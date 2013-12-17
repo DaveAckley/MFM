@@ -11,3 +11,13 @@
 *.lai
 *.la
 *.a
+
+# Ignore emacs backup files
+*~
+
+# Ignore executables
+bin/*
+
+# Ignore build and lib dirs
+build
+lib/*
