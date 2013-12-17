@@ -45,3 +45,15 @@ void Drawing::DrawVLine(SDL_Surface* dest, int x,
     SetPixel(dest, x, y, color);
   }
 }
+
+void Drawing::FillRect(SDL_Surface* dest, int x, int y,
+		       int w, int h, Uint32 color)
+{
+  for(int i = x; i < x + w; i++)
+  {
+    for(int j = y; j < y + h; j++)
+    {
+      SetPixel(dest, i, j, color);
+    }
+  }
+}

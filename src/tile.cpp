@@ -1,8 +1,15 @@
 #include "tile.h"
 
-Tile::Tile()
+Tile::Tile(Point<int>* location)
 {
+  m_location.SetX(location->GetX());
+  m_location.SetY(location->GetY());
+}
 
+Tile::Tile(int x, int y)
+{
+  m_location.SetX(x);
+  m_location.SetY(y);
 }
 
 Tile::~Tile()

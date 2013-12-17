@@ -15,10 +15,13 @@ class Tile
 {
 private:
   Atom* m_atoms[TILE_SIZE];
+  Point<int> m_location;
 
 public:
 
-  Tile();
+  Tile(Point<int>* location);
+
+  Tile(int x, int y);
 
   ~Tile();
 
