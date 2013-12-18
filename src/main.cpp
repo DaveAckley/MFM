@@ -7,6 +7,8 @@
 #include "drawing.h"
 #include "tilerenderer.h"
 
+#define FRAMES_PER_SECOND 60.0
+
 void HandleMouse(Mouse* mouse, SDL_MouseButtonEvent* e)
 {
   if(e->state == SDL_PRESSED)
@@ -38,6 +40,8 @@ void RunSim()
   Point<int> renderPt(0, 0);
   Mouse mouse;
 
+  int lastFrame = SDL_GetTicks();
+
   Drawing::Clear(screen, 0xffffffff);
 
   while(running)
@@ -55,6 +59,13 @@ void RunSim()
 	break;
       }
     }
+
+    int sleepMS = (int)((1000.0 / FRAMES_PER_SECOND) - (SDL_GetTicks() - lastFrame));
+    if(sleepMS > 0)
+    {
+      SDL_Delay(sleepMS);
+    }
+    lastFrame = SDL_GetTicks();
 
     update(&mouse, &renderer);
 

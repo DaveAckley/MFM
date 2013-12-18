@@ -1,24 +1,25 @@
 #ifndef ATOM_H
 #define ATOM_H
 
+#include "bitfield.h"
 #include "point.h"
 #include "eventwindow.h"
+
+#define ATOM_SIZE 64
 
 class EventWindow;
 class Atom
 {
 protected:
-  unsigned char m_type;
+  BitField<ATOM_SIZE> m_bits; 
 
 public:
-
-  Atom(unsigned char type) {m_type = type;}
 
   Atom() { }
 
   ~Atom() { }
 
-  virtual void Update(EventWindow* window) = 0;
+  void Update(EventWindow* window);
 
 };
 
