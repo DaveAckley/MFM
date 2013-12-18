@@ -34,7 +34,9 @@ void update(Mouse* mouse, TileRenderer* tr)
 void RunSim()
 {
   bool running = true;
-  SDL_Surface* screen = SDL_SetVideoMode(256, 256, 32, SDL_SWSURFACE);
+  SDL_Surface* screen = 
+    SDL_SetVideoMode(256, 256, 32, SDL_SWSURFACE);
+
   SDL_Event event;
   TileRenderer renderer(screen);
   Point<int> renderPt(0, 0);
@@ -60,12 +62,15 @@ void RunSim()
       }
     }
 
-    int sleepMS = (int)((1000.0 / FRAMES_PER_SECOND) - (SDL_GetTicks() - lastFrame));
+    /* Limit framerate */
+    int sleepMS = (int)((1000.0 / FRAMES_PER_SECOND) - 
+			(SDL_GetTicks() - lastFrame));
     if(sleepMS > 0)
     {
       SDL_Delay(sleepMS);
     }
     lastFrame = SDL_GetTicks();
+
 
     update(&mouse, &renderer);
 
