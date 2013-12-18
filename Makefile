@@ -1,7 +1,8 @@
 CC := g++
 SRCDIR := src
 BUILDDIR := build
-TARGET := bin/mfm
+OUTPUTDIR := bin
+TARGET := $(OUTPUTDIR)/mfm
 
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
@@ -10,6 +11,7 @@ LIB := -L lib -lm -lSDL
 INC := -I include
 
 $(TARGET): $(OBJECTS)
+	@mkdir -p $(OUTPUTDIR)
 	@echo "$(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o $(TARGET) $(LIB)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
@@ -18,6 +20,6 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 
 clean:
 	@echo "Cleaning..."
-	@echo "$(RM) -r $(BUILDDIR) $(TARGET)"; $(RM) -r $(BUILDDIR) $(TARGET)
+	@echo "$(RM) -r $(BUILDDIR) $(TARGET) $(OUTPUTDIR)"; $(RM) -r $(BUILDDIR) $(TARGET) $(OUTPUTDIR)
 
 .PHONY: clean
