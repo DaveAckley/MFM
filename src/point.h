@@ -10,10 +10,10 @@
 template <class T>
 class Point
 {
- private:
+private:
   T m_x, m_y;
 
- public:
+public:
 
   Point(T x, T y);
 
@@ -26,6 +26,8 @@ class Point
   T GetX();
 
   T GetY();
+
+  T GetManhattanDistance();
 
   void Add(Point<T>* offset);
 

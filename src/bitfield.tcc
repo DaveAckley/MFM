@@ -9,7 +9,7 @@ BitField<bitLength>::BitField()
 }
 
 template <int bitLength>
-BitField<bitLength>::BitField(Uint32* values)
+BitField<bitLength>::BitField(u32* values)
 {
   int bytes = bitLength >> 5;
   for(int i = 0; i < bytes; i++)
@@ -19,7 +19,7 @@ BitField<bitLength>::BitField(Uint32* values)
 }
 
 template<int bitLength>
-Uint32 BitField<bitLength>::MakeMask(int pos, int len)
+u32 BitField<bitLength>::MakeMask(int pos, int len)
 {
   int maskAcc = 0;
   int maskBit = 0x80000000 >> pos;
@@ -31,12 +31,17 @@ Uint32 BitField<bitLength>::MakeMask(int pos, int len)
   return maskAcc;
 }
 
+/* 
+ * TODO These seem a little dumpy and slow. We could
+ * probably make this implementation work with some
+ * better bit-fu .
+ */
 template <int bitLength>
 void BitField<bitLength>::WriteBit(int idx, bool bit)
 {
   int arrIdx = idx >> 5;
   int inIdx = idx & 0x1f;
-  Uint32 newWord = 0x80000000 >> inIdx;
+  u32 newWord = 0x80000000 >> inIdx;
 
   if(m_bits[arrIdx] & newWord)
   {
@@ -63,7 +68,7 @@ bool BitField<bitLength>::ReadBit(int idx)
 template <int bitLength>
 void BitField<bitLength>::Write(int startIdx,
 				int length,
-				Uint32 value)
+				u32 value)
 {
   int mask = 1;
   for(int i = startIdx + length - 1; 
@@ -75,10 +80,24 @@ void BitField<bitLength>::Write(int startIdx,
 }
 
 template <int bitLength>
-Uint32 BitField<bitLength>::Read(int startIdx,
-				 int length)
+void BitField<bitLength>::Insert(int startIdx,
+				 int length,
+				 u32 value)
 {
-  Uint32 acc = 0;
+  /* floor to a multiple of 32   vvv  */
+  for(int i = ((bitLength >> 5) << 5) - 1;
+      i >= startIdx + length; i--)
+  {
+    WriteBit(i, ReadBit(i - length));
+  }
+  Write(startIdx, length, value);
+}
+
+template <int bitLength>
+u32 BitField<bitLength>::Read(int startIdx,
+			      int length)
+{
+  u32 acc = 0;
   for(int i = startIdx; i < startIdx + length; i++)
   {
     acc <<= 1;
@@ -93,7 +112,7 @@ Uint32 BitField<bitLength>::Read(int startIdx,
 template <int bitLength>
 void BitField<bitLength>::Print(FILE* ostream)
 {
-  Uint32 mask = 0xf0000000;
+  u32 mask = 0xf0000000;
   int ints = bitLength >> 5;
   for(int i = 0; i < ints; i++)
   {

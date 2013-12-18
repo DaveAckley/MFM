@@ -33,6 +33,12 @@ T Point<T>::GetY()
 }
 
 template <class T>
+T Point<T>::GetManhattanDistance()
+{
+  return abs((int)m_x) + abs((int)m_y);
+}
+
+template <class T>
 void Point<T>::Add(Point<T>* offset)
 {
   m_x += offset->m_x;

@@ -5,6 +5,7 @@
 #include "point.h"
 #include "eventwindow.h"
 
+/* Should try to be a multiple of 32-bits */
 #define ATOM_SIZE 64
 
 class EventWindow;
@@ -19,7 +20,7 @@ public:
 
   ~Atom() { }
 
-  void Update(EventWindow* window);
+  virtual void Update(EventWindow* window);
 
 };
 

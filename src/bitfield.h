@@ -1,7 +1,7 @@
 #ifndef BITFIELD_H
 #define BITFIELD_H
 
-#include "SDL/SDL.h"
+#include "itype.h"
 #include <stdio.h>
 
 /* 
@@ -12,9 +12,9 @@ template <int bitLength>
 class BitField
 {
 private:
-  Uint32 m_bits[bitLength >> 5];
+  u32 m_bits[bitLength >> 5];
 
-  Uint32 MakeMask(int pos, int len);
+  u32 MakeMask(int pos, int len);
 
   void WriteBit(int idx, bool bit);
 
@@ -23,11 +23,17 @@ public:
 
   BitField();
 
-  BitField(Uint32* values);
+  BitField(u32* values);
 
-  Uint32 Read(int startIdx, int length);
+  u32 Read(int startIdx, int length);
 
-  void Write(int startIdx, int length, Uint32 value);
+  void Write(int startIdx, int length, u32 value);
+
+  /* 
+   * Inserts a value at startIdx. Pushes the values
+   * already there down length bits.
+   */
+  void Insert(int startIdx, int length, u32 value);
 
   void Print(FILE* ostream);
 			   
