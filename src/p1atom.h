@@ -61,6 +61,11 @@ public:
 
   u32 AddShortBond(Point<int>* offset);
 
+  /* Fills pt with the long bond location in index. */
+  void FillLongBond(u32 index, Point<int>* pt);
+
+  void FillShortBond(u32 index, Point<int>* pt);
+
   /* 
    * Removes a long bond. Be careful; if a
    * bond is removed, the bonds ahead of it

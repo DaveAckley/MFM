@@ -3,6 +3,7 @@
 #include "assert.h"
 #include "eventwindow.h"
 #include "itype.h"
+#include "manhattandir.h"
 #include "mouse.h"
 #include "p1atom.h"
 #include "point.h"
@@ -78,7 +79,10 @@ void RunSim()
 
     Drawing::Clear(screen, 0xffffffff);
     
-    renderer.RenderTile(NULL, &renderPt); 
+    Point<int> loc(0,0);
+    Tile<P1Atom> tile(&loc);
+
+    renderer.RenderTile<P1Atom>(&tile, &renderPt); 
 
     SDL_Flip(screen);
   }
@@ -90,7 +94,21 @@ int main(int argc, char** argv)
 {
   SDL_Init(SDL_INIT_EVERYTHING);
 
-  RunSim();
+  //RunSim();
+
+  ManhattanDir::AllocTables();
+
+  Point<int> fromMan(2, 2);
+  Point<int> toMan;
+
+  u8 bits = ManhattanDir::FromPoint(&fromMan, false);
+
+  printf("toBits: 0x%x\n", bits);
+
+  ManhattanDir::FillFromBits(&toMan, bits, false);
+
+  printf("FromBits: %d, %d", fromMan.GetX(),
+	 fromMan.GetY());
 
   SDL_Quit();
 

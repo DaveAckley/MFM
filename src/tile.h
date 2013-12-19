@@ -1,6 +1,7 @@
 #ifndef TILE_H
 #define TILE_H
 
+#include "p1atom.h"
 #include "point.h"
 #include "eventwindow.h"
 
@@ -11,10 +12,11 @@
 #define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)
 
 class EventWindow;
+template <class T>
 class Tile
 {
 private:
-  Atom* m_atoms[TILE_SIZE];
+  T m_atoms[TILE_SIZE];
   Point<int> m_location;
 
 public:
@@ -25,16 +27,18 @@ public:
 
   ~Tile();
 
-  Atom* GetAtom(Point<int>* pt);
+  T* GetAtom(Point<int>* pt);
 
-  Atom* GetAtom(int x, int y);
+  T* GetAtom(int x, int y);
 
-  Atom* GetAtom(int i);
+  T* GetAtom(int i);
 
   EventWindow* CreateWindow(Point<int>* ctr);
 
   EventWindow* CreateRandomWindow();
 
 };
+
+#include "tile.tcc"
 
 #endif /*TILE_H*/

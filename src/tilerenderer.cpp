@@ -58,17 +58,6 @@ void TileRenderer::RenderGrid(Point<int>* pt)
   }
 }
 
-void TileRenderer::RenderTile(Tile* t, Point<int>* pt)
-{
-  if(m_drawMemRegions)
-  {
-    RenderMemRegions(pt);
-  }
-  if(m_drawGrid)
-  {
-    RenderGrid(pt);
-  }
-}
 
 void TileRenderer::ToggleGrid()
 {

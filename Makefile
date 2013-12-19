@@ -1,4 +1,4 @@
-CC := g++
+CC := g++ -std=c++0x
 SRCDIR := src
 BUILDDIR := build
 OUTPUTDIR := bin

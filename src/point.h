@@ -40,6 +40,7 @@ public:
   void SetY(T y);
 };
 
+
 #include "point.tcc"
 
 #endif /*POINT_H*/

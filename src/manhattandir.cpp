@@ -1,38 +1,68 @@
 #include "manhattandir.h"
 
-u8 ManhattanDir::FromPoint(Point<int>* offset)
+Point<int> ManhattanDir::
+pointTableShort[MANHATTANDIR_SHORT_TABLE_SIZE];
+Point<int> ManhattanDir::
+pointTableLong[MANHATTANDIR_LONG_TABLE_SIZE];
+
+void ManhattanDir::AllocTables()
 {
-  int xdir = offset->GetX() > 0 ? -1 : 1;
-  int ydir = offset->GetY() > 0 ? -1 : 1;
+  FillTable(pointTableShort, true);
+  FillTable(pointTableLong, false);
+}
 
-  int offX = offset->GetX();
-  int offY = offset->GetY();
-
-  if(offset->GetManhattanDistance() > 4)
+void  ManhattanDir::FillTable(Point<int>* table,
+			      bool sbond)
+{
+  int maxDist = sbond ? 2 : 4;
+  u8 cidx = 0;
+  Point<int> current;
+  for(int x = -maxDist; x <= maxDist; x++)
   {
-    /*TODO there is probably a better way to do this*/
-    throw "Manhattan direction too large.";
+    current.SetX(x);
+    for(int y = -maxDist; y <= maxDist; y++)
+    {
+      current.SetY(y);
+
+      if(current.GetManhattanDistance() <= maxDist)
+      {
+	table[cidx].SetX(x);
+	table[cidx++].SetY(y);
+      }
+    }
   }
 
-  u8 m_bitRep = 0;
-
-  while(offX != 0)
-  {
-    m_bitRep <<= 2;
-
-    m_bitRep |= (xdir < 0) ? 0 : 1;
-
-    offX += xdir;
-  }
   
-  while(offY != 0)
+}
+
+u8 ManhattanDir::FromPoint(Point<int>* offset,
+			   bool sbond)
+{
+  int arrSize = sbond?
+    MANHATTANDIR_SHORT_TABLE_SIZE :
+    MANHATTANDIR_LONG_TABLE_SIZE;
+  Point<int>* arr = sbond?
+    pointTableShort :
+    pointTableLong;
+  for(int i = 0; i < arrSize; i++)
   {
-    m_bitRep <<= 2;
-
-    m_bitRep |= (ydir < 0) ? 2 : 3;
-
-    offY += ydir;
+    if(offset->GetX() == arr[i].GetX())
+    {
+      if(offset->GetY() == arr[i].GetY())
+      {
+	return i;
+      }
+    }
   }
+  return -1;
+}
 
-  return m_bitRep;
+void ManhattanDir::FillFromBits(Point<int>* pt,
+				u8 bits, bool sbond)
+{
+  Point<int> bp =
+    (sbond ? pointTableShort : pointTableLong)[bits];
+
+  pt->SetX(bp.GetX());
+  pt->SetY(bp.GetY());
 }

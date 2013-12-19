@@ -30,11 +30,23 @@ class TileRenderer
  public:
   TileRenderer(SDL_Surface* dest);
 
-  void RenderTile(Tile* t, Point<int>* pt);
+  template <class T>
+  void RenderTile(Tile<T>* t, Point<int>* pt)
+  {
+    if(m_drawMemRegions)
+    {
+      RenderMemRegions(pt);
+    }
+    if(m_drawGrid)
+    {
+      RenderGrid(pt);
+    }
+  }
 
   void ToggleGrid();
 
   void ToggleMemDraw();
 };
+
 
 #endif /*TILERENDERER_H*/

@@ -9,7 +9,8 @@ u32 P1Atom::AddLongBond(Point<int>* offset)
     P1ATOM_LONGBOND_SIZE * newID;
 
   m_bits.Insert(newBondIdx, P1ATOM_LONGBOND_SIZE,
-		ManhattanDir::FromPoint(offset));
+		ManhattanDir::FromPoint(offset,
+					false));
 
   SetLongBondCount(newID + 1);
   return newID;
@@ -24,10 +25,21 @@ u32 P1Atom::AddShortBond(Point<int>* offset)
     P1ATOM_SHORTBOND_SIZE * newID;
 
   m_bits.Insert(newBondIdx, P1ATOM_SHORTBOND_SIZE,
-		ManhattanDir::FromPoint(offset));
+		ManhattanDir::FromPoint(offset,
+					true));
 
   SetShortBondCount(newID + 1);
   return newID;
+}
+
+void P1Atom::FillLongBond(u32 index, Point<int>* pt)
+{
+
+}
+
+void P1Atom::FillShortBond(u32 index, Point<int>* pt)
+{
+
 }
 
 void P1Atom::RemoveLongBond(u32 index)
