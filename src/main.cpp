@@ -1,3 +1,11 @@
+#define MAIN_RUN_TESTS 1
+
+#if MAIN_RUN_TESTS
+
+#include "tests.h"
+
+#else
+
 #include <stdio.h>
 #include "SDL/SDL.h"
 #include "assert.h"
@@ -114,3 +122,5 @@ int main(int argc, char** argv)
 
   return 0;
 }
+
+#endif
