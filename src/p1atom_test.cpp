@@ -184,4 +184,15 @@ void P1AtomTest::Test_p1atomRemoveSB()
 
   assert(bits[0] == 0);
   assert(bits[1] == 0);
+
+  atom.AddLongBond(&sb1);
+  atom.AddShortBond(&sb2);
+  atom.AddShortBond(&sb1);
+
+  atom.RemoveShortBond(0);
+
+  atom.ReadVariableBodyInto(bits);
+
+  assert((bits[0] & 0xf) == 0);
+  assert(bits[1] == 0);
 }

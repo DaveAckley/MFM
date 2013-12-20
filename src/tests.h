@@ -5,6 +5,7 @@
 #include "bitfield_test.hpp"
 #include "point_test.hpp"
 #include "p1atom_test.hpp"
+#include "tile_test.hpp"
 
 int test_main(int argc, char** argv)
 {

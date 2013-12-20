@@ -1,24 +1,4 @@
 template <class T>
-Tile<T>::Tile(Point<int>* location)
-{
-  m_location.SetX(location->GetX());
-  m_location.SetY(location->GetY());
-}
-
-template <class T>
-Tile<T>::Tile(int x, int y)
-{
-  m_location.SetX(x);
-  m_location.SetY(y);
-}
-
-template <class T>
-Tile<T>::~Tile()
-{
-
-}
-
-template <class T>
 T* Tile<T>::GetAtom(Point<int>* pt)
 {
   return &m_atoms[pt->GetX() + 

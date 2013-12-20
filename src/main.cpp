@@ -1,4 +1,4 @@
-#define MAIN_RUN_TESTS 1
+#define MAIN_RUN_TESTS 0
 
 #if MAIN_RUN_TESTS
 
@@ -11,6 +11,8 @@
 #include "SDL/SDL.h"
 #include "assert.h"
 #include "eventwindow.h"
+#include "grid.h"
+#include "gridrenderer.h"
 #include "itype.h"
 #include "manhattandir.h"
 #include "mouse.h"
@@ -33,13 +35,8 @@ void HandleMouse(Mouse* mouse, SDL_MouseButtonEvent* e)
   }
 }
 
-void update(Mouse* mouse, TileRenderer* tr)
-{
-  if(mouse->SemiAuto(SDL_BUTTON_LEFT))
-  {
-    tr->ToggleMemDraw();
-  }
-  
+void update(Mouse* mouse)
+{ 
   mouse->Flip();
 }
 
@@ -50,9 +47,10 @@ void RunSim()
     SDL_SetVideoMode(256, 256, 32, SDL_SWSURFACE);
 
   SDL_Event event;
-  TileRenderer renderer(screen);
-  Point<int> renderPt(0, 0);
+  GridRenderer grend(screen);
   Mouse mouse;
+
+  Grid<P1Atom> mainGrid(2, 2);
 
   int lastFrame = SDL_GetTicks();
 
@@ -84,14 +82,11 @@ void RunSim()
     lastFrame = SDL_GetTicks();
 
 
-    update(&mouse, &renderer);
+    update(&mouse);
 
     Drawing::Clear(screen, 0xffffffff);
-    
-    Point<int> loc(0,0);
-    Tile<P1Atom> tile(&loc);
 
-    renderer.RenderTile<P1Atom>(&tile, &renderPt); 
+    grend.RenderGrid(&mainGrid);
 
     SDL_Flip(screen);
   }
@@ -103,21 +98,7 @@ int main(int argc, char** argv)
 {
   SDL_Init(SDL_INIT_EVERYTHING);
 
-  //RunSim();
-
-  ManhattanDir::AllocTables();
-
-  Point<int> fromMan(2, 2);
-  Point<int> toMan;
-
-  u8 bits = ManhattanDir::FromPoint(&fromMan, false);
-
-  printf("toBits: 0x%x\n", bits);
-
-  ManhattanDir::FillFromBits(&toMan, bits, false);
-
-  printf("FromBits: %d, %d", fromMan.GetX(),
-	 fromMan.GetY());
+  RunSim();
 
   SDL_Quit();
 

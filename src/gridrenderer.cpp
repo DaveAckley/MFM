@@ -17,8 +17,3 @@ GridRenderer::~GridRenderer()
 {
   delete m_tileRenderer;
 }
-
-void RenderGrid(SDL_Surface* dest, Grid* grid)
-{
-  
-}

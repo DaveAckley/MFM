@@ -4,6 +4,7 @@
 #include "grid.h"
 #include "SDL/SDL.h"
 #include "tilerenderer.h"
+
 class GridRenderer
 {
 private:
@@ -17,8 +18,22 @@ public:
 	       TileRenderer* tr);
 
   ~GridRenderer();
-
-  void RenderGrid(SDL_Surface* dest, Grid* grid);
+  
+  template <class T>
+  void RenderGrid(Grid<T>* grid)
+  {
+    Point<int> current;
+    for(int x = 0; x < grid->GetWidth(); x++)
+    {
+      current.SetX(x);
+      for(int y = 0; y < grid->GetHeight(); y++)
+      {
+	current.SetY(y);
+	
+	m_tileRenderer->RenderTile(grid->GetTile(x, y), &current);
+      }
+    }
+  }
   
 };
 

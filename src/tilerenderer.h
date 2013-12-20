@@ -7,11 +7,11 @@
 
 class TileRenderer
 {
- private:
+private:
   bool m_drawGrid;
   bool m_drawMemRegions;
   int m_atomDrawSize;
-
+  
   Uint32 m_gridColor;
   Uint32 m_sharedColor;
   Uint32 m_visibleColor;
@@ -27,24 +27,24 @@ class TileRenderer
 
   void RenderGrid(Point<int>* pt);
 
- public:
+public:
   TileRenderer(SDL_Surface* dest);
 
   template <class T>
-  void RenderTile(Tile<T>* t, Point<int>* pt)
+  void RenderTile(Tile<T>* t, Point<int>* loc)
   {
     if(m_drawMemRegions)
     {
-      RenderMemRegions(pt);
+      RenderMemRegions(loc);
     }
     if(m_drawGrid)
     {
-      RenderGrid(pt);
+      RenderGrid(loc);
     }
   }
 
   void ToggleGrid();
-
+  
   void ToggleMemDraw();
 };
 

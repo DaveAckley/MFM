@@ -1,6 +1,7 @@
 #ifndef TILE_H
 #define TILE_H
 
+#include "eucliddir.h"
 #include "p1atom.h"
 #include "point.h"
 #include "eventwindow.h"
@@ -17,15 +18,10 @@ class Tile
 {
 private:
   T m_atoms[TILE_SIZE];
-  Point<int> m_location;
 
 public:
 
-  Tile(Point<int>* location);
-
-  Tile(int x, int y);
-
-  ~Tile();
+  Tile() { }
 
   T* GetAtom(Point<int>* pt);
 

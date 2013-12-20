@@ -24,8 +24,8 @@ void TileRenderer::RenderMemRegions(Point<int>* pt)
 }
 
 void TileRenderer::RenderMemRegion(Point<int>* pt,
-				   int regID,
-				   Uint32 color)
+				      int regID,
+				      Uint32 color)
 {
 
   int tileSize = m_atomDrawSize * TILE_WIDTH;
@@ -57,7 +57,6 @@ void TileRenderer::RenderGrid(Point<int>* pt)
 		       m_gridColor);
   }
 }
-
 
 void TileRenderer::ToggleGrid()
 {
