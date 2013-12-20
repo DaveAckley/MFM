@@ -4,6 +4,7 @@
 #include "manhattandir_test.hpp"
 #include "bitfield_test.hpp"
 #include "point_test.hpp"
+#include "p1atom_test.hpp"
 
 int test_main(int argc, char** argv)
 {
@@ -19,7 +20,13 @@ int test_main(int argc, char** argv)
 
   ManhattanDirTest::Test_manhattandirConversion();
 
-  
+  P1AtomTest::Test_p1atomState();
+  P1AtomTest::Test_p1atomLBCount();
+  P1AtomTest::Test_p1atomReadBody();
+  P1AtomTest::Test_p1atomAddLB();
+  P1AtomTest::Test_p1atomAddSB();
+  P1AtomTest::Test_p1atomRemoveLB();
+  P1AtomTest::Test_p1atomRemoveSB();
 
   return 0;
 }

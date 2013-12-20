@@ -55,13 +55,21 @@ void P1Atom::FillShortBond(u32 index, Point<int>* pt)
 
 void P1Atom::RemoveLongBond(u32 index)
 {
-  int bondsToMove;
-  
-  
-  SetShortBondCount(GetShortBondCount() - 1);
+  u32 realIdx = P1ATOM_HEADER_SIZE +
+    P1ATOM_LONGBOND_SIZE * index;
+
+  m_bits.Remove(realIdx, 8);
+
+  SetLongBondCount(GetLongBondCount() - 1);
 }
 
 void P1Atom::RemoveShortBond(u32 index)
 {
+  u32 realIdx = P1ATOM_HEADER_SIZE +
+    P1ATOM_LONGBOND_SIZE * GetLongBondCount() +
+    P1ATOM_SHORTBOND_SIZE * index;
 
+  m_bits.Remove(realIdx, 4);
+
+  SetShortBondCount(GetShortBondCount() - 1);
 }

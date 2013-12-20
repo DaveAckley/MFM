@@ -77,3 +77,10 @@ inline bool operator==(Point<T>& lhs, Point<T>& rhs)
   return lhs.GetX() == rhs.GetX() &&
     lhs.GetY() == rhs.GetY();
 }
+
+template<class T>
+void Point<T>::Set(T x, T y)
+{
+  m_x = x;
+  m_y = y;
+}

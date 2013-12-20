@@ -2,7 +2,7 @@
 #define P1ATOM_TEST_HPP
 
 class P1AtomTest
-{
+{ 
 public:
   static void Test_p1atomState();
 
@@ -16,7 +16,13 @@ public:
 
   static void Test_p1atomAddSB();
 
-  static void Test_p1atom
+  static void Test_p1atomFillSB();
+
+  static void Test_p1atomFillLB();
+
+  static void Test_p1atomRemoveLB();
+
+  static void Test_p1atomRemoveSB();
 };
 
 #endif /*P1ATOM_TEST_HPP*/

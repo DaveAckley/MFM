@@ -38,6 +38,8 @@ public:
   void SetX(T x);
 
   void SetY(T y);
+
+  void Set(T x, T y);
 };
 
 
