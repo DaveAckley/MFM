@@ -15,8 +15,11 @@ int test_main(int argc, char** argv)
   BitFieldTest::Test_bitfieldRead();
   BitFieldTest::Test_bitfieldWrite();
   BitFieldTest::Test_bitfieldInsert();
+  BitFieldTest::Test_bitfieldRemove();
 
   ManhattanDirTest::Test_manhattandirConversion();
+
+  
 
   return 0;
 }

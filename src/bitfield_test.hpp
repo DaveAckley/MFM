@@ -18,6 +18,8 @@ public:
   static void Test_bitfieldWrite();
 
   static void Test_bitfieldInsert();
+
+  static void Test_bitfieldRemove();
 };
 
 #endif /*BITFIELD_TEST_HPP*/

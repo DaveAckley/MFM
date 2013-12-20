@@ -34,12 +34,23 @@ u32 P1Atom::AddShortBond(Point<int>* offset)
 
 void P1Atom::FillLongBond(u32 index, Point<int>* pt)
 {
+  u32 realIdx = P1ATOM_HEADER_SIZE +
+    P1ATOM_LONGBOND_SIZE * index;
 
+  u8 bond = m_bits.Read(realIdx, 8);
+
+  ManhattanDir::FillFromBits(pt, bond, false);
 }
 
 void P1Atom::FillShortBond(u32 index, Point<int>* pt)
 {
+  u32 realIdx = P1ATOM_HEADER_SIZE +
+    P1ATOM_LONGBOND_SIZE * GetLongBondCount() +
+    P1ATOM_SHORTBOND_SIZE * index;
 
+  u8 bond = m_bits.Read(realIdx, 4);
+
+  ManhattanDir::FillFromBits(pt, bond, true);
 }
 
 void P1Atom::RemoveLongBond(u32 index)

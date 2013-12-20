@@ -135,3 +135,16 @@ void BitField<bitLength>::Print(FILE* ostream)
     }
   }
 }
+
+template<int bitLength>
+void BitField<bitLength>::Remove(int startIdx, int length)
+{
+  for(int i = startIdx; i < bitLength - length; i++)
+  {
+    WriteBit(i, ReadBit(i + length));
+  }
+  for(int i = bitLength - length; i < bitLength; i++)
+  {
+    WriteBit(i, 0);
+  }
+}

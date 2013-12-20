@@ -72,4 +72,19 @@ void BitFieldTest::Test_bitfieldInsert()
   assert(bits->Read(0, 32) == 0xff1234ff);
   assert(bits->Read(32, 32) == 0xffff0000);
   assert(bits->Read(224, 32) == 0x0000ffff);
+
+  delete bits;
+}
+
+void BitFieldTest::Test_bitfieldRemove()
+{
+  BitField<256>* bits = setup();
+
+  bits->Remove(0, 32);
+  
+  assert(bits->Read(0  , 32) == 0x00000000);
+  assert(bits->Read(32 , 32) == 0x12345678);
+  assert(bits->Read(224, 32) == 0x00000000);
+
+  delete bits;
 }

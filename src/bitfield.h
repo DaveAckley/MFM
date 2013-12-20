@@ -35,6 +35,12 @@ public:
    */
   void Insert(int startIdx, int length, u32 value);
 
+  /*
+   * Removes length bits from this bitfield, then pushes
+   * all bits to the right of them back length bits.
+   */
+  void Remove(int startIdx, int length);
+
   void Print(FILE* ostream);
 			   
 };
