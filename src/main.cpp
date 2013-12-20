@@ -2,6 +2,7 @@
 
 #if MAIN_RUN_TESTS
 
+#include <boost/test/minimal.hpp>
 #include "tests.h"
 
 #else

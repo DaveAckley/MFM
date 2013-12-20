@@ -5,6 +5,8 @@ class PointTest
 {
 public:
   static void Test_pointAdd();
+
+  static void Test_pointMultiply();
 };
 
 #endif /*POINT_TEST_HPP*/
