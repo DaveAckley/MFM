@@ -17,6 +17,28 @@ public:
   GridRenderer(SDL_Surface* dest,
 	       TileRenderer* tr);
 
+  GridRenderer()
+  {
+    m_tileRenderer = new TileRenderer(NULL);
+  }
+
+  void SetDestination(SDL_Surface* dest)
+  {
+    m_dest = dest;
+    delete m_tileRenderer;
+    m_tileRenderer = new TileRenderer(dest);
+  }
+
+  void IncreaseAtomSize()
+  {
+    m_tileRenderer->IncreaseAtomSize();
+  }
+
+  void DecreaseAtomSize()
+  {
+    m_tileRenderer->DecreaseAtomSize();
+  }
+
   ~GridRenderer();
   
   template <class T>
@@ -29,7 +51,7 @@ public:
       for(int y = 0; y < grid->GetHeight(); y++)
       {
 	current.SetY(y);
-	
+
 	m_tileRenderer->RenderTile(grid->GetTile(x, y),
 				   &current);
       }

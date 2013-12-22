@@ -1,6 +1,6 @@
 #include "drawing.h"
 
-void Drawing::SetPixel(SDL_Surface* dest, int x,
+inline void Drawing::SetPixel(SDL_Surface* dest, int x,
 		       int y, Uint32 color)
 {
   if(x >= 0 && y >= 0 && x < dest->w && y < dest->h)

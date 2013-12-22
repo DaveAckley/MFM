@@ -5,6 +5,8 @@
 #include "point.h"
 #include "SDL/SDL.h"
 
+
+
 class TileRenderer
 {
 private:
@@ -28,6 +30,7 @@ private:
   void RenderGrid(Point<int>* pt);
 
 public:
+
   TileRenderer(SDL_Surface* dest);
 
   template <class T>
@@ -46,6 +49,10 @@ public:
       RenderGrid(&multPt);
     }
   }
+
+  void IncreaseAtomSize();
+
+  void DecreaseAtomSize();
 
   void ToggleGrid();
   

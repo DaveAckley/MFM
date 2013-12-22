@@ -2,6 +2,8 @@
 #include "tilerenderer.h"
 #include "eventwindow.h"
 
+#define TILESIZE_CHANGE_RATE 1
+
 TileRenderer::TileRenderer(SDL_Surface* dest)
 {
   m_dest = dest;
@@ -69,4 +71,14 @@ void TileRenderer::ToggleGrid()
 void TileRenderer::ToggleMemDraw()
 {
   m_drawMemRegions = !m_drawMemRegions;
+}
+
+void TileRenderer::IncreaseAtomSize()
+{
+  m_atomDrawSize += TILESIZE_CHANGE_RATE;
+}
+  
+void TileRenderer::DecreaseAtomSize()
+{
+  m_atomDrawSize -= TILESIZE_CHANGE_RATE;
 }
