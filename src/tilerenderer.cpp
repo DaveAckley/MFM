@@ -44,14 +44,17 @@ void TileRenderer::RenderGrid(Point<int>* pt)
   int lineLen = m_atomDrawSize * TILE_WIDTH;
   for(int x = 0; x < TILE_WIDTH + 1; x++)
   {
-    Drawing::DrawVLine(m_dest, x * m_atomDrawSize,
-		       pt->GetY(), 
+    Drawing::DrawVLine(m_dest,
+		       pt->GetX() + x * m_atomDrawSize,
+		       pt->GetY(),
 		       pt->GetY() + lineLen,
 		       m_gridColor);
   }
+
   for(int y = 0; y < TILE_WIDTH + 1; y++)
   {
-    Drawing::DrawHLine(m_dest, y * m_atomDrawSize,
+    Drawing::DrawHLine(m_dest,
+		       pt->GetY() + y * m_atomDrawSize,
 		       pt->GetX(),
 		       pt->GetX() + lineLen,
 		       m_gridColor);

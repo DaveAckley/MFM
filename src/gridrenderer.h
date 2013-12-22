@@ -30,7 +30,8 @@ public:
       {
 	current.SetY(y);
 	
-	m_tileRenderer->RenderTile(grid->GetTile(x, y), &current);
+	m_tileRenderer->RenderTile(grid->GetTile(x, y),
+				   &current);
       }
     }
   }

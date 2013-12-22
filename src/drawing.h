@@ -6,7 +6,7 @@
 
 class Drawing
 {
- public:
+public:
 
   static const int WHITE   = 0xffffffff;
   static const int RED     = 0xffff0000;

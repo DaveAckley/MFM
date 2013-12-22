@@ -14,6 +14,7 @@
 #include "grid.h"
 #include "gridrenderer.h"
 #include "itype.h"
+#include "keyboard.hpp"
 #include "manhattandir.h"
 #include "mouse.h"
 #include "p1atom.h"
@@ -23,21 +24,11 @@
 
 #define FRAMES_PER_SECOND 60.0
 
-void HandleMouse(Mouse* mouse, SDL_MouseButtonEvent* e)
-{
-  if(e->state == SDL_PRESSED)
-  {
-    mouse->Press(e->button);
-  }
-  else if(e->state == SDL_RELEASED)
-  {
-    mouse->Release(e->button);
-  }
-}
-
-void update(Mouse* mouse)
+void update(Mouse* mouse, Keyboard* kb)
 { 
   mouse->Flip();
+  kb->Flip();
+  
 }
 
 void RunSim()
@@ -49,6 +40,7 @@ void RunSim()
   SDL_Event event;
   GridRenderer grend(screen);
   Mouse mouse;
+  Keyboard keyboard;
 
   Grid<P1Atom> mainGrid(2, 2);
 
@@ -67,8 +59,16 @@ void RunSim()
 	break;
       case SDL_MOUSEBUTTONUP:
       case SDL_MOUSEBUTTONDOWN:
-	HandleMouse(&mouse, &event.button);
+	mouse.HandleButtonEvent(&event.button);
 	break;
+      case SDL_MOUSEMOTION:
+	mouse.HandleMotionEvent(&event.motion);
+	break;
+      case SDL_KEYDOWN:
+      case SDL_KEYUP:
+	keyboard.HandleEvent(&event.key);
+	break;
+	
       }
     }
 
@@ -82,7 +82,7 @@ void RunSim()
     lastFrame = SDL_GetTicks();
 
 
-    update(&mouse);
+    update(&mouse, &keyboard);
 
     Drawing::Clear(screen, 0xffffffff);
 
