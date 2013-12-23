@@ -12,12 +12,19 @@
 #include "point.h"
 #include "bitfield.h"
 
+
 class P1Atom
 {
 private:
   BitField<P1ATOM_SIZE> m_bits;
 
 public:
+
+  static u32 StateFunc(P1Atom* atom)
+  {
+    return atom->GetState();
+  }
+
   P1Atom() { }
 
   P1Atom(u32 state)
@@ -76,6 +83,8 @@ public:
   void RemoveLongBond(u32 index);
 
   void RemoveShortBond(u32 index);
+
+  P1Atom& operator=(P1Atom rhs);
 };
 
 #endif /*P1ATOM_H*/

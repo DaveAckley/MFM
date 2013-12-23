@@ -4,8 +4,8 @@
 #include "itype.h"
 #include "point.h"
 
-#define MANHATTANDIR_SHORT_TABLE_SIZE 0xf
-#define MANHATTANDIR_LONG_TABLE_SIZE 0xff
+#define MANHATTANDIR_SHORT_TABLE_SIZE 13
+#define MANHATTANDIR_LONG_TABLE_SIZE 41
 
 using namespace std;
 
@@ -19,9 +19,17 @@ private:
   static Point<int>
   pointTableLong[MANHATTANDIR_LONG_TABLE_SIZE];
 
-  static void FillTable(Point<int>* table, bool sbond);
+  static void FillTable(Point<int>* table,
+			bool sbond);
+
+  static u32 m_shortTableSize;
+  static u32 m_longTableSize;
 
 public:
+
+  static u32 ShortTableSize();
+
+  static u32 LongTableSize();
   
   /*
    * Call this before using any of the other public
@@ -29,7 +37,8 @@ public:
    */
   static void AllocTables();
   
-  static u8 FromPoint(Point<int>* offset, bool sbond);
+  static u8 FromPoint(Point<int>* offset,
+		      bool sbond);
 
   /* 
    * Fills pt with the point represented by bits.

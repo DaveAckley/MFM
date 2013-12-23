@@ -20,10 +20,16 @@ public:
   Grid(int width, int height);
 
   ~Grid();
+  
+  void SetStateFunc(u32 (*stateFunc)(T* atom));
 
   u32 GetHeight();
 
   u32 GetWidth();
+
+  void PlaceAtom(T* atom, Point<int>* location);
+
+  T* GetAtom(Point<int>* location);
 
   void Expand(int extraW, int extraH);
 

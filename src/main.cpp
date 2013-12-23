@@ -1,4 +1,4 @@
-#define MAIN_RUN_TESTS 0
+#define MAIN_RUN_TESTS 1
 
 #if MAIN_RUN_TESTS
 
@@ -55,11 +55,25 @@ public:
   void Run()
   {
     bool running = true;
-    screen = SDL_SetVideoMode(256, 256, 32, SDL_SWSURFACE);
+    screen = SDL_SetVideoMode(256, 256, 32,
+			      SDL_SWSURFACE);
 
     SDL_Event event;
     grend.SetDestination(screen);
     Grid<P1Atom> mainGrid(4, 4);
+
+    mainGrid.SetStateFunc(&P1Atom::StateFunc);
+
+    P1Atom atom(ELEMENT_DREG);
+    Point<int> aloc(10, 10);
+
+    mainGrid.PlaceAtom(&atom, &aloc);
+
+    P1Atom* other = mainGrid.GetAtom(&aloc);
+
+    printf("%d == %d?\n", atom.GetState(), other->GetState());
+    assert(other->GetState() == atom.GetState());
+
 
     int lastFrame = SDL_GetTicks();
 
@@ -88,8 +102,9 @@ public:
       }
       
       /* Limit framerate */
-      int sleepMS = (int)((1000.0 / FRAMES_PER_SECOND) - 
-			  (SDL_GetTicks() - lastFrame));
+      int sleepMS = (int)
+	((1000.0 / FRAMES_PER_SECOND) -
+	 (SDL_GetTicks() - lastFrame));
       if(sleepMS > 0)
       {
 	SDL_Delay(sleepMS);
@@ -114,6 +129,8 @@ public:
 int main(int argc, char** argv)
 {
   SDL_Init(SDL_INIT_EVERYTHING);
+
+  ManhattanDir::AllocTables();
 
   MFMSim sim;
 

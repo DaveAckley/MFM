@@ -1,7 +1,7 @@
 template <int bitLength>
 BitField<bitLength>::BitField()
 {
-  int bytes = bitLength >> 5;
+  int bytes = bitLength / BITFIELD_WORDSIZE;
   for(int i = 0; i < bytes; i++)
   {
     m_bits[i] = 0;
@@ -11,7 +11,7 @@ BitField<bitLength>::BitField()
 template <int bitLength>
 BitField<bitLength>::BitField(u32* values)
 {
-  int bytes = bitLength >> 5;
+  int bytes = bitLength / BITFIELD_WORDSIZE;
   for(int i = 0; i < bytes; i++)
   {
     m_bits[i] = values[i];
@@ -39,7 +39,7 @@ u32 BitField<bitLength>::MakeMask(int pos, int len)
 template <int bitLength>
 void BitField<bitLength>::WriteBit(int idx, bool bit)
 {
-  int arrIdx = idx >> 5;
+  int arrIdx = idx / BITFIELD_WORDSIZE;
   int inIdx = idx & 0x1f;
   u32 newWord = 0x80000000 >> inIdx;
 
@@ -59,7 +59,7 @@ void BitField<bitLength>::WriteBit(int idx, bool bit)
 template <int bitLength>
 bool BitField<bitLength>::ReadBit(int idx)
 {
-  int arrIdx = idx >> 5;
+  int arrIdx = idx / BITFIELD_WORDSIZE;
   int intIdx = idx & 0x1f;
   
   return m_bits[arrIdx] & (0x80000000 >> intIdx);
@@ -85,7 +85,8 @@ void BitField<bitLength>::Insert(int startIdx,
 				 u32 value)
 {
   /* floor to a multiple of 32   vvv  */
-  for(int i = ((bitLength >> 5) << 5) - 1;
+  for(int i = ((bitLength / BITFIELD_WORDSIZE)
+	       * BITFIELD_WORDSIZE) - 1;
       i >= startIdx + length; i--)
   {
     WriteBit(i, ReadBit(i - length));
@@ -113,7 +114,7 @@ template <int bitLength>
 void BitField<bitLength>::Print(FILE* ostream)
 {
   u32 mask = 0xf0000000;
-  int ints = bitLength >> 5;
+  int ints = bitLength / BITFIELD_WORDSIZE;
   for(int i = 0; i < ints; i++)
   {
     for(int j = 0; j < 8; j++)

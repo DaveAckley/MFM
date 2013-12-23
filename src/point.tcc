@@ -39,6 +39,12 @@ T Point<T>::GetManhattanDistance()
 }
 
 template <class T>
+double Point<T>::GetLength()
+{
+  return sqrt(m_x * m_x + m_y * m_y);
+}
+
+template <class T>
 void Point<T>::Add(Point<T>* offset)
 {
   m_x += offset->m_x;
@@ -50,6 +56,20 @@ void Point<T>::Add(T x, T y)
 {
   m_x += x;
   m_y += y;
+}
+
+template <class T>
+void Point<T>::Subtract(Point<T>* offset)
+{
+  m_x -= offset->m_x;
+  m_y -= offset->m_y;
+}
+
+template <class T>
+void Point<T>::Subtract(T x, T y)
+{
+  m_x -= x;
+  m_y -= y;
 }
 
 template <class T>

@@ -36,6 +36,11 @@ public:
   static void FillRect(SDL_Surface* dest,
 		       int x, int y, int w, int h,
 		       Uint32 color);
+
+  static void FillCircle(SDL_Surface* dest,
+			 int x, int y, int w,
+			 int h, int radius,
+			 Uint32 color);
 };
 
 #endif /*DRAWING_H*/

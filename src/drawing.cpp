@@ -1,3 +1,4 @@
+#include <cmath>
 #include "drawing.h"
 
 inline void Drawing::SetPixel(SDL_Surface* dest, int x,
@@ -54,6 +55,26 @@ void Drawing::FillRect(SDL_Surface* dest, int x, int y,
     for(int j = y; j < y + h; j++)
     {
       SetPixel(dest, i, j, color);
+    }
+  }
+}
+
+void Drawing::FillCircle(SDL_Surface* dest, int x, int y,
+			 int w, int h, int radius,
+			 Uint32 color)
+{
+  Point<int> ip;
+  Point<int> cp(x + (w / 2), y + (h / 2));
+  for(int i = x; i < x + w; i++)
+  {
+    for(int j = y; j < y + h; j++)
+    {
+      ip.Set(i, j);
+      ip.Subtract(&cp);
+      if(ip.GetLength() < radius)
+      {
+	SetPixel(dest, i, j, color);
+      }
     }
   }
 }

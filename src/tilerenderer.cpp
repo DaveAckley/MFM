@@ -1,4 +1,3 @@
-#include "drawing.h"
 #include "tilerenderer.h"
 #include "eventwindow.h"
 
@@ -30,7 +29,9 @@ void TileRenderer::RenderMemRegion(Point<int>* pt,
 				      Uint32 color)
 {
 
-  int tileSize = m_atomDrawSize * TILE_WIDTH;
+  /* Subtract out the cache's width */
+  int tileSize = m_atomDrawSize * 
+    (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
   int ewrSize = EVENT_WINDOW_RADIUS * m_atomDrawSize;
 
   Drawing::FillRect(m_dest,
@@ -43,8 +44,11 @@ void TileRenderer::RenderMemRegion(Point<int>* pt,
 
 void TileRenderer::RenderGrid(Point<int>* pt)
 {
-  int lineLen = m_atomDrawSize * TILE_WIDTH;
-  for(int x = 0; x < TILE_WIDTH + 1; x++)
+  int lineLen = m_atomDrawSize * 
+    (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
+  int linesToDraw = TILE_WIDTH + 
+    1 - (2 * EVENT_WINDOW_RADIUS);
+  for(int x = 0; x < linesToDraw; x++)
   {
     Drawing::DrawVLine(m_dest,
 		       pt->GetX() + x * m_atomDrawSize,
@@ -53,7 +57,7 @@ void TileRenderer::RenderGrid(Point<int>* pt)
 		       m_gridColor);
   }
 
-  for(int y = 0; y < TILE_WIDTH + 1; y++)
+  for(int y = 0; y < linesToDraw; y++)
   {
     Drawing::DrawHLine(m_dest,
 		       pt->GetY() + y * m_atomDrawSize,
@@ -80,5 +84,8 @@ void TileRenderer::IncreaseAtomSize()
   
 void TileRenderer::DecreaseAtomSize()
 {
-  m_atomDrawSize -= TILESIZE_CHANGE_RATE;
+  if(m_atomDrawSize > 1)
+  {
+    m_atomDrawSize -= TILESIZE_CHANGE_RATE;
+  }
 }

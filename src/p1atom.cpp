@@ -73,3 +73,18 @@ void P1Atom::RemoveShortBond(u32 index)
 
   SetShortBondCount(GetShortBondCount() - 1);
 }
+
+P1Atom& P1Atom::operator=(P1Atom rhs)
+{
+  int start;
+  for(int i = 0;
+      i < P1ATOM_SIZE / BITFIELD_WORDSIZE; i++)
+  {
+    start = i * BITFIELD_WORDSIZE;
+    m_bits.Write(start,
+		 BITFIELD_WORDSIZE,
+		 rhs.m_bits.Read(start,
+				 BITFIELD_WORDSIZE
+				 ));
+  }
+}
