@@ -5,23 +5,35 @@
 #include "p1atom.h"
 #include "point.h"
 #include "eventwindow.h"
+#include "elementtable.hpp"
 
 /* The length, in sites, of a Tile.*/
-#define TILE_WIDTH 16
+#define TILE_WIDTH 20
 
 /*The number of sites a tile contains.*/
 #define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)
 
-class EventWindow;
 template <class T>
 class Tile
 {
 private:
   T m_atoms[TILE_SIZE];
 
+  EventWindow<T>* CreateRandomWindow();
+
+  u32 (*m_stateFunc)(T* atom);
+
 public:
 
   Tile() { }
+
+  void SetStateFunc(u32 (*stateFunc)(T* atom))
+  { m_stateFunc = stateFunc; }
+
+  u32 (*GetStateFunc())(T* atom)
+  {
+    return m_stateFunc;
+  }
 
   T* GetAtom(Point<int>* pt);
 
@@ -29,9 +41,12 @@ public:
 
   T* GetAtom(int i);
 
-  EventWindow* CreateWindow(Point<int>* ctr);
+  void PlaceAtom(T* atom, Point<int>* pt);
 
-  EventWindow* CreateRandomWindow();
+  void Execute();
+
+  void ResetAtom(Point<int>* point,
+		 ElementType type);
 
 };
 

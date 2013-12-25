@@ -29,9 +29,15 @@ public:
 
   T GetManhattanDistance();
 
+  double GetLength();
+
   void Add(Point<T>* offset);
 
   void Add(T x, T y);
+
+  void Subtract(Point<T>* offset);
+
+  void Subtract(T x, T y);
 
   void Multiply(T scalar);
 

@@ -1,4 +1,8 @@
+#include <stdio.h>
 #include "manhattandir.h"
+
+u32 ManhattanDir::m_shortTableSize;
+u32 ManhattanDir::m_longTableSize;
 
 Point<int> ManhattanDir::
 pointTableShort[MANHATTANDIR_SHORT_TABLE_SIZE];
@@ -32,7 +36,18 @@ void  ManhattanDir::FillTable(Point<int>* table,
     }
   }
 
-  
+  (sbond ? m_shortTableSize : m_longTableSize) 
+    = cidx;
+}
+
+u32 ManhattanDir::ShortTableSize()
+{
+  return m_shortTableSize;
+}
+
+u32 ManhattanDir::LongTableSize()
+{
+  return m_longTableSize;
 }
 
 u8 ManhattanDir::FromPoint(Point<int>* offset,

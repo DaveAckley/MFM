@@ -4,6 +4,8 @@
 #include "itype.h"
 #include <stdio.h>
 
+#define BITFIELD_WORDSIZE 32
+
 /* 
  * Try to make this a multiple of 32. Otherwise
  * there will be some wasted space.
@@ -12,7 +14,7 @@ template <int bitLength>
 class BitField
 {
 private:
-  u32 m_bits[bitLength >> 5];
+  u32 m_bits[bitLength / BITFIELD_WORDSIZE];
 
   u32 MakeMask(int pos, int len);
 

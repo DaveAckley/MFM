@@ -6,6 +6,7 @@
 #include "point_test.hpp"
 #include "p1atom_test.hpp"
 #include "tile_test.hpp"
+#include "grid_test.hpp"
 
 int test_main(int argc, char** argv)
 {
@@ -28,6 +29,10 @@ int test_main(int argc, char** argv)
   P1AtomTest::Test_p1atomAddSB();
   P1AtomTest::Test_p1atomRemoveLB();
   P1AtomTest::Test_p1atomRemoveSB();
+
+  TileTest::Test_tilePlaceAtom();
+
+  GridTest::Test_gridPlaceAtom();
 
   return 0;
 }
