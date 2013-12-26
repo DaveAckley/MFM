@@ -17,6 +17,8 @@ private:
 
   T* m_atoms;
 
+  Point<int> m_center;
+
 public:
 
   EventWindow(Point<int>& center, T* atoms, u32 tileWidth);
@@ -24,6 +26,10 @@ public:
   ~EventWindow();
 
   T* GetCenterAtom();
+
+  void FillCenter(Point<int>& out);
+
+  
   
 };
 

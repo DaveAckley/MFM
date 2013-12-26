@@ -51,6 +51,8 @@ void Tile<T>::Execute(ElementTable<T>& table)
   EventWindow<T>* window = CreateRandomWindow();
   
   table.Execute(*window);
+
+  window->FillCenter(m_lastExecutedAtom);
   
   delete window;
 }

@@ -43,11 +43,11 @@ private:
 
   static u32 GetBondSize(TableType type);
 
-  static u32 GetTableSize(TableType type);
-
   static Point<int>* GetTable(TableType type);
 
 public:
+
+  static u32 GetTableSize(TableType type);
 
   static u32 ShortTableSize();
 

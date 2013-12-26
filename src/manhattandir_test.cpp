@@ -22,4 +22,6 @@ void ManhattanDirTest::Test_manhattandirConversion()
 
   assert(out.GetX() == 1);
   assert(out.GetY() == -1);
+
+  ManhattanDir::DeallocTables();
 }

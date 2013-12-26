@@ -89,6 +89,8 @@ void P1AtomTest::Test_p1atomReadBody()
     assert(bf.Read(i * 8, 8) == pvals[i + 4]);
     assert(bf.Read(32 + i * 4, 4) == pvals[i]);
   }
+
+  ManhattanDir::DeallocTables();
   
 }
 

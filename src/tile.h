@@ -19,6 +19,8 @@ class Tile
 private:
   T m_atoms[TILE_SIZE];
 
+  Point<int> m_lastExecutedAtom;
+
   EventWindow<T>* CreateRandomWindow();
 
   u32 (*m_stateFunc)(T* atom);
@@ -40,6 +42,8 @@ public:
   T* GetAtom(int x, int y);
 
   T* GetAtom(int i);
+
+  void FillLastExecutedAtom(Point<int>& out);
 
   void PlaceAtom(T* atom, Point<int>* pt);
 

@@ -24,7 +24,7 @@ void Grid<T>::SetStateFunc(u32 (*stateFunc)(T* atom))
 template <class T>
 Grid<T>::~Grid()
 {
-  delete m_tiles;
+  delete[] m_tiles;
 }
 
 template <class T>
@@ -90,6 +90,8 @@ void Grid<T>::TriggerEvent()
 
   m_tiles[windowTile.GetX() + 
 	  windowTile.GetY() * m_width].Execute(*m_elementTable);
+
+  m_lastEventTile.Set(windowTile.GetX(), windowTile.GetY());
 }
 
 template <class T>

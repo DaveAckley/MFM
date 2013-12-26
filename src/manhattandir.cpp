@@ -95,7 +95,7 @@ void  ManhattanDir::FillTable(Point<int>* table,
 
 void ManhattanDir::DeallocTables()
 {
-  delete pointTableEventWindow;
+  delete[] pointTableEventWindow;
 }
 
 u32 ManhattanDir::ShortTableSize()

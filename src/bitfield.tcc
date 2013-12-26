@@ -102,10 +102,7 @@ u32 BitField<bitLength>::Read(int startIdx,
   for(int i = startIdx; i < startIdx + length; i++)
   {
     acc <<= 1;
-    if(ReadBit(i))
-    {
-      acc |= 1;
-    }
+    acc |= ReadBit(i) ? 1 : 0;
   }
   return acc;
 }

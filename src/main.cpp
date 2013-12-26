@@ -172,6 +172,8 @@ int main(int argc, char** argv)
 
   sim.Run();
 
+  ManhattanDir::DeallocTables();
+
   SDL_Quit();
 
   return 0;

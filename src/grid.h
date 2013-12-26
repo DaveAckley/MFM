@@ -11,6 +11,8 @@ class Grid
 private:
 
   u32 m_width, m_height;
+
+  Point<int> m_lastEventTile;
   
   Tile<T>* m_tiles;
 

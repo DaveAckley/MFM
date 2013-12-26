@@ -111,9 +111,16 @@ inline bool operator==(Point<T>& lhs, Point<T>& rhs)
     lhs.GetY() == rhs.GetY();
 }
 
-template<class T>
+template <class T>
 void Point<T>::Set(T x, T y)
 {
   m_x = x;
   m_y = y;
+}
+
+template <class T>
+Point<T>& Point<T>::operator=(Point<T> rhs)
+{
+  m_x = rhs.m_x;
+  m_y = rhs.m_y;
 }
