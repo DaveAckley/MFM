@@ -2,27 +2,31 @@
 #define EVENTWINDOW_H
 
 #include "point.h"
+#include "itype.h"
 
 #define EVENT_WINDOW_RADIUS 2
+
+template <class T>
+class Tile;
 
 template <class T>
 class EventWindow
 {
 private:
+  u32 m_atomCount;
+
   T* m_atoms;
 
 public:
 
-  EventWindow(T* atoms);
+  EventWindow(Point<int>& center, T* atoms, u32 tileWidth);
 
-  ~EventWindow() { }
+  ~EventWindow();
 
-  
-
-  /* Finds the manhattan area of a 
-   window of a particular radius. */
-  static int ManhattanArea(int maxDistance);
+  T* GetCenterAtom();
   
 };
+
+#include "eventwindow.tcc"
 
 #endif /*EVENTWINDOW_H*/

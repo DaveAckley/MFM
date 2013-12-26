@@ -3,6 +3,7 @@
 
 #include "itype.h"
 #include "tile.h"
+#include "elementtable.hpp"
 
 template <class T>
 class Grid
@@ -13,11 +14,13 @@ private:
   
   Tile<T>* m_tiles;
 
+  ElementTable<T>* m_elementTable;
+
   Tile<T>* GetTile(int position);
 
 public:
 
-  Grid(int width, int height);
+  Grid(int width, int height, ElementTable<T>* elementTable);
 
   ~Grid();
   
@@ -37,6 +40,8 @@ public:
 
   void FillNeighbors(int center_x, int center_y,
 		     Tile<T>** out);
+
+  void TriggerEvent();
   
   Tile<T>* GetTile(Point<int> location);
   

@@ -15,8 +15,21 @@ Point<T>::Point(bool random)
   }
   else
   {
-    m_x = 0;
-    m_y = 0;
+    m_x = m_y = 0;
+  }
+}
+
+template <class T>
+Point<T>::Point(bool random, T maxX, T maxY)
+{
+  if(random)
+  {
+    m_x = (T)rand() % maxX;
+    m_y = (T)rand() % maxY;
+  }
+  else
+  {
+    m_x = m_y = 0;
   }
 }
 

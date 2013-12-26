@@ -1,7 +1,9 @@
 #include "assert.h"
+#include "eventwindow.h"
 #include "p1atom_test.hpp"
 #include "p1atom.h"
 #include "manhattandir.h"
+
 
 
 void P1AtomTest::Test_p1atomState()
@@ -20,7 +22,7 @@ void P1AtomTest::Test_p1atomLBCount()
   P1Atom atom;
   Point<int> offset(1, -1);
 
-  atom.AddLongBond(&offset);
+  atom.AddLongBond(offset);
 
   assert(atom.GetLongBondCount() == 1);
 }
@@ -30,8 +32,8 @@ void P1AtomTest::Test_p1atomSBCount()
   P1Atom atom;
   Point<int> offset(1, -1);
 
-  atom.AddShortBond(&offset);
-  atom.AddShortBond(&offset);
+  atom.AddShortBond(offset);
+  atom.AddShortBond(offset);
 
   assert(atom.GetShortBondCount() == 2);
 }
@@ -54,24 +56,25 @@ void P1AtomTest::Test_p1atomReadBody()
   points[6].Set(-2, 0);
   points[7].Set(1, 3);
 
-  ManhattanDir::AllocTables();
+  ManhattanDir::AllocTables(EVENT_WINDOW_RADIUS);
 
   for(int i = 0; i < 8; i++)
   {
-    bool sbond = (i < 4) ? true : false;
+    TableType type = (i < 4) ? 
+      MANHATTAN_TABLE_SHORT : MANHATTAN_TABLE_LONG;
 
-    pvals[i] = ManhattanDir::FromPoint(points + i, sbond);
+    pvals[i] = ManhattanDir::FromPoint(points[i], type);
   }
 
   for(int i = 0; i < 8; i++)
   {
     if(i < 4)
     {
-      atom.AddShortBond(&points[i]);
+      atom.AddShortBond(points[i]);
     }
     else
     {
-      atom.AddLongBond(&points[i]);
+      atom.AddLongBond(points[i]);
     }
   }
 
@@ -101,7 +104,7 @@ void P1AtomTest::Test_p1atomAddLB()
 
   for(int i = 0; i < 4; i++)
   {
-    atom.AddLongBond(lbonds + i);
+    atom.AddLongBond(lbonds[i]);
   }
 
   assert(atom.GetLongBondCount() == 4);
@@ -115,14 +118,14 @@ void P1AtomTest::Test_p1atomAddSB()
 
   for(int i = 0; i < 10; i++)
   {
-    atom.AddShortBond(&sbond);
+    atom.AddShortBond(sbond);
   }
 
   assert(atom.GetShortBondCount() == 10);
 
   for(int i = 0; i < 10; i++)
   {
-    atom.FillShortBond(i, &out);
+    atom.FillShortBond(i, out);
     assert(out == sbond);
   }
 }
@@ -133,8 +136,8 @@ void P1AtomTest::Test_p1atomRemoveLB()
   Point<int> lbond2(3, 1);
   P1Atom atom(12);
 
-  atom.AddLongBond(&lbond1);
-  atom.AddLongBond(&lbond2);
+  atom.AddLongBond(lbond1);
+  atom.AddLongBond(lbond2);
 
   atom.RemoveLongBond(0);
 
@@ -158,8 +161,8 @@ void P1AtomTest::Test_p1atomRemoveSB()
   Point<int> sb2(1, -1);
   P1Atom atom(9);
 
-  atom.AddShortBond(&sb1);
-  atom.AddShortBond(&sb2);
+  atom.AddShortBond(sb1);
+  atom.AddShortBond(sb2);
 
   atom.RemoveShortBond(0);
 
@@ -185,9 +188,9 @@ void P1AtomTest::Test_p1atomRemoveSB()
   assert(bits[0] == 0);
   assert(bits[1] == 0);
 
-  atom.AddLongBond(&sb1);
-  atom.AddShortBond(&sb2);
-  atom.AddShortBond(&sb1);
+  atom.AddLongBond(sb1);
+  atom.AddShortBond(sb2);
+  atom.AddShortBond(sb1);
 
   atom.RemoveShortBond(0);
 

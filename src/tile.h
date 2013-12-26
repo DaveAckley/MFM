@@ -43,11 +43,7 @@ public:
 
   void PlaceAtom(T* atom, Point<int>* pt);
 
-  void Execute();
-
-  void ResetAtom(Point<int>* point,
-		 ElementType type);
-
+  void Execute(ElementTable<T>& table);
 };
 
 #include "tile.tcc"

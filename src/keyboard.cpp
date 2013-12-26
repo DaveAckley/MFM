@@ -22,6 +22,18 @@ void Keyboard::Release(u32 key)
   m_current.erase(key);
 }
 
+bool Keyboard::ShiftHeld()
+{
+  return m_current.count(SDLK_RSHIFT) > 0 ||
+    m_current.count(SDLK_LSHIFT) > 0;
+}
+
+bool Keyboard::CtrlHeld()
+{
+  return m_current.count(SDLK_LCTRL) > 0 ||
+    m_current.count(SDLK_RCTRL) > 0;
+}
+
 bool Keyboard::IsDown(u32 key)
 {
   return m_current.count(key) > 0;

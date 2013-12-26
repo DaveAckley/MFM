@@ -39,6 +39,36 @@ public:
     m_tileRenderer->DecreaseAtomSize();
   }
 
+  void ToggleGrid()
+  {
+    m_tileRenderer->ToggleGrid();
+  }
+
+  void ToggleMemDraw()
+  {
+    m_tileRenderer->ToggleMemDraw();
+  }
+
+  void MoveUp(u8 amount)
+  {
+    m_tileRenderer->MoveUp(amount);
+  }
+
+  void MoveDown(u8 amount)
+  {
+    m_tileRenderer->MoveDown(amount);
+  }
+
+  void MoveLeft(u8 amount)
+  {
+    m_tileRenderer->MoveLeft(amount);
+  }
+
+  void MoveRight(u8 amount)
+  {
+    m_tileRenderer->MoveRight(amount);
+  }
+
   ~GridRenderer();
   
   template <class T>

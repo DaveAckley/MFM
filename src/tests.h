@@ -8,7 +8,7 @@
 #include "tile_test.hpp"
 #include "grid_test.hpp"
 
-int test_main(int argc, char** argv)
+int main(int argc, char** argv)
 {
   PointTest::Test_pointAdd();
   PointTest::Test_pointMultiply();

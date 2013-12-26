@@ -35,8 +35,10 @@ void TileRenderer::RenderMemRegion(Point<int>* pt,
   int ewrSize = EVENT_WINDOW_RADIUS * m_atomDrawSize;
 
   Drawing::FillRect(m_dest,
-		    pt->GetX() + (ewrSize * regID),
-		    pt->GetY() + (ewrSize * regID),
+		    pt->GetX() + (ewrSize * regID) +
+		    m_windowTL.GetX(),
+		    pt->GetY() + (ewrSize * regID) +
+		    m_windowTL.GetY(),
 		    tileSize - (ewrSize * regID * 2),
 		    tileSize - (ewrSize * regID * 2),
 		    color);
@@ -51,18 +53,22 @@ void TileRenderer::RenderGrid(Point<int>* pt)
   for(int x = 0; x < linesToDraw; x++)
   {
     Drawing::DrawVLine(m_dest,
-		       pt->GetX() + x * m_atomDrawSize,
-		       pt->GetY(),
-		       pt->GetY() + lineLen,
+		       pt->GetX() + x * m_atomDrawSize +
+		       m_windowTL.GetX(),
+		       pt->GetY() + m_windowTL.GetY(),
+		       pt->GetY() + lineLen +
+		       m_windowTL.GetY(),
 		       m_gridColor);
   }
 
   for(int y = 0; y < linesToDraw; y++)
   {
     Drawing::DrawHLine(m_dest,
-		       pt->GetY() + y * m_atomDrawSize,
-		       pt->GetX(),
-		       pt->GetX() + lineLen,
+		       pt->GetY() + y * m_atomDrawSize +
+		       m_windowTL.GetY(),
+		       pt->GetX() + m_windowTL.GetX(),
+		       pt->GetX() + lineLen +
+		       m_windowTL.GetX(),
 		       m_gridColor);
   }
 }
@@ -88,4 +94,24 @@ void TileRenderer::DecreaseAtomSize()
   {
     m_atomDrawSize -= TILESIZE_CHANGE_RATE;
   }
+}
+
+void TileRenderer::MoveUp(u8 amount)
+{
+  m_windowTL.SetY(m_windowTL.GetY() + amount);
+}
+
+void TileRenderer::MoveDown(u8 amount)
+{
+  m_windowTL.SetY(m_windowTL.GetY() - amount);
+}
+
+void TileRenderer::MoveLeft(u8 amount)
+{
+  m_windowTL.SetX(m_windowTL.GetX() + amount);
+}
+
+void TileRenderer::MoveRight(u8 amount)
+{
+  m_windowTL.SetX(m_windowTL.GetX() - amount);
 }

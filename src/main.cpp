@@ -1,8 +1,7 @@
-#define MAIN_RUN_TESTS 1
+#define MAIN_RUN_TESTS 0
 
 #if MAIN_RUN_TESTS
 
-#include <boost/test/minimal.hpp>
 #include "tests.h"
 
 #else
@@ -24,6 +23,9 @@
 
 #define FRAMES_PER_SECOND 60.0
 
+#define CAMERA_SLOW_SPEED 2
+#define CAMERA_FAST_SPEED 10
+
 class MFMSim
 {
 private:
@@ -33,16 +35,49 @@ private:
   SDL_Surface* screen;
   GridRenderer grend;
 
-  void Update()
+  void Update(Grid<P1Atom>& grid)
   { 
-    if(keyboard.SemiAuto(SDLK_1))
+    u8 speed = keyboard.ShiftHeld() ?
+      CAMERA_FAST_SPEED : CAMERA_SLOW_SPEED;
+
+    if(keyboard.IsDown(SDLK_1))
     {
       grend.IncreaseAtomSize();
     }
-    if(keyboard.SemiAuto(SDLK_2))
+    if(keyboard.IsDown(SDLK_2))
     {
       grend.DecreaseAtomSize();
     }
+    if(keyboard.SemiAuto(SDLK_g))
+    {
+      grend.ToggleGrid();
+    }
+    if(keyboard.SemiAuto(SDLK_m))
+    {
+      grend.ToggleMemDraw();
+    }
+    if(keyboard.IsDown(SDLK_LEFT) ||
+       keyboard.IsDown(SDLK_a))
+    {
+      grend.MoveLeft(speed);
+    }
+    if(keyboard.IsDown(SDLK_DOWN) ||
+       keyboard.IsDown(SDLK_s))
+    {
+      grend.MoveDown(speed);
+    }
+    if(keyboard.IsDown(SDLK_UP) ||
+       keyboard.IsDown(SDLK_w))
+    {
+      grend.MoveUp(speed);
+    }
+    if(keyboard.IsDown(SDLK_RIGHT) ||
+       keyboard.IsDown(SDLK_d))
+    {
+      grend.MoveRight(speed);
+    }
+
+    grid.TriggerEvent();
 
     mouse.Flip();
     keyboard.Flip();
@@ -55,12 +90,14 @@ public:
   void Run()
   {
     bool running = true;
-    screen = SDL_SetVideoMode(256, 256, 32,
+    screen = SDL_SetVideoMode(640, 640, 32,
 			      SDL_SWSURFACE);
+
+    ElementTable<P1Atom> elements(&P1Atom::StateFunc);
 
     SDL_Event event;
     grend.SetDestination(screen);
-    Grid<P1Atom> mainGrid(4, 4);
+    Grid<P1Atom> mainGrid(5, 3, &elements);
 
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
 
@@ -71,7 +108,6 @@ public:
 
     P1Atom* other = mainGrid.GetAtom(&aloc);
 
-    printf("%d == %d?\n", atom.GetState(), other->GetState());
     assert(other->GetState() == atom.GetState());
 
 
@@ -112,7 +148,7 @@ public:
       lastFrame = SDL_GetTicks();
       
       
-      Update();
+      Update(mainGrid);
       
       Drawing::Clear(screen, 0xffffffff);
       
@@ -130,7 +166,7 @@ int main(int argc, char** argv)
 {
   SDL_Init(SDL_INIT_EVERYTHING);
 
-  ManhattanDir::AllocTables();
+  ManhattanDir::AllocTables(EVENT_WINDOW_RADIUS);
 
   MFMSim sim;
 

@@ -19,6 +19,8 @@ public:
 
   Point(bool random);
 
+  Point(bool random, T maxX, T maxY);
+
   Point() { }
 
   ~Point() { }
