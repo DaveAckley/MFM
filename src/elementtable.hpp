@@ -13,13 +13,14 @@ typedef enum
   ELEMENT_RES     = 0x2,
 }ElementType;
 
-typedef void (*ElementFunc)(EventWindow<P1Atom>*);
+template <class T>
+class EventWindow;
 
 template <class T>
 class ElementTable
 {
 private:
-  ElementFunc m_funcmap[0xff];
+  void (* m_funcmap[0xff])(EventWindow<T>&);
 
   /* Can't typedef this. Gross! */
 
@@ -30,17 +31,17 @@ private:
 
   u32 (*m_statefunc)(T* atom);
 
-  void NothingBehavior(EventWindow<T>* w);
+  static void NothingBehavior(EventWindow<T>& w);
 
-  void DRegBehavior(EventWindow<T>* w);
+  static void DRegBehavior(EventWindow<T>& w);
   
 public:
   ElementTable(u32 (*stateFunc)(T* atom));
 
   ~ElementTable() { }
 
-  void Execute(T* atom, EventWindow<T>* window)
-  { m_funcmap[m_statefunc(atom)](window); }
+  void Execute(EventWindow<T>& window)
+  { m_funcmap[m_statefunc(window.GetCenterAtom())](window); }
 
   void FillAtom(T* atom, ElementType type);
 

@@ -1,5 +1,3 @@
-#include "elementtable.hpp"
-
 template <class T>
 T* Tile<T>::GetAtom(Point<int>* pt)
 {
@@ -22,13 +20,12 @@ T* Tile<T>::GetAtom(int i)
 template <class T>
 EventWindow<T>* Tile<T>::CreateRandomWindow()
 {
-  Point<int> pt(true);
-
   /* Make sure not to be created in the cache */
-  pt.Set(2 + pt.GetX() % (TILE_WIDTH - 4),
-	 2 + pt.GetY() % (TILE_WIDTH - 4));
+  int maxval = TILE_WIDTH - (EVENT_WINDOW_RADIUS << 1);
+  Point<int> pt(true, maxval, maxval);
+  pt.Add(EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS);
 
-  
+  return new EventWindow<T>(pt, m_atoms, maxval);
 }
 
 template <class T>
@@ -49,14 +46,13 @@ void Tile<T>::PlaceAtom(T* atom, Point<int>* pt)
 }
 
 template <class T>
-void Tile<T>::Execute()
+void Tile<T>::Execute(ElementTable<T>& table)
 {
   EventWindow<T>* window = CreateRandomWindow();
   
-}
+  table.Execute(*window);
 
-template <class T>
-void Tile<T>::ResetAtom(Point<int>* point, ElementType type)
-{
-
+  window->FillCenter(m_lastExecutedAtom);
+  
+  delete window;
 }

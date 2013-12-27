@@ -46,9 +46,16 @@ public:
     multPt.Multiply((TILE_WIDTH - 4) * 
 		    m_atomDrawSize);
 
-    if(multPt.GetX() >= 0 && multPt.GetY() >= 0 &&
-       multPt.GetX() < m_dest->w &&
-       multPt.GetY() < m_dest->h)
+    Point<int> realPt(multPt.GetX(), multPt.GetY());
+
+    u32 tileHeight = TILE_WIDTH * m_atomDrawSize;
+
+    realPt.Add(&m_windowTL);
+
+    if(realPt.GetX() + tileHeight >= 0 &&
+       realPt.GetY() + tileHeight >= 0 &&
+       realPt.GetX() < m_dest->w &&
+       realPt.GetY() < m_dest->h)
     {
       if(m_drawMemRegions)
       {
@@ -64,8 +71,6 @@ public:
     }
   }
 
-
-
   void IncreaseAtomSize();
 
   void DecreaseAtomSize();
@@ -73,6 +78,14 @@ public:
   void ToggleGrid();
   
   void ToggleMemDraw();
+
+  void MoveUp(u8 amount);
+
+  void MoveDown(u8 amount);
+
+  void MoveLeft(u8 amount);
+
+  void MoveRight(u8 amount);
 };
 
 template <class T>
@@ -89,7 +102,6 @@ void TileRenderer::RenderAtoms(Point<int>* pt,
     {
       atomLoc.SetY(y - ewr);
       u32 sval = stfu(tile->GetAtom(&atomLoc));
-      
       u32 color;
 
       switch(sval)
@@ -102,14 +114,16 @@ void TileRenderer::RenderAtoms(Point<int>* pt,
       Drawing::FillCircle(m_dest,
 			  m_atomDrawSize *
 			  atomLoc.GetX() +
-			  pt->GetX(),
+			  pt->GetX() +
+			  m_windowTL.GetX(),
 			  m_atomDrawSize * 
 			  atomLoc.GetY() +
-			  pt->GetY(),
+			  pt->GetY() +
+			  m_windowTL.GetY(),
 			  m_atomDrawSize,
 			  m_atomDrawSize,
 			  (m_atomDrawSize / 2) - 2,
-			  0xff00ff00);
+			  color);
     }
   }
 }

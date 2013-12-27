@@ -23,6 +23,10 @@ public:
 
   void Release(u32 key);
 
+  bool ShiftHeld();
+
+  bool CtrlHeld();
+
   bool IsDown(u32 key);
 
   bool IsUp(u32 key);

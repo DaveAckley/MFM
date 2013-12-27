@@ -2,12 +2,14 @@
 #include "grid.h"
 
 template <class T>
-Grid<T>::Grid(int width, int height)
+Grid<T>::Grid(int width, int height, ElementTable<T>* elementTable)
 {
   m_width = width;
   m_height = height;
 
   m_tiles = new Tile<T>[m_width * m_height];
+
+  m_elementTable = elementTable;
 }
 
 template <class T>
@@ -22,7 +24,7 @@ void Grid<T>::SetStateFunc(u32 (*stateFunc)(T* atom))
 template <class T>
 Grid<T>::~Grid()
 {
-  delete m_tiles;
+  delete[] m_tiles;
 }
 
 template <class T>
@@ -43,12 +45,12 @@ void Grid<T>::PlaceAtom(T* atom,
 {
   int x = loc->GetX() / TILE_WIDTH;
   int y = loc->GetY() / TILE_WIDTH;
-  Tile<T> tile = m_tiles[x + y * m_width];
+  Tile<T>& tile = m_tiles[x + y * m_width];
 
   Point<int> local(loc->GetX() % TILE_WIDTH,
 		   loc->GetY() % TILE_WIDTH);
 
-  tile.PlaceAtom(atom, &local);
+  m_tiles[x + y * m_width].PlaceAtom(atom, &local);
 }
 
 template <class T>
@@ -56,12 +58,12 @@ T* Grid<T>::GetAtom(Point<int>* loc)
 {
   int x = loc->GetX() / TILE_WIDTH;
   int y = loc->GetY() / TILE_WIDTH;
-  Tile<T> tile = m_tiles[x + y * m_width];
+  Tile<T>& tile = m_tiles[x + y * m_width];
 
   Point<int> local(loc->GetX() % TILE_WIDTH,
 		   loc->GetY() % TILE_WIDTH);
 
-  return tile.GetAtom(&local);
+  return m_tiles[x + y * m_width].GetAtom(&local);
 }
 
 template <class T>
@@ -82,12 +84,23 @@ void Grid<T>::Resize(int newWidth, int newHeight)
 }
 
 template <class T>
+void Grid<T>::TriggerEvent()
+{
+  Point<int> windowTile(true, m_width, m_height);
+
+  m_tiles[windowTile.GetX() + 
+	  windowTile.GetY() * m_width].Execute(*m_elementTable);
+
+  m_lastEventTile.Set(windowTile.GetX(), windowTile.GetY());
+}
+
+template <class T>
 void Grid<T>::FillNeighbors(int center_x, int center_y,
 			    Tile<T>** out)
 {  
   for(int i = 0; i < 8; i++)
   {
-
+    
   }
 }
 

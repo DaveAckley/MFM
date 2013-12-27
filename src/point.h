@@ -19,6 +19,8 @@ public:
 
   Point(bool random);
 
+  Point(bool random, T maxX, T maxY);
+
   Point() { }
 
   ~Point() { }
@@ -46,6 +48,8 @@ public:
   void SetY(T y);
 
   void Set(T x, T y);
+
+  Point<T>& operator=(Point<T> rhs);
 };
 
 
