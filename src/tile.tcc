@@ -30,7 +30,7 @@ template <class T>
 EventWindow<T>* Tile<T>::CreateRandomWindow()
 {
   /* Make sure not to be created in the cache */
-  int maxval = TILE_WIDTH - (EVENT_WINDOW_RADIUS << 1);
+  int maxval = TILE_WIDTH - (EVENT_WINDOW_RADIUS << 2);
   Point<int> pt(true, maxval, maxval);
   pt.Add(EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS);
 

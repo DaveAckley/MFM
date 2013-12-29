@@ -56,6 +56,10 @@ private:
     {
       grend.ToggleMemDraw();
     }
+    if(keyboard.SemiAuto(SDLK_p))
+    {
+      grend.ToggleTileSeparation();
+    }
     if(keyboard.IsDown(SDLK_LEFT) ||
        keyboard.IsDown(SDLK_a))
     {
@@ -152,7 +156,7 @@ public:
       
       Drawing::Clear(screen, 0xffffffff);
       
-      grend.RenderGrid(&mainGrid);
+      grend.RenderGrid(mainGrid);
       
       SDL_Flip(screen);
     }
