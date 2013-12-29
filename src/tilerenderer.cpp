@@ -17,14 +17,14 @@ TileRenderer::TileRenderer(SDL_Surface* dest)
   m_windowTL.SetY(0);
 }
 
-void TileRenderer::RenderMemRegions(Point<int>* pt)
+void TileRenderer::RenderMemRegions(Point<int>& pt)
 {
   RenderMemRegion(pt, 0, m_sharedColor);
   RenderMemRegion(pt, 1, m_visibleColor);
   RenderMemRegion(pt, 2, m_hiddenColor);
 }
 
-void TileRenderer::RenderMemRegion(Point<int>* pt,
+void TileRenderer::RenderMemRegion(Point<int>& pt,
 				      int regID,
 				      Uint32 color)
 {
@@ -35,9 +35,9 @@ void TileRenderer::RenderMemRegion(Point<int>* pt,
   int ewrSize = EVENT_WINDOW_RADIUS * m_atomDrawSize;
 
   Drawing::FillRect(m_dest,
-		    pt->GetX() + (ewrSize * regID) +
+		    pt.GetX() + (ewrSize * regID) +
 		    m_windowTL.GetX(),
-		    pt->GetY() + (ewrSize * regID) +
+		    pt.GetY() + (ewrSize * regID) +
 		    m_windowTL.GetY(),
 		    tileSize - (ewrSize * regID * 2),
 		    tileSize - (ewrSize * regID * 2),
@@ -71,6 +71,18 @@ void TileRenderer::RenderGrid(Point<int>* pt)
 		       m_windowTL.GetX(),
 		       m_gridColor);
   }
+}
+
+void TileRenderer::RenderAtomBG(Point<int>& offset,
+				Point<int>& atomLoc,
+				u32 color)
+{
+  Drawing::FillRect(m_dest,
+		    m_windowTL.GetX() +
+		    offset.GetX() + atomLoc.GetX() * m_atomDrawSize,
+		    m_windowTL.GetY() + 
+		    offset.GetY() + atomLoc.GetY() * m_atomDrawSize,
+		    m_atomDrawSize, m_atomDrawSize, color);
 }
 
 void TileRenderer::ToggleGrid()

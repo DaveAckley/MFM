@@ -70,7 +70,7 @@ void Drawing::FillCircle(SDL_Surface* dest, int x, int y,
     for(int j = y; j < y + h; j++)
     {
       ip.Set(i, j);
-      ip.Subtract(&cp);
+      ip.Subtract(cp);
       if(ip.GetLength() < radius)
       {
 	SetPixel(dest, i, j, color);

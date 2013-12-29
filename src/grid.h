@@ -43,6 +43,8 @@ public:
   void FillNeighbors(int center_x, int center_y,
 		     Tile<T>** out);
 
+  void FillLastEventTile(Point<int>& out);
+
   void TriggerEvent();
   
   Tile<T>* GetTile(Point<int> location);

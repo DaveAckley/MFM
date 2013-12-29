@@ -83,7 +83,7 @@ public:
 	current.SetY(y);
 
 	m_tileRenderer->RenderTile(grid->GetTile(x, y),
-				   &current);
+				   current, true);
       }
     }
   }

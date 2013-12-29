@@ -7,7 +7,7 @@ void PointTest::Test_pointAdd()
   Point<int> iPointA(20, 30);
   Point<int> iPointB(30, 20);
 
-  iPointA.Add(&iPointB);
+  iPointA.Add(iPointB);
 
   assert(iPointA.GetX() == 50);
   assert(iPointA.GetY() == 50);
@@ -15,7 +15,7 @@ void PointTest::Test_pointAdd()
   Point<float> fPointA(30.0f, 50.0f);
   Point<float> fPointB(50.0f, 30.0f);
 
-  fPointA.Add(&fPointB);
+  fPointA.Add(fPointB);
 
   assert(fPointA.GetX() == 30.0f + 50.0f);
 }

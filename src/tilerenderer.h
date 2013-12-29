@@ -24,33 +24,40 @@ private:
   Point<int> m_windowTL;
   SDL_Surface* m_dest;
 
-  void RenderMemRegions(Point<int>* pt);
+  void RenderMemRegions(Point<int>& pt);
 
-  void RenderMemRegion(Point<int>* pt, int regID,
+  void RenderMemRegion(Point<int>& pt, int regID,
 		       u32 color);
 
   void RenderGrid(Point<int>* pt);
 
+  void RenderAtomBG(Point<int>& offset, Point<int>& atomloc,
+		    u32 color);
+
   template <class T>
   void RenderAtoms(Point<int>* pt, Tile<T>* tile);
+
+  template <class T>
+  void RenderEventWindow(Point<int>& offset, Tile<T>& tile);
 
 public:
 
   TileRenderer(SDL_Surface* dest);
 
   template <class T>
-  void RenderTile(Tile<T>* t, Point<int>* loc)
+  void RenderTile(Tile<T>* t, Point<int> loc, bool renderWindow)
   {
-    Point<int> multPt(loc->GetX(), loc->GetY());
+    Point<int> multPt(loc.GetX(), loc.GetY());
 
     multPt.Multiply((TILE_WIDTH - 4) * 
 		    m_atomDrawSize);
 
     Point<int> realPt(multPt.GetX(), multPt.GetY());
 
+
     u32 tileHeight = TILE_WIDTH * m_atomDrawSize;
 
-    realPt.Add(&m_windowTL);
+    realPt.Add(m_windowTL);
 
     if(realPt.GetX() + tileHeight >= 0 &&
        realPt.GetY() + tileHeight >= 0 &&
@@ -59,10 +66,15 @@ public:
     {
       if(m_drawMemRegions)
       {
-	RenderMemRegions(&multPt);
+	RenderMemRegions(multPt);
       }
 
       RenderAtoms(&multPt, t);
+
+      if(renderWindow)
+      {
+	RenderEventWindow(multPt, *t);
+      }
 
       if(m_drawGrid)
       {
@@ -125,6 +137,37 @@ void TileRenderer::RenderAtoms(Point<int>* pt,
 			  (m_atomDrawSize / 2) - 2,
 			  color);
     }
+  }
+}
+
+template <class T>
+void TileRenderer::RenderEventWindow(Point<int>& offset,
+				     Tile<T>& tile)
+{
+  Point<int> winCenter;
+  tile.FillLastExecutedAtom(winCenter);
+
+  Point<int> atomLoc;
+  Point<int> eventCenter;
+  u32 drawColor = Drawing::WHITE;
+  
+  tile.FillLastExecutedAtom(eventCenter);
+  u32 tableSize = ManhattanDir::GetTableSize(MANHATTAN_TABLE_EVENT);
+  for(int i = 0; i < tableSize; i++)
+  {
+    ManhattanDir::FillFromBits(atomLoc, i, MANHATTAN_TABLE_EVENT);
+    atomLoc.Add(eventCenter);
+
+    if(i == (tableSize >> 1))
+    {
+      drawColor = Drawing::GREEN;
+    }
+    else
+    {
+      drawColor = Drawing::WHITE;
+    }
+
+    RenderAtomBG(offset, atomLoc, drawColor);
   }
 }
 

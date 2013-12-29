@@ -47,6 +47,8 @@ public:
 
   void PlaceAtom(T* atom, Point<int>* pt);
 
+  void DiffuseAtom(EventWindow<T>& window);
+
   void Execute(ElementTable<T>& table);
 };
 

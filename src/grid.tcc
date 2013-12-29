@@ -105,6 +105,13 @@ void Grid<T>::FillNeighbors(int center_x, int center_y,
 }
 
 template <class T>
+void Grid<T>::FillLastEventTile(Point<int>& out)
+{
+  out.Set(m_lastEventTile.GetX(),
+	  m_lastEventTile.GetY());
+}
+
+template <class T>
 Tile<T>* Grid<T>::GetTile(int x, int y)
 {
   return &m_tiles[y * m_width + x];
