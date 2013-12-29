@@ -13,9 +13,9 @@ void GridTest::Test_gridPlaceAtom()
 
   Point<int> gloc(5, 10);
 
-  grid.PlaceAtom(&atom, &gloc);
+  grid.PlaceAtom(atom, gloc);
 
-  P1Atom* out = grid.GetAtom(&gloc);
+  P1Atom* out = grid.GetAtom(gloc);
 
   assert(out->GetState() == atom.GetState());
 }

@@ -30,7 +30,7 @@ template <class T>
 EventWindow<T>* Tile<T>::CreateRandomWindow()
 {
   /* Make sure not to be created in the cache */
-  int maxval = TILE_WIDTH - (EVENT_WINDOW_RADIUS << 2);
+  int maxval = TILE_WIDTH - (EVENT_WINDOW_RADIUS << 1);
   Point<int> pt(true, maxval, maxval);
   pt.Add(EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS);
 
@@ -38,20 +38,10 @@ EventWindow<T>* Tile<T>::CreateRandomWindow()
 }
 
 template <class T>
-void Tile<T>::PlaceAtom(T* atom, Point<int>* pt)
+void Tile<T>::PlaceAtom(T& atom, Point<int>& pt)
 {
-  T dest = 
-  m_atoms[pt->GetX() + 
-	  pt->GetY() * TILE_WIDTH];
-
-  dest = *atom;
-
-  assert(dest.GetState() == atom->GetState());
-
-  m_atoms[pt->GetX() +
-	  pt->GetY() * TILE_WIDTH] = dest;
-
-  
+  m_atoms[pt.GetX() + 
+	  pt.GetY() * TILE_WIDTH] = atom;
 }
 
 template <class T>

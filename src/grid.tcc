@@ -40,28 +40,27 @@ u32 Grid<T>::GetWidth()
 }
 
 template <class T>
-void Grid<T>::PlaceAtom(T* atom,
-			Point<int>* loc)
+void Grid<T>::PlaceAtom(T& atom, Point<int>& loc)
 {
-  int x = loc->GetX() / TILE_WIDTH;
-  int y = loc->GetY() / TILE_WIDTH;
+  int x = loc.GetX() / TILE_WIDTH;
+  int y = loc.GetY() / TILE_WIDTH;
   Tile<T>& tile = m_tiles[x + y * m_width];
 
-  Point<int> local(loc->GetX() % TILE_WIDTH,
-		   loc->GetY() % TILE_WIDTH);
+  Point<int> local(loc.GetX() % TILE_WIDTH,
+		   loc.GetY() % TILE_WIDTH);
 
-  m_tiles[x + y * m_width].PlaceAtom(atom, &local);
+  m_tiles[x + y * m_width].PlaceAtom(atom, local);
 }
 
 template <class T>
-T* Grid<T>::GetAtom(Point<int>* loc)
+T* Grid<T>::GetAtom(Point<int>& loc)
 {
-  int x = loc->GetX() / TILE_WIDTH;
-  int y = loc->GetY() / TILE_WIDTH;
+  int x = loc.GetX() / TILE_WIDTH;
+  int y = loc.GetY() / TILE_WIDTH;
   Tile<T>& tile = m_tiles[x + y * m_width];
 
-  Point<int> local(loc->GetX() % TILE_WIDTH,
-		   loc->GetY() % TILE_WIDTH);
+  Point<int> local(loc.GetX() % TILE_WIDTH,
+		   loc.GetY() % TILE_WIDTH);
 
   return m_tiles[x + y * m_width].GetAtom(&local);
 }

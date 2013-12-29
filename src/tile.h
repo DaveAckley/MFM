@@ -45,7 +45,7 @@ public:
 
   void FillLastExecutedAtom(Point<int>& out);
 
-  void PlaceAtom(T* atom, Point<int>* pt);
+  void PlaceAtom(T& atom, Point<int>& pt);
 
   void DiffuseAtom(EventWindow<T>& window);
 
