@@ -146,3 +146,10 @@ u32 ManhattanDir::ManhattanArea(u32 maxDistance)
   return (oddSum << 1) + oddAcc;
 }
 
+void ManhattanDir::FillVNNeighbors(Point<int>* pts)
+{
+  pts[0].Set(-1, 0);
+  pts[1].Set(0, -1);
+  pts[2].Set(1,  0);
+  pts[3].Set(0,  1);
+}

@@ -58,10 +58,10 @@ double Point<T>::GetLength()
 }
 
 template <class T>
-void Point<T>::Add(Point<T>* offset)
+void Point<T>::Add(Point<T>& offset)
 {
-  m_x += offset->m_x;
-  m_y += offset->m_y;
+  m_x += offset.m_x;
+  m_y += offset.m_y;
 }
 
 template <class T>
@@ -72,10 +72,10 @@ void Point<T>::Add(T x, T y)
 }
 
 template <class T>
-void Point<T>::Subtract(Point<T>* offset)
+void Point<T>::Subtract(Point<T>& offset)
 {
-  m_x -= offset->m_x;
-  m_y -= offset->m_y;
+  m_x -= offset.m_x;
+  m_y -= offset.m_y;
 }
 
 template <class T>

@@ -1,3 +1,5 @@
+#include "manhattandir.h"
+
 template <class T>
 T* Tile<T>::GetAtom(Point<int>* pt)
 {
@@ -18,6 +20,13 @@ T* Tile<T>::GetAtom(int i)
 }
 
 template <class T>
+void Tile<T>::FillLastExecutedAtom(Point<int>& out)
+{
+  out.Set(m_lastExecutedAtom.GetX(),
+	  m_lastExecutedAtom.GetY());
+}
+
+template <class T>
 EventWindow<T>* Tile<T>::CreateRandomWindow()
 {
   /* Make sure not to be created in the cache */
@@ -29,20 +38,35 @@ EventWindow<T>* Tile<T>::CreateRandomWindow()
 }
 
 template <class T>
-void Tile<T>::PlaceAtom(T* atom, Point<int>* pt)
+void Tile<T>::PlaceAtom(T& atom, Point<int>& pt)
 {
-  T dest = 
-  m_atoms[pt->GetX() + 
-	  pt->GetY() * TILE_WIDTH];
+  m_atoms[pt.GetX() + 
+	  pt.GetY() * TILE_WIDTH] = atom;
+}
 
-  dest = *atom;
+template <class T>
+void Tile<T>::DiffuseAtom(EventWindow<T>& window)
+{
+  Point<int> neighbors[4];
+  Point<int> center;
+  ManhattanDir::FillVNNeighbors(neighbors);
+  u8 idx = rand() & 3;
 
-  assert(dest.GetState() == atom->GetState());
+  for(int i = 0; i < 4; i++)
+  {
+    idx++;
+    idx &= 3;
 
-  m_atoms[pt->GetX() +
-	  pt->GetY() * TILE_WIDTH] = dest;
+    T* atom = window.GetRelativeAtom(neighbors[idx]);
 
-  
+    /* It's empty! Move there! */
+    if(m_stateFunc(atom) == 0)
+      {
+      Point<int> empty(0, 0);
+      window.SwapAtoms(neighbors[idx], empty);
+      return;
+    }
+  }
 }
 
 template <class T>
@@ -52,7 +76,11 @@ void Tile<T>::Execute(ElementTable<T>& table)
   
   table.Execute(*window);
 
+  DiffuseAtom(*window);
+
   window->FillCenter(m_lastExecutedAtom);
+
+  window->WriteTo(m_atoms, TILE_WIDTH);
   
   delete window;
 }

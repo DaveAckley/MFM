@@ -56,6 +56,10 @@ private:
     {
       grend.ToggleMemDraw();
     }
+    if(keyboard.SemiAuto(SDLK_p))
+    {
+      grend.ToggleTileSeparation();
+    }
     if(keyboard.IsDown(SDLK_LEFT) ||
        keyboard.IsDown(SDLK_a))
     {
@@ -97,19 +101,14 @@ public:
 
     SDL_Event event;
     grend.SetDestination(screen);
-    Grid<P1Atom> mainGrid(5, 3, &elements);
+    Grid<P1Atom> mainGrid(5, 5, &elements);
 
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
 
     P1Atom atom(ELEMENT_DREG);
     Point<int> aloc(10, 10);
 
-    mainGrid.PlaceAtom(&atom, &aloc);
-
-    P1Atom* other = mainGrid.GetAtom(&aloc);
-
-    assert(other->GetState() == atom.GetState());
-
+    mainGrid.PlaceAtom(atom, aloc);
 
     int lastFrame = SDL_GetTicks();
 
@@ -148,11 +147,12 @@ public:
       lastFrame = SDL_GetTicks();
       
       
+      if(rand() % 3 == 0)
       Update(mainGrid);
       
       Drawing::Clear(screen, 0xffffffff);
       
-      grend.RenderGrid(&mainGrid);
+      grend.RenderGrid(mainGrid);
       
       SDL_Flip(screen);
     }

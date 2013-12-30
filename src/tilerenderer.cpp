@@ -13,43 +13,68 @@ TileRenderer::TileRenderer(SDL_Surface* dest)
   m_sharedColor = 0xffe8757a;
   m_visibleColor = 0xfff0d470;
   m_hiddenColor = 0xff423b16;
+  m_cacheColor = 0xffffc0c0;
   m_windowTL.SetX(0);
   m_windowTL.SetY(0);
 }
 
-void TileRenderer::RenderMemRegions(Point<int>* pt)
+void TileRenderer::RenderMemRegions(Point<int>& pt, bool renderCache)
 {
-  RenderMemRegion(pt, 0, m_sharedColor);
-  RenderMemRegion(pt, 1, m_visibleColor);
-  RenderMemRegion(pt, 2, m_hiddenColor);
+  int regID = 0;
+  if(renderCache)
+  {
+    RenderMemRegion(pt, regID++, m_cacheColor, renderCache);
+  }
+  RenderMemRegion(pt, regID++, m_sharedColor, renderCache);
+  RenderMemRegion(pt, regID++, m_visibleColor, renderCache);
+  RenderMemRegion(pt, regID  , m_hiddenColor, renderCache);
 }
 
-void TileRenderer::RenderMemRegion(Point<int>* pt,
-				      int regID,
-				      Uint32 color)
+void TileRenderer::RenderMemRegion(Point<int>& pt, int regID,
+				   Uint32 color, bool renderCache)
 {
+  int tileSize;
+  if(!renderCache)
+  {
+    /* Subtract out the cache's width */
+    tileSize = m_atomDrawSize * 
+      (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
+  }
+  else
+  {
+    tileSize = m_atomDrawSize * TILE_WIDTH;
+  }
 
-  /* Subtract out the cache's width */
-  int tileSize = m_atomDrawSize * 
-    (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
   int ewrSize = EVENT_WINDOW_RADIUS * m_atomDrawSize;
 
   Drawing::FillRect(m_dest,
-		    pt->GetX() + (ewrSize * regID) +
+		    pt.GetX() + (ewrSize * regID) +
 		    m_windowTL.GetX(),
-		    pt->GetY() + (ewrSize * regID) +
+		    pt.GetY() + (ewrSize * regID) +
 		    m_windowTL.GetY(),
 		    tileSize - (ewrSize * regID * 2),
 		    tileSize - (ewrSize * regID * 2),
 		    color);
 }
 
-void TileRenderer::RenderGrid(Point<int>* pt)
+void TileRenderer::RenderGrid(Point<int>* pt, bool renderCache)
 {
-  int lineLen = m_atomDrawSize * 
-    (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
-  int linesToDraw = TILE_WIDTH + 
-    1 - (2 * EVENT_WINDOW_RADIUS);
+
+  int lineLen, linesToDraw;
+
+  if(!renderCache)
+  {
+    lineLen = m_atomDrawSize * 
+      (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
+    linesToDraw = TILE_WIDTH + 
+      1 - (2 * EVENT_WINDOW_RADIUS);
+  }
+  else
+  {
+    lineLen = m_atomDrawSize * TILE_WIDTH;
+    linesToDraw = TILE_WIDTH + 1;
+  }
+
   for(int x = 0; x < linesToDraw; x++)
   {
     Drawing::DrawVLine(m_dest,
@@ -71,6 +96,18 @@ void TileRenderer::RenderGrid(Point<int>* pt)
 		       m_windowTL.GetX(),
 		       m_gridColor);
   }
+}
+
+void TileRenderer::RenderAtomBG(Point<int>& offset,
+				Point<int>& atomLoc,
+				u32 color)
+{
+  Drawing::FillRect(m_dest,
+		    m_windowTL.GetX() +
+		    offset.GetX() + atomLoc.GetX() * m_atomDrawSize,
+		    m_windowTL.GetY() + 
+		    offset.GetY() + atomLoc.GetY() * m_atomDrawSize,
+		    m_atomDrawSize, m_atomDrawSize, color);
 }
 
 void TileRenderer::ToggleGrid()

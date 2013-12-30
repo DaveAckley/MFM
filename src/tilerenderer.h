@@ -20,56 +20,34 @@ private:
   u32 m_sharedColor;
   u32 m_visibleColor;
   u32 m_hiddenColor;
+  u32 m_cacheColor;
 
   Point<int> m_windowTL;
   SDL_Surface* m_dest;
 
-  void RenderMemRegions(Point<int>* pt);
+  void RenderMemRegions(Point<int>& pt, bool renderCache);
 
-  void RenderMemRegion(Point<int>* pt, int regID,
-		       u32 color);
+  void RenderMemRegion(Point<int>& pt, int regID,
+		       u32 color, bool renderCache);
 
-  void RenderGrid(Point<int>* pt);
+  void RenderGrid(Point<int>* pt, bool renderCache);
+
+  void RenderAtomBG(Point<int>& offset, Point<int>& atomloc,
+		    u32 color);
 
   template <class T>
   void RenderAtoms(Point<int>* pt, Tile<T>* tile);
+
+  template <class T>
+  void RenderEventWindow(Point<int>& offset, Tile<T>& tile);
 
 public:
 
   TileRenderer(SDL_Surface* dest);
 
   template <class T>
-  void RenderTile(Tile<T>* t, Point<int>* loc)
-  {
-    Point<int> multPt(loc->GetX(), loc->GetY());
-
-    multPt.Multiply((TILE_WIDTH - 4) * 
-		    m_atomDrawSize);
-
-    Point<int> realPt(multPt.GetX(), multPt.GetY());
-
-    u32 tileHeight = TILE_WIDTH * m_atomDrawSize;
-
-    realPt.Add(&m_windowTL);
-
-    if(realPt.GetX() + tileHeight >= 0 &&
-       realPt.GetY() + tileHeight >= 0 &&
-       realPt.GetX() < m_dest->w &&
-       realPt.GetY() < m_dest->h)
-    {
-      if(m_drawMemRegions)
-      {
-	RenderMemRegions(&multPt);
-      }
-
-      RenderAtoms(&multPt, t);
-
-      if(m_drawGrid)
-      {
-	RenderGrid(&multPt);
-      }
-    }
-  }
+  void RenderTile(Tile<T>* t, Point<int> loc, bool renderWindow, 
+		  bool renderCache);
 
   void IncreaseAtomSize();
 
@@ -88,45 +66,6 @@ public:
   void MoveRight(u8 amount);
 };
 
-template <class T>
-void TileRenderer::RenderAtoms(Point<int>* pt,
-			       Tile<T>* tile)
-{
-  Point<int> atomLoc;
-  int ewr = EVENT_WINDOW_RADIUS;
-  u32 (*stfu)(T*) = tile->GetStateFunc();
-  for(int x = ewr; x < TILE_WIDTH - ewr; x++)
-  {
-    atomLoc.SetX(x - ewr);
-    for(int y = ewr; y < TILE_WIDTH - ewr; y++)
-    {
-      atomLoc.SetY(y - ewr);
-      u32 sval = stfu(tile->GetAtom(&atomLoc));
-      u32 color;
-
-      switch(sval)
-      {
-      case ELEMENT_DREG:
-	color = 0xff505050;
-	break;
-      default: continue;
-      }
-      Drawing::FillCircle(m_dest,
-			  m_atomDrawSize *
-			  atomLoc.GetX() +
-			  pt->GetX() +
-			  m_windowTL.GetX(),
-			  m_atomDrawSize * 
-			  atomLoc.GetY() +
-			  pt->GetY() +
-			  m_windowTL.GetY(),
-			  m_atomDrawSize,
-			  m_atomDrawSize,
-			  (m_atomDrawSize / 2) - 2,
-			  color);
-    }
-  }
-}
-
+#include "tilerenderer.tcc"
 
 #endif /*TILERENDERER_H*/

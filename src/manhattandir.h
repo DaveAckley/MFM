@@ -77,6 +77,8 @@ public:
 			   TableType type);
 
   static u32 ManhattanArea(u32 maxDistance);
+
+  static void FillVNNeighbors(Point<int>* pts);
   
 };
 

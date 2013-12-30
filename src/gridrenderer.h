@@ -5,11 +5,34 @@
 #include "SDL/SDL.h"
 #include "tilerenderer.h"
 
+typedef enum
+{
+  EVENTWINDOW_RENDER_OFF     = 0,
+  EVENTWINDOW_RENDER_CURRENT = 1,
+  EVENTWINDOW_RENDER_ALL     = 2
+} EventWindowRenderMode;
+
+
 class GridRenderer
 {
 private:
   SDL_Surface* m_dest;
   TileRenderer* m_tileRenderer;
+
+  static const EventWindowRenderMode m_defaultRenderMode =
+    EVENTWINDOW_RENDER_ALL;
+
+  static const bool m_renderTilesSeparatedDefault = false;
+
+  bool m_renderTilesSeparated;
+
+  EventWindowRenderMode m_currentEWRenderMode;
+
+  template <class T>
+  void RenderGridClose(Grid<T>& grid);
+
+  template <class T>
+  void RenderGridSeparated(Grid<T>& grid);
 
 public:
   GridRenderer(SDL_Surface* dest);
@@ -17,9 +40,11 @@ public:
   GridRenderer(SDL_Surface* dest,
 	       TileRenderer* tr);
 
-  GridRenderer()
+  GridRenderer();
+
+  void SetEventWindowRenderMode(EventWindowRenderMode mode)
   {
-    m_tileRenderer = new TileRenderer(NULL);
+    m_currentEWRenderMode = mode;
   }
 
   void SetDestination(SDL_Surface* dest)
@@ -32,6 +57,11 @@ public:
   void IncreaseAtomSize()
   {
     m_tileRenderer->IncreaseAtomSize();
+  }
+
+  void ToggleTileSeparation()
+  {
+    m_renderTilesSeparated = !m_renderTilesSeparated;
   }
 
   void DecreaseAtomSize()
@@ -72,22 +102,10 @@ public:
   ~GridRenderer();
   
   template <class T>
-  void RenderGrid(Grid<T>* grid)
-  {
-    Point<int> current;
-    for(int x = 0; x < grid->GetWidth(); x++)
-    {
-      current.SetX(x);
-      for(int y = 0; y < grid->GetHeight(); y++)
-      {
-	current.SetY(y);
-
-	m_tileRenderer->RenderTile(grid->GetTile(x, y),
-				   &current);
-      }
-    }
-  }
+  void RenderGrid(Grid<T>& grid);
   
 };
+
+#include "gridrenderer.tcc"
 
 #endif /*GRIDRENDERER_H*/

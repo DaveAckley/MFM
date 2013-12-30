@@ -10,7 +10,7 @@ void TileTest::Test_tilePlaceAtom()
   P1Atom atom(10);
   Point<int> loc(10, 10);
 
-  tile.PlaceAtom(&atom, &loc);
+  tile.PlaceAtom(atom, loc);
 
   P1Atom other = *tile.GetAtom(&loc);
 

@@ -32,9 +32,9 @@ public:
 
   u32 GetWidth();
 
-  void PlaceAtom(T* atom, Point<int>* location);
+  void PlaceAtom(T& atom, Point<int>& location);
 
-  T* GetAtom(Point<int>* location);
+  T* GetAtom(Point<int>& location);
 
   void Expand(int extraW, int extraH);
 
@@ -42,6 +42,8 @@ public:
 
   void FillNeighbors(int center_x, int center_y,
 		     Tile<T>** out);
+
+  void FillLastEventTile(Point<int>& out);
 
   void TriggerEvent();
   
