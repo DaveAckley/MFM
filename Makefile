@@ -1,4 +1,5 @@
-CC := g++ -std=c++0x
+CC := g++ -g2
+ALLDEP := Makefile
 SRCDIR := src
 BUILDDIR := build
 OUTPUTDIR := bin
@@ -14,7 +15,7 @@ $(TARGET): $(OBJECTS)
 	@mkdir -p $(OUTPUTDIR)
 	@echo "$(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o $(TARGET) $(LIB)
 
-$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
+$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT) $(ALLDEP)
 	@mkdir -p $(BUILDDIR)
 	@echo "$(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
