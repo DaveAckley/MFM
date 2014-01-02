@@ -6,12 +6,15 @@ OUTPUTDIR := bin
 TARGET := $(OUTPUTDIR)/mfm
 
 SRCEXT := cpp
+HDRPAT := -name *.h -o -name *.tcc
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
+HEADERS := $(shell find $(SRCDIR) -type f $(HDRPAT))
+ALLDEP += $(HEADERS)
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 LIB := -L lib -lm -lSDL
 INC := -I include
 
-$(TARGET): $(OBJECTS)
+$(TARGET): $(OBJECTS)  
 	@mkdir -p $(OUTPUTDIR)
 	@echo "$(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o $(TARGET) $(LIB)
 
