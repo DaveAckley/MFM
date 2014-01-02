@@ -2,6 +2,8 @@
 #include "bitfield_test.hpp"
 #include "itype.h"
 
+static BitField<256> bits;
+
 BitField<256>* BitFieldTest::setup()
 {
   u32 vals[8] =
@@ -16,9 +18,9 @@ BitField<256>* BitFieldTest::setup()
     0xffffffff
   };
 
-  BitField<256>* bits = new BitField<256>(vals);
+  bits = BitField<256>(vals);
 
-  return bits;
+  return &bits;
 }
 
 void BitFieldTest::Test_bitfieldAllocate()
@@ -26,8 +28,6 @@ void BitFieldTest::Test_bitfieldAllocate()
   BitField<256>* bits = setup();
 
   assert(bits->Read(0, 32) == 0xffffffff);
-
-  delete bits;
 }
 
 void BitFieldTest::Test_bitfieldRead()
@@ -37,8 +37,6 @@ void BitFieldTest::Test_bitfieldRead()
   assert(bits->Read(16, 32) == 0xffff0000);
   assert(bits->Read(64, 32) == 0x12345678);
   assert(bits->Read(56, 16) == 0x00000012);
-
-  delete bits;
 }
 
 void BitFieldTest::Test_bitfieldSize()
@@ -59,8 +57,6 @@ void BitFieldTest::Test_bitfieldWrite()
   assert(bits->Read(0, 32) == 0xffffa0a0);
   assert(bits->Read(32, 32) == 0xb0b00000);
   assert(bits->Read(224, 32) == 0xffffffff);
-  
-  delete bits;
 }
 
 void BitFieldTest::Test_bitfieldInsert()
@@ -72,8 +68,6 @@ void BitFieldTest::Test_bitfieldInsert()
   assert(bits->Read(0, 32) == 0xff1234ff);
   assert(bits->Read(32, 32) == 0xffff0000);
   assert(bits->Read(224, 32) == 0x0000ffff);
-
-  delete bits;
 }
 
 void BitFieldTest::Test_bitfieldRemove()
@@ -85,6 +79,4 @@ void BitFieldTest::Test_bitfieldRemove()
   assert(bits->Read(0  , 32) == 0x00000000);
   assert(bits->Read(32 , 32) == 0x12345678);
   assert(bits->Read(224, 32) == 0x00000000);
-
-  delete bits;
 }

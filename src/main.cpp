@@ -1,4 +1,4 @@
-#define MAIN_RUN_TESTS 0
+#define MAIN_RUN_TESTS 1
 
 #if MAIN_RUN_TESTS
 
