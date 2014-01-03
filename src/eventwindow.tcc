@@ -13,6 +13,7 @@ EventWindow<T>::EventWindow(Point<int>& center, T* atoms, u32 tileWidth)
   for(int i = 0; i < numAtoms; i++)
   {
     ManhattanDir::FillFromBits(current, i, MANHATTAN_TABLE_EVENT);
+    current.Add(center);
     T atom = atoms[current.GetX() + current.GetY() * tileWidth];
     m_atoms[i] = atom;
   }
@@ -27,17 +28,17 @@ EventWindow<T>::~EventWindow()
 }
 
 template <class T>
-T* EventWindow<T>::GetCenterAtom()
+T& EventWindow<T>::GetCenterAtom()
 {
-  return m_atoms + (m_atomCount >> 1) + 1;
+  return m_atoms[m_atomCount >> 1];
 }
 
 template <class T>
-T* EventWindow<T>::GetRelativeAtom(Point<int>& offset)
+T& EventWindow<T>::GetRelativeAtom(Point<int>& offset)
 {
   u8 idx = ManhattanDir::FromPoint(offset, MANHATTAN_TABLE_EVENT);
 
-  return m_atoms + idx;
+  return m_atoms[idx];
 }
 
 template <class T>
@@ -73,7 +74,7 @@ void EventWindow<T>::WriteTo(T* atoms, u16 tileWidth)
 			  coffset.GetY() - m_center.GetY());
       
       atoms[coffset.GetX() + coffset.GetY() * tileWidth] =
-	*GetRelativeAtom(relative);
+	GetRelativeAtom(relative);
     }
   }
 }

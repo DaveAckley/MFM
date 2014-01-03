@@ -41,7 +41,7 @@ public:
   ~ElementTable() { }
 
   void Execute(EventWindow<T>& window)
-  { m_funcmap[m_statefunc(window.GetCenterAtom())](window); }
+  { m_funcmap[m_statefunc(&window.GetCenterAtom())](window); }
 
   void FillAtom(T* atom, ElementType type);
 

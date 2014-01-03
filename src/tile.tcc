@@ -57,11 +57,11 @@ void Tile<T>::DiffuseAtom(EventWindow<T>& window)
     idx++;
     idx &= 3;
 
-    T* atom = window.GetRelativeAtom(neighbors[idx]);
+    T& atom = window.GetRelativeAtom(neighbors[idx]);
 
     /* It's empty! Move there! */
-    if(m_stateFunc(atom) == 0)
-      {
+    if(m_stateFunc(&atom) == 0)
+    {
       Point<int> empty(0, 0);
       window.SwapAtoms(neighbors[idx], empty);
       return;

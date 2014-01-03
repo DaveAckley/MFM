@@ -3,8 +3,6 @@
 
 void ManhattanDirTest::Test_manhattandirConversion()
 {
-  ManhattanDir::AllocTables(4);
-
   Point<int> longPt(2, 2);
   Point<int> shortPt(1, -1);
   
@@ -22,6 +20,4 @@ void ManhattanDirTest::Test_manhattandirConversion()
 
   assert(out.GetX() == 1);
   assert(out.GetY() == -1);
-
-  ManhattanDir::DeallocTables();
 }

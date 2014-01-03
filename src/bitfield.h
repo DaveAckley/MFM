@@ -13,8 +13,10 @@
 template <int bitLength>
 class BitField
 {
+public:
+  static const u32 ARRAY_LENGTH = (bitLength+BITFIELD_WORDSIZE-1) / BITFIELD_WORDSIZE;
 private:
-  u32 m_bits[bitLength / BITFIELD_WORDSIZE];
+  u32 m_bits[ARRAY_LENGTH];
 
   u32 MakeMask(int pos, int len);
 
@@ -24,6 +26,8 @@ private:
 public:
 
   BitField();
+
+  BitField(const BitField & other);
 
   BitField(u32* values);
 

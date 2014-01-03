@@ -56,8 +56,6 @@ void P1AtomTest::Test_p1atomReadBody()
   points[6].Set(-2, 0);
   points[7].Set(1, 3);
 
-  ManhattanDir::AllocTables(EVENT_WINDOW_RADIUS);
-
   for(int i = 0; i < 8; i++)
   {
     TableType type = (i < 4) ? 
@@ -89,8 +87,6 @@ void P1AtomTest::Test_p1atomReadBody()
     assert(bf.Read(i * 8, 8) == pvals[i + 4]);
     assert(bf.Read(32 + i * 4, 4) == pvals[i]);
   }
-
-  ManhattanDir::DeallocTables();
   
 }
 

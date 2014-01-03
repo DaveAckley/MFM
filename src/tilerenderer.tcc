@@ -1,10 +1,12 @@
 template <class T>
 void TileRenderer::RenderAtoms(Point<int>* pt,
-			       Tile<T>* tile)
+			       Tile<T>* tile,
+			       bool renderCache)
 {
   Point<int> atomLoc;
   int ewr = EVENT_WINDOW_RADIUS;
   u32 (*stfu)(T*) = tile->GetStateFunc();
+  u32 cacheOffset = renderCache ? ewr * m_atomDrawSize : 0;
   for(int x = ewr; x < TILE_WIDTH - ewr; x++)
   {
     atomLoc.SetX(x - ewr);
@@ -25,10 +27,12 @@ void TileRenderer::RenderAtoms(Point<int>* pt,
 			  m_atomDrawSize *
 			  atomLoc.GetX() +
 			  pt->GetX() +
-			  m_windowTL.GetX(),
+			  m_windowTL.GetX() +
+			  cacheOffset,
 			  m_atomDrawSize * 
 			  atomLoc.GetY() +
 			  pt->GetY() +
+			  cacheOffset +
 			  m_windowTL.GetY(),
 			  m_atomDrawSize,
 			  m_atomDrawSize,
@@ -58,35 +62,36 @@ void TileRenderer::RenderTile(Tile<T>* t, Point<int> loc, bool renderWindow,
      realPt.GetY() + tileHeight >= 0 &&
      realPt.GetX() < m_dest->w &&
      realPt.GetY() < m_dest->h)
+  {
+    if(m_drawMemRegions)
     {
-      if(m_drawMemRegions)
-	{
-	  RenderMemRegions(multPt, renderCache);
-	}
+      RenderMemRegions(multPt, renderCache);
+    }
 
-      RenderAtoms(&multPt, t);
+    if(renderWindow)
+    {
+      RenderEventWindow(multPt, *t, renderCache);
+    }
 
-      if(renderWindow)
-	{
-	  RenderEventWindow(multPt, *t);
-	}
-
-      if(m_drawGrid)
-	{
-	  RenderGrid(&multPt, renderCache);
-	}
-    }  
+    RenderAtoms(&multPt, t, renderCache);
+    
+    if(m_drawGrid)
+    {
+      RenderGrid(&multPt, renderCache);
+    }
+  }  
 }
 
 template <class T>
 void TileRenderer::RenderEventWindow(Point<int>& offset,
-				     Tile<T>& tile)
+				     Tile<T>& tile, bool renderCache)
 {
   Point<int> winCenter;
   tile.FillLastExecutedAtom(winCenter);
 
   Point<int> atomLoc;
   Point<int> eventCenter;
+  u32 cacheOffset = renderCache ? EVENT_WINDOW_RADIUS : 0;
   u32 drawColor = Drawing::WHITE;
   
   tile.FillLastExecutedAtom(eventCenter);
@@ -95,6 +100,7 @@ void TileRenderer::RenderEventWindow(Point<int>& offset,
   {
     ManhattanDir::FillFromBits(atomLoc, i, MANHATTAN_TABLE_EVENT);
     atomLoc.Add(eventCenter);
+    atomLoc.Add(cacheOffset, cacheOffset);
 
     if(i == (tableSize >> 1))
     {

@@ -36,10 +36,10 @@ private:
 		    u32 color);
 
   template <class T>
-  void RenderAtoms(Point<int>* pt, Tile<T>* tile);
+  void RenderAtoms(Point<int>* pt, Tile<T>* tile, bool renderCache);
 
   template <class T>
-  void RenderEventWindow(Point<int>& offset, Tile<T>& tile);
+  void RenderEventWindow(Point<int>& offset, Tile<T>& tile, bool renderCache);
 
 public:
 

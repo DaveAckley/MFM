@@ -1,4 +1,4 @@
-#define MAIN_RUN_TESTS 0
+#define MAIN_RUN_TESTS 1
 
 #if MAIN_RUN_TESTS
 
@@ -75,13 +75,15 @@ private:
     {
       grend.MoveUp(speed);
     }
+    if(keyboard.SemiAuto(SDLK_SPACE))
+    {
+      grid.TriggerEvent();
+    }
     if(keyboard.IsDown(SDLK_RIGHT) ||
        keyboard.IsDown(SDLK_d))
     {
       grend.MoveRight(speed);
     }
-
-    grid.TriggerEvent();
 
     mouse.Flip();
     keyboard.Flip();
@@ -101,7 +103,7 @@ public:
 
     SDL_Event event;
     grend.SetDestination(screen);
-    Grid<P1Atom> mainGrid(5, 5, &elements);
+    Grid<P1Atom> mainGrid(1, 1, &elements);
 
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
 
