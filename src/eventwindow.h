@@ -27,9 +27,9 @@ public:
 
   ~EventWindow();
 
-  T* GetCenterAtom();
+  T& GetCenterAtom();
 
-  T* GetRelativeAtom(Point<int>& offset);
+  T& GetRelativeAtom(Point<int>& offset);
 
   void SetAtom(Point<int>& offset, T* atom);
 
