@@ -1,8 +1,8 @@
+
 template <int bitLength>
 BitField<bitLength>::BitField()
 {
-  int bytes = bitLength / BITFIELD_WORDSIZE;
-  for(int i = 0; i < bytes; i++)
+  for(int i = 0; i < ARRAY_LENGTH; i++)
   {
     m_bits[i] = 0;
   }
@@ -11,10 +11,18 @@ BitField<bitLength>::BitField()
 template <int bitLength>
 BitField<bitLength>::BitField(u32* values)
 {
-  int bytes = bitLength / BITFIELD_WORDSIZE;
-  for(int i = 0; i < bytes; i++)
+  for(int i = 0; i < ARRAY_LENGTH; i++)
   {
     m_bits[i] = values[i];
+  }
+}
+
+template <int bitLength>
+BitField<bitLength>::BitField(const BitField & other)
+{
+  for(int i = 0; i < ARRAY_LENGTH; i++)
+  {
+    m_bits[i] = other.m_bits[i];
   }
 }
 
@@ -60,7 +68,7 @@ template <int bitLength>
 bool BitField<bitLength>::ReadBit(int idx)
 {
   int arrIdx = idx / BITFIELD_WORDSIZE;
-  int intIdx = idx & 0x1f;
+  int intIdx = idx % BITFIELD_WORDSIZE;
   
   return m_bits[arrIdx] & (0x80000000 >> intIdx);
 }
@@ -112,7 +120,7 @@ void BitField<bitLength>::Print(FILE* ostream)
 {
   u32 mask = 0xf0000000;
   int ints = bitLength / BITFIELD_WORDSIZE;
-  for(int i = 0; i < ints; i++)
+  for(int i = 0; i < ARRAY_LENGTH; i++)
   {
     for(int j = 0; j < 8; j++)
     {
@@ -127,7 +135,7 @@ void BitField<bitLength>::Print(FILE* ostream)
 	fputc(c + '0', ostream);
       }
     }
-    if(i + 1 < ints)
+    if(i + 1 < ARRAY_LENGTH)
     {
       fputc('-', ostream);
     }
