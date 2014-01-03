@@ -38,10 +38,19 @@ EventWindow<T>* Tile<T>::CreateRandomWindow()
 }
 
 template <class T>
+EventWindow<T>* Tile<T>::CreateWindowAt(Point<int>& pt)
+{
+  int maxval = TILE_WIDTH - (EVENT_WINDOW_RADIUS << 1);
+  return new EventWindow<T>(pt, m_atoms, maxval);
+}
+
+template <class T>
 void Tile<T>::PlaceAtom(T& atom, Point<int>& pt)
 {
-  m_atoms[pt.GetX() + 
-	  pt.GetY() * TILE_WIDTH] = atom;
+  Point<int> offset(EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS);
+  offset.Add(pt);
+  m_atoms[offset.GetX() + 
+	  offset.GetY() * TILE_WIDTH] = atom;
 }
 
 template <class T>
@@ -72,7 +81,10 @@ void Tile<T>::DiffuseAtom(EventWindow<T>& window)
 template <class T>
 void Tile<T>::Execute(ElementTable<T>& table)
 {
-  EventWindow<T>* window = CreateRandomWindow();
+  //EventWindow<T>* window = CreateRandomWindow();
+
+  Point<int> eventCenter(10, 10);
+  EventWindow<T>* window = CreateWindowAt(eventCenter);
   
   table.Execute(*window);
 
