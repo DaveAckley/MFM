@@ -6,7 +6,7 @@ OUTPUTDIR := bin
 TARGET := $(OUTPUTDIR)/mfm
 
 SRCEXT := cpp
-HDRPAT := -name *.h -o -name *.tcc
+HDRPAT := -name *.h -o -name *.hpp -o -name *.tcc
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 HEADERS := $(shell find $(SRCDIR) -type f $(HDRPAT))
 ALLDEP += $(HEADERS)
