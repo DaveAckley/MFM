@@ -10,7 +10,7 @@ typedef enum
 {
   ELEMENT_NOTHING = 0x0,
   ELEMENT_DREG    = 0x1,
-  ELEMENT_RES     = 0x2,
+  ELEMENT_RES     = 0x2
 }ElementType;
 
 template <class T>
@@ -20,9 +20,9 @@ template <class T>
 class ElementTable
 {
 private:
-  void (* m_funcmap[0xff])(EventWindow<T>&);
 
-  /* Can't typedef this. Gross! */
+  typedef void (* BehaviorFunction )(EventWindow<T>&);
+  BehaviorFunction m_funcmap[0xff];
 
   /*
    * This is used to get the "state" field
