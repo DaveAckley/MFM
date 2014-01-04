@@ -10,7 +10,7 @@ typedef enum
 {
   ELEMENT_NOTHING = 0x0,
   ELEMENT_DREG    = 0x1,
-  ELEMENT_RES     = 0x2,
+  ELEMENT_RES     = 0x2
 }ElementType;
 
 template <class T>
