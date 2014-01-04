@@ -20,9 +20,9 @@ template <class T>
 class ElementTable
 {
 private:
-  void (* m_funcmap[0xff])(EventWindow<T>&);
 
-  /* Can't typedef this. Gross! */
+  typedef void (* BehaviorFunction )(EventWindow<T>&);
+  BehaviorFunction m_funcmap[0xff];
 
   /*
    * This is used to get the "state" field
