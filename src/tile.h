@@ -23,6 +23,8 @@ private:
 
   EventWindow<T>* CreateRandomWindow();
 
+  EventWindow<T>* CreateWindowAt(Point<int>& pt);
+
   u32 (*m_stateFunc)(T* atom);
 
 public:
