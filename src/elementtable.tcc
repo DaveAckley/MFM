@@ -18,4 +18,5 @@ ElementTable<T>::ElementTable(u32 (*stateFunc)(T* atom))
   m_statefunc = stateFunc;
   m_funcmap[0] = &NothingBehavior;
   m_funcmap[1] = &DRegBehavior;
+  m_funcmap[2] = &NothingBehavior;
 }

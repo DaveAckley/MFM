@@ -20,6 +20,7 @@
 #include "point.h"
 #include "drawing.h"
 #include "tilerenderer.h"
+#include "time.h"
 
 #define FRAMES_PER_SECOND 60.0
 
@@ -115,9 +116,12 @@ public:
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
 
     P1Atom atom(ELEMENT_DREG);
+    P1Atom res(ELEMENT_RES);
     Point<int> aloc(10, 10);
+    Point<int> rloc(3, 3);
 
     mainGrid.PlaceAtom(atom, aloc);
+    mainGrid.PlaceAtom(res, rloc);
 
     int lastFrame = SDL_GetTicks();
 
@@ -174,6 +178,8 @@ public:
 int main(int argc, char** argv)
 {
   SDL_Init(SDL_INIT_EVERYTHING);
+
+  srand(time(NULL));
 
   ManhattanDir::AllocTables(EVENT_WINDOW_RADIUS);
 

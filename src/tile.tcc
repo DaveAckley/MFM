@@ -33,8 +33,6 @@ void Tile<T>::CreateRandomWindow()
   int maxval = TILE_WIDTH - (EVENT_WINDOW_RADIUS << 1);
   Point<int> pt(true, maxval, maxval);
 
-  printf("(%d, %d)\n", pt.GetX(), pt.GetY());
-
   m_executingWindow = EventWindow<T>(pt, m_atoms, TILE_WIDTH);
 }
 
