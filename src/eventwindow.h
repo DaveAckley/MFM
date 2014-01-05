@@ -25,7 +25,11 @@ public:
 
   EventWindow(Point<int>& center, T* atoms, u32 tileWidth);
 
-  ~EventWindow();
+  EventWindow() { }
+
+  void DeallocateAtoms();
+
+  ~EventWindow() { }
 
   T& GetCenterAtom();
 

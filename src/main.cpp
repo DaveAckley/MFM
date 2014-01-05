@@ -23,6 +23,8 @@
 
 #define FRAMES_PER_SECOND 60.0
 
+#define EVENTS_PER_FRAME 10
+
 #define CAMERA_SLOW_SPEED 2
 #define CAMERA_FAST_SPEED 10
 
@@ -83,6 +85,11 @@ private:
        keyboard.IsDown(SDLK_d))
     {
       grend.MoveRight(speed);
+    }
+
+    for(int i = 0; i < EVENTS_PER_FRAME; i++)
+    {
+      grid.TriggerEvent();
     }
 
     mouse.Flip();

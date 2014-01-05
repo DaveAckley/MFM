@@ -27,30 +27,28 @@ void Tile<T>::FillLastExecutedAtom(Point<int>& out)
 }
 
 template <class T>
-EventWindow<T>* Tile<T>::CreateRandomWindow()
+void Tile<T>::CreateRandomWindow()
 {
   /* Make sure not to be created in the cache */
   int maxval = TILE_WIDTH - (EVENT_WINDOW_RADIUS << 1);
   Point<int> pt(true, maxval, maxval);
-  pt.Add(EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS);
 
-  return new EventWindow<T>(pt, m_atoms, maxval);
+  printf("(%d, %d)\n", pt.GetX(), pt.GetY());
+
+  m_executingWindow = EventWindow<T>(pt, m_atoms, TILE_WIDTH);
 }
 
 template <class T>
-EventWindow<T>* Tile<T>::CreateWindowAt(Point<int>& pt)
+void Tile<T>::CreateWindowAt(Point<int>& pt)
 {
-  int maxval = TILE_WIDTH - (EVENT_WINDOW_RADIUS << 1);
-  return new EventWindow<T>(pt, m_atoms, maxval);
+  m_executingWindow =  EventWindow<T>(pt, m_atoms, TILE_WIDTH);
 }
 
 template <class T>
 void Tile<T>::PlaceAtom(T& atom, Point<int>& pt)
 {
-  Point<int> offset(EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS);
-  offset.Add(pt);
-  m_atoms[offset.GetX() + 
-	  offset.GetY() * TILE_WIDTH] = atom;
+  m_atoms[pt.GetX() + 
+	  pt.GetY() * TILE_WIDTH] = atom;
 }
 
 template <class T>
@@ -81,18 +79,18 @@ void Tile<T>::DiffuseAtom(EventWindow<T>& window)
 template <class T>
 void Tile<T>::Execute(ElementTable<T>& table)
 {
-  //EventWindow<T>* window = CreateRandomWindow();
+  CreateRandomWindow();
 
-  Point<int> eventCenter(10, 10);
-  EventWindow<T>* window = CreateWindowAt(eventCenter);
+  //Point<int> eventCenter(10, 8);
+  //CreateWindowAt(eventCenter);
   
-  table.Execute(*window);
+  table.Execute(m_executingWindow);
 
-  DiffuseAtom(*window);
+  DiffuseAtom(m_executingWindow);
 
-  window->FillCenter(m_lastExecutedAtom);
+  m_executingWindow.FillCenter(m_lastExecutedAtom);
 
-  window->WriteTo(m_atoms, TILE_WIDTH);
-  
-  delete window;
+  m_executingWindow.WriteTo(m_atoms, TILE_WIDTH);
+
+  m_executingWindow.DeallocateAtoms();
 }

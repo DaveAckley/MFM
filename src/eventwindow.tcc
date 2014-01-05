@@ -22,7 +22,7 @@ EventWindow<T>::EventWindow(Point<int>& center, T* atoms, u32 tileWidth)
 }
 
 template <class T>
-EventWindow<T>::~EventWindow()
+void EventWindow<T>::DeallocateAtoms()
 {
   delete[] m_atoms;
 }

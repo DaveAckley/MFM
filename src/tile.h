@@ -17,13 +17,16 @@ template <class T>
 class Tile
 {
 private:
+
   T m_atoms[TILE_SIZE];
 
   Point<int> m_lastExecutedAtom;
 
-  EventWindow<T>* CreateRandomWindow();
+  EventWindow<T> m_executingWindow;
 
-  EventWindow<T>* CreateWindowAt(Point<int>& pt);
+  void CreateRandomWindow();
+
+  void CreateWindowAt(Point<int>& pt);
 
   u32 (*m_stateFunc)(T* atom);
 
