@@ -4,7 +4,7 @@
 #include "point.h"
 #include "itype.h"
 
-#define EVENT_WINDOW_RADIUS 4
+#define EVENT_WINDOW_RADIUS 2
 
 template <class T>
 class Tile;
@@ -35,7 +35,7 @@ public:
 
   T& GetRelativeAtom(Point<int>& offset);
 
-  void SetAtom(Point<int>& offset, T* atom);
+  void SetRelativeAtom(Point<int>& offset, T atom);
 
   void SwapAtoms(Point<int>& locA, Point<int>& locB);
 

@@ -34,6 +34,14 @@ T& EventWindow<T>::GetCenterAtom()
 }
 
 template <class T>
+void EventWindow<T>::SetRelativeAtom(Point<int>& offset, T atom)
+{
+  u8 idx = ManhattanDir::FromPoint(offset, MANHATTAN_TABLE_EVENT);
+
+  m_atoms[idx] = atom;
+}
+
+template <class T>
 T& EventWindow<T>::GetRelativeAtom(Point<int>& offset)
 {
   u8 idx = ManhattanDir::FromPoint(offset, MANHATTAN_TABLE_EVENT);

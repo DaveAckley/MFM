@@ -8,7 +8,7 @@
 #include "elementtable.hpp"
 
 /* The length, in sites, of a Tile.*/
-#define TILE_WIDTH 32
+#define TILE_WIDTH 50
 
 /*The number of sites a tile contains.*/
 #define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)

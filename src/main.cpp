@@ -24,7 +24,7 @@
 
 #define FRAMES_PER_SECOND 60.0
 
-#define EVENTS_PER_FRAME 10
+#define EVENTS_PER_FRAME 10000
 
 #define CAMERA_SLOW_SPEED 2
 #define CAMERA_FAST_SPEED 10
@@ -117,8 +117,29 @@ public:
 
     P1Atom atom(ELEMENT_DREG);
     P1Atom res(ELEMENT_RES);
-    Point<int> aloc(10, 10);
-    Point<int> rloc(3, 3);
+    Point<int> aloc(30, 30);
+    Point<int> rloc(35, 40);
+
+    /* 
+     * Getto fix for keeping atoms from going
+     * into the cache
+     */
+
+    for(int x = 0; x < TILE_WIDTH; x++)
+    {
+      for(int y = 0; y < TILE_WIDTH; y++)
+      {
+	if(x < EVENT_WINDOW_RADIUS ||
+	   y < EVENT_WINDOW_RADIUS ||
+	   x >= TILE_WIDTH - EVENT_WINDOW_RADIUS ||
+	   y >= TILE_WIDTH - EVENT_WINDOW_RADIUS)
+	{
+	  Point<int> nloc(x, y);
+
+	  mainGrid.PlaceAtom(res, nloc);
+	}
+      }
+    }
 
     mainGrid.PlaceAtom(atom, aloc);
     mainGrid.PlaceAtom(res, rloc);

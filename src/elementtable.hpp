@@ -20,20 +20,20 @@ template <class T>
 class ElementTable
 {
 private:
-
-  typedef void (* BehaviorFunction )(EventWindow<T>&);
-  BehaviorFunction m_funcmap[0xff];
-
   /*
    * This is used to get the "state" field
    * out of an atom.
    */
 
-  u32 (*m_statefunc)(T* atom);
+  typedef u32 (* StateFunction )(T* atom);
+  StateFunction m_statefunc;
 
-  static void NothingBehavior(EventWindow<T>& w);
+  typedef void (* BehaviorFunction )(EventWindow<T>&, StateFunction f);
+  BehaviorFunction m_funcmap[0xff];
 
-  static void DRegBehavior(EventWindow<T>& w);
+  static void NothingBehavior(EventWindow<T>& w, StateFunction f);
+
+  static void DRegBehavior(EventWindow<T>& w, StateFunction f);
   
 public:
   ElementTable(u32 (*stateFunc)(T* atom));
@@ -41,7 +41,7 @@ public:
   ~ElementTable() { }
 
   void Execute(EventWindow<T>& window)
-  { m_funcmap[m_statefunc(&(window.GetCenterAtom()))](window); }
+  { m_funcmap[m_statefunc(&(window.GetCenterAtom()))](window, m_statefunc); }
 
   void FillAtom(T* atom, ElementType type);
 
