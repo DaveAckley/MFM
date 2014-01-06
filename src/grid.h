@@ -47,9 +47,9 @@ public:
 
   void TriggerEvent();
   
-  Tile<T>* GetTile(Point<int> location);
+  Tile<T>& GetTile(Point<int> location);
   
-  Tile<T>* GetTile(int x, int y);
+  Tile<T>& GetTile(int x, int y);
 };
 
 #include "grid.tcc"

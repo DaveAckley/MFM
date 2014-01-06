@@ -8,7 +8,7 @@
 #include "elementtable.hpp"
 
 /* The length, in sites, of a Tile.*/
-#define TILE_WIDTH 20
+#define TILE_WIDTH 50
 
 /*The number of sites a tile contains.*/
 #define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)
@@ -17,13 +17,16 @@ template <class T>
 class Tile
 {
 private:
+
   T m_atoms[TILE_SIZE];
 
   Point<int> m_lastExecutedAtom;
 
-  EventWindow<T>* CreateRandomWindow();
+  EventWindow<T> m_executingWindow;
 
-  EventWindow<T>* CreateWindowAt(Point<int>& pt);
+  void CreateRandomWindow();
+
+  void CreateWindowAt(Point<int>& pt);
 
   u32 (*m_stateFunc)(T* atom);
 

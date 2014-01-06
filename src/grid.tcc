@@ -111,7 +111,7 @@ void Grid<T>::FillLastEventTile(Point<int>& out)
 }
 
 template <class T>
-Tile<T>* Grid<T>::GetTile(int x, int y)
+Tile<T>& Grid<T>::GetTile(int x, int y)
 {
-  return &m_tiles[y * m_width + x];
+  return m_tiles[y * m_width + x];
 }

@@ -153,3 +153,15 @@ void ManhattanDir::FillVNNeighbors(Point<int>* pts)
   pts[2].Set(1,  0);
   pts[3].Set(0,  1);
 }
+
+void ManhattanDir::FillRandomSingleDir(Point<int>& pt)
+{
+  switch(rand() & 3)
+  {
+  case 0: pt.Set(0, -1); break;
+  case 1: pt.Set(0, 1);  break;
+  case 2: pt.Set(-1, 0); break;
+  case 3: pt.Set(1, 0); break;
+  default: return;
+  }
+}

@@ -22,7 +22,7 @@ EventWindow<T>::EventWindow(Point<int>& center, T* atoms, u32 tileWidth)
 }
 
 template <class T>
-EventWindow<T>::~EventWindow()
+void EventWindow<T>::DeallocateAtoms()
 {
   delete[] m_atoms;
 }
@@ -31,6 +31,14 @@ template <class T>
 T& EventWindow<T>::GetCenterAtom()
 {
   return m_atoms[m_atomCount >> 1];
+}
+
+template <class T>
+void EventWindow<T>::SetRelativeAtom(Point<int>& offset, T atom)
+{
+  u8 idx = ManhattanDir::FromPoint(offset, MANHATTAN_TABLE_EVENT);
+
+  m_atoms[idx] = atom;
 }
 
 template <class T>

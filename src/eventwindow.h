@@ -25,13 +25,17 @@ public:
 
   EventWindow(Point<int>& center, T* atoms, u32 tileWidth);
 
-  ~EventWindow();
+  EventWindow() { }
+
+  void DeallocateAtoms();
+
+  ~EventWindow() { }
 
   T& GetCenterAtom();
 
   T& GetRelativeAtom(Point<int>& offset);
 
-  void SetAtom(Point<int>& offset, T* atom);
+  void SetRelativeAtom(Point<int>& offset, T atom);
 
   void SwapAtoms(Point<int>& locA, Point<int>& locB);
 

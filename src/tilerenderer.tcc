@@ -1,3 +1,4 @@
+/*
 template <class T>
 void TileRenderer::RenderAtoms(Point<int>* pt,
 			       Tile<T>* tile,
@@ -7,12 +8,15 @@ void TileRenderer::RenderAtoms(Point<int>* pt,
   int ewr = EVENT_WINDOW_RADIUS;
   u32 (*stfu)(T*) = tile->GetStateFunc();
   u32 cacheOffset = renderCache ? ewr * m_atomDrawSize : 0;
-  for(int x = ewr; x < TILE_WIDTH - ewr; x++)
+
+  u32 astart = renderCache ? 0 : ewr;
+  u32 aend   = renderCache ? TILE_WIDTH : TILE_WIDTH - ewr;
+  for(int x = astart; x < aend; x++)
   {
-    atomLoc.SetX(x - ewr);
-    for(int y = ewr; y < TILE_WIDTH - ewr; y++)
+    atomLoc.SetX(x);
+    for(int y = astart; y < aend; y++)
     {
-      atomLoc.SetY(y - ewr);
+      atomLoc.SetY(y);
       u32 sval = stfu(tile->GetAtom(&atomLoc));
       u32 color;
 
@@ -20,6 +24,9 @@ void TileRenderer::RenderAtoms(Point<int>* pt,
       {
       case ELEMENT_DREG:
 	color = 0xff505050;
+	break;
+      case ELEMENT_RES:
+	color = 0xffffff00;
 	break;
       default: continue;
       }
@@ -41,14 +48,65 @@ void TileRenderer::RenderAtoms(Point<int>* pt,
     }
   }
 }
+*/
 
 template <class T>
-void TileRenderer::RenderTile(Tile<T>* t, Point<int> loc, bool renderWindow,
+void TileRenderer::RenderAtoms(Point<int>& pt, Tile<T>& tile,
+			       bool renderCache)
+{
+  u32 astart = renderCache ? 0 : EVENT_WINDOW_RADIUS;
+  u32 aend   = renderCache ? TILE_WIDTH : TILE_WIDTH - EVENT_WINDOW_RADIUS;
+
+  u32 cacheOffset = renderCache ? 0 : -EVENT_WINDOW_RADIUS * m_atomDrawSize;
+
+  Point<int> atomLoc;
+
+  for(int x = astart; x < aend; x++)
+  {
+    atomLoc.SetX(x);
+    for(int y = astart; y < aend; y++)
+    {
+      atomLoc.SetY(y);
+
+      T* atom = tile.GetAtom(&atomLoc);
+      u32 color;
+
+      switch(tile.GetStateFunc()(atom))
+      {
+      case ELEMENT_DREG:
+	color = 0xff505050;
+	break;
+      case ELEMENT_RES:
+	color = 0xffffff00;
+	break;
+      default: continue;
+      }
+
+      Drawing::FillCircle(m_dest,
+			  pt.GetX() +
+			  m_atomDrawSize * x +
+			  m_windowTL.GetX() +
+			  cacheOffset,
+			  pt.GetY() +
+			  m_atomDrawSize * y +
+			  m_windowTL.GetY() +
+			  cacheOffset,
+			  m_atomDrawSize,
+			  m_atomDrawSize,
+			  (m_atomDrawSize / 2) - 2,
+			  color);
+			  
+    }
+  }
+}
+
+template <class T>
+void TileRenderer::RenderTile(Tile<T>& t, Point<int>& loc, bool renderWindow,
 			      bool renderCache)
 {
   Point<int> multPt(loc.GetX(), loc.GetY());
 
-  multPt.Multiply((TILE_WIDTH - 4) * 
+  multPt.Multiply((TILE_WIDTH) * 
 		  m_atomDrawSize);
 
   Point<int> realPt(multPt.GetX(), multPt.GetY());
@@ -70,10 +128,10 @@ void TileRenderer::RenderTile(Tile<T>* t, Point<int> loc, bool renderWindow,
 
     if(renderWindow)
     {
-      RenderEventWindow(multPt, *t, renderCache);
+      RenderEventWindow(multPt, t, renderCache);
     }
 
-    RenderAtoms(&multPt, t, renderCache);
+    RenderAtoms(multPt, t, renderCache);
     
     if(m_drawGrid)
     {
@@ -91,7 +149,7 @@ void TileRenderer::RenderEventWindow(Point<int>& offset,
 
   Point<int> atomLoc;
   Point<int> eventCenter;
-  u32 cacheOffset = renderCache ? EVENT_WINDOW_RADIUS : 0;
+  u32 cacheOffset = renderCache ? 0 : -EVENT_WINDOW_RADIUS;
   u32 drawColor = Drawing::WHITE;
   
   tile.FillLastExecutedAtom(eventCenter);

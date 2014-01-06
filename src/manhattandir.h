@@ -47,6 +47,8 @@ private:
 
 public:
 
+  static void FillRandomSingleDir(Point<int>& pt);
+
   static u32 GetTableSize(TableType type);
 
   static u32 ShortTableSize();
