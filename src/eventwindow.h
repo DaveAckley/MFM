@@ -4,7 +4,7 @@
 #include "point.h"
 #include "itype.h"
 
-#define EVENT_WINDOW_RADIUS 2
+#define EVENT_WINDOW_RADIUS 4
 
 template <class T>
 class Tile;

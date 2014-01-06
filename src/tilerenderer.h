@@ -36,7 +36,7 @@ private:
 		    u32 color);
 
   template <class T>
-  void RenderAtoms(Point<int>* pt, Tile<T>* tile, bool renderCache);
+  void RenderAtoms(Point<int>& pt, Tile<T>& tile, bool renderCache);
 
   template <class T>
   void RenderEventWindow(Point<int>& offset, Tile<T>& tile, bool renderCache);
@@ -46,7 +46,7 @@ public:
   TileRenderer(SDL_Surface* dest);
 
   template <class T>
-  void RenderTile(Tile<T>* t, Point<int> loc, bool renderWindow, 
+  void RenderTile(Tile<T>& t, Point<int>& loc, bool renderWindow, 
 		  bool renderCache);
 
   void IncreaseAtomSize();
