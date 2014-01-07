@@ -29,7 +29,7 @@
 
 #define FAIL(code) FailHere(__FILE__,__LINE__,FAIL_CODE_REASON_##code)
 
-extern "C" void FailHere(const char * file, int line, int code) __attribute__ ((noreturn));
+extern "C" void FailHere(const char * file, const int line, const int code) __attribute__ ((noreturn));
 extern "C" const char * FailCodeReason(int failCode) ;
 
 
