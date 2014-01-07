@@ -12,7 +12,7 @@ HEADERS := $(shell find $(SRCDIR) -type f $(HDRPAT))
 ALLDEP += $(HEADERS)
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 LIB := -L lib -lm -lSDL
-INC := -I include
+INC := -I src/include
 
 $(TARGET): $(OBJECTS)  
 	@mkdir -p $(OUTPUTDIR)
