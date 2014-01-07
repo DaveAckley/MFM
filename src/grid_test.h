@@ -1,4 +1,4 @@
-#ifndef GRID_TEST_H
+#ifndef GRID_TEST_H      /* -*- C++ -*- */
 #define GRID_TEST_H
 
 class GridTest

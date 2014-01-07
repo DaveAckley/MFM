@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "elementtable.hpp"
+#include "elementtable.h"
 #include "manhattandir.h"
 
 #define RAND_ONEIN(x) !(rand() % (x))

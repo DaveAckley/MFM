@@ -1,5 +1,5 @@
-#ifndef BITFIELD_TEST_HPP
-#define BITFIELD_TEST_HPP
+#ifndef BITFIELD_TEST_H      /* -*- C++ -*- */
+#define BITFIELD_TEST_H
 
 #include "bitfield.h"
 
@@ -22,4 +22,4 @@ public:
   static void Test_bitfieldRemove();
 };
 
-#endif /*BITFIELD_TEST_HPP*/
+#endif /*BITFIELD_TEST_H*/

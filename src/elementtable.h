@@ -1,5 +1,5 @@
-#ifndef ELEMENTTABLE_HPP
-#define ELEMENTTABLE_HPP
+#ifndef ELEMENTTABLE_H      /* -*- C++ -*- */
+#define ELEMENTTABLE_H
 
 #include "bitfield.h"
 #include "eventwindow.h"
@@ -50,4 +50,4 @@ public:
 
 #include "elementtable.tcc"
 
-#endif /*ELEMENETTABLE_HPP*/
+#endif /*ELEMENETTABLE_H*/

@@ -1,7 +1,7 @@
 #include "assert.h"
 #include "grid.h"
 #include "p1atom.h"
-#include "grid_test.hpp"
+#include "grid_test.h"
 
 void GridTest::Test_gridPlaceAtom()
 {

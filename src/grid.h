@@ -3,7 +3,7 @@
 
 #include "itype.h"
 #include "tile.h"
-#include "elementtable.hpp"
+#include "elementtable.h"
 
 template <class T>
 class Grid

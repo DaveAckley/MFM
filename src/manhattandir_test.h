@@ -1,5 +1,5 @@
-#ifndef MANHATTANDIR_TEST_HPP
-#define MANHATTANDIR_TEST_HPP
+#ifndef MANHATTANDIR_TEST_H      /* -*- C++ -*- */
+#define MANHATTANDIR_TEST_H
 
 #include "manhattandir.h"
 
@@ -10,4 +10,4 @@ public:
   
 };
 
-#endif /*MANHATTANDIR_TEST_HPP*/
+#endif /*MANHATTANDIR_TEST_H*/

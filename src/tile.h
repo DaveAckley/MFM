@@ -5,7 +5,7 @@
 #include "p1atom.h"
 #include "point.h"
 #include "eventwindow.h"
-#include "elementtable.hpp"
+#include "elementtable.h"
 
 /* The length, in sites, of a Tile.*/
 #define TILE_WIDTH 50

@@ -1,6 +1,6 @@
 #include "assert.h"
 #include "eventwindow.h"
-#include "p1atom_test.hpp"
+#include "p1atom_test.h"
 #include "p1atom.h"
 #include "manhattandir.h"
 

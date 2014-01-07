@@ -1,5 +1,5 @@
-#ifndef P1ATOM_TEST_HPP
-#define P1ATOM_TEST_HPP
+#ifndef P1ATOM_TEST_H      /* -*- C++ -*- */
+#define P1ATOM_TEST_H
 
 class P1AtomTest
 { 
@@ -25,4 +25,4 @@ public:
   static void Test_p1atomRemoveSB();
 };
 
-#endif /*P1ATOM_TEST_HPP*/
+#endif /*P1ATOM_TEST_H*/

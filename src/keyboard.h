@@ -1,5 +1,5 @@
-#ifndef KEYBOARD_HPP
-#define KEYBOARD_HPP
+#ifndef KEYBOARD_H      /* -*- C++ -*- */
+#define KEYBOARD_H
 
 #include <set>
 #include "itype.h"
@@ -36,4 +36,4 @@ public:
   void Flip();
 };
 
-#endif /*KEYBOARD_HPP*/
+#endif /*KEYBOARD_H*/

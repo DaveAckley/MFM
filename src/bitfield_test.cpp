@@ -1,5 +1,5 @@
 #include "assert.h"
-#include "bitfield_test.hpp"
+#include "bitfield_test.h"
 #include "itype.h"
 
 static BitField<256> bits;

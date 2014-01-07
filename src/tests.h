@@ -2,14 +2,14 @@
 #define TESTS_H
 
 #include "manhattandir.h"
-#include "manhattandir_test.hpp"
-#include "bitfield_test.hpp"
-#include "point_test.hpp"
-#include "p1atom_test.hpp"
-#include "tile_test.hpp"
+#include "manhattandir_test.h"
+#include "bitfield_test.h"
+#include "point_test.h"
+#include "p1atom_test.h"
+#include "tile_test.h"
 #include "eventwindow.h"
-#include "grid_test.hpp"
-#include "eventwindow_test.hpp"
+#include "grid_test.h"
+#include "eventwindow_test.h"
 
 int main(int argc, char** argv)
 {

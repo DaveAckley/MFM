@@ -1,5 +1,5 @@
-#ifndef TILE_TEST_HPP
-#define TILE_TEST_HPP
+#ifndef TILE_TEST_H      /* -*- C++ -*- */
+#define TILE_TEST_H
 
 class TileTest
 {
