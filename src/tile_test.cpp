@@ -2,7 +2,7 @@
 #include "tile.h"
 #include "p1atom.h"
 #include "point.h"
-#include "tile_test.hpp"
+#include "tile_test.h"
 
 void TileTest::Test_tilePlaceAtom()
 {

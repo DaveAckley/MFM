@@ -1,5 +1,5 @@
 #include "assert.h"
-#include "point_test.hpp"
+#include "point_test.h"
 #include "point.h"
 
 void PointTest::Test_pointAdd()

@@ -1,4 +1,5 @@
-CC := g++ -ansi -pedantic -g2
+CC := g++ 
+CFLAGS += -ansi -pedantic -Wall -Werror -g2
 ALLDEP := Makefile
 SRCDIR := src
 BUILDDIR := build
@@ -6,13 +7,13 @@ OUTPUTDIR := bin
 TARGET := $(OUTPUTDIR)/mfm
 
 SRCEXT := cpp
-HDRPAT := -name *.h -o -name *.hpp -o -name *.tcc
+HDRPAT := -name *.h -o -name *.tcc
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 HEADERS := $(shell find $(SRCDIR) -type f $(HDRPAT))
 ALLDEP += $(HEADERS)
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 LIB := -L lib -lm -lSDL
-INC := -I include
+INC := -I src/include
 
 $(TARGET): $(OBJECTS)  
 	@mkdir -p $(OUTPUTDIR)

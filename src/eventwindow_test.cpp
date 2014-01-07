@@ -1,6 +1,6 @@
-#include "elementtable.hpp"
+#include "elementtable.h"
 #include "assert.h"
-#include "eventwindow_test.hpp"
+#include "eventwindow_test.h"
 #include "eventwindow.h"
 #include "p1atom.h"
 #include "point.h"

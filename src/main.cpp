@@ -13,7 +13,7 @@
 #include "grid.h"
 #include "gridrenderer.h"
 #include "itype.h"
-#include "keyboard.hpp"
+#include "keyboard.h"
 #include "manhattandir.h"
 #include "mouse.h"
 #include "p1atom.h"

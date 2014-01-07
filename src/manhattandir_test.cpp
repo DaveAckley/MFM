@@ -1,5 +1,5 @@
 #include "assert.h"
-#include "manhattandir_test.hpp"
+#include "manhattandir_test.h"
 
 void ManhattanDirTest::Test_manhattandirConversion()
 {
