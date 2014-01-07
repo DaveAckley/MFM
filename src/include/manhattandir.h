@@ -1,87 +1,108 @@
-#ifndef MANHATTANDIR_H      /* -*- C++ -*- */
+/*                                              -*- mode:C++ -*-
+  manhattandir.h Support for mapping manhattan distances in and out of 1D form
+  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+  USA
+*/
+
+/**
+  \file manhattandir.h Support for mapping manhattan distances in and out of 1D form
+  \author Trent R. Small.
+  \author David H. Ackley.
+  \date (C) 2014 All rights reserved.
+  \lgpl
+ */
+#ifndef MANHATTANDIR_H
 #define MANHATTANDIR_H
 
 #include "itype.h"
 #include "point.h"
 
-/*
- * This class assumes that a Short bond is
- * maximum 2 away from the center and a
- * Long bond is maximum 4 from the center.
+/**
+ * Compute the number of sites within Manhattan distance 'radius' of a
+ * given center site.  WARNING: Macro expands argument 'radius' twice!
+ * Avoid side-effects!
  */
-#define MANHATTANDIR_SHORT_TABLE_SIZE 13
-#define MANHATTANDIR_LONG_TABLE_SIZE 41
 
-using namespace std;
+#define EVENT_WINDOW_SITES(radius) ((((radius)*2+1)*((radius)*2+1))/2+1)
+
+// Let's let the table type and the max bond length be the same thing.
+// Can simplify it later.
 
 typedef enum
 {
-  MANHATTAN_TABLE_SHORT,
-  MANHATTAN_TABLE_LONG,
-  MANHATTAN_TABLE_EVENT
-}TableType;
+  MANHATTAN_TABLE_RADIUS_0 = 0,
+  MANHATTAN_TABLE_RADIUS_1,
+  MANHATTAN_TABLE_RADIUS_2,
+  MANHATTAN_TABLE_RADIUS_3,
+  MANHATTAN_TABLE_RADIUS_4,
+  MANHATTAN_TABLE_SHORT = MANHATTAN_TABLE_RADIUS_2,
+  MANHATTAN_TABLE_LONG = MANHATTAN_TABLE_RADIUS_4,
+  MANHATTAN_TABLE_EVENT = MANHATTAN_TABLE_RADIUS_4
+} TableType;
 
+template <u32 R>
 class ManhattanDir
 {
-private:
-
-  static Point<int> 
-  pointTableShort[MANHATTANDIR_SHORT_TABLE_SIZE];
-
-  static Point<int>
-  pointTableLong[MANHATTANDIR_LONG_TABLE_SIZE];
-
-  static Point<int>* pointTableEventWindow;
-
-  static void FillTable(Point<int>* table,
-			TableType type);
-
-  static u32 m_shortTableSize;
-  static u32 m_longTableSize;
-  static u32 m_eventTableSize;
-  static u32 m_eventWindowRadius;
-
-  static u32 GetBondSize(TableType type);
-
-  static Point<int>* GetTable(TableType type);
-
 public:
+  static const u32 EVENT_WINDOW_DIAMETER = R*2+1;
 
-  static void FillRandomSingleDir(Point<int>& pt);
-
-  static u32 GetTableSize(TableType type);
-
-  static u32 ShortTableSize();
-
-  static u32 LongTableSize();
-  
-  /*
-   * Call this before using any of the other public
-   * methods.
+  /**
+   * Access the singleton ManhattanDir of any given size.
    */
-  static void AllocTables(u8 eventWindowRadius);
+  static ManhattanDir<R> & get() ;
 
-  /*
-   * Call this after using this class to deallocate
-   * any used memory.
-   */
-  static void DeallocTables();
+  void FillRandomSingleDir(Point<int>& pt);
+
+  u32 GetTableSize(TableType type);
+
+  u32 ShortTableSize();
+
+  u32 LongTableSize();
   
-  static u8 FromPoint(Point<int>& offset,
-		      TableType type);
+  ManhattanDir();
+
+  s32 FromPoint(const Point<s32>& offset, TableType type);
 
   /* 
    * Fills pt with the point represented by bits.
    * If this is a short bond (i.e. a 4-bit rep),
    * sbond needs to be true.
    */
-  static void FillFromBits(Point<int>& pt, u8 bits,
+  void FillFromBits(Point<int>& pt, u8 bits,
 			   TableType type);
 
-  static u32 ManhattanArea(u32 maxDistance);
+  void FillVNNeighbors(Point<int>* pts);
 
-  static void FillVNNeighbors(Point<int>* pts);
+private:
+  static const u32 ARRAY_LENGTH = EVENT_WINDOW_SITES(R);
+
+  static inline u32 ManhattanArea(u32 maxDistance) {
+    return EVENT_WINDOW_SITES(maxDistance);
+  }
+
+  Point<s32> m_indexToPoint[ARRAY_LENGTH];
+  s32 m_pointToIndex[EVENT_WINDOW_DIAMETER][EVENT_WINDOW_DIAMETER];
+
+  u32 m_firstIndex[R+2];  // m_firstIndex[R+1] holds 'lastIndex[R]'
+
+  u32 GetBondSize(TableType type);
   
 };
+
+#include "manhattandir.tcc"
 
 #endif /*MANHATTANDIR_H*/
