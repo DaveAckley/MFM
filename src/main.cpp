@@ -31,14 +31,20 @@
 
 class MFMSim
 {
+public:
+  static const u32 EVENT_WINDOW_RADIUS = 4;
+
 private:
+
+  typedef Grid<P1Atom,EVENT_WINDOW_RADIUS> GridP1Atom;
+  typedef ElementTable<P1Atom,EVENT_WINDOW_RADIUS> ElementTableP1Atom;
 
   Mouse mouse;
   Keyboard keyboard;
   SDL_Surface* screen;
   GridRenderer grend;
 
-  void Update(Grid<P1Atom>& grid)
+  void Update(GridP1Atom& grid)
   { 
     u8 speed = keyboard.ShiftHeld() ?
       CAMERA_FAST_SPEED : CAMERA_SLOW_SPEED;
@@ -103,15 +109,18 @@ public:
 
   void Run()
   {
+    // Repeatable until forced otherwise
+    srandom(2);
+
     bool running = true;
     screen = SDL_SetVideoMode(640, 640, 32,
 			      SDL_SWSURFACE);
 
-    ElementTable<P1Atom> elements(&P1Atom::StateFunc);
+    ElementTableP1Atom elements(&P1Atom::StateFunc);
 
     SDL_Event event;
     grend.SetDestination(screen);
-    Grid<P1Atom> mainGrid(1, 1, &elements);
+    GridP1Atom mainGrid(1, 1, &elements);
 
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
 
@@ -125,9 +134,9 @@ public:
      * into the cache
      */
 
-    for(int x = 0; x < TILE_WIDTH; x++)
+    for(u32 x = 0; x < TILE_WIDTH; x++)
     {
-      for(int y = 0; y < TILE_WIDTH; y++)
+      for(u32 y = 0; y < TILE_WIDTH; y++)
       {
 	if(x < EVENT_WINDOW_RADIUS ||
 	   y < EVENT_WINDOW_RADIUS ||
@@ -202,13 +211,13 @@ int main(int argc, char** argv)
 
   srand(time(NULL));
 
-  ManhattanDir::AllocTables(EVENT_WINDOW_RADIUS);
+  //ManhattanDir<4>::AllocTables(EVENT_WINDOW_RADIUS);
 
   MFMSim sim;
 
   sim.Run();
 
-  ManhattanDir::DeallocTables();
+  //ManhattanDir<4>::DeallocTables();
 
   SDL_Quit();
 

@@ -11,12 +11,15 @@
 #include "itype.h"
 #include "point.h"
 #include "bitfield.h"
+#include "manhattandir.h"
 
 
 class P1Atom
 {
 private:
   BitField<P1ATOM_SIZE> m_bits;
+
+  typedef ManhattanDir<4> ManhattanDir4;
 
 public:
 

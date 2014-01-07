@@ -1,19 +1,19 @@
 #include "eucliddir.h"
 #include "grid.h"
 
-template <class T>
-Grid<T>::Grid(int width, int height, ElementTable<T>* elementTable)
+template <class T,u32 R>
+Grid<T,R>::Grid(int width, int height, ElementTable<T,R>* elementTable)
 {
   m_width = width;
   m_height = height;
 
-  m_tiles = new Tile<T>[m_width * m_height];
+  m_tiles = new Tile<T,R>[m_width * m_height];
 
   m_elementTable = elementTable;
 }
 
-template <class T>
-void Grid<T>::SetStateFunc(u32 (*stateFunc)(T* atom))
+template <class T,u32 R>
+void Grid<T,R>::SetStateFunc(u32 (*stateFunc)(T* atom))
 {
   for(u32 i = 0; i < m_width * m_height; i++)
   {
@@ -21,67 +21,67 @@ void Grid<T>::SetStateFunc(u32 (*stateFunc)(T* atom))
   }
 }
 
-template <class T>
-Grid<T>::~Grid()
+template <class T, u32 R>
+Grid<T,R>::~Grid()
 {
   delete[] m_tiles;
 }
 
-template <class T>
-u32 Grid<T>::GetHeight()
+template <class T, u32 R>
+u32 Grid<T,R>::GetHeight()
 {
   return m_height;
 }
 
-template <class T>
-u32 Grid<T>::GetWidth()
+template <class T, u32 R>
+u32 Grid<T,R>::GetWidth()
 {
   return m_width;
 }
 
-template <class T>
-void Grid<T>::PlaceAtom(T& atom, Point<int>& loc)
+template <class T, u32 R>
+void Grid<T,R>::PlaceAtom(T& atom, Point<int>& loc)
 {
-  int x = loc.GetX() / TILE_WIDTH;
-  int y = loc.GetY() / TILE_WIDTH;
+  u32 x = loc.GetX() / TILE_WIDTH;
+  u32 y = loc.GetY() / TILE_WIDTH;
 
   Point<int> local(loc.GetX() % TILE_WIDTH,
 		   loc.GetY() % TILE_WIDTH);
 
-  m_tiles[x + y * m_width].PlaceAtom(atom, local);
+  GetTile(x,y).PlaceAtom(atom, local);
 }
 
-template <class T>
-T* Grid<T>::GetAtom(Point<int>& loc)
+template <class T, u32 R>
+T* Grid<T,R>::GetAtom(Point<int>& loc)
 {
-  int x = loc.GetX() / TILE_WIDTH;
-  int y = loc.GetY() / TILE_WIDTH;
+  u32 x = loc.GetX() / TILE_WIDTH;
+  u32 y = loc.GetY() / TILE_WIDTH;
 
   Point<int> local(loc.GetX() % TILE_WIDTH,
 		   loc.GetY() % TILE_WIDTH);
 
-  return m_tiles[x + y * m_width].GetAtom(&local);
+  return GetTile(x,y).GetAtom(&local);
 }
 
-template <class T>
-void Grid<T>::Expand(int extraW, int extraH)
+template <class T, u32 R>
+void Grid<T,R>::Expand(int extraW, int extraH)
 {
   Resize(m_width + extraW, m_height + extraH);
 }
 
-template <class T>
-void Grid<T>::Resize(int newWidth, int newHeight)
+template <class T, u32 R>
+void Grid<T,R>::Resize(int newWidth, int newHeight)
 {
   delete m_tiles;
 
   m_width = newWidth;
   m_height = newHeight;
 
-  m_tiles = new Tile<T>[m_width * m_height];
+  m_tiles = new Tile<T,R>[m_width * m_height];
 }
 
-template <class T>
-void Grid<T>::TriggerEvent()
+template <class T, u32 R>
+void Grid<T,R>::TriggerEvent()
 {
   Point<int> windowTile(true, m_width, m_height);
 
@@ -91,9 +91,9 @@ void Grid<T>::TriggerEvent()
   m_lastEventTile.Set(windowTile.GetX(), windowTile.GetY());
 }
 
-template <class T>
-void Grid<T>::FillNeighbors(int center_x, int center_y,
-			    Tile<T>** out)
+template <class T, u32 R>
+void Grid<T,R>::FillNeighbors(int center_x, int center_y,
+			    Tile<T,R>** out)
 {  
   for(int i = 0; i < 8; i++)
   {
@@ -101,15 +101,9 @@ void Grid<T>::FillNeighbors(int center_x, int center_y,
   }
 }
 
-template <class T>
-void Grid<T>::FillLastEventTile(Point<int>& out)
+template <class T, u32 R>
+void Grid<T,R>::FillLastEventTile(Point<int>& out)
 {
   out.Set(m_lastEventTile.GetX(),
 	  m_lastEventTile.GetY());
-}
-
-template <class T>
-Tile<T>& Grid<T>::GetTile(int x, int y)
-{
-  return m_tiles[y * m_width + x];
 }

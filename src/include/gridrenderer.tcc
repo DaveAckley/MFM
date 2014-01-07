@@ -1,5 +1,5 @@
-template <class T>
-void GridRenderer::RenderGrid(Grid<T>& grid)
+template <class T,u32 R>
+void GridRenderer::RenderGrid(Grid<T,R>& grid)
 {
   if(m_renderTilesSeparated)
   {
@@ -11,8 +11,8 @@ void GridRenderer::RenderGrid(Grid<T>& grid)
   }
 }
 
-template <class T>
-void GridRenderer::RenderGridSeparated(Grid<T>& grid)
+template <class T,u32 R>
+void GridRenderer::RenderGridSeparated(Grid<T,R>& grid)
 {
   Point<int> current;
   Point<int> eventLoc;
@@ -47,8 +47,8 @@ void GridRenderer::RenderGridSeparated(Grid<T>& grid)
   }  
 }
 
-template <class T>
-void GridRenderer::RenderGridClose(Grid<T>& grid)
+template <class T,u32 R>
+void GridRenderer::RenderGridClose(Grid<T,R>& grid)
 {
   Point<int> current;
   Point<int> eventLoc;

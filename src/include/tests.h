@@ -1,6 +1,9 @@
 #ifndef TESTS_H      /* -*- C++ -*- */
 #define TESTS_H
 
+/* Get some types for us to test */
+#include "test_common.h"
+
 #include "manhattandir.h"
 #include "manhattandir_test.h"
 #include "bitfield_test.h"
@@ -13,7 +16,7 @@
 
 int main(int argc, char** argv)
 {
-  ManhattanDir::AllocTables(EVENT_WINDOW_RADIUS);
+  //  ManhattanDir<4>::ManhattanDir tables();
 
   PointTest::Test_pointAdd();
   PointTest::Test_pointMultiply();
@@ -42,7 +45,7 @@ int main(int argc, char** argv)
   EventWindowTest::Test_eventwindowConstruction();
   EventWindowTest::Test_eventwindowWrite();
 
-  ManhattanDir::DeallocTables();
+  //ManhattanDir::DeallocTables();
 
   return 0;
 }

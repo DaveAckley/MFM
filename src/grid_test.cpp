@@ -7,9 +7,9 @@ void GridTest::Test_gridPlaceAtom()
 {
   P1Atom atom(23);
   
-  ElementTable<P1Atom> table(&P1Atom::StateFunc);
+  ElementTableP1Atom table(&P1Atom::StateFunc);
 
-  Grid<P1Atom> grid(2,2, &table);
+  GridP1Atom grid(2,2, &table);
 
   Point<int> gloc(5, 10);
 

@@ -13,16 +13,18 @@
 /*The number of sites a tile contains.*/
 #define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)
 
-template <class T>
+template <class T,u32 R>
 class Tile
 {
+  static const u32 EVENT_WINDOW_RADIUS = R;
+
 private:
 
   T m_atoms[TILE_SIZE];
 
   Point<int> m_lastExecutedAtom;
 
-  EventWindow<T> m_executingWindow;
+  EventWindow<T,R> m_executingWindow;
 
   void CreateRandomWindow();
 
@@ -52,9 +54,9 @@ public:
 
   void PlaceAtom(T& atom, Point<int>& pt);
 
-  void DiffuseAtom(EventWindow<T>& window);
+  void DiffuseAtom(EventWindow<T,R>& window);
 
-  void Execute(ElementTable<T>& table);
+  void Execute(ElementTable<T,R>& table);
 };
 
 #include "tile.tcc"

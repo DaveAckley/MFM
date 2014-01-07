@@ -9,7 +9,7 @@ u32 P1Atom::AddLongBond(Point<int>& offset)
     P1ATOM_LONGBOND_SIZE * newID;
 
   m_bits.Insert(newBondIdx, P1ATOM_LONGBOND_SIZE,
-		ManhattanDir::FromPoint(offset, MANHATTAN_TABLE_LONG));
+		ManhattanDir4::get().FromPoint(offset, MANHATTAN_TABLE_LONG));
 
   SetLongBondCount(newID + 1);
   return newID;
@@ -24,7 +24,7 @@ u32 P1Atom::AddShortBond(Point<int>& offset)
     P1ATOM_SHORTBOND_SIZE * newID;
 
   m_bits.Insert(newBondIdx, P1ATOM_SHORTBOND_SIZE,
-		ManhattanDir::FromPoint(offset, MANHATTAN_TABLE_SHORT));
+		ManhattanDir4::get().FromPoint(offset, MANHATTAN_TABLE_SHORT));
 
   SetShortBondCount(newID + 1);
   return newID;
@@ -37,7 +37,7 @@ void P1Atom::FillLongBond(u32 index, Point<int>& pt)
 
   u8 bond = m_bits.Read(realIdx, 8);
 
-  ManhattanDir::FillFromBits(pt, bond, MANHATTAN_TABLE_LONG);
+  ManhattanDir4::get().FillFromBits(pt, bond, MANHATTAN_TABLE_LONG);
 }
 
 void P1Atom::FillShortBond(u32 index, Point<int>& pt)
@@ -48,7 +48,7 @@ void P1Atom::FillShortBond(u32 index, Point<int>& pt)
 
   u8 bond = m_bits.Read(realIdx, 4);
 
-  ManhattanDir::FillFromBits(pt, bond, MANHATTAN_TABLE_SHORT);
+  ManhattanDir4::get().FillFromBits(pt, bond, MANHATTAN_TABLE_SHORT);
 }
 
 void P1Atom::RemoveLongBond(u32 index)
@@ -75,14 +75,14 @@ void P1Atom::RemoveShortBond(u32 index)
 P1Atom& P1Atom::operator=(P1Atom rhs)
 {
   int start;
-  for(int i = 0;
-      i < P1ATOM_SIZE / BITFIELD_WORDSIZE; i++)
+  for(u32 i = 0;
+      i < P1ATOM_SIZE / BitField<P1ATOM_SIZE>::BITS_PER_UNIT; i++)
   {
-    start = i * BITFIELD_WORDSIZE;
+    start = i * BitField<P1ATOM_SIZE>::BITS_PER_UNIT;
     m_bits.Write(start,
-		 BITFIELD_WORDSIZE,
+		 BitField<P1ATOM_SIZE>::BITS_PER_UNIT,
 		 rhs.m_bits.Read(start,
-				 BITFIELD_WORDSIZE
+				 BitField<P1ATOM_SIZE>::BITS_PER_UNIT
 				 ));
   }
   return *this;

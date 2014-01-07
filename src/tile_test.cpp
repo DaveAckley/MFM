@@ -6,7 +6,7 @@
 
 void TileTest::Test_tilePlaceAtom()
 {
-  Tile<P1Atom> tile;
+  TileP1Atom tile;
   P1Atom atom(10);
   Point<int> loc(10, 10);
 
