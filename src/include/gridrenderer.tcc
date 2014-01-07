@@ -16,10 +16,10 @@ void GridRenderer::RenderGridSeparated(Grid<T>& grid)
 {
   Point<int> current;
   Point<int> eventLoc;
-  for(int x = 0; x < grid.GetWidth(); x++)
+  for(u32 x = 0; x < grid.GetWidth(); x++)
   {
     current.SetX(x * 2);
-    for(int y = 0; y < grid.GetHeight(); y++)
+    for(u32 y = 0; y < grid.GetHeight(); y++)
     {
       current.SetY(y * 2);
       
@@ -52,10 +52,10 @@ void GridRenderer::RenderGridClose(Grid<T>& grid)
 {
   Point<int> current;
   Point<int> eventLoc;
-  for(int x = 0; x < grid.GetWidth(); x++)
+  for(u32 x = 0; x < grid.GetWidth(); x++)
   {
     current.SetX(x);
-    for(int y = 0; y < grid.GetHeight(); y++)
+    for(u32 y = 0; y < grid.GetHeight(); y++)
     {
       current.SetY(y);
       

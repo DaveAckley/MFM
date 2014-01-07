@@ -1,4 +1,5 @@
-CC := g++ -ansi -pedantic -g2
+CC := g++ 
+CFLAGS += -ansi -pedantic -Wall -Werror -g2
 ALLDEP := Makefile
 SRCDIR := src
 BUILDDIR := build

@@ -61,10 +61,10 @@ void TileRenderer::RenderAtoms(Point<int>& pt, Tile<T>& tile,
 
   Point<int> atomLoc;
 
-  for(int x = astart; x < aend; x++)
+  for(u32 x = astart; x < aend; x++)
   {
     atomLoc.SetX(x);
-    for(int y = astart; y < aend; y++)
+    for(u32 y = astart; y < aend; y++)
     {
       atomLoc.SetY(y);
 
@@ -154,7 +154,7 @@ void TileRenderer::RenderEventWindow(Point<int>& offset,
   
   tile.FillLastExecutedAtom(eventCenter);
   u32 tableSize = ManhattanDir::GetTableSize(MANHATTAN_TABLE_EVENT);
-  for(int i = 0; i < tableSize; i++)
+  for(u32 i = 0; i < tableSize; i++)
   {
     ManhattanDir::FillFromBits(atomLoc, i, MANHATTAN_TABLE_EVENT);
     atomLoc.Add(eventCenter);

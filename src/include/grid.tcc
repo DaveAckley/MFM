@@ -15,7 +15,7 @@ Grid<T>::Grid(int width, int height, ElementTable<T>* elementTable)
 template <class T>
 void Grid<T>::SetStateFunc(u32 (*stateFunc)(T* atom))
 {
-  for(int i = 0; i < m_width * m_height; i++)
+  for(u32 i = 0; i < m_width * m_height; i++)
   {
     m_tiles[i].SetStateFunc(stateFunc);
   }
@@ -44,7 +44,6 @@ void Grid<T>::PlaceAtom(T& atom, Point<int>& loc)
 {
   int x = loc.GetX() / TILE_WIDTH;
   int y = loc.GetY() / TILE_WIDTH;
-  Tile<T>& tile = m_tiles[x + y * m_width];
 
   Point<int> local(loc.GetX() % TILE_WIDTH,
 		   loc.GetY() % TILE_WIDTH);
@@ -57,7 +56,6 @@ T* Grid<T>::GetAtom(Point<int>& loc)
 {
   int x = loc.GetX() / TILE_WIDTH;
   int y = loc.GetY() / TILE_WIDTH;
-  Tile<T>& tile = m_tiles[x + y * m_width];
 
   Point<int> local(loc.GetX() % TILE_WIDTH,
 		   loc.GetY() % TILE_WIDTH);

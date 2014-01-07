@@ -85,4 +85,5 @@ P1Atom& P1Atom::operator=(P1Atom rhs)
 				 BITFIELD_WORDSIZE
 				 ));
   }
+  return *this;
 }

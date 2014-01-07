@@ -2,7 +2,7 @@
 template <int bitLength>
 BitField<bitLength>::BitField()
 {
-  for(int i = 0; i < ARRAY_LENGTH; i++)
+  for(u32 i = 0; i < ARRAY_LENGTH; i++)
   {
     m_bits[i] = 0;
   }
@@ -11,7 +11,7 @@ BitField<bitLength>::BitField()
 template <int bitLength>
 BitField<bitLength>::BitField(u32* values)
 {
-  for(int i = 0; i < ARRAY_LENGTH; i++)
+  for(u32 i = 0; i < ARRAY_LENGTH; i++)
   {
     m_bits[i] = values[i];
   }
@@ -20,7 +20,7 @@ BitField<bitLength>::BitField(u32* values)
 template <int bitLength>
 BitField<bitLength>::BitField(const BitField & other)
 {
-  for(int i = 0; i < ARRAY_LENGTH; i++)
+  for(u32 i = 0; i < ARRAY_LENGTH; i++)
   {
     m_bits[i] = other.m_bits[i];
   }
@@ -119,8 +119,7 @@ template <int bitLength>
 void BitField<bitLength>::Print(FILE* ostream)
 {
   u32 mask = 0xf0000000;
-  int ints = bitLength / BITFIELD_WORDSIZE;
-  for(int i = 0; i < ARRAY_LENGTH; i++)
+  for(u32 i = 0; i < ARRAY_LENGTH; i++)
   {
     for(int j = 0; j < 8; j++)
     {

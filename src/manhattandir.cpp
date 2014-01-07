@@ -138,7 +138,7 @@ u32 ManhattanDir::ManhattanArea(u32 maxDistance)
 {
   int oddSum = 0;
   int oddAcc = 1;
-  for(int i = 0; i < maxDistance; i++)
+  for(u32 i = 0; i < maxDistance; i++)
   {
     oddSum += oddAcc;
     oddAcc += 2;

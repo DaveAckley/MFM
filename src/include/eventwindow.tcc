@@ -70,7 +70,7 @@ template <class T>
 void EventWindow<T>::WriteTo(T* atoms, u16 tileWidth)
 {
   Point<int> coffset;
-  for(int i = 0; i < ManhattanDir::GetTableSize(MANHATTAN_TABLE_EVENT); i++)
+  for(u32 i = 0; i < ManhattanDir::GetTableSize(MANHATTAN_TABLE_EVENT); i++)
   {
     ManhattanDir::FillFromBits(coffset, i, MANHATTAN_TABLE_EVENT);
     coffset.Add(m_center);

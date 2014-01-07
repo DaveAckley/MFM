@@ -130,4 +130,5 @@ Point<T>& Point<T>::operator=(Point<T> rhs)
 {
   m_x = rhs.m_x;
   m_y = rhs.m_y;
+  return *this;
 }
