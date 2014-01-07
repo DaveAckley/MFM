@@ -1,4 +1,4 @@
-#ifndef DRAWING_H
+#ifndef DRAWING_H      /* -*- C++ -*- */
 #define DRAWING_H
 
 #include "SDL/SDL.h"

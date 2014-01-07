@@ -1,4 +1,4 @@
-#ifndef TILE_H
+#ifndef TILE_H      /* -*- C++ -*- */
 #define TILE_H
 
 #include "eucliddir.h"

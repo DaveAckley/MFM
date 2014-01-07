@@ -1,4 +1,4 @@
-#ifndef P1ATOM_H
+#ifndef P1ATOM_H      /* -*- C++ -*- */
 #define P1ATOM_H
 
 #define P1ATOM_SIZE 64

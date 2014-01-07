@@ -1,4 +1,4 @@
-#ifndef TESTS_H
+#ifndef TESTS_H      /* -*- C++ -*- */
 #define TESTS_H
 
 #include "manhattandir.h"

@@ -1,4 +1,4 @@
-#ifndef EVENTWINDOW_H
+#ifndef EVENTWINDOW_H      /* -*- C++ -*- */
 #define EVENTWINDOW_H
 
 #include "point.h"

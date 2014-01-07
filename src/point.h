@@ -1,4 +1,4 @@
-#ifndef POINT_H
+#ifndef POINT_H      /* -*- C++ -*- */
 #define POINT_H
 
 #include <stdlib.h>

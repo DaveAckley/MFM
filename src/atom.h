@@ -1,4 +1,4 @@
-#ifndef ATOM_H
+#ifndef ATOM_H      /* -*- C++ -*- */
 #define ATOM_H
 
 #include "bitfield.h"

@@ -1,4 +1,4 @@
-#ifndef BITFIELD_H
+#ifndef BITFIELD_H      /* -*- C++ -*- */
 #define BITFIELD_H
 
 #include "itype.h"

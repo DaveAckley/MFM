@@ -1,4 +1,4 @@
-#ifndef TILERENDERER_H
+#ifndef TILERENDERER_H      /* -*- C++ -*- */
 #define TILERENDERER_H
 
 #include "drawing.h"

@@ -1,4 +1,4 @@
-#ifndef GRIDRENDERER_H
+#ifndef GRIDRENDERER_H      /* -*- C++ -*- */
 #define GRIDRENDERER_H
 
 #include "grid.h"

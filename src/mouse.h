@@ -1,4 +1,4 @@
-#ifndef MOUSE_H
+#ifndef MOUSE_H      /* -*- C++ -*- */
 #define MOUSE_H
 
 #include <set>

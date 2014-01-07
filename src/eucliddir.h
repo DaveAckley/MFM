@@ -1,4 +1,4 @@
-#ifndef EUCLIDDIR_H
+#ifndef EUCLIDDIR_H      /* -*- C++ -*- */
 #define EUCLIDDIR_H
 
 typedef enum enum_eucliddir

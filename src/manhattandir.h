@@ -1,4 +1,4 @@
-#ifndef MANHATTANDIR_H
+#ifndef MANHATTANDIR_H      /* -*- C++ -*- */
 #define MANHATTANDIR_H
 
 #include "itype.h"

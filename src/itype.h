@@ -1,4 +1,4 @@
-#ifndef ITYPE_H
+#ifndef ITYPE_H      /* -*- C++ -*- */
 #define ITYPE_H
 
 typedef unsigned char u8;

@@ -1,4 +1,4 @@
-#ifndef GRID_H
+#ifndef GRID_H      /* -*- C++ -*- */
 #define GRID_H
 
 #include "itype.h"
