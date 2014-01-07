@@ -17,6 +17,8 @@ public:
 
   Point(T x, T y);
 
+  Point(const Point<T> &);
+
   Point(bool random);
 
   Point(bool random, T maxX, T maxY);

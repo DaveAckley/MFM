@@ -128,7 +128,7 @@ u8 ManhattanDir::FromPoint(Point<int>& offset, TableType type)
 void ManhattanDir::FillFromBits(Point<int>& pt,
 				u8 bits, TableType type)
 {
-  Point<int> bp = GetTable(type)[bits];
+  Point<int> & bp = GetTable(type)[bits];
 
   pt.SetX(bp.GetX());
   pt.SetY(bp.GetY());

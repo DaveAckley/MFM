@@ -6,6 +6,13 @@ Point<T>::Point(T x, T y)
 }
 
 template <class T>
+Point<T>::Point(const Point<T> & p)
+{
+  m_x = p.m_x;
+  m_y = p.m_y;
+}
+
+template <class T>
 Point<T>::Point(bool random)
 {
   if(random)
