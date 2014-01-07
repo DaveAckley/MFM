@@ -1,10 +1,10 @@
-#include "eventwindow.h"
+/* -*- C++ -*- */
 #include "manhattandir.h"
 
-template <class T>
-EventWindow<T>::EventWindow(Point<int>& center, T* atoms, u32 tileWidth)
+template <class T,u32 R>
+EventWindow<T,R>::EventWindow(Point<int>& center, T* atoms, u32 tileWidth)
 {
-  int numAtoms = ManhattanDir::GetTableSize(MANHATTAN_TABLE_EVENT);
+  int numAtoms = ManhattanDir<R>::get().GetTableSize(MANHATTAN_TABLE_EVENT);
   m_atoms = new T[numAtoms];
   m_atomCount = numAtoms;
   m_tileWidth = tileWidth;
@@ -12,7 +12,7 @@ EventWindow<T>::EventWindow(Point<int>& center, T* atoms, u32 tileWidth)
   Point<int> current;
   for(int i = 0; i < numAtoms; i++)
   {
-    ManhattanDir::FillFromBits(current, i, MANHATTAN_TABLE_EVENT);
+    ManhattanDir<R>::get().FillFromBits(current, i, MANHATTAN_TABLE_EVENT);
     current.Add(center);
     T atom = atoms[current.GetX() + current.GetY() * tileWidth];
     m_atoms[i] = atom;
@@ -21,58 +21,65 @@ EventWindow<T>::EventWindow(Point<int>& center, T* atoms, u32 tileWidth)
   m_center.Set(center.GetX(), center.GetY());
 }
 
-template <class T>
-void EventWindow<T>::DeallocateAtoms()
+template <class T, u32 R>
+void EventWindow<T,R>::DeallocateAtoms()
 {
   delete[] m_atoms;
 }
 
-template <class T>
-T& EventWindow<T>::GetCenterAtom()
+template <class T, u32 R>
+T& EventWindow<T,R>::GetCenterAtom()
 {
-  return m_atoms[m_atomCount >> 1];
+  return m_atoms[0];
 }
 
-template <class T>
-void EventWindow<T>::SetRelativeAtom(Point<int>& offset, T atom)
+template <class T, u32 R>
+void EventWindow<T,R>::SetRelativeAtom(Point<int>& offset, T atom)
 {
-  u8 idx = ManhattanDir::FromPoint(offset, MANHATTAN_TABLE_EVENT);
+  s32 idx = ManhattanDir<R>::get().FromPoint(offset, MANHATTAN_TABLE_EVENT);
+  if (idx < 0)
+    FAIL(ILLEGAL_ARGUMENT);
 
   m_atoms[idx] = atom;
 }
 
-template <class T>
-T& EventWindow<T>::GetRelativeAtom(Point<int>& offset)
+template <class T, u32 R>
+T& EventWindow<T,R>::GetRelativeAtom(Point<int>& offset)
 {
-  u8 idx = ManhattanDir::FromPoint(offset, MANHATTAN_TABLE_EVENT);
+  s32 idx = ManhattanDir<R>::get().FromPoint(offset, MANHATTAN_TABLE_EVENT);
+  if (idx < 0)
+    FAIL(ILLEGAL_ARGUMENT);
 
   return m_atoms[idx];
 }
 
-template <class T>
-void EventWindow<T>::SwapAtoms(Point<int>& locA, Point<int>& locB)
+template <class T, u32 R>
+void EventWindow<T,R>::SwapAtoms(Point<int>& locA, Point<int>& locB)
 {
-  u8 aIdx = ManhattanDir::FromPoint(locA, MANHATTAN_TABLE_EVENT);
-  u8 bIdx = ManhattanDir::FromPoint(locB, MANHATTAN_TABLE_EVENT);
+  s32 aIdx = ManhattanDir<R>::get().FromPoint(locA, MANHATTAN_TABLE_EVENT);
+  s32 bIdx = ManhattanDir<R>::get().FromPoint(locB, MANHATTAN_TABLE_EVENT);
+
+  if (aIdx < 0) FAIL(ILLEGAL_ARGUMENT);
+  if (bIdx < 0) FAIL(ILLEGAL_ARGUMENT);
 
   T atom = m_atoms[aIdx];
   m_atoms[aIdx] = m_atoms[bIdx];
   m_atoms[bIdx] = atom;
 }
 
-template <class T>
-void EventWindow<T>::FillCenter(Point<int>& out)
+template <class T, u32 R>
+void EventWindow<T,R>::FillCenter(Point<int>& out)
 {
   out.Set(m_center.GetX(), m_center.GetY());
 }
 
-template <class T>
-void EventWindow<T>::WriteTo(T* atoms, u16 tileWidth)
+template <class T, u32 R>
+void EventWindow<T,R>::WriteTo(T* atoms, u16 tileWidth)
 {
   Point<int> coffset;
-  for(u32 i = 0; i < ManhattanDir::GetTableSize(MANHATTAN_TABLE_EVENT); i++)
+  for(u32 i = 0; i < ManhattanDir<R>::get().GetTableSize(MANHATTAN_TABLE_EVENT); i++)
   {
-    ManhattanDir::FillFromBits(coffset, i, MANHATTAN_TABLE_EVENT);
+    ManhattanDir<R>::get().FillFromBits(coffset, i, MANHATTAN_TABLE_EVENT);
     coffset.Add(m_center);
 
     if(coffset.GetX() >= 0 && coffset.GetY() >= 0 &&

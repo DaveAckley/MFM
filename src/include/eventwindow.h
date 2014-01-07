@@ -4,12 +4,10 @@
 #include "point.h"
 #include "itype.h"
 
-#define EVENT_WINDOW_RADIUS 2
-
-template <class T>
+template <class T,u32 R>
 class Tile;
 
-template <class T>
+template <class T,u32 R>
 class EventWindow
 {
 private:

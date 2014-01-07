@@ -1,6 +1,8 @@
 #ifndef EVENTWINDOW_TEST_H      /* -*- C++ -*- */
 #define EVENTWINDOW_TEST_H
 
+#include "test_common.h"
+
 class EventWindowTest
 {
 public:
