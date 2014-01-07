@@ -4,8 +4,8 @@
 
 #define RAND_ONEIN(x) !(rand() % (x))
 
-template <class T>
-void ElementTable<T>::NothingBehavior(EventWindow<T>& window,
+template <class T,u32 R>
+void ElementTable<T,R>::NothingBehavior(EventWindow<T,R>& window,
 				      StateFunction f)
 {
   return;
@@ -18,12 +18,12 @@ void ElementTable<T>::NothingBehavior(EventWindow<T>& window,
 
 
 
-template <class T>
-void ElementTable<T>::DRegBehavior(EventWindow<T>& window,
+template <class T,u32 R>
+void ElementTable<T,R>::DRegBehavior(EventWindow<T,R>& window,
 				   StateFunction f)
 {
   Point<int> dir;
-  ManhattanDir::FillRandomSingleDir(dir);
+  ManhattanDir<R>::get().FillRandomSingleDir(dir);
 
   u32 state = f(&window.GetRelativeAtom(dir));
 
@@ -58,8 +58,8 @@ void ElementTable<T>::DRegBehavior(EventWindow<T>& window,
   }
 }
 
-template <class T>
-ElementTable<T>::ElementTable(u32 (*stateFunc)(T* atom))
+template <class T,u32 R>
+ElementTable<T,R>::ElementTable(u32 (*stateFunc)(T* atom))
 {
   m_statefunc = stateFunc;
   m_funcmap[0] = &NothingBehavior;
