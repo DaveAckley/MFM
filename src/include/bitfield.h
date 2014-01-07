@@ -2,23 +2,55 @@
 #define BITFIELD_H
 
 #include "itype.h"
-#include <stdio.h>
-
-#define BITFIELD_WORDSIZE 32
+#include <stdio.h>  /* for FILE */
+#include <climits>  /* for CHAR_BIT */
 
 /* 
- * Try to make this a multiple of 32. Otherwise
- * there will be some wasted space.
+ * Try to make bitLength a multiple of BITS_PER_UNIT (currently
+ * 32). Otherwise there will be some wasted space.
  */
 template <int bitLength>
 class BitField
 {
 public:
-  static const u32 ARRAY_LENGTH = (bitLength+BITFIELD_WORDSIZE-1) / BITFIELD_WORDSIZE;
-private:
-  u32 m_bits[ARRAY_LENGTH];
+  typedef u32 BitUnitType;
+  static const u32 BITS_PER_UNIT = sizeof(BitUnitType) * CHAR_BIT;
 
-  u32 MakeMask(int pos, int len);
+  static const u32 ARRAY_LENGTH = (bitLength + BITS_PER_UNIT - 1) / BITS_PER_UNIT;
+private:
+  BitUnitType m_bits[ARRAY_LENGTH];
+
+  /**
+   * Low-level mask generation.  No checking is done: Caller g'tees
+   * length <= 32
+   */
+  inline static u32 MakeMask(const u32 length) {
+    if (length<32) return (1u << length) - 1;
+    return -1;
+  }
+ 
+  /**
+   * Low-level raw bitfield writing to a single array element.
+   * startIdx==0 means the leftmost bit (MSB).  No checking is done:
+   * Caller guarantees (1) idx is valid and (2) startIdx + length <=
+   * 32
+   */
+  inline void WriteToUnit(const u32 idx, const u32 startIdx, const u32 length, const u32 value) {
+    const u32 shift = BITS_PER_UNIT - (startIdx + length);
+    u32 mask = MakeMask(length) << shift;
+    m_bits[idx] = (m_bits[idx] & ~mask) | ((value << shift) & mask);
+  }
+
+  /**
+   * Low-level raw bitfield reading from a single array element.
+   * startIdx==0 means the leftmost bit (MSB).  No checking is done:
+   * Caller guarantees (1) idx is valid and (2) startIdx + length <=
+   * 32
+   */
+  inline u32 ReadFromUnit(const u32 idx, const u32 startIdx, const u32 length) const {
+    const u32 shift = BITS_PER_UNIT - (startIdx + length);
+    return (m_bits[idx] >> shift) & MakeMask(length);
+  }
 
   void WriteBit(int idx, bool bit);
 
@@ -29,11 +61,11 @@ public:
 
   BitField(const BitField & other);
 
-  BitField(u32* values);
+  BitField(const u32 * const values);
 
-  u32 Read(int startIdx, int length);
+  u32 Read(const u32 startIdx, const u32 length) const;
 
-  void Write(int startIdx, int length, u32 value);
+  void Write(const u32 startIdx, const u32 length, const u32 value);
 
   /* 
    * Inserts a value at startIdx. Pushes the values
