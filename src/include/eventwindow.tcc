@@ -4,7 +4,7 @@
 template <class T,u32 R>
 EventWindow<T,R>::EventWindow(Point<int>& center, T* atoms, u32 tileWidth)
 {
-  int numAtoms = ManhattanDir<R>::get().GetTableSize(MANHATTAN_TABLE_EVENT);
+  int numAtoms = EVENT_WINDOW_SITES(R);
   m_atoms = new T[numAtoms];
   m_atomCount = numAtoms;
   m_tileWidth = tileWidth;
@@ -36,7 +36,7 @@ T& EventWindow<T,R>::GetCenterAtom()
 template <class T, u32 R>
 void EventWindow<T,R>::SetRelativeAtom(Point<int>& offset, T atom)
 {
-  s32 idx = ManhattanDir<R>::get().FromPoint(offset, MANHATTAN_TABLE_EVENT);
+  s32 idx = ManhattanDir<R>::get().FromPoint(offset, (TableType)R);
   if (idx < 0)
     FAIL(ILLEGAL_ARGUMENT);
 
@@ -46,7 +46,7 @@ void EventWindow<T,R>::SetRelativeAtom(Point<int>& offset, T atom)
 template <class T, u32 R>
 T& EventWindow<T,R>::GetRelativeAtom(Point<int>& offset)
 {
-  s32 idx = ManhattanDir<R>::get().FromPoint(offset, MANHATTAN_TABLE_EVENT);
+  s32 idx = ManhattanDir<R>::get().FromPoint(offset, (TableType)R);
   if (idx < 0)
     FAIL(ILLEGAL_ARGUMENT);
 
@@ -56,8 +56,8 @@ T& EventWindow<T,R>::GetRelativeAtom(Point<int>& offset)
 template <class T, u32 R>
 void EventWindow<T,R>::SwapAtoms(Point<int>& locA, Point<int>& locB)
 {
-  s32 aIdx = ManhattanDir<R>::get().FromPoint(locA, MANHATTAN_TABLE_EVENT);
-  s32 bIdx = ManhattanDir<R>::get().FromPoint(locB, MANHATTAN_TABLE_EVENT);
+  s32 aIdx = ManhattanDir<R>::get().FromPoint(locA, (TableType)R);
+  s32 bIdx = ManhattanDir<R>::get().FromPoint(locB, (TableType)R);
 
   if (aIdx < 0) FAIL(ILLEGAL_ARGUMENT);
   if (bIdx < 0) FAIL(ILLEGAL_ARGUMENT);
@@ -77,9 +77,9 @@ template <class T, u32 R>
 void EventWindow<T,R>::WriteTo(T* atoms, u16 tileWidth)
 {
   Point<int> coffset;
-  for(u32 i = 0; i < ManhattanDir<R>::get().GetTableSize(MANHATTAN_TABLE_EVENT); i++)
+  for(u32 i = 0; i < EVENT_WINDOW_SITES(R); i++)
   {
-    ManhattanDir<R>::get().FillFromBits(coffset, i, MANHATTAN_TABLE_EVENT);
+    ManhattanDir<R>::get().FillFromBits(coffset, i, (TableType)R);
     coffset.Add(m_center);
 
     if(coffset.GetX() >= 0 && coffset.GetY() >= 0 &&

@@ -9,7 +9,7 @@
 #include "elementtable.h"
 
 /* The length, in sites, of a Tile.*/
-#define TILE_WIDTH 50
+#define TILE_WIDTH 20
 
 /*The number of sites a tile contains.*/
 #define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)
@@ -25,6 +25,8 @@ private:
 
   typedef void (* ComFunction )(Packet<T>& packet);
 
+  ComFunction m_comFunctions[8];
+
   Point<int> m_lastExecutedAtom;
 
   EventWindow<T,R> m_executingWindow;
@@ -35,9 +37,17 @@ private:
 
   u32 (*m_stateFunc)(T* atom);
 
+  /*
+   * Finds the cache point at by pt. If there
+   * is no cache there, this will return -1.
+   */
+  EuclidDir CacheAt(Point<int>& pt);
+
+  void SendAtom(EuclidDir neighbor, Point<int>& atomLoc);
+
 public:
 
-  Tile() { }
+  Tile();
 
   void SetStateFunc(u32 (*stateFunc)(T* atom))
   { m_stateFunc = stateFunc; }
@@ -45,6 +55,11 @@ public:
   u32 (*GetStateFunc())(T* atom)
   {
     return m_stateFunc;
+  }
+
+  void AddComFunction(ComFunction func, EuclidDir dir)
+  {
+    m_comFunctions[dir] = func;
   }
 
   T* GetAtom(Point<int>* pt);

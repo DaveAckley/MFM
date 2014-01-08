@@ -32,7 +32,7 @@
 class MFMSim
 {
 public:
-  static const u32 EVENT_WINDOW_RADIUS = 4;
+  static const u32 EVENT_WINDOW_RADIUS = 2;
 
 private:
 
@@ -126,8 +126,8 @@ public:
 
     P1Atom atom(ELEMENT_DREG);
     P1Atom res(ELEMENT_RES);
-    Point<int> aloc(30, 30);
-    Point<int> rloc(35, 40);
+    Point<int> aloc(10, 10);
+    Point<int> rloc(12, 12);
 
     /* 
      * Getto fix for keeping atoms from going

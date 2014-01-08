@@ -102,10 +102,10 @@ void TileRenderer::RenderEventWindow(Point<int>& offset,
   u32 drawColor = Drawing::WHITE;
   
   tile.FillLastExecutedAtom(eventCenter);
-  u32 tableSize = ManhattanDir<R>::get().GetTableSize(MANHATTAN_TABLE_EVENT);
+  u32 tableSize = EVENT_WINDOW_SITES(R);
   for(u32 i = 0; i < tableSize; i++)
   {
-    ManhattanDir<R>::get().FillFromBits(atomLoc, i, MANHATTAN_TABLE_EVENT);
+    ManhattanDir<R>::get().FillFromBits(atomLoc, i, (TableType)R);
     atomLoc.Add(eventCenter);
     atomLoc.Add(cacheOffset, cacheOffset);
 
