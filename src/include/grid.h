@@ -5,24 +5,31 @@
 #include "tile.h"
 #include "elementtable.h"
 
-template <class T>
+template <class T,u32 R>
 class Grid
 {
 private:
-
   u32 m_width, m_height;
 
   Point<int> m_lastEventTile;
   
-  Tile<T>* m_tiles;
+  Tile<T,R>* m_tiles;
 
-  ElementTable<T>* m_elementTable;
+  ElementTable<T,R>* m_elementTable;
 
-  Tile<T>* GetTile(int position);
+  Tile<T,R>* GetTile(int position);
+
+  inline u32 GetPosition(u32 x, u32 y) { return x + y * m_width; }
+
+  inline Tile<T,R> & GetTile(u32 x, u32 y) { return m_tiles[GetPosition(x, y)]; }
+
+  inline const Tile<T,R> & GetTile(u32 x, u32 y) const { return m_tiles[GetPosition(x, y)]; }
 
 public:
 
-  Grid(int width, int height, ElementTable<T>* elementTable);
+  friend class GridRenderer;
+
+  Grid(int width, int height, ElementTable<T,R>* elementTable);
 
   ~Grid();
   
@@ -41,15 +48,15 @@ public:
   void Resize(int newWidth, int newHeight);
 
   void FillNeighbors(int center_x, int center_y,
-		     Tile<T>** out);
+		     Tile<T,R>** out);
 
   void FillLastEventTile(Point<int>& out);
 
   void TriggerEvent();
   
-  Tile<T>& GetTile(Point<int> location);
+  Tile<T,R>& GetTile(Point<int> location);
   
-  Tile<T>& GetTile(int x, int y);
+  Tile<T,R>& GetTile(int x, int y);
 };
 
 #include "grid.tcc"

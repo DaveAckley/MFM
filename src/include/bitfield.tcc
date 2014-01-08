@@ -1,3 +1,5 @@
+/* -*- C++ -*- */
+#include "fail.h"  /* For FAIL */
 
 template <int bitLength>
 BitField<bitLength>::BitField()
@@ -9,7 +11,7 @@ BitField<bitLength>::BitField()
 }
 
 template <int bitLength>
-BitField<bitLength>::BitField(u32* values)
+BitField<bitLength>::BitField(const u32 * const values)
 {
   for(u32 i = 0; i < ARRAY_LENGTH; i++)
   {
@@ -26,65 +28,62 @@ BitField<bitLength>::BitField(const BitField & other)
   }
 }
 
-template<int bitLength>
-u32 BitField<bitLength>::MakeMask(int pos, int len)
-{
-  int maskAcc = 0;
-  int maskBit = 0x80000000 >> pos;
-  for(int i = 0; i < len; i++)
-  {
-    maskAcc |= maskBit;
-    maskBit >>= 1;
-  }
-  return maskAcc;
-}
-
 /* 
  * TODO These seem a little dumpy and slow. We could
  * probably make this implementation work with some
  * better bit-fu .
+ *
+ * SHAZAM! Slightly better bit-fu has arrived.  (Primarily in Read()
+ * and Write(), to avoid going per-bit)
  */
+
 template <int bitLength>
 void BitField<bitLength>::WriteBit(int idx, bool bit)
 {
-  int arrIdx = idx / BITFIELD_WORDSIZE;
-  int inIdx = idx & 0x1f;
+  int arrIdx = idx / BITS_PER_UNIT;
+  int inIdx = idx % BITS_PER_UNIT;
   u32 newWord = 0x80000000 >> inIdx;
 
-  if(m_bits[arrIdx] & newWord)
-  {
-    if(!bit)
-    {
-      m_bits[arrIdx] &= (~newWord);
-    }
-  }
-  else if(bit)
-  {
+  if(!bit)
+    m_bits[arrIdx] &= ~newWord;
+  else 
     m_bits[arrIdx] |= newWord;
-  }
 }
 
 template <int bitLength>
 bool BitField<bitLength>::ReadBit(int idx)
 {
-  int arrIdx = idx / BITFIELD_WORDSIZE;
-  int intIdx = idx % BITFIELD_WORDSIZE;
+  int arrIdx = idx / BITS_PER_UNIT;
+  int intIdx = idx % BITS_PER_UNIT;
   
   return m_bits[arrIdx] & (0x80000000 >> intIdx);
 }
 
 template <int bitLength>
-void BitField<bitLength>::Write(int startIdx,
-				int length,
+void BitField<bitLength>::Write(u32 startIdx,
+				u32 length,
 				u32 value)
 {
-  int mask = 1;
-  for(int i = startIdx + length - 1; 
-      i >= startIdx; i--)
-  {
-    WriteBit(i, value & mask);
-    mask <<= 1;
-  }
+  if (startIdx+length > bitLength)
+    FAIL(ILLEGAL_ARGUMENT);
+
+  if (length > sizeof(BitUnitType) * CHAR_BIT)
+    FAIL(ILLEGAL_ARGUMENT);
+
+  /* Since we're writing no more than 32 bits into an array of 32 bit
+     words, we can't need to touch more than two of them.  So unroll
+     the loop.
+  */
+
+  const u32 firstUnitIdx = startIdx / BITS_PER_UNIT;
+  const u32 firstUnitFirstBit = startIdx % BITS_PER_UNIT;
+  const bool hasSecondUnit = (firstUnitFirstBit + length) > BITS_PER_UNIT;
+  const u32 firstUnitLength = hasSecondUnit ? length - (BITS_PER_UNIT-firstUnitFirstBit) : length;
+
+  WriteToUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength, value >> (length - firstUnitLength));
+
+  if (hasSecondUnit) 
+    WriteToUnit(firstUnitIdx + 1, 0, length - firstUnitLength, value);
 }
 
 template <int bitLength>
@@ -93,8 +92,7 @@ void BitField<bitLength>::Insert(int startIdx,
 				 u32 value)
 {
   /* floor to a multiple of 32   vvv  */
-  for(int i = ((bitLength / BITFIELD_WORDSIZE)
-	       * BITFIELD_WORDSIZE) - 1;
+  for(int i = ((bitLength / BITS_PER_UNIT) * BITS_PER_UNIT) - 1;
       i >= startIdx + length; i--)
   {
     WriteBit(i, ReadBit(i - length));
@@ -103,16 +101,29 @@ void BitField<bitLength>::Insert(int startIdx,
 }
 
 template <int bitLength>
-u32 BitField<bitLength>::Read(int startIdx,
-			      int length)
+u32 BitField<bitLength>::Read(const u32 startIdx, const u32 length) const
 {
-  u32 acc = 0;
-  for(int i = startIdx; i < startIdx + length; i++)
-  {
-    acc <<= 1;
-    acc |= ReadBit(i) ? 1 : 0;
+  if (startIdx+length > bitLength)
+    FAIL(ILLEGAL_ARGUMENT);
+
+  if (length > sizeof(BitUnitType) * CHAR_BIT)
+    FAIL(ILLEGAL_ARGUMENT);
+
+  /* See Write(u32,u32,u32) for theory, such as it is */
+
+  const u32 firstUnitIdx = startIdx / BITS_PER_UNIT;
+  const u32 firstUnitFirstBit = startIdx % BITS_PER_UNIT;
+  const bool hasSecondUnit = (firstUnitFirstBit + length) > BITS_PER_UNIT;
+  const u32 firstUnitLength = hasSecondUnit ? length - (BITS_PER_UNIT-firstUnitFirstBit) : length;
+
+  u32 ret = ReadFromUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength);
+
+  if (hasSecondUnit) {
+    const u32 secondUnitLength = length - firstUnitLength;
+    ret = (ret << secondUnitLength) | ReadFromUnit(firstUnitIdx + 1, 0, secondUnitLength);
   }
-  return acc;
+
+  return ret;
 }
 
 template <int bitLength>

@@ -41,31 +41,31 @@ Point<T>::Point(bool random, T maxX, T maxY)
 }
 
 template <class T>
-T Point<T>::GetX()
+T Point<T>::GetX() const
 {
   return m_x;
 }
 
 template <class T>
-T Point<T>::GetY()
+T Point<T>::GetY() const
 {
   return m_y;
 }
 
 template <class T>
-T Point<T>::GetManhattanDistance()
+u32 Point<T>::GetManhattanDistance() const
 {
-  return abs((int)m_x) + abs((int)m_y);
+  return (u32) (abs(m_x) + abs(m_y));
 }
 
 template <class T>
-double Point<T>::GetLength()
+double Point<T>::GetLength() const
 {
   return sqrt(m_x * m_x + m_y * m_y);
 }
 
 template <class T>
-void Point<T>::Add(Point<T>& offset)
+void Point<T>::Add(const Point<T>& offset)
 {
   m_x += offset.m_x;
   m_y += offset.m_y;
@@ -79,7 +79,7 @@ void Point<T>::Add(T x, T y)
 }
 
 template <class T>
-void Point<T>::Subtract(Point<T>& offset)
+void Point<T>::Subtract(const Point<T>& offset)
 {
   m_x -= offset.m_x;
   m_y -= offset.m_y;
@@ -126,7 +126,7 @@ void Point<T>::Set(T x, T y)
 }
 
 template <class T>
-Point<T>& Point<T>::operator=(Point<T> rhs)
+Point<T>& Point<T>::operator=(const Point<T>& rhs)
 {
   m_x = rhs.m_x;
   m_y = rhs.m_y;

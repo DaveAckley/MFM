@@ -2,6 +2,7 @@
 #define POINT_H
 
 #include <stdlib.h>
+#include "itype.h"
 
 /* 
  * Going to go ahead and use templates here
@@ -27,19 +28,19 @@ public:
 
   ~Point() { }
 
-  T GetX();
+  T GetX() const;
 
-  T GetY();
+  T GetY() const;
 
-  T GetManhattanDistance();
+  u32 GetManhattanDistance() const;  // Would prefer 'unsigned T' return type but not using C++0x type_traits
 
-  double GetLength();
+  double GetLength() const;
 
-  void Add(Point<T>& offset);
+  void Add(const Point<T>& offset);
 
   void Add(T x, T y);
 
-  void Subtract(Point<T>& offset);
+  void Subtract(const Point<T>& offset);
 
   void Subtract(T x, T y);
 
@@ -51,7 +52,7 @@ public:
 
   void Set(T x, T y);
 
-  Point<T>& operator=(Point<T> rhs);
+  Point<T>& operator=(const Point<T> & rhs);
 };
 
 

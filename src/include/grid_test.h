@@ -1,6 +1,8 @@
 #ifndef GRID_TEST_H      /* -*- C++ -*- */
 #define GRID_TEST_H
 
+#include "test_common.h"
+
 class GridTest
 {
 public:

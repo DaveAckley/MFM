@@ -25,28 +25,31 @@ private:
   Point<int> m_windowTL;
   SDL_Surface* m_dest;
 
+  template <u32 R>
   void RenderMemRegions(Point<int>& pt, bool renderCache);
 
+  template <u32 R>
   void RenderMemRegion(Point<int>& pt, int regID,
 		       u32 color, bool renderCache);
 
+  template <u32 R>
   void RenderGrid(Point<int>* pt, bool renderCache);
 
   void RenderAtomBG(Point<int>& offset, Point<int>& atomloc,
 		    u32 color);
 
-  template <class T>
-  void RenderAtoms(Point<int>& pt, Tile<T>& tile, bool renderCache);
+  template <class T,u32 R>
+  void RenderAtoms(Point<int>& pt, Tile<T,R>& tile, bool renderCache);
 
-  template <class T>
-  void RenderEventWindow(Point<int>& offset, Tile<T>& tile, bool renderCache);
+  template <class T,u32 R>
+  void RenderEventWindow(Point<int>& offset, Tile<T,R>& tile, bool renderCache);
 
 public:
 
   TileRenderer(SDL_Surface* dest);
 
-  template <class T>
-  void RenderTile(Tile<T>& t, Point<int>& loc, bool renderWindow, 
+  template <class T,u32 R>
+  void RenderTile(Tile<T,R>& t, Point<int>& loc, bool renderWindow, 
 		  bool renderCache);
 
   void IncreaseAtomSize();

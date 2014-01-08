@@ -1,61 +1,61 @@
 #include "manhattandir.h"
 
-template <class T>
-T* Tile<T>::GetAtom(Point<int>* pt)
+template <class T,u32 R>
+T* Tile<T,R>::GetAtom(Point<int>* pt)
 {
   return &m_atoms[pt->GetX() + 
 		  pt->GetY() * TILE_WIDTH];
 }
 
-template <class T>
-T* Tile<T>::GetAtom(int x, int y)
+template <class T,u32 R>
+T* Tile<T,R>::GetAtom(int x, int y)
 {
   return &m_atoms[x + y * TILE_WIDTH];
 }
 
-template <class T>
-T* Tile<T>::GetAtom(int i)
+template <class T,u32 R>
+T* Tile<T,R>::GetAtom(int i)
 {
   return &m_atoms[i];
 }
 
-template <class T>
-void Tile<T>::FillLastExecutedAtom(Point<int>& out)
+template <class T,u32 R>
+void Tile<T,R>::FillLastExecutedAtom(Point<int>& out)
 {
   out.Set(m_lastExecutedAtom.GetX(),
 	  m_lastExecutedAtom.GetY());
 }
 
-template <class T>
-void Tile<T>::CreateRandomWindow()
+template <class T,u32 R>
+void Tile<T,R>::CreateRandomWindow()
 {
   /* Make sure not to be created in the cache */
   int maxval = TILE_WIDTH - (EVENT_WINDOW_RADIUS << 1);
   Point<int> pt(true, maxval, maxval);
   pt.Add(EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS);
 
-  m_executingWindow = EventWindow<T>(pt, m_atoms, TILE_WIDTH);
+  m_executingWindow = EventWindow<T,R>(pt, m_atoms, TILE_WIDTH);
 }
 
-template <class T>
-void Tile<T>::CreateWindowAt(Point<int>& pt)
+template <class T,u32 R>
+void Tile<T,R>::CreateWindowAt(Point<int>& pt)
 {
-  m_executingWindow =  EventWindow<T>(pt, m_atoms, TILE_WIDTH);
+  m_executingWindow =  EventWindow<T,R>(pt, m_atoms, TILE_WIDTH);
 }
 
-template <class T>
-void Tile<T>::PlaceAtom(T& atom, Point<int>& pt)
+template <class T,u32 R>
+void Tile<T,R>::PlaceAtom(T& atom, Point<int>& pt)
 {
   m_atoms[pt.GetX() + 
 	  pt.GetY() * TILE_WIDTH] = atom;
 }
 
-template <class T>
-void Tile<T>::DiffuseAtom(EventWindow<T>& window)
+template <class T,u32 R>
+void Tile<T,R>::DiffuseAtom(EventWindow<T,R>& window)
 {
   Point<int> neighbors[4];
   Point<int> center;
-  ManhattanDir::FillVNNeighbors(neighbors);
+  ManhattanDir<R>::get().FillVNNeighbors(neighbors);
   u8 idx = rand() & 3;
 
   for(int i = 0; i < 4; i++)
@@ -75,8 +75,8 @@ void Tile<T>::DiffuseAtom(EventWindow<T>& window)
   }
 }
 
-template <class T>
-void Tile<T>::Execute(ElementTable<T>& table)
+template <class T,u32 R>
+void Tile<T,R>::Execute(ElementTable<T,R>& table)
 {
   CreateRandomWindow();
 

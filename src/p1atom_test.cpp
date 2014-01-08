@@ -61,7 +61,7 @@ void P1AtomTest::Test_p1atomReadBody()
     TableType type = (i < 4) ? 
       MANHATTAN_TABLE_SHORT : MANHATTAN_TABLE_LONG;
 
-    pvals[i] = ManhattanDir::FromPoint(points[i], type);
+    pvals[i] = ManhattanDir<4>::get().FromPoint(points[i], type);
   }
 
   for(int i = 0; i < 8; i++)
