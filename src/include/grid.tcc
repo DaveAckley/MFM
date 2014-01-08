@@ -8,6 +8,7 @@ Grid<T,R>::Grid(int width, int height, ElementTable<T,R>* elementTable)
   m_height = height;
 
   m_tiles = new Tile<T,R>[m_width * m_height];
+ 
 
   m_elementTable = elementTable;
 }
@@ -42,11 +43,48 @@ u32 Grid<T,R>::GetWidth()
 template <class T, u32 R>
 void Grid<T,R>::PlaceAtom(T& atom, Point<int>& loc)
 {
-  u32 x = loc.GetX() / TILE_WIDTH;
-  u32 y = loc.GetY() / TILE_WIDTH;
+  /* Account for overlapping caches  vvvvv */
+  u32 x = loc.GetX() / (TILE_WIDTH - R * 2);
+  u32 y = loc.GetY() / (TILE_WIDTH - R * 2);
 
-  Point<int> local(loc.GetX() % TILE_WIDTH,
-		   loc.GetY() % TILE_WIDTH);
+  /* How many tiles is this going to be placed in? */
+  bool xOverlap = (u32)(loc.GetX() / TILE_WIDTH) != x;
+  bool yOverlap = (u32)(loc.GetY() / TILE_WIDTH) != y;
+
+  Point<int> local(loc.GetX() % (TILE_WIDTH - R * 2),
+		   loc.GetY() % (TILE_WIDTH - R * 2));
+
+  if(xOverlap)
+  {
+    if(x - 1 >= 0)
+    {
+      Point<int> remotePt(local.GetX() + (TILE_WIDTH - R * 2),
+			  local.GetY());
+
+      GetTile(x - 1, y).PlaceAtom(atom, remotePt);
+    }
+  }
+  if(yOverlap)
+  {
+    if(y - 1 >= 0)
+    {
+      Point<int> remotePt(local.GetX(),
+			  local.GetY() + (TILE_WIDTH - R * 2));
+
+      GetTile(x, y - 1).PlaceAtom(atom, remotePt);
+    }
+  }
+
+  if(xOverlap && yOverlap)
+  {
+    if(y - 1 >= 0 && y - 1 >= 0)
+    {
+      Point<int> remotePt(local.GetX() + (TILE_WIDTH - R * 2),
+			  local.GetY() + (TILE_WIDTH - R * 2));
+
+      GetTile(x - 1, y - 1).PlaceAtom(atom, remotePt);
+    }
+  }
 
   GetTile(x,y).PlaceAtom(atom, local);
 }
@@ -54,8 +92,9 @@ void Grid<T,R>::PlaceAtom(T& atom, Point<int>& loc)
 template <class T, u32 R>
 T* Grid<T,R>::GetAtom(Point<int>& loc)
 {
-  u32 x = loc.GetX() / TILE_WIDTH;
-  u32 y = loc.GetY() / TILE_WIDTH;
+  /* Account for overlapping caches  vvvvv */
+  u32 x = loc.GetX() / (TILE_WIDTH - R * 2);
+  u32 y = loc.GetY() / (TILE_WIDTH - R * 2);
 
   Point<int> local(loc.GetX() % TILE_WIDTH,
 		   loc.GetY() % TILE_WIDTH);

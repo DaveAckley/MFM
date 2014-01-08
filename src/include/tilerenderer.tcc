@@ -53,9 +53,9 @@ template <class T,u32 R>
 void TileRenderer::RenderTile(Tile<T,R>& t, Point<int>& loc, bool renderWindow,
 			      bool renderCache)
 {
-  Point<int> multPt(loc.GetX(), loc.GetY());
+  Point<int> multPt(loc);
 
-  multPt.Multiply((TILE_WIDTH) * 
+  multPt.Multiply((TILE_WIDTH - R * 3) * 
 		  m_atomDrawSize);
 
   Point<int> realPt(multPt.GetX(), multPt.GetY());

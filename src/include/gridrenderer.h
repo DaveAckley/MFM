@@ -20,7 +20,7 @@ private:
   TileRenderer* m_tileRenderer;
 
   static const EventWindowRenderMode m_defaultRenderMode =
-    EVENTWINDOW_RENDER_ALL;
+    EVENTWINDOW_RENDER_CURRENT;
 
   static const bool m_renderTilesSeparatedDefault = false;
 

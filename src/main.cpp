@@ -24,7 +24,7 @@
 
 #define FRAMES_PER_SECOND 60.0
 
-#define EVENTS_PER_FRAME 10000
+#define EVENTS_PER_FRAME 0
 
 #define CAMERA_SLOW_SPEED 2
 #define CAMERA_FAST_SPEED 10
@@ -69,6 +69,10 @@ private:
     {
       grend.ToggleTileSeparation();
     }
+    if(keyboard.SemiAuto(SDLK_o))
+    {
+      grend.SetEventWindowRenderMode(EVENTWINDOW_RENDER_OFF);
+    }
     if(keyboard.IsDown(SDLK_LEFT) ||
        keyboard.IsDown(SDLK_a))
     {
@@ -94,7 +98,7 @@ private:
       grend.MoveRight(speed);
     }
 
-    for(int i = 0; i < EVENTS_PER_FRAME; i++)
+    for(u32 i = 0; i < EVENTS_PER_FRAME; i++)
     {
       grid.TriggerEvent();
     }
@@ -110,7 +114,7 @@ public:
   void Run()
   {
     // Repeatable until forced otherwise
-    srandom(3);
+    srandom(5);
 
     bool running = true;
     screen = SDL_SetVideoMode(640, 640, 32,
@@ -120,14 +124,14 @@ public:
 
     SDL_Event event;
     grend.SetDestination(screen);
-    GridP1Atom mainGrid(1, 1, &elements);
+    GridP1Atom mainGrid(3, 3, &elements);
 
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
 
     P1Atom atom(ELEMENT_DREG);
     P1Atom res(ELEMENT_RES);
-    Point<int> aloc(10, 10);
-    Point<int> rloc(12, 12);
+    Point<int> aloc(3, 3);
+    Point<int> rloc(16, 16);
 
     /* 
      * Getto fix for keeping atoms from going
@@ -193,7 +197,7 @@ public:
       if(rand() % 3 == 0)
       Update(mainGrid);
       
-      Drawing::Clear(screen, 0xffffffff);
+      Drawing::Clear(screen, 0xff200020);
       
       grend.RenderGrid(mainGrid);
       
