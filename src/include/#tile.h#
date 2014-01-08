@@ -3,7 +3,6 @@
 
 #include "eucliddir.h"
 #include "p1atom.h"
-#include "packet.h"
 #include "point.h"
 #include "eventwindow.h"
 #include "elementtable.h"
@@ -23,7 +22,7 @@ private:
 
   T m_atoms[TILE_SIZE];
 
-  typedef void (* ComFunction )(Packet<T>& packet);
+  typedef void (* ComFunction )(Packet& packet);
 
   Point<int> m_lastExecutedAtom;
 

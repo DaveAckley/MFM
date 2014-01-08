@@ -110,7 +110,7 @@ public:
   void Run()
   {
     // Repeatable until forced otherwise
-    srandom(2);
+    srandom(3);
 
     bool running = true;
     screen = SDL_SetVideoMode(640, 640, 32,
