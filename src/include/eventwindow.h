@@ -25,9 +25,12 @@ public:
 
   EventWindow() { }
 
-  void DeallocateAtoms();
-
   ~EventWindow() { }
+
+  u32 GetAtomCount()
+  {
+    return m_atomCount;
+  }
 
   T& GetCenterAtom();
 
@@ -38,8 +41,6 @@ public:
   void SwapAtoms(Point<int>& locA, Point<int>& locB);
 
   void FillCenter(Point<int>& out);
-
-  void WriteTo(T* atoms, u16 tileWidth);
   
 };
 

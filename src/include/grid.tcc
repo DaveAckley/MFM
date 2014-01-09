@@ -8,8 +8,23 @@ Grid<T,R>::Grid(int width, int height, ElementTable<T,R>* elementTable)
   m_height = height;
 
   m_tiles = new Tile<T,R>[m_width * m_height];
- 
 
+  Point<int> neighborPt;
+  /* Set up all communication functions */
+  for(u32 x = 0; x < m_width; x++)
+  {
+    for(u32 y = 0; y < m_height; y++)
+    {
+      for(EuclidDir d = EUDIR_NORTH; d <= EUDIR_NORTHWEST; d = (EuclidDir)(d + 1))
+      {
+	EuDir::FillEuclidDir(neighborPt, d);
+	neighborPt.Add(x, y);
+
+	GetTile(x, y).AddComFunction(&GetTile(neighborPt).RecievePacket, d);
+      }
+    }
+  }
+ 
   m_elementTable = elementTable;
 }
 
@@ -43,22 +58,24 @@ u32 Grid<T,R>::GetWidth()
 template <class T, u32 R>
 void Grid<T,R>::PlaceAtom(T& atom, Point<int>& loc)
 {
+  u32 ovlapLen = TILE_WIDTH - R * 2;
+
   /* Account for overlapping caches  vvvvv */
-  u32 x = loc.GetX() / (TILE_WIDTH - R * 2);
-  u32 y = loc.GetY() / (TILE_WIDTH - R * 2);
+  u32 x = loc.GetX() / ovlapLen;
+  u32 y = loc.GetY() / ovlapLen;
 
   /* How many tiles is this going to be placed in? */
   bool xOverlap = (u32)(loc.GetX() / TILE_WIDTH) != x;
   bool yOverlap = (u32)(loc.GetY() / TILE_WIDTH) != y;
 
-  Point<int> local(loc.GetX() % (TILE_WIDTH - R * 2),
-		   loc.GetY() % (TILE_WIDTH - R * 2));
+  Point<int> local(loc.GetX() % ovlapLen,
+		   loc.GetY() % ovlapLen);
 
   if(xOverlap)
   {
     if(x - 1 >= 0)
     {
-      Point<int> remotePt(local.GetX() + (TILE_WIDTH - R * 2),
+      Point<int> remotePt(local.GetX() + ovlapLen,
 			  local.GetY());
 
       GetTile(x - 1, y).PlaceAtom(atom, remotePt);
@@ -69,7 +86,7 @@ void Grid<T,R>::PlaceAtom(T& atom, Point<int>& loc)
     if(y - 1 >= 0)
     {
       Point<int> remotePt(local.GetX(),
-			  local.GetY() + (TILE_WIDTH - R * 2));
+			  local.GetY() + ovlapLen);
 
       GetTile(x, y - 1).PlaceAtom(atom, remotePt);
     }
@@ -79,8 +96,8 @@ void Grid<T,R>::PlaceAtom(T& atom, Point<int>& loc)
   {
     if(y - 1 >= 0 && y - 1 >= 0)
     {
-      Point<int> remotePt(local.GetX() + (TILE_WIDTH - R * 2),
-			  local.GetY() + (TILE_WIDTH - R * 2));
+      Point<int> remotePt(local.GetX() + ovlapLen,
+			  local.GetY() + ovlapLen);
 
       GetTile(x - 1, y - 1).PlaceAtom(atom, remotePt);
     }

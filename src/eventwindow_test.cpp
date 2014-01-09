@@ -30,8 +30,7 @@ void EventWindowTest::Test_eventwindowWrite()
   P1Atom atoms[64];
   Point<int> center(4, 4);
   Point<int> absolute(-2, 0);
-
-  absolute.Add(center);
+  Point<int> zero(0, 0);
 
   atoms[center.GetX() + center.GetY() * 8].SetState(ELEMENT_DREG);
   atoms[absolute.GetX() + absolute.GetY() * 8].SetState(ELEMENT_RES);
@@ -43,13 +42,20 @@ void EventWindowTest::Test_eventwindowWrite()
     atoms[i] = P1Atom(0);
   }
 
+  absolute.Add(center);
+
   P1Atom& erased1 = atoms[center.GetX() + center.GetY() * 8];
   P1Atom& erased2 = atoms[absolute.GetX() + absolute.GetY() * 8];
+
+  absolute.Subtract(center);
 
   assert(erased1.GetState() == 0);
   assert(erased2.GetState() == 0);
 
-  ew.WriteTo(atoms, 8);
+  ew.SetRelativeAtom(zero, P1Atom(ELEMENT_DREG));
+  ew.SetRelativeAtom(absolute, P1Atom(ELEMENT_RES));
+
+  absolute.Add(center);
 
   P1Atom& reWritten1 = atoms[center.GetX() + center.GetY() * 8];
   P1Atom& reWritten2 = atoms[absolute.GetX() + absolute.GetY() * 8];

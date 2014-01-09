@@ -4,33 +4,17 @@
 template <class T,u32 R>
 EventWindow<T,R>::EventWindow(Point<int>& center, T* atoms, u32 tileWidth)
 {
-  int numAtoms = EVENT_WINDOW_SITES(R);
-  m_atoms = new T[numAtoms];
-  m_atomCount = numAtoms;
+  m_atoms = atoms;
+  m_atomCount = EVENT_WINDOW_SITES(R);
   m_tileWidth = tileWidth;
 
-  Point<int> current;
-  for(int i = 0; i < numAtoms; i++)
-  {
-    ManhattanDir<R>::get().FillFromBits(current, i, MANHATTAN_TABLE_EVENT);
-    current.Add(center);
-    T atom = atoms[current.GetX() + current.GetY() * tileWidth];
-    m_atoms[i] = atom;
-  }
-
-  m_center.Set(center.GetX(), center.GetY());
-}
-
-template <class T, u32 R>
-void EventWindow<T,R>::DeallocateAtoms()
-{
-  delete[] m_atoms;
+  m_center = Point<int>(center);
 }
 
 template <class T, u32 R>
 T& EventWindow<T,R>::GetCenterAtom()
 {
-  return m_atoms[0];
+  return m_atoms[m_center.GetX() + m_center.GetY() * m_tileWidth];
 }
 
 template <class T, u32 R>
@@ -40,7 +24,10 @@ void EventWindow<T,R>::SetRelativeAtom(Point<int>& offset, T atom)
   if (idx < 0)
     FAIL(ILLEGAL_ARGUMENT);
 
-  m_atoms[idx] = atom;
+  Point<int> accessLoc(offset);
+  accessLoc.Add(m_center.GetX(), m_center.GetY());
+
+  m_atoms[accessLoc.GetX() + accessLoc.GetY() * m_tileWidth] = atom;
 }
 
 template <class T, u32 R>
@@ -50,7 +37,11 @@ T& EventWindow<T,R>::GetRelativeAtom(Point<int>& offset)
   if (idx < 0)
     FAIL(ILLEGAL_ARGUMENT);
 
-  return m_atoms[idx];
+  Point<int> accessLoc(offset);
+  accessLoc.Add(m_center.GetX(), m_center.GetY());
+
+  return m_atoms[accessLoc.GetX() + accessLoc.GetY() * m_tileWidth];
+
 }
 
 template <class T, u32 R>
@@ -62,34 +53,22 @@ void EventWindow<T,R>::SwapAtoms(Point<int>& locA, Point<int>& locB)
   if (aIdx < 0) FAIL(ILLEGAL_ARGUMENT);
   if (bIdx < 0) FAIL(ILLEGAL_ARGUMENT);
 
-  T atom = m_atoms[aIdx];
-  m_atoms[aIdx] = m_atoms[bIdx];
-  m_atoms[bIdx] = atom;
+  Point<int> arrLocA(locA);
+  Point<int> arrLocB(locB);
+
+  arrLocA.Add(m_center.GetX(), m_center.GetY());
+  arrLocB.Add(m_center.GetX(), m_center.GetY());
+
+  T atom = m_atoms[arrLocA.GetX() + arrLocA.GetY() * m_tileWidth];
+
+  m_atoms[arrLocA.GetX() + arrLocA.GetY() * m_tileWidth] =
+    m_atoms[arrLocB.GetX() + arrLocB.GetY() * m_tileWidth];
+
+  m_atoms[arrLocB.GetX() + arrLocB.GetY() * m_tileWidth] = atom;
 }
 
 template <class T, u32 R>
 void EventWindow<T,R>::FillCenter(Point<int>& out)
 {
   out.Set(m_center.GetX(), m_center.GetY());
-}
-
-template <class T, u32 R>
-void EventWindow<T,R>::WriteTo(T* atoms, u16 tileWidth)
-{
-  Point<int> coffset;
-  for(u32 i = 0; i < EVENT_WINDOW_SITES(R); i++)
-  {
-    ManhattanDir<R>::get().FillFromBits(coffset, i, (TableType)R);
-    coffset.Add(m_center);
-
-    if(coffset.GetX() >= 0 && coffset.GetY() >= 0 &&
-       coffset.GetX() < tileWidth && coffset.GetY() < tileWidth)
-    {
-      Point<int> relative(coffset.GetX() - m_center.GetX(),
-			  coffset.GetY() - m_center.GetY());
-      
-      atoms[coffset.GetX() + coffset.GetY() * tileWidth] =
-	GetRelativeAtom(relative);
-    }
-  }
 }

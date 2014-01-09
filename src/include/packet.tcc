@@ -28,15 +28,3 @@ Point<int>& Packet<T>::GetLocation()
 {
   return m_edgeLoc;
 }
-
-template <class T>
-void Packet<T>::SetEdge(EuclidDir edge)
-{
-  m_edge = edge;
-}
-
-template <class T>
-EuclidDir Packet<T>::GetEdge()
-{
-  return m_edge;
-}

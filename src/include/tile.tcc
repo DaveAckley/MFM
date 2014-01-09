@@ -127,35 +127,99 @@ void Tile<T,R>::DiffuseAtom(EventWindow<T,R>& window)
 template <class T, u32 R>
 void Tile<T, R>::SendAtom(EuclidDir neighbor, Point<int>& atomLoc)
 {
-  Point<int> remoteLoc(atomLoc);
-
-  /* The neighbor will think this atom is in a different location. */
-  switch(neighbor)
+  if(m_comFunctions[neighbor])
   {
-  case EUDIR_NORTH: remoteLoc.Add(0, TILE_WIDTH + R); break;
-  case EUDIR_SOUTH: remoteLoc.Add(0, -(TILE_WIDTH + R)); break;
-  case EUDIR_WEST:  remoteLoc.Add(TILE_WIDTH + R, 0); break;
-  case EUDIR_EAST:  remoteLoc.Add(-(TILE_WIDTH + R), 0); break;
-  case EUDIR_NORTHEAST:
-    remoteLoc.Add(-(TILE_WIDTH + R), TILE_WIDTH + R); break;
-  case EUDIR_SOUTHEAST:
-    remoteLoc.Add(-(TILE_WIDTH + R), -(TILE_WIDTH + R)); break;
-  case EUDIR_SOUTHWEST:
-    remoteLoc.Add(TILE_WIDTH + R, -(TILE_WIDTH + R)); break;
-  case EUDIR_NORTHWEST:
-    remoteLoc.Add(TILE_WIDTH + R, TILE_WIDTH + R); break;
-  }
+    Point<int> remoteLoc(atomLoc);
+    
+    /* The neighbor will think this atom is in a different location. */
+    switch(neighbor)
+    {
+    case EUDIR_NORTH: remoteLoc.Add(0, TILE_WIDTH + R); break;
+    case EUDIR_SOUTH: remoteLoc.Add(0, -(TILE_WIDTH + R)); break;
+    case EUDIR_WEST:  remoteLoc.Add(TILE_WIDTH + R, 0); break;
+    case EUDIR_EAST:  remoteLoc.Add(-(TILE_WIDTH + R), 0); break;
+    case EUDIR_NORTHEAST:
+      remoteLoc.Add(-(TILE_WIDTH + R), TILE_WIDTH + R); break;
+    case EUDIR_SOUTHEAST:
+      remoteLoc.Add(-(TILE_WIDTH + R), -(TILE_WIDTH + R)); break;
+    case EUDIR_SOUTHWEST:
+      remoteLoc.Add(TILE_WIDTH + R, -(TILE_WIDTH + R)); break;
+    case EUDIR_NORTHWEST:
+      remoteLoc.Add(TILE_WIDTH + R, TILE_WIDTH + R); break;
+    }
 
-  Packet<T> sendout(PACKET_WRITE);
+    Packet<T> sendout(PACKET_WRITE);
+
+    sendout.SetLocation(atomLoc);
+    sendout.SetAtom(*GetAtom(&atomLoc));
+
+    m_comFunctions[neighbor](sendout);
+
+  }
+}
+
+/*
+ * This examines the current event window and sends all atoms
+ *  within this tile's shared section of memory. This ensures
+ *  that any and all atoms that need to be sent are sent.
+ */
+template <class T, u32 R>
+void Tile<T,R>::SendRelevantAtoms()
+{
+  Point<int> localLoc;
+  Point<int> ewCenter;
+
+  s32 r2 = R * 2;
+
+  m_executingWindow.FillCenter(ewCenter);
+
+  for(u32 i = 0; i < m_executingWindow.GetAtomCount(); i++)
+  {
+    ManhattanDir<R>::get().FillFromBits(localLoc, i, (TableType)R);
+    localLoc.Add(ewCenter);
+
+    /* Send to West neighbor? */
+    if(localLoc.GetX() < r2)
+    {
+      SendAtom(EUDIR_WEST, localLoc);
+      if(localLoc.GetY() < r2)
+      {
+	SendAtom(EUDIR_NORTHWEST, localLoc);
+      }
+      else if(localLoc.GetY() >= TILE_WIDTH - r2)
+      {
+	SendAtom(EUDIR_SOUTHWEST, localLoc);
+      }
+    }
+    /*East neighbor?*/
+    else if(localLoc.GetX() >= TILE_WIDTH - r2)
+    {
+      SendAtom(EUDIR_EAST, localLoc);
+      if(localLoc.GetY() < r2)
+      {
+	SendAtom(EUDIR_NORTHEAST, localLoc);
+      }
+      if(localLoc.GetY() >= TILE_WIDTH - r2)
+      {
+	SendAtom(EUDIR_SOUTHEAST, localLoc);
+      }
+    }
+    else if(localLoc.GetY() < r2)
+    {
+      SendAtom(EUDIR_NORTH, localLoc);
+    }
+    else if(localLoc.GetY() >= TILE_WIDTH - r2)
+    {
+      SendAtom(EUDIR_SOUTH, localLoc);
+    }
+    
+  }
 }
 
 template <class T,u32 R>
 void Tile<T,R>::Execute(ElementTable<T,R>& table)
 {
   CreateRandomWindow();
-
-  //Point<int> eventCenter(10, 8);
-  //CreateWindowAt(eventCenter);
   
   table.Execute(m_executingWindow);
 
@@ -163,7 +227,5 @@ void Tile<T,R>::Execute(ElementTable<T,R>& table)
 
   m_executingWindow.FillCenter(m_lastExecutedAtom);
 
-  m_executingWindow.WriteTo(m_atoms, TILE_WIDTH);
-
-  m_executingWindow.DeallocateAtoms();
+  SendRelevantAtoms();
 }

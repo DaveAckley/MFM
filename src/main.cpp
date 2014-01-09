@@ -32,7 +32,7 @@
 class MFMSim
 {
 public:
-  static const u32 EVENT_WINDOW_RADIUS = 2;
+  static const u32 EVENT_WINDOW_RADIUS = 4;
 
 private:
 
@@ -124,7 +124,7 @@ public:
 
     SDL_Event event;
     grend.SetDestination(screen);
-    GridP1Atom mainGrid(3, 3, &elements);
+    GridP1Atom mainGrid(2, 2, &elements);
 
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
 

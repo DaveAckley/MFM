@@ -1,6 +1,8 @@
 #ifndef EUCLIDDIR_H      /* -*- C++ -*- */
 #define EUCLIDDIR_H
 
+#include "point.h"
+
 typedef enum enum_eucliddir
 { 
   EUDIR_NORTH     = 0,
@@ -12,5 +14,11 @@ typedef enum enum_eucliddir
   EUDIR_WEST      = 6,
   EUDIR_NORTHWEST = 7
 }EuclidDir;
+
+class EuDir
+{
+public:
+  static void FillEuclidDir(Point<int>& pt, EuclidDir dir);
+};
 
 #endif /*EUCLIDDIR_H*/

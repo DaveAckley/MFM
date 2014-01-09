@@ -21,8 +21,6 @@ class Packet
 {
 private:
   PacketType m_type;
-
-  EuclidDir m_edge;
   
   Point<int> m_edgeLoc;
 
@@ -39,10 +37,6 @@ public:
   void SetLocation(Point<int>& fromPt);
 
   Point<int>& GetLocation();
-
-  void SetEdge(EuclidDir edge);
-  
-  EuclidDir GetEdge();
 };
 
 #include "packet.tcc"
