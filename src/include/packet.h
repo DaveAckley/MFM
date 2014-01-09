@@ -30,6 +30,9 @@ public:
 
   Packet(PacketType type);
 
+  PacketType GetType()
+  { return m_type; }
+
   void SetAtom(T& atom);
 
   T& GetAtom();

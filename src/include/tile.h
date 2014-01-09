@@ -70,7 +70,7 @@ public:
 
   T* GetAtom(int i);
 
-  void RecievePacket(Packet<T>& packet);
+  void ReceivePacket(Packet<T>& packet);
 
   void FillLastExecutedAtom(Point<int>& out);
 

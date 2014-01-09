@@ -20,7 +20,7 @@ Grid<T,R>::Grid(int width, int height, ElementTable<T,R>* elementTable)
 	EuDir::FillEuclidDir(neighborPt, d);
 	neighborPt.Add(x, y);
 
-	GetTile(x, y).AddComFunction(&GetTile(neighborPt).RecievePacket, d);
+	GetTile(x, y).AddComFunction(&Tile<T,R>::ReceivePacket, d);
       }
     }
   }
@@ -139,7 +139,9 @@ void Grid<T,R>::Resize(int newWidth, int newHeight)
 template <class T, u32 R>
 void Grid<T,R>::TriggerEvent()
 {
-  Point<int> windowTile(true, m_width, m_height);
+  //Point<int> windowTile(true, m_width, m_height);
+
+  Point<int> windowTile(0, 0);
 
   m_tiles[windowTile.GetX() + 
 	  windowTile.GetY() * m_width].Execute(*m_elementTable);

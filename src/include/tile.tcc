@@ -28,6 +28,19 @@ T* Tile<T,R>::GetAtom(int i)
   return &m_atoms[i];
 }
 
+template <class T, u32 R>
+void Tile<T,R>::ReceivePacket(Packet<T>& packet)
+{
+  switch(packet.GetType())
+  {
+  case PACKET_WRITE:
+    PlaceAtom(packet.GetAtom(), packet.GetLocation());
+    break;
+  default:
+    FAIL(INCOMPLETE_CODE); break;
+  }
+}
+
 template <class T,u32 R>
 void Tile<T,R>::FillLastExecutedAtom(Point<int>& out)
 {
@@ -130,30 +143,32 @@ void Tile<T, R>::SendAtom(EuclidDir neighbor, Point<int>& atomLoc)
   if(m_comFunctions[neighbor])
   {
     Point<int> remoteLoc(atomLoc);
+
+    u32 tileDiff = TILE_WIDTH - 2 * R;
     
     /* The neighbor will think this atom is in a different location. */
     switch(neighbor)
     {
-    case EUDIR_NORTH: remoteLoc.Add(0, TILE_WIDTH + R); break;
-    case EUDIR_SOUTH: remoteLoc.Add(0, -(TILE_WIDTH + R)); break;
-    case EUDIR_WEST:  remoteLoc.Add(TILE_WIDTH + R, 0); break;
-    case EUDIR_EAST:  remoteLoc.Add(-(TILE_WIDTH + R), 0); break;
+    case EUDIR_NORTH: remoteLoc.Add(0, tileDiff); break;
+    case EUDIR_SOUTH: remoteLoc.Add(0, -tileDiff); break;
+    case EUDIR_WEST:  remoteLoc.Add(tileDiff, 0); break;
+    case EUDIR_EAST:  remoteLoc.Add(-tileDiff, 0); break;
     case EUDIR_NORTHEAST:
-      remoteLoc.Add(-(TILE_WIDTH + R), TILE_WIDTH + R); break;
+      remoteLoc.Add(-tileDiff, tileDiff); break;
     case EUDIR_SOUTHEAST:
-      remoteLoc.Add(-(TILE_WIDTH + R), -(TILE_WIDTH + R)); break;
+      remoteLoc.Add(-tileDiff, -tileDiff); break;
     case EUDIR_SOUTHWEST:
-      remoteLoc.Add(TILE_WIDTH + R, -(TILE_WIDTH + R)); break;
+      remoteLoc.Add(tileDiff, -tileDiff); break;
     case EUDIR_NORTHWEST:
-      remoteLoc.Add(TILE_WIDTH + R, TILE_WIDTH + R); break;
+      remoteLoc.Add(tileDiff, tileDiff); break;
     }
 
     Packet<T> sendout(PACKET_WRITE);
 
-    sendout.SetLocation(atomLoc);
+    sendout.SetLocation(remoteLoc);
     sendout.SetAtom(*GetAtom(&atomLoc));
 
-    m_comFunctions[neighbor](sendout);
+    (this->*m_comFunctions[neighbor])(sendout);
 
   }
 }
@@ -219,7 +234,10 @@ void Tile<T,R>::SendRelevantAtoms()
 template <class T,u32 R>
 void Tile<T,R>::Execute(ElementTable<T,R>& table)
 {
-  CreateRandomWindow();
+  //CreateRandomWindow();
+
+  Point<int> winCenter(TILE_WIDTH - R, TILE_WIDTH - R - 1);
+  CreateWindowAt(winCenter);
   
   table.Execute(m_executingWindow);
 
