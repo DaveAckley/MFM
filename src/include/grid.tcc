@@ -8,22 +8,6 @@ Grid<T,R>::Grid(int width, int height, ElementTable<T,R>* elementTable)
   m_height = height;
 
   m_tiles = new Tile<T,R>[m_width * m_height];
-
-  Point<int> neighborPt;
-  /* Set up all communication functions */
-  for(u32 x = 0; x < m_width; x++)
-  {
-    for(u32 y = 0; y < m_height; y++)
-    {
-      for(EuclidDir d = EUDIR_NORTH; d <= EUDIR_NORTHWEST; d = (EuclidDir)(d + 1))
-      {
-	EuDir::FillEuclidDir(neighborPt, d);
-	neighborPt.Add(x, y);
-
-	GetTile(x, y).AddComFunction(&Tile<T,R>::ReceivePacket, d);
-      }
-    }
-  }
  
   m_elementTable = elementTable;
 }
@@ -139,12 +123,28 @@ void Grid<T,R>::Resize(int newWidth, int newHeight)
 template <class T, u32 R>
 void Grid<T,R>::TriggerEvent()
 {
-  //Point<int> windowTile(true, m_width, m_height);
+  Point<int> windowTile(true, m_width, m_height);
 
-  Point<int> windowTile(0, 0);
+  Tile<T,R>& execTile = m_tiles[windowTile.GetX() + 
+				windowTile.GetY() * m_width];
 
-  m_tiles[windowTile.GetX() + 
-	  windowTile.GetY() * m_width].Execute(*m_elementTable);
+  execTile.Execute(*m_elementTable);
+
+  Packet<T>* readPack;
+  Point<int> nOffset;
+  while((readPack = execTile.NextPacket()))
+  {
+    EuDir::FillEuclidDir(nOffset, readPack->GetReceivingNeighbor());
+    nOffset.Add(windowTile);
+    if(nOffset.GetX() >= 0 && nOffset.GetY() >= 0 &&
+       nOffset.GetX() < (s32)m_width && nOffset.GetY() < (s32)m_height)
+    {
+      /* Tile's there! Dump the packet. */
+      Tile<T,R>& writeTile = GetTile((u32)nOffset.GetX(), (u32)nOffset.GetY());
+
+      writeTile.ReceivePacket(*readPack);
+    }
+  }
 
   m_lastEventTile.Set(windowTile.GetX(), windowTile.GetY());
 }

@@ -1,6 +1,7 @@
 #ifndef PACKET_H /* -*- C++ -*- */
 #define PACKET_H
 
+#include "eucliddir.h"
 #include "itype.h"
 
 /* 
@@ -24,16 +25,29 @@ private:
   
   Point<int> m_edgeLoc;
 
+  EuclidDir m_toNeighbor;
+
   T m_atom;
 
 public:
 
   Packet(PacketType type);
 
+  Packet() { }
+
   PacketType GetType()
   { return m_type; }
 
+  void SetType(PacketType type)
+  { m_type = type; }
+
   void SetAtom(T& atom);
+
+  void SetReceivingNeighbor(EuclidDir dir)
+  { m_toNeighbor = dir; }
+
+  EuclidDir GetReceivingNeighbor()
+  { return m_toNeighbor; }
 
   T& GetAtom();
 

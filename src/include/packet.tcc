@@ -4,7 +4,6 @@ Packet<T>::Packet(PacketType type)
   m_type = type;
 }
 
-
 template <class T>
 void Packet<T>::SetAtom(T& atom)
 {

@@ -24,7 +24,7 @@
 
 #define FRAMES_PER_SECOND 60.0
 
-#define EVENTS_PER_FRAME 0
+#define EVENTS_PER_FRAME 10000
 
 #define CAMERA_SLOW_SPEED 2
 #define CAMERA_FAST_SPEED 10
@@ -32,7 +32,7 @@
 class MFMSim
 {
 public:
-  static const u32 EVENT_WINDOW_RADIUS = 4;
+  static const u32 EVENT_WINDOW_RADIUS = 2;
 
 private:
 
@@ -114,7 +114,7 @@ public:
   void Run()
   {
     // Repeatable until forced otherwise
-    srandom(5);
+    srandom(2);
 
     bool running = true;
     screen = SDL_SetVideoMode(640, 640, 32,
@@ -130,7 +130,7 @@ public:
 
     P1Atom atom(ELEMENT_DREG);
     P1Atom res(ELEMENT_RES);
-    Point<int> aloc(3, 3);
+    Point<int> aloc(15, 15);
     Point<int> rloc(16, 16);
 
     /* 

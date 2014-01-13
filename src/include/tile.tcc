@@ -3,10 +3,6 @@
 template <class T, u32 R>
 Tile<T,R>::Tile()
 {
-  for(u32 i = 0; i < 8; i++)
-  {
-    m_comFunctions[i] = NULL;
-  }
 }
 
 template <class T,u32 R>
@@ -39,6 +35,16 @@ void Tile<T,R>::ReceivePacket(Packet<T>& packet)
   default:
     FAIL(INCOMPLETE_CODE); break;
   }
+}
+
+template <class T, u32 R>
+Packet<T>* Tile<T,R>::NextPacket()
+{
+  if(m_outgoingPackets.PacketsHeld())
+  {
+    return m_outgoingPackets.PopPacket();
+  }
+  return NULL;
 }
 
 template <class T,u32 R>
@@ -140,37 +146,36 @@ void Tile<T,R>::DiffuseAtom(EventWindow<T,R>& window)
 template <class T, u32 R>
 void Tile<T, R>::SendAtom(EuclidDir neighbor, Point<int>& atomLoc)
 {
-  if(m_comFunctions[neighbor])
-  {
-    Point<int> remoteLoc(atomLoc);
+  Point<int> remoteLoc(atomLoc);
 
-    u32 tileDiff = TILE_WIDTH - 2 * R;
+  u32 tileDiff = TILE_WIDTH - 2 * R;
     
-    /* The neighbor will think this atom is in a different location. */
-    switch(neighbor)
-    {
-    case EUDIR_NORTH: remoteLoc.Add(0, tileDiff); break;
-    case EUDIR_SOUTH: remoteLoc.Add(0, -tileDiff); break;
-    case EUDIR_WEST:  remoteLoc.Add(tileDiff, 0); break;
-    case EUDIR_EAST:  remoteLoc.Add(-tileDiff, 0); break;
-    case EUDIR_NORTHEAST:
-      remoteLoc.Add(-tileDiff, tileDiff); break;
-    case EUDIR_SOUTHEAST:
-      remoteLoc.Add(-tileDiff, -tileDiff); break;
-    case EUDIR_SOUTHWEST:
-      remoteLoc.Add(tileDiff, -tileDiff); break;
-    case EUDIR_NORTHWEST:
-      remoteLoc.Add(tileDiff, tileDiff); break;
-    }
-
-    Packet<T> sendout(PACKET_WRITE);
-
-    sendout.SetLocation(remoteLoc);
-    sendout.SetAtom(*GetAtom(&atomLoc));
-
-    (this->*m_comFunctions[neighbor])(sendout);
-
+  /* The neighbor will think this atom is in a different location. */
+  switch(neighbor)
+  {
+  case EUDIR_NORTH: remoteLoc.Add(0, tileDiff); break;
+  case EUDIR_SOUTH: remoteLoc.Add(0, -tileDiff); break;
+  case EUDIR_WEST:  remoteLoc.Add(tileDiff, 0); break;
+  case EUDIR_EAST:  remoteLoc.Add(-tileDiff, 0); break;
+  case EUDIR_NORTHEAST:
+    remoteLoc.Add(-tileDiff, tileDiff); break;
+  case EUDIR_SOUTHEAST:
+    remoteLoc.Add(-tileDiff, -tileDiff); break;
+  case EUDIR_SOUTHWEST:
+    remoteLoc.Add(tileDiff, -tileDiff); break;
+  case EUDIR_NORTHWEST:
+    remoteLoc.Add(tileDiff, tileDiff); break;
+  default:
+    FAIL(INCOMPLETE_CODE); break;
   }
+
+  Packet<T> sendout(PACKET_WRITE);
+
+  sendout.SetLocation(remoteLoc);
+  sendout.SetAtom(*GetAtom(&atomLoc));
+  sendout.SetReceivingNeighbor(neighbor);
+
+  m_outgoingPackets.PushPacket(sendout);
 }
 
 /*
@@ -234,10 +239,10 @@ void Tile<T,R>::SendRelevantAtoms()
 template <class T,u32 R>
 void Tile<T,R>::Execute(ElementTable<T,R>& table)
 {
-  //CreateRandomWindow();
+  CreateRandomWindow();
 
-  Point<int> winCenter(TILE_WIDTH - R, TILE_WIDTH - R - 1);
-  CreateWindowAt(winCenter);
+  //Point<int> winCenter(R * 2 - 1, 15);
+  //CreateWindowAt(winCenter);
   
   table.Execute(m_executingWindow);
 

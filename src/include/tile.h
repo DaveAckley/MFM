@@ -4,12 +4,13 @@
 #include "eucliddir.h"
 #include "p1atom.h"
 #include "packet.h"
+#include "packetbuffer.h"
 #include "point.h"
 #include "eventwindow.h"
 #include "elementtable.h"
 
 /* The length, in sites, of a Tile.*/
-#define TILE_WIDTH 40
+#define TILE_WIDTH 28
 
 /*The number of sites a tile contains.*/
 #define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)
@@ -23,13 +24,11 @@ private:
 
   T m_atoms[TILE_SIZE];
 
-  typedef void (Tile<T,R>::*ComFunction )(Packet<T>& packet);
-
-  ComFunction m_comFunctions[8];
-
   Point<int> m_lastExecutedAtom;
 
   EventWindow<T,R> m_executingWindow;
+
+  PacketBuffer<T> m_outgoingPackets;
 
   void CreateRandomWindow();
 
@@ -38,7 +37,7 @@ private:
   u32 (*m_stateFunc)(T* atom);
 
   /*
-   * Finds the cache point at by pt. If there
+   * Finds the cache pointed at by pt. If there
    * is no cache there, this will return -1.
    */
   EuclidDir CacheAt(Point<int>& pt);
@@ -52,16 +51,13 @@ public:
   Tile();
 
   void SetStateFunc(u32 (*stateFunc)(T* atom))
-  { m_stateFunc = stateFunc; }
+  {
+    m_stateFunc = stateFunc;
+  }
 
   u32 (*GetStateFunc())(T* atom)
   {
     return m_stateFunc;
-  }
-
-  void AddComFunction(ComFunction func, EuclidDir dir)
-  {
-    m_comFunctions[dir] = func;
   }
 
   T* GetAtom(Point<int>* pt);
@@ -71,6 +67,12 @@ public:
   T* GetAtom(int i);
 
   void ReceivePacket(Packet<T>& packet);
+
+  /*
+   * Gets the next packet that needs to be sent. This
+   * returns NULL if there are no more packets to take.
+   */
+  Packet<T>* NextPacket();
 
   void FillLastExecutedAtom(Point<int>& out);
 
