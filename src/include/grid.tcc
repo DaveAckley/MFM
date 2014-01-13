@@ -123,7 +123,12 @@ void Grid<T,R>::Resize(int newWidth, int newHeight)
 template <class T, u32 R>
 void Grid<T,R>::TriggerEvent()
 {
+  /*Change to 0 if aiming a window at a certian tile.*/
+#if 1
   Point<int> windowTile(true, m_width, m_height);
+#else
+  Point<int> windowTile(0, 1);
+#endif
 
   Tile<T,R>& execTile = m_tiles[windowTile.GetX() + 
 				windowTile.GetY() * m_width];

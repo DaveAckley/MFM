@@ -24,7 +24,7 @@
 
 #define FRAMES_PER_SECOND 60.0
 
-#define EVENTS_PER_FRAME 10000
+#define EVENTS_PER_FRAME 100000
 
 #define CAMERA_SLOW_SPEED 2
 #define CAMERA_FAST_SPEED 10
@@ -38,6 +38,8 @@ private:
 
   typedef Grid<P1Atom,EVENT_WINDOW_RADIUS> GridP1Atom;
   typedef ElementTable<P1Atom,EVENT_WINDOW_RADIUS> ElementTableP1Atom;
+
+  bool paused;
 
   Mouse mouse;
   Keyboard keyboard;
@@ -73,6 +75,10 @@ private:
     {
       grend.SetEventWindowRenderMode(EVENTWINDOW_RENDER_OFF);
     }
+    if(keyboard.SemiAuto(SDLK_e))
+    {
+      grid.TriggerEvent();
+    }
     if(keyboard.IsDown(SDLK_LEFT) ||
        keyboard.IsDown(SDLK_a))
     {
@@ -90,7 +96,7 @@ private:
     }
     if(keyboard.SemiAuto(SDLK_SPACE))
     {
-      grid.TriggerEvent();
+      paused = !paused;
     }
     if(keyboard.IsDown(SDLK_RIGHT) ||
        keyboard.IsDown(SDLK_d))
@@ -98,9 +104,12 @@ private:
       grend.MoveRight(speed);
     }
 
-    for(u32 i = 0; i < EVENTS_PER_FRAME; i++)
+    if(!paused)
     {
-      grid.TriggerEvent();
+      for(u32 i = 0; i < EVENTS_PER_FRAME; i++)
+      {
+	grid.TriggerEvent();
+      }
     }
 
     mouse.Flip();
@@ -114,7 +123,9 @@ public:
   void Run()
   {
     // Repeatable until forced otherwise
-    srandom(2);
+    srandom(3);
+
+    paused = true;
 
     bool running = true;
     screen = SDL_SetVideoMode(640, 640, 32,
@@ -124,28 +135,37 @@ public:
 
     SDL_Event event;
     grend.SetDestination(screen);
-    GridP1Atom mainGrid(2, 2, &elements);
+    GridP1Atom mainGrid(3, 2, &elements);
 
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
 
     P1Atom atom(ELEMENT_DREG);
     P1Atom res(ELEMENT_RES);
-    Point<int> aloc(15, 15);
+    Point<int> aloc(30, 30);
     Point<int> rloc(16, 16);
 
+    for(int i = 0; i < 10; i++)
+    {
+      mainGrid.PlaceAtom(atom, aloc);
+      aloc.SetX(aloc.GetX() + 1);
+    }
+
     /* 
-     * Getto fix for keeping atoms from going
+     * Ghetto fix for keeping atoms from going
      * into the cache
      */
 
-    for(u32 x = 0; x < TILE_WIDTH; x++)
+    u32 uniWidth = mainGrid.GetWidth() * (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
+    u32 uniHeight = mainGrid.GetHeight() * (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
+
+    for(u32 x = 0; x < uniWidth; x++)
     {
-      for(u32 y = 0; y < TILE_WIDTH; y++)
+      for(u32 y = 0; y < uniHeight; y++)
       {
 	if(x < EVENT_WINDOW_RADIUS ||
 	   y < EVENT_WINDOW_RADIUS ||
-	   x >= TILE_WIDTH - EVENT_WINDOW_RADIUS ||
-	   y >= TILE_WIDTH - EVENT_WINDOW_RADIUS)
+	   x >= uniWidth - EVENT_WINDOW_RADIUS ||
+	   y >= uniHeight - EVENT_WINDOW_RADIUS)
 	{
 	  Point<int> nloc(x, y);
 

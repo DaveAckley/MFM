@@ -205,10 +205,12 @@ void Tile<T,R>::SendRelevantAtoms()
       if(localLoc.GetY() < r2)
       {
 	SendAtom(EUDIR_NORTHWEST, localLoc);
+	SendAtom(EUDIR_NORTH, localLoc);
       }
       else if(localLoc.GetY() >= TILE_WIDTH - r2)
       {
 	SendAtom(EUDIR_SOUTHWEST, localLoc);
+	SendAtom(EUDIR_SOUTH, localLoc);
       }
     }
     /*East neighbor?*/
@@ -218,10 +220,12 @@ void Tile<T,R>::SendRelevantAtoms()
       if(localLoc.GetY() < r2)
       {
 	SendAtom(EUDIR_NORTHEAST, localLoc);
+	SendAtom(EUDIR_NORTH, localLoc);
       }
       if(localLoc.GetY() >= TILE_WIDTH - r2)
       {
 	SendAtom(EUDIR_SOUTHEAST, localLoc);
+	SendAtom(EUDIR_SOUTH, localLoc);
       }
     }
     else if(localLoc.GetY() < r2)
@@ -239,10 +243,13 @@ void Tile<T,R>::SendRelevantAtoms()
 template <class T,u32 R>
 void Tile<T,R>::Execute(ElementTable<T,R>& table)
 {
+  /*Change to 0 if placing a window in a certain place*/
+#if 1
   CreateRandomWindow();
-
-  //Point<int> winCenter(R * 2 - 1, 15);
-  //CreateWindowAt(winCenter);
+#else
+  Point<int> winCenter(R * 2 - 1, R);
+  CreateWindowAt(winCenter);
+#endif
   
   table.Execute(m_executingWindow);
 
