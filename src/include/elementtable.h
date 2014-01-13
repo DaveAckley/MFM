@@ -45,6 +45,7 @@ public:
 
   void FillAtom(T* atom, ElementType type);
 
+  bool Diffusable(ElementType type);
   
 };
 

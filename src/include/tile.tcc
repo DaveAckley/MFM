@@ -253,7 +253,10 @@ void Tile<T,R>::Execute(ElementTable<T,R>& table)
   
   table.Execute(m_executingWindow);
 
-  DiffuseAtom(m_executingWindow);
+  if(table.Diffusable((ElementType)m_stateFunc(&m_executingWindow.GetCenterAtom())))
+  {
+    DiffuseAtom(m_executingWindow);
+  }
 
   m_executingWindow.FillCenter(m_lastExecutedAtom);
 

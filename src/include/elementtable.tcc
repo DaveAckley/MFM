@@ -66,3 +66,15 @@ ElementTable<T,R>::ElementTable(u32 (*stateFunc)(T* atom))
   m_funcmap[1] = &DRegBehavior;
   m_funcmap[2] = &NothingBehavior;
 }
+
+template <class T, u32 R>
+bool ElementTable<T,R>::Diffusable(ElementType type)
+{
+  switch(type)
+  {
+  case ELEMENT_NOTHING:
+    return false;
+  default:
+    return true;
+  }
+}
