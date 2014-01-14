@@ -140,44 +140,20 @@ public:
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
 
     P1Atom atom(ELEMENT_DREG);
-    P1Atom res(ELEMENT_RES);
+    P1Atom sorter(ELEMENT_SORTER);
     Point<int> aloc(30, 30);
-    Point<int> rloc(16, 16);
+
+    Point<int> sloc(10, 10);
 
     for(int i = 0; i < 10; i++)
     {
       mainGrid.PlaceAtom(atom, aloc);
       aloc.SetX(aloc.GetX() + 1);
     }
+    
+    mainGrid.PlaceAtom(sorter, sloc);
 
-    /* 
-     * Ghetto fix for keeping atoms from going
-     * into the cache
-     */
-
-    u32 uniWidth = mainGrid.GetWidth() * (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
-    u32 uniHeight = mainGrid.GetHeight() * (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
-
-    for(u32 x = 0; x < uniWidth; x++)
-    {
-      for(u32 y = 0; y < uniHeight; y++)
-      {
-	if(x < EVENT_WINDOW_RADIUS ||
-	   y < EVENT_WINDOW_RADIUS ||
-	   x >= uniWidth - EVENT_WINDOW_RADIUS ||
-	   y >= uniHeight - EVENT_WINDOW_RADIUS)
-	{
-	  Point<int> nloc(x, y);
-
-	  mainGrid.PlaceAtom(res, nloc);
-	}
-      }
-    }
-
-    mainGrid.PlaceAtom(atom, aloc);
-    mainGrid.PlaceAtom(res, rloc);
-
-    int lastFrame = SDL_GetTicks();
+    s32 lastFrame = SDL_GetTicks();
 
     while(running)
     {
@@ -204,7 +180,7 @@ public:
       }
       
       /* Limit framerate */
-      int sleepMS = (int)
+      s32 sleepMS = (s32)
 	((1000.0 / FRAMES_PER_SECOND) -
 	 (SDL_GetTicks() - lastFrame));
       if(sleepMS > 0)

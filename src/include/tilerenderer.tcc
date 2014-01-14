@@ -28,6 +28,9 @@ void TileRenderer::RenderAtoms(Point<int>& pt, Tile<T,EVENT_WINDOW_RADIUS>& tile
       case ELEMENT_RES:
 	color = 0xffffff00;
 	break;
+      case ELEMENT_SORTER:
+	color = 0xffff0000;
+	break;
       default: continue;
       }
 

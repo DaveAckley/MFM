@@ -10,7 +10,8 @@ typedef enum
 {
   ELEMENT_NOTHING = 0x0,
   ELEMENT_DREG    = 0x1,
-  ELEMENT_RES     = 0x2
+  ELEMENT_RES     = 0x2,
+  ELEMENT_SORTER  = 0x3
 }ElementType;
 
 template <class T,u32 R>
@@ -34,6 +35,8 @@ private:
   static void NothingBehavior(EventWindow<T,R>& w, StateFunction f);
 
   static void DRegBehavior(EventWindow<T,R>& w, StateFunction f);
+
+  static void SorterBehavior(EventWindow<T,R>& w, StateFunction f);
   
 public:
   ElementTable(u32 (*stateFunc)(T* atom));

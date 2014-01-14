@@ -59,12 +59,28 @@ void ElementTable<T,R>::DRegBehavior(EventWindow<T,R>& window,
 }
 
 template <class T,u32 R>
+void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
+				       StateFunction f)
+{
+  Point<int> dir;
+  ManhattanDir<R>::get().FillRandomSingleDir(dir);
+
+  u32 state = f(&window.GetRelativeAtom(dir));
+
+  if(state == ELEMENT_RES)
+  {
+    window.SetRelativeAtom(dir, P1Atom(ELEMENT_SORTER));
+  }
+}
+
+template <class T,u32 R>
 ElementTable<T,R>::ElementTable(u32 (*stateFunc)(T* atom))
 {
   m_statefunc = stateFunc;
   m_funcmap[0] = &NothingBehavior;
   m_funcmap[1] = &DRegBehavior;
   m_funcmap[2] = &NothingBehavior;
+  m_funcmap[3] = &SorterBehavior;
 }
 
 template <class T, u32 R>

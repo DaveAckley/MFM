@@ -22,6 +22,8 @@ class Tile
 
 private:
 
+  u8 m_neighborConnections;
+
   T m_atoms[TILE_SIZE];
 
   Point<int> m_lastExecutedAtom;
@@ -46,9 +48,15 @@ private:
 
   void SendAtom(EuclidDir neighbor, Point<int>& atomLoc);
 
+  inline bool IsConnected(EuclidDir dir);
+
+  inline bool IsInCache(Point<int>& pt);
+
 public:
 
   Tile();
+
+  void SetNeighbors(u8 neighbors);
 
   void SetStateFunc(u32 (*stateFunc)(T* atom))
   {

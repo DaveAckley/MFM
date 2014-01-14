@@ -19,14 +19,17 @@ private:
 
   Tile<T,R>* GetTile(int position);
 
-  inline u32 GetPosition(u32 x, u32 y) { return x + y * m_width; }
+  inline u32 GetPosition(u32 x, u32 y) 
+  { return x + y * m_width; }
   
   inline Tile<T,R> & GetTile(const Point<u32>& pt)
   {return m_tiles[GetPosition(pt.GetX(), pt.GetY())];}
 
-  inline Tile<T,R> & GetTile(u32 x, u32 y) { return m_tiles[GetPosition(x, y)]; }
+  inline Tile<T,R> & GetTile(u32 x, u32 y) 
+  { return m_tiles[GetPosition(x, y)]; }
 
-  inline const Tile<T,R> & GetTile(u32 x, u32 y) const { return m_tiles[GetPosition(x, y)]; }
+  inline const Tile<T,R> & GetTile(u32 x, u32 y) const 
+  { return m_tiles[GetPosition(x, y)]; }
 
 public:
 
@@ -49,9 +52,6 @@ public:
   void Expand(int extraW, int extraH);
 
   void Resize(int newWidth, int newHeight);
-
-  void FillNeighbors(int center_x, int center_y,
-		     Tile<T,R>** out);
 
   void FillLastEventTile(Point<int>& out);
 

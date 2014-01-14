@@ -5,6 +5,12 @@ Tile<T,R>::Tile()
 {
 }
 
+template <class T, u32 R>
+void Tile<T,R>::SetNeighbors(u8 neighbors)
+{
+  m_neighborConnections = neighbors;
+}
+
 template <class T,u32 R>
 T* Tile<T,R>::GetAtom(Point<int>* pt)
 {
@@ -123,13 +129,28 @@ void Tile<T,R>::DiffuseAtom(EventWindow<T,R>& window)
 {
   Point<int> neighbors[4];
   Point<int> center;
+  window.FillCenter(center);
+
   ManhattanDir<R>::get().FillVNNeighbors(neighbors);
   u8 idx = rand() & 3;
+
+  Point<int> current;
 
   for(int i = 0; i < 4; i++)
   {
     idx++;
     idx &= 3;
+    
+    current = center;
+    current.Add(neighbors[idx]);
+
+    /* Is this a dead cache? */
+    if(IsInCache(current) && 
+       !IsConnected(EuDir::FromOffset(neighbors[idx])))
+    {
+      continue;
+    }
+
 
     T& atom = window.GetRelativeAtom(neighbors[idx]);
 
@@ -176,6 +197,20 @@ void Tile<T, R>::SendAtom(EuclidDir neighbor, Point<int>& atomLoc)
   sendout.SetReceivingNeighbor(neighbor);
 
   m_outgoingPackets.PushPacket(sendout);
+}
+
+template <class T, u32 R>
+bool Tile<T,R>::IsConnected(EuclidDir dir)
+{
+  return m_neighborConnections & (1 << ((u8)dir >> 1));
+}
+
+template <class T, u32 R>
+bool Tile<T,R>::IsInCache(Point<int>& pt)
+{
+  int upbnd = TILE_WIDTH - R;
+  return (u32)pt.GetX() < R || (u32)pt.GetY() < R ||
+    pt.GetX() >= upbnd || pt.GetY() >= upbnd;
 }
 
 /*

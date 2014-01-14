@@ -60,42 +60,6 @@ u32 ManhattanDir<R>::GetTableSize(TableType type)
   return EVENT_WINDOW_SITES(radius);
 }
 
-  /*
-template<u32 R>
-void  ManhattanDir<R>::FillTable(Point<int>* table,
-			      TableType type)
-{
-  int maxDist = GetBondSize(type);
-  u8 cidx = 0;
-  Point<int> current;
-  for(int x = -maxDist;  x <= maxDist; x++)
-  {
-    current.SetX(x);
-    for(int y = -maxDist; y <= maxDist; y++)
-    {
-      current.SetY(y);
-
-      if(current.GetManhattanDistance() <= maxDist)
-      {
-	table[cidx].SetX(x);
-	table[cidx].SetY(y);
-	cidx++;
-      }
-    }
-  }
-
-  switch(type)
-  {
-  case MANHATTAN_TABLE_SHORT:
-    m_shortTableSize = cidx; break;
-  case MANHATTAN_TABLE_LONG:
-    m_longTableSize = cidx; break;
-  default:
-    m_eventTableSize = cidx; break;
-  }
-}
-  */
-
 template<u32 R>
 ManhattanDir<R>& ManhattanDir<R>::get() {
   static ManhattanDir<R> instance;

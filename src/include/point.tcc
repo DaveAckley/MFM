@@ -126,6 +126,13 @@ void Point<T>::Set(T x, T y)
 }
 
 template <class T>
+void Point<T>::Set(const Point<T>& other)
+{
+  m_x = other.m_x;
+  m_y = other.m_y;
+}
+
+template <class T>
 Point<T>& Point<T>::operator=(const Point<T>& rhs)
 {
   m_x = rhs.m_x;

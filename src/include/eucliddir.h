@@ -19,6 +19,8 @@ class EuDir
 {
 public:
   static void FillEuclidDir(Point<int>& pt, EuclidDir dir);
+
+  static EuclidDir FromOffset(Point<int>& pt);
 };
 
 #endif /*EUCLIDDIR_H*/

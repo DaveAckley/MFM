@@ -52,6 +52,8 @@ public:
 
   void Set(T x, T y);
 
+  void Set(const Point<T>& copyFrom);
+
   Point<T>& operator=(const Point<T> & rhs);
 };
 

@@ -1,4 +1,5 @@
 #include "eucliddir.h"
+#include "fail.h"
 
 void EuDir::FillEuclidDir(Point<int>& pt, EuclidDir dir)
 {
@@ -17,4 +18,36 @@ void EuDir::FillEuclidDir(Point<int>& pt, EuclidDir dir)
   case EUDIR_SOUTHWEST:
     pt.Set(-1,  1); break;
   }
+}
+
+EuclidDir EuDir::FromOffset(Point<int>& pt)
+{
+  switch(pt.GetX())
+  {
+  case 1:
+    switch(pt.GetY())
+    {
+    case 1:  return EUDIR_SOUTHEAST;
+    case 0:  return EUDIR_EAST;
+    case -1: return EUDIR_NORTHEAST;
+    }
+    break;
+  case 0:
+    switch(pt.GetY())
+    {
+    case 1:  return EUDIR_SOUTH;
+    case -1: return EUDIR_NORTH;
+    }
+    break;
+  case -1:
+    switch(pt.GetY())
+    {
+    case 1:  return EUDIR_SOUTHWEST;
+    case 0:  return EUDIR_WEST;
+    case -1: return EUDIR_NORTHWEST;
+    }
+    break;
+  }
+
+  FAIL(ILLEGAL_ARGUMENT);
 }

@@ -8,6 +8,33 @@ Grid<T,R>::Grid(int width, int height, ElementTable<T,R>* elementTable)
   m_height = height;
 
   m_tiles = new Tile<T,R>[m_width * m_height];
+
+  u8 neighbors;
+  for(u32 x = 0; x < m_width; x++)
+  {
+    for(u32 y = 0; y < m_height; y++)
+    {
+      neighbors = 0;
+      if(x > 0)
+      {
+	neighbors |= 0x8; 
+      }
+      if(y > 0)
+      {
+	neighbors |= 0x1;
+      }
+      if(x < m_width - 1)
+      {
+	neighbors |= 0x2;
+      }
+      if(y < m_height - 1)
+      {
+	neighbors |= 0x4;
+      }
+
+      GetTile(x, y).SetNeighbors(neighbors);
+    }
+  }
  
   m_elementTable = elementTable;
 }
@@ -144,7 +171,7 @@ void Grid<T,R>::TriggerEvent()
     if(nOffset.GetX() >= 0 && nOffset.GetY() >= 0 &&
        nOffset.GetX() < (s32)m_width && nOffset.GetY() < (s32)m_height)
     {
-      /* Tile's there! Dump the packet. */
+      /* Tile's there! Give it the packet. */
       Tile<T,R>& writeTile = GetTile((u32)nOffset.GetX(), (u32)nOffset.GetY());
 
       writeTile.ReceivePacket(*readPack);
@@ -152,16 +179,6 @@ void Grid<T,R>::TriggerEvent()
   }
 
   m_lastEventTile.Set(windowTile.GetX(), windowTile.GetY());
-}
-
-template <class T, u32 R>
-void Grid<T,R>::FillNeighbors(int center_x, int center_y,
-			    Tile<T,R>** out)
-{  
-  for(int i = 0; i < 8; i++)
-  {
-    
-  }
 }
 
 template <class T, u32 R>

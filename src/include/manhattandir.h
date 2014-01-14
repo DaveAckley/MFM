@@ -87,12 +87,16 @@ public:
 
   void FillVNNeighbors(Point<int>* pts);
 
+
+
 private:
   static const u32 ARRAY_LENGTH = EVENT_WINDOW_SITES(R);
 
   static inline u32 ManhattanArea(u32 maxDistance) {
     return EVENT_WINDOW_SITES(maxDistance);
   }
+
+  
 
   Point<s32> m_indexToPoint[ARRAY_LENGTH];
   s32 m_pointToIndex[EVENT_WINDOW_DIAMETER][EVENT_WINDOW_DIAMETER];
