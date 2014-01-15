@@ -141,9 +141,11 @@ public:
 
     P1Atom atom(ELEMENT_DREG);
     P1Atom sorter(ELEMENT_SORTER);
-    Point<int> aloc(30, 30);
+    P1Atom emtr(ELEMENT_EMITTER);
 
+    Point<int> aloc(30, 30);
     Point<int> sloc(10, 10);
+    Point<int> eloc(70, 10);
 
     for(int i = 0; i < 10; i++)
     {
@@ -152,6 +154,7 @@ public:
     }
     
     mainGrid.PlaceAtom(sorter, sloc);
+    mainGrid.PlaceAtom(emtr, eloc);
 
     s32 lastFrame = SDL_GetTicks();
 

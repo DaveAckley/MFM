@@ -23,14 +23,17 @@ void TileRenderer::RenderAtoms(Point<int>& pt, Tile<T,EVENT_WINDOW_RADIUS>& tile
       switch(tile.GetStateFunc()(atom))
       {
       case ELEMENT_DREG:
-	color = 0xff505050;
-	break;
+	color = 0xff505050; break;
       case ELEMENT_RES:
-	color = 0xffffff00;
-	break;
+	color = 0xffffff00; break;
       case ELEMENT_SORTER:
-	color = 0xffff0000;
-	break;
+	color = 0xffff0000; break;
+      case ELEMENT_EMITTER:
+	color = 0xff808080; break;
+      case ELEMENT_DATA:
+	color = 0xff0000ff; break;
+      case ELEMENT_CONSUMER:
+	color = 0xff101010; break;
       default: continue;
       }
 

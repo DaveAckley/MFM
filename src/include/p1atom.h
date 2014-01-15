@@ -63,6 +63,16 @@ public:
     m_bits.Write(32, 32, arr[1]);
   }
 
+  void WriteLowerBits(u32 val)
+  {
+    m_bits.Write(32, 32, val);
+  }
+
+  u32 ReadLowerBits()
+  {
+    return m_bits.Read(32, 32);
+  }
+
   void PrintBits(FILE* ostream)
   { m_bits.Print(ostream); }
 
