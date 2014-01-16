@@ -13,7 +13,7 @@ void EventWindowTest::Test_eventwindowConstruction()
 
   atoms[center.GetX() + center.GetY() * 8].SetState(ELEMENT_DREG);
 
-  EventWindowP1Atom ew(center, atoms, 8);
+  EventWindowP1Atom ew(center, atoms, 8, 0xff);
 
   P1Atom catom = ew.GetCenterAtom();
 
@@ -35,7 +35,7 @@ void EventWindowTest::Test_eventwindowWrite()
   atoms[center.GetX() + center.GetY() * 8].SetState(ELEMENT_DREG);
   atoms[absolute.GetX() + absolute.GetY() * 8].SetState(ELEMENT_RES);
 
-  EventWindowP1Atom ew(center, atoms, 8);
+  EventWindowP1Atom ew(center, atoms, 8, 0xff);
 
   for(int i = 0; i < 64; i++)
   {

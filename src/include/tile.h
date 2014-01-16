@@ -10,7 +10,7 @@
 #include "elementtable.h"
 
 /* The length, in sites, of a Tile.*/
-#define TILE_WIDTH 28
+#define TILE_WIDTH 40
 
 /*The number of sites a tile contains.*/
 #define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)
@@ -50,13 +50,13 @@ private:
 
   inline bool IsConnected(EuclidDir dir);
 
-  inline bool IsInCache(Point<int>& pt);
-
 public:
 
   Tile();
 
   void SetNeighbors(u8 neighbors);
+
+  static inline bool IsInCache(Point<int>& pt);
 
   void SetStateFunc(u32 (*stateFunc)(T* atom))
   {

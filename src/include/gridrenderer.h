@@ -64,6 +64,11 @@ public:
     m_renderTilesSeparated = !m_renderTilesSeparated;
   }
 
+  void ToggleDataHeatmap()
+  {
+    m_tileRenderer->ToggleDataHeat();
+  }
+
   void DecreaseAtomSize()
   {
     m_tileRenderer->DecreaseAtomSize();

@@ -1,3 +1,35 @@
+template <class T, u32 R>
+u32 TileRenderer::GetAtomColor(Tile<T,R>& tile, T& atom)
+{
+  switch(tile.GetStateFunc()(&atom))
+  {
+  case ELEMENT_DREG:
+    return 0xff505050;
+  case ELEMENT_RES:
+    return 0xffffff00;
+  case ELEMENT_SORTER:
+    return 0xffff0000;
+  case ELEMENT_EMITTER:
+    return 0xff808080;
+  case ELEMENT_DATA:
+    return 0xff0000ff;
+  case ELEMENT_CONSUMER:
+    return 0xff101010;
+  }
+  return 0;
+}
+
+template <class T, u32 R>
+u32 TileRenderer::GetDataHeatColor(Tile<T,R>& tile, T& atom)
+{
+  if(tile.GetStateFunc()(&atom) == ELEMENT_DATA)
+  {
+    u8 tcl = atom.ReadLowerBits();
+    return 0xff000000 | (tcl << 17);
+  }
+  return 0;
+}
+
 
 template <class T,u32 EVENT_WINDOW_RADIUS>
 void TileRenderer::RenderAtoms(Point<int>& pt, Tile<T,EVENT_WINDOW_RADIUS>& tile,
@@ -19,38 +51,31 @@ void TileRenderer::RenderAtoms(Point<int>& pt, Tile<T,EVENT_WINDOW_RADIUS>& tile
 
       T* atom = tile.GetAtom(&atomLoc);
       u32 color;
-
-      switch(tile.GetStateFunc()(atom))
+      if(m_drawDataHeat)
       {
-      case ELEMENT_DREG:
-	color = 0xff505050; break;
-      case ELEMENT_RES:
-	color = 0xffffff00; break;
-      case ELEMENT_SORTER:
-	color = 0xffff0000; break;
-      case ELEMENT_EMITTER:
-	color = 0xff808080; break;
-      case ELEMENT_DATA:
-	color = 0xff0000ff; break;
-      case ELEMENT_CONSUMER:
-	color = 0xff101010; break;
-      default: continue;
+	color = GetDataHeatColor(tile, *atom);
+      }
+      else
+      {
+	color = GetAtomColor(tile, *atom);
       }
 
-      Drawing::FillCircle(m_dest,
-			  pt.GetX() +
-			  m_atomDrawSize * x +
-			  m_windowTL.GetX() +
-			  cacheOffset,
-			  pt.GetY() +
-			  m_atomDrawSize * y +
-			  m_windowTL.GetY() +
-			  cacheOffset,
-			  m_atomDrawSize,
-			  m_atomDrawSize,
-			  (m_atomDrawSize / 2) - 2,
-			  color);
-			  
+      if(color)
+      {
+	Drawing::FillCircle(m_dest,
+			    pt.GetX() +
+			    m_atomDrawSize * x +
+			    m_windowTL.GetX() +
+			    cacheOffset,
+			    pt.GetY() +
+			    m_atomDrawSize * y +
+			    m_windowTL.GetY() +
+			    cacheOffset,
+			    m_atomDrawSize,
+			    m_atomDrawSize,
+			    (m_atomDrawSize / 2) - 2,
+			    color);
+      }
     }
   }
 }

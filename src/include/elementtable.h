@@ -44,6 +44,9 @@ private:
   static void EmitterBehavior(EventWindow<T,R>& w, StateFunction f);
 
   static void ConsumerBehavior(EventWindow<T,R>& w, StateFunction f);
+
+  static void ReproduceVertically(EventWindow<T,R>& w, StateFunction f,
+				  ElementType type);
   
 public:
   ElementTable(u32 (*stateFunc)(T* atom));

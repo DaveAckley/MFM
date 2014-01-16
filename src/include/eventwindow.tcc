@@ -2,11 +2,14 @@
 #include "manhattandir.h"
 
 template <class T,u32 R>
-EventWindow<T,R>::EventWindow(Point<int>& center, T* atoms, u32 tileWidth)
+EventWindow<T,R>::EventWindow(Point<int>& center, T* atoms, u32 tileWidth,
+			      u8 neighborConnections)
 {
   m_atoms = atoms;
   m_atomCount = EVENT_WINDOW_SITES(R);
   m_tileWidth = tileWidth;
+  
+  m_neighborConnections = neighborConnections;
 
   m_center = Point<int>(center);
 }
@@ -18,7 +21,7 @@ T& EventWindow<T,R>::GetCenterAtom()
 }
 
 template <class T, u32 R>
-void EventWindow<T,R>::SetRelativeAtom(Point<int>& offset, T atom)
+bool EventWindow<T,R>::SetRelativeAtom(Point<int>& offset, T atom)
 {
   s32 idx = ManhattanDir<R>::get().FromPoint(offset, (TableType)R);
   if (idx < 0)
@@ -28,6 +31,8 @@ void EventWindow<T,R>::SetRelativeAtom(Point<int>& offset, T atom)
   accessLoc.Add(m_center.GetX(), m_center.GetY());
 
   m_atoms[accessLoc.GetX() + accessLoc.GetY() * m_tileWidth] = atom;
+
+  return true;
 }
 
 template <class T, u32 R>

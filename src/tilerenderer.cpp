@@ -40,6 +40,11 @@ void TileRenderer::ToggleMemDraw()
   m_drawMemRegions = !m_drawMemRegions;
 }
 
+void TileRenderer::ToggleDataHeat()
+{
+  m_drawDataHeat = !m_drawDataHeat;
+}
+
 void TileRenderer::IncreaseAtomSize()
 {
   m_atomDrawSize += TILESIZE_CHANGE_RATE;

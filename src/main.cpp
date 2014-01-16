@@ -27,12 +27,12 @@
 #define EVENTS_PER_FRAME 100000
 
 #define CAMERA_SLOW_SPEED 2
-#define CAMERA_FAST_SPEED 10
+#define CAMERA_FAST_SPEED 50
 
 class MFMSim
 {
 public:
-  static const u32 EVENT_WINDOW_RADIUS = 2;
+  static const u32 EVENT_WINDOW_RADIUS = 4;
 
 private:
 
@@ -40,6 +40,8 @@ private:
   typedef ElementTable<P1Atom,EVENT_WINDOW_RADIUS> ElementTableP1Atom;
 
   bool paused;
+
+  u32 m_eventsPerFrame;
 
   Mouse mouse;
   Keyboard keyboard;
@@ -66,6 +68,10 @@ private:
     if(keyboard.SemiAuto(SDLK_m))
     {
       grend.ToggleMemDraw();
+    }
+    if(keyboard.SemiAuto(SDLK_l))
+    {
+      grend.ToggleDataHeatmap();
     }
     if(keyboard.SemiAuto(SDLK_p))
     {
@@ -103,10 +109,23 @@ private:
     {
       grend.MoveRight(speed);
     }
+    if(keyboard.SemiAuto(SDLK_COMMA))
+    {
+      m_eventsPerFrame /= 10;
+      if(m_eventsPerFrame == 0)
+      {
+	m_eventsPerFrame = 1;
+      }
+    }
+    if(keyboard.SemiAuto(SDLK_PERIOD))
+    {
+      m_eventsPerFrame *= 10;
+    }
+    
 
     if(!paused)
     {
-      for(u32 i = 0; i < EVENTS_PER_FRAME; i++)
+      for(u32 i = 0; i < m_eventsPerFrame; i++)
       {
 	grid.TriggerEvent();
       }
@@ -118,7 +137,10 @@ private:
 
 public:
 
-  MFMSim() { }
+  MFMSim() 
+  {
+    m_eventsPerFrame = 10000;
+  }
 
   void Run()
   {
@@ -142,10 +164,14 @@ public:
     P1Atom atom(ELEMENT_DREG);
     P1Atom sorter(ELEMENT_SORTER);
     P1Atom emtr(ELEMENT_EMITTER);
+    P1Atom cnsr(ELEMENT_CONSUMER);
+
+    sorter.WriteLowerBits(50);
 
     Point<int> aloc(30, 30);
     Point<int> sloc(10, 10);
-    Point<int> eloc(70, 10);
+    Point<int> eloc(99, 10);
+    Point<int> cloc(4, 10);
 
     for(int i = 0; i < 10; i++)
     {
@@ -155,6 +181,7 @@ public:
     
     mainGrid.PlaceAtom(sorter, sloc);
     mainGrid.PlaceAtom(emtr, eloc);
+    mainGrid.PlaceAtom(cnsr, cloc);
 
     s32 lastFrame = SDL_GetTicks();
 

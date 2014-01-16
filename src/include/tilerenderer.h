@@ -14,6 +14,7 @@ class TileRenderer
 private:
   bool m_drawGrid;
   bool m_drawMemRegions;
+  bool m_drawDataHeat;
   int m_atomDrawSize;
   
   u32 m_gridColor;
@@ -41,6 +42,12 @@ private:
   template <class T,u32 R>
   void RenderAtoms(Point<int>& pt, Tile<T,R>& tile, bool renderCache);
 
+  template <class T, u32 R>
+  u32 GetAtomColor(Tile<T,R>& tile, T& atom);
+
+  template <class T, u32 R>
+  u32 GetDataHeatColor(Tile<T,R>& tile, T& atom);
+
   template <class T,u32 R>
   void RenderEventWindow(Point<int>& offset, Tile<T,R>& tile, bool renderCache);
 
@@ -59,6 +66,8 @@ public:
   void ToggleGrid();
   
   void ToggleMemDraw();
+
+  void ToggleDataHeat();
 
   void MoveUp(u8 amount);
 

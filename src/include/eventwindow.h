@@ -11,6 +11,9 @@ template <class T,u32 R>
 class EventWindow
 {
 private:
+
+  u8 m_neighborConnections;
+  
   u32 m_atomCount;
 
   u32 m_tileWidth;
@@ -21,7 +24,7 @@ private:
 
 public:
 
-  EventWindow(Point<int>& center, T* atoms, u32 tileWidth);
+  EventWindow(Point<int>& center, T* atoms, u32 tileWidth, u8 neighborConnections);
 
   EventWindow() { }
 
@@ -36,7 +39,7 @@ public:
 
   T& GetRelativeAtom(Point<int>& offset);
 
-  void SetRelativeAtom(Point<int>& offset, T atom);
+  bool SetRelativeAtom(Point<int>& offset, T atom);
 
   void SwapAtoms(Point<int>& locA, Point<int>& locB);
 

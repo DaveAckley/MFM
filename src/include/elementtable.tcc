@@ -1,9 +1,12 @@
 #include <stdlib.h>
+#include "eucliddir.h"
 #include "elementtable.h"
 #include "manhattandir.h"
 #include "p1atom.h"
 
 #define RAND_ONEIN(x) !(rand() % (x))
+#define RAND_BETWEEN(x, y) ((x) + (rand() % (y)))
+#define RAND_MOD(x) (rand() % (x))
 #define RAND_BOOL (rand() & 1)
 
 template <class T,u32 R>
@@ -73,24 +76,32 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
 
   if(state == ELEMENT_RES)
   {
+    u32 newState = sorter.ReadLowerBits();
+    switch(EuDir::FromOffset(dir))
+    {
+    case EUDIR_NORTH: newState -= 5; break;
+    case EUDIR_SOUTH: newState += 5; break;
+    default: break;
+    }
     window.SetRelativeAtom(dir, P1Atom(ELEMENT_SORTER));
+    window.GetRelativeAtom(dir).WriteLowerBits(newState);
   }
 
   u32 halfR = R >> 1;
   bool swapUp = RAND_BOOL;
   bool swapping = false;
 
-  Point<int> rightSearchPtr(1, swapUp? 1 : halfR);
-  Point<int> cpr;
+  Point<int> rightSearchPtr(1, swapUp? 1 : -halfR);
+  Point<int> srcPt;
 
   for(u32 x = 0; x < halfR; x++)
   {
     for(u32 y = 0; y < halfR; y++)
     {
-      cpr.Set(x, y);
-      cpr.Add(rightSearchPtr);
+      srcPt.Set(x, y);
+      srcPt.Add(rightSearchPtr);
       
-      T ratom = window.GetRelativeAtom(cpr);
+      T ratom = window.GetRelativeAtom(srcPt);
 
       if(f(&ratom) == ELEMENT_DATA)
       {
@@ -98,6 +109,7 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
 	{
 	  if(sorter.ReadLowerBits() > ratom.ReadLowerBits())
 	  {
+	    sorter.WriteLowerBits(ratom.ReadLowerBits());
 	    swapping = true;
 	    break;
 	  }
@@ -106,6 +118,7 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
 	{
 	  if(sorter.ReadLowerBits() < ratom.ReadLowerBits())
 	  {
+	    sorter.WriteLowerBits(ratom.ReadLowerBits());
 	    swapping = true;
 	    break;
 	  }
@@ -117,14 +130,33 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
       break;
     }
   }
+
+  rightSearchPtr = Point<s32>(-halfR, swapUp? -halfR : 1);
+  Point<s32> destPt;
   
   if(swapping)
   {
-    
+    for(u32 x = 0; x < halfR; x++)
+    {
+      for(u32 y = 0; y < halfR; y++)
+      {
+	destPt.Set(x, y);
+	destPt.Add(rightSearchPtr);
+
+	if(f(&window.GetRelativeAtom(destPt)) == ELEMENT_NOTHING)
+	{
+	  if(window.SetRelativeAtom(destPt,
+				    window.GetRelativeAtom(srcPt)))
+	  {
+	    window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING));
+	  }
+	}
+      }
+    }
   }
 }
 
-#define DATA_CREATE_ODDS 1000
+#define DATA_CREATE_ODDS 50
 #define DATA_MAXVAL 100
 #define DATA_MINVAL 1
 
@@ -132,16 +164,10 @@ template <class T, u32 R>
 void ElementTable<T,R>::EmitterBehavior(EventWindow<T,R>& window,
 					StateFunction f)
 {
-  /* See if we can split up or down */
-
-  Point<int> repPt = Point<int>(0, RAND_BOOL ? R : -R);
-  if(f(&window.GetRelativeAtom(repPt)) == ELEMENT_NOTHING)
-  {
-    window.SetRelativeAtom(repPt, T(ELEMENT_EMITTER));
-  }
+  ReproduceVertically(window, f, ELEMENT_EMITTER);
 
   /* Create some data */
-  
+  Point<int> repPt;
   ManhattanDir<R>::get().FillRandomSingleDir(repPt);
 
   if(RAND_ONEIN(DATA_CREATE_ODDS))
@@ -149,9 +175,24 @@ void ElementTable<T,R>::EmitterBehavior(EventWindow<T,R>& window,
     if(f(&window.GetRelativeAtom(repPt)) == ELEMENT_NOTHING)
     {
       T atom = T(ELEMENT_DATA);
-      atom.WriteLowerBits(RAND_ONEIN(DATA_MAXVAL) + DATA_MINVAL);
+      atom.WriteLowerBits(RAND_BETWEEN(DATA_MINVAL, DATA_MAXVAL));
       window.SetRelativeAtom(repPt, atom);
     }
+  }
+}
+
+template <class T, u32 R>
+void ElementTable<T,R>::ReproduceVertically(EventWindow<T,R>& window,
+					    StateFunction f,
+					    ElementType type)
+{
+  u32 cval = window.GetCenterAtom().ReadLowerBits();
+  bool down = RAND_BOOL;
+  Point<int> repPt = Point<int>(0, down ? R : -R);
+  if(f(&window.GetRelativeAtom(repPt)) == ELEMENT_NOTHING)
+  {
+    window.SetRelativeAtom(repPt, T(type));
+    window.GetRelativeAtom(repPt).WriteLowerBits(cval + (down ? 1 : -1));
   }
 }
 
@@ -160,7 +201,18 @@ template <class T, u32 R>
 void ElementTable<T,R>::ConsumerBehavior(EventWindow<T,R>& window,
 					StateFunction f)
 {
-  
+  ReproduceVertically(window, f, ELEMENT_CONSUMER);
+
+  Point<s32> consPt;
+  ManhattanDir<R>::get().FillRandomSingleDir(consPt);
+
+  if(f(&window.GetRelativeAtom(consPt)) == ELEMENT_DATA)
+  {
+    u32 val = window.GetRelativeAtom(consPt).ReadLowerBits();
+    u32 bnum = window.GetCenterAtom().ReadLowerBits();
+    printf("[%3d]Export!: %d\n", bnum, val);
+    window.SetRelativeAtom(consPt, T(ELEMENT_NOTHING));
+  }
 }
 
 template <class T,u32 R>

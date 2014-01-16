@@ -68,13 +68,15 @@ void Tile<T,R>::CreateRandomWindow()
   Point<int> pt(true, maxval, maxval);
   pt.Add(EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS);
 
-  m_executingWindow = EventWindow<T,R>(pt, m_atoms, TILE_WIDTH);
+  m_executingWindow = EventWindow<T,R>(pt, m_atoms, TILE_WIDTH,
+				       m_neighborConnections);
 }
 
 template <class T,u32 R>
 void Tile<T,R>::CreateWindowAt(Point<int>& pt)
 {
-  m_executingWindow =  EventWindow<T,R>(pt, m_atoms, TILE_WIDTH);
+  m_executingWindow =  EventWindow<T,R>(pt, m_atoms, TILE_WIDTH,
+				       m_neighborConnections);
 }
 
 template <class T, u32 R>
@@ -288,7 +290,8 @@ void Tile<T,R>::Execute(ElementTable<T,R>& table)
   
   table.Execute(m_executingWindow);
 
-  if(table.Diffusable((ElementType)m_stateFunc(&m_executingWindow.GetCenterAtom())))
+  if(table.Diffusable((ElementType)
+		      m_stateFunc(&m_executingWindow.GetCenterAtom())))
   {
     DiffuseAtom(m_executingWindow);
   }
