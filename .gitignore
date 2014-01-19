@@ -21,3 +21,6 @@ bin/*
 # Ignore build and lib dirs
 build
 lib/*
+
+# Ignore the code log
+codelog.txt

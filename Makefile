@@ -1,27 +1,33 @@
 CC := g++ 
-CFLAGS += -ansi -pedantic -Wall -Werror -g2
+CFLAGS += -ansi -pedantic -Wall -Werror -O99
 ALLDEP := Makefile
 SRCDIR := src
 BUILDDIR := build
 OUTPUTDIR := bin
+TESTTARGET:= $(OUTPUTDIR)/mfm_test
 TARGET := $(OUTPUTDIR)/mfm
 
+SIMMAIN := $(SRCDIR)/drivers/MFMSim.cpp
+
 SRCEXT := cpp
+OBJEXT := o
 HDRPAT := -name *.h -o -name *.tcc
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 HEADERS := $(shell find $(SRCDIR) -type f $(HDRPAT))
 ALLDEP += $(HEADERS)
-OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-LIB := -L lib -lm -lSDL
-INC := -I src/include
+OBJECTS := $(shell find $(BUILDDIR) -name *.$(OBJEXT))
 
-$(TARGET): $(OBJECTS)  
+LIB := -L lib -lm -lSDL -L build
+INC := -I src/core/include -I src/gui/include -I src/sim/include
+
+$(TARGET): dependencies
+	$(CC) $(CFLAGS) -o $(TARGET) $(SIMMAIN) $(LIB) $(OBJECTS) $(INC)
+
+dependencies:
 	@mkdir -p $(OUTPUTDIR)
-	@echo "$(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o $(TARGET) $(LIB)
-
-$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT) $(ALLDEP)
-	@mkdir -p $(BUILDDIR)
-	@echo "$(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
+	@make -C src/core
+	@make -C src/sim
+	@make -C src/gui
 
 clean:
 	@echo "Cleaning..."
