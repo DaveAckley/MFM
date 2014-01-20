@@ -16,7 +16,7 @@ typedef enum
 class GridRenderer
 {
 private:
-  SDL_Surface* m_dest;
+  Panel* m_panel;
   TileRenderer* m_tileRenderer;
 
   static const EventWindowRenderMode m_defaultRenderMode =
@@ -35,9 +35,9 @@ private:
   void RenderGridSeparated(Grid<T,R>& grid);
 
 public:
-  GridRenderer(SDL_Surface* dest);
+  GridRenderer(Panel* panel);
 
-  GridRenderer(SDL_Surface* dest,
+  GridRenderer(Panel* panel,
 	       TileRenderer* tr);
 
   GridRenderer();
@@ -47,11 +47,11 @@ public:
     m_currentEWRenderMode = mode;
   }
 
-  void SetDestination(SDL_Surface* dest)
+  void SetPanel(Panel* panel)
   {
-    m_dest = dest;
+    m_panel = panel;
     delete m_tileRenderer;
-    m_tileRenderer = new TileRenderer(dest);
+    m_tileRenderer = new TileRenderer(panel);
   }
 
   void IncreaseAtomSize()

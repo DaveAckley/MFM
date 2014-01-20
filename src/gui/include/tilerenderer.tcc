@@ -1,3 +1,5 @@
+/* -*- C++ -*- */
+
 template <class T, u32 R>
 u32 TileRenderer::GetAtomColor(Tile<T,R>& tile, T& atom)
 {
@@ -62,7 +64,7 @@ void TileRenderer::RenderAtoms(Point<int>& pt, Tile<T,EVENT_WINDOW_RADIUS>& tile
 
       if(color)
       {
-	Drawing::FillCircle(m_dest,
+	Drawing::FillCircle(m_panel->GetDestination(),
 			    pt.GetX() +
 			    m_atomDrawSize * x +
 			    m_windowTL.GetX() +
@@ -98,8 +100,8 @@ void TileRenderer::RenderTile(Tile<T,R>& t, Point<int>& loc, bool renderWindow,
 
   if(realPt.GetX() + tileHeight >= 0 &&
      realPt.GetY() + tileHeight >= 0 &&
-     realPt.GetX() < m_dest->w &&
-     realPt.GetY() < m_dest->h)
+     realPt.GetX() < (s32)m_panel->GetWidth() &&
+     realPt.GetY() < (s32)m_panel->GetHeight())
   {
     if(m_drawMemRegions)
     {
@@ -184,7 +186,7 @@ void TileRenderer::RenderMemRegion(Point<int>& pt, int regID,
 
   int ewrSize = EVENT_WINDOW_RADIUS * m_atomDrawSize;
 
-  Drawing::FillRect(m_dest,
+  Drawing::FillRect(m_panel->GetDestination(),
 		    pt.GetX() + (ewrSize * regID) +
 		    m_windowTL.GetX(),
 		    pt.GetY() + (ewrSize * regID) +
@@ -215,7 +217,7 @@ void TileRenderer::RenderGrid(Point<int>* pt, bool renderCache)
 
   for(int x = 0; x < linesToDraw; x++)
   {
-    Drawing::DrawVLine(m_dest,
+    Drawing::DrawVLine(m_panel->GetDestination(),
 		       pt->GetX() + x * m_atomDrawSize +
 		       m_windowTL.GetX(),
 		       pt->GetY() + m_windowTL.GetY(),
@@ -226,7 +228,7 @@ void TileRenderer::RenderGrid(Point<int>* pt, bool renderCache)
 
   for(int y = 0; y < linesToDraw; y++)
   {
-    Drawing::DrawHLine(m_dest,
+    Drawing::DrawHLine(m_panel->GetDestination(),
 		       pt->GetY() + y * m_atomDrawSize +
 		       m_windowTL.GetY(),
 		       pt->GetX() + m_windowTL.GetX(),

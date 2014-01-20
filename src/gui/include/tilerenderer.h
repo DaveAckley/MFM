@@ -4,6 +4,7 @@
 #include "drawing.h"
 #include "elementtable.h"
 #include "tile.h"
+#include "panel.h"
 #include "point.h"
 #include "SDL/SDL.h"
 
@@ -24,7 +25,8 @@ private:
   u32 m_cacheColor;
 
   Point<int> m_windowTL;
-  SDL_Surface* m_dest;
+
+  Panel* m_panel;
 
   template <u32 R>
   void RenderMemRegions(Point<int>& pt, bool renderCache);
@@ -53,7 +55,7 @@ private:
 
 public:
 
-  TileRenderer(SDL_Surface* dest);
+  TileRenderer(Panel* panel);
 
   template <class T,u32 R>
   void RenderTile(Tile<T,R>& t, Point<int>& loc, bool renderWindow, 

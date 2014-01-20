@@ -1,3 +1,5 @@
+/* -*- C++ -*- */
+
 template <class T,u32 R>
 void GridRenderer::RenderGrid(Grid<T,R>& grid)
 {

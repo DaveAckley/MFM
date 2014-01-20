@@ -11,6 +11,7 @@
 #include "assert.h"
 #include "eventwindow.h"
 #include "grid.h"
+#include "gridpanel.h"
 #include "gridrenderer.h"
 #include "itype.h"
 #include "keyboard.h"
@@ -156,7 +157,10 @@ public:
     ElementTableP1Atom elements(&P1Atom::StateFunc);
 
     SDL_Event event;
-    grend.SetDestination(screen);
+
+    GridPanel gridPanel(screen, 640, 640);
+    
+    grend.SetPanel(&gridPanel);
     GridP1Atom mainGrid(3, 2, &elements);
 
     mainGrid.SetStateFunc(&P1Atom::StateFunc);

@@ -1,8 +1,14 @@
-#include "manhattandir.h"
+#include "manhattandir.h"      /* -*- C++ -*- */
 
 template <class T, u32 R>
 Tile<T,R>::Tile()
 {
+  m_atomCount[ELEMENT_NOTHING] = TILE_SIZE;
+  
+  for(s32 i = 1; i < ELEMENT_COUNT; i++)
+  {
+    m_atomCount[i] = 0;
+  }
 }
 
 template <class T, u32 R>
@@ -122,8 +128,15 @@ EuclidDir Tile<T,R>::CacheAt(Point<int>& pt)
 template <class T,u32 R>
 void Tile<T,R>::PlaceAtom(T& atom, Point<int>& pt)
 {
+  T* oldAtom = GetAtom(&pt);
+  u32 type = m_stateFunc(oldAtom);
+
+  m_atomCount[type]--;
+
   m_atoms[pt.GetX() + 
-	  pt.GetY() * TILE_WIDTH] = atom;
+	  pt.GetY() * TILE_WIDTH] = atom;  
+
+  m_atomCount[m_stateFunc(&atom)]++;
 }
 
 template <class T,u32 R>

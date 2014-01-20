@@ -6,6 +6,8 @@
 #include "itype.h"
 #include "p1atom.h"
 
+#define ELEMENT_COUNT 7
+
 typedef enum
 {
   ELEMENT_NOTHING  = 0x0,
@@ -32,7 +34,9 @@ private:
   typedef u32 (* StateFunction )(T* atom);
   StateFunction m_statefunc;
 
-  typedef void (* BehaviorFunction )(EventWindow<T,R>&, StateFunction f);
+  typedef void (* BehaviorFunction )
+  (EventWindow<T,R>&, StateFunction f);
+
   BehaviorFunction m_funcmap[0xff];
 
   static void NothingBehavior(EventWindow<T,R>& w, StateFunction f);
@@ -45,7 +49,8 @@ private:
 
   static void ConsumerBehavior(EventWindow<T,R>& w, StateFunction f);
 
-  static void ReproduceVertically(EventWindow<T,R>& w, StateFunction f,
+  static void ReproduceVertically(EventWindow<T,R>& w, 
+				  StateFunction f,
 				  ElementType type);
   
 public:

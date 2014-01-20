@@ -1,17 +1,17 @@
 #include "gridrenderer.h"
 
-GridRenderer::GridRenderer(SDL_Surface* dest)
+GridRenderer::GridRenderer(Panel* panel)
 {
-  m_tileRenderer = new TileRenderer(dest);
-  m_dest = dest;
+  m_tileRenderer = new TileRenderer(panel);
+  m_panel = panel;
   m_currentEWRenderMode = m_defaultRenderMode;
   m_renderTilesSeparated = m_renderTilesSeparatedDefault;
 }
 
-GridRenderer::GridRenderer(SDL_Surface* dest,
+GridRenderer::GridRenderer(Panel* panel,
 			   TileRenderer* tr)
 {
-  m_dest = dest;
+  m_panel = panel;
   m_tileRenderer = tr;
   m_currentEWRenderMode = m_defaultRenderMode;
   m_renderTilesSeparated = m_renderTilesSeparatedDefault;
@@ -20,7 +20,7 @@ GridRenderer::GridRenderer(SDL_Surface* dest,
 GridRenderer::GridRenderer()
 {
   m_tileRenderer = new TileRenderer(NULL);
-  m_dest = NULL;
+  m_panel = NULL;
   m_currentEWRenderMode = m_defaultRenderMode;
   m_renderTilesSeparated = m_renderTilesSeparatedDefault;
 }

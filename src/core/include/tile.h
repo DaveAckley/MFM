@@ -26,6 +26,8 @@ private:
 
   T m_atoms[TILE_SIZE];
 
+  u16 m_atomCount[ELEMENT_COUNT];
+
   Point<int> m_lastExecutedAtom;
 
   EventWindow<T,R> m_executingWindow;
