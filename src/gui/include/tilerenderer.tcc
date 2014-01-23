@@ -62,17 +62,18 @@ void TileRenderer::RenderAtoms(Point<int>& pt, Tile<T,EVENT_WINDOW_RADIUS>& tile
 	color = GetAtomColor(tile, *atom);
       }
 
+      Point<u32> rendPt(pt.GetX() + m_atomDrawSize * x +
+			m_windowTL.GetX() + cacheOffset,
+			pt.GetY() + m_atomDrawSize * y +
+			m_windowTL.GetY() + cacheOffset);
+
+      if(rendPt.GetX() < m_dimensions.GetX() &&
+	 rendPt.GetY() < m_dimensions.GetY())
       if(color)
       {
-	Drawing::FillCircle(m_panel->GetDestination(),
-			    pt.GetX() +
-			    m_atomDrawSize * x +
-			    m_windowTL.GetX() +
-			    cacheOffset,
-			    pt.GetY() +
-			    m_atomDrawSize * y +
-			    m_windowTL.GetY() +
-			    cacheOffset,
+	Drawing::FillCircle(m_dest,
+			    rendPt.GetX(),
+			    rendPt.GetY(),
 			    m_atomDrawSize,
 			    m_atomDrawSize,
 			    (m_atomDrawSize / 2) - 2,
@@ -100,8 +101,8 @@ void TileRenderer::RenderTile(Tile<T,R>& t, Point<int>& loc, bool renderWindow,
 
   if(realPt.GetX() + tileHeight >= 0 &&
      realPt.GetY() + tileHeight >= 0 &&
-     realPt.GetX() < (s32)m_panel->GetWidth() &&
-     realPt.GetY() < (s32)m_panel->GetHeight())
+     realPt.GetX() < (s32)m_dest->w &&
+     realPt.GetY() < (s32)m_dest->h)
   {
     if(m_drawMemRegions)
     {
@@ -186,7 +187,7 @@ void TileRenderer::RenderMemRegion(Point<int>& pt, int regID,
 
   int ewrSize = EVENT_WINDOW_RADIUS * m_atomDrawSize;
 
-  Drawing::FillRect(m_panel->GetDestination(),
+  Drawing::FillRect(m_dest,
 		    pt.GetX() + (ewrSize * regID) +
 		    m_windowTL.GetX(),
 		    pt.GetY() + (ewrSize * regID) +
@@ -217,7 +218,7 @@ void TileRenderer::RenderGrid(Point<int>* pt, bool renderCache)
 
   for(int x = 0; x < linesToDraw; x++)
   {
-    Drawing::DrawVLine(m_panel->GetDestination(),
+    Drawing::DrawVLine(m_dest,
 		       pt->GetX() + x * m_atomDrawSize +
 		       m_windowTL.GetX(),
 		       pt->GetY() + m_windowTL.GetY(),
@@ -228,7 +229,7 @@ void TileRenderer::RenderGrid(Point<int>* pt, bool renderCache)
 
   for(int y = 0; y < linesToDraw; y++)
   {
-    Drawing::DrawHLine(m_panel->GetDestination(),
+    Drawing::DrawHLine(m_dest,
 		       pt->GetY() + y * m_atomDrawSize +
 		       m_windowTL.GetY(),
 		       pt->GetX() + m_windowTL.GetX(),

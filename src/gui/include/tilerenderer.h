@@ -26,7 +26,9 @@ private:
 
   Point<int> m_windowTL;
 
-  Panel* m_panel;
+  Point<u32> m_dimensions;
+
+  SDL_Surface* m_dest;
 
   template <u32 R>
   void RenderMemRegions(Point<int>& pt, bool renderCache);
@@ -55,11 +57,21 @@ private:
 
 public:
 
-  TileRenderer(Panel* panel);
+  TileRenderer(SDL_Surface* dest);
 
   template <class T,u32 R>
   void RenderTile(Tile<T,R>& t, Point<int>& loc, bool renderWindow, 
 		  bool renderCache);
+
+  void SetDimensions(Point<u32> dimensions)
+  {
+    m_dimensions = dimensions;
+  }
+
+  SDL_Surface* GetDestination()
+  {
+    return m_dest;
+  }
 
   void IncreaseAtomSize();
 

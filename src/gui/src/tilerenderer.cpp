@@ -3,9 +3,9 @@
 
 #define TILESIZE_CHANGE_RATE 1
 
-TileRenderer::TileRenderer(Panel* panel)
+TileRenderer::TileRenderer(SDL_Surface* dest)
 {
-  m_panel = panel;
+  m_dest = dest;
   m_atomDrawSize = 8;
   m_drawMemRegions = true;
   m_drawGrid = true;
@@ -23,7 +23,7 @@ void TileRenderer::RenderAtomBG(Point<int>& offset,
 				Point<int>& atomLoc,
 				u32 color)
 {
-  Drawing::FillRect(m_panel->GetDestination(),
+  Drawing::FillRect(m_dest,
 		    m_windowTL.GetX() +
 		    offset.GetX() + atomLoc.GetX() * m_atomDrawSize,
 		    m_windowTL.GetY() + 

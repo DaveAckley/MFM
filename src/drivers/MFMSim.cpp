@@ -157,11 +157,11 @@ public:
     ElementTableP1Atom elements(&P1Atom::StateFunc);
 
     SDL_Event event;
-
-    GridPanel gridPanel(screen, 640, 640);
     
-    grend.SetPanel(&gridPanel);
     GridP1Atom mainGrid(3, 2, &elements);
+
+    grend.SetDestination(screen);
+    grend.SetDimensions(Point<u32>(640,640));
 
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
 
