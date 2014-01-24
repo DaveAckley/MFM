@@ -140,7 +140,7 @@ public:
 
   MFMSim() 
   {
-    m_eventsPerFrame = 10000;
+    m_eventsPerFrame = EVENTS_PER_FRAME;
   }
 
   void Run()
@@ -151,7 +151,7 @@ public:
     paused = true;
 
     bool running = true;
-    screen = SDL_SetVideoMode(640, 640, 32,
+    screen = SDL_SetVideoMode(1280, 720, 32,
 			      SDL_SWSURFACE);
 
     ElementTableP1Atom elements(&P1Atom::StateFunc);
@@ -161,7 +161,7 @@ public:
     GridP1Atom mainGrid(3, 2, &elements);
 
     grend.SetDestination(screen);
-    grend.SetDimensions(Point<u32>(640,640));
+    grend.SetDimensions(Point<u32>(320,320));
 
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
 

@@ -1,5 +1,8 @@
 /* -*- C++ -*- */
 
+#define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
+#define MIN(X,Y) ((X) > (Y) ? (Y) : (X))
+
 template <class T, u32 R>
 u32 TileRenderer::GetAtomColor(Tile<T,R>& tile, T& atom)
 {
@@ -44,40 +47,50 @@ void TileRenderer::RenderAtoms(Point<int>& pt, Tile<T,EVENT_WINDOW_RADIUS>& tile
 
   Point<int> atomLoc;
 
+  Point<u32> rendPt;
+
   for(u32 x = astart; x < aend; x++)
   {
-    atomLoc.SetX(x);
-    for(u32 y = astart; y < aend; y++)
+    rendPt.SetX(pt.GetX() + m_atomDrawSize * x +
+		m_windowTL.GetX() + cacheOffset);
+    if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX())
     {
-      atomLoc.SetY(y);
-
-      T* atom = tile.GetAtom(&atomLoc);
-      u32 color;
-      if(m_drawDataHeat)
+      atomLoc.SetX(x);
+      for(u32 y = astart; y < aend; y++)
       {
-	color = GetDataHeatColor(tile, *atom);
-      }
-      else
-      {
-	color = GetAtomColor(tile, *atom);
-      }
+	rendPt.SetY(pt.GetY() + m_atomDrawSize * y +
+		    m_windowTL.GetY() + cacheOffset);
+	if(rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
+	{
+	  atomLoc.SetY(y);
 
-      Point<u32> rendPt(pt.GetX() + m_atomDrawSize * x +
-			m_windowTL.GetX() + cacheOffset,
-			pt.GetY() + m_atomDrawSize * y +
-			m_windowTL.GetY() + cacheOffset);
-
-      if(rendPt.GetX() < m_dimensions.GetX() &&
-	 rendPt.GetY() < m_dimensions.GetY())
-      if(color)
-      {
-	Drawing::FillCircle(m_dest,
-			    rendPt.GetX(),
-			    rendPt.GetY(),
-			    m_atomDrawSize,
-			    m_atomDrawSize,
-			    (m_atomDrawSize / 2) - 2,
-			    color);
+	  T* atom = tile.GetAtom(&atomLoc);
+	  u32 color;
+	  if(m_drawDataHeat)
+	  {
+	    color = GetDataHeatColor(tile, *atom);
+	  }
+	  else
+	  {
+	    color = GetAtomColor(tile, *atom);
+	  }
+			  
+	  
+	  if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX() &&
+	     rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
+	  {
+	    if(color)
+	    {
+	      Drawing::FillCircle(m_dest,
+				  rendPt.GetX(),
+				  rendPt.GetY(),
+				  m_atomDrawSize,
+				  m_atomDrawSize,
+				  (m_atomDrawSize / 2) - 2,
+				  color);
+	    }
+	  }
+	}
       }
     }
   }
@@ -187,21 +200,24 @@ void TileRenderer::RenderMemRegion(Point<int>& pt, int regID,
 
   int ewrSize = EVENT_WINDOW_RADIUS * m_atomDrawSize;
 
-  Drawing::FillRect(m_dest,
-		    pt.GetX() + (ewrSize * regID) +
-		    m_windowTL.GetX(),
-		    pt.GetY() + (ewrSize * regID) +
-		    m_windowTL.GetY(),
-		    tileSize - (ewrSize * regID * 2),
-		    tileSize - (ewrSize * regID * 2),
-		    color);
+  /* Manually fill the rect so we can stop at the right place. */
+  Point<s32> topPt(pt.GetX() + (ewrSize * regID) + m_windowTL.GetX(),
+		   pt.GetY() + (ewrSize * regID) + m_windowTL.GetY());
+  Point<s32> botPt(MIN((s32)m_dimensions.GetX(), topPt.GetX() + (tileSize - (ewrSize * regID * 2))),
+		   MIN((s32)m_dimensions.GetY(), topPt.GetY() + (tileSize - (ewrSize * regID * 2))));
+  for(s32 x = topPt.GetX(); x < botPt.GetX(); x++)
+  {
+    for(s32 y = topPt.GetY(); y < botPt.GetY(); y++)
+    {
+      Drawing::SetPixel(m_dest, x, y, color);
+    }
+  }
 }
 
 template <u32 EVENT_WINDOW_RADIUS>
 void TileRenderer::RenderGrid(Point<int>* pt, bool renderCache)
 {
-
-  int lineLen, linesToDraw;
+  s32 lineLen, linesToDraw;
 
   if(!renderCache)
   {
@@ -216,25 +232,37 @@ void TileRenderer::RenderGrid(Point<int>* pt, bool renderCache)
     linesToDraw = TILE_WIDTH + 1;
   }
 
+  s32 lowBound =
+    MIN((s32)m_dimensions.GetY(), pt->GetY() + m_windowTL.GetY() + lineLen);
+
   for(int x = 0; x < linesToDraw; x++)
   {
+    if(pt->GetX() + x * m_atomDrawSize + m_windowTL.GetX() > (s32)m_dimensions.GetX())
+    {
+      break;
+    }
     Drawing::DrawVLine(m_dest,
 		       pt->GetX() + x * m_atomDrawSize +
 		       m_windowTL.GetX(),
 		       pt->GetY() + m_windowTL.GetY(),
-		       pt->GetY() + lineLen +
-		       m_windowTL.GetY(),
+		       lowBound,
 		       m_gridColor);
   }
 
+  s32 rightBound =
+    MIN((s32)m_dimensions.GetX(), pt->GetX() + m_windowTL.GetX() + lineLen);
+
   for(int y = 0; y < linesToDraw; y++)
   {
+    if(pt->GetY() + y * m_atomDrawSize + m_windowTL.GetY() > (s32)m_dimensions.GetY())
+    {
+      break;
+    }
     Drawing::DrawHLine(m_dest,
 		       pt->GetY() + y * m_atomDrawSize +
 		       m_windowTL.GetY(),
 		       pt->GetX() + m_windowTL.GetX(),
-		       pt->GetX() + lineLen +
-		       m_windowTL.GetX(),
+		       rightBound,
 		       m_gridColor);
   }
 }

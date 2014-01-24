@@ -1,6 +1,7 @@
 #ifndef DRAWING_H      /* -*- C++ -*- */
 #define DRAWING_H
 
+#include "itype.h"
 #include "SDL/SDL.h"
 #include "tile.h"
 
@@ -17,8 +18,14 @@ public:
   static const int YELLOW  = 0xffffff00;
   
   static inline void SetPixel(SDL_Surface* dest,
-			      int x, int y,
-			      Uint32 color);
+			      u32 x, u32 y,
+			      Uint32 color)
+  {
+    if(x >= 0 && y >= 0 && x < (u32)dest->w && y < (u32)dest->h)
+    {
+      ((Uint32*)dest->pixels)[x + y * dest->w] = color;
+    }
+  }
 
   static inline void SetPixel(SDL_Surface* dest,
 			      int i, Uint32 color);

@@ -1,15 +1,6 @@
 #include <cmath>
 #include "drawing.h"
 
-inline void Drawing::SetPixel(SDL_Surface* dest, int x,
-		       int y, Uint32 color)
-{
-  if(x >= 0 && y >= 0 && x < dest->w && y < dest->h)
-  {
-    ((Uint32*)dest->pixels)[x + y * dest->w] = color;
-  }
-}
-
 void Drawing::SetPixel(SDL_Surface* dest, int i,
 		       Uint32 color)
 {
