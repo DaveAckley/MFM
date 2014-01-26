@@ -1,11 +1,11 @@
 # Who we are
-COMPONENTNAME:=core
+COMPONENTNAME:=test
 
 # Where's the top
 BASEDIR:=../..
 
 # What we need from outside
-INCLUDES += 
+INCLUDES += -I $(BASEDIR)/src/core/include -I $(BASEDIR)/src/sim/include
 
 # Do the library thing
 include $(BASEDIR)/config/Makelib.mk
