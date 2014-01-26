@@ -1,27 +1,4 @@
-#define MAIN_RUN_TESTS 0
-
-#if MAIN_RUN_TESTS
-
-#include "tests.h"
-
-#else
-
-#include <stdio.h>
-#include "SDL/SDL.h"
-#include "assert.h"
-#include "eventwindow.h"
-#include "grid.h"
-#include "gridpanel.h"
-#include "gridrenderer.h"
-#include "itype.h"
-#include "keyboard.h"
-#include "manhattandir.h"
-#include "mouse.h"
-#include "p1atom.h"
-#include "point.h"
-#include "drawing.h"
-#include "tilerenderer.h"
-#include "time.h"
+#include "main.h"
 
 #define FRAMES_PER_SECOND 60.0
 
@@ -238,7 +215,6 @@ public:
   }
 };
 
-
 int main(int argc, char** argv)
 {
   SDL_Init(SDL_INIT_EVERYTHING);
@@ -257,5 +233,3 @@ int main(int argc, char** argv)
 
   return 0;
 }
-
-#endif

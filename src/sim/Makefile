@@ -1,20 +1,11 @@
-CC := g++
-CFLAGS := -ansi -pedantic -Wall -Werror -O99
-ALLDEP := Makefile
-SRCDIR := src
-BUILDDIR := ../../build
+# Who we are
+COMPONENTNAME:=sim
 
-SRCEXT := cpp
-HDRPAT := -name *.h -o -name *.tcc
-SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
-HEADERS := $(shell find $(SRCDIR) -type f $(HDRPAT))
-ALLDEP += $(HEADERS)
-OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-LIB := -lm -lSDL
-INC := -I include -I ../core/include
+# Where's the top
+BASEDIR:=../..
 
-all: $(OBJECTS)
+# What we need from outside
+INCLUDES += -I $(BASEDIR)/src/core/include
 
-$(BUILDDIR)/%.o:	$(SRCDIR)/%.$(SRCEXT) $(ALLDEP)
-	@mkdir -p $(BUILDDIR)
-	@echo "$(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
+# Do the library thing
+include $(BASEDIR)/config/Makelib.mk
