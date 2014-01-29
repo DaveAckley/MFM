@@ -9,7 +9,7 @@ INCLUDES += -I $(BASEDIR)/src/core/include -I $(BASEDIR)/src/sim/include -I $(BA
 
 # What we need to link
 LIBS += -L $(BASEDIR)/build/core/ -L $(BASEDIR)/build/sim/ -L $(BASEDIR)/build/gui/
-LIBS += -lmfmgui -lmfmsim -lmfmcore -lSDL -lm
+LIBS += -lmfmgui -lmfmsim -lmfmcore -lSDL -lSDL_ttf -lm
 
 # Do the program thing
 include $(BASEDIR)/config/Makeprog.mk

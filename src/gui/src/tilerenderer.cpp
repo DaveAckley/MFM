@@ -23,12 +23,34 @@ void TileRenderer::RenderAtomBG(Point<int>& offset,
 				Point<int>& atomLoc,
 				u32 color)
 {
-  Drawing::FillRect(m_dest,
-		    m_windowTL.GetX() +
-		    offset.GetX() + atomLoc.GetX() * m_atomDrawSize,
-		    m_windowTL.GetY() + 
-		    offset.GetY() + atomLoc.GetY() * m_atomDrawSize,
-		    m_atomDrawSize, m_atomDrawSize, color);
+  /* 
+   * Again, draw this rect manually in order to only draw 
+   * renderable pieces of it.
+   */
+  Point<s32> ulpt(m_windowTL.GetX() + offset.GetY() + atomLoc.GetX() *
+		  m_atomDrawSize,
+		  m_windowTL.GetY() + offset.GetY() + atomLoc.GetY() *
+		  m_atomDrawSize);
+
+  Point<s32> brpt(ulpt.GetX() + m_atomDrawSize, ulpt.GetY() + m_atomDrawSize);
+
+  if(brpt.GetX() > (s32)m_dimensions.GetX())
+  {
+    brpt.SetX(m_dimensions.GetX());
+  }
+  if(brpt.GetY() > (s32)m_dimensions.GetY())
+  {
+    brpt.SetY(m_dimensions.GetY());
+  }
+  
+
+  for(s32 x = ulpt.GetX(); x < brpt.GetX(); x++)
+  {
+    for(s32 y = ulpt.GetY(); y < brpt.GetY(); y++)
+    {
+      Drawing::SetPixel(m_dest, x, y, color);
+    }
+  }
 }
 
 void TileRenderer::ToggleGrid()

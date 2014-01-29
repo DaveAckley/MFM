@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <stdlib.h> /* -*- C++ -*- */
 #include "eucliddir.h"
 #include "elementtable.h"
 #include "manhattandir.h"
@@ -156,7 +156,7 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
   }
 }
 
-#define DATA_CREATE_ODDS 50
+#define DATA_CREATE_ODDS 25
 #define DATA_MAXVAL 100
 #define DATA_MINVAL 1
 

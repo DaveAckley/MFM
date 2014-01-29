@@ -24,7 +24,7 @@ private:
   Point<u32> m_dimensions;
 
   static const EventWindowRenderMode m_defaultRenderMode =
-    EVENTWINDOW_RENDER_ALL;
+    EVENTWINDOW_RENDER_OFF;
 
   static const bool m_renderTilesSeparatedDefault = false;
 

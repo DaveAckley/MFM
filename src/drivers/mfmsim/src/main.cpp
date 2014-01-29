@@ -19,12 +19,15 @@ private:
 
   bool paused;
 
+  bool renderStats;
+
   u32 m_eventsPerFrame;
 
   Mouse mouse;
   Keyboard keyboard;
   SDL_Surface* screen;
   GridRenderer grend;
+  StatsRenderer srend;
 
   void Update(GridP1Atom& grid)
   { 
@@ -82,6 +85,10 @@ private:
     {
       paused = !paused;
     }
+    if(keyboard.SemiAuto(SDLK_i))
+    {
+      renderStats = !renderStats;
+    }
     if(keyboard.IsDown(SDLK_RIGHT) ||
        keyboard.IsDown(SDLK_d))
     {
@@ -138,9 +145,15 @@ public:
     GridP1Atom mainGrid(3, 2, &elements);
 
     grend.SetDestination(screen);
-    grend.SetDimensions(Point<u32>(320,320));
+    grend.SetDimensions(Point<u32>(1024,720));
+
+    srend.SetDestination(screen);
+    srend.SetDrawPoint(Point<s32>(1024, 0));
+    srend.SetDimensions(Point<u32>(256, 720));
 
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
+
+    renderStats = false;
 
     P1Atom atom(ELEMENT_DREG);
     P1Atom sorter(ELEMENT_SORTER);
@@ -207,6 +220,10 @@ public:
       Drawing::Clear(screen, 0xff200020);
       
       grend.RenderGrid(mainGrid);
+      if(renderStats)
+      {
+	srend.RenderGridStatistics(mainGrid);
+      }
       
       SDL_Flip(screen);
     }
@@ -218,6 +235,9 @@ public:
 int main(int argc, char** argv)
 {
   SDL_Init(SDL_INIT_EVERYTHING);
+  TTF_Init();
+
+  SDL_WM_SetCaption("Movable Feast Machine Simulator", NULL);
 
   srand(time(NULL));
 

@@ -3,6 +3,7 @@
 
 #include "itype.h"
 #include "SDL/SDL.h"
+#include "SDL/SDL_ttf.h"
 #include "tile.h"
 
 class Drawing
@@ -19,35 +20,40 @@ public:
   
   static inline void SetPixel(SDL_Surface* dest,
 			      u32 x, u32 y,
-			      Uint32 color)
+			      u32 color)
   {
     if(x >= 0 && y >= 0 && x < (u32)dest->w && y < (u32)dest->h)
     {
-      ((Uint32*)dest->pixels)[x + y * dest->w] = color;
+      ((u32*)dest->pixels)[x + y * dest->w] = color;
     }
   }
 
   static inline void SetPixel(SDL_Surface* dest,
-			      int i, Uint32 color);
+			      int i, u32 color);
 
-  static void Clear(SDL_Surface* dest, Uint32 color);
+  static void Clear(SDL_Surface* dest, u32 color);
 
   static void DrawHLine(SDL_Surface* dest,
 			int y, int startX, int endX,
-			Uint32 color);
+			u32 color);
 
   static void DrawVLine(SDL_Surface* dest,
 			int x, int startY, int endY,
-			Uint32 color);
+			u32 color);
 
   static void FillRect(SDL_Surface* dest,
 		       int x, int y, int w, int h,
-		       Uint32 color);
+		       u32 color);
 
   static void FillCircle(SDL_Surface* dest,
 			 int x, int y, int w,
 			 int h, int radius,
-			 Uint32 color);
+			 u32 color);
+
+  static void BlitText(SDL_Surface*& dest, TTF_Font*& font,
+		       const char* message, Point<u32> loc,
+		       Point<u32> size, u32 color);
+		       
 };
 
 #endif /*DRAWING_H*/

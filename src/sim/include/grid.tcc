@@ -1,4 +1,4 @@
-#include "eucliddir.h"
+#include "eucliddir.h" /* -*- C++ -*- */
 #include "grid.h"
 
 template <class T,u32 R>

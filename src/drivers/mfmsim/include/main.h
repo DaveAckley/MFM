@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include "SDL/SDL.h"
+#include "SDL/SDL_ttf.h"
 #include "assert.h"
 #include "eventwindow.h"
 #include "grid.h"
@@ -15,6 +16,7 @@
 #include "p1atom.h"
 #include "point.h"
 #include "drawing.h"
+#include "statsrenderer.h"
 #include "tilerenderer.h"
 #include "time.h"
 
