@@ -91,6 +91,8 @@ public:
   void DiffuseAtom(EventWindow<T,R>& window);
 
   void Execute(ElementTable<T,R>& table);
+
+  u32 GetAtomCount(u32 atomType);
 };
 
 #include "tile.tcc"

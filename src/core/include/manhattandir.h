@@ -60,10 +60,12 @@ class ManhattanDir
 public:
   static const u32 EVENT_WINDOW_DIAMETER = R*2+1;
 
+  static Point<s32>& FlipAxis(Point<s32>& pt, bool xAxis);
+
   /**
    * Access the singleton ManhattanDir of any given size.
    */
-  static ManhattanDir<R> & get() ;
+  static ManhattanDir<R> & get();
 
   void FillRandomSingleDir(Point<int>& pt);
 
@@ -87,6 +89,8 @@ public:
 
   void FillVNNeighbors(Point<int>* pts);
 
+  Point<s32>& GetSEWindowPoint(u32 index)
+  { return m_southeastSubWindow[index]; }
 
 
 private:
@@ -96,7 +100,8 @@ private:
     return EVENT_WINDOW_SITES(maxDistance);
   }
 
-  
+  /* This only works if R is even! */
+  Point<s32> m_southeastSubWindow[R];
 
   Point<s32> m_indexToPoint[ARRAY_LENGTH];
   s32 m_pointToIndex[EVENT_WINDOW_DIAMETER][EVENT_WINDOW_DIAMETER];

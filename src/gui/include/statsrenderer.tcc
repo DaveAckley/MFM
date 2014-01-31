@@ -1,4 +1,5 @@
 #include "drawing.h" /* -*- C++ -*- */
+#include <string.h>
 
 template <class T, u32 R>
 void StatsRenderer::RenderGridStatistics(Grid<T,R>& grid)
@@ -7,7 +8,15 @@ void StatsRenderer::RenderGridStatistics(Grid<T,R>& grid)
 		    m_dimensions.GetX(), m_dimensions.GetY(),
 		    0xff400040);
 
-  Drawing::BlitText(m_dest, m_drawFont, "Density: 45%", Point<u32>(m_drawPoint.GetX(), 0),
+  char strBuffer[128];
+
+  memset(strBuffer, 0, 128);
+
+  
+
+  sprintf(strBuffer, "Res count: %d", grid.GetAtomCount(2));
+
+  Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 0),
 		    Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
   
   /*

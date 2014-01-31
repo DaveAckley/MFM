@@ -313,3 +313,9 @@ void Tile<T,R>::Execute(ElementTable<T,R>& table)
 
   SendRelevantAtoms();
 }
+
+template <class T, u32 R>
+u32 Tile<T,R>::GetAtomCount(u32 atomType)
+{
+  return m_atomCount[atomType];
+}

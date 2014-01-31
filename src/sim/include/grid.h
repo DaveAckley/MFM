@@ -60,6 +60,8 @@ public:
   Tile<T,R>& GetTile(Point<int> location);
   
   Tile<T,R>& GetTile(int x, int y);
+
+  u32 GetAtomCount(u32 atomType);
 };
 
 #include "grid.tcc"

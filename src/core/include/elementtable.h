@@ -3,6 +3,7 @@
 
 #include "bitfield.h"
 #include "eventwindow.h"
+#include "eucliddir.h"
 #include "itype.h"
 #include "p1atom.h"
 
@@ -38,6 +39,12 @@ private:
   (EventWindow<T,R>&, StateFunction f);
 
   BehaviorFunction m_funcmap[0xff];
+
+  /* Fills pt with the coordinates of a randomly selected          */
+  /* Atom with the specified type. Returns false if there is none. */
+  static bool FillSubWindowContaining(Point<s32>& pt, EventWindow<T,R>& window,
+				      ElementType type, StateFunction f, 
+				      EuclidDir corner);
 
   static void NothingBehavior(EventWindow<T,R>& w, StateFunction f);
 

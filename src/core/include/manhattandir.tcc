@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdio.h>         /* -*- C++ -*- */
 #include "manhattandir.h"
 #include "fail.h"
 
@@ -42,6 +42,42 @@ ManhattanDir<R>::ManhattanDir()
   m_firstIndex[R+1] = next;
   if (next != EVENT_WINDOW_SITES(R))
     FAIL(ILLEGAL_STATE);
+
+  /* Initialize the southeast table */
+  u32 i = 0;
+  for(s32 x = 1; (u32)x < R / 2 + 1; x++)
+  {
+    for(s32 y = 1; (u32)y < R / 2 + 1; y++)
+    {
+      m_southeastSubWindow[i++] = Point<s32>(x, y);
+    }
+  }
+
+  /* Shuffle the southeast table */
+  i = 0;
+  u32 a, b;
+  Point<s32> tmp;
+  for(i = 0; i < R * 5; i++)
+  {
+    a = rand() % R;
+    b = rand() % R;
+
+    if(a != b)
+    {
+      tmp = m_southeastSubWindow[a];
+      m_southeastSubWindow[a] = m_southeastSubWindow[b];
+      m_southeastSubWindow[b] = tmp;
+    }
+  }
+}
+
+template<u32 R>
+Point<s32>& ManhattanDir<R>::FlipAxis(Point<s32>& pt, bool xAxis)
+{
+  pt.Set(xAxis ? -pt.GetX() : pt.GetX(),
+	 (!xAxis) ? -pt.GetY() : pt.GetY());
+
+  return pt;
 }
 
 template<u32 R>

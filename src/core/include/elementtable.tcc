@@ -63,95 +63,80 @@ void ElementTable<T,R>::DRegBehavior(EventWindow<T,R>& window,
   }
 }
 
+template <class T, u32 R>
+bool ElementTable<T,R>::FillSubWindowContaining(Point<s32>& pt, EventWindow<T,R>& window,
+						ElementType type, StateFunction f, 
+						EuclidDir corner)
+{
+  u32 startIdx = rand() % R;
+  
+  Point<s32> srcPt;
+  for(u32 i = 0; i < R; i++)
+  {
+    srcPt = ManhattanDir<R>::get().GetSEWindowPoint((startIdx + i) % R);
+
+    switch(corner)
+    {
+    case EUDIR_SOUTHEAST: break;
+    case EUDIR_NORTHEAST: ManhattanDir<R>::get().FlipAxis(srcPt, false); break;
+    case EUDIR_SOUTHWEST: ManhattanDir<R>::get().FlipAxis(srcPt, true); break;
+    case EUDIR_NORTHWEST:
+      ManhattanDir<R>::get().FlipAxis(srcPt, true);
+      ManhattanDir<R>::get().FlipAxis(srcPt, false);
+      break;
+    default: FAIL(ILLEGAL_ARGUMENT); break;
+    }
+
+    if(f(&window.GetRelativeAtom(srcPt)) == type)
+    {
+      pt.Set(srcPt.GetX(), srcPt.GetY());
+      return true;
+    }
+  }
+
+  return false;
+}
+
 template <class T,u32 R>
 void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
 				       StateFunction f)
 {
-  Point<int> dir;
-  ManhattanDir<R>::get().FillRandomSingleDir(dir);
+  Point<s32> repPt;
+  ManhattanDir<R>::get().FillRandomSingleDir(repPt);
 
-  T sorter = window.GetCenterAtom();
-
-  u32 state = f(&window.GetRelativeAtom(dir));
-
-  if(state == ELEMENT_RES)
+  if(f(&window.GetRelativeAtom(repPt)) == ELEMENT_RES)
   {
-    u32 newState = sorter.ReadLowerBits();
-    switch(EuDir::FromOffset(dir))
-    {
-    case EUDIR_NORTH: newState -= 5; break;
-    case EUDIR_SOUTH: newState += 5; break;
-    default: break;
-    }
-    window.SetRelativeAtom(dir, P1Atom(ELEMENT_SORTER));
-    window.GetRelativeAtom(dir).WriteLowerBits(newState);
+    window.SetRelativeAtom(repPt, T(ELEMENT_SORTER));
   }
 
-  u32 halfR = R >> 1;
-  bool swapUp = RAND_BOOL;
-  bool swapping = false;
+  EuclidDir firstEdge = RAND_BOOL ? EUDIR_SOUTHEAST : EUDIR_NORTHEAST;
+  EuclidDir firstOpposite = firstEdge == EUDIR_SOUTHEAST ? EUDIR_NORTHWEST :
+    EUDIR_SOUTHWEST;
+  EuclidDir lastEdge = firstEdge == EUDIR_SOUTHEAST ? EUDIR_NORTHEAST :
+    EUDIR_SOUTHEAST;
+  EuclidDir lastOpposite = firstEdge == EUDIR_SOUTHEAST ? EUDIR_NORTHWEST :
+    EUDIR_SOUTHWEST;
 
-  Point<int> rightSearchPtr(1, swapUp? 1 : -halfR);
-  Point<int> srcPt;
-
-  for(u32 x = 0; x < halfR; x++)
+  Point<s32> srcPt;
+  Point<s32> dstPt;
+  for(u32 i = 0; i < R; i++)
   {
-    for(u32 y = 0; y < halfR; y++)
+    if(FillSubWindowContaining(srcPt, window, ELEMENT_DATA, f,
+			       firstEdge) &&
+       FillSubWindowContaining(dstPt, window, ELEMENT_NOTHING, f,
+			       firstOpposite))
     {
-      srcPt.Set(x, y);
-      srcPt.Add(rightSearchPtr);
       
-      T ratom = window.GetRelativeAtom(srcPt);
-
-      if(f(&ratom) == ELEMENT_DATA)
-      {
-	if(swapUp)
-	{
-	  if(sorter.ReadLowerBits() > ratom.ReadLowerBits())
-	  {
-	    sorter.WriteLowerBits(ratom.ReadLowerBits());
-	    swapping = true;
-	    break;
-	  }
-	}
-	else
-	{
-	  if(sorter.ReadLowerBits() < ratom.ReadLowerBits())
-	  {
-	    sorter.WriteLowerBits(ratom.ReadLowerBits());
-	    swapping = true;
-	    break;
-	  }
-	}
-      }
+      window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt));
+      window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING));
     }
-    if(swapping)
+    else if(FillSubWindowContaining(srcPt, window, ELEMENT_DATA, f,
+				    lastEdge) &&
+	    FillSubWindowContaining(dstPt, window, ELEMENT_NOTHING, f,
+				    lastOpposite))
     {
-      break;
-    }
-  }
-
-  rightSearchPtr = Point<s32>(-halfR, swapUp? -halfR : 1);
-  Point<s32> destPt;
-  
-  if(swapping)
-  {
-    for(u32 x = 0; x < halfR; x++)
-    {
-      for(u32 y = 0; y < halfR; y++)
-      {
-	destPt.Set(x, y);
-	destPt.Add(rightSearchPtr);
-
-	if(f(&window.GetRelativeAtom(destPt)) == ELEMENT_NOTHING)
-	{
-	  if(window.SetRelativeAtom(destPt,
-				    window.GetRelativeAtom(srcPt)))
-	  {
-	    window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING));
-	  }
-	}
-      }
+      window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt));
+      window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING));
     }
   }
 }
