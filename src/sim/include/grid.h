@@ -61,7 +61,7 @@ public:
   
   Tile<T,R>& GetTile(int x, int y);
 
-  u32 GetAtomCount(u32 atomType);
+  u32 GetAtomCount(ElementType atomType);
 };
 
 #include "grid.tcc"

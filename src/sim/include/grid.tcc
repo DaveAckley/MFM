@@ -189,7 +189,7 @@ void Grid<T,R>::FillLastEventTile(Point<int>& out)
 }
 
 template <class T, u32 R>
-u32 Grid<T,R>::GetAtomCount(u32 atomType)
+u32 Grid<T,R>::GetAtomCount(ElementType atomType)
 {
   u32 total = 0;
   for(u32 i = 0; i < m_width * m_height; i++)
@@ -197,5 +197,5 @@ u32 Grid<T,R>::GetAtomCount(u32 atomType)
     total += m_tiles[i].GetAtomCount(atomType);
   }
 
-  return atomType;
+  return total;
 }

@@ -26,7 +26,7 @@ private:
 
   T m_atoms[TILE_SIZE];
 
-  u16 m_atomCount[ELEMENT_COUNT];
+  s32 m_atomCount[ELEMENT_COUNT];
 
   Point<int> m_lastExecutedAtom;
 
@@ -51,6 +51,12 @@ private:
   void SendAtom(EuclidDir neighbor, Point<int>& atomLoc);
 
   inline bool IsConnected(EuclidDir dir);
+
+  void AddToAtomCounts(s32 value);
+
+  void RemovePreWindowAtomCount();
+
+  void AddPostWindowAtomCount();
 
 public:
 
@@ -92,7 +98,7 @@ public:
 
   void Execute(ElementTable<T,R>& table);
 
-  u32 GetAtomCount(u32 atomType);
+  u32 GetAtomCount(ElementType atomType);
 };
 
 #include "tile.tcc"

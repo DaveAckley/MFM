@@ -42,6 +42,9 @@ public:
   {
     m_dimensions = dimensions;
   }
+  
+  template <class T, u32 R>
+  void DrawString(const char* string, u32 x, u32 y);
 
   template<class T, u32 R>
   void RenderGridStatistics(Grid<T,R>& grid);

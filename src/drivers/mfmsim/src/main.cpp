@@ -160,6 +160,8 @@ public:
     P1Atom emtr(ELEMENT_EMITTER);
     P1Atom cnsr(ELEMENT_CONSUMER);
 
+    emtr.WriteLowerBits(3);
+
     sorter.WriteLowerBits(50);
 
     Point<int> aloc(30, 30);

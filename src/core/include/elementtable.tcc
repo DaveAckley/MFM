@@ -126,22 +126,31 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
        FillSubWindowContaining(dstPt, window, ELEMENT_NOTHING, f,
 			       firstOpposite))
     {
-      
-      window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt));
-      window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING));
+      if(window.GetRelativeAtom(srcPt).ReadLowerBits() <
+	 window.GetCenterAtom().ReadLowerBits())
+      {
+	window.GetCenterAtom().WriteLowerBits(window.GetRelativeAtom(srcPt).ReadLowerBits());
+	window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt));
+	window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING));
+      }
     }
     else if(FillSubWindowContaining(srcPt, window, ELEMENT_DATA, f,
 				    lastEdge) &&
 	    FillSubWindowContaining(dstPt, window, ELEMENT_NOTHING, f,
 				    lastOpposite))
     {
-      window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt));
-      window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING));
+      if(window.GetRelativeAtom(srcPt).ReadLowerBits() >
+	 window.GetCenterAtom().ReadLowerBits())
+      {
+	window.GetCenterAtom().WriteLowerBits(window.GetRelativeAtom(srcPt).ReadLowerBits());
+	window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt));
+	window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING));
+      }
     }
   }
 }
 
-#define DATA_CREATE_ODDS 25
+#define DATA_CREATE_ODDS 5
 #define DATA_MAXVAL 100
 #define DATA_MINVAL 1
 
