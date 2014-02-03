@@ -7,6 +7,11 @@
 #define CAMERA_SLOW_SPEED 2
 #define CAMERA_FAST_SPEED 50
 
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 720
+
+#define STATS_WINDOW_WIDTH 256
+
 class MFMSim
 {
 public:
@@ -88,6 +93,15 @@ private:
     if(keyboard.SemiAuto(SDLK_i))
     {
       renderStats = !renderStats;
+      if(!renderStats)
+      {
+	grend.SetDimensions(Point<u32>(SCREEN_WIDTH, SCREEN_HEIGHT));
+      }
+      else
+      {
+	grend.SetDimensions(Point<u32>(SCREEN_WIDTH - STATS_WINDOW_WIDTH,
+				       SCREEN_HEIGHT));
+      }
     }
     if(keyboard.IsDown(SDLK_RIGHT) ||
        keyboard.IsDown(SDLK_d))
@@ -135,21 +149,21 @@ public:
     paused = true;
 
     bool running = true;
-    screen = SDL_SetVideoMode(1280, 720, 32,
+    screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 32,
 			      SDL_SWSURFACE);
 
     ElementTableP1Atom elements(&P1Atom::StateFunc);
 
     SDL_Event event;
     
-    GridP1Atom mainGrid(3, 2, &elements);
+    GridP1Atom mainGrid(4, 2, &elements);
 
     grend.SetDestination(screen);
-    grend.SetDimensions(Point<u32>(1024,720));
+    grend.SetDimensions(Point<u32>(SCREEN_WIDTH,SCREEN_HEIGHT));
 
     srend.SetDestination(screen);
     srend.SetDrawPoint(Point<s32>(1024, 0));
-    srend.SetDimensions(Point<u32>(256, 720));
+    srend.SetDimensions(Point<u32>(STATS_WINDOW_WIDTH, SCREEN_HEIGHT));
 
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
 
@@ -164,9 +178,9 @@ public:
 
     sorter.WriteLowerBits(50);
 
-    Point<int> aloc(30, 30);
+    Point<int> aloc(70, 30);
     Point<int> sloc(10, 10);
-    Point<int> eloc(99, 10);
+    Point<int> eloc(131, 10);
     Point<int> cloc(4, 10);
 
     for(int i = 0; i < 10; i++)

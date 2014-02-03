@@ -52,12 +52,6 @@ private:
 
   inline bool IsConnected(EuclidDir dir);
 
-  void AddToAtomCounts(s32 value);
-
-  void RemovePreWindowAtomCount();
-
-  void AddPostWindowAtomCount();
-
 public:
 
   Tile();

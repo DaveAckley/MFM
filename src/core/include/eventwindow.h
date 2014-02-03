@@ -12,6 +12,8 @@ class EventWindow
 {
 private:
 
+  typedef u32 (* StateFunction )(T* atom);
+
   u8 m_neighborConnections;
   
   u32 m_atomCount;
@@ -39,7 +41,7 @@ public:
 
   T& GetRelativeAtom(Point<int>& offset);
 
-  bool SetRelativeAtom(Point<int>& offset, T atom);
+  bool SetRelativeAtom(Point<int>& offset, T atom, StateFunction f, s32* atomCounts);
 
   void SwapAtoms(Point<int>& locA, Point<int>& locB);
 

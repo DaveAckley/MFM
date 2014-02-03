@@ -290,32 +290,6 @@ void Tile<T,R>::SendRelevantAtoms()
   }
 }
 
-template <class T, u32 R>
-void Tile<T,R>::AddToAtomCounts(s32 value)
-{
-  Point<s32> winPt;
-  for(u32 i = 0; i < m_executingWindow.GetAtomCount(); i++)
-  {
-    ManhattanDir<R>::get().FillFromBits(winPt, i, MANHATTAN_TABLE_EVENT);
-    u32 type = m_stateFunc(&m_executingWindow.GetRelativeAtom(winPt));
-    
-    m_atomCount[type] += value;
-  }
-}
-
-template <class T, u32 R>
-void Tile<T,R>::RemovePreWindowAtomCount()
-{
-  AddToAtomCounts(-1);
-}
-
-template <class T, u32 R>
-void Tile<T,R>::AddPostWindowAtomCount()
-{
-  AddToAtomCounts(1);
-}
-
-
 template <class T,u32 R>
 void Tile<T,R>::Execute(ElementTable<T,R>& table)
 {
@@ -326,15 +300,8 @@ void Tile<T,R>::Execute(ElementTable<T,R>& table)
   Point<int> winCenter(R * 2 - 1, R);
   CreateWindowAt(winCenter);
 #endif
-
-  /* In order to preserve atom counting, we need to  */
-  /* pretend like all atoms inside the window cease  */
-  /* to exist once it is created. Let's remove their */
-  /* counts here.                                    */
-
-  RemovePreWindowAtomCount();
   
-  table.Execute(m_executingWindow);
+  table.Execute(m_executingWindow, m_atomCount);
 
   if(table.Diffusable((ElementType)
 		      m_stateFunc(&m_executingWindow.GetCenterAtom())))
@@ -343,8 +310,6 @@ void Tile<T,R>::Execute(ElementTable<T,R>& table)
   }
 
   m_executingWindow.FillCenter(m_lastExecutedAtom);
-
-  AddPostWindowAtomCount();
 
   SendRelevantAtoms();
 }

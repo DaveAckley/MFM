@@ -27,10 +27,15 @@ u32 TileRenderer::GetAtomColor(Tile<T,R>& tile, T& atom)
 template <class T, u32 R>
 u32 TileRenderer::GetDataHeatColor(Tile<T,R>& tile, T& atom)
 {
+  if(tile.GetStateFunc()(&atom) == ELEMENT_SORTER)
+  {
+    u8 tcl = atom.ReadLowerBits() << 1;
+    return 0xff0000ff | (tcl << 8);
+  }
   if(tile.GetStateFunc()(&atom) == ELEMENT_DATA)
   {
-    u8 tcl = atom.ReadLowerBits();
-    return 0xff000000 | (tcl << 17);
+    u8 tcl = atom.ReadLowerBits() << 1;
+    return 0xffff0000 | (tcl << 8);
   }
   return 0;
 }

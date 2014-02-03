@@ -21,7 +21,8 @@ T& EventWindow<T,R>::GetCenterAtom()
 }
 
 template <class T, u32 R>
-bool EventWindow<T,R>::SetRelativeAtom(Point<int>& offset, T atom)
+bool EventWindow<T,R>::SetRelativeAtom(Point<int>& offset, T atom,
+				       StateFunction f, s32* atomCounts)
 {
   s32 idx = ManhattanDir<R>::get().FromPoint(offset, (TableType)R);
   if (idx < 0)
@@ -29,8 +30,17 @@ bool EventWindow<T,R>::SetRelativeAtom(Point<int>& offset, T atom)
 
   Point<int> accessLoc(offset);
   accessLoc.Add(m_center.GetX(), m_center.GetY());
+  
+  T* oldAtom = m_atoms + accessLoc.GetX() + (accessLoc.GetY() * m_tileWidth);
 
-  m_atoms[accessLoc.GetX() + accessLoc.GetY() * m_tileWidth] = atom;
+  /* Only count if there's something to count in */
+  if(atomCounts && f)
+  {
+    atomCounts[f(oldAtom)]--;
+    atomCounts[f(&atom)]++;
+  }
+  
+  *oldAtom = atom;
 
   return true;
 }

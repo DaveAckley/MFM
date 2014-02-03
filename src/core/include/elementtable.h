@@ -35,8 +35,9 @@ private:
   typedef u32 (* StateFunction )(T* atom);
   StateFunction m_statefunc;
 
+  /* the atomCounts argument can be NULL on any call to these functions. */
   typedef void (* BehaviorFunction )
-  (EventWindow<T,R>&, StateFunction f);
+  (EventWindow<T,R>&, StateFunction f, s32* atomCounts);
 
   BehaviorFunction m_funcmap[0xff];
 
@@ -46,27 +47,27 @@ private:
 				      ElementType type, StateFunction f, 
 				      EuclidDir corner);
 
-  static void NothingBehavior(EventWindow<T,R>& w, StateFunction f);
+  static void NothingBehavior(EventWindow<T,R>& w, StateFunction f, s32* atomCounts);
 
-  static void DRegBehavior(EventWindow<T,R>& w, StateFunction f);
+  static void DRegBehavior(EventWindow<T,R>& w, StateFunction f, s32* atomCounts);
 
-  static void SorterBehavior(EventWindow<T,R>& w, StateFunction f);
+  static void SorterBehavior(EventWindow<T,R>& w, StateFunction f, s32* atomCounts);
 
-  static void EmitterBehavior(EventWindow<T,R>& w, StateFunction f);
+  static void EmitterBehavior(EventWindow<T,R>& w, StateFunction f, s32* atomCounts);
 
-  static void ConsumerBehavior(EventWindow<T,R>& w, StateFunction f);
+  static void ConsumerBehavior(EventWindow<T,R>& w, StateFunction f, s32* atomCounts);
 
   static void ReproduceVertically(EventWindow<T,R>& w, 
 				  StateFunction f,
-				  ElementType type);
+				  ElementType type, s32* atomCounts);
   
 public:
   ElementTable(u32 (*stateFunc)(T* atom));
 
   ~ElementTable() { }
 
-  void Execute(EventWindow<T,R>& window)
-  { m_funcmap[m_statefunc(&(window.GetCenterAtom()))](window, m_statefunc); }
+  void Execute(EventWindow<T,R>& window, s32* atomCounts)
+  { m_funcmap[m_statefunc(&(window.GetCenterAtom()))](window, m_statefunc, atomCounts); }
 
   void FillAtom(T* atom, ElementType type);
 
