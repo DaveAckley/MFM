@@ -156,7 +156,7 @@ public:
 
     SDL_Event event;
     
-    GridP1Atom mainGrid(4, 2, &elements);
+    GridP1Atom mainGrid(5, 3, &elements);
 
     grend.SetDestination(screen);
     grend.SetDimensions(Point<u32>(SCREEN_WIDTH,SCREEN_HEIGHT));
@@ -178,18 +178,28 @@ public:
 
     sorter.WriteLowerBits(50);
 
+    u32 realWidth = TILE_WIDTH - EVENT_WINDOW_RADIUS * 2;
+
     Point<int> aloc(70, 30);
     Point<int> sloc(10, 10);
-    Point<int> eloc(131, 10);
+    Point<int> eloc(131 + realWidth, 10);
     Point<int> cloc(4, 10);
 
-    for(int i = 0; i < 10; i++)
+    for(u32 x = 0; x < mainGrid.GetWidth(); x++)
     {
-      mainGrid.PlaceAtom(atom, aloc);
-      aloc.SetX(aloc.GetX() + 1);
+      for(u32 y = 0; y < mainGrid.GetHeight(); y++)
+      {
+	for(u32 z = 0; z < 4; z++)
+	{
+	  aloc.Set(20 + x * realWidth + z, 20 + y * realWidth);
+	  sloc.Set(21 + x * realWidth + z, 21 + y * realWidth);
+	  
+	  mainGrid.PlaceAtom(sorter, sloc);
+	  mainGrid.PlaceAtom(atom, aloc);
+	}
+      }
     }
     
-    mainGrid.PlaceAtom(sorter, sloc);
     mainGrid.PlaceAtom(emtr, eloc);
     mainGrid.PlaceAtom(cnsr, cloc);
 

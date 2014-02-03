@@ -27,12 +27,12 @@ u32 TileRenderer::GetAtomColor(Tile<T,R>& tile, T& atom)
 template <class T, u32 R>
 u32 TileRenderer::GetDataHeatColor(Tile<T,R>& tile, T& atom)
 {
-  if(tile.GetStateFunc()(&atom) == ELEMENT_SORTER)
+  if(tile.GetStateFunc()(&atom) == ELEMENT_DATA)
   {
     u8 tcl = atom.ReadLowerBits() << 1;
     return 0xff0000ff | (tcl << 8);
   }
-  if(tile.GetStateFunc()(&atom) == ELEMENT_DATA)
+  if(tile.GetStateFunc()(&atom) == ELEMENT_SORTER)
   {
     u8 tcl = atom.ReadLowerBits() << 1;
     return 0xffff0000 | (tcl << 8);
@@ -107,7 +107,7 @@ void TileRenderer::RenderTile(Tile<T,R>& t, Point<int>& loc, bool renderWindow,
 {
   Point<int> multPt(loc);
 
-  multPt.Multiply((TILE_WIDTH - R * 3) * 
+  multPt.Multiply((TILE_WIDTH - R * 2) * 
 		  m_atomDrawSize);
 
   Point<int> realPt(multPt.GetX(), multPt.GetY());

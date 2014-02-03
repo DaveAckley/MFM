@@ -114,8 +114,8 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
     EUDIR_SOUTHWEST;
   EuclidDir lastEdge = firstEdge == EUDIR_SOUTHEAST ? EUDIR_NORTHEAST :
     EUDIR_SOUTHEAST;
-  EuclidDir lastOpposite = firstEdge == EUDIR_SOUTHEAST ? EUDIR_NORTHWEST :
-    EUDIR_SOUTHWEST;
+  EuclidDir lastOpposite = firstEdge == EUDIR_SOUTHEAST ? EUDIR_SOUTHWEST :
+    EUDIR_NORTHWEST;
 
   Point<s32> srcPt;
   Point<s32> dstPt;
@@ -153,7 +153,7 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
   }
 }
 
-#define DATA_CREATE_ODDS 15
+#define DATA_CREATE_ODDS 8
 #define DATA_MAXVAL 100
 #define DATA_MINVAL 1
 
