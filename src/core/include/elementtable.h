@@ -47,6 +47,9 @@ private:
 				      ElementType type, StateFunction f, 
 				      EuclidDir corner);
 
+  static void FillEastSubwindowIndices(s32* indices, EventWindow<T,R>& window,
+				       StateFunction f, ElementType type);
+
   static void NothingBehavior(EventWindow<T,R>& w, StateFunction f, s32* atomCounts);
 
   static void DRegBehavior(EventWindow<T,R>& w, StateFunction f, s32* atomCounts);
