@@ -52,23 +52,6 @@ ManhattanDir<R>::ManhattanDir()
       m_southeastSubWindow[i++] = Point<s32>(x, y);
     }
   }
-
-  /* Shuffle the southeast table */
-  i = 0;
-  u32 a, b;
-  Point<s32> tmp;
-  for(i = 0; i < R * 5; i++)
-  {
-    a = rand() % R;
-    b = rand() % R;
-
-    if(a != b)
-    {
-      tmp = m_southeastSubWindow[a];
-      m_southeastSubWindow[a] = m_southeastSubWindow[b];
-      m_southeastSubWindow[b] = tmp;
-    }
-  }
 }
 
 template<u32 R>

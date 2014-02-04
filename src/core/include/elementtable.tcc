@@ -97,6 +97,29 @@ bool ElementTable<T,R>::FillSubWindowContaining(Point<s32>& pt, EventWindow<T,R>
   return false;
 }
 
+/* Fills 'indices' with the Southeast Sub-window indices of all     */
+/* relative atoms which have type 'type'. Also looks at the         */
+/* NorthEast Sub-window, but fills with indices with some bits set. */
+/* This will break on super large event window sizes (i.e. > 255).  */
+
+/* Values in 'indices' reflect:                                     */
+/* 0x 00 00 0a bb                                                   */
+/* a = 0 => SouthEast                                               */
+/* a = 0 => NorthEast                                               */
+/* b = SouthEast Sub-window index                                   */
+template <class T, u32 R>
+void ElementTable<T,R>::FillEastSubwindowIndices(s32* indices,
+						 EventWindow<T,R>& window,
+						 StateFunction f,
+						 ElementType type)
+{
+  /* (R/2)*(R/2) is the size of the sub-window */
+  for(u32 i = 0; i < R / 2; i++)
+  {
+    
+  }
+}
+
 template <class T,u32 R>
 void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
 				       StateFunction f, s32* atomCounts)

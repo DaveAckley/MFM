@@ -100,7 +100,7 @@ private:
     return EVENT_WINDOW_SITES(maxDistance);
   }
 
-  /* This only works if R is even! */
+  /* This only works if R is a power of two! */
   Point<s32> m_southeastSubWindow[R];
 
   Point<s32> m_indexToPoint[ARRAY_LENGTH];
