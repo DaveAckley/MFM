@@ -114,8 +114,8 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
     EUDIR_SOUTHWEST;
   EuclidDir lastEdge = firstEdge == EUDIR_SOUTHEAST ? EUDIR_NORTHEAST :
     EUDIR_SOUTHEAST;
-  EuclidDir lastOpposite = firstEdge == EUDIR_SOUTHEAST ? EUDIR_NORTHWEST :
-    EUDIR_SOUTHWEST;
+  EuclidDir lastOpposite = firstEdge == EUDIR_SOUTHEAST ? EUDIR_SOUTHWEST :
+    EUDIR_NORTHWEST;
 
   Point<s32> srcPt;
   Point<s32> dstPt;
@@ -126,15 +126,18 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
        FillSubWindowContaining(dstPt, window, ELEMENT_NOTHING, f,
 			       firstOpposite))
     {
-      if(window.GetRelativeAtom(srcPt).ReadLowerBits() <
-	 window.GetCenterAtom().ReadLowerBits())
+      u32 cmp =  window.GetRelativeAtom(srcPt).ReadLowerBits() >
+	window.GetCenterAtom().ReadLowerBits();
+
+      if((cmp && firstEdge == EUDIR_SOUTHEAST) ||
+	 ((!cmp) && firstEdge == EUDIR_NORTHEAST))
       {
 	window.GetCenterAtom().WriteLowerBits(window.GetRelativeAtom(srcPt).ReadLowerBits());
 	window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt), f, atomCounts);
 	window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING), f, atomCounts);
 
 	/* Let's try only moving one atom at a time for now. */
-	return;
+	
       }
     }
     if(FillSubWindowContaining(srcPt, window, ELEMENT_DATA, f,
@@ -142,8 +145,11 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
        FillSubWindowContaining(dstPt, window, ELEMENT_NOTHING, f,
 			       lastOpposite))
     {
-      if(window.GetRelativeAtom(srcPt).ReadLowerBits() >
-	 window.GetCenterAtom().ReadLowerBits())
+      u32 cmp =  window.GetRelativeAtom(srcPt).ReadLowerBits() <
+	window.GetCenterAtom().ReadLowerBits();
+
+      if((cmp && firstEdge == EUDIR_SOUTHEAST) ||
+	 ((!cmp) && firstEdge == EUDIR_NORTHEAST))
       {
 	window.GetCenterAtom().WriteLowerBits(window.GetRelativeAtom(srcPt).ReadLowerBits());
 	window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt), f, atomCounts);
@@ -153,7 +159,7 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
   }
 }
 
-#define DATA_CREATE_ODDS 15
+#define DATA_CREATE_ODDS 8
 #define DATA_MAXVAL 100
 #define DATA_MINVAL 1
 
