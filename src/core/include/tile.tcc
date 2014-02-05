@@ -12,6 +12,12 @@ Tile<T,R>::Tile()
 }
 
 template <class T, u32 R>
+MFM::Random& Tile<T,R>::GetRandom()
+{
+  return m_random;
+}
+
+template <class T, u32 R>
 void Tile<T,R>::SetNeighbors(u8 neighbors)
 {
   m_neighborConnections = neighbors;
