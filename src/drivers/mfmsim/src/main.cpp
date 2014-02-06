@@ -244,7 +244,6 @@ public:
       lastFrame = SDL_GetTicks();
       
       
-      if(rand() % 3 == 0)
       Update(mainGrid);
       
       Drawing::Clear(screen, 0xff200020);
