@@ -2,7 +2,7 @@
 
 int main(int argc, char** argv)
 {
-  //  ManhattanDir<4>::ManhattanDir tables();
+  MFM::RandomTest::Test_RunTests();
 
   PointTest::Test_pointAdd();
   PointTest::Test_pointMultiply();

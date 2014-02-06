@@ -2,6 +2,7 @@
 #define TILE_H
 
 #include "eucliddir.h"
+#include "random.h"  /* for Random */
 #include "p1atom.h"
 #include "packet.h"
 #include "packetbuffer.h"
@@ -21,6 +22,8 @@ class Tile
   static const u32 EVENT_WINDOW_RADIUS = R;
 
 private:
+
+  MFM::Random m_random;
 
   u8 m_neighborConnections;
 
@@ -55,6 +58,8 @@ private:
 public:
 
   Tile();
+
+  MFM::Random & GetRandom();
 
   void SetNeighbors(u8 neighbors);
 
