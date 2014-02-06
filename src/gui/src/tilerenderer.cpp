@@ -1,6 +1,8 @@
 #include "tilerenderer.h"
 #include "eventwindow.h"
 
+namespace MFM {
+
 #define TILESIZE_CHANGE_RATE 1
 
 TileRenderer::TileRenderer(SDL_Surface* dest)
@@ -19,8 +21,8 @@ TileRenderer::TileRenderer(SDL_Surface* dest)
   m_windowTL.SetY(0);
 }
 
-void TileRenderer::RenderAtomBG(Point<int>& offset,
-				Point<int>& atomLoc,
+void TileRenderer::RenderAtomBG(SPoint& offset,
+				SPoint& atomLoc,
 				u32 color)
 {
   /* 
@@ -100,3 +102,5 @@ void TileRenderer::MoveRight(u8 amount)
 {
   m_windowTL.SetX(m_windowTL.GetX() - amount);
 }
+} /* namespace MFM */
+

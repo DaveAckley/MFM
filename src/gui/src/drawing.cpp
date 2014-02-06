@@ -1,6 +1,8 @@
 #include <cmath>
 #include "drawing.h"
 
+namespace MFM {
+
 void Drawing::SetPixel(SDL_Surface* dest, int i,
 		       Uint32 color)
 {
@@ -54,8 +56,8 @@ void Drawing::FillCircle(SDL_Surface* dest, int x, int y,
 			 int w, int h, int radius,
 			 Uint32 color)
 {
-  Point<int> ip;
-  Point<int> cp(x + (w / 2), y + (h / 2));
+  SPoint ip;
+  SPoint cp(x + (w / 2), y + (h / 2));
   for(int i = x; i < x + w; i++)
   {
     for(int j = y; j < y + h; j++)
@@ -90,3 +92,5 @@ void Drawing::BlitText(SDL_Surface*& dest, TTF_Font*& font,
 
   SDL_FreeSurface(text);
 }
+} /* namespace MFM */
+

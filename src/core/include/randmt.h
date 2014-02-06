@@ -56,6 +56,8 @@
 #ifndef _RANDMT_H_
 #define _RANDMT_H_
 
+namespace MFM {
+
 typedef unsigned long uint32;
 
 class RandMT {
@@ -114,7 +116,9 @@ inline uint32 RandMT::randomMT(void) {
   y ^= (y << 15) & 0xEFC60000U;
   return(y ^ (y >> 18));
 }
+} /* namespace MFM */
 
 #endif // _RANDMT_H_
+
 
 

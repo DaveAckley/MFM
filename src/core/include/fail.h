@@ -27,14 +27,13 @@
 #ifndef FAIL_H
 #define FAIL_H
 
-#define FAIL(code) FailHere(__FILE__,__LINE__,FAIL_CODE_REASON_##code)
+#define FAIL(code) MFMFailHere(__FILE__,__LINE__,MFM_FAIL_CODE_REASON_##code)
 
-extern "C" void FailHere(const char * file, const int line, const int code) __attribute__ ((noreturn));
-extern "C" const char * FailCodeReason(int failCode) ;
+extern "C" void MFMFailHere(const char * file, const int line, const int code) __attribute__ ((noreturn));
+extern "C" const char * MFMFailCodeReason(int failCode) ;
 
-
-#define XX(a) FAIL_CODE_REASON_##a,
-enum FailureCodes{
+#define XX(a) MFM_FAIL_CODE_REASON_##a,
+enum MFMFailureCodes{
   ZERO_UNUSED = 0,
 #include "failCodes.h"
 #undef XX
@@ -42,3 +41,4 @@ enum FailureCodes{
 };
 
 #endif  /* FAIL_H */
+

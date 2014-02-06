@@ -1,3 +1,5 @@
+
+namespace MFM {
 template <class T>
 PacketBuffer<T>::PacketBuffer()
 {
@@ -25,3 +27,5 @@ Packet<T>* PacketBuffer<T>::PopPacket()
 
   return m_buffer + (--m_heldPackets);
 }
+} /* namespace MFM */
+

@@ -7,6 +7,8 @@
 #include "itype.h"
 #include "p1atom.h"
 
+namespace MFM {
+
 #define ELEMENT_COUNT 7
 
 typedef enum
@@ -82,6 +84,8 @@ public:
   bool Diffusable(ElementType type);
   
 };
+
+} /* namespace MFM */
 
 #include "elementtable.tcc"
 

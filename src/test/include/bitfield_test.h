@@ -3,6 +3,8 @@
 
 #include "bitfield.h"
 
+namespace MFM {
+
 class BitFieldTest
 {
 private:
@@ -21,5 +23,6 @@ public:
 
   static void Test_bitfieldRemove();
 };
-
+} /* namespace MFM */
 #endif /*BITFIELD_TEST_H*/
+

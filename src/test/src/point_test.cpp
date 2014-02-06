@@ -2,10 +2,12 @@
 #include "point_test.h"
 #include "point.h"
 
+namespace MFM {
+
 void PointTest::Test_pointAdd()
 {
-  Point<int> iPointA(20, 30);
-  Point<int> iPointB(30, 20);
+  SPoint iPointA(20, 30);
+  SPoint iPointB(30, 20);
 
   iPointA.Add(iPointB);
 
@@ -22,7 +24,7 @@ void PointTest::Test_pointAdd()
 
 void PointTest::Test_pointMultiply()
 {
-  Point<int> iPoint(20, 100);
+  SPoint iPoint(20, 100);
   Point<double> dPoint(100.0, 20.25);
 
   iPoint.Multiply(30);
@@ -35,3 +37,5 @@ void PointTest::Test_pointMultiply()
   assert(dPoint.GetX() == 100.0 * 2.0);
   assert(dPoint.GetY() == 20.25 * 2.0);
 }
+} /* namespace MFM */
+

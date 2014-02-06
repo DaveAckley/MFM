@@ -1,5 +1,7 @@
 #include "gridpanel.h"
 
+namespace MFM {
+
 GridPanel::GridPanel() : Panel()
 {
 
@@ -25,3 +27,5 @@ void GridPanel::SetRenderer(GridRenderer* renderer)
 {
   m_renderer = renderer;
 }
+} /* namespace MFM */
+

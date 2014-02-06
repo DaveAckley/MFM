@@ -4,6 +4,8 @@
 #include "packet.h"
 #include "itype.h"
 
+namespace MFM {
+
 #define PACKETBUFFER_SIZE 128
 
 template <class T>
@@ -26,7 +28,9 @@ public:
   { return m_heldPackets; }
   
 };
+} /* namespace MFM */
 
 #include "packetbuffer.tcc"
 
 #endif /*PACKETBUFFER_H*/
+

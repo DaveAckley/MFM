@@ -1,5 +1,7 @@
 #include "gridrenderer.h"
 
+namespace MFM {
+
 GridRenderer::GridRenderer(SDL_Surface* dest)
 {
   m_tileRenderer = new TileRenderer(dest);
@@ -28,3 +30,5 @@ GridRenderer::~GridRenderer()
 {
   delete m_tileRenderer;
 }
+} /* namespace MFM */
+

@@ -1,37 +1,41 @@
 /* -*- C++ -*- */
 #include "manhattandir.h"
 
-template <class T,u32 R>
-EventWindow<T,R>::EventWindow(Point<int>& center, T* atoms, u32 tileWidth,
-			      u8 neighborConnections)
-{
-  m_atoms = atoms;
-  m_atomCount = EVENT_WINDOW_SITES(R);
-  m_tileWidth = tileWidth;
-  
-  m_neighborConnections = neighborConnections;
+namespace MFM {
 
-  m_center = Point<int>(center);
+template <class T,u32 R>
+EventWindow<T,R>::EventWindow(Tile<T,R> & tile, u32 tileWidth,
+			      u8 neighborConnections) : m_tile(tile)
+{
+  // m_tileWidth = tileWidth;
+  //  m_neighborConnections = neighborConnections;
+
+}
+
+template <class T, u32 R>
+void EventWindow<T,R>::SetCenter(const SPoint& center)
+{
+  m_center = center;
 }
 
 template <class T, u32 R>
 T& EventWindow<T,R>::GetCenterAtom()
 {
-  return m_atoms[m_center.GetX() + m_center.GetY() * m_tileWidth];
+  return *m_tile.GetAtom(m_center);
 }
 
 template <class T, u32 R>
-bool EventWindow<T,R>::SetRelativeAtom(Point<int>& offset, T atom,
+bool EventWindow<T,R>::SetRelativeAtom(const SPoint& offset, T atom,
 				       StateFunction f, s32* atomCounts)
 {
   s32 idx = ManhattanDir<R>::get().FromPoint(offset, (TableType)R);
   if (idx < 0)
     FAIL(ILLEGAL_ARGUMENT);
 
-  Point<int> accessLoc(offset);
+  SPoint accessLoc(offset);
   accessLoc.Add(m_center.GetX(), m_center.GetY());
   
-  T* oldAtom = m_atoms + accessLoc.GetX() + (accessLoc.GetY() * m_tileWidth);
+  T* oldAtom = m_tile.GetAtom(accessLoc);
 
   /* Only count if there's something to count in */
   if(atomCounts && f)
@@ -46,21 +50,21 @@ bool EventWindow<T,R>::SetRelativeAtom(Point<int>& offset, T atom,
 }
 
 template <class T, u32 R>
-T& EventWindow<T,R>::GetRelativeAtom(Point<int>& offset)
+T& EventWindow<T,R>::GetRelativeAtom(const SPoint& offset)
 {
   s32 idx = ManhattanDir<R>::get().FromPoint(offset, (TableType)R);
   if (idx < 0)
     FAIL(ILLEGAL_ARGUMENT);
 
-  Point<int> accessLoc(offset);
+  SPoint accessLoc(offset);
   accessLoc.Add(m_center.GetX(), m_center.GetY());
 
-  return m_atoms[accessLoc.GetX() + accessLoc.GetY() * m_tileWidth];
+  return *m_tile.GetAtom(accessLoc);
 
 }
 
 template <class T, u32 R>
-void EventWindow<T,R>::SwapAtoms(Point<int>& locA, Point<int>& locB)
+void EventWindow<T,R>::SwapAtoms(const SPoint& locA, const SPoint& locB)
 {
   s32 aIdx = ManhattanDir<R>::get().FromPoint(locA, (TableType)R);
   s32 bIdx = ManhattanDir<R>::get().FromPoint(locB, (TableType)R);
@@ -68,22 +72,20 @@ void EventWindow<T,R>::SwapAtoms(Point<int>& locA, Point<int>& locB)
   if (aIdx < 0) FAIL(ILLEGAL_ARGUMENT);
   if (bIdx < 0) FAIL(ILLEGAL_ARGUMENT);
 
-  Point<int> arrLocA(locA);
-  Point<int> arrLocB(locB);
+  SPoint arrLocA(locA);
+  SPoint arrLocB(locB);
 
   arrLocA.Add(m_center.GetX(), m_center.GetY());
   arrLocB.Add(m_center.GetX(), m_center.GetY());
 
-  T atom = m_atoms[arrLocA.GetX() + arrLocA.GetY() * m_tileWidth];
-
-  m_atoms[arrLocA.GetX() + arrLocA.GetY() * m_tileWidth] =
-    m_atoms[arrLocB.GetX() + arrLocB.GetY() * m_tileWidth];
-
-  m_atoms[arrLocB.GetX() + arrLocB.GetY() * m_tileWidth] = atom;
+  T temp = *m_tile.GetAtom(arrLocA);
+  *m_tile.GetAtom(arrLocA) = *m_tile.GetAtom(arrLocB);
+  *m_tile.GetAtom(arrLocB) = temp;
 }
 
 template <class T, u32 R>
-void EventWindow<T,R>::FillCenter(Point<int>& out)
+void EventWindow<T,R>::FillCenter(SPoint& out)
 {
   out.Set(m_center.GetX(), m_center.GetY());
 }
+} /* namespace MFM */

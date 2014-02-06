@@ -1,6 +1,8 @@
 #ifndef P1ATOM_TEST_H      /* -*- C++ -*- */
 #define P1ATOM_TEST_H
 
+namespace MFM {
+
 class P1AtomTest
 { 
 public:
@@ -24,5 +26,6 @@ public:
 
   static void Test_p1atomRemoveSB();
 };
-
+} /* namespace MFM */
 #endif /*P1ATOM_TEST_H*/
+

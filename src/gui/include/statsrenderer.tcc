@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+namespace MFM {
+
 template <class T, u32 R>
 void StatsRenderer::RenderGridStatistics(Grid<T,R>& grid)
 { 
@@ -44,3 +46,5 @@ void StatsRenderer::RenderGridStatistics(Grid<T,R>& grid)
 		    Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
   
 }
+} /* namespace MFM */
+

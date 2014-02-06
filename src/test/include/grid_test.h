@@ -6,10 +6,13 @@
 #include "eucliddir.h"
 #include "manhattandir.h"
 
+namespace MFM {
+
 class GridTest
 {
 public:
   static void Test_gridPlaceAtom();
 };
-
+} /* namespace MFM */
 #endif /*GRID_TEST_H*/
+

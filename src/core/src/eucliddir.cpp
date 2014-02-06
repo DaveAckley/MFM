@@ -1,7 +1,9 @@
 #include "eucliddir.h"
 #include "fail.h"
 
-void EuDir::FillEuclidDir(Point<int>& pt, EuclidDir dir)
+
+namespace MFM {
+void EuDir::FillEuclidDir(SPoint& pt, EuclidDir dir)
 {
   switch(dir)
   {
@@ -17,10 +19,12 @@ void EuDir::FillEuclidDir(Point<int>& pt, EuclidDir dir)
     pt.Set(1,   1); break;
   case EUDIR_SOUTHWEST:
     pt.Set(-1,  1); break;
+  default:
+    FAIL(ILLEGAL_ARGUMENT);
   }
 }
 
-EuclidDir EuDir::FromOffset(Point<int>& pt)
+EuclidDir EuDir::FromOffset(SPoint& pt)
 {
   switch(pt.GetX())
   {
@@ -51,3 +55,5 @@ EuclidDir EuDir::FromOffset(Point<int>& pt)
 
   FAIL(ILLEGAL_ARGUMENT);
 }
+} /* namespace MFM */
+

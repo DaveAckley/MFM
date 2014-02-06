@@ -4,10 +4,7 @@
 #include "manhattandir.h"
 #include "p1atom.h"
 
-#define RAND_ONEIN(x) !(rand() % (x))
-#define RAND_BETWEEN(x, y) ((x) + (rand() % (y)))
-#define RAND_MOD(x) (rand() % (x))
-#define RAND_BOOL (rand() & 1)
+namespace MFM {
 
 template <class T,u32 R>
 void ElementTable<T,R>::NothingBehavior(EventWindow<T,R>& window,
@@ -16,8 +13,8 @@ void ElementTable<T,R>::NothingBehavior(EventWindow<T,R>& window,
   return;
 }
 
-#define DREG_RES_ODDS 40
-#define DREG_DEL_ODDS 20
+#define DREG_RES_ODDS 20
+#define DREG_DEL_ODDS 10
 #define DREG_DRG_ODDS 1000
 #define DREG_DDR_ODDS 10 /*Deleting DREGs*/
 
@@ -27,7 +24,9 @@ template <class T,u32 R>
 void ElementTable<T,R>::DRegBehavior(EventWindow<T,R>& window,
 				     StateFunction f, s32* atomCounts)
 {
-  Point<int> dir;
+  Random & random = window.GetRandom();
+
+  SPoint dir;
   ManhattanDir<R>::get().FillRandomSingleDir(dir);
 
   u32 state = f(&window.GetRelativeAtom(dir));
@@ -36,23 +35,23 @@ void ElementTable<T,R>::DRegBehavior(EventWindow<T,R>& window,
 
   if(state == ELEMENT_NOTHING)
   {
-    if(RAND_ONEIN(DREG_DRG_ODDS))
+    if(random.OneIn(DREG_DRG_ODDS))
     {
       newType = ELEMENT_DREG;
     }
-    else if(RAND_ONEIN(DREG_RES_ODDS))
+    else if(random.OneIn(DREG_RES_ODDS))
     {
       newType = ELEMENT_RES;
     }
   }
   else if(state == ELEMENT_DREG)
   {
-    if(RAND_ONEIN(DREG_DDR_ODDS))
+    if(random.OneIn(DREG_DDR_ODDS))
     {
       newType = ELEMENT_NOTHING;
     }
   }
-  else if(RAND_ONEIN(DREG_DEL_ODDS))
+  else if(random.OneIn(DREG_DEL_ODDS))
   {
     newType = ELEMENT_NOTHING;
   }
@@ -153,10 +152,12 @@ u32 ElementTable<T,R>::FoundIndicesCount(s32* indices)
   return count;
 }
 
-template <class T ,u32 R>
+template <class T,u32 R>
 void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
 				       StateFunction f, s32* atomCounts)
 {
+  Random & random = window.GetRandom();
+
   Point<s32> repPt;
   ManhattanDir<R>::get().FillRandomSingleDir(repPt);
 
@@ -183,20 +184,20 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
   u32 swCount = FoundIndicesCount(swEmpties);
   u32 nwCount = FoundIndicesCount(nwEmpties);
 
-  bool movingUp = RAND_BOOL;
+  bool movingUp = random.CreateBool();
   
   Point<s32> srcPt, dstPt;
   for(s32 i = 0; i < 2; i++)
   {
     if(movingUp && seCount && nwCount)
     {
-      ManhattanDir<R>::get().FillFromBits(srcPt, seDatas[RAND_MOD(seCount)], MANHATTAN_TABLE_EVENT);
-      ManhattanDir<R>::get().FillFromBits(dstPt, nwEmpties[RAND_MOD(nwCount)], MANHATTAN_TABLE_EVENT);
+      ManhattanDir<R>::get().FillFromBits(srcPt, seDatas[random.Create(seCount)], MANHATTAN_TABLE_EVENT);
+      ManhattanDir<R>::get().FillFromBits(dstPt, nwEmpties[random.Create(nwCount)], MANHATTAN_TABLE_EVENT);
     }
     else if(!movingUp && neCount && swCount)
     {
-      ManhattanDir<R>::get().FillFromBits(srcPt, neDatas[RAND_MOD(neCount)], MANHATTAN_TABLE_EVENT);
-      ManhattanDir<R>::get().FillFromBits(dstPt, swEmpties[RAND_MOD(swCount)], MANHATTAN_TABLE_EVENT);
+      ManhattanDir<R>::get().FillFromBits(srcPt, neDatas[random.Create(neCount)], MANHATTAN_TABLE_EVENT);
+      ManhattanDir<R>::get().FillFromBits(dstPt, swEmpties[random.Create(swCount)], MANHATTAN_TABLE_EVENT);
     }
     else
     {
@@ -226,18 +227,20 @@ template <class T, u32 R>
 void ElementTable<T,R>::EmitterBehavior(EventWindow<T,R>& window,
 					StateFunction f, s32* atomCounts)
 {
+  Random & random = window.GetRandom();
+
   ReproduceVertically(window, f, ELEMENT_EMITTER, atomCounts);
 
   /* Create some data */
-  Point<int> repPt;
+  SPoint repPt;
   ManhattanDir<R>::get().FillRandomSingleDir(repPt);
 
-  if(RAND_ONEIN(DATA_CREATE_ODDS))
+  if(random.OneIn(DATA_CREATE_ODDS))
   {
     if(f(&window.GetRelativeAtom(repPt)) == ELEMENT_NOTHING)
     {
       T atom = T(ELEMENT_DATA);
-      atom.WriteLowerBits(RAND_BETWEEN(DATA_MINVAL, DATA_MAXVAL));
+      atom.WriteLowerBits(random.Between(DATA_MINVAL, DATA_MAXVAL));
       window.SetRelativeAtom(repPt, atom, f, atomCounts);
     }
   }
@@ -248,9 +251,11 @@ void ElementTable<T,R>::ReproduceVertically(EventWindow<T,R>& window,
 					    StateFunction f,
 					    ElementType type, s32* atomCounts)
 {
+  Random & random = window.GetRandom();
+
   u32 cval = window.GetCenterAtom().ReadLowerBits();
-  bool down = RAND_BOOL;
-  Point<int> repPt = Point<int>(0, down ? R : -R);
+  bool down = random.CreateBool();
+  SPoint repPt(0, down ? R/2 : -(R/2));
   if(f(&window.GetRelativeAtom(repPt)) == ELEMENT_NOTHING)
   {
     window.SetRelativeAtom(repPt, T(type), f, atomCounts);
@@ -272,7 +277,7 @@ void ElementTable<T,R>::ConsumerBehavior(EventWindow<T,R>& window,
   {
     u32 val = window.GetRelativeAtom(consPt).ReadLowerBits();
     u32 bnum = window.GetCenterAtom().ReadLowerBits();
-    printf("[%3d]Export!: %d\n", bnum, val);
+    printf("[%3d]Export!: %d sum %d\n", bnum, val, 3*bnum+val); // something sort of constant at equil.?
     window.SetRelativeAtom(consPt, T(ELEMENT_NOTHING), f, atomCounts);
   }
 }
@@ -303,3 +308,5 @@ bool ElementTable<T,R>::Diffusable(ElementType type)
     return true;
   }
 }
+
+} /* namespace MFM */

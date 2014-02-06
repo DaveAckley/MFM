@@ -4,14 +4,20 @@
 #include "itype.h"
 #include "tile.h"
 #include "elementtable.h"
+#include "random.h"
+
+namespace MFM {
 
 template <class T,u32 R>
 class Grid
 {
 private:
+  Random m_random;
+  Random& GetRandom() { return m_random; }
+
   u32 m_width, m_height;
 
-  Point<int> m_lastEventTile;
+  SPoint m_lastEventTile;
   
   Tile<T,R>* m_tiles;
 
@@ -22,22 +28,29 @@ private:
   inline u32 GetPosition(u32 x, u32 y) 
   { return x + y * m_width; }
   
-  inline Tile<T,R> & GetTile(const Point<u32>& pt)
-  {return m_tiles[GetPosition(pt.GetX(), pt.GetY())];}
-
-  inline Tile<T,R> & GetTile(u32 x, u32 y) 
-  { return m_tiles[GetPosition(x, y)]; }
-
-  inline const Tile<T,R> & GetTile(u32 x, u32 y) const 
-  { return m_tiles[GetPosition(x, y)]; }
-
 public:
 
   friend class GridRenderer;
 
   Grid(int width, int height, ElementTable<T,R>* elementTable);
 
+  void SetSeed(u32 seed); 
+
   ~Grid();
+
+  /**
+   * Return true iff tileInGrid is a legal tile coordinate in this
+   * grid.  If this returns false, GetTile(tileInGrid) is unsafe.
+   */
+  bool IsLegalTileIndex(const SPoint & tileInGrid) const;
+
+  /**
+   * Find the grid coordinate of the 'owning tile' (i.e., ignoring
+   * caches) for the give siteInGrid.  Return false if there isn't
+   * one, otherwise set tileInGrid and siteInTile appropriately and
+   * return true.
+   */
+  bool MapGridToTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const;
   
   void SetStateFunc(u32 (*stateFunc)(T* atom));
 
@@ -45,25 +58,35 @@ public:
 
   u32 GetWidth();
 
-  void PlaceAtom(T& atom, Point<int>& location);
+  void PlaceAtom(T& atom, const SPoint& location);
 
-  T* GetAtom(Point<int>& location);
+  T* GetAtom(SPoint& location);
 
   void Expand(int extraW, int extraH);
 
   void Resize(int newWidth, int newHeight);
 
-  void FillLastEventTile(Point<int>& out);
+  void FillLastEventTile(SPoint& out);
 
   void TriggerEvent();
   
-  Tile<T,R>& GetTile(Point<int> location);
-  
-  Tile<T,R>& GetTile(int x, int y);
+  inline Tile<T,R> & GetTile(const SPoint& pt)
+  {return GetTile(pt.GetX(), pt.GetY());}
+
+  inline const Tile<T,R> & GetTile(const SPoint& pt) const
+  {return GetTile(pt.GetX(), pt.GetY());}
+
+  inline Tile<T,R> & GetTile(u32 x, u32 y) 
+  { return m_tiles[GetPosition(x, y)]; }
+
+  inline const Tile<T,R> & GetTile(u32 x, u32 y) const 
+  { return m_tiles[GetPosition(x, y)]; }
 
   u32 GetAtomCount(ElementType atomType);
 };
+} /* namespace MFM */
 
 #include "grid.tcc"
 
 #endif /*GRID_H*/
+

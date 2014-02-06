@@ -6,6 +6,8 @@
 #include "SDL/SDL_ttf.h"
 #include "tile.h"
 
+namespace MFM {
+
 class Drawing
 {
 public:
@@ -55,5 +57,7 @@ public:
 		       Point<u32> size, u32 color);
 		       
 };
+} /* namespace MFM */
 
 #endif /*DRAWING_H*/
+

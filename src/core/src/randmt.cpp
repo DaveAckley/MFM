@@ -62,7 +62,9 @@
 
 #include "randmt.h"
 
-using namespace std;
+//using namespace std;
+
+namespace MFM {
 
 //
 // uint32 must be an unsigned integer type capable of holding at least 32
@@ -175,7 +177,7 @@ uint32 RandMT::reloadMT(void) {
   s1 ^= (s1 << 15) & 0xEFC60000U;
   return(s1 ^ (s1 >> 18));
 }
-
+} /* namespace MFM */
 
 #if 0
 // A simple test
@@ -193,3 +195,4 @@ int main(void) {
   return(EXIT_SUCCESS);
 }
 #endif
+

@@ -5,6 +5,8 @@
 #include <stdio.h>  /* for FILE */
 #include <climits>  /* for CHAR_BIT */
 
+namespace MFM {
+
 /* 
  * Try to make bitLength a multiple of BITS_PER_UNIT (currently
  * 32). Otherwise there will be some wasted space.
@@ -82,6 +84,7 @@ public:
   void Print(FILE* ostream);
 			   
 };
+} /* namespace MFM */
 
 #include "bitfield.tcc"
 

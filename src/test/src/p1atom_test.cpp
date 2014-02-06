@@ -5,6 +5,8 @@
 #include "manhattandir.h"
 
 
+namespace MFM {
+
 
 void P1AtomTest::Test_p1atomState()
 {
@@ -20,7 +22,7 @@ void P1AtomTest::Test_p1atomState()
 void P1AtomTest::Test_p1atomLBCount()
 {
   P1Atom atom;
-  Point<int> offset(1, -1);
+  SPoint offset(1, -1);
 
   atom.AddLongBond(offset);
 
@@ -30,7 +32,7 @@ void P1AtomTest::Test_p1atomLBCount()
 void P1AtomTest::Test_p1atomSBCount()
 {
   P1Atom atom;
-  Point<int> offset(1, -1);
+  SPoint offset(1, -1);
 
   atom.AddShortBond(offset);
   atom.AddShortBond(offset);
@@ -44,7 +46,7 @@ void P1AtomTest::Test_p1atomReadBody()
   u32 blocks[2];
   P1Atom atom;
 
-  Point<int> points[8];
+  SPoint points[8];
   u8 pvals[8];
   
   points[0].Set(0, 1);
@@ -92,7 +94,7 @@ void P1AtomTest::Test_p1atomReadBody()
 
 void P1AtomTest::Test_p1atomAddLB()
 {
-  Point<int> lbonds[4];
+  SPoint lbonds[4];
   P1Atom atom;
   
   lbonds[0].Set(0, 1);
@@ -110,8 +112,8 @@ void P1AtomTest::Test_p1atomAddLB()
 
 void P1AtomTest::Test_p1atomAddSB()
 {
-  Point<int> sbond(1, 1);
-  Point<int> out;
+  SPoint sbond(1, 1);
+  SPoint out;
   P1Atom atom(32);
 
   for(int i = 0; i < 10; i++)
@@ -130,8 +132,8 @@ void P1AtomTest::Test_p1atomAddSB()
 
 void P1AtomTest::Test_p1atomRemoveLB()
 {
-  Point<int> lbond1(2, 2);
-  Point<int> lbond2(3, 1);
+  SPoint lbond1(2, 2);
+  SPoint lbond2(3, 1);
   P1Atom atom(12);
 
   atom.AddLongBond(lbond1);
@@ -155,8 +157,8 @@ void P1AtomTest::Test_p1atomRemoveLB()
 
 void P1AtomTest::Test_p1atomRemoveSB()
 {
-  Point<int> sb1(0, 2);
-  Point<int> sb2(1, -1);
+  SPoint sb1(0, 2);
+  SPoint sb2(1, -1);
   P1Atom atom(9);
 
   atom.AddShortBond(sb1);
@@ -197,3 +199,5 @@ void P1AtomTest::Test_p1atomRemoveSB()
   assert((bits[0] & 0xf) == 0);
   assert(bits[1] == 0);
 }
+} /* namespace MFM */
+

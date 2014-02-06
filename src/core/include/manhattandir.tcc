@@ -2,6 +2,8 @@
 #include "manhattandir.h"
 #include "fail.h"
 
+namespace MFM {
+
 template<u32 R>
 ManhattanDir<R>::ManhattanDir()
 {
@@ -18,7 +20,7 @@ ManhattanDir<R>::ManhattanDir()
       m_pointToIndex[x][y] = -1;
 
   u32 next = 0;
-  const Point<int> center(R,R);
+  const SPoint center(R,R);
   
   // For every length from small to large
   for (u32 length = 0; length<=R; ++length) {
@@ -104,7 +106,7 @@ s32 ManhattanDir<R>::FromPoint(const Point<s32>& offset, TableType type)
 }
 
 template<u32 R>
-void ManhattanDir<R>::FillFromBits(Point<int>& pt,
+void ManhattanDir<R>::FillFromBits(SPoint& pt,
 				u8 bits, TableType type)
 {
   if (bits >= ARRAY_LENGTH)
@@ -117,7 +119,7 @@ void ManhattanDir<R>::FillFromBits(Point<int>& pt,
 }
 
 template<u32 R>
-void ManhattanDir<R>::FillVNNeighbors(Point<int>* pts)
+void ManhattanDir<R>::FillVNNeighbors(SPoint* pts)
 {
   pts[0].Set(-1, 0);
   pts[1].Set(0, -1);
@@ -126,7 +128,7 @@ void ManhattanDir<R>::FillVNNeighbors(Point<int>* pts)
 }
 
 template<u32 R>
-void ManhattanDir<R>::FillRandomSingleDir(Point<int>& pt)
+void ManhattanDir<R>::FillRandomSingleDir(SPoint& pt)
 {
   switch(rand() & 3)
   {
@@ -137,3 +139,5 @@ void ManhattanDir<R>::FillRandomSingleDir(Point<int>& pt)
   default: return;
   }
 }
+} /* namespace MFM */
+

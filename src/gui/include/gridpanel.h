@@ -4,6 +4,8 @@
 #include "itype.h"
 #include "gridrenderer.h"
 
+namespace MFM {
+
 class GridPanel : public Panel
 {
 private:
@@ -32,5 +34,6 @@ public:
   {
   }
 };
-
+} /* namespace MFM */
 #endif /* GRIDPANEL_H */
+

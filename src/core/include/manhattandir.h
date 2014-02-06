@@ -31,6 +31,8 @@
 #include "itype.h"
 #include "point.h"
 
+namespace MFM {
+
 /**
  * Compute the number of sites within Manhattan distance 'radius' of a
  * given center site.  WARNING: Macro expands argument 'radius' twice!
@@ -67,7 +69,7 @@ public:
    */
   static ManhattanDir<R> & get();
 
-  void FillRandomSingleDir(Point<int>& pt);
+  void FillRandomSingleDir(SPoint& pt);
 
   u32 GetTableSize(TableType type);
 
@@ -84,10 +86,10 @@ public:
    * If this is a short bond (i.e. a 4-bit rep),
    * sbond needs to be true.
    */
-  void FillFromBits(Point<int>& pt, u8 bits,
-			   TableType type);
+  void FillFromBits(SPoint& pt, u8 bits,
+                    TableType type);
 
-  void FillVNNeighbors(Point<int>* pts);
+  void FillVNNeighbors(SPoint* pts);
 
   Point<s32>& GetSEWindowPoint(u32 index)
   { return m_southeastSubWindow[index]; }
@@ -111,7 +113,9 @@ private:
   u32 GetBondSize(TableType type);
   
 };
+} /* namespace MFM */
 
 #include "manhattandir.tcc"
 
 #endif /*MANHATTANDIR_H*/
+

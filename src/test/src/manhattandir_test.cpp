@@ -1,15 +1,17 @@
 #include "assert.h"
 #include "manhattandir_test.h"
 
+namespace MFM {
+
 void ManhattanDirTest::Test_manhattandirConversion()
 {
-  Point<int> longPt(2, 2);
-  Point<int> shortPt(1, -1);
+  SPoint longPt(2, 2);
+  SPoint shortPt(1, -1);
   
   u8 longBits  = ManhattanDir<4>::get().FromPoint(longPt, MANHATTAN_TABLE_LONG);
   u8 shortBits = ManhattanDir<4>::get().FromPoint(shortPt, MANHATTAN_TABLE_SHORT);
 
-  Point<int> out(0, 0);
+  SPoint out(0, 0);
 
   ManhattanDir<4>::get().FillFromBits(out, longBits, MANHATTAN_TABLE_LONG);
 
@@ -21,3 +23,5 @@ void ManhattanDirTest::Test_manhattandirConversion()
   assert(out.GetX() == 1);
   assert(out.GetY() == -1);
 }
+} /* namespace MFM */
+

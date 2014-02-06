@@ -11,14 +11,14 @@ extern "C" {
     "max failure code"
   };
 
-  const char * FailCodeReason(int failCode) {
+  const char * MFMFailCodeReason(int failCode) {
     if (failCode < 0 || failCode >= (int) (sizeof(FailStrings)/sizeof(FailStrings[0])))
       return "[failCode out of range]";
     return FailStrings[failCode];
   }
 
-  void FailHere(const char * fname, const int lineno, int code) {
-    fprintf(stderr,"%s:%d: FAILED: %s\n", fname, lineno, FailCodeReason(code));
+  void MFMFailHere(const char * fname, const int lineno, int code) {
+    fprintf(stderr,"%s:%d: FAILED: %s\n", fname, lineno, MFMFailCodeReason(code));
     abort();
   }
 }
