@@ -5,6 +5,7 @@
 
 void GridTest::Test_gridPlaceAtom()
 {
+  
   P1Atom atom(23);
   
   ElementTableP1Atom table(&P1Atom::StateFunc);
@@ -18,4 +19,5 @@ void GridTest::Test_gridPlaceAtom()
   P1Atom* out = grid.GetAtom(gloc);
 
   assert(out->GetState() == atom.GetState());
+  
 }

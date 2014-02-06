@@ -41,14 +41,19 @@ private:
 
   BehaviorFunction m_funcmap[0xff];
 
+  static void FlipSEPointToCorner(Point<s32>& pt, EuclidDir corner);
+
   /* Fills pt with the coordinates of a randomly selected          */
   /* Atom with the specified type. Returns false if there is none. */
   static bool FillSubWindowContaining(Point<s32>& pt, EventWindow<T,R>& window,
 				      ElementType type, StateFunction f, 
 				      EuclidDir corner);
 
-  static void FillEastSubwindowIndices(s32* indices, EventWindow<T,R>& window,
-				       StateFunction f, ElementType type);
+
+  static void FillSubwindowIndices(s32* indices, EventWindow<T,R>& window,StateFunction f,
+				   ElementType type, EuclidDir corner);
+
+  static u32 FoundIndicesCount(s32* indices);
 
   static void NothingBehavior(EventWindow<T,R>& w, StateFunction f, s32* atomCounts);
 

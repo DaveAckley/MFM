@@ -97,30 +97,63 @@ bool ElementTable<T,R>::FillSubWindowContaining(Point<s32>& pt, EventWindow<T,R>
   return false;
 }
 
-/* Fills 'indices' with the Southeast Sub-window indices of all     */
-/* relative atoms which have type 'type'. Also looks at the         */
-/* NorthEast Sub-window, but fills with indices with some bits set. */
-/* This will break on super large event window sizes (i.e. > 255).  */
-
-/* Values in 'indices' reflect:                                     */
-/* 0x 00 00 0a bb                                                   */
-/* a = 0 => SouthEast                                               */
-/* a = 0 => NorthEast                                               */
-/* b = SouthEast Sub-window index                                   */
 template <class T, u32 R>
-void ElementTable<T,R>::FillEastSubwindowIndices(s32* indices,
-						 EventWindow<T,R>& window,
-						 StateFunction f,
-						 ElementType type)
+void ElementTable<T,R>::FlipSEPointToCorner(Point<s32>& pt, EuclidDir corner)
 {
-  /* (R/2)*(R/2) is the size of the sub-window */
-  for(u32 i = 0; i < R / 2; i++)
+  switch(corner)
   {
-    
+  case EUDIR_SOUTHEAST: break;
+  case EUDIR_NORTHEAST: ManhattanDir<R>::get().FlipAxis(pt, false); break;
+  case EUDIR_SOUTHWEST: ManhattanDir<R>::get().FlipAxis(pt, true); break;
+  case EUDIR_NORTHWEST:
+    ManhattanDir<R>::get().FlipAxis(pt, true);
+    ManhattanDir<R>::get().FlipAxis(pt, false);
+    break;
+  default: FAIL(ILLEGAL_ARGUMENT); break;
   }
 }
 
-template <class T,u32 R>
+/* Fills 'indices' with the indices of a Sub-windows of all       */
+/* relative atoms which have type 'type' .                        */
+/* Once all indices are found, a -1 is inserted, like a null      */
+/* terminator.                                                    */
+template <class T, u32 R>
+void ElementTable<T,R>::FillSubwindowIndices(s32* indices,
+					     EventWindow<T,R>& window,
+					     StateFunction f,
+					     ElementType type,
+					     EuclidDir corner)
+{
+  /* As long as R is a power of two,             */
+  /* ((R * R) / 4) is the size of one sub-window. */
+  Point<s32> srcPt;
+  for(u32 i = 0; i < ((R * R) / 4); i++)
+  {
+    srcPt = ManhattanDir<R>::get().GetSEWindowPoint(i);
+
+    FlipSEPointToCorner(srcPt, corner);
+
+    if(f(&window.GetRelativeAtom(srcPt)) == type)
+    {
+      *indices = ManhattanDir<R>::get().FromPoint(srcPt, MANHATTAN_TABLE_EVENT);
+      indices++;
+    }
+  }
+  *indices = -1;
+}
+
+template <class T ,u32 R>
+u32 ElementTable<T,R>::FoundIndicesCount(s32* indices)
+{
+  u32 count = 0;
+  while(indices[count] != -1)
+  {
+    count++;
+  }
+  return count;
+}
+
+template <class T ,u32 R>
 void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
 				       StateFunction f, s32* atomCounts)
 {
@@ -132,52 +165,55 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
     window.SetRelativeAtom(repPt, T(ELEMENT_SORTER), f, atomCounts);
   }
 
-  EuclidDir firstEdge = RAND_BOOL ? EUDIR_SOUTHEAST : EUDIR_NORTHEAST;
-  EuclidDir firstOpposite = firstEdge == EUDIR_SOUTHEAST ? EUDIR_NORTHWEST :
-    EUDIR_SOUTHWEST;
-  EuclidDir lastEdge = firstEdge == EUDIR_SOUTHEAST ? EUDIR_NORTHEAST :
-    EUDIR_SOUTHEAST;
-  EuclidDir lastOpposite = firstEdge == EUDIR_SOUTHEAST ? EUDIR_SOUTHWEST :
-    EUDIR_NORTHWEST;
+  /* Add one for the terminator       v    */
+  const u32 subSize = ((R * R) / 4) + 1;
 
-  Point<s32> srcPt;
-  Point<s32> dstPt;
-  for(u32 i = 0; i < R; i++)
+  s32 seDatas[subSize];
+  s32 neDatas[subSize];
+  s32 nwEmpties[subSize];
+  s32 swEmpties[subSize];
+
+  FillSubwindowIndices(seDatas, window, f, ELEMENT_DATA, EUDIR_SOUTHEAST);
+  FillSubwindowIndices(neDatas, window, f, ELEMENT_DATA, EUDIR_NORTHEAST);
+  FillSubwindowIndices(swEmpties, window, f, ELEMENT_NOTHING, EUDIR_SOUTHWEST);
+  FillSubwindowIndices(nwEmpties, window, f, ELEMENT_NOTHING, EUDIR_NORTHWEST);
+
+  u32 seCount = FoundIndicesCount(seDatas);
+  u32 neCount = FoundIndicesCount(neDatas);
+  u32 swCount = FoundIndicesCount(swEmpties);
+  u32 nwCount = FoundIndicesCount(nwEmpties);
+
+  bool movingUp = RAND_BOOL;
+  
+  Point<s32> srcPt, dstPt;
+  for(s32 i = 0; i < 2; i++)
   {
-    if(FillSubWindowContaining(srcPt, window, ELEMENT_DATA, f,
-			       firstEdge) &&
-       FillSubWindowContaining(dstPt, window, ELEMENT_NOTHING, f,
-			       firstOpposite))
+    if(movingUp && seCount && nwCount)
     {
-      u32 cmp =  window.GetRelativeAtom(srcPt).ReadLowerBits() >
-	window.GetCenterAtom().ReadLowerBits();
-
-      if((cmp && firstEdge == EUDIR_SOUTHEAST) ||
-	 ((!cmp) && firstEdge == EUDIR_NORTHEAST))
-      {
-	window.GetCenterAtom().WriteLowerBits(window.GetRelativeAtom(srcPt).ReadLowerBits());
-	window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt), f, atomCounts);
-	window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING), f, atomCounts);
-
-	/* Let's try only moving one atom at a time for now. */
-	
-      }
+      ManhattanDir<R>::get().FillFromBits(srcPt, seDatas[RAND_MOD(seCount)], MANHATTAN_TABLE_EVENT);
+      ManhattanDir<R>::get().FillFromBits(dstPt, nwEmpties[RAND_MOD(nwCount)], MANHATTAN_TABLE_EVENT);
     }
-    if(FillSubWindowContaining(srcPt, window, ELEMENT_DATA, f,
-			       lastEdge) &&
-       FillSubWindowContaining(dstPt, window, ELEMENT_NOTHING, f,
-			       lastOpposite))
+    else if(!movingUp && neCount && swCount)
     {
-      u32 cmp =  window.GetRelativeAtom(srcPt).ReadLowerBits() <
-	window.GetCenterAtom().ReadLowerBits();
+      ManhattanDir<R>::get().FillFromBits(srcPt, neDatas[RAND_MOD(neCount)], MANHATTAN_TABLE_EVENT);
+      ManhattanDir<R>::get().FillFromBits(dstPt, swEmpties[RAND_MOD(swCount)], MANHATTAN_TABLE_EVENT);
+    }
+    else
+    {
+      movingUp = !movingUp;
+      continue;
+    }
 
-      if((cmp && firstEdge == EUDIR_SOUTHEAST) ||
-	 ((!cmp) && firstEdge == EUDIR_NORTHEAST))
-      {
-	window.GetCenterAtom().WriteLowerBits(window.GetRelativeAtom(srcPt).ReadLowerBits());
-	window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt), f, atomCounts);
-	window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING), f, atomCounts);
-      }
+    u32 cmp = ((movingUp && (window.GetRelativeAtom(srcPt).ReadLowerBits() >
+			     window.GetCenterAtom().ReadLowerBits())) ||
+	       (!movingUp && (window.GetRelativeAtom(srcPt).ReadLowerBits() <
+			      window.GetCenterAtom().ReadLowerBits())));
+    if(cmp)
+    {
+      window.GetCenterAtom().WriteLowerBits(window.GetRelativeAtom(srcPt).ReadLowerBits());
+      window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt), f, atomCounts);
+      window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING), f, atomCounts);
+      return;
     }
   }
 }

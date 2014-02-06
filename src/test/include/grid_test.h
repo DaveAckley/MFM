@@ -3,6 +3,9 @@
 
 #include "test_common.h"
 
+#include "eucliddir.h"
+#include "manhattandir.h"
+
 class GridTest
 {
 public:
