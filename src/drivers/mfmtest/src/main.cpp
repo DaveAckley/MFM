@@ -1,8 +1,10 @@
 #include "main.h"
 
+using namespace MFM;
+
 int main(int argc, char** argv)
 {
-  MFM::RandomTest::Test_RunTests();
+  RandomTest::Test_RunTests();
 
   PointTest::Test_pointAdd();
   PointTest::Test_pointMultiply();

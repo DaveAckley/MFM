@@ -2,6 +2,8 @@
 #include "bitfield_test.h"
 #include "itype.h"
 
+namespace MFM {
+
 static BitField<256> bits;
 
 BitField<256>* BitFieldTest::setup()
@@ -80,3 +82,5 @@ void BitFieldTest::Test_bitfieldRemove()
   assert(bits->Read(32 , 32) == 0x12345678);
   assert(bits->Read(224, 32) == 0x00000000);
 }
+} /* namespace MFM */
+

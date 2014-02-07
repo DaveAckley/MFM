@@ -1,6 +1,7 @@
 /* -*- C++ -*- */
 #include "fail.h"  /* For FAIL */
 
+namespace MFM {
 template <int bitLength>
 BitField<bitLength>::BitField()
 {
@@ -164,3 +165,5 @@ void BitField<bitLength>::Remove(int startIdx, int length)
     WriteBit(i, 0);
   }
 }
+
+} /* namespace MFM */

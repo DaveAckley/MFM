@@ -5,6 +5,8 @@
 #include "point.h"
 #include "SDL/SDL.h"
 
+namespace MFM {
+
 class Panel
 {
 protected:
@@ -40,5 +42,6 @@ public:
   void Render(void* rendObj);
 
 };
-
+} /* namespace MFM */
 #endif /*PANEL_H*/
+

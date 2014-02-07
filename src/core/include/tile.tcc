@@ -1,7 +1,14 @@
 #include "manhattandir.h"      /* -*- C++ -*- */
 
+namespace MFM {
+
 template <class T, u32 R>
-Tile<T,R>::Tile()
+static u32 UninitializedStateFunc(T* atom) {
+  FAIL(UNINITIALIZED_VALUE);
+}
+
+template <class T, u32 R>
+Tile<T,R>::Tile() : m_executingWindow(*this), m_stateFunc(&UninitializedStateFunc<T,R>)
 {
   m_atomCount[ELEMENT_NOTHING] = TILE_SIZE;
   
@@ -12,7 +19,7 @@ Tile<T,R>::Tile()
 }
 
 template <class T, u32 R>
-MFM::Random& Tile<T,R>::GetRandom()
+Random& Tile<T,R>::GetRandom()
 {
   return m_random;
 }
@@ -24,21 +31,30 @@ void Tile<T,R>::SetNeighbors(u8 neighbors)
 }
 
 template <class T,u32 R>
-T* Tile<T,R>::GetAtom(Point<int>* pt)
+T* Tile<T,R>::GetAtoms()
 {
-  return &m_atoms[pt->GetX() + 
-		  pt->GetY() * TILE_WIDTH];
+  return m_atoms;
 }
 
 template <class T,u32 R>
-T* Tile<T,R>::GetAtom(int x, int y)
+T* Tile<T,R>::GetAtom(const SPoint& pt)
 {
-  return &m_atoms[x + y * TILE_WIDTH];
+  return GetAtom(pt.GetX(), pt.GetY());
 }
 
 template <class T,u32 R>
-T* Tile<T,R>::GetAtom(int i)
+T* Tile<T,R>::GetAtom(s32 x, s32 y)
 {
+  if (x < 0 || y < 0 || x >= TILE_WIDTH || y >= TILE_WIDTH) 
+    FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
+  return GetAtom(x + y * TILE_WIDTH);
+}
+
+template <class T,u32 R>
+T* Tile<T,R>::GetAtom(s32 i)
+{
+  if (i < 0 || i >= TILE_SIZE) 
+    FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
   return &m_atoms[i];
 }
 
@@ -66,7 +82,7 @@ Packet<T>* Tile<T,R>::NextPacket()
 }
 
 template <class T,u32 R>
-void Tile<T,R>::FillLastExecutedAtom(Point<int>& out)
+void Tile<T,R>::FillLastExecutedAtom(SPoint& out)
 {
   out.Set(m_lastExecutedAtom.GetX(),
 	  m_lastExecutedAtom.GetY());
@@ -77,23 +93,23 @@ void Tile<T,R>::CreateRandomWindow()
 {
   /* Make sure not to be created in the cache */
   int maxval = TILE_WIDTH - (EVENT_WINDOW_RADIUS << 1);
-  Point<int> pt(true, maxval, maxval);
+  SPoint pt(GetRandom(), maxval, maxval);
   pt.Add(EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS);
 
-  m_executingWindow = EventWindow<T,R>(pt, m_atoms, TILE_WIDTH,
-				       m_neighborConnections);
+  m_executingWindow.SetCenter(pt);
 }
 
 template <class T,u32 R>
-void Tile<T,R>::CreateWindowAt(Point<int>& pt)
+void Tile<T,R>::CreateWindowAt(const SPoint& pt)
 {
-  m_executingWindow =  EventWindow<T,R>(pt, m_atoms, TILE_WIDTH,
-				       m_neighborConnections);
+  m_executingWindow.SetCenter(pt);
 }
 
 template <class T, u32 R>
-EuclidDir Tile<T,R>::CacheAt(Point<int>& pt)
+EuclidDir Tile<T,R>::CacheAt(SPoint& sp)
 {
+  UPoint pt = makeUnsigned(sp);
+
   if(pt.GetX() < R)
   {
     if(pt.GetY() < R)
@@ -132,9 +148,9 @@ EuclidDir Tile<T,R>::CacheAt(Point<int>& pt)
 }
 
 template <class T,u32 R>
-void Tile<T,R>::PlaceAtom(T& atom, Point<int>& pt)
+void Tile<T,R>::PlaceAtom(T& atom, const SPoint& pt)
 {
-  T* oldAtom = GetAtom(&pt);
+  T* oldAtom = GetAtom(pt);
   u32 type = m_stateFunc(oldAtom);
 
   m_atomCount[type]--;
@@ -148,14 +164,14 @@ void Tile<T,R>::PlaceAtom(T& atom, Point<int>& pt)
 template <class T,u32 R>
 void Tile<T,R>::DiffuseAtom(EventWindow<T,R>& window)
 {
-  Point<int> neighbors[4];
-  Point<int> center;
+  SPoint neighbors[4];
+  SPoint center;
   window.FillCenter(center);
 
   ManhattanDir<R>::get().FillVNNeighbors(neighbors);
   u8 idx = rand() & 3;
 
-  Point<int> current;
+  SPoint current;
 
   for(int i = 0; i < 4; i++)
   {
@@ -178,7 +194,7 @@ void Tile<T,R>::DiffuseAtom(EventWindow<T,R>& window)
     /* It's empty! Move there! */
     if(m_stateFunc(&atom) == 0)
     {
-      Point<int> empty(0, 0);
+      SPoint empty(0, 0);
       window.SwapAtoms(neighbors[idx], empty);
       return;
     }
@@ -186,9 +202,9 @@ void Tile<T,R>::DiffuseAtom(EventWindow<T,R>& window)
 }
 
 template <class T, u32 R>
-void Tile<T, R>::SendAtom(EuclidDir neighbor, Point<int>& atomLoc)
+void Tile<T, R>::SendAtom(EuclidDir neighbor, SPoint& atomLoc)
 {
-  Point<int> remoteLoc(atomLoc);
+  SPoint remoteLoc(atomLoc);
 
   u32 tileDiff = TILE_WIDTH - 2 * R;
     
@@ -214,7 +230,7 @@ void Tile<T, R>::SendAtom(EuclidDir neighbor, Point<int>& atomLoc)
   Packet<T> sendout(PACKET_WRITE);
 
   sendout.SetLocation(remoteLoc);
-  sendout.SetAtom(*GetAtom(&atomLoc));
+  sendout.SetAtom(*GetAtom(atomLoc));
   sendout.SetReceivingNeighbor(neighbor);
 
   m_outgoingPackets.PushPacket(sendout);
@@ -227,7 +243,7 @@ bool Tile<T,R>::IsConnected(EuclidDir dir)
 }
 
 template <class T, u32 R>
-bool Tile<T,R>::IsInCache(Point<int>& pt)
+bool Tile<T,R>::IsInCache(SPoint& pt)
 {
   int upbnd = TILE_WIDTH - R;
   return (u32)pt.GetX() < R || (u32)pt.GetY() < R ||
@@ -242,8 +258,8 @@ bool Tile<T,R>::IsInCache(Point<int>& pt)
 template <class T, u32 R>
 void Tile<T,R>::SendRelevantAtoms()
 {
-  Point<int> localLoc;
-  Point<int> ewCenter;
+  SPoint localLoc;
+  SPoint ewCenter;
 
   s32 r2 = R * 2;
 
@@ -303,7 +319,7 @@ void Tile<T,R>::Execute(ElementTable<T,R>& table)
 #if 1
   CreateRandomWindow();
 #else
-  Point<int> winCenter(R * 2 - 1, R);
+  SPoint winCenter(R * 2 - 1, R);
   CreateWindowAt(winCenter);
 #endif
   
@@ -325,3 +341,4 @@ u32 Tile<T,R>::GetAtomCount(ElementType atomType)
 {
   return m_atomCount[(u32)atomType];
 }
+} /* namespace MFM */

@@ -4,6 +4,8 @@
 #include "panel.h"
 #include "SDL/SDL.h"
 
+namespace MFM {
+
 class PanelStack
 {
 private:
@@ -26,5 +28,6 @@ public:
 
   void Render();
 };
-
+} /* namespace MFM */
 #endif /*PANELSTACK_H*/
+

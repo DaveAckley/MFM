@@ -1,5 +1,7 @@
 #include "main.h"
 
+namespace MFM {
+
 #define FRAMES_PER_SECOND 60.0
 
 #define EVENTS_PER_FRAME 100000
@@ -8,7 +10,7 @@
 #define CAMERA_FAST_SPEED 50
 
 #define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 720
+#define SCREEN_HEIGHT 1024
 
 #define STATS_WINDOW_WIDTH 256
 
@@ -141,11 +143,8 @@ public:
     m_eventsPerFrame = EVENTS_PER_FRAME;
   }
 
-  void Run()
+  void Run(u32 seedOrZero)
   {
-    // Repeatable until forced otherwise
-    srandom(3);
-
     paused = true;
 
     bool running = true;
@@ -156,14 +155,19 @@ public:
 
     SDL_Event event;
     
-    GridP1Atom mainGrid(5, 3, &elements);
+    const u32 GRID_WIDTH = 5;
+    const u32 GRID_HEIGHT = 3;
+    GridP1Atom mainGrid(GRID_WIDTH, GRID_HEIGHT, &elements);
+
+    if (seedOrZero==0) seedOrZero = 1;  /* Avoid superstitious 0 zeed */
+    mainGrid.SetSeed(seedOrZero);  /* Push seeds out to everybody */
 
     grend.SetDestination(screen);
-    grend.SetDimensions(Point<u32>(SCREEN_WIDTH,SCREEN_HEIGHT));
+    grend.SetDimensions(UPoint(SCREEN_WIDTH,SCREEN_HEIGHT));
 
     srend.SetDestination(screen);
-    srend.SetDrawPoint(Point<s32>(1024, 0));
-    srend.SetDimensions(Point<u32>(STATS_WINDOW_WIDTH, SCREEN_HEIGHT));
+    srend.SetDrawPoint(SPoint(1024, 0));
+    srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, SCREEN_HEIGHT));
 
     mainGrid.SetStateFunc(&P1Atom::StateFunc);
 
@@ -180,10 +184,10 @@ public:
 
     u32 realWidth = TILE_WIDTH - EVENT_WINDOW_RADIUS * 2;
 
-    Point<int> aloc(20, 30);
-    Point<int> sloc(20, 10);
-    Point<int> eloc(131 + realWidth, 10);
-    Point<int> cloc(4, 10);
+    SPoint aloc(20, 30);
+    SPoint sloc(20, 10);
+    SPoint eloc(GRID_WIDTH*realWidth-2, 10);
+    SPoint cloc(1, 10);
 
     for(u32 x = 0; x < mainGrid.GetWidth(); x++)
     {
@@ -201,6 +205,7 @@ public:
     
     mainGrid.PlaceAtom(emtr, eloc);
     mainGrid.PlaceAtom(cnsr, cloc);
+    mainGrid.PlaceAtom(cnsr, cloc+SPoint(1,1));  // More consumers than emitters!
 
     s32 lastFrame = SDL_GetTicks();
 
@@ -239,7 +244,6 @@ public:
       lastFrame = SDL_GetTicks();
       
       
-      if(rand() % 3 == 0)
       Update(mainGrid);
       
       Drawing::Clear(screen, 0xff200020);
@@ -256,25 +260,36 @@ public:
     SDL_FreeSurface(screen);
   }
 };
+} /* namespace MFM */
 
 int main(int argc, char** argv)
 {
+  MFM::u32 seed;
+  switch (argc) {
+  case 1:
+    seed = time(NULL);
+    break;
+  case 2:
+    seed = atoi(argv[1]);
+    break;
+  default:
+    fprintf(stderr,"Too many arguments (%d), 0 or 1 needed\n",argc);
+    exit(1);
+  }
+
   SDL_Init(SDL_INIT_EVERYTHING);
   TTF_Init();
 
   SDL_WM_SetCaption("Movable Feast Machine Simulator", NULL);
 
-  srand(time(NULL));
+  printf("[Seed=%d]\n", seed);
 
-  //ManhattanDir<4>::AllocTables(EVENT_WINDOW_RADIUS);
+  MFM::MFMSim sim;
 
-  MFMSim sim;
-
-  sim.Run();
-
-  //ManhattanDir<4>::DeallocTables();
+  sim.Run(seed);
 
   SDL_Quit();
 
   return 0;
 }
+

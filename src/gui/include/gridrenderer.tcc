@@ -1,5 +1,7 @@
 /* -*- C++ -*- */
 
+namespace MFM {
+
 template <class T,u32 R>
 void GridRenderer::RenderGrid(Grid<T,R>& grid)
 {
@@ -16,8 +18,8 @@ void GridRenderer::RenderGrid(Grid<T,R>& grid)
 template <class T,u32 R>
 void GridRenderer::RenderGridSeparated(Grid<T,R>& grid)
 {
-  Point<int> current;
-  Point<int> eventLoc;
+  SPoint current;
+  SPoint eventLoc;
   for(u32 x = 0; x < grid.GetWidth(); x++)
   {
     current.SetX(x * 2);
@@ -52,8 +54,8 @@ void GridRenderer::RenderGridSeparated(Grid<T,R>& grid)
 template <class T,u32 R>
 void GridRenderer::RenderGridClose(Grid<T,R>& grid)
 {
-  Point<int> current;
-  Point<int> eventLoc;
+  SPoint current;
+  SPoint eventLoc;
   for(u32 x = 0; x < grid.GetWidth(); x++)
   {
     current.SetX(x);
@@ -84,3 +86,5 @@ void GridRenderer::RenderGridClose(Grid<T,R>& grid)
     }
   }
 }
+} /* namespace MFM */
+

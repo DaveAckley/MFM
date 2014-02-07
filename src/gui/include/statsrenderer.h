@@ -6,6 +6,8 @@
 #include "itype.h"
 #include "point.h"
 
+namespace MFM {
+
 class StatsRenderer
 {
 private:
@@ -49,7 +51,8 @@ public:
   template<class T, u32 R>
   void RenderGridStatistics(Grid<T,R>& grid);
 };
-
+} /* namespace MFM */
 #include "statsrenderer.tcc"
 
 #endif /*STATSRENDERER_H*/
+

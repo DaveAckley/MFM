@@ -4,6 +4,8 @@
 #include "eucliddir.h"
 #include "itype.h"
 
+namespace MFM {
+
 /* 
  * The basic kinds of packets that
  * will be used between tiles for
@@ -23,7 +25,7 @@ class Packet
 private:
   PacketType m_type;
   
-  Point<int> m_edgeLoc;
+  SPoint m_edgeLoc;
 
   EuclidDir m_toNeighbor;
 
@@ -51,11 +53,13 @@ public:
 
   T& GetAtom();
 
-  void SetLocation(Point<int>& fromPt);
+  void SetLocation(const SPoint& fromPt);
 
-  Point<int>& GetLocation();
+  const SPoint& GetLocation() const;
 };
+} /* namespace MFM */
 
 #include "packet.tcc"
 
 #endif /*PACKET_H*/
+

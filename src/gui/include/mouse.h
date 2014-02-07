@@ -6,6 +6,8 @@
 #include "point.h"
 #include "SDL/SDL.h"
 
+namespace MFM {
+
 class Mouse
 {
 private:
@@ -38,7 +40,7 @@ public:
 
   u16 GetY() { return m_y; }
 
-  void FillPoint(Point<int>* out);
+  void FillPoint(SPoint* out);
 
   /* 
    * This should be called once a
@@ -47,5 +49,6 @@ public:
    */
   void Flip();
 };
-
+} /* namespace MFM */
 #endif /*MOUSE_H*/
+

@@ -3,6 +3,8 @@
 #include "p1atom.h"
 #include "grid_test.h"
 
+namespace MFM {
+
 void GridTest::Test_gridPlaceAtom()
 {
   
@@ -12,7 +14,7 @@ void GridTest::Test_gridPlaceAtom()
 
   GridP1Atom grid(2,2, &table);
 
-  Point<int> gloc(5, 10);
+  SPoint gloc(5, 10);
 
   grid.PlaceAtom(atom, gloc);
 
@@ -21,3 +23,5 @@ void GridTest::Test_gridPlaceAtom()
   assert(out->GetState() == atom.GetState());
   
 }
+} /* namespace MFM */
+

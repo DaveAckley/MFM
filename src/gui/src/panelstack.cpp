@@ -1,5 +1,7 @@
 #include "panelstack.h"
 
+namespace MFM {
+
 PanelStack::PanelStack(SDL_Surface* dest)
 {
   m_panelCount = 0;
@@ -25,3 +27,5 @@ void PanelStack::Render()
     m_panels[i]->Render(m_renderObjs[i]);
   }
 }
+} /* namespace MFM */
+

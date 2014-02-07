@@ -3,6 +3,9 @@
 
 #include "point.h"
 #include "itype.h"
+#include "manhattandir.h"  /* for EVENT_WINDOW_SITES */
+
+namespace MFM {
 
 template <class T,u32 R>
 class Tile;
@@ -14,41 +17,40 @@ private:
 
   typedef u32 (* StateFunction )(T* atom);
 
-  u8 m_neighborConnections;
-  
-  u32 m_atomCount;
+  Tile<T,R> & m_tile;
 
-  u32 m_tileWidth;
-
-  T* m_atoms;
-
-  Point<int> m_center;
+  SPoint m_center;
 
 public:
+  Random & GetRandom() { return m_tile.GetRandom(); }
 
-  EventWindow(Point<int>& center, T* atoms, u32 tileWidth, u8 neighborConnections);
+  EventWindow(Tile<T,R> & tile, u32 tileWidth, u8 neighborConnections);
 
-  EventWindow() { }
+  EventWindow(Tile<T,R> & tile) : m_tile(tile) { }
+
+  void SetCenter(const SPoint& center) ;
 
   ~EventWindow() { }
 
   u32 GetAtomCount()
   {
-    return m_atomCount;
+    return EVENT_WINDOW_SITES(R);
   }
 
   T& GetCenterAtom();
 
-  T& GetRelativeAtom(Point<int>& offset);
+  T& GetRelativeAtom(const SPoint& offset);
 
-  bool SetRelativeAtom(Point<int>& offset, T atom, StateFunction f, s32* atomCounts);
+  bool SetRelativeAtom(const SPoint& offset, T atom, StateFunction f, s32* atomCounts);
 
-  void SwapAtoms(Point<int>& locA, Point<int>& locB);
+  void SwapAtoms(const SPoint& locA, const SPoint& locB);
 
-  void FillCenter(Point<int>& out);
+  void FillCenter(SPoint& out);
   
 };
+} /* namespace MFM */
 
 #include "eventwindow.tcc"
 
 #endif /*EVENTWINDOW_H*/
+

@@ -1,7 +1,9 @@
 #include "p1atom.h"
 #include "manhattandir.h"
 
-u32 P1Atom::AddLongBond(Point<int>& offset)
+namespace MFM {
+
+u32 P1Atom::AddLongBond(const SPoint& offset)
 {
   u32 newID = GetLongBondCount();
   
@@ -15,7 +17,7 @@ u32 P1Atom::AddLongBond(Point<int>& offset)
   return newID;
 }
 
-u32 P1Atom::AddShortBond(Point<int>& offset)
+u32 P1Atom::AddShortBond(const SPoint& offset)
 {
   u32 newID = GetShortBondCount();
 
@@ -30,7 +32,7 @@ u32 P1Atom::AddShortBond(Point<int>& offset)
   return newID;
 }
 
-void P1Atom::FillLongBond(u32 index, Point<int>& pt)
+void P1Atom::FillLongBond(u32 index, SPoint& pt)
 {
   u32 realIdx = P1ATOM_HEADER_SIZE +
     P1ATOM_LONGBOND_SIZE * index;
@@ -40,7 +42,7 @@ void P1Atom::FillLongBond(u32 index, Point<int>& pt)
   ManhattanDir4::get().FillFromBits(pt, bond, MANHATTAN_TABLE_LONG);
 }
 
-void P1Atom::FillShortBond(u32 index, Point<int>& pt)
+void P1Atom::FillShortBond(u32 index, SPoint& pt)
 {
   u32 realIdx = P1ATOM_HEADER_SIZE +
     P1ATOM_LONGBOND_SIZE * GetLongBondCount() +
@@ -87,3 +89,5 @@ P1Atom& P1Atom::operator=(P1Atom rhs)
   }
   return *this;
 }
+} /* namespace MFM */
+

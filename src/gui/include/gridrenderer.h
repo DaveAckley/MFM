@@ -5,6 +5,8 @@
 #include "SDL/SDL.h"
 #include "tilerenderer.h"
 
+namespace MFM {
+
 typedef enum
 {
   EVENTWINDOW_RENDER_OFF     = 0,
@@ -119,7 +121,8 @@ public:
   void RenderGrid(Grid<T,R>& grid);
   
 };
-
+} /* namespace MFM */
 #include "gridrenderer.tcc"
 
 #endif /*GRIDRENDERER_H*/
+

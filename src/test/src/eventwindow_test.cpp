@@ -5,15 +5,19 @@
 #include "p1atom.h"
 #include "point.h"
 
+namespace MFM {
+
 void EventWindowTest::Test_eventwindowConstruction()
 { 
-  P1Atom atoms[64];
-  Point<int> center(4, 4);
-  Point<int> zero(0, 0);
+  TileP1Atom tile;
+  P1Atom * atoms = tile.GetAtoms();
+  Point<s32> center(4, 4);
+  Point<s32> zero(0, 0);
 
   atoms[center.GetX() + center.GetY() * 8].SetState(ELEMENT_DREG);
 
-  EventWindowP1Atom ew(center, atoms, 8, 0xff);
+  EventWindowP1Atom ew(tile, 8, 0xff);
+  ew.SetCenter(center);
 
   P1Atom catom = ew.GetCenterAtom();
 
@@ -27,15 +31,17 @@ void EventWindowTest::Test_eventwindowConstruction()
 
 void EventWindowTest::Test_eventwindowWrite()
 {
-  P1Atom atoms[64];
-  Point<int> center(4, 4);
-  Point<int> absolute(-2, 0);
-  Point<int> zero(0, 0);
+  TileP1Atom tile;
+  P1Atom * atoms = tile.GetAtoms();
+  SPoint center(4, 4);
+  SPoint absolute(-2, 0);
+  SPoint zero(0, 0);
 
   atoms[center.GetX() + center.GetY() * 8].SetState(ELEMENT_DREG);
   atoms[absolute.GetX() + absolute.GetY() * 8].SetState(ELEMENT_RES);
 
-  EventWindowP1Atom ew(center, atoms, 8, 0xff);
+  EventWindowP1Atom ew(tile, 8, 0xff);
+  ew.SetCenter(center);
 
   for(int i = 0; i < 64; i++)
   {
@@ -65,3 +71,5 @@ void EventWindowTest::Test_eventwindowWrite()
 
   
 }
+} /* namespace MFM */
+

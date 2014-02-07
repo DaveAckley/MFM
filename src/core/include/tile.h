@@ -10,7 +10,10 @@
 #include "eventwindow.h"
 #include "elementtable.h"
 
-/* The length, in sites, of a Tile.*/
+
+namespace MFM {
+
+/* The full length, in sites, of a Tile, including neighbor caches.*/
 #define TILE_WIDTH 40
 
 /*The number of sites a tile contains.*/
@@ -19,19 +22,28 @@
 template <class T,u32 R>
 class Tile
 {
+public:
   static const u32 EVENT_WINDOW_RADIUS = R;
+  
+  /**
+   * The edge length of the portion of a tile that is 'owned' by the
+   * tile itself -- i.e., excluding the cache boundary.
+   */
+  static const u32 OWNED_SIDE = TILE_WIDTH-2*R;
 
 private:
 
-  MFM::Random m_random;
+  Random m_random;
 
   u8 m_neighborConnections;
+
+  friend class EventWindow<T,R>;
 
   T m_atoms[TILE_SIZE];
 
   s32 m_atomCount[ELEMENT_COUNT];
 
-  Point<int> m_lastExecutedAtom;
+  SPoint m_lastExecutedAtom;
 
   EventWindow<T,R> m_executingWindow;
 
@@ -39,19 +51,13 @@ private:
 
   void CreateRandomWindow();
 
-  void CreateWindowAt(Point<int>& pt);
+  void CreateWindowAt(const SPoint& pt);
 
   u32 (*m_stateFunc)(T* atom);
 
-  /*
-   * Finds the cache pointed at by pt. If there
-   * is no cache there, this will return -1.
-   */
-  EuclidDir CacheAt(Point<int>& pt);
-
   void SendRelevantAtoms();
 
-  void SendAtom(EuclidDir neighbor, Point<int>& atomLoc);
+  void SendAtom(EuclidDir neighbor, SPoint& atomLoc);
 
   inline bool IsConnected(EuclidDir dir);
 
@@ -59,11 +65,16 @@ public:
 
   Tile();
 
-  MFM::Random & GetRandom();
+  u32 GetTileWidth() 
+  {
+    return TILE_WIDTH;
+  }
+
+  Random & GetRandom();
 
   void SetNeighbors(u8 neighbors);
 
-  static inline bool IsInCache(Point<int>& pt);
+  static inline bool IsInCache(SPoint& pt);
 
   void SetStateFunc(u32 (*stateFunc)(T* atom))
   {
@@ -75,7 +86,20 @@ public:
     return m_stateFunc;
   }
 
-  T* GetAtom(Point<int>* pt);
+  /*
+   * Finds the cache pointed at by pt. If there
+   * is no cache there, this will return -1.
+   */
+  EuclidDir CacheAt(SPoint& pt);
+
+
+  /**
+   * Expose the underlying atom array because, e.g., testing depends
+   * on it?  Urgh?
+   */
+  T* GetAtoms() ;
+
+  T* GetAtom(const SPoint& pt);
 
   T* GetAtom(int x, int y);
 
@@ -89,9 +113,22 @@ public:
    */
   Packet<T>* NextPacket();
 
-  void FillLastExecutedAtom(Point<int>& out);
+  void FillLastExecutedAtom(SPoint& out);
 
-  void PlaceAtom(T& atom, Point<int>& pt);
+  /**
+   * Store an atom anywhere in the tile, using the 'raw' coordinate
+   * system in which (0,0) is in the tile cache.  See also PlaceInternalAtom
+   */
+  void PlaceAtom(T& atom, const SPoint& pt);
+
+  /**
+   * Store an atom in the 'locally-owned' portion of a tile, using the
+   * 'natural' coordinate system in which (0,0) is the upper left of
+   * the sites that this tile owns..  See also PlaceAtom
+   */
+  void PlaceInternalAtom(T& atom, const SPoint& pt) {
+    PlaceAtom(atom,pt+SPoint(R,R));
+  }
 
   void DiffuseAtom(EventWindow<T,R>& window);
 
@@ -99,7 +136,9 @@ public:
 
   u32 GetAtomCount(ElementType atomType);
 };
+} /* namespace MFM */
 
 #include "tile.tcc"
 
 #endif /*TILE_H*/
+

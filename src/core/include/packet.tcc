@@ -1,3 +1,5 @@
+
+namespace MFM {
 template <class T>
 Packet<T>::Packet(PacketType type)
 {
@@ -17,13 +19,15 @@ T& Packet<T>::GetAtom()
 }
 
 template <class T>
-void Packet<T>::SetLocation(Point<int>& fromPt)
+void Packet<T>::SetLocation(const SPoint& fromPt)
 {
-  m_edgeLoc = Point<int>(fromPt);
+  m_edgeLoc = fromPt;
 }
 
 template <class T>
-Point<int>& Packet<T>::GetLocation()
+const SPoint& Packet<T>::GetLocation() const
 {
   return m_edgeLoc;
 }
+} /* namespace MFM */
+

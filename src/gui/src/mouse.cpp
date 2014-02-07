@@ -1,5 +1,7 @@
 #include "mouse.h"
 
+namespace MFM {
+
 void Mouse::HandleButtonEvent(SDL_MouseButtonEvent* e)
 {
   if(e->state == SDL_PRESSED)
@@ -44,7 +46,7 @@ bool Mouse::SemiAuto(u8 button)
     m_prev.count(button) == 0;
 }
 
-void Mouse::FillPoint(Point<int>* out)
+void Mouse::FillPoint(SPoint* out)
 {
   out->Set(m_x, m_y);
 }
@@ -53,3 +55,5 @@ void Mouse::Flip()
 {
   m_prev = m_current;
 }
+} /* namespace MFM */
+

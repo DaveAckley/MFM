@@ -1,18 +1,20 @@
 #ifndef P1ATOM_H      /* -*- C++ -*- */
 #define P1ATOM_H
 
-#define P1ATOM_SIZE 64
-
-#define P1ATOM_HEADER_SIZE 16
-#define P1ATOM_LONGBOND_SIZE 8
-#define P1ATOM_SHORTBOND_SIZE 4
-
 #include <stdio.h>
 #include "itype.h"
 #include "point.h"
 #include "bitfield.h"
 #include "manhattandir.h"
 
+#define P1ATOM_SIZE 64
+
+#define P1ATOM_HEADER_SIZE 16
+#define P1ATOM_LONGBOND_SIZE 8
+#define P1ATOM_SHORTBOND_SIZE 4
+
+
+namespace MFM {
 
 class P1Atom
 {
@@ -77,14 +79,14 @@ public:
   { m_bits.Print(ostream); }
 
   /* Adds a long bond. Returns its index. */
-  u32 AddLongBond(Point<int>& offset);
+  u32 AddLongBond(const SPoint& offset);
 
-  u32 AddShortBond(Point<int>& offset);
+  u32 AddShortBond(const SPoint& offset);
 
   /* Fills pt with the long bond location in index. */
-  void FillLongBond(u32 index, Point<int>& pt);
+  void FillLongBond(u32 index, SPoint& pt);
 
-  void FillShortBond(u32 index, Point<int>& pt);
+  void FillShortBond(u32 index, SPoint& pt);
 
   /* 
    * Removes a long bond. Be careful; if a
@@ -99,5 +101,6 @@ public:
 
   P1Atom& operator=(P1Atom rhs);
 };
-
+} /* namespace MFM */
 #endif /*P1ATOM_H*/
+

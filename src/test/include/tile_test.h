@@ -3,11 +3,15 @@
 
 #include "test_common.h"
 
+namespace MFM {
+
 class TileTest
 {
 public:
 
   static void Test_tilePlaceAtom();
 };
+} /* namespace MFM */
 
 #endif /*TILE_TEST_h*/
+

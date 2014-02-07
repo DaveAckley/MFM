@@ -1,5 +1,7 @@
 #include "keyboard.h"
 
+namespace MFM {
+
 void Keyboard::HandleEvent(SDL_KeyboardEvent* e)
 {
   if(e->type == SDL_KEYUP)
@@ -54,3 +56,5 @@ void Keyboard::Flip()
 {
   m_prev = m_current;
 }
+} /* namespace MFM */
+

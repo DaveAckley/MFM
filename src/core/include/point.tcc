@@ -1,43 +1,27 @@
+#include "fail.h"
+
+namespace MFM {
+
 template <class T>
-Point<T>::Point(T x, T y)
+Point<T>::Point() : m_x(0), m_y(0) 
 {
-  m_x = x;
-  m_y = y;
 }
 
 template <class T>
-Point<T>::Point(const Point<T> & p)
+Point<T>::Point(T x, T y) : m_x(x), m_y(y) 
 {
-  m_x = p.m_x;
-  m_y = p.m_y;
 }
 
 template <class T>
-Point<T>::Point(bool random)
+Point<T>::Point(const Point<T> & p) : m_x(p.m_x), m_y(p.m_y)
 {
-  if(random)
-  {
-    m_x = (T)rand();
-    m_y = (T)rand();
-  }
-  else
-  {
-    m_x = m_y = 0;
-  }
 }
 
 template <class T>
-Point<T>::Point(bool random, T maxX, T maxY)
+Point<T>::Point(Random & random, T maxX, T maxY)
 {
-  if(random)
-  {
-    m_x = (T)rand() % maxX;
-    m_y = (T)rand() % maxY;
-  }
-  else
-  {
-    m_x = m_y = 0;
-  }
+  m_x = (T)random.Create(maxX);
+  m_y = (T)random.Create(maxY);
 }
 
 template <class T>
@@ -100,6 +84,20 @@ void Point<T>::Multiply(T scalar)
 }
 
 template <class T>
+void Point<T>::Divide(T scalar)
+{
+  m_x /= scalar;
+  m_y /= scalar;
+}
+
+template <class T>
+void Point<T>::Mod(T scalar)
+{
+  m_x %= scalar;
+  m_y %= scalar;
+}
+
+template <class T>
 void Point<T>::SetX(T x)
 {
   m_x = x;
@@ -139,3 +137,12 @@ Point<T>& Point<T>::operator=(const Point<T>& rhs)
   m_y = rhs.m_y;
   return *this;
 }
+
+template <class T>
+bool Point<T>::Equals(const Point<T>& rhs) 
+{
+  return GetX()==rhs.GetX() && GetY()==rhs.GetY();
+}
+
+} /* namespace MFM */
+

@@ -9,6 +9,8 @@
 #include "SDL/SDL.h"
 
 
+namespace MFM {
+
 
 class TileRenderer
 {
@@ -24,27 +26,27 @@ private:
   u32 m_hiddenColor;
   u32 m_cacheColor;
 
-  Point<int> m_windowTL;
+  SPoint m_windowTL;
 
   Point<u32> m_dimensions;
 
   SDL_Surface* m_dest;
 
   template <u32 R>
-  void RenderMemRegions(Point<int>& pt, bool renderCache);
+  void RenderMemRegions(SPoint& pt, bool renderCache);
 
   template <u32 R>
-  void RenderMemRegion(Point<int>& pt, int regID,
+  void RenderMemRegion(SPoint& pt, int regID,
 		       u32 color, bool renderCache);
 
   template <u32 R>
-  void RenderGrid(Point<int>* pt, bool renderCache);
+  void RenderGrid(SPoint* pt, bool renderCache);
 
-  void RenderAtomBG(Point<int>& offset, Point<int>& atomloc,
+  void RenderAtomBG(SPoint& offset, Point<int>& atomloc,
 		    u32 color);
 
   template <class T,u32 R>
-  void RenderAtoms(Point<int>& pt, Tile<T,R>& tile, bool renderCache);
+  void RenderAtoms(SPoint& pt, Tile<T,R>& tile, bool renderCache);
 
   template <class T, u32 R>
   u32 GetAtomColor(Tile<T,R>& tile, T& atom);
@@ -53,14 +55,14 @@ private:
   u32 GetDataHeatColor(Tile<T,R>& tile, T& atom);
 
   template <class T,u32 R>
-  void RenderEventWindow(Point<int>& offset, Tile<T,R>& tile, bool renderCache);
+  void RenderEventWindow(SPoint& offset, Tile<T,R>& tile, bool renderCache);
 
 public:
 
   TileRenderer(SDL_Surface* dest);
 
   template <class T,u32 R>
-  void RenderTile(Tile<T,R>& t, Point<int>& loc, bool renderWindow, 
+  void RenderTile(Tile<T,R>& t, SPoint& loc, bool renderWindow, 
 		  bool renderCache);
 
   void SetDimensions(Point<u32> dimensions)
@@ -91,7 +93,9 @@ public:
 
   void MoveRight(u8 amount);
 };
+} /* namespace MFM */
 
 #include "tilerenderer.tcc"
 
 #endif /*TILERENDERER_H*/
+

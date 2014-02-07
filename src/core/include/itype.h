@@ -29,6 +29,8 @@
 
 #include <inttypes.h>
 
+namespace MFM {
+
 typedef int8_t  s8;                    /**< Signed 8 bit type */
 typedef int16_t s16;                   /**< Signed 16 bit type */
 typedef int32_t s32;                   /**< Signed 32 bit type */
@@ -96,4 +98,7 @@ typedef volatile const uintptr_t uvcptr; /**< Unsigned volatile const type the s
                                        /* U64_MAX hacked with an expression to avoid C99ish syntax.. */
 #define U64_MIN    ((u64)0LL)          /**< Minimum value of unsigned 64 bit */
 
+} /* namespace MFM */
+
 #endif  /* ITYPE_H */
+

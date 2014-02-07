@@ -5,6 +5,8 @@
 #include "itype.h"
 #include "SDL/SDL.h"
 
+namespace MFM {
+
 class Keyboard
 {
 private:
@@ -35,5 +37,6 @@ public:
 
   void Flip();
 };
-
+} /* namespace MFM */
 #endif /*KEYBOARD_H*/
+

@@ -3,6 +3,8 @@
 
 #include "test_common.h"
 
+namespace MFM {
+
 class EventWindowTest
 {
 public:
@@ -11,5 +13,6 @@ public:
 
   static void Test_eventwindowWrite();
 };
-
+} /* namespace MFM */
 #endif /*EVENTWINDOW_TEST_H*/
+
