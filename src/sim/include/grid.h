@@ -21,8 +21,6 @@ private:
   
   Tile<T,R>* m_tiles;
 
-  ElementTable<T,R>* m_elementTable;
-
   Tile<T,R>* GetTile(int position);
 
   inline u32 GetPosition(u32 x, u32 y) 
@@ -32,7 +30,7 @@ public:
 
   friend class GridRenderer;
 
-  Grid(int width, int height, ElementTable<T,R>* elementTable);
+  Grid(int width, int height);
 
   void SetSeed(u32 seed); 
 

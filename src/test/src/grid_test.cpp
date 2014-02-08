@@ -9,10 +9,10 @@ void GridTest::Test_gridPlaceAtom()
 {
   
   P1Atom atom(23);
-  
-  ElementTableP1Atom table(&P1Atom::StateFunc);
 
-  GridP1Atom grid(2,2, &table);
+  ElementTableP1Atom::get().SetStateFunction(&P1Atom::StateFunc);
+
+  GridP1Atom grid(2,2);
 
   SPoint gloc(5, 10);
 

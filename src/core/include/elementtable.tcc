@@ -18,7 +18,6 @@ void ElementTable<T,R>::NothingBehavior(EventWindow<T,R>& window, StateFunction 
 #define DREG_DDR_ODDS 10 /*Deleting DREGs*/
 
 
-
 template <class T,u32 R>
 void ElementTable<T,R>::DRegBehavior(EventWindow<T,R>& window, StateFunction f)
 {
@@ -279,10 +278,15 @@ void ElementTable<T,R>::ConsumerBehavior(EventWindow<T,R>& window,
   }
 }
 
-template <class T,u32 R>
-ElementTable<T,R>::ElementTable(u32 (*stateFunc)(T* atom))
+template <class T, u32 R>
+void ElementTable<T,R>::SetStateFunction(u32 (*stateFunc)(T* atom))
 {
   m_statefunc = stateFunc;
+}
+
+template <class T,u32 R>
+ElementTable<T,R>::ElementTable()
+{
   m_funcmap[0] = &NothingBehavior;
   m_funcmap[1] = &DRegBehavior;
   m_funcmap[2] = &NothingBehavior;

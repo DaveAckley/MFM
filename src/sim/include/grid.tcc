@@ -4,7 +4,7 @@
 namespace MFM {
 
 template <class T,u32 R>
-Grid<T,R>::Grid(int width, int height, ElementTable<T,R>* elementTable)
+Grid<T,R>::Grid(int width, int height)
 {
   m_width = width;
   m_height = height;
@@ -40,8 +40,6 @@ Grid<T,R>::Grid(int width, int height, ElementTable<T,R>* elementTable)
       GetTile(x, y).SetNeighbors(neighbors);
     }
   }
- 
-  m_elementTable = elementTable;
 }
 
 template <class T,u32 R>
@@ -245,7 +243,7 @@ void Grid<T,R>::TriggerEvent()
   Tile<T,R>& execTile = m_tiles[windowTile.GetX() + 
 				windowTile.GetY() * m_width];
 
-  execTile.Execute(*m_elementTable);
+  execTile.Execute(ElementTable<T,R>::get());
 
   Packet<T>* readPack;
   SPoint nOffset;

@@ -6,21 +6,12 @@
 #include "eucliddir.h"
 #include "itype.h"
 #include "p1atom.h"
+#include "elementtype.h"
 
 namespace MFM {
 
 #define ELEMENT_COUNT 7
 
-typedef enum
-{
-  ELEMENT_NOTHING  = 0x0,
-  ELEMENT_DREG     = 0x1,
-  ELEMENT_RES      = 0x2,
-  ELEMENT_SORTER   = 0x3,
-  ELEMENT_EMITTER  = 0x4,
-  ELEMENT_CONSUMER = 0x5,
-  ELEMENT_DATA     = 0x6
-}ElementType;
 
 template <class T,u32 R>
 class EventWindow;
@@ -72,7 +63,7 @@ private:
 				  ElementType type);
   
 public:
-  ElementTable(u32 (*stateFunc)(T* atom));
+  ElementTable();
 
   static ElementTable<T,R> & get();
 
@@ -81,9 +72,17 @@ public:
   void Execute(EventWindow<T,R>& window)
   { m_funcmap[m_statefunc(&(window.GetCenterAtom()))](window, m_statefunc); }
 
+  void SetStateFunction(StateFunction f);
+
   void FillAtom(T* atom, ElementType type);
 
   bool Diffusable(ElementType type);
+
+  bool RegisterElement(ElementType type, BehaviorFunction function)
+  {
+    m_funcmap[(u32)type] = function;
+    return true;
+  }
   
 };
 

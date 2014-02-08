@@ -151,13 +151,13 @@ public:
     screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 32,
 			      SDL_SWSURFACE);
 
-    ElementTableP1Atom elements(&P1Atom::StateFunc);
+    ElementTableP1Atom::get().SetStateFunction(&P1Atom::StateFunc);
 
     SDL_Event event;
     
     const u32 GRID_WIDTH = 5;
     const u32 GRID_HEIGHT = 3;
-    GridP1Atom mainGrid(GRID_WIDTH, GRID_HEIGHT, &elements);
+    GridP1Atom mainGrid(GRID_WIDTH, GRID_HEIGHT);
 
     if (seedOrZero==0) seedOrZero = 1;  /* Avoid superstitious 0 zeed */
     mainGrid.SetSeed(seedOrZero);  /* Push seeds out to everybody */
