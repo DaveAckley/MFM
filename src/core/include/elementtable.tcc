@@ -7,8 +7,7 @@
 namespace MFM {
 
 template <class T,u32 R>
-void ElementTable<T,R>::NothingBehavior(EventWindow<T,R>& window,
-					StateFunction f, s32* atomCounts)
+void ElementTable<T,R>::NothingBehavior(EventWindow<T,R>& window, StateFunction f)
 {
   return;
 }
@@ -21,8 +20,7 @@ void ElementTable<T,R>::NothingBehavior(EventWindow<T,R>& window,
 
 
 template <class T,u32 R>
-void ElementTable<T,R>::DRegBehavior(EventWindow<T,R>& window,
-				     StateFunction f, s32* atomCounts)
+void ElementTable<T,R>::DRegBehavior(EventWindow<T,R>& window, StateFunction f)
 {
   Random & random = window.GetRandom();
 
@@ -58,7 +56,7 @@ void ElementTable<T,R>::DRegBehavior(EventWindow<T,R>& window,
 
   if(newType >= 0)
   {
-    window.SetRelativeAtom(dir, T(newType), f, atomCounts);
+    window.SetRelativeAtom(dir, T(newType));
   }
 }
 
@@ -154,7 +152,7 @@ u32 ElementTable<T,R>::FoundIndicesCount(s32* indices)
 
 template <class T,u32 R>
 void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
-				       StateFunction f, s32* atomCounts)
+				       StateFunction f)
 {
   Random & random = window.GetRandom();
 
@@ -163,7 +161,7 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
 
   if(f(&window.GetRelativeAtom(repPt)) == ELEMENT_RES)
   {
-    window.SetRelativeAtom(repPt, T(ELEMENT_SORTER), f, atomCounts);
+    window.SetRelativeAtom(repPt, T(ELEMENT_SORTER));
   }
 
   /* Add one for the terminator       v    */
@@ -212,8 +210,8 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
     if(cmp)
     {
       window.GetCenterAtom().WriteLowerBits(window.GetRelativeAtom(srcPt).ReadLowerBits());
-      window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt), f, atomCounts);
-      window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING), f, atomCounts);
+      window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt));
+      window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING));
       return;
     }
   }
@@ -225,11 +223,11 @@ void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
 
 template <class T, u32 R>
 void ElementTable<T,R>::EmitterBehavior(EventWindow<T,R>& window,
-					StateFunction f, s32* atomCounts)
+					StateFunction f)
 {
   Random & random = window.GetRandom();
 
-  ReproduceVertically(window, f, ELEMENT_EMITTER, atomCounts);
+  ReproduceVertically(window, f, ELEMENT_EMITTER);
 
   /* Create some data */
   SPoint repPt;
@@ -241,15 +239,14 @@ void ElementTable<T,R>::EmitterBehavior(EventWindow<T,R>& window,
     {
       T atom = T(ELEMENT_DATA);
       atom.WriteLowerBits(random.Between(DATA_MINVAL, DATA_MAXVAL));
-      window.SetRelativeAtom(repPt, atom, f, atomCounts);
+      window.SetRelativeAtom(repPt, atom);
     }
   }
 }
 
 template <class T, u32 R>
-void ElementTable<T,R>::ReproduceVertically(EventWindow<T,R>& window,
-					    StateFunction f,
-					    ElementType type, s32* atomCounts)
+void ElementTable<T,R>::ReproduceVertically(EventWindow<T,R>& window, StateFunction f,
+					    ElementType type)
 {
   Random & random = window.GetRandom();
 
@@ -258,7 +255,7 @@ void ElementTable<T,R>::ReproduceVertically(EventWindow<T,R>& window,
   SPoint repPt(0, down ? R/2 : -(R/2));
   if(f(&window.GetRelativeAtom(repPt)) == ELEMENT_NOTHING)
   {
-    window.SetRelativeAtom(repPt, T(type), f, atomCounts);
+    window.SetRelativeAtom(repPt, T(type));
     window.GetRelativeAtom(repPt).WriteLowerBits(cval + (down ? 1 : -1));
   }
 }
@@ -266,9 +263,9 @@ void ElementTable<T,R>::ReproduceVertically(EventWindow<T,R>& window,
 
 template <class T, u32 R>
 void ElementTable<T,R>::ConsumerBehavior(EventWindow<T,R>& window,
-					StateFunction f, s32* atomCounts)
+					 StateFunction f)
 {
-  ReproduceVertically(window, f, ELEMENT_CONSUMER, atomCounts);
+  ReproduceVertically(window, f, ELEMENT_CONSUMER);
 
   Point<s32> consPt;
   ManhattanDir<R>::get().FillRandomSingleDir(consPt);
@@ -278,7 +275,7 @@ void ElementTable<T,R>::ConsumerBehavior(EventWindow<T,R>& window,
     u32 val = window.GetRelativeAtom(consPt).ReadLowerBits();
     u32 bnum = window.GetCenterAtom().ReadLowerBits();
     printf("[%3d]Export!: %d sum %d\n", bnum, val, 3*bnum+val); // something sort of constant at equil.?
-    window.SetRelativeAtom(consPt, T(ELEMENT_NOTHING), f, atomCounts);
+    window.SetRelativeAtom(consPt, T(ELEMENT_NOTHING));
   }
 }
 
@@ -293,6 +290,13 @@ ElementTable<T,R>::ElementTable(u32 (*stateFunc)(T* atom))
   m_funcmap[4] = &EmitterBehavior;
   m_funcmap[5] = &ConsumerBehavior;
   m_funcmap[6] = &NothingBehavior;
+}
+
+template <class T, u32 R>
+ElementTable<T,R>& ElementTable<T,R>::get()
+{
+  static ElementTable<T,R> instance;
+  return instance;
 }
 
 template <class T, u32 R>

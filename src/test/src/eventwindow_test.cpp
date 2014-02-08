@@ -58,8 +58,8 @@ void EventWindowTest::Test_eventwindowWrite()
   assert(erased1.GetState() == 0);
   assert(erased2.GetState() == 0);
 
-  ew.SetRelativeAtom(zero, P1Atom(ELEMENT_DREG), NULL, NULL);
-  ew.SetRelativeAtom(absolute, P1Atom(ELEMENT_RES), NULL, NULL);
+  ew.SetRelativeAtom(zero, P1Atom(ELEMENT_DREG));
+  ew.SetRelativeAtom(absolute, P1Atom(ELEMENT_RES));
 
   absolute.Add(center);
 

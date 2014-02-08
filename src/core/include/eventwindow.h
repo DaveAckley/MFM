@@ -41,7 +41,7 @@ public:
 
   T& GetRelativeAtom(const SPoint& offset);
 
-  bool SetRelativeAtom(const SPoint& offset, T atom, StateFunction f, s32* atomCounts);
+  bool SetRelativeAtom(const SPoint& offset, T atom);
 
   void SwapAtoms(const SPoint& locA, const SPoint& locB);
 

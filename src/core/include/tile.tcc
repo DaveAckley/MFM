@@ -323,7 +323,7 @@ void Tile<T,R>::Execute(ElementTable<T,R>& table)
   CreateWindowAt(winCenter);
 #endif
   
-  table.Execute(m_executingWindow, m_atomCount);
+  table.Execute(m_executingWindow);
 
   if(table.Diffusable((ElementType)
 		      m_stateFunc(&m_executingWindow.GetCenterAtom())))
