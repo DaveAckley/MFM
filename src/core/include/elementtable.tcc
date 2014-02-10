@@ -12,11 +12,11 @@ void ElementTable<T,R>::NothingBehavior(EventWindow<T,R>& window, StateFunction 
   return;
 }
 
+
 #define DREG_RES_ODDS 20
 #define DREG_DEL_ODDS 10
 #define DREG_DRG_ODDS 1000
-#define DREG_DDR_ODDS 10 /*Deleting DREGs*/
-
+#define DREG_DDR_ODDS 10 //Deleting DREGs
 
 template <class T,u32 R>
 void ElementTable<T,R>::DRegBehavior(EventWindow<T,R>& window, StateFunction f)
@@ -58,6 +58,7 @@ void ElementTable<T,R>::DRegBehavior(EventWindow<T,R>& window, StateFunction f)
     window.SetRelativeAtom(dir, T(newType));
   }
 }
+
 
 template <class T, u32 R>
 bool ElementTable<T,R>::FillSubWindowContaining(Point<s32>& pt, EventWindow<T,R>& window,

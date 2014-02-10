@@ -78,10 +78,13 @@ public:
 
   bool Diffusable(ElementType type);
 
+  /* Registers a new BehaviorFunction to this ElementTable. Returns */
+  /* true if an element definition was not overwritten.             */
   bool RegisterElement(ElementType type, BehaviorFunction function)
   {
+    bool alreadyRegistered = m_funcmap[(u32)type] == NULL;
     m_funcmap[(u32)type] = function;
-    return true;
+    return alreadyRegistered;
   }
   
 };

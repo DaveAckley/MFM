@@ -1,5 +1,5 @@
-#include "elementtype.h"
 #include "eventwindow.h"
+#include "elementtype.h"
 #include "itype.h"
 #include "p1atom.h"
 
@@ -27,37 +27,45 @@ namespace MFM
     ElementType newType = (ElementType)-1;
 
     if(state == ELEMENT_NOTHING)
-    {
-      if(random.OneIn(DREG_DRG_ODDS))
-	{
-	  newType = ELEMENT_DREG;
-	}
-      else if(random.OneIn(DREG_RES_ODDS))
-	{
-	  newType = ELEMENT_RES;
-	}
-    }
+      {
+	if(random.OneIn(DREG_DRG_ODDS))
+	  {
+	    newType = ELEMENT_DREG;
+	  }
+	else if(random.OneIn(DREG_RES_ODDS))
+	  {
+	    newType = ELEMENT_RES;
+	  }
+      }
     else if(state == ELEMENT_DREG)
-    {
-      if(random.OneIn(DREG_DDR_ODDS))
-	{
-	  newType = ELEMENT_NOTHING;
-	}
-    }
+      {
+	if(random.OneIn(DREG_DDR_ODDS))
+	  {
+	    newType = ELEMENT_NOTHING;
+	  }
+      }
     else if(random.OneIn(DREG_DEL_ODDS))
-    {
-      newType = ELEMENT_NOTHING;
-    }
+      {
+	newType = ELEMENT_NOTHING;
+      }
 
     if(newType >= 0)
-    {
-      window.SetRelativeAtom(dir, P1Atom(newType));
-    }
+      {
+	window.SetRelativeAtom(dir, P1Atom(newType));
+      }
   }
 
   /*
-  bool element_dreg_registered = 
+  class Element_Dreg
+  {
+  private:
+    const static bool element_dreg_registered;
+  };
+
+  template<class T, u32 R>
+  class ElementTable;
+
+  const bool Element_Dreg::element_dreg_registered = 
     ElementTable<P1Atom,4>::get().RegisterElement(ELEMENT_DREG, &DRegBehavior);
   */
-
 }
