@@ -53,16 +53,6 @@ private:
 
   static u32 FoundIndicesCount(s32* indices);
 
-  static void NothingBehavior(EventWindow<T,R>& w, StateFunction f);
-
-  static void DRegBehavior(EventWindow<T,R>& w, StateFunction f);
-
-  static void SorterBehavior(EventWindow<T,R>& w, StateFunction f);
-
-  static void EmitterBehavior(EventWindow<T,R>& w, StateFunction f);
-
-  static void ConsumerBehavior(EventWindow<T,R>& w, StateFunction f);
-
   static void ReproduceVertically(EventWindow<T,R>& w, 
 				  StateFunction f,
 				  ElementType type);
@@ -75,9 +65,10 @@ public:
   ~ElementTable() { }
 
   void Execute(EventWindow<T,R>& window)
-  { u32 state = m_statefunc(&window.GetCenterAtom());
-    if(state == ELEMENT_DREG || state == ELEMENT_SORTER)
-    m_elementTable[m_statefunc(&(window.GetCenterAtom()))]->Behavior(window, m_statefunc); }
+  { u32 state = m_statefunc(&(window.GetCenterAtom()));
+    if(state == ELEMENT_DREG || state == ELEMENT_SORTER ||
+       state == ELEMENT_EMITTER || state == ELEMENT_CONSUMER)
+    m_elementTable[state]->Behavior(window, m_statefunc); }
 
   void SetStateFunction(StateFunction f);
 

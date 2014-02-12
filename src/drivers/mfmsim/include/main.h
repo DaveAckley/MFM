@@ -9,6 +9,8 @@
 #include "element_dreg.h"
 #include "element_res.h"
 #include "element_sorter.h"
+#include "element_emitter.h"
+#include "element_consumer.h"
 #include "grid.h"
 #include "gridpanel.h"
 #include "gridrenderer.h"

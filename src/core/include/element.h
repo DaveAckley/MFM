@@ -15,6 +15,12 @@ namespace MFM
     typedef u32 (* StateFunction )(T* atom);
     
     ElementType m_type;
+
+  protected:
+    
+    void ReproduceVertically(EventWindow<T,R>& window, StateFunction f,
+			     ElementType type);
+
     
   public:
     

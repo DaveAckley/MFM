@@ -6,60 +6,6 @@
 
 namespace MFM {
 
-template <class T,u32 R>
-void ElementTable<T,R>::NothingBehavior(EventWindow<T,R>& window, StateFunction f)
-{
-  return;
-}
-
-
-#define DREG_RES_ODDS 20
-#define DREG_DEL_ODDS 10
-#define DREG_DRG_ODDS 1000
-#define DREG_DDR_ODDS 10 //Deleting DREGs
-
-template <class T,u32 R>
-void ElementTable<T,R>::DRegBehavior(EventWindow<T,R>& window, StateFunction f)
-{
-  Random & random = window.GetRandom();
-
-  SPoint dir;
-  ManhattanDir<R>::get().FillRandomSingleDir(dir);
-
-  u32 state = f(&window.GetRelativeAtom(dir));
-
-  ElementType newType = (ElementType)-1;
-
-  if(state == ELEMENT_NOTHING)
-  {
-    if(random.OneIn(DREG_DRG_ODDS))
-    {
-      newType = ELEMENT_DREG;
-    }
-    else if(random.OneIn(DREG_RES_ODDS))
-    {
-      newType = ELEMENT_RES;
-    }
-  }
-  else if(state == ELEMENT_DREG)
-  {
-    if(random.OneIn(DREG_DDR_ODDS))
-    {
-      newType = ELEMENT_NOTHING;
-    }
-  }
-  else if(random.OneIn(DREG_DEL_ODDS))
-  {
-    newType = ELEMENT_NOTHING;
-  }
-
-  if(newType >= 0)
-  {
-    window.SetRelativeAtom(dir, T(newType));
-  }
-}
-
-
 template <class T, u32 R>
 bool ElementTable<T,R>::FillSubWindowContaining(Point<s32>& pt, EventWindow<T,R>& window,
 						ElementType type, StateFunction f, 
@@ -150,100 +96,6 @@ u32 ElementTable<T,R>::FoundIndicesCount(s32* indices)
   return count;
 }
 
-template <class T,u32 R>
-void ElementTable<T,R>::SorterBehavior(EventWindow<T,R>& window,
-				       StateFunction f)
-{
-  Random & random = window.GetRandom();
-
-  Point<s32> repPt;
-  ManhattanDir<R>::get().FillRandomSingleDir(repPt);
-
-  if(f(&window.GetRelativeAtom(repPt)) == ELEMENT_RES)
-  {
-    window.SetRelativeAtom(repPt, T(ELEMENT_SORTER));
-  }
-
-  /* Add one for the terminator       v    */
-  const u32 subSize = ((R * R) / 4) + 1;
-
-  s32 seDatas[subSize];
-  s32 neDatas[subSize];
-  s32 nwEmpties[subSize];
-  s32 swEmpties[subSize];
-
-  FillSubwindowIndices(seDatas, window, f, ELEMENT_DATA, EUDIR_SOUTHEAST);
-  FillSubwindowIndices(neDatas, window, f, ELEMENT_DATA, EUDIR_NORTHEAST);
-  FillSubwindowIndices(swEmpties, window, f, ELEMENT_NOTHING, EUDIR_SOUTHWEST);
-  FillSubwindowIndices(nwEmpties, window, f, ELEMENT_NOTHING, EUDIR_NORTHWEST);
-
-  u32 seCount = FoundIndicesCount(seDatas);
-  u32 neCount = FoundIndicesCount(neDatas);
-  u32 swCount = FoundIndicesCount(swEmpties);
-  u32 nwCount = FoundIndicesCount(nwEmpties);
-
-  bool movingUp = random.CreateBool();
-  
-  Point<s32> srcPt, dstPt;
-  for(s32 i = 0; i < 2; i++)
-  {
-    if(movingUp && seCount && nwCount)
-    {
-      ManhattanDir<R>::get().FillFromBits(srcPt, seDatas[random.Create(seCount)], MANHATTAN_TABLE_EVENT);
-      ManhattanDir<R>::get().FillFromBits(dstPt, nwEmpties[random.Create(nwCount)], MANHATTAN_TABLE_EVENT);
-    }
-    else if(!movingUp && neCount && swCount)
-    {
-      ManhattanDir<R>::get().FillFromBits(srcPt, neDatas[random.Create(neCount)], MANHATTAN_TABLE_EVENT);
-      ManhattanDir<R>::get().FillFromBits(dstPt, swEmpties[random.Create(swCount)], MANHATTAN_TABLE_EVENT);
-    }
-    else
-    {
-      movingUp = !movingUp;
-      continue;
-    }
-
-    u32 cmp = ((movingUp && (window.GetRelativeAtom(srcPt).ReadLowerBits() >
-			     window.GetCenterAtom().ReadLowerBits())) ||
-	       (!movingUp && (window.GetRelativeAtom(srcPt).ReadLowerBits() <
-			      window.GetCenterAtom().ReadLowerBits())));
-    if(cmp)
-    {
-      window.GetCenterAtom().WriteLowerBits(window.GetRelativeAtom(srcPt).ReadLowerBits());
-      window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt));
-      window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING));
-      return;
-    }
-  }
-}
-
-#define DATA_CREATE_ODDS 8
-#define DATA_MAXVAL 100
-#define DATA_MINVAL 1
-
-template <class T, u32 R>
-void ElementTable<T,R>::EmitterBehavior(EventWindow<T,R>& window,
-					StateFunction f)
-{
-  Random & random = window.GetRandom();
-
-  ReproduceVertically(window, f, ELEMENT_EMITTER);
-
-  /* Create some data */
-  SPoint repPt;
-  ManhattanDir<R>::get().FillRandomSingleDir(repPt);
-
-  if(random.OneIn(DATA_CREATE_ODDS))
-  {
-    if(f(&window.GetRelativeAtom(repPt)) == ELEMENT_NOTHING)
-    {
-      T atom = T(ELEMENT_DATA);
-      atom.WriteLowerBits(random.Between(DATA_MINVAL, DATA_MAXVAL));
-      window.SetRelativeAtom(repPt, atom);
-    }
-  }
-}
-
 template <class T, u32 R>
 void ElementTable<T,R>::ReproduceVertically(EventWindow<T,R>& window, StateFunction f,
 					    ElementType type)
@@ -257,25 +109,6 @@ void ElementTable<T,R>::ReproduceVertically(EventWindow<T,R>& window, StateFunct
   {
     window.SetRelativeAtom(repPt, T(type));
     window.GetRelativeAtom(repPt).WriteLowerBits(cval + (down ? 1 : -1));
-  }
-}
-
-
-template <class T, u32 R>
-void ElementTable<T,R>::ConsumerBehavior(EventWindow<T,R>& window,
-					 StateFunction f)
-{
-  ReproduceVertically(window, f, ELEMENT_CONSUMER);
-
-  Point<s32> consPt;
-  ManhattanDir<R>::get().FillRandomSingleDir(consPt);
-
-  if(f(&window.GetRelativeAtom(consPt)) == ELEMENT_DATA)
-  {
-    u32 val = window.GetRelativeAtom(consPt).ReadLowerBits();
-    u32 bnum = window.GetCenterAtom().ReadLowerBits();
-    printf("[%3d]Export!: %d sum %d\n", bnum, val, 3*bnum+val); // something sort of constant at equil.?
-    window.SetRelativeAtom(consPt, T(ELEMENT_NOTHING));
   }
 }
 

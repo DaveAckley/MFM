@@ -162,6 +162,8 @@ public:
     Element_Dreg<P1Atom, 4>::Needed();
     Element_Res<P1Atom, 4>::Needed();
     Element_Sorter<P1Atom, 4>::Needed();
+    Element_Emitter<P1Atom, 4>::Needed();
+    Element_Consumer<P1Atom, 4>::Needed();
 
     if (seedOrZero==0) seedOrZero = 1;  /* Avoid superstitious 0 zeed */
     mainGrid.SetSeed(seedOrZero);  /* Push seeds out to everybody */
