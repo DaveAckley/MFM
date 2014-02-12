@@ -159,6 +159,8 @@ public:
     const u32 GRID_HEIGHT = 3;
     GridP1Atom mainGrid(GRID_WIDTH, GRID_HEIGHT);
 
+    Element_Dreg<P1Atom, 4>::Needed();
+
     if (seedOrZero==0) seedOrZero = 1;  /* Avoid superstitious 0 zeed */
     mainGrid.SetSeed(seedOrZero);  /* Push seeds out to everybody */
 

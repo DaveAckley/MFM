@@ -6,6 +6,7 @@
 #include "eucliddir.h"
 #include "itype.h"
 #include "p1atom.h"
+#include "element.h"
 #include "elementtype.h"
 
 namespace MFM {
@@ -28,11 +29,15 @@ private:
   typedef u32 (* StateFunction )(T* atom);
   StateFunction m_statefunc;
 
-  /* the atomCounts argument can be NULL on any call to these functions. */
+  // the atomCounts argument can be NULL on any call to these functions.
+  /*
   typedef void (* BehaviorFunction )
   (EventWindow<T,R>&, StateFunction f);
 
   BehaviorFunction m_funcmap[0xff];
+  */
+
+  Element<T,R>* m_elementTable[0xff];
 
   static void FlipSEPointToCorner(Point<s32>& pt, EuclidDir corner);
 
@@ -70,7 +75,9 @@ public:
   ~ElementTable() { }
 
   void Execute(EventWindow<T,R>& window)
-  { m_funcmap[m_statefunc(&(window.GetCenterAtom()))](window, m_statefunc); }
+  { 
+    if(m_statefunc(&window.GetCenterAtom()) == ELEMENT_DREG)
+    m_elementTable[m_statefunc(&(window.GetCenterAtom()))]->Behavior(window, m_statefunc); }
 
   void SetStateFunction(StateFunction f);
 
@@ -78,13 +85,10 @@ public:
 
   bool Diffusable(ElementType type);
 
-  /* Registers a new BehaviorFunction to this ElementTable. Returns */
-  /* true if an element definition was not overwritten.             */
-  bool RegisterElement(ElementType type, BehaviorFunction function)
+  bool RegisterElement(ElementType type, Element<T,R>* e)
   {
-    bool alreadyRegistered = m_funcmap[(u32)type] == NULL;
-    m_funcmap[(u32)type] = function;
-    return alreadyRegistered;
+    m_elementTable[(u32)type] = e;
+    return true;
   }
   
 };

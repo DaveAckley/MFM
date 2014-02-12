@@ -6,6 +6,7 @@
 #include "SDL/SDL_ttf.h"
 #include "assert.h"
 #include "eventwindow.h"
+#include "element_dreg.h"
 #include "grid.h"
 #include "gridpanel.h"
 #include "gridrenderer.h"
