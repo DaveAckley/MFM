@@ -160,6 +160,8 @@ public:
     GridP1Atom mainGrid(GRID_WIDTH, GRID_HEIGHT);
 
     Element_Dreg<P1Atom, 4>::Needed();
+    Element_Res<P1Atom, 4>::Needed();
+    Element_Sorter<P1Atom, 4>::Needed();
 
     if (seedOrZero==0) seedOrZero = 1;  /* Avoid superstitious 0 zeed */
     mainGrid.SetSeed(seedOrZero);  /* Push seeds out to everybody */

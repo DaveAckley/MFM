@@ -20,7 +20,7 @@ namespace MFM
     
     Element() { }
     
-    virtual void Behavior(EventWindow<T,R> window, StateFunction f) = 0;
+    virtual void Behavior(EventWindow<T,R>& window, StateFunction f) = 0;
     
   };
 }

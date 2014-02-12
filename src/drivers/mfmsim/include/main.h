@@ -7,6 +7,8 @@
 #include "assert.h"
 #include "eventwindow.h"
 #include "element_dreg.h"
+#include "element_res.h"
+#include "element_sorter.h"
 #include "grid.h"
 #include "gridpanel.h"
 #include "gridrenderer.h"

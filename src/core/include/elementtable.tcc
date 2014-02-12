@@ -288,15 +288,6 @@ void ElementTable<T,R>::SetStateFunction(u32 (*stateFunc)(T* atom))
 template <class T,u32 R>
 ElementTable<T,R>::ElementTable()
 {
-  /*
-  m_funcmap[0] = &NothingBehavior;
-  m_funcmap[1] = &DRegBehavior;
-  m_funcmap[2] = &NothingBehavior;
-  m_funcmap[3] = &SorterBehavior;
-  m_funcmap[4] = &EmitterBehavior;
-  m_funcmap[5] = &ConsumerBehavior;
-  m_funcmap[6] = &NothingBehavior;
-  */
 }
 
 template <class T, u32 R>

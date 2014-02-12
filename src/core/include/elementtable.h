@@ -75,8 +75,8 @@ public:
   ~ElementTable() { }
 
   void Execute(EventWindow<T,R>& window)
-  { 
-    if(m_statefunc(&window.GetCenterAtom()) == ELEMENT_DREG)
+  { u32 state = m_statefunc(&window.GetCenterAtom());
+    if(state == ELEMENT_DREG || state == ELEMENT_SORTER)
     m_elementTable[m_statefunc(&(window.GetCenterAtom()))]->Behavior(window, m_statefunc); }
 
   void SetStateFunction(StateFunction f);

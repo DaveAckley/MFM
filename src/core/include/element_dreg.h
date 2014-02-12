@@ -25,7 +25,7 @@ namespace MFM
     
     typedef u32 (* StateFunction )(T* atom);
 
-    virtual void Behavior(EventWindow<T,R> window, StateFunction f)
+    virtual void Behavior(EventWindow<T,R>& window, StateFunction f)
     {
       Random & random = window.GetRandom();
 
@@ -71,11 +71,6 @@ namespace MFM
 
   template <class T, u32 R>
   Element_Dreg<T,R> Element_Dreg<T,R>::DREG_INSTANCE;
-
-  /*
-  template <class T, u32 R>
-  bool Element_Dreg<T,R>::element_dreg_registered = 
-  */
 
   template <class T, u32 R>
   void Element_Dreg<T,R>::Needed()
