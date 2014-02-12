@@ -74,18 +74,21 @@ void P1Atom::RemoveShortBond(u32 index)
   SetShortBondCount(GetShortBondCount() - 1);
 }
 
-P1Atom& P1Atom::operator=(P1Atom rhs)
+P1Atom& P1Atom::operator=(const P1Atom & rhs)
 {
+  if (this == &rhs) return *this;
+
   int start;
+
   for(u32 i = 0;
       i < P1ATOM_SIZE / BitField<P1ATOM_SIZE>::BITS_PER_UNIT; i++)
   {
     start = i * BitField<P1ATOM_SIZE>::BITS_PER_UNIT;
     m_bits.Write(start,
-		 BitField<P1ATOM_SIZE>::BITS_PER_UNIT,
-		 rhs.m_bits.Read(start,
-				 BitField<P1ATOM_SIZE>::BITS_PER_UNIT
-				 ));
+                BitField<P1ATOM_SIZE>::BITS_PER_UNIT,
+                rhs.m_bits.Read(start,
+                                BitField<P1ATOM_SIZE>::BITS_PER_UNIT
+                                ));
   }
   return *this;
 }
