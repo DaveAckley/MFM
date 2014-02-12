@@ -12,7 +12,7 @@ namespace MFM
   class Element_Sorter : public Element<T,R>
   {
   public:
-    static Element_Sorter SORTER_INSTANCE;
+    static Element_Sorter THE_INSTANCE;
 
     Element_Sorter() {}
     
@@ -173,11 +173,11 @@ namespace MFM
   };
 
   template <class T, u32 R>
-  Element_Sorter<T,R> Element_Sorter<T,R>::SORTER_INSTANCE;
+  Element_Sorter<T,R> Element_Sorter<T,R>::THE_INSTANCE;
 
   template <class T, u32 R>
   void Element_Sorter<T,R>::Needed()
   {
-    ElementTable<T,R>::get().RegisterElement(ELEMENT_SORTER, &Element_Sorter<T,R>::SORTER_INSTANCE);
+    ElementTable<T,R>::get().RegisterElement(ELEMENT_SORTER, &Element_Sorter<T,R>::THE_INSTANCE);
   }
 }

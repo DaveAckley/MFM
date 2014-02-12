@@ -19,7 +19,7 @@ namespace MFM
     //static bool element_dreg_registered;
 
   public:
-    static Element_Dreg DREG_INSTANCE;
+    static Element_Dreg THE_INSTANCE;
 
     Element_Dreg() {}
     
@@ -70,11 +70,11 @@ namespace MFM
   };
 
   template <class T, u32 R>
-  Element_Dreg<T,R> Element_Dreg<T,R>::DREG_INSTANCE;
+  Element_Dreg<T,R> Element_Dreg<T,R>::THE_INSTANCE;
 
   template <class T, u32 R>
   void Element_Dreg<T,R>::Needed()
   {
-    ElementTable<T,R>::get().RegisterElement(ELEMENT_DREG, &Element_Dreg<T,R>::DREG_INSTANCE);
+    ElementTable<T,R>::get().RegisterElement(ELEMENT_DREG, &Element_Dreg<T,R>::THE_INSTANCE);
   }
 }

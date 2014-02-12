@@ -12,7 +12,7 @@ namespace MFM
   class Element_Res : public Element<T,R>
   {
   public:
-    static Element_Res RES_INSTANCE;
+    static Element_Res THE_INSTANCE;
 
     Element_Res() {}
     
@@ -27,11 +27,11 @@ namespace MFM
   };
 
   template <class T, u32 R>
-  Element_Res<T,R> Element_Res<T,R>::RES_INSTANCE;
+  Element_Res<T,R> Element_Res<T,R>::THE_INSTANCE;
 
   template <class T, u32 R>
   void Element_Res<T,R>::Needed()
   {
-    ElementTable<T,R>::get().RegisterElement(ELEMENT_RES, &Element_Res<T,R>::RES_INSTANCE);
+    ElementTable<T,R>::get().RegisterElement(ELEMENT_RES, &Element_Res<T,R>::THE_INSTANCE);
   }
 }

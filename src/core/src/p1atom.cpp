@@ -85,10 +85,10 @@ P1Atom& P1Atom::operator=(const P1Atom & rhs)
   {
     start = i * BitField<P1ATOM_SIZE>::BITS_PER_UNIT;
     m_bits.Write(start,
-                BitField<P1ATOM_SIZE>::BITS_PER_UNIT,
-                rhs.m_bits.Read(start,
-                                BitField<P1ATOM_SIZE>::BITS_PER_UNIT
-                                ));
+                 BitField<P1ATOM_SIZE>::BITS_PER_UNIT,
+                 rhs.m_bits.Read(start,
+                                 BitField<P1ATOM_SIZE>::BITS_PER_UNIT
+                                 ));
   }
   return *this;
 }
