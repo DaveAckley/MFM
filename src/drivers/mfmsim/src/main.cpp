@@ -29,6 +29,7 @@ private:
   bool renderStats;
 
   u32 m_eventsPerFrame;
+  double m_AEPS;
 
   Mouse mouse;
   Keyboard keyboard;
@@ -126,10 +127,15 @@ private:
 
     if(!paused)
     {
+      u32 processingTime = SDL_GetTicks();
       for(u32 i = 0; i < m_eventsPerFrame; i++)
       {
 	grid.TriggerEvent();
       }
+      processingTime = SDL_GetTicks() - processingTime;
+
+      /* m_eventProcessingTime is measured in milliseconds, so convert to seconds.*/
+      m_AEPS = (double)m_eventsPerFrame / (processingTime / 1000.0);
     }
 
     mouse.Flip();
@@ -141,6 +147,7 @@ public:
   MFMSim() 
   {
     m_eventsPerFrame = EVENTS_PER_FRAME;
+    m_AEPS = 0;
   }
 
   void Run(u32 seedOrZero)
@@ -257,7 +264,7 @@ public:
       grend.RenderGrid(mainGrid);
       if(renderStats)
       {
-	srend.RenderGridStatistics(mainGrid);
+	srend.RenderGridStatistics(mainGrid, m_AEPS);
       }
       
       SDL_Flip(screen);
