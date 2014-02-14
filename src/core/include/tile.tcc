@@ -199,7 +199,7 @@ void Tile<T, R>::SendAtom(EuclidDir neighbor, SPoint& atomLoc)
 template <class T, u32 R>
 bool Tile<T,R>::IsConnected(EuclidDir dir)
 {
-  return m_neighborConnections & (1 << ((u8)dir >> 1));
+  return m_neighborConnections & (1<<dir);
 }
 
 template <class T, u32 R>

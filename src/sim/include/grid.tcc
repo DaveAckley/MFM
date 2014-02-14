@@ -11,6 +11,8 @@ Grid<T,R>::Grid(int width, int height)
 
   m_tiles = new Tile<T,R>[m_width * m_height];
 
+  /* Set the neighbors flags of each tile. This lets the tiles know */
+  /* if any of its caches are dead and should not be written to.    */
   u8 neighbors;
   for(u32 x = 0; x < m_width; x++)
   {
@@ -19,24 +21,41 @@ Grid<T,R>::Grid(int width, int height)
       neighbors = 0;
       if(x > 0)
       {
-	neighbors |= 0x8;  // XXX TODO: Should be (1<<EUDIR_WEST) or something, etc
+	neighbors |= (1<<EUDIR_WEST);
       }
       if(y > 0)
       {
-	neighbors |= 0x1;
+	neighbors |= (1<<EUDIR_NORTH);
       }
       if(x < m_width - 1)
       {
-	neighbors |= 0x2;
+	neighbors |= (1<<EUDIR_EAST);
       }
       if(y < m_height - 1)
       {
-	neighbors |= 0x4;
+	neighbors |= (1<<EUDIR_SOUTH);
+      }
+      if((neighbors & (1<<EUDIR_SOUTH)) && 
+	 (neighbors & (1<<EUDIR_WEST)))
+      {
+	neighbors |= (1<<EUDIR_SOUTHWEST);
+      }
+      if((neighbors & (1<<EUDIR_NORTH)) && 
+	 (neighbors & (1<<EUDIR_WEST)))
+      {
+	neighbors |= (1<<EUDIR_NORTHWEST);
+      }
+      if((neighbors & (1<<EUDIR_SOUTH)) && 
+	 (neighbors & (1<<EUDIR_EAST)))
+      {
+	neighbors |= (1<<EUDIR_SOUTHEAST);
+      }
+      if((neighbors & (1<<EUDIR_NORTH)) && 
+	 (neighbors & (1<<EUDIR_EAST)))
+      {
+	neighbors |= (1<<EUDIR_NORTHEAST);
       }
 
-      // XXX Here, shouldn't there also be like:
-      // if (neighbors&NORTH_BIT && neighbors&WEST_BIT) neighbors |= NORTH_WEST_BIT;
-      // etc?  What are these neighbors used for?
       GetTile(x, y).SetNeighbors(neighbors);
     }
   }

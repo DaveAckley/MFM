@@ -92,6 +92,9 @@ public:
   Point<s32>& GetSEWindowPoint(u32 index)
   { return m_southeastSubWindow[index]; }
 
+  SPoint* GetSESubWindow()
+  { return m_southeastSubWindow; }
+
 
 private:
   static const u32 ARRAY_LENGTH = EVENT_WINDOW_SITES(R);
