@@ -34,8 +34,6 @@ bool EventWindow<T,R>::SetRelativeAtom(const SPoint& offset, T atom)
   SPoint accessLoc(offset);
   accessLoc.Add(m_center.GetX(), m_center.GetY());
   
-
-
   m_tile.PlaceAtom(atom, accessLoc);
 
   return true;

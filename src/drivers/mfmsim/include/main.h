@@ -11,6 +11,7 @@
 #include "element_sorter.h"
 #include "element_emitter.h"
 #include "element_consumer.h"
+#include "element_data.h"
 #include "grid.h"
 #include "gridpanel.h"
 #include "gridrenderer.h"

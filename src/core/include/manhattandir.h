@@ -89,8 +89,6 @@ public:
   void FillFromBits(SPoint& pt, u8 bits,
                     TableType type);
 
-  void FillVNNeighbors(SPoint* pts);
-
   Point<s32>& GetSEWindowPoint(u32 index)
   { return m_southeastSubWindow[index]; }
 

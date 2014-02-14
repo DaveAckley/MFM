@@ -28,7 +28,7 @@ namespace MFM
     virtual void Behavior(EventWindow<T,R>& window, StateFunction f)
     {
       Random & random = window.GetRandom();
-
+      
       SPoint dir;
       ManhattanDir<R>::get().FillRandomSingleDir(dir);
       
@@ -39,30 +39,32 @@ namespace MFM
       if(state == ELEMENT_NOTHING)
       {
 	if(random.OneIn(DREG_DRG_ODDS))
-	  {
-	    newType = ELEMENT_DREG;
-	  }
+	{
+	  newType = ELEMENT_DREG;
+	}
 	else if(random.OneIn(DREG_RES_ODDS))
-	  {
-	    newType = ELEMENT_RES;
-	  }
+	{
+	  newType = ELEMENT_RES;
+	}
       }
-    else if(state == ELEMENT_DREG)
+      else if(state == ELEMENT_DREG)
       {
 	if(random.OneIn(DREG_DDR_ODDS))
-	  {
-	    newType = ELEMENT_NOTHING;
-	  }
+	{
+	  newType = ELEMENT_NOTHING;
+	}
       }
-    else if(random.OneIn(DREG_DEL_ODDS))
+      else if(random.OneIn(DREG_DEL_ODDS))
       {
 	newType = ELEMENT_NOTHING;
       }
-
-    if(newType >= 0)
+      
+      if(newType >= 0)
       {
 	window.SetRelativeAtom(dir, P1Atom(newType));
       }
+
+      Diffuse(window, f);
     }
 
     static void Needed();

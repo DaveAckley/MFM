@@ -25,11 +25,15 @@ private:
 public:
   Random & GetRandom() { return m_tile.GetRandom(); }
 
+  Tile<T,R>& GetTile() { return m_tile; }
+
   EventWindow(Tile<T,R> & tile, u32 tileWidth, u8 neighborConnections);
 
   EventWindow(Tile<T,R> & tile) : m_tile(tile) { }
 
   void SetCenter(const SPoint& center) ;
+
+  SPoint& GetCenter() { return m_center; }
 
   ~EventWindow() { }
 

@@ -21,7 +21,10 @@ namespace MFM
     void ReproduceVertically(EventWindow<T,R>& window, StateFunction f,
 			     ElementType type);
 
-    
+    u32 FillAvailableVNNeighbors(EventWindow<T,R>& window, StateFunction f, SPoint* points);
+
+    void Diffuse(EventWindow<T,R>& window, StateFunction f);
+
   public:
     
     Element() { }

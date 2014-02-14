@@ -119,15 +119,6 @@ void ManhattanDir<R>::FillFromBits(SPoint& pt,
 }
 
 template<u32 R>
-void ManhattanDir<R>::FillVNNeighbors(SPoint* pts)
-{
-  pts[0].Set(-1, 0);
-  pts[1].Set(0, -1);
-  pts[2].Set(1,  0);
-  pts[3].Set(0,  1);
-}
-
-template<u32 R>
 void ManhattanDir<R>::FillRandomSingleDir(SPoint& pt)
 {
   switch(rand() & 3)

@@ -130,18 +130,4 @@ ElementTable<T,R>& ElementTable<T,R>::get()
   return instance;
 }
 
-template <class T, u32 R>
-bool ElementTable<T,R>::Diffusable(ElementType type)
-{
-  switch(type)
-  {
-  case ELEMENT_NOTHING:
-  case ELEMENT_EMITTER:
-  case ELEMENT_CONSUMER:
-    return false;
-  default:
-    return true;
-  }
-}
-
 } /* namespace MFM */

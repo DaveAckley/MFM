@@ -8,7 +8,7 @@
 namespace MFM
 {
 
-#define DATA_CREATE_ODDS 8
+#define DATA_CREATE_ODDS 12
 #define DATA_MAXVAL 100
 #define DATA_MINVAL 1
 

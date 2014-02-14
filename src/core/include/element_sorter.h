@@ -112,9 +112,9 @@ namespace MFM
       ManhattanDir<R>::get().FillRandomSingleDir(repPt);
 
       if(f(&window.GetRelativeAtom(repPt)) == ELEMENT_RES)
-	{
-	  window.SetRelativeAtom(repPt, T(ELEMENT_SORTER));
-	}
+      {
+	window.SetRelativeAtom(repPt, T(ELEMENT_SORTER));
+      }
 
       /* Add one for the terminator       v    */
       const u32 subSize = ((R * R) / 4) + 1;
@@ -138,35 +138,36 @@ namespace MFM
   
       Point<s32> srcPt, dstPt;
       for(s32 i = 0; i < 2; i++)
+      {
+	if(movingUp && seCount && nwCount)
 	{
-	  if(movingUp && seCount && nwCount)
-	    {
-	      ManhattanDir<R>::get().FillFromBits(srcPt, seDatas[random.Create(seCount)], MANHATTAN_TABLE_EVENT);
-	      ManhattanDir<R>::get().FillFromBits(dstPt, nwEmpties[random.Create(nwCount)], MANHATTAN_TABLE_EVENT);
-	    }
-	  else if(!movingUp && neCount && swCount)
-	    {
-	      ManhattanDir<R>::get().FillFromBits(srcPt, neDatas[random.Create(neCount)], MANHATTAN_TABLE_EVENT);
-	      ManhattanDir<R>::get().FillFromBits(dstPt, swEmpties[random.Create(swCount)], MANHATTAN_TABLE_EVENT);
-	    }
-	  else
-	    {
-	      movingUp = !movingUp;
-	      continue;
-	    }
-
-	  u32 cmp = ((movingUp && (window.GetRelativeAtom(srcPt).ReadLowerBits() >
-				   window.GetCenterAtom().ReadLowerBits())) ||
-		     (!movingUp && (window.GetRelativeAtom(srcPt).ReadLowerBits() <
-				    window.GetCenterAtom().ReadLowerBits())));
-	  if(cmp)
-	    {
-	      window.GetCenterAtom().WriteLowerBits(window.GetRelativeAtom(srcPt).ReadLowerBits());
-	      window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt));
-	      window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING));
-	      return;
-	    }
+	  ManhattanDir<R>::get().FillFromBits(srcPt, seDatas[random.Create(seCount)], MANHATTAN_TABLE_EVENT);
+	  ManhattanDir<R>::get().FillFromBits(dstPt, nwEmpties[random.Create(nwCount)], MANHATTAN_TABLE_EVENT);
 	}
+	else if(!movingUp && neCount && swCount)
+	{
+	  ManhattanDir<R>::get().FillFromBits(srcPt, neDatas[random.Create(neCount)], MANHATTAN_TABLE_EVENT);
+	  ManhattanDir<R>::get().FillFromBits(dstPt, swEmpties[random.Create(swCount)], MANHATTAN_TABLE_EVENT);
+	}
+	else
+	{
+	  movingUp = !movingUp;
+	  continue;
+	}
+	
+	u32 cmp = ((movingUp && (window.GetRelativeAtom(srcPt).ReadLowerBits() >
+				 window.GetCenterAtom().ReadLowerBits())) ||
+		   (!movingUp && (window.GetRelativeAtom(srcPt).ReadLowerBits() <
+				  window.GetCenterAtom().ReadLowerBits())));
+	if(cmp)
+	{
+	  window.GetCenterAtom().WriteLowerBits(window.GetRelativeAtom(srcPt).ReadLowerBits());
+	  window.SetRelativeAtom(dstPt, window.GetRelativeAtom(srcPt));
+	  window.SetRelativeAtom(srcPt, T(ELEMENT_NOTHING));
+	  return;
+	}
+      }
+      Diffuse(window, f);
     }
 
     static void Needed();    
