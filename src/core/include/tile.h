@@ -59,8 +59,6 @@ private:
 
   void SendAtom(EuclidDir neighbor, SPoint& atomLoc);
 
-  inline bool IsConnected(EuclidDir dir);
-
 public:
 
   Tile();
@@ -73,6 +71,8 @@ public:
   Random & GetRandom();
 
   void SetNeighbors(u8 neighbors);
+
+  inline bool IsConnected(EuclidDir dir);
 
   static inline bool IsInCache(SPoint& pt);
 
@@ -129,8 +129,6 @@ public:
   void PlaceInternalAtom(T& atom, const SPoint& pt) {
     PlaceAtom(atom,pt+SPoint(R,R));
   }
-
-  void DiffuseAtom(EventWindow<T,R>& window);
 
   void Execute(ElementTable<T,R>& table);
 

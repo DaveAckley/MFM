@@ -161,46 +161,6 @@ void Tile<T,R>::PlaceAtom(T& atom, const SPoint& pt)
   m_atomCount[m_stateFunc(&atom)]++;
 }
 
-template <class T,u32 R>
-void Tile<T,R>::DiffuseAtom(EventWindow<T,R>& window)
-{
-  SPoint neighbors[4];
-  SPoint center;
-  window.FillCenter(center);
-
-  ManhattanDir<R>::get().FillVNNeighbors(neighbors);
-  u8 idx = rand() & 3;
-
-  SPoint current;
-
-  for(int i = 0; i < 4; i++)
-  {
-    idx++;
-    idx &= 3;
-    
-    current = center;
-    current.Add(neighbors[idx]);
-
-    /* Is this a dead cache? */
-    if(IsInCache(current) && 
-       !IsConnected(EuDir::FromOffset(neighbors[idx])))
-    {
-      continue;
-    }
-
-
-    T& atom = window.GetRelativeAtom(neighbors[idx]);
-
-    /* It's empty! Move there! */
-    if(m_stateFunc(&atom) == 0)
-    {
-      SPoint empty(0, 0);
-      window.SwapAtoms(neighbors[idx], empty);
-      return;
-    }
-  }
-}
-
 template <class T, u32 R>
 void Tile<T, R>::SendAtom(EuclidDir neighbor, SPoint& atomLoc)
 {
@@ -239,7 +199,7 @@ void Tile<T, R>::SendAtom(EuclidDir neighbor, SPoint& atomLoc)
 template <class T, u32 R>
 bool Tile<T,R>::IsConnected(EuclidDir dir)
 {
-  return m_neighborConnections & (1 << ((u8)dir >> 1));
+  return m_neighborConnections & (1<<dir);
 }
 
 template <class T, u32 R>
@@ -324,12 +284,6 @@ void Tile<T,R>::Execute(ElementTable<T,R>& table)
 #endif
   
   table.Execute(m_executingWindow);
-
-  if(table.Diffusable((ElementType)
-		      m_stateFunc(&m_executingWindow.GetCenterAtom())))
-  {
-    DiffuseAtom(m_executingWindow);
-  }
 
   m_executingWindow.FillCenter(m_lastExecutedAtom);
 

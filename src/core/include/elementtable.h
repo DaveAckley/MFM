@@ -66,15 +66,12 @@ public:
 
   void Execute(EventWindow<T,R>& window)
   { u32 state = m_statefunc(&(window.GetCenterAtom()));
-    if(state == ELEMENT_DREG || state == ELEMENT_SORTER ||
-       state == ELEMENT_EMITTER || state == ELEMENT_CONSUMER)
+    if(state != ELEMENT_NOTHING)
     m_elementTable[state]->Behavior(window, m_statefunc); }
 
   void SetStateFunction(StateFunction f);
 
   void FillAtom(T* atom, ElementType type);
-
-  bool Diffusable(ElementType type);
 
   bool RegisterElement(ElementType type, Element<T,R>* e)
   {
