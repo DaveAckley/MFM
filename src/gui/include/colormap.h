@@ -22,7 +22,7 @@ namespace MFM {
 
     /**
      * Map value, which must be in the range of min..max to one of
-     * five different colors.  If max<min or value is out of range,
+     * five different colors.  If max<=min or value is out of range,
      * return badColor.  Only five or six different colors (plus
      * possibly badColor) will be returned by this function.
      */
@@ -31,7 +31,7 @@ namespace MFM {
     /**
      * Map value, which must be in the range of min..max to a color
      * interpolated linearly between five or six different colors
-     * equally spaced from min to max.  If max<min or value is out of
+     * equally spaced from min to max.  If max<=min or value is out of
      * range, return badColor.
      */
     u32 GetInterpolatedColor(float value, float min, float max, u32 badColor) const;
