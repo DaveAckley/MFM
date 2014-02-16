@@ -8,6 +8,18 @@ endif
 
 # Customizing/standardizing the behavior of make
 SHELL:=/bin/bash
+
+ifndef DEBUG
+  OPTFLAGS += -O99
+else
+  OPTFLAGS += -g2
+  # Default to commands if debugginb
+  ifndef COMMANDS
+    COMMANDS := 1
+  endif	
+endif
+
+
 ifndef COMMANDS
   MAKEFLAGS += --quiet
 endif
@@ -24,7 +36,7 @@ NATIVE_GCC_CFLAGS:=$(COMMON_CFLAGS)
 NATIVE_GCC_CPPFLAGS:=$(COMMON_CPPFLAGS)
 NATIVE_GCC_LDFLAGS:=$(COMMON_LDFLAGS)
 NATIVE_GCC_DEFINES:=
-NATIVE_GCC_OPTS:=-O99
+NATIVE_GCC_OPTS:=$(OPTFLAGS)
 NATIVE_GCC_DEBUGS:=
 NATIVE_LD:=ld
 
