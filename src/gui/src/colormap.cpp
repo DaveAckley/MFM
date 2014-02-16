@@ -67,7 +67,7 @@ namespace MFM {
 #undef XX6
 
   u32 ColorMap::GetSelectedColor(float value, float min, float max, u32 outOfRange) const {
-    if (min > max || value < min || value > max) return outOfRange;
+    if (min >= max || value < min || value > max) return outOfRange;
 
     const u32 * map = GetColorArray();
     u32 maxIdx = GetColorArrayLength()-1;
@@ -82,7 +82,7 @@ namespace MFM {
   }
 
   u32 ColorMap::GetInterpolatedColor(float value, float min, float max, u32 outOfRange) const {
-    if (min > max || value < min || value > max) return outOfRange;
+    if (min >= max || value < min || value > max) return outOfRange;
 
     const u32 * map = GetColorArray();
     u32 maxIdx = GetColorArrayLength()-1;
