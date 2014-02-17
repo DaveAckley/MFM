@@ -15,7 +15,7 @@ namespace MFM
     //static bool element_dreg_registered;
 
   public:
-    static Element_Consumer CONSUMER_INSTANCE;
+    static Element_Consumer THE_INSTANCE;
 
     Element_Consumer() {}
     
@@ -44,11 +44,11 @@ namespace MFM
   };
 
   template <class T, u32 R>
-  Element_Consumer<T,R> Element_Consumer<T,R>::CONSUMER_INSTANCE;
+  Element_Consumer<T,R> Element_Consumer<T,R>::THE_INSTANCE;
 
   template <class T, u32 R>
   void Element_Consumer<T,R>::Needed()
   {
-    ElementTable<T,R>::get().RegisterElement(ELEMENT_CONSUMER, &Element_Consumer<T,R>::CONSUMER_INSTANCE);
+    ElementTable<T,R>::get().RegisterElement(ELEMENT_CONSUMER, &Element_Consumer<T,R>::THE_INSTANCE);
   }
 }

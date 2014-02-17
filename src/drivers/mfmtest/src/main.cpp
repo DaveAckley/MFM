@@ -4,6 +4,8 @@ using namespace MFM;
 
 int main(int argc, char** argv)
 {
+
+  ColorMapTest::Test_RunTests();
   RandomTest::Test_RunTests();
 
   PointTest::Test_pointAdd();

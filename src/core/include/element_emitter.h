@@ -18,7 +18,7 @@ namespace MFM
     //static bool element_dreg_registered;
 
   public:
-    static Element_Emitter EMITTER_INSTANCE;
+    static Element_Emitter THE_INSTANCE;
 
     Element_Emitter() {}
     
@@ -50,11 +50,11 @@ namespace MFM
   };
 
   template <class T, u32 R>
-  Element_Emitter<T,R> Element_Emitter<T,R>::EMITTER_INSTANCE;
+  Element_Emitter<T,R> Element_Emitter<T,R>::THE_INSTANCE;
 
   template <class T, u32 R>
   void Element_Emitter<T,R>::Needed()
   {
-    ElementTable<T,R>::get().RegisterElement(ELEMENT_EMITTER, &Element_Emitter<T,R>::EMITTER_INSTANCE);
+    ElementTable<T,R>::get().RegisterElement(ELEMENT_EMITTER, &Element_Emitter<T,R>::THE_INSTANCE);
   }
 }

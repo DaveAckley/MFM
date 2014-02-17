@@ -1,4 +1,5 @@
 /* -*- C++ -*- */
+#include "colormap.h"
 
 namespace MFM {
 
@@ -31,14 +32,11 @@ u32 TileRenderer::GetDataHeatColor(Tile<T,R>& tile, T& atom)
 {
   if(tile.GetStateFunc()(&atom) == ELEMENT_DATA)
   {
-    u8 tcl = atom.ReadLowerBits() << 1;
-    return 0xff0000ff | (tcl << 8);
+    return ColorMap_SEQ5_YlOrRd::THE_INSTANCE.GetInterpolatedColor(atom.ReadLowerBits(),0,100,0xffff0000);
   }
   if(tile.GetStateFunc()(&atom) == ELEMENT_SORTER)
   {
-    u8 tcl = atom.ReadLowerBits() << 1;
-    //    return 0xffff0000 | (tcl << 8);
-    return 0xff0000ff | (tcl << 8);
+    return ColorMap_SEQ5_YlGnBu::THE_INSTANCE.GetInterpolatedColor(atom.ReadLowerBits(),0,100,0xffff0000);
   }
   return 0;
 }
@@ -94,7 +92,7 @@ void TileRenderer::RenderAtoms(SPoint& pt, Tile<T,EVENT_WINDOW_RADIUS>& tile,
 				  rendPt.GetY(),
 				  m_atomDrawSize,
 				  m_atomDrawSize,
-				  (m_atomDrawSize / 2) - 2,
+				  m_atomDrawSize / 2,
 				  color);
 	    }
 	  }

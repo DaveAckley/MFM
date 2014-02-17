@@ -14,5 +14,6 @@
 #include "grid_test.h"
 #include "eventwindow_test.h"
 #include "random_test.h"
+#include "colormap_test.h"
 
 #endif /*TESTS_H*/

@@ -2,7 +2,7 @@
 
 namespace MFM {
 
-#define FRAMES_PER_SECOND 60.0
+#define FRAMES_PER_SECOND 100.0
 
 #define EVENTS_PER_FRAME 100000
 

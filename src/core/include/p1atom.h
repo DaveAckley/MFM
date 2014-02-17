@@ -99,7 +99,7 @@ public:
 
   void RemoveShortBond(u32 index);
 
-  P1Atom& operator=(P1Atom rhs);
+  P1Atom& operator=(const P1Atom & rhs);
 };
 } /* namespace MFM */
 #endif /*P1ATOM_H*/
