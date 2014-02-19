@@ -13,32 +13,32 @@ namespace MFM
   {
   private:
     
-    typedef u32 (* StateFunction )(T* atom);
-    
-    ElementType m_type;
-
   protected:
 
     static SPoint VNNeighbors[4];
     
-    void ReproduceVertically(EventWindow<T,R>& window, StateFunction f,
-			     ElementType type);
+    void FlipSEPointToCorner(SPoint& readPt, SPoint& outPt, EuclidDir corner) const;
 
-    void FlipSEPointToCorner(SPoint& readPt, SPoint& outPt, EuclidDir corner);
+    bool FillAvailableVNNeighbor(EventWindow<T,R>& window, SPoint& pt) const;
 
-    bool FillAvailableVNNeighbor(EventWindow<T,R>& window, StateFunction f, SPoint& pt);
-
-    bool FillPointWithType(EventWindow<T,R>& window, StateFunction f,
+    bool FillPointWithType(EventWindow<T,R>& window, 
 			   SPoint& pt, SPoint* relevants, u32 relevantCount,
-			   EuclidDir rotation, ElementType type);
+			   EuclidDir rotation, ElementType type) const;
       
-    void Diffuse(EventWindow<T,R>& window, StateFunction f);
+    void Diffuse(EventWindow<T,R>& window) const;
 
   public:
+
+    Element() 
+    { }
+
+    u32 GetType() const { return GetDefaultAtom().GetType(); }
     
-    Element() { }
-    
-    virtual void Behavior(EventWindow<T,R>& window, StateFunction f) = 0;
+    virtual void Behavior(EventWindow<T,R>& window) const = 0;
+
+    virtual const T & GetDefaultAtom() const = 0;
+
+    virtual u32 DefaultPhysicsColor() const = 0;
     
   };
 }
