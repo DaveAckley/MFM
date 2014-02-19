@@ -1,3 +1,6 @@
+#ifndef ELEMENT_RES_H
+#define ELEMENT_RES_H
+
 #include "element.h"       /* -*- C++ -*- */
 #include "eventwindow.h"
 #include "elementtype.h"
@@ -13,14 +16,24 @@ namespace MFM
   {
   public:
     static Element_Res THE_INSTANCE;
+    static const u32 TYPE = 0xa11ce11;             // We are stem cells able to become anything
 
     Element_Res() {}
     
-    typedef u32 (* StateFunction )(T* atom);
-
-    virtual void Behavior(EventWindow<T,R>& window, StateFunction f)
+    virtual const T & GetDefaultAtom() const 
     {
-      Diffuse(window, f);
+      static T defaultAtom(TYPE,0,0,0);
+      return defaultAtom;
+    }
+
+    virtual u32 DefaultPhysicsColor() const 
+    {
+      return 0xffffff00;
+    }
+
+    virtual void Behavior(EventWindow<T,R>& window) const
+    {
+      Diffuse(window);
     }
 
     static void Needed();    
@@ -29,9 +42,13 @@ namespace MFM
   template <class T, u32 R>
   Element_Res<T,R> Element_Res<T,R>::THE_INSTANCE;
 
+  /*
   template <class T, u32 R>
   void Element_Res<T,R>::Needed()
   {
-    ElementTable<T,R>::get().RegisterElement(ELEMENT_RES, &Element_Res<T,R>::THE_INSTANCE);
+    ElementTable<T,R>::get().RegisterElement(Element_Res<T,R>::THE_INSTANCE);
   }
+  */
 }
+
+#endif /* ELEMENT_RES_H */
