@@ -8,11 +8,11 @@ namespace MFM {
 void GridTest::Test_gridPlaceAtom()
 {
   
-  P1Atom atom(23);
+  GridP1Atom grid;
 
-  ElementTableP1Atom::get().SetStateFunction(&P1Atom::StateFunc);
+  grid.Needed(Element_Res<P1Atom,4>::THE_INSTANCE);
 
-  GridP1Atom grid(2,2);
+  P1Atom atom(Element_Res<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
 
   SPoint gloc(5, 10);
 
@@ -20,7 +20,7 @@ void GridTest::Test_gridPlaceAtom()
 
   P1Atom* out = grid.GetAtom(gloc);
 
-  assert(out->GetState() == atom.GetState());
+  assert(out->GetType() == atom.GetType());
   
 }
 } /* namespace MFM */

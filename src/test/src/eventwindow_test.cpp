@@ -1,4 +1,6 @@
 #include "elementtable.h"
+#include "element_dreg.h"
+#include "element_res.h"
 #include "assert.h"
 #include "eventwindow_test.h"
 #include "eventwindow.h"
@@ -10,66 +12,60 @@ namespace MFM {
 void EventWindowTest::Test_eventwindowConstruction()
 { 
   TileP1Atom tile;
-  P1Atom * atoms = tile.GetAtoms();
+  tile.RegisterElement(Element_Dreg<P1Atom,4>::THE_INSTANCE);
+
+  //  P1Atom * atoms = tile.GetAtoms();
   Point<s32> center(4, 4);
   Point<s32> zero(0, 0);
+  const u32 DREG_TYPE = Element_Dreg<P1Atom,4>::TYPE;
 
-  atoms[center.GetX() + center.GetY() * 8].SetState(ELEMENT_DREG);
+  tile.PlaceAtom(P1Atom(DREG_TYPE,0,0,0), center);
 
   EventWindowP1Atom ew(tile, 8, 0xff);
   ew.SetCenter(center);
 
   P1Atom catom = ew.GetCenterAtom();
 
-  assert(catom.GetState() == ELEMENT_DREG);
+  assert(catom.GetType() == DREG_TYPE);
 
   catom = ew.GetRelativeAtom(zero);
 
-  assert(catom.GetState() == ELEMENT_DREG);
+  assert(catom.GetType() == DREG_TYPE);
   
 }
 
 void EventWindowTest::Test_eventwindowWrite()
 {
   TileP1Atom tile;
-  P1Atom * atoms = tile.GetAtoms();
+  tile.RegisterElement(Element_Dreg<P1Atom,4>::THE_INSTANCE);
+  tile.RegisterElement(Element_Res<P1Atom,4>::THE_INSTANCE);
+
   SPoint center(4, 4);
   SPoint absolute(-2, 0);
   SPoint zero(0, 0);
-
-  atoms[center.GetX() + center.GetY() * 8].SetState(ELEMENT_DREG);
-  atoms[absolute.GetX() + absolute.GetY() * 8].SetState(ELEMENT_RES);
-
-  EventWindowP1Atom ew(tile, 8, 0xff);
-  ew.SetCenter(center);
-
-  for(int i = 0; i < 64; i++)
-  {
-    atoms[i] = P1Atom(0);
-  }
+  const u32 DREG_TYPE = Element_Dreg<P1Atom,4>::TYPE;
+  const u32 RES_TYPE = Element_Res<P1Atom,4>::TYPE;
 
   absolute.Add(center);
 
-  P1Atom& erased1 = atoms[center.GetX() + center.GetY() * 8];
-  P1Atom& erased2 = atoms[absolute.GetX() + absolute.GetY() * 8];
+  P1Atom * erased1 = tile.GetAtom(center);
+  P1Atom * erased2 = tile.GetAtom(absolute);
 
   absolute.Subtract(center);
 
-  assert(erased1.GetState() == 0);
-  assert(erased2.GetState() == 0);
+  assert(erased1->GetType() == 0);
+  assert(erased2->GetType() == 0);
 
-  ew.SetRelativeAtom(zero, P1Atom(ELEMENT_DREG));
-  ew.SetRelativeAtom(absolute, P1Atom(ELEMENT_RES));
+  EventWindowP1Atom ew(tile, 8, 0xff);
 
-  absolute.Add(center);
+  ew.SetCenter(center);
 
-  P1Atom& reWritten1 = atoms[center.GetX() + center.GetY() * 8];
-  P1Atom& reWritten2 = atoms[absolute.GetX() + absolute.GetY() * 8];
+  ew.SetRelativeAtom(zero, P1Atom(DREG_TYPE,0,0,0));
+  ew.SetRelativeAtom(absolute, P1Atom(RES_TYPE,0,0,0));
 
-  assert(reWritten1.GetState() == ELEMENT_DREG);
-  assert(reWritten2.GetState() == ELEMENT_RES);
+  assert(erased1->GetType() == DREG_TYPE);
+  assert(erased2->GetType() == RES_TYPE);
 
-  
 }
 } /* namespace MFM */
 
