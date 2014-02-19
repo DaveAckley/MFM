@@ -128,7 +128,7 @@ u32 BitField<bitLength>::Read(const u32 startIdx, const u32 length) const
 }
 
 template <int bitLength>
-void BitField<bitLength>::Print(FILE* ostream)
+void BitField<bitLength>::Print(FILE* ostream) const
 {
   u32 mask = 0xf0000000;
   for(u32 i = 0; i < ARRAY_LENGTH; i++)
