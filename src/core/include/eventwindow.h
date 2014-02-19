@@ -16,7 +16,7 @@ class EventWindow
 {
 private:
 
-  typedef u32 (* StateFunction )(T* atom);
+  //  typedef u32 (* StateFunction )(T* atom);
 
   Tile<T,R> & m_tile;
 
