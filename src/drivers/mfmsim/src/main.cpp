@@ -18,11 +18,15 @@ class MFMSim
 {
 public:
   static const u32 EVENT_WINDOW_RADIUS = 4;
+  static const u32 GRID_WIDTH = 5;
+  static const u32 GRID_HEIGHT = 3;
+  static const u32 ELEMENT_TABLE_BITS = 8;
+
 
 private:
 
-  typedef Grid<P1Atom,EVENT_WINDOW_RADIUS> GridP1Atom;
-  typedef ElementTable<P1Atom,EVENT_WINDOW_RADIUS> ElementTableP1Atom;
+  typedef Grid<P1Atom,EVENT_WINDOW_RADIUS,GRID_WIDTH,GRID_HEIGHT> GridP1Atom;
+  typedef ElementTable<P1Atom,EVENT_WINDOW_RADIUS,ELEMENT_TABLE_BITS> ElementTableP1Atom;
 
   bool paused;
 
@@ -158,20 +162,17 @@ public:
     screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 32,
 			      SDL_SWSURFACE);
 
-    ElementTableP1Atom::get().SetStateFunction(&P1Atom::StateFunc);
-
     SDL_Event event;
     
-    const u32 GRID_WIDTH = 5;
-    const u32 GRID_HEIGHT = 3;
-    GridP1Atom mainGrid(GRID_WIDTH, GRID_HEIGHT);
+    GridP1Atom mainGrid;
 
-    Element_Dreg<P1Atom, 4>::Needed();
-    Element_Res<P1Atom, 4>::Needed();
-    Element_Sorter<P1Atom, 4>::Needed();
-    Element_Emitter<P1Atom, 4>::Needed();
-    Element_Consumer<P1Atom, 4>::Needed();
-    Element_Data<P1Atom, 4>::Needed();
+    mainGrid.Needed(Element_Empty<P1Atom, 4>::THE_INSTANCE);
+    mainGrid.Needed(Element_Dreg<P1Atom, 4>::THE_INSTANCE);
+    mainGrid.Needed(Element_Res<P1Atom, 4>::THE_INSTANCE);
+    mainGrid.Needed(Element_Sorter<P1Atom, 4>::THE_INSTANCE);
+    mainGrid.Needed(Element_Emitter<P1Atom, 4>::THE_INSTANCE);
+    mainGrid.Needed(Element_Consumer<P1Atom, 4>::THE_INSTANCE);
+    mainGrid.Needed(Element_Data<P1Atom, 4>::THE_INSTANCE);
 
     if (seedOrZero==0) seedOrZero = 1;  /* Avoid superstitious 0 zeed */
     mainGrid.SetSeed(seedOrZero);  /* Push seeds out to everybody */
@@ -183,18 +184,16 @@ public:
     srend.SetDrawPoint(SPoint(1024, 0));
     srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, SCREEN_HEIGHT));
 
-    mainGrid.SetStateFunc(&P1Atom::StateFunc);
-
     renderStats = false;
 
-    P1Atom atom(ELEMENT_DREG);
-    P1Atom sorter(ELEMENT_SORTER);
-    P1Atom emtr(ELEMENT_EMITTER);
-    P1Atom cnsr(ELEMENT_CONSUMER);
+    P1Atom atom(Element_Dreg<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
+    P1Atom sorter(Element_Sorter<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
+    P1Atom emtr(Element_Emitter<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
+    P1Atom cnsr(Element_Consumer<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
 
-    emtr.WriteLowerBits(3);
+    emtr.SetStateField(0,10,3);  // What is this for??
 
-    sorter.WriteLowerBits(50);
+    sorter.SetStateField(0,32,50);  // Default threshold
 
     u32 realWidth = TILE_WIDTH - EVENT_WINDOW_RADIUS * 2;
 

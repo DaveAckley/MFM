@@ -6,6 +6,7 @@
 #include "SDL/SDL_ttf.h"
 #include "assert.h"
 #include "eventwindow.h"
+#include "element_empty.h"
 #include "element_dreg.h"
 #include "element_res.h"
 #include "element_sorter.h"

@@ -34,11 +34,11 @@ private:
 
   EventWindowRenderMode m_currentEWRenderMode;
 
-  template <class T,u32 R>
-  void RenderGridClose(Grid<T,R>& grid);
+  template <class T,u32 R,u32 W,u32 H>
+  void RenderGridClose(Grid<T,R,W,H>& grid);
 
-  template <class T,u32 R>
-  void RenderGridSeparated(Grid<T,R>& grid);
+  template <class T,u32 R,u32 W,u32 H>
+  void RenderGridSeparated(Grid<T,R,W,H>& grid);
 
 public:
   GridRenderer(SDL_Surface* dest);
@@ -117,8 +117,8 @@ public:
 
   ~GridRenderer();
   
-  template <class T,u32 R>
-  void RenderGrid(Grid<T,R>& grid);
+  template <class T,u32 R,u32 W,u32 H>
+  void RenderGrid(Grid<T,R,W,H>& grid);
   
 };
 } /* namespace MFM */

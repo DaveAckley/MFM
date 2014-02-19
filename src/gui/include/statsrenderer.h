@@ -48,8 +48,8 @@ public:
   template <class T, u32 R>
   void DrawString(const char* string, u32 x, u32 y);
 
-  template<class T, u32 R>
-  void RenderGridStatistics(Grid<T,R>& grid, double aeps);
+  template<class T, u32 R, u32 W, u32 H>
+  void RenderGridStatistics(Grid<T,R,W,H>& grid, double aeps);
 };
 } /* namespace MFM */
 #include "statsrenderer.tcc"
