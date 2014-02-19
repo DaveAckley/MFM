@@ -1,18 +1,17 @@
 #ifndef ELEMENTTYPE_H /* -*- C++ -*- */
 #define ELEMENTTYPE_H
 
+#include "itype.h"
+
 namespace MFM
 {
-  typedef enum
-  {
-    ELEMENT_NOTHING  = 0x0,
-    ELEMENT_DREG     = 0x1,
-    ELEMENT_RES      = 0x2,
-    ELEMENT_SORTER   = 0x3,
-    ELEMENT_EMITTER  = 0x4,
-    ELEMENT_CONSUMER = 0x5,
-    ELEMENT_DATA     = 0x6
-  }ElementType;
+  typedef u32 ElementType;
+
+  /**
+   * ELEMENT_NOTHING is recognized at the element/elementtable level.
+   */
+  static const u32 ELEMENT_NOTHING  = 0x0;
+
 }
 
 #endif /*ELEMENTTYPE_H*/

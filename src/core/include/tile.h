@@ -3,7 +3,6 @@
 
 #include "eucliddir.h"
 #include "random.h"  /* for Random */
-#include "p1atom.h"
 #include "packet.h"
 #include "packetbuffer.h"
 #include "point.h"
@@ -19,12 +18,15 @@ namespace MFM {
 /*The number of sites a tile contains.*/
 #define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)
 
-template <class T,u32 R>
+  template <class T,u32 R>
 class Tile
 {
 public:
   static const u32 EVENT_WINDOW_RADIUS = R;
-  
+
+  static const u32 ELEMENT_TABLE_BITS = 8;  // Currently hard-coded!
+  static const u32 ELEMENT_TABLE_SIZE = 1u<<ELEMENT_TABLE_BITS;
+
   /**
    * The edge length of the portion of a tile that is 'owned' by the
    * tile itself -- i.e., excluding the cache boundary.
@@ -33,7 +35,11 @@ public:
 
 private:
 
+  ElementTable<T,R,ELEMENT_TABLE_BITS> elementTable;
+
   Random m_random;
+
+  u64 m_eventsExecuted;
 
   u8 m_neighborConnections;
 
@@ -41,7 +47,7 @@ private:
 
   T m_atoms[TILE_SIZE];
 
-  s32 m_atomCount[ELEMENT_COUNT];
+  s32 m_atomCount[ELEMENT_TABLE_SIZE];
 
   SPoint m_lastExecutedAtom;
 
@@ -53,7 +59,7 @@ private:
 
   void CreateWindowAt(const SPoint& pt);
 
-  u32 (*m_stateFunc)(T* atom);
+  //  u32 (*m_stateFunc)(T* atom);
 
   void SendRelevantAtoms();
 
@@ -72,10 +78,20 @@ public:
 
   void SetNeighbors(u8 neighbors);
 
+  ElementTable<T,R,ELEMENT_TABLE_BITS> & GetElementTable() {
+    return elementTable;
+  }
+
   inline bool IsConnected(EuclidDir dir);
 
   static inline bool IsInCache(SPoint& pt);
 
+  u32 GetEventsExecuted() const 
+  {
+    return m_eventsExecuted;
+  }
+
+  /*
   void SetStateFunc(u32 (*stateFunc)(T* atom))
   {
     m_stateFunc = stateFunc;
@@ -85,6 +101,7 @@ public:
   {
     return m_stateFunc;
   }
+  */
 
   /*
    * Finds the cache pointed at by pt. If there
@@ -119,20 +136,28 @@ public:
    * Store an atom anywhere in the tile, using the 'raw' coordinate
    * system in which (0,0) is in the tile cache.  See also PlaceInternalAtom
    */
-  void PlaceAtom(T& atom, const SPoint& pt);
+  void PlaceAtom(const T& atom, const SPoint& pt);
 
   /**
    * Store an atom in the 'locally-owned' portion of a tile, using the
    * 'natural' coordinate system in which (0,0) is the upper left of
    * the sites that this tile owns..  See also PlaceAtom
    */
-  void PlaceInternalAtom(T& atom, const SPoint& pt) {
+  void PlaceInternalAtom(const T& atom, const SPoint& pt) {
     PlaceAtom(atom,pt+SPoint(R,R));
   }
 
-  void Execute(ElementTable<T,R>& table);
+  void Execute();
 
   u32 GetAtomCount(ElementType atomType);
+
+  void SetAtomCount(ElementType atomType, u32 count);
+
+  void IncrAtomCount(ElementType atomType, s32 delta);
+
+  void RegisterElement(const Element<T,R> & anElement) {
+    elementTable.RegisterElement(anElement);
+  }
 };
 } /* namespace MFM */
 
