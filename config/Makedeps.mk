@@ -1,8 +1,7 @@
 
 # We need a kickstart rule to get .d files going, before their first real compile-time generation:
 $(BUILDDIR)/%.d:	
-	mkdir -p $(BUILDDIR)
-	-touch $@
+	@mkdir -p $(BUILDDIR)
 
 # After we make .d's, let's keep them
 .PRECIOUS:	$(BUILDDIR)/%.d
