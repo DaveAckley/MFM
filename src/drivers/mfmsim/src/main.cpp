@@ -191,7 +191,8 @@ public:
     P1Atom emtr(Element_Emitter<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
     P1Atom cnsr(Element_Consumer<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
 
-    emtr.SetStateField(0,10,3);  // What is this for??
+    emtr.SetStateField(0,10,10);  // What is this for??
+    cnsr.SetStateField(0,10,10);  // What is this for??
 
     sorter.SetStateField(0,32,50);  // Default threshold
 

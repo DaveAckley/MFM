@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "itype.h"
 #include "point.h"
-#include "bitfield.h"
+#include "BitVector.h"
 #include "manhattandir.h"
 #include "atom.h"
 
@@ -20,7 +20,7 @@ namespace MFM {
 class P1Atom : public Atom<P1Atom,4>
 {
 private:
-  BitField<P1ATOM_SIZE> m_bits;
+  BitVector<P1ATOM_SIZE> m_bits;
 
   typedef ManhattanDir<4> ManhattanDir4;
 
@@ -164,18 +164,40 @@ public:
     return m_bits.Read(32, 32);
   }
   */
+
   void PrintBits(FILE* ostream) const
   { m_bits.Print(ostream); }
 
+#if 0
   /* Adds a long bond. Returns its index. */
   u32 AddLongBond(const SPoint& offset);
 
   u32 AddShortBond(const SPoint& offset);
+#endif
 
-  /* Fills pt with the long bond location in index. */
-  void FillLongBond(u32 index, SPoint& pt);
+  /**
+   * Fills pt with the long bond location in index and returns true,
+   * if atom has at least index+1 long bonds.  Otherwise returns false
+   * and pt is unchanged */
+  bool GetLongBond(u32 index, SPoint& pt) const;
 
-  void FillShortBond(u32 index, SPoint& pt);
+  /**
+   * Fills pt with the short bond location in index and returns true,
+   * if atom has at least index+1 short bonds.  Otherwise returns
+   * false and pt is unchanged */
+  bool GetShortBond(u32 index, SPoint& pt) const;
+
+  /**
+   * Stores pt in the long bond location index and returns true, if
+   * atom has at least index+1 long bonds, and pt is representable as
+   * a long bond.  Otherwise returns false and *this is unchanged */
+  bool SetLongBond(u32 index, const SPoint& pt);
+
+  /**
+   * Stores pt in the short bond location in index and returns true,
+   * if atom has at least index+1 short bonds, and pt is representable
+   * as a short bond.  Otherwise returns false and *this is unchanged */
+  bool SetShortBond(u32 index, const SPoint& pt);
 
   /* 
    * Removes a long bond. Be careful; if a
