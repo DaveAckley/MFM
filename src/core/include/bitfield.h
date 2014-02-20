@@ -81,7 +81,7 @@ public:
    */
   void Remove(int startIdx, int length);
 
-  void Print(FILE* ostream);
+  void Print(FILE* ostream) const;
 			   
 };
 } /* namespace MFM */

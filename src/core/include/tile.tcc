@@ -1,21 +1,26 @@
 #include "manhattandir.h"      /* -*- C++ -*- */
+#include "element_empty.h"
 
 namespace MFM {
 
+/*
 template <class T, u32 R>
 static u32 UninitializedStateFunc(T* atom) {
   FAIL(UNINITIALIZED_VALUE);
 }
+*/
 
 template <class T, u32 R>
-Tile<T,R>::Tile() : m_executingWindow(*this), m_stateFunc(&UninitializedStateFunc<T,R>)
+Tile<T,R>::Tile() : m_eventsExecuted(0), m_executingWindow(*this)
 {
-  m_atomCount[ELEMENT_NOTHING] = TILE_SIZE;
-  
-  for(s32 i = 1; i < ELEMENT_COUNT; i++)
+  for(u32 i = 0; i < ELEMENT_TABLE_SIZE; i++)
   {
     m_atomCount[i] = 0;
   }
+
+  RegisterElement(Element_Empty<T,R>::THE_INSTANCE);
+
+  SetAtomCount(ELEMENT_NOTHING,TILE_SIZE);
 }
 
 template <class T, u32 R>
@@ -148,17 +153,17 @@ EuclidDir Tile<T,R>::CacheAt(SPoint& sp)
 }
 
 template <class T,u32 R>
-void Tile<T,R>::PlaceAtom(T& atom, const SPoint& pt)
+void Tile<T,R>::PlaceAtom(const T& atom, const SPoint& pt)
 {
   T* oldAtom = GetAtom(pt);
-  u32 type = m_stateFunc(oldAtom);
+  u32 oldType = oldAtom->GetType();
 
-  m_atomCount[type]--;
+  IncrAtomCount(oldType,-1);
 
   m_atoms[pt.GetX() + 
 	  pt.GetY() * TILE_WIDTH] = atom;  
 
-  m_atomCount[m_stateFunc(&atom)]++;
+  IncrAtomCount(atom.GetType(),1);
 }
 
 template <class T, u32 R>
@@ -273,7 +278,7 @@ void Tile<T,R>::SendRelevantAtoms()
 }
 
 template <class T,u32 R>
-void Tile<T,R>::Execute(ElementTable<T,R>& table)
+void Tile<T,R>::Execute()
 {
   /*Change to 0 if placing a window in a certain place*/
 #if 1
@@ -283,16 +288,50 @@ void Tile<T,R>::Execute(ElementTable<T,R>& table)
   CreateWindowAt(winCenter);
 #endif
   
-  table.Execute(m_executingWindow);
+  elementTable.Execute(m_executingWindow);
 
   m_executingWindow.FillCenter(m_lastExecutedAtom);
 
   SendRelevantAtoms();
+
+  ++m_eventsExecuted;
+
 }
 
 template <class T, u32 R>
 u32 Tile<T,R>::GetAtomCount(ElementType atomType)
 {
-  return m_atomCount[(u32)atomType];
+  s32 idx = elementTable.GetIndex(atomType);
+  if (idx < 0) return 0;
+  return m_atomCount[idx];
+}
+
+template <class T, u32 R>
+void Tile<T,R>::SetAtomCount(ElementType atomType, u32 count)
+{
+  s32 idx = elementTable.GetIndex(atomType);
+  if (idx < 0) {
+    if (count > 0) FAIL(ILLEGAL_STATE);  
+    return;
+  }
+  m_atomCount[idx] = count;
+}
+
+template <class T, u32 R>
+void Tile<T,R>::IncrAtomCount(ElementType atomType, s32 delta)
+{
+  s32 idx = elementTable.GetIndex(atomType);
+  if (idx < 0) {
+    if (delta != 0) FAIL(ILLEGAL_STATE);  
+    return;
+  }
+  if (delta < 0 && (u32) -delta > m_atomCount[idx])
+    FAIL(ILLEGAL_ARGUMENT);
+
+  if (delta < 0)
+    m_atomCount[idx] -= (u32) -delta;
+  else
+    m_atomCount[idx] += (u32) delta;
+
 }
 } /* namespace MFM */

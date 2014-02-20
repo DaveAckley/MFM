@@ -8,34 +8,17 @@ namespace MFM
       SPoint(-1, 0), SPoint(1, 0), SPoint(0, -1), SPoint(0, 1)
   };
 
-  template <class T, u32 R>
-  void Element<T,R>::ReproduceVertically(EventWindow<T,R>& window, StateFunction f,
-			   ElementType type)
-  {
-    Random & random = window.GetRandom();
-    
-    u32 cval = window.GetCenterAtom().ReadLowerBits();
-    bool down = random.CreateBool();
-    SPoint repPt(0, down ? R/2 : -(R/2));
-    if(f(&window.GetRelativeAtom(repPt)) == ELEMENT_NOTHING)
-    {
-      window.SetRelativeAtom(repPt, T(type));
-      window.GetRelativeAtom(repPt).WriteLowerBits(cval + (down ? 1 : -1));
-    }
-  }
-
   /* Fills 'pt' with the value of a randomly selected empty von neumann */
   /* neighbor.                                                          */
   /* Returns false if there is no valid neighbor to be used.            */
   template <class T, u32 R>
-  bool Element<T,R>::FillAvailableVNNeighbor(EventWindow<T,R>& window, StateFunction f,
-					     SPoint& pt)
+  bool Element<T,R>::FillAvailableVNNeighbor(EventWindow<T,R>& window, SPoint& pt) const
   {
-    return FillPointWithType(window, f, pt, VNNeighbors, 4, EUDIR_SOUTHEAST, ELEMENT_NOTHING);
+    return FillPointWithType(window, pt, VNNeighbors, 4, EUDIR_SOUTHEAST, ELEMENT_NOTHING);
   }
 
   template <class T, u32 R>
-  void Element<T,R>::FlipSEPointToCorner(SPoint& readPt, SPoint& outPt, EuclidDir corner)
+  void Element<T,R>::FlipSEPointToCorner(SPoint& readPt, SPoint& outPt, EuclidDir corner) const
   {
     outPt = readPt;
     switch(corner)
@@ -55,9 +38,9 @@ namespace MFM
      symmetric about the origin, rotation does not make a difference. 
    */
   template <class T, u32 R>
-  bool Element<T,R>::FillPointWithType(EventWindow<T,R>& window, StateFunction f,
+  bool Element<T,R>::FillPointWithType(EventWindow<T,R>& window, 
 				       SPoint& pt, SPoint* relevants, u32 relevantCount,
-				       EuclidDir rotation, ElementType type)
+				       EuclidDir rotation, ElementType type) const
   {
     Tile<T,R>& tile = window.GetTile();
     const SPoint& center = window.GetCenter();
@@ -71,7 +54,7 @@ namespace MFM
       
       /* Dead cache? Not of right type? */
       if((tile.IsInCache(current) && !tile.IsConnected(tile.CacheAt(current))) ||
-	 (f(&window.GetRelativeAtom(relevantFlip)) != type))
+	 (window.GetRelativeAtom(relevantFlip).GetType() != type))
       {
 	continue;
       }
@@ -88,10 +71,10 @@ namespace MFM
   }
 
   template <class T, u32 R>
-  void Element<T,R>::Diffuse(EventWindow<T,R>& window, StateFunction f)
+  void Element<T,R>::Diffuse(EventWindow<T,R>& window) const
   {
     SPoint pt;
-    if(FillAvailableVNNeighbor(window, f, pt))
+    if(FillAvailableVNNeighbor(window, pt))
     {
       window.SwapAtoms(pt, SPoint(0, 0));
     }

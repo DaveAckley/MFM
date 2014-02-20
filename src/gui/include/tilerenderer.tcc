@@ -1,4 +1,6 @@
 /* -*- C++ -*- */
+#include "element_data.h"    /* for ELEMENT_DATA */
+#include "element_sorter.h"  /* for ELEMENT_SORTER */
 #include "colormap.h"
 
 namespace MFM {
@@ -9,34 +11,21 @@ namespace MFM {
 template <class T, u32 R>
 u32 TileRenderer::GetAtomColor(Tile<T,R>& tile, T& atom)
 {
-  switch(tile.GetStateFunc()(&atom))
-  {
-  case ELEMENT_DREG:
-    return 0xff505050;
-  case ELEMENT_RES:
-    return 0xffffff00;
-  case ELEMENT_SORTER:
-    return 0xffff0000;
-  case ELEMENT_EMITTER:
-    return 0xff808080;
-  case ELEMENT_DATA:
-    return 0xff0000ff;
-  case ELEMENT_CONSUMER:
-    return 0xff101010;
-  }
-  return 0;
+  const Element<T,R> * elt = tile.GetElementTable().Lookup(atom.GetType());
+  if (elt) return elt->DefaultPhysicsColor();
+  return 0xffffffff;
 }
 
 template <class T, u32 R>
 u32 TileRenderer::GetDataHeatColor(Tile<T,R>& tile, T& atom)
 {
-  if(tile.GetStateFunc()(&atom) == ELEMENT_DATA)
+  if(atom.IsType(Element_Data<T,R>::TYPE))
   {
-    return ColorMap_SEQ5_YlOrRd::THE_INSTANCE.GetInterpolatedColor(atom.ReadLowerBits(),0,100,0xffff0000);
+    return ColorMap_SEQ5_YlOrRd::THE_INSTANCE.GetInterpolatedColor(Element_Data<T,R>::THE_INSTANCE.GetDatum(atom,0),0,100,0xffff0000);
   }
-  if(tile.GetStateFunc()(&atom) == ELEMENT_SORTER)
+  if(atom.IsType(Element_Sorter<T,R>::TYPE))
   {
-    return ColorMap_SEQ5_YlGnBu::THE_INSTANCE.GetInterpolatedColor(atom.ReadLowerBits(),0,100,0xffff0000);
+    return ColorMap_SEQ5_YlGnBu::THE_INSTANCE.GetInterpolatedColor(Element_Sorter<T,R>::THE_INSTANCE.GetThreshold(atom,0),0,100,0xffff0000);
   }
   return 0;
 }

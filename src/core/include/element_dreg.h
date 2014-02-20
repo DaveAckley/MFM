@@ -1,9 +1,13 @@
+#ifndef ELEMENT_DREG_H
+#define ELEMENT_DREG_H
+
 #include "element.h"       /* -*- C++ -*- */
 #include "eventwindow.h"
 #include "elementtype.h"
 #include "elementtable.h"
 #include "itype.h"
 #include "p1atom.h"
+#include "element_res.h"  /* For Element_Res::TYPE */
 
 namespace MFM
 {
@@ -16,55 +20,64 @@ namespace MFM
   template <class T, u32 R>
   class Element_Dreg : public Element<T,R>
   {
-    //static bool element_dreg_registered;
 
   public:
     static Element_Dreg THE_INSTANCE;
+    static const u32 TYPE = 0xdba;             // We are the death-birth-agent
 
-    Element_Dreg() {}
-    
-    typedef u32 (* StateFunction )(T* atom);
+    Element_Dreg() { }
 
-    virtual void Behavior(EventWindow<T,R>& window, StateFunction f)
+    virtual const T & GetDefaultAtom() const 
+    {
+      static T defaultAtom(TYPE,0,0,0);
+      return defaultAtom;
+    }
+
+    virtual u32 DefaultPhysicsColor() const 
+    {
+      return 0xff505050;
+    }
+
+    virtual void Behavior(EventWindow<T,R>& window) const
     {
       Random & random = window.GetRandom();
       
       SPoint dir;
       ManhattanDir<R>::get().FillRandomSingleDir(dir);
       
-      u32 state = f(&window.GetRelativeAtom(dir));
       
-      ElementType newType = (ElementType)-1;
+      T atom = window.GetRelativeAtom(dir);
+      u32 oldType = atom.GetType();
       
-      if(state == ELEMENT_NOTHING)
+      if(oldType == ELEMENT_NOTHING)
       {
 	if(random.OneIn(DREG_DRG_ODDS))
 	{
-	  newType = ELEMENT_DREG;
+	  atom = Element_Dreg<T,R>::THE_INSTANCE.GetDefaultAtom();
 	}
 	else if(random.OneIn(DREG_RES_ODDS))
 	{
-	  newType = ELEMENT_RES;
+	  atom = Element_Res<T,R>::THE_INSTANCE.GetDefaultAtom();
 	}
       }
-      else if(state == ELEMENT_DREG)
+      else if(oldType == Element_Dreg::TYPE)
       {
 	if(random.OneIn(DREG_DDR_ODDS))
 	{
-	  newType = ELEMENT_NOTHING;
+	  atom = T();
 	}
       }
       else if(random.OneIn(DREG_DEL_ODDS))
       {
-	newType = ELEMENT_NOTHING;
+	  atom = T();
       }
       
-      if(newType >= 0)
+      if(atom.GetType() != oldType)
       {
-	window.SetRelativeAtom(dir, P1Atom(newType));
+	window.SetRelativeAtom(dir, atom);
       }
 
-      Diffuse(window, f);
+      Diffuse(window);
     }
 
     static void Needed();
@@ -74,9 +87,13 @@ namespace MFM
   template <class T, u32 R>
   Element_Dreg<T,R> Element_Dreg<T,R>::THE_INSTANCE;
 
+  /*
   template <class T, u32 R>
   void Element_Dreg<T,R>::Needed()
   {
-    ElementTable<T,R>::get().RegisterElement(ELEMENT_DREG, &Element_Dreg<T,R>::THE_INSTANCE);
+    ElementTable<T,R>::get().RegisterElement(Element_Dreg<T,R>::THE_INSTANCE);
   }
+  */
 }
+
+#endif /* ELEMENT_DREG_H */

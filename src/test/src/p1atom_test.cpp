@@ -10,13 +10,13 @@ namespace MFM {
 
 void P1AtomTest::Test_p1atomState()
 {
-  P1Atom atom(32);
+  P1Atom atom(32,0,0,0);
 
-  assert(atom.GetState() == 32);
+  assert(atom.GetType() == 32);
   
-  atom.SetState(15);
+  atom = P1Atom(15,0,0,0);
   
-  assert(atom.GetState() == 15);
+  assert(atom.GetType() == 15);
 }
 
 void P1AtomTest::Test_p1atomLBCount()
@@ -110,11 +110,12 @@ void P1AtomTest::Test_p1atomAddLB()
   assert(atom.GetLongBondCount() == 4);
 }
 
+// XXX DEPRECATED:  # of short or long bonds should not change when type is same!
 void P1AtomTest::Test_p1atomAddSB()
 {
   SPoint sbond(1, 1);
   SPoint out;
-  P1Atom atom(32);
+  P1Atom atom(32,0,0,0);
 
   for(int i = 0; i < 10; i++)
   {
@@ -130,11 +131,12 @@ void P1AtomTest::Test_p1atomAddSB()
   }
 }
 
+// XXX DEPRECATED:  # of short or long bonds should not change when type is same!
 void P1AtomTest::Test_p1atomRemoveLB()
 {
   SPoint lbond1(2, 2);
   SPoint lbond2(3, 1);
-  P1Atom atom(12);
+  P1Atom atom(12,0,0,0);
 
   atom.AddLongBond(lbond1);
   atom.AddLongBond(lbond2);
@@ -159,7 +161,7 @@ void P1AtomTest::Test_p1atomRemoveSB()
 {
   SPoint sb1(0, 2);
   SPoint sb2(1, -1);
-  P1Atom atom(9);
+  P1Atom atom(9,0,0,0);
 
   atom.AddShortBond(sb1);
   atom.AddShortBond(sb2);

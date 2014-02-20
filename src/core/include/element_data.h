@@ -1,3 +1,6 @@
+#ifndef ELEMENT_DATA_H
+#define ELEMENT_DATA_H
+
 #include "element.h"       /* -*- C++ -*- */
 #include "eventwindow.h"
 #include "elementtype.h"
@@ -12,26 +15,47 @@ namespace MFM
   class Element_Data : public Element<T,R>
   {
   public:
-    static Element_Data DATA_INSTANCE;
+    static Element_Data THE_INSTANCE;
+    static const u32 TYPE = 0xdada;
+    static const u32 STATE_DATA_IDX = 0;
+    static const u32 STATE_DATA_LEN = 32;
+    static const u32 STATE_BITS = STATE_DATA_IDX+STATE_DATA_LEN;
+
+    u32 GetDatum(const T &atom, u32 badType) const {
+      if (!atom.IsType(TYPE)) return badType;
+      return atom.GetStateField(STATE_DATA_IDX,STATE_DATA_LEN);
+    }
+
+    bool SetDatum(T &atom, u32 value) const {
+      if (!atom.IsType(TYPE)) return false;
+      atom.SetStateField(STATE_DATA_IDX,STATE_DATA_LEN,value);
+      return true;
+    }
 
     Element_Data() {}
     
-    typedef u32 (* StateFunction )(T* atom);
-
-    virtual void Behavior(EventWindow<T,R>& window, StateFunction f)
+    virtual const T & GetDefaultAtom() const 
     {
-      Diffuse(window, f);
+      static T defaultAtom(TYPE,0,0,STATE_BITS);
+      return defaultAtom;
+    }
+
+    virtual u32 DefaultPhysicsColor() const 
+    {
+      return 0xff0000ff;
+    }
+
+    virtual void Behavior(EventWindow<T,R>& window) const
+    {
+      Diffuse(window);
     }
 
     static void Needed();    
   };
 
   template <class T, u32 R>
-  Element_Data<T,R> Element_Data<T,R>::DATA_INSTANCE;
+  Element_Data<T,R> Element_Data<T,R>::THE_INSTANCE;
 
-  template <class T, u32 R>
-  void Element_Data<T,R>::Needed()
-  {
-    ElementTable<T,R>::get().RegisterElement(ELEMENT_DATA, &Element_Data<T,R>::DATA_INSTANCE);
-  }
 }
+
+#endif /* ELEMENT_DATA_H */
