@@ -331,9 +331,9 @@ void Tile<T,R>::IncrAtomCount(ElementType atomType, s32 delta)
     FAIL(ILLEGAL_ARGUMENT);
 
   if (delta < 0)
-    m_atomCount[idx] -= (u32) -delta;
+    m_atomCount[idx] -= -delta;
   else
-    m_atomCount[idx] += (u32) delta;
+    m_atomCount[idx] += delta;
 
 }
 } /* namespace MFM */

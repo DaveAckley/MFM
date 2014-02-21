@@ -77,7 +77,7 @@ namespace MFM
 	window.SetRelativeAtom(dir, atom);
       }
 
-      Element<T,R>::Diffuse(window);
+      this->Diffuse(window);
     }
 
     static void Needed();

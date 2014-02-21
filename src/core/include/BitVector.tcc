@@ -1,32 +1,24 @@
 /* -*- C++ -*- */
 #include "fail.h"  /* For FAIL */
+#include <string.h> /* For memset, memcpy */
 
 namespace MFM {
-template <int bitLength>
-BitField<bitLength>::BitField()
+template <u32 BITS>
+BitVector<BITS>::BitVector()
 {
-  for(u32 i = 0; i < ARRAY_LENGTH; i++)
-  {
-    m_bits[i] = 0;
-  }
+  memset(m_bits, 0, sizeof(m_bits));
 }
 
-template <int bitLength>
-BitField<bitLength>::BitField(const u32 * const values)
+template <u32 BITS>
+BitVector<BITS>::BitVector(const u32 * const values)
 {
-  for(u32 i = 0; i < ARRAY_LENGTH; i++)
-  {
-    m_bits[i] = values[i];
-  }
+  memcpy(m_bits,values,sizeof(m_bits));
 }
 
-template <int bitLength>
-BitField<bitLength>::BitField(const BitField & other)
+template <u32 BITS>
+BitVector<BITS>::BitVector(const BitVector & other)
 {
-  for(u32 i = 0; i < ARRAY_LENGTH; i++)
-  {
-    m_bits[i] = other.m_bits[i];
-  }
+  memcpy(m_bits,other.m_bits,sizeof(m_bits));
 }
 
 /* 
@@ -38,8 +30,8 @@ BitField<bitLength>::BitField(const BitField & other)
  * and Write(), to avoid going per-bit)
  */
 
-template <int bitLength>
-void BitField<bitLength>::WriteBit(int idx, bool bit)
+template <u32 BITS>
+void BitVector<BITS>::WriteBit(int idx, bool bit)
 {
   int arrIdx = idx / BITS_PER_UNIT;
   int inIdx = idx % BITS_PER_UNIT;
@@ -51,8 +43,8 @@ void BitField<bitLength>::WriteBit(int idx, bool bit)
     m_bits[arrIdx] |= newWord;
 }
 
-template <int bitLength>
-bool BitField<bitLength>::ReadBit(int idx)
+template <u32 BITS>
+bool BitVector<BITS>::ReadBit(int idx)
 {
   int arrIdx = idx / BITS_PER_UNIT;
   int intIdx = idx % BITS_PER_UNIT;
@@ -60,12 +52,12 @@ bool BitField<bitLength>::ReadBit(int idx)
   return m_bits[arrIdx] & (0x80000000 >> intIdx);
 }
 
-template <int bitLength>
-void BitField<bitLength>::Write(u32 startIdx,
+template <u32 BITS>
+void BitVector<BITS>::Write(u32 startIdx,
 				u32 length,
 				u32 value)
 {
-  if (startIdx+length > bitLength)
+  if (startIdx+length > BITS)
     FAIL(ILLEGAL_ARGUMENT);
 
   if (length > sizeof(BitUnitType) * CHAR_BIT)
@@ -87,24 +79,26 @@ void BitField<bitLength>::Write(u32 startIdx,
     WriteToUnit(firstUnitIdx + 1, 0, length - firstUnitLength, value);
 }
 
-template <int bitLength>
-void BitField<bitLength>::Insert(int startIdx,
-				 int length,
-				 u32 value)
+#if 0
+template <u32 BITS>
+void BitVector<BITS>::Insert(u32 startIdx,
+                             u32 length,
+                             u32 value)
 {
   /* floor to a multiple of 32   vvv  */
-  for(int i = ((bitLength / BITS_PER_UNIT) * BITS_PER_UNIT) - 1;
+  for(u32 i = ((BITS / BITS_PER_UNIT) * BITS_PER_UNIT) - 1;
       i >= startIdx + length; i--)
   {
     WriteBit(i, ReadBit(i - length));
   }
   Write(startIdx, length, value);
 }
+#endif
 
-template <int bitLength>
-u32 BitField<bitLength>::Read(const u32 startIdx, const u32 length) const
+template <u32 BITS>
+u32 BitVector<BITS>::Read(const u32 startIdx, const u32 length) const
 {
-  if (startIdx+length > bitLength)
+  if (startIdx+length > BITS)
     FAIL(ILLEGAL_ARGUMENT);
 
   if (length > sizeof(BitUnitType) * CHAR_BIT)
@@ -127,9 +121,12 @@ u32 BitField<bitLength>::Read(const u32 startIdx, const u32 length) const
   return ret;
 }
 
-template <int bitLength>
-void BitField<bitLength>::Print(FILE* ostream) const
+template <u32 BITS>
+void BitVector<BITS>::Print(FILE* ostream) const
 {
+  for (u32 i = 0; i < BITS; i += 4) 
+    fputc("0123456789abcdef"[Read(i,4)], ostream);
+  /*
   u32 mask = 0xf0000000;
   for(u32 i = 0; i < ARRAY_LENGTH; i++)
   {
@@ -151,19 +148,23 @@ void BitField<bitLength>::Print(FILE* ostream) const
       fputc('-', ostream);
     }
   }
+  */
 }
 
-template<int bitLength>
-void BitField<bitLength>::Remove(int startIdx, int length)
+/*
+template<u32 BITS>
+void BitVector<BITS>::Remove(u32 startIdx, u32 length)
 {
-  for(int i = startIdx; i < bitLength - length; i++)
+  for(u32 i = startIdx; i < BITS - length; i++)
   {
     WriteBit(i, ReadBit(i + length));
   }
-  for(int i = bitLength - length; i < bitLength; i++)
+  for(u32 i = BITS - length; i < BITS; i++)
   {
     WriteBit(i, 0);
   }
 }
+*/
+
 
 } /* namespace MFM */

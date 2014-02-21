@@ -11,12 +11,12 @@ int main(int argc, char** argv)
   PointTest::Test_pointAdd();
   PointTest::Test_pointMultiply();
 
-  BitFieldTest::Test_bitfieldAllocate();
-  BitFieldTest::Test_bitfieldSize();
-  BitFieldTest::Test_bitfieldRead();
-  BitFieldTest::Test_bitfieldWrite();
-  BitFieldTest::Test_bitfieldInsert();
-  BitFieldTest::Test_bitfieldRemove();
+  BitVectorTest::Test_bitVectorAllocate();
+  BitVectorTest::Test_bitVectorSize();
+  BitVectorTest::Test_bitVectorRead();
+  BitVectorTest::Test_bitVectorWrite();
+  //  BitVectorTest::Test_bitVectorInsert();
+  //  BitVectorTest::Test_bitVectorRemove();
 
   ManhattanDirTest::Test_manhattandirConversion();
 
@@ -25,8 +25,8 @@ int main(int argc, char** argv)
   P1AtomTest::Test_p1atomReadBody();
   P1AtomTest::Test_p1atomAddLB();
   P1AtomTest::Test_p1atomAddSB();
-  P1AtomTest::Test_p1atomRemoveLB();
-  P1AtomTest::Test_p1atomRemoveSB();
+  //  P1AtomTest::Test_p1atomRemoveLB();
+  //  P1AtomTest::Test_p1atomRemoveSB();
 
   TileTest::Test_tilePlaceAtom();
 

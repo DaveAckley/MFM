@@ -21,21 +21,18 @@ void P1AtomTest::Test_p1atomState()
 
 void P1AtomTest::Test_p1atomLBCount()
 {
-  P1Atom atom;
-  SPoint offset(1, -1);
-
-  atom.AddLongBond(offset);
+  P1Atom atom(1,1,0,0);
 
   assert(atom.GetLongBondCount() == 1);
 }
 
 void P1AtomTest::Test_p1atomSBCount()
 {
-  P1Atom atom;
+  P1Atom atom(1,0,2,0);
   SPoint offset(1, -1);
 
-  atom.AddShortBond(offset);
-  atom.AddShortBond(offset);
+  //atom.AddShortBond(offset);
+  //atom.AddShortBond(offset);
 
   assert(atom.GetShortBondCount() == 2);
 }
@@ -44,7 +41,7 @@ void P1AtomTest::Test_p1atomReadBody()
 {
 
   u32 blocks[2];
-  P1Atom atom;
+  P1Atom atom(0,4,4,0);
 
   SPoint points[8];
   u8 pvals[8];
@@ -70,24 +67,24 @@ void P1AtomTest::Test_p1atomReadBody()
   {
     if(i < 4)
     {
-      atom.AddShortBond(points[i]);
+      assert(atom.SetShortBond(i,points[i]));
     }
     else
     {
-      atom.AddLongBond(points[i]);
+      assert(atom.SetLongBond(i-4,points[i]));
     }
   }
 
   atom.ReadVariableBodyInto(blocks);
   
-  BitField<64> bf(blocks);
+  BitVector<64> bf(blocks);
 
-  bf.Remove(0, 16);
+  //bf.Remove(0, 16);
 
   for(int i = 0; i < 4; i++)
   {
-    assert(bf.Read(i * 8, 8) == pvals[i + 4]);
-    assert(bf.Read(32 + i * 4, 4) == pvals[i]);
+    assert(bf.Read(16+i * 8, 8) == pvals[i + 4]);
+    assert(bf.Read(16+32 + i * 4, 4) == pvals[i]);
   }
   
 }
@@ -95,7 +92,7 @@ void P1AtomTest::Test_p1atomReadBody()
 void P1AtomTest::Test_p1atomAddLB()
 {
   SPoint lbonds[4];
-  P1Atom atom;
+  P1Atom atom(1,4,0,0);
   
   lbonds[0].Set(0, 1);
   lbonds[1].Set(0, 2);
@@ -104,7 +101,10 @@ void P1AtomTest::Test_p1atomAddLB()
 
   for(int i = 0; i < 4; i++)
   {
-    atom.AddLongBond(lbonds[i]);
+    assert(atom.SetLongBond(i,lbonds[i]));
+    SPoint pt;
+    assert(atom.GetLongBond(i,pt));
+    assert(pt == lbonds[i]);
   }
 
   assert(atom.GetLongBondCount() == 4);
@@ -115,22 +115,20 @@ void P1AtomTest::Test_p1atomAddSB()
 {
   SPoint sbond(1, 1);
   SPoint out;
-  P1Atom atom(32,0,0,0);
+  P1Atom atom(32,0,10,0);
 
   for(int i = 0; i < 10; i++)
   {
-    atom.AddShortBond(sbond);
+    assert(atom.SetShortBond(i,sbond));
+    SPoint pt;
+    assert(atom.GetShortBond(i,pt));
+    assert(pt==sbond);
   }
 
   assert(atom.GetShortBondCount() == 10);
-
-  for(int i = 0; i < 10; i++)
-  {
-    atom.FillShortBond(i, out);
-    assert(out == sbond);
-  }
 }
 
+#if 0
 // XXX DEPRECATED:  # of short or long bonds should not change when type is same!
 void P1AtomTest::Test_p1atomRemoveLB()
 {
@@ -148,7 +146,7 @@ void P1AtomTest::Test_p1atomRemoveLB()
   u32 bits[2];
   atom.ReadVariableBodyInto(bits);
   
-  BitField<64> bf(bits);
+  BitVector<64> bf(bits);
 
   bf.Remove(0, 16);
   
@@ -173,7 +171,7 @@ void P1AtomTest::Test_p1atomRemoveSB()
   u32 bits[2];
   atom.ReadVariableBodyInto(bits);
 
-  BitField<64> bf(bits);
+  BitVector<64> bf(bits);
 
   bf.Remove(0, 16);
 
@@ -201,5 +199,7 @@ void P1AtomTest::Test_p1atomRemoveSB()
   assert((bits[0] & 0xf) == 0);
   assert(bits[1] == 0);
 }
+#endif
+
 } /* namespace MFM */
 

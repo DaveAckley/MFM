@@ -47,7 +47,7 @@ namespace MFM
 
     virtual void Behavior(EventWindow<T,R>& window) const
     {
-      Element<T,R>::Diffuse(window);
+      this->Diffuse(window);
     }
 
     static void Needed();    

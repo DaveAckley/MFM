@@ -42,13 +42,13 @@ namespace MFM
   {
     Random & random = window.GetRandom();
     
-    u32 cval = GetVertPos(window.GetCenterAtom(),0);
+    s32 cval = GetVertPos(window.GetCenterAtom(),0);
     bool down = random.CreateBool();
     SPoint repPt(0, down ? R/2 : -(R/2));
     if(window.GetRelativeAtom(repPt).GetType() == ELEMENT_NOTHING)
     {
       window.SetRelativeAtom(repPt, this->GetDefaultAtom());
-      SetVertPos(window.GetRelativeAtom(repPt),cval + (down ? 1 : -1));
+      SetVertPos(window.GetRelativeAtom(repPt),(u32) (cval + (down ? 1 : -1)));
     }
   }
 
