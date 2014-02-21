@@ -1,7 +1,7 @@
 #ifndef _BITOPS_H_             /* -*- mode: C++ -*- */
 #define _BITOPS_H_
 
-/* This is used by Random.h but needs to be integrated with bitfield.h! */
+/* This is used by Random.h but needs to be integrated with BitVector.h! */
 
 #include <limits>            // For numeric_limits<T>::is_signed
 #include "itype.h"

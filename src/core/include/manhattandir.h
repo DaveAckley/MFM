@@ -79,6 +79,11 @@ public:
   
   ManhattanDir();
 
+  /**
+   * Return the coding of offset as a bond if possible.  Returns -1 if
+   * the given offset cannot be expressed as a bond of the given type
+   * (or radius, same thing).
+   */
   s32 FromPoint(const Point<s32>& offset, TableType type);
 
   /* 

@@ -6,7 +6,7 @@
 
 #include "manhattandir.h"
 #include "manhattandir_test.h"
-#include "bitfield_test.h"
+#include "BitVector_test.h"
 #include "point_test.h"
 #include "p1atom_test.h"
 #include "tile_test.h"

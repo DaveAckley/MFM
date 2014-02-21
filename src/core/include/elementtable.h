@@ -1,7 +1,7 @@
 #ifndef ELEMENTTABLE_H      /* -*- C++ -*- */
 #define ELEMENTTABLE_H
 
-#include "bitfield.h"
+#include "BitVector.h"
 #include "eventwindow.h"
 #include "eucliddir.h"
 #include "itype.h"
