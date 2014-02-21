@@ -43,7 +43,7 @@ namespace MFM
     {
       Random & random = window.GetRandom();
 
-      ReproduceVertically(window);
+      this->ReproduceVertically(window);
       
       /* Create some data */
       SPoint repPt;
