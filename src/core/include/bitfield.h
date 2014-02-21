@@ -1,6 +1,7 @@
 #ifndef BITFIELD_H      /* -*- C++ -*- */
 #define BITFIELD_H
 
+#include "fail.h"
 #include "itype.h"
 #include <stdio.h>  /* for FILE */
 #include <climits>  /* for CHAR_BIT */

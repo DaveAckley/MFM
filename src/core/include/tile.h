@@ -84,7 +84,7 @@ public:
 
   inline bool IsConnected(EuclidDir dir);
 
-  static inline bool IsInCache(SPoint& pt);
+  static inline bool IsInCache(const SPoint& pt);
 
   u32 GetEventsExecuted() const 
   {

@@ -1,7 +1,7 @@
-#ifndef ELEMENT_DATA_H
+#ifndef ELEMENT_DATA_H       /* -*- C++ -*- */
 #define ELEMENT_DATA_H
 
-#include "element.h"       /* -*- C++ -*- */
+#include "element.h"
 #include "eventwindow.h"
 #include "elementtype.h"
 #include "elementtable.h"
@@ -47,7 +47,7 @@ namespace MFM
 
     virtual void Behavior(EventWindow<T,R>& window) const
     {
-      Diffuse(window);
+      Element<T,R>::Diffuse(window);
     }
 
     static void Needed();    

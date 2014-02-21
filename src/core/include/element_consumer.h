@@ -38,7 +38,7 @@ namespace MFM
     
     virtual void Behavior(EventWindow<T,R>& window) const
     {
-      ReproduceVertically(window);
+      Element_Reprovert<T,R>::ReproduceVertically(window);
 
       Point<s32> consPt;
       ManhattanDir<R>::get().FillRandomSingleDir(consPt);
@@ -46,7 +46,7 @@ namespace MFM
       if(window.GetRelativeAtom(consPt).GetType() == Element_Data<T,R>::TYPE)
       {
 	u32 val = Element_Data<T,R>::THE_INSTANCE.GetDatum(window.GetRelativeAtom(consPt),0);
-	u32 bnum = GetVertPos(window.GetCenterAtom(),0);
+	u32 bnum = Element_Reprovert<T,R>::GetVertPos(window.GetCenterAtom(),0);
 
 	// something sort of constant at equil.?
 	printf("[%3d]Export!: %d sum %d\n", bnum, val, 3*bnum+val); 

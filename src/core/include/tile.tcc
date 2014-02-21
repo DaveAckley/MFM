@@ -158,12 +158,14 @@ void Tile<T,R>::PlaceAtom(const T& atom, const SPoint& pt)
   T* oldAtom = GetAtom(pt);
   u32 oldType = oldAtom->GetType();
 
-  IncrAtomCount(oldType,-1);
-
   m_atoms[pt.GetX() + 
 	  pt.GetY() * TILE_WIDTH] = atom;  
 
-  IncrAtomCount(atom.GetType(),1);
+  if(!IsInCache(pt))
+  {
+    IncrAtomCount(atom.GetType(),1);
+    IncrAtomCount(oldType,-1);
+  }
 }
 
 template <class T, u32 R>
@@ -208,7 +210,7 @@ bool Tile<T,R>::IsConnected(EuclidDir dir)
 }
 
 template <class T, u32 R>
-bool Tile<T,R>::IsInCache(SPoint& pt)
+bool Tile<T,R>::IsInCache(const SPoint& pt)
 {
   int upbnd = TILE_WIDTH - R;
   return (u32)pt.GetX() < R || (u32)pt.GetY() < R ||
@@ -325,7 +327,7 @@ void Tile<T,R>::IncrAtomCount(ElementType atomType, s32 delta)
     if (delta != 0) FAIL(ILLEGAL_STATE);  
     return;
   }
-  if (delta < 0 && (u32) -delta > m_atomCount[idx])
+  if (delta < 0 && -delta > m_atomCount[idx])
     FAIL(ILLEGAL_ARGUMENT);
 
   if (delta < 0)

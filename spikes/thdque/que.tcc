@@ -1,17 +1,30 @@
 #include <stdio.h>    /* -*- C++ -*- */
 #include <stdlib.h>
 
+#define MIN(X,Y) ((X) > (Y) ? (Y) : (X))
+
 namespace ThreadSpike
 {
   ThreadQueue::ThreadQueue()
   {
     m_readHead = m_writeHead = m_heldBytes = 0;
-    pthread_mutex_init(&m_lock, NULL);    
+    
+    if(pthread_mutex_init(&m_lock, NULL))
+    {
+      fprintf(stderr, "ERROR: Mutex did not initialize.\n");
+      exit(1);
+    }
+    if(pthread_cond_init(&m_cond, NULL))
+    {
+      fprintf(stderr, "ERROR: Cond did not initialize.\n");
+      exit(2);
+    }
   }
   
   ThreadQueue::~ThreadQueue()
   {
     pthread_mutex_destroy(&m_lock);
+    pthread_cond_destroy(&m_cond);
   }
 
   void ThreadQueue::Write(u8* bytes, u32 length)
@@ -33,8 +46,42 @@ namespace ThreadSpike
 	  m_writeHead %= THREADQUEUE_MAX_BYTES;
 	}
       }
+      m_heldBytes += length;
     }
+    pthread_cond_signal(&m_cond); /* Writing is available! */
     pthread_mutex_unlock(&m_lock);
+  }
+
+  u32 ThreadQueue::UnsafeRead(u8* bytes, u32 length)
+  {
+    u32 bytesAvailable = MIN(length, m_heldBytes);
+    for(u32 i = 0; i < bytesAvailable; i++)
+    {
+      *(bytes++) = m_queueData[m_readHead++];
+      if(m_readHead >= THREADQUEUE_MAX_BYTES)
+      {
+	m_readHead %= THREADQUEUE_MAX_BYTES;
+      }
+    }
+    m_heldBytes -= bytesAvailable;
+    return bytesAvailable;
+  }
+
+  void ThreadQueue::ReadBlocking(u8* bytes, u32 length)
+  {
+    u32 readBytes = 0;
+    while(readBytes < length)
+    {
+      pthread_mutex_lock(&m_lock);
+      {
+	readBytes += UnsafeRead(bytes + readBytes, length);
+	if(readBytes < length)
+	{
+	  pthread_cond_wait(&m_cond, &m_lock);
+	}
+      }
+      pthread_mutex_unlock(&m_lock);
+    }
   }
 
   u32 ThreadQueue::Read(u8* bytes, u32 length)
@@ -45,15 +92,7 @@ namespace ThreadSpike
     {
       pthread_mutex_lock(&m_lock);
       {
-	for(u32 i = 0; i < length; i++)
-	{
-	  *(bytes++) = m_queueData[m_readHead++];
-	  if(m_readHead >= THREADQUEUE_MAX_BYTES)
-	  {
-	    m_readHead %= THREADQUEUE_MAX_BYTES;
-	  }
-
-	}
+	readBytes = UnsafeRead(bytes, length);
       }
       pthread_mutex_unlock(&m_lock);
     }

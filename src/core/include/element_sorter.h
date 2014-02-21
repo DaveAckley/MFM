@@ -1,7 +1,7 @@
-#ifndef ELEMENT_SORTER_H
+#ifndef ELEMENT_SORTER_H       /* -*- C++ -*- */
 #define ELEMENT_SORTER_H
 
-#include "element.h"       /* -*- C++ -*- */
+#include "element.h"
 #include "eventwindow.h"
 #include "elementtype.h"
 #include "elementtable.h"
@@ -45,9 +45,9 @@ namespace MFM
     bool FillAvailableSubwindowPoint(EventWindow<T,R>& window, 
 				     SPoint& pt, EuclidDir subwindow, ElementType type) const
     {
-      return FillPointWithType(window, pt, 
-			       ManhattanDir<R>::get().GetSESubWindow(), 
-			       ((R*R)/4), subwindow, type);
+      return Element<T,R>::FillPointWithType(window, pt, 
+					     ManhattanDir<R>::get().GetSESubWindow(), 
+					     ((R*R)/4), subwindow, type);
     }
 
     virtual u32 DefaultPhysicsColor() const 
@@ -59,7 +59,7 @@ namespace MFM
     {
       Random & random = window.GetRandom();
       SPoint reproducePt;
-      if(FillPointWithType(window, reproducePt,
+      if(Element<T,R>::FillPointWithType(window, reproducePt,
 			   Element<T,R>::VNNeighbors, 4, EUDIR_SOUTHEAST, Element_Res<T,R>::TYPE))
       {
 	window.SetRelativeAtom(reproducePt, this->GetDefaultAtom());
@@ -100,7 +100,7 @@ namespace MFM
 	  return;
 	}
       }
-      Diffuse(window);
+      Element<T,R>::Diffuse(window);
     }
 
     static void Needed();

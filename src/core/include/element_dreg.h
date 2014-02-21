@@ -1,7 +1,7 @@
-#ifndef ELEMENT_DREG_H
+#ifndef ELEMENT_DREG_H  /* -*- C++ -*- */
 #define ELEMENT_DREG_H
 
-#include "element.h"       /* -*- C++ -*- */
+#include "element.h"   
 #include "eventwindow.h"
 #include "elementtype.h"
 #include "elementtable.h"
@@ -77,7 +77,7 @@ namespace MFM
 	window.SetRelativeAtom(dir, atom);
       }
 
-      Diffuse(window);
+      Element<T,R>::Diffuse(window);
     }
 
     static void Needed();

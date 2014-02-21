@@ -1,7 +1,7 @@
-#ifndef ELEMENT_REPROVERT_H
+#ifndef ELEMENT_REPROVERT_H       /* -*- C++ -*- */
 #define ELEMENT_REPROVERT_H
 
-#include "element.h"       /* -*- C++ -*- */
+#include "element.h"
 #include "eventwindow.h"
 #include "elementtype.h"
 #include "elementtable.h"
