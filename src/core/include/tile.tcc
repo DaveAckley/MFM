@@ -20,7 +20,7 @@ Tile<T,R>::Tile() : m_eventsExecuted(0), m_executingWindow(*this)
 
   RegisterElement(Element_Empty<T,R>::THE_INSTANCE);
 
-  SetAtomCount(ELEMENT_NOTHING,TILE_SIZE);
+  SetAtomCount(ELEMENT_NOTHING,TILE_SIZE * TILE_SIZE);
 }
 
 template <class T, u32 R>
@@ -33,12 +33,6 @@ template <class T, u32 R>
 void Tile<T,R>::SetNeighbors(u8 neighbors)
 {
   m_neighborConnections = neighbors;
-}
-
-template <class T,u32 R>
-T* Tile<T,R>::GetAtoms()
-{
-  return m_atoms;
 }
 
 template <class T,u32 R>
@@ -309,7 +303,7 @@ u32 Tile<T,R>::GetAtomCount(ElementType atomType)
 }
 
 template <class T, u32 R>
-void Tile<T,R>::SetAtomCount(ElementType atomType, u32 count)
+void Tile<T,R>::SetAtomCount(ElementType atomType, s32 count)
 {
   s32 idx = elementTable.GetIndex(atomType);
   if (idx < 0) {

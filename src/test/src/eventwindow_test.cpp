@@ -67,5 +67,6 @@ void EventWindowTest::Test_eventwindowWrite()
   assert(erased2->GetType() == RES_TYPE);
 
 }
+
 } /* namespace MFM */
 

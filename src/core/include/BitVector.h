@@ -54,6 +54,8 @@ namespace MFM {
      * 32
      */
     inline u32 ReadFromUnit(const u32 idx, const u32 startIdx, const u32 length) const {
+      if(!length) { return length; }
+      if(idx >= 2) { printf("Whoa! %d %d %d\n", idx, startIdx, length); return 0; }
       const u32 shift = BITS_PER_UNIT - (startIdx + length);
       return (m_bits[idx] >> shift) & MakeMask(length);
     }

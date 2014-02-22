@@ -39,7 +39,7 @@ void P1AtomTest::Test_p1atomSBCount()
 
 void P1AtomTest::Test_p1atomReadBody()
 {
-
+  /*
   u32 blocks[2];
   P1Atom atom(0,4,4,0);
 
@@ -86,7 +86,7 @@ void P1AtomTest::Test_p1atomReadBody()
     assert(bf.Read(16+i * 8, 8) == pvals[i + 4]);
     assert(bf.Read(16+32 + i * 4, 4) == pvals[i]);
   }
-  
+  */
 }
 
 void P1AtomTest::Test_p1atomAddLB()
