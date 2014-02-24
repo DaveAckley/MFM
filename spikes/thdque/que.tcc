@@ -48,7 +48,7 @@ namespace ThreadSpike
       }
       m_heldBytes += length;
     }
-    pthread_cond_signal(&m_cond); /* Writing is available! */
+    pthread_cond_signal(&m_cond); /* Reading is available! */
     pthread_mutex_unlock(&m_lock);
   }
 
