@@ -5,7 +5,7 @@
 #include "p1atom.h"
 #include "elementtable.h"
 #include "eventwindow.h"
-#include "tile.h"
+#include "Tile.h"
 
 namespace MFM {
 

@@ -4,7 +4,7 @@
 #include "itype.h"
 #include "SDL/SDL.h"
 #include "SDL/SDL_ttf.h"
-#include "tile.h"
+#include "Tile.h"
 
 namespace MFM {
 
@@ -19,7 +19,7 @@ public:
   static const int CYAN    = 0xff00ffff;
   static const int MAGENTA = 0xffff00ff;
   static const int YELLOW  = 0xffffff00;
-  
+
   static inline void SetPixel(SDL_Surface* dest,
 			      u32 x, u32 y,
 			      u32 color)
@@ -55,7 +55,7 @@ public:
   static void BlitText(SDL_Surface*& dest, TTF_Font*& font,
 		       const char* message, Point<u32> loc,
 		       Point<u32> size, u32 color);
-		       
+
 };
 } /* namespace MFM */
 

@@ -3,7 +3,7 @@
 
 #include "drawing.h"
 #include "elementtable.h"
-#include "tile.h"
+#include "Tile.h"
 #include "panel.h"
 #include "point.h"
 #include "SDL/SDL.h"
@@ -19,7 +19,7 @@ private:
   bool m_drawMemRegions;
   bool m_drawDataHeat;
   int m_atomDrawSize;
-  
+
   u32 m_gridColor;
   u32 m_sharedColor;
   u32 m_visibleColor;
@@ -62,7 +62,7 @@ public:
   TileRenderer(SDL_Surface* dest);
 
   template <class T,u32 R>
-  void RenderTile(Tile<T,R>& t, SPoint& loc, bool renderWindow, 
+  void RenderTile(Tile<T,R>& t, SPoint& loc, bool renderWindow,
 		  bool renderCache);
 
   void SetDimensions(Point<u32> dimensions)
@@ -80,7 +80,7 @@ public:
   void DecreaseAtomSize();
 
   void ToggleGrid();
-  
+
   void ToggleMemDraw();
 
   void ToggleDataHeat();

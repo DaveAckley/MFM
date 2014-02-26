@@ -21,18 +21,51 @@ Tile<T,R>::Tile() : m_eventsExecuted(0), m_executingWindow(*this)
   RegisterElement(Element_Empty<T,R>::THE_INSTANCE);
 
   SetAtomCount(ELEMENT_NOTHING,TILE_SIZE * TILE_SIZE);
+
+  /* Set up our connection pointers. Some of these may remain NULL, */
+  /* symbolizing a dead edge.       */
+  u32 edges = 0;
+  for(EuclidDir i = EUDIR_NORTH; edges < EUDIR_COUNT; i = EuDir::CWDir(i), edges++)
+  {
+    if(IS_OWNED_CONNECTION(i))
+    {
+      /* We own this one! Hook it up. */
+      m_connections[i] = m_ownedConnections + i - EUDIR_EAST;
+    }
+    else
+    {
+      /* We will rely on the grid to hook these up when the time
+	 comes. */
+      m_connections[i] = NULL;
+    }
+  }
+}
+
+template <class T, u32 R>
+void Tile<T,R>::Connect(Tile<T,R>& other, EuclidDir toCache)
+{
+  if(IS_OWNED_CONNECTION(toCache))
+  {
+    m_connections[toCache]->SetConnected(true);
+  }
+  else
+  {
+    m_connections[toCache] = other.GetConnection(EuDir::OppositeDir(toCache));
+    m_connections[toCache]->SetConnected(true);
+    other.Connect(*this, EuDir::OppositeDir(toCache));
+  }
+}
+
+template <class T, u32 R>
+Connection* Tile<T,R>::GetConnection(EuclidDir cache)
+{
+  return m_connections[cache];
 }
 
 template <class T, u32 R>
 Random& Tile<T,R>::GetRandom()
 {
   return m_random;
-}
-
-template <class T, u32 R>
-void Tile<T,R>::SetNeighbors(u8 neighbors)
-{
-  m_neighborConnections = neighbors;
 }
 
 template <class T,u32 R>
@@ -44,7 +77,7 @@ T* Tile<T,R>::GetAtom(const SPoint& pt)
 template <class T,u32 R>
 T* Tile<T,R>::GetAtom(s32 x, s32 y)
 {
-  if (x < 0 || y < 0 || x >= TILE_WIDTH || y >= TILE_WIDTH) 
+  if (x < 0 || y < 0 || x >= TILE_WIDTH || y >= TILE_WIDTH)
     FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
   return GetAtom(x + y * TILE_WIDTH);
 }
@@ -52,7 +85,7 @@ T* Tile<T,R>::GetAtom(s32 x, s32 y)
 template <class T,u32 R>
 T* Tile<T,R>::GetAtom(s32 i)
 {
-  if (i < 0 || i >= TILE_SIZE) 
+  if (i < 0 || i >= TILE_SIZE)
     FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
   return &m_atoms[i];
 }
@@ -68,16 +101,6 @@ void Tile<T,R>::ReceivePacket(Packet<T>& packet)
   default:
     FAIL(INCOMPLETE_CODE); break;
   }
-}
-
-template <class T, u32 R>
-Packet<T>* Tile<T,R>::NextPacket()
-{
-  if(m_outgoingPackets.PacketsHeld())
-  {
-    return m_outgoingPackets.PopPacket();
-  }
-  return NULL;
 }
 
 template <class T,u32 R>
@@ -133,7 +156,7 @@ EuclidDir Tile<T,R>::CacheAt(SPoint& sp)
     }
     return EUDIR_EAST;
   }
-  
+
   if(pt.GetY() < R)
   {
     return EUDIR_NORTH;
@@ -152,8 +175,8 @@ void Tile<T,R>::PlaceAtom(const T& atom, const SPoint& pt)
   T* oldAtom = GetAtom(pt);
   u32 oldType = oldAtom->GetType();
 
-  m_atoms[pt.GetX() + 
-	  pt.GetY() * TILE_WIDTH] = atom;  
+  m_atoms[pt.GetX() +
+	  pt.GetY() * TILE_WIDTH] = atom;
 
   if(!IsInCache(pt))
   {
@@ -165,42 +188,49 @@ void Tile<T,R>::PlaceAtom(const T& atom, const SPoint& pt)
 template <class T, u32 R>
 void Tile<T, R>::SendAtom(EuclidDir neighbor, SPoint& atomLoc)
 {
-  SPoint remoteLoc(atomLoc);
-
-  u32 tileDiff = TILE_WIDTH - 2 * R;
-    
-  /* The neighbor will think this atom is in a different location. */
-  switch(neighbor)
+  if(IsConnected(neighbor))
   {
-  case EUDIR_NORTH: remoteLoc.Add(0, tileDiff); break;
-  case EUDIR_SOUTH: remoteLoc.Add(0, -tileDiff); break;
-  case EUDIR_WEST:  remoteLoc.Add(tileDiff, 0); break;
-  case EUDIR_EAST:  remoteLoc.Add(-tileDiff, 0); break;
-  case EUDIR_NORTHEAST:
-    remoteLoc.Add(-tileDiff, tileDiff); break;
-  case EUDIR_SOUTHEAST:
-    remoteLoc.Add(-tileDiff, -tileDiff); break;
-  case EUDIR_SOUTHWEST:
-    remoteLoc.Add(tileDiff, -tileDiff); break;
-  case EUDIR_NORTHWEST:
-    remoteLoc.Add(tileDiff, tileDiff); break;
-  default:
-    FAIL(INCOMPLETE_CODE); break;
+    SPoint remoteLoc(atomLoc);
+
+    u32 tileDiff = TILE_WIDTH - 2 * R;
+
+    /* The neighbor will think this atom is in a different location. */
+    switch(neighbor)
+    {
+    case EUDIR_NORTH: remoteLoc.Add(0, tileDiff); break;
+    case EUDIR_SOUTH: remoteLoc.Add(0, -tileDiff); break;
+    case EUDIR_WEST:  remoteLoc.Add(tileDiff, 0); break;
+    case EUDIR_EAST:  remoteLoc.Add(-tileDiff, 0); break;
+    case EUDIR_NORTHEAST:
+      remoteLoc.Add(-tileDiff, tileDiff); break;
+    case EUDIR_SOUTHEAST:
+      remoteLoc.Add(-tileDiff, -tileDiff); break;
+    case EUDIR_SOUTHWEST:
+      remoteLoc.Add(tileDiff, -tileDiff); break;
+    case EUDIR_NORTHWEST:
+      remoteLoc.Add(tileDiff, tileDiff); break;
+    default:
+      FAIL(INCOMPLETE_CODE); break;
+    }
+
+    Packet<T> sendout(PACKET_WRITE);
+
+    sendout.SetLocation(remoteLoc);
+    sendout.SetAtom(*GetAtom(atomLoc));
+    sendout.SetReceivingNeighbor(neighbor);
+
+    /* Send out the serialized version of the packet */
+    m_connections[neighbor]->Write(!IS_OWNED_CONNECTION(neighbor),
+				   (u8*)&sendout,
+				   sizeof(Packet<T>));
   }
-
-  Packet<T> sendout(PACKET_WRITE);
-
-  sendout.SetLocation(remoteLoc);
-  sendout.SetAtom(*GetAtom(atomLoc));
-  sendout.SetReceivingNeighbor(neighbor);
-
-  m_outgoingPackets.PushPacket(sendout);
 }
 
 template <class T, u32 R>
 bool Tile<T,R>::IsConnected(EuclidDir dir)
 {
-  return m_neighborConnections & (1<<dir);
+  return m_connections[dir] != NULL &&
+         m_connections[dir]->IsConnected();
 }
 
 template <class T, u32 R>
@@ -269,7 +299,7 @@ void Tile<T,R>::SendRelevantAtoms()
     {
       SendAtom(EUDIR_SOUTH, localLoc);
     }
-    
+
   }
 }
 
@@ -283,7 +313,27 @@ void Tile<T,R>::Execute()
   SPoint winCenter(R * 2 - 1, R);
   CreateWindowAt(winCenter);
 #endif
-  
+
+  Packet<T> readPack(PACKET_WRITE);
+  u32 readBytes;
+
+  /* Flush out all packet buffers */
+  for(EuclidDir dir = EUDIR_NORTH; dir < EUDIR_COUNT; dir = (EuclidDir)(dir + 1))
+  {
+    if(IsConnected(dir))
+    {
+      while((readBytes = m_connections[dir]->Read(!IS_OWNED_CONNECTION(dir),
+						  (u8*)&readPack, sizeof(Packet<T>))))
+      {
+	if(readBytes != sizeof(Packet<T>))
+        {
+	  FAIL(ILLEGAL_STATE); /* Didn't read enough for a full packet! */
+	}
+	ReceivePacket(readPack);
+      }
+    }
+  }
+
   elementTable.Execute(m_executingWindow);
 
   m_executingWindow.FillCenter(m_lastExecutedAtom);
@@ -307,7 +357,7 @@ void Tile<T,R>::SetAtomCount(ElementType atomType, s32 count)
 {
   s32 idx = elementTable.GetIndex(atomType);
   if (idx < 0) {
-    if (count > 0) FAIL(ILLEGAL_STATE);  
+    if (count > 0) FAIL(ILLEGAL_STATE);
     return;
   }
   m_atomCount[idx] = count;
@@ -318,7 +368,7 @@ void Tile<T,R>::IncrAtomCount(ElementType atomType, s32 delta)
 {
   s32 idx = elementTable.GetIndex(atomType);
   if (idx < 0) {
-    if (delta != 0) FAIL(ILLEGAL_STATE);  
+    if (delta != 0) FAIL(ILLEGAL_STATE);
     return;
   }
   if (delta < 0 && -delta > m_atomCount[idx])

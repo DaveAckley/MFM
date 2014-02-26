@@ -11,54 +11,57 @@ namespace MFM {
     /* if any of its caches are dead and should not be written to.    */
     u8 neighbors;
     for(u32 x = 0; x < m_width; x++)
+    {
+      for(u32 y = 0; y < m_height; y++)
       {
-        for(u32 y = 0; y < m_height; y++)
-          {
-            neighbors = 0;
-            if(x > 0)
-              {
-                neighbors |= (1<<EUDIR_WEST);
-              }
-            if(y > 0)
-              {
-                neighbors |= (1<<EUDIR_NORTH);
-              }
-            if(x < m_width - 1)
-              {
-                neighbors |= (1<<EUDIR_EAST);
-              }
-            if(y < m_height - 1)
-              {
-                neighbors |= (1<<EUDIR_SOUTH);
-              }
-            if((neighbors & (1<<EUDIR_SOUTH)) && 
-               (neighbors & (1<<EUDIR_WEST)))
-              {
-                neighbors |= (1<<EUDIR_SOUTHWEST);
-              }
-            if((neighbors & (1<<EUDIR_NORTH)) && 
-               (neighbors & (1<<EUDIR_WEST)))
-              {
-                neighbors |= (1<<EUDIR_NORTHWEST);
-              }
-            if((neighbors & (1<<EUDIR_SOUTH)) && 
-               (neighbors & (1<<EUDIR_EAST)))
-              {
-                neighbors |= (1<<EUDIR_SOUTHEAST);
-              }
-            if((neighbors & (1<<EUDIR_NORTH)) && 
-               (neighbors & (1<<EUDIR_EAST)))
-              {
-                neighbors |= (1<<EUDIR_NORTHEAST);
-              }
-
-            GetTile(x, y).SetNeighbors(neighbors);
-          }
+	Tile<T,R>& ctile = GetTile(x, y);
+	neighbors = 0;
+	if(x > 0)
+        {
+	  ctile.Connect(GetTile(x - 1, y), EUDIR_WEST);
+	  neighbors |= (1<<EUDIR_WEST);
+	}
+	if(y > 0)
+	{
+	  ctile.Connect(GetTile(x, y - 1), EUDIR_NORTH);
+	  neighbors |= (1<<EUDIR_NORTH);
+	}
+	if(x < m_width - 1)
+        {
+	  ctile.Connect(GetTile(x + 1, y), EUDIR_EAST);
+	  neighbors |= (1<<EUDIR_EAST);
+	}
+	if(y < m_height - 1)
+        {
+	  ctile.Connect(GetTile(x, y + 1), EUDIR_SOUTH);
+	  neighbors |= (1<<EUDIR_SOUTH);
+	}
+	if((neighbors & (1<<EUDIR_SOUTH)) &&
+	   (neighbors & (1<<EUDIR_WEST)))
+        {
+	  ctile.Connect(GetTile(x - 1, y + 1), EUDIR_SOUTHWEST);
+	}
+	if((neighbors & (1<<EUDIR_NORTH)) &&
+	   (neighbors & (1<<EUDIR_WEST)))
+        {
+	  ctile.Connect(GetTile(x - 1, y - 1), EUDIR_NORTHWEST);
+	}
+	if((neighbors & (1<<EUDIR_SOUTH)) &&
+	   (neighbors & (1<<EUDIR_EAST)))
+        {
+	  ctile.Connect(GetTile(x + 1, y + 1), EUDIR_SOUTHEAST);
+	}
+	if((neighbors & (1<<EUDIR_NORTH)) &&
+	   (neighbors & (1<<EUDIR_EAST)))
+        {
+	  ctile.Connect(GetTile(x + 1, y - 1), EUDIR_NORTHEAST);
+	}
       }
+    }
   }
 
   template <class T,u32 R,u32 W, u32 H>
-  void Grid<T,R,W,H>::SetSeed(u32 seed) 
+  void Grid<T,R,W,H>::SetSeed(u32 seed)
   {
     m_random.SetSeed(seed);
     for(u32 i = 0; i < W; i++)
@@ -108,7 +111,7 @@ namespace MFM {
 
     // Set up return values
     tileInGrid = t;
-    siteInTile = 
+    siteInTile =
       siteInGrid % Tile<T,R>::OWNED_SIDE  // get index into just 'owned' sites
       + SPoint(R,R);                      // and adjust to full Tile indexing
     return true;
@@ -118,13 +121,13 @@ namespace MFM {
   void Grid<T,R,W,H>::PlaceAtom(T& atom, const SPoint& siteInGrid)
   {
     SPoint tileInGrid, siteInTile;
-    if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile)) 
+    if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
       FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
 
     Tile<T,R> & owner = GetTile(tileInGrid);
     owner.PlaceAtom(atom, siteInTile);
 
-    EuclidDir startDir = owner.CacheAt(siteInTile); 
+    EuclidDir startDir = owner.CacheAt(siteInTile);
 
     if ((s32) startDir < 0)       // Doesn't hit cache, we're done
       return;
@@ -141,12 +144,12 @@ namespace MFM {
       EuDir::FillEuclidDir(tileOffset,dir);
 
       SPoint otherTileIndex = tileInGrid+tileOffset;
-    
+
       if (!IsLegalTileIndex(otherTileIndex)) continue;  // edge of grid
 
       Tile<T,R> & other = GetTile(otherTileIndex);
       SPoint otherIndex = siteInTile + tileOffset * Tile<T,R>::OWNED_SIDE;
-    
+
       other.PlaceAtom(atom,otherIndex);
       FAIL(INCOMPLETE_CODE);
     }
@@ -157,7 +160,7 @@ namespace MFM {
   T* Grid<T,R,W,H>::GetAtom(SPoint& loc)
   {
     SPoint tileInGrid, siteInTile;
-    if (!MapGridToTile(loc, tileInGrid, siteInTile)) 
+    if (!MapGridToTile(loc, tileInGrid, siteInTile))
       FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
 
     return GetTile(tileInGrid).GetAtom(siteInTile);
@@ -177,22 +180,6 @@ namespace MFM {
 
     //  execTile.Execute(ElementTable<T,R>::get());
     execTile.Execute();
-
-    Packet<T>* readPack;
-    SPoint nOffset;
-    while((readPack = execTile.NextPacket()))
-      {
-        EuDir::FillEuclidDir(nOffset, readPack->GetReceivingNeighbor());
-        nOffset.Add(windowTile);
-        if(nOffset.GetX() >= 0 && nOffset.GetY() >= 0 &&
-           nOffset.GetX() < (s32)m_width && nOffset.GetY() < (s32)m_height)
-          {
-            /* Tile's there! Give it the packet. */
-            Tile<T,R>& writeTile = GetTile((u32)nOffset.GetX(), (u32)nOffset.GetY());
-
-            writeTile.ReceivePacket(*readPack);
-          }
-      }
 
     m_lastEventTile.Set(windowTile.GetX(), windowTile.GetY());
   }
@@ -216,7 +203,7 @@ namespace MFM {
   }
 
   template <class T, u32 R,u32 W, u32 H>
-  void Grid<T,R,W,H>::Needed(const Element<T,R> & anElement) 
+  void Grid<T,R,W,H>::Needed(const Element<T,R> & anElement)
   {
     for(u32 i = 0; i < W; i++)
       for(u32 j = 0; j < H; j++)

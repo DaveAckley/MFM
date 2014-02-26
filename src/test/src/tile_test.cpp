@@ -1,5 +1,5 @@
 #include "assert.h"
-#include "tile.h"
+#include "Tile.h"
 #include "p1atom.h"
 #include "point.h"
 #include "tile_test.h"

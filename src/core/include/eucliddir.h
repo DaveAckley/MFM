@@ -6,7 +6,7 @@
 namespace MFM {
 
 typedef enum enum_eucliddir
-{ 
+{
   EUDIR_NORTH     = 0,
   EUDIR_NORTHEAST = 1,
   EUDIR_EAST      = 2,
@@ -36,6 +36,14 @@ public:
    * IsCorner(dir)==IsFace(CWDir(dir)), and dir==CWDir(CCWDir(dir))
    */
   static EuclidDir CWDir(EuclidDir dir) { return (EuclidDir) ((dir+1)%EUDIR_COUNT); }
+
+  /**
+   * Gets the direction opposite the one specified.
+   *
+   * @returns The direction opposite the one specified.
+   */
+  static EuclidDir OppositeDir(EuclidDir dir)
+  { return (EuclidDir)((dir + (EUDIR_COUNT / 2)) % EUDIR_COUNT); }
 
   /**
    * The next dir counter-clockwise from dir.  Note that for all dir,

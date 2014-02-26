@@ -8,6 +8,7 @@
 #include "point.h"
 #include "eventwindow.h"
 #include "elementtable.h"
+#include "Connection.h"
 
 
 namespace MFM {
@@ -18,6 +19,9 @@ namespace MFM {
 
   /** The number of sites a Tile contains. */
 #define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)
+
+
+#define IS_OWNED_CONNECTION(X) ((X) - EUDIR_EAST >= 0 && (X) - EUDIR_EAST < 4)
 
   template <class T,u32 R>
 class Tile
@@ -48,12 +52,6 @@ private:
       initialization. */
   u64 m_eventsExecuted;
 
-  /** A bitfield representing this Tile's connected neighbors. Used to
-   *  find 'dead' caches, i.e. caches which aren't connected to a
-   *  neighbor.
-   */
-  u8 m_neighborConnections;
-
   friend class EventWindow<T,R>;
 
   /** The Atoms currently held by this Tile, including caches. */
@@ -70,11 +68,22 @@ private:
   /** The only EventWindow to exist in this tile. */
   EventWindow<T,R> m_executingWindow;
 
-  /** The PacketBuffer which will hold all outgoing Packets meant for
-      other tiles.*/
-  PacketBuffer<T> m_outgoingPackets;
+  Connection* m_connections[8];
 
-  /** 
+  Connection m_ownedConnections[4];
+
+  /**
+   * Checks to see if this Tile owns the connection over a particular
+   * cache.
+   *
+   * @param dir The cache to check ownership of its connection.
+   *
+   * @returns true if this Tile owns the Connection over the cache in
+   *          the dir direction.
+   */
+  bool IsOwnedConnection(EuclidDir dir);
+
+  /**
    * Sets m_executingWindow to a new location in this Tile. This new
    * location is guaranteed to be valid and ready for execution.
    */
@@ -117,9 +126,29 @@ public:
   Tile();
 
   /**
+   * Connects another Tile to one of this Tile's caches.
+   *
+   * @param other The other Tile to connect to this one.
+   *
+   * @param toCache The cache to share with other.
+   */
+  void Connect(Tile<T,R>& other, EuclidDir toCache);
+
+  /**
+   * Finds the Connection which corresponds to one of this tile's
+   * caches.
+   *
+   * @param cache The direction of the held Connection to find.
+   *
+   * @returns a pointer to the held connection, or NULL if there is
+   *          none.
+   */
+  Connection* GetConnection(EuclidDir cache);
+
+  /**
    * Gets the width of this Tile in sites, including caches.
    */
-  u32 GetTileWidth() 
+  u32 GetTileWidth()
   {
     return TILE_WIDTH;
   }
@@ -129,14 +158,6 @@ public:
    * @Returns a reference to this Tile's PRNG.
    */
   Random & GetRandom();
-
-  /**
-   * Sets the neighbors bitfield to a new bitfield. This in essence
-   * should only be called when constructing the Tile or when adding a
-   * neighbor to the Tile to tell it which directions it is able to
-   * send packets in.
-   */
-  void SetNeighbors(u8 neighbors);
 
   /**
    * Gets a reference to this Tile's ElementTable.
@@ -176,7 +197,7 @@ public:
    * @returns The number of events executed within this Tile since
    *          initialization.
    */
-  u64 GetEventsExecuted() const 
+  u64 GetEventsExecuted() const
   {
     return m_eventsExecuted;
   }
@@ -344,7 +365,7 @@ public:
 };
 } /* namespace MFM */
 
-#include "tile.tcc"
+#include "Tile.tcc"
 
 #endif /*TILE_H*/
 
