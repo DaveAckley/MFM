@@ -39,6 +39,9 @@ Tile<T,R>::Tile() : m_eventsExecuted(0), m_executingWindow(*this)
       m_connections[i] = NULL;
     }
   }
+
+  m_threadInitialized = false;
+  m_threadPaused = false;
 }
 
 template <class T, u32 R>
@@ -128,45 +131,57 @@ void Tile<T,R>::CreateWindowAt(const SPoint& pt)
 }
 
 template <class T, u32 R>
-EuclidDir Tile<T,R>::CacheAt(SPoint& sp)
+EuclidDir Tile<T,R>::RegionAt(const SPoint& sp, u32 reach)
 {
   UPoint pt = makeUnsigned(sp);
 
-  if(pt.GetX() < R)
+  if(pt.GetX() < reach)
   {
-    if(pt.GetY() < R)
+    if(pt.GetY() < reach)
     {
       return EUDIR_NORTHWEST;
     }
-    else if(pt.GetY() >= TILE_WIDTH - R)
+    else if(pt.GetY() >= TILE_WIDTH - reach)
     {
       return EUDIR_SOUTHWEST;
     }
     return EUDIR_WEST;
   }
-  else if(pt.GetX() >= TILE_WIDTH - R)
+  else if(pt.GetX() >= TILE_WIDTH - reach)
   {
-    if(pt.GetY() < R)
+    if(pt.GetY() < reach)
     {
       return EUDIR_NORTHEAST;
     }
-    else if(pt.GetY() >= TILE_WIDTH - R)
+    else if(pt.GetY() >= TILE_WIDTH - reach)
     {
       return EUDIR_SOUTHEAST;
     }
     return EUDIR_EAST;
   }
 
-  if(pt.GetY() < R)
+  if(pt.GetY() < reach)
   {
     return EUDIR_NORTH;
   }
-  else if(pt.GetY() >= TILE_WIDTH - R)
+  else if(pt.GetY() >= TILE_WIDTH - reach)
   {
     return EUDIR_SOUTH;
   }
 
   return (EuclidDir)-1;
+}
+
+template <class T, u32 R>
+EuclidDir Tile<T,R>::CacheAt(const SPoint& pt)
+{
+  return RegionAt(pt, R);
+}
+
+template <class T, u32 R>
+EuclidDir Tile<T,R>::SharedAt(const SPoint& pt)
+{
+  return RegionAt(pt, R * 3);
 }
 
 template <class T,u32 R>
@@ -303,45 +318,170 @@ void Tile<T,R>::SendRelevantAtoms()
   }
 }
 
+template <class T, u32 R>
+bool Tile<T,R>::TryLock(EuclidDir connectionDir)
+{
+  return IsConnected(connectionDir) &&
+    m_connections[connectionDir]->Lock();
+}
+
+template <class T, u32 R>
+bool Tile<T,R>::TryLockCorner(EuclidDir cornerDir)
+{
+  u32 locked = 0;
+
+  /* Go back one, then wind until we lock all three. */
+  cornerDir = EuDir::CCWDir(cornerDir);
+  for(u32 i = 0; i < 3; i++)
+  {
+    if(TryLock(cornerDir))
+    {
+      locked++;
+      cornerDir = EuDir::CWDir(cornerDir);
+    }
+    /* If we can't hit one, rewind, unlocking all held locks. */
+    else
+    {
+      for(u32 j = 0; j < locked; j++)
+      {
+	cornerDir = EuDir::CCWDir(cornerDir);
+	m_connections[cornerDir]->Unlock();
+      }
+      return false;
+    }
+  }
+  return true;
+}
+
+template <class T, u32 R>
+bool Tile<T,R>::LockRegion(EuclidDir regionDir)
+{
+  switch(regionDir)
+  {
+  case EUDIR_NORTH:
+  case EUDIR_EAST:
+  case EUDIR_SOUTH:
+  case EUDIR_WEST:
+    return TryLock(regionDir);
+
+  case EUDIR_NORTHWEST:
+  case EUDIR_NORTHEAST:
+  case EUDIR_SOUTHEAST:
+  case EUDIR_SOUTHWEST:
+    return TryLockCorner(regionDir);
+
+  default:
+    FAIL(ILLEGAL_ARGUMENT);
+  }
+}
+
+template <class T, u32 R>
+void Tile<T,R>::UnlockCorner(EuclidDir corner)
+{
+  corner = EuDir::CCWDir(corner);
+  for(u32 i = 0; i < 3; i++)
+  {
+    m_connections[corner]->Unlock();
+    corner = EuDir::CWDir(corner);
+  }
+}
+
+template <class T, u32 R>
+void Tile<T,R>::UnlockRegion(EuclidDir regionDir)
+{
+  switch(regionDir)
+  {
+  case EUDIR_NORTH:
+  case EUDIR_EAST:
+  case EUDIR_SOUTH:
+  case EUDIR_WEST:
+    m_connections[regionDir]->Unlock();
+    return;
+
+  case EUDIR_NORTHWEST:
+  case EUDIR_NORTHEAST:
+  case EUDIR_SOUTHEAST:
+  case EUDIR_SOUTHWEST:
+    return UnlockCorner(regionDir);
+
+  default:
+    FAIL(ILLEGAL_ARGUMENT);
+  }
+}
+
+template <class T, u32 R>
+bool Tile<T,R>::IsInHidden(const SPoint& pt)
+{
+  return pt.GetX() >= (s32)R * 3 && pt.GetX() < TILE_WIDTH - (s32)R * 3 &&
+    pt.GetY() >= (s32)R * 3 && pt.GetY() < TILE_WIDTH - (s32)R * 3;
+}
+
 template <class T,u32 R>
 void Tile<T,R>::Execute()
 {
+  while(m_threadInitialized)
+  {
   /*Change to 0 if placing a window in a certain place*/
 #if 1
-  CreateRandomWindow();
+    CreateRandomWindow();
 #else
-  SPoint winCenter(R * 2 - 1, R);
-  CreateWindowAt(winCenter);
+    SPoint winCenter(R * 2 - 1, R);
+    CreateWindowAt(winCenter);
 #endif
 
-  Packet<T> readPack(PACKET_WRITE);
-  u32 readBytes;
-
-  /* Flush out all packet buffers */
-  for(EuclidDir dir = EUDIR_NORTH; dir < EUDIR_COUNT; dir = (EuclidDir)(dir + 1))
-  {
-    if(IsConnected(dir))
+    bool locked = false;
+    EuclidDir lockRegion = EUDIR_NORTH;
+    if(IsInHidden(m_executingWindow.GetCenter()) ||
+       !IsConnected(lockRegion = SharedAt(m_executingWindow.GetCenter())) ||
+       (locked = LockRegion(lockRegion)))
     {
-      while((readBytes = m_connections[dir]->Read(!IS_OWNED_CONNECTION(dir),
-						  (u8*)&readPack, sizeof(Packet<T>))))
+      elementTable.Execute(m_executingWindow);
+
+      m_executingWindow.FillCenter(m_lastExecutedAtom);
+
+      SendRelevantAtoms();
+
+      ++m_eventsExecuted;
+
+      if(locked)
       {
-	if(readBytes != sizeof(Packet<T>))
-        {
-	  FAIL(ILLEGAL_STATE); /* Didn't read enough for a full packet! */
-	}
-	ReceivePacket(readPack);
+	UnlockRegion(lockRegion);
       }
     }
+
+    Packet<T> readPack(PACKET_WRITE);
+    u32 readBytes;
+
+    /* Flush out all packet buffers */
+    for(EuclidDir dir = EUDIR_NORTH; dir < EUDIR_COUNT; dir = (EuclidDir)(dir + 1))
+    {
+      if(IsConnected(dir))
+      {
+	while((readBytes = m_connections[dir]->Read(!IS_OWNED_CONNECTION(dir),
+						    (u8*)&readPack, sizeof(Packet<T>))))
+	{
+	  if(readBytes != sizeof(Packet<T>))
+	  {
+	    FAIL(ILLEGAL_STATE); /* Didn't read enough for a full packet! */
+	  }
+	  ReceivePacket(readPack);
+	}
+      }
+    }
+    /* Let's try to give someone else a chance. */
+    /* This pausing mechanism is a little janky, too. */
+    do
+    {
+      pthread_yield();
+    } while(m_threadPaused);
   }
+}
 
-  elementTable.Execute(m_executingWindow);
-
-  m_executingWindow.FillCenter(m_lastExecutedAtom);
-
-  SendRelevantAtoms();
-
-  ++m_eventsExecuted;
-
+template <class T, u32 R>
+void* Tile<T,R>::ExecuteThreadHelper(void* tilePtr)
+{
+  ((Tile*)tilePtr)->Execute();
+  return NULL;
 }
 
 template <class T, u32 R>
@@ -361,6 +501,26 @@ void Tile<T,R>::SetAtomCount(ElementType atomType, s32 count)
     return;
   }
   m_atomCount[idx] = count;
+}
+
+template <class T, u32 R>
+void Tile<T,R>::Start()
+{
+  if(!m_threadInitialized)
+  {
+    m_threadInitialized = true;
+    pthread_create(&m_thread, NULL, ExecuteThreadHelper, this);
+  }
+  else
+  {
+    m_threadPaused = false;
+  }
+}
+
+template <class T, u32 R>
+void Tile<T,R>::Pause()
+{
+  m_threadPaused =! m_threadPaused;
 }
 
 template <class T, u32 R>

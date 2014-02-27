@@ -1,6 +1,7 @@
 #ifndef TILE_H      /* -*- C++ -*- */
 #define TILE_H
 
+#include <pthread.h>
 #include "eucliddir.h"
 #include "random.h"  /* for Random */
 #include "packet.h"
@@ -72,6 +73,12 @@ private:
 
   Connection m_ownedConnections[4];
 
+  pthread_t m_thread;
+
+  bool m_threadInitialized;
+
+  bool m_threadPaused;
+
   /**
    * Checks to see if this Tile owns the connection over a particular
    * cache.
@@ -117,6 +124,26 @@ private:
    *                 written to the destination Tile.
    */
   void SendAtom(EuclidDir neighbor, SPoint& atomLoc);
+
+  bool TryLock(EuclidDir connectionDir);
+
+  bool TryLockCorner(EuclidDir cornerDir);
+
+  bool LockRegion(EuclidDir regionDir);
+
+  void UnlockCorner(EuclidDir corner);
+
+  void UnlockRegion(EuclidDir regionDir);
+
+  /**
+   * Checks to see if a specified point is in Hidden memory, and therefore
+   * does not require a lock to execute.
+   *
+   * @param pt The SPoint to check for Hidden memory membership.
+   *
+   * @returns true if pt is in Hidden memory.
+   */
+  inline bool IsInHidden(const SPoint& pt);
 
 public:
 
@@ -202,10 +229,7 @@ public:
     return m_eventsExecuted;
   }
 
-  /*
-   * Finds the cache pointed at by pt. If there
-   * is no cache there, this will return -1.
-   */
+  EuclidDir RegionAt(const SPoint& pt, u32 reach);
 
   /**
    * Finds the cache in this tile which contains a specified Point.
@@ -215,7 +239,9 @@ public:
    * @returns The direction of the cache specified by pt, or
    *          (EuclidDir)-1 if there is no such cache.
    */
-  EuclidDir CacheAt(SPoint& pt);
+  EuclidDir CacheAt(const SPoint& pt);
+
+  EuclidDir SharedAt(const SPoint& pt);
 
 
   /**
@@ -322,6 +348,14 @@ public:
   void Execute();
 
   /**
+   * Used during thread execution to call the execution loop.
+   *
+   * @param tilePtr A pointer to the tile wished to put into
+                    an execution loop.
+   */
+  static void* ExecuteThreadHelper(void* tilePtr);
+
+  /**
    * Gets the number of Atoms in this Tile's main memory of a
    * specified type.
    *
@@ -342,6 +376,22 @@ public:
    * @param count The new count of all Atoms of type atomType.
    */
   void SetAtomCount(ElementType atomType, s32 count);
+
+  /**
+   * Begins event execution on this Tile on its own thread.
+   * Events will continue to happen until paused.
+   *
+   * @sa Pause
+   */
+  void Start();
+
+  /**
+   * Pauses event execution on this Tile. Events will begin
+   * again once Start is called.
+   *
+   * @sa Start
+   */
+  void Pause();
 
   /**
    * Adds an offset to the count of a particular type of Atom.

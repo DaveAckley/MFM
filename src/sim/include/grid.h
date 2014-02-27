@@ -56,6 +56,10 @@ namespace MFM {
 
     u32 GetWidth();
 
+    void Pause();
+
+    void Unpause();
+
     void PlaceAtom(T& atom, const SPoint& location);
 
     T* GetAtom(SPoint& location);

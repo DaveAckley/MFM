@@ -41,8 +41,17 @@ private:
   GridRenderer grend;
   StatsRenderer srend;
 
+  void Sleep(u32 seconds, u64 nanos)
+  {
+    struct timespec tspec;
+    tspec.tv_sec = seconds;
+    tspec.tv_nsec = nanos;
+
+    nanosleep(&tspec, NULL);
+  }
+
   void Update(GridP1Atom& grid)
-  { 
+  {
     u8 speed = keyboard.ShiftHeld() ?
       CAMERA_FAST_SPEED : CAMERA_SLOW_SPEED;
 
@@ -127,10 +136,11 @@ private:
     {
       m_eventsPerFrame *= 10;
     }
-    
+
 
     if(!paused)
     {
+      /*
       u32 processingTime = SDL_GetTicks();
       for(u32 i = 0; i < m_eventsPerFrame; i++)
       {
@@ -138,8 +148,15 @@ private:
       }
       processingTime = SDL_GetTicks() - processingTime;
 
-      /* m_eventProcessingTime is measured in milliseconds, so convert to seconds.*/
       m_AEPS = (double)m_eventsPerFrame / (processingTime / 1000.0);
+      */
+
+      /* Unpause all threads */
+      grid.Unpause();
+      /* Sleep for a bit     */
+      Sleep(1, 0);
+      /* Pause all threads   */
+      grid.Pause();
     }
 
     mouse.Flip();
@@ -148,7 +165,7 @@ private:
 
 public:
 
-  MFMSim() 
+  MFMSim()
   {
     m_eventsPerFrame = EVENTS_PER_FRAME;
     m_AEPS = 0;
@@ -163,7 +180,7 @@ public:
 			      SDL_SWSURFACE);
 
     SDL_Event event;
-    
+
     GridP1Atom mainGrid;
 
     mainGrid.Needed(Element_Empty<P1Atom, 4>::THE_INSTANCE);
@@ -173,6 +190,7 @@ public:
     mainGrid.Needed(Element_Emitter<P1Atom, 4>::THE_INSTANCE);
     mainGrid.Needed(Element_Consumer<P1Atom, 4>::THE_INSTANCE);
     mainGrid.Needed(Element_Data<P1Atom, 4>::THE_INSTANCE);
+
 
     if (seedOrZero==0) seedOrZero = 1;  /* Avoid superstitious 0 zeed */
     mainGrid.SetSeed(seedOrZero);  /* Push seeds out to everybody */
@@ -216,7 +234,7 @@ public:
 	}
       }
     }
-    
+
     mainGrid.PlaceAtom(emtr, eloc);
     mainGrid.PlaceAtom(cnsr, cloc);
     mainGrid.PlaceAtom(cnsr, cloc+SPoint(1,1));  // More consumers than emitters!
@@ -243,10 +261,10 @@ public:
 	case SDL_KEYUP:
 	  keyboard.HandleEvent(&event.key);
 	  break;
-	  
+
 	}
       }
-      
+
       /* Limit framerate */
       s32 sleepMS = (s32)
 	((1000.0 / FRAMES_PER_SECOND) -
@@ -256,21 +274,21 @@ public:
 	SDL_Delay(sleepMS);
       }
       lastFrame = SDL_GetTicks();
-      
-      
+
+
       Update(mainGrid);
-      
+
       Drawing::Clear(screen, 0xff200020);
-      
+
       grend.RenderGrid(mainGrid);
       if(renderStats)
       {
 	srend.RenderGridStatistics(mainGrid, m_AEPS);
       }
-      
+
       SDL_Flip(screen);
     }
-    
+
     SDL_FreeSurface(screen);
   }
 };

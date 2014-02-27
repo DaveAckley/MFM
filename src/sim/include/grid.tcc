@@ -167,6 +167,30 @@ namespace MFM {
   }
 
   template <class T, u32 R,u32 W, u32 H>
+  void Grid<T,R,W,H>::Pause()
+  {
+    for(u32 x = 0; x < W; x++)
+    {
+      for(u32 y = 0; y < H; y++)
+      {
+	GetTile(x, y).Pause();
+      }
+    }
+  }
+
+  template <class T, u32 R,u32 W, u32 H>
+  void Grid<T,R,W,H>::Unpause()
+  {
+    for(u32 x = 0; x < W; x++)
+    {
+      for(u32 y = 0; y < H; y++)
+      {
+	GetTile(x, y).Start();
+      }
+    }
+  }
+
+  template <class T, u32 R,u32 W, u32 H>
   void Grid<T,R,W,H>::TriggerEvent()
   {
     /*Change to 0 if aiming a window at a certian tile.*/
