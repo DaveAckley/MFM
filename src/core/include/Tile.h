@@ -10,6 +10,7 @@
 #include "eventwindow.h"
 #include "elementtable.h"
 #include "Connection.h"
+#include "ThreadPauser.h"
 
 
 namespace MFM {
@@ -78,6 +79,8 @@ private:
   bool m_threadInitialized;
 
   bool m_threadPaused;
+
+  ThreadPauser m_threadPauser;
 
   /**
    * Checks to see if this Tile owns the connection over a particular

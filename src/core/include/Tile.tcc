@@ -469,11 +469,8 @@ void Tile<T,R>::Execute()
       }
     }
     /* Let's try to give someone else a chance. */
-    /* This pausing mechanism is a little janky, too. */
-    do
-    {
-      pthread_yield();
-    } while(m_threadPaused);
+    pthread_yield();
+    m_threadPauser.WaitIfPaused();
   }
 }
 
@@ -513,14 +510,14 @@ void Tile<T,R>::Start()
   }
   else
   {
-    m_threadPaused = false;
+    m_threadPauser.Unpause();
   }
 }
 
 template <class T, u32 R>
 void Tile<T,R>::Pause()
 {
-  m_threadPaused =! m_threadPaused;
+  m_threadPauser.Pause();
 }
 
 template <class T, u32 R>
