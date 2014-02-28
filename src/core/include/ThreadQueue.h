@@ -16,13 +16,44 @@ namespace MFM
   {
   private:
 
+    /**
+     * The pthread_mutex_t required to lock this ThreadQueue upon
+     * reading and writing.
+     */
     pthread_mutex_t m_lock;
 
+    /**
+     * The pthread_cond_t required to wake a waiting thread during an
+     * IO conflict.
+     */
     pthread_cond_t m_cond;
 
+    /**
+     * The actual data held within this ThreadQueue.
+     */
     u8 m_queueData[THREADQUEUE_MAX_BYTES];
 
-    u32 m_readHead, m_writeHead, m_heldBytes;
+    /**
+     * The location within m_queueData which the next byte received
+     * through Write() will be written to.
+     *
+     * @sa Write
+     */
+    u32 m_writeHead,
+
+    /**
+     * The location within m_queueData which the next byte asked for
+     * by Read() will be read from.
+     *
+     * @sa Read
+     */
+        m_readHead,
+
+    /**
+     * The number of bytes currently available to be read from
+     * m_queueData.
+     */
+        m_heldBytes;
 
     /**
      * Reads a specified number of bytes from this ThreadQueue into a
@@ -47,10 +78,29 @@ namespace MFM
 
   public:
 
+    /**
+     * Constructs a new ThreadQueue, setting up all mutex related
+     * structures.
+     */
     ThreadQueue();
 
+    /**
+     * Deconstructs a ThreadQueue, destroying all mutexes.
+     */
     ~ThreadQueue();
 
+    /**
+     * Writes a specified number of bytes to this ThreadQueue from a
+     * specified buffer. If writing is not available, this thread
+     * waits until it is.
+     *
+     * @param bytes The buffer where bytes will be taken from during
+     *              writing.
+     *
+     * @param length The number of bytes which will be taken from
+     *               bytes. The caller must ensure that this number is
+     *               less than or equal to the length of bytes.
+     */
     void Write(u8* bytes, u32 length);
 
     /**

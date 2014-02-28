@@ -1,6 +1,5 @@
 #include <stdio.h>    /* -*- C++ -*- */
 #include <stdlib.h>
-#include "fail.h"
 #include "ThreadQueue.h"
 
 #define MIN(X,Y) ((X) > (Y) ? (Y) : (X))
@@ -35,8 +34,9 @@ namespace MFM
     {
       if(length + m_heldBytes > THREADQUEUE_MAX_BYTES)
       {
+	/* Won't worry too badly about the Fail macro here. */
 	fprintf(stderr, "ERROR: THREADQUEUE OVERLOAD! \n");
-	FAIL(ILLEGAL_STATE);
+	exit(1);
       }
 
       for(u32 i = 0; i < length; i++)
