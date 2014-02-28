@@ -22,5 +22,9 @@ bin/*
 build
 lib/*
 
+# Ignore doxygen
+html/
+latex/
+
 # Ignore the code log
 codelog.txt
