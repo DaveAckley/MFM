@@ -59,6 +59,13 @@ namespace MFM
       pthread_mutex_unlock(&m_lock);
     }
 
+    void ReadBlocking(bool child, u8* buffer, u32 length)
+    {
+      ThreadQueue& queue = child ? m_outbuffer : m_inbuffer;
+
+      queue.ReadBlocking(buffer, length);
+    }
+
     /**
      * Reads from the corresponding underlying queue.
      *

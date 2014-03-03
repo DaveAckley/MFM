@@ -143,6 +143,19 @@ namespace MFM {
     void SendRelevantAtoms();
 
     /**
+     * Alerts a neighboring Tile that this Tile has completed its
+     * event. This keeps the inter-tile buffers from overflowing. This
+     * should be the last thing called (once per relevant neighbor)
+     * during an event.
+     *
+     * @param neighbor The EuclidDir of the direction of the
+     *                 neighboring Tile which should be sent an "Event
+     *                 Complete" packet and waited on for an
+     *                 acknowledgement Packet.
+     */
+    void EndAndWaitForAcknowledgement(EuclidDir neighbor);
+
+    /**
      * Creates a single Packet describing an Atom placement on this
      * Tile's cache, therefore describing an Atom placement on another
      * Tile's main memory. This Packet is placed in m_outgoingPackets,

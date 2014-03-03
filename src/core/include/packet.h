@@ -12,9 +12,20 @@ namespace MFM {
    */
   typedef enum
     {
-      /** This type describes a Tile's intent to write an atom to a
+      /** This PacketType describes a Tile's intent to write an atom to a
 	  specific location.*/
-      PACKET_WRITE
+      PACKET_WRITE,
+      /** Used to keep inter-tile buffers from overflowing, this PacketType
+	  describes that a Tile has completed processing an event and
+	  is ready to unlock its caches. */
+      PACKET_EVENT_COMPLETE,
+      /** Used to keep inter-tile buffers from overflowing, this
+	  PacketType describes that a Tile has completed all event
+	  processing from another Tile's events. In practice, a Packet
+	  of this PacketType should be sent immediately upon receipt
+	  of a PACKET_EVENT_COMPLETE Packet. */
+      PACKET_EVENT_ACKNOWLEDGE
+
     }PacketType;
 
   /**

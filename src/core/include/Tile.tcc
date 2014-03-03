@@ -101,6 +101,9 @@ void Tile<T,R>::ReceivePacket(Packet<T>& packet)
   case PACKET_WRITE:
     PlaceAtom(packet.GetAtom(), packet.GetLocation());
     break;
+  case PACKET_EVENT_COMPLETE:
+    
+    break;
   default:
     FAIL(INCOMPLETE_CODE); break;
   }
@@ -256,11 +259,30 @@ bool Tile<T,R>::IsInCache(const SPoint& pt)
     pt.GetX() >= upbnd || pt.GetY() >= upbnd;
 }
 
-/*
- * This examines the current event window and sends all atoms
- *  within this tile's shared section of memory. This ensures
- *  that any and all atoms that need to be sent are sent.
- */
+template <class T, u32 R>
+void Tile<T,R>::EndAndWaitForAcknowledgement(EuclidDir neighbor)
+{
+  Packet<T> sendout(PACKET_EVENT_COMPLETE);
+  sendout.SetReceivingNeighbor(neighbor);
+  
+  /* We don't care about what other kind of stuff is in the Packet */
+  m_connections[neighbor]->Write(!IS_OWNED_CONNECTION(neighbor),
+				 (u8*)&sendout, sizeof(Packet<T>));
+
+  /* Recycle the packet as input and wait for acknowledgement */
+  m_connections[neighbor]->ReadBlocking(!IS_OWNED_CONNECTION(neighbor),
+				(u8*)&sendout, sizeof(Packet<T>));
+
+  if(sendout.GetType() != PACKET_EVENT_ACKNOWLEDGE)
+  {
+    /* Did not receive acknowledgement packet. Something is wrong with
+       a mutex somewhere... */
+    FAIL(ILLEGAL_STATE); 
+  }
+
+  ReceivePacket(sendout);
+}
+
 template <class T, u32 R>
 void Tile<T,R>::SendRelevantAtoms()
 {
@@ -268,7 +290,6 @@ void Tile<T,R>::SendRelevantAtoms()
   SPoint ewCenter;
 
   s32 r2 = R * 2;
-
   m_executingWindow.FillCenter(ewCenter);
 
   for(u32 i = 0; i < m_executingWindow.GetAtomCount(); i++)
@@ -314,7 +335,6 @@ void Tile<T,R>::SendRelevantAtoms()
     {
       SendAtom(EUDIR_SOUTH, localLoc);
     }
-
   }
 }
 
