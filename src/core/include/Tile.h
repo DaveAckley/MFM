@@ -139,8 +139,13 @@ namespace MFM {
      * Populates m_outgoingPackets with all Packets describing the state of
      * this Tile's caches. All Packets created by this method are ready to
      * be output to other Tiles.
+     *
+     * @returns a bitfield describing which neighbors need to be
+     *          waited on for receipt of an acknowledgement
+     *          packet. These neighbors are all found by checking
+     *          (retval & (1<<EUDIR_DIRECTION)).
      */
-    void SendRelevantAtoms();
+    u32 SendRelevantAtoms();
 
     /**
      * Alerts a neighboring Tile that this Tile has completed its
@@ -153,7 +158,7 @@ namespace MFM {
      *                 Complete" packet and waited on for an
      *                 acknowledgement Packet.
      */
-    void EndAndWaitForAcknowledgement(EuclidDir neighbor);
+    void SendEndEventPackets(u32 dirWaitWord);
 
     /**
      * Creates a single Packet describing an Atom placement on this
@@ -401,6 +406,8 @@ namespace MFM {
      */
     T* GetAtom(int i);
 
+    void SendAcknowledgementPacket(Packet<T>& packet);
+
     /**
      * Processes a Packet, performing all necessary operations defined by
      * Packet symantics.
@@ -452,6 +459,8 @@ namespace MFM {
     void PlaceInternalAtom(const T& atom, const SPoint& pt) {
       PlaceAtom(atom,pt+SPoint(R,R));
     }
+
+    void FlushAndWaitOnAllBuffers(u32 dirWaitWord);
 
     /**
      * Executes a single new EventWindow at a randomly chosen location.

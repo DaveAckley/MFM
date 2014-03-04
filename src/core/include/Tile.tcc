@@ -94,6 +94,18 @@ T* Tile<T,R>::GetAtom(s32 i)
 }
 
 template <class T, u32 R>
+void Tile<T,R>::SendAcknowledgementPacket(Packet<T>& packet)
+{
+  EuclidDir from = EuDir::OppositeDir(packet.GetReceivingNeighbor());
+  Packet<T> sendout(PACKET_EVENT_ACKNOWLEDGE);
+  sendout.SetReceivingNeighbor(from);
+
+  m_connections[from]->Write(!IS_OWNED_CONNECTION(from),
+			     (u8*)&sendout,
+			     sizeof(Packet<T>));
+}
+
+template <class T, u32 R>
 void Tile<T,R>::ReceivePacket(Packet<T>& packet)
 {
   switch(packet.GetType())
@@ -102,7 +114,10 @@ void Tile<T,R>::ReceivePacket(Packet<T>& packet)
     PlaceAtom(packet.GetAtom(), packet.GetLocation());
     break;
   case PACKET_EVENT_COMPLETE:
-    
+    SendAcknowledgementPacket(packet);
+    break;
+  case PACKET_EVENT_ACKNOWLEDGE:
+
     break;
   default:
     FAIL(INCOMPLETE_CODE); break;
@@ -260,34 +275,32 @@ bool Tile<T,R>::IsInCache(const SPoint& pt)
 }
 
 template <class T, u32 R>
-void Tile<T,R>::EndAndWaitForAcknowledgement(EuclidDir neighbor)
+void Tile<T,R>::SendEndEventPackets(u32 dirWaitWord)
 {
-  Packet<T> sendout(PACKET_EVENT_COMPLETE);
-  sendout.SetReceivingNeighbor(neighbor);
-  
-  /* We don't care about what other kind of stuff is in the Packet */
-  m_connections[neighbor]->Write(!IS_OWNED_CONNECTION(neighbor),
-				 (u8*)&sendout, sizeof(Packet<T>));
-
-  /* Recycle the packet as input and wait for acknowledgement */
-  m_connections[neighbor]->ReadBlocking(!IS_OWNED_CONNECTION(neighbor),
-				(u8*)&sendout, sizeof(Packet<T>));
-
-  if(sendout.GetType() != PACKET_EVENT_ACKNOWLEDGE)
+  EuclidDir dir = EUDIR_NORTH;
+  do
   {
-    /* Did not receive acknowledgement packet. Something is wrong with
-       a mutex somewhere... */
-    FAIL(ILLEGAL_STATE); 
-  }
+    if(IsConnected(dir) && (dirWaitWord & (1 << dir)))
+    {
+      Packet<T> sendout(PACKET_EVENT_COMPLETE);
+      sendout.SetReceivingNeighbor(dir);
 
-  ReceivePacket(sendout);
+      /* We don't care about what other kind of stuff is in the Packet */
+      m_connections[dir]->Write(!IS_OWNED_CONNECTION(dir),
+				     (u8*)&sendout, sizeof(Packet<T>));
+    }
+
+    dir = EuDir::CWDir(dir);
+  } while (dir != EUDIR_NORTH);
 }
 
 template <class T, u32 R>
-void Tile<T,R>::SendRelevantAtoms()
+u32 Tile<T,R>::SendRelevantAtoms()
 {
   SPoint localLoc;
   SPoint ewCenter;
+
+  u32 dirBitfield = 0;
 
   s32 r2 = R * 2;
   m_executingWindow.FillCenter(ewCenter);
@@ -301,41 +314,54 @@ void Tile<T,R>::SendRelevantAtoms()
     if(localLoc.GetX() < r2)
     {
       SendAtom(EUDIR_WEST, localLoc);
+      dirBitfield |= (1<<EUDIR_WEST);
       if(localLoc.GetY() < r2)
       {
 	SendAtom(EUDIR_NORTHWEST, localLoc);
 	SendAtom(EUDIR_NORTH, localLoc);
+	dirBitfield |= (1<<EUDIR_NORTHWEST);
+	dirBitfield |= (1<<EUDIR_NORTH);
       }
       else if(localLoc.GetY() >= TILE_WIDTH - r2)
       {
 	SendAtom(EUDIR_SOUTHWEST, localLoc);
 	SendAtom(EUDIR_SOUTH, localLoc);
+	dirBitfield |= (1<<EUDIR_SOUTHWEST);
+	dirBitfield |= (1<<EUDIR_SOUTH);
       }
     }
     /*East neighbor?*/
     else if(localLoc.GetX() >= TILE_WIDTH - r2)
     {
       SendAtom(EUDIR_EAST, localLoc);
+      dirBitfield |= (1<<EUDIR_EAST);
       if(localLoc.GetY() < r2)
       {
 	SendAtom(EUDIR_NORTHEAST, localLoc);
 	SendAtom(EUDIR_NORTH, localLoc);
+	dirBitfield |= (1<<EUDIR_NORTHEAST);
+	dirBitfield |= (1<<EUDIR_NORTH);
       }
       if(localLoc.GetY() >= TILE_WIDTH - r2)
       {
 	SendAtom(EUDIR_SOUTHEAST, localLoc);
 	SendAtom(EUDIR_SOUTH, localLoc);
+	dirBitfield |= (1<<EUDIR_SOUTHEAST);
+	dirBitfield |= (1<<EUDIR_SOUTH);
       }
     }
     else if(localLoc.GetY() < r2)
     {
       SendAtom(EUDIR_NORTH, localLoc);
+      dirBitfield |= (1<<EUDIR_NORTH);
     }
     else if(localLoc.GetY() >= TILE_WIDTH - r2)
     {
       SendAtom(EUDIR_SOUTH, localLoc);
+      dirBitfield |= (1<<EUDIR_SOUTH);
     }
   }
+  return dirBitfield;
 }
 
 template <class T, u32 R>
@@ -436,6 +462,42 @@ bool Tile<T,R>::IsInHidden(const SPoint& pt)
     pt.GetY() >= (s32)R * 3 && pt.GetY() < TILE_WIDTH - (s32)R * 3;
 }
 
+template <class T, u32 R>
+void Tile<T,R>::FlushAndWaitOnAllBuffers(u32 dirWaitWord)
+{
+  Packet<T> readPack(PACKET_WRITE);
+  u32 readBytes;
+  do
+  {
+    /* Flush out all packet buffers */
+    for(EuclidDir dir = EUDIR_NORTH; dir < EUDIR_COUNT; dir = (EuclidDir)(dir + 1))
+    {
+      if(IsConnected(dir))
+      {
+	while((readBytes = m_connections[dir]->Read(!IS_OWNED_CONNECTION(dir),
+						    (u8*)&readPack, sizeof(Packet<T>))))
+	{
+	  if(readBytes != sizeof(Packet<T>))
+	  {
+	    FAIL(ILLEGAL_STATE); /* Didn't read enough for a full packet! */
+	  }
+	  if(dirWaitWord & (1 << dir))
+	  {
+	    if(readPack.GetType() == PACKET_EVENT_ACKNOWLEDGE)
+	    {
+	      /* FAIL(ILLEGAL_STATE);  Didn't get an acknowledgement right away */
+	      dirWaitWord &= (~(1 << dir));
+	    }
+	  }
+	  ReceivePacket(readPack);
+	}
+      }
+    }
+    pthread_yield();
+    m_threadPauser.WaitIfPaused();
+  } while(dirWaitWord);
+}
+
 template <class T,u32 R>
 void Tile<T,R>::Execute()
 {
@@ -451,6 +513,7 @@ void Tile<T,R>::Execute()
 
     bool locked = false;
     EuclidDir lockRegion = EUDIR_NORTH;
+    u32 dirWaitWord = 0;
     if(IsInHidden(m_executingWindow.GetCenter()) ||
        !IsConnected(lockRegion = SharedAt(m_executingWindow.GetCenter())) ||
        (locked = LockRegion(lockRegion)))
@@ -459,7 +522,11 @@ void Tile<T,R>::Execute()
 
       m_executingWindow.FillCenter(m_lastExecutedAtom);
 
-      SendRelevantAtoms();
+      dirWaitWord = SendRelevantAtoms();
+
+      SendEndEventPackets(dirWaitWord);
+
+      FlushAndWaitOnAllBuffers(dirWaitWord);
 
       ++m_eventsExecuted;
 
@@ -468,29 +535,10 @@ void Tile<T,R>::Execute()
 	UnlockRegion(lockRegion);
       }
     }
-
-    Packet<T> readPack(PACKET_WRITE);
-    u32 readBytes;
-
-    /* Flush out all packet buffers */
-    for(EuclidDir dir = EUDIR_NORTH; dir < EUDIR_COUNT; dir = (EuclidDir)(dir + 1))
+    else
     {
-      if(IsConnected(dir))
-      {
-	while((readBytes = m_connections[dir]->Read(!IS_OWNED_CONNECTION(dir),
-						    (u8*)&readPack, sizeof(Packet<T>))))
-	{
-	  if(readBytes != sizeof(Packet<T>))
-	  {
-	    FAIL(ILLEGAL_STATE); /* Didn't read enough for a full packet! */
-	  }
-	  ReceivePacket(readPack);
-	}
-      }
+      FlushAndWaitOnAllBuffers(dirWaitWord);
     }
-    /* Let's try to give someone else a chance. */
-    pthread_yield();
-    m_threadPauser.WaitIfPaused();
   }
 }
 
