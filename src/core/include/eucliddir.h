@@ -51,6 +51,42 @@ public:
    */
   static EuclidDir CCWDir(EuclidDir dir) { return (EuclidDir) ((dir+EUDIR_COUNT-1)%EUDIR_COUNT); }
 
+  /**
+   * Adds a EuclidDir to a EuclidDir mask.
+   *
+   * @param mask The EuclidDir mask to add a EuclidDir to.
+   *
+   * @param dir The EuclidDir to add to mask.
+   *
+   * @returns mask with dir added to it.
+   */
+  static inline u32 AddDirToMask(u32 mask, EuclidDir dir)
+  { return mask | (1 << dir); }
+
+  /**
+   * Removes a EuclidDir to a EuclidDir mask.
+   *
+   * @param mask The EuclidDir mask to remove a EuclidDir from.
+   *
+   * @param dir The EuclidDir to remove from mask.
+   *
+   * @returns mask with dir removed from it.
+   */
+  static inline u32 RemoveDirInMask(u32 mask, EuclidDir dir)
+  { return mask & (~(1 << dir)); }
+
+  /**
+   * Checks a EuclidDir mask to see if a EuclidDir is inside it.
+   *
+   * @param mask The mask to check EuclidDir membership of.
+   *
+   * @param dir The EuclidDir to check mask for membership of.
+   *
+   * @return true if dir is inside mask, else false.
+   */
+  static inline bool TestDirInMask(u32 mask, EuclidDir dir)
+  { return mask & (1 << dir); }
+
   static void FillEuclidDir(SPoint& pt, EuclidDir dir);
 
   static EuclidDir FromOffset(SPoint& pt);

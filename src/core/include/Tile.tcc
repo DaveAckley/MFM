@@ -311,54 +311,54 @@ u32 Tile<T,R>::SendRelevantAtoms()
     localLoc.Add(ewCenter);
 
     /* Send to West neighbor? */
-    if(localLoc.GetX() < r2)
+    if(IsConnected(EUDIR_WEST) && localLoc.GetX() < r2)
     {
       SendAtom(EUDIR_WEST, localLoc);
-      dirBitfield |= (1<<EUDIR_WEST);
-      if(localLoc.GetY() < r2)
+      dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_WEST);
+      if(IsConnected(EUDIR_NORTH) && localLoc.GetY() < r2)
       {
 	SendAtom(EUDIR_NORTHWEST, localLoc);
 	SendAtom(EUDIR_NORTH, localLoc);
-	dirBitfield |= (1<<EUDIR_NORTHWEST);
-	dirBitfield |= (1<<EUDIR_NORTH);
+	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_NORTHWEST);
+	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_NORTH);
       }
-      else if(localLoc.GetY() >= TILE_WIDTH - r2)
+      else if(IsConnected(EUDIR_SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
       {
 	SendAtom(EUDIR_SOUTHWEST, localLoc);
 	SendAtom(EUDIR_SOUTH, localLoc);
-	dirBitfield |= (1<<EUDIR_SOUTHWEST);
-	dirBitfield |= (1<<EUDIR_SOUTH);
+	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_SOUTHWEST);
+	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_SOUTH);
       }
     }
     /*East neighbor?*/
-    else if(localLoc.GetX() >= TILE_WIDTH - r2)
+    else if(IsConnected(EUDIR_EAST) && localLoc.GetX() >= TILE_WIDTH - r2)
     {
       SendAtom(EUDIR_EAST, localLoc);
-      dirBitfield |= (1<<EUDIR_EAST);
-      if(localLoc.GetY() < r2)
+      dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_EAST);
+      if(IsConnected(EUDIR_NORTH) && localLoc.GetY() < r2)
       {
 	SendAtom(EUDIR_NORTHEAST, localLoc);
 	SendAtom(EUDIR_NORTH, localLoc);
-	dirBitfield |= (1<<EUDIR_NORTHEAST);
-	dirBitfield |= (1<<EUDIR_NORTH);
+	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_NORTHEAST);
+	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_NORTH);
       }
-      if(localLoc.GetY() >= TILE_WIDTH - r2)
+      if(IsConnected(EUDIR_SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
       {
 	SendAtom(EUDIR_SOUTHEAST, localLoc);
 	SendAtom(EUDIR_SOUTH, localLoc);
-	dirBitfield |= (1<<EUDIR_SOUTHEAST);
-	dirBitfield |= (1<<EUDIR_SOUTH);
+	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_SOUTHEAST);
+	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_SOUTH);
       }
     }
-    else if(localLoc.GetY() < r2)
+    else if(IsConnected(EUDIR_NORTH) && localLoc.GetY() < r2)
     {
       SendAtom(EUDIR_NORTH, localLoc);
-      dirBitfield |= (1<<EUDIR_NORTH);
+      dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_NORTH);
     }
-    else if(localLoc.GetY() >= TILE_WIDTH - r2)
+    else if(IsConnected(EUDIR_SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
     {
       SendAtom(EUDIR_SOUTH, localLoc);
-      dirBitfield |= (1<<EUDIR_SOUTH);
+      dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_SOUTH);
     }
   }
   return dirBitfield;
