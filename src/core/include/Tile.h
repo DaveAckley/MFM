@@ -406,7 +406,7 @@ namespace MFM {
      */
     T* GetAtom(int i);
 
-    void SendAcknowledgementPacket(Packet<T>& packet);
+    void SendAcknowledgmentPacket(Packet<T>& packet);
 
     /**
      * Processes a Packet, performing all necessary operations defined by

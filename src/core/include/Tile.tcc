@@ -94,7 +94,7 @@ T* Tile<T,R>::GetAtom(s32 i)
 }
 
 template <class T, u32 R>
-void Tile<T,R>::SendAcknowledgementPacket(Packet<T>& packet)
+void Tile<T,R>::SendAcknowledgmentPacket(Packet<T>& packet)
 {
   EuclidDir from = EuDir::OppositeDir(packet.GetReceivingNeighbor());
   Packet<T> sendout(PACKET_EVENT_ACKNOWLEDGE);
@@ -114,7 +114,7 @@ void Tile<T,R>::ReceivePacket(Packet<T>& packet)
     PlaceAtom(packet.GetAtom(), packet.GetLocation());
     break;
   case PACKET_EVENT_COMPLETE:
-    SendAcknowledgementPacket(packet);
+    SendAcknowledgmentPacket(packet);
     break;
   case PACKET_EVENT_ACKNOWLEDGE:
 
@@ -485,7 +485,7 @@ void Tile<T,R>::FlushAndWaitOnAllBuffers(u32 dirWaitWord)
 	  {
 	    if(readPack.GetType() == PACKET_EVENT_ACKNOWLEDGE)
 	    {
-	      /* FAIL(ILLEGAL_STATE);  Didn't get an acknowledgement right away */
+	      /* FAIL(ILLEGAL_STATE);  Didn't get an acknowledgment right away */
 	      dirWaitWord &= (~(1 << dir));
 	    }
 	  }
