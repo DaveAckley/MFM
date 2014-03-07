@@ -2,11 +2,9 @@
 #include "element_data.h"    /* for ELEMENT_DATA */
 #include "element_sorter.h"  /* for ELEMENT_SORTER */
 #include "colormap.h"
+#include "Util.h"            /* for MIN and MAX */
 
 namespace MFM {
-
-#define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
-#define MIN(X,Y) ((X) > (Y) ? (Y) : (X))
 
 template <class T, u32 R>
 u32 TileRenderer::GetAtomColor(Tile<T,R>& tile, T& atom)
@@ -19,13 +17,15 @@ u32 TileRenderer::GetAtomColor(Tile<T,R>& tile, T& atom)
 template <class T, u32 R>
 u32 TileRenderer::GetDataHeatColor(Tile<T,R>& tile, T& atom)
 {
-  if(atom.IsType(Element_Data<T,R>::TYPE))
-  {
-    return ColorMap_SEQ5_YlOrRd::THE_INSTANCE.GetInterpolatedColor(Element_Data<T,R>::THE_INSTANCE.GetDatum(atom,0),0,100,0xffff0000);
-  }
   if(atom.IsType(Element_Sorter<T,R>::TYPE))
   {
-    return ColorMap_SEQ5_YlGnBu::THE_INSTANCE.GetInterpolatedColor(Element_Sorter<T,R>::THE_INSTANCE.GetThreshold(atom,0),0,100,0xffff0000);
+    return ColorMap_SEQ5_YlOrRd::THE_INSTANCE.
+      GetInterpolatedColor(Element_Sorter<T,R>::THE_INSTANCE.GetThreshold(atom,0),0,100,0xffff0000);
+  }
+  if(atom.IsType(Element_Data<T,R>::TYPE))
+  {
+    return ColorMap_SEQ5_YlGnBu::THE_INSTANCE.
+      GetInterpolatedColor(Element_Data<T,R>::THE_INSTANCE.GetDatum(atom,0),0,100,0xffff0000);
   }
   return 0;
 }
@@ -69,8 +69,8 @@ void TileRenderer::RenderAtoms(SPoint& pt, Tile<T,EVENT_WINDOW_RADIUS>& tile,
 	  {
 	    color = GetAtomColor(tile, *atom);
 	  }
-			  
-	  
+
+
 	  if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX() &&
 	     rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
 	  {
@@ -97,7 +97,7 @@ void TileRenderer::RenderTile(Tile<T,R>& t, SPoint& loc, bool renderWindow,
 {
   SPoint multPt(loc);
 
-  multPt.Multiply((TILE_WIDTH - R * 2) * 
+  multPt.Multiply((TILE_WIDTH - R * 2) *
 		  m_atomDrawSize);
 
   SPoint realPt(multPt.GetX(), multPt.GetY());
@@ -123,12 +123,12 @@ void TileRenderer::RenderTile(Tile<T,R>& t, SPoint& loc, bool renderWindow,
     }
 
     RenderAtoms(multPt, t, renderCache);
-    
+
     if(m_drawGrid)
     {
       RenderGrid<R>(&multPt, renderCache);
     }
-  }  
+  }
 }
 
 template <class T,u32 R>
@@ -142,7 +142,7 @@ void TileRenderer::RenderEventWindow(SPoint& offset,
   SPoint eventCenter;
   u32 cacheOffset = renderCache ? 0 : -R;
   u32 drawColor = Drawing::WHITE;
-  
+
   tile.FillLastExecutedAtom(eventCenter);
   u32 tableSize = EVENT_WINDOW_SITES(R);
   for(u32 i = 0; i < tableSize; i++)
@@ -185,7 +185,7 @@ void TileRenderer::RenderMemRegion(SPoint& pt, int regID,
   if(!renderCache)
   {
     /* Subtract out the cache's width */
-    tileSize = m_atomDrawSize * 
+    tileSize = m_atomDrawSize *
       (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
   }
   else
@@ -216,9 +216,9 @@ void TileRenderer::RenderGrid(SPoint* pt, bool renderCache)
 
   if(!renderCache)
   {
-    lineLen = m_atomDrawSize * 
+    lineLen = m_atomDrawSize *
       (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
-    linesToDraw = TILE_WIDTH + 
+    linesToDraw = TILE_WIDTH +
       1 - (2 * EVENT_WINDOW_RADIUS);
   }
   else

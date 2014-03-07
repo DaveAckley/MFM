@@ -1,5 +1,6 @@
 #include "manhattandir.h"      /* -*- C++ -*- */
 #include "element_empty.h"
+#include "Util.h"
 
 namespace MFM {
 
@@ -38,6 +39,11 @@ Tile<T,R>::Tile() : m_eventsExecuted(0), m_executingWindow(*this)
 	 comes. */
       m_connections[i] = NULL;
     }
+  }
+
+  for(u32 i = 0; i < REGION_COUNT; i++)
+  {
+    m_regionEvents[i] = 0;
   }
 
   m_threadInitialized = false;
@@ -463,6 +469,37 @@ bool Tile<T,R>::IsInHidden(const SPoint& pt)
 }
 
 template <class T, u32 R>
+TileRegion Tile<T,R>::RegionFromIndex(const u32 index)
+{
+  if(index > TILE_WIDTH)
+  {
+    FAIL(ARRAY_INDEX_OUT_OF_BOUNDS); /* Index out of Tile bounds */
+  }
+
+  const u32 hiddenWidth = TILE_WIDTH - R * 6;
+
+  if(index < R * REGION_HIDDEN)
+  {
+    return (TileRegion)(index / R);
+  }
+  else if(index >= R * REGION_HIDDEN + hiddenWidth)
+  {
+    return (TileRegion)((index - (R * REGION_HIDDEN) - hiddenWidth) / R);
+  }
+  else
+  {
+    return REGION_HIDDEN;
+  }
+}
+
+template <class T, u32 R>
+TileRegion Tile<T,R>::RegionIn(const SPoint& pt)
+{
+  return MIN(RegionFromIndex((u32)pt.GetX()),
+	     RegionFromIndex((u32)pt.GetY()));
+}
+
+template <class T, u32 R>
 void Tile<T,R>::FlushAndWaitOnAllBuffers(u32 dirWaitWord)
 {
   Packet<T> readPack(PACKET_WRITE);
@@ -529,6 +566,7 @@ void Tile<T,R>::Execute()
       FlushAndWaitOnAllBuffers(dirWaitWord);
 
       ++m_eventsExecuted;
+      ++m_regionEvents[RegionIn(m_executingWindow.GetCenter())];
 
       if(locked)
       {

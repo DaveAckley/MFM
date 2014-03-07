@@ -137,25 +137,10 @@ private:
       m_eventsPerFrame *= 10;
     }
 
-
     if(!paused)
     {
-      /*
-      u32 processingTime = SDL_GetTicks();
-      for(u32 i = 0; i < m_eventsPerFrame; i++)
-      {
-	grid.TriggerEvent();
-      }
-      processingTime = SDL_GetTicks() - processingTime;
-
-      m_AEPS = (double)m_eventsPerFrame / (processingTime / 1000.0);
-      */
-
-      /* Unpause all threads */
       grid.Unpause();
-      /* Sleep for a bit     */
-      Sleep(1, 0);
-      /* Pause all threads   */
+      Sleep(0, 100000000);
       grid.Pause();
     }
 

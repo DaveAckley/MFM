@@ -4,7 +4,7 @@
 #include "itype.h"
 #include <pthread.h>
 
-#define THREADQUEUE_MAX_BYTES 65535
+#define THREADQUEUE_MAX_BYTES 1536
 
 namespace MFM
 {

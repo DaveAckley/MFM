@@ -25,6 +25,15 @@ namespace MFM {
 
 #define IS_OWNED_CONNECTION(X) ((X) - EUDIR_EAST >= 0 && (X) - EUDIR_EAST < 4)
 
+  typedef enum
+  {
+    REGION_CACHE   = 0,
+    REGION_SHARED  = 1,
+    REGION_VISIBLE = 2,
+    REGION_HIDDEN  = 3,
+    REGION_COUNT
+  }TileRegion;
+
   template <class T,u32 R>
   class Tile
   {
@@ -53,6 +62,13 @@ namespace MFM {
     /** The number of events executed in this Tile since
 	initialization. */
     u64 m_eventsExecuted;
+
+    /**
+     * The number of events executed in this Tile since
+     * initialization. Counts here are indexed by TileRegion, i.e.
+     * all hidden events can be read by using m_regionEvents[REGION_HIDDEN] .
+     */
+    u64 m_regionEvents[REGION_COUNT];
 
     friend class EventWindow<T,R>;
 
@@ -237,6 +253,29 @@ namespace MFM {
     void UnlockRegion(EuclidDir regionDir);
 
     /**
+     * Gets the TileRegion that a specified index, from the center of
+     * the edge of a Tile, reaches to.
+     *
+     * @param index The index to check region membership of.
+     *
+     * @returns The TileRegion which index will reach.
+     */
+    TileRegion RegionFromIndex(const u32 index);
+
+    /**
+     * Gets the TileRegion that a specified point is inside of. This
+     * method fails upon an argument which does not point at a memory
+     * region.
+     *
+     * @param pt The SPoint, which much be pointing at a memory region
+     *           within this Tile, of which to find the region it is
+     *           pointing at.
+     *
+     * @returns The TileRegion that pt is pointing at.
+     */
+    TileRegion RegionIn(const SPoint& pt);
+
+    /**
      * Checks to see if a specified point is in Hidden memory, and therefore
      * does not require a lock to execute.
      *
@@ -339,6 +378,9 @@ namespace MFM {
      * @param reach The size, in sites from the edge of the tile, of
      *              this region. For example, a reach of R would specify
      *              searching for Atoms in this Tile's cache.
+     *
+     * @returns The EuclidDir of the cache pointed at by pt, or
+     *          (EuclidDir)-1 if pt is not pointing at a cache.
      */
     EuclidDir RegionAt(const SPoint& pt, u32 reach);
 
