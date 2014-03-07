@@ -34,6 +34,14 @@ namespace MFM {
     REGION_COUNT
   }TileRegion;
 
+  typedef enum
+  {
+    LOCKTYPE_NONE   = 0,
+    LOCKTYPE_SINGLE = 1,
+    LOCKTYPE_TRIPLE = 2,
+    LOCKTYPE_COUNT
+  }LockType;
+
   template <class T,u32 R>
   class Tile
   {
@@ -66,9 +74,16 @@ namespace MFM {
     /**
      * The number of events executed in this Tile since
      * initialization. Counts here are indexed by TileRegion, i.e.
-     * all hidden events can be read by using m_regionEvents[REGION_HIDDEN] .
+     * all hidden events can be read by using
+     * m_regionEvents[REGION_HIDDEN] .
      */
     u64 m_regionEvents[REGION_COUNT];
+
+    /**
+     * The number of events which have occurred in different locking
+     * areas of this Tile.
+     */
+    u64 m_lockEvents[LOCKTYPE_COUNT];
 
     friend class EventWindow<T,R>;
 

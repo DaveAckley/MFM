@@ -41,9 +41,14 @@ Tile<T,R>::Tile() : m_eventsExecuted(0), m_executingWindow(*this)
     }
   }
 
+  /* Zero out all of the counting fields */
   for(u32 i = 0; i < REGION_COUNT; i++)
   {
     m_regionEvents[i] = 0;
+  }
+  for(u32 i = 0; i < LOCKTYPE_COUNT; i++)
+  {
+    m_lockEvents[i] = 0;
   }
 
   m_threadInitialized = false;
@@ -571,6 +576,19 @@ void Tile<T,R>::Execute()
       if(locked)
       {
 	UnlockRegion(lockRegion);
+
+	switch(lockRegion)
+	{
+	case EUDIR_NORTH: case EUDIR_SOUTH:
+	case EUDIR_EAST:  case EUDIR_WEST:
+	  ++m_regionEvents[LOCKTYPE_SINGLE]; break;
+	default: /* UnlockRegion would have caught a bad argument. */
+	  ++m_regionEvents[LOCKTYPE_TRIPLE]; break;
+	}
+      }
+      else
+      {
+	++m_regionEvents[LOCKTYPE_NONE];
       }
     }
     else
