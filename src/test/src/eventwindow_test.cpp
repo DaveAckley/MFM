@@ -48,8 +48,8 @@ void EventWindowTest::Test_eventwindowWrite()
 
   absolute.Add(center);
 
-  P1Atom * erased1 = tile.GetAtom(center);
-  P1Atom * erased2 = tile.GetAtom(absolute);
+  const P1Atom * erased1 = tile.GetAtom(center);
+  const P1Atom * erased2 = tile.GetAtom(absolute);
 
   absolute.Subtract(center);
 

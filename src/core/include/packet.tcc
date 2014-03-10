@@ -7,7 +7,7 @@ Packet<T>::Packet(PacketType type)
 }
 
 template <class T>
-void Packet<T>::SetAtom(T& atom)
+void Packet<T>::SetAtom(const T& atom)
 {
   m_atom = atom;
 }

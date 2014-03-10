@@ -92,7 +92,7 @@ namespace MFM {
      * @param atom The Atom to copy into this Packet. A reference is
      *             not kept to this Atom.
      */
-    void SetAtom(T& atom);
+    void SetAtom(const T& atom);
 
     /**
      * Sets this Packet's held EuclidDir neighbor field.
