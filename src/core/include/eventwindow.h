@@ -42,9 +42,11 @@ public:
     return EVENT_WINDOW_SITES(R);
   }
 
-  T& GetCenterAtom();
+  const T& GetCenterAtom() const;
 
-  T& GetRelativeAtom(const SPoint& offset);
+  void SetCenterAtom(const T& atom) ;
+
+  const T& GetRelativeAtom(const SPoint& offset) const;
 
   bool SetRelativeAtom(const SPoint& offset, T atom);
 
