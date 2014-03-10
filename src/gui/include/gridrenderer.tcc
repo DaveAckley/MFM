@@ -5,16 +5,40 @@ namespace MFM {
   template <class T,u32 R,u32 W,u32 H>
   void GridRenderer::RenderGrid(Grid<T,R,W,H>& grid)
   {
-    if(m_renderTilesSeparated)
+    SPoint current;
+    SPoint eventLoc;
+    for(u32 x = 0; x < grid.GetWidth(); x++)
       {
-        RenderGridSeparated(grid);
-      }
-    else
-      {
-        RenderGridClose(grid);
-      }
+        current.SetX(x);
+        for(u32 y = 0; y < grid.GetHeight(); y++)
+          {
+            current.SetY(y);
+      
+            bool renderEW = true;
+      
+            switch(m_currentEWRenderMode)
+              {
+              case EVENTWINDOW_RENDER_OFF:
+                renderEW = false; break;
+              case EVENTWINDOW_RENDER_CURRENT:
+                grid.FillLastEventTile(eventLoc);
+                renderEW = 
+                  current.GetX() == eventLoc.GetX() &&
+                  current.GetY() == eventLoc.GetY();
+                break;
+              case EVENTWINDOW_RENDER_ALL:
+                renderEW = true; break;
+                break;
+              default: break;
+              }
+
+            m_tileRenderer->RenderTile(grid.GetTile(x, y),
+                                       current, renderEW, m_renderTilesSeparated);
+          }
+      }  
   }
 
+#if 0
   template <class T,u32 R,u32 W,u32 H>
   void GridRenderer::RenderGridSeparated(Grid<T,R,W,H>& grid)
   {
@@ -86,5 +110,7 @@ namespace MFM {
           }
       }
   }
+#endif
+
 } /* namespace MFM */
 
