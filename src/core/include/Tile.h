@@ -438,7 +438,7 @@ namespace MFM {
      *
      * @returns A pointer to the Atom at location pt.
      */
-    T* GetAtom(const SPoint& pt);
+    const T* GetAtom(const SPoint& pt) const;
 
     /**
      * Gets an Atom from a specified point in this Tile.
@@ -451,7 +451,33 @@ namespace MFM {
      *
      * @returns A pointer to the Atom at the specified location.
      */
-    T* GetAtom(int x, int y);
+    const T* GetAtom(s32 x, s32 y) const;
+
+    /**
+     * Gets an Atom from a specified point in this Tile.  Indexing
+     * ignores the cache boundary, so possible range is (0,0) to
+     * (OWNED_SIDE-1,OWNED_SIDE-1).
+     *
+     * @param pt The location of the Atom to retrieve.
+     *
+     * @returns A pointer to the Atom at location pt.
+     */
+    const T* GetUncachedAtom(const SPoint& pt) const;
+
+    /**
+     * Gets an Atom from a specified point in this Tile.  Indexing
+     * ignores the cache boundary, so possible range is (0,0) to
+     * (OWNED_SIDE-1,OWNED_SIDE-1).
+     *
+     * @param x The x coordinate of the location of the Atom to
+     *          retrieve.
+
+     * @param y The y coordinate of the location of the Atom to
+     *          retrieve.
+     *
+     * @returns A pointer to the Atom at the specified location.
+     */
+      const T* GetUncachedAtom(s32 x, s32 y) const;
 
     /**
      * Gets an Atom from this Tile by its raster index.
@@ -461,7 +487,7 @@ namespace MFM {
      *
      * @returns A pointer to the Atom at the specified index.
      */
-    T* GetAtom(int i);
+    const T* GetAtom(int i) const;
 
     void SendAcknowledgmentPacket(Packet<T>& packet);
 
@@ -580,6 +606,11 @@ namespace MFM {
      *              atomType.
      */
     void IncrAtomCount(ElementType atomType, s32 delta);
+
+    /** Do a full count of atom types and FAIL unless the atom
+        histogram in m_atomCount is consistent with the content of
+        m_atoms. */
+    void AssertValidAtomCounts() const;
 
     /**
      * Registers an Element into this Tile's ElementTable.
