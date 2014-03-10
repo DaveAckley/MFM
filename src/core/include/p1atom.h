@@ -79,6 +79,13 @@ public:
     if (type >= 1u<<avail)
       FAIL(ILLEGAL_ARGUMENT);
     SetType(type, avail);
+
+    if (statec > 32) {
+      SetStateField(32,statec-32,0);
+      statec = 32;
+    }
+    SetStateField(0,statec,0);
+
   }
 
   u32 GetBitsAllocated() const
@@ -167,6 +174,16 @@ public:
 
   void PrintBits(FILE* ostream) const
   { m_bits.Print(ostream); }
+
+  void Print(FILE* ostream) const
+  { 
+    u32 type = GetType();
+    u32 lbc = GetLongBondCount();
+    u32 sbc = GetShortBondCount();
+    u32 stc = GetStateBitCount();
+    u32 state = GetStateField(0,stc>32?32:stc);
+    fprintf(ostream,"P1[%x/%d%d/%d:%x]", type,lbc,sbc,stc,state);
+  }
 
 #if 0
   /* Adds a long bond. Returns its index. */
