@@ -47,8 +47,9 @@ namespace MFM
     SPoint repPt(0, down ? R/2 : -(R/2));
     if(window.GetRelativeAtom(repPt).GetType() == ELEMENT_NOTHING)
     {
-      window.SetRelativeAtom(repPt, this->GetDefaultAtom());
-      SetVertPos(window.GetRelativeAtom(repPt),(u32) (cval + (down ? 1 : -1)));
+      T newAtom = this->GetDefaultAtom();
+      SetVertPos(newAtom,(u32) (cval + (down ? 1 : -1)));
+      window.SetRelativeAtom(repPt, newAtom);
     }
   }
 

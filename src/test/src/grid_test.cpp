@@ -18,7 +18,7 @@ void GridTest::Test_gridPlaceAtom()
 
   grid.PlaceAtom(atom, gloc);
 
-  P1Atom* out = grid.GetAtom(gloc);
+  const P1Atom* out = grid.GetAtom(gloc);
 
   assert(out->GetType() == atom.GetType());
   

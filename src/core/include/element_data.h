@@ -47,6 +47,11 @@ namespace MFM
 
     virtual void Behavior(EventWindow<T,R>& window) const
     {
+
+      u32 val = GetDatum(window.GetCenterAtom(),-1);
+      if (val < 0 || val > 100)
+        FAIL(ILLEGAL_STATE);
+
       this->Diffuse(window);
     }
 

@@ -62,7 +62,7 @@ namespace MFM {
 
     void PlaceAtom(T& atom, const SPoint& location);
 
-    T* GetAtom(SPoint& location);
+    const T* GetAtom(SPoint& location);
 
     void FillLastEventTile(SPoint& out);
 

@@ -7,7 +7,7 @@
 namespace MFM {
 
 template <class T, u32 R>
-u32 TileRenderer::GetAtomColor(Tile<T,R>& tile, T& atom)
+u32 TileRenderer::GetAtomColor(Tile<T,R>& tile, const T& atom)
 {
   const Element<T,R> * elt = tile.GetElementTable().Lookup(atom.GetType());
   if (elt) return elt->DefaultPhysicsColor();
@@ -15,7 +15,7 @@ u32 TileRenderer::GetAtomColor(Tile<T,R>& tile, T& atom)
 }
 
 template <class T, u32 R>
-u32 TileRenderer::GetDataHeatColor(Tile<T,R>& tile, T& atom)
+u32 TileRenderer::GetDataHeatColor(Tile<T,R>& tile, const T& atom)
 {
   if(atom.IsType(Element_Sorter<T,R>::TYPE))
   {
@@ -59,7 +59,7 @@ void TileRenderer::RenderAtoms(SPoint& pt, Tile<T,EVENT_WINDOW_RADIUS>& tile,
 	{
 	  atomLoc.SetY(y);
 
-	  T* atom = tile.GetAtom(atomLoc);
+	  const T* atom = tile.GetAtom(atomLoc);
 	  u32 color;
 	  if(m_drawDataHeat)
 	  {
@@ -97,10 +97,11 @@ void TileRenderer::RenderTile(Tile<T,R>& t, SPoint& loc, bool renderWindow,
 {
   SPoint multPt(loc);
 
-  multPt.Multiply((TILE_WIDTH - R * 2) *
-		  m_atomDrawSize);
+  const s32 INTER_CACHE_GAP = 1;
+  s32 spacing = renderCache ? TILE_WIDTH + INTER_CACHE_GAP : TILE_WIDTH - R * 2;
+  multPt.Multiply(spacing * m_atomDrawSize);
 
-  SPoint realPt(multPt.GetX(), multPt.GetY());
+  SPoint realPt(multPt);
 
 
   u32 tileHeight = TILE_WIDTH * m_atomDrawSize;

@@ -34,7 +34,6 @@ public:
   T GetY() const;
 
   u32 GetManhattanDistance() const;  // Would prefer 'unsigned T' return type but not using C++0x type_traits
-
   double GetLength() const;
 
   void Add(const Point<T>& offset);

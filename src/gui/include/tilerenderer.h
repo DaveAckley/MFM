@@ -49,10 +49,10 @@ private:
   void RenderAtoms(SPoint& pt, Tile<T,R>& tile, bool renderCache);
 
   template <class T, u32 R>
-  u32 GetAtomColor(Tile<T,R>& tile, T& atom);
+  u32 GetAtomColor(Tile<T,R>& tile, const T& atom);
 
   template <class T, u32 R>
-  u32 GetDataHeatColor(Tile<T,R>& tile, T& atom);
+  u32 GetDataHeatColor(Tile<T,R>& tile, const T& atom);
 
   template <class T,u32 R>
   void RenderEventWindow(SPoint& offset, Tile<T,R>& tile, bool renderCache);

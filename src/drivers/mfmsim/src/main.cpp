@@ -167,6 +167,12 @@ public:
     SDL_Event event;
 
     GridP1Atom mainGrid;
+    for (u32 y = 0; y < mainGrid.GetHeight(); ++y) {
+      for (u32 x = 0; x < mainGrid.GetWidth(); ++x) {
+        fprintf(stderr,"  (%2d,%2d):%p",x,y,(void*) &mainGrid.GetTile(SPoint(x,y)));
+      }
+      fprintf(stderr,"\n");
+    }
 
     mainGrid.Needed(Element_Empty<P1Atom, 4>::THE_INSTANCE);
     mainGrid.Needed(Element_Dreg<P1Atom, 4>::THE_INSTANCE);

@@ -21,7 +21,7 @@ Tile<T,R>::Tile() : m_eventsExecuted(0), m_executingWindow(*this)
 
   RegisterElement(Element_Empty<T,R>::THE_INSTANCE);
 
-  SetAtomCount(ELEMENT_NOTHING,TILE_SIZE * TILE_SIZE);
+  SetAtomCount(ELEMENT_NOTHING,OWNED_SIDE*OWNED_SIDE);
 
   /* Set up our connection pointers. Some of these may remain NULL, */
   /* symbolizing a dead edge.       */
@@ -83,13 +83,25 @@ Random& Tile<T,R>::GetRandom()
 }
 
 template <class T,u32 R>
-T* Tile<T,R>::GetAtom(const SPoint& pt)
+const T* Tile<T,R>::GetAtom(const SPoint& pt) const
 {
   return GetAtom(pt.GetX(), pt.GetY());
 }
 
 template <class T,u32 R>
-T* Tile<T,R>::GetAtom(s32 x, s32 y)
+const T* Tile<T,R>::GetUncachedAtom(const SPoint& pt) const
+{
+  return GetUncachedAtom(pt.GetX(), pt.GetY());
+}
+
+template <class T,u32 R>
+const T* Tile<T,R>::GetUncachedAtom(s32 x, s32 y) const
+{
+  return GetAtom(x+R, y+R);
+}
+
+template <class T,u32 R>
+const T* Tile<T,R>::GetAtom(s32 x, s32 y) const
 {
   if (x < 0 || y < 0 || x >= TILE_WIDTH || y >= TILE_WIDTH)
     FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
@@ -97,7 +109,7 @@ T* Tile<T,R>::GetAtom(s32 x, s32 y)
 }
 
 template <class T,u32 R>
-T* Tile<T,R>::GetAtom(s32 i)
+const T* Tile<T,R>::GetAtom(s32 i) const
 {
   if (i < 0 || i >= TILE_SIZE)
     FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
@@ -216,7 +228,7 @@ EuclidDir Tile<T,R>::SharedAt(const SPoint& pt)
 template <class T,u32 R>
 void Tile<T,R>::PlaceAtom(const T& atom, const SPoint& pt)
 {
-  T* oldAtom = GetAtom(pt);
+  const T* oldAtom = GetAtom(pt);
   u32 oldType = oldAtom->GetType();
 
   m_atoms[pt.GetX() +
@@ -562,6 +574,8 @@ void Tile<T,R>::Execute()
     {
       elementTable.Execute(m_executingWindow);
 
+      // XXX INSANE SLOWDOWN FOR DEBUG: AssertValidAtomCounts();
+
       m_executingWindow.FillCenter(m_lastExecutedAtom);
 
       dirWaitWord = SendRelevantAtoms();
@@ -629,6 +643,7 @@ void Tile<T,R>::Start()
 {
   if(!m_threadInitialized)
   {
+    AssertValidAtomCounts();
     m_threadInitialized = true;
     pthread_create(&m_thread, NULL, ExecuteThreadHelper, this);
   }
@@ -652,8 +667,11 @@ void Tile<T,R>::IncrAtomCount(ElementType atomType, s32 delta)
     if (delta != 0) FAIL(ILLEGAL_STATE);
     return;
   }
-  if (delta < 0 && -delta > m_atomCount[idx])
+  if (delta < 0 && -delta > m_atomCount[idx]) {
+    fprintf(stderr, "LOST ATOMS %x %d %d (Tile %p)\n",
+            (int) atomType,delta,m_atomCount[idx],(void*) this);
     FAIL(ILLEGAL_ARGUMENT);
+  }
 
   if (delta < 0)
     m_atomCount[idx] -= -delta;
@@ -661,4 +679,25 @@ void Tile<T,R>::IncrAtomCount(ElementType atomType, s32 delta)
     m_atomCount[idx] += delta;
 
 }
+
+template <class T, u32 R>
+  void Tile<T,R>::AssertValidAtomCounts() const
+{
+  s32 counts[ELEMENT_TABLE_SIZE];
+  for (u32 i = 0; i < ELEMENT_TABLE_SIZE; ++i)
+    counts[i] = 0;
+  for (u32 x = 0; x < OWNED_SIDE; ++x) 
+    for (u32 y = 0; y < OWNED_SIDE; ++y) {
+      const Atom<T,R> * atom = GetUncachedAtom(x,y);
+      s32 type = elementTable.GetIndex(atom->GetType());
+      if (type < 0)
+        FAIL(ILLEGAL_STATE);
+      counts[type]++;
+    }
+  for (u32 i = 0; i < ELEMENT_TABLE_SIZE; ++i)
+    if (counts[i] != m_atomCount[i])
+      FAIL(ILLEGAL_STATE);
+}
+
+
 } /* namespace MFM */

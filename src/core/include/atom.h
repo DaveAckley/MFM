@@ -2,6 +2,7 @@
 #define ATOM_H
 
 #include "itype.h"
+#include <stdio.h>  /* For FILE */
 
 namespace MFM {
 
@@ -24,6 +25,8 @@ namespace MFM {
       //      const Element<T,R> * GetElement() const ;
 
       virtual u32 GetType() const = 0;
+
+      virtual void Print(FILE* ostream) const = 0;
 
     };
 } /* namespace MFM */

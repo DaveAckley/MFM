@@ -62,7 +62,10 @@ namespace MFM
       if(this->FillPointWithType(window, reproducePt,
 			   Element<T,R>::VNNeighbors, 4, EUDIR_SOUTHEAST, Element_Res<T,R>::TYPE))
       {
-	window.SetRelativeAtom(reproducePt, this->GetDefaultAtom());
+        T newAtom = this->GetDefaultAtom();
+        u32 myThresh = GetThreshold(window.GetCenterAtom(),0);
+        SetThreshold(newAtom,myThresh);
+	window.SetRelativeAtom(reproducePt, newAtom);
       }
 
       SPoint seData, neData, swEmpty, nwEmpty, srcPt, dstPt;
@@ -95,7 +98,9 @@ namespace MFM
 	u32 cmp = (movingUp && (datum > threshold)) || (!movingUp && (datum < threshold));
 	if(cmp)
 	{
-	  SetThreshold(window.GetCenterAtom(),datum);
+          T ctr = window.GetCenterAtom();
+          SetThreshold(ctr,datum);
+          window.SetCenterAtom(ctr);
 	  window.SwapAtoms(srcPt, dstPt);
 	  return;
 	}

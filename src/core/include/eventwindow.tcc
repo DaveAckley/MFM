@@ -19,9 +19,15 @@ void EventWindow<T,R>::SetCenter(const SPoint& center)
 }
 
 template <class T, u32 R>
-T& EventWindow<T,R>::GetCenterAtom()
+const T& EventWindow<T,R>::GetCenterAtom() const
 {
   return *m_tile.GetAtom(m_center);
+}
+
+template <class T, u32 R>
+void EventWindow<T,R>::SetCenterAtom(const T& atom) 
+{
+  return m_tile.PlaceAtom(atom,m_center);
 }
 
 template <class T, u32 R>
@@ -40,7 +46,7 @@ bool EventWindow<T,R>::SetRelativeAtom(const SPoint& offset, T atom)
 }
 
 template <class T, u32 R>
-T& EventWindow<T,R>::GetRelativeAtom(const SPoint& offset)
+const T& EventWindow<T,R>::GetRelativeAtom(const SPoint& offset) const
 {
   s32 idx = ManhattanDir<R>::get().FromPoint(offset, (TableType)R);
   if (idx < 0)
@@ -68,10 +74,12 @@ void EventWindow<T,R>::SwapAtoms(const SPoint& locA, const SPoint& locB)
   arrLocA.Add(m_center.GetX(), m_center.GetY());
   arrLocB.Add(m_center.GetX(), m_center.GetY());
 
-  T temp = *m_tile.GetAtom(arrLocA);
-  *m_tile.GetAtom(arrLocA) = *m_tile.GetAtom(arrLocB);
-  *m_tile.GetAtom(arrLocB) = temp;
+  T a = *m_tile.GetAtom(arrLocA);
+  T b = *m_tile.GetAtom(arrLocB);
+  m_tile.PlaceAtom(b, arrLocA);
+  m_tile.PlaceAtom(a, arrLocB);
 }
+
 
 template <class T, u32 R>
 void EventWindow<T,R>::FillCenter(SPoint& out)
