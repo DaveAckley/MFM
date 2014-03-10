@@ -157,7 +157,7 @@ namespace MFM {
   }
 
   template <class T, u32 R,u32 W, u32 H>
-  T* Grid<T,R,W,H>::GetAtom(SPoint& loc)
+  const T* Grid<T,R,W,H>::GetAtom(SPoint& loc)
   {
     SPoint tileInGrid, siteInTile;
     if (!MapGridToTile(loc, tileInGrid, siteInTile))
