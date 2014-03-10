@@ -215,6 +215,20 @@ namespace MFM {
             m_lastEventTile.GetY());
   }
 
+  template <class T, u32 R, u32 W, u32 H>
+  u64 Grid<T,R,W,H>::GetTotalEventsExecuted()
+  {
+    u64 total = 0;
+    for(u32 x = 0; x < W; x++)
+    {
+      for(u32 y = 0; y < H; y++)
+      {
+	total += m_tiles[x][y].GetEventsExecuted();
+      }
+    }
+    return total;
+  }
+
   template <class T, u32 R,u32 W, u32 H>
   u32 Grid<T,R,W,H>::GetAtomCount(ElementType atomType)
   {

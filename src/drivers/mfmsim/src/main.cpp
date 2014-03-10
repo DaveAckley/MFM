@@ -34,6 +34,8 @@ private:
 
   u32 m_eventsPerFrame;
   double m_AEPS;
+  u64 m_msSpentRunning;
+  
 
   Mouse mouse;
   Keyboard keyboard;
@@ -139,9 +141,13 @@ private:
 
     if(!paused)
     {
+      u32 startMS = SDL_GetTicks();
       grid.Unpause();
-      Sleep(0, 100000000);
+      Sleep(0, 500000000);
       grid.Pause();
+      m_msSpentRunning += (SDL_GetTicks() - startMS);
+ 
+      m_AEPS = 1000 * (grid.GetTotalEventsExecuted() / m_msSpentRunning);
     }
 
     mouse.Flip();
@@ -154,6 +160,7 @@ public:
   {
     m_eventsPerFrame = EVENTS_PER_FRAME;
     m_AEPS = 0;
+    m_msSpentRunning = 0;
   }
 
   void Run(u32 seedOrZero)

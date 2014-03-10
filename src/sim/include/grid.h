@@ -80,6 +80,9 @@ namespace MFM {
     inline const Tile<T,R> & GetTile(u32 x, u32 y) const
     { return m_tiles[x][y]; }
 
+    u64 GetTotalEventsExecuted();
+      
+
     u32 GetAtomCount(ElementType atomType);
   };
 } /* namespace MFM */
