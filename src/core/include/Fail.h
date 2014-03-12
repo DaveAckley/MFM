@@ -35,7 +35,7 @@ extern "C" const char * MFMFailCodeReason(int failCode) ;
 #define XX(a) MFM_FAIL_CODE_REASON_##a,
 enum MFMFailureCodes{
   ZERO_UNUSED = 0,
-#include "failCodes.h"
+#include "FailCodes.h"
 #undef XX
   MAX_FAILURE
 };

@@ -1,7 +1,7 @@
 #ifndef RANDOM_TEST_H      /* -*- C++ -*- */
 #define RANDOM_TEST_H
 
-#include "random.h"
+#include "Random.h"
 
 namespace MFM {
   class RandomTest

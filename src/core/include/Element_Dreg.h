@@ -1,13 +1,12 @@
 #ifndef ELEMENT_DREG_H  /* -*- C++ -*- */
 #define ELEMENT_DREG_H
 
-#include "element.h"   
-#include "eventwindow.h"
-#include "elementtype.h"
-#include "elementtable.h"
+#include "Element.h"   
+#include "EventWindow.h"
+#include "ElementTable.h"
 #include "itype.h"
-#include "p1atom.h"
-#include "element_res.h"  /* For Element_Res::TYPE */
+#include "P1Atom.h"
+#include "Element_Res.h"  /* For Element_Res::TYPE */
 
 namespace MFM
 {
@@ -22,6 +21,8 @@ namespace MFM
   {
 
   public:
+    const char* GetName() const { return "DReg"; }
+
     static Element_Dreg THE_INSTANCE;
     static const u32 TYPE = 0xdba;             // We are the death-birth-agent
 
@@ -43,13 +44,13 @@ namespace MFM
       Random & random = window.GetRandom();
       
       SPoint dir;
-      ManhattanDir<R>::get().FillRandomSingleDir(dir);
+      MDist<R>::get().FillRandomSingleDir(dir, random);
       
       
       T atom = window.GetRelativeAtom(dir);
       u32 oldType = atom.GetType();
       
-      if(oldType == ELEMENT_NOTHING)
+      if(oldType == ELEMENT_EMPTY)
       {
 	if(random.OneIn(DREG_DRG_ODDS))
 	{

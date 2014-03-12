@@ -1,14 +1,13 @@
 #ifndef ELEMENT_EMITTER_H
 #define ELEMENT_EMITTER_H
 
-#include "element.h"       /* -*- C++ -*- */
-#include "eventwindow.h"
-#include "elementtype.h"
-#include "elementtable.h"
-#include "element_data.h"
-#include "element_reprovert.h"
+#include "Element.h"       /* -*- C++ -*- */
+#include "EventWindow.h"
+#include "ElementTable.h"
+#include "Element_Data.h"
+#include "Element_Reprovert.h"
 #include "itype.h"
-#include "p1atom.h"
+#include "P1Atom.h"
 
 namespace MFM
 {
@@ -23,6 +22,8 @@ namespace MFM
     //static bool element_dreg_registered;
 
   public:
+    const char* GetName() const { return "Emitter"; }
+
     static Element_Emitter THE_INSTANCE;
     static const u32 TYPE = 0xdada1;
 
@@ -47,11 +48,11 @@ namespace MFM
       
       /* Create some data */
       SPoint repPt;
-      ManhattanDir<R>::get().FillRandomSingleDir(repPt);
+      MDist<R>::get().FillRandomSingleDir(repPt, random);
       
       if(random.OneIn(DATA_CREATE_ODDS))
       {
-	if(window.GetRelativeAtom(repPt).GetType() == ELEMENT_NOTHING)
+	if(window.GetRelativeAtom(repPt).GetType() == ELEMENT_EMPTY)
 	{
 	  T atom = Element_Data<T,R>::THE_INSTANCE.GetDefaultAtom();
           Element_Data<T,R>::THE_INSTANCE.SetDatum(atom,random.Between(DATA_MINVAL, DATA_MAXVAL));

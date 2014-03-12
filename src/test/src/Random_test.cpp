@@ -1,5 +1,5 @@
 #include "assert.h"
-#include "random_test.h"
+#include "Random_test.h"
 #include "itype.h"
 
 namespace MFM {

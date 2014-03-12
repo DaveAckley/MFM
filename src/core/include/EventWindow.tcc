@@ -1,5 +1,5 @@
 /* -*- C++ -*- */
-#include "manhattandir.h"
+#include "MDist.h"
 
 namespace MFM {
 
@@ -33,7 +33,7 @@ void EventWindow<T,R>::SetCenterAtom(const T& atom)
 template <class T, u32 R>
 bool EventWindow<T,R>::SetRelativeAtom(const SPoint& offset, T atom)
 {
-  s32 idx = ManhattanDir<R>::get().FromPoint(offset, (TableType)R);
+  s32 idx = MDist<R>::get().FromPoint(offset, R);
   if (idx < 0)
     FAIL(ILLEGAL_ARGUMENT);
 
@@ -48,7 +48,7 @@ bool EventWindow<T,R>::SetRelativeAtom(const SPoint& offset, T atom)
 template <class T, u32 R>
 const T& EventWindow<T,R>::GetRelativeAtom(const SPoint& offset) const
 {
-  s32 idx = ManhattanDir<R>::get().FromPoint(offset, (TableType)R);
+  s32 idx = MDist<R>::get().FromPoint(offset, R);
   if (idx < 0)
     FAIL(ILLEGAL_ARGUMENT);
 
@@ -62,8 +62,8 @@ const T& EventWindow<T,R>::GetRelativeAtom(const SPoint& offset) const
 template <class T, u32 R>
 void EventWindow<T,R>::SwapAtoms(const SPoint& locA, const SPoint& locB)
 {
-  s32 aIdx = ManhattanDir<R>::get().FromPoint(locA, (TableType)R);
-  s32 bIdx = ManhattanDir<R>::get().FromPoint(locB, (TableType)R);
+  s32 aIdx = MDist<R>::get().FromPoint(locA, R);
+  s32 bIdx = MDist<R>::get().FromPoint(locB, R);
 
   if (aIdx < 0) FAIL(ILLEGAL_ARGUMENT);
   if (bIdx < 0) FAIL(ILLEGAL_ARGUMENT);

@@ -1,4 +1,4 @@
-#include "atom.h"
+#include "Atom.h"
 
 namespace MFM {
 } /* namespace MFM */

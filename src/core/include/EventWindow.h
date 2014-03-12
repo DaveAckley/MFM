@@ -1,9 +1,9 @@
 #ifndef EVENTWINDOW_H      /* -*- C++ -*- */
 #define EVENTWINDOW_H
 
-#include "point.h"
+#include "Point.h"
 #include "itype.h"
-#include "manhattandir.h"  /* for EVENT_WINDOW_SITES */
+#include "MDist.h"  /* for EVENT_WINDOW_SITES */
 
 namespace MFM {
 
@@ -57,7 +57,7 @@ public:
 };
 } /* namespace MFM */
 
-#include "eventwindow.tcc"
+#include "EventWindow.tcc"
 
 #endif /*EVENTWINDOW_H*/
 

@@ -2,9 +2,9 @@
 #define TEST_COMMON_H
 
 #include "grid.h"
-#include "p1atom.h"
-#include "elementtable.h"
-#include "eventwindow.h"
+#include "P1Atom.h"
+#include "ElementTable.h"
+#include "EventWindow.h"
 #include "Tile.h"
 
 namespace MFM {

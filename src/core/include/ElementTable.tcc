@@ -1,28 +1,28 @@
 #include <stdlib.h> /* -*- C++ -*- */
-#include "eucliddir.h"
-#include "manhattandir.h"
+#include "Dirs.h"
+#include "MDist.h"
 
 namespace MFM {
 
   template <class T, u32 R, u32 B>
   bool ElementTable<T,R,B>::FillSubWindowContaining(Point<s32>& pt, EventWindow<T,R>& window,
-						ElementType type, EuclidDir corner)
+						ElementType type, Dir corner)
 {
   u32 startIdx = rand() % R;
   
   Point<s32> srcPt;
   for(u32 i = 0; i < R; i++)
   {
-    srcPt = ManhattanDir<R>::get().GetSEWindowPoint((startIdx + i) % R);
+    srcPt = MDist<R>::get().GetSEWindowPoint((startIdx + i) % R);
 
     switch(corner)
     {
-    case EUDIR_SOUTHEAST: break;
-    case EUDIR_NORTHEAST: ManhattanDir<R>::get().FlipAxis(srcPt, false); break;
-    case EUDIR_SOUTHWEST: ManhattanDir<R>::get().FlipAxis(srcPt, true); break;
-    case EUDIR_NORTHWEST:
-      ManhattanDir<R>::get().FlipAxis(srcPt, true);
-      ManhattanDir<R>::get().FlipAxis(srcPt, false);
+    case Dirs::SOUTHEAST: break;
+    case Dirs::NORTHEAST: MDist<R>::get().FlipAxis(srcPt, false); break;
+    case Dirs::SOUTHWEST: MDist<R>::get().FlipAxis(srcPt, true); break;
+    case Dirs::NORTHWEST:
+      MDist<R>::get().FlipAxis(srcPt, true);
+      MDist<R>::get().FlipAxis(srcPt, false);
       break;
     default: FAIL(ILLEGAL_ARGUMENT); break;
     }
@@ -38,16 +38,16 @@ namespace MFM {
 }
 
 template <class T, u32 R, u32 B>
-void ElementTable<T,R,B>::FlipSEPointToCorner(Point<s32>& pt, EuclidDir corner)
+void ElementTable<T,R,B>::FlipSEPointToCorner(Point<s32>& pt, Dir corner)
 {
   switch(corner)
   {
-  case EUDIR_SOUTHEAST: break;
-  case EUDIR_NORTHEAST: ManhattanDir<R>::get().FlipAxis(pt, false); break;
-  case EUDIR_SOUTHWEST: ManhattanDir<R>::get().FlipAxis(pt, true); break;
-  case EUDIR_NORTHWEST:
-    ManhattanDir<R>::get().FlipAxis(pt, true);
-    ManhattanDir<R>::get().FlipAxis(pt, false);
+  case Dirs::SOUTHEAST: break;
+  case Dirs::NORTHEAST: MDist<R>::get().FlipAxis(pt, false); break;
+  case Dirs::SOUTHWEST: MDist<R>::get().FlipAxis(pt, true); break;
+  case Dirs::NORTHWEST:
+    MDist<R>::get().FlipAxis(pt, true);
+    MDist<R>::get().FlipAxis(pt, false);
     break;
   default: FAIL(ILLEGAL_ARGUMENT); break;
   }
@@ -61,20 +61,20 @@ template <class T, u32 R, u32 B>
 void ElementTable<T,R,B>::FillSubwindowIndices(s32* indices,
 					     EventWindow<T,R>& window,
 					     ElementType type,
-					     EuclidDir corner)
+					     Dir corner)
 {
   /* As long as R is a power of two,             */
   /* ((R * R) / 4) is the size of one sub-window. */
   Point<s32> srcPt;
   for(u32 i = 0; i < ((R * R) / 4); i++)
   {
-    srcPt = ManhattanDir<R>::get().GetSEWindowPoint(i);
+    srcPt = MDist<R>::get().GetSEWindowPoint(i);
 
     FlipSEPointToCorner(srcPt, corner);
 
     if(f(&window.GetRelativeAtom(srcPt)) == type)
     {
-      *indices = ManhattanDir<R>::get().FromPoint(srcPt, MANHATTAN_TABLE_EVENT);
+      *indices = MDist<R>::get().FromPoint(srcPt, MANHATTAN_TABLE_EVENT);
       indices++;
     }
   }
@@ -100,7 +100,7 @@ void ElementTable<T,R,B>::ReproduceVertically(EventWindow<T,R>& window, ElementT
   u32 cval = window.GetCenterAtom().ReadLowerBits();
   bool down = random.CreateBool();
   SPoint repPt(0, down ? R/2 : -(R/2));
-  if(window.GetRelativeAtom(repPt).GeType() == ELEMENT_NOTHING)
+  if(window.GetRelativeAtom(repPt).GeType() == ELEMENT_EMPTY)
   {
     window.SetRelativeAtom(repPt, T(type));
     window.GetRelativeAtom(repPt).WriteLowerBits(cval + (down ? 1 : -1));

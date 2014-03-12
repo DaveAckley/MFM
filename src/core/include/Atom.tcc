@@ -1,5 +1,5 @@
 /* -*- C++ -*- */
-#include "elementtable.h"
+#include "ElementTable.h"
 
 namespace MFM
 {

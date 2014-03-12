@@ -1,7 +1,7 @@
 #ifndef PACKETBUFFER_H      /* -*- C++ -*- */
 #define PACKETBUFFER_H
 
-#include "packet.h"
+#include "Packet.h"
 #include "itype.h"
 
 namespace MFM {
@@ -30,7 +30,7 @@ public:
 };
 } /* namespace MFM */
 
-#include "packetbuffer.tcc"
+#include "PacketBuffer.tcc"
 
 #endif /*PACKETBUFFER_H*/
 

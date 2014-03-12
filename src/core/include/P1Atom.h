@@ -3,10 +3,10 @@
 
 #include <stdio.h>
 #include "itype.h"
-#include "point.h"
+#include "Point.h"
 #include "BitVector.h"
-#include "manhattandir.h"
-#include "atom.h"
+#include "MDist.h"
+#include "Atom.h"
 
 #define P1ATOM_SIZE 64
 
@@ -22,7 +22,7 @@ class P1Atom : public Atom<P1Atom,4>
 private:
   BitVector<P1ATOM_SIZE> m_bits;
 
-  typedef ManhattanDir<4> ManhattanDir4;
+  typedef MDist<4> MDist4;
 
   /* We really don't want to allow the public to change the type of a
      p1atom, since the type doesn't mean much without the atomic
@@ -55,7 +55,7 @@ public:
 
   P1Atom()
   {
-    InitAtom(ELEMENT_NOTHING,0,0,48);
+    InitAtom(ELEMENT_EMPTY,0,0,48);
   }
 
   P1Atom(u32 type, u32 longc, u32 shortc, u32 statec) 

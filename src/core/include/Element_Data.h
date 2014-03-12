@@ -1,12 +1,11 @@
 #ifndef ELEMENT_DATA_H       /* -*- C++ -*- */
 #define ELEMENT_DATA_H
 
-#include "element.h"
-#include "eventwindow.h"
-#include "elementtype.h"
-#include "elementtable.h"
+#include "Element.h"
+#include "EventWindow.h"
+#include "ElementTable.h"
 #include "itype.h"
-#include "p1atom.h"
+#include "P1Atom.h"
 
 namespace MFM
 {
@@ -15,6 +14,8 @@ namespace MFM
   class Element_Data : public Element<T,R>
   {
   public:
+    const char* GetName() const { return "Data"; }
+
     static Element_Data THE_INSTANCE;
     static const u32 TYPE = 0xdada;
     static const u32 STATE_DATA_IDX = 0;

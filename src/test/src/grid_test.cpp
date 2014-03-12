@@ -1,7 +1,8 @@
 #include "assert.h"
 #include "grid.h"
-#include "p1atom.h"
+#include "P1Atom.h"
 #include "grid_test.h"
+#include "Element_Res.h"
 
 namespace MFM {
 

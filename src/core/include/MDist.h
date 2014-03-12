@@ -1,5 +1,7 @@
-/*                                              -*- mode:C++ -*-
-  manhattandir.h Support for mapping manhattan distances in and out of 1D form
+/* -*- mode:C++ -*- */
+
+/*
+  MDist.h Support for Manhattan distance calculations
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,109 +21,118 @@
 */
 
 /**
-  \file manhattandir.h Support for mapping manhattan distances in and out of 1D form
-  \author Trent R. Small.
-  \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
-  \lgpl
- */
-#ifndef MANHATTANDIR_H
-#define MANHATTANDIR_H
+   \file MDist.h Support for Manhattan distance calculations
+   \author Trent R. Small.
+   \author David H. Ackley.
+   \date (C) 2014 All rights reserved.
+   \lgpl
+*/
+#ifndef MDIST_H
+#define MDIST_H
 
 #include "itype.h"
-#include "point.h"
+#include "Point.h"
+#include "Random.h"
 
 namespace MFM {
 
-/**
- * Compute the number of sites within Manhattan distance 'radius' of a
- * given center site.  WARNING: Macro expands argument 'radius' twice!
- * Avoid side-effects!
- */
+  /**
+   * Compute the number of sites within Manhattan distance 'radius' of a
+   * given center site.  WARNING: Macro expands argument 'radius' twice!
+   * Avoid side-effects!
+   */
 
 #define EVENT_WINDOW_SITES(radius) ((((radius)*2+1)*((radius)*2+1))/2+1)
 
-// Let's let the table type and the max bond length be the same thing.
-// Can simplify it later.
+  typedef enum
+    {
+      MANHATTAN_TABLE_RADIUS_0 = 0,
+      MANHATTAN_TABLE_RADIUS_1,
+      MANHATTAN_TABLE_RADIUS_2,
+      MANHATTAN_TABLE_RADIUS_3,
+      MANHATTAN_TABLE_RADIUS_4,
+      MANHATTAN_TABLE_SHORT = MANHATTAN_TABLE_RADIUS_2,
+      MANHATTAN_TABLE_LONG = MANHATTAN_TABLE_RADIUS_4,
+      MANHATTAN_TABLE_EVENT = MANHATTAN_TABLE_RADIUS_4
+    } TableType;
 
-typedef enum
-{
-  MANHATTAN_TABLE_RADIUS_0 = 0,
-  MANHATTAN_TABLE_RADIUS_1,
-  MANHATTAN_TABLE_RADIUS_2,
-  MANHATTAN_TABLE_RADIUS_3,
-  MANHATTAN_TABLE_RADIUS_4,
-  MANHATTAN_TABLE_SHORT = MANHATTAN_TABLE_RADIUS_2,
-  MANHATTAN_TABLE_LONG = MANHATTAN_TABLE_RADIUS_4,
-  MANHATTAN_TABLE_EVENT = MANHATTAN_TABLE_RADIUS_4
-} TableType;
+  template <u32 R>
+  class MDist
+  {
+  public:
+    static const u32 EVENT_WINDOW_DIAMETER = R*2+1;
 
-template <u32 R>
-class ManhattanDir
-{
-public:
-  static const u32 EVENT_WINDOW_DIAMETER = R*2+1;
+    static Point<s32>& FlipAxis(Point<s32>& pt, bool xAxis);
 
-  static Point<s32>& FlipAxis(Point<s32>& pt, bool xAxis);
+    /**
+     * Access the singleton MDist of any given size.
+     */
+    static MDist<R> & get();
 
-  /**
-   * Access the singleton ManhattanDir of any given size.
-   */
-  static ManhattanDir<R> & get();
+    void FillRandomSingleDir(SPoint& pt,Random & random);
 
-  void FillRandomSingleDir(SPoint& pt);
+    u32 GetTableSize(u32 maxRadius);
 
-  u32 GetTableSize(TableType type);
+    u32 ShortTableSize();
 
-  u32 ShortTableSize();
+    u32 LongTableSize();
 
-  u32 LongTableSize();
+    u32 GetFirstIndex(const u32 radius) const {
+      if (radius >= sizeof(m_firstIndex)/sizeof(m_firstIndex[0]))
+        FAIL(ILLEGAL_ARGUMENT);
+      return m_firstIndex[radius];
+    }
+
+    u32 GetLastIndex(const u32 radius) const {
+      return GetFirstIndex(radius+1)-1;
+    }
+
+    const SPoint & GetPoint(const u32 index) const {
+      if (index >= ARRAY_LENGTH)
+        FAIL(ILLEGAL_ARGUMENT);
+      return m_indexToPoint[index];
+    }
   
-  ManhattanDir();
+    MDist();
 
-  /**
-   * Return the coding of offset as a bond if possible.  Returns -1 if
-   * the given offset cannot be expressed as a bond of the given type
-   * (or radius, same thing).
-   */
-  s32 FromPoint(const Point<s32>& offset, TableType type);
+    /**
+     * Return the coding of offset as a bond if possible.  Returns -1 if
+     * the given offset cannot be expressed as a max length radius bond.
+     */
+    s32 FromPoint(const Point<s32>& offset, u32 radius);
 
-  /* 
-   * Fills pt with the point represented by bits.
-   * If this is a short bond (i.e. a 4-bit rep),
-   * sbond needs to be true.
-   */
-  void FillFromBits(SPoint& pt, u8 bits,
-                    TableType type);
+    /* 
+     * Fills pt with the point represented by bits.
+     * Uses a 4-bit rep if maxRadius less than 3
+     */
+    void FillFromBits(SPoint& pt, u8 bits, u32 maxRadius);
 
-  Point<s32>& GetSEWindowPoint(u32 index)
-  { return m_southeastSubWindow[index]; }
+    Point<s32>& GetSEWindowPoint(u32 index)
+    { return m_southeastSubWindow[index]; }
 
-  SPoint* GetSESubWindow()
-  { return m_southeastSubWindow; }
+    SPoint* GetSESubWindow()
+    { return m_southeastSubWindow; }
 
 
-private:
-  static const u32 ARRAY_LENGTH = EVENT_WINDOW_SITES(R);
+  private:
+    static const u32 ARRAY_LENGTH = EVENT_WINDOW_SITES(R);
 
-  static inline u32 ManhattanArea(u32 maxDistance) {
-    return EVENT_WINDOW_SITES(maxDistance);
-  }
+    static inline u32 ManhattanArea(u32 maxDistance) {
+      return EVENT_WINDOW_SITES(maxDistance);
+    }
 
-  /* This only works if R is a power of two! */
-  Point<s32> m_southeastSubWindow[R];
+    /* This only works if R is a power of two! */
+    Point<s32> m_southeastSubWindow[R];
 
-  Point<s32> m_indexToPoint[ARRAY_LENGTH];
-  s32 m_pointToIndex[EVENT_WINDOW_DIAMETER][EVENT_WINDOW_DIAMETER];
+    Point<s32> m_indexToPoint[ARRAY_LENGTH];
+    s32 m_pointToIndex[EVENT_WINDOW_DIAMETER][EVENT_WINDOW_DIAMETER];
 
-  u32 m_firstIndex[R+2];  // m_firstIndex[R+1] holds 'lastIndex[R]'
+    u32 m_firstIndex[R+2];  // m_firstIndex[R+1] holds 'lastIndex[R]'
 
-  u32 GetBondSize(TableType type);
-  
-};
+  };
 } /* namespace MFM */
 
-#include "manhattandir.tcc"
+#include "MDist.tcc"
 
-#endif /*MANHATTANDIR_H*/
+#endif /*MDIST_H*/
 

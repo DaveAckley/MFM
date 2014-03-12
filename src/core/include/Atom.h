@@ -31,7 +31,7 @@ namespace MFM {
     };
 } /* namespace MFM */
 
-#include "atom.tcc"
+#include "Atom.tcc"
 
 #endif /*ATOM_H*/
 

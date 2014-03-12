@@ -3,8 +3,8 @@
 
 #include "itype.h"
 #include "Tile.h"
-#include "elementtable.h"
-#include "random.h"
+#include "ElementTable.h"
+#include "Random.h"
 
 namespace MFM {
 
@@ -82,6 +82,7 @@ namespace MFM {
 
     u64 GetTotalEventsExecuted();
       
+    u32 GetTotalSites();
 
     u32 GetAtomCount(ElementType atomType);
   };

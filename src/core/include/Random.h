@@ -5,8 +5,8 @@
 
 #include "itype.h"
 #include "randmt.h"
-#include "bitops.h"
-#include "fail.h"
+#include "BitVector.h"
+#include "Fail.h"
 
 namespace MFM
 {

@@ -1,6 +1,6 @@
 /* -*- C++ -*- */
-#include "element_data.h"    /* for ELEMENT_DATA */
-#include "element_sorter.h"  /* for ELEMENT_SORTER */
+#include "Element_Data.h"    /* for ELEMENT_DATA */
+#include "Element_Sorter.h"  /* for ELEMENT_SORTER */
 #include "colormap.h"
 #include "Util.h"            /* for MIN and MAX */
 
@@ -148,7 +148,7 @@ void TileRenderer::RenderEventWindow(SPoint& offset,
   u32 tableSize = EVENT_WINDOW_SITES(R);
   for(u32 i = 0; i < tableSize; i++)
   {
-    ManhattanDir<R>::get().FillFromBits(atomLoc, i, (TableType)R);
+    MDist<R>::get().FillFromBits(atomLoc, i, R);
     atomLoc.Add(eventCenter);
     atomLoc.Add(cacheOffset, cacheOffset);
 

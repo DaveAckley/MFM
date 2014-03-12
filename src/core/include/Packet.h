@@ -1,7 +1,7 @@
 #ifndef PACKET_H /* -*- C++ -*- */
 #define PACKET_H
 
-#include "eucliddir.h"
+#include "Dirs.h"
 #include "itype.h"
 
 namespace MFM {
@@ -50,7 +50,7 @@ namespace MFM {
     /**
      * Used to describe an edge during Tile communication.
      */
-    EuclidDir m_toNeighbor;
+    u32 m_toNeighbor;
 
     /**
      * Used to describe an Atom during Tile communication.
@@ -99,7 +99,7 @@ namespace MFM {
      *
      * @param dir The EuclidDir to place inside this Packet.
      */
-    void SetReceivingNeighbor(EuclidDir dir)
+    void SetReceivingNeighbor(Dir dir)
     { m_toNeighbor = dir; }
 
     /**
@@ -107,7 +107,7 @@ namespace MFM {
      *
      * @returns This Packet's held Eucliddir neighbor field.
      */
-    EuclidDir GetReceivingNeighbor()
+    u32 GetReceivingNeighbor()
     { return m_toNeighbor; }
 
     /**
@@ -133,7 +133,7 @@ namespace MFM {
   };
 } /* namespace MFM */
 
-#include "packet.tcc"
+#include "Packet.tcc"
 
 #endif /*PACKET_H*/
 

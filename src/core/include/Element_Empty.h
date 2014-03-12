@@ -1,13 +1,11 @@
 #ifndef ELEMENT_EMPTY_H
 #define ELEMENT_EMPTY_H
 
-#include "element.h"       /* -*- C++ -*- */
-#include "eventwindow.h"
-#include "elementtype.h"
-#include "elementtable.h"
+#include "Element.h"       /* -*- C++ -*- */
+#include "EventWindow.h"
+#include "ElementTable.h"
 #include "itype.h"
-#include "p1atom.h"
-#include "element_res.h"  /* For Element_Res::TYPE */
+#include "P1Atom.h"
 
 namespace MFM
 {
@@ -17,6 +15,8 @@ namespace MFM
   {
 
   public:
+    const char* GetName() const { return "Empty"; }
+
     static Element_Empty THE_INSTANCE;
     static const u32 TYPE = 0x0;             // We get the best type of all
 

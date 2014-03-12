@@ -1,16 +1,16 @@
 #ifndef MANHATTANDIR_TEST_H      /* -*- C++ -*- */
 #define MANHATTANDIR_TEST_H
 
-#include "manhattandir.h"
+#include "MDist.h"
 
 namespace MFM {
 
-class ManhattanDirTest
+class MDistTest
 {
 public:
-  static void Test_manhattandirConversion();
+  static void Test_MDistConversion();
   
 };
 } /* namespace MFM */
-#endif /*MANHATTANDIR_TEST_H*/
+#endif /*MDIST_TEST_H*/
 

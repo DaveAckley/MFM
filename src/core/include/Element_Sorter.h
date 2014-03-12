@@ -1,14 +1,13 @@
 #ifndef ELEMENT_SORTER_H       /* -*- C++ -*- */
 #define ELEMENT_SORTER_H
 
-#include "element.h"
-#include "eventwindow.h"
-#include "elementtype.h"
-#include "elementtable.h"
-#include "element_res.h"  /* For Element_Res::TYPE */
-#include "element_data.h"  /* For Element_Data::TYPE */
+#include "Element.h"
+#include "EventWindow.h"
+#include "ElementTable.h"
+#include "Element_Res.h"  /* For Element_Res::TYPE */
+#include "Element_Data.h"  /* For Element_Data::TYPE */
 #include "itype.h"
-#include "p1atom.h"
+#include "P1Atom.h"
 
 namespace MFM
 {
@@ -17,6 +16,8 @@ namespace MFM
   class Element_Sorter : public Element<T,R>
   {
   public:
+    const char* GetName() const { return "Sorter"; }
+
     static Element_Sorter THE_INSTANCE;
     static const u32 TYPE = 0xab;                // We compare a vs b
     static const u32 STATE_THRESHOLD_IDX = 0;    // First bit in state
@@ -43,10 +44,10 @@ namespace MFM
     }
 
     bool FillAvailableSubwindowPoint(EventWindow<T,R>& window, 
-				     SPoint& pt, EuclidDir subwindow, ElementType type) const
+				     SPoint& pt, Dir subwindow, ElementType type) const
     {
       return this->FillPointWithType(window, pt, 
-                                     ManhattanDir<R>::get().GetSESubWindow(), 
+                                     MDist<R>::get().GetSESubWindow(), 
                                      ((R*R)/4), subwindow, type);
     }
 
@@ -60,7 +61,7 @@ namespace MFM
       Random & random = window.GetRandom();
       SPoint reproducePt;
       if(this->FillPointWithType(window, reproducePt,
-			   Element<T,R>::VNNeighbors, 4, EUDIR_SOUTHEAST, Element_Res<T,R>::TYPE))
+                                 Element<T,R>::VNNeighbors, 4, Dirs::SOUTHEAST, Element_Res<T,R>::TYPE))
       {
         T newAtom = this->GetDefaultAtom();
         u32 myThresh = GetThreshold(window.GetCenterAtom(),0);
@@ -74,15 +75,15 @@ namespace MFM
       for(s32 i = 0; i < 2; i++)
       {
 	if(movingUp &&
-	   FillAvailableSubwindowPoint(window, seData, EUDIR_SOUTHEAST, Element_Data<T,R>::TYPE) &&
-	   FillAvailableSubwindowPoint(window, nwEmpty, EUDIR_NORTHWEST, ELEMENT_NOTHING))
+	   FillAvailableSubwindowPoint(window, seData, Dirs::SOUTHEAST, Element_Data<T,R>::TYPE) &&
+	   FillAvailableSubwindowPoint(window, nwEmpty, Dirs::NORTHWEST, ELEMENT_EMPTY))
 	{
 	  srcPt = seData;
 	  dstPt = nwEmpty;
 	}
 	else if(!movingUp &&
-                FillAvailableSubwindowPoint(window, neData, EUDIR_NORTHEAST, Element_Data<T,R>::TYPE) &&
-                FillAvailableSubwindowPoint(window, swEmpty, EUDIR_SOUTHWEST, ELEMENT_NOTHING))
+                FillAvailableSubwindowPoint(window, neData, Dirs::NORTHEAST, Element_Data<T,R>::TYPE) &&
+                FillAvailableSubwindowPoint(window, swEmpty, Dirs::SOUTHWEST, ELEMENT_EMPTY))
 	{
 	  srcPt = neData;
 	  dstPt = swEmpty;

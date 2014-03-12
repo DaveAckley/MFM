@@ -2,11 +2,10 @@
 #define ELEMENTTABLE_H
 
 #include "BitVector.h"
-#include "eventwindow.h"
-#include "eucliddir.h"
+#include "EventWindow.h"
+#include "Dirs.h"
 #include "itype.h"
-#include "element.h"
-#include "elementtype.h"
+#include "Element.h"
 
 namespace MFM {
 
@@ -43,7 +42,7 @@ namespace MFM {
     void Execute(EventWindow<T,R>& window)
     { 
       u32 type = window.GetCenterAtom().GetType();
-      if(type != ELEMENT_NOTHING) {
+      if(type != ELEMENT_EMPTY) {
         const Element<T,R> * elt = Lookup(type);
         if (elt != 0)
           elt->Behavior(window);
@@ -61,17 +60,17 @@ namespace MFM {
 
   private:
 
-    static void FlipSEPointToCorner(Point<s32>& pt, EuclidDir corner);
+    static void FlipSEPointToCorner(Point<s32>& pt, Dir corner);
 
     /* Fills pt with the coordinates of a randomly selected          */
     /* Atom with the specified type. Returns false if there is none. */
     static bool FillSubWindowContaining(Point<s32>& pt, EventWindow<T,R>& window,
                                         ElementType type, 
-                                        EuclidDir corner);
+                                        Dir corner);
 
 
     static void FillSubwindowIndices(s32* indices, EventWindow<T,R>& window,
-                                     ElementType type, EuclidDir corner);
+                                     ElementType type, Dir corner);
 
     static u32 FoundIndicesCount(s32* indices);
 
@@ -88,6 +87,6 @@ namespace MFM {
 
 } /* namespace MFM */
 
-#include "elementtable.tcc"
+#include "ElementTable.tcc"
 
 #endif /*ELEMENETTABLE_H*/

@@ -1,12 +1,12 @@
 extern "C" {
 #include <stdlib.h>  /* for abort() */
 #include <stdio.h>  /* for fprintf, stderr */
-#include "fail.h"
+#include "Fail.h"
 
   static const char * FailStrings[] = {
     "zero unused",
 #define XX(x) #x, 
-#include "failCodes.h"
+#include "FailCodes.h"
 #undef XX
     "max failure code"
   };

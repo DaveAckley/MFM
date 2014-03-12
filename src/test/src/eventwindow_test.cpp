@@ -1,11 +1,11 @@
-#include "elementtable.h"
-#include "element_dreg.h"
-#include "element_res.h"
+#include "ElementTable.h"
+#include "Element_Dreg.h"
+#include "Element_Res.h"
 #include "assert.h"
 #include "eventwindow_test.h"
-#include "eventwindow.h"
-#include "p1atom.h"
-#include "point.h"
+#include "EventWindow.h"
+#include "P1Atom.h"
+#include "Point.h"
 
 namespace MFM {
 

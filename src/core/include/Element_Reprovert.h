@@ -1,12 +1,11 @@
 #ifndef ELEMENT_REPROVERT_H       /* -*- C++ -*- */
 #define ELEMENT_REPROVERT_H
 
-#include "element.h"
-#include "eventwindow.h"
-#include "elementtype.h"
-#include "elementtable.h"
+#include "Element.h"
+#include "EventWindow.h"
+#include "ElementTable.h"
 #include "itype.h"
-#include "p1atom.h"
+#include "P1Atom.h"
 
 namespace MFM
 {
@@ -45,7 +44,7 @@ namespace MFM
     s32 cval = GetVertPos(window.GetCenterAtom(),0);
     bool down = random.CreateBool();
     SPoint repPt(0, down ? R/2 : -(R/2));
-    if(window.GetRelativeAtom(repPt).GetType() == ELEMENT_NOTHING)
+    if(window.GetRelativeAtom(repPt).GetType() == ELEMENT_EMPTY)
     {
       T newAtom = this->GetDefaultAtom();
       SetVertPos(newAtom,(u32) (cval + (down ? 1 : -1)));

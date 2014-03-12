@@ -1,4 +1,4 @@
-#include "fail.h"
+#include "Fail.h"
 
 namespace MFM {
 

@@ -1,4 +1,4 @@
-#include "manhattandir.h"
+#include "MDist.h"
 
 
 namespace MFM {

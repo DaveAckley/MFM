@@ -1,4 +1,5 @@
-#include "eucliddir.h" /* -*- C++ -*- */
+                           /* -*- C++ -*- */
+#include "Dirs.h"    
 #include "grid.h"
 
 namespace MFM {
@@ -18,43 +19,43 @@ namespace MFM {
 	neighbors = 0;
 	if(x > 0)
         {
-	  ctile.Connect(GetTile(x - 1, y), EUDIR_WEST);
-	  neighbors |= (1<<EUDIR_WEST);
+	  ctile.Connect(GetTile(x - 1, y), Dirs::WEST);
+	  neighbors |= (1<<Dirs::WEST);
 	}
 	if(y > 0)
 	{
-	  ctile.Connect(GetTile(x, y - 1), EUDIR_NORTH);
-	  neighbors |= (1<<EUDIR_NORTH);
+	  ctile.Connect(GetTile(x, y - 1), Dirs::NORTH);
+	  neighbors |= (1<<Dirs::NORTH);
 	}
 	if(x < m_width - 1)
         {
-	  ctile.Connect(GetTile(x + 1, y), EUDIR_EAST);
-	  neighbors |= (1<<EUDIR_EAST);
+	  ctile.Connect(GetTile(x + 1, y), Dirs::EAST);
+	  neighbors |= (1<<Dirs::EAST);
 	}
 	if(y < m_height - 1)
         {
-	  ctile.Connect(GetTile(x, y + 1), EUDIR_SOUTH);
-	  neighbors |= (1<<EUDIR_SOUTH);
+	  ctile.Connect(GetTile(x, y + 1), Dirs::SOUTH);
+	  neighbors |= (1<<Dirs::SOUTH);
 	}
-	if((neighbors & (1<<EUDIR_SOUTH)) &&
-	   (neighbors & (1<<EUDIR_WEST)))
+	if((neighbors & (1<<Dirs::SOUTH)) &&
+	   (neighbors & (1<<Dirs::WEST)))
         {
-	  ctile.Connect(GetTile(x - 1, y + 1), EUDIR_SOUTHWEST);
+	  ctile.Connect(GetTile(x - 1, y + 1), Dirs::SOUTHWEST);
 	}
-	if((neighbors & (1<<EUDIR_NORTH)) &&
-	   (neighbors & (1<<EUDIR_WEST)))
+	if((neighbors & (1<<Dirs::NORTH)) &&
+	   (neighbors & (1<<Dirs::WEST)))
         {
-	  ctile.Connect(GetTile(x - 1, y - 1), EUDIR_NORTHWEST);
+	  ctile.Connect(GetTile(x - 1, y - 1), Dirs::NORTHWEST);
 	}
-	if((neighbors & (1<<EUDIR_SOUTH)) &&
-	   (neighbors & (1<<EUDIR_EAST)))
+	if((neighbors & (1<<Dirs::SOUTH)) &&
+	   (neighbors & (1<<Dirs::EAST)))
         {
-	  ctile.Connect(GetTile(x + 1, y + 1), EUDIR_SOUTHEAST);
+	  ctile.Connect(GetTile(x + 1, y + 1), Dirs::SOUTHEAST);
 	}
-	if((neighbors & (1<<EUDIR_NORTH)) &&
-	   (neighbors & (1<<EUDIR_EAST)))
+	if((neighbors & (1<<Dirs::NORTH)) &&
+	   (neighbors & (1<<Dirs::EAST)))
         {
-	  ctile.Connect(GetTile(x + 1, y - 1), EUDIR_NORTHEAST);
+	  ctile.Connect(GetTile(x + 1, y - 1), Dirs::NORTHEAST);
 	}
       }
     }
@@ -127,21 +128,21 @@ namespace MFM {
     Tile<T,R> & owner = GetTile(tileInGrid);
     owner.PlaceAtom(atom, siteInTile);
 
-    EuclidDir startDir = owner.CacheAt(siteInTile);
+    Dir startDir = owner.CacheAt(siteInTile);
 
     if ((s32) startDir < 0)       // Doesn't hit cache, we're done
       return;
 
-    EuclidDir stopDir = EuDir::CWDir(startDir);
+    Dir stopDir = Dirs::CWDir(startDir);
 
-    if (EuDir::IsCorner(startDir)) {
-      startDir = EuDir::CCWDir(startDir);
-      stopDir = EuDir::CWDir(stopDir);
+    if (Dirs::IsCorner(startDir)) {
+      startDir = Dirs::CCWDir(startDir);
+      stopDir = Dirs::CWDir(stopDir);
     }
 
-    for (EuclidDir dir = startDir; dir != stopDir; dir = EuDir::CWDir(dir)) {
+    for (Dir dir = startDir; dir != stopDir; dir = Dirs::CWDir(dir)) {
       SPoint tileOffset;
-      EuDir::FillEuclidDir(tileOffset,dir);
+      Dirs::FillDir(tileOffset,dir);
 
       SPoint otherTileIndex = tileInGrid+tileOffset;
 
@@ -236,6 +237,17 @@ namespace MFM {
     for(u32 i = 0; i < W; i++)
       for(u32 j = 0; j < H; j++)
         total += m_tiles[i][j].GetAtomCount(atomType);
+
+    return total;
+  }
+
+  template <class T, u32 R,u32 W, u32 H>
+  u32 Grid<T,R,W,H>::GetTotalSites()
+  {
+    u32 total = 0;
+    for(u32 i = 0; i < W; i++)
+      for(u32 j = 0; j < H; j++)
+        total += m_tiles[i][j].GetSites();
 
     return total;
   }

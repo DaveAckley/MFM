@@ -281,7 +281,7 @@ public:
       grend.RenderGrid(mainGrid);
       if(renderStats)
       {
-	srend.RenderGridStatistics(mainGrid, m_AEPS);
+	srend.RenderGridStatistics(mainGrid, m_AEPS, 0);
       }
 
       SDL_Flip(screen);

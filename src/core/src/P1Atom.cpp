@@ -1,5 +1,5 @@
-#include "p1atom.h"
-#include "manhattandir.h"
+#include "P1Atom.h"
+#include "MDist.h"
 #include <stdio.h>
 
 namespace MFM {
@@ -23,7 +23,7 @@ u32 P1Atom::AddLongBond(const SPoint& offset)
     P1ATOM_LONG_BOND_SIZE * newID;
 
   m_bits.Insert(newBondIdx, P1ATOM_LONG_BOND_SIZE,
-		ManhattanDir4::get().FromPoint(offset, MANHATTAN_TABLE_LONG));
+		MDist4::get().FromPoint(offset, MANHATTAN_TABLE_LONG));
 
   SetLongBondCount(newID + 1);
   return newID;
@@ -38,7 +38,7 @@ u32 P1Atom::AddShortBond(const SPoint& offset)
     P1ATOM_SHORT_BOND_SIZE * newID;
 
   m_bits.Insert(newBondIdx, P1ATOM_SHORT_BOND_SIZE,
-		ManhattanDir4::get().FromPoint(offset, MANHATTAN_TABLE_SHORT));
+		MDist4::get().FromPoint(offset, MANHATTAN_TABLE_SHORT));
 
   SetShortBondCount(newID + 1);
   return newID;
@@ -55,7 +55,7 @@ bool P1Atom::GetLongBond(u32 index, SPoint& pt) const
 
   u8 bond = m_bits.Read(realIdx, 8);
 
-  ManhattanDir4::get().FillFromBits(pt, bond, MANHATTAN_TABLE_LONG);
+  MDist4::get().FillFromBits(pt, bond, MANHATTAN_TABLE_LONG);
   return true;
 }
 
@@ -70,7 +70,7 @@ bool P1Atom::GetShortBond(u32 index, SPoint& pt) const
 
   u8 bond = m_bits.Read(realIdx, 4);
 
-  ManhattanDir4::get().FillFromBits(pt, bond, MANHATTAN_TABLE_SHORT);
+  MDist4::get().FillFromBits(pt, bond, MANHATTAN_TABLE_SHORT);
   return true;
 }
 
@@ -79,7 +79,7 @@ bool P1Atom::SetLongBond(u32 index, const SPoint& pt)
   if (index >= GetLongBondCount())
     return false;
 
-  s32 bond =  ManhattanDir4::get().FromPoint(pt,MANHATTAN_TABLE_LONG);
+  s32 bond =  MDist4::get().FromPoint(pt,MANHATTAN_TABLE_LONG);
   if (bond < 0)
     return false;
 
@@ -96,7 +96,7 @@ bool P1Atom::SetShortBond(u32 index, const SPoint& pt)
   if (index >= GetShortBondCount())
     return false;
 
-  s32 bond =  ManhattanDir4::get().FromPoint(pt,MANHATTAN_TABLE_SHORT);
+  s32 bond =  MDist4::get().FromPoint(pt,MANHATTAN_TABLE_SHORT);
   if (bond < 0)
     return false;
 

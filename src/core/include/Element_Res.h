@@ -1,12 +1,11 @@
 #ifndef ELEMENT_RES_H       /* -*- C++ -*- */
 #define ELEMENT_RES_H
 
-#include "element.h"
-#include "eventwindow.h"
-#include "elementtype.h"
-#include "elementtable.h"
+#include "Element.h"
+#include "EventWindow.h"
+#include "ElementTable.h"
 #include "itype.h"
-#include "p1atom.h"
+#include "P1Atom.h"
 
 namespace MFM
 {
@@ -15,6 +14,8 @@ namespace MFM
   class Element_Res : public Element<T,R>
   {
   public:
+    const char* GetName() const { return "Res"; }
+
     static Element_Res THE_INSTANCE;
     static const u32 TYPE = 0xa11ce11;             // We are stem cells able to become anything
 

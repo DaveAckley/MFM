@@ -2,12 +2,18 @@
 #define ELEMENT_H
 
 #include "itype.h"
-#include "eventwindow.h"
-#include "elementtype.h"
-#include "eucliddir.h"
+#include "EventWindow.h"
+#include "Dirs.h"
 
 namespace MFM
 {
+  typedef u32 ElementType;
+
+  /**
+   * ELEMENT_EMPTY is recognized at the element/elementtable level.
+   */
+  static const u32 ELEMENT_EMPTY  = 0x0;
+
   template <class T, u32 R>
   class Element
   {
@@ -17,13 +23,13 @@ namespace MFM
 
     static SPoint VNNeighbors[4];
     
-    void FlipSEPointToCorner(SPoint& readPt, SPoint& outPt, EuclidDir corner) const;
+    void FlipSEPointToCorner(SPoint& readPt, SPoint& outPt, Dir corner) const;
 
     bool FillAvailableVNNeighbor(EventWindow<T,R>& window, SPoint& pt) const;
 
     bool FillPointWithType(EventWindow<T,R>& window, 
 			   SPoint& pt, SPoint* relevants, u32 relevantCount,
-			   EuclidDir rotation, ElementType type) const;
+			   Dir rotation, ElementType type) const;
       
     void Diffuse(EventWindow<T,R>& window) const;
 
@@ -34,6 +40,8 @@ namespace MFM
 
     u32 GetType() const { return GetDefaultAtom().GetType(); }
     
+    virtual const char * GetName() const = 0;
+
     virtual void Behavior(EventWindow<T,R>& window) const = 0;
 
     virtual const T & GetDefaultAtom() const = 0;
@@ -43,6 +51,6 @@ namespace MFM
   };
 }
   
-#include "element.tcc"
+#include "Element.tcc"
 
 #endif /* ELEMENT_H */

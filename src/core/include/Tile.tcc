@@ -1,15 +1,8 @@
-#include "manhattandir.h"      /* -*- C++ -*- */
-#include "element_empty.h"
+#include "MDist.h"      /* -*- C++ -*- */
+#include "Element_Empty.h"
 #include "Util.h"
 
 namespace MFM {
-
-/*
-template <class T, u32 R>
-static u32 UninitializedStateFunc(T* atom) {
-  FAIL(UNINITIALIZED_VALUE);
-}
-*/
 
 template <class T, u32 R>
 Tile<T,R>::Tile() : m_eventsExecuted(0), m_executingWindow(*this)
@@ -21,17 +14,17 @@ Tile<T,R>::Tile() : m_eventsExecuted(0), m_executingWindow(*this)
 
   RegisterElement(Element_Empty<T,R>::THE_INSTANCE);
 
-  SetAtomCount(ELEMENT_NOTHING,OWNED_SIDE*OWNED_SIDE);
+  SetAtomCount(ELEMENT_EMPTY,OWNED_SIDE*OWNED_SIDE);
 
   /* Set up our connection pointers. Some of these may remain NULL, */
   /* symbolizing a dead edge.       */
   u32 edges = 0;
-  for(EuclidDir i = EUDIR_NORTH; edges < EUDIR_COUNT; i = EuDir::CWDir(i), edges++)
+  for(Dir i = Dirs::NORTH; edges < Dirs::DIR_COUNT; i = Dirs::CWDir(i), edges++)
   {
     if(IS_OWNED_CONNECTION(i))
     {
       /* We own this one! Hook it up. */
-      m_connections[i] = m_ownedConnections + i - EUDIR_EAST;
+      m_connections[i] = m_ownedConnections + i - Dirs::EAST;
     }
     else
     {
@@ -56,7 +49,7 @@ Tile<T,R>::Tile() : m_eventsExecuted(0), m_executingWindow(*this)
 }
 
 template <class T, u32 R>
-void Tile<T,R>::Connect(Tile<T,R>& other, EuclidDir toCache)
+void Tile<T,R>::Connect(Tile<T,R>& other, Dir toCache)
 {
   if(IS_OWNED_CONNECTION(toCache))
   {
@@ -64,14 +57,14 @@ void Tile<T,R>::Connect(Tile<T,R>& other, EuclidDir toCache)
   }
   else
   {
-    m_connections[toCache] = other.GetConnection(EuDir::OppositeDir(toCache));
+    m_connections[toCache] = other.GetConnection(Dirs::OppositeDir(toCache));
     m_connections[toCache]->SetConnected(true);
-    other.Connect(*this, EuDir::OppositeDir(toCache));
+    other.Connect(*this, Dirs::OppositeDir(toCache));
   }
 }
 
 template <class T, u32 R>
-Connection* Tile<T,R>::GetConnection(EuclidDir cache)
+Connection* Tile<T,R>::GetConnection(Dir cache)
 {
   return m_connections[cache];
 }
@@ -119,7 +112,7 @@ const T* Tile<T,R>::GetAtom(s32 i) const
 template <class T, u32 R>
 void Tile<T,R>::SendAcknowledgmentPacket(Packet<T>& packet)
 {
-  EuclidDir from = EuDir::OppositeDir(packet.GetReceivingNeighbor());
+  Dir from = Dirs::OppositeDir(packet.GetReceivingNeighbor());
   Packet<T> sendout(PACKET_EVENT_ACKNOWLEDGE);
   sendout.SetReceivingNeighbor(from);
 
@@ -172,7 +165,7 @@ void Tile<T,R>::CreateWindowAt(const SPoint& pt)
 }
 
 template <class T, u32 R>
-EuclidDir Tile<T,R>::RegionAt(const SPoint& sp, u32 reach)
+Dir Tile<T,R>::RegionAt(const SPoint& sp, u32 reach)
 {
   UPoint pt = makeUnsigned(sp);
 
@@ -180,47 +173,47 @@ EuclidDir Tile<T,R>::RegionAt(const SPoint& sp, u32 reach)
   {
     if(pt.GetY() < reach)
     {
-      return EUDIR_NORTHWEST;
+      return Dirs::NORTHWEST;
     }
     else if(pt.GetY() >= TILE_WIDTH - reach)
     {
-      return EUDIR_SOUTHWEST;
+      return Dirs::SOUTHWEST;
     }
-    return EUDIR_WEST;
+    return Dirs::WEST;
   }
   else if(pt.GetX() >= TILE_WIDTH - reach)
   {
     if(pt.GetY() < reach)
     {
-      return EUDIR_NORTHEAST;
+      return Dirs::NORTHEAST;
     }
     else if(pt.GetY() >= TILE_WIDTH - reach)
     {
-      return EUDIR_SOUTHEAST;
+      return Dirs::SOUTHEAST;
     }
-    return EUDIR_EAST;
+    return Dirs::EAST;
   }
 
   if(pt.GetY() < reach)
   {
-    return EUDIR_NORTH;
+    return Dirs::NORTH;
   }
   else if(pt.GetY() >= TILE_WIDTH - reach)
   {
-    return EUDIR_SOUTH;
+    return Dirs::SOUTH;
   }
 
-  return (EuclidDir)-1;
+  return (Dir)-1;
 }
 
 template <class T, u32 R>
-EuclidDir Tile<T,R>::CacheAt(const SPoint& pt)
+Dir Tile<T,R>::CacheAt(const SPoint& pt)
 {
   return RegionAt(pt, R);
 }
 
 template <class T, u32 R>
-EuclidDir Tile<T,R>::SharedAt(const SPoint& pt)
+Dir Tile<T,R>::SharedAt(const SPoint& pt)
 {
   return RegionAt(pt, R * 3);
 }
@@ -242,7 +235,7 @@ void Tile<T,R>::PlaceAtom(const T& atom, const SPoint& pt)
 }
 
 template <class T, u32 R>
-void Tile<T, R>::SendAtom(EuclidDir neighbor, SPoint& atomLoc)
+void Tile<T, R>::SendAtom(Dir neighbor, SPoint& atomLoc)
 {
   if(IsConnected(neighbor))
   {
@@ -253,17 +246,17 @@ void Tile<T, R>::SendAtom(EuclidDir neighbor, SPoint& atomLoc)
     /* The neighbor will think this atom is in a different location. */
     switch(neighbor)
     {
-    case EUDIR_NORTH: remoteLoc.Add(0, tileDiff); break;
-    case EUDIR_SOUTH: remoteLoc.Add(0, -tileDiff); break;
-    case EUDIR_WEST:  remoteLoc.Add(tileDiff, 0); break;
-    case EUDIR_EAST:  remoteLoc.Add(-tileDiff, 0); break;
-    case EUDIR_NORTHEAST:
+    case Dirs::NORTH: remoteLoc.Add(0, tileDiff); break;
+    case Dirs::SOUTH: remoteLoc.Add(0, -tileDiff); break;
+    case Dirs::WEST:  remoteLoc.Add(tileDiff, 0); break;
+    case Dirs::EAST:  remoteLoc.Add(-tileDiff, 0); break;
+    case Dirs::NORTHEAST:
       remoteLoc.Add(-tileDiff, tileDiff); break;
-    case EUDIR_SOUTHEAST:
+    case Dirs::SOUTHEAST:
       remoteLoc.Add(-tileDiff, -tileDiff); break;
-    case EUDIR_SOUTHWEST:
+    case Dirs::SOUTHWEST:
       remoteLoc.Add(tileDiff, -tileDiff); break;
-    case EUDIR_NORTHWEST:
+    case Dirs::NORTHWEST:
       remoteLoc.Add(tileDiff, tileDiff); break;
     default:
       FAIL(INCOMPLETE_CODE); break;
@@ -283,7 +276,7 @@ void Tile<T, R>::SendAtom(EuclidDir neighbor, SPoint& atomLoc)
 }
 
 template <class T, u32 R>
-bool Tile<T,R>::IsConnected(EuclidDir dir)
+bool Tile<T,R>::IsConnected(Dir dir)
 {
   return m_connections[dir] != NULL &&
          m_connections[dir]->IsConnected();
@@ -300,7 +293,7 @@ bool Tile<T,R>::IsInCache(const SPoint& pt)
 template <class T, u32 R>
 void Tile<T,R>::SendEndEventPackets(u32 dirWaitWord)
 {
-  EuclidDir dir = EUDIR_NORTH;
+  Dir dir = Dirs::NORTH;
   do
   {
     if(IsConnected(dir) && (dirWaitWord & (1 << dir)))
@@ -313,8 +306,8 @@ void Tile<T,R>::SendEndEventPackets(u32 dirWaitWord)
 				     (u8*)&sendout, sizeof(Packet<T>));
     }
 
-    dir = EuDir::CWDir(dir);
-  } while (dir != EUDIR_NORTH);
+    dir = Dirs::CWDir(dir);
+  } while (dir != Dirs::NORTH);
 }
 
 template <class T, u32 R>
@@ -330,90 +323,90 @@ u32 Tile<T,R>::SendRelevantAtoms()
 
   for(u32 i = 0; i < m_executingWindow.GetAtomCount(); i++)
   {
-    ManhattanDir<R>::get().FillFromBits(localLoc, i, (TableType)R);
+    MDist<R>::get().FillFromBits(localLoc, i, R);
     localLoc.Add(ewCenter);
 
     /* Send to West neighbor? */
-    if(IsConnected(EUDIR_WEST) && localLoc.GetX() < r2)
+    if(IsConnected(Dirs::WEST) && localLoc.GetX() < r2)
     {
-      SendAtom(EUDIR_WEST, localLoc);
-      dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_WEST);
-      if(IsConnected(EUDIR_NORTH) && localLoc.GetY() < r2)
+      SendAtom(Dirs::WEST, localLoc);
+      dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::WEST);
+      if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
       {
-	SendAtom(EUDIR_NORTHWEST, localLoc);
-	SendAtom(EUDIR_NORTH, localLoc);
-	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_NORTHWEST);
-	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_NORTH);
+	SendAtom(Dirs::NORTHWEST, localLoc);
+	SendAtom(Dirs::NORTH, localLoc);
+	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTHWEST);
+	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
       }
-      else if(IsConnected(EUDIR_SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
+      else if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
       {
-	SendAtom(EUDIR_SOUTHWEST, localLoc);
-	SendAtom(EUDIR_SOUTH, localLoc);
-	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_SOUTHWEST);
-	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_SOUTH);
+	SendAtom(Dirs::SOUTHWEST, localLoc);
+	SendAtom(Dirs::SOUTH, localLoc);
+	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTHWEST);
+	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
       }
     }
     /*East neighbor?*/
-    else if(IsConnected(EUDIR_EAST) && localLoc.GetX() >= TILE_WIDTH - r2)
+    else if(IsConnected(Dirs::EAST) && localLoc.GetX() >= TILE_WIDTH - r2)
     {
-      SendAtom(EUDIR_EAST, localLoc);
-      dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_EAST);
-      if(IsConnected(EUDIR_NORTH) && localLoc.GetY() < r2)
+      SendAtom(Dirs::EAST, localLoc);
+      dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::EAST);
+      if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
       {
-	SendAtom(EUDIR_NORTHEAST, localLoc);
-	SendAtom(EUDIR_NORTH, localLoc);
-	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_NORTHEAST);
-	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_NORTH);
+	SendAtom(Dirs::NORTHEAST, localLoc);
+	SendAtom(Dirs::NORTH, localLoc);
+	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTHEAST);
+	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
       }
-      if(IsConnected(EUDIR_SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
+      if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
       {
-	SendAtom(EUDIR_SOUTHEAST, localLoc);
-	SendAtom(EUDIR_SOUTH, localLoc);
-	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_SOUTHEAST);
-	dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_SOUTH);
+	SendAtom(Dirs::SOUTHEAST, localLoc);
+	SendAtom(Dirs::SOUTH, localLoc);
+	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTHEAST);
+	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
       }
     }
-    else if(IsConnected(EUDIR_NORTH) && localLoc.GetY() < r2)
+    else if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
     {
-      SendAtom(EUDIR_NORTH, localLoc);
-      dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_NORTH);
+      SendAtom(Dirs::NORTH, localLoc);
+      dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
     }
-    else if(IsConnected(EUDIR_SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
+    else if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
     {
-      SendAtom(EUDIR_SOUTH, localLoc);
-      dirBitfield = EuDir::AddDirToMask(dirBitfield, EUDIR_SOUTH);
+      SendAtom(Dirs::SOUTH, localLoc);
+      dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
     }
   }
   return dirBitfield;
 }
 
 template <class T, u32 R>
-bool Tile<T,R>::TryLock(EuclidDir connectionDir)
+bool Tile<T,R>::TryLock(Dir connectionDir)
 {
   return IsConnected(connectionDir) &&
     m_connections[connectionDir]->Lock();
 }
 
 template <class T, u32 R>
-bool Tile<T,R>::TryLockCorner(EuclidDir cornerDir)
+bool Tile<T,R>::TryLockCorner(Dir cornerDir)
 {
   u32 locked = 0;
 
   /* Go back one, then wind until we lock all three. */
-  cornerDir = EuDir::CCWDir(cornerDir);
+  cornerDir = Dirs::CCWDir(cornerDir);
   for(u32 i = 0; i < 3; i++)
   {
     if(TryLock(cornerDir))
     {
       locked++;
-      cornerDir = EuDir::CWDir(cornerDir);
+      cornerDir = Dirs::CWDir(cornerDir);
     }
     /* If we can't hit one, rewind, unlocking all held locks. */
     else
     {
       for(u32 j = 0; j < locked; j++)
       {
-	cornerDir = EuDir::CCWDir(cornerDir);
+	cornerDir = Dirs::CCWDir(cornerDir);
 	m_connections[cornerDir]->Unlock();
       }
       return false;
@@ -423,20 +416,20 @@ bool Tile<T,R>::TryLockCorner(EuclidDir cornerDir)
 }
 
 template <class T, u32 R>
-bool Tile<T,R>::LockRegion(EuclidDir regionDir)
+bool Tile<T,R>::LockRegion(Dir regionDir)
 {
   switch(regionDir)
   {
-  case EUDIR_NORTH:
-  case EUDIR_EAST:
-  case EUDIR_SOUTH:
-  case EUDIR_WEST:
+  case Dirs::NORTH:
+  case Dirs::EAST:
+  case Dirs::SOUTH:
+  case Dirs::WEST:
     return TryLock(regionDir);
 
-  case EUDIR_NORTHWEST:
-  case EUDIR_NORTHEAST:
-  case EUDIR_SOUTHEAST:
-  case EUDIR_SOUTHWEST:
+  case Dirs::NORTHWEST:
+  case Dirs::NORTHEAST:
+  case Dirs::SOUTHEAST:
+  case Dirs::SOUTHWEST:
     return TryLockCorner(regionDir);
 
   default:
@@ -445,32 +438,32 @@ bool Tile<T,R>::LockRegion(EuclidDir regionDir)
 }
 
 template <class T, u32 R>
-void Tile<T,R>::UnlockCorner(EuclidDir corner)
+void Tile<T,R>::UnlockCorner(Dir corner)
 {
-  corner = EuDir::CCWDir(corner);
+  corner = Dirs::CCWDir(corner);
   for(u32 i = 0; i < 3; i++)
   {
     m_connections[corner]->Unlock();
-    corner = EuDir::CWDir(corner);
+    corner = Dirs::CWDir(corner);
   }
 }
 
 template <class T, u32 R>
-void Tile<T,R>::UnlockRegion(EuclidDir regionDir)
+void Tile<T,R>::UnlockRegion(Dir regionDir)
 {
   switch(regionDir)
   {
-  case EUDIR_NORTH:
-  case EUDIR_EAST:
-  case EUDIR_SOUTH:
-  case EUDIR_WEST:
+  case Dirs::NORTH:
+  case Dirs::EAST:
+  case Dirs::SOUTH:
+  case Dirs::WEST:
     m_connections[regionDir]->Unlock();
     return;
 
-  case EUDIR_NORTHWEST:
-  case EUDIR_NORTHEAST:
-  case EUDIR_SOUTHEAST:
-  case EUDIR_SOUTHWEST:
+  case Dirs::NORTHWEST:
+  case Dirs::NORTHEAST:
+  case Dirs::SOUTHEAST:
+  case Dirs::SOUTHWEST:
     return UnlockCorner(regionDir);
 
   default:
@@ -524,7 +517,7 @@ void Tile<T,R>::FlushAndWaitOnAllBuffers(u32 dirWaitWord)
   do
   {
     /* Flush out all packet buffers */
-    for(EuclidDir dir = EUDIR_NORTH; dir < EUDIR_COUNT; dir = (EuclidDir)(dir + 1))
+    for(Dir dir = Dirs::NORTH; dir < Dirs::DIR_COUNT; ++dir)
     {
       if(IsConnected(dir))
       {
@@ -566,7 +559,7 @@ void Tile<T,R>::Execute()
 #endif
 
     bool locked = false;
-    EuclidDir lockRegion = EUDIR_NORTH;
+    Dir lockRegion = Dirs::NORTH;
     u32 dirWaitWord = 0;
     if(IsInHidden(m_executingWindow.GetCenter()) ||
        !IsConnected(lockRegion = SharedAt(m_executingWindow.GetCenter())) ||
@@ -593,8 +586,8 @@ void Tile<T,R>::Execute()
 
 	switch(lockRegion)
 	{
-	case EUDIR_NORTH: case EUDIR_SOUTH:
-	case EUDIR_EAST:  case EUDIR_WEST:
+	case Dirs::NORTH: case Dirs::SOUTH:
+	case Dirs::EAST:  case Dirs::WEST:
 	  ++m_regionEvents[LOCKTYPE_SINGLE]; break;
 	default: /* UnlockRegion would have caught a bad argument. */
 	  ++m_regionEvents[LOCKTYPE_TRIPLE]; break;

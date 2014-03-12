@@ -1,15 +1,14 @@
 #ifndef ELEMENT_CONSUMER_H
 #define ELEMENT_CONSUMER_H
 
-#include "element.h"       /* -*- C++ -*- */
-#include "eventwindow.h"
-#include "elementtype.h"
-#include "elementtable.h"
-#include "element_data.h"
-#include "element_empty.h"
-#include "element_reprovert.h"
+#include "Element.h"       /* -*- C++ -*- */
+#include "EventWindow.h"
+#include "ElementTable.h"
+#include "Element_Data.h"
+#include "Element_Empty.h"
+#include "Element_Reprovert.h"
 #include "itype.h"
-#include "p1atom.h"
+#include "P1Atom.h"
 
 namespace MFM
 {
@@ -20,6 +19,8 @@ namespace MFM
   {
 
   public:
+    const char* GetName() const { return "Consumer"; }
+
     static Element_Consumer THE_INSTANCE;
     static const u32 TYPE = 0xdada0;
 
@@ -38,10 +39,12 @@ namespace MFM
     
     virtual void Behavior(EventWindow<T,R>& window) const
     {
+      Random & random = window.GetRandom();
+
       this->ReproduceVertically(window);
 
       Point<s32> consPt;
-      ManhattanDir<R>::get().FillRandomSingleDir(consPt);
+      MDist<R>::get().FillRandomSingleDir(consPt, random);
       
       if(window.GetRelativeAtom(consPt).GetType() == Element_Data<T,R>::TYPE)
       {

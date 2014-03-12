@@ -1,5 +1,5 @@
 #include "colormap.h"
-#include "fail.h"  /* for FAIL */
+#include "Fail.h"  /* for FAIL */
 
 namespace MFM {
 

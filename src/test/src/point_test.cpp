@@ -1,6 +1,6 @@
 #include "assert.h"
 #include "point_test.h"
-#include "point.h"
+#include "Point.h"
 
 namespace MFM {
 

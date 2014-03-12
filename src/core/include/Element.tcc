@@ -1,4 +1,4 @@
-#include "fail.h" /* -*- C++ -*- */
+#include "Fail.h" /* -*- C++ -*- */
 
 namespace MFM
 {
@@ -14,21 +14,21 @@ namespace MFM
   template <class T, u32 R>
   bool Element<T,R>::FillAvailableVNNeighbor(EventWindow<T,R>& window, SPoint& pt) const
   {
-    return FillPointWithType(window, pt, VNNeighbors, 4, EUDIR_SOUTHEAST, ELEMENT_NOTHING);
+    return FillPointWithType(window, pt, VNNeighbors, 4, Dirs::SOUTHEAST, ELEMENT_EMPTY);
   }
 
   template <class T, u32 R>
-  void Element<T,R>::FlipSEPointToCorner(SPoint& readPt, SPoint& outPt, EuclidDir corner) const
+  void Element<T,R>::FlipSEPointToCorner(SPoint& readPt, SPoint& outPt, Dir corner) const
   {
     outPt = readPt;
     switch(corner)
     {
-    case EUDIR_SOUTHEAST: break;
-    case EUDIR_NORTHEAST: ManhattanDir<R>::get().FlipAxis(outPt, false); break;
-    case EUDIR_SOUTHWEST: ManhattanDir<R>::get().FlipAxis(outPt, true); break;
-    case EUDIR_NORTHWEST:
-      ManhattanDir<R>::get().FlipAxis(outPt, true);
-      ManhattanDir<R>::get().FlipAxis(outPt, false);
+    case Dirs::SOUTHEAST: break;
+    case Dirs::NORTHEAST: MDist<R>::get().FlipAxis(outPt, false); break;
+    case Dirs::SOUTHWEST: MDist<R>::get().FlipAxis(outPt, true); break;
+    case Dirs::NORTHWEST:
+      MDist<R>::get().FlipAxis(outPt, true);
+      MDist<R>::get().FlipAxis(outPt, false);
       break;
     default: FAIL(ILLEGAL_ARGUMENT); break;
     }
@@ -40,7 +40,7 @@ namespace MFM
   template <class T, u32 R>
   bool Element<T,R>::FillPointWithType(EventWindow<T,R>& window, 
 				       SPoint& pt, SPoint* relevants, u32 relevantCount,
-				       EuclidDir rotation, ElementType type) const
+				       Dir rotation, ElementType type) const
   {
     Tile<T,R>& tile = window.GetTile();
     const SPoint& center = window.GetCenter();

@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include "itype.h"
-#include "random.h"
+#include "Random.h"
 
 namespace MFM {
 
@@ -142,7 +142,7 @@ SPoint makeSigned(const UPoint & upoint);
 
 } /* namespace MFM */
 
-#include "point.tcc"
+#include "Point.tcc"
 
 #endif /*POINT_H*/
 

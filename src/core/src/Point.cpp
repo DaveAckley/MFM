@@ -1,4 +1,4 @@
-#include "point.h"
+#include "Point.h"
 
 namespace MFM {
 

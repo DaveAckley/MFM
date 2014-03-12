@@ -2,7 +2,7 @@
 #define PANEL_H
 
 #include "itype.h"
-#include "point.h"
+#include "Point.h"
 #include "SDL/SDL.h"
 
 namespace MFM {
