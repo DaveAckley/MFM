@@ -33,6 +33,7 @@ private:
   bool renderStats;
 
   u32 m_eventsPerFrame;
+  double m_AER;
   double m_AEPS;
   u64 m_msSpentRunning;
   
@@ -143,11 +144,19 @@ private:
     {
       u32 startMS = SDL_GetTicks();
       grid.Unpause();
-      Sleep(0, 500000000);
+      Sleep(2, 100000000);
       grid.Pause();
       m_msSpentRunning += (SDL_GetTicks() - startMS);
- 
-      m_AEPS = 1000 * (grid.GetTotalEventsExecuted() / m_msSpentRunning);
+
+      m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
+      m_AER = 1000 * (m_AEPS / m_msSpentRunning);
+
+      /* Meh, only half of a PPM. We can fix it manually for now. */
+      FILE* fp = fopen("output.ppm", "w");
+	      
+      printf("Max Site Event: %ld\n", grid.WriteEPSRaster(fp));
+
+      fclose(fp);
     }
 
     mouse.Flip();
@@ -281,7 +290,7 @@ public:
       grend.RenderGrid(mainGrid);
       if(renderStats)
       {
-	srend.RenderGridStatistics(mainGrid, m_AEPS);
+	srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER);
       }
 
       SDL_Flip(screen);

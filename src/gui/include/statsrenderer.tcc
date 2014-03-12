@@ -11,7 +11,7 @@
 namespace MFM {
 
   template <class T, u32 R, u32 W, u32 H>
-  void StatsRenderer::RenderGridStatistics(Grid<T,R,W,H>& grid, double aeps)
+  void StatsRenderer::RenderGridStatistics(Grid<T,R,W,H>& grid, double aeps, double aer)
 { 
   Drawing::FillRect(m_dest, m_drawPoint.GetX(), m_drawPoint.GetY(),
 		    m_dimensions.GetX(), m_dimensions.GetY(),
@@ -54,6 +54,11 @@ namespace MFM {
   sprintf(strBuffer, "AEPS: %g", aeps);
 
   Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 140),
+		    Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
+
+  sprintf(strBuffer, "AER: %g/s", aer);
+
+  Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 160),
 		    Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
   
 }

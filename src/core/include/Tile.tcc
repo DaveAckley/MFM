@@ -50,6 +50,13 @@ Tile<T,R>::Tile() : m_eventsExecuted(0), m_executingWindow(*this)
   {
     m_lockEvents[i] = 0;
   }
+  for(u32 x = 0; x < TILE_WIDTH - 2 * R; x++)
+  {
+    for(u32 y = 0; y < TILE_WIDTH - 2 * R; y++)
+    {
+      m_siteEvents[x][y] = 0;
+    }
+  }
 
   m_threadInitialized = false;
   m_threadPaused = false;
@@ -587,6 +594,9 @@ void Tile<T,R>::Execute()
       ++m_eventsExecuted;
       ++m_regionEvents[RegionIn(m_executingWindow.GetCenter())];
 
+      ++m_siteEvents[m_executingWindow.GetCenter().GetX() - R]
+                    [m_executingWindow.GetCenter().GetY() - R];
+
       if(locked)
       {
 	UnlockRegion(lockRegion);
@@ -681,7 +691,19 @@ void Tile<T,R>::IncrAtomCount(ElementType atomType, s32 delta)
 }
 
 template <class T, u32 R>
-  void Tile<T,R>::AssertValidAtomCounts() const
+u64 Tile<T,R>::WriteEPSRasterLine(FILE* outstrm, u32 lineIdx)
+{
+  u64 max = 0;
+  for(u32 x = 0; x < TILE_WIDTH - 2 * R; x++)
+  {
+    fprintf(outstrm, "%ld ", m_siteEvents[x][lineIdx]);
+    max = MAX(max, m_siteEvents[x][lineIdx]);
+  }
+  return max;
+}
+
+template <class T, u32 R>
+void Tile<T,R>::AssertValidAtomCounts() const
 {
   s32 counts[ELEMENT_TABLE_SIZE];
   for (u32 i = 0; i < ELEMENT_TABLE_SIZE; ++i)

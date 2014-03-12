@@ -229,6 +229,24 @@ namespace MFM {
     return total;
   }
 
+  template <class T, u32 R, u32 W, u32 H>
+  u64 Grid<T,R,W,H>::WriteEPSRaster(FILE* outstrm)
+  {
+    u64 max = 0;
+    for(u32 y = 0; y < H; y++)
+    {
+      for(u32 i = 0; i < TILE_WIDTH - R * 2; i++)
+      {
+	for(u32 x = 0; x < W; x++)
+	{
+	  max = MAX(max, GetTile(x, y).WriteEPSRasterLine(outstrm, i));
+	}
+	fputc('\n', outstrm);
+      }
+    }
+    return max;
+  }
+
   template <class T, u32 R,u32 W, u32 H>
   u32 Grid<T,R,W,H>::GetAtomCount(ElementType atomType)
   {

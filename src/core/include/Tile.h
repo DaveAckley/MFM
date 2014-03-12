@@ -85,6 +85,12 @@ namespace MFM {
      */
     u64 m_lockEvents[LOCKTYPE_COUNT];
 
+    /**
+     * The number of events which have occurred in every individual
+     * site. Indexed as m_siteEvents[x][y] .
+     */
+    u64 m_siteEvents[TILE_WIDTH - 2 * R][TILE_WIDTH - 2 * R];
+
     friend class EventWindow<T,R>;
 
     /** The Atoms currently held by this Tile, including caches. */
@@ -611,6 +617,16 @@ namespace MFM {
         histogram in m_atomCount is consistent with the content of
         m_atoms. */
     void AssertValidAtomCounts() const;
+
+
+    /**
+     * Writes a single x-axis raster line of this Tile to a specified
+     * FILE*.
+     *
+     * @param outstrm The FILE* to write raster data to.
+     *
+     */
+    u64 WriteEPSRasterLine(FILE* outstrm, u32 lineIdx);
 
     /**
      * Registers an Element into this Tile's ElementTable.

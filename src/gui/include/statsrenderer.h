@@ -49,7 +49,7 @@ public:
   void DrawString(const char* string, u32 x, u32 y);
 
   template<class T, u32 R, u32 W, u32 H>
-  void RenderGridStatistics(Grid<T,R,W,H>& grid, double aeps);
+  void RenderGridStatistics(Grid<T,R,W,H>& grid, double aeps, double aer);
 };
 } /* namespace MFM */
 #include "statsrenderer.tcc"
