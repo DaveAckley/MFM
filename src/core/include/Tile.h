@@ -370,8 +370,8 @@ namespace MFM {
     inline bool IsConnected(Dir dir);
 
     /**
-     * Checks to see if a specified local point is contained within one
-     * of this Tile's caches.
+     * Checks to see if a specified local point is contained within a
+     * Tile's caches.
      *
      * @param pt The local location which is in question of being inside
      *        of a cache.
@@ -379,6 +379,36 @@ namespace MFM {
      * @returns true if pt is in a cache, else false.
      */
     static inline bool IsInCache(const SPoint& pt);
+
+    /**
+     * Checks to see if a specified local point is contained within a
+     * Tile's sites, including caches.  If this method returns true,
+     * then the GetAtom methods, applied to this location, will not
+     * FAIL.
+     *
+     * @param pt The local location which is in question of being
+     *           inside the bounds of this Tile
+     *
+     * @returns true if pt is a legal location in a Tile, else false.
+     *
+     * @sa GetAtom(const SPoint& pt)
+     */
+    static inline bool IsInTile(const SPoint& pt);
+
+    /**
+     * Checks to see if a specified local point is a site that
+     * currently might receive events in this particular Tile.  Note
+     * this method is not static, because liveness depends on the
+     * connectivity of this Tile.  Therefore, even given the same
+     * location as argument, the return value from this method could
+     * change over time, if the connectivity of this Tile changes.
+     *
+     * @param pt The local location which is in question of being
+     *           a live site that receives events in this Tile
+     *
+     * @returns true if pt is a live site in this Tile, else false.
+     */
+    bool IsLiveSite(const SPoint & location) ;
 
     /**
      * Gets the number of events executed within this Tile since

@@ -53,7 +53,7 @@ namespace MFM
       current = center + relevantFlip;
       
       /* Dead cache? Not of right type? */
-      if((tile.IsInCache(current) && !tile.IsConnected(tile.CacheAt(current))) ||
+      if(!tile.IsLiveSite(current) ||
 	 (window.GetRelativeAtom(relevantFlip).GetType() != type))
       {
 	continue;
