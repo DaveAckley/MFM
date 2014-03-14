@@ -1,5 +1,5 @@
                            /* -*- C++ -*- */
-#include "Dirs.h"    
+#include "Dirs.h"
 #include "grid.h"
 
 namespace MFM {
@@ -255,17 +255,6 @@ namespace MFM {
     for(u32 i = 0; i < W; i++)
       for(u32 j = 0; j < H; j++)
         total += m_tiles[i][j].GetAtomCount(atomType);
-
-    return total;
-  }
-
-  template <class T, u32 R,u32 W, u32 H>
-  u32 Grid<T,R,W,H>::GetTotalSites()
-  {
-    u32 total = 0;
-    for(u32 i = 0; i < W; i++)
-      for(u32 j = 0; j < H; j++)
-        total += m_tiles[i][j].GetSites();
 
     return total;
   }

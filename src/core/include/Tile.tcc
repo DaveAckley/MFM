@@ -56,7 +56,7 @@ namespace MFM {
   }
 
   template <class T, u32 R>
-  void Tile<T,R>::Connect(Tile<T,R>& other, EuclidDir toCache)
+  void Tile<T,R>::Connect(Tile<T,R>& other, Dir toCache)
   {
     if(IS_OWNED_CONNECTION(toCache))
     {
@@ -64,14 +64,14 @@ namespace MFM {
     }
     else
     {
-      m_connections[toCache] = other.GetConnection(EuDir::OppositeDir(toCache));
+      m_connections[toCache] = other.GetConnection(Dirs::OppositeDir(toCache));
       m_connections[toCache]->SetConnected(true);
-      other.Connect(*this, EuDir::OppositeDir(toCache));
+      other.Connect(*this, Dirs::OppositeDir(toCache));
     }
   }
 
   template <class T, u32 R>
-  Connection* Tile<T,R>::GetConnection(EuclidDir cache)
+  Connection* Tile<T,R>::GetConnection(Dir cache)
   {
     return m_connections[cache];
   }
@@ -119,7 +119,7 @@ namespace MFM {
   template <class T, u32 R>
   void Tile<T,R>::SendAcknowledgmentPacket(Packet<T>& packet)
   {
-    EuclidDir from = EuDir::OppositeDir(packet.GetReceivingNeighbor());
+    Dir from = Dirs::OppositeDir(packet.GetReceivingNeighbor());
     Packet<T> sendout(PACKET_EVENT_ACKNOWLEDGE);
     sendout.SetReceivingNeighbor(from);
 
@@ -172,7 +172,7 @@ namespace MFM {
   }
 
   template <class T, u32 R>
-  EuclidDir Tile<T,R>::RegionAt(const SPoint& sp, u32 reach)
+  Dir Tile<T,R>::RegionAt(const SPoint& sp, u32 reach)
   {
     UPoint pt = makeUnsigned(sp);
 
@@ -694,7 +694,6 @@ namespace MFM {
       m_atomCount[idx] += delta;
 
   }
-}
 
   template <class T, u32 R>
   u64 Tile<T,R>::WriteEPSRasterLine(FILE* outstrm, u32 lineIdx)
@@ -702,7 +701,7 @@ namespace MFM {
     u64 max = 0;
     for(u32 x = 0; x < TILE_WIDTH - 2 * R; x++)
     {
-      fprintf(outstrm, "%ld ", m_siteEvents[x][lineIdx]);
+      fprintf(outstrm, "%d ", (u32)m_siteEvents[x][lineIdx]);
       max = MAX(max, m_siteEvents[x][lineIdx]);
     }
     return max;
@@ -726,4 +725,5 @@ namespace MFM {
       if (counts[i] != m_atomCount[i])
         FAIL(ILLEGAL_STATE);
   }
+
 } /* namespace MFM */

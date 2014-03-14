@@ -35,9 +35,8 @@ private:
   u32 m_eventsPerFrame;
   double m_AER;
   double m_AEPS;
-  double m_AER;
   u64 m_msSpentRunning;
-  
+
 
   Mouse mouse;
   Keyboard keyboard;
@@ -148,22 +147,16 @@ private:
       Sleep(2, 100000000);
       grid.Pause();
       m_msSpentRunning += (SDL_GetTicks() - startMS);
-<<<<<<< HEAD
 
       m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
       m_AER = 1000 * (m_AEPS / m_msSpentRunning);
 
       /* Meh, only half of a PPM. We can fix it manually for now. */
       FILE* fp = fopen("output.ppm", "w");
-	      
-      printf("Max Site Event: %ld\n", grid.WriteEPSRaster(fp));
+
+      printf("Max Site Event: %d\n", (u32)grid.WriteEPSRaster(fp));
 
       fclose(fp);
-=======
- 
-      m_AEPS = (double) grid.GetTotalEventsExecuted() / grid.GetTotalSites();
-      m_AER = 1000 * m_AEPS / m_msSpentRunning;
->>>>>>> af281108b6f3cdcea311771c43741714d222f99a
     }
 
     mouse.Flip();
