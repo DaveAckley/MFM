@@ -57,11 +57,11 @@ ARCHIVEPATH := $(BUILDDIR)/$(ARCHIVENAME)
 
 # Pattern rule for c files
 $(BUILDDIR)/%.o:	src/%.c $(ALLDEP) $(BUILDDIR)/%.d
-	$(GCC) $(OPTS) $(DEBUGS) $(CFLAGS) $(DEFINES) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+	$(GCC) $(OPTS) $(DEBUGS) $(CFLAGS) $(DEFINES) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
 
 # Pattern rule for cpp files
 $(BUILDDIR)/%.o:	src/%.cpp $(ALLDEP) $(BUILDDIR)/%.d
-	$(GPP) $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+	$(GPP) $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
 
 # Pattern rule for S files
 $(BUILDDIR)/%.o:	src/%.S $(ALLDEP) $(BUILDDIR)/%.d
