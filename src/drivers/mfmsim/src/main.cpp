@@ -40,6 +40,7 @@ private:
 
   Mouse mouse;
   Keyboard keyboard;
+  Camera camera;
   SDL_Surface* screen;
   GridRenderer grend;
   StatsRenderer srend;
@@ -85,6 +86,10 @@ private:
     if(keyboard.SemiAuto(SDLK_o))
     {
       grend.SetEventWindowRenderMode(EVENTWINDOW_RENDER_OFF);
+    }
+    if(keyboard.SemiAuto(SDLK_r))
+    {
+      camera.ToggleRecord();
     }
     if(keyboard.SemiAuto(SDLK_e))
     {
@@ -179,9 +184,7 @@ public:
     bool running = true;
     screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 32,
 			      SDL_SWSURFACE);
-
     SDL_Event event;
-
     GridP1Atom mainGrid;
     for (u32 y = 0; y < mainGrid.GetHeight(); ++y) {
       for (u32 x = 0; x < mainGrid.GetWidth(); ++x) {
@@ -301,7 +304,7 @@ public:
 	srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER);
       }
 
-      SDL_Flip(screen);
+      camera.DrawSurface(screen);
     }
 
     SDL_FreeSurface(screen);
