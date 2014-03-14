@@ -1,5 +1,5 @@
 /* -*- C++ -*- */
-#include "fail.h"  /* For FAIL */
+#include "Fail.h"  /* For FAIL */
 #include <string.h> /* For memset, memcpy */
 
 namespace MFM {

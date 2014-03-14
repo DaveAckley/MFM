@@ -1,8 +1,8 @@
 #include "assert.h"
-#include "eventwindow.h"
+#include "EventWindow.h"
 #include "p1atom_test.h"
-#include "p1atom.h"
-#include "manhattandir.h"
+#include "P1Atom.h"
+#include "MDist.h"
 
 
 namespace MFM {
@@ -57,10 +57,8 @@ void P1AtomTest::Test_p1atomReadBody()
 
   for(int i = 0; i < 8; i++)
   {
-    TableType type = (i < 4) ? 
-      MANHATTAN_TABLE_SHORT : MANHATTAN_TABLE_LONG;
 
-    pvals[i] = ManhattanDir<4>::get().FromPoint(points[i], type);
+    pvals[i] = MDist<4>::get().FromPoint(points[i], i);
   }
 
   for(int i = 0; i < 8; i++)

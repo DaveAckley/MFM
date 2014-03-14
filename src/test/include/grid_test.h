@@ -3,8 +3,8 @@
 
 #include "test_common.h"
 
-#include "eucliddir.h"
-#include "manhattandir.h"
+#include "Dirs.h"
+#include "MDist.h"
 
 namespace MFM {
 

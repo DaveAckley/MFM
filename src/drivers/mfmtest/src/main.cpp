@@ -18,7 +18,7 @@ int main(int argc, char** argv)
   //  BitVectorTest::Test_bitVectorInsert();
   //  BitVectorTest::Test_bitVectorRemove();
 
-  ManhattanDirTest::Test_manhattandirConversion();
+  MDistTest::Test_MDistConversion();
 
   P1AtomTest::Test_p1atomState();
   P1AtomTest::Test_p1atomLBCount();
@@ -34,8 +34,6 @@ int main(int argc, char** argv)
 
   EventWindowTest::Test_eventwindowConstruction();
   EventWindowTest::Test_eventwindowWrite();
-
-  //ManhattanDir::DeallocTables();
 
   return 0;
 }

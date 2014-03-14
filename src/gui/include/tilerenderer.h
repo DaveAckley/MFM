@@ -2,10 +2,10 @@
 #define TILERENDERER_H
 
 #include "drawing.h"
-#include "elementtable.h"
+#include "ElementTable.h"
 #include "Tile.h"
 #include "panel.h"
-#include "point.h"
+#include "Point.h"
 #include "SDL/SDL.h"
 
 

@@ -2,16 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "element_dreg.h"
-#include "element_res.h"
-#include "element_consumer.h"
-#include "element_emitter.h"
-#include "element_sorter.h"
-
 namespace MFM {
 
   template <class T, u32 R, u32 W, u32 H>
   void StatsRenderer::RenderGridStatistics(Grid<T,R,W,H>& grid, double aeps, double aer)
+<<<<<<< HEAD
 { 
   Drawing::FillRect(m_dest, m_drawPoint.GetX(), m_drawPoint.GetY(),
 		    m_dimensions.GetX(), m_dimensions.GetY(),
@@ -35,24 +30,35 @@ namespace MFM {
 
   Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 40),
 		    Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
+=======
+  { 
+    Drawing::FillRect(m_dest, m_drawPoint.GetX(), m_drawPoint.GetY(),
+                      m_dimensions.GetX(), m_dimensions.GetY(),
+                      0xff400040);
+>>>>>>> af281108b6f3cdcea311771c43741714d222f99a
 
-  sprintf(strBuffer, "Emitter %d", grid.GetAtomCount(Element_Emitter<T,R>::TYPE));
+    const u32 STR_BUFFER_SIZE = 128;
+    char strBuffer[STR_BUFFER_SIZE];
 
-  Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 60),
-		    Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
+    sprintf(strBuffer, "%8.3f kAEPS", aeps/1000.0);
 
-  sprintf(strBuffer, "Consumer %d", grid.GetAtomCount(Element_Consumer<T,R>::TYPE));
+    Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 0),
+                      Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
 
-  Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 80),
-		    Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
+    sprintf(strBuffer, "%8.3f AER", aer);
 
-  sprintf(strBuffer, "Data: %d", grid.GetAtomCount(Element_Data<T,R>::TYPE));
+    Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 20),
+                      Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
 
-  Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 100),
-		    Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
+    for (u32 i = 0; i < m_displayTypesInUse; ++i) {
+      u32 type = m_displayTypes[i];
+      const Element<T,R> * elt = grid.GetTile(SPoint(0,0)).GetElementTable().Lookup(type);
+      if (elt == 0) continue;
+      u32 typeCount = grid.GetAtomCount(type);
 
-  sprintf(strBuffer, "AEPS: %g", aeps);
+      snprintf(strBuffer, STR_BUFFER_SIZE, "%8d %s", typeCount, elt->GetName());
 
+<<<<<<< HEAD
   Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 140),
 		    Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
 
@@ -62,5 +68,11 @@ namespace MFM {
 		    Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
   
 }
+=======
+      Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 20*i+50),
+                        Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
+    }
+  }
+>>>>>>> af281108b6f3cdcea311771c43741714d222f99a
 } /* namespace MFM */
 

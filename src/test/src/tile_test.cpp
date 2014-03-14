@@ -1,8 +1,9 @@
 #include "assert.h"
 #include "Tile.h"
-#include "p1atom.h"
-#include "point.h"
+#include "P1Atom.h"
+#include "Point.h"
 #include "tile_test.h"
+#include "Element_Res.h"
 
 namespace MFM {
 

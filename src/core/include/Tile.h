@@ -2,13 +2,13 @@
 #define TILE_H
 
 #include <pthread.h>
-#include "eucliddir.h"
-#include "random.h"  /* for Random */
-#include "packet.h"
-#include "packetbuffer.h"
-#include "point.h"
-#include "eventwindow.h"
-#include "elementtable.h"
+#include "Dirs.h"
+#include "Random.h"  /* for Random */
+#include "Packet.h"
+#include "PacketBuffer.h"
+#include "Point.h"
+#include "EventWindow.h"
+#include "ElementTable.h"
 #include "Connection.h"
 #include "ThreadPauser.h"
 
@@ -23,7 +23,7 @@ namespace MFM {
 #define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)
 
 
-#define IS_OWNED_CONNECTION(X) ((X) - EUDIR_EAST >= 0 && (X) - EUDIR_EAST < 4)
+#define IS_OWNED_CONNECTION(X) ((X) - Dirs::EAST >= 0 && (X) - Dirs::EAST < 4)
 
   typedef enum
   {
@@ -156,7 +156,7 @@ namespace MFM {
      * @returns true if this Tile owns the Connection over the cache in
      *          the dir direction.
      */
-    bool IsOwnedConnection(EuclidDir dir);
+    bool IsOwnedConnection(Dir dir);
 
     /**
      * Sets m_executingWindow to a new location in this Tile. This new
@@ -209,7 +209,7 @@ namespace MFM {
      * @param atomLoc  The current location of the Atom which should be
      *                 written to the destination Tile.
      */
-    void SendAtom(EuclidDir neighbor, SPoint& atomLoc);
+    void SendAtom(Dir neighbor, SPoint& atomLoc);
 
     /**
      * Attempt to lock only the Connection specified. This will return
@@ -220,7 +220,7 @@ namespace MFM {
      * @returns true if the lock for the specified direction is
      *          acquired.
      */
-    bool TryLock(EuclidDir connectionDir);
+    bool TryLock(Dir connectionDir);
 
     /**
      * Attempt to lock the specified Connection, along with the
@@ -235,7 +235,7 @@ namespace MFM {
      *
      * @sa UnlockCorner
      */
-    bool TryLockCorner(EuclidDir cornerDir);
+    bool TryLockCorner(Dir cornerDir);
 
     /**
      * Attempt to lock an edge of this Tile. This takes into account the
@@ -248,7 +248,7 @@ namespace MFM {
      *
      * @sa UnlockRegion
      */
-    bool LockRegion(EuclidDir regionDir);
+    bool LockRegion(Dir regionDir);
 
     /**
      * Unlocks the Connection of the specified direction, along with the
@@ -259,7 +259,7 @@ namespace MFM {
      *
      * @sa LockCorner
      */
-    void UnlockCorner(EuclidDir corner);
+    void UnlockCorner(Dir corner);
 
     /**
      * Unlocks an edge of this Tile. This takes into account the fact
@@ -271,7 +271,7 @@ namespace MFM {
      *
      * @sa LockRegion
      */
-    void UnlockRegion(EuclidDir regionDir);
+    void UnlockRegion(Dir regionDir);
 
     /**
      * Gets the TileRegion that a specified index, from the center of
@@ -320,7 +320,7 @@ namespace MFM {
      *
      * @param toCache The cache to share with other.
      */
-    void Connect(Tile<T,R>& other, EuclidDir toCache);
+    void Connect(Tile<T,R>& other, Dir toCache);
 
     /**
      * Finds the Connection which corresponds to one of this tile's
@@ -331,7 +331,15 @@ namespace MFM {
      * @returns a pointer to the held connection, or NULL if there is
      *          none.
      */
-    Connection* GetConnection(EuclidDir cache);
+    Connection* GetConnection(Dir cache);
+
+    /**
+     * Gets the number of sites in this Tile in sites, excluding caches.
+     */
+    u32 GetSites()
+    {
+      return OWNED_SIDE*OWNED_SIDE;
+    }
 
     /**
      * Gets the width of this Tile in sites, including caches.
@@ -365,11 +373,11 @@ namespace MFM {
      *
      * @returns true if this Tile has a neighbor in direction dir, else false.
      */
-    inline bool IsConnected(EuclidDir dir);
+    inline bool IsConnected(Dir dir);
 
     /**
-     * Checks to see if a specified local point is contained within one
-     * of this Tile's caches.
+     * Checks to see if a specified local point is contained within a
+     * Tile's caches.
      *
      * @param pt The local location which is in question of being inside
      *        of a cache.
@@ -377,6 +385,36 @@ namespace MFM {
      * @returns true if pt is in a cache, else false.
      */
     static inline bool IsInCache(const SPoint& pt);
+
+    /**
+     * Checks to see if a specified local point is contained within a
+     * Tile's sites, including caches.  If this method returns true,
+     * then the GetAtom methods, applied to this location, will not
+     * FAIL.
+     *
+     * @param pt The local location which is in question of being
+     *           inside the bounds of this Tile
+     *
+     * @returns true if pt is a legal location in a Tile, else false.
+     *
+     * @sa GetAtom(const SPoint& pt)
+     */
+    static inline bool IsInTile(const SPoint& pt);
+
+    /**
+     * Checks to see if a specified local point is a site that
+     * currently might receive events in this particular Tile.  Note
+     * this method is not static, because liveness depends on the
+     * connectivity of this Tile.  Therefore, even given the same
+     * location as argument, the return value from this method could
+     * change over time, if the connectivity of this Tile changes.
+     *
+     * @param pt The local location which is in question of being
+     *           a live site that receives events in this Tile
+     *
+     * @returns true if pt is a live site in this Tile, else false.
+     */
+    bool IsLiveSite(const SPoint & location) ;
 
     /**
      * Gets the number of events executed within this Tile since
@@ -403,7 +441,7 @@ namespace MFM {
      * @returns The EuclidDir of the cache pointed at by pt, or
      *          (EuclidDir)-1 if pt is not pointing at a cache.
      */
-    EuclidDir RegionAt(const SPoint& pt, u32 reach);
+    Dir RegionAt(const SPoint& pt, u32 reach);
 
     /**
      * Finds the cache in this Tile which contains a specified SPoint.
@@ -413,7 +451,7 @@ namespace MFM {
      * @returns The direction of the cache specified by pt, or
      *          (EuclidDir)-1 if there is no such cache.
      */
-    EuclidDir CacheAt(const SPoint& pt);
+    Dir CacheAt(const SPoint& pt);
 
     /**
      * Finds the region of shared memory in this Tile which contains a
@@ -425,7 +463,7 @@ namespace MFM {
      * @returns The direction of the shared memory specified by pt, or
      *          (EuclidDir)-1 if pt is not in shared memory.
      */
-    EuclidDir SharedAt(const SPoint& pt);
+    Dir SharedAt(const SPoint& pt);
 
 
     /*

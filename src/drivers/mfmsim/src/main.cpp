@@ -35,6 +35,7 @@ private:
   u32 m_eventsPerFrame;
   double m_AER;
   double m_AEPS;
+  double m_AER;
   u64 m_msSpentRunning;
   
 
@@ -147,6 +148,7 @@ private:
       Sleep(2, 100000000);
       grid.Pause();
       m_msSpentRunning += (SDL_GetTicks() - startMS);
+<<<<<<< HEAD
 
       m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
       m_AER = 1000 * (m_AEPS / m_msSpentRunning);
@@ -157,6 +159,11 @@ private:
       printf("Max Site Event: %ld\n", grid.WriteEPSRaster(fp));
 
       fclose(fp);
+=======
+ 
+      m_AEPS = (double) grid.GetTotalEventsExecuted() / grid.GetTotalSites();
+      m_AER = 1000 * m_AEPS / m_msSpentRunning;
+>>>>>>> af281108b6f3cdcea311771c43741714d222f99a
     }
 
     mouse.Flip();
@@ -215,6 +222,14 @@ public:
     P1Atom sorter(Element_Sorter<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
     P1Atom emtr(Element_Emitter<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
     P1Atom cnsr(Element_Consumer<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
+
+    srend.DisplayStatsForType(Element_Empty<P1Atom, 4>::TYPE);
+    srend.DisplayStatsForType(Element_Dreg<P1Atom, 4>::TYPE);
+    srend.DisplayStatsForType(Element_Res<P1Atom, 4>::TYPE);
+    srend.DisplayStatsForType(Element_Sorter<P1Atom, 4>::TYPE);
+    srend.DisplayStatsForType(Element_Emitter<P1Atom, 4>::TYPE);
+    srend.DisplayStatsForType(Element_Consumer<P1Atom, 4>::TYPE);
+    srend.DisplayStatsForType(Element_Data<P1Atom, 4>::TYPE);
 
     emtr.SetStateField(0,10,10);  // What is this for??
     cnsr.SetStateField(0,10,10);  // What is this for??

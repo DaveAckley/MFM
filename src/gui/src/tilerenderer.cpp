@@ -1,5 +1,5 @@
 #include "tilerenderer.h"
-#include "eventwindow.h"
+#include "EventWindow.h"
 
 namespace MFM {
 

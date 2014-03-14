@@ -4,7 +4,7 @@
 #include "SDL/SDL_ttf.h"
 #include "grid.h"
 #include "itype.h"
-#include "point.h"
+#include "Point.h"
 
 namespace MFM {
 
@@ -18,12 +18,20 @@ private:
 
   SDL_Surface* m_dest;
 
+  static const u32 MAX_TYPES = 16;
+  u32 m_displayTypes[MAX_TYPES];
+  u32 m_displayTypesInUse;
+
+  void DisplayTypeAt(u32 lineNum, u32 type) ;
+
 public:
 
-  StatsRenderer()
+  StatsRenderer() : m_displayTypesInUse(0)
   {
-    m_drawFont = TTF_OpenFont("tiny.ttf", 20);
+    m_drawFont = TTF_OpenFont("UbuntuMono-R.ttf", 20);
   }
+
+  bool DisplayStatsForType(u32 type) ;
 
   ~StatsRenderer()
   {

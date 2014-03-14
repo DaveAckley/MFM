@@ -3,8 +3,8 @@
 
 #include "itype.h"
 #include "Tile.h"
-#include "elementtable.h"
-#include "random.h"
+#include "ElementTable.h"
+#include "Random.h"
 
 namespace MFM {
 
@@ -86,10 +86,14 @@ namespace MFM {
 
     u64 GetTotalEventsExecuted();
       
+<<<<<<< HEAD
     /* Returns the maximum written value */
     u64 WriteEPSRaster(FILE* outstrm);
 
     void ResetEPSCounts();
+=======
+    u32 GetTotalSites();
+>>>>>>> af281108b6f3cdcea311771c43741714d222f99a
 
     u32 GetAtomCount(ElementType atomType);
   };
