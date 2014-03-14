@@ -28,3 +28,6 @@ latex/
 
 # Ignore the code log
 codelog.txt
+
+# We don't want ppms
+*.ppm
