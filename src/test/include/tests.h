@@ -15,5 +15,6 @@
 #include "eventwindow_test.h"
 #include "Random_test.h"
 #include "colormap_test.h"
+#include "FXP_test.h"
 
 #endif /*TESTS_H*/
