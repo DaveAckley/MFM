@@ -20,9 +20,9 @@ class MFMSim
 {
 public:
   static const u32 EVENT_WINDOW_RADIUS = 4;
-  static const u32 GRID_WIDTH = 5;
-  static const u32 GRID_HEIGHT = 3;
-  static const u32 ELEMENT_TABLE_BITS = 8;
+  static const u32 GRID_WIDTH = 7;
+  static const u32 GRID_HEIGHT = 4;
+  static const u32 ELEMENT_TABLE_BITS = 3;
 
 
 private:
@@ -67,6 +67,12 @@ private:
     {
       exit(0);
     }
+
+    if(keyboard.IsDown(SDLK_a))
+    {
+      m_srend.SetDisplayAER(!m_srend.GetDisplayAER());
+    }
+
     if(keyboard.IsDown(SDLK_1))
     {
       m_grend.IncreaseAtomSize();
@@ -99,20 +105,21 @@ private:
     {
       grid.TriggerEvent();
     }
-    if(keyboard.IsDown(SDLK_LEFT) ||
-       keyboard.IsDown(SDLK_a))
+    if(keyboard.IsDown(SDLK_LEFT))
     {
       m_grend.MoveLeft(speed);
     }
-    if(keyboard.IsDown(SDLK_DOWN) ||
-       keyboard.IsDown(SDLK_s))
+    if(keyboard.IsDown(SDLK_DOWN))
     {
       m_grend.MoveDown(speed);
     }
-    if(keyboard.IsDown(SDLK_UP) ||
-       keyboard.IsDown(SDLK_w))
+    if(keyboard.IsDown(SDLK_UP))
     {
       m_grend.MoveUp(speed);
+    }
+    if(keyboard.IsDown(SDLK_RIGHT))
+    {
+      m_grend.MoveRight(speed);
     }
     if(keyboard.SemiAuto(SDLK_SPACE))
     {
@@ -131,11 +138,6 @@ private:
 				       m_screenHeight));
       }
     }
-    if(keyboard.IsDown(SDLK_RIGHT) ||
-       keyboard.IsDown(SDLK_d))
-    {
-      m_grend.MoveRight(speed);
-    }
     if(keyboard.SemiAuto(SDLK_COMMA))
     {
       m_eventsPerFrame /= 10;
@@ -153,7 +155,7 @@ private:
     {
       u32 startMS = SDL_GetTicks();
       grid.Unpause();
-      Sleep(0, 500000000);
+      Sleep(0, 100000000);
       grid.Pause();
       m_msSpentRunning += (SDL_GetTicks() - startMS);
  
@@ -212,6 +214,7 @@ public:
     mainGrid.Needed(Element_Dreg<P1Atom, 4>::THE_INSTANCE);
     mainGrid.Needed(Element_Res<P1Atom, 4>::THE_INSTANCE);
     mainGrid.Needed(Element_Boids1<P1Atom, 4>::THE_INSTANCE);
+    mainGrid.Needed(Element_Boids2<P1Atom, 4>::THE_INSTANCE);
 
     if (seedOrZero==0) seedOrZero = 1;  /* Avoid superstitious 0 zeed */
     mainGrid.SetSeed(seedOrZero);  /* Push seeds out to everybody */
@@ -220,30 +223,31 @@ public:
     m_srend.DisplayStatsForType(Element_Dreg<P1Atom, 4>::TYPE);
     m_srend.DisplayStatsForType(Element_Res<P1Atom, 4>::TYPE);
     m_srend.DisplayStatsForType(Element_Boids1<P1Atom, 4>::TYPE);
+    m_srend.DisplayStatsForType(Element_Boids2<P1Atom, 4>::TYPE);
 
     renderStats = false;
 
-    P1Atom aBoid(Element_Boids1<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
+    P1Atom aBoid1(Element_Boids1<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
+    P1Atom aBoid2(Element_Boids2<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
     P1Atom aDReg(Element_Dreg<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
 
-    u32 realWidth = TILE_WIDTH - EVENT_WINDOW_RADIUS * 2;
+    u32 realWidth = Tile<P1Atom,4>::OWNED_SIDE;
 
     SPoint aloc(20, 30);
     SPoint sloc(20, 10);
     SPoint eloc(GRID_WIDTH*realWidth-2, 10);
     SPoint cloc(1, 10);
 
-    for(u32 x = 0; x < mainGrid.GetWidth(); x++)
-    {
-      for(u32 y = 0; y < mainGrid.GetHeight(); y++)
-      {
-	for(u32 z = 0; z < 4; z++)
-	{
-	  aloc.Set(20 + x * realWidth + z, 20 + y * realWidth);
-	  sloc.Set(21 + x * realWidth + z, 21 + y * realWidth);
-	  mainGrid.PlaceAtom(aBoid, aloc);
-	  mainGrid.PlaceAtom(aDReg, sloc);
-	}
+    for(u32 x = 0; x < mainGrid.GetWidth()*realWidth; x+=4) {
+      for(u32 y = 0; y < mainGrid.GetHeight()*realWidth; y+=4) {
+        aloc.Set(x,y);
+        sloc.Set(x+1,y+1);
+
+        if ((x/4)&1)
+          mainGrid.PlaceAtom(aBoid1, aloc);
+        else
+          mainGrid.PlaceAtom(aBoid2, aloc);
+        mainGrid.PlaceAtom(aDReg, sloc);
       }
     }
 

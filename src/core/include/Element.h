@@ -9,6 +9,8 @@ namespace MFM
 {
   typedef u32 ElementType;
 
+  template <class T, u32 R> class Atom; // Forward declaration
+
   /**
    * ELEMENT_EMPTY is recognized at the element/elementtable level.
    */
@@ -47,6 +49,10 @@ namespace MFM
     virtual const T & GetDefaultAtom() const = 0;
 
     virtual u32 DefaultPhysicsColor() const = 0;
+    
+    virtual u32 LocalPhysicsColor(const T &) const {
+      return DefaultPhysicsColor();
+    }
     
   };
 }

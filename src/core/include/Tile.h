@@ -17,7 +17,8 @@ namespace MFM {
 
   /** The full length, in sites, of a Tile, including neighbor
       caches.*/
-#define TILE_WIDTH 40
+  //#define TILE_WIDTH 40
+#define TILE_WIDTH 64
 
   /** The number of sites a Tile contains. */
 #define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)
