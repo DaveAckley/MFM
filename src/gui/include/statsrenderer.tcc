@@ -6,7 +6,7 @@ namespace MFM {
 
   template <class T, u32 R, u32 W, u32 H>
   void StatsRenderer::RenderGridStatistics(Grid<T,R,W,H>& grid, double aeps, double aer)
-  { 
+  {
     Drawing::FillRect(m_dest, m_drawPoint.GetX(), m_drawPoint.GetY(),
                       m_dimensions.GetX(), m_dimensions.GetY(),
                       0xff400040);

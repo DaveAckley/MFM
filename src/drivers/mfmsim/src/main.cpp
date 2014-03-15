@@ -33,13 +33,14 @@ private:
   bool renderStats;
 
   u32 m_eventsPerFrame;
-  double m_AEPS;
   double m_AER;
+  double m_AEPS;
   u64 m_msSpentRunning;
-  
+
 
   Mouse mouse;
   Keyboard keyboard;
+  Camera camera;
   SDL_Surface* screen;
   GridRenderer grend;
   StatsRenderer srend;
@@ -85,6 +86,10 @@ private:
     if(keyboard.SemiAuto(SDLK_o))
     {
       grend.SetEventWindowRenderMode(EVENTWINDOW_RENDER_OFF);
+    }
+    if(keyboard.SemiAuto(SDLK_r))
+    {
+      camera.ToggleRecord();
     }
     if(keyboard.SemiAuto(SDLK_e))
     {
@@ -144,12 +149,19 @@ private:
     {
       u32 startMS = SDL_GetTicks();
       grid.Unpause();
-      Sleep(0, 500000000);
+      Sleep(2, 100000000);
       grid.Pause();
       m_msSpentRunning += (SDL_GetTicks() - startMS);
- 
-      m_AEPS = (double) grid.GetTotalEventsExecuted() / grid.GetTotalSites();
-      m_AER = 1000 * m_AEPS / m_msSpentRunning;
+
+      m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
+      m_AER = 1000 * (m_AEPS / m_msSpentRunning);
+
+      /* Meh, only half of a PPM. We can fix it manually for now. */
+      FILE* fp = fopen("output.ppm", "w");
+
+      printf("Max Site Event: %d\n", (u32)grid.WriteEPSRaster(fp));
+
+      fclose(fp);
     }
 
     mouse.Flip();
@@ -172,9 +184,7 @@ public:
     bool running = true;
     screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 32,
 			      SDL_SWSURFACE);
-
     SDL_Event event;
-
     GridP1Atom mainGrid;
     for (u32 y = 0; y < mainGrid.GetHeight(); ++y) {
       for (u32 x = 0; x < mainGrid.GetWidth(); ++x) {
@@ -294,7 +304,7 @@ public:
 	srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER);
       }
 
-      SDL_Flip(screen);
+      camera.DrawSurface(screen);
     }
 
     SDL_FreeSurface(screen);

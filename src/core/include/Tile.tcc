@@ -8,9 +8,9 @@ namespace MFM {
   Tile<T,R>::Tile() : m_eventsExecuted(0), m_executingWindow(*this)
   {
     for(u32 i = 0; i < ELEMENT_TABLE_SIZE; i++)
-      {
-        m_atomCount[i] = 0;
-      }
+    {
+      m_atomCount[i] = 0;
+    }
 
     RegisterElement(Element_Empty<T,R>::THE_INSTANCE);
 
@@ -20,29 +20,36 @@ namespace MFM {
     /* symbolizing a dead edge.       */
     u32 edges = 0;
     for(Dir i = Dirs::NORTH; edges < Dirs::DIR_COUNT; i = Dirs::CWDir(i), edges++)
+    {
+      if(IS_OWNED_CONNECTION(i))
       {
-        if(IS_OWNED_CONNECTION(i))
-          {
-            /* We own this one! Hook it up. */
-            m_connections[i] = m_ownedConnections + i - Dirs::EAST;
-          }
-        else
-          {
-            /* We will rely on the grid to hook these up when the time
-               comes. */
-            m_connections[i] = NULL;
-          }
+	/* We own this one! Hook it up. */
+	m_connections[i] = m_ownedConnections + i - Dirs::EAST;
       }
+      else
+      {
+	/* We will rely on the grid to hook these up when the time
+	   comes. */
+	m_connections[i] = NULL;
+      }
+    }
 
     /* Zero out all of the counting fields */
     for(u32 i = 0; i < REGION_COUNT; i++)
-      {
-        m_regionEvents[i] = 0;
-      }
+    {
+      m_regionEvents[i] = 0;
+    }
     for(u32 i = 0; i < LOCKTYPE_COUNT; i++)
+    {
+      m_lockEvents[i] = 0;
+    }
+    for(u32 x = 0; x < TILE_WIDTH - 2 * R; x++)
+    {
+      for(u32 y = 0; y < TILE_WIDTH - 2 * R; y++)
       {
-        m_lockEvents[i] = 0;
+	m_siteEvents[x][y] = 0;
       }
+    }
 
     m_threadInitialized = false;
     m_threadPaused = false;
@@ -52,15 +59,15 @@ namespace MFM {
   void Tile<T,R>::Connect(Tile<T,R>& other, Dir toCache)
   {
     if(IS_OWNED_CONNECTION(toCache))
-      {
-        m_connections[toCache]->SetConnected(true);
-      }
+    {
+      m_connections[toCache]->SetConnected(true);
+    }
     else
-      {
-        m_connections[toCache] = other.GetConnection(Dirs::OppositeDir(toCache));
-        m_connections[toCache]->SetConnected(true);
-        other.Connect(*this, Dirs::OppositeDir(toCache));
-      }
+    {
+      m_connections[toCache] = other.GetConnection(Dirs::OppositeDir(toCache));
+      m_connections[toCache]->SetConnected(true);
+      other.Connect(*this, Dirs::OppositeDir(toCache));
+    }
   }
 
   template <class T, u32 R>
@@ -117,34 +124,34 @@ namespace MFM {
     sendout.SetReceivingNeighbor(from);
 
     m_connections[from]->Write(!IS_OWNED_CONNECTION(from),
-                               (u8*)&sendout,
-                               sizeof(Packet<T>));
+			       (u8*)&sendout,
+			       sizeof(Packet<T>));
   }
 
   template <class T, u32 R>
   void Tile<T,R>::ReceivePacket(Packet<T>& packet)
   {
     switch(packet.GetType())
-      {
-      case PACKET_WRITE:
-        PlaceAtom(packet.GetAtom(), packet.GetLocation());
-        break;
-      case PACKET_EVENT_COMPLETE:
-        SendAcknowledgmentPacket(packet);
-        break;
-      case PACKET_EVENT_ACKNOWLEDGE:
+    {
+    case PACKET_WRITE:
+      PlaceAtom(packet.GetAtom(), packet.GetLocation());
+      break;
+    case PACKET_EVENT_COMPLETE:
+      SendAcknowledgmentPacket(packet);
+      break;
+    case PACKET_EVENT_ACKNOWLEDGE:
 
-        break;
-      default:
-        FAIL(INCOMPLETE_CODE); break;
-      }
+      break;
+    default:
+      FAIL(INCOMPLETE_CODE); break;
+    }
   }
 
   template <class T,u32 R>
   void Tile<T,R>::FillLastExecutedAtom(SPoint& out)
   {
     out.Set(m_lastExecutedAtom.GetX(),
-            m_lastExecutedAtom.GetY());
+	    m_lastExecutedAtom.GetY());
   }
 
   template <class T,u32 R>
@@ -170,38 +177,38 @@ namespace MFM {
     UPoint pt = makeUnsigned(sp);
 
     if(pt.GetX() < reach)
+    {
+      if(pt.GetY() < reach)
       {
-        if(pt.GetY() < reach)
-          {
-            return Dirs::NORTHWEST;
-          }
-        else if(pt.GetY() >= TILE_WIDTH - reach)
-          {
-            return Dirs::SOUTHWEST;
-          }
-        return Dirs::WEST;
+	return Dirs::NORTHWEST;
       }
+      else if(pt.GetY() >= TILE_WIDTH - reach)
+      {
+	return Dirs::SOUTHWEST;
+      }
+      return Dirs::WEST;
+    }
     else if(pt.GetX() >= TILE_WIDTH - reach)
+    {
+      if(pt.GetY() < reach)
       {
-        if(pt.GetY() < reach)
-          {
-            return Dirs::NORTHEAST;
-          }
-        else if(pt.GetY() >= TILE_WIDTH - reach)
-          {
-            return Dirs::SOUTHEAST;
-          }
-        return Dirs::EAST;
+        return Dirs::NORTHEAST;
       }
+      else if(pt.GetY() >= TILE_WIDTH - reach)
+      {
+        return Dirs::SOUTHEAST;
+      }
+      return Dirs::EAST;
+    }
 
     if(pt.GetY() < reach)
-      {
-        return Dirs::NORTH;
-      }
+    {
+      return Dirs::NORTH;
+    }
     else if(pt.GetY() >= TILE_WIDTH - reach)
-      {
-        return Dirs::SOUTH;
-      }
+    {
+      return Dirs::SOUTH;
+    }
 
     return (Dir)-1;
   }
@@ -228,51 +235,51 @@ namespace MFM {
             pt.GetY() * TILE_WIDTH] = atom;
 
     if(!IsInCache(pt))
-      {
-        IncrAtomCount(atom.GetType(),1);
-        IncrAtomCount(oldType,-1);
-      }
+    {
+      IncrAtomCount(atom.GetType(),1);
+      IncrAtomCount(oldType,-1);
+    }
   }
 
   template <class T, u32 R>
   void Tile<T, R>::SendAtom(Dir neighbor, SPoint& atomLoc)
   {
     if(IsConnected(neighbor))
-      {
-        SPoint remoteLoc(atomLoc);
+    {
+      SPoint remoteLoc(atomLoc);
 
-        u32 tileDiff = TILE_WIDTH - 2 * R;
+      u32 tileDiff = TILE_WIDTH - 2 * R;
 
-        /* The neighbor will think this atom is in a different location. */
-        switch(neighbor)
-          {
-          case Dirs::NORTH: remoteLoc.Add(0, tileDiff); break;
-          case Dirs::SOUTH: remoteLoc.Add(0, -tileDiff); break;
-          case Dirs::WEST:  remoteLoc.Add(tileDiff, 0); break;
-          case Dirs::EAST:  remoteLoc.Add(-tileDiff, 0); break;
-          case Dirs::NORTHEAST:
-            remoteLoc.Add(-tileDiff, tileDiff); break;
-          case Dirs::SOUTHEAST:
-            remoteLoc.Add(-tileDiff, -tileDiff); break;
-          case Dirs::SOUTHWEST:
-            remoteLoc.Add(tileDiff, -tileDiff); break;
-          case Dirs::NORTHWEST:
-            remoteLoc.Add(tileDiff, tileDiff); break;
-          default:
-            FAIL(INCOMPLETE_CODE); break;
-          }
+      /* The neighbor will think this atom is in a different location. */
+      switch(neighbor)
+        {
+	case Dirs::NORTH: remoteLoc.Add(0, tileDiff); break;
+	case Dirs::SOUTH: remoteLoc.Add(0, -tileDiff); break;
+	case Dirs::WEST:  remoteLoc.Add(tileDiff, 0); break;
+	case Dirs::EAST:  remoteLoc.Add(-tileDiff, 0); break;
+	case Dirs::NORTHEAST:
+	  remoteLoc.Add(-tileDiff, tileDiff); break;
+	case Dirs::SOUTHEAST:
+	  remoteLoc.Add(-tileDiff, -tileDiff); break;
+	case Dirs::SOUTHWEST:
+	  remoteLoc.Add(tileDiff, -tileDiff); break;
+	case Dirs::NORTHWEST:
+	  remoteLoc.Add(tileDiff, tileDiff); break;
+	default:
+	  FAIL(INCOMPLETE_CODE); break;
+	}
 
-        Packet<T> sendout(PACKET_WRITE);
+      Packet<T> sendout(PACKET_WRITE);
 
-        sendout.SetLocation(remoteLoc);
-        sendout.SetAtom(*GetAtom(atomLoc));
-        sendout.SetReceivingNeighbor(neighbor);
+      sendout.SetLocation(remoteLoc);
+      sendout.SetAtom(*GetAtom(atomLoc));
+      sendout.SetReceivingNeighbor(neighbor);
 
-        /* Send out the serialized version of the packet */
-        m_connections[neighbor]->Write(!IS_OWNED_CONNECTION(neighbor),
-                                       (u8*)&sendout,
-                                       sizeof(Packet<T>));
-      }
+      /* Send out the serialized version of the packet */
+      m_connections[neighbor]->Write(!IS_OWNED_CONNECTION(neighbor),
+				     (u8*)&sendout,
+				     sizeof(Packet<T>));
+    }
   }
 
   template <class T, u32 R>
@@ -308,19 +315,19 @@ namespace MFM {
   {
     Dir dir = Dirs::NORTH;
     do
+    {
+      if(IsConnected(dir) && (dirWaitWord & (1 << dir)))
       {
-        if(IsConnected(dir) && (dirWaitWord & (1 << dir)))
-          {
-            Packet<T> sendout(PACKET_EVENT_COMPLETE);
-            sendout.SetReceivingNeighbor(dir);
+	Packet<T> sendout(PACKET_EVENT_COMPLETE);
+	sendout.SetReceivingNeighbor(dir);
 
-            /* We don't care about what other kind of stuff is in the Packet */
-            m_connections[dir]->Write(!IS_OWNED_CONNECTION(dir),
-                                      (u8*)&sendout, sizeof(Packet<T>));
-          }
+	/* We don't care about what other kind of stuff is in the Packet */
+	m_connections[dir]->Write(!IS_OWNED_CONNECTION(dir),
+				  (u8*)&sendout, sizeof(Packet<T>));
+      }
 
-        dir = Dirs::CWDir(dir);
-      } while (dir != Dirs::NORTH);
+      dir = Dirs::CWDir(dir);
+    } while (dir != Dirs::NORTH);
   }
 
   template <class T, u32 R>
@@ -335,61 +342,61 @@ namespace MFM {
     m_executingWindow.FillCenter(ewCenter);
 
     for(u32 i = 0; i < m_executingWindow.GetAtomCount(); i++)
-      {
-        MDist<R>::get().FillFromBits(localLoc, i, R);
-        localLoc.Add(ewCenter);
+    {
+      MDist<R>::get().FillFromBits(localLoc, i, R);
+      localLoc.Add(ewCenter);
 
-        /* Send to West neighbor? */
-        if(IsConnected(Dirs::WEST) && localLoc.GetX() < r2)
-          {
-            SendAtom(Dirs::WEST, localLoc);
-            dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::WEST);
-            if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
-              {
-                SendAtom(Dirs::NORTHWEST, localLoc);
-                SendAtom(Dirs::NORTH, localLoc);
-                dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTHWEST);
-                dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
-              }
-            else if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
-              {
-                SendAtom(Dirs::SOUTHWEST, localLoc);
-                SendAtom(Dirs::SOUTH, localLoc);
-                dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTHWEST);
-                dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
-              }
-          }
-        /*East neighbor?*/
-        else if(IsConnected(Dirs::EAST) && localLoc.GetX() >= TILE_WIDTH - r2)
-          {
-            SendAtom(Dirs::EAST, localLoc);
-            dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::EAST);
-            if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
-              {
-                SendAtom(Dirs::NORTHEAST, localLoc);
-                SendAtom(Dirs::NORTH, localLoc);
-                dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTHEAST);
-                dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
-              }
-            if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
-              {
-                SendAtom(Dirs::SOUTHEAST, localLoc);
-                SendAtom(Dirs::SOUTH, localLoc);
-                dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTHEAST);
-                dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
-              }
-          }
-        else if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
-          {
-            SendAtom(Dirs::NORTH, localLoc);
-            dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
-          }
-        else if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
-          {
-            SendAtom(Dirs::SOUTH, localLoc);
-            dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
-          }
+      /* Send to West neighbor? */
+      if(IsConnected(Dirs::WEST) && localLoc.GetX() < r2)
+      {
+	SendAtom(Dirs::WEST, localLoc);
+	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::WEST);
+	if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
+	{
+	  SendAtom(Dirs::NORTHWEST, localLoc);
+	  SendAtom(Dirs::NORTH, localLoc);
+	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTHWEST);
+	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
+	}
+	else if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
+	{
+	  SendAtom(Dirs::SOUTHWEST, localLoc);
+	  SendAtom(Dirs::SOUTH, localLoc);
+	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTHWEST);
+	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
+	}
       }
+      /*East neighbor?*/
+      else if(IsConnected(Dirs::EAST) && localLoc.GetX() >= TILE_WIDTH - r2)
+      {
+	SendAtom(Dirs::EAST, localLoc);
+	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::EAST);
+	if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
+	{
+	  SendAtom(Dirs::NORTHEAST, localLoc);
+	  SendAtom(Dirs::NORTH, localLoc);
+	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTHEAST);
+	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
+	}
+	if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
+	{
+	  SendAtom(Dirs::SOUTHEAST, localLoc);
+	  SendAtom(Dirs::SOUTH, localLoc);
+	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTHEAST);
+	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
+	}
+      }
+      else if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
+      {
+	SendAtom(Dirs::NORTH, localLoc);
+	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
+      }
+      else if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
+      {
+	SendAtom(Dirs::SOUTH, localLoc);
+	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
+      }
+    }
     return dirBitfield;
   }
 
@@ -408,23 +415,23 @@ namespace MFM {
     /* Go back one, then wind until we lock all three. */
     cornerDir = Dirs::CCWDir(cornerDir);
     for(u32 i = 0; i < 3; i++)
+    {
+      if(TryLock(cornerDir))
       {
-        if(TryLock(cornerDir))
-          {
-            locked++;
-            cornerDir = Dirs::CWDir(cornerDir);
-          }
-        /* If we can't hit one, rewind, unlocking all held locks. */
-        else
-          {
-            for(u32 j = 0; j < locked; j++)
-              {
-                cornerDir = Dirs::CCWDir(cornerDir);
-                m_connections[cornerDir]->Unlock();
-              }
-            return false;
-          }
+	locked++;
+	cornerDir = Dirs::CWDir(cornerDir);
       }
+        /* If we can't hit one, rewind, unlocking all held locks. */
+      else
+      {
+	for(u32 j = 0; j < locked; j++)
+	{
+	  cornerDir = Dirs::CCWDir(cornerDir);
+	  m_connections[cornerDir]->Unlock();
+	}
+	return false;
+      }
+    }
     return true;
   }
 
@@ -432,22 +439,22 @@ namespace MFM {
   bool Tile<T,R>::LockRegion(Dir regionDir)
   {
     switch(regionDir)
-      {
-      case Dirs::NORTH:
-      case Dirs::EAST:
-      case Dirs::SOUTH:
-      case Dirs::WEST:
-        return TryLock(regionDir);
+    {
+    case Dirs::NORTH:
+    case Dirs::EAST:
+    case Dirs::SOUTH:
+    case Dirs::WEST:
+      return TryLock(regionDir);
 
-      case Dirs::NORTHWEST:
-      case Dirs::NORTHEAST:
-      case Dirs::SOUTHEAST:
-      case Dirs::SOUTHWEST:
-        return TryLockCorner(regionDir);
+    case Dirs::NORTHWEST:
+    case Dirs::NORTHEAST:
+    case Dirs::SOUTHEAST:
+    case Dirs::SOUTHWEST:
+      return TryLockCorner(regionDir);
 
-      default:
-        FAIL(ILLEGAL_ARGUMENT);
-      }
+    default:
+      FAIL(ILLEGAL_ARGUMENT);
+    }
   }
 
   template <class T, u32 R>
@@ -455,33 +462,33 @@ namespace MFM {
   {
     corner = Dirs::CCWDir(corner);
     for(u32 i = 0; i < 3; i++)
-      {
-        m_connections[corner]->Unlock();
-        corner = Dirs::CWDir(corner);
-      }
+    {
+      m_connections[corner]->Unlock();
+      corner = Dirs::CWDir(corner);
+    }
   }
 
   template <class T, u32 R>
   void Tile<T,R>::UnlockRegion(Dir regionDir)
   {
     switch(regionDir)
-      {
-      case Dirs::NORTH:
-      case Dirs::EAST:
-      case Dirs::SOUTH:
-      case Dirs::WEST:
-        m_connections[regionDir]->Unlock();
-        return;
+    {
+    case Dirs::NORTH:
+    case Dirs::EAST:
+    case Dirs::SOUTH:
+    case Dirs::WEST:
+      m_connections[regionDir]->Unlock();
+      return;
 
-      case Dirs::NORTHWEST:
-      case Dirs::NORTHEAST:
-      case Dirs::SOUTHEAST:
-      case Dirs::SOUTHWEST:
-        return UnlockCorner(regionDir);
+    case Dirs::NORTHWEST:
+    case Dirs::NORTHEAST:
+    case Dirs::SOUTHEAST:
+    case Dirs::SOUTHWEST:
+      return UnlockCorner(regionDir);
 
-      default:
-        FAIL(ILLEGAL_ARGUMENT);
-      }
+    default:
+      FAIL(ILLEGAL_ARGUMENT);
+    }
   }
 
   template <class T, u32 R>
@@ -495,24 +502,24 @@ namespace MFM {
   TileRegion Tile<T,R>::RegionFromIndex(const u32 index)
   {
     if(index > TILE_WIDTH)
-      {
-        FAIL(ARRAY_INDEX_OUT_OF_BOUNDS); /* Index out of Tile bounds */
-      }
+    {
+      FAIL(ARRAY_INDEX_OUT_OF_BOUNDS); /* Index out of Tile bounds */
+    }
 
     const u32 hiddenWidth = TILE_WIDTH - R * 6;
 
     if(index < R * REGION_HIDDEN)
-      {
-        return (TileRegion)(index / R);
-      }
+    {
+      return (TileRegion)(index / R);
+    }
     else if(index >= R * REGION_HIDDEN + hiddenWidth)
-      {
-        return (TileRegion)((index - (R * REGION_HIDDEN) - hiddenWidth) / R);
-      }
+    {
+      return (TileRegion)((index - (R * REGION_HIDDEN) - hiddenWidth) / R);
+    }
     else
-      {
-        return REGION_HIDDEN;
-      }
+    {
+      return REGION_HIDDEN;
+    }
   }
 
   template <class T, u32 R>
@@ -528,77 +535,80 @@ namespace MFM {
     Packet<T> readPack(PACKET_WRITE);
     u32 readBytes;
     do
+    {
+      /* Flush out all packet buffers */
+      for(Dir dir = Dirs::NORTH; dir < Dirs::DIR_COUNT; ++dir)
       {
-        /* Flush out all packet buffers */
-        for(Dir dir = Dirs::NORTH; dir < Dirs::DIR_COUNT; ++dir)
-          {
-            if(IsConnected(dir))
-              {
-                while((readBytes = m_connections[dir]->Read(!IS_OWNED_CONNECTION(dir),
-                                                            (u8*)&readPack, sizeof(Packet<T>))))
-                  {
-                    if(readBytes != sizeof(Packet<T>))
-                      {
-                        FAIL(ILLEGAL_STATE); /* Didn't read enough for a full packet! */
-                      }
-                    if(dirWaitWord & (1 << dir))
-                      {
-                        if(readPack.GetType() == PACKET_EVENT_ACKNOWLEDGE)
-                          {
-                            /* FAIL(ILLEGAL_STATE);  Didn't get an acknowledgment right away */
-                            dirWaitWord &= (~(1 << dir));
-                          }
-                      }
-                    ReceivePacket(readPack);
-                  }
-              }
-          }
-        pthread_yield();
-        m_threadPauser.WaitIfPaused();
-      } while(dirWaitWord);
+	if(IsConnected(dir))
+	{
+	  while((readBytes = m_connections[dir]->Read(!IS_OWNED_CONNECTION(dir),
+						      (u8*)&readPack, sizeof(Packet<T>))))
+	  {
+	    if(readBytes != sizeof(Packet<T>))
+	    {
+	      FAIL(ILLEGAL_STATE); /* Didn't read enough for a full packet! */
+	    }
+	    if(dirWaitWord & (1 << dir))
+	    {
+	      if(readPack.GetType() == PACKET_EVENT_ACKNOWLEDGE)
+	      {
+		/* FAIL(ILLEGAL_STATE);  Didn't get an acknowledgment right away */
+		dirWaitWord &= (~(1 << dir));
+	      }
+	    }
+	    ReceivePacket(readPack);
+	  }
+	}
+      }
+      pthread_yield();
+      m_threadPauser.WaitIfPaused();
+    } while(dirWaitWord);
   }
 
   template <class T,u32 R>
   void Tile<T,R>::Execute()
   {
     while(m_threadInitialized)
-      {
-        /*Change to 0 if placing a window in a certain place*/
+    {
+      /*Change to 0 if placing a window in a certain place*/
 #if 1
-        CreateRandomWindow();
+      CreateRandomWindow();
 #else
-        SPoint winCenter(R * 2 - 1, R);
-        CreateWindowAt(winCenter);
+      SPoint winCenter(R * 2 - 1, R);
+      CreateWindowAt(winCenter);
 #endif
 
-        bool locked = false;
-        Dir lockRegion = Dirs::NORTH;
-        u32 dirWaitWord = 0;
-        if(IsInHidden(m_executingWindow.GetCenter()) ||
-           !IsConnected(lockRegion = SharedAt(m_executingWindow.GetCenter())) ||
-           (locked = LockRegion(lockRegion)))
+      bool locked = false;
+      Dir lockRegion = Dirs::NORTH;
+      u32 dirWaitWord = 0;
+      if(IsInHidden(m_executingWindow.GetCenter()) ||
+	 !IsConnected(lockRegion = SharedAt(m_executingWindow.GetCenter())) ||
+	 (locked = LockRegion(lockRegion)))
+	{
+	  elementTable.Execute(m_executingWindow);
+
+	  // XXX INSANE SLOWDOWN FOR DEBUG: AssertValidAtomCounts();
+
+	  m_executingWindow.FillCenter(m_lastExecutedAtom);
+
+	  dirWaitWord = SendRelevantAtoms();
+
+	  SendEndEventPackets(dirWaitWord);
+
+	  FlushAndWaitOnAllBuffers(dirWaitWord);
+
+	  ++m_eventsExecuted;
+	  ++m_regionEvents[RegionIn(m_executingWindow.GetCenter())];
+
+	  ++m_siteEvents[m_executingWindow.GetCenter().GetX() - R]
+	                [m_executingWindow.GetCenter().GetY() - R];
+
+	  if(locked)
           {
-            elementTable.Execute(m_executingWindow);
+	    UnlockRegion(lockRegion);
 
-            // XXX INSANE SLOWDOWN FOR DEBUG: AssertValidAtomCounts();
-
-            m_executingWindow.FillCenter(m_lastExecutedAtom);
-
-            dirWaitWord = SendRelevantAtoms();
-
-            SendEndEventPackets(dirWaitWord);
-
-            FlushAndWaitOnAllBuffers(dirWaitWord);
-
-            ++m_eventsExecuted;
-            ++m_regionEvents[RegionIn(m_executingWindow.GetCenter())];
-
-            if(locked)
-              {
-                UnlockRegion(lockRegion);
-
-                switch(lockRegion)
-                  {
+	    switch(lockRegion)
+	      {
                   case Dirs::NORTH: case Dirs::SOUTH:
                   case Dirs::EAST:  case Dirs::WEST:
                     ++m_regionEvents[LOCKTYPE_SINGLE]; break;
@@ -643,20 +653,19 @@ namespace MFM {
     }
     m_atomCount[idx] = count;
   }
-
   template <class T, u32 R>
   void Tile<T,R>::Start()
   {
     if(!m_threadInitialized)
-      {
-        AssertValidAtomCounts();
-        m_threadInitialized = true;
-        pthread_create(&m_thread, NULL, ExecuteThreadHelper, this);
-      }
+    {
+      AssertValidAtomCounts();
+      m_threadInitialized = true;
+      pthread_create(&m_thread, NULL, ExecuteThreadHelper, this);
+    }
     else
-      {
-        m_threadPauser.Unpause();
-      }
+    {
+      m_threadPauser.Unpause();
+    }
   }
 
   template <class T, u32 R>
@@ -687,23 +696,34 @@ namespace MFM {
   }
 
   template <class T, u32 R>
+  u64 Tile<T,R>::WriteEPSRasterLine(FILE* outstrm, u32 lineIdx)
+  {
+    u64 max = 0;
+    for(u32 x = 0; x < TILE_WIDTH - 2 * R; x++)
+    {
+      fprintf(outstrm, "%d ", (u32)m_siteEvents[x][lineIdx]);
+      max = MAX(max, m_siteEvents[x][lineIdx]);
+    }
+    return max;
+  }
+
+  template <class T, u32 R>
   void Tile<T,R>::AssertValidAtomCounts() const
   {
     s32 counts[ELEMENT_TABLE_SIZE];
     for (u32 i = 0; i < ELEMENT_TABLE_SIZE; ++i)
       counts[i] = 0;
-    for (u32 x = 0; x < OWNED_SIDE; ++x) 
+    for (u32 x = 0; x < OWNED_SIDE; ++x)
       for (u32 y = 0; y < OWNED_SIDE; ++y) {
         const Atom<T,R> * atom = GetUncachedAtom(x,y);
         s32 type = elementTable.GetIndex(atom->GetType());
         if (type < 0)
           FAIL(ILLEGAL_STATE);
         counts[type]++;
-      }
+    }
     for (u32 i = 0; i < ELEMENT_TABLE_SIZE; ++i)
       if (counts[i] != m_atomCount[i])
         FAIL(ILLEGAL_STATE);
   }
-
 
 } /* namespace MFM */

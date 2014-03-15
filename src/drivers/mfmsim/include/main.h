@@ -5,6 +5,7 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_ttf.h"
 #include "assert.h"
+#include "Camera.h"
 #include "EventWindow.h"
 #include "Element_Empty.h"
 #include "Element_Dreg.h"

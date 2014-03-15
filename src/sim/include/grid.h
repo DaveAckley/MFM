@@ -86,9 +86,16 @@ namespace MFM {
     inline const Tile<T,R> & GetTile(u32 x, u32 y) const
     { return m_tiles[x][y]; }
 
+    /* Don't count caches! */
+    inline const u32 GetTotalSites()
+    { return W * H * (TILE_WIDTH - R * 2) * (TILE_WIDTH - R * 2); }
+
     u64 GetTotalEventsExecuted();
-      
-    u32 GetTotalSites();
+
+    /* Returns the maximum written value */
+    u64 WriteEPSRaster(FILE* outstrm);
+
+    void ResetEPSCounts();
 
     u32 GetAtomCount(ElementType atomType);
   };
