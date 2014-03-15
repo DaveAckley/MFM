@@ -52,8 +52,14 @@ namespace MFM {
      */
     bool MapGridToTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const;
 
+    /**
+     * Return the Grid height in Tiles
+     */
     u32 GetHeight();
 
+    /**
+     * Return the Grid width in Tiles
+     */
     u32 GetWidth();
 
     void Pause();
