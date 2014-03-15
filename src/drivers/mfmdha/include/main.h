@@ -8,6 +8,7 @@
 #include "EventWindow.h"
 #include "Element_Empty.h"
 #include "Element_Boids1.h"
+#include "Element_Boids2.h"
 #include "Element_Res.h"
 #include "Element_Sorter.h"
 #include "Element_Emitter.h"
