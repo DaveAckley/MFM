@@ -14,16 +14,23 @@ namespace MFM {
     const u32 STR_BUFFER_SIZE = 128;
     char strBuffer[STR_BUFFER_SIZE];
 
+    const u32 ROW_HEIGHT = 20;
+    u32 baseY = 0;
+
     sprintf(strBuffer, "%8.3f kAEPS", aeps/1000.0);
 
-    Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 0),
-                      Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
+    Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
+                      Point<u32>(m_dimensions.GetX(), ROW_HEIGHT), 0xffffffff);
+    baseY += ROW_HEIGHT;
 
-    sprintf(strBuffer, "%8.3f AER", aer);
+    if (m_displayAER) {
+      sprintf(strBuffer, "%8.3f AER", aer);
+      Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
+                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT), 0xffffffff);
+      baseY += ROW_HEIGHT;
+    }
 
-    Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 20),
-                      Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
-
+    baseY += ROW_HEIGHT; // skip a line
     for (u32 i = 0; i < m_displayTypesInUse; ++i) {
       u32 type = m_displayTypes[i];
       const Element<T,R> * elt = grid.GetTile(SPoint(0,0)).GetElementTable().Lookup(type);
@@ -32,8 +39,9 @@ namespace MFM {
 
       snprintf(strBuffer, STR_BUFFER_SIZE, "%8d %s", typeCount, elt->GetName());
 
-      Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), 20*i+50),
-                        Point<u32>(m_dimensions.GetX(), 20), 0xffffffff);
+      Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
+                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT), 0xffffffff);
+      baseY += ROW_HEIGHT;
     }
   }
 } /* namespace MFM */

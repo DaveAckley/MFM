@@ -22,14 +22,20 @@ private:
   u32 m_displayTypes[MAX_TYPES];
   u32 m_displayTypesInUse;
 
+  bool m_displayAER;
+
   void DisplayTypeAt(u32 lineNum, u32 type) ;
 
 public:
 
-  StatsRenderer() : m_displayTypesInUse(0)
+  StatsRenderer() : m_displayTypesInUse(0), m_displayAER(false)
   {
     m_drawFont = TTF_OpenFont("UbuntuMono-R.ttf", 20);
   }
+
+  bool GetDisplayAER() const { return m_displayAER; }
+
+  void SetDisplayAER(bool displayAER) { m_displayAER = displayAER; }
 
   bool DisplayStatsForType(u32 type) ;
 
