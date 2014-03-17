@@ -12,7 +12,6 @@
 #include "Connection.h"
 #include "ThreadPauser.h"
 
-
 namespace MFM {
 
   /** The full length, in sites, of a Tile, including neighbor
@@ -313,6 +312,11 @@ namespace MFM {
      * Constructs a new Tile.
      */
     Tile();
+
+    /**
+     * Reinitializes a Tile to a like-new (actually, like-OnceOnlyInit()ed) state.
+     */
+    void Reinit();
 
     /**
      * Connects another Tile to one of this Tile's caches.

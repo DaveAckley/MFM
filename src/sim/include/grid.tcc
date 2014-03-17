@@ -5,8 +5,17 @@
 namespace MFM {
 
   template <class T,u32 R,u32 W, u32 H>
-  Grid<T,R,W,H>::Grid() : m_width(W), m_height(H)
+  Grid<T,R,W,H>::Grid() : m_seed(0), m_width(W), m_height(H)
   {
+  }
+
+  template <class T,u32 R,u32 W, u32 H>
+  void Grid<T,R,W,H>::Reinit() {
+
+    /* Reseed grid PRNG and push seeds to the tile PRNGs */
+    ReinitSeed();
+
+    /* Reinit all the tiles */
 
     /* Set the neighbors flags of each tile. This lets the tiles know */
     /* if any of its caches are dead and should not be written to.    */
@@ -16,6 +25,9 @@ namespace MFM {
       for(u32 y = 0; y < m_height; y++)
       {
 	Tile<T,R>& ctile = GetTile(x, y);
+
+        ctile.Reinit();
+
 	neighbors = 0;
 	if(x > 0)
         {
@@ -64,7 +76,16 @@ namespace MFM {
   template <class T,u32 R,u32 W, u32 H>
   void Grid<T,R,W,H>::SetSeed(u32 seed)
   {
-    m_random.SetSeed(seed);
+    m_seed = seed;
+  }
+
+  template <class T,u32 R,u32 W, u32 H>
+  void Grid<T,R,W,H>::ReinitSeed()
+  {
+    if (m_seed==0)  // SetSeed must have been called by now!
+      FAIL(ILLEGAL_STATE);
+
+    m_random.SetSeed(m_seed);
     for(u32 i = 0; i < W; i++)
       for(u32 j = 0; j < H; j++)
         {

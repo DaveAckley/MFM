@@ -5,8 +5,18 @@
 namespace MFM {
 
   template <class T, u32 R>
-  Tile<T,R>::Tile() : m_eventsExecuted(0), m_executingWindow(*this)
+  Tile<T,R>::Tile() : m_executingWindow(*this)
   {
+    Reinit();
+  }
+
+  template <class T, u32 R>
+  void Tile<T,R>::Reinit() 
+  {
+    elementTable.Reinit();
+
+    m_eventsExecuted = 0;
+
     for(u32 i = 0; i < ELEMENT_TABLE_SIZE; i++)
     {
       m_atomCount[i] = 0;

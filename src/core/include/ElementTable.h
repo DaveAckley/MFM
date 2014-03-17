@@ -18,6 +18,11 @@ namespace MFM {
   public:
     static const u32 SIZE = 1u<<B;
 
+    /**
+     * Reinitialize this ElementTable to empty.
+     */
+    void Reinit() ;
+
     void Insert(const Element<T,R> & theElement) ;
 
     u32 GetSize() const {
@@ -32,8 +37,6 @@ namespace MFM {
     s32 GetIndex(u32 elementType) const ; 
 
     ElementTable();
-
-    //  static ElementTable<T,R> & get();
 
     ~ElementTable() { }
 

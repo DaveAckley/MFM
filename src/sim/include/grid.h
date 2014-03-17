@@ -13,7 +13,10 @@ namespace MFM {
   {
   private:
     Random m_random;
-    Random& GetRandom() { return m_random; }
+
+    u32 m_seed;
+
+    void ReinitSeed();
 
     const u32 m_width, m_height;
 
@@ -27,14 +30,17 @@ namespace MFM {
     { return x + y * m_width; }
 
   public:
+    Random& GetRandom() { return m_random; }
 
     friend class GridRenderer;
 
+    void SetSeed(u32 seed);
+
     Grid();
 
-    void Needed(const Element<T,R> & anElement) ;
+    void Reinit();
 
-    void SetSeed(u32 seed);
+    void Needed(const Element<T,R> & anElement) ;
 
     ~Grid();
 
