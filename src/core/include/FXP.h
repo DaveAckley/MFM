@@ -272,22 +272,22 @@ namespace MFM {
   // no default implementation
 
   template <int p>
-  inline FXP<p> sin(FXP<p> a);
+  inline FXP<p> Sin(FXP<p> a);
 
   template <int p>
-  inline FXP<p> cos(FXP<p> a);
+  inline FXP<p> Cos(FXP<p> a);
 
   template <int p>
-  inline FXP<p> sqrt(FXP<p> a);
+  inline FXP<p> Sqrt(FXP<p> a);
 
   template <int p>
-  inline FXP<p> rsqrt(FXP<p> a);
+  inline FXP<p> Rsqrt(FXP<p> a);
 
   template <int p>
-  inline FXP<p> inv(FXP<p> a);
+  inline FXP<p> Inv(FXP<p> a);
 
   template <int p>
-  inline FXP<p> abs(FXP<p> a)
+  inline FXP<p> Abs(FXP<p> a)
   { 
     FXP<p> r; 
     r.intValue = a.intValue > 0 ? a.intValue : -a.intValue; 
@@ -297,7 +297,7 @@ namespace MFM {
   // specializations for 16.16 format
 
   template <>
-  inline FXP<16> sin(FXP<16> a)
+  inline FXP<16> Sin(FXP<16> a)
   {
     FXP<16> r;
     r.intValue = fixsin16(a.intValue);
@@ -305,7 +305,7 @@ namespace MFM {
   }
 
   template <>
-  inline FXP<16> cos(FXP<16> a)
+  inline FXP<16> Cos(FXP<16> a)
   {
     FXP<16> r;
     r.intValue = fixcos16(a.intValue);
@@ -314,7 +314,7 @@ namespace MFM {
 
 
   template <>
-  inline FXP<16> sqrt(FXP<16> a)
+  inline FXP<16> Sqrt(FXP<16> a)
   {
     FXP<16> r;
     r.intValue = fixsqrt16(a.intValue);
@@ -322,7 +322,7 @@ namespace MFM {
   }
 
   template <>
-  inline FXP<16> rsqrt(FXP<16> a)
+  inline FXP<16> Rsqrt(FXP<16> a)
   {
     FXP<16> r;
     r.intValue = fixrsqrt16(a.intValue);
@@ -330,7 +330,7 @@ namespace MFM {
   }
 
   template <>
-  inline FXP<16> inv(FXP<16> a)
+  inline FXP<16> Inv(FXP<16> a)
   {
     FXP<16> r;
     r.intValue = fixinv<16>(a.intValue);

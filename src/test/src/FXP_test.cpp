@@ -194,7 +194,7 @@ namespace MFM {
     assertClose(s,a);
     assertClose(t,b);
     
-    a = ::sqrt(b*a);  s = sqrt(t*s);      
+    a = sqrt(b*a);  s = Sqrt(t*s);      
 
     assertFar(s,a);
     
@@ -232,7 +232,7 @@ namespace MFM {
     a = s.toDouble(); 
     b = t.toDouble();
     
-    a = ::sqrt(a);  s = sqrt(s);      
+    a = sqrt(a);  s = Sqrt(s);      
 
     assertFar(s,a);
     
@@ -250,7 +250,7 @@ namespace MFM {
     a = s.toDouble(); 
     b = t.toDouble();
 
-    a = ::sin(a); s = sin(s);
+    a = sin(a); s = Sin(s);
 
     assertFar(s,a);
     
