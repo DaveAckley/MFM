@@ -4,6 +4,7 @@
 #include <sys/stat.h>  /* for mkdir */
 #include <sys/types.h> /* for mkdir */
 #include "Utils.h"     /* for GetDateTimeNow */
+#include <png.h>
 
 /* libpng is ghetto and needs these */
 static void libpng_warning(png_structp context, png_const_charp msg)

@@ -14,7 +14,7 @@ namespace MFM {
     const u32 STR_BUFFER_SIZE = 128;
     char strBuffer[STR_BUFFER_SIZE];
 
-    const u32 ROW_HEIGHT = 20;
+    const u32 ROW_HEIGHT = 30;
     u32 baseY = 0;
 
     sprintf(strBuffer, "%8.3f kAEPS", aeps/1000.0);

@@ -28,9 +28,14 @@ private:
 
 public:
 
-  StatsRenderer() : m_displayTypesInUse(0), m_displayAER(false)
+  StatsRenderer() : m_drawFont(0), m_displayTypesInUse(0), m_displayAER(false)
   {
-    m_drawFont = TTF_OpenFont("UbuntuMono-R.ttf", 20);
+  }
+
+  void OnceOnly() {
+    m_drawFont = TTF_OpenFont("UbuntuMono-R.ttf", 30);
+    if (!m_drawFont)
+      FAIL(ILLEGAL_STATE);
   }
 
   bool GetDisplayAER() const { return m_displayAER; }

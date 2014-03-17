@@ -1,11 +1,8 @@
 #ifndef CAMERA_H     /* -*- C++ -*- */
 #define CAMERA_H
 
-#include <stdlib.h>
-#include <png.h>
-#include <SDL/SDL.h>
-
 #include "itype.h"
+#include <SDL/SDL.h>
 
 namespace MFM
 {
