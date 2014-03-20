@@ -16,8 +16,6 @@ class EventWindow
 {
 private:
 
-  //  typedef u32 (* StateFunction )(T* atom);
-
   Tile<T,R> & m_tile;
 
   SPoint m_center;
@@ -26,6 +24,10 @@ public:
   Random & GetRandom() { return m_tile.GetRandom(); }
 
   Tile<T,R>& GetTile() { return m_tile; }
+
+  bool IsLiveSite(const SPoint & location) {
+    return m_tile.IsLiveSite(location-m_center);
+  }
 
   EventWindow(Tile<T,R> & tile, u32 tileWidth, u8 neighborConnections);
 

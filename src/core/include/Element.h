@@ -20,17 +20,14 @@ namespace MFM
   class Element
   {
   private:
-    
-  protected:
 
-    static SPoint VNNeighbors[4];
-    
-    void FlipSEPointToCorner(SPoint& readPt, SPoint& outPt, Dir corner) const;
+  protected:
+    static const SPoint VNNeighbors[4];
 
     bool FillAvailableVNNeighbor(EventWindow<T,R>& window, SPoint& pt) const;
 
     bool FillPointWithType(EventWindow<T,R>& window, 
-			   SPoint& pt, SPoint* relevants, u32 relevantCount,
+			   SPoint& pt, const SPoint* relevants, u32 relevantCount,
 			   Dir rotation, ElementType type) const;
       
     void Diffuse(EventWindow<T,R>& window) const;

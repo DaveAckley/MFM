@@ -89,6 +89,19 @@ namespace MFM {
     static void FillDir(SPoint& pt, Dir dir);
 
     static Dir FromOffset(SPoint& pt);
+
+    static inline SPoint & FlipXAxis(SPoint & pt) {
+      pt.SetX(-pt.GetX());
+      return pt;
+    }
+
+    static inline SPoint & FlipYAxis(SPoint & pt) {
+      pt.SetY(-pt.GetY());
+      return pt;
+    }
+
+    static SPoint FlipSEPointToCorner(const Point<s32>& pt, const Dir corner);
+
   };
 
 } /* namespace MFM */

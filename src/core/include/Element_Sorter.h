@@ -24,6 +24,8 @@ namespace MFM
     static const u32 STATE_THRESHOLD_LEN = 32;
     static const u32 STATE_BITS = STATE_THRESHOLD_LEN;
 
+    static const SPoint m_southeastSubwindow[4];
+
     Element_Sorter() { }
     
     u32 GetThreshold(const T &atom, u32 badType) const {
@@ -47,8 +49,9 @@ namespace MFM
 				     SPoint& pt, Dir subwindow, ElementType type) const
     {
       return this->FillPointWithType(window, pt, 
-                                     MDist<R>::get().GetSESubWindow(), 
-                                     ((R*R)/4), subwindow, type);
+                                     m_southeastSubwindow,
+                                     sizeof(m_southeastSubwindow)/sizeof(m_southeastSubwindow[0]),
+                                     subwindow, type);
     }
 
     virtual u32 DefaultPhysicsColor() const 
@@ -115,6 +118,11 @@ namespace MFM
 
   template <class T, u32 R>
   Element_Sorter<T,R> Element_Sorter<T,R>::THE_INSTANCE;
+
+  template <class T, u32 R>
+  const SPoint Element_Sorter<T,R>::m_southeastSubwindow[4] = {
+    SPoint(1,1),SPoint(1,2),SPoint(2,1),SPoint(2,2)
+  };
 
   /*
   template <class T, u32 R>

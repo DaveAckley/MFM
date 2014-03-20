@@ -16,17 +16,7 @@ namespace MFM {
       {
         srcPt = MDist<R>::get().GetSEWindowPoint((startIdx + i) % R);
 
-        switch(corner)
-          {
-          case Dirs::SOUTHEAST: break;
-          case Dirs::NORTHEAST: MDist<R>::get().FlipAxis(srcPt, false); break;
-          case Dirs::SOUTHWEST: MDist<R>::get().FlipAxis(srcPt, true); break;
-          case Dirs::NORTHWEST:
-            MDist<R>::get().FlipAxis(srcPt, true);
-            MDist<R>::get().FlipAxis(srcPt, false);
-            break;
-          default: FAIL(ILLEGAL_ARGUMENT); break;
-          }
+        srcPt = Dirs::FlipSEPointToCorner(srcPt,corner);
 
         if(f(&window.GetRelativeAtom(srcPt)) == type)
           {
@@ -36,22 +26,6 @@ namespace MFM {
       }
 
     return false;
-  }
-
-  template <class T, u32 R, u32 B>
-  void ElementTable<T,R,B>::FlipSEPointToCorner(Point<s32>& pt, Dir corner)
-  {
-    switch(corner)
-      {
-      case Dirs::SOUTHEAST: break;
-      case Dirs::NORTHEAST: MDist<R>::get().FlipAxis(pt, false); break;
-      case Dirs::SOUTHWEST: MDist<R>::get().FlipAxis(pt, true); break;
-      case Dirs::NORTHWEST:
-        MDist<R>::get().FlipAxis(pt, true);
-        MDist<R>::get().FlipAxis(pt, false);
-        break;
-      default: FAIL(ILLEGAL_ARGUMENT); break;
-      }
   }
 
   /* Fills 'indices' with the indices of a Sub-windows of all       */
@@ -71,7 +45,7 @@ namespace MFM {
       {
         srcPt = MDist<R>::get().GetSEWindowPoint(i);
 
-        FlipSEPointToCorner(srcPt, corner);
+        srcPt = Dirs::FlipSEPointToCorner(srcPt, corner);
 
         if(f(&window.GetRelativeAtom(srcPt)) == type)
           {
