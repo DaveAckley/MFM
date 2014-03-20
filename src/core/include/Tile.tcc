@@ -595,7 +595,13 @@ namespace MFM {
 	 !IsConnected(lockRegion = SharedAt(m_executingWindow.GetCenter())) ||
 	 (locked = LockRegion(lockRegion)))
 	{
-	  elementTable.Execute(m_executingWindow);
+          unwind_protect({
+              ++m_eventsFailed;
+              ++m_failuresErased;
+              m_executingWindow.SetCenterAtom(Element_Empty<T,R>::THE_INSTANCE.GetDefaultAtom());
+            },{
+              elementTable.Execute(m_executingWindow);
+            });
 
 	  // XXX INSANE SLOWDOWN FOR DEBUG: AssertValidAtomCounts();
 

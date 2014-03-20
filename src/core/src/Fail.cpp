@@ -21,4 +21,6 @@ extern "C" {
     fprintf(stderr,"%s:%d: FAILED: %s\n", fname, lineno, MFMFailCodeReason(code));
     abort();
   }
+
+  MFMErrorEnvironment * MFMErrorEnvironmentStackTop = 0;
 }

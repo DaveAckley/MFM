@@ -71,6 +71,14 @@ namespace MFM {
 	initialization. */
     u64 m_eventsExecuted;
 
+    /** The number of event failures during execution in this Tile
+	since initialization. */
+    u64 m_eventsFailed;
+
+    /** The number of the event failures resolved by erasing the
+	center atom, in this Tile since initialization. */
+    u64 m_failuresErased;
+
     /**
      * The number of events executed in this Tile since
      * initialization. Counts here are indexed by TileRegion, i.e.
