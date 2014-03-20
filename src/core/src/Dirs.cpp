@@ -3,6 +3,22 @@
 
 
 namespace MFM {
+
+  SPoint Dirs::FlipSEPointToCorner(const Point<s32>& pt, const Dir corner)
+  {
+    SPoint out = pt;
+    switch(corner)
+      {
+      case Dirs::SOUTHEAST: break;
+      case Dirs::NORTHEAST: FlipYAxis(out); break;
+      case Dirs::SOUTHWEST: FlipXAxis(out); break;
+      case Dirs::NORTHWEST: FlipXAxis(out); FlipYAxis(out); break;
+      default: FAIL(ILLEGAL_ARGUMENT); break;
+      }
+    return out;
+  }
+
+
   void Dirs::FillDir(SPoint& pt, u32 dir)
   {
     switch(dir)
