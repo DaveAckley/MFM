@@ -8,5 +8,11 @@ program:	$(BINDIR)/$(COMPONENTNAME)
 # Get rules to build our main.o
 include $(BASEDIR)/config/Makelib.mk
 
-$(BINDIR)/$(COMPONENTNAME):	$(BUILDDIR)/main.o $(ALLDEP)
+# We don't have functioning interlibrary dependency tracking because
+# we're losers.  For now say that if any .a files are touched, we need
+# to relink
+
+ARCHIVES := $(wildcard $(BASEDIR)/build/*/*.a)
+
+$(BINDIR)/$(COMPONENTNAME):	$(BUILDDIR)/main.o $(ALLDEP) $(ARCHIVES)
 	$(GPP) $(BUILDDIR)/main.o $(LIBS) -o $@

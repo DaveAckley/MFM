@@ -1,5 +1,5 @@
-# For now, we'll assume we're building the simulator only
-PLATFORMS=sim
+# For now, we'll assume we're building on linux only
+PLATFORMS=linux
 
 .PHONY:	$(PLATFORMS) all clean realclean
 
@@ -13,4 +13,4 @@ realclean:  $(PLATFORMS)
 
 # Pass each entry in PLATFORMS down as a target
 $(PLATFORMS):
-	export TARGET=$@;$(MAKE) -C src $(MAKECMDGOALS)
+	export MFM_TARGET=$@;$(MAKE) -C src $(MAKECMDGOALS)

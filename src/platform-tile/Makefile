@@ -1,5 +1,5 @@
 # Who we are
-COMPONENTNAME:=core
+COMPONENTNAME:=platform-tile
 
 # Where's the top
 BASEDIR:=../..

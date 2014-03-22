@@ -17,10 +17,4 @@ extern "C" {
     return FailStrings[failCode];
   }
 
-  void MFMFailHere(const char * fname, const int lineno, int code) {
-    fprintf(stderr,"%s:%d: FAILED: %s\n", fname, lineno, MFMFailCodeReason(code));
-    abort();
-  }
-
-  MFMErrorEnvironment * MFMErrorEnvironmentStackTop = 0;
 }

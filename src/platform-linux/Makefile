@@ -1,5 +1,5 @@
 # Who we are
-COMPONENTNAME:=core
+COMPONENTNAME:=platform-linux
 
 # Where's the top
 BASEDIR:=../..
