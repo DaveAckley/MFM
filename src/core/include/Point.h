@@ -33,8 +33,10 @@ public:
 
   T GetY() const;
 
-  u32 GetManhattanDistance() const;  // Would prefer 'unsigned T' return type but not using C++0x type_traits
-  double GetLength() const;
+  u32 GetManhattanLength() const;  // Would prefer 'unsigned T' return type but not using C++0x type_traits
+  u32 GetMaximumLength() const;    
+
+  double GetEuclideanLength() const;
 
   void Add(const Point<T>& offset);
 

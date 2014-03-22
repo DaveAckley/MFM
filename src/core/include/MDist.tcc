@@ -33,7 +33,7 @@ namespace MFM {
           p.Subtract(center);
 
           // And accumulate points of the given length
-          if (p.GetManhattanDistance()==length) {
+          if (p.GetManhattanLength()==length) {
             m_indexToPoint[next] = p;
             m_pointToIndex[x][y] = next;
             ++next;
