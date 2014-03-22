@@ -1,9 +1,6 @@
 #include "Camera.h"
 
 #include <stdlib.h>    /* for malloc, free */
-#include <sys/stat.h>  /* for mkdir */
-#include <sys/types.h> /* for mkdir */
-#include "Utils.h"     /* for GetDateTimeNow */
 #include <png.h>
 
 /* libpng is ghetto and needs these */
@@ -33,45 +30,22 @@ namespace MFM
     return m_recording;
   }
 
-  const static char* VID_DIR = "vids";
-
   void Camera::SetRecording(bool recording)
   {
     m_recording = recording;
     if(recording)
     {
-      /* Video directory = now */
-      u64 startTime = GetDateTimeNow();
-
-      /* Let's make the video directory */
-      mkdir(VID_DIR, 0777);
-
-      /* Now our particular video directory */
-      snprintf(m_current_vid_dir, VIDEO_NAME_MAX_LENGTH,
-	       "%s/%ld", VID_DIR, startTime);
-
-      mkdir(m_current_vid_dir, 0777);
-
       m_currentFrame = 0;
     }
   }
 
-  void Camera::DrawSurface(SDL_Surface* sfc)
+  bool Camera::DrawSurface(SDL_Surface* sfc, const char * pngDirPath) const
   {
-    if(m_recording)
-    {
-      char frameName[VIDEO_NAME_MAX_LENGTH * 2];
-      snprintf(frameName, VIDEO_NAME_MAX_LENGTH * 2,
-	       "%s/%08d.png", m_current_vid_dir, m_currentFrame++);
+    // m_currentFrame++
+    bool ret = SavePNG(pngDirPath, sfc);
 
-      if(SavePNG(frameName, sfc))
-      {
-	/* There was an error D: Let's stop recording. */
-	m_recording = false;
-      }
-    }
-
-    SDL_Flip(sfc);
+    //    SDL_Flip(sfc);
+    return ret;
   }
 
   // Currently unused..
@@ -91,7 +65,7 @@ namespace MFM
     return ctype;
   }
 
-  u32 Camera::SavePNG(char* filename, SDL_Surface* sfc)
+  u32 Camera::SavePNG(const char* filename, SDL_Surface* sfc) const
   {
     FILE* fp = fopen(filename, "wb");
     if(fp == NULL)
