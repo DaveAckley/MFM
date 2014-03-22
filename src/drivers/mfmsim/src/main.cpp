@@ -2,8 +2,10 @@
 
 namespace MFM {
 
-  class MFMSimDHSDemo : public AbstractDriver<P1Atom,5,3,4>
+  struct MFMSimDHSDemo : public AbstractDriver<P1Atom,5,3,4>
   {
+    MFMSimDHSDemo(DriverArguments& args) : AbstractDriver(args) { }
+
     virtual void ReinitPhysics() {
       OurGrid & mainGrid = GetGrid();
 
@@ -71,9 +73,8 @@ int main(int argc, char** argv)
 {
   MFM::DriverArguments args(argc,argv);
 
-  MFM::MFMSimDHSDemo sim;
+  MFM::MFMSimDHSDemo sim(args);
 
-  sim.SetSeed(args.GetSeed());
   sim.Reinit();
 
   sim.Run();

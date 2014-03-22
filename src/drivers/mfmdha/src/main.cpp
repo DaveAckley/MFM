@@ -2,8 +2,12 @@
 
 namespace MFM {
 
-  class MFMSimCloudDemo : public AbstractDriver<P1Atom,5,3,4>
+  struct MFMSimCloudDemo : public AbstractDriver<P1Atom,5,3,4>
   {
+    MFMSimCloudDemo(DriverArguments & args) 
+      : AbstractDriver(args) 
+    {
+    }
 
     virtual void ReinitPhysics() {
       OurGrid & mainGrid = GetGrid();
@@ -37,12 +41,14 @@ namespace MFM {
       SPoint eloc(GRID_WIDTH*realWidth-2, 10);
       SPoint cloc(1, 10);
 
-      for(u32 x = 0; x < mainGrid.GetWidth()*realWidth; x+=4) {
-        for(u32 y = 0; y < mainGrid.GetHeight()*realWidth; y+=4) {
+      u32 wid = mainGrid.GetWidth()*realWidth;
+      u32 hei = mainGrid.GetHeight()*realWidth;
+      for(u32 x = 7*wid/16; x < 9*wid/16; x+=2) {
+        for(u32 y = 7*hei/16; y < 9*hei/16; y+=2) {
           aloc.Set(x,y);
           sloc.Set(x+1,y+1);
 
-          if (mainGrid.GetRandom().OneIn(2))
+          if (((x+y)/2)&1)
             mainGrid.PlaceAtom(aBoid1, aloc);
           else
             mainGrid.PlaceAtom(aBoid2, aloc);
@@ -57,9 +63,8 @@ int main(int argc, char** argv)
 {
   MFM::DriverArguments args(argc,argv);
 
-  MFM::MFMSimCloudDemo sim;
+  MFM::MFMSimCloudDemo sim(args);
 
-  sim.SetSeed(args.GetSeed());
   sim.Reinit();
 
   sim.Run();

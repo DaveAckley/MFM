@@ -1,6 +1,10 @@
 #ifndef ABSTRACTDRIVER_H   /* -*- C++ -*- */
 #define ABSTRACTDRIVER_H
 
+#include <sys/stat.h>  /* for mkdir */
+#include <sys/types.h> /* for mkdir */
+#include <errno.h>     /* for errno */
+#include "Utils.h"     /* for GetDateTimeNow */
 #include "itype.h"
 #include "grid.h"
 #include "gridrenderer.h"
@@ -27,6 +31,9 @@ namespace MFM {
 
 #define STATS_WINDOW_WIDTH 256
 
+#define MAX_PATH_LENGTH 1000
+#define MIN_PATH_RESERVED_LENGTH 100
+
   template<class ATOM, u32 WIDTH, u32 HEIGHT, u32 RADIUS>
   class AbstractDriver
   {
@@ -40,6 +47,15 @@ namespace MFM {
     typedef ElementTable<ATOM,EVENT_WINDOW_RADIUS,ELEMENT_TABLE_BITS> OurElementTable;
 
   private:
+    char m_simDirBasePath[MAX_PATH_LENGTH];
+    u32 m_simDirBasePathLength;
+
+    char * GetSimDirPathTemporary(const char * format, ...) {
+      va_list ap;
+      va_start(ap,format);
+      vsnprintf(m_simDirBasePath+m_simDirBasePathLength, MAX_PATH_LENGTH-1, format, ap);
+      return m_simDirBasePath;
+    }
 
     OurGrid mainGrid;
 
@@ -47,12 +63,15 @@ namespace MFM {
 
     bool renderStats;
 
-    u32 m_seed;
-
     u32 m_eventsPerFrame;
     double m_AER;
     double m_AEPS;
     u64 m_msSpentRunning;
+
+    s32 m_recordEventCountsPerAEPS;
+    s32 m_recordScreenshotPerAEPS;
+    u32 m_nextEventCountsAEPS;
+    u32 m_nextScreenshotAEPS;
 
     Mouse mouse;
     Keyboard keyboard;
@@ -151,7 +170,7 @@ namespace MFM {
           else
             {
               m_grend.SetDimensions(Point<u32>(m_screenWidth - STATS_WINDOW_WIDTH,
-                                             m_screenHeight));
+                                               m_screenHeight));
             }
         }
       if(keyboard.IsDown(SDLK_RIGHT))
@@ -182,12 +201,18 @@ namespace MFM {
           m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
           m_AER = 1000 * (m_AEPS / m_msSpentRunning);
 
-          /* Meh, only half of a PPM. We can fix it manually for now. */
-          FILE* fp = fopen("output.ppm", "w");
+          if (m_recordEventCountsPerAEPS > 0) {
+            if (m_AEPS >= m_nextEventCountsAEPS) {
 
-          printf("Max Site Event: %d\n", (u32)grid.WriteEPSRaster(fp));
+              char buf[100];
+              snprintf(buf,100,"%10d-EPS.ppm",m_nextEventCountsAEPS);
+              FILE* fp = fopen(buf, "w");
+              grid.WriteEPSImage(fp);
+              fclose(fp);
 
-          fclose(fp);
+              m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
+            }
+          }
         }
 
       mouse.Flip();
@@ -196,20 +221,55 @@ namespace MFM {
 
   public:
 
-    AbstractDriver()
+    AbstractDriver(DriverArguments & args)
     {
-      OnceOnly();
+      OnceOnly(args);
     }
 
-    void OnceOnly() 
+    void OnceOnly(DriverArguments & args) 
     {
+      const char * dirPath = args.GetDataDirPath();
+      if (dirPath == 0) dirPath = "/tmp";
+
+      /* Try to make the main dir */
+      if (mkdir(dirPath,0777) != 0) {
+        /* If it died because it's already there we'll let it ride.. */
+        if (errno != EEXIST) 
+          args.Die("Couldn't make directory '%s': %s",dirPath,strerror(errno));
+      }
+
+      /* Sim directory = now */
+      u64 startTime = GetDateTimeNow();
+
+      /* Get the master simulation data directory */
+      snprintf(m_simDirBasePath, MAX_PATH_LENGTH-1,
+	       "%s/%ld/", dirPath, startTime);
+
+      m_simDirBasePathLength = strlen(m_simDirBasePath);
+      if (m_simDirBasePathLength >= MAX_PATH_LENGTH-MIN_PATH_RESERVED_LENGTH)
+        args.Die("Path name too long '%s'",dirPath);
+
+      /* Make the std subdirs under it */
+      const char * (subs[]) = { "", "vid", "eps" };
+      for (u32 i = 0; i < sizeof(subs)/sizeof(subs[0]); ++i) {
+        const char * path = GetSimDirPathTemporary("%s", subs[i]);
+        if (mkdir(path, 0777) != 0)
+          args.Die("Couldn't make simulation sub directory '%s': %s",path,strerror(errno));
+      }
+
       m_screenWidth = SCREEN_INITIAL_WIDTH;
       m_screenHeight = SCREEN_INITIAL_HEIGHT;
 
       m_eventsPerFrame = EVENTS_PER_FRAME;
       m_AEPS = 0;
       m_msSpentRunning = 0;
-      m_seed = 0;  
+
+      m_recordEventCountsPerAEPS = args.GetRecordEventCountsPerAEPS();
+      m_recordScreenshotPerAEPS = args.GetRecordScreenshotPerAEPS();
+
+      u32 seed = args.GetSeed();
+      if (seed==0) seed = time(0);
+      SetSeed(seed);
 
       SDL_Init(SDL_INIT_EVERYTHING);
       TTF_Init();
@@ -225,7 +285,14 @@ namespace MFM {
       mainGrid.SetSeed(seed);
     }
 
+    void ReinitUs() {
+      m_nextEventCountsAEPS = 0;
+      m_nextScreenshotAEPS = 0;
+    }
+
     void Reinit() {
+      ReinitUs();
+
       mainGrid.Reinit();
 
       mainGrid.Needed(Element_Empty<P1Atom, 4>::THE_INSTANCE);
@@ -273,23 +340,26 @@ namespace MFM {
 
     void Run()
     {
+      unwind_protect({
+          MFMPrintErrorEnvironment(stderr,&unwindProtect_errorEnvironment);
+          fprintf(stderr, "Failure reached top-level!  Aborting\n");
+          abort();
+        }, {
+          RunHelper(); 
+        });
+    }
+
+    void RunHelper() 
+    {
       paused = true;
 
       bool running = true;
       screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32,
                                 SDL_SWSURFACE | SDL_RESIZABLE);
-    if (screen == 0) 
-      FAIL(ILLEGAL_STATE);
+      if (screen == 0) 
+        FAIL(ILLEGAL_STATE);
 
-    SDL_Event event;
-#if 0
-      for (u32 y = 0; y < mainGrid.GetHeight(); ++y) {
-        for (u32 x = 0; x < mainGrid.GetWidth(); ++x) {
-          fprintf(stderr,"  (%2d,%2d):%p",x,y,(void*) &mainGrid.GetTile(SPoint(x,y)));
-        }
-        fprintf(stderr,"\n");
-      }
-#endif
+      SDL_Event event;
 
       m_grend.SetDestination(screen);
       m_grend.SetDimensions(UPoint(m_screenWidth,m_screenHeight));
@@ -350,7 +420,17 @@ namespace MFM {
               m_srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER);
             }
 
-          camera.DrawSurface(screen);
+          if (m_recordScreenshotPerAEPS > 0) {
+            if (m_AEPS >= m_nextScreenshotAEPS) {
+
+              const char * path = GetSimDirPathTemporary("vid/%010d.png", m_nextScreenshotAEPS);
+
+              camera.DrawSurface(screen,path);
+
+              m_nextScreenshotAEPS += m_recordScreenshotPerAEPS;
+            }
+          }
+          SDL_Flip(screen);
         }
 
       SDL_FreeSurface(screen);
