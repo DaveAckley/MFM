@@ -1,0 +1,5 @@
+#ifndef FAILPLATFORMSPECIFIC_H      /* -*- C++ -*- */
+#define FAILPLATFORMSPECIFIC_H
+
+#endif /*FAILPLATFORMSPECIFIC_H*/
+

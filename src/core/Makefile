@@ -5,7 +5,7 @@ COMPONENTNAME:=core
 BASEDIR:=../..
 
 # What we need from outside
-INCLUDES += -lpthread
+INCLUDES += 
 
 # Do the library thing
 include $(BASEDIR)/config/Makelib.mk

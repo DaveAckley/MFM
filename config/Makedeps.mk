@@ -1,6 +1,11 @@
-# We need a kickstart rule to get .d files going, before their first real compile-time generation:
-$(BUILDDIR)/%.d:	
-	@mkdir -p $(BUILDDIR)
+# We need a kickstart rule to get .d files going, before their first
+# real compile-time generation.  So make empty .d's, if they don't
+# already exist.
+$(BUILDDIR)/%.d:	$(BUILDDIR)
+	@[ -e $@ ] || >$@
+
+$(BUILDDIR):	
+	@mkdir -p $@
 
 # After we make .d's, let's keep them
 .PRECIOUS:	$(BUILDDIR)/%.d

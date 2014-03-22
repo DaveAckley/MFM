@@ -24,6 +24,8 @@ namespace MFM
     static const u32 STATE_THRESHOLD_LEN = 32;
     static const u32 STATE_BITS = STATE_THRESHOLD_LEN;
 
+    static const SPoint m_southeastSubwindow[4];
+
     Element_Sorter() { }
     
     u32 GetThreshold(const T &atom, u32 badType) const {
@@ -47,8 +49,9 @@ namespace MFM
 				     SPoint& pt, Dir subwindow, ElementType type) const
     {
       return this->FillPointWithType(window, pt, 
-                                     MDist<R>::get().GetSESubWindow(), 
-                                     ((R*R)/4), subwindow, type);
+                                     m_southeastSubwindow,
+                                     sizeof(m_southeastSubwindow)/sizeof(m_southeastSubwindow[0]),
+                                     subwindow, type);
     }
 
     virtual u32 DefaultPhysicsColor() const 
@@ -60,13 +63,11 @@ namespace MFM
     {
       Random & random = window.GetRandom();
       SPoint reproducePt;
+      T self = window.GetCenterAtom();
       if(this->FillPointWithType(window, reproducePt,
                                  Element<T,R>::VNNeighbors, 4, Dirs::SOUTHEAST, Element_Res<T,R>::TYPE))
       {
-        T newAtom = this->GetDefaultAtom();
-        u32 myThresh = GetThreshold(window.GetCenterAtom(),0);
-        SetThreshold(newAtom,myThresh);
-	window.SetRelativeAtom(reproducePt, newAtom);
+	window.SetRelativeAtom(reproducePt, self);
       }
 
       SPoint seData, neData, swEmpty, nwEmpty, srcPt, dstPt;
@@ -99,9 +100,8 @@ namespace MFM
 	u32 cmp = (movingUp && (datum > threshold)) || (!movingUp && (datum < threshold));
 	if(cmp)
 	{
-          T ctr = window.GetCenterAtom();
-          SetThreshold(ctr,datum);
-          window.SetCenterAtom(ctr);
+          SetThreshold(self,datum);
+          window.SetCenterAtom(self);
 	  window.SwapAtoms(srcPt, dstPt);
 	  return;
 	}
@@ -115,6 +115,11 @@ namespace MFM
 
   template <class T, u32 R>
   Element_Sorter<T,R> Element_Sorter<T,R>::THE_INSTANCE;
+
+  template <class T, u32 R>
+  const SPoint Element_Sorter<T,R>::m_southeastSubwindow[4] = {
+    SPoint(1,1),SPoint(1,2),SPoint(2,1),SPoint(2,2)
+  };
 
   /*
   template <class T, u32 R>

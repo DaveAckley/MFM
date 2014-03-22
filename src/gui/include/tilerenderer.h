@@ -16,7 +16,7 @@ class TileRenderer
 {
 private:
   bool m_drawGrid;
-  bool m_drawMemRegions;
+  enum DrawRegionType { NO, EDGE, FULL, MAX} m_drawMemRegions;
   bool m_drawDataHeat;
   int m_atomDrawSize;
 
@@ -34,6 +34,9 @@ private:
 
   template <u32 R>
   void RenderMemRegions(SPoint& pt, bool renderCache);
+
+  template <u32 R>
+  void RenderVisibleRegionOutlines(SPoint& pt, bool renderCache);
 
   template <u32 R>
   void RenderMemRegion(SPoint& pt, int regID,

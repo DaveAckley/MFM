@@ -12,12 +12,12 @@
 #include "Connection.h"
 #include "ThreadPauser.h"
 
-
 namespace MFM {
 
   /** The full length, in sites, of a Tile, including neighbor
       caches.*/
-#define TILE_WIDTH 40
+  //#define TILE_WIDTH 40
+#define TILE_WIDTH 64
 
   /** The number of sites a Tile contains. */
 #define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)
@@ -59,6 +59,9 @@ namespace MFM {
     static const u32 OWNED_SIDE = TILE_WIDTH-2*R;
 
   private:
+    /** The top of the error stack for thread-local, per-Tile, FAIL
+        processing. */
+    MFMErrorEnvironmentPointer_t m_errorEnvironmentStackTop;
 
     /** The ElementTable instance which holds all atom behavior for this
 	Tile. */
@@ -70,6 +73,14 @@ namespace MFM {
     /** The number of events executed in this Tile since
 	initialization. */
     u64 m_eventsExecuted;
+
+    /** The number of event failures during execution in this Tile
+	since initialization. */
+    u64 m_eventsFailed;
+
+    /** The number of the event failures resolved by erasing the
+	center atom, in this Tile since initialization. */
+    u64 m_failuresErased;
 
     /**
      * The number of events executed in this Tile since
@@ -87,14 +98,14 @@ namespace MFM {
 
     /**
      * The number of events which have occurred in every individual
-     * site. Indexed as m_siteEvents[x][y] .
+     * site. Indexed as m_siteEvents[x][y], x,y : 0..OWNED_SIDE-1.
      */
-    u64 m_siteEvents[TILE_WIDTH - 2 * R][TILE_WIDTH - 2 * R];
+    u64 m_siteEvents[OWNED_SIDE][OWNED_SIDE];
 
     friend class EventWindow<T,R>;
 
     /** The Atoms currently held by this Tile, including caches. */
-    T m_atoms[TILE_SIZE];
+    T m_atoms[TILE_WIDTH][TILE_WIDTH];
 
     /** An index of the number of each type of Atom currently held
 	within this Tile.*/
@@ -314,6 +325,11 @@ namespace MFM {
     Tile();
 
     /**
+     * Reinitializes a Tile to a like-new (actually, like-OnceOnlyInit()ed) state.
+     */
+    void Reinit();
+
+    /**
      * Connects another Tile to one of this Tile's caches.
      *
      * @param other The other Tile to connect to this one.
@@ -373,7 +389,7 @@ namespace MFM {
      *
      * @returns true if this Tile has a neighbor in direction dir, else false.
      */
-    inline bool IsConnected(Dir dir);
+    inline bool IsConnected(Dir dir) const;
 
     /**
      * Checks to see if a specified local point is contained within a
@@ -384,7 +400,19 @@ namespace MFM {
      *
      * @returns true if pt is in a cache, else false.
      */
-    static inline bool IsInCache(const SPoint& pt);
+    static inline bool IsInCache(const SPoint& pt) ;
+
+    /**
+     * Checks to see if a specified local point is contained within a
+     * Tile's owned sites.
+     *
+     * @param pt The local location which is in question of being inside
+     *        of the Tile's own sites.
+     *
+     * @returns true if pt is an owned site of this Tile, else false.
+     */
+    static inline bool IsOwnedSite(const SPoint & location) ;
+
 
     /**
      * Checks to see if a specified local point is contained within a
@@ -402,6 +430,25 @@ namespace MFM {
     static inline bool IsInTile(const SPoint& pt);
 
     /**
+     * Checks to see if a specified coordinate is contained within a
+     * Tile's sites excluding the caches.  Indexing ignores the cache
+     * boundary, so possible range is (0,0) to
+     * (OWNED_SIDE-1,OWNED_SIDE-1).  If this method returns true, then
+     * the 'Uncached' methods, applied to this location, will not FAIL.
+     *
+     * @param pt The coordinate which is in question of being a legal
+     *           uncached site index in this Tile
+     *
+     * @returns true if pt is a legal uncached location in a Tile,
+     * else false.
+     *
+     * @sa GetUncachedAtom(const SPoint& pt)
+     * @sa GetUncachedAtom(s32 x, s32 y)
+     * @sa GetUncachedSiteEvents(const SPoint site)
+     */
+    static inline bool IsInUncachedTile(const SPoint& pt);
+
+    /**
      * Checks to see if a specified local point is a site that
      * currently might receive events in this particular Tile.  Note
      * this method is not static, because liveness depends on the
@@ -414,7 +461,7 @@ namespace MFM {
      *
      * @returns true if pt is a live site in this Tile, else false.
      */
-    bool IsLiveSite(const SPoint & location) ;
+    bool IsLiveSite(const SPoint & location) const ;
 
     /**
      * Gets the number of events executed within this Tile since
@@ -441,7 +488,7 @@ namespace MFM {
      * @returns The EuclidDir of the cache pointed at by pt, or
      *          (EuclidDir)-1 if pt is not pointing at a cache.
      */
-    Dir RegionAt(const SPoint& pt, u32 reach);
+    Dir RegionAt(const SPoint& pt, u32 reach) const;
 
     /**
      * Finds the cache in this Tile which contains a specified SPoint.
@@ -451,7 +498,7 @@ namespace MFM {
      * @returns The direction of the cache specified by pt, or
      *          (EuclidDir)-1 if there is no such cache.
      */
-    Dir CacheAt(const SPoint& pt);
+    Dir CacheAt(const SPoint& pt) const;
 
     /**
      * Finds the region of shared memory in this Tile which contains a
@@ -463,7 +510,7 @@ namespace MFM {
      * @returns The direction of the shared memory specified by pt, or
      *          (EuclidDir)-1 if pt is not in shared memory.
      */
-    Dir SharedAt(const SPoint& pt);
+    Dir SharedAt(const SPoint& pt) const;
 
 
     /*
@@ -524,6 +571,23 @@ namespace MFM {
       const T* GetUncachedAtom(s32 x, s32 y) const;
 
     /**
+     * Gets the site event count for a specified point in this Tile.
+     * Indexing ignores the cache boundary, so possible range is (0,0)
+     * to (OWNED_SIDE-1,OWNED_SIDE-1).
+     *
+     * @param site The coordinates of the location of the site whose
+     *          event count should be retrieved.
+     *
+     * @param y The y coordinate of the location of the site whose
+     *          event count should be retrieved.
+     *
+     * @returns The total events that have occured at that site
+     */
+    u64 GetUncachedSiteEvents(const SPoint site) const ;
+
+
+#if 0  // Doesn't seem like anybody is using this?
+    /**
      * Gets an Atom from this Tile by its raster index.
      *
      * @param i The raster index (horizontal first) of the Atom to
@@ -532,6 +596,7 @@ namespace MFM {
      * @returns A pointer to the Atom at the specified index.
      */
     const T* GetAtom(int i) const;
+#endif
 
     void SendAcknowledgmentPacket(Packet<T>& packet);
 
@@ -612,7 +677,18 @@ namespace MFM {
      * @returns The number of Atoms in this Tile's main memory of type
      *          atomType.
      */
-    u32 GetAtomCount(ElementType atomType);
+    u32 GetAtomCount(ElementType atomType) const;
+
+    /**
+     * Stores an Atom after ensuring valid indices but performing no
+     * other actions (e.g., no counts are adjusted).
+     *
+     * @param atom An atom to store
+     * @param sx x coordinate in Tile (including caches)
+     * @param sy y coordinate in Tile (including caches)
+     *
+     */
+    void InternalPutAtom(const T & atom, s32 x, s32 y) ;
 
     /**
      * Sets the internal count of Atoms of a specified ElementType.

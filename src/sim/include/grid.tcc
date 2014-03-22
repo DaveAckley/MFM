@@ -5,8 +5,17 @@
 namespace MFM {
 
   template <class T,u32 R,u32 W, u32 H>
-  Grid<T,R,W,H>::Grid() : m_width(W), m_height(H)
+  Grid<T,R,W,H>::Grid() : m_seed(0), m_width(W), m_height(H)
   {
+  }
+
+  template <class T,u32 R,u32 W, u32 H>
+  void Grid<T,R,W,H>::Reinit() {
+
+    /* Reseed grid PRNG and push seeds to the tile PRNGs */
+    ReinitSeed();
+
+    /* Reinit all the tiles */
 
     /* Set the neighbors flags of each tile. This lets the tiles know */
     /* if any of its caches are dead and should not be written to.    */
@@ -16,6 +25,9 @@ namespace MFM {
       for(u32 y = 0; y < m_height; y++)
       {
 	Tile<T,R>& ctile = GetTile(x, y);
+
+        ctile.Reinit();
+
 	neighbors = 0;
 	if(x > 0)
         {
@@ -64,7 +76,16 @@ namespace MFM {
   template <class T,u32 R,u32 W, u32 H>
   void Grid<T,R,W,H>::SetSeed(u32 seed)
   {
-    m_random.SetSeed(seed);
+    m_seed = seed;
+  }
+
+  template <class T,u32 R,u32 W, u32 H>
+  void Grid<T,R,W,H>::ReinitSeed()
+  {
+    if (m_seed==0)  // SetSeed must have been called by now!
+      FAIL(ILLEGAL_STATE);
+
+    m_random.SetSeed(m_seed);
     for(u32 i = 0; i < W; i++)
       for(u32 j = 0; j < H; j++)
         {
@@ -77,17 +98,6 @@ namespace MFM {
   {
   }
 
-  template <class T, u32 R,u32 W, u32 H>
-  u32 Grid<T,R,W, H>::GetHeight()
-  {
-    return H;
-  }
-
-  template <class T, u32 R,u32 W, u32 H>
-  u32 Grid<T,R,W,H>::GetWidth()
-  {
-    return W;
-  }
 
   template <class T, u32 R,u32 W, u32 H>
   bool Grid<T,R,W,H>::IsLegalTileIndex(const SPoint & tileInGrid) const
@@ -102,6 +112,16 @@ namespace MFM {
   template <class T, u32 R,u32 W, u32 H>
   bool Grid<T,R,W,H>::MapGridToTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const
   {
+    SPoint myTile, mySite;
+    if (!MapGridToUncachedTile(siteInGrid, myTile, mySite)) return false;
+    tileInGrid = myTile;
+    siteInTile = mySite+SPoint(R,R);      // adjust to full Tile indexing
+    return true;
+  }
+
+  template <class T, u32 R,u32 W, u32 H>
+  bool Grid<T,R,W,H>::MapGridToUncachedTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const
+  {
     if (siteInGrid.GetX() < 0 || siteInGrid.GetY() < 0)
       return false;
 
@@ -113,8 +133,7 @@ namespace MFM {
     // Set up return values
     tileInGrid = t;
     siteInTile =
-      siteInGrid % Tile<T,R>::OWNED_SIDE  // get index into just 'owned' sites
-      + SPoint(R,R);                      // and adjust to full Tile indexing
+      siteInGrid % Tile<T,R>::OWNED_SIDE;  // get index into just 'owned' sites
     return true;
   }
 
@@ -217,7 +236,7 @@ namespace MFM {
   }
 
   template <class T, u32 R, u32 W, u32 H>
-  u64 Grid<T,R,W,H>::GetTotalEventsExecuted()
+  u64 Grid<T,R,W,H>::GetTotalEventsExecuted() const
   {
     u64 total = 0;
     for(u32 x = 0; x < W; x++)
@@ -231,25 +250,32 @@ namespace MFM {
   }
 
   template <class T, u32 R, u32 W, u32 H>
-  u64 Grid<T,R,W,H>::WriteEPSRaster(FILE* outstrm)
+  void Grid<T,R,W,H>::WriteEPSImage(FILE* outstrm) const
   {
     u64 max = 0;
-    for(u32 y = 0; y < H; y++)
-    {
-      for(u32 i = 0; i < TILE_WIDTH - R * 2; i++)
-      {
-	for(u32 x = 0; x < W; x++)
-	{
-	  max = MAX(max, GetTile(x, y).WriteEPSRasterLine(outstrm, i));
-	}
-	fputc('\n', outstrm);
+    const u32 swidth = GetWidthSites();
+    const u32 sheight = GetHeightSites();
+
+    for(u32 pass = 0; pass < 2; ++pass) {
+      if (pass==1) 
+        fprintf(outstrm,"P5\n # Max site events = %ld\n%d %d 255\n",max,swidth,sheight);
+      for(u32 y = 0; y < sheight; y++) {
+	for(u32 x = 0; x < swidth; x++) {
+          SPoint siteInGrid(x,y), tileInGrid, siteInTile;
+          if (!MapGridToUncachedTile(siteInGrid, tileInGrid, siteInTile))
+            FAIL(ILLEGAL_STATE);
+          u64 events = GetTile(tileInGrid).GetUncachedSiteEvents(siteInTile);
+          if (pass==0)
+            max = MAX(max, events); 
+          else
+            fputc((u8) (events*255/max), outstrm);
+        }
       }
     }
-    return max;
   }
 
   template <class T, u32 R,u32 W, u32 H>
-  u32 Grid<T,R,W,H>::GetAtomCount(ElementType atomType)
+  u32 Grid<T,R,W,H>::GetAtomCount(ElementType atomType) const
   {
     u32 total = 0;
     for(u32 i = 0; i < W; i++)

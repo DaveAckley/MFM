@@ -5,6 +5,8 @@ using namespace MFM;
 int main(int argc, char** argv)
 {
 
+  Fail_test::Test_RunTests();
+  FXP_test::Test_RunTests();
   ColorMapTest::Test_RunTests();
   RandomTest::Test_RunTests();
 

@@ -10,7 +10,7 @@ template <class T, u32 R>
 u32 TileRenderer::GetAtomColor(Tile<T,R>& tile, const T& atom)
 {
   const Element<T,R> * elt = tile.GetElementTable().Lookup(atom.GetType());
-  if (elt) return elt->DefaultPhysicsColor();
+  if (elt) return elt->LocalPhysicsColor(atom);
   return 0xffffffff;
 }
 
@@ -113,9 +113,16 @@ void TileRenderer::RenderTile(Tile<T,R>& t, SPoint& loc, bool renderWindow,
      realPt.GetX() < (s32)m_dest->w &&
      realPt.GetY() < (s32)m_dest->h)
   {
-    if(m_drawMemRegions)
-    {
+    switch (m_drawMemRegions) {
+    default: 
+    case NO:
+      break;
+    case FULL:
       RenderMemRegions<R>(multPt, renderCache);
+      break;
+    case EDGE:
+      RenderVisibleRegionOutlines<R>(multPt, renderCache);
+      break;
     }
 
     if(renderWindow)
@@ -176,6 +183,13 @@ void TileRenderer::RenderMemRegions(SPoint& pt, bool renderCache)
   RenderMemRegion<R>(pt, regID++, m_sharedColor, renderCache);
   RenderMemRegion<R>(pt, regID++, m_visibleColor, renderCache);
   RenderMemRegion<R>(pt, regID  , m_hiddenColor, renderCache);
+}
+
+template <u32 R>
+void TileRenderer::RenderVisibleRegionOutlines(SPoint& pt, bool renderCache)
+{
+  int regID = renderCache?2:1;
+  RenderMemRegion<R>(pt, regID, 0xff202020, renderCache);
 }
 
 template <u32 EVENT_WINDOW_RADIUS>

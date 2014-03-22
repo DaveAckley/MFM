@@ -13,12 +13,13 @@ SOBJECTS := $(patsubst src/%.S,$(BUILDDIR)/%.o,$(SSOURCES))
 SOURCES := $(CSOURCES) $(CPPSOURCES) $(SSOURCES)
 OBJECTS := $(COBJECTS) $(CPPOBJECTS) $(SOBJECTS)
 
-HEADERS := $(wildcard $(INCLUDEDIR)/*)
+HEADERS := $(wildcard include/*)
+
 ALLDEP += $(HEADERS)
 
 all:	$(ARCHIVEPATH)
 
-$(ARCHIVEPATH):	$(OBJECTS)
+$(ARCHIVEPATH):	$(BUILDDIR) $(OBJECTS) 
 	$(AR) ruc "$@" $(OBJECTS)
 
 clean:	
@@ -29,6 +30,7 @@ include $(BASEDIR)/config/Makedeps.mk
 realclean:	clean
 	rm -f $(AUTODEPS)
 	rm -f $(ARCHIVEPATH)
+	rm -f src/*~ include/*~ *~
 
 .PHONY:	clean realclean
 

@@ -64,7 +64,7 @@ void Drawing::FillCircle(SDL_Surface* dest, int x, int y,
     {
       ip.Set(i, j);
       ip.Subtract(cp);
-      if(ip.GetLength() < radius)
+      if(ip.GetEuclideanLength() < radius)
       {
 	SetPixel(dest, i, j, color);
       }
@@ -80,7 +80,8 @@ void Drawing::BlitText(SDL_Surface*& dest, TTF_Font*& font,
   sdl_color.r = (color >> 16) & 0xff;
   sdl_color.g = (color >> 8) & 0xff;
   sdl_color.b = color & 0xff;
-  SDL_Surface* text = TTF_RenderText_Solid(font, message, sdl_color);
+
+  SDL_Surface* text = TTF_RenderText_Blended(font, message, sdl_color);
 
   SDL_Rect rect;
   rect.x = loc.GetX();

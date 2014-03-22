@@ -1,4 +1,5 @@
 #include "Fail.h"
+#include "Util.h"   /* For MAX */
 
 namespace MFM {
 
@@ -37,13 +38,19 @@ T Point<T>::GetY() const
 }
 
 template <class T>
-u32 Point<T>::GetManhattanDistance() const
+u32 Point<T>::GetManhattanLength() const
 {
   return (u32) (abs(m_x) + abs(m_y));
 }
 
 template <class T>
-double Point<T>::GetLength() const
+u32 Point<T>::GetMaximumLength() const
+{
+  return (u32) MAX(abs(m_x), abs(m_y));
+}
+
+template <class T>
+double Point<T>::GetEuclideanLength() const
 {
   return sqrt(m_x * m_x + m_y * m_y);
 }

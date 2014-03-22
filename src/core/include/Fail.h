@@ -27,9 +27,8 @@
 #ifndef FAIL_H
 #define FAIL_H
 
-#define FAIL(code) MFMFailHere(__FILE__,__LINE__,MFM_FAIL_CODE_REASON_##code)
+#include "FailPlatformSpecific.h"  /* For FAIL and unwind_protect */
 
-extern "C" void MFMFailHere(const char * file, const int line, const int code) __attribute__ ((noreturn));
 extern "C" const char * MFMFailCodeReason(int failCode) ;
 
 #define XX(a) MFM_FAIL_CODE_REASON_##a,

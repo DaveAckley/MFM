@@ -62,8 +62,6 @@ namespace MFM {
   public:
     static const u32 EVENT_WINDOW_DIAMETER = R*2+1;
 
-    static Point<s32>& FlipAxis(Point<s32>& pt, bool xAxis);
-
     /**
      * Access the singleton MDist of any given size.
      */
@@ -107,22 +105,12 @@ namespace MFM {
      */
     void FillFromBits(SPoint& pt, u8 bits, u32 maxRadius);
 
-    Point<s32>& GetSEWindowPoint(u32 index)
-    { return m_southeastSubWindow[index]; }
-
-    SPoint* GetSESubWindow()
-    { return m_southeastSubWindow; }
-
-
   private:
     static const u32 ARRAY_LENGTH = EVENT_WINDOW_SITES(R);
 
     static inline u32 ManhattanArea(u32 maxDistance) {
       return EVENT_WINDOW_SITES(maxDistance);
     }
-
-    /* This only works if R is a power of two! */
-    Point<s32> m_southeastSubWindow[R];
 
     Point<s32> m_indexToPoint[ARRAY_LENGTH];
     s32 m_pointToIndex[EVENT_WINDOW_DIAMETER][EVENT_WINDOW_DIAMETER];

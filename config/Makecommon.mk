@@ -3,6 +3,10 @@
 include $(BASEDIR)/config/Makevars.mk
 
 #####
+# PLATFORM-SPECIFIC MAKE CONFIGURATION
+include $(BASEDIR)/src/platform-$(MFM_TARGET)/MakePlatform.mk
+
+#####
 # COMPONENT DIRECTORY LAYOUT  
 #
 # For a COMPONENTNAME foo, we expect to find the following structure:
@@ -16,7 +20,7 @@ INCLUDES+=-I include
 
 LDFLAGS:=
 
-ALLDEP:=$(wildcard $(BASEDIR)/config/*.mk) Makefile   # If config or local makefile changes, nuke it from orbit
+ALLDEP+=$(wildcard $(BASEDIR)/config/*.mk) Makefile   # If config or local makefile changes, nuke it from orbit
 
 ifndef ($(TARGET),cross)
   CFLAGS:=$(NATIVE_GCC_CFLAGS)

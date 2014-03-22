@@ -6,6 +6,7 @@
 #include "itype.h"
 #include "randmt.h"
 #include "BitVector.h"
+#include "FXP.h"
 #include "Fail.h"
 
 namespace MFM
@@ -50,6 +51,23 @@ namespace MFM
      */
 
     bool OddsOf(u32 thisMany, u32 outOfThisMany) ;
+
+    /**
+     * Return true pseudo-randomly, with fixed point bounds.  E.g.,
+     * oddsOf(FXP16(0.6),FXP16(2)) returns true on 30% of calls.
+     * FAILs ILLEGAL_ARGUMENT if outOfThisMany is <= 0.  When thisMany
+     * <= 0, never returns true.  When thisMany >= outOfThisMany,
+     * always returns true.
+     */
+    template <int P>
+    bool OddsOf(FXP<P> thisMany, FXP<P> outOfThisMany) {
+      if (outOfThisMany <= 0) FAIL(ILLEGAL_ARGUMENT);
+
+      if (thisMany <= 0) return false;
+      if (thisMany >= outOfThisMany) return true;
+
+      return OddsOf(thisMany.intValue, outOfThisMany.intValue);
+    }
 
     /**
      * Return a uniformly chosen pseudo-random signed number in the

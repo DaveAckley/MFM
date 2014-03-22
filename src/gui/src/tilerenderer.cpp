@@ -9,7 +9,7 @@ TileRenderer::TileRenderer(SDL_Surface* dest)
 {
   m_dest = dest;
   m_atomDrawSize = 8;
-  m_drawMemRegions = true;
+  m_drawMemRegions = FULL;
   m_drawGrid = true;
   m_drawDataHeat = false;
   m_gridColor = 0xff303030;
@@ -62,7 +62,7 @@ void TileRenderer::ToggleGrid()
 
 void TileRenderer::ToggleMemDraw()
 {
-  m_drawMemRegions = !m_drawMemRegions;
+  m_drawMemRegions = (DrawRegionType) ((m_drawMemRegions+1)%MAX);
 }
 
 void TileRenderer::ToggleDataHeat()

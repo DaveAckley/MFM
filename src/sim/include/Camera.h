@@ -1,11 +1,8 @@
 #ifndef CAMERA_H     /* -*- C++ -*- */
 #define CAMERA_H
 
-#include <stdlib.h>
-#include <png.h>
-#include <SDL/SDL.h>
-
 #include "itype.h"
+#include <SDL/SDL.h>
 
 namespace MFM
 {
@@ -34,7 +31,7 @@ namespace MFM
 
     u32 GetPNGColorType(SDL_Surface* sfc);
 
-    u32 SavePNG(char* filename, SDL_Surface* sfc);
+    u32 SavePNG(const char* filename, SDL_Surface* sfc) const;
 
   public:
 
@@ -46,7 +43,7 @@ namespace MFM
 
     void SetRecording(bool recording);
 
-    void DrawSurface(SDL_Surface* sfc);
+    bool DrawSurface(SDL_Surface* sfc, const char * pngPath) const;
   };
 }
 

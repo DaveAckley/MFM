@@ -18,6 +18,11 @@ namespace MFM {
   public:
     static const u32 SIZE = 1u<<B;
 
+    /**
+     * Reinitialize this ElementTable to empty.
+     */
+    void Reinit() ;
+
     void Insert(const Element<T,R> & theElement) ;
 
     u32 GetSize() const {
@@ -33,8 +38,6 @@ namespace MFM {
 
     ElementTable();
 
-    //  static ElementTable<T,R> & get();
-
     ~ElementTable() { }
 
     const Element<T,R> * Lookup(u32 elementType) ;
@@ -44,9 +47,8 @@ namespace MFM {
       u32 type = window.GetCenterAtom().GetType();
       if(type != ELEMENT_EMPTY) {
         const Element<T,R> * elt = Lookup(type);
-        if (elt != 0)
-          elt->Behavior(window);
-        /* else WTH? */
+        if (elt == 0) FAIL(UNKNOWN_ELEMENT);
+        elt->Behavior(window);
       }
     }
 
@@ -60,7 +62,7 @@ namespace MFM {
 
   private:
 
-    static void FlipSEPointToCorner(Point<s32>& pt, Dir corner);
+    //    static void FlipSEPointToCorner(Point<s32>& pt, Dir corner);
 
     /* Fills pt with the coordinates of a randomly selected          */
     /* Atom with the specified type. Returns false if there is none. */
