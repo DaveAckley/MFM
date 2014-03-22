@@ -15,4 +15,4 @@ include $(BASEDIR)/config/Makelib.mk
 ARCHIVES := $(wildcard $(BASEDIR)/build/*/*.a)
 
 $(BINDIR)/$(COMPONENTNAME):	$(BUILDDIR)/main.o $(ALLDEP) $(ARCHIVES)
-	$(GPP) $(BUILDDIR)/main.o $(LIBS) -o $@
+	$(GPP) $(LDFLAGS) $(BUILDDIR)/main.o $(LIBS) -o $@

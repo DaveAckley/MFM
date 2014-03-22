@@ -13,21 +13,30 @@ ifndef DEBUG
   OPTFLAGS += -O99
 else
   OPTFLAGS += -g2
-  # Default to commands if debugginb
+  # Default to commands if debugging
   ifndef COMMANDS
     COMMANDS := 1
   endif	
 endif
 
+ifndef PROFILE
+else
+  OPTFLAGS := -pg -O99
+  COMMON_LDFLAGS += -pg
+  # Default to commands if profiling
+  ifndef COMMANDS
+    COMMANDS := 1
+  endif	
+endif
 
 ifndef COMMANDS
   MAKEFLAGS += --quiet
 endif
 
-# Common flags
-COMMON_CFLAGS:=-Wall -pedantic -Werror -Wundef     # Let's help them help us
-COMMON_CPPFLAGS:=-ansi -pedantic -Wall -Werror     #   "
-COMMON_LDFLAGS:=--fatal-warnings -L$(LIBDIR)       #   "  
+# Common flags: All about errors -- let's help them help us
+COMMON_CFLAGS+=-Wall -pedantic -Werror -Wundef
+COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror
+COMMON_LDFLAGS+=-Wl,--fatal-warnings
 
 # Native tool chain
 NATIVE_GCC:=gcc
