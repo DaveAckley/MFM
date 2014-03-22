@@ -53,9 +53,9 @@ namespace MFM {
     {
       m_lockEvents[i] = 0;
     }
-    for(u32 x = 0; x < TILE_WIDTH - 2 * R; x++)
+    for(u32 x = 0; x < OWNED_SIDE; x++)
     {
-      for(u32 y = 0; y < TILE_WIDTH - 2 * R; y++)
+      for(u32 y = 0; y < OWNED_SIDE; y++)
       {
 	m_siteEvents[x][y] = 0;
       }
@@ -105,6 +105,13 @@ namespace MFM {
   }
 
   template <class T,u32 R>
+  u64 Tile<T,R>::GetUncachedSiteEvents(const SPoint site) const
+  {
+    if (!IsInUncachedTile(site)) FAIL(ILLEGAL_ARGUMENT);
+    return m_siteEvents[site.GetX()][site.GetY()];
+  }
+
+  template <class T,u32 R>
   const T* Tile<T,R>::GetUncachedAtom(s32 x, s32 y) const
   {
     return GetAtom(x+R, y+R);
@@ -115,15 +122,15 @@ namespace MFM {
   {
     if (x < 0 || y < 0 || x >= TILE_WIDTH || y >= TILE_WIDTH)
       FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
-    return GetAtom(x + y * TILE_WIDTH);
+    return &m_atoms[x][y];
   }
 
   template <class T,u32 R>
-  const T* Tile<T,R>::GetAtom(s32 i) const
+  void Tile<T,R>::InternalPutAtom(const T & atom, s32 x, s32 y) 
   {
-    if (i < 0 || i >= TILE_SIZE)
+    if (x < 0 || y < 0 || x >= TILE_WIDTH || y >= TILE_WIDTH)
       FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
-    return &m_atoms[i];
+    m_atoms[x][y] = atom;
   }
 
   template <class T, u32 R>
@@ -182,7 +189,7 @@ namespace MFM {
   }
 
   template <class T, u32 R>
-  Dir Tile<T,R>::RegionAt(const SPoint& sp, u32 reach)
+  Dir Tile<T,R>::RegionAt(const SPoint& sp, u32 reach) const
   {
     UPoint pt = makeUnsigned(sp);
 
@@ -224,13 +231,13 @@ namespace MFM {
   }
 
   template <class T, u32 R>
-  Dir Tile<T,R>::CacheAt(const SPoint& pt)
+  Dir Tile<T,R>::CacheAt(const SPoint& pt) const
   {
     return RegionAt(pt, R);
   }
 
   template <class T, u32 R>
-  Dir Tile<T,R>::SharedAt(const SPoint& pt)
+  Dir Tile<T,R>::SharedAt(const SPoint& pt) const
   {
     return RegionAt(pt, R * 3);
   }
@@ -241,8 +248,7 @@ namespace MFM {
     const T* oldAtom = GetAtom(pt);
     u32 oldType = oldAtom->GetType();
 
-    m_atoms[pt.GetX() +
-            pt.GetY() * TILE_WIDTH] = atom;
+    InternalPutAtom(atom,pt.GetX(),pt.GetY());
 
     if(!IsInCache(pt))
     {
@@ -293,23 +299,29 @@ namespace MFM {
   }
 
   template <class T, u32 R>
-  bool Tile<T,R>::IsConnected(Dir dir)
+  bool Tile<T,R>::IsConnected(Dir dir) const
   {
     return m_connections[dir] != NULL &&
       m_connections[dir]->IsConnected();
   }
 
   template <class T, u32 R>
-  bool Tile<T,R>::IsLiveSite(const SPoint & location)
+  bool Tile<T,R>::IsLiveSite(const SPoint & location) const
   {
     return IsInTile(location) &&
       (!IsInCache(location) || IsConnected(CacheAt(location)));
   }
 
   template <class T, u32 R>
-  bool Tile<T,R>::IsInCache(const SPoint& pt)
+  bool Tile<T,R>::IsOwnedSite(const SPoint & location) 
   {
-    int upbnd = TILE_WIDTH - R;
+    return IsInTile(location) && !IsInCache(location);
+  }
+
+  template <class T, u32 R>
+  bool Tile<T,R>::IsInCache(const SPoint& pt) 
+  {
+    s32 upbnd = TILE_WIDTH - R;
     return (u32)pt.GetX() < R || (u32)pt.GetY() < R ||
       pt.GetX() >= upbnd || pt.GetY() >= upbnd;
   }
@@ -318,6 +330,12 @@ namespace MFM {
   bool Tile<T,R>::IsInTile(const SPoint& pt)
   {
     return ((u32) pt.GetX()) < TILE_WIDTH && ((u32) pt.GetY() < TILE_WIDTH);
+  }
+
+  template <class T, u32 R>
+  bool Tile<T,R>::IsInUncachedTile(const SPoint& pt)
+  {
+    return ((u32) pt.GetX()) < OWNED_SIDE && ((u32) pt.GetY() < OWNED_SIDE);
   }
 
   template <class T, u32 R>
@@ -580,13 +598,7 @@ namespace MFM {
   {
     while(m_threadInitialized)
     {
-      /*Change to 0 if placing a window in a certain place*/
-#if 1
       CreateRandomWindow();
-#else
-      SPoint winCenter(R * 2 - 1, R);
-      CreateWindowAt(winCenter);
-#endif
 
       bool locked = false;
       Dir lockRegion = Dirs::NORTH;
@@ -645,14 +657,16 @@ namespace MFM {
   }
 
   template <class T, u32 R>
-  void* Tile<T,R>::ExecuteThreadHelper(void* tilePtr)
+  void* Tile<T,R>::ExecuteThreadHelper(void* arg)
   {
-    ((Tile*)tilePtr)->Execute();
+    Tile* tilePtr = (Tile*) arg;
+    MFMPtrToErrEnvStackPtr = &(tilePtr->m_errorEnvironmentStackTop);
+    tilePtr->Execute();
     return NULL;
   }
 
   template <class T, u32 R>
-  u32 Tile<T,R>::GetAtomCount(ElementType atomType)
+  u32 Tile<T,R>::GetAtomCount(ElementType atomType) const
   {
     s32 idx = elementTable.GetIndex(atomType);
     if (idx < 0) return 0;
@@ -711,6 +725,7 @@ namespace MFM {
 
   }
 
+#if 0
   template <class T, u32 R>
   u64 Tile<T,R>::WriteEPSRasterLine(FILE* outstrm, u32 lineIdx)
   {
@@ -722,6 +737,7 @@ namespace MFM {
     }
     return max;
   }
+#endif
 
   template <class T, u32 R>
   void Tile<T,R>::AssertValidAtomCounts() const
