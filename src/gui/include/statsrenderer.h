@@ -33,7 +33,7 @@ public:
   }
 
   void OnceOnly() {
-    m_drawFont = TTF_OpenFont("UbuntuMono-R.ttf", 30);
+    m_drawFont = TTF_OpenFont("UbuntuMono-B.ttf", 30);
     if (!m_drawFont)
       FAIL(ILLEGAL_STATE);
   }
