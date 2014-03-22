@@ -13,6 +13,100 @@
 namespace MFM
 {
 
+  /**
+    A clump-forming class.  Goals:
+   
+    - Survive and operate in a DReg environment, recruiting Res to
+      establish and maintain the clump.
+   
+    - Approximately but effectively regulate clump size even though
+      the size will be larger than an event window radius.
+    
+    - Maintain 'clump identity' by a shared belief about the position
+      of the center or centroid of the clump.  Nearby clumps will not
+      coalesce in calm conditions due to their separate identities.
+   
+    - An ability to maintain and (later) move the clump position.
+   
+    Class:
+    (C1) Name is Ball
+    (C2) Type is 0xba11
+    (C3) State is BallState
+
+    Sets:
+    (S1) BallState is { center, when }, with
+      (S1.1) center, a TinyVec<3> --- heading to believed center
+      (S1.2) when, a u3 --- events since last two+ point confirmation on center.
+                        --- max value for 'when' means no confidence in 'center'
+    (S2) BallInfo is { center, count, distance, nearus, adjemp }, with
+      (S2.1) center, a Point --- location of claimed Ball center
+      (S2.2) count, a u8     --- number of votes for that center
+      (S2.3) distance, a u8  --- distance to nearest-us voter for this center
+      (S2.4) nearus, a Point  --- location of nearest-us voter for this center
+      (S2.5) adjemp, a Point  --- location of Moore neighborhood empty nearest this center
+
+    (S3) Centers is Array[limit 3] of BallInfo
+    (S4) Empties is Array[limit 7] of Point --- Moore neighborhood empties
+
+    Actors:
+    (A1) self, a Ball
+    (A2) info, a Centers 
+    (A3) empties, an Empties
+    (A4) i, an Index into info
+    (A5) e, an Index into empties
+
+    Self check:
+
+    - None
+
+    Perception:
+
+    - Collect potential clump centers + exact match confirmation
+      counts, for, say, up to three centers.  Include self.  Also for
+      each potential clump, collect distance to nearest of that clump.
+
+    - Also collect Moore neighborhood live empties
+
+    Reactions:
+
+    (R1) self.when = 0
+
+    (R2) Place(self), then
+    (R3) Done
+
+    (R4) self.when = 0, then
+    (R5) self.center += empties[e]-self, then
+    (R6) self <=> empties[e], then
+    (R7) Done
+
+
+    Thought:
+
+    --- (1) If I'm part of a confirmed ball stay near center
+    --- (2) 
+
+    (1) If info.length > 0: --- At least one confirmed center
+
+      (1.1) If there exists i such that self.center info[i].center: 
+
+        Do (R1), then
+
+        (1.1.1) Length(info[i].center) > 1:  --- We're not at center
+          (1.1.1.1) There is an adjacent empty e closer than self to center
+            Do (R5), (R6), then Done
+          (1.1.1.2) --- No closer empty
+            Do (R2) then Done
+        (1.1.2) MinDist to ball <= 1
+          (1.1.2.1) There is an adjacent empty e farther from ball
+                    but no farther than self from center
+            Do (R5), (R6), then Done
+
+
+ :=> Stand
+   
+   */
+
+
   template <class T, u32 R>
   class Element_Boids : public Element<T,R>
   {
@@ -131,10 +225,6 @@ namespace MFM
     }
 
   public:
-    /*
-    const char* GetName() const { return "Boid"; }
-    */
-
 
     static const u32 TYPE = 0xbd;
     static const u32 TYPE_BITS = 8;
@@ -151,20 +241,6 @@ namespace MFM
 
     Element_Boids() { }
 
-    /*
-    virtual const T & GetDefaultAtom() const 
-    {
-      static T defaultAtom(TYPE,0,0,STATE_BITS);
-      return defaultAtom;
-    }
-    */
-    /*
-    virtual u32 DefaultPhysicsColor() const 
-    {
-      return 0xff00f0f0;
-    }
-    */
-
     Vector GetHeading(const T &atom) const {
       if (!IsBoidType(atom.GetType()))
         FAIL(ILLEGAL_STATE);
@@ -177,7 +253,8 @@ namespace MFM
       atom.SetStateField(STATE_HEADING_IDX,STATE_HEADING_LEN,toTinyVector<BITS_PER_DIM>(v));
     }
 
-    SPoint PickPossibleDestination(EventWindow<T,R>& window, const Vector & target, Random & random) {
+    SPoint PickPossibleDestination(EventWindow<T,R>& window, const Vector & target, Random & random) const 
+    {
       SPoint dest;
       FXP16 totWgt = 0;
 
@@ -186,8 +263,12 @@ namespace MFM
       const FXP16 WGT_PER_DIST = MAX_DIST_WGT / MAX_DIST;
 
       const MDist<R> md = MDist<R>::get();
-      for (u32 idx = md.GetFirstIndex(0); idx < md.GetLastIndex(1); ++idx) {
+      for (u32 idx = md.GetFirstIndex(0); idx < md.GetLastIndex(2); ++idx) {
         const SPoint sp = md.GetPoint(idx);
+
+        // Allow corners but not two steps away
+        if (sp.GetMaximumLength() > 1) continue;
+
         Vector spVec(sp);
         const T other = window.GetRelativeAtom(sp);
 
@@ -212,11 +293,16 @@ namespace MFM
         if (other.GetType() != Element_Empty<T,R>::TYPE)
           weight /= 2;
 
-        totWgt += weight;
-
-        FAIL(INCOMPLETE_CODE);
+        if (weight > 0) {
+          totWgt += weight;
+          if (random.OddsOf(weight,totWgt)) {
+            dest = sp;
+          }
+        }
       }
+      return dest;
     }
+
     virtual void Behavior(EventWindow<T,R>& window) const 
     {
       const double TARGET_SPACING = 1.5;
@@ -256,7 +342,7 @@ namespace MFM
 
         if (otherType != selfType) continue;
         
-        u32 dist = sp.GetManhattanDistance();
+        u32 dist = sp.GetManhattanLength();
         if (dist < minDist)
           minDist = dist;
 
@@ -285,10 +371,15 @@ namespace MFM
 
       } else if (countNgbr == 1 && minDist > TARGET_SPACING) {
         // Try to step closer to avgPosition (regardless of heading?)
+        SPoint dest = PickPossibleDestination(window,avgPosition,random);
+
+        window.SwapAtoms(SPoint(0,0),dest);
+        return;  // No diffusion if swap
 
       } else {
         avgHeading /= countNgbr;
         avgPosition /= countNgbr;
+
         //        avgPosition.Print(stderr);
         //        fprintf(stderr," %d\n",countNgbr);
       }
