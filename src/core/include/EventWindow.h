@@ -25,8 +25,8 @@ public:
 
   Tile<T,R>& GetTile() { return m_tile; }
 
-  bool IsLiveSite(const SPoint & location) {
-    return m_tile.IsLiveSite(location-m_center);
+  bool IsLiveSite(const SPoint & location) const {
+    return m_tile.IsLiveSite(location+m_center);
   }
 
   EventWindow(Tile<T,R> & tile, u32 tileWidth, u8 neighborConnections);
@@ -35,7 +35,7 @@ public:
 
   void SetCenter(const SPoint& center) ;
 
-  SPoint& GetCenter() { return m_center; }
+  const SPoint& GetCenter() const { return m_center; }
 
   ~EventWindow() { }
 
@@ -54,7 +54,7 @@ public:
 
   void SwapAtoms(const SPoint& locA, const SPoint& locB);
 
-  void FillCenter(SPoint& out);
+  void FillCenter(SPoint& out) const;
   
 };
 } /* namespace MFM */

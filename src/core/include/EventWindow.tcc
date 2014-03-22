@@ -82,7 +82,7 @@ void EventWindow<T,R>::SwapAtoms(const SPoint& locA, const SPoint& locB)
 
 
 template <class T, u32 R>
-void EventWindow<T,R>::FillCenter(SPoint& out)
+void EventWindow<T,R>::FillCenter(SPoint& out) const
 {
   out.Set(m_center.GetX(), m_center.GetY());
 }
