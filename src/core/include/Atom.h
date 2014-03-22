@@ -22,11 +22,11 @@ namespace MFM {
         return GetType()==other.GetType();
       }
 
-      //      const Element<T,R> * GetElement() const ;
-
       virtual u32 GetType() const = 0;
 
       virtual void Print(FILE* ostream) const = 0;
+
+      virtual ~Atom() { }
 
     };
 } /* namespace MFM */
