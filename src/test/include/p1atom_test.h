@@ -1,6 +1,8 @@
 #ifndef P1ATOM_TEST_H      /* -*- C++ -*- */
 #define P1ATOM_TEST_H
 
+#include "test_common.h"
+
 namespace MFM {
 
 class P1AtomTest

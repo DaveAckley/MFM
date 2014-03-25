@@ -9,20 +9,20 @@ namespace MFM {
 void GridTest::Test_gridPlaceAtom()
 {
   
-  GridP1Atom grid;
+  TestGrid grid;
 
   grid.SetSeed(1);
   grid.Reinit();
 
-  grid.Needed(Element_Res<P1Atom,4>::THE_INSTANCE);
+  grid.Needed(Element_Res<TestCoreConfig>::THE_INSTANCE);
 
-  P1Atom atom(Element_Res<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
+  TestAtom atom(Element_Res<TestCoreConfig>::THE_INSTANCE.GetDefaultAtom());
 
   SPoint gloc(5, 10);
 
   grid.PlaceAtom(atom, gloc);
 
-  const P1Atom* out = grid.GetAtom(gloc);
+  const TestAtom* out = grid.GetAtom(gloc);
 
   assert(out->GetType() == atom.GetType());
   

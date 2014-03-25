@@ -39,6 +39,11 @@ void BitVectorTest::Test_bitVectorRead()
   assert(bits->Read(16, 32) == 0xffff0000);
   assert(bits->Read(64, 32) == 0x12345678);
   assert(bits->Read(56, 16) == 0x00000012);
+
+  {
+    BitVector<64> foo;
+    assert(foo.Read(64-31, 31)==0);
+  }
 }
 
 void BitVectorTest::Test_bitVectorSize()
