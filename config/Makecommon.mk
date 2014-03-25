@@ -18,11 +18,9 @@ INCLUDES+=-I include
 
 ### TOOL STUFF
 
-LDFLAGS:=
-
 ALLDEP+=$(wildcard $(BASEDIR)/config/*.mk) Makefile   # If config or local makefile changes, nuke it from orbit
 
-ifndef ($(TARGET),cross)
+ifeq ($(MFM_TARGET),linux)
   CFLAGS:=$(NATIVE_GCC_CFLAGS)
   CPPFLAGS:=$(NATIVE_GCC_CPPFLAGS)
   LDFLAGS:=$(NATIVE_GCC_LDFLAGS)

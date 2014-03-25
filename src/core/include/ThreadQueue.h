@@ -68,7 +68,7 @@ namespace MFM
      * *****************NOTICE*******************
      *
      * @param bytes The buffer to read bytes into. This buffer will be
-     *              overrwritten during this call.
+     *              overwritten during this call.
      *
      * @param length The number of bytes to read from the front of the
      *               underlying queue.

@@ -10,9 +10,12 @@
 namespace MFM
 {
 
-  template <class T, u32 R>
-  class Element_Data : public Element<T,R>
+  template <class CC>
+  class Element_Data : public Element<CC>
   {
+    // Extract short names for parameter types
+    typedef typename CC::ATOM_TYPE T;
+
   public:
     const char* GetName() const { return "Data"; }
 
@@ -23,12 +26,12 @@ namespace MFM
     static const u32 STATE_BITS = STATE_DATA_IDX+STATE_DATA_LEN;
 
     u32 GetDatum(const T &atom, u32 badType) const {
-      if (!atom.IsType(TYPE)) return badType;
+      if (!Atom<CC>::IsType(atom,TYPE)) return badType;
       return atom.GetStateField(STATE_DATA_IDX,STATE_DATA_LEN);
     }
 
     bool SetDatum(T &atom, u32 value) const {
-      if (!atom.IsType(TYPE)) return false;
+      if (!Atom<CC>::IsType(atom,TYPE)) return false;
       atom.SetStateField(STATE_DATA_IDX,STATE_DATA_LEN,value);
       return true;
     }
@@ -46,7 +49,7 @@ namespace MFM
       return 0xff0000ff;
     }
 
-    virtual void Behavior(EventWindow<T,R>& window) const
+    virtual void Behavior(EventWindow<CC>& window) const
     {
 
       u32 val = GetDatum(window.GetCenterAtom(),-1);
@@ -59,8 +62,8 @@ namespace MFM
     static void Needed();    
   };
 
-  template <class T, u32 R>
-  Element_Data<T,R> Element_Data<T,R>::THE_INSTANCE;
+  template <class CC>
+  Element_Data<CC> Element_Data<CC>::THE_INSTANCE;
 
 }
 

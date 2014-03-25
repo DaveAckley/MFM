@@ -107,9 +107,13 @@ namespace MFM
    */
 
 
-  template <class T, u32 R>
-  class Element_Boids : public Element<T,R>
+  template <class CC>
+  class Element_Boids : public Element<CC>
   {
+    // Extract short names for parameter types
+    typedef typename CC::ATOM_TYPE T;
+    typedef typename CC::PARAM_CONFIG P;
+    enum { R = P::EVENT_WINDOW_RADIUS };
    
     class Vector {
       FXP16 x;
@@ -253,7 +257,7 @@ namespace MFM
       atom.SetStateField(STATE_HEADING_IDX,STATE_HEADING_LEN,toTinyVector<BITS_PER_DIM>(v));
     }
 
-    SPoint PickPossibleDestination(EventWindow<T,R>& window, const Vector & target, Random & random) const 
+    SPoint PickPossibleDestination(EventWindow<CC>& window, const Vector & target, Random & random) const 
     {
       SPoint dest;
       FXP16 totWgt = 0;
@@ -290,7 +294,7 @@ namespace MFM
         FXP16 weight = 0;
         if (dist < MAX_DIST) 
           weight = MAX_DIST_WGT-dist*WGT_PER_DIST;
-        if (other.GetType() != Element_Empty<T,R>::TYPE)
+        if (other.GetType() != Element_Empty<CC>::TYPE)
           weight /= 2;
 
         if (weight > 0) {
@@ -303,7 +307,7 @@ namespace MFM
       return dest;
     }
 
-    virtual void Behavior(EventWindow<T,R>& window) const 
+    virtual void Behavior(EventWindow<CC>& window) const 
     {
       const double TARGET_SPACING = 1.5;
       Random & random = window.GetRandom();
@@ -335,7 +339,7 @@ namespace MFM
 
         const u32 otherType = other.GetType();
 
-        if (otherType == Element_Res<T,R>::TYPE) {
+        if (otherType == Element_Res<CC>::TYPE) {
           if (random.OneIn(++resCount)) resAt = sp;
           continue;
         }
@@ -366,7 +370,7 @@ namespace MFM
         // With medium prob: Do random increment to heading
         // With lower prob: Suicide
         if (random.OneIn(3)) {
-          window.SetCenterAtom(Element_Empty<T,R>::THE_INSTANCE.GetDefaultAtom());  // I can't stand it
+          window.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());  // I can't stand it
         }
 
       } else if (countNgbr == 1 && minDist > TARGET_SPACING) {

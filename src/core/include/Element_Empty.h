@@ -10,9 +10,11 @@
 namespace MFM
 {
 
-  template <class T, u32 R>
-  class Element_Empty : public Element<T,R>
+  template <class CC>
+  class Element_Empty : public Element<CC>
   {
+    // Extract short names for parameter types
+    typedef typename CC::ATOM_TYPE T;
 
   public:
     const char* GetName() const { return "Empty"; }
@@ -33,13 +35,13 @@ namespace MFM
       return 0x00000000;                    // Not black.. transparent
     }
 
-    virtual void Behavior(EventWindow<T,R>& window) const
+    virtual void Behavior(EventWindow<CC>& window) const
     {
     }
   };
 
-  template <class T, u32 R>
-  Element_Empty<T,R> Element_Empty<T,R>::THE_INSTANCE;
+  template <class CC>
+  Element_Empty<CC> Element_Empty<CC>::THE_INSTANCE;
 }
 
 #endif /* ELEMENT_EMPTY_H */

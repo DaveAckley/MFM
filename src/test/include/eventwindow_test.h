@@ -7,6 +7,7 @@ namespace MFM {
 
 class EventWindowTest
 {
+
 public:
 
   static void Test_eventwindowConstruction();

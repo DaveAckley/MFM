@@ -1,20 +1,25 @@
 #include "main.h"
+#include "ParamConfig.h"
 
 namespace MFM {
 
-  struct MFMSimDHSDemo : public AbstractDriver<P1Atom,5,3,4>
+  typedef ParamConfig<> OurParamConfig;
+  typedef P1Atom<OurParamConfig> OurAtom;
+  typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
+  typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
+  struct MFMSimDHSDemo : public AbstractDriver<OurGridConfig>
   {
     MFMSimDHSDemo(DriverArguments& args) : AbstractDriver(args) { }
 
     virtual void ReinitPhysics() {
       OurGrid & mainGrid = GetGrid();
 
-      mainGrid.Needed(Element_Dreg<P1Atom, 4>::THE_INSTANCE);
-      mainGrid.Needed(Element_Res<P1Atom, 4>::THE_INSTANCE);
-      mainGrid.Needed(Element_Sorter<P1Atom, 4>::THE_INSTANCE);
-      mainGrid.Needed(Element_Emitter<P1Atom, 4>::THE_INSTANCE);
-      mainGrid.Needed(Element_Consumer<P1Atom, 4>::THE_INSTANCE);
-      mainGrid.Needed(Element_Data<P1Atom, 4>::THE_INSTANCE);
+      mainGrid.Needed(Element_Dreg<OurCoreConfig>::THE_INSTANCE);
+      mainGrid.Needed(Element_Res<OurCoreConfig>::THE_INSTANCE);
+      mainGrid.Needed(Element_Sorter<OurCoreConfig>::THE_INSTANCE);
+      mainGrid.Needed(Element_Emitter<OurCoreConfig>::THE_INSTANCE);
+      mainGrid.Needed(Element_Consumer<OurCoreConfig>::THE_INSTANCE);
+      mainGrid.Needed(Element_Data<OurCoreConfig>::THE_INSTANCE);
     }
 
     void ReinitEden() 
@@ -22,25 +27,25 @@ namespace MFM {
       OurGrid & mainGrid = GetGrid();
       StatsRenderer & srend = GetStatsRenderer();
 
-      P1Atom atom(Element_Dreg<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
-      P1Atom sorter(Element_Sorter<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
-      P1Atom emtr(Element_Emitter<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
-      P1Atom cnsr(Element_Consumer<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
+      OurAtom atom(Element_Dreg<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
+      OurAtom sorter(Element_Sorter<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
+      OurAtom emtr(Element_Emitter<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
+      OurAtom cnsr(Element_Consumer<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
 
-      srend.DisplayStatsForType(Element_Empty<P1Atom, 4>::TYPE);
-      srend.DisplayStatsForType(Element_Dreg<P1Atom, 4>::TYPE);
-      srend.DisplayStatsForType(Element_Res<P1Atom, 4>::TYPE);
-      srend.DisplayStatsForType(Element_Sorter<P1Atom, 4>::TYPE);
-      srend.DisplayStatsForType(Element_Emitter<P1Atom, 4>::TYPE);
-      srend.DisplayStatsForType(Element_Consumer<P1Atom, 4>::TYPE);
-      srend.DisplayStatsForType(Element_Data<P1Atom, 4>::TYPE);
+      srend.DisplayStatsForType(Element_Empty<OurCoreConfig>::TYPE);
+      srend.DisplayStatsForType(Element_Dreg<OurCoreConfig>::TYPE);
+      srend.DisplayStatsForType(Element_Res<OurCoreConfig>::TYPE);
+      srend.DisplayStatsForType(Element_Sorter<OurCoreConfig>::TYPE);
+      srend.DisplayStatsForType(Element_Emitter<OurCoreConfig>::TYPE);
+      srend.DisplayStatsForType(Element_Consumer<OurCoreConfig>::TYPE);
+      srend.DisplayStatsForType(Element_Data<OurCoreConfig>::TYPE);
 
       emtr.SetStateField(0,10,10);  // What is this for??
       cnsr.SetStateField(0,10,10);  // What is this for??
 
       sorter.SetStateField(0,32,50);  // Default threshold
 
-      u32 realWidth = TILE_WIDTH - EVENT_WINDOW_RADIUS * 2;
+      u32 realWidth = P::TILE_WIDTH - P::EVENT_WINDOW_RADIUS * 2;
 
       SPoint aloc(20, 30);
       SPoint sloc(20, 10);

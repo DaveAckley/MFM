@@ -1,8 +1,14 @@
 #include "main.h"
+#include "P0Atom.h"
 
 namespace MFM {
 
-  struct MFMSimCloudDemo : public AbstractDriver<P1Atom,5,3,4>
+  typedef ParamConfig<> OurParamConfig;
+  typedef P0Atom<OurParamConfig> OurAtom;
+  typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
+  typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
+
+  struct MFMSimCloudDemo : public AbstractDriver<OurGridConfig>
   {
     MFMSimCloudDemo(DriverArguments & args) 
       : AbstractDriver(args) 
@@ -12,11 +18,11 @@ namespace MFM {
     virtual void ReinitPhysics() {
       OurGrid & mainGrid = GetGrid();
 
-      mainGrid.Needed(Element_Empty<P1Atom, 4>::THE_INSTANCE);
-      mainGrid.Needed(Element_Dreg<P1Atom, 4>::THE_INSTANCE);
-      mainGrid.Needed(Element_Res<P1Atom, 4>::THE_INSTANCE);
-      mainGrid.Needed(Element_Boids1<P1Atom, 4>::THE_INSTANCE);
-      mainGrid.Needed(Element_Boids2<P1Atom, 4>::THE_INSTANCE);
+      mainGrid.Needed(Element_Empty<OurCoreConfig>::THE_INSTANCE);
+      mainGrid.Needed(Element_Dreg<OurCoreConfig>::THE_INSTANCE);
+      mainGrid.Needed(Element_Res<OurCoreConfig>::THE_INSTANCE);
+      mainGrid.Needed(Element_Boids1<OurCoreConfig>::THE_INSTANCE);
+      mainGrid.Needed(Element_Boids2<OurCoreConfig>::THE_INSTANCE);
     }
 
     void ReinitEden() 
@@ -24,17 +30,19 @@ namespace MFM {
       OurGrid & mainGrid = GetGrid();
       StatsRenderer & srend = GetStatsRenderer();
 
-      srend.DisplayStatsForType(Element_Empty<P1Atom, 4>::TYPE);
-      srend.DisplayStatsForType(Element_Dreg<P1Atom, 4>::TYPE);
-      srend.DisplayStatsForType(Element_Res<P1Atom, 4>::TYPE);
-      srend.DisplayStatsForType(Element_Boids1<P1Atom, 4>::TYPE);
-      srend.DisplayStatsForType(Element_Boids2<P1Atom, 4>::TYPE);
+      srend.DisplayStatsForType(Element_Empty<OurCoreConfig>::TYPE);
+      srend.DisplayStatsForType(Element_Dreg<OurCoreConfig>::TYPE);
+      srend.DisplayStatsForType(Element_Res<OurCoreConfig>::TYPE);
+      srend.DisplayStatsForType(Element_Boids1<OurCoreConfig>::TYPE);
+      srend.DisplayStatsForType(Element_Boids2<OurCoreConfig>::TYPE);
 
-      P1Atom aBoid1(Element_Boids1<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
-      P1Atom aBoid2(Element_Boids2<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
-      P1Atom aDReg(Element_Dreg<P1Atom,4>::THE_INSTANCE.GetDefaultAtom());
+      OurAtom aBoid1(Element_Boids1<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
+      OurAtom aBoid2(Element_Boids2<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
+      OurAtom aDReg(Element_Dreg<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
 
-      u32 realWidth = Tile<P1Atom,4>::OWNED_SIDE;
+      u32 realWidth = Tile<OurCoreConfig>::OWNED_SIDE;
+
+      // printf("atom size %ld\n",8*sizeof(MFM::Atom<OurCoreConfig>));
 
       SPoint aloc(20, 30);
       SPoint sloc(20, 10);

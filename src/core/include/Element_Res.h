@@ -10,9 +10,12 @@
 namespace MFM
 {
 
-  template <class T, u32 R>
-  class Element_Res : public Element<T,R>
+  template <class C>
+  class Element_Res : public Element<C>
   {
+    // Extract short names for parameter types
+    typedef typename C::ATOM_TYPE T;
+
   public:
     const char* GetName() const { return "Res"; }
 
@@ -32,7 +35,7 @@ namespace MFM
       return 0xffffff00;
     }
 
-    virtual void Behavior(EventWindow<T,R>& window) const
+    virtual void Behavior(EventWindow<C>& window) const
     {
       this->Diffuse(window);
     }
@@ -40,14 +43,14 @@ namespace MFM
     static void Needed();    
   };
 
-  template <class T, u32 R>
-  Element_Res<T,R> Element_Res<T,R>::THE_INSTANCE;
+  template <class C>
+  Element_Res<C> Element_Res<C>::THE_INSTANCE;
 
   /*
-  template <class T, u32 R>
-  void Element_Res<T,R>::Needed()
+  template <class C>
+  void Element_Res<C>::Needed()
   {
-    ElementTable<T,R>::get().RegisterElement(Element_Res<T,R>::THE_INSTANCE);
+    ElementTable<C>::get().RegisterElement(Element_Res<C>::THE_INSTANCE);
   }
   */
 }

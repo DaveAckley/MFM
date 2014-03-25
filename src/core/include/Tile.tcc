@@ -4,14 +4,14 @@
 
 namespace MFM {
 
-  template <class T, u32 R>
-  Tile<T,R>::Tile() : m_executingWindow(*this)
+  template <class CC>
+  Tile<CC>::Tile() : m_executingWindow(*this)
   {
     Reinit();
   }
 
-  template <class T, u32 R>
-  void Tile<T,R>::Reinit() 
+  template <class CC>
+  void Tile<CC>::Reinit() 
   {
     elementTable.Reinit();
 
@@ -22,7 +22,7 @@ namespace MFM {
       m_atomCount[i] = 0;
     }
 
-    RegisterElement(Element_Empty<T,R>::THE_INSTANCE);
+    RegisterElement(Element_Empty<CC>::THE_INSTANCE);
 
     SetAtomCount(ELEMENT_EMPTY,OWNED_SIDE*OWNED_SIDE);
 
@@ -65,8 +65,8 @@ namespace MFM {
     m_threadPaused = false;
   }
 
-  template <class T, u32 R>
-  void Tile<T,R>::Connect(Tile<T,R>& other, Dir toCache)
+  template <class CC>
+  void Tile<CC>::Connect(Tile<CC>& other, Dir toCache)
   {
     if(IS_OWNED_CONNECTION(toCache))
     {
@@ -80,61 +80,35 @@ namespace MFM {
     }
   }
 
-  template <class T, u32 R>
-  Connection* Tile<T,R>::GetConnection(Dir cache)
+  template <class CC>
+  Connection* Tile<CC>::GetConnection(Dir cache)
   {
     return m_connections[cache];
   }
 
-  template <class T, u32 R>
-  Random& Tile<T,R>::GetRandom()
+  template <class CC>
+  Random& Tile<CC>::GetRandom()
   {
     return m_random;
   }
 
-  template <class T,u32 R>
-  const T* Tile<T,R>::GetAtom(const SPoint& pt) const
-  {
-    return GetAtom(pt.GetX(), pt.GetY());
-  }
-
-  template <class T,u32 R>
-  const T* Tile<T,R>::GetUncachedAtom(const SPoint& pt) const
-  {
-    return GetUncachedAtom(pt.GetX(), pt.GetY());
-  }
-
-  template <class T,u32 R>
-  u64 Tile<T,R>::GetUncachedSiteEvents(const SPoint site) const
+  template <class CC>
+  u64 Tile<CC>::GetUncachedSiteEvents(const SPoint site) const
   {
     if (!IsInUncachedTile(site)) FAIL(ILLEGAL_ARGUMENT);
     return m_siteEvents[site.GetX()][site.GetY()];
   }
 
-  template <class T,u32 R>
-  const T* Tile<T,R>::GetUncachedAtom(s32 x, s32 y) const
+  template <class CC>
+  void Tile<CC>::InternalPutAtom(const T & atom, s32 x, s32 y) 
   {
-    return GetAtom(x+R, y+R);
-  }
-
-  template <class T,u32 R>
-  const T* Tile<T,R>::GetAtom(s32 x, s32 y) const
-  {
-    if (x < 0 || y < 0 || x >= TILE_WIDTH || y >= TILE_WIDTH)
-      FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
-    return &m_atoms[x][y];
-  }
-
-  template <class T,u32 R>
-  void Tile<T,R>::InternalPutAtom(const T & atom, s32 x, s32 y) 
-  {
-    if (x < 0 || y < 0 || x >= TILE_WIDTH || y >= TILE_WIDTH)
+    if (((u32) x) >= TILE_WIDTH || ((u32) y) >= TILE_WIDTH)
       FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
     m_atoms[x][y] = atom;
   }
 
-  template <class T, u32 R>
-  void Tile<T,R>::SendAcknowledgmentPacket(Packet<T>& packet)
+  template <class CC>
+  void Tile<CC>::SendAcknowledgmentPacket(Packet<T>& packet)
   {
     Dir from = Dirs::OppositeDir(packet.GetReceivingNeighbor());
     Packet<T> sendout(PACKET_EVENT_ACKNOWLEDGE);
@@ -145,8 +119,8 @@ namespace MFM {
 			       sizeof(Packet<T>));
   }
 
-  template <class T, u32 R>
-  void Tile<T,R>::ReceivePacket(Packet<T>& packet)
+  template <class CC>
+  void Tile<CC>::ReceivePacket(Packet<T>& packet)
   {
     switch(packet.GetType())
     {
@@ -164,15 +138,15 @@ namespace MFM {
     }
   }
 
-  template <class T,u32 R>
-  void Tile<T,R>::FillLastExecutedAtom(SPoint& out)
+  template <class CC>
+  void Tile<CC>::FillLastExecutedAtom(SPoint& out)
   {
     out.Set(m_lastExecutedAtom.GetX(),
 	    m_lastExecutedAtom.GetY());
   }
 
-  template <class T,u32 R>
-  void Tile<T,R>::CreateRandomWindow()
+  template <class CC>
+  void Tile<CC>::CreateRandomWindow()
   {
     /* Make sure not to be created in the cache */
     int maxval = TILE_WIDTH - (EVENT_WINDOW_RADIUS << 1);
@@ -182,14 +156,14 @@ namespace MFM {
     m_executingWindow.SetCenter(pt);
   }
 
-  template <class T,u32 R>
-  void Tile<T,R>::CreateWindowAt(const SPoint& pt)
+  template <class CC>
+  void Tile<CC>::CreateWindowAt(const SPoint& pt)
   {
     m_executingWindow.SetCenter(pt);
   }
 
-  template <class T, u32 R>
-  Dir Tile<T,R>::RegionAt(const SPoint& sp, u32 reach) const
+  template <class CC>
+  Dir Tile<CC>::RegionAt(const SPoint& sp, u32 reach) const
   {
     UPoint pt = makeUnsigned(sp);
 
@@ -230,20 +204,20 @@ namespace MFM {
     return (Dir)-1;
   }
 
-  template <class T, u32 R>
-  Dir Tile<T,R>::CacheAt(const SPoint& pt) const
+  template <class CC>
+  Dir Tile<CC>::CacheAt(const SPoint& pt) const
   {
     return RegionAt(pt, R);
   }
 
-  template <class T, u32 R>
-  Dir Tile<T,R>::SharedAt(const SPoint& pt) const
+  template <class CC>
+  Dir Tile<CC>::SharedAt(const SPoint& pt) const
   {
     return RegionAt(pt, R * 3);
   }
 
-  template <class T,u32 R>
-  void Tile<T,R>::PlaceAtom(const T& atom, const SPoint& pt)
+  template <class CC>
+  void Tile<CC>::PlaceAtom(const T& atom, const SPoint& pt)
   {
     const T* oldAtom = GetAtom(pt);
     u32 oldType = oldAtom->GetType();
@@ -257,8 +231,8 @@ namespace MFM {
     }
   }
 
-  template <class T, u32 R>
-  void Tile<T, R>::SendAtom(Dir neighbor, SPoint& atomLoc)
+  template <class CC>
+  void Tile<CC>::SendAtom(Dir neighbor, SPoint& atomLoc)
   {
     if(IsConnected(neighbor))
     {
@@ -298,48 +272,48 @@ namespace MFM {
     }
   }
 
-  template <class T, u32 R>
-  bool Tile<T,R>::IsConnected(Dir dir) const
+  template <class CC>
+  bool Tile<CC>::IsConnected(Dir dir) const
   {
     return m_connections[dir] != NULL &&
       m_connections[dir]->IsConnected();
   }
 
-  template <class T, u32 R>
-  bool Tile<T,R>::IsLiveSite(const SPoint & location) const
+  template <class CC>
+  bool Tile<CC>::IsLiveSite(const SPoint & location) const
   {
     return IsInTile(location) &&
       (!IsInCache(location) || IsConnected(CacheAt(location)));
   }
 
-  template <class T, u32 R>
-  bool Tile<T,R>::IsOwnedSite(const SPoint & location) 
+  template <class CC>
+  bool Tile<CC>::IsOwnedSite(const SPoint & location) 
   {
     return IsInTile(location) && !IsInCache(location);
   }
 
-  template <class T, u32 R>
-  bool Tile<T,R>::IsInCache(const SPoint& pt) 
+  template <class CC>
+  bool Tile<CC>::IsInCache(const SPoint& pt) 
   {
     s32 upbnd = TILE_WIDTH - R;
     return (u32)pt.GetX() < R || (u32)pt.GetY() < R ||
       pt.GetX() >= upbnd || pt.GetY() >= upbnd;
   }
 
-  template <class T, u32 R>
-  bool Tile<T,R>::IsInTile(const SPoint& pt)
+  template <class CC>
+  bool Tile<CC>::IsInTile(const SPoint& pt)
   {
     return ((u32) pt.GetX()) < TILE_WIDTH && ((u32) pt.GetY() < TILE_WIDTH);
   }
 
-  template <class T, u32 R>
-  bool Tile<T,R>::IsInUncachedTile(const SPoint& pt)
+  template <class CC>
+  bool Tile<CC>::IsInUncachedTile(const SPoint& pt)
   {
     return ((u32) pt.GetX()) < OWNED_SIDE && ((u32) pt.GetY() < OWNED_SIDE);
   }
 
-  template <class T, u32 R>
-  void Tile<T,R>::SendEndEventPackets(u32 dirWaitWord)
+  template <class CC>
+  void Tile<CC>::SendEndEventPackets(u32 dirWaitWord)
   {
     Dir dir = Dirs::NORTH;
     do
@@ -358,9 +332,12 @@ namespace MFM {
     } while (dir != Dirs::NORTH);
   }
 
-  template <class T, u32 R>
-  u32 Tile<T,R>::SendRelevantAtoms()
+  template <class CC>
+  u32 Tile<CC>::SendRelevantAtoms()
   {
+    // Extract short names for parameter types
+    typedef typename CC::PARAM_CONFIG P;
+
     SPoint localLoc;
     SPoint ewCenter;
 
@@ -386,7 +363,7 @@ namespace MFM {
 	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTHWEST);
 	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
 	}
-	else if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
+	else if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= P::TILE_WIDTH - r2)
 	{
 	  SendAtom(Dirs::SOUTHWEST, localLoc);
 	  SendAtom(Dirs::SOUTH, localLoc);
@@ -395,7 +372,7 @@ namespace MFM {
 	}
       }
       /*East neighbor?*/
-      else if(IsConnected(Dirs::EAST) && localLoc.GetX() >= TILE_WIDTH - r2)
+      else if(IsConnected(Dirs::EAST) && localLoc.GetX() >= P::TILE_WIDTH - r2)
       {
 	SendAtom(Dirs::EAST, localLoc);
 	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::EAST);
@@ -406,7 +383,7 @@ namespace MFM {
 	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTHEAST);
 	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
 	}
-	if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
+	if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= P::TILE_WIDTH - r2)
 	{
 	  SendAtom(Dirs::SOUTHEAST, localLoc);
 	  SendAtom(Dirs::SOUTH, localLoc);
@@ -419,7 +396,7 @@ namespace MFM {
 	SendAtom(Dirs::NORTH, localLoc);
 	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
       }
-      else if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= TILE_WIDTH - r2)
+      else if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= P::TILE_WIDTH - r2)
       {
 	SendAtom(Dirs::SOUTH, localLoc);
 	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
@@ -428,15 +405,15 @@ namespace MFM {
     return dirBitfield;
   }
 
-  template <class T, u32 R>
-  bool Tile<T,R>::TryLock(Dir connectionDir)
+  template <class CC>
+  bool Tile<CC>::TryLock(Dir connectionDir)
   {
     return IsConnected(connectionDir) &&
       m_connections[connectionDir]->Lock();
   }
 
-  template <class T, u32 R>
-  bool Tile<T,R>::TryLockCorner(Dir cornerDir)
+  template <class CC>
+  bool Tile<CC>::TryLockCorner(Dir cornerDir)
   {
     u32 locked = 0;
 
@@ -463,8 +440,8 @@ namespace MFM {
     return true;
   }
 
-  template <class T, u32 R>
-  bool Tile<T,R>::LockRegion(Dir regionDir)
+  template <class CC>
+  bool Tile<CC>::LockRegion(Dir regionDir)
   {
     switch(regionDir)
     {
@@ -485,8 +462,8 @@ namespace MFM {
     }
   }
 
-  template <class T, u32 R>
-  void Tile<T,R>::UnlockCorner(Dir corner)
+  template <class CC>
+  void Tile<CC>::UnlockCorner(Dir corner)
   {
     corner = Dirs::CCWDir(corner);
     for(u32 i = 0; i < 3; i++)
@@ -496,8 +473,8 @@ namespace MFM {
     }
   }
 
-  template <class T, u32 R>
-  void Tile<T,R>::UnlockRegion(Dir regionDir)
+  template <class CC>
+  void Tile<CC>::UnlockRegion(Dir regionDir)
   {
     switch(regionDir)
     {
@@ -519,22 +496,29 @@ namespace MFM {
     }
   }
 
-  template <class T, u32 R>
-  bool Tile<T,R>::IsInHidden(const SPoint& pt)
+  template <class CC>
+  bool Tile<CC>::IsInHidden(const SPoint& pt)
   {
-    return pt.GetX() >= (s32)R * 3 && pt.GetX() < TILE_WIDTH - (s32)R * 3 &&
-      pt.GetY() >= (s32)R * 3 && pt.GetY() < TILE_WIDTH - (s32)R * 3;
+    // Extract short names for parameter types
+    typedef typename CC::PARAM_CONFIG P;
+
+    return pt.GetX() >= (s32)R * 3 && pt.GetX() < P::TILE_WIDTH - (s32)R * 3 &&
+      pt.GetY() >= (s32)R * 3 && pt.GetY() < P::TILE_WIDTH - (s32)R * 3;
   }
 
-  template <class T, u32 R>
-  TileRegion Tile<T,R>::RegionFromIndex(const u32 index)
+  template <class CC>
+  TileRegion Tile<CC>::RegionFromIndex(const u32 index)
   {
-    if(index > TILE_WIDTH)
+    // Extract short names for parameter types
+    typedef typename CC::PARAM_CONFIG P;
+    enum { R = P::EVENT_WINDOW_RADIUS };
+
+    if(index > P::TILE_WIDTH)
     {
       FAIL(ARRAY_INDEX_OUT_OF_BOUNDS); /* Index out of Tile bounds */
     }
 
-    const u32 hiddenWidth = TILE_WIDTH - R * 6;
+    const u32 hiddenWidth = P::TILE_WIDTH - R * 6;
 
     if(index < R * REGION_HIDDEN)
     {
@@ -550,15 +534,15 @@ namespace MFM {
     }
   }
 
-  template <class T, u32 R>
-  TileRegion Tile<T,R>::RegionIn(const SPoint& pt)
+  template <class CC>
+  TileRegion Tile<CC>::RegionIn(const SPoint& pt)
   {
     return MIN(RegionFromIndex((u32)pt.GetX()),
                RegionFromIndex((u32)pt.GetY()));
   }
 
-  template <class T, u32 R>
-  void Tile<T,R>::FlushAndWaitOnAllBuffers(u32 dirWaitWord)
+  template <class CC>
+  void Tile<CC>::FlushAndWaitOnAllBuffers(u32 dirWaitWord)
   {
     Packet<T> readPack(PACKET_WRITE);
     u32 readBytes;
@@ -593,8 +577,8 @@ namespace MFM {
     } while(dirWaitWord);
   }
 
-  template <class T,u32 R>
-  void Tile<T,R>::Execute()
+  template <class CC>
+  void Tile<CC>::Execute()
   {
     while(m_threadInitialized)
     {
@@ -608,9 +592,10 @@ namespace MFM {
 	 (locked = LockRegion(lockRegion)))
 	{
           unwind_protect({
+              printf("%d",i);
               ++m_eventsFailed;
               ++m_failuresErased;
-              m_executingWindow.SetCenterAtom(Element_Empty<T,R>::THE_INSTANCE.GetDefaultAtom());
+              m_executingWindow.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
             },{
               elementTable.Execute(m_executingWindow);
             });
@@ -656,8 +641,8 @@ namespace MFM {
       }
   }
 
-  template <class T, u32 R>
-  void* Tile<T,R>::ExecuteThreadHelper(void* arg)
+  template <class CC>
+  void* Tile<CC>::ExecuteThreadHelper(void* arg)
   {
     Tile* tilePtr = (Tile*) arg;
     MFMPtrToErrEnvStackPtr = &(tilePtr->m_errorEnvironmentStackTop);
@@ -665,16 +650,16 @@ namespace MFM {
     return NULL;
   }
 
-  template <class T, u32 R>
-  u32 Tile<T,R>::GetAtomCount(ElementType atomType) const
+  template <class CC>
+  u32 Tile<CC>::GetAtomCount(ElementType atomType) const
   {
     s32 idx = elementTable.GetIndex(atomType);
     if (idx < 0) return 0;
     return m_atomCount[idx];
   }
 
-  template <class T, u32 R>
-  void Tile<T,R>::SetAtomCount(ElementType atomType, s32 count)
+  template <class CC>
+  void Tile<CC>::SetAtomCount(ElementType atomType, s32 count)
   {
     s32 idx = elementTable.GetIndex(atomType);
     if (idx < 0) {
@@ -683,8 +668,8 @@ namespace MFM {
     }
     m_atomCount[idx] = count;
   }
-  template <class T, u32 R>
-  void Tile<T,R>::Start()
+  template <class CC>
+  void Tile<CC>::Start()
   {
     if(!m_threadInitialized)
     {
@@ -698,14 +683,14 @@ namespace MFM {
     }
   }
 
-  template <class T, u32 R>
-  void Tile<T,R>::Pause()
+  template <class CC>
+  void Tile<CC>::Pause()
   {
     m_threadPauser.Pause();
   }
 
-  template <class T, u32 R>
-  void Tile<T,R>::IncrAtomCount(ElementType atomType, s32 delta)
+  template <class CC>
+  void Tile<CC>::IncrAtomCount(ElementType atomType, s32 delta)
   {
     s32 idx = elementTable.GetIndex(atomType);
     if (idx < 0) {
@@ -726,8 +711,8 @@ namespace MFM {
   }
 
 #if 0
-  template <class T, u32 R>
-  u64 Tile<T,R>::WriteEPSRasterLine(FILE* outstrm, u32 lineIdx)
+  template <class CC>
+  u64 Tile<CC>::WriteEPSRasterLine(FILE* outstrm, u32 lineIdx)
   {
     u64 max = 0;
     for(u32 x = 0; x < TILE_WIDTH - 2 * R; x++)
@@ -739,15 +724,15 @@ namespace MFM {
   }
 #endif
 
-  template <class T, u32 R>
-  void Tile<T,R>::AssertValidAtomCounts() const
+  template <class CC>
+  void Tile<CC>::AssertValidAtomCounts() const
   {
     s32 counts[ELEMENT_TABLE_SIZE];
     for (u32 i = 0; i < ELEMENT_TABLE_SIZE; ++i)
       counts[i] = 0;
     for (u32 x = 0; x < OWNED_SIDE; ++x)
       for (u32 y = 0; y < OWNED_SIDE; ++y) {
-        const Atom<T,R> * atom = GetUncachedAtom(x,y);
+        const T * atom = GetUncachedAtom(x,y);
         s32 type = elementTable.GetIndex(atom->GetType());
         if (type < 0)
           FAIL(ILLEGAL_STATE);

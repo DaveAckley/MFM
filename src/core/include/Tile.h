@@ -14,15 +14,6 @@
 
 namespace MFM {
 
-  /** The full length, in sites, of a Tile, including neighbor
-      caches.*/
-  //#define TILE_WIDTH 40
-#define TILE_WIDTH 64
-
-  /** The number of sites a Tile contains. */
-#define TILE_SIZE (TILE_WIDTH * TILE_WIDTH)
-
-
 #define IS_OWNED_CONNECTION(X) ((X) - Dirs::EAST >= 0 && (X) - Dirs::EAST < 4)
 
   typedef enum
@@ -42,14 +33,28 @@ namespace MFM {
     LOCKTYPE_COUNT
   }LockType;
 
-  template <class T,u32 R>
+  template <class CC>
   class Tile
   {
+    // Extract short names for parameter types
+    typedef typename CC::ATOM_TYPE T;
+    typedef typename CC::PARAM_CONFIG P;
+    enum { R = P::EVENT_WINDOW_RADIUS };
+    enum { W = P::TILE_WIDTH };
+    enum { B = P::ELEMENT_TABLE_BITS };
+
   public:
+
     /** The radius of all events taking place in this Tile. */
     static const u32 EVENT_WINDOW_RADIUS = R;
 
-    static const u32 ELEMENT_TABLE_BITS = 8;  // Currently hard-coded!
+    /** The full length, in sites, of a Tile, including neighbor
+        caches.*/
+    static const u32 TILE_WIDTH = W;
+
+    static const u32 TILE_SIZE = TILE_WIDTH * TILE_WIDTH;
+
+    static const u32 ELEMENT_TABLE_BITS = B;  // Currently hard-coded!
     static const u32 ELEMENT_TABLE_SIZE = 1u<<ELEMENT_TABLE_BITS;
 
     /**
@@ -65,7 +70,7 @@ namespace MFM {
 
     /** The ElementTable instance which holds all atom behavior for this
 	Tile. */
-    ElementTable<T,R,ELEMENT_TABLE_BITS> elementTable;
+    ElementTable<CC> elementTable;
 
     /** The PRNG used for generating all random numbers in this Tile. */
     Random m_random;
@@ -102,7 +107,7 @@ namespace MFM {
      */
     u64 m_siteEvents[OWNED_SIDE][OWNED_SIDE];
 
-    friend class EventWindow<T,R>;
+    friend class EventWindow<CC>;
 
     /** The Atoms currently held by this Tile, including caches. */
     T m_atoms[TILE_WIDTH][TILE_WIDTH];
@@ -116,7 +121,7 @@ namespace MFM {
     SPoint m_lastExecutedAtom;
 
     /** The only EventWindow to exist in this tile. */
-    EventWindow<T,R> m_executingWindow;
+    EventWindow<CC> m_executingWindow;
 
     /** Pointers to Connections to each of this Tile's neighbors,
 	indexed by EuclidDir. */
@@ -336,7 +341,7 @@ namespace MFM {
      *
      * @param toCache The cache to share with other.
      */
-    void Connect(Tile<T,R>& other, Dir toCache);
+    void Connect(Tile<CC>& other, Dir toCache);
 
     /**
      * Finds the Connection which corresponds to one of this tile's
@@ -376,7 +381,7 @@ namespace MFM {
      *
      * @returns a reference to this Tile's ElementTable.
      */
-    ElementTable<T,R,ELEMENT_TABLE_BITS> & GetElementTable() {
+    ElementTable<CC> & GetElementTable() {
       return elementTable;
     }
 
@@ -529,7 +534,10 @@ namespace MFM {
      *
      * @returns A pointer to the Atom at location pt.
      */
-    const T* GetAtom(const SPoint& pt) const;
+    const T* GetAtom(const SPoint& pt) const
+    {
+      return GetAtom(pt.GetX(), pt.GetY());
+    }
 
     /**
      * Gets an Atom from a specified point in this Tile.
@@ -542,7 +550,12 @@ namespace MFM {
      *
      * @returns A pointer to the Atom at the specified location.
      */
-    const T* GetAtom(s32 x, s32 y) const;
+    const T* GetAtom(s32 x, s32 y) const
+    {
+      if (((u32) x) >= TILE_WIDTH || ((u32) y) >= TILE_WIDTH)
+        FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
+      return &m_atoms[x][y];
+    }
 
     /**
      * Gets an Atom from a specified point in this Tile.  Indexing
@@ -553,7 +566,10 @@ namespace MFM {
      *
      * @returns A pointer to the Atom at location pt.
      */
-    const T* GetUncachedAtom(const SPoint& pt) const;
+    const T* GetUncachedAtom(const SPoint& pt) const 
+    {
+      return GetUncachedAtom(pt.GetX(), pt.GetY());
+    }
 
     /**
      * Gets an Atom from a specified point in this Tile.  Indexing
@@ -568,7 +584,11 @@ namespace MFM {
      *
      * @returns A pointer to the Atom at the specified location.
      */
-      const T* GetUncachedAtom(s32 x, s32 y) const;
+    const T* GetUncachedAtom(s32 x, s32 y) const
+    {
+      return GetAtom(x+R, y+R);
+    }
+
 
     /**
      * Gets the site event count for a specified point in this Tile.
@@ -747,7 +767,7 @@ namespace MFM {
      *
      * @param the Element to register into this Tile's ElementTable.
      */
-    void RegisterElement(const Element<T,R> & anElement) {
+    void RegisterElement(const Element<CC> & anElement) {
       elementTable.RegisterElement(anElement);
     }
   };

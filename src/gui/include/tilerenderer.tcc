@@ -1,44 +1,51 @@
 /* -*- C++ -*- */
+#if 0
 #include "Element_Data.h"    /* for ELEMENT_DATA */
 #include "Element_Sorter.h"  /* for ELEMENT_SORTER */
+#endif
 #include "colormap.h"
 #include "Util.h"            /* for MIN and MAX */
 
 namespace MFM {
 
-template <class T, u32 R>
-u32 TileRenderer::GetAtomColor(Tile<T,R>& tile, const T& atom)
+template <class CC>
+u32 TileRenderer::GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom)
 {
-  const Element<T,R> * elt = tile.GetElementTable().Lookup(atom.GetType());
+  const Element<CC> * elt = tile.GetElementTable().Lookup(atom.GetType());
   if (elt) return elt->LocalPhysicsColor(atom);
   return 0xffffffff;
 }
 
-template <class T, u32 R>
-u32 TileRenderer::GetDataHeatColor(Tile<T,R>& tile, const T& atom)
+template <class CC>
+u32 TileRenderer::GetDataHeatColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom)
 {
-  if(atom.IsType(Element_Sorter<T,R>::TYPE))
+#if 0
+  if(Atom<CC>::IsType(atom,Element_Sorter<CC>::TYPE))
   {
     return ColorMap_SEQ5_YlOrRd::THE_INSTANCE.
-      GetInterpolatedColor(Element_Sorter<T,R>::THE_INSTANCE.GetThreshold(atom,0),0,100,0xffff0000);
+      GetInterpolatedColor(Element_Sorter<CC>::THE_INSTANCE.GetThreshold(atom,0),0,100,0xffff0000);
   }
-  if(atom.IsType(Element_Data<T,R>::TYPE))
+  if(Atom<CC>::IsType(atom,Element_Data<CC>::TYPE))
   {
     return ColorMap_SEQ5_YlGnBu::THE_INSTANCE.
-      GetInterpolatedColor(Element_Data<T,R>::THE_INSTANCE.GetDatum(atom,0),0,100,0xffff0000);
+      GetInterpolatedColor(Element_Data<CC>::THE_INSTANCE.GetDatum(atom,0),0,100,0xffff0000);
   }
-  return 0;
+#endif
+  return GetAtomColor(tile,atom);
 }
 
 
-template <class T,u32 EVENT_WINDOW_RADIUS>
-void TileRenderer::RenderAtoms(SPoint& pt, Tile<T,EVENT_WINDOW_RADIUS>& tile,
-			       bool renderCache)
+template <class CC>
+void TileRenderer::RenderAtoms(SPoint& pt, Tile<CC>& tile, bool renderCache)
 {
-  u32 astart = renderCache ? 0 : EVENT_WINDOW_RADIUS;
-  u32 aend   = renderCache ? TILE_WIDTH : TILE_WIDTH - EVENT_WINDOW_RADIUS;
+  // Extract short type names
+  typedef typename CC::ATOM_TYPE T;
+  typedef typename CC::PARAM_CONFIG P;
 
-  u32 cacheOffset = renderCache ? 0 : -EVENT_WINDOW_RADIUS * m_atomDrawSize;
+  u32 astart = renderCache ? 0 : P::EVENT_WINDOW_RADIUS;
+  u32 aend   = renderCache ? P::TILE_WIDTH : P::TILE_WIDTH - P::EVENT_WINDOW_RADIUS;
+
+  u32 cacheOffset = renderCache ? 0 : -P::EVENT_WINDOW_RADIUS * m_atomDrawSize;
 
   SPoint atomLoc;
 
@@ -59,7 +66,7 @@ void TileRenderer::RenderAtoms(SPoint& pt, Tile<T,EVENT_WINDOW_RADIUS>& tile,
 	{
 	  atomLoc.SetY(y);
 
-	  const T* atom = tile.GetAtom(atomLoc);
+	  const typename CC::ATOM_TYPE * atom = tile.GetAtom(atomLoc);
 	  u32 color;
 	  if(m_drawDataHeat)
 	  {
@@ -91,20 +98,24 @@ void TileRenderer::RenderAtoms(SPoint& pt, Tile<T,EVENT_WINDOW_RADIUS>& tile,
   }
 }
 
-template <class T,u32 R>
-void TileRenderer::RenderTile(Tile<T,R>& t, SPoint& loc, bool renderWindow,
+template <class CC>
+void TileRenderer::RenderTile(Tile<CC>& t, SPoint& loc, bool renderWindow,
 			      bool renderCache)
 {
+  // Extract short type names
+  typedef typename CC::ATOM_TYPE T;
+  typedef typename CC::PARAM_CONFIG P;
+
   SPoint multPt(loc);
 
   const s32 INTER_CACHE_GAP = 1;
-  s32 spacing = renderCache ? TILE_WIDTH + INTER_CACHE_GAP : TILE_WIDTH - R * 2;
+  s32 spacing = renderCache ? P::TILE_WIDTH + INTER_CACHE_GAP : P::TILE_WIDTH - P::EVENT_WINDOW_RADIUS * 2;
   multPt.Multiply(spacing * m_atomDrawSize);
 
   SPoint realPt(multPt);
 
 
-  u32 tileHeight = TILE_WIDTH * m_atomDrawSize;
+  u32 tileHeight = P::TILE_WIDTH * m_atomDrawSize;
 
   realPt.Add(m_windowTL);
 
@@ -118,10 +129,10 @@ void TileRenderer::RenderTile(Tile<T,R>& t, SPoint& loc, bool renderWindow,
     case NO:
       break;
     case FULL:
-      RenderMemRegions<R>(multPt, renderCache);
+      RenderMemRegions<CC>(multPt, renderCache);
       break;
     case EDGE:
-      RenderVisibleRegionOutlines<R>(multPt, renderCache);
+      RenderVisibleRegionOutlines<CC>(multPt, renderCache);
       break;
     }
 
@@ -134,15 +145,19 @@ void TileRenderer::RenderTile(Tile<T,R>& t, SPoint& loc, bool renderWindow,
 
     if(m_drawGrid)
     {
-      RenderGrid<R>(&multPt, renderCache);
+      RenderGrid<CC>(&multPt, renderCache);
     }
   }
 }
 
-template <class T,u32 R>
-void TileRenderer::RenderEventWindow(SPoint& offset,
-				     Tile<T,R>& tile, bool renderCache)
+template <class CC>
+void TileRenderer::RenderEventWindow(SPoint& offset, Tile<CC>& tile, bool renderCache)
 {
+  // Extract short type names
+  typedef typename CC::ATOM_TYPE T;
+  typedef typename CC::PARAM_CONFIG P;
+  enum { R = P::EVENT_WINDOW_RADIUS};
+
   SPoint winCenter;
   tile.FillLastExecutedAtom(winCenter);
 
@@ -172,43 +187,52 @@ void TileRenderer::RenderEventWindow(SPoint& offset,
   }
 }
 
-template <u32 R>
+template <class CC>
 void TileRenderer::RenderMemRegions(SPoint& pt, bool renderCache)
 {
+  // Extract short type names
+  typedef typename CC::ATOM_TYPE T;
+  typedef typename CC::PARAM_CONFIG P;
+  enum { R = P::EVENT_WINDOW_RADIUS};
+
   int regID = 0;
   if(renderCache)
   {
-    RenderMemRegion<R>(pt, regID++, m_cacheColor, renderCache);
+    RenderMemRegion<CC>(pt, regID++, m_cacheColor, renderCache);
   }
-  RenderMemRegion<R>(pt, regID++, m_sharedColor, renderCache);
-  RenderMemRegion<R>(pt, regID++, m_visibleColor, renderCache);
-  RenderMemRegion<R>(pt, regID  , m_hiddenColor, renderCache);
+  RenderMemRegion<CC>(pt, regID++, m_sharedColor, renderCache);
+  RenderMemRegion<CC>(pt, regID++, m_visibleColor, renderCache);
+  RenderMemRegion<CC>(pt, regID  , m_hiddenColor, renderCache);
 }
 
-template <u32 R>
+template <class CC>
 void TileRenderer::RenderVisibleRegionOutlines(SPoint& pt, bool renderCache)
 {
   int regID = renderCache?2:1;
-  RenderMemRegion<R>(pt, regID, 0xff202020, renderCache);
+  RenderMemRegion<CC>(pt, regID, 0xff202020, renderCache);
 }
 
-template <u32 EVENT_WINDOW_RADIUS>
+template <class CC>
 void TileRenderer::RenderMemRegion(SPoint& pt, int regID,
 				   Uint32 color, bool renderCache)
 {
+  // Extract short names for parameter types
+  typedef typename CC::ATOM_TYPE T;
+  typedef typename CC::PARAM_CONFIG P;
+
   int tileSize;
   if(!renderCache)
   {
     /* Subtract out the cache's width */
     tileSize = m_atomDrawSize *
-      (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
+      (P::TILE_WIDTH - 2 * P::EVENT_WINDOW_RADIUS);
   }
   else
   {
-    tileSize = m_atomDrawSize * TILE_WIDTH;
+    tileSize = m_atomDrawSize * P::TILE_WIDTH;
   }
 
-  int ewrSize = EVENT_WINDOW_RADIUS * m_atomDrawSize;
+  int ewrSize = P::EVENT_WINDOW_RADIUS * m_atomDrawSize;
 
   /* Manually fill the rect so we can stop at the right place. */
   Point<s32> topPt(pt.GetX() + (ewrSize * regID) + m_windowTL.GetX(),
@@ -224,22 +248,25 @@ void TileRenderer::RenderMemRegion(SPoint& pt, int regID,
   }
 }
 
-template <u32 EVENT_WINDOW_RADIUS>
+template <class CC>
 void TileRenderer::RenderGrid(SPoint* pt, bool renderCache)
 {
+  // Extract short type names
+  typedef typename CC::ATOM_TYPE T;
+  typedef typename CC::PARAM_CONFIG P;
   s32 lineLen, linesToDraw;
 
   if(!renderCache)
   {
     lineLen = m_atomDrawSize *
-      (TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS);
-    linesToDraw = TILE_WIDTH +
-      1 - (2 * EVENT_WINDOW_RADIUS);
+      (P::TILE_WIDTH - 2 * P::EVENT_WINDOW_RADIUS);
+    linesToDraw = P::TILE_WIDTH +
+      1 - (2 * P::EVENT_WINDOW_RADIUS);
   }
   else
   {
-    lineLen = m_atomDrawSize * TILE_WIDTH;
-    linesToDraw = TILE_WIDTH + 1;
+    lineLen = m_atomDrawSize * P::TILE_WIDTH;
+    linesToDraw = P::TILE_WIDTH + 1;
   }
 
   s32 lowBound =

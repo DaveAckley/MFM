@@ -11,9 +11,13 @@ namespace MFM
 {
 
 
-  template <class T, u32 R>
-  class Element_Reprovert : public Element<T,R>
+  template <class CC>
+  class Element_Reprovert : public Element<CC>
   {
+    // Extract short names for parameter types
+    typedef typename CC::ATOM_TYPE T;
+    typedef typename CC::PARAM_CONFIG P;
+    enum { R = P::EVENT_WINDOW_RADIUS };
 
   public:
     static const u32 STATE_VERTPOS_IDX = 0;
@@ -21,23 +25,23 @@ namespace MFM
     static const u32 STATE_BITS = STATE_VERTPOS_IDX+STATE_VERTPOS_LEN;
 
     u32 GetVertPos(const T &atom, u32 badType) const {
-      if (!atom.IsType(Element<T,R>::GetType())) return badType;
+      if (!Atom<CC>::IsType(atom,Element<CC>::GetType())) return badType;
       return atom.GetStateField(STATE_VERTPOS_IDX,STATE_VERTPOS_LEN);
     }
 
     bool SetVertPos(T &atom, u32 value) const {
-      if (!atom.IsType(Element<T,R>::GetType())) return false;
+      if (!Atom<CC>::IsType(atom,Element<CC>::GetType())) return false;
       atom.SetStateField(STATE_VERTPOS_IDX,STATE_VERTPOS_LEN,value);
       return true;
     }
 
 
-    void ReproduceVertically(EventWindow<T,R>& window) const;
+    void ReproduceVertically(EventWindow<CC>& window) const;
 
   };
 
-  template <class T, u32 R>
-    void Element_Reprovert<T,R>::ReproduceVertically(EventWindow<T,R>& window) const
+  template <class CC>
+    void Element_Reprovert<CC>::ReproduceVertically(EventWindow<CC>& window) const
   {
     Random & random = window.GetRandom();
     

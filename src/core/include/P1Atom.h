@@ -7,8 +7,9 @@
 #include "BitVector.h"
 #include "MDist.h"
 #include "Atom.h"
-
-#define P1ATOM_SIZE 64
+#include "Element.h"
+#include "CoreConfig.h"
+#include "ParamConfig.h"
 
 #define P1ATOM_HEADER_SIZE 16
 #define P1ATOM_LONG_BOND_SIZE 8
@@ -17,218 +18,246 @@
 
 namespace MFM {
 
-class P1Atom : public Atom<P1Atom,4>
-{
-private:
-  BitVector<P1ATOM_SIZE> m_bits;
-
-  typedef MDist<4> MDist4;
-
-  /* We really don't want to allow the public to change the type of a
-     p1atom, since the type doesn't mean much without the atomic
-     header as well */
-
-  void SetType(u32 type, u32 width) 
+  template <class PC>
+  class P1Atom : public Atom< CoreConfig< P1Atom<PC>, PC> >
   {
-    m_bits.Write(P1ATOM_SIZE-width, width, type); 
-  }
 
-public:
+    enum { 
+      BITS = 64,
+      // For now we insist on exact match.  Possibly longer could be
+      // supported relatively easily.
+      CONFIGURED_BITS_PER_ATOM_IS_INCOMPATIBLE_WITH_P1ATOM = 1/((PC::BITS_PER_ATOM==BITS)?1:0)
+    };
 
-  virtual u32 GetType() const {
-    s32 bitsUsed = GetBitsAllocated();
-    if (bitsUsed > P1ATOM_SIZE)
-      FAIL(ILLEGAL_STATE);
+  protected:
 
-    // The up-to 31 bits left over after everything else are the type bits
-    u32 typeBits = P1ATOM_SIZE-bitsUsed;
-    if (typeBits > 31) typeBits = 31;
-    return m_bits.Read(P1ATOM_SIZE-typeBits,typeBits);
-  }
+    typedef MDist<4> MDist4;
 
-  /*
-  static u32 StateFunc(P1Atom* atom)
-  {
-    return atom->GetState();
-  }
-  */
+    /* We really don't want to allow the public to change the type of a
+       p1atom, since the type doesn't mean much without the atomic
+       header as well */
 
-  P1Atom()
-  {
-    InitAtom(ELEMENT_EMPTY,0,0,48);
-  }
-
-  P1Atom(u32 type, u32 longc, u32 shortc, u32 statec) 
-  { 
-    InitAtom(type,longc,shortc,statec);
-  }
-
-  void InitAtom(u32 type, u32 longc, u32 shortc, u32 statec) 
-  {
-    SetLongBondCount(longc);
-    SetShortBondCount(shortc);
-    SetStateBitCount(statec);
-    u32 used = GetBitsAllocated();
-
-    if (used > P1ATOM_SIZE)
-      FAIL(ILLEGAL_ARGUMENT);
-
-    u32 avail = P1ATOM_SIZE - used;
-    if (avail > 31) avail = 31;
-
-    if (type >= 1u<<avail)
-      FAIL(ILLEGAL_ARGUMENT);
-    SetType(type, avail);
-
-    if (statec > 32) {
-      SetStateField(32,statec-32,0);
-      statec = 32;
+    void SetType(u32 type, u32 width) 
+    {
+      this->m_bits.Write(BITS-width, width, type); 
     }
-    SetStateField(0,statec,0);
 
-  }
+  public:
 
-  u32 GetBitsAllocated() const
-  {
-    return
-      P1ATOM_HEADER_SIZE+
-      GetLongBondCount()*P1ATOM_LONG_BOND_SIZE
-      + GetShortBondCount()*P1ATOM_SHORT_BOND_SIZE
-      + GetStateBitCount();
-  }
+    u32 GetType() const {
+      s32 bitsUsed = GetBitsAllocated();
+      if (bitsUsed > BITS)
+        FAIL(ILLEGAL_STATE);
 
-  u32 GetStateBitCount() const
-  { return m_bits.Read(2, 6); }
+      // The up-to 31 bits left over after everything else are the type bits
+      u32 typeBits = BITS-bitsUsed;
+      if (typeBits > 31) typeBits = 31;
+      return this->m_bits.Read(BITS-typeBits,typeBits);
+    }
 
-  void SetStateBitCount(u32 state)
-  { m_bits.Write(2, 6, state); }
+    /*
+      static u32 StateFunc(P1Atom* atom)
+      {
+      return atom->GetState();
+      }
+    */
 
-  u32 GetStateField(u32 stateIndex, u32 stateWidth) const
-  {
-    // The state bits end at the end of the 'allocated bits'
-    u32 lastState = GetBitsAllocated();
-    return m_bits.Read(lastState-stateWidth, stateWidth);
-  }
+    P1Atom()
+    {
+      InitAtom(ELEMENT_EMPTY,0,0,48);
+    }
 
-  void SetStateField(u32 stateIndex, u32 stateWidth, u32 value) 
-  {
-    u32 lastState = GetBitsAllocated();
-    return m_bits.Write(lastState-stateWidth, stateWidth, value);
-  }
+    P1Atom(u32 type, u32 longc, u32 shortc, u32 statec) 
+    { 
+      InitAtom(type,longc,shortc,statec);
+    }
 
-  u32 GetLongBondCount() const
-  { return m_bits.Read(9, 3); }
+    void InitAtom(u32 type, u32 longc, u32 shortc, u32 statec) 
+    {
+      SetLongBondCount(longc);
+      SetShortBondCount(shortc);
+      SetStateBitCount(statec);
+      u32 used = GetBitsAllocated();
 
-  void SetLongBondCount(u32 count)
-  { m_bits.Write(9, 3, count); }
+      if (used > BITS)
+        FAIL(ILLEGAL_ARGUMENT);
 
-  u32 GetShortBondCount() const
-  { return m_bits.Read(12, 4); }
+      u32 avail = BITS - used;
+      if (avail > 31) avail = 31;
 
-  void SetShortBondCount(u32 count)
-  { m_bits.Write(12, 4, count); }
+      if (type >= 1u<<avail)
+        FAIL(ILLEGAL_ARGUMENT);
+      SetType(type, avail);
 
-  u32 GetLongBond(u32 index) const {
-    if (index>=GetLongBondCount()) return 0;
-    return m_bits.Read(16+index*8,8);
-  }
-  void SetLongBond(u32 index, u8 value) {
-    if (index>=GetLongBondCount()) return;
-    return m_bits.Write(16+index*8,8,(u32) value);
-  }
+      if (statec > 32) {
+        SetStateField(32,statec-32,0);
+        statec = 32;
+      }
+      SetStateField(0,statec,0);
 
-  u32 GetShortBond(u32 index) const {
-    if (index>=GetShortBondCount()) return 0;
-    u32 start = GetLongBondCount()*8+16;
-    return m_bits.Read(start+index*4,4);
-  }
-  void SetShortBond(u32 index, u8 value) {
-    if (index>=GetLongBondCount()) return;
-    u32 start = GetLongBondCount()*8+16;
-    return m_bits.Write(start+index*4,4,(u32) value);
-  }
+    }
 
-  void ReadVariableBodyInto(u32* arr) const
-  {
-    arr[0] = m_bits.Read(16, 16);
-    arr[1] = m_bits.Read(32, 32);
-  }
+    u32 GetBitsAllocated() const
+    {
+      return
+        P1ATOM_HEADER_SIZE+
+        GetLongBondCount()*P1ATOM_LONG_BOND_SIZE
+        + GetShortBondCount()*P1ATOM_SHORT_BOND_SIZE
+        + GetStateBitCount();
+    }
 
-  void WriteVariableBodyFrom(u32* arr)
-  {
-    m_bits.Write(16, 16, arr[0]);
-    m_bits.Write(32, 32, arr[1]);
-  }
+    u32 GetBitsAllocatedExceptState() const
+    {
+      return
+        P1ATOM_HEADER_SIZE+
+        GetLongBondCount()*P1ATOM_LONG_BOND_SIZE
+        + GetShortBondCount()*P1ATOM_SHORT_BOND_SIZE;
+    }
 
-  /*
-  void WriteLowerBits(u32 val)
-  {
-    m_bits.Write(32, 32, val);
-  }
+    u32 GetStateBitCount() const
+    { return this->m_bits.Read(2, 6); }
 
-  u32 ReadLowerBits() const
-  {
-    return m_bits.Read(32, 32);
-  }
-  */
+    void SetStateBitCount(u32 state)
+    { this->m_bits.Write(2, 6, state); }
 
-  void PrintBits(FILE* ostream) const
-  { m_bits.Print(ostream); }
+    /**
+     * Read stateWidth state bits starting at stateIndex, which counts
+     * toward the right with 0 meaning the leftmost state bit.
+     */
+    u32 GetStateField(u32 stateIndex, u32 stateWidth) const
+    {
+      // The state bits end at the end of the 'allocated bits'
+      u32 firstState = GetBitsAllocatedExceptState();
+      return this->m_bits.Read(firstState+stateIndex, stateWidth);
+    }
 
-  void Print(FILE* ostream) const
-  { 
-    u32 type = GetType();
-    u32 lbc = GetLongBondCount();
-    u32 sbc = GetShortBondCount();
-    u32 stc = GetStateBitCount();
-    u32 state = GetStateField(0,stc>32?32:stc);
-    fprintf(ostream,"P1[%x/%d%d/%d:%x]", type,lbc,sbc,stc,state);
-  }
+    /**
+     * Store value into stateWidth state bits starting at stateIndex,
+     * which counts toward the right with 0 meaning the leftmost state
+     * bit. 
+     */
+    void SetStateField(u32 stateIndex, u32 stateWidth, u32 value) 
+    {
+      u32 firstState = GetBitsAllocatedExceptState();
+      return this->m_bits.Write(firstState+stateIndex, stateWidth, value);
+    }
+
+    u32 GetLongBondCount() const
+    { return this->m_bits.Read(9, 3); }
+
+    void SetLongBondCount(u32 count)
+    { this->m_bits.Write(9, 3, count); }
+
+    u32 GetShortBondCount() const
+    { return this->m_bits.Read(12, 4); }
+
+    void SetShortBondCount(u32 count)
+    { this->m_bits.Write(12, 4, count); }
+
+    u32 GetLongBond(u32 index) const {
+      if (index>=GetLongBondCount()) return 0;
+      return this->m_bits.Read(16+index*8,8);
+    }
+    void SetLongBond(u32 index, u8 value) {
+      if (index>=GetLongBondCount()) return;
+      return this->m_bits.Write(16+index*8,8,(u32) value);
+    }
+
+    u32 GetShortBond(u32 index) const {
+      if (index>=GetShortBondCount()) return 0;
+      u32 start = GetLongBondCount()*8+16;
+      return this->m_bits.Read(start+index*4,4);
+    }
+    void SetShortBond(u32 index, u8 value) {
+      if (index>=GetLongBondCount()) return;
+      u32 start = GetLongBondCount()*8+16;
+      return this->m_bits.Write(start+index*4,4,(u32) value);
+    }
+
+    void ReadVariableBodyInto(u32* arr) const
+    {
+      arr[0] = this->m_bits.Read(16, 16);
+      arr[1] = this->m_bits.Read(32, 32);
+    }
+
+    void WriteVariableBodyFrom(u32* arr)
+    {
+      this->m_bits.Write(16, 16, arr[0]);
+      this->m_bits.Write(32, 32, arr[1]);
+    }
+
+    /*
+      void WriteLowerBits(u32 val)
+      {
+      this->m_bits.Write(32, 32, val);
+      }
+
+      u32 ReadLowerBits() const
+      {
+      return this->m_bits.Read(32, 32);
+      }
+    */
+
+    void PrintBits(FILE* ostream) const
+    { this->m_bits.Print(ostream); }
+
+    void Print(FILE* ostream) const
+    { 
+      u32 type = GetType();
+      u32 lbc = GetLongBondCount();
+      u32 sbc = GetShortBondCount();
+      u32 stc = GetStateBitCount();
+      u32 state = GetStateField(0,stc>32?32:stc);
+      fprintf(ostream,"P1[%x/%d%d/%d:%x]", type,lbc,sbc,stc,state);
+    }
 
 #if 0
-  /* Adds a long bond. Returns its index. */
-  u32 AddLongBond(const SPoint& offset);
+    /* Adds a long bond. Returns its index. */
+    u32 AddLongBond(const SPoint& offset);
 
-  u32 AddShortBond(const SPoint& offset);
+    u32 AddShortBond(const SPoint& offset);
 #endif
 
-  /**
-   * Fills pt with the long bond location in index and returns true,
-   * if atom has at least index+1 long bonds.  Otherwise returns false
-   * and pt is unchanged */
-  bool GetLongBond(u32 index, SPoint& pt) const;
+    /**
+     * Fills pt with the long bond location in index and returns true,
+     * if atom has at least index+1 long bonds.  Otherwise returns false
+     * and pt is unchanged */
+    bool GetLongBond(u32 index, SPoint& pt) const;
 
-  /**
-   * Fills pt with the short bond location in index and returns true,
-   * if atom has at least index+1 short bonds.  Otherwise returns
-   * false and pt is unchanged */
-  bool GetShortBond(u32 index, SPoint& pt) const;
+    /**
+     * Fills pt with the short bond location in index and returns true,
+     * if atom has at least index+1 short bonds.  Otherwise returns
+     * false and pt is unchanged */
+    bool GetShortBond(u32 index, SPoint& pt) const;
 
-  /**
-   * Stores pt in the long bond location index and returns true, if
-   * atom has at least index+1 long bonds, and pt is representable as
-   * a long bond.  Otherwise returns false and *this is unchanged */
-  bool SetLongBond(u32 index, const SPoint& pt);
+    /**
+     * Stores pt in the long bond location index and returns true, if
+     * atom has at least index+1 long bonds, and pt is representable as
+     * a long bond.  Otherwise returns false and *this is unchanged */
+    bool SetLongBond(u32 index, const SPoint& pt);
 
-  /**
-   * Stores pt in the short bond location in index and returns true,
-   * if atom has at least index+1 short bonds, and pt is representable
-   * as a short bond.  Otherwise returns false and *this is unchanged */
-  bool SetShortBond(u32 index, const SPoint& pt);
+    /**
+     * Stores pt in the short bond location in index and returns true,
+     * if atom has at least index+1 short bonds, and pt is representable
+     * as a short bond.  Otherwise returns false and *this is unchanged */
+    bool SetShortBond(u32 index, const SPoint& pt);
 
-  /* 
-   * Removes a long bond. Be careful; if a
-   * bond is removed, the bonds ahead of it
-   * (if they exist) will be pushed downwards.
-   * The indices of these bonds will need to
-   * be updated again afterwards.
-   */
-  void RemoveLongBond(u32 index);
+    /* 
+     * Removes a long bond. Be careful; if a
+     * bond is removed, the bonds ahead of it
+     * (if they exist) will be pushed downwards.
+     * The indices of these bonds will need to
+     * be updated again afterwards.
+     */
+    void RemoveLongBond(u32 index);
 
-  void RemoveShortBond(u32 index);
+    void RemoveShortBond(u32 index);
 
-  P1Atom& operator=(const P1Atom & rhs);
-};
+    P1Atom& operator=(const P1Atom & rhs);
+  };
 } /* namespace MFM */
+
+#include "P1Atom.tcc"
+
 #endif /*P1ATOM_H*/
 

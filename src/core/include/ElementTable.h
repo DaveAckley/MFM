@@ -9,12 +9,18 @@
 
 namespace MFM {
 
-  template <class T,u32 R>
+  template <class CC>
   class EventWindow;
 
-  template <class T,u32 R,u32 B>
+  template <class CC>
   class ElementTable
   {
+    // Extract short type names
+    typedef typename CC::ATOM_TYPE T;
+    typedef typename CC::PARAM_CONFIG P;
+    enum { B = P::ELEMENT_TABLE_BITS};
+    enum { R = P::EVENT_WINDOW_RADIUS};
+
   public:
     static const u32 SIZE = 1u<<B;
 
@@ -23,7 +29,7 @@ namespace MFM {
      */
     void Reinit() ;
 
-    void Insert(const Element<T,R> & theElement) ;
+    void Insert(const Element<CC> & theElement) ;
 
     u32 GetSize() const {
       return SIZE;
@@ -40,13 +46,13 @@ namespace MFM {
 
     ~ElementTable() { }
 
-    const Element<T,R> * Lookup(u32 elementType) ;
+    const Element<CC> * Lookup(u32 elementType) ;
 
-    void Execute(EventWindow<T,R>& window)
+    void Execute(EventWindow<CC>& window)
     { 
       u32 type = window.GetCenterAtom().GetType();
       if(type != ELEMENT_EMPTY) {
-        const Element<T,R> * elt = Lookup(type);
+        const Element<CC> * elt = Lookup(type);
         if (elt == 0) FAIL(UNKNOWN_ELEMENT);
         elt->Behavior(window);
       }
@@ -54,7 +60,7 @@ namespace MFM {
 
     void FillAtom(T* atom, ElementType type);
 
-    bool RegisterElement(const Element<T,R>& e)
+    bool RegisterElement(const Element<CC>& e)
     {
       Insert(e);
       return true;
@@ -66,23 +72,23 @@ namespace MFM {
 
     /* Fills pt with the coordinates of a randomly selected          */
     /* Atom with the specified type. Returns false if there is none. */
-    static bool FillSubWindowContaining(Point<s32>& pt, EventWindow<T,R>& window,
+    static bool FillSubWindowContaining(Point<s32>& pt, EventWindow<CC>& window,
                                         ElementType type, 
                                         Dir corner);
 
 
-    static void FillSubwindowIndices(s32* indices, EventWindow<T,R>& window,
+    static void FillSubwindowIndices(s32* indices, EventWindow<CC>& window,
                                      ElementType type, Dir corner);
 
     static u32 FoundIndicesCount(s32* indices);
 
-    static void ReproduceVertically(EventWindow<T,R>& w, 
+    static void ReproduceVertically(EventWindow<CC>& w, 
                                     ElementType type);
   
 
     u32 SlotFor(u32 elementType) const ; 
 
-    const Element<T,R>* (m_hash[SIZE]);
+    const Element<CC>* (m_hash[SIZE]);
     u32 m_hashSlotsInUse;
   
   };

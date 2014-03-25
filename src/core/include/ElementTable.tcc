@@ -4,9 +4,9 @@
 
 namespace MFM {
 
-  template <class T, u32 R, u32 B>
-  bool ElementTable<T,R,B>::FillSubWindowContaining(Point<s32>& pt, EventWindow<T,R>& window,
-                                                    ElementType type, Dir corner)
+  template <class C>
+  bool ElementTable<C>::FillSubWindowContaining(SPoint& pt, EventWindow<C>& window,
+                                                ElementType type, Dir corner)
   {
     Random & random = window.GetRandom();
     u32 startIdx = random.Create(R);
@@ -32,11 +32,11 @@ namespace MFM {
   /* relative atoms which have type 'type' .                        */
   /* Once all indices are found, a -1 is inserted, like a null      */
   /* terminator.                                                    */
-  template <class T, u32 R, u32 B>
-  void ElementTable<T,R,B>::FillSubwindowIndices(s32* indices,
-                                                 EventWindow<T,R>& window,
-                                                 ElementType type,
-                                                 Dir corner)
+  template <class C>
+  void ElementTable<C>::FillSubwindowIndices(s32* indices,
+                                                   EventWindow<C>& window,
+                                                   ElementType type,
+                                                   Dir corner)
   {
     /* As long as R is a power of two,             */
     /* ((R * R) / 4) is the size of one sub-window. */
@@ -56,8 +56,8 @@ namespace MFM {
     *indices = -1;
   }
 
-  template <class T ,u32 R, u32 B>
-  u32 ElementTable<T,R,B>::FoundIndicesCount(s32* indices)
+  template <class C>
+  u32 ElementTable<C>::FoundIndicesCount(s32* indices)
   {
     u32 count = 0;
     while(indices[count] != -1)
@@ -67,8 +67,8 @@ namespace MFM {
     return count;
   }
 
-  template <class T, u32 R, u32 B>
-  void ElementTable<T,R,B>::ReproduceVertically(EventWindow<T,R>& window, ElementType type)
+  template <class C>
+  void ElementTable<C>::ReproduceVertically(EventWindow<C>& window, ElementType type)
   {
     Random & random = window.GetRandom();
 
@@ -82,22 +82,22 @@ namespace MFM {
       }
   }
 
-  template <class T,u32 R, u32 B>
-  s32 ElementTable<T,R,B>::GetIndex(u32 elementType) const
+  template <class C>
+  s32 ElementTable<C>::GetIndex(u32 elementType) const
   {
     u32 slot = SlotFor(elementType);
     if (m_hash[slot] == 0) return -1;
     return (s32) slot;
   }
 
-  template <class T,u32 R, u32 B>
-  u32 ElementTable<T,R,B>::SlotFor(u32 elementType) const
+  template <class C>
+  u32 ElementTable<C>::SlotFor(u32 elementType) const
   {
     u32 collide = 0;
     u32 slot = elementType;
     while (true) {
       slot %= SIZE;
-      const Element<T,R> * elt = m_hash[slot];
+      const Element<C> * elt = m_hash[slot];
       if (elt==0 || elt->GetType() == elementType) 
         return slot;   // Empty or match: This is the slot for you
       ++collide;
@@ -105,8 +105,8 @@ namespace MFM {
     } 
   }
 
-  template <class T,u32 R, u32 B>
-  void ElementTable<T,R,B>::Insert(const Element<T,R> & theElement)
+  template <class C>
+  void ElementTable<C>::Insert(const Element<C> & theElement)
   {
     u32 type = theElement.GetType();
     u32 slotFor = SlotFor(type);
@@ -124,20 +124,20 @@ namespace MFM {
     }
   }
 
-  template <class T,u32 R, u32 B>
-  const Element<T,R> * ElementTable<T,R,B>::Lookup(u32 elementType) 
+  template <class C>
+  const Element<C> * ElementTable<C>::Lookup(u32 elementType) 
   {
     return m_hash[SlotFor(elementType)];
   }
 
-  template <class T,u32 R, u32 B>
-  ElementTable<T,R,B>::ElementTable()
+  template <class C>
+  ElementTable<C>::ElementTable()
   {
     Reinit();
   }
 
-  template <class T,u32 R, u32 B>
-  void ElementTable<T,R,B>::Reinit()
+  template <class C>
+  void ElementTable<C>::Reinit()
   {
     m_hashSlotsInUse = 0;
     for (u32 i = 0; i < SIZE; ++i) 
