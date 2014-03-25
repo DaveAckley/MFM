@@ -12,9 +12,14 @@
 namespace MFM
 {
 
-  template <class T, u32 R>
-  class Element_Sorter : public Element<T,R>
+  template <class CC>
+  class Element_Sorter : public Element<CC>
   {
+    // Extract short names for parameter types
+    typedef typename CC::ATOM_TYPE T;
+    typedef typename CC::PARAM_CONFIG P;
+    enum { R = P::EVENT_WINDOW_RADIUS };
+
   public:
     const char* GetName() const { return "Sorter"; }
 
@@ -29,12 +34,12 @@ namespace MFM
     Element_Sorter() { }
     
     u32 GetThreshold(const T &atom, u32 badType) const {
-      if (!atom.IsType(TYPE)) return badType;
+      if (!Atom<CC>::IsType(atom,TYPE)) return badType;
       return atom.GetStateField(STATE_THRESHOLD_IDX,STATE_THRESHOLD_LEN);
     }
 
     bool SetThreshold(T &atom, u32 value) const {
-      if (!atom.IsType(TYPE)) return false;
+      if (!Atom<CC>::IsType(atom,TYPE)) return false;
       atom.SetStateField(STATE_THRESHOLD_IDX,STATE_THRESHOLD_LEN,value);
       return true;
     }
@@ -45,7 +50,7 @@ namespace MFM
       return defaultAtom;
     }
 
-    bool FillAvailableSubwindowPoint(EventWindow<T,R>& window, 
+    bool FillAvailableSubwindowPoint(EventWindow<CC>& window, 
 				     SPoint& pt, Dir subwindow, ElementType type) const
     {
       return this->FillPointWithType(window, pt, 
@@ -59,13 +64,13 @@ namespace MFM
       return 0xffff0000;
     }
 
-    virtual void Behavior(EventWindow<T,R>& window) const
+    virtual void Behavior(EventWindow<CC>& window) const
     {
       Random & random = window.GetRandom();
       SPoint reproducePt;
       T self = window.GetCenterAtom();
       if(this->FillPointWithType(window, reproducePt,
-                                 Element<T,R>::VNNeighbors, 4, Dirs::SOUTHEAST, Element_Res<T,R>::TYPE))
+                                 Element<CC>::VNNeighbors, 4, Dirs::SOUTHEAST, Element_Res<CC>::TYPE))
       {
 	window.SetRelativeAtom(reproducePt, self);
       }
@@ -76,14 +81,14 @@ namespace MFM
       for(s32 i = 0; i < 2; i++)
       {
 	if(movingUp &&
-	   FillAvailableSubwindowPoint(window, seData, Dirs::SOUTHEAST, Element_Data<T,R>::TYPE) &&
+	   FillAvailableSubwindowPoint(window, seData, Dirs::SOUTHEAST, Element_Data<CC>::TYPE) &&
 	   FillAvailableSubwindowPoint(window, nwEmpty, Dirs::NORTHWEST, ELEMENT_EMPTY))
 	{
 	  srcPt = seData;
 	  dstPt = nwEmpty;
 	}
 	else if(!movingUp &&
-                FillAvailableSubwindowPoint(window, neData, Dirs::NORTHEAST, Element_Data<T,R>::TYPE) &&
+                FillAvailableSubwindowPoint(window, neData, Dirs::NORTHEAST, Element_Data<CC>::TYPE) &&
                 FillAvailableSubwindowPoint(window, swEmpty, Dirs::SOUTHWEST, ELEMENT_EMPTY))
 	{
 	  srcPt = neData;
@@ -96,7 +101,7 @@ namespace MFM
 	}
 	
         u32 threshold = GetThreshold(window.GetCenterAtom(),0);
-        u32 datum = Element_Data<T,R>::THE_INSTANCE.GetDatum(window.GetRelativeAtom(srcPt),0);
+        u32 datum = Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtom(srcPt),0);
 	u32 cmp = (movingUp && (datum > threshold)) || (!movingUp && (datum < threshold));
 	if(cmp)
 	{
@@ -113,19 +118,19 @@ namespace MFM
 
   };
 
-  template <class T, u32 R>
-  Element_Sorter<T,R> Element_Sorter<T,R>::THE_INSTANCE;
+  template <class CC>
+  Element_Sorter<CC> Element_Sorter<CC>::THE_INSTANCE;
 
-  template <class T, u32 R>
-  const SPoint Element_Sorter<T,R>::m_southeastSubwindow[4] = {
+  template <class CC>
+  const SPoint Element_Sorter<CC>::m_southeastSubwindow[4] = {
     SPoint(1,1),SPoint(1,2),SPoint(2,1),SPoint(2,2)
   };
 
   /*
-  template <class T, u32 R>
-  void Element_Sorter<T,R>::Needed()
+  template <class CC>
+  void Element_Sorter<CC>::Needed()
   {
-    ElementTable<T,R>::get().RegisterElement(Element_Sorter<T,R>::THE_INSTANCE);
+    ElementTable<CC>::get().RegisterElement(Element_Sorter<CC>::THE_INSTANCE);
   }
   */
 }

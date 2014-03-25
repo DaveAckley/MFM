@@ -16,9 +16,13 @@ namespace MFM
 #define DREG_DRG_ODDS 1000
 #define DREG_DDR_ODDS 10 /*Deleting DREGs*/
 
-  template <class T, u32 R>
-  class Element_Dreg : public Element<T,R>
+  template <class CC>
+  class Element_Dreg : public Element<CC>
   {
+    // Extract short names for parameter types
+    typedef typename CC::ATOM_TYPE T;
+    typedef typename CC::PARAM_CONFIG P;
+    enum { R = P::EVENT_WINDOW_RADIUS };
 
   public:
     const char* GetName() const { return "DReg"; }
@@ -39,13 +43,12 @@ namespace MFM
       return 0xff505050;
     }
 
-    virtual void Behavior(EventWindow<T,R>& window) const
+    virtual void Behavior(EventWindow<CC>& window) const
     {
       Random & random = window.GetRandom();
       
       SPoint dir;
       MDist<R>::get().FillRandomSingleDir(dir, random);
-      
       
       T atom = window.GetRelativeAtom(dir);
       u32 oldType = atom.GetType();
@@ -54,11 +57,11 @@ namespace MFM
       {
 	if(random.OneIn(DREG_DRG_ODDS))
 	{
-	  atom = Element_Dreg<T,R>::THE_INSTANCE.GetDefaultAtom();
+          atom = Element_Dreg<CC>::THE_INSTANCE.GetDefaultAtom();
 	}
 	else if(random.OneIn(DREG_RES_ODDS))
 	{
-	  atom = Element_Res<T,R>::THE_INSTANCE.GetDefaultAtom();
+          atom = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
 	}
       }
       else if(oldType == Element_Dreg::TYPE)
@@ -79,22 +82,16 @@ namespace MFM
       }
 
       this->Diffuse(window);
+
     }
 
     static void Needed();
     
   };
 
-  template <class T, u32 R>
-  Element_Dreg<T,R> Element_Dreg<T,R>::THE_INSTANCE;
+  template <class CC>
+  Element_Dreg<CC> Element_Dreg<CC>::THE_INSTANCE;
 
-  /*
-  template <class T, u32 R>
-  void Element_Dreg<T,R>::Needed()
-  {
-    ElementTable<T,R>::get().RegisterElement(Element_Dreg<T,R>::THE_INSTANCE);
-  }
-  */
 }
 
 #endif /* ELEMENT_DREG_H */

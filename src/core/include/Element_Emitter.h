@@ -16,10 +16,13 @@ namespace MFM
 #define DATA_MAXVAL 100
 #define DATA_MINVAL 1
 
-  template <class T, u32 R>
-  class Element_Emitter : public Element_Reprovert<T,R>
+  template <class CC>
+  class Element_Emitter : public Element_Reprovert<CC>
   {
-    //static bool element_dreg_registered;
+    // Extract short names for parameter types
+    typedef typename CC::ATOM_TYPE T;
+    typedef typename CC::PARAM_CONFIG P;
+    enum { R = P::EVENT_WINDOW_RADIUS };
 
   public:
     const char* GetName() const { return "Emitter"; }
@@ -31,7 +34,7 @@ namespace MFM
     
     virtual const T & GetDefaultAtom() const 
     {
-      static T defaultAtom(TYPE,0,0,Element_Reprovert<T,R>::STATE_BITS);
+      static T defaultAtom(TYPE,0,0,Element_Reprovert<CC>::STATE_BITS);
       return defaultAtom;
     }
 
@@ -40,7 +43,7 @@ namespace MFM
       return 0xff808080;
     }
 
-    virtual void Behavior(EventWindow<T,R>& window) const
+    virtual void Behavior(EventWindow<CC>& window) const
     {
       Random & random = window.GetRandom();
 
@@ -54,8 +57,8 @@ namespace MFM
       {
 	if(window.GetRelativeAtom(repPt).GetType() == ELEMENT_EMPTY)
 	{
-	  T atom = Element_Data<T,R>::THE_INSTANCE.GetDefaultAtom();
-          Element_Data<T,R>::THE_INSTANCE.SetDatum(atom,random.Between(DATA_MINVAL, DATA_MAXVAL));
+	  T atom = Element_Data<CC>::THE_INSTANCE.GetDefaultAtom();
+          Element_Data<CC>::THE_INSTANCE.SetDatum(atom,random.Between(DATA_MINVAL, DATA_MAXVAL));
 	  window.SetRelativeAtom(repPt, atom);
 	}
       }
@@ -65,14 +68,14 @@ namespace MFM
     
   };
 
-  template <class T, u32 R>
-  Element_Emitter<T,R> Element_Emitter<T,R>::THE_INSTANCE;
+  template <class CC>
+  Element_Emitter<CC> Element_Emitter<CC>::THE_INSTANCE;
 
   /*
-  template <class T, u32 R>
-  void Element_Emitter<T,R>::Needed()
+  template <class CC>
+  void Element_Emitter<CC>::Needed()
   {
-    ElementTable<T,R>::get().RegisterElement(Element_Emitter<T,R>::THE_INSTANCE);
+    ElementTable<CC>::get().RegisterElement(Element_Emitter<CC>::THE_INSTANCE);
   }
   */
 }
