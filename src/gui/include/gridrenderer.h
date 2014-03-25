@@ -111,8 +111,8 @@ public:
 
   ~GridRenderer();
   
-  template <class T,u32 R,u32 W,u32 H>
-  void RenderGrid(Grid<T,R,W,H>& grid);
+  template <class GC>
+  void RenderGrid(Grid<GC>& grid);
   
 };
 } /* namespace MFM */

@@ -32,40 +32,40 @@ private:
 
   SDL_Surface* m_dest;
 
-  template <u32 R>
+  template <class CC>
   void RenderMemRegions(SPoint& pt, bool renderCache);
 
-  template <u32 R>
+  template <class CC>
   void RenderVisibleRegionOutlines(SPoint& pt, bool renderCache);
 
-  template <u32 R>
+  template <class CC>
   void RenderMemRegion(SPoint& pt, int regID,
 		       u32 color, bool renderCache);
 
-  template <u32 R>
+  template <class CC>
   void RenderGrid(SPoint* pt, bool renderCache);
 
   void RenderAtomBG(SPoint& offset, Point<int>& atomloc,
 		    u32 color);
 
-  template <class T,u32 R>
-  void RenderAtoms(SPoint& pt, Tile<T,R>& tile, bool renderCache);
+  template <class CC>
+  void RenderAtoms(SPoint& pt, Tile<CC>& tile, bool renderCache);
 
-  template <class T, u32 R>
-  u32 GetAtomColor(Tile<T,R>& tile, const T& atom);
+  template <class CC>
+  u32 GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom);
 
-  template <class T, u32 R>
-  u32 GetDataHeatColor(Tile<T,R>& tile, const T& atom);
+  template <class CC>
+  u32 GetDataHeatColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom);
 
-  template <class T,u32 R>
-  void RenderEventWindow(SPoint& offset, Tile<T,R>& tile, bool renderCache);
+  template <class CC>
+  void RenderEventWindow(SPoint& offset, Tile<CC>& tile, bool renderCache);
 
 public:
 
   TileRenderer(SDL_Surface* dest);
 
-  template <class T,u32 R>
-  void RenderTile(Tile<T,R>& t, SPoint& loc, bool renderWindow,
+  template <class CC>
+  void RenderTile(Tile<CC>& t, SPoint& loc, bool renderWindow,
 		  bool renderCache);
 
   void SetDimensions(Point<u32> dimensions)

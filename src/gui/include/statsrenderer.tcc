@@ -4,9 +4,17 @@
 
 namespace MFM {
 
-  template <class T, u32 R, u32 W, u32 H>
-  void StatsRenderer::RenderGridStatistics(Grid<T,R,W,H>& grid, double aeps, double aer)
+  template <class GC>
+  void StatsRenderer::RenderGridStatistics(Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead)
   {
+    // Extract short names for parameter types
+    typedef typename GC::CORE_CONFIG CC;
+    typedef typename CC::ATOM_TYPE T;
+    typedef typename CC::PARAM_CONFIG P;
+    enum { W = GC::GRID_WIDTH};
+    enum { H = GC::GRID_HEIGHT};
+    enum { R = P::EVENT_WINDOW_RADIUS};
+
     Drawing::FillRect(m_dest, m_drawPoint.GetX(), m_drawPoint.GetY(),
                       m_dimensions.GetX(), m_dimensions.GetY(),
                       0xff400040);
@@ -24,16 +32,27 @@ namespace MFM {
     baseY += ROW_HEIGHT;
 
     if (m_displayAER) {
+      sprintf(strBuffer, "%8d/frame", AEPSperFrame);
+      Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
+                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT), 0xffffffff);
+      baseY += ROW_HEIGHT;
+
       sprintf(strBuffer, "%8.3f AER", aer);
       Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
                         Point<u32>(m_dimensions.GetX(), ROW_HEIGHT), 0xffffffff);
       baseY += ROW_HEIGHT;
+
+      sprintf(strBuffer, "%8.3f %%ovrhd", overhead);
+      Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
+                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT), 0xffffffff);
+      baseY += ROW_HEIGHT;
+
     }
 
     baseY += ROW_HEIGHT; // skip a line
     for (u32 i = 0; i < m_displayTypesInUse; ++i) {
       u32 type = m_displayTypes[i];
-      const Element<T,R> * elt = grid.GetTile(SPoint(0,0)).GetElementTable().Lookup(type);
+      const Element<CC> * elt = grid.GetTile(SPoint(0,0)).GetElementTable().Lookup(type);
       if (elt == 0) continue;
       u32 typeCount = grid.GetAtomCount(type);
 

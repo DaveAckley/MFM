@@ -2,8 +2,8 @@
 
 namespace MFM {
 
-  template <class T,u32 R,u32 W,u32 H>
-  void GridRenderer::RenderGrid(Grid<T,R,W,H>& grid)
+  template <class GC>
+  void GridRenderer::RenderGrid(Grid<GC>& grid)
   {
     SPoint current;
     SPoint eventLoc;

@@ -12,10 +12,10 @@ private:
   
   GridRenderer* m_renderer;
 
-  template <class T, u32 R,u32 W,u32 H>
+  template <class GC>
   void RenderHeldGrid(void*& rendObj)
   {
-    m_renderer->RenderGrid(*((Grid<T,R,W,H>*)rendObj));
+    m_renderer->RenderGrid(*((Grid<GC>*)rendObj));
   }
 
 public:

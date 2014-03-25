@@ -21,7 +21,7 @@ namespace MFM {
 
 #define FRAMES_PER_SECOND 100.0
 
-#define EVENTS_PER_FRAME 100000
+#define INITIAL_AEPS_PER_FRAME 1
 
 #define CAMERA_SLOW_SPEED 2
 #define CAMERA_FAST_SPEED 50
@@ -34,17 +34,24 @@ namespace MFM {
 #define MAX_PATH_LENGTH 1000
 #define MIN_PATH_RESERVED_LENGTH 100
 
-  template<class ATOM, u32 WIDTH, u32 HEIGHT, u32 RADIUS>
+  template<class GC>
   class AbstractDriver
   {
   public:
-    static const u32 EVENT_WINDOW_RADIUS = RADIUS;
-    static const u32 GRID_WIDTH = WIDTH;
-    static const u32 GRID_HEIGHT = HEIGHT;
-    static const u32 ELEMENT_TABLE_BITS = 8;
+    // Extract short type names
+    typedef typename GC::CORE_CONFIG CC;
+    typedef typename CC::PARAM_CONFIG P;
+    typedef typename CC::ATOM_TYPE T;
+    enum { W = GC::GRID_WIDTH};
+    enum { H = GC::GRID_HEIGHT};
+    enum { R = P::EVENT_WINDOW_RADIUS};
 
-    typedef Grid<ATOM,EVENT_WINDOW_RADIUS,GRID_WIDTH,GRID_HEIGHT> OurGrid;
-    typedef ElementTable<ATOM,EVENT_WINDOW_RADIUS,ELEMENT_TABLE_BITS> OurElementTable;
+    static const u32 EVENT_WINDOW_RADIUS = R;
+    static const u32 GRID_WIDTH = W;
+    static const u32 GRID_HEIGHT = H;
+
+    typedef Grid<GC> OurGrid;
+    typedef ElementTable<CC> OurElementTable;
 
   private:
     char m_simDirBasePath[MAX_PATH_LENGTH];
@@ -63,10 +70,15 @@ namespace MFM {
 
     bool renderStats;
 
-    u32 m_eventsPerFrame;
+    u32 m_aepsPerFrame;
+    s32 m_microsSleepPerFrame;
+    double m_overheadPercent;
     double m_AER;
     double m_AEPS;
+    double m_lastFrameAEPS;
     u64 m_msSpentRunning;
+    u64 m_msSpentOverhead;
+    u32 m_ticksLastStopped;
 
     s32 m_recordEventCountsPerAEPS;
     s32 m_recordScreenshotPerAEPS;
@@ -179,34 +191,54 @@ namespace MFM {
         }
       if(keyboard.SemiAuto(SDLK_COMMA))
         {
-          m_eventsPerFrame /= 10;
-          if(m_eventsPerFrame == 0)
-            {
-              m_eventsPerFrame = 1;
-            }
+          if(m_aepsPerFrame > 1)
+              m_aepsPerFrame--;
         }
       if(keyboard.SemiAuto(SDLK_PERIOD))
         {
-          m_eventsPerFrame *= 10;
+          if(m_aepsPerFrame < 1000)
+            m_aepsPerFrame++;
         }
 
       if(!paused)
         {
-          u32 startMS = SDL_GetTicks();
-          grid.Unpause();
-          Sleep(2, 100000000);
+          const s32 ONE_THOUSAND = 1000;
+          const s32 ONE_MILLION = ONE_THOUSAND*ONE_THOUSAND;
+
+          grid.Unpause();  // pausing and unpausing should be overhead!
+
+          u32 startMS = SDL_GetTicks();  // So get the ticks after unpausing
+          if (m_ticksLastStopped != 0)
+            m_msSpentOverhead += startMS - m_ticksLastStopped;
+          else
+            m_msSpentOverhead = 0;
+
+          Sleep(m_microsSleepPerFrame/ONE_MILLION, (u64) (m_microsSleepPerFrame%ONE_MILLION)*ONE_THOUSAND);
+          m_ticksLastStopped = SDL_GetTicks(); // and before pausing
+
           grid.Pause();
-          m_msSpentRunning += (SDL_GetTicks() - startMS);
+
+          m_msSpentRunning += (m_ticksLastStopped - startMS);
 
           m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
           m_AER = 1000 * (m_AEPS / m_msSpentRunning);
 
-          if (m_recordEventCountsPerAEPS > 0) {
-            if (m_AEPS >= m_nextEventCountsAEPS) {
+          m_overheadPercent = 100.0*m_msSpentOverhead/(m_msSpentRunning+m_msSpentOverhead);
 
-              char buf[100];
-              snprintf(buf,100,"%10d-EPS.ppm",m_nextEventCountsAEPS);
-              FILE* fp = fopen(buf, "w");
+          double diff = m_AEPS - m_lastFrameAEPS;
+          double err = MIN(1.0, MAX(-1.0, m_aepsPerFrame - diff));
+
+          // Correct up to 20% of current each frame
+          m_microsSleepPerFrame = (100+20*err)*m_microsSleepPerFrame/100;
+          m_microsSleepPerFrame = MIN(100000000, MAX(1000, m_microsSleepPerFrame));
+
+          m_lastFrameAEPS = m_AEPS;
+
+          if (m_recordEventCountsPerAEPS > 0) {
+            if (m_AEPS > m_nextEventCountsAEPS) {
+
+              const char * path = GetSimDirPathTemporary("eps/%010d.png", m_nextEventCountsAEPS);
+              FILE* fp = fopen(path, "w");
               grid.WriteEPSImage(fp);
               fclose(fp);
 
@@ -260,9 +292,10 @@ namespace MFM {
       m_screenWidth = SCREEN_INITIAL_WIDTH;
       m_screenHeight = SCREEN_INITIAL_HEIGHT;
 
-      m_eventsPerFrame = EVENTS_PER_FRAME;
+      m_aepsPerFrame = INITIAL_AEPS_PER_FRAME;
       m_AEPS = 0;
       m_msSpentRunning = 0;
+      m_microsSleepPerFrame = 1000;
 
       m_recordEventCountsPerAEPS = args.GetRecordEventCountsPerAEPS();
       m_recordScreenshotPerAEPS = args.GetRecordScreenshotPerAEPS();
@@ -277,6 +310,8 @@ namespace MFM {
       m_srend.OnceOnly();
 
       SDL_WM_SetCaption("Movable Feast Machine Simulator", NULL);
+
+      m_ticksLastStopped = 0;
     }
 
     void SetSeed(u32 seed) {
@@ -288,6 +323,7 @@ namespace MFM {
     void ReinitUs() {
       m_nextEventCountsAEPS = 0;
       m_nextScreenshotAEPS = 0;
+      m_lastFrameAEPS = 0;
     }
 
     void Reinit() {
@@ -295,7 +331,7 @@ namespace MFM {
 
       mainGrid.Reinit();
 
-      mainGrid.Needed(Element_Empty<P1Atom, 4>::THE_INSTANCE);
+      mainGrid.Needed(Element_Empty<CC>::THE_INSTANCE);
 
       ReinitPhysics();
 
@@ -417,11 +453,11 @@ namespace MFM {
           m_grend.RenderGrid(mainGrid);
           if(renderStats)
             {
-              m_srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER);
+              m_srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent);
             }
 
           if (m_recordScreenshotPerAEPS > 0) {
-            if (m_AEPS >= m_nextScreenshotAEPS) {
+            if (!paused && m_AEPS >= m_nextScreenshotAEPS) {
 
               const char * path = GetSimDirPathTemporary("vid/%010d.png", m_nextScreenshotAEPS);
 

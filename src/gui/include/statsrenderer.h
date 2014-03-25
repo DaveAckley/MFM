@@ -67,8 +67,8 @@ public:
   template <class T, u32 R>
   void DrawString(const char* string, u32 x, u32 y);
 
-  template<class T, u32 R, u32 W, u32 H>
-  void RenderGridStatistics(Grid<T,R,W,H>& grid, double aeps, double aer);
+  template<class GC>
+  void RenderGridStatistics(Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead);
 };
 } /* namespace MFM */
 #include "statsrenderer.tcc"
