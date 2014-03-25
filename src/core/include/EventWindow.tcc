@@ -3,8 +3,8 @@
 
 namespace MFM {
 
-template <class T,u32 R>
-EventWindow<T,R>::EventWindow(Tile<T,R> & tile, u32 tileWidth,
+template <class C>
+EventWindow<C>::EventWindow(Tile<C> & tile, u32 tileWidth,
 			      u8 neighborConnections) : m_tile(tile)
 {
   // m_tileWidth = tileWidth;
@@ -12,26 +12,14 @@ EventWindow<T,R>::EventWindow(Tile<T,R> & tile, u32 tileWidth,
 
 }
 
-template <class T, u32 R>
-void EventWindow<T,R>::SetCenter(const SPoint& center)
+template <class C>
+void EventWindow<C>::SetCenter(const SPoint& center)
 {
   m_center = center;
 }
 
-template <class T, u32 R>
-const T& EventWindow<T,R>::GetCenterAtom() const
-{
-  return *m_tile.GetAtom(m_center);
-}
-
-template <class T, u32 R>
-void EventWindow<T,R>::SetCenterAtom(const T& atom) 
-{
-  return m_tile.PlaceAtom(atom,m_center);
-}
-
-template <class T, u32 R>
-bool EventWindow<T,R>::SetRelativeAtom(const SPoint& offset, T atom)
+template <class C> 
+bool EventWindow<C>::SetRelativeAtom(const SPoint& offset, T atom)
 {
   s32 idx = MDist<R>::get().FromPoint(offset, R);
   if (idx < 0)
@@ -45,8 +33,8 @@ bool EventWindow<T,R>::SetRelativeAtom(const SPoint& offset, T atom)
   return true;
 }
 
-template <class T, u32 R>
-const T& EventWindow<T,R>::GetRelativeAtom(const SPoint& offset) const
+template <class C>
+const typename C::ATOM_TYPE& EventWindow<C>::GetRelativeAtom(const SPoint& offset) const
 {
   s32 idx = MDist<R>::get().FromPoint(offset, R);
   if (idx < 0)
@@ -59,8 +47,8 @@ const T& EventWindow<T,R>::GetRelativeAtom(const SPoint& offset) const
 
 }
 
-template <class T, u32 R>
-void EventWindow<T,R>::SwapAtoms(const SPoint& locA, const SPoint& locB)
+template <class C>
+void EventWindow<C>::SwapAtoms(const SPoint& locA, const SPoint& locB)
 {
   s32 aIdx = MDist<R>::get().FromPoint(locA, R);
   s32 bIdx = MDist<R>::get().FromPoint(locB, R);
@@ -81,8 +69,8 @@ void EventWindow<T,R>::SwapAtoms(const SPoint& locA, const SPoint& locB)
 }
 
 
-template <class T, u32 R>
-void EventWindow<T,R>::FillCenter(SPoint& out) const
+template <class C>
+void EventWindow<C>::FillCenter(SPoint& out) const
 {
   out.Set(m_center.GetX(), m_center.GetY());
 }

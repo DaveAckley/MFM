@@ -4,6 +4,7 @@
 #include "itype.h"
 #include <stdio.h>  /* for FILE */
 #include <climits>  /* for CHAR_BIT */
+#include <stdlib.h> /* for abort */
 
 namespace MFM {
 
@@ -85,10 +86,11 @@ namespace MFM {
    * may be other issues.
    */
 
-  template <u32 BITS>
+  template <u32 B>
   class BitVector
   {
   public:
+    enum { BITS = B };
     typedef u32 BitUnitType;
     static const u32 BITS_PER_UNIT = sizeof(BitUnitType) * CHAR_BIT;
 
@@ -104,7 +106,7 @@ namespace MFM {
       if (length<32) return (1u << length) - 1;
       return -1;
     }
- 
+
     /**
      * Low-level raw bitvector writing to a single array element.
      * startIdx==0 means the leftmost bit (MSB).  No checking is done:
@@ -112,6 +114,7 @@ namespace MFM {
      * 32
      */
     inline void WriteToUnit(const u32 idx, const u32 startIdx, const u32 length, const u32 value) {
+      if (length==0) return;
       const u32 shift = BITS_PER_UNIT - (startIdx + length);
       u32 mask = MakeMask(length) << shift;
       m_bits[idx] = (m_bits[idx] & ~mask) | ((value << shift) & mask);
@@ -124,8 +127,8 @@ namespace MFM {
      * 32
      */
     inline u32 ReadFromUnit(const u32 idx, const u32 startIdx, const u32 length) const {
-      if(!length) { return length; }
-      if(idx >= ARRAY_LENGTH) { printf("Whoa! %d %d %d\n", idx, startIdx, length); return 0; }
+      if (length==0) { return 0; }
+      if(idx >= ARRAY_LENGTH) abort();
       const u32 shift = BITS_PER_UNIT - (startIdx + length);
       return (m_bits[idx] >> shift) & MakeMask(length);
     }
@@ -141,25 +144,11 @@ namespace MFM {
 
     BitVector(const u32 * const values);
 
-    u32 Read(const u32 startIdx, const u32 length) const;
+    inline u32 Read(const u32 startIdx, const u32 length) const;
 
     void Write(const u32 startIdx, const u32 length, const u32 value);
 
-#if 0 // Considered harmful..
-    /* 
-     * Inserts a value at startIdx. Pushes the values
-     * already there down length bits.
-     */
-    void Insert(u32 startIdx, u32 length, u32 value);
-#endif
-
-#if 0
-    /*
-     * Removes length bits from this bitvector, then pushes
-     * all bits to the right of them back length bits.
-     */
-    void Remove(u32 startIdx, u32 length);
-#endif
+    void Clear();
 
     void Print(FILE* ostream) const;
 			   

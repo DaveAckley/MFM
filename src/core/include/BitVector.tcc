@@ -6,7 +6,7 @@ namespace MFM {
 template <u32 BITS>
 BitVector<BITS>::BitVector()
 {
-  memset(m_bits, 0, sizeof(m_bits));
+  Clear();
 }
 
 template <u32 BITS>
@@ -19,6 +19,12 @@ template <u32 BITS>
 BitVector<BITS>::BitVector(const BitVector & other)
 {
   memcpy(m_bits,other.m_bits,sizeof(m_bits));
+}
+
+template <u32 BITS>
+void BitVector<BITS>::Clear()
+{
+  memset(m_bits, 0, sizeof(m_bits));
 }
 
 /* 
@@ -57,6 +63,9 @@ void BitVector<BITS>::Write(u32 startIdx,
 				u32 length,
 				u32 value)
 {
+  if (length == 0) 
+    return;
+
   if (startIdx+length > BITS)
     FAIL(ILLEGAL_ARGUMENT);
 
@@ -98,6 +107,9 @@ void BitVector<BITS>::Insert(u32 startIdx,
 template <u32 BITS>
 u32 BitVector<BITS>::Read(const u32 startIdx, const u32 length) const
 {
+  if (length == 0)
+    return 0;
+
   if (startIdx+length > BITS)
     FAIL(ILLEGAL_ARGUMENT);
 
