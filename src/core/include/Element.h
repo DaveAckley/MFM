@@ -9,28 +9,29 @@ namespace MFM
 {
   typedef u32 ElementType;
 
-  template <class T, u32 R> class Atom; // Forward declaration
+  template <class C> class Atom; // Forward declaration
 
   /**
    * ELEMENT_EMPTY is recognized at the element/elementtable level.
    */
   static const u32 ELEMENT_EMPTY  = 0x0;
 
-  template <class T, u32 R>
+  template <class C>
   class Element
   {
   private:
+    typedef typename C::ATOM_TYPE T;
 
   protected:
     static const SPoint VNNeighbors[4];
 
-    bool FillAvailableVNNeighbor(EventWindow<T,R>& window, SPoint& pt) const;
+    bool FillAvailableVNNeighbor(EventWindow<C>& window, SPoint& pt) const;
 
-    bool FillPointWithType(EventWindow<T,R>& window, 
+    bool FillPointWithType(EventWindow<C>& window, 
 			   SPoint& pt, const SPoint* relevants, u32 relevantCount,
 			   Dir rotation, ElementType type) const;
       
-    void Diffuse(EventWindow<T,R>& window) const;
+    void Diffuse(EventWindow<C>& window) const;
 
   public:
 
@@ -41,7 +42,7 @@ namespace MFM
     
     virtual const char * GetName() const = 0;
 
-    virtual void Behavior(EventWindow<T,R>& window) const = 0;
+    virtual void Behavior(EventWindow<C>& window) const = 0;
 
     virtual const T & GetDefaultAtom() const = 0;
 
