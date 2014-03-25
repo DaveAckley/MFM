@@ -5,12 +5,21 @@
 #include "Tile.h"
 #include "ElementTable.h"
 #include "Random.h"
+#include "GridConfig.h"
 
 namespace MFM {
 
-  template <class T,u32 R, u32 W, u32 H>
+  template <class GC>
   class Grid
   {
+    // Extract short type names
+    typedef typename GC::CORE_CONFIG CC;
+    typedef typename CC::ATOM_TYPE T;
+    typedef typename CC::PARAM_CONFIG P;
+    enum { W = GC::GRID_WIDTH};
+    enum { H = GC::GRID_HEIGHT};
+    enum { R = P::EVENT_WINDOW_RADIUS};
+
   private:
     Random m_random;
 
@@ -22,14 +31,7 @@ namespace MFM {
 
     SPoint m_lastEventTile;
 
-    Tile<T,R> m_tiles[W][H];
-
-#if 0 // Anybody using these?
-    Tile<T,R>* GetTile(int position);
-
-    inline u32 GetPosition(u32 x, u32 y)
-    { return x + y * m_width; }
-#endif
+    Tile<CC> m_tiles[W][H];
 
   public:
     Random& GetRandom() { return m_random; }
@@ -38,13 +40,22 @@ namespace MFM {
 
     void SetSeed(u32 seed);
 
-    Grid();
+    Grid() : m_seed(0), m_width(W), m_height(H)
+    {
+    }
 
     void Reinit();
 
-    void Needed(const Element<T,R> & anElement) ;
+    void Needed(const Element<CC> & anElement)
+    {
+      for(u32 i = 0; i < W; i++)
+        for(u32 j = 0; j < H; j++)
+          m_tiles[i][j].RegisterElement(anElement);
+    }
 
-    ~Grid();
+    ~Grid() 
+    {
+    }
 
     /**
      * Return true iff tileInGrid is a legal tile coordinate in this
@@ -90,7 +101,7 @@ namespace MFM {
      */
     static u32 GetHeightSites() 
     {
-      return GetHeight() * Tile<T,R>::OWNED_SIDE;
+      return GetHeight() * Tile<CC>::OWNED_SIDE;
     }
 
     /**
@@ -98,7 +109,7 @@ namespace MFM {
      */
     static u32 GetWidthSites() 
     {
-      return GetWidth() * Tile<T,R>::OWNED_SIDE;
+      return GetWidth() * Tile<CC>::OWNED_SIDE;
     }
 
 
@@ -108,22 +119,28 @@ namespace MFM {
 
     void PlaceAtom(T& atom, const SPoint& location);
 
-    const T* GetAtom(SPoint& location);
+    const T* GetAtom(SPoint& loc)
+    {
+      SPoint tileInGrid, siteInTile;
+      if (!MapGridToTile(loc, tileInGrid, siteInTile))
+        FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+      return GetTile(tileInGrid).GetAtom(siteInTile);
+    }
 
     void FillLastEventTile(SPoint& out);
 
     void TriggerEvent();
 
-    inline Tile<T,R> & GetTile(const SPoint& pt)
+    inline Tile<CC> & GetTile(const SPoint& pt)
     {return GetTile(pt.GetX(), pt.GetY());}
 
-    inline const Tile<T,R> & GetTile(const SPoint& pt) const
+    inline const Tile<CC> & GetTile(const SPoint& pt) const
     {return GetTile(pt.GetX(), pt.GetY());}
 
-    inline Tile<T,R> & GetTile(u32 x, u32 y)
+    inline Tile<CC> & GetTile(u32 x, u32 y)
     { return m_tiles[x][y]; }
 
-    inline const Tile<T,R> & GetTile(u32 x, u32 y) const
+    inline const Tile<CC> & GetTile(u32 x, u32 y) const
     { return m_tiles[x][y]; }
 
     /* Don't count caches! */

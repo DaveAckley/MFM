@@ -4,13 +4,8 @@
 
 namespace MFM {
 
-  template <class T,u32 R,u32 W, u32 H>
-  Grid<T,R,W,H>::Grid() : m_seed(0), m_width(W), m_height(H)
-  {
-  }
-
-  template <class T,u32 R,u32 W, u32 H>
-  void Grid<T,R,W,H>::Reinit() {
+  template <class GC>
+  void Grid<GC>::Reinit() {
 
     /* Reseed grid PRNG and push seeds to the tile PRNGs */
     ReinitSeed();
@@ -24,7 +19,7 @@ namespace MFM {
     {
       for(u32 y = 0; y < m_height; y++)
       {
-	Tile<T,R>& ctile = GetTile(x, y);
+	Tile<CC>& ctile = GetTile(x, y);
 
         ctile.Reinit();
 
@@ -73,14 +68,14 @@ namespace MFM {
     }
   }
 
-  template <class T,u32 R,u32 W, u32 H>
-  void Grid<T,R,W,H>::SetSeed(u32 seed)
+  template <class GC>
+  void Grid<GC>::SetSeed(u32 seed)
   {
     m_seed = seed;
   }
 
-  template <class T,u32 R,u32 W, u32 H>
-  void Grid<T,R,W,H>::ReinitSeed()
+  template <class GC>
+  void Grid<GC>::ReinitSeed()
   {
     if (m_seed==0)  // SetSeed must have been called by now!
       FAIL(ILLEGAL_STATE);
@@ -93,14 +88,8 @@ namespace MFM {
         }
   }
 
-  template <class T, u32 R,u32 W, u32 H>
-  Grid<T,R,W,H>::~Grid()
-  {
-  }
-
-
-  template <class T, u32 R,u32 W, u32 H>
-  bool Grid<T,R,W,H>::IsLegalTileIndex(const SPoint & tileInGrid) const
+  template <class GC>
+  bool Grid<GC>::IsLegalTileIndex(const SPoint & tileInGrid) const
   {
     if (tileInGrid.GetX() < 0 || tileInGrid.GetY() < 0)
       return false;
@@ -109,8 +98,8 @@ namespace MFM {
     return true;
   }
 
-  template <class T, u32 R,u32 W, u32 H>
-  bool Grid<T,R,W,H>::MapGridToTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const
+  template <class GC>
+  bool Grid<GC>::MapGridToTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const
   {
     SPoint myTile, mySite;
     if (!MapGridToUncachedTile(siteInGrid, myTile, mySite)) return false;
@@ -119,13 +108,13 @@ namespace MFM {
     return true;
   }
 
-  template <class T, u32 R,u32 W, u32 H>
-  bool Grid<T,R,W,H>::MapGridToUncachedTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const
+  template <class GC>
+  bool Grid<GC>::MapGridToUncachedTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const
   {
     if (siteInGrid.GetX() < 0 || siteInGrid.GetY() < 0)
       return false;
 
-    SPoint t = siteInGrid/Tile<T,R>::OWNED_SIDE;
+    SPoint t = siteInGrid/Tile<CC>::OWNED_SIDE;
 
     if (!IsLegalTileIndex(t))
       return false;
@@ -133,18 +122,18 @@ namespace MFM {
     // Set up return values
     tileInGrid = t;
     siteInTile =
-      siteInGrid % Tile<T,R>::OWNED_SIDE;  // get index into just 'owned' sites
+      siteInGrid % Tile<CC>::OWNED_SIDE;  // get index into just 'owned' sites
     return true;
   }
 
-  template <class T, u32 R,u32 W, u32 H>
-  void Grid<T,R,W,H>::PlaceAtom(T& atom, const SPoint& siteInGrid)
+  template <class GC>
+  void Grid<GC>::PlaceAtom(T& atom, const SPoint& siteInGrid)
   {
     SPoint tileInGrid, siteInTile;
     if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
       FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
 
-    Tile<T,R> & owner = GetTile(tileInGrid);
+    Tile<CC> & owner = GetTile(tileInGrid);
     owner.PlaceAtom(atom, siteInTile);
 
     Dir startDir = owner.CacheAt(siteInTile);
@@ -167,8 +156,8 @@ namespace MFM {
 
       if (!IsLegalTileIndex(otherTileIndex)) continue;  // edge of grid
 
-      Tile<T,R> & other = GetTile(otherTileIndex);
-      SPoint otherIndex = siteInTile + tileOffset * Tile<T,R>::OWNED_SIDE;
+      Tile<CC> & other = GetTile(otherTileIndex);
+      SPoint otherIndex = siteInTile + tileOffset * Tile<CC>::OWNED_SIDE;
 
       other.PlaceAtom(atom,otherIndex);
       FAIL(INCOMPLETE_CODE);
@@ -176,18 +165,8 @@ namespace MFM {
 
   }
 
-  template <class T, u32 R,u32 W, u32 H>
-  const T* Grid<T,R,W,H>::GetAtom(SPoint& loc)
-  {
-    SPoint tileInGrid, siteInTile;
-    if (!MapGridToTile(loc, tileInGrid, siteInTile))
-      FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
-
-    return GetTile(tileInGrid).GetAtom(siteInTile);
-  }
-
-  template <class T, u32 R,u32 W, u32 H>
-  void Grid<T,R,W,H>::Pause()
+  template <class GC>
+  void Grid<GC>::Pause()
   {
     for(u32 x = 0; x < W; x++)
     {
@@ -198,8 +177,8 @@ namespace MFM {
     }
   }
 
-  template <class T, u32 R,u32 W, u32 H>
-  void Grid<T,R,W,H>::Unpause()
+  template <class GC>
+  void Grid<GC>::Unpause()
   {
     for(u32 x = 0; x < W; x++)
     {
@@ -210,8 +189,8 @@ namespace MFM {
     }
   }
 
-  template <class T, u32 R,u32 W, u32 H>
-  void Grid<T,R,W,H>::TriggerEvent()
+  template <class GC>
+  void Grid<GC>::TriggerEvent()
   {
     /*Change to 0 if aiming a window at a certian tile.*/
 #if 1
@@ -220,23 +199,23 @@ namespace MFM {
     SPoint windowTile(0, 1);
 #endif
 
-    Tile<T,R>& execTile = m_tiles[windowTile.GetX()][windowTile.GetY()];
+    Tile<CC>& execTile = m_tiles[windowTile.GetX()][windowTile.GetY()];
 
-    //  execTile.Execute(ElementTable<T,R>::get());
+    //  execTile.Execute(ElementTable<CC>::get());
     execTile.Execute();
 
     m_lastEventTile.Set(windowTile.GetX(), windowTile.GetY());
   }
 
-  template <class T, u32 R,u32 W, u32 H>
-  void Grid<T,R,W,H>::FillLastEventTile(SPoint& out)
+  template <class GC>
+  void Grid<GC>::FillLastEventTile(SPoint& out)
   {
     out.Set(m_lastEventTile.GetX(),
             m_lastEventTile.GetY());
   }
 
-  template <class T, u32 R, u32 W, u32 H>
-  u64 Grid<T,R,W,H>::GetTotalEventsExecuted() const
+  template <class GC>
+  u64 Grid<GC>::GetTotalEventsExecuted() const
   {
     u64 total = 0;
     for(u32 x = 0; x < W; x++)
@@ -249,8 +228,8 @@ namespace MFM {
     return total;
   }
 
-  template <class T, u32 R, u32 W, u32 H>
-  void Grid<T,R,W,H>::WriteEPSImage(FILE* outstrm) const
+  template <class GC>
+  void Grid<GC>::WriteEPSImage(FILE* outstrm) const
   {
     u64 max = 0;
     const u32 swidth = GetWidthSites();
@@ -274,8 +253,8 @@ namespace MFM {
     }
   }
 
-  template <class T, u32 R,u32 W, u32 H>
-  u32 Grid<T,R,W,H>::GetAtomCount(ElementType atomType) const
+  template <class GC>
+  u32 Grid<GC>::GetAtomCount(ElementType atomType) const
   {
     u32 total = 0;
     for(u32 i = 0; i < W; i++)
@@ -285,12 +264,5 @@ namespace MFM {
     return total;
   }
 
-  template <class T, u32 R,u32 W, u32 H>
-  void Grid<T,R,W,H>::Needed(const Element<T,R> & anElement)
-  {
-    for(u32 i = 0; i < W; i++)
-      for(u32 j = 0; j < H; j++)
-        m_tiles[i][j].RegisterElement(anElement);
-  }
 } /* namespace MFM */
 
