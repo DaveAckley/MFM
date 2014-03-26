@@ -4,14 +4,14 @@
 namespace MFM {
 
   typedef ParamConfig<> OurParamConfig;
-  typedef P0Atom<OurParamConfig> OurAtom;
+  typedef P1Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
 
   struct MFMSimCloudDemo : public AbstractDriver<OurGridConfig>
   {
-    MFMSimCloudDemo(DriverArguments & args) 
-      : AbstractDriver(args) 
+    MFMSimCloudDemo(DriverArguments & args)
+      : AbstractDriver(args)
     {
     }
 
@@ -25,7 +25,7 @@ namespace MFM {
       mainGrid.Needed(Element_Boids2<OurCoreConfig>::THE_INSTANCE);
     }
 
-    void ReinitEden() 
+    void ReinitEden()
     {
       OurGrid & mainGrid = GetGrid();
       StatsRenderer & srend = GetStatsRenderer();

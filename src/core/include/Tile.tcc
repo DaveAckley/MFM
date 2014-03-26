@@ -11,7 +11,7 @@ namespace MFM {
   }
 
   template <class CC>
-  void Tile<CC>::Reinit() 
+  void Tile<CC>::Reinit()
   {
     elementTable.Reinit();
 
@@ -100,7 +100,7 @@ namespace MFM {
   }
 
   template <class CC>
-  void Tile<CC>::InternalPutAtom(const T & atom, s32 x, s32 y) 
+  void Tile<CC>::InternalPutAtom(const T & atom, s32 x, s32 y)
   {
     if (((u32) x) >= TILE_WIDTH || ((u32) y) >= TILE_WIDTH)
       FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
@@ -287,13 +287,13 @@ namespace MFM {
   }
 
   template <class CC>
-  bool Tile<CC>::IsOwnedSite(const SPoint & location) 
+  bool Tile<CC>::IsOwnedSite(const SPoint & location)
   {
     return IsInTile(location) && !IsInCache(location);
   }
 
   template <class CC>
-  bool Tile<CC>::IsInCache(const SPoint& pt) 
+  bool Tile<CC>::IsInCache(const SPoint& pt)
   {
     s32 upbnd = TILE_WIDTH - R;
     return (u32)pt.GetX() < R || (u32)pt.GetY() < R ||
@@ -592,7 +592,6 @@ namespace MFM {
 	 (locked = LockRegion(lockRegion)))
 	{
           unwind_protect({
-              printf("%d",i);
               ++m_eventsFailed;
               ++m_failuresErased;
               m_executingWindow.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());

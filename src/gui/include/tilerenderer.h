@@ -18,13 +18,17 @@ private:
   bool m_drawGrid;
   enum DrawRegionType { NO, EDGE, FULL, MAX} m_drawMemRegions;
   bool m_drawDataHeat;
-  int m_atomDrawSize;
+  u32 m_atomDrawSize;
 
   u32 m_gridColor;
+
+  u32 m_cacheColor;
   u32 m_sharedColor;
   u32 m_visibleColor;
   u32 m_hiddenColor;
-  u32 m_cacheColor;
+  u32 m_selectedHiddenColor;
+
+
 
   SPoint m_windowTL;
 
@@ -33,7 +37,7 @@ private:
   SDL_Surface* m_dest;
 
   template <class CC>
-  void RenderMemRegions(SPoint& pt, bool renderCache);
+  void RenderMemRegions(SPoint& pt, bool renderCache, bool selected);
 
   template <class CC>
   void RenderVisibleRegionOutlines(SPoint& pt, bool renderCache);
@@ -66,11 +70,16 @@ public:
 
   template <class CC>
   void RenderTile(Tile<CC>& t, SPoint& loc, bool renderWindow,
-		  bool renderCache);
+		  bool renderCache, bool selected);
 
   void SetDimensions(Point<u32> dimensions)
   {
     m_dimensions = dimensions;
+  }
+
+  SPoint& GetWindowTL()
+  {
+    return m_windowTL;
   }
 
   SDL_Surface* GetDestination()
@@ -81,6 +90,11 @@ public:
   void IncreaseAtomSize();
 
   void DecreaseAtomSize();
+
+  u32 GetAtomSize()
+  {
+    return m_atomDrawSize;
+  }
 
   void ToggleGrid();
 

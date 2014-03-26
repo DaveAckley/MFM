@@ -100,7 +100,7 @@ void TileRenderer::RenderAtoms(SPoint& pt, Tile<CC>& tile, bool renderCache)
 
 template <class CC>
 void TileRenderer::RenderTile(Tile<CC>& t, SPoint& loc, bool renderWindow,
-			      bool renderCache)
+			      bool renderCache, bool selected)
 {
   // Extract short type names
   typedef typename CC::ATOM_TYPE T;
@@ -125,11 +125,11 @@ void TileRenderer::RenderTile(Tile<CC>& t, SPoint& loc, bool renderWindow,
      realPt.GetY() < (s32)m_dest->h)
   {
     switch (m_drawMemRegions) {
-    default: 
+    default:
     case NO:
       break;
     case FULL:
-      RenderMemRegions<CC>(multPt, renderCache);
+      RenderMemRegions<CC>(multPt, renderCache, selected);
       break;
     case EDGE:
       RenderVisibleRegionOutlines<CC>(multPt, renderCache);
@@ -188,7 +188,7 @@ void TileRenderer::RenderEventWindow(SPoint& offset, Tile<CC>& tile, bool render
 }
 
 template <class CC>
-void TileRenderer::RenderMemRegions(SPoint& pt, bool renderCache)
+void TileRenderer::RenderMemRegions(SPoint& pt, bool renderCache, bool selected)
 {
   // Extract short type names
   typedef typename CC::ATOM_TYPE T;
@@ -202,7 +202,8 @@ void TileRenderer::RenderMemRegions(SPoint& pt, bool renderCache)
   }
   RenderMemRegion<CC>(pt, regID++, m_sharedColor, renderCache);
   RenderMemRegion<CC>(pt, regID++, m_visibleColor, renderCache);
-  RenderMemRegion<CC>(pt, regID  , m_hiddenColor, renderCache);
+  RenderMemRegion<CC>(pt, regID,
+		      selected ? m_selectedHiddenColor: m_hiddenColor, renderCache);
 }
 
 template <class CC>

@@ -1,7 +1,7 @@
 #ifndef ELEMENT_BOIDS_H   /* -*- C++ -*- */
 #define ELEMENT_BOIDS_H
 
-#include "Element.h"    
+#include "Element.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "Element_Empty.h"
@@ -15,19 +15,19 @@ namespace MFM
 
   /**
     A clump-forming class.  Goals:
-   
+
     - Survive and operate in a DReg environment, recruiting Res to
       establish and maintain the clump.
-   
+
     - Approximately but effectively regulate clump size even though
       the size will be larger than an event window radius.
-    
+
     - Maintain 'clump identity' by a shared belief about the position
       of the center or centroid of the clump.  Nearby clumps will not
       coalesce in calm conditions due to their separate identities.
-   
+
     - An ability to maintain and (later) move the clump position.
-   
+
     Class:
     (C1) Name is Ball
     (C2) Type is 0xba11
@@ -50,7 +50,7 @@ namespace MFM
 
     Actors:
     (A1) self, a Ball
-    (A2) info, a Centers 
+    (A2) info, a Centers
     (A3) empties, an Empties
     (A4) i, an Index into info
     (A5) e, an Index into empties
@@ -83,11 +83,11 @@ namespace MFM
     Thought:
 
     --- (1) If I'm part of a confirmed ball stay near center
-    --- (2) 
+    --- (2)
 
     (1) If info.length > 0: --- At least one confirmed center
 
-      (1.1) If there exists i such that self.center info[i].center: 
+      (1.1) If there exists i such that self.center info[i].center:
 
         Do (R1), then
 
@@ -103,7 +103,7 @@ namespace MFM
 
 
  :=> Stand
-   
+
    */
 
 
@@ -114,7 +114,7 @@ namespace MFM
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS };
-   
+
     class Vector {
       FXP16 x;
       FXP16 y;
@@ -158,7 +158,7 @@ namespace MFM
       friend Vector operator/(const Vector & v1,const FXP16 num) {
         return 1.0/num*v1;
       }
-     
+
       Vector & operator=(const Vector & v1) {
         this->x = v1.x;
         this->y = v1.y;
@@ -187,7 +187,7 @@ namespace MFM
 
     };
 
-    template <u32 TVBITS> 
+    template <u32 TVBITS>
     static u32 toSignMag(FXP16 value) {
       const u32 SIGN_BIT = 1<<(TVBITS-1);
       const u32 MAX = SIGN_BIT-1;
@@ -196,13 +196,13 @@ namespace MFM
         sign = SIGN_BIT;
         value = -value;
       }
-      if (value > MAX) 
+      if (value > MAX)
         value = MAX;
       u32 val = (u32) value;
       return sign|val;
     }
 
-    template <u32 TVBITS> 
+    template <u32 TVBITS>
     static FXP16 fromSignMag(const u32 value) {
       const u32 SIGN_BIT = 1<<(TVBITS-1);
       const u32 MASK = SIGN_BIT-1;
@@ -212,14 +212,14 @@ namespace MFM
       return val;
     }
 
-    template <u32 TVBITS> 
+    template <u32 TVBITS>
     static u32 toTinyVector(const Vector v) {
       u32 x = toSignMag<TVBITS>(v.x);
       u32 y = toSignMag<TVBITS>(v.y);
       return (x<<TVBITS)|y;
     }
 
-    template <u32 TVBITS> 
+    template <u32 TVBITS>
     static Vector toVector(const u32 bits) {
       const u32 MASK = (1<<TVBITS)-1;
 
@@ -257,7 +257,7 @@ namespace MFM
       atom.SetStateField(STATE_HEADING_IDX,STATE_HEADING_LEN,toTinyVector<BITS_PER_DIM>(v));
     }
 
-    SPoint PickPossibleDestination(EventWindow<CC>& window, const Vector & target, Random & random) const 
+    SPoint PickPossibleDestination(EventWindow<CC>& window, const Vector & target, Random & random) const
     {
       SPoint dest;
       FXP16 totWgt = 0;
@@ -289,10 +289,10 @@ namespace MFM
         //
         // (4) Then the dest is empty or the center, throw the
         //     weighted die and select if win
-        
+
         FXP16 dist = GetDistSq(spVec,target);
         FXP16 weight = 0;
-        if (dist < MAX_DIST) 
+        if (dist < MAX_DIST)
           weight = MAX_DIST_WGT-dist*WGT_PER_DIST;
         if (other.GetType() != Element_Empty<CC>::TYPE)
           weight /= 2;
@@ -307,7 +307,7 @@ namespace MFM
       return dest;
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const 
+    virtual void Behavior(EventWindow<CC>& window) const
     {
       const double TARGET_SPACING = 1.5;
       Random & random = window.GetRandom();
@@ -345,7 +345,7 @@ namespace MFM
         }
 
         if (otherType != selfType) continue;
-        
+
         u32 dist = sp.GetManhattanLength();
         if (dist < minDist)
           minDist = dist;

@@ -17,7 +17,7 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_ttf.h"
 
-namespace MFM { 
+namespace MFM {
 
 #define FRAMES_PER_SECOND 100.0
 
@@ -107,147 +107,179 @@ namespace MFM {
 
     void Update(OurGrid& grid)
     {
+      KeyboardUpdate(grid);
+      MouseUpdate(grid);
+    }
+
+    void MouseUpdate(OurGrid& grid)
+    {
+      if(mouse.IsDown(SDL_BUTTON_LEFT))
+      {
+	SPoint mloc;
+	UPoint gdim = m_grend.GetDimensions();
+
+	mouse.FillPoint(&mloc);
+
+	if((u32)mloc.GetX() < gdim.GetX() &&
+	   (u32)mloc.GetY() < gdim.GetY())
+	{
+	  /* This is in the grid renderer */
+	  m_grend.SelectTile(grid, mloc);
+	}
+	else
+	{
+	  /* This must be in the control panel  */
+
+	  /* Adjust so we are relative to the control panel */
+	  mloc.SetX(mloc.GetX() - (s32)gdim.GetX());
+	}
+
+      }
+      mouse.Flip();
+    }
+
+    void KeyboardUpdate(OurGrid& grid)
+    {
       u8 speed = keyboard.ShiftHeld() ?
         CAMERA_FAST_SPEED : CAMERA_SLOW_SPEED;
 
       if(keyboard.IsDown(SDLK_q) && (keyboard.IsDown(SDLK_LCTRL) || keyboard.IsDown(SDLK_RCTRL)))
-        {
-          exit(0);
-        }
+      {
+	exit(0);
+      }
 
-      if(keyboard.IsDown(SDLK_a))
-        {
-          m_srend.SetDisplayAER(!m_srend.GetDisplayAER());
-        }
+      if(keyboard.SemiAuto(SDLK_a))
+      {
+	m_srend.SetDisplayAER(!m_srend.GetDisplayAER());
+      }
 
       if(keyboard.IsDown(SDLK_1))
-        {
-          m_grend.IncreaseAtomSize();
-        }
+      {
+	m_grend.IncreaseAtomSize();
+      }
       if(keyboard.IsDown(SDLK_2))
-        {
-          m_grend.DecreaseAtomSize();
-        }
+      {
+	m_grend.DecreaseAtomSize();
+      }
       if(keyboard.SemiAuto(SDLK_g))
-        {
-          m_grend.ToggleGrid();
-        }
+      {
+	m_grend.ToggleGrid();
+      }
       if(keyboard.SemiAuto(SDLK_m))
-        {
-          m_grend.ToggleMemDraw();
-        }
+      {
+	m_grend.ToggleMemDraw();
+      }
       if(keyboard.SemiAuto(SDLK_l))
-        {
-          m_grend.ToggleDataHeatmap();
-        }
+      {
+	m_grend.ToggleDataHeatmap();
+      }
       if(keyboard.SemiAuto(SDLK_p))
-        {
-          m_grend.ToggleTileSeparation();
-        }
+      {
+	m_grend.ToggleTileSeparation();
+      }
       if(keyboard.SemiAuto(SDLK_o))
-        {
-          m_grend.SetEventWindowRenderMode(EVENTWINDOW_RENDER_OFF);
-        }
+      {
+	m_grend.SetEventWindowRenderMode(EVENTWINDOW_RENDER_OFF);
+      }
       if(keyboard.SemiAuto(SDLK_r))
-        {
-          camera.ToggleRecord();
-        }
+      {
+	camera.ToggleRecord();
+      }
       if(keyboard.SemiAuto(SDLK_e))
-        {
-          grid.TriggerEvent();
-        }
+      {
+	grid.TriggerEvent();
+      }
       if(keyboard.IsDown(SDLK_LEFT))
-        {
-          m_grend.MoveLeft(speed);
-        }
+      {
+	m_grend.MoveLeft(speed);
+      }
       if(keyboard.IsDown(SDLK_DOWN))
-        {
-          m_grend.MoveDown(speed);
-        }
+      {
+	m_grend.MoveDown(speed);
+      }
       if(keyboard.IsDown(SDLK_UP))
-        {
-          m_grend.MoveUp(speed);
-        }
+      {
+	m_grend.MoveUp(speed);
+      }
       if(keyboard.SemiAuto(SDLK_SPACE))
-        {
-          paused = !paused;
-        }
+      {
+	paused = !paused;
+      }
       if(keyboard.SemiAuto(SDLK_i))
+      {
+	renderStats = !renderStats;
+	if(!renderStats)
         {
-          renderStats = !renderStats;
-          if(!renderStats)
-            {
-              m_grend.SetDimensions(Point<u32>(m_screenWidth, m_screenHeight));
-            }
+	  m_grend.SetDimensions(Point<u32>(m_screenWidth, m_screenHeight));
+	}
           else
-            {
-              m_grend.SetDimensions(Point<u32>(m_screenWidth - STATS_WINDOW_WIDTH,
-                                               m_screenHeight));
-            }
-        }
+        {
+	  m_grend.SetDimensions(Point<u32>(m_screenWidth - STATS_WINDOW_WIDTH,
+					   m_screenHeight));
+	}
+      }
       if(keyboard.IsDown(SDLK_RIGHT))
-        {
-          m_grend.MoveRight(speed);
-        }
+      {
+	m_grend.MoveRight(speed);
+      }
       if(keyboard.SemiAuto(SDLK_COMMA))
-        {
-          if(m_aepsPerFrame > 1)
-              m_aepsPerFrame--;
-        }
+      {
+	if(m_aepsPerFrame > 1)
+	  m_aepsPerFrame--;
+      }
       if(keyboard.SemiAuto(SDLK_PERIOD))
-        {
-          if(m_aepsPerFrame < 1000)
-            m_aepsPerFrame++;
-        }
+      {
+	if(m_aepsPerFrame < 1000)
+	  m_aepsPerFrame++;
+      }
 
       if(!paused)
-        {
-          const s32 ONE_THOUSAND = 1000;
-          const s32 ONE_MILLION = ONE_THOUSAND*ONE_THOUSAND;
+      {
+	const s32 ONE_THOUSAND = 1000;
+	const s32 ONE_MILLION = ONE_THOUSAND*ONE_THOUSAND;
 
-          grid.Unpause();  // pausing and unpausing should be overhead!
+	grid.Unpause();  // pausing and unpausing should be overhead!
 
-          u32 startMS = SDL_GetTicks();  // So get the ticks after unpausing
-          if (m_ticksLastStopped != 0)
-            m_msSpentOverhead += startMS - m_ticksLastStopped;
-          else
-            m_msSpentOverhead = 0;
+	u32 startMS = SDL_GetTicks();  // So get the ticks after unpausing
+	if (m_ticksLastStopped != 0)
+	  m_msSpentOverhead += startMS - m_ticksLastStopped;
+	else
+	  m_msSpentOverhead = 0;
 
-          Sleep(m_microsSleepPerFrame/ONE_MILLION, (u64) (m_microsSleepPerFrame%ONE_MILLION)*ONE_THOUSAND);
-          m_ticksLastStopped = SDL_GetTicks(); // and before pausing
+	Sleep(m_microsSleepPerFrame/ONE_MILLION, (u64) (m_microsSleepPerFrame%ONE_MILLION)*ONE_THOUSAND);
+	m_ticksLastStopped = SDL_GetTicks(); // and before pausing
 
-          grid.Pause();
+	grid.Pause();
 
-          m_msSpentRunning += (m_ticksLastStopped - startMS);
+	m_msSpentRunning += (m_ticksLastStopped - startMS);
 
-          m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
-          m_AER = 1000 * (m_AEPS / m_msSpentRunning);
+	m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
+	m_AER = 1000 * (m_AEPS / m_msSpentRunning);
 
-          m_overheadPercent = 100.0*m_msSpentOverhead/(m_msSpentRunning+m_msSpentOverhead);
+	m_overheadPercent = 100.0*m_msSpentOverhead/(m_msSpentRunning+m_msSpentOverhead);
 
-          double diff = m_AEPS - m_lastFrameAEPS;
-          double err = MIN(1.0, MAX(-1.0, m_aepsPerFrame - diff));
+	double diff = m_AEPS - m_lastFrameAEPS;
+	double err = MIN(1.0, MAX(-1.0, m_aepsPerFrame - diff));
 
-          // Correct up to 20% of current each frame
-          m_microsSleepPerFrame = (100+20*err)*m_microsSleepPerFrame/100;
-          m_microsSleepPerFrame = MIN(100000000, MAX(1000, m_microsSleepPerFrame));
+	// Correct up to 20% of current each frame
+	m_microsSleepPerFrame = (100+20*err)*m_microsSleepPerFrame/100;
+	m_microsSleepPerFrame = MIN(100000000, MAX(1000, m_microsSleepPerFrame));
 
-          m_lastFrameAEPS = m_AEPS;
+	m_lastFrameAEPS = m_AEPS;
 
-          if (m_recordEventCountsPerAEPS > 0) {
-            if (m_AEPS > m_nextEventCountsAEPS) {
+	if (m_recordEventCountsPerAEPS > 0) {
+	  if (m_AEPS > m_nextEventCountsAEPS) {
 
-              const char * path = GetSimDirPathTemporary("eps/%010d.png", m_nextEventCountsAEPS);
-              FILE* fp = fopen(path, "w");
-              grid.WriteEPSImage(fp);
-              fclose(fp);
+	    const char * path = GetSimDirPathTemporary("eps/%010d.png", m_nextEventCountsAEPS);
+	    FILE* fp = fopen(path, "w");
+	    grid.WriteEPSImage(fp);
+	    fclose(fp);
 
-              m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
-            }
-          }
-        }
+	    m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
+	  }
+	}
+      }
 
-      mouse.Flip();
       keyboard.Flip();
     }
 
@@ -258,7 +290,7 @@ namespace MFM {
       OnceOnly(args);
     }
 
-    void OnceOnly(DriverArguments & args) 
+    void OnceOnly(DriverArguments & args)
     {
       const char * dirPath = args.GetDataDirPath();
       if (dirPath == 0) dirPath = "/tmp";
@@ -266,7 +298,7 @@ namespace MFM {
       /* Try to make the main dir */
       if (mkdir(dirPath,0777) != 0) {
         /* If it died because it's already there we'll let it ride.. */
-        if (errno != EEXIST) 
+        if (errno != EEXIST)
           args.Die("Couldn't make directory '%s': %s",dirPath,strerror(errno));
       }
 
@@ -275,7 +307,7 @@ namespace MFM {
 
       /* Get the master simulation data directory */
       snprintf(m_simDirBasePath, MAX_PATH_LENGTH-1,
-	       "%s/%ld/", dirPath, startTime);
+	       "%s/%d/", dirPath, (u32)startTime);
 
       m_simDirBasePathLength = strlen(m_simDirBasePath);
       if (m_simDirBasePathLength >= MAX_PATH_LENGTH-MIN_PATH_RESERVED_LENGTH)
@@ -339,18 +371,18 @@ namespace MFM {
     }
 
     /**
-     * Register any element types needed for the run 
+     * Register any element types needed for the run
      */
     virtual void ReinitPhysics() = 0;
 
     /**
-     * Establish the Garden of Eden configuration on the grid 
+     * Establish the Garden of Eden configuration on the grid
      */
     virtual void ReinitEden() = 0;
 
     OurGrid & GetGrid()
     {
-      return mainGrid; 
+      return mainGrid;
     }
 
     void SetScreenSize(u32 width, u32 height) {
@@ -358,7 +390,7 @@ namespace MFM {
       m_screenHeight = height;
       screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32,
                                 SDL_SWSURFACE | SDL_RESIZABLE);
-      if (screen == 0) 
+      if (screen == 0)
         FAIL(ILLEGAL_STATE);
 
       m_grend.SetDestination(screen);
@@ -371,7 +403,7 @@ namespace MFM {
 
     StatsRenderer & GetStatsRenderer()
     {
-      return m_srend; 
+      return m_srend;
     }
 
     void Run()
@@ -381,18 +413,18 @@ namespace MFM {
           fprintf(stderr, "Failure reached top-level!  Aborting\n");
           abort();
         }, {
-          RunHelper(); 
+          RunHelper();
         });
     }
 
-    void RunHelper() 
+    void RunHelper()
     {
       paused = true;
 
       bool running = true;
       screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32,
                                 SDL_SWSURFACE | SDL_RESIZABLE);
-      if (screen == 0) 
+      if (screen == 0)
         FAIL(ILLEGAL_STATE);
 
       SDL_Event event;

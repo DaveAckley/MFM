@@ -236,8 +236,8 @@ namespace MFM {
     const u32 sheight = GetHeightSites();
 
     for(u32 pass = 0; pass < 2; ++pass) {
-      if (pass==1) 
-        fprintf(outstrm,"P5\n # Max site events = %ld\n%d %d 255\n",max,swidth,sheight);
+      if (pass==1)
+        fprintf(outstrm,"P5\n # Max site events = %d\n%d %d 255\n",(u32)max,swidth,sheight);
       for(u32 y = 0; y < sheight; y++) {
 	for(u32 x = 0; x < swidth; x++) {
           SPoint siteInGrid(x,y), tileInGrid, siteInTile;
@@ -245,7 +245,7 @@ namespace MFM {
             FAIL(ILLEGAL_STATE);
           u64 events = GetTile(tileInGrid).GetUncachedSiteEvents(siteInTile);
           if (pass==0)
-            max = MAX(max, events); 
+            max = MAX(max, events);
           else
             fputc((u8) (events*255/max), outstrm);
         }

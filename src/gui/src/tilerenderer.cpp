@@ -16,6 +16,7 @@ TileRenderer::TileRenderer(SDL_Surface* dest)
   m_sharedColor = 0xffe8757a;
   m_visibleColor = 0xfff0d470;
   m_hiddenColor = 0xff423b16;
+  m_selectedHiddenColor = 0xffffffff;
   m_cacheColor = 0xffffc0c0;
   m_windowTL.SetX(0);
   m_windowTL.SetY(0);
@@ -25,8 +26,8 @@ void TileRenderer::RenderAtomBG(SPoint& offset,
 				SPoint& atomLoc,
 				u32 color)
 {
-  /* 
-   * Again, draw this rect manually in order to only draw 
+  /*
+   * Again, draw this rect manually in order to only draw
    * renderable pieces of it.
    */
   Point<s32> ulpt(m_windowTL.GetX() + offset.GetY() + atomLoc.GetX() *
@@ -44,7 +45,7 @@ void TileRenderer::RenderAtomBG(SPoint& offset,
   {
     brpt.SetY(m_dimensions.GetY());
   }
-  
+
 
   for(s32 x = ulpt.GetX(); x < brpt.GetX(); x++)
   {
@@ -74,7 +75,7 @@ void TileRenderer::IncreaseAtomSize()
 {
   m_atomDrawSize += TILESIZE_CHANGE_RATE;
 }
-  
+
 void TileRenderer::DecreaseAtomSize()
 {
   if(m_atomDrawSize > 1)

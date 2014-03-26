@@ -25,13 +25,13 @@ public:
   void HandleButtonEvent(SDL_MouseButtonEvent* e);
 
   void HandleMotionEvent(SDL_MouseMotionEvent* e);
-  
+
   void Press(u8 button);
 
   void Release(u8 button);
 
   bool IsDown(u8 button);
-  
+
   bool IsUp(u8 button);
 
   bool SemiAuto(u8 button);
@@ -42,7 +42,7 @@ public:
 
   void FillPoint(SPoint* out);
 
-  /* 
+  /*
    * This should be called once a
    * frame to keep the SemiAuto
    * function working.
