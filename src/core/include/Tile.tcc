@@ -1,6 +1,7 @@
 #include "MDist.h"      /* -*- C++ -*- */
 #include "Element_Empty.h"
 #include "Util.h"
+#include <time.h>
 
 namespace MFM {
 
@@ -16,6 +17,8 @@ namespace MFM {
     elementTable.Reinit();
 
     m_eventsExecuted = 0;
+
+    m_onlyWaitOnBuffers = false;
 
     for(u32 i = 0; i < ELEMENT_TABLE_SIZE; i++)
     {
@@ -63,6 +66,26 @@ namespace MFM {
 
     m_threadInitialized = false;
     m_threadPaused = false;
+  }
+
+  /* Definitely not thread safe. Make sure to pause and join this Tile
+     before calling this from the outside. */
+  template <class CC>
+  void Tile<CC>::ClearAtoms()
+  {
+    for(u32 i = 0; i < ELEMENT_TABLE_SIZE; i++)
+    {
+      m_atomCount[i] = 0;
+    }
+    SetAtomCount(ELEMENT_EMPTY,OWNED_SIDE*OWNED_SIDE);
+
+    for(u32 x = 0; x < TILE_WIDTH; x++)
+    {
+      for(u32 y = 0; y < TILE_WIDTH; y++)
+      {
+	m_atoms[x][y] = T(0);
+      }
+    }
   }
 
   template <class CC>
@@ -571,6 +594,8 @@ namespace MFM {
 	    ReceivePacket(readPack);
 	  }
 	}
+	/* Have we waited long enough without a response? Let's disconnect that tile. */
+	
       }
       pthread_yield();
       m_threadPauser.WaitIfPaused();
@@ -587,57 +612,60 @@ namespace MFM {
       bool locked = false;
       Dir lockRegion = Dirs::NORTH;
       u32 dirWaitWord = 0;
-      if(IsInHidden(m_executingWindow.GetCenter()) ||
-	 !IsConnected(lockRegion = SharedAt(m_executingWindow.GetCenter())) ||
-	 (locked = LockRegion(lockRegion)))
-	{
-          unwind_protect({
-              ++m_eventsFailed;
-              ++m_failuresErased;
-              m_executingWindow.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
-            },{
-              elementTable.Execute(m_executingWindow);
-            });
+      if((!m_onlyWaitOnBuffers) &&
+	 (
+	  IsInHidden(m_executingWindow.GetCenter()) ||
+	  !IsConnected(lockRegion = SharedAt(m_executingWindow.GetCenter())) ||
+	  (locked = LockRegion(lockRegion))
+	 ))
+      {
+	unwind_protect({
+	    ++m_eventsFailed;
+	    ++m_failuresErased;
+	    m_executingWindow.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+	  },{
+	    elementTable.Execute(m_executingWindow);
+	  });
+	
+	// XXX INSANE SLOWDOWN FOR DEBUG: AssertValidAtomCounts();
 
-	  // XXX INSANE SLOWDOWN FOR DEBUG: AssertValidAtomCounts();
+	m_executingWindow.FillCenter(m_lastExecutedAtom);
+	
+	dirWaitWord = SendRelevantAtoms();
+	
+	SendEndEventPackets(dirWaitWord);
+	
+	FlushAndWaitOnAllBuffers(dirWaitWord);
+	
+	++m_eventsExecuted;
+	++m_regionEvents[RegionIn(m_executingWindow.GetCenter())];
+	
+	++m_siteEvents[m_executingWindow.GetCenter().GetX() - R]
+	              [m_executingWindow.GetCenter().GetY() - R];
+	
+	if(locked)
+        {
+	UnlockRegion(lockRegion);
 
-	  m_executingWindow.FillCenter(m_lastExecutedAtom);
-
-	  dirWaitWord = SendRelevantAtoms();
-
-	  SendEndEventPackets(dirWaitWord);
-
-	  FlushAndWaitOnAllBuffers(dirWaitWord);
-
-	  ++m_eventsExecuted;
-	  ++m_regionEvents[RegionIn(m_executingWindow.GetCenter())];
-
-	  ++m_siteEvents[m_executingWindow.GetCenter().GetX() - R]
-	                [m_executingWindow.GetCenter().GetY() - R];
-
-	  if(locked)
-          {
-	    UnlockRegion(lockRegion);
-
-	    switch(lockRegion)
-	      {
-                  case Dirs::NORTH: case Dirs::SOUTH:
-                  case Dirs::EAST:  case Dirs::WEST:
-                    ++m_regionEvents[LOCKTYPE_SINGLE]; break;
-                  default: /* UnlockRegion would have caught a bad argument. */
-                    ++m_regionEvents[LOCKTYPE_TRIPLE]; break;
-                  }
-              }
-            else
-              {
-                ++m_regionEvents[LOCKTYPE_NONE];
-              }
-          }
-        else
-          {
-            FlushAndWaitOnAllBuffers(dirWaitWord);
-          }
+          switch(lockRegion)
+	  {
+	  case Dirs::NORTH: case Dirs::SOUTH:
+	  case Dirs::EAST:  case Dirs::WEST:
+	    ++m_regionEvents[LOCKTYPE_SINGLE]; break;
+	  default: /* UnlockRegion would have caught a bad argument. */
+	    ++m_regionEvents[LOCKTYPE_TRIPLE]; break;
+	  }
+	}
+	else
+        {
+	  ++m_regionEvents[LOCKTYPE_NONE];
+	}
       }
+      else
+      {
+	FlushAndWaitOnAllBuffers(dirWaitWord);
+      }
+    }
   }
 
   template <class CC>
@@ -716,7 +744,7 @@ namespace MFM {
     u64 max = 0;
     for(u32 x = 0; x < TILE_WIDTH - 2 * R; x++)
     {
-      fprintf(outstrm, "%d ", (u32)m_siteEvents[x][lineIdx]);
+      fprintf(outstrm, "%ld ", m_siteEvents[x][lineIdx]);
       max = MAX(max, m_siteEvents[x][lineIdx]);
     }
     return max;

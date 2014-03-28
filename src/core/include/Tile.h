@@ -156,6 +156,11 @@ namespace MFM {
     bool m_threadPaused;
 
     /**
+     * 
+     */
+    bool m_onlyWaitOnBuffers;
+
+    /**
      * The ThreadPauser used to block m_thread when it needs to be paused.
      *
      * @sa Pause
@@ -333,6 +338,11 @@ namespace MFM {
      * Reinitializes a Tile to a like-new (actually, like-OnceOnlyInit()ed) state.
      */
     void Reinit();
+
+    /**
+     * Resets all Atoms and their counts to the Empty atom.
+     */
+    void ClearAtoms();
 
     /**
      * Connects another Tile to one of this Tile's caches.
@@ -673,6 +683,25 @@ namespace MFM {
     }
 
     void FlushAndWaitOnAllBuffers(u32 dirWaitWord);
+
+    /**
+     * Used to tell this Tile whether or not to actually execute any
+     * events, or to just wait on any packet communication from other
+     * Tiles instead.
+     *
+     * @param value If value is true, this tells the Tile to begin
+     *              executing its own events. Else, this Tile will
+     *              only process Packets from other Tiles.
+     */
+    void SetExecuteOwnEvents(bool value)
+    {
+      m_onlyWaitOnBuffers = !value;
+    }
+
+    bool GetExecutingOwnEvents()
+    {
+      return !m_onlyWaitOnBuffers;
+    }
 
     /**
      * Executes a single new EventWindow at a randomly chosen location.

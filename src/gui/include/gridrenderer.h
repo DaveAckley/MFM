@@ -25,7 +25,7 @@ private:
 
   Point<u32> m_dimensions;
 
-  Point<u32> m_selectedTile;
+  SPoint m_selectedTile;
 
   static const EventWindowRenderMode m_defaultRenderMode =
     EVENTWINDOW_RENDER_OFF;
@@ -122,6 +122,12 @@ public:
   void RenderGrid(Grid<GC>& grid);
 
   template <class GC>
+  SPoint& GetSelectedTile()
+  {
+    return m_selectedTile;
+  }
+
+  template <class GC>
   void SelectTile(Grid<GC>& grid, SPoint& clickPt)
   {
     SPoint& offset = m_tileRenderer->GetWindowTL();
@@ -139,7 +145,8 @@ public:
     }
 
     m_selectedTile.Set(-1, -1);
-    if(m_selectedTile.GetX() >= 0 && m_selectedTile.GetY() >= 0)
+
+    if(cp.GetX() > 0 && cp.GetY() > 0)
     {
       for(u32 x = 0; x < GC::GRID_WIDTH + 1; x++)
       {

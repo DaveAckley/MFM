@@ -104,4 +104,13 @@ namespace MFM
   {
     return m_heldBytes;
   }
+
+  void ThreadQueue::Flush()
+  {
+    pthread_mutex_lock(&m_lock);
+    {
+      m_readHead = m_writeHead = m_heldBytes = 0;
+    }
+    pthread_mutex_unlock(&m_lock);
+  }
 }

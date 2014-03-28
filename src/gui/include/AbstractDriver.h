@@ -105,6 +105,28 @@ namespace MFM {
       nanosleep(&tspec, NULL);
     }
 
+    typedef enum
+    {
+      BUTTONFUNC_TOGGLE_EXECUTION,
+      BUTTONFUNC_EMPTY_TILE
+    }ButtonFunction;
+
+    void ExecuteButtonFunction(ButtonFunction func)
+    {
+      switch(func)
+      {
+      case BUTTONFUNC_TOGGLE_EXECUTION:
+	mainGrid.SetTileToExecuteOnly(m_grend.GetSelectedTile<GC>(),
+				      !mainGrid.GetTileExecutionStatus(m_grend.GetSelectedTile<GC>()));
+	break;
+      case BUTTONFUNC_EMPTY_TILE:
+	break;
+      default:
+	FAIL(ILLEGAL_ARGUMENT);
+	break;
+      }
+    }
+
     void Update(OurGrid& grid)
     {
       KeyboardUpdate(grid);
@@ -180,6 +202,10 @@ namespace MFM {
       if(keyboard.SemiAuto(SDLK_o))
       {
 	m_grend.SetEventWindowRenderMode(EVENTWINDOW_RENDER_OFF);
+      }
+      if(keyboard.SemiAuto(SDLK_9))
+      {
+        ExecuteButtonFunction(BUTTONFUNC_TOGGLE_EXECUTION);
       }
       if(keyboard.SemiAuto(SDLK_r))
       {
@@ -307,7 +333,7 @@ namespace MFM {
 
       /* Get the master simulation data directory */
       snprintf(m_simDirBasePath, MAX_PATH_LENGTH-1,
-	       "%s/%d/", dirPath, (u32)startTime);
+	       "%s/%ld/", dirPath, startTime);
 
       m_simDirBasePathLength = strlen(m_simDirBasePath);
       if (m_simDirBasePathLength >= MAX_PATH_LENGTH-MIN_PATH_RESERVED_LENGTH)

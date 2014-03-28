@@ -89,6 +89,18 @@ namespace MFM {
   }
 
   template <class GC>
+  void Grid<GC>::SetTileToExecuteOnly(const SPoint& tileLoc, bool value)
+  {
+    GetTile(tileLoc).SetExecuteOwnEvents(value);
+  }
+
+  template <class GC>
+  bool Grid<GC>::GetTileExecutionStatus(const SPoint& tileLoc)
+  {
+    return GetTile(tileLoc).GetExecutingOwnEvents();
+  }
+
+  template <class GC>
   bool Grid<GC>::IsLegalTileIndex(const SPoint & tileInGrid) const
   {
     if (tileInGrid.GetX() < 0 || tileInGrid.GetY() < 0)
@@ -237,7 +249,7 @@ namespace MFM {
 
     for(u32 pass = 0; pass < 2; ++pass) {
       if (pass==1)
-        fprintf(outstrm,"P5\n # Max site events = %d\n%d %d 255\n",(u32)max,swidth,sheight);
+        fprintf(outstrm,"P5\n # Max site events = %ld\n%d %d 255\n",max,swidth,sheight);
       for(u32 y = 0; y < sheight; y++) {
 	for(u32 x = 0; x < swidth; x++) {
           SPoint siteInGrid(x,y), tileInGrid, siteInTile;

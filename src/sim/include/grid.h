@@ -58,6 +58,27 @@ namespace MFM {
     }
 
     /**
+     * Used to tell this Tile whether or not to actually execute any
+     * events, or to just wait on any packet communication from other
+     * Tiles instead.
+     *
+     * @param tileLoc The position of the Tile to set.
+     *
+     * @param value If value is true, this tells the Tile to begin
+     *              executing its own events. Else, this Tile will
+     *              only process Packets from other Tiles.
+     */
+    void SetTileToExecuteOnly(const SPoint& tileLoc, bool value);
+
+    /**
+     * Checks whether or not a specific Tile is currently executing
+     * its own events or is simply processing Packets.
+     *
+     * @param tileLoc The location of the Tile in this Grid to check.
+     */
+    bool GetTileExecutionStatus(const SPoint& tileLoc);
+
+    /**
      * Return true iff tileInGrid is a legal tile coordinate in this
      * grid.  If this returns false, GetTile(tileInGrid) is unsafe.
      */

@@ -143,6 +143,15 @@ namespace MFM
      */
     u32 BytesAvailable();
 
+    /**
+     * Erases all held data within this TheadQueue. This should only
+     * be called in erronous cases where the ThreadQueue should no
+     * longer need to hold any data inside. This should NEVER be used
+     * in tandem with a call to ReadBlocking; this will create a
+     * deadlock.
+     */
+    void Flush();
+
   };
 }
 
