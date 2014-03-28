@@ -79,6 +79,16 @@ namespace MFM {
     bool GetTileExecutionStatus(const SPoint& tileLoc);
 
     /**
+     * Clears a Tile of all of its held atoms.
+     *
+     * @param tileLoc The location of the Tile in this Grid to clear.
+     */
+    void EmptyTile(const SPoint& tileLoc)
+    {
+      GetTile(tileLoc).ClearAtoms();
+    }
+
+    /**
      * Return true iff tileInGrid is a legal tile coordinate in this
      * grid.  If this returns false, GetTile(tileInGrid) is unsafe.
      */

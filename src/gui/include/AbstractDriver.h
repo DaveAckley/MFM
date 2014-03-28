@@ -120,6 +120,7 @@ namespace MFM {
 				      !mainGrid.GetTileExecutionStatus(m_grend.GetSelectedTile<GC>()));
 	break;
       case BUTTONFUNC_EMPTY_TILE:
+	mainGrid.EmptyTile(m_grend.GetSelectedTile<GC>());
 	break;
       default:
 	FAIL(ILLEGAL_ARGUMENT);
@@ -206,6 +207,10 @@ namespace MFM {
       if(keyboard.SemiAuto(SDLK_9))
       {
         ExecuteButtonFunction(BUTTONFUNC_TOGGLE_EXECUTION);
+      }
+      if(keyboard.SemiAuto(SDLK_8))
+      {
+	ExecuteButtonFunction(BUTTONFUNC_EMPTY_TILE);
       }
       if(keyboard.SemiAuto(SDLK_r))
       {

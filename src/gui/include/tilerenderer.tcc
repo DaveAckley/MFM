@@ -1,5 +1,5 @@
 /* -*- C++ -*- */
-#if 0
+#if 1
 #include "Element_Data.h"    /* for ELEMENT_DATA */
 #include "Element_Sorter.h"  /* for ELEMENT_SORTER */
 #endif
@@ -19,7 +19,7 @@ u32 TileRenderer::GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& ato
 template <class CC>
 u32 TileRenderer::GetDataHeatColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom)
 {
-#if 0
+#if 1
   if(Atom<CC>::IsType(atom,Element_Sorter<CC>::TYPE))
   {
     return ColorMap_SEQ5_YlOrRd::THE_INSTANCE.
@@ -132,7 +132,7 @@ void TileRenderer::RenderTile(Tile<CC>& t, SPoint& loc, bool renderWindow,
       RenderMemRegions<CC>(multPt, renderCache, selected);
       break;
     case EDGE:
-      RenderVisibleRegionOutlines<CC>(multPt, renderCache);
+      RenderVisibleRegionOutlines<CC>(multPt, renderCache, selected);
       break;
     }
 
@@ -207,10 +207,11 @@ void TileRenderer::RenderMemRegions(SPoint& pt, bool renderCache, bool selected)
 }
 
 template <class CC>
-void TileRenderer::RenderVisibleRegionOutlines(SPoint& pt, bool renderCache)
+void TileRenderer::RenderVisibleRegionOutlines(SPoint& pt, bool renderCache, bool selected)
 {
   int regID = renderCache?2:1;
-  RenderMemRegion<CC>(pt, regID, 0xff202020, renderCache);
+  RenderMemRegion<CC>(pt, regID, 
+		      selected ? 0xff606060 : 0xff202020, renderCache);
 }
 
 template <class CC>

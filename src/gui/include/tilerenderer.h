@@ -40,7 +40,7 @@ private:
   void RenderMemRegions(SPoint& pt, bool renderCache, bool selected);
 
   template <class CC>
-  void RenderVisibleRegionOutlines(SPoint& pt, bool renderCache);
+  void RenderVisibleRegionOutlines(SPoint& pt, bool renderCache, bool selected);
 
   template <class CC>
   void RenderMemRegion(SPoint& pt, int regID,

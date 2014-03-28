@@ -83,7 +83,7 @@ namespace MFM {
     {
       for(u32 y = 0; y < TILE_WIDTH; y++)
       {
-	m_atoms[x][y] = T(0);
+	m_atoms[x][y] = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
       }
     }
   }
