@@ -67,7 +67,21 @@ namespace MFM {
         m_recordScreenshotPerAEPS = atoi(val);
         fprintf(stderr,"[Recording grid pictures approximately every %d AEPS]\n",m_recordScreenshotPerAEPS);
 
-      } else if (!strcmp("-h",arg) || !strcmp("--help",arg)) {
+      }
+
+      else if (!strcmp("--haltafteraeps", arg))
+      {
+	const char* val = GetNextArg(argc, argv);
+	if(!val) Die("Missing aeps (integer) argument after %s", arg);
+
+	m_haltAfterAEPS = atoi(val);
+	if(m_haltAfterAEPS > 0)
+	{
+	  fprintf(stderr, "[Halting execution after approximately %d AEPS]\n", m_haltAfterAEPS);
+	}
+      }
+
+      else if (!strcmp("-h",arg) || !strcmp("--help",arg)) {
 
         fprintf(stderr,
                 "Arguments arg:\n"
@@ -76,6 +90,8 @@ namespace MFM {
                 " -d DIR, --dir DIR          Store data in per-sim directories under DIR\n"
                 " -e AEPS, --events AEPS     Record event counts every AEPS aeps\n"
                 " -p AEPS, --pictures AEPS   Record screenshots every AEPS aeps\n"
+		"\n"
+		" --haltafteraeps AEPS        If APES > 0, Halts after AEPS elapsed aeps.\n"
                 );
         exit(0);
       } else {

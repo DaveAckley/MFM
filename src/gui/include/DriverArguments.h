@@ -11,6 +11,7 @@ namespace MFM {
     const char * m_programName;
     const char * m_dataDirPath;
     u32 m_seed;
+    u32 m_haltAfterAEPS;
     s32 m_recordEventCountsPerAEPS;
     s32 m_recordScreenshotPerAEPS;
 
@@ -20,6 +21,7 @@ namespace MFM {
       m_programName(0),
       m_dataDirPath(0),
       m_seed(0),
+      m_haltAfterAEPS(0),
       m_recordEventCountsPerAEPS(-1),
       m_recordScreenshotPerAEPS(-1)
     {
@@ -33,6 +35,7 @@ namespace MFM {
     const char * GetProgramName() const { return m_programName; }
     const char * GetDataDirPath() const { return m_dataDirPath; }
     u32 GetSeed() const { return m_seed; }
+    u32 GetHaltAfterAEPS() const { return m_haltAfterAEPS; }
     s32 GetRecordEventCountsPerAEPS() const { return m_recordEventCountsPerAEPS; }
     s32 GetRecordScreenshotPerAEPS() const { return m_recordScreenshotPerAEPS; }
 

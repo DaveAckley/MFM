@@ -70,6 +70,7 @@ namespace MFM {
 
     bool renderStats;
 
+    u32 m_haltAfterAEPS;
     u32 m_aepsPerFrame;
     s32 m_microsSleepPerFrame;
     double m_overheadPercent;
@@ -338,6 +339,8 @@ namespace MFM {
           args.Die("Couldn't make directory '%s': %s",dirPath,strerror(errno));
       }
 
+      m_haltAfterAEPS = args.GetHaltAfterAEPS();
+
       /* Sim directory = now */
       u64 startTime = GetDateTimeNow();
 
@@ -455,7 +458,7 @@ namespace MFM {
 
     void RunHelper()
     {
-      paused = true;
+      paused = false;
 
       bool running = true;
       screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32,
@@ -508,9 +511,9 @@ namespace MFM {
             ((1000.0 / FRAMES_PER_SECOND) -
              (SDL_GetTicks() - lastFrame));
           if(sleepMS > 0)
-            {
-              SDL_Delay(sleepMS);
-            }
+          {
+	    SDL_Delay(sleepMS);
+	  }
           lastFrame = SDL_GetTicks();
 
 
@@ -520,9 +523,9 @@ namespace MFM {
 
           m_grend.RenderGrid(mainGrid);
           if(renderStats)
-            {
-              m_srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent);
-            }
+          {
+	    m_srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent);
+	  }
 
           if (m_recordScreenshotPerAEPS > 0) {
             if (!paused && m_AEPS >= m_nextScreenshotAEPS) {
@@ -534,6 +537,12 @@ namespace MFM {
               m_nextScreenshotAEPS += m_recordScreenshotPerAEPS;
             }
           }
+
+	  if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
+	  {
+	    running = false;
+	  }
+
           SDL_Flip(screen);
         }
 
