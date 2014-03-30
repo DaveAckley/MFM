@@ -116,11 +116,11 @@ namespace MFM {
       switch(func)
       {
       case BUTTONFUNC_TOGGLE_EXECUTION:
-	mainGrid.SetTileToExecuteOnly(m_grend.GetSelectedTile<GC>(),
-				      !mainGrid.GetTileExecutionStatus(m_grend.GetSelectedTile<GC>()));
+	mainGrid.SetTileToExecuteOnly(m_grend.GetSelectedTile(),
+				      !mainGrid.GetTileExecutionStatus(m_grend.GetSelectedTile()));
 	break;
       case BUTTONFUNC_EMPTY_TILE:
-	mainGrid.EmptyTile(m_grend.GetSelectedTile<GC>());
+	mainGrid.EmptyTile(m_grend.GetSelectedTile());
 	break;
       default:
 	FAIL(ILLEGAL_ARGUMENT);
@@ -132,6 +132,7 @@ namespace MFM {
     {
       KeyboardUpdate(grid);
       MouseUpdate(grid);
+      RunGrid(grid);
     }
 
     void MouseUpdate(OurGrid& grid)
@@ -170,12 +171,18 @@ namespace MFM {
       {
 	exit(0);
       }
-
+      
+      /* View Control */
       if(keyboard.SemiAuto(SDLK_a))
       {
 	m_srend.SetDisplayAER(!m_srend.GetDisplayAER());
       }
-
+      if(keyboard.SemiAuto(SDLK_i))
+      {
+	renderStats = !renderStats;
+	  m_grend.SetDimensions(Point<u32>(m_screenWidth - (renderStats ? STATS_WINDOW_WIDTH : 0)
+					   , m_screenHeight));
+      }
       if(keyboard.IsDown(SDLK_1))
       {
 	m_grend.IncreaseAtomSize();
@@ -204,6 +211,8 @@ namespace MFM {
       {
 	m_grend.SetEventWindowRenderMode(EVENTWINDOW_RENDER_OFF);
       }
+
+      /* Per-Tile Control */
       if(keyboard.SemiAuto(SDLK_9))
       {
         ExecuteButtonFunction(BUTTONFUNC_TOGGLE_EXECUTION);
@@ -212,14 +221,18 @@ namespace MFM {
       {
 	ExecuteButtonFunction(BUTTONFUNC_EMPTY_TILE);
       }
+      if(keyboard.SemiAuto(SDLK_ESCAPE))
+      {
+	m_grend.DeselectTile();
+      }
+
+      /* Camera Recording */
       if(keyboard.SemiAuto(SDLK_r))
       {
 	camera.ToggleRecord();
       }
-      if(keyboard.SemiAuto(SDLK_e))
-      {
-	grid.TriggerEvent();
-      }
+
+      /* Camera Movement*/
       if(keyboard.IsDown(SDLK_LEFT))
       {
 	m_grend.MoveLeft(speed);
@@ -232,26 +245,15 @@ namespace MFM {
       {
 	m_grend.MoveUp(speed);
       }
-      if(keyboard.SemiAuto(SDLK_SPACE))
-      {
-	paused = !paused;
-      }
-      if(keyboard.SemiAuto(SDLK_i))
-      {
-	renderStats = !renderStats;
-	if(!renderStats)
-        {
-	  m_grend.SetDimensions(Point<u32>(m_screenWidth, m_screenHeight));
-	}
-          else
-        {
-	  m_grend.SetDimensions(Point<u32>(m_screenWidth - STATS_WINDOW_WIDTH,
-					   m_screenHeight));
-	}
-      }
       if(keyboard.IsDown(SDLK_RIGHT))
       {
 	m_grend.MoveRight(speed);
+      }
+
+      /* Speed Control */
+      if(keyboard.SemiAuto(SDLK_SPACE))
+      {
+	paused = !paused;
       }
       if(keyboard.SemiAuto(SDLK_COMMA))
       {
@@ -264,6 +266,11 @@ namespace MFM {
 	  m_aepsPerFrame++;
       }
 
+      keyboard.Flip();
+    }
+
+    void RunGrid(OurGrid& grid)
+    {
       if(!paused)
       {
 	const s32 ONE_THOUSAND = 1000;
@@ -310,8 +317,6 @@ namespace MFM {
 	  }
 	}
       }
-
-      keyboard.Flip();
     }
 
   public:

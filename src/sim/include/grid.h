@@ -160,8 +160,6 @@ namespace MFM {
 
     void FillLastEventTile(SPoint& out);
 
-    void TriggerEvent();
-
     inline Tile<CC> & GetTile(const SPoint& pt)
     {return GetTile(pt.GetX(), pt.GetY());}
 

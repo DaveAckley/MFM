@@ -202,24 +202,6 @@ namespace MFM {
   }
 
   template <class GC>
-  void Grid<GC>::TriggerEvent()
-  {
-    /*Change to 0 if aiming a window at a certian tile.*/
-#if 1
-    SPoint windowTile(GetRandom(), m_width, m_height);
-#else
-    SPoint windowTile(0, 1);
-#endif
-
-    Tile<CC>& execTile = m_tiles[windowTile.GetX()][windowTile.GetY()];
-
-    //  execTile.Execute(ElementTable<CC>::get());
-    execTile.Execute();
-
-    m_lastEventTile.Set(windowTile.GetX(), windowTile.GetY());
-  }
-
-  template <class GC>
   void Grid<GC>::FillLastEventTile(SPoint& out)
   {
     out.Set(m_lastEventTile.GetX(),

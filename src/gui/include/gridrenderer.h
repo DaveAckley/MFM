@@ -5,169 +5,86 @@
 #include "SDL/SDL.h"
 #include "tilerenderer.h"
 
-namespace MFM {
-
-typedef enum
+namespace MFM 
 {
-  EVENTWINDOW_RENDER_OFF     = 0,
-  EVENTWINDOW_RENDER_CURRENT = 1,
-  EVENTWINDOW_RENDER_ALL     = 2
-} EventWindowRenderMode;
 
-
-class GridRenderer
-{
-private:
-
-  SDL_Surface* m_dest;
-
-  TileRenderer* m_tileRenderer;
-
-  Point<u32> m_dimensions;
-
-  SPoint m_selectedTile;
-
-  static const EventWindowRenderMode m_defaultRenderMode =
-    EVENTWINDOW_RENDER_OFF;
-
-  static const bool m_renderTilesSeparatedDefault = false;
-
-  bool m_renderTilesSeparated;
-
-  EventWindowRenderMode m_currentEWRenderMode;
-
-public:
-  GridRenderer(SDL_Surface* dest);
-
-  GridRenderer(TileRenderer* tr);
-
-  GridRenderer();
-
-  void SetEventWindowRenderMode(EventWindowRenderMode mode)
+  typedef enum
   {
-    m_currentEWRenderMode = mode;
-  }
+    EVENTWINDOW_RENDER_OFF     = 0,
+    EVENTWINDOW_RENDER_CURRENT = 1,
+    EVENTWINDOW_RENDER_ALL     = 2
+  } EventWindowRenderMode;
+  
 
-  void SetDestination(SDL_Surface* dest)
+  class GridRenderer
   {
-    m_dest = dest;
-    delete m_tileRenderer;
-    m_tileRenderer = new TileRenderer(dest);
-  }
+  private:
 
-  Point<u32>& GetDimensions()
-  {
-    return m_dimensions;
-  }
+    SDL_Surface* m_dest;
 
-  void SetDimensions(Point<u32> dimensions)
-  {
-    m_dimensions = dimensions;
-    m_tileRenderer->SetDimensions(dimensions);
-  }
+    TileRenderer* m_tileRenderer;
 
-  void IncreaseAtomSize()
-  {
-    m_tileRenderer->IncreaseAtomSize();
-  }
+    Point<u32> m_dimensions;
 
-  void ToggleTileSeparation()
-  {
-    m_renderTilesSeparated = !m_renderTilesSeparated;
-  }
+    SPoint m_selectedTile;
 
-  void ToggleDataHeatmap()
-  {
-    m_tileRenderer->ToggleDataHeat();
-  }
+    static const EventWindowRenderMode m_defaultRenderMode =
+      EVENTWINDOW_RENDER_OFF;
 
-  void DecreaseAtomSize()
-  {
-    m_tileRenderer->DecreaseAtomSize();
-  }
+    static const bool m_renderTilesSeparatedDefault = false;
 
-  void ToggleGrid()
-  {
-    m_tileRenderer->ToggleGrid();
-  }
+    bool m_renderTilesSeparated;
 
-  void ToggleMemDraw()
-  {
-    m_tileRenderer->ToggleMemDraw();
-  }
+    EventWindowRenderMode m_currentEWRenderMode;
 
-  void MoveUp(u8 amount)
-  {
-    m_tileRenderer->MoveUp(amount);
-  }
+  public:
+    GridRenderer(SDL_Surface* dest);
 
-  void MoveDown(u8 amount)
-  {
-    m_tileRenderer->MoveDown(amount);
-  }
+    GridRenderer(TileRenderer* tr);
 
-  void MoveLeft(u8 amount)
-  {
-    m_tileRenderer->MoveLeft(amount);
-  }
+    GridRenderer();
 
-  void MoveRight(u8 amount)
-  {
-    m_tileRenderer->MoveRight(amount);
-  }
+    ~GridRenderer();
 
-  ~GridRenderer();
+    void SetEventWindowRenderMode(EventWindowRenderMode mode);
 
-  template <class GC>
-  void RenderGrid(Grid<GC>& grid);
+    void SetDestination(SDL_Surface* dest);
 
-  template <class GC>
-  SPoint& GetSelectedTile()
-  {
-    return m_selectedTile;
-  }
+    UPoint& GetDimensions();
 
-  template <class GC>
-  void SelectTile(Grid<GC>& grid, SPoint& clickPt)
-  {
-    SPoint& offset = m_tileRenderer->GetWindowTL();
+    void SetDimensions(Point<u32> dimensions);
 
-    SPoint& cp = clickPt;
+    void IncreaseAtomSize();
 
-    /* Offset it by the corner */
-    cp.SetX(cp.GetX() - offset.GetX());
-    cp.SetY(cp.GetY() - offset.GetY());
+    void ToggleTileSeparation();
 
-    u32 tileSize = m_tileRenderer->GetAtomSize() * (GC::CORE_CONFIG::PARAM_CONFIG::TILE_WIDTH + 1);
-    if(!m_renderTilesSeparated)
-    {
-      tileSize -= m_tileRenderer->GetAtomSize() * (GC::CORE_CONFIG::PARAM_CONFIG::EVENT_WINDOW_RADIUS * 2 + 1);
-    }
+    void ToggleDataHeatmap();
 
-    m_selectedTile.Set(-1, -1);
+    void DecreaseAtomSize();
 
-    if(cp.GetX() > 0 && cp.GetY() > 0)
-    {
-      for(u32 x = 0; x < GC::GRID_WIDTH + 1; x++)
-      {
-	if(x * tileSize >= (u32)cp.GetX())
-	{
-	  m_selectedTile.SetX(x - 1);
-	  break;
-	}
-      }
-      for(u32 y = 0; y < GC::GRID_HEIGHT + 1; y++)
-      {
-	if(y * tileSize >= (u32)cp.GetY())
-	{
-	  m_selectedTile.SetY(y - 1);
-	  break;
-	}
-      }
-    }
-  }
+    void ToggleGrid();
 
-};
+    void ToggleMemDraw();
+
+    void MoveUp(u8 amount);
+
+    void MoveDown(u8 amount);
+
+    void MoveLeft(u8 amount);
+
+    void MoveRight(u8 amount);
+
+    void DeselectTile();
+
+    SPoint& GetSelectedTile();
+
+    template <class GC>
+    void RenderGrid(Grid<GC>& grid);
+
+    template <class GC>
+    void SelectTile(Grid<GC>& grid, SPoint& clickPt);
+
+  };
 } /* namespace MFM */
 #include "gridrenderer.tcc"
 
