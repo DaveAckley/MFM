@@ -91,6 +91,11 @@ namespace MFM {
   {
   public:
     enum { BITS = B };
+
+    u32 GetLength() const {
+      return BITS;
+    }
+
     typedef u32 BitUnitType;
     static const u32 BITS_PER_UNIT = sizeof(BitUnitType) * CHAR_BIT;
 
@@ -136,6 +141,9 @@ namespace MFM {
     void WriteBit(int idx, bool bit);
 
     bool ReadBit(int idx);
+
+    bool ToggleBit(int idx);
+
   public:
 
     BitVector();
