@@ -50,6 +50,17 @@ void BitVector<BITS>::WriteBit(int idx, bool bit)
 }
 
 template <u32 BITS>
+bool BitVector<BITS>::ToggleBit(int idx)
+{
+  int arrIdx = idx / BITS_PER_UNIT;
+  int inIdx = idx % BITS_PER_UNIT;
+  u32 newWord = 0x80000000 >> inIdx;
+
+  m_bits[arrIdx] ^= newWord;
+  return m_bits[arrIdx] & newWord;
+}
+
+template <u32 BITS>
 bool BitVector<BITS>::ReadBit(int idx)
 {
   int arrIdx = idx / BITS_PER_UNIT;
@@ -80,7 +91,7 @@ void BitVector<BITS>::Write(u32 startIdx,
   const u32 firstUnitIdx = startIdx / BITS_PER_UNIT;
   const u32 firstUnitFirstBit = startIdx % BITS_PER_UNIT;
   const bool hasSecondUnit = (firstUnitFirstBit + length) > BITS_PER_UNIT;
-  const u32 firstUnitLength = hasSecondUnit ? length - (BITS_PER_UNIT-firstUnitFirstBit) : length;
+  const u32 firstUnitLength = hasSecondUnit ? BITS_PER_UNIT-firstUnitFirstBit : length;
 
   WriteToUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength, value >> (length - firstUnitLength));
 
@@ -121,7 +132,7 @@ u32 BitVector<BITS>::Read(const u32 startIdx, const u32 length) const
   const u32 firstUnitIdx = startIdx / BITS_PER_UNIT;
   const u32 firstUnitFirstBit = startIdx % BITS_PER_UNIT;
   const bool hasSecondUnit = (firstUnitFirstBit + length) > BITS_PER_UNIT;
-  const u32 firstUnitLength = hasSecondUnit ? length - (BITS_PER_UNIT-firstUnitFirstBit) : length;
+  const u32 firstUnitLength = hasSecondUnit ? BITS_PER_UNIT-firstUnitFirstBit : length;
 
   u32 ret = ReadFromUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength);
 

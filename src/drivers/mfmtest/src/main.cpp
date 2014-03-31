@@ -9,16 +9,10 @@ int main(int argc, char** argv)
   FXP_test::Test_RunTests();
   ColorMapTest::Test_RunTests();
   RandomTest::Test_RunTests();
+  BitVectorTest::Test_RunTests();
 
   PointTest::Test_pointAdd();
   PointTest::Test_pointMultiply();
-
-  BitVectorTest::Test_bitVectorAllocate();
-  BitVectorTest::Test_bitVectorSize();
-  BitVectorTest::Test_bitVectorRead();
-  BitVectorTest::Test_bitVectorWrite();
-  //  BitVectorTest::Test_bitVectorInsert();
-  //  BitVectorTest::Test_bitVectorRemove();
 
   MDistTest::Test_MDistConversion();
 
