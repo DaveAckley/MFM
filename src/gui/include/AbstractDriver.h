@@ -97,6 +97,8 @@ namespace MFM {
     GridRenderer m_grend;
     StatsRenderer m_srend;
 
+    DriverArguments* m_driverArguments;
+
     void Sleep(u32 seconds, u64 nanos)
     {
       struct timespec tspec;
@@ -325,6 +327,9 @@ namespace MFM {
     AbstractDriver(DriverArguments & args)
     {
       OnceOnly(args);
+
+      /* Let's save these for later */
+      m_driverArguments = &args;
     }
 
     void OnceOnly(DriverArguments & args)
@@ -407,6 +412,20 @@ namespace MFM {
       ReinitPhysics();
 
       ReinitEden();
+
+      ReapplyPostArguments(m_driverArguments);
+    }
+
+    void ReapplyPostArguments(DriverArguments* argptr)
+    {
+      DriverArguments& args = *argptr;
+
+      /* Initially disable all tiles given in arguments */
+      for(u32 i = 0; i < args.GetDisabledTileCount(); i++)
+      {
+	SPoint& pt =  args.GetDisabledTiles()[i];
+	mainGrid.SetTileToExecuteOnly(pt, false);
+      }
     }
 
     /**
@@ -480,72 +499,71 @@ namespace MFM {
       s32 lastFrame = SDL_GetTicks();
 
       while(running)
-        {
-          while(SDL_PollEvent(&event))
-            {
-              switch(event.type)
-                {
-                case SDL_VIDEORESIZE:
-                  SetScreenSize(event.resize.w, event.resize.h);
-                  break;
-                case SDL_QUIT:
-                  running = false;
-                  break;
-                case SDL_MOUSEBUTTONUP:
-                case SDL_MOUSEBUTTONDOWN:
-                  mouse.HandleButtonEvent(&event.button);
-                  break;
-                case SDL_MOUSEMOTION:
-                  mouse.HandleMotionEvent(&event.motion);
-                  break;
-                case SDL_KEYDOWN:
-                case SDL_KEYUP:
-                  keyboard.HandleEvent(&event.key);
-                  break;
-
-                }
-            }
-
-          /* Limit framerate */
-          s32 sleepMS = (s32)
-            ((1000.0 / FRAMES_PER_SECOND) -
-             (SDL_GetTicks() - lastFrame));
-          if(sleepMS > 0)
-          {
-	    SDL_Delay(sleepMS);
-	  }
-          lastFrame = SDL_GetTicks();
-
-
-          Update(mainGrid);
-
-          Drawing::Clear(screen, 0xff200020);
-
-          m_grend.RenderGrid(mainGrid);
-          if(renderStats)
-          {
-	    m_srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent);
-	  }
-
-          if (m_recordScreenshotPerAEPS > 0) {
-            if (!paused && m_AEPS >= m_nextScreenshotAEPS) {
-
-              const char * path = GetSimDirPathTemporary("vid/%010d.png", m_nextScreenshotAEPS);
-
-              camera.DrawSurface(screen,path);
-
-              m_nextScreenshotAEPS += m_recordScreenshotPerAEPS;
-            }
-          }
-
-	  if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
+      {
+	while(SDL_PollEvent(&event))
+	{
+	  switch(event.type)
 	  {
+	  case SDL_VIDEORESIZE:
+	    SetScreenSize(event.resize.w, event.resize.h);
+	    break;
+	  case SDL_QUIT:
 	    running = false;
+	    break;
+	  case SDL_MOUSEBUTTONUP:
+	  case SDL_MOUSEBUTTONDOWN:
+	    mouse.HandleButtonEvent(&event.button);
+	    break;
+	  case SDL_MOUSEMOTION:
+	    mouse.HandleMotionEvent(&event.motion);
+	    break;
+	  case SDL_KEYDOWN:
+	  case SDL_KEYUP:
+	    keyboard.HandleEvent(&event.key);
+	    break;
 	  }
+	}
 
-          SDL_Flip(screen);
-        }
+	/* Limit framerate */
+	s32 sleepMS = (s32)
+	  ((1000.0 / FRAMES_PER_SECOND) -
+	   (SDL_GetTicks() - lastFrame));
+	if(sleepMS > 0)
+        {
+	  SDL_Delay(sleepMS);
+	}
+	lastFrame = SDL_GetTicks();
 
+
+	Update(mainGrid);
+	
+	Drawing::Clear(screen, 0xff200020);
+	  
+	m_grend.RenderGrid(mainGrid);
+	if(renderStats)
+        {
+	  m_srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent);
+	}
+	
+	if (m_recordScreenshotPerAEPS > 0) {
+	  if (!paused && m_AEPS >= m_nextScreenshotAEPS) {
+
+	    const char * path = GetSimDirPathTemporary("vid/%010d.png", m_nextScreenshotAEPS);
+	    
+	    camera.DrawSurface(screen,path);
+	    
+	    m_nextScreenshotAEPS += m_recordScreenshotPerAEPS;
+	  }
+	}
+	
+	if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
+        {
+	  running = false;
+	}
+	
+	SDL_Flip(screen);
+      }
+      
       SDL_FreeSurface(screen);
       SDL_Quit();
     }

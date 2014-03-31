@@ -81,6 +81,20 @@ namespace MFM {
 	}
       }
 
+      else if (!strcmp("--disabletile", arg))
+      {
+	char* val = GetNextArg(argc, argv);
+	if(!val) Die("Missing tile (upoint, i.e. '(s32,s32)') argument after %s", arg);
+
+	if(m_disabledTileCount >= DRIVERARGUMENTS_MAX_DISABLED_TILES)
+	{
+	  Die("More than %d tiles may not be disabled", DRIVERARGUMENTS_MAX_DISABLED_TILES);
+	}
+	
+	m_disabledTiles[m_disabledTileCount++].Parse(val);
+	fprintf(stderr, "[Tile @ %s deactivated]\n", val);
+      }
+
       else if (!strcmp("-h",arg) || !strcmp("--help",arg)) {
 
         fprintf(stderr,
@@ -91,7 +105,8 @@ namespace MFM {
                 " -e AEPS, --events AEPS     Record event counts every AEPS aeps\n"
                 " -p AEPS, --pictures AEPS   Record screenshots every AEPS aeps\n"
 		"\n"
-		" --haltafteraeps AEPS        If APES > 0, Halts after AEPS elapsed aeps.\n"
+		" --haltafteraeps AEPS       If APES > 0, Halts after AEPS elapsed aeps.\n"
+		" --disabletile TILEPT       Stops execution of the Tile at TILEPT.\n"
                 );
         exit(0);
       } else {
@@ -103,4 +118,3 @@ namespace MFM {
   }
 
 }
-

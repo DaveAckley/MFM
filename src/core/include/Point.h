@@ -62,6 +62,16 @@ public:
 
   bool Equals(const Point<T>& rhs);
 
+  /**
+   * Parses a char* for a Point of \emph{integral} type in the format
+   * "(x,y)" with no whitespace. This treats any read values as
+   * (T)atoi(x) and (T)atoi(y), so make sure that casting from a call
+   * of atoi won't break anything.
+   *
+   * @param buffer The char* to parse a point directly from.
+   */
+  void Parse(char* buffer);
+
   ////// Operator overloads
 
   Point<T>& operator=(const Point<T> & rhs);

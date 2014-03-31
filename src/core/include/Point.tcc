@@ -1,5 +1,5 @@
-#include "Fail.h"
-#include "Util.h"   /* For MAX */
+#include "Fail.h"   /* -*- C++ -*- */
+#include "Util.h"   /* For MAX, SEEK */
 
 namespace MFM {
 
@@ -103,6 +103,57 @@ void Point<T>::Mod(T scalar)
   m_x %= scalar;
   m_y %= scalar;
 }
+
+/**
+ * Seeks a char* for a specified char. If this char is not found by
+ * the time this function seeks to the end (specified by strlen), this
+ * function calls FAIL(ARRAY_INDEX_OUT_OF_BOUNDS) . Therefore, this
+ * function runs in O(n) time in terms of the length of the given
+ * char* .
+ *
+ * @param start The start of the char* to scan.
+ *
+ * @param seekchar The char to look for in start.
+ *
+ * @returns start, seeked to the first occurrence of seekchar.
+ */
+static char* SEEK(char* start, char seekchar)
+{
+  MFM::u32 len = strlen(start);
+  MFM::u32 curChar = 0;
+
+  while(*start != seekchar)
+  {
+    curChar++;
+    start++;
+    
+    if(curChar >= len)
+    {
+      FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
+    }
+  }
+  return start;
+}
+
+
+template <class T>
+void Point<T>::Parse(char* buffer)
+{
+  /*
+   * SEEK FAILs if argument 2 is not found in argument 1 before
+   * strlen(argument 1) is reached.
+   */
+  buffer = SEEK(buffer, '(') + 1;
+
+  m_x = (T)atoi(buffer);
+
+  buffer = SEEK(buffer, ',') + 1;
+  
+  m_y = (T)atoi(buffer);
+
+  buffer = SEEK(buffer, ')');
+}
+
 
 template <class T>
 void Point<T>::SetX(T x)
