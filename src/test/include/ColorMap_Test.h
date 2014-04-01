@@ -1,7 +1,7 @@
 #ifndef COLORMAP_TEST_H      /* -*- C++ -*- */
 #define COLORMAP_TEST_H
 
-#include "colormap.h"
+#include "ColorMap.h"
 
 namespace MFM {
 
