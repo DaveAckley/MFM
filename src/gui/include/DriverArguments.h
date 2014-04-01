@@ -14,6 +14,8 @@ namespace MFM {
     u32 m_haltAfterAEPS;
     s32 m_recordEventCountsPerAEPS;
     s32 m_recordScreenshotPerAEPS;
+    s32 m_countOfScreenshotsPerRate;
+    bool m_startPaused;
 
   public:
 
@@ -23,7 +25,8 @@ namespace MFM {
       m_seed(0),
       m_haltAfterAEPS(0),
       m_recordEventCountsPerAEPS(-1),
-      m_recordScreenshotPerAEPS(-1)
+      m_recordScreenshotPerAEPS(-1),
+      m_countOfScreenshotsPerRate(-1)
     {
       ProcessArguments(argc,argv);
     }
@@ -38,7 +41,8 @@ namespace MFM {
     u32 GetHaltAfterAEPS() const { return m_haltAfterAEPS; }
     s32 GetRecordEventCountsPerAEPS() const { return m_recordEventCountsPerAEPS; }
     s32 GetRecordScreenshotPerAEPS() const { return m_recordScreenshotPerAEPS; }
-
+    s32 GetCountOfScreenshotsPerRate() const { return m_countOfScreenshotsPerRate; }
+    bool GetStartPaused() const { return m_startPaused; }
   };
 } /* namespace MFM */
 
