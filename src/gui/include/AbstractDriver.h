@@ -70,6 +70,7 @@ namespace MFM {
 
     bool renderStats;
 
+    bool m_startPaused;
     u32 m_haltAfterAEPS;
     u32 m_aepsPerFrame;
     s32 m_microsSleepPerFrame;
@@ -83,6 +84,9 @@ namespace MFM {
 
     s32 m_recordEventCountsPerAEPS;
     s32 m_recordScreenshotPerAEPS;
+    s32 m_maxRecordScreenshotPerAEPS;
+    s32 m_countOfScreenshotsAtThisAEPS;
+    s32 m_countOfScreenshotsPerRate;
     u32 m_nextEventCountsAEPS;
     u32 m_nextScreenshotAEPS;
 
@@ -309,7 +313,7 @@ namespace MFM {
 	if (m_recordEventCountsPerAEPS > 0) {
 	  if (m_AEPS > m_nextEventCountsAEPS) {
 
-	    const char * path = GetSimDirPathTemporary("eps/%010d.png", m_nextEventCountsAEPS);
+	    const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEventCountsAEPS);
 	    FILE* fp = fopen(path, "w");
 	    grid.WriteEPSImage(fp);
 	    fclose(fp);
@@ -339,6 +343,7 @@ namespace MFM {
           args.Die("Couldn't make directory '%s': %s",dirPath,strerror(errno));
       }
 
+      m_startPaused = args.GetStartPaused();
       m_haltAfterAEPS = args.GetHaltAfterAEPS();
 
       /* Sim directory = now */
@@ -370,6 +375,12 @@ namespace MFM {
 
       m_recordEventCountsPerAEPS = args.GetRecordEventCountsPerAEPS();
       m_recordScreenshotPerAEPS = args.GetRecordScreenshotPerAEPS();
+      m_countOfScreenshotsPerRate = args.GetCountOfScreenshotsPerRate();
+      if (m_countOfScreenshotsPerRate > 0) {
+        m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
+        m_recordScreenshotPerAEPS = 1;
+        m_countOfScreenshotsAtThisAEPS = 0;
+      }
 
       u32 seed = args.GetSeed();
       if (seed==0) seed = time(0);
@@ -458,7 +469,7 @@ namespace MFM {
 
     void RunHelper()
     {
-      paused = false;
+      paused = m_startPaused;
 
       bool running = true;
       screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32,
@@ -534,6 +545,17 @@ namespace MFM {
 
               camera.DrawSurface(screen,path);
 
+              // Are we accelerating and not yet up to cruising speed?
+              if (m_countOfScreenshotsPerRate > 0 && 
+                  m_recordScreenshotPerAEPS < m_maxRecordScreenshotPerAEPS) {
+
+                // Time to step on it?
+                if (++m_countOfScreenshotsAtThisAEPS > m_countOfScreenshotsPerRate) {
+                  ++m_recordScreenshotPerAEPS;
+                  m_countOfScreenshotsAtThisAEPS = 0;
+                }
+              }
+            
               m_nextScreenshotAEPS += m_recordScreenshotPerAEPS;
             }
           }
