@@ -48,7 +48,7 @@ namespace MFM
 
     virtual u32 DefaultPhysicsColor() const = 0;
     
-    virtual u32 LocalPhysicsColor(const T &) const {
+    virtual u32 LocalPhysicsColor(const T &, u32 selector) const {
       return DefaultPhysicsColor();
     }
     

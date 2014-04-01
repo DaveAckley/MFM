@@ -1,37 +1,20 @@
 /* -*- C++ -*- */
-#if 1
-#include "Element_Data.h"    /* for ELEMENT_DATA */
-#include "Element_Sorter.h"  /* for ELEMENT_SORTER */
-#endif
-#include "colormap.h"
 #include "Util.h"            /* for MIN and MAX */
 
 namespace MFM {
 
 template <class CC>
-u32 TileRenderer::GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom)
+u32 TileRenderer::GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom, u32 selector)
 {
   const Element<CC> * elt = tile.GetElementTable().Lookup(atom.GetType());
-  if (elt) return elt->LocalPhysicsColor(atom);
+  if (elt) return elt->LocalPhysicsColor(atom,selector);
   return 0xffffffff;
 }
 
 template <class CC>
 u32 TileRenderer::GetDataHeatColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom)
 {
-#if 1
-  if(Atom<CC>::IsType(atom,Element_Sorter<CC>::TYPE))
-  {
-    return ColorMap_SEQ5_YlOrRd::THE_INSTANCE.
-      GetInterpolatedColor(Element_Sorter<CC>::THE_INSTANCE.GetThreshold(atom,0),0,100,0xffff0000);
-  }
-  if(Atom<CC>::IsType(atom,Element_Data<CC>::TYPE))
-  {
-    return ColorMap_SEQ5_YlGnBu::THE_INSTANCE.
-      GetInterpolatedColor(Element_Data<CC>::THE_INSTANCE.GetDatum(atom,0),0,100,0xffff0000);
-  }
-#endif
-  return GetAtomColor(tile,atom);
+  return GetAtomColor(tile,atom,1);
 }
 
 

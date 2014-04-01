@@ -2,6 +2,7 @@
 #define ELEMENT_DATA_H
 
 #include "Element.h"
+#include "ColorMap.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "itype.h"
@@ -47,6 +48,17 @@ namespace MFM
     virtual u32 DefaultPhysicsColor() const 
     {
       return 0xff0000ff;
+    }
+
+    virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const 
+    {
+      switch (selector) {
+      case 1:
+        return ColorMap_SEQ5_YlGnBu::THE_INSTANCE.
+          GetInterpolatedColor(GetDatum(atom,0),0,100,0xffff0000);
+      default:
+        return DefaultPhysicsColor();
+      }
     }
 
     virtual void Behavior(EventWindow<CC>& window) const
