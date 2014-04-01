@@ -1,5 +1,6 @@
 #include "Fail.h"
 #include "Util.h"   /* For MAX */
+#include <math.h>   /* For sqrt */
 
 namespace MFM {
 
@@ -146,9 +147,27 @@ Point<T>& Point<T>::operator=(const Point<T>& rhs)
 }
 
 template <class T>
-bool Point<T>::Equals(const Point<T>& rhs) 
+bool Point<T>::Equals(const Point<T>& rhs) const
 {
   return GetX()==rhs.GetX() && GetY()==rhs.GetY();
+}
+
+template <class T>
+bool Point<T>::BoundedBelow(const Point<T>& bound) const
+{
+  return GetX()>=bound.GetX() && GetY()>=bound.GetY();
+}
+
+template <class T>
+bool Point<T>::BoundedAbove(const Point<T>& bound) const
+{
+  return GetX()<=bound.GetX() && GetY()<=bound.GetY();
+}
+
+template <class T>
+bool Point<T>::BoundedBy(const Point<T>& lowerBound, const Point<T>& upperBound) const
+{
+  return BoundedBelow(lowerBound) && BoundedAbove(upperBound);
 }
 
 } /* namespace MFM */

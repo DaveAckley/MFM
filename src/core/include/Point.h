@@ -60,7 +60,13 @@ public:
 
   void Set(const Point<T>& copyFrom);
 
-  bool Equals(const Point<T>& rhs);
+  bool Equals(const Point<T>& rhs) const;
+
+  bool BoundedBelow(const Point<T>& bound) const;
+
+  bool BoundedAbove(const Point<T>& bound) const;
+
+  bool BoundedBy(const Point<T>& lowerBound,const Point<T>& upperBound) const;
 
   ////// Operator overloads
 
@@ -138,9 +144,9 @@ typedef Point<u32> UPoint;
 /** 
  * Non-template conversions, just for our common case.
  */
-UPoint makeUnsigned(const SPoint & spoint);
+UPoint MakeUnsigned(const SPoint & spoint);
 
-SPoint makeSigned(const UPoint & upoint);
+SPoint MakeSigned(const UPoint & upoint);
 
 } /* namespace MFM */
 

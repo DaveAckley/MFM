@@ -62,7 +62,7 @@ namespace MFM {
 
     const T& GetRelativeAtom(const SPoint& offset) const;
 
-    bool SetRelativeAtom(const SPoint& offset, T atom);
+    bool SetRelativeAtom(const SPoint& offset, const T & atom);
 
     void SwapAtoms(const SPoint& locA, const SPoint& locB);
 

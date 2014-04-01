@@ -19,7 +19,7 @@ void EventWindow<C>::SetCenter(const SPoint& center)
 }
 
 template <class C> 
-bool EventWindow<C>::SetRelativeAtom(const SPoint& offset, T atom)
+bool EventWindow<C>::SetRelativeAtom(const SPoint& offset, const T & atom)
 {
   s32 idx = MDist<R>::get().FromPoint(offset, R);
   if (idx < 0)
