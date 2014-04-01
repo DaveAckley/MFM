@@ -44,6 +44,10 @@ namespace MFM {
 
   public:
 
+    u32 GetBitCount() const {
+      return BITS;
+    }
+
     u32 GetType() const {
       s32 bitsUsed = GetBitsAllocated();
       if (bitsUsed > BITS)

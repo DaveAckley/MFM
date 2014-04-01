@@ -16,18 +16,15 @@ namespace MFM {
   {
     elementTable.Reinit();
 
+    RegisterElement(Element_Empty<CC>::THE_INSTANCE);
+
+    ClearAtoms();
+
+    m_writeFailureOdds = 0;  // Default is reliable
+
     m_eventsExecuted = 0;
 
     m_onlyWaitOnBuffers = false;
-
-    for(u32 i = 0; i < ELEMENT_TABLE_SIZE; i++)
-    {
-      m_atomCount[i] = 0;
-    }
-
-    RegisterElement(Element_Empty<CC>::THE_INSTANCE);
-
-    SetAtomCount(ELEMENT_EMPTY,OWNED_SIDE*OWNED_SIDE);
 
     /* Set up our connection pointers. Some of these may remain NULL, */
     /* symbolizing a dead edge.       */
@@ -77,6 +74,9 @@ namespace MFM {
     {
       m_atomCount[i] = 0;
     }
+
+    m_illegalAtomCount = 0;
+
     SetAtomCount(ELEMENT_EMPTY,OWNED_SIDE*OWNED_SIDE);
 
     for(u32 x = 0; x < TILE_WIDTH; x++)
@@ -188,7 +188,7 @@ namespace MFM {
   template <class CC>
   Dir Tile<CC>::RegionAt(const SPoint& sp, u32 reach) const
   {
-    UPoint pt = makeUnsigned(sp);
+    UPoint pt = MakeUnsigned(sp);
 
     if(pt.GetX() < reach)
     {
@@ -244,6 +244,8 @@ namespace MFM {
   {
     const T* oldAtom = GetAtom(pt);
     u32 oldType = oldAtom->GetType();
+
+    // XXX IMPLEMENT BIT-CORRUPTION-ON-WRITE IN HERE
 
     InternalPutAtom(atom,pt.GetX(),pt.GetY());
 
@@ -721,7 +723,7 @@ namespace MFM {
   {
     s32 idx = elementTable.GetIndex(atomType);
     if (idx < 0) {
-      if (delta != 0) FAIL(ILLEGAL_STATE);
+      m_illegalAtomCount += delta;
       return;
     }
     if (delta < 0 && -delta > m_atomCount[idx]) {

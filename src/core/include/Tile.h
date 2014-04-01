@@ -68,6 +68,10 @@ namespace MFM {
         processing. */
     MFMErrorEnvironmentPointer_t m_errorEnvironmentStackTop;
 
+    /** The 1-in-this odds of bit corruptions during atom writing.  (0
+        means no corruptions).  (NOT YET IMPLEMENTED)  */
+    u32 m_writeFailureOdds;
+
     /** The ElementTable instance which holds all atom behavior for this
 	Tile. */
     ElementTable<CC> elementTable;
@@ -115,6 +119,10 @@ namespace MFM {
     /** An index of the number of each type of Atom currently held
 	within this Tile.*/
     s32 m_atomCount[ELEMENT_TABLE_SIZE];
+
+    /** A count of corrupted atoms for which an element could not be
+        found */
+    s32 m_illegalAtomCount;
 
     /** The local location which the last EventWindow was centered
 	on. */
