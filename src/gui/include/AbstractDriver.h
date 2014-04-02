@@ -10,6 +10,10 @@
 #include "gridrenderer.h"
 #include "statsrenderer.h"
 #include "ElementTable.h"
+#include "Element_Empty.h" /* Need common elements */
+#include "Element_Dreg.h"
+#include "Element_Res.h"
+#include "Element_Wall.h"
 #include "mouse.h"
 #include "keyboard.h"
 #include "Camera.h"
@@ -264,12 +268,12 @@ namespace MFM {
       {
 	paused = !paused;
       }
-      if(keyboard.SemiAuto(SDLK_COMMA))
+      if(keyboard.IsDown(SDLK_COMMA))
       {
 	if(m_aepsPerFrame > 1)
 	  m_aepsPerFrame--;
       }
-      if(keyboard.SemiAuto(SDLK_PERIOD))
+      if(keyboard.IsDown(SDLK_PERIOD))
       {
 	if(m_aepsPerFrame < 1000)
 	  m_aepsPerFrame++;
@@ -346,7 +350,13 @@ namespace MFM {
 	  const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
 	  FILE* fp = fopen(path, "a");
 	  
-	  fprintf(fp, "%g %d\n", m_AEPS, grid.CountActiveSites());
+	  fprintf(fp, "%g %d %d %d %d %d\n",
+		  m_AEPS, 
+		  grid.CountActiveSites(),
+		  grid.GetAtomCount(Element_Empty<CC>::TYPE),
+		  grid.GetAtomCount(Element_Dreg<CC>::TYPE),
+		  grid.GetAtomCount(Element_Res<CC>::TYPE),
+		  grid.GetAtomCount(Element_Wall<CC>::TYPE));
 	  
 	  fclose(fp);
 	  m_nextTimeBasedDataAEPS += m_recordTimeBasedDataPerAEPS;
