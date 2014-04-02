@@ -56,7 +56,7 @@ private:
   void RenderAtoms(SPoint& pt, Tile<CC>& tile, bool renderCache);
 
   template <class CC>
-  u32 GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom);
+  u32 GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom, u32 selector = 0);
 
   template <class CC>
   u32 GetDataHeatColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom);

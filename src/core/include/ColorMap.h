@@ -61,7 +61,7 @@ namespace MFM {
 #define XX6(T,N,M1,M2,M3,M4,M5,M6)                    \
   XXB(T##6_##N)
 
-#include "colormaps.h"
+#include "ColorMaps.h"
 
 #undef XXB
 #undef XX5

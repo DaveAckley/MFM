@@ -70,6 +70,7 @@ namespace MFM {
 
     bool renderStats;
 
+    bool m_startPaused;
     u32 m_haltAfterAEPS;
     u32 m_aepsPerFrame;
     s32 m_microsSleepPerFrame;
@@ -83,6 +84,9 @@ namespace MFM {
 
     s32 m_recordEventCountsPerAEPS;
     s32 m_recordScreenshotPerAEPS;
+    s32 m_maxRecordScreenshotPerAEPS;
+    s32 m_countOfScreenshotsAtThisAEPS;
+    s32 m_countOfScreenshotsPerRate;
     u32 m_nextEventCountsAEPS;
     u32 m_nextScreenshotAEPS;
 
@@ -311,7 +315,7 @@ namespace MFM {
 	if (m_recordEventCountsPerAEPS > 0) {
 	  if (m_AEPS > m_nextEventCountsAEPS) {
 
-	    const char * path = GetSimDirPathTemporary("eps/%010d.png", m_nextEventCountsAEPS);
+	    const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEventCountsAEPS);
 	    FILE* fp = fopen(path, "w");
 	    grid.WriteEPSImage(fp);
 	    fclose(fp);
@@ -344,6 +348,7 @@ namespace MFM {
           args.Die("Couldn't make directory '%s': %s",dirPath,strerror(errno));
       }
 
+      m_startPaused = args.GetStartPaused();
       m_haltAfterAEPS = args.GetHaltAfterAEPS();
 
       /* Sim directory = now */
@@ -375,6 +380,12 @@ namespace MFM {
 
       m_recordEventCountsPerAEPS = args.GetRecordEventCountsPerAEPS();
       m_recordScreenshotPerAEPS = args.GetRecordScreenshotPerAEPS();
+      m_countOfScreenshotsPerRate = args.GetCountOfScreenshotsPerRate();
+      if (m_countOfScreenshotsPerRate > 0) {
+        m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
+        m_recordScreenshotPerAEPS = 1;
+        m_countOfScreenshotsAtThisAEPS = 0;
+      }
 
       u32 seed = args.GetSeed();
       if (seed==0) seed = time(0);
@@ -477,7 +488,7 @@ namespace MFM {
 
     void RunHelper()
     {
-      paused = false;
+      paused = m_startPaused;
 
       bool running = true;
       screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32,
@@ -499,63 +510,75 @@ namespace MFM {
       s32 lastFrame = SDL_GetTicks();
 
       while(running)
-      {
-	while(SDL_PollEvent(&event))
-	{
-	  switch(event.type)
-	  {
-	  case SDL_VIDEORESIZE:
-	    SetScreenSize(event.resize.w, event.resize.h);
-	    break;
-	  case SDL_QUIT:
-	    running = false;
-	    break;
-	  case SDL_MOUSEBUTTONUP:
-	  case SDL_MOUSEBUTTONDOWN:
-	    mouse.HandleButtonEvent(&event.button);
-	    break;
-	  case SDL_MOUSEMOTION:
-	    mouse.HandleMotionEvent(&event.motion);
-	    break;
-	  case SDL_KEYDOWN:
-	  case SDL_KEYUP:
-	    keyboard.HandleEvent(&event.key);
-	    break;
-	  }
-	}
-
-	/* Limit framerate */
-	s32 sleepMS = (s32)
-	  ((1000.0 / FRAMES_PER_SECOND) -
-	   (SDL_GetTicks() - lastFrame));
-	if(sleepMS > 0)
         {
-	  SDL_Delay(sleepMS);
-	}
-	lastFrame = SDL_GetTicks();
+          while(SDL_PollEvent(&event))
+            {
+              switch(event.type)
+                {
+                case SDL_VIDEORESIZE:
+                  SetScreenSize(event.resize.w, event.resize.h);
+                  break;
+                case SDL_QUIT:
+                  running = false;
+                  break;
+                case SDL_MOUSEBUTTONUP:
+                case SDL_MOUSEBUTTONDOWN:
+                  mouse.HandleButtonEvent(&event.button);
+                  break;
+                case SDL_MOUSEMOTION:
+                  mouse.HandleMotionEvent(&event.motion);
+                  break;
+                case SDL_KEYDOWN:
+                case SDL_KEYUP:
+                  keyboard.HandleEvent(&event.key);
+                  break;
 
+                }
+            }
 
-	Update(mainGrid);
-	
-	Drawing::Clear(screen, 0xff200020);
-	  
-	m_grend.RenderGrid(mainGrid);
-	if(renderStats)
-        {
-	  m_srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent);
-	}
-	
-	if (m_recordScreenshotPerAEPS > 0) {
-	  if (!paused && m_AEPS >= m_nextScreenshotAEPS) {
-
-	    const char * path = GetSimDirPathTemporary("vid/%010d.png", m_nextScreenshotAEPS);
-	    
-	    camera.DrawSurface(screen,path);
-	    
-	    m_nextScreenshotAEPS += m_recordScreenshotPerAEPS;
+          /* Limit framerate */
+          s32 sleepMS = (s32)
+            ((1000.0 / FRAMES_PER_SECOND) -
+             (SDL_GetTicks() - lastFrame));
+          if(sleepMS > 0)
+          {
+	    SDL_Delay(sleepMS);
 	  }
-	}
-	
+          lastFrame = SDL_GetTicks();
+
+
+          Update(mainGrid);
+
+          Drawing::Clear(screen, 0xff200020);
+
+          m_grend.RenderGrid(mainGrid);
+          if(renderStats)
+          {
+	    m_srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent);
+	  }
+
+          if (m_recordScreenshotPerAEPS > 0) {
+            if (!paused && m_AEPS >= m_nextScreenshotAEPS) {
+
+              const char * path = GetSimDirPathTemporary("vid/%010d.png", m_nextScreenshotAEPS);
+
+              camera.DrawSurface(screen,path);
+
+              // Are we accelerating and not yet up to cruising speed?
+              if (m_countOfScreenshotsPerRate > 0 && 
+                  m_recordScreenshotPerAEPS < m_maxRecordScreenshotPerAEPS) {
+
+                // Time to step on it?
+                if (++m_countOfScreenshotsAtThisAEPS > m_countOfScreenshotsPerRate) {
+                  ++m_recordScreenshotPerAEPS;
+                  m_countOfScreenshotsAtThisAEPS = 0;
+                }
+              }
+            
+              m_nextScreenshotAEPS += m_recordScreenshotPerAEPS;
+            }
+          }
+
 	if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
         {
 	  running = false;

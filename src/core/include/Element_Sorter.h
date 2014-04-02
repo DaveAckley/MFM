@@ -6,6 +6,7 @@
 #include "ElementTable.h"
 #include "Element_Res.h"  /* For Element_Res::TYPE */
 #include "Element_Data.h"  /* For Element_Data::TYPE */
+#include "ColorMap.h"
 #include "itype.h"
 #include "P1Atom.h"
 
@@ -62,6 +63,17 @@ namespace MFM
     virtual u32 DefaultPhysicsColor() const 
     {
       return 0xffff0000;
+    }
+
+    virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const 
+    {
+      switch (selector) {
+      case 1:
+        return ColorMap_SEQ5_YlOrRd::THE_INSTANCE.
+          GetInterpolatedColor(GetThreshold(atom,0),0,100,0xffff0000);
+      default:
+        return DefaultPhysicsColor();
+      }
     }
 
     virtual void Behavior(EventWindow<CC>& window) const

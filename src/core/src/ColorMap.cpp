@@ -1,4 +1,4 @@
-#include "colormap.h"
+#include "ColorMap.h"
 #include "Fail.h"  /* for FAIL */
 
 namespace MFM {
@@ -11,7 +11,7 @@ namespace MFM {
 #define XX6(T,N,M1,M2,M3,M4,M5,M6)              \
     ""#T"6_"#N,
 
-#include "colormaps.h"
+#include "ColorMaps.h"
 
 #undef XX5
 #undef XX6
@@ -28,7 +28,7 @@ namespace MFM {
 #define XX6(T,N,M1,M2,M3,M4,M5,M6)              \
     &ColorMap_##T##6_##N::THE_INSTANCE,
 
-#include "colormaps.h"
+#include "ColorMaps.h"
 
 #undef XX5
 #undef XX6
@@ -60,7 +60,7 @@ namespace MFM {
   static u32 T##6_##N##_ARRAY[] = { M1,M2,M3,M4,M5,M6 };  \
   XXB(T##6_##N)
 
-#include "colormaps.h"
+#include "ColorMaps.h"
 
 #undef XXB
 #undef XX5

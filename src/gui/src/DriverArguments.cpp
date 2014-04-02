@@ -65,7 +65,17 @@ namespace MFM {
         if (!val) Die("Missing aeps (integer) argument after %s", arg);
 
         m_recordScreenshotPerAEPS = atoi(val);
+        m_recordScreenshotPerAEPS = atoi(val);
         fprintf(stderr,"[Recording grid pictures approximately every %d AEPS]\n",m_recordScreenshotPerAEPS);
+
+      } else if (!strcmp("--picturesPerRate",arg)) {
+
+        const char * val = GetNextArg(argc,argv);
+        if (!val) Die("Missing COUNT (integer) argument after %s", arg);
+
+        m_countOfScreenshotsPerRate = atoi(val);
+        if (m_countOfScreenshotsPerRate < 1) Die("COUNT must be greater than zero, after %s",arg);
+        fprintf(stderr,"[Accelerating in groups of %d pictures]\n",m_countOfScreenshotsPerRate);
 
       }
 
@@ -80,7 +90,6 @@ namespace MFM {
 	  fprintf(stderr, "[Halting execution after approximately %d AEPS]\n", m_haltAfterAEPS);
 	}
       }
-
       else if (!strcmp("--disabletile", arg))
       {
 	char* val = GetNextArg(argc, argv);
@@ -93,6 +102,16 @@ namespace MFM {
 	
 	m_disabledTiles[m_disabledTileCount++].Parse(val);
 	fprintf(stderr, "[Tile @ %s deactivated]\n", val);
+      }
+      else if (!strcmp("--startpaused", arg) || !strcmp("--nostartpaused", arg))
+      {
+	m_startPaused = !strcmp("--startpaused", arg);
+        if (m_startPaused)
+        {
+          fprintf(stderr, "[Starting paused]\n");
+        } else {
+          fprintf(stderr, "[Starting without initial pause]\n");
+        } 
       }
 
       else if (!strcmp("-h",arg) || !strcmp("--help",arg)) {
@@ -107,6 +126,10 @@ namespace MFM {
 		"\n"
 		" --haltafteraeps AEPS       If APES > 0, Halts after AEPS elapsed aeps.\n"
 		" --disabletile TILEPT       Stops execution of the Tile at TILEPT.\n"
+                " --picturesPerRate COUNT    Take COUNT shots per speed from 1 up to -p value\n"
+		" --haltafteraeps AEPS       If AEPS > 0, Halts after AEPS elapsed aeps.\n"
+		" --startpaused              Start paused to allow display configuration.\n"
+		" --nostartpaused            Start running immediately for hands-off operation.\n"
                 );
         exit(0);
       } else {

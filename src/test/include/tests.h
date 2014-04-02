@@ -13,7 +13,7 @@
 #include "grid_test.h"
 #include "eventwindow_test.h"
 #include "Random_test.h"
-#include "colormap_test.h"
+#include "ColorMap_Test.h"
 #include "FXP_test.h"
 
 #endif /*TESTS_H*/

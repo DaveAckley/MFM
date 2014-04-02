@@ -1,5 +1,5 @@
 #include "assert.h"
-#include "colormap_test.h"
+#include "ColorMap_Test.h"
 #include "itype.h"
 
 namespace MFM {
