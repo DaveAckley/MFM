@@ -7,6 +7,8 @@
 #include "Random.h"
 #include "GridConfig.h"
 
+#include "Element_Wall.h"
+
 namespace MFM {
 
   template <class GC>
@@ -184,6 +186,8 @@ namespace MFM {
     void ResetEPSCounts();
 
     u32 GetAtomCount(ElementType atomType) const;
+
+    void SurroundRectangleWithWall(s32 x, s32 y, s32 w, s32 h, s32 thickness);
   };
 } /* namespace MFM */
 

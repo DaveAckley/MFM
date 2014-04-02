@@ -35,7 +35,7 @@ namespace MFM
 
     virtual u32 DefaultPhysicsColor() const
     {
-      return 0;
+      return 0xffffffff;
     }
     
     virtual void Behavior(EventWindow<CC>& window) const

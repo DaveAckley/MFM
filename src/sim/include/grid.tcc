@@ -1,4 +1,5 @@
-                           /* -*- C++ -*- */
+/* -*- C++ -*- */
+
 #include "Dirs.h"
 #include "grid.h"
 
@@ -258,5 +259,40 @@ namespace MFM {
     return total;
   }
 
+  template <class GC>
+  void Grid<GC>::SurroundRectangleWithWall(s32 sx, s32 sy, s32 w, s32 h, s32 thickness)
+  {
+    if(thickness > 0)
+    {
+      SPoint aloc;
+      T atom(Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom());
+      /* Draw out one rectangle */
+      for(s32 x = sx; x <= sx + w; x++)
+      {
+	aloc.SetX(x);
+	aloc.SetY(sy);
+
+	PlaceAtom(atom, aloc);
+
+	aloc.SetY(sy + h);
+	PlaceAtom(atom, aloc);
+      }
+
+      for(s32 y = sy; y <= sy + h; y++)
+      {
+	aloc.SetY(y);
+	aloc.SetX(sx);
+
+	PlaceAtom(atom, aloc);
+
+	aloc.SetX(sx + w);
+	PlaceAtom(atom, aloc);
+      }
+      
+      /* Recursively create a larger one around us */
+      SurroundRectangleWithWall(sx - 1, sy - 1, w + 2, h + 2, thickness - 1);
+    }
+  }
+    
 } /* namespace MFM */
 
