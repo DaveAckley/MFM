@@ -293,6 +293,22 @@ namespace MFM {
       SurroundRectangleWithWall(sx - 1, sy - 1, w + 2, h + 2, thickness - 1);
     }
   }
+
+  template <class GC>
+  u32 Grid<GC>::CountActiveSites()
+  {
+    u32 acc   = 0,
+        sides = GetTile(0,0).GetSites();
+    
+    for(u32 x = 0; x < W; x++)
+    {
+      for(u32 y = 0; y < H; y++)
+      {
+	acc += GetTile(x,y).GetExecutingOwnEvents() ? sides : 0;
+      }
+    }
+    return acc;
+  }
     
 } /* namespace MFM */
 

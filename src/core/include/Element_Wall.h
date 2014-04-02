@@ -23,7 +23,7 @@ namespace MFM
     const  char* GetName() const { return "Wall";}
 
     static Element_Wall THE_INSTANCE;
-    static const u32 TYPE = 0x00f;  // Oof. A wall.
+    static const u32 TYPE = 0xb00f;  // Oof. A wall.
     
     Element_Wall() { }
 

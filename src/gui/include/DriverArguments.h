@@ -18,6 +18,7 @@ namespace MFM {
     u32 m_disabledTileCount;
     s32 m_recordEventCountsPerAEPS;
     s32 m_recordScreenshotPerAEPS;
+    s32 m_recordTimeBasedDataPerAEPS;
     SPoint m_disabledTiles[DRIVERARGUMENTS_MAX_DISABLED_TILES];
     s32 m_countOfScreenshotsPerRate;
     bool m_startPaused;
@@ -32,6 +33,7 @@ namespace MFM {
       m_disabledTileCount(0),
       m_recordEventCountsPerAEPS(-1),
       m_recordScreenshotPerAEPS(-1),
+      m_recordTimeBasedDataPerAEPS(-1),
       m_countOfScreenshotsPerRate(-1)
     {
       ProcessArguments(argc,argv);
@@ -48,6 +50,7 @@ namespace MFM {
     u32 GetDisabledTileCount() const { return m_disabledTileCount; }
     s32 GetRecordEventCountsPerAEPS() const { return m_recordEventCountsPerAEPS; }
     s32 GetRecordScreenshotPerAEPS() const { return m_recordScreenshotPerAEPS; }
+    s32 GetRecordTimeBasedDataPerAEPS() const { return m_recordTimeBasedDataPerAEPS; }
     SPoint* GetDisabledTiles() { return m_disabledTiles; }
     s32 GetCountOfScreenshotsPerRate() const { return m_countOfScreenshotsPerRate; }
     bool GetStartPaused() const { return m_startPaused; }

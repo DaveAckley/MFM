@@ -84,11 +84,13 @@ namespace MFM {
 
     s32 m_recordEventCountsPerAEPS;
     s32 m_recordScreenshotPerAEPS;
+    s32 m_recordTimeBasedDataPerAEPS;
     s32 m_maxRecordScreenshotPerAEPS;
     s32 m_countOfScreenshotsAtThisAEPS;
     s32 m_countOfScreenshotsPerRate;
     u32 m_nextEventCountsAEPS;
     u32 m_nextScreenshotAEPS;
+    u32 m_nextTimeBasedDataAEPS;
 
     Mouse mouse;
     Keyboard keyboard;
@@ -312,16 +314,42 @@ namespace MFM {
 
 	m_lastFrameAEPS = m_AEPS;
 
-	if (m_recordEventCountsPerAEPS > 0) {
-	  if (m_AEPS > m_nextEventCountsAEPS) {
+	ExportEventCounts(grid);
+	ExportTimeBasedData(grid);
+      }
+    }
 
-	    const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEventCountsAEPS);
-	    FILE* fp = fopen(path, "w");
-	    grid.WriteEPSImage(fp);
-	    fclose(fp);
+    void ExportEventCounts(OurGrid& grid)
+    {
+      if (m_recordEventCountsPerAEPS > 0) {
+	if (m_AEPS > m_nextEventCountsAEPS) {
+	  
+	  const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEventCountsAEPS);
+	  FILE* fp = fopen(path, "w");
+	  grid.WriteEPSImage(fp);
+	  fclose(fp);
+	  
+	  m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
+	}
+      }
+    }
+    
+    void ExportTimeBasedData(OurGrid& grid)
+    {
+      /* Current header : */
+      /* # AEPS activesites empty dreg res wall  */
 
-	    m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
-	  }
+      if(m_recordTimeBasedDataPerAEPS > 0)
+      {
+	if(m_AEPS > m_nextTimeBasedDataAEPS)
+	{
+	  const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
+	  FILE* fp = fopen(path, "a");
+	  
+	  fprintf(fp, "%g %d\n", m_AEPS, grid.CountActiveSites());
+	  
+	  fclose(fp);
+	  m_nextTimeBasedDataAEPS += m_recordTimeBasedDataPerAEPS;
 	}
       }
     }
@@ -363,12 +391,18 @@ namespace MFM {
         args.Die("Path name too long '%s'",dirPath);
 
       /* Make the std subdirs under it */
-      const char * (subs[]) = { "", "vid", "eps" };
+      const char * (subs[]) = { "", "vid", "eps", "tbd" };
       for (u32 i = 0; i < sizeof(subs)/sizeof(subs[0]); ++i) {
         const char * path = GetSimDirPathTemporary("%s", subs[i]);
         if (mkdir(path, 0777) != 0)
           args.Die("Couldn't make simulation sub directory '%s': %s",path,strerror(errno));
       }
+
+      /* Initialize tbd.txt */
+      const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
+      FILE* fp = fopen(path, "w");
+      fprintf(fp, "# AEPS activesites empty dreg res wall\n");
+      fclose(fp);
 
       m_screenWidth = SCREEN_INITIAL_WIDTH;
       m_screenHeight = SCREEN_INITIAL_HEIGHT;
@@ -381,6 +415,7 @@ namespace MFM {
       m_recordEventCountsPerAEPS = args.GetRecordEventCountsPerAEPS();
       m_recordScreenshotPerAEPS = args.GetRecordScreenshotPerAEPS();
       m_countOfScreenshotsPerRate = args.GetCountOfScreenshotsPerRate();
+      m_recordTimeBasedDataPerAEPS = args.GetRecordTimeBasedDataPerAEPS();
       if (m_countOfScreenshotsPerRate > 0) {
         m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
         m_recordScreenshotPerAEPS = 1;
@@ -410,6 +445,7 @@ namespace MFM {
     void ReinitUs() {
       m_nextEventCountsAEPS = 0;
       m_nextScreenshotAEPS = 0;
+      m_nextTimeBasedDataAEPS = 0;
       m_lastFrameAEPS = 0;
     }
 

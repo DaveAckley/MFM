@@ -49,7 +49,8 @@ namespace MFM {
         if (!val) Die("Missing aeps (integer) argument after %s", arg);
 
         m_recordEventCountsPerAEPS = atoi(val);
-        fprintf(stderr,"[Recording event counts approximately every %d AEPS]\n",m_recordEventCountsPerAEPS);
+        fprintf(stderr,"[Recording event counts approximately every %d AEPS]\n",
+		       m_recordEventCountsPerAEPS);
 
       } else if (!strcmp("-d",arg) || !strcmp("--dir",arg)) {
 
@@ -65,10 +66,20 @@ namespace MFM {
         if (!val) Die("Missing aeps (integer) argument after %s", arg);
 
         m_recordScreenshotPerAEPS = atoi(val);
-        m_recordScreenshotPerAEPS = atoi(val);
-        fprintf(stderr,"[Recording grid pictures approximately every %d AEPS]\n",m_recordScreenshotPerAEPS);
+        fprintf(stderr,"[Recording grid pictures approximately every %d AEPS]\n",
+		       m_recordScreenshotPerAEPS);
 
-      } else if (!strcmp("--picturesPerRate",arg)) {
+      }
+      else if (!strcmp("-t", arg) || !strcmp("--timebd", arg))
+      {
+	const char* val = GetNextArg(argc, argv);
+	if(!val) Die("Missing aeps (integer) argument after %s", arg);
+       
+	m_recordTimeBasedDataPerAEPS = atoi(val);
+	fprintf(stderr, "[Recording time based data approximately every %d AEPS]\n",
+		        m_recordTimeBasedDataPerAEPS);
+      }
+      else if (!strcmp("--picturesPerRate",arg)) {
 
         const char * val = GetNextArg(argc,argv);
         if (!val) Die("Missing COUNT (integer) argument after %s", arg);
@@ -123,6 +134,7 @@ namespace MFM {
                 " -d DIR, --dir DIR          Store data in per-sim directories under DIR\n"
                 " -e AEPS, --events AEPS     Record event counts every AEPS aeps\n"
                 " -p AEPS, --pictures AEPS   Record screenshots every AEPS aeps\n"
+		" -t AEPS, --timebd AEPS     Records time based data every AEPS aeps\n"
 		"\n"
 		" --haltafteraeps AEPS       If APES > 0, Halts after AEPS elapsed aeps.\n"
 		" --disabletile TILEPT       Stops execution of the Tile at TILEPT.\n"

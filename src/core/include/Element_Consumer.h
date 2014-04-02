@@ -50,11 +50,13 @@ namespace MFM
       
       if(window.GetRelativeAtom(consPt).GetType() == Element_Data<CC>::TYPE)
       {
+	/*
 	u32 val = Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtom(consPt),0);
 	u32 bnum = this->GetVertPos(window.GetCenterAtom(),0);
 
 	// something sort of constant at equil.?
 	printf("[%3d]Export!: %d sum %d\n", bnum, val, 3*bnum+val); 
+	*/
 	window.SetRelativeAtom(consPt, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
       }
     }

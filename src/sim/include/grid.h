@@ -188,6 +188,8 @@ namespace MFM {
     u32 GetAtomCount(ElementType atomType) const;
 
     void SurroundRectangleWithWall(s32 x, s32 y, s32 w, s32 h, s32 thickness);
+
+    u32 CountActiveSites();
   };
 } /* namespace MFM */
 
