@@ -12,6 +12,7 @@
 #include "Element_Emitter.h"
 #include "Element_Consumer.h"
 #include "Element_Data.h"
+#include "Element_Wall.h"
 
 #endif /* MAIN_H */
 

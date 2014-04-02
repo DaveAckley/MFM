@@ -20,6 +20,7 @@ namespace MFM {
       mainGrid.Needed(Element_Emitter<OurCoreConfig>::THE_INSTANCE);
       mainGrid.Needed(Element_Consumer<OurCoreConfig>::THE_INSTANCE);
       mainGrid.Needed(Element_Data<OurCoreConfig>::THE_INSTANCE);
+      mainGrid.Needed(Element_Wall<OurCoreConfig>::THE_INSTANCE);
     }
 
     void ReinitEden() 
