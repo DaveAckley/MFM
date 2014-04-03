@@ -21,4 +21,10 @@ inline T CLAMP(T min, T max, T val)
   return val < min ? min : (val > max ? max : val);
 }
 
+template <class T>
+inline T ABS(T val)
+{
+  return val > 0 ? val : (-val);
+}
+
 #endif /* UTIL_H */

@@ -140,7 +140,7 @@ namespace MFM {
      * which counts toward the right with 0 meaning the leftmost state
      * bit. 
      */
-    void SetStateField(u32 stateIndex, u32 stateWidth, u32 value) 
+    void SetStateField(u32 stateIndex, u32 stateWidth, u32 value)
     {
       u32 firstState = GetBitsAllocatedExceptState();
       return this->m_bits.Write(firstState+stateIndex, stateWidth, value);

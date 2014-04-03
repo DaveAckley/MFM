@@ -41,7 +41,7 @@ namespace MFM
   };
 
   template <class CC>
-    void Element_Reprovert<CC>::ReproduceVertically(EventWindow<CC>& window) const
+  void Element_Reprovert<CC>::ReproduceVertically(EventWindow<CC>& window) const
   {
     Random & random = window.GetRandom();
     

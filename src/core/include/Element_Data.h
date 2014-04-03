@@ -8,6 +8,9 @@
 #include "itype.h"
 #include "P1Atom.h"
 
+#define DATA_MAXVAL 1000000
+#define DATA_MINVAL 1
+
 namespace MFM
 {
 
@@ -36,8 +39,6 @@ namespace MFM
       atom.SetStateField(STATE_DATA_IDX,STATE_DATA_LEN,value);
       return true;
     }
-
-    Element_Data() {}
     
     virtual const T & GetDefaultAtom() const 
     {
@@ -55,7 +56,7 @@ namespace MFM
       switch (selector) {
       case 1:
         return ColorMap_SEQ5_YlGnBu::THE_INSTANCE.
-          GetInterpolatedColor(GetDatum(atom,0),0,100,0xffff0000);
+          GetInterpolatedColor(GetDatum(atom,0),DATA_MINVAL,DATA_MAXVAL,0xffff0000);
       default:
         return DefaultPhysicsColor();
       }
@@ -65,7 +66,7 @@ namespace MFM
     {
 
       u32 val = GetDatum(window.GetCenterAtom(),-1);
-      if (val < 0 || val > 100)
+      if (val < DATA_MINVAL || val > DATA_MAXVAL)
         FAIL(ILLEGAL_STATE);
 
       this->Diffuse(window);

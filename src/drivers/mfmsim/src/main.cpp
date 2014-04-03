@@ -3,7 +3,7 @@
 
 namespace MFM {
 
-  typedef ParamConfig<> OurParamConfig;
+  typedef ParamConfig<64,4,8,80> OurParamConfig;
   typedef P1Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
@@ -42,9 +42,9 @@ namespace MFM {
       srend.DisplayStatsForType(Element_Data<OurCoreConfig>::TYPE);
 
       emtr.SetStateField(0,10,10);  // What is this for??
-      cnsr.SetStateField(0,10,10);  // What is this for??
+      cnsr.SetStateField(0,10,5);  // What is this for?? This tells the Consumer how vertical it is.
 
-      sorter.SetStateField(0,32,50);  // Default threshold
+      sorter.SetStateField(0,32,DATA_MINVAL + ((DATA_MAXVAL - DATA_MINVAL) / 2));  // Default threshold
 
       u32 realWidth = P::TILE_WIDTH - P::EVENT_WINDOW_RADIUS * 2;
 

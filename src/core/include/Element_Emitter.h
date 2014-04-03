@@ -1,7 +1,8 @@
+/* -*- C++ -*- */
 #ifndef ELEMENT_EMITTER_H
 #define ELEMENT_EMITTER_H
 
-#include "Element.h"       /* -*- C++ -*- */
+#include "Element.h"       
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "Element_Data.h"
@@ -12,9 +13,7 @@
 namespace MFM
 {
 
-#define DATA_CREATE_ODDS 11
-#define DATA_MAXVAL 100
-#define DATA_MINVAL 1
+#define DATA_CREATE_ODDS 15
 
   template <class CC>
   class Element_Emitter : public Element_Reprovert<CC>
