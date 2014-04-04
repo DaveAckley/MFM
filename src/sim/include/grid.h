@@ -180,8 +180,9 @@ namespace MFM {
 
     u64 GetTotalEventsExecuted() const;
 
-    /* Returns the maximum written value */
     void WriteEPSImage(FILE* outstrm) const;
+
+    void WriteEPSAverageImage(FILE* outstrm) const;
 
     void ResetEPSCounts();
 

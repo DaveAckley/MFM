@@ -99,7 +99,7 @@ namespace MFM
 	if(val < minBucketVal || val > maxBucketVal)
 	{
 	  /* D'oh, wrong bucket */
-	  printf("[%3d]Bucket Miss!: %d\n", bnum, val);
+	  /* printf("[%3d]Bucket Miss!: %d\n", bnum, val); */
 
 	  /*
 	  u32 missAmt = ABS((val - minBucketVal) / bucketSize);

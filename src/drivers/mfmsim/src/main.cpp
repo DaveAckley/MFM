@@ -3,10 +3,10 @@
 
 namespace MFM {
 
-  typedef ParamConfig<64,4,8,80> OurParamConfig;
+  typedef ParamConfig<64,4,8,40> OurParamConfig;
   typedef P1Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
-  typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
+  typedef GridConfig<OurCoreConfig,5,5> OurGridConfig;
   struct MFMSimDHSDemo : public AbstractDriver<OurGridConfig>
   {
     MFMSimDHSDemo(DriverArguments& args) : AbstractDriver(args) { }
@@ -59,8 +59,8 @@ namespace MFM {
             {
               for(u32 z = 0; z < 4; z++)
                 {
-                  aloc.Set(20 + x * realWidth + z, 20 + y * realWidth);
-                  sloc.Set(21 + x * realWidth + z, 21 + y * realWidth);
+                  aloc.Set(10 + x * realWidth + z, 10 + y * realWidth);
+                  sloc.Set(11 + x * realWidth + z, 11 + y * realWidth);
                   mainGrid.PlaceAtom(sorter, sloc);
                   mainGrid.PlaceAtom(atom, aloc);
                 }

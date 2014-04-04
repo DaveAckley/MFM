@@ -332,6 +332,11 @@ namespace MFM {
 	  FILE* fp = fopen(path, "w");
 	  grid.WriteEPSImage(fp);
 	  fclose(fp);
+
+	  path = GetSimDirPathTemporary("eps/%010d-average.ppm", m_nextEventCountsAEPS);
+	  fp = fopen(path, "w");
+	  grid.WriteEPSAverageImage(fp);
+	  fclose(fp);
 	  
 	  m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
 	}
@@ -436,7 +441,7 @@ namespace MFM {
       if (seed==0) seed = time(0);
       SetSeed(seed);
 
-      SDL_Init(SDL_INIT_EVERYTHING);
+      SDL_Init(SDL_INIT_VIDEO);
       TTF_Init();
 
       m_srend.OnceOnly();

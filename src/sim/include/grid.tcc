@@ -144,7 +144,10 @@ namespace MFM {
   {
     SPoint tileInGrid, siteInTile;
     if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
+    {
+      printf("Can't place at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
       FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+    }
 
     Tile<CC> & owner = GetTile(tileInGrid);
     owner.PlaceAtom(atom, siteInTile);
@@ -244,6 +247,51 @@ namespace MFM {
           else
             fputc((u8) (events*255/max), outstrm);
         }
+      }
+    }
+  }
+
+  template <class GC>
+  void Grid<GC>::WriteEPSAverageImage(FILE* outstrm) const
+  {
+    u64 max = 0;
+    const u32 swidth = Tile<CC>::OWNED_SIDE;
+    const u32 sheight = Tile<CC>::OWNED_SIDE;
+    const u32 tileCt = GetHeight() * GetWidth();
+
+    for(u32 pass = 0; pass < 2; pass++)
+    {
+      if(pass == 1)
+      {
+	fprintf(outstrm,"P5\n #Max site events = %ld\n%d %d 255\n", max, swidth, sheight);
+      }
+      for(u32 y = 0; y < sheight; y++)
+      {
+	for(u32 x = 0; x < swidth; x++)
+	{
+	  u64 events = 0;
+	  for(u32 tx = 0; tx < GetWidth(); tx++)
+	  {
+	    for(u32 ty = 0; ty < GetHeight(); ty++)
+	    {
+	      SPoint siteInGrid(x + swidth * tx, y + sheight * ty), tileInGrid, siteInTile;
+	      if (!MapGridToUncachedTile(siteInGrid, tileInGrid, siteInTile))
+	      {
+		FAIL(ILLEGAL_STATE);
+	      }
+	      events += GetTile(tileInGrid).GetUncachedSiteEvents(siteInTile);
+	    }
+	  }
+	  events /= tileCt;
+	  if (pass==0)
+	  {
+	    max = MAX(max, events);
+	  }
+	  else
+	  {
+	    fputc((u8) (events*255/max), outstrm);
+	  }
+	}
       }
     }
   }
