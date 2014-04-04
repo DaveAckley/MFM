@@ -35,6 +35,9 @@ namespace MFM {
 
 #define STATS_WINDOW_WIDTH 256
 
+#define STATS_START_WINDOW_WIDTH 233
+#define STATS_START_WINDOW_HEIGHT 120
+
 #define MAX_PATH_LENGTH 1000
 #define MIN_PATH_RESERVED_LENGTH 100
 
@@ -175,6 +178,13 @@ namespace MFM {
       mouse.Flip();
     }
 
+    inline void ToggleStatsView()
+    {
+      renderStats = !renderStats;
+      m_grend.SetDimensions(Point<u32>(m_screenWidth - (renderStats ? STATS_WINDOW_WIDTH : 0)
+				       , m_screenHeight));
+    }
+
     void KeyboardUpdate(OurGrid& grid)
     {
       u8 speed = keyboard.ShiftHeld() ?
@@ -192,9 +202,7 @@ namespace MFM {
       }
       if(keyboard.SemiAuto(SDLK_i))
       {
-	renderStats = !renderStats;
-	  m_grend.SetDimensions(Point<u32>(m_screenWidth - (renderStats ? STATS_WINDOW_WIDTH : 0)
-					   , m_screenHeight));
+	ToggleStatsView();
       }
       if(keyboard.IsDown(SDLK_1))
       {
@@ -488,6 +496,17 @@ namespace MFM {
 	SPoint& pt =  args.GetDisabledTiles()[i];
 	mainGrid.SetTileToExecuteOnly(pt, false);
       }
+
+      renderStats = false;
+      if(args.GetStartWithoutGridView())
+      {
+	m_screenWidth = STATS_START_WINDOW_WIDTH;
+	m_screenHeight = STATS_START_WINDOW_HEIGHT;
+	ToggleStatsView();
+	m_srend.SetDisplayAER(!m_srend.GetDisplayAER());
+      }
+
+      m_aepsPerFrame = args.GetAEPSPerFrame();
     }
 
     /**
@@ -519,6 +538,8 @@ namespace MFM {
       m_srend.SetDestination(screen);
       m_srend.SetDrawPoint(SPoint(m_screenWidth-STATS_WINDOW_WIDTH, 0));
       m_srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, m_screenHeight));
+
+      printf("Screen resize: %d x %d\n", width, height);
     }
 
     StatsRenderer & GetStatsRenderer()
@@ -555,8 +576,6 @@ namespace MFM {
       m_srend.SetDestination(screen);
       m_srend.SetDrawPoint(SPoint(m_screenWidth-STATS_WINDOW_WIDTH, 0));
       m_srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, m_screenHeight));
-
-      renderStats = false;
 
       s32 lastFrame = SDL_GetTicks();
 

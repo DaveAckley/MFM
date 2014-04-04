@@ -114,6 +114,11 @@ namespace MFM {
 	m_disabledTiles[m_disabledTileCount++].Parse(val);
 	fprintf(stderr, "[Tile @ %s deactivated]\n", val);
       }
+      else if (!strcmp("--startwithoutgrid", arg))
+      {
+	m_startWithoutGridView = true;
+	fprintf(stderr, "[Starting in statistics view]\n");
+      }
       else if (!strcmp("--startpaused", arg) || !strcmp("--nostartpaused", arg))
       {
 	m_startPaused = !strcmp("--startpaused", arg);
@@ -123,6 +128,15 @@ namespace MFM {
         } else {
           fprintf(stderr, "[Starting without initial pause]\n");
         } 
+      }
+      else if(!strcmp("-r", arg) || !strcmp("--rate", arg))
+      {
+        const char * val = GetNextArg(argc,argv);
+        if (!val) Die("Missing AEPS (integer) argument after %s", arg);
+
+        m_aepsPerFrame = atoi(val);
+        if (m_aepsPerFrame < 1) Die("AEPS must be greater than zero, after %s",arg);
+        fprintf(stderr,"[Initially rendering at %d AEPS per frame]\n",m_aepsPerFrame);
       }
 
       else if (!strcmp("-h",arg) || !strcmp("--help",arg)) {
@@ -135,6 +149,7 @@ namespace MFM {
                 " -e AEPS, --events AEPS     Record event counts every AEPS aeps\n"
                 " -p AEPS, --pictures AEPS   Record screenshots every AEPS aeps\n"
 		" -t AEPS, --timebd AEPS     Records time based data every AEPS aeps\n"
+		" -r AEPS, --rate AEPS       The AEPS per frame rendering rate to begin at\n"
 		"\n"
 		" --haltafteraeps AEPS       If APES > 0, Halts after AEPS elapsed aeps.\n"
 		" --disabletile TILEPT       Stops execution of the Tile at TILEPT.\n"
@@ -142,6 +157,7 @@ namespace MFM {
 		" --haltafteraeps AEPS       If AEPS > 0, Halts after AEPS elapsed aeps.\n"
 		" --startpaused              Start paused to allow display configuration.\n"
 		" --nostartpaused            Start running immediately for hands-off operation.\n"
+		" --startwithoutgrid         Start with the statistics view on screen.\n"
                 );
         exit(0);
       } else {
