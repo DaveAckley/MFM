@@ -6,7 +6,7 @@ namespace MFM {
   typedef ParamConfig<64,4,8,40> OurParamConfig;
   typedef P1Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
-  typedef GridConfig<OurCoreConfig,5,5> OurGridConfig;
+  typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
   struct MFMSimDHSDemo : public AbstractDriver<OurGridConfig>
   {
     MFMSimDHSDemo(DriverArguments& args) : AbstractDriver(args) { }
@@ -66,7 +66,6 @@ namespace MFM {
                 }
             }
         }
-
       mainGrid.PlaceAtom(emtr, eloc);
       mainGrid.PlaceAtom(cnsr, cloc);
       mainGrid.PlaceAtom(cnsr, cloc+SPoint(1,1));  // More consumers than emitters!

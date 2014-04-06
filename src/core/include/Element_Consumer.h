@@ -17,7 +17,6 @@
 
 namespace MFM
 {
-
   template <class CC>
   class Element_Consumer : public Element_Reprovert<CC>
   {
@@ -32,6 +31,9 @@ namespace MFM
 
     static Element_Consumer THE_INSTANCE;
     static const u32 TYPE = 0xdada0;
+    
+    static u64 bucketHitCounts;
+    static u64 bucketMissCounts;
     /*
     static const u32 STATE_HIT_IDX  = Element_Reprovert<CC>::STATE_BITS;
     static const u32 STATE_HIT_LEN  = 16;
@@ -63,7 +65,22 @@ namespace MFM
     }
     */
 
-    Element_Consumer() { }
+    Element_Consumer() { Element_Consumer<CC>::bucketHitCounts = 
+	                 Element_Consumer<CC>::bucketMissCounts = 0; }
+
+    u64 GetAndResetHits() const
+    {
+      u64 val = Element_Consumer<CC>::bucketHitCounts;
+      Element_Consumer<CC>::bucketHitCounts = 0;
+      return val;
+    }
+
+    u64 GetAndResetMisses() const
+    {
+      u64 val = Element_Consumer<CC>::bucketMissCounts;
+      Element_Consumer<CC>::bucketMissCounts = 0;
+      return val;
+    }
 
     virtual const T & GetDefaultAtom() const 
     {
@@ -87,34 +104,32 @@ namespace MFM
       
       if(window.GetRelativeAtom(consPt).GetType() == Element_Data<CC>::TYPE)
       {
-	u32 val = Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtom(consPt),0);
-	u32 bnum = this->GetVertPos(window.GetCenterAtom(),0) * 2;
+	u32 val = DATA_MAXVAL - Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtom(consPt),0);
+	u32 bnum = this->GetVertPos(window.GetCenterAtom(),0);
 
-	/*
-	u32 bucketSize = DATA_MAXVAL / EXPERIMENT_HEIGHT;
-	*/
-	u32 minBucketVal = DATA_MAXVAL - ((DATA_MAXVAL / EXPERIMENT_HEIGHT) * bnum);
-	u32 maxBucketVal = DATA_MAXVAL - ((DATA_MAXVAL / EXPERIMENT_HEIGHT) * (bnum + 1));
+	const u32 bucketSize = (DATA_MAXVAL / EXPERIMENT_HEIGHT) * 5;
+	u32 minBucketVal = bucketSize * bnum;
+	u32 maxBucketVal = bucketSize * (bnum + 1);
 
 	if(val < minBucketVal || val > maxBucketVal)
 	{
-	  /* D'oh, wrong bucket */
-	  /* printf("[%3d]Bucket Miss!: %d\n", bnum, val); */
-
-	  /*
+	  /* D'oh, wrong bucket
+	  
 	  u32 missAmt = ABS((val - minBucketVal) / bucketSize);
 	  u32 oldMisses = window.GetCenterAtom().GetStateField(STATE_MISS_IDX,STATE_MISS_LEN);
 	  window.GetCenterAtom().SetStateField(STATE_MISS_IDX,STATE_MISS_LEN,missAmt + oldMisses);
 	  */
+
+	  Element_Consumer<CC>::bucketMissCounts++;
+	  
 	}
 	else
 	{
-	  printf("[%3d]Bucket Hit!: %d\n", bnum, val);
-	  
 	  /*
 	  u32 oldHits = window.GetCenterAtom().GetStateField(STATE_HIT_IDX,STATE_HIT_LEN);
 	  window.GetCenterAtom().SetStateField(STATE_HIT_IDX,STATE_HIT_LEN,oldHits + 1);
 	  */
+	  Element_Consumer<CC>::bucketHitCounts++;
 
 	}
 
@@ -130,6 +145,12 @@ namespace MFM
 
   template <class CC>
   Element_Consumer<CC> Element_Consumer<CC>::THE_INSTANCE;
+
+  template <class CC>
+  u64 Element_Consumer<CC>::bucketMissCounts;
+
+  template <class CC>
+  u64 Element_Consumer<CC>::bucketHitCounts;
 
 }
 

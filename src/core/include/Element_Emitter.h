@@ -13,7 +13,7 @@
 namespace MFM
 {
 
-#define DATA_CREATE_ODDS 15
+#define DATA_CREATE_ODDS 12
 
   template <class CC>
   class Element_Emitter : public Element_Reprovert<CC>

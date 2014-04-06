@@ -14,6 +14,7 @@
 #include "Element_Dreg.h"
 #include "Element_Res.h"
 #include "Element_Wall.h"
+#include "Element_Consumer.h"
 #include "mouse.h"
 #include "keyboard.h"
 #include "Camera.h"
@@ -341,7 +342,7 @@ namespace MFM {
 	  grid.WriteEPSImage(fp);
 	  fclose(fp);
 
-	  path = GetSimDirPathTemporary("eps/%010d-average.ppm", m_nextEventCountsAEPS);
+	  path = GetSimDirPathTemporary("teps/%010d-average.ppm", m_nextEventCountsAEPS);
 	  fp = fopen(path, "w");
 	  grid.WriteEPSAverageImage(fp);
 	  fclose(fp);
@@ -354,7 +355,7 @@ namespace MFM {
     void ExportTimeBasedData(OurGrid& grid)
     {
       /* Current header : */
-      /* # AEPS activesites empty dreg res wall  */
+      /* # AEPS activesites empty dreg res wall sort-hits sort-misses sort-total  */
 
       if(m_recordTimeBasedDataPerAEPS > 0)
       {
@@ -362,14 +363,18 @@ namespace MFM {
 	{
 	  const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
 	  FILE* fp = fopen(path, "a");
+
+	  u64 hits = Element_Consumer<CC>::THE_INSTANCE.GetAndResetHits(),
+	      misses = Element_Consumer<CC>::THE_INSTANCE.GetAndResetMisses();
 	  
-	  fprintf(fp, "%g %d %d %d %d %d\n",
+	  fprintf(fp, "%g %d %d %d %d %d %ld %ld %ld\n",
 		  m_AEPS, 
 		  grid.CountActiveSites(),
 		  grid.GetAtomCount(Element_Empty<CC>::TYPE),
 		  grid.GetAtomCount(Element_Dreg<CC>::TYPE),
 		  grid.GetAtomCount(Element_Res<CC>::TYPE),
-		  grid.GetAtomCount(Element_Wall<CC>::TYPE));
+		  grid.GetAtomCount(Element_Wall<CC>::TYPE),
+		  hits, misses, hits + misses);
 	  
 	  fclose(fp);
 	  m_nextTimeBasedDataAEPS += m_recordTimeBasedDataPerAEPS;
@@ -414,7 +419,7 @@ namespace MFM {
         args.Die("Path name too long '%s'",dirPath);
 
       /* Make the std subdirs under it */
-      const char * (subs[]) = { "", "vid", "eps", "tbd" };
+      const char * (subs[]) = { "", "vid", "eps", "tbd", "teps" };
       for (u32 i = 0; i < sizeof(subs)/sizeof(subs[0]); ++i) {
         const char * path = GetSimDirPathTemporary("%s", subs[i]);
         if (mkdir(path, 0777) != 0)
@@ -424,7 +429,7 @@ namespace MFM {
       /* Initialize tbd.txt */
       const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
       FILE* fp = fopen(path, "w");
-      fprintf(fp, "# AEPS activesites empty dreg res wall\n");
+      fprintf(fp, "# AEPS activesites empty dreg res wall sort-hits sort-misses sort-total\n");
       fclose(fp);
 
       m_screenWidth = SCREEN_INITIAL_WIDTH;
