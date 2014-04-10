@@ -1,5 +1,5 @@
-#include "panel.h"
-#include "drawing.h"
+#include "Panel.h"
+#include "Drawing.h"
 
 namespace MFM {
 

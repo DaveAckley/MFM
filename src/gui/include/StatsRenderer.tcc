@@ -1,4 +1,5 @@
-#include "drawing.h" /* -*- C++ -*- */
+/* -*- C++ -*- */
+#include "Drawing.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -65,9 +66,9 @@ namespace MFM {
   }
 
   template <class GC>
-  void StatsRenderer::WriteRegisteredCounts(FILE * fp, bool writeHeader, Grid<GC>& grid, 
-                                           double aeps, double aer, u32 AEPSperFrame, 
-                                           double overhead) 
+  void StatsRenderer::WriteRegisteredCounts(FILE * fp, bool writeHeader, Grid<GC>& grid,
+                                           double aeps, double aer, u32 AEPSperFrame,
+                                           double overhead)
   {
     // Extract short names for parameter types
     typedef typename GC::CORE_CONFIG CC;
@@ -87,7 +88,7 @@ namespace MFM {
       }
       fprintf(fp,"\n");
     }
-    
+
     fprintf(fp,"%8.3f", aeps/1000.0);
     fprintf(fp," %d", AEPSperFrame);
     fprintf(fp, "%8.3f", aer);

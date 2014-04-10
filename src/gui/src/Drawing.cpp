@@ -1,5 +1,5 @@
 #include <cmath>
-#include "drawing.h"
+#include "Drawing.h"
 
 namespace MFM {
 
@@ -75,7 +75,7 @@ void Drawing::FillCircle(SDL_Surface* dest, int x, int y,
 void Drawing::BlitText(SDL_Surface*& dest, TTF_Font*& font,
 		       const char* message, Point<u32> loc,
 		       Point<u32> size, u32 color)
-{  
+{
   SDL_Color sdl_color;
   sdl_color.r = (color >> 16) & 0xff;
   sdl_color.g = (color >> 8) & 0xff;

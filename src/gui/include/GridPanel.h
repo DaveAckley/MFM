@@ -2,14 +2,15 @@
 #define GRIDPANEL_H
 
 #include "itype.h"
-#include "gridrenderer.h"
+#include "Panel.h"
+#include "GridRenderer.h"
 
 namespace MFM {
 
 class GridPanel : public Panel
 {
 private:
-  
+
   GridRenderer* m_renderer;
 
   template <class GC>
@@ -19,7 +20,7 @@ private:
   }
 
 public:
-  
+
   GridPanel();
 
   GridPanel(u32 width, u32 height);

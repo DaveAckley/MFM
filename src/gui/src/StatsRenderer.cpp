@@ -1,4 +1,4 @@
-#include "statsrenderer.h"
+#include "StatsRenderer.h"
 
 namespace MFM {
   bool StatsRenderer::DisplayStatsForType(u32 type) {
@@ -10,7 +10,7 @@ namespace MFM {
 #if 0
   void StatsRenderer::DisplayTypeAt(u32 lineNum, u32 type) {
     char strBuffer[128];
-    
+
 
   sprintf(strBuffer, "DReg %d", grid.GetAtomCount(Element_Dreg<T,R>::TYPE));
 

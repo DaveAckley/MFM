@@ -1,4 +1,4 @@
-#include "tilerenderer.h"
+#include "TileRenderer.h"
 #include "EventWindow.h"
 
 namespace MFM {

@@ -1,7 +1,7 @@
 #ifndef TILERENDERER_H      /* -*- C++ -*- */
 #define TILERENDERER_H
 
-#include "drawing.h"
+#include "Drawing.h"
 #include "ElementTable.h"
 #include "Tile.h"
 #include "panel.h"
@@ -112,7 +112,7 @@ public:
 };
 } /* namespace MFM */
 
-#include "tilerenderer.tcc"
+#include "TileRenderer.tcc"
 
 #endif /*TILERENDERER_H*/
 

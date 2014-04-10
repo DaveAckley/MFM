@@ -1,4 +1,4 @@
-#include "panelstack.h"
+#include "PanelStack.h"
 
 namespace MFM {
 

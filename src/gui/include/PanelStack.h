@@ -1,7 +1,7 @@
 #ifndef PANELSTACK_H    /* -*- C++ -*- */
 #define PANELSTACK_H
 
-#include "panel.h"
+#include "Panel.h"
 #include "SDL/SDL.h"
 
 namespace MFM {

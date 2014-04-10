@@ -65,7 +65,7 @@ public:
   {
     m_dimensions = dimensions;
   }
-  
+
   template <class T, u32 R>
   void DrawString(const char* string, u32 x, u32 y);
 
@@ -76,7 +76,7 @@ public:
   void WriteRegisteredCounts(FILE * fp, bool writeHeader, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead);
 };
 } /* namespace MFM */
-#include "statsrenderer.tcc"
+#include "StatsRenderer.tcc"
 
 #endif /*STATSRENDERER_H*/
 

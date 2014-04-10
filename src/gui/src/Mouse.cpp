@@ -1,4 +1,4 @@
-#include "mouse.h"
+#include "Mouse.h"
 
 namespace MFM {
 
