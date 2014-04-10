@@ -5,7 +5,7 @@
 
 namespace MFM {
 
-  typedef ParamConfig<> OurParamConfig;
+  typedef ParamConfig<64,4,8,40> OurParamConfig;
   typedef P1Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
@@ -36,9 +36,9 @@ namespace MFM {
       srend.DisplayStatsForType(Element_Dreg<OurCoreConfig>::TYPE);
       srend.DisplayStatsForType(Element_Res<OurCoreConfig>::TYPE);
       srend.DisplayStatsForType(Element_Bar<OurCoreConfig>::TYPE);
-      srend.DisplayStatsForType(Element_Mover<OurCoreConfig>::TYPE);
+      //      srend.DisplayStatsForType(Element_Mover<OurCoreConfig>::TYPE);
 
-      const SPoint BAR_SIZE(56,14);
+      const SPoint BAR_SIZE(100,50);
       const SPoint center = BAR_SIZE/2;
       OurAtom aBoid1(Element_Bar<OurCoreConfig>::THE_INSTANCE.GetAtom(BAR_SIZE,center));
       OurAtom aBoid2(Element_Mover<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
@@ -71,10 +71,13 @@ namespace MFM {
         }
       }
 
+      /*
       mainGrid.PlaceAtom(aBoid2, e1loc);
       mainGrid.PlaceAtom(aBoid2, e2loc);
       mainGrid.PlaceAtom(aBoid2, e1loc+SPoint(1,1));
       mainGrid.PlaceAtom(aBoid2, e2loc+SPoint(1,1));
+      */
+
     }
   };
 } /* namespace MFM */

@@ -195,7 +195,7 @@ namespace MFM {
       {
 	exit(0);
       }
-      
+
       /* View Control */
       if(keyboard.SemiAuto(SDLK_a))
       {
@@ -336,7 +336,7 @@ namespace MFM {
     {
       if (m_recordEventCountsPerAEPS > 0) {
 	if (m_AEPS > m_nextEventCountsAEPS) {
-	  
+
 	  const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEventCountsAEPS);
 	  FILE* fp = fopen(path, "w");
 	  grid.WriteEPSImage(fp);
@@ -346,12 +346,12 @@ namespace MFM {
 	  fp = fopen(path, "w");
 	  grid.WriteEPSAverageImage(fp);
 	  fclose(fp);
-	  
+
 	  m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
 	}
       }
     }
-    
+
     void ExportTimeBasedData(OurGrid& grid)
     {
       /* Current header : */
@@ -366,16 +366,16 @@ namespace MFM {
 
 	  u64 hits = Element_Consumer<CC>::THE_INSTANCE.GetAndResetHits(),
 	      misses = Element_Consumer<CC>::THE_INSTANCE.GetAndResetMisses();
-	  
+
 	  fprintf(fp, "%g %d %d %d %d %d %ld %ld %ld\n",
-		  m_AEPS, 
+		  m_AEPS,
 		  grid.CountActiveSites(),
 		  grid.GetAtomCount(Element_Empty<CC>::TYPE),
 		  grid.GetAtomCount(Element_Dreg<CC>::TYPE),
 		  grid.GetAtomCount(Element_Res<CC>::TYPE),
 		  grid.GetAtomCount(Element_Wall<CC>::TYPE),
 		  hits, misses, hits + misses);
-	  
+
 	  fclose(fp);
 	  m_nextTimeBasedDataAEPS += m_recordTimeBasedDataPerAEPS;
 	}
@@ -638,9 +638,21 @@ namespace MFM {
               const char * path = GetSimDirPathTemporary("vid/%010d.png", m_nextScreenshotAEPS);
 
               camera.DrawSurface(screen,path);
-
+              {
+                const char * path = GetSimDirPathTemporary("tbd/data.dat");
+                bool exists = true;
+                {
+                  FILE* fp = fopen(path, "r");
+                  if (!fp) exists = false;
+                  else fclose(fp);
+                }
+                FILE* fp = fopen(path, "a");
+                m_srend.WriteRegisteredCounts(fp, !exists, mainGrid,
+                                              m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent);
+                fclose(fp);
+              }
               // Are we accelerating and not yet up to cruising speed?
-              if (m_countOfScreenshotsPerRate > 0 && 
+              if (m_countOfScreenshotsPerRate > 0 &&
                   m_recordScreenshotPerAEPS < m_maxRecordScreenshotPerAEPS) {
 
                 // Time to step on it?
@@ -649,7 +661,7 @@ namespace MFM {
                   m_countOfScreenshotsAtThisAEPS = 0;
                 }
               }
-            
+
               m_nextScreenshotAEPS += m_recordScreenshotPerAEPS;
             }
           }
@@ -658,10 +670,10 @@ namespace MFM {
         {
 	  running = false;
 	}
-	
+
 	SDL_Flip(screen);
       }
-      
+
       SDL_FreeSurface(screen);
       SDL_Quit();
     }

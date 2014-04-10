@@ -63,5 +63,46 @@ namespace MFM {
       baseY += ROW_HEIGHT;
     }
   }
+
+  template <class GC>
+  void StatsRenderer::WriteRegisteredCounts(FILE * fp, bool writeHeader, Grid<GC>& grid, 
+                                           double aeps, double aer, u32 AEPSperFrame, 
+                                           double overhead) 
+  {
+    // Extract short names for parameter types
+    typedef typename GC::CORE_CONFIG CC;
+    typedef typename CC::ATOM_TYPE T;
+    typedef typename CC::PARAM_CONFIG P;
+    enum { W = GC::GRID_WIDTH};
+    enum { H = GC::GRID_HEIGHT};
+    enum { R = P::EVENT_WINDOW_RADIUS};
+
+    if (writeHeader) {
+      fprintf(fp,"# kAEPS AEPSperFrame AER pctOvrhd");
+      for (u32 i = 0; i < m_displayTypesInUse; ++i) {
+        u32 type = m_displayTypes[i];
+        const Element<CC> * elt = grid.GetTile(SPoint(0,0)).GetElementTable().Lookup(type);
+        if (elt == 0) continue;
+        fprintf(fp," #%s", elt->GetName());
+      }
+      fprintf(fp,"\n");
+    }
+    
+    fprintf(fp,"%8.3f", aeps/1000.0);
+    fprintf(fp," %d", AEPSperFrame);
+    fprintf(fp, "%8.3f", aer);
+    fprintf(fp, "%8.3f", overhead);
+
+    for (u32 i = 0; i < m_displayTypesInUse; ++i) {
+      u32 type = m_displayTypes[i];
+      const Element<CC> * elt = grid.GetTile(SPoint(0,0)).GetElementTable().Lookup(type);
+      if (elt == 0) continue;
+      u32 typeCount = grid.GetAtomCount(type);
+
+      fprintf(fp," %8d", typeCount);
+    }
+    fprintf(fp,"\n");
+  }
+
 } /* namespace MFM */
 

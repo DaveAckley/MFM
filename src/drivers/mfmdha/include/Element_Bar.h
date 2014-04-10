@@ -138,7 +138,7 @@ namespace MFM
       return type==TYPE;
     }
 
-    static const u32 BITS_PER_DIM = 6;  
+    static const u32 BITS_PER_DIM = 8;  
 
     static const u32 STATE_SIZE_IDX = 0;
     static const u32 STATE_SIZE_LEN = 2 * BITS_PER_DIM;
