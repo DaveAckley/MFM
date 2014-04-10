@@ -24,10 +24,6 @@ private:
 
   bool m_displayAER;
 
-  void DisplayTypeAt(u32 lineNum, u32 type) ;
-
-  void WriterRegisteredCounts(FILE * fp, bool writeHeader) ;
-
 public:
 
   StatsRenderer() : m_drawFont(0), m_displayTypesInUse(0), m_displayAER(false)
