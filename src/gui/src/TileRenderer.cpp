@@ -29,6 +29,9 @@ void TileRenderer::RenderAtomBG(SPoint& offset,
   /*
    * Again, draw this rect manually in order to only draw
    * renderable pieces of it.
+   *
+   * (???  What? There's no clipping or anything I can see in here..
+   * Why not use fillrect again?)
    */
   Point<s32> ulpt(m_windowTL.GetX() + offset.GetY() + atomLoc.GetX() *
 		  m_atomDrawSize,
@@ -46,14 +49,10 @@ void TileRenderer::RenderAtomBG(SPoint& offset,
     brpt.SetY(m_dimensions.GetY());
   }
 
-
-  for(s32 x = ulpt.GetX(); x < brpt.GetX(); x++)
-  {
-    for(s32 y = ulpt.GetY(); y < brpt.GetY(); y++)
-    {
-      Drawing::SetPixel(m_dest, x, y, color);
-    }
-  }
+  Drawing::FillRect(m_dest,
+                    ulpt.GetX(),ulpt.GetY(),
+                    brpt.GetX()-ulpt.GetX(),brpt.GetY()-ulpt.GetY(),
+                    color);
 }
 
 void TileRenderer::ToggleGrid()
