@@ -20,19 +20,6 @@ public:
   static const int MAGENTA = 0xffff00ff;
   static const int YELLOW  = 0xffffff00;
 
-  static inline void SetPixel(SDL_Surface* dest,
-			      u32 x, u32 y,
-			      u32 color)
-  {
-    if(x >= 0 && y >= 0 && x < (u32)dest->w && y < (u32)dest->h)
-    {
-      ((u32*)dest->pixels)[x + y * dest->w] = color;
-    }
-  }
-
-  static inline void SetPixel(SDL_Surface* dest,
-			      int i, u32 color);
-
   static void Clear(SDL_Surface* dest, u32 color);
 
   static void DrawHLine(SDL_Surface* dest,
@@ -56,6 +43,20 @@ public:
 		       const char* message, Point<u32> loc,
 		       Point<u32> size, u32 color);
 
+
+private:
+  // Let's try to deprecate SetPixel.  Bounds-checking every pixel is
+  // slow, and SDL_FillRect is (like SSE) fast and also clips against
+  // the surface cliprect so it's bounds-checking anyway?
+  static inline void SetPixel(SDL_Surface* dest,
+			      u32 x, u32 y,
+			      u32 color)
+  {
+    if(x >= 0 && y >= 0 && x < (u32)dest->w && y < (u32)dest->h)
+    {
+      ((u32*)dest->pixels)[x + y * dest->w] = color;
+    }
+  }
 };
 } /* namespace MFM */
 

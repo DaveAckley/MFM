@@ -193,7 +193,7 @@ template <class CC>
 void TileRenderer::RenderVisibleRegionOutlines(SPoint& pt, bool renderCache, bool selected)
 {
   int regID = renderCache?2:1;
-  RenderMemRegion<CC>(pt, regID, 
+  RenderMemRegion<CC>(pt, regID,
 		      selected ? 0xff606060 : 0xff202020, renderCache);
 }
 
@@ -219,18 +219,17 @@ void TileRenderer::RenderMemRegion(SPoint& pt, int regID,
 
   int ewrSize = P::EVENT_WINDOW_RADIUS * m_atomDrawSize;
 
-  /* Manually fill the rect so we can stop at the right place. */
+  /* Find rectangle to fill. */
   Point<s32> topPt(pt.GetX() + (ewrSize * regID) + m_windowTL.GetX(),
 		   pt.GetY() + (ewrSize * regID) + m_windowTL.GetY());
   Point<s32> botPt(MIN((s32)m_dimensions.GetX(), topPt.GetX() + (tileSize - (ewrSize * regID * 2))),
 		   MIN((s32)m_dimensions.GetY(), topPt.GetY() + (tileSize - (ewrSize * regID * 2))));
-  for(s32 x = topPt.GetX(); x < botPt.GetX(); x++)
-  {
-    for(s32 y = topPt.GetY(); y < botPt.GetY(); y++)
-    {
-      Drawing::SetPixel(m_dest, x, y, color);
-    }
-  }
+
+  Drawing::FillRect(m_dest,
+                    topPt.GetX(), topPt.GetY(),
+                    botPt.GetX() - topPt.GetX(),
+                    botPt.GetY() - topPt.GetY(),
+                    color);
 }
 
 template <class CC>

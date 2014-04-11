@@ -3,41 +3,23 @@
 
 namespace MFM {
 
-void Drawing::SetPixel(SDL_Surface* dest, int i,
-		       Uint32 color)
-{
-  if(i >= 0 && i < dest->w * dest->h)
-  {
-    ((Uint32*)dest->pixels)[i] = color;
-  }
-}
-
 void Drawing::Clear(SDL_Surface* dest, Uint32 color)
 {
-  for(int i = 0; i < dest->w * dest->h; i++)
-  {
-    SetPixel(dest, i, color);
-  }
+  SDL_FillRect(dest, 0, color);
 }
 
 void Drawing::DrawHLine(SDL_Surface* dest, int y,
 			int startX, int endX,
 			Uint32 color)
 {
-  for(int x = startX; x < endX; x++)
-  {
-    SetPixel(dest, x, y, color);
-  }
+  FillRect(dest,startX,y,endX-startX,1,color);
 }
 
 void Drawing::DrawVLine(SDL_Surface* dest, int x,
 			int startY, int endY,
 			Uint32 color)
 {
-  for(int y = startY; y < endY; y++)
-  {
-    SetPixel(dest, x, y, color);
-  }
+  FillRect(dest,x,startY,1,endY-startY,color);
 }
 
 void Drawing::FillRect(SDL_Surface* dest, int x, int y,
@@ -47,7 +29,7 @@ void Drawing::FillRect(SDL_Surface* dest, int x, int y,
   rect.x = x;
   rect.y = y;
   rect.w = w;
-  rect.h = y;
+  rect.h = h;
   SDL_FillRect(dest, &rect, color);
 }
 
@@ -55,19 +37,13 @@ void Drawing::FillCircle(SDL_Surface* dest, int x, int y,
 			 int w, int h, int radius,
 			 Uint32 color)
 {
-  SPoint ip;
-  SPoint cp(x + (w / 2), y + (h / 2));
-  for(int i = x; i < x + w; i++)
+  double cx = x+w/2.0;
+  double cy = y+h/2.0;
+  for(int dy = 1; dy <= radius; dy++)
   {
-    for(int j = y; j < y + h; j++)
-    {
-      ip.Set(i, j);
-      ip.Subtract(cp);
-      if(ip.GetEuclideanLength() < radius)
-      {
-	SetPixel(dest, i, j, color);
-      }
-    }
+    double dx = floor(sqrt(2.0*radius*dy - dy*dy));
+    DrawHLine(dest, (int) (cy + radius - dy), (int) (cx-dx), (int)(cx+dx), color);
+    DrawHLine(dest, (int) (cy - radius + dy), (int) (cx-dx), (int)(cx+dx), color);
   }
 }
 
