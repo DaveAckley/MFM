@@ -8,69 +8,69 @@
 
 namespace MFM {
 
-class StatsRenderer
-{
-private:
-  Point<u32> m_dimensions;
-  Point<s32> m_drawPoint;
-
-  TTF_Font* m_drawFont;
-
-  SDL_Surface* m_dest;
-
-  static const u32 MAX_TYPES = 16;
-  u32 m_displayTypes[MAX_TYPES];
-  u32 m_displayTypesInUse;
-
-  bool m_displayAER;
-
-public:
-
-  StatsRenderer() : m_drawFont(0), m_displayTypesInUse(0), m_displayAER(false)
+  class StatsRenderer
   {
-  }
+  private:
+    Point<u32> m_dimensions;
+    Point<s32> m_drawPoint;
 
-  void OnceOnly() {
-    m_drawFont = TTF_OpenFont("UbuntuMono-B.ttf", 30);
-    if (!m_drawFont)
-      FAIL(ILLEGAL_STATE);
-  }
+    TTF_Font* m_drawFont;
 
-  bool GetDisplayAER() const { return m_displayAER; }
+    SDL_Surface* m_dest;
 
-  void SetDisplayAER(bool displayAER) { m_displayAER = displayAER; }
+    static const u32 MAX_TYPES = 16;
+    u32 m_displayTypes[MAX_TYPES];
+    u32 m_displayTypesInUse;
 
-  bool DisplayStatsForType(u32 type) ;
+    bool m_displayAER;
 
-  ~StatsRenderer()
-  {
-    TTF_CloseFont(m_drawFont);
-  }
+  public:
 
-  void SetDestination(SDL_Surface* dest)
-  {
-    m_dest = dest;
-  }
+    StatsRenderer() : m_drawFont(0), m_displayTypesInUse(0), m_displayAER(false)
+    {
+    }
 
-  void SetDrawPoint(Point<s32> drawPoint)
-  {
-    m_drawPoint = drawPoint;
-  }
+    void OnceOnly() {
+      m_drawFont = TTF_OpenFont("UbuntuMono-B.ttf", 30);
+      if (!m_drawFont)
+        FAIL(ILLEGAL_STATE);
+    }
 
-  void SetDimensions(Point<u32> dimensions)
-  {
-    m_dimensions = dimensions;
-  }
+    bool GetDisplayAER() const { return m_displayAER; }
 
-  template <class T, u32 R>
-  void DrawString(const char* string, u32 x, u32 y);
+    void SetDisplayAER(bool displayAER) { m_displayAER = displayAER; }
 
-  template<class GC>
-  void RenderGridStatistics(Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead);
+    bool DisplayStatsForType(u32 type) ;
 
-  template<class GC>
-  void WriteRegisteredCounts(FILE * fp, bool writeHeader, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead);
-};
+    ~StatsRenderer()
+    {
+      TTF_CloseFont(m_drawFont);
+    }
+
+    void SetDestination(SDL_Surface* dest)
+    {
+      m_dest = dest;
+    }
+
+    void SetDrawPoint(Point<s32> drawPoint)
+    {
+      m_drawPoint = drawPoint;
+    }
+
+    void SetDimensions(Point<u32> dimensions)
+    {
+      m_dimensions = dimensions;
+    }
+
+    template <class T, u32 R>
+    void DrawString(const char* string, u32 x, u32 y);
+
+    template<class GC>
+    void RenderGridStatistics(Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead);
+
+    template<class GC>
+    void WriteRegisteredCounts(FILE * fp, bool writeHeader, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead);
+  };
 } /* namespace MFM */
 #include "StatsRenderer.tcc"
 

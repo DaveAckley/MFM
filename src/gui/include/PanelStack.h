@@ -6,28 +6,28 @@
 
 namespace MFM {
 
-class PanelStack
-{
-private:
+  class PanelStack
+  {
+  private:
 
-  void* m_renderObjs[0x10];
+    void* m_renderObjs[0x10];
 
-  Panel* m_panels[0x10];
+    Panel* m_panels[0x10];
 
-  u32 m_panelCount;
+    u32 m_panelCount;
 
-  SDL_Surface* m_dest;
+    SDL_Surface* m_dest;
 
-public:
+  public:
 
-  PanelStack(SDL_Surface* dest);
+    PanelStack(SDL_Surface* dest);
 
-  void PushPanel(Panel& panel, void* renderObj);
+    void PushPanel(Panel& panel, void* renderObj);
 
-  Panel* PopPanel();
+    Panel* PopPanel();
 
-  void Render();
-};
+    void Render();
+  };
 } /* namespace MFM */
 #endif /*PANELSTACK_H*/
 

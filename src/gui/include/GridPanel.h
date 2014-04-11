@@ -7,34 +7,34 @@
 
 namespace MFM {
 
-class GridPanel : public Panel
-{
-private:
-
-  GridRenderer* m_renderer;
-
-  template <class GC>
-  void RenderHeldGrid(void*& rendObj)
+  class GridPanel : public Panel
   {
-    m_renderer->RenderGrid(*((Grid<GC>*)rendObj));
-  }
+  private:
 
-public:
+    GridRenderer* m_renderer;
 
-  GridPanel();
+    template <class GC>
+    void RenderHeldGrid(void*& rendObj)
+    {
+      m_renderer->RenderGrid(*((Grid<GC>*)rendObj));
+    }
 
-  GridPanel(u32 width, u32 height);
+  public:
 
-  GridPanel(SDL_Surface* dest);
+    GridPanel();
 
-  GridPanel(SDL_Surface* dest, u32 width, u32 height);
+    GridPanel(u32 width, u32 height);
 
-  void SetRenderer(GridRenderer* renderer);
+    GridPanel(SDL_Surface* dest);
 
-  void Render(void* rendObj)
-  {
-  }
-};
+    GridPanel(SDL_Surface* dest, u32 width, u32 height);
+
+    void SetRenderer(GridRenderer* renderer);
+
+    void Render(void* rendObj)
+    {
+    }
+  };
 } /* namespace MFM */
 #endif /* GRIDPANEL_H */
 

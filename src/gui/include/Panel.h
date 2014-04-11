@@ -7,41 +7,41 @@
 
 namespace MFM {
 
-class Panel
-{
-protected:
+  class Panel
+  {
+  protected:
 
-  u32 m_width, m_height;
+    u32 m_width, m_height;
 
-  Point<s32> m_renderPt;
+    Point<s32> m_renderPt;
 
-  SDL_Surface* m_dest;
+    SDL_Surface* m_dest;
 
-public:
+  public:
 
-  Panel();
+    Panel();
 
-  Panel(u32 width, u32 height);
+    Panel(u32 width, u32 height);
 
-  Panel(SDL_Surface* dest);
+    Panel(SDL_Surface* dest);
 
-  Panel(SDL_Surface* dest, u32 width, u32 height);
+    Panel(SDL_Surface* dest, u32 width, u32 height);
 
-  void SetDestination(SDL_Surface* dest);
+    void SetDestination(SDL_Surface* dest);
 
-  u32 GetWidth() {return m_width;}
+    u32 GetWidth() {return m_width;}
 
-  u32 GetHeight() {return m_height;}
+    u32 GetHeight() {return m_height;}
 
-  SDL_Surface* GetDestination() {return m_dest;}
+    SDL_Surface* GetDestination() {return m_dest;}
 
-  void SetDimensions(u32 width, u32 height);
+    void SetDimensions(u32 width, u32 height);
 
-  void SetRenderPoint(Point<s32>& renderPt);
+    void SetRenderPoint(Point<s32>& renderPt);
 
-  void Render(void* rendObj);
+    void Render(void* rendObj);
 
-};
+  };
 } /* namespace MFM */
 #endif /*PANEL_H*/
 
