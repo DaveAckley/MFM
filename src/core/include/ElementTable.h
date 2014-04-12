@@ -40,7 +40,7 @@ namespace MFM {
      * return a number from 0.. GetSize()-1 representing the location
      * of this elementType in this table.
      */
-    s32 GetIndex(u32 elementType) const ; 
+    s32 GetIndex(u32 elementType) const ;
 
     ElementTable();
 
@@ -49,7 +49,7 @@ namespace MFM {
     const Element<CC> * Lookup(u32 elementType) ;
 
     void Execute(EventWindow<CC>& window)
-    { 
+    {
       u32 type = window.GetCenterAtom().GetType();
       if(type != ELEMENT_EMPTY) {
         const Element<CC> * elt = Lookup(type);
@@ -57,8 +57,6 @@ namespace MFM {
         elt->Behavior(window);
       }
     }
-
-    void FillAtom(T* atom, ElementType type);
 
     bool RegisterElement(const Element<CC>& e)
     {
@@ -68,29 +66,11 @@ namespace MFM {
 
   private:
 
-    //    static void FlipSEPointToCorner(Point<s32>& pt, Dir corner);
-
-    /* Fills pt with the coordinates of a randomly selected          */
-    /* Atom with the specified type. Returns false if there is none. */
-    static bool FillSubWindowContaining(Point<s32>& pt, EventWindow<CC>& window,
-                                        ElementType type, 
-                                        Dir corner);
-
-
-    static void FillSubwindowIndices(s32* indices, EventWindow<CC>& window,
-                                     ElementType type, Dir corner);
-
-    static u32 FoundIndicesCount(s32* indices);
-
-    static void ReproduceVertically(EventWindow<CC>& w, 
-                                    ElementType type);
-  
-
-    u32 SlotFor(u32 elementType) const ; 
+    u32 SlotFor(u32 elementType) const ;
 
     const Element<CC>* (m_hash[SIZE]);
     u32 m_hashSlotsInUse;
-  
+
   };
 
 } /* namespace MFM */
