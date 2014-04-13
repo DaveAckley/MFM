@@ -8,7 +8,7 @@ namespace MFM {
   s32 ElementTable<C>::GetIndex(u32 elementType) const
   {
     u32 slot = SlotFor(elementType);
-    if (m_hash[slot] == 0) return -1;
+    if (m_hash[slot].m_element == 0) return -1;
     return (s32) slot;
   }
 
@@ -19,7 +19,7 @@ namespace MFM {
     u32 slot = elementType;
     while (true) {
       slot %= SIZE;
-      const Element<C> * elt = m_hash[slot];
+      const Element<C> * elt = m_hash[slot].m_element;
       if (elt==0 || elt->GetType() == elementType)
         return slot;   // Empty or match: This is the slot for you
       ++collide;
@@ -33,23 +33,24 @@ namespace MFM {
     u32 type = theElement.GetType();
     u32 slotFor = SlotFor(type);
 
-    if (m_hash[slotFor] != 0) {
+    if (m_hash[slotFor].m_element != 0) {
 
-      if (m_hash[slotFor] != &theElement)
+      if (m_hash[slotFor].m_element != &theElement)
         FAIL(DUPLICATE_ELEMENT_TYPE);
       else return;
 
     } else {
       if (++m_hashSlotsInUse > SIZE/2)
         FAIL(TOO_MANY_ELEMENT_TYPES);
-      m_hash[slotFor] = &theElement;
+      m_hash[slotFor].m_element = &theElement;
+
     }
   }
 
   template <class C>
   const Element<C> * ElementTable<C>::Lookup(u32 elementType)
   {
-    return m_hash[SlotFor(elementType)];
+    return m_hash[SlotFor(elementType)].m_element;
   }
 
   template <class C>
@@ -63,7 +64,8 @@ namespace MFM {
   {
     m_hashSlotsInUse = 0;
     for (u32 i = 0; i < SIZE; ++i)
-      m_hash[i] = 0;
+      m_hash[i].Clear();
+    m_nextFreeElementDataIndex = 0;
   }
 
 } /* namespace MFM */
