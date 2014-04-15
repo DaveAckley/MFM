@@ -9,6 +9,7 @@ namespace MFM {
   typedef P1Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
+  typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
 
   struct MFMSimCloudDemo : public AbstractDriver<OurGridConfig>
   {
@@ -30,12 +31,12 @@ namespace MFM {
     void ReinitEden()
     {
       OurGrid & mainGrid = GetGrid();
-      StatsRenderer & srend = GetStatsRenderer();
+      OurStatsRenderer & srend = GetStatsRenderer();
 
-      srend.DisplayStatsForType(Element_Empty<OurCoreConfig>::TYPE);
-      srend.DisplayStatsForType(Element_Dreg<OurCoreConfig>::TYPE);
-      srend.DisplayStatsForType(Element_Res<OurCoreConfig>::TYPE);
-      srend.DisplayStatsForType(Element_Bar<OurCoreConfig>::TYPE);
+      srend.DisplayStatsForElement(mainGrid,Element_Empty<OurCoreConfig>::THE_INSTANCE);
+      srend.DisplayStatsForElement(mainGrid,Element_Dreg<OurCoreConfig>::THE_INSTANCE);
+      srend.DisplayStatsForElement(mainGrid,Element_Res<OurCoreConfig>::THE_INSTANCE);
+      srend.DisplayStatsForElement(mainGrid,Element_Bar<OurCoreConfig>::THE_INSTANCE);
       //      srend.DisplayStatsForType(Element_Mover<OurCoreConfig>::TYPE);
 
       const SPoint BAR_SIZE(100,50);

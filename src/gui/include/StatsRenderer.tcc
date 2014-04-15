@@ -1,12 +1,13 @@
 /* -*- C++ -*- */
 #include "Drawing.h"
 #include <stdlib.h>
+#include <ctype.h>    /* For isspace */
 #include <string.h>
 
 namespace MFM {
 
   template <class GC>
-  void StatsRenderer::RenderGridStatistics(Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead)
+  void StatsRenderer<GC>::RenderGridStatistics(Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool endOfEpoch)
   {
     // Extract short names for parameter types
     typedef typename GC::CORE_CONFIG CC;
@@ -19,6 +20,9 @@ namespace MFM {
     Drawing::FillRect(m_dest, m_drawPoint.GetX(), m_drawPoint.GetY(),
                       m_dimensions.GetX(), m_dimensions.GetY(),
                       0xff400040);
+
+    const u32 FMT_BUFFER_SIZE = 32;
+    char fmtBuffer[FMT_BUFFER_SIZE];
 
     const u32 STR_BUFFER_SIZE = 128;
     char strBuffer[STR_BUFFER_SIZE];
@@ -51,13 +55,16 @@ namespace MFM {
     }
 
     baseY += ROW_HEIGHT; // skip a line
-    for (u32 i = 0; i < m_displayTypesInUse; ++i) {
-      u32 type = m_displayTypes[i];
-      const Element<CC> * elt = grid.GetTile(SPoint(0,0)).GetElementTable().Lookup(type);
-      if (elt == 0) continue;
-      u32 typeCount = grid.GetAtomCount(type);
+    for (u32 i = 0; i < m_capStatsInUse; ++i) {
+      const CapturableStatistic * cs = m_capStats[i];
 
-      snprintf(strBuffer, STR_BUFFER_SIZE, "%8d %s", typeCount, elt->GetName());
+      s32 places = cs->GetDecimalPlaces();
+      if (places < 0) {
+        snprintf(strBuffer, STR_BUFFER_SIZE, "%s", cs->GetLabel());
+      } else {
+        snprintf(fmtBuffer, FMT_BUFFER_SIZE, "%%8.%df %%s",places);
+        snprintf(strBuffer, STR_BUFFER_SIZE, fmtBuffer, cs->GetValue(endOfEpoch), cs->GetLabel());
+      }
 
       Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
                         Point<u32>(m_dimensions.GetX(), ROW_HEIGHT), 0xffffffff);
@@ -66,9 +73,9 @@ namespace MFM {
   }
 
   template <class GC>
-  void StatsRenderer::WriteRegisteredCounts(FILE * fp, bool writeHeader, Grid<GC>& grid,
-                                           double aeps, double aer, u32 AEPSperFrame,
-                                           double overhead)
+  void StatsRenderer<GC>::WriteRegisteredCounts(FILE * fp, bool writeHeader, Grid<GC>& grid,
+                                                double aeps, double aer, u32 AEPSperFrame,
+                                                double overhead, bool endOfEpoch)
   {
     // Extract short names for parameter types
     typedef typename GC::CORE_CONFIG CC;
@@ -80,11 +87,16 @@ namespace MFM {
 
     if (writeHeader) {
       fprintf(fp,"# kAEPS AEPSperFrame AER pctOvrhd");
-      for (u32 i = 0; i < m_displayTypesInUse; ++i) {
-        u32 type = m_displayTypes[i];
-        const Element<CC> * elt = grid.GetTile(SPoint(0,0)).GetElementTable().Lookup(type);
-        if (elt == 0) continue;
-        fprintf(fp," #%s", elt->GetName());
+      for (u32 i = 0; i < m_capStatsInUse; ++i) {
+        const CapturableStatistic * cs = m_capStats[i];
+        if (cs->GetDecimalPlaces() < 0) continue;
+
+        // Try to ensure splitting on spaces will get the right number of names
+        fputc(' ', fp);
+        for (const char * p = cs->GetLabel(); *p; ++p) {
+          if (isspace(*p)) fputc('_', fp);
+          else fputc(*p, fp);
+        }
       }
       fprintf(fp,"\n");
     }
@@ -94,13 +106,10 @@ namespace MFM {
     fprintf(fp, "%8.3f", aer);
     fprintf(fp, "%8.3f", overhead);
 
-    for (u32 i = 0; i < m_displayTypesInUse; ++i) {
-      u32 type = m_displayTypes[i];
-      const Element<CC> * elt = grid.GetTile(SPoint(0,0)).GetElementTable().Lookup(type);
-      if (elt == 0) continue;
-      u32 typeCount = grid.GetAtomCount(type);
-
-      fprintf(fp," %8d", typeCount);
+    for (u32 i = 0; i < m_capStatsInUse; ++i) {
+      const CapturableStatistic * cs = m_capStats[i];
+      if (cs->GetDecimalPlaces() < 0) continue;
+      fprintf(fp," %g", cs->GetValue(endOfEpoch));
     }
     fprintf(fp,"\n");
   }
