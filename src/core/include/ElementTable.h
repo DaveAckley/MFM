@@ -94,6 +94,10 @@ namespace MFM {
      */
     bool AllocateElementDataSlots(const Element<CC>& e, u32 slots) {
       u32 elementType = e.GetType();
+      return AllocateElementDataSlotsFromType(elementType, slots);
+    }
+
+    bool AllocateElementDataSlotsFromType(const u32 elementType, u32 slots) {
       s32 index = GetIndex(elementType);
       if (index < 0) return false;
 
@@ -127,8 +131,12 @@ namespace MFM {
      * - E is a registered element that has more or less than SLOTS of
      *   element-specific data associated with it.
      */
-    u64 * GetElementDataSlots(const Element<CC>& e, u32 slots) {
+    u64 * GetElementDataSlots(const Element<CC>& e, const u32 slots) {
       u32 elementType = e.GetType();
+      return GetElementDataSlotsFromType(elementType, slots);
+    }
+
+    u64 * GetElementDataSlotsFromType(const u32 elementType, const u32 slots) {
       s32 index = GetIndex(elementType);
       if (index < 0) return 0;
 
@@ -136,6 +144,38 @@ namespace MFM {
       if (m_hash[index].m_elementDataLength != slots) return 0;
       return & m_elementData[m_hash[index].m_elementDataStart];
     }
+
+    u64 * GetDataAndRegister(const u32 elementType, u32 slots)
+    {
+      // Yes, (this use of) the EDS API is pretty awkward.
+
+      // See if already registered
+      u64 * datap = GetElementDataSlotsFromType(elementType, slots);
+
+      if (!datap) {
+
+        // Not yet registered.  If this fails, you probably need to up
+        // the EDS in your ParamConfig.
+        if (!AllocateElementDataSlotsFromType(elementType, slots))
+          FAIL(ILLEGAL_STATE);
+
+        // Now this must succeed
+        datap = GetElementDataSlotsFromType(elementType, slots);
+        if (!datap)
+          FAIL(ILLEGAL_STATE);
+
+        // Init newly registered slots
+        for (u32 i = 0; i < slots; ++i)
+          datap[i] = 0;
+      }
+      return datap;
+    }
+
+    u64 * GetDataIfRegistered(const u32 elementType, u32 slots)
+    {
+      return GetElementDataSlotsFromType(elementType, slots);
+    }
+
 
   private:
 
