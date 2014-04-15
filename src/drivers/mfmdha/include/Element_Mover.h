@@ -82,7 +82,7 @@ namespace MFM
       const MDist<R> md = MDist<R>::get();
 
       // Scan event window outside self
-      for (u32 idx = md.GetFirstIndex(1); idx < md.GetLastIndex(1); ++idx) {
+      for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(1); ++idx) {
         const SPoint sp = md.GetPoint(idx);
 
         // Empty or occupied?
