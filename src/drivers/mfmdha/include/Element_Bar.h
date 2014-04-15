@@ -138,7 +138,7 @@ namespace MFM
       return type==TYPE;
     }
 
-    static const u32 BITS_PER_DIM = 8;  
+    static const u32 BITS_PER_DIM = 8;
 
     static const u32 STATE_SIZE_IDX = 0;
     static const u32 STATE_SIZE_LEN = 2 * BITS_PER_DIM;
@@ -200,7 +200,7 @@ namespace MFM
       return 0xfff00505;
     }
 
-    virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const 
+    virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const
     {
       switch (selector) {
       case 1: {
@@ -247,7 +247,7 @@ namespace MFM
       u32 eatCount = 0;
 
       // Scan event window outside self
-      for (u32 idx = md.GetFirstIndex(1); idx < md.GetLastIndex(R); ++idx) {
+      for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(R); ++idx) {
         const SPoint sp = md.GetPoint(idx);
 
         // First question: A 'bar grid' site?
@@ -282,7 +282,7 @@ namespace MFM
               if (IsBarType(otherType)) {
 
                 // Next question: Are they consistent with us?
-                
+
                 SPoint otherBarMax = GetMax(other);
                 SPoint otherPos = GetPos(other);
 
@@ -329,10 +329,10 @@ namespace MFM
               }
             }
         }
-      } 
+      }
 
       // Scan finished.  Let's decide what to do.
-      
+
       // First question: Are we inconsistent with anybody?
       if (inconsistentCount > 0) {
         // Next question: Are we much more consistent than inconsistent?
