@@ -131,7 +131,8 @@ namespace MFM {
     typedef enum
     {
       BUTTONFUNC_TOGGLE_EXECUTION,
-      BUTTONFUNC_EMPTY_TILE
+      BUTTONFUNC_EMPTY_TILE,
+      BUTTONFUNC_RANDOM_NUKE
     }ButtonFunction;
 
     void ExecuteButtonFunction(ButtonFunction func)
@@ -144,6 +145,9 @@ namespace MFM {
 	break;
       case BUTTONFUNC_EMPTY_TILE:
 	mainGrid.EmptyTile(m_grend.GetSelectedTile());
+	break;
+      case BUTTONFUNC_RANDOM_NUKE:
+	mainGrid.RandomNuke();
 	break;
       default:
 	FAIL(ILLEGAL_ARGUMENT);
@@ -226,6 +230,10 @@ namespace MFM {
       if(keyboard.SemiAuto(SDLK_m))
       {
 	m_grend.ToggleMemDraw();
+      }
+      if(keyboard.SemiAuto(SDLK_n))
+      {
+	ExecuteButtonFunction(BUTTONFUNC_RANDOM_NUKE);
       }
       if(keyboard.SemiAuto(SDLK_l))
       {

@@ -343,6 +343,35 @@ namespace MFM {
   }
 
   template <class GC>
+  void Grid<GC>::RandomNuke()
+  {
+    /* Let's just grab the first tile's RNG for this. */
+    Random& rand = GetTile(0,0).GetRandom();
+    
+    SPoint center(rand.Create(W * CC::PARAM_CONFIG::TILE_WIDTH),
+		  rand.Create(H * CC::PARAM_CONFIG::TILE_WIDTH));
+
+    u32 radius = rand.Between(5, CC::PARAM_CONFIG::TILE_WIDTH);
+    T atom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+
+    SPoint siteInGrid, tileInGrid, siteInTile;
+    for(s32 x = center.GetX() - radius; x < (s32)(center.GetX() + radius); x++)
+    {
+      for(s32 y = center.GetY() - radius; y < (s32)(center.GetY() + radius); y++)
+      {
+	siteInGrid.Set(x, y);
+	if(DISTANCE(x, y, center.GetX(), center.GetY()) < radius)
+	{
+	  if(MapGridToTile(siteInGrid, tileInGrid, siteInTile))
+	  {
+	    PlaceAtom(atom, siteInGrid);
+	  }
+	}
+      }
+    }
+  }
+
+  template <class GC>
   u32 Grid<GC>::CountActiveSites()
   {
     u32 acc   = 0,

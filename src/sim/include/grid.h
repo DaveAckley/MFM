@@ -230,6 +230,12 @@ namespace MFM {
 
     void SurroundRectangleWithWall(s32 x, s32 y, s32 w, s32 h, s32 thickness);
 
+    /**
+     * Picks a random site in the grid, then sets all sites in a
+     * randomly sized radius to Element_Empty .
+     */
+    void RandomNuke();
+
     u32 CountActiveSites();
   };
 } /* namespace MFM */

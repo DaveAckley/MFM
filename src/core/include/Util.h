@@ -3,6 +3,7 @@
 
 #include "Fail.h"
 #include "itype.h"
+#include "math.h"
 #include <string.h>
 
 template <class T>
@@ -25,6 +26,12 @@ template <class T>
 inline T ABS(T val)
 {
   return val > 0 ? val : (-val);
+}
+
+template <class T>
+inline double DISTANCE(T x1, T y1, T x2, T y2)
+{
+  return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
 
 #endif /* UTIL_H */
