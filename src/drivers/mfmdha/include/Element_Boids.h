@@ -267,7 +267,7 @@ namespace MFM
       const FXP16 WGT_PER_DIST = MAX_DIST_WGT / MAX_DIST;
 
       const MDist<R> md = MDist<R>::get();
-      for (u32 idx = md.GetFirstIndex(0); idx < md.GetLastIndex(2); ++idx) {
+      for (u32 idx = md.GetFirstIndex(0); idx <= md.GetLastIndex(2); ++idx) {
         const SPoint sp = md.GetPoint(idx);
 
         // Allow corners but not two steps away
@@ -333,7 +333,7 @@ namespace MFM
       const MDist<R> md = MDist<R>::get();
 
       // Scan event window outside self
-      for (u32 idx = md.GetFirstIndex(1); idx < md.GetLastIndex(R); ++idx) {
+      for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(R); ++idx) {
         const SPoint sp = md.GetPoint(idx);
         const T other = window.GetRelativeAtom(sp);
 

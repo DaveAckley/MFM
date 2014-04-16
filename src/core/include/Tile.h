@@ -164,7 +164,7 @@ namespace MFM {
     bool m_threadPaused;
 
     /**
-     * 
+     *
      */
     bool m_onlyWaitOnBuffers;
 
@@ -584,7 +584,7 @@ namespace MFM {
      *
      * @returns A pointer to the Atom at location pt.
      */
-    const T* GetUncachedAtom(const SPoint& pt) const 
+    const T* GetUncachedAtom(const SPoint& pt) const
     {
       return GetUncachedAtom(pt.GetX(), pt.GetY());
     }
@@ -807,6 +807,7 @@ namespace MFM {
     void RegisterElement(const Element<CC> & anElement) {
       elementTable.RegisterElement(anElement);
     }
+
   };
 } /* namespace MFM */
 

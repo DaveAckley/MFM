@@ -5,7 +5,7 @@
 #include <stdarg.h>   /* For va_list, va_args */
 #include <time.h>     /* For time */
 
-namespace MFM { 
+namespace MFM {
 
   void DriverArguments::Die(const char * format, ...) {
     fprintf(stderr,"ERROR: ");
@@ -17,14 +17,14 @@ namespace MFM {
   }
 
   static char * GetNextArg(int & count, char ** & argv) {
-    if (count <= 0) 
+    if (count <= 0)
       return 0;
     --count;
     return *argv++;
   }
 
   /* This should be written with getopt! */
-  int DriverArguments::ProcessArguments(int argc, char **argv) 
+  int DriverArguments::ProcessArguments(int argc, char **argv)
   {
     m_programName = GetNextArg(argc,argv);
 
@@ -34,7 +34,7 @@ namespace MFM {
     while (argc > 0) {
       const char * arg = GetNextArg(argc,argv);
       if (!arg) Die("Unreachable?");
-        
+
       if (!strcmp("-s",arg) || !strcmp("--seed",arg)) {
 
         const char * val = GetNextArg(argc,argv);
@@ -74,7 +74,7 @@ namespace MFM {
       {
 	const char* val = GetNextArg(argc, argv);
 	if(!val) Die("Missing aeps (integer) argument after %s", arg);
-       
+
 	m_recordTimeBasedDataPerAEPS = atoi(val);
 	fprintf(stderr, "[Recording time based data approximately every %d AEPS]\n",
 		        m_recordTimeBasedDataPerAEPS);
@@ -110,7 +110,7 @@ namespace MFM {
 	{
 	  Die("More than %d tiles may not be disabled", DRIVERARGUMENTS_MAX_DISABLED_TILES);
 	}
-	
+
 	m_disabledTiles[m_disabledTileCount++].Parse(val);
 	fprintf(stderr, "[Tile @ %s deactivated]\n", val);
       }
@@ -127,7 +127,7 @@ namespace MFM {
           fprintf(stderr, "[Starting paused]\n");
         } else {
           fprintf(stderr, "[Starting without initial pause]\n");
-        } 
+        }
       }
       else if(!strcmp("-r", arg) || !strcmp("--rate", arg))
       {
@@ -151,7 +151,7 @@ namespace MFM {
 		" -t AEPS, --timebd AEPS     Records time based data every AEPS aeps\n"
 		" -r AEPS, --rate AEPS       The AEPS per frame rendering rate to begin at\n"
 		"\n"
-		" --haltafteraeps AEPS       If APES > 0, Halts after AEPS elapsed aeps.\n"
+		" --haltafteraeps AEPS       If AEPS > 0, Halts after AEPS elapsed aeps.\n"
 		" --disabletile TILEPT       Stops execution of the Tile at TILEPT.\n"
                 " --picturesPerRate COUNT    Take COUNT shots per speed from 1 up to -p value\n"
 		" --haltafteraeps AEPS       If AEPS > 0, Halts after AEPS elapsed aeps.\n"
@@ -161,7 +161,7 @@ namespace MFM {
                 );
         exit(0);
       } else {
-        Die("Unrecognized argument '%s', try '%s -h' for help", 
+        Die("Unrecognized argument '%s', try '%s -h' for help",
             arg, m_programName);
       }
     }

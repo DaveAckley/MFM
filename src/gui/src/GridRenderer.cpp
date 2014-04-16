@@ -1,4 +1,4 @@
-#include "gridrenderer.h"
+#include "GridRenderer.h"
 
 namespace MFM {
 

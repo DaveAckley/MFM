@@ -6,17 +6,18 @@
 #include <errno.h>     /* for errno */
 #include "Utils.h"     /* for GetDateTimeNow */
 #include "itype.h"
+#include "Tile.h"
 #include "grid.h"
-#include "gridrenderer.h"
-#include "statsrenderer.h"
+#include "GridRenderer.h"
+#include "StatsRenderer.h"
 #include "ElementTable.h"
 #include "Element_Empty.h" /* Need common elements */
 #include "Element_Dreg.h"
 #include "Element_Res.h"
 #include "Element_Wall.h"
 #include "Element_Consumer.h"
-#include "mouse.h"
-#include "keyboard.h"
+#include "Mouse.h"
+#include "Keyboard.h"
 #include "Camera.h"
 #include "DriverArguments.h"
 #include "SDL/SDL.h"
@@ -109,7 +110,7 @@ namespace MFM {
     u32 m_screenHeight;
 
     GridRenderer m_grend;
-    StatsRenderer m_srend;
+    StatsRenderer<GC> m_srend;
 
     DriverArguments* m_driverArguments;
 
@@ -195,7 +196,7 @@ namespace MFM {
       {
 	exit(0);
       }
-      
+
       /* View Control */
       if(keyboard.SemiAuto(SDLK_a))
       {
@@ -328,7 +329,7 @@ namespace MFM {
 	m_lastFrameAEPS = m_AEPS;
 
 	ExportEventCounts(grid);
-	ExportTimeBasedData(grid);
+        //	ExportTimeBasedData(grid);
       }
     }
 
@@ -336,7 +337,7 @@ namespace MFM {
     {
       if (m_recordEventCountsPerAEPS > 0) {
 	if (m_AEPS > m_nextEventCountsAEPS) {
-	  
+
 	  const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEventCountsAEPS);
 	  FILE* fp = fopen(path, "w");
 	  grid.WriteEPSImage(fp);
@@ -346,12 +347,13 @@ namespace MFM {
 	  fp = fopen(path, "w");
 	  grid.WriteEPSAverageImage(fp);
 	  fclose(fp);
-	  
+
 	  m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
 	}
       }
     }
-    
+
+#if 0
     void ExportTimeBasedData(OurGrid& grid)
     {
       /* Current header : */
@@ -364,23 +366,28 @@ namespace MFM {
 	  const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
 	  FILE* fp = fopen(path, "a");
 
-	  u64 hits = Element_Consumer<CC>::THE_INSTANCE.GetAndResetHits(),
-	      misses = Element_Consumer<CC>::THE_INSTANCE.GetAndResetMisses();
-	  
-	  fprintf(fp, "%g %d %d %d %d %d %ld %ld %ld\n",
-		  m_AEPS, 
+	  u64 consumed = 0, totalError = 0;
+          for (typename OurGrid::iterator_type i = grid.begin(); i != grid.end(); ++i) {
+            Tile<CC> * t = *i;
+            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsConsumed(*t);
+            totalError += Element_Consumer<CC>::THE_INSTANCE.GetAndResetBucketError(*t);
+          }
+
+	  fprintf(fp, "%g %d %d %d %d %d %ld %ld\n",
+		  m_AEPS,
 		  grid.CountActiveSites(),
 		  grid.GetAtomCount(Element_Empty<CC>::TYPE),
 		  grid.GetAtomCount(Element_Dreg<CC>::TYPE),
 		  grid.GetAtomCount(Element_Res<CC>::TYPE),
 		  grid.GetAtomCount(Element_Wall<CC>::TYPE),
-		  hits, misses, hits + misses);
-	  
+		  consumed, totalError);
+
 	  fclose(fp);
 	  m_nextTimeBasedDataAEPS += m_recordTimeBasedDataPerAEPS;
 	}
       }
     }
+#endif
 
   public:
 
@@ -547,7 +554,7 @@ namespace MFM {
       printf("Screen resize: %d x %d\n", width, height);
     }
 
-    StatsRenderer & GetStatsRenderer()
+    StatsRenderer<GC> & GetStatsRenderer()
     {
       return m_srend;
     }
@@ -627,9 +634,10 @@ namespace MFM {
           Drawing::Clear(screen, 0xff200020);
 
           m_grend.RenderGrid(mainGrid);
+
           if(renderStats)
           {
-	    m_srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent);
+	    m_srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent,false);
 	  }
 
           if (m_recordScreenshotPerAEPS > 0) {
@@ -638,9 +646,21 @@ namespace MFM {
               const char * path = GetSimDirPathTemporary("vid/%010d.png", m_nextScreenshotAEPS);
 
               camera.DrawSurface(screen,path);
-
+              {
+                const char * path = GetSimDirPathTemporary("tbd/data.dat");
+                bool exists = true;
+                {
+                  FILE* fp = fopen(path, "r");
+                  if (!fp) exists = false;
+                  else fclose(fp);
+                }
+                FILE* fp = fopen(path, "a");
+                m_srend.WriteRegisteredCounts(fp, !exists, mainGrid,
+                                              m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent, true);
+                fclose(fp);
+              }
               // Are we accelerating and not yet up to cruising speed?
-              if (m_countOfScreenshotsPerRate > 0 && 
+              if (m_countOfScreenshotsPerRate > 0 &&
                   m_recordScreenshotPerAEPS < m_maxRecordScreenshotPerAEPS) {
 
                 // Time to step on it?
@@ -649,7 +669,7 @@ namespace MFM {
                   m_countOfScreenshotsAtThisAEPS = 0;
                 }
               }
-            
+
               m_nextScreenshotAEPS += m_recordScreenshotPerAEPS;
             }
           }
@@ -658,10 +678,10 @@ namespace MFM {
         {
 	  running = false;
 	}
-	
+
 	SDL_Flip(screen);
       }
-      
+
       SDL_FreeSurface(screen);
       SDL_Quit();
     }
