@@ -138,6 +138,11 @@ namespace MFM {
         if (m_aepsPerFrame < 1) Die("AEPS must be greater than zero, after %s",arg);
         fprintf(stderr,"[Initially rendering at %d AEPS per frame]\n",m_aepsPerFrame);
       }
+      else if(!strcmp("--startminimal", arg))
+      {
+	m_startMinimal = true;
+	fprintf(stderr, "[Starting with minimal rendering]\n");
+      }
 
       else if (!strcmp("-h",arg) || !strcmp("--help",arg)) {
 
@@ -151,13 +156,13 @@ namespace MFM {
 		" -t AEPS, --timebd AEPS     Records time based data every AEPS aeps\n"
 		" -r AEPS, --rate AEPS       The AEPS per frame rendering rate to begin at\n"
 		"\n"
-		" --haltafteraeps AEPS       If APES > 0, Halts after AEPS elapsed aeps.\n"
 		" --disabletile TILEPT       Stops execution of the Tile at TILEPT.\n"
                 " --picturesPerRate COUNT    Take COUNT shots per speed from 1 up to -p value\n"
 		" --haltafteraeps AEPS       If AEPS > 0, Halts after AEPS elapsed aeps.\n"
 		" --startpaused              Start paused to allow display configuration.\n"
 		" --nostartpaused            Start running immediately for hands-off operation.\n"
 		" --startwithoutgrid         Start with the statistics view on screen.\n"
+		" --startminimal             Start with as small a window as possible.\n"
                 );
         exit(0);
       } else {

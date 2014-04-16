@@ -39,6 +39,11 @@ namespace MFM {
 #define STATS_START_WINDOW_WIDTH 233
 #define STATS_START_WINDOW_HEIGHT 120
 
+  /* super speedy for now */
+#define MINIMAL_START_WINDOW_WIDTH 1
+#define MINIMAL_START_WINDOW_HEIGHT 1
+
+
 #define MAX_PATH_LENGTH 1000
 #define MIN_PATH_RESERVED_LENGTH 100
 
@@ -355,7 +360,7 @@ namespace MFM {
     void ExportTimeBasedData(OurGrid& grid)
     {
       /* Current header : */
-      /* # AEPS activesites empty dreg res wall sort-hits sort-misses sort-total  */
+      /* # AEPS activesites empty dreg res wall sort-hits sort-misses sort-total sort-hit-pctg sort-bucket-miss-average*/
 
       if(m_recordTimeBasedDataPerAEPS > 0)
       {
@@ -365,16 +370,20 @@ namespace MFM {
 	  FILE* fp = fopen(path, "a");
 
 	  u64 hits = Element_Consumer<CC>::THE_INSTANCE.GetAndResetHits(),
-	      misses = Element_Consumer<CC>::THE_INSTANCE.GetAndResetMisses();
+	    misses = Element_Consumer<CC>::THE_INSTANCE.GetAndResetMisses(),
+	    totals = Element_Consumer<CC>::THE_INSTANCE.GetAndResetTotals(),
+	    buckErrors = Element_Consumer<CC>::THE_INSTANCE.GetAndResetAbsoluteErrors();
 	  
-	  fprintf(fp, "%g %d %d %d %d %d %ld %ld %ld\n",
+	  fprintf(fp, "%g %d %d %d %d %d %ld %ld %ld %g %g\n",
 		  m_AEPS, 
 		  grid.CountActiveSites(),
 		  grid.GetAtomCount(Element_Empty<CC>::TYPE),
 		  grid.GetAtomCount(Element_Dreg<CC>::TYPE),
 		  grid.GetAtomCount(Element_Res<CC>::TYPE),
 		  grid.GetAtomCount(Element_Wall<CC>::TYPE),
-		  hits, misses, hits + misses);
+		  hits, misses, hits + misses,
+		  ((double)(100 * hits) / (double)(hits + misses)),
+		  ((double)buckErrors / (double)totals));
 	  
 	  fclose(fp);
 	  m_nextTimeBasedDataAEPS += m_recordTimeBasedDataPerAEPS;
@@ -429,7 +438,7 @@ namespace MFM {
       /* Initialize tbd.txt */
       const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
       FILE* fp = fopen(path, "w");
-      fprintf(fp, "# AEPS activesites empty dreg res wall sort-hits sort-misses sort-total\n");
+      fprintf(fp, "# AEPS activesites empty dreg res wall sort-hits sort-misses sort-total sort-hit-pctg\n");
       fclose(fp);
 
       m_screenWidth = SCREEN_INITIAL_WIDTH;
@@ -509,6 +518,11 @@ namespace MFM {
 	m_screenHeight = STATS_START_WINDOW_HEIGHT;
 	ToggleStatsView();
 	m_srend.SetDisplayAER(!m_srend.GetDisplayAER());
+      }
+      else if(args.GetStartMinimal())
+      {
+	m_screenWidth = MINIMAL_START_WINDOW_HEIGHT;
+	m_screenHeight = MINIMAL_START_WINDOW_WIDTH;
       }
 
       m_aepsPerFrame = args.GetAEPSPerFrame();

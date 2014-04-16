@@ -36,12 +36,12 @@ namespace MFM
     }
 
 
-    void ReproduceVertically(EventWindow<CC>& window) const;
+    void ReproduceVertically(EventWindow<CC>& window, u32 id) const;
 
   };
 
   template <class CC>
-  void Element_Reprovert<CC>::ReproduceVertically(EventWindow<CC>& window) const
+  void Element_Reprovert<CC>::ReproduceVertically(EventWindow<CC>& window, u32 id) const
   {
     Random & random = window.GetRandom();
     
@@ -51,7 +51,8 @@ namespace MFM
     if(window.GetRelativeAtom(repPt).GetType() == ELEMENT_EMPTY)
     {
       T newAtom = this->GetDefaultAtom();
-      SetVertPos(newAtom,(u32) (cval + (down ? 1 : -1)));
+      u32 newval = (u32) (cval + (down ? 1 : -1));
+      SetVertPos(newAtom, newval);
       window.SetRelativeAtom(repPt, newAtom);
     }
   }

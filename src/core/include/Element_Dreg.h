@@ -7,6 +7,7 @@
 #include "itype.h"
 #include "P1Atom.h"
 #include "Element_Res.h"  /* For Element_Res::TYPE */
+#include "Element_Wall.h" /* For Element_Wall::TYPE */
 
 namespace MFM
 {
@@ -71,7 +72,7 @@ namespace MFM
 	  atom = T();
 	}
       }
-      else if(random.OneIn(DREG_DEL_ODDS))
+      else if(oldType != Element_Wall<CC>::TYPE && random.OneIn(DREG_DEL_ODDS))
       {
 	  atom = T();
       }

@@ -2,6 +2,7 @@
 #ifndef ELEMENT_CONSUMER_H
 #define ELEMENT_CONSUMER_H
 
+#include "AtomicLong.h"
 #include "Element.h"       
 #include "EventWindow.h"
 #include "ElementTable.h"
@@ -32,8 +33,10 @@ namespace MFM
     static Element_Consumer THE_INSTANCE;
     static const u32 TYPE = 0xdada0;
     
-    static u64 bucketHitCounts;
-    static u64 bucketMissCounts;
+    static AtomicLong bucketHitCounts;
+    static AtomicLong bucketMissCounts;
+    static AtomicLong bucketTotals;
+    static AtomicLong absoluteBucketError;
     /*
     static const u32 STATE_HIT_IDX  = Element_Reprovert<CC>::STATE_BITS;
     static const u32 STATE_HIT_LEN  = 16;
@@ -65,21 +68,26 @@ namespace MFM
     }
     */
 
-    Element_Consumer() { Element_Consumer<CC>::bucketHitCounts = 
-	                 Element_Consumer<CC>::bucketMissCounts = 0; }
+    Element_Consumer() { }
 
     u64 GetAndResetHits() const
     {
-      u64 val = Element_Consumer<CC>::bucketHitCounts;
-      Element_Consumer<CC>::bucketHitCounts = 0;
-      return val;
+      return Element_Consumer<CC>::bucketHitCounts.GetAndReset();
     }
 
     u64 GetAndResetMisses() const
     {
-      u64 val = Element_Consumer<CC>::bucketMissCounts;
-      Element_Consumer<CC>::bucketMissCounts = 0;
-      return val;
+      return Element_Consumer<CC>::bucketMissCounts.GetAndReset();
+    }
+
+    u64 GetAndResetTotals() const
+    {
+      return Element_Consumer<CC>::bucketTotals.GetAndReset();
+    }
+
+    u64 GetAndResetAbsoluteErrors() const
+    {
+      return Element_Consumer<CC>::absoluteBucketError.GetAndReset();
     }
 
     virtual const T & GetDefaultAtom() const 
@@ -97,30 +105,43 @@ namespace MFM
     {
       Random & random = window.GetRandom();
 
-      this->ReproduceVertically(window);
+      this->ReproduceVertically(window, 1);
 
       Point<s32> consPt;
       MDist<R>::get().FillRandomSingleDir(consPt, random);
       
       if(window.GetRelativeAtom(consPt).GetType() == Element_Data<CC>::TYPE)
       {
-	u32 val = DATA_MAXVAL - Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtom(consPt),0);
+	s32 val = (s32)(DATA_MAXVAL - Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtom(consPt),0));
 	u32 bnum = this->GetVertPos(window.GetCenterAtom(),0);
 
-	const u32 bucketSize = (DATA_MAXVAL / EXPERIMENT_HEIGHT) * 5;
-	u32 minBucketVal = bucketSize * bnum;
-	u32 maxBucketVal = bucketSize * (bnum + 1);
+	const s32 bucketSize = (DATA_MAXVAL / EXPERIMENT_HEIGHT) * 5;
+	s32 minBucketVal = bucketSize * bnum;
+	s32 maxBucketVal = bucketSize * (bnum + 1);
 
 	if(val < minBucketVal || val > maxBucketVal)
 	{
-	  /* D'oh, wrong bucket
 	  
-	  u32 missAmt = ABS((val - minBucketVal) / bucketSize);
+	  /* D'oh, wrong bucket */
+	  u32 missAmt;
+	  if(val - minBucketVal < 0)
+	  {
+	    missAmt = 1 + ABS((val - minBucketVal) / bucketSize);
+	  }
+	  else
+	  {
+	    missAmt = ABS((val - minBucketVal) / bucketSize);
+	  }
+
+	  /*
 	  u32 oldMisses = window.GetCenterAtom().GetStateField(STATE_MISS_IDX,STATE_MISS_LEN);
 	  window.GetCenterAtom().SetStateField(STATE_MISS_IDX,STATE_MISS_LEN,missAmt + oldMisses);
 	  */
 
-	  Element_Consumer<CC>::bucketMissCounts++;
+	  Element_Consumer<CC>::absoluteBucketError.Add(missAmt);
+
+	  Element_Consumer<CC>::bucketMissCounts.Increment();
+	  Element_Consumer<CC>::bucketTotals.Increment();
 	  
 	}
 	else
@@ -129,7 +150,8 @@ namespace MFM
 	  u32 oldHits = window.GetCenterAtom().GetStateField(STATE_HIT_IDX,STATE_HIT_LEN);
 	  window.GetCenterAtom().SetStateField(STATE_HIT_IDX,STATE_HIT_LEN,oldHits + 1);
 	  */
-	  Element_Consumer<CC>::bucketHitCounts++;
+	  Element_Consumer<CC>::bucketHitCounts.Increment();
+	  Element_Consumer<CC>::bucketTotals.Increment();
 
 	}
 
@@ -147,10 +169,16 @@ namespace MFM
   Element_Consumer<CC> Element_Consumer<CC>::THE_INSTANCE;
 
   template <class CC>
-  u64 Element_Consumer<CC>::bucketMissCounts;
+  AtomicLong Element_Consumer<CC>::bucketHitCounts;
 
   template <class CC>
-  u64 Element_Consumer<CC>::bucketHitCounts;
+  AtomicLong Element_Consumer<CC>::bucketMissCounts;
+
+  template <class CC>
+  AtomicLong Element_Consumer<CC>::bucketTotals;
+
+  template <class CC>
+  AtomicLong Element_Consumer<CC>::absoluteBucketError;
 
 }
 

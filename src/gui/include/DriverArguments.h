@@ -24,6 +24,7 @@ namespace MFM {
     s32 m_countOfScreenshotsPerRate;
     bool m_startPaused;
     bool m_startWithoutGridView;
+    bool m_startMinimal;
 
   public:
 
@@ -59,6 +60,7 @@ namespace MFM {
     s32 GetCountOfScreenshotsPerRate() const { return m_countOfScreenshotsPerRate; }
     bool GetStartPaused() const { return m_startPaused; }
     bool GetStartWithoutGridView() const { return m_startWithoutGridView; }
+    bool GetStartMinimal() const { return m_startMinimal; }
   };
 } /* namespace MFM */
 
