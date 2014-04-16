@@ -3,9 +3,9 @@
 
 #include "grid.h"
 #include "SDL/SDL.h"
-#include "tilerenderer.h"
+#include "TileRenderer.h"
 
-namespace MFM 
+namespace MFM
 {
 
   typedef enum
@@ -14,7 +14,7 @@ namespace MFM
     EVENTWINDOW_RENDER_CURRENT = 1,
     EVENTWINDOW_RENDER_ALL     = 2
   } EventWindowRenderMode;
-  
+
 
   class GridRenderer
   {
@@ -86,7 +86,7 @@ namespace MFM
 
   };
 } /* namespace MFM */
-#include "gridrenderer.tcc"
+#include "GridRenderer.tcc"
 
 #endif /*GRIDRENDERER_H*/
 

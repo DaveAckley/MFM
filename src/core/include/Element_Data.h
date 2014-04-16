@@ -39,23 +39,23 @@ namespace MFM
       atom.SetStateField(STATE_DATA_IDX,STATE_DATA_LEN,value);
       return true;
     }
-    
-    virtual const T & GetDefaultAtom() const 
+
+    virtual const T & GetDefaultAtom() const
     {
       static T defaultAtom(TYPE,0,0,STATE_BITS);
       return defaultAtom;
     }
 
-    virtual u32 DefaultPhysicsColor() const 
+    virtual u32 DefaultPhysicsColor() const
     {
       return 0xff0000ff;
     }
 
-    virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const 
+    virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const
     {
       switch (selector) {
       case 1:
-        return ColorMap_SEQ5_YlGnBu::THE_INSTANCE.
+        return ColorMap_SEQ6_PuBuGn::THE_INSTANCE.
           GetInterpolatedColor(GetDatum(atom,0),DATA_MINVAL,DATA_MAXVAL,0xffff0000);
       default:
         return DefaultPhysicsColor();
@@ -72,7 +72,7 @@ namespace MFM
       this->Diffuse(window);
     }
 
-    static void Needed();    
+    static void Needed();
   };
 
   template <class CC>

@@ -1,7 +1,7 @@
 #ifndef ELEMENT_PAIR_H   /* -*- C++ -*- */
 #define ELEMENT_PAIR_H
 
-#include "Element.h"    
+#include "Element.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "Element_Empty.h"
@@ -15,7 +15,7 @@ namespace MFM
 
   /**
     A pair-forming class.
-   
+
     Class:
     (C1) Name is Element_Pair
     (C2) Type is 0x2b2
@@ -25,7 +25,7 @@ namespace MFM
         (C3.2.1) Paired state is { side, a u1; loc, a V2D<2> }
 
     Role: Unemployed
-    
+
     Behavior:
 
     - Search for otherLoc, a location containing other, the nearest
@@ -45,7 +45,7 @@ namespace MFM
     Done
 
     Role: Employed
-    
+
     Element_Pair other = [self.role.Paired.loc] --- or FAIL
     assert(other.role == Paired)
     assert(other.role.Paired.side == 1-self.role.Paired.side)
@@ -53,7 +53,7 @@ namespace MFM
 
     Search for emptyLoc, an empty location less than distance 3
     from both self and other
-    
+
     if (emptyLoc
 
     Behavior:
@@ -76,7 +76,7 @@ namespace MFM
 
 
 
-      (1.1) If there exists i such that self.center info[i].center: 
+      (1.1) If there exists i such that self.center info[i].center:
 
         Do (R1), then
 
@@ -92,14 +92,14 @@ namespace MFM
 
 
  :=> Stand
-   
+
    */
 
 
   template <class T, u32 R>
   class Element_Pair : public Element<T,R>
   {
-   
+
     class Vector {
       FXP16 x;
       FXP16 y;
@@ -143,7 +143,7 @@ namespace MFM
       friend Vector operator/(const Vector & v1,const FXP16 num) {
         return 1.0/num*v1;
       }
-     
+
       Vector & operator=(const Vector & v1) {
         this->x = v1.x;
         this->y = v1.y;
@@ -172,7 +172,7 @@ namespace MFM
 
     };
 
-    template <u32 TVBITS> 
+    template <u32 TVBITS>
     static u32 toSignMag(FXP16 value) {
       const u32 SIGN_BIT = 1<<(TVBITS-1);
       const u32 MAX = SIGN_BIT-1;
@@ -181,13 +181,13 @@ namespace MFM
         sign = SIGN_BIT;
         value = -value;
       }
-      if (value > MAX) 
+      if (value > MAX)
         value = MAX;
       u32 val = (u32) value;
       return sign|val;
     }
 
-    template <u32 TVBITS> 
+    template <u32 TVBITS>
     static FXP16 fromSignMag(const u32 value) {
       const u32 SIGN_BIT = 1<<(TVBITS-1);
       const u32 MASK = SIGN_BIT-1;
@@ -197,14 +197,14 @@ namespace MFM
       return val;
     }
 
-    template <u32 TVBITS> 
+    template <u32 TVBITS>
     static u32 toTinyVector(const Vector v) {
       u32 x = toSignMag<TVBITS>(v.x);
       u32 y = toSignMag<TVBITS>(v.y);
       return (x<<TVBITS)|y;
     }
 
-    template <u32 TVBITS> 
+    template <u32 TVBITS>
     static Vector toVector(const u32 bits) {
       const u32 MASK = (1<<TVBITS)-1;
 
@@ -242,7 +242,7 @@ namespace MFM
       atom.SetStateField(STATE_HEADING_IDX,STATE_HEADING_LEN,toTinyVector<BITS_PER_DIM>(v));
     }
 
-    SPoint PickPossibleDestination(EventWindow<T,R>& window, const Vector & target, Random & random) const 
+    SPoint PickPossibleDestination(EventWindow<T,R>& window, const Vector & target, Random & random) const
     {
       SPoint dest;
       FXP16 totWgt = 0;
@@ -274,10 +274,10 @@ namespace MFM
         //
         // (4) Then the dest is empty or the center, throw the
         //     weighted die and select if win
-        
+
         FXP16 dist = GetDistSq(spVec,target);
         FXP16 weight = 0;
-        if (dist < MAX_DIST) 
+        if (dist < MAX_DIST)
           weight = MAX_DIST_WGT-dist*WGT_PER_DIST;
         if (other.GetType() != Element_Empty<T,R>::TYPE)
           weight /= 2;
@@ -292,7 +292,7 @@ namespace MFM
       return dest;
     }
 
-    virtual void Behavior(EventWindow<T,R>& window) const 
+    virtual void Behavior(EventWindow<T,R>& window) const
     {
       const double TARGET_SPACING = 1.5;
       Random & random = window.GetRandom();
@@ -318,7 +318,7 @@ namespace MFM
       const MDist<R> md = MDist<R>::get();
 
       // Scan event window outside self
-      for (u32 idx = md.GetFirstIndex(1); idx < md.GetLastIndex(R); ++idx) {
+      for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(R); ++idx) {
         const SPoint sp = md.GetPoint(idx);
         const T other = window.GetRelativeAtom(sp);
 
@@ -330,7 +330,7 @@ namespace MFM
         }
 
         if (otherType != selfType) continue;
-        
+
         u32 dist = sp.GetManhattanLength();
         if (dist < minDist)
           minDist = dist;

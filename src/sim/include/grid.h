@@ -55,7 +55,47 @@ namespace MFM {
           m_tiles[i][j].RegisterElement(anElement);
     }
 
-    ~Grid() 
+    template <typename PointerType> class MyIterator {
+      Grid & g;
+      s32 i;
+      s32 j;
+    public:
+      MyIterator(Grid<GC> & g, int i = 0, int j = 0) : g(g), i(i), j(j) { }
+
+      bool operator!=(const MyIterator &m) const { return i != m.i || j != m.j; }
+      void operator++() {
+        if (j < g.H) {
+          i++;
+          if (i >= g.W) {
+            i = 0;
+            j++;
+          }
+        }
+      }
+      int operator-(const MyIterator &m) const {
+        s32 rows = j-m.j;
+        s32 cols = i-m.i;
+        return rows*g.W + cols;
+      }
+
+      PointerType operator*() const {
+        return &g.m_tiles[i][j];
+      }
+
+    };
+
+    typedef MyIterator<Tile<CC>*> iterator_type;
+    typedef MyIterator<const Tile<CC>*> const_iterator_type;
+
+    iterator_type begin() { return iterator_type(*this); }
+
+    const_iterator_type begin() const { return iterator_type(*this); }
+
+    iterator_type end() { return iterator_type(*this,0,H); }
+
+    const_iterator_type end() const { return const_iterator_type(*this, 0,H); }
+
+    ~Grid()
     {
     }
 
@@ -100,7 +140,7 @@ namespace MFM {
      * Find the grid coordinate of the 'owning tile' (i.e., ignoring
      * caches) for the give siteInGrid.  Return false if there isn't
      * one, otherwise set tileInGrid and siteInTile appropriately and
-     * return true.  
+     * return true.
      *
      * Note that although siteInGrid is specified in 'uncached'
      * coordinates (in which (0,0) is the upperleftmost uncached
@@ -132,7 +172,7 @@ namespace MFM {
     /**
      * Return the Grid height in (non-cache) sites
      */
-    static u32 GetHeightSites() 
+    static u32 GetHeightSites()
     {
       return GetHeight() * Tile<CC>::OWNED_SIDE;
     }
@@ -140,7 +180,7 @@ namespace MFM {
     /**
      * Return the Grid width in (non-cache) sites
      */
-    static u32 GetWidthSites() 
+    static u32 GetWidthSites()
     {
       return GetWidth() * Tile<CC>::OWNED_SIDE;
     }

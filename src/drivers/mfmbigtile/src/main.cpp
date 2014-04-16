@@ -7,6 +7,7 @@ namespace MFM {
   typedef P1Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig,1,1> OurGridConfig;
+  typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
   struct MFMSimDHSDemo : public AbstractDriver<OurGridConfig>
   {
     MFMSimDHSDemo(DriverArguments& args) : AbstractDriver(args) { }
@@ -23,26 +24,47 @@ namespace MFM {
       mainGrid.Needed(Element_Wall<OurCoreConfig>::THE_INSTANCE);
     }
 
+    StatsRenderer<OurGridConfig>::ElementDataSlotSum m_sortingSlots[4];
+
     void ReinitEden() 
     {
       OurGrid & mainGrid = GetGrid();
-      StatsRenderer & srend = GetStatsRenderer();
+      OurStatsRenderer & srend = GetStatsRenderer();
 
       OurAtom atom(Element_Dreg<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
       OurAtom sorter(Element_Sorter<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
       OurAtom emtr(Element_Emitter<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
       OurAtom cnsr(Element_Consumer<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
 
-      srend.DisplayStatsForType(Element_Empty<OurCoreConfig>::TYPE);
-      srend.DisplayStatsForType(Element_Dreg<OurCoreConfig>::TYPE);
-      srend.DisplayStatsForType(Element_Res<OurCoreConfig>::TYPE);
-      srend.DisplayStatsForType(Element_Sorter<OurCoreConfig>::TYPE);
-      srend.DisplayStatsForType(Element_Emitter<OurCoreConfig>::TYPE);
-      srend.DisplayStatsForType(Element_Consumer<OurCoreConfig>::TYPE);
-      srend.DisplayStatsForType(Element_Data<OurCoreConfig>::TYPE);
+      srend.DisplayStatsForElement(mainGrid, Element_Empty<OurCoreConfig>::THE_INSTANCE);
+      srend.DisplayStatsForElement(mainGrid, Element_Dreg<OurCoreConfig>::THE_INSTANCE);
+      srend.DisplayStatsForElement(mainGrid, Element_Res<OurCoreConfig>::THE_INSTANCE);
+      srend.DisplayStatsForElement(mainGrid, Element_Sorter<OurCoreConfig>::THE_INSTANCE);
+      srend.DisplayStatsForElement(mainGrid, Element_Emitter<OurCoreConfig>::THE_INSTANCE);
+      srend.DisplayStatsForElement(mainGrid, Element_Consumer<OurCoreConfig>::THE_INSTANCE);
+      srend.DisplayStatsForElement(mainGrid, Element_Data<OurCoreConfig>::THE_INSTANCE);
 
-      emtr.SetStateField(0,10,10);  // What is this for??
-      cnsr.SetStateField(0,10,5);  // What is this for?? This tells the Consumer how vertical it is.
+      m_sortingSlots[0].Set(mainGrid, "Data in",
+                            Element_Emitter<OurCoreConfig>::TYPE,
+                            Element_Emitter<OurCoreConfig>::DATUMS_EMITTED_SLOT,
+                            Element_Emitter<OurCoreConfig>::DATA_SLOT_COUNT,
+                            true);
+      m_sortingSlots[1].Set(mainGrid, "Overflow",
+                            Element_Emitter<OurCoreConfig>::TYPE,
+                            Element_Emitter<OurCoreConfig>::DATUMS_REJECTED_SLOT,
+                            Element_Emitter<OurCoreConfig>::DATA_SLOT_COUNT,
+                            true);
+
+      m_sortingSlots[2].Set(mainGrid, "Data out",
+                            Element_Consumer<OurCoreConfig>::TYPE,
+                            Element_Consumer<OurCoreConfig>::DATUMS_CONSUMED_SLOT,
+                            Element_Consumer<OurCoreConfig>::DATA_SLOT_COUNT,
+                            true);
+      m_sortingSlots[3].Set(mainGrid, "Sort error",
+                            Element_Consumer<OurCoreConfig>::TYPE,
+                            Element_Consumer<OurCoreConfig>::TOTAL_BUCKET_ERROR_SLOT,
+                            Element_Consumer<OurCoreConfig>::DATA_SLOT_COUNT,
+                            true);
 
       sorter.SetStateField(0,32,DATA_MINVAL + ((DATA_MAXVAL - DATA_MINVAL) / 2));  // Default threshold
 

@@ -39,7 +39,9 @@ namespace MFM {
   template <u32 L = 64, // Bits per atom
             u32 R = 4,  // Event window radius
             u32 B = 8,  // Element table bits
-            u32 W = 40> // Tile width
+            u32 W = 40, // Tile width
+            u32 EDS = 4 // Per-Tile element data slots for experimenter's use
+            >
   struct ParamConfig {
 
     /**
@@ -67,6 +69,17 @@ namespace MFM {
      * this ParamConfiguration.
      */
     enum { TILE_WIDTH = W };
+
+    /**
+     * ELEMENT_DATA_SLOTS is the count of u64's to allocate in each
+     * ElementTable to hold arbitrary element-specific data , for
+     * purposes of experimental data storage, statistics gathering,
+     * and so forth.  Key point is that since a separate ElementTable
+     * goes in each Tile, and each Tile has its own thread, these
+     * slots are likewise available per-thread.
+     */
+    enum { ELEMENT_DATA_SLOTS = EDS };
+
   };
 
 } /* namespace MFM */

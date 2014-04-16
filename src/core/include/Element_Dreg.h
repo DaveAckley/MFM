@@ -1,7 +1,7 @@
 #ifndef ELEMENT_DREG_H  /* -*- C++ -*- */
 #define ELEMENT_DREG_H
 
-#include "Element.h"   
+#include "Element.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "itype.h"
@@ -12,9 +12,9 @@
 namespace MFM
 {
 
-#define DREG_RES_ODDS 20
-#define DREG_DEL_ODDS 10
-#define DREG_DRG_ODDS 1000
+#define DREG_RES_ODDS 50
+#define DREG_DEL_ODDS 25
+#define DREG_DRG_ODDS 100
 #define DREG_DDR_ODDS 10 /*Deleting DREGs*/
 
   template <class CC>
@@ -33,13 +33,13 @@ namespace MFM
 
     Element_Dreg() { }
 
-    virtual const T & GetDefaultAtom() const 
+    virtual const T & GetDefaultAtom() const
     {
       static T defaultAtom(TYPE,0,0,0);
       return defaultAtom;
     }
 
-    virtual u32 DefaultPhysicsColor() const 
+    virtual u32 DefaultPhysicsColor() const
     {
       return 0xff505050;
     }
@@ -47,13 +47,13 @@ namespace MFM
     virtual void Behavior(EventWindow<CC>& window) const
     {
       Random & random = window.GetRandom();
-      
+
       SPoint dir;
       MDist<R>::get().FillRandomSingleDir(dir, random);
-      
+
       T atom = window.GetRelativeAtom(dir);
       u32 oldType = atom.GetType();
-      
+
       if(oldType == ELEMENT_EMPTY)
       {
 	if(random.OneIn(DREG_DRG_ODDS))
@@ -76,7 +76,7 @@ namespace MFM
       {
 	  atom = T();
       }
-      
+
       if(atom.GetType() != oldType)
       {
 	window.SetRelativeAtom(dir, atom);
@@ -87,7 +87,7 @@ namespace MFM
     }
 
     static void Needed();
-    
+
   };
 
   template <class CC>
