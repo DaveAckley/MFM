@@ -1,5 +1,5 @@
 #include "assert.h"
-#include "BitVector_test.h"
+#include "BitVector_Test.h"
 #include "itype.h"
 
 namespace MFM {

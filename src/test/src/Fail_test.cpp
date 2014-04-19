@@ -1,4 +1,4 @@
-#include "Fail_test.h"
+#include "Fail_Test.h"
 #include <assert.h>  /* For assert */
 #include <stdlib.h>  /* For rand */
 #include "itype.h"

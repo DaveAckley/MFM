@@ -1,7 +1,7 @@
 #ifndef GRIDRENDERER_H      /* -*- C++ -*- */
 #define GRIDRENDERER_H
 
-#include "grid.h"
+#include "Grid.h"
 #include "SDL/SDL.h"
 #include "TileRenderer.h"
 

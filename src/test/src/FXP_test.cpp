@@ -1,7 +1,7 @@
 #include <math.h>
 #include <assert.h>   /* for assert */
 #include <stdlib.h>   /* for abort */
-#include "FXP_test.h"
+#include "FXP_Test.h"
 #include "itype.h"
 
 namespace MFM {

@@ -1,7 +1,7 @@
 /* -*- C++ -*- */
 
 #include "Dirs.h"
-#include "grid.h"
+#include "Grid.h"
 
 #define XRAY_SITE_ODDS 1000
 #define XRAY_BIT_ODDS 10

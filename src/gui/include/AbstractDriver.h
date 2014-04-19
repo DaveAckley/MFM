@@ -7,7 +7,7 @@
 #include "Utils.h"     /* for GetDateTimeNow */
 #include "itype.h"
 #include "Tile.h"
-#include "grid.h"
+#include "Grid.h"
 #include "GridRenderer.h"
 #include "StatsRenderer.h"
 #include "ElementTable.h"

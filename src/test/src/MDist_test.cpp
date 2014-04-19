@@ -1,5 +1,5 @@
 #include "assert.h"
-#include "MDist_test.h"
+#include "MDist_Test.h"
 
 namespace MFM {
 

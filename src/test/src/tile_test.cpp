@@ -2,7 +2,7 @@
 #include "Tile.h"
 #include "P1Atom.h"
 #include "Point.h"
-#include "tile_test.h"
+#include "Tile_Test.h"
 #include "Element_Res.h"
 
 namespace MFM {

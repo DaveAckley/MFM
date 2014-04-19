@@ -245,7 +245,7 @@ namespace MFM {
   };
 } /* namespace MFM */
 
-#include "grid.tcc"
+#include "Grid.tcc"
 
 #endif /*GRID_H*/
 

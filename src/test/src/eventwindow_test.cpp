@@ -2,7 +2,7 @@
 #include "Element_Dreg.h"
 #include "Element_Res.h"
 #include "assert.h"
-#include "eventwindow_test.h"
+#include "EventWindow_Test.h"
 #include "EventWindow.h"
 #include "P1Atom.h"
 #include "Point.h"

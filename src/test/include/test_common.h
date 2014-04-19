@@ -1,7 +1,7 @@
 #ifndef TEST_COMMON_H      /* -*- C++ -*- */
 #define TEST_COMMON_H
 
-#include "grid.h"
+#include "Grid.h"
 #include "P1Atom.h"
 #include "ParamConfig.h"
 #include "ElementTable.h"

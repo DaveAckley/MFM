@@ -2,7 +2,7 @@
 #define STATSRENDERER_H
 
 #include "SDL/SDL_ttf.h"
-#include "grid.h"
+#include "Grid.h"
 #include "itype.h"
 #include "Point.h"
 
