@@ -132,7 +132,8 @@ namespace MFM {
     {
       BUTTONFUNC_TOGGLE_EXECUTION,
       BUTTONFUNC_EMPTY_TILE,
-      BUTTONFUNC_RANDOM_NUKE
+      BUTTONFUNC_RANDOM_NUKE,
+      BUTTONFUNC_XRAY
     }ButtonFunction;
 
     void ExecuteButtonFunction(ButtonFunction func)
@@ -148,6 +149,9 @@ namespace MFM {
 	break;
       case BUTTONFUNC_RANDOM_NUKE:
 	mainGrid.RandomNuke();
+	break;
+      case BUTTONFUNC_XRAY:
+	mainGrid.XRay();
 	break;
       default:
 	FAIL(ILLEGAL_ARGUMENT);
@@ -234,6 +238,10 @@ namespace MFM {
       if(keyboard.SemiAuto(SDLK_n))
       {
 	ExecuteButtonFunction(BUTTONFUNC_RANDOM_NUKE);
+      }
+      if(keyboard.SemiAuto(SDLK_x))
+      {
+	ExecuteButtonFunction(BUTTONFUNC_XRAY);
       }
       if(keyboard.SemiAuto(SDLK_l))
       {

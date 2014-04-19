@@ -142,8 +142,6 @@ namespace MFM {
 
     bool ReadBit(int idx);
 
-    bool ToggleBit(int idx);
-
   public:
 
     BitVector();
@@ -155,6 +153,8 @@ namespace MFM {
     inline u32 Read(const u32 startIdx, const u32 length) const;
 
     void Write(const u32 startIdx, const u32 length, const u32 value);
+
+    bool ToggleBit(int idx);
 
     void Clear();
 

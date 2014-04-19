@@ -3,6 +3,9 @@
 #include "Dirs.h"
 #include "grid.h"
 
+#define XRAY_SITE_ODDS 1000
+#define XRAY_BIT_ODDS 10
+
 namespace MFM {
 
   template <class GC>
@@ -367,6 +370,19 @@ namespace MFM {
 	    PlaceAtom(atom, siteInGrid);
 	  }
 	}
+      }
+    }
+  }
+
+  template <class GC>
+  void Grid<GC>::XRay()
+  {
+    for(u32 x = 0; x < W; x++)
+    {
+      for(u32 y = 0; y < H; y++)
+      {
+	GetTile(x,y).XRay(XRAY_SITE_ODDS,
+			  XRAY_BIT_ODDS);
       }
     }
   }

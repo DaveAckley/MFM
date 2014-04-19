@@ -236,6 +236,11 @@ namespace MFM {
      */
     void RandomNuke();
 
+    /**
+     * Randomly flips bits in randomly selected sites in this grid.
+     */
+    void XRay();
+
     u32 CountActiveSites();
   };
 } /* namespace MFM */

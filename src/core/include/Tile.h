@@ -808,6 +808,8 @@ namespace MFM {
       elementTable.RegisterElement(anElement);
     }
 
+    void XRay(u32 siteOdds, u32 bitOdds);
+
   };
 } /* namespace MFM */
 

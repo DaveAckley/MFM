@@ -772,4 +772,18 @@ namespace MFM {
         FAIL(ILLEGAL_STATE);
   }
 
+  template <class CC>
+  void Tile<CC>::XRay(u32 siteOdds, u32 bitOdds)
+  {
+    for(u32 x = 0; x < W; x++)
+    {
+      for(u32 y = 0; y < W; y++)
+      {
+	if(m_random.OneIn(siteOdds))
+	{
+	  m_atoms[x][y].XRay(m_random, bitOdds);
+	}
+      }
+    }
+  }
 } /* namespace MFM */
