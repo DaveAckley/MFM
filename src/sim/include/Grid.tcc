@@ -95,7 +95,11 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::SetTileToExecuteOnly(const SPoint& tileLoc, bool value)
   {
-    GetTile(tileLoc).SetExecuteOwnEvents(value);
+    if(tileLoc.GetX() >= 0 && tileLoc.GetY() >= 0 &&
+       tileLoc.GetX() < W  && tileLoc.GetY() < H)
+    {
+      GetTile(tileLoc).SetExecuteOwnEvents(value);
+    }
   }
 
   template <class GC>
@@ -155,7 +159,7 @@ namespace MFM {
     Tile<CC> & owner = GetTile(tileInGrid);
     owner.PlaceAtom(atom, siteInTile);
 
-    Dir startDir = owner.CacheAt(siteInTile);
+    Dir startDir = owner.SharedAt(siteInTile);
 
     if ((s32) startDir < 0)       // Doesn't hit cache, we're done
       return;

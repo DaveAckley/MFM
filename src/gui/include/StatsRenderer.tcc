@@ -70,6 +70,11 @@ namespace MFM {
                         Point<u32>(m_dimensions.GetX(), ROW_HEIGHT), 0xffffffff);
       baseY += ROW_HEIGHT;
     }
+
+    for(u32 i = 0; i < m_registeredButtons; i++)
+    {
+      m_buttons[i].Render(m_dest, m_drawPoint, m_drawFont);
+    }
   }
 
   template <class GC>

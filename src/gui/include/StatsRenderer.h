@@ -1,6 +1,7 @@
 #ifndef STATSRENDERER_H /* -*- C++ -*- */
 #define STATSRENDERER_H
 
+#include "Button.h"
 #include "SDL/SDL_ttf.h"
 #include "Grid.h"
 #include "itype.h"
@@ -116,9 +117,35 @@ namespace MFM {
 
     bool m_displayAER;
 
+    static const u32 MAX_BUTTONS = 16;
+    Button m_buttons[MAX_BUTTONS];
+    u32 m_registeredButtons;
+
   public:
-    StatsRenderer() : m_drawFont(0), m_capStatsInUse(0), m_displayElementsInUse(0), m_displayAER(false)
+    StatsRenderer() : m_drawFont(0), m_capStatsInUse(0), m_displayElementsInUse(0), m_displayAER(false),
+		      m_registeredButtons(0)
+    {}
+
+    void AddButton(ButtonFunction func, const char* text)
     {
+      SPoint dimensions(256, 32);
+      SPoint location(10, 250 + (m_capStatsInUse + m_registeredButtons) * 40);
+      Button b(func, text, location, dimensions);
+
+      m_buttons[m_registeredButtons++] = b;
+    }
+
+    ButtonFunction HandleClick(SPoint& clickPt)
+    {
+      ButtonFunction func = BUTTONFUNC_NOTHING;
+      for(u32 i = 0; i < m_registeredButtons; i++)
+      {
+	if((func = m_buttons[i].Contains(clickPt)))
+	{
+	  break;
+	}
+      }
+      return func;
     }
 
     void OnceOnly() {

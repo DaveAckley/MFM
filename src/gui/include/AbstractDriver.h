@@ -5,6 +5,7 @@
 #include <sys/types.h> /* for mkdir */
 #include <errno.h>     /* for errno */
 #include "Utils.h"     /* for GetDateTimeNow */
+#include "Button.h"
 #include "itype.h"
 #include "Tile.h"
 #include "Grid.h"
@@ -128,18 +129,12 @@ namespace MFM {
       nanosleep(&tspec, NULL);
     }
 
-    typedef enum
-    {
-      BUTTONFUNC_TOGGLE_EXECUTION,
-      BUTTONFUNC_EMPTY_TILE,
-      BUTTONFUNC_RANDOM_NUKE,
-      BUTTONFUNC_XRAY
-    }ButtonFunction;
-
     void ExecuteButtonFunction(ButtonFunction func)
     {
       switch(func)
       {
+      case BUTTONFUNC_NOTHING:
+	break;
       case BUTTONFUNC_TOGGLE_EXECUTION:
 	mainGrid.SetTileToExecuteOnly(m_grend.GetSelectedTile(),
 				      !mainGrid.GetTileExecutionStatus(m_grend.GetSelectedTile()));
@@ -152,6 +147,15 @@ namespace MFM {
 	break;
       case BUTTONFUNC_XRAY:
 	mainGrid.XRay();
+	break;
+      case BUTTONFUNC_TOGGLE_HEATMAP:
+	m_grend.ToggleDataHeatmap();	
+	break;
+      case BUTTONFUNC_TOGGLE_GRID:
+	m_grend.ToggleGrid();
+	break;
+      case BUTTONFUNC_TOGGLE_TILEVIEW:
+	m_grend.ToggleMemDraw();
 	break;
       default:
 	FAIL(ILLEGAL_ARGUMENT);
@@ -187,6 +191,10 @@ namespace MFM {
 
 	  /* Adjust so we are relative to the control panel */
 	  mloc.SetX(mloc.GetX() - (s32)gdim.GetX());
+	  if(mouse.SemiAuto(SDL_BUTTON_LEFT))
+	  {
+	    ExecuteButtonFunction(m_srend.HandleClick(mloc));
+	  }
 	}
 
       }
