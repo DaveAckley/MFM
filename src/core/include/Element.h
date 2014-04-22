@@ -21,6 +21,8 @@ namespace MFM
   {
   private:
     typedef typename CC::ATOM_TYPE T;
+    typedef typename CC::PARAM_CONFIG P;
+    enum { R = P::EVENT_WINDOW_RADIUS };
 
   protected:
     static const SPoint VNNeighbors[4];

@@ -10,7 +10,7 @@
 namespace MFM {
 
 void EventWindowTest::Test_eventwindowConstruction()
-{ 
+{
   TestTile tile;
   tile.RegisterElement(Element_Dreg<TestCoreConfig>::THE_INSTANCE);
 
@@ -21,8 +21,8 @@ void EventWindowTest::Test_eventwindowConstruction()
 
   tile.PlaceAtom(TestAtom(DREG_TYPE,0,0,0), center);
 
-  TestEventWindow ew(tile, 8, 0xff);
-  ew.SetCenter(center);
+  TestEventWindow ew(tile);
+  ew.SetCenterInTile(center);
 
   TestAtom catom = ew.GetCenterAtom();
 
@@ -55,9 +55,9 @@ void EventWindowTest::Test_eventwindowWrite()
   assert(erased1->GetType() == 0);
   assert(erased2->GetType() == 0);
 
-  TestEventWindow ew(tile, 8, 0xff);
+  TestEventWindow ew(tile);
 
-  ew.SetCenter(center);
+  ew.SetCenterInTile(center);
 
   ew.SetRelativeAtom(zero, TestAtom(DREG_TYPE,0,0,0));
   ew.SetRelativeAtom(absolute, TestAtom(RES_TYPE,0,0,0));

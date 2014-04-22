@@ -6,7 +6,7 @@ namespace MFM {
   typedef ParamConfig<64,4,8,40> OurParamConfig;
   typedef P1Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
-  typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
+  typedef GridConfig<OurCoreConfig,3,2> OurGridConfig;
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
   struct MFMSimDHSDemo : public AbstractDriver<OurGridConfig>
   {

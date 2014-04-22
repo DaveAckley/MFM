@@ -6,7 +6,7 @@
 
 #define DRIVERARGUMENTS_MAX_DISABLED_TILES 0xFF
 
-namespace MFM { 
+namespace MFM {
 
   class DriverArguments
   {
@@ -25,10 +25,11 @@ namespace MFM {
     bool m_startPaused;
     bool m_startWithoutGridView;
     bool m_startMinimal;
+    u32 m_lastArgUsed;
 
   public:
 
-    DriverArguments(int argc, char **argv) :
+    DriverArguments(int & argc, char ** &argv) :
       m_programName(0),
       m_dataDirPath(0),
       m_seed(0),
@@ -40,12 +41,12 @@ namespace MFM {
       m_recordTimeBasedDataPerAEPS(-1),
       m_countOfScreenshotsPerRate(-1)
     {
-      ProcessArguments(argc,argv);
+      m_lastArgUsed = ProcessArguments(argc,argv);
     }
 
     void Die(const char * format, ...) __attribute__ ((noreturn));
 
-    int ProcessArguments(int argc, char **argv) ;
+    int ProcessArguments(int & argc, char ** &argv) ;
 
     const char * GetProgramName() const { return m_programName; }
     const char * GetDataDirPath() const { return m_dataDirPath; }

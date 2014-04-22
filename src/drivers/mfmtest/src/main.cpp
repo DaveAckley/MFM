@@ -5,6 +5,8 @@ using namespace MFM;
 int main(int argc, char** argv)
 {
 
+  PSym_test::Test_RunTests();
+
   Fail_test::Test_RunTests();
   FXP_test::Test_RunTests();
   ColorMapTest::Test_RunTests();
@@ -21,8 +23,6 @@ int main(int argc, char** argv)
   P1AtomTest::Test_p1atomReadBody();
   P1AtomTest::Test_p1atomAddLB();
   P1AtomTest::Test_p1atomAddSB();
-  //  P1AtomTest::Test_p1atomRemoveLB();
-  //  P1AtomTest::Test_p1atomRemoveSB();
 
   TileTest::Test_tilePlaceAtom();
 
