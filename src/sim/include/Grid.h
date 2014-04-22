@@ -153,7 +153,7 @@ namespace MFM {
 
     /**
      * Find the grid coordinate of the 'owning tile' (i.e., ignoring
-     * caches) for the give siteInGrid.  Return false if there isn't
+     * caches) for the given siteInGrid.  Return false if there isn't
      * one, otherwise set tileInGrid and siteInTile appropriately and
      * return true.
      */

@@ -180,10 +180,15 @@ namespace MFM {
       if (!IsLegalTileIndex(otherTileIndex)) continue;  // edge of grid
 
       Tile<CC> & other = GetTile(otherTileIndex);
-      SPoint otherIndex = siteInTile + tileOffset * Tile<CC>::OWNED_SIDE;
+
+      // siteInTile is in tileInGrid's shared region, indexed with
+      // including-cache coords.  Offsetting by the owned size
+      // (excluding caches) maps into including-cache coords on their
+      // side.  Hmm.
+
+      SPoint otherIndex = siteInTile - tileOffset * Tile<CC>::OWNED_SIDE;
 
       other.PlaceAtom(atom,otherIndex);
-      FAIL(INCOMPLETE_CODE);
     }
 
   }
@@ -343,7 +348,7 @@ namespace MFM {
 	aloc.SetX(sx + w);
 	PlaceAtom(atom, aloc);
       }
-      
+
       /* Recursively create a larger one around us */
       SurroundRectangleWithWall(sx - 1, sy - 1, w + 2, h + 2, thickness - 1);
     }
@@ -354,7 +359,7 @@ namespace MFM {
   {
     /* Let's just grab the first tile's RNG for this. */
     Random& rand = GetTile(0,0).GetRandom();
-    
+
     SPoint center(rand.Create(W * CC::PARAM_CONFIG::TILE_WIDTH),
 		  rand.Create(H * CC::PARAM_CONFIG::TILE_WIDTH));
 
@@ -396,7 +401,7 @@ namespace MFM {
   {
     u32 acc   = 0,
         sides = GetTile(0,0).GetSites();
-    
+
     for(u32 x = 0; x < W; x++)
     {
       for(u32 y = 0; y < H; y++)
@@ -406,6 +411,6 @@ namespace MFM {
     }
     return acc;
   }
-    
+
 } /* namespace MFM */
 

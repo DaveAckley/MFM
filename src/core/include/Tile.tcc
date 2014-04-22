@@ -236,6 +236,12 @@ namespace MFM {
   template <class CC>
   Dir Tile<CC>::SharedAt(const SPoint& pt) const
   {
+    return RegionAt(pt, R * 2);
+  }
+
+  template <class CC>
+  Dir Tile<CC>::VisibleAt(const SPoint& pt) const
+  {
     return RegionAt(pt, R * 3);
   }
 
@@ -617,7 +623,7 @@ namespace MFM {
       if((!m_onlyWaitOnBuffers) &&
 	 (
 	  IsInHidden(m_executingWindow.GetCenterInTile()) ||
-	  !IsConnected(lockRegion = SharedAt(m_executingWindow.GetCenterInTile())) ||
+	  !IsConnected(lockRegion = VisibleAt(m_executingWindow.GetCenterInTile())) ||
 	  (locked = LockRegion(lockRegion))
 	 ))
       {

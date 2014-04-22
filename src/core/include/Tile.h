@@ -505,11 +505,13 @@ namespace MFM {
      * @param pt The SPoint to check region membership for.
      *
      * @param reach The size, in sites from the edge of the tile, of
-     *              this region. For example, a reach of R would specify
-     *              searching for Atoms in this Tile's cache.
+     *              this region. For example, a reach of R would
+     *              specify searching for Atoms in this Tile's cache.
+     *              2*R includes the shared region, and 3*R includes
+     *              the visible region.
      *
-     * @returns The EuclidDir of the cache pointed at by pt, or
-     *          (EuclidDir)-1 if pt is not pointing at a cache.
+     * @returns The direction of the cache pointed at by pt, or
+     *          (Dir)-1 if pt is not pointing at a cache.
      */
     Dir RegionAt(const SPoint& pt, u32 reach) const;
 
@@ -519,7 +521,7 @@ namespace MFM {
      * @param pt The Point which should specify the location of a cache.
      *
      * @returns The direction of the cache specified by pt, or
-     *          (EuclidDir)-1 if there is no such cache.
+     *          (Dir)-1 if there is no such cache.
      */
     Dir CacheAt(const SPoint& pt) const;
 
@@ -531,9 +533,21 @@ namespace MFM {
      *           shared memory.
      *
      * @returns The direction of the shared memory specified by pt, or
-     *          (EuclidDir)-1 if pt is not in shared memory.
+     *          (Dir)-1 if pt is not in shared memory.
      */
     Dir SharedAt(const SPoint& pt) const;
+
+    /**
+     * Finds the region of visible memory in this Tile which contains a
+     * specified SPoint.
+     *
+     * @param pt The SPoint which should specify a location within
+     *           visible memory.
+     *
+     * @returns The direction of the visible memory specified by pt, or
+     *          (Dir)-1 if pt is not in visible memory.
+     */
+    Dir VisibleAt(const SPoint& pt) const;
 
 
     /*
