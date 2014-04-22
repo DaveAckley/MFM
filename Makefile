@@ -5,6 +5,10 @@ PLATFORMS=linux
 
 sim:	PLATFORMS:=sim
 
+doc:	FORCE
+	mkdir -p doc/ref
+	doxygen
+
 all:	$(PLATFORMS)
 
 clean:  $(PLATFORMS)
@@ -14,3 +18,5 @@ realclean:  $(PLATFORMS)
 # Pass each entry in PLATFORMS down as a target
 $(PLATFORMS):
 	export MFM_TARGET=$@;$(MAKE) -C src $(MAKECMDGOALS)
+
+.PHONY:	FORCE
