@@ -42,7 +42,7 @@ namespace MFM
     return possibles > 0;
   }
 
-#if 0
+#if 1
   template <class CC>
   void Element<CC>::Diffuse(EventWindow<CC>& window) const
   {
@@ -52,7 +52,7 @@ namespace MFM
       window.SwapAtoms(pt, SPoint(0, 0));
     }
   }
-#endif
+#else  /* Eight way diffusion */
   template <class CC>
   void Element<CC>::Diffuse(EventWindow<CC>& window) const
   {
@@ -71,4 +71,5 @@ namespace MFM
     if (picked > 0)
       window.SwapAtoms(pick, SPoint(0, 0));
   }
+#endif
 }
