@@ -65,7 +65,7 @@ namespace MFM {
       return m_tile.IsLiveSite(MapToTile(location));
     }
 
-    EventWindow(Tile<CC> & tile) : m_tile(tile), m_sym(NORMAL) { }
+    EventWindow(Tile<CC> & tile) : m_tile(tile), m_sym(PSYM_NORMAL) { }
 
     /**
      * Place this EventWindow within GetTile, in untransformed Tile

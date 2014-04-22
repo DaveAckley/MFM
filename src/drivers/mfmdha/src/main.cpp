@@ -134,7 +134,7 @@ namespace MFM {
       Element_SBar<OurCoreConfig>::THE_INSTANCE.SetSymI(aBoid1, 3);
 
       OurAtom aBoid2(Element_DBar<OurCoreConfig>::THE_INSTANCE.GetAtom(BAR_SIZE,center));
-      Element_DBar<OurCoreConfig>::THE_INSTANCE.SetSymI(aBoid2, DEG000L);
+      Element_DBar<OurCoreConfig>::THE_INSTANCE.SetSymI(aBoid2, PSYM_DEG000L);
 
       OurAtom aDReg(Element_Dreg<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
 
