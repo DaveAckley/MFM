@@ -41,7 +41,7 @@ namespace MFM {
 
     } else {
       if (++m_hashSlotsInUse > SIZE/2)
-        FAIL(TOO_MANY_ELEMENT_TYPES);
+        FAIL(TOO_MANY_ELEMENT_TYPES);  // XXX standardize on OUT_OF_ROOM ?
       m_hash[slotFor].m_element = &theElement;
 
     }

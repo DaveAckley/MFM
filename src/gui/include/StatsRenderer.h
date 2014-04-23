@@ -129,7 +129,7 @@ namespace MFM {
     void AddButton(ButtonFunction func, const char* text)
     {
       if (m_registeredButtons >= MAX_BUTTONS)
-        FAIL(ILLEGAL_ARGUMENT);
+        FAIL(OUT_OF_ROOM);
 
       SPoint dimensions(256, 32);
       SPoint location(10, 250 + (m_capStatsInUse + m_registeredButtons) * 40);
