@@ -2,7 +2,7 @@
 #define MAIN_H
 
 #include "AbstractDriver.h"
-#include "Button.h"
+#include "AbstractButton.h"
 #include "P1Atom.h"
 
 #include "EventWindow.h"

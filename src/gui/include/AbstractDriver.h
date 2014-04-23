@@ -5,7 +5,7 @@
 #include <sys/types.h> /* for mkdir */
 #include <errno.h>     /* for errno */
 #include "Utils.h"     /* for GetDateTimeNow */
-#include "Button.h"
+#include "AbstractButton.h"
 #include "itype.h"
 #include "Tile.h"
 #include "Grid.h"
@@ -129,6 +129,7 @@ namespace MFM {
       nanosleep(&tspec, NULL);
     }
 
+    /*
     void ExecuteButtonFunction(ButtonFunction func)
     {
       switch(func)
@@ -140,7 +141,7 @@ namespace MFM {
 				      !mainGrid.GetTileExecutionStatus(m_grend.GetSelectedTile()));
 	break;
       case BUTTONFUNC_EMPTY_TILE:
-	mainGrid.EmptyTile(m_grend.GetSelectedTile());
+
 	break;
       case BUTTONFUNC_RANDOM_NUKE:
 	mainGrid.RandomNuke();
@@ -162,6 +163,7 @@ namespace MFM {
 	break;
       }
     }
+    */
 
     void Update(OurGrid& grid)
     {
@@ -193,7 +195,7 @@ namespace MFM {
 	  mloc.SetX(mloc.GetX() - (s32)gdim.GetX());
 	  if(mouse.SemiAuto(SDL_BUTTON_LEFT))
 	  {
-	    ExecuteButtonFunction(m_srend.HandleClick(mloc));
+	    m_srend.HandleClick(mloc);
 	  }
 	}
 
@@ -243,14 +245,6 @@ namespace MFM {
       {
 	m_grend.ToggleMemDraw();
       }
-      if(keyboard.SemiAuto(SDLK_n))
-      {
-	ExecuteButtonFunction(BUTTONFUNC_RANDOM_NUKE);
-      }
-      if(keyboard.SemiAuto(SDLK_x))
-      {
-	ExecuteButtonFunction(BUTTONFUNC_XRAY);
-      }
       if(keyboard.SemiAuto(SDLK_l))
       {
 	m_grend.ToggleDataHeatmap();
@@ -264,15 +258,6 @@ namespace MFM {
 	m_grend.SetEventWindowRenderMode(EVENTWINDOW_RENDER_OFF);
       }
 
-      /* Per-Tile Control */
-      if(keyboard.SemiAuto(SDLK_9))
-      {
-        ExecuteButtonFunction(BUTTONFUNC_TOGGLE_EXECUTION);
-      }
-      if(keyboard.SemiAuto(SDLK_8))
-      {
-	ExecuteButtonFunction(BUTTONFUNC_EMPTY_TILE);
-      }
       if(keyboard.SemiAuto(SDLK_ESCAPE))
       {
 	m_grend.DeselectTile();
@@ -572,6 +557,11 @@ namespace MFM {
     OurGrid & GetGrid()
     {
       return mainGrid;
+    }
+
+    void ClearSelectedTile()
+    {
+      mainGrid.EmptyTile(m_grend.GetSelectedTile());      
     }
 
     void SetScreenSize(u32 width, u32 height) {

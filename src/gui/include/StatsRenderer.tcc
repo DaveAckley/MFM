@@ -73,7 +73,7 @@ namespace MFM {
 
     for(u32 i = 0; i < m_registeredButtons; i++)
     {
-      m_buttons[i].Render(m_dest, m_drawPoint, m_drawFont);
+      m_buttons[i]->Render(m_dest, m_drawPoint, m_drawFont);
     }
   }
 

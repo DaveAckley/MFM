@@ -1,7 +1,7 @@
 #ifndef STATSRENDERER_H /* -*- C++ -*- */
 #define STATSRENDERER_H
 
-#include "Button.h"
+#include "AbstractButton.h"
 #include "SDL/SDL_ttf.h"
 #include "Grid.h"
 #include "itype.h"
@@ -118,7 +118,7 @@ namespace MFM {
     bool m_displayAER;
 
     static const u32 MAX_BUTTONS = 16;
-    Button m_buttons[MAX_BUTTONS];
+    AbstractButton* m_buttons[MAX_BUTTONS];
     u32 m_registeredButtons;
 
   public:
@@ -131,29 +131,29 @@ namespace MFM {
       m_registeredButtons = 0;
     }
 
-    void AddButton(ButtonFunction func, const char* text)
+    void AddButton(AbstractButton* b)
     {
       if (m_registeredButtons >= MAX_BUTTONS)
         FAIL(OUT_OF_ROOM);
 
       SPoint dimensions(256, 32);
       SPoint location(10, 250 + (m_capStatsInUse + m_registeredButtons) * 40);
-      Button b(func, text, location, dimensions);
+      b->SetDimensions(dimensions);
+      b->SetLocation(location);
 
       m_buttons[m_registeredButtons++] = b;
     }
 
-    ButtonFunction HandleClick(SPoint& clickPt)
+    void HandleClick(SPoint& clickPt)
     {
-      ButtonFunction func = BUTTONFUNC_NOTHING;
       for(u32 i = 0; i < m_registeredButtons; i++)
       {
-	if((func = m_buttons[i].Contains(clickPt)))
+	if(m_buttons[i]->Contains(clickPt))
 	{
+	  m_buttons[i]->OnClick();
 	  break;
 	}
       }
-      return func;
     }
 
     void OnceOnly() {

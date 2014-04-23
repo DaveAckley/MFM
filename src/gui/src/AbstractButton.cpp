@@ -1,27 +1,23 @@
-#include "Button.h"
+#include "AbstractButton.h"
 #include "SDL/SDL.h"
 #include "Drawing.h"
 
 namespace MFM
 {
-  Button::Button()
+  AbstractButton::AbstractButton()
   {
-    m_func = BUTTONFUNC_NOTHING;
     m_text = NULL;
   }
 
-  Button::Button(ButtonFunction func, const char* text, SPoint location, SPoint dimensions)
+  AbstractButton::AbstractButton(const char* text)
   {
-    m_func = func;
     m_text = text;
-    m_location = location;
-    m_dimensions = dimensions;
   }
 
-  Button::~Button()
+  AbstractButton::~AbstractButton()
   {}
 
-  void Button::Render(SDL_Surface* sfc, SPoint& offset, TTF_Font* font)
+  void AbstractButton::Render(SDL_Surface* sfc, SPoint& offset, TTF_Font* font)
   {
     SPoint loc = m_location + offset;
     UPoint floc = MakeUnsigned(loc);
@@ -44,16 +40,15 @@ namespace MFM
 		      MakeUnsigned(m_dimensions), BUTTON_BORDER_COLOR);
   }
 
-  ButtonFunction Button::Contains(SPoint& pt)
+  bool AbstractButton::Contains(SPoint& pt)
   {
     if(pt.GetX() > m_location.GetX() &&
        pt.GetY() > m_location.GetY() &&
        pt.GetX() < m_location.GetX() + m_dimensions.GetX() &&
        pt.GetY() < m_location.GetY() + m_dimensions.GetY())
     {
-      return m_func;
+      return true;
     }
-    
-    return BUTTONFUNC_NOTHING;
+    return false;
   }
 }

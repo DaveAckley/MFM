@@ -24,19 +24,38 @@ namespace MFM {
       mainGrid.Needed(Element_Wall<OurCoreConfig>::THE_INSTANCE);
     }
 
+    class ClearTileButton : public AbstractButton
+    {
+    private:
+      
+      MFMSimDHSDemo* m_driver;
+      
+    public:
+
+      ClearTileButton() : AbstractButton("Clear Tile"){}
+
+      void SetDriver(MFMSimDHSDemo* driver)
+      {
+	m_driver = driver;
+      }
+
+      virtual void OnClick()
+      {
+	m_driver->ClearSelectedTile();
+      }
+    };
+
+    ClearTileButton clearButton;
+
     virtual void HandleResize()
     {
       OurStatsRenderer& srend = GetStatsRenderer();
 
       srend.ClearButtons();
 
-      srend.AddButton(BUTTONFUNC_RANDOM_NUKE, "Nuke");
-      srend.AddButton(BUTTONFUNC_XRAY, "XRay");
-      srend.AddButton(BUTTONFUNC_EMPTY_TILE, "Clear Tile");
-      srend.AddButton(BUTTONFUNC_TOGGLE_EXECUTION, "Pause Tile");
-      srend.AddButton(BUTTONFUNC_TOGGLE_HEATMAP, "Toggle Heatmap");
-      srend.AddButton(BUTTONFUNC_TOGGLE_GRID, "Toggle Grid");
-      srend.AddButton(BUTTONFUNC_TOGGLE_TILEVIEW, "Toggle Tile View");
+      clearButton.SetDriver(this);
+
+      srend.AddButton(&clearButton);
     }
 
     StatsRenderer<OurGridConfig>::ElementDataSlotSum m_sortingSlots[4];
