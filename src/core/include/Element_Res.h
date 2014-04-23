@@ -23,16 +23,16 @@ namespace MFM
     static const u32 TYPE = 0xa11ce11;             // We are stem cells able to become anything
 
     Element_Res() {}
-    
-    virtual const T & GetDefaultAtom() const 
+
+    virtual const T & GetDefaultAtom() const
     {
       static T defaultAtom(TYPE,0,0,0);
       return defaultAtom;
     }
 
-    virtual u32 DefaultPhysicsColor() const 
+    virtual u32 DefaultPhysicsColor() const
     {
-      return 0xffffff00;
+      return 0xff676700;
     }
 
     virtual void Behavior(EventWindow<C>& window) const
@@ -40,7 +40,7 @@ namespace MFM
       this->Diffuse(window);
     }
 
-    static void Needed();    
+    static void Needed();
   };
 
   template <class C>

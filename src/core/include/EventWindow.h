@@ -4,12 +4,13 @@
 #include "Point.h"
 #include "itype.h"
 #include "MDist.h"  /* for EVENT_WINDOW_SITES */
+#include "PSym.h"   /* For PointSymmetry, Map */
 
 namespace MFM {
 
+  // Forward declaration
   template <class CC>
   class Tile;
-
 
   template <class CC>
   class EventWindow
@@ -26,22 +27,59 @@ namespace MFM {
 
     SPoint m_center;
 
+    PointSymmetry m_sym;
+
+    /**
+     * Low-level, private because this does not guarantee loc is in
+     * the window!
+     */
+    SPoint MapToTile(const SPoint & loc) const
+    {
+      return Map(loc,m_sym,loc)+m_center;
+    }
+
   public:
+
+    bool InWindow(const SPoint & offset) const
+    {
+      // Ignores m_sym since point symmetries can't change this answer
+      return offset.GetManhattanLength() <= R;
+    }
+
+    /**
+     * FAIL(ILLEGAL_ARGUMENT) if offset is not in the event window
+     */
+    SPoint MapToTileValid(const SPoint & offset) const ;
+
+    PointSymmetry GetSymmetry() const { return m_sym; }
+
+    void SetSymmetry(const PointSymmetry psym) {
+      m_sym = psym;
+    }
+
     Random & GetRandom() { return m_tile.GetRandom(); }
 
     Tile<CC>& GetTile() { return m_tile; }
 
     bool IsLiveSite(const SPoint & location) const {
-      return m_tile.IsLiveSite(location+m_center);
+      return m_tile.IsLiveSite(MapToTile(location));
     }
 
-    EventWindow(Tile<CC> & tile, u32 tileWidth, u8 neighborConnections);
+    EventWindow(Tile<CC> & tile) : m_tile(tile), m_sym(PSYM_NORMAL) { }
 
-    EventWindow(Tile<CC> & tile) : m_tile(tile) { }
+    /**
+     * Place this EventWindow within GetTile, in untransformed Tile
+     * coordinates.
+     */
+    void SetCenterInTile(const SPoint& center) {
+      m_center = center;
+    }
 
-    void SetCenter(const SPoint& center) ;
-
-    const SPoint& GetCenter() const { return m_center; }
+    /**
+     * Get the position this EventWindow within GetTile, in
+     * untransformed Tile coordinates.
+     */
+    const SPoint& GetCenterInTile() const { return m_center; }
 
     ~EventWindow() { }
 
@@ -55,9 +93,9 @@ namespace MFM {
       return *m_tile.GetAtom(m_center);
     }
 
-    void SetCenterAtom(const T& atom) 
+    void SetCenterAtom(const T& atom)
     {
-      return m_tile.PlaceAtom(atom,m_center);
+      return m_tile.PlaceAtom(atom, m_center);
     }
 
     const T& GetRelativeAtom(const SPoint& offset) const;
@@ -66,8 +104,9 @@ namespace MFM {
 
     void SwapAtoms(const SPoint& locA, const SPoint& locB);
 
-    void FillCenter(SPoint& out) const;
-  
+    // Deprecated: Use GetCenterInTile instead
+    // void FillCenter(SPoint& out) const;
+
   };
 } /* namespace MFM */
 

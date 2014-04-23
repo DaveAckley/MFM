@@ -22,9 +22,8 @@ bin/*
 build
 lib/*
 
-# Ignore doxygen
-html/
-latex/
+# Ignore doxygen-generated output
+doc/ref
 
 # Ignore the code log
 codelog.txt

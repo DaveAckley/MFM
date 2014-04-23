@@ -12,10 +12,10 @@
 namespace MFM
 {
 
-#define DREG_RES_ODDS 50
-#define DREG_DEL_ODDS 25
-#define DREG_DRG_ODDS 100
-#define DREG_DDR_ODDS 10 /*Deleting DREGs*/
+#define DREG_RES_ODDS 100
+#define DREG_DEL_ODDS 40
+#define DREG_DRG_ODDS 200
+#define DREG_DDR_ODDS 20 /*Deleting DREGs*/
 
   template <class CC>
   class Element_Dreg : public Element<CC>

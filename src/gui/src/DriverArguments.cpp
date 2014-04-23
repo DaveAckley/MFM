@@ -24,7 +24,7 @@ namespace MFM {
   }
 
   /* This should be written with getopt! */
-  int DriverArguments::ProcessArguments(int argc, char **argv)
+  int DriverArguments::ProcessArguments(int & argc, char  ** &argv)
   {
     m_programName = GetNextArg(argc,argv);
 
@@ -34,6 +34,10 @@ namespace MFM {
     while (argc > 0) {
       const char * arg = GetNextArg(argc,argv);
       if (!arg) Die("Unreachable?");
+
+      if (!strcmp("--",arg)) {
+        return argc;
+      }
 
       if (!strcmp("-s",arg) || !strcmp("--seed",arg)) {
 
@@ -163,6 +167,8 @@ namespace MFM {
 		" --nostartpaused            Start running immediately for hands-off operation.\n"
 		" --startwithoutgrid         Start with the statistics view on screen.\n"
 		" --startminimal             Start with as small a window as possible.\n"
+		"\n"
+		" --                         Flag end of standard arguments.\n"
                 );
         exit(0);
       } else {

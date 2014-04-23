@@ -3,64 +3,32 @@
 
 namespace MFM {
 
-template <class C>
-EventWindow<C>::EventWindow(Tile<C> & tile, u32 tileWidth,
-			      u8 neighborConnections) : m_tile(tile)
+template <class CC>
+SPoint EventWindow<CC>::MapToTileValid(const SPoint& offset) const
 {
-  // m_tileWidth = tileWidth;
-  //  m_neighborConnections = neighborConnections;
-
+  if (!InWindow(offset)) FAIL(ILLEGAL_ARGUMENT);
+  return MapToTile(offset);
 }
 
-template <class C>
-void EventWindow<C>::SetCenter(const SPoint& center)
+template <class CC>
+bool EventWindow<CC>::SetRelativeAtom(const SPoint& offset, const T & atom)
 {
-  m_center = center;
-}
 
-template <class C> 
-bool EventWindow<C>::SetRelativeAtom(const SPoint& offset, const T & atom)
-{
-  s32 idx = MDist<R>::get().FromPoint(offset, R);
-  if (idx < 0)
-    FAIL(ILLEGAL_ARGUMENT);
-
-  SPoint accessLoc(offset);
-  accessLoc.Add(m_center.GetX(), m_center.GetY());
-  
-  m_tile.PlaceAtom(atom, accessLoc);
-
+  m_tile.PlaceAtom(atom, MapToTileValid(offset));
   return true;
 }
 
-template <class C>
-const typename C::ATOM_TYPE& EventWindow<C>::GetRelativeAtom(const SPoint& offset) const
+template <class CC>
+const typename CC::ATOM_TYPE& EventWindow<CC>::GetRelativeAtom(const SPoint& offset) const
 {
-  s32 idx = MDist<R>::get().FromPoint(offset, R);
-  if (idx < 0)
-    FAIL(ILLEGAL_ARGUMENT);
-
-  SPoint accessLoc(offset);
-  accessLoc.Add(m_center.GetX(), m_center.GetY());
-
-  return *m_tile.GetAtom(accessLoc);
-
+  return *m_tile.GetAtom(MapToTileValid(offset));
 }
 
-template <class C>
-void EventWindow<C>::SwapAtoms(const SPoint& locA, const SPoint& locB)
+template <class CC>
+void EventWindow<CC>::SwapAtoms(const SPoint& locA, const SPoint& locB)
 {
-  s32 aIdx = MDist<R>::get().FromPoint(locA, R);
-  s32 bIdx = MDist<R>::get().FromPoint(locB, R);
-
-  if (aIdx < 0) FAIL(ILLEGAL_ARGUMENT);
-  if (bIdx < 0) FAIL(ILLEGAL_ARGUMENT);
-
-  SPoint arrLocA(locA);
-  SPoint arrLocB(locB);
-
-  arrLocA.Add(m_center.GetX(), m_center.GetY());
-  arrLocB.Add(m_center.GetX(), m_center.GetY());
+  SPoint arrLocA(MapToTileValid(locA));
+  SPoint arrLocB(MapToTileValid(locB));
 
   T a = *m_tile.GetAtom(arrLocA);
   T b = *m_tile.GetAtom(arrLocB);
@@ -69,9 +37,4 @@ void EventWindow<C>::SwapAtoms(const SPoint& locA, const SPoint& locB)
 }
 
 
-template <class C>
-void EventWindow<C>::FillCenter(SPoint& out) const
-{
-  out.Set(m_center.GetX(), m_center.GetY());
-}
 } /* namespace MFM */

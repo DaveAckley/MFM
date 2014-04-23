@@ -176,7 +176,7 @@ namespace MFM {
     SPoint pt(GetRandom(), maxval, maxval);
     pt.Add(EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS);
 
-    m_executingWindow.SetCenter(pt);
+    m_executingWindow.SetCenterInTile(pt);
   }
 
   template <class CC>
@@ -235,6 +235,12 @@ namespace MFM {
 
   template <class CC>
   Dir Tile<CC>::SharedAt(const SPoint& pt) const
+  {
+    return RegionAt(pt, R * 2);
+  }
+
+  template <class CC>
+  Dir Tile<CC>::VisibleAt(const SPoint& pt) const
   {
     return RegionAt(pt, R * 3);
   }
@@ -369,7 +375,7 @@ namespace MFM {
     u32 dirBitfield = 0;
 
     s32 r2 = R * 2;
-    m_executingWindow.FillCenter(ewCenter);
+    ewCenter = m_executingWindow.GetCenterInTile();
 
     for(u32 i = 0; i < m_executingWindow.GetAtomCount(); i++)
     {
@@ -597,7 +603,7 @@ namespace MFM {
 	  }
 	}
 	/* Have we waited long enough without a response? Let's disconnect that tile. */
-	
+
       }
       pthread_yield();
       m_threadPauser.WaitIfPaused();
@@ -616,35 +622,36 @@ namespace MFM {
       u32 dirWaitWord = 0;
       if((!m_onlyWaitOnBuffers) &&
 	 (
-	  IsInHidden(m_executingWindow.GetCenter()) ||
-	  !IsConnected(lockRegion = SharedAt(m_executingWindow.GetCenter())) ||
+	  IsInHidden(m_executingWindow.GetCenterInTile()) ||
+	  !IsConnected(lockRegion = VisibleAt(m_executingWindow.GetCenterInTile())) ||
 	  (locked = LockRegion(lockRegion))
 	 ))
       {
 	unwind_protect({
 	    ++m_eventsFailed;
 	    ++m_failuresErased;
+            fprintf(stderr,"FE(%x)\n",m_executingWindow.GetCenterAtom().GetType());
 	    m_executingWindow.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
 	  },{
 	    elementTable.Execute(m_executingWindow);
 	  });
-	
+
 	// XXX INSANE SLOWDOWN FOR DEBUG: AssertValidAtomCounts();
 
-	m_executingWindow.FillCenter(m_lastExecutedAtom);
-	
+	m_lastExecutedAtom = m_executingWindow.GetCenterInTile();
+
 	dirWaitWord = SendRelevantAtoms();
-	
+
 	SendEndEventPackets(dirWaitWord);
-	
+
 	FlushAndWaitOnAllBuffers(dirWaitWord);
-	
+
 	++m_eventsExecuted;
-	++m_regionEvents[RegionIn(m_executingWindow.GetCenter())];
-	
-	++m_siteEvents[m_executingWindow.GetCenter().GetX() - R]
-	              [m_executingWindow.GetCenter().GetY() - R];
-	
+	++m_regionEvents[RegionIn(m_executingWindow.GetCenterInTile())];
+
+	++m_siteEvents[m_executingWindow.GetCenterInTile().GetX() - R]
+	              [m_executingWindow.GetCenterInTile().GetY() - R];
+
 	if(locked)
         {
 	UnlockRegion(lockRegion);

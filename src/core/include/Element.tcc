@@ -42,6 +42,7 @@ namespace MFM
     return possibles > 0;
   }
 
+#if 1
   template <class CC>
   void Element<CC>::Diffuse(EventWindow<CC>& window) const
   {
@@ -51,5 +52,24 @@ namespace MFM
       window.SwapAtoms(pt, SPoint(0, 0));
     }
   }
+#else  /* Eight way diffusion */
+  template <class CC>
+  void Element<CC>::Diffuse(EventWindow<CC>& window) const
+  {
+    Random & random = window.GetRandom();
+    SPoint pick;
+    u32 picked = 0;
+    const MDist<R> md = MDist<R>::get();
 
+    for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(2); ++idx) {
+      const SPoint sp = md.GetPoint(idx);
+      if (sp.GetMaximumLength() > 1) continue;
+      T other = window.GetRelativeAtom(sp);
+      if (other.GetType() == ELEMENT_EMPTY && random.OneIn(++picked))
+        pick = sp;
+    }
+    if (picked > 0)
+      window.SwapAtoms(pick, SPoint(0, 0));
+  }
+#endif
 }
