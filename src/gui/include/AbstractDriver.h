@@ -137,8 +137,6 @@ namespace MFM {
       case BUTTONFUNC_NOTHING:
 	break;
       case BUTTONFUNC_TOGGLE_EXECUTION:
-	mainGrid.SetTileToExecuteOnly(m_grend.GetSelectedTile(),
-				      !mainGrid.GetTileExecutionStatus(m_grend.GetSelectedTile()));
 	break;
       case BUTTONFUNC_EMPTY_TILE:
 
@@ -562,6 +560,12 @@ namespace MFM {
     void ClearSelectedTile()
     {
       mainGrid.EmptyTile(m_grend.GetSelectedTile());      
+    }
+
+    void PauseSelectedTile()
+    {
+      mainGrid.SetTileToExecuteOnly(m_grend.GetSelectedTile(),
+				    !mainGrid.GetTileExecutionStatus(m_grend.GetSelectedTile()));
     }
 
     void SetScreenSize(u32 width, u32 height) {

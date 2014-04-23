@@ -24,20 +24,25 @@ namespace MFM {
       mainGrid.Needed(Element_Wall<OurCoreConfig>::THE_INSTANCE);
     }
 
-    class ClearTileButton : public AbstractButton
+    class AbstractDriverButton : public AbstractButton
     {
-    private:
-      
+    protected: 
       MFMSimDHSDemo* m_driver;
-      
     public:
+      AbstractDriverButton(const char* title) : AbstractButton(title){}
 
-      ClearTileButton() : AbstractButton("Clear Tile"){}
-
-      void SetDriver(MFMSimDHSDemo* driver)
+      MFMSimDHSDemo* SetDriver(MFMSimDHSDemo* driver)
       {
-	m_driver = driver;
+	return m_driver = driver;
       }
+      
+      virtual void OnClick() = 0;
+    };
+
+    class ClearTileButton : public AbstractDriverButton
+    {
+    public:
+      ClearTileButton() : AbstractDriverButton("Clear Tile"){}
 
       virtual void OnClick()
       {
@@ -45,7 +50,19 @@ namespace MFM {
       }
     };
 
-    ClearTileButton clearButton;
+    class PauseTileButton : public AbstractDriverButton
+    {
+    public:
+      PauseTileButton() : AbstractDriverButton("Pause Tile"){}
+
+      virtual void OnClick()
+      {
+	m_driver->PauseSelectedTile();
+      }
+    };
+
+    ClearTileButton clearTileButton;
+    PauseTileButton pauseTileButton;
 
     virtual void HandleResize()
     {
@@ -53,9 +70,11 @@ namespace MFM {
 
       srend.ClearButtons();
 
-      clearButton.SetDriver(this);
+      pauseTileButton.SetDriver(
+      clearTileButton.SetDriver(this));
 
-      srend.AddButton(&clearButton);
+      srend.AddButton(&clearTileButton);
+      srend.AddButton(&pauseTileButton);
     }
 
     StatsRenderer<OurGridConfig>::ElementDataSlotSum m_sortingSlots[4];
