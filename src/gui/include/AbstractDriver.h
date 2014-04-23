@@ -129,39 +129,6 @@ namespace MFM {
       nanosleep(&tspec, NULL);
     }
 
-    /*
-    void ExecuteButtonFunction(ButtonFunction func)
-    {
-      switch(func)
-      {
-      case BUTTONFUNC_NOTHING:
-	break;
-      case BUTTONFUNC_TOGGLE_EXECUTION:
-	break;
-      case BUTTONFUNC_EMPTY_TILE:
-
-	break;
-      case BUTTONFUNC_RANDOM_NUKE:
-	mainGrid.RandomNuke();
-	break;
-      case BUTTONFUNC_XRAY:
-	mainGrid.XRay();
-	break;
-      case BUTTONFUNC_TOGGLE_HEATMAP:
-	m_grend.ToggleDataHeatmap();	
-	break;
-      case BUTTONFUNC_TOGGLE_GRID:
-	m_grend.ToggleGrid();
-	break;
-      case BUTTONFUNC_TOGGLE_TILEVIEW:
-	m_grend.ToggleMemDraw();
-	break;
-      default:
-	FAIL(ILLEGAL_ARGUMENT);
-	break;
-      }
-    }
-    */
 
     void Update(OurGrid& grid)
     {
@@ -556,7 +523,7 @@ namespace MFM {
     {
       return mainGrid;
     }
-
+    /* Methods used by buttons */
     void ClearSelectedTile()
     {
       mainGrid.EmptyTile(m_grend.GetSelectedTile());      
@@ -567,6 +534,32 @@ namespace MFM {
       mainGrid.SetTileToExecuteOnly(m_grend.GetSelectedTile(),
 				    !mainGrid.GetTileExecutionStatus(m_grend.GetSelectedTile()));
     }
+
+    void RandomNuke()
+    {
+      mainGrid.RandomNuke();
+    }
+
+    void XRay()
+    {
+      mainGrid.XRay();
+    }
+
+    void ToggleHeatmap()
+    {
+      m_grend.ToggleDataHeatmap();
+    }
+
+    void ToggleGrid()
+    {
+      m_grend.ToggleGrid();      
+    }
+
+    void ToggleTileView()
+    {
+      m_grend.ToggleMemDraw();      
+    }
+
 
     void SetScreenSize(u32 width, u32 height) {
       m_screenWidth = width;

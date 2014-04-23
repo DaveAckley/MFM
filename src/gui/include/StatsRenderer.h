@@ -137,7 +137,7 @@ namespace MFM {
         FAIL(OUT_OF_ROOM);
 
       SPoint dimensions(256, 32);
-      SPoint location(10, 250 + (m_capStatsInUse + m_registeredButtons) * 40);
+      SPoint location(10, (m_capStatsInUse + m_registeredButtons) * 40);
       b->SetDimensions(dimensions);
       b->SetLocation(location);
 

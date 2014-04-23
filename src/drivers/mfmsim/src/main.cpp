@@ -24,22 +24,7 @@ namespace MFM {
       mainGrid.Needed(Element_Wall<OurCoreConfig>::THE_INSTANCE);
     }
 
-    class AbstractDriverButton : public AbstractButton
-    {
-    protected: 
-      MFMSimDHSDemo* m_driver;
-    public:
-      AbstractDriverButton(const char* title) : AbstractButton(title){}
-
-      MFMSimDHSDemo* SetDriver(MFMSimDHSDemo* driver)
-      {
-	return m_driver = driver;
-      }
-      
-      virtual void OnClick() = 0;
-    };
-
-    class ClearTileButton : public AbstractDriverButton
+    class ClearTileButton : public AbstractDriverButton<MFMSimDHSDemo>
     {
     public:
       ClearTileButton() : AbstractDriverButton("Clear Tile"){}
@@ -50,7 +35,7 @@ namespace MFM {
       }
     };
 
-    class PauseTileButton : public AbstractDriverButton
+    class PauseTileButton : public AbstractDriverButton<MFMSimDHSDemo>
     {
     public:
       PauseTileButton() : AbstractDriverButton("Pause Tile"){}
@@ -61,8 +46,68 @@ namespace MFM {
       }
     };
 
+    class RandomNukeButton : public AbstractDriverButton<MFMSimDHSDemo>
+    {
+    public:
+      RandomNukeButton() : AbstractDriverButton("Nuke"){}
+
+      virtual void OnClick()
+      {
+	m_driver->RandomNuke();
+      }
+    };
+
+    class XRayButton : public AbstractDriverButton<MFMSimDHSDemo>
+    {
+    public:
+      XRayButton() : AbstractDriverButton("XRay"){}
+
+      virtual void OnClick()
+      {
+	m_driver->XRay();
+      }
+    };
+
+    class ToggleHeatmapButton : public AbstractDriverButton<MFMSimDHSDemo>
+    {
+    public:
+      ToggleHeatmapButton() : AbstractDriverButton("Toggle Heatmap"){}
+
+      virtual void OnClick()
+      {
+	m_driver->ToggleHeatmap();
+      }
+    };
+
+    class ToggleGridButton : public AbstractDriverButton<MFMSimDHSDemo>
+    {
+    public:
+      ToggleGridButton() : AbstractDriverButton("Toggle Grid"){}
+
+      virtual void OnClick()
+      {
+	m_driver->ToggleGrid();
+      }
+    };
+
+    class ToggleTileViewButton : public AbstractDriverButton<MFMSimDHSDemo>
+    {
+    public:
+      ToggleTileViewButton() : AbstractDriverButton("Toggle Tile View"){}
+
+      virtual void OnClick()
+      {
+	m_driver->ToggleTileView();
+      }
+    };
+
     ClearTileButton clearTileButton;
     PauseTileButton pauseTileButton;
+    RandomNukeButton randomNukeButton;
+    XRayButton xrayButton;
+    ToggleHeatmapButton toggleHeatmapButton;
+    ToggleGridButton toggleGridButton;
+    ToggleTileViewButton toggleTileViewButton;
 
     virtual void HandleResize()
     {
@@ -71,10 +116,20 @@ namespace MFM {
       srend.ClearButtons();
 
       pauseTileButton.SetDriver(
-      clearTileButton.SetDriver(this));
+      randomNukeButton.SetDriver(
+      xrayButton.SetDriver(
+      toggleHeatmapButton.SetDriver(
+      toggleGridButton.SetDriver(
+      toggleTileViewButton.SetDriver(
+      clearTileButton.SetDriver(this)))))));
 
       srend.AddButton(&clearTileButton);
       srend.AddButton(&pauseTileButton);
+      srend.AddButton(&randomNukeButton);
+      srend.AddButton(&xrayButton);
+      srend.AddButton(&toggleHeatmapButton);
+      srend.AddButton(&toggleGridButton);
+      srend.AddButton(&toggleTileViewButton);
     }
 
     StatsRenderer<OurGridConfig>::ElementDataSlotSum m_sortingSlots[4];

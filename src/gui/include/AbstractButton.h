@@ -47,6 +47,22 @@ namespace MFM
 
     bool Contains(SPoint& pt);
   };
+
+  template <class baseDriver>
+  class AbstractDriverButton : public AbstractButton
+  {
+  protected: 
+    baseDriver* m_driver;
+  public:
+    AbstractDriverButton(const char* title) : AbstractButton(title){}
+    
+    baseDriver* SetDriver(baseDriver* driver)
+    {
+      return m_driver = driver;
+    }
+    
+    virtual void OnClick() = 0;
+  };
 }
 
 #endif /* ABSTRACTBUTTON_H */
