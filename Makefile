@@ -5,11 +5,11 @@ PLATFORMS=linux
 
 sim:	PLATFORMS:=sim
 
+all:	$(PLATFORMS)
+
 doc:	FORCE
 	mkdir -p doc/ref
 	doxygen
-
-all:	$(PLATFORMS)
 
 clean:  $(PLATFORMS)
 
