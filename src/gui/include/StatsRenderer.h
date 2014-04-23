@@ -126,6 +126,11 @@ namespace MFM {
 		      m_registeredButtons(0)
     {}
 
+    void ClearButtons()
+    {
+      m_registeredButtons = 0;
+    }
+
     void AddButton(ButtonFunction func, const char* text)
     {
       if (m_registeredButtons >= MAX_BUTTONS)

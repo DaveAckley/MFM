@@ -37,6 +37,11 @@ namespace MFM {
         mainGrid.Needed(Element_Mover<OurCoreConfig>::THE_INSTANCE);
     }
 
+    virtual void HandleResize()
+    {
+
+    }
+
     void ReinitEden()
     {
       OurGrid & mainGrid = GetGrid();
@@ -114,6 +119,11 @@ namespace MFM {
       mainGrid.Needed(Element_SBar<OurCoreConfig>::THE_INSTANCE);
       mainGrid.Needed(Element_DBar<OurCoreConfig>::THE_INSTANCE);
       mainGrid.Needed(Element_Mover<OurCoreConfig>::THE_INSTANCE);
+    }
+
+    virtual void HandleResize()
+    {
+
     }
 
     void ReinitEden()

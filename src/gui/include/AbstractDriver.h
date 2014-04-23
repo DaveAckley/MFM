@@ -524,6 +524,8 @@ namespace MFM {
 
       ReinitEden();
 
+      HandleResize();
+
       ReapplyPostArguments(m_driverArguments);
     }
 
@@ -565,6 +567,8 @@ namespace MFM {
      */
     virtual void ReinitEden() = 0;
 
+    virtual void HandleResize() = 0;
+
     OurGrid & GetGrid()
     {
       return mainGrid;
@@ -579,13 +583,21 @@ namespace MFM {
         FAIL(ILLEGAL_STATE);
 
       m_grend.SetDestination(screen);
-      m_grend.SetDimensions(UPoint(m_screenWidth,m_screenHeight));
-
+      if(renderStats)
+      {
+	m_grend.SetDimensions(UPoint(m_screenWidth - STATS_WINDOW_WIDTH,m_screenHeight));
+      }
+      else
+      {
+	m_grend.SetDimensions(UPoint(m_screenWidth,m_screenHeight));
+      }
+      
       m_srend.SetDestination(screen);
       m_srend.SetDrawPoint(SPoint(m_screenWidth-STATS_WINDOW_WIDTH, 0));
       m_srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, m_screenHeight));
 
       printf("Screen resize: %d x %d\n", width, height);
+      HandleResize();
     }
 
     StatsRenderer<GC> & GetStatsRenderer()

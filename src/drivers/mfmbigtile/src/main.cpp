@@ -24,6 +24,11 @@ namespace MFM {
       mainGrid.Needed(Element_Wall<OurCoreConfig>::THE_INSTANCE);
     }
 
+    virtual void HandleResize()
+    {
+
+    }
+
     StatsRenderer<OurGridConfig>::ElementDataSlotSum m_sortingSlots[4];
 
     void ReinitEden() 

@@ -24,6 +24,21 @@ namespace MFM {
       mainGrid.Needed(Element_Wall<OurCoreConfig>::THE_INSTANCE);
     }
 
+    virtual void HandleResize()
+    {
+      OurStatsRenderer& srend = GetStatsRenderer();
+
+      srend.ClearButtons();
+
+      srend.AddButton(BUTTONFUNC_RANDOM_NUKE, "Nuke");
+      srend.AddButton(BUTTONFUNC_XRAY, "XRay");
+      srend.AddButton(BUTTONFUNC_EMPTY_TILE, "Clear Tile");
+      srend.AddButton(BUTTONFUNC_TOGGLE_EXECUTION, "Pause Tile");
+      srend.AddButton(BUTTONFUNC_TOGGLE_HEATMAP, "Toggle Heatmap");
+      srend.AddButton(BUTTONFUNC_TOGGLE_GRID, "Toggle Grid");
+      srend.AddButton(BUTTONFUNC_TOGGLE_TILEVIEW, "Toggle Tile View");
+    }
+
     StatsRenderer<OurGridConfig>::ElementDataSlotSum m_sortingSlots[4];
 
     void ReinitEden()
@@ -43,14 +58,6 @@ namespace MFM {
       srend.DisplayStatsForElement(mainGrid, Element_Emitter<OurCoreConfig>::THE_INSTANCE);
       srend.DisplayStatsForElement(mainGrid, Element_Consumer<OurCoreConfig>::THE_INSTANCE);
       srend.DisplayStatsForElement(mainGrid, Element_Data<OurCoreConfig>::THE_INSTANCE);
-
-      srend.AddButton(BUTTONFUNC_RANDOM_NUKE, "Nuke");
-      srend.AddButton(BUTTONFUNC_XRAY, "XRay");
-      srend.AddButton(BUTTONFUNC_EMPTY_TILE, "Clear Tile");
-      srend.AddButton(BUTTONFUNC_TOGGLE_EXECUTION, "Pause Tile");
-      srend.AddButton(BUTTONFUNC_TOGGLE_HEATMAP, "Toggle Heatmap");
-      srend.AddButton(BUTTONFUNC_TOGGLE_GRID, "Toggle Grid");
-      srend.AddButton(BUTTONFUNC_TOGGLE_TILEVIEW, "Toggle Tile View");
 
       m_sortingSlots[0].Set(mainGrid, "Data in",
                             Element_Emitter<OurCoreConfig>::TYPE,
