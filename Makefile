@@ -11,6 +11,11 @@ doc:	FORCE
 	mkdir -p doc/ref
 	doxygen
 
+commondeps: FORCE
+	mkdir -p ~/.mfm/res/
+	cp res/* ~/.mfm/res/
+	chmod -R 777 ~/.mfm/
+
 clean:  $(PLATFORMS)
 
 realclean:  $(PLATFORMS)

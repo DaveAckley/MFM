@@ -6,6 +6,9 @@
 #include "Grid.h"
 #include "itype.h"
 #include "Point.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 namespace MFM {
 
@@ -157,9 +160,16 @@ namespace MFM {
     }
 
     void OnceOnly() {
-      m_drawFont = TTF_OpenFont("UbuntuMono-B.ttf", 30);
+      char fontloc[1024];
+      sprintf(fontloc, "%s/.mfm/res/UbuntuMono-B.ttf", getenv("HOME"));
+      m_drawFont = TTF_OpenFont(fontloc, 30);
       if (!m_drawFont)
+      {
+	fprintf(stderr, 
+		"TTF Font Error: %s\n",
+		TTF_GetError());
         FAIL(ILLEGAL_STATE);
+      }
     }
 
     bool GetDisplayAER() const { return m_displayAER; }
