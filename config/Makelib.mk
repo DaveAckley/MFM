@@ -17,7 +17,14 @@ HEADERS := $(wildcard include/*)
 
 ALLDEP += $(HEADERS)
 
-all:	$(ARCHIVEPATH)
+all:	$(ARCHIVEPATH) commondeps
+
+
+commondeps:	FORCE
+	mkdir -p $(DSHARED_DIR)
+	cp -r $(BASEDIR)/res/* $(DSHARED_DIR)
+	chmod -R 777 $(DSHARED_DIR)
+
 
 $(ARCHIVEPATH):	$(BUILDDIR) $(OBJECTS) 
 	$(AR) ruc "$@" $(OBJECTS)
@@ -32,5 +39,5 @@ realclean:	clean
 	rm -f $(ARCHIVEPATH)
 	rm -f src/*~ include/*~ *~
 
-.PHONY:	clean realclean
+.PHONY:	clean realclean FORCE
 

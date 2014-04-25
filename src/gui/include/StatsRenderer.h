@@ -159,9 +159,22 @@ namespace MFM {
       }
     }
 
+    void translateHome(char* buffer)
+    {
+      if(*buffer == '~')
+      {
+	char trans[1024] = {0};
+	sprintf(trans, "%s%s", 
+		getenv("HOME"),
+		buffer + 1);
+	sprintf(buffer, "%s", trans);
+      }
+    }
+
     void OnceOnly() {
       char fontloc[1024];
-      sprintf(fontloc, "%s/.mfm/res/UbuntuMono-B.ttf", getenv("HOME"));
+      sprintf(fontloc, "%s/UbuntuMono-B.ttf", DSHARED_DIR);
+      translateHome(fontloc);
       m_drawFont = TTF_OpenFont(fontloc, 30);
       if (!m_drawFont)
       {

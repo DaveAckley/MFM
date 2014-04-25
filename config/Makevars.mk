@@ -33,9 +33,13 @@ ifndef COMMANDS
   MAKEFLAGS += --quiet
 endif
 
+ifndef DSHARED_DIR
+  DSHARED_DIR := ~/.mfm/res
+endif
+
 # Common flags: All about errors -- let's help them help us
-COMMON_CFLAGS+=-Wall -pedantic -Werror -Wundef
-COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror
+COMMON_CFLAGS+=-Wall -pedantic -Werror -Wundef -D DSHARED_DIR=\"$(DSHARED_DIR)\"
+COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror -D DSHARED_DIR=\"$(DSHARED_DIR)\"
 COMMON_LDFLAGS+=-Wl,--fatal-warnings
 
 # Native tool chain
