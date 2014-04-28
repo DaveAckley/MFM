@@ -148,7 +148,14 @@ namespace MFM {
     switch(packet.GetType())
     {
     case PACKET_WRITE:
-      PlaceAtom(packet.GetAtom(), packet.GetLocation());
+      if(packet.GetAtom().IsSane())
+      {
+	PlaceAtom(packet.GetAtom(), packet.GetLocation());
+      }
+      else
+      {
+	PlaceAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), packet.GetLocation());
+      }
       break;
     case PACKET_EVENT_COMPLETE:
       SendAcknowledgmentPacket(packet);
@@ -249,16 +256,29 @@ namespace MFM {
   void Tile<CC>::PlaceAtom(const T& atom, const SPoint& pt)
   {
     const T* oldAtom = GetAtom(pt);
-    u32 oldType = oldAtom->GetType();
+    u32 oldType = 0;
+    bool recounted = false;
+    unwind_protect(
+    {
+      recounted = true;
+      m_atoms[pt.GetX()][pt.GetY()] =
+	Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+      RecountAtoms();
+    },
+    {
+      oldType = oldAtom->GetType();
+    });
 
     // XXX IMPLEMENT BIT-CORRUPTION-ON-WRITE IN HERE
-
-    InternalPutAtom(atom,pt.GetX(),pt.GetY());
-
-    if(!IsInCache(pt))
+    if(!recounted)
     {
-      IncrAtomCount(atom.GetType(),1);
-      IncrAtomCount(oldType,-1);
+      InternalPutAtom(atom,pt.GetX(),pt.GetY());
+
+      if(!IsInCache(pt))
+      {
+	IncrAtomCount(atom.GetType(),1);
+	IncrAtomCount(oldType,-1);
+      }
     }
   }
 
@@ -292,8 +312,14 @@ namespace MFM {
 
       Packet<T> sendout(PACKET_WRITE);
 
+      /* Did this atom get corrupted? Destroy it! */
+      if(!m_atoms[atomLoc.GetX()][atomLoc.GetY()].IsSane())
+      {
+	PlaceAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), atomLoc);
+      }
+
       sendout.SetLocation(remoteLoc);
-      sendout.SetAtom(*GetAtom(atomLoc));
+      sendout.SetAtom(m_atoms[atomLoc.GetX()][atomLoc.GetY()]);
       sendout.SetReceivingNeighbor(neighbor);
 
       /* Send out the serialized version of the packet */
@@ -630,7 +656,14 @@ namespace MFM {
 	unwind_protect({
 	    ++m_eventsFailed;
 	    ++m_failuresErased;
-            fprintf(stderr,"FE(%x)\n",m_executingWindow.GetCenterAtom().GetType());
+	    if(m_executingWindow.GetCenterAtom().IsSane())
+	    {
+	      fprintf(stderr, "FE(INSANE)\n");
+	    }
+	    else
+	    {
+	      fprintf(stderr,"FE(%x)\n",m_executingWindow.GetCenterAtom().GetType());
+	    }
 	    m_executingWindow.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
 	  },{
 	    elementTable.Execute(m_executingWindow);
@@ -643,8 +676,9 @@ namespace MFM {
 	dirWaitWord = SendRelevantAtoms();
 
 	SendEndEventPackets(dirWaitWord);
-
+	  
 	FlushAndWaitOnAllBuffers(dirWaitWord);
+
 
 	++m_eventsExecuted;
 	++m_regionEvents[RegionIn(m_executingWindow.GetCenterInTile())];
@@ -777,6 +811,31 @@ namespace MFM {
     for (u32 i = 0; i < ELEMENT_TABLE_SIZE; ++i)
       if (counts[i] != m_atomCount[i])
         FAIL(ILLEGAL_STATE);
+  }
+
+  template <class CC>
+  void Tile<CC>::RecountAtoms()
+  {
+    for(u32 i = 0; i < ELEMENT_TABLE_SIZE; i++)
+    {
+      m_atomCount[i] = 0;
+    }
+
+    m_illegalAtomCount = 0;
+
+    SetAtomCount(ELEMENT_EMPTY,OWNED_SIDE*OWNED_SIDE);
+
+    for(u32 x = 0; x < TILE_WIDTH; x++)
+    {
+      for(u32 y = 0; y < TILE_WIDTH; y++)
+      {
+	if(!m_atoms[x][y].IsSane())
+	{
+	  m_atoms[x][y] = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+	}
+	IncrAtomCount(m_atoms[x][y].GetType(), 1);
+      }
+    }
   }
 
   template <class CC>

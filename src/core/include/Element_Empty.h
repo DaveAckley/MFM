@@ -1,7 +1,8 @@
+/* -*- C++ -*- */
 #ifndef ELEMENT_EMPTY_H
 #define ELEMENT_EMPTY_H
 
-#include "Element.h"       /* -*- C++ -*- */
+#include "Element.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "itype.h"

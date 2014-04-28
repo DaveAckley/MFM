@@ -35,6 +35,8 @@ namespace MFM
     {
       return atom.GetType()==other.GetType();
     }
+
+    virtual bool IsSane() const = 0;
     
     // To be defined by subclasses only
     u32 GetType() const;

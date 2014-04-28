@@ -134,13 +134,27 @@ namespace MFM {
       m_registeredButtons = 0;
     }
 
+    void ReassignButtonLocations()
+    {
+      SPoint loc(4, m_capStatsInUse * 40);
+      if(m_displayAER)
+      {
+	loc.SetY(loc.GetY() + 100);
+      }
+      for(u32 i = 0; i < m_registeredButtons; i++)
+      {
+	m_buttons[i]->SetLocation(loc);
+	loc.SetY(loc.GetY() + 40);
+      }
+    }
+
     void AddButton(AbstractButton* b)
     {
       if (m_registeredButtons >= MAX_BUTTONS)
         FAIL(OUT_OF_ROOM);
 
-      SPoint dimensions(256, 32);
-      SPoint location(10, (m_capStatsInUse + m_registeredButtons) * 40);
+      SPoint dimensions(268, 32);
+      SPoint location(4, (m_capStatsInUse + m_registeredButtons) * 40);
       b->SetDimensions(dimensions);
       b->SetLocation(location);
 
@@ -164,7 +178,7 @@ namespace MFM {
       if(*buffer == '~')
       {
 	char trans[1024] = {0};
-	sprintf(trans, "%s%s", 
+	sprintf(trans, "%s%s",
 		getenv("HOME"),
 		buffer + 1);
 	sprintf(buffer, "%s", trans);
@@ -178,7 +192,7 @@ namespace MFM {
       m_drawFont = TTF_OpenFont(fontloc, 30);
       if (!m_drawFont)
       {
-	fprintf(stderr, 
+	fprintf(stderr,
 		"TTF Font Error: %s\n",
 		TTF_GetError());
         FAIL(ILLEGAL_STATE);
@@ -187,7 +201,11 @@ namespace MFM {
 
     bool GetDisplayAER() const { return m_displayAER; }
 
-    void SetDisplayAER(bool displayAER) { m_displayAER = displayAER; }
+    void SetDisplayAER(bool displayAER)
+    {
+      m_displayAER = displayAER;
+      ReassignButtonLocations();
+    }
 
     bool DisplayCapturableStats(const CapturableStatistic * cs) {
       if (m_capStatsInUse >= MAX_TYPES) return false;

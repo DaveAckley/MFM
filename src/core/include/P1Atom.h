@@ -44,6 +44,11 @@ namespace MFM {
 
   public:
 
+    virtual bool IsSane() const
+    {
+      return GetBitsAllocated() <= BITS;
+    }
+
     u32 GetBitCount() const {
       return BITS;
     }

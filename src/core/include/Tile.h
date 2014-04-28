@@ -803,6 +803,12 @@ namespace MFM {
         m_atoms. */
     void AssertValidAtomCounts() const;
 
+    /**
+     * Resets all atom counts and refreshes the atoms counts inside
+     * this tile.
+     */
+    void RecountAtoms();
+
 
     /**
      * Writes a single x-axis raster line of this Tile to a specified

@@ -36,7 +36,7 @@ namespace MFM {
 #define SCREEN_INITIAL_WIDTH 1280
 #define SCREEN_INITIAL_HEIGHT 1024
 
-#define STATS_WINDOW_WIDTH 256
+#define STATS_WINDOW_WIDTH 288
 
 #define STATS_START_WINDOW_WIDTH 233
 #define STATS_START_WINDOW_HEIGHT 120
@@ -526,13 +526,24 @@ namespace MFM {
     /* Methods used by buttons */
     void ClearSelectedTile()
     {
-      mainGrid.EmptyTile(m_grend.GetSelectedTile());      
+      SPoint& selTile = m_grend.GetSelectedTile();
+      if(selTile.GetX() >= 0 && selTile.GetX() < W &&
+	 selTile.GetY() >= 0 && selTile.GetY() < H)
+      {
+	mainGrid.EmptyTile(m_grend.GetSelectedTile());
+      }
     }
 
     void PauseSelectedTile()
     {
-      mainGrid.SetTileToExecuteOnly(m_grend.GetSelectedTile(),
-				    !mainGrid.GetTileExecutionStatus(m_grend.GetSelectedTile()));
+
+      SPoint& selTile = m_grend.GetSelectedTile();
+      if(selTile.GetX() >= 0 && selTile.GetX() < W &&
+	 selTile.GetY() >= 0 && selTile.GetY() < H)
+      {
+	mainGrid.SetTileToExecuteOnly(selTile,
+				      !mainGrid.GetTileExecutionStatus(selTile));
+      }
     }
 
     void RandomNuke()
@@ -552,12 +563,12 @@ namespace MFM {
 
     void ToggleGrid()
     {
-      m_grend.ToggleGrid();      
+      m_grend.ToggleGrid();
     }
 
     void ToggleTileView()
     {
-      m_grend.ToggleMemDraw();      
+      m_grend.ToggleMemDraw();
     }
 
 
@@ -578,7 +589,7 @@ namespace MFM {
       {
 	m_grend.SetDimensions(UPoint(m_screenWidth,m_screenHeight));
       }
-      
+
       m_srend.SetDestination(screen);
       m_srend.SetDrawPoint(SPoint(m_screenWidth-STATS_WINDOW_WIDTH, 0));
       m_srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, m_screenHeight));
