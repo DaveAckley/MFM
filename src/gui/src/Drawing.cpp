@@ -1,70 +1,167 @@
-#include <cmath>
+#include <math.h>     /* For floor, sqrt */
 #include "Drawing.h"
+#include "Util.h"     /* For MIN */
 
 namespace MFM {
 
-  void Drawing::Clear(SDL_Surface* dest, Uint32 color)
-  {
-    SDL_FillRect(dest, 0, color);
+  void Drawing::Convert(const Rect & rect, SDL_Rect & toFill)  {
+    toFill.x = rect.GetX();
+    toFill.y = rect.GetY();
+    toFill.w = rect.GetWidth();
+    toFill.h = rect.GetHeight();
   }
 
-  void Drawing::DrawHLine(SDL_Surface* dest, int y,
-                          int startX, int endX,
-                          Uint32 color)
+  void Drawing::TransformWindow(const Rect & rect)
   {
-    FillRect(dest,startX,y,endX-startX,1,color);
+    Rect temp;
+    TransformWindow(m_rect, rect, temp);
+    m_rect = temp;
   }
 
-  void Drawing::DrawVLine(SDL_Surface* dest, int x,
-                          int startY, int endY,
-                          Uint32 color)
+  void Drawing::TransformWindow(const Rect & existing, const Rect & rect, Rect & result)
   {
-    FillRect(dest,x,startY,1,endY-startY,color);
+    result.SetX(existing.GetX() + rect.GetX());
+    result.SetY(existing.GetY() + rect.GetY());
+    result.SetWidth(MIN(existing.GetWidth(), rect.GetWidth()));
+    result.SetHeight(MIN(existing.GetHeight(), rect.GetHeight()));
   }
 
-  void Drawing::FillRect(SDL_Surface* dest, int x, int y,
-                         int w, int h, Uint32 color)
+  void Drawing::SetWindow(const Rect & rect)
+  {
+    m_rect = rect;
+  }
+
+  void Drawing::GetWindow(Rect & rect) const
+  {
+    rect = m_rect;
+  }
+
+  u32 Drawing::InterpolateColors(const u32 color1, const u32 color2, const u32 percentOfColor1)
+  {
+    if (percentOfColor1 >= 100) return color1;
+    if (percentOfColor1 == 0) return color2;
+
+    const u32 percentOfColor2 = 100 - percentOfColor1;
+    u32 res = 0;
+    for (u32 i = 0; i < 32; i += 8) {
+      u32 comp1 = (color1 >> i) & 0xff;
+      u32 comp2 = (color2 >> i) & 0xff;
+      u32 mix = (percentOfColor1 * comp1 + percentOfColor2 * comp2) / 100;
+      res |= mix << i;
+    }
+
+    return res;
+  }
+
+  void Drawing::SetSDLColor(SDL_Color & set, const u32 from)
+  {
+    set.r = (from >> 16) & 0xff;
+    set.g = (from >> 8) & 0xff;
+    set.b = from & 0xff;
+  }
+
+  void Drawing::GetSDLColor(const SDL_Color & from, u32 & to)
+  {
+    to = (0xff<<24)|(from.r<<16)|(from.g<<8)|from.b;
+  }
+
+  Drawing::Drawing(SDL_Surface * dest, TTF_Font * font)
+  {
+    Reset(dest,font);
+  }
+
+  void Drawing::Reset(SDL_Surface * dest, TTF_Font * font)
+  {
+    m_dest = dest;
+    m_rect.SetPosition(SPoint());
+    if (m_dest) {
+      m_rect.SetSize(UPoint(m_dest->w, m_dest->h));
+    } else {
+      m_rect.SetSize(UPoint(600, 400));
+    }
+
+    m_fgColor = YELLOW;
+    m_bgColor = BLACK;
+
+    m_font = font;
+  }
+
+  void Drawing::Clear()
+  {
+    FillRect(0, 0, m_rect.GetWidth(), m_rect.GetHeight(), m_bgColor);
+  }
+
+  void Drawing::DrawHLine(int y, int startX, int endX) const
+  {
+    FillRect(startX,y,endX-startX,1);
+  }
+
+  void Drawing::DrawVLine(int x, int startY, int endY) const
+  {
+    FillRect(x,startY,1,endY-startY);
+  }
+
+  void Drawing::DrawRectangle(const Rect & rect) const
+  {
+    DrawHLine(rect.GetY(),rect.GetX(),rect.GetX()+rect.GetWidth());
+    DrawHLine(rect.GetY()+rect.GetHeight()-1,rect.GetX(),rect.GetX()+rect.GetWidth());
+
+    DrawVLine(rect.GetX(),rect.GetY(),rect.GetY()+rect.GetHeight());
+    DrawVLine(rect.GetX()+rect.GetWidth()-1,rect.GetY(),rect.GetY()+rect.GetHeight());
+  }
+
+  void Drawing::FillRect(int x, int y, int w, int h) const
+  {
+    FillRect(x, y, w, h, m_fgColor);
+  }
+
+  void Drawing::FillRect(int x, int y, int w, int h, u32 color) const
   {
     SDL_Rect rect;
-    rect.x = x;
-    rect.y = y;
+    rect.x = x+m_rect.GetX();
+    rect.y = y+m_rect.GetY();;
     rect.w = w;
     rect.h = h;
-    SDL_FillRect(dest, &rect, color);
+
+    SDL_Rect clip;
+    Convert(m_rect,clip);
+
+    SDL_SetClipRect(m_dest, &clip);
+    SDL_FillRect(m_dest, &rect, color);
   }
 
-  void Drawing::FillCircle(SDL_Surface* dest, int x, int y,
-                           int w, int h, int radius,
-                           Uint32 color)
+  void Drawing::FillCircle(int x, int y, int w, int h, int radius) const
   {
     double cx = x+w/2.0;
     double cy = y+h/2.0;
     for(int dy = 1; dy <= radius; dy++)
       {
         double dx = floor(sqrt(2.0*radius*dy - dy*dy));
-        DrawHLine(dest, (int) (cy + radius - dy), (int) (cx-dx), (int)(cx+dx), color);
-        DrawHLine(dest, (int) (cy - radius + dy), (int) (cx-dx), (int)(cx+dx), color);
+        DrawHLine((int) (cy + radius - dy), (int) (cx-dx), (int)(cx+dx));
+        DrawHLine((int) (cy - radius + dy), (int) (cx-dx), (int)(cx+dx));
       }
   }
 
-  void Drawing::BlitText(SDL_Surface*& dest, TTF_Font*& font,
-                         const char* message, Point<u32> loc,
-                         Point<u32> size, u32 color)
+  void Drawing::BlitText(const char* message, UPoint loc, UPoint size) const
   {
-    SDL_Color sdl_color;
-    sdl_color.r = (color >> 16) & 0xff;
-    sdl_color.g = (color >> 8) & 0xff;
-    sdl_color.b = color & 0xff;
+    if (!m_font) FAIL(ILLEGAL_STATE);
 
-    SDL_Surface* text = TTF_RenderText_Blended(font, message, sdl_color);
+    SDL_Color sdl_color;
+    SetSDLColor(sdl_color,m_fgColor);
+
+    SDL_Surface* text = TTF_RenderText_Blended(m_font, message, sdl_color);
 
     SDL_Rect rect;
-    rect.x = loc.GetX();
-    rect.y = loc.GetY();
+    rect.x = loc.GetX() + m_rect.GetX();
+    rect.y = loc.GetY() + m_rect.GetY();
     rect.w = size.GetX();
     rect.h = size.GetY();
 
-    SDL_BlitSurface(text, NULL, dest, &rect);
+    SDL_Rect clip;
+    Convert(m_rect,clip);
+
+    SDL_SetClipRect(m_dest, &clip);
+    SDL_BlitSurface(text, NULL, m_dest, &rect);
 
     SDL_FreeSurface(text);
   }
