@@ -19,7 +19,7 @@ u32 TileRenderer::GetDataHeatColor(Tile<CC>& tile, const typename CC::ATOM_TYPE&
 
 
 template <class CC>
-void TileRenderer::RenderAtoms(SPoint& pt, Tile<CC>& tile, bool renderCache)
+void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile, bool renderCache)
 {
   // Extract short type names
   typedef typename CC::ATOM_TYPE T;
@@ -66,13 +66,13 @@ void TileRenderer::RenderAtoms(SPoint& pt, Tile<CC>& tile, bool renderCache)
 	  {
 	    if(color)
 	    {
-	      Drawing::FillCircle(m_dest,
-				  rendPt.GetX(),
-				  rendPt.GetY(),
-				  m_atomDrawSize,
-				  m_atomDrawSize,
-				  m_atomDrawSize / 2,
-				  color);
+
+              drawing.SetForeground(color);
+	      drawing.FillCircle(rendPt.GetX(),
+                                 rendPt.GetY(),
+                                 m_atomDrawSize,
+                                 m_atomDrawSize,
+                                 m_atomDrawSize / 2);
 	    }
 	  }
 	}
@@ -82,7 +82,7 @@ void TileRenderer::RenderAtoms(SPoint& pt, Tile<CC>& tile, bool renderCache)
 }
 
 template <class CC>
-void TileRenderer::RenderTile(Tile<CC>& t, SPoint& loc, bool renderWindow,
+void TileRenderer::RenderTile(Drawing & drawing, Tile<CC>& t, SPoint& loc, bool renderWindow,
 			      bool renderCache, bool selected)
 {
   // Extract short type names
@@ -103,38 +103,38 @@ void TileRenderer::RenderTile(Tile<CC>& t, SPoint& loc, bool renderWindow,
   realPt.Add(m_windowTL);
 
   if(realPt.GetX() + tileHeight >= 0 &&
-     realPt.GetY() + tileHeight >= 0 &&
+     realPt.GetY() + tileHeight >= 0 /* &&  Go ahead and draw, we'll clip?
      realPt.GetX() < (s32)m_dest->w &&
-     realPt.GetY() < (s32)m_dest->h)
+     realPt.GetY() < (s32)m_dest->h*/)
   {
     switch (m_drawMemRegions) {
     default:
     case NO:
       break;
     case FULL:
-      RenderMemRegions<CC>(multPt, renderCache, selected);
+      RenderMemRegions<CC>(drawing, multPt, renderCache, selected);
       break;
     case EDGE:
-      RenderVisibleRegionOutlines<CC>(multPt, renderCache, selected);
+      RenderVisibleRegionOutlines<CC>(drawing, multPt, renderCache, selected);
       break;
     }
 
     if(renderWindow)
     {
-      RenderEventWindow(multPt, t, renderCache);
+      RenderEventWindow(drawing, multPt, t, renderCache);
     }
 
-    RenderAtoms(multPt, t, renderCache);
+    RenderAtoms(drawing, multPt, t, renderCache);
 
     if(m_drawGrid)
     {
-      RenderGrid<CC>(&multPt, renderCache);
+      RenderGrid<CC>(drawing, &multPt, renderCache);
     }
   }
 }
 
 template <class CC>
-void TileRenderer::RenderEventWindow(SPoint& offset, Tile<CC>& tile, bool renderCache)
+void TileRenderer::RenderEventWindow(Drawing & drawing, SPoint& offset, Tile<CC>& tile, bool renderCache)
 {
   // Extract short type names
   typedef typename CC::ATOM_TYPE T;
@@ -166,12 +166,12 @@ void TileRenderer::RenderEventWindow(SPoint& offset, Tile<CC>& tile, bool render
       drawColor = Drawing::WHITE;
     }
 
-    RenderAtomBG(offset, atomLoc, drawColor);
+    RenderAtomBG(drawing, offset, atomLoc, drawColor);
   }
 }
 
 template <class CC>
-void TileRenderer::RenderMemRegions(SPoint& pt, bool renderCache, bool selected)
+void TileRenderer::RenderMemRegions(Drawing & drawing, SPoint& pt, bool renderCache, bool selected)
 {
   // Extract short type names
   typedef typename CC::ATOM_TYPE T;
@@ -181,24 +181,24 @@ void TileRenderer::RenderMemRegions(SPoint& pt, bool renderCache, bool selected)
   int regID = 0;
   if(renderCache)
   {
-    RenderMemRegion<CC>(pt, regID++, m_cacheColor, renderCache);
+    RenderMemRegion<CC>(drawing, pt, regID++, m_cacheColor, renderCache);
   }
-  RenderMemRegion<CC>(pt, regID++, m_sharedColor, renderCache);
-  RenderMemRegion<CC>(pt, regID++, m_visibleColor, renderCache);
-  RenderMemRegion<CC>(pt, regID,
+  RenderMemRegion<CC>(drawing, pt, regID++, m_sharedColor, renderCache);
+  RenderMemRegion<CC>(drawing, pt, regID++, m_visibleColor, renderCache);
+  RenderMemRegion<CC>(drawing, pt, regID,
 		      selected ? m_selectedHiddenColor: m_hiddenColor, renderCache);
 }
 
 template <class CC>
-void TileRenderer::RenderVisibleRegionOutlines(SPoint& pt, bool renderCache, bool selected)
+void TileRenderer::RenderVisibleRegionOutlines(Drawing & drawing, SPoint& pt, bool renderCache, bool selected)
 {
   int regID = renderCache?2:1;
-  RenderMemRegion<CC>(pt, regID,
+  RenderMemRegion<CC>(drawing, pt, regID,
 		      selected ? 0xff606060 : 0xff202020, renderCache);
 }
 
 template <class CC>
-void TileRenderer::RenderMemRegion(SPoint& pt, int regID,
+void TileRenderer::RenderMemRegion(Drawing & drawing, SPoint& pt, int regID,
 				   Uint32 color, bool renderCache)
 {
   // Extract short names for parameter types
@@ -225,15 +225,14 @@ void TileRenderer::RenderMemRegion(SPoint& pt, int regID,
   Point<s32> botPt(MIN((s32)m_dimensions.GetX(), topPt.GetX() + (tileSize - (ewrSize * regID * 2))),
 		   MIN((s32)m_dimensions.GetY(), topPt.GetY() + (tileSize - (ewrSize * regID * 2))));
 
-  Drawing::FillRect(m_dest,
-                    topPt.GetX(), topPt.GetY(),
-                    botPt.GetX() - topPt.GetX(),
-                    botPt.GetY() - topPt.GetY(),
-                    color);
+  drawing.FillRect(topPt.GetX(), topPt.GetY(),
+                   botPt.GetX() - topPt.GetX(),
+                   botPt.GetY() - topPt.GetY(),
+                   color);
 }
 
 template <class CC>
-void TileRenderer::RenderGrid(SPoint* pt, bool renderCache)
+void TileRenderer::RenderGrid(Drawing & drawing, SPoint* pt, bool renderCache)
 {
   // Extract short type names
   typedef typename CC::ATOM_TYPE T;
@@ -256,18 +255,17 @@ void TileRenderer::RenderGrid(SPoint* pt, bool renderCache)
   s32 lowBound =
     MIN((s32)m_dimensions.GetY(), pt->GetY() + m_windowTL.GetY() + lineLen);
 
+  drawing.SetForeground(m_gridColor);
   for(int x = 0; x < linesToDraw; x++)
   {
     if(pt->GetX() + x * m_atomDrawSize + m_windowTL.GetX() > (s32)m_dimensions.GetX())
     {
       break;
     }
-    Drawing::DrawVLine(m_dest,
-		       pt->GetX() + x * m_atomDrawSize +
-		       m_windowTL.GetX(),
-		       pt->GetY() + m_windowTL.GetY(),
-		       lowBound,
-		       m_gridColor);
+    drawing.DrawVLine(pt->GetX() + x * m_atomDrawSize +
+                      m_windowTL.GetX(),
+                      pt->GetY() + m_windowTL.GetY(),
+                      lowBound);
   }
 
   s32 rightBound =
@@ -279,12 +277,10 @@ void TileRenderer::RenderGrid(SPoint* pt, bool renderCache)
     {
       break;
     }
-    Drawing::DrawHLine(m_dest,
-		       pt->GetY() + y * m_atomDrawSize +
-		       m_windowTL.GetY(),
-		       pt->GetX() + m_windowTL.GetX(),
-		       rightBound,
-		       m_gridColor);
+    drawing.DrawHLine(pt->GetY() + y * m_atomDrawSize +
+                      m_windowTL.GetY(),
+                      pt->GetX() + m_windowTL.GetX(),
+                      rightBound);
   }
 }
 } /* namespace MFM */

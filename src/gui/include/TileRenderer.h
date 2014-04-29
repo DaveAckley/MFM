@@ -4,7 +4,7 @@
 #include "Drawing.h"
 #include "ElementTable.h"
 #include "Tile.h"
-#include "panel.h"
+#include "Panel.h"
 #include "Point.h"
 #include "SDL/SDL.h"
 
@@ -34,26 +34,24 @@ namespace MFM {
 
     Point<u32> m_dimensions;
 
-    SDL_Surface* m_dest;
+    template <class CC>
+    void RenderMemRegions(Drawing & drawing, SPoint& pt, bool renderCache, bool selected);
 
     template <class CC>
-    void RenderMemRegions(SPoint& pt, bool renderCache, bool selected);
+    void RenderVisibleRegionOutlines(Drawing & drawing, SPoint& pt, bool renderCache, bool selected);
 
     template <class CC>
-    void RenderVisibleRegionOutlines(SPoint& pt, bool renderCache, bool selected);
-
-    template <class CC>
-    void RenderMemRegion(SPoint& pt, int regID,
+    void RenderMemRegion(Drawing & drawing, SPoint& pt, int regID,
                          u32 color, bool renderCache);
 
     template <class CC>
-    void RenderGrid(SPoint* pt, bool renderCache);
+    void RenderGrid(Drawing & drawing, SPoint* pt, bool renderCache);
 
-    void RenderAtomBG(SPoint& offset, Point<int>& atomloc,
+    void RenderAtomBG(Drawing & drawing, SPoint& offset, Point<int>& atomloc,
                       u32 color);
 
     template <class CC>
-    void RenderAtoms(SPoint& pt, Tile<CC>& tile, bool renderCache);
+    void RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile, bool renderCache);
 
     template <class CC>
     u32 GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom, u32 selector = 0);
@@ -62,14 +60,14 @@ namespace MFM {
     u32 GetDataHeatColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom);
 
     template <class CC>
-    void RenderEventWindow(SPoint& offset, Tile<CC>& tile, bool renderCache);
+    void RenderEventWindow(Drawing & drawing, SPoint& offset, Tile<CC>& tile, bool renderCache);
 
   public:
 
-    TileRenderer(SDL_Surface* dest);
+    TileRenderer();
 
     template <class CC>
-    void RenderTile(Tile<CC>& t, SPoint& loc, bool renderWindow,
+    void RenderTile(Drawing & drawing, Tile<CC>& t, SPoint& loc, bool renderWindow,
                     bool renderCache, bool selected);
 
     void SetDimensions(Point<u32> dimensions)
@@ -80,11 +78,6 @@ namespace MFM {
     SPoint& GetWindowTL()
     {
       return m_windowTL;
-    }
-
-    SDL_Surface* GetDestination()
-    {
-      return m_dest;
     }
 
     void IncreaseAtomSize();
