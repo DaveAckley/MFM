@@ -4,10 +4,11 @@
 #include <stdlib.h>
 #include "itype.h"
 #include "Random.h"
+#include "Util.h"  /* For MAX and MIN */
 
 namespace MFM {
 
-/* 
+/*
  * Going to go ahead and use templates here
  * so we can store any kind of number in these.
  */
@@ -34,9 +35,13 @@ public:
   T GetY() const;
 
   u32 GetManhattanLength() const;  // Would prefer 'unsigned T' return type but not using C++0x type_traits
-  u32 GetMaximumLength() const;    
+  u32 GetMaximumLength() const;
 
   double GetEuclideanLength() const;
+
+  void Clear() {
+    m_x = m_y = 0;
+  }
 
   void Add(const Point<T>& offset);
 
@@ -68,6 +73,11 @@ public:
 
   bool BoundedBy(const Point<T>& lowerBound,const Point<T>& upperBound) const;
 
+  bool IsZero() const
+  {
+    return m_x == 0 && m_y == 0;
+  }
+
   /**
    * Parses a char* for a Point of \emph{integral} type in the format
    * "(x,y)" with no whitespace. This treats any read values as
@@ -77,6 +87,19 @@ public:
    * @param buffer The char* to parse a point directly from.
    */
   void Parse(char* buffer);
+
+  friend Point<T> max(const Point<T> & lhs,const Point<T> & rhs) {
+    T x = MAX(lhs.m_x, rhs.m_x);
+    T y = MAX(lhs.m_y, rhs.m_y);
+    return Point<T>(x,y);
+  }
+
+  friend Point<T> min(const Point<T> & lhs,const Point<T> & rhs) {
+    T x = MIN(lhs.m_x, rhs.m_x);
+    T y = MIN(lhs.m_y, rhs.m_y);
+    return Point<T>(x,y);
+  }
+
 
   ////// Operator overloads
 
@@ -151,7 +174,7 @@ typedef Point<s32> SPoint;
 
 typedef Point<u32> UPoint;
 
-/** 
+/**
  * Non-template conversions, just for our common case.
  */
 UPoint MakeUnsigned(const SPoint & spoint);
