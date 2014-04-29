@@ -72,6 +72,8 @@ namespace MFM {
     char m_simDirBasePath[MAX_PATH_LENGTH];
     u32 m_simDirBasePathLength;
 
+    Fonts m_fonts;
+
     char * GetSimDirPathTemporary(const char * format, ...) {
       va_list ap;
       va_start(ap,format);
@@ -111,6 +113,8 @@ namespace MFM {
     Keyboard keyboard;
     Camera camera;
     SDL_Surface* screen;
+    Panel m_rootPanel;
+    Drawing m_rootDrawing;
 
     u32 m_screenWidth;
     u32 m_screenHeight;
@@ -394,7 +398,7 @@ namespace MFM {
       m_haltAfterAEPS = args.GetHaltAfterAEPS();
 
       /* Sim directory = now */
-      u64 startTime = GetDateTimeNow();
+      u64 startTime = Utils::GetDateTimeNow();
 
       /* Get the master simulation data directory */
       snprintf(m_simDirBasePath, MAX_PATH_LENGTH-1,
@@ -441,9 +445,18 @@ namespace MFM {
       SetSeed(seed);
 
       SDL_Init(SDL_INIT_VIDEO);
-      TTF_Init();
+      m_fonts.Init();
 
-      m_srend.OnceOnly();
+      m_rootPanel.SetName("Root");
+      m_rootPanel.Insert(&m_panel1,0);
+      m_rootPanel.Insert(&m_panel2,&m_panel1);
+      m_panel1.Insert(&m_panel3,0);
+      m_rootPanel.Insert(&m_panel4,0);
+      m_panel5.SetControlled(&m_panel4);
+      m_rootPanel.Insert(&m_panel5,0);
+      m_rootPanel.Print(stdout);
+
+      m_srend.OnceOnly(m_fonts);
 
       SDL_WM_SetCaption("Movable Feast Machine Simulator", NULL);
 
@@ -571,6 +584,84 @@ namespace MFM {
       m_grend.ToggleMemDraw();
     }
 
+    //////////////////
+    //////// START DEBUG PANELS
+
+    struct Panel1 : public Panel {
+      Panel1() {
+        SetName("Panel1");
+        SetDimensions(400,500);
+        SetRenderPoint(SPoint(280,43));
+        SetForeground(Drawing::BLUE);
+        SetBackground(Drawing::GREEN);
+      }
+    } m_panel1;
+
+    struct Panel2 : public Panel {
+      Panel2() {
+        SetName("Panel2");
+        SetDimensions(20,20);
+        SetRenderPoint(SPoint(0,0));
+        SetForeground(Drawing::BLUE);
+        SetBackground(Drawing::BLACK);
+      }
+      u32 m_counter;
+      virtual void PaintComponent(Drawing & drawing) {
+        ++m_counter;
+        SetRenderPoint(SPoint(m_counter%20+30, m_counter%30+40));
+        this->Panel::PaintComponent(drawing);
+      }
+    } m_panel2;
+
+    struct Panel3 : public Panel {
+      Panel3() {
+        SetName("Panel3");
+        SetDimensions(20,20);
+        SetRenderPoint(SPoint(0,0));
+        SetForeground(Drawing::CYAN);
+        SetBackground(Drawing::MAGENTA);
+      }
+      u32 m_counter;
+      virtual void PaintComponent(Drawing & drawing) {
+        m_counter += 2;
+        SetRenderPoint(SPoint(m_counter%50+30, m_counter%80+40));
+        this->Panel::PaintComponent(drawing);
+      }
+    } m_panel3;
+
+    struct Panel4 : public AbstractButton {
+      Panel4() : AbstractButton("Panel4") {
+        SetName("Panel4");
+        Panel::SetDimensions(100,40);
+        SetRenderPoint(SPoint(50,70));
+        SetForeground(Drawing::BLACK);
+        SetBackground(Drawing::WHITE);
+      }
+      virtual void OnClick() {
+        printf("click\n");
+      }
+    } m_panel4;
+
+    struct Panel5 : public AbstractButton {
+      AbstractButton * m_toEnable;
+      Panel5() : AbstractButton("Enabler") {
+        SetName("Enable");
+        Panel::SetDimensions(100,40);
+        SetRenderPoint(SPoint(50,200));
+        SetForeground(Drawing::BLACK);
+        SetBackground(Drawing::WHITE);
+      }
+      void SetControlled(AbstractButton * controlled) {
+        m_toEnable = controlled;
+      }
+      virtual void OnClick() {
+        m_toEnable->SetEnabled(!m_toEnable->IsEnabled());
+      }
+    } m_panel5;
+
+    //////// END DEBUG PANELS
+    //////////////////
+
 
     void SetScreenSize(u32 width, u32 height) {
       m_screenWidth = width;
@@ -580,7 +671,13 @@ namespace MFM {
       if (screen == 0)
         FAIL(ILLEGAL_STATE);
 
-      m_grend.SetDestination(screen);
+      m_rootPanel.SetDimensions(m_screenWidth, m_screenHeight);
+      m_rootPanel.SetRenderPoint(SPoint(-10,-20));
+      m_rootPanel.SetForeground(Drawing::BLUE);
+      m_rootPanel.SetBackground(Drawing::RED);
+
+      m_rootDrawing.Reset(screen, m_fonts.GetDefaultFont());
+
       if(renderStats)
       {
 	m_grend.SetDimensions(UPoint(m_screenWidth - STATS_WINDOW_WIDTH,m_screenHeight));
@@ -590,7 +687,7 @@ namespace MFM {
 	m_grend.SetDimensions(UPoint(m_screenWidth,m_screenHeight));
       }
 
-      m_srend.SetDestination(screen);
+      //m_srend.SetDestination(screen);
       m_srend.SetDrawPoint(SPoint(m_screenWidth-STATS_WINDOW_WIDTH, 0));
       m_srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, m_screenHeight));
 
@@ -619,20 +716,24 @@ namespace MFM {
       paused = m_startPaused;
 
       bool running = true;
+      SetScreenSize(m_screenWidth, m_screenHeight);
+
+      /*
       screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32,
                                 SDL_SWSURFACE | SDL_RESIZABLE);
       if (screen == 0)
         FAIL(ILLEGAL_STATE);
 
-      SDL_Event event;
 
-      m_grend.SetDestination(screen);
+      //      m_grend.SetDestination(screen);
       m_grend.SetDimensions(UPoint(m_screenWidth,m_screenHeight));
 
-      m_srend.SetDestination(screen);
+      //m_srend.SetDestination(screen);
       m_srend.SetDrawPoint(SPoint(m_screenWidth-STATS_WINDOW_WIDTH, 0));
       m_srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, m_screenHeight));
+      */
 
+      SDL_Event event;
       s32 lastFrame = SDL_GetTicks();
 
       while(running)
@@ -649,10 +750,11 @@ namespace MFM {
                   break;
                 case SDL_MOUSEBUTTONUP:
                 case SDL_MOUSEBUTTONDOWN:
-                  mouse.HandleButtonEvent(&event.button);
-                  break;
+                  //                  mouse.HandleButtonEvent(&event.button);
+                  //                  break;
                 case SDL_MOUSEMOTION:
-                  mouse.HandleMotionEvent(&event.motion);
+                  m_rootPanel.Dispatch(event,Rect(SPoint(),UPoint(m_screenWidth,m_screenHeight)));
+                  //                  mouse.HandleMotionEvent(&event.motion);
                   break;
                 case SDL_KEYDOWN:
                 case SDL_KEYUP:
@@ -675,13 +777,17 @@ namespace MFM {
 
           Update(mainGrid);
 
-          Drawing::Clear(screen, 0xff200020);
+          //m_rootDrawing.SetBackground(0xff200020);
+          m_rootDrawing.Clear();
 
-          m_grend.RenderGrid(mainGrid);
+          m_rootPanel.Paint(m_rootDrawing);
+          //          m_grend.RenderGrid(m_rootDrawing, mainGrid);
 
           if(renderStats)
           {
-	    m_srend.RenderGridStatistics(mainGrid, m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent,false);
+	    m_srend.RenderGridStatistics(m_rootDrawing, mainGrid,
+                                         m_AEPS, m_AER, m_aepsPerFrame,
+                                         m_overheadPercent, false);
 	  }
 
           if (m_recordScreenshotPerAEPS > 0) {
