@@ -3,7 +3,7 @@
 namespace MFM {
 
   template <class GC>
-  void GridRenderer::RenderGrid(Grid<GC>& grid)
+  void GridRenderer::RenderGrid(Drawing & drawing, Grid<GC>& grid)
   {
     SPoint current;
     SPoint eventLoc;
@@ -32,10 +32,11 @@ namespace MFM {
 	default: break;
 	}
 
-	m_tileRenderer->RenderTile(grid.GetTile(x, y),
-				   current, renderEW, m_renderTilesSeparated,
-				   current.GetX() == (s32)m_selectedTile.GetX() &&
-				   current.GetY() == (s32)m_selectedTile.GetY());
+	m_tileRenderer.RenderTile(drawing,
+                                  grid.GetTile(x, y),
+                                  current, renderEW, m_renderTilesSeparated,
+                                  current.GetX() == (s32)m_selectedTile.GetX() &&
+                                  current.GetY() == (s32)m_selectedTile.GetY());
       }
     }
   }
@@ -43,7 +44,7 @@ namespace MFM {
   template <class GC>
   void GridRenderer::SelectTile(Grid<GC>& grid, SPoint& clickPt)
   {
-    SPoint& offset = m_tileRenderer->GetWindowTL();
+    SPoint& offset = m_tileRenderer.GetWindowTL();
 
     SPoint& cp = clickPt;
 
@@ -51,10 +52,10 @@ namespace MFM {
     cp.SetX(cp.GetX() - offset.GetX());
     cp.SetY(cp.GetY() - offset.GetY());
 
-    u32 tileSize = m_tileRenderer->GetAtomSize() * (GC::CORE_CONFIG::PARAM_CONFIG::TILE_WIDTH + 1);
+    u32 tileSize = m_tileRenderer.GetAtomSize() * (GC::CORE_CONFIG::PARAM_CONFIG::TILE_WIDTH + 1);
     if(!m_renderTilesSeparated)
     {
-      tileSize -= m_tileRenderer->GetAtomSize() * 
+      tileSize -= m_tileRenderer.GetAtomSize() *
 	          (GC::CORE_CONFIG::PARAM_CONFIG::EVENT_WINDOW_RADIUS * 2 + 1);
     }
 

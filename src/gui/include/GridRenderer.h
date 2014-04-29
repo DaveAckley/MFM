@@ -2,7 +2,7 @@
 #define GRIDRENDERER_H
 
 #include "Grid.h"
-#include "SDL/SDL.h"
+#include "Drawing.h"
 #include "TileRenderer.h"
 
 namespace MFM
@@ -20,9 +20,7 @@ namespace MFM
   {
   private:
 
-    SDL_Surface* m_dest;
-
-    TileRenderer* m_tileRenderer;
+    TileRenderer m_tileRenderer;
 
     Point<u32> m_dimensions;
 
@@ -38,7 +36,6 @@ namespace MFM
     EventWindowRenderMode m_currentEWRenderMode;
 
   public:
-    GridRenderer(SDL_Surface* dest);
 
     GridRenderer(TileRenderer* tr);
 
@@ -47,8 +44,6 @@ namespace MFM
     ~GridRenderer();
 
     void SetEventWindowRenderMode(EventWindowRenderMode mode);
-
-    void SetDestination(SDL_Surface* dest);
 
     UPoint& GetDimensions();
 
@@ -79,7 +74,7 @@ namespace MFM
     SPoint& GetSelectedTile();
 
     template <class GC>
-    void RenderGrid(Grid<GC>& grid);
+    void RenderGrid(Drawing & drawing, Grid<GC>& grid);
 
     template <class GC>
     void SelectTile(Grid<GC>& grid, SPoint& clickPt);
