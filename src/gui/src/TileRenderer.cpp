@@ -5,9 +5,8 @@ namespace MFM {
 
 #define TILESIZE_CHANGE_RATE 1
 
-  TileRenderer::TileRenderer(SDL_Surface* dest)
+  TileRenderer::TileRenderer()
   {
-    m_dest = dest;
     m_atomDrawSize = 8;
     m_drawMemRegions = FULL;
     m_drawGrid = true;
@@ -22,17 +21,11 @@ namespace MFM {
     m_windowTL.SetY(0);
   }
 
-  void TileRenderer::RenderAtomBG(SPoint& offset,
+  void TileRenderer::RenderAtomBG(Drawing & drawing,
+                                  SPoint& offset,
                                   SPoint& atomLoc,
                                   u32 color)
   {
-    /*
-     * Again, draw this rect manually in order to only draw
-     * renderable pieces of it.
-     *
-     * (???  What? There's no clipping or anything I can see in here..
-     * Why not use fillrect again?)
-     */
     Point<s32> ulpt(m_windowTL.GetX() + offset.GetY() + atomLoc.GetX() *
                     m_atomDrawSize,
                     m_windowTL.GetY() + offset.GetY() + atomLoc.GetY() *
@@ -49,10 +42,9 @@ namespace MFM {
         brpt.SetY(m_dimensions.GetY());
       }
 
-    Drawing::FillRect(m_dest,
-                      ulpt.GetX(),ulpt.GetY(),
-                      brpt.GetX()-ulpt.GetX(),brpt.GetY()-ulpt.GetY(),
-                      color);
+    drawing.FillRect(ulpt.GetX(),ulpt.GetY(),
+                     brpt.GetX()-ulpt.GetX(),brpt.GetY()-ulpt.GetY(),
+                     color);
   }
 
   void TileRenderer::ToggleGrid()

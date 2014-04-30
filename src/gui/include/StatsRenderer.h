@@ -4,8 +4,10 @@
 #include "AbstractButton.h"
 #include "SDL/SDL_ttf.h"
 #include "Grid.h"
+#include "Utils.h"
 #include "itype.h"
 #include "Point.h"
+#include "Fonts.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
@@ -109,8 +111,6 @@ namespace MFM {
 
     TTF_Font* m_drawFont;
 
-    SDL_Surface* m_dest;
-
     static const u32 MAX_TYPES = 16;
     const CapturableStatistic *(m_capStats[MAX_TYPES]);
     u32 m_capStatsInUse;
@@ -173,30 +173,23 @@ namespace MFM {
       }
     }
 
+    /*
     void translateHome(char* buffer)
     {
       if(*buffer == '~')
       {
-	char trans[1024] = {0};
+        const u32 SIZE = 1024;
+	char trans[SIZE];
 	sprintf(trans, "%s%s",
 		getenv("HOME"),
 		buffer + 1);
 	sprintf(buffer, "%s", trans);
       }
     }
+    */
 
-    void OnceOnly() {
-      char fontloc[1024];
-      sprintf(fontloc, "%s/UbuntuMono-B.ttf", DSHARED_DIR);
-      translateHome(fontloc);
-      m_drawFont = TTF_OpenFont(fontloc, 30);
-      if (!m_drawFont)
-      {
-	fprintf(stderr,
-		"TTF Font Error: %s\n",
-		TTF_GetError());
-        FAIL(ILLEGAL_STATE);
-      }
+    void OnceOnly(Fonts & fonts) {
+      m_drawFont = fonts.GetDefaultFont(30);
     }
 
     bool GetDisplayAER() const { return m_displayAER; }
@@ -226,10 +219,12 @@ namespace MFM {
       TTF_CloseFont(m_drawFont);
     }
 
-    void SetDestination(SDL_Surface* dest)
+    /*
+    void SetDestination(Panel* dest)
     {
       m_dest = dest;
     }
+    */
 
     void SetDrawPoint(Point<s32> drawPoint)
     {
@@ -241,7 +236,7 @@ namespace MFM {
       m_dimensions = dimensions;
     }
 
-    void RenderGridStatistics(Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool doResets);
+    void RenderGridStatistics(Drawing & drawing, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool doResets);
 
     void WriteRegisteredCounts(FILE * fp, bool writeHeader, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool doResets);
   };

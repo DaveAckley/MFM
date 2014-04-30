@@ -7,7 +7,7 @@
 namespace MFM {
 
   template <class GC>
-  void StatsRenderer<GC>::RenderGridStatistics(Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool endOfEpoch)
+  void StatsRenderer<GC>::RenderGridStatistics(Drawing & drawing, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool endOfEpoch)
   {
     // Extract short names for parameter types
     typedef typename GC::CORE_CONFIG CC;
@@ -17,9 +17,9 @@ namespace MFM {
     enum { H = GC::GRID_HEIGHT};
     enum { R = P::EVENT_WINDOW_RADIUS};
 
-    Drawing::FillRect(m_dest, m_drawPoint.GetX(), m_drawPoint.GetY(),
-                      m_dimensions.GetX(), m_dimensions.GetY(),
-                      0xff400040);
+    drawing.FillRect(m_drawPoint.GetX(), m_drawPoint.GetY(),
+                     m_dimensions.GetX(), m_dimensions.GetY(),
+                     0xff400040);
 
     const u32 FMT_BUFFER_SIZE = 32;
     char fmtBuffer[FMT_BUFFER_SIZE];
@@ -32,24 +32,26 @@ namespace MFM {
 
     sprintf(strBuffer, "%8.3f kAEPS", aeps/1000.0);
 
-    Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
-                      Point<u32>(m_dimensions.GetX(), ROW_HEIGHT), 0xffffffff);
+    drawing.SetFont(m_drawFont);
+    drawing.SetForeground(0xffffffff);
+    drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
+                     Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
     baseY += ROW_HEIGHT;
 
     if (m_displayAER) {
       sprintf(strBuffer, "%8d/frame", AEPSperFrame);
-      Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
-                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT), 0xffffffff);
+      drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
+                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
       baseY += ROW_HEIGHT;
 
       sprintf(strBuffer, "%8.3f AER", aer);
-      Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
-                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT), 0xffffffff);
+      drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
+                       Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
       baseY += ROW_HEIGHT;
 
       sprintf(strBuffer, "%8.3f %%ovrhd", overhead);
-      Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
-                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT), 0xffffffff);
+      drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
+                       Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
       baseY += ROW_HEIGHT;
 
     }
@@ -66,14 +68,16 @@ namespace MFM {
         snprintf(strBuffer, STR_BUFFER_SIZE, fmtBuffer, cs->GetValue(endOfEpoch), cs->GetLabel());
       }
 
-      Drawing::BlitText(m_dest, m_drawFont, strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
-                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT), 0xffffffff);
+      drawing.SetFont(m_drawFont);
+      drawing.SetForeground(0xffffffff);
+      drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
+                       Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
       baseY += ROW_HEIGHT;
     }
 
     for(u32 i = 0; i < m_registeredButtons; i++)
     {
-      m_buttons[i]->Render(m_dest, m_drawPoint, m_drawFont);
+      m_buttons[i]->Render(drawing, m_drawPoint, m_drawFont);
     }
   }
 
