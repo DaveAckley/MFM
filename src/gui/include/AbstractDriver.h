@@ -174,7 +174,7 @@ namespace MFM {
 
     inline void ToggleStatsView()
     {
-      renderStats = !renderStats;
+      m_statisticsPanel.ToggleVisibility();
       m_grend.SetDimensions(Point<u32>(m_screenWidth - (renderStats ? STATS_WINDOW_WIDTH : 0)
 				       , m_screenHeight));
     }
@@ -297,7 +297,7 @@ namespace MFM {
 
 	m_msSpentRunning += (m_ticksLastStopped - startMS);
 
-	m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
+	m_statisticsPanel.SetAEPS(m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites());
 	m_AER = 1000 * (m_AEPS / m_msSpentRunning);
 
 	m_overheadPercent = 100.0*m_msSpentOverhead/(m_msSpentRunning+m_msSpentOverhead);
@@ -448,12 +448,26 @@ namespace MFM {
       m_fonts.Init();
 
       m_rootPanel.SetName("Root");
+      m_gridPanel.SetGridRenderer(&m_grend);
+      m_gridPanel.SetGrid(&mainGrid);
+
+      m_rootPanel.Insert(&m_gridPanel, NULL);
+      m_rootPanel.Insert(&m_statisticsPanel, NULL);
+
+      m_statisticsPanel.SetStastRenderer(&m_srend);
+      m_statisticsPanel.SetGrid(&mainGrid);
+      m_statisticsPanel.SetAEPS(m_AEPS);
+      m_statisticsPanel.SetAER(m_AER);
+      m_statisticsPanel.SetAEPSPerFrame(m_aepsPerFrame);
+      m_statisticsPanel.SetOverheadPercent(m_overheadPercent);
+      /*
       m_rootPanel.Insert(&m_panel1,0);
       m_rootPanel.Insert(&m_panel2,&m_panel1);
       m_panel1.Insert(&m_panel3,0);
       m_rootPanel.Insert(&m_panel4,0);
       m_panel5.SetControlled(&m_panel4);
       m_rootPanel.Insert(&m_panel5,0);
+      */
       m_rootPanel.Print(stdout);
 
       m_srend.OnceOnly(m_fonts);
@@ -597,6 +611,120 @@ namespace MFM {
       }
     } m_panel1;
 
+    class GridPanel : public Panel
+    {
+      GridRenderer* m_grend;
+      OurGrid* m_mainGrid;
+
+    public:
+      GridPanel()
+      {
+	SetName("Grid Panel");
+	SetDimensions(SCREEN_INITIAL_WIDTH,
+		      SCREEN_INITIAL_HEIGHT);
+	SetRenderPoint(SPoint(10, 10));
+	SetForeground(Drawing::BLACK);
+	SetBackground(Drawing::DARK_PURPLE);
+
+	m_grend = NULL;
+	m_mainGrid = NULL;
+      }
+
+      void SetGrid(OurGrid* mainGrid)
+      {
+	m_mainGrid = mainGrid;
+      }
+
+      void SetGridRenderer(GridRenderer* grend)
+      {
+	m_grend = grend;
+      }
+
+    protected:
+      virtual void PaintComponent(Drawing& drawing)
+      {
+	this->Panel::PaintComponent(drawing);
+
+	m_grend->RenderGrid(drawing, *m_mainGrid);
+      }
+
+      virtual bool Handle(SDL_MouseButtonEvent& event)
+      {
+	if(event.button == SDL_BUTTON_LEFT &&
+	   event.type   == SDL_MOUSEBUTTONUP)
+	{
+	  SPoint pt = GetAbsoluteLocation();
+	  pt.Set(event.x - pt.GetX(),
+		 event.y - pt.GetY());
+
+	  m_grend->SelectTile(*m_mainGrid,
+			      pt);
+	}
+	return true;
+      }
+    } m_gridPanel;
+
+    class StatisticsPanel : public Panel
+    {
+      StatsRenderer<GC>* m_srend;
+      OurGrid* m_mainGrid;
+      double m_AEPS;
+      double m_AER;
+      double m_overheadPercent;
+      u32 m_aepsPerFrame;
+
+    public:
+      StatisticsPanel() : m_srend(NULL)
+      {
+	SetName("Statistics Panel");
+	SetDimensions(STATS_START_WINDOW_WIDTH,
+		      STATS_START_WINDOW_HEIGHT);
+	SetRenderPoint(SPoint(SCREEN_INITIAL_WIDTH - STATS_START_WINDOW_WIDTH, 0));
+	SetForeground(Drawing::DARK_PURPLE);
+	SetBackground(Drawing::BLACK);
+	m_AEPS = m_AER = 0.0;
+	m_aepsPerFrame = 0;
+      }
+
+      void SetStastRenderer(StatsRenderer<GC>* srend)
+      {
+	m_srend = srend;
+      }
+
+      void SetGrid(OurGrid* mainGrid)
+      {
+	m_mainGrid = mainGrid;
+      }
+
+      void SetAEPS(double aeps)
+      {
+	m_AEPS = aeps;
+      }
+
+      void SetAER(double aer)
+      {
+	m_AER = aer;
+      }
+
+      void SetOverheadPercent(double overheadPercent)
+      {
+	m_overheadPercent = overheadPercent;
+      }
+
+      void SetAEPSPerFrame(u32 apf)
+      {
+	m_aepsPerFrame = apf;
+      }
+
+    protected:
+      virtual void PaintComponent(Drawing& drawing)
+      {
+	m_srend->RenderGridStatistics(drawing, *m_mainGrid,
+				     m_AEPS, m_AER, m_aepsPerFrame,
+				     m_overheadPercent, false);
+      }
+    }m_statisticsPanel;
+
     struct Panel2 : public Panel {
       Panel2() {
         SetName("Panel2");
@@ -672,7 +800,7 @@ namespace MFM {
         FAIL(ILLEGAL_STATE);
 
       m_rootPanel.SetDimensions(m_screenWidth, m_screenHeight);
-      m_rootPanel.SetRenderPoint(SPoint(-10,-20));
+      m_rootPanel.SetRenderPoint(SPoint(0, 0));
       m_rootPanel.SetForeground(Drawing::BLUE);
       m_rootPanel.SetBackground(Drawing::RED);
 
@@ -785,9 +913,6 @@ namespace MFM {
 
           if(renderStats)
           {
-	    m_srend.RenderGridStatistics(m_rootDrawing, mainGrid,
-                                         m_AEPS, m_AER, m_aepsPerFrame,
-                                         m_overheadPercent, false);
 	  }
 
           if (m_recordScreenshotPerAEPS > 0) {

@@ -31,6 +31,8 @@ namespace MFM {
     Panel * m_forward;    // Pointer to next guy above me in rendering order
     Panel * m_backward;   // Pointer to next guy below me in rendering order
 
+    bool m_visible;
+
     static void Indent(FILE * file, u32 count) ;
 
   public:
@@ -44,6 +46,10 @@ namespace MFM {
     Panel * Pop() ;
 
     void Remove(Panel * child) ;
+
+    void SetVisibility(bool value){ m_visible = value; }
+
+    void ToggleVisibility(){ m_visible = !m_visible; }
 
     u32 GetWidth() {return m_rect.GetWidth();}
 
@@ -92,6 +98,15 @@ namespace MFM {
       m_fgColor = color;
       return old;
     }
+
+    /**
+     * Gets the absolute location of this Panel from the window that
+     * the program is contained in.
+     *
+     * @returns The absolute location of this Panel from the window that
+     *          the program is contained in.
+     */
+    SPoint GetAbsoluteLocation();
 
 
     virtual void Paint(Drawing & config);

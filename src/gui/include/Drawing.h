@@ -54,6 +54,8 @@ namespace MFM {
     static const int MAGENTA = 0xffff00ff;
     static const int YELLOW  = 0xffffff00;
 
+    static const int DARK_PURPLE = 0xff200020;
+
     Drawing(SDL_Surface * dest = 0, TTF_Font * font = 0) ;
 
     /**
