@@ -452,7 +452,7 @@ namespace MFM {
       m_gridPanel.SetGrid(&mainGrid);
 
       m_rootPanel.Insert(&m_gridPanel, NULL);
-      m_rootPanel.Insert(&m_statisticsPanel, NULL);
+      m_gridPanel.Insert(&m_statisticsPanel, NULL);
 
       m_statisticsPanel.SetStastRenderer(&m_srend);
       m_statisticsPanel.SetGrid(&mainGrid);
@@ -460,6 +460,7 @@ namespace MFM {
       m_statisticsPanel.SetAER(m_AER);
       m_statisticsPanel.SetAEPSPerFrame(m_aepsPerFrame);
       m_statisticsPanel.SetOverheadPercent(m_overheadPercent);
+      m_statisticsPanel.SetVisibility(true);
       /*
       m_rootPanel.Insert(&m_panel1,0);
       m_rootPanel.Insert(&m_panel2,&m_panel1);
@@ -622,7 +623,7 @@ namespace MFM {
 	SetName("Grid Panel");
 	SetDimensions(SCREEN_INITIAL_WIDTH,
 		      SCREEN_INITIAL_HEIGHT);
-	SetRenderPoint(SPoint(10, 10));
+	SetRenderPoint(SPoint(0, 0));
 	SetForeground(Drawing::BLACK);
 	SetBackground(Drawing::DARK_PURPLE);
 
@@ -650,8 +651,7 @@ namespace MFM {
 
       virtual bool Handle(SDL_MouseButtonEvent& event)
       {
-	if(event.button == SDL_BUTTON_LEFT &&
-	   event.type   == SDL_MOUSEBUTTONUP)
+	if(event.button == SDL_BUTTON_LEFT)
 	{
 	  SPoint pt = GetAbsoluteLocation();
 	  pt.Set(event.x - pt.GetX(),
@@ -678,10 +678,10 @@ namespace MFM {
       {
 	SetName("Statistics Panel");
 	SetDimensions(STATS_START_WINDOW_WIDTH,
-		      STATS_START_WINDOW_HEIGHT);
+		      SCREEN_INITIAL_HEIGHT);
 	SetRenderPoint(SPoint(SCREEN_INITIAL_WIDTH - STATS_START_WINDOW_WIDTH, 0));
-	SetForeground(Drawing::DARK_PURPLE);
-	SetBackground(Drawing::BLACK);
+	SetForeground(Drawing::WHITE);
+	SetBackground(Drawing::DARK_PURPLE);
 	m_AEPS = m_AER = 0.0;
 	m_aepsPerFrame = 0;
       }
@@ -719,9 +719,22 @@ namespace MFM {
     protected:
       virtual void PaintComponent(Drawing& drawing)
       {
+	this->Panel::PaintComponent(drawing);
 	m_srend->RenderGridStatistics(drawing, *m_mainGrid,
 				     m_AEPS, m_AER, m_aepsPerFrame,
 				     m_overheadPercent, false);
+      }
+
+      virtual bool Handle(SDL_MouseButtonEvent& event)
+      {
+	if(event.button == SDL_BUTTON_LEFT)
+	{
+	  SPoint pt = GetAbsoluteLocation();
+	  pt.Set(event.x - pt.GetX(),
+		 event.y - pt.GetY());
+	  printf("(%d,%d)\n", pt.GetX(), pt.GetY());
+	}
+	return true;
       }
     }m_statisticsPanel;
 
@@ -816,7 +829,7 @@ namespace MFM {
       }
 
       //m_srend.SetDestination(screen);
-      m_srend.SetDrawPoint(SPoint(m_screenWidth-STATS_WINDOW_WIDTH, 0));
+      m_srend.SetDrawPoint(SPoint(0,0));//m_screenWidth-STATS_WINDOW_WIDTH, 0));
       m_srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, m_screenHeight));
 
       printf("Screen resize: %d x %d\n", width, height);

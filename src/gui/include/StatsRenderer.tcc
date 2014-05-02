@@ -17,10 +17,6 @@ namespace MFM {
     enum { H = GC::GRID_HEIGHT};
     enum { R = P::EVENT_WINDOW_RADIUS};
 
-    drawing.FillRect(m_drawPoint.GetX(), m_drawPoint.GetY(),
-                     m_dimensions.GetX(), m_dimensions.GetY(),
-                     0xff400040);
-
     const u32 FMT_BUFFER_SIZE = 32;
     char fmtBuffer[FMT_BUFFER_SIZE];
 
