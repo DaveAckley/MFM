@@ -26,7 +26,7 @@ extern "C" {
     volatile const char * file = errenv->file;
     int line = errenv->lineno;
     int code = errenv->thrown;
-    if (!file) { 
+    if (!file) {
       file = "unknown";
       line = 0;
     }

@@ -19,7 +19,7 @@
 */
 
 /**
-  \file fail.h Support for meaningful runtime deaths when necessary
+  \file Fail.h Support for meaningful runtime deaths when necessary
   \author David H. Ackley.
   \date (C) 2014 All rights reserved.
   \lgpl
@@ -29,7 +29,15 @@
 
 #include "FailPlatformSpecific.h"  /* For FAIL and unwind_protect */
 
-extern "C" const char * MFMFailCodeReason(int failCode) ;
+extern "C" {
+  /**
+     Convert a failure code into a null-terminated string for printing.
+     If \a failCode is negative or greater than the number of known
+     failure codes, returns "[failCode out of range]", otherwise returns
+     the failure code symbol itself as a string.
+  */
+  const char * MFMFailCodeReason(int failCode) ;
+}
 
 #define XX(a) MFM_FAIL_CODE_REASON_##a,
 enum MFMFailureCodes{
