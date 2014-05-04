@@ -4,6 +4,7 @@
 #include "itype.h"
 #include "BitVector.h"
 #include "Random.h"
+#include "Util.h"     /* For REQUIRE */
 #include <stdio.h>  /* For FILE */
 
 namespace MFM
@@ -37,10 +38,18 @@ namespace MFM
     enum { W = P::TILE_WIDTH };
     enum { B = P::ELEMENT_TABLE_BITS };
 
-  public:
+  protected:
+    /**
+       The actual and only storage space of an Atom.
+     */
     BitVector<BPA> m_bits;
 
   public:
+
+    Atom() {
+      // Create a compilation error if sizeof(Atom)!=sizeof(m_bits)
+      COMPILATION_REQUIREMENT<sizeof(Atom)==sizeof(m_bits)>();
+    }
 
     /**
        Return true if the given \a atom is the given \a type.

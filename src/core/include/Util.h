@@ -6,6 +6,11 @@
 #include "math.h"
 #include <string.h>
 
+template <const bool mustBeTrue>
+inline void COMPILATION_REQUIREMENT() {
+  typedef char errorIfFalse[mustBeTrue == 0 ? -1 : 1];
+}
+
 template <class T>
 inline T MAX(T x, T y) {
   return (x > y) ? x : y;
