@@ -22,7 +22,7 @@ namespace MFM {
   class P1Atom : public Atom< CoreConfig< P1Atom<PC>, PC> >
   {
 
-    enum { 
+    enum {
       BITS = 64,
       // For now we insist on exact match.  Possibly longer could be
       // supported relatively easily.
@@ -37,14 +37,14 @@ namespace MFM {
        p1atom, since the type doesn't mean much without the atomic
        header as well */
 
-    void SetType(u32 type, u32 width) 
+    void SetType(u32 type, u32 width)
     {
-      this->m_bits.Write(BITS-width, width, type); 
+      this->m_bits.Write(BITS-width, width, type);
     }
 
   public:
 
-    virtual bool IsSane() const
+    bool IsSane() const
     {
       return GetBitsAllocated() <= BITS;
     }
@@ -76,12 +76,12 @@ namespace MFM {
       InitAtom(ELEMENT_EMPTY,0,0,48);
     }
 
-    P1Atom(u32 type, u32 longc, u32 shortc, u32 statec) 
-    { 
+    P1Atom(u32 type, u32 longc, u32 shortc, u32 statec)
+    {
       InitAtom(type,longc,shortc,statec);
     }
 
-    void InitAtom(u32 type, u32 longc, u32 shortc, u32 statec) 
+    void InitAtom(u32 type, u32 longc, u32 shortc, u32 statec)
     {
       SetLongBondCount(longc);
       SetShortBondCount(shortc);
@@ -143,7 +143,7 @@ namespace MFM {
     /**
      * Store value into stateWidth state bits starting at stateIndex,
      * which counts toward the right with 0 meaning the leftmost state
-     * bit. 
+     * bit.
      */
     void SetStateField(u32 stateIndex, u32 stateWidth, u32 value)
     {
@@ -211,7 +211,7 @@ namespace MFM {
     { this->m_bits.Print(ostream); }
 
     void Print(FILE* ostream) const
-    { 
+    {
       u32 type = GetType();
       u32 lbc = GetLongBondCount();
       u32 sbc = GetShortBondCount();
@@ -251,7 +251,7 @@ namespace MFM {
      * as a short bond.  Otherwise returns false and *this is unchanged */
     bool SetShortBond(u32 index, const SPoint& pt);
 
-    /* 
+    /*
      * Removes a long bond. Be careful; if a
      * bond is removed, the bonds ahead of it
      * (if they exist) will be pushed downwards.

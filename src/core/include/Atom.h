@@ -11,6 +11,21 @@ namespace MFM
 
   template <class CC> class Element; // Forward declaration
 
+  /**
+     An Atom is a fixed-size collection of bits, representing the
+     contents of a site.  An Atom is the MFM analog to an 'object' in
+     an object-oriented programming language, as \sa Element is the
+     MFM analog to a 'class'.  Be warned, however, that the analogy is
+     very loose!  Atoms are both fixed size and very small, comprising
+     dozens or perhaps hundreds of bits only.
+
+     The Atom class is abstract; subclasses are to provide details of
+     atomic structure, but note Atom <b>contains \em NO virtual
+     methods</b>.  Our goal is to avoid incurring the cost of a vtable
+     pointer on every Atom instance, so all Atom accesses must be by
+     template type rather than by base class polymorphism.
+
+   */
   template <class CC>
   class Atom
   {
@@ -21,29 +36,34 @@ namespace MFM
     enum { R = P::EVENT_WINDOW_RADIUS };
     enum { W = P::TILE_WIDTH };
     enum { B = P::ELEMENT_TABLE_BITS };
-    
+
   public:
     BitVector<BPA> m_bits;
-    
+
   public:
-    static bool IsType(const T& atom, u32 type) 
+
+    /**
+       Return true if the given \a atom is the given \a type.
+     */
+    static bool IsType(const T& atom, u32 type)
     {
       return atom.GetType()==type;
     }
-    
-    static bool IsSameType(const T& atom, const T & other) 
+
+    static bool IsSameType(const T& atom, const T & other)
     {
       return atom.GetType()==other.GetType();
     }
 
-    virtual bool IsSane() const = 0;
-    
+    // To be defined by subclasses only
+    bool IsSane() const;
+
     // To be defined by subclasses only
     u32 GetType() const;
-    
+
     // To be defined by subclasses only
     void Print(FILE* ostream) const;
-    
+
     void XRay(Random& rand, u32 bitOdds)
     {
       for(u32 i = 0; i < BPA >> 1; i++)
