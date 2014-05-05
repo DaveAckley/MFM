@@ -78,7 +78,7 @@ namespace MFM {
     return v+1;
   }
 
-  /** 
+  /**
    * A bit vector with reasonably fast operations
    *
    * BITS should be a multiple of BITS_PER_UNIT (currently
@@ -159,7 +159,7 @@ namespace MFM {
     void Clear();
 
     void Print(FILE* ostream) const;
-			   
+
   };
 } /* namespace MFM */
 

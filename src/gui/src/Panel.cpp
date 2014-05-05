@@ -14,6 +14,8 @@ namespace MFM {
 
     m_bgColor = Drawing::BLACK;
     m_fgColor = Drawing::YELLOW;
+
+    m_visible = true;
   }
 
   Panel::~Panel()
@@ -116,20 +118,29 @@ namespace MFM {
     m_rect.SetPosition(renderPt);
   }
 
+  SPoint Panel::GetAbsoluteLocation()
+  {
+    return m_rect.GetPosition() +
+      (m_parent ? m_parent->GetAbsoluteLocation() : SPoint(0,0));
+  }
+
   void Panel::Paint(Drawing & drawing)
   {
-    Rect old, cur;
-    drawing.GetWindow(old);
-    drawing.TransformWindow(m_rect);
-    drawing.GetWindow(cur);
+    if(m_visible)
+    {
+      Rect old, cur;
+      drawing.GetWindow(old);
+      drawing.TransformWindow(m_rect);
+      drawing.GetWindow(cur);
 
-    PaintComponent(drawing);
-    PaintBorder(drawing);
+      PaintComponent(drawing);
+      PaintBorder(drawing);
 
-    drawing.SetWindow(cur);
-    PaintChildren(drawing);
+      drawing.SetWindow(cur);
+      PaintChildren(drawing);
 
-    drawing.SetWindow(old);
+      drawing.SetWindow(old);
+    }
   }
 
   void Panel::PaintChildren(Drawing & drawing)
