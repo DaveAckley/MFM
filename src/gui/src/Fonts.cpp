@@ -36,7 +36,7 @@ namespace MFM {
           FAIL(ILLEGAL_STATE);
         return c.font;
       }
-      if (size == c.size && strcmp(resourcePath, c.path))
+      if (size == c.size && !strcmp(resourcePath, c.path))
         return c.font;
     }
     FAIL(OUT_OF_ROOM);
