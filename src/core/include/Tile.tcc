@@ -676,7 +676,7 @@ namespace MFM {
 	dirWaitWord = SendRelevantAtoms();
 
 	SendEndEventPackets(dirWaitWord);
-	  
+
 	FlushAndWaitOnAllBuffers(dirWaitWord);
 
 
