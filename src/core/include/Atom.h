@@ -1,4 +1,5 @@
-#ifndef ATOM_H      /* -*- C++ -*- */
+      /* -*- C++ -*- */
+#ifndef ATOM_H
 #define ATOM_H
 
 #include "itype.h"
@@ -18,7 +19,7 @@ namespace MFM
      contents of a site is currently a single Atom.
 
      In general, an Atom is the MFM analog to an 'object' in an
-     object-oriented programming language, as \sa Element is the MFM
+     object-oriented programming language, as Element is the MFM
      analog to a 'class'.  Be warned, however, that the analogy is
      very loose!  Atoms are both fixed size and very small, comprising
      dozens or perhaps hundreds of bits only.
