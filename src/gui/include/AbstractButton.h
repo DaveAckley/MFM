@@ -58,8 +58,6 @@ namespace MFM
 
     virtual bool Handle(SDL_MouseButtonEvent & event)
     {
-      //      printf("Abstract button mouse %d @(%d,%d)", event.type, event.x,event.y);
-      //      Print(stdout);
       if (IsEnabled() && event.type == SDL_MOUSEBUTTONUP) {
         OnClick();
         return true;
@@ -76,22 +74,6 @@ namespace MFM
     void Render(Drawing & drawing, SPoint& offset, TTF_Font* font);
 
     bool Contains(SPoint& pt);
-  };
-
-  template <class baseDriver>
-  class AbstractDriverButton : public AbstractButton
-  {
-  protected:
-    baseDriver* m_driver;
-  public:
-    AbstractDriverButton(const char* title) : AbstractButton(title){}
-
-    baseDriver* SetDriver(baseDriver* driver)
-    {
-      return m_driver = driver;
-    }
-
-    virtual void OnClick() = 0;
   };
 }
 

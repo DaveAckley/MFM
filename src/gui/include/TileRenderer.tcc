@@ -22,7 +22,6 @@ template <class CC>
 void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile, bool renderCache)
 {
   // Extract short type names
-  typedef typename CC::ATOM_TYPE T;
   typedef typename CC::PARAM_CONFIG P;
 
   u32 astart = renderCache ? 0 : P::EVENT_WINDOW_RADIUS;
@@ -86,7 +85,6 @@ void TileRenderer::RenderTile(Drawing & drawing, Tile<CC>& t, SPoint& loc, bool 
 			      bool renderCache, bool selected)
 {
   // Extract short type names
-  typedef typename CC::ATOM_TYPE T;
   typedef typename CC::PARAM_CONFIG P;
 
   SPoint multPt(loc);
@@ -137,7 +135,6 @@ template <class CC>
 void TileRenderer::RenderEventWindow(Drawing & drawing, SPoint& offset, Tile<CC>& tile, bool renderCache)
 {
   // Extract short type names
-  typedef typename CC::ATOM_TYPE T;
   typedef typename CC::PARAM_CONFIG P;
   enum { R = P::EVENT_WINDOW_RADIUS};
 
@@ -174,7 +171,6 @@ template <class CC>
 void TileRenderer::RenderMemRegions(Drawing & drawing, SPoint& pt, bool renderCache, bool selected)
 {
   // Extract short type names
-  typedef typename CC::ATOM_TYPE T;
   typedef typename CC::PARAM_CONFIG P;
   enum { R = P::EVENT_WINDOW_RADIUS};
 
@@ -202,7 +198,6 @@ void TileRenderer::RenderMemRegion(Drawing & drawing, SPoint& pt, int regID,
 				   Uint32 color, bool renderCache)
 {
   // Extract short names for parameter types
-  typedef typename CC::ATOM_TYPE T;
   typedef typename CC::PARAM_CONFIG P;
 
   int tileSize;
@@ -235,7 +230,6 @@ template <class CC>
 void TileRenderer::RenderGrid(Drawing & drawing, SPoint* pt, bool renderCache)
 {
   // Extract short type names
-  typedef typename CC::ATOM_TYPE T;
   typedef typename CC::PARAM_CONFIG P;
   s32 lineLen, linesToDraw;
 
@@ -284,4 +278,3 @@ void TileRenderer::RenderGrid(Drawing & drawing, SPoint* pt, bool renderCache)
   }
 }
 } /* namespace MFM */
-

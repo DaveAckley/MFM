@@ -24,112 +24,166 @@ namespace MFM {
       mainGrid.Needed(Element_Wall<OurCoreConfig>::THE_INSTANCE);
     }
 
-    class ClearTileButton : public AbstractDriverButton<MFMSimDHSDemo>
+    class AbstractGridButton : public AbstractButton
     {
-    public:
-      ClearTileButton() : AbstractDriverButton("Clear Tile"){}
+    protected:
+      GridRenderer* m_grend;
+      OurGrid* m_grid;
 
-      virtual void OnClick()
+      AbstractGridButton(const char* title) :
+        AbstractButton(title) { }
+
+    public:
+      void SetGridRenderer(GridRenderer* grend)
       {
-	m_driver->ClearSelectedTile();
+	m_grend = grend;
+      }
+
+      void SetGrid(OurGrid* grid)
+      {
+	m_grid = grid;
       }
     };
 
-    class PauseTileButton : public AbstractDriverButton<MFMSimDHSDemo>
+    struct ClearButton : public AbstractGridButton
     {
-    public:
-      PauseTileButton() : AbstractDriverButton("Pause Tile"){}
+      ClearButton() : AbstractGridButton("Clear Tile")
+      {
+	AbstractButton::SetName("ClearButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 450));
+        AbstractButton::SetForeground(Drawing::WHITE);
+        AbstractButton::SetBackground(Drawing::BLACK);
+      }
 
       virtual void OnClick()
       {
-	m_driver->PauseSelectedTile();
+	SPoint& selTile = AbstractGridButton::m_grend->GetSelectedTile();
+	if(selTile.GetX() >= 0 && selTile.GetX() < W &&
+	   selTile.GetY() >= 0 && selTile.GetY() < H)
+	{
+	  AbstractGridButton::m_grid->
+	    EmptyTile(AbstractGridButton::m_grend->GetSelectedTile());
+	}
       }
-    };
+    } m_clearButton;
 
-    class RandomNukeButton : public AbstractDriverButton<MFMSimDHSDemo>
+    struct PauseButton : public AbstractGridButton
     {
-    public:
-      RandomNukeButton() : AbstractDriverButton("Nuke"){}
+      PauseButton() : AbstractGridButton("Pause Tile")
+      {
+	AbstractButton::SetName("PauseButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2,500));
+        AbstractButton::SetForeground(Drawing::WHITE);
+        AbstractButton::SetBackground(Drawing::BLACK);
+      }
 
       virtual void OnClick()
       {
-	m_driver->RandomNuke();
+	printf("click\n");
+	SPoint& selTile = AbstractGridButton::m_grend->GetSelectedTile();
+	if(selTile.GetX() >= 0 && selTile.GetX() < W &&
+	   selTile.GetY() >= 0 && selTile.GetY() < H)
+	{
+	  AbstractGridButton::m_grid->
+	    SetTileToExecuteOnly(selTile,
+				 !AbstractGridButton::m_grid->
+				 GetTileExecutionStatus(selTile));
+	  printf("pause\n");
+	}
       }
-    };
+    } m_pauseButton;
 
-    class XRayButton : public AbstractDriverButton<MFMSimDHSDemo>
+    struct NukeButton : public AbstractGridButton
     {
-    public:
-      XRayButton() : AbstractDriverButton("XRay"){}
+      NukeButton() : AbstractGridButton("Nuke")
+      {
+	AbstractButton::SetName("NukeButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 550));
+        AbstractButton::SetForeground(Drawing::WHITE);
+        AbstractButton::SetBackground(Drawing::BLACK);
+      }
 
       virtual void OnClick()
       {
-	m_driver->XRay();
+	m_grid->RandomNuke();
       }
-    };
+    } m_nukeButton;
 
-    class ToggleHeatmapButton : public AbstractDriverButton<MFMSimDHSDemo>
+    struct XRayButton : public AbstractGridButton
     {
-    public:
-      ToggleHeatmapButton() : AbstractDriverButton("Toggle Heatmap"){}
+      XRayButton() : AbstractGridButton("XRay")
+      {
+	AbstractButton::SetName("XRayButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 600));
+        AbstractButton::SetForeground(Drawing::WHITE);
+        AbstractButton::SetBackground(Drawing::BLACK);
+      }
 
       virtual void OnClick()
       {
-	m_driver->ToggleHeatmap();
+	m_grid->XRay();
       }
-    };
+    } m_xrayButton;
 
-    class ToggleGridButton : public AbstractDriverButton<MFMSimDHSDemo>
+    struct GridRenderButton : public AbstractGridButton
     {
-    public:
-      ToggleGridButton() : AbstractDriverButton("Toggle Grid"){}
+      GridRenderButton() : AbstractGridButton("Toggle Grid")
+      {
+	AbstractButton::SetName("GridRenderButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 650));
+        AbstractButton::SetForeground(Drawing::WHITE);
+        AbstractButton::SetBackground(Drawing::BLACK);
+      }
 
       virtual void OnClick()
       {
-	m_driver->ToggleGrid();
+	m_grend->ToggleGrid();
       }
-    };
+    } m_gridRenderButton;
 
-    class ToggleTileViewButton : public AbstractDriverButton<MFMSimDHSDemo>
+    struct HeatmapButton : public AbstractGridButton
     {
-    public:
-      ToggleTileViewButton() : AbstractDriverButton("Toggle Tile View"){}
+      HeatmapButton() : AbstractGridButton("Toggle Heatmap")
+      {
+	AbstractButton::SetName("HeatmapButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 700));
+        AbstractButton::SetForeground(Drawing::WHITE);
+        AbstractButton::SetBackground(Drawing::BLACK);
+      }
 
       virtual void OnClick()
       {
-	m_driver->ToggleTileView();
+	m_grend->ToggleDataHeatmap();
       }
-    };
+    } m_heatmapButton;
 
-    ClearTileButton clearTileButton;
-    PauseTileButton pauseTileButton;
-    RandomNukeButton randomNukeButton;
-    XRayButton xrayButton;
-    ToggleHeatmapButton toggleHeatmapButton;
-    ToggleGridButton toggleGridButton;
-    ToggleTileViewButton toggleTileViewButton;
+    struct TileViewButton : public AbstractGridButton
+    {
+      TileViewButton() : AbstractGridButton("Toggle Tile View")
+      {
+	AbstractButton::SetName("TileViewButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 750));
+        AbstractButton::SetForeground(Drawing::WHITE);
+        AbstractButton::SetBackground(Drawing::BLACK);
+      }
+
+      virtual void OnClick()
+      {
+	m_grend->ToggleMemDraw();
+      }
+    } m_tileViewButton;
+
+
 
     virtual void HandleResize()
     {
-      OurStatsRenderer& srend = GetStatsRenderer();
-
-      srend.ClearButtons();
-
-      pauseTileButton.SetDriver(
-      randomNukeButton.SetDriver(
-      xrayButton.SetDriver(
-      toggleHeatmapButton.SetDriver(
-      toggleGridButton.SetDriver(
-      toggleTileViewButton.SetDriver(
-      clearTileButton.SetDriver(this)))))));
-
-      srend.AddButton(&clearTileButton);
-      srend.AddButton(&pauseTileButton);
-      srend.AddButton(&randomNukeButton);
-      srend.AddButton(&xrayButton);
-      srend.AddButton(&toggleHeatmapButton);
-      srend.AddButton(&toggleGridButton);
-      srend.AddButton(&toggleTileViewButton);
     }
 
     StatsRenderer<OurGridConfig>::ElementDataSlotSum m_sortingSlots[4];
@@ -201,6 +255,29 @@ namespace MFM {
         }
       mainGrid.PlaceAtom(emtr, eloc);
       mainGrid.PlaceAtom(cnsr, cloc);
+
+      m_clearButton.SetGrid(&mainGrid);
+      m_clearButton.SetGridRenderer(&m_grend);
+      m_xrayButton.SetGrid(&mainGrid);
+      m_xrayButton.SetGridRenderer(&m_grend);
+      m_pauseButton.SetGrid(&mainGrid);
+      m_pauseButton.SetGridRenderer(&m_grend);
+      m_nukeButton.SetGrid(&mainGrid);
+      m_nukeButton.SetGridRenderer(&m_grend);
+      m_gridRenderButton.SetGrid(&mainGrid);
+      m_gridRenderButton.SetGridRenderer(&m_grend);
+      m_heatmapButton.SetGrid(&mainGrid);
+      m_heatmapButton.SetGridRenderer(&m_grend);
+      m_tileViewButton.SetGrid(&mainGrid);
+      m_tileViewButton.SetGridRenderer(&m_grend);
+
+      m_statisticsPanel.Insert(&m_clearButton, NULL);
+      m_statisticsPanel.Insert(&m_pauseButton, NULL);
+      m_statisticsPanel.Insert(&m_nukeButton, NULL);
+      m_statisticsPanel.Insert(&m_xrayButton, NULL);
+      m_statisticsPanel.Insert(&m_gridRenderButton, NULL);
+      m_statisticsPanel.Insert(&m_heatmapButton, NULL);
+      m_statisticsPanel.Insert(&m_tileViewButton, NULL);
     }
 
   };

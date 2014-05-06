@@ -11,7 +11,6 @@ namespace MFM {
   {
     // Extract short names for parameter types
     typedef typename GC::CORE_CONFIG CC;
-    typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
     enum { W = GC::GRID_WIDTH};
     enum { H = GC::GRID_HEIGHT};
@@ -84,7 +83,6 @@ namespace MFM {
   {
     // Extract short names for parameter types
     typedef typename GC::CORE_CONFIG CC;
-    typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
     enum { W = GC::GRID_WIDTH};
     enum { H = GC::GRID_HEIGHT};
@@ -120,4 +118,3 @@ namespace MFM {
   }
 
 } /* namespace MFM */
-

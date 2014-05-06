@@ -119,9 +119,11 @@ namespace MFM {
     u32 m_screenWidth;
     u32 m_screenHeight;
 
+  protected: /* Need these for our buttons at driver level */
     GridRenderer m_grend;
     StatsRenderer<GC> m_srend;
 
+  private:
     DriverArguments* m_driverArguments;
 
     void Sleep(u32 seconds, u64 nanos)
@@ -451,16 +453,16 @@ namespace MFM {
       m_gridPanel.SetGridRenderer(&m_grend);
       m_gridPanel.SetGrid(&mainGrid);
 
-      m_rootPanel.Insert(&m_gridPanel, NULL);
-      m_gridPanel.Insert(&m_statisticsPanel, NULL);
-
-      m_statisticsPanel.SetStastRenderer(&m_srend);
+      m_statisticsPanel.SetStatsRenderer(&m_srend);
       m_statisticsPanel.SetGrid(&mainGrid);
       m_statisticsPanel.SetAEPS(m_AEPS);
       m_statisticsPanel.SetAER(m_AER);
       m_statisticsPanel.SetAEPSPerFrame(m_aepsPerFrame);
       m_statisticsPanel.SetOverheadPercent(m_overheadPercent);
-      m_statisticsPanel.SetVisibility(true);
+      m_statisticsPanel.SetVisibility(false);
+
+      m_rootPanel.Insert(&m_gridPanel, NULL);
+      m_gridPanel.Insert(&m_statisticsPanel, NULL);
       /*
       m_rootPanel.Insert(&m_panel1,0);
       m_rootPanel.Insert(&m_panel2,&m_panel1);
@@ -550,48 +552,6 @@ namespace MFM {
     OurGrid & GetGrid()
     {
       return mainGrid;
-    }
-    /* Methods used by buttons */
-    void ClearSelectedTile()
-    {
-      SPoint& selTile = m_grend.GetSelectedTile();
-      if(selTile.GetX() >= 0 && selTile.GetX() < W &&
-	 selTile.GetY() >= 0 && selTile.GetY() < H)
-      {
-	mainGrid.EmptyTile(m_grend.GetSelectedTile());
-      }
-    }
-
-    void PauseSelectedTile()
-    {
-
-      SPoint& selTile = m_grend.GetSelectedTile();
-      if(selTile.GetX() >= 0 && selTile.GetX() < W &&
-	 selTile.GetY() >= 0 && selTile.GetY() < H)
-      {
-	mainGrid.SetTileToExecuteOnly(selTile,
-				      !mainGrid.GetTileExecutionStatus(selTile));
-      }
-    }
-
-    void RandomNuke()
-    {
-      mainGrid.RandomNuke();
-    }
-
-    void XRay()
-    {
-      mainGrid.XRay();
-    }
-
-    void ToggleHeatmap()
-    {
-      m_grend.ToggleDataHeatmap();
-    }
-
-    void ToggleGrid()
-    {
-      m_grend.ToggleGrid();
     }
 
     void ToggleTileView()
@@ -686,7 +646,7 @@ namespace MFM {
 	m_aepsPerFrame = 0;
       }
 
-      void SetStastRenderer(StatsRenderer<GC>* srend)
+      void SetStatsRenderer(StatsRenderer<GC>* srend)
       {
 	m_srend = srend;
       }

@@ -45,7 +45,7 @@ namespace MFM {
     friend Vector operator/(const Vector & v1,const FXP16 num) {
       return 1.0/num*v1;
     }
-     
+
     Vector & operator=(const Vector & v1) {
       this->x = v1.x;
       this->y = v1.y;
