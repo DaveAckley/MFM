@@ -54,6 +54,9 @@ namespace MFM {
     void RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile, bool renderCache);
 
     template <class CC>
+    void RenderAtom(Drawing & drawing, const SPoint& atomLoc, const UPoint& rendPt,  Tile<CC>& tile);
+
+    template <class CC>
     u32 GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom, u32 selector = 0);
 
     template <class CC>
