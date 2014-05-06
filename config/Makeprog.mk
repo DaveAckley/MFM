@@ -15,4 +15,5 @@ include $(BASEDIR)/config/Makelib.mk
 ARCHIVES := $(wildcard $(BASEDIR)/build/*/*.a)
 
 $(BINDIR)/$(COMPONENTNAME):	$(BUILDDIR)/main.o $(ALLDEP) $(ARCHIVES)
+	mkdir -p $(BINDIR)
 	$(GPP) $(LDFLAGS) $(BUILDDIR)/main.o $(LIBS) -o $@

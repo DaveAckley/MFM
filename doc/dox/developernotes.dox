@@ -1,0 +1,37 @@
+/**
+  \page developernotes Notes for developers
+
+  So far, this page is a relatively unstructured list of notes,
+  warnings, gotchas, etc, targetted for source code developers.
+
+  \section naming Naming issues
+
+  \li With very few exceptions, all names defined in this codebase are
+  (and shall remain) C++ mangled and in the MFM namespace.
+
+  \li \em All exceptions to the previous point --- any and all names
+  introduced by this codebase that are not C++ mangled or are outside
+  the MFM namespace --- begin and must begin with 'MFM'.
+
+ \li Most of the known exceptions to date deal with the failure
+  handling system, which uses C names for several internal entities,
+  including:
+MFMErrorEnvironment,
+MFMFailCodeReason,
+MFMFailHere,
+MFMFailureCodes,
+MFMLongJmpHere,
+MFMPrintError,
+MFMPrintErrorEnvironment,
+MFMPtrToErrEnvStackPtr.
+
+  \section debugging Debugging tips
+
+  \li Put a breakpoint at MFMLongJmpHere to break on every FAIL call
+  \e before the longjmp has occurred, so you can look around in the
+  context of the failure with the stack intact.
+
+
+
+*/
+

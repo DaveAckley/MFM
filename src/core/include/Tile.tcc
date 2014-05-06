@@ -656,14 +656,17 @@ namespace MFM {
 	unwind_protect({
 	    ++m_eventsFailed;
 	    ++m_failuresErased;
-	    if(m_executingWindow.GetCenterAtom().IsSane())
+
+	    if(!m_executingWindow.GetCenterAtom().IsSane())
 	    {
 	      fprintf(stderr, "FE(INSANE)\n");
 	    }
 	    else
 	    {
 	      fprintf(stderr,"FE(%x)\n",m_executingWindow.GetCenterAtom().GetType());
-	    }
+            }
+
+
 	    m_executingWindow.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
 	  },{
 	    elementTable.Execute(m_executingWindow);

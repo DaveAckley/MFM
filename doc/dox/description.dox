@@ -1,0 +1,31 @@
+/**
+   \page description Overview
+
+   This codebase implements a simulator&mdash;and, hopefully soon,
+   board support for actual hardware&mdash;for a computer architecture
+   known as the "Movable Feast Machine" (MFM).  The MFM is designed to
+   offer <em>indefinite scalability</em> emphasize <em>robust-first
+   computing</em>, in response to two fundamental limitations of
+   traditional CPU+RAM computer architecture: limited scalability and
+   inherent insecurity.
+
+   Only a very brief overview is provided here; for more information,
+   see the links in \ref bibliography.
+
+   \section rant-intro Moving beyond traditional computer architecture
+
+   Traditional computing is based on a particular division of labor,
+   an implicit contract, between hardware and software: Hardware
+   starts from unruly physical reality and produces automated logic;
+   software starts from automated logic and produces behavior that is
+   valuable to pay for the hardware and the software both.
+
+   Traditional computing in a nutshell: Hardware provides \em
+   reliability while software provides \em desirability.
+
+   \subsection rant-problems Traditional computer architecture is unscalable and insecure
+
+   The
+
+*/
+

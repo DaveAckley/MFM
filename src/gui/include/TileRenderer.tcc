@@ -48,36 +48,56 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile, bo
 	{
 	  atomLoc.SetY(y);
 
-	  const typename CC::ATOM_TYPE * atom = tile.GetAtom(atomLoc);
-	  u32 color;
-	  if(m_drawDataHeat)
-	  {
-	    color = GetDataHeatColor(tile, *atom);
-	  }
-	  else
-	  {
-	    color = GetAtomColor(tile, *atom);
-	  }
-
-
-	  if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX() &&
-	     rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
-	  {
-	    if(color)
-	    {
-
-              drawing.SetForeground(color);
-	      drawing.FillCircle(rendPt.GetX(),
-                                 rendPt.GetY(),
-                                 m_atomDrawSize,
-                                 m_atomDrawSize,
-                                 m_atomDrawSize / 2);
-	    }
-	  }
+          // We're going to examine the atom now.  It might be toxic.
+          unwind_protect({
+              // Flag danger and move on
+              drawing.SetForeground(Drawing::YELLOW);
+	      drawing.FillRect(rendPt.GetX(),
+                               rendPt.GetY(),
+                               m_atomDrawSize,
+                               m_atomDrawSize/2);
+              drawing.SetForeground(Drawing::BLACK);
+	      drawing.FillRect(rendPt.GetX(),
+                               rendPt.GetY()+m_atomDrawSize/2,
+                               m_atomDrawSize,
+                               m_atomDrawSize/2);
+            },{
+              RenderAtom(drawing, atomLoc, rendPt, tile);
+            });
 	}
       }
     }
   }
+}
+
+template <class CC>
+void TileRenderer::RenderAtom(Drawing & drawing, const SPoint& atomLoc, const UPoint& rendPt,  Tile<CC>& tile)
+{
+  const typename CC::ATOM_TYPE * atom = tile.GetAtom(atomLoc);
+  u32 color;
+  if(m_drawDataHeat)
+    {
+      color = GetDataHeatColor(tile, *atom);
+    }
+  else
+    {
+      color = GetAtomColor(tile, *atom);
+    }
+
+  if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX() &&
+     rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
+    {
+      if(color)
+        {
+
+          drawing.SetForeground(color);
+          drawing.FillCircle(rendPt.GetX(),
+                             rendPt.GetY(),
+                             m_atomDrawSize,
+                             m_atomDrawSize,
+                             m_atomDrawSize / 2);
+        }
+    }
 }
 
 template <class CC>

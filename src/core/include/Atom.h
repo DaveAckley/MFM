@@ -1,9 +1,11 @@
-#ifndef ATOM_H      /* -*- C++ -*- */
+      /* -*- C++ -*- */
+#ifndef ATOM_H
 #define ATOM_H
 
 #include "itype.h"
 #include "BitVector.h"
 #include "Random.h"
+#include "Util.h"     /* For REQUIRE */
 #include <stdio.h>  /* For FILE */
 
 namespace MFM
@@ -12,8 +14,22 @@ namespace MFM
   template <class CC> class Element; // Forward declaration
 
   /**
-   * Base class for the Atom type, which represents an instance of an
-   * Element in the Movable Feast Machine.
+     An Atom is a fixed-size collection of bits, representing an
+     instance of an Element in the Movable Feast Machine.  The
+     contents of a site is currently a single Atom.
+
+     In general, an Atom is the MFM analog to an 'object' in an
+     object-oriented programming language, as Element is the MFM
+     analog to a 'class'.  Be warned, however, that the analogy is
+     very loose!  Atoms are both fixed size and very small, comprising
+     dozens or perhaps hundreds of bits only.
+
+     The Atom class is abstract; subclasses are to provide details of
+     atomic structure, but note Atom <b>contains \em NO virtual
+     methods</b>.  Our goal is to avoid incurring the cost of a vtable
+     pointer on every Atom instance, so all Atom accesses must be by
+     template type rather than by base class polymorphism.
+
    */
   template <class CC>
   class Atom
@@ -50,7 +66,7 @@ namespace MFM
      */
     enum { B = P::ELEMENT_TABLE_BITS };
 
-  public:
+  protected:
     /**
        The state of this Atom, in its entirety. All fields of this
        atom are contained in this BitVector.
@@ -58,14 +74,20 @@ namespace MFM
     BitVector<BPA> m_bits;
 
   public:
+
+    Atom() {
+      // Create a compilation error if sizeof(Atom)!=sizeof(m_bits)
+      COMPILATION_REQUIREMENT<sizeof(Atom)==sizeof(m_bits)>();
+    }
+
     /**
-     * Checks to see if a specified Atom is of a particular type.
+     * Checks to see if a specified Atom is of a particular \a type.
      *
      * @param atom The atom to check the type of.
      *
-     * @param type The Atomic type to check atom for membership of.
+     * @param type The Atomic type to check \a atom for membership of.
      *
-     * @returns true if atom is of type type.
+     * @returns true if \a atom is of type \a type.
      */
     static bool IsType(const T& atom, u32 type)
     {
@@ -92,8 +114,10 @@ namespace MFM
      *
      * @returns true if this Atom is considered to be in a legal
      * state, else false.
+     *
+     * @remarks This is to be defined only by a subclass of Atom.
      */
-    virtual bool IsSane() const = 0;
+    bool IsSane() const;
 
     /**
      * Gets the type of this Atom.
@@ -122,7 +146,7 @@ namespace MFM
      */
     void XRay(Random& rand, u32 bitOdds)
     {
-      for(u32 i = 0; i < BPA >> 1; i++)
+      for(u32 i = 0; i < BPA >> 1; i++)      // XXX What is the '>> 1' here?
       {
 	if(rand.OneIn(bitOdds))
 	{
