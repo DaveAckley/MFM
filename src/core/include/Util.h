@@ -7,11 +7,15 @@
 #include <string.h>
 
 namespace MFM {
+
+#define MARK_USED(X) ((void)(&(X)))
+
   template <const bool mustBeTrue>
   inline void COMPILATION_REQUIREMENT()
   {
-    //typedef char errorIfFalse[mustBeTrue == 0 ? -1 : 1];
-
+    typedef char errorIfFalse[mustBeTrue == 0 ? -1 : 1];
+    errorIfFalse t;
+    MARK_USED(t);
   }
 
   template <class T>
