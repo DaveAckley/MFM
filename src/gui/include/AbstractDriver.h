@@ -299,7 +299,7 @@ namespace MFM {
 
 	m_msSpentRunning += (m_ticksLastStopped - startMS);
 
-	m_statisticsPanel.SetAEPS(m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites());
+	m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
 	m_AER = 1000 * (m_AEPS / m_msSpentRunning);
 
 	m_overheadPercent = 100.0*m_msSpentOverhead/(m_msSpentRunning+m_msSpentOverhead);
@@ -469,6 +469,8 @@ namespace MFM {
 
       m_rootPanel.Insert(&m_gridPanel, NULL);
       m_gridPanel.Insert(&m_statisticsPanel, NULL);
+      m_statisticsPanel.Insert(&m_buttonPanel, NULL);
+      m_buttonPanel.SetVisibility(true);
       /*
       m_rootPanel.Insert(&m_panel1,0);
       m_rootPanel.Insert(&m_panel2,&m_panel1);
@@ -703,6 +705,21 @@ namespace MFM {
 	return true;
       }
     }m_statisticsPanel;
+
+    struct ButtonPanel : public Panel
+    {
+      ButtonPanel()
+      {
+	SetName("ButtonPanel");
+	SetDimensions(STATS_START_WINDOW_WIDTH,
+		      SCREEN_INITIAL_HEIGHT / 2);
+	SetRenderPoint(SPoint(0,
+			      SCREEN_INITIAL_HEIGHT / 2));
+	SetForeground(Drawing::WHITE);
+	SetBackground(Drawing::DARK_PURPLE);
+      }
+
+    }m_buttonPanel;
 
     struct Panel2 : public Panel {
       Panel2() {

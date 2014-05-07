@@ -74,7 +74,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("PauseButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2,500));
+        AbstractButton::SetRenderPoint(SPoint(2,0));
         AbstractButton::SetForeground(Drawing::WHITE);
         AbstractButton::SetBackground(Drawing::BLACK);
       }
@@ -101,7 +101,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("NukeButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 550));
+        AbstractButton::SetRenderPoint(SPoint(2, 50));
         AbstractButton::SetForeground(Drawing::WHITE);
         AbstractButton::SetBackground(Drawing::BLACK);
       }
@@ -118,7 +118,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("XRayButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 600));
+        AbstractButton::SetRenderPoint(SPoint(2, 100));
         AbstractButton::SetForeground(Drawing::WHITE);
         AbstractButton::SetBackground(Drawing::BLACK);
       }
@@ -135,7 +135,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("GridRenderButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 650));
+        AbstractButton::SetRenderPoint(SPoint(2, 150));
         AbstractButton::SetForeground(Drawing::WHITE);
         AbstractButton::SetBackground(Drawing::BLACK);
       }
@@ -152,7 +152,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("HeatmapButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 700));
+        AbstractButton::SetRenderPoint(SPoint(2, 200));
         AbstractButton::SetForeground(Drawing::WHITE);
         AbstractButton::SetBackground(Drawing::BLACK);
       }
@@ -169,7 +169,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("TileViewButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 750));
+        AbstractButton::SetRenderPoint(SPoint(2, 250));
         AbstractButton::SetForeground(Drawing::WHITE);
         AbstractButton::SetBackground(Drawing::BLACK);
       }
@@ -271,13 +271,13 @@ namespace MFM {
       m_tileViewButton.SetGrid(&mainGrid);
       m_tileViewButton.SetGridRenderer(&m_grend);
 
-      m_statisticsPanel.Insert(&m_clearButton, NULL);
-      m_statisticsPanel.Insert(&m_pauseButton, NULL);
-      m_statisticsPanel.Insert(&m_nukeButton, NULL);
-      m_statisticsPanel.Insert(&m_xrayButton, NULL);
-      m_statisticsPanel.Insert(&m_gridRenderButton, NULL);
-      m_statisticsPanel.Insert(&m_heatmapButton, NULL);
-      m_statisticsPanel.Insert(&m_tileViewButton, NULL);
+      m_buttonPanel.Insert(&m_clearButton, NULL);
+      m_buttonPanel.Insert(&m_pauseButton, NULL);
+      m_buttonPanel.Insert(&m_nukeButton, NULL);
+      m_buttonPanel.Insert(&m_xrayButton, NULL);
+      m_buttonPanel.Insert(&m_gridRenderButton, NULL);
+      m_buttonPanel.Insert(&m_heatmapButton, NULL);
+      m_buttonPanel.Insert(&m_tileViewButton, NULL);
     }
 
   };
@@ -295,4 +295,3 @@ int main(int argc, char** argv)
 
   return 0;
 }
-
