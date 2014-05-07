@@ -313,6 +313,12 @@ namespace MFM {
 
 	m_lastFrameAEPS = m_AEPS;
 
+	/* Update the stats renderer */
+	m_statisticsPanel.SetAEPS(m_AEPS);
+	m_statisticsPanel.SetAER(m_AER);
+	m_statisticsPanel.SetAEPSPerFrame(m_aepsPerFrame);
+	m_statisticsPanel.SetOverheadPercent(m_overheadPercent);
+
 	ExportEventCounts(grid);
         //	ExportTimeBasedData(grid);
       }

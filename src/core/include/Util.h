@@ -8,8 +8,10 @@
 
 namespace MFM {
   template <const bool mustBeTrue>
-  inline void COMPILATION_REQUIREMENT() {
-    typedef char errorIfFalse[mustBeTrue == 0 ? -1 : 1];
+  inline void COMPILATION_REQUIREMENT()
+  {
+    //typedef char errorIfFalse[mustBeTrue == 0 ? -1 : 1];
+
   }
 
   template <class T>
