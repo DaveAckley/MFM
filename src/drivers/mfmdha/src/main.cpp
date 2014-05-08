@@ -13,11 +13,12 @@ namespace MFM {
 
   typedef GridConfig<OurCoreConfig,3,2> OurSmallGridConfig;
   typedef GridConfig<OurCoreConfig,6,4> OurBigGridConfig;
+  typedef OurBigGridConfig OurGridConfig;
 
-  struct MFMSimQBarDemo : public AbstractDriver<OurBigGridConfig>
+  typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
+
+  struct MFMSimQBarDemo : public AbstractDriver<OurGridConfig>
   {
-    typedef StatsRenderer<OurBigGridConfig> OurStatsRenderer;
-
     int m_whichSim;
 
     MFMSimQBarDemo(DriverArguments & args, int whichSim)
@@ -101,9 +102,9 @@ namespace MFM {
     }
   };
 
-  struct MFMSimSBarDemo : public AbstractDriver<OurBigGridConfig>
+  struct MFMSimSBarDemo : public AbstractDriver<OurGridConfig>
   {
-    typedef StatsRenderer<OurBigGridConfig> OurStatsRenderer;
+    typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
 
     MFMSimSBarDemo(DriverArguments & args)
       : AbstractDriver(args)
