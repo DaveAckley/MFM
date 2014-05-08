@@ -404,6 +404,16 @@ namespace MFM {
     }
 
     /**
+     * Looks up an element type in this Tile's ElementTable.
+     *
+     * @returns a pointer to the Element associated with \a
+     *          elementType, or NULL if there is no such Element.
+     */
+    const Element<CC> * GetElement(const u32 elementType) {
+      return elementTable.Lookup(elementType);
+    }
+
+    /**
      * Checks to see if this Tile has another tile in a specified
      * direction.
      *
