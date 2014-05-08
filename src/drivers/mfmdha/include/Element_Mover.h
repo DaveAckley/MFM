@@ -59,6 +59,11 @@ namespace MFM
       return 0xff0030e0;
     }
 
+    virtual u32 PercentMovable(const T& you, const T& me, const SPoint& offset) const
+    {
+      return 100;
+    }
+
     virtual void Behavior(EventWindow<CC>& window) const
     {
       Random & random = window.GetRandom();

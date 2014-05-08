@@ -83,7 +83,8 @@ namespace MFM
       return m_defaultAtom;
     }
 
-    virtual u32 PercentMovable(const T& you, const T& me, const SPoint& offset)
+    virtual u32 PercentMovable(const T& you,
+			       const T& me, const SPoint& offset) const
     {
       return 0;
     }

@@ -51,6 +51,12 @@ namespace MFM
       return 0xff0000ff;
     }
 
+    virtual u32 PercentMovable(const T& you, const T& me, const SPoint& offset) const
+    {
+      return 100;
+    }
+
+
     virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const
     {
       switch (selector) {

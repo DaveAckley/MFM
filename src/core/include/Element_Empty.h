@@ -25,13 +25,19 @@ namespace MFM
 
     Element_Empty() { }
 
-    virtual const T & GetDefaultAtom() const 
+    virtual u32 PercentMovable(const T& you,
+			       const T& me, const SPoint& offset) const
+    {
+      return 100;
+    }
+
+    virtual const T & GetDefaultAtom() const
     {
       static T defaultAtom;                 // And the default ctor makes us!
       return defaultAtom;
     }
 
-    virtual u32 DefaultPhysicsColor() const 
+    virtual u32 DefaultPhysicsColor() const
     {
       return 0x00000000;                    // Not black.. transparent
     }
