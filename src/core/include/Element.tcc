@@ -42,7 +42,7 @@ namespace MFM
     return possibles > 0;
   }
 
-#if 1
+#if 0
   template <class CC>
   void Element<CC>::Diffuse(EventWindow<CC>& window) const
   {
@@ -74,23 +74,34 @@ namespace MFM
       swapIdx = MAX(swapIdx - desires[i], 0);
     }
   }
-#else  /* Eight way diffusion */
+#else  /* Four way diffusion */
   template <class CC>
   void Element<CC>::Diffuse(EventWindow<CC>& window) const
   {
     Random & random = window.GetRandom();
-    SPoint pick;
-    u32 picked = 0;
+    Tile<CC>& tile = window.GetTile();
+    SPoint pick = SPoint(0,0);
+    u32 pickWeight = 0;
     const MDist<R> md = MDist<R>::get();
 
-    for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(2); ++idx) {
+    for (u32 idx = md.GetFirstIndex(0); idx <= md.GetLastIndex(1); ++idx) {
       const SPoint sp = md.GetPoint(idx);
-      if (sp.GetMaximumLength() > 1) continue;
       T other = window.GetRelativeAtom(sp);
-      if (other.GetType() == ELEMENT_EMPTY && random.OneIn(++picked))
-        pick = sp;
+      const Element * elt = tile.GetElement(other.GetType());
+
+      if (!other.IsSane() || !(elt = tile.GetElement(other.GetType()))) {
+        if (sp.IsZero()) return;  // If ctr insane or undefined, we're done
+        else continue;            // If nghbr, just ignore it
+      }
+
+      u32 thisWeight = elt->Diffusability(window, sp, SPoint(0,0));
+      if (thisWeight > 0) {
+        pickWeight += thisWeight;
+        if (random.OddsOf(thisWeight, pickWeight))
+          pick = sp;
+      }
     }
-    if (picked > 0)
+    if (pick != SPoint(0,0))
       window.SwapAtoms(pick, SPoint(0, 0));
   }
 #endif

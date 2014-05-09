@@ -22,6 +22,12 @@ namespace MFM {
     // My parent Panel, if any
     Panel * m_parent;
 
+    // Which side(s), if any, that I stick to, when my parent resizes.
+    // (0,0), no automatic repositioning on parent resize, otherwise
+    // sgn(GetX()) -> Left, Center, Right, and sgn(GetY()) -> Top,
+    // Middle, Bottom
+    // XXX Future: SPoint m_gravity;
+
     // The top of the stack of panels I am parent to.  This is
     // null when I have no kids
     Panel * m_top;

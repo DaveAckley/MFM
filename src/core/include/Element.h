@@ -67,6 +67,38 @@ namespace MFM
       return DefaultPhysicsColor();
     }
 
+    /**
+     * On entry, the Atom at \a nowAt will be an instance of the type
+     * of this Element.  How much does that atom like the idea that it
+     * should be moved to (or remain at; the two SPoints might be
+     * equal) location \a maybeAt?  Return 0 to totally hate the idea,
+     * or greater than 0 to request that many chances for this choice
+     * out of the sum of all choices.  Note that \a nowAt and \a
+     * maybeAt are both relative to the EventWindow \a ew, but neither
+     * is necessarily the center atom!
+     *
+     * By default all atoms are considered diffusable, and they return
+     * DEFAULT_DIFFUSABILITY chances for every suggested move
+     */
+    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
+      return DEFAULT_DIFFUSABILITY;
+    }
+
+    /**
+       A utility method available to subclasses that specifies no
+       diffusion is allowed, by specifying a 0 value for the
+       Diffusability of every position except when \a nowAt == \a
+       maybeAt.
+     */
+    u32 NoDiffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
+      return (nowAt == maybeAt)? DEFAULT_DIFFUSABILITY : 0;
+    }
+
+    /**
+     * A standard basis for specifying degrees of diffusability.
+     */
+    static const u32 DEFAULT_DIFFUSABILITY = 1000;
+
   };
 }
 

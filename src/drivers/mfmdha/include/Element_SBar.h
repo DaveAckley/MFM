@@ -225,6 +225,13 @@ namespace MFM
       }
     }
 
+    /**
+       We do not diffuse
+     */
+    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
+      return NoDiffusability(ew, nowAt, maybeAt);
+    }
+
     virtual void Behavior(EventWindow<CC>& window) const
     {
       // Get self, sanity check
