@@ -15,13 +15,13 @@ namespace MFM {
        to the R. */
 
     /* Init the reverse lookup table to all 'illegal' */
-    for (u32 x = 0; x<EVENT_WINDOW_DIAMETER; ++x) 
-      for (u32 y = 0; y<EVENT_WINDOW_DIAMETER; ++y) 
+    for (u32 x = 0; x<EVENT_WINDOW_DIAMETER; ++x)
+      for (u32 y = 0; y<EVENT_WINDOW_DIAMETER; ++y)
         m_pointToIndex[x][y] = -1;
 
     u32 next = 0;
     const SPoint center(R,R);
-  
+
     // For every length from small to large
     for (u32 length = 0; length<=R; ++length) {
       m_firstIndex[length] = next;
@@ -64,7 +64,7 @@ namespace MFM {
   {
     u32 x = (u32) (offset.GetX()+R);
     u32 y = (u32) (offset.GetY()+R);
-    if (x >= EVENT_WINDOW_DIAMETER || y >= EVENT_WINDOW_DIAMETER) 
+    if (x >= EVENT_WINDOW_DIAMETER || y >= EVENT_WINDOW_DIAMETER)
       return -1;
 
     u32 idx = m_pointToIndex[x][y];
@@ -89,10 +89,10 @@ namespace MFM {
   }
 
     static SPoint VNNeighbors[4];
-    
+
 
   template<u32 R>
-  void MDist<R>::FillRandomSingleDir(SPoint& pt,Random & random)
+  void MDist<R>::FillRandomSingleDir(SPoint& pt,Random & random) const
   {
     switch(random.Create(4))
       {
