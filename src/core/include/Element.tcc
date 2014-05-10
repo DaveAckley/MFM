@@ -74,7 +74,7 @@ namespace MFM
       swapIdx = MAX(swapIdx - desires[i], 0);
     }
   }
-#else  /* Four way diffusion */
+#elsif 0 /* 'full' Four way diffusion */
   template <class CC>
   void Element<CC>::Diffuse(EventWindow<CC>& window) const
   {
@@ -104,5 +104,27 @@ namespace MFM
     if (pick != SPoint(0,0))
       window.SwapAtoms(pick, SPoint(0, 0));
   }
+#else  /* 'faster' weighted one way diffusion */
+  template <class CC>
+  void Element<CC>::Diffuse(EventWindow<CC>& window) const
+  {
+    Random & random = window.GetRandom();
+    Tile<CC>& tile = window.GetTile();
+    const MDist<R> md = MDist<R>::get();
+
+    SPoint sp;
+    md.FillRandomSingleDir(sp, random);
+
+    T other = window.GetRelativeAtom(sp);
+    const Element * elt = tile.GetElement(other.GetType());
+
+    if (!other.IsSane() || !(elt = tile.GetElement(other.GetType())))
+      return;       // Any confusion, let the engine sort it out first
+
+    u32 thisWeight = elt->Diffusability(window, sp, SPoint(0,0));
+    if (random.OddsOf(thisWeight, COMPLETE_DIFFUSABILITY))
+      window.SwapAtoms(sp, SPoint(0, 0));
+  }
+
 #endif
 }

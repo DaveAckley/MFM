@@ -67,7 +67,7 @@ namespace MFM {
      */
     static MDist<R> & get();
 
-    void FillRandomSingleDir(SPoint& pt,Random & random);
+    void FillRandomSingleDir(SPoint& pt,Random & random) const;
 
     u32 GetTableSize(u32 maxRadius);
 
@@ -90,7 +90,7 @@ namespace MFM {
         FAIL(ILLEGAL_ARGUMENT);
       return m_indexToPoint[index];
     }
-  
+
     MDist();
 
     /**
@@ -99,7 +99,7 @@ namespace MFM {
      */
     s32 FromPoint(const Point<s32>& offset, u32 radius);
 
-    /* 
+    /*
      * Fills pt with the point represented by bits.
      * Uses a 4-bit rep if maxRadius less than 3
      */
