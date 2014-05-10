@@ -162,6 +162,14 @@ namespace MFM {
     }
 
     /**
+     * Called by the parent of this panel upon a resize event.
+     */
+    virtual void HandleResize(SPoint& parentDimensions)
+    {
+      /* Do nothing by default */
+    }
+
+    /**
        Respond to a MouseMotionEvent.  Return true if the event should
        be considered handled.  The default implementation does nothing
        and returns false.
@@ -173,4 +181,3 @@ namespace MFM {
   };
 } /* namespace MFM */
 #endif /*PANEL_H*/
-

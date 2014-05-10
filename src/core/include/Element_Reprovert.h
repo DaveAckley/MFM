@@ -68,7 +68,7 @@ namespace MFM
        Reprovert Elements do not diffuse
      */
     virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
-      return NoDiffusability(ew, nowAt, maybeAt);
+      return this->NoDiffusability(ew, nowAt, maybeAt);
     }
 
     void ReproduceVertically(EventWindow<CC>& window) const;
