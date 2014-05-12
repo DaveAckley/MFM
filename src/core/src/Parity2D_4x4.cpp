@@ -114,7 +114,7 @@ namespace MFM {
       for (u32 r = 0; r < Parity2D_4x4::H + 1; ++r) {
         bits |= 1 << Parity2D_4x4::indices2D[r][c];
       }
-      fprintf(output,"      0x%07x, // Col %d\n", bits, c);
+      fprintf(output,"      0x%07x%s // Col %d\n", bits, c==Parity2D_4x4::W?" ":",", c);
     }
     fprintf(output,"%s", "  };\n");
   }

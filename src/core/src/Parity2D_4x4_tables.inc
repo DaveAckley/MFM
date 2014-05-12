@@ -10,7 +10,7 @@
       0x0204444, // Col 1
       0x0402222, // Col 2
       0x0801111, // Col 3
-      0x10f0000, // Col 4
+      0x10f0000  // Col 4
   };
   const u16 Parity2D_4x4::eccTable[TABLE_SIZE] =
     {
