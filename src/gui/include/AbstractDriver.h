@@ -795,7 +795,7 @@ namespace MFM {
       if (screen == 0)
         FAIL(ILLEGAL_STATE);
 
-      SPoint newDimensions((s32)width, (s32)height);
+      UPoint newDimensions(width, height);
 
       m_rootPanel.SetDimensions(m_screenWidth, m_screenHeight);
       m_rootPanel.SetRenderPoint(SPoint(0, 0));

@@ -12,12 +12,17 @@ namespace MFM {
   class Panel
   {
   protected:
-
     const char * m_name;
 
     Rect m_rect;
     u32 m_bgColor;  // Default background color of this panel
     u32 m_fgColor;  // Default foreground color of this panel
+
+    /**
+     * The size that this Panel wants to be, when given enough room.
+     */
+    UPoint m_desiredSize;
+    SPoint m_desiredLocation;
 
     // My parent Panel, if any
     Panel * m_parent;
@@ -161,13 +166,7 @@ namespace MFM {
       return false;
     }
 
-    /**
-     * Called by the parent of this panel upon a resize event.
-     */
-    virtual void HandleResize(SPoint& parentDimensions)
-    {
-      /* Do nothing by default */
-    }
+    virtual void HandleResize(const UPoint& parentSize);
 
     /**
        Respond to a MouseMotionEvent.  Return true if the event should

@@ -65,6 +65,11 @@ namespace MFM
       return false;
     }
 
+    virtual void HandleResize(const UPoint& parentSize)
+    {
+      /* As a button, do nothing. */
+    }
+
     virtual void PaintComponent(Drawing & config) ;
 
     virtual void OnClick() = 0;
