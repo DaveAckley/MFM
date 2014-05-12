@@ -3,7 +3,7 @@
 #ifndef ELEMENT_WALL_H
 #define ELEMENT_WALL_H
 
-#include "Element.h"   
+#include "Element.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "itype.h"
@@ -24,7 +24,7 @@ namespace MFM
 
     static Element_Wall THE_INSTANCE;
     static const u32 TYPE = 0xb00f;  // Oof. A wall.
-    
+
     Element_Wall() { }
 
     virtual const T & GetDefaultAtom() const
@@ -37,7 +37,13 @@ namespace MFM
     {
       return 0xffffffff;
     }
-    
+
+    virtual u32 PercentMovable(const T& you,
+			       const T& me, const SPoint& offset) const
+    {
+      return 0;
+    }
+
     virtual void Behavior(EventWindow<CC>& window) const
     {}
 

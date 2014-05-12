@@ -106,6 +106,7 @@ namespace MFM {
   {
     m_rect.SetWidth(width);
     m_rect.SetHeight(height);
+    m_desiredSize.Set(width, height);
   }
 
   const UPoint & Panel::GetDimensions() const
@@ -116,6 +117,7 @@ namespace MFM {
   void Panel::SetRenderPoint(const SPoint & renderPt)
   {
     m_rect.SetPosition(renderPt);
+    m_desiredLocation.Set(renderPt.GetX(), renderPt.GetY());
   }
 
   SPoint Panel::GetAbsoluteLocation()
@@ -169,6 +171,48 @@ namespace MFM {
   {
     drawing.SetForeground(m_fgColor);
     drawing.DrawRectangle(Rect(SPoint(),m_rect.GetSize()));
+  }
+
+  void Panel::HandleResize(const UPoint& parentSize)
+  {
+    /* Try to make myself as big as I can, then call on my children. */
+
+    if(m_desiredSize.GetX() > parentSize.GetX())
+    {
+      m_rect.SetX(0);
+      m_rect.SetWidth(parentSize.GetX());
+    }
+    else
+    {
+      m_rect.SetX(MIN<u32>(m_desiredLocation.GetX(),
+			   parentSize.GetX() - m_rect.GetWidth()));
+      m_rect.SetWidth(m_desiredSize.GetX());
+    }
+
+
+    if(m_desiredSize.GetY() > parentSize.GetY())
+    {
+      m_rect.SetY(0);
+      m_rect.SetHeight(parentSize.GetY());
+    }
+    else
+    {
+      m_rect.SetY(MIN<u32>(m_desiredLocation.GetY(),
+			   parentSize.GetY() - m_rect.GetHeight()));
+      m_rect.SetHeight(m_desiredSize.GetY());
+    }
+
+    if (m_top)
+    {
+      Rect cur;
+      Panel * p = m_top;
+      do
+      {
+        p = p->m_forward;
+        p->HandleResize(m_rect.GetSize());
+      } while (p != m_top);
+    }
+
   }
 
   bool Panel::Dispatch(SDL_Event & event, const Rect & existing)
@@ -230,4 +274,3 @@ namespace MFM {
   }
 
 } /* namespace MFM */
-

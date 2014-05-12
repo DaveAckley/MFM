@@ -12,12 +12,17 @@ namespace MFM {
   class Panel
   {
   protected:
-
     const char * m_name;
 
     Rect m_rect;
     u32 m_bgColor;  // Default background color of this panel
     u32 m_fgColor;  // Default foreground color of this panel
+
+    /**
+     * The size that this Panel wants to be, when given enough room.
+     */
+    UPoint m_desiredSize;
+    SPoint m_desiredLocation;
 
     // My parent Panel, if any
     Panel * m_parent;
@@ -151,15 +156,22 @@ namespace MFM {
 
     /**
        Respond to a MouseButtonEvent (this includes scroll wheel
-       events).  Return true if the event should be considered
-       handled.  The default implementation does nothing and returns
-       false.
+       events).
+
+       @returns true if the event should be considered handled.  The
+                default implementation does nothing and returns
+		false.
      */
     virtual bool Handle(SDL_MouseButtonEvent & event)
     {
       //printf("Mouse %d@(%d,%d)", event.type, event.x, event.y);
       return false;
     }
+
+    /**
+     * Respond to the resizing of this panel's parent.
+     */
+    virtual void HandleResize(const UPoint& parentSize);
 
     /**
        Respond to a MouseMotionEvent.  Return true if the event should
@@ -173,4 +185,3 @@ namespace MFM {
   };
 } /* namespace MFM */
 #endif /*PANEL_H*/
-

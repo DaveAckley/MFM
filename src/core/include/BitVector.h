@@ -1,4 +1,5 @@
-#ifndef BITVECTOR_H      /* -*- C++ -*- */
+/* -*- C++ -*- */
+#ifndef BITVECTOR_H
 #define BITVECTOR_H
 
 #include "itype.h"
@@ -85,7 +86,6 @@ namespace MFM {
    * 32). Otherwise there will, at least, be some wasted space -- and
    * may be other issues.
    */
-
   template <u32 B>
   class BitVector
   {
@@ -138,26 +138,98 @@ namespace MFM {
       return (m_bits[idx] >> shift) & MakeMask(length);
     }
 
+    /**
+     * Writes a specified value to a particular bit in this BitVector.
+     *
+     * @param idx The bit to set, where the MSB is index 0.
+     *
+     * @param bit The value to set the bit at \c idx to.
+     */
     void WriteBit(int idx, bool bit);
 
+    /**
+     * Reads a specified value from a particular bit in this BitVector.
+     *
+     * @param idx The bit to read, where the MSB is index 0.
+     *
+     * @returns The value of the bit at \c idx index.
+     */
     bool ReadBit(int idx);
 
   public:
 
+    /**
+     * Constructs a new BitVector. Set parameters of this BitVector
+     * using the template arguments. All bits are initialized to \c 0 .
+     */
     BitVector();
 
+    /**
+     * Copy-constructor for a BitVector. Creates an identical copy of
+     * the specified BitVector.
+     *
+     * @param other The BitVector to copy properties of.
+     */
     BitVector(const BitVector & other);
 
+    /**
+     * Constructs a BitVector with specified inital value.
+     *
+     * @param values A pointer to a big-endian array of values to
+     *               initialize this BitVector to. This array must
+     *               contain at least as many bits as this BitVector
+     *               can hold (specified as a template parameter).
+     */
     BitVector(const u32 * const values);
 
+    /**
+     * Reads up to 32 bits of a particular section of this BitVector.
+     *
+     * @param startIdx The index of the first bit to read inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param length The number of bits to read from this
+     *               BitVector. This should be in the range \c [1,32] .
+     *
+     * @returns The bits read from the particular section of this
+     *          BitVector.
+     */
     inline u32 Read(const u32 startIdx, const u32 length) const;
 
+    /**
+     * Writes up to 32 bits of a specified u32 to a section of this BitVector.
+     *
+     * @param startIdx The index of the first bit to write inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param length The number of bits to write to this
+     *               BitVector. This should be in the range \c [1,32] .
+     *
+     * @param value The bits to write to the specified section of this
+     *              BitVector.
+     */
     void Write(const u32 startIdx, const u32 length, const u32 value);
 
+    /**
+     * Flips the bit at a specified index in this BitVector.
+     * (i.e. bv[idx] = !bv[idx])
+     *
+     * @param idx The index of the bit to toggle, where the MSB is
+     *        indexed at \c 0 .
+     */
     bool ToggleBit(int idx);
 
+    /**
+     * Sets all bits of this BitVector to \c 0 .
+     */
     void Clear();
 
+    /**
+     * Prints the bits held in this BitVector to a specified FILE* in
+     * hex format.
+     *
+     * @param ostream The FILE* to print bits to.
+     */
     void Print(FILE* ostream) const;
 
   };

@@ -68,4 +68,3 @@ void EventWindowTest::Test_eventwindowWrite()
 }
 
 } /* namespace MFM */
-

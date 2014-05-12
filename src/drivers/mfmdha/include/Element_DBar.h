@@ -213,6 +213,11 @@ namespace MFM
       return 0xffffff00;
     }
 
+    virtual u32 PercentMovable(const T& you, const T& me, const SPoint& offset) const
+    {
+      return 0;
+    }
+
     virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const
     {
       switch (selector) {
@@ -233,7 +238,7 @@ namespace MFM
        We do not diffuse
      */
     virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
-      return NoDiffusability(ew, nowAt, maybeAt);
+      return this->NoDiffusability(ew, nowAt, maybeAt);
     }
 
     virtual void Behavior(EventWindow<CC>& window) const

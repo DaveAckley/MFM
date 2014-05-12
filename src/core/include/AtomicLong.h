@@ -1,5 +1,4 @@
- /* -*- C++ -*- */
-
+/* -*- C++ -*- */
 #ifndef ATOMICLONG_H
 #define ATOMICLONG_H
 

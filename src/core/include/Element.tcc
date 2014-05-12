@@ -1,4 +1,4 @@
-                               /* -*- C++ -*- */
+/* -*- C++ -*- */
 #include "Fail.h"
 #include "Dirs.h"
 
@@ -47,9 +47,31 @@ namespace MFM
   void Element<CC>::Diffuse(EventWindow<CC>& window) const
   {
     SPoint pt;
-    if(FillAvailableVNNeighbor(window, pt))
+    /* Make a pariring of direction to neighbor's move desires */
+    Dir dirs[] = {Dirs::NORTH, Dirs::EAST, Dirs::SOUTH, Dirs::WEST};
+    s32 desires[4] = {0};
+    s32 totalDesire = 0;
+    for(u32 i = 0; i < 4; i++)
     {
-      window.SwapAtoms(pt, SPoint(0, 0));
+      Dirs::FillDir(pt, dirs[i]);
+      u32 atomType= window.GetRelativeAtom(pt).GetType();
+
+      desires[i] = (s32)window.GetTile().GetElementTable().Lookup(atomType)->
+	PercentMovable(window.GetCenterAtom(), window.GetRelativeAtom(pt), pt);
+      totalDesire += desires[i];
+    }
+
+    /* Pick a plausible swap partner */
+    s32 swapIdx = (s32)window.GetTile().GetRandom().Create((u32)totalDesire);
+    for(u32 i = 0; i < 4; i++)
+    {
+      if(swapIdx < desires[i])
+      {
+	Dirs::FillDir(pt, dirs[i]);
+	window.SwapAtoms(pt, SPoint(0, 0));
+	return;
+      }
+      swapIdx = MAX(swapIdx - desires[i], 0);
     }
   }
 #elsif 0 /* 'full' Four way diffusion */

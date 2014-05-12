@@ -35,6 +35,19 @@ namespace MFM
 
     void Diffuse(EventWindow<CC>& window) const;
 
+
+    /**
+     * Determines how likely an Atom of this type is to be swapped
+     * with during diffusal.
+     *
+     * @returns an integral percentage, from 0 to 100, describing the
+     *          desire of an atom of this type to be moved; 0 being
+     *          impossible to move and 100 being completely fine with
+     *          moving.
+     */
+    virtual u32 PercentMovable(const T& you,
+			       const T& me, const SPoint& offset) const = 0;
+
   public:
 
     Element()

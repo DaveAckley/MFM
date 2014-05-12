@@ -51,6 +51,12 @@ namespace MFM
       return defaultAtom;
     }
 
+    virtual u32 PercentMovable(const T& you,
+			       const T& me, const SPoint& offset) const
+    {
+      return 100;
+    }
+
     bool FillAvailableSubwindowPoint(EventWindow<CC>& window,
 				     SPoint& pt, Dir subwindow, ElementType type) const
     {
