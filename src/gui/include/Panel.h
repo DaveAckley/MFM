@@ -156,9 +156,11 @@ namespace MFM {
 
     /**
        Respond to a MouseButtonEvent (this includes scroll wheel
-       events).  Return true if the event should be considered
-       handled.  The default implementation does nothing and returns
-       false.
+       events).
+
+       @returns true if the event should be considered handled.  The
+                default implementation does nothing and returns
+		false.
      */
     virtual bool Handle(SDL_MouseButtonEvent & event)
     {
@@ -166,6 +168,9 @@ namespace MFM {
       return false;
     }
 
+    /**
+     * Respond to the resizing of this panel's parent.
+     */
     virtual void HandleResize(const UPoint& parentSize);
 
     /**
