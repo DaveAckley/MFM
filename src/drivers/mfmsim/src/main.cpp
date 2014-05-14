@@ -1,10 +1,11 @@
 #include "main.h"
+#include "P3Atom.h"
 #include "ParamConfig.h"
 
 namespace MFM {
 
   typedef ParamConfig<64,4,8,40> OurParamConfig;
-  typedef P1Atom<OurParamConfig> OurAtom;
+  typedef P3Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
@@ -231,7 +232,8 @@ namespace MFM {
       for (u32 i = 0; i < 4; ++i)
         srend.DisplayCapturableStats(&m_sortingSlots[i]);
 
-      sorter.SetStateField(0,32,DATA_MINVAL + ((DATA_MAXVAL - DATA_MINVAL) / 2));  // Default threshold
+      //      sorter.SetStateField(0,32,DATA_MINVAL + ((DATA_MAXVAL - DATA_MINVAL) / 2));  // Default threshold
+      sorter.SetStateField(0,32, DATA_MINVAL);  // Default threshold
 
       u32 realWidth = P::TILE_WIDTH - P::EVENT_WINDOW_RADIUS * 2;
 
