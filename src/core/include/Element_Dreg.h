@@ -57,37 +57,39 @@ namespace MFM
       SPoint dir;
       MDist<R>::get().FillRandomSingleDir(dir, random);
 
-      T atom = window.GetRelativeAtom(dir);
-      u32 oldType = atom.GetType();
+      if (window.IsLiveSite(dir)) {
 
-      if(oldType == ELEMENT_EMPTY)
-      {
-	if(random.OneIn(DREG_DRG_ODDS))
-	{
-          atom = Element_Dreg<CC>::THE_INSTANCE.GetDefaultAtom();
-	}
-	else if(random.OneIn(DREG_RES_ODDS))
-	{
-          atom = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
-	}
-      }
-      else if(oldType == Element_Dreg::TYPE)
-      {
-	if(random.OneIn(DREG_DDR_ODDS))
-	{
-	  atom = T();
-	}
-      }
-      else if(oldType != Element_Wall<CC>::TYPE && random.OneIn(DREG_DEL_ODDS))
-      {
-	  atom = T();
-      }
+        T atom = window.GetRelativeAtom(dir);
+        u32 oldType = atom.GetType();
 
-      if(atom.GetType() != oldType)
-      {
-	window.SetRelativeAtom(dir, atom);
-      }
+        if(oldType == ELEMENT_EMPTY)
+          {
+            if(random.OneIn(DREG_DRG_ODDS))
+              {
+                atom = Element_Dreg<CC>::THE_INSTANCE.GetDefaultAtom();
+              }
+            else if(random.OneIn(DREG_RES_ODDS))
+              {
+                atom = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
+              }
+          }
+        else if(oldType == Element_Dreg::TYPE)
+          {
+            if(random.OneIn(DREG_DDR_ODDS))
+              {
+                atom = T();
+              }
+          }
+        else if(oldType != Element_Wall<CC>::TYPE && random.OneIn(DREG_DEL_ODDS))
+          {
+            atom = T();
+          }
 
+        if(atom.GetType() != oldType)
+          {
+            window.SetRelativeAtom(dir, atom);
+          }
+      }
       this->Diffuse(window);
 
     }
