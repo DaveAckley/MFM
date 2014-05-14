@@ -115,6 +115,14 @@ namespace MFM
     SPoint sp;
     md.FillRandomSingleDir(sp, random);
 
+    // Don't diffuse stuff into the great nowhere, but consider
+    // 'bouncing' off the edge of the universe
+    if (!window.IsLiveSite(sp)) {
+      sp *= -1;
+      if (!window.IsLiveSite(sp))  // Wow this is a tight universe!
+        return;
+    }
+
     T other = window.GetRelativeAtom(sp);
     const Element * elt = tile.GetElement(other.GetType());
 
