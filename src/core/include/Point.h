@@ -106,19 +106,23 @@ public:
   Point<T>& operator=(const Point<T> & rhs);
 
   Point<T>& operator+=(const Point<T> & rhs) {
-    return Add(rhs);
+    Add(rhs);
+    return *this;
   }
 
   Point<T>& operator-=(const Point<T> & rhs) {
-    return Subtract(rhs);
+    Subtract(rhs);
+    return *this;
   }
 
   Point<T>& operator*=(const s32 rhs) {
-    return Multiply(rhs);
+    Multiply(rhs);
+    return *this;
   }
 
   Point<T>& operator/=(const s32 rhs) {
-    return Divide(rhs);
+    Divide(rhs);
+    return *this;
   }
 
   friend Point<T> operator+(const Point<T> & lhs,const Point<T> & rhs) {
