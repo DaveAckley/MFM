@@ -63,12 +63,15 @@ namespace MFM {
 
   public:
 
-    P3Atom(u32 type = ELEMENT_EMPTY, u32 z1 = 0, u32 z2 = 0, u32 z3 = 0)
+    P3Atom(u32 type = ELEMENT_EMPTY, u32 z1 = 0, u32 z2 = 0, u32 stateBits = 0)
     {
       COMPILATION_REQUIREMENT< 32 <= BITS-1 >();
 
-      if (z1 != 0 || z2 != 0 || z3 != 0)
+      if (z1 != 0 || z2 != 0)
         FAIL(ILLEGAL_ARGUMENT);
+
+      if (stateBits > P3_STATE_BITS_LEN)
+        FAIL(OUT_OF_ROOM);
 
       SetType(type);
     }
