@@ -20,7 +20,7 @@ namespace MFM
     const char* GetName() const { return "Res"; }
 
     static Element_Res THE_INSTANCE;
-    static const u32 TYPE = 0xa11ce11;             // We are stem cells able to become anything
+    static const u32 TYPE = 0xce11;             // We are stem cells able to become anything
 
     Element_Res() {}
 
