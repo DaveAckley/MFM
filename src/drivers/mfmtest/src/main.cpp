@@ -5,6 +5,7 @@ using namespace MFM;
 int main(int argc, char** argv)
 {
 
+  Parity2D_4x4_Test::Test_RunTests();
   PSym_test::Test_RunTests();
 
   Fail_test::Test_RunTests();

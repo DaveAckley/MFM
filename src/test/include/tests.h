@@ -4,6 +4,7 @@
 /* Get some types for us to test */
 #include "test_common.h"
 
+#include "Parity2D_4x4_Test.h"
 #include "PSym_Test.h"
 #include "Fail_Test.h"
 #include "MDist_Test.h"

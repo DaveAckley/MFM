@@ -1,5 +1,5 @@
 #include "main.h"
-#include "P1Atom.h"
+#include "P3Atom.h"
 #include "Element_SBar.h"
 #include "Element_DBar.h"
 #include "Element_QBar.h"
@@ -8,7 +8,7 @@
 namespace MFM {
 
   typedef ParamConfig<64,4,8,40> OurParamConfig;
-  typedef P1Atom<OurParamConfig> OurAtom;
+  typedef P3Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
 
   typedef GridConfig<OurCoreConfig,3,2> OurSmallGridConfig;

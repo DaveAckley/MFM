@@ -647,7 +647,7 @@ namespace MFM {
 	SetName("Statistics Panel");
 	SetDimensions(STATS_START_WINDOW_WIDTH,
 		      SCREEN_INITIAL_HEIGHT);
-	SetRenderPoint(SPoint(SCREEN_INITIAL_WIDTH - STATS_START_WINDOW_WIDTH, 0));
+	SetRenderPoint(SPoint(100000, 0));
 	SetForeground(Drawing::WHITE);
 	SetBackground(Drawing::DARK_PURPLE);
 	m_AEPS = m_AER = 0.0;
@@ -798,6 +798,8 @@ namespace MFM {
       UPoint newDimensions(width, height);
 
       m_rootPanel.SetDimensions(m_screenWidth, m_screenHeight);
+      m_gridPanel.SetDimensions(m_screenWidth, m_screenHeight);
+
       m_rootPanel.SetRenderPoint(SPoint(0, 0));
       m_rootPanel.SetForeground(Drawing::BLUE);
       m_rootPanel.SetBackground(Drawing::RED);

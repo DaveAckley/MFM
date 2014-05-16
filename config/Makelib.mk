@@ -26,10 +26,10 @@ commondeps:	FORCE
 	chmod -R 777 $(DSHARED_DIR)
 
 
-$(ARCHIVEPATH):	$(BUILDDIR) $(OBJECTS) 
+$(ARCHIVEPATH):	$(BUILDDIR) $(OBJECTS)
 	$(AR) ruc "$@" $(OBJECTS)
 
-clean:	
+clean:
 	rm -f $(OBJECTS)
 
 include $(BASEDIR)/config/Makedeps.mk
@@ -38,6 +38,7 @@ realclean:	clean
 	rm -f $(AUTODEPS)
 	rm -f $(ARCHIVEPATH)
 	rm -f src/*~ include/*~ *~
+	rm -f $(BUILDDIR)/*
 
 .PHONY:	clean realclean FORCE
 

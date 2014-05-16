@@ -37,7 +37,7 @@ namespace MFM
     const char* GetName() const { return "Emitter"; }
 
     static Element_Emitter THE_INSTANCE;
-    static const u32 TYPE = 0xdada1;
+    static const u32 TYPE = 0xdad1;
 
     Element_Emitter() : m_defaultAtom(BuildDefaultAtom()) {}
 

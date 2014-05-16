@@ -42,7 +42,7 @@ namespace MFM
     const char* GetName() const { return "Consumer"; }
 
     static Element_Consumer THE_INSTANCE;
-    static const u32 TYPE = 0xdada0;
+    static const u32 TYPE = 0xdad0;
 
     Element_Consumer() : m_defaultAtom(BuildDefaultAtom())
     {

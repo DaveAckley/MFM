@@ -5,7 +5,6 @@
 #include "itype.h"
 #include "Point.h"
 #include "BitField.h"
-#include "MDist.h"
 #include "Atom.h"
 #include "Element.h"
 #include "CoreConfig.h"
@@ -20,7 +19,7 @@ namespace MFM {
   template <class PC>
   class P0Atom : public Atom< CoreConfig< P0Atom<PC>, PC> >
   {
-    enum { 
+    enum {
       BITS = 64,
       // For now we insist on exact match.  Possibly longer could be
       // supported relatively easily.
@@ -34,8 +33,6 @@ namespace MFM {
     typedef BitField<BitVector<BITS>,28,AFTypeLengthCode::END> AFTypeLength3;
 
   protected:
-
-    typedef MDist<4> MDist4;
 
     /* We really don't want to allow the public to change the type of a
        P0Atom, since the type doesn't mean much without the atomic
@@ -53,7 +50,7 @@ namespace MFM {
       }
     }
 
-    u32 GetLengthCodeForType(u32 type) 
+    u32 GetLengthCodeForType(u32 type)
     {
       for (u32 i = 0; i <= 3; ++i) {
         u32 typebits = i*P0ATOM_TYPE_WIDTH_INCREMENT;
@@ -73,7 +70,7 @@ namespace MFM {
       case 0: return AFTypeLength0::Read(this->m_bits);
       case 1: return AFTypeLength1::Read(this->m_bits);
       case 2: return AFTypeLength2::Read(this->m_bits);
-      case 3: return AFTypeLength3::Read(this->m_bits); 
+      case 3: return AFTypeLength3::Read(this->m_bits);
       default:
         FAIL(UNREACHABLE_CODE);
       }
@@ -90,12 +87,12 @@ namespace MFM {
       InitAtom(ELEMENT_EMPTY,0,0,P0ATOM_STATE_SIZE);
     }
 
-    P0Atom(u32 type, u32 longc, u32 shortc, u32 statec) 
-    { 
+    P0Atom(u32 type, u32 longc, u32 shortc, u32 statec)
+    {
       InitAtom(type,longc,shortc,statec);
     }
 
-    void InitAtom(u32 type, u32 longc, u32 shortc, u32 statec) 
+    void InitAtom(u32 type, u32 longc, u32 shortc, u32 statec)
     {
       if (longc != 0)
         FAIL(ILLEGAL_ARGUMENT);
@@ -104,7 +101,7 @@ namespace MFM {
 
       u32 lengthCode =
         GetLengthCodeForType(type);
-      u32 maxState = 
+      u32 maxState =
         GetMaxStateSize(lengthCode);
 
       if (statec > maxState)
@@ -118,7 +115,7 @@ namespace MFM {
     { this->m_bits.Print(ostream); }
 
     void Print(FILE* ostream) const
-    { 
+    {
       u32 lengthCode = AFTypeLengthCode::Read();
       u32 type = GetType();
       fprintf(ostream,"P0[%x/",type);
