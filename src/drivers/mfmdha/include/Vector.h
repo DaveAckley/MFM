@@ -16,8 +16,8 @@ namespace MFM {
 
     FXP16 GetY() const { return y; }
 
-    void Print(FILE * f) {
-      fprintf(f,"(%06f,%06f)",x.toFloat(),y.toFloat());
+    void Print(ByteSink & f) {
+      f.Printf("(%06x,%06x)",x.asInt(),y.asInt());
     }
 
     friend FXP16 GetDistSq(const Vector & v1, const Vector & v2)  {
