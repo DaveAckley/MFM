@@ -20,6 +20,7 @@ namespace MFM {
   typedef ElementTable<TestCoreConfig> TestElementTable;
   typedef EventWindow<TestCoreConfig> TestEventWindow;
   typedef Tile<TestCoreConfig> TestTile;
+
 } /* namespace MFM */
 
 #endif /*TEST_COMMON_H*/
