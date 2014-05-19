@@ -53,6 +53,7 @@ namespace MFM {
       for(u32 i = 0; i < W; i++)
         for(u32 j = 0; j < H; j++)
           m_tiles[i][j].RegisterElement(anElement);
+      LOG.Message("Assigned type 0x%04x for %@",anElement.GetType(),&anElement.GetUUID());
     }
 
     template <typename PointerType> class MyIterator {
@@ -220,9 +221,9 @@ namespace MFM {
 
     u64 GetTotalEventsExecuted() const;
 
-    void WriteEPSImage(FILE* outstrm) const;
+    void WriteEPSImage(ByteSink & outstrm) const;
 
-    void WriteEPSAverageImage(FILE* outstrm) const;
+    void WriteEPSAverageImage(ByteSink & outstrm) const;
 
     void ResetEPSCounts();
 
