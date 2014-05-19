@@ -194,7 +194,15 @@ TAB_SIZE               = 8
 # You can put \n's in the value part of an alias to insert newlines.
 
 ALIASES                =
-ALIASES += lgpl="\par License: \n \ref license \"LGPL\""
+ALIASES += pubdoc="\par License Note:\n All code samples shown in documentation are placed into the public domain."
+ALIASES += license{1}="\par Code License:\n \ref \1 \pubdoc"
+ALIASES += lgpl="\license{LGPL}"
+ALIASES += gpl="\license{GPL}"
+
+ALIASES += fail="\par Fails: \n"
+ALIASES += fails="\par Fails: \n"
+ALIASES += eq="Same as "
+ALIASES += usage="\par Example:\n"
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).
 # A mapping has the form "name=value". For example adding
@@ -688,7 +696,7 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = spikes doc/internal
+EXCLUDE                = spikes doc/internal .git
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
