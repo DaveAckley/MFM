@@ -1,5 +1,6 @@
 #include "Panel.h"
 #include "Drawing.h"
+#include "FileByteSink.h"  /* For STDOUT */
 
 namespace MFM {
 
@@ -30,18 +31,18 @@ namespace MFM {
       m_parent->Remove(this);
   }
 
-  void Panel::Indent(FILE * file, u32 count)
+  void Panel::Indent(ByteSink & sink, u32 count)
   {
     for (u32 i = 0; i < count; ++i)
-      fprintf(file," ");
+      sink.WriteByte(' ');
   }
-  void Panel::Print(FILE * file, u32 indent) const
+  void Panel::Print(ByteSink & sink, u32 indent) const
   {
-    Indent(file,indent);
-    fprintf(file,"[");
-    if (GetName()) fprintf(file,"%s:", GetName());
-    fprintf(file,"%p",(void*) this);
-    fprintf(file,"(%d,%d)%dx%d,bg:%08x,fg:%08x",
+    Indent(sink,indent);
+    sink.Printf("[");
+    if (GetName()) sink.Printf("%s:", GetName());
+    sink.Printf("%p",(void*) this);
+    sink.Printf("(%d,%d)%dx%d,bg:%08x,fg:%08x",
             m_rect.GetX(),
             m_rect.GetY(),
             m_rect.GetWidth(),
@@ -50,14 +51,14 @@ namespace MFM {
             m_fgColor);
     if (m_top) {
       Panel * p = m_top;
-      fprintf(file,"\n");
+      sink.Printf("\n");
       do {
         p = p->m_forward;
-        p->Print(file, indent+2);
+        p->Print(sink, indent+2);
       } while (p != m_top);
-      Indent(file,indent);
+      Indent(sink,indent);
     }
-    fprintf(file,"]\n");
+    sink.Printf("]\n");
   }
 
   void Panel::Insert(Panel * child, Panel * after)
@@ -262,7 +263,7 @@ namespace MFM {
       return Handle(*motion);
     case SDL_MOUSEBUTTONUP:
       printf("Panel Button Up");
-      Print(stdout);
+      Print(STDOUT);
       // FALL THROUGH
     case SDL_MOUSEBUTTONDOWN:
       return Handle(*button);
