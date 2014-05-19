@@ -130,8 +130,10 @@ namespace MFM
     const char* GetName() const { return "Bar"; }
 
     static Element_Bar THE_INSTANCE;
+    static const u32 TYPE() {
+      return THE_INSTANCE.GetType();
+    }
 
-    static const u32 TYPE = 0xba;
     static const u32 TYPE_BITS = 8;
     static const u32 TYPE_MASK = (1<<TYPE_BITS)-1;
     static bool IsBarType(u32 type) {

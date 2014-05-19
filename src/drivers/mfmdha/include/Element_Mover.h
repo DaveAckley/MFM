@@ -12,6 +12,7 @@
 
 namespace MFM
 {
+#define MOVER_VERSION 1
 
   /**
     An element that moves other elements around and causes trouble for
@@ -32,25 +33,26 @@ namespace MFM
     enum { R = P::EVENT_WINDOW_RADIUS };
 
   public:
-    const char* GetName() const { return "Mover"; }
 
     static Element_Mover THE_INSTANCE;
+    static const u32 TYPE() {
+      return THE_INSTANCE.GetType();
+    }
 
-    static const u32 TYPE = 0x140;
     static const u32 TYPE_BITS = 12;
     static const u32 TYPE_MASK = (1<<TYPE_BITS)-1;
 
     static const u32 STATE_BITS = 0;
 
     static bool IsMoverType(u32 type) {
-      return type==TYPE;
+      return type==TYPE();
     }
 
-    Element_Mover() { }
+    Element_Mover() : Element<CC>(MFM_UUID_FOR("Mover", MOVER_VERSION)){ }
 
     virtual const T & GetDefaultAtom() const
     {
-      static T defaultAtom(TYPE,0,0,STATE_BITS);
+      static T defaultAtom(TYPE(),0,0,STATE_BITS);
       return defaultAtom;
     }
 
@@ -93,18 +95,18 @@ namespace MFM
         // Empty or occupied?
         const T other = window.GetRelativeAtom(sp);
         const u32 otherType = other.GetType();
-        bool isEmpty = otherType == Element_Empty<CC>::TYPE;
+        bool isEmpty = Element_Empty<CC>::IsType(otherType);
 
         if (isEmpty) {
           if (random.OneIn(++emptyCount)) {
             empty = sp;
           }
         } else {
-          if (otherType == Element_Mover<CC>::TYPE)
+          if (otherType == Element_Mover<CC>::TYPE())
             ++moverCount;
-          else if (otherType == Element_Dreg<CC>::TYPE)
+          else if (otherType == Element_Dreg<CC>::TYPE())
             ++dregCount;
-          else if (otherType == Element_Res<CC>::TYPE)
+          else if (otherType == Element_Res<CC>::TYPE())
             ++resCount;
 
           if (random.OneIn(++occupCount)) {
@@ -117,7 +119,7 @@ namespace MFM
 
         const T other = window.GetRelativeAtom(occup);
         const u32 otherType = other.GetType();
-        bool isRes = otherType == Element_Res<CC>::TYPE;
+        bool isRes = otherType == Element_Res<CC>::TYPE();
 
         // Is it Res, and no other Movers, and we're inclined to convert?
 

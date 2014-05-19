@@ -8,7 +8,7 @@
 #include "Element_Res.h"
 #include "itype.h"
 #include "FXP.h"
-#include "P1Atom.h"
+#include "ByteSink.h"
 
 namespace MFM
 {
@@ -114,8 +114,8 @@ namespace MFM
 
       FXP16 GetY() const { return y; }
 
-      void Print(FILE * f) {
-        fprintf(f,"(%06f,%06f)",x,y);
+      void Print(ByteSink & f) {
+        f.Printf("(%06d,%06d)",x,y);
       }
 
       friend FXP16 GetDistSq(const Vector & v1, const Vector & v2)  {
