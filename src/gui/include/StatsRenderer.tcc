@@ -77,7 +77,7 @@ namespace MFM {
   }
 
   template <class GC>
-  void StatsRenderer<GC>::WriteRegisteredCounts(FILE * fp, bool writeHeader, Grid<GC>& grid,
+  void StatsRenderer<GC>::WriteRegisteredCounts(ByteSink & fp, bool writeHeader, Grid<GC>& grid,
                                                 double aeps, double aer, u32 AEPSperFrame,
                                                 double overhead, bool endOfEpoch)
   {
@@ -89,32 +89,35 @@ namespace MFM {
     enum { R = P::EVENT_WINDOW_RADIUS};
 
     if (writeHeader) {
-      fprintf(fp,"# kAEPS AEPSperFrame AER pctOvrhd");
+      fp.Printf("# AEPS AEPSperFrame AER100 pctOvrhd100");
       for (u32 i = 0; i < m_capStatsInUse; ++i) {
         const CapturableStatistic * cs = m_capStats[i];
         if (cs->GetDecimalPlaces() < 0) continue;
 
         // Try to ensure splitting on spaces will get the right number of names
-        fputc(' ', fp);
+        fp.WriteByte(' ');
         for (const char * p = cs->GetLabel(); *p; ++p) {
-          if (isspace(*p)) fputc('_', fp);
-          else fputc(*p, fp);
+          if (isspace(*p)) fp.WriteByte('_');
+          else fp.WriteByte(*p);
         }
       }
-      fprintf(fp,"\n");
+      fp.Println();
     }
 
-    fprintf(fp,"%8.3f", aeps/1000.0);
-    fprintf(fp," %d", AEPSperFrame);
-    fprintf(fp, "%8.3f", aer);
-    fprintf(fp, "%8.3f", overhead);
+    //fprintf(fp,"%8.3f", aeps/1000.0);
+    fp.Print((u64) aeps);
+    fp.Print(" ");
+    fp.Print(AEPSperFrame);
+    fp.Print(" ");
+    fp.Printf("%d", (u32) (100.0*aer));
+    fp.Printf("%d", (u32) (100.0*overhead));
 
     for (u32 i = 0; i < m_capStatsInUse; ++i) {
       const CapturableStatistic * cs = m_capStats[i];
       if (cs->GetDecimalPlaces() < 0) continue;
-      fprintf(fp," %g", cs->GetValue(endOfEpoch));
+      fp.Printf(" %d", (u32) cs->GetValue(endOfEpoch));
     }
-    fprintf(fp,"\n");
+    fp.Println();
   }
 
 } /* namespace MFM */

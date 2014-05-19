@@ -5,7 +5,7 @@
 #include "Point.h"
 #include "Rect.h"
 #include "Drawing.h"
-#include <stdio.h>      /* For FILE */
+#include "ByteSink.h"
 
 namespace MFM {
 
@@ -44,7 +44,7 @@ namespace MFM {
 
     bool m_visible;
 
-    static void Indent(FILE * file, u32 count) ;
+    static void Indent(ByteSink & sink, u32 count) ;
 
   public:
 
@@ -76,7 +76,7 @@ namespace MFM {
 
     void SetName(const char * name) { m_name = name; }
 
-    void Print(FILE * file, u32 indent = 0) const;
+    void Print(ByteSink & sink, u32 indent = 0) const;
 
     /**
        Get the current background color.

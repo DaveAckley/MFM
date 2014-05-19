@@ -43,7 +43,7 @@ namespace MFM {
 
       virtual const char * GetLabel() const {
         if (m_element)
-          return m_element->GetName();
+          return m_element->GetUUID().GetLabel();
         return "<unset>";
       }
       virtual s32 GetDecimalPlaces() const {
@@ -238,7 +238,7 @@ namespace MFM {
 
     void RenderGridStatistics(Drawing & drawing, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool doResets);
 
-    void WriteRegisteredCounts(FILE * fp, bool writeHeader, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool doResets);
+    void WriteRegisteredCounts(ByteSink & fp, bool writeHeader, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool doResets);
   };
 } /* namespace MFM */
 #include "StatsRenderer.tcc"
