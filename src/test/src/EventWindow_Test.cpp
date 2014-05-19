@@ -17,7 +17,7 @@ void EventWindowTest::Test_eventwindowConstruction()
   //  P1Atom * atoms = tile.GetAtoms();
   Point<s32> center(4, 4);
   Point<s32> zero(0, 0);
-  const u32 DREG_TYPE = Element_Dreg<TestCoreConfig>::TYPE;
+  const u32 DREG_TYPE = Element_Dreg<TestCoreConfig>::TYPE();
 
   tile.PlaceAtom(TestAtom(DREG_TYPE,0,0,0), center);
 
@@ -42,8 +42,8 @@ void EventWindowTest::Test_eventwindowWrite()
   SPoint center(4, 4);
   SPoint absolute(-2, 0);
   SPoint zero(0, 0);
-  const u32 DREG_TYPE = Element_Dreg<TestCoreConfig>::TYPE;
-  const u32 RES_TYPE = Element_Res<TestCoreConfig>::TYPE;
+  const u32 DREG_TYPE = Element_Dreg<TestCoreConfig>::TYPE();
+  const u32 RES_TYPE = Element_Res<TestCoreConfig>::TYPE();
 
   absolute.Add(center);
 
