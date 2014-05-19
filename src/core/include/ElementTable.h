@@ -6,6 +6,7 @@
 #include "Dirs.h"
 #include "itype.h"
 #include "Element.h"
+#include "Element_Empty.h"
 
 namespace MFM {
 
@@ -52,7 +53,7 @@ namespace MFM {
     void Execute(EventWindow<CC>& window)
     {
       u32 type = window.GetCenterAtom().GetType();
-      if(type != ELEMENT_EMPTY) {
+      if(type != Element_Empty<CC>::THE_INSTANCE.GetType()) {
         const Element<CC> * elt = Lookup(type);
         if (elt == 0) FAIL(UNKNOWN_ELEMENT);
         elt->Behavior(window);
