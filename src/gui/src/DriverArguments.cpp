@@ -1,4 +1,5 @@
 #include "DriverArguments.h"
+#include "Logger.h"
 #include <stdio.h>    /* For fprintf, stderr */
 #include <stdlib.h>   /* For atoi, exit */
 #include <string.h>   /* For strcmp */
@@ -142,6 +143,16 @@ namespace MFM {
         if (m_aepsPerFrame < 1) Die("AEPS must be greater than zero, after %s",arg);
         fprintf(stderr,"[Initially rendering at %d AEPS per frame]\n",m_aepsPerFrame);
       }
+      else if(!strcmp("-l", arg) || !strcmp("--log", arg))
+      {
+        const char * val = GetNextArg(argc,argv);
+        if (!val) Die("Missing logging level (integer) argument after %s", arg);
+
+        m_initLogLevel = atoi(val);
+        if (!Logger::ValidLevel(m_initLogLevel)) Die("Invalid logging level %d", m_initLogLevel);
+        fprintf(stderr,"[Initial logging level %s]\n",
+                Logger::StrLevel((Logger::Level) m_initLogLevel));
+      }
       else if(!strcmp("--startminimal", arg))
       {
 	m_startMinimal = true;
@@ -155,6 +166,9 @@ namespace MFM {
                 " -h, --help                 Print this help\n"
                 " -s NUM, --seed NUM         Set master PRNG seed to NUM (u32)\n"
                 " -d DIR, --dir DIR          Store data in per-sim directories under DIR\n"
+		"\n"
+                " -l NUM, --log NUM          Amount of logging output (0 is none, 1 is errors only)\n"
+		"\n"
                 " -e AEPS, --events AEPS     Record event counts every AEPS aeps\n"
                 " -p AEPS, --pictures AEPS   Record screenshots every AEPS aeps\n"
 		" -t AEPS, --timebd AEPS     Records time based data every AEPS aeps\n"

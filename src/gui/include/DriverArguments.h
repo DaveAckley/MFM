@@ -3,6 +3,7 @@
 
 #include "itype.h"
 #include "Point.h"
+#include "Logger.h"
 
 #define DRIVERARGUMENTS_MAX_DISABLED_TILES 0xFF
 
@@ -17,6 +18,7 @@ namespace MFM {
     u32 m_haltAfterAEPS;
     u32 m_disabledTileCount;
     u32 m_aepsPerFrame;
+    u32 m_initLogLevel;
     s32 m_recordEventCountsPerAEPS;
     s32 m_recordScreenshotPerAEPS;
     s32 m_recordTimeBasedDataPerAEPS;
@@ -54,6 +56,9 @@ namespace MFM {
     u32 GetHaltAfterAEPS() const { return m_haltAfterAEPS; }
     u32 GetDisabledTileCount() const { return m_disabledTileCount; }
     u32 GetAEPSPerFrame() const { return m_aepsPerFrame; }
+    Logger::Level GetInitialLogLevel() const {
+      return (Logger::Level) m_initLogLevel;
+    }
     s32 GetRecordEventCountsPerAEPS() const { return m_recordEventCountsPerAEPS; }
     s32 GetRecordScreenshotPerAEPS() const { return m_recordScreenshotPerAEPS; }
     s32 GetRecordTimeBasedDataPerAEPS() const { return m_recordTimeBasedDataPerAEPS; }
