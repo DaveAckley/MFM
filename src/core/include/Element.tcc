@@ -1,6 +1,7 @@
 /* -*- C++ -*- */
 #include "Fail.h"
 #include "Dirs.h"
+#include "Element_Empty.h"
 
 namespace MFM
 {
@@ -16,7 +17,7 @@ namespace MFM
   template <class CC>
   bool Element<CC>::FillAvailableVNNeighbor(EventWindow<CC>& window, SPoint& pt) const
   {
-    return FillPointWithType(window, pt, VNNeighbors, 4, Dirs::SOUTHEAST, ELEMENT_EMPTY);
+    return FillPointWithType(window, pt, VNNeighbors, 4, Dirs::SOUTHEAST, Element_Empty<CC>::GetType());
   }
 
   /* Master search method for finding atoms in regions in a window. If regions are
