@@ -8,6 +8,7 @@
 #include "MDist.h"
 #include "Atom.h"
 #include "Element.h"
+#include "Element_Empty.h"
 #include "CoreConfig.h"
 #include "ParamConfig.h"
 
@@ -32,6 +33,7 @@ namespace MFM {
   protected:
 
     typedef MDist<4> MDist4;
+    typedef CoreConfig< P1Atom<PC>, PC> CC;
 
     /* We really don't want to allow the public to change the type of a
        p1atom, since the type doesn't mean much without the atomic
@@ -73,7 +75,7 @@ namespace MFM {
 
     P1Atom()
     {
-      InitAtom(ELEMENT_EMPTY,0,0,48);
+      InitAtom(Element_Empty<CC>::THE_INSTANCE.GetType(),0,0,48);
     }
 
     P1Atom(u32 type, u32 longc, u32 shortc, u32 statec)
@@ -207,17 +209,17 @@ namespace MFM {
       }
     */
 
-    void PrintBits(FILE* ostream) const
+    void PrintBits(ByteSink & ostream) const
     { this->m_bits.Print(ostream); }
 
-    void Print(FILE* ostream) const
+    void Print(ByteSink & ostream) const
     {
       u32 type = GetType();
       u32 lbc = GetLongBondCount();
       u32 sbc = GetShortBondCount();
       u32 stc = GetStateBitCount();
       u32 state = GetStateField(0,stc>32?32:stc);
-      fprintf(ostream,"P1[%x/%d%d/%d:%x]", type,lbc,sbc,stc,state);
+      ostream.Printf("P1[%x/%d%d/%d:%x]", type,lbc,sbc,stc,state);
     }
 
 #if 0

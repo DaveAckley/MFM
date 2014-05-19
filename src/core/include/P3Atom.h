@@ -17,6 +17,8 @@ namespace MFM {
   template <class PC>
   class P3Atom : public Atom< CoreConfig< P3Atom<PC>, PC> >
   {
+    typedef CoreConfig< P3Atom<PC>, PC> CC;
+
     enum {
       BITS = PC::BITS_PER_ATOM,
 
@@ -63,7 +65,7 @@ namespace MFM {
 
   public:
 
-    P3Atom(u32 type = ELEMENT_EMPTY, u32 z1 = 0, u32 z2 = 0, u32 stateBits = 0)
+    P3Atom(u32 type = Element_Empty<CC>::THE_INSTANCE.GetType(), u32 z1 = 0, u32 z2 = 0, u32 stateBits = 0)
     {
       COMPILATION_REQUIREMENT< 32 <= BITS-1 >();
 
@@ -113,19 +115,19 @@ namespace MFM {
       return this->m_bits.Write(P3_STATE_BITS_POS + stateIndex, stateWidth, value);
     }
 
-    void PrintBits(FILE* ostream) const
+    void PrintBits(ByteSink & ostream) const
     { this->m_bits.Print(ostream); }
 
-    void Print(FILE* ostream) const
+    void Print(ByteSink & ostream) const
     {
       u32 type = GetType();
-      fprintf(ostream,"P3[%x/",type);
+      ostream.Printf("P3[%x/",type);
       u32 length = GetMaxStateSize(type);
       for (int i = 0; i < length; i += 4) {
         u32 nyb = this->m_bits.Read(i,4);
-        fprintf(ostream,"%x",nyb);
+        ostream.Printf("%x",nyb);
       }
-      fprintf(ostream,"]");
+      ostream.Printf("]");
     }
 
     P3Atom& operator=(const P3Atom & rhs)

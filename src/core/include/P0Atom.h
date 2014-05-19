@@ -19,6 +19,8 @@ namespace MFM {
   template <class PC>
   class P0Atom : public Atom< CoreConfig< P0Atom<PC>, PC> >
   {
+    typedef CoreConfig< P0Atom<PC>, PC> CC;
+
     enum {
       BITS = 64,
       // For now we insist on exact match.  Possibly longer could be
@@ -84,7 +86,7 @@ namespace MFM {
 
     P0Atom()
     {
-      InitAtom(ELEMENT_EMPTY,0,0,P0ATOM_STATE_SIZE);
+      InitAtom(Element_Empty<CC>::GetType(),0,0,P0ATOM_STATE_SIZE);
     }
 
     P0Atom(u32 type, u32 longc, u32 shortc, u32 statec)
@@ -111,20 +113,20 @@ namespace MFM {
 
     }
 
-    void PrintBits(FILE* ostream) const
+    void PrintBits(ByteSink & ostream) const
     { this->m_bits.Print(ostream); }
 
-    void Print(FILE* ostream) const
+    void Print(ByteSink & ostream) const
     {
       u32 lengthCode = AFTypeLengthCode::Read();
       u32 type = GetType();
-      fprintf(ostream,"P0[%x/",type);
+      ostream.Printf("P0[%x/",type);
       u32 length = GetMaxStateSize(lengthCode);
       for (int i = 0; i < length; i += 4) {
         u32 nyb = this->m_bits.Read(length+i,4);
-        fprintf(ostream,"%x",nyb);
+        ostream.Printf("%x",nyb);
       }
-      fprintf(ostream,"]");
+      ostream.Printf("]");
     }
 
     P0Atom& operator=(const P0Atom & rhs);
