@@ -120,6 +120,9 @@ namespace MFM {
 	within this Tile.*/
     s32 m_atomCount[ELEMENT_TABLE_SIZE];
 
+    /** Set to true if an impossible count is detected */
+    bool m_needRecount;
+
     /** A count of corrupted atoms for which an element could not be
         found */
     s32 m_illegalAtomCount;
@@ -648,18 +651,6 @@ namespace MFM {
     u64 GetUncachedSiteEvents(const SPoint site) const ;
 
 
-#if 0  // Doesn't seem like anybody is using this?
-    /**
-     * Gets an Atom from this Tile by its raster index.
-     *
-     * @param i The raster index (horizontal first) of the Atom to
-     *          retrieve.
-     *
-     * @returns A pointer to the Atom at the specified index.
-     */
-    const T* GetAtom(int i) const;
-#endif
-
     void SendAcknowledgmentPacket(Packet<T>& packet);
 
     /**
@@ -814,20 +805,25 @@ namespace MFM {
     void AssertValidAtomCounts() const;
 
     /**
+     * Calls RecountAtoms if anybody has signaled a need to do so.
+     * this tile.
+     */
+    void RecountAtomsIfNeeded();
+
+    /**
      * Resets all atom counts and refreshes the atoms counts inside
      * this tile.
      */
     void RecountAtoms();
 
-
     /**
      * Writes a single x-axis raster line of this Tile to a specified
-     * FILE*.
+     * ByteSink.
      *
-     * @param outstrm The FILE* to write raster data to.
+     * @param outstrm The ByteSink to write raster data to.
      *
      */
-    u64 WriteEPSRasterLine(FILE* outstrm, u32 lineIdx);
+    u64 WriteEPSRasterLine(ByteSink & outstrm, u32 lineIdx);
 
     /**
      * Registers an Element into this Tile's ElementTable.
