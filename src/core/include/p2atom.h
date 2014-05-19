@@ -76,7 +76,7 @@ namespace MFM {
       return m_bits.Read(32, 32);
     }
 
-    void PrintBits(FILE* ostream)
+    void PrintBits(ByteSink & ostream)
     { m_bits.Print(ostream); }
 
     /* Adds a long bond. Returns its index. */
@@ -89,7 +89,7 @@ namespace MFM {
 
     void FillShortBond(u32 index, SPoint& pt);
 
-    /* 
+    /*
      * Removes a long bond. Be careful; if a
      * bond is removed, the bonds ahead of it
      * (if they exist) will be pushed downwards.
