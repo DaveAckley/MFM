@@ -2,19 +2,17 @@
 #define ELEMENT_H
 
 #include "itype.h"
+#include "StaticLoader.h"
 #include "EventWindow.h"
+#include "UUID.h"
 #include "Dirs.h"
+#include "Logger.h"
 
 namespace MFM
 {
   typedef u32 ElementType;
 
   template <class C> class Atom; // Forward declaration
-
-  /**
-   * ELEMENT_EMPTY is recognized at the element/elementtable level.
-   */
-  static const u32 ELEMENT_EMPTY  = 0x0;
 
   template <class CC>
   class Element
@@ -23,6 +21,9 @@ namespace MFM
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS };
+
+    const UUID m_UUID;
+    const u32 m_type;
 
   protected:
     static const SPoint VNNeighbors[4];
@@ -50,12 +51,23 @@ namespace MFM
 
   public:
 
-    Element()
+    Element(const UUID & uuid) : m_UUID(uuid), m_type(U16StaticLoader::AllocateType(m_UUID))
+    {
+      LOG.Message("%0x for %@",m_type,&m_UUID);
+    }
+
+    // For use by Element_Empty only!
+    Element(const UUID & uuid, u32 type) : m_UUID(uuid), m_type(type)
     { }
 
-    u32 GetType() const { return GetDefaultAtom().GetType(); }
+    //    u32 GetType() const { return GetDefaultAtom().GetType(); }
+    u32 GetType() const { return m_type; }
 
-    virtual const char * GetName() const = 0;
+    bool IsType(u32 type) const { return m_type == type; }
+
+    const UUID & GetUUID() const {
+      return m_UUID;
+    }
 
     virtual void Behavior(EventWindow<CC>& window) const = 0;
 

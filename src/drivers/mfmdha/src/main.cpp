@@ -7,7 +7,8 @@
 
 namespace MFM {
 
-  typedef ParamConfig<64,4,8,40> OurParamConfig;
+  //  typedef ParamConfig<64,4,8,40> OurParamConfig;
+  typedef ParamConfig<96,4,8,40> OurParamConfig;
   typedef P3Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
 

@@ -7,7 +7,7 @@
 
 namespace MFM {
 
-void TileTest::Test_tilePlaceAtom()
+void Tile_Test::Test_tilePlaceAtom()
 {
   TestTile tile;
   tile.RegisterElement(Element_Res<TestCoreConfig>::THE_INSTANCE);

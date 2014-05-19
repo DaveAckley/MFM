@@ -1,5 +1,6 @@
 #include "MDist.h"      /* -*- C++ -*- */
 #include "Element_Empty.h"
+#include "Logger.h"
 #include "Util.h"
 #include <time.h>
 
@@ -61,6 +62,8 @@ namespace MFM {
       }
     }
 
+    m_needRecount = false;
+
     m_threadInitialized = false;
     m_threadPaused = false;
   }
@@ -77,7 +80,7 @@ namespace MFM {
 
     m_illegalAtomCount = 0;
 
-    SetAtomCount(ELEMENT_EMPTY,OWNED_SIDE*OWNED_SIDE);
+    SetAtomCount(Element_Empty<CC>::THE_INSTANCE.GetType(),OWNED_SIDE*OWNED_SIDE);
 
     for(u32 x = 0; x < TILE_WIDTH; x++)
     {
@@ -641,6 +644,8 @@ namespace MFM {
   {
     while(m_threadInitialized)
     {
+      RecountAtomsIfNeeded();
+
       CreateRandomWindow();
 
       bool locked = false;
@@ -659,11 +664,11 @@ namespace MFM {
 
 	    if(!m_executingWindow.GetCenterAtom().IsSane())
 	    {
-	      fprintf(stderr, "FE(INSANE)\n");
+	      LOG.Debug("FE(INSANE)");
 	    }
 	    else
 	    {
-	      fprintf(stderr,"FE(%x)\n",m_executingWindow.GetCenterAtom().GetType());
+	      LOG.Debug("FE(%x)",m_executingWindow.GetCenterAtom().GetType());
             }
 
 
@@ -771,9 +776,10 @@ namespace MFM {
       return;
     }
     if (delta < 0 && -delta > m_atomCount[idx]) {
-      fprintf(stderr, "LOST ATOMS %x %d %d (Tile %p)\n",
-              (int) atomType,delta,m_atomCount[idx],(void*) this);
-      FAIL(ILLEGAL_ARGUMENT);
+      LOG.Warning("LOST ATOMS %x %d %d (Tile %p) - requesting recount",
+                  (int) atomType,delta,m_atomCount[idx],(void*) this);
+      m_needRecount = true;
+      return;
     }
 
     if (delta < 0)
@@ -782,20 +788,6 @@ namespace MFM {
       m_atomCount[idx] += delta;
 
   }
-
-#if 0
-  template <class CC>
-  u64 Tile<CC>::WriteEPSRasterLine(FILE* outstrm, u32 lineIdx)
-  {
-    u64 max = 0;
-    for(u32 x = 0; x < TILE_WIDTH - 2 * R; x++)
-    {
-      fprintf(outstrm, "%ld ", m_siteEvents[x][lineIdx]);
-      max = MAX(max, m_siteEvents[x][lineIdx]);
-    }
-    return max;
-  }
-#endif
 
   template <class CC>
   void Tile<CC>::AssertValidAtomCounts() const
@@ -817,6 +809,16 @@ namespace MFM {
   }
 
   template <class CC>
+  void Tile<CC>::RecountAtomsIfNeeded()
+  {
+    if (m_needRecount) {
+      LOG.Message("Recounting atoms (Tile %p)", this);
+      RecountAtoms();
+      m_needRecount = false;
+    }
+  }
+
+  template <class CC>
   void Tile<CC>::RecountAtoms()
   {
     for(u32 i = 0; i < ELEMENT_TABLE_SIZE; i++)
@@ -826,7 +828,7 @@ namespace MFM {
 
     m_illegalAtomCount = 0;
 
-    SetAtomCount(ELEMENT_EMPTY,OWNED_SIDE*OWNED_SIDE);
+    SetAtomCount(Element_Empty<CC>::THE_INSTANCE.GetType(),OWNED_SIDE*OWNED_SIDE);
 
     for(u32 x = 0; x < TILE_WIDTH; x++)
     {

@@ -5,6 +5,8 @@
 #include <sys/types.h> /* for mkdir */
 #include <errno.h>     /* for errno */
 #include "Utils.h"     /* for GetDateTimeNow */
+#include "Logger.h"
+#include "FileByteSink.h"
 #include "AbstractButton.h"
 #include "itype.h"
 #include "Tile.h"
@@ -331,12 +333,14 @@ namespace MFM {
 
 	  const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEventCountsAEPS);
 	  FILE* fp = fopen(path, "w");
-	  grid.WriteEPSImage(fp);
+          FileByteSink fbs(fp);
+	  grid.WriteEPSImage(fbs);
 	  fclose(fp);
 
 	  path = GetSimDirPathTemporary("teps/%010d-average.ppm", m_nextEventCountsAEPS);
 	  fp = fopen(path, "w");
-	  grid.WriteEPSAverageImage(fp);
+          FileByteSink fbs2(fp);
+	  grid.WriteEPSAverageImage(fbs2);
 	  fclose(fp);
 
 	  m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
@@ -392,6 +396,8 @@ namespace MFM {
 
     void OnceOnly(DriverArguments & args)
     {
+      LOG.SetLevel(args.GetInitialLogLevel());
+
       const char * dirPath = args.GetDataDirPath();
       if (dirPath == 0) dirPath = "/tmp";
 
@@ -479,7 +485,7 @@ namespace MFM {
       m_panel5.SetControlled(&m_panel4);
       m_rootPanel.Insert(&m_panel5,0);
       */
-      m_rootPanel.Print(stdout);
+      m_rootPanel.Print(STDOUT);
 
       m_srend.OnceOnly(m_fonts);
 
@@ -931,7 +937,8 @@ namespace MFM {
                   else fclose(fp);
                 }
                 FILE* fp = fopen(path, "a");
-                m_srend.WriteRegisteredCounts(fp, !exists, mainGrid,
+                FileByteSink fbs(fp);
+                m_srend.WriteRegisteredCounts(fbs, !exists, mainGrid,
                                               m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent, true);
                 fclose(fp);
               }

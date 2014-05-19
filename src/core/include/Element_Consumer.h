@@ -10,7 +10,6 @@
 #include "Element_Emitter.h" /* For DATA_MAXVAL, DATA_MINVAL */
 #include "Element_Reprovert.h"
 #include "itype.h"
-#include "P1Atom.h"
 #include "Util.h"
 #include "Tile.h"
 
@@ -39,12 +38,18 @@ namespace MFM
       DATA_SLOT_COUNT
     };
 
-    const char* GetName() const { return "Consumer"; }
-
     static Element_Consumer THE_INSTANCE;
-    static const u32 TYPE = 0xdad0;
+    static const u32 TYPE() { return THE_INSTANCE.GetType(); }
 
-    Element_Consumer() : m_defaultAtom(BuildDefaultAtom())
+    const T BuildDefaultAtom() const {
+      T defaultAtom(TYPE(),0,0,Element_Reprovert<CC>::STATE_BITS);
+      this->SetGap(defaultAtom,1); // Pack consumers adjacent
+      return defaultAtom;
+    }
+
+    Element_Consumer()
+      : Element_Reprovert<CC>(MFM_UUID_FOR("Consumer",1)),
+        m_defaultAtom(BuildDefaultAtom())
     {
     }
 
@@ -70,12 +75,6 @@ namespace MFM
       u64 ret = datap[TOTAL_BUCKET_ERROR_SLOT];
       datap[TOTAL_BUCKET_ERROR_SLOT] = 0;
       return ret;
-    }
-
-    const T BuildDefaultAtom() const {
-      T defaultAtom(TYPE,0,0,Element_Reprovert<CC>::STATE_BITS);
-      this->SetGap(defaultAtom,1); // Pack consumers adjacent
-      return defaultAtom;
     }
 
     virtual const T & GetDefaultAtom() const
@@ -104,8 +103,7 @@ namespace MFM
       // Find nearest-on-right consumable, if any
       for (u32 i = 1; i < R; ++i) {
         SPoint consPt(i,0);
-        if(window.GetRelativeAtom(consPt).GetType() == Element_Data<CC>::TYPE)
-          {
+        if(window.GetRelativeAtom(consPt).GetType() == Element_Data<CC>::TYPE())          {
             // Use the expanded info maintained by reprovert to
             // dynamically compute the bucket size.  That info can be
             // temporarily disrupted e.g. by DReg, so going this route
@@ -132,7 +130,7 @@ namespace MFM
             Tile<CC> & tile = window.GetTile();
             ElementTable<CC> & et = tile.GetElementTable();
 
-            u64 * datap = et.GetDataAndRegister(TYPE,DATA_SLOT_COUNT);
+            u64 * datap = et.GetDataAndRegister(TYPE(),DATA_SLOT_COUNT);
             ++datap[DATUMS_CONSUMED_SLOT];                 // Count datums consumed
             datap[TOTAL_BUCKET_ERROR_SLOT] += bucketsOff;  // Count total bucket error
 
@@ -154,9 +152,6 @@ namespace MFM
           }
       }
     }
-
-    static void Needed();
-
   };
 
   template <class CC>

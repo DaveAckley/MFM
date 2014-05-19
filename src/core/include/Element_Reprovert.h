@@ -5,7 +5,7 @@
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "itype.h"
-#include "P1Atom.h"
+#include "UUID.h"
 
 namespace MFM
 {
@@ -20,6 +20,8 @@ namespace MFM
     enum { R = P::EVENT_WINDOW_RADIUS };
 
   public:
+    Element_Reprovert(const UUID & uuid) : Element<CC>(uuid) { }
+
     static const u32 STATE_BELOW_IDX = 0;
     static const u32 STATE_BELOW_LEN = 9;
     static const u32 STATE_ABOVE_IDX = STATE_BELOW_IDX+STATE_BELOW_LEN;
@@ -92,7 +94,7 @@ namespace MFM
 
     bool weChanged = false;
 
-    if (otherType == ELEMENT_EMPTY) {
+    if (Element_Empty<CC>::IsType(otherType)) {
       T newAtom = self;
 
       // New guys are assumed maximally extreme in their direction

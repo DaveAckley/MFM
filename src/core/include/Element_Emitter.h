@@ -14,6 +14,7 @@
 namespace MFM
 {
 
+#define EMITTER_VERSION 1
 #define DATA_CREATE_PER_1000 150
 
   template <class CC>
@@ -27,6 +28,7 @@ namespace MFM
     const T m_defaultAtom;
 
   public:
+
     // Element Data Slot names
     enum {
       DATUMS_EMITTED_SLOT,
@@ -34,18 +36,21 @@ namespace MFM
       DATA_SLOT_COUNT
     };
 
-    const char* GetName() const { return "Emitter"; }
-
     static Element_Emitter THE_INSTANCE;
-    static const u32 TYPE = 0xdad1;
-
-    Element_Emitter() : m_defaultAtom(BuildDefaultAtom()) {}
+    static const u32 TYPE() {
+      return THE_INSTANCE.GetType();
+    }
 
     const T BuildDefaultAtom() const {
-      T defaultAtom(TYPE,0,0,Element_Reprovert<CC>::STATE_BITS);
+      T defaultAtom(TYPE(),0,0,Element_Reprovert<CC>::STATE_BITS);
       this->SetGap(defaultAtom,2);
       return defaultAtom;
     }
+
+    Element_Emitter() :
+      Element_Reprovert<CC>(MFM_UUID_FOR("Emitter", EMITTER_VERSION)),
+      m_defaultAtom(BuildDefaultAtom())
+    { }
 
     virtual const T & GetDefaultAtom() const
     {
@@ -73,7 +78,7 @@ namespace MFM
         Tile<CC> & tile = window.GetTile();
         ElementTable<CC> & et = tile.GetElementTable();
 
-        u64 * datap = et.GetDataAndRegister(TYPE,DATA_SLOT_COUNT);
+        u64 * datap = et.GetDataAndRegister(TYPE(),DATA_SLOT_COUNT);
         ++datap[DATUMS_EMITTED_SLOT];                  // Count emission attempts
 
         // Pick random nearest empty, if any
@@ -85,7 +90,7 @@ namespace MFM
             const SPoint sp = md.GetPoint(idx);
             const T other = window.GetRelativeAtom(sp);
             const u32 otherType = other.GetType();
-            bool isEmpty = otherType == Element_Empty<CC>::TYPE;
+            bool isEmpty = otherType == Element_Empty<CC>::THE_INSTANCE.GetType();
             if (isEmpty && random.OneIn(++emptiesFound))
               emptyPoint = sp;
           }
@@ -100,21 +105,10 @@ namespace MFM
         ++datap[DATUMS_REJECTED_SLOT];  // Opps, no room at the inn
       }
     }
-
-    static void Needed();
-
   };
 
   template <class CC>
   Element_Emitter<CC> Element_Emitter<CC>::THE_INSTANCE;
-
-  /*
-  template <class CC>
-  void Element_Emitter<CC>::Needed()
-  {
-    ElementTable<CC>::get().RegisterElement(Element_Emitter<CC>::THE_INSTANCE);
-  }
-  */
 }
 
 #endif /* ELEMENT_EMITTER_H */

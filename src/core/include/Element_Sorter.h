@@ -13,6 +13,8 @@
 namespace MFM
 {
 
+#define SORTER_VERSION 1
+
   template <class CC>
   class Element_Sorter : public Element<CC>
   {
@@ -22,32 +24,34 @@ namespace MFM
     enum { R = P::EVENT_WINDOW_RADIUS };
 
   public:
-    const char* GetName() const { return "Sorter"; }
 
     static Element_Sorter THE_INSTANCE;
-    static const u32 TYPE = 0xab;                // We compare a vs b
+    static const u32 TYPE() {
+      return THE_INSTANCE.GetType();
+    }
+
     static const u32 STATE_THRESHOLD_IDX = 0;    // First bit in state
     static const u32 STATE_THRESHOLD_LEN = 32;
     static const u32 STATE_BITS = STATE_THRESHOLD_LEN;
 
     static const SPoint m_southeastSubwindow[4];
 
-    Element_Sorter() { }
+    Element_Sorter() : Element<CC>(MFM_UUID_FOR("Sorter", SORTER_VERSION)) { }
 
     u32 GetThreshold(const T &atom, u32 badType) const {
-      if (!Atom<CC>::IsType(atom,TYPE)) return badType;
+      if (!Atom<CC>::IsType(atom,TYPE())) return badType;
       return atom.GetStateField(STATE_THRESHOLD_IDX,STATE_THRESHOLD_LEN);
     }
 
     bool SetThreshold(T &atom, u32 value) const {
-      if (!Atom<CC>::IsType(atom,TYPE)) return false;
+      if (!Atom<CC>::IsType(atom,TYPE())) return false;
       atom.SetStateField(STATE_THRESHOLD_IDX,STATE_THRESHOLD_LEN,value);
       return true;
     }
 
     virtual const T & GetDefaultAtom() const
     {
-      static T defaultAtom(TYPE,0,0,STATE_BITS);
+      static T defaultAtom(TYPE(),0,0,STATE_BITS);
       return defaultAtom;
     }
 
@@ -89,7 +93,7 @@ namespace MFM
       SPoint reproducePt;
       T self = window.GetCenterAtom();
       if(this->FillPointWithType(window, reproducePt,
-                                 Element<CC>::VNNeighbors, 4, Dirs::SOUTHEAST, Element_Res<CC>::TYPE))
+                                 Element<CC>::VNNeighbors, 4, Dirs::SOUTHEAST, Element_Res<CC>::TYPE()))
       {
 	window.SetRelativeAtom(reproducePt, self);
       }
@@ -100,15 +104,15 @@ namespace MFM
       for(s32 i = 0; i < 2; i++)
       {
 	if(movingUp &&
-	   FillAvailableSubwindowPoint(window, seData, Dirs::SOUTHEAST, Element_Data<CC>::TYPE) &&
-	   FillAvailableSubwindowPoint(window, nwEmpty, Dirs::NORTHWEST, ELEMENT_EMPTY))
+	   FillAvailableSubwindowPoint(window, seData, Dirs::SOUTHEAST, Element_Data<CC>::TYPE()) &&
+	   FillAvailableSubwindowPoint(window, nwEmpty, Dirs::NORTHWEST, Element_Empty<CC>::TYPE()))
 	{
 	  srcPt = seData;
 	  dstPt = nwEmpty;
 	}
 	else if(!movingUp &&
-                FillAvailableSubwindowPoint(window, neData, Dirs::NORTHEAST, Element_Data<CC>::TYPE) &&
-                FillAvailableSubwindowPoint(window, swEmpty, Dirs::SOUTHWEST, ELEMENT_EMPTY))
+                FillAvailableSubwindowPoint(window, neData, Dirs::NORTHEAST, Element_Data<CC>::TYPE()) &&
+                FillAvailableSubwindowPoint(window, swEmpty, Dirs::SOUTHWEST, Element_Empty<CC>::TYPE()))
 	{
 	  srcPt = neData;
 	  dstPt = swEmpty;
@@ -133,9 +137,6 @@ namespace MFM
       }
       this->Diffuse(window);
     }
-
-    static void Needed();
-
   };
 
   template <class CC>
@@ -146,12 +147,5 @@ namespace MFM
     SPoint(1,1),SPoint(1,2),SPoint(2,1),SPoint(2,2)
   };
 
-  /*
-  template <class CC>
-  void Element_Sorter<CC>::Needed()
-  {
-    ElementTable<CC>::get().RegisterElement(Element_Sorter<CC>::THE_INSTANCE);
-  }
-  */
 }
 #endif /* ELEMENT_SORTER_H */

@@ -5,6 +5,9 @@ using namespace MFM;
 int main(int argc, char** argv)
 {
 
+  Logger_Test::Test_RunTests();
+  UUID_Test::Test_RunTests();
+  ByteSink_Test::Test_RunTests();
   Parity2D_4x4_Test::Test_RunTests();
   PSym_test::Test_RunTests();
 
@@ -25,7 +28,7 @@ int main(int argc, char** argv)
   P1AtomTest::Test_p1atomAddLB();
   P1AtomTest::Test_p1atomAddSB();
 
-  TileTest::Test_tilePlaceAtom();
+  Tile_Test::Test_tilePlaceAtom();
 
   GridTest::Test_gridPlaceAtom();
 

@@ -6,7 +6,7 @@
 #include "BitVector.h"
 #include "Random.h"
 #include "Util.h"     /* For REQUIRE */
-#include <stdio.h>  /* For FILE */
+#include "Logger.h"
 
 namespace MFM
 {
@@ -129,11 +129,11 @@ namespace MFM
     u32 GetType() const;
 
     /**
-     * Prints this Atom in a semi-readable way to a FILE*.
+     * Prints this Atom in a semi-readable way to a ByteSink.
      *
      * @remarks This is to be defined only by a subclass of Atom.
      */
-    void Print(FILE* ostream) const;
+    void Print(ByteSink & ostream) const;
 
     /**
      * Randomly flips some of the bits in this Atom's BitVector.
@@ -146,12 +146,12 @@ namespace MFM
      */
     void XRay(Random& rand, u32 bitOdds)
     {
-      for(u32 i = 0; i < BPA >> 1; i++)      // XXX What is the '>> 1' here?
+      for(u32 i = 0; i < BPA; i++)
       {
 	if(rand.OneIn(bitOdds))
 	{
 	  m_bits.ToggleBit(i);
-	  printf("Bit %d xray'd\n", i);
+	  LOG.Debug("Bit %d xray'd (odds %d)", i, bitOdds);
 	}
       }
     }

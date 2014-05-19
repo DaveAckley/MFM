@@ -10,23 +10,26 @@
 namespace MFM
 {
 
-  template <class C>
-  class Element_Res : public Element<C>
+#define RES_VERSION 1
+
+  template <class CC>
+  class Element_Res : public Element<CC>
   {
     // Extract short names for parameter types
-    typedef typename C::ATOM_TYPE T;
+    typedef typename CC::ATOM_TYPE T;
 
   public:
-    const char* GetName() const { return "Res"; }
 
     static Element_Res THE_INSTANCE;
-    static const u32 TYPE = 0xce11;             // We are stem cells able to become anything
+    static const u32 TYPE() {
+      return THE_INSTANCE.GetType();
+    }
 
-    Element_Res() {}
+    Element_Res() : Element<CC>(MFM_UUID_FOR("Res", RES_VERSION)) {}
 
     virtual const T & GetDefaultAtom() const
     {
-      static T defaultAtom(TYPE,0,0,0);
+      static T defaultAtom(TYPE(),0,0,0);
       return defaultAtom;
     }
 
@@ -41,24 +44,15 @@ namespace MFM
       return 0xff676700;
     }
 
-    virtual void Behavior(EventWindow<C>& window) const
+    virtual void Behavior(EventWindow<CC>& window) const
     {
       this->Diffuse(window);
     }
-
-    static void Needed();
   };
 
-  template <class C>
-  Element_Res<C> Element_Res<C>::THE_INSTANCE;
+  template <class CC>
+  Element_Res<CC> Element_Res<CC>::THE_INSTANCE;
 
-  /*
-  template <class C>
-  void Element_Res<C>::Needed()
-  {
-    ElementTable<C>::get().RegisterElement(Element_Res<C>::THE_INSTANCE);
-  }
-  */
 }
 
 #endif /* ELEMENT_RES_H */

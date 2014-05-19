@@ -14,6 +14,8 @@
 namespace MFM
 {
 
+#define DATA_VERSION 1
+
   template <class CC>
   class Element_Data : public Element<CC>
   {
@@ -21,28 +23,33 @@ namespace MFM
     typedef typename CC::ATOM_TYPE T;
 
   public:
-    const char* GetName() const { return "Data"; }
+
+    Element_Data() : Element<CC>(MFM_UUID_FOR("Data", DATA_VERSION))
+    {
+    }
 
     static Element_Data THE_INSTANCE;
-    static const u32 TYPE = 0xdada;
+    static const u32 TYPE() {
+      return THE_INSTANCE.GetType();
+    }
     static const u32 STATE_DATA_IDX = 0;
     static const u32 STATE_DATA_LEN = 32;
     static const u32 STATE_BITS = STATE_DATA_IDX+STATE_DATA_LEN;
 
     u32 GetDatum(const T &atom, u32 badType) const {
-      if (!Atom<CC>::IsType(atom,TYPE)) return badType;
+      if (!Atom<CC>::IsType(atom,TYPE())) return badType;
       return atom.GetStateField(STATE_DATA_IDX,STATE_DATA_LEN);
     }
 
     bool SetDatum(T &atom, u32 value) const {
-      if (!Atom<CC>::IsType(atom,TYPE)) return false;
+      if (!Atom<CC>::IsType(atom,TYPE())) return false;
       atom.SetStateField(STATE_DATA_IDX,STATE_DATA_LEN,value);
       return true;
     }
 
     virtual const T & GetDefaultAtom() const
     {
-      static T defaultAtom(TYPE,0,0,STATE_BITS);
+      static T defaultAtom(TYPE(),0,0,STATE_BITS);
       return defaultAtom;
     }
 
@@ -77,8 +84,6 @@ namespace MFM
 
       this->Diffuse(window);
     }
-
-    static void Needed();
   };
 
   template <class CC>

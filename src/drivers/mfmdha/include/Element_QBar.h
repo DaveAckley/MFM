@@ -14,6 +14,8 @@
 namespace MFM
 {
 
+#define QBAR_VERSION 1
+
   // Forward
   template <class CC> class Element_DBar ;
 
@@ -113,14 +115,14 @@ namespace MFM
     }
 
   public:
-    const char* GetName() const { return "QBar"; }
 
     static Element_QBar THE_INSTANCE;
-
-    static const u32 TYPE = 0x2ba2;
+    static const u32 TYPE() {
+      return THE_INSTANCE.GetType();
+    }
 
     static bool IsOurType(u32 type) {
-      return type==TYPE;
+      return type==TYPE();
     }
 
     static const u32 BITS_WIDE = 5;
@@ -129,7 +131,6 @@ namespace MFM
     static const u32 BITS_TIMER = 3;
 
     static const u32 MAX_TIMER_VALUE = (1<<BITS_TIMER)-1;
-
 
     static const u32 BITS_BAR_COORD_LEN = BITS_WIDE + BITS_HIGH;
 
@@ -143,7 +144,7 @@ namespace MFM
     static const u32 STATE_TIMER_LEN = BITS_TIMER;
     static const u32 STATE_BITS = STATE_TIMER_IDX + STATE_TIMER_LEN;
 
-    Element_QBar() { }
+    Element_QBar() : Element<CC>(MFM_UUID_FOR("QBar", QBAR_VERSION)) { }
 
     u32 GetSymI(const T &atom) const {
       if (!IsOurType(atom.GetType()))
@@ -207,7 +208,7 @@ namespace MFM
 
     virtual const T & GetDefaultAtom() const
     {
-      static T defaultAtom(TYPE,0,0,STATE_BITS);
+      static T defaultAtom(TYPE(),0,0,STATE_BITS);
       return defaultAtom;
     }
 
@@ -315,7 +316,7 @@ namespace MFM
             const T other = window.GetRelativeAtom(sp);
             const u32 otherType = other.GetType();
 
-            bool isEmpty = otherType == Element_Empty<CC>::TYPE;
+            bool isEmpty = Element_Empty<CC>::IsType(otherType);
 
             if (isEmpty) {
 
@@ -366,7 +367,7 @@ namespace MFM
             const T other = window.GetRelativeAtom(sp);
             const u32 otherType = other.GetType();
 
-            bool isRes = otherType == Element_Res<CC>::TYPE;
+            bool isRes = otherType == Element_Res<CC>::TYPE();
             if (isRes) {
               ++consistentCount;
               if (random.OneIn(++eatCount)) {
@@ -375,7 +376,7 @@ namespace MFM
             }
             else {
 
-              bool isEmpty = otherType == Element_Empty<CC>::TYPE;
+              bool isEmpty = Element_Empty<CC>::IsType(otherType);
 
               if (isEmpty) ++consistentCount;
               else {
@@ -429,7 +430,7 @@ namespace MFM
             SPoint offset(0,2);
             T offEnd = window.GetRelativeAtom(offset);
             const u32 offType = offEnd.GetType();
-            if (offType == Element_Empty<CC>::TYPE && eatCount > 0) {
+            if (Element_Empty<CC>::IsType(offType) && eatCount > 0) {
               T corner = self;
               u32 symi = GetSymI(self);
               ++symi;

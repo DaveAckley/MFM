@@ -4,6 +4,9 @@
 /* Get some types for us to test */
 #include "test_common.h"
 
+#include "Logger_Test.h"
+#include "UUID_Test.h"
+#include "ByteSink_Test.h"
 #include "Parity2D_4x4_Test.h"
 #include "PSym_Test.h"
 #include "Fail_Test.h"

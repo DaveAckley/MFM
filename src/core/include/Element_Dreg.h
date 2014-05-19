@@ -17,6 +17,8 @@ namespace MFM
 #define DREG_DRG_ODDS 200
 #define DREG_DDR_ODDS 20 /*Deleting DREGs*/
 
+#define DREG_VERSION 1
+
   template <class CC>
   class Element_Dreg : public Element<CC>
   {
@@ -26,16 +28,17 @@ namespace MFM
     enum { R = P::EVENT_WINDOW_RADIUS };
 
   public:
-    const char* GetName() const { return "DReg"; }
 
     static Element_Dreg THE_INSTANCE;
-    static const u32 TYPE = 0xdba;             // We are the death-birth-agent
+    static const u32 TYPE() {
+      return THE_INSTANCE.GetType();
+    }
 
-    Element_Dreg() { }
+    Element_Dreg() : Element<CC>(MFM_UUID_FOR("Dreg", DREG_VERSION)) { }
 
     virtual const T & GetDefaultAtom() const
     {
-      static T defaultAtom(TYPE,0,0,0);
+      static T defaultAtom(TYPE(),0,0,0);
       return defaultAtom;
     }
 
@@ -62,7 +65,7 @@ namespace MFM
         T atom = window.GetRelativeAtom(dir);
         u32 oldType = atom.GetType();
 
-        if(oldType == ELEMENT_EMPTY)
+        if(Element_Empty<CC>::IsType(oldType))
           {
             if(random.OneIn(DREG_DRG_ODDS))
               {
@@ -73,14 +76,14 @@ namespace MFM
                 atom = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
               }
           }
-        else if(oldType == Element_Dreg::TYPE)
+        else if(oldType == Element_Dreg::TYPE())
           {
             if(random.OneIn(DREG_DDR_ODDS))
               {
                 atom = T();
               }
           }
-        else if(oldType != Element_Wall<CC>::TYPE && random.OneIn(DREG_DEL_ODDS))
+        else if(oldType != Element_Wall<CC>::TYPE() && random.OneIn(DREG_DEL_ODDS))
           {
             atom = T();
           }
@@ -93,9 +96,6 @@ namespace MFM
       this->Diffuse(window);
 
     }
-
-    static void Needed();
-
   };
 
   template <class CC>

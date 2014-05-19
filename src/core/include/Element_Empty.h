@@ -4,12 +4,12 @@
 
 #include "Element.h"
 #include "EventWindow.h"
-#include "ElementTable.h"
 #include "itype.h"
-#include "P1Atom.h"
 
 namespace MFM
 {
+
+#define EMPTY_VERSION 0
 
   template <class CC>
   class Element_Empty : public Element<CC>
@@ -18,12 +18,14 @@ namespace MFM
     typedef typename CC::ATOM_TYPE T;
 
   public:
-    const char* GetName() const { return "Empty"; }
 
     static Element_Empty THE_INSTANCE;
-    static const u32 TYPE = 0x0;             // We get the best type of all
+    static u32 TYPE() { return THE_INSTANCE.GetType(); }
+    static bool IsType(u32 type) {
+      return type == TYPE();
+    }
 
-    Element_Empty() { }
+    Element_Empty() : Element<CC>(MFM_UUID_FOR("Empty", EMPTY_VERSION)) { }
 
     virtual u32 PercentMovable(const T& you,
 			       const T& me, const SPoint& offset) const

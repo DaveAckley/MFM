@@ -4,7 +4,7 @@
 #include "Grid.h"
 
 #define XRAY_SITE_ODDS 1000
-#define XRAY_BIT_ODDS 10
+#define XRAY_BIT_ODDS 100
 
 namespace MFM {
 
@@ -239,7 +239,7 @@ namespace MFM {
   }
 
   template <class GC>
-  void Grid<GC>::WriteEPSImage(FILE* outstrm) const
+  void Grid<GC>::WriteEPSImage(ByteSink & outstrm) const
   {
     u64 max = 0;
     const u32 swidth = GetWidthSites();
@@ -247,7 +247,7 @@ namespace MFM {
 
     for(u32 pass = 0; pass < 2; ++pass) {
       if (pass==1)
-        fprintf(outstrm,"P5\n # Max site events = %ld\n%d %d 255\n",max,swidth,sheight);
+        outstrm.Printf("P5\n # Max site events = %d\n%d %d 255\n",(u32) max,swidth,sheight);
       for(u32 y = 0; y < sheight; y++) {
 	for(u32 x = 0; x < swidth; x++) {
           SPoint siteInGrid(x,y), tileInGrid, siteInTile;
@@ -257,14 +257,14 @@ namespace MFM {
           if (pass==0)
             max = MAX(max, events);
           else
-            fputc((u8) (events*255/max), outstrm);
+            outstrm.WriteByte((u8) (events*255/max));
         }
       }
     }
   }
 
   template <class GC>
-  void Grid<GC>::WriteEPSAverageImage(FILE* outstrm) const
+  void Grid<GC>::WriteEPSAverageImage(ByteSink & outstrm) const
   {
     u64 max = 0;
     const u32 swidth = Tile<CC>::OWNED_SIDE;
@@ -275,7 +275,7 @@ namespace MFM {
     {
       if(pass == 1)
       {
-	fprintf(outstrm,"P5\n #Max site events = %ld\n%d %d 255\n", max, swidth, sheight);
+	outstrm.Printf("P5\n #Max site events = %d\n%d %d 255\n", (u32) max, swidth, sheight);
       }
       for(u32 y = 0; y < sheight; y++)
       {
@@ -301,7 +301,7 @@ namespace MFM {
 	  }
 	  else
 	  {
-	    fputc((u8) (events*255/max), outstrm);
+	    outstrm.WriteByte((u8) (events*255/max));
 	  }
 	}
       }

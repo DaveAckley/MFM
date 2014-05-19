@@ -5,7 +5,7 @@
 
 namespace MFM {
 
-class TileTest
+class Tile_Test
 {
 public:
 
@@ -13,5 +13,5 @@ public:
 };
 } /* namespace MFM */
 
-#endif /*TILE_TEST_h*/
+#endif /*TILE_TEST_H*/
 
