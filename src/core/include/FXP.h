@@ -10,18 +10,18 @@
 
  All rights reserved.
 
- Redistribution and use in source and binary forms, with or without 
+ Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
 
- * Redistributions of source code must retain the above copyright notice, 
+ * Redistributions of source code must retain the above copyright notice,
  this list of conditions and the following disclaimer.
 
  * Redistributions in binary form must reproduce the above copyright notice,
- this list of conditions and the following disclaimer in the documentation 
+ this list of conditions and the following disclaimer in the documentation
  and/or other materials provided with the distribution.
 
- * Neither the name of the library's copyright owner nor the names of its 
- contributors may be used to endorse or promote products derived from this 
+ * Neither the name of the library's copyright owner nor the names of its
+ contributors may be used to endorse or promote products derived from this
  software without specific prior written permission.
 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -52,12 +52,12 @@
 
 namespace MFM {
 
-  // The template argument p in all of the following functions refers to the 
+  // The template argument p in all of the following functions refers to the
   // fixed point precision (e.g. p = 8 gives 24.8 fixed point functions).
 
   // Perform a fixed point multiplication without a 64-bit intermediate result.
   // This is fast but beware of overflow!
-  template <int p> 
+  template <int p>
   inline s32 fixmulf(s32 a, s32 b)
   {
     return (a * b) >> p;
@@ -77,8 +77,8 @@ namespace MFM {
   {
 #if 1
     return (s32)((((s64)a) << p) / b);
-#else	
-    // The following produces the same results as the above but gcc 4.0.3 
+#else
+    // The following produces the same results as the above but gcc 4.0.3
     // generates fewer instructions (at least on the ARM processor).
     union {
       s64 a;
@@ -98,31 +98,31 @@ namespace MFM {
     inline u32 CountLeadingZeros(u32 x)
     {
       u32 exp = 31;
-	
-      if (x & 0xffff0000) { 
-        exp -= 16; 
-        x >>= 16; 
+
+      if (x & 0xffff0000) {
+        exp -= 16;
+        x >>= 16;
       }
-	
-      if (x & 0xff00) { 
-        exp -= 8; 
-        x >>= 8; 
+
+      if (x & 0xff00) {
+        exp -= 8;
+        x >>= 8;
       }
-		
-      if (x & 0xf0) { 
-        exp -= 4; 
-        x >>= 4; 
+
+      if (x & 0xf0) {
+        exp -= 4;
+        x >>= 4;
       }
-	
-      if (x & 0xc) { 
-        exp -= 2; 
-        x >>= 2; 
+
+      if (x & 0xc) {
+        exp -= 2;
+        x >>= 2;
       }
-		
-      if (x & 0x2) { 
-        exp -= 1; 
+
+      if (x & 0x2) {
+        exp -= 1;
       }
-	
+
       return exp;
     }
   }
@@ -141,10 +141,10 @@ namespace MFM {
       a = -a;
     }
 
-    static const uint16_t rcp_tab[] = { 
+    static const uint16_t rcp_tab[] = {
       0x8000, 0x71c7, 0x6666, 0x5d17, 0x5555, 0x4ec4, 0x4924, 0x4444
     };
-		
+
     s32 exp = detail::CountLeadingZeros(a);
     x = ((s32)rcp_tab[(a>>(28-exp))&0x7]) << 2;
     exp -= 16;
@@ -183,19 +183,19 @@ namespace MFM {
   s32 fixrsqrt16(s32 a);
   s32 fixsqrt16(s32 a);
 
-  // The template argument p in all of the following functions refers to the 
+  // The template argument p in all of the following functions refers to the
   // fixed point precision (e.g. p = 8 gives 24.8 fixed point functions).
 
   template <int p>
   struct FXP {
     s32 intValue;
-	
+
     FXP() : intValue(0) {}
     /*explicit*/ FXP(u32 i) : intValue(i << p) {}
     /*explicit*/ FXP(s32 i) : intValue(i << p) {}
     /*explicit*/ FXP(float f) : intValue(float2fix<p>(f)) {}
     /*explicit*/ FXP(double f) : intValue(float2fix<p>((float)f)) {}
-	
+
     FXP& operator += (FXP r) { intValue += r.intValue; return *this; }
     FXP& operator -= (FXP r) { intValue -= r.intValue; return *this; }
     FXP& operator *= (FXP r) { intValue = fixmul<p>(intValue, r.intValue); return *this; }
@@ -206,16 +206,16 @@ namespace MFM {
 
     FXP& operator -- () { *this -= 1; return *this; }
     FXP operator -- (int) { const FXP val = *this; -- *this; return val; }
-	
+
     FXP& operator *= (s32 r) { intValue *= r; return *this; }
     FXP& operator /= (s32 r) { intValue /= r; return *this; }
-	
+
     FXP operator - () const { FXP x; x.intValue = -intValue; return x; }
     FXP operator + (FXP r) const { FXP x = *this; x += r; return x;}
     FXP operator - (FXP r) const { FXP x = *this; x -= r; return x;}
     FXP operator * (FXP r) const { FXP x = *this; x *= r; return x;}
     FXP operator / (FXP r) const { FXP x = *this; x /= r; return x;}
-	
+
     bool operator == (FXP r) const { return intValue == r.intValue; }
     bool operator != (FXP r) const { return !(*this == r); }
     bool operator <  (FXP r) const { return intValue < r.intValue; }
@@ -228,6 +228,7 @@ namespace MFM {
     FXP operator * (s32 r) const { FXP x = *this; x *= r; return x;}
     FXP operator / (s32 r) const { FXP x = *this; x /= r; return x;}
 
+    s32 asInt() const { return intValue; }
     float toFloat() const { return fix2float<p>(intValue); }
     double toDouble() const { return (double) fix2float<p>(intValue); }
 
@@ -288,10 +289,10 @@ namespace MFM {
 
   template <int p>
   inline FXP<p> Abs(FXP<p> a)
-  { 
-    FXP<p> r; 
-    r.intValue = a.intValue > 0 ? a.intValue : -a.intValue; 
-    return r; 
+  {
+    FXP<p> r;
+    r.intValue = a.intValue > 0 ? a.intValue : -a.intValue;
+    return r;
   }
 
   // specializations for 16.16 format
@@ -340,7 +341,7 @@ namespace MFM {
   // The multiply accumulate case can be optimized.
   template <int p>
   inline FXP<p> multiply_accumulate(
-                                    int count, 
+                                    int count,
                                     const FXP<p> *a,
                                     const FXP<p> *b)
   {
