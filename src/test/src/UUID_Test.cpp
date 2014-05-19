@@ -63,8 +63,8 @@ namespace MFM {
 
   static void Test_Print() {
     UUID u1("Sorter",1,2,3);
-    Test_Vprintf_Result("foo[6Sorter111213]bar", "foo%@bar", &u1);
-    Test_Vprintf_Result("([6Sorter111213])", "(%#@)", 1234, &u1);
+    Test_Vprintf_Result("foo[6Sorter118000000026000003]bar", "foo%@bar", &u1);
+    Test_Vprintf_Result("([6Sorter118000000026000003])", "(%#@)", 1234, &u1);
 
     UUID u2("hi",2,0x20140516,0x191339);
     Test_Vprintf_Result("foo[2hi128201405166191339]bar", "foo%@bar", &u2);
@@ -77,7 +77,7 @@ namespace MFM {
                         "%@", &u3);
 
     UUID u4("", 1, 2, 3);
-    Test_Vprintf_Result("foo[0111213]bar", "foo%@bar", &u4);
+    Test_Vprintf_Result("foo[0118000000026000003]bar", "foo%@bar", &u4);
   }
 
   void UUID_Test::Test_RunTests() {

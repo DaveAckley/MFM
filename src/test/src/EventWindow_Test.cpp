@@ -45,6 +45,8 @@ void EventWindowTest::Test_eventwindowWrite()
   const u32 DREG_TYPE = Element_Dreg<TestCoreConfig>::TYPE();
   const u32 RES_TYPE = Element_Res<TestCoreConfig>::TYPE();
 
+  const u32 EMPTY_TYPE = Element_Empty<TestCoreConfig>::TYPE();
+
   absolute.Add(center);
 
   const TestAtom * erased1 = tile.GetAtom(center);
@@ -52,8 +54,8 @@ void EventWindowTest::Test_eventwindowWrite()
 
   absolute.Subtract(center);
 
-  assert(erased1->GetType() == 0);
-  assert(erased2->GetType() == 0);
+  assert(erased1->GetType() == EMPTY_TYPE);
+  assert(erased2->GetType() == EMPTY_TYPE);
 
   TestEventWindow ew(tile);
 
