@@ -11,6 +11,9 @@
 
 namespace MFM
 {
+
+#define WALL_VERSION 1
+
   template <class CC>
   class Element_Wall : public Element<CC>
   {
@@ -20,16 +23,17 @@ namespace MFM
     enum { R = P::EVENT_WINDOW_RADIUS };
 
   public:
-    const  char* GetName() const { return "Wall";}
 
     static Element_Wall THE_INSTANCE;
-    static const u32 TYPE = 0xb00f;  // Oof. A wall.
+    static const u32 TYPE() {
+      return THE_INSTANCE.GetType();
+    }
 
-    Element_Wall() { }
+    Element_Wall() : Element<CC>(MFM_UUID_FOR("Wall", WALL_VERSION)) { }
 
     virtual const T & GetDefaultAtom() const
     {
-      static T defaultAtom(TYPE,0,0,0);
+      static T defaultAtom(TYPE(),0,0,0);
       return defaultAtom;
     }
 
@@ -46,9 +50,6 @@ namespace MFM
 
     virtual void Behavior(EventWindow<CC>& window) const
     {}
-
-    static void Needed();
-
   };
 
   template <class CC>
