@@ -3,7 +3,7 @@
 #define BITVECTOR_H
 
 #include "itype.h"
-#include <stdio.h>  /* for FILE */
+#include "ByteSink.h"
 #include <climits>  /* for CHAR_BIT */
 #include <stdlib.h> /* for abort */
 
@@ -225,12 +225,12 @@ namespace MFM {
     void Clear();
 
     /**
-     * Prints the bits held in this BitVector to a specified FILE* in
+     * Prints the bits held in this BitVector to a specified ByteSink in
      * hex format.
      *
-     * @param ostream The FILE* to print bits to.
+     * @param ostream The ByteSink to print bits to.
      */
-    void Print(FILE* ostream) const;
+    void Print(ByteSink & ostream) const;
 
   };
 } /* namespace MFM */
