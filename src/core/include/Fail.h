@@ -47,5 +47,8 @@ enum MFMFailureCodes{
   MAX_FAILURE
 };
 
+#define MFM_API_ASSERT(expr,code) do { if (!(expr)) FAIL(code); } while (0)
+#define MFM_API_ASSERT_NONNULL(expr) MFM_API_ASSERT(expr,NULL_POINTER)
+
 #endif  /* FAIL_H */
 
