@@ -75,7 +75,7 @@ namespace MFM {
 
     P1Atom()
     {
-      InitAtom(Element_Empty<CC>::THE_INSTANCE.GetType(),0,0,48);
+      InitAtom(Element_Empty<CC>::THE_INSTANCE.GetType(),0,0,32);
     }
 
     P1Atom(u32 type, u32 longc, u32 shortc, u32 statec)
