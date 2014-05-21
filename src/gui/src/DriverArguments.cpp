@@ -46,7 +46,7 @@ namespace MFM {
         if (!val) Die("Missing seed (integer) argument after %s", arg);
 
         m_seed = atoi(val);
-        fprintf(stderr,"[Seed %d]\n",m_seed);
+	LOG.Message("[Seed %d]\n",m_seed);
 
       } else if (!strcmp("-e",arg) || !strcmp("--events",arg)) {
 
@@ -54,8 +54,8 @@ namespace MFM {
         if (!val) Die("Missing aeps (integer) argument after %s", arg);
 
         m_recordEventCountsPerAEPS = atoi(val);
-        fprintf(stderr,"[Recording event counts approximately every %d AEPS]\n",
-		       m_recordEventCountsPerAEPS);
+	LOG.Message("[Recording event counts approximately every %d AEPS]\n",
+		    m_recordEventCountsPerAEPS);
 
       } else if (!strcmp("-d",arg) || !strcmp("--dir",arg)) {
 
@@ -63,7 +63,7 @@ namespace MFM {
         if (!val) Die("Missing aeps (integer) argument after %s", arg);
 
         m_dataDirPath = val;
-        fprintf(stderr,"[Data directory path = %s]\n",m_dataDirPath);
+	LOG.Message("[Data directory path = %s]\n",m_dataDirPath);
 
       } else if (!strcmp("-p",arg) || !strcmp("--pictures",arg)) {
 
@@ -71,8 +71,8 @@ namespace MFM {
         if (!val) Die("Missing aeps (integer) argument after %s", arg);
 
         m_recordScreenshotPerAEPS = atoi(val);
-        fprintf(stderr,"[Recording grid pictures approximately every %d AEPS]\n",
-		       m_recordScreenshotPerAEPS);
+	LOG.Message("[Recording grid pictures approximately every %d AEPS]\n",
+		    m_recordScreenshotPerAEPS);
 
       }
       else if (!strcmp("-t", arg) || !strcmp("--timebd", arg))
@@ -81,8 +81,8 @@ namespace MFM {
 	if(!val) Die("Missing aeps (integer) argument after %s", arg);
 
 	m_recordTimeBasedDataPerAEPS = atoi(val);
-	fprintf(stderr, "[Recording time based data approximately every %d AEPS]\n",
-		        m_recordTimeBasedDataPerAEPS);
+	LOG.Message("[Recording time based data approximately every %d AEPS]\n",
+		    m_recordTimeBasedDataPerAEPS);
       }
       else if (!strcmp("--picturesPerRate",arg)) {
 
@@ -91,7 +91,8 @@ namespace MFM {
 
         m_countOfScreenshotsPerRate = atoi(val);
         if (m_countOfScreenshotsPerRate < 1) Die("COUNT must be greater than zero, after %s",arg);
-        fprintf(stderr,"[Accelerating in groups of %d pictures]\n",m_countOfScreenshotsPerRate);
+	LOG.Message("[Accelerating in groups of %d pictures]\n",
+	            m_countOfScreenshotsPerRate);
 
       }
 
@@ -103,7 +104,8 @@ namespace MFM {
 	m_haltAfterAEPS = atoi(val);
 	if(m_haltAfterAEPS > 0)
 	{
-	  fprintf(stderr, "[Halting execution after approximately %d AEPS]\n", m_haltAfterAEPS);
+	  LOG.Message("[Halting execution after approximately %d AEPS]\n",
+		      m_haltAfterAEPS);
 	}
       }
       else if (!strcmp("--disabletile", arg))
@@ -117,21 +119,21 @@ namespace MFM {
 	}
 
 	m_disabledTiles[m_disabledTileCount++].Parse(val);
-	fprintf(stderr, "[Tile @ %s deactivated]\n", val);
+	LOG.Message("[Tile @ %s deactivated]\n", val);
       }
       else if (!strcmp("--startwithoutgrid", arg))
       {
 	m_startWithoutGridView = true;
-	fprintf(stderr, "[Starting in statistics view]\n");
+	LOG.Message("[Starting in statistics view]\n");
       }
       else if (!strcmp("--startpaused", arg) || !strcmp("--nostartpaused", arg))
       {
 	m_startPaused = !strcmp("--startpaused", arg);
         if (m_startPaused)
         {
-          fprintf(stderr, "[Starting paused]\n");
+          LOG.Message("[Starting paused]\n");
         } else {
-          fprintf(stderr, "[Starting without initial pause]\n");
+          LOG.Message("[Starting without initial pause]\n");
         }
       }
       else if(!strcmp("-r", arg) || !strcmp("--rate", arg))
@@ -141,7 +143,8 @@ namespace MFM {
 
         m_aepsPerFrame = atoi(val);
         if (m_aepsPerFrame < 1) Die("AEPS must be greater than zero, after %s",arg);
-        fprintf(stderr,"[Initially rendering at %d AEPS per frame]\n",m_aepsPerFrame);
+        LOG.Message("[Initially rendering at %d AEPS per frame]\n",
+		    m_aepsPerFrame);
       }
       else if(!strcmp("-l", arg) || !strcmp("--log", arg))
       {
@@ -150,13 +153,13 @@ namespace MFM {
 
         m_initLogLevel = atoi(val);
         if (!Logger::ValidLevel(m_initLogLevel)) Die("Invalid logging level %d", m_initLogLevel);
-        fprintf(stderr,"[Initial logging level %s]\n",
-                Logger::StrLevel((Logger::Level) m_initLogLevel));
+	LOG.Message("[Initial logging level %s]\n",
+                    Logger::StrLevel((Logger::Level) m_initLogLevel));
       }
       else if(!strcmp("--startminimal", arg))
       {
 	m_startMinimal = true;
-	fprintf(stderr, "[Starting with minimal rendering]\n");
+	LOG.Message("[Starting with minimal rendering]\n");
       }
 
       else if (!strcmp("-h",arg) || !strcmp("--help",arg)) {
