@@ -1,4 +1,5 @@
-#include <stdio.h>    /* -*- C++ -*- */
+/* -*- C++ -*- */
+#include <stdio.h>
 #include <stdlib.h>
 #include "ThreadQueue.h"
 
@@ -12,13 +13,13 @@ namespace MFM
 
     if(pthread_mutex_init(&m_lock, NULL))
     {
-      fprintf(stderr, "ERROR: Mutex did not initialize.\n");
-      exit(1);
+      LOG.Error("ERROR: Mutex did not initialize.\n");
+      FAIL(OUT_OF_RESOURCES);
     }
     if(pthread_cond_init(&m_cond, NULL))
     {
-      fprintf(stderr, "ERROR: Cond did not initialize.\n");
-      exit(2);
+      LOG.Error("ERROR: Cond did not initialize.\n");
+      FAIL(OUT_OF_RESOURCES);
     }
   }
 
@@ -34,9 +35,8 @@ namespace MFM
     {
       if(length + m_heldBytes > THREADQUEUE_MAX_BYTES)
       {
-	/* Won't worry too badly about the Fail macro here. */
-	fprintf(stderr, "ERROR: THREADQUEUE OVERLOAD! \n");
-	exit(1);
+	LOG.Error("ERROR: THREADQUEUE OVERLOAD!\n");
+	FAIL(OUT_OF_RESOURCES);
       }
 
       for(u32 i = 0; i < length; i++)

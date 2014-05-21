@@ -6,14 +6,13 @@
 namespace MFM {
 
   template<class PC>
-  void printP1(const P1Atom<PC> & atom) 
+  void printP1(const P1Atom<PC> & atom)
   {
     atom.PrintBits(stdout);
-    
-    printf(",%d/%d/%d+%d",
-           atom.GetLongBondCount(),atom.GetShortBondCount(),atom.GetStateBitCount(),
-           atom.GetBitsAllocated());
-    printf("\n");
+
+    LOG.Debug(",%d/%d/%d+%d\n",
+	      atom.GetLongBondCount(),atom.GetShortBondCount(),atom.GetStateBitCount(),
+	      atom.GetBitsAllocated());
   }
 
   template<class PC>
@@ -48,7 +47,7 @@ namespace MFM {
   }
 
   template<class PC>
-  bool P1Atom<PC>::SetLongBond(u32 index, const SPoint& pt) 
+  bool P1Atom<PC>::SetLongBond(u32 index, const SPoint& pt)
   {
     if (index >= GetLongBondCount())
       return false;
@@ -66,7 +65,7 @@ namespace MFM {
   }
 
   template<class PC>
-  bool P1Atom<PC>::SetShortBond(u32 index, const SPoint& pt) 
+  bool P1Atom<PC>::SetShortBond(u32 index, const SPoint& pt)
   {
     if (index >= GetShortBondCount())
       return false;
@@ -94,4 +93,3 @@ namespace MFM {
     return *this;
   }
 } /* namespace MFM */
-

@@ -706,7 +706,7 @@ namespace MFM {
 	  SPoint pt = GetAbsoluteLocation();
 	  pt.Set(event.x - pt.GetX(),
 		 event.y - pt.GetY());
-	  printf("(%d,%d)\n", pt.GetX(), pt.GetY());
+	  LOG.Debug("(%d,%d)\n", pt.GetX(), pt.GetY());
 	}
 	return true;
       }
