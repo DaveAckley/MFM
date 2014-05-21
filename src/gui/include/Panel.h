@@ -9,6 +9,14 @@
 
 namespace MFM {
 
+  typedef enum
+  {
+    ANCHOR_NORTH,
+    ANCHOR_EAST,
+    ANCHOR_SOUTH,
+    ANCHOR_WEST
+  }GUIAnchor;
+
   class Panel
   {
   protected:
@@ -172,6 +180,15 @@ namespace MFM {
      * Respond to the resizing of this panel's parent.
      */
     virtual void HandleResize(const UPoint& parentSize);
+
+    /**
+     * Used to tell this Panel to stick to a particular edge of its
+     * parent based on a specified GUIAnchor.
+     *
+     * @param anchor The GUIAnchor which specifies the edge of this
+     *               Panel's bounds to stick to.
+     */
+    void SetAnchor(const GUIAnchor anchor);
 
     /**
        Respond to a MouseMotionEvent.  Return true if the event should

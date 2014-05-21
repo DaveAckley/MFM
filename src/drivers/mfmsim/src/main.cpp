@@ -258,6 +258,8 @@ namespace MFM {
       mainGrid.PlaceAtom(emtr, eloc);
       mainGrid.PlaceAtom(cnsr, cloc);
 
+      m_buttonPanel.SetAnchor(ANCHOR_EAST);
+
       m_clearButton.SetGrid(&mainGrid);
       m_clearButton.SetGridRenderer(&m_grend);
       m_xrayButton.SetGrid(&mainGrid);

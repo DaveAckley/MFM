@@ -174,6 +174,28 @@ namespace MFM {
     drawing.DrawRectangle(Rect(SPoint(),m_rect.GetSize()));
   }
 
+  void Panel::SetAnchor(const GUIAnchor anchor)
+  {
+    switch(anchor)
+    {
+    case ANCHOR_NORTH:
+      m_desiredLocation.SetY(0);
+      break;
+    case ANCHOR_EAST:
+      /* This ought to be big enough */
+      m_desiredLocation.SetX(1000000);
+      break;
+    case ANCHOR_SOUTH:
+      m_desiredLocation.SetY(1000000);
+      break;
+    case ANCHOR_WEST:
+      m_desiredLocation.SetX(0);
+      break;
+    default:
+      break;
+    }
+  }
+
   void Panel::HandleResize(const UPoint& parentSize)
   {
     /* Try to make myself as big as I can, then call on my children. */

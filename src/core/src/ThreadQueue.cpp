@@ -1,7 +1,8 @@
 /* -*- C++ -*- */
-#include <stdio.h>
 #include <stdlib.h>
 #include "ThreadQueue.h"
+#include "Fail.h"
+#include "Logger.h"
 
 #define MIN(X,Y) ((X) > (Y) ? (Y) : (X))
 
