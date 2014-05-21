@@ -52,7 +52,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("ClearButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 450));
+        AbstractButton::SetRenderPoint(SPoint(2, 300));
         AbstractButton::SetForeground(Drawing::WHITE);
         AbstractButton::SetBackground(Drawing::BLACK);
       }
@@ -258,7 +258,7 @@ namespace MFM {
       mainGrid.PlaceAtom(emtr, eloc);
       mainGrid.PlaceAtom(cnsr, cloc);
 
-      m_buttonPanel.SetAnchor(ANCHOR_EAST);
+      m_statisticsPanel.SetAnchor(ANCHOR_WEST);
 
       m_clearButton.SetGrid(&mainGrid);
       m_clearButton.SetGridRenderer(&m_grend);
