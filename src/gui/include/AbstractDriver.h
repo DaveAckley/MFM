@@ -888,7 +888,9 @@ namespace MFM {
                   //                  mouse.HandleButtonEvent(&event.button);
                   //                  break;
                 case SDL_MOUSEMOTION:
-                  m_rootPanel.Dispatch(event,Rect(SPoint(),UPoint(m_screenWidth,m_screenHeight)));
+                  m_rootPanel.Dispatch(event,
+				       Rect(SPoint(),
+					    UPoint(m_screenWidth,m_screenHeight)));
                   //                  mouse.HandleMotionEvent(&event.motion);
                   break;
                 case SDL_KEYDOWN:
@@ -912,15 +914,9 @@ namespace MFM {
 
           Update(mainGrid);
 
-          //m_rootDrawing.SetBackground(0xff200020);
           m_rootDrawing.Clear();
 
           m_rootPanel.Paint(m_rootDrawing);
-          //          m_grend.RenderGrid(m_rootDrawing, mainGrid);
-
-          if(renderStats)
-          {
-	  }
 
           if (m_recordScreenshotPerAEPS > 0) {
             if (!paused && m_AEPS >= m_nextScreenshotAEPS) {

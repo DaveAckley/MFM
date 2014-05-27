@@ -1,12 +1,12 @@
 # SUBDIRS here are expected to be independent of each other
-SUBDIRS=mfmtest mfmsim mfmdha mfmbigtile
+SUBDIRS=mfmtest mfmsim mfmdha mfmbigtile mfmheadless
 
 .PHONY:	$(SUBDIRS) all clean realclean
 
 all:	$(SUBDIRS)
 
 clean:	$(SUBDIRS)
-	@rm -f *~	
+	@rm -f *~
 
 realclean:	clean $(SUBDIRS)
 
