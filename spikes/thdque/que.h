@@ -11,11 +11,11 @@ namespace ThreadSpike
   class ThreadQueue
   {
   private:
-    
+
     pthread_mutex_t m_lock;
-    
+
     pthread_cond_t m_cond;
-    
+
     u8 m_queueData[THREADQUEUE_MAX_BYTES];
 
     u32 m_readHead, m_writeHead, m_heldBytes;
@@ -25,9 +25,9 @@ namespace ThreadSpike
      * specified buffer. These bytes are taken directly from the front
      * of the underlying queue. This does not block, and instead reads
      * as many bytes as possible from the underlying queue, up to the
-     * specified limit, before returning. 
+     * specified limit, before returning.
      *
-     * ****************NOTICE******************* 
+     * ****************NOTICE*******************
      * This function ignores the mutex and is meant to be for internal
      * use only!
      * *****************NOTICE*******************
@@ -40,9 +40,9 @@ namespace ThreadSpike
      *
      */
     u32 UnsafeRead(u8* bytes, u32 length);
-    
+
   public:
-    
+
     ThreadQueue();
 
     ~ThreadQueue();
@@ -88,7 +88,7 @@ namespace ThreadSpike
      *          underlying queue.
      */
     u32 BytesAvailable();
-    
+
   };
 }
 

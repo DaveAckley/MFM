@@ -16,10 +16,6 @@
 #include "Grid.h"
 #include "ElementTable.h"
 #include "Element_Empty.h" /* Need common elements */
-#include "Element_Dreg.h"
-#include "Element_Res.h"
-#include "Element_Wall.h"
-#include "Element_Consumer.h"
 #include "DriverArguments.h"
 
 

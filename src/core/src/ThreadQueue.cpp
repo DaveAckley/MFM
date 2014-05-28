@@ -14,12 +14,12 @@ namespace MFM
 
     if(pthread_mutex_init(&m_lock, NULL))
     {
-      LOG.Error("ERROR: Mutex did not initialize.\n");
+      LOG.Error("ThreadQueue Mutex did not initialize.\n");
       FAIL(OUT_OF_RESOURCES);
     }
     if(pthread_cond_init(&m_cond, NULL))
     {
-      LOG.Error("ERROR: Cond did not initialize.\n");
+      LOG.Error("ThreadQueue Cond did not initialize.\n");
       FAIL(OUT_OF_RESOURCES);
     }
   }

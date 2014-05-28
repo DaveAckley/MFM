@@ -1,5 +1,7 @@
-#include <stdio.h>    /* -*- C++ -*- */
+/* -*- C++ -*- */
+#include <stdio.h>
 #include <stdlib.h>
+#include "Logger.h"
 
 #define MIN(X,Y) ((X) > (Y) ? (Y) : (X))
 
@@ -8,19 +10,19 @@ namespace ThreadSpike
   ThreadQueue::ThreadQueue()
   {
     m_readHead = m_writeHead = m_heldBytes = 0;
-    
+
     if(pthread_mutex_init(&m_lock, NULL))
     {
-      fprintf(stderr, "ERROR: Mutex did not initialize.\n");
+      LOG.Error("ThreadQueue Mutex did not initialize.\n");
       exit(1);
     }
     if(pthread_cond_init(&m_cond, NULL))
     {
-      fprintf(stderr, "ERROR: Cond did not initialize.\n");
+      LOG.Error("ThreadQueue Cond did not initialize.\n");
       exit(2);
     }
   }
-  
+
   ThreadQueue::~ThreadQueue()
   {
     pthread_mutex_destroy(&m_lock);
@@ -33,9 +35,8 @@ namespace ThreadSpike
     {
       if(length + m_heldBytes > THREADQUEUE_MAX_BYTES)
       {
-	/* Won't worry too badly about the Fail macro here. */
-	fprintf(stderr, "ERROR: THREADQUEUE OVERLOAD! \n");
-	exit(1);
+	LOG.Error("ERROR: THREADQUEUE OVERLOAD! \n");
+        FAIL(OUT_OF_ROOM);
       }
 
       for(u32 i = 0; i < length; i++)

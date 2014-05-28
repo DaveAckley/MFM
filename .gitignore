@@ -31,5 +31,5 @@ codelog.txt
 # We don't want ppms
 *.ppm
 
-# Don't track the packaging spike for now
-spikes/packaging
+# Don't track spikes for now
+spikes/
