@@ -5,6 +5,7 @@ using namespace MFM;
 int main(int argc, char** argv)
 {
 
+  VArguments_Test::Test_RunTests();
   Logger_Test::Test_RunTests();
   UUID_Test::Test_RunTests();
   ByteSink_Test::Test_RunTests();
@@ -37,4 +38,3 @@ int main(int argc, char** argv)
 
   return 0;
 }
-

@@ -4,6 +4,7 @@
 /* Get some types for us to test */
 #include "test_common.h"
 
+#include "VArguments_Test.h"
 #include "Logger_Test.h"
 #include "UUID_Test.h"
 #include "ByteSink_Test.h"
