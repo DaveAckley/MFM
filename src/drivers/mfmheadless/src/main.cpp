@@ -9,7 +9,8 @@ namespace MFM
 
   struct MFMSimHeadlessDemo : public AbstractHeadlessDriver<OurGridConfig>
   {
-    MFMSimHeadlessDemo(DriverArguments& args) : AbstractHeadlessDriver(args) { }
+    MFMSimHeadlessDemo(u32 argc, const char** argv) :
+      AbstractHeadlessDriver(argc, argv) { }
 
     virtual void ReinitPhysics()
     {
@@ -33,13 +34,12 @@ namespace MFM
   };
 }
 
-int main(int argc, char** argv)
+int main(int argc, const char** argv)
 {
   MFM::LOG.SetByteSink(MFM::STDERR);
   MFM::LOG.SetLevel(MFM::LOG.ALL);
 
-  MFM::DriverArguments args(argc, argv);
-  MFM::MFMSimHeadlessDemo sim(args);
+  MFM::MFMSimHeadlessDemo sim(argc, argv);
 
   sim.ReinitUs();
 

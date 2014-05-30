@@ -2,6 +2,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include "itype.h"
 #include "AbstractHeadlessDriver.h"
 #include "P3Atom.h"
 #include "ParamConfig.h"

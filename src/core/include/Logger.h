@@ -48,6 +48,11 @@ namespace MFM {
       return m_logLevel;
     }
 
+    Level SetLevel(u32 newLevel)
+    {
+      return SetLevel((Level)newLevel);
+    }
+
     Level SetLevel(Level newLevel) {
       if (!ValidLevel(newLevel))
         FAIL(ILLEGAL_ARGUMENT);
@@ -150,4 +155,3 @@ namespace MFM {
 } /* namespace MFM */
 
 #endif /*LOGGER_H*/
-

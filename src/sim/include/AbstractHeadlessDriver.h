@@ -16,7 +16,7 @@
 #include "Grid.h"
 #include "ElementTable.h"
 #include "Element_Empty.h" /* Need common elements */
-#include "DriverArguments.h"
+#include "VArguments.h"
 
 
 #define MAX_PATH_LENGTH 1000
@@ -48,11 +48,13 @@ namespace MFM
     typedef Grid<GC> OurGrid;
     typedef ElementTable<CC> OurElementTable;
 
-    AbstractHeadlessDriver(DriverArguments& args)
+    AbstractHeadlessDriver(u32 argc, const char** argv)
     {
-      OnceOnly(args);
+      AddDriverArguments(m_varguments);
 
-      m_driverArguments = &args;
+      m_varguments.ProcessArguments(argc, argv);
+
+      OnceOnly(m_varguments);
     }
 
     void ReinitUs()
@@ -64,6 +66,101 @@ namespace MFM
     OurGrid& GetGrid()
     {
       return m_grid;
+    }
+
+    static void PrintArgUsage(const char* not_needed, void* vargs)
+    {
+      VArguments& args = *((VArguments*)vargs);
+      args.Usage();
+    }
+
+    static void SetLoggingLevel(const char* level, void* not_needed)
+    {
+      LOG.SetLevel(atoi(level));
+    }
+
+    static void SetSeedFromArgs(const char* seedstr, void* driver)
+    {
+      u32 seed = atoi(seedstr);
+      if(!seed)
+      {
+	seed = time(0);
+      }
+      ((AbstractHeadlessDriver*)driver)->SetSeed(seed);
+    }
+
+    static void SetRecordEventCountsFromArgs(const char* aepsStr, void* driver)
+    {
+      u32 recAEPS = atoi(aepsStr);
+      ((AbstractHeadlessDriver*)driver)->m_recordEventCountsPerAEPS = recAEPS;
+    }
+
+    static void SetRecordTimeBasedDataFromArgs(const char* tbdStr, void* driver)
+    {
+      u32 tbdAEPS = atoi(tbdStr);
+      ((AbstractHeadlessDriver*)driver)->m_recordTimeBasedDataPerAEPS = tbdAEPS;
+    }
+
+    static void SetDataDirFromArgs(const char* dirPath, void* driverPtr)
+    {
+      AbstractHeadlessDriver& driver = *((AbstractHeadlessDriver*)driverPtr);
+      VArguments& args = driver.m_varguments;
+
+      if(!dirPath || strlen(dirPath) == 0)
+      {
+	dirPath = "/tmp";
+      }
+
+      printf("%s, %lu\n", dirPath, strlen(dirPath));
+
+      /* Make the main data directory */
+      if(mkdir(dirPath, 0777))
+      {
+	/* It's OK if it already exists */
+	if(errno != EEXIST)
+	{
+	  args.Die("Couldn't make directory '%s' : %s", dirPath, strerror(errno));
+	}
+      }
+
+      u64 startTime = Utils::GetDateTimeNow();
+
+      snprintf(driver.m_simDirBasePath, MAX_PATH_LENGTH - 1,
+	       "%s/%ld", dirPath, startTime);
+
+      driver.m_simDirBasePathLength = strlen(driver.m_simDirBasePath);
+
+      if(driver.m_simDirBasePathLength >= MAX_PATH_LENGTH - MIN_PATH_RESERVED_LENGTH)
+      {
+	args.Die("Path name too long '%s'", dirPath);
+      }
+    }
+
+    virtual void AddDriverArguments(VArguments& args)
+    {
+      args.RegisterArgument("Display this help message, then exit.",
+			    "-h|--help", &PrintArgUsage, (void*)(&args), false);
+
+      args.RegisterArgument("Amount of logging output (0 is none, 8 is high)",
+			    "-l|--log", &SetLoggingLevel, NULL, true);
+
+      args.RegisterArgument("Set master PRNG seed to NUM (u32)",
+			    "-s|--seed", &SetSeedFromArgs, this, true);
+
+      args.RegisterArgument("Record event counts every AEPS aeps",
+			    "-e|--events", &SetRecordEventCountsFromArgs, this, true);
+
+      args.RegisterArgument("Records time based data every AEPS aeps",
+			    "-t|--timebd",
+			    &SetRecordTimeBasedDataFromArgs, this, true);
+
+      /*
+       * Placing a newline at the end of this description makes any arguments added
+       * after this one appear to be in their own section.
+       */
+      args.RegisterArgument("Store data in per-sim directories under DIR\n",
+			    "-d|--dir", &SetDataDirFromArgs, this, true);
+
     }
 
   private:
@@ -83,7 +180,7 @@ namespace MFM
 
     OurGrid m_grid;
 
-    DriverArguments* m_driverArguments;
+    VArguments m_varguments;
 
     char* GetSimDirPathTemporary(const char* format, ...)
     {
@@ -124,36 +221,11 @@ namespace MFM
       LOG.Debug("Elapsed AEPS: %d", (int)m_AEPS);
     }
 
-    void OnceOnly(DriverArguments& args)
+    void OnceOnly(VArguments& args)
     {
-      LOG.SetLevel(args.GetInitialLogLevel());
-
-      const char* dirPath = args.GetDataDirPath();
-      if(!dirPath)
+      if(!args.Appeared("-d"))
       {
-	dirPath = "/tmp";
-      }
-
-      /* Make the main data directory */
-      if(mkdir(dirPath, 0777))
-      {
-	/* It's OK if it already exists */
-	if(errno != EEXIST)
-	{
-	  args.Die("Couldn't make directory '%s' : %s", dirPath, strerror(errno));
-	}
-      }
-
-      u64 startTime = Utils::GetDateTimeNow();
-
-      snprintf(m_simDirBasePath, MAX_PATH_LENGTH - 1,
-	       "%s/%ld", dirPath, startTime);
-
-      m_simDirBasePathLength = strlen(m_simDirBasePath);
-
-      if(m_simDirBasePathLength >= MAX_PATH_LENGTH - MIN_PATH_RESERVED_LENGTH)
-      {
-	args.Die("Path name too long '%s'", dirPath);
+	SetDataDirFromArgs(NULL, this);
       }
 
       const char* (subs[]) = { "", "vid", "eps", "tbd", "teps" };
@@ -176,15 +248,6 @@ namespace MFM
 
       m_AEPS = 0;
 
-      m_recordEventCountsPerAEPS = args.GetRecordEventCountsPerAEPS();
-      m_recordTimeBasedDataPerAEPS = args.GetRecordTimeBasedDataPerAEPS();
-
-      u32 seed = args.GetSeed();
-      if(!seed)
-      {
-	seed = time(0);
-      }
-      SetSeed(seed);
 
       m_ticksLastStopped = 0;
     }
@@ -196,17 +259,6 @@ namespace MFM
 	FAIL(ILLEGAL_ARGUMENT);
       }
       m_grid.SetSeed(seed);
-    }
-
-    void ReapplyPostArguments(DriverArguments* argptr)
-    {
-      DriverArguments& args = *argptr;
-
-      for(u32 i = 0; i < args.GetDisabledTileCount(); i++)
-      {
-	SPoint& pt = args.GetDisabledTiles()[i];
-	m_grid.SetTileToExecuteOnly(pt, false);
-      }
     }
 
     void Reinit()

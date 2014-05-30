@@ -7,7 +7,7 @@
 namespace MFM {
 
   static const char* handlerArg;
-  static void handler(const char* arg)
+  static void handler(const char* arg, void* not_used)
   {
     handlerArg = arg;
   }
@@ -16,7 +16,7 @@ namespace MFM {
   {
     VArguments args;
 
-    args.RegisterArgument("test description", "-t|--test", 0, false);
+    args.RegisterArgument("test description", "-t|--test", 0, 0, false);
 
     assert(!args.Get("-t"));
 
@@ -32,7 +32,7 @@ namespace MFM {
 
     assert(unwound);
 
-    args.RegisterArgument("test handler", "-f|--foo", &handler, true);
+    args.RegisterArgument("test handler", "-f|--foo", &handler, 0, true);
 
     const char* argv[] =
       {
