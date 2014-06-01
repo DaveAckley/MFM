@@ -13,7 +13,8 @@ namespace MFM {
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
 
   typedef GridConfig<OurCoreConfig,3,2> OurSmallGridConfig;
-  typedef GridConfig<OurCoreConfig,6,4> OurBigGridConfig;
+  typedef GridConfig<OurCoreConfig,8,5> OurBigGridConfig;
+  //  typedef GridConfig<OurCoreConfig,5,3> OurBigGridConfig;
   typedef OurBigGridConfig OurGridConfig;
 
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
@@ -57,9 +58,12 @@ namespace MFM {
       if (addMover)
         srend.DisplayStatsForElement(mainGrid,Element_Mover<OurCoreConfig>::THE_INSTANCE);
 
-      const SPoint BAR_SIZE(17,49);
-      const SPoint center = BAR_SIZE/4;
-      OurAtom aBoid1(Element_QBar<OurCoreConfig>::THE_INSTANCE.GetAtom(BAR_SIZE,center));
+      const SPoint QBAR_SIZE(27,3*27);
+      SPoint center = QBAR_SIZE/4;
+      // Ensure we start with even-even
+      if (center.GetX()&1) center += SPoint(1,0);
+      if (center.GetY()&1) center += SPoint(0,1);
+      OurAtom aBoid1(Element_QBar<OurCoreConfig>::THE_INSTANCE.GetAtom(QBAR_SIZE,center));
       Element_QBar<OurCoreConfig>::THE_INSTANCE.SetSymI(aBoid1, 0);
 
       OurAtom aDReg(Element_Dreg<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
@@ -73,17 +77,22 @@ namespace MFM {
       SPoint e1loc(20+2,20+2);
       SPoint e2loc(GRID_WIDTH*realWidth-2-20, GRID_HEIGHT*realWidth-2-20);
       SPoint cloc(GRID_WIDTH*realWidth, GRID_HEIGHT*realWidth/2);
+      SPoint seedAtomPlace(3*GRID_WIDTH*realWidth/4,QBAR_SIZE.GetY()/4*3/2+15);
 
       u32 wid = mainGrid.GetWidth()*realWidth;
       u32 hei = mainGrid.GetHeight()*realWidth;
       bool once = true;
-      for(u32 x = 0; x < wid; x+=5) {
-        for(u32 y = 0; y < hei; y+=5) {
+      for(u32 x = 0; x < wid; x+=3) {
+        for(u32 y = 0; y < hei; y+=3) {
           aloc.Set(x,y);
-          mainGrid.PlaceAtom(aDReg, aloc);
+          SPoint tloc(aloc);
+          tloc.Subtract(seedAtomPlace);
+          if (tloc.GetMaximumLength() < 12)
+            if (Element_Empty<OurCoreConfig>::IsType(mainGrid.GetAtom(aloc)->GetType()))
+              mainGrid.PlaceAtom(aDReg, aloc);
 
           if (once) {
-            mainGrid.PlaceAtom(aBoid1, cloc*2/5);
+            mainGrid.PlaceAtom(aBoid1, seedAtomPlace);
             if (addMover) {
               T mover = Element_Mover<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom();
               mainGrid.PlaceAtom(mover, e2loc);
@@ -140,12 +149,12 @@ namespace MFM {
       srend.DisplayStatsForElement(mainGrid,Element_DBar<OurCoreConfig>::THE_INSTANCE);
       //      srend.DisplayStatsForType(Element_Mover<OurCoreConfig>::TYPE);
 
-      const SPoint BAR_SIZE(11,25);
-      const SPoint center = BAR_SIZE/4;
-      OurAtom aBoid1(Element_SBar<OurCoreConfig>::THE_INSTANCE.GetAtom(BAR_SIZE,center));
+      const SPoint SD_BAR_SIZE(21,55);
+      const SPoint center = SD_BAR_SIZE/4;
+      OurAtom aBoid1(Element_SBar<OurCoreConfig>::THE_INSTANCE.GetAtom(SD_BAR_SIZE,center));
       Element_SBar<OurCoreConfig>::THE_INSTANCE.SetSymI(aBoid1, 3);
 
-      OurAtom aBoid2(Element_DBar<OurCoreConfig>::THE_INSTANCE.GetAtom(BAR_SIZE,center));
+      OurAtom aBoid2(Element_DBar<OurCoreConfig>::THE_INSTANCE.GetAtom(SD_BAR_SIZE,center));
       Element_DBar<OurCoreConfig>::THE_INSTANCE.SetSymI(aBoid2, PSYM_DEG000L);
 
       OurAtom aDReg(Element_Dreg<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
@@ -166,9 +175,9 @@ namespace MFM {
       for(u32 x = 0; x < wid; x+=5) {
         for(u32 y = 0; y < hei; y+=5) {
           aloc.Set(x,y);
-          mainGrid.PlaceAtom(aDReg, aloc);
 
           if (once) {
+          mainGrid.PlaceAtom(aDReg, aloc);
             mainGrid.PlaceAtom(aBoid1, cloc);
             //            mainGrid.PlaceAtom(aBoid2, cloc/2);
             once = false;

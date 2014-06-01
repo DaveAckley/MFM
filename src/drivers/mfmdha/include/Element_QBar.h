@@ -43,7 +43,7 @@ namespace MFM
 
     Class:
     (C1) Name is Element_QBar
-    (C2) Type is 0x2ba2
+    (C2) Type is 0x4ba2
    */
 
 
@@ -127,7 +127,7 @@ namespace MFM
 
     static const u32 BITS_WIDE = 5;
     static const u32 BITS_HIGH = 7;
-    static const u32 BITS_SYMI = 3;
+    static const u32 BITS_SYMI = 2;
     static const u32 BITS_TIMER = 3;
 
     static const u32 MAX_TIMER_VALUE = (1<<BITS_TIMER)-1;
@@ -275,7 +275,6 @@ namespace MFM
 
       SPoint barMax = GetMax(self);
       SPoint myPos = GetPos(self);
-      //      myPos.Print(stderr);
 
       const MDist<R> md = MDist<R>::get();
 
@@ -441,7 +440,8 @@ namespace MFM
               window.SetRelativeAtom(offset, corner);
               window.SetRelativeAtom(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
             }
-          } else {
+          }
+          {
             // We are alllll good, with nothing to do.  What is our timer situation?
             u32 ourTimer = GetTimer(self);
             if (ourTimer < MAX_TIMER_VALUE && (ourTimer==0 || (neighborTimer && minTimer+1 >= ourTimer))) {

@@ -599,7 +599,7 @@ namespace MFM {
 		      SCREEN_INITIAL_HEIGHT);
 	SetRenderPoint(SPoint(0, 0));
 	SetForeground(Drawing::BLACK);
-	SetBackground(Drawing::DARK_PURPLE);
+	SetBackground(Drawing::BLACK);
 
 	m_grend = NULL;
 	m_mainGrid = NULL;
@@ -699,6 +699,10 @@ namespace MFM {
 				     m_overheadPercent, false);
       }
 
+      virtual void PaintBorder(Drawing & config) {
+        /* No border please */
+      }
+
       virtual bool Handle(SDL_MouseButtonEvent& event)
       {
 	if(event.button == SDL_BUTTON_LEFT)
@@ -714,6 +718,9 @@ namespace MFM {
 
     struct ButtonPanel : public Panel
     {
+      virtual void PaintBorder(Drawing & config) {
+        /* No border please */
+      }
       ButtonPanel()
       {
 	SetName("ButtonPanel");
