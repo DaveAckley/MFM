@@ -1,8 +1,10 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "AbstractDriver.h"
+#include "AbstractGUIDriver.h"
 #include "P1Atom.h"
+
+#include "itype.h"
 
 #include "Element_Boids1.h"
 #include "Element_Boids2.h"
@@ -10,4 +12,3 @@
 #include "Element_Dreg.h"
 
 #endif /* MAIN_H */
-

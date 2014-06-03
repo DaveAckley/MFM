@@ -39,7 +39,7 @@ int main(int argc, const char** argv)
   MFM::LOG.SetByteSink(MFM::STDERR);
   MFM::LOG.SetLevel(MFM::LOG.ALL);
 
-  MFM::MFMSimHeadlessDemo sim(argc, argv);
+  MFM::MFMSimHeadlessDemo sim((MFM::u32)argc, argv);
 
   sim.ReinitUs();
 

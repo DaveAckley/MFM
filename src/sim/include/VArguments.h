@@ -23,6 +23,10 @@ namespace MFM
   {
   private:
 
+    /**
+     * A struct representing a single registry of a command line
+     * argument, meant to be used internally by VArguments.
+     */
     struct VArg
     {
 
@@ -75,6 +79,9 @@ namespace MFM
 
     };
 
+    /**
+     * The VArg arguments which are currently registered.
+     */
     VArg m_argDescriptors[VARGUMENTS_MAX_SIZE];
 
     /**
@@ -161,6 +168,16 @@ namespace MFM
      */
     u32 GetInt(const char* argName) const;
 
+    /**
+     * Checks to see if a particular argument was encountered on the
+     * command line during ProcessArguments .
+     *
+     * @param argName The name of the argument being checked for
+     *                command line membership.
+     *
+     * @returns \c true if this argument was encountered on the
+     *          command line, else \c false.
+     */
     bool Appeared(const char* argName) const;
 
     /**

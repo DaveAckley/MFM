@@ -9,9 +9,9 @@ namespace MFM {
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
-  struct MFMSimDHSDemo : public AbstractDriver<OurGridConfig>
+  struct MFMSimDHSDemo : public AbstractGUIDriver<OurGridConfig>
   {
-    MFMSimDHSDemo(DriverArguments& args) : AbstractDriver(args) { }
+    MFMSimDHSDemo(u32 argc, const char** argv) : AbstractGUIDriver(argc, argv) { }
 
     virtual void ReinitPhysics() {
       OurGrid & mainGrid = GetGrid();
@@ -287,14 +287,12 @@ namespace MFM {
   };
 }
 
-int main(int argc, char** argv)
+int main(int argc, const char** argv)
 {
   MFM::LOG.SetByteSink(MFM::STDERR);
   MFM::LOG.SetLevel(MFM::LOG.ALL);
 
-  MFM::DriverArguments args(argc,argv);
-
-  MFM::MFMSimDHSDemo sim(args);
+  MFM::MFMSimDHSDemo sim(argc, argv);
 
   sim.Reinit();
 
