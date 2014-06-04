@@ -3,7 +3,7 @@
 #define MAIN_H
 
 #include "itype.h"
-#include "AbstractHeadlessDriver.h"
+#include "AbstractDualDriver.h"
 #include "P3Atom.h"
 #include "ParamConfig.h"
 #include "Element_Dreg.h"

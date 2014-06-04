@@ -7,10 +7,10 @@ namespace MFM
   typedef CoreConfig<OurAtom, OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig, 5, 3> OurGridConfig;
 
-  struct MFMSimHeadlessDemo : public AbstractHeadlessDriver<OurGridConfig>
+  struct MFMSimHeadlessDemo : public AbstractDualDriver<OurGridConfig>
   {
     MFMSimHeadlessDemo(u32 argc, const char** argv) :
-      AbstractHeadlessDriver(argc, argv) { }
+      AbstractDualDriver(argc, argv) { }
 
     virtual void ReinitPhysics()
     {
