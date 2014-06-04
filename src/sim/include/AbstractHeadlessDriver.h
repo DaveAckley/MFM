@@ -45,25 +45,6 @@ namespace MFM
       nanosleep(&tspec, NULL);
     }
 
-    void Update()
-    {
-      //const s32 ONE_THOUSAND = 1000;
-      //const s32 ONE_MILLION = ONE_THOUSAND * ONE_THOUSAND;
-
-      Super::GetGrid().Unpause();
-
-      /* Sleep at a constant rate for now  */
-      /* XXX See what the overhead is here */
-      Sleep(1, 1000);
-
-      Super::GetGrid().Pause();
-
-      Super::SetAEPS(AbstractDriver<GC>::GetGrid().GetTotalEventsExecuted() /
-		     AbstractDriver<GC>::GetGrid().GetTotalSites());
-
-      LOG.Debug("Elapsed AEPS: %d", (int)Super::GetAEPS());
-    }
-
     /* No extra behavior */
     virtual void PostReinit(VArguments& args)
     {  }
