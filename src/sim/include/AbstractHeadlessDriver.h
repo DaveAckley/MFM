@@ -24,15 +24,18 @@ namespace MFM
   template<class GC>
   class AbstractHeadlessDriver : public AbstractDriver<GC>
   {
-  protected:
-
+  private:
     typedef AbstractDriver<GC> Super;
+
+  protected:
     typedef typename Super::OurGrid OurGrid;
     typedef typename Super::CC CC;
 
     AbstractHeadlessDriver(u32 argc, const char** argv) :
       AbstractDriver<GC>(argc, argv)
-    { }
+    {
+      Super::OnceOnly();
+    }
 
     virtual void PostUpdate()
     {

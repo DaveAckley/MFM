@@ -155,6 +155,7 @@ namespace MFM
     virtual void PostOnceOnly(VArguments& args)
     { }
 
+
     /**
      * The main loop which runs this simulation.
      */
@@ -171,6 +172,35 @@ namespace MFM
 	  running = false;
 	}
       }
+    }
+
+    void OnceOnly()
+    {
+      VArguments& args = m_varguments;
+      if(!args.Appeared("-d"))
+      {
+	SetDataDirFromArgs(NULL, this);
+      }
+
+      const char* (subs[]) = { "", "vid", "eps", "tbd", "teps" };
+      for(u32 i = 0; i < sizeof(subs) / sizeof(subs[0]); i++)
+      {
+	const char* path = GetSimDirPathTemporary("%s", subs[i]);
+	if(mkdir(path, 0777))
+	{
+	  args.Die("Couldn't make simulation sub-directory '%s' : %s",
+		   path, strerror(errno));
+	}
+      }
+
+      /* Initialize tbd.txt */
+      const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
+      FILE* fp = fopen(path, "w");
+      fprintf(fp, "#AEPS activesites empty dreg res wall sort-hits"
+	          "sort-misses sort-total sort-hit-pctg\n");
+      fclose(fp);
+
+      PostOnceOnly(args);
     }
 
   private:
@@ -331,34 +361,6 @@ namespace MFM
 
     }
 
-    void OnceOnly(VArguments& args)
-    {
-      if(!args.Appeared("-d"))
-      {
-	SetDataDirFromArgs(NULL, this);
-      }
-
-      const char* (subs[]) = { "", "vid", "eps", "tbd", "teps" };
-      for(u32 i = 0; i < sizeof(subs) / sizeof(subs[0]); i++)
-      {
-	const char* path = GetSimDirPathTemporary("%s", subs[i]);
-	if(mkdir(path, 0777))
-	{
-	  args.Die("Couldn't make simulation sub-directory '%s' : %s",
-		   path, strerror(errno));
-	}
-      }
-
-      /* Initialize tbd.txt */
-      const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
-      FILE* fp = fopen(path, "w");
-      fprintf(fp, "#AEPS activesites empty dreg res wall sort-hits"
-	          "sort-misses sort-total sort-hit-pctg\n");
-      fclose(fp);
-
-      PostOnceOnly(args);
-    }
-
 
     void ExportEventCounts(OurGrid& grid)
     {
@@ -397,11 +399,11 @@ namespace MFM
       AddMandatoryDriverArguments(m_varguments);
       AddDriverArguments(m_varguments);
 
+      SetSeed(1);
+
       m_varguments.ProcessArguments(argc, argv);
 
       m_startTimeMS = GetTicks();
-
-      OnceOnly(m_varguments);
     }
 
 

@@ -49,9 +49,10 @@ namespace MFM {
   template<class GC>
   class AbstractGUIDriver : public AbstractDriver<GC>
   {
-  protected:
+  private:
     typedef AbstractDriver<GC> Super;
 
+  protected:
     typedef typename Super::OurGrid OurGrid;
     typedef typename Super::CC CC;
 
@@ -84,6 +85,61 @@ namespace MFM {
   protected: /* Need these for our buttons at driver level */
     GridRenderer m_grend;
     StatsRenderer<GC> m_srend;
+
+    virtual void PostUpdate()
+    {
+      /* Update the stats renderer */
+      m_statisticsPanel.SetAEPS(Super::GetAEPS());
+      m_statisticsPanel.SetAER(Super::GetAER());
+      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
+      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
+    }
+
+    virtual void PostOnceOnly(VArguments& args)
+    {
+      if (m_countOfScreenshotsPerRate > 0) {
+        m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
+        m_recordScreenshotPerAEPS = 1;
+        m_countOfScreenshotsAtThisAEPS = 0;
+      }
+
+      SDL_Init(SDL_INIT_VIDEO);
+      m_fonts.Init();
+
+      m_rootPanel.SetName("Root");
+      m_gridPanel.SetGridRenderer(&m_grend);
+      m_gridPanel.SetGrid(&Super::GetGrid());
+
+      m_statisticsPanel.SetStatsRenderer(&m_srend);
+      m_statisticsPanel.SetGrid(&Super::GetGrid());
+      m_statisticsPanel.SetAEPS(Super::GetAEPS());
+      m_statisticsPanel.SetAER(Super::GetAER());
+      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
+      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
+      m_statisticsPanel.SetVisibility(false);
+
+      m_rootPanel.Insert(&m_gridPanel, NULL);
+      m_gridPanel.Insert(&m_statisticsPanel, NULL);
+      m_statisticsPanel.Insert(&m_buttonPanel, NULL);
+      m_buttonPanel.SetVisibility(true);
+      /*
+      m_rootPanel.Insert(&m_panel1,0);
+      m_rootPanel.Insert(&m_panel2,&m_panel1);
+      m_panel1.Insert(&m_panel3,0);
+      m_rootPanel.Insert(&m_panel4,0);
+      m_panel5.SetControlled(&m_panel4);
+      m_rootPanel.Insert(&m_panel5,0);
+      */
+      m_rootPanel.Print(STDOUT);
+
+      m_srend.OnceOnly(m_fonts);
+
+      SDL_WM_SetCaption("Movable Feast Machine Simulator", NULL);
+
+      m_ticksLastStopped = 0;
+
+    }
+
 
   private:
 
@@ -270,60 +326,10 @@ namespace MFM {
       m_renderStats(false),
       m_screenWidth(SCREEN_INITIAL_WIDTH),
       m_screenHeight(SCREEN_INITIAL_HEIGHT)
-    { }
-
-    virtual void PostUpdate()
     {
-      /* Update the stats renderer */
-      m_statisticsPanel.SetAEPS(Super::GetAEPS());
-      m_statisticsPanel.SetAER(Super::GetAER());
-      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
-      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
-    }
-
-    virtual void PostOnceOnly(VArguments args)
-    {
-      if (m_countOfScreenshotsPerRate > 0) {
-        m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
-        m_recordScreenshotPerAEPS = 1;
-        m_countOfScreenshotsAtThisAEPS = 0;
-      }
-
-      SDL_Init(SDL_INIT_VIDEO);
-      m_fonts.Init();
-
-      m_rootPanel.SetName("Root");
-      m_gridPanel.SetGridRenderer(&m_grend);
-      m_gridPanel.SetGrid(&Super::GetGrid());
-
-      m_statisticsPanel.SetStatsRenderer(&m_srend);
-      m_statisticsPanel.SetGrid(&Super::GetGrid());
-      m_statisticsPanel.SetAEPS(Super::GetAEPS());
-      m_statisticsPanel.SetAER(Super::GetAER());
-      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
-      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
-      m_statisticsPanel.SetVisibility(false);
-
-      m_rootPanel.Insert(&m_gridPanel, NULL);
-      m_gridPanel.Insert(&m_statisticsPanel, NULL);
-      m_statisticsPanel.Insert(&m_buttonPanel, NULL);
-      m_buttonPanel.SetVisibility(true);
-      /*
-      m_rootPanel.Insert(&m_panel1,0);
-      m_rootPanel.Insert(&m_panel2,&m_panel1);
-      m_panel1.Insert(&m_panel3,0);
-      m_rootPanel.Insert(&m_panel4,0);
-      m_panel5.SetControlled(&m_panel4);
-      m_rootPanel.Insert(&m_panel5,0);
-      */
-      m_rootPanel.Print(STDOUT);
-
-      m_srend.OnceOnly(m_fonts);
-
-      SDL_WM_SetCaption("Movable Feast Machine Simulator", NULL);
-
-      m_ticksLastStopped = 0;
-
+      /* Needs to be called from here because of the virtual
+	 override of PostOnceOnly. */
+      Super::OnceOnly();
     }
 
     virtual void ReinitUs()
@@ -340,7 +346,8 @@ namespace MFM {
       m_renderStats = false;
     }
 
-    virtual void HandleResize() = 0;
+    virtual void HandleResize()
+    { }
 
     void ToggleTileView()
     {

@@ -20,10 +20,14 @@ namespace MFM {
     m_initted = true;
   }
 
-  TTF_Font * Fonts::GetFont(const char * resourcePath, u32 size) {
-    for (u32 i = 0; i < CACHE_SIZE; ++i) {
+  TTF_Font * Fonts::GetFont(const char * resourcePath, u32 size)
+  {
+    Init();
+    for (u32 i = 0; i < CACHE_SIZE; ++i)
+    {
       Cache & c = m_fontCache[i];
-      if (c.path == 0) {
+      if (c.path == 0)
+      {
         // Not found, set up camp here
         c.path = resourcePath;
         c.size = size;
