@@ -6,7 +6,6 @@
 #include <errno.h>     /* for errno */
 #include "Utils.h"     /* for GetDateTimeNow */
 #include "Logger.h"
-#include "FileByteSink.h"
 #include "AbstractButton.h"
 #include "Tile.h"
 #include "GridRenderer.h"
@@ -27,8 +26,6 @@
 namespace MFM {
 
 #define FRAMES_PER_SECOND 100.0
-
-#define INITIAL_AEPS_PER_FRAME 1
 
 #define CAMERA_SLOW_SPEED 2
 #define CAMERA_FAST_SPEED 50
@@ -53,38 +50,20 @@ namespace MFM {
   class AbstractGUIDriver : public AbstractDriver<GC>
   {
   protected:
-    typedef typename AbstractDriver<GC>::OurGrid OurGrid;
-    typedef typename AbstractDriver<GC>::CC CC;
+    typedef AbstractDriver<GC> Super;
+
+    typedef typename Super::OurGrid OurGrid;
+    typedef typename Super::CC CC;
 
   private:
-    char m_simDirBasePath[MAX_PATH_LENGTH];
-    u32 m_simDirBasePathLength;
 
     Fonts m_fonts;
 
-    char * GetSimDirPathTemporary(const char * format, ...) {
-      va_list ap;
-      va_start(ap,format);
-      vsnprintf(m_simDirBasePath+m_simDirBasePathLength, MAX_PATH_LENGTH-1, format, ap);
-      return m_simDirBasePath;
-    }
-
     bool paused;
-
     bool m_renderStats;
-    u32 m_aepsPerFrame;
-    s32 m_microsSleepPerFrame;
-    double m_overheadPercent;
-    double m_AER;
-    double m_AEPS;
-    double m_lastFrameAEPS;
-    u64 m_msSpentRunning;
-    u64 m_msSpentOverhead;
     u32 m_ticksLastStopped;
 
-    s32 m_recordEventCountsPerAEPS;
     s32 m_recordScreenshotPerAEPS;
-    s32 m_recordTimeBasedDataPerAEPS;
     s32 m_maxRecordScreenshotPerAEPS;
     s32 m_countOfScreenshotsAtThisAEPS;
     s32 m_countOfScreenshotsPerRate;
@@ -108,21 +87,11 @@ namespace MFM {
 
   private:
 
-    void Sleep(u32 seconds, u64 nanos)
-    {
-      struct timespec tspec;
-      tspec.tv_sec = seconds;
-      tspec.tv_nsec = nanos;
-
-      nanosleep(&tspec, NULL);
-    }
-
-
     void Update(OurGrid& grid)
     {
       KeyboardUpdate(grid);
       MouseUpdate(grid);
-      RunGrid(grid);
+      Super::RunGrid(grid);
     }
 
     void MouseUpdate(OurGrid& grid)
@@ -151,7 +120,6 @@ namespace MFM {
 	    m_srend.HandleClick(mloc);
 	  }
 	}
-
       }
       mouse.Flip();
     }
@@ -247,86 +215,17 @@ namespace MFM {
       }
       if(keyboard.IsDown(SDLK_COMMA))
       {
-	if(m_aepsPerFrame > 1)
-	  m_aepsPerFrame--;
+	Super::DecrementAEPSPerFrame();
       }
       if(keyboard.IsDown(SDLK_PERIOD))
       {
-	if(m_aepsPerFrame < 1000)
-	  m_aepsPerFrame++;
+	Super::IncrementAEPSPerFrame();
       }
 
       keyboard.Flip();
     }
 
-    void RunGrid(OurGrid& grid)
-    {
-      if(!paused)
-      {
-	const s32 ONE_THOUSAND = 1000;
-	const s32 ONE_MILLION = ONE_THOUSAND*ONE_THOUSAND;
 
-	grid.Unpause();  // pausing and unpausing should be overhead!
-
-	u32 startMS = SDL_GetTicks();  // So get the ticks after unpausing
-	if (m_ticksLastStopped != 0)
-	  m_msSpentOverhead += startMS - m_ticksLastStopped;
-	else
-	  m_msSpentOverhead = 0;
-
-	Sleep(m_microsSleepPerFrame/ONE_MILLION, (u64) (m_microsSleepPerFrame%ONE_MILLION)*ONE_THOUSAND);
-	m_ticksLastStopped = SDL_GetTicks(); // and before pausing
-
-	grid.Pause();
-
-	m_msSpentRunning += (m_ticksLastStopped - startMS);
-
-	m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
-	m_AER = 1000 * (m_AEPS / m_msSpentRunning);
-
-	m_overheadPercent = 100.0*m_msSpentOverhead/(m_msSpentRunning+m_msSpentOverhead);
-
-	double diff = m_AEPS - m_lastFrameAEPS;
-	double err = MIN(1.0, MAX(-1.0, m_aepsPerFrame - diff));
-
-	// Correct up to 20% of current each frame
-	m_microsSleepPerFrame = (100+20*err)*m_microsSleepPerFrame/100;
-	m_microsSleepPerFrame = MIN(100000000, MAX(1000, m_microsSleepPerFrame));
-
-	m_lastFrameAEPS = m_AEPS;
-
-	/* Update the stats renderer */
-	m_statisticsPanel.SetAEPS(m_AEPS);
-	m_statisticsPanel.SetAER(m_AER);
-	m_statisticsPanel.SetAEPSPerFrame(m_aepsPerFrame);
-	m_statisticsPanel.SetOverheadPercent(m_overheadPercent);
-
-	ExportEventCounts(grid);
-        //	ExportTimeBasedData(grid);
-      }
-    }
-
-    void ExportEventCounts(OurGrid& grid)
-    {
-      if (m_recordEventCountsPerAEPS > 0) {
-	if (m_AEPS > m_nextEventCountsAEPS) {
-
-	  const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEventCountsAEPS);
-	  FILE* fp = fopen(path, "w");
-          FileByteSink fbs(fp);
-	  grid.WriteEPSImage(fbs);
-	  fclose(fp);
-
-	  path = GetSimDirPathTemporary("teps/%010d-average.ppm", m_nextEventCountsAEPS);
-	  fp = fopen(path, "w");
-          FileByteSink fbs2(fp);
-	  grid.WriteEPSAverageImage(fbs2);
-	  fclose(fp);
-
-	  m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
-	}
-      }
-    }
 
 #if 0
     void ExportTimeBasedData(OurGrid& grid)
@@ -367,15 +266,20 @@ namespace MFM {
   public:
 
     AbstractGUIDriver(int argc, const char** argv) :
-      AbstractDriver<GC>(argc, argv),
+      Super(argc, argv),
       m_renderStats(false),
-      m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
-      m_microsSleepPerFrame(1000),
-      m_AEPS(0),
-      m_msSpentRunning(0),
       m_screenWidth(SCREEN_INITIAL_WIDTH),
       m_screenHeight(SCREEN_INITIAL_HEIGHT)
     { }
+
+    virtual void PostUpdate()
+    {
+      /* Update the stats renderer */
+      m_statisticsPanel.SetAEPS(Super::GetAEPS());
+      m_statisticsPanel.SetAER(Super::GetAER());
+      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
+      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
+    }
 
     virtual void PostOnceOnly(VArguments args)
     {
@@ -390,14 +294,14 @@ namespace MFM {
 
       m_rootPanel.SetName("Root");
       m_gridPanel.SetGridRenderer(&m_grend);
-      m_gridPanel.SetGrid(&AbstractDriver<GC>::GetGrid());
+      m_gridPanel.SetGrid(&Super::GetGrid());
 
       m_statisticsPanel.SetStatsRenderer(&m_srend);
-      m_statisticsPanel.SetGrid(&AbstractDriver<GC>::GetGrid());
-      m_statisticsPanel.SetAEPS(m_AEPS);
-      m_statisticsPanel.SetAER(m_AER);
-      m_statisticsPanel.SetAEPSPerFrame(m_aepsPerFrame);
-      m_statisticsPanel.SetOverheadPercent(m_overheadPercent);
+      m_statisticsPanel.SetGrid(&Super::GetGrid());
+      m_statisticsPanel.SetAEPS(Super::GetAEPS());
+      m_statisticsPanel.SetAER(Super::GetAER());
+      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
+      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
       m_statisticsPanel.SetVisibility(false);
 
       m_rootPanel.Insert(&m_gridPanel, NULL);
@@ -422,18 +326,11 @@ namespace MFM {
 
     }
 
-    void SetSeed(u32 seed) {
-      if (seed == 0)
-        FAIL(ILLEGAL_ARGUMENT);
-      AbstractDriver<GC>::GetGrid().SetSeed(seed);
-    }
-
     virtual void ReinitUs()
     {
       m_nextEventCountsAEPS = 0;
       m_nextScreenshotAEPS = 0;
       m_nextTimeBasedDataAEPS = 0;
-      m_lastFrameAEPS = 0;
     }
 
     virtual void PostReinit(VArguments& args)
@@ -473,13 +370,6 @@ namespace MFM {
       driver->m_screenHeight = MINIMAL_START_WINDOW_WIDTH;
     }
 
-    static void SetRecordEventCountsPerAEPSFromArgs(const char* aeps, void* driverptr)
-    {
-      AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
-
-      driver->m_recordEventCountsPerAEPS = atoi(aeps);
-    }
-
     static void SetRecordScreenshotPerAEPSFromArgs(const char* aeps, void* driverptr)
     {
       AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
@@ -501,9 +391,6 @@ namespace MFM {
 
       args.RegisterArgument("Start with the satistics view on the screen.",
 			    "--startminimal", &ConfigMinimalView, this, false);
-
-      args.RegisterArgument("Record event counts every AEPS aeps",
-			    "-e|--events", &SetRecordEventCountsPerAEPSFromArgs, this, true);
 
       args.RegisterArgument("Record screenshots every AEPS aeps",
 			    "-p|--pictures", &SetRecordScreenshotPerAEPSFromArgs, this, true);
@@ -786,7 +673,7 @@ namespace MFM {
 
     void RunHelper()
     {
-      paused = AbstractDriver<GC>::GetStartPaused();
+      paused = Super::GetStartPaused();
 
       bool running = true;
       SetScreenSize(m_screenWidth, m_screenHeight);
@@ -850,20 +737,21 @@ namespace MFM {
           lastFrame = SDL_GetTicks();
 
 
-          Update(AbstractDriver<GC>::GetGrid());
+          Update(Super::GetGrid());
 
           m_rootDrawing.Clear();
 
           m_rootPanel.Paint(m_rootDrawing);
 
           if (m_recordScreenshotPerAEPS > 0) {
-            if (!paused && m_AEPS >= m_nextScreenshotAEPS) {
+            if (!paused && Super::GetAEPS() >= m_nextScreenshotAEPS) {
 
-              const char * path = GetSimDirPathTemporary("vid/%010d.png", m_nextScreenshotAEPS);
+              const char * path = Super::GetSimDirPathTemporary("vid/%010d.png",
+								m_nextScreenshotAEPS);
 
               camera.DrawSurface(screen,path);
               {
-                const char * path = GetSimDirPathTemporary("tbd/data.dat");
+                const char * path = Super::GetSimDirPathTemporary("tbd/data.dat");
                 bool exists = true;
                 {
                   FILE* fp = fopen(path, "r");
@@ -872,8 +760,11 @@ namespace MFM {
                 }
                 FILE* fp = fopen(path, "a");
                 FileByteSink fbs(fp);
-                m_srend.WriteRegisteredCounts(fbs, !exists, AbstractDriver<GC>::GetGrid(),
-                                              m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent, true);
+                m_srend.WriteRegisteredCounts(fbs, !exists, Super::GetGrid(),
+                                              Super::GetAEPS(),
+					      Super::GetAER(),
+					      Super::GetAEPSPerFrame(),
+					      Super::GetOverheadPercent(), true);
                 fclose(fp);
               }
               // Are we accelerating and not yet up to cruising speed?
@@ -891,8 +782,8 @@ namespace MFM {
             }
           }
 
-	  if(AbstractDriver<GC>::GetHaltAfterAEPS() > 0 &&
-	     AbstractDriver<GC>::GetAEPS() > AbstractDriver<GC>::GetHaltAfterAEPS())
+	  if(Super::GetHaltAfterAEPS() > 0 &&
+	     Super::GetAEPS() > Super::GetHaltAfterAEPS())
 	  {
 	    running = false;
 	  }

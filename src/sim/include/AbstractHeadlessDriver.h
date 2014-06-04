@@ -50,13 +50,13 @@ namespace MFM
       //const s32 ONE_THOUSAND = 1000;
       //const s32 ONE_MILLION = ONE_THOUSAND * ONE_THOUSAND;
 
-      AbstractDriver<GC>::GetGrid().Unpause();
+      Super::GetGrid().Unpause();
 
       /* Sleep at a constant rate for now  */
       /* XXX See what the overhead is here */
       Sleep(1, 1000);
 
-      AbstractDriver<GC>::GetGrid().Pause();
+      Super::GetGrid().Pause();
 
       Super::SetAEPS(AbstractDriver<GC>::GetGrid().GetTotalEventsExecuted() /
 		     AbstractDriver<GC>::GetGrid().GetTotalSites());
@@ -68,13 +68,18 @@ namespace MFM
     virtual void PostReinit(VArguments& args)
     {  }
 
+    virtual void PostUpdate()
+    {
+      LOG.Debug("AEPS: %d", (u32)Super::GetAEPS());
+    }
+
     void RunHelper()
     {
       bool running = true;
 
       while(running)
       {
-	Update();
+	Super::RunGrid(Super::GetGrid());
 
 	if(Super::GetHaltAfterAEPS() > 0 && Super::GetAEPS() > Super::GetHaltAfterAEPS())
 	{
