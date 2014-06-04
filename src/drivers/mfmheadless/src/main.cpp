@@ -29,7 +29,6 @@ namespace MFM
       SPoint dregPt(30, 30);
 
       m_grid.PlaceAtom(dreg, dregPt);
-
     }
   };
 }

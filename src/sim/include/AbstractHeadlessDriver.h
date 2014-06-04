@@ -19,7 +19,7 @@ namespace MFM
 {
   /**
    * A class representing a headless driver, i.e. a driver which works
-   * only on the command line.
+   * only on the command line without input.
    */
   template<class GC>
   class AbstractHeadlessDriver : public AbstractDriver<GC>
@@ -34,53 +34,9 @@ namespace MFM
       AbstractDriver<GC>(argc, argv)
     { }
 
-  private:
-
-    void Sleep(u32 seconds, u64 nanos)
-    {
-      struct timespec tspec;
-      tspec.tv_sec = seconds;
-      tspec.tv_nsec = nanos;
-
-      nanosleep(&tspec, NULL);
-    }
-
-    /* No extra behavior */
-    virtual void PostReinit(VArguments& args)
-    {  }
-
     virtual void PostUpdate()
     {
       LOG.Debug("AEPS: %d", (u32)Super::GetAEPS());
-    }
-
-    void RunHelper()
-    {
-      bool running = true;
-
-      while(running)
-      {
-	Super::RunGrid(Super::GetGrid());
-
-	if(Super::GetHaltAfterAEPS() > 0 && Super::GetAEPS() > Super::GetHaltAfterAEPS())
-	{
-	  running = false;
-	}
-      }
-    }
-
-  public:
-    void Run()
-    {
-      unwind_protect
-      ({
-	 MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
-	 fprintf(stderr, "Failure reached top-level! Aborting\n");
-	 abort();
-       },
-       {
-	 RunHelper();
-       });
     }
   };
 }

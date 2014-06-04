@@ -121,8 +121,57 @@ namespace MFM
       return m_simDirBasePath;
     }
 
+    /**
+     * Called at the end of the Reinit() call. This is for custom
+     * initialization behavior.
+     */
+    virtual void PostReinit(VArguments& args)
+    { }
 
+    /**
+     * Establish the Garden of Eden configuration on the grid.
+     */
+    virtual void ReinitEden() = 0;
 
+    /**
+     * Register any element types needed for the run.
+     */
+    virtual void ReinitPhysics() = 0;
+
+    /**
+     * To be run at the end of a frame update.
+     */
+    virtual void PostUpdate()
+    { }
+
+    virtual void AddDriverArguments(VArguments& args)
+    { }
+
+    /**
+     * To be run during first initialization, only once. This runs
+     * after all standard argument parsing and is meant to be used to
+     * extend this behavior.
+     */
+    virtual void PostOnceOnly(VArguments& args)
+    { }
+
+    /**
+     * The main loop which runs this simulation.
+     */
+    virtual void RunHelper()
+    {
+      bool running = true;
+
+      while(running)
+      {
+	RunGrid(m_grid);
+
+	if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
+	{
+	  running = false;
+	}
+      }
+    }
 
   private:
     OurGrid m_grid;
@@ -355,6 +404,10 @@ namespace MFM
       OnceOnly(m_varguments);
     }
 
+
+    virtual void ReinitUs()
+    { }
+
     bool GetStartPaused()
     {
       return m_startPaused;
@@ -404,43 +457,6 @@ namespace MFM
       m_grid.SetSeed(seed);
     }
 
-    virtual void ReinitUs()
-    {
-    }
-
-    /**
-     * Called at the end of the Reinit() call. This is for custom
-     * initialization behavior.
-     */
-    virtual void PostReinit(VArguments& args) = 0;
-
-    /**
-     * Establish the Garden of Eden configuration on the grid.
-     */
-    virtual void ReinitEden() = 0;
-
-    /**
-     * Register any element types needed for the run.
-     */
-    virtual void ReinitPhysics() = 0;
-
-    /**
-     * To be run at the end of a frame update.
-     */
-    virtual void PostUpdate()
-    { }
-
-    virtual void AddDriverArguments(VArguments& args)
-    { }
-
-    /**
-     * To be run during first initialization, only once. This runs
-     * after all standard argument parsing and is meant to be used to
-     * extend this behavior.
-     */
-    virtual void PostOnceOnly(VArguments& args)
-    { }
-
     void Reinit()
     {
       m_lastFrameAEPS = 0;
@@ -458,6 +474,18 @@ namespace MFM
       PostReinit(m_varguments);
     }
 
+    void Run()
+    {
+      unwind_protect
+      ({
+	 MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
+	 fprintf(stderr, "Failure reached top-level! Aborting\n");
+	 abort();
+       },
+       {
+	 RunHelper();
+       });
+    }
   };
 }
 
