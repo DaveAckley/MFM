@@ -4,11 +4,15 @@
 
 
 #ifdef MFM_GUI_DRIVER
+
 #include "AbstractGUIDriver.h"
 #define DUAL_DRIVER_TYPE AbstractGUIDriver
+
 #else
+
 #include "AbstractHeadlessDriver.h"
 #define DUAL_DRIVER_TYPE AbstractHeadlessDriver
+
 #endif
 
 namespace MFM
