@@ -1,4 +1,30 @@
-#ifndef _RANDOM_H_               /* -*- mode: C++ -*- */
+/*                                              -*- mode:C++ -*-
+  Random.h PRNG interface for the Mersenne Twister
+  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+  USA
+*/
+
+/**
+  \file Random.h PRNG interface for the Mersenne Twister
+  \author David H. Ackley.
+  \date (C) 2014 All rights reserved.
+  \lgpl
+ */
+#ifndef _RANDOM_H_
 #define _RANDOM_H_
 
 #include <stdlib.h>
@@ -20,7 +46,7 @@ namespace MFM
 
     /**
      * Get 32 well-mixed pseudo-random bits
-     */ 
+     */
     u32 Create() ;
 
     /**
@@ -31,7 +57,7 @@ namespace MFM
 
     /**
      * Get a pseudo-random truth value
-     */ 
+     */
     bool CreateBool() { return OneIn(2); }
 
     /**
@@ -81,7 +107,7 @@ namespace MFM
 
   private:
     RandMT _generator;
-    
+
   };
 
   /******************************************************************************
