@@ -30,7 +30,7 @@
 
 #include "itype.h"
 //#include "SDL/SDL.h"
-//#include "SDL/SDL_ttf.h"
+#include "SDL/SDL_ttf.h"
 #include "Point.h"
 #include "Panel.h"
 #include "Drawing.h"
@@ -41,11 +41,15 @@ namespace MFM
   {
   private:
 
-    static const u32 BUTTON_BORDER_SIZE = 2;
-    static const u32 BUTTON_BORDER_COLOR = 0xffffffff;
-    static const u32 BUTTON_COLOR = 0xff600060;
+    static const u32 BUTTON_BORDER_COLOR = Drawing::GREY10;
+    static const u32 BUTTON_BACKGROUND_COLOR = Drawing::GREY20;
+    static const u32 BUTTON_COLOR = Drawing::GREY90;
+
+    void Init() ;
 
     SPoint m_dimensions;
+
+    SPoint GetTextSize(TTF_Font * font, const char * text);
 
     SPoint m_location;
 
@@ -82,9 +86,9 @@ namespace MFM
     /////////
     //// Panel Methods
 
-    virtual bool Handle(SDL_MouseButtonEvent & event)
+    virtual bool Handle(MouseButtonEvent & event)
     {
-      if (IsEnabled() && event.type == SDL_MOUSEBUTTONUP) {
+      if (IsEnabled() && event.m_event.type == SDL_MOUSEBUTTONUP) {
         OnClick();
         return true;
       }
@@ -101,8 +105,6 @@ namespace MFM
     virtual void OnClick() = 0;
 
     ~AbstractButton();
-
-    void Render(Drawing & drawing, SPoint& offset, TTF_Font* font);
 
     bool Contains(SPoint& pt);
   };

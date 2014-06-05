@@ -4,34 +4,32 @@
 
 namespace MFM
 {
+  void AbstractButton::Init()
+  {
+    this->SetForeground(BUTTON_COLOR);
+    this->SetBorder(BUTTON_BORDER_COLOR);
+    this->SetBackground(BUTTON_BACKGROUND_COLOR);
+  }
+
   AbstractButton::AbstractButton() : m_text(0), m_enabled(true)
-  { }
+  {
+    Init();
+  }
 
   AbstractButton::AbstractButton(const char* text) : m_text(text), m_enabled(true)
-  { }
+  {
+    Init();
+  }
 
   AbstractButton::~AbstractButton()
   {}
 
-  void AbstractButton::Render(Drawing & drawing, SPoint& offset, TTF_Font* font)
+  SPoint AbstractButton::GetTextSize(TTF_Font * font, const char * text)
   {
-    drawing.SetForeground(BUTTON_BORDER_COLOR);
-
-    SPoint loc = m_location + offset;
-    UPoint floc = MakeUnsigned(loc);
-    floc.SetX(floc.GetX() + 20);
-    drawing.FillRect(loc.GetX() - BUTTON_BORDER_SIZE,
-                     loc.GetY() - BUTTON_BORDER_SIZE,
-                     m_dimensions.GetX() + 2 * BUTTON_BORDER_SIZE,
-                     m_dimensions.GetY() + 2 * BUTTON_BORDER_SIZE);
-    drawing.FillRect(loc.GetX(),
-                     loc.GetY(),
-                     m_dimensions.GetX(),
-                     m_dimensions.GetY(),
-                     BUTTON_COLOR);
-
-    drawing.SetFont(font);
-    drawing.BlitText(m_text, floc, MakeUnsigned(m_dimensions));
+    s32 width, height;
+    if (!TTF_SizeText(font, text, &width, &height))
+      return SPoint(width,height);
+    return SPoint(0,0);
   }
 
   void AbstractButton::PaintComponent(Drawing & drawing)
@@ -41,7 +39,11 @@ namespace MFM
     drawing.SetBackground(m_enabled? m_bgColor : Drawing::InterpolateColors(m_fgColor,m_bgColor,40));
     drawing.Clear();
 
-    drawing.BlitText(m_text, UPoint(0,0), GetDimensions());
+    SPoint dims = MakeSigned(GetDimensions());
+    SPoint textSize = GetTextSize(drawing.GetFont(), m_text);
+    SPoint renderAt = max((dims-textSize)/2, SPoint(0,0));
+
+    drawing.BlitText(m_text, MakeUnsigned(renderAt), GetDimensions());
   }
 
   bool AbstractButton::Contains(SPoint& pt)
