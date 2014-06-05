@@ -1,5 +1,4 @@
 /* -*- C++ -*- */
-
 #include "Dirs.h"
 #include "Grid.h"
 
@@ -413,4 +412,3 @@ namespace MFM {
   }
 
 } /* namespace MFM */
-
