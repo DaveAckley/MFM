@@ -51,13 +51,15 @@ namespace MFM {
 
     void Release(u32 key);
 
-    bool ShiftHeld();
+    bool ShiftHeld() const;
 
-    bool CtrlHeld();
+    bool CtrlHeld() const;
 
-    bool IsDown(u32 key);
+    bool AltHeld() const;
 
-    bool IsUp(u32 key);
+    bool IsDown(u32 key) const;
+
+    bool IsUp(u32 key) const;
 
     bool SemiAuto(u32 key);
 

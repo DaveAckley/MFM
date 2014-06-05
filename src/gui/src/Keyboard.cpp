@@ -24,24 +24,30 @@ namespace MFM {
     m_current.erase(key);
   }
 
-  bool Keyboard::ShiftHeld()
+  bool Keyboard::AltHeld() const
+  {
+    return m_current.count(SDLK_RALT) > 0 ||
+      m_current.count(SDLK_LALT) > 0;
+  }
+
+  bool Keyboard::ShiftHeld() const
   {
     return m_current.count(SDLK_RSHIFT) > 0 ||
       m_current.count(SDLK_LSHIFT) > 0;
   }
 
-  bool Keyboard::CtrlHeld()
+  bool Keyboard::CtrlHeld() const
   {
     return m_current.count(SDLK_LCTRL) > 0 ||
       m_current.count(SDLK_RCTRL) > 0;
   }
 
-  bool Keyboard::IsDown(u32 key)
+  bool Keyboard::IsDown(u32 key) const
   {
     return m_current.count(key) > 0;
   }
 
-  bool Keyboard::IsUp(u32 key)
+  bool Keyboard::IsUp(u32 key) const
   {
     return m_current.count(key) == 0;
   }
