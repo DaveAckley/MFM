@@ -1,11 +1,11 @@
 #ifndef EVENTWINDOW_TEST_H      /* -*- C++ -*- */
 #define EVENTWINDOW_TEST_H
 
-#include "test_common.h"
+#include "Test_Common.h"
 
 namespace MFM {
 
-class EventWindowTest
+class EventWindow_Test
 {
 
 public:
@@ -16,4 +16,3 @@ public:
 };
 } /* namespace MFM */
 #endif /*EVENTWINDOW_TEST_H*/
-

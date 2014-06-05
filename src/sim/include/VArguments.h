@@ -1,4 +1,30 @@
-/* -*- C++ -*- */
+/*                                              -*- mode:C++ -*-
+  VArguments.h Command Line Argument registry
+  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+  USA
+*/
+
+/**
+  \file VArguments.h Command Line Argument registry
+  \author Trent R. Small.
+  \author David H. Ackley.
+  \date (C) 2014 All rights reserved.
+  \lgpl
+ */
 #ifndef VARGUMENTS_H
 #define VARGUMENTS_H
 
@@ -23,6 +49,10 @@ namespace MFM
   {
   private:
 
+    /**
+     * A struct representing a single registry of a command line
+     * argument, meant to be used internally by VArguments.
+     */
     struct VArg
     {
 
@@ -75,6 +105,9 @@ namespace MFM
 
     };
 
+    /**
+     * The VArg arguments which are currently registered.
+     */
     VArg m_argDescriptors[VARGUMENTS_MAX_SIZE];
 
     /**
@@ -161,6 +194,16 @@ namespace MFM
      */
     u32 GetInt(const char* argName) const;
 
+    /**
+     * Checks to see if a particular argument was encountered on the
+     * command line during ProcessArguments .
+     *
+     * @param argName The name of the argument being checked for
+     *                command line membership.
+     *
+     * @returns \c true if this argument was encountered on the
+     *          command line, else \c false.
+     */
     bool Appeared(const char* argName) const;
 
     /**

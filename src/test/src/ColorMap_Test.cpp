@@ -13,12 +13,12 @@ namespace MFM {
     }
   }
 
-  void ColorMapTest::Test_RunTests() {
+  void ColorMap_Test::Test_RunTests() {
     Test_colorMapSelected();
     Test_colorMapInterpolated();
   }
 
-  void ColorMapTest::Test_colorMapSelected()
+  void ColorMap_Test::Test_colorMapSelected()
   {
     for (u32 i = 0; i < 5; ++i) {
       u32 frac = i*255/4;  // five even steps from black to white..
@@ -35,10 +35,10 @@ namespace MFM {
         assert(ColorMap_DBG5_BKWH::THE_INSTANCE.GetSelectedColor(i*10+2,0,4*10,0xffff0000)==color);
       }
     }
-    
+
   }
 
-  void ColorMapTest::Test_colorMapInterpolated()
+  void ColorMap_Test::Test_colorMapInterpolated()
   {
     // Half scale should be 50% grey on 5 or 6 scales, forward or backwards
     assertColorsClose(ColorMap_DBG5_BKWH::THE_INSTANCE.GetInterpolatedColor(0.5,0,1,0xffff0000),0xff808080);
@@ -85,4 +85,3 @@ namespace MFM {
   }
 
 } /* namespace MFM */
-

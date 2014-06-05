@@ -8,25 +8,25 @@
 namespace MFM {
 
 
-void P1AtomTest::Test_p1atomState()
+void P1Atom_Test::Test_p1atomState()
 {
   TestAtom atom(32,0,0,0);
 
   assert(atom.GetType() == 32);
-  
+
   atom = TestAtom(15,0,0,0);
-  
+
   assert(atom.GetType() == 15);
 }
 
-void P1AtomTest::Test_p1atomLBCount()
+void P1Atom_Test::Test_p1atomLBCount()
 {
   TestAtom atom(1,1,0,0);
 
   assert(atom.GetLongBondCount() == 1);
 }
 
-void P1AtomTest::Test_p1atomSBCount()
+void P1Atom_Test::Test_p1atomSBCount()
 {
   TestAtom atom(1,0,2,0);
   SPoint offset(1, -1);
@@ -37,7 +37,7 @@ void P1AtomTest::Test_p1atomSBCount()
   assert(atom.GetShortBondCount() == 2);
 }
 
-void P1AtomTest::Test_p1atomReadBody()
+void P1Atom_Test::Test_p1atomReadBody()
 {
   /*
   u32 blocks[2];
@@ -45,7 +45,7 @@ void P1AtomTest::Test_p1atomReadBody()
 
   SPoint points[8];
   u8 pvals[8];
-  
+
   points[0].Set(0, 1);
   points[1].Set(0, 2);
   points[2].Set(-2, 0);
@@ -74,7 +74,7 @@ void P1AtomTest::Test_p1atomReadBody()
   }
 
   atom.ReadVariableBodyInto(blocks);
-  
+
   BitVector<64> bf(blocks);
 
   //bf.Remove(0, 16);
@@ -87,11 +87,11 @@ void P1AtomTest::Test_p1atomReadBody()
   */
 }
 
-void P1AtomTest::Test_p1atomAddLB()
+void P1Atom_Test::Test_p1atomAddLB()
 {
   SPoint lbonds[4];
   TestAtom atom(1,4,0,0);
-  
+
   lbonds[0].Set(0, 1);
   lbonds[1].Set(0, 2);
   lbonds[2].Set(0, 3);
@@ -109,7 +109,7 @@ void P1AtomTest::Test_p1atomAddLB()
 }
 
 // XXX DEPRECATED:  # of short or long bonds should not change when type is same!
-void P1AtomTest::Test_p1atomAddSB()
+void P1Atom_Test::Test_p1atomAddSB()
 {
   SPoint sbond(1, 1);
   SPoint out;
@@ -128,7 +128,7 @@ void P1AtomTest::Test_p1atomAddSB()
 
 #if 0
 // XXX DEPRECATED:  # of short or long bonds should not change when type is same!
-void P1AtomTest::Test_p1atomRemoveLB()
+void P1Atom_Test::Test_p1atomRemoveLB()
 {
   SPoint lbond1(2, 2);
   SPoint lbond2(3, 1);
@@ -143,17 +143,17 @@ void P1AtomTest::Test_p1atomRemoveLB()
 
   u32 bits[2];
   atom.ReadVariableBodyInto(bits);
-  
+
   BitVector<64> bf(bits);
 
   bf.Remove(0, 16);
-  
+
   assert(bf.Read(8, 8) == 0);
   assert(bf.Read(16, 32) == 0);
-  
+
 }
 
-void P1AtomTest::Test_p1atomRemoveSB()
+void P1Atom_Test::Test_p1atomRemoveSB()
 {
   SPoint sb1(0, 2);
   SPoint sb2(1, -1);
@@ -200,4 +200,3 @@ void P1AtomTest::Test_p1atomRemoveSB()
 #endif
 
 } /* namespace MFM */
-

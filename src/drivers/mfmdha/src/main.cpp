@@ -19,12 +19,12 @@ namespace MFM {
 
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
 
-  struct MFMSimQBarDemo : public AbstractDriver<OurGridConfig>
+  struct MFMSimQBarDemo : public AbstractGUIDriver<OurGridConfig>
   {
     int m_whichSim;
 
-    MFMSimQBarDemo(DriverArguments & args, int whichSim)
-      : AbstractDriver(args), m_whichSim(whichSim)
+    MFMSimQBarDemo(u32 argc, const char** argv, int whichSim)
+      : AbstractGUIDriver(argc, argv), m_whichSim(whichSim)
     {
     }
 
@@ -112,12 +112,12 @@ namespace MFM {
     }
   };
 
-  struct MFMSimSBarDemo : public AbstractDriver<OurGridConfig>
+  struct MFMSimSBarDemo : public AbstractGUIDriver<OurGridConfig>
   {
     typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
 
-    MFMSimSBarDemo(DriverArguments & args)
-      : AbstractDriver(args)
+    MFMSimSBarDemo(u32 argc, const char** argv)
+      : AbstractGUIDriver(argc, argv)
     {
     }
 
@@ -196,10 +196,8 @@ namespace MFM {
   };
 } /* namespace MFM */
 
-int main(int argc, char** argv)
+int main(int argc, const char** argv)
 {
-  MFM::DriverArguments args(argc,argv);
-
   int whichSim = 0;
   if (argc > 0)
     whichSim = atoi(argv[0]);
@@ -207,13 +205,13 @@ int main(int argc, char** argv)
   switch (whichSim) {
   default:
   case 0: {
-    MFM::MFMSimQBarDemo sim(args,whichSim);
+    MFM::MFMSimQBarDemo sim((MFM::u32)argc, argv, whichSim);
     sim.Reinit();
     sim.Run();
     break;
   }
   case 2: {
-    MFM::MFMSimSBarDemo sim(args);
+    MFM::MFMSimSBarDemo sim((MFM::u32)argc, argv);
     sim.Reinit();
     sim.Run();
     break;

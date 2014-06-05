@@ -7,19 +7,18 @@
 
 namespace MFM {
 
-void Tile_Test::Test_tilePlaceAtom()
-{
-  TestTile tile;
-  tile.RegisterElement(Element_Res<TestCoreConfig>::THE_INSTANCE);
+  void Tile_Test::Test_tilePlaceAtom()
+  {
+    TestTile tile;
+    tile.RegisterElement(Element_Res<TestCoreConfig>::THE_INSTANCE);
 
-  TestAtom atom(Element_Res<TestCoreConfig>::THE_INSTANCE.GetDefaultAtom());
-  SPoint loc(10, 10);
+    TestAtom atom(Element_Res<TestCoreConfig>::THE_INSTANCE.GetDefaultAtom());
+    SPoint loc(10, 10);
 
-  tile.PlaceAtom(atom, loc);
+    tile.PlaceAtom(atom, loc);
 
-  TestAtom other = *tile.GetAtom(loc);
+    TestAtom other = *tile.GetAtom(loc);
 
-  assert(other.GetType() == atom.GetType());
-}
+    assert(other.GetType() == atom.GetType());
+  }
 } /* namespace MFM */
-

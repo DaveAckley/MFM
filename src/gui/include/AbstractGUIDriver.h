@@ -1,19 +1,42 @@
-#ifndef ABSTRACTDRIVER_H   /* -*- C++ -*- */
-#define ABSTRACTDRIVER_H
+/*                                              -*- mode:C++ -*-
+  AbstractGUIDriver.h Base class for all GUI-based MFM drivers
+  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+  USA
+*/
+
+/**
+  \file AbstractGUIDriver.h Base class for all GUI-based MFM drivers
+  \author Trent R. Small.
+  \author David H. Ackley.
+  \date (C) 2014 All rights reserved.
+  \lgpl
+ */
+#ifndef ABSTRACTGUIDRIVER_H
+#define ABSTRACTGUIDRIVER_H
 
 #include <sys/stat.h>  /* for mkdir */
 #include <sys/types.h> /* for mkdir */
 #include <errno.h>     /* for errno */
 #include "Utils.h"     /* for GetDateTimeNow */
 #include "Logger.h"
-#include "FileByteSink.h"
 #include "AbstractButton.h"
-#include "itype.h"
 #include "Tile.h"
-#include "Grid.h"
 #include "GridRenderer.h"
 #include "StatsRenderer.h"
-#include "ElementTable.h"
 #include "Element_Empty.h" /* Need common elements */
 #include "Element_Dreg.h"
 #include "Element_Res.h"
@@ -22,15 +45,14 @@
 #include "Mouse.h"
 #include "Keyboard.h"
 #include "Camera.h"
-#include "DriverArguments.h"
+#include "AbstractDriver.h"
+#include "VArguments.h"
 #include "SDL/SDL.h"
 #include "SDL/SDL_ttf.h"
 
 namespace MFM {
 
 #define FRAMES_PER_SECOND 100.0
-
-#define INITIAL_AEPS_PER_FRAME 1
 
 #define CAMERA_SLOW_SPEED 2
 #define CAMERA_FAST_SPEED 50
@@ -52,58 +74,24 @@ namespace MFM {
 #define MIN_PATH_RESERVED_LENGTH 100
 
   template<class GC>
-  class AbstractDriver
+  class AbstractGUIDriver : public AbstractDriver<GC>
   {
-  public:
-    // Extract short type names
-    typedef typename GC::CORE_CONFIG CC;
-    typedef typename CC::PARAM_CONFIG P;
-    typedef typename CC::ATOM_TYPE T;
-    enum { W = GC::GRID_WIDTH};
-    enum { H = GC::GRID_HEIGHT};
-    enum { R = P::EVENT_WINDOW_RADIUS};
+  private:
+    typedef AbstractDriver<GC> Super;
 
-    static const u32 EVENT_WINDOW_RADIUS = R;
-    static const u32 GRID_WIDTH = W;
-    static const u32 GRID_HEIGHT = H;
-
-    typedef Grid<GC> OurGrid;
-    typedef ElementTable<CC> OurElementTable;
+  protected:
+    typedef typename Super::OurGrid OurGrid;
+    typedef typename Super::CC CC;
 
   private:
-    char m_simDirBasePath[MAX_PATH_LENGTH];
-    u32 m_simDirBasePathLength;
 
     Fonts m_fonts;
 
-    char * GetSimDirPathTemporary(const char * format, ...) {
-      va_list ap;
-      va_start(ap,format);
-      vsnprintf(m_simDirBasePath+m_simDirBasePathLength, MAX_PATH_LENGTH-1, format, ap);
-      return m_simDirBasePath;
-    }
-
-    OurGrid mainGrid;
-
     bool paused;
-
-    bool renderStats;
-
-    bool m_startPaused;
-    u32 m_haltAfterAEPS;
-    u32 m_aepsPerFrame;
-    s32 m_microsSleepPerFrame;
-    double m_overheadPercent;
-    double m_AER;
-    double m_AEPS;
-    double m_lastFrameAEPS;
-    u64 m_msSpentRunning;
-    u64 m_msSpentOverhead;
+    bool m_renderStats;
     u32 m_ticksLastStopped;
 
-    s32 m_recordEventCountsPerAEPS;
     s32 m_recordScreenshotPerAEPS;
-    s32 m_recordTimeBasedDataPerAEPS;
     s32 m_maxRecordScreenshotPerAEPS;
     s32 m_countOfScreenshotsAtThisAEPS;
     s32 m_countOfScreenshotsPerRate;
@@ -125,24 +113,68 @@ namespace MFM {
     GridRenderer m_grend;
     StatsRenderer<GC> m_srend;
 
-  private:
-    DriverArguments* m_driverArguments;
-
-    void Sleep(u32 seconds, u64 nanos)
+    virtual void PostUpdate()
     {
-      struct timespec tspec;
-      tspec.tv_sec = seconds;
-      tspec.tv_nsec = nanos;
-
-      nanosleep(&tspec, NULL);
+      /* Update the stats renderer */
+      m_statisticsPanel.SetAEPS(Super::GetAEPS());
+      m_statisticsPanel.SetAER(Super::GetAER());
+      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
+      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
     }
 
+    virtual void PostOnceOnly(VArguments& args)
+    {
+      if (m_countOfScreenshotsPerRate > 0) {
+        m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
+        m_recordScreenshotPerAEPS = 1;
+        m_countOfScreenshotsAtThisAEPS = 0;
+      }
+
+      SDL_Init(SDL_INIT_VIDEO);
+      m_fonts.Init();
+
+      m_rootPanel.SetName("Root");
+      m_gridPanel.SetGridRenderer(&m_grend);
+      m_gridPanel.SetGrid(&Super::GetGrid());
+
+      m_statisticsPanel.SetStatsRenderer(&m_srend);
+      m_statisticsPanel.SetGrid(&Super::GetGrid());
+      m_statisticsPanel.SetAEPS(Super::GetAEPS());
+      m_statisticsPanel.SetAER(Super::GetAER());
+      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
+      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
+      m_statisticsPanel.SetVisibility(false);
+
+      m_rootPanel.Insert(&m_gridPanel, NULL);
+      m_gridPanel.Insert(&m_statisticsPanel, NULL);
+      m_statisticsPanel.Insert(&m_buttonPanel, NULL);
+      m_buttonPanel.SetVisibility(true);
+      /*
+      m_rootPanel.Insert(&m_panel1,0);
+      m_rootPanel.Insert(&m_panel2,&m_panel1);
+      m_panel1.Insert(&m_panel3,0);
+      m_rootPanel.Insert(&m_panel4,0);
+      m_panel5.SetControlled(&m_panel4);
+      m_rootPanel.Insert(&m_panel5,0);
+      */
+      m_rootPanel.Print(STDOUT);
+
+      m_srend.OnceOnly(m_fonts);
+
+      SDL_WM_SetCaption("Movable Feast Machine Simulator", NULL);
+
+      m_ticksLastStopped = 0;
+
+    }
+
+
+  private:
 
     void Update(OurGrid& grid)
     {
       KeyboardUpdate(grid);
       MouseUpdate(grid);
-      RunGrid(grid);
+      Super::RunGrid(grid);
     }
 
     void MouseUpdate(OurGrid& grid)
@@ -171,7 +203,6 @@ namespace MFM {
 	    m_srend.HandleClick(mloc);
 	  }
 	}
-
       }
       mouse.Flip();
     }
@@ -179,7 +210,7 @@ namespace MFM {
     inline void ToggleStatsView()
     {
       m_statisticsPanel.ToggleVisibility();
-      m_grend.SetDimensions(Point<u32>(m_screenWidth - (renderStats ? STATS_WINDOW_WIDTH : 0)
+      m_grend.SetDimensions(Point<u32>(m_screenWidth - (m_renderStats ? STATS_WINDOW_WIDTH : 0)
 				       , m_screenHeight));
     }
 
@@ -267,86 +298,17 @@ namespace MFM {
       }
       if(keyboard.IsDown(SDLK_COMMA))
       {
-	if(m_aepsPerFrame > 1)
-	  m_aepsPerFrame--;
+	Super::DecrementAEPSPerFrame();
       }
       if(keyboard.IsDown(SDLK_PERIOD))
       {
-	if(m_aepsPerFrame < 1000)
-	  m_aepsPerFrame++;
+	Super::IncrementAEPSPerFrame();
       }
 
       keyboard.Flip();
     }
 
-    void RunGrid(OurGrid& grid)
-    {
-      if(!paused)
-      {
-	const s32 ONE_THOUSAND = 1000;
-	const s32 ONE_MILLION = ONE_THOUSAND*ONE_THOUSAND;
 
-	grid.Unpause();  // pausing and unpausing should be overhead!
-
-	u32 startMS = SDL_GetTicks();  // So get the ticks after unpausing
-	if (m_ticksLastStopped != 0)
-	  m_msSpentOverhead += startMS - m_ticksLastStopped;
-	else
-	  m_msSpentOverhead = 0;
-
-	Sleep(m_microsSleepPerFrame/ONE_MILLION, (u64) (m_microsSleepPerFrame%ONE_MILLION)*ONE_THOUSAND);
-	m_ticksLastStopped = SDL_GetTicks(); // and before pausing
-
-	grid.Pause();
-
-	m_msSpentRunning += (m_ticksLastStopped - startMS);
-
-	m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
-	m_AER = 1000 * (m_AEPS / m_msSpentRunning);
-
-	m_overheadPercent = 100.0*m_msSpentOverhead/(m_msSpentRunning+m_msSpentOverhead);
-
-	double diff = m_AEPS - m_lastFrameAEPS;
-	double err = MIN(1.0, MAX(-1.0, m_aepsPerFrame - diff));
-
-	// Correct up to 20% of current each frame
-	m_microsSleepPerFrame = (100+20*err)*m_microsSleepPerFrame/100;
-	m_microsSleepPerFrame = MIN(100000000, MAX(1000, m_microsSleepPerFrame));
-
-	m_lastFrameAEPS = m_AEPS;
-
-	/* Update the stats renderer */
-	m_statisticsPanel.SetAEPS(m_AEPS);
-	m_statisticsPanel.SetAER(m_AER);
-	m_statisticsPanel.SetAEPSPerFrame(m_aepsPerFrame);
-	m_statisticsPanel.SetOverheadPercent(m_overheadPercent);
-
-	ExportEventCounts(grid);
-        //	ExportTimeBasedData(grid);
-      }
-    }
-
-    void ExportEventCounts(OurGrid& grid)
-    {
-      if (m_recordEventCountsPerAEPS > 0) {
-	if (m_AEPS > m_nextEventCountsAEPS) {
-
-	  const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEventCountsAEPS);
-	  FILE* fp = fopen(path, "w");
-          FileByteSink fbs(fp);
-	  grid.WriteEPSImage(fbs);
-	  fclose(fp);
-
-	  path = GetSimDirPathTemporary("teps/%010d-average.ppm", m_nextEventCountsAEPS);
-	  fp = fopen(path, "w");
-          FileByteSink fbs2(fp);
-	  grid.WriteEPSAverageImage(fbs2);
-	  fclose(fp);
-
-	  m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
-	}
-      }
-    }
 
 #if 0
     void ExportTimeBasedData(OurGrid& grid)
@@ -362,7 +324,7 @@ namespace MFM {
 	  FILE* fp = fopen(path, "a");
 
 	  u64 consumed = 0, totalError = 0;
-          for (typename OurGrid::iterator_type i = grid.begin(); i != grid.end(); ++i) {
+          for (OurGrid::iterator_type i = grid.begin(); i != grid.end(); ++i) {
             Tile<CC> * t = *i;
             consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsConsumed(*t);
             totalError += Element_Consumer<CC>::THE_INSTANCE.GetAndResetBucketError(*t);
@@ -386,191 +348,91 @@ namespace MFM {
 
   public:
 
-    AbstractDriver(DriverArguments & args)
+    AbstractGUIDriver(int argc, const char** argv) :
+      Super(argc, argv),
+      m_renderStats(false),
+      m_screenWidth(SCREEN_INITIAL_WIDTH),
+      m_screenHeight(SCREEN_INITIAL_HEIGHT)
     {
-      OnceOnly(args);
-
-      /* Let's save these for later */
-      m_driverArguments = &args;
+      /* Needs to be called from here because of the virtual
+	 override of PostOnceOnly. */
+      Super::OnceOnly();
     }
 
-    void OnceOnly(DriverArguments & args)
+    virtual void ReinitUs()
     {
-      LOG.SetLevel(args.GetInitialLogLevel());
-
-      const char * dirPath = args.GetDataDirPath();
-      if (dirPath == 0) dirPath = "/tmp";
-
-      /* Try to make the main dir */
-      if (mkdir(dirPath,0777) != 0) {
-        /* If it died because it's already there we'll let it ride.. */
-        if (errno != EEXIST)
-          args.Die("Couldn't make directory '%s': %s",dirPath,strerror(errno));
-      }
-
-      m_startPaused = args.GetStartPaused();
-      m_haltAfterAEPS = args.GetHaltAfterAEPS();
-
-      /* Sim directory = now */
-      u64 startTime = Utils::GetDateTimeNow();
-
-      /* Get the master simulation data directory */
-      snprintf(m_simDirBasePath, MAX_PATH_LENGTH-1,
-	       "%s/%ld/", dirPath, startTime);
-
-      m_simDirBasePathLength = strlen(m_simDirBasePath);
-      if (m_simDirBasePathLength >= MAX_PATH_LENGTH-MIN_PATH_RESERVED_LENGTH)
-        args.Die("Path name too long '%s'",dirPath);
-
-      /* Make the std subdirs under it */
-      const char * (subs[]) = { "", "vid", "eps", "tbd", "teps" };
-      for (u32 i = 0; i < sizeof(subs)/sizeof(subs[0]); ++i) {
-        const char * path = GetSimDirPathTemporary("%s", subs[i]);
-        if (mkdir(path, 0777) != 0)
-          args.Die("Couldn't make simulation sub directory '%s': %s",path,strerror(errno));
-      }
-
-      /* Initialize tbd.txt */
-      const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
-      FILE* fp = fopen(path, "w");
-      fprintf(fp, "# AEPS activesites empty dreg res wall sort-hits sort-misses sort-total sort-hit-pctg\n");
-      fclose(fp);
-
-      m_screenWidth = SCREEN_INITIAL_WIDTH;
-      m_screenHeight = SCREEN_INITIAL_HEIGHT;
-
-      m_aepsPerFrame = INITIAL_AEPS_PER_FRAME;
-      m_AEPS = 0;
-      m_msSpentRunning = 0;
-      m_microsSleepPerFrame = 1000;
-
-      m_recordEventCountsPerAEPS = args.GetRecordEventCountsPerAEPS();
-      m_recordScreenshotPerAEPS = args.GetRecordScreenshotPerAEPS();
-      m_countOfScreenshotsPerRate = args.GetCountOfScreenshotsPerRate();
-      m_recordTimeBasedDataPerAEPS = args.GetRecordTimeBasedDataPerAEPS();
-      if (m_countOfScreenshotsPerRate > 0) {
-        m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
-        m_recordScreenshotPerAEPS = 1;
-        m_countOfScreenshotsAtThisAEPS = 0;
-      }
-
-      u32 seed = args.GetSeed();
-      if (seed==0) seed = time(0);
-      SetSeed(seed);
-
-      SDL_Init(SDL_INIT_VIDEO);
-      m_fonts.Init();
-
-      m_rootPanel.SetName("Root");
-      m_gridPanel.SetGridRenderer(&m_grend);
-      m_gridPanel.SetGrid(&mainGrid);
-
-      m_statisticsPanel.SetStatsRenderer(&m_srend);
-      m_statisticsPanel.SetGrid(&mainGrid);
-      m_statisticsPanel.SetAEPS(m_AEPS);
-      m_statisticsPanel.SetAER(m_AER);
-      m_statisticsPanel.SetAEPSPerFrame(m_aepsPerFrame);
-      m_statisticsPanel.SetOverheadPercent(m_overheadPercent);
-      m_statisticsPanel.SetVisibility(false);
-
-      m_rootPanel.Insert(&m_gridPanel, NULL);
-      m_gridPanel.Insert(&m_statisticsPanel, NULL);
-      m_statisticsPanel.Insert(&m_buttonPanel, NULL);
-      m_buttonPanel.SetVisibility(true);
-      /*
-      m_rootPanel.Insert(&m_panel1,0);
-      m_rootPanel.Insert(&m_panel2,&m_panel1);
-      m_panel1.Insert(&m_panel3,0);
-      m_rootPanel.Insert(&m_panel4,0);
-      m_panel5.SetControlled(&m_panel4);
-      m_rootPanel.Insert(&m_panel5,0);
-      */
-      m_rootPanel.Print(STDOUT);
-
-      m_srend.OnceOnly(m_fonts);
-
-      SDL_WM_SetCaption("Movable Feast Machine Simulator", NULL);
-
-      m_ticksLastStopped = 0;
-    }
-
-    void SetSeed(u32 seed) {
-      if (seed == 0)
-        FAIL(ILLEGAL_ARGUMENT);
-      mainGrid.SetSeed(seed);
-    }
-
-    void ReinitUs() {
       m_nextEventCountsAEPS = 0;
       m_nextScreenshotAEPS = 0;
       m_nextTimeBasedDataAEPS = 0;
-      m_lastFrameAEPS = 0;
     }
 
-    void Reinit() {
-      ReinitUs();
-
-      mainGrid.Reinit();
-
-      mainGrid.Needed(Element_Empty<CC>::THE_INSTANCE);
-
-      ReinitPhysics();
-
-      ReinitEden();
-
+    virtual void PostReinit(VArguments& args)
+    {
       HandleResize();
 
-      ReapplyPostArguments(m_driverArguments);
+      m_renderStats = false;
     }
 
-    void ReapplyPostArguments(DriverArguments* argptr)
-    {
-      DriverArguments& args = *argptr;
-
-      /* Initially disable all tiles given in arguments */
-      for(u32 i = 0; i < args.GetDisabledTileCount(); i++)
-      {
-	SPoint& pt =  args.GetDisabledTiles()[i];
-	mainGrid.SetTileToExecuteOnly(pt, false);
-      }
-
-      renderStats = false;
-      if(args.GetStartWithoutGridView())
-      {
-	m_screenWidth = STATS_START_WINDOW_WIDTH;
-	m_screenHeight = STATS_START_WINDOW_HEIGHT;
-	ToggleStatsView();
-	m_srend.SetDisplayAER(!m_srend.GetDisplayAER());
-      }
-      else if(args.GetStartMinimal())
-      {
-	m_screenWidth = MINIMAL_START_WINDOW_HEIGHT;
-	m_screenHeight = MINIMAL_START_WINDOW_WIDTH;
-      }
-
-      m_aepsPerFrame = args.GetAEPSPerFrame();
-    }
-
-    /**
-     * Register any element types needed for the run
-     */
-    virtual void ReinitPhysics() = 0;
-
-    /**
-     * Establish the Garden of Eden configuration on the grid
-     */
-    virtual void ReinitEden() = 0;
-
-    virtual void HandleResize() = 0;
-
-    OurGrid & GetGrid()
-    {
-      return mainGrid;
-    }
+    virtual void HandleResize()
+    { }
 
     void ToggleTileView()
     {
       m_grend.ToggleMemDraw();
+    }
+
+    /*********************************
+     * GUI SPECIFIC DRIVER ARGUMENTS *
+     *********************************/
+
+    static void ConfigStatsOnlyView(const char* not_used, void* driverptr)
+    {
+      AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
+
+
+      driver->m_screenWidth = STATS_START_WINDOW_WIDTH;
+      driver->m_screenHeight = STATS_START_WINDOW_HEIGHT;
+      driver->ToggleStatsView();
+      driver->m_srend.SetDisplayAER(!driver->m_srend.GetDisplayAER());
+    }
+
+    static void ConfigMinimalView(const char* not_used, void* driverptr)
+    {
+      AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
+
+      driver->m_screenWidth = MINIMAL_START_WINDOW_HEIGHT;
+      driver->m_screenHeight = MINIMAL_START_WINDOW_WIDTH;
+    }
+
+    static void SetRecordScreenshotPerAEPSFromArgs(const char* aeps, void* driverptr)
+    {
+      AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
+
+      driver->m_recordScreenshotPerAEPS = atoi(aeps);
+    }
+
+    static void SetPicturesPerRateFromArgs(const char* aeps, void* driverptr)
+    {
+      AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
+
+      driver->m_countOfScreenshotsPerRate = atoi(aeps);
+    }
+
+    virtual void AddDriverArguments(VArguments& args)
+    {
+      args.RegisterArgument("Start with the satistics view on the screen.",
+			    "--startwithoutgrid", &ConfigStatsOnlyView, this, false);
+
+      args.RegisterArgument("Start with the satistics view on the screen.",
+			    "--startminimal", &ConfigMinimalView, this, false);
+
+      args.RegisterArgument("Record screenshots every AEPS aeps",
+			    "-p|--pictures", &SetRecordScreenshotPerAEPSFromArgs, this, true);
+
+      args.RegisterArgument("Take COUNT shots per speed from 1 up to -p value",
+			    "--picturesPerRate",
+			    &SetPicturesPerRateFromArgs, this, true);
+
     }
 
     //////////////////
@@ -589,10 +451,10 @@ namespace MFM {
     class GridPanel : public Panel
     {
       GridRenderer* m_grend;
-      OurGrid* m_mainGrid;
+      OurGrid* m_grid;
 
     public:
-      GridPanel()
+      GridPanel() : m_grend(NULL), m_grid(NULL)
       {
 	SetName("Grid Panel");
 	SetDimensions(SCREEN_INITIAL_WIDTH,
@@ -605,9 +467,9 @@ namespace MFM {
 	m_mainGrid = NULL;
       }
 
-      void SetGrid(OurGrid* mainGrid)
+      void SetGrid(OurGrid* grid)
       {
-	m_mainGrid = mainGrid;
+	m_grid = grid;
       }
 
       void SetGridRenderer(GridRenderer* grend)
@@ -620,7 +482,7 @@ namespace MFM {
       {
 	this->Panel::PaintComponent(drawing);
 
-	m_grend->RenderGrid(drawing, *m_mainGrid);
+	m_grend->RenderGrid(drawing, *m_grid);
       }
 
       virtual bool Handle(SDL_MouseButtonEvent& event)
@@ -631,7 +493,7 @@ namespace MFM {
 	  pt.Set(event.x - pt.GetX(),
 		 event.y - pt.GetY());
 
-	  m_grend->SelectTile(*m_mainGrid,
+	  m_grend->SelectTile(*m_grid,
 			      pt);
 	}
 	return true;
@@ -641,7 +503,7 @@ namespace MFM {
     class StatisticsPanel : public Panel
     {
       StatsRenderer<GC>* m_srend;
-      OurGrid* m_mainGrid;
+      OurGrid* m_grid;
       double m_AEPS;
       double m_AER;
       double m_overheadPercent;
@@ -665,9 +527,9 @@ namespace MFM {
 	m_srend = srend;
       }
 
-      void SetGrid(OurGrid* mainGrid)
+      void SetGrid(OurGrid* grid)
       {
-	m_mainGrid = mainGrid;
+	m_grid = grid;
       }
 
       void SetAEPS(double aeps)
@@ -694,7 +556,7 @@ namespace MFM {
       virtual void PaintComponent(Drawing& drawing)
       {
 	this->Panel::PaintComponent(drawing);
-	m_srend->RenderGridStatistics(drawing, *m_mainGrid,
+	m_srend->RenderGridStatistics(drawing, *m_grid,
 				     m_AEPS, m_AER, m_aepsPerFrame,
 				     m_overheadPercent, false);
       }
@@ -820,7 +682,7 @@ namespace MFM {
 
       m_rootDrawing.Reset(screen, m_fonts.GetDefaultFont());
 
-      if(renderStats)
+      if(m_renderStats)
       {
 	m_grend.SetDimensions(UPoint(m_screenWidth - STATS_WINDOW_WIDTH,m_screenHeight));
       }
@@ -855,7 +717,7 @@ namespace MFM {
 
     void RunHelper()
     {
-      paused = m_startPaused;
+      paused = Super::GetStartPaused();
 
       bool running = true;
       SetScreenSize(m_screenWidth, m_screenHeight);
@@ -919,20 +781,21 @@ namespace MFM {
           lastFrame = SDL_GetTicks();
 
 
-          Update(mainGrid);
+          Update(Super::GetGrid());
 
           m_rootDrawing.Clear();
 
           m_rootPanel.Paint(m_rootDrawing);
 
           if (m_recordScreenshotPerAEPS > 0) {
-            if (!paused && m_AEPS >= m_nextScreenshotAEPS) {
+            if (!paused && Super::GetAEPS() >= m_nextScreenshotAEPS) {
 
-              const char * path = GetSimDirPathTemporary("vid/%010d.png", m_nextScreenshotAEPS);
+              const char * path = Super::GetSimDirPathTemporary("vid/%010d.png",
+								m_nextScreenshotAEPS);
 
               camera.DrawSurface(screen,path);
               {
-                const char * path = GetSimDirPathTemporary("tbd/data.dat");
+                const char * path = Super::GetSimDirPathTemporary("tbd/data.dat");
                 bool exists = true;
                 {
                   FILE* fp = fopen(path, "r");
@@ -941,8 +804,11 @@ namespace MFM {
                 }
                 FILE* fp = fopen(path, "a");
                 FileByteSink fbs(fp);
-                m_srend.WriteRegisteredCounts(fbs, !exists, mainGrid,
-                                              m_AEPS, m_AER, m_aepsPerFrame, m_overheadPercent, true);
+                m_srend.WriteRegisteredCounts(fbs, !exists, Super::GetGrid(),
+                                              Super::GetAEPS(),
+					      Super::GetAER(),
+					      Super::GetAEPSPerFrame(),
+					      Super::GetOverheadPercent(), true);
                 fclose(fp);
               }
               // Are we accelerating and not yet up to cruising speed?
@@ -960,10 +826,11 @@ namespace MFM {
             }
           }
 
-	if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
-        {
-	  running = false;
-	}
+	  if(Super::GetHaltAfterAEPS() > 0 &&
+	     Super::GetAEPS() > Super::GetHaltAfterAEPS())
+	  {
+	    running = false;
+	  }
 
 	SDL_Flip(screen);
       }
@@ -974,4 +841,4 @@ namespace MFM {
   };
 } /* namespace MFM */
 
-#endif /* ABSTRACTDRIVER_H */
+#endif /* ABSTRACTGUIDRIVER_H */

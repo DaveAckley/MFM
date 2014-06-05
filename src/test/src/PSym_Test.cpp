@@ -4,12 +4,12 @@
 
 namespace MFM {
 
-  void PSym_test::Test_RunTests() {
+  void PSym_Test::Test_RunTests() {
     Test_PSymTemplates();
     Test_PSymMap();
   }
 
-  void PSym_test::Test_PSymTemplates()
+  void PSym_Test::Test_PSymTemplates()
   {
     const SPoint in(3,5);
 
@@ -30,7 +30,7 @@ namespace MFM {
 
   }
 
-  void PSym_test::Test_PSymMap()
+  void PSym_Test::Test_PSymMap()
   {
     const SPoint in(1,2);
     const SPoint err(9,10);
@@ -73,4 +73,3 @@ namespace MFM {
   }
 
 } /* namespace MFM */
-

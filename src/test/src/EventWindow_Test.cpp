@@ -9,7 +9,7 @@
 
 namespace MFM {
 
-void EventWindowTest::Test_eventwindowConstruction()
+void EventWindow_Test::Test_eventwindowConstruction()
 {
   TestTile tile;
   tile.RegisterElement(Element_Dreg<TestCoreConfig>::THE_INSTANCE);
@@ -33,7 +33,7 @@ void EventWindowTest::Test_eventwindowConstruction()
   assert(catom.GetType() == DREG_TYPE);
 }
 
-void EventWindowTest::Test_eventwindowWrite()
+void EventWindow_Test::Test_eventwindowWrite()
 {
   TestTile tile;
   tile.RegisterElement(Element_Dreg<TestCoreConfig>::THE_INSTANCE);

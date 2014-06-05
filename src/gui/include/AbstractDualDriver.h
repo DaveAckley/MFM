@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  Utils.h Globally accessible extension methods
+  DualDriver.h Compilation switch for GUI enabling
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,36 +19,46 @@
 */
 
 /**
-  \file Utils.h Globally accessible extension methods
-  \author David H. Ackley.
+  \file DualDriver.h Compilation switch for GUI enabling
+  \author Trent R. Small.
   \date (C) 2014 All rights reserved.
   \lgpl
  */
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef ABSTRACT_DUAL_DRIVER_H
+#define ABSTRACT_DUAL_DRIVER_H
 
-#include <stdlib.h>
-#include "itype.h"
+
+#ifdef MFM_GUI_DRIVER
+
+#include "AbstractGUIDriver.h"
+#define DUAL_DRIVER_TYPE AbstractGUIDriver
+
+#else
+
+#include "AbstractHeadlessDriver.h"
+#define DUAL_DRIVER_TYPE AbstractHeadlessDriver
+
+#endif
 
 namespace MFM
 {
-  namespace Utils {
-    u64 GetDateTimeNow() ;
+  /**
+   * A quantum driver, existing both as an AbstractGUIDriver and an
+   * AbstractHeadlessDriver. If the symbol MFM_GUI_DRIVER is set, this
+   * will build as a GUI driver. If not, this will build as a headless
+   * driver.
+   */
+  template<class GC>
+  class AbstractDualDriver : public DUAL_DRIVER_TYPE<GC>
+  {
+  private:
+    typedef DUAL_DRIVER_TYPE<GC> Super;
 
-    u64 GetDateTime(time_t t) ;
+  protected:
 
-    /**
-       Look in standard places for relativePath.  Return true if a
-       readable file was found, and fills result with an absolute path
-       (up to the given length) that was openable for reading at the
-       time it was checked.  If such a readable file is not found
-       anywhere, set result to a null string and return false.  Fails
-       with ILLEGAL_ARGUMENT if length is zero; will silently truncate
-       paths (and fail to find a file, or worse, possibly find the wrong
-       file) if length is too short.
-    */
-    bool GetReadableResourceFile(const char * relativePath, char * result, u32 length) ;
-  }
+    AbstractDualDriver(u32 argc, const char** argv) : Super(argc, argv)
+    { }
+  };
 }
 
-#endif /* UTILS_H */
+#endif /* ABSTRACT_DUAL_DRIVER_H */

@@ -5,7 +5,7 @@
 
 namespace MFM {
 
-  class BitVectorTest
+  class BitVector_Test
   {
   private:
     static BitVector<256>* setup();
@@ -16,7 +16,7 @@ namespace MFM {
     static void Test_bitVectorAllocate();
 
     static void Test_bitVectorRead();
-  
+
     static void Test_bitVectorSize();
 
     static void Test_bitVectorWrite();
@@ -26,4 +26,3 @@ namespace MFM {
   };
 } /* namespace MFM */
 #endif /*BITVECTOR_TEST_H*/
-

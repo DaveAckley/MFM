@@ -5,12 +5,11 @@
 
 namespace MFM {
 
-class MDistTest
+class MDist_Test
 {
 public:
   static void Test_MDistConversion();
-  
+
 };
 } /* namespace MFM */
 #endif /*MDIST_TEST_H*/
-

@@ -7,10 +7,10 @@ namespace MFM
   typedef CoreConfig<OurAtom, OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig, 5, 3> OurGridConfig;
 
-  struct MFMSimHeadlessDemo : public AbstractHeadlessDriver<OurGridConfig>
+  struct MFMSimHeadlessDemo : public AbstractDualDriver<OurGridConfig>
   {
     MFMSimHeadlessDemo(u32 argc, const char** argv) :
-      AbstractHeadlessDriver(argc, argv) { }
+      AbstractDualDriver(argc, argv) { }
 
     virtual void ReinitPhysics()
     {
@@ -20,16 +20,15 @@ namespace MFM
       m_grid.Needed(Element_Res<OurCoreConfig>::THE_INSTANCE);
     }
 
-    void ReinitEden()
+    virtual void ReinitEden()
     {
       OurGrid& m_grid = GetGrid();
 
       OurAtom dreg(Element_Dreg<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
 
-      SPoint dregPt(30, 30);
+      SPoint dregPt(5, 5);
 
       m_grid.PlaceAtom(dreg, dregPt);
-
     }
   };
 }
@@ -39,9 +38,9 @@ int main(int argc, const char** argv)
   MFM::LOG.SetByteSink(MFM::STDERR);
   MFM::LOG.SetLevel(MFM::LOG.ALL);
 
-  MFM::MFMSimHeadlessDemo sim(argc, argv);
+  MFM::MFMSimHeadlessDemo sim((MFM::u32)argc, argv);
 
-  sim.ReinitUs();
+  sim.Reinit();
 
   sim.Run();
 

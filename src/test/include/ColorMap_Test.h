@@ -5,7 +5,7 @@
 
 namespace MFM {
 
-  class ColorMapTest
+  class ColorMap_Test
   {
   private:
     static void Test_colorMapSelected();
@@ -17,4 +17,3 @@ namespace MFM {
 
 } /* namespace MFM */
 #endif /*COLORMAP_TEST_H*/
-

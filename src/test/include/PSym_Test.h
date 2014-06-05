@@ -5,7 +5,7 @@
 
 namespace MFM {
 
-  class PSym_test
+  class PSym_Test
   {
   private:
 
@@ -19,4 +19,3 @@ namespace MFM {
   };
 } /* namespace MFM */
 #endif /*PSYM_TEST_H*/
-

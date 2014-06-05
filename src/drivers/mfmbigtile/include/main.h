@@ -1,7 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "AbstractDriver.h"
+#include "AbstractGUIDriver.h"
 #include "P1Atom.h"
 
 #include "EventWindow.h"
@@ -15,4 +15,3 @@
 #include "Element_Wall.h"
 
 #endif /* MAIN_H */
-

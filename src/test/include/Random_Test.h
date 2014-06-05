@@ -4,7 +4,7 @@
 #include "Random.h"
 
 namespace MFM {
-  class RandomTest
+  class Random_Test
   {
   private:
     static Random & setup();

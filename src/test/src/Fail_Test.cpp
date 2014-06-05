@@ -5,7 +5,7 @@
 
 namespace MFM {
 
-  void Fail_test::Test_RunTests() {
+  void Fail_Test::Test_RunTests() {
     Test_NoFail();
     Test_SimpleFail();
     Test_FailAndNot();
@@ -14,7 +14,7 @@ namespace MFM {
     Test_UnsafeModification();
   }
 
-  void Fail_test::Test_NoFail()
+  void Fail_Test::Test_NoFail()
   {
     bool failed = false;
     int num = 0;
@@ -25,12 +25,12 @@ namespace MFM {
     assert(failed==false);
   }
 
-  void Fail_test::Test_SimpleFail()
+  void Fail_Test::Test_SimpleFail()
   {
     bool failed = false;
     int num = 0;
     unwind_protect({
-        failed = true; 
+        failed = true;
         num = 2;   // This assignment will definitely be visible on throw
       },{
         num = 1;  // Note: With -O99, this assignment may invisible on throw!
@@ -40,13 +40,13 @@ namespace MFM {
     assert(num==2);
   }
 
-  void Fail_test::Test_FailAndNot()
+  void Fail_Test::Test_FailAndNot()
   {
     bool failed = false;
     int num = 0;
     for (int i = 10; i < 12; ++i) {
       unwind_protect({
-          failed = true; 
+          failed = true;
           num = i;   // This assignment will definitely be visible on throw
         },{
           num = 1;  // Note: With -O99, this assignment may invisible on throw!
@@ -63,7 +63,7 @@ namespace MFM {
     }
   }
 
-  void Fail_test::Test_FailWithCode()
+  void Fail_Test::Test_FailWithCode()
   {
     bool failed = false;
     int num = 0;
@@ -101,7 +101,7 @@ namespace MFM {
     FAIL(ILLEGAL_ARGUMENT);
   }
 
-  void Fail_test::Test_NestedFail()
+  void Fail_Test::Test_NestedFail()
   {
     bool failed = false;
     int num = 0;
@@ -121,11 +121,11 @@ namespace MFM {
 
   static void modifyArg(int * pnum) { *pnum = 1; FAIL(ILLEGAL_STATE); }
 
-  void Fail_test::Test_UnsafeModification()
+  void Fail_Test::Test_UnsafeModification()
   {
     int num = 0;
     unwind_protect({ },{ modifyArg(&num); });
-    // UNRELIABLE, CANNOT MAKE THIS ASSERTION: 
+    // UNRELIABLE, CANNOT MAKE THIS ASSERTION:
     // assert(num==1);
 
     // (Note it seems to work if the 'static' is omitted from the
@@ -134,6 +134,5 @@ namespace MFM {
     // But it's still unreliable and unsafe so we can't do it!)
   }
 
-  
-} /* namespace MFM */
 
+} /* namespace MFM */
