@@ -13,7 +13,7 @@ namespace MFM {
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
 
   typedef GridConfig<OurCoreConfig,3,2> OurSmallGridConfig;
-  typedef GridConfig<OurCoreConfig,8,5> OurBigGridConfig;
+  typedef GridConfig<OurCoreConfig,6,5> OurBigGridConfig;
   //  typedef GridConfig<OurCoreConfig,5,3> OurBigGridConfig;
   typedef OurBigGridConfig OurGridConfig;
 
