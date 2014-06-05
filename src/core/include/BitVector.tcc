@@ -1,5 +1,6 @@
 /* -*- C++ -*- */
 #include "Fail.h"  /* For FAIL */
+#include "Util.h"  /* For MAX */
 #include <string.h> /* For memset, memcpy */
 
 namespace MFM {
@@ -91,29 +92,13 @@ namespace MFM {
     const u32 firstUnitIdx = startIdx / BITS_PER_UNIT;
     const u32 firstUnitFirstBit = startIdx % BITS_PER_UNIT;
     const bool hasSecondUnit = (firstUnitFirstBit + length) > BITS_PER_UNIT;
-    const u32 firstUnitLength = hasSecondUnit ? BITS_PER_UNIT-firstUnitFirstBit : length;
+    const u32 firstUnitLength = hasSecondUnit ? BITS_PER_UNIT - firstUnitFirstBit : length;
 
     WriteToUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength, value >> (length - firstUnitLength));
 
     if (hasSecondUnit)
       WriteToUnit(firstUnitIdx + 1, 0, length - firstUnitLength, value);
   }
-
-#if 0
-  template <u32 BITS>
-  void BitVector<BITS>::Insert(u32 startIdx,
-                               u32 length,
-                               u32 value)
-  {
-    /* floor to a multiple of 32   vvv  */
-    for(u32 i = ((BITS / BITS_PER_UNIT) * BITS_PER_UNIT) - 1;
-        i >= startIdx + length; i--)
-      {
-        WriteBit(i, ReadBit(i - length));
-      }
-    Write(startIdx, length, value);
-  }
-#endif
 
   template <u32 BITS>
   u32 BitVector<BITS>::Read(const u32 startIdx, const u32 length) const
@@ -145,10 +130,52 @@ namespace MFM {
   }
 
   template <u32 BITS>
+  void BitVector<BITS>::StoreBits(const u32 bits, const u32 startIdx, const u32 length)
+  {
+    if (!length) return;
+
+    const u32 stopIdx = MIN((u32) BITS, startIdx + length) - 1;
+
+    const u32 firstUnitIdx = startIdx / BITS_PER_UNIT;
+    const u32 firstUnitFirstBit = startIdx % BITS_PER_UNIT;
+    const bool firstUnitFull = firstUnitFirstBit == 0;
+
+    const u32 lastUnitIdx = stopIdx / BITS_PER_UNIT;
+    const u32 lastUnitLastBit = (stopIdx % BITS_PER_UNIT);
+    const bool lastUnitFull = lastUnitLastBit == (BITS_PER_UNIT - 1);
+
+    const bool hasMultipleUnits = lastUnitIdx > firstUnitIdx;
+
+    if (!hasMultipleUnits) {
+      WriteToUnit(firstUnitIdx, firstUnitFirstBit, length,
+                  bits >> (BITS_PER_UNIT - (firstUnitFirstBit + length)));
+      return;
+    }
+
+    // lastFullUnitIdx can go negative so be signed through here
+    const s32 firstFullUnitIdx = firstUnitFull ? firstUnitIdx : firstUnitIdx + 1;
+    const s32 lastFullUnitIdx = lastUnitFull ? lastUnitIdx : lastUnitIdx - 1;
+
+    if (!firstUnitFull) {
+      const u32 firstUnitLength = BITS_PER_UNIT - firstUnitFirstBit;
+      WriteToUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength, bits);
+    }
+
+    for (s32 idx = firstFullUnitIdx; idx <= lastFullUnitIdx; ++idx)
+      m_bits[idx] = bits;
+
+    if (!lastUnitFull) {
+      const u32 lastUnitLength = lastUnitLastBit + 1;
+      WriteToUnit(lastUnitIdx, 0, lastUnitLength,
+                  bits >> (BITS_PER_UNIT - lastUnitLength));
+    }
+  }
+
+  template <u32 BITS>
   void BitVector<BITS>::Print(ByteSink & ostream) const
   {
     for (u32 i = 0; i < BITS; i += 4)
-      ostream.WriteByte("0123456789abcdef"[Read(i,4)]);
+      ostream.Printf("%x",Read(i,4));
   }
 
 } /* namespace MFM */

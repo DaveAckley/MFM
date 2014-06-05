@@ -23,6 +23,10 @@ namespace MFM {
 
     static void Test_bitVectorSplitWrites();
 
+    static void Test_bitVectorSetAndClearBits();
+
+    static void Test_bitVectorStoreBits();
+
   };
 } /* namespace MFM */
 #endif /*BITVECTOR_TEST_H*/

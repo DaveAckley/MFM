@@ -144,7 +144,7 @@ namespace MFM {
      * 32
      */
     inline void WriteToUnit(const u32 idx, const u32 startIdx, const u32 length, const u32 value) {
-      if (length==0) return;
+      if (length == 0) return;
       const u32 shift = BITS_PER_UNIT - (startIdx + length);
       u32 mask = MakeMask(length) << shift;
       m_bits[idx] = (m_bits[idx] & ~mask) | ((value << shift) & mask);
@@ -243,6 +243,57 @@ namespace MFM {
      *        indexed at \c 0 .
      */
     bool ToggleBit(int idx);
+
+    /**
+     * Set a contiguous range of bits, so they all have value 1.
+     *
+     * @param startIdx The index of the first bit to set inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param length The number of bits to set in this BitVector.  If
+     *               this length would exceed the number of bits in
+     *               the BitVector, the excess length is ignored.
+     *
+     */
+    void SetBits(const u32 startIdx, const u32 length) {
+      StoreBits(0xffffffff, startIdx, length);
+    }
+
+    /**
+     * Clear a contiguous range of bits, so they all have value 0.
+     *
+     * @param startIdx The index of the first bit to clear inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param length The number of bits to clear in this BitVector.
+     *               If this length would exceed the number of bits in
+     *               the BitVector, the excess length is ignored.
+     *
+     */
+    void ClearBits(const u32 startIdx, const u32 length)  {
+      StoreBits(0, startIdx, length);
+    }
+
+    /**
+     * Store a single bit value into a contiguous range of bits, so
+     * they all have that value.
+     *
+     * @param bits The bits to store.  The supplied bits are tiled
+     *                 onto the contiguous range of bits as many times
+     *                 as needed to cover the given length, with the
+     *                 u32 bits aligned to the underlying u32 storage
+     *                 units. To avoid confusion, pass only 0x0 or
+     *                 0xffffffff as bits.
+     *
+     * @param startIdx The index of the first bit to store inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param length The number of bits to store in this BitVector.
+     *               If this length would exceed the number of bits in
+     *               the BitVector, the excess length is ignored.
+     *
+     */
+    void StoreBits(const u32 bits, const u32 startIdx, const u32 length) ;
 
     /**
      * Sets all bits of this BitVector to \c 0 .
