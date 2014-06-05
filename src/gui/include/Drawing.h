@@ -81,6 +81,19 @@ namespace MFM {
     static const int MAGENTA = 0xffff00ff;
     static const int YELLOW  = 0xffffff00;
 
+    static const int GREY05  = 0xff0c0c0c;
+    static const int GREY10  = 0xff191919;
+    static const int GREY20  = 0xff333333;
+    static const int GREY30  = 0xff4c4c4c;
+    static const int GREY40  = 0xff666666;
+    static const int GREY50  = 0xff7f7f7f;
+    static const int GREY60  = 0xff999999;
+    static const int GREY70  = 0xffb2b2b2;
+    static const int GREY80  = 0xffcccccc;
+    static const int GREY90  = 0xffe5e5e5;
+    static const int GREY95  = 0xfff2f2f2;
+
+    static const int GREY = GREY50;
     static const int DARK_PURPLE = 0xff200020;
 
     Drawing(SDL_Surface * dest = 0, TTF_Font * font = 0) ;

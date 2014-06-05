@@ -3,7 +3,7 @@
 
 namespace MFM {
 
-#define TILESIZE_CHANGE_RATE 1
+#define MAX_ATOM_SIZE 256
 
   TileRenderer::TileRenderer()
   {
@@ -26,12 +26,12 @@ namespace MFM {
                                   SPoint& atomLoc,
                                   u32 color)
   {
-    Point<s32> ulpt(m_windowTL.GetX() + offset.GetY() + atomLoc.GetX() *
-                    m_atomDrawSize,
-                    m_windowTL.GetY() + offset.GetY() + atomLoc.GetY() *
-                    m_atomDrawSize);
+    SPoint ulpt(m_windowTL.GetX() + offset.GetY() + atomLoc.GetX() *
+                m_atomDrawSize,
+                m_windowTL.GetY() + offset.GetY() + atomLoc.GetY() *
+                m_atomDrawSize);
 
-    Point<s32> brpt(ulpt.GetX() + m_atomDrawSize, ulpt.GetY() + m_atomDrawSize);
+    SPoint brpt(ulpt.GetX() + m_atomDrawSize, ulpt.GetY() + m_atomDrawSize);
 
     if(brpt.GetX() > (s32)m_dimensions.GetX())
       {
@@ -62,17 +62,32 @@ namespace MFM {
     m_drawDataHeat = !m_drawDataHeat;
   }
 
-  void TileRenderer::IncreaseAtomSize()
+  void TileRenderer::ChangeAtomSize(bool increase, SPoint around)
   {
-    m_atomDrawSize += TILESIZE_CHANGE_RATE;
-  }
+    SPoint atomLoc = (around - m_windowTL) / m_atomDrawSize;
 
-  void TileRenderer::DecreaseAtomSize()
-  {
-    if(m_atomDrawSize > 1)
-      {
-        m_atomDrawSize -= TILESIZE_CHANGE_RATE;
-      }
+    const u32 SCALE_GRANULARITY = 10;
+    s32 amount;
+
+    if (m_atomDrawSize < SCALE_GRANULARITY)   // Be proportional unless tiny
+      amount = 1;
+    else
+      amount = m_atomDrawSize / SCALE_GRANULARITY;
+
+    if (!increase) amount = -amount;
+
+    s32 newSize = m_atomDrawSize + amount;
+
+    if (newSize < 1)
+      newSize = 1;
+    else if (newSize > MAX_ATOM_SIZE)
+      newSize = MAX_ATOM_SIZE;
+
+    m_atomDrawSize = newSize;
+
+    SPoint newAround = atomLoc * m_atomDrawSize + m_windowTL;
+    SPoint delta = newAround - around;
+    m_windowTL -= delta;
   }
 
   void TileRenderer::MoveUp(u8 amount)

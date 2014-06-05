@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  Dirs.h Euclidian direction system
+  Dirs.h Euclidean direction system
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 */
 
 /**
-  \file Dirs.h Euclidian direction system
+  \file Dirs.h Euclidean direction system
   \author Trent R. Small.
   \author David H. Ackley
   \date (C) 2014 All rights reserved.

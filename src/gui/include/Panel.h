@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  Panel.h Heirarchical rendering system
+  Panel.h Hierarchical rendering system
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 */
 
 /**
-  \file Panel.h Heirarchical rendering system
+  \file Panel.h Hierarchical rendering system
   \author David H. Ackley.
   \date (C) 2014 All rights reserved.
   \lgpl
@@ -31,6 +31,7 @@
 #include "Point.h"
 #include "Rect.h"
 #include "Drawing.h"
+#include "Keyboard.h"
 #include "ByteSink.h"
 
 namespace MFM {
@@ -43,14 +44,69 @@ namespace MFM {
     ANCHOR_WEST
   }GUIAnchor;
 
+  class Panel;   // FORWARD
+
+  struct MouseEvent {
+    MouseEvent(const Keyboard & keyboard, SDL_Event & event)
+      : m_keyboard(keyboard), m_event(event)
+    { }
+    const Keyboard & m_keyboard;
+    SDL_Event & m_event;
+
+    virtual ~MouseEvent() { }
+
+    // Double dispatch support
+    virtual bool Handle(Panel & panel) = 0;
+
+    virtual SPoint GetAt() const = 0;
+  };
+
+  struct MouseButtonEvent : public MouseEvent
+  {
+    MouseButtonEvent(const Keyboard & keyboard, SDL_Event & event)
+      : MouseEvent(keyboard, event)
+    { }
+
+    virtual bool Handle(Panel & panel) ;
+
+    virtual SPoint GetAt() const
+    {
+      return SPoint(m_event.button.x, m_event.button.y);
+    }
+  };
+
+  typedef SPoint ButtonPositionArray[SDL_BUTTON_X2+1];
+
+  struct MouseMotionEvent : public MouseEvent
+  {
+    const u32 m_buttonMask;
+    const ButtonPositionArray & m_buttonPositionArray;
+
+    MouseMotionEvent(const Keyboard & keyboard, SDL_Event & event, u32 buttonMask, ButtonPositionArray & bpa)
+      : MouseEvent(keyboard, event), m_buttonMask(buttonMask), m_buttonPositionArray(bpa)
+    { }
+
+    virtual bool Handle(Panel & panel) ;
+    virtual SPoint GetAt() const
+    {
+      return SPoint(m_event.motion.x, m_event.motion.y);
+    }
+  };
+
   class Panel
   {
   protected:
     const char * m_name;
 
     Rect m_rect;
+    u32 m_bdColor;  // Default border color of this panel
     u32 m_bgColor;  // Default background color of this panel
     u32 m_fgColor;  // Default foreground color of this panel
+
+    /**
+     * Preferred font for text operations, if any
+     */
+    TTF_Font* m_font;
 
     /**
      * The size that this Panel wants to be, when given enough room.
@@ -61,12 +117,6 @@ namespace MFM {
     // My parent Panel, if any
     Panel * m_parent;
 
-    // Which side(s), if any, that I stick to, when my parent resizes.
-    // (0,0), no automatic repositioning on parent resize, otherwise
-    // sgn(GetX()) -> Left, Center, Right, and sgn(GetY()) -> Top,
-    // Middle, Bottom
-    // XXX Future: SPoint m_gravity;
-
     // The top of the stack of panels I am parent to.  This is
     // null when I have no kids
     Panel * m_top;
@@ -76,8 +126,13 @@ namespace MFM {
     Panel * m_forward;    // Pointer to next guy above me in rendering order
     Panel * m_backward;   // Pointer to next guy below me in rendering order
 
+    /**
+     * Whether this Panel is currently being displayed, and
+     * analogously, whether it is doing #Dispatch processing.
+     */
     bool m_visible;
 
+    // A helper function to indent a line, that totally belongs elsewhere
     static void Indent(ByteSink & sink, u32 count) ;
 
   public:
@@ -96,9 +151,9 @@ namespace MFM {
 
     void ToggleVisibility(){ m_visible = !m_visible; }
 
-    u32 GetWidth() {return m_rect.GetWidth();}
+    u32 GetWidth() const {return m_rect.GetWidth();}
 
-    u32 GetHeight() {return m_rect.GetHeight();}
+    u32 GetHeight() const {return m_rect.GetHeight();}
 
     void SetDimensions(u32 width, u32 height);
 
@@ -129,6 +184,22 @@ namespace MFM {
     }
 
     /**
+       Get the current border color.
+     */
+    u32 GetBorder() const {
+      return m_bdColor;
+    }
+
+    /**
+       Set the border color.  Returns prior value
+     */
+    u32 SetBorder(const u32 color) {
+      u32 old = m_bdColor;
+      m_bdColor = color;
+      return old;
+    }
+
+    /**
        Get the current foreground color.
      */
     u32 GetForeground() const {
@@ -143,6 +214,19 @@ namespace MFM {
       m_fgColor = color;
       return old;
     }
+
+    /**
+       Get the default font for this panel.  May return null.  Text
+       drawing operations will use the prevailing font
+       (Drawing::GetFont()) if this returns null.
+    */
+    TTF_Font* GetFont() const ;
+
+    /**
+       Set the default font for this panel.  Null may be passed in to
+       clear the default font.  Returns prior value.
+    */
+    TTF_Font* SetFont(TTF_Font * newFont) ;
 
     /**
      * Gets the absolute location of this Panel from the window that
@@ -180,13 +264,13 @@ namespace MFM {
     virtual void PaintChildren(Drawing & config);
 
     /**
-       Dispatch a mouse event to the appropriate subpanel depending on
+       Dispatch a mouse event, to the appropriate subpanel depending on
        the stacking order and the position of the mouse.  Panels should
-       override the Handle(SDL_MouseButtonEvent) and/or
-       Handle(SDL_MouseMotionEvent) method if they wish to handle such
+       override the Handle(MouseButtonEvent) and/or
+       Handle(MouseMotionEvent) method if they wish to handle such
        events.  Returns true if any panel claimed to handle the event.
      */
-    virtual bool Dispatch(SDL_Event & event, const Rect & rect);
+    virtual bool Dispatch(MouseEvent & event, const Rect & rect);
 
     /**
        Respond to a MouseButtonEvent (this includes scroll wheel
@@ -196,11 +280,14 @@ namespace MFM {
                 default implementation does nothing and returns
 		false.
      */
-    virtual bool Handle(SDL_MouseButtonEvent & event)
-    {
-      //printf("Mouse %d@(%d,%d)", event.type, event.x, event.y);
-      return false;
-    }
+    virtual bool Handle(MouseButtonEvent & event) ;
+
+    /**
+       Respond to a MouseMotionEvent.  Return true if the event should
+       be considered handled.  The default implementation does nothing
+       and returns false.
+     */
+    virtual bool Handle(MouseMotionEvent & event) ;
 
     /**
      * Respond to the resizing of this panel's parent.
@@ -216,15 +303,6 @@ namespace MFM {
      */
     void SetAnchor(const GUIAnchor anchor);
 
-    /**
-       Respond to a MouseMotionEvent.  Return true if the event should
-       be considered handled.  The default implementation does nothing
-       and returns false.
-     */
-    virtual bool Handle(SDL_MouseMotionEvent & event)
-    {
-      return false;
-    }
   };
 } /* namespace MFM */
 #endif /*PANEL_H*/

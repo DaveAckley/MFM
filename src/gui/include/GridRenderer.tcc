@@ -44,7 +44,7 @@ namespace MFM {
   template <class GC>
   void GridRenderer::SelectTile(Grid<GC>& grid, SPoint& clickPt)
   {
-    SPoint& offset = m_tileRenderer.GetWindowTL();
+    const SPoint& offset = m_tileRenderer.GetWindowTL();
 
     SPoint& cp = clickPt;
 

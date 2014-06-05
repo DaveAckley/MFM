@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  BitVector.h Extended integral type
+  CharBufferByteSink.h Character based ByteSink
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or

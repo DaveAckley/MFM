@@ -36,13 +36,13 @@
 #include "AbstractButton.h"
 #include "Tile.h"
 #include "GridRenderer.h"
+#include "GridPanel.h"
 #include "StatsRenderer.h"
 #include "Element_Empty.h" /* Need common elements */
 #include "Element_Dreg.h"
 #include "Element_Res.h"
 #include "Element_Wall.h"
 #include "Element_Consumer.h"
-#include "Mouse.h"
 #include "Keyboard.h"
 #include "Camera.h"
 #include "AbstractDriver.h"
@@ -56,9 +56,6 @@ namespace MFM {
 
 #define CAMERA_SLOW_SPEED 2
 #define CAMERA_FAST_SPEED 50
-
-#define SCREEN_INITIAL_WIDTH 1280
-#define SCREEN_INITIAL_HEIGHT 1024
 
 #define STATS_WINDOW_WIDTH 288
 
@@ -82,12 +79,21 @@ namespace MFM {
   protected:
     typedef typename Super::OurGrid OurGrid;
     typedef typename Super::CC CC;
+    enum { W = GC::GRID_WIDTH};
+    enum { H = GC::GRID_HEIGHT};
 
   private:
 
     Fonts m_fonts;
 
-    bool paused;
+    bool m_keyboardPaused;   // Toggled by keyboard space, ' ', SDLK_SPACE
+    bool m_mousePaused;      // Set if any buttons down, clear if all up
+    bool m_gridPaused;       // Set if keyboard || mouse paused, checked by RunGrid
+    bool m_reinitRequested;
+    void RequestReinit() {
+      m_reinitRequested = true;
+    }
+
     bool m_renderStats;
     u32 m_ticksLastStopped;
 
@@ -99,8 +105,7 @@ namespace MFM {
     u32 m_nextScreenshotAEPS;
     u32 m_nextTimeBasedDataAEPS;
 
-    Mouse mouse;
-    Keyboard keyboard;
+    Keyboard m_keyboard;
     Camera camera;
     SDL_Surface* screen;
     Panel m_rootPanel;
@@ -109,9 +114,193 @@ namespace MFM {
     u32 m_screenWidth;
     u32 m_screenHeight;
 
+    class AbstractGridButton : public AbstractButton
+    {
+    protected:
+      //      GridRenderer* m_grend;
+      //      OurGrid* m_grid;
+      AbstractGUIDriver * m_driver;
+
+      AbstractGridButton(const char* title) :
+        AbstractButton(title), m_driver(0)
+      {
+      }
+
+    public:
+
+      void SetDriver(AbstractGUIDriver & driver)
+      {
+	m_driver = &driver;
+      }
+      /*
+      void SetGrid(OurGrid* grid)
+      {
+	m_grid = grid;
+      }
+      */
+    };
+
+    struct ClearButton : public AbstractGridButton
+    {
+      ClearButton() : AbstractGridButton("Clear Tile")
+      {
+	AbstractButton::SetName("ClearButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 300));
+      }
+
+      virtual void OnClick()
+      {
+        OurGrid & grid = AbstractGridButton::m_driver->GetGrid();
+        GridRenderer & grend = AbstractGridButton::m_driver->GetGridRenderer();
+
+	const SPoint selTile = grend.GetSelectedTile();
+	if(selTile.GetX() >= 0 && selTile.GetX() < W &&
+	   selTile.GetY() >= 0 && selTile.GetY() < H)
+	{
+	  grid.EmptyTile(grend.GetSelectedTile());
+	}
+      }
+    } m_clearButton;
+
+    struct PauseButton : public AbstractGridButton
+    {
+      PauseButton() : AbstractGridButton("Pause Tile")
+      {
+	AbstractButton::SetName("PauseButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2,0));
+      }
+
+      virtual void OnClick()
+      {
+	const SPoint selTile =
+          AbstractGridButton::m_driver->GetGridRenderer().GetSelectedTile();
+	if(selTile.GetX() >= 0 && selTile.GetX() < W &&
+	   selTile.GetY() >= 0 && selTile.GetY() < H)
+	{
+	  AbstractGridButton::m_driver->GetGrid().
+            SetTileToExecuteOnly(selTile,
+                                 !AbstractGridButton::m_driver->GetGrid().
+                                 GetTileExecutionStatus(selTile));
+	}
+      }
+    } m_pauseButton;
+
+    struct NukeButton : public AbstractGridButton
+    {
+      NukeButton() : AbstractGridButton("Nuke")
+      {
+	AbstractButton::SetName("NukeButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 50));
+      }
+
+      virtual void OnClick()
+      {
+        AbstractGridButton::m_driver->GetGrid().RandomNuke();
+      }
+    } m_nukeButton;
+
+    struct XRayButton : public AbstractGridButton
+    {
+      XRayButton() : AbstractGridButton("XRay")
+      {
+	AbstractButton::SetName("XRayButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 100));
+      }
+
+      virtual void OnClick()
+      {
+	AbstractGridButton::m_driver->GetGrid().XRay();
+      }
+    } m_xrayButton;
+
+    struct GridRenderButton : public AbstractGridButton
+    {
+      GridRenderButton() : AbstractGridButton("Toggle Grid")
+      {
+	AbstractButton::SetName("GridRenderButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 150));
+      }
+
+      virtual void OnClick()
+      {
+	AbstractGridButton::m_driver->GetGridRenderer().ToggleGrid();
+      }
+    } m_gridRenderButton;
+
+    struct HeatmapButton : public AbstractGridButton
+    {
+      HeatmapButton() : AbstractGridButton("Toggle Heatmap")
+      {
+	AbstractButton::SetName("HeatmapButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 200));
+      }
+
+      virtual void OnClick()
+      {
+	AbstractGridButton::m_driver->GetGridRenderer().ToggleDataHeatmap();
+      }
+    } m_heatmapButton;
+
+    struct TileViewButton : public AbstractGridButton
+    {
+      TileViewButton() : AbstractGridButton("Toggle Tile View")
+      {
+	AbstractButton::SetName("TileViewButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 250));
+      }
+
+      virtual void OnClick()
+      {
+	AbstractGridButton::m_driver->GetGridRenderer().ToggleMemDraw();
+      }
+    } m_tileViewButton;
+
+    struct ResetButton : public AbstractGridButton
+    {
+      ResetButton() : AbstractGridButton("Reset")
+      {
+	AbstractButton::SetName("QuitButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 350));
+      }
+
+      virtual void OnClick()
+      {
+        //        AbstractGridButton::m_driver->RequestReinit();
+        printf("RESET NYI\n");
+      }
+    } m_resetButton;
+
+    struct QuitButton : public AbstractGridButton
+    {
+      QuitButton() : AbstractGridButton("Quit")
+      {
+	AbstractButton::SetName("QuitButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 400));
+      }
+
+      virtual void OnClick()
+      {
+        exit(0);
+      }
+    } m_quitButton;
+
   protected: /* Need these for our buttons at driver level */
     GridRenderer m_grend;
     StatsRenderer<GC> m_srend;
+
+    GridRenderer & GetGridRenderer()
+    {
+      return m_grend;
+    }
 
     virtual void PostUpdate()
     {
@@ -165,46 +354,44 @@ namespace MFM {
 
       m_ticksLastStopped = 0;
 
+      m_reinitRequested = false;
+
+      OnceOnlyButtons();
+
     }
 
-
   private:
+
+    void OnceOnlyButtons() {
+      m_statisticsPanel.SetAnchor(ANCHOR_WEST);
+
+      m_clearButton.SetDriver(*this);
+      m_xrayButton.SetDriver(*this);
+      m_pauseButton.SetDriver(*this);
+      m_nukeButton.SetDriver(*this);
+      m_gridRenderButton.SetDriver(*this);
+      m_heatmapButton.SetDriver(*this);
+      m_tileViewButton.SetDriver(*this);
+      m_resetButton.SetDriver(*this);
+      m_quitButton.SetDriver(*this);
+
+      m_buttonPanel.Insert(&m_clearButton, NULL);
+      m_buttonPanel.Insert(&m_pauseButton, NULL);
+      m_buttonPanel.Insert(&m_nukeButton, NULL);
+      m_buttonPanel.Insert(&m_xrayButton, NULL);
+      m_buttonPanel.Insert(&m_gridRenderButton, NULL);
+      m_buttonPanel.Insert(&m_heatmapButton, NULL);
+      m_buttonPanel.Insert(&m_tileViewButton, NULL);
+      m_buttonPanel.Insert(&m_resetButton, NULL);
+      m_buttonPanel.Insert(&m_quitButton, NULL);
+
+    }
 
     void Update(OurGrid& grid)
     {
       KeyboardUpdate(grid);
-      MouseUpdate(grid);
+      m_gridPaused = m_keyboardPaused || m_mousePaused;
       Super::RunGrid(grid);
-    }
-
-    void MouseUpdate(OurGrid& grid)
-    {
-      if(mouse.IsDown(SDL_BUTTON_LEFT))
-      {
-	SPoint mloc;
-	UPoint gdim = m_grend.GetDimensions();
-
-	mouse.FillPoint(&mloc);
-
-	if((u32)mloc.GetX() < gdim.GetX() &&
-	   (u32)mloc.GetY() < gdim.GetY())
-	{
-	  /* This is in the grid renderer */
-	  m_grend.SelectTile(grid, mloc);
-	}
-	else
-	{
-	  /* This must be in the control panel  */
-
-	  /* Adjust so we are relative to the control panel */
-	  mloc.SetX(mloc.GetX() - (s32)gdim.GetX());
-	  if(mouse.SemiAuto(SDL_BUTTON_LEFT))
-	  {
-	    m_srend.HandleClick(mloc);
-	  }
-	}
-      }
-      mouse.Flip();
     }
 
     inline void ToggleStatsView()
@@ -216,96 +403,96 @@ namespace MFM {
 
     void KeyboardUpdate(OurGrid& grid)
     {
-      u8 speed = keyboard.ShiftHeld() ?
+      u8 speed = m_keyboard.ShiftHeld() ?
         CAMERA_FAST_SPEED : CAMERA_SLOW_SPEED;
 
-      if(keyboard.IsDown(SDLK_q) && (keyboard.IsDown(SDLK_LCTRL) || keyboard.IsDown(SDLK_RCTRL)))
+      if(m_keyboard.IsDown(SDLK_q) && (m_keyboard.IsDown(SDLK_LCTRL) || m_keyboard.IsDown(SDLK_RCTRL)))
       {
 	exit(0);
       }
 
       /* View Control */
-      if(keyboard.SemiAuto(SDLK_a))
+      if(m_keyboard.SemiAuto(SDLK_a))
       {
 	m_srend.SetDisplayAER(!m_srend.GetDisplayAER());
       }
-      if(keyboard.SemiAuto(SDLK_i))
+      if(m_keyboard.SemiAuto(SDLK_i))
       {
 	ToggleStatsView();
       }
-      if(keyboard.SemiAuto(SDLK_1))
+      if(m_keyboard.SemiAuto(SDLK_1))
       {
 	m_grend.IncreaseAtomSize();
       }
-      if(keyboard.SemiAuto(SDLK_2))
+      if(m_keyboard.SemiAuto(SDLK_2))
       {
 	m_grend.DecreaseAtomSize();
       }
-      if(keyboard.SemiAuto(SDLK_g))
+      if(m_keyboard.SemiAuto(SDLK_g))
       {
 	m_grend.ToggleGrid();
       }
-      if(keyboard.SemiAuto(SDLK_m))
+      if(m_keyboard.SemiAuto(SDLK_m))
       {
 	m_grend.ToggleMemDraw();
       }
-      if(keyboard.SemiAuto(SDLK_l))
+      if(m_keyboard.SemiAuto(SDLK_l))
       {
 	m_grend.ToggleDataHeatmap();
       }
-      if(keyboard.SemiAuto(SDLK_p))
+      if(m_keyboard.SemiAuto(SDLK_p))
       {
 	m_grend.ToggleTileSeparation();
       }
-      if(keyboard.SemiAuto(SDLK_o))
+      if(m_keyboard.SemiAuto(SDLK_o))
       {
 	m_grend.SetEventWindowRenderMode(EVENTWINDOW_RENDER_OFF);
       }
 
-      if(keyboard.SemiAuto(SDLK_ESCAPE))
+      if(m_keyboard.SemiAuto(SDLK_ESCAPE))
       {
 	m_grend.DeselectTile();
       }
 
       /* Camera Recording */
-      if(keyboard.SemiAuto(SDLK_r))
+      if(m_keyboard.SemiAuto(SDLK_r))
       {
 	camera.ToggleRecord();
       }
 
       /* Camera Movement*/
-      if(keyboard.IsDown(SDLK_LEFT))
+      if(m_keyboard.IsDown(SDLK_LEFT))
       {
 	m_grend.MoveLeft(speed);
       }
-      if(keyboard.IsDown(SDLK_DOWN))
+      if(m_keyboard.IsDown(SDLK_DOWN))
       {
 	m_grend.MoveDown(speed);
       }
-      if(keyboard.IsDown(SDLK_UP))
+      if(m_keyboard.IsDown(SDLK_UP))
       {
 	m_grend.MoveUp(speed);
       }
-      if(keyboard.IsDown(SDLK_RIGHT))
+      if(m_keyboard.IsDown(SDLK_RIGHT))
       {
 	m_grend.MoveRight(speed);
       }
 
       /* Speed Control */
-      if(keyboard.SemiAuto(SDLK_SPACE))
+      if(m_keyboard.SemiAuto(SDLK_SPACE))
       {
-	paused = !paused;
+	m_keyboardPaused = !m_keyboardPaused;
       }
-      if(keyboard.IsDown(SDLK_COMMA))
+      if(m_keyboard.IsDown(SDLK_COMMA))
       {
 	Super::DecrementAEPSPerFrame();
       }
-      if(keyboard.IsDown(SDLK_PERIOD))
+      if(m_keyboard.IsDown(SDLK_PERIOD))
       {
 	Super::IncrementAEPSPerFrame();
       }
 
-      keyboard.Flip();
+      m_keyboard.Flip();
     }
 
 
@@ -352,7 +539,8 @@ namespace MFM {
       Super(argc, argv),
       m_renderStats(false),
       m_screenWidth(SCREEN_INITIAL_WIDTH),
-      m_screenHeight(SCREEN_INITIAL_HEIGHT)
+      m_screenHeight(SCREEN_INITIAL_HEIGHT),
+      m_buttonPanel(m_fonts)
     {
       /* Needs to be called from here because of the virtual
 	 override of PostOnceOnly. */
@@ -435,72 +623,12 @@ namespace MFM {
 
     }
 
-    //////////////////
-    //////// START DEBUG PANELS
-
-    struct Panel1 : public Panel {
-      Panel1() {
-        SetName("Panel1");
-        SetDimensions(400,500);
-        SetRenderPoint(SPoint(280,43));
-        SetForeground(Drawing::BLUE);
-        SetBackground(Drawing::GREEN);
-      }
-    } m_panel1;
-
-    class GridPanel : public Panel
-    {
-      GridRenderer* m_grend;
-      OurGrid* m_grid;
-
-    public:
-      GridPanel() : m_grend(NULL), m_grid(NULL)
-      {
-	SetName("Grid Panel");
-	SetDimensions(SCREEN_INITIAL_WIDTH,
-		      SCREEN_INITIAL_HEIGHT);
-	SetRenderPoint(SPoint(0, 0));
-	SetForeground(Drawing::BLACK);
-	SetBackground(Drawing::DARK_PURPLE);
-      }
-
-      void SetGrid(OurGrid* grid)
-      {
-	m_grid = grid;
-      }
-
-      void SetGridRenderer(GridRenderer* grend)
-      {
-	m_grend = grend;
-      }
-
-    protected:
-      virtual void PaintComponent(Drawing& drawing)
-      {
-	this->Panel::PaintComponent(drawing);
-
-	m_grend->RenderGrid(drawing, *m_grid);
-      }
-
-      virtual bool Handle(SDL_MouseButtonEvent& event)
-      {
-	if(event.button == SDL_BUTTON_LEFT)
-	{
-	  SPoint pt = GetAbsoluteLocation();
-	  pt.Set(event.x - pt.GetX(),
-		 event.y - pt.GetY());
-
-	  m_grend->SelectTile(*m_grid,
-			      pt);
-	}
-	return true;
-      }
-    } m_gridPanel;
+    GridPanel<GC> m_gridPanel;
 
     class StatisticsPanel : public Panel
     {
       StatsRenderer<GC>* m_srend;
-      OurGrid* m_grid;
+      OurGrid* m_mainGrid;
       double m_AEPS;
       double m_AER;
       double m_overheadPercent;
@@ -524,9 +652,9 @@ namespace MFM {
 	m_srend = srend;
       }
 
-      void SetGrid(OurGrid* grid)
+      void SetGrid(OurGrid* mainGrid)
       {
-	m_grid = grid;
+	m_mainGrid = mainGrid;
       }
 
       void SetAEPS(double aeps)
@@ -553,13 +681,18 @@ namespace MFM {
       virtual void PaintComponent(Drawing& drawing)
       {
 	this->Panel::PaintComponent(drawing);
-	m_srend->RenderGridStatistics(drawing, *m_grid,
+	m_srend->RenderGridStatistics(drawing, *m_mainGrid,
 				     m_AEPS, m_AER, m_aepsPerFrame,
 				     m_overheadPercent, false);
       }
 
-      virtual bool Handle(SDL_MouseButtonEvent& event)
+      virtual void PaintBorder(Drawing & config) {
+        /* No border please */
+      }
+
+      virtual bool Handle(MouseButtonEvent& mbe)
       {
+        SDL_MouseButtonEvent& event = mbe.m_event.button;
 	if(event.button == SDL_BUTTON_LEFT)
 	{
 	  SPoint pt = GetAbsoluteLocation();
@@ -573,7 +706,10 @@ namespace MFM {
 
     struct ButtonPanel : public Panel
     {
-      ButtonPanel()
+      virtual void PaintBorder(Drawing & config) {
+        /* No border please */
+      }
+      ButtonPanel(Fonts & fonts)
       {
 	SetName("ButtonPanel");
 	SetDimensions(STATS_START_WINDOW_WIDTH,
@@ -582,74 +718,10 @@ namespace MFM {
 			      SCREEN_INITIAL_HEIGHT / 2));
 	SetForeground(Drawing::WHITE);
 	SetBackground(Drawing::DARK_PURPLE);
+        SetFont(fonts.GetDefaultFont(20));
       }
 
     }m_buttonPanel;
-
-    struct Panel2 : public Panel {
-      Panel2() {
-        SetName("Panel2");
-        SetDimensions(20,20);
-        SetRenderPoint(SPoint(0,0));
-        SetForeground(Drawing::BLUE);
-        SetBackground(Drawing::BLACK);
-      }
-      u32 m_counter;
-      virtual void PaintComponent(Drawing & drawing) {
-        ++m_counter;
-        SetRenderPoint(SPoint(m_counter%20+30, m_counter%30+40));
-        this->Panel::PaintComponent(drawing);
-      }
-    } m_panel2;
-
-    struct Panel3 : public Panel {
-      Panel3() {
-        SetName("Panel3");
-        SetDimensions(20,20);
-        SetRenderPoint(SPoint(0,0));
-        SetForeground(Drawing::CYAN);
-        SetBackground(Drawing::MAGENTA);
-      }
-      u32 m_counter;
-      virtual void PaintComponent(Drawing & drawing) {
-        m_counter += 2;
-        SetRenderPoint(SPoint(m_counter%50+30, m_counter%80+40));
-        this->Panel::PaintComponent(drawing);
-      }
-    } m_panel3;
-
-    struct Panel4 : public AbstractButton {
-      Panel4() : AbstractButton("Panel4") {
-        SetName("Panel4");
-        Panel::SetDimensions(100,40);
-        SetRenderPoint(SPoint(50,70));
-        SetForeground(Drawing::BLACK);
-        SetBackground(Drawing::WHITE);
-      }
-      virtual void OnClick() {
-        printf("click\n");
-      }
-    } m_panel4;
-
-    struct Panel5 : public AbstractButton {
-      AbstractButton * m_toEnable;
-      Panel5() : AbstractButton("Enabler") {
-        SetName("Enable");
-        Panel::SetDimensions(100,40);
-        SetRenderPoint(SPoint(50,200));
-        SetForeground(Drawing::BLACK);
-        SetBackground(Drawing::WHITE);
-      }
-      void SetControlled(AbstractButton * controlled) {
-        m_toEnable = controlled;
-      }
-      virtual void OnClick() {
-        m_toEnable->SetEnabled(!m_toEnable->IsEnabled());
-      }
-    } m_panel5;
-
-    //////// END DEBUG PANELS
-    //////////////////
 
 
     void SetScreenSize(u32 width, u32 height) {
@@ -707,30 +779,18 @@ namespace MFM {
 
     void RunHelper()
     {
-      paused = Super::GetStartPaused();
+      m_keyboardPaused = Super::GetStartPaused();
 
       bool running = true;
       SetScreenSize(m_screenWidth, m_screenHeight);
 
-      /*
-      screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32,
-                                SDL_SWSURFACE | SDL_RESIZABLE);
-      if (screen == 0)
-        FAIL(ILLEGAL_STATE);
-
-
-      //      m_grend.SetDestination(screen);
-      m_grend.SetDimensions(UPoint(m_screenWidth,m_screenHeight));
-
-      //m_srend.SetDestination(screen);
-      m_srend.SetDrawPoint(SPoint(m_screenWidth-STATS_WINDOW_WIDTH, 0));
-      m_srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, m_screenHeight));
-      */
-
       SDL_Event event;
       s32 lastFrame = SDL_GetTicks();
 
-      while(running)
+      u32 mouseButtonsDown = 0;
+      ButtonPositionArray dragStartPositions;
+
+      while(running && !m_reinitRequested)
         {
           while(SDL_PollEvent(&event))
             {
@@ -739,26 +799,48 @@ namespace MFM {
                 case SDL_VIDEORESIZE:
                   SetScreenSize(event.resize.w, event.resize.h);
                   break;
+
                 case SDL_QUIT:
                   running = false;
                   break;
+
                 case SDL_MOUSEBUTTONUP:
+                  mouseButtonsDown &= ~(1<<(event.button.button));
+                  dragStartPositions[event.button.button].Set(-1,-1);
+                  goto mousebuttondispatch;
+
                 case SDL_MOUSEBUTTONDOWN:
-                  //                  mouse.HandleButtonEvent(&event.button);
-                  //                  break;
-                case SDL_MOUSEMOTION:
-                  m_rootPanel.Dispatch(event,
-				       Rect(SPoint(),
-					    UPoint(m_screenWidth,m_screenHeight)));
-                  //                  mouse.HandleMotionEvent(&event.motion);
+                  mouseButtonsDown |= 1<<(event.button.button);
+                  dragStartPositions[event.button.button].Set(event.button.x,event.button.y);
+                  // FALL THROUGH
+
+                mousebuttondispatch:
+                  {
+                    MouseButtonEvent mbe(m_keyboard, event);
+                    m_rootPanel.Dispatch(mbe,
+                                         Rect(SPoint(),
+                                              UPoint(m_screenWidth,m_screenHeight)));
+                  }
                   break;
+
+                case SDL_MOUSEMOTION:
+                  {
+                    MouseMotionEvent mme(m_keyboard, event, mouseButtonsDown, dragStartPositions);
+                    m_rootPanel.Dispatch(mme,
+                                         Rect(SPoint(),
+                                              UPoint(m_screenWidth,m_screenHeight)));
+                  }
+                  break;
+
                 case SDL_KEYDOWN:
                 case SDL_KEYUP:
-                  keyboard.HandleEvent(&event.key);
+                  m_keyboard.HandleEvent(&event.key);
                   break;
 
                 }
             }
+
+          m_mousePaused = mouseButtonsDown != 0;
 
           /* Limit framerate */
           s32 sleepMS = (s32)
@@ -778,7 +860,7 @@ namespace MFM {
           m_rootPanel.Paint(m_rootDrawing);
 
           if (m_recordScreenshotPerAEPS > 0) {
-            if (!paused && Super::GetAEPS() >= m_nextScreenshotAEPS) {
+            if (!m_gridPaused && Super::GetAEPS() >= m_nextScreenshotAEPS) {
 
               const char * path = Super::GetSimDirPathTemporary("vid/%010d.png",
 								m_nextScreenshotAEPS);
