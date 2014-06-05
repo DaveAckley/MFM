@@ -16,7 +16,7 @@ else
   # Default to commands if debugging
   ifndef COMMANDS
     COMMANDS := 1
-  endif	
+  endif
 endif
 
 ifndef PROFILE
@@ -26,7 +26,7 @@ else
   # Default to commands if profiling
   ifndef COMMANDS
     COMMANDS := 1
-  endif	
+  endif
 endif
 
 ifndef COMMANDS
@@ -35,6 +35,10 @@ endif
 
 ifndef DSHARED_DIR
   DSHARED_DIR := ~/.mfm/res
+endif
+
+ifdef FIND_DEAD_CODE
+  OPTFLAGS += -Wunreachable-code
 endif
 
 # Common flags: All about errors -- let's help them help us
