@@ -694,7 +694,7 @@ namespace MFM {
       {
         SDL_MouseButtonEvent& event = mbe.m_event.button;
 	if(event.button == SDL_BUTTON_LEFT)
-	{
+	  {
 	  SPoint pt = GetAbsoluteLocation();
 	  pt.Set(event.x - pt.GetX(),
 		 event.y - pt.GetY());

@@ -178,20 +178,3 @@ uint32 RandMT::reloadMT(void) {
   return(s1 ^ (s1 >> 18));
 }
 } /* namespace MFM */
-
-#if 0
-// A simple test
-int main(void) {
-  int j;
-
-  RandMT r(4357U);
-  // you can seed with any uint32, but the best are odds in 0..(2^32 - 1)
-
-  // Run this 40 million times
-  for(j=40000000; j>0 ; --j) {
-    r.randomMT();
-  }
-
-  return(EXIT_SUCCESS);
-}
-#endif
