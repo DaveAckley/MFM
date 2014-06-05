@@ -48,7 +48,7 @@ namespace MFM
 
     TileRenderer m_tileRenderer;
 
-    Point<u32> m_dimensions;
+    UPoint m_dimensions;
 
     SPoint m_selectedTile;
 
@@ -71,21 +71,25 @@ namespace MFM
 
     void SetEventWindowRenderMode(EventWindowRenderMode mode);
 
-    UPoint& GetDimensions();
+    UPoint GetDimensions() const;
 
-    void SetDimensions(Point<u32> dimensions);
+    void SetDimensions(UPoint dimensions);
 
-    void IncreaseAtomSize();
+    void IncreaseAtomSize(SPoint around = SPoint(0,0));
 
     void ToggleTileSeparation();
 
     void ToggleDataHeatmap();
 
-    void DecreaseAtomSize();
+    void DecreaseAtomSize(SPoint around = SPoint(0,0));
 
     void ToggleGrid();
 
     void ToggleMemDraw();
+
+    const SPoint & GetDrawOrigin() const ;
+
+    void SetDrawOrigin(const SPoint & origin) ;
 
     void MoveUp(u8 amount);
 
@@ -97,7 +101,7 @@ namespace MFM
 
     void DeselectTile();
 
-    SPoint& GetSelectedTile();
+    SPoint GetSelectedTile() const;
 
     template <class GC>
     void RenderGrid(Drawing & drawing, Grid<GC>& grid);

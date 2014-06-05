@@ -40,7 +40,7 @@ namespace MFM {
     m_currentEWRenderMode = mode;
   }
 
-  UPoint& GridRenderer::GetDimensions()
+  UPoint GridRenderer::GetDimensions() const
   {
     return m_dimensions;
   }
@@ -51,9 +51,9 @@ namespace MFM {
     m_tileRenderer.SetDimensions(dimensions);
   }
 
-  void GridRenderer::IncreaseAtomSize()
+  void GridRenderer::IncreaseAtomSize(SPoint around)
   {
-    m_tileRenderer.IncreaseAtomSize();
+    m_tileRenderer.IncreaseAtomSize(around);
   }
 
   void GridRenderer::ToggleTileSeparation()
@@ -66,9 +66,9 @@ namespace MFM {
     m_tileRenderer.ToggleDataHeat();
   }
 
-  void GridRenderer::DecreaseAtomSize()
+  void GridRenderer::DecreaseAtomSize(SPoint around)
   {
-    m_tileRenderer.DecreaseAtomSize();
+    m_tileRenderer.DecreaseAtomSize(around);
   }
 
   void GridRenderer::ToggleGrid()
@@ -79,6 +79,16 @@ namespace MFM {
   void GridRenderer::ToggleMemDraw()
   {
     m_tileRenderer.ToggleMemDraw();
+  }
+
+  const SPoint & GridRenderer::GetDrawOrigin() const
+  {
+    return m_tileRenderer.GetWindowTL();
+  }
+
+  void GridRenderer::SetDrawOrigin(const SPoint & origin)
+  {
+    m_tileRenderer.SetWindowTL(origin);
   }
 
   void GridRenderer::MoveUp(u8 amount)
@@ -106,7 +116,7 @@ namespace MFM {
     m_selectedTile.Set(-1, -1);
   }
 
-  SPoint& GridRenderer::GetSelectedTile()
+  SPoint GridRenderer::GetSelectedTile() const
   {
     return m_selectedTile;
   }
