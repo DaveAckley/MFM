@@ -104,14 +104,27 @@ namespace MFM {
       m_dimensions = dimensions;
     }
 
-    SPoint& GetWindowTL()
+    const SPoint& GetWindowTL() const
     {
       return m_windowTL;
     }
 
-    void IncreaseAtomSize();
+    void SetWindowTL(const SPoint & newTL)
+    {
+      m_windowTL = newTL;
+    }
 
-    void DecreaseAtomSize();
+    void IncreaseAtomSize(SPoint around)
+    {
+      ChangeAtomSize(true, around);
+    }
+
+    void DecreaseAtomSize(SPoint around)
+    {
+      ChangeAtomSize(false, around);
+    }
+
+    void ChangeAtomSize(bool increase, SPoint around) ;
 
     u32 GetAtomSize()
     {
