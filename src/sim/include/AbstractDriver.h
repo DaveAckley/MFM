@@ -330,7 +330,7 @@ namespace MFM
       u64 startTime = Utils::GetDateTimeNow();
 
       snprintf(driver.m_simDirBasePath, MAX_PATH_LENGTH - 1,
-	       "%s/%ld", dirPath, startTime);
+	       "%s/%ld/", dirPath, startTime);
 
       driver.m_simDirBasePathLength = strlen(driver.m_simDirBasePath);
 
