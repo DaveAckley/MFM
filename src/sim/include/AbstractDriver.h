@@ -419,7 +419,7 @@ namespace MFM
       m_msSpentOverhead(0),
       m_microsSleepPerFrame(1000),
       m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
-      m_startPaused(true),
+      m_startPaused(false),
       m_AEPS(0)
     {
       AddMandatoryDriverArguments(m_varguments);
