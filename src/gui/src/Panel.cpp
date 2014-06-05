@@ -4,6 +4,25 @@
 
 namespace MFM {
 
+  // Do the double dispatching
+  bool MouseButtonEvent::Handle(Panel & panel) {
+    return panel.Handle(*this);
+  }
+
+  bool MouseMotionEvent::Handle(Panel & panel) {
+    return panel.Handle(*this);
+  }
+
+  bool Panel::Handle(MouseButtonEvent & event)
+  {
+    return false;
+  }
+
+  bool Panel::Handle(MouseMotionEvent & event)
+  {
+    return false;
+  }
+
   Panel::Panel(u32 width, u32 height)
   {
     SetDimensions(width, height);
@@ -11,9 +30,11 @@ namespace MFM {
     m_forward = m_backward = 0;
     m_parent = m_top = 0;
 
+    m_font = 0;
     m_name = 0;
 
     m_bgColor = Drawing::BLACK;
+    m_bdColor = Drawing::GREY;
     m_fgColor = Drawing::YELLOW;
 
     m_visible = true;
@@ -42,12 +63,13 @@ namespace MFM {
     sink.Printf("[");
     if (GetName()) sink.Printf("%s:", GetName());
     sink.Printf("%p",(void*) this);
-    sink.Printf("(%d,%d)%dx%d,bg:%08x,fg:%08x",
+    sink.Printf("(%d,%d)%dx%d,bg:%08x,bd:%08x,fg:%08x",
             m_rect.GetX(),
             m_rect.GetY(),
             m_rect.GetWidth(),
             m_rect.GetHeight(),
             m_bgColor,
+            m_bdColor,
             m_fgColor);
     if (m_top) {
       Panel * p = m_top;
@@ -103,6 +125,16 @@ namespace MFM {
     child->m_backward = 0;
   }
 
+  TTF_Font* Panel::GetFont() const {
+    return m_font;
+  }
+
+  TTF_Font*  Panel::SetFont(TTF_Font * newFont) {
+    TTF_Font* old = m_font;
+    m_font = newFont;
+    return old;
+  }
+
   void Panel::SetDimensions(u32 width, u32 height)
   {
     m_rect.SetWidth(width);
@@ -136,6 +168,11 @@ namespace MFM {
       drawing.TransformWindow(m_rect);
       drawing.GetWindow(cur);
 
+      TTF_Font* oldFont = 0;
+      TTF_Font* font = GetFont();
+      if (font)
+        oldFont = drawing.SetFont(font);
+
       PaintComponent(drawing);
       PaintBorder(drawing);
 
@@ -143,6 +180,9 @@ namespace MFM {
       PaintChildren(drawing);
 
       drawing.SetWindow(old);
+
+      if (oldFont)
+        drawing.SetFont(oldFont);
     }
   }
 
@@ -170,7 +210,7 @@ namespace MFM {
 
   void Panel::PaintBorder(Drawing & drawing)
   {
-    drawing.SetForeground(m_fgColor);
+    drawing.SetForeground(m_bdColor);
     drawing.DrawRectangle(Rect(SPoint(),m_rect.GetSize()));
   }
 
@@ -238,27 +278,14 @@ namespace MFM {
 
   }
 
-  bool Panel::Dispatch(SDL_Event & event, const Rect & existing)
+  bool Panel::Dispatch(MouseEvent & event, const Rect & existing)
   {
-    SPoint at;
-    SDL_MouseButtonEvent * button = 0;
-    SDL_MouseMotionEvent * motion = 0;
 
-    switch (event.type) {
-    case SDL_MOUSEMOTION:
-      motion = &event.motion;
-      at.SetX(motion->x);
-      at.SetY(motion->y);
-      break;
-    case SDL_MOUSEBUTTONUP:
-    case SDL_MOUSEBUTTONDOWN:
-      button = &event.button;
-      at.SetX(button->x);
-      at.SetY(button->y);
-      break;
-    default:
+    // Can't take events if we're not here.
+    if (!m_visible)
       return false;
-    }
+
+    SPoint at = event.GetAt();
 
     Rect newRect;
     Drawing::TransformWindow(existing, m_rect, newRect);
@@ -279,21 +306,7 @@ namespace MFM {
 
     // Here the hit is in us and none of our descendants wanted it.
     // So it's ours if we do.
-
-    switch (event.type) {
-    case SDL_MOUSEMOTION:
-      return Handle(*motion);
-    case SDL_MOUSEBUTTONUP:
-      printf("Panel Button Up");
-      Print(STDOUT);
-      // FALL THROUGH
-    case SDL_MOUSEBUTTONDOWN:
-      return Handle(*button);
-    default:
-      break;
-    }
-
-    return false;
+    return event.Handle(*this);
   }
 
 } /* namespace MFM */
