@@ -464,7 +464,6 @@ namespace MFM {
 	SetBackground(Drawing::BLACK);
 
 	m_grend = NULL;
-	m_mainGrid = NULL;
       }
 
       void SetGrid(OurGrid* grid)
