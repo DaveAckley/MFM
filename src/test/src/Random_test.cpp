@@ -4,17 +4,17 @@
 
 namespace MFM {
 
-  void RandomTest::Test_RunTests() {
+  void Random_Test::Test_RunTests() {
     Test_randomSetSeed();
   }
 
-  Random & RandomTest::setup()
+  Random & Random_Test::setup()
   {
     static Random random(1);
     return random;
   }
 
-  void RandomTest::Test_randomSetSeed()
+  void Random_Test::Test_randomSetSeed()
   {
     Random & random = setup();
     const u32 NUMS = 100;
@@ -47,7 +47,7 @@ namespace MFM {
 
   }
 
-  void RandomTest::Test_randomDeterministics()
+  void Random_Test::Test_randomDeterministics()
   {
     Random & random = setup();
     const u32 TRIES = 100;
@@ -70,4 +70,3 @@ namespace MFM {
   }
 
 } /* namespace MFM */
-

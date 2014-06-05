@@ -1,7 +1,7 @@
 #ifndef TILE_TEST_H      /* -*- C++ -*- */
 #define TILE_TEST_H
 
-#include "test_common.h"
+#include "Test_Common.h"
 
 namespace MFM {
 
@@ -14,4 +14,3 @@ public:
 } /* namespace MFM */
 
 #endif /*TILE_TEST_H*/
-

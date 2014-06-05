@@ -4,7 +4,7 @@
 
 namespace MFM {
 
-void PointTest::Test_pointAdd()
+void Point_Test::Test_pointAdd()
 {
   SPoint iPointA(20, 30);
   SPoint iPointB(30, 20);
@@ -22,7 +22,7 @@ void PointTest::Test_pointAdd()
   assert(fPointA.GetX() == 30.0f + 50.0f);
 }
 
-void PointTest::Test_pointMultiply()
+void Point_Test::Test_pointMultiply()
 {
   SPoint iPoint(20, 100);
   Point<double> dPoint(100.0, 20.25);
@@ -38,4 +38,3 @@ void PointTest::Test_pointMultiply()
   assert(dPoint.GetY() == 20.25 * 2.0);
 }
 } /* namespace MFM */
-

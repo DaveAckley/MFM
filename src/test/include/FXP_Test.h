@@ -5,7 +5,7 @@
 
 namespace MFM {
 
-  class FXP_test
+  class FXP_Test
   {
   private:
     template <int p>
@@ -22,4 +22,3 @@ namespace MFM {
 
 } /* namespace MFM */
 #endif /*FXP_TEST_H*/
-

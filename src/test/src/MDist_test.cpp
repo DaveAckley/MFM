@@ -3,11 +3,11 @@
 
 namespace MFM {
 
-void MDistTest::Test_MDistConversion()
+void MDist_Test::Test_MDistConversion()
 {
   SPoint longPt(2, 2);
   SPoint shortPt(1, -1);
-  
+
   u8 longBits  = MDist<4>::get().FromPoint(longPt, MANHATTAN_TABLE_LONG);
   u8 shortBits = MDist<4>::get().FromPoint(shortPt, MANHATTAN_TABLE_SHORT);
 
@@ -24,4 +24,3 @@ void MDistTest::Test_MDistConversion()
   assert(out.GetY() == -1);
 }
 } /* namespace MFM */
-

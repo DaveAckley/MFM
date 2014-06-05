@@ -1,4 +1,4 @@
-#include "p2atom.h"
+#include "P2Atom.h"
 #include "MDist.h"
 
 namespace MFM {
@@ -7,7 +7,7 @@ namespace MFM {
   u32 P2Atom::AddLongBond(const SPoint& offset)
   {
     u32 newID = GetLongBondCount();
-  
+
     u32 newBondIdx = P2ATOM_HEADER_SIZE +
       P2ATOM_LONGBOND_SIZE * newID;
 
@@ -23,7 +23,7 @@ namespace MFM {
     u32 newID = GetShortBondCount();
 
     u32 newBondIdx = P2ATOM_HEADER_SIZE +
-      P2ATOM_LONGBOND_SIZE * GetLongBondCount() + 
+      P2ATOM_LONGBOND_SIZE * GetLongBondCount() +
       P2ATOM_SHORTBOND_SIZE * newID;
 
     m_bits.Insert(newBondIdx, P2ATOM_SHORTBOND_SIZE,
@@ -94,4 +94,3 @@ namespace MFM {
     return *this;
   }
 } /* namespace MFM */
-

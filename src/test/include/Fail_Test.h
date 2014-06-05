@@ -5,7 +5,7 @@
 
 namespace MFM {
 
-  class Fail_test
+  class Fail_Test
   {
   private:
 
@@ -21,4 +21,3 @@ namespace MFM {
   };
 } /* namespace MFM */
 #endif /*FAIL_TEST_H*/
-

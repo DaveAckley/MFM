@@ -2,7 +2,7 @@
 #define TESTS_H
 
 /* Get some types for us to test */
-#include "test_common.h"
+#include "Test_Common.h"
 
 #include "VArguments_Test.h"
 #include "Logger_Test.h"

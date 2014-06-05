@@ -1,12 +1,12 @@
 #ifndef P1ATOM_TEST_H      /* -*- C++ -*- */
 #define P1ATOM_TEST_H
 
-#include "test_common.h"
+#include "Test_Common.h"
 
 namespace MFM {
 
-class P1AtomTest
-{ 
+class P1Atom_Test
+{
 public:
   static void Test_p1atomState();
 
@@ -30,4 +30,3 @@ public:
 };
 } /* namespace MFM */
 #endif /*P1ATOM_TEST_H*/
-

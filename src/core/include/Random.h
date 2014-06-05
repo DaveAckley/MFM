@@ -30,7 +30,7 @@
 #include <stdlib.h>
 
 #include "itype.h"
-#include "randmt.h"
+#include "RandMT.h"
 #include "BitVector.h"
 #include "FXP.h"
 #include "Fail.h"

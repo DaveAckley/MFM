@@ -6,14 +6,14 @@
 
 namespace MFM {
 
-  void FXP_test::Test_RunTests() {
+  void FXP_Test::Test_RunTests() {
     Test_FXPCtors();
     Test_FXPOps();
     Test_FXPCloser();
     Test_FXPFarther();
   }
 
-  void FXP_test::Test_FXPCtors()
+  void FXP_Test::Test_FXPCtors()
   {
     {
       FXP16 s;
@@ -50,7 +50,7 @@ namespace MFM {
     }
   }
 
-  void FXP_test::Test_FXPOps()
+  void FXP_Test::Test_FXPOps()
   {
     {
       FXP16 s;
@@ -138,14 +138,14 @@ namespace MFM {
   }
 
   template <int p>
-  void FXP_test::assertTolerance(const char * file, const int lineno, const int ulp, FXP<p> num, double toThis) {
+  void FXP_Test::assertTolerance(const char * file, const int lineno, const int ulp, FXP<p> num, double toThis) {
     double is = num.toDouble();
     double absDiff = (is-toThis);
     const double tolerance = ((double) ulp)/(1<<p);
     if (absDiff<0) absDiff = -absDiff;
     if (absDiff > tolerance) {
       fprintf(stderr,"%s:%d: Assertion failed ",file,lineno);
-      num.Print(stderr); 
+      num.Print(stderr);
       fprintf(stderr,"!=%f (err=%f, tol=%f)\n",toThis,absDiff,tolerance);
       abort();
     }
@@ -157,12 +157,12 @@ namespace MFM {
 #define assertClose(a,b) assertTolerance(__FILE__,__LINE__,2,(a),(b))
 #define assertFar(a,b) assertTolerance(__FILE__,__LINE__,50,(a),(b))
 
-  void FXP_test::Test_FXPCloser()
+  void FXP_Test::Test_FXPCloser()
   {
     FXP16 s = 77, t = 9;
     double a, b;
 
-    a = s.toDouble(); 
+    a = s.toDouble();
     b = t.toDouble();
 
     assertClose(s,a);
@@ -178,83 +178,82 @@ namespace MFM {
     assertClose(s,a);
     assertClose(t,b);
 
-    a += b;  s += t;      
+    a += b;  s += t;
 
     assertClose(s,a);
     assertClose(t,b);
-    
-    a /= b;  s /= t;      
+
+    a /= b;  s /= t;
 
     assertClose(s,a);
     assertClose(t,b);
-    
-    a = s.toDouble(); 
+
+    a = s.toDouble();
     b = t.toDouble();
 
     assertClose(s,a);
     assertClose(t,b);
-    
-    a = sqrt(b*a);  s = Sqrt(t*s);      
+
+    a = sqrt(b*a);  s = Sqrt(t*s);
 
     assertFar(s,a);
-    
+
     b = 1/b; t = 1/t;
 
     assertFar(t,b);
-    
-    b -= a;  t -= s;      
+
+    b -= a;  t -= s;
 
     assertFar(t,b);
 
     s = 12.34;
     t = 56.78;
 
-    a = s.toDouble(); 
+    a = s.toDouble();
     b = t.toDouble();
 
-    a = b*a;  s = t*s;      
+    a = b*a;  s = t*s;
 
     assertClose(s,a);
 
-    a /= a;  s /= s;      
+    a /= a;  s /= s;
 
     assertClose(s,a);
 
     b -= a; t -= s;
-    assertClose(t,b);    
+    assertClose(t,b);
   }
 
-  void FXP_test::Test_FXPFarther()
+  void FXP_Test::Test_FXPFarther()
   {
     FXP16 s = 77, t = 9;
     double a, b;
 
-    a = s.toDouble(); 
+    a = s.toDouble();
     b = t.toDouble();
-    
-    a = sqrt(a);  s = Sqrt(s);      
+
+    a = sqrt(a);  s = Sqrt(s);
 
     assertFar(s,a);
-    
+
     b = 1/b; t = 1/t;
 
     assertFar(t,b);
-    
-    b -= a;  t -= s;      
+
+    b -= a;  t -= s;
 
     assertFar(t,b);
 
     s = 12.34;
     t = 56.78;
 
-    a = s.toDouble(); 
+    a = s.toDouble();
     b = t.toDouble();
 
     a = sin(a); s = Sin(s);
 
     assertFar(s,a);
-    
+
   }
 
 } /* namespace MFM */
-

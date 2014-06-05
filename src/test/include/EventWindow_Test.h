@@ -5,7 +5,7 @@
 
 namespace MFM {
 
-class EventWindowTest
+class EventWindow_Test
 {
 
 public:
@@ -16,4 +16,3 @@ public:
 };
 } /* namespace MFM */
 #endif /*EVENTWINDOW_TEST_H*/
-

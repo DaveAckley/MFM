@@ -47,7 +47,7 @@
 // however I've not profiled the class to compare it with the straight
 // C code.
 //
-// Use of a class removes many C nasties and also allows you to easily 
+// Use of a class removes many C nasties and also allows you to easily
 // create multiple generators.
 // To compile on GNU a simple line is:
 // g++ -O3 RandMT.cc -o RandMT
@@ -60,7 +60,7 @@
 // in the code, cut'n'paste this bit to create a .h for use in
 // other programs
 
-#include "randmt.h"
+#include "RandMT.h"
 
 //using namespace std;
 
@@ -87,7 +87,7 @@ void RandMT::seedMT_MFM(uint32 s)
     int j;
     state[0]= s & 0xffffffffUL;
     for (j=1; j<N; j++) {
-        state[j] = (1812433253UL * (state[j-1] ^ (state[j-1] >> 30)) + j); 
+        state[j] = (1812433253UL * (state[j-1] ^ (state[j-1] >> 30)) + j);
         /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
         /* In the previous versions, MSBs of the seed affect   */
         /* only MSBs of the array state[].                     */
@@ -184,7 +184,7 @@ uint32 RandMT::reloadMT(void) {
 int main(void) {
   int j;
 
-  RandMT r(4357U); 
+  RandMT r(4357U);
   // you can seed with any uint32, but the best are odds in 0..(2^32 - 1)
 
   // Run this 40 million times
@@ -195,4 +195,3 @@ int main(void) {
   return(EXIT_SUCCESS);
 }
 #endif
-

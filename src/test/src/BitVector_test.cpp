@@ -4,7 +4,7 @@
 
 namespace MFM {
 
-  void BitVectorTest::Test_RunTests() {
+  void BitVector_Test::Test_RunTests() {
     Test_bitVectorAllocate();
     Test_bitVectorRead();
     Test_bitVectorSize();
@@ -14,7 +14,7 @@ namespace MFM {
 
   static BitVector<256> bits;
 
-  BitVector<256>* BitVectorTest::setup()
+  BitVector<256>* BitVector_Test::setup()
   {
     u32 vals[8] =
       {
@@ -33,14 +33,14 @@ namespace MFM {
     return &bits;
   }
 
-  void BitVectorTest::Test_bitVectorAllocate()
+  void BitVector_Test::Test_bitVectorAllocate()
   {
     BitVector<256>* bits = setup();
 
     assert(bits->Read(0, 32) == 0xffffffff);
   }
 
-  void BitVectorTest::Test_bitVectorRead()
+  void BitVector_Test::Test_bitVectorRead()
   {
     BitVector<256>* bits = setup();
 
@@ -54,16 +54,16 @@ namespace MFM {
     }
   }
 
-  void BitVectorTest::Test_bitVectorSize()
+  void BitVector_Test::Test_bitVectorSize()
   {
     BitVector<64> bits;
     BitVector<1024> bigBits;
-  
+
     assert(sizeof(bits) * 8 == 64);
     assert(sizeof(bigBits) * 8 == 1024);
   }
 
-  void BitVectorTest::Test_bitVectorWrite()
+  void BitVector_Test::Test_bitVectorWrite()
   {
     BitVector<256>* bits = setup();
 
@@ -74,7 +74,7 @@ namespace MFM {
     assert(bits->Read(224, 32) == 0xffffffff);
   }
 
-  void BitVectorTest::Test_bitVectorSplitWrites()
+  void BitVector_Test::Test_bitVectorSplitWrites()
   {
     BitVector<64> bits;
 
@@ -90,4 +90,3 @@ namespace MFM {
   }
 
 } /* namespace MFM */
-

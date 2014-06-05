@@ -3,7 +3,7 @@
 
 namespace MFM {
 
-class PointTest
+class Point_Test
 {
 public:
   static void Test_pointAdd();
@@ -12,4 +12,3 @@ public:
 };
 } /* namespace MFM */
 #endif /*POINT_TEST_H*/
-
