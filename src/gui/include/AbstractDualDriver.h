@@ -51,13 +51,23 @@ namespace MFM
   template<class GC>
   class AbstractDualDriver : public DUAL_DRIVER_TYPE<GC>
   {
-  private:
-    typedef DUAL_DRIVER_TYPE<GC> Super;
+  private: typedef DUAL_DRIVER_TYPE<GC> Super;
 
   protected:
 
-    AbstractDualDriver(u32 argc, const char** argv) : Super(argc, argv)
+    AbstractDualDriver()
     { }
+
+    virtual void AddDriverArguments()
+    {
+      Super::AddDriverArguments();
+    }
+
+    virtual void OnceOnly(VArguments& args)
+    {
+      Super::OnceOnly(args);
+    }
+
   };
 }
 
