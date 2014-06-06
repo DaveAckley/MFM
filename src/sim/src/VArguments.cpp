@@ -39,6 +39,22 @@ namespace MFM
     arg.m_handlerArg = handlerArg;
   }
 
+  void VArguments::RegisterSection(const char* sectionLabel)
+  {
+    if(m_heldArguments >= VARGUMENTS_MAX_SIZE)
+    {
+      FAIL(OUT_OF_ROOM);
+    }
+
+    VArg& arg = m_argDescriptors[m_heldArguments++];
+
+    arg.m_description = sectionLabel;
+    arg.m_filter = 0;
+    arg.m_function = 0;
+    arg.m_argsNeeded = false;
+    arg.m_handlerArg = 0;
+  }
+
   static bool MatchesFilter(const char* str, const char* filter)
   {
     u32 arglen = strlen(str);
@@ -78,9 +94,16 @@ namespace MFM
       for(u32 j = 0; j < m_heldArguments; j++)
       {
 	VArg& arg = m_argDescriptors[j];
+
+        if (!arg.m_filter) continue;  // Skip sections
+
 	if(MatchesFilter(argv[i], arg.m_filter))
 	{
 	  arg.m_appeared = true;
+
+	  if(arg.m_argsNeeded && i >= argc - 1)
+            Die("'%s' requires an argument", argv[i]);
+
 	  if(arg.m_argsNeeded && arg.m_function)
 	  {
 	    arg.m_function(arg.m_value = argv[++i], arg.m_handlerArg);
@@ -109,6 +132,8 @@ namespace MFM
   {
     for(u32 i = 0; i < m_heldArguments; i++)
     {
+      if (!m_argDescriptors[i].m_filter) continue;  // Skip sections
+
       if(MatchesFilter(argName, m_argDescriptors[i].m_filter))
       {
 	return m_argDescriptors[i].m_value;
@@ -122,6 +147,8 @@ namespace MFM
   {
     for(u32 i = 0; i < m_heldArguments; i++)
     {
+      if (!m_argDescriptors[i].m_filter) continue;  // Skip sections
+
       if(MatchesFilter(argName, m_argDescriptors[i].m_filter))
       {
 	return m_argDescriptors[i].m_appeared;
@@ -136,13 +163,21 @@ namespace MFM
     fprintf(stderr,
 	    "Movable Feast Machine Simulator\n"
 	    "\n"
-	    "Usage:\n"
-	    "\n");
+	    "Usage:");
 
     for(u32 i = 0; i < m_heldArguments; i++)
     {
       const VArg& va = m_argDescriptors[i];
-      fprintf(stderr, "  %-15s%-20s\n", va.m_filter, va.m_description);
+      if (va.m_filter)
+      {
+        fprintf(stderr, "  %-20s%-20s%s\n",
+                va.m_filter,
+                va.m_description,
+                va.m_argsNeeded ? " [ARG]" : "");
+      }
+      else
+        fprintf(stderr, "\n %s\n", va.m_description);  // Section label
+
     }
 
     exit(0);
