@@ -10,7 +10,18 @@ namespace MFM {
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
   struct MFMSimDHSDemo : public AbstractGUIDriver<OurGridConfig>
   {
-    MFMSimDHSDemo(u32 argc, const char** argv) : AbstractGUIDriver(argc, argv) { }
+  private: typedef AbstractGUIDriver<OurGridConfig> Super;
+
+  public:
+    virtual void AddDriverArguments()
+    {
+      Super::AddDriverArguments();
+    }
+
+    virtual void OnceOnly(VArguments& args)
+    {
+      Super::OnceOnly(args);
+    }
 
     virtual void ReinitPhysics() {
       OurGrid & mainGrid = GetGrid();
@@ -105,7 +116,9 @@ namespace MFM {
 
 int main(int argc, const char** argv)
 {
-  MFM::MFMSimDHSDemo sim((MFM::u32)argc, argv);
+  MFM::MFMSimDHSDemo sim;
+
+  sim.Init(argc, argv);
 
   sim.Reinit();
 
