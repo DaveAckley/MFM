@@ -63,8 +63,10 @@ namespace MFM
 
       /**
        * The flags of each command line argument, separated by the '|'
-       * character. For instance, "-h|--help" would match both "-h" and
-       * "--help".
+       * character. For instance, "-h|--help" would match both "-h"
+       * and "--help".  If m_filter is NULL, this entry is a 'section
+       * header', used only when providing help, rather than an actual
+       * argument definition.
        */
       const char* m_filter;
 
@@ -111,8 +113,8 @@ namespace MFM
     VArg m_argDescriptors[VARGUMENTS_MAX_SIZE];
 
     /**
-     * The number of arguments that have been registered in this
-     * instance of VArguments.
+     * The number of arguments and sections that have been registered
+     * in this instance of VArguments.
      */
     u32 m_heldArguments;
 
@@ -155,6 +157,17 @@ namespace MFM
     void RegisterArgument(const char* description, const char* filter,
 			  VArgumentHandleValue func, void* handlerArg,
 			  bool runFunc);
+
+    /**
+     * Defines a new command line argument section in this VArguments
+     * instance.  Subsequent RegisterArgument calls will be described
+     * as part of section \a label, unless and until another
+     * RegisterSection call.
+     *
+     * @param label The name of the section, printed out as part of
+     *                    program usage help.
+     */
+    void RegisterSection(const char* label);
 
     /**
      * To be called after all arguments are registered. This will parse

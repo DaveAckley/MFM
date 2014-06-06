@@ -11,7 +11,29 @@ namespace MFM {
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
   struct MFMSimDHSDemo : public AbstractGUIDriver<OurGridConfig>
   {
-    MFMSimDHSDemo(u32 argc, const char** argv) : AbstractGUIDriver(argc, argv) { }
+  private: typedef AbstractGUIDriver<OurGridConfig> Super;
+  public:
+
+    static void SayArgPointless(const char* arg, void* ptr)
+    {
+      VArguments * vargs = (VArguments*) ptr;
+      vargs->Die("But '%s' is completely pointless!",arg);
+    }
+
+    virtual void AddDriverArguments()
+    {
+      Super::AddDriverArguments();
+
+      RegisterSection("Simulation-specific switches");
+
+      RegisterArgument("Object that ARG is pointless (demo switch).",
+                       "--pointless", &SayArgPointless, (void*) &GetVArguments(), true);
+    }
+
+    virtual void OnceOnly(VArguments& args)
+    {
+      Super::OnceOnly(args);
+    }
 
     virtual void ReinitPhysics() {
       OurGrid & mainGrid = GetGrid();
@@ -110,7 +132,9 @@ int main(int argc, const char** argv)
   MFM::LOG.SetByteSink(MFM::STDERR);
   MFM::LOG.SetLevel(MFM::LOG.ALL);
 
-  MFM::MFMSimDHSDemo sim(argc, argv);
+  MFM::MFMSimDHSDemo sim;
+
+  sim.Init(argc, argv);
 
   sim.Reinit();
 

@@ -43,12 +43,12 @@
 #define MAX_PATH_LENGTH 1000
 #define MIN_PATH_RESERVED_LENGTH 100
 
-#define INITIAL_AEPS_PER_FRAME 20
+#define INITIAL_AEPS_PER_FRAME 2
 
 namespace MFM
 {
   /**
-   * An abstract driver which all MFM drivers should inherit.
+   * An abstract driver from which all MFM drivers should inherit.
    */
   template<class GC>
   class AbstractDriver
@@ -80,44 +80,41 @@ namespace MFM
 
     void RunGrid(OurGrid& grid)
     {
-      if(!m_paused)
-      {
-	const s32 ONE_THOUSAND = 1000;
-	const s32 ONE_MILLION = ONE_THOUSAND*ONE_THOUSAND;
+      const s32 ONE_THOUSAND = 1000;
+      const s32 ONE_MILLION = ONE_THOUSAND*ONE_THOUSAND;
 
-	grid.Unpause();  // pausing and unpausing should be overhead!
+      grid.Unpause();  // pausing and unpausing should be overhead!
 
-	u32 startMS = GetTicks();  // So get the ticks after unpausing
-	if (m_ticksLastStopped != 0)
-	  m_msSpentOverhead += startMS - m_ticksLastStopped;
-	else
-	  m_msSpentOverhead = 0;
+      u32 startMS = GetTicks();  // So get the ticks after unpausing
+      if (m_ticksLastStopped != 0)
+        m_msSpentOverhead += startMS - m_ticksLastStopped;
+      else
+        m_msSpentOverhead = 0;
 
-	Sleep(m_microsSleepPerFrame/ONE_MILLION, (u64) (m_microsSleepPerFrame%ONE_MILLION)*ONE_THOUSAND);
-	m_ticksLastStopped = GetTicks(); // and before pausing
+      Sleep(m_microsSleepPerFrame/ONE_MILLION, (u64) (m_microsSleepPerFrame%ONE_MILLION)*ONE_THOUSAND);
+      m_ticksLastStopped = GetTicks(); // and before pausing
 
-	grid.Pause();
+      grid.Pause();
 
-	m_msSpentRunning += (m_ticksLastStopped - startMS);
+      m_msSpentRunning += (m_ticksLastStopped - startMS);
 
-	m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
-	m_AER = 1000 * (m_AEPS / m_msSpentRunning);
+      m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
+      m_AER = 1000 * (m_AEPS / m_msSpentRunning);
 
-	m_overheadPercent = 100.0*m_msSpentOverhead/(m_msSpentRunning+m_msSpentOverhead);
+      m_overheadPercent = 100.0*m_msSpentOverhead/(m_msSpentRunning+m_msSpentOverhead);
 
-	double diff = m_AEPS - m_lastFrameAEPS;
-	double err = MIN(1.0, MAX(-1.0, m_aepsPerFrame - diff));
+      double diff = m_AEPS - m_lastFrameAEPS;
+      double err = MIN(1.0, MAX(-1.0, m_aepsPerFrame - diff));
 
-	// Correct up to 20% of current each frame
-	m_microsSleepPerFrame = (100+20*err)*m_microsSleepPerFrame/100;
-	m_microsSleepPerFrame = MIN(100000000, MAX(1000, m_microsSleepPerFrame));
+      // Correct up to 20% of current each frame
+      m_microsSleepPerFrame = (100+20*err)*m_microsSleepPerFrame/100;
+      m_microsSleepPerFrame = MIN(100000000, MAX(1000, m_microsSleepPerFrame));
 
-	m_lastFrameAEPS = m_AEPS;
+      m_lastFrameAEPS = m_AEPS;
 
-	ExportEventCounts(grid);
+      ExportEventCounts(grid);
 
-	PostUpdate();
-      }
+      PostUpdate();
     }
 
     void DecrementAEPSPerFrame()
@@ -170,39 +167,16 @@ namespace MFM
     virtual void PostUpdate()
     { }
 
-    virtual void AddDriverArguments(VArguments& args)
-    { }
-
     /**
      * To be run during first initialization, only once. This runs
-     * after all standard argument parsing and is meant to be used to
-     * extend this behavior.
+     * after all standard argument parsing and is available to extend
+     * that behavior.  Any overrides of this method should be certain
+     * to call Super::OnceOnly (probably at the beginning, but in any
+     * sometime) during their execution, so more abstract levels can
+     * do any processing they need to.
      */
-    virtual void PostOnceOnly(VArguments& args)
-    { }
-
-
-    /**
-     * The main loop which runs this simulation.
-     */
-    virtual void RunHelper()
+    virtual void OnceOnly(VArguments& args)
     {
-      bool running = true;
-
-      while(running)
-      {
-	RunGrid(m_grid);
-
-	if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
-	{
-	  running = false;
-	}
-      }
-    }
-
-    void OnceOnly()
-    {
-      VArguments& args = m_varguments;
       if(!args.Appeared("-d"))
       {
 	SetDataDirFromArgs(NULL, this);
@@ -225,8 +199,24 @@ namespace MFM
       fprintf(fp, "#AEPS activesites empty dreg res wall sort-hits"
 	          "sort-misses sort-total sort-hit-pctg\n");
       fclose(fp);
+    }
 
-      PostOnceOnly(args);
+    /**
+     * The main loop which runs this simulation.
+     */
+    virtual void RunHelper()
+    {
+      bool running = true;
+
+      while(running)
+      {
+	RunGrid(m_grid);
+
+	if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
+	{
+	  running = false;
+	}
+      }
     }
 
   private:
@@ -245,9 +235,6 @@ namespace MFM
 
     s32 m_recordEventCountsPerAEPS;
     s32 m_recordTimeBasedDataPerAEPS;
-
-    bool m_startPaused;
-    bool m_paused;
 
     double m_AEPS;
     double m_AER;
@@ -340,53 +327,12 @@ namespace MFM
       }
     }
 
-    static void SetStartPausedFromArgs(const char* not_used, void* driverptr)
-    {
-      AbstractDriver& driver = *((AbstractDriver*)driverptr);
-
-      driver.m_startPaused = true;
-    }
-
     static void SetHaltAfterAEPSFromArgs(const char* not_used, void* driverptr)
     {
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
 
       driver.m_haltAfterAEPS = atoi(not_used);
     }
-
-    virtual void AddMandatoryDriverArguments(VArguments& args)
-    {
-      args.RegisterArgument("Display this help message, then exit.",
-			    "-h|--help", &PrintArgUsage, (void*)(&args), false);
-
-      args.RegisterArgument("Amount of logging output (0 is none, 8 is high)",
-			    "-l|--log", &SetLoggingLevel, NULL, true);
-
-      args.RegisterArgument("Set master PRNG seed to NUM (u32)",
-			    "-s|--seed", &SetSeedFromArgs, this, true);
-
-      args.RegisterArgument("Record event counts every AEPS aeps",
-			    "-e|--events", &SetRecordEventCountsFromArgs, this, true);
-
-      args.RegisterArgument("Records time based data every AEPS aeps",
-			    "-t|--timebd",
-			    &SetRecordTimeBasedDataFromArgs, this, true);
-
-      args.RegisterArgument("Starts paused to allow display configuration.",
-			    "--startpaused", &SetStartPausedFromArgs, this, false);
-
-      args.RegisterArgument("If AEPS > 0, Halts after AEPS elapsed aeps.",
-			    "--haltafteraeps", &SetHaltAfterAEPSFromArgs, this, true);
-
-      /*
-       * Placing a newline at the end of this description makes any arguments added
-       * after this one appear to be in their own section.
-       */
-      args.RegisterArgument("Store data in per-sim directories under DIR\n",
-			    "-d|--dir", &SetDataDirFromArgs, this, true);
-
-    }
-
 
     void ExportEventCounts(OurGrid& grid)
     {
@@ -412,34 +358,87 @@ namespace MFM
 
   public:
 
-    AbstractDriver(u32 argc, const char** argv) :
+    AbstractDriver() :
       m_ticksLastStopped(0),
       m_startTimeMS(0),
       m_msSpentRunning(0),
       m_msSpentOverhead(0),
       m_microsSleepPerFrame(1000),
       m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
-      m_startPaused(false),
       m_AEPS(0)
     {
-      AddMandatoryDriverArguments(m_varguments);
-      AddDriverArguments(m_varguments);
+    }
+
+    void Init(u32 argc, const char** argv)
+    {
+      AddDriverArguments();
 
       SetSeed(1);
 
       m_varguments.ProcessArguments(argc, argv);
 
       m_startTimeMS = GetTicks();
+
+      OnceOnly(m_varguments);
+    }
+
+    VArguments & GetVArguments()
+    {
+      return m_varguments;
+    }
+
+    void RegisterArgument(const char* description, const char* filter,
+			  VArgumentHandleValue func, void* handlerArg,
+			  bool runFunc)
+    {
+      m_varguments.RegisterArgument(description, filter, func, handlerArg, runFunc);
+    }
+
+    void RegisterSection(const char* sectionLabel)
+    {
+      m_varguments.RegisterSection(sectionLabel);
+    }
+
+    /**
+     * Adds any command-line arguments desired, by calling
+     * #RegisterArgument with appropriate arguments.  Note:
+     * (Sub-)subclasses of AbstractDriver should \e always override
+     * this method, even if they do not wish to add command-line
+     * arguments, and begin their overriding method with
+     * Super::AddDriverArguments().  Such chaining lets all levels of
+     * abstraction define command-line arguments, with the most
+     * abstract going first.
+     */
+    virtual void AddDriverArguments()
+    {
+      RegisterSection("General switches");
+
+      RegisterArgument("Display this help message, then exit.",
+                       "-h|--help", &PrintArgUsage, (void*)(&m_varguments), false);
+
+      RegisterArgument("Amount of logging output is ARG (0 -> none, 8 -> max)",
+                       "-l|--log", &SetLoggingLevel, NULL, true);
+
+      RegisterArgument("Set master PRNG seed to ARG (u32)",
+                       "-s|--seed", &SetSeedFromArgs, this, true);
+
+      RegisterArgument("Record event counts every ARG aeps",
+                       "-e|--events", &SetRecordEventCountsFromArgs, this, true);
+
+      RegisterArgument("Records time based data every ARG aeps",
+                       "-t|--timebd",
+                       &SetRecordTimeBasedDataFromArgs, this, true);
+
+      RegisterArgument("If ARG > 0, Halts after ARG elapsed aeps.",
+                       "--haltafteraeps", &SetHaltAfterAEPSFromArgs, this, true);
+
+      RegisterArgument("Store data in per-sim directories under ARG (string)",
+                       "-d|--dir", &SetDataDirFromArgs, this, true);
     }
 
 
     virtual void ReinitUs()
     { }
-
-    bool GetStartPaused()
-    {
-      return m_startPaused;
-    }
 
     u32 GetHaltAfterAEPS()
     {
