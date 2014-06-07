@@ -32,6 +32,11 @@
 
 namespace MFM {
 
+  /**
+   * A ByteSink that holds up to BUFSIZE - 2 data bytes.  If that
+   * limit is reached, an 'X' is appended at the end of the ByteSink,
+   * and further data written is discarded.
+   */
   template <int BUFSIZE>
   class OverflowableCharBufferByteSink : public ByteSink {
   public:
@@ -42,14 +47,17 @@ namespace MFM {
       if (m_overflowed)
         return;
 
-      if (m_written + len < BUFSIZE - 2) {
-        memcpy(&m_buf[m_written], data, len);
-        m_written += len;
-        return;
+      u32 effLen = len;
+      if (m_written + effLen > BUFSIZE - 2) {
+        effLen = BUFSIZE - 2 - m_written;
+        m_overflowed = true;
       }
 
-      m_buf[m_written++] = 'X';
-      m_overflowed = true;
+      memcpy(&m_buf[m_written], data, effLen);
+      m_written += effLen;
+
+      if (m_overflowed)
+        m_buf[m_written++] = 'X';
     }
 
     virtual s32 CanWrite() {
