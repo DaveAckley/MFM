@@ -1,0 +1,4 @@
+RegisterAtom(4Dreg1220193etc393, d)
+PlaceAtom(d,30,30)
+PlaceAtom(d,31,31)
+SetParameter(DregResRatio,10)
