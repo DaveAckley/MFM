@@ -619,21 +619,21 @@ namespace MFM {
 
       this->RegisterSection("Display-specific switches");
 
-      RegisterArgument("Start with only the statistics view on the screen.",
-                       "--startwithoutgrid", &ConfigStatsOnlyView, this, false);
+      this->RegisterArgument("Start with only the statistics view on the screen.",
+			     "--startwithoutgrid", &ConfigStatsOnlyView, this, false);
 
-      RegisterArgument("Start with a minimal-sized window.",
-                       "--startminimal", &ConfigMinimalView, this, false);
+      this->RegisterArgument("Start with a minimal-sized window.",
+			     "--startminimal", &ConfigMinimalView, this, false);
 
-      RegisterArgument("Record screenshots every ARG aeps",
-                       "-p|--pictures", &SetRecordScreenshotPerAEPSFromArgs, this, true);
+      this->RegisterArgument("Record screenshots every ARG aeps",
+			     "-p|--pictures", &SetRecordScreenshotPerAEPSFromArgs, this, true);
 
-      RegisterArgument("Take ARG shots per speed from 1 up to -p value",
-                       "--picturesPerRate",
-                       &SetPicturesPerRateFromArgs, this, true);
+      this->RegisterArgument("Take ARG shots per speed from 1 up to -p value",
+			     "--picturesPerRate",
+			     &SetPicturesPerRateFromArgs, this, true);
 
-      RegisterArgument("Starts paused to allow display configuration.",
-                       "--startpaused", &SetStartPausedFromArgs, this, false);
+      this->RegisterArgument("Starts paused to allow display configuration.",
+			     "--startpaused", &SetStartPausedFromArgs, this, false);
     }
 
     GridPanel<GC> m_gridPanel;

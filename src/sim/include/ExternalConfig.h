@@ -31,6 +31,9 @@
 
 namespace MFM
 {
+
+  class FunctionCall; /* Forward Declaration, in ExternalConfig.tcc */
+
   /**
    * Structure for reading and writing the current grid configuration
    * backed by a filename.
@@ -75,6 +78,10 @@ namespace MFM
      * The name of the file to read from or write to.
      */
     const char* m_filename;
+
+    void DeactivateTile(FunctionCall& fcall);
+
+    void Dispatch(FunctionCall& fcall, u32 lineNumber);
 
     void ParseLine(const char* line, u32 lineNumber);
   };

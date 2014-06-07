@@ -223,7 +223,22 @@ namespace MFM
 
   }
 
-  static void Dispatch(FunctionCall& fcall, u32 lineNumber, const char* filename)
+  template<class GC>
+  void ExternalConfig<GC>::DeactivateTile(FunctionCall& call)
+  {
+    if(call.GetArgumentCount() == 2)
+    {
+      SPoint pt;
+
+      pt.SetX(atoi(call.GetArgument(0)));
+      pt.SetY(atoi(call.GetArgument(1)));
+
+      m_grid.SetTileToExecuteOnly(pt, false);
+    }
+  }
+
+  template<class GC>
+  void ExternalConfig<GC>::Dispatch(FunctionCall& fcall, u32 lineNumber)
   {
     if(!strcmp(fcall.GetFunctionName(), "RegisterAtom"))
     {
@@ -237,10 +252,14 @@ namespace MFM
     {
       SetParameter(fcall);
     }
+    else if(!strcmp(fcall.GetFunctionName(), "DeactivateTile"))
+    {
+      DeactivateTile(fcall);
+    }
     else
     {
       LOG.Error("%s:%d:0 error: No function named \"%s\"",
-		filename, lineNumber, fcall.GetFunctionName());
+		m_filename, lineNumber, fcall.GetFunctionName());
     }
   }
 
@@ -255,7 +274,7 @@ namespace MFM
     }
     else
     {
-      Dispatch(fcall, lineNumber, m_filename);
+      Dispatch(fcall, lineNumber);
     }
   }
 }
