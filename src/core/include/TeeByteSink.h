@@ -28,6 +28,7 @@
 #define TEEBYTESINK_H
 
 #include "ByteSink.h"
+#include "Util.h"     /* For MIN */
 
 namespace MFM {
 
@@ -62,9 +63,8 @@ namespace MFM {
     }
 
     virtual s32 CanWrite() {
-      return
-        (!m_sink1 || m_sink1->CanWrite()) &&
-        (!m_sink2 || m_sink2->CanWrite());
+      return MIN<s32>(m_sink1 ? m_sink1->CanWrite() : S32_MAX,
+                      m_sink2 ? m_sink2->CanWrite() : S32_MAX);
     }
 
   private:
