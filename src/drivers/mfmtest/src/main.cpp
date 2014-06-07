@@ -36,5 +36,7 @@ int main(int argc, char** argv)
   EventWindow_Test::Test_eventwindowConstruction();
   EventWindow_Test::Test_eventwindowWrite();
 
+  ExternalConfig_Test::Test_RunTests();
+
   return 0;
 }

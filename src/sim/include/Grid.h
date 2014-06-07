@@ -159,6 +159,11 @@ namespace MFM {
     }
 
     /**
+     * Empties this Grid of all held Atoms.
+     */
+    void Clear();
+
+    /**
      * Return true iff tileInGrid is a legal tile coordinate in this
      * grid.  If this returns false, GetTile(tileInGrid) is unsafe.
      */

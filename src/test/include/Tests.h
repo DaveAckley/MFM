@@ -21,5 +21,6 @@
 #include "Random_Test.h"
 #include "ColorMap_Test.h"
 #include "FXP_Test.h"
+#include "ExternalConfig_Test.h"
 
 #endif /*TESTS_H*/

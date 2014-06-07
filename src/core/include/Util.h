@@ -150,6 +150,30 @@ namespace MFM {
   template<u64 NUMBER>
   struct UForNumber : PickIType_<_ITypeSizesForNumber<NUMBER>::value> {};
 
+  /**
+   * Counts the occurrences of a particular item in an array, using
+   * the '==' operator to test for equality.
+   *
+   * @param array The array to search through
+   *
+   * @param item  The item to look for
+   *
+   * @returns The number of times that \c item occurs in \c array
+   */
+  template <class T>
+  u32 ITEM_COUNT(T* array, T item, u32 arrSize)
+  {
+    u32 count = 0;
+    u32 i;
+    for(i = 0; i < arrSize; i++)
+    {
+      if(array[i] == item)
+      {
+	count++;
+      }
+    }
+    return count;
+  }
 }
 
 #endif /* UTIL_H */
