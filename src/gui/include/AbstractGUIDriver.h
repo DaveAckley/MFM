@@ -37,6 +37,8 @@
 #include "Tile.h"
 #include "GridRenderer.h"
 #include "GridPanel.h"
+#include "TextPanel.h"
+#include "TeeByteSink.h"
 #include "StatsRenderer.h"
 #include "Element_Empty.h" /* Need common elements */
 #include "Element_Dreg.h"
@@ -313,7 +315,15 @@ namespace MFM {
 
     virtual void OnceOnly(VArguments& args)
     {
-      // Let the parent go first
+      /// Mux our screen logger into the LOGing path, before calling parent!
+      {
+
+        ByteSink * old = LOG.SetByteSink(m_logSplitter);
+        m_logSplitter.SetSink1(old);
+        m_logSplitter.SetSink2(&m_logPanel.GetByteSink());
+      }
+
+      // Let the parent 'go first'!
       Super::OnceOnly(args);
 
       if (m_countOfScreenshotsPerRate > 0) {
@@ -341,6 +351,13 @@ namespace MFM {
       m_gridPanel.Insert(&m_statisticsPanel, NULL);
       m_statisticsPanel.Insert(&m_buttonPanel, NULL);
       m_buttonPanel.SetVisibility(true);
+
+      m_gridPanel.Insert(&m_logPanel, NULL);
+      m_logPanel.SetVisibility(false);
+      m_logPanel.SetDimensions(m_screenWidth, 160);
+      m_logPanel.SetAnchor(ANCHOR_SOUTH);
+      m_logPanel.SetFont(m_fonts.GetDefaultFont(16));
+
       /*
       m_rootPanel.Insert(&m_panel1,0);
       m_rootPanel.Insert(&m_panel2,&m_panel1);
@@ -366,7 +383,7 @@ namespace MFM {
   private:
 
     void OnceOnlyButtons() {
-      m_statisticsPanel.SetAnchor(ANCHOR_WEST);
+      m_statisticsPanel.SetAnchor(ANCHOR_EAST);
 
       m_clearButton.SetDriver(*this);
       m_xrayButton.SetDriver(*this);
@@ -405,6 +422,15 @@ namespace MFM {
 				       , m_screenHeight));
     }
 
+    inline void ToggleLogView()
+    {
+      m_logPanel.ToggleVisibility();
+      /*
+      m_grend.SetDimensions(Point<u32>(m_screenWidth - (m_renderStats ? STATS_WINDOW_WIDTH : 0)
+				       , m_screenHeight));
+      */
+    }
+
     void KeyboardUpdate(OurGrid& grid)
     {
       u8 speed = m_keyboard.ShiftHeld() ?
@@ -440,9 +466,13 @@ namespace MFM {
       {
 	m_grend.ToggleMemDraw();
       }
-      if(m_keyboard.SemiAuto(SDLK_l))
+      if(m_keyboard.SemiAuto(SDLK_h))
       {
 	m_grend.ToggleDataHeatmap();
+      }
+      if(m_keyboard.SemiAuto(SDLK_l))
+      {
+        ToggleLogView();
       }
       if(m_keyboard.SemiAuto(SDLK_p))
       {
@@ -736,6 +766,8 @@ namespace MFM {
 
     }m_buttonPanel;
 
+    TextPanel<80,100> m_logPanel;
+    TeeByteSink m_logSplitter;
 
     void SetScreenSize(u32 width, u32 height) {
       m_screenWidth = width;
