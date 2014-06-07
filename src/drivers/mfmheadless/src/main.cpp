@@ -9,8 +9,18 @@ namespace MFM
 
   struct MFMSimHeadlessDemo : public AbstractDualDriver<OurGridConfig>
   {
-    MFMSimHeadlessDemo(u32 argc, const char** argv) :
-      AbstractDualDriver(argc, argv) { }
+  private: typedef AbstractDualDriver<OurGridConfig> Super;
+
+  public:
+    virtual void AddDriverArguments()
+    {
+      Super::AddDriverArguments();
+    }
+
+    virtual void OnceOnly(VArguments& args)
+    {
+      Super::OnceOnly(args);
+    }
 
     virtual void ReinitPhysics()
     {
@@ -38,7 +48,8 @@ int main(int argc, const char** argv)
   MFM::LOG.SetByteSink(MFM::STDERR);
   MFM::LOG.SetLevel(MFM::LOG.ALL);
 
-  MFM::MFMSimHeadlessDemo sim((MFM::u32)argc, argv);
+  MFM::MFMSimHeadlessDemo sim;
+  sim.Init(argc, argv);
 
   sim.Reinit();
 

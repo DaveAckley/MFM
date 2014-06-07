@@ -21,11 +21,23 @@ namespace MFM {
 
   struct MFMSimQBarDemo : public AbstractGUIDriver<OurGridConfig>
   {
+  private: typedef AbstractGUIDriver<OurGridConfig> Super;
+
+  public:
     int m_whichSim;
 
-    MFMSimQBarDemo(u32 argc, const char** argv, int whichSim)
-      : AbstractGUIDriver(argc, argv), m_whichSim(whichSim)
+    MFMSimQBarDemo(int whichSim)
+      : m_whichSim(whichSim)
+    { }
+
+    virtual void AddDriverArguments()
     {
+      Super::AddDriverArguments();
+    }
+
+    virtual void OnceOnly(VArguments& args)
+    {
+      Super::OnceOnly(args);
     }
 
     virtual void ReinitPhysics() {
@@ -114,11 +126,23 @@ namespace MFM {
 
   struct MFMSimSBarDemo : public AbstractGUIDriver<OurGridConfig>
   {
+  private: typedef AbstractGUIDriver<OurGridConfig> Super;
+
+  public:
+
     typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
 
-    MFMSimSBarDemo(u32 argc, const char** argv)
-      : AbstractGUIDriver(argc, argv)
+    MFMSimSBarDemo()
+    { }
+
+    virtual void AddDriverArguments()
     {
+      Super::AddDriverArguments();
+    }
+
+    virtual void OnceOnly(VArguments& args)
+    {
+      Super::OnceOnly(args);
     }
 
     virtual void ReinitPhysics() {
@@ -205,13 +229,15 @@ int main(int argc, const char** argv)
   switch (whichSim) {
   default:
   case 0: {
-    MFM::MFMSimQBarDemo sim((MFM::u32)argc, argv, whichSim);
+    MFM::MFMSimQBarDemo sim(whichSim);
+    sim.Init(argc, argv);
     sim.Reinit();
     sim.Run();
     break;
   }
   case 2: {
-    MFM::MFMSimSBarDemo sim((MFM::u32)argc, argv);
+    MFM::MFMSimSBarDemo sim;
+    sim.Init(argc, argv);
     sim.Reinit();
     sim.Run();
     break;

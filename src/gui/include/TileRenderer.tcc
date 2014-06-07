@@ -89,13 +89,15 @@ void TileRenderer::RenderAtom(Drawing & drawing, const SPoint& atomLoc, const UP
     {
       if(color)
         {
+          // Round up on radius.  Better to overlap than vanish
+          u32 radius = (m_atomDrawSize + 1) / 2;
 
           drawing.SetForeground(color);
           drawing.FillCircle(rendPt.GetX(),
                              rendPt.GetY(),
                              m_atomDrawSize,
                              m_atomDrawSize,
-                             m_atomDrawSize / 2);
+                             radius);
         }
     }
 }

@@ -73,8 +73,7 @@ namespace MFM {
   template<class GC>
   class AbstractGUIDriver : public AbstractDriver<GC>
   {
-  private:
-    typedef AbstractDriver<GC> Super;
+  private: typedef AbstractDriver<GC> Super;
 
   protected:
     typedef typename Super::OurGrid OurGrid;
@@ -86,6 +85,7 @@ namespace MFM {
 
     Fonts m_fonts;
 
+    bool m_startPaused;
     bool m_keyboardPaused;   // Toggled by keyboard space, ' ', SDLK_SPACE
     bool m_mousePaused;      // Set if any buttons down, clear if all up
     bool m_gridPaused;       // Set if keyboard || mouse paused, checked by RunGrid
@@ -311,8 +311,11 @@ namespace MFM {
       m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
     }
 
-    virtual void PostOnceOnly(VArguments& args)
+    virtual void OnceOnly(VArguments& args)
     {
+      // Let the parent go first
+      Super::OnceOnly(args);
+
       if (m_countOfScreenshotsPerRate > 0) {
         m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
         m_recordScreenshotPerAEPS = 1;
@@ -391,7 +394,8 @@ namespace MFM {
     {
       KeyboardUpdate(grid);
       m_gridPaused = m_keyboardPaused || m_mousePaused;
-      Super::RunGrid(grid);
+      if (!m_gridPaused)
+        Super::RunGrid(grid);
     }
 
     inline void ToggleStatsView()
@@ -535,17 +539,13 @@ namespace MFM {
 
   public:
 
-    AbstractGUIDriver(int argc, const char** argv) :
-      Super(argc, argv),
+    AbstractGUIDriver() :
+      m_startPaused(false),
       m_renderStats(false),
       m_screenWidth(SCREEN_INITIAL_WIDTH),
       m_screenHeight(SCREEN_INITIAL_HEIGHT),
       m_buttonPanel(m_fonts)
-    {
-      /* Needs to be called from here because of the virtual
-	 override of PostOnceOnly. */
-      Super::OnceOnly();
-    }
+    { }
 
     virtual void ReinitUs()
     {
@@ -599,6 +599,13 @@ namespace MFM {
       driver->m_recordScreenshotPerAEPS = atoi(aeps);
     }
 
+    static void SetStartPausedFromArgs(const char* not_used, void* driverptr)
+    {
+      AbstractGUIDriver& driver = *((AbstractGUIDriver*)driverptr);
+
+      driver.m_startPaused = true;
+    }
+
     static void SetPicturesPerRateFromArgs(const char* aeps, void* driverptr)
     {
       AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
@@ -606,21 +613,27 @@ namespace MFM {
       driver->m_countOfScreenshotsPerRate = atoi(aeps);
     }
 
-    virtual void AddDriverArguments(VArguments& args)
+    void AddDriverArguments()
     {
-      args.RegisterArgument("Start with the satistics view on the screen.",
-			    "--startwithoutgrid", &ConfigStatsOnlyView, this, false);
+      Super::AddDriverArguments();
 
-      args.RegisterArgument("Start with the satistics view on the screen.",
-			    "--startminimal", &ConfigMinimalView, this, false);
+      this->RegisterSection("Display-specific switches");
 
-      args.RegisterArgument("Record screenshots every AEPS aeps",
-			    "-p|--pictures", &SetRecordScreenshotPerAEPSFromArgs, this, true);
+      RegisterArgument("Start with only the statistics view on the screen.",
+                       "--startwithoutgrid", &ConfigStatsOnlyView, this, false);
 
-      args.RegisterArgument("Take COUNT shots per speed from 1 up to -p value",
-			    "--picturesPerRate",
-			    &SetPicturesPerRateFromArgs, this, true);
+      RegisterArgument("Start with a minimal-sized window.",
+                       "--startminimal", &ConfigMinimalView, this, false);
 
+      RegisterArgument("Record screenshots every ARG aeps",
+                       "-p|--pictures", &SetRecordScreenshotPerAEPSFromArgs, this, true);
+
+      RegisterArgument("Take ARG shots per speed from 1 up to -p value",
+                       "--picturesPerRate",
+                       &SetPicturesPerRateFromArgs, this, true);
+
+      RegisterArgument("Starts paused to allow display configuration.",
+                       "--startpaused", &SetStartPausedFromArgs, this, false);
     }
 
     GridPanel<GC> m_gridPanel;
@@ -779,7 +792,7 @@ namespace MFM {
 
     void RunHelper()
     {
-      m_keyboardPaused = Super::GetStartPaused();
+      m_keyboardPaused = m_startPaused;
 
       bool running = true;
       SetScreenSize(m_screenWidth, m_screenHeight);
