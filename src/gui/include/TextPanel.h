@@ -43,7 +43,8 @@ namespace MFM {
       SetName("Text Panel");
       SetRenderPoint(SPoint(0, 0));
       SetForeground(Drawing::GREEN);
-      SetBackground(Drawing::BLACK);
+      SetBackground(Drawing::GREY05);
+      SetBorder(Drawing::BLACK);
 
       m_bottomLineShown = 0;
     }
