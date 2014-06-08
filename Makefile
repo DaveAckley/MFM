@@ -14,6 +14,7 @@ doc:	FORCE
 clean:  $(PLATFORMS)
 
 realclean:  $(PLATFORMS)
+	rm -f bin/*
 
 # Pass each entry in PLATFORMS down as a target
 $(PLATFORMS):
