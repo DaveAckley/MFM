@@ -332,7 +332,11 @@ namespace MFM {
         m_countOfScreenshotsAtThisAEPS = 0;
       }
 
+      if (!getenv("SDL_VIDEO_ALLOW_SCREENSAVER"))          // If user isn't already messing with this
+        putenv((char *) "SDL_VIDEO_ALLOW_SCREENSAVER=1");  // Old school sdl 1.2 mechanism
+
       SDL_Init(SDL_INIT_VIDEO);
+
       m_fonts.Init();
 
       m_rootPanel.SetName("Root");
@@ -528,7 +532,6 @@ namespace MFM {
 
       m_keyboard.Flip();
     }
-
 
 
 #if 0
@@ -809,17 +812,6 @@ namespace MFM {
     StatsRenderer<GC> & GetStatsRenderer()
     {
       return m_srend;
-    }
-
-    void Run()
-    {
-      unwind_protect({
-          MFMPrintErrorEnvironment(stderr,&unwindProtect_errorEnvironment);
-          fprintf(stderr, "Failure reached top-level!  Aborting\n");
-          abort();
-        }, {
-          RunHelper();
-        });
     }
 
     void RunHelper()
