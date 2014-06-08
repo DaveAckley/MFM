@@ -329,11 +329,11 @@ namespace MFM
       }
     }
 
-    static void SetHaltAfterAEPSFromArgs(const char* not_used, void* driverptr)
+    static void SetHaltAfterAEPSFromArgs(const char* aeps, void* driverptr)
     {
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
 
-      driver.m_haltAfterAEPS = atoi(not_used);
+      driver.m_haltAfterAEPS = atoi(aeps);
     }
 
     void ExportEventCounts(OurGrid& grid)

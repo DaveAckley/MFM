@@ -35,8 +35,8 @@ namespace MFM
 #define VARGUMENTS_MAX_SIZE 64
 
   /**
-   * A typedef describing a function called when a command line
-   * argument does not correspond to an input value.
+   * A typedef describing a function callback used to handle the
+   * argument of a command line switch.
    */
   typedef void (*VArgumentHandleValue)(const char*, void* arg);
 
