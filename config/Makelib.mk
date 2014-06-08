@@ -35,7 +35,7 @@ clean:
 include $(BASEDIR)/config/Makedeps.mk
 
 realclean:	clean
-	rm -f $(AUTODEPS)
+	rm -f $(AUTODEPS) # AUTODEPS
 	rm -f $(ARCHIVEPATH)
 	rm -f src/*~ include/*~ *~
 	rm -f $(BUILDDIR)/*

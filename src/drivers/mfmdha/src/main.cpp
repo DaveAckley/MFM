@@ -1,16 +1,15 @@
 #include "main.h"
-#include "P3Atom.h"
+#include "Logger.h"
+#include "Element_QBar.h"
 #include "Element_SBar.h"
 #include "Element_DBar.h"
-#include "Element_QBar.h"
 #include "Element_Mover.h"
+#include "LocalConfig.h"
+#include <dlfcn.h>          /* For dlopen etc */
+
+extern "C" typedef void * (*MFM_Element_Plugin_Get_Static_Pointer)();
 
 namespace MFM {
-
-  //  typedef ParamConfig<64,4,8,40> OurParamConfig;
-  typedef ParamConfig<96,4,8,40> OurParamConfig;
-  typedef P3Atom<OurParamConfig> OurAtom;
-  typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
 
   typedef GridConfig<OurCoreConfig,3,2> OurSmallGridConfig;
   typedef GridConfig<OurCoreConfig,6,5> OurBigGridConfig;
@@ -19,16 +18,17 @@ namespace MFM {
 
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
 
-  struct MFMSimQBarDemo : public AbstractGUIDriver<OurGridConfig>
+  struct MFMSimQBDemo : public AbstractGUIDriver<OurGridConfig>
   {
   private: typedef AbstractGUIDriver<OurGridConfig> Super;
 
   public:
     int m_whichSim;
 
-    MFMSimQBarDemo(int whichSim)
+    MFMSimQBDemo(int whichSim)
       : m_whichSim(whichSim)
-    { }
+    {
+    }
 
     virtual void AddDriverArguments()
     {
@@ -47,7 +47,9 @@ namespace MFM {
       mainGrid.Needed(Element_Empty<OurCoreConfig>::THE_INSTANCE);
       mainGrid.Needed(Element_Dreg<OurCoreConfig>::THE_INSTANCE);
       mainGrid.Needed(Element_Res<OurCoreConfig>::THE_INSTANCE);
-      mainGrid.Needed(Element_QBar<OurCoreConfig>::THE_INSTANCE);
+      if (!m_qbarInstance)
+        FAIL(ILLEGAL_STATE);
+      mainGrid.Needed(*m_qbarInstance);
       if (addMover)
         mainGrid.Needed(Element_Mover<OurCoreConfig>::THE_INSTANCE);
     }
@@ -66,7 +68,9 @@ namespace MFM {
       srend.DisplayStatsForElement(mainGrid,Element_Empty<OurCoreConfig>::THE_INSTANCE);
       srend.DisplayStatsForElement(mainGrid,Element_Dreg<OurCoreConfig>::THE_INSTANCE);
       srend.DisplayStatsForElement(mainGrid,Element_Res<OurCoreConfig>::THE_INSTANCE);
-      srend.DisplayStatsForElement(mainGrid,Element_QBar<OurCoreConfig>::THE_INSTANCE);
+      if (!m_qbarInstance)
+        FAIL(ILLEGAL_STATE);
+      srend.DisplayStatsForElement(mainGrid,*m_qbarInstance);
       if (addMover)
         srend.DisplayStatsForElement(mainGrid,Element_Mover<OurCoreConfig>::THE_INSTANCE);
 
@@ -75,8 +79,11 @@ namespace MFM {
       // Ensure we start with even-even
       if (center.GetX()&1) center += SPoint(1,0);
       if (center.GetY()&1) center += SPoint(0,1);
-      OurAtom aBoid1(Element_QBar<OurCoreConfig>::THE_INSTANCE.GetAtom(QBAR_SIZE,center));
-      Element_QBar<OurCoreConfig>::THE_INSTANCE.SetSymI(aBoid1, 0);
+      if (!m_qbarInstance)
+        FAIL(ILLEGAL_STATE);
+      //      OurAtom aBoid1(((Element_QBar<OurCoreConfig>*) m_qbarInstance)->GetAtom(QBAR_SIZE,center));
+      OurAtom aBoid1(m_qbarInstance->GetDefaultAtom());
+      //      ((Element_QBar<OurCoreConfig>*) m_qbarInstance)->SetSymI(aBoid1, 0);
 
       OurAtom aDReg(Element_Dreg<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
 
@@ -113,14 +120,38 @@ namespace MFM {
           }
         }
       }
+    }
 
-      /*
-      mainGrid.PlaceAtom(aBoid2, e1loc);
-      mainGrid.PlaceAtom(aBoid2, e2loc);
-      mainGrid.PlaceAtom(aBoid2, e1loc+SPoint(1,1));
-      mainGrid.PlaceAtom(aBoid2, e2loc+SPoint(1,1));
-      */
+    Element<OurCoreConfig> * m_qbarInstance;
 
+    void LoadPlugin() {
+      const char * path = "./bin/Element_QBar-Plugin.so";
+
+      // Load lib
+      void* dllib = dlopen(path, RTLD_LAZY);
+      if (!dllib) {
+        LOG.Error("Cannot load library: %s", dlerror());
+        FAIL(IO_ERROR);
+      }
+
+      // get accessor
+      void * symptr = dlsym(dllib, "get_static_element_pointer");
+      const char* dlsym_error = dlerror();
+      if (dlsym_error) {
+        LOG.Error("Cannot find accessor in library: %s", dlsym_error);
+        FAIL(IO_ERROR);
+      }
+
+      // do undefined (?) casting shenanigans to make it a function pointer ?
+      MFM_Element_Plugin_Get_Static_Pointer getref =
+        (MFM_Element_Plugin_Get_Static_Pointer) ((uptr) symptr);
+
+      // get ptr
+      m_qbarInstance = (Element<OurCoreConfig> *) getref();
+      if (!m_qbarInstance) {
+        LOG.Error("Accessor failed");
+        FAIL(IO_ERROR);
+      }
     }
   };
 
@@ -222,6 +253,9 @@ namespace MFM {
 
 int main(int argc, const char** argv)
 {
+  MFM::LOG.SetByteSink(MFM::STDERR);
+  MFM::LOG.SetLevel(MFM::LOG.ALL);
+
   int whichSim = 0;
   if (argc > 0)
     whichSim = atoi(argv[0]);
@@ -229,7 +263,8 @@ int main(int argc, const char** argv)
   switch (whichSim) {
   default:
   case 0: {
-    MFM::MFMSimQBarDemo sim(whichSim);
+    MFM::MFMSimQBDemo sim(whichSim);
+    sim.LoadPlugin();
     sim.Init(argc, argv);
     sim.Reinit();
     sim.Run();
