@@ -24,11 +24,13 @@
   \date (C) 2014 All rights reserved.
   \lgpl
  */
-#ifndef IO_H
-#define IO_H
+#ifndef BYTESOURCE_H
+#define BYTESOURCE_H
 
 #include "itype.h"
 #include "Fail.h"
+#include "Format.h"
+#include "ByteSink.h"
 #include <stdarg.h>    /* For ... */
 
 namespace MFM {
@@ -64,7 +66,27 @@ namespace MFM {
       return m_read;
     }
 
-    s32 Scanf(const char * format, ...) ;
+    bool Scan(s32 & result, Format::Type code = Format::DEC, u32 maxLen = U32_MAX) ;
+    bool Scan(u32 & result, Format::Type code = Format::DEC, u32 maxLen = U32_MAX) ;
+    s32 Scan(ByteSink & result, const char * stopOn, const char * continueOn = NULL) ;
+    s32 ScanSet(ByteSink & result, const char * setSpec) {
+      return ScanSetFormat(result, setSpec);
+    }
+    s32 SkipSet(const char * setSpec) {
+      return ScanSet(DevNull, setSpec);
+    }
+
+    s32 ScanSetFormat(ByteSink & result, const char * & setSpec) ;
+
+    static const char * WHITESPACE_CHARS;
+    static const char * WHITESPACE_SET;
+    static const char * NON_WHITESPACE_SET;
+
+    s32 SkipWhitespace() {
+      return SkipSet(WHITESPACE_SET);
+    }
+
+    s32 Scanf(const char * format, ...) ;  // NYI
     s32 Vscanf(const char * format, va_list & ap) ;
 
   private:
@@ -75,4 +97,4 @@ namespace MFM {
 
 }
 
-#endif /* IO_H */
+#endif /* BYTESOURCE_H */
