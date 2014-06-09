@@ -39,7 +39,7 @@ namespace MFM {
     bs.Print("[");
 
     u32 len = strlen(m_label);
-    bs.Print(len, bs.LEXHD);
+    bs.Print(len, Format::LEXHD);
     bs.Print(m_label);
     bs.Printf("%D%08X%06X",
               m_apiVersion,

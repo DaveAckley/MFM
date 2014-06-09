@@ -21,62 +21,62 @@ namespace MFM {
     assert(tbuf.Equals("19"));
 
     tbuf.Reset();
-    tbuf.Print(19, tbuf.DEC);
+    tbuf.Print(19, Format::DEC);
     assert(tbuf.Equals("19"));
 
     tbuf.Reset();
-    tbuf.Print(19, tbuf.OCT);
+    tbuf.Print(19, Format::OCT);
     assert(tbuf.Equals("23"));
 
     tbuf.Reset();
-    tbuf.Print(19, tbuf.BIN);
+    tbuf.Print(19, Format::BIN);
     assert(tbuf.Equals("10011"));
 
     tbuf.Reset();
-    tbuf.Print(10,tbuf.HEX);
+    tbuf.Print(10, Format::HEX);
     assert(tbuf.Equals("A"));
 
     tbuf.Reset();
-    tbuf.Print(0x10,tbuf.HEX);
+    tbuf.Print(0x10, Format::HEX);
     assert(tbuf.Equals("10"));
 
     tbuf.Reset();
-    tbuf.Print(0xdeadcafe,tbuf.HEX);
+    tbuf.Print(0xdeadcafe, Format::HEX);
     assert(tbuf.Equals("DEADCAFE"));
 
     tbuf.Reset();
-    tbuf.Print(36,tbuf.B36);
+    tbuf.Print(36, Format::B36);
     assert(tbuf.Equals("10"));
 
     tbuf.Reset();
-    tbuf.Print(-1,tbuf.B36);
+    tbuf.Print(-1, Format::B36);
     assert(tbuf.Equals("1Z141Z3"));
   }
 
   static void Test_Bytes() {
 
     tbuf.Reset();
-    tbuf.Print(19, tbuf.BYTE);
+    tbuf.Print(19, Format::BYTE);
     assert(tbuf.Equals("\023"));
 
     tbuf.Reset();
-    tbuf.Print(0x0102, tbuf.BEU16);
+    tbuf.Print(0x0102, Format::BEU16);
     assert(tbuf.Equals("\001\002"));
 
     tbuf.Reset();
-    tbuf.Print(0xfffe, tbuf.BEU16);
+    tbuf.Print(0xfffe, Format::BEU16);
     assert(tbuf.Equals("\377\376"));
 
     tbuf.Reset();
-    tbuf.Print(0x04050607, tbuf.BEU32);
+    tbuf.Print(0x04050607, Format::BEU32);
     assert(tbuf.Equals("\004\005\006\007"));
 
     tbuf.Reset();
-    tbuf.Print(0x0405060708090a0bL, tbuf.BEU64);
+    tbuf.Print(0x0405060708090a0bL, Format::BEU64);
     assert(tbuf.Equals("\004\005\006\007\010\011\012\013"));
 
     tbuf.Reset();
-    tbuf.Print(0xfeedfacedeadbeefL, tbuf.BEU64);
+    tbuf.Print(0xfeedfacedeadbeefL, Format::BEU64);
     assert(tbuf.Equals("\376\355\372\316\336\255\276\357"));
 
   }
@@ -84,23 +84,23 @@ namespace MFM {
   static void Test_Lex() {
 
     tbuf.Reset();
-    tbuf.Print(19, tbuf.LEX32);
+    tbuf.Print(19, Format::LEX32);
     assert(tbuf.Equals("219"));
 
     tbuf.Reset();
-    tbuf.Print(0x1234, tbuf.LXX32);
+    tbuf.Print(0x1234, Format::LXX32);
     assert(tbuf.Equals("41234"));
 
     tbuf.Reset();
-    tbuf.Print(-1, tbuf.LXX32);
+    tbuf.Print(-1, Format::LXX32);
     assert(tbuf.Equals("8FFFFFFFF"));
 
     tbuf.Reset();
-    tbuf.Print(123456789101112L, tbuf.LEX64);
+    tbuf.Print(123456789101112L, Format::LEX64);
     assert(tbuf.Equals("9215123456789101112"));
 
     tbuf.Reset();
-    tbuf.Print(0xfeedfacedeadbeefL, tbuf.LXX64);
+    tbuf.Print(0xfeedfacedeadbeefL, Format::LXX64);
     assert(tbuf.Equals("9216FEEDFACEDEADBEEF"));
 
   }

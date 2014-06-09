@@ -168,7 +168,7 @@ namespace MFM {
       DefaultTimeStamper() : m_calls(0) { }
       void Reset() { m_calls = 0; }
       virtual void PrintTo(ByteSink & byteSink, s32 argument = 0) {
-        byteSink.Print(++m_calls, byteSink.LEX32);
+        byteSink.Print(++m_calls, Format::LEX32);
         byteSink.Print(": ");
       }
     } m_defaultTimeStamper;

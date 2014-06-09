@@ -77,7 +77,7 @@ namespace MFM {
 
   void ByteSink::Print(u64 num, s32 fieldWidth, u8 padChar)
   {
-    PrintInBase(num, DEC, fieldWidth, padChar);
+    PrintInBase(num, Format::DEC, fieldWidth, padChar);
   }
 
   void ByteSink::Print(s64 decimal, s32 fieldWidth, u8 padChar)
@@ -101,15 +101,15 @@ namespace MFM {
 
   void ByteSink::Print(u32 decimal, s32 fieldWidth, u8 padChar)
   {
-    Print(decimal, DEC, fieldWidth, padChar);
+    Print(decimal, Format::DEC, fieldWidth, padChar);
   }
 
   void ByteSink::PrintLexDigits(u32 digits) {
     if (digits > 8) {
-      Print('9', BYTE);
-      Print(digits, LEX32);
+      Print('9', Format::BYTE);
+      Print(digits, Format::LEX32);
     } else {
-      Print(digits+'0', BYTE);
+      Print(digits+'0', Format::BYTE);
     }
   }
 
@@ -208,23 +208,23 @@ XXX
     }
   \endcode
  */
-  void ByteSink::Print(u32 num, BaseCode code, s32 fieldWidth, u8 padChar)
+  void ByteSink::Print(u32 num, Format::Type code, s32 fieldWidth, u8 padChar)
   {
 
     switch (code) {
-    case LEX64:
-    case BEU64:
+    case Format::LEX64:
+    case Format::BEU64:
       FAIL(ILLEGAL_ARGUMENT);
 
-    case LEXHD:  // padding makes no sense for a lex header
+    case Format::LEXHD:  // padding makes no sense for a lex header
       PrintLexDigits(num);
       break;
 
-    case LEX32:
-    case LXX32:
+    case Format::LEX32:
+    case Format::LXX32:
       {
         u32 base = 10;
-        if (code==LXX32)
+        if (code==Format::LXX32)
           base = 16;
 
         u32 digits = CountDigits(num, base);
@@ -232,20 +232,20 @@ XXX
           digits = fieldWidth;
 
         PrintLexDigits(digits);
-        Print(num, (BaseCode) base, fieldWidth, padChar);
+        Print(num, (Format::Type) base, fieldWidth, padChar);
         break;
       }
 
-    case BEU32:  // padding makes no sense for binary
+    case Format::BEU32:  // padding makes no sense for binary
       WriteByte((num>>24)&0xff);
       WriteByte((num>>16)&0xff);
       /* FALL THROUGH */
 
-    case BEU16:
+    case Format::BEU16:
       WriteByte((num>>8)&0xff);
       /* FALL THROUGH */
 
-    case BYTE:
+    case Format::BYTE:
       WriteByte((num>>0)&0xff);
       break;
 
@@ -254,15 +254,15 @@ XXX
     }
   }
 
-  void ByteSink::Print(u64 num, BaseCode code, s32 fieldWidth, u8 padChar)
+  void ByteSink::Print(u64 num, Format::Type code, s32 fieldWidth, u8 padChar)
   {
 
     switch (code) {
 
-    case LXX64:
-    case LEX64: {
+    case Format::LXX64:
+    case Format::LEX64: {
       u32 base = 10;
-      if (code==LXX64)
+      if (code==Format::LXX64)
         base = 16;
 
       u32 digits = CountDigits(num, base);
@@ -270,12 +270,12 @@ XXX
         digits = fieldWidth;
 
       PrintLexDigits(digits);
-      PrintInBase(num, (BaseCode) base, fieldWidth, padChar);
+      PrintInBase(num, (Format::Type) base, fieldWidth, padChar);
       break;
     }
 
-    case BEU64:
-    case BEU32:
+    case Format::BEU64:
+    case Format::BEU32:
       WriteByte((num>>(24+32))&0xff);
       WriteByte((num>>(16+32))&0xff);
       WriteByte((num>>( 8+32))&0xff);
@@ -294,7 +294,7 @@ XXX
   }
 
   /**
-     The same as #Print(u32 num, BaseCode code), \e except that if \a
+     The same as #Print(u32 num, Format code), \e except that if \a
      num is negative \e and \a code is \c DEC, then prints \a num as a
      negative, with a leading '-'.
 
@@ -319,16 +319,16 @@ XXX
      ...
      \endcode
   */
-  void ByteSink::Print(s32 num, BaseCode code, s32 fieldWidth, u8 padChar) {
-    if (code == DEC) {
+  void ByteSink::Print(s32 num, Format::Type code, s32 fieldWidth, u8 padChar) {
+    if (code == Format::DEC) {
       Print(num, fieldWidth, padChar);
       return;
     }
     Print((u32) num, code, fieldWidth, padChar);
   }
 
-  void ByteSink::Print(s64 num, BaseCode code, s32 fieldWidth, u8 padChar) {
-    if (code == DEC) {
+  void ByteSink::Print(s64 num, Format::Type code, s32 fieldWidth, u8 padChar) {
+    if (code == Format::DEC) {
       Print(num, fieldWidth, padChar);
       return;
     }
@@ -348,7 +348,7 @@ XXX
     MFM_API_ASSERT_NONNULL(format);
 
     u8 p;
-    BaseCode type;
+    Format::Type type;
     bool alt;
     s32 fieldWidth;
     u8 padChar;
@@ -357,7 +357,7 @@ XXX
         if (p == '\n')          // '\n's _in_the_format_string_ are
           Println();            // treated as packet delimiters!
         else
-          Print(p,BYTE);
+          Print(p,Format::BYTE);
         continue;
       }
 
@@ -384,13 +384,13 @@ XXX
     case 'c':
       {
         u32 ch = va_arg(ap,int);
-        if (!alt || IsPrint(ch)) Print(ch,BYTE);
+        if (!alt || IsPrint(ch)) Print(ch,Format::BYTE);
         else {
-          Print('[',BYTE);
+          Print('[',Format::BYTE);
           if (ch < 0x10)
-            Print('0',BYTE);
-          Print(ch,HEX);
-          Print(']',BYTE);
+            Print('0', Format::BYTE);
+          Print(ch, Format::HEX);
+          Print(']', Format::BYTE);
         }
       }
       break;
@@ -406,27 +406,27 @@ XXX
       break;
 
     case 'q':
-      Print(va_arg(ap,u64), BEU64);
+      Print(va_arg(ap,u64), Format::BEU64);
       break;
-    case 'H': type = LEXHD; goto print;
-    case 'h': type = BEU16; goto print;
-    case 'l': type = BEU32; goto print;
+    case 'H': type = Format::LEXHD; goto print;
+    case 'h': type = Format::BEU16; goto print;
+    case 'l': type = Format::BEU32; goto print;
 
-    case 'b': type = BIN; goto printbase;
-    case 'o': type = OCT; goto printbase;
+    case 'b': type = Format::BIN; goto printbase;
+    case 'o': type = Format::OCT; goto printbase;
     case 'd':
       if (alt) {
-        type = DEC;
+        type = Format::DEC;
         goto printbase;
       } else {
         Print(va_arg(ap,s32), fieldWidth, padChar);
         break;
       }
-    case 'x': type = HEX; goto printbase;
-    case 't': type = B36; goto printbase;
+    case 'x': type = Format::HEX; goto printbase;
+    case 't': type = Format::B36; goto printbase;
 
-    case 'D': type = LEX32; goto print;
-    case 'X': type = LXX32; goto print;
+    case 'D': type = Format::LEX32; goto print;
+    case 'X': type = Format::LXX32; goto print;
 
     printbase:
       PrintInBase(va_arg(ap,u32), type, fieldWidth, padChar);
@@ -456,13 +456,13 @@ XXX
       if (!p) Print("(nullp)");
       else {
         Print("0x");
-        Print((uptr) p, HEX);
+        Print((uptr) p, Format::HEX);
       }
       break;
     }
 
     case '%':
-      Print(p,BYTE);
+      Print(p, Format::BYTE);
       break;
 
     default:                    // Either I don't know that code, or you're bogus.
