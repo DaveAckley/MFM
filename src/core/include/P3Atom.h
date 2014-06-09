@@ -45,6 +45,7 @@ namespace MFM {
   {
     typedef CoreConfig< P3Atom<PC>, PC> CC;
 
+  public:
     enum {
       BITS = PC::BITS_PER_ATOM,
 

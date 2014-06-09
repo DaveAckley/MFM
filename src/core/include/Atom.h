@@ -99,6 +99,8 @@ namespace MFM
      */
     BitVector<BPA> m_bits;
 
+    friend class Element<CC>;  // Let Element mess with our bits
+
   public:
 
     Atom() {
