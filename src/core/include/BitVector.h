@@ -163,6 +163,8 @@ namespace MFM {
       return (m_bits[idx] >> shift) & MakeMask(length);
     }
 
+  public:
+
     /**
      * Writes a specified value to a particular bit in this BitVector.
      *
@@ -180,8 +182,6 @@ namespace MFM {
      * @returns The value of the bit at \c idx index.
      */
     bool ReadBit(int idx);
-
-  public:
 
     /**
      * Constructs a new BitVector. Set parameters of this BitVector
@@ -236,13 +236,37 @@ namespace MFM {
     void Write(const u32 startIdx, const u32 length, const u32 value);
 
     /**
+     * Sets the bit at a specified index in this BitVector.
+     *
+     * @param idx The index of the bit to set, where the MSB is
+     *        indexed at \c 0 .
+     */
+    void SetBit(const u32 idx) {
+      Write(idx, 1, 1);
+    }
+
+    /**
+     * Clears the bit at a specified index in this BitVector.
+     *
+     * @param idx The index of the bit to clear, where the MSB is
+     *        indexed at \c 0 .
+     */
+    void ClearBit(const u32 idx) {
+      Write(idx, 1, 0);
+    }
+
+    bool ReadBit(const u32 idx) const {
+      return Read(idx, 1) != 0;
+    }
+
+    /**
      * Flips the bit at a specified index in this BitVector.
      * (i.e. bv[idx] = !bv[idx])
      *
      * @param idx The index of the bit to toggle, where the MSB is
      *        indexed at \c 0 .
      */
-    bool ToggleBit(int idx);
+    bool ToggleBit(const u32 idx);
 
     /**
      * Set a contiguous range of bits, so they all have value 1.
