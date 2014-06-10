@@ -29,6 +29,7 @@
 
 #include "itype.h"
 #include "ByteSink.h"
+#include "Util.h"   /* for MakeMaskClip */
 #include <climits>  /* for CHAR_BIT */
 #include <stdlib.h> /* for abort */
 
@@ -125,17 +126,9 @@ namespace MFM {
     static const u32 BITS_PER_UNIT = sizeof(BitUnitType) * CHAR_BIT;
 
     static const u32 ARRAY_LENGTH = (BITS + BITS_PER_UNIT - 1) / BITS_PER_UNIT;
+
   private:
     BitUnitType m_bits[ARRAY_LENGTH];
-
-    /**
-     * Low-level mask generation.  No checking is done: Caller g'tees
-     * length <= 32
-     */
-    inline static u32 MakeMask(const u32 length) {
-      if (length<32) return (1u << length) - 1;
-      return -1;
-    }
 
     /**
      * Low-level raw bitvector writing to a single array element.
@@ -146,7 +139,7 @@ namespace MFM {
     inline void WriteToUnit(const u32 idx, const u32 startIdx, const u32 length, const u32 value) {
       if (length == 0) return;
       const u32 shift = BITS_PER_UNIT - (startIdx + length);
-      u32 mask = MakeMask(length) << shift;
+      u32 mask = MakeMaskClip(length) << shift;
       m_bits[idx] = (m_bits[idx] & ~mask) | ((value << shift) & mask);
     }
 
@@ -160,7 +153,7 @@ namespace MFM {
       if (length==0) { return 0; }
       if(idx >= ARRAY_LENGTH) abort();
       const u32 shift = BITS_PER_UNIT - (startIdx + length);
-      return (m_bits[idx] >> shift) & MakeMask(length);
+      return (m_bits[idx] >> shift) & MakeMaskClip(length);
     }
 
   public:
