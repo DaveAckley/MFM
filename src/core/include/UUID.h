@@ -29,18 +29,20 @@
 
 #include "itype.h"
 #include "ByteSink.h"
+#include "ByteSource.h"
+#include <string.h>    /* For strlen, strncpy */
 
 #define MFM_UUID_FOR(label, apiVersion) UUID(label,apiVersion,MFM_BUILD_DATE,MFM_BUILD_TIME)
 
 namespace MFM {
 
-  struct UUID : public ByteSinkable {
-    const char * const m_label;
-    const u32 m_apiVersion;
-    const u32 m_hexDate;
-    const u32 m_hexTime;
+  class UUID : public ByteSinkable, public ByteSourceable {
+  public:
+    static const u32 MAX_LABEL_LENGTH = 63;
 
     UUID(const char * label, const u32 apiVersion, const u32 hexDate, const u32 hexTime) ;
+
+    UUID(ByteSource & bs) ;
 
     const char * GetLabel() const { return m_label; }
     u32 GetVersion() const { return m_apiVersion; }
@@ -57,6 +59,12 @@ namespace MFM {
       Print(bs);
     }
 
+    bool Read(ByteSource & bs) ;
+
+    bool ReadFrom(ByteSource & bs, s32 argument = 0) {
+      return Read(bs);
+    }
+
     bool operator==(const UUID & other) const ;
 
     bool operator!=(const UUID & other) const {
@@ -65,6 +73,12 @@ namespace MFM {
 
   private:
     s32 CompareDateOnly(const UUID & other) const ;
+
+    char m_label[MAX_LABEL_LENGTH + 1];
+    u32 m_apiVersion;
+    u32 m_hexDate;
+    u32 m_hexTime;
+
   };
 
 }
