@@ -107,23 +107,20 @@ namespace MFM
 
     static const u32 BITS_BAR_COORD_LEN = BITS_WIDE + BITS_HIGH;
 
-    static const u32 STATE_SIZE_IDX = P3Atom<P>::P3_STATE_BITS_POS;
-    static const u32 STATE_SIZE_LEN = BITS_BAR_COORD_LEN;
-    static const u32 STATE_POS_IDX = STATE_SIZE_IDX + STATE_SIZE_LEN;
-    static const u32 STATE_POS_LEN = BITS_BAR_COORD_LEN;
-    static const u32 STATE_SYMI_IDX = STATE_POS_IDX + STATE_POS_LEN;
-    static const u32 STATE_SYMI_LEN = BITS_SYMI;
-    static const u32 STATE_TIMER_IDX = STATE_SYMI_IDX + STATE_SYMI_LEN;
-    static const u32 STATE_TIMER_LEN = BITS_TIMER;
-    static const u32 STATE_BITS = STATE_TIMER_IDX + STATE_TIMER_LEN;
-
+    static const u32 STATE_BITS_START = P3Atom<P>::P3_STATE_BITS_POS;
     typedef BitVector<P::BITS_PER_ATOM> BVA;
-    typedef BitField<BVA, STATE_SIZE_LEN, STATE_SIZE_IDX> AFSize;
-    typedef BitField<BVA, STATE_POS_LEN, STATE_POS_IDX> AFPos;
-    typedef BitField<BVA, STATE_SYMI_LEN, STATE_SYMI_IDX> AFSymI;
-    typedef BitField<BVA, STATE_TIMER_LEN, STATE_TIMER_IDX> AFTimer;
 
-    Element_MQBar() : Element<CC>(MFM_UUID_FOR("QBar", QBAR_VERSION)) { LOG.Message("MQBar ctor"); }
+    typedef BitField<BVA, BITS_BAR_COORD_LEN, STATE_BITS_START> AFSize;
+    typedef BitField<BVA, BITS_BAR_COORD_LEN, AFSize::END> AFPos;
+    typedef BitField<BVA, BITS_SYMI, AFPos::END> AFSymI;
+    typedef BitField<BVA, BITS_TIMER, AFSymI::END> AFTimer;
+
+    static const u32 STATE_BITS_END = AFTimer::END;
+    static const u32 STATE_BITS_COUNT = STATE_BITS_END - STATE_BITS_START + 1;
+
+    Element_MQBar() : Element<CC>(MFM_UUID_FOR("QBar", QBAR_VERSION)) {
+      LOG.Message("MQBar ctor");
+    }
 
     u32 GetSymI(const T &atom) const {
       if (!IsOurType(atom.GetType()))
@@ -150,7 +147,7 @@ namespace MFM
     }
 
     bool FitsInRep(const SPoint & v) const {
-      return v.BoundedBy(SPoint(0,0),SPoint((1<<BITS_WIDE)-1,(1<<BITS_HIGH)-1));
+      return v.BoundedBy(SPoint(0,0),SPoint(MakeMaskClip(BITS_WIDE),MakeMaskClip(BITS_HIGH)));
     }
 
     void SetSize(T &atom, const SPoint & v) const {
@@ -187,7 +184,7 @@ namespace MFM
 
     virtual const T & GetDefaultAtom() const
     {
-      static T defaultAtom(TYPE(), 0, 0, STATE_BITS);
+      static T defaultAtom(TYPE(), 0, 0, STATE_BITS_COUNT);
       const SPoint QBAR_SIZE(27, 3 * 27);
       SetSize(defaultAtom, QBAR_SIZE);
       SetPos(defaultAtom, QBAR_SIZE / 4);
