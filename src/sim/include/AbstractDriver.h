@@ -172,8 +172,8 @@ namespace MFM
      * after all standard argument parsing and is available to extend
      * that behavior.  Any overrides of this method should be certain
      * to call Super::OnceOnly (probably at the beginning, but in any
-     * sometime) during their execution, so more abstract levels can
-     * do any processing they need to.
+     * case, sometime) during their execution, so more abstract levels
+     * can do any processing they need to.
      */
     virtual void OnceOnly(VArguments& args)
     {
@@ -181,6 +181,8 @@ namespace MFM
       {
 	SetDataDirFromArgs(NULL, this);
       }
+
+      LOG.Message("Writing to simulation directory '%s'", GetSimDirPathTemporary(""));
 
       const char* (subs[]) = { "", "vid", "eps", "tbd", "teps" };
       for(u32 i = 0; i < sizeof(subs) / sizeof(subs[0]); i++)
@@ -327,11 +329,11 @@ namespace MFM
       }
     }
 
-    static void SetHaltAfterAEPSFromArgs(const char* not_used, void* driverptr)
+    static void SetHaltAfterAEPSFromArgs(const char* aeps, void* driverptr)
     {
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
 
-      driver.m_haltAfterAEPS = atoi(not_used);
+      driver.m_haltAfterAEPS = atoi(aeps);
     }
 
     void ExportEventCounts(OurGrid& grid)

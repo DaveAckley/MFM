@@ -112,8 +112,8 @@ namespace MFM {
             {
               for(u32 z = 0; z < 4; z++)
                 {
-                  aloc.Set(10 + x * realWidth + z, 10 + y * realWidth);
-                  sloc.Set(11 + x * realWidth + z, 11 + y * realWidth);
+                  aloc.Set(10 + x * realWidth + z, 14 + y * realWidth);
+                  sloc.Set(11 + x * realWidth + z, 15 + y * realWidth);
                   mainGrid.PlaceAtom(sorter, sloc);
                   mainGrid.PlaceAtom(atom, aloc);
                 }

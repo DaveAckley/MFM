@@ -14,7 +14,7 @@
 namespace MFM
 {
 
-#define QBAR_VERSION 1
+#define QBAR_VERSION 2
 
   // Forward
   template <class CC> class Element_DBar ;
@@ -144,7 +144,7 @@ namespace MFM
     static const u32 STATE_TIMER_LEN = BITS_TIMER;
     static const u32 STATE_BITS = STATE_TIMER_IDX + STATE_TIMER_LEN;
 
-    Element_QBar() : Element<CC>(MFM_UUID_FOR("QBar", QBAR_VERSION)) { }
+    Element_QBar() : Element<CC>(MFM_UUID_FOR("QBar", QBAR_VERSION)) { LOG.Message("QBar ctor"); }
 
     u32 GetSymI(const T &atom) const {
       if (!IsOurType(atom.GetType()))
@@ -208,15 +208,17 @@ namespace MFM
 
     virtual const T & GetDefaultAtom() const
     {
-      static T defaultAtom(TYPE(),0,0,STATE_BITS);
+      static T defaultAtom(TYPE(), 0, 0, STATE_BITS);
+      const SPoint QBAR_SIZE(27, 3 * 27);
+      SetSize(defaultAtom, QBAR_SIZE);
+      SetPos(defaultAtom, QBAR_SIZE / 4);
+      SetSymI(defaultAtom, 0);
       return defaultAtom;
     }
 
     T GetAtom(const SPoint & size, const SPoint & pos) const
     {
       T atom = GetDefaultAtom();
-      SetSize(atom,size);
-      SetPos(atom,pos);
 
       return atom;
     }

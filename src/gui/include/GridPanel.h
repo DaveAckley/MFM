@@ -132,7 +132,7 @@ namespace MFM {
     {
       SDL_MouseMotionEvent & event = mbe.m_event.motion;
       if (mbe.m_keyboard.CtrlHeld() &&
-          (mbe.m_buttonMask&(1<<SDL_BUTTON_LEFT))!=0) {
+          (mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT)) !=0) {
         SPoint nowAt(event.x, event.y);
         SPoint delta = nowAt - m_leftButtonDragStart;
         m_grend->SetDrawOrigin(m_leftButtonGridStart+delta);

@@ -13,3 +13,16 @@ LIBS += -lmfmgui -lmfmsim -lmfmcore -lSDL -lSDL_ttf -lpng -lm -lpthread
 
 # Do the program thing
 include $(BASEDIR)/config/Makeprog.mk
+
+#### TESTING: Build $(BINDIR)/qbar.so for dlopen
+
+## Main executable needs -rdynamic to expose its symbols to dlopen'd stuff
+LDFLAGS += -rdynamic
+
+# Add dependency to make the plugin
+$(BINDIR)/$(COMPONENTNAME):	$(BINDIR)/Element_QBar-Plugin.so
+
+$(BINDIR)/Element_QBar-Plugin.so:	src/Element_QBar.cpp
+	$(GPP) -shared -fPIC -DELEMENT_PLUG_IN $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -o"$@" "$<"
+
+

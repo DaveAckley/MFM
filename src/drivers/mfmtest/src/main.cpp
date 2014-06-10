@@ -5,6 +5,8 @@ using namespace MFM;
 int main(int argc, char** argv)
 {
 
+  LineTailByteSink_Test::Test_RunTests();
+  OverflowableCharBufferByteSink_Test::Test_RunTests();
   VArguments_Test::Test_RunTests();
   Logger_Test::Test_RunTests();
   UUID_Test::Test_RunTests();
