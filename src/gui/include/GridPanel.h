@@ -143,6 +143,5 @@ namespace MFM {
   };
 
 } /* namespace MFM */
-#include "GridPanel.tcc"
 
 #endif /* GRIDPANEL_H */
