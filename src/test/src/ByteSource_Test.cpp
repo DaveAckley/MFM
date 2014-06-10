@@ -8,6 +8,8 @@ namespace MFM {
 
   static ZStringByteSource tester("");
 
+  static CharBufferByteSink<100> obuf;
+
   static void Test_Basic() {
     int ch;
     tester.Reset();
@@ -89,6 +91,88 @@ namespace MFM {
     assert(!tester.Scan(uval, Format::BYTE));
   }
 
+  static void Test_ScanFieldwidths() {
+    s32 val;
+
+    tester.Reset("123");
+    assert(!tester.Scan(val, Format::DEC, 0));
+    assert(!tester.Scan(val, Format::DEC, 0));
+    assert(tester.Scan(val, Format::DEC, 2));
+    assert(val == 12);
+    assert(tester.Scan(val, Format::DEC, 2));
+    assert(val == 3);
+
+    tester.Reset();
+    assert(tester.Scan(val, Format::OCT, 1));
+    assert(val == 1);
+    assert(tester.Scan(val, Format::OCT, 2));
+    assert(val == 023);
+
+    tester.Reset();
+    assert(tester.Scan(val, Format::HEX, 4));
+    assert(val == 0x123);
+
+    tester.Reset();
+    assert(tester.Scan(val, Format::LEX32));
+    assert(val == 2);
+    assert(!tester.Scan(val, Format::LEX32));
+
+    tester.Reset("3246");
+    assert(tester.Scan(val, Format::LEX32));
+    assert(val == 246);
+
+    tester.Reset("40246");
+    assert(tester.Scan(val, Format::LEX32));
+    assert(val == 246);
+
+    tester.Reset("40246313421218");
+    assert(tester.Scan(val, Format::LEX32));
+    assert(val == 246);
+    assert(tester.Scan(val, Format::LEX32));
+    assert(val == 134);
+    assert(tester.Scan(val, Format::LEX32));
+    assert(val == 12);
+    assert(tester.Scan(val, Format::LEX32));
+    assert(val == 8);
+    assert(tester.Read() < 0);
+
+    tester.Reset("010011000111"); // 0100 1100 0111
+    assert(tester.Scan(val, Format::BIN));
+    assert(val == 0x4c7);
+
+    tester.Reset("010011000111"); // 0 1001 1000 111
+    assert(tester.Scan(val, Format::BIN, 1));
+    assert(val == 0);
+    assert(tester.Scan(val, Format::BIN, 4));
+    assert(val == 9);
+    assert(tester.Scan(val, Format::BIN, 4));
+    assert(val == 8);
+    assert(tester.Scan(val, Format::BIN, 4));
+    assert(val == 7);
+
+    tester.Reset("abcdefghijklmnopqrstuvwxyz");
+    obuf.Reset();
+    assert(tester.Scan(obuf, 0));
+
+    assert(tester.Scan(obuf, 1));
+    assert(obuf.Equals("a"));
+
+    assert(tester.Scan(obuf, 3));
+    assert(obuf.Equals("abcd"));
+
+    obuf.Reset();
+    assert(tester.Scan(obuf, 19));
+    assert(obuf.Equals("efghijklmnopqrstuvw"));
+
+    obuf.Reset();
+    assert(tester.Scan(obuf, 3));
+    assert(obuf.Equals("xyz"));
+
+    assert(tester.Scan(obuf, 0));
+    assert(!tester.Scan(obuf, 1));
+
+  }
+
   static void Test_ScanSetFormat() {
 
     tester.Reset("");
@@ -106,8 +190,6 @@ namespace MFM {
     tester.ScanSetFormat(DevNull, p);
     assert(*p == '@');
   }
-
-  static CharBufferByteSink<100> obuf;
 
   static void Test_ScanSet() {
 
@@ -169,12 +251,86 @@ namespace MFM {
 
   }
 
+  static void Test_PrintfScanfRoundTrip(const char * format, u32 value) {
+    obuf.Reset();
+    obuf.Printf(format, value);
+    tester.Reset(obuf.GetZString());
+    u32 recovered = value + 1;
+    assert(tester.Scanf(format, &recovered) > 0);
+    assert(value == recovered);
+  }
+
+  static void Test_ScanfSimple() {
+
+    for (u32 i = 1; i != 0; i <<= 1) {
+      Test_PrintfScanfRoundTrip("%d", i);
+      Test_PrintfScanfRoundTrip("%o", i);
+      Test_PrintfScanfRoundTrip("%x", i);
+      Test_PrintfScanfRoundTrip("%b", i);
+      Test_PrintfScanfRoundTrip("%t", i);
+      Test_PrintfScanfRoundTrip("boo%b", i);
+      Test_PrintfScanfRoundTrip("%dork", i);
+
+      Test_PrintfScanfRoundTrip("%012d", i);
+      Test_PrintfScanfRoundTrip("%018o", i);
+      Test_PrintfScanfRoundTrip("%024x", i);
+      Test_PrintfScanfRoundTrip("%040b", i);
+      Test_PrintfScanfRoundTrip("%07t", i);
+
+      // Add tempting distractions at the end..
+      Test_PrintfScanfRoundTrip("%12d9", i);
+      Test_PrintfScanfRoundTrip("%18o7", i);
+      Test_PrintfScanfRoundTrip("%24xF", i);
+      Test_PrintfScanfRoundTrip("%40b0", i);
+      Test_PrintfScanfRoundTrip("%7tZ", i);
+
+    }
+
+    tester.Reset("foo=12; bar= 34;");
+    u32 foo = 0, bar = 0;
+    assert(13 == tester.Scanf("foo=%d; bar=%d;", &foo, &bar));
+    assert(foo == 12);
+    assert(bar == 34);
+    assert(tester.Read() < 0);
+
+    tester.Reset();
+    assert(13 == tester.Scanf("foo=%o; bar=%x;", &foo, &bar));
+    assert(foo == 012);
+    assert(bar == 0x34);
+    assert(tester.Read() < 0);
+
+    tester.Reset();
+    assert(13 == tester.Scanf("f%co=%o; %car=%x;", &foo, 0, &bar, 0));
+    assert(foo == 'o');
+    assert(bar == 'b');
+    assert(tester.Read() < 0);
+
+    tester.Reset("110% pure");
+    assert(7 == tester.Scanf("%d%% pure", &foo));
+    assert(foo == 110);
+
+    tester.Reset("\1\2\3\4");
+    assert(1 == tester.Scanf("%c", &foo));
+    assert(foo == 1);
+
+    tester.Reset();
+    assert(1 == tester.Scanf("%h", &foo));
+    assert(foo == 0x0102);
+
+    tester.Reset();
+    assert(1 == tester.Scanf("%l", &foo));
+    assert(foo == 0x01020304);
+
+  }
+
   void ByteSource_Test::Test_RunTests() {
     Test_Basic();
     Test_Unread();
     Test_Scan();
     Test_ScanSetFormat();
     Test_ScanSet();
+    Test_ScanFieldwidths();
+    Test_ScanfSimple();
   }
 
 } /* namespace MFM */

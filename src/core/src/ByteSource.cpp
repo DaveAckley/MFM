@@ -12,19 +12,68 @@ namespace MFM {
     return Scan(*(s32*)&result, code, maxLen);
   }
 
-  bool ByteSource::Scan(s32 & result, Format::Type code, u32 maxLen)
+  bool ByteSource::ScanLexDigits(u32 & digits) {
+    u32 byte;
+    if (!Scan(byte, Format::BYTE)) return false;
+    if (byte >= '0' && byte <= '8') {
+      digits = byte-'0';
+      return true;
+    }
+    if (byte =='9') return Scan(digits, Format::LEX32);
+    return false;
+  }
+
+  bool ByteSource::Scan(u64 & result) {
+    u64 num = 0;
+    for (u32 i = 0; i < 8; ++i) {
+      s32 ch = Read();
+      if (ch < 0)
+        return false;
+      num = (num << 8) | ch;
+    }
+    result = num;
+    return true;
+  }
+
+  bool ByteSource::Scan(s32 & result, Format::Type code, u32 fieldWidth)
   {
     s32 ch;
-    if (code <= Format::BYTE && code >= Format::BEU64) {  // Handle raw formats
-      if (code == Format::BEU64)
-        FAIL(ILLEGAL_ARGUMENT);           // Can't 64 into a 32 doh
+    switch (code) {
+    case Format::BEU64:
+    case Format::LEX64:
+    case Format::LXX64:
+      FAIL(ILLEGAL_ARGUMENT);    // Can't 64 into a 32 doh
+
+    case Format::BYTE:
+    case Format::BEU16:
+    case Format::BEU32: {        // Handle raw formats
       s32 num = 0;
       for (int i = 1 << -((s32) code); i > 0; --i) {
-        if ((ch = Read()) < 0) return false;
+        if ((ch = Read()) < 0)   // Raw formats ignore fieldWidth
+          return false;
         num = (num << 8) | ch;
       }
       result = num;
       return true;
+    }
+
+    case Format::LEXHD:         // Self-delimited formats ignore fieldWidth
+      return ScanLexDigits(*(u32*)&result);
+      break;
+
+    case Format::LEX32:
+    case Format::LXX32: {
+      u32 base = 10;
+      if (code==Format::LXX32)
+        base = 16;
+
+      u32 len;
+      if (!ScanLexDigits(len)) return false;
+      return Scan(result, (Format::Type) base, len);
+    }
+
+    default: // Continue analysis below
+      break;
     }
 
     // Here to read in base 2..36
@@ -33,13 +82,15 @@ namespace MFM {
 
     // Skip leading spaces (only, not other 'whitespace')
     do {
-      if ((ch = Read()) < 0) return false;            // Can't get started
+      if ((ch = ReadCounted(fieldWidth)) < 0)
+        return false;           // Can't get started
     } while (ch == ' ');
 
     // ch is now a non-whitespace
     bool negative;
     if ((negative = ch=='-') || ch=='+') {
-      if ((ch = Read()) < 0) return false;            // Can't get started
+      if ((ch = ReadCounted(fieldWidth)) < 0)
+        return false;           // Can't get started
     }
 
     // We are now holding a read-but-unaccepted char in ch
@@ -63,10 +114,21 @@ namespace MFM {
         if (readSome) break;    // If we saw something okay before, okay
         else return false;      // Otherwise this is messed up
       }
-    } while ((ch = Read()) >= 0);
+    } while ((ch = ReadCounted(fieldWidth)) >= 0);
     result = negative?-num:num;
     return true;
   }
+
+  bool ByteSource::Scan(ByteSink & result, const u32 fieldWidth)
+  {
+    for (u32 i = 0; i < fieldWidth; ++i) {
+      s32 ch = Read();
+      if (ch < 0) return false;
+      result.WriteByte(ch);
+    }
+    return true;
+  }
+
 
   s32 ByteSource::ScanSetFormat(ByteSink & result, const char * & setSpec)
   {
@@ -133,121 +195,152 @@ namespace MFM {
     return count;
   }
 
-#if 0
   s32 ByteSource::Scanf(const char * format, ...) {
     va_list ap;
     va_start(ap, format);
-    Vscanf(format, ap);
+    s32 ret = Vscanf(format, ap);
     va_end(ap);
-
+    return ret;
   }
+
+  static void StorePtr8(va_list & ap, u64 val) {
+    u64 * ptr = va_arg(ap,u64*);
+    if (!ptr) return;
+    MFM_API_ASSERT_ZERO(((uptr)ptr)&7);
+    *ptr = val;
+  }
+
+  static void StorePtr4(va_list & ap, u32 val) {
+    u32 * ptr = va_arg(ap,u32*);
+    if (!ptr) return;
+    MFM_API_ASSERT_ZERO(((uptr)ptr)&3);
+    *ptr = val;
+  }
+
+  static void StorePtr2(va_list & ap, u16 val) {
+    u16 * ptr = va_arg(ap,u16*);
+    if (!ptr) return;
+    MFM_API_ASSERT_ZERO(((uptr)ptr)&1);
+    *ptr = val;
+  }
+
+  static void StorePtr1(va_list & ap, u8 val) {
+    u8 * ptr = va_arg(ap,u8*);
+    if (!ptr) return;
+    *ptr = val;
+  }
+
+
+
   s32 ByteSource::Vscanf(const char * format, va_list & ap) {
     MFM_API_ASSERT_NONNULL(format);
 
     u8 p;
-    u32 result;
+    s32 result;
+    s32 fieldWidth;
+    /// NYI: u8 padChar;
 
     bool alt;
     int matches = 0;
     while ((p = *format++)) {
       if (p != '%') {
-        if (p == '\n') {            // '\n's _in_the_format_string_: We have to see EOF
-          if (packetReadEOF(packet)) {
-            ++matches;
-            continue;               // ..but only end of format string now makes sense..
-          } else return -matches;
-        }
-        if (!packetRead(packet,result,BYTE))
-          return -matches;
-        if ((char) result != p)
+        result = Read();
+        if (result < 0)
+          return matches;
+        if ((u8) result != p)
           return matches;
         ++matches;
         continue;
       }
 
+      // Here we read an '%'
       alt = false;
+      fieldWidth = -1;
+      //NYI: padChar = ' ';
+
     again:
       u32 type = 0;
       switch (p = *format++) {
       case '#': alt = true; goto again;
 
+      case '0':
+        if (fieldWidth < 0) {
+          //NYI: padChar = '0';
+          fieldWidth = 0;
+        } else fieldWidth *= 10;
+        goto again;
+
+      case '1': case '2': case '3': case '4': case '5':
+      case '6': case '7': case '8': case '9':
+        if (fieldWidth < 0) fieldWidth = 0;
+        fieldWidth = fieldWidth * 10 + (p - '0');
+        goto again;
+
       case 'c':
-        if (!packetRead(packet,result,BYTE))
+        if (!Scan(result, Format::BYTE))
           return -matches;
-        *getPtr1(ap) = result;
+        StorePtr1(ap, (u8) result);
         ++matches;
         break;
 
       case 'h':
-        if (!packetRead(packet,result,BESHORT))
+        if (!Scan(result, Format::BEU16))
           return -matches;
-        *getPtr2(ap) = result;
+        StorePtr2(ap, (u16) result);
         ++matches;
         break;
 
-      case 'l': type = BELONG; goto store;
-      case 'b': type = BIN; goto store;
-      case 'o': type = OCT; goto store;
-      case 'd': type = DEC; goto store;
-      case 'x': type = HEX; goto store;
-      case 't': type = B36; goto store;
+      case 'l':
+        if (!Scan(result, Format::BEU32))
+          return -matches;
+        StorePtr4(ap, (u32) result);
+        ++matches;
+        break;
+
+      case 'q':
+        {
+          u64 res64;
+          if (!Scan(res64)) return -matches;
+          StorePtr8(ap, res64);
+          ++matches;
+        }
+        break;
+
+      case 'b': type = Format::BIN; goto store;
+      case 'o': type = Format::OCT; goto store;
+      case 'd': type = Format::DEC; goto store;
+      case 'x': type = Format::HEX; goto store;
+      case 't': type = Format::B36; goto store;
 
       store:
-        if (!packetRead(packet,result,type))
+        if (!Scan(result,(Format::Type) type, fieldWidth))
           return -matches;
-        *getPtr4(ap) = result;
+        StorePtr4(ap, (u32) result);
         ++matches;
         break;
 
-      case 'F':
-        if (!packetRead(packet,result,BYTE)) return -matches;
-        if (!IS_FACE_CODE(result)) return matches;
-        *getPtr1(ap) = FACE_NUMBER_FROM_CODE(result);
-        ++matches;
+      case '@':
+        {
+          s32 argument = 0;
+          if (alt) argument = va_arg(ap,s32);
+          ByteSourceable * bs = va_arg(ap,ByteSourceable*);
+          MFM_API_ASSERT_NONNULL(bs);
+          if (!bs->ReadFrom(*this, argument))
+            return -matches;
+          ++matches;
+        }
         break;
-
-#if 0
-      case 'f': {
-        double v =  va_arg(ap,double);
-        facePrint(face,v);
-        break;
-      }
-
-      case 's': {
-        const char * s = va_arg(ap,const char *);
-        if (!s) facePrint(face,"(null)");
-        else facePrint(face,s);
-        break;
-      }
-#endif
-
-      case 'p': {
-        u8 * subp = 0;
-        if (!packetReadPacket(packet,subp)) return -matches;
-        u8 ** ptr = va_arg(ap,u8**);
-        API_ASSERT_NONNULL(ptr);
-        *ptr = subp;
-        ++matches;
-        break;
-      }
 
       case '%':
-        if (!packetRead(packet,result,BYTE)) return -matches;
-        if (result != '%') return matches;
+        if (!Scan(result,Format::BYTE)) return -matches;
+        if (result != '%') return -matches;
         ++matches;
         break;
 
-      case '\n':                  // "%\n" adds checkbyte then terminates packet!
-        if (!packetReadCheckByte(packet)) return -matches;
-        ++matches;
-        break;
-
-      default:                          // Either I don't know that code, or you're bogus.
-        API_BUG(E_API_BAD_FORMAT_CODE); // Either way, I die.  You're welcome.
+      default:                  // Either I don't know that code, or you're bogus.
+        FAIL(BAD_FORMAT_ARG);   // Either way, I die.  You're welcome.
       }
     }
     return matches;
   }
-#endif
-
 }
