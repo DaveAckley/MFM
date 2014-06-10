@@ -27,35 +27,34 @@
 #ifndef ZSTRINGBYTESOURCE_H
 #define ZSTRINGBYTESOURCE_H
 
-#include "ByteSource.h"
-#include <string.h>        /* For memcpy */
+#include "CharBufferByteSource.h"
+#include <string.h>        /* For strlen */
 
 namespace MFM {
 
-  class ZStringByteSource : public ByteSource {
-  public:
-    ZStringByteSource(const char * input) : m_input(input), m_read(0)
-    {
-      if (!input)
+  /**
+     Source bytes from a zero-terminated constant string.
+   */
+  class ZStringByteSource : public CharBufferByteSource {
+  private: typedef CharBufferByteSource Super;
+
+    static u32 Strlen(const char * ptr) {
+      if (!ptr)
         FAIL(NULL_POINTER);
+      return strlen(ptr);
     }
 
-    virtual int ReadByte() {
-      s32 ch = m_input[m_read];
-      if (ch == 0) return -1;
-      ++m_read;
-      return ch;
-    }
+  public:
+    ZStringByteSource(const char * input) : Super(input, Strlen(input))
+    { }
 
     void Reset(const char * newString = 0) {
       if (newString != 0)
-        m_input = newString;
-      m_read = 0;
+        ChangeBuffer(newString, Strlen(newString));
+      else
+        Super::Reset();
     }
 
-  private:
-    const char * m_input;
-    u32 m_read;
   };
 }
 
