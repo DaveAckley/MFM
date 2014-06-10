@@ -168,6 +168,8 @@ namespace MFM {
 
   static void Test_PrintfWidths() {
     Test_Vprintf_Result("  1","%3d",1);
+    Test_Vprintf_Result("002","%03d",2);
+    Test_Vprintf_Result("-03","%03d",-3);
   }
 
   class IPrintMyself : public ByteSinkable {

@@ -61,16 +61,27 @@ namespace MFM {
   {
     if (decimal < 0) {
       if (decimal-1 > 0) {
-        Print("-2147483648", fieldWidth, padChar);
+        // Argh.  Printing this one value right is a huge pain.
+        if (padChar == '0' && fieldWidth > 11) {
+          Print("-");
+          for (s32 i = 11; i < fieldWidth; ++i)
+            Print("0");
+          Print("2147483648");
+        } else
+          Print("-2147483648", fieldWidth, padChar);
         return;
       }
       decimal = -decimal;
+
       u32 len = CountDigits((u32) decimal, 10) + 1;
+
+      if (padChar == '0') WriteByte('-');
       while (fieldWidth > (s32) len) {
         WriteByte(padChar);
         --fieldWidth;
       }
-      WriteByte('-');
+      if (padChar != '0') WriteByte('-');
+      fieldWidth = 0;
     }
     Print((u32) decimal, fieldWidth, padChar);
   }
