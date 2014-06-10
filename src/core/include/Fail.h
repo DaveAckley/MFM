@@ -49,6 +49,7 @@ enum MFMFailureCodes{
 
 #define MFM_API_ASSERT(expr,code) do { if (!(expr)) FAIL(code); } while (0)
 #define MFM_API_ASSERT_NONNULL(expr) MFM_API_ASSERT(expr,NULL_POINTER)
+#define MFM_API_ASSERT_ZERO(expr) MFM_API_ASSERT((expr)==0,NON_ZERO)
 
 #endif  /* FAIL_H */
 
