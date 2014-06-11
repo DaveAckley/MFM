@@ -339,6 +339,8 @@ namespace MFM {
 
       SDL_Init(SDL_INIT_VIDEO);
 
+      SetScreenSize(m_screenWidth, m_screenHeight);
+
       m_fonts.Init();
 
       m_rootPanel.SetName("Root");
@@ -364,6 +366,14 @@ namespace MFM {
       m_logPanel.SetDimensions(m_screenWidth, 160);
       m_logPanel.SetAnchor(ANCHOR_SOUTH);
       m_logPanel.SetFont(m_fonts.GetDefaultFont(16));
+
+      m_toolboxPanel.AddButtons();
+      m_toolboxPanel.SetName("Toolbox");
+      m_toolboxPanel.SetVisibility(false);
+      m_toolboxPanel.SetBackground(Drawing::GREY60);
+      m_toolboxPanel.SetDimensions(79, 79);
+      m_toolboxPanel.SetAnchor(ANCHOR_WEST);
+      m_gridPanel.Insert(&m_toolboxPanel, NULL);
 
       /*
       m_rootPanel.Insert(&m_panel1,0);
@@ -432,10 +442,11 @@ namespace MFM {
     inline void ToggleLogView()
     {
       m_logPanel.ToggleVisibility();
-      /*
-      m_grend.SetDimensions(Point<u32>(m_screenWidth - (m_renderStats ? STATS_WINDOW_WIDTH : 0)
-				       , m_screenHeight));
-      */
+    }
+
+    inline void ToggleToolbox()
+    {
+      m_toolboxPanel.ToggleVisibility();
     }
 
     void KeyboardUpdate(OurGrid& grid)
@@ -499,6 +510,11 @@ namespace MFM {
       if(m_keyboard.SemiAuto(SDLK_r))
       {
 	camera.ToggleRecord();
+      }
+
+      if(m_keyboard.SemiAuto(SDLK_t))
+      {
+	ToggleToolbox();
       }
 
       /* Camera Movement*/
@@ -790,8 +806,6 @@ namespace MFM {
 
       AssetManager::Initialize();
 
-      m_toolboxPanel.Init();
-
       if (screen == 0)
         FAIL(ILLEGAL_STATE);
 
@@ -834,7 +848,6 @@ namespace MFM {
       m_keyboardPaused = m_startPaused;
 
       bool running = true;
-      SetScreenSize(m_screenWidth, m_screenHeight);
 
       SDL_Event event;
       s32 lastFrame = SDL_GetTicks();

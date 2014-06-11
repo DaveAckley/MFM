@@ -53,17 +53,17 @@ namespace MFM
     drawing.SetBackground(m_enabled? m_bgColor : Drawing::InterpolateColors(m_fgColor,m_bgColor,40));
     drawing.Clear();
 
-    SPoint dims = MakeSigned(GetDimensions());
-    SPoint textSize = GetTextSize(drawing.GetFont(), m_text);
-    SPoint renderAt = max((dims-textSize)/2, SPoint(0,0));
-
     if(m_icon)
     {
-      drawing.BlitImage(m_icon, MakeUnsigned(renderAt), GetDimensions());
+
+      drawing.BlitImage(m_icon, MakeUnsigned(GetAbsoluteLocation()), GetDimensions());
     }
 
     if(m_text)
     {
+      SPoint dims = MakeSigned(GetDimensions());
+      SPoint textSize = GetTextSize(drawing.GetFont(), m_text);
+      SPoint renderAt = max((dims-textSize)/2, SPoint(0,0));
 
       drawing.BlitText(m_text, MakeUnsigned(renderAt), GetDimensions());
     }

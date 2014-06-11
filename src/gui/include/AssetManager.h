@@ -64,7 +64,7 @@ namespace MFM
 
 	if(loaded)
 	{
-	  opped = SDL_DisplayFormat(loaded);
+	  opped = SDL_DisplayFormatAlpha(loaded);
 
 	  SDL_FreeSurface(loaded);
 
