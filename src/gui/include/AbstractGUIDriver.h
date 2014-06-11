@@ -340,6 +340,7 @@ namespace MFM {
       m_fonts.Init();
 
       m_rootPanel.SetName("Root");
+      m_gridPanel.SetBorder(Drawing::BLACK);
       m_gridPanel.SetGridRenderer(&m_grend);
       m_gridPanel.SetGrid(&Super::GetGrid());
 

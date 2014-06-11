@@ -51,7 +51,7 @@ namespace MFM {
   }
 
   template <u32 BITS>
-  bool BitVector<BITS>::ToggleBit(int idx)
+  bool BitVector<BITS>::ToggleBit(const u32 idx)
   {
     int arrIdx = idx / BITS_PER_UNIT;
     int inIdx = idx % BITS_PER_UNIT;

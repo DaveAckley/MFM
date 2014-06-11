@@ -44,6 +44,15 @@ namespace MFM {
     MARK_USED(t);
   }
 
+  /**
+   * Right-aligned mask generation.  Returns 0xFFFFFFFF if \a length
+   * >= 32
+   */
+  inline static u32 MakeMaskClip(const u32 length) {
+    if (length<32) return (1u << length) - 1;
+    return -1;
+  }
+
   template <class T>
   inline T MAX(T x, T y) {
     return (x > y) ? x : y;

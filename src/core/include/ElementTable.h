@@ -75,7 +75,7 @@ namespace MFM {
 
     ~ElementTable() { }
 
-    const Element<CC> * Lookup(u32 elementType) ;
+    const Element<CC> * Lookup(u32 elementType) const;
 
     void Execute(EventWindow<CC>& window)
     {

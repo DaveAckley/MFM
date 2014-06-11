@@ -1,5 +1,5 @@
-#ifndef ELEMENT_QBAR_H   /* -*- C++ -*- */
-#define ELEMENT_QBAR_H
+#ifndef ELEMENT_MQBAR_H   /* -*- C++ -*- */
+#define ELEMENT_MQBAR_H
 
 #include "Element.h"
 #include "EventWindow.h"
@@ -8,21 +8,19 @@
 #include "Element_Res.h"
 #include "itype.h"
 #include "FXP.h"
-#include "P1Atom.h"
+#include "P3Atom.h"
 #include "ColorMap.h"
 
 namespace MFM
 {
 
-#define QBAR_VERSION 3
-
-  // Forward
-  template <class CC> class Element_DBar ;
+#define QBAR_VERSION 4
 
   /**
-    A straight bar-forming class, with symmetry, that grows a
+    A moving bar-forming class, with symmetry, that grows a
     quadrilateral of itself, and advances a stability-based state
-    machine.
+    machine.  This guy attempts 'vegetative motion' -- using only
+    asymmetric growth.
 
     Bar grid positions in an event window
 
@@ -42,33 +40,18 @@ namespace MFM
     (GetPos()), and what symmetry it is using (GetSym()).
 
     Class:
-    (C1) Name is Element_QBar
+    (C1) Name is Element_MQBar
     (C2) Type is 0x4ba2
    */
 
 
   template <class CC>
-  class Element_QBar : public Element<CC>
+  class Element_MQBar : public Element<CC>
   {
     // Extract short names for parameter types
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS };
-
-    template <u32 TVBITS>
-    static u32 toSignMag(s32 value) {
-      const u32 SIGN_BIT = 1<<(TVBITS-1);
-      const u32 MAX = SIGN_BIT-1;
-      u32 sign = 0;
-      if (value < 0) {
-        sign = SIGN_BIT;
-        value = -value;
-      }
-      if (value > MAX)
-        value = MAX;
-      u32 val = (u32) value;
-      return sign|val;
-    }
 
     template <u32 TVBITS>
     static u32 toMag(u32 value) {
@@ -79,16 +62,6 @@ namespace MFM
       if (value > MAX)
         value = MAX;
       u32 val = value;
-      return val;
-    }
-
-    template <u32 TVBITS>
-    static s32 fromSignMag(const u32 value) {
-      const u32 SIGN_BIT = 1<<(TVBITS-1);
-      const u32 MASK = SIGN_BIT-1;
-      FXP16 val = value&MASK;
-      if (value & SIGN_BIT)
-        val = -val;
       return val;
     }
 
@@ -116,7 +89,7 @@ namespace MFM
 
   public:
 
-    static Element_QBar THE_INSTANCE;
+    static Element_MQBar THE_INSTANCE;
     static const u32 TYPE() {
       return THE_INSTANCE.GetType();
     }
@@ -128,50 +101,53 @@ namespace MFM
     static const u32 BITS_WIDE = 5;
     static const u32 BITS_HIGH = 7;
     static const u32 BITS_SYMI = 2;
-    static const u32 BITS_TIMER = 3;
 
-    static const u32 MAX_TIMER_VALUE = (1<<BITS_TIMER)-1;
+    static const u32 BITS_TIMER = 4;  // Slow down the timer
+    static const u32 MAX_TIMER_VALUE = 9; //(1<<BITS_TIMER)-1;
 
     static const u32 BITS_BAR_COORD_LEN = BITS_WIDE + BITS_HIGH;
 
-    static const u32 STATE_SIZE_IDX = 0;
-    static const u32 STATE_SIZE_LEN = BITS_BAR_COORD_LEN;
-    static const u32 STATE_POS_IDX = STATE_SIZE_IDX + STATE_SIZE_LEN;
-    static const u32 STATE_POS_LEN = BITS_BAR_COORD_LEN;
-    static const u32 STATE_SYMI_IDX = STATE_POS_IDX + STATE_POS_LEN;
-    static const u32 STATE_SYMI_LEN = BITS_SYMI;
-    static const u32 STATE_TIMER_IDX = STATE_SYMI_IDX + STATE_SYMI_LEN;
-    static const u32 STATE_TIMER_LEN = BITS_TIMER;
-    static const u32 STATE_BITS = STATE_TIMER_IDX + STATE_TIMER_LEN;
+    static const u32 STATE_BITS_START = P3Atom<P>::P3_STATE_BITS_POS;
+    typedef BitVector<P::BITS_PER_ATOM> BVA;
 
-    Element_QBar() : Element<CC>(MFM_UUID_FOR("QBar", QBAR_VERSION)) { LOG.Message("QBar ctor"); }
+    typedef BitField<BVA, BITS_BAR_COORD_LEN, STATE_BITS_START> AFSize;
+    typedef BitField<BVA, BITS_BAR_COORD_LEN, AFSize::END> AFPos;
+    typedef BitField<BVA, BITS_SYMI, AFPos::END> AFSymI;
+    typedef BitField<BVA, BITS_TIMER, AFSymI::END> AFTimer;
+
+    static const u32 STATE_BITS_END = AFTimer::END;
+    static const u32 STATE_BITS_COUNT = STATE_BITS_END - STATE_BITS_START + 1;
+
+    Element_MQBar() : Element<CC>(MFM_UUID_FOR("QBar", QBAR_VERSION)) {
+      LOG.Message("MQBar ctor");
+    }
 
     u32 GetSymI(const T &atom) const {
       if (!IsOurType(atom.GetType()))
         FAIL(ILLEGAL_STATE);
-      return atom.GetStateField(STATE_SYMI_IDX,STATE_SYMI_LEN);
+      return AFSymI::Read(GetBits(atom));
     }
 
     SPoint GetMax(const T &atom) const {
       if (!IsOurType(atom.GetType()))
         FAIL(ILLEGAL_STATE);
-      return MakeSigned(toUPoint<BITS_WIDE,BITS_HIGH>(atom.GetStateField(STATE_SIZE_IDX,STATE_SIZE_LEN)));
+      return MakeSigned(toUPoint<BITS_WIDE,BITS_HIGH>(AFSize::Read(GetBits(atom))));
     }
 
     SPoint GetPos(const T &atom) const {
       if (!IsOurType(atom.GetType()))
         FAIL(ILLEGAL_STATE);
-      return MakeSigned(toUPoint<BITS_WIDE,BITS_HIGH>(atom.GetStateField(STATE_POS_IDX,STATE_POS_LEN)));
+      return MakeSigned(toUPoint<BITS_WIDE,BITS_HIGH>(AFPos::Read(GetBits(atom))));
     }
 
     u32 GetTimer(const T &atom) const {
       if (!IsOurType(atom.GetType()))
         FAIL(ILLEGAL_STATE);
-      return atom.GetStateField(STATE_TIMER_IDX,STATE_TIMER_LEN);
+      return AFTimer::Read(GetBits(atom));
     }
 
     bool FitsInRep(const SPoint & v) const {
-      return v.BoundedBy(SPoint(0,0),SPoint((1<<BITS_WIDE)-1,(1<<BITS_HIGH)-1));
+      return v.BoundedBy(SPoint(0,0),SPoint(MakeMaskClip(BITS_WIDE),MakeMaskClip(BITS_HIGH)));
     }
 
     void SetSize(T &atom, const SPoint & v) const {
@@ -179,7 +155,7 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       if (!FitsInRep(v))
         FAIL(ILLEGAL_ARGUMENT);
-      atom.SetStateField(STATE_SIZE_IDX,STATE_SIZE_LEN,toUTiny<BITS_WIDE,BITS_HIGH>(MakeUnsigned(v)));
+      AFSize::Write(GetBits(atom),toUTiny<BITS_WIDE,BITS_HIGH>(MakeUnsigned(v)));
     }
 
     void SetPos(T &atom, const SPoint v) const {
@@ -187,7 +163,7 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       if (!FitsInRep(v))
         FAIL(ILLEGAL_ARGUMENT);
-      atom.SetStateField(STATE_POS_IDX,STATE_POS_LEN,toUTiny<BITS_WIDE,BITS_HIGH>(MakeUnsigned(v)));
+      AFPos::Write(GetBits(atom),toUTiny<BITS_WIDE,BITS_HIGH>(MakeUnsigned(v)));
     }
 
     void SetSymI(T &atom, const u32 sym) const {
@@ -195,7 +171,7 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       if (sym >= PSYM_SYMMETRY_COUNT)
         FAIL(ILLEGAL_ARGUMENT);
-      atom.SetStateField(STATE_SYMI_IDX,STATE_SYMI_LEN, sym);
+      AFSymI::Write(GetBits(atom),sym);
     }
 
     void SetTimer(T &atom, const u32 tmr) const {
@@ -203,12 +179,12 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       if (tmr > MAX_TIMER_VALUE)
         FAIL(ILLEGAL_ARGUMENT);
-      atom.SetStateField(STATE_TIMER_IDX,STATE_TIMER_LEN, tmr);
+      AFTimer::Write(GetBits(atom),tmr);
     }
 
     virtual const T & GetDefaultAtom() const
     {
-      static T defaultAtom(TYPE(), 0, 0, STATE_BITS);
+      static T defaultAtom(TYPE(), 0, 0, STATE_BITS_COUNT);
       const SPoint QBAR_SIZE(27, 3 * 27);
       SetSize(defaultAtom, QBAR_SIZE);
       SetPos(defaultAtom, QBAR_SIZE / 4);
@@ -249,7 +225,7 @@ namespace MFM
         {
           u32 timer = GetTimer(atom);
           return ColorMap_SEQ6_GnBu::THE_INSTANCE.
-            GetInterpolatedColor(timer,0,MAX_TIMER_VALUE-1,DefaultPhysicsColor());
+            GetInterpolatedColor(timer,0,MAX_TIMER_VALUE - 1, DefaultPhysicsColor());
         }
       }
       return 0x0;
@@ -268,6 +244,8 @@ namespace MFM
       T self = window.GetCenterAtom();
       const u32 selfType = self.GetType();
       if (!IsOurType(selfType)) FAIL(ILLEGAL_STATE);
+
+      u32 ourTimer = GetTimer(self);
 
       // Establish our symmetry before non-self access through window
       u32 symi = GetSymI(self);
@@ -325,7 +303,7 @@ namespace MFM
                 toMake = sp;
                 makeGuy = self; // Start with us
                 SetPos(makeGuy,theirBarPos);  // Update position
-                SetTimer(makeGuy,0);    // They are young (and will enyoungen us, probably.)
+                SetTimer(makeGuy, 0);    // They are young
               }
 
             } else {
@@ -339,21 +317,27 @@ namespace MFM
                 SPoint otherPos = GetPos(other);
 
                 SPoint otherPosMapped = otherPos-sp;
+                u32 otherTimer = GetTimer(other);
+
                 if (otherBarMax==barMax && otherPosMapped == myPos) {
                   ++consistentCount;
 
                   // They are consistent.  Inspect their timer
-                  u32 otherTimer = GetTimer(other);
                   if (!neighborTimer || otherTimer < minTimer)
                     minTimer = otherTimer;
                   if (!neighborTimer || otherTimer > maxTimer)
                     maxTimer = otherTimer;
                   neighborTimer = true;
 
-                } else if (random.OneIn(++inconsistentCount)) {
-                  anInconsistent = sp;
-                  // Inconsistent Bars decay to Res
-                  unmakeGuy = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
+                } else {
+                  u32 otherTimer = GetTimer(other);
+
+                  // An inconsistent guy younger than us decays
+                  if (otherTimer < ourTimer && random.OneIn(++inconsistentCount)) {
+                    anInconsistent = sp;
+                    // Inconsistent Bars decay to Res
+                    unmakeGuy = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
+                  }
                 }
               }
 
@@ -383,7 +367,8 @@ namespace MFM
               else {
                 bool iQBar = IsOurType(otherType);
                 if (iQBar) {
-                  if (random.OneIn(++inconsistentCount)) {
+                  u32 iQBarTimer = GetTimer(other);
+                  if (iQBarTimer < ourTimer && random.OneIn(++inconsistentCount)) {
                     anInconsistent = sp;
                     unmakeGuy = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
                   }
@@ -398,14 +383,21 @@ namespace MFM
 
       // First question: Are we inconsistent with anybody?
       if (inconsistentCount > 0) {
+
         // Next question: Are we much more consistent than inconsistent?
-        if (consistentCount > 3*inconsistentCount) {
+        if (consistentCount > 3 * inconsistentCount) {
+
           // Yes.  Punish selected loser
           window.SetRelativeAtom(anInconsistent, unmakeGuy);
-        } else if (inconsistentCount > 3*consistentCount) {
+
+        } else if (inconsistentCount > 3 * consistentCount) {
+
           // If we're way inconsistent, let's res out and let them have us
           window.SetCenterAtom(Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
+
         } else {
+
+#if 0
           // We're neither way consistent nor way inconsistent.  We
           // will survive but dock our timer
           u32 ourTimer = GetTimer(self);
@@ -417,6 +409,7 @@ namespace MFM
             SetTimer(self,ourTimer);
             window.SetCenterAtom(self);
           }
+#endif
         }
       } else {
         // No inconsistencies.  Do we have something to make, and eat?
@@ -439,6 +432,7 @@ namespace MFM
                 symi = PSYM_DEG000L;
               SetSymI(corner,symi);
               SetPos(corner,SPoint(0,0));
+              SetTimer(corner,0);
               window.SetRelativeAtom(offset, corner);
               window.SetRelativeAtom(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
             }
@@ -462,8 +456,8 @@ namespace MFM
   };
 
   template <class CC>
-  Element_QBar<CC> Element_QBar<CC>::THE_INSTANCE;
+  Element_MQBar<CC> Element_MQBar<CC>::THE_INSTANCE;
 
 }
 
-#endif /* ELEMENT_QBAR_H */
+#endif /* ELEMENT_MQBAR_H */

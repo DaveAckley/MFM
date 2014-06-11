@@ -53,6 +53,15 @@ namespace MFM
     const u32 m_type;
 
   protected:
+
+    const BitVector<P::BITS_PER_ATOM> & GetBits(const T & atom) const {
+      return atom.m_bits;
+    }
+
+    BitVector<P::BITS_PER_ATOM> & GetBits(T & atom) const {
+      return atom.m_bits;
+    }
+
     static const SPoint VNNeighbors[4];
 
     bool FillAvailableVNNeighbor(EventWindow<CC>& window, SPoint& pt) const;

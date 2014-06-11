@@ -37,7 +37,7 @@ namespace MFM {
    * limit is reached, an 'X' is appended at the end of the ByteSink,
    * and further data written is discarded.
    */
-  template <int BUFSIZE>
+  template <u32 BUFSIZE>
   class OverflowableCharBufferByteSink : public ByteSink {
   public:
     OverflowableCharBufferByteSink() : m_written(0), m_overflowed(false) { }
@@ -64,9 +64,15 @@ namespace MFM {
       return BUFSIZE - m_written - 1;
     }
 
-    bool Equals(const char * str) {
-      return strcmp(GetZString(), str)==0;
+    bool Equals(const char * str) const {
+      return GetLength() == strlen(str) && !memcmp(m_buf, str, GetLength());
     }
+
+    template <u32 OTHER_SIZE>
+    bool Equals(const OverflowableCharBufferByteSink<OTHER_SIZE> & str) const {
+      return GetLength() == str.GetLength() && !memcmp(m_buf, str.m_buf, GetLength());
+    }
+
     const char * GetZString() {
       m_buf[m_written] = '\0';
       return (const char *) m_buf;
@@ -85,11 +91,21 @@ namespace MFM {
       m_overflowed = false;
     }
 
+    bool HasOverflowed() const {
+      return m_overflowed;
+    }
+
   private:
-    u8 m_buf[BUFSIZE];
     u32 m_written;
     bool m_overflowed;
+    u8 m_buf[BUFSIZE];
   };
+
+  typedef OverflowableCharBufferByteSink<16 + 2> OString16;
+  typedef OverflowableCharBufferByteSink<32 + 2> OString32;
+  typedef OverflowableCharBufferByteSink<64 + 2> OString64;
+  typedef OverflowableCharBufferByteSink<128 + 2> OString128;
 }
+
 
 #endif /* OVERFLOWABLECHARBUFFERBYTESINK_H */

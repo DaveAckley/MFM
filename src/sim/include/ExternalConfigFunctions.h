@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  fail.h Support for meaningful runtime deaths when necessary
+  ExternalConfigFunctions.h Function call objects for external configuration files
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,37 +19,23 @@
 */
 
 /**
-  \file Fail.h Support for meaningful runtime deaths when necessary
+  \file ExternalConfigFunctions.h Function call objects for external configuration files
+  \author Trent R. Small.
   \author David H. Ackley.
   \date (C) 2014 All rights reserved.
   \lgpl
  */
-#ifndef FAIL_H
-#define FAIL_H
+#ifndef EXTERNALCONFIGFUNCTIONS_H
+#define EXTERNALCONFIGFUNCTIONS_H
 
-#include "FailPlatformSpecific.h"  /* For FAIL and unwind_protect */
+#include "ExternalConfig.h"
 
-extern "C" {
-  /**
-     Convert a failure code into a null-terminated string for printing.
-     If \a failCode is negative or greater than the number of known
-     failure codes, returns "[failCode out of range]", otherwise returns
-     the failure code symbol itself as a string.
-  */
-  const char * MFMFailCodeReason(int failCode) ;
+namespace MFM
+{
+  template <class GC>
+  void RegisterExternalConfigFunctions(ExternalConfig<GC> & ec) ;
 }
 
-#define XX(a) MFM_FAIL_CODE_REASON_##a,
-enum MFMFailureCodes{
-  ZERO_UNUSED = 0,
-#include "FailCodes.h"
-#undef XX
-  MAX_FAILURE
-};
+#include "ExternalConfigFunctions.tcc"
 
-#define MFM_API_ASSERT(expr,code) do { if (!(expr)) FAIL(code); } while (0)
-#define MFM_API_ASSERT_NONNULL(expr) MFM_API_ASSERT(expr,NULL_POINTER)
-#define MFM_API_ASSERT_ZERO(expr) MFM_API_ASSERT((expr)==0,NON_ZERO)
-
-#endif  /* FAIL_H */
-
+#endif /* EXTERNALCONFIGFUNCTIONS_H */

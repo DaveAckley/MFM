@@ -1,3 +1,4 @@
+/* -*- mode:C++ -*- */
 
 #include "Logger.h"
 namespace MFM {
@@ -40,7 +41,7 @@ namespace MFM {
       ++used;
 
       if (forUUID == *m_uuids[i])
-        FAIL(DUPLICATE_ELEMENT_TYPE);
+        FAIL(DUPLICATE_ENTRY);
     }
 
     if (used == SLOTS)
@@ -49,5 +50,25 @@ namespace MFM {
     u32 type = NextType();
     m_uuids[type] = &forUUID;
     return type;
+  }
+
+  template <u32 BITS>
+  s32 StaticLoader<BITS>::TypeFromUUID(const UUID & forUUID) {
+    for (u32 i = 0; i < SLOTS; ++i) {
+      if (!m_uuids[i]) continue;
+      if (forUUID == *m_uuids[i])
+        return (s32) i;
+    }
+    return -1;
+  }
+
+  template <u32 BITS>
+  s32 StaticLoader<BITS>::TypeFromCompatibleUUID(const UUID & forUUID) {
+    for (u32 i = 0; i < SLOTS; ++i) {
+      if (!m_uuids[i]) continue;
+      if (m_uuids[i]->Compatible(forUUID))
+        return (s32) i;
+    }
+    return -1;
   }
 }
