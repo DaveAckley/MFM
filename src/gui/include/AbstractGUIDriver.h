@@ -383,8 +383,6 @@ namespace MFM {
 
       m_reinitRequested = false;
 
-      m_toolboxPanel.Init();
-
       OnceOnlyButtons();
 
     }
@@ -791,6 +789,8 @@ namespace MFM {
                                 SDL_SWSURFACE | SDL_RESIZABLE);
 
       AssetManager::Initialize();
+
+      m_toolboxPanel.Init();
 
       if (screen == 0)
         FAIL(ILLEGAL_STATE);

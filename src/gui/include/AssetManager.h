@@ -31,6 +31,7 @@
 #include "SDL/SDL_image.h"
 #include "SDL/SDL.h"
 #include "Logger.h"
+#include "Utils.h"
 
 namespace MFM
 {
@@ -51,26 +52,34 @@ namespace MFM
 
     static bool initialized;
 
-    static SDL_Surface* LoadImage(const char* filename)
+    static SDL_Surface* LoadImage(const char* relativeFilename)
     {
+      char filename[1024];
       SDL_Surface* loaded = NULL;
       SDL_Surface* opped = NULL;
 
-      loaded = IMG_Load(filename);
-
-      if(loaded)
+      if(Utils::GetReadableResourceFile(relativeFilename, filename, 1024))
       {
-	opped = SDL_DisplayFormatAlpha(loaded);
+	loaded = IMG_Load(filename);
 
-	SDL_FreeSurface(loaded);
+	if(loaded)
+	{
+	  opped = SDL_DisplayFormat(loaded);
 
-      LOG.Debug("Surface %s loaded: %p", filename, opped);
+	  SDL_FreeSurface(loaded);
+
+	  LOG.Debug("Surface %s loaded: %p, opped: %p", filename, loaded, opped);
+	}
+	else
+	{
+	  LOG.Error("Image %s not loaded : %s",
+		    filename,
+		    IMG_GetError());
+	}
       }
       else
       {
-	LOG.Error("Image %s not loaded : %s",
-		  filename,
-		  IMG_GetError());
+	LOG.Error("Cannot compute relative path to: %s", relativeFilename);
       }
 
       return opped;
@@ -86,10 +95,10 @@ namespace MFM
     {
       if(!initialized)
       {
-	surfaces[ASSET_SELECTOR_ICON] = LoadImage("../assets/selector_icon.png");
-	surfaces[ASSET_PENCIL_ICON] = LoadImage("../assets/pencil_icon.png");
-	surfaces[ASSET_ERASER_ICON] = LoadImage("../assets/eraser_icon.png");
-	surfaces[ASSET_BRUSH_ICON] = LoadImage("../assets/brush_icon.png");
+	surfaces[ASSET_SELECTOR_ICON] = LoadImage("images/selector_icon.png");
+	surfaces[ASSET_PENCIL_ICON] = LoadImage("images/pencil_icon.png");
+	surfaces[ASSET_ERASER_ICON] = LoadImage("images/eraser_icon.png");
+	surfaces[ASSET_BRUSH_ICON] = LoadImage("images/brush_icon.png");
 
 	initialized = true;
       }
