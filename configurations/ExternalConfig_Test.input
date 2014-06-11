@@ -1,4 +1,4 @@
-RegisterAtom(4Dreg1220193etc393, d)
-PlaceAtom(d,30,30)
-PlaceAtom(d,31,31)
+RegisterElement(4Dreg118201406116113117, d)
+GA(d,30,31)
+GA(d,31,32)
 SetParameter(DregResRatio,10)
