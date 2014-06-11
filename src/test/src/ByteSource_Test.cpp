@@ -3,6 +3,7 @@
 
 #include "ZStringByteSource.h"
 #include "CharBufferByteSink.h"
+#include "UUID.h"
 
 namespace MFM {
 
@@ -323,6 +324,27 @@ namespace MFM {
 
   }
 
+  static void Test_ScanfComplex() {
+
+    tester.Reset("\n\n\tFoo( 12, bar, 2hi128201405166191339)\n");
+    CharBufferByteSink<100> funcName;
+
+    assert(4 == tester.Scanf("%#[\t\n ]%[A-Za-z0-9]%#[\t\n ](",&funcName));
+    assert(funcName.Equals("Foo"));
+
+    u32 num;
+    assert(4 == tester.Scanf("%#[\t\n ]%d%#[\t\n ],",&num));
+
+    CharBufferByteSink<100> arg2;
+    assert(4 == tester.Scanf("%#[\t\n ]%[^,)\t\n ]%#[\t\n ],",&arg2));
+    assert(arg2.Equals("bar"));
+
+    UUID arg3;
+    assert(4 == tester.Scanf("%#[\t\n ]%@%#[\t\n ])",&arg3));
+    assert(!strcmp(arg3.GetLabel(),"hi"));
+    //                             "(%[\t\n ]%[^,\t\n ]%[^\t\n ],
+  }
+
   void ByteSource_Test::Test_RunTests() {
     Test_Basic();
     Test_Unread();
@@ -331,6 +353,7 @@ namespace MFM {
     Test_ScanSet();
     Test_ScanFieldwidths();
     Test_ScanfSimple();
+    Test_ScanfComplex();
   }
 
 } /* namespace MFM */
