@@ -125,25 +125,25 @@ namespace MFM
     u32 GetSymI(const T &atom) const {
       if (!IsOurType(atom.GetType()))
         FAIL(ILLEGAL_STATE);
-      return AFSymI::Read(GetBits(atom));
+      return AFSymI::Read(this->GetBits(atom));
     }
 
     SPoint GetMax(const T &atom) const {
       if (!IsOurType(atom.GetType()))
         FAIL(ILLEGAL_STATE);
-      return MakeSigned(toUPoint<BITS_WIDE,BITS_HIGH>(AFSize::Read(GetBits(atom))));
+      return MakeSigned(toUPoint<BITS_WIDE,BITS_HIGH>(AFSize::Read(this->GetBits(atom))));
     }
 
     SPoint GetPos(const T &atom) const {
       if (!IsOurType(atom.GetType()))
         FAIL(ILLEGAL_STATE);
-      return MakeSigned(toUPoint<BITS_WIDE,BITS_HIGH>(AFPos::Read(GetBits(atom))));
+      return MakeSigned(toUPoint<BITS_WIDE,BITS_HIGH>(AFPos::Read(this->GetBits(atom))));
     }
 
     u32 GetTimer(const T &atom) const {
       if (!IsOurType(atom.GetType()))
         FAIL(ILLEGAL_STATE);
-      return AFTimer::Read(GetBits(atom));
+      return AFTimer::Read(this->GetBits(atom));
     }
 
     bool FitsInRep(const SPoint & v) const {
@@ -155,7 +155,7 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       if (!FitsInRep(v))
         FAIL(ILLEGAL_ARGUMENT);
-      AFSize::Write(GetBits(atom),toUTiny<BITS_WIDE,BITS_HIGH>(MakeUnsigned(v)));
+      AFSize::Write(this->GetBits(atom),toUTiny<BITS_WIDE,BITS_HIGH>(MakeUnsigned(v)));
     }
 
     void SetPos(T &atom, const SPoint v) const {
@@ -163,7 +163,7 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       if (!FitsInRep(v))
         FAIL(ILLEGAL_ARGUMENT);
-      AFPos::Write(GetBits(atom),toUTiny<BITS_WIDE,BITS_HIGH>(MakeUnsigned(v)));
+      AFPos::Write(this->GetBits(atom),toUTiny<BITS_WIDE,BITS_HIGH>(MakeUnsigned(v)));
     }
 
     void SetSymI(T &atom, const u32 sym) const {
@@ -171,7 +171,7 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       if (sym >= PSYM_SYMMETRY_COUNT)
         FAIL(ILLEGAL_ARGUMENT);
-      AFSymI::Write(GetBits(atom),sym);
+      AFSymI::Write(this->GetBits(atom),sym);
     }
 
     void SetTimer(T &atom, const u32 tmr) const {
@@ -179,7 +179,7 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       if (tmr > MAX_TIMER_VALUE)
         FAIL(ILLEGAL_ARGUMENT);
-      AFTimer::Write(GetBits(atom),tmr);
+      AFTimer::Write(this->GetBits(atom),tmr);
     }
 
     virtual const T & GetDefaultAtom() const
@@ -245,16 +245,16 @@ namespace MFM
       const u32 selfType = self.GetType();
       if (!IsOurType(selfType)) FAIL(ILLEGAL_STATE);
 
-      u32 ourTimer = GetTimer(self);
+      u32 ourTimer = this->GetTimer(self);
 
       // Establish our symmetry before non-self access through window
-      u32 symi = GetSymI(self);
+      u32 symi = this->GetSymI(self);
       window.SetSymmetry((PointSymmetry) symi);
 
       Random & random = window.GetRandom();
 
-      SPoint barMax = GetMax(self);
-      SPoint myPos = GetPos(self);
+      SPoint barMax = this->GetMax(self);
+      SPoint myPos = this->GetPos(self);
 
       const MDist<R> md = MDist<R>::get();
 

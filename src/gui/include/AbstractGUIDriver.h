@@ -39,6 +39,7 @@
 #include "GridRenderer.h"
 #include "GridPanel.h"
 #include "TextPanel.h"
+#include "ToolboxPanel.h"
 #include "TeeByteSink.h"
 #include "StatsRenderer.h"
 #include "Element_Empty.h" /* Need common elements */
@@ -340,8 +341,6 @@ namespace MFM {
 
       m_fonts.Init();
 
-      AssetManager::Initialize();
-
       m_rootPanel.SetName("Root");
       m_gridPanel.SetBorder(Drawing::BLACK);
       m_gridPanel.SetGridRenderer(&m_grend);
@@ -383,6 +382,8 @@ namespace MFM {
       m_ticksLastStopped = 0;
 
       m_reinitRequested = false;
+
+      m_toolboxPanel.Init();
 
       OnceOnlyButtons();
 
@@ -680,6 +681,8 @@ namespace MFM {
 
     GridPanel<GC> m_gridPanel;
 
+    ToolboxPanel m_toolboxPanel;
+
     class StatisticsPanel : public Panel
     {
       StatsRenderer<GC>* m_srend;
@@ -786,6 +789,9 @@ namespace MFM {
       m_screenHeight = height;
       screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32,
                                 SDL_SWSURFACE | SDL_RESIZABLE);
+
+      AssetManager::Initialize();
+
       if (screen == 0)
         FAIL(ILLEGAL_STATE);
 

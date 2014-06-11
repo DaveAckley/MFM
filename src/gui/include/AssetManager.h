@@ -30,6 +30,7 @@
 
 #include "SDL/SDL_image.h"
 #include "SDL/SDL.h"
+#include "Logger.h"
 
 namespace MFM
 {
@@ -48,6 +49,8 @@ namespace MFM
 
     static SDL_Surface* surfaces[ASSET_COUNT];
 
+    static bool initialized;
+
     static SDL_Surface* LoadImage(const char* filename)
     {
       SDL_Surface* loaded = NULL;
@@ -55,11 +58,19 @@ namespace MFM
 
       loaded = IMG_Load(filename);
 
-      if(!loaded)
+      if(loaded)
       {
-	opped = SDL_DisplayFormat(loaded);
+	opped = SDL_DisplayFormatAlpha(loaded);
 
 	SDL_FreeSurface(loaded);
+
+      LOG.Debug("Surface %s loaded: %p", filename, opped);
+      }
+      else
+      {
+	LOG.Error("Image %s not loaded : %s",
+		  filename,
+		  IMG_GetError());
       }
 
       return opped;
@@ -73,10 +84,15 @@ namespace MFM
      */
     static void Initialize()
     {
-      surfaces[ASSET_SELECTOR_ICON] = LoadImage("../assets/selector_icon.png");
-      surfaces[ASSET_PENCIL_ICON] = LoadImage("../assets/pencil_icon.png");
-      surfaces[ASSET_ERASER_ICON] = LoadImage("../assets/eraser_icon.png");
-      surfaces[ASSET_BRUSH_ICON] = LoadImage("../assets/brush_icon.png");
+      if(!initialized)
+      {
+	surfaces[ASSET_SELECTOR_ICON] = LoadImage("../assets/selector_icon.png");
+	surfaces[ASSET_PENCIL_ICON] = LoadImage("../assets/pencil_icon.png");
+	surfaces[ASSET_ERASER_ICON] = LoadImage("../assets/eraser_icon.png");
+	surfaces[ASSET_BRUSH_ICON] = LoadImage("../assets/brush_icon.png");
+
+	initialized = true;
+      }
     }
 
     /**
@@ -84,10 +100,15 @@ namespace MFM
      */
     static void Destroy()
     {
-      for(Asset i = ASSET_SELECTOR_ICON; i < ASSET_COUNT; i = (Asset)(i + 1))
+      if(initialized)
       {
-	SDL_FreeSurface(surfaces[i]);
-	surfaces[i] = NULL;
+	for(Asset i = ASSET_SELECTOR_ICON; i < ASSET_COUNT; i = (Asset)(i + 1))
+	{
+	  SDL_FreeSurface(surfaces[i]);
+	  surfaces[i] = NULL;
+	}
+
+	initialized = false;
       }
     }
 

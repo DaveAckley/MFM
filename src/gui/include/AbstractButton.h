@@ -74,6 +74,11 @@ namespace MFM
       m_location = location;
     }
 
+    void SetIcon(SDL_Surface* icon)
+    {
+      m_icon = icon;
+    }
+
     void SetDimensions(const SPoint& dimensions)
     {
       m_dimensions = dimensions;
