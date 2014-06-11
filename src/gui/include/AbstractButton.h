@@ -65,7 +65,9 @@ namespace MFM
 
     AbstractButton(const char* text);
 
-    AbstractButton(const SDL_Surface* icon);
+    AbstractButton(SDL_Surface* icon);
+
+    AbstractButton(const char* text, SDL_Surface* icon);
 
     void SetLocation(const SPoint& location)
     {

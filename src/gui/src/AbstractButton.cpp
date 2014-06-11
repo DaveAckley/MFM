@@ -23,8 +23,14 @@ namespace MFM
     Init();
   }
 
-  AbstractButton::AbstractButton(const SDL_Surface* icon) :
-    m_text(0), m_icon(0), m_enabled(true)
+  AbstractButton::AbstractButton(SDL_Surface* icon) :
+    m_text(0), m_icon(icon), m_enabled(true)
+  {
+    Init();
+  }
+
+  AbstractButton::AbstractButton(const char* text, SDL_Surface* icon) :
+    m_text(text), m_icon(icon), m_enabled(true)
   {
     Init();
   }

@@ -33,6 +33,7 @@
 #include <errno.h>     /* for errno */
 #include "Utils.h"     /* for GetDateTimeNow */
 #include "Logger.h"
+#include "AssetManager.h"
 #include "AbstractButton.h"
 #include "Tile.h"
 #include "GridRenderer.h"
@@ -339,6 +340,8 @@ namespace MFM {
 
       m_fonts.Init();
 
+      AssetManager::Initialize();
+
       m_rootPanel.SetName("Root");
       m_gridPanel.SetGridRenderer(&m_grend);
       m_gridPanel.SetGrid(&Super::GetGrid());
@@ -579,6 +582,11 @@ namespace MFM {
       m_screenHeight(SCREEN_INITIAL_HEIGHT),
       m_buttonPanel(m_fonts)
     { }
+
+    ~AbstractGUIDriver()
+    {
+      AssetManager::Destroy();
+    }
 
     virtual void ReinitUs()
     {
