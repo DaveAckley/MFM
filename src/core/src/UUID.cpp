@@ -33,6 +33,11 @@ namespace MFM {
     return CompatibleAPIVersion(other) && CompareDateOnly(other) > 0;
   }
 
+  bool UUID::Compatible(const UUID & other) const
+  {
+    return CompatibleAPIVersion(other) && CompareDateOnly(other) >= 0;
+  }
+
   s32 UUID::CompareDateOnly(const UUID & other) const
   {
     if (m_hexDate > other.m_hexDate) return 1;
