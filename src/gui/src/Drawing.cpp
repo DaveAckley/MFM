@@ -142,6 +142,27 @@ namespace MFM {
       }
   }
 
+  void Drawing::BlitImage(SDL_Surface* src, UPoint loc, UPoint maxSize) const
+  {
+    if(!src)
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    SDL_Rect rect;
+    rect.x = loc.GetX();
+    rect.y = loc.GetY();
+    rect.w = maxSize.GetX();
+    rect.h = maxSize.GetY();
+
+    SDL_BlitSurface(src, NULL, m_dest, &rect);
+  }
+
+  void Drawing::BlitAsset(Asset asset, UPoint loc, UPoint maxSize) const
+  {
+    BlitImage(AssetManager::Get(asset), loc, maxSize);
+  }
+
   void Drawing::BlitText(const char* message, UPoint loc, UPoint size) const
   {
     if (!m_font) FAIL(ILLEGAL_STATE);
@@ -166,4 +187,3 @@ namespace MFM {
     SDL_FreeSurface(text);
   }
 } /* namespace MFM */
-

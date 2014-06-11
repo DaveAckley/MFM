@@ -109,6 +109,7 @@ namespace MFM {
 
         case SDL_BUTTON_MIDDLE:
           m_grend->SelectTile(*m_mainGrid, pt);
+	  /* Paint atoms */
           break;
 
         case SDL_BUTTON_LEFT:
@@ -131,11 +132,18 @@ namespace MFM {
     virtual bool Handle(MouseMotionEvent& mbe)
     {
       SDL_MouseMotionEvent & event = mbe.m_event.motion;
-      if (mbe.m_keyboard.CtrlHeld() &&
-          (mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT)) !=0) {
-        SPoint nowAt(event.x, event.y);
-        SPoint delta = nowAt - m_leftButtonDragStart;
-        m_grend->SetDrawOrigin(m_leftButtonGridStart+delta);
+      if (mbe.m_keyboard.CtrlHeld())
+      {
+        if(mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT))
+	{
+	  SPoint nowAt(event.x, event.y);
+	  SPoint delta = nowAt - m_leftButtonDragStart;
+	  m_grend->SetDrawOrigin(m_leftButtonGridStart+delta);
+	}
+	else
+	{
+	  /* Paint atoms */
+	}
       }
       return false;
     }

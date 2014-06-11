@@ -41,6 +41,12 @@ ifdef FIND_DEAD_CODE
   OPTFLAGS += -Wunreachable-code
 endif
 
+ifdef MAKE_GUI
+  COMMON_CFLAGS += -DMFM_GUI_DRIVER
+  COMMON_CPPFLAGS += -DMFM_GUI_DRIVER
+  COMMON_LDFLAGS += -DMFM_GUI_DRIVER
+endif
+
 # Common flags: All about errors -- let's help them help us
 COMMON_CFLAGS+=-Wall -pedantic -Werror -Wundef -D DSHARED_DIR=\"$(DSHARED_DIR)\"
 COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror -D DSHARED_DIR=\"$(DSHARED_DIR)\"

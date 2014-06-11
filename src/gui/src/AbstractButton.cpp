@@ -11,12 +11,20 @@ namespace MFM
     this->SetBackground(BUTTON_BACKGROUND_COLOR);
   }
 
-  AbstractButton::AbstractButton() : m_text(0), m_enabled(true)
+  AbstractButton::AbstractButton() :
+    m_text(0), m_icon(0), m_enabled(true)
   {
     Init();
   }
 
-  AbstractButton::AbstractButton(const char* text) : m_text(text), m_enabled(true)
+  AbstractButton::AbstractButton(const char* text) :
+    m_text(text), m_icon(0), m_enabled(true)
+  {
+    Init();
+  }
+
+  AbstractButton::AbstractButton(const SDL_Surface* icon) :
+    m_text(0), m_icon(0), m_enabled(true)
   {
     Init();
   }
@@ -43,7 +51,16 @@ namespace MFM
     SPoint textSize = GetTextSize(drawing.GetFont(), m_text);
     SPoint renderAt = max((dims-textSize)/2, SPoint(0,0));
 
-    drawing.BlitText(m_text, MakeUnsigned(renderAt), GetDimensions());
+    if(m_icon)
+    {
+      drawing.BlitImage(m_icon, MakeUnsigned(renderAt), GetDimensions());
+    }
+
+    if(m_text)
+    {
+
+      drawing.BlitText(m_text, MakeUnsigned(renderAt), GetDimensions());
+    }
   }
 
   bool AbstractButton::Contains(SPoint& pt)

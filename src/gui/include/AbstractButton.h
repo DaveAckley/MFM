@@ -29,7 +29,7 @@
 #define ABSTRACTBUTTON_H
 
 #include "itype.h"
-//#include "SDL/SDL.h"
+#include "SDL/SDL.h"
 #include "SDL/SDL_ttf.h"
 #include "Point.h"
 #include "Panel.h"
@@ -55,6 +55,8 @@ namespace MFM
 
     const char* m_text;
 
+    SDL_Surface* m_icon;
+
     bool m_enabled;
 
   public:
@@ -62,6 +64,8 @@ namespace MFM
     AbstractButton();
 
     AbstractButton(const char* text);
+
+    AbstractButton(const SDL_Surface* icon);
 
     void SetLocation(const SPoint& location)
     {

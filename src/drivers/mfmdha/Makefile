@@ -9,7 +9,7 @@ INCLUDES += -I $(BASEDIR)/src/core/include -I $(BASEDIR)/src/sim/include -I $(BA
 
 # What we need to link
 LIBS += -L $(BASEDIR)/build/core/ -L $(BASEDIR)/build/sim/ -L $(BASEDIR)/build/gui/
-LIBS += -lmfmgui -lmfmsim -lmfmcore -lSDL -lSDL_ttf -lpng -lm -lpthread
+LIBS += -lmfmgui -lmfmsim -lmfmcore -lSDL_ttf -lSDL_image -lSDL -lpng -lm -lpthread -ldl
 
 # Do the program thing
 include $(BASEDIR)/config/Makeprog.mk
@@ -24,5 +24,3 @@ $(BINDIR)/$(COMPONENTNAME):	$(BINDIR)/Element_QBar-Plugin.so
 
 $(BINDIR)/Element_QBar-Plugin.so:	src/Element_QBar.cpp
 	$(GPP) -shared -fPIC -DELEMENT_PLUG_IN $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -o"$@" "$<"
-
-

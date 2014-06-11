@@ -28,6 +28,7 @@
 #ifndef DRAWING_H
 #define DRAWING_H
 
+#include "AssetManager.h"
 #include "itype.h"
 #include "SDL/SDL.h"         /* For SDL_Surface, SDL_Color */
 #include "SDL/SDL_ttf.h"     /* For TTF_Font, at least */
@@ -242,6 +243,16 @@ namespace MFM {
        color.  Fail ILLEGAL_STATE if the current font is null.
      */
     void BlitText(const char* message, UPoint loc, UPoint size) const;
+
+    /**
+     * Draw a specified image to a specified part of the screen.
+     */
+    void BlitImage(SDL_Surface* image, UPoint loc, UPoint maxSize) const;
+
+    /**
+     * Draw a specified Asset (corresponding to an SDL_Surface*) to the screen.
+     */
+    void BlitAsset(Asset asset, UPoint loc, UPoint maxSize) const;
 
 
     static void Convert(const Rect & rect, SDL_Rect & toFill) ;
