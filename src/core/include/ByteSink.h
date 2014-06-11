@@ -34,25 +34,7 @@
 
 namespace MFM {
 
-  class ByteSink; // FORWARD
-
-  /**
-     ByteSinkable is an interface for an object that can print itself
-     to a ByteSink.
-   */
-  class ByteSinkable {
-  public:
-    /**
-       Prints a representation of the ByteSinkable to the given \a
-       byteSink, with its details possibly modified by \a argument.
-       The meaning of \a argument is unspecified except that 0 should
-       be interpreted as a request for default, 'no modification',
-       formatting.
-     */
-    virtual void PrintTo(ByteSink & byteSink, s32 argument = 0) = 0;
-
-    virtual ~ByteSinkable() { }
-  };
+  class ByteSerializable;   // FORWARD
 
   /**
      ByteSink is an abstract base class for byte stream output
@@ -123,10 +105,7 @@ namespace MFM {
     void Print(u64 num, Format::Type code, s32 fieldWidth = -1, u8 padChar = ' ');
     void Print(s64 num, Format::Type code, s32 fieldWidth = -1, u8 padChar = ' ');
 
-    void Print(ByteSinkable & byteSinkable, s32 argument = 0)
-    {
-      byteSinkable.PrintTo(*this, argument);
-    }
+    void Print(ByteSerializable & byteSerializble, s32 argument = 0) ;
 
     void Println()
     {
@@ -164,10 +143,7 @@ namespace MFM {
       Println();
     }
 
-    void Println(ByteSinkable & byteSinkable, s32 argument = 0) {
-      Print(byteSinkable, argument);
-      Println();
-    }
+    void Println(ByteSerializable & byteSerializable, s32 argument = 0) ;
 
     void Printf(const char * format, ...) ;
 
@@ -192,10 +168,8 @@ namespace MFM {
     void PrintInBase(UNSIGNED_TYPE num, u32 base, s32 width = 0, u8 pad = ' ') ;
   };
 
-  class DiscardAndDiscardable : public ByteSink, public ByteSinkable {
+  class DiscardBytes : public ByteSink {
   public:
-    virtual void PrintTo(ByteSink & byteSink, s32 argument)
-    { }
 
     virtual void WriteBytes(const u8 * data, const u32 len)
     { }
@@ -207,7 +181,7 @@ namespace MFM {
 
   };
 
-  extern DiscardAndDiscardable DevNull;
+  extern DiscardBytes DevNull;
 
 }
 

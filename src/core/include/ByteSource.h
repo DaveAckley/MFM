@@ -35,27 +35,7 @@
 
 namespace MFM {
 
-  class ByteSource; // FORWARD
-
-  /**
-     ByteSourceable is an interface for an object that can read itself
-     to a ByteSource, (preferably at least) in a manner that inverts
-     ByteSinkable.
-   */
-  class ByteSourceable {
-  public:
-    /**
-       Read a representation of the ByteSourceable from the given \a
-       byteSource, with its details possibly modified by \a argument.
-       The meaning of \a argument is unspecified except that 0 should
-       be interpreted as a request for default, 'no modification',
-       interpretation. \returns true if the reading was successful;
-       false if there was some problem.
-     */
-    virtual bool ReadFrom(ByteSource & byteSource, s32 argument = 0) = 0;
-
-    virtual ~ByteSourceable() { }
-  };
+  class ByteSerializable; // FORWARD
 
   class ByteSource {
   public:
@@ -92,10 +72,7 @@ namespace MFM {
     bool Scan(s32 & result, Format::Type code = Format::DEC, u32 fieldWidth = U32_MAX) ;
     bool Scan(u32 & result, Format::Type code = Format::DEC, u32 fieldWidth = U32_MAX) ;
 
-    bool Scan(ByteSourceable & byteSourceable, s32 argument = 0)
-    {
-      return byteSourceable.ReadFrom(*this, argument);
-    }
+    bool Scan(ByteSerializable & byteSerializable, s32 argument = 0) ;
 
     bool ScanLexDigits(u32 & digits) ;
 
@@ -113,6 +90,13 @@ namespace MFM {
     static const char * WHITESPACE_CHARS;
     static const char * WHITESPACE_SET;
     static const char * NON_WHITESPACE_SET;
+
+    bool ScanIdentifier(ByteSink & result) {
+      SkipWhitespace();
+      if (1 != ScanSet(result, "[_a-zA-Z]")) return false;
+      ScanSet(result, "[_a-zA-Z0-9]");
+      return true;
+    }
 
     s32 SkipWhitespace() {
       return SkipSet(WHITESPACE_SET);
