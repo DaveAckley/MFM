@@ -64,6 +64,23 @@ namespace MFM
   public:
     static u32 AllocateType(const UUID & forUUID) ;
 
+    /**
+     * Return the type assigned to \a forUUID, or -1 if the UUID is
+     * not found.  Note this is O(#types)!  Not for inner loop use!
+     */
+    static s32 TypeFromUUID(const UUID & forUUID) ;
+
+    /**
+     * Return a 'compatible type' assigned to \a forUUID, or -1 if no
+     * such UUID is not found.  Note this is O(#types)!  Not for inner
+     * loop use!
+     */
+    static s32 TypeFromCompatibleUUID(const UUID & forUUID) ;
+
+    /**
+     * Return a pointer to the UUID associated with a given type or 0
+     * if the type has not been assigned.  O(1).
+     */
     static const UUID * UUIDOfType(u32 type) {
       if (type < 0 || type >= SLOTS)
         return 0;
