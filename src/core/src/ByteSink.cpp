@@ -1,9 +1,23 @@
 #include "ByteSink.h"
+#include "ByteSerializable.h"
 #include <string.h>   /* For strlen */
 
 namespace MFM {
 
-  DiscardAndDiscardable DevNull;
+  DiscardBytes DevNull;
+
+  void ByteSink::Print(ByteSerializable & byteSerializable, s32 argument)
+  {
+    if (byteSerializable.PrintTo(*this, argument) == ByteSerializable::UNSUPPORTED)
+      Print("(unsupported)");
+  }
+
+  void ByteSink::Println(ByteSerializable & byteSerializable, s32 argument) {
+    Print(byteSerializable, argument);
+    Println();
+  }
+
+
 
 /**
    Print the contents of a null-terminated string to the ByteSink.
@@ -410,9 +424,9 @@ XXX
       {
         s32 argument = 0;
         if (alt) argument = va_arg(ap,s32);
-        ByteSinkable * bs = va_arg(ap,ByteSinkable*);
+        ByteSerializable * bs = va_arg(ap,ByteSerializable*);
         if (!bs) Print("(null)");
-        else Print(*bs,argument);
+        else Print(*bs, argument);
       }
       break;
 

@@ -29,6 +29,7 @@
 
 #include "itype.h"
 #include "ByteSink.h"
+#include "ByteSerializable.h"
 #include <stdarg.h>
 
 namespace MFM {
@@ -153,7 +154,7 @@ namespace MFM {
       va_end(ap);
     }
 
-    void SetTimeStamper(ByteSinkable * stamper) {
+    void SetTimeStamper(ByteSerializable * stamper) {
       m_timeStamper = stamper? stamper : &m_defaultTimeStamper;
       m_defaultTimeStamper.Reset();
     }
@@ -162,17 +163,18 @@ namespace MFM {
     ByteSink * m_sink;
     Level m_logLevel;
 
-    class DefaultTimeStamper : public ByteSinkable {
+    class DefaultTimeStamper : public ByteSerializable {
       u32 m_calls;
     public:
       DefaultTimeStamper() : m_calls(0) { }
       void Reset() { m_calls = 0; }
-      virtual void PrintTo(ByteSink & byteSink, s32 argument = 0) {
+      virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0) {
         byteSink.Print(++m_calls, Format::LEX32);
         byteSink.Print(": ");
+        return SUCCESS;
       }
     } m_defaultTimeStamper;
-    ByteSinkable * m_timeStamper;
+    ByteSerializable * m_timeStamper;
 
   };
 

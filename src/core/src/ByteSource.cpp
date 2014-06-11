@@ -1,7 +1,16 @@
 #include "ByteSource.h"
+#include "ByteSerializable.h"
 #include "BitVector.h"
 
 namespace MFM {
+
+  bool ByteSource::Scan(ByteSerializable & byteSerializable, s32 argument)
+  {
+    ByteSerializable::Result res = byteSerializable.ReadFrom(*this, argument);
+    if (res == ByteSerializable::UNSUPPORTED)
+      FAIL(UNSUPPORTED_OPERATION);
+    return res == ByteSerializable::SUCCESS;
+  }
 
   const char * ByteSource::WHITESPACE_CHARS = " \n\t\v";
   const char * ByteSource::WHITESPACE_SET = "[ \n\t\v]";
@@ -323,9 +332,23 @@ namespace MFM {
         {
           s32 argument = 0;
           if (alt) argument = va_arg(ap,s32);
-          ByteSourceable * bs = va_arg(ap,ByteSourceable*);
+          ByteSerializable * bs = va_arg(ap,ByteSerializable*);
           MFM_API_ASSERT_NONNULL(bs);
-          if (!bs->ReadFrom(*this, argument))
+          if (bs->ReadFrom(*this, argument) != ByteSerializable::SUCCESS)
+            return -matches;
+          ++matches;
+        }
+        break;
+
+      case '[':
+        {
+          --format;  // Back pointer up to '['
+          ByteSink * bs = 0;
+          if (!alt)
+            bs = va_arg(ap,ByteSink*);
+          if (!bs) bs = &DevNull;
+          s32 res = ScanSetFormat(*bs, format); // Advances format to ']' or FAILs
+          if (res < 0)
             return -matches;
           ++matches;
         }

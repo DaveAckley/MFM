@@ -1,6 +1,7 @@
 #include "assert.h"
 #include "ByteSink_Test.h"
 #include "CharBufferByteSink.h"
+#include "ByteSerializable.h"
 #include <stdlib.h>        /* For strtol */
 
 namespace MFM {
@@ -172,12 +173,13 @@ namespace MFM {
     Test_Vprintf_Result("-03","%03d",-3);
   }
 
-  class IPrintMyself : public ByteSinkable {
+  class IPrintMyself : public ByteSerializable {
   public:
     IPrintMyself(const char * str) : m_str(str) { }
 
-    void PrintTo(ByteSink & bs, s32 arg = 0) {
+    Result PrintTo(ByteSink & bs, s32 arg = 0) {
       bs.Printf("[IPM:%s=%d]",m_str,arg);
+      return SUCCESS;
     }
   private:
     const char * m_str;
