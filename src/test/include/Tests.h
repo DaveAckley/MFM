@@ -4,6 +4,7 @@
 /* Get some types for us to test */
 #include "Test_Common.h"
 
+#include "ByteSource_Test.h"
 #include "LineTailByteSink_Test.h"
 #include "OverflowableCharBufferByteSink_Test.h"
 #include "VArguments_Test.h"

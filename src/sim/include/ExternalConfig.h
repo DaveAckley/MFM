@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  ExternalConfig.h Support for grid configuratios on the drive
+  ExternalConfig.h Support for grid configurations on the drive
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,7 +19,8 @@
 */
 
 /**
-  \file ExternalConfig.h Support for grid configuratios on the drive
+  \file ExternalConfig.h Support for grid configurations on the drive
+  \author Trent R. Small.
   \author David H. Ackley.
   \date (C) 2014 All rights reserved.
   \lgpl
@@ -28,65 +29,84 @@
 #define EXTERNALCONFIG_H
 
 #include "Grid.h"
+#include "OverflowableCharBufferByteSink.h"  /* For OString16 */
+#include "LineCountingByteSource.h"
+#include "ByteSink.h"
 
 namespace MFM
 {
 
-  class FunctionCall; /* Forward Declaration, in ExternalConfig.tcc */
+  template<typename> class ConfigFunctionCall;
 
   /**
    * Structure for reading and writing the current grid configuration
-   * backed by a filename.
    */
   template<class GC>
   class ExternalConfig
   {
+    typedef typename GC::CORE_CONFIG CC;
   public:
-
     /**
-     * Construct a new ExternalConfig referencing a specified Grid and
-     * backed by a specified file.
+     * Construct a new ExternalConfig referencing a specified Grid
      *
      * @param grid The grid to read from or write to.
-     *
-     * @param filename The name of the file to read from or write to.
      */
-    ExternalConfig(Grid<GC>& grid, const char* filename);
+    ExternalConfig(Grid<GC>& grid);
+
+    void SetByteSource(ByteSource & byteSource, const char * label) ;
+
+    void SetErrorByteSink(ByteSink & errorsTo) ;
+    /**
+     * Reads a configuration to the grid specified at construction.
+     * \returns true if the loading succeeded; false if the
+     * configuration file is invalid (in which case an error has been
+     * printed to \a errors, and the grid may be in a partially-loaded
+     * or otherwise incomplete state.)
+     */
+    bool Read();
 
     /**
-     * Reads from the file at the filename specified at construction
-     * and writes the configuration to the grid specified at
-     * construction. FAILs if the configuration file is invalid or
-     * non-existant.
+     * Writes the current grid configuration to the give \a byteSink.
      */
-    void Read();
+    void Write(ByteSink & byteSink);
 
-    /**
-     * Writes to the file at the filename specified at construction
-     * and reads the configuration to the grid specified at
-     * construction.
-     */
-    void Write();
+    void RegisterFunction(ConfigFunctionCall<GC> & fc) ;
+
+    bool RegisterElement(const UUID & uuid, OString16 & nick) ;
+
+    const UUID * LookupElementNick(const OString16 & nick) const ;
+
+    bool PlaceAtom(const UUID & uuid, s32 x, s32 y) ;
+
+    LineCountingByteSource & GetByteSource() {
+      return m_in;
+    }
 
   private:
+    LineCountingByteSource m_in;
+    ByteSink * m_errorsTo;
+
     /**
      * The Grid to read from or write to.
      */
     Grid<GC>& m_grid;
 
-    /**
-     * The name of the file to read from or write to.
-     */
-    const char* m_filename;
+#define MAX_REGISTERED_FUNCTIONS 64
+    ConfigFunctionCall<GC> * (m_registeredFunctions[MAX_REGISTERED_FUNCTIONS]);
+    u32 m_registeredFunctionCount;
 
-    void DeactivateTile(FunctionCall& fcall);
+#define MAX_REGISTERED_ELEMENTS 64
+    struct RegElt {
+      UUID m_uuid;
+      OString16 m_nick;
+      const Element<CC> * m_element;
+    } m_registeredElements[MAX_REGISTERED_ELEMENTS];
+    u32 m_registeredElementCount;
 
-    void Dispatch(FunctionCall& fcall, u32 lineNumber);
-
-    void ParseLine(const char* line, u32 lineNumber);
   };
 }
 
+#include "ConfigFunctionCall.h"
 #include "ExternalConfig.tcc"
 
 #endif /* EXTERNALCONFIG_H */

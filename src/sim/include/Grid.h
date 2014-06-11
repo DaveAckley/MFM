@@ -75,6 +75,11 @@ namespace MFM {
 
     void Reinit();
 
+    const Element<CC> * LookupElement(u32 elementType) const
+    {
+      return m_tiles[0][0].GetElementTable().Lookup(elementType);
+    }
+
     void Needed(const Element<CC> & anElement)
     {
       for(u32 i = 0; i < W; i++)

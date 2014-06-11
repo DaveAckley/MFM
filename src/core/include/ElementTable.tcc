@@ -36,19 +36,19 @@ namespace MFM {
     if (m_hash[slotFor].m_element != 0) {
 
       if (m_hash[slotFor].m_element != &theElement)
-        FAIL(DUPLICATE_ELEMENT_TYPE);
+        FAIL(DUPLICATE_ENTRY);
       else return;
 
     } else {
       if (++m_hashSlotsInUse > SIZE/2)
-        FAIL(TOO_MANY_ELEMENT_TYPES);  // XXX standardize on OUT_OF_ROOM ?
+        FAIL(OUT_OF_ROOM);
       m_hash[slotFor].m_element = &theElement;
 
     }
   }
 
   template <class C>
-  const Element<C> * ElementTable<C>::Lookup(u32 elementType)
+  const Element<C> * ElementTable<C>::Lookup(u32 elementType) const
   {
     return m_hash[SlotFor(elementType)].m_element;
   }

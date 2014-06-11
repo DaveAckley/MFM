@@ -62,7 +62,7 @@ namespace MFM {
     {
       tbuf.Reset();
       Logger log(tbuf,Logger::MESSAGE);
-      log.SetTimeStamper(&DevNull);
+      log.SetTimeStamper(&NullSerializable);
 
       for (Logger::Level i = log.ERROR; i <= log.DEBUG; i = (Logger::Level) (i+1)) {
         log.Error("@%s",Logger::StrLevel(log.GetLevel()));

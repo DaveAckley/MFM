@@ -29,29 +29,12 @@
 
 #include "itype.h"
 #include "Fail.h"
+#include "Format.h"
 #include <stdarg.h>    /* For ... */
 
 namespace MFM {
 
-  class ByteSink; // FORWARD
-
-  /**
-     ByteSinkable is an interface for an object that can print itself
-     to a ByteSink.
-   */
-  class ByteSinkable {
-  public:
-    /**
-       Prints a representation of the ByteSinkable to the given \a
-       byteSink, with its details possibly modified by \a argument.
-       The meaning of \a argument is unspecified except that 0 should
-       be interpreted as a request for default, 'no modification',
-       formatting.
-     */
-    virtual void PrintTo(ByteSink & byteSink, s32 argument = 0) = 0;
-
-    virtual ~ByteSinkable() { }
-  };
+  class ByteSerializable;   // FORWARD
 
   /**
      ByteSink is an abstract base class for byte stream output
@@ -111,44 +94,18 @@ namespace MFM {
 
     virtual ~ByteSink() { }
 
-    /**
-       Formatting codes for use with \ref Print(u32, BaseCode), \ref
-       Print(s32, BaseCode), and \ref Print(u64, BaseCode).
-     */
-    enum BaseCode {
-
-      DEC = 10,      /**< Print in decimal, signed if negative (in most contexts) */
-      HEX = 16,      /**< Print in hexadecimal (base 16, using 0-9A-Z), unsigned */
-      OCT = 8,       /**< Print in octal (base 8, using 0-7), unsigned */
-      BIN = 2,       /**< Print in binary (base 2, using 0-1), unsigned */
-      BYTE = 0,      /**< Print a single byte directly, as an unaltered 8 bit value */
-
-      BEU16 = -1,    /**< Print a u16 (unsigned 2 bytes) in big endian (network order) */
-      BEU32 = -2,    /**< Print a u32 (unsigned 4 bytes) in big endian (network order) */
-      BEU64 = -3,    /**< Print a u64 (unsigned 8 bytes) in big endian (network order) */
-      LEX32 = -4,    /**< Print a u32 (unsigned 4 bytes) in leximited decimal */
-      LXX32 = -5,    /**< Print a u32 (unsigned 4 bytes) in leximited hexadecimal */
-      LEX64 = -6,    /**< Print a u64 (unsigned 8 bytes) in leximited decimal */
-      LXX64 = -7,    /**< Print a u64 (unsigned 8 bytes) in leximited hexadecimal */
-      LEXHD = -8,    /**< Print a u32 (unsigned 4 bytes) as a leximited format header */
-      B36 = 36       /**< Print in base 36 ("hexatrigintimal"?, using 0-9A-Z), unsigned */
-    };
-
     void Print(const char * str, s32 fieldWidth = -1, u8 padChar = ' ');
     void Print(const u8 * str, u32 len, s32 fieldWidth = -1, u8 padChar = ' ');
     void Print(s32 decimal, s32 fieldWidth = -1, u8 padChar = ' ');
     void Print(u32 decimal, s32 fieldWidth = -1, u8 padChar = ' ');
     void Print(s64 decimal, s32 fieldWidth = -1, u8 padChar = ' ');
     void Print(u64 decimal, s32 fieldWidth = -1, u8 padChar = ' ');
-    void Print(u32 num, BaseCode code, s32 fieldWidth = -1, u8 padChar = ' ');
-    void Print(s32 num, BaseCode code, s32 fieldWidth = -1, u8 padChar = ' ');
-    void Print(u64 num, BaseCode code, s32 fieldWidth = -1, u8 padChar = ' ');
-    void Print(s64 num, BaseCode code, s32 fieldWidth = -1, u8 padChar = ' ');
+    void Print(u32 num, Format::Type code, s32 fieldWidth = -1, u8 padChar = ' ');
+    void Print(s32 num, Format::Type code, s32 fieldWidth = -1, u8 padChar = ' ');
+    void Print(u64 num, Format::Type code, s32 fieldWidth = -1, u8 padChar = ' ');
+    void Print(s64 num, Format::Type code, s32 fieldWidth = -1, u8 padChar = ' ');
 
-    void Print(ByteSinkable & byteSinkable, s32 argument = 0)
-    {
-      byteSinkable.PrintTo(*this, argument);
-    }
+    void Print(ByteSerializable & byteSerializble, s32 argument = 0) ;
 
     void Println()
     {
@@ -180,16 +137,13 @@ namespace MFM {
       Print(decimal);
       Println();
     }
-    void Println(u32 decimal, BaseCode code) ///< \eq #Print(u32 decimal, BaseCode code) followed by #Println().
+    void Println(u32 decimal, Format::Type code) ///< \eq #Print(u32 decimal, Format::Type code) followed by #Println().
     {
       Print(decimal,code);
       Println();
     }
 
-    void Println(ByteSinkable & byteSinkable, s32 argument = 0) {
-      Print(byteSinkable, argument);
-      Println();
-    }
+    void Println(ByteSerializable & byteSerializable, s32 argument = 0) ;
 
     void Printf(const char * format, ...) ;
 
@@ -214,10 +168,8 @@ namespace MFM {
     void PrintInBase(UNSIGNED_TYPE num, u32 base, s32 width = 0, u8 pad = ' ') ;
   };
 
-  class DiscardAndDiscardable : public ByteSink, public ByteSinkable {
+  class DiscardBytes : public ByteSink {
   public:
-    virtual void PrintTo(ByteSink & byteSink, s32 argument)
-    { }
 
     virtual void WriteBytes(const u8 * data, const u32 len)
     { }
@@ -229,7 +181,7 @@ namespace MFM {
 
   };
 
-  extern DiscardAndDiscardable DevNull;
+  extern DiscardBytes DevNull;
 
 }
 

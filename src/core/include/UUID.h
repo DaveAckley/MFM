@@ -29,18 +29,26 @@
 
 #include "itype.h"
 #include "ByteSink.h"
+#include "ByteSource.h"
+#include "ByteSerializable.h"
+#include <string.h>    /* For strlen, strncpy */
 
 #define MFM_UUID_FOR(label, apiVersion) UUID(label,apiVersion,MFM_BUILD_DATE,MFM_BUILD_TIME)
 
 namespace MFM {
 
-  struct UUID : public ByteSinkable {
-    const char * const m_label;
-    const u32 m_apiVersion;
-    const u32 m_hexDate;
-    const u32 m_hexTime;
+  class UUID : public ByteSerializable {
+  public:
+    static const u32 MAX_LABEL_LENGTH = 63;
+
+    UUID() : m_apiVersion(0), m_hexDate(0), m_hexTime(0)
+    {
+      m_label[0] = '\0';
+    }
 
     UUID(const char * label, const u32 apiVersion, const u32 hexDate, const u32 hexTime) ;
+
+    UUID(ByteSource & bs) ;
 
     const char * GetLabel() const { return m_label; }
     u32 GetVersion() const { return m_apiVersion; }
@@ -51,10 +59,25 @@ namespace MFM {
     bool CompatibleAPIVersion(const UUID & other) const ;
     bool CompatibleButStrictlyNewer(const UUID & other) const ;
 
+    bool Compatible(const UUID & other) const ; //< CompatibleAPIVersion plus not older date
+
     void Print(ByteSink & bs) const ;
 
-    void PrintTo(ByteSink & bs, s32 argument = 0) {
+    Result PrintTo(ByteSink & bs, s32 argument = 0) {
       Print(bs);
+      return SUCCESS;
+    }
+
+    bool Read(ByteSource & bs) ;
+
+    Result ReadFrom(ByteSource & bs, s32 argument = 0) {
+      if (Read(bs))
+        return SUCCESS;
+      return FAILURE;
+    }
+
+    bool Equals(const UUID & other) const {
+      return *this == other;
     }
 
     bool operator==(const UUID & other) const ;
@@ -63,8 +86,16 @@ namespace MFM {
       return !(*this == other);
     }
 
+    virtual ~UUID() { }
+
   private:
     s32 CompareDateOnly(const UUID & other) const ;
+
+    char m_label[MAX_LABEL_LENGTH + 1];
+    u32 m_apiVersion;
+    u32 m_hexDate;
+    u32 m_hexTime;
+
   };
 
 }

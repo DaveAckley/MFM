@@ -24,14 +24,18 @@
   \date (C) 2014 All rights reserved.
   \lgpl
  */
-#ifndef IO_H
-#define IO_H
+#ifndef BYTESOURCE_H
+#define BYTESOURCE_H
 
 #include "itype.h"
 #include "Fail.h"
+#include "Format.h"
+#include "ByteSink.h"
 #include <stdarg.h>    /* For ... */
 
 namespace MFM {
+
+  class ByteSerializable; // FORWARD
 
   class ByteSource {
   public:
@@ -64,10 +68,51 @@ namespace MFM {
       return m_read;
     }
 
-    s32 Scanf(const char * format, ...) ;
+    bool Scan(u64 & result) ;
+    bool Scan(s32 & result, Format::Type code = Format::DEC, u32 fieldWidth = U32_MAX) ;
+    bool Scan(u32 & result, Format::Type code = Format::DEC, u32 fieldWidth = U32_MAX) ;
+
+    bool Scan(ByteSerializable & byteSerializable, s32 argument = 0) ;
+
+    bool ScanLexDigits(u32 & digits) ;
+
+    bool Scan(ByteSink & result, const u32 fieldWidth) ;
+
+    s32 ScanSet(ByteSink & result, const char * setSpec) {
+      return ScanSetFormat(result, setSpec);
+    }
+    s32 SkipSet(const char * setSpec) {
+      return ScanSet(DevNull, setSpec);
+    }
+
+    s32 ScanSetFormat(ByteSink & result, const char * & setSpec) ;
+
+    static const char * WHITESPACE_CHARS;
+    static const char * WHITESPACE_SET;
+    static const char * NON_WHITESPACE_SET;
+
+    bool ScanIdentifier(ByteSink & result) {
+      SkipWhitespace();
+      if (1 != ScanSet(result, "[_a-zA-Z]")) return false;
+      ScanSet(result, "[_a-zA-Z0-9]");
+      return true;
+    }
+
+    s32 SkipWhitespace() {
+      return SkipSet(WHITESPACE_SET);
+    }
+
+    s32 Scanf(const char * format, ...) ;  // NYI
     s32 Vscanf(const char * format, va_list & ap) ;
 
   private:
+    s32 ReadCounted(u32 & maxLen) {
+      if (maxLen == 0) return -1;
+      s32 ret = Read();
+      if (ret >= 0) --maxLen;
+      return ret;
+    }
+
     u32 m_read;
     s32 m_lastRead;
     bool m_unread;
@@ -75,4 +120,4 @@ namespace MFM {
 
 }
 
-#endif /* IO_H */
+#endif /* BYTESOURCE_H */

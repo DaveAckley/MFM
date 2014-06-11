@@ -434,12 +434,21 @@ namespace MFM {
     }
 
     /**
+     * Gets a const reference to this Tile's ElementTable.
+     *
+     * @returns a reference to this Tile's ElementTable.
+     */
+    const ElementTable<CC> & GetElementTable() const {
+      return elementTable;
+    }
+
+    /**
      * Looks up an element type in this Tile's ElementTable.
      *
      * @returns a pointer to the Element associated with \a
      *          elementType, or NULL if there is no such Element.
      */
-    const Element<CC> * GetElement(const u32 elementType) {
+    const Element<CC> * GetElement(const u32 elementType) const {
       return elementTable.Lookup(elementType);
     }
 
