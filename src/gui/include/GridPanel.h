@@ -109,12 +109,16 @@ namespace MFM {
 
         case SDL_BUTTON_MIDDLE:
           m_grend->SelectTile(*m_mainGrid, pt);
-	  /* Paint atoms */
           break;
 
         case SDL_BUTTON_LEFT:
           m_leftButtonDragStart = pt;
           m_leftButtonGridStart = m_grend->GetDrawOrigin();
+
+	  if(mbe.m_selectedTool == TOOL_SELECTOR)
+	  {
+	    m_grend->SelectTile(*m_mainGrid, pt);
+	  }
           break;
 
         case SDL_BUTTON_WHEELUP:

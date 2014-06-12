@@ -596,6 +596,8 @@ namespace MFM {
       m_renderStats(false),
       m_screenWidth(SCREEN_INITIAL_WIDTH),
       m_screenHeight(SCREEN_INITIAL_HEIGHT),
+      m_selectedTool(TOOL_SELECTOR),
+      m_toolboxPanel(&m_selectedTool),
       m_buttonPanel(m_fonts)
     { }
 
@@ -694,6 +696,8 @@ namespace MFM {
     }
 
     GridPanel<GC> m_gridPanel;
+
+    EditingTool m_selectedTool;
 
     ToolboxPanel m_toolboxPanel;
 
@@ -881,7 +885,7 @@ namespace MFM {
 
                 mousebuttondispatch:
                   {
-                    MouseButtonEvent mbe(m_keyboard, event);
+                    MouseButtonEvent mbe(m_keyboard, event, m_selectedTool);
                     m_rootPanel.Dispatch(mbe,
                                          Rect(SPoint(),
                                               UPoint(m_screenWidth,m_screenHeight)));
@@ -890,7 +894,8 @@ namespace MFM {
 
                 case SDL_MOUSEMOTION:
                   {
-                    MouseMotionEvent mme(m_keyboard, event, mouseButtonsDown, dragStartPositions);
+                    MouseMotionEvent mme(m_keyboard, event,
+					 mouseButtonsDown, dragStartPositions, m_selectedTool);
                     m_rootPanel.Dispatch(mme,
                                          Rect(SPoint(),
                                               UPoint(m_screenWidth,m_screenHeight)));

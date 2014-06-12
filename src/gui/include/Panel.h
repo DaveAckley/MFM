@@ -33,6 +33,7 @@
 #include "Drawing.h"
 #include "Keyboard.h"
 #include "ByteSink.h"
+#include "EditingTool.h"
 
 namespace MFM {
 
@@ -47,11 +48,12 @@ namespace MFM {
   class Panel;   // FORWARD
 
   struct MouseEvent {
-    MouseEvent(const Keyboard & keyboard, SDL_Event & event)
-      : m_keyboard(keyboard), m_event(event)
+    MouseEvent(const Keyboard & keyboard, SDL_Event & event, const EditingTool selectedTool)
+      : m_keyboard(keyboard), m_event(event), m_selectedTool(selectedTool)
     { }
     const Keyboard & m_keyboard;
     SDL_Event & m_event;
+    const EditingTool m_selectedTool;
 
     virtual ~MouseEvent() { }
 
@@ -63,8 +65,9 @@ namespace MFM {
 
   struct MouseButtonEvent : public MouseEvent
   {
-    MouseButtonEvent(const Keyboard & keyboard, SDL_Event & event)
-      : MouseEvent(keyboard, event)
+    MouseButtonEvent(const Keyboard & keyboard,
+		     SDL_Event & event, const EditingTool selectedTool)
+      : MouseEvent(keyboard, event, selectedTool)
     { }
 
     virtual bool Handle(Panel & panel) ;
@@ -82,8 +85,8 @@ namespace MFM {
     const u32 m_buttonMask;
     const ButtonPositionArray & m_buttonPositionArray;
 
-    MouseMotionEvent(const Keyboard & keyboard, SDL_Event & event, u32 buttonMask, ButtonPositionArray & bpa)
-      : MouseEvent(keyboard, event), m_buttonMask(buttonMask), m_buttonPositionArray(bpa)
+    MouseMotionEvent(const Keyboard & keyboard, SDL_Event & event, u32 buttonMask, ButtonPositionArray & bpa, const EditingTool selectedTool)
+      : MouseEvent(keyboard, event, selectedTool), m_buttonMask(buttonMask), m_buttonPositionArray(bpa)
     { }
 
     virtual bool Handle(Panel & panel) ;
