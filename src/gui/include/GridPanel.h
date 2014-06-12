@@ -28,12 +28,14 @@
 #define GRIDPANEL_H
 
 #include "itype.h"
+#include "MDist.h"
 #include "Panel.h"
 #include "GridRenderer.h"
 #include "EditingTool.h"
 
 #define SCREEN_INITIAL_WIDTH 1280
 #define SCREEN_INITIAL_HEIGHT 1024
+#define BRUSH_SIZE 4
 
 namespace MFM {
 
@@ -114,6 +116,13 @@ namespace MFM {
 			      mbe.m_event.button.y));
     }
 
+    void HandleBrushTool(MouseButtonEvent& mbe)
+    {
+      HandleBrushTool(mbe.m_event.button.button,
+		       SPoint(mbe.m_event.button.x,
+			      mbe.m_event.button.y));
+    }
+
     void HandleEraserTool(MouseButtonEvent& mbe)
     {
       HandleEraserTool(mbe.m_event.button.button,
@@ -123,15 +132,20 @@ namespace MFM {
 
     void HandlePencilTool(u8 button, SPoint clickPt)
     {
-      PaintMapper(button, clickPt, Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom());
+      PaintMapper(button, clickPt, false, Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom());
+    }
+
+    void HandleBrushTool(u8 button, SPoint clickPt)
+    {
+      PaintMapper(button, clickPt, true, Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom());
     }
 
     void HandleEraserTool(u8 button, SPoint clickPt)
     {
-      PaintMapper(button, clickPt, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+      PaintMapper(button, clickPt, false, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
     }
 
-    void PaintMapper(u8 button, SPoint clickPt, T atom)
+    void PaintMapper(u8 button, SPoint clickPt, bool brush, T atom)
     {
       /* TODO Maybe be able to select two types of atoms? Like in most
        * image editors, right click allows painting of a different
@@ -142,11 +156,11 @@ namespace MFM {
 	pt.Set(clickPt.GetX() - pt.GetX(),
 	       clickPt.GetY() - pt.GetY());
 
-	PaintAtom(*m_mainGrid, pt, 1, atom);
+	PaintAtom(*m_mainGrid, pt, brush, atom);
       }
     }
 
-    void PaintAtom(Grid<GC>& grid, SPoint& clickPt, u32 radius, T& atom)
+    void PaintAtom(Grid<GC>& grid, SPoint& clickPt, bool brush, T& atom)
     {
       /* Only do this when tiles are together to keep from having to
        * deal with caches */
@@ -161,20 +175,34 @@ namespace MFM {
 	cp.SetX(cp.GetX() - offset.GetX());
 	cp.SetY(cp.GetY() - offset.GetY());
 
-	if(cp.GetX() >= 0 && cp.GetY() >= 0)
+	u32 atomSize = tileRenderer.GetAtomSize();
+
+	/* Figure out which atom needs changing */
+	cp.SetX(cp.GetX() / atomSize);
+	cp.SetY(cp.GetY() / atomSize);
+
+	if(brush)
 	{
-	  u32 atomSize = tileRenderer.GetAtomSize();
+	  MDist<BRUSH_SIZE> md = MDist<BRUSH_SIZE>::get();
 
-	  /* Figure out which atom needs changing */
-	  cp.SetX(cp.GetX() / atomSize);
-	  cp.SetY(cp.GetY() / atomSize);
-
-
-	  if(cp.GetX() < TILE_SIDE_LIVE_SITES * W &&
-	     cp.GetY() < TILE_SIDE_LIVE_SITES * H)
+	  for(u32 i = 0; i < md.GetTableSize(BRUSH_SIZE); i++)
 	  {
-	    grid.PlaceAtom(atom, cp);
+	    SPoint pt = md.GetPoint(i);
+	    pt.Add(cp.GetX(), cp.GetY());
+
+	    if(pt.GetX() >= 0 && pt.GetY() >= 0 &&
+		pt.GetX() < TILE_SIDE_LIVE_SITES * W &&
+		pt.GetY() < TILE_SIDE_LIVE_SITES * H)
+	    {
+	      grid.PlaceAtom(atom, pt);
+	    }
 	  }
+	}
+	else if(cp.GetX() >= 0 && cp.GetY() >= 0 &&
+		cp.GetX() < TILE_SIDE_LIVE_SITES * W &&
+		cp.GetY() < TILE_SIDE_LIVE_SITES * H)
+	{
+	  grid.PlaceAtom(atom, cp);
 	}
       }
     }
@@ -212,6 +240,9 @@ namespace MFM {
 	    break;
 	  case TOOL_ERASER:
 	    HandleEraserTool(mbe);
+	    break;
+	  case TOOL_BRUSH:
+	    HandleBrushTool(mbe);
 	    break;
 	  case TOOL_BUCKET:
 	    HandleBucketTool(mbe);
@@ -256,6 +287,9 @@ namespace MFM {
 	case TOOL_ERASER:
 	  HandleEraserTool(SDL_BUTTON_LEFT, SPoint(event.x, event.y));
 	  break;
+	case TOOL_BRUSH:
+	  HandleBrushTool(SDL_BUTTON_LEFT, SPoint(event.x, event.y));
+	  break;
 
 	default:
 	  /* Some tools don't need to do this */
@@ -264,9 +298,7 @@ namespace MFM {
       }
       return false;
     }
-
   };
-
 } /* namespace MFM */
 
 #endif /* GRIDPANEL_H */
