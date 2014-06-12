@@ -109,16 +109,38 @@ namespace MFM {
 
     void HandlePencilTool(MouseButtonEvent& mbe)
     {
+      HandlePencilTool(mbe.m_event.button.button,
+		       SPoint(mbe.m_event.button.x,
+			      mbe.m_event.button.y));
+    }
+
+    void HandleEraserTool(MouseButtonEvent& mbe)
+    {
+      HandleEraserTool(mbe.m_event.button.button,
+		       SPoint(mbe.m_event.button.x,
+			      mbe.m_event.button.y));
+    }
+
+    void HandlePencilTool(u8 button, SPoint clickPt)
+    {
+      PaintMapper(button, clickPt, Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom());
+    }
+
+    void HandleEraserTool(u8 button, SPoint clickPt)
+    {
+      PaintMapper(button, clickPt, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+    }
+
+    void PaintMapper(u8 button, SPoint clickPt, T atom)
+    {
       /* TODO Maybe be able to select two types of atoms? Like in most
        * image editors, right click allows painting of a different
        * color.*/
-      if(mbe.m_event.button.button == SDL_BUTTON_LEFT)
+      if(button == SDL_BUTTON_LEFT)
       {
 	SPoint pt = GetAbsoluteLocation();
-	pt.Set(mbe.m_event.button.x - pt.GetX(),
-	       mbe.m_event.button.y - pt.GetY());
-
-	T atom = Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom();
+	pt.Set(clickPt.GetX() - pt.GetX(),
+	       clickPt.GetY() - pt.GetY());
 
 	PaintAtom(*m_mainGrid, pt, 1, atom);
       }
@@ -140,18 +162,13 @@ namespace MFM {
 	cp.SetY(cp.GetY() - offset.GetY());
 
 	u32 atomSize = tileRenderer.GetAtomSize();
-	u32 tileSize = (GC::CORE_CONFIG::PARAM_CONFIG::TILE_WIDTH -
-			2 * GC::CORE_CONFIG::PARAM_CONFIG::EVENT_WINDOW_RADIUS);
 
 	/* Figure out which atom needs changing */
 	cp.SetX(cp.GetX() / atomSize);
 	cp.SetY(cp.GetY() / atomSize);
 
-	SPoint tilePt(cp.GetX() / tileSize, cp.GetY() / tileSize);
-
 	grid.PlaceAtom(atom, SPoint(cp.GetX(), cp.GetY()));
       }
-
     }
 
     void HandleBucketTool(MouseButtonEvent& mbe)
@@ -185,6 +202,9 @@ namespace MFM {
 	  case TOOL_PENCIL:
 	    HandlePencilTool(mbe);
 	    break;
+	  case TOOL_ERASER:
+	    HandleEraserTool(mbe);
+	    break;
 	  case TOOL_BUCKET:
 	    HandleBucketTool(mbe);
 	    break;
@@ -217,9 +237,21 @@ namespace MFM {
 	  SPoint delta = nowAt - m_leftButtonDragStart;
 	  m_grend->SetDrawOrigin(m_leftButtonGridStart+delta);
 	}
-	else
+      }
+      else if(mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT))
+      {
+	switch(mbe.m_selectedTool)
 	{
-	  /* Paint atoms */
+	case TOOL_PENCIL:
+	  HandlePencilTool(SDL_BUTTON_LEFT, SPoint(event.x, event.y));
+	  break;
+	case TOOL_ERASER:
+	  HandleEraserTool(SDL_BUTTON_LEFT, SPoint(event.x, event.y));
+	  break;
+
+	default:
+	  /* Some tools don't need to do this */
+	  break;
 	}
       }
       return false;
