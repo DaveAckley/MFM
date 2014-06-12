@@ -161,13 +161,21 @@ namespace MFM {
 	cp.SetX(cp.GetX() - offset.GetX());
 	cp.SetY(cp.GetY() - offset.GetY());
 
-	u32 atomSize = tileRenderer.GetAtomSize();
+	if(cp.GetX() >= 0 && cp.GetY() >= 0)
+	{
+	  u32 atomSize = tileRenderer.GetAtomSize();
 
-	/* Figure out which atom needs changing */
-	cp.SetX(cp.GetX() / atomSize);
-	cp.SetY(cp.GetY() / atomSize);
+	  /* Figure out which atom needs changing */
+	  cp.SetX(cp.GetX() / atomSize);
+	  cp.SetY(cp.GetY() / atomSize);
 
-	grid.PlaceAtom(atom, SPoint(cp.GetX(), cp.GetY()));
+
+	  if(cp.GetX() < TILE_SIDE_LIVE_SITES * W &&
+	     cp.GetY() < TILE_SIDE_LIVE_SITES * H)
+	  {
+	    grid.PlaceAtom(atom, cp);
+	  }
+	}
       }
     }
 
