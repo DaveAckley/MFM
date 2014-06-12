@@ -130,22 +130,38 @@ namespace MFM {
 			      mbe.m_event.button.y));
     }
 
+    void HandleBucketTool(MouseButtonEvent& mbe)
+    {
+      HandleBucketTool(mbe.m_event.button.button,
+		       SPoint(mbe.m_event.button.x,
+			      mbe.m_event.button.y));
+    }
+
     void HandlePencilTool(u8 button, SPoint clickPt)
     {
-      PaintMapper(button, clickPt, false, Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom());
+      PaintMapper(button, clickPt, false,
+		  Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom(), false);
     }
 
     void HandleBrushTool(u8 button, SPoint clickPt)
     {
-      PaintMapper(button, clickPt, true, Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom());
+      PaintMapper(button, clickPt, true,
+		  Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom(), false);
     }
 
     void HandleEraserTool(u8 button, SPoint clickPt)
     {
-      PaintMapper(button, clickPt, false, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+      PaintMapper(button, clickPt, false,
+		  Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), false);
     }
 
-    void PaintMapper(u8 button, SPoint clickPt, bool brush, T atom)
+    void HandleBucketTool(u8 button, SPoint clickPt)
+    {
+      PaintMapper(button, clickPt, false,
+		  Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom(), true);
+    }
+
+    void PaintMapper(u8 button, SPoint clickPt, bool brush, T atom, bool bucket)
     {
       /* TODO Maybe be able to select two types of atoms? Like in most
        * image editors, right click allows painting of a different
@@ -156,11 +172,11 @@ namespace MFM {
 	pt.Set(clickPt.GetX() - pt.GetX(),
 	       clickPt.GetY() - pt.GetY());
 
-	PaintAtom(*m_mainGrid, pt, brush, atom);
+	PaintAtom(*m_mainGrid, pt, brush, atom, bucket);
       }
     }
 
-    void PaintAtom(Grid<GC>& grid, SPoint& clickPt, bool brush, T& atom)
+    void PaintAtom(Grid<GC>& grid, SPoint& clickPt, bool brush, T& atom, bool bucket)
     {
       /* Only do this when tiles are together to keep from having to
        * deal with caches */
@@ -202,14 +218,39 @@ namespace MFM {
 		cp.GetX() < TILE_SIDE_LIVE_SITES * W &&
 		cp.GetY() < TILE_SIDE_LIVE_SITES * H)
 	{
-	  grid.PlaceAtom(atom, cp);
+	  if(bucket)
+	  {
+	    BucketFill(grid, atom, cp);
+	  }
+	  else
+	  {
+	    grid.PlaceAtom(atom, cp);
+	  }
 	}
       }
     }
 
-    void HandleBucketTool(MouseButtonEvent& mbe)
+    void BucketFill(Grid<GC>& grid, T& atom, SPoint& pt)
     {
+      MDist<1> md = MDist<1>::get();
 
+      grid.PlaceAtom(atom, pt);
+
+      for(u32 i = 0; i < md.GetTableSize(1); i++)
+      {
+	SPoint npt = md.GetPoint(i);
+	npt.Add(pt.GetX(), pt.GetY());
+
+	if(npt.GetX() >= 0 && npt.GetY() >= 0 &&
+	   npt.GetX() < TILE_SIDE_LIVE_SITES * W &&
+	   npt.GetY() < TILE_SIDE_LIVE_SITES * H)
+	{
+	  if(Atom<CC>::IsType(*grid.GetAtom(npt), Element_Empty<CC>::TYPE()))
+	  {
+	    BucketFill(grid, atom, npt);
+	  }
+	}
+      }
     }
 
     virtual bool Handle(MouseButtonEvent& mbe)
