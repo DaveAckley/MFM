@@ -41,6 +41,7 @@ namespace MFM
     ASSET_PENCIL_ICON,
     ASSET_ERASER_ICON,
     ASSET_BRUSH_ICON,
+    ASSET_BUCKET_ICON,
     ASSET_COUNT
   };
 
@@ -99,6 +100,7 @@ namespace MFM
 	surfaces[ASSET_PENCIL_ICON] = LoadImage("images/pencil_icon.png");
 	surfaces[ASSET_ERASER_ICON] = LoadImage("images/eraser_icon.png");
 	surfaces[ASSET_BRUSH_ICON] = LoadImage("images/brush_icon.png");
+	surfaces[ASSET_BUCKET_ICON] = LoadImage("images/bucket_icon.png");
 
 	initialized = true;
       }

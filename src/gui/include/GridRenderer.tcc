@@ -81,6 +81,4 @@ namespace MFM {
       }
     }
   }
-
 } /* namespace MFM */
-

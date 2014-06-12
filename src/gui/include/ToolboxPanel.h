@@ -110,6 +110,18 @@ namespace MFM
       }
     }m_pencilButton;
 
+    struct BucketButton : public AbstractToolButton
+    {
+      BucketButton(EditingTool* toolboxTool) :
+	AbstractToolButton(toolboxTool)
+      { }
+
+      virtual void OnClick()
+      {
+	*m_toolboxTool = TOOL_BUCKET;
+	m_parent->ActivateButton(this);
+      }
+    }m_bucketButton;
 
     struct EraserButton : public AbstractToolButton
     {
@@ -145,6 +157,7 @@ namespace MFM
       m_activatedButton(&m_selectorButton),
       m_selectorButton(toolPtr),
       m_pencilButton(toolPtr),
+      m_bucketButton(toolPtr),
       m_eraserButton(toolPtr),
       m_brushButton(toolPtr)
     { }
@@ -155,6 +168,7 @@ namespace MFM
       {
 	&m_selectorButton,
 	&m_pencilButton,
+	&m_bucketButton,
 	&m_eraserButton,
 	&m_brushButton
       };
@@ -163,11 +177,12 @@ namespace MFM
       {
 	ASSET_SELECTOR_ICON,
 	ASSET_PENCIL_ICON,
+	ASSET_BUCKET_ICON,
 	ASSET_ERASER_ICON,
 	ASSET_BRUSH_ICON
       };
 
-      u32 buttonCount = 4;
+      u32 buttonCount = 5;
       u32 x, y;
       for(y = 0; y < 10; y++)
       {
@@ -194,7 +209,10 @@ namespace MFM
       }
     toolboxpanel_addbuttons_loopend:
 
-      this->Panel::SetDimensions(5 + x * 32, 5 + y * 37);
+      /* Set up the correct dimensions. X is always constant, as there
+       * will (hopefully) always be two tools. Y is more complicated,
+       * since we need to increase it if there are an odd number of tools. */
+      this->Panel::SetDimensions(5 + 2 * 37, 5 + (y + ((x & 1) ? 1 : 0)) * 37);
 
       m_activatedButton = buttons[0];
       buttons[0]->AbstractToolButton::SetActivated(true);

@@ -30,11 +30,13 @@
 #include "itype.h"
 #include "Panel.h"
 #include "GridRenderer.h"
+#include "EditingTool.h"
 
 #define SCREEN_INITIAL_WIDTH 1280
 #define SCREEN_INITIAL_HEIGHT 1024
 
 namespace MFM {
+
   template <class GC>
   class GridPanel : public Panel
   {
@@ -96,6 +98,67 @@ namespace MFM {
       m_grend->RenderGrid(drawing, *m_mainGrid);
     }
 
+    void HandleSelectorTool(MouseButtonEvent& mbe)
+    {
+      SPoint pt = GetAbsoluteLocation();
+      pt.Set(mbe.m_event.button.x - pt.GetX(),
+	     mbe.m_event.button.y - pt.GetY());
+
+      m_grend->SelectTile(*m_mainGrid, pt);
+    }
+
+    void HandlePencilTool(MouseButtonEvent& mbe)
+    {
+      /* TODO Maybe be able to select two types of atoms? Like in most
+       * image editors, right click allows painting of a different
+       * color.*/
+      if(mbe.m_event.button.button == SDL_BUTTON_LEFT)
+      {
+	SPoint pt = GetAbsoluteLocation();
+	pt.Set(mbe.m_event.button.x - pt.GetX(),
+	       mbe.m_event.button.y - pt.GetY());
+
+	T atom = Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom();
+
+	PaintAtom(*m_mainGrid, pt, 1, atom);
+      }
+    }
+
+    void PaintAtom(Grid<GC>& grid, SPoint& clickPt, u32 radius, T& atom)
+    {
+      /* Only do this when tiles are together to keep from having to
+       * deal with caches */
+      if(!m_grend->IsRenderingTilesSeparated())
+      {
+	TileRenderer& tileRenderer = m_grend->GetTileRenderer();
+	const SPoint& offset = tileRenderer.GetWindowTL();
+
+	SPoint& cp = clickPt;
+
+	/* Offset it by the corner */
+	cp.SetX(cp.GetX() - offset.GetX());
+	cp.SetY(cp.GetY() - offset.GetY());
+
+	u32 atomSize = tileRenderer.GetAtomSize();
+	u32 tileSize = (GC::CORE_CONFIG::PARAM_CONFIG::TILE_WIDTH -
+			2 * GC::CORE_CONFIG::PARAM_CONFIG::EVENT_WINDOW_RADIUS);
+
+	/* Figure out which atom needs changing */
+	cp.SetX(cp.GetX() / atomSize);
+	cp.SetY(cp.GetY() / atomSize);
+
+	SPoint tilePt(cp.GetX() / tileSize, cp.GetY() / tileSize);
+
+	grid.PlaceAtom(atom, SPoint(cp.GetX(), cp.GetY()));
+      }
+
+    }
+
+    void HandleBucketTool(MouseButtonEvent& mbe)
+    {
+
+    }
+
     virtual bool Handle(MouseButtonEvent& mbe)
     {
       SDL_MouseButtonEvent & event = mbe.m_event.button;
@@ -107,19 +170,29 @@ namespace MFM {
 
         switch (event.button) {
 
-        case SDL_BUTTON_MIDDLE:
-          m_grend->SelectTile(*m_mainGrid, pt);
-          break;
-
-        case SDL_BUTTON_LEFT:
+	case SDL_BUTTON_LEFT:
           m_leftButtonDragStart = pt;
           m_leftButtonGridStart = m_grend->GetDrawOrigin();
+	  /* FALL THROUGH */
+	case SDL_BUTTON_MIDDLE:
+	case SDL_BUTTON_RIGHT:
 
-	  if(mbe.m_selectedTool == TOOL_SELECTOR)
+	  switch(mbe.m_selectedTool)
 	  {
-	    m_grend->SelectTile(*m_mainGrid, pt);
+	  case TOOL_SELECTOR:
+	    HandleSelectorTool(mbe);
+	    break;
+	  case TOOL_PENCIL:
+	    HandlePencilTool(mbe);
+	    break;
+	  case TOOL_BUCKET:
+	    HandleBucketTool(mbe);
+	    break;
+
+	  default: break; /* Do the rest later */
 	  }
-          break;
+
+	  break;
 
         case SDL_BUTTON_WHEELUP:
           m_grend->IncreaseAtomSize(pt);

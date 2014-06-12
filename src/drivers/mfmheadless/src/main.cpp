@@ -28,6 +28,7 @@ namespace MFM
 
       m_grid.Needed(Element_Dreg<OurCoreConfig>::THE_INSTANCE);
       m_grid.Needed(Element_Res<OurCoreConfig>::THE_INSTANCE);
+      m_grid.Needed(Element_Wall<OurCoreConfig>::THE_INSTANCE);
     }
 
     virtual void ReinitEden()

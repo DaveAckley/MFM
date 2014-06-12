@@ -69,6 +69,12 @@ namespace MFM
 
     ~GridRenderer();
 
+    TileRenderer& GetTileRenderer()
+    { return m_tileRenderer; }
+
+    bool IsRenderingTilesSeparated()
+    { return m_renderTilesSeparated; }
+
     void SetEventWindowRenderMode(EventWindowRenderMode mode);
 
     UPoint GetDimensions() const;

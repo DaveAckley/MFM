@@ -34,6 +34,7 @@ namespace MFM
   {
     TOOL_SELECTOR,
     TOOL_PENCIL,
+    TOOL_BUCKET,
     TOOL_ERASER,
     TOOL_BRUSH
   };

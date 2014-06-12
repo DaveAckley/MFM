@@ -371,7 +371,7 @@ namespace MFM {
       m_toolboxPanel.SetName("Toolbox");
       m_toolboxPanel.SetVisibility(false);
       m_toolboxPanel.SetBackground(Drawing::GREY60);
-      m_toolboxPanel.SetDimensions(79, 79);
+      /* m_toolboxPanel.SetDimensions(79, 79); */
       m_toolboxPanel.SetAnchor(ANCHOR_WEST);
       m_gridPanel.Insert(&m_toolboxPanel, NULL);
 
@@ -695,9 +695,9 @@ namespace MFM {
 			     "--startpaused", &SetStartPausedFromArgs, this, false);
     }
 
-    GridPanel<GC> m_gridPanel;
-
     EditingTool m_selectedTool;
+
+    GridPanel<GC> m_gridPanel;
 
     ToolboxPanel m_toolboxPanel;
 
