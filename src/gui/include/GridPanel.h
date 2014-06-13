@@ -32,6 +32,7 @@
 #include "Panel.h"
 #include "GridRenderer.h"
 #include "EditingTool.h"
+#include "ToolboxPanel.h"
 
 #define SCREEN_INITIAL_WIDTH 1280
 #define SCREEN_INITIAL_HEIGHT 1024
@@ -65,6 +66,7 @@ namespace MFM {
   private:
     GridRenderer* m_grend;
     OurGrid* m_mainGrid;
+    ToolboxPanel<CC>* m_toolboxPanel;
     SPoint m_leftButtonDragStart;
     SPoint m_leftButtonGridStart;
 
@@ -90,6 +92,11 @@ namespace MFM {
     void SetGridRenderer(GridRenderer* grend)
     {
       m_grend = grend;
+    }
+
+    void SetToolboxPanel(ToolboxPanel<CC>* toolboxPanel)
+    {
+      m_toolboxPanel = toolboxPanel;
     }
 
   protected:
@@ -139,14 +146,20 @@ namespace MFM {
 
     void HandlePencilTool(u8 button, SPoint clickPt)
     {
-      PaintMapper(button, clickPt, false,
-		  Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom(), false);
+      T atom = (button == SDL_BUTTON_LEFT) ?
+		m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
+		m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
+
+      PaintMapper(button, clickPt, false, atom, false);
     }
 
     void HandleBrushTool(u8 button, SPoint clickPt)
     {
-      PaintMapper(button, clickPt, true,
-		  Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom(), false);
+      T atom = (button == SDL_BUTTON_LEFT) ?
+		m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
+		m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
+
+      PaintMapper(button, clickPt, true, atom, false);
     }
 
     void HandleEraserTool(u8 button, SPoint clickPt)
@@ -157,8 +170,11 @@ namespace MFM {
 
     void HandleBucketTool(u8 button, SPoint clickPt)
     {
-      PaintMapper(button, clickPt, false,
-		  Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom(), true);
+      T atom = (button == SDL_BUTTON_LEFT) ?
+		m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
+		m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
+
+      PaintMapper(button, clickPt, false, atom, true);
     }
 
     void PaintMapper(u8 button, SPoint clickPt, bool brush, T atom, bool bucket)

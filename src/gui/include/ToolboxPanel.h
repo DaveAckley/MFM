@@ -30,59 +30,58 @@
 #include "EditingTool.h"
 #include "AbstractButton.h"
 
+#define ELEMENT_BOX_HEIGHT 10
+#define ELEMENT_BOX_WIDTH 5
+#define ELEMENT_BOX_SIZE (ELEMENT_BOX_WIDTH * ELEMENT_BOX_HEIGHT)
+#define ELEMENT_RENDER_SIZE 15
+
 namespace MFM
 {
-
-  class ToolboxPanel; /* Forward Declaration */
-
-  class AbstractToolButton : public AbstractButton
-  {
-  protected:
-    EditingTool* m_toolboxTool;
-
-    bool m_activated;
-
-    ToolboxPanel* m_parent;
-
-  public:
-
-    AbstractToolButton(EditingTool* toolboxTool) :
-      AbstractButton(), m_toolboxTool(toolboxTool)
-    {
-      this->Panel::SetBackground(Drawing::GREY80);
-      this->Panel::SetBorder(Drawing::GREY40);
-    }
-
-    void SetParent(ToolboxPanel* parent)
-    {
-      m_parent = parent;
-    }
-
-    bool IsActivated()
-    {
-      return m_activated;
-    }
-
-    void SetToolIcon(SDL_Surface* icon)
-    {
-      SetIcon(icon);
-      this->Panel::SetDimensions(icon->w, icon->h);
-    }
-
-    void SetActivated(bool activated)
-    {
-      m_activated = activated;
-      SetBackground(activated ? Drawing::GREY40 : Drawing::GREY80);
-    }
-  };
-
+  template<class CC>
   class ToolboxPanel : public Panel
   {
   private:
 
-    EditingTool* m_toolPtr;
+    class AbstractToolButton : public AbstractButton
+    {
+    protected:
+      EditingTool* m_toolboxTool;
 
-    AbstractToolButton* m_activatedButton;
+      bool m_activated;
+
+      ToolboxPanel<CC>* m_parent;
+
+    public:
+
+      AbstractToolButton(EditingTool* toolboxTool) :
+	AbstractButton(), m_toolboxTool(toolboxTool)
+      {
+	this->Panel::SetBackground(Drawing::GREY80);
+	this->Panel::SetBorder(Drawing::GREY40);
+      }
+
+      void SetParent(ToolboxPanel<CC>* parent)
+      {
+	m_parent = parent;
+      }
+
+      bool IsActivated()
+      {
+	return m_activated;
+      }
+
+      void SetToolIcon(SDL_Surface* icon)
+      {
+	SetIcon(icon);
+	this->Panel::SetDimensions(icon->w, icon->h);
+      }
+
+      void SetActivated(bool activated)
+      {
+	m_activated = activated;
+	SetBackground(activated ? Drawing::GREY40 : Drawing::GREY80);
+      }
+    };
 
     struct SelectorButton : public AbstractToolButton
     {
@@ -92,8 +91,8 @@ namespace MFM
 
       virtual void OnClick()
       {
-	*m_toolboxTool = TOOL_SELECTOR;
-	m_parent->ActivateButton(this);
+	*(this->AbstractToolButton::m_toolboxTool) = TOOL_SELECTOR;
+	(this->AbstractToolButton::m_parent)->ActivateButton(this);
       }
     }m_selectorButton;
 
@@ -105,8 +104,8 @@ namespace MFM
 
       virtual void OnClick()
       {
-	*m_toolboxTool = TOOL_PENCIL;
-	m_parent->ActivateButton(this);
+	*(this->AbstractToolButton::m_toolboxTool) = TOOL_PENCIL;
+	(this->AbstractToolButton::m_parent)->ActivateButton(this);
       }
     }m_pencilButton;
 
@@ -118,8 +117,8 @@ namespace MFM
 
       virtual void OnClick()
       {
-	*m_toolboxTool = TOOL_BUCKET;
-	m_parent->ActivateButton(this);
+	*(this->AbstractToolButton::m_toolboxTool) = TOOL_BUCKET;
+	(this->AbstractToolButton::m_parent)->ActivateButton(this);
       }
     }m_bucketButton;
 
@@ -131,8 +130,8 @@ namespace MFM
 
       virtual void OnClick()
       {
-	*m_toolboxTool = TOOL_ERASER;
-	m_parent->ActivateButton(this);
+	*(this->AbstractToolButton::m_toolboxTool) = TOOL_ERASER;
+	(this->AbstractToolButton::m_parent)->ActivateButton(this);
       }
     }m_eraserButton;
 
@@ -145,21 +144,82 @@ namespace MFM
 
       virtual void OnClick()
       {
-	*m_toolboxTool = TOOL_BRUSH;
-	m_parent->ActivateButton(this);
+	*(this->AbstractToolButton::m_toolboxTool) = TOOL_BRUSH;
+	(this->AbstractToolButton::m_parent)->ActivateButton(this);
       }
     }m_brushButton;
+
+    struct ElementButton : public AbstractButton
+    {
+      ElementButton() :
+	AbstractButton()
+      {
+	this->Panel::SetDimensions(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
+      }
+
+      void SetElement(const Element<CC>* element)
+      {
+	m_element = element;
+      }
+
+      void SetParent(ToolboxPanel<CC>* parent)
+      {
+	m_parent = parent;
+      }
+
+      virtual void PaintComponent(Drawing& d)
+      {
+	u32 oldC = d.GetForeground();
+	d.SetForeground(m_element->DefaultPhysicsColor());
+	d.FillCircle(0, 0,
+		     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE,
+		     ELEMENT_RENDER_SIZE >> 1);
+	d.SetForeground(oldC);
+      }
+
+      const Element<CC>* GetElement()
+      {
+	return m_element;
+      }
+
+      virtual void OnClick()
+      {
+	m_parent->SetPrimaryElement(m_element);
+      }
+
+    private:
+      const Element<CC>* m_element;
+
+      ToolboxPanel<CC>* m_parent;
+    };
+
+    EditingTool* m_toolPtr;
+
+    AbstractToolButton* m_activatedButton;
+
+    const Element<CC>* m_primaryElement;
+
+    const Element<CC>* m_secondaryElement;
+
+    const Element<CC>* m_heldElements[ELEMENT_BOX_SIZE];
+
+    ElementButton m_elementButtons[ELEMENT_BOX_SIZE];
+
+    u32 m_heldElementCount;
 
   public:
 
     ToolboxPanel(EditingTool* toolPtr) :
-      m_toolPtr(toolPtr),
-      m_activatedButton(&m_selectorButton),
       m_selectorButton(toolPtr),
       m_pencilButton(toolPtr),
       m_bucketButton(toolPtr),
       m_eraserButton(toolPtr),
-      m_brushButton(toolPtr)
+      m_brushButton(toolPtr),
+      m_toolPtr(toolPtr),
+      m_activatedButton(&m_selectorButton),
+      m_primaryElement(NULL),
+      m_secondaryElement(NULL),
+      m_heldElementCount(0)
     { }
 
     void AddButtons()
@@ -192,14 +252,14 @@ namespace MFM
 	  if(i >= buttonCount)
 	  {
 	    /* semi-clean multiloop break using goto */
-	    goto toolboxpanel_addbuttons_loopend;
+	    goto toolboxpanel_addbuttons_toolbuttons_loopend;
 	  }
 
 	  buttons[i]->SetParent(this);
 
 	  buttons[i]->Panel::SetRenderPoint(SPoint(5 + x * 37, 5 + y * 37));
 	  buttons[i]->SetToolIcon(AssetManager::Get(assets[i]));
-	  this->Insert(buttons[i], NULL);
+	  this->Panel::Insert(buttons[i], NULL);
 	  LOG.Debug("Selector(%d, %d, %d, %d)",
 		    buttons[i]->GetAbsoluteLocation().GetX(),
 		    buttons[i]->GetAbsoluteLocation().GetY(),
@@ -207,16 +267,63 @@ namespace MFM
 		    buttons[i]->GetDimensions().GetY());
 	}
       }
-    toolboxpanel_addbuttons_loopend:
+    toolboxpanel_addbuttons_toolbuttons_loopend:
+
+      SPoint currentDimensions(5 + 2 * 37, 5 + (y + ((x & 1) ? 1 : 0)) * 37);
+
+      for(y = 0; y < ELEMENT_BOX_HEIGHT; y++)
+      {
+	for(x = 0; x < ELEMENT_BOX_WIDTH; x++)
+	{
+	  u32 i = y * ELEMENT_BOX_WIDTH + x;
+
+	  if(i >= m_heldElementCount)
+	  {
+	    goto toolboxpanel_addbuttons_elemenbuttons_loopend;
+	  }
+
+	  m_elementButtons[i].SetElement(m_heldElements[i]);
+	  m_elementButtons[i].SetParent(this);
+	  m_elementButtons[i].Panel::SetRenderPoint(SPoint(4 + x * ELEMENT_RENDER_SIZE - 1,
+							   currentDimensions.GetY() +
+						           y * ELEMENT_RENDER_SIZE - 1));
+	  this->Panel::Insert(m_elementButtons + i, NULL);
+	}
+      }
+
+    toolboxpanel_addbuttons_elemenbuttons_loopend:
+
+      currentDimensions.Add(0, ELEMENT_RENDER_SIZE + 16);
 
       /* Set up the correct dimensions. X is always constant, as there
        * will (hopefully) always be two tools. Y is more complicated,
        * since we need to increase it if there are an odd number of tools. */
-      this->Panel::SetDimensions(5 + 2 * 37, 5 + (y + ((x & 1) ? 1 : 0)) * 37);
+      this->Panel::SetDimensions(currentDimensions.GetX(), currentDimensions.GetY());
 
       m_activatedButton = buttons[0];
       buttons[0]->AbstractToolButton::SetActivated(true);
     }
+
+    void SetPrimaryElement(const Element<CC>* element)
+    { m_primaryElement = element; }
+
+    const Element<CC>* GetPrimaryElement()
+    { return m_primaryElement; }
+
+    void SetSecondaryElement(const Element<CC>* element)
+    { m_secondaryElement = element; }
+
+    void RegisterElement(const Element<CC>* element)
+    {
+      if(m_heldElementCount >= ELEMENT_BOX_SIZE)
+      {
+	FAIL(OUT_OF_ROOM);
+      }
+      m_heldElements[m_heldElementCount++] = element;
+    }
+
+    const Element<CC>* GetSecondaryElement()
+    { return m_secondaryElement; }
 
     void ActivateButton(AbstractToolButton* button)
     {

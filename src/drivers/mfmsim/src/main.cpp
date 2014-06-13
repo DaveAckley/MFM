@@ -71,6 +71,14 @@ namespace MFM {
       srend.DisplayStatsForElement(mainGrid, Element_Consumer<OurCoreConfig>::THE_INSTANCE);
       srend.DisplayStatsForElement(mainGrid, Element_Data<OurCoreConfig>::THE_INSTANCE);
 
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Sorter<OurCoreConfig>::THE_INSTANCE);
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Emitter<OurCoreConfig>::THE_INSTANCE);
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Consumer<OurCoreConfig>::THE_INSTANCE);
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Data<OurCoreConfig>::THE_INSTANCE);
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Wall<OurCoreConfig>::THE_INSTANCE);
+
       m_sortingSlots[0].Set(mainGrid, "Data in",
                             Element_Emitter<OurCoreConfig>::TYPE(),
                             Element_Emitter<OurCoreConfig>::DATUMS_EMITTED_SLOT,

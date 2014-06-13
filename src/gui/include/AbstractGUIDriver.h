@@ -346,6 +346,7 @@ namespace MFM {
       m_rootPanel.SetName("Root");
       m_gridPanel.SetBorder(Drawing::BLACK);
       m_gridPanel.SetGridRenderer(&m_grend);
+      m_gridPanel.SetToolboxPanel(&m_toolboxPanel);
       m_gridPanel.SetGrid(&Super::GetGrid());
 
       m_statisticsPanel.SetStatsRenderer(&m_srend);
@@ -367,11 +368,9 @@ namespace MFM {
       m_logPanel.SetAnchor(ANCHOR_SOUTH);
       m_logPanel.SetFont(m_fonts.GetDefaultFont(16));
 
-      m_toolboxPanel.AddButtons();
       m_toolboxPanel.SetName("Toolbox");
       m_toolboxPanel.SetVisibility(false);
       m_toolboxPanel.SetBackground(Drawing::GREY60);
-      /* m_toolboxPanel.SetDimensions(79, 79); */
       m_toolboxPanel.SetAnchor(ANCHOR_WEST);
       m_gridPanel.Insert(&m_toolboxPanel, NULL);
 
@@ -618,6 +617,8 @@ namespace MFM {
       HandleResize();
 
       m_renderStats = false;
+
+      m_toolboxPanel.AddButtons();
     }
 
     virtual void HandleResize()
@@ -626,6 +627,11 @@ namespace MFM {
     void ToggleTileView()
     {
       m_grend.ToggleMemDraw();
+    }
+
+    void RegisterToolboxElement(const Element<CC>* element)
+    {
+      m_toolboxPanel.RegisterElement(element);
     }
 
     /*********************************
@@ -699,7 +705,7 @@ namespace MFM {
 
     GridPanel<GC> m_gridPanel;
 
-    ToolboxPanel m_toolboxPanel;
+    ToolboxPanel<CC> m_toolboxPanel;
 
     class StatisticsPanel : public Panel
     {
