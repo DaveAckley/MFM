@@ -35,119 +35,106 @@
 #define ELEMENT_BOX_SIZE (ELEMENT_BOX_WIDTH * ELEMENT_BOX_HEIGHT)
 #define ELEMENT_RENDER_SIZE 15
 
+#define ELEMENT_BOX_BUTTON_COUNT 5
+
 namespace MFM
 {
+  /**
+   * A class representing the Panel which allows a user to select from
+   * a collection of Element drawing tools.
+   */
   template<class CC>
   class ToolboxPanel : public Panel
   {
   private:
 
+    /**
+     * An abstract class representing a Button for selecting a
+     * particular EditingTool.
+     */
     class AbstractToolButton : public AbstractButton
     {
     protected:
       EditingTool* m_toolboxTool;
 
-      bool m_activated;
-
       ToolboxPanel<CC>* m_parent;
+
+      EditingTool m_tool;
 
     public:
 
-      AbstractToolButton(EditingTool* toolboxTool) :
-	AbstractButton(), m_toolboxTool(toolboxTool)
+      /**
+       * Construct a new AbstractToolButton, pointing at a specified
+       * EditingTool location.
+       *
+       * @param toolboxTool An EditingTool pointer, the contents of
+       * which should be modified upon clicking this Button.
+       */
+      AbstractToolButton() :
+	AbstractButton()
       {
 	this->Panel::SetBackground(Drawing::GREY80);
 	this->Panel::SetBorder(Drawing::GREY40);
       }
 
+      void SetToolPointer(EditingTool* toolboxTool)
+      {
+	m_toolboxTool = toolboxTool;
+      }
+
+      void SetEditingTool(EditingTool tool)
+      {
+	m_tool = tool;
+      }
+
+      /**
+       * Sets the ToolboxPanel which owns this
+       * AbstractToolButton. This is required before clicking any
+       * AbstractToolButton.
+       */
       void SetParent(ToolboxPanel<CC>* parent)
       {
 	m_parent = parent;
       }
 
-      bool IsActivated()
-      {
-	return m_activated;
-      }
-
+      /**
+       * Sets the icon of this AbstractToolButton to a particular
+       * SDL_Surface*, which will be rendered when needed.
+       *
+       * @param icon The SDL_Surface* which represents this
+       * AbstractToolButton's icon.
+       */
       void SetToolIcon(SDL_Surface* icon)
       {
 	SetIcon(icon);
 	this->Panel::SetDimensions(icon->w, icon->h);
       }
 
+      /**
+       * Sets the visual properties of this AbstractToolButton to
+       * appear that it is activated or deactivated.
+       *
+       * @param activated If \c true, this AbstractToolButton will
+       *                  appear active. If not, it will appear
+       *                  disabled.
+       */
       void SetActivated(bool activated)
       {
-	m_activated = activated;
 	SetBackground(activated ? Drawing::GREY40 : Drawing::GREY80);
       }
+
+      /**
+       * This hook is invoked when a user clicks on this button,
+       * therefore setting the active tool of this AbstracToolButton.
+       *
+       * @param button The button on the mouse that was pressed.
+       */
+      virtual void OnClick(u8 button)
+      {
+	*m_toolboxTool = m_tool;
+	m_parent->ActivateButton(this);
+      }
     };
-
-    struct SelectorButton : public AbstractToolButton
-    {
-      SelectorButton(EditingTool* toolboxTool) :
-	AbstractToolButton(toolboxTool)
-      { }
-
-      virtual void OnClick(u8 button)
-      {
-	*(this->AbstractToolButton::m_toolboxTool) = TOOL_SELECTOR;
-	(this->AbstractToolButton::m_parent)->ActivateButton(this);
-      }
-    }m_selectorButton;
-
-    struct PencilButton : public AbstractToolButton
-    {
-      PencilButton(EditingTool* toolboxTool) :
-	AbstractToolButton(toolboxTool)
-      { }
-
-      virtual void OnClick(u8 button)
-      {
-	*(this->AbstractToolButton::m_toolboxTool) = TOOL_PENCIL;
-	(this->AbstractToolButton::m_parent)->ActivateButton(this);
-      }
-    }m_pencilButton;
-
-    struct BucketButton : public AbstractToolButton
-    {
-      BucketButton(EditingTool* toolboxTool) :
-	AbstractToolButton(toolboxTool)
-      { }
-
-      virtual void OnClick(u8 button)
-      {
-	*(this->AbstractToolButton::m_toolboxTool) = TOOL_BUCKET;
-	(this->AbstractToolButton::m_parent)->ActivateButton(this);
-      }
-    }m_bucketButton;
-
-    struct EraserButton : public AbstractToolButton
-    {
-      EraserButton(EditingTool* toolboxTool) :
-	AbstractToolButton(toolboxTool)
-      { }
-
-      virtual void OnClick(u8 button)
-      {
-	*(this->AbstractToolButton::m_toolboxTool) = TOOL_ERASER;
-	(this->AbstractToolButton::m_parent)->ActivateButton(this);
-      }
-    }m_eraserButton;
-
-
-    struct BrushButton : public AbstractToolButton
-    {
-      BrushButton(EditingTool* toolboxTool) :
-	AbstractToolButton(toolboxTool)
-      { }
-
-      virtual void OnClick(u8 button)
-      {
-	*(this->AbstractToolButton::m_toolboxTool) = TOOL_BRUSH;
-	(this->AbstractToolButton::m_parent)->ActivateButton(this);
-      }
-    }m_brushButton;
 
     struct ElementButton : public AbstractButton
     {
@@ -206,6 +193,8 @@ namespace MFM
 
     AbstractToolButton* m_activatedButton;
 
+    AbstractToolButton m_toolButtons[ELEMENT_BOX_BUTTON_COUNT];
+
     const Element<CC>* m_primaryElement;
 
     const Element<CC>* m_secondaryElement;
@@ -221,30 +210,22 @@ namespace MFM
   public:
 
     ToolboxPanel(EditingTool* toolPtr) :
-      m_selectorButton(toolPtr),
-      m_pencilButton(toolPtr),
-      m_bucketButton(toolPtr),
-      m_eraserButton(toolPtr),
-      m_brushButton(toolPtr),
       m_toolPtr(toolPtr),
-      m_activatedButton(&m_selectorButton),
+      m_activatedButton(m_toolButtons),
       m_primaryElement(NULL),
       m_secondaryElement(NULL),
       m_heldElementCount(0),
       m_selectedElementDrawY(0)
-    { }
+    {
+      for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
+      {
+	m_toolButtons[i].SetToolPointer(m_toolPtr);
+	m_toolButtons[i].SetEditingTool((EditingTool)i);
+      }
+    }
 
     void AddButtons()
     {
-      AbstractToolButton* buttons[] =
-      {
-	&m_selectorButton,
-	&m_pencilButton,
-	&m_bucketButton,
-	&m_eraserButton,
-	&m_brushButton
-      };
-
       Asset assets[] =
       {
 	ASSET_SELECTOR_ICON,
@@ -254,29 +235,28 @@ namespace MFM
 	ASSET_BRUSH_ICON
       };
 
-      u32 buttonCount = 5;
       u32 x, y;
       for(y = 0; y < 10; y++)
       {
 	for(x = 0; x < 2; x++)
 	{
 	  u32 i = y * 2 + x;
-	  if(i >= buttonCount)
+	  if(i >= ELEMENT_BOX_BUTTON_COUNT)
 	  {
 	    /* semi-clean multiloop break using goto */
 	    goto toolboxpanel_addbuttons_toolbuttons_loopend;
 	  }
 
-	  buttons[i]->SetParent(this);
+	  m_toolButtons[i].SetParent(this);
 
-	  buttons[i]->Panel::SetRenderPoint(SPoint(5 + x * 37, 5 + y * 37));
-	  buttons[i]->SetToolIcon(AssetManager::Get(assets[i]));
-	  this->Panel::Insert(buttons[i], NULL);
+	  m_toolButtons[i].Panel::SetRenderPoint(SPoint(5 + x * 37, 5 + y * 37));
+	  m_toolButtons[i].SetToolIcon(AssetManager::Get(assets[i]));
+	  this->Panel::Insert(m_toolButtons + i, NULL);
 	  LOG.Debug("Selector(%d, %d, %d, %d)",
-		    buttons[i]->GetAbsoluteLocation().GetX(),
-		    buttons[i]->GetAbsoluteLocation().GetY(),
-		    buttons[i]->GetDimensions().GetX(),
-		    buttons[i]->GetDimensions().GetY());
+		    m_toolButtons[i].GetAbsoluteLocation().GetX(),
+		    m_toolButtons[i].GetAbsoluteLocation().GetY(),
+		    m_toolButtons[i].GetDimensions().GetX(),
+		    m_toolButtons[i].GetDimensions().GetY());
 	}
       }
     toolboxpanel_addbuttons_toolbuttons_loopend:
@@ -318,8 +298,8 @@ namespace MFM
        * since we need to increase it if there are an odd number of tools. */
       this->Panel::SetDimensions(currentDimensions.GetX(), currentDimensions.GetY());
 
-      m_activatedButton = buttons[0];
-      buttons[0]->AbstractToolButton::SetActivated(true);
+      m_activatedButton = m_toolButtons;
+      m_toolButtons[0].AbstractToolButton::SetActivated(true);
     }
 
     void SetPrimaryElement(const Element<CC>* element)

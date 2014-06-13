@@ -248,6 +248,13 @@ namespace MFM {
       Write(idx, 1, 0);
     }
 
+    /**
+     * Reads a single bit at a specified index from this BitVector.
+     *
+     * @param idx The index of the bit to read.
+     *
+     * @returns \c 1 if this bit is set, else \c 0 .
+     */
     bool ReadBit(const u32 idx) const {
       return Read(idx, 1) != 0;
     }
