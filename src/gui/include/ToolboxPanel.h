@@ -155,6 +155,8 @@ namespace MFM
 	AbstractButton()
       {
 	this->Panel::SetDimensions(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
+
+	this->Panel::SetBackground(Drawing::GREY80);
       }
 
       void SetElement(const Element<CC>* element)
@@ -169,12 +171,12 @@ namespace MFM
 
       virtual void PaintComponent(Drawing& d)
       {
-	u32 oldC = d.GetForeground();
+	d.SetForeground(this->Panel::GetBackground());
+	d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
 	d.SetForeground(m_element->DefaultPhysicsColor());
 	d.FillCircle(0, 0,
 		     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE,
 		     ELEMENT_RENDER_SIZE >> 1);
-	d.SetForeground(oldC);
       }
 
       const Element<CC>* GetElement()
@@ -185,6 +187,12 @@ namespace MFM
       virtual void OnClick()
       {
 	m_parent->SetPrimaryElement(m_element);
+	m_parent->SelectElementButton(this);
+      }
+
+      void SetActivated(bool activated)
+      {
+	SetBackground(activated ? Drawing::GREY40 : Drawing::GREY80);
       }
 
     private:
@@ -196,6 +204,8 @@ namespace MFM
     EditingTool* m_toolPtr;
 
     AbstractToolButton* m_activatedButton;
+
+    ElementButton* m_selectedElementButton;
 
     const Element<CC>* m_primaryElement;
 
@@ -217,6 +227,7 @@ namespace MFM
       m_brushButton(toolPtr),
       m_toolPtr(toolPtr),
       m_activatedButton(&m_selectorButton),
+      m_selectedElementButton(NULL),
       m_primaryElement(NULL),
       m_secondaryElement(NULL),
       m_heldElementCount(0)
@@ -313,6 +324,19 @@ namespace MFM
     void SetSecondaryElement(const Element<CC>* element)
     { m_secondaryElement = element; }
 
+    const Element<CC>* GetSecondaryElement()
+    { return m_secondaryElement; }
+
+    void SelectElementButton(ElementButton* button)
+    {
+      if(m_selectedElementButton)
+      {
+	m_selectedElementButton->SetActivated(false);
+      }
+      m_selectedElementButton = button;
+      button->SetActivated(true);
+    }
+
     void RegisterElement(const Element<CC>* element)
     {
       if(m_heldElementCount >= ELEMENT_BOX_SIZE)
@@ -322,12 +346,12 @@ namespace MFM
       m_heldElements[m_heldElementCount++] = element;
     }
 
-    const Element<CC>* GetSecondaryElement()
-    { return m_secondaryElement; }
-
     void ActivateButton(AbstractToolButton* button)
     {
-      m_activatedButton->SetActivated(false);
+      if(m_activatedButton)
+      {
+	m_activatedButton->SetActivated(false);
+      }
       m_activatedButton = button;
       button->SetActivated(true);
     }

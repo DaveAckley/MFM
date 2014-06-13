@@ -174,7 +174,11 @@ namespace MFM {
 		m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
 		m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
-      PaintMapper(button, clickPt, false, atom, true);
+      /* Filling empty results in stack overflow for obvious reasons */
+      if(!Atom<CC>::IsType(atom, Element_Empty<CC>::TYPE()))
+      {
+	PaintMapper(button, clickPt, false, atom, true);
+      }
     }
 
     void PaintMapper(u8 button, SPoint clickPt, bool brush, T atom, bool bucket)
