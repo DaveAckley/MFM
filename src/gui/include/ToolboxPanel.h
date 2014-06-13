@@ -52,7 +52,7 @@ namespace MFM
      * An abstract class representing a Button for selecting a
      * particular EditingTool.
      */
-    class AbstractToolButton : public AbstractButton
+    class ToolButton : public AbstractButton
     {
     protected:
       EditingTool* m_toolboxTool;
@@ -64,13 +64,13 @@ namespace MFM
     public:
 
       /**
-       * Construct a new AbstractToolButton, pointing at a specified
+       * Construct a new ToolButton, pointing at a specified
        * EditingTool location.
        *
        * @param toolboxTool An EditingTool pointer, the contents of
        * which should be modified upon clicking this Button.
        */
-      AbstractToolButton() :
+      ToolButton() :
 	AbstractButton()
       {
 	this->Panel::SetBackground(Drawing::GREY80);
@@ -89,8 +89,8 @@ namespace MFM
 
       /**
        * Sets the ToolboxPanel which owns this
-       * AbstractToolButton. This is required before clicking any
-       * AbstractToolButton.
+       * ToolButton. This is required before clicking any
+       * ToolButton.
        */
       void SetParent(ToolboxPanel<CC>* parent)
       {
@@ -98,11 +98,11 @@ namespace MFM
       }
 
       /**
-       * Sets the icon of this AbstractToolButton to a particular
+       * Sets the icon of this ToolButton to a particular
        * SDL_Surface*, which will be rendered when needed.
        *
        * @param icon The SDL_Surface* which represents this
-       * AbstractToolButton's icon.
+       * ToolButton's icon.
        */
       void SetToolIcon(SDL_Surface* icon)
       {
@@ -111,10 +111,10 @@ namespace MFM
       }
 
       /**
-       * Sets the visual properties of this AbstractToolButton to
+       * Sets the visual properties of this ToolButton to
        * appear that it is activated or deactivated.
        *
-       * @param activated If \c true, this AbstractToolButton will
+       * @param activated If \c true, this ToolButton will
        *                  appear active. If not, it will appear
        *                  disabled.
        */
@@ -191,9 +191,9 @@ namespace MFM
 
     EditingTool* m_toolPtr;
 
-    AbstractToolButton* m_activatedButton;
+    ToolButton* m_activatedButton;
 
-    AbstractToolButton m_toolButtons[ELEMENT_BOX_BUTTON_COUNT];
+    ToolButton m_toolButtons[ELEMENT_BOX_BUTTON_COUNT];
 
     const Element<CC>* m_primaryElement;
 
@@ -299,7 +299,7 @@ namespace MFM
       this->Panel::SetDimensions(currentDimensions.GetX(), currentDimensions.GetY());
 
       m_activatedButton = m_toolButtons;
-      m_toolButtons[0].AbstractToolButton::SetActivated(true);
+      m_toolButtons[0].ToolButton::SetActivated(true);
     }
 
     void SetPrimaryElement(const Element<CC>* element)
@@ -323,7 +323,7 @@ namespace MFM
       m_heldElements[m_heldElementCount++] = element;
     }
 
-    void ActivateButton(AbstractToolButton* button)
+    void ActivateButton(ToolButton* button)
     {
       if(m_activatedButton)
       {
