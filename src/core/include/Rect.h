@@ -52,6 +52,10 @@ namespace MFM
       : m_position(pos), m_size(size)
     { }
 
+    Rect(s32 x, s32 y, u32 w, u32 h)
+      : m_position(x, y), m_size(w, h)
+    { }
+
     void IntersectWith(const Rect & other) ;
 
     bool IsEmpty() const

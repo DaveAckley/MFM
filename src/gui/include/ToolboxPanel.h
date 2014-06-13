@@ -217,6 +217,8 @@ namespace MFM
 
     u32 m_heldElementCount;
 
+    s32 m_selectedElementDrawY;
+
   public:
 
     ToolboxPanel(EditingTool* toolPtr) :
@@ -230,7 +232,8 @@ namespace MFM
       m_selectedElementButton(NULL),
       m_primaryElement(NULL),
       m_secondaryElement(NULL),
-      m_heldElementCount(0)
+      m_heldElementCount(0),
+      m_selectedElementDrawY(0)
     { }
 
     void AddButtons()
@@ -280,7 +283,8 @@ namespace MFM
       }
     toolboxpanel_addbuttons_toolbuttons_loopend:
 
-      SPoint currentDimensions(5 + 2 * 37, 5 + (y + ((x & 1) ? 1 : 0)) * 37);
+      SPoint currentDimensions(5 + 2 * 37,
+			       5 + (y + ((x & 1) ? 1 : 0)) * 37 + 2 * ELEMENT_RENDER_SIZE);
 
       for(y = 0; y < ELEMENT_BOX_HEIGHT; y++)
       {
@@ -304,7 +308,12 @@ namespace MFM
 
     toolboxpanel_addbuttons_elemenbuttons_loopend:
 
-      currentDimensions.Add(0, ELEMENT_RENDER_SIZE + 16);
+      m_selectedElementDrawY = currentDimensions.GetY() - 2 * ELEMENT_RENDER_SIZE;
+
+      m_primaryElement   = m_heldElements[0];
+      m_secondaryElement = m_heldElements[1];
+
+      currentDimensions.Add(0, y * ELEMENT_RENDER_SIZE + 32);
 
       /* Set up the correct dimensions. X is always constant, as there
        * will (hopefully) always be two tools. Y is more complicated,
@@ -365,6 +374,19 @@ namespace MFM
     {
       /* Try to keep the grid from taking this event too */
       return true;
+    }
+
+    virtual void PaintComponent(Drawing& d)
+    {
+      d.SetForeground(this->Panel::GetBackground());
+      d.FillRect(0, 0, this->Panel::GetWidth(), this->Panel::GetHeight());
+
+      d.SetForeground(m_primaryElement->DefaultPhysicsColor());
+      d.FillCircle(10 + ELEMENT_RENDER_SIZE, m_selectedElementDrawY, ELEMENT_RENDER_SIZE,
+		   ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
+      d.SetForeground(m_secondaryElement->DefaultPhysicsColor());
+      d.FillCircle(10 + 2 * ELEMENT_RENDER_SIZE, m_selectedElementDrawY,
+		   ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
     }
   };
 }
