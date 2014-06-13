@@ -72,6 +72,4 @@ namespace MFM {
   };
 } /* namespace MFM */
 
-#include "BitField.tcc"
-
 #endif /*BITFIELD_H*/
