@@ -89,7 +89,7 @@ namespace MFM
 	AbstractToolButton(toolboxTool)
       { }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
 	*(this->AbstractToolButton::m_toolboxTool) = TOOL_SELECTOR;
 	(this->AbstractToolButton::m_parent)->ActivateButton(this);
@@ -102,7 +102,7 @@ namespace MFM
 	AbstractToolButton(toolboxTool)
       { }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
 	*(this->AbstractToolButton::m_toolboxTool) = TOOL_PENCIL;
 	(this->AbstractToolButton::m_parent)->ActivateButton(this);
@@ -115,7 +115,7 @@ namespace MFM
 	AbstractToolButton(toolboxTool)
       { }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
 	*(this->AbstractToolButton::m_toolboxTool) = TOOL_BUCKET;
 	(this->AbstractToolButton::m_parent)->ActivateButton(this);
@@ -128,7 +128,7 @@ namespace MFM
 	AbstractToolButton(toolboxTool)
       { }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
 	*(this->AbstractToolButton::m_toolboxTool) = TOOL_ERASER;
 	(this->AbstractToolButton::m_parent)->ActivateButton(this);
@@ -142,7 +142,7 @@ namespace MFM
 	AbstractToolButton(toolboxTool)
       { }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
 	*(this->AbstractToolButton::m_toolboxTool) = TOOL_BRUSH;
 	(this->AbstractToolButton::m_parent)->ActivateButton(this);
@@ -184,15 +184,16 @@ namespace MFM
 	return m_element;
       }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
-	m_parent->SetPrimaryElement(m_element);
-	m_parent->SelectElementButton(this);
-      }
-
-      void SetActivated(bool activated)
-      {
-	SetBackground(activated ? Drawing::GREY40 : Drawing::GREY80);
+	if(button == SDL_BUTTON_LEFT)
+	{
+	  m_parent->SetPrimaryElement(m_element);
+	}
+	else
+	{
+	  m_parent->SetSecondaryElement(m_element);
+	}
       }
 
     private:
@@ -204,8 +205,6 @@ namespace MFM
     EditingTool* m_toolPtr;
 
     AbstractToolButton* m_activatedButton;
-
-    ElementButton* m_selectedElementButton;
 
     const Element<CC>* m_primaryElement;
 
@@ -229,7 +228,6 @@ namespace MFM
       m_brushButton(toolPtr),
       m_toolPtr(toolPtr),
       m_activatedButton(&m_selectorButton),
-      m_selectedElementButton(NULL),
       m_primaryElement(NULL),
       m_secondaryElement(NULL),
       m_heldElementCount(0),
@@ -335,16 +333,6 @@ namespace MFM
 
     const Element<CC>* GetSecondaryElement()
     { return m_secondaryElement; }
-
-    void SelectElementButton(ElementButton* button)
-    {
-      if(m_selectedElementButton)
-      {
-	m_selectedElementButton->SetActivated(false);
-      }
-      m_selectedElementButton = button;
-      button->SetActivated(true);
-    }
 
     void RegisterElement(const Element<CC>* element)
     {

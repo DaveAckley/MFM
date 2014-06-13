@@ -100,7 +100,7 @@ namespace MFM
     virtual bool Handle(MouseButtonEvent & event)
     {
       if (IsEnabled() && event.m_event.type == SDL_MOUSEBUTTONUP) {
-        OnClick();
+        OnClick(event.m_event.button.button);
         return true;
       }
       return false;
@@ -113,7 +113,7 @@ namespace MFM
 
     virtual void PaintComponent(Drawing & config) ;
 
-    virtual void OnClick() = 0;
+    virtual void OnClick(u8 button) = 0;
 
     ~AbstractButton();
 

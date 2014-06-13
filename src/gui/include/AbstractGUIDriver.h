@@ -153,7 +153,7 @@ namespace MFM {
         AbstractButton::SetRenderPoint(SPoint(2, 300));
       }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
         OurGrid & grid = AbstractGridButton::m_driver->GetGrid();
         GridRenderer & grend = AbstractGridButton::m_driver->GetGridRenderer();
@@ -176,7 +176,7 @@ namespace MFM {
         AbstractButton::SetRenderPoint(SPoint(2,0));
       }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
 	const SPoint selTile =
           AbstractGridButton::m_driver->GetGridRenderer().GetSelectedTile();
@@ -200,7 +200,7 @@ namespace MFM {
         AbstractButton::SetRenderPoint(SPoint(2, 50));
       }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
         AbstractGridButton::m_driver->GetGrid().RandomNuke();
       }
@@ -215,7 +215,7 @@ namespace MFM {
         AbstractButton::SetRenderPoint(SPoint(2, 100));
       }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
 	AbstractGridButton::m_driver->GetGrid().XRay();
       }
@@ -230,7 +230,7 @@ namespace MFM {
         AbstractButton::SetRenderPoint(SPoint(2, 150));
       }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
 	AbstractGridButton::m_driver->GetGridRenderer().ToggleGrid();
       }
@@ -245,7 +245,7 @@ namespace MFM {
         AbstractButton::SetRenderPoint(SPoint(2, 200));
       }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
 	AbstractGridButton::m_driver->GetGridRenderer().ToggleDataHeatmap();
       }
@@ -260,7 +260,7 @@ namespace MFM {
         AbstractButton::SetRenderPoint(SPoint(2, 250));
       }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
 	AbstractGridButton::m_driver->GetGridRenderer().ToggleMemDraw();
       }
@@ -275,7 +275,7 @@ namespace MFM {
         AbstractButton::SetRenderPoint(SPoint(2, 350));
       }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
         //        AbstractGridButton::m_driver->RequestReinit();
         printf("RESET NYI\n");
@@ -291,7 +291,7 @@ namespace MFM {
         AbstractButton::SetRenderPoint(SPoint(2, 400));
       }
 
-      virtual void OnClick()
+      virtual void OnClick(u8 button)
       {
         exit(0);
       }

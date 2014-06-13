@@ -187,33 +187,6 @@ namespace MFM {
       m_buttons[m_registeredButtons++] = b;
     }
 
-    void HandleClick(SPoint& clickPt)
-    {
-      for(u32 i = 0; i < m_registeredButtons; i++)
-      {
-	if(m_buttons[i]->Contains(clickPt))
-	{
-	  m_buttons[i]->OnClick();
-	  break;
-	}
-      }
-    }
-
-    /*
-    void translateHome(char* buffer)
-    {
-      if(*buffer == '~')
-      {
-        const u32 SIZE = 1024;
-	char trans[SIZE];
-	sprintf(trans, "%s%s",
-		getenv("HOME"),
-		buffer + 1);
-	sprintf(buffer, "%s", trans);
-      }
-    }
-    */
-
     void OnceOnly(Fonts & fonts) {
       m_drawFont = fonts.GetDefaultFont(30);
     }

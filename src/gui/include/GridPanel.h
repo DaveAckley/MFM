@@ -183,17 +183,11 @@ namespace MFM {
 
     void PaintMapper(u8 button, SPoint clickPt, bool brush, T atom, bool bucket)
     {
-      /* TODO Maybe be able to select two types of atoms? Like in most
-       * image editors, right click allows painting of a different
-       * color.*/
-      if(button == SDL_BUTTON_LEFT)
-      {
-	SPoint pt = GetAbsoluteLocation();
-	pt.Set(clickPt.GetX() - pt.GetX(),
-	       clickPt.GetY() - pt.GetY());
+      SPoint pt = GetAbsoluteLocation();
+      pt.Set(clickPt.GetX() - pt.GetX(),
+	     clickPt.GetY() - pt.GetY());
 
-	PaintAtom(*m_mainGrid, pt, brush, atom, bucket);
-      }
+      PaintAtom(*m_mainGrid, pt, brush, atom, bucket);
     }
 
     void PaintAtom(Grid<GC>& grid, SPoint& clickPt, bool brush, T& atom, bool bucket)
@@ -338,23 +332,36 @@ namespace MFM {
 	  m_grend->SetDrawOrigin(m_leftButtonGridStart+delta);
 	}
       }
-      else if(mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT))
+      else
       {
-	switch(mbe.m_selectedTool)
+	u8 mask = 0;
+	if(mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT))
 	{
-	case TOOL_PENCIL:
-	  HandlePencilTool(SDL_BUTTON_LEFT, SPoint(event.x, event.y));
-	  break;
-	case TOOL_ERASER:
-	  HandleEraserTool(SDL_BUTTON_LEFT, SPoint(event.x, event.y));
-	  break;
-	case TOOL_BRUSH:
-	  HandleBrushTool(SDL_BUTTON_LEFT, SPoint(event.x, event.y));
-	  break;
+	  mask = SDL_BUTTON_LEFT;
+	}
+	else if(mbe.m_buttonMask & (1 << SDL_BUTTON_RIGHT))
+	{
+	  mask = SDL_BUTTON_RIGHT;
+	}
 
-	default:
-	  /* Some tools don't need to do this */
-	  break;
+	if(mask)
+	{
+	  switch(mbe.m_selectedTool)
+	  {
+	  case TOOL_PENCIL:
+	    HandlePencilTool(mask, SPoint(event.x, event.y));
+	    break;
+	  case TOOL_ERASER:
+	    HandleEraserTool(mask, SPoint(event.x, event.y));
+	    break;
+	  case TOOL_BRUSH:
+	    HandleBrushTool(mask, SPoint(event.x, event.y));
+	    break;
+
+	  default:
+	    /* Some tools don't need to do this */
+	    break;
+	  }
 	}
       }
       return false;
