@@ -49,8 +49,8 @@ namespace MFM
   private:
 
     /**
-     * An abstract class representing a Button for selecting a
-     * particular EditingTool.
+     * A class representing a Button for selecting a particular
+     * EditingTool.
      */
     class ToolButton : public AbstractButton
     {
@@ -125,7 +125,7 @@ namespace MFM
 
       /**
        * This hook is invoked when a user clicks on this button,
-       * therefore setting the active tool of this AbstracToolButton.
+       * therefore setting the active tool of this ToolButton.
        *
        * @param button The button on the mouse that was pressed.
        */
