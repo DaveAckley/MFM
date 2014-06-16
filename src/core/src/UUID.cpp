@@ -4,13 +4,6 @@
 #include <string.h>    /* For strcmp, strncpy */
 
 namespace MFM {
-  UUID::UUID(const char * label, const u32 apiVersion, const u32 decDate, const u32 decTime)
-    : m_apiVersion(apiVersion), m_hexDate(decDate), m_hexTime(decTime)
-  {
-    if (!label)
-      FAIL(NULL_POINTER);
-    strncpy(m_label, label, MAX_LABEL_LENGTH + 1);
-  }
 
   UUID::UUID(ByteSource & bs)
   {
@@ -23,9 +16,16 @@ namespace MFM {
     return strcmp(m_label, other.m_label)==0;
   }
 
+  bool UUID::CompatibleConfigurationCode(const UUID & other) const
+  {
+    return m_configurationCode == other.m_configurationCode;
+  }
+
   bool UUID::CompatibleAPIVersion(const UUID & other) const
   {
-    return CompatibleLabel(other) && m_apiVersion == other.m_apiVersion;
+    return CompatibleLabel(other)
+      && CompatibleConfigurationCode(other)
+      && m_apiVersion == other.m_apiVersion;
   }
 
   bool UUID::CompatibleButStrictlyNewer(const UUID & other) const
@@ -52,8 +52,9 @@ namespace MFM {
     u32 len = strlen(m_label);
     bs.Print(len, Format::LEXHD);
     bs.Print(m_label);
-    bs.Printf("%D%08X%06X",
+    bs.Printf("%D%X%08X%06X",
               m_apiVersion,
+              m_configurationCode,
               m_hexDate,
               m_hexTime);
   }
@@ -63,6 +64,7 @@ namespace MFM {
     // Read everything before changing anything..
     CharBufferByteSink<UUID::MAX_LABEL_LENGTH> cbbs;
     u32 apiversion = 0;
+    u32 configurationCode = 0;
     u32 hexdate = 0;
     u32 hextime = 0;
 
@@ -70,11 +72,13 @@ namespace MFM {
     if (!bs.Scan(hdlen, Format::LEXHD)) return false;
     if (!bs.Scan(cbbs, hdlen)) return false;
     if (!bs.Scan(apiversion, Format::LEX32)) return false;
+    if (!bs.Scan(configurationCode, Format::LXX32)) return false;
     if (!bs.Scan(hexdate, Format::LXX32)) return false;
     if (!bs.Scan(hextime, Format::LXX32)) return false;
 
     strncpy(m_label, cbbs.GetZString(), MAX_LABEL_LENGTH + 1);
     m_apiVersion = apiversion;
+    m_configurationCode = configurationCode;
     m_hexDate = hexdate;
     m_hexTime = hextime;
     return true;

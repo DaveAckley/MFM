@@ -33,7 +33,7 @@
 #include "ByteSerializable.h"
 #include <string.h>    /* For strlen, strncpy */
 
-#define MFM_UUID_FOR(label, apiVersion) UUID(label,apiVersion,MFM_BUILD_DATE,MFM_BUILD_TIME)
+#define MFM_UUID_FOR(label, apiVersion) UUID(label,(u32) apiVersion, (u32) MFM_BUILD_DATE, (u32) MFM_BUILD_TIME, UUID::ComputeConfigurationCode<CC>())
 
 namespace MFM {
 
@@ -41,12 +41,32 @@ namespace MFM {
   public:
     static const u32 MAX_LABEL_LENGTH = 63;
 
-    UUID() : m_apiVersion(0), m_hexDate(0), m_hexTime(0)
+    UUID() : m_configurationCode(0), m_apiVersion(0), m_hexDate(0), m_hexTime(0)
     {
       m_label[0] = '\0';
     }
 
-    UUID(const char * label, const u32 apiVersion, const u32 hexDate, const u32 hexTime) ;
+    template <class CC>
+    static u32 ComputeConfigurationCode() {
+      u32 val = 0;
+      val = (val<<4) + CC::ATOM_TYPE::ATOM_CATEGORY;
+      val = (val<<4) + CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS;
+      val = (val<<4) + CC::PARAM_CONFIG::ELEMENT_TABLE_BITS;
+      val = (val<<4) + CC::PARAM_CONFIG::ELEMENT_DATA_SLOTS;
+      val = (val<<8) + CC::PARAM_CONFIG::TILE_WIDTH;
+      val = (val<<8) + CC::PARAM_CONFIG::BITS_PER_ATOM;
+      return val;
+    }
+
+    UUID(const char * label, const u32 apiVersion, const u32 decDate, const u32 decTime, const u32 configCode)
+      : m_configurationCode(configCode),
+        m_apiVersion(apiVersion),
+        m_hexDate(decDate), m_hexTime(decTime)
+    {
+      if (!label)
+        FAIL(NULL_POINTER);
+      strncpy(m_label, label, MAX_LABEL_LENGTH + 1);
+    }
 
     UUID(ByteSource & bs) ;
 
@@ -54,7 +74,9 @@ namespace MFM {
     u32 GetVersion() const { return m_apiVersion; }
     u32 GetHexDate() const { return m_hexDate; }
     u32 GetHexTime() const { return m_hexTime; }
+    u32 GetConfigurationCode() const { return m_configurationCode; }
 
+    bool CompatibleConfigurationCode(const UUID & other) const ;
     bool CompatibleLabel(const UUID & other) const ;
     bool CompatibleAPIVersion(const UUID & other) const ;
     bool CompatibleButStrictlyNewer(const UUID & other) const ;
@@ -89,9 +111,11 @@ namespace MFM {
     virtual ~UUID() { }
 
   private:
+
     s32 CompareDateOnly(const UUID & other) const ;
 
     char m_label[MAX_LABEL_LENGTH + 1];
+    u32 m_configurationCode;
     u32 m_apiVersion;
     u32 m_hexDate;
     u32 m_hexTime;

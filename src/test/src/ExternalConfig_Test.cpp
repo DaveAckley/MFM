@@ -15,7 +15,7 @@ namespace MFM
     ExternalConfig<TestGridConfig> cfg(grid);
     RegisterExternalConfigFunctions<TestGridConfig>(cfg);
 
-    ZStringByteSource zbs("RegisterElement(4Dreg118201406116113117, d)\n"
+    ZStringByteSource zbs("RegisterElement(4Dreg118148428408201406116113117, d)\n"
                           "GA(d,30,31)\n"
                           "GA(d,31,32)\n"
                           "SetParameter(DregResRatio,10)\n");
