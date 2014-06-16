@@ -49,6 +49,8 @@ namespace MFM {
   template <class PC>
   class P1Atom : public Atom< CoreConfig< P1Atom<PC>, PC> >
   {
+  public: enum { ATOM_CATEGORY = 1 };
+  private:
 
     enum {
       BITS = 64,

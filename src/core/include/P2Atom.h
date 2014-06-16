@@ -45,6 +45,7 @@ namespace MFM {
 
   class P2Atom
   {
+  public: enum { ATOM_CATEGORY = 2 };
   private:
     BitVector<P2ATOM_SIZE> m_bits;
 
