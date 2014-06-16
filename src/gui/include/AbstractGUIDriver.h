@@ -805,7 +805,7 @@ namespace MFM {
 
     }m_buttonPanel;
 
-    TextPanel<80,100> m_logPanel;
+    TextPanel<100,100> m_logPanel;
     TeeByteSink m_logSplitter;
 
     void SetScreenSize(u32 width, u32 height) {
