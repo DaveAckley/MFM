@@ -38,6 +38,9 @@
 
 namespace MFM {
 
+  /**
+   * A two-dimensional grid of simulated Tiles.
+   */
   template <class GC>
   class Grid
   {
@@ -88,6 +91,9 @@ namespace MFM {
       LOG.Message("Assigned type 0x%04x for %@",anElement.GetType(),&anElement.GetUUID());
     }
 
+    /**
+     * A minimal iterator over the Tiles of a grid.  Access via Grid::begin().
+     */
     template <typename PointerType> class MyIterator {
       Grid & g;
       s32 i;

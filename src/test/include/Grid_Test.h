@@ -8,10 +8,13 @@
 
 namespace MFM {
 
-class Grid_Test
-{
-public:
-  static void Test_gridPlaceAtom();
-};
+  /**
+   * Tests for the Grid class
+   */
+  class Grid_Test
+  {
+  public:
+    static void Test_gridPlaceAtom();
+  };
 } /* namespace MFM */
 #endif /*GRID_TEST_H*/

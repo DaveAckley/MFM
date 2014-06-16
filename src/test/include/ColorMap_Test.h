@@ -5,6 +5,9 @@
 
 namespace MFM {
 
+  /**
+   * Tests of ColorMap
+   */
   class ColorMap_Test
   {
   private:

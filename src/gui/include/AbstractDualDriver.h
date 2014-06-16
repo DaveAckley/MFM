@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  DualDriver.h Compilation switch for GUI enabling
+  AbstractDualDriver.h Compilation switch for GUI enabling
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 */
 
 /**
-  \file DualDriver.h Compilation switch for GUI enabling
+  \file AbstractDualDriver.h Compilation switch for GUI enabling
   \author Trent R. Small.
   \date (C) 2014 All rights reserved.
   \lgpl

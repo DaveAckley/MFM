@@ -39,6 +39,11 @@ namespace MFM {
   template <class CC>
   class Tile;
 
+  /**
+   * An EventWindow provides access for an Element to a selected
+   * portion of the sites of a Tile to enable the Element::behavior()
+   * method to compute a state transition.
+   */
   template <class CC>
   class EventWindow
   {

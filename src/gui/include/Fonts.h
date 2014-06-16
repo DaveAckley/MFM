@@ -34,6 +34,9 @@
 
 namespace MFM
 {
+  /**
+   * A SDL_Font loading and caching class.
+   */
   class Fonts
   {
   private:

@@ -60,6 +60,10 @@ namespace MFM {
     LOCKTYPE_COUNT
   }LockType;
 
+  /**
+   * The representation of a single indefinitely scalable hardware
+   * tile (whether real or simulated).
+   */
   template <class CC>
   class Tile
   {

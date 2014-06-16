@@ -33,6 +33,10 @@
 
 namespace MFM
 {
+  /**
+   * A ByteSink that wraps a stdio.h FILE * pointer for disk file
+   * output.
+   */
   class FileByteSink : public ByteSink {
     FILE * m_file;
   public:

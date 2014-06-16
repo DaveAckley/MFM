@@ -5,6 +5,9 @@
 
 namespace MFM {
 
+  /**
+   * Tests for the ByteSink interface
+   */
   class ByteSink_Test
   {
   private:

@@ -40,6 +40,9 @@
 
 namespace MFM {
 
+  /**
+   * A template class for displaying the Grid in a Panel.
+   */
   template <class GC>
   class GridPanel : public Panel
   {

@@ -37,6 +37,10 @@
 
 namespace MFM {
 
+  /**
+   * A class representing a 'Universal Unique ID' for an Element.  A
+   * UUID is meant to be a 'fingerprint' of an Element.
+   */
   class UUID : public ByteSerializable {
   public:
     static const u32 MAX_LABEL_LENGTH = 63;
