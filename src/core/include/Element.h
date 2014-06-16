@@ -39,7 +39,7 @@ namespace MFM
 {
   typedef u32 ElementType;
 
-  template <class C> class Atom; // Forward declaration
+  template <class CC> class Atom; // Forward declaration
 
   template <class CC>
   class Element

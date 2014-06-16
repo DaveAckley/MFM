@@ -32,8 +32,8 @@
 namespace MFM {
 
   /**
-   * A template class used to hold all compile-time parameters for an
-   * MFM core, except the type of the Atom.
+   * A template class used to hold all compile-time parameters needed
+   * for compilations in the MFM core.
    */
   template <class A,  // An Atom type
             class P>  // A ParamConfig
