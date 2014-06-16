@@ -20,7 +20,7 @@ include $(BASEDIR)/config/Makeprog.mk
 LDFLAGS += -rdynamic
 
 # Add dependency to make the plugin
-$(BINDIR)/$(COMPONENTNAME):	$(BINDIR)/Element_QBar-Plugin.so
+$(BINDIR)/$(COMPONENTNAME):	$(BINDIR)/Element_MQBar-Plugin.so
 
-$(BINDIR)/Element_QBar-Plugin.so:	src/Element_MQBar.cpp include/Element_MQBar.h
+$(BINDIR)/Element_MQBar-Plugin.so:	src/Element_MQBar.cpp include/Element_MQBar.h include/LocalConfig.h
 	$(GPP) -shared -fPIC -DELEMENT_PLUG_IN $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -o"$@" "$<"

@@ -82,16 +82,6 @@ namespace MFM
      */
     enum { R = P::EVENT_WINDOW_RADIUS };
 
-    /**
-       The width of every tile, in sites.
-     */
-    enum { W = P::TILE_WIDTH };
-
-    /**
-       The number of bits required to represent an Element Table.
-     */
-    enum { B = P::ELEMENT_TABLE_BITS };
-
   protected:
     /**
        The state of this Atom, in its entirety. All fields of this

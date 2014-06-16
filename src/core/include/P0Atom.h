@@ -45,8 +45,10 @@ namespace MFM {
   template <class PC>
   class P0Atom : public Atom< CoreConfig< P0Atom<PC>, PC> >
   {
-    typedef CoreConfig< P0Atom<PC>, PC> CC;
+  public: enum { ATOM_CATEGORY = 0 };
+  private:
 
+    typedef CoreConfig< P0Atom<PC>, PC> CC;
     enum {
       BITS = 64,
       // For now we insist on exact match.  Possibly longer could be

@@ -43,6 +43,8 @@ namespace MFM {
   template <class PC>
   class P3Atom : public Atom< CoreConfig< P3Atom<PC>, PC> >
   {
+  public: enum { ATOM_CATEGORY = 3 };
+  private:
     typedef CoreConfig< P3Atom<PC>, PC> CC;
 
   public:

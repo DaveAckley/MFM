@@ -4,6 +4,7 @@
 #include "Element_SBar.h"
 #include "Element_DBar.h"
 #include "Element_Mover.h"
+#include "Element_Wall.h"
 #include "LocalConfig.h"
 #include <dlfcn.h>          /* For dlopen etc */
 
@@ -12,7 +13,7 @@ extern "C" typedef void * (*MFM_Element_Plugin_Get_Static_Pointer)();
 namespace MFM {
 
   typedef GridConfig<OurCoreConfig,3,2> OurSmallGridConfig;
-  typedef GridConfig<OurCoreConfig,6,5> OurBigGridConfig;
+  typedef GridConfig<OurCoreConfig,4,3> OurBigGridConfig;
   //  typedef GridConfig<OurCoreConfig,5,3> OurBigGridConfig;
   typedef OurBigGridConfig OurGridConfig;
 
@@ -47,6 +48,7 @@ namespace MFM {
       mainGrid.Needed(Element_Empty<OurCoreConfig>::THE_INSTANCE);
       mainGrid.Needed(Element_Dreg<OurCoreConfig>::THE_INSTANCE);
       mainGrid.Needed(Element_Res<OurCoreConfig>::THE_INSTANCE);
+      mainGrid.Needed(Element_Wall<OurCoreConfig>::THE_INSTANCE);
       if (!m_qbarInstance)
         FAIL(ILLEGAL_STATE);
       mainGrid.Needed(*m_qbarInstance);
@@ -68,11 +70,19 @@ namespace MFM {
       srend.DisplayStatsForElement(mainGrid,Element_Empty<OurCoreConfig>::THE_INSTANCE);
       srend.DisplayStatsForElement(mainGrid,Element_Dreg<OurCoreConfig>::THE_INSTANCE);
       srend.DisplayStatsForElement(mainGrid,Element_Res<OurCoreConfig>::THE_INSTANCE);
+      srend.DisplayStatsForElement(mainGrid,Element_Wall<OurCoreConfig>::THE_INSTANCE);
       if (!m_qbarInstance)
         FAIL(ILLEGAL_STATE);
       srend.DisplayStatsForElement(mainGrid,*m_qbarInstance);
       if (addMover)
         srend.DisplayStatsForElement(mainGrid,Element_Mover<OurCoreConfig>::THE_INSTANCE);
+
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Empty<OurCoreConfig>::THE_INSTANCE);
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
+      AbstractGUIDriver::RegisterToolboxElement(&Element_SBar<OurCoreConfig>::THE_INSTANCE);
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Wall<OurCoreConfig>::THE_INSTANCE);
+      AbstractGUIDriver::RegisterToolboxElement(m_qbarInstance);
 
       const SPoint QBAR_SIZE(27,3*27);
       SPoint center = QBAR_SIZE/4;
@@ -106,7 +116,7 @@ namespace MFM {
           aloc.Set(x,y);
           SPoint tloc(aloc);
           tloc.Subtract(seedAtomPlace);
-          if (tloc.GetMaximumLength() < 12)
+          if (tloc.GetMaximumLength() < 12 && tloc.GetMaximumLength() > 4)
             if (Element_Empty<OurCoreConfig>::IsType(mainGrid.GetAtom(aloc)->GetType()))
               mainGrid.PlaceAtom(aDReg, aloc);
 
@@ -125,7 +135,7 @@ namespace MFM {
     Element<OurCoreConfig> * m_qbarInstance;
 
     void LoadPlugin() {
-      const char * path = "./bin/Element_QBar-Plugin.so";
+      const char * path = "./bin/Element_MQBar-Plugin.so";
 
       // Load lib
       void* dllib = dlopen(path, RTLD_LAZY);
@@ -202,6 +212,7 @@ namespace MFM {
       srend.DisplayStatsForElement(mainGrid,Element_Res<OurCoreConfig>::THE_INSTANCE);
       srend.DisplayStatsForElement(mainGrid,Element_SBar<OurCoreConfig>::THE_INSTANCE);
       srend.DisplayStatsForElement(mainGrid,Element_DBar<OurCoreConfig>::THE_INSTANCE);
+
       //      srend.DisplayStatsForType(Element_Mover<OurCoreConfig>::TYPE);
 
       const SPoint SD_BAR_SIZE(21,55);
