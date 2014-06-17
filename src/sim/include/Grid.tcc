@@ -118,6 +118,21 @@ namespace MFM {
   }
 
   template <class GC>
+  void Grid<GC>::SaveState(const char* filename) const
+  {
+    FAIL(INCOMPLETE_CODE);
+    /*
+    ExternalConfig cfg(*this);
+    FILE* fp = fopen(filename, "w");
+    FileByteSink fs(fp);
+
+    cfg.Write();
+
+    fs.Close();
+    */
+  }
+
+  template <class GC>
   bool Grid<GC>::MapGridToTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const
   {
     SPoint myTile, mySite;

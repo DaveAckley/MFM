@@ -266,13 +266,29 @@ namespace MFM {
       }
     } m_tileViewButton;
 
+    struct SaveButton : public AbstractGridButton
+    {
+      SaveButton() : AbstractGridButton("Save State")
+      {
+	AbstractButton::SetName("SaveButton");
+	Panel::SetDimensions(200, 40);
+	AbstractButton::SetRenderPoint(SPoint(2, 350));
+      }
+
+      virtual void OnClick(u8 button)
+      {
+	AbstractGridButton::m_driver->GetGrid().
+	  SaveState(AbstractGridButton::m_driver->GetSimDirPathTemporary(""));
+      }
+    }m_saveButton;
+
     struct ResetButton : public AbstractGridButton
     {
       ResetButton() : AbstractGridButton("Reset")
       {
 	AbstractButton::SetName("QuitButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 350));
+        AbstractButton::SetRenderPoint(SPoint(2, 450));
       }
 
       virtual void OnClick(u8 button)
@@ -408,6 +424,7 @@ namespace MFM {
       m_gridRenderButton.SetDriver(*this);
       m_heatmapButton.SetDriver(*this);
       m_tileViewButton.SetDriver(*this);
+      m_saveButton.SetDriver(*this);
       m_resetButton.SetDriver(*this);
       m_quitButton.SetDriver(*this);
 
@@ -418,6 +435,7 @@ namespace MFM {
       m_buttonPanel.Insert(&m_gridRenderButton, NULL);
       m_buttonPanel.Insert(&m_heatmapButton, NULL);
       m_buttonPanel.Insert(&m_tileViewButton, NULL);
+      m_buttonPanel.Insert(&m_saveButton, NULL);
       m_buttonPanel.Insert(&m_resetButton, NULL);
       m_buttonPanel.Insert(&m_quitButton, NULL);
 

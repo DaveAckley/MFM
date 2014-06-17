@@ -21,6 +21,7 @@
 /**
   \file FileByteSink.h Byte sink backed by a FILE*
   \author David H. Ackley.
+  \author Trent R. Small.
   \date (C) 2014 All rights reserved.
   \lgpl
  */
@@ -43,13 +44,28 @@ namespace MFM
     }
 
     virtual void WriteBytes(const u8 * data, const u32 len) {
+      if(!m_file)
+      {
+	FAIL(NULL_POINTER);
+      }
       size_t wrote = fwrite(data, 1, len, m_file);
       if (wrote != len)
         FAIL(IO_ERROR);
     }
 
+    /**
+     * Closes the FILE* backed by this FileByteSink. This FileByteSink
+     * will no longer be able to be used after this and will need to
+     * be reconstructed to be used again.
+     */
+    void Close()
+    {
+      fclose(m_file);
+      m_file = NULL;
+    }
+
     virtual s32 CanWrite() {
-      return 1;  // XXX WHAT GOES HERE FFS?
+      return (m_file != NULL) ? 1 : -1; /* Can't write to a closed stream */
     }
   };
 

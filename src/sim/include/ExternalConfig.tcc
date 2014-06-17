@@ -77,6 +77,12 @@ namespace MFM
   }
 
   template<class GC>
+  void Write(ByteSink& byteSink)
+  {
+    FAIL(INCOMPLETE_CODE);
+  }
+
+  template<class GC>
   void ExternalConfig<GC>::RegisterFunction(ConfigFunctionCall<GC> & fc)
   {
     for (u32 i = 0; i < m_registeredFunctionCount; ++i) {

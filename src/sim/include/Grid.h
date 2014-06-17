@@ -175,6 +175,16 @@ namespace MFM {
     bool IsLegalTileIndex(const SPoint & tileInGrid) const;
 
     /**
+     * Saves the current state of this Grid to a file specified by the
+     * given filename. This "GridState" is able to be read back in to
+     * the simulator using the ExternalConfig.Read() method.
+     *
+     * @param filename The name of the file to create or rewrite
+     *                 containing the state of this Grid.
+     */
+    void SaveState(const char* filename) const;
+
+    /**
      * Find the grid coordinate of the 'owning tile' (i.e., ignoring
      * caches) for the give siteInGrid.  Return false if there isn't
      * one, otherwise set tileInGrid and siteInTile appropriately and

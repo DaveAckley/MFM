@@ -184,7 +184,7 @@ namespace MFM
 
       LOG.Message("Writing to simulation directory '%s'", GetSimDirPathTemporary(""));
 
-      const char* (subs[]) = { "", "vid", "eps", "tbd", "teps" };
+      const char* (subs[]) = { "", "vid", "eps", "tbd", "teps", "save" };
       for(u32 i = 0; i < sizeof(subs) / sizeof(subs[0]); i++)
       {
 	const char* path = GetSimDirPathTemporary("%s", subs[i]);
