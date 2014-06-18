@@ -13,7 +13,7 @@ namespace MFM {
 
   bool UUID::CompatibleLabel(const UUID & other) const
   {
-    return strcmp(m_label, other.m_label)==0;
+    return m_label.Equals(other.m_label);
   }
 
   bool UUID::CompatibleConfigurationCode(const UUID & other) const
@@ -49,10 +49,8 @@ namespace MFM {
 
   void UUID::Print(ByteSink & bs) const
   {
-    u32 len = strlen(m_label);
-    bs.Print(len, Format::LEXHD);
-    bs.Print(m_label);
-    bs.Printf("%D%X%08X%06X",
+    bs.Print(GetLabel());
+    bs.Printf("-%D%X%X%X",
               m_apiVersion,
               m_configurationCode,
               m_hexDate,
@@ -62,21 +60,28 @@ namespace MFM {
   bool UUID::Read(ByteSource & bs) {
 
     // Read everything before changing anything..
-    CharBufferByteSink<UUID::MAX_LABEL_LENGTH> cbbs;
+    OString64 cbbs;
     u32 apiversion = 0;
     u32 configurationCode = 0;
     u32 hexdate = 0;
     u32 hextime = 0;
 
-    u32 hdlen = 0;
-    if (!bs.Scan(hdlen, Format::LEXHD)) return false;
-    if (!bs.Scan(cbbs, hdlen)) return false;
+    if (!bs.ScanSet(cbbs, "[^-]"))
+      return false;
+    bs.Scanf("-");
+
+    if (cbbs.HasOverflowed() || !LegalLabel(cbbs.GetZString()))
+      return false;
+
     if (!bs.Scan(apiversion, Format::LEX32)) return false;
     if (!bs.Scan(configurationCode, Format::LXX32)) return false;
     if (!bs.Scan(hexdate, Format::LXX32)) return false;
     if (!bs.Scan(hextime, Format::LXX32)) return false;
 
-    strncpy(m_label, cbbs.GetZString(), MAX_LABEL_LENGTH + 1);
+    m_label.Reset();
+    m_label.Print(cbbs.GetZString());
+    m_label.GetZString();  // null terminate
+
     m_apiVersion = apiversion;
     m_configurationCode = configurationCode;
     m_hexDate = hexdate;
