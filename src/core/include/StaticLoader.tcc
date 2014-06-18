@@ -27,9 +27,9 @@ namespace MFM {
           type |= bits;
         }
       }
-      LOG.Debug("trying 0x%04x\n",type);
+      LOG.Debug("trying 0x%04x",type);
     } while (m_uuids[type] != 0);
-    LOG.Message("taking 0x%04x\n",type);
+    LOG.Message("taking 0x%04x",type);
     return type;
   }
 
