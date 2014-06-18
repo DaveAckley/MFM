@@ -5,9 +5,11 @@
 #include "LocalConfig.h"
 
 extern "C" {
-  void * get_static_element_pointer() {
+  static void * getref() {
     return (void *) & (MFM::Element_MQBar<MFM::OurCoreConfig>::THE_INSTANCE);
   }
+  typedef void* (*FuncPtr)();
+  FuncPtr get_static_element_pointer[] = { getref };
 }
 
 #endif /* ELEMENT_PLUG_IN */
