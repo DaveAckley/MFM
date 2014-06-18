@@ -161,7 +161,7 @@ namespace MFM {
   }
 
   template <class GC>
-  void Grid<GC>::PlaceAtom(T& atom, const SPoint& siteInGrid)
+  void Grid<GC>::PlaceAtom(const T& atom, const SPoint& siteInGrid)
   {
     SPoint tileInGrid, siteInTile;
     if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
