@@ -38,6 +38,7 @@
 #include "Grid.h"
 #include "ElementTable.h"
 #include "VArguments.h"
+#include "ElementRegistry.h"
 
 
 #define MAX_PATH_LENGTH 1000

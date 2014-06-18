@@ -40,6 +40,8 @@ namespace MFM
   template <class GC>
   class FunctionCallGA : public ConfigFunctionCall<GC>
   {
+    typedef typename GC::CORE_CONFIG CC;
+
   public:
     FunctionCallGA() : ConfigFunctionCall<GC>("GA")
     { }
@@ -52,9 +54,11 @@ namespace MFM
       OString16 nick;
       if (!in.ScanIdentifier(nick))
         return in.Msg(Logger::ERROR, "Expected identifier as first argument");
+      if (nick.HasOverflowed())
+        return in.Msg(Logger::ERROR, "Identifier too long '%s'", nick.GetZString());
 
-      const UUID * uuid = ec.LookupElementNick(nick);
-      if (!uuid)
+      const Element<CC> * pelt = ec.LookupElement(nick);
+      if (!pelt)
         return in.Msg(Logger::ERROR, "'%@' isn't a registered element nickname", &nick);
 
       s32 x, y;
@@ -73,8 +77,47 @@ namespace MFM
 
       if (!in.Scan(y)) return in.Msg(Logger::ERROR, "Expected y position");
 
-      if (!ec.PlaceAtom(*uuid, x, y))
+      if (!ec.PlaceAtom(*pelt, x, y))
         return false;
+
+      return this->SkipToNextArg(in) == 0;
+    }
+
+    virtual void Print(ByteSink & in) { FAIL(UNSUPPORTED_OPERATION); }
+
+    virtual void Apply(ExternalConfig<GC> & ec) { /* Work already done */ }
+
+  };
+
+  template <class GC>
+  class FunctionCallSetParameter : public ConfigFunctionCall<GC>
+  {
+    typedef typename GC::CORE_CONFIG CC;
+
+  public:
+    FunctionCallSetParameter() : ConfigFunctionCall<GC>("SetParameter")
+    { }
+
+    virtual bool Parse(ExternalConfig<GC> & ec)
+    {
+      LineCountingByteSource & in = ec.GetByteSource();
+      in.SkipWhitespace();
+
+      OString64 parm;
+      if (!in.ScanIdentifier(parm))
+        return in.Msg(Logger::ERROR, "Expected parameter name as first argument");
+
+      s32 val;
+      s32 ret;
+
+      ret = this->SkipToNextArg(in);
+      if (ret < 0) return false;
+      if (ret == 0)
+        return in.Msg(Logger::ERROR, "Expected second argument (parameter value)");
+
+      if (!in.Scan(val)) return in.Msg(Logger::ERROR, "Expected decimal parameter value");
+
+      in.Msg(Logger::ERROR, "Unimplemented: SetParameter(%s,%d)", parm.GetZString(), val);
 
       return this->SkipToNextArg(in) == 0;
     }
@@ -95,6 +138,10 @@ namespace MFM
     }
     {
       static FunctionCallGA<GC> elt;
+      ec.RegisterFunction(elt);
+    }
+    {
+      static FunctionCallSetParameter<GC> elt;
       ec.RegisterFunction(elt);
     }
   }
