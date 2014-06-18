@@ -66,7 +66,7 @@ namespace MFM
     bool Read();
 
     /**
-     * Writes the current grid configuration to the give \a byteSink.
+     * Writes the current grid configuration to the give \a ByteSink.
      */
     void Write(ByteSink & byteSink);
 
