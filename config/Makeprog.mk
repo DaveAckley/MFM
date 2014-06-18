@@ -14,6 +14,9 @@ include $(BASEDIR)/config/Makelib.mk
 
 ARCHIVES := $(wildcard $(BASEDIR)/build/*/*.a)
 
-$(BINDIR)/$(COMPONENTNAME):	$(BUILDDIR)/main.o $(ALLDEP) $(ARCHIVES)
+$(BUILDDIR)/$(COMPONENTNAME).o:	src/main.cpp $(ALLDEP) $(BUILDDIR)/%.d
+	$(GPP) $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+
+$(BINDIR)/$(COMPONENTNAME):	$(BUILDDIR)/$(COMPONENTNAME).o $(ALLDEP) $(ARCHIVES)
 	mkdir -p $(BINDIR)
-	$(GPP) $(LDFLAGS) $(BUILDDIR)/main.o $(LIBS) -o $@
+	$(GPP) $(LDFLAGS) $(BUILDDIR)/$(COMPONENTNAME).o $(LIBS) -o $@
