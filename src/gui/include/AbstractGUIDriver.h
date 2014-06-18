@@ -410,6 +410,8 @@ namespace MFM {
 
       OnceOnlyButtons();
 
+      // Again to 'set' stuff?
+      SetScreenSize(m_screenWidth, m_screenHeight);
     }
 
   private:
