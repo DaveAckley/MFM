@@ -32,6 +32,10 @@
 
 namespace MFM {
 
+  /**
+   * A ByteSink that wraps two other ByteSinks, routing all bytes sent
+   * to it on to both underlying ByteSinks.
+   */
   class TeeByteSink : public ByteSink {
   public:
     TeeByteSink() : m_sink1(0), m_sink2(0)

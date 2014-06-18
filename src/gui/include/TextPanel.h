@@ -32,6 +32,10 @@
 #include "LineTailByteSink.h"
 
 namespace MFM {
+  /**
+   * A template class for a panel capable of holding a given number of
+   * lines of text each no longer than a given number of columns.
+   */
   template <u32 COLUMNS, u32 LINES>
   class TextPanel : public Panel
   {

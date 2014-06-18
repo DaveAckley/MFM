@@ -326,7 +326,7 @@ namespace MFM {
 
   static void Test_ScanfComplex() {
 
-    tester.Reset("\n\n\tFoo( 12, bar, 2hi122348201405166191339)\n");
+    tester.Reset("\n\n\tFoo( 12, bar, Hi-122348201405166191339)\n");
     CharBufferByteSink<100> funcName;
 
     assert(4 == tester.Scanf("%#[\t\n ]%[A-Za-z0-9]%#[\t\n ](",&funcName));
@@ -341,7 +341,7 @@ namespace MFM {
 
     UUID arg3;
     assert(4 == tester.Scanf("%#[\t\n ]%@%#[\t\n ])",&arg3));
-    assert(!strcmp(arg3.GetLabel(),"hi"));
+    assert(!strcmp(arg3.GetLabel(),"Hi"));
     //                             "(%[\t\n ]%[^,\t\n ]%[^\t\n ],
   }
 

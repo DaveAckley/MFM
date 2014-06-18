@@ -93,8 +93,15 @@ namespace MFM {
 
     bool ScanIdentifier(ByteSink & result) {
       SkipWhitespace();
-      if (1 != ScanSet(result, "[_a-zA-Z]")) return false;
+      if (ScanSet(result, "[_a-zA-Z]") <= 0) return false;
       ScanSet(result, "[_a-zA-Z0-9]");
+      return true;
+    }
+
+    bool ScanCamelIdentifier(ByteSink & result) {
+      SkipWhitespace();
+      if (ScanSet(result, "[A-Z]") <= 0) return false;
+      ScanSet(result, "[a-zA-Z0-9]");
       return true;
     }
 

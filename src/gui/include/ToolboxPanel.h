@@ -352,12 +352,16 @@ namespace MFM
       d.SetForeground(this->Panel::GetBackground());
       d.FillRect(0, 0, this->Panel::GetWidth(), this->Panel::GetHeight());
 
-      d.SetForeground(m_primaryElement->DefaultPhysicsColor());
-      d.FillCircle(10 + ELEMENT_RENDER_SIZE, m_selectedElementDrawY, ELEMENT_RENDER_SIZE,
-		   ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
-      d.SetForeground(m_secondaryElement->DefaultPhysicsColor());
-      d.FillCircle(10 + 2 * ELEMENT_RENDER_SIZE, m_selectedElementDrawY,
-		   ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
+      if (m_primaryElement) {
+        d.SetForeground(m_primaryElement->DefaultPhysicsColor());
+        d.FillCircle(10 + ELEMENT_RENDER_SIZE, m_selectedElementDrawY, ELEMENT_RENDER_SIZE,
+                     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
+      }
+      if (m_secondaryElement) {
+        d.SetForeground(m_secondaryElement->DefaultPhysicsColor());
+        d.FillCircle(10 + 2 * ELEMENT_RENDER_SIZE, m_selectedElementDrawY,
+                     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
+      }
     }
   };
 }

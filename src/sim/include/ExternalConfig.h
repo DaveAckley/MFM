@@ -32,6 +32,7 @@
 #include "OverflowableCharBufferByteSink.h"  /* For OString16 */
 #include "LineCountingByteSource.h"
 #include "ByteSink.h"
+#include "ElementRegistry.h"
 
 namespace MFM
 {
@@ -50,8 +51,10 @@ namespace MFM
      * Construct a new ExternalConfig referencing a specified Grid
      *
      * @param grid The grid to read from or write to.
+     *
+     * @param elts The registry to search for element definitions
      */
-    ExternalConfig(Grid<GC>& grid);
+    ExternalConfig(Grid<GC>& grid, ElementRegistry<CC>& elts);
 
     void SetByteSource(ByteSource & byteSource, const char * label) ;
 
@@ -74,9 +77,9 @@ namespace MFM
 
     bool RegisterElement(const UUID & uuid, OString16 & nick) ;
 
-    const UUID * LookupElementNick(const OString16 & nick) const ;
+    const Element<CC> * LookupElement(const OString16 & nick) const ;
 
-    bool PlaceAtom(const UUID & uuid, s32 x, s32 y) ;
+    bool PlaceAtom(const Element<CC> & elt, s32 x, s32 y) ;
 
     LineCountingByteSource & GetByteSource() {
       return m_in;
@@ -90,6 +93,11 @@ namespace MFM
      * The Grid to read from or write to.
      */
     Grid<GC>& m_grid;
+
+    /**
+     * The ElementRegistry to lookup UUIDs in.
+     */
+    ElementRegistry<CC>& m_elementRegistry;
 
 #define MAX_REGISTERED_FUNCTIONS 64
     ConfigFunctionCall<GC> * (m_registeredFunctions[MAX_REGISTERED_FUNCTIONS]);

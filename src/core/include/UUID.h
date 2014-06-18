@@ -28,8 +28,8 @@
 #define UUID_H
 
 #include "itype.h"
-#include "ByteSink.h"
-#include "ByteSource.h"
+#include "OverflowableCharBufferByteSink.h"
+#include "ZStringByteSource.h"
 #include "ByteSerializable.h"
 #include <string.h>    /* For strlen, strncpy */
 
@@ -37,13 +37,17 @@
 
 namespace MFM {
 
+  /**
+   * A class representing a 'Universal Unique ID' for an Element.  A
+   * UUID is meant to be a 'fingerprint' of an Element.
+   */
   class UUID : public ByteSerializable {
   public:
-    static const u32 MAX_LABEL_LENGTH = 63;
 
     UUID() : m_configurationCode(0), m_apiVersion(0), m_hexDate(0), m_hexTime(0)
     {
-      m_label[0] = '\0';
+      m_label.Reset();
+      m_label.GetZString();
     }
 
     template <class CC>
@@ -65,12 +69,39 @@ namespace MFM {
     {
       if (!label)
         FAIL(NULL_POINTER);
-      strncpy(m_label, label, MAX_LABEL_LENGTH + 1);
+      if (!LegalLabel(label))
+        FAIL(ILLEGAL_ARGUMENT);
+
+      m_label.Reset();
+      m_label.Print(label);
+      m_label.GetZString(); // Ensure label is null-terminated
+    }
+
+    bool LegalLabel(const char * label)
+    {
+      if (!label)
+        return false;
+
+      OString64 buf;
+
+      ZStringByteSource zbs(label);
+      if (!zbs.ScanCamelIdentifier(buf))
+        return false;
+
+      if (zbs.Read() >= 0)  // Need EOF now
+        return false;
+
+      if (buf.HasOverflowed())
+        return false;
+
+      return true;
     }
 
     UUID(ByteSource & bs) ;
 
-    const char * GetLabel() const { return m_label; }
+    const char * GetLabel() const {
+      return m_label.GetBuffer();  // m_label writers have ensured null-termination
+    }
     u32 GetVersion() const { return m_apiVersion; }
     u32 GetHexDate() const { return m_hexDate; }
     u32 GetHexTime() const { return m_hexTime; }
@@ -114,7 +145,7 @@ namespace MFM {
 
     s32 CompareDateOnly(const UUID & other) const ;
 
-    char m_label[MAX_LABEL_LENGTH + 1];
+    OString64 m_label;
     u32 m_configurationCode;
     u32 m_apiVersion;
     u32 m_hexDate;

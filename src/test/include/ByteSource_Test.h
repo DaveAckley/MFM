@@ -5,6 +5,9 @@
 
 namespace MFM {
 
+  /**
+   * Tests of the ByteSource interface
+   */
   class ByteSource_Test
   {
   private:

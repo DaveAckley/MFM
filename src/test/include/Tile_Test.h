@@ -5,12 +5,15 @@
 
 namespace MFM {
 
-class Tile_Test
-{
-public:
+  /**
+   * Tests for the Tile class
+   */
+  class Tile_Test
+  {
+  public:
 
-  static void Test_tilePlaceAtom();
-};
+    static void Test_tilePlaceAtom();
+  };
 } /* namespace MFM */
 
 #endif /*TILE_TEST_H*/

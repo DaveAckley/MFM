@@ -147,10 +147,19 @@ namespace MFM {
     };
   };
 
+  /** Template metaprogramming support for size-dependent integral types */
   template<u32 BITS> struct PickIType_;
+
+  /** Template metaprogramming support for an 8 bit integral type */
   template<> struct PickIType_<8> { typedef u8 type; };
+
+  /** Template metaprogramming support for a 16 bit integral type */
   template<> struct PickIType_<16> { typedef u16 type; };
+
+  /** Template metaprogramming support for a 32 bit integral type */
   template<> struct PickIType_<32> { typedef u32 type; };
+
+  /** Template metaprogramming support for a 64 bit integral type */
   template<> struct PickIType_<64> { typedef u64 type; };
 
   template<u32 BITS>

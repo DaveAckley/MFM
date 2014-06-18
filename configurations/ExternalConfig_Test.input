@@ -1,4 +1,4 @@
-RegisterElement(4Dreg118148428408201406116113117, d)
+RegisterElement(Dreg-118148428408201406116113117, d)
 GA(d,30,31)
 GA(d,31,32)
 SetParameter(DregResRatio,10)

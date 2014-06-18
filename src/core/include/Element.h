@@ -41,6 +41,9 @@ namespace MFM
 
   template <class CC> class Atom; // Forward declaration
 
+  /**
+   * An Element describes how a given type of Atom behaves.
+   */
   template <class CC>
   class Element
   {

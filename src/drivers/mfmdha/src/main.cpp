@@ -138,26 +138,33 @@ namespace MFM {
       const char * path = "./bin/Element_MQBar-Plugin.so";
 
       // Load lib
+      LOG.Debug("Calling dlopen");
       void* dllib = dlopen(path, RTLD_LAZY);
       if (!dllib) {
         LOG.Error("Cannot load library: %s", dlerror());
         FAIL(IO_ERROR);
       }
+      LOG.Debug("Back from dlopen");
 
       // get accessor
-      void * symptr = dlsym(dllib, "get_static_element_pointer");
+      typedef void* (*FuncPtr)();
+      typedef FuncPtr FuncPtrArray[1];
+
+      LOG.Debug("Calling dlsym");
+      FuncPtrArray * symptr = (FuncPtrArray*) dlsym(dllib, "get_static_element_pointer");
+      LOG.Debug("Back from dlsym");
+
       const char* dlsym_error = dlerror();
       if (dlsym_error) {
         LOG.Error("Cannot find accessor in library: %s", dlsym_error);
         FAIL(IO_ERROR);
       }
 
-      // do undefined (?) casting shenanigans to make it a function pointer ?
-      MFM_Element_Plugin_Get_Static_Pointer getref =
-        (MFM_Element_Plugin_Get_Static_Pointer) ((uptr) symptr);
-
-      // get ptr
-      m_qbarInstance = (Element<OurCoreConfig> *) getref();
+       // get ptr
+      FuncPtrArray & ary = * (FuncPtrArray*) symptr;
+      FuncPtr fp = ary[0];
+      void * result = fp();
+      m_qbarInstance = (Element<OurCoreConfig> *) result;
       if (!m_qbarInstance) {
         LOG.Error("Accessor failed");
         FAIL(IO_ERROR);

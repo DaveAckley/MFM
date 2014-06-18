@@ -10,8 +10,9 @@
 namespace MFM
 {
   template<class GC>
-  ExternalConfig<GC>::ExternalConfig(Grid<GC>& grid) :
-    m_grid(grid), m_registeredFunctionCount(0)
+  ExternalConfig<GC>::ExternalConfig(Grid<GC>& grid, ElementRegistry<CC>& elts) :
+    m_grid(grid), m_elementRegistry(elts),
+    m_registeredFunctionCount(0), m_registeredElementCount(0)
   { }
 
   template<class GC>
@@ -99,15 +100,16 @@ namespace MFM
   template<class GC>
   bool ExternalConfig<GC>::RegisterElement(const UUID & uuid, OString16 & nick)
   {
-    const UUID * puuid = &uuid;
-    s32 type = U16StaticLoader::TypeFromUUID(uuid);
-    if (type < 0) {
+    const Element<CC> * elt = m_elementRegistry.Lookup(uuid);
+    const UUID * puuid = 0;
+    if (!elt) {
       m_in.Msg(Logger::WARNING, "Unknown element '%@', searching for compatible alternatives", &uuid);
-      type = U16StaticLoader::TypeFromCompatibleUUID(uuid);
-      if (type < 0)
+
+      elt =  m_elementRegistry.LookupCompatible(uuid);
+      if (!elt)
         return m_in.Msg(Logger::WARNING, "No alternatives found for unknown/unregistered element '%@'", &uuid);
-      puuid = U16StaticLoader::UUIDOfType((u32) type);
-      if (!puuid) FAIL(ILLEGAL_STATE);
+
+      puuid = &elt->GetUUID();
       m_in.Msg(Logger::WARNING, "Substituting '%@' for '%@'", puuid, &uuid);
     }
 
@@ -122,32 +124,32 @@ namespace MFM
     if (m_registeredElementCount >= sizeof(m_registeredElements)/sizeof(m_registeredElements[0]))
       return m_in.Msg(Logger::ERROR,"No room for more registered Elements");
 
-    const Element<CC> * element = m_grid.LookupElement((u32) type);
-    if (!element)
-      return m_in.Msg(Logger::ERROR,"Registered UUID has no element?  Bug?  For %@/%04x", puuid, type);
-
     m_registeredElements[m_registeredElementCount].m_uuid = *puuid;
     m_registeredElements[m_registeredElementCount].m_nick = nick;
-    m_registeredElements[m_registeredElementCount].m_element = element;
+    m_registeredElements[m_registeredElementCount].m_element = elt;
     ++m_registeredElementCount;
+
+    m_in.Msg(Logger::MESSAGE,"Registration %d: Nickname '%s' -> UUID '%@'", m_registeredElementCount, nick.GetZString(), puuid);
+
     return true;
   }
 
   template<class GC>
-  const UUID * ExternalConfig<GC>::LookupElementNick(const OString16 & nick) const
+  const Element<typename GC::CORE_CONFIG> * ExternalConfig<GC>::LookupElement(const OString16 & nick) const
   {
     for (u32 i = 0; i < m_registeredElementCount; ++i) {
       const RegElt & re = m_registeredElements[i];
       if (re.m_nick.Equals(nick))
-        return &re.m_uuid;
+        return re.m_element;
     }
     return 0;
   }
 
   template<class GC>
-  bool ExternalConfig<GC>::PlaceAtom(const UUID & uuid, s32 x, s32 y)
+  bool ExternalConfig<GC>::PlaceAtom(const Element<CC> & elt, s32 x, s32 y)
   {
-    return m_in.Msg(Logger::ERROR,"Unimplemented");
+    m_grid.PlaceAtom(elt.GetDefaultAtom(), SPoint(x, y));
+    return true;
   }
 
 }

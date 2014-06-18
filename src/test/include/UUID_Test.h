@@ -5,6 +5,9 @@
 
 namespace MFM {
 
+  /**
+   * Tests for UUIDs.
+   */
   class UUID_Test
   {
   private:

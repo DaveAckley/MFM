@@ -75,6 +75,8 @@ namespace MFM {
 
     const Element<CC> * Lookup(const UUID & uuid) const;
 
+    const Element<CC> * LookupCompatible(const UUID & uuid) const;
+
     /**
      * Add a path to the search path, if it is not already there.
      * Fails with OUT_OF_ROOM if no more paths can be added.
@@ -102,7 +104,7 @@ namespace MFM {
     } m_registeredElements[TABLE_SIZE];
     u32 m_registeredElementsCount;
 
-    ElementEntry * FindMatching(const UUID & uuid) const {
+    const ElementEntry * FindMatching(const UUID & uuid) const {
       for (u32 i = 0; i < m_registeredElementsCount; ++i) {
         if (m_registeredElements[i].m_uuid == uuid)
           return &m_registeredElements[i];
@@ -111,7 +113,7 @@ namespace MFM {
     }
 
     s32 FindCompatibleIndex(const UUID & uuid, s32 lastIndex) const {
-      if (lastIndex < 0)
+      if (lastIndex < -1)
         FAIL(ILLEGAL_ARGUMENT);
       for (s32 i = lastIndex + 1; i < (s32) m_registeredElementsCount; ++i) {
         if (m_registeredElements[i].m_uuid.Compatible(uuid))

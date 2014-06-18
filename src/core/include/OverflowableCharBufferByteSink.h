@@ -75,6 +75,14 @@ namespace MFM {
 
     const char * GetZString() {
       m_buf[m_written] = '\0';
+      return GetBuffer();
+    }
+
+    /**
+     * Get a pointer to the underlying char buffer.  WARNING: Result
+     * may not be null-terminated!
+     */
+    const char * GetBuffer() const {
       return (const char *) m_buf;
     }
 

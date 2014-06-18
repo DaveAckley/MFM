@@ -5,6 +5,9 @@
 
 namespace MFM {
 
+  /**
+   * Tests of OverflowableCharBufferByteSink
+   */
   class OverflowableCharBufferByteSink_Test
   {
   private:

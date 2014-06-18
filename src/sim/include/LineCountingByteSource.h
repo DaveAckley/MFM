@@ -34,6 +34,11 @@
 
 namespace MFM
 {
+  /**
+   * A ByteSource that tracks how many lines of text have been read,
+   * and what byte of the current line was most recently read.  Useful
+   * for providing feedback to help pinpoint errors in ByteSources.
+   */
   class LineCountingByteSource : public ByteSource {
   public:
   LineCountingByteSource()

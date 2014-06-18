@@ -39,6 +39,11 @@ namespace MFM
 
 #define RES_VERSION 1
 
+  /**
+   * A basic 'Resource' element, created in controlled amounts by DReg
+   * and available for use by other Elements that wish to have
+   * controlled growth.
+   */
   template <class CC>
   class Element_Res : public Element<CC>
   {
