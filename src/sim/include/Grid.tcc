@@ -120,6 +120,7 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::SaveState(const char* filename) const
   {
+    LOG.Debug("Saving to: %s", filename);
     FAIL(INCOMPLETE_CODE);
     /*
     ExternalConfig cfg(*this);

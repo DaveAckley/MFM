@@ -268,7 +268,8 @@ namespace MFM {
 
     struct SaveButton : public AbstractGridButton
     {
-      SaveButton() : AbstractGridButton("Save State")
+      SaveButton() : AbstractGridButton("Save State"),
+		     m_saveStateIndex(1)
       {
 	AbstractButton::SetName("SaveButton");
 	Panel::SetDimensions(200, 40);
@@ -278,8 +279,13 @@ namespace MFM {
       virtual void OnClick(u8 button)
       {
 	AbstractGridButton::m_driver->GetGrid().
-	  SaveState(AbstractGridButton::m_driver->GetSimDirPathTemporary(""));
+	  SaveState(AbstractGridButton::m_driver->
+		    GetSimDirPathTemporary("save/%d.mfs", m_saveStateIndex++));
       }
+
+    private:
+
+      u32 m_saveStateIndex;
     }m_saveButton;
 
     struct ResetButton : public AbstractGridButton
@@ -588,7 +594,7 @@ namespace MFM {
 	  u64 consumed = 0, totalError = 0;
           for (OurGrid::iterator_type i = grid.begin(); i != grid.end(); ++i) {
             Tile<CC> * t = *i;
-            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsConsumed(*t);
+t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsConsumed(*t);
             totalError += Element_Consumer<CC>::THE_INSTANCE.GetAndResetBucketError(*t);
           }
 

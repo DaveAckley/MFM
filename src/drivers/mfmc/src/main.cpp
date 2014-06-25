@@ -40,6 +40,15 @@ namespace MFM
       SPoint dregPt(5, 5);
 
       m_grid.PlaceAtom(dreg, dregPt);
+
+#ifdef MFM_GUI_DRIVER
+
+      /* Register painting tools if we need them */
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Empty<OurCoreConfig>::THE_INSTANCE);
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
+      AbstractGUIDriver::RegisterToolboxElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
+
+#endif
     }
   };
 }
