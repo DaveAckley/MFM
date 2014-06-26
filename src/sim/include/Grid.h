@@ -65,6 +65,8 @@ namespace MFM {
 
     Tile<CC> m_tiles[W][H];
 
+    bool m_backgroundRadiationEnabled;
+
   public:
     Random& GetRandom() { return m_random; }
 
@@ -181,16 +183,6 @@ namespace MFM {
     bool IsLegalTileIndex(const SPoint & tileInGrid) const;
 
     /**
-     * Saves the current state of this Grid to a file specified by the
-     * given filename. This "GridState" is able to be read back in to
-     * the simulator using the ExternalConfig.Read() method.
-     *
-     * @param filename The name of the file to create or rewrite
-     *                 containing the state of this Grid.
-     */
-    void SaveState(const char* filename) const;
-
-    /**
      * Find the grid coordinate of the 'owning tile' (i.e., ignoring
      * caches) for the give siteInGrid.  Return false if there isn't
      * one, otherwise set tileInGrid and siteInTile appropriately and
@@ -289,6 +281,29 @@ namespace MFM {
      * randomly sized radius to Element_Empty .
      */
     void RandomNuke();
+
+    /**
+     * Sets whether or not background radiation will begin mutating
+     * the Atoms of this Grid upon writing.
+     */
+    void SetBackgroundRadiation(bool value);
+
+    /**
+     * Toggles the background radiation in this Grid .
+     */
+    void ToggleBackgroundRadiation()
+    {
+      SetBackgroundRadiation(!m_backgroundRadiationEnabled);
+    }
+
+    /**
+     * Checks to see if this Grid is currently administering
+     * background radiataion.
+     */
+    bool IsBackgroundRadiataionEnabled()
+    {
+      return m_backgroundRadiationEnabled;
+    }
 
     /**
      * Randomly flips bits in randomly selected sites in this grid.

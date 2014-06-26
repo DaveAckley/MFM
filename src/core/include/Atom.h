@@ -169,7 +169,6 @@ namespace MFM
 	if(rand.OneIn(bitOdds))
 	{
 	  m_bits.ToggleBit(i);
-	  LOG.Debug("Bit %d xray'd (odds %d)", i, bitOdds);
 	}
       }
     }

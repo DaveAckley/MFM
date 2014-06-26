@@ -78,9 +78,29 @@ namespace MFM
   }
 
   template<class GC>
-  void Write(ByteSink& byteSink)
+  void ExternalConfig<GC>::Write(ByteSink& byteSink)
   {
-    FAIL(INCOMPLETE_CODE);
+    /* First, register all elements. */
+
+    u32 elems = m_elementRegistry.GetEntryCount();
+
+    for(u32 i = 0; i < elems; i++)
+    {
+      UUID& uuid = m_elementRegistry.GetEntryUUID(i);
+      Element<CC>* element = m_elementRegistry.GetEntryElement(i);
+
+      byteSink.Printf("RegisterElement(%s, %d)",
+	              uuid.GetLabel(), i);
+
+      byteSink.WriteNewline();
+    }
+    byteSink.WriteNewline();
+
+    /* Then, GA all live atoms. */
+
+    //for(u32 x = 0; x < GC::W * ; x++
+
+    /* Set any additional parameters */
   }
 
   template<class GC>

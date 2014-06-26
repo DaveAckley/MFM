@@ -1,6 +1,7 @@
 /* -*- C++ -*- */
 #include "Dirs.h"
 #include "Grid.h"
+#include "FileByteSink.h"
 
 #define XRAY_SITE_ODDS 1000
 #define XRAY_BIT_ODDS 100
@@ -12,6 +13,8 @@ namespace MFM {
 
     /* Reseed grid PRNG and push seeds to the tile PRNGs */
     ReinitSeed();
+
+    m_backgroundRadiationEnabled = false;
 
     /* Reinit all the tiles */
 
@@ -115,22 +118,6 @@ namespace MFM {
     if (tileInGrid.GetX() >= (s32) W || tileInGrid.GetY() >= (s32) H)
       return false;
     return true;
-  }
-
-  template <class GC>
-  void Grid<GC>::SaveState(const char* filename) const
-  {
-    LOG.Debug("Saving to: %s", filename);
-    FAIL(INCOMPLETE_CODE);
-    /*
-    ExternalConfig cfg(*this);
-    FILE* fp = fopen(filename, "w");
-    FileByteSink fs(fp);
-
-    cfg.Write();
-
-    fs.Close();
-    */
   }
 
   template <class GC>
@@ -408,6 +395,19 @@ namespace MFM {
 	EmptyTile(SPoint(x, y));
       }
     }
+  }
+
+  template <class GC>
+  void Grid<GC>::SetBackgroundRadiation(bool value)
+  {
+    for(u32 x = 0; x < W; x++)
+    {
+      for(u32 y = 0; y < H; y++)
+      {
+	GetTile(x, y).SetBackgroundRadiation(value);
+      }
+    }
+    m_backgroundRadiationEnabled = value;
   }
 
   template <class GC>

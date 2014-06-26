@@ -1,4 +1,5 @@
-#include "MDist.h"      /* -*- C++ -*- */
+/* -*- C++ -*- */
+#include "MDist.h"
 #include "Element_Empty.h"
 #include "Logger.h"
 #include "Util.h"
@@ -26,6 +27,8 @@ namespace MFM {
     m_eventsExecuted = 0;
 
     m_onlyWaitOnBuffers = false;
+
+    m_backgroundRadiationEnabled = false;
 
     /* Set up our connection pointers. Some of these may remain NULL, */
     /* symbolizing a dead edge.       */
@@ -272,7 +275,6 @@ namespace MFM {
       oldType = oldAtom->GetType();
     });
 
-    // XXX IMPLEMENT BIT-CORRUPTION-ON-WRITE IN HERE
     if(!recounted)
     {
       InternalPutAtom(atom,pt.GetX(),pt.GetY());
@@ -282,6 +284,14 @@ namespace MFM {
 	IncrAtomCount(atom.GetType(),1);
 	IncrAtomCount(oldType,-1);
       }
+    }
+
+    // XXX IMPLEMENT BIT-CORRUPTION-ON-WRITE IN HERE
+
+    if(m_backgroundRadiationEnabled &&
+       m_random.OneIn(BACKGROUND_RADIATION_SITE_ODDS))
+    {
+      SingleXRay(pt.GetX(), pt.GetY());
     }
   }
 
@@ -841,6 +851,18 @@ namespace MFM {
 	IncrAtomCount(m_atoms[x][y].GetType(), 1);
       }
     }
+  }
+
+  template <class CC>
+  void Tile<CC>::SingleXRay()
+  {
+    SingleXRay(m_random.Create(W), m_random.Create(W));
+  }
+
+  template <class CC>
+  void Tile<CC>::SingleXRay(u32 x, u32 y)
+  {
+    m_atoms[x][y].XRay(m_random, BACKGROUND_RADIATION_BIT_ODDS);
   }
 
   template <class CC>

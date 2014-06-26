@@ -43,6 +43,9 @@ namespace MFM {
 
 #define IS_OWNED_CONNECTION(X) ((X) - Dirs::EAST >= 0 && (X) - Dirs::EAST < 4)
 
+#define BACKGROUND_RADIATION_SITE_ODDS 1000
+#define BACKGROUND_RADIATION_BIT_ODDS 100
+
   typedef enum
   {
     REGION_CACHE   = 0,
@@ -98,6 +101,11 @@ namespace MFM {
     /** The top of the error stack for thread-local, per-Tile, FAIL
         processing. */
     MFMErrorEnvironmentPointer_t m_errorEnvironmentStackTop;
+
+    /**
+     * If \c true , will XRay atoms upon writing.
+     */
+    bool m_backgroundRadiationEnabled;
 
     /** The 1-in-this odds of bit corruptions during atom writing.  (0
         means no corruptions).  (NOT YET IMPLEMENTED)  */
@@ -874,6 +882,41 @@ namespace MFM {
       elementTable.RegisterElement(anElement);
     }
 
+    /**
+     * Sets whether or not background radiation will begin mutating
+     * the Atoms of this Tile upon writing.
+     */
+    void SetBackgroundRadiation(bool value)
+    {
+      m_backgroundRadiationEnabled = value;
+    }
+
+    /**
+     * XRays a single randomly chosen Atom in this Tile, with the odds
+     * of flipping a bit being BACKGROUND_RADIATION_BIT_ODDS .
+     */
+    inline void SingleXRay();
+
+    /**
+     * XRays a single Atom in this Tile, with the odds of flipping a
+     * bit being BACKGROUND_RADIATION_BIT_ODDS .
+     *
+     * @param x The x location of the Atom to XRay
+     *
+     * @param y The y location of the Atom to XRay
+     */
+    inline void SingleXRay(u32 x, u32 y);
+
+    /**
+     * Iterates through each Atom in this Tile, XRaying each atom
+     * based on a provided rate and flipping a bit in each selected
+     * atom at a provided rate.
+     *
+     * @param siteOdds The odds of an Atom to be selected for XRay.
+     *
+     * @param bitOdds The odds that a particular bit in a selected
+     *                Atom will be selected for XRay.
+     */
     void XRay(u32 siteOdds, u32 bitOdds);
 
   };

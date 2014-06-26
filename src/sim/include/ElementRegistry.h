@@ -95,6 +95,34 @@ namespace MFM {
      */
     bool RegisterElement(const Element<CC>& e) ;
 
+    /**
+     * Gets the number of currently loaded Elements inside this
+     * ElementRegistry.
+     */
+    u32 GetEntryCount();
+
+    /**
+     * Gets the UUID of the Element which was loaded in a particular
+     * index.
+     *
+     * @param entryIdx The index at which this UUID was loaded. For
+     *                 instance, the UUID at index \c 0 was loaded first.
+     *
+     * @returns The UUID of the element loaded at this partuclar index.
+     */
+    UUID& GetEntryUUID(u32 entryIdx);
+
+    /**
+     * Gets a pointer to the specific Element which was loaded in a
+     * particular index.
+     *
+     * @param entryIdx The index at which this Element was loaded. For
+     *                 instance, the Element at index \c 0 was loaded first.
+     *
+     * @returns The Element of the element loaded at this partuclar index.
+     */
+    Element<CC>* GetEntryElement(u32 entryIdx);
+
 
   private:
     struct ElementEntry {
