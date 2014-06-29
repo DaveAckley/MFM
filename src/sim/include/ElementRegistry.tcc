@@ -1,6 +1,50 @@
-#include <stdlib.h> /* -*- C++ -*- */
+/* -*- C++ -*- */
+#include <stdlib.h>
+#include <dirent.h> /* For opendir */
 
-namespace MFM {
+namespace MFM
+{
+
+  template <class CC>
+  void ElementRegistry<CC>::Init()
+  {
+    LOG.Debug("Searching for elements in %d directories...", m_searchPathsCount);
+    for(u32 i = 0; i < m_searchPathsCount; i++)
+    {
+      const char* dirname = m_searchPaths[i].GetZString();
+      LOG.Debug("  Searching %s for shared libs:", dirname);
+      DIR* dir = opendir(dirname);
+
+      if(!dir)
+      {
+	LOG.Error("    *-*-* CANNOT OPEN %s *-*-*", dirname);
+	FAIL(IO_ERROR);
+      }
+
+      struct dirent *entry = NULL;
+
+      while((entry = readdir(dir)))
+      {
+	/* Files and symbolic links are both OK */
+	if(entry->d_type == DT_LNK ||
+	   entry->d_type == DT_REG)
+	{
+	  if(Element_Empty<CC>::THE_INSTANCE.GetUUID().LegalFilename(entry->d_name))
+	  {
+	    LOG.Debug("    ELEMENT FOUND: %s", entry->d_name);
+
+	  }
+	  else
+	  {
+	    LOG.Debug("    Other file: %s", entry->d_name);
+	  }
+	}
+      }
+
+      closedir(dir);
+    }
+  }
+
   template <class CC>
   bool ElementRegistry<CC>::RegisterElement(const Element<CC>& e)
   {
@@ -84,6 +128,7 @@ namespace MFM {
     m_searchPaths[m_searchPathsCount] = path;
     ++m_searchPathsCount;
   }
+
   template <class CC>
   ElementRegistry<CC>::ElementRegistry()
     : m_registeredElementsCount(0), m_searchPathsCount(0)

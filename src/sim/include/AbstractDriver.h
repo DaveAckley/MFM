@@ -67,6 +67,7 @@ namespace MFM
     static const u32 GRID_WIDTH = W;
     static const u32 GRID_HEIGHT = H;
 
+    typedef ElementRegistry<CC> OurElementRegistry;
     typedef Grid<GC> OurGrid;
     typedef ElementTable<CC> OurElementTable;
 
@@ -202,6 +203,9 @@ namespace MFM
       fprintf(fp, "#AEPS activesites empty dreg res wall sort-hits"
 	          "sort-misses sort-total sort-hit-pctg\n");
       fclose(fp);
+
+      m_elementRegistry.AddPath("/home/sixstring982/Documents/Git/MFMv2/bin");
+      m_elementRegistry.Init();
     }
 
     /**
@@ -223,6 +227,7 @@ namespace MFM
     }
 
   private:
+    OurElementRegistry m_elementRegistry;
     OurGrid m_grid;
 
     u32 m_ticksLastStopped;
@@ -328,6 +333,13 @@ namespace MFM
       {
 	args.Die("Path name too long '%s'", dirPath);
       }
+    }
+
+    static void RegisterElementPath(const char* path, void* driverptr)
+    {
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+
+      driver.m_elementRegistry.AddPath(path);
     }
 
     static void SetHaltAfterAEPSFromArgs(const char* aeps, void* driverptr)
@@ -437,6 +449,9 @@ namespace MFM
 
       RegisterArgument("Store data in per-sim directories under ARG (string)",
                        "-d|--dir", &SetDataDirFromArgs, this, true);
+
+      RegisterArgument("Add ARG as a path to search for element libraries",
+		       "-ep | --elementpath", &RegisterElementPath, this, true);
     }
 
 

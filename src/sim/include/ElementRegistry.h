@@ -67,6 +67,8 @@ namespace MFM {
 
     ~ElementRegistry() { }
 
+    void Init();
+
     bool IsRegistered(const UUID & uuid) const;
 
     bool IsLoaded(const UUID & uuid) const;

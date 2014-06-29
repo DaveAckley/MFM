@@ -77,7 +77,7 @@ namespace MFM {
       m_label.GetZString(); // Ensure label is null-terminated
     }
 
-    bool LegalLabel(const char * label)
+    bool LegalLabel(const char * label) const
     {
       if (!label)
         return false;
@@ -95,6 +95,32 @@ namespace MFM {
         return false;
 
       return true;
+    }
+
+    bool LegalFilename(const char* label) const
+    {
+      /* Let's copy it into another buffer, trim the extension, then
+       * see if that's a legal label.*/
+
+      char newBuffer[128];
+      char* bufp = newBuffer;
+
+      while(*label && *label != '.')
+      {
+	*(bufp++) = *(label++);
+      }
+
+      if(*label == '.')
+      {
+	if(strcmp(label, ".so"))
+	{
+	  return false;
+	}
+
+	return LegalLabel(newBuffer);
+      }
+
+      return false;
     }
 
     UUID(ByteSource & bs) ;
