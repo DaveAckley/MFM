@@ -280,9 +280,6 @@ namespace MFM {
 
       virtual void OnClick(u8 button)
       {
-	/* TODO This call needs an ElementRegistry. I haven't figured
-	 * out how to get that sorted out yet. */
-	/*
 	const char* filename =
 	  AbstractGridButton::m_driver->GetSimDirPathTemporary("save/%d.mfs",
 							       m_saveStateIndex++);
@@ -295,7 +292,7 @@ namespace MFM {
 	cfg.Write(fs);
 
 	fs.Close();
-	*/
+
       }
 
     private:

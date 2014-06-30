@@ -10,8 +10,8 @@
 namespace MFM
 {
   template<class GC>
-  ExternalConfig<GC>::ExternalConfig(Grid<GC>& grid, ElementRegistry<CC>& elts) :
-    m_grid(grid), m_elementRegistry(elts),
+  ExternalConfig<GC>::ExternalConfig(Grid<GC>& grid) :
+    m_grid(grid), m_elementRegistry(grid.GetElementRegistry()),
     m_registeredFunctionCount(0), m_registeredElementCount(0)
   { }
 
@@ -87,7 +87,6 @@ namespace MFM
     for(u32 i = 0; i < elems; i++)
     {
       UUID& uuid = m_elementRegistry.GetEntryUUID(i);
-      Element<CC>* element = m_elementRegistry.GetEntryElement(i);
 
       byteSink.Printf("RegisterElement(%s, %d)",
 	              uuid.GetLabel(), i);

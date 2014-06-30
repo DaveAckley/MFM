@@ -51,10 +51,8 @@ namespace MFM
      * Construct a new ExternalConfig referencing a specified Grid
      *
      * @param grid The grid to read from or write to.
-     *
-     * @param elts The registry to search for element definitions
      */
-    ExternalConfig(Grid<GC>& grid, ElementRegistry<CC>& elts);
+    ExternalConfig(Grid<GC>& grid);
 
     void SetByteSource(ByteSource & byteSource, const char * label) ;
 

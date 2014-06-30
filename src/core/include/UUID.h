@@ -109,6 +109,7 @@ namespace MFM {
       {
 	*(bufp++) = *(label++);
       }
+      *bufp = 0;
 
       if(*label == '.')
       {

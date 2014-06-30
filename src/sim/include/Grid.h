@@ -88,6 +88,11 @@ namespace MFM {
       return m_tiles[0][0].GetElementTable().Lookup(elementType);
     }
 
+    ElementRegistry<CC>& GetElementRegistry()
+    {
+      return m_er;
+    }
+
     void Needed(Element<CC> & anElement)
     {
       anElement.AllocateType();         // Force a type now

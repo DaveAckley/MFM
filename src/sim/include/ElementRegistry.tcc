@@ -10,6 +10,10 @@ namespace MFM
   template <class CC>
   void ElementRegistry<CC>::Init()
   {
+
+    /* Scan all element directories for any <UUID>.so files, then
+     * register them. */
+
     LOG.Debug("Searching for elements in %d directories...", m_searchPathsCount);
     for(u32 i = 0; i < m_searchPathsCount; i++)
     {
@@ -19,7 +23,7 @@ namespace MFM
 
       if(!dir)
       {
-	LOG.Warning("Skipping %s: %s", dirname, strerror(errno));
+	LOG.Warning("  Skipping %s: %s", dirname, strerror(errno));
         continue;
       }
 
@@ -35,6 +39,14 @@ namespace MFM
 	  {
 	    LOG.Debug("    ELEMENT FOUND: %s", entry->d_name);
 
+	    UUID fileID;
+	    u32 entrylen = strlen(entry->d_name) - 3; /* For '.so' extension */
+	    CharBufferByteSource charSource(entry->d_name, entrylen);
+	    ByteSource& source = charSource;
+
+	    fileID.Read(source);
+
+	    RegisterUUID(fileID);
 	  }
 	  else
 	  {
@@ -42,7 +54,6 @@ namespace MFM
 	  }
 	}
       }
-
       closedir(dir);
     }
   }

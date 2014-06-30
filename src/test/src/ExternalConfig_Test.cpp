@@ -16,7 +16,7 @@ namespace MFM
     ereg.RegisterElement(Element_Dreg<TestCoreConfig>::THE_INSTANCE);
 
     Grid<TestGridConfig> grid(ereg);
-    ExternalConfig<TestGridConfig> cfg(grid, ereg);
+    ExternalConfig<TestGridConfig> cfg(grid);
     RegisterExternalConfigFunctions<TestGridConfig>(cfg);
 
     ZStringByteSource zbs("RegisterElement(Dreg-118148428408201406116113117, d)\n"
