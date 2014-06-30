@@ -95,18 +95,18 @@ namespace MFM
         // Empty or occupied?
         const T other = window.GetRelativeAtom(sp);
         const u32 otherType = other.GetType();
-        bool isEmpty = Element_Empty<CC>::IsType(otherType);
+        bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
 
         if (isEmpty) {
           if (random.OneIn(++emptyCount)) {
             empty = sp;
           }
         } else {
-          if (otherType == Element_Mover<CC>::TYPE())
+          if (otherType == Element_Mover<CC>::THE_INSTANCE.GetType())
             ++moverCount;
-          else if (otherType == Element_Dreg<CC>::TYPE())
+          else if (otherType == Element_Dreg<CC>::THE_INSTANCE.GetType())
             ++dregCount;
-          else if (otherType == Element_Res<CC>::TYPE())
+          else if (otherType == Element_Res<CC>::THE_INSTANCE.GetType())
             ++resCount;
 
           if (random.OneIn(++occupCount)) {

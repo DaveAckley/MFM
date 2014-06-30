@@ -10,6 +10,7 @@ namespace MFM {
   void Tile_Test::Test_tilePlaceAtom()
   {
     TestTile tile;
+    Element_Res<TestCoreConfig>::THE_INSTANCE.AllocateType();
     tile.RegisterElement(Element_Res<TestCoreConfig>::THE_INSTANCE);
 
     TestAtom atom(Element_Res<TestCoreConfig>::THE_INSTANCE.GetDefaultAtom());

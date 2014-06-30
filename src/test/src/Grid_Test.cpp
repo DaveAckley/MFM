@@ -9,7 +9,8 @@ namespace MFM {
   void Grid_Test::Test_gridPlaceAtom()
   {
 
-    TestGrid grid;
+    ElementRegistry<TestCoreConfig> ereg;
+    TestGrid grid(ereg);
 
     grid.SetSeed(1);
     grid.Reinit();

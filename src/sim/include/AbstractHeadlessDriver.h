@@ -55,7 +55,7 @@ namespace MFM
     typedef typename Super::OurGrid OurGrid;
     typedef typename Super::CC CC;
 
-    AbstractHeadlessDriver()
+    AbstractHeadlessDriver() : AbstractDriver<GC>()
     { }
 
     virtual void AddDriverArguments()

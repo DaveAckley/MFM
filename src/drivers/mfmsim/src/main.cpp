@@ -81,23 +81,23 @@ namespace MFM {
       AbstractGUIDriver::RegisterToolboxElement(&Element_Wall<OurCoreConfig>::THE_INSTANCE);
 
       m_sortingSlots[0].Set(mainGrid, "Data in",
-                            Element_Emitter<OurCoreConfig>::TYPE(),
+                            Element_Emitter<OurCoreConfig>::THE_INSTANCE.GetType(),
                             Element_Emitter<OurCoreConfig>::DATUMS_EMITTED_SLOT,
                             Element_Emitter<OurCoreConfig>::DATA_SLOT_COUNT,
                             true);
       m_sortingSlots[1].Set(mainGrid, "Overflow",
-                            Element_Emitter<OurCoreConfig>::TYPE(),
+                            Element_Emitter<OurCoreConfig>::THE_INSTANCE.GetType(),
                             Element_Emitter<OurCoreConfig>::DATUMS_REJECTED_SLOT,
                             Element_Emitter<OurCoreConfig>::DATA_SLOT_COUNT,
                             true);
 
       m_sortingSlots[2].Set(mainGrid, "Data out",
-                            Element_Consumer<OurCoreConfig>::TYPE(),
+                            Element_Consumer<OurCoreConfig>::THE_INSTANCE.GetType(),
                             Element_Consumer<OurCoreConfig>::DATUMS_CONSUMED_SLOT,
                             Element_Consumer<OurCoreConfig>::DATA_SLOT_COUNT,
                             true);
       m_sortingSlots[3].Set(mainGrid, "Sort error",
-                            Element_Consumer<OurCoreConfig>::TYPE(),
+                            Element_Consumer<OurCoreConfig>::THE_INSTANCE.GetType(),
                             Element_Consumer<OurCoreConfig>::TOTAL_BUCKET_ERROR_SLOT,
                             Element_Consumer<OurCoreConfig>::DATA_SLOT_COUNT,
                             true);

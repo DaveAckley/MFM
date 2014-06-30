@@ -53,9 +53,17 @@ namespace MFM
     enum { R = P::EVENT_WINDOW_RADIUS };
 
     const UUID m_UUID;
-    const u32 m_type;
+    u32 m_type;
+    bool m_hasType;
+    T m_defaultAtom;
 
   protected:
+
+    virtual T BuildDefaultAtom() const
+    {
+      T defaultAtom(this->GetType(), 0, 0, 0);
+      return defaultAtom;
+    }
 
     const BitVector<P::BITS_PER_ATOM> & GetBits(const T & atom) const {
       return atom.m_bits;
@@ -90,19 +98,32 @@ namespace MFM
 
   public:
 
-    Element(const UUID & uuid) : m_UUID(uuid), m_type(U16StaticLoader::AllocateType(m_UUID))
+    Element(const UUID & uuid) : m_UUID(uuid), m_type(0), m_hasType(false)
     {
-      LOG.Message("%0x for %@",m_type,&m_UUID);
+      LOG.Debug("Constructed %@",&m_UUID);
     }
 
     // For use by Element_Empty only!
-    Element(const UUID & uuid, u32 type) : m_UUID(uuid), m_type(type)
+    Element(const UUID & uuid, u32 type) : m_UUID(uuid), m_type(type), m_hasType(true)
     { }
 
-    //    u32 GetType() const { return GetDefaultAtom().GetType(); }
-    u32 GetType() const { return m_type; }
+    void AllocateType() {
+      if (!m_hasType) {
+        m_type = U16StaticLoader::AllocateType(m_UUID);
+        m_hasType = true;
+        m_defaultAtom = BuildDefaultAtom();
+      }
+    }
 
-    bool IsType(u32 type) const { return m_type == type; }
+    u32 GetType() const {
+      if (!m_hasType)
+        FAIL(ILLEGAL_STATE);
+      return m_type;
+    }
+
+    bool IsType(u32 type) const {
+      return GetType() == type;
+    }
 
     const UUID & GetUUID() const {
       return m_UUID;
@@ -110,7 +131,12 @@ namespace MFM
 
     virtual void Behavior(EventWindow<CC>& window) const = 0;
 
-    virtual const T & GetDefaultAtom() const = 0;
+    const T & GetDefaultAtom() const
+    {
+      if (!m_hasType)
+        FAIL(ILLEGAL_STATE);
+      return m_defaultAtom;
+    }
 
     virtual u32 DefaultPhysicsColor() const = 0;
 

@@ -12,12 +12,13 @@ namespace MFM {
 void EventWindow_Test::Test_eventwindowConstruction()
 {
   TestTile tile;
+  Element_Dreg<TestCoreConfig>::THE_INSTANCE.AllocateType();
   tile.RegisterElement(Element_Dreg<TestCoreConfig>::THE_INSTANCE);
 
   //  P1Atom * atoms = tile.GetAtoms();
   Point<s32> center(4, 4);
   Point<s32> zero(0, 0);
-  const u32 DREG_TYPE = Element_Dreg<TestCoreConfig>::TYPE();
+  const u32 DREG_TYPE = Element_Dreg<TestCoreConfig>::THE_INSTANCE.GetType();
 
   tile.PlaceAtom(TestAtom(DREG_TYPE,0,0,0), center);
 
@@ -36,16 +37,18 @@ void EventWindow_Test::Test_eventwindowConstruction()
 void EventWindow_Test::Test_eventwindowWrite()
 {
   TestTile tile;
+  Element_Dreg<TestCoreConfig>::THE_INSTANCE.AllocateType();
+  Element_Res<TestCoreConfig>::THE_INSTANCE.AllocateType();
   tile.RegisterElement(Element_Dreg<TestCoreConfig>::THE_INSTANCE);
   tile.RegisterElement(Element_Res<TestCoreConfig>::THE_INSTANCE);
 
   SPoint center(4, 4);
   SPoint absolute(-2, 0);
   SPoint zero(0, 0);
-  const u32 DREG_TYPE = Element_Dreg<TestCoreConfig>::TYPE();
-  const u32 RES_TYPE = Element_Res<TestCoreConfig>::TYPE();
+  const u32 DREG_TYPE = Element_Dreg<TestCoreConfig>::THE_INSTANCE.GetType();
+  const u32 RES_TYPE = Element_Res<TestCoreConfig>::THE_INSTANCE.GetType();
 
-  const u32 EMPTY_TYPE = Element_Empty<TestCoreConfig>::TYPE();
+  const u32 EMPTY_TYPE = Element_Empty<TestCoreConfig>::THE_INSTANCE.GetType();
 
   absolute.Add(center);
 

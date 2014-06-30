@@ -33,7 +33,7 @@
 #include "ElementTable.h"
 #include "Element_Empty.h"
 #include "Element_Data.h"
-#include "Element_Reprovert.h"
+#include "AbstractElement_Reprovert.h"
 #include "itype.h"
 #include "P1Atom.h"
 
@@ -44,14 +44,12 @@ namespace MFM
 #define DATA_CREATE_PER_1000 150
 
   template <class CC>
-  class Element_Emitter : public Element_Reprovert<CC>
+  class Element_Emitter : public AbstractElement_Reprovert<CC>
   {
     // Extract short names for parameter types
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS };
-
-    const T m_defaultAtom;
 
   public:
 
@@ -63,25 +61,16 @@ namespace MFM
     };
 
     static Element_Emitter THE_INSTANCE;
-    static const u32 TYPE() {
-      return THE_INSTANCE.GetType();
-    }
 
-    const T BuildDefaultAtom() const {
-      T defaultAtom(TYPE(),0,0,Element_Reprovert<CC>::STATE_BITS);
+    virtual T BuildDefaultAtom() const {
+      T defaultAtom(this->GetType(), 0, 0, AbstractElement_Reprovert<CC>::STATE_BITS);
       this->SetGap(defaultAtom,2);
       return defaultAtom;
     }
 
     Element_Emitter() :
-      Element_Reprovert<CC>(MFM_UUID_FOR("Emitter", EMITTER_VERSION)),
-      m_defaultAtom(BuildDefaultAtom())
+      AbstractElement_Reprovert<CC>(MFM_UUID_FOR("Emitter", EMITTER_VERSION))
     { }
-
-    virtual const T & GetDefaultAtom() const
-    {
-      return m_defaultAtom;
-    }
 
     virtual u32 PercentMovable(const T& you, const T& me, const SPoint& offset) const
     {
@@ -104,7 +93,7 @@ namespace MFM
         Tile<CC> & tile = window.GetTile();
         ElementTable<CC> & et = tile.GetElementTable();
 
-        u64 * datap = et.GetDataAndRegister(TYPE(),DATA_SLOT_COUNT);
+        u64 * datap = et.GetDataAndRegister(this->GetType(), DATA_SLOT_COUNT);
         ++datap[DATUMS_EMITTED_SLOT];                  // Count emission attempts
 
         // Pick random nearest empty, if any

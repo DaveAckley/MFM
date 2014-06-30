@@ -57,17 +57,8 @@ namespace MFM
   public:
 
     static Element_Dreg THE_INSTANCE;
-    static const u32 TYPE() {
-      return THE_INSTANCE.GetType();
-    }
 
     Element_Dreg() : Element<CC>(MFM_UUID_FOR("Dreg", DREG_VERSION)) { }
-
-    virtual const T & GetDefaultAtom() const
-    {
-      static T defaultAtom(TYPE(),0,0,0);
-      return defaultAtom;
-    }
 
     virtual u32 PercentMovable(const T& you,
 			       const T& me, const SPoint& offset) const
@@ -92,7 +83,7 @@ namespace MFM
         T atom = window.GetRelativeAtom(dir);
         u32 oldType = atom.GetType();
 
-        if(Element_Empty<CC>::IsType(oldType))
+        if(Element_Empty<CC>::THE_INSTANCE.IsType(oldType))
           {
             if(random.OneIn(DREG_DRG_ODDS))
               {
@@ -103,16 +94,16 @@ namespace MFM
                 atom = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
               }
           }
-        else if(oldType == Element_Dreg::TYPE())
+        else if(oldType == Element_Dreg::THE_INSTANCE.GetType())
           {
             if(random.OneIn(DREG_DDR_ODDS))
               {
-                atom = T();
+                atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
               }
           }
         else if(oldType != Element_Wall<CC>::TYPE() && random.OneIn(DREG_DEL_ODDS))
           {
-            atom = T();
+            atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
           }
 
         if(atom.GetType() != oldType)

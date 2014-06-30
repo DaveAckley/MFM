@@ -33,6 +33,7 @@
 #include "ElementTable.h"
 #include "Random.h"
 #include "GridConfig.h"
+#include "ElementRegistry.h"
 
 #include "Element_Wall.h"
 
@@ -67,6 +68,8 @@ namespace MFM {
 
     bool m_backgroundRadiationEnabled;
 
+    ElementRegistry<CC> m_er;
+
   public:
     Random& GetRandom() { return m_random; }
 
@@ -74,7 +77,7 @@ namespace MFM {
 
     void SetSeed(u32 seed);
 
-    Grid() : m_seed(0), m_width(W), m_height(H)
+    Grid(ElementRegistry<CC>& elts) : m_seed(0), m_width(W), m_height(H), m_er(elts)
     {
     }
 
@@ -85,8 +88,11 @@ namespace MFM {
       return m_tiles[0][0].GetElementTable().Lookup(elementType);
     }
 
-    void Needed(const Element<CC> & anElement)
+    void Needed(Element<CC> & anElement)
     {
+      anElement.AllocateType();         // Force a type now
+      m_er.RegisterElement(anElement);  // Make sure we're in here (How could we not?)
+
       for(u32 i = 0; i < W; i++)
         for(u32 j = 0; j < H; j++)
           m_tiles[i][j].RegisterElement(anElement);
