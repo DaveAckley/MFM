@@ -286,7 +286,7 @@ namespace MFM
             const T other = window.GetRelativeAtom(sp);
             const u32 otherType = other.GetType();
 
-            bool isEmpty = Element_Empty<CC>::IsType(otherType);
+            bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
 
             if (isEmpty) {
 
@@ -336,7 +336,7 @@ namespace MFM
             }
             else {
 
-              bool isEmpty = Element_Empty<CC>::IsType(otherType);
+              bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
 
               if (isEmpty) ++consistentCount;
               else {
@@ -377,7 +377,7 @@ namespace MFM
             SPoint offset(0,2);
             T offEnd = window.GetRelativeAtom(offset);
             const u32 offType = offEnd.GetType();
-            if (Element_Empty<CC>::IsType(offType) && eatCount > 0) {
+            if (Element_Empty<CC>::THE_INSTANCE.IsType(offType) && eatCount > 0) {
               //              T corner = self;
               T corner = Element_DBar<CC>::THE_INSTANCE.GetAtom(barMax,SPoint(0,0));
               u32 symi = GetSymI(self);

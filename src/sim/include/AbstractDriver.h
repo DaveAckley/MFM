@@ -38,6 +38,7 @@
 #include "Grid.h"
 #include "ElementTable.h"
 #include "VArguments.h"
+#include "StdElements.h"
 #include "ElementRegistry.h"
 
 
@@ -68,6 +69,7 @@ namespace MFM
     static const u32 GRID_HEIGHT = H;
 
     typedef ElementRegistry<CC> OurElementRegistry;
+    typedef StdElements<CC> OurStdElements;
     typedef Grid<GC> OurGrid;
     typedef ElementTable<CC> OurElementTable;
 
@@ -205,6 +207,7 @@ namespace MFM
       fclose(fp);
 
       m_elementRegistry.AddPath("/home/sixstring982/Documents/Git/MFMv2/bin");
+      m_elementRegistry.AddPath("./bin");
       m_elementRegistry.Init();
     }
 
@@ -227,7 +230,9 @@ namespace MFM
     }
 
   private:
+
     OurElementRegistry m_elementRegistry;
+    OurStdElements m_se;
     OurGrid m_grid;
 
     u32 m_ticksLastStopped;
@@ -374,6 +379,7 @@ namespace MFM
   public:
 
     AbstractDriver() :
+      m_grid(m_elementRegistry),
       m_ticksLastStopped(0),
       m_startTimeMS(0),
       m_msSpentRunning(0),

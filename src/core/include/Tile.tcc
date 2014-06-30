@@ -18,6 +18,7 @@ namespace MFM {
   {
     elementTable.Reinit();
 
+    Element_Empty<CC>::THE_INSTANCE.AllocateType();
     RegisterElement(Element_Empty<CC>::THE_INSTANCE);
 
     ClearAtoms();

@@ -6,6 +6,7 @@
 #include "Element_Mover.h"
 #include "Element_Wall.h"
 #include "LocalConfig.h"
+#include "StdElements.h"
 #include <dlfcn.h>          /* For dlopen etc */
 
 extern "C" typedef void * (*MFM_Element_Plugin_Get_Static_Pointer)();
@@ -29,6 +30,8 @@ namespace MFM {
     MFMSimQBDemo(int whichSim)
       : m_whichSim(whichSim)
     {
+      StdElements<OurCoreConfig> se;
+      LOG.Debug("Standard elements %d", se.GetStdElementCount());
     }
 
     virtual void AddDriverArguments()
@@ -117,7 +120,7 @@ namespace MFM {
           SPoint tloc(aloc);
           tloc.Subtract(seedAtomPlace);
           if (tloc.GetMaximumLength() < 12 && tloc.GetMaximumLength() > 4)
-            if (Element_Empty<OurCoreConfig>::IsType(mainGrid.GetAtom(aloc)->GetType()))
+            if (Element_Empty<OurCoreConfig>::THE_INSTANCE.IsType(mainGrid.GetAtom(aloc)->GetType()))
               mainGrid.PlaceAtom(aDReg, aloc);
 
           if (once) {

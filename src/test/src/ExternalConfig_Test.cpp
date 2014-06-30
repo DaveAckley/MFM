@@ -15,7 +15,7 @@ namespace MFM
     ElementRegistry<TestCoreConfig> ereg;
     ereg.RegisterElement(Element_Dreg<TestCoreConfig>::THE_INSTANCE);
 
-    Grid<TestGridConfig> grid;
+    Grid<TestGridConfig> grid(ereg);
     ExternalConfig<TestGridConfig> cfg(grid, ereg);
     RegisterExternalConfigFunctions<TestGridConfig>(cfg);
 

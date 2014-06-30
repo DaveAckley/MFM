@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  Element_Reprovert.h Vertically reproducing base element type
+  AbstractElement_Reprovert.h Vertically reproducing base element type
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 */
 
 /**
-  \file Element_Reprovert.h Vertically reproducing base element type
+  \file AbstractElement_Reprovert.h Vertically reproducing base element type
   \author Trent R. Small.
   \author David H. Ackley.
   \date (C) 2014 All rights reserved.
@@ -39,7 +39,7 @@ namespace MFM
 
 
   template <class CC>
-  class Element_Reprovert : public Element<CC>
+  class AbstractElement_Reprovert : public Element<CC>
   {
     // Extract short names for parameter types
     typedef typename CC::ATOM_TYPE T;
@@ -47,7 +47,7 @@ namespace MFM
     enum { R = P::EVENT_WINDOW_RADIUS };
 
   public:
-    Element_Reprovert(const UUID & uuid) : Element<CC>(uuid) { }
+    AbstractElement_Reprovert(const UUID & uuid) : Element<CC>(uuid) { }
 
     static const u32 STATE_BELOW_IDX = 0;
     static const u32 STATE_BELOW_LEN = 9;
@@ -105,7 +105,7 @@ namespace MFM
   };
 
   template <class CC>
-  void Element_Reprovert<CC>::ReproduceVertically(EventWindow<CC>& window) const
+  void AbstractElement_Reprovert<CC>::ReproduceVertically(EventWindow<CC>& window) const
   {
     Random & random = window.GetRandom();
     T self = window.GetCenterAtom();
@@ -121,7 +121,7 @@ namespace MFM
 
     bool weChanged = false;
 
-    if (Element_Empty<CC>::IsType(otherType)) {
+    if (Element_Empty<CC>::THE_INSTANCE.IsType(otherType)) {
       T newAtom = self;
 
       // New guys are assumed maximally extreme in their direction

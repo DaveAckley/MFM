@@ -131,15 +131,15 @@ namespace MFM
       for(s32 i = 0; i < 2; i++)
       {
 	if(movingUp &&
-	   FillAvailableSubwindowPoint(window, seData, Dirs::SOUTHEAST, Element_Data<CC>::TYPE()) &&
-	   FillAvailableSubwindowPoint(window, nwEmpty, Dirs::NORTHWEST, Element_Empty<CC>::TYPE()))
+	   FillAvailableSubwindowPoint(window, seData, Dirs::SOUTHEAST, Element_Data<CC>::THE_INSTANCE.GetType()) &&
+	   FillAvailableSubwindowPoint(window, nwEmpty, Dirs::NORTHWEST, Element_Empty<CC>::THE_INSTANCE.GetType()))
 	{
 	  srcPt = seData;
 	  dstPt = nwEmpty;
 	}
 	else if(!movingUp &&
-                FillAvailableSubwindowPoint(window, neData, Dirs::NORTHEAST, Element_Data<CC>::TYPE()) &&
-                FillAvailableSubwindowPoint(window, swEmpty, Dirs::SOUTHWEST, Element_Empty<CC>::TYPE()))
+                FillAvailableSubwindowPoint(window, neData, Dirs::NORTHEAST, Element_Data<CC>::THE_INSTANCE.GetType()) &&
+                FillAvailableSubwindowPoint(window, swEmpty, Dirs::SOUTHWEST, Element_Empty<CC>::THE_INSTANCE.GetType()))
 	{
 	  srcPt = neData;
 	  dstPt = swEmpty;

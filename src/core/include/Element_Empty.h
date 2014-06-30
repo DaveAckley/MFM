@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  Element_Consumer.h MFM representation of empty space
+  Element_Empty.h MFM representation of empty space
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 */
 
 /**
-  \file Element_Consumer.h MFM representation of empty space
+  \file Element_Empty.h MFM representation of empty space
   \author Trent R. Small.
   \author David H. Ackley.
   \date (C) 2014 All rights reserved.
@@ -46,10 +46,6 @@ namespace MFM
   public:
 
     static Element_Empty THE_INSTANCE;
-    static u32 TYPE() { return THE_INSTANCE.GetType(); }
-    static bool IsType(u32 type) {
-      return type == TYPE();
-    }
 
     Element_Empty() : Element<CC>(MFM_UUID_FOR("Empty", EMPTY_VERSION)) { }
 
@@ -57,12 +53,6 @@ namespace MFM
 			       const T& me, const SPoint& offset) const
     {
       return 100;
-    }
-
-    virtual const T & GetDefaultAtom() const
-    {
-      static T defaultAtom;                 // And the default ctor makes us!
-      return defaultAtom;
     }
 
     virtual u32 DefaultPhysicsColor() const

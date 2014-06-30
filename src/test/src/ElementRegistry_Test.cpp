@@ -10,6 +10,7 @@ namespace MFM {
     UUID u1("Sorter",1,2,3,4);
     assert(!er.IsRegistered(u1));
     assert(!er.IsLoaded(u1));
+    Element_Empty<TestCoreConfig>::THE_INSTANCE.AllocateType();
     er.RegisterElement(Element_Empty<TestCoreConfig>::THE_INSTANCE);
 
     assert(!er.IsRegistered(u1));

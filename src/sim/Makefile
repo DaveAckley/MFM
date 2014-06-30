@@ -5,7 +5,7 @@ COMPONENTNAME:=sim
 BASEDIR:=../..
 
 # What we need from outside
-INCLUDES += -I $(BASEDIR)/src/core/include
+INCLUDES += -I $(BASEDIR)/src/core/include -I $(BASEDIR)/src/elements/include
 
 # Do the library thing
 include $(BASEDIR)/config/Makelib.mk

@@ -178,7 +178,7 @@ namespace MFM {
 		m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
       /* Filling empty results in stack overflow for obvious reasons */
-      if(!Atom<CC>::IsType(atom, Element_Empty<CC>::TYPE()))
+      if(!Atom<CC>::IsType(atom, Element_Empty<CC>::THE_INSTANCE.GetType()))
       {
 	PaintMapper(button, clickPt, false, atom, true);
       }
@@ -262,7 +262,7 @@ namespace MFM {
 	   npt.GetX() < TILE_SIDE_LIVE_SITES * W &&
 	   npt.GetY() < TILE_SIDE_LIVE_SITES * H)
 	{
-	  if(Atom<CC>::IsType(*grid.GetAtom(npt), Element_Empty<CC>::TYPE()))
+	  if(Atom<CC>::IsType(*grid.GetAtom(npt), Element_Empty<CC>::THE_INSTANCE.GetType()))
 	  {
 	    BucketFill(grid, atom, npt);
 	  }
