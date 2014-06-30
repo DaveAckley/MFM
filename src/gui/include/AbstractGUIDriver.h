@@ -307,7 +307,7 @@ namespace MFM {
     {
       ResetButton() : AbstractGridButton("Reset")
       {
-	AbstractButton::SetName("QuitButton");
+	AbstractButton::SetName("ResetButton");
         Panel::SetDimensions(200,40);
         AbstractButton::SetRenderPoint(SPoint(2, 450));
       }
@@ -336,7 +336,7 @@ namespace MFM {
 
     struct BGRButton : public AbstractGridButton
     {
-      BGRButton() : AbstractGridButton("Quit")
+      BGRButton() : AbstractGridButton("Bkgd Rad")
       {
 	AbstractButton::SetName("BGRButton");
         Panel::SetDimensions(200,40);
