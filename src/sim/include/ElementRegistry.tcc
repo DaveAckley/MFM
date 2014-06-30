@@ -35,7 +35,7 @@ namespace MFM
 	if(entry->d_type == DT_LNK ||
 	   entry->d_type == DT_REG)
 	{
-	  if(Element_Empty<CC>::THE_INSTANCE.GetUUID().LegalFilename(entry->d_name))
+	  if(UUID::LegalFilename(entry->d_name))
 	  {
 	    LOG.Debug("    ELEMENT FOUND: %s", entry->d_name);
 

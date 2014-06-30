@@ -86,7 +86,7 @@ namespace MFM
 
     for(u32 i = 0; i < elems; i++)
     {
-      UUID& uuid = m_elementRegistry.GetEntryUUID(i);
+      const UUID& uuid = m_elementRegistry.GetEntryUUID(i);
 
       byteSink.Printf("RegisterElement(%s, %d)",
 	              uuid.GetLabel(), i);

@@ -98,10 +98,13 @@ namespace MFM {
     bool RegisterElement(const Element<CC>& e) ;
 
     /**
-     * Gets the number of currently loaded Elements inside this
+     * Gets the number of currently registered Elements inside this
      * ElementRegistry.
      */
-    u32 GetEntryCount();
+    u32 GetEntryCount() const
+    {
+      return m_registeredElementsCount;
+    }
 
     /**
      * Gets the UUID of the Element which was loaded in a particular
@@ -112,7 +115,12 @@ namespace MFM {
      *
      * @returns The UUID of the element loaded at this partuclar index.
      */
-    UUID& GetEntryUUID(u32 entryIdx);
+    const UUID& GetEntryUUID(u32 entryIdx) const
+    {
+      if (entryIdx >= GetEntryCount())
+        FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
+      return m_registeredElements[entryIdx].m_uuid;
+    }
 
     /**
      * Gets a pointer to the specific Element which was loaded in a

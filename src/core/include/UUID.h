@@ -77,7 +77,12 @@ namespace MFM {
       m_label.GetZString(); // Ensure label is null-terminated
     }
 
-    bool LegalLabel(const char * label) const
+    /**
+     * Is \a label a legally-formatted label for an Element?  This
+     * includes just the name, not the additional info following the
+     * '-'.
+     */
+    static bool LegalLabel(const char * label)
     {
       if (!label)
         return false;
@@ -97,31 +102,12 @@ namespace MFM {
       return true;
     }
 
-    bool LegalFilename(const char* label) const
+    static bool LegalFilename(const char* label)
     {
-      /* Let's copy it into another buffer, trim the extension, then
-       * see if that's a legal label.*/
+      ZStringByteSource zbs(label);
 
-      char newBuffer[128];
-      char* bufp = newBuffer;
-
-      while(*label && *label != '.')
-      {
-	*(bufp++) = *(label++);
-      }
-      *bufp = 0;
-
-      if(*label == '.')
-      {
-	if(strcmp(label, ".so"))
-	{
-	  return false;
-	}
-
-	return LegalLabel(newBuffer);
-      }
-
-      return false;
+      UUID temp;
+      return 4==zbs.Scanf("%@.so",&temp);
     }
 
     UUID(ByteSource & bs) ;
