@@ -1,5 +1,7 @@
 /* -*- C++ -*- */
 #include <stdlib.h>
+#include <errno.h>  /* For errno */
+#include <string.h> /* For strerror */
 #include <dirent.h> /* For opendir */
 
 namespace MFM
@@ -17,8 +19,8 @@ namespace MFM
 
       if(!dir)
       {
-	LOG.Error("    *-*-* CANNOT OPEN %s *-*-*", dirname);
-	FAIL(IO_ERROR);
+	LOG.Warning("Skipping %s: %s", dirname, strerror(errno));
+        continue;
       }
 
       struct dirent *entry = NULL;
