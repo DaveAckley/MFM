@@ -119,7 +119,7 @@ namespace MFM
     static const u32 STATE_BITS_COUNT = STATE_BITS_END - STATE_BITS_START + 1;
 
     Element_MQBar() : Element<CC>(MFM_UUID_FOR("MQBar", QBAR_VERSION)) {
-      LOG.Message("%@ ctor %p, type=0x%x", &this->GetUUID(), this, this->GetType());
+      LOG.Message("%@ ctor %p", &this->GetUUID(), this);
     }
 
     u32 GetSymI(const T &atom) const {
@@ -295,7 +295,7 @@ namespace MFM
             const T other = window.GetRelativeAtom(sp);
             const u32 otherType = other.GetType();
 
-            bool isEmpty = Element_Empty<CC>::IsType(otherType);
+            bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
 
             if (isEmpty) {
 
@@ -361,7 +361,7 @@ namespace MFM
             }
             else {
 
-              bool isEmpty = Element_Empty<CC>::IsType(otherType);
+              bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
 
               if (isEmpty) ++consistentCount;
               else {
@@ -424,7 +424,7 @@ namespace MFM
             SPoint offset(0,2);
             T offEnd = window.GetRelativeAtom(offset);
             const u32 offType = offEnd.GetType();
-            if (Element_Empty<CC>::IsType(offType) && eatCount > 0) {
+            if (Element_Empty<CC>::THE_INSTANCE.IsType(offType) && eatCount > 0) {
               T corner = self;
               u32 symi = GetSymI(self);
               ++symi;
