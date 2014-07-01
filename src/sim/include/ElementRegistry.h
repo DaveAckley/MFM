@@ -131,7 +131,12 @@ namespace MFM {
      *
      * @returns The Element of the element loaded at this partuclar index.
      */
-    Element<CC>* GetEntryElement(u32 entryIdx);
+    const Element<CC>* GetEntryElement(u32 entryIdx) const
+    {
+      if (entryIdx >= GetEntryCount())
+        FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
+      return m_registeredElements[entryIdx].m_element;
+    }
 
 
   private:

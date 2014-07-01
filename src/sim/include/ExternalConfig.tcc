@@ -88,16 +88,43 @@ namespace MFM
     {
       const UUID& uuid = m_elementRegistry.GetEntryUUID(i);
 
-      byteSink.Printf("RegisterElement(%s, %d)",
-	              uuid.GetLabel(), i);
-
+      byteSink.Printf("RegisterElement(");
+      uuid.Print(byteSink);
+      byteSink.Printf(",%d)", i);
       byteSink.WriteNewline();
     }
     byteSink.WriteNewline();
 
     /* Then, GA all live atoms. */
 
-    //for(u32 x = 0; x < GC::W * ; x++
+    for(u32 y = 0; y < CC::PARAM_CONFIG::TILE_WIDTH; y++)
+    {
+      for(u32 x = 0; x < CC::PARAM_CONFIG::TILE_WIDTH; x++)
+      {
+	SPoint currentPt(x, y);
+	/* No need to write empties since they are the default */
+	if(!Atom<CC>::IsType(*m_grid.GetAtom(currentPt),
+			     Element_Empty<CC>::THE_INSTANCE.GetType()))
+	{
+	  byteSink.Printf("GA(");
+
+	  /* This wil be a little slow, but meh. Makes me miss hash
+	   * tables. */
+	  for(u32 i = 0; i < elems; i++)
+	  {
+	    if(Atom<CC>::IsType(*m_grid.GetAtom(currentPt),
+		 m_elementRegistry.GetEntryElement(i)->GetType()))
+	    {
+	      byteSink.Printf("%d", i);
+	      break;
+	    }
+	  }
+
+	  byteSink.Printf(",%d,%d)", x, y);
+	  byteSink.WriteNewline();
+	}
+      }
+    }
 
     /* Set any additional parameters */
   }
