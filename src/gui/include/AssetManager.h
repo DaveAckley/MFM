@@ -42,6 +42,8 @@ namespace MFM
     ASSET_ERASER_ICON,
     ASSET_BRUSH_ICON,
     ASSET_BUCKET_ICON,
+    ASSET_CHECKBOX_ICON_ON,
+    ASSET_CHECKBOX_ICON_OFF,
     ASSET_COUNT
   };
 
@@ -101,6 +103,8 @@ namespace MFM
 	surfaces[ASSET_ERASER_ICON] = LoadImage("images/eraser_icon.png");
 	surfaces[ASSET_BRUSH_ICON] = LoadImage("images/brush_icon.png");
 	surfaces[ASSET_BUCKET_ICON] = LoadImage("images/bucket_icon.png");
+	surfaces[ASSET_CHECKBOX_ICON_ON] = LoadImage("images/checkbox_on.png");
+	surfaces[ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
 
 	initialized = true;
       }

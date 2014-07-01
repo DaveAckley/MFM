@@ -35,6 +35,7 @@
 #include "Logger.h"
 #include "AssetManager.h"
 #include "AbstractButton.h"
+#include "AbstractCheckbox.h"
 #include "Tile.h"
 #include "GridRenderer.h"
 #include "GridPanel.h"
@@ -123,8 +124,6 @@ namespace MFM {
     class AbstractGridButton : public AbstractButton
     {
     protected:
-      //      GridRenderer* m_grend;
-      //      OurGrid* m_grid;
       AbstractGUIDriver * m_driver;
 
       AbstractGridButton(const char* title) :
@@ -138,12 +137,24 @@ namespace MFM {
       {
 	m_driver = &driver;
       }
-      /*
-      void SetGrid(OurGrid* grid)
+    };
+
+    class AbstractGridCheckbox : public AbstractCheckbox
+    {
+    protected:
+      AbstractGUIDriver * m_driver;
+
+      AbstractGridCheckbox(const char* title) :
+        AbstractCheckbox(title), m_driver(0)
       {
-	m_grid = grid;
       }
-      */
+
+    public:
+
+      void SetDriver(AbstractGUIDriver & driver)
+      {
+	m_driver = &driver;
+      }
     };
 
     struct ClearButton : public AbstractGridButton
@@ -238,19 +249,20 @@ namespace MFM {
       }
     } m_gridRenderButton;
 
-    struct HeatmapButton : public AbstractGridButton
+    struct HeatmapButton : public AbstractGridCheckbox
     {
-      HeatmapButton() : AbstractGridButton("Toggle Heatmap")
+      HeatmapButton() : AbstractGridCheckbox("Toggle Heatmap")
       {
 	AbstractButton::SetName("HeatmapButton");
         Panel::SetDimensions(200,40);
         AbstractButton::SetRenderPoint(SPoint(2, 200));
       }
 
-      virtual void OnClick(u8 button)
+      virtual void OnCheck(bool value)
       {
-	AbstractGridButton::m_driver->GetGridRenderer().ToggleDataHeatmap();
+	AbstractGridCheckbox::m_driver->GetGridRenderer().ToggleDataHeatmap();
       }
+
     } m_heatmapButton;
 
     struct TileViewButton : public AbstractGridButton
@@ -432,14 +444,6 @@ namespace MFM {
       m_toolboxPanel.SetAnchor(ANCHOR_WEST);
       m_gridPanel.Insert(&m_toolboxPanel, NULL);
 
-      /*
-      m_rootPanel.Insert(&m_panel1,0);
-      m_rootPanel.Insert(&m_panel2,&m_panel1);
-      m_panel1.Insert(&m_panel3,0);
-      m_rootPanel.Insert(&m_panel4,0);
-      m_panel5.SetControlled(&m_panel4);
-      m_rootPanel.Insert(&m_panel5,0);
-      */
       m_rootPanel.Print(STDOUT);
 
       m_srend.OnceOnly(m_fonts);

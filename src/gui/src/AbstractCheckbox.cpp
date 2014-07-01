@@ -1,0 +1,2 @@
+/* -*- C++ -*- */
+#include "AbstractCheckbox.h"

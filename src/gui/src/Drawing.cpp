@@ -150,11 +150,15 @@ namespace MFM {
     }
 
     SDL_Rect rect;
-    rect.x = loc.GetX();
-    rect.y = loc.GetY();
+    rect.x = loc.GetX() + m_rect.GetX();
+    rect.y = loc.GetY() + m_rect.GetY();
     rect.w = maxSize.GetX();
     rect.h = maxSize.GetY();
 
+    SDL_Rect clip;
+    Convert(m_rect, clip);
+
+    SDL_SetClipRect(m_dest, &clip);
     SDL_BlitSurface(src, NULL, m_dest, &rect);
   }
 

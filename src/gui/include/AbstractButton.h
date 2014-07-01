@@ -79,6 +79,11 @@ namespace MFM
       m_icon = icon;
     }
 
+    SDL_Surface* GetIcon()
+    {
+      return m_icon;
+    }
+
     void SetDimensions(const SPoint& dimensions)
     {
       m_dimensions = dimensions;
@@ -92,6 +97,11 @@ namespace MFM
     void SetText(const char* text)
     {
       m_text = text;
+    }
+
+    const char* GetText()
+    {
+      return m_text;
     }
 
     bool IsEnabled() const

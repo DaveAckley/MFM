@@ -55,13 +55,12 @@ namespace MFM
 
     if(m_icon)
     {
-
-      drawing.BlitImage(m_icon, MakeUnsigned(GetAbsoluteLocation()), GetDimensions());
+      drawing.BlitImage(m_icon, UPoint(0,0), Panel::GetDimensions());
     }
 
     if(m_text)
     {
-      SPoint dims = MakeSigned(GetDimensions());
+      SPoint dims = MakeSigned(Panel::GetDimensions());
       SPoint textSize = GetTextSize(drawing.GetFont(), m_text);
       SPoint renderAt = max((dims-textSize)/2, SPoint(0,0));
 
