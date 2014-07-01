@@ -343,6 +343,15 @@ namespace MFM {
       virtual void OnClick(u8 button)
       {
 	AbstractGridButton::m_driver->GetGrid().ToggleBackgroundRadiation();
+	if(AbstractGridButton::m_driver->GetGrid().
+	   IsBackgroundRadiataionEnabled())
+	{
+	  AbstractButton::SetText("Turn OFF Radiation");
+	}
+	else
+	{
+	  AbstractButton::SetText("Turn ON Radiation");
+	}
       }
     } m_bgrButton;
 

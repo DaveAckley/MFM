@@ -89,6 +89,11 @@ namespace MFM
       m_enabled = isEnabled;
     }
 
+    void SetText(const char* text)
+    {
+      m_text = text;
+    }
+
     bool IsEnabled() const
     {
       return m_enabled;

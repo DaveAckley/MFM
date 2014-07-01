@@ -125,6 +125,22 @@ namespace MFM
 	}
       }
     }
+    byteSink.WriteNewline();
+
+    /* Set Tile geometry */
+    for(u32 y = 0; y < GC::GRID_HEIGHT; y++)
+    {
+      for(u32 x = 0; x < GC::GRID_WIDTH; x++)
+      {
+	SPoint currentPt(x, y);
+
+	if(!m_grid.GetTileExecutionStatus(currentPt))
+	{
+	  byteSink.Printf("DisableTile(%d,%d)", x, y);
+	  byteSink.WriteNewline();
+	}
+      }
+    }
 
     /* Set any additional parameters */
   }

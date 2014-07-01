@@ -158,7 +158,7 @@ namespace MFM {
      *
      * @param tileLoc The position of the Tile to set.
      *
-     * @param value If value is true, this tells the Tile to begin
+     * @param value If \c value is \c true, this tells the Tile to begin
      *              executing its own events. Else, this Tile will
      *              only process Packets from other Tiles.
      */
