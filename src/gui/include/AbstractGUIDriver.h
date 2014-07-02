@@ -163,7 +163,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("ClearButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 300));
+        AbstractButton::SetRenderPoint(SPoint(2, 305));
       }
 
       virtual void OnClick(u8 button)
@@ -186,7 +186,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("PauseButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2,0));
+        AbstractButton::SetRenderPoint(SPoint(2,105));
       }
 
       virtual void OnClick(u8 button)
@@ -210,7 +210,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("NukeButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 50));
+        AbstractButton::SetRenderPoint(SPoint(2, 155));
       }
 
       virtual void OnClick(u8 button)
@@ -225,7 +225,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("XRayButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 100));
+        AbstractButton::SetRenderPoint(SPoint(2, 205));
       }
 
       virtual void OnClick(u8 button)
@@ -234,35 +234,35 @@ namespace MFM {
       }
     } m_xrayButton;
 
-    struct GridRenderButton : public AbstractGridButton
+    struct GridRenderButton : public AbstractGridCheckbox
     {
-      GridRenderButton() : AbstractGridButton("Toggle Grid")
+      GridRenderButton() : AbstractGridCheckbox("Grid")
       {
 	AbstractButton::SetName("GridRenderButton");
-        Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 150));
+        Panel::SetDimensions(200,25);
+        AbstractButton::SetRenderPoint(SPoint(2, 0));
+	AbstractCheckbox::SetChecked(true);
       }
 
-      virtual void OnClick(u8 button)
+      virtual void OnCheck(bool value)
       {
-	AbstractGridButton::m_driver->GetGridRenderer().ToggleGrid();
+	AbstractGridCheckbox::m_driver->GetGridRenderer().ToggleGrid();
       }
     } m_gridRenderButton;
 
     struct HeatmapButton : public AbstractGridCheckbox
     {
-      HeatmapButton() : AbstractGridCheckbox("Toggle Heatmap")
+      HeatmapButton() : AbstractGridCheckbox("Heatmap")
       {
 	AbstractButton::SetName("HeatmapButton");
-        Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 200));
+        Panel::SetDimensions(200,25);
+        AbstractButton::SetRenderPoint(SPoint(2, 35));
       }
 
       virtual void OnCheck(bool value)
       {
 	AbstractGridCheckbox::m_driver->GetGridRenderer().ToggleDataHeatmap();
       }
-
     } m_heatmapButton;
 
     struct TileViewButton : public AbstractGridButton
@@ -271,7 +271,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("TileViewButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 250));
+        AbstractButton::SetRenderPoint(SPoint(2, 255));
       }
 
       virtual void OnClick(u8 button)
@@ -287,7 +287,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("SaveButton");
 	Panel::SetDimensions(200, 40);
-	AbstractButton::SetRenderPoint(SPoint(2, 350));
+	AbstractButton::SetRenderPoint(SPoint(2, 355));
       }
 
       virtual void OnClick(u8 button)
@@ -318,7 +318,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("ResetButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 450));
+        AbstractButton::SetRenderPoint(SPoint(2, 455));
       }
 
       virtual void OnClick(u8 button)
@@ -334,7 +334,7 @@ namespace MFM {
       {
 	AbstractButton::SetName("QuitButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 400));
+        AbstractButton::SetRenderPoint(SPoint(2, 405));
       }
 
       virtual void OnClick(u8 button)
@@ -343,27 +343,18 @@ namespace MFM {
       }
     } m_quitButton;
 
-    struct BGRButton : public AbstractGridButton
+    struct BGRButton : public AbstractGridCheckbox
     {
-      BGRButton() : AbstractGridButton("Bkgd Rad")
+      BGRButton() : AbstractGridCheckbox("XRay On Write")
       {
 	AbstractButton::SetName("BGRButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 500));
+        AbstractButton::SetRenderPoint(SPoint(2, 70));
       }
 
-      virtual void OnClick(u8 button)
+      virtual void OnCheck(bool value)
       {
-	AbstractGridButton::m_driver->GetGrid().ToggleBackgroundRadiation();
-	if(AbstractGridButton::m_driver->GetGrid().
-	   IsBackgroundRadiataionEnabled())
-	{
-	  AbstractButton::SetText("Turn OFF Radiation");
-	}
-	else
-	{
-	  AbstractButton::SetText("Turn ON Radiation");
-	}
+	AbstractGridCheckbox::m_driver->GetGrid().ToggleBackgroundRadiation();
       }
     } m_bgrButton;
 

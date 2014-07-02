@@ -41,13 +41,13 @@ namespace MFM
     AbstractCheckbox() :
       AbstractButton(), m_checked(false)
     {
-      OnceOnly();
+      AbstractCheckbox::OnceOnly();
     }
 
     AbstractCheckbox(const char* text) :
       AbstractButton(text), m_checked(false)
     {
-      OnceOnly();
+      AbstractCheckbox::OnceOnly();
     }
 
     virtual void PaintBorder(Drawing& d)
@@ -57,6 +57,9 @@ namespace MFM
     {
       SDL_Surface* icon = GetIcon();
       d.BlitAsset(GetAsset(), UPoint(0, 0), UPoint(icon->w, icon->h));
+
+      d.SetForeground(Panel::GetForeground());
+
       d.BlitText(AbstractButton::GetText(), UPoint(32, 0),
 		 AbstractButton::GetDimensions());
     }
@@ -73,6 +76,11 @@ namespace MFM
     bool IsChecked()
     {
       return m_checked;
+    }
+
+    void SetChecked(bool checked)
+    {
+      m_checked = checked;
     }
 
   private:
