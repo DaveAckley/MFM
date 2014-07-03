@@ -168,9 +168,14 @@ namespace MFM
 	//d.FillCircle(0, 0,
 	//	     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE,
 	//	     ELEMENT_RENDER_SIZE >> 1);
+	d.SetFont(AssetManager::GetFont(FONT_ASSET_ELEMENT));
+
+	d.SetForeground(Drawing::HalfColor(~m_element->DefaultPhysicsColor()));
+	d.BlitText(m_element->GetAtomicSymbol(),
+		   UPoint(3, 1),
+		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
 
 	d.SetForeground(~m_element->DefaultPhysicsColor());
-	d.SetFont(AssetManager::GetFont(FONT_ASSET_ELEMENT));
 	d.BlitText(m_element->GetAtomicSymbol(),
 		   UPoint(2, 0),
 		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));

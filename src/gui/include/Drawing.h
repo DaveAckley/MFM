@@ -97,6 +97,16 @@ namespace MFM {
     static const int GREY = GREY50;
     static const int DARK_PURPLE = 0xff200020;
 
+    static u32 HalfColor(u32 input)
+    {
+      u8 r, g, b;
+      r = (input & 0xff0000) >> 17;
+      g = (input & 0x00ff00) >> 9;
+      b = (input & 0xff) >> 1;
+
+      return 0xff000000 | (r << 16) | (g << 8) | b;
+    }
+
     Drawing(SDL_Surface * dest = 0, TTF_Font * font = 0) ;
 
     /**

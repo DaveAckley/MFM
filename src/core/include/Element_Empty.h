@@ -47,7 +47,10 @@ namespace MFM
 
     static Element_Empty THE_INSTANCE;
 
-    Element_Empty() : Element<CC>(MFM_UUID_FOR("Empty", EMPTY_VERSION)) { }
+    Element_Empty() : Element<CC>(MFM_UUID_FOR("Empty", EMPTY_VERSION))
+    {
+      Element<CC>::SetAtomicSymbol("Em");
+    }
 
     virtual u32 PercentMovable(const T& you,
 			       const T& me, const SPoint& offset) const

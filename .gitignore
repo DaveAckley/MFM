@@ -33,3 +33,7 @@ codelog.txt
 
 # Don't track spikes for now
 spikes/
+
+# Don't need the generated *.inc files
+src/elements/include/StdElements.inc
+src/elements/include/StdElementsHeaders.inc
