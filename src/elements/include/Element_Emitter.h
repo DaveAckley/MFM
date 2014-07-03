@@ -70,7 +70,9 @@ namespace MFM
 
     Element_Emitter() :
       AbstractElement_Reprovert<CC>(MFM_UUID_FOR("Emitter", EMITTER_VERSION))
-    { }
+    {
+      Element<CC>::SetAtomicSymbol("Em");
+    }
 
     virtual u32 PercentMovable(const T& you, const T& me, const SPoint& offset) const
     {

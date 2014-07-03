@@ -30,6 +30,7 @@
 
 #include "SDL/SDL_image.h"
 #include "SDL/SDL.h"
+#include "SDL/SDL_ttf.h"
 #include "Logger.h"
 #include "Utils.h"
 
@@ -47,11 +48,19 @@ namespace MFM
     ASSET_COUNT
   };
 
+  enum FontAsset
+  {
+    FONT_ASSET_ELEMENT = 0,
+    FONT_ASSET_COUNT
+  };
+
   class AssetManager
   {
   private:
 
     static SDL_Surface* surfaces[ASSET_COUNT];
+
+    static TTF_Font* fonts[FONT_ASSET_COUNT];
 
     static bool initialized;
 
@@ -88,6 +97,30 @@ namespace MFM
       return opped;
     }
 
+    static TTF_Font* LoadFont(const char* relativePath, u32 size)
+    {
+      TTF_Font* font = NULL;
+      char path[1024];
+
+      if(Utils::GetReadableResourceFile(relativePath, path, 1024))
+      {
+	font = TTF_OpenFont(path, size);
+
+	if(!font)
+	{
+	  LOG.Error("Font %s not loaded: %s",
+		    path,
+		    TTF_GetError());
+	}
+      }
+      else
+      {
+	LOG.Error("Cannot compute relative path to: %s", relativePath);
+      }
+
+      return font;
+    }
+
   public:
 
     /**
@@ -106,6 +139,8 @@ namespace MFM
 	surfaces[ASSET_CHECKBOX_ICON_ON] = LoadImage("images/checkbox_on.png");
 	surfaces[ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
 
+	fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/tiny.ttf", 12);
+
 	initialized = true;
       }
     }
@@ -123,6 +158,12 @@ namespace MFM
 	  surfaces[i] = NULL;
 	}
 
+	for(FontAsset i = FONT_ASSET_ELEMENT; i < FONT_ASSET_COUNT; i = (FontAsset)(i + 1))
+	{
+	  TTF_CloseFont(fonts[i]);
+	  fonts[i] = NULL;
+	}
+
 	initialized = false;
       }
     }
@@ -130,6 +171,11 @@ namespace MFM
     static SDL_Surface* Get(Asset a)
     {
       return surfaces[a];
+    }
+
+    static TTF_Font* GetFont(FontAsset a)
+    {
+      return fonts[a];
     }
   };
 }

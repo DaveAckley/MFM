@@ -63,7 +63,10 @@ namespace MFM
 
     static const SPoint m_southeastSubwindow[4];
 
-    Element_Sorter() : Element<CC>(MFM_UUID_FOR("Sorter", SORTER_VERSION)) { }
+    Element_Sorter() : Element<CC>(MFM_UUID_FOR("Sorter", SORTER_VERSION))
+    {
+      Element<CC>::SetAtomicSymbol("Sr");
+    }
 
     u32 GetThreshold(const T &atom, u32 badType) const {
       if (!Atom<CC>::IsType(atom,TYPE())) return badType;

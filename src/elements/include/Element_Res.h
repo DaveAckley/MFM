@@ -57,7 +57,10 @@ namespace MFM
       return THE_INSTANCE.GetType();
     }
 
-    Element_Res() : Element<CC>(MFM_UUID_FOR("Res", RES_VERSION)) {}
+    Element_Res() : Element<CC>(MFM_UUID_FOR("Res", RES_VERSION))
+    {
+      Element<CC>::SetAtomicSymbol("R");
+    }
 
     virtual u32 PercentMovable(const T& you,
 			       const T& me, const SPoint& offset) const

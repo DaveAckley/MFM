@@ -57,6 +57,8 @@ namespace MFM
     bool m_hasType;
     T m_defaultAtom;
 
+    const char* m_atomicSymbol;
+
   protected:
 
     virtual T BuildDefaultAtom() const
@@ -71,6 +73,16 @@ namespace MFM
 
     BitVector<P::BITS_PER_ATOM> & GetBits(T & atom) const {
       return atom.m_bits;
+    }
+
+    void SetAtomicSymbol(const char* symbol)
+    {
+      if(strlen(symbol) > 2)
+      {
+	/* Single or double letters only, like the periodic table. */
+	FAIL(ILLEGAL_ARGUMENT);
+      }
+      m_atomicSymbol = symbol;
     }
 
     static const SPoint VNNeighbors[4];
@@ -98,13 +110,15 @@ namespace MFM
 
   public:
 
-    Element(const UUID & uuid) : m_UUID(uuid), m_type(0), m_hasType(false)
+    Element(const UUID & uuid) : m_UUID(uuid), m_type(0), m_hasType(false),
+				 m_atomicSymbol("!!")
     {
       LOG.Debug("Constructed %@",&m_UUID);
     }
 
     // For use by Element_Empty only!
-    Element(const UUID & uuid, u32 type) : m_UUID(uuid), m_type(type), m_hasType(true)
+    Element(const UUID & uuid, u32 type) : m_UUID(uuid), m_type(type), m_hasType(true),
+					   m_atomicSymbol("!!")
     { }
 
     void AllocateType() {
@@ -119,6 +133,11 @@ namespace MFM
       if (!m_hasType)
         FAIL(ILLEGAL_STATE);
       return m_type;
+    }
+
+    const char* GetAtomicSymbol() const
+    {
+      return m_atomicSymbol;
     }
 
     bool IsType(u32 type) const {

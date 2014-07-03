@@ -161,12 +161,19 @@ namespace MFM
 
       virtual void PaintComponent(Drawing& d)
       {
-	d.SetForeground(this->Panel::GetBackground());
-	d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
+	//d.SetForeground(this->Panel::GetBackground());
+	//d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
 	d.SetForeground(m_element->DefaultPhysicsColor());
-	d.FillCircle(0, 0,
-		     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE,
-		     ELEMENT_RENDER_SIZE >> 1);
+	d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
+	//d.FillCircle(0, 0,
+	//	     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE,
+	//	     ELEMENT_RENDER_SIZE >> 1);
+
+	d.SetForeground(~m_element->DefaultPhysicsColor());
+	d.SetFont(AssetManager::GetFont(FONT_ASSET_ELEMENT));
+	d.BlitText(m_element->GetAtomicSymbol(),
+		   UPoint(0, 0),
+		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
 
       const Element<CC>* GetElement()

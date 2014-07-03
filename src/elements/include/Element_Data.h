@@ -53,6 +53,7 @@ namespace MFM
 
     Element_Data() : Element<CC>(MFM_UUID_FOR("Data", DATA_VERSION))
     {
+      Element<CC>::SetAtomicSymbol("Dt");
     }
 
     static Element_Data THE_INSTANCE;

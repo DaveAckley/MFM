@@ -54,7 +54,10 @@ namespace MFM
       return THE_INSTANCE.GetType();
     }
 
-    Element_Wall() : Element<CC>(MFM_UUID_FOR("Wall", WALL_VERSION)) { }
+    Element_Wall() : Element<CC>(MFM_UUID_FOR("Wall", WALL_VERSION))
+    {
+      Element<CC>::SetAtomicSymbol("W");
+    }
 
     virtual const T & GetDefaultAtom() const
     {
