@@ -33,7 +33,7 @@
 #define ELEMENT_BOX_HEIGHT 10
 #define ELEMENT_BOX_WIDTH 5
 #define ELEMENT_BOX_SIZE (ELEMENT_BOX_WIDTH * ELEMENT_BOX_HEIGHT)
-#define ELEMENT_RENDER_SIZE 15
+#define ELEMENT_RENDER_SIZE 16
 
 #define ELEMENT_BOX_BUTTON_COUNT 5
 
@@ -172,7 +172,7 @@ namespace MFM
 	d.SetForeground(~m_element->DefaultPhysicsColor());
 	d.SetFont(AssetManager::GetFont(FONT_ASSET_ELEMENT));
 	d.BlitText(m_element->GetAtomicSymbol(),
-		   UPoint(0, 0),
+		   UPoint(2, 0),
 		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
 
