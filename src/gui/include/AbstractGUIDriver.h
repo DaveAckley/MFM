@@ -49,6 +49,7 @@
 #include "Element_Wall.h"
 #include "Element_Consumer.h"
 #include "ExternalConfig.h"
+#include "FileByteSource.h"
 #include "Keyboard.h"
 #include "Camera.h"
 #include "AbstractDriver.h"
@@ -121,6 +122,11 @@ namespace MFM {
     u32 m_screenWidth;
     u32 m_screenHeight;
 
+
+    /************************************/
+    /*******ABSTRACT BUTTONS*************/
+    /************************************/
+
     class AbstractGridButton : public AbstractButton
     {
     protected:
@@ -156,6 +162,11 @@ namespace MFM {
 	m_driver = &driver;
       }
     };
+
+    /************************************/
+    /******CONCRETE BUTTONS**************/
+    /************************************/
+
 
     struct ClearButton : public AbstractGridButton
     {
@@ -304,7 +315,6 @@ namespace MFM {
 	cfg.Write(fs);
 
 	fs.Close();
-
       }
 
     private:

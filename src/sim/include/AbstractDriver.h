@@ -33,6 +33,9 @@
 #include <sys/types.h> /* for mkdir */
 #include <errno.h>     /* for errno */
 #include "Utils.h"     /* for GetDateTimeNow */
+#include "ExternalConfig.h"
+#include "ExternalConfigFunctions.h"
+#include "FileByteSource.h"
 #include "FileByteSink.h"
 #include "itype.h"
 #include "Grid.h"
@@ -256,6 +259,8 @@ namespace MFM
 
     VArguments m_varguments;
 
+    const char* m_configurationPath;
+
     char m_simDirBasePath[MAX_PATH_LENGTH];
     u32 m_simDirBasePathLength;
 
@@ -354,6 +359,31 @@ namespace MFM
       driver.m_haltAfterAEPS = atoi(aeps);
     }
 
+    static void LoadFromConfigFile(const char* path, void* driverptr)
+    {
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+
+      driver.m_configurationPath = path;
+    }
+
+    void LoadFromConfigurationPath()
+    {
+      if(m_configurationPath)
+      {
+	LOG.Debug("Loading configuration from %s...", m_configurationPath);
+
+	ExternalConfig<GC> cfg(GetGrid());
+	RegisterExternalConfigFunctions<GC>(cfg);
+	FileByteSource fs(m_configurationPath);
+
+	cfg.SetByteSource(fs, m_configurationPath);
+
+	cfg.Read();
+
+	fs.Close();
+      }
+    }
+
     void ExportEventCounts(OurGrid& grid)
     {
       if (m_recordEventCountsPerAEPS > 0) {
@@ -386,7 +416,8 @@ namespace MFM
       m_msSpentOverhead(0),
       m_microsSleepPerFrame(1000),
       m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
-      m_AEPS(0)
+      m_AEPS(0),
+      m_configurationPath(NULL)
     {
     }
 
@@ -457,7 +488,10 @@ namespace MFM
                        "-d|--dir", &SetDataDirFromArgs, this, true);
 
       RegisterArgument("Add ARG as a path to search for element libraries",
-		       "-ep | --elementpath", &RegisterElementPath, this, true);
+		       "-ep|--elementpath", &RegisterElementPath, this, true);
+
+      RegisterArgument("Load initial configuration from file at path ARG (string)",
+		       "-cp|--configurationPath", &LoadFromConfigFile, this, true);
     }
 
 
@@ -523,6 +557,8 @@ namespace MFM
       ReinitEden();
 
       PostReinit(m_varguments);
+
+      LoadFromConfigurationPath();
     }
 
     void Run()

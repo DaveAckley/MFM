@@ -33,13 +33,6 @@ namespace MFM
 
     virtual void ReinitEden()
     {
-      OurGrid& m_grid = GetGrid();
-
-      OurAtom dreg(Element_Dreg<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
-
-      SPoint dregPt(5, 5);
-
-      m_grid.PlaceAtom(dreg, dregPt);
 
 #ifdef MFM_GUI_DRIVER
 

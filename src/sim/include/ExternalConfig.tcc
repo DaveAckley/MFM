@@ -31,7 +31,6 @@ namespace MFM
   template<class GC>
   bool ExternalConfig<GC>::Read()
   {
-
     m_grid.Clear();
 
     while (true) {
@@ -97,9 +96,20 @@ namespace MFM
 
     /* Then, GA all live atoms. */
 
-    for(u32 y = 0; y < CC::PARAM_CONFIG::TILE_WIDTH; y++)
+    /* The grid size in sites excluding caches */
+    const u32 gridWidth = CC::PARAM_CONFIG::TILE_WIDTH *
+      GC::GRID_WIDTH -
+      CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS *
+      GC::GRID_WIDTH * 2;
+
+    const u32 gridHeight = CC::PARAM_CONFIG::TILE_WIDTH *
+      GC::GRID_HEIGHT -
+      CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS *
+      GC::GRID_HEIGHT * 2;
+
+    for(u32 y = 0; y < gridHeight; y++)
     {
-      for(u32 x = 0; x < CC::PARAM_CONFIG::TILE_WIDTH; x++)
+      for(u32 x = 0; x < gridWidth; x++)
       {
 	SPoint currentPt(x, y);
 	/* No need to write empties since they are the default */

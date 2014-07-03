@@ -57,6 +57,7 @@ namespace MFM
     void SetByteSource(ByteSource & byteSource, const char * label) ;
 
     void SetErrorByteSink(ByteSink & errorsTo) ;
+
     /**
      * Reads a configuration to the grid specified at construction.
      * \returns true if the loading succeeded; false if the
