@@ -364,15 +364,39 @@ namespace MFM
       d.SetForeground(this->Panel::GetBackground());
       d.FillRect(0, 0, this->Panel::GetWidth(), this->Panel::GetHeight());
 
+      d.SetFont(AssetManager::GetFont(FONT_ASSET_ELEMENT));
+
+
+
       if (m_primaryElement) {
         d.SetForeground(m_primaryElement->DefaultPhysicsColor());
         d.FillCircle(10 + ELEMENT_RENDER_SIZE, m_selectedElementDrawY, ELEMENT_RENDER_SIZE,
                      ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
+
+	d.SetForeground(Drawing::HalfColor(~this->Panel::GetBackground()));
+	d.BlitText(m_primaryElement->GetAtomicSymbol(),
+		   UPoint(9, 1 + m_selectedElementDrawY),
+		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+
+	d.SetForeground(~this->Panel::GetBackground());
+	d.BlitText(m_primaryElement->GetAtomicSymbol(),
+		   UPoint(8, m_selectedElementDrawY),
+		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
       if (m_secondaryElement) {
         d.SetForeground(m_secondaryElement->DefaultPhysicsColor());
         d.FillCircle(10 + 2 * ELEMENT_RENDER_SIZE, m_selectedElementDrawY,
                      ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
+
+	d.SetForeground(Drawing::HalfColor(~this->Panel::GetBackground()));
+	d.BlitText(m_secondaryElement->GetAtomicSymbol(),
+		   UPoint(13 + ELEMENT_RENDER_SIZE * 3, 1 + m_selectedElementDrawY),
+		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+
+	d.SetForeground(~this->Panel::GetBackground());
+	d.BlitText(m_secondaryElement->GetAtomicSymbol(),
+		   UPoint(12 + ELEMENT_RENDER_SIZE * 3, m_selectedElementDrawY),
+		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
     }
   };
