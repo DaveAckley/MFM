@@ -155,6 +155,14 @@ namespace MFM {
       return 0;
     }
 
+    ElementEntry * FindMatching(const UUID & uuid) {
+      for (u32 i = 0; i < m_registeredElementsCount; ++i) {
+        if (m_registeredElements[i].m_uuid == uuid)
+          return &m_registeredElements[i];
+      }
+      return 0;
+    }
+
     s32 FindCompatibleIndex(const UUID & uuid, s32 lastIndex) const {
       if (lastIndex < -1)
         FAIL(ILLEGAL_ARGUMENT);

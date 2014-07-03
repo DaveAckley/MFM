@@ -39,6 +39,7 @@ namespace MFM
 	  {
 	    LOG.Debug("    ELEMENT FOUND: %s", entry->d_name);
 
+
 	    UUID fileID;
 	    u32 entrylen = strlen(entry->d_name) - 3; /* For '.so' extension */
 	    CharBufferByteSource charSource(entry->d_name, entrylen);
@@ -47,6 +48,13 @@ namespace MFM
 	    fileID.Read(source);
 
 	    RegisterUUID(fileID);
+
+            // Update the pathIndex for loading later
+            ElementEntry * ee = FindMatching(fileID);
+            if (!ee)
+              FAIL(ILLEGAL_STATE);
+            ee->m_pathIndex = (s32) i;
+
 	  }
 	  else
 	  {

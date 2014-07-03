@@ -83,13 +83,16 @@ namespace MFM
 
     u32 elems = m_elementRegistry.GetEntryCount();
 
+    if (elems > 25)  // Um handle multidigit codes
+      FAIL(INCOMPLETE_CODE);
+
     for(u32 i = 0; i < elems; i++)
     {
       const UUID& uuid = m_elementRegistry.GetEntryUUID(i);
 
       byteSink.Printf("RegisterElement(");
       uuid.Print(byteSink);
-      byteSink.Printf(",%d)", i);
+      byteSink.Printf(",%c)", i+'a');
       byteSink.WriteNewline();
     }
     byteSink.WriteNewline();
@@ -125,7 +128,7 @@ namespace MFM
 	    if(Atom<CC>::IsType(*m_grid.GetAtom(currentPt),
 		 m_elementRegistry.GetEntryElement(i)->GetType()))
 	    {
-	      byteSink.Printf("%d", i);
+	      byteSink.Printf("%c", i+'a');
 	      break;
 	    }
 	  }
@@ -184,6 +187,9 @@ namespace MFM
       puuid = &elt->GetUUID();
       m_in.Msg(Logger::WARNING, "Substituting '%@' for '%@'", puuid, &uuid);
     }
+
+    if (!puuid)
+      FAIL(NULL_POINTER);
 
     for (u32 i = 0; i < m_registeredElementCount; ++i) {
       RegElt & re = m_registeredElements[i];

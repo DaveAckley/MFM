@@ -679,7 +679,7 @@ namespace MFM {
 	    }
 	    else
 	    {
-	      LOG.Debug("FE(%x)",m_executingWindow.GetCenterAtom().GetType());
+	      LOG.Debug("FE(%x) (SANE)",m_executingWindow.GetCenterAtom().GetType());
             }
 
 
