@@ -192,6 +192,10 @@ namespace MFM {
     }
     return count;
   }
+
+  extern u32 DigitCount(u32 num, u32 base);
+
+  extern void IntLexEncode(u32 num, char* output);
 }
 
 #endif /* UTIL_H */

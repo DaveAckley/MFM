@@ -139,7 +139,7 @@ namespace MFM
 	surfaces[ASSET_CHECKBOX_ICON_ON] = LoadImage("images/checkbox_on.png");
 	surfaces[ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
 
-	fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/tiny.ttf", 12);
+	fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/tiny.ttf", 15);
 
 	initialized = true;
       }

@@ -30,10 +30,8 @@
 #include "EditingTool.h"
 #include "AbstractButton.h"
 
-#define ELEMENT_BOX_HEIGHT 10
-#define ELEMENT_BOX_WIDTH 5
-#define ELEMENT_BOX_SIZE (ELEMENT_BOX_WIDTH * ELEMENT_BOX_HEIGHT)
-#define ELEMENT_RENDER_SIZE 16
+#define ELEMENT_BOX_SIZE 72
+#define ELEMENT_RENDER_SIZE 20
 
 #define ELEMENT_BOX_BUTTON_COUNT 5
 
@@ -147,11 +145,15 @@ namespace MFM
 	this->Panel::SetDimensions(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
 
 	this->Panel::SetBackground(Drawing::GREY80);
+
+	AbstractButton::SetEnabled(false);
       }
 
       void SetElement(const Element<CC>* element)
       {
 	m_element = element;
+
+	AbstractButton::SetEnabled(!!m_element);
       }
 
       void SetParent(ToolboxPanel<CC>* parent)
@@ -161,24 +163,27 @@ namespace MFM
 
       virtual void PaintComponent(Drawing& d)
       {
-	//d.SetForeground(this->Panel::GetBackground());
-	//d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
-	d.SetForeground(m_element->DefaultPhysicsColor());
-	d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
-	//d.FillCircle(0, 0,
-	//	     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE,
-	//	     ELEMENT_RENDER_SIZE >> 1);
-	d.SetFont(AssetManager::GetFont(FONT_ASSET_ELEMENT));
+	if(m_element)
+	{
+	  d.SetForeground(m_element->DefaultPhysicsColor());
+	  d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
+	  d.SetFont(AssetManager::GetFont(FONT_ASSET_ELEMENT));
 
-	d.SetForeground(Drawing::HalfColor(~m_element->DefaultPhysicsColor()));
-	d.BlitText(m_element->GetAtomicSymbol(),
-		   UPoint(3, 1),
-		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+	  d.SetForeground(Drawing::HalfColor(~m_element->DefaultPhysicsColor()));
+	  d.BlitText(m_element->GetAtomicSymbol(),
+		     UPoint(3, 1),
+		     UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
 
-	d.SetForeground(~m_element->DefaultPhysicsColor());
-	d.BlitText(m_element->GetAtomicSymbol(),
-		   UPoint(2, 0),
-		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+	  d.SetForeground(~m_element->DefaultPhysicsColor());
+	  d.BlitText(m_element->GetAtomicSymbol(),
+		     UPoint(2, 0),
+		     UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+	}
+	else
+	{
+	  d.SetForeground(Drawing::GREY80);
+	  d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
+	}
       }
 
       const Element<CC>* GetElement()
@@ -220,8 +225,6 @@ namespace MFM
 
     u32 m_heldElementCount;
 
-    s32 m_selectedElementDrawY;
-
   public:
 
     ToolboxPanel(EditingTool* toolPtr) :
@@ -229,13 +232,17 @@ namespace MFM
       m_activatedButton(m_toolButtons),
       m_primaryElement(NULL),
       m_secondaryElement(NULL),
-      m_heldElementCount(0),
-      m_selectedElementDrawY(0)
+      m_heldElementCount(0)
     {
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
       {
 	m_toolButtons[i].SetToolPointer(m_toolPtr);
 	m_toolButtons[i].SetEditingTool((EditingTool)i);
+      }
+
+      for(u32 i = 0; i < ELEMENT_BOX_SIZE; i++)
+      {
+	m_heldElements[i] = NULL;
       }
     }
 
@@ -250,68 +257,82 @@ namespace MFM
 	ASSET_BRUSH_ICON
       };
 
-      u32 x, y;
-      for(y = 0; y < 10; y++)
+      for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
       {
-	for(x = 0; x < 2; x++)
-	{
-	  u32 i = y * 2 + x;
-	  if(i >= ELEMENT_BOX_BUTTON_COUNT)
-	  {
-	    /* semi-clean multiloop break using goto */
-	    goto toolboxpanel_addbuttons_toolbuttons_loopend;
-	  }
+	m_toolButtons[i].SetParent(this);
 
-	  m_toolButtons[i].SetParent(this);
-
-	  m_toolButtons[i].Panel::SetRenderPoint(SPoint(5 + x * 37, 5 + y * 37));
-	  m_toolButtons[i].SetToolIcon(AssetManager::Get(assets[i]));
-	  this->Panel::Insert(m_toolButtons + i, NULL);
-	  LOG.Debug("Selector(%d, %d, %d, %d)",
-		    m_toolButtons[i].GetAbsoluteLocation().GetX(),
-		    m_toolButtons[i].GetAbsoluteLocation().GetY(),
-		    m_toolButtons[i].GetDimensions().GetX(),
-		    m_toolButtons[i].GetDimensions().GetY());
-	}
-      }
-    toolboxpanel_addbuttons_toolbuttons_loopend:
-
-      SPoint currentDimensions(5 + 2 * 37,
-			       5 + (y + ((x & 1) ? 1 : 0)) * 37 + 2 * ELEMENT_RENDER_SIZE);
-
-      for(y = 0; y < ELEMENT_BOX_HEIGHT; y++)
-      {
-	for(x = 0; x < ELEMENT_BOX_WIDTH; x++)
-	{
-	  u32 i = y * ELEMENT_BOX_WIDTH + x;
-
-	  if(i >= m_heldElementCount)
-	  {
-	    goto toolboxpanel_addbuttons_elemenbuttons_loopend;
-	  }
-
-	  m_elementButtons[i].SetElement(m_heldElements[i]);
-	  m_elementButtons[i].SetParent(this);
-	  m_elementButtons[i].Panel::SetRenderPoint(SPoint(4 + x * ELEMENT_RENDER_SIZE - 1,
-							   currentDimensions.GetY() +
-						           y * ELEMENT_RENDER_SIZE - 1));
-	  this->Panel::Insert(m_elementButtons + i, NULL);
-	}
+	m_toolButtons[i].Panel::SetRenderPoint(SPoint(69 + i * 32, 3));
+	m_toolButtons[i].SetToolIcon(AssetManager::Get(assets[i]));
+	Panel::Insert(m_toolButtons + i, NULL);
+	LOG.Debug("Selector(%d, %d, %d, %d)",
+		  m_toolButtons[i].GetAbsoluteLocation().GetX(),
+		  m_toolButtons[i].GetAbsoluteLocation().GetY(),
+		  m_toolButtons[i].GetDimensions().GetX(),
+		  m_toolButtons[i].GetDimensions().GetY());
       }
 
-    toolboxpanel_addbuttons_elemenbuttons_loopend:
+      /* This is a little hairy, but I'm going to attempt rendering
+       * like the periodic table. */
+      for(u32 i = 0; i < ELEMENT_BOX_SIZE; i++)
+      {
+	u32 x, y;
+	if(i < 18)
+	{
+	  /* H, Li, Na */
+	  x = 3;
+	  y = 3;
+	  if(i == 1)
+	  {
+	    /* He */
+	    x += ELEMENT_RENDER_SIZE * 17;
+	  }
+	  else if(i == 3 || i == 0xb)
+	  {
+	    /*Be, Mg*/
+	    x += ELEMENT_RENDER_SIZE;
+	  }
+	  else if(i >= 4 && i <= 9)
+	  {
+	    /*B - Ne */
+	    x += ELEMENT_RENDER_SIZE * (12 + (i - 4));
+	  }
+	  else if(i >= 0xc && i <= 0x11)
+	  {
+	    /* Al - Ar*/
+	    x += ELEMENT_RENDER_SIZE * (12 + (i - 0xc));
+	  }
 
-      m_selectedElementDrawY = currentDimensions.GetY() - 2 * ELEMENT_RENDER_SIZE;
+	  if(i >= 2 && i <= 9)
+	  {
+	    y += ELEMENT_RENDER_SIZE;
+	  }
+	  else if(i >= 0xa)
+	  {
+	    y += 2 * ELEMENT_RENDER_SIZE;
+	  }
+	}
+	else
+	{
+	  /* From this point on it's grid rendering */
+	  x = 3 + ELEMENT_RENDER_SIZE * (i % 18);
+	  y = 3 + ELEMENT_RENDER_SIZE * (2 + (i / 18));
+	}
+
+
+	/* These will render correctly because ElementButtons render
+	   grey when SetElement is fed NULL. */
+	m_elementButtons[i].SetElement(m_heldElements[i]);
+	m_elementButtons[i].SetParent(this);
+	m_elementButtons[i].Panel::SetRenderPoint(SPoint(x, y));
+
+	Panel::Insert(m_elementButtons + i, NULL);
+      }
 
       m_primaryElement   = m_heldElements[0];
       m_secondaryElement = m_heldElements[1];
 
-      currentDimensions.Add(0, y * ELEMENT_RENDER_SIZE + 32);
-
-      /* Set up the correct dimensions. X is always constant, as there
-       * will (hopefully) always be two tools. Y is more complicated,
-       * since we need to increase it if there are an odd number of tools. */
-      this->Panel::SetDimensions(currentDimensions.GetX(), currentDimensions.GetY());
+      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * 18,
+	                   6 + ELEMENT_RENDER_SIZE * 6);
 
       m_activatedButton = m_toolButtons;
       m_toolButtons[0].ToolButton::SetActivated(true);
@@ -370,32 +391,32 @@ namespace MFM
 
       if (m_primaryElement) {
         d.SetForeground(m_primaryElement->DefaultPhysicsColor());
-        d.FillCircle(10 + ELEMENT_RENDER_SIZE, m_selectedElementDrawY, ELEMENT_RENDER_SIZE,
+        d.FillCircle(129, 40, ELEMENT_RENDER_SIZE,
                      ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
 
 	d.SetForeground(Drawing::HalfColor(~this->Panel::GetBackground()));
 	d.BlitText(m_primaryElement->GetAtomicSymbol(),
-		   UPoint(9, 1 + m_selectedElementDrawY),
+		   UPoint(129 - ELEMENT_RENDER_SIZE , 41),
 		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
 
 	d.SetForeground(~this->Panel::GetBackground());
 	d.BlitText(m_primaryElement->GetAtomicSymbol(),
-		   UPoint(8, m_selectedElementDrawY),
+		   UPoint(128 - ELEMENT_RENDER_SIZE, 40),
 		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
       if (m_secondaryElement) {
         d.SetForeground(m_secondaryElement->DefaultPhysicsColor());
-        d.FillCircle(10 + 2 * ELEMENT_RENDER_SIZE, m_selectedElementDrawY,
-                     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
+        d.FillCircle(129 + ELEMENT_RENDER_SIZE, 40, ELEMENT_RENDER_SIZE,
+		     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
 
 	d.SetForeground(Drawing::HalfColor(~this->Panel::GetBackground()));
 	d.BlitText(m_secondaryElement->GetAtomicSymbol(),
-		   UPoint(13 + ELEMENT_RENDER_SIZE * 3, 1 + m_selectedElementDrawY),
+		   UPoint(129 + ELEMENT_RENDER_SIZE * 2, 41),
 		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
 
 	d.SetForeground(~this->Panel::GetBackground());
 	d.BlitText(m_secondaryElement->GetAtomicSymbol(),
-		   UPoint(12 + ELEMENT_RENDER_SIZE * 3, m_selectedElementDrawY),
+		   UPoint(128 + ELEMENT_RENDER_SIZE * 2, 40),
 		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
     }

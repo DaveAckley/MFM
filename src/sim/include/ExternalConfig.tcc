@@ -82,6 +82,7 @@ namespace MFM
     /* First, register all elements. */
 
     u32 elems = m_elementRegistry.GetEntryCount();
+    char lexOutput[24];
 
     if (elems > 25)  // Um handle multidigit codes
       FAIL(INCOMPLETE_CODE);
@@ -90,9 +91,11 @@ namespace MFM
     {
       const UUID& uuid = m_elementRegistry.GetEntryUUID(i);
 
+      IntLexEncode(i, lexOutput);
+
       byteSink.Printf("RegisterElement(");
       uuid.Print(byteSink);
-      byteSink.Printf(",%c)", i+'a');
+      byteSink.Printf(",%s)", lexOutput);
       byteSink.WriteNewline();
     }
     byteSink.WriteNewline();
@@ -128,7 +131,8 @@ namespace MFM
 	    if(Atom<CC>::IsType(*m_grid.GetAtom(currentPt),
 		 m_elementRegistry.GetEntryElement(i)->GetType()))
 	    {
-	      byteSink.Printf("%c", i+'a');
+	      IntLexEncode(i, lexOutput);
+	      byteSink.Printf("%s", lexOutput);
 	      break;
 	    }
 	  }
