@@ -138,6 +138,11 @@ namespace MFM
 	  }
 
 	  byteSink.Printf(",%d,%d)", x, y);
+	  /*
+	  byteSink.Printf(",%d,%d,", x, y);
+	  m_grid.GetAtom(currentPt)->WriteBits(byteSink);
+	  byteSink.Printf(")");
+	  */
 	  byteSink.WriteNewline();
 	}
       }

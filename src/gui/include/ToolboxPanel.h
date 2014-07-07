@@ -71,7 +71,7 @@ namespace MFM
       ToolButton() :
 	AbstractButton()
       {
-	this->Panel::SetBackground(Drawing::GREY80);
+	this->Panel::SetBackground(Drawing::GREY90);
 	this->Panel::SetBorder(Drawing::GREY40);
       }
 

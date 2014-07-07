@@ -33,6 +33,8 @@
 #include "Random.h"
 #include "Util.h"     /* For REQUIRE */
 #include "Logger.h"
+#include "ByteSource.h"
+#include "OverflowableCharBufferByteSink.h"
 
 namespace MFM
 {
@@ -152,6 +154,30 @@ namespace MFM
      * @remarks This is to be defined only by a subclass of Atom.
      */
     void Print(ByteSink & ostream) const;
+
+    /**
+     * Writes the internal bits of this Atom to a ByteSink in hex format.
+     *
+     * @param ostream The ByteSink to write the bits of this Atom to.
+     */
+    void WriteBits(ByteSink& ostream) const
+    {
+      m_bits.Print(ostream);
+    }
+
+    /**
+     * Reads bits from a ByteSource in hex format, replacing the bits
+     * of this Atom with the read bits.
+     *
+     * @param inStream The ByteSource to read bits from.
+     */
+    void ReadBits(ByteSource& inStream)
+    {
+      OString128 readBits;
+      inStream.ScanHex(readBits);
+
+
+    }
 
     /**
      * Randomly flips some of the bits in this Atom's BitVector.

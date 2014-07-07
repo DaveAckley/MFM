@@ -98,6 +98,13 @@ namespace MFM {
       return true;
     }
 
+    bool ScanHex(ByteSink& result)
+    {
+      SkipWhitespace();
+      if(ScanSet(result, "[a-fA-F0-9]") <= 0) return false;
+      return true;
+    }
+
     bool ScanCamelIdentifier(ByteSink & result) {
       SkipWhitespace();
       if (ScanSet(result, "[A-Z]") <= 0) return false;
