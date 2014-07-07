@@ -196,6 +196,10 @@ namespace MFM
       puuid = &elt->GetUUID();
       m_in.Msg(Logger::WARNING, "Substituting '%@' for '%@'", puuid, &uuid);
     }
+    else
+    {
+      puuid = &elt->GetUUID();
+    }
 
     if (!puuid)
       FAIL(NULL_POINTER);
