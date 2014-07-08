@@ -170,15 +170,11 @@ namespace MFM
 	  d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
 	  d.SetFont(AssetManager::GetFont(FONT_ASSET_ELEMENT));
 
-	  d.SetForeground(Drawing::HalfColor(~m_element->DefaultPhysicsColor()));
-	  d.BlitText(m_element->GetAtomicSymbol(),
-		     UPoint(3, 1),
-		     UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
-
+	  d.SetBackground(Drawing::HalfColor(~m_element->DefaultPhysicsColor()));
 	  d.SetForeground(~m_element->DefaultPhysicsColor());
-	  d.BlitText(m_element->GetAtomicSymbol(),
-		     UPoint(2, 0),
-		     UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+	  d.BlitBackedText(m_element->GetAtomicSymbol(),
+			   UPoint(1, 0),
+			   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
 	}
 	else
 	{
@@ -341,6 +337,7 @@ namespace MFM
       /* Slider demonstration */
       SPoint renderPt(3, 133);
       m_slider.Panel::SetRenderPoint(renderPt);
+      m_slider.SetText("Demo Slider");
       Panel::Insert(&m_slider, NULL);
 
       m_activatedButton = m_toolButtons;
@@ -403,26 +400,18 @@ namespace MFM
         d.FillCircle(129, 40, ELEMENT_RENDER_SIZE,
                      ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
 
-	d.SetForeground(Drawing::HalfColor(~this->Panel::GetBackground()));
-	d.BlitText(m_primaryElement->GetAtomicSymbol(),
-		   UPoint(129 - ELEMENT_RENDER_SIZE , 41),
-		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
-
+	d.SetBackground(Drawing::HalfColor(~this->Panel::GetBackground()));
 	d.SetForeground(~this->Panel::GetBackground());
-	d.BlitText(m_primaryElement->GetAtomicSymbol(),
-		   UPoint(128 - ELEMENT_RENDER_SIZE, 40),
-		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+	d.BlitBackedText(m_primaryElement->GetAtomicSymbol(),
+			 UPoint(128 - ELEMENT_RENDER_SIZE, 40),
+			 UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
       if (m_secondaryElement) {
         d.SetForeground(m_secondaryElement->DefaultPhysicsColor());
         d.FillCircle(129 + ELEMENT_RENDER_SIZE, 40, ELEMENT_RENDER_SIZE,
 		     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
 
-	d.SetForeground(Drawing::HalfColor(~this->Panel::GetBackground()));
-	d.BlitText(m_secondaryElement->GetAtomicSymbol(),
-		   UPoint(129 + ELEMENT_RENDER_SIZE * 2, 41),
-		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
-
+	d.SetBackground(Drawing::HalfColor(~this->Panel::GetBackground()));
 	d.SetForeground(~this->Panel::GetBackground());
 	d.BlitText(m_secondaryElement->GetAtomicSymbol(),
 		   UPoint(128 + ELEMENT_RENDER_SIZE * 2, 40),

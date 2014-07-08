@@ -255,6 +255,13 @@ namespace MFM {
     void BlitText(const char* message, UPoint loc, UPoint size) const;
 
     /**
+     * Draw a message in the current font using the current background
+     * color as a backing color to another drawn layer using the
+     * foreground color. Fail ILLEGAL_STATE if the current font is null.
+     */
+    void BlitBackedText(const char* message, UPoint loc, UPoint size);
+
+    /**
      * Draw a specified image to a specified part of the screen.
      */
     void BlitImage(SDL_Surface* image, UPoint loc, UPoint maxSize) const;

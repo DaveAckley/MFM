@@ -190,4 +190,17 @@ namespace MFM {
 
     SDL_FreeSurface(text);
   }
+
+  void Drawing::BlitBackedText(const char* message, UPoint loc, UPoint size)
+  {
+    u32 oldFG = GetForeground();
+    UPoint backedPos(loc.GetX() + 1, loc.GetY() + 1);
+
+    SetForeground(GetBackground());
+    BlitText(message, backedPos, size);
+
+    SetForeground(oldFG);
+    BlitText(message, loc, size);
+
+  }
 } /* namespace MFM */
