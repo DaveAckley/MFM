@@ -29,6 +29,7 @@
 
 #include "EditingTool.h"
 #include "AbstractButton.h"
+#include "Slider.h"
 
 #define ELEMENT_BOX_SIZE 72
 #define ELEMENT_RENDER_SIZE 20
@@ -225,6 +226,8 @@ namespace MFM
 
     u32 m_heldElementCount;
 
+    Slider m_slider;
+
   public:
 
     ToolboxPanel(EditingTool* toolPtr) :
@@ -332,7 +335,13 @@ namespace MFM
       m_secondaryElement = m_heldElements[1];
 
       Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * 18,
-	                   6 + ELEMENT_RENDER_SIZE * 6);
+	                   6 + ELEMENT_RENDER_SIZE * 6 + 32);
+
+
+      /* Slider demonstration */
+      SPoint renderPt(3, 133);
+      m_slider.Panel::SetRenderPoint(renderPt);
+      Panel::Insert(&m_slider, NULL);
 
       m_activatedButton = m_toolButtons;
       m_toolButtons[0].ToolButton::SetActivated(true);

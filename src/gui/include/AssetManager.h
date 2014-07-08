@@ -45,6 +45,7 @@ namespace MFM
     ASSET_BUCKET_ICON,
     ASSET_CHECKBOX_ICON_ON,
     ASSET_CHECKBOX_ICON_OFF,
+    ASSET_SLIDER_HANDLE,
     ASSET_COUNT
   };
 
@@ -138,6 +139,7 @@ namespace MFM
 	surfaces[ASSET_BUCKET_ICON] = LoadImage("images/bucket_icon.png");
 	surfaces[ASSET_CHECKBOX_ICON_ON] = LoadImage("images/checkbox_on.png");
 	surfaces[ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
+	surfaces[ASSET_SLIDER_HANDLE] = LoadImage("images/slider_handle.png");
 
 	fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/tiny.ttf", 15);
 
