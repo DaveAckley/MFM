@@ -70,6 +70,8 @@ namespace MFM {
 
     ElementRegistry<CC> m_er;
 
+    s32 m_xraySiteOdds;
+
   public:
     Random& GetRandom() { return m_random; }
 
@@ -77,8 +79,14 @@ namespace MFM {
 
     void SetSeed(u32 seed);
 
-    Grid(ElementRegistry<CC>& elts) : m_seed(0), m_width(W), m_height(H), m_er(elts)
+    Grid(ElementRegistry<CC>& elts) : m_seed(0), m_width(W), m_height(H), m_er(elts),
+				      m_xraySiteOdds(1000)
     {
+    }
+
+    s32* GetXraySiteOddsPtr()
+    {
+      return &m_xraySiteOdds;
     }
 
     void Reinit();

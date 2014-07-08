@@ -372,6 +372,11 @@ namespace MFM {
     GridRenderer m_grend;
     StatsRenderer<GC> m_srend;
 
+    void RegisterSliderConfig(const AbstractSliderConfig<CC>* config)
+    {
+      m_toolboxPanel.RegisterSliderConfig(config);
+    }
+
     GridRenderer & GetGridRenderer()
     {
       return m_grend;
@@ -418,7 +423,6 @@ namespace MFM {
       m_gridPanel.SetBorder(Drawing::BLACK);
       m_gridPanel.SetGridRenderer(&m_grend);
       m_gridPanel.SetToolboxPanel(&m_toolboxPanel);
-      m_toolboxPanel.SetAnchor(ANCHOR_SOUTH);
       m_gridPanel.SetGrid(&Super::GetGrid());
 
       m_statisticsPanel.SetStatsRenderer(&m_srend);

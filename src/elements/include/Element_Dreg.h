@@ -39,7 +39,6 @@
 namespace MFM
 {
 
-#define DREG_RES_ODDS 100
 #define DREG_DEL_ODDS 40
 #define DREG_DRG_ODDS 200
 #define DREG_DDR_ODDS 20 /*Deleting DREGs*/
@@ -53,6 +52,10 @@ namespace MFM
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS };
+
+  private:
+
+    static s32 m_resOdds;
 
   public:
 
@@ -81,46 +84,53 @@ namespace MFM
       SPoint dir;
       MDist<R>::get().FillRandomSingleDir(dir, random);
 
-      if (window.IsLiveSite(dir)) {
-
+      if (window.IsLiveSite(dir))
+      {
         T atom = window.GetRelativeAtom(dir);
         u32 oldType = atom.GetType();
 
         if(Element_Empty<CC>::THE_INSTANCE.IsType(oldType))
-          {
-            if(random.OneIn(DREG_DRG_ODDS))
-              {
-                atom = Element_Dreg<CC>::THE_INSTANCE.GetDefaultAtom();
-              }
-            else if(random.OneIn(DREG_RES_ODDS))
-              {
-                atom = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
-              }
-          }
+	{
+	  if(random.OneIn(DREG_DRG_ODDS))
+	  {
+	    atom = Element_Dreg<CC>::THE_INSTANCE.GetDefaultAtom();
+	  }
+	  else if(random.OneIn(m_resOdds))
+	  {
+	    atom = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
+	  }
+	}
         else if(oldType == Element_Dreg::THE_INSTANCE.GetType())
-          {
-            if(random.OneIn(DREG_DDR_ODDS))
-              {
-                atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
-              }
-          }
+	{
+	  if(random.OneIn(DREG_DDR_ODDS))
+	  {
+	    atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+	  }
+	}
         else if(oldType != Element_Wall<CC>::TYPE() && random.OneIn(DREG_DEL_ODDS))
-          {
-            atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
-          }
+	{
+	  atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+	}
 
         if(atom.GetType() != oldType)
-          {
-            window.SetRelativeAtom(dir, atom);
-          }
+	{
+	  window.SetRelativeAtom(dir, atom);
+	}
       }
       this->Diffuse(window);
+    }
 
+    s32* GetResOddsPtr()
+    {
+      return &m_resOdds;
     }
   };
 
   template <class CC>
   Element_Dreg<CC> Element_Dreg<CC>::THE_INSTANCE;
+
+  template <class CC>
+  s32 Element_Dreg<CC>::m_resOdds = 100;
 
 }
 

@@ -30,11 +30,13 @@
 #include "EditingTool.h"
 #include "AbstractButton.h"
 #include "Slider.h"
+#include "AbstractSliderConfig.h"
 
 #define ELEMENT_BOX_SIZE 72
 #define ELEMENT_RENDER_SIZE 20
 
 #define ELEMENT_BOX_BUTTON_COUNT 5
+#define TOOLBOX_MAX_SLIDERS 8
 
 namespace MFM
 {
@@ -198,6 +200,8 @@ namespace MFM
 	{
 	  m_parent->SetSecondaryElement(m_element);
 	}
+
+	m_parent->RebuildSliders();
       }
 
     private:
@@ -222,7 +226,44 @@ namespace MFM
 
     u32 m_heldElementCount;
 
-    Slider m_slider;
+    Slider m_sliders[TOOLBOX_MAX_SLIDERS];
+
+    u32 m_sliderCount;
+
+    const AbstractSliderConfig<CC>* m_sliderConfigs[ELEMENT_BOX_SIZE];
+
+    u32 m_sliderConfigCount;
+
+    void RebuildSliders()
+    {
+      /* Remove all of the old sliders */
+      for(u32 i = 0; i < m_sliderCount; i++)
+      {
+	Panel::Remove(m_sliders + i);
+      }
+
+      /* Set up the new sliders, if any */
+      m_sliderCount = 0;
+      for(u32 i = 0; i < m_sliderConfigCount; i++)
+      {
+	if(m_primaryElement == m_sliderConfigs[i]->GetElement())
+	{
+	  m_sliderCount = m_sliderConfigs[i]->SetupSliders(m_sliders, TOOLBOX_MAX_SLIDERS);
+	}
+      }
+
+      /* Put the new sliders in */
+      SPoint rpt(3, 6 + ELEMENT_RENDER_SIZE * 6);
+      for(u32 i = 0; i < m_sliderCount; i++)
+      {
+	m_sliders[i].SetRenderPoint(rpt);
+	Panel::Insert(m_sliders + i, NULL);
+	rpt.SetX(rpt.GetX() + 32);
+      }
+
+      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * 18,
+	                   6 + ELEMENT_RENDER_SIZE * 6 + 32 * m_sliderCount);
+    }
 
   public:
 
@@ -231,7 +272,9 @@ namespace MFM
       m_activatedButton(m_toolButtons),
       m_primaryElement(NULL),
       m_secondaryElement(NULL),
-      m_heldElementCount(0)
+      m_heldElementCount(0),
+      m_sliderCount(0),
+      m_sliderConfigCount(0)
     {
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
       {
@@ -243,6 +286,11 @@ namespace MFM
       {
 	m_heldElements[i] = NULL;
       }
+    }
+
+    void ClearSliderConfigs()
+    {
+      m_sliderConfigCount = 0;
     }
 
     void AddButtons()
@@ -331,14 +379,7 @@ namespace MFM
       m_secondaryElement = m_heldElements[1];
 
       Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * 18,
-	                   6 + ELEMENT_RENDER_SIZE * 6 + 32);
-
-
-      /* Slider demonstration */
-      SPoint renderPt(3, 133);
-      m_slider.Panel::SetRenderPoint(renderPt);
-      m_slider.SetText("Demo Slider");
-      Panel::Insert(&m_slider, NULL);
+	                   6 + ELEMENT_RENDER_SIZE * 6);
 
       m_activatedButton = m_toolButtons;
       m_toolButtons[0].ToolButton::SetActivated(true);
@@ -363,6 +404,16 @@ namespace MFM
 	FAIL(OUT_OF_ROOM);
       }
       m_heldElements[m_heldElementCount++] = element;
+    }
+
+    void RegisterSliderConfig(const AbstractSliderConfig<CC>* config)
+    {
+      if(m_sliderConfigCount >= ELEMENT_BOX_SIZE)
+      {
+	FAIL(OUT_OF_ROOM);
+      }
+
+      m_sliderConfigs[m_sliderConfigCount++] = config;
     }
 
     void ActivateButton(ToolButton* button)

@@ -3,7 +3,6 @@
 #include "Grid.h"
 #include "FileByteSink.h"
 
-#define XRAY_SITE_ODDS 1000
 #define XRAY_BIT_ODDS 100
 
 namespace MFM {
@@ -417,7 +416,7 @@ namespace MFM {
     {
       for(u32 y = 0; y < H; y++)
       {
-	GetTile(x,y).XRay(XRAY_SITE_ODDS,
+	GetTile(x,y).XRay(m_xraySiteOdds,
 			  XRAY_BIT_ODDS);
       }
     }
