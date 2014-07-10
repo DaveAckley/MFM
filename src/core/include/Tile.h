@@ -610,16 +610,6 @@ namespace MFM {
      */
     Dir VisibleAt(const SPoint& pt) const;
 
-
-    /*
-     * Expose the underlying atom array because, e.g., testing depends
-     * on it?  Urgh?
-     *
-     * Apparently testing no longer depends on this. Seal it up!
-     *
-     T* GetAtoms() ;
-    */
-
     /**
      * Gets an Atom from a specified point in this Tile.
      *
@@ -635,6 +625,25 @@ namespace MFM {
     /**
      * Gets an Atom from a specified point in this Tile.
      *
+     * @param pt The location of the Atom to retrieve.
+     *
+     * @returns A pointer to the Atom at location pt.
+     *
+     * @remarks Because we need to be able to load an Atom's body
+     *          through a configuration file, and this is the only
+     *          place where Atoms are unique, we need to be able to
+     *          access them in a writable way. Therefore, we have this
+     *          non-const accessor. Use GetAtom if not writing to this
+     *          Atom.
+     */
+    T* GetWritableAtom(const SPoint& pt)
+    {
+      return GetWritableAtom(pt.GetX(), pt.GetY());
+    }
+
+    /**
+     * Gets an Atom from a specified point in this Tile.
+     *
      * @param x The x coordinate of the location of the Atom to
      *          retrieve.
 
@@ -644,6 +653,31 @@ namespace MFM {
      * @returns A pointer to the Atom at the specified location.
      */
     const T* GetAtom(s32 x, s32 y) const
+    {
+      if (((u32) x) >= TILE_WIDTH || ((u32) y) >= TILE_WIDTH)
+        FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
+      return &m_atoms[x][y];
+    }
+
+    /**
+     * Gets an Atom from a specified point in this Tile.
+     *
+     * @param x The x coordinate of the location of the Atom to
+     *          retrieve.
+
+     * @param y The y coordinate of the location of the Atom to
+     *          retrieve.
+     *
+     * @returns A pointer to the Atom at the specified location.
+     *
+     * @remarks Because we need to be able to load an Atom's body
+     *          through a configuration file, and this is the only
+     *          place where Atoms are unique, we need to be able to
+     *          access them in a writable way. Therefore, we have this
+     *          non-const accessor. Use GetAtom if not writing to this
+     *          Atom.
+     */
+    T* GetWritableAtom(s32 x, s32 y)
     {
       if (((u32) x) >= TILE_WIDTH || ((u32) y) >= TILE_WIDTH)
         FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);

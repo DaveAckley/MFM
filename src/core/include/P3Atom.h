@@ -122,6 +122,16 @@ namespace MFM {
       return P3_STATE_BITS_LEN;
     }
 
+    void WriteStateBits(ByteSink& ostream) const
+    {
+      ostream.Printf("1");
+    }
+
+    void ReadStateBits(const char* stateStr)
+    {
+      /* TODO Actually save this stuff */
+    }
+
     /**
      * Read stateWidth state bits starting at stateIndex, which counts
      * toward the right with 0 meaning the leftmost state bit.

@@ -40,7 +40,6 @@ namespace MFM
 {
 
 #define DREG_DEL_ODDS 40
-#define DREG_DRG_ODDS 200
 #define DREG_DDR_ODDS 20 /*Deleting DREGs*/
 
 #define DREG_VERSION 1
@@ -56,6 +55,8 @@ namespace MFM
   private:
 
     static s32 m_resOdds;
+
+    static s32 m_dregCreateOdds;
 
   public:
 
@@ -91,7 +92,7 @@ namespace MFM
 
         if(Element_Empty<CC>::THE_INSTANCE.IsType(oldType))
 	{
-	  if(random.OneIn(DREG_DRG_ODDS))
+	  if(random.OneIn(m_dregCreateOdds))
 	  {
 	    atom = Element_Dreg<CC>::THE_INSTANCE.GetDefaultAtom();
 	  }
@@ -124,6 +125,21 @@ namespace MFM
     {
       return &m_resOdds;
     }
+
+    s32 GetResOdds()
+    {
+      return m_resOdds;
+    }
+
+    s32* GetDregCreateOddsPtr()
+    {
+      return &m_dregCreateOdds;
+    }
+
+    s32 GetDregCreateOdds()
+    {
+      return m_dregCreateOdds;
+    }
   };
 
   template <class CC>
@@ -131,6 +147,9 @@ namespace MFM
 
   template <class CC>
   s32 Element_Dreg<CC>::m_resOdds = 100;
+
+  template <class CC>
+  s32 Element_Dreg<CC>::m_dregCreateOdds = 200;
 
 }
 

@@ -137,12 +137,10 @@ namespace MFM
 	    }
 	  }
 
-	  byteSink.Printf(",%d,%d)", x, y);
-	  /*
 	  byteSink.Printf(",%d,%d,", x, y);
-	  m_grid.GetAtom(currentPt)->WriteBits(byteSink);
+	  m_grid.GetAtom(currentPt)->WriteStateBits(byteSink);
 	  byteSink.Printf(")");
-	  */
+
 	  byteSink.WriteNewline();
 	}
       }
@@ -237,10 +235,11 @@ namespace MFM
   }
 
   template<class GC>
-  bool ExternalConfig<GC>::PlaceAtom(const Element<CC> & elt, s32 x, s32 y)
+  bool ExternalConfig<GC>::PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const char* hexData)
   {
-    m_grid.PlaceAtom(elt.GetDefaultAtom(), SPoint(x, y));
+    SPoint pt(x, y);
+    m_grid.PlaceAtom(elt.GetDefaultAtom(), pt);
+    m_grid.GetWritableAtom(pt)->ReadStateBits(hexData);
     return true;
   }
-
 }

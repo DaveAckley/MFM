@@ -156,6 +156,21 @@ namespace MFM
     void Print(ByteSink & ostream) const;
 
     /**
+     * Writes all bits of this Atom to a ByteSink. These bits must
+     * not include the type bits of this Atom.
+     *
+     * @remarks This is to be defined only by a subclass of Atom.
+     */
+    void WriteStateBits(ByteSink& ostream) const;
+
+    /**
+     * Reads the State bits of this atom from a given hex-encoded char* .
+     *
+     * @remarks This is to be defined only by a subclass of Atom.
+     */
+    void ReadStateBits(const char* hexStr);
+
+    /**
      * Writes the internal bits of this Atom to a ByteSink in hex format.
      *
      * @param ostream The ByteSink to write the bits of this Atom to.
@@ -171,12 +186,47 @@ namespace MFM
      *
      * @param inStream The ByteSource to read bits from.
      */
-    void ReadBits(ByteSource& inStream)
+    void ReadBits(const char* hexStr)
     {
-      OString128 readBits;
-      inStream.ScanHex(readBits);
+      u32 len = strlen(hexStr);
+      u32 bitLen = len * 4;
 
+      if(bitLen > BPA)
+      {
+	FAIL(ILLEGAL_ARGUMENT);
+      }
 
+      m_bits.Clear();
+
+      u32 bitIdx = 0;
+      char hexVal;
+
+      for(s32 i = len - 1; i >= 0; i--)
+      {
+	hexVal = hexStr[i];
+	if(hexVal >= '0' && hexVal <= '9')
+	{
+	  hexVal -= '0';
+	}
+	else if(hexVal >= 'a' && hexVal >= 'f')
+	{
+	  hexVal = hexVal - 'a' + 10;
+	}
+	else if(hexVal >= 'A' && hexVal <= 'F')
+	{
+	  hexVal = hexVal - 'A' + 10;
+	}
+	else
+	{
+	  FAIL(ILLEGAL_ARGUMENT);
+	}
+
+	for(s32 j = 3; j >= 0; j--)
+	{
+	  bitIdx = i * 4 + j;
+	  m_bits.WriteBit(bitIdx, !!(hexVal & (1 << j)));
+	}
+      }
     }
 
     /**

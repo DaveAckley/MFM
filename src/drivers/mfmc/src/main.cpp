@@ -7,7 +7,7 @@
 namespace MFM
 {
   typedef ParamConfig<64,4,8,40> OurParamConfig;
-  typedef P3Atom<OurParamConfig> OurAtom;
+  typedef P1Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom, OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig, 5, 3> OurGridConfig;
 
@@ -59,8 +59,15 @@ namespace MFM
 	sliders[0].SetMinValue(1);
 	sliders[0].SetMaxValue(1000);
 	sliders[0].SetExternalValue(Element_Dreg<CC>::THE_INSTANCE.GetResOddsPtr());
-	sliders[0].SetValue(100);
-	return 1;
+	sliders[0].SetValue(Element_Dreg<CC>::THE_INSTANCE.GetResOdds());
+
+	sliders[1].SetText("DREG Spawn Odds");
+	sliders[1].SetMinValue(1);
+	sliders[1].SetMaxValue(1000);
+	sliders[1].SetExternalValue(Element_Dreg<CC>::THE_INSTANCE.GetDregCreateOddsPtr());
+	sliders[1].SetValue(Element_Dreg<CC>::THE_INSTANCE.GetDregCreateOdds());
+
+	return 2;
       }
     }m_dregSliderConfig;
 

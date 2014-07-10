@@ -253,12 +253,12 @@ namespace MFM
       }
 
       /* Put the new sliders in */
-      SPoint rpt(3, 6 + ELEMENT_RENDER_SIZE * 6);
+      SPoint rpt(32, 6 + ELEMENT_RENDER_SIZE * 6);
       for(u32 i = 0; i < m_sliderCount; i++)
       {
 	m_sliders[i].SetRenderPoint(rpt);
 	Panel::Insert(m_sliders + i, NULL);
-	rpt.SetX(rpt.GetX() + 32);
+	rpt.SetY(rpt.GetY() + 32);
       }
 
       Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * 18,

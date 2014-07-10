@@ -95,12 +95,30 @@ namespace MFM {
       return this->m_bits.Read(BITS-typeBits,typeBits);
     }
 
-    /*
-      static u32 StateFunc(P1Atom* atom)
+    void WriteStateBits(ByteSink& ostream) const
+    {
+      s32 bitsUsed = GetBitsAllocated();
+
+      u32 typeBits = BITS - bitsUsed;
+      if(typeBits > 32) typeBits = 31;
+
+      u32 leftoverBits = BITS - typeBits;
+
+      for(u32 i = 0; i < leftoverBits; i++)
       {
-      return atom->GetState();
+	ostream.Printf("%d", this->m_bits.ReadBit(i) ? 1 : 0);
       }
-    */
+    }
+
+    void ReadStateBits(const char* stateStr)
+    {
+      u32 len = strlen(stateStr);
+
+      for(u32 i = 0; i < len; i++)
+      {
+	this->m_bits.WriteBit(i, stateStr[i] == '0' ? 0 : 1);
+      }
+    }
 
     P1Atom()
     {
@@ -225,18 +243,6 @@ namespace MFM {
       this->m_bits.Write(16, 16, arr[0]);
       this->m_bits.Write(32, 32, arr[1]);
     }
-
-    /*
-      void WriteLowerBits(u32 val)
-      {
-      this->m_bits.Write(32, 32, val);
-      }
-
-      u32 ReadLowerBits() const
-      {
-      return this->m_bits.Read(32, 32);
-      }
-    */
 
     void PrintBits(ByteSink & ostream) const
     { this->m_bits.Print(ostream); }

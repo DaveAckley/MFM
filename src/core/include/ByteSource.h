@@ -105,6 +105,13 @@ namespace MFM {
       return true;
     }
 
+    bool ScanBinary(ByteSink& result)
+    {
+      SkipWhitespace();
+      if(ScanSet(result, "[0-1]") <= 0) return false;
+      return true;
+    }
+
     bool ScanCamelIdentifier(ByteSink & result) {
       SkipWhitespace();
       if (ScanSet(result, "[A-Z]") <= 0) return false;

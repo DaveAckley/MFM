@@ -33,7 +33,7 @@
 #include "Panel.h"
 #include "Util.h"
 
-#define SLIDER_WIDTH 128
+#define SLIDER_WIDTH 150
 
 namespace MFM
 {

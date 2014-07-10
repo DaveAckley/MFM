@@ -78,7 +78,7 @@ namespace MFM
 
     const Element<CC> * LookupElement(const OString16 & nick) const ;
 
-    bool PlaceAtom(const Element<CC> & elt, s32 x, s32 y) ;
+    bool PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const char* dataStr) ;
 
     LineCountingByteSource & GetByteSource() {
       return m_in;

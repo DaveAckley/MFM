@@ -64,6 +64,8 @@ namespace MFM
       s32 x, y;
       s32 ret;
 
+      OString64 hexData;
+
       ret = this->SkipToNextArg(in);
       if (ret < 0) return false;
       if (ret == 0)
@@ -73,11 +75,17 @@ namespace MFM
       ret = this->SkipToNextArg(in);
       if (ret < 0) return false;
       if (ret == 0)
-        return in.Msg(Logger::ERROR, "Expected second argument");
+        return in.Msg(Logger::ERROR, "Expected third argument");
 
       if (!in.Scan(y)) return in.Msg(Logger::ERROR, "Expected y position");
+      ret = this->SkipToNextArg(in);
+      if(ret < 0) return false;
+      if(ret == 0)
+	return in.Msg(Logger::ERROR, "Expected fourth argument");
 
-      if (!ec.PlaceAtom(*pelt, x, y))
+      if (!in.ScanHex(hexData)) return in.Msg(Logger::ERROR, "Expected hex-encoded Atom body");
+
+      if (!ec.PlaceAtom(*pelt, x, y, hexData.GetZString()))
         return false;
 
       return this->SkipToNextArg(in) == 0;
