@@ -172,8 +172,8 @@ namespace MFM
 	  d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
 	  d.SetFont(AssetManager::GetFont(FONT_ASSET_ELEMENT));
 
-	  d.SetBackground(Drawing::HalfColor(~m_element->DefaultPhysicsColor()));
-	  d.SetForeground(~m_element->DefaultPhysicsColor());
+	  d.SetBackground(Drawing::HalfColor(~m_element->PhysicsColor()));
+	  d.SetForeground(~m_element->PhysicsColor());
 	  d.BlitBackedText(m_element->GetAtomicSymbol(),
 			   UPoint(1, 0),
 			   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
@@ -469,9 +469,9 @@ namespace MFM
 
 	d.SetBackground(Drawing::HalfColor(~this->Panel::GetBackground()));
 	d.SetForeground(~this->Panel::GetBackground());
-	d.BlitText(m_secondaryElement->GetAtomicSymbol(),
-		   UPoint(128 + ELEMENT_RENDER_SIZE * 2, 40),
-		   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+	d.BlitBackedText(m_secondaryElement->GetAtomicSymbol(),
+			 UPoint(128 + ELEMENT_RENDER_SIZE * 2, 40),
+			 UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
     }
   };

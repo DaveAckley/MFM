@@ -104,7 +104,7 @@ namespace MFM
         return ColorMap_SEQ6_PuBuGn::THE_INSTANCE.
           GetInterpolatedColor(GetDatum(atom,0),DATA_MINVAL,DATA_MAXVAL,0xffff0000);
       default:
-        return DefaultPhysicsColor();
+        return Element<CC>::PhysicsColor();
       }
     }
 

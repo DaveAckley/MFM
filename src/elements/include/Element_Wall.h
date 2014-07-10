@@ -72,7 +72,7 @@ namespace MFM
 
     virtual u32 DefaultLowlightColor() const
     {
-      return 0xff7f7f7f;
+      return 0xff202020;
     }
 
     virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {

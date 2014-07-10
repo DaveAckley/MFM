@@ -118,7 +118,7 @@ namespace MFM
         //        return ColorMap_SEQ5_Greys::THE_INSTANCE.
         //          GetInterpolatedColor(GetThreshold(atom,0),DATA_MINVAL,DATA_MAXVAL,0xffff0000);
       default:
-        return DefaultPhysicsColor();
+        return Element<CC>::PhysicsColor();
       }
     }
 
