@@ -152,7 +152,7 @@ namespace MFM
 	AbstractButton::SetEnabled(false);
       }
 
-      void SetElement(const Element<CC>* element)
+      void SetElement(Element<CC>* element)
       {
 	m_element = element;
 
@@ -168,7 +168,7 @@ namespace MFM
       {
 	if(m_element)
 	{
-	  d.SetForeground(m_element->DefaultPhysicsColor());
+	  d.SetForeground(m_element->PhysicsColor());
 	  d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
 	  d.SetFont(AssetManager::GetFont(FONT_ASSET_ELEMENT));
 
@@ -185,27 +185,32 @@ namespace MFM
 	}
       }
 
-      const Element<CC>* GetElement()
+      Element<CC>* GetElement()
       {
 	return m_element;
       }
 
       virtual void OnClick(u8 button)
       {
-	if(button == SDL_BUTTON_LEFT)
+	switch(button)
 	{
+	case SDL_BUTTON_LEFT:
 	  m_parent->SetPrimaryElement(m_element);
-	}
-	else
-	{
+	  break;
+	case SDL_BUTTON_RIGHT:
 	  m_parent->SetSecondaryElement(m_element);
+	  break;
+	case SDL_BUTTON_MIDDLE:
+	  m_element->ToggleLowlightPhysicsColor();
+	  break;
+	default: break;
 	}
 
 	m_parent->RebuildSliders();
       }
 
     private:
-      const Element<CC>* m_element;
+      Element<CC>* m_element;
 
       ToolboxPanel<CC>* m_parent;
     };
@@ -216,11 +221,11 @@ namespace MFM
 
     ToolButton m_toolButtons[ELEMENT_BOX_BUTTON_COUNT];
 
-    const Element<CC>* m_primaryElement;
+    Element<CC>* m_primaryElement;
 
-    const Element<CC>* m_secondaryElement;
+    Element<CC>* m_secondaryElement;
 
-    const Element<CC>* m_heldElements[ELEMENT_BOX_SIZE];
+    Element<CC>* m_heldElements[ELEMENT_BOX_SIZE];
 
     ElementButton m_elementButtons[ELEMENT_BOX_SIZE];
 
@@ -385,19 +390,19 @@ namespace MFM
       m_toolButtons[0].ToolButton::SetActivated(true);
     }
 
-    void SetPrimaryElement(const Element<CC>* element)
+    void SetPrimaryElement(Element<CC>* element)
     { m_primaryElement = element; }
 
-    const Element<CC>* GetPrimaryElement()
+    Element<CC>* GetPrimaryElement()
     { return m_primaryElement; }
 
-    void SetSecondaryElement(const Element<CC>* element)
+    void SetSecondaryElement(Element<CC>* element)
     { m_secondaryElement = element; }
 
-    const Element<CC>* GetSecondaryElement()
+    Element<CC>* GetSecondaryElement()
     { return m_secondaryElement; }
 
-    void RegisterElement(const Element<CC>* element)
+    void RegisterElement(Element<CC>* element)
     {
       if(m_heldElementCount >= ELEMENT_BOX_SIZE)
       {
@@ -447,7 +452,7 @@ namespace MFM
 
 
       if (m_primaryElement) {
-        d.SetForeground(m_primaryElement->DefaultPhysicsColor());
+        d.SetForeground(m_primaryElement->PhysicsColor());
         d.FillCircle(129, 40, ELEMENT_RENDER_SIZE,
                      ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
 
@@ -458,7 +463,7 @@ namespace MFM
 			 UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
       if (m_secondaryElement) {
-        d.SetForeground(m_secondaryElement->DefaultPhysicsColor());
+        d.SetForeground(m_secondaryElement->PhysicsColor());
         d.FillCircle(129 + ELEMENT_RENDER_SIZE, 40, ELEMENT_RENDER_SIZE,
 		     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
 

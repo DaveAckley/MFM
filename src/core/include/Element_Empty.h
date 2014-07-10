@@ -63,6 +63,11 @@ namespace MFM
       return 0x00000000;                    // Not black.. transparent
     }
 
+    virtual u32 DefaultLowlightColor() const
+    {
+      return 0x00000000;
+    }
+
     virtual void Behavior(EventWindow<CC>& window) const
     {
     }

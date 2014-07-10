@@ -70,6 +70,11 @@ namespace MFM
       return 0xffffffff;
     }
 
+    virtual u32 DefaultLowlightColor() const
+    {
+      return 0xff7f7f7f;
+    }
+
     virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
       return nowAt.Equals(maybeAt)?Element<CC>::COMPLETE_DIFFUSABILITY:0;
     }

@@ -703,7 +703,7 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
       m_grend.ToggleMemDraw();
     }
 
-    void RegisterToolboxElement(const Element<CC>* element)
+    void RegisterToolboxElement(Element<CC>* element)
     {
       m_toolboxPanel.RegisterElement(element);
     }

@@ -84,6 +84,11 @@ namespace MFM
       return 0xff808080;
     }
 
+    virtual u32 DefaultLowlightColor() const
+    {
+      return 0xff404040;
+    }
+
     virtual void Behavior(EventWindow<CC>& window) const
     {
       Random & random = window.GetRandom();

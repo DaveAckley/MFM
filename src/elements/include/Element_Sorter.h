@@ -105,6 +105,11 @@ namespace MFM
       return 0xffff0000;
     }
 
+    virtual u32 DefaultLowlightColor() const
+    {
+      return 0xff7f0000;
+    }
+
     virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const
     {
       switch (selector) {

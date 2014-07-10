@@ -204,6 +204,11 @@ namespace MFM
       return 0xffffff00;
     }
 
+    virtual u32 DefaultLowlightColor() const
+    {
+      return 0xff7f7f00;
+    }
+
     virtual u32 PercentMovable(const T& you, const T& me, const SPoint& offset) const
     {
       return 0;
@@ -225,7 +230,7 @@ namespace MFM
         {
           u32 timer = GetTimer(atom);
           return ColorMap_SEQ6_GnBu::THE_INSTANCE.
-            GetInterpolatedColor(timer,0,MAX_TIMER_VALUE - 1, DefaultPhysicsColor());
+            GetInterpolatedColor(timer,0,MAX_TIMER_VALUE - 1, Element<CC>::PhysicsColor());
         }
       }
       return 0x0;

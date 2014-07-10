@@ -73,6 +73,11 @@ namespace MFM
       return 0xff676700;
     }
 
+    virtual u32 DefaultLowlightColor() const
+    {
+      return 0xff333300;
+    }
+
     virtual void Behavior(EventWindow<CC>& window) const
     {
       this->Diffuse(window);

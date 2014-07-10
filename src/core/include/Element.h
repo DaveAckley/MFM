@@ -55,6 +55,7 @@ namespace MFM
     const UUID m_UUID;
     u32 m_type;
     bool m_hasType;
+    bool m_renderLowlight;
     T m_defaultAtom;
 
     const char* m_atomicSymbol;
@@ -110,14 +111,18 @@ namespace MFM
 
   public:
 
-    Element(const UUID & uuid) : m_UUID(uuid), m_type(0), m_hasType(false),
+    Element(const UUID & uuid) : m_UUID(uuid), m_type(0),
+				 m_hasType(false),
+				 m_renderLowlight(false),
 				 m_atomicSymbol("!!")
     {
       LOG.Debug("Constructed %@",&m_UUID);
     }
 
     // For use by Element_Empty only!
-    Element(const UUID & uuid, u32 type) : m_UUID(uuid), m_type(type), m_hasType(true),
+    Element(const UUID & uuid, u32 type) : m_UUID(uuid), m_type(type),
+					   m_hasType(true),
+					   m_renderLowlight(false),
 					   m_atomicSymbol("!!")
     { }
 
@@ -157,10 +162,29 @@ namespace MFM
       return m_defaultAtom;
     }
 
+    virtual u32 PhysicsColor() const
+    {
+      if(m_renderLowlight)
+      {
+	return DefaultLowlightColor();
+      }
+      else
+      {
+	return DefaultPhysicsColor();
+      }
+    }
+
     virtual u32 DefaultPhysicsColor() const = 0;
 
+    virtual u32 DefaultLowlightColor() const = 0;
+
+    virtual void ToggleLowlightPhysicsColor()
+    {
+      m_renderLowlight = !m_renderLowlight;
+    }
+
     virtual u32 LocalPhysicsColor(const T &, u32 selector) const {
-      return DefaultPhysicsColor();
+      return PhysicsColor();
     }
 
     /**
