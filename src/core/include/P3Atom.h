@@ -132,9 +132,9 @@ namespace MFM {
 
     void ReadStateBits(const char* stateStr)
     {
-      for(u32 i = P3_STATE_BITS_POS; i < P3_STATE_BITS_POS + P3_STATE_BITS_LEN; i++)
+      for(u32 i = 0; i < P3_STATE_BITS_LEN; i++)
       {
-	this->m_bits.WriteBit(i, stateStr[i] == '0' ? 0 : 1);
+	this->m_bits.WriteBit(P3_STATE_BITS_POS + i, stateStr[i] == '0' ? 0 : 1);
       }
     }
 
