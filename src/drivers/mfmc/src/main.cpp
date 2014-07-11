@@ -7,7 +7,7 @@
 namespace MFM
 {
   typedef ParamConfig<64,4,8,40> OurParamConfig;
-  typedef P1Atom<OurParamConfig> OurAtom;
+  typedef P3Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom, OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig, 5, 3> OurGridConfig;
 
@@ -27,6 +27,11 @@ namespace MFM
 
     virtual void OnceOnly(VArguments& args)
     {
+
+#ifdef MFM_GUI_DRIVER
+      AbstractGUIDriver::m_startPaused = true;
+#endif
+
       Super::OnceOnly(args);
     }
 

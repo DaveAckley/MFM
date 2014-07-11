@@ -174,9 +174,27 @@ namespace MFM
       }
     }
 
+    /**
+     * Gets the 32-bit ARGB formatted color that all Atoms of this
+     * Element will be drawn with.
+     *
+     * @returns The 32-bit ARGB formatted color that all Atoms of this
+     *          Element will be drawn with.
+     */
     virtual u32 DefaultPhysicsColor() const = 0;
 
-    virtual u32 DefaultLowlightColor() const = 0;
+    virtual u32 DefaultLowlightColor() const
+    {
+      u8 r, g, b;
+      u32 oc = DefaultPhysicsColor();
+
+      /* Shift them one more to divide by 2 */
+      r = (oc & 0x00ff0000) >> 17;
+      g = (oc & 0x0000ff00) >> 9;
+      b = (oc & 0x000000ff) >> 1;
+
+      return 0xff000000 | (r << 16) | (g << 8) | b;
+    }
 
     virtual void ToggleLowlightPhysicsColor()
     {

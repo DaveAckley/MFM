@@ -92,7 +92,10 @@ namespace MFM {
 
     Fonts m_fonts;
 
+  protected:
     bool m_startPaused;
+
+  private:
     bool m_keyboardPaused;   // Toggled by keyboard space, ' ', SDLK_SPACE
     bool m_mousePaused;      // Set if any buttons down, clear if all up
     bool m_gridPaused;       // Set if keyboard || mouse paused, checked by RunGrid
