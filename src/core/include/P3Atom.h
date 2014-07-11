@@ -124,12 +124,18 @@ namespace MFM {
 
     void WriteStateBits(ByteSink& ostream) const
     {
-      ostream.Printf("1");
+      for(u32 i = P3_STATE_BITS_POS; i < P3_STATE_BITS_POS + P3_STATE_BITS_LEN; i++)
+      {
+	ostream.Printf("%d", this->m_bits.ReadBit(i) ? 1 : 0);
+      }
     }
 
     void ReadStateBits(const char* stateStr)
     {
-      /* TODO Actually save this stuff */
+      for(u32 i = P3_STATE_BITS_POS; i < P3_STATE_BITS_POS + P3_STATE_BITS_LEN; i++)
+      {
+	this->m_bits.WriteBit(i, stateStr[i] == '0' ? 0 : 1);
+      }
     }
 
     /**

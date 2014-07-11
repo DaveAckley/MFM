@@ -92,6 +92,24 @@ namespace MFM {
       FAIL(ILLEGAL_ARGUMENT);
     }
 
+    u32 GetTypeLength()
+    {
+      u32 lengthCode = AFTypeLengthCode::Read(this->m_bits);
+      switch(lengthCode)
+      {
+      case 0:
+	return AFTypeLength0::END;
+      case 1:
+	return AFTypeLength1::END;
+      case 2:
+	return AFTypeLength2::END;
+      case 3:
+	return AFTypeLength3::END;
+      default:
+	FAIL(UNREACHABLE_CODE);
+      }
+    }
+
   public:
 
     u32 GetType() const {
@@ -103,6 +121,26 @@ namespace MFM {
       case 3: return AFTypeLength3::Read(this->m_bits);
       default:
         FAIL(UNREACHABLE_CODE);
+      }
+    }
+
+    void WriteStateBits(ByteSink& ostream) const
+    {
+      u32 typeBits = GetTypeLength();
+
+      for(u32 i = typeBits; i < BITS; i++)
+      {
+	ostream.Printf("%d", this->m_bits.ReadBit(i) ? 1 : 0);
+      }
+    }
+
+    void ReadStateBits(const char* stateStr)
+    {
+      u32 typeBits = GetTypeLength();
+
+      for(u32 i = typeBits; i < BITS; i++)
+      {
+	this->m_bits.WriteBit(i, stateStr[i] == '0' ? 0 : 1);
       }
     }
 
