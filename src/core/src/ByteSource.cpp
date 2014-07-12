@@ -4,37 +4,11 @@
 
 namespace MFM {
 
-  bool ByteSource::Scan(ByteSerializable & byteSerializable, s32 argument)
+  bool ByteSource::Scan(u64 & result)
   {
-    ByteSerializable::Result res = byteSerializable.ReadFrom(*this, argument);
-    if (res == ByteSerializable::UNSUPPORTED)
-      FAIL(UNSUPPORTED_OPERATION);
-    return res == ByteSerializable::SUCCESS;
-  }
-
-  const char * ByteSource::WHITESPACE_CHARS = " \n\t\v";
-  const char * ByteSource::WHITESPACE_SET = "[ \n\t\v]";
-  const char * ByteSource::NON_WHITESPACE_SET = "[^ \n\t\v]";
-
-  bool ByteSource::Scan(u32 & result, Format::Type code, u32 maxLen)
-  {
-    return Scan(*(s32*)&result, code, maxLen);
-  }
-
-  bool ByteSource::ScanLexDigits(u32 & digits) {
-    u32 byte;
-    if (!Scan(byte, Format::BYTE)) return false;
-    if (byte >= '0' && byte <= '8') {
-      digits = byte-'0';
-      return true;
-    }
-    if (byte =='9') return Scan(digits, Format::LEX32);
-    return false;
-  }
-
-  bool ByteSource::Scan(u64 & result) {
     u64 num = 0;
-    for (u32 i = 0; i < 8; ++i) {
+    for (u32 i = 0; i < 8; ++i)
+    {
       s32 ch = Read();
       if (ch < 0)
         return false;
@@ -128,6 +102,40 @@ namespace MFM {
     return true;
   }
 
+  bool ByteSource::Scan(u32 & result, Format::Type code, u32 maxLen)
+  {
+    return Scan(*(s32*)&result, code, maxLen);
+  }
+
+  bool ByteSource::Scan(ByteSerializable & byteSerializable, s32 argument)
+  {
+    ByteSerializable::Result res = byteSerializable.ReadFrom(*this, argument);
+    if (res == ByteSerializable::UNSUPPORTED)
+      FAIL(UNSUPPORTED_OPERATION);
+    return res == ByteSerializable::SUCCESS;
+  }
+
+  bool ByteSource::ScanLexDigits(u32 & digits)
+  {
+    u32 byte;
+    if (!Scan(byte, Format::BYTE))
+    {
+      return false;
+    }
+
+    if (byte >= '0' && byte <= '8')
+    {
+      digits = byte-'0';
+      return true;
+    }
+
+    if (byte =='9')
+    {
+      return Scan(digits, Format::LEX32);
+    }
+    return false;
+  }
+
   bool ByteSource::Scan(ByteSink & result, const u32 fieldWidth)
   {
     for (u32 i = 0; i < fieldWidth; ++i) {
@@ -203,6 +211,10 @@ namespace MFM {
       return ch;
     return count;
   }
+
+  const char * ByteSource::WHITESPACE_CHARS = " \n\t\v";
+  const char * ByteSource::WHITESPACE_SET = "[ \n\t\v]";
+  const char * ByteSource::NON_WHITESPACE_SET = "[^ \n\t\v]";
 
   s32 ByteSource::Scanf(const char * format, ...) {
     va_list ap;

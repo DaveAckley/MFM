@@ -58,6 +58,10 @@ namespace MFM
     bool m_renderLowlight;
     T m_defaultAtom;
 
+    /**
+     * The Atomic Symbol of this Element, i.e. a One or Two character
+     * string representing a very short name for this Element.
+     */
     const char* m_atomicSymbol;
 
   protected:
@@ -162,6 +166,10 @@ namespace MFM
       return m_defaultAtom;
     }
 
+    /**
+     * Gets the current 32-bit ARGB color which this all Atoms of this
+     * Element should be rendered with.
+     */
     virtual u32 PhysicsColor() const
     {
       if(m_renderLowlight)
@@ -183,6 +191,14 @@ namespace MFM
      */
     virtual u32 DefaultPhysicsColor() const = 0;
 
+    /**
+     * Gets the 32-bit ARGB formatted color that all Atoms of this
+     * Element will be drawn with when they have lowlight drawing
+     * enabled.
+     *
+     * @returns The lowlight color to draw all Atoms of this Element
+     *          with.
+     */
     virtual u32 DefaultLowlightColor() const
     {
       u8 r, g, b;
@@ -196,7 +212,11 @@ namespace MFM
       return 0xff000000 | (r << 16) | (g << 8) | b;
     }
 
-    virtual void ToggleLowlightPhysicsColor()
+    /**
+     * Toggles the lowlight / normal rendering of all Atoms of this
+     * Element.
+     */
+    void ToggleLowlightPhysicsColor()
     {
       m_renderLowlight = !m_renderLowlight;
     }
