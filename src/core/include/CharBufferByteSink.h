@@ -21,6 +21,7 @@
 /**
   \file CharBufferByteSink.h Character based ByteSink
   \author David H. Ackley.
+  \author Trent R. Small.
   \date (C) 2014 All rights reserved.
   \lgpl
  */
@@ -30,8 +31,8 @@
 #include "ByteSink.h"
 #include <string.h>        /* For memcpy */
 
-namespace MFM {
-
+namespace MFM
+{
   /**
    * A template class for a ByteSink into a fixed-size char buffer.
    * If the fixed-size buffer overflows,
@@ -40,11 +41,30 @@ namespace MFM {
    * OverflowableCharBufferByteSink.
    */
   template <int BUFSIZE>
-  class CharBufferByteSink : public ByteSink {
+  class CharBufferByteSink : public ByteSink
+  {
   public:
-    CharBufferByteSink() : m_written(0) { }
-    virtual void WriteBytes(const u8 * data, const u32 len) {
-      if (m_written + len < BUFSIZE-1) {
+
+    CharBufferByteSink() :
+      m_written(0)
+      { }
+
+    /**
+     * Writes a series of bytes to this CharBufferByteSink. This will
+     * FAIL with OUT_OF_ROOM if therre is not enough room for the
+     * bytes to be written. One can check the number of bytes which
+     * may be written through the \c CanWrite() function.
+     *
+     * @param data A pointer to the bytes wished to be written to this
+     *             CharBufferByteSink.
+     *
+     * @param len The number of bytes to write to this
+     *            CharBufferByteSink.
+     */
+    virtual void WriteBytes(const u8 * data, const u32 len)
+    {
+      if (m_written + len < BUFSIZE-1)
+      {
         memcpy(&m_buf[m_written], data, len);
         m_written += len;
         return;
@@ -52,32 +72,91 @@ namespace MFM {
       FAIL(OUT_OF_ROOM);
     }
 
-    virtual s32 CanWrite() {
+    /**
+     * Gets the number of bytes which may be written to this
+     * CharBufferByteSink before it calls FAIL(OUT_OF_ROOM) .
+     *
+     * @returns The number of bytes which may be written to this
+     *          CharBufferByteSink .
+     */
+    virtual s32 CanWrite()
+    {
       return BUFSIZE - m_written - 1;
     }
 
-    bool Equals(const char * str) {
+    /**
+     * Checks to see if the underlying buffer of this
+     * CharBufferByteSink contains the same characters of another
+     * null-terminated string.
+     *
+     * @param str A null-terminated string of characters which may or
+     *            may not equal the string held by this
+     *            CharBufferByteSink .
+     *
+     * @returns \c true if this CharBufferByteSink and \c str
+     *          represent the same string, else \c false.
+     */
+    bool Equals(const char * str)
+    {
       return strcmp(GetZString(), str)==0;
     }
-    const char * GetZString() {
+
+    /**
+     * Retreives the underlying buffer of this CharBufferByteSink,
+     * usable as a \c const \c char* . The returned \c char* is
+     * guaranteed to be null terminated.
+     *
+     * @returns The underlying buffer of this CharBufferByteSink,
+     * usable as a \c const \c char* .
+     */
+    const char * GetZString()
+    {
       m_buf[m_written] = '\0';
       return (const char *) m_buf;
     }
 
-    u32 GetLength() const {
+    /**
+     * Gets the length of this CharBufferByteSink, in bytes.
+     *
+     * @returns The length of this CharBufferByteSink, in bytes.
+     */
+    u32 GetLength() const
+    {
       return m_written;
     }
 
-    u32 GetCapacity() const {
+    /**
+     * Gets the maximum number of bytes which this CharBufferByteSink
+     * may hold.
+     *
+     * @returns The maximum number of bytes which this CharBufferByteSink
+     *          may hold.
+     */
+    u32 GetCapacity() const
+    {
       return BUFSIZE;
     }
 
-    void Reset() {
+    /**
+     * Effectively clears this CharBufferByteSink, resulting in it
+     * being logically equivalent to the empty string.
+     */
+    void Reset()
+    {
       m_written = 0;
     }
 
   private:
+    /**
+     * The underlying buffer used to represent the string held by this
+     * CharBufferByteSink.
+     */
     u8 m_buf[BUFSIZE];
+
+    /**
+     * The number of bytes that this CharBufferByteSink is currently
+     * holding.
+     */
     u32 m_written;
   };
 }

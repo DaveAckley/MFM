@@ -29,38 +29,104 @@
 
 #include "ByteSource.h"
 
-namespace MFM {
-
-  class CharBufferByteSource : public ByteSource {
+namespace MFM
+{
+  /**
+   * A ByteSource backed by a char pointer.
+   */
+  class CharBufferByteSource : public ByteSource
+  {
   public:
+
+    /**
+     * Constructs a new CharBufferByteSource backed by a provided char
+     * pointer. The length of readable bytes by the provided char
+     * pointer must also be provided.
+     *
+     * @param input The char* to back this CharBufferByteSource
+     *              by. This must not be NULL, else this constructor
+     *              will FAIL with NULL_POINTER .
+     *
+     * @param length The number of readable bytes which may be read
+     *               from \c input .
+     */
     CharBufferByteSource(const char * input, u32 length)
-      : m_input(input), m_length(length), m_read(0)
+      : m_input(input),
+	m_length(length),
+	m_read(0)
     {
       if (!input)
+      {
         FAIL(NULL_POINTER);
+      }
     }
 
-    virtual int ReadByte() {
-      if (m_read >= m_length) return -1;
+    /**
+     * Reads the next byte from the front of this CharBufferByteSource
+     * and advances the pointer.
+     *
+     * @returns the next byte from the front of this CharBufferByteSource .
+     */
+    virtual int ReadByte()
+    {
+      if (m_read >= m_length)
+      {
+	return -1;
+      }
       return m_input[m_read++];
     }
 
-    void ChangeBuffer(const char * newBuffer, u32 bufferLength) {
+    /**
+     * Assigns a new char pointer to this CharBufferByteSource. Used
+     * to reconstruct this CharBufferByteSource as needed.
+     *
+     * @param newBuffer The new char pointer which this
+     *                  CharBufferByteSource will point to. This must
+     *                  not be NULL, else will FAIL with NULL_POINTER .
+     *
+     * @param bufferLength The number of readable bytes which may be read
+     *                     from \c newBuffer .
+     */
+    void ChangeBuffer(const char * newBuffer, u32 bufferLength)
+    {
       if (!newBuffer)
+      {
         FAIL(NULL_POINTER);
+      }
       m_input = newBuffer;
       m_length = bufferLength;
 
       Reset();
     }
 
-    void Reset() {
+    /**
+     * Effectively clears this CharBufferByteSource, making all bytes
+     * since either construction or \c ChangeBuffer() available again
+     * from the beginning of the buffer.
+     */
+    void Reset()
+    {
       m_read = 0;
     }
 
   private:
+
+    /**
+     * The char pointer of which to read bytes from upon \c ReadByte()
+     * . This is guaranteed to not be NULL .
+     */
     const char * m_input;
+
+    /**
+     * The number of bytes which may be read from this
+     * CharBufferByteSource .
+     */
     u32 m_length;
+
+    /**
+     * Thenumber of bytes which have already been read from this
+     * CharBufferByteSource.
+     */
     u32 m_read;
   };
 }
