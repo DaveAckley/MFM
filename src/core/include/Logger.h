@@ -21,6 +21,7 @@
 /**
   \file Logger.h Configurable output logging system
   \author David H. Ackley.
+  \author Trent R. Small.
   \date (C) 2014 All rights reserved.
   \lgpl
  */
@@ -32,12 +33,23 @@
 #include "ByteSerializable.h"
 #include <stdarg.h>
 
-namespace MFM {
+namespace MFM
+{
 
+  /**
+   * A logging system used for logging different kinds of messages to
+   * a ByteSink .
+   */
   class Logger
   {
   public:
-    enum Level {
+
+    /**
+     * An enumeration of all levels at which this Logger may be
+     * elevated to . Lower levels are reserved for more severe messages .
+     */
+    enum Level
+    {
       NONE,      // 'NONE' must remain 0 to avoid races from logging in static ctors
       ERROR,
       WARNING,
@@ -52,8 +64,17 @@ namespace MFM {
       MAX = ALL
     };
 
-    static const char * StrLevel(Level l) {
-      switch (l) {
+    /**
+     * Translates a Level to an immutable string .
+     *
+     * @param l The level to translate to a string .
+     *
+     * @returns The string which represents \c l .
+     */
+    static const char * StrLevel(Level l)
+    {
+      switch (l)
+      {
       case NONE: return "NON";
       case ERROR: return "ERR";
       case WARNING: return "WRN";
@@ -67,25 +88,67 @@ namespace MFM {
       }
     }
 
-    static bool ValidLevel(s32 levelNumber) {
+    /**
+     * Checks to see if a specified level number represents a Level in
+     * this Logger .
+     *
+     * @param levelNumber The number of the level to check for
+     *                    validity .
+     *
+     * @returns \c true if \c levelNumber represents a valid logging Level .
+     */
+    static bool ValidLevel(s32 levelNumber)
+    {
       return levelNumber >= MIN && levelNumber <= MAX;
     }
 
-    Level GetLevel() const {
+    /**
+     * Gets the current Level that this Logger is operating at .
+     *
+     * @returns The current Level that this Logger is operating at .
+     */
+    Level GetLevel() const
+    {
       return m_logLevel;
     }
 
+    /**
+     * Sets the Level that this Logger will operate at by specifying
+     * the number of the level to be set.
+     *
+     * @param newLevel the number of the Level to set this Logger
+     *                 to. This FAILs with ILLEGAL_ARGUMENT if this is
+     *                 not a valid Level number.
+     *
+     * @returns the Level that this Logger was operating at before
+     *          this method was called.
+     */
     Level SetLevel(u32 newLevel)
     {
       return SetLevel((Level)newLevel);
     }
 
-    Level SetLevel(Level newLevel) {
+    /**
+     * Sets the Level that this Logger will operate at.
+     *
+     * @param newLevel The Level that this Logger will operate
+     *                 at. This FAILs with ILLEGAL_ARGUMENT if this is
+     *                 not a valid Level .
+     *
+     * @returns the Level that this Logger was operating at before
+     *          this method was called.
+     */
+    Level SetLevel(Level newLevel)
+    {
       if (!ValidLevel(newLevel))
+      {
         FAIL(ILLEGAL_ARGUMENT);
+      }
 
       if (newLevel == m_logLevel)
+      {
         return m_logLevel;
+      }
 
       Level oldLevel = m_logLevel;
 
@@ -96,21 +159,61 @@ namespace MFM {
       return oldLevel;
     }
 
-    ByteSink * SetByteSink(ByteSink & byteSink) {
+    /**
+     * Sets the ByteSink that this Logger will begin writing to.
+     *
+     * @param byteSink The ByteSink that this Logger will begin writing to.
+     *
+     * @returns A pointer to the ByteSink that this Logger was writing
+     *          to before this method was called.
+     */
+    ByteSink * SetByteSink(ByteSink & byteSink)
+    {
       ByteSink * old = m_sink;
       m_sink = &byteSink;
       return old;
     }
 
+    /**
+     * Constructs a new Logger which writes to a specified ByteSink
+     * and logs at a particular logging Level .
+     *
+     * @param sink The ByteSink that this Logger will begin writing to.
+     *
+     * @param initialLevel The Level that this Logger will begin writing at.
+     */
     Logger(ByteSink & sink, Level initialLevel) :
       m_sink(&sink),
       m_logLevel(initialLevel),
       m_timeStamper(&m_defaultTimeStamper)
     { }
 
-    bool IfLog(Level level) { return m_logLevel > NONE && level <= m_logLevel; }
+    /**
+     * Checks to see if this Logger is operating at a higher Level
+     * than a specified one.
+     *
+     * @param level The Level used to test the elevation of this Logger .
+     *
+     * @returns \c true if this Logger is operating on some level
+     *          higher than \c level , else \c false .
+     */
+    bool IfLog(Level level)
+    {
+      return m_logLevel > NONE && level <= m_logLevel;
+    }
 
-    bool Log(Level level, const char * format, ... ) {
+    /**
+     * Logs a formatted message at a specified logging Level .
+     *
+     * @param level The logging Level to log this message at.
+     *
+     * @param format The format string used to parse the variatic
+     *               arguments which follow it.
+     *
+     * @returns \c true .
+     */
+    bool Log(Level level, const char * format, ... )
+    {
       va_list ap;
       va_start(ap, format);
       Vreport(level, format, ap);
@@ -118,43 +221,92 @@ namespace MFM {
       return true;
     }
 
-    void Vreport(Level level, const char * format, va_list & ap) {
-      if (IfLog(level)) {
+    /**
+     * Logs a formatted message at a specified logging level .
+     *
+     * @param level The logging Level to log this message at.
+     *
+     * @param format The format string used to parse the variatic
+     *               argument list .
+     *
+     * @param ap The variatic argument list describing the message to
+     *           be logged.
+     */
+    void Vreport(Level level, const char * format, va_list & ap)
+    {
+      if (IfLog(level))
+      {
         m_sink->Printf("%@%s: ",m_timeStamper, StrLevel(level));
         m_sink->Vprintf(format, ap);
         m_sink->Println();
       }
     }
 
-    void Error(const char * format, ... ) {
+    /**
+     * Logs a formatted message at the ERROR logging Level .
+     *
+     * @param format The format string used to parse the variatic
+     *               arguments which follow it.
+     */
+    void Error(const char * format, ... )
+    {
       va_list ap;
       va_start(ap, format);
       Vreport(ERROR, format, ap);
       va_end(ap);
     }
 
-    void Warning(const char * format, ... ) {
+    /**
+     * Logs a formatted message at the WARNING logging Level .
+     *
+     * @param format The format string used to parse the variatic
+     *               arguments which follow it.
+     */
+    void Warning(const char * format, ... )
+    {
       va_list ap;
       va_start(ap, format);
       Vreport(WARNING, format, ap);
       va_end(ap);
     }
 
-    void Message(const char * format, ... ) {
+    /**
+     * Logs a formatted message at the MESSAGE logging Level .
+     *
+     * @param format The format string used to parse the variatic
+     *               arguments which follow it.
+     */
+    void Message(const char * format, ... )
+    {
       va_list ap;
       va_start(ap, format);
       Vreport(MESSAGE, format, ap);
       va_end(ap);
     }
 
-    void Debug(const char * format, ... ) {
+    /**
+     * Logs a formatted message at the DEBUG logging Level .
+     *
+     * @param format The format string used to parse the variatic
+     *               arguments which follow it.
+     */
+    void Debug(const char * format, ... )
+    {
       va_list ap;
       va_start(ap, format);
       Vreport(DEBUG, format, ap);
       va_end(ap);
     }
 
-    void SetTimeStamper(ByteSerializable * stamper) {
+    /**
+     * Sets the Time Stamper to be used by this Logger , a device used
+     * to keep track of the number of messages that have been logged.
+     *
+     * @param stamper The ByteSerializable that will be printed as a
+     *                prefix to each logging message.
+     */
+    void SetTimeStamper(ByteSerializable * stamper)
+    {
       m_timeStamper = stamper? stamper : &m_defaultTimeStamper;
       m_defaultTimeStamper.Reset();
     }
@@ -163,12 +315,14 @@ namespace MFM {
     ByteSink * m_sink;
     Level m_logLevel;
 
-    class DefaultTimeStamper : public ByteSerializable {
+    class DefaultTimeStamper : public ByteSerializable
+    {
       u32 m_calls;
     public:
       DefaultTimeStamper() : m_calls(0) { }
       void Reset() { m_calls = 0; }
-      virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0) {
+      virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0)
+      {
         byteSink.Print(++m_calls, Format::LEX32);
         byteSink.Print(": ");
         return SUCCESS;

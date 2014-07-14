@@ -17,7 +17,8 @@ namespace MFM {
   {
     u32 collide = 0;
     u32 slot = elementType;
-    while (true) {
+    while (true)
+    {
       slot %= SIZE;
       const Element<C> * elt = m_hash[slot].m_element;
       if (elt==0 || elt->GetType() == elementType)

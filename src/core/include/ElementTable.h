@@ -35,10 +35,10 @@
 #include "Element.h"
 #include "Element_Empty.h"
 
-namespace MFM {
+namespace MFM
+{
 
-  template <class CC>
-  class EventWindow;
+  template <class CC> class EventWindow; // Forward declaration
 
   template <class CC>
   class ElementTable
@@ -58,9 +58,20 @@ namespace MFM {
      */
     void Reinit() ;
 
+    /**
+     * Registers an Element into this ElementTable, allowing Elements
+     * of a specified type to exist and act inside a Tile .
+     *
+     * @param theElement The Element to insert into this ElementTable .
+     */
     void Insert(const Element<CC> & theElement) ;
 
-    u32 GetSize() const {
+    /**
+     * Gets the capacity of this ElementTable, in Elements that may be
+     * registered.
+     */
+    u32 GetSize() const
+    {
       return SIZE;
     }
 
@@ -69,24 +80,67 @@ namespace MFM {
      * return a number from 0.. GetSize()-1 representing the location
      * of this elementType in this table.
      */
+
+    /**
+     * Gets the index of this ElementTable where a particular Element
+     * (described by a specified type) resides.
+     *
+     * @param elementType The type of the Element of which to look up
+     *                    an index for.
+     *
+     * @returns The index of this ElementTable where the Element of
+     *          type \c elementType resides.
+     */
     s32 GetIndex(u32 elementType) const ;
 
+    /**
+     * Constructs and calls \c Reinit() on a new new ElementTable.
+     */
     ElementTable();
 
+    /**
+     * Deconstructs this ElementTable.
+     */
     ~ElementTable() { }
 
+    /**
+     * Gets a pointer to an immutable Element which is stored in this
+     * ElementTable by providing a type.
+     *
+     * @param elementType the type of the Element which will be found
+     *                    in this Table.
+     *
+     * @returns A pointer to an immutable Element which is stored in
+     *          this table. If an Element with this type is not found
+     *          in this ElementTable, will return NULL .
+     */
     const Element<CC> * Lookup(u32 elementType) const;
 
+    /**
+     * Executes the behavior method of the Element in the center of a
+     * specified EventWindow. This method finds the central Element by
+     * the type of the Atom located there, then executes its behavior.
+     *
+     * @param window The EventWindow to execute an event upon.
+     */
     void Execute(EventWindow<CC>& window)
     {
       u32 type = window.GetCenterAtom().GetType();
-      if(type != Element_Empty<CC>::THE_INSTANCE.GetType()) {
+      if(type != Element_Empty<CC>::THE_INSTANCE.GetType())
+      {
         const Element<CC> * elt = Lookup(type);
         if (elt == 0) FAIL(UNKNOWN_ELEMENT);
         elt->Behavior(window);
       }
     }
 
+    /**
+     * Inserts an Element into this ElementTable.
+     *
+     * @param e The Element to insert into this ElementTable.
+     *
+     * @returns \c true .
+     */
     bool RegisterElement(const Element<CC>& e)
     {
       Insert(e);
@@ -207,6 +261,16 @@ namespace MFM {
 
   private:
 
+    /**
+     * Acting as a hashing function, finds a slot inside this
+     * ElementTable table for an Element with a given type.
+     *
+     * @param elementType The type of an Element to find a slot in
+     * this ElementTable for.
+     *
+     * @returns The index of the slot of the internal table which
+     *          belongs to an Element of \c elementType type.
+     */
     u32 SlotFor(u32 elementType) const ;
 
     struct ElementEntry {

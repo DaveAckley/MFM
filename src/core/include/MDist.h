@@ -34,27 +34,27 @@
 #include "Point.h"
 #include "Random.h"
 
-namespace MFM {
+namespace MFM
+{
 
   /**
    * Compute the number of sites within Manhattan distance 'radius' of a
    * given center site.  WARNING: Macro expands argument 'radius' twice!
    * Avoid side-effects!
    */
-
 #define EVENT_WINDOW_SITES(radius) ((((radius)*2+1)*((radius)*2+1))/2+1)
 
   typedef enum
-    {
-      MANHATTAN_TABLE_RADIUS_0 = 0,
-      MANHATTAN_TABLE_RADIUS_1,
-      MANHATTAN_TABLE_RADIUS_2,
-      MANHATTAN_TABLE_RADIUS_3,
-      MANHATTAN_TABLE_RADIUS_4,
-      MANHATTAN_TABLE_SHORT = MANHATTAN_TABLE_RADIUS_2,
-      MANHATTAN_TABLE_LONG = MANHATTAN_TABLE_RADIUS_4,
-      MANHATTAN_TABLE_EVENT = MANHATTAN_TABLE_RADIUS_4
-    } TableType;
+  {
+    MANHATTAN_TABLE_RADIUS_0 = 0,
+    MANHATTAN_TABLE_RADIUS_1,
+    MANHATTAN_TABLE_RADIUS_2,
+    MANHATTAN_TABLE_RADIUS_3,
+    MANHATTAN_TABLE_RADIUS_4,
+    MANHATTAN_TABLE_SHORT = MANHATTAN_TABLE_RADIUS_2,
+    MANHATTAN_TABLE_LONG = MANHATTAN_TABLE_RADIUS_4,
+    MANHATTAN_TABLE_EVENT = MANHATTAN_TABLE_RADIUS_4
+  } TableType;
 
   template <u32 R>
   class MDist
@@ -123,4 +123,3 @@ namespace MFM {
 #include "MDist.tcc"
 
 #endif /*MDIST_H*/
-
