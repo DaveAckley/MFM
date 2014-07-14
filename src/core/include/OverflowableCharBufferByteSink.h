@@ -38,17 +38,39 @@ namespace MFM {
    * and further data written is discarded.
    */
   template <u32 BUFSIZE>
-  class OverflowableCharBufferByteSink : public ByteSink {
+  class OverflowableCharBufferByteSink : public ByteSink
+  {
   public:
-    OverflowableCharBufferByteSink() : m_written(0), m_overflowed(false) { }
 
-    virtual void WriteBytes(const u8 * data, const u32 len) {
+    /**
+     * Constructs a new CharBufferByteSink representing the empty string.
+     */
+    OverflowableCharBufferByteSink() :
+      m_written(0),
+      m_overflowed(false)
+      { }
 
+    /**
+     * Writes a series of bytes to this OveflowableCharBufferByteSink
+     * . If overflow occurs, will append an 'X' to the end of this
+     * internal string.
+     *
+     * @param bytes A pointer to the bytes which will be written to this
+     *              OverflowableCharBufferByteSink .
+     *
+     * @param len The number of bytes which will be attempted to be
+     *            written to this OverflowableCharBufferByteSink .
+     */
+    virtual void WriteBytes(const u8 * data, const u32 len)
+    {
       if (m_overflowed)
+      {
         return;
+      }
 
       u32 effLen = len;
-      if (m_written + effLen > BUFSIZE - 2) {
+      if (m_written + effLen > BUFSIZE - 2)
+      {
         effLen = BUFSIZE - 2 - m_written;
         m_overflowed = true;
       }
@@ -57,14 +79,37 @@ namespace MFM {
       m_written += effLen;
 
       if (m_overflowed)
+      {
         m_buf[m_written++] = 'X';
+      }
     }
 
-    virtual s32 CanWrite() {
+    /**
+     * Gets the number of bytes that can be written to this
+     * OverflowableCharBufferByteSink .
+     *
+     * @returns The number of bytes that can be written to this
+     * OverflowableCharBufferByteSink .
+     */
+    virtual s32 CanWrite()
+    {
       return BUFSIZE - m_written - 1;
     }
 
-    bool Equals(const char * str) const {
+    /**
+     * Checks to see if the string represented by this
+     * OverflowableCharBufferByteSink is equal to another specified
+     * string.
+     *
+     * @param str The string to check for equality against this
+     *            OverflowableCharBufferByteSink .
+     *
+     * @returns \c true if the string represented by this
+     *          OverflowableCharBufferByteSink is equal to the string
+     *          represented by \c str , else \c false .
+     */
+    bool Equals(const char * str) const
+    {
       return GetLength() == strlen(str) && !memcmp(m_buf, str, GetLength());
     }
 

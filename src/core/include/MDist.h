@@ -44,6 +44,10 @@ namespace MFM
    */
 #define EVENT_WINDOW_SITES(radius) ((((radius)*2+1)*((radius)*2+1))/2+1)
 
+  /**
+   * An enumeration of several kinds of Manhattan Distance table
+   * sizes.
+   */
   typedef enum
   {
     MANHATTAN_TABLE_RADIUS_0 = 0,
@@ -56,10 +60,17 @@ namespace MFM
     MANHATTAN_TABLE_EVENT = MANHATTAN_TABLE_RADIUS_4
   } TableType;
 
+  /**
+   * A singleton class consisting of many utilities used for
+   * calculating Manhattan Distances.
+   */
   template <u32 R>
   class MDist
   {
   public:
+    /**
+     * The diameter of an EventWindow of Radius R .
+     */
     static const u32 EVENT_WINDOW_DIAMETER = R*2+1;
 
     /**
@@ -67,27 +78,44 @@ namespace MFM
      */
     static MDist<R> & get();
 
+    /**
+     * Fills a given SPoint with a random Von Neumann unit vector.
+     *
+     * @param pt The SPoint to fill with a random Von Neumann unit vector.
+     *
+     * @param random The PRNG used to determine which unit vector to
+     *               fill \c pt with.
+     */
     void FillRandomSingleDir(SPoint& pt,Random & random) const;
 
-    u32 GetTableSize(u32 maxRadius);
+    /**
+     * Gets the area of a Manhattan Distance circle of a given radius .
+     *
+     * @param maxRadius The radius of the Manhattan Distance circle to
+     *                  examine.
+     */
+    u32 GetTableSize(u32 maxRadius) const;
 
-    u32 ShortTableSize();
-
-    u32 LongTableSize();
-
-    u32 GetFirstIndex(const u32 radius) const {
+    u32 GetFirstIndex(const u32 radius) const
+    {
       if (radius >= sizeof(m_firstIndex)/sizeof(m_firstIndex[0]))
+      {
         FAIL(ILLEGAL_ARGUMENT);
+      }
       return m_firstIndex[radius];
     }
 
-    u32 GetLastIndex(const u32 radius) const {
+    u32 GetLastIndex(const u32 radius) const
+    {
       return GetFirstIndex(radius+1)-1;
     }
 
-    const SPoint & GetPoint(const u32 index) const {
+    const SPoint & GetPoint(const u32 index) const
+    {
       if (index >= ARRAY_LENGTH)
+      {
         FAIL(ILLEGAL_ARGUMENT);
+      }
       return m_indexToPoint[index];
     }
 
@@ -108,7 +136,8 @@ namespace MFM
   private:
     static const u32 ARRAY_LENGTH = EVENT_WINDOW_SITES(R);
 
-    static inline u32 ManhattanArea(u32 maxDistance) {
+    static inline u32 ManhattanArea(u32 maxDistance)
+    {
       return EVENT_WINDOW_SITES(maxDistance);
     }
 

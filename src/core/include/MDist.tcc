@@ -16,24 +16,32 @@ namespace MFM {
 
     /* Init the reverse lookup table to all 'illegal' */
     for (u32 x = 0; x<EVENT_WINDOW_DIAMETER; ++x)
+    {
       for (u32 y = 0; y<EVENT_WINDOW_DIAMETER; ++y)
+      {
         m_pointToIndex[x][y] = -1;
+      }
+    }
 
     u32 next = 0;
     const SPoint center(R,R);
 
     // For every length from small to large
-    for (u32 length = 0; length<=R; ++length) {
+    for (u32 length = 0; length<=R; ++length)
+    {
       m_firstIndex[length] = next;
 
       // Scan the whole event window
-      for (u32 x = 0; x<EVENT_WINDOW_DIAMETER; ++x) {
-        for (u32 y = 0; y<EVENT_WINDOW_DIAMETER; ++y) {
+      for (u32 x = 0; x<EVENT_WINDOW_DIAMETER; ++x)
+      {
+        for (u32 y = 0; y<EVENT_WINDOW_DIAMETER; ++y)
+	{
           Point<s32> p(x,y);
           p.Subtract(center);
 
           // And accumulate points of the given length
-          if (p.GetManhattanLength()==length) {
+          if (p.GetManhattanLength()==length)
+	  {
             m_indexToPoint[next] = p;
             m_pointToIndex[x][y] = next;
             ++next;
@@ -47,13 +55,14 @@ namespace MFM {
   }
 
   template<u32 R>
-  u32 MDist<R>::GetTableSize(u32 maxRadius)
+  u32 MDist<R>::GetTableSize(u32 maxRadius) const
   {
     return EVENT_WINDOW_SITES(maxRadius);
   }
 
   template<u32 R>
-  MDist<R>& MDist<R>::get() {
+  MDist<R>& MDist<R>::get()
+  {
     static MDist<R> instance;
     return instance;
   }
@@ -104,4 +113,3 @@ namespace MFM {
       }
   }
 } /* namespace MFM */
-
