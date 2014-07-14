@@ -62,7 +62,20 @@ namespace MFM {
      */
     u32 GetInterpolatedColor(float value, float min, float max, u32 badColor) const;
 
+    /**
+     * Gets the number of ColorMaps loaded into the system.
+     *
+     * @returns The number of ColorMaps loaded into the system.
+     */
     static u32 GetMapCount();
+
+    /**
+     * Gets the ColorMap loaded into the system at a specified index.
+     *
+     * @param index The index of the ColorMap to retrieve.
+     *
+     * @returns The ColorMap loaded into the system at \c index .
+     */
     static ColorMap & GetMap(u32 index);
 
   private:

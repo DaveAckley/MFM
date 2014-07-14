@@ -52,10 +52,33 @@ namespace MFM
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS };
 
+    /**
+     * The unique UUID of this Element . Each Element must be given
+     * one upon construction.
+     */
     const UUID m_UUID;
+
+    /**
+     * The type shared by every Atom of this Element.
+     */
     u32 m_type;
+
+    /**
+     * A flag indicating whether or not the type of this Atom (held by
+     * \c m_type ) is a valid type.
+     */
     bool m_hasType;
+
+    /**
+     * A flag used when rendering every Atom of this Element which
+     * determines which color to use during rendering.
+     */
     bool m_renderLowlight;
+
+    /**
+     * The basic, most generic Atom of this Element to be used when
+     * placing a new Atom.
+     */
     T m_defaultAtom;
 
     /**
@@ -66,23 +89,82 @@ namespace MFM
 
   protected:
 
+    /**
+     * Describes how the default Atom of this Element should be
+     * constructed. The default behavior of this method builds an atom
+     * with the type of this Element and otherwise empty fields.
+     *
+     * @returns The default Atom of this Element, to be stored in \c m_defaultAtom .
+     */
     virtual T BuildDefaultAtom() const
     {
       T defaultAtom(this->GetType(), 0, 0, 0);
       return defaultAtom;
     }
 
+    /**
+     * Retrieves the read-only BitVector held inside a specified Atom .
+     *
+     * @param atom The Atom to retrieve the held BitVector from.
+     *
+     * @returns The BitVector held inside \c atom .
+     */
     const BitVector<P::BITS_PER_ATOM> & GetBits(const T & atom) const {
       return atom.m_bits;
     }
 
+    /**
+     * Retrieves the writable BitVector held inside a specified Atom .
+     *
+     * @param atom The Atom to retrieve the held BitVector from.
+     *
+     * @returns The BitVector held inside \c atom .
+     */
     BitVector<P::BITS_PER_ATOM> & GetBits(T & atom) const {
       return atom.m_bits;
     }
 
+    /**
+     * Checks to see if a specified Atomic Symbol is a valid symbol. A
+     * valid symbol must be either a single capital letter, or a
+     * capital letter followed by a single lowercase letter.
+     *
+     * @param symbol The string to check symbolic validity of.
+     *
+     * @returns \c true If \c symbol is a valid atomic symbol, else \c
+     *          false .
+     */
+    bool IsValidAtomicSymbol(const char* symbol)
+    {
+      u32 len = strlen(symbol);
+
+      if(len == 2)
+      {
+	return (symbol[0] >= 'A' && symbol[0] <= 'Z') &&
+	       (symbol[1] >= 'a' && symbol[1] <= 'z');
+      }
+      else if(len == 1)
+      {
+	return (symbol[0] >= 'A' && symbol[0] <= 'Z');
+      }
+      else
+      {
+	return false;
+      }
+    }
+
+    /**
+     * Sets the Atomic Symbol of this Element, which is mainly used
+     * during the rendering of this Element .
+     *
+     * @param symbol The string representing the Atomic Symbol of this
+     *               Element. If this symbol is not valid (in terms of
+     *               the \c IsValidAtomicSymbol() method), this will
+     *               FAIL with ILLEGAL_ARGUMENT .
+     */
     void SetAtomicSymbol(const char* symbol)
     {
-      if(strlen(symbol) > 2)
+      if(!IsValidAtomicSymbol(symbol))
       {
 	/* Single or double letters only, like the periodic table. */
 	FAIL(ILLEGAL_ARGUMENT);
@@ -90,14 +172,63 @@ namespace MFM
       m_atomicSymbol = symbol;
     }
 
+    /**
+     * The four Von Neumann neighbors, represented as four unit
+     * vectors in the four cardinal directions.
+     */
     static const SPoint VNNeighbors[4];
 
+    /**
+     * Fills a specified SPoint with a randomly selected Von Neumann
+     * neighbor of the center of a specified EventWindow .
+     *
+     * @param window The EventWindow whose center will be scanned for
+     *               an empty Von Neumann neighbor.
+     *
+     * @param pt The SPoint to fill a Von Neumann unit vector with.
+     *
+     * @returns \c true if an empty Von Neumann neighbor is found,
+     *          else \c false .
+     */
     bool FillAvailableVNNeighbor(EventWindow<CC>& window, SPoint& pt) const;
 
+    /**
+     * Master search method for finding an Atom inside an EventWindow .
+     *
+     * @param window The EventWindow to search.
+     *
+     * @param pt Output, representing a valid location in this search
+     *           which satisfies the search parameters.
+     *
+     * @param relevants The range of SPoints which should be searched
+     *                  using this method.
+     *
+     * @param relevantCount The number of SPoints held by \c relevants .
+     *
+     * @param rotation A symmetric rotation, describing the flipping
+     *                 of the relevant points. This can be used to
+     *                 search for a particular corner, then flipped to
+     *                 searchfor another.
+     *
+     * @param type The type of the Element to search for during this
+     *             search.
+     *
+     *
+     * @returns \c true if any Atoms are found which satisfy the
+     *          search parameters, else \c false .
+     */
     bool FillPointWithType(EventWindow<CC>& window,
 			   SPoint& pt, const SPoint* relevants, u32 relevantCount,
 			   Dir rotation, ElementType type) const;
 
+    /**
+     * Diffuses the central Atom of a given EventWindow based on the
+     * empty places around the Atom and the odds that the central Atom
+     * can be diffused.
+     *
+     * @param window The EventWindow of which the central Atom should
+     *               attempt to be diffused.
+     */
     void Diffuse(EventWindow<CC>& window) const;
 
 
@@ -115,6 +246,13 @@ namespace MFM
 
   public:
 
+    /**
+     * Constructs a new Element with a given UUID .
+     *
+     * @param uuid The UUID of this Element, used for various
+     *              operations. It is vital that this UUID be unique,
+     *              but this constructor does not check for that.
+     */
     Element(const UUID & uuid) : m_UUID(uuid), m_type(0),
 				 m_hasType(false),
 				 m_renderLowlight(false),
@@ -130,45 +268,108 @@ namespace MFM
 					   m_atomicSymbol("!!")
     { }
 
-    void AllocateType() {
-      if (!m_hasType) {
+    /**
+     * Assigns the type of this Element using the U16StaticLoader
+     * . This type is only assigned if it has not been assigned
+     * already. Once this type has been allocated, the default Atom of
+     * this Element is constructed and an Atom of this Element may be
+     * placed.
+     *
+     * @sa U16StaticLoader;
+     */
+    void AllocateType()
+    {
+      if (!m_hasType)
+      {
         m_type = U16StaticLoader::AllocateType(m_UUID);
         m_hasType = true;
         m_defaultAtom = BuildDefaultAtom();
       }
     }
 
-    u32 GetType() const {
+    /**
+     * Gets the unique type of this Element . If the type has not been
+     * assigned yet (by using \c AllocateType() ), this will FAIL with
+     * ILLEGAL_STATE .
+     *
+     * @returns The unique type of this Element .
+     */
+    u32 GetType() const
+    {
       if (!m_hasType)
+      {
         FAIL(ILLEGAL_STATE);
+      }
       return m_type;
     }
 
+    /**
+     * Gets the Atomic Symbol of this Element . If this has not been
+     * set, the default Atomic Symbol is the invalid symbol "!!" .
+     *
+     * @returns The Atomic Symbol of this Element.
+     */
     const char* GetAtomicSymbol() const
     {
       return m_atomicSymbol;
     }
 
-    bool IsType(u32 type) const {
+    /**
+     * Checks to see if this Element is of a specified type.
+     *
+     * @param type The \c type of which to check against they type of
+     *             this Element.
+     *
+     * @returns \c true if this Element is of \c type type, else \c
+     *          false.
+     */
+    bool IsType(u32 type) const
+    {
       return GetType() == type;
     }
 
-    const UUID & GetUUID() const {
+    /**
+     * Gets the UUID of this Element .
+     *
+     * @returns The UUID of this Element.
+     */
+    const UUID & GetUUID() const
+    {
       return m_UUID;
     }
 
+    /**
+     * Describes the behavior of this Element. This is invoked when an
+     * Atom of this Element is chosen as the center of an EventWindow
+     * for an Event, which is given as a parameter.
+     *
+     * @param window The EventWindow describing the Event which is
+     * currently being executed.
+     */
     virtual void Behavior(EventWindow<CC>& window) const = 0;
 
+    /**
+     * Gets the default Atom of this Element . If this Element has not
+     * been assigned a type through \c AllocateType() , this will FAIL
+     * with ILLEGAL_STATE .
+     *
+     * @returns The default Atom of this Element.
+     */
     const T & GetDefaultAtom() const
     {
       if (!m_hasType)
+      {
         FAIL(ILLEGAL_STATE);
+      }
       return m_defaultAtom;
     }
 
     /**
      * Gets the current 32-bit ARGB color which this all Atoms of this
      * Element should be rendered with.
+     *
+     * @param The selected current 32-bit ARGB color which is
+     *        suggested to render any Atom of this Element with.
      */
     virtual u32 PhysicsColor() const
     {
@@ -221,7 +422,22 @@ namespace MFM
       m_renderLowlight = !m_renderLowlight;
     }
 
-    virtual u32 LocalPhysicsColor(const T &, u32 selector) const {
+    /**
+     * Used during rendering, will select a color for any Atom of this
+     * Element to be rendered with. This should be overridden if
+     * wanting to use a gradient or some other variable color based on
+     * the body of the specified Atom .
+     *
+     * @param atom The Atom of this element of which to find a color
+     *             for.
+     *
+     * @param selector An additional argument which may be used to
+     *                 determine the color of which to render \c atom
+     *                 .
+     *
+     * @returns The 32-bit ARGB color of which to render \c atom with.
+     */
+    virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const {
       return PhysicsColor();
     }
 

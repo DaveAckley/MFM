@@ -1,3 +1,5 @@
+/* -*- C++ -*- */
+
 /**
  * This file includes color specifications and designs developed by
  * Cynthia Brewer (http://colorbrewer.org/)
@@ -112,4 +114,3 @@ XX5(DBG, WHBK, 0xffffffff, 0xffbfbfbf, 0xff7f7f7f, 0xff3f3f3f, 0xff000000)
 XX6(DBG, WHBK, 0xffffffff, 0xffcccccc, 0xff999999, 0xff666666, 0xff333333, 0xff000000)
 XX5(DBG, RDBU, 0xffff0000, 0xffbf003f, 0xff7f007f, 0xff3f00bf, 0xff0000ff)
 XX6(DBG, RDBU, 0xffff0000, 0xffcc0033, 0xff990066, 0xff660099, 0xff3300cc, 0xff0000ff)
-

@@ -113,21 +113,85 @@ namespace MFM {
     static inline bool TestDirInMask(u32 mask, Dir dir)
     { return mask & (1 << dir); }
 
+    /**
+     * Given a Dir , will fill a SPoint with unit offsets representing
+     * the direction of this Dir . For instance:
+     *
+     * \code{.cpp}
+
+       FillDir(pt, NORTH) // pt == (0, -1)
+       FillDir(pt, SOUTHEAST) // pt == (1, 1)
+
+     * \endcode
+     *
+     * @param pt The SPoint to fill with the offsets of a direction.
+     *
+     * @param dir The Dir specifying the units to fill \c pt with.
+     */
     static void FillDir(SPoint& pt, Dir dir);
 
+    /**
+     * Translates the coordinates in a SPoint to a Dir . The
+     * coordinates in SPoint must be a unit offset (like the ones
+     * returned from \c FillDir ), otherwise this will FAIL with
+     * ILLEGAL_ARGUMENT .
+     *
+     * @param pt The SPoint containing a unit offset to translate to a
+     * Dir .
+     *
+     * @returns The Dir representing the offset held by \c pt .
+     */
     static Dir FromOffset(SPoint& pt);
 
+    /**
+     * Flips the X coordinate of a given SPoint about the origin.
+     *
+     * @param pt The SPoint to flip the X coordinate of .
+     *
+     * @returns A reference to \c pt .
+     */
     static inline SPoint & FlipXAxis(SPoint & pt) {
       pt.SetX(-pt.GetX());
       return pt;
     }
 
+
+    /**
+     * Flips the Y coordinate of a given SPoint about the origin.
+     *
+     * @param pt The SPoint to flip the Y coordinate of .
+     *
+     * @returns A reference to \c pt .
+     */
     static inline SPoint & FlipYAxis(SPoint & pt) {
       pt.SetY(-pt.GetY());
       return pt;
     }
 
-    static SPoint FlipSEPointToCorner(const Point<s32>& pt, const Dir corner);
+    /**
+     * Flips the axes of a given SPoint about the origin. This behaves
+     * as if the given SPoint is a SOUTHEAST SPoint, which will
+     * represent the specified corner Dir once the flip has taken place. For instance,
+     *
+     * \code{.cpp}
+
+       SPoint pt(1, 1); // Or, a SOUTHEAST SPoint
+       FlipSEPointToCorner(pt, NORTHWEST); // pt is now a NORTHWEST SPoint, or (-1, -1)
+
+     * \endcode This performs only axis flipping, keeping the distance
+     * from the origin the same.
+     *
+     * @param pt The SPoint to flip the axes of.
+     *
+     * @param corner The corner representing the axes of \c pt to
+     *               flip. This must be a corner (e.g. NORTHEAST,
+     *               SOUTHEAST), else this method FAILs with
+     *               ILLEGAL_ARGUMENT.
+     *
+     * @returns A new point containing the new coordinates of \c pt ,
+     *          which is also changed.
+     */
+    static SPoint FlipSEPointToCorner(const SPoint& pt, const Dir corner);
 
   };
 

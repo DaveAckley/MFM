@@ -38,7 +38,9 @@ namespace MFM
       if(window.IsLiveSite(current) &&
 	 (window.GetRelativeAtom(current).GetType() == type) &&
          random.OneIn(++possibles))
+      {
         pt = current;
+      }
     }
     return possibles > 0;
   }

@@ -32,34 +32,72 @@
 
 namespace MFM
 {
-
+  /**
+   * A construct meant to be used by two threads as a communication
+   * channel, supporting reading and writing on both ends. Only one
+   * thread is able to access the IO of this construct at a time,
+   * allowing for thread safe operation.
+   */
   class Connection
   {
   private:
+    /**
+     * The pthread_mutext_t used to allow a thread to lock this
+     * Connection .
+     */
     pthread_mutex_t m_lock;
 
+    /**
+     * The two ThreadQueue constructs used for two way IO .
+     */
     ThreadQueue m_outbuffer, m_inbuffer;
 
+    /**
+     * A flag which indicates whether or not this Connection is
+     * currently established and functional.
+     */
     bool m_connected;
 
   public:
 
+    /**
+     * Creates a new Connection which is not connected. Also
+     * initializes the internal mutex.
+     */
     Connection()
     {
       m_connected = false;
       pthread_mutex_init(&m_lock, NULL);
     }
 
+    /**
+     * Deconstructs this Connection, freeing the internal mutex.
+     */
     ~Connection()
     {
       pthread_mutex_destroy(&m_lock);
     }
 
+    /**
+     * Sets the connection status of this Connection, allowing or
+     * disallowing communication.
+     *
+     * @param value If \c true , will allow this Connection to be
+     *              written to and read from. Else, will disallow
+     *              these features.
+     */
     void SetConnected(bool value)
     {
       m_connected = value;
     }
 
+    /**
+     * Checks whether or not this Connection is able to be used as a
+     * communication channel.
+     *
+     * @returns \c true if this Connection is able to be written to
+     *          and read from on both ends, else \c false .
+     */
     bool IsConnected()
     {
       return m_connected;
@@ -85,6 +123,18 @@ namespace MFM
       pthread_mutex_unlock(&m_lock);
     }
 
+    /**
+     * Waits until this Connection is not busy, then reads a specified
+     * amount of bytes into a specified buffer. This method blocks the
+     * calling thread until it is able to take control of this
+     * Connection.
+     *
+     * @param buffer The buffer to write bytes read from this
+     *               Connection to.
+     *
+     * @param length The number of bytes which will be written to \c
+     *               buffer before this method returns.
+     */
     void ReadBlocking(bool child, u8* buffer, u32 length)
     {
       ThreadQueue& queue = child ? m_outbuffer : m_inbuffer;
@@ -93,7 +143,8 @@ namespace MFM
     }
 
     /**
-     * Reads from the corresponding underlying queue.
+     * Reads from the corresponding underlying queue without blocking
+     * the calling thread.
      *
      * @param child This should be true if the calling thread is not
      *              the owner of this Connection.
@@ -102,7 +153,10 @@ namespace MFM
      *
      * @param length The number of bytes to read from the underlying buffer.
      *               Use 0 if wanting to read as many as possible.
-     @sa Write
+     *
+     * @returns The number of bytes successfully read from this Connection.
+     *
+     * @sa Write
     */
     u32 Read(bool child, u8* buffer, u32 length)
     {
@@ -111,6 +165,21 @@ namespace MFM
       return queue.Read(buffer, length);
     }
 
+    /**
+     * Writes a series of bytes to a specified internal buffer of this
+     * Connection.
+     *
+     * @param child Selects which internal buffer to write to. If the
+     *              calling object created this Connection, use \c
+     *              true . If not, use \c false .
+     *
+     * @param buffer The buffer containing the bytes to write to this
+     *               Connection.
+     *
+     * @param length The number of bytes which will be written to this
+     *               Connection from \c buffer before this method
+     *               returns.
+     */
     void Write(bool child, u8* buffer, u32 length)
     {
       ThreadQueue& queue = !child ? m_outbuffer : m_inbuffer;
