@@ -39,13 +39,18 @@
 #include "Connection.h"
 #include "ThreadPauser.h"
 
-namespace MFM {
+namespace MFM
+{
 
 #define IS_OWNED_CONNECTION(X) ((X) - Dirs::EAST >= 0 && (X) - Dirs::EAST < 4)
 
 #define BACKGROUND_RADIATION_SITE_ODDS 1000
 #define BACKGROUND_RADIATION_BIT_ODDS 100
 
+  /**
+   * An enumeration of the kinds of memory regions which may exist in
+   * a Tile.
+   */
   typedef enum
   {
     REGION_CACHE   = 0,
@@ -55,6 +60,10 @@ namespace MFM {
     REGION_COUNT
   }TileRegion;
 
+  /**
+   * An enumeration of the kinds of locking mechanisms which may exist
+   * in a Tile.
+   */
   typedef enum
   {
     LOCKTYPE_NONE   = 0,
@@ -86,6 +95,9 @@ namespace MFM {
         caches.*/
     static const u32 TILE_WIDTH = W;
 
+    /**
+     * The area of this Tile in sites.
+     */
     static const u32 TILE_SIZE = TILE_WIDTH * TILE_WIDTH;
 
     static const u32 ELEMENT_TABLE_BITS = B;  // Currently hard-coded!
@@ -206,7 +218,10 @@ namespace MFM {
     bool m_threadPaused;
 
     /**
-     *
+     * A flag which describes how a Tile should be executing. If \c
+     * true , will not execute its own events and will instead only
+     * perform intertile communication. If \c false , will also
+     * execute its own events.
      */
     bool m_onlyWaitOnBuffers;
 
@@ -655,7 +670,9 @@ namespace MFM {
     const T* GetAtom(s32 x, s32 y) const
     {
       if (((u32) x) >= TILE_WIDTH || ((u32) y) >= TILE_WIDTH)
+      {
         FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
+      }
       return &m_atoms[x][y];
     }
 
@@ -680,7 +697,9 @@ namespace MFM {
     T* GetWritableAtom(s32 x, s32 y)
     {
       if (((u32) x) >= TILE_WIDTH || ((u32) y) >= TILE_WIDTH)
+      {
         FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
+      }
       return &m_atoms[x][y];
     }
 
@@ -732,7 +751,14 @@ namespace MFM {
      */
     u64 GetUncachedSiteEvents(const SPoint site) const ;
 
-
+    /**
+     * Given a Packet , sends a complementary acknowledgement Packet
+     * describing that this Packet has received and processed all
+     * relevant Packets.
+     *
+     * @param packet The Packet of which a complementary Packet will
+     *               be constructed and sent.
+     */
     void SendAcknowledgmentPacket(Packet<T>& packet);
 
     /**
@@ -787,6 +813,13 @@ namespace MFM {
       PlaceAtom(atom,pt+SPoint(R,R));
     }
 
+    /**
+     * Process all incoming and outgoing Packets which are pending on
+     * this Tile .
+     *
+     * @param dirWaitWord A word describing which buffers need to be
+     *                    waited on for Packet communication.
+     */
     void FlushAndWaitOnAllBuffers(u32 dirWaitWord);
 
     /**
@@ -803,6 +836,13 @@ namespace MFM {
       m_onlyWaitOnBuffers = !value;
     }
 
+    /**
+     * Checks to see whether or not this Tile is executing its own
+     * events or if it issimply processing other incoming Packets.
+     *
+     * @returns \c true if this Tile is executing its own events, else
+     *          \c false .
+     */
     bool GetExecutingOwnEvents()
     {
       return !m_onlyWaitOnBuffers;

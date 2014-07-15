@@ -21,6 +21,7 @@
 /**
    \file ZStringByteSource.h Source bytes from a zero-terminated constant string
    \author David H. Ackley.
+   \author Trent R. Small.
    \date (C) 2014 All rights reserved.
    \lgpl
 */
@@ -30,31 +31,65 @@
 #include "CharBufferByteSource.h"
 #include <string.h>        /* For strlen */
 
-namespace MFM {
+namespace MFM
+{
 
   /**
-     Source bytes from a zero-terminated constant string.
+   * A ByteSource which is backed by a null-terminated string.
    */
-  class ZStringByteSource : public CharBufferByteSource {
-  private: typedef CharBufferByteSource Super;
+  class ZStringByteSource : public CharBufferByteSource
+  {
+  private:
+    typedef CharBufferByteSource Super;
 
-    static u32 Strlen(const char * ptr) {
+    /**
+     * Calculates the length of a null-terminated string. This FAILs
+     * with NULL_POINTER if the specified char pointer is NULL .
+     *
+     * @param ptr The pointer to the string to find the length of.
+     */
+    static u32 Strlen(const char * ptr)
+    {
       if (!ptr)
+      {
         FAIL(NULL_POINTER);
+      }
       return strlen(ptr);
     }
 
   public:
-    ZStringByteSource(const char * input) : Super(input, Strlen(input))
+    /**
+     * Creates a new ZStringByteSource backed by a null-terminated
+     * string.
+     *
+     * @param input The null-terminated String to be used as the
+     *              source for bytes of this ByteSource.
+     */
+    ZStringByteSource(const char * input) :
+      Super(input, Strlen(input))
     { }
 
-    void Reset(const char * newString = 0) {
+    /**
+     * Resets this ZStringByteSource to either a specified string or,
+     * if the specified string is NULL, the string which was already
+     * loaded into this ZStringByteSource .
+     *
+     * @param newString The new String which will back this
+     *                  ZStringByteSource. If NULL, acts as if this
+     *                  argument is the string that is currently
+     *                  backing this ZStringByteSource.
+     */
+    void Reset(const char * newString = 0)
+    {
       if (newString != 0)
+      {
         ChangeBuffer(newString, Strlen(newString));
+      }
       else
+      {
         Super::Reset();
+      }
     }
-
   };
 }
 

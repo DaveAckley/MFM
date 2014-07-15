@@ -55,7 +55,7 @@ namespace MFM
     pthread_cond_t m_joinCond;
 
     /**
-     * A boolean, describing whether or not the looping thread is
+     * A flag which describes whether or not the looping thread is
      * paused.
      */
     bool m_paused;

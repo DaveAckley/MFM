@@ -193,8 +193,24 @@ namespace MFM {
     return count;
   }
 
+  /**
+   * Counts the number of digits in a given number, in a given base.
+   *
+   * @param num The number to count the digits of.
+   *
+   * @param base The base to interpret \c num in when counting digits.
+   *
+   * @returns The digits of \c num when interpreted in \c base base.
+   */
   extern u32 DigitCount(u32 num, u32 base);
 
+  /**
+   * Encodes an integral number as a series of bytes.
+   *
+   * @param num The number to encode
+   *
+   * @param output The char buffer to output the encoded number to.
+   */
   extern void IntLexEncode(u32 num, char* output);
 }
 

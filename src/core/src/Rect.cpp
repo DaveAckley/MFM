@@ -1,6 +1,7 @@
 #include "Rect.h"
 
-namespace MFM {
+namespace MFM
+{
 
   void Rect::IntersectWith(const Rect & other)
   {
