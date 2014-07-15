@@ -58,6 +58,8 @@ ARCHIVEPATH := $(BUILDDIR)/$(ARCHIVENAME)
 ### EXTRA DEFINES
 DEFINES+=-DMFM_BUILD_DATE=$(shell date -u +0x%Y%m%d)
 DEFINES+=-DMFM_BUILD_TIME=$(shell date -u +0x%H%M%S)
+DEFINES+=-DMFM_BUILT_BY=$(shell whoami)
+DEFINES+=-DMFM_BUILT_ON=$(shell hostname)
 
 ### PATTERN RULES
 

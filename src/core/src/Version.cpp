@@ -15,5 +15,7 @@ namespace MFM {
     xstr(MFM_VERSION_MINOR) "."
     xstr(MFM_VERSION_REV) "-"
     xstr(MFM_BUILD_DATE) "-"
-    xstr(MFM_BUILD_TIME);
+    xstr(MFM_BUILD_TIME) "-"
+    xstr(MFM_BUILT_BY) "@"
+    xstr(MFM_BUILT_ON);
 }
