@@ -27,10 +27,6 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define MFM_VERSION_MAJOR 2
-#define MFM_VERSION_MINOR 0
-#define MFM_VERSION_REV 0
-
 namespace MFM {
 
   extern const char * MFM_VERSION_STRING_SHORT;

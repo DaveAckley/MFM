@@ -18,10 +18,11 @@ realclean:  $(PLATFORMS)
 	rm -rf build/
 	rm -rf doc/ref
 
+include config/Makeversion.mk
 TAR_EXCLUDES+=--exclude=tools --exclude=*~ --exclude=.git --exclude=doc/internal --exclude=spikes --exclude-backups
 tar:	FORCE
 	make realclean
-	cd ..;tar cvzf MFMv2.tgz $(TAR_EXCLUDES) MFMv2
+	PWD=`pwd`;BASE=`basename $$PWD`;cd ..;tar cvzf MFM-$(MFM_VERSION_NUMBER).tgz $(TAR_EXCLUDES) $$BASE
 
 # Pass each entry in PLATFORMS down as a target
 $(PLATFORMS):
