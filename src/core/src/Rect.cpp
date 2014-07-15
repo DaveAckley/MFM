@@ -2,7 +2,8 @@
 
 namespace MFM {
 
-  void Rect::IntersectWith(const Rect & other) {
+  void Rect::IntersectWith(const Rect & other)
+  {
     SPoint startInt = max(this->m_position, other.m_position);
 
     SPoint endThis = m_position + MakeSigned(m_size);
@@ -14,4 +15,3 @@ namespace MFM {
   }
 
 } /* namespace MFM */
-
