@@ -40,16 +40,22 @@
 #define P0ATOM_TYPE_WIDTH_INCREMENT 12
 #define P0ATOM_STATE_SIZE 48
 
-namespace MFM {
+namespace MFM
+{
 
   template <class PC>
   class P0Atom : public Atom< CoreConfig< P0Atom<PC>, PC> >
   {
-  public: enum { ATOM_CATEGORY = 0 };
+  public:
+    enum
+    {
+      ATOM_CATEGORY = 0
+    };
   private:
 
     typedef CoreConfig< P0Atom<PC>, PC> CC;
-    enum {
+    enum
+    {
       BITS = 64,
       // For now we insist on exact match.  Possibly longer could be
       // supported relatively easily.
@@ -68,9 +74,11 @@ namespace MFM {
        P0Atom, since the type doesn't mean much without the atomic
        header as well */
 
-    void SetType(u32 lengthCode, u32 type) {
+    void SetType(u32 lengthCode, u32 type)
+    {
       AFTypeLengthCode::Write(this->m_bits,lengthCode);
-      switch (lengthCode) {
+      switch (lengthCode)
+      {
       case 0: AFTypeLength0::Write(this->m_bits,type); break;
       case 1: AFTypeLength1::Write(this->m_bits,type); break;
       case 2: AFTypeLength2::Write(this->m_bits,type); break;
@@ -82,10 +90,12 @@ namespace MFM {
 
     u32 GetLengthCodeForType(u32 type)
     {
-      for (u32 i = 0; i <= 3; ++i) {
+      for (u32 i = 0; i <= 3; ++i)
+      {
         u32 typebits = i*P0ATOM_TYPE_WIDTH_INCREMENT;
         u32 maxtype = 1u<<typebits;
-        if (type < maxtype) {
+        if (type < maxtype)
+	{
           return i;
         }
       }

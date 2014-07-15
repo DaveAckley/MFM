@@ -27,33 +27,76 @@
 #ifndef PACKETBUFFER_H
 #define PACKETBUFFER_H
 
+#include "Fail.h"
 #include "Packet.h"
 #include "itype.h"
 
-namespace MFM {
+namespace MFM
+{
 
+  /**
+   * The capacity of a PacketBuffer , in bytes.
+   */
 #define PACKETBUFFER_SIZE 128
 
-template <class T>
-class PacketBuffer
-{
-private:
-  Packet<T> m_buffer[PACKETBUFFER_SIZE];
+  /**
+   * A LIFO buffer designed to hold a Packet array . This is not
+   * a thread safe structure.
+   */
+  template <class T>
+  class PacketBuffer
+  {
+  private :
+    /**
+     * The internal Packet array held by this PacketBuffer .
+     */
+    Packet<T> m_buffer[PACKETBUFFER_SIZE];
 
-  u32 m_heldPackets;
+    /**
+     * The number of Packets currently held by this PacketBuffer .
+     */
+    u32 m_heldPackets;
 
-public:
+    /**
+     * The maximum number of Packets which may fit inside this
+     * PacketBuffer before it is full.
+     */
+    const u32 m_packetCapacity;
 
-  PacketBuffer();
+  public:
 
-  void PushPacket(Packet<T>& packet);
+    /**
+     * Constructs a new PacketBuffer with an empty Packet array.
+     */
+    PacketBuffer();
 
-  Packet<T>* PopPacket();
+    /**
+     * Pushes a Packet to the top of the internal Packet array .  FAiLs
+     * with OUT_OF_ROOM if there is not room for another Packet on the
+     * stack.
+     *
+     * @param packet The Packet to put on top of the internal buffer.
+     */
+    void PushPacket(Packet<T>& packet);
 
-  u32 PacketsHeld()
-  { return m_heldPackets; }
+    /**
+     * Gets a pointer to the next Packet on the stack. FAILs with
+     * ARRAY_INDEX_OUT_OF_BOUNDS if there is not a Packet left.
+     *
+     * @returns A pointer to the next Packet on the stack.
+     */
+    Packet<T>* PopPacket();
 
-};
+    /**
+     * Gets the number of Packets currently held by this PacketBuffer .
+     *
+     * @returns The number of Packets currently held by this PacketBuffer .
+     */
+    u32 PacketsHeld()
+    {
+      return m_heldPackets;
+    }
+  };
 } /* namespace MFM */
 
 #include "PacketBuffer.tcc"

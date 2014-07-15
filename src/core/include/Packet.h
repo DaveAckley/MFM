@@ -30,7 +30,8 @@
 #include "Dirs.h"
 #include "itype.h"
 
-namespace MFM {
+namespace MFM
+{
 
   /**
    * An enumeration of all of the kinds of different Packets used
@@ -38,18 +39,26 @@ namespace MFM {
    */
   typedef enum
     {
-      /** This PacketType describes a Tile's intent to write an atom to a
-	  specific location.*/
+      /**
+       * This PacketType describes a Tile's intent to write an atom to
+       * a specific location.
+       */
       PACKET_WRITE,
-      /** Used to keep inter-tile buffers from overflowing, this PacketType
-	  describes that a Tile has completed processing an event and
-	  is ready to unlock its caches. */
+
+      /**
+       * Used to keep inter-tile buffers from overflowing, this PacketType
+       * describes that a Tile has completed processing an event and
+       * is ready to unlock its caches.
+       */
       PACKET_EVENT_COMPLETE,
-      /** Used to keep inter-tile buffers from overflowing, this
-	  PacketType describes that a Tile has completed all event
-	  processing from another Tile's events. In practice, a Packet
-	  of this PacketType should be sent immediately upon receipt
-	  of a PACKET_EVENT_COMPLETE Packet. */
+
+      /**
+       * Used to keep inter-tile buffers from overflowing, this
+       * PacketType describes that a Tile has completed all event
+       * processing from another Tile's events. In practice, a Packet
+       * of this PacketType should be sent immediately upon receipt
+       * of a PACKET_EVENT_COMPLETE Packet.
+       */
       PACKET_EVENT_ACKNOWLEDGE
 
     }PacketType;
@@ -89,12 +98,15 @@ namespace MFM {
      * Constructs a new Packet. Its PacketType must be known at time
      * of construction.
      */
-    Packet(PacketType type);
+    Packet(PacketType type) :
+      m_type(type)
+    { }
 
     /**
      * Constructs an unitnitialized Packet.
      */
-    Packet() { }
+    Packet()
+    { }
 
     /**
      * Gets the PacketType of this Packet.
@@ -102,7 +114,9 @@ namespace MFM {
      * @returns The PacketType of this Packet.
      */
     PacketType GetType()
-    { return m_type; }
+    {
+      return m_type;
+    }
 
     /**
      * Sets the PacketType of this Packet.
@@ -110,7 +124,9 @@ namespace MFM {
      * @param type The new PacketType of this Packet.
      */
     void SetType(PacketType type)
-    { m_type = type; }
+    {
+      m_type = type;
+    }
 
     /**
      * Sets this Packet's held Atom.
@@ -118,7 +134,10 @@ namespace MFM {
      * @param atom The Atom to copy into this Packet. A reference is
      *             not kept to this Atom.
      */
-    void SetAtom(const T& atom);
+    void SetAtom(const T& atom)
+    {
+      m_atom = atom;
+    }
 
     /**
      * Sets this Packet's held EuclidDir neighbor field.
@@ -126,7 +145,9 @@ namespace MFM {
      * @param dir The EuclidDir to place inside this Packet.
      */
     void SetReceivingNeighbor(Dir dir)
-    { m_toNeighbor = dir; }
+    {
+      m_toNeighbor = dir;
+    }
 
     /**
      * Gets this Packet's held EuclidDir neighbor field.
@@ -134,31 +155,40 @@ namespace MFM {
      * @returns This Packet's held Eucliddir neighbor field.
      */
     u32 GetReceivingNeighbor()
-    { return m_toNeighbor; }
+    {
+      return m_toNeighbor;
+    }
 
     /**
      * Gets a reference to this Packet's held Atom.
      *
      * @returns A reference to this Packet's held Atom.
      */
-    T& GetAtom();
+    T& GetAtom()
+    {
+      return m_atom;
+    }
 
     /**
      * Sets this Packet's held location.
      *
      * @param fromPt The SPoint to copy into this Packet.
      */
-    void SetLocation(const SPoint& fromPt);
+    void SetLocation(const SPoint& fromPt)
+    {
+      m_edgeLoc = fromPt;
+    }
 
     /**
      * Gets this Packet's held location.
      *
      * @returns This Packet's held location.
      */
-    const SPoint& GetLocation() const;
+    const SPoint& GetLocation() const
+    {
+      return m_edgeLoc;
+    }
   };
 } /* namespace MFM */
-
-#include "Packet.tcc"
 
 #endif /*PACKET_H*/

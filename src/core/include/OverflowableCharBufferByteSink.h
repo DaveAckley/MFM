@@ -113,41 +113,111 @@ namespace MFM {
       return GetLength() == strlen(str) && !memcmp(m_buf, str, GetLength());
     }
 
+    /**
+     * Checks to see if the string represented by this
+     * OverflowableCharBufferByteSink is equal to another specified
+     * OverflowableCharBufferByteSink.
+     *
+     * @param str The OverflowableCharBufferByteSink to check for
+     *            equality against this OverflowableCharBufferByteSink
+     *
+     *
+     * @returns \c true if the string represented by this
+     *          OverflowableCharBufferByteSink is equal to the string
+     *          represented by \c str , else \c false .
+     */
     template <u32 OTHER_SIZE>
-    bool Equals(const OverflowableCharBufferByteSink<OTHER_SIZE> & str) const {
+    bool Equals(const OverflowableCharBufferByteSink<OTHER_SIZE> & str) const
+    {
       return GetLength() == str.GetLength() && !memcmp(m_buf, str.m_buf, GetLength());
     }
 
-    const char * GetZString() {
+    /**
+     * Gets the immutable char buffer held by this
+     * OverflowableCharBufferByteSink . It is guaranteed to be null
+     * terminated.
+     *
+     * @returns A null terminated string representing this
+     *          OverflowableCharBufferByteSink .
+     */
+    const char * GetZString()
+    {
       m_buf[m_written] = '\0';
       return GetBuffer();
     }
 
     /**
-     * Get a pointer to the underlying char buffer.  WARNING: Result
-     * may not be null-terminated!
+     * Gets the immutable char buffer held by this
+     * OverflowableCharBufferByteSink . This is NOT guaranteed to be
+     * null terminated!
+     *
+     * @returns A pointer to the string representing this
+     *          OverflowableCharBufferByteSink which may not be null
+     *          terminated.
      */
-    const char * GetBuffer() const {
+    const char * GetBuffer() const
+    {
       return (const char *) m_buf;
     }
 
-    u32 GetLength() const {
+    /**
+     * Gets the length of the string represented by this
+     * OverflowableCharBufferByteSink in bytes .
+     *
+     * @returns The length of the string represented by this
+     *          OverflowableCharBufferByteSink in bytes .
+     */
+    u32 GetLength() const
+    {
       return m_written;
     }
 
-    u32 GetCapacity() const {
+    /**
+     * Gets the total number of bytes that may be written to this
+     * OverflowableCharBufferByteSink before it overflows.
+     *
+     * @returns The total number of bytes that may be written to this
+     *          OverflowableCharBufferByteSink before it overflows.
+     */
+    u32 GetCapacity() const
+    {
       return BUFSIZE;
     }
 
-    void Reset() {
+    /**
+     * Resets the internal state of this
+     * OverflowableCharBufferByteSink , making it equivalent to the
+     * empty string.
+     */
+    void Reset()
+    {
       m_written = 0;
       m_overflowed = false;
     }
 
-    bool HasOverflowed() const {
+    /**
+     * Checks to see whether or not this
+     * OverflowableCharBufferByteSink has overflowed, i.e. had more
+     * bytes written to it than it can hold.
+     *
+     * @returns \c true if this OverflowableCharBufferByteSink has
+     *          overflowed before, else \c false .
+     */
+    bool HasOverflowed() const
+    {
       return m_overflowed;
     }
 
+    /**
+     * An operator overload which copies the bytes held at a specified
+     * null terminated string to this OverflowableCharBufferByteSink
+     * . After this is called, and if there is enough room in this
+     * OverflowableCharBufferByteSink , it will represent the
+     * specified string.
+     *
+     * @param zstr The null terminated string which is wished to be
+     *             represented by this OverflowableCharBufferByteSink .
+     */
     OverflowableCharBufferByteSink<BUFSIZE>& operator=(const char* zstr)
     {
       /* Check for >= to account for null byte written by snprintf */
@@ -167,11 +237,25 @@ namespace MFM {
     u8 m_buf[BUFSIZE];
   };
 
+  /**
+   * An OverflowableCharBufferByteSink with a capacity of 16 bytes.
+   */
   typedef OverflowableCharBufferByteSink<16 + 2> OString16;
+
+  /**
+   * An OverflowableCharBufferByteSink with a capacity of 32 bytes.
+   */
   typedef OverflowableCharBufferByteSink<32 + 2> OString32;
+
+  /**
+   * An OverflowableCharBufferByteSink with a capacity of 64 bytes.
+   */
   typedef OverflowableCharBufferByteSink<64 + 2> OString64;
+
+  /**
+   * An OverflowableCharBufferByteSink with a capacity of 128 bytes.
+   */
   typedef OverflowableCharBufferByteSink<128 + 2> OString128;
 }
-
 
 #endif /* OVERFLOWABLECHARBUFFERBYTESINK_H */
