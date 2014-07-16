@@ -1,4 +1,4 @@
-/*                                              -*- mode:C++ -*-
+ /*                                              -*- mode:C++ -*-
   AbstractGUIDriver.h Base class for all GUI-based MFM drivers
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
@@ -154,9 +154,9 @@ namespace MFM {
       AbstractGUIDriver * m_driver;
 
       AbstractGridCheckbox(const char* title) :
-        AbstractCheckbox(title), m_driver(0)
-      {
-      }
+        AbstractCheckbox(title),
+	m_driver(0)
+      { }
 
     public:
 
@@ -255,13 +255,10 @@ namespace MFM {
 	AbstractButton::SetName("GridRenderButton");
         Panel::SetDimensions(200,25);
         AbstractButton::SetRenderPoint(SPoint(2, 0));
-	AbstractCheckbox::SetChecked(true);
       }
 
       virtual void OnCheck(bool value)
-      {
-	AbstractGridCheckbox::m_driver->GetGridRenderer().ToggleGrid();
-      }
+      { }
     } m_gridRenderButton;
 
     struct HeatmapButton : public AbstractGridCheckbox
@@ -274,9 +271,7 @@ namespace MFM {
       }
 
       virtual void OnCheck(bool value)
-      {
-	AbstractGridCheckbox::m_driver->GetGridRenderer().ToggleDataHeatmap();
-      }
+      { }
     } m_heatmapButton;
 
     struct TileViewButton : public AbstractGridButton
@@ -366,9 +361,7 @@ namespace MFM {
       }
 
       virtual void OnCheck(bool value)
-      {
-	AbstractGridCheckbox::m_driver->GetGrid().ToggleBackgroundRadiation();
-      }
+      { }
     } m_bgrButton;
 
   protected: /* Need these for our buttons at driver level */
@@ -471,7 +464,8 @@ namespace MFM {
 
   private:
 
-    void OnceOnlyButtons() {
+    void OnceOnlyButtons()
+    {
       m_statisticsPanel.SetAnchor(ANCHOR_EAST);
 
       m_clearButton.SetDriver(*this);
@@ -485,6 +479,11 @@ namespace MFM {
       m_resetButton.SetDriver(*this);
       m_quitButton.SetDriver(*this);
       m_bgrButton.SetDriver(*this);
+
+      m_gridRenderButton.SetExternalValue(m_grend.GetGridEnabledPointer());
+      m_heatmapButton.SetExternalValue(m_grend.GetDrawDataHeatPointer());
+      m_bgrButton.SetExternalValue(AbstractDriver<GC>::GetGrid().
+				   GetBackgroundRadiationEnabledPointer());
 
       m_buttonPanel.Insert(&m_clearButton, NULL);
       m_buttonPanel.Insert(&m_pauseButton, NULL);

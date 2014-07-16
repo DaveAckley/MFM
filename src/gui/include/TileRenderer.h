@@ -104,6 +104,16 @@ namespace MFM {
       m_dimensions = dimensions;
     }
 
+    bool* GetGridEnabledPointer()
+    {
+      return &m_drawGrid;
+    }
+
+    bool* GetDrawDataHeatPointer()
+    {
+      return &m_drawDataHeat;
+    }
+
     const SPoint& GetWindowTL() const
     {
       return m_windowTL;

@@ -91,6 +91,16 @@ namespace MFM
 
     void ToggleGrid();
 
+    bool* GetGridEnabledPointer()
+    {
+      return m_tileRenderer.GetGridEnabledPointer();
+    }
+
+    bool* GetDrawDataHeatPointer()
+    {
+      return m_tileRenderer.GetDrawDataHeatPointer();
+    }
+
     void ToggleMemDraw();
 
     const SPoint & GetDrawOrigin() const ;

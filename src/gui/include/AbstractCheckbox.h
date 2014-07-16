@@ -39,19 +39,21 @@ namespace MFM
   public:
 
     AbstractCheckbox() :
-      AbstractButton(), m_checked(false)
+      AbstractButton(),
+      m_externalValue(NULL)
     {
       AbstractCheckbox::OnceOnly();
     }
 
     AbstractCheckbox(const char* text) :
-      AbstractButton(text), m_checked(false)
+      AbstractButton(text),
+      m_externalValue(NULL)
     {
       AbstractCheckbox::OnceOnly();
     }
 
     virtual void PaintBorder(Drawing& d)
-    {}
+    { }
 
     virtual void PaintComponent(Drawing& d)
     {
@@ -66,30 +68,35 @@ namespace MFM
 
     void OnClick(u8 button)
     {
-      m_checked = !m_checked;
+      SetChecked(!(*m_externalValue));
 
-      OnCheck(m_checked);
+      OnCheck(*m_externalValue);
     }
 
     virtual void OnCheck(bool value) = 0;
 
     bool IsChecked()
     {
-      return m_checked;
+      return *m_externalValue;
     }
 
     void SetChecked(bool checked)
     {
-      m_checked = checked;
+      *m_externalValue = checked;
+    }
+
+    void SetExternalValue(bool* externalValue)
+    {
+      m_externalValue = externalValue;
     }
 
   private:
 
-    bool m_checked;
+    bool* m_externalValue;
 
     inline Asset GetAsset()
     {
-      return m_checked ?
+      return (*m_externalValue) ?
 	ASSET_CHECKBOX_ICON_ON :
 	ASSET_CHECKBOX_ICON_OFF ;
     }

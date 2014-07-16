@@ -75,14 +75,22 @@ namespace MFM {
   public:
     Random& GetRandom() { return m_random; }
 
+    bool* GetBackgroundRadiationEnabledPointer()
+    {
+      return &m_backgroundRadiationEnabled;
+    }
+
     friend class GridRenderer;
 
     void SetSeed(u32 seed);
 
-    Grid(ElementRegistry<CC>& elts) : m_seed(0), m_width(W), m_height(H), m_er(elts),
-				      m_xraySiteOdds(1000)
-    {
-    }
+    Grid(ElementRegistry<CC>& elts) :
+      m_seed(0),
+      m_width(W),
+      m_height(H),
+      m_er(elts),
+      m_xraySiteOdds(1000)
+    { }
 
     s32* GetXraySiteOddsPtr()
     {

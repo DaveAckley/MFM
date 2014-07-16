@@ -1,28 +1,7 @@
 #include "GridRenderer.h"
 
-namespace MFM {
-
-  /*
-  GridRenderer::GridRenderer(SDL_Surface* dest)
-  {
-    m_tileRenderer = new TileRenderer(dest);
-    m_dest = dest;
-    m_currentEWRenderMode = m_defaultRenderMode;
-    m_renderTilesSeparated = m_renderTilesSeparatedDefault;
-    m_selectedTile.Set(-1, -1);
-  }
-  */
-
-  /*
-  GridRenderer::GridRenderer(TileRenderer* tr)
-  {
-    m_tileRenderer = tr;
-    //    m_dest = tr->GetDestination();
-    m_currentEWRenderMode = m_defaultRenderMode;
-    m_renderTilesSeparated = m_renderTilesSeparatedDefault;
-    m_selectedTile.Set(-1, -1);
-  }
-  */
+namespace MFM
+{
 
   GridRenderer::GridRenderer()
   {
@@ -122,4 +101,3 @@ namespace MFM {
   }
 
 } /* namespace MFM */
-

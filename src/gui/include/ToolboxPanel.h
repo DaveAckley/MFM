@@ -121,10 +121,7 @@ namespace MFM
        */
       void SetActivated(bool activated)
       {
-        if (activated)
-          SetBackground(Drawing::GREY40);
-        else
-          SetBackground(Drawing::GREY80);
+	SetBackground(activated ? Drawing::GREY40 : Drawing::GREY80);
       }
 
       /**

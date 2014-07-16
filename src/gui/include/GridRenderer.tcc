@@ -1,6 +1,7 @@
 /* -*- C++ -*- */
 
-namespace MFM {
+namespace MFM
+{
 
   template <class GC>
   void GridRenderer::RenderGrid(Drawing & drawing, Grid<GC>& grid)
