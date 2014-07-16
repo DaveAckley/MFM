@@ -279,7 +279,8 @@ namespace MFM {
         pt.Set(event.x - pt.GetX(),
                event.y - pt.GetY());
 
-        switch (event.button) {
+        switch (event.button)
+	{
 
 	case SDL_BUTTON_LEFT:
           m_leftButtonDragStart = pt;
@@ -288,25 +289,28 @@ namespace MFM {
 	case SDL_BUTTON_MIDDLE:
 	case SDL_BUTTON_RIGHT:
 
-	  switch(mbe.m_selectedTool)
+	  if(!mbe.m_keyboard.CtrlHeld())
 	  {
-	  case TOOL_SELECTOR:
-	    HandleSelectorTool(mbe);
-	    break;
-	  case TOOL_PENCIL:
-	    HandlePencilTool(mbe);
-	    break;
-	  case TOOL_ERASER:
-	    HandleEraserTool(mbe);
-	    break;
-	  case TOOL_BRUSH:
-	    HandleBrushTool(mbe);
-	    break;
-	  case TOOL_BUCKET:
-	    HandleBucketTool(mbe);
-	    break;
+	    switch(mbe.m_selectedTool)
+	    {
+	    case TOOL_SELECTOR:
+	      HandleSelectorTool(mbe);
+	      break;
+	    case TOOL_PENCIL:
+	      HandlePencilTool(mbe);
+	      break;
+	    case TOOL_ERASER:
+	      HandleEraserTool(mbe);
+	      break;
+	    case TOOL_BRUSH:
+	      HandleBrushTool(mbe);
+	      break;
+	    case TOOL_BUCKET:
+	      HandleBucketTool(mbe);
+	      break;
 
-	  default: break; /* Do the rest later */
+	    default: break; /* Do the rest later */
+	    }
 	  }
 
 	  break;
@@ -347,7 +351,7 @@ namespace MFM {
 	  mask = SDL_BUTTON_RIGHT;
 	}
 
-	if(mask)
+	if(mask && !mbe.m_keyboard.CtrlHeld())
 	{
 	  switch(mbe.m_selectedTool)
 	  {
