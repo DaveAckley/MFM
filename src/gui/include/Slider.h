@@ -42,7 +42,6 @@ namespace MFM
   private:
     s32 m_minValue;
     s32 m_maxValue;
-    s32 m_value;
 
     /**
      * If not \c NULL, will set this value alongside the value inside
@@ -62,7 +61,6 @@ namespace MFM
     Slider() :
       m_minValue(0),
       m_maxValue(100),
-      m_value(50),
       m_externalValue(NULL),
       m_dragging(false),
       m_text(NULL)
@@ -73,18 +71,6 @@ namespace MFM
     Slider(s32 maxValue, s32 minValue) :
       m_minValue(minValue),
       m_maxValue(maxValue),
-      m_value((maxValue - minValue) / 2),
-      m_externalValue(NULL),
-      m_dragging(false),
-      m_text(NULL)
-    {
-      Init();
-    }
-
-    Slider(s32 maxValue, s32 minValue, s32 value) :
-      m_minValue(minValue),
-      m_maxValue(maxValue),
-      m_value(value),
       m_externalValue(NULL),
       m_dragging(false),
       m_text(NULL)
@@ -129,16 +115,15 @@ namespace MFM
 
     void SetValue(s32 value)
     {
-      m_value = CLAMP(m_minValue, m_maxValue, value);
       if(m_externalValue)
       {
-	*m_externalValue = m_value;
+	*m_externalValue = CLAMP(m_minValue, m_maxValue, value);
       }
     }
 
     s32 GetValue() const
     {
-      return m_value;
+      return *m_externalValue;
     }
 
     virtual void PaintBorder(Drawing& d)
@@ -152,10 +137,13 @@ namespace MFM
 	{
 	  if(GetSliderRect().Contains(event.GetAt() - GetAbsoluteLocation()))
 	  {
-	    m_dragging = true;
-	    m_dragStartX = event.GetAt().GetX();
-	    m_preDragVal = m_value;
-	    return true;
+	    if(m_externalValue)
+	    {
+	      m_dragging = true;
+	      m_dragStartX = event.GetAt().GetX();
+	      m_preDragVal = *m_externalValue;
+	      return true;
+	    }
 	  }
 	}
       }
@@ -201,7 +189,16 @@ namespace MFM
 		 UPoint(48, 16));
 
       numBuffer.Reset();
-      numBuffer.Printf("%d", m_value);
+
+      if(m_externalValue)
+      {
+	numBuffer.Printf("%d", *m_externalValue);
+      }
+      else
+      {
+	numBuffer.Printf("?");
+      }
+
       d.SetBackground(Drawing::BLACK);
       d.SetForeground(Drawing::WHITE);
       d.BlitBackedText(numBuffer.GetZString(),
@@ -225,7 +222,7 @@ namespace MFM
 
     inline Rect GetSliderRect()
     {
-      s32 xpos = ((m_value * (SLIDER_WIDTH - 7)) / m_maxValue) - 7;
+      s32 xpos = (((*m_externalValue) * (SLIDER_WIDTH - 7)) / m_maxValue) - 7;
       return Rect(xpos > 0 ? xpos : 0,
 		  0, 17, 16);
     }
