@@ -320,22 +320,6 @@ namespace MFM {
       u32 m_saveStateIndex;
     }m_saveButton;
 
-    struct ResetButton : public AbstractGridButton
-    {
-      ResetButton() : AbstractGridButton("Reset")
-      {
-	AbstractButton::SetName("ResetButton");
-        Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 455));
-      }
-
-      virtual void OnClick(u8 button)
-      {
-	//AbstractGridButton::m_driver->RequestReinit();
-        printf("RESET NYI\n");
-      }
-    } m_resetButton;
-
     struct QuitButton : public AbstractGridButton
     {
       QuitButton() : AbstractGridButton("Quit")
@@ -476,7 +460,6 @@ namespace MFM {
       m_heatmapButton.SetDriver(*this);
       m_tileViewButton.SetDriver(*this);
       m_saveButton.SetDriver(*this);
-      m_resetButton.SetDriver(*this);
       m_quitButton.SetDriver(*this);
       m_bgrButton.SetDriver(*this);
 
@@ -493,7 +476,6 @@ namespace MFM {
       m_buttonPanel.Insert(&m_heatmapButton, NULL);
       m_buttonPanel.Insert(&m_tileViewButton, NULL);
       m_buttonPanel.Insert(&m_saveButton, NULL);
-      m_buttonPanel.Insert(&m_resetButton, NULL);
       m_buttonPanel.Insert(&m_quitButton, NULL);
       m_buttonPanel.Insert(&m_bgrButton, NULL);
 
