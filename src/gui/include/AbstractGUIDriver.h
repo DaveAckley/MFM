@@ -67,7 +67,7 @@ namespace MFM
 
 #define STATS_WINDOW_WIDTH 288
 
-#define STATS_START_WINDOW_WIDTH 233
+#define STATS_START_WINDOW_WIDTH 280
 #define STATS_START_WINDOW_HEIGHT 120
 
   /* super speedy for now */
@@ -434,7 +434,7 @@ namespace MFM
       m_gridPanel.Insert(&m_toolboxPanel, NULL);
 
       m_helpPanel.SetName("Help");
-      m_helpPanel.SetVisibility(true);
+      m_helpPanel.SetVisibility(false);
       m_helpPanel.SetDimensions(m_screenWidth / 3, m_screenHeight);
       m_helpPanel.SetAnchor(ANCHOR_WEST);
       m_gridPanel.Insert(&m_helpPanel, NULL);
