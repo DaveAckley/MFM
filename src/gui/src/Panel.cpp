@@ -309,4 +309,13 @@ namespace MFM {
     return event.Handle(*this);
   }
 
+  SPoint Panel::GetTextSize(TTF_Font * font, const char * text)
+  {
+    s32 width, height;
+    if (!TTF_SizeText(font, text, &width, &height))
+    {
+      return SPoint(width,height);
+    }
+    return SPoint(0,0);
+  }
 } /* namespace MFM */

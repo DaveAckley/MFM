@@ -56,9 +56,10 @@
 #include "VArguments.h"
 #include "SDL/SDL.h"
 #include "SDL/SDL_ttf.h"
+#include "HelpPanel.h"
 
-namespace MFM {
-
+namespace MFM
+{
 #define FRAMES_PER_SECOND 100.0
 
 #define CAMERA_SLOW_SPEED 2
@@ -348,6 +349,8 @@ namespace MFM {
       { }
     } m_bgrButton;
 
+    HelpPanel m_helpPanel;
+
   protected: /* Need these for our buttons at driver level */
     GridRenderer m_grend;
     StatsRenderer<GC> m_srend;
@@ -423,6 +426,11 @@ namespace MFM {
       m_logPanel.SetDimensions(m_screenWidth, 160);
       m_logPanel.SetAnchor(ANCHOR_SOUTH);
       m_logPanel.SetFont(m_fonts.GetDefaultFont(16));
+
+      m_gridPanel.Insert(&m_helpPanel, NULL);
+      m_helpPanel.SetVisibility(true);
+      m_helpPanel.SetDimensions(m_screenWidth / 3, m_screenHeight);
+      m_helpPanel.SetAnchor(ANCHOR_WEST);
 
       m_toolboxPanel.SetName("Toolbox");
       m_toolboxPanel.SetVisibility(false);
@@ -541,9 +549,13 @@ namespace MFM {
       {
 	m_grend.ToggleMemDraw();
       }
-      if(m_keyboard.SemiAuto(SDLK_h))
+      if(m_keyboard.SemiAuto(SDLK_k))
       {
 	m_grend.ToggleDataHeatmap();
+      }
+      if(m_keyboard.SemiAuto(SDLK_h))
+      {
+	m_helpPanel.ToggleVisibility();
       }
       if(m_keyboard.SemiAuto(SDLK_l))
       {

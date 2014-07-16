@@ -167,7 +167,7 @@ namespace MFM
 	{
 	  d.SetForeground(m_element->PhysicsColor());
 	  d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
-	  d.SetFont(AssetManager::GetFont(FONT_ASSET_ELEMENT));
+	  d.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
 
 	  d.SetBackground(Drawing::HalfColor(~m_element->PhysicsColor()));
 	  d.SetForeground(~m_element->PhysicsColor());
@@ -444,11 +444,10 @@ namespace MFM
       d.SetForeground(this->Panel::GetBackground());
       d.FillRect(0, 0, this->Panel::GetWidth(), this->Panel::GetHeight());
 
-      d.SetFont(AssetManager::GetFont(FONT_ASSET_ELEMENT));
+      d.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
 
-
-
-      if (m_primaryElement) {
+      if (m_primaryElement)
+      {
         d.SetForeground(m_primaryElement->PhysicsColor());
         d.FillCircle(129, 40, ELEMENT_RENDER_SIZE,
                      ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
@@ -459,7 +458,8 @@ namespace MFM
 			 UPoint(128 - ELEMENT_RENDER_SIZE, 40),
 			 UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
-      if (m_secondaryElement) {
+      if (m_secondaryElement)
+      {
         d.SetForeground(m_secondaryElement->PhysicsColor());
         d.FillCircle(129 + ELEMENT_RENDER_SIZE, 40, ELEMENT_RENDER_SIZE,
 		     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);

@@ -52,6 +52,8 @@ namespace MFM
   enum FontAsset
   {
     FONT_ASSET_ELEMENT = 0,
+    FONT_ASSET_HELPPANEL_BIG,
+    FONT_ASSET_HELPPANEL_SMALL,
     FONT_ASSET_COUNT
   };
 
@@ -142,6 +144,8 @@ namespace MFM
 	surfaces[ASSET_SLIDER_HANDLE] = LoadImage("images/slider_handle.png");
 
 	fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/tiny.ttf", 15);
+	fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont("fonts/tiny.ttf", 26);
+	fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont("fonts/tiny.ttf", 16);
 
 	initialized = true;
       }
@@ -175,7 +179,7 @@ namespace MFM
       return surfaces[a];
     }
 
-    static TTF_Font* GetFont(FontAsset a)
+    static TTF_Font* Get(FontAsset a)
     {
       return fonts[a];
     }

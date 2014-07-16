@@ -46,16 +46,6 @@ namespace MFM
   AbstractButton::~AbstractButton()
   { }
 
-  SPoint AbstractButton::GetTextSize(TTF_Font * font, const char * text)
-  {
-    s32 width, height;
-    if (!TTF_SizeText(font, text, &width, &height))
-    {
-      return SPoint(width,height);
-    }
-    return SPoint(0,0);
-  }
-
   void AbstractButton::PaintComponent(Drawing & drawing)
   {
     // Fade fg and bg toward each other if not enabled.
@@ -71,7 +61,7 @@ namespace MFM
     if(m_text)
     {
       SPoint dims = MakeSigned(Panel::GetDimensions());
-      SPoint textSize = GetTextSize(drawing.GetFont(), m_text);
+      SPoint textSize = Panel::GetTextSize(drawing.GetFont(), m_text);
       SPoint renderAt = max((dims-textSize)/2, SPoint(0,0));
 
       drawing.BlitText(m_text, MakeUnsigned(renderAt), GetDimensions());
