@@ -17,7 +17,21 @@ namespace MFM
 
   struct MFMCDriver : public AbstractDualDriver<OurGridConfig>
   {
-  private: typedef AbstractDualDriver<OurGridConfig> Super;
+  private:
+
+    typedef AbstractDualDriver<OurGridConfig> Super;
+
+    #define NEEDED_ELEMENT_COUNT 4
+
+    Element<OurCoreConfig>* m_neededElements[NEEDED_ELEMENT_COUNT];
+
+    void FillNeededElements()
+    {
+      m_neededElements[0] = &Element_Empty<OurCoreConfig>::THE_INSTANCE;
+      m_neededElements[1] = &Element_Wall<OurCoreConfig>::THE_INSTANCE;
+      m_neededElements[2] = &Element_Res<OurCoreConfig>::THE_INSTANCE;
+      m_neededElements[3] = &Element_Dreg<OurCoreConfig>::THE_INSTANCE;
+    }
 
   public:
     virtual void AddDriverArguments()
@@ -27,24 +41,24 @@ namespace MFM
 
     virtual void OnceOnly(VArguments& args)
     {
-
 #ifdef MFM_GUI_DRIVER
       AbstractGUIDriver::m_startPaused = true;
 #endif
-
       Super::OnceOnly(args);
+
+      FillNeededElements();
     }
 
     virtual void ReinitPhysics()
     {
       OurGrid& m_grid = GetGrid();
 
-      m_grid.Needed(Element_Dreg<OurCoreConfig>::THE_INSTANCE);
-      m_grid.Needed(Element_Res<OurCoreConfig>::THE_INSTANCE);
-      m_grid.Needed(Element_Wall<OurCoreConfig>::THE_INSTANCE);
+      for(u32 i = 0; i < NEEDED_ELEMENT_COUNT; i++)
+      {
+	m_grid.Needed(*m_neededElements[i]);
+      }
 
 #ifdef MFM_GUI_DRIVER
-
       Element<CC>* elem = &Element_Dreg<OurCoreConfig>::THE_INSTANCE;
       m_dregSliderConfig.SetElement(elem);
 
@@ -83,10 +97,10 @@ namespace MFM
 
 #ifdef MFM_GUI_DRIVER
       /* Register painting tools if we need them */
-      AbstractGUIDriver::RegisterToolboxElement(&Element_Empty<OurCoreConfig>::THE_INSTANCE);
-      AbstractGUIDriver::RegisterToolboxElement(&Element_Wall<OurCoreConfig>::THE_INSTANCE);
-      AbstractGUIDriver::RegisterToolboxElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
-      AbstractGUIDriver::RegisterToolboxElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
+      for(u32 i = 0; i < NEEDED_ELEMENT_COUNT; i++)
+      {
+	AbstractGUIDriver::RegisterToolboxElement(m_neededElements[i]);
+      }
 #endif
     }
   };
