@@ -439,6 +439,12 @@ namespace MFM
       return true;
     }
 
+    virtual bool Handle(MouseMotionEvent& mme)
+    {
+      /* Try to keep the grid from taking this event too */
+      return true;
+    }
+
     virtual void PaintComponent(Drawing& d)
     {
       d.SetForeground(this->Panel::GetBackground());
