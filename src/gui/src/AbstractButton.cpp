@@ -12,37 +12,47 @@ namespace MFM
   }
 
   AbstractButton::AbstractButton() :
-    m_text(0), m_icon(0), m_enabled(true)
+    m_text(0),
+    m_icon(0),
+    m_enabled(true)
   {
     Init();
   }
 
   AbstractButton::AbstractButton(const char* text) :
-    m_text(text), m_icon(0), m_enabled(true)
+    m_text(text),
+    m_icon(0),
+    m_enabled(true)
   {
     Init();
   }
 
   AbstractButton::AbstractButton(SDL_Surface* icon) :
-    m_text(0), m_icon(icon), m_enabled(true)
+    m_text(0),
+    m_icon(icon),
+    m_enabled(true)
   {
     Init();
   }
 
   AbstractButton::AbstractButton(const char* text, SDL_Surface* icon) :
-    m_text(text), m_icon(icon), m_enabled(true)
+    m_text(text),
+    m_icon(icon),
+    m_enabled(true)
   {
     Init();
   }
 
   AbstractButton::~AbstractButton()
-  {}
+  { }
 
   SPoint AbstractButton::GetTextSize(TTF_Font * font, const char * text)
   {
     s32 width, height;
     if (!TTF_SizeText(font, text, &width, &height))
+    {
       return SPoint(width,height);
+    }
     return SPoint(0,0);
   }
 

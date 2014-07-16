@@ -1,5 +1,6 @@
 ############ Nothing below here should need to be changed ############
 
+include $(BASEDIR)/config/Makeversion.mk
 include $(BASEDIR)/config/Makevars.mk
 
 #####
@@ -58,6 +59,11 @@ ARCHIVEPATH := $(BUILDDIR)/$(ARCHIVENAME)
 ### EXTRA DEFINES
 DEFINES+=-DMFM_BUILD_DATE=$(shell date -u +0x%Y%m%d)
 DEFINES+=-DMFM_BUILD_TIME=$(shell date -u +0x%H%M%S)
+DEFINES+=-DMFM_BUILT_BY=$(shell whoami)
+DEFINES+=-DMFM_BUILT_ON=$(shell hostname)
+DEFINES+=-DMFM_VERSION_MAJOR=$(MFM_VERSION_MAJOR)
+DEFINES+=-DMFM_VERSION_MINOR=$(MFM_VERSION_MINOR)
+DEFINES+=-DMFM_VERSION_REV=$(MFM_VERSION_REV)
 
 ### PATTERN RULES
 

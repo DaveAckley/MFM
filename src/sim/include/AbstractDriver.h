@@ -43,6 +43,7 @@
 #include "VArguments.h"
 #include "StdElements.h"
 #include "ElementRegistry.h"
+#include "Version.h"
 
 
 #define MAX_PATH_LENGTH 1000
@@ -285,6 +286,12 @@ namespace MFM
       args.Usage();
     }
 
+    static void PrintVersion(const char* not_needed, void* nullForShort)
+    {
+      fprintf(stderr, "%s\n", nullForShort ? MFM_VERSION_STRING_LONG : MFM_VERSION_STRING_SHORT);
+      exit(0);
+    }
+
     static void SetLoggingLevel(const char* level, void* not_needed)
     {
       LOG.SetLevel(atoi(level));
@@ -470,6 +477,12 @@ namespace MFM
 
       RegisterArgument("Amount of logging output is ARG (0 -> none, 8 -> max)",
                        "-l|--log", &SetLoggingLevel, NULL, true);
+
+      RegisterArgument("Print the brief version number, then exit.",
+                       "-v|--version", &PrintVersion, NULL, false);
+
+      RegisterArgument("Print the full version number, then exit.",
+                       "-V|--Version", &PrintVersion, this, false);
 
       RegisterArgument("Set master PRNG seed to ARG (u32)",
                        "-s|--seed", &SetSeedFromArgs, this, true);
