@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include "Version.h"
 
 namespace MFM
 {
@@ -161,9 +162,11 @@ namespace MFM
   void VArguments::Usage() const
   {
     fprintf(stderr,
-	    "Movable Feast Machine Simulator\n"
+	    "Movable Feast Machine (%s)\n"
 	    "\n"
-	    "Usage:");
+	    "Usage:",
+            MFM_VERSION_STRING_SHORT
+            );
 
     for(u32 i = 0; i < m_heldArguments; i++)
     {
