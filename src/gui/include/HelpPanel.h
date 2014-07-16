@@ -31,7 +31,7 @@
 #include "AssetManager.h"
 #include "Panel.h"
 
-#define HELP_MESSAGE_COUNT 4
+#define HELP_MESSAGE_COUNT 25
 
 namespace MFM
 {
@@ -47,10 +47,32 @@ namespace MFM
 
     void RegisterMessages()
     {
-      m_helpMessages[0] = "Keyboard:";
-      m_helpMessages[1] = "[t] Show toolbox";
-      m_helpMessages[2] = "[i] Show statistics and settings";
-      m_helpMessages[3] = "[ctrl+q] Quit";
+      const char** messages = m_helpMessages;
+      *(messages++) = "";
+      *(messages++) = "Keyboard:";
+      *(messages++) = " [t] Show toolbox";
+      *(messages++) = " [g] Show grid";
+      *(messages++) = " [m] Toggle memory view";
+      *(messages++) = " [k] Render Atom heatmap";
+      *(messages++) = " [h] Show this help window";
+      *(messages++) = " [l] Show log";
+      *(messages++) = " [p] Render caches";
+      *(messages++) = " [esc] Deselect Tile";
+      *(messages++) = " [r] Toggle recording";
+      *(messages++) = " [arrow keys] Move tiles";
+      *(messages++) = " [,] Decrease AEPS per frame";
+      *(messages++) = " [.] Increase AEPS per frame";
+      *(messages++) = " [i] Show statistics and settings";
+      *(messages++) = "    [a] Show AER statistics";
+      *(messages++) = " [CTRL+q] Quit";
+      *(messages++) = "";
+      *(messages++) = "Mouse:";
+      *(messages++) = " [Ctrl+Drag] Move tiles";
+      *(messages++) = " [Scroll] Zoom";
+      *(messages++) = "";
+      *(messages++) = "Painting:";
+      *(messages++) = " [Left Click] Select / paint element 1";
+      *(messages++) = " [Right Click] Select / paint element 2";
     }
 
   public:

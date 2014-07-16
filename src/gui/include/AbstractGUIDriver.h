@@ -427,16 +427,17 @@ namespace MFM
       m_logPanel.SetAnchor(ANCHOR_SOUTH);
       m_logPanel.SetFont(m_fonts.GetDefaultFont(16));
 
-      m_gridPanel.Insert(&m_helpPanel, NULL);
-      m_helpPanel.SetVisibility(true);
-      m_helpPanel.SetDimensions(m_screenWidth / 3, m_screenHeight);
-      m_helpPanel.SetAnchor(ANCHOR_WEST);
-
       m_toolboxPanel.SetName("Toolbox");
       m_toolboxPanel.SetVisibility(false);
       m_toolboxPanel.SetBackground(Drawing::GREY60);
       m_toolboxPanel.SetAnchor(ANCHOR_WEST);
       m_gridPanel.Insert(&m_toolboxPanel, NULL);
+
+      m_helpPanel.SetName("Help");
+      m_helpPanel.SetVisibility(true);
+      m_helpPanel.SetDimensions(m_screenWidth / 3, m_screenHeight);
+      m_helpPanel.SetAnchor(ANCHOR_WEST);
+      m_gridPanel.Insert(&m_helpPanel, NULL);
 
       m_rootPanel.Print(STDOUT);
 
@@ -533,14 +534,6 @@ namespace MFM
       {
 	ToggleStatsView();
       }
-      if(m_keyboard.SemiAuto(SDLK_1))
-      {
-	m_grend.IncreaseAtomSize();
-      }
-      if(m_keyboard.SemiAuto(SDLK_2))
-      {
-	m_grend.DecreaseAtomSize();
-      }
       if(m_keyboard.SemiAuto(SDLK_g))
       {
 	m_grend.ToggleGrid();
@@ -564,10 +557,6 @@ namespace MFM
       if(m_keyboard.SemiAuto(SDLK_p))
       {
 	m_grend.ToggleTileSeparation();
-      }
-      if(m_keyboard.SemiAuto(SDLK_o))
-      {
-	m_grend.SetEventWindowRenderMode(EVENTWINDOW_RENDER_OFF);
       }
 
       if(m_keyboard.SemiAuto(SDLK_ESCAPE))
