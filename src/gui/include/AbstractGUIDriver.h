@@ -443,7 +443,7 @@ namespace MFM
 
       m_srend.OnceOnly(m_fonts);
 
-      SDL_WM_SetCaption("Movable Feast Machine Simulator", NULL);
+      SDL_WM_SetCaption(MFM_VERSION_STRING_LONG, NULL);
 
       m_ticksLastStopped = 0;
 

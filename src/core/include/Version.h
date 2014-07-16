@@ -27,10 +27,18 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-namespace MFM {
-
+namespace MFM
+{
+  /**
+   * A string representing an abbreviated version number of this
+   * instance of the Movable Feast Machine.
+   */
   extern const char * MFM_VERSION_STRING_SHORT;
 
+  /**
+   * A string representing the extended version number of this
+   * instance of the Movable Feast Machine.
+   */
   extern const char * MFM_VERSION_STRING_LONG;
 
 } /* namespace MFM */
