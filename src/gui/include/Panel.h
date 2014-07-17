@@ -159,6 +159,11 @@ namespace MFM {
 
     void ToggleVisibility(){ m_visible = !m_visible; }
 
+    bool IsVisible()
+    {
+      return m_visible;
+    }
+
     u32 GetWidth() const {return m_rect.GetWidth();}
 
     u32 GetHeight() const {return m_rect.GetHeight();}

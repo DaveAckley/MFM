@@ -38,8 +38,8 @@
 #define SCREEN_INITIAL_HEIGHT 1024
 #define BRUSH_SIZE 4
 
-namespace MFM {
-
+namespace MFM
+{
   /**
    * A template class for displaying the Grid in a Panel.
    */
@@ -72,9 +72,11 @@ namespace MFM {
     ToolboxPanel<CC>* m_toolboxPanel;
     SPoint m_leftButtonDragStart;
     SPoint m_leftButtonGridStart;
+    bool m_paintingEnabled;
 
   public:
-    GridPanel()
+    GridPanel() :
+      m_paintingEnabled(false)
     {
       SetName("Grid Panel");
       SetDimensions(SCREEN_INITIAL_WIDTH,
@@ -100,6 +102,11 @@ namespace MFM {
     void SetToolboxPanel(ToolboxPanel<CC>* toolboxPanel)
     {
       m_toolboxPanel = toolboxPanel;
+    }
+
+    void SetPaintingEnabled(bool isPaintingEnabled)
+    {
+      m_paintingEnabled = isPaintingEnabled;
     }
 
   protected:
@@ -289,7 +296,7 @@ namespace MFM {
 	case SDL_BUTTON_MIDDLE:
 	case SDL_BUTTON_RIGHT:
 
-	  if(!mbe.m_keyboard.CtrlHeld())
+	  if(!mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
 	  {
 	    switch(mbe.m_selectedTool)
 	    {
@@ -351,7 +358,7 @@ namespace MFM {
 	  mask = SDL_BUTTON_RIGHT;
 	}
 
-	if(mask && !mbe.m_keyboard.CtrlHeld())
+	if(mask && !mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
 	{
 	  switch(mbe.m_selectedTool)
 	  {

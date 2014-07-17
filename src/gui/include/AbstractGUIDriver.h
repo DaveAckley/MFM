@@ -516,6 +516,7 @@ namespace MFM
     inline void ToggleToolbox()
     {
       m_toolboxPanel.ToggleVisibility();
+      m_gridPanel.SetPaintingEnabled(m_toolboxPanel.IsVisible());
     }
 
     void KeyboardUpdate(OurGrid& grid)
