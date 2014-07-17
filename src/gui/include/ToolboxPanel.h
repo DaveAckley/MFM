@@ -33,7 +33,7 @@
 #include "AbstractSliderConfig.h"
 
 #define ELEMENT_BOX_SIZE 72
-#define ELEMENT_RENDER_SIZE 20
+#define ELEMENT_RENDER_SIZE 32
 
 #define ELEMENT_BOX_BUTTON_COUNT 5
 #define TOOLBOX_MAX_SLIDERS 8

@@ -171,6 +171,8 @@ namespace MFM
     {
       d.SetForeground(Drawing::BLACK);
 
+      d.SetFont(AssetManager::Get(FONT_ASSET_HELPPANEL_SMALL));
+
       d.DrawHLine(16, 7, SLIDER_WIDTH - 7);
 
       d.DrawVLine(7, 16, 20);

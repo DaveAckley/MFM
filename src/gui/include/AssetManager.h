@@ -143,7 +143,7 @@ namespace MFM
 	surfaces[ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
 	surfaces[ASSET_SLIDER_HANDLE] = LoadImage("images/slider_handle.png");
 
-	fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/tiny.ttf", 15);
+	fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/tiny.ttf", 24);
 	fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont("fonts/tiny.ttf", 26);
 	fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont("fonts/tiny.ttf", 16);
 
