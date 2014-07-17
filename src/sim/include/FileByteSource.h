@@ -33,20 +33,53 @@
 
 namespace MFM
 {
+  /**
+   * A ByteSource which uses a file descriptor as its reading source.
+   */
   class FileByteSource : public ByteSource
   {
-  public:
+  private:
+    /**
+     * The file descriptor which backs this ByteSource. Is this is not
+     * a valid file descriptor, this will always be NULL .
+     */
+    FILE* m_fp;
 
-    FileByteSource() : ByteSource(),
-		       m_fp(NULL)
+  public:
+    /**
+     * Constructs a new FileByteSource which is not ready for reading
+     * from.  One must call \c Open() before using.
+     */
+    FileByteSource() :
+      ByteSource(),
+      m_fp(NULL)
     { }
 
-    FileByteSource(const char* filename) : ByteSource(),
-					   m_fp(NULL)
+    /**
+     * Constructs a new FileByteSource which is ready for reading
+     * from, given that the provided filename is a legal file to open.
+     *
+     * @param filename The path to the FILE that is wished to back
+     *                 this FileByteSource and will therefore be read
+     *                 from.
+     */
+    FileByteSource(const char* filename) :
+      ByteSource(),
+      m_fp(NULL)
     {
       Open(filename);
     }
 
+    /**
+     * Opens the file at a given path and allows this FileByteSource
+     * to begin reading from it. If this FileByteSource is already
+     * backed by an open file descriptor, this will do nothing. One
+     * should check to see if this FileByteSource \c IsOpen() before
+     * and after calling this method.
+     *
+     * @param filename The string representing the path to the file
+     *        wished to back this FileByteSource .
+     */
     void Open(const char* filename)
     {
       if(!m_fp)
@@ -55,11 +88,28 @@ namespace MFM
       }
     }
 
+    /**
+     * Checks to see if this FileByteSource is backed by a valid file
+     * descriptor and is therefore ready to write to.
+     *
+     * @returns \c true if this FileByteSource is ready to be written
+     *          to, else \c false .
+     */
+    bool IsOpen()
+    {
+      return m_fp != NULL;
+    }
+
+    /**
+     * Closes this FileByteSource, disallowing writing. One must call
+     * \c Open() to use this FileByteSource after closing it.
+     */
     void Close()
     {
       if(m_fp)
       {
 	fclose(m_fp);
+	m_fp = NULL;
       }
     }
 
@@ -67,10 +117,6 @@ namespace MFM
     {
       return fgetc(m_fp);
     }
-
-  private:
-
-    FILE* m_fp;
   };
 }
 

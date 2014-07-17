@@ -38,16 +38,35 @@ namespace MFM
    * A ByteSink that wraps a stdio.h FILE * pointer for disk file
    * output.
    */
-  class FileByteSink : public ByteSink {
+  class FileByteSink : public ByteSink
+  {
+  private:
+    /**
+     * The FILE* which backs this FileByteSink. All writing is done
+     * through this descriptor.
+     */
     FILE * m_file;
+
   public:
 
-    FileByteSink(FILE * file) : m_file(file) {
+    /**
+     * Constructs a new FileByteSink which writes bytes to a given
+     * open file descriptor.
+     *
+     * @param file The FILE* wihch all bytes written to this
+     *             FileByteSink are written to.
+     */
+    FileByteSink(FILE * file) :
+      m_file(file)
+    {
       if (!file)
+      {
         FAIL(NULL_POINTER);
+      }
     }
 
-    virtual void WriteBytes(const u8 * data, const u32 len) {
+    virtual void WriteBytes(const u8 * data, const u32 len)
+    {
       if(!m_file)
       {
 	FAIL(NULL_POINTER);
@@ -58,9 +77,8 @@ namespace MFM
     }
 
     /**
-     * Closes the FILE* backed by this FileByteSink. This FileByteSink
-     * will no longer be able to be used after this and will need to
-     * be reconstructed to be used again.
+     * Closes the FILE* backing this FileByteSink. This FileByteSink
+     * will no longer be able to be used after this is called.
      */
     void Close()
     {
@@ -68,7 +86,8 @@ namespace MFM
       m_file = NULL;
     }
 
-    virtual s32 CanWrite() {
+    virtual s32 CanWrite()
+    {
       return (m_file != NULL) ? 1 : -1; /* Can't write to a closed stream */
     }
   };
