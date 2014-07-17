@@ -115,15 +115,20 @@ namespace MFM {
       m_er.RegisterElement(anElement);  // Make sure we're in here (How could we not?)
 
       for(u32 i = 0; i < W; i++)
+      {
         for(u32 j = 0; j < H; j++)
+	{
           m_tiles[i][j].RegisterElement(anElement);
+	}
+      }
       LOG.Message("Assigned type 0x%04x for %@",anElement.GetType(),&anElement.GetUUID());
     }
 
     /**
      * A minimal iterator over the Tiles of a grid.  Access via Grid::begin().
      */
-    template <typename PointerType> class MyIterator {
+    template <typename PointerType> class MyIterator
+    {
       Grid & g;
       s32 i;
       s32 j;
@@ -131,25 +136,29 @@ namespace MFM {
       MyIterator(Grid<GC> & g, int i = 0, int j = 0) : g(g), i(i), j(j) { }
 
       bool operator!=(const MyIterator &m) const { return i != m.i || j != m.j; }
-      void operator++() {
-        if (j < g.H) {
+      void operator++()
+      {
+        if (j < g.H)
+	{
           i++;
-          if (i >= g.W) {
+          if (i >= g.W)
+	  {
             i = 0;
             j++;
           }
         }
       }
-      int operator-(const MyIterator &m) const {
+      int operator-(const MyIterator &m) const
+      {
         s32 rows = j-m.j;
         s32 cols = i-m.i;
         return rows*g.W + cols;
       }
 
-      PointerType operator*() const {
+      PointerType operator*() const
+      {
         return &g.m_tiles[i][j];
       }
-
     };
 
     typedef MyIterator<Tile<CC>*> iterator_type;

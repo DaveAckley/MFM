@@ -346,7 +346,10 @@ namespace MFM
       }
 
       virtual void OnCheck(bool value)
-      { }
+      {
+	AbstractGridCheckbox::m_driver->GetGrid().SetBackgroundRadiation(
+	  AbstractCheckbox::IsChecked());
+      }
     } m_bgrButton;
 
     HelpPanel m_helpPanel;

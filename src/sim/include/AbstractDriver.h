@@ -54,29 +54,101 @@
 namespace MFM
 {
   /**
-   * An abstract driver from which all MFM drivers should inherit.
+   * An abstract driver from which all MFM drivers should
+   * inherit. This should be the highest level structure and contain
+   * just about everything needed to run a successful simulation.
    */
   template<class GC>
   class AbstractDriver
   {
   protected:
-    // Extract short type names
+
+    /**
+     * The CoreConfig used to describe templated pieces of the core
+     * components.
+     */
     typedef typename GC::CORE_CONFIG CC;
+
+    /**
+     * The ParamConfig used to configure several templated pieces of
+     * the core components.
+     */
     typedef typename CC::PARAM_CONFIG P;
+
+    /**
+     * The type of every Atom used in this simulation.
+     */
     typedef typename CC::ATOM_TYPE T;
+
+    /**
+     * Exported from the GridConfiguration, the enumerated width of
+     * the Grid used by this simulation.
+     */
     enum { W = GC::GRID_WIDTH};
+
+    /**
+     * Exported from the GridConfiguration, the enumerated height of
+     * the Grid used by this simulation.
+     */
     enum { H = GC::GRID_HEIGHT};
+
+    /**
+     * Exported from the GridConfiguration, the enumerated size of
+     * every EventWindow used by this simulation.
+     */
     enum { R = P::EVENT_WINDOW_RADIUS};
 
+    /**
+     * The size of every EventWindow used by this simulation.
+     */
     static const u32 EVENT_WINDOW_RADIUS = R;
+
+    /**
+     * The width of the Grid used by this simulation.
+     */
     static const u32 GRID_WIDTH = W;
+
+    /**
+     * The height of the Grid used by this simulation.
+     */
     static const u32 GRID_HEIGHT = H;
 
+    /**
+     * Template shortcut for an ElementRegistry with the correct
+     * template parameters.
+     */
     typedef ElementRegistry<CC> OurElementRegistry;
+
+    /**
+     * Template shortcut for an instance of StdElements with the
+     * correct template parameters.
+     */
     typedef StdElements<CC> OurStdElements;
+
+    /**
+     * Template shortcut for a Grid with the correct template
+     * parameters.
+     */
     typedef Grid<GC> OurGrid;
+
+    /**
+     * Template shortcut for an ElementTable with the correct template
+     * parameters.
+     */
     typedef ElementTable<CC> OurElementTable;
 
+    /**
+     * Pauses the calling thread for a specified amount of time, using
+     * (apparently) nanosecond percision. The calling thread sleeps
+     * for the number of seconds plus the number of nanoseconds
+     * specified.
+     *
+     * @param seconds The number of seconds that the calling thread
+     *                should sleep for.
+     *
+     * @param nanos The number of nanoseconds that the calling thread
+     *              should sleep for.
+     */
     void Sleep(u32 seconds, u64 nanos)
     {
       struct timespec tspec;
@@ -86,6 +158,14 @@ namespace MFM
       nanosleep(&tspec, NULL);
     }
 
+    /**
+     * Runs the held Grid and all its associated threads for a breif
+     * amount of time, attempting to elapse \c m_aepsPerFrame before
+     * continuing. This also learns about how long an AEPS takes to
+     * elapse, making subsequent calls more accurate in speed.
+     *
+     * @param grid The Grid which is updated during this call.
+     */
     void RunGrid(OurGrid& grid)
     {
       const s32 ONE_THOUSAND = 1000;
@@ -125,6 +205,11 @@ namespace MFM
       PostUpdate();
     }
 
+    /**
+     * Subtracts \c m_aepsPerFrame (or, the number of AEPS which
+     * should elapse every call to \c RunGrid() ) by one, keeping it
+     * above \c 0 at all times.
+     */
     void DecrementAEPSPerFrame()
     {
       if(m_aepsPerFrame > 1)
@@ -133,6 +218,11 @@ namespace MFM
       }
     }
 
+    /**
+     * Adds one to \c m_aepsPerFrame (or, the number of AEPS which
+     * should elapse every call to \c RunGrid() ), keeping it
+     * below \c 1000 at all times.
+     */
     void IncrementAEPSPerFrame()
     {
       if(m_aepsPerFrame < 1000)
@@ -141,6 +231,18 @@ namespace MFM
       }
     }
 
+    /**
+     * Gets a formatted string representing a working path to the
+     * assets directory of this simulation. This is where the local
+     * copy of the \c res/ directory is kept and should be used for
+     * finding any assets in that location.
+     *
+     * @param format The formatting string used to parse the arguments
+     *               that follow it into a reasonable format.
+     *
+     * @returns \c format , with the location of the local resources
+     *          directory prepended to it.
+     */
     char* GetSimDirPathTemporary(const char* format, ...)
     {
       va_list ap;
@@ -155,6 +257,10 @@ namespace MFM
     /**
      * Called at the end of the Reinit() call. This is for custom
      * initialization behavior.
+     *
+     * @param args The VArguments , which should have been gotten from
+     *             the command line, which will be processed again
+     *             during this call.
      */
     virtual void PostReinit(VArguments& args)
     { }
@@ -182,6 +288,11 @@ namespace MFM
      * to call Super::OnceOnly (probably at the beginning, but in any
      * case, sometime) during their execution, so more abstract levels
      * can do any processing they need to.
+     *
+     * @param args The VArguments , which should have been gotten from
+     *             the command line. These allow this method to
+     *             configure itself properly from the command line
+     *             arguments.
      */
     virtual void OnceOnly(VArguments& args)
     {
