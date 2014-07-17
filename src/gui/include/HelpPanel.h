@@ -31,6 +31,10 @@
 #include "AssetManager.h"
 #include "Panel.h"
 
+/**
+ * The number of messages which should be displayed upon rendering a
+ * HelpPanel .
+ */
 #define HELP_MESSAGE_COUNT 25
 
 namespace MFM
@@ -43,8 +47,15 @@ namespace MFM
   {
   private:
 
+    /**
+     * The messages which are rendered upon rendering of this
+     * HelpPanel .
+     */
     const char* m_helpMessages[HELP_MESSAGE_COUNT];
 
+    /**
+     * Initializes all messages in \c m_helpMessages
+     */
     void RegisterMessages()
     {
       const char** messages = m_helpMessages;
@@ -73,10 +84,17 @@ namespace MFM
       *(messages++) = "Painting:";
       *(messages++) = " [Left Click] Select / paint element 1";
       *(messages++) = " [Right Click] Select / paint element 2";
+
+      /*
+       * If any more lines are added, don't forget to increase
+       * HELP_MESSAGE_COUNT at the top of this file.
+       */
     }
 
   public:
-
+    /**
+     * Constructs a new HelpPanel that is ready to be used.
+     */
     HelpPanel()
     {
       RegisterMessages();
@@ -103,7 +121,7 @@ namespace MFM
       for(u32 i = 0; i < HELP_MESSAGE_COUNT; i++)
       {
 	d.BlitText(m_helpMessages[i],
-		   UPoint(0, i * 16 + 28),
+		   UPoint(0, i * 18 + 28),
 		   MakeUnsigned(Panel::GetTextSize(smFont, m_helpMessages[i])));
       }
     }
