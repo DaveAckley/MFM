@@ -81,7 +81,7 @@ namespace MFM
       *(messages++) = " [Ctrl+Drag] Move tiles";
       *(messages++) = " [Scroll] Zoom";
       *(messages++) = "";
-      *(messages++) = "Painting:";
+      *(messages++) = "Toolbox Control:";
       *(messages++) = " [Left Click] Select / paint element 1";
       *(messages++) = " [Right Click] Select / paint element 2";
 

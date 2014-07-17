@@ -191,16 +191,26 @@ namespace MFM {
     SDL_FreeSurface(text);
   }
 
+  static const SPoint backingPts[4] =
+  {
+    SPoint(1,1), SPoint(-1,-1), SPoint(1,-1), SPoint(-1,1)
+  };
+
   void Drawing::BlitBackedText(const char* message, UPoint loc, UPoint size)
   {
     u32 oldFG = GetForeground();
-    UPoint backedPos(loc.GetX() + 1, loc.GetY() + 1);
+    SPoint backingPt;
 
+    loc.Set(loc.GetX() + 1, loc.GetY() + 1);  /* Since we are backing, add more room. */
     SetForeground(GetBackground());
-    BlitText(message, backedPos, size);
+
+    for(u32 i = 0; i < 4; i++)
+    {
+      backingPt.Set(loc.GetX() + backingPts[i].GetX(), loc.GetY() + backingPts[i].GetY());
+      BlitText(message, MakeUnsigned(backingPt), size);
+    }
 
     SetForeground(oldFG);
     BlitText(message, loc, size);
-
   }
 } /* namespace MFM */

@@ -169,8 +169,8 @@ namespace MFM
 	  d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
 	  d.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
 
-	  d.SetBackground(Drawing::HalfColor(~m_element->PhysicsColor()));
-	  d.SetForeground(~m_element->PhysicsColor());
+	  d.SetBackground(Drawing::BLACK);
+	  d.SetForeground(Drawing::WHITE);
 	  d.BlitBackedText(m_element->GetAtomicSymbol(),
 			   UPoint(1, 0),
 			   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
@@ -458,8 +458,8 @@ namespace MFM
         d.FillCircle(129, 40, ELEMENT_RENDER_SIZE,
                      ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
 
-	d.SetBackground(Drawing::HalfColor(~this->Panel::GetBackground()));
-	d.SetForeground(~this->Panel::GetBackground());
+	d.SetBackground(Drawing::BLACK);
+	d.SetForeground(Drawing::WHITE);
 	d.BlitBackedText(m_primaryElement->GetAtomicSymbol(),
 			 UPoint(128 - ELEMENT_RENDER_SIZE, 40),
 			 UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
@@ -470,8 +470,8 @@ namespace MFM
         d.FillCircle(129 + ELEMENT_RENDER_SIZE, 40, ELEMENT_RENDER_SIZE,
 		     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
 
-	d.SetBackground(Drawing::HalfColor(~this->Panel::GetBackground()));
-	d.SetForeground(~this->Panel::GetBackground());
+	d.SetBackground(Drawing::BLACK);
+	d.SetForeground(Drawing::WHITE);
 	d.BlitBackedText(m_secondaryElement->GetAtomicSymbol(),
 			 UPoint(128 + ELEMENT_RENDER_SIZE * 2, 40),
 			 UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
