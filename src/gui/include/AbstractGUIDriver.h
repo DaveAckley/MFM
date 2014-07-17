@@ -644,7 +644,7 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
   public:
 
     AbstractGUIDriver() :
-      m_startPaused(false),
+      m_startPaused(true),
       m_renderStats(false),
       m_screenWidth(SCREEN_INITIAL_WIDTH),
       m_screenHeight(SCREEN_INITIAL_HEIGHT),
@@ -721,7 +721,7 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
     {
       AbstractGUIDriver& driver = *((AbstractGUIDriver*)driverptr);
 
-      driver.m_startPaused = true;
+      driver.m_startPaused = false;
     }
 
     static void SetPicturesPerRateFromArgs(const char* aeps, void* driverptr)
@@ -750,8 +750,8 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
 			     "--picturesPerRate",
 			     &SetPicturesPerRateFromArgs, this, true);
 
-      this->RegisterArgument("Starts paused to allow display configuration.",
-			     "--startpaused", &SetStartPausedFromArgs, this, false);
+      this->RegisterArgument("Simulation begins upon program startup.",
+			     "--run", &SetStartPausedFromArgs, this, false);
     }
 
     EditingTool m_selectedTool;

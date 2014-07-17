@@ -41,9 +41,6 @@ namespace MFM
 
     virtual void OnceOnly(VArguments& args)
     {
-#ifdef MFM_GUI_DRIVER
-      AbstractGUIDriver::m_startPaused = true;
-#endif
       Super::OnceOnly(args);
 
       FillNeededElements();
