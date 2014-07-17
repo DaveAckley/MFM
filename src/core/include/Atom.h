@@ -58,7 +58,7 @@ namespace MFM
      pointer on every Atom instance, so all Atom accesses must be by
      template type rather than by base class polymorphism.
 
-   */
+  */
   template <class CC>
   class Atom
   {
@@ -66,36 +66,37 @@ namespace MFM
     /**
        The kind of Atom, or sub-class of this Atom, that will be used
        during compilation.
-     */
+    */
     typedef typename CC::ATOM_TYPE T;
 
     /**
        A collection of parameters, which are expanded upon below.
-     */
+    */
     typedef typename CC::PARAM_CONFIG P;
 
     /**
        The number of bits that every atom will occupy.
-     */
+    */
     enum { BPA = P::BITS_PER_ATOM };
 
     /**
        The radius of all event windows.
-     */
+    */
     enum { R = P::EVENT_WINDOW_RADIUS };
 
   protected:
     /**
        The state of this Atom, in its entirety. All fields of this
        atom are contained in this BitVector.
-     */
+    */
     BitVector<BPA> m_bits;
 
     friend class Element<CC>;  // Let Element mess with our bits
 
   public:
 
-    Atom() {
+    Atom()
+    {
       // Create a compilation error if sizeof(Atom)!=sizeof(m_bits)
       COMPILATION_REQUIREMENT<sizeof(Atom)==sizeof(m_bits)>();
     }
@@ -242,10 +243,10 @@ namespace MFM
     {
       for(u32 i = 0; i < BPA; i++)
       {
-	if(rand.OneIn(bitOdds))
-	{
-	  m_bits.ToggleBit(i);
-	}
+        if(rand.OneIn(bitOdds))
+        {
+          m_bits.ToggleBit(i);
+        }
       }
     }
   };

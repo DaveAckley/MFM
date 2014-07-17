@@ -37,3 +37,6 @@ spikes/
 # Don't need the generated *.inc files
 src/elements/include/StdElements.inc
 src/elements/include/StdElementsHeaders.inc
+
+# Using Google's lint but don't want to commit it.
+tools/cpplint.py

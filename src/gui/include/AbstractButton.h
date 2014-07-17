@@ -43,7 +43,7 @@ namespace MFM
    */
   class AbstractButton : public Panel
   {
-  private:
+   private:
 
     /**
      * Default color for the border of every AbstractButton

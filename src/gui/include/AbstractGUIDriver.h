@@ -1,4 +1,4 @@
- /*                                              -*- mode:C++ -*-
+/*                                              -*- mode:C++ -*-
   AbstractGUIDriver.h Base class for all GUI-based MFM drivers
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
@@ -81,22 +81,19 @@ namespace MFM
   template<class GC>
   class AbstractGUIDriver : public AbstractDriver<GC>
   {
-  private: typedef AbstractDriver<GC> Super;
+   private:
+    typedef AbstractDriver<GC> Super;
 
-  protected:
+   protected:
     typedef typename Super::OurGrid OurGrid;
     typedef typename Super::CC CC;
     enum { W = GC::GRID_WIDTH};
     enum { H = GC::GRID_HEIGHT};
 
-  private:
+    bool m_startPaused;
 
     Fonts m_fonts;
 
-  protected:
-    bool m_startPaused;
-
-  private:
     bool m_keyboardPaused;   // Toggled by keyboard space, ' ', SDLK_SPACE
     bool m_mousePaused;      // Set if any buttons down, clear if all up
     bool m_gridPaused;       // Set if keyboard || mouse paused, checked by RunGrid
@@ -133,38 +130,36 @@ namespace MFM
 
     class AbstractGridButton : public AbstractButton
     {
-    protected:
+     public:
+      void SetDriver(AbstractGUIDriver & driver)
+      {
+	m_driver = &driver;
+      }
+
+     protected:
       AbstractGUIDriver * m_driver;
 
       AbstractGridButton(const char* title) :
         AbstractButton(title), m_driver(0)
       {
       }
-
-    public:
-
-      void SetDriver(AbstractGUIDriver & driver)
-      {
-	m_driver = &driver;
-      }
     };
 
     class AbstractGridCheckbox : public AbstractCheckbox
     {
-    protected:
+     public:
+      void SetDriver(AbstractGUIDriver & driver)
+      {
+	m_driver = &driver;
+      }
+
+     protected:
       AbstractGUIDriver * m_driver;
 
       AbstractGridCheckbox(const char* title) :
         AbstractCheckbox(title),
 	m_driver(0)
       { }
-
-    public:
-
-      void SetDriver(AbstractGUIDriver & driver)
-      {
-	m_driver = &driver;
-      }
     };
 
     /************************************/
@@ -172,13 +167,14 @@ namespace MFM
     /************************************/
 
 
-    struct ClearButton : public AbstractGridButton
+    class ClearButton : public AbstractGridButton
     {
+     public:
       ClearButton() : AbstractGridButton("Clear Tile")
       {
 	AbstractButton::SetName("ClearButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 305));
+        AbstractButton::SetRenderPoint(SPoint(2, 250));
       }
 
       virtual void OnClick(u8 button)
@@ -195,37 +191,14 @@ namespace MFM
       }
     } m_clearButton;
 
-    struct PauseButton : public AbstractGridButton
+    class NukeButton : public AbstractGridButton
     {
-      PauseButton() : AbstractGridButton("Pause Tile")
-      {
-	AbstractButton::SetName("PauseButton");
-        Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2,105));
-      }
-
-      virtual void OnClick(u8 button)
-      {
-	const SPoint selTile =
-          AbstractGridButton::m_driver->GetGridRenderer().GetSelectedTile();
-	if(selTile.GetX() >= 0 && selTile.GetX() < W &&
-	   selTile.GetY() >= 0 && selTile.GetY() < H)
-	{
-	  AbstractGridButton::m_driver->GetGrid().
-            SetTileToExecuteOnly(selTile,
-                                 !AbstractGridButton::m_driver->GetGrid().
-                                 GetTileExecutionStatus(selTile));
-	}
-      }
-    } m_pauseButton;
-
-    struct NukeButton : public AbstractGridButton
-    {
+     public:
       NukeButton() : AbstractGridButton("Nuke")
       {
 	AbstractButton::SetName("NukeButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 155));
+        AbstractButton::SetRenderPoint(SPoint(2, 100));
       }
 
       virtual void OnClick(u8 button)
@@ -240,7 +213,7 @@ namespace MFM
       {
 	AbstractButton::SetName("XRayButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 205));
+        AbstractButton::SetRenderPoint(SPoint(2, 150));
       }
 
       virtual void OnClick(u8 button)
@@ -249,13 +222,27 @@ namespace MFM
       }
     } m_xrayButton;
 
+    class GridRunCheckbox : public AbstractGridCheckbox
+    {
+     public:
+      GridRunCheckbox() : AbstractGridCheckbox("Pause")
+      {
+        AbstractButton::SetName("GridRunButton");
+        Panel::SetDimensions(200, 50);
+        AbstractButton::SetRenderPoint(SPoint(2, 0));
+      }
+
+      virtual void OnCheck(bool value)
+      { }
+    }m_gridRunButton;
+
     struct GridRenderButton : public AbstractGridCheckbox
     {
       GridRenderButton() : AbstractGridCheckbox("Grid")
       {
 	AbstractButton::SetName("GridRenderButton");
         Panel::SetDimensions(200,25);
-        AbstractButton::SetRenderPoint(SPoint(2, 0));
+        AbstractButton::SetRenderPoint(SPoint(2, 25));
       }
 
       virtual void OnCheck(bool value)
@@ -268,7 +255,7 @@ namespace MFM
       {
 	AbstractButton::SetName("HeatmapButton");
         Panel::SetDimensions(200,25);
-        AbstractButton::SetRenderPoint(SPoint(2, 35));
+        AbstractButton::SetRenderPoint(SPoint(2, 50));
       }
 
       virtual void OnCheck(bool value)
@@ -281,7 +268,7 @@ namespace MFM
       {
 	AbstractButton::SetName("TileViewButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 255));
+        AbstractButton::SetRenderPoint(SPoint(2, 200));
       }
 
       virtual void OnClick(u8 button)
@@ -297,7 +284,7 @@ namespace MFM
       {
 	AbstractButton::SetName("SaveButton");
 	Panel::SetDimensions(200, 40);
-	AbstractButton::SetRenderPoint(SPoint(2, 355));
+	AbstractButton::SetRenderPoint(SPoint(2, 300));
       }
 
       virtual void OnClick(u8 button)
@@ -327,7 +314,7 @@ namespace MFM
       {
 	AbstractButton::SetName("QuitButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 405));
+        AbstractButton::SetRenderPoint(SPoint(2, 350));
       }
 
       virtual void OnClick(u8 button)
@@ -342,7 +329,7 @@ namespace MFM
       {
 	AbstractButton::SetName("BGRButton");
         Panel::SetDimensions(200,40);
-        AbstractButton::SetRenderPoint(SPoint(2, 70));
+        AbstractButton::SetRenderPoint(SPoint(2, 75));
       }
 
       virtual void OnCheck(bool value)
@@ -466,9 +453,9 @@ namespace MFM
 
       m_clearButton.SetDriver(*this);
       m_xrayButton.SetDriver(*this);
-      m_pauseButton.SetDriver(*this);
       m_nukeButton.SetDriver(*this);
       m_gridRenderButton.SetDriver(*this);
+      m_gridRunButton.SetDriver(*this);
       m_heatmapButton.SetDriver(*this);
       m_tileViewButton.SetDriver(*this);
       m_saveButton.SetDriver(*this);
@@ -479,9 +466,9 @@ namespace MFM
       m_heatmapButton.SetExternalValue(m_grend.GetDrawDataHeatPointer());
       m_bgrButton.SetExternalValue(AbstractDriver<GC>::GetGrid().
 				   GetBackgroundRadiationEnabledPointer());
+      m_gridRunButton.SetExternalValue(&m_keyboardPaused);
 
       m_buttonPanel.Insert(&m_clearButton, NULL);
-      m_buttonPanel.Insert(&m_pauseButton, NULL);
       m_buttonPanel.Insert(&m_nukeButton, NULL);
       m_buttonPanel.Insert(&m_xrayButton, NULL);
       m_buttonPanel.Insert(&m_gridRenderButton, NULL);
@@ -489,6 +476,7 @@ namespace MFM
       m_buttonPanel.Insert(&m_tileViewButton, NULL);
       m_buttonPanel.Insert(&m_saveButton, NULL);
       m_buttonPanel.Insert(&m_quitButton, NULL);
+      m_buttonPanel.Insert(&m_gridRunButton, NULL);
       m_buttonPanel.Insert(&m_bgrButton, NULL);
 
     }
@@ -498,7 +486,9 @@ namespace MFM
       KeyboardUpdate(grid);
       m_gridPaused = m_keyboardPaused || m_mousePaused;
       if (!m_gridPaused)
+      {
         Super::RunGrid(grid);
+      }
     }
 
     inline void ToggleStatsView()
@@ -997,9 +987,10 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
 
 	m_rootPanel.Paint(m_rootDrawing);
 
-	if (m_recordScreenshotPerAEPS > 0) {
-	  if (!m_gridPaused && Super::GetAEPS() >= m_nextScreenshotAEPS) {
-
+	if (m_recordScreenshotPerAEPS > 0)
+        {
+	  if (!m_gridPaused && Super::GetAEPS() >= m_nextScreenshotAEPS)
+          {
 	    const char * path = Super::GetSimDirPathTemporary("vid/%010d.png",
 							      m_nextScreenshotAEPS);
 
@@ -1023,10 +1014,12 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
 	    }
 	    // Are we accelerating and not yet up to cruising speed?
 	    if (m_countOfScreenshotsPerRate > 0 &&
-		m_recordScreenshotPerAEPS < m_maxRecordScreenshotPerAEPS) {
+		m_recordScreenshotPerAEPS < m_maxRecordScreenshotPerAEPS)
+            {
 
 	      // Time to step on it?
-	      if (++m_countOfScreenshotsAtThisAEPS > m_countOfScreenshotsPerRate) {
+	      if (++m_countOfScreenshotsAtThisAEPS > m_countOfScreenshotsPerRate)
+              {
 		++m_recordScreenshotPerAEPS;
 		m_countOfScreenshotsAtThisAEPS = 0;
 	      }
