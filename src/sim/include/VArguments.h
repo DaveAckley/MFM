@@ -120,6 +120,9 @@ namespace MFM
 
   public:
 
+    /**
+     * Constructs a new empty VArguments collection.
+     */
     VArguments();
 
     /**

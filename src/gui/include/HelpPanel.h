@@ -35,7 +35,7 @@
  * The number of messages which should be displayed upon rendering a
  * HelpPanel .
  */
-#define HELP_MESSAGE_COUNT 25
+#define HELP_MESSAGE_COUNT 26
 
 namespace MFM
 {
@@ -61,6 +61,7 @@ namespace MFM
       const char** messages = m_helpMessages;
       *(messages++) = "";
       *(messages++) = "Keyboard:";
+      *(messages++) = " [SPACE] Pause / Start simulation";
       *(messages++) = " [t] Show toolbox";
       *(messages++) = " [g] Show grid";
       *(messages++) = " [m] Toggle memory view";
