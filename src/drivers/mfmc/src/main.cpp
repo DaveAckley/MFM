@@ -52,7 +52,7 @@ namespace MFM
 
       for(u32 i = 0; i < NEEDED_ELEMENT_COUNT; i++)
       {
-	m_grid.Needed(*m_neededElements[i]);
+        m_grid.Needed(*m_neededElements[i]);
       }
 
 #ifdef MFM_GUI_DRIVER
@@ -71,19 +71,19 @@ namespace MFM
     public:
       virtual u32 SetupSliders(Slider* sliders, u32 maxSliders) const
       {
-	sliders[0].SetText("RES Spawn Odds");
-	sliders[0].SetMinValue(1);
-	sliders[0].SetMaxValue(1000);
-	sliders[0].SetExternalValue(Element_Dreg<CC>::THE_INSTANCE.GetResOddsPtr());
-	sliders[0].SetValue(Element_Dreg<CC>::THE_INSTANCE.GetResOdds());
+        sliders[0].SetText("RES Spawn Odds");
+        sliders[0].SetMinValue(1);
+        sliders[0].SetMaxValue(1000);
+        sliders[0].SetExternalValue(Element_Dreg<CC>::THE_INSTANCE.GetResOddsPtr());
+        sliders[0].SetValue(Element_Dreg<CC>::THE_INSTANCE.GetResOdds());
 
-	sliders[1].SetText("DREG Spawn Odds");
-	sliders[1].SetMinValue(1);
-	sliders[1].SetMaxValue(1000);
-	sliders[1].SetExternalValue(Element_Dreg<CC>::THE_INSTANCE.GetDregCreateOddsPtr());
-	sliders[1].SetValue(Element_Dreg<CC>::THE_INSTANCE.GetDregCreateOdds());
+        sliders[1].SetText("DREG Spawn Odds");
+        sliders[1].SetMinValue(1);
+        sliders[1].SetMaxValue(1000);
+        sliders[1].SetExternalValue(Element_Dreg<CC>::THE_INSTANCE.GetDregCreateOddsPtr());
+        sliders[1].SetValue(Element_Dreg<CC>::THE_INSTANCE.GetDregCreateOdds());
 
-	return 2;
+        return 2;
       }
     }m_dregSliderConfig;
 
@@ -91,12 +91,12 @@ namespace MFM
 
     virtual void ReinitEden()
     {
-
-#ifdef MFM_GUI_DRIVER
       /* Register painting tools if we need them */
+#ifdef MFM_GUI_DRIVER
       for(u32 i = 0; i < NEEDED_ELEMENT_COUNT; i++)
       {
-	AbstractGUIDriver::RegisterToolboxElement(m_neededElements[i]);
+        GetStatsRenderer().DisplayStatsForElement(GetGrid(), *(m_neededElements[i]));
+        AbstractGUIDriver::RegisterToolboxElement(m_neededElements[i]);
       }
 #endif
     }
