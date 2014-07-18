@@ -27,6 +27,14 @@ namespace MFM
       NeedElement(&Element_Wall<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
+
+#ifdef MFM_GUI_DRIVER
+      Element<CC>* elem = &Element_Dreg<OurCoreConfig>::THE_INSTANCE;
+      m_dregSliderConfig.SetElement(elem);
+
+      /* Register sliders */
+      AbstractGUIDriver::RegisterSliderConfig(&m_dregSliderConfig);
+#endif
     }
 
   public:
@@ -40,17 +48,6 @@ namespace MFM
       Super::OnceOnly(args);
     }
 
-    virtual void ReinitPhysics()
-    {
-#ifdef MFM_GUI_DRIVER
-      Element<CC>* elem = &Element_Dreg<OurCoreConfig>::THE_INSTANCE;
-      m_dregSliderConfig.SetElement(elem);
-
-      /* Register sliders */
-      AbstractGUIDriver::RegisterSliderConfig(&m_dregSliderConfig);
-#endif
-    }
-
 #ifdef MFM_GUI_DRIVER
 
     class DregSliderConfig : public OurSliderConfig
@@ -62,13 +59,11 @@ namespace MFM
         sliders[0].SetMinValue(1);
         sliders[0].SetMaxValue(1000);
         sliders[0].SetExternalValue(Element_Dreg<CC>::THE_INSTANCE.GetResOddsPtr());
-        sliders[0].SetValue(Element_Dreg<CC>::THE_INSTANCE.GetResOdds());
 
         sliders[1].SetText("DREG Spawn Odds");
         sliders[1].SetMinValue(1);
         sliders[1].SetMaxValue(1000);
         sliders[1].SetExternalValue(Element_Dreg<CC>::THE_INSTANCE.GetDregCreateOddsPtr());
-        sliders[1].SetValue(Element_Dreg<CC>::THE_INSTANCE.GetDregCreateOdds());
 
         return 2;
       }

@@ -1,11 +1,13 @@
 /* -*- C++ -*- */
 
+#include "Element_Dreg.h"
+
 namespace MFM
 {
   template <class GC>
   class FunctionCallRegisterElement : public ConfigFunctionCall<GC>
   {
-  public:
+   public:
     FunctionCallRegisterElement() : ConfigFunctionCall<GC>("RegisterElement")
     { }
 
@@ -42,7 +44,7 @@ namespace MFM
   {
     typedef typename GC::CORE_CONFIG CC;
 
-  public:
+   public:
     FunctionCallGA() : ConfigFunctionCall<GC>("GA")
     { }
 
@@ -53,13 +55,19 @@ namespace MFM
 
       OString16 nick;
       if (!in.ScanIdentifier(nick))
+      {
         return in.Msg(Logger::ERROR, "Expected identifier as first argument");
+      }
       if (nick.HasOverflowed())
+      {
         return in.Msg(Logger::ERROR, "Identifier too long '%s'", nick.GetZString());
+      }
 
       const Element<CC> * pelt = ec.LookupElement(nick);
       if (!pelt)
+      {
         return in.Msg(Logger::ERROR, "'%@' isn't a registered element nickname", &nick);
+      }
 
       s32 x, y;
       s32 ret;
@@ -67,26 +75,57 @@ namespace MFM
       OString64 hexData;
 
       ret = this->SkipToNextArg(in);
-      if (ret < 0) return false;
+      if (ret < 0)
+      {
+        return false;
+      }
+
       if (ret == 0)
+      {
         return in.Msg(Logger::ERROR, "Expected second argument");
+      }
 
-      if (!in.Scan(x)) return in.Msg(Logger::ERROR, "Expected x position");
+      if (!in.Scan(x))
+      {
+        return in.Msg(Logger::ERROR, "Expected x position");
+      }
+
       ret = this->SkipToNextArg(in);
-      if (ret < 0) return false;
+      if (ret < 0)
+      {
+        return false;
+      }
+
       if (ret == 0)
+      {
         return in.Msg(Logger::ERROR, "Expected third argument");
+      }
 
-      if (!in.Scan(y)) return in.Msg(Logger::ERROR, "Expected y position");
+      if (!in.Scan(y))
+      {
+        return in.Msg(Logger::ERROR, "Expected y position");
+      }
+
       ret = this->SkipToNextArg(in);
-      if(ret < 0) return false;
-      if(ret == 0)
-	return in.Msg(Logger::ERROR, "Expected fourth argument");
+      if(ret < 0)
+      {
+        return false;
+      }
 
-      if (!in.ScanHex(hexData)) return in.Msg(Logger::ERROR, "Expected hex-encoded Atom body");
+      if(ret == 0)
+      {
+        return in.Msg(Logger::ERROR, "Expected fourth argument");
+      }
+
+      if (!in.ScanHex(hexData))
+      {
+        return in.Msg(Logger::ERROR, "Expected hex-encoded Atom body");
+      }
 
       if (!ec.PlaceAtom(*pelt, x, y, hexData.GetZString()))
+      {
         return false;
+      }
 
       return this->SkipToNextArg(in) == 0;
     }
@@ -102,8 +141,9 @@ namespace MFM
   {
     typedef typename GC::CORE_CONFIG CC;
 
-  public:
-    FunctionCallSetParameter() : ConfigFunctionCall<GC>("SetParameter")
+   public:
+    FunctionCallSetParameter() :
+      ConfigFunctionCall<GC>("SetParameter")
     { }
 
     virtual bool Parse(ExternalConfig<GC> & ec)
@@ -113,27 +153,53 @@ namespace MFM
 
       OString64 parm;
       if (!in.ScanIdentifier(parm))
+      {
         return in.Msg(Logger::ERROR, "Expected parameter name as first argument");
+      }
 
       s32 val;
       s32 ret;
 
       ret = this->SkipToNextArg(in);
-      if (ret < 0) return false;
+      if (ret < 0)
+      {
+        return false;
+      }
       if (ret == 0)
+      {
         return in.Msg(Logger::ERROR, "Expected second argument (parameter value)");
+      }
 
-      if (!in.Scan(val)) return in.Msg(Logger::ERROR, "Expected decimal parameter value");
+      if (!in.Scan(val))
+      {
+        return in.Msg(Logger::ERROR, "Expected decimal parameter value");
+      }
 
       in.Msg(Logger::ERROR, "Unimplemented: SetParameter(%s,%d)", parm.GetZString(), val);
+
+      const char* pm = parm.GetZString();
+      /* Register all settable parameters here */
+
+      if(!strcmp(pm, "DregResOdds"))
+      {
+        *(Element_Dreg<CC>::THE_INSTANCE.GetResOddsPtr()) = val;
+      }
+
+      if(!strcmp(pm, "DregCreateOdds"))
+      {
+        *(Element_Dreg<CC>::THE_INSTANCE.GetDregCreateOddsPtr()) = val;
+      }
 
       return this->SkipToNextArg(in) == 0;
     }
 
-    virtual void Print(ByteSink & in) { FAIL(UNSUPPORTED_OPERATION); }
+    virtual void Print(ByteSink & in)
+    {
+      FAIL(UNSUPPORTED_OPERATION);
+    }
 
-    virtual void Apply(ExternalConfig<GC> & ec) { /* Work already done */ }
-
+    virtual void Apply(ExternalConfig<GC> & ec)
+    { /* Work already done */ }
   };
 
 
@@ -153,5 +219,4 @@ namespace MFM
       ec.RegisterFunction(elt);
     }
   }
-
 }

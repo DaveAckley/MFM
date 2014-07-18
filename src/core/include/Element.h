@@ -47,7 +47,7 @@ namespace MFM
   template <class CC>
   class Element
   {
-  private:
+   private:
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS };
@@ -87,7 +87,7 @@ namespace MFM
      */
     const char* m_atomicSymbol;
 
-  protected:
+   protected:
 
     /**
      * Describes how the default Atom of this Element should be
@@ -109,7 +109,8 @@ namespace MFM
      *
      * @returns The BitVector held inside \c atom .
      */
-    const BitVector<P::BITS_PER_ATOM> & GetBits(const T & atom) const {
+    const BitVector<P::BITS_PER_ATOM> & GetBits(const T & atom) const
+    {
       return atom.m_bits;
     }
 
@@ -120,7 +121,8 @@ namespace MFM
      *
      * @returns The BitVector held inside \c atom .
      */
-    BitVector<P::BITS_PER_ATOM> & GetBits(T & atom) const {
+    BitVector<P::BITS_PER_ATOM> & GetBits(T & atom) const
+    {
       return atom.m_bits;
     }
 
@@ -140,16 +142,16 @@ namespace MFM
 
       if(len == 2)
       {
-	return (symbol[0] >= 'A' && symbol[0] <= 'Z') &&
-	       (symbol[1] >= 'a' && symbol[1] <= 'z');
+        return (symbol[0] >= 'A' && symbol[0] <= 'Z') &&
+               (symbol[1] >= 'a' && symbol[1] <= 'z');
       }
       else if(len == 1)
       {
-	return (symbol[0] >= 'A' && symbol[0] <= 'Z');
+        return (symbol[0] >= 'A' && symbol[0] <= 'Z');
       }
       else
       {
-	return false;
+        return false;
       }
     }
 
@@ -166,8 +168,8 @@ namespace MFM
     {
       if(!IsValidAtomicSymbol(symbol))
       {
-	/* Single or double letters only, like the periodic table. */
-	FAIL(ILLEGAL_ARGUMENT);
+        /* Single or double letters only, like the periodic table. */
+        FAIL(ILLEGAL_ARGUMENT);
       }
       m_atomicSymbol = symbol;
     }
@@ -218,8 +220,8 @@ namespace MFM
      *          search parameters, else \c false .
      */
     bool FillPointWithType(EventWindow<CC>& window,
-			   SPoint& pt, const SPoint* relevants, u32 relevantCount,
-			   Dir rotation, ElementType type) const;
+                           SPoint& pt, const SPoint* relevants, u32 relevantCount,
+                           Dir rotation, ElementType type) const;
 
     /**
      * Diffuses the central Atom of a given EventWindow based on the
@@ -242,9 +244,9 @@ namespace MFM
      *          moving.
      */
     virtual u32 PercentMovable(const T& you,
-			       const T& me, const SPoint& offset) const = 0;
+                               const T& me, const SPoint& offset) const = 0;
 
-  public:
+   public:
 
     /**
      * Constructs a new Element with a given UUID .
@@ -254,18 +256,18 @@ namespace MFM
      *              but this constructor does not check for that.
      */
     Element(const UUID & uuid) : m_UUID(uuid), m_type(0),
-				 m_hasType(false),
-				 m_renderLowlight(false),
-				 m_atomicSymbol("!!")
+                                 m_hasType(false),
+                                 m_renderLowlight(false),
+                                 m_atomicSymbol("!!")
     {
       LOG.Debug("Constructed %@",&m_UUID);
     }
 
     // For use by Element_Empty only!
     Element(const UUID & uuid, u32 type) : m_UUID(uuid), m_type(type),
-					   m_hasType(true),
-					   m_renderLowlight(false),
-					   m_atomicSymbol("!!")
+                                           m_hasType(true),
+                                           m_renderLowlight(false),
+                                           m_atomicSymbol("!!")
     { }
 
     /**
@@ -375,11 +377,11 @@ namespace MFM
     {
       if(m_renderLowlight)
       {
-	return DefaultLowlightColor();
+        return DefaultLowlightColor();
       }
       else
       {
-	return DefaultPhysicsColor();
+        return DefaultPhysicsColor();
       }
     }
 
@@ -437,7 +439,8 @@ namespace MFM
      *
      * @returns The 32-bit ARGB color of which to render \c atom with.
      */
-    virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const {
+    virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
+    {
       return PhysicsColor();
     }
 
@@ -455,7 +458,8 @@ namespace MFM
      * By default all atoms are considered diffusable, and they return
      * COMPLETE_DIFFUSABILITY chances for every suggested move
      */
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
+    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
+    {
       return COMPLETE_DIFFUSABILITY;
     }
 
@@ -464,8 +468,9 @@ namespace MFM
        diffusion is allowed, by specifying a 0 value for the
        Diffusability of every position except when \a nowAt == \a
        maybeAt.
-     */
-    u32 NoDiffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
+    */
+    u32 NoDiffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
+    {
       return (nowAt == maybeAt)? COMPLETE_DIFFUSABILITY : 0;
     }
 

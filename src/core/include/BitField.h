@@ -38,14 +38,23 @@ namespace MFM {
   class BitField
   {
   public:
-    enum {
+    enum
+    {
       BITS = BV::BITS,
       START = I,
       LENGTH = L,
       END = L+I
     };
-    enum { BITFIELD_ERROR_OVERFLOWED_BITS = (END+1)/((BITS+1)/(END+1)) };
-    enum { BITFIELD_ERROR_FIELD_TOO_LONG = (LENGTH+1)/((32+1)/(LENGTH+1)) };
+
+    enum
+    {
+      BITFIELD_ERROR_OVERFLOWED_BITS = (END+1)/((BITS+1)/(END+1))
+    };
+
+    enum
+    {
+      BITFIELD_ERROR_FIELD_TOO_LONG = (LENGTH+1)/((32+1)/(LENGTH+1))
+    };
 
     /**
      * Reads the contents of a window (which is represented by this
@@ -56,7 +65,8 @@ namespace MFM {
      * @returns the bits inside the window specified by this BitField
      *          which reside in bv.
      */
-    static u32 Read(const BV & bv) {
+    static u32 Read(const BV & bv)
+    {
       return bv.Read(START,LENGTH);
     }
 
@@ -66,7 +76,8 @@ namespace MFM {
      *
      * @param bv The BV to write bits to.
      */
-    static void Write(BV & bv, u32 val) {
+    static void Write(BV & bv, u32 val)
+    {
       bv.Write(START,LENGTH,val);
     }
   };

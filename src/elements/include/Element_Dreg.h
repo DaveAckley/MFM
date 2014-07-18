@@ -131,19 +131,9 @@ namespace MFM
       return &m_resOdds;
     }
 
-    s32 GetResOdds()
-    {
-      return m_resOdds;
-    }
-
     s32* GetDregCreateOddsPtr()
     {
       return &m_dregCreateOdds;
-    }
-
-    s32 GetDregCreateOdds()
-    {
-      return m_dregCreateOdds;
     }
   };
 

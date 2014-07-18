@@ -47,7 +47,8 @@ namespace MFM
   {
     typedef typename GC::CORE_CONFIG CC;
   public:
-    /**
+
+    /*
      * Construct a new ExternalConfig referencing a specified Grid
      *
      * @param grid The grid to read from or write to.
@@ -80,7 +81,8 @@ namespace MFM
 
     bool PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const char* dataStr) ;
 
-    LineCountingByteSource & GetByteSource() {
+    LineCountingByteSource & GetByteSource()
+    {
       return m_in;
     }
 
