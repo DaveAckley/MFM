@@ -51,7 +51,7 @@
 
 #define MAX_NEEDED_ELEMENTS 100
 
-#define INITIAL_AEPS_PER_FRAME 2
+#define INITIAL_AEPS_PER_FRAME 1
 
 namespace MFM
 {
