@@ -118,8 +118,12 @@ namespace MFM
     static const u32 STATE_BITS_END = AFTimer::END;
     static const u32 STATE_BITS_COUNT = STATE_BITS_END - STATE_BITS_START + 1;
 
-    Element_MQBar() : Element<CC>(MFM_UUID_FOR("MQBar", QBAR_VERSION)) {
+    Element_MQBar() :
+      Element<CC>(MFM_UUID_FOR("MQBar", QBAR_VERSION))
+    {
       LOG.Message("%@ ctor %p", &this->GetUUID(), this);
+
+      Element<CC>::SetAtomicSymbol("Mq");
     }
 
     u32 GetSymI(const T &atom) const {

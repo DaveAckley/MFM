@@ -109,7 +109,8 @@ namespace MFM {
           tloc.Subtract(seedAtomPlace);
           if (tloc.GetMaximumLength() < 12 && tloc.GetMaximumLength() > 4)
           {
-            if (Element_Empty<OurCoreConfig>::THE_INSTANCE.IsType(mainGrid.GetAtom(aloc)->GetType()))
+            if (Element_Empty<OurCoreConfig>::THE_INSTANCE.IsType(
+                  mainGrid.GetAtom(aloc)->GetType()))
             {
               mainGrid.PlaceAtom(aDReg, aloc);
             }
@@ -131,13 +132,15 @@ namespace MFM {
 
     Element<OurCoreConfig> * m_qbarInstance;
 
-    void LoadPlugin() {
+    void LoadPlugin()
+    {
       const char * path = "./bin/Element_MQBar-Plugin.so";
 
       // Load lib
       LOG.Debug("Calling dlopen");
       void* dllib = dlopen(path, RTLD_LAZY);
-      if (!dllib) {
+      if (!dllib)
+      {
         LOG.Error("Cannot load library: %s", dlerror());
         FAIL(IO_ERROR);
       }
@@ -152,7 +155,8 @@ namespace MFM {
       LOG.Debug("Back from dlsym");
 
       const char* dlsym_error = dlerror();
-      if (dlsym_error) {
+      if (dlsym_error)
+      {
         LOG.Error("Cannot find accessor in library: %s", dlsym_error);
         FAIL(IO_ERROR);
       }
@@ -162,7 +166,8 @@ namespace MFM {
       FuncPtr fp = ary[0];
       void * result = fp();
       m_qbarInstance = (Element<OurCoreConfig> *) result;
-      if (!m_qbarInstance) {
+      if (!m_qbarInstance)
+      {
         LOG.Error("Accessor failed");
         FAIL(IO_ERROR);
       }

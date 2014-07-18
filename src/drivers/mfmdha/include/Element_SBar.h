@@ -139,7 +139,11 @@ namespace MFM
     static const u32 STATE_SYMI_LEN = BITS_SYMI;
     static const u32 STATE_BITS = STATE_SYMI_IDX + STATE_SYMI_LEN;
 
-    Element_SBar() : Element<CC>(MFM_UUID_FOR("SBar", SBAR_VERSION))  { }
+    Element_SBar() :
+      Element<CC>(MFM_UUID_FOR("SBar", SBAR_VERSION))
+    {
+      Element<CC>::SetAtomicSymbol("Sb");
+    }
 
     u32 GetSymI(const T &atom) const {
       if (!IsOurType(atom.GetType()))
