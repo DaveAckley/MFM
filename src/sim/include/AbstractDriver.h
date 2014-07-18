@@ -49,6 +49,8 @@
 #define MAX_PATH_LENGTH 1000
 #define MIN_PATH_RESERVED_LENGTH 100
 
+#define MAX_NEEDED_ELEMENTS 100
+
 #define INITIAL_AEPS_PER_FRAME 2
 
 namespace MFM
@@ -137,6 +139,19 @@ namespace MFM
      */
     typedef ElementTable<CC> OurElementTable;
 
+    Element<CC>* m_neededElements[MAX_NEEDED_ELEMENTS];
+    u32 m_neededElementCount;
+
+    void NeedElement(Element<CC>* element)
+    {
+      if(m_neededElementCount >= MAX_NEEDED_ELEMENTS)
+      {
+        FAIL(OUT_OF_ROOM);
+      }
+
+      m_neededElements[m_neededElementCount++] = element;
+    }
+
     /**
      * Pauses the calling thread for a specified amount of time, using
      * (apparently) nanosecond percision. The calling thread sleeps
@@ -214,7 +229,7 @@ namespace MFM
     {
       if(m_aepsPerFrame > 1)
       {
-	m_aepsPerFrame--;
+        m_aepsPerFrame--;
       }
     }
 
@@ -227,7 +242,7 @@ namespace MFM
     {
       if(m_aepsPerFrame < 1000)
       {
-	m_aepsPerFrame++;
+        m_aepsPerFrame++;
       }
     }
 
@@ -248,9 +263,9 @@ namespace MFM
       va_list ap;
       va_start(ap, format);
       vsnprintf(m_simDirBasePath +
-		m_simDirBasePathLength,
-		MAX_PATH_LENGTH - 1,
-		format, ap);
+                m_simDirBasePathLength,
+                MAX_PATH_LENGTH - 1,
+                format, ap);
       return m_simDirBasePath;
     }
 
@@ -273,7 +288,30 @@ namespace MFM
     /**
      * Register any element types needed for the run.
      */
-    virtual void ReinitPhysics() = 0;
+    void ReinitPhysics()
+    {
+      for(u32 i = 0; i < m_neededElementCount; i++)
+      {
+        GetGrid().Needed(*m_neededElements[i]);
+      }
+
+      PostReinitPhysics();
+    }
+
+    /**
+     * Used by GUI Drivers to register Elements in places needed.
+     */
+    virtual void PostReinitPhysics()
+    {
+
+    }
+
+    /**
+     * To be defined by the top level driver only. This allows all
+     * Elements to be known by this AbstractDriver before they are
+     * inserted into its sub-drivers .
+     */
+    virtual void DefineNeededElements() = 0;
 
     /**
      * To be run at the end of a frame update.
@@ -298,7 +336,7 @@ namespace MFM
     {
       if(!args.Appeared("-d"))
       {
-	SetDataDirFromArgs(NULL, this);
+        SetDataDirFromArgs(NULL, this);
       }
 
       LOG.Message("Writing to simulation directory '%s'", GetSimDirPathTemporary(""));
@@ -306,24 +344,26 @@ namespace MFM
       const char* (subs[]) = { "", "vid", "eps", "tbd", "teps", "save" };
       for(u32 i = 0; i < sizeof(subs) / sizeof(subs[0]); i++)
       {
-	const char* path = GetSimDirPathTemporary("%s", subs[i]);
-	if(mkdir(path, 0777))
-	{
-	  args.Die("Couldn't make simulation sub-directory '%s' : %s",
-		   path, strerror(errno));
-	}
+        const char* path = GetSimDirPathTemporary("%s", subs[i]);
+        if(mkdir(path, 0777))
+        {
+          args.Die("Couldn't make simulation sub-directory '%s' : %s",
+                   path, strerror(errno));
+        }
       }
 
       /* Initialize tbd.txt */
       const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
       FILE* fp = fopen(path, "w");
       fprintf(fp, "#AEPS activesites empty dreg res wall sort-hits"
-	          "sort-misses sort-total sort-hit-pctg\n");
+              "sort-misses sort-total sort-hit-pctg\n");
       fclose(fp);
 
       m_elementRegistry.AddPath("/home/sixstring982/Documents/Git/MFMv2/bin");
       m_elementRegistry.AddPath("./bin");
       m_elementRegistry.Init();
+
+      DefineNeededElements();
     }
 
     /**
@@ -335,12 +375,12 @@ namespace MFM
 
       while(running)
       {
-	RunGrid(m_grid);
+        RunGrid(m_grid);
 
-	if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
-	{
-	  running = false;
-	}
+        if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
+        {
+          running = false;
+        }
       }
     }
 
@@ -413,7 +453,7 @@ namespace MFM
       u32 seed = atoi(seedstr);
       if(!seed)
       {
-	seed = time(0);
+        seed = time(0);
       }
       ((AbstractDriver*)driver)->SetSeed(seed);
     }
@@ -437,29 +477,29 @@ namespace MFM
 
       if(!dirPath || strlen(dirPath) == 0)
       {
-	dirPath = "/tmp";
+        dirPath = "/tmp";
       }
 
       /* Make the main data directory */
       if(mkdir(dirPath, 0777))
       {
-	/* It's OK if it already exists */
-	if(errno != EEXIST)
-	{
-	  args.Die("Couldn't make directory '%s' : %s", dirPath, strerror(errno));
-	}
+        /* It's OK if it already exists */
+        if(errno != EEXIST)
+        {
+          args.Die("Couldn't make directory '%s' : %s", dirPath, strerror(errno));
+        }
       }
 
       u64 startTime = Utils::GetDateTimeNow();
 
       snprintf(driver.m_simDirBasePath, MAX_PATH_LENGTH - 1,
-	       "%s/%ld/", dirPath, startTime);
+               "%s/%ld/", dirPath, startTime);
 
       driver.m_simDirBasePathLength = strlen(driver.m_simDirBasePath);
 
       if(driver.m_simDirBasePathLength >= MAX_PATH_LENGTH - MIN_PATH_RESERVED_LENGTH)
       {
-	args.Die("Path name too long '%s'", dirPath);
+        args.Die("Path name too long '%s'", dirPath);
       }
     }
 
@@ -488,45 +528,48 @@ namespace MFM
     {
       if(m_configurationPath)
       {
-	LOG.Debug("Loading configuration from %s...", m_configurationPath);
+        LOG.Debug("Loading configuration from %s...", m_configurationPath);
 
-	ExternalConfig<GC> cfg(GetGrid());
-	RegisterExternalConfigFunctions<GC>(cfg);
-	FileByteSource fs(m_configurationPath);
+        ExternalConfig<GC> cfg(GetGrid());
+        RegisterExternalConfigFunctions<GC>(cfg);
+        FileByteSource fs(m_configurationPath);
 
-	cfg.SetByteSource(fs, m_configurationPath);
+        cfg.SetByteSource(fs, m_configurationPath);
 
-	cfg.Read();
+        cfg.Read();
 
-	fs.Close();
+        fs.Close();
       }
     }
 
     void ExportEventCounts(OurGrid& grid)
     {
-      if (m_recordEventCountsPerAEPS > 0) {
-	if (m_AEPS > m_nextEventCountsAEPS) {
+      if (m_recordEventCountsPerAEPS > 0)
+      {
+        if (m_AEPS > m_nextEventCountsAEPS)
+        {
 
-	  const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEventCountsAEPS);
-	  FILE* fp = fopen(path, "w");
+          const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEventCountsAEPS);
+          FILE* fp = fopen(path, "w");
           FileByteSink fbs(fp);
-	  grid.WriteEPSImage(fbs);
-	  fclose(fp);
+          grid.WriteEPSImage(fbs);
+          fclose(fp);
 
-	  path = GetSimDirPathTemporary("teps/%010d-average.ppm", m_nextEventCountsAEPS);
-	  fp = fopen(path, "w");
+          path = GetSimDirPathTemporary("teps/%010d-average.ppm", m_nextEventCountsAEPS);
+          fp = fopen(path, "w");
           FileByteSink fbs2(fp);
-	  grid.WriteEPSAverageImage(fbs2);
-	  fclose(fp);
+          grid.WriteEPSAverageImage(fbs2);
+          fclose(fp);
 
-	  m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
-	}
+          m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
+        }
       }
     }
 
   public:
 
     AbstractDriver() :
+      m_neededElementCount(0),
       m_grid(m_elementRegistry),
       m_ticksLastStopped(0),
       m_startTimeMS(0),
@@ -536,8 +579,7 @@ namespace MFM
       m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
       m_AEPS(0),
       m_configurationPath(NULL)
-    {
-    }
+    { }
 
     void Init(u32 argc, const char** argv)
     {
@@ -558,8 +600,8 @@ namespace MFM
     }
 
     void RegisterArgument(const char* description, const char* filter,
-			  VArgumentHandleValue func, void* handlerArg,
-			  bool runFunc)
+                          VArgumentHandleValue func, void* handlerArg,
+                          bool runFunc)
     {
       m_varguments.RegisterArgument(description, filter, func, handlerArg, runFunc);
     }
@@ -612,10 +654,10 @@ namespace MFM
                        "-d|--dir", &SetDataDirFromArgs, this, true);
 
       RegisterArgument("Add ARG as a path to search for element libraries",
-		       "-ep|--elementpath", &RegisterElementPath, this, true);
+                       "-ep|--elementpath", &RegisterElementPath, this, true);
 
       RegisterArgument("Load initial configuration from file at path ARG (string)",
-		       "-cp|--configurationPath", &LoadFromConfigFile, this, true);
+                       "-cp|--configurationPath", &LoadFromConfigFile, this, true);
     }
 
 
@@ -661,7 +703,7 @@ namespace MFM
     {
       if(!seed)
       {
-	FAIL(ILLEGAL_ARGUMENT);
+        FAIL(ILLEGAL_ARGUMENT);
       }
       m_grid.SetSeed(seed);
     }
@@ -689,12 +731,12 @@ namespace MFM
     {
       unwind_protect
       ({
-	 MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
-	 fprintf(stderr, "Failure reached top-level! Aborting\n");
-	 abort();
+        MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
+        fprintf(stderr, "Failure reached top-level! Aborting\n");
+        abort();
        },
        {
-	 RunHelper();
+         RunHelper();
        });
     }
   };

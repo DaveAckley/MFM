@@ -674,6 +674,16 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
       m_toolboxPanel.AddButtons();
     }
 
+    virtual void PostReinitPhysics()
+    {
+      for(u32 i = 0; i < AbstractDriver<GC>::m_neededElementCount; i++)
+      {
+        GetStatsRenderer().DisplayStatsForElement(AbstractDriver<GC>::GetGrid(),
+                                                  *(AbstractDriver<GC>::m_neededElements[i]));
+        this->RegisterToolboxElement(AbstractDriver<GC>::m_neededElements[i]);
+      }
+    }
+
     virtual void HandleResize()
     { }
 

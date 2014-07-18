@@ -21,16 +21,12 @@ namespace MFM
 
     typedef AbstractDualDriver<OurGridConfig> Super;
 
-    #define NEEDED_ELEMENT_COUNT 4
-
-    Element<OurCoreConfig>* m_neededElements[NEEDED_ELEMENT_COUNT];
-
-    void FillNeededElements()
+    virtual void DefineNeededElements()
     {
-      m_neededElements[0] = &Element_Empty<OurCoreConfig>::THE_INSTANCE;
-      m_neededElements[1] = &Element_Wall<OurCoreConfig>::THE_INSTANCE;
-      m_neededElements[2] = &Element_Res<OurCoreConfig>::THE_INSTANCE;
-      m_neededElements[3] = &Element_Dreg<OurCoreConfig>::THE_INSTANCE;
+      NeedElement(&Element_Empty<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Wall<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
     }
 
   public:
@@ -42,19 +38,10 @@ namespace MFM
     virtual void OnceOnly(VArguments& args)
     {
       Super::OnceOnly(args);
-
-      FillNeededElements();
     }
 
     virtual void ReinitPhysics()
     {
-      OurGrid& m_grid = GetGrid();
-
-      for(u32 i = 0; i < NEEDED_ELEMENT_COUNT; i++)
-      {
-        m_grid.Needed(*m_neededElements[i]);
-      }
-
 #ifdef MFM_GUI_DRIVER
       Element<CC>* elem = &Element_Dreg<OurCoreConfig>::THE_INSTANCE;
       m_dregSliderConfig.SetElement(elem);
@@ -91,14 +78,6 @@ namespace MFM
 
     virtual void ReinitEden()
     {
-      /* Register painting tools if we need them */
-#ifdef MFM_GUI_DRIVER
-      for(u32 i = 0; i < NEEDED_ELEMENT_COUNT; i++)
-      {
-        GetStatsRenderer().DisplayStatsForElement(GetGrid(), *(m_neededElements[i]));
-        AbstractGUIDriver::RegisterToolboxElement(m_neededElements[i]);
-      }
-#endif
     }
   };
 }

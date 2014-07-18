@@ -23,16 +23,15 @@ namespace MFM {
       Super::OnceOnly(args);
     }
 
-    virtual void ReinitPhysics() {
-      OurGrid & mainGrid = GetGrid();
-
-      mainGrid.Needed(Element_Dreg<OurCoreConfig>::THE_INSTANCE);
-      mainGrid.Needed(Element_Res<OurCoreConfig>::THE_INSTANCE);
-      mainGrid.Needed(Element_Sorter<OurCoreConfig>::THE_INSTANCE);
-      mainGrid.Needed(Element_Emitter<OurCoreConfig>::THE_INSTANCE);
-      mainGrid.Needed(Element_Consumer<OurCoreConfig>::THE_INSTANCE);
-      mainGrid.Needed(Element_Data<OurCoreConfig>::THE_INSTANCE);
-      mainGrid.Needed(Element_Wall<OurCoreConfig>::THE_INSTANCE);
+    virtual void DefineNeededElements()
+    {
+      NeedElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Sorter<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Emitter<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Consumer<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Data<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Wall<OurCoreConfig>::THE_INSTANCE);
     }
 
     virtual void HandleResize()
@@ -45,20 +44,11 @@ namespace MFM {
     void ReinitEden()
     {
       OurGrid & mainGrid = GetGrid();
-      OurStatsRenderer & srend = GetStatsRenderer();
 
       OurAtom atom(Element_Dreg<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
       OurAtom sorter(Element_Sorter<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
       OurAtom emtr(Element_Emitter<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
       OurAtom cnsr(Element_Consumer<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
-
-      srend.DisplayStatsForElement(mainGrid, Element_Empty<OurCoreConfig>::THE_INSTANCE);
-      srend.DisplayStatsForElement(mainGrid, Element_Dreg<OurCoreConfig>::THE_INSTANCE);
-      srend.DisplayStatsForElement(mainGrid, Element_Res<OurCoreConfig>::THE_INSTANCE);
-      srend.DisplayStatsForElement(mainGrid, Element_Sorter<OurCoreConfig>::THE_INSTANCE);
-      srend.DisplayStatsForElement(mainGrid, Element_Emitter<OurCoreConfig>::THE_INSTANCE);
-      srend.DisplayStatsForElement(mainGrid, Element_Consumer<OurCoreConfig>::THE_INSTANCE);
-      srend.DisplayStatsForElement(mainGrid, Element_Data<OurCoreConfig>::THE_INSTANCE);
 
       m_sortingSlots[0].Set(mainGrid, "Data in",
                             Element_Emitter<OurCoreConfig>::THE_INSTANCE.GetType(),

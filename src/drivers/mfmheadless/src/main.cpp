@@ -22,13 +22,11 @@ namespace MFM
       Super::OnceOnly(args);
     }
 
-    virtual void ReinitPhysics()
+    virtual void DefineNeededElements()
     {
-      OurGrid& m_grid = GetGrid();
-
-      m_grid.Needed(Element_Dreg<OurCoreConfig>::THE_INSTANCE);
-      m_grid.Needed(Element_Res<OurCoreConfig>::THE_INSTANCE);
-      m_grid.Needed(Element_Wall<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Wall<OurCoreConfig>::THE_INSTANCE);
     }
 
     virtual void ReinitEden()
