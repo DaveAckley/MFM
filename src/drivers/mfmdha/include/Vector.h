@@ -1,6 +1,9 @@
 #ifndef VECTOR_H   /* -*- C++ -*- */
 #define VECTOR_H
 
+#include "FXP.h"
+#include "Point.h"
+
 namespace MFM {
   class Vector {
     FXP16 x;
