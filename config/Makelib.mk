@@ -21,10 +21,7 @@ all:	$(ARCHIVEPATH) commondeps
 
 
 commondeps:	FORCE
-	mkdir -p $(DSHARED_DIR)
-	cp -r $(BASEDIR)/res/* $(DSHARED_DIR)
-	chmod -R 777 $(DSHARED_DIR)
-
+	# Not currently used
 
 $(ARCHIVEPATH):	$(BUILDDIR) $(OBJECTS)
 	$(AR) ruc "$@" $(OBJECTS)
