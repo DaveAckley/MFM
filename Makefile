@@ -22,7 +22,7 @@ include config/Makeversion.mk
 TAR_EXCLUDES+=--exclude=tools --exclude=*~ --exclude=.git --exclude=doc/internal --exclude=spikes --exclude-backups
 tar:	FORCE
 	make realclean
-	PWD=`pwd`;BASE=`basename $$PWD`;cd ..;tar cvzf MFM-$(MFM_VERSION_NUMBER).tgz $(TAR_EXCLUDES) $$BASE
+	PWD=`pwd`;BASE=`basename $$PWD`;cd ..;tar cvzf mfm-$(MFM_VERSION_NUMBER).tgz $(TAR_EXCLUDES) $$BASE
 
 include config/Makedebian.mk
 
