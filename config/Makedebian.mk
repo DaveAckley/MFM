@@ -6,7 +6,7 @@ DEB_MFM_RESDIR := $(DESTDIR)/usr/share/mfm/res
 install:	FORCE
 	# We're recursing rather than depending on 'all' so that the
 	# $(PLATFORMS) mechanism doesn't need to know about install.
-	make all
+	COMMANDS=1 make all
 	mkdir -p $(DEB_MFM_BINDIR)
 	cp $(DEB_PROGRAMS_PATHS_TO_INSTALL) $(DEB_MFM_BINDIR)
 	mkdir -p $(DEB_MFM_RESDIR)
