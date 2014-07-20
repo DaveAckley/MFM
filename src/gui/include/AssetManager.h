@@ -69,11 +69,12 @@ namespace MFM
 
     static SDL_Surface* LoadImage(const char* relativeFilename)
     {
-      char filename[1024];
+      const u32 BUFFER_SIZE = 1024;
+      char filename[BUFFER_SIZE];
       SDL_Surface* loaded = NULL;
       SDL_Surface* opped = NULL;
 
-      if(Utils::GetReadableResourceFile(relativeFilename, filename, 1024))
+      if(Utils::GetReadableResourceFile(relativeFilename, filename, BUFFER_SIZE))
       {
 	loaded = IMG_Load(filename);
 
@@ -102,10 +103,11 @@ namespace MFM
 
     static TTF_Font* LoadFont(const char* relativePath, u32 size)
     {
+      const u32 BUFFER_SIZE = 1024;
       TTF_Font* font = NULL;
-      char path[1024];
+      char path[BUFFER_SIZE];
 
-      if(Utils::GetReadableResourceFile(relativePath, path, 1024))
+      if(Utils::GetReadableResourceFile(relativePath, path, BUFFER_SIZE))
       {
 	font = TTF_OpenFont(path, size);
 

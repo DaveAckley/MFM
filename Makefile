@@ -15,6 +15,7 @@ clean:  $(PLATFORMS)
 
 realclean:  $(PLATFORMS)
 	rm -f bin/*
+	rm -f elements/*
 	rm -rf build/
 	rm -rf doc/ref
 
@@ -23,6 +24,8 @@ TAR_EXCLUDES+=--exclude=tools --exclude=*~ --exclude=.git --exclude=doc/internal
 tar:	FORCE
 	make realclean
 	PWD=`pwd`;BASE=`basename $$PWD`;cd ..;tar cvzf MFM-$(MFM_VERSION_NUMBER).tgz $(TAR_EXCLUDES) $$BASE
+
+include config/Makedebian.mk
 
 # Pass each entry in PLATFORMS down as a target
 $(PLATFORMS):

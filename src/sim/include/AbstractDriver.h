@@ -359,7 +359,7 @@ namespace MFM
               "sort-misses sort-total sort-hit-pctg\n");
       fclose(fp);
 
-      m_elementRegistry.AddPath("/home/sixstring982/Documents/Git/MFMv2/bin");
+      m_elementRegistry.AddPath(DSHARED_DIR "/elements");
       m_elementRegistry.AddPath("./bin");
       m_elementRegistry.Init();
 
