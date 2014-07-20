@@ -5,13 +5,15 @@
 
 namespace MFM {
   namespace Utils {
-    u64 GetDateTimeNow() {
+    u64 GetDateTimeNow()
+    {
       time_t t;
       t = time(NULL);
       return GetDateTime(t);
     }
 
-    u64 GetDateTime(time_t t) {
+    u64 GetDateTime(time_t t)
+    {
       struct tm *tmp;
       tmp = localtime(&t);
       if (tmp == NULL)
@@ -25,7 +27,8 @@ namespace MFM {
          *100+tmp->tm_sec);
     }
 
-    bool GetReadableResourceFile(const char * relativePath, char * result, u32 length) {
+    bool GetReadableResourceFile(const char * relativePath, char * result, u32 length)
+    {
       if (!length) FAIL(ILLEGAL_ARGUMENT);
 
       const char * (paths[]) = {

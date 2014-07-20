@@ -359,7 +359,8 @@ namespace MFM
               "sort-misses sort-total sort-hit-pctg\n");
       fclose(fp);
 
-      m_elementRegistry.AddPath(DSHARED_DIR "/elements");
+      m_elementRegistry.AddPath("~/.mfm/res/elements");
+      m_elementRegistry.AddPath(DSHARED_DIR "/res/elements");
       m_elementRegistry.AddPath("./bin");
       m_elementRegistry.Init();
 
