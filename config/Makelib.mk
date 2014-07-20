@@ -21,7 +21,7 @@ all:	$(ARCHIVEPATH) commondeps
 
 
 commondeps:	FORCE
-	# Not currently used
+	mkdir -p $(BASEDIR)/res/elements
 
 $(ARCHIVEPATH):	$(BUILDDIR) $(OBJECTS)
 	$(AR) ruc "$@" $(OBJECTS)
