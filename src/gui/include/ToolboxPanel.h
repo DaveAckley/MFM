@@ -155,6 +155,10 @@ namespace MFM
 
         this->Panel::SetBackground(Drawing::GREY80);
 
+        this->Panel::SetForeground(Drawing::GREY70);
+
+        this->Panel::SetBorder(Drawing::GREY60);
+
         AbstractButton::SetEnabled(false);
       }
 
@@ -185,7 +189,7 @@ namespace MFM
         }
         else
         {
-          d.SetForeground(Drawing::GREY80);
+          d.SetForeground(this->GetForeground());
           d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
         }
       }
