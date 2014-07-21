@@ -137,6 +137,63 @@ namespace MFM
   };
 
   template <class GC>
+  class FunctionCallDisableTile : public ConfigFunctionCall<GC>
+  {
+   private:
+    typedef typename GC::CORE_CONFIG CC;
+
+   public:
+    FunctionCallDisableTile() :
+      ConfigFunctionCall<GC>("DisableTile")
+    { }
+
+    virtual bool Parse(ExternalConfig<GC>& ec)
+    {
+      LineCountingByteSource& in = ec.GetByteSource();
+
+      in.SkipWhitespace();
+
+      u32 x, y;
+
+      if(!in.Scan(x))
+      {
+        return in.Msg(Logger::ERROR, "Expected decimal x-coordinate parameter");
+      }
+
+      printf("x->%d\n", x);
+
+      s32 ret;
+
+      ret = this->SkipToNextArg(in);
+      if(ret < 0)
+      {
+        return false;
+      }
+      if(ret == 0)
+      {
+        return in.Msg(Logger::ERROR, "Expected second decimal y-coordinate parameter");
+      }
+
+      if(!in.Scan(y))
+      {
+        return in.Msg(Logger::ERROR, "Expected second decimal y-coordinate parameter");
+      }
+
+      printf("y->%d\n", y);
+
+      SPoint tilePt(x, y);
+
+      ec.SetTileToExecuteOnly(tilePt, false);
+
+      return this->SkipToNextArg(in) == 0;
+    }
+
+    virtual void Print(ByteSink & in) { FAIL(UNSUPPORTED_OPERATION); }
+
+    virtual void Apply(ExternalConfig<GC> & ec) { /* Work already done */ }
+  };
+
+  template <class GC>
   class FunctionCallSetParameter : public ConfigFunctionCall<GC>
   {
     typedef typename GC::CORE_CONFIG CC;
@@ -174,8 +231,6 @@ namespace MFM
       {
         return in.Msg(Logger::ERROR, "Expected decimal parameter value");
       }
-
-      in.Msg(Logger::ERROR, "Unimplemented: SetParameter(%s,%d)", parm.GetZString(), val);
 
       const char* pm = parm.GetZString();
       /* Register all settable parameters here */
@@ -216,6 +271,10 @@ namespace MFM
     }
     {
       static FunctionCallSetParameter<GC> elt;
+      ec.RegisterFunction(elt);
+    }
+    {
+      static FunctionCallDisableTile<GC> elt;
       ec.RegisterFunction(elt);
     }
   }

@@ -121,7 +121,7 @@ namespace MFM
     {
       SPoint pt = GetAbsoluteLocation();
       pt.Set(mbe.m_event.button.x - pt.GetX(),
-	     mbe.m_event.button.y - pt.GetY());
+             mbe.m_event.button.y - pt.GetY());
 
       m_grend->SelectTile(*m_mainGrid, pt);
     }
@@ -129,36 +129,36 @@ namespace MFM
     void HandlePencilTool(MouseButtonEvent& mbe)
     {
       HandlePencilTool(mbe.m_event.button.button,
-		       SPoint(mbe.m_event.button.x,
-			      mbe.m_event.button.y));
+                       SPoint(mbe.m_event.button.x,
+                              mbe.m_event.button.y));
     }
 
     void HandleBrushTool(MouseButtonEvent& mbe)
     {
       HandleBrushTool(mbe.m_event.button.button,
-		       SPoint(mbe.m_event.button.x,
-			      mbe.m_event.button.y));
+                      SPoint(mbe.m_event.button.x,
+                             mbe.m_event.button.y));
     }
 
     void HandleEraserTool(MouseButtonEvent& mbe)
     {
       HandleEraserTool(mbe.m_event.button.button,
-		       SPoint(mbe.m_event.button.x,
-			      mbe.m_event.button.y));
+                       SPoint(mbe.m_event.button.x,
+                              mbe.m_event.button.y));
     }
 
     void HandleBucketTool(MouseButtonEvent& mbe)
     {
       HandleBucketTool(mbe.m_event.button.button,
-		       SPoint(mbe.m_event.button.x,
-			      mbe.m_event.button.y));
+                       SPoint(mbe.m_event.button.x,
+                              mbe.m_event.button.y));
     }
 
     void HandlePencilTool(u8 button, SPoint clickPt)
     {
       T atom = (button == SDL_BUTTON_LEFT) ?
-		m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
-		m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
+        m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
+        m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
       PaintMapper(button, clickPt, false, atom, false);
     }
@@ -166,8 +166,8 @@ namespace MFM
     void HandleBrushTool(u8 button, SPoint clickPt)
     {
       T atom = (button == SDL_BUTTON_LEFT) ?
-		m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
-		m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
+        m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
+        m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
       PaintMapper(button, clickPt, true, atom, false);
     }
@@ -175,19 +175,19 @@ namespace MFM
     void HandleEraserTool(u8 button, SPoint clickPt)
     {
       PaintMapper(button, clickPt, false,
-		  Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), false);
+                  Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), false);
     }
 
     void HandleBucketTool(u8 button, SPoint clickPt)
     {
       T atom = (button == SDL_BUTTON_LEFT) ?
-		m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
-		m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
+        m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
+        m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
       /* Filling empty results in stack overflow for obvious reasons */
       if(!Atom<CC>::IsType(atom, Element_Empty<CC>::THE_INSTANCE.GetType()))
       {
-	PaintMapper(button, clickPt, false, atom, true);
+        PaintMapper(button, clickPt, false, atom, true);
       }
     }
 
@@ -195,7 +195,7 @@ namespace MFM
     {
       SPoint pt = GetAbsoluteLocation();
       pt.Set(clickPt.GetX() - pt.GetX(),
-	     clickPt.GetY() - pt.GetY());
+             clickPt.GetY() - pt.GetY());
 
       PaintAtom(*m_mainGrid, pt, brush, atom, bucket);
     }
@@ -206,51 +206,51 @@ namespace MFM
        * deal with caches */
       if(!m_grend->IsRenderingTilesSeparated())
       {
-	TileRenderer& tileRenderer = m_grend->GetTileRenderer();
-	const SPoint& offset = tileRenderer.GetWindowTL();
+        TileRenderer& tileRenderer = m_grend->GetTileRenderer();
+        const SPoint& offset = tileRenderer.GetWindowTL();
 
-	SPoint& cp = clickPt;
+        SPoint& cp = clickPt;
 
-	/* Offset it by the corner */
-	cp.SetX(cp.GetX() - offset.GetX());
-	cp.SetY(cp.GetY() - offset.GetY());
+        /* Offset it by the corner */
+        cp.SetX(cp.GetX() - offset.GetX());
+        cp.SetY(cp.GetY() - offset.GetY());
 
-	u32 atomSize = tileRenderer.GetAtomSize();
+        u32 atomSize = tileRenderer.GetAtomSize();
 
-	/* Figure out which atom needs changing */
-	cp.SetX(cp.GetX() / atomSize);
-	cp.SetY(cp.GetY() / atomSize);
+        /* Figure out which atom needs changing */
+        cp.SetX(cp.GetX() / atomSize);
+        cp.SetY(cp.GetY() / atomSize);
 
-	if(brush)
-	{
-	  MDist<BRUSH_SIZE> md = MDist<BRUSH_SIZE>::get();
+        if(brush)
+        {
+          MDist<BRUSH_SIZE> md = MDist<BRUSH_SIZE>::get();
 
-	  for(u32 i = 0; i < md.GetTableSize(BRUSH_SIZE); i++)
-	  {
-	    SPoint pt = md.GetPoint(i);
-	    pt.Add(cp.GetX(), cp.GetY());
+          for(u32 i = 0; i < md.GetTableSize(BRUSH_SIZE); i++)
+          {
+            SPoint pt = md.GetPoint(i);
+            pt.Add(cp.GetX(), cp.GetY());
 
-	    if(pt.GetX() >= 0 && pt.GetY() >= 0 &&
-		pt.GetX() < TILE_SIDE_LIVE_SITES * W &&
-		pt.GetY() < TILE_SIDE_LIVE_SITES * H)
-	    {
-	      grid.PlaceAtom(atom, pt);
-	    }
-	  }
-	}
-	else if(cp.GetX() >= 0 && cp.GetY() >= 0 &&
-		cp.GetX() < TILE_SIDE_LIVE_SITES * W &&
-		cp.GetY() < TILE_SIDE_LIVE_SITES * H)
-	{
-	  if(bucket)
-	  {
-	    BucketFill(grid, atom, cp);
-	  }
-	  else
-	  {
-	    grid.PlaceAtom(atom, cp);
-	  }
-	}
+            if(pt.GetX() >= 0 && pt.GetY() >= 0 &&
+               pt.GetX() < TILE_SIDE_LIVE_SITES * W &&
+               pt.GetY() < TILE_SIDE_LIVE_SITES * H)
+            {
+              grid.PlaceAtom(atom, pt);
+            }
+          }
+        }
+        else if(cp.GetX() >= 0 && cp.GetY() >= 0 &&
+                cp.GetX() < TILE_SIDE_LIVE_SITES * W &&
+                cp.GetY() < TILE_SIDE_LIVE_SITES * H)
+        {
+          if(bucket)
+          {
+            BucketFill(grid, atom, cp);
+          }
+          else
+          {
+            grid.PlaceAtom(atom, cp);
+          }
+        }
       }
     }
 
@@ -262,18 +262,18 @@ namespace MFM
 
       for(u32 i = 0; i < md.GetTableSize(1); i++)
       {
-	SPoint npt = md.GetPoint(i);
-	npt.Add(pt.GetX(), pt.GetY());
+        SPoint npt = md.GetPoint(i);
+        npt.Add(pt.GetX(), pt.GetY());
 
-	if(npt.GetX() >= 0 && npt.GetY() >= 0 &&
-	   npt.GetX() < TILE_SIDE_LIVE_SITES * W &&
-	   npt.GetY() < TILE_SIDE_LIVE_SITES * H)
-	{
-	  if(Atom<CC>::IsType(*grid.GetAtom(npt), Element_Empty<CC>::THE_INSTANCE.GetType()))
-	  {
-	    BucketFill(grid, atom, npt);
-	  }
-	}
+        if(npt.GetX() >= 0 && npt.GetY() >= 0 &&
+           npt.GetX() < TILE_SIDE_LIVE_SITES * W &&
+           npt.GetY() < TILE_SIDE_LIVE_SITES * H)
+        {
+          if(Atom<CC>::IsType(*grid.GetAtom(npt), Element_Empty<CC>::THE_INSTANCE.GetType()))
+          {
+            BucketFill(grid, atom, npt);
+          }
+        }
       }
     }
 
@@ -287,40 +287,39 @@ namespace MFM
                event.y - pt.GetY());
 
         switch (event.button)
-	{
-
-	case SDL_BUTTON_LEFT:
+        {
+        case SDL_BUTTON_LEFT:
           m_leftButtonDragStart = pt;
           m_leftButtonGridStart = m_grend->GetDrawOrigin();
-	  /* FALL THROUGH */
-	case SDL_BUTTON_MIDDLE:
-	case SDL_BUTTON_RIGHT:
+          /* FALL THROUGH */
+        case SDL_BUTTON_MIDDLE:
+        case SDL_BUTTON_RIGHT:
 
-	  if(!mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
-	  {
-	    switch(mbe.m_selectedTool)
-	    {
-	    case TOOL_SELECTOR:
-	      HandleSelectorTool(mbe);
-	      break;
-	    case TOOL_PENCIL:
-	      HandlePencilTool(mbe);
-	      break;
-	    case TOOL_ERASER:
-	      HandleEraserTool(mbe);
-	      break;
-	    case TOOL_BRUSH:
-	      HandleBrushTool(mbe);
-	      break;
-	    case TOOL_BUCKET:
-	      HandleBucketTool(mbe);
-	      break;
+          if(!mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
+          {
+            switch(mbe.m_selectedTool)
+            {
+            case TOOL_SELECTOR:
+              HandleSelectorTool(mbe);
+              break;
+            case TOOL_PENCIL:
+              HandlePencilTool(mbe);
+              break;
+            case TOOL_ERASER:
+              HandleEraserTool(mbe);
+              break;
+            case TOOL_BRUSH:
+              HandleBrushTool(mbe);
+              break;
+            case TOOL_BUCKET:
+              HandleBucketTool(mbe);
+              break;
 
-	    default: break; /* Do the rest later */
-	    }
-	  }
+            default: break; /* Do the rest later */
+            }
+          }
 
-	  break;
+          break;
 
         case SDL_BUTTON_WHEELUP:
           m_grend->IncreaseAtomSize(pt);
@@ -340,43 +339,43 @@ namespace MFM
       if (mbe.m_keyboard.CtrlHeld())
       {
         if(mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT))
-	{
-	  SPoint nowAt(event.x, event.y);
-	  SPoint delta = nowAt - m_leftButtonDragStart;
-	  m_grend->SetDrawOrigin(m_leftButtonGridStart+delta);
-	}
+        {
+          SPoint nowAt(event.x, event.y);
+          SPoint delta = nowAt - m_leftButtonDragStart;
+          m_grend->SetDrawOrigin(m_leftButtonGridStart+delta);
+        }
       }
       else
       {
-	u8 mask = 0;
-	if(mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT))
-	{
-	  mask = SDL_BUTTON_LEFT;
-	}
-	else if(mbe.m_buttonMask & (1 << SDL_BUTTON_RIGHT))
-	{
-	  mask = SDL_BUTTON_RIGHT;
-	}
+        u8 mask = 0;
+        if(mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT))
+        {
+          mask = SDL_BUTTON_LEFT;
+        }
+        else if(mbe.m_buttonMask & (1 << SDL_BUTTON_RIGHT))
+        {
+          mask = SDL_BUTTON_RIGHT;
+        }
 
-	if(mask && !mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
-	{
-	  switch(mbe.m_selectedTool)
-	  {
-	  case TOOL_PENCIL:
-	    HandlePencilTool(mask, SPoint(event.x, event.y));
-	    break;
-	  case TOOL_ERASER:
-	    HandleEraserTool(mask, SPoint(event.x, event.y));
-	    break;
-	  case TOOL_BRUSH:
-	    HandleBrushTool(mask, SPoint(event.x, event.y));
-	    break;
+        if(mask && !mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
+        {
+          switch(mbe.m_selectedTool)
+          {
+          case TOOL_PENCIL:
+            HandlePencilTool(mask, SPoint(event.x, event.y));
+            break;
+          case TOOL_ERASER:
+            HandleEraserTool(mask, SPoint(event.x, event.y));
+            break;
+          case TOOL_BRUSH:
+            HandleBrushTool(mask, SPoint(event.x, event.y));
+            break;
 
-	  default:
-	    /* Some tools don't need to do this */
-	    break;
-	  }
-	}
+          default:
+            /* Some tools don't need to do this */
+            break;
+          }
+        }
       }
       return false;
     }

@@ -235,6 +235,12 @@ namespace MFM
   }
 
   template<class GC>
+  void ExternalConfig<GC>::SetTileToExecuteOnly(const SPoint& tileLoc, bool value)
+  {
+    m_grid.SetTileToExecuteOnly(tileLoc, value);
+  }
+
+  template<class GC>
   bool ExternalConfig<GC>::PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const char* hexData)
   {
     SPoint pt(x, y);

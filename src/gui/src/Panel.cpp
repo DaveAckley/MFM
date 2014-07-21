@@ -252,7 +252,7 @@ namespace MFM {
     else
     {
       m_rect.SetX(MIN<u32>(m_desiredLocation.GetX(),
-			   parentSize.GetX() - m_rect.GetWidth()));
+                           parentSize.GetX() - m_rect.GetWidth()));
       m_rect.SetWidth(m_desiredSize.GetX());
     }
 
@@ -265,7 +265,7 @@ namespace MFM {
     else
     {
       m_rect.SetY(MIN<u32>(m_desiredLocation.GetY(),
-			   parentSize.GetY() - m_rect.GetHeight()));
+                           parentSize.GetY() - m_rect.GetHeight()));
       m_rect.SetHeight(m_desiredSize.GetY());
     }
 
@@ -307,7 +307,7 @@ namespace MFM {
       Panel * p = m_top;
       Panel* oldFocus = m_focusedChild;
       Panel* newFocus = NULL;
-      bool handled;
+      bool handled = false;
       do
       {
         if (p->Dispatch(event, newRect))

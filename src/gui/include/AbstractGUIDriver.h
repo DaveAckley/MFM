@@ -133,16 +133,23 @@ namespace MFM
      public:
       void SetDriver(AbstractGUIDriver & driver)
       {
-	m_driver = &driver;
+        m_driver = &driver;
+      }
+
+      void SetGridRenderer(GridRenderer& grend)
+      {
+        m_grend = &grend;
       }
 
      protected:
       AbstractGUIDriver * m_driver;
 
+      GridRenderer* m_grend;
+
       AbstractGridButton(const char* title) :
-        AbstractButton(title), m_driver(0)
-      {
-      }
+        AbstractButton(title), m_driver(0),
+        m_grend(NULL)
+      { }
     };
 
     class AbstractGridCheckbox : public AbstractCheckbox
@@ -150,7 +157,7 @@ namespace MFM
      public:
       void SetDriver(AbstractGUIDriver & driver)
       {
-	m_driver = &driver;
+        m_driver = &driver;
       }
 
      protected:
@@ -158,7 +165,7 @@ namespace MFM
 
       AbstractGridCheckbox(const char* title) :
         AbstractCheckbox(title),
-	m_driver(0)
+        m_driver(0)
       { }
     };
 
@@ -172,7 +179,7 @@ namespace MFM
      public:
       ClearButton() : AbstractGridButton("Clear Tile")
       {
-	AbstractButton::SetName("ClearButton");
+        AbstractButton::SetName("ClearButton");
         Panel::SetDimensions(200,40);
         AbstractButton::SetRenderPoint(SPoint(2, 250));
       }
@@ -182,12 +189,12 @@ namespace MFM
         OurGrid & grid = AbstractGridButton::m_driver->GetGrid();
         GridRenderer & grend = AbstractGridButton::m_driver->GetGridRenderer();
 
-	const SPoint selTile = grend.GetSelectedTile();
-	if(selTile.GetX() >= 0 && selTile.GetX() < W &&
-	   selTile.GetY() >= 0 && selTile.GetY() < H)
-	{
-	  grid.EmptyTile(grend.GetSelectedTile());
-	}
+        const SPoint selTile = grend.GetSelectedTile();
+        if(selTile.GetX() >= 0 && selTile.GetX() < W &&
+           selTile.GetY() >= 0 && selTile.GetY() < H)
+        {
+          grid.EmptyTile(grend.GetSelectedTile());
+        }
       }
     } m_clearButton;
 
@@ -196,7 +203,7 @@ namespace MFM
      public:
       NukeButton() : AbstractGridButton("Nuke")
       {
-	AbstractButton::SetName("NukeButton");
+        AbstractButton::SetName("NukeButton");
         Panel::SetDimensions(200,40);
         AbstractButton::SetRenderPoint(SPoint(2, 100));
       }
@@ -211,14 +218,14 @@ namespace MFM
     {
       XRayButton() : AbstractGridButton("XRay")
       {
-	AbstractButton::SetName("XRayButton");
+        AbstractButton::SetName("XRayButton");
         Panel::SetDimensions(200,40);
         AbstractButton::SetRenderPoint(SPoint(2, 150));
       }
 
       virtual void OnClick(u8 button)
       {
-	AbstractGridButton::m_driver->GetGrid().XRay();
+        AbstractGridButton::m_driver->GetGrid().XRay();
       }
     } m_xrayButton;
 
@@ -240,7 +247,7 @@ namespace MFM
     {
       GridRenderButton() : AbstractGridCheckbox("Grid")
       {
-	AbstractButton::SetName("GridRenderButton");
+        AbstractButton::SetName("GridRenderButton");
         Panel::SetDimensions(200,25);
         AbstractButton::SetRenderPoint(SPoint(2, 25));
       }
@@ -253,7 +260,7 @@ namespace MFM
     {
       HeatmapButton() : AbstractGridCheckbox("Heatmap")
       {
-	AbstractButton::SetName("HeatmapButton");
+        AbstractButton::SetName("HeatmapButton");
         Panel::SetDimensions(200,25);
         AbstractButton::SetRenderPoint(SPoint(2, 50));
       }
@@ -266,41 +273,40 @@ namespace MFM
     {
       TileViewButton() : AbstractGridButton("Toggle Tile View")
       {
-	AbstractButton::SetName("TileViewButton");
+        AbstractButton::SetName("TileViewButton");
         Panel::SetDimensions(200,40);
         AbstractButton::SetRenderPoint(SPoint(2, 200));
       }
 
       virtual void OnClick(u8 button)
       {
-	AbstractGridButton::m_driver->GetGridRenderer().ToggleMemDraw();
+        AbstractGridButton::m_driver->GetGridRenderer().ToggleMemDraw();
       }
     } m_tileViewButton;
 
     struct SaveButton : public AbstractGridButton
     {
       SaveButton() : AbstractGridButton("Save State"),
-		     m_saveStateIndex(1)
+                     m_saveStateIndex(1)
       {
-	AbstractButton::SetName("SaveButton");
-	Panel::SetDimensions(200, 40);
-	AbstractButton::SetRenderPoint(SPoint(2, 300));
+        AbstractButton::SetName("SaveButton");
+        Panel::SetDimensions(200, 40);
+        AbstractButton::SetRenderPoint(SPoint(2, 300));
       }
 
       virtual void OnClick(u8 button)
       {
-	const char* filename =
-	  AbstractGridButton::m_driver->GetSimDirPathTemporary("save/%d.mfs",
-							       m_saveStateIndex++);
+        const char* filename =
+          AbstractGridButton::m_driver->GetSimDirPathTemporary("save/%d.mfs",
+                                                               m_saveStateIndex++);
 
-	LOG.Debug("Saving to: %s", filename);
-	ExternalConfig<GC> cfg(AbstractGridButton::m_driver->GetGrid());
-	FILE* fp = fopen(filename, "w");
-	FileByteSink fs(fp);
+        LOG.Debug("Saving to: %s", filename);
+        ExternalConfig<GC> cfg(AbstractGridButton::m_driver->GetGrid());
+        FILE* fp = fopen(filename, "w");
+        FileByteSink fs(fp);
 
-	cfg.Write(fs);
-
-	fs.Close();
+        cfg.Write(fs);
+        fs.Close();
       }
 
     private:
@@ -312,7 +318,7 @@ namespace MFM
     {
       QuitButton() : AbstractGridButton("Quit")
       {
-	AbstractButton::SetName("QuitButton");
+        AbstractButton::SetName("QuitButton");
         Panel::SetDimensions(200,40);
         AbstractButton::SetRenderPoint(SPoint(2, 350));
       }
@@ -323,19 +329,42 @@ namespace MFM
       }
     } m_quitButton;
 
+    struct PauseTileButton : public AbstractGridButton
+    {
+      PauseTileButton() : AbstractGridButton("Pause Tile")
+      {
+        AbstractButton::SetName("PauseTileButton");
+        Panel::SetDimensions(200, 40);
+        AbstractButton::SetRenderPoint(SPoint(2, 400));
+      }
+
+      virtual void OnClick(u8 button)
+      {
+        SPoint selectedTile = AbstractGridButton::m_grend->GetSelectedTile();
+
+        if(selectedTile.GetX() > 0 && selectedTile.GetY() > 0)
+        {
+          AbstractGridButton::m_driver->GetGrid().SetTileToExecuteOnly(
+            selectedTile,
+            !AbstractGridButton::m_driver->GetGrid().GetTileExecutionStatus(selectedTile));
+        }
+
+      }
+    }m_pauseTileButton;
+
     struct BGRButton : public AbstractGridCheckbox
     {
       BGRButton() : AbstractGridCheckbox("XRay On Write")
       {
-	AbstractButton::SetName("BGRButton");
+        AbstractButton::SetName("BGRButton");
         Panel::SetDimensions(200,40);
         AbstractButton::SetRenderPoint(SPoint(2, 75));
       }
 
       virtual void OnCheck(bool value)
       {
-	AbstractGridCheckbox::m_driver->GetGrid().SetBackgroundRadiation(
-	  AbstractCheckbox::IsChecked());
+        AbstractGridCheckbox::m_driver->GetGrid().SetBackgroundRadiation(
+          AbstractCheckbox::IsChecked());
       }
     } m_bgrButton;
 
@@ -461,11 +490,14 @@ namespace MFM
       m_saveButton.SetDriver(*this);
       m_quitButton.SetDriver(*this);
       m_bgrButton.SetDriver(*this);
+      m_pauseTileButton.SetDriver(*this);
+
+      m_pauseTileButton.SetGridRenderer(m_grend);
 
       m_gridRenderButton.SetExternalValue(m_grend.GetGridEnabledPointer());
       m_heatmapButton.SetExternalValue(m_grend.GetDrawDataHeatPointer());
       m_bgrButton.SetExternalValue(AbstractDriver<GC>::GetGrid().
-				   GetBackgroundRadiationEnabledPointer());
+                                   GetBackgroundRadiationEnabledPointer());
       m_gridRunButton.SetExternalValue(&m_keyboardPaused);
 
       m_buttonPanel.Insert(&m_clearButton, NULL);
@@ -478,6 +510,7 @@ namespace MFM
       m_buttonPanel.Insert(&m_quitButton, NULL);
       m_buttonPanel.Insert(&m_gridRunButton, NULL);
       m_buttonPanel.Insert(&m_bgrButton, NULL);
+      m_buttonPanel.Insert(&m_pauseTileButton, NULL);
 
     }
 
@@ -495,7 +528,7 @@ namespace MFM
     {
       m_statisticsPanel.ToggleVisibility();
       m_grend.SetDimensions(Point<u32>(m_screenWidth - (m_renderStats ? STATS_WINDOW_WIDTH : 0)
-				       , m_screenHeight));
+                                       , m_screenHeight));
     }
 
     inline void ToggleLogView()
@@ -516,33 +549,33 @@ namespace MFM
 
       if(m_keyboard.IsDown(SDLK_q) && (m_keyboard.IsDown(SDLK_LCTRL) || m_keyboard.IsDown(SDLK_RCTRL)))
       {
-	exit(0);
+        exit(0);
       }
 
       /* View Control */
       if(m_keyboard.SemiAuto(SDLK_a))
       {
-	m_srend.SetDisplayAER(!m_srend.GetDisplayAER());
+        m_srend.SetDisplayAER(!m_srend.GetDisplayAER());
       }
       if(m_keyboard.SemiAuto(SDLK_i))
       {
-	ToggleStatsView();
+        ToggleStatsView();
       }
       if(m_keyboard.SemiAuto(SDLK_g))
       {
-	m_grend.ToggleGrid();
+        m_grend.ToggleGrid();
       }
       if(m_keyboard.SemiAuto(SDLK_m))
       {
-	m_grend.ToggleMemDraw();
+        m_grend.ToggleMemDraw();
       }
       if(m_keyboard.SemiAuto(SDLK_k))
       {
-	m_grend.ToggleDataHeatmap();
+        m_grend.ToggleDataHeatmap();
       }
       if(m_keyboard.SemiAuto(SDLK_h))
       {
-	m_helpPanel.ToggleVisibility();
+        m_helpPanel.ToggleVisibility();
       }
       if(m_keyboard.SemiAuto(SDLK_l))
       {
@@ -550,55 +583,55 @@ namespace MFM
       }
       if(m_keyboard.SemiAuto(SDLK_p))
       {
-	m_grend.ToggleTileSeparation();
+        m_grend.ToggleTileSeparation();
       }
 
       if(m_keyboard.SemiAuto(SDLK_ESCAPE))
       {
-	m_grend.DeselectTile();
+        m_grend.DeselectTile();
       }
 
       /* Camera Recording */
       if(m_keyboard.SemiAuto(SDLK_r))
       {
-	camera.ToggleRecord();
+        camera.ToggleRecord();
       }
 
       if(m_keyboard.SemiAuto(SDLK_t))
       {
-	ToggleToolbox();
+        ToggleToolbox();
       }
 
       /* Camera Movement*/
       if(m_keyboard.IsDown(SDLK_LEFT))
       {
-	m_grend.MoveLeft(speed);
+        m_grend.MoveLeft(speed);
       }
       if(m_keyboard.IsDown(SDLK_DOWN))
       {
-	m_grend.MoveDown(speed);
+        m_grend.MoveDown(speed);
       }
       if(m_keyboard.IsDown(SDLK_UP))
       {
-	m_grend.MoveUp(speed);
+        m_grend.MoveUp(speed);
       }
       if(m_keyboard.IsDown(SDLK_RIGHT))
       {
-	m_grend.MoveRight(speed);
+        m_grend.MoveRight(speed);
       }
 
       /* Speed Control */
       if(m_keyboard.SemiAuto(SDLK_SPACE))
       {
-	m_keyboardPaused = !m_keyboardPaused;
+        m_keyboardPaused = !m_keyboardPaused;
       }
       if(m_keyboard.IsDown(SDLK_COMMA))
       {
-	Super::DecrementAEPSPerFrame();
+        Super::DecrementAEPSPerFrame();
       }
       if(m_keyboard.IsDown(SDLK_PERIOD))
       {
-	Super::IncrementAEPSPerFrame();
+        Super::IncrementAEPSPerFrame();
       }
 
       m_keyboard.Flip();
@@ -613,30 +646,30 @@ namespace MFM
 
       if(m_recordTimeBasedDataPerAEPS > 0)
       {
-	if(m_AEPS > m_nextTimeBasedDataAEPS)
-	{
-	  const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
-	  FILE* fp = fopen(path, "a");
+        if(m_AEPS > m_nextTimeBasedDataAEPS)
+        {
+          const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
+          FILE* fp = fopen(path, "a");
 
-	  u64 consumed = 0, totalError = 0;
+          u64 consumed = 0, totalError = 0;
           for (OurGrid::iterator_type i = grid.begin(); i != grid.end(); ++i) {
             Tile<CC> * t = *i;
 t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsConsumed(*t);
             totalError += Element_Consumer<CC>::THE_INSTANCE.GetAndResetBucketError(*t);
           }
 
-	  fprintf(fp, "%g %d %d %d %d %d %ld %ld\n",
-		  m_AEPS,
-		  grid.CountActiveSites(),
-		  grid.GetAtomCount(Element_Empty<CC>::TYPE),
-		  grid.GetAtomCount(Element_Dreg<CC>::TYPE),
-		  grid.GetAtomCount(Element_Res<CC>::TYPE),
-		  grid.GetAtomCount(Element_Wall<CC>::TYPE),
-		  consumed, totalError);
+          fprintf(fp, "%g %d %d %d %d %d %ld %ld\n",
+                  m_AEPS,
+                  grid.CountActiveSites(),
+                  grid.GetAtomCount(Element_Empty<CC>::TYPE),
+                  grid.GetAtomCount(Element_Dreg<CC>::TYPE),
+                  grid.GetAtomCount(Element_Res<CC>::TYPE),
+                  grid.GetAtomCount(Element_Wall<CC>::TYPE),
+                  consumed, totalError);
 
-	  fclose(fp);
-	  m_nextTimeBasedDataAEPS += m_recordTimeBasedDataPerAEPS;
-	}
+          fclose(fp);
+          m_nextTimeBasedDataAEPS += m_recordTimeBasedDataPerAEPS;
+        }
       }
     }
 #endif
@@ -748,20 +781,20 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
       this->RegisterSection("Display-specific switches");
 
       this->RegisterArgument("Start with only the statistics view on the screen.",
-			     "--startwithoutgrid", &ConfigStatsOnlyView, this, false);
+                             "--startwithoutgrid", &ConfigStatsOnlyView, this, false);
 
       this->RegisterArgument("Start with a minimal-sized window.",
-			     "--startminimal", &ConfigMinimalView, this, false);
+                             "--startminimal", &ConfigMinimalView, this, false);
 
       this->RegisterArgument("Record screenshots every ARG aeps",
-			     "-p|--pictures", &SetRecordScreenshotPerAEPSFromArgs, this, true);
+                             "-p|--pictures", &SetRecordScreenshotPerAEPSFromArgs, this, true);
 
       this->RegisterArgument("Take ARG shots per speed from 1 up to -p value",
-			     "--picturesPerRate",
-			     &SetPicturesPerRateFromArgs, this, true);
+                             "--picturesPerRate",
+                             &SetPicturesPerRateFromArgs, this, true);
 
       this->RegisterArgument("Simulation begins upon program startup.",
-			     "--run", &SetStartPausedFromArgs, this, false);
+                             "--run", &SetStartPausedFromArgs, this, false);
     }
 
     EditingTool m_selectedTool;
@@ -782,34 +815,34 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
     public:
       StatisticsPanel() : m_srend(NULL)
       {
-	SetName("Statistics Panel");
-	SetDimensions(STATS_START_WINDOW_WIDTH,
-		      SCREEN_INITIAL_HEIGHT);
-	SetRenderPoint(SPoint(100000, 0));
-	SetForeground(Drawing::WHITE);
-	SetBackground(Drawing::DARK_PURPLE);
-	m_AEPS = m_AER = 0.0;
-	m_aepsPerFrame = 0;
+        SetName("Statistics Panel");
+        SetDimensions(STATS_START_WINDOW_WIDTH,
+                      SCREEN_INITIAL_HEIGHT);
+        SetRenderPoint(SPoint(100000, 0));
+        SetForeground(Drawing::WHITE);
+        SetBackground(Drawing::DARK_PURPLE);
+        m_AEPS = m_AER = 0.0;
+        m_aepsPerFrame = 0;
       }
 
       void SetStatsRenderer(StatsRenderer<GC>* srend)
       {
-	m_srend = srend;
+        m_srend = srend;
       }
 
       void SetGrid(OurGrid* mainGrid)
       {
-	m_mainGrid = mainGrid;
+        m_mainGrid = mainGrid;
       }
 
       void SetAEPS(double aeps)
       {
-	m_AEPS = aeps;
+        m_AEPS = aeps;
       }
 
       void SetAER(double aer)
       {
-	m_AER = aer;
+        m_AER = aer;
       }
 
       void SetOverheadPercent(double overheadPercent)

@@ -271,7 +271,7 @@ namespace MFM
       SkipWhitespace();
       if (ScanSet(result, "[_a-zA-Z]") <= 0)
       {
-	return false;
+        return false;
       }
       ScanSet(result, "[_a-zA-Z0-9]");
       return true;
@@ -331,7 +331,7 @@ namespace MFM
       SkipWhitespace();
       if (ScanSet(result, "[A-Z]") <= 0)
       {
-	return false;
+        return false;
       }
       ScanSet(result, "[a-zA-Z0-9]");
       return true;
@@ -352,10 +352,18 @@ namespace MFM
     s32 Vscanf(const char * format, va_list & ap) ;
 
   private:
-    s32 ReadCounted(u32 & maxLen) {
-      if (maxLen == 0) return -1;
+    s32 ReadCounted(u32 & maxLen)
+    {
+      if (maxLen == 0)
+      {
+        return -1;
+      }
+
       s32 ret = Read();
-      if (ret >= 0) --maxLen;
+      if (ret >= 0)
+      {
+        --maxLen;
+      }
       return ret;
     }
 

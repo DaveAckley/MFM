@@ -81,6 +81,8 @@ namespace MFM
 
     bool PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const char* dataStr) ;
 
+    void SetTileToExecuteOnly(const SPoint& tileLoc, bool value);
+
     LineCountingByteSource & GetByteSource()
     {
       return m_in;
