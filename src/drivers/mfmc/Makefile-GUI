@@ -9,6 +9,7 @@ ALLDEP += $(BASEDIR)/src/drivers/mfmc/Makefile-GUI
 
 # What we need to build
 INCLUDES += -I $(BASEDIR)/src/core/include -I $(BASEDIR)/src/elements/include -I $(BASEDIR)/src/sim/include -I $(BASEDIR)/src/gui/include
+INCLUDES += $(shell sdl-config --cflags)
 DEFINES += -D MFM_GUI_DRIVER
 
 # What we need to link

@@ -121,7 +121,16 @@ namespace MFM
        */
       void SetActivated(bool activated)
       {
-        SetBackground(activated ? Drawing::GREY40 : Drawing::GREY80);
+        // DO NOT REWRITE THIS 'IF' AS A QUESTION-COLON; IT DOES NOT
+        // COMPILE ON 12.04.
+        if (activated)
+        {
+          SetBackground(Drawing::GREY40);
+        }
+        else
+        {
+          SetBackground(Drawing::GREY80);
+        }
       }
 
       /**
@@ -147,6 +156,10 @@ namespace MFM
         this->Panel::SetBorder(Drawing::GREY70);
 
         this->Panel::SetBackground(Drawing::GREY80);
+
+        this->Panel::SetForeground(Drawing::GREY70);
+
+        this->Panel::SetBorder(Drawing::GREY60);
 
         AbstractButton::SetEnabled(false);
       }
@@ -178,7 +191,7 @@ namespace MFM
         }
         else
         {
-          d.SetForeground(Drawing::GREY80);
+          d.SetForeground(this->GetForeground());
           d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
         }
       }

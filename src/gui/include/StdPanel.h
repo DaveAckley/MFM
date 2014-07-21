@@ -29,7 +29,7 @@
 
 #include "itype.h"
 #include "Panel.h"
-#include "SDL/SDL.h"
+#include "SDL.h"
 
 namespace MFM {
 

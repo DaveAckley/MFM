@@ -1,5 +1,6 @@
 #include "assert.h"
 #include "ByteSink_Test.h"
+#include "Util.h"
 #include "CharBufferByteSink.h"
 #include "ByteSerializable.h"
 #include <stdlib.h>        /* For strtol */
@@ -73,11 +74,11 @@ namespace MFM {
     assert(tbuf.Equals("\004\005\006\007"));
 
     tbuf.Reset();
-    tbuf.Print(0x0405060708090a0bL, Format::BEU64);
+    tbuf.Print(HexU64(0x04050607,0x08090a0b), Format::BEU64);
     assert(tbuf.Equals("\004\005\006\007\010\011\012\013"));
 
     tbuf.Reset();
-    tbuf.Print(0xfeedfacedeadbeefL, Format::BEU64);
+    tbuf.Print(HexU64(0xfeedface,0xdeadbeef), Format::BEU64);
     assert(tbuf.Equals("\376\355\372\316\336\255\276\357"));
 
   }
@@ -97,11 +98,11 @@ namespace MFM {
     assert(tbuf.Equals("8FFFFFFFF"));
 
     tbuf.Reset();
-    tbuf.Print(123456789101112L, Format::LEX64);
+    tbuf.Print(DecU64(123456,789101112), Format::LEX64);
     assert(tbuf.Equals("9215123456789101112"));
 
     tbuf.Reset();
-    tbuf.Print(0xfeedfacedeadbeefL, Format::LXX64);
+    tbuf.Print(HexU64(0xfeedface,0xdeadbeef), Format::LXX64);
     assert(tbuf.Equals("9216FEEDFACEDEADBEEF"));
 
   }
@@ -129,7 +130,7 @@ namespace MFM {
 
     Test_Vprintf_Result("foo=\020\021\n", "foo=%h\n",0x1011);
     Test_Vprintf_Result("foo=\020\021\022\023\n", "foo=%l\n",0x10111213);
-    Test_Vprintf_Result("foo=\020\021\022\023\024\025\026\027\n", "foo=%q\n",0x1011121314151617L);
+    Test_Vprintf_Result("foo=\020\021\022\023\024\025\026\027\n", "foo=%q\n",HexU64(0x10111213,0x14151617));
 
     Test_Vprintf_Result("%d", "%c%c",'%','d');
     Test_Vprintf_Result("foo=bar=gah", "foo=%s%sh","bar","=ga");

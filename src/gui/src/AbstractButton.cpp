@@ -1,5 +1,5 @@
 #include "AbstractButton.h"
-#include "SDL/SDL.h"
+#include "SDL.h"
 #include "Drawing.h"
 
 namespace MFM

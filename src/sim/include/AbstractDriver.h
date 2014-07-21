@@ -51,7 +51,7 @@
 
 #define MAX_NEEDED_ELEMENTS 100
 
-#define INITIAL_AEPS_PER_FRAME 2
+#define INITIAL_AEPS_PER_FRAME 1
 
 namespace MFM
 {
@@ -359,7 +359,8 @@ namespace MFM
               "sort-misses sort-total sort-hit-pctg\n");
       fclose(fp);
 
-      m_elementRegistry.AddPath("/home/sixstring982/Documents/Git/MFMv2/bin");
+      m_elementRegistry.AddPath("~/.mfm/res/elements");
+      m_elementRegistry.AddPath(DSHARED_DIR "/res/elements");
       m_elementRegistry.AddPath("./bin");
       m_elementRegistry.Init();
 

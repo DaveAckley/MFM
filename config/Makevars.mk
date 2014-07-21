@@ -34,7 +34,7 @@ ifndef COMMANDS
 endif
 
 ifndef DSHARED_DIR
-  DSHARED_DIR := ~/.mfm/res
+  DSHARED_DIR := $(shell readlink -e $(BASEDIR))
 endif
 
 ifdef FIND_DEAD_CODE
