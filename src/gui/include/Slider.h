@@ -117,7 +117,7 @@ namespace MFM
     {
       if(m_externalValue)
       {
-	*m_externalValue = CLAMP(m_minValue, m_maxValue, value);
+        *m_externalValue = CLAMP(m_minValue, m_maxValue, value);
       }
     }
 
@@ -133,24 +133,24 @@ namespace MFM
     {
       if(event.m_event.button.type == SDL_MOUSEBUTTONDOWN)
       {
-	if(event.m_event.button.button == SDL_BUTTON_LEFT)
-	{
-	  if(GetSliderRect().Contains(event.GetAt() - GetAbsoluteLocation()))
-	  {
-	    if(m_externalValue)
-	    {
-	      m_dragging = true;
-	      m_dragStartX = event.GetAt().GetX();
-	      m_preDragVal = *m_externalValue;
-	      return true;
-	    }
-	  }
-	}
+        if(event.m_event.button.button == SDL_BUTTON_LEFT)
+        {
+          if(GetSliderRect().Contains(event.GetAt() - GetAbsoluteLocation()))
+          {
+            if(m_externalValue)
+            {
+              m_dragging = true;
+              m_dragStartX = event.GetAt().GetX();
+              m_preDragVal = *m_externalValue;
+              return true;
+            }
+          }
+        }
       }
       else
       {
-	m_dragging = false;
-	return true;
+        m_dragging = false;
+        return true;
       }
       return false;
     }
@@ -159,12 +159,17 @@ namespace MFM
     {
       if(m_dragging)
       {
-	s32 delta = event.m_event.motion.x - m_dragStartX;
-	s32 valDelta = (delta * m_maxValue) / SLIDER_WIDTH;
+        s32 delta = event.m_event.motion.x - m_dragStartX;
+        s32 valDelta = (delta * m_maxValue) / SLIDER_WIDTH;
 
-	SetValue(m_preDragVal + valDelta);
+        SetValue(m_preDragVal + valDelta);
       }
       return m_dragging;
+    }
+
+    virtual void OnMouseExit()
+    {
+      m_dragging = false;
     }
 
     virtual void PaintComponent(Drawing & d)
@@ -181,42 +186,42 @@ namespace MFM
       CharBufferByteSink<16> numBuffer;
       numBuffer.Printf("%d", m_minValue);
       d.BlitText(numBuffer.GetZString(),
-		 UPoint(3, 16),
-		 UPoint(48, 16));
+                 UPoint(3, 16),
+                 UPoint(48, 16));
 
       numBuffer.Reset();
       numBuffer.Printf("%d", m_maxValue);
       d.BlitText(numBuffer.GetZString(),
-		 UPoint(SLIDER_WIDTH - 32, 16),
-		 UPoint(48, 16));
+                 UPoint(SLIDER_WIDTH - 32, 16),
+                 UPoint(48, 16));
 
       numBuffer.Reset();
 
       if(m_externalValue)
       {
-	numBuffer.Printf("%d", *m_externalValue);
+        numBuffer.Printf("%d", *m_externalValue);
       }
       else
       {
-	numBuffer.Printf("?");
+        numBuffer.Printf("?");
       }
 
       d.SetBackground(Drawing::BLACK);
       d.SetForeground(Drawing::WHITE);
       d.BlitBackedText(numBuffer.GetZString(),
-		       UPoint(SLIDER_WIDTH / 2 - 16, 16),
-		       UPoint(48, 16));
+                       UPoint(SLIDER_WIDTH / 2 - 16, 16),
+                       UPoint(48, 16));
 
       Rect sliderRect = GetSliderRect();
       d.BlitAsset(ASSET_SLIDER_HANDLE,
-		  MakeUnsigned(sliderRect.GetPosition()),
-		  sliderRect.GetSize());
+                  MakeUnsigned(sliderRect.GetPosition()),
+                  sliderRect.GetSize());
 
       if(m_text)
       {
-	d.BlitBackedText(m_text,
-			 UPoint(SLIDER_WIDTH, 7),
-			 UPoint(SLIDER_WIDTH, 16));
+        d.BlitBackedText(m_text,
+                         UPoint(SLIDER_WIDTH, 7),
+                         UPoint(SLIDER_WIDTH, 16));
       }
     }
 
@@ -226,7 +231,7 @@ namespace MFM
     {
       s32 xpos = (((*m_externalValue) * (SLIDER_WIDTH - 7)) / m_maxValue) - 7;
       return Rect(xpos > 0 ? xpos : 0,
-		  0, 17, 16);
+                  0, 17, 16);
     }
   };
 }

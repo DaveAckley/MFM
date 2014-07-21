@@ -37,6 +37,8 @@ namespace MFM {
     m_bdColor = Drawing::GREY;
     m_fgColor = Drawing::YELLOW;
 
+    m_focusedChild = NULL;
+
     m_visible = true;
   }
 
@@ -171,7 +173,9 @@ namespace MFM {
       TTF_Font* oldFont = 0;
       TTF_Font* font = GetFont();
       if (font)
+      {
         oldFont = drawing.SetFont(font);
+      }
 
       PaintComponent(drawing);
       PaintBorder(drawing);
@@ -278,6 +282,9 @@ namespace MFM {
 
   }
 
+  void Panel::OnMouseExit()
+  { /* No behavior by default */ }
+
   bool Panel::Dispatch(MouseEvent & event, const Rect & existing)
   {
 
@@ -293,15 +300,38 @@ namespace MFM {
     if (!newRect.Contains(at))
       return false;
 
-    if (m_top) {
+    if (m_top)
+    {
 
       // Scan kids from top down so more visible gets first crack
       Panel * p = m_top;
-      do {
+      Panel* oldFocus = m_focusedChild;
+      Panel* newFocus = NULL;
+      bool handled;
+      do
+      {
         if (p->Dispatch(event, newRect))
-          return true;
+        {
+          newFocus = p;
+          handled = true;
+          break;
+        }
         p = p->m_backward;
       } while (p != m_top);
+
+      if(newFocus != oldFocus)
+      {
+        if(oldFocus)
+        {
+          oldFocus->OnMouseExit();
+        }
+      }
+      m_focusedChild = newFocus;
+
+      if(handled)
+      {
+        return true;
+      }
     }
 
     // Here the hit is in us and none of our descendants wanted it.

@@ -71,7 +71,7 @@ namespace MFM {
   struct MouseButtonEvent : public MouseEvent
   {
     MouseButtonEvent(const Keyboard & keyboard,
-		     SDL_Event & event, const EditingTool selectedTool) :
+                     SDL_Event & event, const EditingTool selectedTool) :
       MouseEvent(keyboard, event, selectedTool)
     { }
 
@@ -137,6 +137,8 @@ namespace MFM {
     // These are null when I have no parent.
     Panel * m_forward;    // Pointer to next guy above me in rendering order
     Panel * m_backward;   // Pointer to next guy below me in rendering order
+
+    Panel* m_focusedChild;
 
     /**
      * Whether this Panel is currently being displayed, and
@@ -305,6 +307,13 @@ namespace MFM {
        and returns false.
      */
     virtual bool Handle(MouseMotionEvent & event) ;
+
+    /**
+     * Called when a MouseMotionEvent happens which is equivalent to
+     * the mouse exiting this Panel . This is, for instance, useful if
+     * a Panel needs to stop following the mouse
+     */
+    virtual void OnMouseExit();
 
     /**
      * Respond to the resizing of this panel's parent.
