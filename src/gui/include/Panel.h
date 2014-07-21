@@ -101,9 +101,13 @@ namespace MFM {
     }
   };
 
+  /**
+   * The base class for a region of the GUI system used in the MFM
+   * simulator.
+   */
   class Panel
   {
-  protected:
+   protected:
     const char * m_name;
 
     Rect m_rect;

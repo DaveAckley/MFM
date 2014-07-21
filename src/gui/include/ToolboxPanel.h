@@ -144,6 +144,8 @@ namespace MFM
       {
         this->Panel::SetDimensions(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
 
+        this->Panel::SetBorder(Drawing::GREY70);
+
         this->Panel::SetBackground(Drawing::GREY80);
 
         AbstractButton::SetEnabled(false);
