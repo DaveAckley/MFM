@@ -28,7 +28,7 @@
 #define STATSRENDERER_H
 
 #include "AbstractButton.h"
-#include "SDL/SDL_ttf.h"
+#include "SDL_ttf.h"
 #include "Grid.h"
 #include "Utils.h"
 #include "itype.h"

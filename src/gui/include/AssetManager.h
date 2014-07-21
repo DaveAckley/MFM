@@ -28,9 +28,9 @@
 #ifndef ASSETMANAGER_H
 #define ASSETMANAGER_H
 
-#include "SDL/SDL_image.h"
-#include "SDL/SDL.h"
-#include "SDL/SDL_ttf.h"
+#include "SDL_image.h"
+#include "SDL.h"
+#include "SDL_ttf.h"
 #include "Logger.h"
 #include "Utils.h"
 

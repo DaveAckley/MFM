@@ -32,7 +32,7 @@
 #include "Tile.h"
 #include "Panel.h"
 #include "Point.h"
-#include "SDL/SDL.h"
+#include "SDL.h"
 
 
 namespace MFM {
