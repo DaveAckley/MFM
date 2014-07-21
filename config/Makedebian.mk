@@ -14,3 +14,6 @@ install:	FORCE
 	cp -r res/images $(DEB_MFM_RESDIR)
 	cp -r res/elements $(DEB_MFM_RESDIR)
 	# MAN AND DOC?
+
+version:	FORCE
+	@echo $(MFM_VERSION_NUMBER)
