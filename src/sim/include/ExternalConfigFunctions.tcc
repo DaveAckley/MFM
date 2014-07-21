@@ -160,8 +160,6 @@ namespace MFM
         return in.Msg(Logger::ERROR, "Expected decimal x-coordinate parameter");
       }
 
-      printf("x->%d\n", x);
-
       s32 ret;
 
       ret = this->SkipToNextArg(in);
@@ -178,8 +176,6 @@ namespace MFM
       {
         return in.Msg(Logger::ERROR, "Expected second decimal y-coordinate parameter");
       }
-
-      printf("y->%d\n", y);
 
       SPoint tilePt(x, y);
 
