@@ -49,7 +49,7 @@ namespace MFM
 
     Element_Empty() : Element<CC>(MFM_UUID_FOR("Empty", EMPTY_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("Em");
+      Element<CC>::SetAtomicSymbol("E");
     }
 
     virtual u32 PercentMovable(const T& you,

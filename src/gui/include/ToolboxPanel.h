@@ -32,7 +32,7 @@
 #include "Slider.h"
 #include "AbstractSliderConfig.h"
 
-#define ELEMENT_BOX_SIZE 72
+#define ELEMENT_BOX_SIZE 70
 #define ELEMENT_RENDER_SIZE 32
 
 #define ELEMENT_BOX_BUTTON_COUNT 5
@@ -72,20 +72,20 @@ namespace MFM
        * which should be modified upon clicking this Button.
        */
       ToolButton() :
-	AbstractButton()
+        AbstractButton()
       {
-	this->Panel::SetBackground(Drawing::GREY90);
-	this->Panel::SetBorder(Drawing::GREY40);
+        this->Panel::SetBackground(Drawing::GREY90);
+        this->Panel::SetBorder(Drawing::GREY40);
       }
 
       void SetToolPointer(EditingTool* toolboxTool)
       {
-	m_toolboxTool = toolboxTool;
+        m_toolboxTool = toolboxTool;
       }
 
       void SetEditingTool(EditingTool tool)
       {
-	m_tool = tool;
+        m_tool = tool;
       }
 
       /**
@@ -95,7 +95,7 @@ namespace MFM
        */
       void SetParent(ToolboxPanel<CC>* parent)
       {
-	m_parent = parent;
+        m_parent = parent;
       }
 
       /**
@@ -107,8 +107,8 @@ namespace MFM
        */
       void SetToolIcon(SDL_Surface* icon)
       {
-	SetIcon(icon);
-	this->Panel::SetDimensions(icon->w, icon->h);
+        SetIcon(icon);
+        this->Panel::SetDimensions(icon->w, icon->h);
       }
 
       /**
@@ -121,7 +121,7 @@ namespace MFM
        */
       void SetActivated(bool activated)
       {
-	SetBackground(activated ? Drawing::GREY40 : Drawing::GREY80);
+        SetBackground(activated ? Drawing::GREY40 : Drawing::GREY80);
       }
 
       /**
@@ -132,81 +132,80 @@ namespace MFM
        */
       virtual void OnClick(u8 button)
       {
-	*m_toolboxTool = m_tool;
-	m_parent->ActivateButton(this);
+        *m_toolboxTool = m_tool;
+        m_parent->ActivateButton(this);
       }
     };
 
     struct ElementButton : public AbstractButton
     {
       ElementButton() :
-	AbstractButton()
+        AbstractButton()
       {
-	this->Panel::SetDimensions(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
+        this->Panel::SetDimensions(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
 
-	this->Panel::SetBackground(Drawing::GREY80);
+        this->Panel::SetBackground(Drawing::GREY80);
 
-	AbstractButton::SetEnabled(false);
+        AbstractButton::SetEnabled(false);
       }
 
       void SetElement(Element<CC>* element)
       {
-	m_element = element;
+        m_element = element;
 
-	AbstractButton::SetEnabled(!!m_element);
+        AbstractButton::SetEnabled(!!m_element);
       }
 
       void SetParent(ToolboxPanel<CC>* parent)
       {
-	m_parent = parent;
+        m_parent = parent;
       }
 
       virtual void PaintComponent(Drawing& d)
       {
-	if(m_element)
-	{
-	  d.SetForeground(m_element->PhysicsColor());
-	  d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
-	  d.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
-
-	  d.SetBackground(Drawing::BLACK);
-	  d.SetForeground(Drawing::WHITE);
-	  d.BlitBackedText(m_element->GetAtomicSymbol(),
-			   UPoint(1, 0),
-			   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
-	}
-	else
-	{
-	  d.SetForeground(Drawing::GREY80);
-	  d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
-	}
+        if(m_element)
+        {
+          d.SetForeground(m_element->PhysicsColor());
+          d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
+          d.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
+          d.SetBackground(Drawing::BLACK);
+          d.SetForeground(Drawing::WHITE);
+          d.BlitBackedText(m_element->GetAtomicSymbol(),
+                           UPoint(1, 0),
+                           UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+        }
+        else
+        {
+          d.SetForeground(Drawing::GREY80);
+          d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
+        }
       }
 
       Element<CC>* GetElement()
       {
-	return m_element;
+        return m_element;
       }
 
       virtual void OnClick(u8 button)
       {
-	switch(button)
-	{
-	case SDL_BUTTON_LEFT:
-	  m_parent->SetPrimaryElement(m_element);
-	  break;
-	case SDL_BUTTON_RIGHT:
-	  m_parent->SetSecondaryElement(m_element);
-	  break;
-	case SDL_BUTTON_MIDDLE:
-	  m_element->ToggleLowlightPhysicsColor();
-	  break;
-	default: break;
-	}
+        switch(button)
+        {
+        case SDL_BUTTON_LEFT:
+          m_parent->SetPrimaryElement(m_element);
+          break;
+        case SDL_BUTTON_RIGHT:
+          m_parent->SetSecondaryElement(m_element);
+          break;
+        case SDL_BUTTON_MIDDLE:
+          m_element->ToggleLowlightPhysicsColor();
+          break;
+        default: break;
+        }
 
-	m_parent->RebuildSliders();
+        m_parent->RebuildSliders();
       }
 
-    private:
+     private:
       Element<CC>* m_element;
 
       ToolboxPanel<CC>* m_parent;
@@ -241,33 +240,33 @@ namespace MFM
       /* Remove all of the old sliders */
       for(u32 i = 0; i < m_sliderCount; i++)
       {
-	Panel::Remove(m_sliders + i);
+        Panel::Remove(m_sliders + i);
       }
 
       /* Set up the new sliders, if any */
       m_sliderCount = 0;
       for(u32 i = 0; i < m_sliderConfigCount; i++)
       {
-	if(m_primaryElement == m_sliderConfigs[i]->GetElement())
-	{
-	  m_sliderCount = m_sliderConfigs[i]->SetupSliders(m_sliders, TOOLBOX_MAX_SLIDERS);
-	}
+        if(m_primaryElement == m_sliderConfigs[i]->GetElement())
+        {
+          m_sliderCount = m_sliderConfigs[i]->SetupSliders(m_sliders, TOOLBOX_MAX_SLIDERS);
+        }
       }
 
       /* Put the new sliders in */
-      SPoint rpt(32, 6 + ELEMENT_RENDER_SIZE * 6);
+      SPoint rpt(16, 6 + ELEMENT_RENDER_SIZE * 10);
       for(u32 i = 0; i < m_sliderCount; i++)
       {
-	m_sliders[i].SetRenderPoint(rpt);
-	Panel::Insert(m_sliders + i, NULL);
-	rpt.SetY(rpt.GetY() + 32);
+        m_sliders[i].SetRenderPoint(rpt);
+        Panel::Insert(m_sliders + i, NULL);
+        rpt.SetY(rpt.GetY() + 32);
       }
 
-      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * 18,
-	                   6 + ELEMENT_RENDER_SIZE * 6 + 32 * m_sliderCount);
+      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * 10,
+                           6 + ELEMENT_RENDER_SIZE * 10 + 32 * m_sliderCount);
     }
 
-  public:
+   public:
 
     ToolboxPanel(EditingTool* toolPtr) :
       m_toolPtr(toolPtr),
@@ -280,13 +279,13 @@ namespace MFM
     {
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
       {
-	m_toolButtons[i].SetToolPointer(m_toolPtr);
-	m_toolButtons[i].SetEditingTool((EditingTool)i);
+        m_toolButtons[i].SetToolPointer(m_toolPtr);
+        m_toolButtons[i].SetEditingTool((EditingTool)i);
       }
 
       for(u32 i = 0; i < ELEMENT_BOX_SIZE; i++)
       {
-	m_heldElements[i] = NULL;
+        m_heldElements[i] = NULL;
       }
     }
 
@@ -299,89 +298,48 @@ namespace MFM
     {
       Asset assets[] =
       {
-	ASSET_SELECTOR_ICON,
-	ASSET_PENCIL_ICON,
-	ASSET_BUCKET_ICON,
-	ASSET_ERASER_ICON,
-	ASSET_BRUSH_ICON
+        ASSET_SELECTOR_ICON,
+        ASSET_PENCIL_ICON,
+        ASSET_BUCKET_ICON,
+        ASSET_ERASER_ICON,
+        ASSET_BRUSH_ICON
       };
 
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
       {
-	m_toolButtons[i].SetParent(this);
+        m_toolButtons[i].SetParent(this);
 
-	m_toolButtons[i].Panel::SetRenderPoint(SPoint(69 + i * 32, 3));
-	m_toolButtons[i].SetToolIcon(AssetManager::Get(assets[i]));
-	Panel::Insert(m_toolButtons + i, NULL);
-	LOG.Debug("Selector(%d, %d, %d, %d)",
-		  m_toolButtons[i].GetAbsoluteLocation().GetX(),
-		  m_toolButtons[i].GetAbsoluteLocation().GetY(),
-		  m_toolButtons[i].GetDimensions().GetX(),
-		  m_toolButtons[i].GetDimensions().GetY());
+        m_toolButtons[i].Panel::SetRenderPoint(SPoint(16 + i * 32, 3));
+        m_toolButtons[i].SetToolIcon(AssetManager::Get(assets[i]));
+        Panel::Insert(m_toolButtons + i, NULL);
+        LOG.Debug("Selector(%d, %d, %d, %d)",
+                  m_toolButtons[i].GetAbsoluteLocation().GetX(),
+                  m_toolButtons[i].GetAbsoluteLocation().GetY(),
+                  m_toolButtons[i].GetDimensions().GetX(),
+                  m_toolButtons[i].GetDimensions().GetY());
       }
 
-      /* This is a little hairy, but I'm going to attempt rendering
-       * like the periodic table. */
       for(u32 i = 0; i < ELEMENT_BOX_SIZE; i++)
       {
-	u32 x, y;
-	if(i < 18)
-	{
-	  /* H, Li, Na */
-	  x = 3;
-	  y = 3;
-	  if(i == 1)
-	  {
-	    /* He */
-	    x += ELEMENT_RENDER_SIZE * 17;
-	  }
-	  else if(i == 3 || i == 0xb)
-	  {
-	    /*Be, Mg*/
-	    x += ELEMENT_RENDER_SIZE;
-	  }
-	  else if(i >= 4 && i <= 9)
-	  {
-	    /*B - Ne */
-	    x += ELEMENT_RENDER_SIZE * (12 + (i - 4));
-	  }
-	  else if(i >= 0xc && i <= 0x11)
-	  {
-	    /* Al - Ar*/
-	    x += ELEMENT_RENDER_SIZE * (12 + (i - 0xc));
-	  }
+        u32 x, y;
 
-	  if(i >= 2 && i <= 9)
-	  {
-	    y += ELEMENT_RENDER_SIZE;
-	  }
-	  else if(i >= 0xa)
-	  {
-	    y += 2 * ELEMENT_RENDER_SIZE;
-	  }
-	}
-	else
-	{
-	  /* From this point on it's grid rendering */
-	  x = 3 + ELEMENT_RENDER_SIZE * (i % 18);
-	  y = 3 + ELEMENT_RENDER_SIZE * (2 + (i / 18));
-	}
+        x = 3 + ELEMENT_RENDER_SIZE * (i % 10);
+        y = 3 + ELEMENT_RENDER_SIZE * (3 + (i / 10));
 
+        /* These will render correctly because ElementButtons render
+           grey when SetElement is fed NULL. */
+        m_elementButtons[i].SetElement(m_heldElements[i]);
+        m_elementButtons[i].SetParent(this);
+        m_elementButtons[i].Panel::SetRenderPoint(SPoint(x, y));
 
-	/* These will render correctly because ElementButtons render
-	   grey when SetElement is fed NULL. */
-	m_elementButtons[i].SetElement(m_heldElements[i]);
-	m_elementButtons[i].SetParent(this);
-	m_elementButtons[i].Panel::SetRenderPoint(SPoint(x, y));
-
-	Panel::Insert(m_elementButtons + i, NULL);
+        Panel::Insert(m_elementButtons + i, NULL);
       }
 
       m_primaryElement   = m_heldElements[0];
       m_secondaryElement = m_heldElements[1];
 
-      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * 18,
-	                   6 + ELEMENT_RENDER_SIZE * 6);
+      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * 10,
+                           6 + ELEMENT_RENDER_SIZE * 10);
 
       m_activatedButton = m_toolButtons;
       m_toolButtons[0].ToolButton::SetActivated(true);
@@ -403,7 +361,7 @@ namespace MFM
     {
       if(m_heldElementCount >= ELEMENT_BOX_SIZE)
       {
-	FAIL(OUT_OF_ROOM);
+        FAIL(OUT_OF_ROOM);
       }
       m_heldElements[m_heldElementCount++] = element;
     }
@@ -412,7 +370,7 @@ namespace MFM
     {
       if(m_sliderConfigCount >= ELEMENT_BOX_SIZE)
       {
-	FAIL(OUT_OF_ROOM);
+        FAIL(OUT_OF_ROOM);
       }
 
       m_sliderConfigs[m_sliderConfigCount++] = config;
@@ -422,7 +380,7 @@ namespace MFM
     {
       if(m_activatedButton)
       {
-	m_activatedButton->SetActivated(false);
+        m_activatedButton->SetActivated(false);
       }
       m_activatedButton = button;
       button->SetActivated(true);
@@ -455,26 +413,26 @@ namespace MFM
       if (m_primaryElement)
       {
         d.SetForeground(m_primaryElement->PhysicsColor());
-        d.FillCircle(129, 40, ELEMENT_RENDER_SIZE,
+        d.FillCircle(64, 40, ELEMENT_RENDER_SIZE,
                      ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
 
-	d.SetBackground(Drawing::BLACK);
-	d.SetForeground(Drawing::WHITE);
-	d.BlitBackedText(m_primaryElement->GetAtomicSymbol(),
-			 UPoint(128 - ELEMENT_RENDER_SIZE, 40),
-			 UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+        d.SetBackground(Drawing::BLACK);
+        d.SetForeground(Drawing::WHITE);
+        d.BlitBackedText(m_primaryElement->GetAtomicSymbol(),
+                         UPoint(70, 40),
+                         UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
       if (m_secondaryElement)
       {
         d.SetForeground(m_secondaryElement->PhysicsColor());
-        d.FillCircle(129 + ELEMENT_RENDER_SIZE, 40, ELEMENT_RENDER_SIZE,
-		     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
+        d.FillCircle(64 + ELEMENT_RENDER_SIZE, 40, ELEMENT_RENDER_SIZE,
+                     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
 
-	d.SetBackground(Drawing::BLACK);
-	d.SetForeground(Drawing::WHITE);
-	d.BlitBackedText(m_secondaryElement->GetAtomicSymbol(),
-			 UPoint(128 + ELEMENT_RENDER_SIZE * 2, 40),
-			 UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+        d.SetBackground(Drawing::BLACK);
+        d.SetForeground(Drawing::WHITE);
+        d.BlitBackedText(m_secondaryElement->GetAtomicSymbol(),
+                         UPoint(70 + ELEMENT_RENDER_SIZE, 40),
+                         UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
     }
   };
