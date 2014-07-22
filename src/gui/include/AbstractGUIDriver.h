@@ -503,6 +503,8 @@ namespace MFM
 
       m_buttonPanel.SetButtonDrivers(*this);
       m_buttonPanel.InsertButtons();
+
+      m_buttonPanel.SetAnchor(ANCHOR_SOUTH);
     }
 
     void Update(OurGrid& grid)
@@ -867,8 +869,10 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
     struct ButtonPanel : public Panel
     {
       static const u32 MAX_BUTTONS = 16;
-      static const u32 CHECKBOX_HEIGHT = 30;
-      static const u32 BUTTON_HEIGHT = 50;
+      static const u32 CHECKBOX_SPACING_HEIGHT = 30;
+      static const u32 BUTTON_SPACING_HEIGHT = 40;
+      static const u32 BUTTON_HEIGHT = 30;
+      static const u32 BUTTON_WIDTH = 200;
 
       virtual void PaintBorder(Drawing & config)
       { /* No border please */ }
@@ -934,6 +938,7 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
         for(u32 i = 0; i < m_buttonCount; i++)
         {
           Panel::Insert(m_buttons[i], NULL);
+          m_buttons[i]->SetDimensions(SPoint(BUTTON_WIDTH, BUTTON_HEIGHT));
         }
       }
 
@@ -948,18 +953,18 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
       {
         for(u32 i = 0; i < m_checkboxCount; i++)
         {
-          m_checkboxes[i]->SetRenderPoint(SPoint(2, i * CHECKBOX_HEIGHT));
+          m_checkboxes[i]->SetRenderPoint(SPoint(2, i * CHECKBOX_SPACING_HEIGHT));
         }
 
         for(u32 i = 0; i < m_buttonCount; i++)
         {
-          m_buttons[i]->SetRenderPoint(SPoint(2, m_checkboxCount * CHECKBOX_HEIGHT +
-                                                 i * BUTTON_HEIGHT));
+          m_buttons[i]->SetRenderPoint(SPoint(2, m_checkboxCount * CHECKBOX_SPACING_HEIGHT +
+                                                 i * BUTTON_SPACING_HEIGHT));
         }
 
         Panel::SetDimensions(STATS_WINDOW_WIDTH,
-                             m_checkboxCount * CHECKBOX_HEIGHT +
-                             m_buttonCount * BUTTON_HEIGHT);
+                             m_checkboxCount * CHECKBOX_SPACING_HEIGHT +
+                             m_buttonCount * BUTTON_SPACING_HEIGHT);
       }
 
     }m_buttonPanel;
@@ -1002,7 +1007,6 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
         m_grend.SetDimensions(UPoint(m_screenWidth,m_screenHeight));
       }
 
-      //m_srend.SetDestination(screen);
       m_srend.SetDrawPoint(SPoint(0,0));//m_screenWidth-STATS_WINDOW_WIDTH, 0));
       m_srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, m_screenHeight));
 
