@@ -235,7 +235,7 @@ namespace MFM
       GridRunCheckbox() : AbstractGridCheckbox("Pause")
       {
         AbstractButton::SetName("GridRunButton");
-        Panel::SetDimensions(200, 50);
+        Panel::SetDimensions(200, 25);
         AbstractButton::SetRenderPoint(SPoint(2, 0));
       }
 
@@ -480,17 +480,18 @@ namespace MFM
     {
       m_statisticsPanel.SetAnchor(ANCHOR_EAST);
 
-      m_clearButton.SetDriver(*this);
-      m_xrayButton.SetDriver(*this);
-      m_nukeButton.SetDriver(*this);
-      m_gridRenderButton.SetDriver(*this);
-      m_gridRunButton.SetDriver(*this);
-      m_heatmapButton.SetDriver(*this);
-      m_tileViewButton.SetDriver(*this);
-      m_saveButton.SetDriver(*this);
-      m_quitButton.SetDriver(*this);
-      m_bgrButton.SetDriver(*this);
-      m_pauseTileButton.SetDriver(*this);
+      m_buttonPanel.InsertCheckbox(&m_heatmapButton);
+      m_buttonPanel.InsertCheckbox(&m_gridRenderButton);
+      m_buttonPanel.InsertCheckbox(&m_gridRunButton);
+
+      m_buttonPanel.InsertCheckbox(&m_bgrButton);
+      m_buttonPanel.InsertButton(&m_clearButton);
+      m_buttonPanel.InsertButton(&m_xrayButton);
+      m_buttonPanel.InsertButton(&m_nukeButton);
+      m_buttonPanel.InsertButton(&m_tileViewButton);
+      m_buttonPanel.InsertButton(&m_saveButton);
+      m_buttonPanel.InsertButton(&m_quitButton);
+      m_buttonPanel.InsertButton(&m_pauseTileButton);
 
       m_pauseTileButton.SetGridRenderer(m_grend);
 
@@ -500,18 +501,8 @@ namespace MFM
                                    GetBackgroundRadiationEnabledPointer());
       m_gridRunButton.SetExternalValue(&m_keyboardPaused);
 
-      m_buttonPanel.Insert(&m_clearButton, NULL);
-      m_buttonPanel.Insert(&m_nukeButton, NULL);
-      m_buttonPanel.Insert(&m_xrayButton, NULL);
-      m_buttonPanel.Insert(&m_gridRenderButton, NULL);
-      m_buttonPanel.Insert(&m_heatmapButton, NULL);
-      m_buttonPanel.Insert(&m_tileViewButton, NULL);
-      m_buttonPanel.Insert(&m_saveButton, NULL);
-      m_buttonPanel.Insert(&m_quitButton, NULL);
-      m_buttonPanel.Insert(&m_gridRunButton, NULL);
-      m_buttonPanel.Insert(&m_bgrButton, NULL);
-      m_buttonPanel.Insert(&m_pauseTileButton, NULL);
-
+      m_buttonPanel.SetButtonDrivers(*this);
+      m_buttonPanel.InsertButtons();
     }
 
     void Update(OurGrid& grid)
@@ -847,55 +838,128 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
 
       void SetOverheadPercent(double overheadPercent)
       {
-	m_overheadPercent = overheadPercent;
+        m_overheadPercent = overheadPercent;
       }
 
       void SetAEPSPerFrame(u32 apf)
       {
-	m_aepsPerFrame = apf;
+        m_aepsPerFrame = apf;
       }
 
     protected:
       virtual void PaintComponent(Drawing& drawing)
       {
-	this->Panel::PaintComponent(drawing);
-	m_srend->RenderGridStatistics(drawing, *m_mainGrid,
-				     m_AEPS, m_AER, m_aepsPerFrame,
-				     m_overheadPercent, false);
+        this->Panel::PaintComponent(drawing);
+        m_srend->RenderGridStatistics(drawing, *m_mainGrid,
+                                      m_AEPS, m_AER, m_aepsPerFrame,
+                                      m_overheadPercent, false);
       }
 
-      virtual void PaintBorder(Drawing & config) {
-        /* No border please */
-      }
+      virtual void PaintBorder(Drawing & config)
+      { /* No border please */ }
 
       virtual bool Handle(MouseButtonEvent& mbe)
       {
-        SDL_MouseButtonEvent& event = mbe.m_event.button;
-	if(event.button == SDL_BUTTON_LEFT)
-	  {
-	  SPoint pt = GetAbsoluteLocation();
-	  pt.Set(event.x - pt.GetX(),
-		 event.y - pt.GetY());
-	}
-	return true;
+        return true;  /* Eat the event to keep the grid from taking it */
       }
     }m_statisticsPanel;
 
     struct ButtonPanel : public Panel
     {
-      virtual void PaintBorder(Drawing & config) {
-        /* No border please */
-      }
-      ButtonPanel(Fonts & fonts)
+      static const u32 MAX_BUTTONS = 16;
+      static const u32 CHECKBOX_HEIGHT = 30;
+      static const u32 BUTTON_HEIGHT = 50;
+
+      virtual void PaintBorder(Drawing & config)
+      { /* No border please */ }
+
+      ButtonPanel(Fonts & fonts) :
+        m_checkboxCount(0),
+        m_buttonCount(0)
       {
-	SetName("ButtonPanel");
-	SetDimensions(STATS_START_WINDOW_WIDTH,
-		      SCREEN_INITIAL_HEIGHT / 2);
-	SetRenderPoint(SPoint(0,
-			      SCREEN_INITIAL_HEIGHT / 2));
-	SetForeground(Drawing::WHITE);
-	SetBackground(Drawing::DARK_PURPLE);
+        SetName("ButtonPanel");
+        SetDimensions(STATS_START_WINDOW_WIDTH,
+                      SCREEN_INITIAL_HEIGHT / 2);
+        SetRenderPoint(SPoint(0,
+                              SCREEN_INITIAL_HEIGHT / 2));
+        SetForeground(Drawing::WHITE);
+        SetBackground(Drawing::DARK_PURPLE);
         SetFont(fonts.GetDefaultFont(20));
+      }
+
+      void InsertCheckbox(AbstractGridCheckbox* checkbox)
+      {
+        if(m_checkboxCount >= MAX_BUTTONS)
+        {
+          FAIL(OUT_OF_ROOM);
+        }
+
+        m_checkboxes[m_checkboxCount++] = checkbox;
+
+        Pack();
+      }
+
+      void InsertButton(AbstractGridButton* button)
+      {
+        if(m_buttonCount >= MAX_BUTTONS)
+        {
+          FAIL(OUT_OF_ROOM);
+        }
+
+        m_buttons[m_buttonCount++] = button;
+
+        Pack();
+      }
+
+      void SetButtonDrivers(AbstractGUIDriver& driver)
+      {
+        for(u32 i = 0; i < m_checkboxCount; i++)
+        {
+          m_checkboxes[i]->SetDriver(driver);
+        }
+
+        for(u32 i = 0; i < m_buttonCount; i++)
+        {
+          m_buttons[i]->SetDriver(driver);
+        }
+      }
+
+      void InsertButtons()
+      {
+        for(u32 i = 0; i < m_checkboxCount; i++)
+        {
+          Panel::Insert(m_checkboxes[i], NULL);
+        }
+
+        for(u32 i = 0; i < m_buttonCount; i++)
+        {
+          Panel::Insert(m_buttons[i], NULL);
+        }
+      }
+
+     private:
+      AbstractGridCheckbox* m_checkboxes[MAX_BUTTONS];
+      AbstractGridButton*   m_buttons[MAX_BUTTONS];
+
+      u32 m_checkboxCount;
+      u32 m_buttonCount;
+
+      void Pack()
+      {
+        for(u32 i = 0; i < m_checkboxCount; i++)
+        {
+          m_checkboxes[i]->SetRenderPoint(SPoint(2, i * CHECKBOX_HEIGHT));
+        }
+
+        for(u32 i = 0; i < m_buttonCount; i++)
+        {
+          m_buttons[i]->SetRenderPoint(SPoint(2, m_checkboxCount * CHECKBOX_HEIGHT +
+                                                 i * BUTTON_HEIGHT));
+        }
+
+        Panel::SetDimensions(STATS_WINDOW_WIDTH,
+                             m_checkboxCount * CHECKBOX_HEIGHT +
+                             m_buttonCount * BUTTON_HEIGHT);
       }
 
     }m_buttonPanel;
@@ -903,7 +967,8 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
     TextPanel<100,100> m_logPanel;
     TeeByteSink m_logSplitter;
 
-    void SetScreenSize(u32 width, u32 height) {
+    void SetScreenSize(u32 width, u32 height)
+    {
       m_screenWidth = width;
       m_screenHeight = height;
       screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32,
@@ -912,7 +977,9 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
       AssetManager::Initialize();
 
       if (screen == 0)
+      {
         FAIL(ILLEGAL_STATE);
+      }
 
       UPoint newDimensions(width, height);
 
@@ -928,11 +995,11 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
 
       if(m_renderStats)
       {
-	m_grend.SetDimensions(UPoint(m_screenWidth - STATS_WINDOW_WIDTH,m_screenHeight));
+        m_grend.SetDimensions(UPoint(m_screenWidth - STATS_WINDOW_WIDTH,m_screenHeight));
       }
       else
       {
-	m_grend.SetDimensions(UPoint(m_screenWidth,m_screenHeight));
+        m_grend.SetDimensions(UPoint(m_screenWidth,m_screenHeight));
       }
 
       //m_srend.SetDestination(screen);
@@ -962,123 +1029,123 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
 
       while(running)
       {
-	while(SDL_PollEvent(&event))
-	{
-	  switch(event.type)
-	  {
-	  case SDL_VIDEORESIZE:
-	    SetScreenSize(event.resize.w, event.resize.h);
-	    break;
-
-	  case SDL_QUIT:
-	    running = false;
-	    break;
-
-	  case SDL_MOUSEBUTTONUP:
-	    mouseButtonsDown &= ~(1<<(event.button.button));
-	    dragStartPositions[event.button.button].Set(-1,-1);
-	    goto mousebuttondispatch;
-
-	  case SDL_MOUSEBUTTONDOWN:
-	    mouseButtonsDown |= 1<<(event.button.button);
-	    dragStartPositions[event.button.button].Set(event.button.x,event.button.y);
-	    // FALL THROUGH
-
-	  mousebuttondispatch:
-	    {
-	      MouseButtonEvent mbe(m_keyboard, event, m_selectedTool);
-	      m_rootPanel.Dispatch(mbe,
-				   Rect(SPoint(),
-					UPoint(m_screenWidth,m_screenHeight)));
-	    }
-	    break;
-
-	  case SDL_MOUSEMOTION:
-	  {
-	    MouseMotionEvent mme(m_keyboard, event,
-				 mouseButtonsDown, dragStartPositions, m_selectedTool);
-	    m_rootPanel.Dispatch(mme,
-				 Rect(SPoint(),
-				      UPoint(m_screenWidth,m_screenHeight)));
-	  }
-	  break;
-
-	  case SDL_KEYDOWN:
-	  case SDL_KEYUP:
-	    m_keyboard.HandleEvent(&event.key);
-	    break;
-
-	  }
-	}
-
-	m_mousePaused = mouseButtonsDown != 0;
-
-	/* Limit framerate */
-	s32 sleepMS = (s32)
-	  ((1000.0 / FRAMES_PER_SECOND) -
-	   (SDL_GetTicks() - lastFrame));
-	if(sleepMS > 0)
-	{
-	  SDL_Delay(sleepMS);
-	}
-	lastFrame = SDL_GetTicks();
-
-
-	Update(Super::GetGrid());
-
-	m_rootDrawing.Clear();
-
-	m_rootPanel.Paint(m_rootDrawing);
-
-	if (m_recordScreenshotPerAEPS > 0)
+        while(SDL_PollEvent(&event))
         {
-	  if (!m_gridPaused && Super::GetAEPS() >= m_nextScreenshotAEPS)
+          switch(event.type)
           {
-	    const char * path = Super::GetSimDirPathTemporary("vid/%010d.png",
-							      m_nextScreenshotAEPS);
+          case SDL_VIDEORESIZE:
+            SetScreenSize(event.resize.w, event.resize.h);
+            break;
 
-	    camera.DrawSurface(screen,path);
-	    {
-	      const char * path = Super::GetSimDirPathTemporary("tbd/data.dat");
-	      bool exists = true;
-	      {
-		FILE* fp = fopen(path, "r");
-		if (!fp) exists = false;
-		else fclose(fp);
-	      }
-	      FILE* fp = fopen(path, "a");
-	      FileByteSink fbs(fp);
-	      m_srend.WriteRegisteredCounts(fbs, !exists, Super::GetGrid(),
-					    Super::GetAEPS(),
-					    Super::GetAER(),
-					    Super::GetAEPSPerFrame(),
-					    Super::GetOverheadPercent(), true);
-	      fclose(fp);
-	    }
-	    // Are we accelerating and not yet up to cruising speed?
-	    if (m_countOfScreenshotsPerRate > 0 &&
-		m_recordScreenshotPerAEPS < m_maxRecordScreenshotPerAEPS)
+          case SDL_QUIT:
+            running = false;
+            break;
+
+          case SDL_MOUSEBUTTONUP:
+            mouseButtonsDown &= ~(1<<(event.button.button));
+            dragStartPositions[event.button.button].Set(-1,-1);
+            goto mousebuttondispatch;
+
+          case SDL_MOUSEBUTTONDOWN:
+            mouseButtonsDown |= 1<<(event.button.button);
+            dragStartPositions[event.button.button].Set(event.button.x,event.button.y);
+            // FALL THROUGH
+
+          mousebuttondispatch:
+            {
+              MouseButtonEvent mbe(m_keyboard, event, m_selectedTool);
+              m_rootPanel.Dispatch(mbe,
+                                   Rect(SPoint(),
+                                        UPoint(m_screenWidth,m_screenHeight)));
+            }
+            break;
+
+          case SDL_MOUSEMOTION:
+          {
+            MouseMotionEvent mme(m_keyboard, event,
+                                 mouseButtonsDown, dragStartPositions, m_selectedTool);
+            m_rootPanel.Dispatch(mme,
+                                 Rect(SPoint(),
+                                      UPoint(m_screenWidth,m_screenHeight)));
+          }
+          break;
+
+          case SDL_KEYDOWN:
+          case SDL_KEYUP:
+            m_keyboard.HandleEvent(&event.key);
+            break;
+
+          }
+        }
+
+        m_mousePaused = mouseButtonsDown != 0;
+
+        /* Limit framerate */
+        s32 sleepMS = (s32)
+          ((1000.0 / FRAMES_PER_SECOND) -
+           (SDL_GetTicks() - lastFrame));
+        if(sleepMS > 0)
+        {
+          SDL_Delay(sleepMS);
+        }
+        lastFrame = SDL_GetTicks();
+
+
+        Update(Super::GetGrid());
+
+        m_rootDrawing.Clear();
+
+        m_rootPanel.Paint(m_rootDrawing);
+
+        if (m_recordScreenshotPerAEPS > 0)
+        {
+          if (!m_gridPaused && Super::GetAEPS() >= m_nextScreenshotAEPS)
+          {
+            const char * path = Super::GetSimDirPathTemporary("vid/%010d.png",
+                                                              m_nextScreenshotAEPS);
+
+            camera.DrawSurface(screen,path);
+            {
+              const char * path = Super::GetSimDirPathTemporary("tbd/data.dat");
+              bool exists = true;
+              {
+                FILE* fp = fopen(path, "r");
+                if (!fp) exists = false;
+                else fclose(fp);
+              }
+              FILE* fp = fopen(path, "a");
+              FileByteSink fbs(fp);
+              m_srend.WriteRegisteredCounts(fbs, !exists, Super::GetGrid(),
+                                            Super::GetAEPS(),
+                                            Super::GetAER(),
+                                            Super::GetAEPSPerFrame(),
+                                            Super::GetOverheadPercent(), true);
+              fclose(fp);
+            }
+            // Are we accelerating and not yet up to cruising speed?
+            if (m_countOfScreenshotsPerRate > 0 &&
+                m_recordScreenshotPerAEPS < m_maxRecordScreenshotPerAEPS)
             {
 
-	      // Time to step on it?
-	      if (++m_countOfScreenshotsAtThisAEPS > m_countOfScreenshotsPerRate)
+              // Time to step on it?
+              if (++m_countOfScreenshotsAtThisAEPS > m_countOfScreenshotsPerRate)
               {
-		++m_recordScreenshotPerAEPS;
-		m_countOfScreenshotsAtThisAEPS = 0;
-	      }
-	    }
+                ++m_recordScreenshotPerAEPS;
+                m_countOfScreenshotsAtThisAEPS = 0;
+              }
+            }
 
-	    m_nextScreenshotAEPS += m_recordScreenshotPerAEPS;
-	  }
-	}
+            m_nextScreenshotAEPS += m_recordScreenshotPerAEPS;
+          }
+        }
 
-	if(Super::GetHaltAfterAEPS() > 0 &&
-	   Super::GetAEPS() > Super::GetHaltAfterAEPS())
-	{
-	  running = false;
-	}
+        if(Super::GetHaltAfterAEPS() > 0 &&
+           Super::GetAEPS() > Super::GetHaltAfterAEPS())
+        {
+          running = false;
+        }
 
-	SDL_Flip(screen);
+        SDL_Flip(screen);
       }
 
       SDL_FreeSurface(screen);
