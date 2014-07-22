@@ -48,52 +48,85 @@ namespace MFM {
 
   public:
 
-    class CapturableStatistic {
-    public:
+    class CapturableStatistic
+    {
+     public:
       virtual const char * GetLabel() const = 0;
+
       virtual s32 GetDecimalPlaces() const = 0;
+
       virtual double GetValue(bool endOfEpoch) const = 0;
-      virtual ~CapturableStatistic() { }
+
+      virtual ~CapturableStatistic()
+      { }
     };
 
-    class ElementCount : public CapturableStatistic {
+    class ElementCount : public CapturableStatistic
+    {
+     private:
       const Element<CC> * m_element;
       const Grid<GC> * m_grid;
-    public:
-      ElementCount() : m_element(0), m_grid(0) { }
 
-      void Set(const Grid<GC> * grid, const Element<CC> * elt) {
+     public:
+      ElementCount() :
+        m_element(0),
+        m_grid(0)
+      { }
+
+      void Set(const Grid<GC> * grid, const Element<CC> * elt)
+      {
         m_element = elt;
         m_grid = grid;
       }
 
-      virtual const char * GetLabel() const {
+      virtual const char * GetLabel() const
+      {
         if (m_element)
+        {
           return m_element->GetUUID().GetLabel();
+        }
         return "<unset>";
       }
-      virtual s32 GetDecimalPlaces() const {
+
+      virtual s32 GetDecimalPlaces() const
+      {
         return 0;
       }
-      virtual double GetValue(bool) const {
+
+      virtual double GetValue(bool) const
+      {
         if (!m_element || !m_grid)
+        {
           return -1;
+        }
         u32 type = m_element->GetType();
         return (double) m_grid->GetAtomCount(type);
       }
     };
 
-    class ElementDataSlotSum : public CapturableStatistic {
+    class ElementDataSlotSum : public CapturableStatistic
+    {
+     private:
       Grid<GC> * m_grid;
       const char * m_label;
       u32 m_elementType;
       u32 m_slot;
       u32 m_outOfSlots;
       bool m_resetOnRead;
-    public:
-      ElementDataSlotSum() : m_grid(0), m_label(0), m_elementType(0), m_slot(0), m_outOfSlots(0), m_resetOnRead(false) { }
 
-      void Set(Grid<GC> & grid, const char * label, u32 elementType, u32 slot, u32 outOfSlots, bool resetOnRead) {
+     public:
+      ElementDataSlotSum() :
+        m_grid(0),
+        m_label(0),
+        m_elementType(0),
+        m_slot(0),
+        m_outOfSlots(0),
+        m_resetOnRead(false)
+      { }
+
+      void Set(Grid<GC> & grid, const char * label, u32 elementType,
+               u32 slot, u32 outOfSlots, bool resetOnRead)
+      {
         m_grid = &grid;
         m_label = label;
         m_elementType = elementType;
@@ -102,22 +135,33 @@ namespace MFM {
         m_resetOnRead = resetOnRead;
       }
 
-      virtual const char * GetLabel() const {
+      virtual const char * GetLabel() const
+      {
         if (m_label)
+        {
           return m_label;
+        }
         return "<unset>";
       }
-      virtual s32 GetDecimalPlaces() const {
+
+      virtual s32 GetDecimalPlaces() const
+      {
         return 0;
       }
-      virtual double GetValue(bool endOfEpoch) const {
+      virtual double GetValue(bool endOfEpoch) const
+      {
         if (!m_grid)
+        {
           return -1;
+        }
         if (m_slot >= m_outOfSlots)
+        {
           return -1;
+        }
 
         u64 sum = 0;
-        for (typename Grid<GC>::iterator_type i = m_grid->begin(); i != m_grid->end(); ++i) {
+        for (typename Grid<GC>::iterator_type i = m_grid->begin(); i != m_grid->end(); ++i)
+        {
           Tile<CC> * t = *i;
           ElementTable<CC> & et = t->GetElementTable();
           u64 * eds = et.GetElementDataSlotsFromType(m_elementType,m_outOfSlots);
@@ -151,9 +195,13 @@ namespace MFM {
     u32 m_registeredButtons;
 
   public:
-    StatsRenderer() : m_drawFont(0), m_capStatsInUse(0), m_displayElementsInUse(0), m_displayAER(false),
-		      m_registeredButtons(0)
-    {}
+    StatsRenderer() :
+      m_drawFont(0),
+      m_capStatsInUse(0),
+      m_displayElementsInUse(0),
+      m_displayAER(false),
+      m_registeredButtons(0)
+    { }
 
     void ClearButtons()
     {
@@ -165,12 +213,12 @@ namespace MFM {
       SPoint loc(4, m_capStatsInUse * 40);
       if(m_displayAER)
       {
-	loc.SetY(loc.GetY() + 100);
+        loc.SetY(loc.GetY() + 100);
       }
       for(u32 i = 0; i < m_registeredButtons; i++)
       {
-	m_buttons[i]->SetLocation(loc);
-	loc.SetY(loc.GetY() + 40);
+        m_buttons[i]->SetLocation(loc);
+        loc.SetY(loc.GetY() + 40);
       }
     }
 

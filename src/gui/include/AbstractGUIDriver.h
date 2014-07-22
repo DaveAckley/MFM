@@ -1007,7 +1007,7 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
         m_grend.SetDimensions(UPoint(m_screenWidth,m_screenHeight));
       }
 
-      m_srend.SetDrawPoint(SPoint(0,0));//m_screenWidth-STATS_WINDOW_WIDTH, 0));
+      m_srend.SetDrawPoint(SPoint(0,0));
       m_srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, m_screenHeight));
 
       printf("Screen resize: %d x %d\n", width, height);

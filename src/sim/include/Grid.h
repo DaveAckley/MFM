@@ -117,9 +117,9 @@ namespace MFM {
       for(u32 i = 0; i < W; i++)
       {
         for(u32 j = 0; j < H; j++)
-	{
+        {
           m_tiles[i][j].RegisterElement(anElement);
-	}
+        }
       }
       LOG.Message("Assigned type 0x%04x for %@",anElement.GetType(),&anElement.GetUUID());
     }
@@ -139,10 +139,10 @@ namespace MFM {
       void operator++()
       {
         if (j < g.H)
-	{
+        {
           i++;
           if (i >= g.W)
-	  {
+          {
             i = 0;
             j++;
           }
@@ -173,8 +173,7 @@ namespace MFM {
     const_iterator_type end() const { return const_iterator_type(*this, 0,H); }
 
     ~Grid()
-    {
-    }
+    { }
 
     /**
      * Used to tell this Tile whether or not to actually execute any
@@ -279,8 +278,8 @@ namespace MFM {
       SPoint tileInGrid, siteInTile;
       if (!MapGridToTile(loc, tileInGrid, siteInTile))
       {
-	LOG.Error("Can't get atom at site (%d,%d): Does not map to grid.",
-	          loc.GetX(), loc.GetY());
+        LOG.Error("Can't get atom at site (%d,%d): Does not map to grid.",
+                  loc.GetX(), loc.GetY());
         FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
       }
       return GetTile(tileInGrid).GetAtom(siteInTile);
@@ -291,8 +290,8 @@ namespace MFM {
       SPoint tileInGrid, siteInTile;
       if (!MapGridToTile(loc, tileInGrid, siteInTile))
       {
-	LOG.Error("Can't get atom at site (%d,%d): Does not map to grid.",
-	          loc.GetX(), loc.GetY());
+        LOG.Error("Can't get atom at site (%d,%d): Does not map to grid.",
+                  loc.GetX(), loc.GetY());
         FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
       }
       return GetTile(tileInGrid).GetWritableAtom(siteInTile);
@@ -325,6 +324,19 @@ namespace MFM {
     void ResetEPSCounts();
 
     u32 GetAtomCount(ElementType atomType) const;
+
+    /**
+     * Counts the number of sites which are occupied in this Grid and
+     * gets a percentage, in the range [0.0 , 1.0] , describing the
+     * sites which are occupied.
+     *
+     * @returns a percentage of the occupied sites in this Grid .
+     */
+    double GetFullSitePercentage() const
+    {
+      return (double)GetAtomCount(Element_Empty<CC>::THE_INSTANCE.GetType()) /
+             (double)(GetHeightSites() * GetWidthSites());
+    }
 
     void SurroundRectangleWithWall(s32 x, s32 y, s32 w, s32 h, s32 thickness);
 
