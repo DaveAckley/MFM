@@ -1,5 +1,5 @@
 /* -*- C++ -*- */
-#include <stdlib.h>
+#include <stdlib.h> /* For getenv */
 #include <errno.h>  /* For errno */
 #include <string.h> /* For strerror */
 #include <dirent.h> /* For opendir */
@@ -140,13 +140,23 @@ namespace MFM
   {
     if (!path)
       FAIL(NULL_POINTER);
+    PathString xpath;
+    xpath = path;
+    if (path[0] == '~') {
+      const char * home = getenv("HOME");
+      if (home) {
+        xpath.Reset();
+        xpath.Printf("%s%s", home, path + 1);
+      }
+    }
+
     for (u32 i = 0; i < m_searchPathsCount; ++i) {
-      if (m_searchPaths[i].Equals(path))
+      if (m_searchPaths[i].Equals(xpath))
         return;
     }
     if (m_searchPathsCount >= MAX_PATHS)
       FAIL(OUT_OF_ROOM);
-    m_searchPaths[m_searchPathsCount] = path;
+    m_searchPaths[m_searchPathsCount] = xpath;
     ++m_searchPathsCount;
   }
 

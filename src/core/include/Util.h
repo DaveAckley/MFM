@@ -45,6 +45,27 @@ namespace MFM {
   }
 
   /**
+   * Generate a u64 constant that works on i386 and amd64, without
+   * using the 'ULL' suffix that -ansi rejects, from two 32 bit pieces
+   * (likely, though not actually necessarily, expressed as hex
+   * constants).
+   */
+  inline static u64 HexU64(const u32 hi, const u32 lo) {
+    return ((((u64) hi)<<32)|lo);
+  }
+
+  /**
+   * Generate a u64 constant that works on i386 and amd64, without
+   * using the 'ULL' suffix that -ansi rejects, from two pieces
+   * representing the bottom nine decimal digits in 'millions', and
+   * the remaining upper decimal digits in 'billions'.  For example:
+   * DecU64(123456,789101,112) == 123456789101112ULL
+   */
+  inline static u64 DecU64(const u32 billions, const u32 millions) {
+    return ((((u64) billions)*1000000000) + millions);
+  }
+
+  /**
    * Right-aligned mask generation.  Returns 0xFFFFFFFF if \a length
    * >= 32
    */

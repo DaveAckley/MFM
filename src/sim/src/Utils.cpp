@@ -5,13 +5,15 @@
 
 namespace MFM {
   namespace Utils {
-    u64 GetDateTimeNow() {
+    u64 GetDateTimeNow()
+    {
       time_t t;
       t = time(NULL);
       return GetDateTime(t);
     }
 
-    u64 GetDateTime(time_t t) {
+    u64 GetDateTime(time_t t)
+    {
       struct tm *tmp;
       tmp = localtime(&t);
       if (tmp == NULL)
@@ -25,19 +27,25 @@ namespace MFM {
          *100+tmp->tm_sec);
     }
 
-    bool GetReadableResourceFile(const char * relativePath, char * result, u32 length) {
+    bool GetReadableResourceFile(const char * relativePath, char * result, u32 length)
+    {
       if (!length) FAIL(ILLEGAL_ARGUMENT);
 
-      const char * (paths[]) = { ".", "~/.mfm", DSHARED_DIR };
+      const char * (paths[]) = {
+        "~/.mfm",                // Possible per-user customizations first
+        DSHARED_DIR,             // Source tree root
+        "/usr/share/mfm",        // Debian install location
+        "."                      // Last desperate hope
+      };
       const char * home = getenv("HOME");
 
       for (u32 i = 0; i < sizeof(paths)/sizeof(paths[0]); ++i) {
 
         const char * dir = paths[i];
         if (dir[0] == '~' && home)
-          snprintf(result, length, "%s%s/%s",home,dir+1,relativePath);
+          snprintf(result, length, "%s%s/res/%s",home,dir+1,relativePath);
         else
-          snprintf(result, length, "%s/%s",dir,relativePath);
+          snprintf(result, length, "%s/res/%s",dir,relativePath);
         FILE * f = fopen(result,"r");
         if (f) {
           fclose(f);

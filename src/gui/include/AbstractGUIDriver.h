@@ -54,8 +54,8 @@
 #include "Camera.h"
 #include "AbstractDriver.h"
 #include "VArguments.h"
-#include "SDL/SDL.h"
-#include "SDL/SDL_ttf.h"
+#include "SDL.h"
+#include "SDL_ttf.h"
 #include "HelpPanel.h"
 
 namespace MFM
