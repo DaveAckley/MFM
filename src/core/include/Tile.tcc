@@ -5,8 +5,8 @@
 #include "Util.h"
 #include <time.h>
 
-namespace MFM {
-
+namespace MFM
+{
   template <class CC>
   Tile<CC>::Tile() : m_executingWindow(*this)
   {
@@ -38,14 +38,14 @@ namespace MFM {
     {
       if(IS_OWNED_CONNECTION(i))
       {
-	/* We own this one! Hook it up. */
-	m_connections[i] = m_ownedConnections + i - Dirs::EAST;
+        /* We own this one! Hook it up. */
+        m_connections[i] = m_ownedConnections + i - Dirs::EAST;
       }
       else
       {
-	/* We will rely on the grid to hook these up when the time
-	   comes. */
-	m_connections[i] = NULL;
+        /* We will rely on the grid to hook these up when the time
+           comes. */
+        m_connections[i] = NULL;
       }
     }
 
@@ -62,12 +62,11 @@ namespace MFM {
     {
       for(u32 y = 0; y < OWNED_SIDE; y++)
       {
-	m_siteEvents[x][y] = 0;
+        m_siteEvents[x][y] = 0;
       }
     }
 
     m_needRecount = false;
-
     m_threadInitialized = false;
     m_threadPaused = false;
   }
@@ -84,15 +83,15 @@ namespace MFM {
 
     m_illegalAtomCount = 0;
 
-    SetAtomCount(Element_Empty<CC>::THE_INSTANCE.GetType(),OWNED_SIDE*OWNED_SIDE);
-
     for(u32 x = 0; x < TILE_WIDTH; x++)
     {
       for(u32 y = 0; y < TILE_WIDTH; y++)
       {
-	m_atoms[x][y] = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+        m_atoms[x][y] = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
       }
     }
+
+    RecountAtoms();
   }
 
   template <class CC>
@@ -145,8 +144,8 @@ namespace MFM {
     sendout.SetReceivingNeighbor(from);
 
     m_connections[from]->Write(!IS_OWNED_CONNECTION(from),
-			       (u8*)&sendout,
-			       sizeof(Packet<T>));
+                               (u8*)&sendout,
+                               sizeof(Packet<T>));
   }
 
   template <class CC>
@@ -157,11 +156,11 @@ namespace MFM {
     case PACKET_WRITE:
       if(packet.GetAtom().IsSane())
       {
-	PlaceAtom(packet.GetAtom(), packet.GetLocation());
+        PlaceAtom(packet.GetAtom(), packet.GetLocation());
       }
       else
       {
-	PlaceAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), packet.GetLocation());
+        PlaceAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), packet.GetLocation());
       }
       break;
     case PACKET_EVENT_COMPLETE:
@@ -179,7 +178,7 @@ namespace MFM {
   void Tile<CC>::FillLastExecutedAtom(SPoint& out)
   {
     out.Set(m_lastExecutedAtom.GetX(),
-	    m_lastExecutedAtom.GetY());
+            m_lastExecutedAtom.GetY());
   }
 
   template <class CC>
@@ -208,11 +207,11 @@ namespace MFM {
     {
       if(pt.GetY() < reach)
       {
-	return Dirs::NORTHWEST;
+        return Dirs::NORTHWEST;
       }
       else if(pt.GetY() >= TILE_WIDTH - reach)
       {
-	return Dirs::SOUTHWEST;
+        return Dirs::SOUTHWEST;
       }
       return Dirs::WEST;
     }
@@ -263,37 +262,30 @@ namespace MFM {
   void Tile<CC>::PlaceAtom(const T& atom, const SPoint& pt)
   {
     const T* oldAtom = GetAtom(pt);
-    u32 oldType = 0;
-    bool recounted = false;
     unwind_protect(
     {
-      recounted = true;
-      m_atoms[pt.GetX()][pt.GetY()] =
-	Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+      InternalPutAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(),
+                      pt.GetX(),pt.GetY());
+
       RecountAtoms();
     },
     {
-      oldType = oldAtom->GetType();
-    });
+      u32 oldType = oldAtom->GetType();
 
-    if(!recounted)
-    {
-      InternalPutAtom(atom,pt.GetX(),pt.GetY());
+      InternalPutAtom(atom, pt.GetX(), pt.GetY());
 
-      if(!IsInCache(pt))
+      if(m_backgroundRadiationEnabled &&
+         m_random.OneIn(BACKGROUND_RADIATION_SITE_ODDS))
       {
-	IncrAtomCount(atom.GetType(),1);
-	IncrAtomCount(oldType,-1);
+        SingleXRay(pt.GetX(), pt.GetY());
+        RecountAtoms();
       }
-    }
-
-    // XXX IMPLEMENT BIT-CORRUPTION-ON-WRITE IN HERE
-
-    if(m_backgroundRadiationEnabled &&
-       m_random.OneIn(BACKGROUND_RADIATION_SITE_ODDS))
-    {
-      SingleXRay(pt.GetX(), pt.GetY());
-    }
+      else if(!IsInCache(pt))
+      {
+        IncrAtomCount(atom.GetType(), 1);
+        IncrAtomCount(oldType, -1);
+      }
+    });
   }
 
   template <class CC>
@@ -308,28 +300,28 @@ namespace MFM {
       /* The neighbor will think this atom is in a different location. */
       switch(neighbor)
         {
-	case Dirs::NORTH: remoteLoc.Add(0, tileDiff); break;
-	case Dirs::SOUTH: remoteLoc.Add(0, -tileDiff); break;
-	case Dirs::WEST:  remoteLoc.Add(tileDiff, 0); break;
-	case Dirs::EAST:  remoteLoc.Add(-tileDiff, 0); break;
-	case Dirs::NORTHEAST:
-	  remoteLoc.Add(-tileDiff, tileDiff); break;
-	case Dirs::SOUTHEAST:
-	  remoteLoc.Add(-tileDiff, -tileDiff); break;
-	case Dirs::SOUTHWEST:
-	  remoteLoc.Add(tileDiff, -tileDiff); break;
-	case Dirs::NORTHWEST:
-	  remoteLoc.Add(tileDiff, tileDiff); break;
-	default:
-	  FAIL(INCOMPLETE_CODE); break;
-	}
+        case Dirs::NORTH: remoteLoc.Add(0, tileDiff); break;
+        case Dirs::SOUTH: remoteLoc.Add(0, -tileDiff); break;
+        case Dirs::WEST:  remoteLoc.Add(tileDiff, 0); break;
+        case Dirs::EAST:  remoteLoc.Add(-tileDiff, 0); break;
+        case Dirs::NORTHEAST:
+          remoteLoc.Add(-tileDiff, tileDiff); break;
+        case Dirs::SOUTHEAST:
+          remoteLoc.Add(-tileDiff, -tileDiff); break;
+        case Dirs::SOUTHWEST:
+          remoteLoc.Add(tileDiff, -tileDiff); break;
+        case Dirs::NORTHWEST:
+          remoteLoc.Add(tileDiff, tileDiff); break;
+        default:
+          FAIL(INCOMPLETE_CODE); break;
+        }
 
       Packet<T> sendout(PACKET_WRITE);
 
       /* Did this atom get corrupted? Destroy it! */
       if(!m_atoms[atomLoc.GetX()][atomLoc.GetY()].IsSane())
       {
-	PlaceAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), atomLoc);
+        PlaceAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), atomLoc);
       }
 
       sendout.SetLocation(remoteLoc);
@@ -338,8 +330,8 @@ namespace MFM {
 
       /* Send out the serialized version of the packet */
       m_connections[neighbor]->Write(!IS_OWNED_CONNECTION(neighbor),
-				     (u8*)&sendout,
-				     sizeof(Packet<T>));
+                                     (u8*)&sendout,
+                                     sizeof(Packet<T>));
     }
   }
 
@@ -391,12 +383,12 @@ namespace MFM {
     {
       if(IsConnected(dir) && (dirWaitWord & (1 << dir)))
       {
-	Packet<T> sendout(PACKET_EVENT_COMPLETE);
-	sendout.SetReceivingNeighbor(dir);
+        Packet<T> sendout(PACKET_EVENT_COMPLETE);
+        sendout.SetReceivingNeighbor(dir);
 
-	/* We don't care about what other kind of stuff is in the Packet */
-	m_connections[dir]->Write(!IS_OWNED_CONNECTION(dir),
-				  (u8*)&sendout, sizeof(Packet<T>));
+        /* We don't care about what other kind of stuff is in the Packet */
+        m_connections[dir]->Write(!IS_OWNED_CONNECTION(dir),
+                                  (u8*)&sendout, sizeof(Packet<T>));
       }
 
       dir = Dirs::CWDir(dir);
@@ -425,52 +417,52 @@ namespace MFM {
       /* Send to West neighbor? */
       if(IsConnected(Dirs::WEST) && localLoc.GetX() < r2)
       {
-	SendAtom(Dirs::WEST, localLoc);
-	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::WEST);
-	if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
-	{
-	  SendAtom(Dirs::NORTHWEST, localLoc);
-	  SendAtom(Dirs::NORTH, localLoc);
-	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTHWEST);
-	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
-	}
-	else if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= P::TILE_WIDTH - r2)
-	{
-	  SendAtom(Dirs::SOUTHWEST, localLoc);
-	  SendAtom(Dirs::SOUTH, localLoc);
-	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTHWEST);
-	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
-	}
+        SendAtom(Dirs::WEST, localLoc);
+        dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::WEST);
+        if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
+        {
+          SendAtom(Dirs::NORTHWEST, localLoc);
+          SendAtom(Dirs::NORTH, localLoc);
+          dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTHWEST);
+          dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
+        }
+        else if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= P::TILE_WIDTH - r2)
+        {
+          SendAtom(Dirs::SOUTHWEST, localLoc);
+          SendAtom(Dirs::SOUTH, localLoc);
+          dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTHWEST);
+          dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
+        }
       }
       /*East neighbor?*/
       else if(IsConnected(Dirs::EAST) && localLoc.GetX() >= P::TILE_WIDTH - r2)
       {
-	SendAtom(Dirs::EAST, localLoc);
-	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::EAST);
-	if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
-	{
-	  SendAtom(Dirs::NORTHEAST, localLoc);
-	  SendAtom(Dirs::NORTH, localLoc);
-	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTHEAST);
-	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
-	}
-	if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= P::TILE_WIDTH - r2)
-	{
-	  SendAtom(Dirs::SOUTHEAST, localLoc);
-	  SendAtom(Dirs::SOUTH, localLoc);
-	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTHEAST);
-	  dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
-	}
+        SendAtom(Dirs::EAST, localLoc);
+        dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::EAST);
+        if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
+        {
+          SendAtom(Dirs::NORTHEAST, localLoc);
+          SendAtom(Dirs::NORTH, localLoc);
+          dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTHEAST);
+          dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
+        }
+        if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= P::TILE_WIDTH - r2)
+        {
+          SendAtom(Dirs::SOUTHEAST, localLoc);
+          SendAtom(Dirs::SOUTH, localLoc);
+          dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTHEAST);
+          dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
+        }
       }
       else if(IsConnected(Dirs::NORTH) && localLoc.GetY() < r2)
       {
-	SendAtom(Dirs::NORTH, localLoc);
-	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
+        SendAtom(Dirs::NORTH, localLoc);
+        dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::NORTH);
       }
       else if(IsConnected(Dirs::SOUTH) && localLoc.GetY() >= P::TILE_WIDTH - r2)
       {
-	SendAtom(Dirs::SOUTH, localLoc);
-	dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
+        SendAtom(Dirs::SOUTH, localLoc);
+        dirBitfield = Dirs::AddDirToMask(dirBitfield, Dirs::SOUTH);
       }
     }
     return dirBitfield;
@@ -494,18 +486,18 @@ namespace MFM {
     {
       if(TryLock(cornerDir))
       {
-	locked++;
-	cornerDir = Dirs::CWDir(cornerDir);
+        locked++;
+        cornerDir = Dirs::CWDir(cornerDir);
       }
-        /* If we can't hit one, rewind, unlocking all held locks. */
+      /* If we can't hit one, rewind, unlocking all held locks. */
       else
       {
-	for(u32 j = 0; j < locked; j++)
-	{
-	  cornerDir = Dirs::CCWDir(cornerDir);
-	  m_connections[cornerDir]->Unlock();
-	}
-	return false;
+        for(u32 j = 0; j < locked; j++)
+        {
+          cornerDir = Dirs::CCWDir(cornerDir);
+          m_connections[cornerDir]->Unlock();
+        }
+        return false;
       }
     }
     return true;
@@ -622,27 +614,27 @@ namespace MFM {
       /* Flush out all packet buffers */
       for(Dir dir = Dirs::NORTH; dir < Dirs::DIR_COUNT; ++dir)
       {
-	if(IsConnected(dir))
-	{
-	  while((readBytes = m_connections[dir]->Read(!IS_OWNED_CONNECTION(dir),
-						      (u8*)&readPack, sizeof(Packet<T>))))
-	  {
-	    if(readBytes != sizeof(Packet<T>))
-	    {
-	      FAIL(ILLEGAL_STATE); /* Didn't read enough for a full packet! */
-	    }
-	    if(dirWaitWord & (1 << dir))
-	    {
-	      if(readPack.GetType() == PACKET_EVENT_ACKNOWLEDGE)
-	      {
-		/* FAIL(ILLEGAL_STATE);  Didn't get an acknowledgment right away */
-		dirWaitWord &= (~(1 << dir));
-	      }
-	    }
-	    ReceivePacket(readPack);
-	  }
-	}
-	/* Have we waited long enough without a response? Let's disconnect that tile. */
+        if(IsConnected(dir))
+        {
+          while((readBytes = m_connections[dir]->Read(!IS_OWNED_CONNECTION(dir),
+                                                      (u8*)&readPack, sizeof(Packet<T>))))
+          {
+            if(readBytes != sizeof(Packet<T>))
+            {
+              FAIL(ILLEGAL_STATE);  /* Didn't read enough for a full packet! */
+            }
+            if(dirWaitWord & (1 << dir))
+            {
+              if(readPack.GetType() == PACKET_EVENT_ACKNOWLEDGE)
+              {
+                /* FAIL(ILLEGAL_STATE);  Didn't get an acknowledgment right away */
+                dirWaitWord &= (~(1 << dir));
+              }
+            }
+            ReceivePacket(readPack);
+          }
+        }
+        /* Have we waited long enough without a response? Let's disconnect that tile. */
 
       }
       pthread_yield();
@@ -663,69 +655,69 @@ namespace MFM {
       Dir lockRegion = Dirs::NORTH;
       u32 dirWaitWord = 0;
       if((!m_onlyWaitOnBuffers) &&
-	 (
-	  IsInHidden(m_executingWindow.GetCenterInTile()) ||
-	  !IsConnected(lockRegion = VisibleAt(m_executingWindow.GetCenterInTile())) ||
-	  (locked = LockRegion(lockRegion))
-	 ))
+         (
+           IsInHidden(m_executingWindow.GetCenterInTile()) ||
+           !IsConnected(lockRegion = VisibleAt(m_executingWindow.GetCenterInTile())) ||
+           (locked = LockRegion(lockRegion))
+           ))
       {
-	unwind_protect({
-	    ++m_eventsFailed;
-	    ++m_failuresErased;
+        unwind_protect({
+            ++m_eventsFailed;
+            ++m_failuresErased;
 
-	    if(!m_executingWindow.GetCenterAtom().IsSane())
-	    {
-	      LOG.Debug("FE(INSANE)");
-	    }
-	    else
-	    {
-	      LOG.Debug("FE(%x) (SANE)",m_executingWindow.GetCenterAtom().GetType());
+            if(!m_executingWindow.GetCenterAtom().IsSane())
+            {
+              LOG.Debug("FE(INSANE)");
+            }
+            else
+            {
+              LOG.Debug("FE(%x) (SANE)",m_executingWindow.GetCenterAtom().GetType());
             }
 
 
-	    m_executingWindow.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
-	  },{
-	    elementTable.Execute(m_executingWindow);
-	  });
+            m_executingWindow.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+          },{
+            elementTable.Execute(m_executingWindow);
+          });
 
-	// XXX INSANE SLOWDOWN FOR DEBUG: AssertValidAtomCounts();
+          // XXX INSANE SLOWDOWN FOR DEBUG: AssertValidAtomCounts();
 
-	m_lastExecutedAtom = m_executingWindow.GetCenterInTile();
+        m_lastExecutedAtom = m_executingWindow.GetCenterInTile();
 
-	dirWaitWord = SendRelevantAtoms();
+        dirWaitWord = SendRelevantAtoms();
 
-	SendEndEventPackets(dirWaitWord);
+        SendEndEventPackets(dirWaitWord);
 
-	FlushAndWaitOnAllBuffers(dirWaitWord);
+        FlushAndWaitOnAllBuffers(dirWaitWord);
 
 
-	++m_eventsExecuted;
-	++m_regionEvents[RegionIn(m_executingWindow.GetCenterInTile())];
+        ++m_eventsExecuted;
+        ++m_regionEvents[RegionIn(m_executingWindow.GetCenterInTile())];
 
-	++m_siteEvents[m_executingWindow.GetCenterInTile().GetX() - R]
-	              [m_executingWindow.GetCenterInTile().GetY() - R];
+        ++m_siteEvents[m_executingWindow.GetCenterInTile().GetX() - R]
+          [m_executingWindow.GetCenterInTile().GetY() - R];
 
-	if(locked)
+        if(locked)
         {
-	UnlockRegion(lockRegion);
+          UnlockRegion(lockRegion);
 
           switch(lockRegion)
-	  {
-	  case Dirs::NORTH: case Dirs::SOUTH:
-	  case Dirs::EAST:  case Dirs::WEST:
-	    ++m_regionEvents[LOCKTYPE_SINGLE]; break;
-	  default: /* UnlockRegion would have caught a bad argument. */
-	    ++m_regionEvents[LOCKTYPE_TRIPLE]; break;
-	  }
-	}
-	else
+          {
+          case Dirs::NORTH: case Dirs::SOUTH:
+          case Dirs::EAST:  case Dirs::WEST:
+            ++m_regionEvents[LOCKTYPE_SINGLE]; break;
+          default: /* UnlockRegion would have caught a bad argument. */
+            ++m_regionEvents[LOCKTYPE_TRIPLE]; break;
+          }
+        }
+        else
         {
-	  ++m_regionEvents[LOCKTYPE_NONE];
-	}
+          ++m_regionEvents[LOCKTYPE_NONE];
+        }
       }
       else
       {
-	FlushAndWaitOnAllBuffers(dirWaitWord);
+        FlushAndWaitOnAllBuffers(dirWaitWord);
       }
     }
   }
@@ -782,11 +774,13 @@ namespace MFM {
   void Tile<CC>::IncrAtomCount(ElementType atomType, s32 delta)
   {
     s32 idx = elementTable.GetIndex(atomType);
-    if (idx < 0) {
+    if (idx < 0)
+    {
       m_illegalAtomCount += delta;
       return;
     }
-    if (delta < 0 && -delta > m_atomCount[idx]) {
+    if (delta < 0 && -delta > m_atomCount[idx])
+    {
       LOG.Warning("LOST ATOMS %x %d %d (Tile %p) - requesting recount",
                   (int) atomType,delta,m_atomCount[idx],(void*) this);
       m_needRecount = true;
@@ -794,9 +788,13 @@ namespace MFM {
     }
 
     if (delta < 0)
+    {
       m_atomCount[idx] -= -delta;
+    }
     else
+    {
       m_atomCount[idx] += delta;
+    }
 
   }
 
@@ -805,24 +803,36 @@ namespace MFM {
   {
     s32 counts[ELEMENT_TABLE_SIZE];
     for (u32 i = 0; i < ELEMENT_TABLE_SIZE; ++i)
+    {
       counts[i] = 0;
+    }
     for (u32 x = 0; x < OWNED_SIDE; ++x)
-      for (u32 y = 0; y < OWNED_SIDE; ++y) {
+    {
+      for (u32 y = 0; y < OWNED_SIDE; ++y)
+      {
         const T * atom = GetUncachedAtom(x,y);
         s32 type = elementTable.GetIndex(atom->GetType());
         if (type < 0)
+        {
           FAIL(ILLEGAL_STATE);
+        }
         counts[type]++;
+      }
     }
     for (u32 i = 0; i < ELEMENT_TABLE_SIZE; ++i)
+    {
       if (counts[i] != m_atomCount[i])
+      {
         FAIL(ILLEGAL_STATE);
+      }
+    }
   }
 
   template <class CC>
   void Tile<CC>::RecountAtomsIfNeeded()
   {
-    if (m_needRecount) {
+    if (m_needRecount)
+    {
       LOG.Message("Recounting atoms (Tile %p)", this);
       RecountAtoms();
       m_needRecount = false;
@@ -839,17 +849,11 @@ namespace MFM {
 
     m_illegalAtomCount = 0;
 
-    SetAtomCount(Element_Empty<CC>::THE_INSTANCE.GetType(),OWNED_SIDE*OWNED_SIDE);
-
-    for(u32 x = 0; x < TILE_WIDTH; x++)
+    for(u32 x = 0; x < OWNED_SIDE; x++)
     {
-      for(u32 y = 0; y < TILE_WIDTH; y++)
+      for(u32 y = 0; y < OWNED_SIDE; y++)
       {
-	if(!m_atoms[x][y].IsSane())
-	{
-	  m_atoms[x][y] = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
-	}
-	IncrAtomCount(m_atoms[x][y].GetType(), 1);
+        IncrAtomCount(m_atoms[x][y].GetType(), 1);
       }
     }
   }
@@ -873,10 +877,10 @@ namespace MFM {
     {
       for(u32 y = 0; y < W; y++)
       {
-	if(m_random.OneIn(siteOdds))
-	{
-	  m_atoms[x][y].XRay(m_random, bitOdds);
-	}
+        if(m_random.OneIn(siteOdds))
+        {
+          m_atoms[x][y].XRay(m_random, bitOdds);
+        }
       }
     }
   }

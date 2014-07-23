@@ -41,7 +41,6 @@
 
 namespace MFM
 {
-
 #define IS_OWNED_CONNECTION(X) ((X) - Dirs::EAST >= 0 && (X) - Dirs::EAST < 4)
 
 #define BACKGROUND_RADIATION_SITE_ODDS 1000
@@ -124,22 +123,22 @@ namespace MFM
     u32 m_writeFailureOdds;
 
     /** The ElementTable instance which holds all atom behavior for this
-	Tile. */
+        Tile. */
     ElementTable<CC> elementTable;
 
     /** The PRNG used for generating all random numbers in this Tile. */
     Random m_random;
 
     /** The number of events executed in this Tile since
-	initialization. */
+        initialization. */
     u64 m_eventsExecuted;
 
     /** The number of event failures during execution in this Tile
-	since initialization. */
+        since initialization. */
     u64 m_eventsFailed;
 
     /** The number of the event failures resolved by erasing the
-	center atom, in this Tile since initialization. */
+        center atom, in this Tile since initialization. */
     u64 m_failuresErased;
 
     /**
@@ -168,7 +167,7 @@ namespace MFM
     T m_atoms[TILE_WIDTH][TILE_WIDTH];
 
     /** An index of the number of each type of Atom currently held
-	within this Tile.*/
+        within this Tile.*/
     s32 m_atomCount[ELEMENT_TABLE_SIZE];
 
     /** Set to true if an impossible count is detected */
@@ -179,14 +178,14 @@ namespace MFM
     s32 m_illegalAtomCount;
 
     /** The local location which the last EventWindow was centered
-	on. */
+        on. */
     SPoint m_lastExecutedAtom;
 
     /** The only EventWindow to exist in this tile. */
     EventWindow<CC> m_executingWindow;
 
     /** Pointers to Connections to each of this Tile's neighbors,
-	indexed by EuclidDir. */
+        indexed by EuclidDir. */
     Connection* m_connections[8];
 
     /**
