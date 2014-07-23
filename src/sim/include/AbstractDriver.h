@@ -400,6 +400,16 @@ namespace MFM
       }
     }
 
+    void SetAEPSPerEpoch(u32 aeps)
+    {
+      m_AEPSPerEpoch = aeps;
+    }
+
+    u32 GetAEPSPerEpoch() const
+    {
+      return m_AEPSPerEpoch;
+    }
+
   private:
 
     OurElementRegistry m_elementRegistry;
@@ -440,6 +450,7 @@ namespace MFM
     u64 m_lastTotalEvents;
 
     u32 m_nextEpochAEPS;
+    u32 m_epochCount;
 
     VArguments m_varguments;
 
@@ -495,7 +506,7 @@ namespace MFM
       u32 epochAEPS = atoi(aepsStr);
       if (epochAEPS < 1)
         FAIL(ILLEGAL_ARGUMENT);  // How do we report command line errors here?
-      ((AbstractDriver*)driver)->m_AEPSPerEpoch = epochAEPS;
+      ((AbstractDriver*)driver)->SetAEPSPerEpoch(epochAEPS);
     }
 
     static void SetGridImages(const char* not_needed, void* driver)
@@ -594,8 +605,9 @@ namespace MFM
       {
         if (m_AEPS >= m_nextEpochAEPS)
         {
-          DoEpochEvents(grid);
+          DoEpochEvents(grid, m_epochCount, m_nextEpochAEPS);
           m_nextEpochAEPS += m_AEPSPerEpoch;
+          ++m_epochCount;
         }
       }
     }
@@ -608,11 +620,11 @@ namespace MFM
      * should override this method and do Super::DoEpochEvents to
      * ensure all methods are called.
      */
-    virtual void DoEpochEvents(OurGrid& grid)
+    virtual void DoEpochEvents(OurGrid& grid, u32 epochs, u32 epochAEPS)
     {
       if (m_gridImages)
       {
-        const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEpochAEPS);
+        const char * path = GetSimDirPathTemporary("eps/%010d.ppm", epochAEPS);
         FILE* fp = fopen(path, "w");
         FileByteSink fbs(fp);
         grid.WriteEPSImage(fbs);
@@ -621,7 +633,7 @@ namespace MFM
 
       if (m_tileImages)
       {
-        const char * path = GetSimDirPathTemporary("teps/%010d-average.ppm", m_nextEpochAEPS);
+        const char * path = GetSimDirPathTemporary("teps/%010d-average.ppm", epochAEPS);
         FILE* fp = fopen(path, "w");
         FileByteSink fbs2(fp);
         grid.WriteEPSAverageImage(fbs2);
@@ -645,6 +657,8 @@ namespace MFM
       m_AEPS(0),
       m_recentAER(0),
       m_lastTotalEvents(0),
+      m_nextEpochAEPS(0),
+      m_epochCount(0),
       m_configurationPath(NULL)
     { }
 

@@ -91,6 +91,10 @@ namespace MFM
     enum { H = GC::GRID_HEIGHT};
 
     bool m_startPaused;
+    bool m_thisUpdateIsEpoch;
+    u32 m_thisEpochAEPS;
+    bool m_captureScreenshots;
+    u32 m_accelerateAfterEpochs;
 
     Fonts m_fonts;
 
@@ -106,13 +110,13 @@ namespace MFM
     bool m_renderStats;
     u32 m_ticksLastStopped;
 
-    s32 m_recordScreenshotPerAEPS;
-    s32 m_maxRecordScreenshotPerAEPS;
-    s32 m_countOfScreenshotsAtThisAEPS;
-    s32 m_countOfScreenshotsPerRate;
-    u32 m_nextEventCountsAEPS;
-    u32 m_nextScreenshotAEPS;
-    u32 m_nextTimeBasedDataAEPS;
+    //s32 m_recordScreenshotPerAEPS;
+    //s32 m_maxRecordScreenshotPerAEPS;
+    //s32 m_countOfScreenshotsAtThisAEPS;
+    //s32 m_countOfScreenshotsPerRate;
+    //u32 m_nextEventCountsAEPS;
+    //u32 m_nextScreenshotAEPS;
+    //u32 m_nextTimeBasedDataAEPS;
 
     Keyboard m_keyboard;
     Camera camera;
@@ -393,10 +397,15 @@ namespace MFM
       m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
     }
 
-    virtual void DoEpochEvents(OurGrid& grid)
+    virtual void DoEpochEvents(OurGrid& grid, u32 epochs, u32 epochAEPS)
     {
-      Super::DoEpochEvents(grid);
-      //xXXX add png image stuff
+      Super::DoEpochEvents(grid, epochs, epochAEPS);
+      m_thisUpdateIsEpoch = true;
+      m_thisEpochAEPS = epochAEPS;
+      if (m_accelerateAfterEpochs > 0 && (epochs % m_accelerateAfterEpochs) == 0)
+      {
+        SetAEPSPerEpoch(this->GetAEPSPerEpoch() + 1);
+      }
     }
 
     virtual void OnceOnly(VArguments& args)
@@ -412,11 +421,13 @@ namespace MFM
       // Let the parent 'go first'!
       Super::OnceOnly(args);
 
+      /*
       if (m_countOfScreenshotsPerRate > 0) {
         m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
         m_recordScreenshotPerAEPS = 1;
         m_countOfScreenshotsAtThisAEPS = 0;
       }
+      */
 
       if (!getenv("SDL_VIDEO_ALLOW_SCREENSAVER"))          // If user isn't already messing with this
         putenv((char *) "SDL_VIDEO_ALLOW_SCREENSAVER=1");  // Old school sdl 1.2 mechanism
@@ -677,6 +688,9 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
 
     AbstractGUIDriver() :
       m_startPaused(true),
+      m_thisUpdateIsEpoch(false),
+      m_captureScreenshots(false),
+      m_accelerateAfterEpochs(0),
       m_renderStats(false),
       m_screenWidth(SCREEN_INITIAL_WIDTH),
       m_screenHeight(SCREEN_INITIAL_HEIGHT),
@@ -692,9 +706,11 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
 
     virtual void ReinitUs()
     {
+      /*
       m_nextEventCountsAEPS = 0;
       m_nextScreenshotAEPS = 0;
       m_nextTimeBasedDataAEPS = 0;
+      */
     }
 
     virtual void PostReinit(VArguments& args)
@@ -756,7 +772,7 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
     {
       AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
 
-      driver->m_recordScreenshotPerAEPS = atoi(aeps);
+      driver->m_captureScreenshots = true;
     }
 
     static void SetStartPausedFromArgs(const char* not_used, void* driverptr)
@@ -770,14 +786,14 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
     {
       AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
 
-      driver->m_countOfScreenshotsPerRate = atoi(aeps);
+      driver->m_accelerateAfterEpochs = atoi(aeps);
     }
 
     void AddDriverArguments()
     {
       Super::AddDriverArguments();
 
-      this->RegisterSection("Display-specific switches");
+      this->RegisterSection("GUI switches");
 
       this->RegisterArgument("Start with only the statistics view on the screen.",
                              "--startwithoutgrid", &ConfigStatsOnlyView, this, false);
@@ -785,11 +801,11 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
       this->RegisterArgument("Start with a minimal-sized window.",
                              "--startminimal", &ConfigMinimalView, this, false);
 
-      this->RegisterArgument("Record screenshots every ARG aeps",
-                             "-p|--pictures", &SetRecordScreenshotPerAEPSFromArgs, this, true);
+      this->RegisterArgument("Capture a screenshot every epoch",
+                             "-p|--pngs", &SetRecordScreenshotPerAEPSFromArgs, this, false);
 
-      this->RegisterArgument("Take ARG shots per speed from 1 up to -p value",
-                             "--picturesPerRate",
+      this->RegisterArgument("Increment the epoch length every ARG epochs",
+                             "--accelerate",
                              &SetPicturesPerRateFromArgs, this, true);
 
       this->RegisterArgument("Simulation begins upon program startup.",
@@ -1101,37 +1117,40 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
         lastFrame = SDL_GetTicks();
 
 
+        m_thisUpdateIsEpoch = false;  // Assume it's not
+
         Update(Super::GetGrid());
 
         m_rootDrawing.Clear();
 
         m_rootPanel.Paint(m_rootDrawing);
 
-        if (m_recordScreenshotPerAEPS > 0)
+        if (m_thisUpdateIsEpoch)
         {
-          if (!m_gridPaused && Super::GetAEPS() >= m_nextScreenshotAEPS)
-          {
-            const char * path = Super::GetSimDirPathTemporary("vid/%010d.png",
-                                                              m_nextScreenshotAEPS);
+          if (m_captureScreenshots) {
+            const char * path = Super::GetSimDirPathTemporary("vid/%010d.png", m_thisEpochAEPS);
 
             camera.DrawSurface(screen,path);
+          }
+          {
+            const char * path = Super::GetSimDirPathTemporary("tbd/data.dat");
+            bool exists = true;
             {
-              const char * path = Super::GetSimDirPathTemporary("tbd/data.dat");
-              bool exists = true;
-              {
-                FILE* fp = fopen(path, "r");
-                if (!fp) exists = false;
-                else fclose(fp);
-              }
-              FILE* fp = fopen(path, "a");
-              FileByteSink fbs(fp);
-              m_srend.WriteRegisteredCounts(fbs, !exists, Super::GetGrid(),
-                                            Super::GetAEPS(),
-                                            Super::GetAER(),
-                                            Super::GetAEPSPerFrame(),
-                                            Super::GetOverheadPercent(), true);
-              fclose(fp);
+              FILE* fp = fopen(path, "r");
+              if (!fp) exists = false;
+              else fclose(fp);
             }
+            FILE* fp = fopen(path, "a");
+            FileByteSink fbs(fp);
+            m_srend.WriteRegisteredCounts(fbs, !exists, Super::GetGrid(),
+                                          Super::GetAEPS(),
+                                          Super::GetAER(),
+                                          Super::GetAEPSPerFrame(),
+                                          Super::GetOverheadPercent(), true);
+            fclose(fp);
+          }
+
+          /*
             // Are we accelerating and not yet up to cruising speed?
             if (m_countOfScreenshotsPerRate > 0 &&
                 m_recordScreenshotPerAEPS < m_maxRecordScreenshotPerAEPS)
@@ -1146,7 +1165,7 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
             }
 
             m_nextScreenshotAEPS += m_recordScreenshotPerAEPS;
-          }
+          */
         }
 
         if(Super::GetHaltAfterAEPS() > 0 &&
