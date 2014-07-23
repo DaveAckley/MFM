@@ -124,7 +124,10 @@ namespace MFM
   template <class CC>
   u64 Tile<CC>::GetUncachedSiteEvents(const SPoint site) const
   {
-    if (!IsInUncachedTile(site)) FAIL(ILLEGAL_ARGUMENT);
+    if (!IsInUncachedTile(site))
+    {
+      FAIL(ILLEGAL_ARGUMENT);
+    }
     return m_siteEvents[site.GetX()][site.GetY()];
   }
 
@@ -132,7 +135,9 @@ namespace MFM
   void Tile<CC>::InternalPutAtom(const T & atom, s32 x, s32 y)
   {
     if (((u32) x) >= TILE_WIDTH || ((u32) y) >= TILE_WIDTH)
+    {
       FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
+    }
     m_atoms[x][y] = atom;
   }
 
@@ -167,10 +172,10 @@ namespace MFM
       SendAcknowledgmentPacket(packet);
       break;
     case PACKET_EVENT_ACKNOWLEDGE:
-
       break;
     default:
-      FAIL(INCOMPLETE_CODE); break;
+      FAIL(INCOMPLETE_CODE);
+      break;
     }
   }
 
@@ -278,7 +283,6 @@ namespace MFM
          m_random.OneIn(BACKGROUND_RADIATION_SITE_ODDS))
       {
         SingleXRay(pt.GetX(), pt.GetY());
-        RecountAtoms();
       }
       else if(!IsInCache(pt))
       {
@@ -680,7 +684,7 @@ namespace MFM
             elementTable.Execute(m_executingWindow);
           });
 
-          // XXX INSANE SLOWDOWN FOR DEBUG: AssertValidAtomCounts();
+        // XXX INSANE SLOWDOWN FOR DEBUG: AssertValidAtomCounts();
 
         m_lastExecutedAtom = m_executingWindow.GetCenterInTile();
 

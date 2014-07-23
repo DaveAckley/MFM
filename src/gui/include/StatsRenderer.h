@@ -247,15 +247,23 @@ namespace MFM {
       ReassignButtonLocations();
     }
 
-    bool DisplayCapturableStats(const CapturableStatistic * cs) {
-      if (m_capStatsInUse >= MAX_TYPES) return false;
+    bool DisplayCapturableStats(const CapturableStatistic * cs)
+    {
+      if (m_capStatsInUse >= MAX_TYPES)
+      {
+        return false;
+      }
       u32 index = m_capStatsInUse++;
       m_capStats[index] = cs;
       return true;
     }
 
-    bool DisplayStatsForElement(const Grid<GC>  & grd, const Element<CC> & elt) {
-      if (m_displayElementsInUse >= MAX_TYPES) return false;
+    bool DisplayStatsForElement(const Grid<GC>  & grd, const Element<CC> & elt)
+    {
+      if (m_displayElementsInUse >= MAX_TYPES)
+      {
+        return false;
+      }
       u32 index = m_displayElementsInUse++;
       m_displayElements[index].Set(&grd,&elt);
       return DisplayCapturableStats(&m_displayElements[index]);
@@ -265,13 +273,6 @@ namespace MFM {
     {
       TTF_CloseFont(m_drawFont);
     }
-
-    /*
-    void SetDestination(Panel* dest)
-    {
-      m_dest = dest;
-    }
-    */
 
     void SetDrawPoint(Point<s32> drawPoint)
     {

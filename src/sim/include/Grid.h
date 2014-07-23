@@ -332,10 +332,10 @@ namespace MFM {
      *
      * @returns a percentage of the occupied sites in this Grid .
      */
-    double GetFullSitePercentage() const
+    double GetEmptySitePercentage() const
     {
-      return (double)GetAtomCount(Element_Empty<CC>::THE_INSTANCE.GetType()) /
-             (double)(GetHeightSites() * GetWidthSites());
+      return 1.0 - ((double)GetAtomCount(Element_Empty<CC>::THE_INSTANCE.GetType()) /
+                    (double)(GetHeightSites() * GetWidthSites()));
     }
 
     void SurroundRectangleWithWall(s32 x, s32 y, s32 w, s32 h, s32 thickness);

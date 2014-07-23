@@ -43,6 +43,8 @@ namespace MFM
     s32 m_minValue;
     s32 m_maxValue;
 
+    s32 m_snapResolution;
+
     /**
      * If not \c NULL, will set this value alongside the value inside
      * the Slider. This is useful for binding some outside value to
@@ -61,6 +63,7 @@ namespace MFM
     Slider() :
       m_minValue(0),
       m_maxValue(100),
+      m_snapResolution(1),
       m_externalValue(NULL),
       m_dragging(false),
       m_text(NULL)
@@ -117,13 +120,26 @@ namespace MFM
     {
       if(m_externalValue)
       {
-        *m_externalValue = CLAMP(m_minValue, m_maxValue, value);
+        s32 newVal = CLAMP(m_minValue, m_maxValue, value);
+        newVal -= (newVal % m_snapResolution);
+        newVal = CLAMP(m_minValue, m_maxValue, newVal);
+        *m_externalValue = newVal;
       }
     }
 
     s32 GetValue() const
     {
       return *m_externalValue;
+    }
+
+    void SetSnapResolution(s32 snapResolution)
+    {
+      m_snapResolution = snapResolution;
+    }
+
+    s32 GetSnapResolution() const
+    {
+      return m_snapResolution;
     }
 
     virtual void PaintBorder(Drawing& d)

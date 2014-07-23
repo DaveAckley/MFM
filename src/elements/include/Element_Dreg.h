@@ -39,9 +39,6 @@
 namespace MFM
 {
 
-#define DREG_DEL_ODDS 40
-#define DREG_DDR_ODDS 20 /*Deleting DREGs*/
-
 #define DREG_VERSION 1
 
   template <class CC>
@@ -58,6 +55,12 @@ namespace MFM
 
     static s32 m_dregCreateOdds;
 
+
+    static s32 m_dregDeleteOdds;
+
+
+    static s32 m_dregDeleteDregOdds;
+
   public:
 
     static Element_Dreg THE_INSTANCE;
@@ -68,7 +71,7 @@ namespace MFM
     }
 
     virtual u32 PercentMovable(const T& you,
-			       const T& me, const SPoint& offset) const
+                               const T& me, const SPoint& offset) const
     {
       return 100;
     }
@@ -96,32 +99,32 @@ namespace MFM
         u32 oldType = atom.GetType();
 
         if(Element_Empty<CC>::THE_INSTANCE.IsType(oldType))
-	{
-	  if(random.OneIn(m_dregCreateOdds))
-	  {
-	    atom = Element_Dreg<CC>::THE_INSTANCE.GetDefaultAtom();
-	  }
-	  else if(random.OneIn(m_resOdds))
-	  {
-	    atom = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
-	  }
-	}
+        {
+          if(random.OneIn(m_dregCreateOdds))
+          {
+            atom = Element_Dreg<CC>::THE_INSTANCE.GetDefaultAtom();
+          }
+          else if(random.OneIn(m_resOdds))
+          {
+            atom = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
+          }
+        }
         else if(oldType == Element_Dreg::THE_INSTANCE.GetType())
-	{
-	  if(random.OneIn(DREG_DDR_ODDS))
-	  {
-	    atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
-	  }
-	}
-        else if(oldType != Element_Wall<CC>::TYPE() && random.OneIn(DREG_DEL_ODDS))
-	{
-	  atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
-	}
+        {
+          if(random.OneIn(m_dregDeleteDregOdds))
+          {
+            atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+          }
+        }
+        else if(oldType != Element_Wall<CC>::TYPE() && random.OneIn(m_dregDeleteOdds))
+        {
+          atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+        }
 
         if(atom.GetType() != oldType)
-	{
-	  window.SetRelativeAtom(dir, atom);
-	}
+        {
+          window.SetRelativeAtom(dir, atom);
+        }
       }
       this->Diffuse(window);
     }
@@ -135,6 +138,18 @@ namespace MFM
     {
       return &m_dregCreateOdds;
     }
+
+
+    s32* GetDregDeleteOddsPtr()
+    {
+      return &m_dregDeleteOdds;
+    }
+
+
+    s32* GetDregDeleteDregOddsPtr()
+    {
+      return &m_dregDeleteDregOdds;
+    }
   };
 
   template <class CC>
@@ -146,6 +161,11 @@ namespace MFM
   template <class CC>
   s32 Element_Dreg<CC>::m_dregCreateOdds = 200;
 
+  template <class CC>
+  s32 Element_Dreg<CC>::m_dregDeleteOdds = 40;
+
+  template <class CC>
+  s32 Element_Dreg<CC>::m_dregDeleteDregOdds = 20;
 }
 
 #endif /* ELEMENT_DREG_H */

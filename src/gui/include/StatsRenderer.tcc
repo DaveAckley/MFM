@@ -33,7 +33,8 @@ namespace MFM {
                      Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
     baseY += ROW_HEIGHT;
 
-    if (m_displayAER) {
+    if (m_displayAER)
+    {
       sprintf(strBuffer, "%8d/frame", AEPSperFrame);
       drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
                         Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
@@ -51,14 +52,24 @@ namespace MFM {
 
     }
 
+    baseY += ROW_HEIGHT;
+
+    sprintf(strBuffer, "%8.3f %%full", grid.GetEmptySitePercentage() * 100);
+    drawing.BlitText(strBuffer, UPoint(m_drawPoint.GetX(), baseY),
+                     UPoint(m_dimensions.GetX(), ROW_HEIGHT));
+
     baseY += ROW_HEIGHT; // skip a line
-    for (u32 i = 0; i < m_capStatsInUse; ++i) {
+    for (u32 i = 0; i < m_capStatsInUse; ++i)
+    {
       const CapturableStatistic * cs = m_capStats[i];
 
       s32 places = cs->GetDecimalPlaces();
-      if (places < 0) {
+      if (places < 0)
+      {
         snprintf(strBuffer, STR_BUFFER_SIZE, "%s", cs->GetLabel());
-      } else {
+      }
+      else
+      {
         snprintf(fmtBuffer, FMT_BUFFER_SIZE, "%%8.%df %%s",places);
         snprintf(strBuffer, STR_BUFFER_SIZE, fmtBuffer, cs->GetValue(endOfEpoch), cs->GetLabel());
       }
