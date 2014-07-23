@@ -54,17 +54,17 @@ namespace MFM {
     u32 m_hiddenColor;
     u32 m_selectedHiddenColor;
 
-
-
     SPoint m_windowTL;
 
     Point<u32> m_dimensions;
 
     template <class CC>
-    void RenderMemRegions(Drawing & drawing, SPoint& pt, bool renderCache, bool selected);
+    void RenderMemRegions(Drawing & drawing, SPoint& pt,
+                          bool renderCache, bool selected, bool lowlight);
 
     template <class CC>
-    void RenderVisibleRegionOutlines(Drawing & drawing, SPoint& pt, bool renderCache, bool selected);
+    void RenderVisibleRegionOutlines(Drawing & drawing, SPoint& pt, bool renderCache,
+                                     bool selected, bool lowlight);
 
     template <class CC>
     void RenderMemRegion(Drawing & drawing, SPoint& pt, int regID,
@@ -77,10 +77,12 @@ namespace MFM {
                       u32 color);
 
     template <class CC>
-    void RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile, bool renderCache);
+    void RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
+                     bool renderCache, bool lowlight);
 
     template <class CC>
-    void RenderAtom(Drawing & drawing, const SPoint& atomLoc, const UPoint& rendPt,  Tile<CC>& tile);
+    void RenderAtom(Drawing & drawing, const SPoint& atomLoc, const UPoint& rendPt,
+                    Tile<CC>& tile);
 
     template <class CC>
     u32 GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom, u32 selector = 0);

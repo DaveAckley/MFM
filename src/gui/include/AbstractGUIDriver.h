@@ -342,7 +342,7 @@ namespace MFM
       {
         SPoint selectedTile = AbstractGridButton::m_grend->GetSelectedTile();
 
-        if(selectedTile.GetX() > 0 && selectedTile.GetY() > 0)
+        if(selectedTile.GetX() >= 0 && selectedTile.GetY() >= 0)
         {
           AbstractGridButton::m_driver->GetGrid().SetTileToExecuteOnly(
             selectedTile,
