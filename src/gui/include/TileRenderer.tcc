@@ -63,7 +63,7 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
                                m_atomDrawSize,
                                m_atomDrawSize/2);
             },{
-              RenderAtom(drawing, atomLoc, rendPt, tile);
+              RenderAtom(drawing, atomLoc, rendPt, tile, lowlight);
             });
         }
       }
@@ -72,33 +72,41 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
 }
 
   template <class CC>
-  void TileRenderer::RenderAtom(Drawing & drawing, const SPoint& atomLoc, const UPoint& rendPt,  Tile<CC>& tile)
+  void TileRenderer::RenderAtom(Drawing & drawing, const SPoint& atomLoc, const UPoint& rendPt,  Tile<CC>& tile, bool lowlight)
 {
   const typename CC::ATOM_TYPE * atom = tile.GetAtom(atomLoc);
-  u32 color;
-  if(m_drawDataHeat)
+  if(atom->GetType() != Element_Empty<CC>::THE_INSTANCE.GetType())
   {
-    color = GetDataHeatColor(tile, *atom);
-  }
-  else
-  {
-    color = GetAtomColor(tile, *atom);
-  }
-
-  if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX() &&
-     rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
-  {
-    if(color)
+    u32 color;
+    if(m_drawDataHeat)
     {
-      // Round up on radius.  Better to overlap than vanish
-      u32 radius = (m_atomDrawSize + 1) / 2;
+      color = GetDataHeatColor(tile, *atom);
+    }
+    else
+    {
+      color = GetAtomColor(tile, *atom);
+    }
 
-      drawing.SetForeground(color);
-      drawing.FillCircle(rendPt.GetX(),
-                         rendPt.GetY(),
-                         m_atomDrawSize,
-                         m_atomDrawSize,
-                         radius);
+    if(lowlight)
+    {
+      color = Drawing::HalfColor(color);
+    }
+
+    if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX() &&
+       rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
+    {
+      if(color)
+      {
+        // Round up on radius.  Better to overlap than vanish
+        u32 radius = (m_atomDrawSize + 1) / 2;
+
+        drawing.SetForeground(color);
+        drawing.FillCircle(rendPt.GetX(),
+                           rendPt.GetY(),
+                           m_atomDrawSize,
+                           m_atomDrawSize,
+                           radius);
+      }
     }
   }
 }
