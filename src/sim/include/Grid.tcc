@@ -148,6 +148,14 @@ namespace MFM {
   }
 
   template <class GC>
+  void Grid<GC>::RecountAtoms()
+  {
+    for(u32 i = 0; i < W; i++)
+      for(u32 j = 0; j < H; j++)
+        m_tiles[i][j].RecountAtoms();
+  }
+
+  template <class GC>
   void Grid<GC>::PlaceAtom(const T& atom, const SPoint& siteInGrid)
   {
     SPoint tileInGrid, siteInTile;

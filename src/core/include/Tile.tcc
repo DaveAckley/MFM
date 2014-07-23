@@ -264,36 +264,57 @@ namespace MFM {
   {
     const T* oldAtom = GetAtom(pt);
     u32 oldType = 0;
-    bool recounted = false;
     unwind_protect(
     {
-      recounted = true;
-      m_atoms[pt.GetX()][pt.GetY()] =
-	Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+      InternalPutAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(),
+                      pt.GetX(), pt.GetY());
       RecountAtoms();
     },
     {
       oldType = oldAtom->GetType();
-    });
 
-    if(!recounted)
-    {
-      InternalPutAtom(atom,pt.GetX(),pt.GetY());
-
-      if(!IsInCache(pt))
+      if(m_backgroundRadiationEnabled &&
+         m_random.OneIn(BACKGROUND_RADIATION_SITE_ODDS))
       {
-	IncrAtomCount(atom.GetType(),1);
-	IncrAtomCount(oldType,-1);
+        // Maybe zap oldAtom
+        SingleXRay(pt.GetX(), pt.GetY());
+
+        if (!oldAtom->IsSane())
+        {
+          // This is actually more like bogus control flow, rather a
+          // 'true' failure :(.  We just want to empty the site and
+          // recount, the same as if an inconsistency had been
+          // detected elsewhere in the code.
+          FAIL(INCONSISTENT_ATOM);
+        }
+
+        u32 newOldType = oldAtom->GetType();
+
+        if(newOldType != oldType && !IsInCache(pt))
+        {
+          // Here an xray has changed an atom from a
+          // legal oldType into a legal newOldType
+          IncrAtomCount(oldType, -1);
+          IncrAtomCount(newOldType, 1);
+
+        }
+
+        // So this is (now) the 'old' atom's type
+        oldType = newOldType;
+
       }
-    }
 
-    // XXX IMPLEMENT BIT-CORRUPTION-ON-WRITE IN HERE
+      u32 newType = atom.GetType();
+      if(newType != oldType && !IsInCache(pt))
+      {
+        // Here we're just displacing an oldType
+        // atom with a newType atom
+        IncrAtomCount(oldType, -1);
+        IncrAtomCount(newType, 1);
+      }
 
-    if(m_backgroundRadiationEnabled &&
-       m_random.OneIn(BACKGROUND_RADIATION_SITE_ODDS))
-    {
-      SingleXRay(pt.GetX(), pt.GetY());
-    }
+      InternalPutAtom(atom,pt.GetX(),pt.GetY());
+    });
   }
 
   template <class CC>
@@ -837,18 +858,23 @@ namespace MFM {
       m_atomCount[i] = 0;
     }
 
+    // Not clear that anybody cares about this, but
     m_illegalAtomCount = 0;
-
-    SetAtomCount(Element_Empty<CC>::THE_INSTANCE.GetType(),OWNED_SIDE*OWNED_SIDE);
 
     for(u32 x = 0; x < TILE_WIDTH; x++)
     {
       for(u32 y = 0; y < TILE_WIDTH; y++)
       {
+        const SPoint pt(x,y);
+
+        if (IsInCache(pt))
+          continue;
+
 	if(!m_atoms[x][y].IsSane())
 	{
 	  m_atoms[x][y] = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
 	}
+
 	IncrAtomCount(m_atoms[x][y].GetType(), 1);
       }
     }

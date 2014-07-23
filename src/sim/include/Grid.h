@@ -271,6 +271,12 @@ namespace MFM {
 
     void Unpause();
 
+    /**
+     * Resets all atom counts and refreshes the atoms counts in
+     * every tile in the grid.
+     */
+    void RecountAtoms();
+
     void PlaceAtom(const T& atom, const SPoint& location);
 
     const T* GetAtom(SPoint& loc)
