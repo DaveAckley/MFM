@@ -96,7 +96,7 @@ namespace MFM
 
     bool m_keyboardPaused;   // Toggled by keyboard space, ' ', SDLK_SPACE
     bool m_mousePaused;      // Set if any buttons down, clear if all up
-    bool m_gridPaused;       // Set if keyboard || mouse paused, checked by RunGrid
+    bool m_gridPaused;       // Set if keyboard || mouse paused, checked by UpdateGrid
     bool m_reinitRequested;
     void RequestReinit()
     {
@@ -271,7 +271,7 @@ namespace MFM
 
     struct TileViewButton : public AbstractGridButton
     {
-      TileViewButton() : AbstractGridButton("Toggle Tile View")
+      TileViewButton() : AbstractGridButton("Change Tile View")
       {
         AbstractButton::SetName("TileViewButton");
         Panel::SetDimensions(200,40);
@@ -388,9 +388,15 @@ namespace MFM
     {
       /* Update the stats renderer */
       m_statisticsPanel.SetAEPS(Super::GetAEPS());
-      m_statisticsPanel.SetAER(Super::GetAER());
+      m_statisticsPanel.SetAER(Super::GetRecentAER());  // Use backwards averaged value
       m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
       m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
+    }
+
+    virtual void DoEpochEvents(OurGrid& grid)
+    {
+      Super::DoEpochEvents(grid);
+      //xXXX add png image stuff
     }
 
     virtual void OnceOnly(VArguments& args)
@@ -430,7 +436,7 @@ namespace MFM
       m_statisticsPanel.SetStatsRenderer(&m_srend);
       m_statisticsPanel.SetGrid(&Super::GetGrid());
       m_statisticsPanel.SetAEPS(Super::GetAEPS());
-      m_statisticsPanel.SetAER(Super::GetAER());
+      m_statisticsPanel.SetAER(Super::GetRecentAER());
       m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
       m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
       m_statisticsPanel.SetVisibility(false);
@@ -513,7 +519,7 @@ namespace MFM
       m_gridPaused = m_keyboardPaused || m_mousePaused;
       if (!m_gridPaused)
       {
-        Super::RunGrid(grid);
+        Super::UpdateGrid(grid);
       }
     }
 
