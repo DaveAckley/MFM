@@ -174,14 +174,14 @@ namespace MFM
     }
 
     /**
-     * Runs the held Grid and all its associated threads for a breif
-     * amount of time, attempting to elapse \c m_aepsPerFrame before
-     * continuing. This also learns about how long an AEPS takes to
-     * elapse, making subsequent calls more accurate in speed.
+     * Runs the held Grid and all its associated threads for a brief
+     * amount of time, letting about \c m_aepsPerFrame AEPS occur
+     * before pausing. This also learns about how long an AEPS takes
+     * to elapse, making subsequent calls more accurate in duration.
      *
      * @param grid The Grid which is updated during this call.
      */
-    void RunGrid(OurGrid& grid)
+    void UpdateGrid(OurGrid& grid)
     {
       const s32 ONE_THOUSAND = 1000;
       const s32 ONE_MILLION = ONE_THOUSAND*ONE_THOUSAND;
@@ -199,10 +199,25 @@ namespace MFM
 
       grid.Pause();
 
-      m_msSpentRunning += (m_ticksLastStopped - startMS);
+      u32 thisPeriodMS = m_ticksLastStopped - startMS;
+      m_msSpentRunning += thisPeriodMS;
 
-      m_AEPS = grid.GetTotalEventsExecuted() / grid.GetTotalSites();
+      u64 totalEvents = grid.GetTotalEventsExecuted();
+      u32 totalSites = grid.GetTotalSites();
+      m_AEPS = totalEvents / totalSites;
       m_AER = 1000 * (m_AEPS / m_msSpentRunning);
+
+      u64 newEvents = totalEvents - m_lastTotalEvents;
+      m_lastTotalEvents = totalEvents;
+
+      if (thisPeriodMS == 0) {
+        LOG.Warning("Zero ms in sample");
+        thisPeriodMS = 1;
+      }
+      double thisAERsample = 1000.0 * newEvents / totalSites / thisPeriodMS;
+
+      const double BACKWARDS_AVERAGE_RATE = 0.99;
+      m_recentAER = BACKWARDS_AVERAGE_RATE * m_recentAER + (1 - BACKWARDS_AVERAGE_RATE) * thisAERsample;
 
       m_overheadPercent = 100.0*m_msSpentOverhead/(m_msSpentRunning+m_msSpentOverhead);
 
@@ -215,14 +230,14 @@ namespace MFM
 
       m_lastFrameAEPS = m_AEPS;
 
-      ExportEventCounts(grid);
+      CheckEpochProcessing(grid);
 
       PostUpdate();
     }
 
     /**
      * Subtracts \c m_aepsPerFrame (or, the number of AEPS which
-     * should elapse every call to \c RunGrid() ) by one, keeping it
+     * should elapse every call to \c UpdateGrid() ) by one, keeping it
      * above \c 0 at all times.
      */
     void DecrementAEPSPerFrame()
@@ -235,7 +250,7 @@ namespace MFM
 
     /**
      * Adds one to \c m_aepsPerFrame (or, the number of AEPS which
-     * should elapse every call to \c RunGrid() ), keeping it
+     * should elapse every call to \c UpdateGrid() ), keeping it
      * below \c 1000 at all times.
      */
     void IncrementAEPSPerFrame()
@@ -353,7 +368,7 @@ namespace MFM
       }
 
       /* Initialize tbd.txt */
-      const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
+      const char* path = GetSimDirPathTemporary("tbd/tbd.txt");
       FILE* fp = fopen(path, "w");
       fprintf(fp, "#AEPS activesites empty dreg res wall sort-hits"
               "sort-misses sort-total sort-hit-pctg\n");
@@ -376,7 +391,7 @@ namespace MFM
 
       while(running)
       {
-        RunGrid(m_grid);
+        UpdateGrid(m_grid);
 
         if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
         {
@@ -402,13 +417,29 @@ namespace MFM
     double m_lastFrameAEPS;
     u32 m_aepsPerFrame;
 
-    s32 m_recordEventCountsPerAEPS;
-    s32 m_recordTimeBasedDataPerAEPS;
+    s32 m_AEPSPerEpoch;
+    bool m_gridImages;
+    bool m_tileImages;
+    //    s32 m_recordTimeBasedDataPerAEPS;
 
     double m_AEPS;
+    /**
+     * The absolute event rate since the beginning of the simulation
+     */
     double m_AER;
 
-    u32 m_nextEventCountsAEPS;
+    /**
+     * The recent event rate computed by backwards averaging
+     */
+    double m_recentAER;
+
+    /**
+     * The previous value of Grid::GetTotalEventsExecuted, for
+     * computing m_recentAET
+     */
+    u64 m_lastTotalEvents;
+
+    u32 m_nextEpochAEPS;
 
     VArguments m_varguments;
 
@@ -459,17 +490,31 @@ namespace MFM
       ((AbstractDriver*)driver)->SetSeed(seed);
     }
 
-    static void SetRecordEventCountsFromArgs(const char* aepsStr, void* driver)
+    static void SetAEPSPerEpochFromArgs(const char* aepsStr, void* driver)
     {
-      u32 recAEPS = atoi(aepsStr);
-      ((AbstractDriver*)driver)->m_recordEventCountsPerAEPS = recAEPS;
+      u32 epochAEPS = atoi(aepsStr);
+      if (epochAEPS < 1)
+        FAIL(ILLEGAL_ARGUMENT);  // How do we report command line errors here?
+      ((AbstractDriver*)driver)->m_AEPSPerEpoch = epochAEPS;
     }
 
+    static void SetGridImages(const char* not_needed, void* driver)
+    {
+      ((AbstractDriver*)driver)->m_gridImages = 1;
+    }
+
+    static void SetTileImages(const char* not_needed, void* driver)
+    {
+      ((AbstractDriver*)driver)->m_tileImages = 1;
+    }
+
+    /*
     static void SetRecordTimeBasedDataFromArgs(const char* tbdStr, void* driver)
     {
       u32 tbdAEPS = atoi(tbdStr);
       ((AbstractDriver*)driver)->m_recordTimeBasedDataPerAEPS = tbdAEPS;
     }
+    */
 
     static void SetDataDirFromArgs(const char* dirPath, void* driverPtr)
     {
@@ -543,31 +588,47 @@ namespace MFM
       }
     }
 
-    void ExportEventCounts(OurGrid& grid)
+    void CheckEpochProcessing(OurGrid& grid)
     {
-      if (m_recordEventCountsPerAEPS > 0)
+      if (m_AEPSPerEpoch > 0)
       {
-        if (m_AEPS > m_nextEventCountsAEPS)
+        if (m_AEPS >= m_nextEpochAEPS)
         {
-
-          const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEventCountsAEPS);
-          FILE* fp = fopen(path, "w");
-          FileByteSink fbs(fp);
-          grid.WriteEPSImage(fbs);
-          fclose(fp);
-
-          path = GetSimDirPathTemporary("teps/%010d-average.ppm", m_nextEventCountsAEPS);
-          fp = fopen(path, "w");
-          FileByteSink fbs2(fp);
-          grid.WriteEPSAverageImage(fbs2);
-          fclose(fp);
-
-          m_nextEventCountsAEPS += m_recordEventCountsPerAEPS;
+          DoEpochEvents(grid);
+          m_nextEpochAEPS += m_AEPSPerEpoch;
         }
       }
     }
 
   public:
+
+    /**
+     * Method to do end-of-epoch processing.  Base class handles
+     * --gridImage and --tileImage processing here, so all subclasses
+     * should override this method and do Super::DoEpochEvents to
+     * ensure all methods are called.
+     */
+    virtual void DoEpochEvents(OurGrid& grid)
+    {
+      if (m_gridImages)
+      {
+        const char * path = GetSimDirPathTemporary("eps/%010d.ppm", m_nextEpochAEPS);
+        FILE* fp = fopen(path, "w");
+        FileByteSink fbs(fp);
+        grid.WriteEPSImage(fbs);
+        fclose(fp);
+      }
+
+      if (m_tileImages)
+      {
+        const char * path = GetSimDirPathTemporary("teps/%010d-average.ppm", m_nextEpochAEPS);
+        FILE* fp = fopen(path, "w");
+        FileByteSink fbs2(fp);
+        grid.WriteEPSAverageImage(fbs2);
+        fclose(fp);
+      }
+    }
+
 
     AbstractDriver() :
       m_neededElementCount(0),
@@ -578,7 +639,12 @@ namespace MFM
       m_msSpentOverhead(0),
       m_microsSleepPerFrame(1000),
       m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
+      m_AEPSPerEpoch(1000),
+      m_gridImages(false),
+      m_tileImages(false),
       m_AEPS(0),
+      m_recentAER(0),
+      m_lastTotalEvents(0),
       m_configurationPath(NULL)
     { }
 
@@ -641,12 +707,20 @@ namespace MFM
       RegisterArgument("Set master PRNG seed to ARG (u32)",
                        "-s|--seed", &SetSeedFromArgs, this, true);
 
-      RegisterArgument("Record event counts every ARG aeps",
-                       "-e|--events", &SetRecordEventCountsFromArgs, this, true);
+      RegisterArgument("Set epoch length to ARG AEPS",
+                       "-e|--epoch", &SetAEPSPerEpochFromArgs, this, true);
 
+      RegisterArgument("Each epoch, write grid AEPS image to per-sim eps/ directory",
+                       "--gridImages", &SetGridImages, this, false);
+
+      RegisterArgument("Each epoch, write tile AEPS image to per-sim teps/ directory",
+                       "--tileImages", &SetTileImages, this, false);
+
+      /*
       RegisterArgument("Records time based data every ARG aeps",
                        "-t|--timebd",
                        &SetRecordTimeBasedDataFromArgs, this, true);
+      */
 
       RegisterArgument("If ARG > 0, Halts after ARG elapsed aeps.",
                        "--haltafteraeps", &SetHaltAfterAEPSFromArgs, this, true);
@@ -658,7 +732,7 @@ namespace MFM
                        "-ep|--elementpath", &RegisterElementPath, this, true);
 
       RegisterArgument("Load initial configuration from file at path ARG (string)",
-                       "-cp|--configurationPath", &LoadFromConfigFile, this, true);
+                       "-cp|--configpath", &LoadFromConfigFile, this, true);
     }
 
 
@@ -683,6 +757,16 @@ namespace MFM
     void SetAER(double aer)
     {
       m_AER = aer;
+    }
+
+    double GetRecentAER()
+    {
+      return m_recentAER;
+    }
+
+    void SetRecentAER(double aer)
+    {
+      m_recentAER = aer;
     }
 
     u32 GetAEPSPerFrame()
