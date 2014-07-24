@@ -99,6 +99,7 @@ namespace MFM
     void SetMinValue(s32 value)
     {
       m_minValue = value;
+      ClampValue();
     }
 
     s32 GetMinValue() const
@@ -109,6 +110,7 @@ namespace MFM
     void SetMaxValue(s32 value)
     {
       m_maxValue = value;
+      ClampValue();
     }
 
     s32 GetMaxValue() const
@@ -124,6 +126,14 @@ namespace MFM
         newVal -= (newVal % m_snapResolution);
         newVal = CLAMP(m_minValue, m_maxValue, newVal);
         *m_externalValue = newVal;
+      }
+    }
+
+    void ClampValue()
+    {
+      if(m_externalValue)
+      {
+        *m_externalValue = CLAMP(m_minValue, m_maxValue, *m_externalValue);
       }
     }
 
@@ -143,7 +153,7 @@ namespace MFM
     }
 
     virtual void PaintBorder(Drawing& d)
-    {/* No border*/}
+    { /* No border*/ }
 
     virtual bool Handle(MouseButtonEvent& event)
     {
@@ -176,7 +186,7 @@ namespace MFM
       if(m_dragging)
       {
         s32 delta = event.m_event.motion.x - m_dragStartX;
-        s32 valDelta = (delta * m_maxValue) / SLIDER_WIDTH;
+        s32 valDelta = ((delta * m_maxValue) - 16) / (SLIDER_WIDTH - 16);
 
         SetValue(m_preDragVal + valDelta);
       }
