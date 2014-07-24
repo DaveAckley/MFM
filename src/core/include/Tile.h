@@ -431,7 +431,7 @@ namespace MFM
     /**
      * Gets the number of sites in this Tile in sites, excluding caches.
      */
-    u32 GetSites()
+    u32 GetSites() const
     {
       return OWNED_SIDE*OWNED_SIDE;
     }
@@ -842,7 +842,7 @@ namespace MFM
      * @returns \c true if this Tile is executing its own events, else
      *          \c false .
      */
-    bool GetExecutingOwnEvents()
+    bool GetExecutingOwnEvents() const
     {
       return !m_onlyWaitOnBuffers;
     }
