@@ -267,28 +267,57 @@ namespace MFM
   void Tile<CC>::PlaceAtom(const T& atom, const SPoint& pt)
   {
     const T* oldAtom = GetAtom(pt);
+    u32 oldType = 0;
     unwind_protect(
     {
       InternalPutAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(),
-                      pt.GetX(),pt.GetY());
-
+                      pt.GetX(), pt.GetY());
       RecountAtoms();
     },
     {
-      u32 oldType = oldAtom->GetType();
-
-      InternalPutAtom(atom, pt.GetX(), pt.GetY());
+      oldType = oldAtom->GetType();
 
       if(m_backgroundRadiationEnabled &&
          m_random.OneIn(BACKGROUND_RADIATION_SITE_ODDS))
       {
+        // Maybe zap oldAtom
         SingleXRay(pt.GetX(), pt.GetY());
+
+        if (!oldAtom->IsSane())
+        {
+          // This is actually more like bogus control flow, rather a
+          // 'true' failure :(.  We just want to empty the site and
+          // recount, the same as if an inconsistency had been
+          // detected elsewhere in the code.
+          FAIL(INCONSISTENT_ATOM);
+        }
+
+        u32 newOldType = oldAtom->GetType();
+
+        if(newOldType != oldType && !IsInCache(pt))
+        {
+          // Here an xray has changed an atom from a
+          // legal oldType into a legal newOldType
+          IncrAtomCount(oldType, -1);
+          IncrAtomCount(newOldType, 1);
+
+        }
+
+        // So this is (now) the 'old' atom's type
+        oldType = newOldType;
+
       }
-      else if(!IsInCache(pt))
+
+      u32 newType = atom.GetType();
+      if(newType != oldType && !IsInCache(pt))
       {
-        IncrAtomCount(atom.GetType(), 1);
+        // Here we're just displacing an oldType
+        // atom with a newType atom
         IncrAtomCount(oldType, -1);
+        IncrAtomCount(newType, 1);
       }
+
+      InternalPutAtom(atom,pt.GetX(),pt.GetY());
     });
   }
 
@@ -810,11 +839,18 @@ namespace MFM
     {
       counts[i] = 0;
     }
-    for (u32 x = 0; x < OWNED_SIDE; ++x)
+    for (u32 x = 0; x < TILE_WIDTH; ++x)
     {
-      for (u32 y = 0; y < OWNED_SIDE; ++y)
+      for (u32 y = 0; y < TILE_WIDTH; ++y)
       {
-        const T * atom = GetUncachedAtom(x,y);
+        const SPoint pt(x, y);
+
+        if(IsInCache(pt))
+        {
+          continue;
+        }
+
+        const T * atom = GetAtom(x,y);
         s32 type = elementTable.GetIndex(atom->GetType());
         if (type < 0)
         {
@@ -851,12 +887,20 @@ namespace MFM
       m_atomCount[i] = 0;
     }
 
+    // Not clear that anybody cares about this, but
     m_illegalAtomCount = 0;
 
-    for(u32 x = 0; x < OWNED_SIDE; x++)
+    for(u32 x = 0; x < TILE_WIDTH; x++)
     {
-      for(u32 y = 0; y < OWNED_SIDE; y++)
+      for(u32 y = 0; y < TILE_WIDTH; y++)
       {
+        const SPoint pt(x,y);
+
+        if (IsInCache(pt))
+        {
+          continue;
+        }
+
         IncrAtomCount(m_atoms[x][y].GetType(), 1);
       }
     }
