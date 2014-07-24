@@ -4,7 +4,6 @@
 #include "Element_SBar.h"
 #include "Element_DBar.h"
 #include "Element_Mover.h"
-#include "Element_Wall.h"
 #include "LocalConfig.h"
 #include "StdElements.h"
 #include <dlfcn.h>          /* For dlopen etc */
@@ -46,21 +45,22 @@ namespace MFM {
 
     virtual void DefineNeededElements()
     {
-      bool addMover = m_whichSim==1;
-
       NeedElement(&Element_Empty<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Wall<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Data<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Emitter<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Consumer<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Sorter<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_ForkBomb1<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_ForkBomb2<OurCoreConfig>::THE_INSTANCE);
       if (!m_qbarInstance)
       {
         FAIL(ILLEGAL_STATE);
       }
       NeedElement(m_qbarInstance);
-      if (addMover)
-      {
-        NeedElement(&Element_Mover<OurCoreConfig>::THE_INSTANCE);
-      }
+      NeedElement(&Element_Mover<OurCoreConfig>::THE_INSTANCE);
     }
 
     virtual void HandleResize()
@@ -70,6 +70,7 @@ namespace MFM {
 
     void ReinitEden()
     {
+#if 0 /* Start with empty world! */
       OurGrid & mainGrid = GetGrid();
       bool addMover = m_whichSim==1;
 
@@ -128,6 +129,7 @@ namespace MFM {
           }
         }
       }
+#endif
     }
 
     Element<OurCoreConfig> * m_qbarInstance;

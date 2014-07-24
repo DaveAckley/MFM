@@ -27,6 +27,8 @@ namespace MFM
       NeedElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Wall<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_ForkBomb1<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_ForkBomb2<OurCoreConfig>::THE_INSTANCE);
     }
 
     virtual void ReinitEden()

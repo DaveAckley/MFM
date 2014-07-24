@@ -99,6 +99,7 @@ namespace MFM
     Fonts m_fonts;
 
     bool m_keyboardPaused;   // Toggled by keyboard space, ' ', SDLK_SPACE
+    bool m_singleStep;       // Toggled by Step check box, 's', SDLK_SPACE
     bool m_mousePaused;      // Set if any buttons down, clear if all up
     bool m_gridPaused;       // Set if keyboard || mouse paused, checked by UpdateGrid
     bool m_reinitRequested;
@@ -202,6 +203,24 @@ namespace MFM
       }
     } m_clearButton;
 
+    class ClearGridButton : public AbstractGridButton
+    {
+     public:
+      ClearGridButton() : AbstractGridButton("Clear Grid")
+      {
+        AbstractButton::SetName("ClearGridButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 250));
+      }
+
+      virtual void OnClick(u8 button)
+      {
+        OurGrid & grid = AbstractGridButton::m_driver->GetGrid();
+
+        grid.Clear();
+      }
+    } m_clearGridButton;
+
     class NukeButton : public AbstractGridButton
     {
      public:
@@ -272,6 +291,23 @@ namespace MFM
       virtual void OnCheck(bool value)
       { }
     } m_heatmapButton;
+
+    class GridStepCheckbox : public AbstractGridButton
+    {
+     public:
+      GridStepCheckbox() : AbstractGridButton("Step")
+      {
+        AbstractButton::SetName("GridStepButton");
+        Panel::SetDimensions(200, 40);
+        AbstractButton::SetRenderPoint(SPoint(2, 200));
+      }
+
+      virtual void OnClick(u8 button)
+      {
+        AbstractGridButton::m_driver->m_singleStep = true;
+        AbstractGridButton::m_driver->m_keyboardPaused = false;
+      }
+    }m_gridStepButton;
 
     struct TileViewButton : public AbstractGridButton
     {
@@ -358,7 +394,7 @@ namespace MFM
 
     struct BGRButton : public AbstractGridCheckbox
     {
-      BGRButton() : AbstractGridCheckbox("XRay On Write")
+      BGRButton() : AbstractGridCheckbox("Writes fault")
       {
         AbstractButton::SetName("BGRButton");
         Panel::SetDimensions(200,40);
@@ -500,15 +536,17 @@ namespace MFM
       m_buttonPanel.InsertCheckbox(&m_heatmapButton);
       m_buttonPanel.InsertCheckbox(&m_gridRenderButton);
       m_buttonPanel.InsertCheckbox(&m_gridRunButton);
-
       m_buttonPanel.InsertCheckbox(&m_bgrButton);
+
+      m_buttonPanel.InsertButton(&m_gridStepButton);
       m_buttonPanel.InsertButton(&m_clearButton);
+      m_buttonPanel.InsertButton(&m_clearGridButton);
       m_buttonPanel.InsertButton(&m_xrayButton);
       m_buttonPanel.InsertButton(&m_nukeButton);
       m_buttonPanel.InsertButton(&m_tileViewButton);
       m_buttonPanel.InsertButton(&m_saveButton);
       m_buttonPanel.InsertButton(&m_quitButton);
-      m_buttonPanel.InsertButton(&m_pauseTileButton);
+      // Not ready for prime time? m_buttonPanel.InsertButton(&m_pauseTileButton);
 
       m_pauseTileButton.SetGridRenderer(m_grend);
 
@@ -527,10 +565,21 @@ namespace MFM
     void Update(OurGrid& grid)
     {
       KeyboardUpdate(grid);
+
+      if (m_singleStep)
+      {
+        m_keyboardPaused = false;
+      }
+
       m_gridPaused = m_keyboardPaused || m_mousePaused;
       if (!m_gridPaused)
       {
         Super::UpdateGrid(grid);
+        if (m_singleStep)
+        {
+          m_keyboardPaused = true;
+          m_singleStep = false;
+        }
       }
     }
 
@@ -574,6 +623,10 @@ namespace MFM
       if(m_keyboard.SemiAuto(SDLK_g))
       {
         m_grend.ToggleGrid();
+      }
+      if(m_keyboard.SemiAuto(SDLK_b))
+      {
+        m_buttonPanel.ToggleVisibility();
       }
       if(m_keyboard.SemiAuto(SDLK_m))
       {
@@ -634,6 +687,11 @@ namespace MFM
       if(m_keyboard.SemiAuto(SDLK_SPACE))
       {
         m_keyboardPaused = !m_keyboardPaused;
+      }
+      if(m_keyboard.SemiAuto(SDLK_s))
+      {
+        m_singleStep = true;
+        m_keyboardPaused = false;
       }
       if(m_keyboard.IsDown(SDLK_COMMA))
       {
@@ -891,9 +949,9 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
     struct ButtonPanel : public Panel
     {
       static const u32 MAX_BUTTONS = 16;
-      static const u32 CHECKBOX_SPACING_HEIGHT = 30;
-      static const u32 BUTTON_SPACING_HEIGHT = 40;
-      static const u32 BUTTON_HEIGHT = 30;
+      static const u32 CHECKBOX_SPACING_HEIGHT = 26;
+      static const u32 BUTTON_SPACING_HEIGHT = 38;
+      static const u32 BUTTON_HEIGHT = 22;
       static const u32 BUTTON_WIDTH = 200;
 
       virtual void PaintBorder(Drawing & config)
@@ -1044,6 +1102,7 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
     void RunHelper()
     {
       m_keyboardPaused = m_startPaused;
+      m_singleStep = false;
 
       bool running = true;
 

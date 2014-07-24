@@ -27,13 +27,26 @@ namespace MFM
       NeedElement(&Element_Wall<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_ForkBomb1<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_ForkBomb2<OurCoreConfig>::THE_INSTANCE);
 
 #ifdef MFM_GUI_DRIVER
-      Element<CC>* elem = &Element_Dreg<OurCoreConfig>::THE_INSTANCE;
-      m_dregSliderConfig.SetElement(elem);
+      {
+        Element<CC>* elem = &Element_Dreg<OurCoreConfig>::THE_INSTANCE;
+        m_dregSliderConfig.SetElement(elem);
+        AbstractGUIDriver::RegisterSliderConfig(&m_dregSliderConfig);
+      }
+      {
+        Element<CC>* elem = &Element_ForkBomb1<OurCoreConfig>::THE_INSTANCE;
+        m_forkBombRedSliderConfig.SetElement(elem);
+        AbstractGUIDriver::RegisterSliderConfig(&m_forkBombRedSliderConfig);
+      }
+      {
+        Element<CC>* elem = &Element_ForkBomb2<OurCoreConfig>::THE_INSTANCE;
+        m_forkBombBlueSliderConfig.SetElement(elem);
+        AbstractGUIDriver::RegisterSliderConfig(&m_forkBombBlueSliderConfig);
+      }
 
-      /* Register sliders */
-      AbstractGUIDriver::RegisterSliderConfig(&m_dregSliderConfig);
 #endif
     }
 
@@ -82,6 +95,34 @@ namespace MFM
         return 4;
       }
     }m_dregSliderConfig;
+
+    class ForkBombRedSliderConfig : public OurSliderConfig
+    {
+    public:
+      virtual u32 SetupSliders(Slider* sliders, u32 maxSliders) const
+      {
+        sliders[0].SetText("Bomb Radius");
+        sliders[0].SetMinValue(0);
+        sliders[0].SetMaxValue(4);
+        sliders[0].SetExternalValue(Element_ForkBomb1<CC>::THE_INSTANCE.GetBombRangePtr());
+
+        return 1;
+      }
+    }m_forkBombRedSliderConfig;
+
+    class ForkBombBlueSliderConfig : public OurSliderConfig
+    {
+    public:
+      virtual u32 SetupSliders(Slider* sliders, u32 maxSliders) const
+      {
+        sliders[0].SetText("Bomb Radius");
+        sliders[0].SetMinValue(0);
+        sliders[0].SetMaxValue(4);
+        sliders[0].SetExternalValue(Element_ForkBomb2<CC>::THE_INSTANCE.GetBombRangePtr());
+
+        return 1;
+      }
+    }m_forkBombBlueSliderConfig;
 
 #endif
 

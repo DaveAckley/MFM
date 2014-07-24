@@ -431,7 +431,7 @@ namespace MFM {
   }
 
   template <class GC>
-  u32 Grid<GC>::CountActiveSites()
+  u32 Grid<GC>::CountActiveSites() const
   {
     u32 acc   = 0,
         sides = GetTile(0,0).GetSites();

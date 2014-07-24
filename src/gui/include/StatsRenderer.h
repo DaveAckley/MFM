@@ -48,7 +48,24 @@ namespace MFM {
 
   public:
 
-    class CapturableStatistic
+    class DataReporter
+    {
+    public:
+      virtual const char * GetLabel() const = 0;
+
+      /**
+       * Report the current associated data value to bs, in whatever
+       * form desired.  This is to include everything but the GetLabel
+       * label, which is sometimes handled separately (e.g., in data
+       * files).
+       */
+      virtual void GetValue(ByteSink & bs, bool endOfEpoch) const = 0;
+
+      virtual ~DataReporter()
+      { }
+    };
+
+    class CapturableStatistic : public DataReporter
     {
      public:
       virtual const char * GetLabel() const = 0;
@@ -57,11 +74,28 @@ namespace MFM {
 
       virtual double GetValue(bool endOfEpoch) const = 0;
 
+      virtual void GetValue(ByteSink & bs, bool endOfEpoch) const
+      {
+        const u32 FMT_BUFFER_SIZE = 32;
+        char fmtBuffer[FMT_BUFFER_SIZE];
+
+        const u32 STR_BUFFER_SIZE = 128;
+        char strBuffer[STR_BUFFER_SIZE];
+
+        s32 places = GetDecimalPlaces();
+        if (places >= 0)
+        {
+          snprintf(fmtBuffer, FMT_BUFFER_SIZE, "%%8.%df",places);
+          snprintf(strBuffer, STR_BUFFER_SIZE, fmtBuffer, GetValue(endOfEpoch));
+        }
+        bs.Print(strBuffer);
+      }
+
       virtual ~CapturableStatistic()
       { }
     };
 
-    class ElementCount : public CapturableStatistic
+    class ElementCount : public DataReporter
     {
      private:
       const Element<CC> * m_element;
@@ -88,19 +122,25 @@ namespace MFM {
         return "<unset>";
       }
 
-      virtual s32 GetDecimalPlaces() const
-      {
-        return 0;
-      }
-
-      virtual double GetValue(bool) const
+      virtual void GetValue(ByteSink & bs, bool endOfEpoch) const
       {
         if (!m_element || !m_grid)
         {
-          return -1;
+          return;
         }
         u32 type = m_element->GetType();
-        return (double) m_grid->GetAtomCount(type);
+        u32 allSites = m_grid->CountActiveSites();
+        u32 count = m_grid->GetAtomCount(type);
+        double pct = 100.0 * count / allSites;
+
+        if (pct == 0 || pct >= 1)
+        {
+          bs.Printf("%d %2d", count, (int) pct);
+        }
+        else
+        {
+          bs.Printf("%d .%d", count, (int) (10 * pct));
+        }
       }
     };
 
@@ -182,8 +222,8 @@ namespace MFM {
     TTF_Font* m_drawFont;
 
     static const u32 MAX_TYPES = 16;
-    const CapturableStatistic *(m_capStats[MAX_TYPES]);
-    u32 m_capStatsInUse;
+    const DataReporter *(m_reporters[MAX_TYPES]);
+    u32 m_reportersInUse;
 
     ElementCount m_displayElements[MAX_TYPES];
     u32 m_displayElementsInUse;
@@ -197,7 +237,7 @@ namespace MFM {
   public:
     StatsRenderer() :
       m_drawFont(0),
-      m_capStatsInUse(0),
+      m_reportersInUse(0),
       m_displayElementsInUse(0),
       m_displayAER(false),
       m_registeredButtons(0)
@@ -208,17 +248,21 @@ namespace MFM {
       m_registeredButtons = 0;
     }
 
+    enum {
+      BUTTON_HEIGHT_PIXELS = 20,
+      LINE_HEIGHT_PIXELS = 32
+    };
     void ReassignButtonLocations()
     {
-      SPoint loc(4, m_capStatsInUse * 40);
+      SPoint loc(4, m_reportersInUse * BUTTON_HEIGHT_PIXELS);
       if(m_displayAER)
       {
-        loc.SetY(loc.GetY() + 100);
+        loc.SetY(loc.GetY() + 3*LINE_HEIGHT_PIXELS);
       }
       for(u32 i = 0; i < m_registeredButtons; i++)
       {
         m_buttons[i]->SetLocation(loc);
-        loc.SetY(loc.GetY() + 40);
+        loc.SetY(loc.GetY() + BUTTON_HEIGHT_PIXELS);
       }
     }
 
@@ -227,8 +271,8 @@ namespace MFM {
       if (m_registeredButtons >= MAX_BUTTONS)
         FAIL(OUT_OF_ROOM);
 
-      SPoint dimensions(268, 32);
-      SPoint location(4, (m_capStatsInUse + m_registeredButtons) * 40);
+      SPoint dimensions(268, BUTTON_HEIGHT_PIXELS - 2);
+      SPoint location(4, (m_reportersInUse + m_registeredButtons) * BUTTON_HEIGHT_PIXELS);
       b->SetDimensions(dimensions);
       b->SetLocation(location);
 
@@ -247,14 +291,14 @@ namespace MFM {
       ReassignButtonLocations();
     }
 
-    bool DisplayCapturableStats(const CapturableStatistic * cs)
+    bool DisplayDataReporter(const DataReporter * cs)
     {
-      if (m_capStatsInUse >= MAX_TYPES)
+      if (m_reportersInUse >= MAX_TYPES)
       {
         return false;
       }
-      u32 index = m_capStatsInUse++;
-      m_capStats[index] = cs;
+      u32 index = m_reportersInUse++;
+      m_reporters[index] = cs;
       return true;
     }
 
@@ -266,7 +310,7 @@ namespace MFM {
       }
       u32 index = m_displayElementsInUse++;
       m_displayElements[index].Set(&grd,&elt);
-      return DisplayCapturableStats(&m_displayElements[index]);
+      return DisplayDataReporter(&m_displayElements[index]);
     }
 
     ~StatsRenderer()

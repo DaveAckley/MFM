@@ -649,7 +649,7 @@ namespace MFM
       m_startTimeMS(0),
       m_msSpentRunning(0),
       m_msSpentOverhead(0),
-      m_microsSleepPerFrame(1000),
+      m_microsSleepPerFrame(50000),
       m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
       m_AEPSPerEpoch(1000),
       m_gridImages(false),

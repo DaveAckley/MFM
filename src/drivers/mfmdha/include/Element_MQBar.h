@@ -196,10 +196,9 @@ namespace MFM
       return defaultAtom;
     }
 
-    T GetAtom(const SPoint & size, const SPoint & pos) const
+    virtual T BuildDefaultAtom() const
     {
       T atom = GetDefaultAtom();
-
       return atom;
     }
 

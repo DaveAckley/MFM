@@ -380,7 +380,7 @@ namespace MFM {
      */
     void XRay();
 
-    u32 CountActiveSites();
+    u32 CountActiveSites() const;
   };
 } /* namespace MFM */
 

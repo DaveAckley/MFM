@@ -86,7 +86,7 @@ namespace MFM {
                             true);
 
       for (u32 i = 0; i < 4; ++i)
-        srend.DisplayCapturableStats(&m_sortingSlots[i]);
+        srend.DisplayDataReporter(&m_sortingSlots[i]);
 
       //      sorter.SetStateField(0,32,DATA_MINVAL + ((DATA_MAXVAL - DATA_MINVAL) / 2));  // Default threshold
       sorter.SetStateField(0,32, DATA_MINVAL);  // Default threshold
