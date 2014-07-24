@@ -51,7 +51,8 @@ namespace MFM
     enum { ELEMENT_DATA_SLOTS = P::ELEMENT_DATA_SLOTS};
 
   public:
-    static const u32 SIZE = 1u<<B;
+    // -3 to avoid 2**k and 2**k-1 sizes; they seem to beat against type assignments
+    static const u32 SIZE = (1u<<B) - 3;
 
     /**
      * Reinitialize this ElementTable to empty.
