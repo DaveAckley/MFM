@@ -279,11 +279,15 @@ namespace MFM {
       m_buttons[m_registeredButtons++] = b;
     }
 
-    void OnceOnly(Fonts & fonts) {
+    void OnceOnly(Fonts & fonts)
+    {
       m_drawFont = fonts.GetDefaultFont(30);
     }
 
-    bool GetDisplayAER() const { return m_displayAER; }
+    bool GetDisplayAER() const
+    {
+      return m_displayAER;
+    }
 
     void SetDisplayAER(bool displayAER)
     {

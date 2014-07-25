@@ -122,9 +122,9 @@ namespace MFM
       d.SetFont(smFont);
       for(u32 i = 0; i < HELP_MESSAGE_COUNT; i++)
       {
-	d.BlitText(m_helpMessages[i],
-		   UPoint(0, i * 18 + 28),
-		   MakeUnsigned(Panel::GetTextSize(smFont, m_helpMessages[i])));
+        d.BlitText(m_helpMessages[i],
+                   UPoint(0, i * 18 + 28),
+                   MakeUnsigned(Panel::GetTextSize(smFont, m_helpMessages[i])));
       }
     }
   };
