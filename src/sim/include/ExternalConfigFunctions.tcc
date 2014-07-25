@@ -72,7 +72,9 @@ namespace MFM
       s32 x, y;
       s32 ret;
 
-      OString64 hexData;
+      // Umm: P3Atom has 71 non-type bits..
+      // OString64 hexData;
+      OString128 hexData;
 
       ret = this->SkipToNextArg(in);
       if (ret < 0)
