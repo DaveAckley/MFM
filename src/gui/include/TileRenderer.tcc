@@ -7,7 +7,10 @@ template <class CC>
 u32 TileRenderer::GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom, u32 selector)
 {
   const Element<CC> * elt = tile.GetElementTable().Lookup(atom.GetType());
-  if (elt) return elt->LocalPhysicsColor(atom,selector);
+  if (elt)
+  {
+    return elt->LocalPhysicsColor(atom,selector);
+  }
   return 0xffffffff;
 }
 
@@ -299,10 +302,6 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
     drawing.SetForeground(m_gridColor);
     for(int x = 0; x < linesToDraw; x++)
     {
-      if(pt->GetX() + x * m_atomDrawSize + m_windowTL.GetX() > (s32)m_dimensions.GetX())
-      {
-        break;
-      }
       drawing.DrawVLine(pt->GetX() + x * m_atomDrawSize +
                         m_windowTL.GetX(),
                         pt->GetY() + m_windowTL.GetY(),
@@ -314,10 +313,6 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
 
     for(int y = 0; y < linesToDraw; y++)
     {
-      if(pt->GetY() + y * m_atomDrawSize + m_windowTL.GetY() > (s32)m_dimensions.GetY())
-      {
-        break;
-      }
       drawing.DrawHLine(pt->GetY() + y * m_atomDrawSize +
                         m_windowTL.GetY(),
                         pt->GetX() + m_windowTL.GetX(),

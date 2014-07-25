@@ -2,9 +2,11 @@
 #include "Drawing.h"
 #include "Util.h"     /* For MIN */
 
-namespace MFM {
+namespace MFM
+{
 
-  void Drawing::Convert(const Rect & rect, SDL_Rect & toFill)  {
+  void Drawing::Convert(const Rect & rect, SDL_Rect & toFill)
+  {
     toFill.x = rect.GetX();
     toFill.y = rect.GetY();
     toFill.w = rect.GetWidth();
