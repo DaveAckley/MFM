@@ -100,7 +100,7 @@ namespace MFM {
       s32 bitsUsed = GetBitsAllocated();
 
       u32 typeBits = BITS - bitsUsed;
-      if(typeBits > 32) typeBits = 31;
+      if(typeBits > 31) typeBits = 31;
 
       u32 leftoverBits = BITS - typeBits;
 
@@ -119,6 +119,22 @@ namespace MFM {
 	this->m_bits.WriteBit(i, stateStr[i] == '0' ? 0 : 1);
       }
     }
+
+    void ReadStateBits(const BitVector<BITS> & bv)
+    {
+      s32 bitsUsed = GetBitsAllocated();
+
+      u32 typeBits = BITS - bitsUsed;
+      if(typeBits > 31) typeBits = 31;
+
+      u32 leftoverBits = BITS - typeBits;
+
+      for(u32 i = 0; i < leftoverBits; i++)
+      {
+	this->m_bits.WriteBit(i, bv.ReadBit(i));
+      }
+    }
+
 
     P1Atom()
     {

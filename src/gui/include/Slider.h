@@ -232,7 +232,7 @@ namespace MFM
         numBuffer.Printf("?");
       }
 
-      d.SetBackground(Drawing::BLACK);
+      d.SetBackground(Drawing::GREY70);
       d.SetForeground(Drawing::WHITE);
       d.BlitBackedText(numBuffer.GetZString(),
                        UPoint(SLIDER_WIDTH / 2 - 16, 16),

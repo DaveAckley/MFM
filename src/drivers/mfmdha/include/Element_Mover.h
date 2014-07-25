@@ -48,7 +48,10 @@ namespace MFM
       return type==TYPE();
     }
 
-    Element_Mover() : Element<CC>(MFM_UUID_FOR("Mover", MOVER_VERSION)){ }
+    Element_Mover() : Element<CC>(MFM_UUID_FOR("Mover", MOVER_VERSION))
+    {
+      Element<CC>::SetAtomicSymbol("Mv");
+    }
 
     virtual const T & GetDefaultAtom() const
     {

@@ -153,10 +153,12 @@ namespace MFM
      * on the provided format.
      *
      * @param result The location to store the read binary formatted
-     *               32-bit number .
+     *               32-bit number.
      *
      * @param code The format to treat the next bytes read from this
-     *             ByteSource as, be it binary or ascii in nature.
+     *             ByteSource as, including various numeric bases
+     *             (such as binary, octal, decimal, hexadecimal) and
+     *             network-order binary representations.
      *
      * @param fieldWidth The maximum number of characters which will
      *                   be read during this call.
@@ -278,15 +280,15 @@ namespace MFM
     }
 
     /**
-     * Scans this ByteSource for a hexidecimal string, i.e. a string
-     * consisting of both upper and lowercase hexidecimal digits.
+     * Scans this ByteSource for a hexadecimal string, i.e. a string
+     * consisting of both upper and lowercase hexadecimal digits.
      *
      * @param result The ByteSink which collects the all characters
-     *               that match the rules for being a hexidecimal
+     *               that match the rules for being a hexadecimal
      *               string.
      *
      * @returns \c true if the next characters of this ByteSource
-     *          (excluding whitespace) can be treated as a hexidecimal
+     *          (excluding whitespace) can be treated as a hexadecimal
      *          string.
      */
     bool ScanHex(ByteSink& result)

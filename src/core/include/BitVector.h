@@ -29,6 +29,7 @@
 
 #include "itype.h"
 #include "ByteSink.h"
+#include "ByteSource.h"
 #include "Util.h"   /* for MakeMaskClip */
 #include <climits>  /* for CHAR_BIT */
 #include <stdlib.h> /* for abort */
@@ -331,6 +332,19 @@ namespace MFM {
      * @param ostream The ByteSink to print bits to.
      */
     void Print(ByteSink & ostream) const;
+
+    /**
+     * Load this BitVector from a specified ByteSource by reading BITS
+     * / 4 bytes in hex format.  Skips leading whitespace.  Returns
+     * true if all went well; returns false if insufficient
+     * consecutive hex bytes were available to fully initialize the
+     * BitVector.  When false is returned the ByteSource will be
+     * positioned just before the first unacceptable byte encountered,
+     * and the BitVector will be unchanged.
+     *
+     * @param istream The ByteSource to read bytes from.
+     */
+    bool Read(ByteSource & bs) ;
 
   };
 } /* namespace MFM */
