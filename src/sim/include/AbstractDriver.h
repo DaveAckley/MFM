@@ -646,6 +646,7 @@ namespace MFM
       m_neededElementCount(0),
       m_grid(m_elementRegistry),
       m_ticksLastStopped(0),
+      m_haltAfterAEPS(0),
       m_startTimeMS(0),
       m_msSpentRunning(0),
       m_msSpentOverhead(0),
