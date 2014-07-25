@@ -178,4 +178,25 @@ namespace MFM {
       ostream.Printf("%x",Read(i,4));
   }
 
+  template <u32 BITS>
+  bool BitVector<BITS>::Read(ByteSource & istream)
+  {
+    istream.SkipWhitespace();
+
+    BitVector<BITS> temp;
+    for (u32 i = 0; i < BITS; i += 4)
+    {
+      s32 hex;
+      if (!istream.Scan(hex, Format::HEX, 1))
+      {
+        return false;
+      }
+
+      temp.Write(i, 4, hex);
+    }
+
+    *this = temp;
+    return true;
+  }
+
 } /* namespace MFM */
