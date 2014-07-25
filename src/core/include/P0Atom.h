@@ -54,6 +54,9 @@ namespace MFM
   private:
 
     typedef CoreConfig< P0Atom<PC>, PC> CC;
+    typedef typename CC::PARAM_CONFIG P;
+    enum { BPA = P::BITS_PER_ATOM };
+
     enum
     {
       BITS = 64,
@@ -151,6 +154,16 @@ namespace MFM
       for(u32 i = typeBits; i < BITS; i++)
       {
 	this->m_bits.WriteBit(i, stateStr[i] == '0' ? 0 : 1);
+      }
+    }
+
+    void ReadStateBits(const Atom<CC> & atom)
+    {
+      u32 typeBits = GetTypeLength();
+
+      for(u32 i = typeBits; i < BITS; i++)
+      {
+	this->m_bits.WriteBit(i, atom.m_bits.ReadBit(i));
       }
     }
 
