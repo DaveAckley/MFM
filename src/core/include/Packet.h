@@ -103,7 +103,7 @@ namespace MFM
     { }
 
     /**
-     * Constructs an unitnitialized Packet.
+     * Constructs an uninitialized Packet.
      */
     Packet()
     { }
