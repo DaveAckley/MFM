@@ -35,7 +35,7 @@
  * The number of messages which should be displayed upon rendering a
  * HelpPanel .
  */
-#define HELP_MESSAGE_COUNT 26
+#define HELP_MESSAGE_COUNT 27
 
 namespace MFM
 {
@@ -76,6 +76,7 @@ namespace MFM
       *(messages++) = " [.] Increase AEPS per frame";
       *(messages++) = " [i] Show statistics and settings";
       *(messages++) = "    [a] Show AER statistics";
+      *(messages++) = "    [b] Hide buttons";
       *(messages++) = " [CTRL+q] Quit";
       *(messages++) = "";
       *(messages++) = "Mouse:";
