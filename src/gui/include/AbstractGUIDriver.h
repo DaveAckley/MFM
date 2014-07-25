@@ -544,9 +544,9 @@ namespace MFM
       m_buttonPanel.InsertButton(&m_xrayButton);
       m_buttonPanel.InsertButton(&m_nukeButton);
       m_buttonPanel.InsertButton(&m_tileViewButton);
+      m_buttonPanel.InsertButton(&m_pauseTileButton);
       m_buttonPanel.InsertButton(&m_saveButton);
       m_buttonPanel.InsertButton(&m_quitButton);
-      // Not ready for prime time? m_buttonPanel.InsertButton(&m_pauseTileButton);
 
       m_pauseTileButton.SetGridRenderer(m_grend);
 

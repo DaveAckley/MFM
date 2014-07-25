@@ -16,6 +16,7 @@ namespace MFM {
     m_visibleColor = 0xfff0d470;
     m_hiddenColor = 0xff423b16;
     m_selectedHiddenColor = 0xffffffff;
+    m_selectedPausedColor = 0xffafafaf;
     m_cacheColor = 0xffffc0c0;
     m_windowTL.SetX(0);
     m_windowTL.SetY(0);
@@ -110,4 +111,3 @@ namespace MFM {
     m_windowTL.SetX(m_windowTL.GetX() - amount);
   }
 } /* namespace MFM */
-

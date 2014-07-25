@@ -144,7 +144,8 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
                                           realPt.GetX() < (s32)m_dest->w &&
                                           realPt.GetY() < (s32)m_dest->h*/)
     {
-      switch (m_drawMemRegions) {
+      switch (m_drawMemRegions)
+      {
       default:
       case NO:
         break;
@@ -193,7 +194,7 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
       atomLoc.Add(eventCenter);
       atomLoc.Add(cacheOffset, cacheOffset);
 
-      if(i == 0) // Center atom first in indexing.
+      if(i == 0)  // Center atom first in indexing.
       {
         drawColor = Drawing::GREEN;
       }
@@ -235,11 +236,18 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
   void TileRenderer::RenderVisibleRegionOutlines(Drawing & drawing, SPoint& pt,
                                                  bool renderCache, bool selected, bool lowlight)
   {
+    u32 regID = renderCache ? 2 : 1;
+
+
     if(!lowlight)
     {
-    int regID = renderCache?2:1;
-    RenderMemRegion<CC>(drawing, pt, regID,
-                        selected ? 0xff606060 : 0xff202020, renderCache);
+      RenderMemRegion<CC>(drawing, pt, regID,
+                          selected ? 0xff606060 : 0xff202020, renderCache);
+    }
+    else
+    {
+      RenderMemRegion<CC>(drawing, pt, regID,
+                          selected ? 0xff303030 : 0xff101010, renderCache);
     }
   }
 
