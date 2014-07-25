@@ -40,6 +40,7 @@ namespace MFM
 {
 
   template <class CC> class Element; // Forward declaration
+  template <class CC> class AtomSerializer; // Forward declaration
 
   /**
      An Atom is a fixed-size collection of bits, representing an
@@ -92,6 +93,7 @@ namespace MFM
     BitVector<BPA> m_bits;
 
     friend class Element<CC>;  // Let Element mess with our bits
+    friend class AtomSerializer<CC>;  // Ditto AtomSerializer
 
   public:
 
@@ -170,6 +172,14 @@ namespace MFM
      * @remarks This is to be defined only by a subclass of Atom.
      */
     void ReadStateBits(const char* hexStr);
+
+    /**
+     * Reads the State bits of this atom from a BitVector.  Only
+     * the non-type bits are copied.
+     *
+     * @remarks This is to be defined only by a subclass of Atom.
+     */
+    void ReadStateBits(const BitVector<BPA> & bv);
 
     /**
      * Writes the internal bits of this Atom to a ByteSink in hex format.

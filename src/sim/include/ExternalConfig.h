@@ -46,6 +46,10 @@ namespace MFM
   class ExternalConfig
   {
     typedef typename GC::CORE_CONFIG CC;
+    typedef typename CC::PARAM_CONFIG P;
+    typedef typename CC::ATOM_TYPE T;
+    enum { BPA = P::BITS_PER_ATOM };
+
   public:
 
     /*
@@ -80,6 +84,8 @@ namespace MFM
     const Element<CC> * LookupElement(const OString16 & nick) const ;
 
     bool PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const char* dataStr) ;
+
+    bool PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const BitVector<BPA> & bv) ;
 
     void SetTileToExecuteOnly(const SPoint& tileLoc, bool value);
 

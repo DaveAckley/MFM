@@ -138,6 +138,15 @@ namespace MFM {
       }
     }
 
+    void ReadStateBits(const BitVector<BITS> & bv)
+    {
+      for(u32 i = 0; i < P3_STATE_BITS_LEN; i++)
+      {
+        u32 idx = P3_STATE_BITS_POS + i;
+	this->m_bits.WriteBit(idx, bv.ReadBit(idx));
+      }
+    }
+
     /**
      * Read stateWidth state bits starting at stateIndex, which counts
      * toward the right with 0 meaning the leftmost state bit.

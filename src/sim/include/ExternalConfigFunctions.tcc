@@ -1,6 +1,7 @@
 /* -*- C++ -*- */
 
 #include "Element_Dreg.h"
+#include "AtomSerializer.h"
 
 namespace MFM
 {
@@ -43,6 +44,8 @@ namespace MFM
   class FunctionCallGA : public ConfigFunctionCall<GC>
   {
     typedef typename GC::CORE_CONFIG CC;
+    typedef typename CC::PARAM_CONFIG P;
+    enum { BPA = P::BITS_PER_ATOM };
 
    public:
     FunctionCallGA() : ConfigFunctionCall<GC>("GA")
@@ -72,7 +75,9 @@ namespace MFM
       s32 x, y;
       s32 ret;
 
-      OString64 hexData;
+      // Umm: P3Atom has 71 non-type bits..
+      // OString64 hexData;
+      OString128 hexData;
 
       ret = this->SkipToNextArg(in);
       if (ret < 0)
@@ -117,12 +122,14 @@ namespace MFM
         return in.Msg(Logger::ERROR, "Expected fourth argument");
       }
 
-      if (!in.ScanHex(hexData))
+      Atom<CC> temp;
+      AtomSerializer<CC> as(temp);
+      if (in.Scanf("%@",&as) != 1)
       {
         return in.Msg(Logger::ERROR, "Expected hex-encoded Atom body");
       }
 
-      if (!ec.PlaceAtom(*pelt, x, y, hexData.GetZString()))
+      if (!ec.PlaceAtom(*pelt, x, y, as.GetBits()))
       {
         return false;
       }
