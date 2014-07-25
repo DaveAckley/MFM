@@ -1,5 +1,6 @@
 /* -*- C++ -*- */
 #include "ConfigFunctionCall.h"
+#include "AtomSerializer.h"
 #include <string.h>
 #include <ctype.h>
 
@@ -137,11 +138,9 @@ namespace MFM
 	    }
 	  }
 
-	  byteSink.Printf(",%d,%d,", x, y);
-	  m_grid.GetAtom(currentPt)->WriteStateBits(byteSink);
-	  byteSink.Printf(")");
-
-	  byteSink.WriteNewline();
+          T temp = *m_grid.GetAtom(currentPt);
+          AtomSerializer<CC> as(temp);
+	  byteSink.Printf(",%d,%d,%@)\n", x, y, &as);
 	}
       }
     }
@@ -246,6 +245,15 @@ namespace MFM
     SPoint pt(x, y);
     m_grid.PlaceAtom(elt.GetDefaultAtom(), pt);
     m_grid.GetWritableAtom(pt)->ReadStateBits(hexData);
+    return true;
+  }
+
+  template<class GC>
+  bool ExternalConfig<GC>::PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const BitVector<BPA> & bv)
+  {
+    SPoint pt(x, y);
+    m_grid.PlaceAtom(elt.GetDefaultAtom(), pt);
+    m_grid.GetWritableAtom(pt)->ReadStateBits(bv);
     return true;
   }
 }
