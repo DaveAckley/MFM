@@ -227,9 +227,9 @@ namespace MFM
         {
           /* brushSize can't be templated, so let's do this by hand. */
           SPoint tile, site;
-          for(s32 y = -brushSize; y < brushSize; y++)
+          for(s32 y = -brushSize; y <= brushSize; y++)
           {
-            for(s32 x = -brushSize; x < brushSize; x++)
+            for(s32 x = -brushSize; x <= brushSize; x++)
             {
               SPoint pt(cp.GetX() + x, cp.GetY() + y);
               if(sqrt((x * x) + (y * y)) <= brushSize &&
