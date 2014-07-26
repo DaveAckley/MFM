@@ -149,6 +149,11 @@ namespace MFM {
     return m_rect.GetSize();
   }
 
+  const SPoint & Panel::GetRenderPoint() const
+  {
+    return m_rect.GetPosition();
+  }
+
   void Panel::SetRenderPoint(const SPoint & renderPt)
   {
     m_rect.SetPosition(renderPt);
