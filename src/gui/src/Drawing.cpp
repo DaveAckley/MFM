@@ -198,6 +198,38 @@ namespace MFM
     SPoint(1,1), SPoint(-1,-1), SPoint(1,-1), SPoint(-1,1)
   };
 
+  SPoint Drawing::GetTextSize(const char* message)
+  {
+    return GetTextSizeInFont(message, GetFont());
+  }
+
+  SPoint Drawing::GetTextSizeInFont(const char* message, TTF_Font * font)
+  {
+    s32 w = -1;
+    s32 h = -1;
+    if (font)
+    {
+      if (TTF_SizeText(font, message, &w, &h) != 0)
+      {
+        w = h = -1;  // Might TTF_SizeText have messed with them?
+      }
+    }
+    return SPoint(w,h);
+  }
+
+  void Drawing::BlitBackedTextCentered(const char* message, UPoint loc, UPoint size)
+  {
+    SPoint tsize = GetTextSize(message);
+    if (tsize.GetX() < 0 || tsize.GetY() < 0)
+    {
+      tsize = SPoint(0,0);  // WTF?
+    }
+    UPoint utsize(tsize.GetX(), tsize.GetY());
+
+    // Extra subtraction because blit backing makes text 1 pixel bigger all around
+    BlitBackedText(message, loc + size / 2 - utsize / 2 - UPoint(1, 1), size);
+  }
+
   void Drawing::BlitBackedText(const char* message, UPoint loc, UPoint size)
   {
     u32 oldFG = GetForeground();
