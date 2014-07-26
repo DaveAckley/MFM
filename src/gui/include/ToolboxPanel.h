@@ -185,9 +185,9 @@ namespace MFM
           d.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
           d.SetBackground(Drawing::BLACK);
           d.SetForeground(Drawing::WHITE);
-          d.BlitBackedText(m_element->GetAtomicSymbol(),
-                           UPoint(1, 0),
-                           UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+          d.BlitBackedTextCentered(m_element->GetAtomicSymbol(),
+                                   UPoint(0, 0),
+                                   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
         }
         else
         {
@@ -292,7 +292,7 @@ namespace MFM
       m_secondaryElement(NULL),
       m_heldElementCount(0),
       m_sliderCount(0),
-      m_brushSize(4),
+      m_brushSize(2),
       m_sliderConfigCount(0)
     {
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
@@ -411,15 +411,24 @@ namespace MFM
 
     virtual bool Handle(MouseButtonEvent& mbe)
     {
-      /* Try to keep the grid from taking this event too */
+      SDL_MouseButtonEvent & event = mbe.m_event.button;
 
-      switch(mbe.m_event.button.button)
+      /* Only fire on wheel 'press' to avoid double-counting */
+      if(event.type != SDL_MOUSEBUTTONDOWN)
+      {
+        return true;
+      }
+
+      switch(event.button)
       {
       case SDL_BUTTON_WHEELUP:
         m_brushSize++;
         break;
       case SDL_BUTTON_WHEELDOWN:
-        m_brushSize--;
+        if (m_brushSize > 0)
+        {
+          m_brushSize--;
+        }
         break;
       default:
         break;
@@ -436,6 +445,9 @@ namespace MFM
 
     virtual void PaintComponent(Drawing& d)
     {
+      const u32 ELEMENT_START_X = 64;
+      const u32 ELEMENT_START_Y = 40;
+
       d.SetForeground(this->Panel::GetBackground());
       d.FillRect(0, 0, this->Panel::GetWidth(), this->Panel::GetHeight());
 
@@ -444,36 +456,42 @@ namespace MFM
       if (m_primaryElement)
       {
         d.SetForeground(m_primaryElement->PhysicsColor());
-        d.FillCircle(64, 40, ELEMENT_RENDER_SIZE,
+        d.FillCircle(ELEMENT_START_X, ELEMENT_START_Y, ELEMENT_RENDER_SIZE,
                      ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
 
         d.SetBackground(Drawing::BLACK);
         d.SetForeground(Drawing::WHITE);
-        d.BlitBackedText(m_primaryElement->GetAtomicSymbol(),
-                         UPoint(70, 40),
-                         UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+        d.BlitBackedTextCentered(m_primaryElement->GetAtomicSymbol(),
+                                 UPoint(ELEMENT_START_X, ELEMENT_START_Y),
+                                 UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
       if (m_secondaryElement)
       {
+        const u32 SECONDARY_X_START = ELEMENT_START_X + ELEMENT_RENDER_SIZE;
         d.SetForeground(m_secondaryElement->PhysicsColor());
-        d.FillCircle(64 + ELEMENT_RENDER_SIZE, 40, ELEMENT_RENDER_SIZE,
+        d.FillCircle(SECONDARY_X_START, ELEMENT_START_Y, ELEMENT_RENDER_SIZE,
                      ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
 
         d.SetBackground(Drawing::BLACK);
         d.SetForeground(Drawing::WHITE);
-        d.BlitBackedText(m_secondaryElement->GetAtomicSymbol(),
-                         UPoint(70 + ELEMENT_RENDER_SIZE, 40),
-                         UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+        d.BlitBackedTextCentered(m_secondaryElement->GetAtomicSymbol(),
+                                 UPoint(SECONDARY_X_START, ELEMENT_START_Y),
+                                 UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
 
-      d.SetBackground(Drawing::BLACK);
-      d.SetForeground(Drawing::WHITE);
+      if (GetSelectedTool() == TOOL_BRUSH)
+      {
+        d.SetBackground(Drawing::BLACK);
+        d.SetForeground(Drawing::WHITE);
 
-      char brushSizeArray[64];
+        char brushSizeArray[64];
 
-      snprintf(brushSizeArray, 64, "Brush Size: %d", m_brushSize);
+        snprintf(brushSizeArray, 64, "%d", m_brushSize);
 
-      d.BlitBackedText(brushSizeArray, UPoint(2, 64), UPoint(128, 128));
+        const SPoint brushPos = m_toolButtons[ASSET_BRUSH_ICON].Panel::GetRenderPoint();
+        UPoint pos(brushPos.GetX() + 64, brushPos.GetY());
+        d.BlitBackedText(brushSizeArray, pos, UPoint(128, 128));
+      }
 
     }
   };
