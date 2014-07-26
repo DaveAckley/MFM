@@ -109,6 +109,25 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
                            m_atomDrawSize,
                            m_atomDrawSize,
                            radius);
+
+        if (m_atomDrawSize > 40)
+        {
+          const Element<CC> * elt = tile.GetElement(atom->GetType());
+          if (elt)
+          {
+            drawing.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
+            const char * sym = elt->GetAtomicSymbol();
+            const SPoint size = drawing.GetTextSize(sym);
+            const UPoint box = UPoint(m_atomDrawSize, m_atomDrawSize);
+            if (size.GetX() > 0 && size.GetY() > 0)
+            {
+              const UPoint usize(size.GetX(), size.GetY());
+              drawing.SetBackground(Drawing::BLACK);
+              drawing.SetForeground(Drawing::WHITE);
+              drawing.BlitBackedTextCentered(sym, rendPt, box);
+            }
+          }
+        }
       }
     }
   }
