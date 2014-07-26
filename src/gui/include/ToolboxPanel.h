@@ -447,6 +447,7 @@ namespace MFM
     {
       const u32 ELEMENT_START_X = 64;
       const u32 ELEMENT_START_Y = 40;
+      const u32 ELEMENT_TOOL_SIZE = ELEMENT_RENDER_SIZE + 8;
 
       d.SetForeground(this->Panel::GetBackground());
       d.FillRect(0, 0, this->Panel::GetWidth(), this->Panel::GetHeight());
@@ -456,27 +457,27 @@ namespace MFM
       if (m_primaryElement)
       {
         d.SetForeground(m_primaryElement->PhysicsColor());
-        d.FillCircle(ELEMENT_START_X, ELEMENT_START_Y, ELEMENT_RENDER_SIZE,
-                     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
+        d.FillCircle(ELEMENT_START_X, ELEMENT_START_Y, ELEMENT_TOOL_SIZE,
+                     ELEMENT_TOOL_SIZE, ELEMENT_TOOL_SIZE / 2);
 
         d.SetBackground(Drawing::BLACK);
         d.SetForeground(Drawing::WHITE);
         d.BlitBackedTextCentered(m_primaryElement->GetAtomicSymbol(),
                                  UPoint(ELEMENT_START_X, ELEMENT_START_Y),
-                                 UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+                                 UPoint(ELEMENT_TOOL_SIZE, ELEMENT_TOOL_SIZE));
       }
       if (m_secondaryElement)
       {
-        const u32 SECONDARY_X_START = ELEMENT_START_X + ELEMENT_RENDER_SIZE;
+        const u32 SECONDARY_X_START = ELEMENT_START_X + ELEMENT_TOOL_SIZE;
         d.SetForeground(m_secondaryElement->PhysicsColor());
-        d.FillCircle(SECONDARY_X_START, ELEMENT_START_Y, ELEMENT_RENDER_SIZE,
-                     ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE / 2);
+        d.FillCircle(SECONDARY_X_START, ELEMENT_START_Y, ELEMENT_TOOL_SIZE,
+                     ELEMENT_TOOL_SIZE, ELEMENT_TOOL_SIZE / 2);
 
         d.SetBackground(Drawing::BLACK);
         d.SetForeground(Drawing::WHITE);
         d.BlitBackedTextCentered(m_secondaryElement->GetAtomicSymbol(),
                                  UPoint(SECONDARY_X_START, ELEMENT_START_Y),
-                                 UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+                                 UPoint(ELEMENT_TOOL_SIZE, ELEMENT_TOOL_SIZE));
       }
 
       if (GetSelectedTool() == TOOL_BRUSH)
