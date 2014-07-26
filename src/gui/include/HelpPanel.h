@@ -35,7 +35,7 @@
  * The number of messages which should be displayed upon rendering a
  * HelpPanel .
  */
-#define HELP_MESSAGE_COUNT 27
+#define HELP_MESSAGE_COUNT 28
 
 namespace MFM
 {
@@ -63,6 +63,7 @@ namespace MFM
       *(messages++) = "Keyboard:";
       *(messages++) = " [SPACE] Pause / Start simulation";
       *(messages++) = " [t] Show toolbox";
+      *(messages++) = "    [Scroll] Brush Size";
       *(messages++) = " [g] Show grid";
       *(messages++) = " [m] Toggle memory view";
       *(messages++) = " [k] Render Atom heatmap";
@@ -122,9 +123,9 @@ namespace MFM
       d.SetFont(smFont);
       for(u32 i = 0; i < HELP_MESSAGE_COUNT; i++)
       {
-	d.BlitText(m_helpMessages[i],
-		   UPoint(0, i * 18 + 28),
-		   MakeUnsigned(Panel::GetTextSize(smFont, m_helpMessages[i])));
+        d.BlitText(m_helpMessages[i],
+                   UPoint(0, i * 18 + 28),
+                   MakeUnsigned(Panel::GetTextSize(smFont, m_helpMessages[i])));
       }
     }
   };

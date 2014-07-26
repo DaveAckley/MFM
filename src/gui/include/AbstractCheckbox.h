@@ -34,10 +34,16 @@
 namespace MFM
 {
 
+  /**
+   * A subclass of an AbstractButton, used to toggle a boolean value.
+   */
   class AbstractCheckbox : public AbstractButton
   {
-  public:
-
+   public:
+    /**
+     * Constructs a new AbstractCheckbox which is not linked to a
+     * boolean value and is therefore not ready to be used.
+     */
     AbstractCheckbox() :
       AbstractButton(),
       m_externalValue(NULL)
@@ -45,6 +51,11 @@ namespace MFM
       AbstractCheckbox::OnceOnly();
     }
 
+    /**
+     * Constructs a new AbstractCheckbox which displays a given string
+     * as its text. The resulting AbstractCheckbox still needs to be
+     * given an external backing value in order to be used.
+     */
     AbstractCheckbox(const char* text) :
       AbstractButton(text),
       m_externalValue(NULL)
@@ -53,7 +64,7 @@ namespace MFM
     }
 
     virtual void PaintBorder(Drawing& d)
-    { }
+    { /* Don't want to paint a border*/ }
 
     virtual void PaintComponent(Drawing& d)
     {
@@ -63,49 +74,115 @@ namespace MFM
       d.SetForeground(Panel::GetForeground());
 
       d.BlitText(AbstractButton::GetText(), UPoint(32, 0),
-		 AbstractButton::GetDimensions());
+                 AbstractButton::GetDimensions());
     }
 
-    void OnClick(u8 button)
+    virtual void OnClick(u8 button)
     {
-      SetChecked(!(*m_externalValue));
+      SetChecked(!IsChecked());
 
       OnCheck(*m_externalValue);
     }
 
+    /**
+     * Called when this AbstractCheckbox is clicked. A value is given
+     * describing whether or not this AbstractCheckbox is checked.
+     *
+     * @param value \true if this AbstractCheckbox is in its on state,
+     *              else \c false .
+     */
     virtual void OnCheck(bool value) = 0;
 
+    /**
+     * Checks to see if this AbstractCheckbox is in its on state. If
+     * it is in its on state, its backing boolean value (if it exists)
+     * is guaranteed to be true. If it is not, or does not have a
+     * backing boolean value, this will be \c false .
+     *
+     * @returns \c true if the boolean value backed by this
+     *          AbstractCheckbox is set and is equal to \true , else
+     *          \c false.
+     */
     bool IsChecked()
     {
-      return *m_externalValue;
+      if(m_externalValue)
+      {
+        return *m_externalValue;
+      }
+      return false;
     }
 
+    /**
+     * Sets the value of the boolean backing this AbstractCheckbox
+     * . If there is no boolean bacing this AbstractCheckbox , this
+     * FAILs with NULL_POINTER .
+     *
+     * @param checked The new value to set the boolean value backing
+     *                this AbstractCheckbox to.
+     */
     void SetChecked(bool checked)
     {
+      if(!m_externalValue)
+      {
+        FAIL(NULL_POINTER);
+      }
       *m_externalValue = checked;
     }
 
+    /**
+     * Sets the pointer to the boolean value which is backing this
+     * AbstractCheckbox . It is important to set this before using
+     * this AbstractCheckbox .
+     *
+     * @param externalValue The pointer to the boolean value wished to
+     *                      back this AbstractCheckbox . Any
+     *                      modifications to the state of this
+     *                      AbstractCheckbox will also modify the
+     *                      contents of this pointer .
+     */
     void SetExternalValue(bool* externalValue)
     {
       m_externalValue = externalValue;
     }
 
   private:
-
+    /**
+     * The pointer to the boolean value backing this AbstractCheckbox .
+     */
     bool* m_externalValue;
 
+    /**
+     * Gets the Asset which should be drawn depending on the state
+     * held by the boolean pointed to by \c m_externalValue .
+     *
+     * @returns The Asset which should be drawn depending on the state
+     *          held by the boolean pointed to by \c m_externalValue .
+     */
     inline Asset GetAsset()
     {
-      return (*m_externalValue) ?
-	ASSET_CHECKBOX_ICON_ON :
-	ASSET_CHECKBOX_ICON_OFF ;
+      return IsChecked() ?
+        ASSET_CHECKBOX_ICON_ON :
+        ASSET_CHECKBOX_ICON_OFF ;
     }
 
+    /**
+     * Gets the SDL_Surface pointer which should be drawn depending on
+     * the state held by the boolean value pointed to by \c m_externalValue .
+     *
+     * @returns The SDL_Surface pointer which should be drawn
+     *          depending on the state held by the boolean value
+     *          pointed to by \c m_externalValue .
+     */
     inline SDL_Surface* GetIcon()
     {
       return AssetManager::Get(GetAsset());
     }
 
+    /**
+     * To be performed only once during initialization. This is most
+     * likely going to be used by constructors to set the default
+     * values of some propterties of this AbstractCheckbox .
+     */
     void OnceOnly()
     {
       Panel::SetForeground(Drawing::WHITE);

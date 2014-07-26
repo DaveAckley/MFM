@@ -35,12 +35,11 @@
 #include "SDL.h"
 
 
-namespace MFM {
-
-
+namespace MFM
+{
   class TileRenderer
   {
-  private:
+   private:
     bool m_drawGrid;
     enum DrawRegionType { NO, EDGE, FULL, MAX} m_drawMemRegions;
     bool m_drawDataHeat;
@@ -53,6 +52,7 @@ namespace MFM {
     u32 m_visibleColor;
     u32 m_hiddenColor;
     u32 m_selectedHiddenColor;
+    u32 m_selectedPausedColor;
 
     SPoint m_windowTL;
 

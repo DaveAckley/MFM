@@ -64,17 +64,22 @@ namespace MFM {
       OString32 datavalue;
       cs->GetValue(datavalue, endOfEpoch);
       OString32 output;
-      for (u32 vlen = datavalue.GetLength(); vlen < VALUE_WIDTH; ++vlen)
-      {
-        output.Print(" ");
-      }
-      output.Printf("%2s %s",datavalue.GetZString(), cs->GetLabel());
 
-      drawing.SetFont(m_drawFont);
-      drawing.SetForeground(0xffffffff);
-      drawing.BlitText(output.GetZString(), Point<u32>(m_drawPoint.GetX(), baseY),
-                       Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
-      baseY += ROW_HEIGHT;
+      if(strcmp(datavalue.GetZString(), "0  0"))
+      {
+        for (u32 vlen = datavalue.GetLength(); vlen < VALUE_WIDTH; ++vlen)
+        {
+          output.Print(" ");
+        }
+
+        output.Printf("%2s %s",datavalue.GetZString(), cs->GetLabel());
+
+        drawing.SetFont(m_drawFont);
+        drawing.SetForeground(0xffffffff);
+        drawing.BlitText(output.GetZString(), Point<u32>(m_drawPoint.GetX(), baseY),
+                         Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
+        baseY += ROW_HEIGHT;
+      }
     }
   }
 

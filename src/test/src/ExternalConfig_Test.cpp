@@ -24,7 +24,6 @@ namespace MFM
                           "GA(d,31,32)\n"
                           "SetParameter(DregResRatio,10)\n");
     cfg.SetByteSource(zbs, "./configurations/ExternalConfig_Test.input");
-    cfg.SetErrorByteSink(STDERR);
     cfg.Read();
 
   }
@@ -33,5 +32,4 @@ namespace MFM
   {
     TestBasic();
   }
-
 }

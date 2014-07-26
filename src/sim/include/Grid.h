@@ -266,7 +266,6 @@ namespace MFM {
       return GetWidth() * Tile<CC>::OWNED_SIDE;
     }
 
-
     void Pause();
 
     void Unpause();
