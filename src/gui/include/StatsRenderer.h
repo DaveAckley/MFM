@@ -205,10 +205,15 @@ namespace MFM {
           Tile<CC> * t = *i;
           ElementTable<CC> & et = t->GetElementTable();
           u64 * eds = et.GetElementDataSlotsFromType(m_elementType,m_outOfSlots);
-          if (!eds) continue;
+          if (!eds)
+          {
+            continue;
+          }
           sum += eds[m_slot];
           if (endOfEpoch && m_resetOnRead)
+          {
             eds[m_slot] = 0;
+          }
         }
 
         return (double) sum;

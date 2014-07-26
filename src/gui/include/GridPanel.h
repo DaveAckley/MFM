@@ -33,10 +33,11 @@
 #include "GridRenderer.h"
 #include "EditingTool.h"
 #include "ToolboxPanel.h"
+#include "Util.h"
+#include <math.h> /* for sqrt */
 
 #define SCREEN_INITIAL_WIDTH 1280
 #define SCREEN_INITIAL_HEIGHT 1024
-#define BRUSH_SIZE 4
 
 namespace MFM
 {
@@ -160,7 +161,7 @@ namespace MFM
         m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
         m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
-      PaintMapper(button, clickPt, false, atom, false);
+      PaintMapper(button, clickPt, 0, atom, false);
     }
 
     void HandleBrushTool(u8 button, SPoint clickPt)
@@ -169,12 +170,12 @@ namespace MFM
         m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
         m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
-      PaintMapper(button, clickPt, true, atom, false);
+      PaintMapper(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(), atom, false);
     }
 
     void HandleEraserTool(u8 button, SPoint clickPt)
     {
-      PaintMapper(button, clickPt, false,
+      PaintMapper(button, clickPt, 0,
                   Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), false);
     }
 
@@ -187,21 +188,22 @@ namespace MFM
       /* Filling empty results in stack overflow for obvious reasons */
       if(!Atom<CC>::IsType(atom, Element_Empty<CC>::THE_INSTANCE.GetType()))
       {
-        PaintMapper(button, clickPt, false, atom, true);
+        PaintMapper(button, clickPt, 0, atom, true);
       }
     }
 
-    void PaintMapper(u8 button, SPoint clickPt, bool brush, T atom, bool bucket)
+    void PaintMapper(u8 button, SPoint clickPt, s32 brushSize, T atom, bool bucket)
     {
       SPoint pt = GetAbsoluteLocation();
       pt.Set(clickPt.GetX() - pt.GetX(),
              clickPt.GetY() - pt.GetY());
 
-      PaintAtom(*m_mainGrid, pt, brush, atom, bucket);
+      PaintAtom(*m_mainGrid, pt, brushSize, atom, bucket);
     }
 
-    void PaintAtom(Grid<GC>& grid, SPoint& clickPt, bool brush, T& atom, bool bucket)
+    void PaintAtom(Grid<GC>& grid, SPoint& clickPt, s32 brushSize, T& atom, bool bucket)
     {
+
       /* Only do this when tiles are together to keep from having to
        * deal with caches */
       if(!m_grend->IsRenderingTilesSeparated())
@@ -221,20 +223,20 @@ namespace MFM
         cp.SetX(cp.GetX() / atomSize);
         cp.SetY(cp.GetY() / atomSize);
 
-        if(brush)
+        if(brushSize > 0)
         {
-          MDist<BRUSH_SIZE> md = MDist<BRUSH_SIZE>::get();
-
-          for(u32 i = 0; i < md.GetTableSize(BRUSH_SIZE); i++)
+          /* brushSize can't be templated, so let's do this by hand. */
+          SPoint tile, site;
+          for(s32 y = -brushSize; y < brushSize; y++)
           {
-            SPoint pt = md.GetPoint(i);
-            pt.Add(cp.GetX(), cp.GetY());
-
-            if(pt.GetX() >= 0 && pt.GetY() >= 0 &&
-               pt.GetX() < TILE_SIDE_LIVE_SITES * W &&
-               pt.GetY() < TILE_SIDE_LIVE_SITES * H)
+            for(s32 x = -brushSize; x < brushSize; x++)
             {
-              grid.PlaceAtom(atom, pt);
+              SPoint pt(cp.GetX() + x, cp.GetY() + y);
+              if(sqrt((x * x) + (y * y)) <= brushSize &&
+                 grid.MapGridToTile(pt, tile, site))
+              {
+                grid.PlaceAtom(atom, SPoint(cp.GetX() + x, cp.GetY() + y));
+              }
             }
           }
         }

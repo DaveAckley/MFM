@@ -246,6 +246,8 @@ namespace MFM
 
     u32 m_sliderCount;
 
+    u32 m_brushSize;
+
     const AbstractSliderConfig<CC>* m_sliderConfigs[ELEMENT_BOX_SIZE];
 
     u32 m_sliderConfigCount;
@@ -290,6 +292,7 @@ namespace MFM
       m_secondaryElement(NULL),
       m_heldElementCount(0),
       m_sliderCount(0),
+      m_brushSize(4),
       m_sliderConfigCount(0)
     {
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
@@ -327,11 +330,6 @@ namespace MFM
         m_toolButtons[i].Panel::SetRenderPoint(SPoint(16 + i * 32, 3));
         m_toolButtons[i].SetToolIcon(AssetManager::Get(assets[i]));
         Panel::Insert(m_toolButtons + i, NULL);
-        LOG.Debug("Selector(%d, %d, %d, %d)",
-                  m_toolButtons[i].GetAbsoluteLocation().GetX(),
-                  m_toolButtons[i].GetAbsoluteLocation().GetY(),
-                  m_toolButtons[i].GetDimensions().GetX(),
-                  m_toolButtons[i].GetDimensions().GetY());
       }
 
       for(u32 i = 0; i < ELEMENT_BOX_SIZE; i++)
@@ -368,6 +366,11 @@ namespace MFM
 
     void SetSecondaryElement(Element<CC>* element)
     { m_secondaryElement = element; }
+
+    u32 GetBrushSize()
+    {
+      return m_brushSize;
+    }
 
     Element<CC>* GetSecondaryElement()
     { return m_secondaryElement; }
@@ -409,6 +412,19 @@ namespace MFM
     virtual bool Handle(MouseButtonEvent& mbe)
     {
       /* Try to keep the grid from taking this event too */
+
+      switch(mbe.m_event.button.button)
+      {
+      case SDL_BUTTON_WHEELUP:
+        m_brushSize++;
+        break;
+      case SDL_BUTTON_WHEELDOWN:
+        m_brushSize--;
+        break;
+      default:
+        break;
+      }
+
       return true;
     }
 
@@ -449,6 +465,16 @@ namespace MFM
                          UPoint(70 + ELEMENT_RENDER_SIZE, 40),
                          UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
       }
+
+      d.SetBackground(Drawing::BLACK);
+      d.SetForeground(Drawing::WHITE);
+
+      char brushSizeArray[64];
+
+      snprintf(brushSizeArray, 64, "Brush Size: %d", m_brushSize);
+
+      d.BlitBackedText(brushSizeArray, UPoint(2, 64), UPoint(128, 128));
+
     }
   };
 }
