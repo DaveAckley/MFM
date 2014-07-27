@@ -90,7 +90,8 @@ namespace MFM
      *                    an index for.
      *
      * @returns The index of this ElementTable where the Element of
-     *          type \c elementType resides.
+     *          type \c elementType resides, or -1 if \c elementType
+     *          is not found in the table.
      */
     s32 GetIndex(u32 elementType) const ;
 
@@ -126,7 +127,12 @@ namespace MFM
      */
     void Execute(EventWindow<CC>& window)
     {
-      u32 type = window.GetCenterAtom().GetType();
+      const T & atom = window.GetCenterAtom();
+      if (!atom.IsSane())
+      {
+        FAIL(INCONSISTENT_ATOM);
+      }
+      u32 type = atom.GetType();
       if(type != Element_Empty<CC>::THE_INSTANCE.GetType())
       {
         const Element<CC> * elt = Lookup(type);

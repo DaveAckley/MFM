@@ -787,7 +787,9 @@ namespace MFM
   {
     if(!m_threadInitialized)
     {
-      AssertValidAtomCounts();
+      // Possible xrays before start means we can't assert even here
+      //      AssertValidAtomCounts();
+      RecountAtoms();
       m_threadInitialized = true;
       pthread_create(&m_thread, NULL, ExecuteThreadHelper, this);
     }
@@ -854,7 +856,7 @@ namespace MFM
         s32 type = elementTable.GetIndex(atom->GetType());
         if (type < 0)
         {
-          FAIL(ILLEGAL_STATE);
+          FAIL(UNKNOWN_ELEMENT);
         }
         counts[type]++;
       }

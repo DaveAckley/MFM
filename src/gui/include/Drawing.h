@@ -262,6 +262,23 @@ namespace MFM {
     void BlitBackedText(const char* message, UPoint loc, UPoint size);
 
     /**
+     * Just like BlitBackedText but center message
+     */
+    void BlitBackedTextCentered(const char* message, UPoint loc, UPoint size);
+
+    /**
+     * Return the SPoint(width, height) of message when rendered in
+     * the current font, or SPoint(-1,-1) if any problem occurs
+     */
+    SPoint GetTextSize(const char* message) ;
+
+    /**
+     * Return the SPoint(width, height) of message when rendered in
+     * thisFont, or SPoint(-1,-1) if any problem occurs
+     */
+    SPoint GetTextSizeInFont(const char* message, TTF_Font * thisFont) ;
+
+    /**
      * Draw a specified image to a specified part of the screen.
      */
     void BlitImage(SDL_Surface* image, UPoint loc, UPoint maxSize) const;

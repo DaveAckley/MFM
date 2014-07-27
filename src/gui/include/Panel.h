@@ -180,6 +180,8 @@ namespace MFM {
 
     void SetRenderPoint(const SPoint & renderPt);
 
+    const SPoint & GetRenderPoint() const ;
+
     const char * GetName() const { return m_name; }
 
     void SetName(const char * name) { m_name = name; }

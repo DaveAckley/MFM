@@ -14,7 +14,9 @@ namespace MFM
   ExternalConfig<GC>::ExternalConfig(Grid<GC>& grid) :
     m_grid(grid), m_elementRegistry(grid.GetElementRegistry()),
     m_registeredFunctionCount(0), m_registeredElementCount(0)
-  { }
+  {
+    m_in.SetErrorByteSink(STDERR);
+  }
 
   template<class GC>
   void ExternalConfig<GC>::SetByteSource(ByteSource & byteSource, const char * label)
