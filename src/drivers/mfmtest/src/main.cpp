@@ -4,6 +4,11 @@ using namespace MFM;
 
 int main(int argc, char** argv)
 {
+  if (argc > 1)
+  {
+    MFM::LOG.SetByteSink(MFM::STDERR);
+    MFM::LOG.SetLevel(MFM::LOG.ALL);
+  }
 
   ElementRegistry_Test::Test_RunTests();
   ByteSource_Test::Test_RunTests();
@@ -27,11 +32,13 @@ int main(int argc, char** argv)
 
   MDist_Test::Test_MDistConversion();
 
+#if 0  /* DEPRECATED */
   P1Atom_Test::Test_p1atomState();
   P1Atom_Test::Test_p1atomLBCount();
   P1Atom_Test::Test_p1atomReadBody();
   P1Atom_Test::Test_p1atomAddLB();
   P1Atom_Test::Test_p1atomAddSB();
+#endif
 
   Tile_Test::Test_tilePlaceAtom();
 
