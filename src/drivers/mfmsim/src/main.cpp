@@ -1,11 +1,16 @@
 #include "main.h"
-#include "P3Atom.h"
+#include "P0Atom.h"
 #include "ParamConfig.h"
 
 namespace MFM {
 
   typedef ParamConfig<64,4,8,40> OurParamConfig;
-  typedef P1Atom<OurParamConfig> OurAtom;
+  // Mon Jul 28 03:45:08 2014 P1Atom is deprecated with 2.0.2.
+  // P3Atom is preferred, but for now we're still supporting
+  // P0Atom so using that here for exercise.
+  //
+  //typedef P1Atom<OurParamConfig> OurAtom;
+  typedef P0Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
