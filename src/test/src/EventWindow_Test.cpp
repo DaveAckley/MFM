@@ -42,7 +42,10 @@ void EventWindow_Test::Test_eventwindowWrite()
   tile.RegisterElement(Element_Dreg<TestCoreConfig>::THE_INSTANCE);
   tile.RegisterElement(Element_Res<TestCoreConfig>::THE_INSTANCE);
 
-  SPoint center(4, 4);
+  // We must ensure neither center nor 'absolute' ends up hitting the
+  // cache!  Our TestTile has no connections, so Tile::PlaceAtom
+  // ignores all cache write attempts to it!
+  SPoint center(8, 8);
   SPoint absolute(-2, 0);
   SPoint zero(0, 0);
   const u32 DREG_TYPE = Element_Dreg<TestCoreConfig>::THE_INSTANCE.GetType();
