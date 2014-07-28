@@ -263,12 +263,14 @@ namespace MFM
       LOG.Debug("Constructed %@",&m_UUID);
     }
 
+    /*
     // For use by Element_Empty only!
     Element(const UUID & uuid, u32 type) : m_UUID(uuid), m_type(type),
                                            m_hasType(true),
                                            m_renderLowlight(false),
                                            m_atomicSymbol("!!")
     { }
+    */
 
     /**
      * Assigns the type of this Element using the U16StaticLoader
@@ -353,11 +355,16 @@ namespace MFM
     /**
      * Gets the default Atom of this Element . If this Element has not
      * been assigned a type through \c AllocateType() , this will FAIL
-     * with ILLEGAL_STATE .
+     * with ILLEGAL_STATE.  NOTE: The defaultAtom returned here will
+     * have been constructed by Element::BuildDefaultAtom, which
+     * leaves all state bits zero.  If this is not desirable, element
+     * subclasses should override this to provide their own default
+     * atom initialization.
      *
      * @returns The default Atom of this Element.
+     * @sa BuildDefaultAtom
      */
-    const T & GetDefaultAtom() const
+    virtual const T & GetDefaultAtom() const
     {
       if (!m_hasType)
       {
