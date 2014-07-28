@@ -41,6 +41,7 @@ namespace MFM
 
   template <class CC> class Element; // Forward declaration
   template <class CC> class AtomSerializer; // Forward declaration
+  template <class BV, u32, u32> class BitField;  // Forward declaration
 
   /**
      An Atom is a fixed-size collection of bits, representing an
@@ -59,6 +60,11 @@ namespace MFM
      pointer on every Atom instance, so all Atom accesses must be by
      template type rather than by base class polymorphism.
 
+     In addition to the 'virtually virtual' methods that Atom
+     subclasses must provide (i.e., the methods documented as 'This is
+     to be defined only by a subclass of Atom'), Atom subclasses must
+     also provide compile time constants: ATOM_CATEGORY and
+     ATOM_FIRST_STATE_BIT.
   */
   template <class CC>
   class Atom
@@ -94,6 +100,7 @@ namespace MFM
 
     friend class Element<CC>;  // Let Element mess with our bits
     friend class AtomSerializer<CC>;  // Ditto AtomSerializer
+    template <class BV, u32, u32> friend class BitField;  // Ditto BitField (all instances)
 
   public:
 
@@ -141,6 +148,17 @@ namespace MFM
      * @remarks This is to be defined only by a subclass of Atom.
      */
     bool IsSane() const;
+
+    /**
+     * Assuming IsSane has returned false, this attempts to correct
+     * the type of this atom, if it is possible to do.
+     *
+     * @returns true if this Atom now has a legal type, false if the
+     * type is so damaged it should just be destroyed
+     *
+     * @remarks This is to be defined only by a subclass of Atom.
+     */
+    bool HasBeenRepaired();
 
     /**
      * Gets the type of this Atom.
