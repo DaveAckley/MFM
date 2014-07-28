@@ -56,6 +56,7 @@ namespace MFM {
       NeedElement(&Element_ForkBomb1<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_ForkBomb2<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_ForkBomb3<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_AntiForkBomb<OurCoreConfig>::THE_INSTANCE);
       if (!m_qbarInstance)
       {
         FAIL(ILLEGAL_STATE);

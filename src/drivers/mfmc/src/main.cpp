@@ -29,6 +29,8 @@ namespace MFM
       NeedElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_ForkBomb1<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_ForkBomb2<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_ForkBomb3<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_AntiForkBomb<OurCoreConfig>::THE_INSTANCE);
 
 #ifdef MFM_GUI_DRIVER
       {
