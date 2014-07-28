@@ -72,6 +72,8 @@ namespace MFM {
 
     s32 m_xraySiteOdds;
 
+    u8 m_gridGeneration;
+
   public:
     Random& GetRandom() { return m_random; }
 
@@ -89,7 +91,8 @@ namespace MFM {
       m_width(W),
       m_height(H),
       m_er(elts),
-      m_xraySiteOdds(1000)
+      m_xraySiteOdds(1000),
+      m_gridGeneration(0)
     { }
 
     s32* GetXraySiteOddsPtr()
@@ -197,17 +200,21 @@ namespace MFM {
     bool GetTileExecutionStatus(const SPoint& tileLoc);
 
     /**
-     * Clears a Tile of all of its held atoms.
+     * Clears a Tile of all of its held atoms.  Also sets the tile
+     * generation to the grid's generation.
      *
      * @param tileLoc The location of the Tile in this Grid to clear.
      */
     void EmptyTile(const SPoint& tileLoc)
     {
-      GetTile(tileLoc).ClearAtoms();
+      Tile<CC> & tile = GetTile(tileLoc);
+      tile.ClearAtoms();
+      tile.SetGeneration(m_gridGeneration);
     }
 
     /**
-     * Empties this Grid of all held Atoms.
+     * Empties this Grid of all held Atoms.  Also increments the grid
+     * generation.
      */
     void Clear();
 

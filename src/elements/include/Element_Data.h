@@ -62,7 +62,6 @@ namespace MFM
     }
     static const u32 STATE_DATA_IDX = 0;
     static const u32 STATE_DATA_LEN = 32;
-    static const u32 STATE_BITS = STATE_DATA_IDX+STATE_DATA_LEN;
 
     u32 GetDatum(const T &atom, u32 badType) const {
       if (!Atom<CC>::IsType(atom,TYPE())) return badType;
@@ -77,7 +76,13 @@ namespace MFM
 
     virtual const T & GetDefaultAtom() const
     {
-      static T defaultAtom(TYPE(),0,0,STATE_BITS);
+      static T defaultAtom(TYPE(),0,0,STATE_DATA_LEN);
+      static bool initted = false;
+      if (!initted)
+      {
+        SetDatum(defaultAtom, (DATA_MAXVAL + DATA_MINVAL) / 2);
+        initted = true;
+      }
       return defaultAtom;
     }
 

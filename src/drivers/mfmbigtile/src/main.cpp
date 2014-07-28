@@ -4,7 +4,8 @@
 namespace MFM {
 
   typedef ParamConfig<64,4,8,176> OurParamConfig;
-  typedef P1Atom<OurParamConfig> OurAtom;
+  //DEPRECATED: typedef P1Atom<OurParamConfig> OurAtom;
+  typedef P3Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig,1,1> OurGridConfig;
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;

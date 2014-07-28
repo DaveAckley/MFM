@@ -71,21 +71,32 @@ namespace MFM
   class Packet
   {
   private:
+
     /**
      * The PacketType of this particular packet. Upon receipt, a
      * Packet's data is interpreted solely from its PacketType.
      */
-    PacketType m_type;
-
-    /**
-     * Used to describe a location during Tile communication.
-     */
-    SPoint m_edgeLoc;
+    u8 m_type;
 
     /**
      * Used to describe an edge during Tile communication.
      */
-    u32 m_toNeighbor;
+    u8 m_toNeighbor;
+
+    /**
+     * Used to discard obsolete packets after tile resets.
+     */
+    u8 m_generation;
+
+    /**
+     * Define a smaller point for intertile indexing
+     */
+    typedef Point<s16> SSPoint;
+
+    /**
+     * Used to describe a location during Tile communication.
+     */
+    SSPoint m_edgeLoc;
 
     /**
      * Used to describe an Atom during Tile communication.
@@ -95,18 +106,17 @@ namespace MFM
   public:
 
     /**
-     * Constructs a new Packet. Its PacketType must be known at time
-     * of construction.
+     * Constructs a new Packet of a given PacketType.
      */
-    Packet(PacketType type) :
-      m_type(type)
+    Packet(PacketType type, u8 generation) :
+      m_type(type), m_generation(generation)
     { }
 
     /**
      * Constructs an uninitialized Packet.
-     */
-    Packet()
+    Packet(u8 generation) : m_generation(generation)
     { }
+     */
 
     /**
      * Gets the PacketType of this Packet.
@@ -115,7 +125,7 @@ namespace MFM
      */
     PacketType GetType()
     {
-      return m_type;
+      return (PacketType) m_type;
     }
 
     /**
@@ -176,7 +186,7 @@ namespace MFM
      */
     void SetLocation(const SPoint& fromPt)
     {
-      m_edgeLoc = fromPt;
+      m_edgeLoc = SSPoint(fromPt.GetX(), fromPt.GetY());
     }
 
     /**
@@ -184,10 +194,44 @@ namespace MFM
      *
      * @returns This Packet's held location.
      */
-    const SPoint& GetLocation() const
+    const SPoint GetLocation() const
     {
-      return m_edgeLoc;
+      return SPoint(m_edgeLoc.GetX(), m_edgeLoc.GetY());
     }
+
+    /**
+     * Gets this Packet's generation.
+     *
+     * @returns This Packet's generation.
+     */
+    const u8 GetGeneration() const
+    {
+      return m_generation;
+    }
+
+    /**
+     * Gets this Packet's generation.
+     *
+     * @returns This Packet's generation.
+     */
+    void SetGeneration(u8 generation)
+    {
+      m_generation = generation;
+    }
+
+    /**
+     * Determine if this packet is obsolete compared to \c
+     * ourGeneration.
+     *
+     * @returns true iff this packet's generation should be considered
+     * 'less than' \c ourGeneration considering u8 wraparound.
+     */
+    bool IsObsolete(u8 ourGeneration) const
+    {
+      return ((u8) (m_generation - ourGeneration)) >= U8_MAX / 2;
+    }
+
+
   };
 } /* namespace MFM */
 

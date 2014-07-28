@@ -1,3 +1,4 @@
+// DEPRECATED
 #include "assert.h"
 #include "EventWindow.h"
 #include "P1Atom_Test.h"
@@ -7,28 +8,29 @@
 
 namespace MFM {
 
+typedef P1Atom<TestParamConfig> TestP1Atom;
 
 void P1Atom_Test::Test_p1atomState()
 {
-  TestAtom atom(32,0,0,0);
+  TestP1Atom atom(32,0,0,0);
 
   assert(atom.GetType() == 32);
 
-  atom = TestAtom(15,0,0,0);
+  atom = TestP1Atom(15,0,0,0);
 
   assert(atom.GetType() == 15);
 }
 
 void P1Atom_Test::Test_p1atomLBCount()
 {
-  TestAtom atom(1,1,0,0);
+  TestP1Atom atom(1,1,0,0);
 
   assert(atom.GetLongBondCount() == 1);
 }
 
 void P1Atom_Test::Test_p1atomSBCount()
 {
-  TestAtom atom(1,0,2,0);
+  TestP1Atom atom(1,0,2,0);
   SPoint offset(1, -1);
 
   //atom.AddShortBond(offset);
@@ -90,7 +92,7 @@ void P1Atom_Test::Test_p1atomReadBody()
 void P1Atom_Test::Test_p1atomAddLB()
 {
   SPoint lbonds[4];
-  TestAtom atom(1,4,0,0);
+  TestP1Atom atom(1,4,0,0);
 
   lbonds[0].Set(0, 1);
   lbonds[1].Set(0, 2);
@@ -113,7 +115,7 @@ void P1Atom_Test::Test_p1atomAddSB()
 {
   SPoint sbond(1, 1);
   SPoint out;
-  TestAtom atom(32,0,10,0);
+  TestP1Atom atom(32,0,10,0);
 
   for(int i = 0; i < 10; i++)
   {

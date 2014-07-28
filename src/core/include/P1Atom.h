@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  P1Atom.h Atom with (eventually) built in bond support
+  P1Atom.h A partial reimplementation, now deprecated, of the original MFM atom
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 */
 
 /**
-  \file P1Atom.h Atom with (eventually) built in bond support
+  \file P1Atom.h A partial reimplementation, now deprecated, of the original MFM atom
   \author Trent R. Small.
   \author David H. Ackley.
   \date (C) 2014 All rights reserved.
@@ -79,6 +79,13 @@ namespace MFM {
     {
       return GetBitsAllocated() <= BITS;
     }
+
+    bool HasBeenRepaired()
+    {
+      // We can't fix an insane atom.
+      return false;
+    }
+
 
     u32 GetBitCount() const {
       return BITS;
@@ -148,6 +155,8 @@ namespace MFM {
 
     void InitAtom(u32 type, u32 longc, u32 shortc, u32 statec)
     {
+      FAIL(DEPRECATED);
+
       SetLongBondCount(longc);
       SetShortBondCount(shortc);
       SetStateBitCount(statec);

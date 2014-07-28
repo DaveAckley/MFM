@@ -127,10 +127,17 @@ namespace MFM
      */
     void Execute(EventWindow<CC>& window)
     {
-      const T & atom = window.GetCenterAtom();
+      T atom = window.GetCenterAtom();
       if (!atom.IsSane())
       {
-        FAIL(INCONSISTENT_ATOM);
+        if (atom.HasBeenRepaired())
+        {
+          window.SetCenterAtom(atom);
+        }
+        else
+        {
+          FAIL(INCONSISTENT_ATOM);
+        }
       }
       u32 type = atom.GetType();
       if(type != Element_Empty<CC>::THE_INSTANCE.GetType())

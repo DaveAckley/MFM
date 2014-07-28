@@ -144,6 +144,8 @@ namespace MFM {
       UUID m_uuid;                   //< Set in all cases
       const Element<CC>* m_element;  //< Set if element is loaded
       s32 m_pathIndex;               //< Set if the element was found in this pathentry
+
+      ElementEntry() : m_element(0), m_pathIndex(-1) { }
     } m_registeredElements[TABLE_SIZE];
     u32 m_registeredElementsCount;
 

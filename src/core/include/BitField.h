@@ -28,6 +28,7 @@
 #define BITFIELD_H
 
 #include "BitVector.h"
+#include "Atom.h"
 
 namespace MFM {
 
@@ -70,6 +71,12 @@ namespace MFM {
       return bv.Read(START,LENGTH);
     }
 
+    template <class CC>
+    static u32 Read(const Atom<CC> & atom)
+    {
+      return Read(atom.m_bits);
+    }
+
     /**
      * writes the contents of a u32 into a window (which is represented by this
      * BitField) of a specified BV.
@@ -80,6 +87,14 @@ namespace MFM {
     {
       bv.Write(START,LENGTH,val);
     }
+
+    template <class CC>
+    static void Write(Atom<CC> & atom, u32 val)
+    {
+      Write(atom.m_bits, val);
+    }
+
+
   };
 } /* namespace MFM */
 

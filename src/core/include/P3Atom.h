@@ -43,7 +43,10 @@ namespace MFM {
   template <class PC>
   class P3Atom : public Atom< CoreConfig< P3Atom<PC>, PC> >
   {
-  public: enum { ATOM_CATEGORY = 3 };
+  public: enum
+  {
+    ATOM_CATEGORY = 3
+  };
   private:
     typedef CoreConfig< P3Atom<PC>, PC> CC;
 
@@ -67,8 +70,11 @@ namespace MFM {
       P3_STATE_BITS_LEN = BITS - P3_STATE_BITS_POS,
 
       //////
-      // Other constants
+      // Declarations required by the Atom contract
+      ATOM_FIRST_STATE_BIT = P3_STATE_BITS_POS,
 
+      //////
+      // Other constants
       P3_TYPE_COUNT = 1<<P3_TYPE_BITS_LEN
 
     };
@@ -118,8 +124,33 @@ namespace MFM {
       return Parity2D_4x4::Check2DParity(fixedHeader);
     }
 
+    bool HasBeenRepaired()
+    {
+      u32 fixedHeader = AFFixedHeader::Read(this->m_bits);
+      u32 repairedHeader =
+        Parity2D_4x4::Correct2DParityIfPossible(fixedHeader);
+
+      if (repairedHeader == 0) return false;
+
+      if (fixedHeader != repairedHeader)
+      {
+        AFFixedHeader::Write(this->m_bits, repairedHeader);
+      }
+
+      return true;
+    }
+
+
     u32 GetMaxStateSize(u32 type) const {
       return P3_STATE_BITS_LEN;
+    }
+
+    /**
+     * Index of first bit that isn't a state bit.
+     */
+    u32 EndStateBit() const
+    {
+      return BITS;
     }
 
     void WriteStateBits(ByteSink& ostream) const
@@ -153,7 +184,7 @@ namespace MFM {
      */
     u32 GetStateField(u32 stateIndex, u32 stateWidth) const
     {
-      if (stateIndex + stateWidth > GetMaxStateSize(GetType()))
+      if (stateWidth > P3_STATE_BITS_LEN)
         FAIL(ILLEGAL_ARGUMENT);
       return this->m_bits.Read(P3_STATE_BITS_POS + stateIndex, stateWidth);
     }
@@ -165,7 +196,7 @@ namespace MFM {
      */
     void SetStateField(u32 stateIndex, u32 stateWidth, u32 value)
     {
-      if (stateIndex + stateWidth > GetMaxStateSize(GetType()))
+      if (stateWidth > P3_STATE_BITS_LEN)
         FAIL(ILLEGAL_ARGUMENT);
       return this->m_bits.Write(P3_STATE_BITS_POS + stateIndex, stateWidth, value);
     }
@@ -179,7 +210,7 @@ namespace MFM {
       ostream.Printf("P3[%x/",type);
       u32 length = GetMaxStateSize(type);
       for (int i = 0; i < length; i += 4) {
-        u32 nyb = this->m_bits.Read(i,4);
+        u32 nyb = this->m_bits.GetStateField(i,4);
         ostream.Printf("%x",nyb);
       }
       ostream.Printf("]");
