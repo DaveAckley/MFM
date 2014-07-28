@@ -2,7 +2,7 @@
 #define TEST_COMMON_H
 
 #include "Grid.h"
-#include "P1Atom.h"
+#include "P0Atom.h"
 #include "ParamConfig.h"
 #include "ElementTable.h"
 #include "EventWindow.h"
@@ -12,7 +12,9 @@ namespace MFM {
 
   /* Some types for us to test */
   typedef ParamConfig<> TestParamConfig;
-  typedef P1Atom<TestParamConfig> TestAtom;
+  //  Deprecating P1Atom Sun Jul 27 18:00:05 2014
+  // typedef P1Atom<TestParamConfig> TestAtom;
+  typedef P0Atom<TestParamConfig> TestAtom;
   typedef CoreConfig<TestAtom, TestParamConfig> TestCoreConfig;
 
   typedef GridConfig<TestCoreConfig,4,3> TestGridConfig;
