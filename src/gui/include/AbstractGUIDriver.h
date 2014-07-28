@@ -369,6 +369,21 @@ namespace MFM
       }
     } m_quitButton;
 
+    struct ReloadButton : public AbstractGridButton
+    {
+      ReloadButton() : AbstractGridButton("Reload")
+      {
+        AbstractButton::SetName("ReloadButton");
+        Panel::SetDimensions(200,40);
+        AbstractButton::SetRenderPoint(SPoint(2, 350));
+      }
+
+      virtual void OnClick(u8 button)
+      {
+        AbstractGridButton::m_driver->LoadFromConfigurationPath();
+      }
+    } m_reloadButton;
+
     struct PauseTileButton : public AbstractGridButton
     {
       PauseTileButton() : AbstractGridButton("Pause Tile")
@@ -546,6 +561,7 @@ namespace MFM
       m_buttonPanel.InsertButton(&m_tileViewButton);
       m_buttonPanel.InsertButton(&m_pauseTileButton);
       m_buttonPanel.InsertButton(&m_saveButton);
+      m_buttonPanel.InsertButton(&m_reloadButton);
       m_buttonPanel.InsertButton(&m_quitButton);
 
       m_pauseTileButton.SetGridRenderer(m_grend);

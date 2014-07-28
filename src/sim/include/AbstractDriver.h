@@ -50,6 +50,7 @@
 #define MIN_PATH_RESERVED_LENGTH 100
 
 #define MAX_NEEDED_ELEMENTS 100
+#define MAX_CONFIGURATION_PATHS 32
 
 #define INITIAL_AEPS_PER_FRAME 1
 
@@ -454,7 +455,9 @@ namespace MFM
 
     VArguments m_varguments;
 
-    const char* m_configurationPath;
+    u32 m_configurationPathCount;
+    u32 m_currentConfigurationPath;
+    const char* (m_configurationPaths[MAX_CONFIGURATION_PATHS]);
 
     char m_simDirBasePath[MAX_PATH_LENGTH];
     u32 m_simDirBasePathLength;
@@ -501,12 +504,17 @@ namespace MFM
       ((AbstractDriver*)driver)->SetSeed(seed);
     }
 
-    static void SetAEPSPerEpochFromArgs(const char* aepsStr, void* driver)
+    static void SetAEPSPerEpochFromArgs(const char* aepsStr, void* driverptr)
     {
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
       u32 epochAEPS = atoi(aepsStr);
       if (epochAEPS < 1)
-        FAIL(ILLEGAL_ARGUMENT);  // How do we report command line errors here?
-      ((AbstractDriver*)driver)->SetAEPSPerEpoch(epochAEPS);
+      {
+        args.Die("AEPS per epoch must be positive, not %d", epochAEPS);
+      }
+      driver.SetAEPSPerEpoch(epochAEPS);
     }
 
     static void SetGridImages(const char* not_needed, void* driver)
@@ -577,26 +585,16 @@ namespace MFM
     static void LoadFromConfigFile(const char* path, void* driverptr)
     {
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
 
-      driver.m_configurationPath = path;
-    }
-
-    void LoadFromConfigurationPath()
-    {
-      if(m_configurationPath)
+      if (driver.m_configurationPathCount >= MAX_CONFIGURATION_PATHS)
       {
-        LOG.Debug("Loading configuration from %s...", m_configurationPath);
-
-        ExternalConfig<GC> cfg(GetGrid());
-        RegisterExternalConfigFunctions<GC>(cfg);
-        FileByteSource fs(m_configurationPath);
-
-        cfg.SetByteSource(fs, m_configurationPath);
-
-        cfg.Read();
-
-        fs.Close();
+        args.Die("Too many configuration paths, max %d, for '%s'",
+                 MAX_CONFIGURATION_PATHS,
+                 path);
       }
+      driver.m_configurationPaths[driver.m_configurationPathCount] = path;
+      ++driver.m_configurationPathCount;
     }
 
     void CheckEpochProcessing(OurGrid& grid)
@@ -613,6 +611,42 @@ namespace MFM
     }
 
   public:
+
+    void LoadFromConfigurationPath()
+    {
+      if (m_configurationPathCount > 0)
+      {
+        ++m_currentConfigurationPath;
+        if (m_currentConfigurationPath >= m_configurationPathCount)
+        {
+          m_currentConfigurationPath = 0;
+        }
+        ReloadCurrentConfigurationPath();
+      }
+    }
+
+    void ReloadCurrentConfigurationPath()
+    {
+      if(m_configurationPathCount == 0)
+      {
+        return;
+      }
+
+      const char * path = m_configurationPaths[m_currentConfigurationPath];
+
+      LOG.Debug("Loading configuration from %s...", path);
+
+      ExternalConfig<GC> cfg(GetGrid());
+      RegisterExternalConfigFunctions<GC>(cfg);
+      FileByteSource fs(path);
+
+      cfg.SetByteSource(fs, path);
+
+      cfg.Read();
+
+      fs.Close();
+    }
+
 
     /**
      * Method to do end-of-epoch processing.  Base class handles
@@ -660,7 +694,8 @@ namespace MFM
       m_lastTotalEvents(0),
       m_nextEpochAEPS(0),
       m_epochCount(0),
-      m_configurationPath(NULL)
+      m_configurationPathCount(0),
+      m_currentConfigurationPath(U32_MAX)
     { }
 
     void Init(u32 argc, const char** argv)
