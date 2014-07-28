@@ -145,7 +145,8 @@ namespace MFM
   void Tile<CC>::SendAcknowledgmentPacket(Packet<T>& packet)
   {
     Dir from = Dirs::OppositeDir(packet.GetReceivingNeighbor());
-    Packet<T> sendout(PACKET_EVENT_ACKNOWLEDGE);
+    // Acknowledge on whatever generation they said they were
+    Packet<T> sendout(PACKET_EVENT_ACKNOWLEDGE, packet.GetGeneration());
     sendout.SetReceivingNeighbor(from);
 
     m_connections[from]->Write(!IS_OWNED_CONNECTION(from),
@@ -156,16 +157,21 @@ namespace MFM
   template <class CC>
   void Tile<CC>::ReceivePacket(Packet<T>& packet)
   {
+    bool isObsolete = packet.IsObsolete(m_generation);
+
     switch(packet.GetType())
     {
     case PACKET_WRITE:
-      if(packet.GetAtom().IsSane())
+      if (!isObsolete)
       {
-        PlaceAtom(packet.GetAtom(), packet.GetLocation());
-      }
-      else
-      {
-        PlaceAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), packet.GetLocation());
+        if(packet.GetAtom().IsSane())
+        {
+          PlaceAtom(packet.GetAtom(), packet.GetLocation());
+        }
+        else
+        {
+          PlaceAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), packet.GetLocation());
+        }
       }
       break;
     case PACKET_EVENT_COMPLETE:
@@ -266,6 +272,7 @@ namespace MFM
   template <class CC>
   void Tile<CC>::PlaceAtom(const T& atom, const SPoint& pt)
   {
+    if (!IsLiveSite(pt)) return;
     const T* oldAtom = GetAtom(pt);
     u32 oldType = 0;
     unwind_protect(
@@ -349,7 +356,7 @@ namespace MFM
           FAIL(INCOMPLETE_CODE); break;
         }
 
-      Packet<T> sendout(PACKET_WRITE);
+      Packet<T> sendout(PACKET_WRITE, m_generation);
 
       /* Did this atom get corrupted? Destroy it! */
       if(!m_atoms[atomLoc.GetX()][atomLoc.GetY()].IsSane())
@@ -416,7 +423,7 @@ namespace MFM
     {
       if(IsConnected(dir) && (dirWaitWord & (1 << dir)))
       {
-        Packet<T> sendout(PACKET_EVENT_COMPLETE);
+        Packet<T> sendout(PACKET_EVENT_COMPLETE, m_generation);
         sendout.SetReceivingNeighbor(dir);
 
         /* We don't care about what other kind of stuff is in the Packet */
@@ -640,7 +647,7 @@ namespace MFM
   template <class CC>
   void Tile<CC>::FlushAndWaitOnAllBuffers(u32 dirWaitWord)
   {
-    Packet<T> readPack(PACKET_WRITE);
+    Packet<T> readPack(PACKET_WRITE, m_generation);
     u32 readBytes;
     do
     {

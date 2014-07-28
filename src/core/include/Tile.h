@@ -32,7 +32,6 @@
 #include "Dirs.h"
 #include "Random.h"  /* for Random */
 #include "Packet.h"
-#include "PacketBuffer.h"
 #include "Point.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
@@ -233,6 +232,12 @@ namespace MFM
     ThreadPauser m_threadPauser;
 
     /**
+     * The generation number of this tile, used to reject obsolete
+     * intertile Packets
+     */
+    u8 m_generation;
+
+    /**
      * Checks to see if this Tile owns the connection over a particular
      * cache.
      *
@@ -407,6 +412,22 @@ namespace MFM
      * Resets all Atoms and their counts to the Empty atom.
      */
     void ClearAtoms();
+
+    /**
+     * Sets the tile generation to \c generation
+     */
+    void SetGeneration(u8 generation)
+    {
+      m_generation = generation;
+    }
+
+    /**
+     * Gets the tile generation
+     */
+    u8 GetGeneration() const
+    {
+      return m_generation;
+    }
 
     /**
      * Connects another Tile to one of this Tile's caches.
@@ -762,7 +783,7 @@ namespace MFM
 
     /**
      * Processes a Packet, performing all necessary operations defined by
-     * Packet symantics.
+     * Packet semantics.
      *
      * @param packet The Packet which this Tile will process.
      */
