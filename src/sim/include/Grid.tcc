@@ -395,11 +395,13 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::Clear()
   {
+    ++m_gridGeneration;
     for(u32 x = 0; x < W; x++)
     {
       for(u32 y = 0; y < H; y++)
       {
 	EmptyTile(SPoint(x, y));
+
       }
     }
   }
