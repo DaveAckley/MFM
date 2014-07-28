@@ -58,10 +58,28 @@ namespace MFM {
       return atom->GetState();
     }
 
-    P2Atom() { }
+    P2Atom() {
+      FAIL(DEPRECATED);
+    }
 
     P2Atom(u32 state)
-    { SetState(state); }
+    {
+      SetState(state);
+      FAIL(DEPRECATED);
+    }
+
+    bool IsSane() const
+    {
+      // P2Atom has no implemented error detection abilities
+      return true;
+    }
+
+    bool HasBeenRepaired()
+    {
+      // If somebody thinks it's bad, we can't fix it.
+      return false;
+    }
+
 
     u32 GetState()
     { return m_bits.Read(2, 6); }
