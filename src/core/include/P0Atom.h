@@ -49,7 +49,8 @@ namespace MFM
   public:
     enum
     {
-      ATOM_CATEGORY = 0
+      ATOM_CATEGORY = 0,
+      ATOM_FIRST_STATE_BIT = 0
     };
   private:
 
@@ -65,11 +66,27 @@ namespace MFM
       CONFIGURED_BITS_PER_ATOM_IS_INCOMPATIBLE_WITH_P0ATOM = 1/((PC::BITS_PER_ATOM==BITS)?1:0)
     };
 
-    typedef BitField<BitVector<BITS>,P0ATOM_HEADER_LENGTH_SIZE,0> AFTypeLengthCode;
-    typedef BitField<BitVector<BITS>,0*P0ATOM_TYPE_WIDTH_INCREMENT,AFTypeLengthCode::END> AFTypeLength0;
-    typedef BitField<BitVector<BITS>,1*P0ATOM_TYPE_WIDTH_INCREMENT,AFTypeLengthCode::END> AFTypeLength1;
-    typedef BitField<BitVector<BITS>,2*P0ATOM_TYPE_WIDTH_INCREMENT,AFTypeLengthCode::END> AFTypeLength2;
-    typedef BitField<BitVector<BITS>,28,AFTypeLengthCode::END> AFTypeLength3;
+    enum
+    {
+      TYPE0_LENGTH = 0*P0ATOM_TYPE_WIDTH_INCREMENT,
+      TYPE1_LENGTH = 1*P0ATOM_TYPE_WIDTH_INCREMENT,
+      TYPE2_LENGTH = 2*P0ATOM_TYPE_WIDTH_INCREMENT,
+      TYPE3_LENGTH = 28
+    };
+    // Type info at end of atom so state bits start at a compile-time known bit position (0)
+    typedef BitField<BitVector<BITS>,P0ATOM_HEADER_LENGTH_SIZE,BITS - P0ATOM_HEADER_LENGTH_SIZE> AFTypeLengthCode;
+
+    // These BitFields represent just the extended type information, exclusive of the length code
+    typedef BitField<BitVector<BITS>,TYPE0_LENGTH, AFTypeLengthCode::START - TYPE0_LENGTH> AFTypeLength0;
+    typedef BitField<BitVector<BITS>,TYPE1_LENGTH, AFTypeLengthCode::START - TYPE1_LENGTH> AFTypeLength1;
+    typedef BitField<BitVector<BITS>,TYPE2_LENGTH, AFTypeLengthCode::START - TYPE2_LENGTH> AFTypeLength2;
+    typedef BitField<BitVector<BITS>,TYPE3_LENGTH, AFTypeLengthCode::START - TYPE3_LENGTH> AFTypeLength3;
+
+    // These BitFields represent the entire type information, including the length code
+    typedef BitField<BitVector<BITS>,TYPE0_LENGTH + P0ATOM_HEADER_LENGTH_SIZE, AFTypeLength0::START> AFType0;
+    typedef BitField<BitVector<BITS>,TYPE1_LENGTH + P0ATOM_HEADER_LENGTH_SIZE, AFTypeLength1::START> AFType1;
+    typedef BitField<BitVector<BITS>,TYPE2_LENGTH + P0ATOM_HEADER_LENGTH_SIZE, AFTypeLength2::START> AFType2;
+    typedef BitField<BitVector<BITS>,TYPE3_LENGTH + P0ATOM_HEADER_LENGTH_SIZE, AFTypeLength3::START> AFType3;
 
   protected:
 
@@ -93,37 +110,51 @@ namespace MFM
 
     u32 GetLengthCodeForType(u32 type)
     {
-      for (u32 i = 0; i <= 3; ++i)
-      {
-        u32 typebits = i*P0ATOM_TYPE_WIDTH_INCREMENT;
-        u32 maxtype = 1u<<typebits;
-        if (type < maxtype)
-	{
-          return i;
-        }
-      }
+      if ((1 << TYPE0_LENGTH) > type) return 0;
+      if ((1 << TYPE1_LENGTH) > type) return 1;
+      if ((1 << TYPE2_LENGTH) > type) return 2;
+      if ((1 << TYPE3_LENGTH) > type) return 3;
       FAIL(ILLEGAL_ARGUMENT);
     }
 
-    u32 GetTypeLength()
+    /**
+     * Index of first bit that isn't a state bit.
+     */
+    u32 EndStateBit() const
     {
-      u32 lengthCode = AFTypeLengthCode::Read(this->m_bits);
+      return EndStateBit(AFTypeLengthCode::Read(this->m_bits));
+    }
+
+    static u32 EndStateBit(u32 lengthCode)
+    {
       switch(lengthCode)
       {
       case 0:
-	return AFTypeLength0::END;
+	return AFTypeLength0::START;
       case 1:
-	return AFTypeLength1::END;
+	return AFTypeLength1::START;
       case 2:
-	return AFTypeLength2::END;
+	return AFTypeLength2::START;
       case 3:
-	return AFTypeLength3::END;
+	return AFTypeLength3::START;
       default:
-	FAIL(UNREACHABLE_CODE);
+	FAIL(ILLEGAL_ARGUMENT);
       }
     }
 
   public:
+
+    bool IsSane() const
+    {
+      // P0Atom has no error detection abilities
+      return true;
+    }
+
+    bool HasBeenRepaired()
+    {
+      // If somebody thinks it's bad, we can't fix it.
+      return false;
+    }
 
     u32 GetType() const {
       u32 lengthCode = AFTypeLengthCode::Read(this->m_bits);
@@ -137,11 +168,42 @@ namespace MFM
       }
     }
 
+    /**
+     * Read stateWidth state bits starting at stateIndex, which counts
+     * toward the right with 0 meaning the leftmost state bit.
+     */
+    u32 GetStateField(u32 stateIndex, u32 stateWidth) const
+    {
+      const u32 lastState = EndStateBit();
+      const u32 firstState = ATOM_FIRST_STATE_BIT + stateIndex;
+
+      if (firstState + stateWidth >= lastState)
+        FAIL(ILLEGAL_ARGUMENT);
+
+      return this->m_bits.Read(firstState, stateWidth);
+    }
+
+    /**
+     * Store value into stateWidth state bits starting at stateIndex,
+     * which counts toward the right with 0 meaning the leftmost state
+     * bit.
+     */
+    void SetStateField(u32 stateIndex, u32 stateWidth, u32 value)
+    {
+      const u32 lastState = EndStateBit();
+      const u32 firstState = ATOM_FIRST_STATE_BIT + stateIndex;
+
+      if (firstState + stateWidth >= lastState)
+        FAIL(ILLEGAL_ARGUMENT);
+
+      return this->m_bits.Write(firstState, stateWidth, value);
+    }
+
     void WriteStateBits(ByteSink& ostream) const
     {
-      u32 typeBits = GetTypeLength();
+      u32 endStateBit = EndStateBit();
 
-      for(u32 i = typeBits; i < BITS; i++)
+      for(u32 i = ATOM_FIRST_STATE_BIT; i < endStateBit; i++)
       {
 	ostream.Printf("%d", this->m_bits.ReadBit(i) ? 1 : 0);
       }
@@ -149,36 +211,29 @@ namespace MFM
 
     void ReadStateBits(const char* stateStr)
     {
-      u32 typeBits = GetTypeLength();
+      u32 endStateBit = EndStateBit();
 
-      for(u32 i = typeBits; i < BITS; i++)
+      for(u32 i = ATOM_FIRST_STATE_BIT; i < endStateBit; i++)
       {
 	this->m_bits.WriteBit(i, stateStr[i] == '0' ? 0 : 1);
       }
     }
 
-    void ReadStateBits(const Atom<CC> & atom)
+    void ReadStateBits(const BitVector<BITS> & bv)
     {
-      u32 typeBits = GetTypeLength();
+      u32 endStateBit = EndStateBit();
 
-      for(u32 i = typeBits; i < BITS; i++)
+      for(u32 i = ATOM_FIRST_STATE_BIT; i < endStateBit; i++)
       {
-	this->m_bits.WriteBit(i, atom.m_bits.ReadBit(i));
+	this->m_bits.WriteBit(i, bv.ReadBit(i));
       }
     }
 
-    u32 GetMaxStateSize(u32 lengthCode) const {
-      if (lengthCode >= 1<<P0ATOM_HEADER_LENGTH_SIZE)
-        FAIL(ILLEGAL_ARGUMENT);
-      return BITS-P0ATOM_HEADER_LENGTH_SIZE-P0ATOM_TYPE_WIDTH_INCREMENT*lengthCode;
+    static u32 GetMaxStateSize(u32 lengthCode) {
+      return EndStateBit(lengthCode);
     }
 
-    P0Atom()
-    {
-      InitAtom(Element_Empty<CC>::GetType(),0,0,P0ATOM_STATE_SIZE);
-    }
-
-    P0Atom(u32 type, u32 longc, u32 shortc, u32 statec)
+    P0Atom(u32 type = 0, u32 longc = 0, u32 shortc = 0, u32 statec = 0)
     {
       InitAtom(type,longc,shortc,statec);
     }
@@ -212,7 +267,7 @@ namespace MFM
       ostream.Printf("P0[%x/",type);
       u32 length = GetMaxStateSize(lengthCode);
       for (int i = 0; i < length; i += 4) {
-        u32 nyb = this->m_bits.Read(length+i,4);
+        u32 nyb = this->m_bits.Read(ATOM_FIRST_STATE_BIT+i,4);
         ostream.Printf("%x",nyb);
       }
       ostream.Printf("]");
