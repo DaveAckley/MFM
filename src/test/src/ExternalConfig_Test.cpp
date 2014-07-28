@@ -19,9 +19,9 @@ namespace MFM
     ExternalConfig<TestGridConfig> cfg(grid);
     RegisterExternalConfigFunctions<TestGridConfig>(cfg);
 
-    ZStringByteSource zbs("RegisterElement(Dreg-118148428408201406116113117, d)\n"
-                          "GA(d,30,31)\n"
-                          "GA(d,31,32)\n"
+    ZStringByteSource zbs("RegisterElement(Dreg-1174842840820140728585614, d)\n"
+                          "GA(d,30,31,0000000000000000)\n"
+                          "GA(d,31,32,0123456789abcdef)\n"   // a.s. invalid value but nobody checks
                           "SetParameter(DregResRatio,10)\n");
     cfg.SetByteSource(zbs, "./configurations/ExternalConfig_Test.input");
     cfg.Read();
