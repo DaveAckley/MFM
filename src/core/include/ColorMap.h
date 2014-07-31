@@ -100,6 +100,45 @@ namespace MFM {
 #define XX6(T,N,M1,M2,M3,M4,M5,M6)                    \
   XXB(T##6_##N)
 
+// A Dave Green 'cubehelix' map
+// # Tue Jul 29 2014 05:04:08 GMT-0600 (MDT)
+// # ---------------------------------------------
+// # HEX R/G/B cubehelix colour scheme
+// #
+// # see http://www.mrao.cam.ac.uk/~dag/CUBEHELIX/
+// #----------------------------------------------
+// # see Green (2011), BASI, 39, 289.
+// #
+// # start............: 0.5
+// # rotations........: -1.5
+// # hue..............: 1.4
+// # gamma............: 1.0
+// # number of levels.: 32
+// #----------------------------------------------
+// # Dave Green: dag@mrao.cam.ac.uk
+// #----------------------------------------------
+XXB(CubeHelix)
+
+// # Tue Jul 29 2014 05:36:46 GMT-0600 (MDT)
+// # ---------------------------------------------
+// # HEX R/G/B cubehelix colour scheme
+// #
+// # see http://www.mrao.cam.ac.uk/~dag/CUBEHELIX/
+// #----------------------------------------------
+// # see Green (2011), BASI, 39, 289.
+// #
+// # start............: 0.5
+// # rotations........: -1
+// # hue..............: 2.0
+// # gamma............: 1.0
+// # number of levels.: 32
+// # (flipped white to black)
+// #----------------------------------------------
+// # Dave Green: dag@mrao.cam.ac.uk
+// #----------------------------------------------
+
+XXB(CubeHelixRev)
+
 #include "ColorMaps.h"
 
 #undef XXB

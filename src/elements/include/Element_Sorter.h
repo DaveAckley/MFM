@@ -114,7 +114,10 @@ namespace MFM
     {
       switch (selector) {
       case 1:
-        return 0xff503030;
+        //        return 0xff503030;
+        return ColorMap_CubeHelixRev::THE_INSTANCE.
+          GetInterpolatedColor(GetThreshold(atom,0),DATA_MINVAL,DATA_MAXVAL,0xffff0000);
+
         //        return ColorMap_SEQ5_Greys::THE_INSTANCE.
         //          GetInterpolatedColor(GetThreshold(atom,0),DATA_MINVAL,DATA_MAXVAL,0xffff0000);
       default:
