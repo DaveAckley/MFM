@@ -14,7 +14,9 @@
 namespace MFM
 {
 
-#define QBAR_VERSION 3
+  enum {
+    QBAR_VERSION = 3
+  };
 
   // Forward
   template <class CC> class Element_DBar ;

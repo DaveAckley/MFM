@@ -13,7 +13,7 @@ extern "C" typedef void * (*MFM_Element_Plugin_Get_Static_Pointer)();
 namespace MFM {
 
   typedef GridConfig<OurCoreConfig,3,2> OurSmallGridConfig;
-  typedef GridConfig<OurCoreConfig,4,3> OurBigGridConfig;
+  typedef GridConfig<OurCoreConfig,5,3> OurBigGridConfig;
   //  typedef GridConfig<OurCoreConfig,5,3> OurBigGridConfig;
   typedef OurBigGridConfig OurGridConfig;
 
@@ -53,10 +53,12 @@ namespace MFM {
       NeedElement(&Element_Emitter<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Consumer<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Sorter<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Block<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_ForkBomb1<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_ForkBomb2<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_ForkBomb3<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_AntiForkBomb<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Collector<OurCoreConfig>::THE_INSTANCE);
       if (!m_qbarInstance)
       {
         FAIL(ILLEGAL_STATE);
@@ -70,8 +72,38 @@ namespace MFM {
 
     }
 
+    StatsRenderer<OurGridConfig>::ElementDataSlotSum m_sortingSlots[4];
+
     void ReinitEden()
     {
+      OurGrid & mainGrid = GetGrid();
+      OurStatsRenderer & srend = GetStatsRenderer();
+
+      m_sortingSlots[0].Set(mainGrid, "Data in",
+                            Element_Emitter<OurCoreConfig>::THE_INSTANCE.GetType(),
+                            Element_Emitter<OurCoreConfig>::DATUMS_EMITTED_SLOT,
+                            Element_Emitter<OurCoreConfig>::DATA_SLOT_COUNT,
+                            true);
+      m_sortingSlots[1].Set(mainGrid, "Overflow",
+                            Element_Emitter<OurCoreConfig>::THE_INSTANCE.GetType(),
+                            Element_Emitter<OurCoreConfig>::DATUMS_REJECTED_SLOT,
+                            Element_Emitter<OurCoreConfig>::DATA_SLOT_COUNT,
+                            true);
+
+      m_sortingSlots[2].Set(mainGrid, "Data out",
+                            Element_Consumer<OurCoreConfig>::THE_INSTANCE.GetType(),
+                            Element_Consumer<OurCoreConfig>::DATUMS_CONSUMED_SLOT,
+                            Element_Consumer<OurCoreConfig>::DATA_SLOT_COUNT,
+                            true);
+      m_sortingSlots[3].Set(mainGrid, "Sort error",
+                            Element_Consumer<OurCoreConfig>::THE_INSTANCE.GetType(),
+                            Element_Consumer<OurCoreConfig>::TOTAL_BUCKET_ERROR_SLOT,
+                            Element_Consumer<OurCoreConfig>::DATA_SLOT_COUNT,
+                            true);
+
+      for (u32 i = 0; i < 4; ++i)
+        srend.DisplayDataReporter(&m_sortingSlots[i]);
+
 #if 0 /* Start with empty world! */
       OurGrid & mainGrid = GetGrid();
       bool addMover = m_whichSim==1;
