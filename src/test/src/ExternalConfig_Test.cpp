@@ -18,6 +18,8 @@ namespace MFM
     Grid<TestGridConfig> grid(ereg);
     ExternalConfig<TestGridConfig> cfg(grid);
     RegisterExternalConfigFunctions<TestGridConfig>(cfg);
+    OverflowableCharBufferByteSink<1024> errs;
+    cfg.SetErrorByteSink(errs);
 
     ZStringByteSource zbs("RegisterElement(Dreg-1174842840820140728585614, d)\n"
                           "GA(d,30,31,0000000000000000)\n"
@@ -25,6 +27,11 @@ namespace MFM
                           "SetParameter(DregResRatio,10)\n");
     cfg.SetByteSource(zbs, "./configurations/ExternalConfig_Test.input");
     cfg.Read();
+
+    if (errs.GetLength() > 0)
+    {
+      LOG.Debug("ExternalConfig_Test error output:\n%s",errs.GetZString());
+    }
 
   }
 
