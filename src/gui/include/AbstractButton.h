@@ -251,9 +251,17 @@ namespace MFM
 
     virtual bool Handle(MouseButtonEvent & event)
     {
-      if (IsEnabled() && event.m_event.type == SDL_MOUSEBUTTONUP) {
-        OnClick(event.m_event.button.button);
-        return true;
+      if (IsEnabled())
+      {
+        if (event.m_event.type == SDL_MOUSEBUTTONUP)      // Execute on up
+        {
+          OnClick(event.m_event.button.button);
+          return true;                                     // We took it
+        }
+        if (event.m_event.type == SDL_MOUSEBUTTONDOWN)     // But eat down too
+        {
+          return true;
+        }
       }
       return false;
     }
