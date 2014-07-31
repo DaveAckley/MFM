@@ -14,8 +14,12 @@ template <class CC>
 bool EventWindow<CC>::SetRelativeAtom(const SPoint& offset, const T & atom)
 {
 
-  m_tile.PlaceAtom(atom, MapToTileValid(offset));
-  return true;
+  if (IsLiveSite(offset))
+  {
+    m_tile.PlaceAtom(atom, MapToTileValid(offset));
+    return true;
+  }
+  return false;
 }
 
 template <class CC>

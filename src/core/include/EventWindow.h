@@ -138,7 +138,7 @@ namespace MFM {
      * this EventWindow, points to a Site that may be used during
      * event execution.
      *
-     * @param location The relative point to check for livliness in
+     * @param location The relative point to check for liveliness in
      *                 this EventWindow .
      *
      * @returns \c true if this site may be reached during event
