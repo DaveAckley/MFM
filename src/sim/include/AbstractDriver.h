@@ -649,13 +649,19 @@ namespace MFM
 
 
     /**
-     * Method to do end-of-epoch processing.  Base class handles
-     * --gridImage and --tileImage processing here, so all subclasses
-     * should override this method and do Super::DoEpochEvents to
-     * ensure all methods are called.
+     * Method to do end-of-epoch processing.  Base class recounts the
+     * grid and handles --gridImage and --tileImage processing here,
+     * so all subclasses should override this method and do
+     * Super::DoEpochEvents to ensure all methods are called.
      */
     virtual void DoEpochEvents(OurGrid& grid, u32 epochs, u32 epochAEPS)
     {
+      LOG.Debug("Epoch %d: %d AEPS", epochs, epochAEPS);
+
+      grid.CheckCaches();
+
+      grid.RecountAtoms();
+
       if (m_gridImages)
       {
         const char * path = GetSimDirPathTemporary("eps/%010d.ppm", epochAEPS);
@@ -686,7 +692,7 @@ namespace MFM
       m_msSpentOverhead(0),
       m_microsSleepPerFrame(50000),
       m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
-      m_AEPSPerEpoch(1000),
+      m_AEPSPerEpoch(500),
       m_gridImages(false),
       m_tileImages(false),
       m_AEPS(0),
