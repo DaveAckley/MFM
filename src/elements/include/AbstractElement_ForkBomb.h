@@ -80,7 +80,8 @@ namespace MFM
         range = R;
       for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(range); ++idx)
       {
-        window.SetRelativeAtom(md.GetPoint(idx), window.GetCenterAtom());
+        const SPoint rel = md.GetPoint(idx);
+        window.SetRelativeAtom(rel, window.GetCenterAtom());
       }
     }
   };

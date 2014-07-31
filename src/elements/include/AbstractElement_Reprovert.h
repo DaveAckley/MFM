@@ -116,6 +116,12 @@ namespace MFM
     s32 aboveSelf = GetAbove(self,0);
     bool down = random.CreateBool();
     SPoint repPt(0, down ? gap : -gap);
+
+    if (!window.IsLiveSite(repPt))
+    {
+      return;
+    }
+
     T other = window.GetRelativeAtom(repPt);
     u32 otherType = other.GetType();
 

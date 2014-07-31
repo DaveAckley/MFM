@@ -105,18 +105,25 @@ namespace MFM
 
         // Pick random nearest empty, if any
         const MDist<R> md = MDist<R>::get();
-        for (u32 ring = 1; ring <= 2; ++ring) {
+        for (u32 ring = 1; ring <= 2; ++ring)
+        {
           u32 emptiesFound = 0;
           SPoint emptyPoint;
-          for (u32 idx = md.GetFirstIndex(ring); idx <= md.GetLastIndex(ring); ++idx) {
+          for (u32 idx = md.GetFirstIndex(ring); idx <= md.GetLastIndex(ring); ++idx)
+          {
             const SPoint sp = md.GetPoint(idx);
+            if (!window.IsLiveSite(sp))
+            {
+              continue;
+            }
             const T other = window.GetRelativeAtom(sp);
             const u32 otherType = other.GetType();
             bool isEmpty = otherType == Element_Empty<CC>::THE_INSTANCE.GetType();
             if (isEmpty && random.OneIn(++emptiesFound))
               emptyPoint = sp;
           }
-          if (emptiesFound > 0) {
+          if (emptiesFound > 0)
+          {
             T atom = Element_Data<CC>::THE_INSTANCE.GetDefaultAtom();
             Element_Data<CC>::THE_INSTANCE.SetDatum(atom,random.Between(DATA_MINVAL, DATA_MAXVAL));
             window.SetRelativeAtom(emptyPoint, atom);
