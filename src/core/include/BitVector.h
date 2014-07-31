@@ -346,6 +346,8 @@ namespace MFM {
      */
     bool Read(ByteSource & bs) ;
 
+    bool operator==(const BitVector & rhs) const ;
+
   };
 } /* namespace MFM */
 

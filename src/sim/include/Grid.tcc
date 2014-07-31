@@ -407,6 +407,30 @@ namespace MFM {
   }
 
   template <class GC>
+  void Grid<GC>::CheckCaches()
+  {
+    for(u32 x = 0; x < W; x++)
+    {
+      for(u32 y = 0; y < H; y++)
+      {
+        const SPoint usp(x,y);
+
+        for (Dir dir = Dirs::NORTH; dir <= Dirs::NORTHWEST; ++dir)
+        {
+          SPoint offset;
+          Dirs::FillDir(offset, dir);
+          const SPoint themp(usp + offset);
+
+          if (IsLegalTileIndex(themp))
+          {
+            GetTile(usp).CheckCacheFromDir(dir, GetTile(themp));
+          }
+        }
+      }
+    }
+  }
+
+  template <class GC>
   void Grid<GC>::SetBackgroundRadiation(bool value)
   {
     for(u32 x = 0; x < W; x++)

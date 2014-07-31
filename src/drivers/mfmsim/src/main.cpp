@@ -10,7 +10,7 @@ namespace MFM {
   // P0Atom so using that here for exercise.
   //
   //typedef P1Atom<OurParamConfig> OurAtom;
-  typedef P0Atom<OurParamConfig> OurAtom;
+  typedef P3Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
@@ -43,6 +43,7 @@ namespace MFM {
 
     virtual void DefineNeededElements()
     {
+      NeedElement(&Element_Empty<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Sorter<OurCoreConfig>::THE_INSTANCE);

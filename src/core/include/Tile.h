@@ -134,11 +134,11 @@ namespace MFM
 
     /** The number of event failures during execution in this Tile
         since initialization. */
-    u64 m_eventsFailed;
+    u32 m_eventsFailed;
 
     /** The number of the event failures resolved by erasing the
         center atom, in this Tile since initialization. */
-    u64 m_failuresErased;
+    u32 m_failuresErased;
 
     /**
      * The number of events executed in this Tile since
@@ -153,6 +153,10 @@ namespace MFM
      * areas of this Tile.
      */
     u64 m_lockEvents[LOCKTYPE_COUNT];
+
+    // Quick hack counts trying to debug vanishing atoms
+    u32 m_lockAttempts;
+    u32 m_lockAttemptsSucceeded;
 
     /**
      * The number of events which have occurred in every individual
@@ -287,6 +291,21 @@ namespace MFM
      */
     void SendEndEventPackets(u32 dirWaitWord);
 
+
+    /**
+     * Compute the coordinates of \c atomLoc in a neighboring tile.
+     * (There may or may not actually be a Tile in the given \c
+     * neighbor direction; this method doesn't check or care.)
+     *
+     * @param neighbor The Dir code of the direction of the
+     *                 neighboring Tile.
+     *
+     * @param atomLoc The point to map into the neighboring Tile's
+     *                coordinates.
+     * @return the mapped coordinate
+     */
+    static SPoint GetNeighborLoc(Dir neighbor, const SPoint& atomLoc);
+
     /**
      * Creates a single Packet describing an Atom placement on this
      * Tile's cache, therefore describing an Atom placement on another
@@ -412,6 +431,18 @@ namespace MFM
      * Resets all Atoms and their counts to the Empty atom.
      */
     void ClearAtoms();
+
+    /**
+     * Checks part of this Tile's cache assuming the given \c
+     * otherTile lies in the given \c direction from this tile, and
+     * the two tiles are connected.  Logs debug messages if cache
+     * mismatches are found.
+     *
+     * @remarks This method relies on grid connectivity knowledge that
+     *          actual distributed Tiles cannot be expected to
+     *          receive.
+     */
+    void CheckCacheFromDir(Dir direction, const Tile & otherTile);
 
     /**
      * Sets the tile generation to \c generation
@@ -789,6 +820,7 @@ namespace MFM
      */
     void ReceivePacket(Packet<T>& packet);
 
+#if 0 /* Doesn't exist? */
     /**
      * Gets a Pointer to the next Packet which is queued inside of
      * m_outgoingPackets, consuming it in the process.
@@ -797,6 +829,7 @@ namespace MFM
      *          NULL if it does not exist.
      */
     Packet<T>* NextPacket();
+#endif
 
     /**
      * Fills a specified Point with the coordinates of the last EventWindow center.

@@ -252,6 +252,13 @@ namespace MFM
 
     u32 m_sliderConfigCount;
 
+    enum {
+      ELEMENTS_PER_ROW = 10,
+      ELEMENT_ROWS = (ELEMENT_BOX_SIZE + ELEMENTS_PER_ROW - 1) / ELEMENTS_PER_ROW,
+      NON_ELEMENT_ROWS = 3,
+      TOTAL_ROWS = ELEMENT_ROWS + NON_ELEMENT_ROWS
+    };
+
     void RebuildSliders()
     {
       /* Remove all of the old sliders */
@@ -271,7 +278,7 @@ namespace MFM
       }
 
       /* Put the new sliders in */
-      SPoint rpt(16, 6 + ELEMENT_RENDER_SIZE * 10);
+      SPoint rpt(16, 6 + ELEMENT_RENDER_SIZE * TOTAL_ROWS);
       for(u32 i = 0; i < m_sliderCount; i++)
       {
         m_sliders[i].SetRenderPoint(rpt);
@@ -279,8 +286,8 @@ namespace MFM
         rpt.SetY(rpt.GetY() + 32);
       }
 
-      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * 10,
-                           6 + ELEMENT_RENDER_SIZE * 10 + 32 * m_sliderCount);
+      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW,
+                           6 + ELEMENT_RENDER_SIZE * TOTAL_ROWS + 32 * m_sliderCount);
     }
 
    public:
@@ -336,8 +343,8 @@ namespace MFM
       {
         u32 x, y;
 
-        x = 3 + ELEMENT_RENDER_SIZE * (i % 10);
-        y = 3 + ELEMENT_RENDER_SIZE * (3 + (i / 10));
+        x = 3 + ELEMENT_RENDER_SIZE * (i % ELEMENTS_PER_ROW);
+        y = 3 + ELEMENT_RENDER_SIZE * (3 + (i / ELEMENTS_PER_ROW));
 
         /* These will render correctly because ElementButtons render
            grey when SetElement is fed NULL. */
@@ -351,8 +358,8 @@ namespace MFM
       m_primaryElement   = m_heldElements[0];
       m_secondaryElement = m_heldElements[1];
 
-      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * 10,
-                           6 + ELEMENT_RENDER_SIZE * 10);
+      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW,
+                           6 + ELEMENT_RENDER_SIZE * TOTAL_ROWS);
 
       m_activatedButton = m_toolButtons;
       m_toolButtons[0].ToolButton::SetActivated(true);

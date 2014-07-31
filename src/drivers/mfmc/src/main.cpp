@@ -27,10 +27,17 @@ namespace MFM
       NeedElement(&Element_Wall<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Sorter<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Data<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Emitter<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Consumer<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Block<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_ForkBomb1<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_ForkBomb2<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_ForkBomb3<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_AntiForkBomb<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_MQBar<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Mover<OurCoreConfig>::THE_INSTANCE);
 
 #ifdef MFM_GUI_DRIVER
       {

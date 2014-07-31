@@ -48,7 +48,7 @@ namespace MFM {
       SetRenderPoint(SPoint(0, 0));
       SetForeground(Drawing::GREEN);
       SetBackground(Drawing::GREY05);
-      SetBorder(Drawing::BLACK);
+      SetBorder(Drawing::GREY20);
 
       m_bottomLineShown = 0;
     }

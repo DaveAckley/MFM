@@ -199,4 +199,11 @@ namespace MFM {
     return true;
   }
 
+  template <u32 BITS>
+  bool BitVector<BITS>::operator==(const BitVector & rhs) const
+  {
+    return 0 == memcmp(m_bits, rhs.m_bits, sizeof(m_bits));
+
+  }
+
 } /* namespace MFM */

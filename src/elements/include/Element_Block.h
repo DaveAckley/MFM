@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  AbstractElement_ForkBomb.h Light cone painting element
+  Element_Block.h Basic non-diffusing non-behaving lump
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,72 +19,78 @@
 */
 
 /**
-  \file AbstractElement_ForkBomb.h Light cone painting element
+  \file Element_Block.h A non-diffusing, non-behaving, lump of stuff
   \author David H. Ackley.
   \date (C) 2014 All rights reserved.
   \lgpl
  */
-#ifndef ABSTRACTELEMENT_FORKBOMB_H
-#define ABSTRACTELEMENT_FORKBOMB_H
+#ifndef ELEMENT_BLOCK_H
+#define ELEMENT_BLOCK_H
 
 #include "Element.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "itype.h"
+#include "Atom.h"
 
 namespace MFM
 {
 
-#define FORKBOMBBASE_VERSION 1
-
   template <class CC>
-  class AbstractElement_ForkBomb : public Element<CC>
+  class Element_Block : public Element<CC>
   {
-    // Extract short names for parameter types
+    // Short names for params
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS };
 
-  private:
-
   public:
+    enum {
+      BLOCK_VERSION = 1
+    };
 
-    /**
-     * From 0 (no forking) up to EVENT_WINDOW_RADIUS (maximum speed forking)
-     */
-    virtual u32 GetBombRange() const = 0;
+    static Element_Block THE_INSTANCE;
+    static const u32 TYPE() {
+      return THE_INSTANCE.GetType();
+    }
 
-    virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const = 0;
-
-    AbstractElement_ForkBomb(const UUID & uuid) : Element<CC>(uuid)
+    Element_Block() : Element<CC>(MFM_UUID_FOR("Block", BLOCK_VERSION))
     {
+      Element<CC>::SetAtomicSymbol("B");
+    }
+
+    virtual const T & GetDefaultAtom() const
+    {
+      static T defaultAtom(TYPE(),0,0,0);
+      return defaultAtom;
+    }
+
+    virtual u32 DefaultPhysicsColor() const
+    {
+      return 0xff00ff00;
+    }
+
+    virtual u32 DefaultLowlightColor() const
+    {
+      return 0xff00af00;
+    }
+
+    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
+      return nowAt.Equals(maybeAt)?Element<CC>::COMPLETE_DIFFUSABILITY:0;
     }
 
     virtual u32 PercentMovable(const T& you,
 			       const T& me, const SPoint& offset) const
     {
-      return 100;
-    }
-
-    virtual u32 DefaultPhysicsColor() const
-    {
-      T temp;
-      return LocalPhysicsColor(temp, 0);
+      return 0;
     }
 
     virtual void Behavior(EventWindow<CC>& window) const
-    {
-      const MDist<R> md = MDist<R>::get();
-      u32 range = GetBombRange();
-      if (range > R)
-        range = R;
-      for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(range); ++idx)
-      {
-        const SPoint rel = md.GetPoint(idx);
-        window.SetRelativeAtom(rel, window.GetCenterAtom());
-      }
-    }
+    {}
   };
+
+  template <class CC>
+  Element_Block<CC> Element_Block<CC>::THE_INSTANCE;
 }
 
-#endif /* ABSTRACTELEMENT_FORKBOMB_H */
+#endif /* ELEMENT_BLOCK_H */

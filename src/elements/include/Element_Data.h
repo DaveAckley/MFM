@@ -106,7 +106,7 @@ namespace MFM
     {
       switch (selector) {
       case 1:
-        return ColorMap_SEQ6_PuBuGn::THE_INSTANCE.
+        return ColorMap_CubeHelixRev::THE_INSTANCE.
           GetInterpolatedColor(GetDatum(atom,0),DATA_MINVAL,DATA_MAXVAL,0xffff0000);
       default:
         return Element<CC>::PhysicsColor();

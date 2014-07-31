@@ -226,7 +226,7 @@ namespace MFM {
 
     TTF_Font* m_drawFont;
 
-    static const u32 MAX_TYPES = 16;
+    static const u32 MAX_TYPES = 32;
     const DataReporter *(m_reporters[MAX_TYPES]);
     u32 m_reportersInUse;
 

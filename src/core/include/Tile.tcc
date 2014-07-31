@@ -2,6 +2,7 @@
 #include "MDist.h"
 #include "Element_Empty.h"
 #include "Logger.h"
+#include "AtomSerializer.h"
 #include "Util.h"
 #include <time.h>
 
@@ -10,6 +11,7 @@ namespace MFM
   template <class CC>
   Tile<CC>::Tile() : m_executingWindow(*this)
   {
+    m_lockAttempts = m_lockAttemptsSucceeded = 0;
     Reinit();
   }
 
@@ -76,10 +78,6 @@ namespace MFM
   template <class CC>
   void Tile<CC>::ClearAtoms()
   {
-    for(u32 i = 0; i < ELEMENT_TABLE_SIZE; i++)
-    {
-      m_atomCount[i] = 0;
-    }
 
     m_illegalAtomCount = 0;
 
@@ -92,6 +90,42 @@ namespace MFM
     }
 
     RecountAtoms();
+  }
+
+  /* Definitely not thread safe. Make sure to pause and join this Tile
+     before calling this from the outside. */
+  template <class CC>
+  void Tile<CC>::CheckCacheFromDir(Dir direction, const Tile & otherTile)
+  {
+    for(u32 x = 0; x < TILE_WIDTH; x++)
+    {
+      for(u32 y = 0; y < TILE_WIDTH; y++)
+      {
+        const SPoint sp(x,y);
+        if (!IsInCache(sp)) continue;
+
+        Dir dir = CacheAt(sp);
+        if (dir != direction)
+        {
+          continue;
+        }
+        if (!IsConnected(dir))
+        {
+          continue;
+        }
+
+        const SPoint rp(GetNeighborLoc(dir, sp));
+
+        T otherAtom = *otherTile.GetAtom(rp);
+        if (m_atoms[x][y] != otherAtom)
+        {
+          AtomSerializer<CC> uss(m_atoms[x][y]), thems(otherAtom);
+          LOG.Debug("%p: Mismatch at (%d,%d) dir %d, us: %@, them: %@",
+                    this, x, y, dir, &uss, &thems);
+        }
+
+      }
+    }
   }
 
   template <class CC>
@@ -272,7 +306,15 @@ namespace MFM
   template <class CC>
   void Tile<CC>::PlaceAtom(const T& atom, const SPoint& pt)
   {
-    if (!IsLiveSite(pt)) return;
+    if (!IsLiveSite(pt))
+    {
+      if (atom.GetType() != Element_Empty<CC>::THE_INSTANCE.GetType())
+      {
+        LOG.Debug("Not placing type %04x at (%2d,%2d) of %p",
+                  atom.GetType(), pt.GetX(), pt.GetY(), this);
+      }
+      return;
+    }
     const T* oldAtom = GetAtom(pt);
     u32 oldType = 0;
     unwind_protect(
@@ -329,32 +371,38 @@ namespace MFM
   }
 
   template <class CC>
+  SPoint Tile<CC>::GetNeighborLoc(Dir neighbor, const SPoint& atomLoc)
+  {
+    u32 tileDiff = TILE_WIDTH - 2 * R;
+    SPoint remoteLoc(atomLoc);
+
+    /* The neighbor will think this atom is in a different location. */
+    switch(neighbor)
+    {
+    case Dirs::NORTH: remoteLoc.Add(0, tileDiff); break;
+    case Dirs::SOUTH: remoteLoc.Add(0, -tileDiff); break;
+    case Dirs::WEST:  remoteLoc.Add(tileDiff, 0); break;
+    case Dirs::EAST:  remoteLoc.Add(-tileDiff, 0); break;
+    case Dirs::NORTHEAST:
+      remoteLoc.Add(-tileDiff, tileDiff); break;
+    case Dirs::SOUTHEAST:
+      remoteLoc.Add(-tileDiff, -tileDiff); break;
+    case Dirs::SOUTHWEST:
+      remoteLoc.Add(tileDiff, -tileDiff); break;
+    case Dirs::NORTHWEST:
+      remoteLoc.Add(tileDiff, tileDiff); break;
+    default:
+      FAIL(INCOMPLETE_CODE); break;
+    }
+    return remoteLoc;
+  }
+
+  template <class CC>
   void Tile<CC>::SendAtom(Dir neighbor, SPoint& atomLoc)
   {
     if(IsConnected(neighbor))
     {
-      SPoint remoteLoc(atomLoc);
-
-      u32 tileDiff = TILE_WIDTH - 2 * R;
-
-      /* The neighbor will think this atom is in a different location. */
-      switch(neighbor)
-        {
-        case Dirs::NORTH: remoteLoc.Add(0, tileDiff); break;
-        case Dirs::SOUTH: remoteLoc.Add(0, -tileDiff); break;
-        case Dirs::WEST:  remoteLoc.Add(tileDiff, 0); break;
-        case Dirs::EAST:  remoteLoc.Add(-tileDiff, 0); break;
-        case Dirs::NORTHEAST:
-          remoteLoc.Add(-tileDiff, tileDiff); break;
-        case Dirs::SOUTHEAST:
-          remoteLoc.Add(-tileDiff, -tileDiff); break;
-        case Dirs::SOUTHWEST:
-          remoteLoc.Add(tileDiff, -tileDiff); break;
-        case Dirs::NORTHWEST:
-          remoteLoc.Add(tileDiff, tileDiff); break;
-        default:
-          FAIL(INCOMPLETE_CODE); break;
-        }
+      SPoint remoteLoc(GetNeighborLoc(neighbor,atomLoc));
 
       Packet<T> sendout(PACKET_WRITE, m_generation);
 
@@ -546,23 +594,42 @@ namespace MFM
   template <class CC>
   bool Tile<CC>::LockRegion(Dir regionDir)
   {
+
+    ++m_lockAttempts;
+
+    bool success = false;
     switch(regionDir)
     {
     case Dirs::NORTH:
     case Dirs::EAST:
     case Dirs::SOUTH:
     case Dirs::WEST:
-      return TryLock(regionDir);
+      success = TryLock(regionDir);
+      break;
 
     case Dirs::NORTHWEST:
     case Dirs::NORTHEAST:
     case Dirs::SOUTHEAST:
     case Dirs::SOUTHWEST:
-      return TryLockCorner(regionDir);
+      success = TryLockCorner(regionDir);
+      break;
 
     default:
       FAIL(ILLEGAL_ARGUMENT);
     }
+    if (success)
+    {
+      ++m_lockAttemptsSucceeded;
+    }
+    if ((m_lockAttempts % 1000000) == 0)
+    {
+      LOG.Debug("Locks %d of %d (%d%%) for %p",
+                m_lockAttemptsSucceeded,
+                m_lockAttempts,
+                100*m_lockAttemptsSucceeded/m_lockAttempts,
+                this);
+    }
+    return success;
   }
 
   template <class CC>
@@ -704,6 +771,11 @@ namespace MFM
         unwind_protect({
             ++m_eventsFailed;
             ++m_failuresErased;
+
+            if ((m_failuresErased % 100) == 0)
+            {
+              LOG.Debug("%d erasures tile %p", m_failuresErased, this);
+            }
 
             if(!m_executingWindow.GetCenterAtom().IsSane())
             {

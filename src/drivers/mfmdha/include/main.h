@@ -2,7 +2,7 @@
 #define MAIN_H
 
 #include "AbstractGUIDriver.h"
-#include "P1Atom.h"
+#include "P3Atom.h"
 
 #include "itype.h"
 

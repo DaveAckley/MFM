@@ -156,16 +156,16 @@ namespace MFM
   Element_Dreg<CC> Element_Dreg<CC>::THE_INSTANCE;
 
   template <class CC>
-  s32 Element_Dreg<CC>::m_resOdds = 100;
+  s32 Element_Dreg<CC>::m_resOdds = 200;
 
   template <class CC>
-  s32 Element_Dreg<CC>::m_dregCreateOdds = 200;
+  s32 Element_Dreg<CC>::m_dregDeleteOdds = 100;
 
   template <class CC>
-  s32 Element_Dreg<CC>::m_dregDeleteOdds = 40;
+  s32 Element_Dreg<CC>::m_dregCreateOdds = 500;
 
   template <class CC>
-  s32 Element_Dreg<CC>::m_dregDeleteDregOdds = 20;
+  s32 Element_Dreg<CC>::m_dregDeleteDregOdds = 50;
 }
 
 #endif /* ELEMENT_DREG_H */
