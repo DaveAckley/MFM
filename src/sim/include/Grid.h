@@ -34,6 +34,7 @@
 #include "Random.h"
 #include "GridConfig.h"
 #include "ElementRegistry.h"
+#include "Logger.h"
 
 #include "Element_Wall.h"
 
@@ -93,7 +94,15 @@ namespace MFM {
       m_er(elts),
       m_xraySiteOdds(1000),
       m_gridGeneration(0)
-    { }
+    {
+      for (u32 y = 0; y < H; ++y)
+      {
+        for (u32 x = 0; x < W; ++x)
+        {
+          LOG.Debug("Tile[%d][%d] @ %p", x, y, &m_tiles[x][y]);
+        }
+      }
+    }
 
     s32* GetXraySiteOddsPtr()
     {
@@ -217,6 +226,13 @@ namespace MFM {
      * generation.
      */
     void Clear();
+
+    /**
+     * Based on the current connectivity pattern, check the visible
+     * regions of each tile against the caches of its connected tiles.
+     * Report debug messages for any discrepancies.
+     */
+    void CheckCaches();
 
     /**
      * Return true iff tileInGrid is a legal tile coordinate in this
