@@ -277,7 +277,19 @@ namespace MFM
         }
       }
     }
+
+    bool operator==(const Atom & rhs) const
+    {
+      return m_bits == rhs.m_bits;
+    }
+
+    bool operator!=(const Atom & rhs) const
+    {
+      return !(*this == rhs);
+    }
   };
+
+
 } /* namespace MFM */
 
 #endif /*ATOM_H*/
