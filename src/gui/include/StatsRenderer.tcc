@@ -65,6 +65,7 @@ namespace MFM {
       cs->GetValue(datavalue, endOfEpoch);
       OString32 output;
 
+      /* Only report values if they aren't 0 */
       if(strcmp(datavalue.GetZString(), "0  0"))
       {
         for (u32 vlen = datavalue.GetLength(); vlen < VALUE_WIDTH; ++vlen)

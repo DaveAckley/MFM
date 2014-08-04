@@ -426,19 +426,23 @@ namespace MFM
         return true;
       }
 
-      switch(event.button)
+      if(GetSelectedTool() == TOOL_BRUSH ||
+         GetSelectedTool() == TOOL_ERASER)
       {
-      case SDL_BUTTON_WHEELUP:
-        m_brushSize++;
-        break;
-      case SDL_BUTTON_WHEELDOWN:
-        if (m_brushSize > 0)
+        switch(event.button)
         {
-          m_brushSize--;
+        case SDL_BUTTON_WHEELUP:
+          m_brushSize++;
+          break;
+        case SDL_BUTTON_WHEELDOWN:
+          if (m_brushSize > 0)
+          {
+            m_brushSize--;
+          }
+          break;
+        default:
+          break;
         }
-        break;
-      default:
-        break;
       }
 
       return true;
@@ -487,14 +491,14 @@ namespace MFM
                                  UPoint(ELEMENT_TOOL_SIZE, ELEMENT_TOOL_SIZE));
       }
 
-      if (GetSelectedTool() == TOOL_BRUSH)
+      if (GetSelectedTool() == TOOL_BRUSH || GetSelectedTool() == TOOL_ERASER)
       {
         d.SetBackground(Drawing::BLACK);
         d.SetForeground(Drawing::WHITE);
 
         char brushSizeArray[64];
 
-        snprintf(brushSizeArray, 64, "%d", m_brushSize);
+        snprintf(brushSizeArray, 64, "Brush: %d", m_brushSize);
 
         const SPoint brushPos = m_toolButtons[ASSET_BRUSH_ICON].Panel::GetRenderPoint();
         UPoint pos(brushPos.GetX() + 64, brushPos.GetY());

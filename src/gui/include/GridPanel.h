@@ -175,7 +175,7 @@ namespace MFM
 
     void HandleEraserTool(u8 button, SPoint clickPt)
     {
-      PaintMapper(button, clickPt, 0,
+      PaintMapper(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
                   Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), false);
     }
 
