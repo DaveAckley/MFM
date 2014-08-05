@@ -35,7 +35,7 @@
 #define ELEMENT_BOX_SIZE 70
 #define ELEMENT_RENDER_SIZE 32
 
-#define ELEMENT_BOX_BUTTON_COUNT 5
+#define ELEMENT_BOX_BUTTON_COUNT 6
 #define TOOLBOX_MAX_SLIDERS 8
 
 namespace MFM
@@ -327,7 +327,8 @@ namespace MFM
         ASSET_PENCIL_ICON,
         ASSET_BUCKET_ICON,
         ASSET_ERASER_ICON,
-        ASSET_BRUSH_ICON
+        ASSET_BRUSH_ICON,
+        ASSET_XRAY_ICON
       };
 
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
@@ -416,6 +417,13 @@ namespace MFM
       return *m_toolPtr;
     }
 
+    bool IsBrushableSelected()
+    {
+      return GetSelectedTool() == TOOL_BRUSH  ||
+             GetSelectedTool() == TOOL_BUCKET ||
+             GetSelectedTool() == TOOL_XRAY;
+    }
+
     virtual bool Handle(MouseButtonEvent& mbe)
     {
       SDL_MouseButtonEvent & event = mbe.m_event.button;
@@ -426,8 +434,7 @@ namespace MFM
         return true;
       }
 
-      if(GetSelectedTool() == TOOL_BRUSH ||
-         GetSelectedTool() == TOOL_ERASER)
+      if(IsBrushableSelected())
       {
         switch(event.button)
         {
@@ -491,17 +498,17 @@ namespace MFM
                                  UPoint(ELEMENT_TOOL_SIZE, ELEMENT_TOOL_SIZE));
       }
 
-      if (GetSelectedTool() == TOOL_BRUSH || GetSelectedTool() == TOOL_ERASER)
+      if(IsBrushableSelected())
       {
         d.SetBackground(Drawing::BLACK);
         d.SetForeground(Drawing::WHITE);
 
         char brushSizeArray[64];
 
-        snprintf(brushSizeArray, 64, "Brush: %d", m_brushSize);
+        snprintf(brushSizeArray, 64, "%d", m_brushSize);
 
-        const SPoint brushPos = m_toolButtons[ASSET_BRUSH_ICON].Panel::GetRenderPoint();
-        UPoint pos(brushPos.GetX() + 64, brushPos.GetY());
+        const SPoint brushPos = m_toolButtons[TOOL_XRAY].Panel::GetRenderPoint();
+        UPoint pos(brushPos.GetX() + 32, brushPos.GetY());
         d.BlitBackedText(brushSizeArray, pos, UPoint(128, 128));
       }
 

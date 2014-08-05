@@ -24,51 +24,51 @@ namespace MFM {
     {
       for(u32 y = 0; y < m_height; y++)
       {
-	Tile<CC>& ctile = GetTile(x, y);
+        Tile<CC>& ctile = GetTile(x, y);
 
         ctile.Reinit();
 
-	neighbors = 0;
-	if(x > 0)
+        neighbors = 0;
+        if(x > 0)
         {
-	  ctile.Connect(GetTile(x - 1, y), Dirs::WEST);
-	  neighbors |= (1<<Dirs::WEST);
-	}
-	if(y > 0)
-	{
-	  ctile.Connect(GetTile(x, y - 1), Dirs::NORTH);
-	  neighbors |= (1<<Dirs::NORTH);
-	}
-	if(x < m_width - 1)
+          ctile.Connect(GetTile(x - 1, y), Dirs::WEST);
+          neighbors |= (1<<Dirs::WEST);
+        }
+        if(y > 0)
         {
-	  ctile.Connect(GetTile(x + 1, y), Dirs::EAST);
-	  neighbors |= (1<<Dirs::EAST);
-	}
-	if(y < m_height - 1)
+          ctile.Connect(GetTile(x, y - 1), Dirs::NORTH);
+          neighbors |= (1<<Dirs::NORTH);
+        }
+        if(x < m_width - 1)
         {
-	  ctile.Connect(GetTile(x, y + 1), Dirs::SOUTH);
-	  neighbors |= (1<<Dirs::SOUTH);
-	}
-	if((neighbors & (1<<Dirs::SOUTH)) &&
-	   (neighbors & (1<<Dirs::WEST)))
+          ctile.Connect(GetTile(x + 1, y), Dirs::EAST);
+          neighbors |= (1<<Dirs::EAST);
+        }
+        if(y < m_height - 1)
         {
-	  ctile.Connect(GetTile(x - 1, y + 1), Dirs::SOUTHWEST);
-	}
-	if((neighbors & (1<<Dirs::NORTH)) &&
-	   (neighbors & (1<<Dirs::WEST)))
+          ctile.Connect(GetTile(x, y + 1), Dirs::SOUTH);
+          neighbors |= (1<<Dirs::SOUTH);
+        }
+        if((neighbors & (1<<Dirs::SOUTH)) &&
+           (neighbors & (1<<Dirs::WEST)))
         {
-	  ctile.Connect(GetTile(x - 1, y - 1), Dirs::NORTHWEST);
-	}
-	if((neighbors & (1<<Dirs::SOUTH)) &&
-	   (neighbors & (1<<Dirs::EAST)))
+          ctile.Connect(GetTile(x - 1, y + 1), Dirs::SOUTHWEST);
+        }
+        if((neighbors & (1<<Dirs::NORTH)) &&
+           (neighbors & (1<<Dirs::WEST)))
         {
-	  ctile.Connect(GetTile(x + 1, y + 1), Dirs::SOUTHEAST);
-	}
-	if((neighbors & (1<<Dirs::NORTH)) &&
-	   (neighbors & (1<<Dirs::EAST)))
+          ctile.Connect(GetTile(x - 1, y - 1), Dirs::NORTHWEST);
+        }
+        if((neighbors & (1<<Dirs::SOUTH)) &&
+           (neighbors & (1<<Dirs::EAST)))
         {
-	  ctile.Connect(GetTile(x + 1, y - 1), Dirs::NORTHEAST);
-	}
+          ctile.Connect(GetTile(x + 1, y + 1), Dirs::SOUTHEAST);
+        }
+        if((neighbors & (1<<Dirs::NORTH)) &&
+           (neighbors & (1<<Dirs::EAST)))
+        {
+          ctile.Connect(GetTile(x + 1, y - 1), Dirs::NORTHEAST);
+        }
       }
     }
   }
@@ -83,14 +83,18 @@ namespace MFM {
   void Grid<GC>::ReinitSeed()
   {
     if (m_seed==0)  // SetSeed must have been called by now!
+    {
       FAIL(ILLEGAL_STATE);
+    }
 
     m_random.SetSeed(m_seed);
     for(u32 i = 0; i < W; i++)
+    {
       for(u32 j = 0; j < H; j++)
         {
           m_tiles[i][j].GetRandom().SetSeed(m_random.Create());
         }
+    }
   }
 
   template <class GC>
@@ -199,7 +203,23 @@ namespace MFM {
 
       other.PlaceAtom(atom,otherIndex);
     }
+  }
 
+  template <class GC>
+  void Grid<GC>::XRayAtom(const SPoint& siteInGrid)
+  {
+    SPoint tileInGrid, siteInTile;
+    if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
+    {
+      printf("Can't xray at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
+      FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+    }
+
+    Tile<CC> & owner = GetTile(tileInGrid);
+    owner.SingleXRay(siteInTile.GetX(), siteInTile.GetY());
+
+    /* This doesn't focus on xraying across caches, which I suppose is
+     * the correct behavior. */
   }
 
   template <class GC>
@@ -209,7 +229,7 @@ namespace MFM {
     {
       for(u32 y = 0; y < H; y++)
       {
-	GetTile(x, y).Pause();
+        GetTile(x, y).Pause();
       }
     }
   }
@@ -221,7 +241,7 @@ namespace MFM {
     {
       for(u32 y = 0; y < H; y++)
       {
-	GetTile(x, y).Start();
+        GetTile(x, y).Start();
       }
     }
   }

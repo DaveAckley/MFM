@@ -155,6 +155,13 @@ namespace MFM
                               mbe.m_event.button.y));
     }
 
+    void HandleXRayTool(MouseButtonEvent& mbe)
+    {
+      HandleXRayTool(mbe.m_event.button.button,
+                     SPoint(mbe.m_event.button.x,
+                            mbe.m_event.button.y));
+    }
+
     void HandlePencilTool(u8 button, SPoint clickPt)
     {
       T atom = (button == SDL_BUTTON_LEFT) ?
@@ -192,16 +199,24 @@ namespace MFM
       }
     }
 
-    void PaintMapper(u8 button, SPoint clickPt, s32 brushSize, T atom, bool bucket)
+    void HandleXRayTool(u8 button, SPoint clickPt)
+    {
+      PaintMapper(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
+                  Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), false, true);
+    }
+
+    void PaintMapper(u8 button, SPoint clickPt, s32 brushSize,
+                     T atom, bool bucket, bool xray = false)
     {
       SPoint pt = GetAbsoluteLocation();
       pt.Set(clickPt.GetX() - pt.GetX(),
              clickPt.GetY() - pt.GetY());
 
-      PaintAtom(*m_mainGrid, pt, brushSize, atom, bucket);
+      PaintAtom(*m_mainGrid, pt, brushSize, atom, bucket, xray);
     }
 
-    void PaintAtom(Grid<GC>& grid, SPoint& clickPt, s32 brushSize, T& atom, bool bucket)
+    void PaintAtom(Grid<GC>& grid, SPoint& clickPt, s32 brushSize,
+                   T& atom, bool bucket, bool xray)
     {
 
       /* Only do this when tiles are together to keep from having to
@@ -235,7 +250,14 @@ namespace MFM
               if(sqrt((x * x) + (y * y)) <= brushSize &&
                  grid.MapGridToTile(pt, tile, site))
               {
-                grid.PlaceAtom(atom, SPoint(cp.GetX() + x, cp.GetY() + y));
+                if(xray)
+                {
+                  grid.XRayAtom(SPoint(cp.GetX() + x, cp.GetY() + y));
+                }
+                else
+                {
+                  grid.PlaceAtom(atom, SPoint(cp.GetX() + x, cp.GetY() + y));
+                }
               }
             }
           }
@@ -316,6 +338,9 @@ namespace MFM
             case TOOL_BUCKET:
               HandleBucketTool(mbe);
               break;
+            case TOOL_XRAY:
+              HandleXRayTool(mbe);
+              break;
 
             default: break; /* Do the rest later */
             }
@@ -371,6 +396,9 @@ namespace MFM
             break;
           case TOOL_BRUSH:
             HandleBrushTool(mask, SPoint(event.x, event.y));
+            break;
+          case TOOL_XRAY:
+            HandleXRayTool(mask, SPoint(event.x, event.y));
             break;
 
           default:

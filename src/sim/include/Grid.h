@@ -301,6 +301,8 @@ namespace MFM {
 
     void PlaceAtom(const T& atom, const SPoint& location);
 
+    void XRayAtom(const SPoint& location);
+
     const T* GetAtom(SPoint& loc)
     {
       SPoint tileInGrid, siteInTile;

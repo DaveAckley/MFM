@@ -204,6 +204,7 @@ namespace MFM
         }
         else
         {
+          LOG.Debug("INSANE ATOM RECEIVED");
           PlaceAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), packet.GetLocation());
         }
       }
@@ -861,6 +862,7 @@ namespace MFM
     }
     m_atomCount[idx] = count;
   }
+
   template <class CC>
   void Tile<CC>::Start()
   {
@@ -909,7 +911,6 @@ namespace MFM
     {
       m_atomCount[idx] += delta;
     }
-
   }
 
   template <class CC>

@@ -43,6 +43,7 @@ namespace MFM
     ASSET_ERASER_ICON,
     ASSET_BRUSH_ICON,
     ASSET_BUCKET_ICON,
+    ASSET_XRAY_ICON,
     ASSET_CHECKBOX_ICON_ON,
     ASSET_CHECKBOX_ICON_OFF,
     ASSET_SLIDER_HANDLE,
@@ -76,26 +77,26 @@ namespace MFM
 
       if(Utils::GetReadableResourceFile(relativeFilename, filename, BUFFER_SIZE))
       {
-	loaded = IMG_Load(filename);
+        loaded = IMG_Load(filename);
 
-	if(loaded)
-	{
-	  opped = SDL_DisplayFormatAlpha(loaded);
+        if(loaded)
+        {
+          opped = SDL_DisplayFormatAlpha(loaded);
 
-	  SDL_FreeSurface(loaded);
+          SDL_FreeSurface(loaded);
 
-	  LOG.Debug("Surface %s loaded: %p, opped: %p", filename, loaded, opped);
-	}
-	else
-	{
-	  LOG.Error("Image %s not loaded : %s",
-		    filename,
-		    IMG_GetError());
-	}
+          LOG.Debug("Surface %s loaded: %p, opped: %p", filename, loaded, opped);
+        }
+        else
+        {
+          LOG.Error("Image %s not loaded : %s",
+                    filename,
+                    IMG_GetError());
+        }
       }
       else
       {
-	LOG.Error("Cannot compute relative path to: %s", relativeFilename);
+        LOG.Error("Cannot compute relative path to: %s", relativeFilename);
       }
 
       return opped;
@@ -109,18 +110,18 @@ namespace MFM
 
       if(Utils::GetReadableResourceFile(relativePath, path, BUFFER_SIZE))
       {
-	font = TTF_OpenFont(path, size);
+        font = TTF_OpenFont(path, size);
 
-	if(!font)
-	{
-	  LOG.Error("Font %s not loaded: %s",
-		    path,
-		    TTF_GetError());
-	}
+        if(!font)
+        {
+          LOG.Error("Font %s not loaded: %s",
+                    path,
+                    TTF_GetError());
+        }
       }
       else
       {
-	LOG.Error("Cannot compute relative path to: %s", relativePath);
+        LOG.Error("Cannot compute relative path to: %s", relativePath);
       }
 
       return font;
@@ -136,20 +137,21 @@ namespace MFM
     {
       if(!initialized)
       {
-	surfaces[ASSET_SELECTOR_ICON] = LoadImage("images/selector_icon.png");
-	surfaces[ASSET_PENCIL_ICON] = LoadImage("images/pencil_icon.png");
-	surfaces[ASSET_ERASER_ICON] = LoadImage("images/eraser_icon.png");
-	surfaces[ASSET_BRUSH_ICON] = LoadImage("images/brush_icon.png");
-	surfaces[ASSET_BUCKET_ICON] = LoadImage("images/bucket_icon.png");
-	surfaces[ASSET_CHECKBOX_ICON_ON] = LoadImage("images/checkbox_on.png");
-	surfaces[ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
-	surfaces[ASSET_SLIDER_HANDLE] = LoadImage("images/slider_handle.png");
+        surfaces[ASSET_SELECTOR_ICON] = LoadImage("images/selector_icon.png");
+        surfaces[ASSET_PENCIL_ICON] = LoadImage("images/pencil_icon.png");
+        surfaces[ASSET_ERASER_ICON] = LoadImage("images/eraser_icon.png");
+        surfaces[ASSET_BRUSH_ICON] = LoadImage("images/brush_icon.png");
+        surfaces[ASSET_BUCKET_ICON] = LoadImage("images/bucket_icon.png");
+        surfaces[ASSET_XRAY_ICON] = LoadImage("images/xray_icon.png");
+        surfaces[ASSET_CHECKBOX_ICON_ON] = LoadImage("images/checkbox_on.png");
+        surfaces[ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
+        surfaces[ASSET_SLIDER_HANDLE] = LoadImage("images/slider_handle.png");
 
-	fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/tiny.ttf", 24);
-	fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont("fonts/tiny.ttf", 26);
-	fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont("fonts/tiny.ttf", 16);
+        fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/tiny.ttf", 24);
+        fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont("fonts/tiny.ttf", 26);
+        fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont("fonts/tiny.ttf", 16);
 
-	initialized = true;
+        initialized = true;
       }
     }
 
@@ -160,19 +162,19 @@ namespace MFM
     {
       if(initialized)
       {
-	for(Asset i = ASSET_SELECTOR_ICON; i < ASSET_COUNT; i = (Asset)(i + 1))
-	{
-	  SDL_FreeSurface(surfaces[i]);
-	  surfaces[i] = NULL;
-	}
+        for(Asset i = ASSET_SELECTOR_ICON; i < ASSET_COUNT; i = (Asset)(i + 1))
+        {
+          SDL_FreeSurface(surfaces[i]);
+          surfaces[i] = NULL;
+        }
 
-	for(FontAsset i = FONT_ASSET_ELEMENT; i < FONT_ASSET_COUNT; i = (FontAsset)(i + 1))
-	{
-	  TTF_CloseFont(fonts[i]);
-	  fonts[i] = NULL;
-	}
+        for(FontAsset i = FONT_ASSET_ELEMENT; i < FONT_ASSET_COUNT; i = (FontAsset)(i + 1))
+        {
+          TTF_CloseFont(fonts[i]);
+          fonts[i] = NULL;
+        }
 
-	initialized = false;
+        initialized = false;
       }
     }
 
