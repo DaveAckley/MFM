@@ -50,10 +50,11 @@ namespace MFM
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS };
 
-  public:
+   public:
 
     static Element_Sorter THE_INSTANCE;
-    static const u32 TYPE() {
+    static const u32 TYPE()
+    {
       return THE_INSTANCE.GetType();
     }
 
@@ -68,13 +69,21 @@ namespace MFM
       Element<CC>::SetAtomicSymbol("Sr");
     }
 
-    u32 GetThreshold(const T &atom, u32 badType) const {
-      if (!Atom<CC>::IsType(atom,TYPE())) return badType;
+    u32 GetThreshold(const T &atom, u32 badType) const
+    {
+      if (!Atom<CC>::IsType(atom,TYPE()))
+      {
+        return badType;
+      }
       return atom.GetStateField(STATE_THRESHOLD_IDX,STATE_THRESHOLD_LEN);
     }
 
-    bool SetThreshold(T &atom, u32 value) const {
-      if (!Atom<CC>::IsType(atom,TYPE())) return false;
+    bool SetThreshold(T &atom, u32 value) const
+    {
+      if (!Atom<CC>::IsType(atom,TYPE()))
+      {
+        return false;
+      }
       atom.SetStateField(STATE_THRESHOLD_IDX,STATE_THRESHOLD_LEN,value);
       return true;
     }
@@ -86,13 +95,13 @@ namespace MFM
     }
 
     virtual u32 PercentMovable(const T& you,
-			       const T& me, const SPoint& offset) const
+                               const T& me, const SPoint& offset) const
     {
       return 100;
     }
 
     bool FillAvailableSubwindowPoint(EventWindow<CC>& window,
-				     SPoint& pt, Dir subwindow, ElementType type) const
+                                     SPoint& pt, Dir subwindow, ElementType type) const
     {
       return this->FillPointWithType(window, pt,
                                      m_southeastSubwindow,
@@ -110,16 +119,21 @@ namespace MFM
       return 0xff7f0000;
     }
 
+    virtual const char* GetDescription() const
+    {
+      return "A sorting \"demon\", which sorts DATA atoms based on their values and "
+             "a value held within this Sorter as well. See the \"Demon Hoard Sort\" "
+             "algorithm for details.";
+    }
+
     virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const
     {
-      switch (selector) {
+      switch (selector)
+      {
       case 1:
-        //        return 0xff503030;
         return ColorMap_CubeHelixRev::THE_INSTANCE.
           GetInterpolatedColor(GetThreshold(atom,0),DATA_MINVAL,DATA_MAXVAL,0xffff0000);
 
-        //        return ColorMap_SEQ5_Greys::THE_INSTANCE.
-        //          GetInterpolatedColor(GetThreshold(atom,0),DATA_MINVAL,DATA_MAXVAL,0xffff0000);
       default:
         return Element<CC>::PhysicsColor();
       }
@@ -131,9 +145,10 @@ namespace MFM
       SPoint reproducePt;
       T self = window.GetCenterAtom();
       if(this->FillPointWithType(window, reproducePt,
-                                 Element<CC>::VNNeighbors, 4, Dirs::SOUTHEAST, Element_Res<CC>::TYPE()))
+                                 Element<CC>::VNNeighbors, 4,
+                                 Dirs::SOUTHEAST, Element_Res<CC>::TYPE()))
       {
-	window.SetRelativeAtom(reproducePt, self);
+        window.SetRelativeAtom(reproducePt, self);
       }
 
       SPoint seData, neData, swEmpty, nwEmpty, srcPt, dstPt;
@@ -141,37 +156,44 @@ namespace MFM
 
       for(s32 i = 0; i < 2; i++)
       {
-	if(movingUp &&
-	   FillAvailableSubwindowPoint(window, seData, Dirs::SOUTHEAST, Element_Data<CC>::THE_INSTANCE.GetType()) &&
-	   FillAvailableSubwindowPoint(window, nwEmpty, Dirs::NORTHWEST, Element_Empty<CC>::THE_INSTANCE.GetType()))
-	{
-	  srcPt = seData;
-	  dstPt = nwEmpty;
-	}
-	else if(!movingUp &&
-                FillAvailableSubwindowPoint(window, neData, Dirs::NORTHEAST, Element_Data<CC>::THE_INSTANCE.GetType()) &&
-                FillAvailableSubwindowPoint(window, swEmpty, Dirs::SOUTHWEST, Element_Empty<CC>::THE_INSTANCE.GetType()))
-	{
-	  srcPt = neData;
-	  dstPt = swEmpty;
-	}
-	else
-	{
-	  movingUp = !movingUp;
-	  continue;
-	}
+        if(movingUp &&
+           FillAvailableSubwindowPoint(window, seData,
+                                       Dirs::SOUTHEAST,
+                                       Element_Data<CC>::THE_INSTANCE.GetType()) &&
+           FillAvailableSubwindowPoint(window, nwEmpty,
+                                       Dirs::NORTHWEST,
+                                       Element_Empty<CC>::THE_INSTANCE.GetType()))
+        {
+          srcPt = seData;
+          dstPt = nwEmpty;
+        }
+        else if(!movingUp &&
+                FillAvailableSubwindowPoint(window, neData,
+                                            Dirs::NORTHEAST,
+                                            Element_Data<CC>::THE_INSTANCE.GetType()) &&
+                FillAvailableSubwindowPoint(window, swEmpty,
+                                            Dirs::SOUTHWEST,
+                                            Element_Empty<CC>::THE_INSTANCE.GetType()))
+        {
+          srcPt = neData;
+          dstPt = swEmpty;
+        }
+        else
+        {
+          movingUp = !movingUp;
+          continue;
+        }
 
         u32 threshold = GetThreshold(window.GetCenterAtom(),0);
         u32 datum = Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtom(srcPt),0);
-	u32 cmp = (movingUp && (datum < threshold)) || (!movingUp && (datum > threshold));
-	if(cmp)
-	{
+        u32 cmp = (movingUp && (datum < threshold)) || (!movingUp && (datum > threshold));
+        if(cmp)
+        {
           SetThreshold(self,datum);
           window.SetCenterAtom(self);
-	  window.SwapAtoms(srcPt, dstPt);
-          //	  return;
+          window.SwapAtoms(srcPt, dstPt);
           break;
-	}
+        }
       }
       this->Diffuse(window);
     }
@@ -181,7 +203,8 @@ namespace MFM
   Element_Sorter<CC> Element_Sorter<CC>::THE_INSTANCE;
 
   template <class CC>
-  const SPoint Element_Sorter<CC>::m_southeastSubwindow[4] = {
+  const SPoint Element_Sorter<CC>::m_southeastSubwindow[4] =
+  {
     SPoint(1,1),SPoint(1,2),SPoint(2,1),SPoint(2,2)
   };
 

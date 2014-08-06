@@ -78,6 +78,13 @@ namespace MFM
       return 0xff333300;
     }
 
+    virtual const char* GetDescription() const
+    {
+      return "The Element which represents a universal resource. Other atoms may freely "
+             "convert these atoms into something else without disturbing the DREG's "
+             "regulatory properties.";
+    }
+
     virtual void Behavior(EventWindow<CC>& window) const
     {
       this->Diffuse(window);

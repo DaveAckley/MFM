@@ -408,13 +408,13 @@ namespace MFM
       Packet<T> sendout(PACKET_WRITE, m_generation);
 
       /* Did this atom get corrupted? Destroy it! */
-      if(!m_atoms[atomLoc.GetX()][atomLoc.GetY()].IsSane())
+      if(!GetAtom(atomLoc)->IsSane())
       {
         PlaceAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), atomLoc);
       }
 
       sendout.SetLocation(remoteLoc);
-      sendout.SetAtom(m_atoms[atomLoc.GetX()][atomLoc.GetY()]);
+      sendout.SetAtom(*GetAtom(atomLoc));
       sendout.SetReceivingNeighbor(neighbor);
 
       /* Send out the serialized version of the packet */

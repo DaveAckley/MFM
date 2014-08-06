@@ -101,6 +101,11 @@ namespace MFM
       return 100;
     }
 
+    virtual const char* GetDescription() const
+    {
+      return "An element designed simply to hold a 32-bit value, usually generated "
+             "at random when created by an emitter atom.";
+    }
 
     virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const
     {

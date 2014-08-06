@@ -89,6 +89,12 @@ namespace MFM
       return 0xff404040;
     }
 
+    virtual const char* GetDescription() const
+    {
+      return "This vertically-reproducing Element emits DATA atoms with randomly generated "
+             "payloads.";
+    }
+
     virtual void Behavior(EventWindow<CC>& window) const
     {
       Random & random = window.GetRandom();

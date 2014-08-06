@@ -393,6 +393,20 @@ namespace MFM
     }
 
     /**
+     * Gets a string of a short description of the behavior of this
+     * Element . This will be displayed in some way when a user needs
+     * help with this Element . This string must not include newlines;
+     * they will be added when they are needed.
+     *
+     * @returns A helpful description string breifely describing the
+     *          behavior of this Element.
+     */
+    virtual const char* GetDescription() const
+    {
+      return "NO DESCRIPTION";
+    }
+
+    /**
      * Gets the 32-bit ARGB formatted color that all Atoms of this
      * Element will be drawn with.
      *

@@ -75,18 +75,26 @@ namespace MFM
       return 0xff202020;
     }
 
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
+    virtual const char* GetDescription() const
+    {
+      return "The Element which represents an immovable wall. Other Elements may "
+             "modify the position or existance of this Wall, but most Elements like "
+             "DREG will not.";
+    }
+
+    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
+    {
       return nowAt.Equals(maybeAt)?Element<CC>::COMPLETE_DIFFUSABILITY:0;
     }
 
     virtual u32 PercentMovable(const T& you,
-			       const T& me, const SPoint& offset) const
+                               const T& me, const SPoint& offset) const
     {
       return 0;
     }
 
     virtual void Behavior(EventWindow<CC>& window) const
-    {}
+    { }
   };
 
   template <class CC>

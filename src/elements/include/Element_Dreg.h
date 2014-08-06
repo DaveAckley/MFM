@@ -86,6 +86,12 @@ namespace MFM
       return 0xff282828;
     }
 
+    virtual const char* GetDescription() const
+    {
+      return "Short for \"Dynamic Regulator\", This Atom controls the density of "
+             "nearby Atoms by creating RES atoms and deleting nearby atoms.";
+    }
+
     virtual void Behavior(EventWindow<CC>& window) const
     {
       Random & random = window.GetRandom();

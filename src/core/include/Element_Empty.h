@@ -54,9 +54,14 @@ namespace MFM
     }
 
     virtual u32 PercentMovable(const T& you,
-			       const T& me, const SPoint& offset) const
+                               const T& me, const SPoint& offset) const
     {
       return 100;
+    }
+
+    virtual const char* GetDescription() const
+    {
+      return "The Element which represents empty space. Events do not occur for this Element.";
     }
 
     virtual u32 DefaultPhysicsColor() const
@@ -70,8 +75,7 @@ namespace MFM
     }
 
     virtual void Behavior(EventWindow<CC>& window) const
-    {
-    }
+    { }
   };
 
   template <class CC>

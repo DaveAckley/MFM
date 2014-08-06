@@ -98,7 +98,7 @@ namespace MFM
     }
 
     virtual u32 PercentMovable(const T& you,
-			       const T& me, const SPoint& offset) const
+                               const T& me, const SPoint& offset) const
     {
       return 0;
     }
@@ -111,6 +111,12 @@ namespace MFM
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff101018;
+    }
+
+    virtual const char* GetDescription() const
+    {
+      return "This vertically-reproducing Element consumes DATA atoms and holds "
+             "information on its position and the DATA consumed.";
     }
 
     virtual void Behavior(EventWindow<CC>& window) const
