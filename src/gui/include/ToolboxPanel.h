@@ -420,7 +420,7 @@ namespace MFM
     bool IsBrushableSelected()
     {
       return GetSelectedTool() == TOOL_BRUSH  ||
-             GetSelectedTool() == TOOL_BUCKET ||
+             GetSelectedTool() == TOOL_ERASER ||
              GetSelectedTool() == TOOL_XRAY;
     }
 

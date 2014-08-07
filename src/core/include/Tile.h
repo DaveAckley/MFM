@@ -415,7 +415,7 @@ namespace MFM
      */
     inline bool IsInHidden(const SPoint& pt);
 
-  public:
+   public:
 
     /**
      * Constructs a new Tile.
@@ -507,7 +507,8 @@ namespace MFM
      *
      * @returns a reference to this Tile's ElementTable.
      */
-    ElementTable<CC> & GetElementTable() {
+    ElementTable<CC> & GetElementTable()
+    {
       return elementTable;
     }
 
@@ -516,7 +517,8 @@ namespace MFM
      *
      * @returns a reference to this Tile's ElementTable.
      */
-    const ElementTable<CC> & GetElementTable() const {
+    const ElementTable<CC> & GetElementTable() const
+    {
       return elementTable;
     }
 
@@ -526,7 +528,8 @@ namespace MFM
      * @returns a pointer to the Element associated with \a
      *          elementType, or NULL if there is no such Element.
      */
-    const Element<CC> * GetElement(const u32 elementType) const {
+    const Element<CC> * GetElement(const u32 elementType) const
+    {
       return elementTable.Lookup(elementType);
     }
 
@@ -550,7 +553,7 @@ namespace MFM
      *
      * @returns true if pt is in a cache, else false.
      */
-    static inline bool IsInCache(const SPoint& pt) ;
+    static inline bool IsInCache(const SPoint& pt);
 
     /**
      * Checks to see if a specified local point is contained within a
@@ -561,7 +564,7 @@ namespace MFM
      *
      * @returns true if pt is an owned site of this Tile, else false.
      */
-    static inline bool IsOwnedSite(const SPoint & location) ;
+    static inline bool IsOwnedSite(const SPoint & location);
 
 
     /**
@@ -611,7 +614,7 @@ namespace MFM
      *
      * @returns true if pt is a live site in this Tile, else false.
      */
-    bool IsLiveSite(const SPoint & location) const ;
+    bool IsLiveSite(const SPoint & location) const;
 
     /**
      * Gets the number of events executed within this Tile since
@@ -862,7 +865,8 @@ namespace MFM
      *
      * @sa PlaceAtom
      */
-    void PlaceInternalAtom(const T& atom, const SPoint& pt) {
+    void PlaceInternalAtom(const T& atom, const SPoint& pt)
+    {
       PlaceAtom(atom,pt+SPoint(R,R));
     }
 
@@ -935,7 +939,7 @@ namespace MFM
      * @param sy y coordinate in Tile (including caches)
      *
      */
-    void InternalPutAtom(const T & atom, s32 x, s32 y) ;
+    void InternalPutAtom(const T & atom, s32 x, s32 y);
 
     /**
      * Sets the internal count of Atoms of a specified ElementType.
@@ -1005,7 +1009,8 @@ namespace MFM
      *
      * @param the Element to register into this Tile's ElementTable.
      */
-    void RegisterElement(const Element<CC> & anElement) {
+    void RegisterElement(const Element<CC> & anElement)
+    {
       elementTable.RegisterElement(anElement);
     }
 

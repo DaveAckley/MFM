@@ -848,7 +848,10 @@ namespace MFM
   u32 Tile<CC>::GetAtomCount(ElementType atomType) const
   {
     s32 idx = elementTable.GetIndex(atomType);
-    if (idx < 0) return 0;
+    if (idx < 0)
+    {
+      return 0;
+    }
     return m_atomCount[idx];
   }
 
@@ -856,8 +859,12 @@ namespace MFM
   void Tile<CC>::SetAtomCount(ElementType atomType, s32 count)
   {
     s32 idx = elementTable.GetIndex(atomType);
-    if (idx < 0) {
-      if (count > 0) FAIL(ILLEGAL_STATE);
+    if (idx < 0)
+    {
+      if (count > 0)
+      {
+        FAIL(ILLEGAL_STATE);
+      }
       return;
     }
     m_atomCount[idx] = count;
