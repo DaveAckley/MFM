@@ -89,6 +89,7 @@ namespace MFM
     void SetExternalValue(s32* externalValue)
     {
       m_externalValue = externalValue;
+      ClampValue();
     }
 
     void SetText(const char* text)
@@ -99,7 +100,6 @@ namespace MFM
     void SetMinValue(s32 value)
     {
       m_minValue = value;
-      ClampValue();
     }
 
     s32 GetMinValue() const
@@ -110,7 +110,6 @@ namespace MFM
     void SetMaxValue(s32 value)
     {
       m_maxValue = value;
-      ClampValue();
     }
 
     s32 GetMaxValue() const

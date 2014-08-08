@@ -80,26 +80,26 @@ namespace MFM
         sliders[0].SetText("RES Spawn Odds");
         sliders[0].SetMinValue(1);
         sliders[0].SetMaxValue(1000);
-        sliders[0].SetSnapResolution(10);
         sliders[0].SetExternalValue(Element_Dreg<CC>::THE_INSTANCE.GetResOddsPtr());
+        sliders[0].SetSnapResolution(10);
 
         sliders[1].SetText("DREG Spawn Odds");
         sliders[1].SetMinValue(1);
         sliders[1].SetMaxValue(1000);
-        sliders[1].SetSnapResolution(10);
         sliders[1].SetExternalValue(Element_Dreg<CC>::THE_INSTANCE.GetDregCreateOddsPtr());
+        sliders[1].SetSnapResolution(10);
 
         sliders[2].SetText("Delete Odds");
         sliders[2].SetMinValue(1);
         sliders[2].SetMaxValue(100);
-        sliders[2].SetSnapResolution(10);
         sliders[2].SetExternalValue(Element_Dreg<CC>::THE_INSTANCE.GetDregDeleteOddsPtr());
+        sliders[2].SetSnapResolution(10);
 
         sliders[3].SetText("Delete DREG Odds");
         sliders[3].SetMinValue(1);
         sliders[3].SetMaxValue(100);
-        sliders[3].SetSnapResolution(10);
         sliders[3].SetExternalValue(Element_Dreg<CC>::THE_INSTANCE.GetDregDeleteDregOddsPtr());
+        sliders[3].SetSnapResolution(10);
 
         return 4;
       }
