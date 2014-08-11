@@ -1,7 +1,8 @@
 #include "TileRenderer.h"
 #include "EventWindow.h"
 
-namespace MFM {
+namespace MFM
+{
 
 #define MAX_ATOM_SIZE 256
 
@@ -35,13 +36,13 @@ namespace MFM {
     SPoint brpt(ulpt.GetX() + m_atomDrawSize, ulpt.GetY() + m_atomDrawSize);
 
     if(brpt.GetX() > (s32)m_dimensions.GetX())
-      {
-        brpt.SetX(m_dimensions.GetX());
-      }
+    {
+      brpt.SetX(m_dimensions.GetX());
+    }
     if(brpt.GetY() > (s32)m_dimensions.GetY())
-      {
-        brpt.SetY(m_dimensions.GetY());
-      }
+    {
+      brpt.SetY(m_dimensions.GetY());
+    }
 
     drawing.FillRect(ulpt.GetX(),ulpt.GetY(),
                      brpt.GetX()-ulpt.GetX(),brpt.GetY()-ulpt.GetY(),
@@ -71,18 +72,30 @@ namespace MFM {
     s32 amount;
 
     if (m_atomDrawSize < SCALE_GRANULARITY)   // Be proportional unless tiny
+    {
       amount = 1;
+    }
     else
+    {
       amount = m_atomDrawSize / SCALE_GRANULARITY;
+    }
 
-    if (!increase) amount = -amount;
+    if (!increase)
+    {
+      amount = -amount;
+    }
+
 
     s32 newSize = m_atomDrawSize + amount;
 
     if (newSize < 1)
+    {
       newSize = 1;
+    }
     else if (newSize > MAX_ATOM_SIZE)
+    {
       newSize = MAX_ATOM_SIZE;
+    }
 
     m_atomDrawSize = newSize;
 

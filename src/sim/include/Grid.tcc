@@ -229,6 +229,23 @@ namespace MFM {
     {
       for(u32 y = 0; y < H; y++)
       {
+        GetTile(x, y).PauseRequested();
+      }
+    }
+    for(u32 x = 0; x < W; x++)
+    {
+      for(u32 y = 0; y < H; y++)
+      {
+        while(!GetTile(x, y).IsPauseReady())
+        {
+          pthread_yield();
+        }
+      }
+    }
+    for(u32 x = 0; x < W; x++)
+    {
+      for(u32 y = 0; y < H; y++)
+      {
         GetTile(x, y).Pause();
       }
     }
@@ -261,7 +278,7 @@ namespace MFM {
     {
       for(u32 y = 0; y < H; y++)
       {
-	total += m_tiles[x][y].GetEventsExecuted();
+        total += m_tiles[x][y].GetEventsExecuted();
       }
     }
     return total;

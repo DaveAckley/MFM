@@ -415,6 +415,11 @@ namespace MFM
      */
     inline bool IsInHidden(const SPoint& pt);
 
+    /**
+     * Performs a single Event on the generated EventWindow .
+     */
+    void DoEvent(bool locked, Dir lockRegion);
+
    public:
 
     /**
@@ -966,6 +971,19 @@ namespace MFM
      * @sa Start
      */
     void Pause();
+
+    /**
+     * Sees if this Tile is ready to be paused. There is some
+     * processing to be done between \c PauseRequested() and \c
+     * Pause() , so this method tells whether or not it is time to
+     * pause each Tile .
+     *
+     * @returns \c true if this Tile is ready to be paused, else \c
+     *          false .
+     */
+    bool IsPauseReady();
+
+    void PauseRequested();
 
     /**
      * Adds an offset to the count of a particular type of Atom.

@@ -8,7 +8,7 @@ namespace MFM
     pthread_cond_init(&m_pauseCond, NULL);
     pthread_cond_init(&m_joinCond, NULL);
 
-    m_paused = false;
+    m_threadState = THREADSTATE_RUNNING;
   }
 
   ThreadPauser::~ThreadPauser()
@@ -20,20 +20,69 @@ namespace MFM
 
   bool ThreadPauser::IsPaused()
   {
-    return m_paused;
+    bool retval;
+    pthread_mutex_lock(&m_lock);
+    {
+      retval = (m_threadState == THREADSTATE_PAUSED);
+    }
+    pthread_mutex_unlock(&m_lock);
+
+    return retval;
+  }
+
+  bool ThreadPauser::IsPauseRequested()
+  {
+    bool retval;
+    pthread_mutex_lock(&m_lock);
+    {
+      retval = (m_threadState == THREADSTATE_PAUSE_REQUESTED);
+    }
+    pthread_mutex_unlock(&m_lock);
+
+    return retval;
+  }
+
+  bool ThreadPauser::IsPauseReady()
+  {
+    bool retval;
+    pthread_mutex_lock(&m_lock);
+    {
+      retval = (m_threadState == THREADSTATE_PAUSE_READY);
+    }
+    pthread_mutex_unlock(&m_lock);
+
+    return retval;
+  }
+
+  void ThreadPauser::PauseReady()
+  {
+    pthread_mutex_lock(&m_lock);
+    {
+      m_threadState = THREADSTATE_PAUSE_READY;
+    }
+    pthread_mutex_unlock(&m_lock);
+  }
+
+  void ThreadPauser::RequestPause()
+  {
+    pthread_mutex_lock(&m_lock);
+    {
+      m_threadState = THREADSTATE_PAUSE_REQUESTED;
+    }
+    pthread_mutex_unlock(&m_lock);
   }
 
   void ThreadPauser::WaitIfPaused()
   {
-    if(m_paused)
+    if(IsPaused())
     { /* Don't bother grabbing the lock unless we're sure about being paused. */
       pthread_mutex_lock(&m_lock);
       {
-	while(m_paused)
-	{
-	  pthread_cond_signal(&m_joinCond);
-	  pthread_cond_wait(&m_pauseCond, &m_lock);
-	}
+        while(m_threadState == THREADSTATE_PAUSED)
+        {
+          pthread_cond_signal(&m_joinCond);
+          pthread_cond_wait(&m_pauseCond, &m_lock);
+        }
       }
       pthread_mutex_unlock(&m_lock);
     }
@@ -43,7 +92,7 @@ namespace MFM
   {
     pthread_mutex_lock(&m_lock);
     {
-      m_paused = true;
+      m_threadState = THREADSTATE_PAUSED;
       pthread_cond_wait(&m_joinCond, &m_lock);
     }
     pthread_mutex_unlock(&m_lock);
@@ -53,7 +102,7 @@ namespace MFM
   {
     pthread_mutex_lock(&m_lock);
     {
-      m_paused = true;
+      m_threadState = THREADSTATE_PAUSED;
     }
     pthread_mutex_unlock(&m_lock);
   }
@@ -62,7 +111,7 @@ namespace MFM
   {
     pthread_mutex_lock(&m_lock);
     {
-      m_paused = false;
+      m_threadState = THREADSTATE_RUNNING;
       pthread_cond_signal(&m_pauseCond);
     }
     pthread_mutex_unlock(&m_lock);

@@ -35,7 +35,7 @@
 #define ELEMENT_BOX_SIZE 70
 #define ELEMENT_RENDER_SIZE 32
 
-#define ELEMENT_BOX_BUTTON_COUNT 6
+#define ELEMENT_BOX_BUTTON_COUNT 7
 #define TOOLBOX_MAX_SLIDERS 8
 
 namespace MFM
@@ -324,6 +324,7 @@ namespace MFM
       Asset assets[] =
       {
         ASSET_SELECTOR_ICON,
+        ASSET_ATOM_SELECTOR_ICON,
         ASSET_PENCIL_ICON,
         ASSET_BUCKET_ICON,
         ASSET_ERASER_ICON,

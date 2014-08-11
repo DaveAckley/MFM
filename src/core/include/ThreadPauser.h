@@ -31,12 +31,24 @@
 
 namespace MFM
 {
+
+  typedef enum
+  {
+    THREADSTATE_RUNNING = 0,
+    THREADSTATE_PAUSE_REQUESTED,
+    THREADSTATE_PAUSE_READY,
+    THREADSTATE_PAUSED
+  }ThreadState;
+
   /**
-   * A threading construct which pauses a looping thread by blocking it.
+   * A threading construct which pauses a looping thread by blocking
+   * it. It is controlled by what is known as an 'outer' thread
+   * (i.e. a thread which tells another to pause), and it controls an
+   * 'inner' thread (i.e. the thread to be paused).
    */
   class ThreadPauser
   {
-  private:
+   private:
 
     /**
      * The mutex required to lock the looping thread.
@@ -44,21 +56,20 @@ namespace MFM
     pthread_mutex_t m_lock;
 
     /**
-     * The thread condition required to lock the looping thread.
+     * The thread condition required to lock the inner thread.
      */
     pthread_cond_t m_pauseCond;
 
     /**
-     * The thread condition used to announce to the controlling thread
-     * that the looping thread is paused.
+     * Used to signal the outer thread that the inner thread has
+     * paused.
      */
     pthread_cond_t m_joinCond;
 
     /**
-     * A flag which describes whether or not the looping thread is
-     * paused.
+     * A flag describing the current state of the inner thread.
      */
-    bool m_paused;
+    ThreadState m_threadState;
 
   public:
 
@@ -79,22 +90,41 @@ namespace MFM
     bool IsPaused();
 
     /**
+     * Finds out if an outside thread wishes this ThreadPauser to be
+     * paused.
+     */
+    bool IsPauseRequested();
+
+    /**
+     * Checks to see if the internal thread is ready to be paused.
+     */
+    bool IsPauseReady();
+
+    /**
+     * Sets this ThreadPauser to be in a state which describes that it
+     * is ready to be paused.
+     */
+    void PauseReady();
+
+    /**
+     * Tells this ThreadPauser that an outside thread wishes the
+     * internal thread to pause.
+     */
+    void RequestPause();
+
+    /**
      * To be called by the looping thread. This pauses the thread if it
      * is supposed to be paused.
      */
     void WaitIfPaused();
 
     /**
-     * To be called by the controlling thread. This returns as soon as
-     * the looping thread is waiting.
-     */
-    void PauseBlocking();
-
-    /**
      * To be called by the controlling thread. This returns immediately
      * and pauses the looping thread.
      */
     void Pause();
+
+    void PauseBlocking();
 
     /**
      * To be called by the controlling thread. This wakes up the looping

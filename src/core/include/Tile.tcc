@@ -745,9 +745,73 @@ namespace MFM
         /* Have we waited long enough without a response? Let's disconnect that tile. */
 
       }
-      pthread_yield();
-      m_threadPauser.WaitIfPaused();
     } while(dirWaitWord);
+  }
+
+  template <class CC>
+  void Tile<CC>::DoEvent(bool locked, Dir lockRegion)
+  {
+    u32 dirWaitWord = 0;
+    unwind_protect(
+      {
+        ++m_eventsFailed;
+        ++m_failuresErased;
+
+        if ((m_failuresErased % 100) == 0)
+        {
+          LOG.Debug("%d erasures tile %p", m_failuresErased, this);
+        }
+
+        if(!m_executingWindow.GetCenterAtom().IsSane())
+        {
+          LOG.Debug("FE(INSANE)");
+        }
+        else
+        {
+          LOG.Debug("FE(%x) (SANE)",m_executingWindow.GetCenterAtom().GetType());
+        }
+
+
+        m_executingWindow.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+      },
+      {
+        elementTable.Execute(m_executingWindow);
+      });
+
+    // XXX INSANE SLOWDOWN FOR DEBUG: AssertValidAtomCounts();
+
+    m_lastExecutedAtom = m_executingWindow.GetCenterInTile();
+
+    dirWaitWord = SendRelevantAtoms();
+
+    SendEndEventPackets(dirWaitWord);
+
+    FlushAndWaitOnAllBuffers(dirWaitWord);
+
+
+    ++m_eventsExecuted;
+    ++m_regionEvents[RegionIn(m_executingWindow.GetCenterInTile())];
+
+    ++m_siteEvents[m_executingWindow.GetCenterInTile().GetX() - R]
+                  [m_executingWindow.GetCenterInTile().GetY() - R];
+
+    if(locked)
+    {
+      UnlockRegion(lockRegion);
+
+      switch(lockRegion)
+      {
+      case Dirs::NORTH: case Dirs::SOUTH:
+      case Dirs::EAST:  case Dirs::WEST:
+        ++m_regionEvents[LOCKTYPE_SINGLE]; break;
+      default: /* UnlockRegion would have caught a bad argument. */
+        ++m_regionEvents[LOCKTYPE_TRIPLE]; break;
+      }
+    }
+    else
+    {
+      ++m_regionEvents[LOCKTYPE_NONE];
+    }
   }
 
   template <class CC>
@@ -761,76 +825,33 @@ namespace MFM
 
       bool locked = false;
       Dir lockRegion = Dirs::NORTH;
-      u32 dirWaitWord = 0;
       if((!m_onlyWaitOnBuffers) &&
+         (!m_threadPauser.IsPauseRequested()) &&
          (
            IsInHidden(m_executingWindow.GetCenterInTile()) ||
            !IsConnected(lockRegion = VisibleAt(m_executingWindow.GetCenterInTile())) ||
            (locked = LockRegion(lockRegion))
            ))
       {
-        unwind_protect({
-            ++m_eventsFailed;
-            ++m_failuresErased;
-
-            if ((m_failuresErased % 100) == 0)
-            {
-              LOG.Debug("%d erasures tile %p", m_failuresErased, this);
-            }
-
-            if(!m_executingWindow.GetCenterAtom().IsSane())
-            {
-              LOG.Debug("FE(INSANE)");
-            }
-            else
-            {
-              LOG.Debug("FE(%x) (SANE)",m_executingWindow.GetCenterAtom().GetType());
-            }
-
-
-            m_executingWindow.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
-          },{
-            elementTable.Execute(m_executingWindow);
-          });
-
-        // XXX INSANE SLOWDOWN FOR DEBUG: AssertValidAtomCounts();
-
-        m_lastExecutedAtom = m_executingWindow.GetCenterInTile();
-
-        dirWaitWord = SendRelevantAtoms();
-
-        SendEndEventPackets(dirWaitWord);
-
-        FlushAndWaitOnAllBuffers(dirWaitWord);
-
-
-        ++m_eventsExecuted;
-        ++m_regionEvents[RegionIn(m_executingWindow.GetCenterInTile())];
-
-        ++m_siteEvents[m_executingWindow.GetCenterInTile().GetX() - R]
-          [m_executingWindow.GetCenterInTile().GetY() - R];
-
-        if(locked)
-        {
-          UnlockRegion(lockRegion);
-
-          switch(lockRegion)
-          {
-          case Dirs::NORTH: case Dirs::SOUTH:
-          case Dirs::EAST:  case Dirs::WEST:
-            ++m_regionEvents[LOCKTYPE_SINGLE]; break;
-          default: /* UnlockRegion would have caught a bad argument. */
-            ++m_regionEvents[LOCKTYPE_TRIPLE]; break;
-          }
-        }
-        else
-        {
-          ++m_regionEvents[LOCKTYPE_NONE];
-        }
+        DoEvent(locked, lockRegion);
       }
       else
       {
-        FlushAndWaitOnAllBuffers(dirWaitWord);
+        if(m_threadPauser.IsPauseRequested())
+        {
+          do
+          {
+            FlushAndWaitOnAllBuffers(0);
+            m_threadPauser.PauseReady();
+            pthread_yield();
+          } while(m_threadPauser.IsPauseReady());
+          FlushAndWaitOnAllBuffers(0);
+          m_threadPauser.WaitIfPaused();
+        }
+        else
+        {
+          FlushAndWaitOnAllBuffers(0);
+        }
       }
     }
   }
@@ -891,6 +912,18 @@ namespace MFM
   void Tile<CC>::Pause()
   {
     m_threadPauser.Pause();
+  }
+
+  template <class CC>
+  bool Tile<CC>::IsPauseReady()
+  {
+    return m_threadPauser.IsPauseReady();
+  }
+
+  template <class CC>
+  void Tile<CC>::PauseRequested()
+  {
+    m_threadPauser.RequestPause();
   }
 
   template <class CC>

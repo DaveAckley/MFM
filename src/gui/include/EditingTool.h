@@ -33,6 +33,7 @@ namespace MFM
   enum EditingTool
   {
     TOOL_SELECTOR,
+    TOOL_ATOM_SELECTOR,
     TOOL_PENCIL,
     TOOL_BUCKET,
     TOOL_ERASER,

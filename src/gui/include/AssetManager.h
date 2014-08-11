@@ -39,6 +39,7 @@ namespace MFM
   enum Asset
   {
     ASSET_SELECTOR_ICON = 0,
+    ASSET_ATOM_SELECTOR_ICON,
     ASSET_PENCIL_ICON,
     ASSET_ERASER_ICON,
     ASSET_BRUSH_ICON,
@@ -138,6 +139,7 @@ namespace MFM
       if(!initialized)
       {
         surfaces[ASSET_SELECTOR_ICON] = LoadImage("images/selector_icon.png");
+        surfaces[ASSET_ATOM_SELECTOR_ICON] = LoadImage("images/atom_selector_icon.png");
         surfaces[ASSET_PENCIL_ICON] = LoadImage("images/pencil_icon.png");
         surfaces[ASSET_ERASER_ICON] = LoadImage("images/eraser_icon.png");
         surfaces[ASSET_BRUSH_ICON] = LoadImage("images/brush_icon.png");
