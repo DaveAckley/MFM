@@ -839,10 +839,10 @@ namespace MFM
       {
         if(m_threadPauser.IsPauseRequested())
         {
+          m_threadPauser.PauseReady();
           do
           {
             FlushAndWaitOnAllBuffers(0);
-            m_threadPauser.PauseReady();
             pthread_yield();
           } while(m_threadPauser.IsPauseReady());
           FlushAndWaitOnAllBuffers(0);

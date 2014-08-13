@@ -7,7 +7,7 @@ namespace MFM {
   //DEPRECATED: typedef P1Atom<OurParamConfig> OurAtom;
   typedef P3Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
-  typedef GridConfig<OurCoreConfig,1,1> OurGridConfig;
+  typedef GridConfig<OurCoreConfig,2,1> OurGridConfig;
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
   struct MFMSimDHSDemo : public AbstractGUIDriver<OurGridConfig>
   {

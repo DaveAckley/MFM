@@ -1,4 +1,5 @@
 #include "ThreadPauser.h"
+#include "Logger.h"
 
 namespace MFM
 {
@@ -111,6 +112,11 @@ namespace MFM
   {
     pthread_mutex_lock(&m_lock);
     {
+
+      if(m_threadState != THREADSTATE_PAUSED)
+      {
+        LOG.Error("Unpausing an unpaused threadpauser!");
+      }
       m_threadState = THREADSTATE_RUNNING;
       pthread_cond_signal(&m_pauseCond);
     }
