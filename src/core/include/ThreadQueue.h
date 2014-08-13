@@ -65,7 +65,7 @@ namespace MFM
      *
      * @sa Write
      */
-    u32 m_writeHead,
+    u32 m_writeHead;
 
     /**
      * The location within m_queueData which the next byte asked for
@@ -73,13 +73,13 @@ namespace MFM
      *
      * @sa Read
      */
-        m_readHead,
+    u32 m_readHead;
 
     /**
      * The number of bytes currently available to be read from
      * m_queueData.
      */
-        m_heldBytes;
+    u32 m_heldBytes;
 
     /**
      * Reads a specified number of bytes from this ThreadQueue into a
@@ -167,7 +167,7 @@ namespace MFM
      * @returns The number of bytes ready to be read from the
      *          underlying queue.
      */
-    u32 BytesAvailable();
+    u32 BytesAvailable() ;
 
     /**
      * Erases all held data within this TheadQueue. This should only

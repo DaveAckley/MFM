@@ -99,7 +99,7 @@ namespace MFM
 
     template <class CC>
     void RenderTile(Drawing & drawing, Tile<CC>& t, SPoint& loc, bool renderWindow,
-                    bool renderCache, bool selected);
+                    bool renderCache, bool selected, SPoint* selectedAtom);
 
     void SetDimensions(Point<u32> dimensions)
     {

@@ -211,6 +211,16 @@ namespace MFM
     bool m_threadInitialized;
 
     /**
+     * Returns true if this Tile is paused, or if the accessing thread
+     * is this Tile's owner.
+     */
+    bool IsPausedOrOwner()
+    {
+      return m_threadPauser.IsPaused() || pthread_equal(pthread_self(), m_thread);
+    }
+
+#if 0
+    /**
      * Tells whether or not m_thread should be blocking and waiting to
      * be unpaused.
      *
@@ -218,6 +228,7 @@ namespace MFM
      * @sa Start
      */
     bool m_threadPaused;
+#endif
 
     /**
      * A flag which describes how a Tile should be executing. If \c
@@ -369,6 +380,8 @@ namespace MFM
      * @sa LockCorner
      */
     void UnlockCorner(Dir corner);
+
+    void UnlockDir(Dir dir) ;
 
     /**
      * Unlocks an edge of this Tile. This takes into account the fact
@@ -548,6 +561,8 @@ namespace MFM
      * @returns true if this Tile has a neighbor in direction dir, else false.
      */
     inline bool IsConnected(Dir dir) const;
+
+    bool HasAnyConnections(Dir regionDir) const;
 
     /**
      * Checks to see if a specified local point is contained within a
@@ -883,6 +898,11 @@ namespace MFM
      *                    waited on for Packet communication.
      */
     void FlushAndWaitOnAllBuffers(u32 dirWaitWord);
+
+    /**
+     * Return true if all connected input buffers are empty.
+     */
+    bool AllBuffersAreEmpty() ;
 
     /**
      * Used to tell this Tile whether or not to actually execute any

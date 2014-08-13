@@ -44,13 +44,22 @@ namespace MFM
 
   class GridRenderer
   {
-  private:
+   private:
 
     TileRenderer m_tileRenderer;
 
     UPoint m_dimensions;
 
     SPoint m_selectedTile;
+
+    /**
+     * The coordinates, ignoring all caches, of the Atom that is
+     * selected. Therefore, (0, 0) is the top-left tile's top-left
+     * shared atom and (0, TILE_WIDTH) is the tile at (0, 1)'s
+     * top-left shared atom. If either coordinate is negative, treat
+     * as if no Atom is selected.
+     */
+    SPoint m_selectedAtom;
 
     static const EventWindowRenderMode m_defaultRenderMode =
       EVENTWINDOW_RENDER_OFF;
@@ -61,7 +70,7 @@ namespace MFM
 
     EventWindowRenderMode m_currentEWRenderMode;
 
-  public:
+   public:
 
     GridRenderer(TileRenderer* tr);
 
@@ -117,13 +126,20 @@ namespace MFM
 
     void DeselectTile();
 
+    void DeselectAtom();
+
     SPoint GetSelectedTile() const;
+
+    SPoint GetSelectedAtom() const;
 
     template <class GC>
     void RenderGrid(Drawing & drawing, Grid<GC>& grid);
 
     template <class GC>
-    void SelectTile(Grid<GC>& grid, SPoint& clickPt);
+    void SelectTile(Grid<GC>& grid, SPoint clickPt);
+
+    template <class GC>
+    void SelectAtom(Grid<GC>& grid, SPoint clickPt);
 
   };
 } /* namespace MFM */

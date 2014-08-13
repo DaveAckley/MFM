@@ -231,8 +231,8 @@ namespace MFM
       return ((u8) (m_generation - ourGeneration)) >= U8_MAX / 2;
     }
 
-
   };
+
 } /* namespace MFM */
 
 #endif /*PACKET_H*/

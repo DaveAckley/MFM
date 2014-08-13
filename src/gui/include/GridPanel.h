@@ -127,6 +127,13 @@ namespace MFM
       m_grend->SelectTile(*m_mainGrid, pt);
     }
 
+    void HandleAtomSelectorTool(MouseButtonEvent& mbe)
+    {
+      HandleAtomSelectorTool(mbe.m_event.button.button,
+                             SPoint(mbe.m_event.button.x,
+                                    mbe.m_event.button.y));
+    }
+
     void HandlePencilTool(MouseButtonEvent& mbe)
     {
       HandlePencilTool(mbe.m_event.button.button,
@@ -160,6 +167,15 @@ namespace MFM
       HandleXRayTool(mbe.m_event.button.button,
                      SPoint(mbe.m_event.button.x,
                             mbe.m_event.button.y));
+    }
+
+    void HandleAtomSelectorTool(u8 button, SPoint clickPt)
+    {
+      SPoint pt = GetAbsoluteLocation();
+      pt.Set(clickPt.GetX() - pt.GetX(),
+             clickPt.GetY() - pt.GetY());
+
+      m_grend->SelectAtom(*m_mainGrid, pt);
     }
 
     void HandlePencilTool(u8 button, SPoint clickPt)
@@ -326,6 +342,9 @@ namespace MFM
             case TOOL_SELECTOR:
               HandleSelectorTool(mbe);
               break;
+            case TOOL_ATOM_SELECTOR:
+              HandleAtomSelectorTool(mbe);
+              break;
             case TOOL_PENCIL:
               HandlePencilTool(mbe);
               break;
@@ -399,6 +418,9 @@ namespace MFM
             break;
           case TOOL_XRAY:
             HandleXRayTool(mask, SPoint(event.x, event.y));
+            break;
+          case TOOL_ATOM_SELECTOR:
+            HandleAtomSelectorTool(mask, SPoint(event.x, event.y));
             break;
 
           default:

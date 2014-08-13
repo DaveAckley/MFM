@@ -9,6 +9,7 @@ namespace MFM
   typedef ParamConfig<64,4,8,40> OurParamConfig;
   typedef P3Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom, OurParamConfig> OurCoreConfig;
+  //  typedef GridConfig<OurCoreConfig, 5, 3> OurGridConfig;
   typedef GridConfig<OurCoreConfig, 5, 3> OurGridConfig;
 
 #ifdef MFM_GUI_DRIVER
@@ -38,6 +39,7 @@ namespace MFM
       NeedElement(&Element_AntiForkBomb<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_MQBar<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Mover<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Indexed<OurCoreConfig>::THE_INSTANCE);
 
 #ifdef MFM_GUI_DRIVER
       {

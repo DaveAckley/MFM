@@ -28,6 +28,7 @@
 #define UTILS_H
 
 #include <stdlib.h>
+#include <time.h>  /* for nanosleep */
 #include "itype.h"
 
 namespace MFM
@@ -48,6 +49,7 @@ namespace MFM
        file) if length is too short.
     */
     bool GetReadableResourceFile(const char * relativePath, char * result, u32 length) ;
+
   }
 }
 

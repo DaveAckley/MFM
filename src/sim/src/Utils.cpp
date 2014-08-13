@@ -1,6 +1,5 @@
 #include "Utils.h"
 #include "Fail.h"
-#include <time.h>
 #include <stdlib.h>
 
 namespace MFM {

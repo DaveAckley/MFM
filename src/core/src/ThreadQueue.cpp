@@ -103,7 +103,11 @@ namespace MFM
 
   u32 ThreadQueue::BytesAvailable()
   {
-    return m_heldBytes;
+    u32 ret;
+    pthread_mutex_lock(&m_lock);
+    ret = m_heldBytes;
+    pthread_mutex_unlock(&m_lock);
+    return ret;
   }
 
   void ThreadQueue::Flush()

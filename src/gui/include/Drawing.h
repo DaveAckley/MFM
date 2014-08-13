@@ -158,14 +158,16 @@ namespace MFM {
     /**
        Get the current background color.
      */
-    u32 GetBackground() const {
+    u32 GetBackground() const
+    {
       return m_bgColor;
     }
 
     /**
        Set the background color.  Returns prior value
      */
-    u32 SetBackground(const u32 color) {
+    u32 SetBackground(const u32 color)
+    {
       u32 old = m_bgColor;
       m_bgColor = color;
       return old;
@@ -174,14 +176,16 @@ namespace MFM {
     /**
        Get the current foreground color.
      */
-    u32 GetForeground() const {
+    u32 GetForeground() const
+    {
       return m_fgColor;
     }
 
     /**
        Set the foreground color.  Returns prior value
      */
-    u32 SetForeground(const u32 color) {
+    u32 SetForeground(const u32 color)
+    {
       u32 old = m_fgColor;
       m_fgColor = color;
       return old;
@@ -191,7 +195,8 @@ namespace MFM {
        Get the current font.  May return null.  Text operations will
        fail ILLEGAL_STATE if attempted with a null font.
      */
-    TTF_Font* GetFont() const {
+    TTF_Font* GetFont() const
+    {
       return m_font;
     }
 
@@ -200,7 +205,8 @@ namespace MFM {
        current font.  Text operations will fail ILLEGAL_STATE if
        attempted with a null font.  Returns prior value.
      */
-    TTF_Font* SetFont(TTF_Font * newFont) {
+    TTF_Font* SetFont(TTF_Font * newFont)
+    {
       TTF_Font* old = m_font;
       m_font = newFont;
       return old;

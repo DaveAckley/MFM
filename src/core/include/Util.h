@@ -233,6 +233,22 @@ namespace MFM {
    * @param output The char buffer to output the encoded number to.
    */
   extern void IntLexEncode(u32 num, char* output);
+
+  /**
+   * Pauses the calling thread for a specified amount of time, using
+   * (nominally) nanosecond precision.  (The actual granularity is
+   * determined by the operating system and is usually in the
+   * hundreds of nanos at least.)  The calling thread sleeps for the
+   * number of seconds plus the number of nanoseconds specified.
+   *
+   * @param seconds The number of seconds that the calling thread
+   *                should sleep for.
+   *
+   * @param nanos The number of nanoseconds that the calling thread
+   *              should sleep for.
+   */
+  extern void Sleep(u32 seconds, u64 nanos) ;
+
 }
 
 #endif /* UTIL_H */

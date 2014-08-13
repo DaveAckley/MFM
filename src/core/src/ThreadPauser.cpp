@@ -1,5 +1,5 @@
 #include "ThreadPauser.h"
-#include "Logger.h"
+#include <assert.h>      /* For assert */
 
 namespace MFM
 {
@@ -9,7 +9,7 @@ namespace MFM
     pthread_cond_init(&m_pauseCond, NULL);
     pthread_cond_init(&m_joinCond, NULL);
 
-    m_threadState = THREADSTATE_RUNNING;
+    m_threadState = THREADSTATE_PAUSED;  // Able to be configured; ready for an initial unpause
   }
 
   ThreadPauser::~ThreadPauser()
@@ -59,6 +59,7 @@ namespace MFM
   {
     pthread_mutex_lock(&m_lock);
     {
+      assert(m_threadState == THREADSTATE_PAUSE_REQUESTED);
       m_threadState = THREADSTATE_PAUSE_READY;
     }
     pthread_mutex_unlock(&m_lock);
@@ -68,6 +69,7 @@ namespace MFM
   {
     pthread_mutex_lock(&m_lock);
     {
+      assert(m_threadState == THREADSTATE_RUNNING);
       m_threadState = THREADSTATE_PAUSE_REQUESTED;
     }
     pthread_mutex_unlock(&m_lock);
@@ -89,20 +91,11 @@ namespace MFM
     }
   }
 
-  void ThreadPauser::PauseBlocking()
-  {
-    pthread_mutex_lock(&m_lock);
-    {
-      m_threadState = THREADSTATE_PAUSED;
-      pthread_cond_wait(&m_joinCond, &m_lock);
-    }
-    pthread_mutex_unlock(&m_lock);
-  }
-
   void ThreadPauser::Pause()
   {
     pthread_mutex_lock(&m_lock);
     {
+      assert(m_threadState == THREADSTATE_PAUSE_READY);
       m_threadState = THREADSTATE_PAUSED;
     }
     pthread_mutex_unlock(&m_lock);
@@ -112,11 +105,7 @@ namespace MFM
   {
     pthread_mutex_lock(&m_lock);
     {
-
-      if(m_threadState != THREADSTATE_PAUSED)
-      {
-        LOG.Error("Unpausing an unpaused threadpauser!");
-      }
+      assert(m_threadState == THREADSTATE_PAUSED);
       m_threadState = THREADSTATE_RUNNING;
       pthread_cond_signal(&m_pauseCond);
     }

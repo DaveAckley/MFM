@@ -1,4 +1,5 @@
 #include "Util.h"
+#include <time.h>  /* For nanosleep */
 
 namespace MFM
 {
@@ -32,5 +33,14 @@ namespace MFM
 	num /= 26;
       }
     }
+  }
+
+  void Sleep(u32 seconds, u64 nanos)
+  {
+    struct timespec tspec;
+    tspec.tv_sec = seconds;
+    tspec.tv_nsec = nanos;
+
+    nanosleep(&tspec, NULL);
   }
 }
