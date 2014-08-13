@@ -119,12 +119,13 @@ namespace MFM
     void WaitIfPaused();
 
     /**
-     * To be called by the controlling thread. This returns immediately
-     * and pauses the looping thread.
+     * To be called by the controlling thread. ThreadPauser must be in
+     * state THREADSTATE_PAUSE_READY. This returns immediately and
+     * pauses the looping thread.
      */
     void Pause();
 
-    void PauseBlocking();
+    //void PauseBlocking();
 
     /**
      * To be called by the controlling thread. This wakes up the looping

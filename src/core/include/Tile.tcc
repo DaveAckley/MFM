@@ -4,7 +4,7 @@
 #include "Logger.h"
 #include "AtomSerializer.h"
 #include "Util.h"
-#include <time.h>
+//#include <time.h>
 
 namespace MFM
 {
@@ -70,7 +70,7 @@ namespace MFM
 
     m_needRecount = false;
     m_threadInitialized = false;
-    m_threadPaused = false;
+    //    m_threadPaused = false;
   }
 
   /* Definitely not thread safe. Make sure to pause and join this Tile
@@ -78,6 +78,8 @@ namespace MFM
   template <class CC>
   void Tile<CC>::ClearAtoms()
   {
+
+    assert(IsPausedOrOwner());
 
     m_illegalAtomCount = 0;
 
@@ -97,6 +99,8 @@ namespace MFM
   template <class CC>
   void Tile<CC>::CheckCacheFromDir(Dir direction, const Tile & otherTile)
   {
+    assert(IsPausedOrOwner());
+
     for(u32 x = 0; x < TILE_WIDTH; x++)
     {
       for(u32 y = 0; y < TILE_WIDTH; y++)
@@ -191,7 +195,12 @@ namespace MFM
   template <class CC>
   void Tile<CC>::ReceivePacket(Packet<T>& packet)
   {
-    bool isObsolete = packet.IsObsolete(m_generation);
+    //bool isObsolete = packet.IsObsolete(m_generation);
+    bool isObsolete = packet.GetGeneration() != m_generation;
+    if (isObsolete)
+    {
+      LOG.Debug("Received obsolete packet in %d", m_generation);
+    }
 
     switch(packet.GetType())
     {
@@ -495,7 +504,7 @@ namespace MFM
 
     u32 dirBitfield = 0;
 
-    s32 r2 = R * 2;
+    const s32 r2 = R * 2;
     ewCenter = m_executingWindow.GetCenterInTile();
 
     for(u32 i = 0; i < m_executingWindow.GetAtomCount(); i++)
@@ -560,8 +569,10 @@ namespace MFM
   template <class CC>
   bool Tile<CC>::TryLock(Dir connectionDir)
   {
-    return IsConnected(connectionDir) &&
-      m_connections[connectionDir]->Lock();
+    return
+      (IsConnected(connectionDir) &&
+       m_connections[connectionDir]->Lock())
+      || !IsConnected(connectionDir);
   }
 
   template <class CC>
@@ -584,12 +595,38 @@ namespace MFM
         for(u32 j = 0; j < locked; j++)
         {
           cornerDir = Dirs::CCWDir(cornerDir);
-          m_connections[cornerDir]->Unlock();
+
+          UnlockDir(cornerDir);
         }
         return false;
       }
     }
     return true;
+  }
+
+  template <class CC>
+  bool Tile<CC>::HasAnyConnections(Dir regionDir) const
+  {
+    switch(regionDir)
+    {
+    case Dirs::NORTH:
+    case Dirs::EAST:
+    case Dirs::SOUTH:
+    case Dirs::WEST:
+      return IsConnected(regionDir);
+
+    case Dirs::NORTHWEST:
+    case Dirs::NORTHEAST:
+    case Dirs::SOUTHEAST:
+    case Dirs::SOUTHWEST:
+      if (IsConnected(regionDir)) return true;
+      if (IsConnected(Dirs::CCWDir(regionDir))) return true;
+      if (IsConnected(Dirs::CWDir(regionDir))) return true;
+      return false;
+
+    default:
+      FAIL(ILLEGAL_ARGUMENT);
+    }
   }
 
   template <class CC>
@@ -639,8 +676,17 @@ namespace MFM
     corner = Dirs::CCWDir(corner);
     for(u32 i = 0; i < 3; i++)
     {
-      m_connections[corner]->Unlock();
+      UnlockDir(corner);
       corner = Dirs::CWDir(corner);
+    }
+  }
+
+  template <class CC>
+  void Tile<CC>::UnlockDir(Dir dir)
+  {
+    if (IsConnected(dir))
+    {
+      m_connections[dir]->Unlock();
     }
   }
 
@@ -653,7 +699,7 @@ namespace MFM
     case Dirs::EAST:
     case Dirs::SOUTH:
     case Dirs::WEST:
-      m_connections[regionDir]->Unlock();
+      UnlockDir(regionDir);
       return;
 
     case Dirs::NORTHWEST:
@@ -713,6 +759,26 @@ namespace MFM
   }
 
   template <class CC>
+  bool Tile<CC>::AllBuffersAreEmpty()
+  {
+    for(Dir dir = Dirs::NORTH; dir < Dirs::DIR_COUNT; ++dir)
+    {
+      if(IsConnected(dir))
+      {
+        if (m_connections[dir]->InputByteCount() != 0)
+        {
+          return false;
+        }
+        if (m_connections[dir]->OutputByteCount() != 0)
+        {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  template <class CC>
   void Tile<CC>::FlushAndWaitOnAllBuffers(u32 dirWaitWord)
   {
     Packet<T> readPack(PACKET_WRITE, m_generation);
@@ -735,8 +801,11 @@ namespace MFM
             {
               if(readPack.GetType() == PACKET_EVENT_ACKNOWLEDGE)
               {
-                /* FAIL(ILLEGAL_STATE);  Didn't get an acknowledgment right away */
                 dirWaitWord &= (~(1 << dir));
+              }
+              else
+              {
+                FAIL(ILLEGAL_STATE);  /* Didn't get an acknowledgment right away */
               }
             }
             ReceivePacket(readPack);
@@ -745,6 +814,7 @@ namespace MFM
         /* Have we waited long enough without a response? Let's disconnect that tile. */
 
       }
+      Sleep(0,100);
     } while(dirWaitWord);
   }
 
@@ -829,7 +899,7 @@ namespace MFM
          (!m_threadPauser.IsPauseRequested()) &&
          (
            IsInHidden(m_executingWindow.GetCenterInTile()) ||
-           !IsConnected(lockRegion = VisibleAt(m_executingWindow.GetCenterInTile())) ||
+           !HasAnyConnections(lockRegion = VisibleAt(m_executingWindow.GetCenterInTile())) ||
            (locked = LockRegion(lockRegion))
            ))
       {
@@ -839,13 +909,14 @@ namespace MFM
       {
         if(m_threadPauser.IsPauseRequested())
         {
+          m_threadPauser.PauseReady();
           do
           {
             FlushAndWaitOnAllBuffers(0);
-            m_threadPauser.PauseReady();
-            pthread_yield();
+            Sleep(0,100); // pthread_yield();
           } while(m_threadPauser.IsPauseReady());
           FlushAndWaitOnAllBuffers(0);
+          assert(AllBuffersAreEmpty());
           m_threadPauser.WaitIfPaused();
         }
         else
@@ -900,12 +971,11 @@ namespace MFM
       //      AssertValidAtomCounts();
       RecountAtoms();
       m_threadInitialized = true;
-      pthread_create(&m_thread, NULL, ExecuteThreadHelper, this);
+      if (pthread_create(&m_thread, NULL, ExecuteThreadHelper, this))
+        FAIL(ILLEGAL_STATE);
     }
-    else
-    {
-      m_threadPauser.Unpause();
-    }
+
+    m_threadPauser.Unpause();
   }
 
   template <class CC>

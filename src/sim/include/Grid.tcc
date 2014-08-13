@@ -1,6 +1,7 @@
 /* -*- C++ -*- */
 #include "Dirs.h"
 #include "Grid.h"
+#include "Utils.h"   /* For Sleep */
 #include "FileByteSink.h"
 
 #define XRAY_BIT_ODDS 100
@@ -232,16 +233,27 @@ namespace MFM {
         GetTile(x, y).PauseRequested();
       }
     }
-    for(u32 x = 0; x < W; x++)
-    {
-      for(u32 y = 0; y < H; y++)
+    bool allReady = false;
+    u32 loops = 0;
+    while (!allReady) {
+      allReady = true;
+      ++loops;
+      for(u32 x = 0; x < W; x++)
       {
-        while(!GetTile(x, y).IsPauseReady())
+        for(u32 y = 0; y < H; y++)
         {
-          pthread_yield();
+          if(!GetTile(x, y).IsPauseReady())
+          {
+            allReady = false;
+            //            pthread_yield();
+          }
         }
       }
+      Sleep(0,1);
     }
+    if (loops > 0)
+      LOG.Warning("Pause looped %d times", loops);
+
     for(u32 x = 0; x < W; x++)
     {
       for(u32 y = 0; y < H; y++)

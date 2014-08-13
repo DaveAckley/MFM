@@ -32,7 +32,7 @@
 #include <sys/time.h>  /* for gettimeofday */
 #include <sys/types.h> /* for mkdir */
 #include <errno.h>     /* for errno */
-#include "Utils.h"     /* for GetDateTimeNow */
+#include "Utils.h"     /* for GetDateTimeNow, Sleep */
 #include "ExternalConfig.h"
 #include "ExternalConfigFunctions.h"
 #include "FileByteSource.h"
@@ -151,27 +151,6 @@ namespace MFM
       }
 
       m_neededElements[m_neededElementCount++] = element;
-    }
-
-    /**
-     * Pauses the calling thread for a specified amount of time, using
-     * (apparently) nanosecond percision. The calling thread sleeps
-     * for the number of seconds plus the number of nanoseconds
-     * specified.
-     *
-     * @param seconds The number of seconds that the calling thread
-     *                should sleep for.
-     *
-     * @param nanos The number of nanoseconds that the calling thread
-     *              should sleep for.
-     */
-    void Sleep(u32 seconds, u64 nanos)
-    {
-      struct timespec tspec;
-      tspec.tv_sec = seconds;
-      tspec.tv_nsec = nanos;
-
-      nanosleep(&tspec, NULL);
     }
 
     /**
@@ -691,6 +670,7 @@ namespace MFM
       m_msSpentRunning(0),
       m_msSpentOverhead(0),
       m_microsSleepPerFrame(50000),
+      m_overheadPercent(0.0),
       m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
       m_AEPSPerEpoch(500),
       m_gridImages(false),

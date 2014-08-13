@@ -29,6 +29,7 @@
 
 #include "ThreadQueue.h"
 #include "itype.h"
+#include <assert.h>
 
 namespace MFM
 {
@@ -46,6 +47,11 @@ namespace MFM
      * Connection .
      */
     pthread_mutex_t m_lock;
+
+    /**
+     * If the lock is held, the pthread id of the thread holding it.
+     */
+    pthread_t m_threadId;
 
     /**
      * The two ThreadQueue constructs used for two way IO .
@@ -110,7 +116,12 @@ namespace MFM
      */
     bool Lock()
     {
-      return !pthread_mutex_trylock(&m_lock);
+      bool ret = !pthread_mutex_trylock(&m_lock);
+      if (ret)
+      {
+        m_threadId = pthread_self();
+      }
+      return ret;
     }
 
     /**
@@ -120,6 +131,7 @@ namespace MFM
      */
     void Unlock()
     {
+      assert(pthread_equal(m_threadId, pthread_self()));
       pthread_mutex_unlock(&m_lock);
     }
 
@@ -185,6 +197,24 @@ namespace MFM
       ThreadQueue& queue = !child ? m_outbuffer : m_inbuffer;
 
       queue.Write(buffer, length);
+    }
+
+    /**
+     * Number of bytes currently in the input buffer of this
+     * connection.
+     */
+    u32 InputByteCount()
+    {
+      return m_inbuffer.BytesAvailable();
+    }
+
+    /**
+     * Number of bytes currently in the output buffer of this
+     * connection.
+     */
+    u32 OutputByteCount()
+    {
+      return m_outbuffer.BytesAvailable();
     }
 
   };

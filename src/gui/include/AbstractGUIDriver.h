@@ -912,6 +912,7 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
         SetBackground(Drawing::DARK_PURPLE);
         m_AEPS = m_AER = 0.0;
         m_aepsPerFrame = 0;
+        m_overheadPercent = 0.0;
       }
 
       void SetStatsRenderer(StatsRenderer<GC>* srend)
