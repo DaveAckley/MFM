@@ -813,7 +813,7 @@ namespace MFM
         /* Have we waited long enough without a response? Let's disconnect that tile. */
 
       }
-      Sleep(0,100);
+      pthread_yield();
     } while(dirWaitWord);
   }
 
@@ -912,10 +912,11 @@ namespace MFM
           do
           {
             FlushAndWaitOnAllBuffers(0);
-            Sleep(0,100); // pthread_yield();
+            pthread_yield();
           } while(m_threadPauser.IsPauseReady());
           FlushAndWaitOnAllBuffers(0);
-          assert(AllBuffersAreEmpty());
+          if (!AllBuffersAreEmpty())
+            LOG.Warning("NON-EMPTY BUFFERS IN %p", (void*) this);
           m_threadPauser.WaitIfPaused();
         }
         else
