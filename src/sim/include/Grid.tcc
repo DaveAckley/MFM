@@ -249,10 +249,10 @@ namespace MFM {
           }
         }
       }
-      Sleep(0,1);
+      Sleep(0,100000);
     }
-    if (loops > 0)
-      LOG.Warning("Pause looped %d times", loops);
+    if (loops > 100)
+      LOG.Debug("Pause looped %d times", loops);
 
     for(u32 x = 0; x < W; x++)
     {
