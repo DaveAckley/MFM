@@ -337,7 +337,7 @@ namespace MFM
       virtual void OnClick(u8 button)
       {
         const char* filename =
-          AbstractGridButton::m_driver->GetSimDirPathTemporary("save/%d.mfs",
+          AbstractGridButton::m_driver->GetSimDirPathTemporary("save/%D.mfs",
                                                                m_saveStateIndex++);
 
         LOG.Debug("Saving to: %s", filename);
@@ -596,6 +596,13 @@ namespace MFM
           m_keyboardPaused = true;
           m_singleStep = false;
         }
+      }
+      else
+      {
+        const s32 ONE_THOUSAND = 1000;
+        const s32 ONE_MILLION = ONE_THOUSAND*ONE_THOUSAND;
+
+        Sleep(0,33*ONE_MILLION); // 33 ms ~= 30 fps idle
       }
     }
 
