@@ -43,7 +43,7 @@ namespace MFM
 
     Grid<GC>* m_grid;
 
-    static const u32 ATOM_DRAW_SIZE = 16;
+    static const u32 ATOM_DRAW_SIZE = 40;
 
    public:
     AtomViewPanel() :
@@ -71,7 +71,11 @@ namespace MFM
         const Element<CC>* element = m_grid->LookupElement(m_atom->GetType());
         d.SetForeground(element->DefaultPhysicsColor());
         d.FillCircle(2, 2, ATOM_DRAW_SIZE, ATOM_DRAW_SIZE, ATOM_DRAW_SIZE >> 1);
-        d.SetFont(AssetManager::Get(FONT_ASSET_HELPPANEL_SMALL));
+        d.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
+        d.SetForeground(Drawing::WHITE);
+        d.SetBackground(Drawing::BLACK);
+        d.BlitBackedTextCentered(element->GetAtomicSymbol(), UPoint(8, 8),
+                                 MakeUnsigned(d.GetTextSize("12"))); /* Monospaced font! */
       }
     }
 
