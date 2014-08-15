@@ -67,6 +67,7 @@ namespace MFM
     Element_Sorter() : Element<CC>(MFM_UUID_FOR("Sorter", SORTER_VERSION))
     {
       Element<CC>::SetAtomicSymbol("Sr");
+      Element<CC>::SetName("Sorter");
     }
 
     u32 GetThreshold(const T &atom, u32 badType) const

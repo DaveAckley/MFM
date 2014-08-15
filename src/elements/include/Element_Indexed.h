@@ -63,10 +63,11 @@ namespace MFM
     Element_Indexed() : Element<CC>(MFM_UUID_FOR("Indexed", ELT_VERSION))
     {
       Element<CC>::SetAtomicSymbol("Ix");
+      Element<CC>::SetName("Indexed");
     }
 
     virtual u32 PercentMovable(const T& you,
-			       const T& me, const SPoint& offset) const
+                               const T& me, const SPoint& offset) const
     {
       return 100;
     }

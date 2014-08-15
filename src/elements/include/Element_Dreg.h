@@ -68,6 +68,7 @@ namespace MFM
     Element_Dreg() : Element<CC>(MFM_UUID_FOR("Dreg", DREG_VERSION))
     {
       Element<CC>::SetAtomicSymbol("Dr");
+      Element<CC>::SetName("Dreg");
     }
 
     virtual u32 PercentMovable(const T& you,

@@ -50,8 +50,7 @@ namespace MFM
       Panel(300, 100),
       m_atom(NULL),
       m_grid(NULL)
-    {
-    }
+    { }
 
     virtual void PaintComponent(Drawing& d)
     {
@@ -76,6 +75,9 @@ namespace MFM
         d.SetBackground(Drawing::BLACK);
         d.BlitBackedTextCentered(element->GetAtomicSymbol(), UPoint(8, 8),
                                  MakeUnsigned(d.GetTextSize("12"))); /* Monospaced font! */
+
+        d.BlitBackedText(element->GetName(), UPoint(4 + ATOM_DRAW_SIZE, 2),
+                         MakeUnsigned(d.GetTextSize(element->GetName())));
       }
     }
 

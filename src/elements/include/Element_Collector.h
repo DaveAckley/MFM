@@ -44,6 +44,7 @@ namespace MFM
     Element_Collector() : Element<CC>(MFM_UUID_FOR("PileMaker", COLLECTOR_VERSION))
     {
       Element<CC>::SetAtomicSymbol("Pm");
+      Element<CC>::SetName("Collector (PileMaker)");
     }
 
     virtual const T & GetDefaultAtom() const

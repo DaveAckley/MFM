@@ -81,6 +81,7 @@ namespace MFM
       m_minDensity = 1;
       m_maxDensity = 3;
       Element<CC>::SetAtomicSymbol("Af");
+      Element<CC>::SetName("Anti-Fork Bomb");
     }
 
     virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const

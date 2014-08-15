@@ -78,13 +78,15 @@ namespace MFM
     }
 
     static Element_Shark THE_INSTANCE;
-    static const u32 TYPE() {
+    static const u32 TYPE()
+    {
       return THE_INSTANCE.GetType();
     }
 
     Element_Shark() : AbstractElement_WaPat<CC>(MFM_UUID_FOR("Shark", ELEMENT_VERSION))
     {
       Element<CC>::SetAtomicSymbol("Sh");
+      Element<CC>::SetName("Shark");
 
     }
 

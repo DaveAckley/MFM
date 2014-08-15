@@ -50,13 +50,15 @@ namespace MFM
     };
 
     static Element_Block THE_INSTANCE;
-    static const u32 TYPE() {
+    static const u32 TYPE()
+    {
       return THE_INSTANCE.GetType();
     }
 
     Element_Block() : Element<CC>(MFM_UUID_FOR("Block", BLOCK_VERSION))
     {
       Element<CC>::SetAtomicSymbol("B");
+      Element<CC>::SetName("Block");
     }
 
     virtual const T & GetDefaultAtom() const

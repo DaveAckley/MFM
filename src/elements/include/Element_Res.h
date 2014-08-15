@@ -60,10 +60,11 @@ namespace MFM
     Element_Res() : Element<CC>(MFM_UUID_FOR("Res", RES_VERSION))
     {
       Element<CC>::SetAtomicSymbol("R");
+      Element<CC>::SetName("Res");
     }
 
     virtual u32 PercentMovable(const T& you,
-			       const T& me, const SPoint& offset) const
+                               const T& me, const SPoint& offset) const
     {
       return 100;
     }

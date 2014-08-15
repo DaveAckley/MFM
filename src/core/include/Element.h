@@ -87,6 +87,11 @@ namespace MFM
      */
     const char* m_atomicSymbol;
 
+    /**
+     * The English name of this Element.
+     */
+    const char* m_name;
+
    protected:
 
     /**
@@ -175,6 +180,17 @@ namespace MFM
     }
 
     /**
+     * Sets the English name of this Element which is used for
+     * inspection purposes.
+     *
+     * @param name The new English name of this Element .
+     */
+    void SetName(const char* name)
+    {
+      m_name = name;
+    }
+
+    /**
      * The four Von Neumann neighbors, represented as four unit
      * vectors in the four cardinal directions.
      */
@@ -258,7 +274,8 @@ namespace MFM
     Element(const UUID & uuid) : m_UUID(uuid), m_type(0),
                                  m_hasType(false),
                                  m_renderLowlight(false),
-                                 m_atomicSymbol("!!")
+                                 m_atomicSymbol("!!"),
+                                 m_name("UNNAMED")
     {
       LOG.Debug("Constructed %@",&m_UUID);
     }
@@ -311,11 +328,22 @@ namespace MFM
      * Gets the Atomic Symbol of this Element . If this has not been
      * set, the default Atomic Symbol is the invalid symbol "!!" .
      *
-     * @returns The Atomic Symbol of this Element.
+     * @returns The Atomic Symbol of this Element .
      */
     const char* GetAtomicSymbol() const
     {
       return m_atomicSymbol;
+    }
+
+    /**
+     * Gets the English name of this Element , which is normally used
+     * for display purposes. The default is the string "UNNAMED" .
+     *
+     * @returns The English name of this Element .
+     */
+    const char* GetName() const
+    {
+      return m_name;
     }
 
     /**

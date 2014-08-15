@@ -64,6 +64,7 @@ namespace MFM
     Element_Fish() : AbstractElement_WaPat<CC>(MFM_UUID_FOR("Fish", ELEMENT_VERSION))
     {
       Element<CC>::SetAtomicSymbol("Fi");
+      Element<CC>::SetName("Fish");
     }
 
     s32* GetFishBirthAgePtr()

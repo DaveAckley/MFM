@@ -125,6 +125,7 @@ namespace MFM
       LOG.Message("%@ ctor %p", &this->GetUUID(), this);
 
       Element<CC>::SetAtomicSymbol("Mq");
+      Element<CC>::SetName("MQBar");
     }
 
     u32 GetSymI(const T &atom) const {

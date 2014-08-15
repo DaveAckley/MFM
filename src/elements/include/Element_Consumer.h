@@ -71,6 +71,7 @@ namespace MFM
       : AbstractElement_Reprovert<CC>(MFM_UUID_FOR("Consumer",1))
     {
       Element<CC>::SetAtomicSymbol("Cn");
+      Element<CC>::SetName("Consumer");
     }
 
     u64 GetAndResetDatumsConsumed(Tile<CC> & t) const

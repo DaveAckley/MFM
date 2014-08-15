@@ -51,6 +51,7 @@ namespace MFM
     {
       Element<CC>::AllocateType(); // For empty only, allocate type immediately
       Element<CC>::SetAtomicSymbol("E");
+      Element<CC>::SetName("Empty");
     }
 
     virtual u32 PercentMovable(const T& you,

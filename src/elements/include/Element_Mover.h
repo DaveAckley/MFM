@@ -45,13 +45,15 @@ namespace MFM
 
     static const u32 STATE_BITS = 0;
 
-    static bool IsMoverType(u32 type) {
+    static bool IsMoverType(u32 type)
+    {
       return type==TYPE();
     }
 
     Element_Mover() : Element<CC>(MFM_UUID_FOR("Mover", MOVER_VERSION))
     {
       Element<CC>::SetAtomicSymbol("Mv");
+      Element<CC>::SetName("Mover");
     }
 
     virtual const T & GetDefaultAtom() const

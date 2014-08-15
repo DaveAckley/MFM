@@ -68,6 +68,7 @@ namespace MFM
     {
       m_bombRange = 2;
       Element<CC>::SetAtomicSymbol("Br");
+      Element<CC>::SetName("Red Fork Bomb");
     }
 
     virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
