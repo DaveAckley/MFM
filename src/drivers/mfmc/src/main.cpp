@@ -40,6 +40,8 @@ namespace MFM
       NeedElement(&Element_MQBar<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Mover<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Indexed<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Fish<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Shark<OurCoreConfig>::THE_INSTANCE);
 
 #ifdef MFM_GUI_DRIVER
       {
@@ -56,6 +58,16 @@ namespace MFM
         Element<CC>* elem = &Element_ForkBomb2<OurCoreConfig>::THE_INSTANCE;
         m_forkBombBlueSliderConfig.SetElement(elem);
         AbstractGUIDriver::RegisterSliderConfig(&m_forkBombBlueSliderConfig);
+      }
+      {
+        Element<CC>* elem = &Element_Fish<OurCoreConfig>::THE_INSTANCE;
+        m_fishSliderConfig.SetElement(elem);
+        AbstractGUIDriver::RegisterSliderConfig(&m_fishSliderConfig);
+      }
+      {
+        Element<CC>* elem = &Element_Shark<OurCoreConfig>::THE_INSTANCE;
+        m_sharkSliderConfig.SetElement(elem);
+        AbstractGUIDriver::RegisterSliderConfig(&m_sharkSliderConfig);
       }
 
 #endif
@@ -106,6 +118,39 @@ namespace MFM
         return 4;
       }
     }m_dregSliderConfig;
+
+    class FishSliderConfig : public OurSliderConfig
+    {
+    public:
+      virtual u32 SetupSliders(Slider* sliders, u32 maxSliders) const
+      {
+        sliders[0].SetText("Birth Age");
+        sliders[0].SetMinValue(1);
+        sliders[0].SetMaxValue(250);
+        sliders[0].SetExternalValue(Element_Fish<CC>::THE_INSTANCE.GetFishBirthAgePtr());
+
+        return 1;
+      }
+    }m_fishSliderConfig;
+
+    class SharkSliderConfig : public OurSliderConfig
+    {
+    public:
+      virtual u32 SetupSliders(Slider* sliders, u32 maxSliders) const
+      {
+        sliders[0].SetText("Birth Age");
+        sliders[0].SetMinValue(1);
+        sliders[0].SetMaxValue(250);
+        sliders[0].SetExternalValue(Element_Shark<CC>::THE_INSTANCE.GetSharkBirthAgePtr());
+
+        sliders[1].SetText("Energy Per Fish");
+        sliders[1].SetMinValue(1);
+        sliders[1].SetMaxValue(50);
+        sliders[1].SetExternalValue(Element_Shark<CC>::THE_INSTANCE.GetSharkEnergyPerFishPtr());
+
+        return 2;
+      }
+    }m_sharkSliderConfig;
 
     class ForkBombRedSliderConfig : public OurSliderConfig
     {

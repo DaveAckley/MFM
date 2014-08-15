@@ -96,6 +96,7 @@ namespace MFM
     u32 m_thisEpochAEPS;
     bool m_captureScreenshots;
     u32 m_accelerateAfterEpochs;
+    u32 m_saveStateIndex;
 
     Fonts m_fonts;
 
@@ -327,8 +328,7 @@ namespace MFM
 
     struct SaveButton : public AbstractGridButton
     {
-      SaveButton() : AbstractGridButton("Save State"),
-                     m_saveStateIndex(1)
+      SaveButton() : AbstractGridButton("Save State")
       {
         AbstractButton::SetName("SaveButton");
         Panel::SetDimensions(200, 40);
@@ -337,22 +337,11 @@ namespace MFM
 
       virtual void OnClick(u8 button)
       {
-        const char* filename =
-          AbstractGridButton::m_driver->GetSimDirPathTemporary("save/%D.mfs",
-                                                               m_saveStateIndex++);
-
-        LOG.Debug("Saving to: %s", filename);
-        ExternalConfig<GC> cfg(AbstractGridButton::m_driver->GetGrid());
-        FILE* fp = fopen(filename, "w");
-        FileByteSink fs(fp);
-
-        cfg.Write(fs);
-        fs.Close();
+        AbstractGridButton::m_driver->SaveGrid();
       }
 
     private:
 
-      u32 m_saveStateIndex;
     }m_saveButton;
 
     struct QuitButton : public AbstractGridButton
@@ -681,7 +670,11 @@ namespace MFM
       /* Camera Recording */
       if(m_keyboard.SemiAuto(SDLK_r))
       {
-        camera.ToggleRecord();
+        m_captureScreenshots = !m_captureScreenshots;
+        if (m_captureScreenshots)
+          LOG.Message("Capturing screenshots every %d AEPS", this->GetAEPSPerEpoch());
+        else
+          LOG.Message("Not capturing screenshots");
       }
 
       if(m_keyboard.SemiAuto(SDLK_t))
@@ -766,13 +759,28 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
     }
 #endif
 
+
   public:
+    void SaveGrid()
+    {
+      const char* filename =
+        Super::GetSimDirPathTemporary("save/%D.mfs", m_saveStateIndex++);
+
+      LOG.Debug("Saving to: %s", filename);
+      ExternalConfig<GC> cfg(this->GetGrid());
+      FILE* fp = fopen(filename, "w");
+      FileByteSink fs(fp);
+
+      cfg.Write(fs);
+      fs.Close();
+    }
 
     AbstractGUIDriver() :
       m_startPaused(true),
       m_thisUpdateIsEpoch(false),
       m_captureScreenshots(false),
       m_accelerateAfterEpochs(0),
+      m_saveStateIndex(0),
       m_renderStats(false),
       m_screenWidth(SCREEN_INITIAL_WIDTH),
       m_screenHeight(SCREEN_INITIAL_HEIGHT),
@@ -1255,6 +1263,8 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
         if(Super::GetHaltAfterAEPS() > 0 &&
            Super::GetAEPS() > Super::GetHaltAfterAEPS())
         {
+          // Free final save if --haltafteraeps.  Hope for good-looking corpse
+          SaveGrid();
           running = false;
         }
 

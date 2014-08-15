@@ -677,7 +677,7 @@ namespace MFM
       m_microsSleepPerFrame(50000),
       m_overheadPercent(0.0),
       m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
-      m_AEPSPerEpoch(500),
+      m_AEPSPerEpoch(100),
       m_gridImages(false),
       m_tileImages(false),
       m_AEPS(0),
