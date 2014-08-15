@@ -65,22 +65,22 @@ namespace MFM
 
     u32 GetCurrentAge(const T& us) const
     {
-      return AFCurrentAge::Read(GetBits(us));
+      return AFCurrentAge::Read(this->GetBits(us));
     }
 
     void SetCurrentAge(T& us, const u32 age) const
     {
-      AFCurrentAge::Write(GetBits(us), age);
+      AFCurrentAge::Write(this->GetBits(us), age);
     }
 
     u32 GetBirthAge(const T& us) const
     {
-      return AFBirthAge::Read(GetBits(us));
+      return AFBirthAge::Read(this->GetBits(us));
     }
 
     void SetBirthAge(T& us, const u32 age) const
     {
-      AFBirthAge::Write(GetBits(us), age);
+      AFBirthAge::Write(this->GetBits(us), age);
     }
 
     AbstractElement_WaPat(const UUID & uuid) : Element<CC>(uuid)
