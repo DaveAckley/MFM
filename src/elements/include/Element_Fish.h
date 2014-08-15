@@ -75,8 +75,8 @@ namespace MFM
     {
       static T defaultAtom(TYPE(),0,0,0);
 
-      SetBirthAge(defaultAtom, m_fishBirthAge);
-      SetCurrentAge(defaultAtom, 0);
+      this->SetBirthAge(defaultAtom, m_fishBirthAge);
+      this->SetCurrentAge(defaultAtom, 0);
 
       return defaultAtom;
     }
@@ -105,12 +105,12 @@ namespace MFM
       const MDist<R> md = MDist<R>::get();
       SPoint emptyRel;
       u32 emptyCount = 0;
-      u32 age = GetCurrentAge(self);
-      bool reproable = age >= GetBirthAge(self);
+      u32 age = this->GetCurrentAge(self);
+      bool reproable = age >= this->GetBirthAge(self);
 
       if (!reproable)
       {
-        SetCurrentAge(self, 1 + age);
+        this->SetCurrentAge(self, 1 + age);
       }
 
       for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(1); ++idx)
@@ -135,7 +135,7 @@ namespace MFM
       {
         if (reproable)     // and leave kid behind
         {
-          SetCurrentAge(self,0);
+          this->SetCurrentAge(self,0);
           window.SetCenterAtom(self);
         }
         else               // or leave empty behind

@@ -69,12 +69,12 @@ namespace MFM
 
     u32 GetSharkEnergy(const T& us) const
     {
-      return AFSharkEnergy::Read(GetBits(us));
+      return AFSharkEnergy::Read(this->GetBits(us));
     }
 
     void SetSharkEnergy(T& us, const u32 age) const
     {
-      AFSharkEnergy::Write(GetBits(us), age);
+      AFSharkEnergy::Write(this->GetBits(us), age);
     }
 
     static Element_Shark THE_INSTANCE;
@@ -103,9 +103,9 @@ namespace MFM
     {
       static T defaultAtom(TYPE(),0,0,0);
 
-      SetBirthAge(defaultAtom, m_sharkBirthAge);
-      SetCurrentAge(defaultAtom, 0);
-      SetSharkEnergy(defaultAtom, m_sharkEnergyPerFish);
+      this->SetBirthAge(defaultAtom, m_sharkBirthAge);
+      this->SetCurrentAge(defaultAtom, 0);
+      this->SetSharkEnergy(defaultAtom, m_sharkEnergyPerFish);
 
       return defaultAtom;
     }
@@ -149,14 +149,14 @@ namespace MFM
       }
 
       energy = energy - 1;
-      SetSharkEnergy(self, energy);
+      this->SetSharkEnergy(self, energy);
 
-      u32 age = GetCurrentAge(self);
-      bool reproable = age >= GetBirthAge(self);
+      u32 age = this->GetCurrentAge(self);
+      bool reproable = age >= this->GetBirthAge(self);
 
       if (!reproable)
       {
-        SetCurrentAge(self, 1 + age);
+        this->SetCurrentAge(self, 1 + age);
       }
 
       for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(1); ++idx)
@@ -194,11 +194,11 @@ namespace MFM
           energy = energy / 2;  // parent and kid split it
         }
 
-        SetSharkEnergy(self, energy);
+        this->SetSharkEnergy(self, energy);
 
         if (reproable)
         {
-          SetCurrentAge(self,0);      // reset age counter
+          this->SetCurrentAge(self,0);      // reset age counter
           window.SetCenterAtom(self); // and clone a kid
         }
         else               // or leave empty behind
@@ -212,8 +212,8 @@ namespace MFM
         if (reproable)     // and leave kid behind
         {
           energy = energy / 2;  // parent and kid split available energy
-          SetSharkEnergy(self, energy);
-          SetCurrentAge(self,0);
+          this->SetSharkEnergy(self, energy);
+          this->SetCurrentAge(self,0);
           window.SetCenterAtom(self);
         }
         else               // or leave empty behind
