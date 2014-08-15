@@ -96,9 +96,6 @@ namespace MFM
       m_selectedAtom.SetY(((cp.GetY() % tileSize) +
                            m_selectedTile.GetY() * tileSize) / atomSize);
 
-      LOG.Debug("Atom selected: (%d, %d)",
-                m_selectedAtom.GetX(),
-                m_selectedAtom.GetY());
       m_selectedTile = oldSelectedTile;
     }
   }

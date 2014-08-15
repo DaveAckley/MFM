@@ -95,6 +95,11 @@ namespace MFM
     m_selectedTile.Set(-1, -1);
   }
 
+  void GridRenderer::DeselectAtom()
+  {
+    m_selectedAtom.Set(-1, -1);
+  }
+
   SPoint GridRenderer::GetSelectedTile() const
   {
     return m_selectedTile;

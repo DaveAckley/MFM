@@ -36,6 +36,7 @@
 #include "AssetManager.h"
 #include "AbstractButton.h"
 #include "AbstractCheckbox.h"
+#include "AtomViewPanel.h"
 #include "Tile.h"
 #include "GridRenderer.h"
 #include "GridPanel.h"
@@ -667,7 +668,7 @@ namespace MFM
 
       if(m_keyboard.SemiAuto(SDLK_ESCAPE))
       {
-        m_grend.DeselectTile();
+        m_gridPanel.DeselectAtomAndTile();
       }
 
       /* Camera Recording */
@@ -901,7 +902,7 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
       double m_overheadPercent;
       u32 m_aepsPerFrame;
 
-    public:
+     public:
       StatisticsPanel() : m_srend(NULL)
       {
         SetName("Statistics Panel");

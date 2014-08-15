@@ -191,14 +191,16 @@ namespace MFM {
     /**
        Get the current background color.
      */
-    u32 GetBackground() const {
+    u32 GetBackground() const
+    {
       return m_bgColor;
     }
 
     /**
        Set the background color.  Returns prior value
      */
-    u32 SetBackground(const u32 color) {
+    u32 SetBackground(const u32 color)
+    {
       u32 old = m_bgColor;
       m_bgColor = color;
       return old;
@@ -207,14 +209,16 @@ namespace MFM {
     /**
        Get the current border color.
      */
-    u32 GetBorder() const {
+    u32 GetBorder() const
+    {
       return m_bdColor;
     }
 
     /**
        Set the border color.  Returns prior value
      */
-    u32 SetBorder(const u32 color) {
+    u32 SetBorder(const u32 color)
+    {
       u32 old = m_bdColor;
       m_bdColor = color;
       return old;
@@ -223,14 +227,16 @@ namespace MFM {
     /**
        Get the current foreground color.
      */
-    u32 GetForeground() const {
+    u32 GetForeground() const
+    {
       return m_fgColor;
     }
 
     /**
        Set the foreground color.  Returns prior value
      */
-    u32 SetForeground(const u32 color) {
+    u32 SetForeground(const u32 color)
+    {
       u32 old = m_fgColor;
       m_fgColor = color;
       return old;
@@ -299,7 +305,7 @@ namespace MFM {
 
        @returns true if the event should be considered handled.  The
                 default implementation does nothing and returns
-		false.
+                false.
      */
     virtual bool Handle(MouseButtonEvent & event) ;
 

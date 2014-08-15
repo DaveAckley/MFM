@@ -130,7 +130,10 @@ namespace MFM
 
     SPoint GetSelectedTile() const;
 
-    SPoint GetSelectedAtom() const;
+    SPoint GetSelectedAtom() const
+    {
+      return m_selectedAtom;
+    }
 
     template <class GC>
     void RenderGrid(Drawing & drawing, Grid<GC>& grid);

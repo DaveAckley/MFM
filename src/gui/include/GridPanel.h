@@ -27,6 +27,7 @@
 #ifndef GRIDPANEL_H
 #define GRIDPANEL_H
 
+#include "AtomViewPanel.h"
 #include "itype.h"
 #include "MDist.h"
 #include "Panel.h"
@@ -75,7 +76,9 @@ namespace MFM
     SPoint m_leftButtonGridStart;
     bool m_paintingEnabled;
 
-  public:
+    AtomViewPanel<GC> m_atomViewPanel;
+
+   public:
     GridPanel() :
       m_paintingEnabled(false)
     {
@@ -88,11 +91,20 @@ namespace MFM
 
       m_grend = NULL;
       m_mainGrid = NULL;
+
+      m_atomViewPanel.SetName("AtomViewer");
+      m_atomViewPanel.SetRenderPoint(SPoint(326, 0));
+      m_atomViewPanel.SetBackground(Drawing::BLACK);
+      m_atomViewPanel.SetForeground(Drawing::GREY70);
+      m_atomViewPanel.SetVisibility(true);
+
+      Panel::Insert(&m_atomViewPanel, NULL);
     }
 
     void SetGrid(OurGrid* mainGrid)
     {
       m_mainGrid = mainGrid;
+      m_atomViewPanel.SetGrid(m_mainGrid);
     }
 
     void SetGridRenderer(GridRenderer* grend)
@@ -108,6 +120,13 @@ namespace MFM
     void SetPaintingEnabled(bool isPaintingEnabled)
     {
       m_paintingEnabled = isPaintingEnabled;
+    }
+
+    void DeselectAtomAndTile()
+    {
+      m_grend->DeselectTile();
+      m_grend->DeselectAtom();
+      m_atomViewPanel.SetAtom(NULL);
     }
 
   protected:
@@ -176,6 +195,8 @@ namespace MFM
              clickPt.GetY() - pt.GetY());
 
       m_grend->SelectAtom(*m_mainGrid, pt);
+      SPoint selectedAtom = m_grend->GetSelectedAtom();
+      m_atomViewPanel.SetAtom(m_mainGrid->GetAtom(selectedAtom));
     }
 
     void HandlePencilTool(u8 button, SPoint clickPt)
