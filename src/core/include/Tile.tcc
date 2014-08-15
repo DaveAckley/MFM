@@ -658,12 +658,13 @@ namespace MFM
     {
       ++m_lockAttemptsSucceeded;
     }
-    if ((m_lockAttempts % 1000000) == 0)
+    const u32 MILLION = 1000000;
+    if ((m_lockAttempts % (1*MILLION)) == 0)
     {
-      LOG.Debug("Locks %d of %d (%d%%) for %p",
-                m_lockAttemptsSucceeded,
-                m_lockAttempts,
-                100*m_lockAttemptsSucceeded/m_lockAttempts,
+      LOG.Debug("Locks %dM of %dM (%d%%) for %p",
+                (u32) (m_lockAttemptsSucceeded / MILLION),
+                (u32) (m_lockAttempts / MILLION),
+                (u32) (100 * m_lockAttemptsSucceeded / m_lockAttempts),
                 this);
     }
     return success;

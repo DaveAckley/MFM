@@ -155,8 +155,8 @@ namespace MFM
     u64 m_lockEvents[LOCKTYPE_COUNT];
 
     // Quick hack counts trying to debug vanishing atoms
-    u32 m_lockAttempts;
-    u32 m_lockAttemptsSucceeded;
+    u64 m_lockAttempts;
+    u64 m_lockAttemptsSucceeded;
 
     /**
      * The number of events which have occurred in every individual
