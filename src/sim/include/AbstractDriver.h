@@ -35,6 +35,7 @@
 #include "Utils.h"     /* for GetDateTimeNow, Sleep */
 #include "ExternalConfig.h"
 #include "ExternalConfigFunctions.h"
+#include "OverflowableCharBufferByteSink.h"
 #include "FileByteSource.h"
 #include "FileByteSink.h"
 #include "itype.h"
@@ -253,15 +254,19 @@ namespace MFM
      * @returns \c format , with the location of the local resources
      *          directory prepended to it.
      */
-    char* GetSimDirPathTemporary(const char* format, ...)
+    const char* GetSimDirPathTemporary(const char* format, ...) const
     {
+      static OverflowableCharBufferByteSink<500> buf;
+      buf.Reset();
+      buf.Printf("%s",m_simDirBasePath);
       va_list ap;
       va_start(ap, format);
-      vsnprintf(m_simDirBasePath +
-                m_simDirBasePathLength,
-                MAX_PATH_LENGTH - 1,
-                format, ap);
-      return m_simDirBasePath;
+      buf.Vprintf(format, ap);
+      if (buf.HasOverflowed())
+      {
+        FAIL(OUT_OF_ROOM);
+      }
+      return buf.GetZString();
     }
 
     /**

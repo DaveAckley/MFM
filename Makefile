@@ -15,6 +15,7 @@ clean:  $(PLATFORMS)
 
 realclean:  $(PLATFORMS)
 	rm -f bin/*
+	rm -f res/elements/*.so
 	rm -rf build/
 	rm -rf doc/ref
 
