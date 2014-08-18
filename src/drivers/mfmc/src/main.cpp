@@ -190,7 +190,7 @@ namespace MFM
 int main(int argc, const char** argv)
 {
   MFM::LOG.SetByteSink(MFM::STDERR);
-  MFM::LOG.SetLevel(MFM::LOG.ALL);
+  MFM::LOG.SetLevel(MFM::LOG.WARNING);
 
   MFM::MFMCDriver sim;
   sim.Init(argc, argv);
