@@ -347,6 +347,21 @@ namespace MFM
     }
 
     /**
+     * Appends a short description of the data held by an Atom of this
+     * Element.
+     *
+     * @param atom A pointer to an Atom (guaranteed to be an instance
+     *             of this Element ) to append a description of.
+     *
+     * @param desc The OverflowabeleCharBufferByteSink to append the
+     *             description to.
+     */
+    virtual void AppendDescription(const T* atom, OString64& desc) const
+    {
+      /* Default to no description */
+    }
+
+    /**
      * Checks to see if this Element is of a specified type.
      *
      * @param type The \c type of which to check against they type of

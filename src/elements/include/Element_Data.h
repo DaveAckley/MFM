@@ -49,8 +49,7 @@ namespace MFM
     // Extract short names for parameter types
     typedef typename CC::ATOM_TYPE T;
 
-  public:
-
+   public:
     Element_Data() : Element<CC>(MFM_UUID_FOR("Data", DATA_VERSION))
     {
       Element<CC>::SetAtomicSymbol("Dt");
@@ -58,21 +57,46 @@ namespace MFM
     }
 
     static Element_Data THE_INSTANCE;
-    static const u32 TYPE() {
+    static const u32 TYPE()
+    {
       return THE_INSTANCE.GetType();
     }
+
     static const u32 STATE_DATA_IDX = 0;
     static const u32 STATE_DATA_LEN = 32;
 
-    u32 GetDatum(const T &atom, u32 badType) const {
-      if (!Atom<CC>::IsType(atom,TYPE())) return badType;
+    u32 GetDatum(const T &atom, u32 badType) const
+    {
+      if (!Atom<CC>::IsType(atom,TYPE()))
+      {
+	return badType;
+      }
       return atom.GetStateField(STATE_DATA_IDX,STATE_DATA_LEN);
     }
 
-    bool SetDatum(T &atom, u32 value) const {
-      if (!Atom<CC>::IsType(atom,TYPE())) return false;
+    bool SetDatum(T &atom, u32 value) const
+    {
+      if (!Atom<CC>::IsType(atom,TYPE()))
+      {
+	return false;
+      }
       atom.SetStateField(STATE_DATA_IDX,STATE_DATA_LEN,value);
       return true;
+    }
+
+    virtual void AppendDescription(const T* atomPtr, OString64& desc) const
+    {
+      const T& atom = *atomPtr;
+
+      u32 datum = GetDatum(atom, 0);
+      if(datum)
+      {
+	desc.Printf("Datum: %d", datum);
+      }
+      else
+      {
+	desc.Printf("Datum: INVALID");
+      }
     }
 
     virtual const T & GetDefaultAtom() const
@@ -110,7 +134,8 @@ namespace MFM
 
     virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const
     {
-      switch (selector) {
+      switch (selector)
+      {
       case 1:
         return ColorMap_CubeHelixRev::THE_INSTANCE.
           GetInterpolatedColor(GetDatum(atom,0),DATA_MINVAL,DATA_MAXVAL,0xffff0000);
@@ -121,10 +146,11 @@ namespace MFM
 
     virtual void Behavior(EventWindow<CC>& window) const
     {
-
       u32 val = GetDatum(window.GetCenterAtom(),-1);
       if (val < DATA_MINVAL || val > DATA_MAXVAL)
+      {
         FAIL(ILLEGAL_STATE);
+      }
 
       this->Diffuse(window);
     }

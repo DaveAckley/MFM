@@ -213,6 +213,20 @@ namespace MFM {
     }
 
     /**
+     * Set the current font to one loaded by the AssetManager.
+     *
+     * @param asset The FontAsset of the font to load into this
+     *              Drawing instance.
+     *
+     * @param returns The TTF_Font which was loaded by this Drawing
+     *                instance before calling this method.
+     */
+    TTF_Font* SetFont(FontAsset asset)
+    {
+      return SetFont(AssetManager::Get(asset));
+    }
+
+    /**
        Draw a one-pixel high horizontal line in the current foreground color
      */
     void DrawHLine(int y, int startX, int endX) const;
