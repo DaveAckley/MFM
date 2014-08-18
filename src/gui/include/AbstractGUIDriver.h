@@ -761,7 +761,7 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
       const char* filename =
         Super::GetSimDirPathTemporary("save/%D.mfs", m_saveStateIndex++);
 
-      LOG.Debug("Saving to: %s", filename);
+      LOG.Message("Saving to: %s", filename);
       ExternalConfig<GC> cfg(this->GetGrid());
       FILE* fp = fopen(filename, "w");
       FileByteSink fs(fp);
