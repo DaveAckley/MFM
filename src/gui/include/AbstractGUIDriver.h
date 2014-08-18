@@ -95,7 +95,6 @@ namespace MFM
     bool m_thisUpdateIsEpoch;
     u32 m_thisEpochAEPS;
     bool m_captureScreenshots;
-    u32 m_accelerateAfterEpochs;
     u32 m_saveStateIndex;
 
     Fonts m_fonts;
@@ -443,10 +442,6 @@ namespace MFM
       Super::DoEpochEvents(grid, epochs, epochAEPS);
       m_thisUpdateIsEpoch = true;
       m_thisEpochAEPS = epochAEPS;
-      if (m_accelerateAfterEpochs > 0 && (epochs % m_accelerateAfterEpochs) == 0)
-      {
-        this->SetAEPSPerEpoch(this->GetAEPSPerEpoch() + 1);
-      }
     }
 
     virtual void OnceOnly(VArguments& args)
@@ -779,7 +774,6 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
       m_startPaused(true),
       m_thisUpdateIsEpoch(false),
       m_captureScreenshots(false),
-      m_accelerateAfterEpochs(0),
       m_saveStateIndex(0),
       m_renderStats(false),
       m_screenWidth(SCREEN_INITIAL_WIDTH),
@@ -872,13 +866,6 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
       driver.m_startPaused = false;
     }
 
-    static void SetPicturesPerRateFromArgs(const char* aeps, void* driverptr)
-    {
-      AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
-
-      driver->m_accelerateAfterEpochs = atoi(aeps);
-    }
-
     void AddDriverArguments()
     {
       Super::AddDriverArguments();
@@ -893,10 +880,6 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
 
       this->RegisterArgument("Capture a screenshot every epoch",
                              "-p|--pngs", &SetRecordScreenshotPerAEPSFromArgs, this, false);
-
-      this->RegisterArgument("Increment the epoch length every ARG epochs",
-                             "--accelerate",
-                             &SetPicturesPerRateFromArgs, this, true);
 
       this->RegisterArgument("Simulation begins upon program startup.",
                              "--run", &SetStartPausedFromArgs, this, false);

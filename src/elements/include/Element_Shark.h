@@ -114,7 +114,8 @@ namespace MFM
 
     virtual u32 DefaultPhysicsColor() const
     {
-      return 0xffbbaaff;
+      return 0xffff2244;
+
     }
 
     // Non-diffusable
