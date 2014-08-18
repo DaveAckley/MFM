@@ -96,7 +96,7 @@ namespace MFM
       m_atomViewPanel.SetRenderPoint(SPoint(326, 0));
       m_atomViewPanel.SetBackground(Drawing::BLACK);
       m_atomViewPanel.SetForeground(Drawing::GREY70);
-      m_atomViewPanel.SetVisibility(true);
+      m_atomViewPanel.SetVisibility(false);
 
       Panel::Insert(&m_atomViewPanel, NULL);
     }
@@ -105,6 +105,11 @@ namespace MFM
     {
       m_mainGrid = mainGrid;
       m_atomViewPanel.SetGrid(m_mainGrid);
+    }
+
+    void ToggleAtomViewPanel()
+    {
+      m_atomViewPanel.ToggleVisibility();
     }
 
     void SetGridRenderer(GridRenderer* grend)

@@ -106,7 +106,8 @@ namespace MFM
     {
       return this->FillPointWithType(window, pt,
                                      m_southeastSubwindow,
-                                     sizeof(m_southeastSubwindow)/sizeof(m_southeastSubwindow[0]),
+                                     sizeof(m_southeastSubwindow)/
+				     sizeof(m_southeastSubwindow[0]),
                                      subwindow, type);
     }
 
@@ -125,6 +126,20 @@ namespace MFM
       return "A sorting \"demon\", which sorts DATA atoms based on their values and "
              "a value held within this Sorter as well. See the \"Demon Hoard Sort\" "
              "algorithm for details.";
+    }
+
+    virtual void AppendDescription(const T* atom, OString64& desc) const
+    {
+      u32 threshold = GetThreshold(*atom, 0);
+
+      if(threshold)
+      {
+	desc.Printf("Threshold: %d", threshold);
+      }
+      else
+      {
+	desc.Printf("Threshold: INVALID");
+      }
     }
 
     virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const

@@ -661,6 +661,10 @@ namespace MFM
       {
         m_grend.ToggleTileSeparation();
       }
+      if(m_keyboard.SemiAuto(SDLK_v))
+      {
+	m_gridPanel.ToggleAtomViewPanel();
+      }
 
       if(m_keyboard.SemiAuto(SDLK_ESCAPE))
       {
