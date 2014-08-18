@@ -126,7 +126,7 @@ namespace MFM
       {
         sliders[0].SetText("Birth Age");
         sliders[0].SetMinValue(1);
-        sliders[0].SetMaxValue(250);
+        sliders[0].SetMaxValue(100);
         sliders[0].SetExternalValue(Element_Fish<CC>::THE_INSTANCE.GetFishBirthAgePtr());
 
         return 1;
@@ -140,7 +140,7 @@ namespace MFM
       {
         sliders[0].SetText("Birth Age");
         sliders[0].SetMinValue(1);
-        sliders[0].SetMaxValue(250);
+        sliders[0].SetMaxValue(100);
         sliders[0].SetExternalValue(Element_Shark<CC>::THE_INSTANCE.GetSharkBirthAgePtr());
 
         sliders[1].SetText("Energy Per Fish");
@@ -190,7 +190,7 @@ namespace MFM
 int main(int argc, const char** argv)
 {
   MFM::LOG.SetByteSink(MFM::STDERR);
-  MFM::LOG.SetLevel(MFM::LOG.WARNING);
+  MFM::LOG.SetLevel(MFM::LOG.MESSAGE);
 
   MFM::MFMCDriver sim;
   sim.Init(argc, argv);
