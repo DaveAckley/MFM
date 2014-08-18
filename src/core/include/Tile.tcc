@@ -917,7 +917,9 @@ namespace MFM
           } while(m_threadPauser.IsPauseReady());
           FlushAndWaitOnAllBuffers(0);
           if (!AllBuffersAreEmpty())
+	  {
             LOG.Warning("NON-EMPTY BUFFERS IN %p", (void*) this);
+	  }
           m_threadPauser.WaitIfPaused();
         }
         else

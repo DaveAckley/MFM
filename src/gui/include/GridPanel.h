@@ -48,7 +48,7 @@ namespace MFM
   template <class GC>
   class GridPanel : public Panel
   {
-  public:
+   public:
     // Extract short type names
     typedef typename GC::CORE_CONFIG CC;
     typedef typename CC::PARAM_CONFIG P;
@@ -68,7 +68,7 @@ namespace MFM
 
     typedef Grid<GC> OurGrid;
 
-  private:
+   private:
     GridRenderer* m_grend;
     OurGrid* m_mainGrid;
     ToolboxPanel<CC>* m_toolboxPanel;
@@ -134,7 +134,7 @@ namespace MFM
       m_atomViewPanel.SetAtom(NULL);
     }
 
-  protected:
+   protected:
     virtual void PaintComponent(Drawing& drawing)
     {
       this->Panel::PaintComponent(drawing);
@@ -335,7 +335,8 @@ namespace MFM
            npt.GetX() < TILE_SIDE_LIVE_SITES * W &&
            npt.GetY() < TILE_SIDE_LIVE_SITES * H)
         {
-          if(Atom<CC>::IsType(*grid.GetAtom(npt), Element_Empty<CC>::THE_INSTANCE.GetType()))
+          if(Atom<CC>::IsType(*grid.GetAtom(npt),
+			      Element_Empty<CC>::THE_INSTANCE.GetType()))
           {
             BucketFill(grid, atom, npt);
           }
@@ -346,8 +347,8 @@ namespace MFM
     virtual bool Handle(MouseButtonEvent& mbe)
     {
       SDL_MouseButtonEvent & event = mbe.m_event.button;
-      if(event.type == SDL_MOUSEBUTTONDOWN) {
-
+      if(event.type == SDL_MOUSEBUTTONDOWN)
+      {
         SPoint pt = GetAbsoluteLocation();
         pt.Set(event.x - pt.GetX(),
                event.y - pt.GetY());
@@ -360,8 +361,7 @@ namespace MFM
           /* FALL THROUGH */
         case SDL_BUTTON_MIDDLE:
         case SDL_BUTTON_RIGHT:
-
-          if(!mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
+	  if(!mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
           {
             switch(mbe.m_selectedTool)
             {
@@ -390,13 +390,10 @@ namespace MFM
             default: break; /* Do the rest later */
             }
           }
-
           break;
-
         case SDL_BUTTON_WHEELUP:
           m_grend->IncreaseAtomSize(pt);
           break;
-
         case SDL_BUTTON_WHEELDOWN:
           m_grend->DecreaseAtomSize(pt);
           break;
