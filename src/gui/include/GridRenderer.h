@@ -30,6 +30,7 @@
 #include "Grid.h"
 #include "Drawing.h"
 #include "TileRenderer.h"
+#include "AtomViewPanel.h"
 
 namespace MFM
 {

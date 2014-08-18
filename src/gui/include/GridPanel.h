@@ -101,6 +101,11 @@ namespace MFM
       Panel::Insert(&m_atomViewPanel, NULL);
     }
 
+    AtomViewPanel<GC> * GetAtomViewPanel()
+    {
+      return &m_atomViewPanel;
+    }
+
     void SetGrid(OurGrid* mainGrid)
     {
       m_mainGrid = mainGrid;
@@ -115,6 +120,7 @@ namespace MFM
     void SetToolboxPanel(ToolboxPanel<CC>* toolboxPanel)
     {
       m_toolboxPanel = toolboxPanel;
+      m_atomViewPanel.SetToolboxPanel(m_toolboxPanel);
     }
 
     void SetPaintingEnabled(bool isPaintingEnabled)
