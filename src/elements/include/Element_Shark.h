@@ -53,7 +53,7 @@ namespace MFM
 
       MAX_SHARK_ENERGY = (1<<SHARK_ENERGY_LEN) - 1,
 
-      INITIAL_DEFAULT_BIRTH_AGE = 16,
+      INITIAL_DEFAULT_BIRTH_AGE = 15,
       DEFAULT_ENERGY_PER_FISH = 8
     };
 
@@ -155,7 +155,8 @@ namespace MFM
       this->SetSharkEnergy(self, energy);
 
       u32 age = this->GetCurrentAge(self);
-      bool reproable = age >= this->GetBirthAge(self);
+      // Don't use genetic birth age (yet): bool reproable = age >= this->GetBirthAge(self);
+      bool reproable = age >= (u32) m_sharkBirthAge;
 
       if (!reproable)
       {
