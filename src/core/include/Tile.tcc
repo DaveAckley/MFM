@@ -759,7 +759,7 @@ namespace MFM
   }
 
   template <class CC>
-  bool Tile<CC>::AllBuffersAreEmpty()
+  void Tile<CC>::ReportIfBuffersAreNonEmpty()
   {
     for(Dir dir = Dirs::NORTH; dir < Dirs::DIR_COUNT; ++dir)
     {
@@ -767,16 +767,20 @@ namespace MFM
       {
         if (m_connections[dir]->InputByteCount() != 0)
         {
-          return false;
+          LOG.Warning("NON-EMPTY INPUT BUFFER (%d bytes %d) IN %p",
+                      m_connections[dir]->InputByteCount(), sizeof(Packet<T>),
+                      (void*) this);
         }
         if (m_connections[dir]->OutputByteCount() != 0)
         {
-          return false;
+          LOG.Warning("NON-EMPTY OUTPUT BUFFER (%d bytes %d) IN %p",
+                      m_connections[dir]->OutputByteCount(), sizeof(Packet<T>),
+                      (void*) this);
         }
       }
     }
-    return true;
   }
+
 
   template <class CC>
   void Tile<CC>::FlushAndWaitOnAllBuffers(u32 dirWaitWord)
@@ -916,10 +920,7 @@ namespace MFM
             pthread_yield();
           } while(m_threadPauser.IsPauseReady());
           FlushAndWaitOnAllBuffers(0);
-          if (!AllBuffersAreEmpty())
-	  {
-            LOG.Warning("NON-EMPTY BUFFERS IN %p", (void*) this);
-	  }
+          ReportIfBuffersAreNonEmpty();
           m_threadPauser.WaitIfPaused();
         }
         else
