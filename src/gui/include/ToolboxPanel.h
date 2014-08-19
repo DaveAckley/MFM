@@ -72,7 +72,9 @@ namespace MFM
        * which should be modified upon clicking this Button.
        */
       ToolButton() :
-        AbstractButton()
+        AbstractButton(),
+        m_toolboxTool(0),
+        m_parent(0)
       {
         this->Panel::SetBackground(Drawing::GREY90);
         this->Panel::SetBorder(Drawing::GREY40);

@@ -107,7 +107,9 @@ namespace MFM
       SPoint emptyRel;
       u32 emptyCount = 0;
       u32 age = this->GetCurrentAge(self);
-      bool reproable = age >= this->GetBirthAge(self);
+
+      // Don't use genetic birth age (yet): bool reproable = age >= this->GetBirthAge(self);
+      bool reproable = age >= (u32) m_fishBirthAge;
 
       if (!reproable)
       {

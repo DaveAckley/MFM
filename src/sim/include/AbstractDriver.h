@@ -413,6 +413,10 @@ namespace MFM
     u32 m_aepsPerFrame;
 
     s32 m_AEPSPerEpoch;
+    u32 m_accelerateAfterEpochs;
+    u32 m_acceleration;
+    u32 m_surgeAfterEpochs;
+
     bool m_gridImages;
     bool m_tileImages;
     //    s32 m_recordTimeBasedDataPerAEPS;
@@ -494,11 +498,30 @@ namespace MFM
       VArguments& args = driver.m_varguments;
 
       u32 epochAEPS = atoi(aepsStr);
-      if (epochAEPS < 1)
+      if (epochAEPS < 0)
       {
-        args.Die("AEPS per epoch must be positive, not %d", epochAEPS);
+        args.Die("AEPS per epoch must be non-negative, not %d", epochAEPS);
       }
       driver.SetAEPSPerEpoch(epochAEPS);
+    }
+
+    static void SetPicturesPerRateFromArgs(const char* aeps, void* driverptr)
+    {
+      AbstractDriver* driver = (AbstractDriver*)driverptr;
+
+      driver->m_accelerateAfterEpochs = atoi(aeps);
+    }
+
+    static void SetSurgePerEpochFromArgs(const char* aeps, void* driverptr)
+    {
+      AbstractDriver* driver = (AbstractDriver*)driverptr;
+
+      driver->m_surgeAfterEpochs = atoi(aeps);
+
+      if (driver->m_surgeAfterEpochs > 0)  // If actually surging
+      {                                    // it'll happen immediately
+        driver->m_acceleration = 0;        // so push acceleration back
+      }
     }
 
     static void SetGridImages(const char* not_needed, void* driver)
@@ -583,7 +606,7 @@ namespace MFM
 
     void CheckEpochProcessing(OurGrid& grid)
     {
-      if (m_AEPSPerEpoch > 0)
+      if (m_AEPSPerEpoch >= 0 || m_accelerateAfterEpochs > 0 || m_surgeAfterEpochs > 0)
       {
         if (m_AEPS >= m_nextEpochAEPS)
         {
@@ -663,6 +686,16 @@ namespace MFM
         grid.WriteEPSAverageImage(fbs2);
         fclose(fp);
       }
+
+      if (m_accelerateAfterEpochs > 0 && (epochs % m_accelerateAfterEpochs) == 0)
+      {
+        this->SetAEPSPerEpoch(this->GetAEPSPerEpoch() + m_acceleration);
+      }
+
+      if (m_accelerateAfterEpochs > 0 && m_surgeAfterEpochs > 0 && (epochs % m_surgeAfterEpochs) == 0)
+      {
+        ++m_acceleration;
+      }
     }
 
 
@@ -678,6 +711,9 @@ namespace MFM
       m_overheadPercent(0.0),
       m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
       m_AEPSPerEpoch(100),
+      m_accelerateAfterEpochs(0),
+      m_acceleration(1),
+      m_surgeAfterEpochs(0),
       m_gridImages(false),
       m_tileImages(false),
       m_AEPS(0),
@@ -750,6 +786,14 @@ namespace MFM
 
       RegisterArgument("Set epoch length to ARG AEPS",
                        "-e|--epoch", &SetAEPSPerEpochFromArgs, this, true);
+
+      this->RegisterArgument("Increase the epoch length every ARG epochs",
+                             "--accelerate",
+                             &SetPicturesPerRateFromArgs, this, true);
+
+      this->RegisterArgument("Increase the epoch length acceleration every ARG epochs",
+                             "--surge",
+                             &SetSurgePerEpochFromArgs, this, true);
 
       RegisterArgument("Each epoch, write grid AEPS image to per-sim eps/ directory",
                        "--gridImages", &SetGridImages, this, false);

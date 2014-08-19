@@ -29,7 +29,7 @@ namespace MFM {
       }
       LOG.Debug("trying 0x%04x",type);
     } while (m_uuids[type] != 0);
-    LOG.Message("taking 0x%04x",type);
+    LOG.Debug("taking 0x%04x",type);
     return type;
   }
 

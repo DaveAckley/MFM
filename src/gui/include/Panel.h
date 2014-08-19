@@ -268,6 +268,23 @@ namespace MFM {
     virtual void Paint(Drawing & config);
 
     /**
+       Update the visibility of this Panel, if desired, at the
+       beginning of the painting process.  The default implementation
+       (which may be accessed, if overridden, via
+       this->Panel::IsVisible) does nothing; overriding
+       implementations may use SetVisibility and/or ToggleVisibility
+       to alter the visibility of this Panel before its painting
+       begins in earnest.  Note this method is called only during
+       painting; during dispatching the m_visible variable is checked
+       directly.
+
+       @sa SetVisibility
+       @sa ToggleVisibility
+
+     */
+    virtual void PaintUpdateVisibility(Drawing & config);
+
+    /**
        Paint the component itself, excluding its border and any
        children it may have.  The default implementation (which may be
        accessed, if overridden, via this->Panel::PaintComponent) sets

@@ -166,8 +166,15 @@ namespace MFM {
       (m_parent ? m_parent->GetAbsoluteLocation() : SPoint(0,0));
   }
 
+  void Panel::PaintUpdateVisibility(Drawing & config)
+  {
+    // Overridable; does nothing by default
+  }
+
   void Panel::Paint(Drawing & drawing)
   {
+    PaintUpdateVisibility(drawing);
+
     if(m_visible)
     {
       Rect old, cur;

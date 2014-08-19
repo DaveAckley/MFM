@@ -29,6 +29,7 @@
 
 #include "Panel.h"
 #include "Grid.h"
+#include "ToolboxPanel.h"
 
 namespace MFM
 {
@@ -43,14 +44,31 @@ namespace MFM
 
     Grid<GC>* m_grid;
 
+    ToolboxPanel<CC>* m_toolboxPanel;
+
     static const u32 ATOM_DRAW_SIZE = 40;
 
    public:
     AtomViewPanel() :
       Panel(300, 100),
       m_atom(NULL),
-      m_grid(NULL)
+      m_grid(NULL),
+      m_toolboxPanel(NULL)
     { }
+
+    void SetToolboxPanel(ToolboxPanel<CC>* toolboxPanel)
+    {
+      m_toolboxPanel = toolboxPanel;
+    }
+
+    virtual void PaintUpdateVisibility(Drawing& d)
+    {
+      bool visible =
+        m_toolboxPanel != 0
+        && m_toolboxPanel->IsVisible()
+        && m_toolboxPanel->GetSelectedTool() == TOOL_ATOM_SELECTOR;
+      this->SetVisibility(visible);
+    }
 
     virtual void PaintComponent(Drawing& d)
     {
