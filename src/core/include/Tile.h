@@ -900,9 +900,9 @@ namespace MFM
     void FlushAndWaitOnAllBuffers(u32 dirWaitWord);
 
     /**
-     * Return true if all connected input buffers are empty.
+     * Log warnings if connection buffers are not empty.
      */
-    bool AllBuffersAreEmpty() ;
+    void ReportIfBuffersAreNonEmpty();
 
     /**
      * Used to tell this Tile whether or not to actually execute any
