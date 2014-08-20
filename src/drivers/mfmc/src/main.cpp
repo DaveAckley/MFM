@@ -128,6 +128,7 @@ namespace MFM
         sliders[0].SetMinValue(1);
         sliders[0].SetMaxValue(100);
         sliders[0].SetExternalValue(Element_Fish<CC>::THE_INSTANCE.GetFishBirthAgePtr());
+        sliders[0].SetSnapResolution(1);
 
         return 1;
       }
@@ -142,11 +143,13 @@ namespace MFM
         sliders[0].SetMinValue(1);
         sliders[0].SetMaxValue(100);
         sliders[0].SetExternalValue(Element_Shark<CC>::THE_INSTANCE.GetSharkBirthAgePtr());
+        sliders[0].SetSnapResolution(1);
 
         sliders[1].SetText("Energy Per Fish");
         sliders[1].SetMinValue(1);
         sliders[1].SetMaxValue(50);
         sliders[1].SetExternalValue(Element_Shark<CC>::THE_INSTANCE.GetSharkEnergyPerFishPtr());
+        sliders[1].SetSnapResolution(1);
 
         return 2;
       }
@@ -161,6 +164,7 @@ namespace MFM
         sliders[0].SetMinValue(0);
         sliders[0].SetMaxValue(4);
         sliders[0].SetExternalValue(Element_ForkBomb1<CC>::THE_INSTANCE.GetBombRangePtr());
+        sliders[0].SetSnapResolution(1);
 
         return 1;
       }
@@ -175,6 +179,7 @@ namespace MFM
         sliders[0].SetMinValue(0);
         sliders[0].SetMaxValue(4);
         sliders[0].SetExternalValue(Element_ForkBomb2<CC>::THE_INSTANCE.GetBombRangePtr());
+        sliders[0].SetSnapResolution(1);
 
         return 1;
       }

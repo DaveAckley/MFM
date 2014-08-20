@@ -76,11 +76,15 @@ namespace MFM
     SPoint m_leftButtonGridStart;
     bool m_paintingEnabled;
 
+    /* I'm making this a field because of the recursive nature of BucketFill .*/
+    u32 m_bucketFillStartType;
+
     AtomViewPanel<GC> m_atomViewPanel;
 
    public:
     GridPanel() :
-      m_paintingEnabled(false)
+      m_paintingEnabled(false),
+      m_bucketFillStartType(0)
     {
       SetName("Grid Panel");
       SetDimensions(SCREEN_INITIAL_WIDTH,
@@ -316,7 +320,15 @@ namespace MFM
         {
           if(bucket)
           {
-            BucketFill(grid, atom, cp);
+            SPoint tile, site;
+            if(grid.MapGridToTile(cp, tile, site))
+            {
+              m_bucketFillStartType = grid.GetTile(tile).GetAtom(site)->GetType();
+              if(m_bucketFillStartType != atom.GetType())
+              {
+                BucketFill(grid, atom, cp);
+              }
+            }
           }
           else
           {
@@ -342,7 +354,7 @@ namespace MFM
            npt.GetY() < TILE_SIDE_LIVE_SITES * H)
         {
           if(Atom<CC>::IsType(*grid.GetAtom(npt),
-			      Element_Empty<CC>::THE_INSTANCE.GetType()))
+                              m_bucketFillStartType))
           {
             BucketFill(grid, atom, npt);
           }
@@ -367,7 +379,7 @@ namespace MFM
           /* FALL THROUGH */
         case SDL_BUTTON_MIDDLE:
         case SDL_BUTTON_RIGHT:
-	  if(!mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
+          if(!mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
           {
             switch(mbe.m_selectedTool)
             {

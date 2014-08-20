@@ -614,7 +614,7 @@ namespace MFM
       u8 speed = m_keyboard.ShiftHeld() ?
         CAMERA_FAST_SPEED : CAMERA_SLOW_SPEED;
 
-      if(m_keyboard.IsDown(SDLK_q) && (m_keyboard.IsDown(SDLK_LCTRL) || m_keyboard.IsDown(SDLK_RCTRL)))
+      if(m_keyboard.IsDown(SDLK_q) && m_keyboard.CtrlHeld())
       {
         exit(0);
       }
@@ -658,7 +658,7 @@ namespace MFM
       }
       if(m_keyboard.SemiAuto(SDLK_v))
       {
-	m_gridPanel.ToggleAtomViewPanel();
+        m_gridPanel.ToggleAtomViewPanel();
       }
 
       if(m_keyboard.SemiAuto(SDLK_ESCAPE))
@@ -711,11 +711,11 @@ namespace MFM
       }
       if(m_keyboard.IsDown(SDLK_COMMA))
       {
-        Super::DecrementAEPSPerFrame();
+        Super::DecrementAEPSPerFrame(m_keyboard.CtrlHeld() ? 10 : 1);
       }
       if(m_keyboard.IsDown(SDLK_PERIOD))
       {
-        Super::IncrementAEPSPerFrame();
+        Super::IncrementAEPSPerFrame(m_keyboard.CtrlHeld() ? 10 : 1);
       }
 
       m_keyboard.Flip();

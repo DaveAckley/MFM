@@ -32,6 +32,7 @@
 #include <sys/time.h>  /* for gettimeofday */
 #include <sys/types.h> /* for mkdir */
 #include <errno.h>     /* for errno */
+#include "Util.h"
 #include "Utils.h"     /* for GetDateTimeNow, Sleep */
 #include "ExternalConfig.h"
 #include "ExternalConfigFunctions.h"
@@ -220,12 +221,18 @@ namespace MFM
      * Subtracts \c m_aepsPerFrame (or, the number of AEPS which
      * should elapse every call to \c UpdateGrid() ) by one, keeping it
      * above \c 0 at all times.
+     *
+     * @param amount The amount of AEPS per frame to decrement by.
      */
-    void DecrementAEPSPerFrame()
+    void DecrementAEPSPerFrame(u32 amount)
     {
-      if(m_aepsPerFrame > 1)
+      if(m_aepsPerFrame <= amount)
       {
-        m_aepsPerFrame--;
+        m_aepsPerFrame = 1;
+      }
+      else
+      {
+        m_aepsPerFrame -= amount;
       }
     }
 
@@ -233,12 +240,15 @@ namespace MFM
      * Adds one to \c m_aepsPerFrame (or, the number of AEPS which
      * should elapse every call to \c UpdateGrid() ), keeping it
      * below \c 1000 at all times.
+     *
+     * @param amount The amount of AEPS per frame to increment by.
      */
-    void IncrementAEPSPerFrame()
+    void IncrementAEPSPerFrame(u32 amount)
     {
-      if(m_aepsPerFrame < 1000)
+      m_aepsPerFrame += amount;
+      if(m_aepsPerFrame >= 1000)
       {
-        m_aepsPerFrame++;
+        m_aepsPerFrame = 1000;
       }
     }
 
