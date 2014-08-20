@@ -64,9 +64,10 @@ namespace MFM
     virtual void PaintUpdateVisibility(Drawing& d)
     {
       bool visible =
-        m_toolboxPanel != 0
-        && m_toolboxPanel->IsVisible()
-        && m_toolboxPanel->GetSelectedTool() == TOOL_ATOM_SELECTOR;
+        m_toolboxPanel != NULL &&
+        (Panel::IsVisible() ||
+        (m_toolboxPanel->IsVisible() &&
+         m_toolboxPanel->GetSelectedTool() == TOOL_ATOM_SELECTOR));
       this->SetVisibility(visible);
     }
 
@@ -92,21 +93,21 @@ namespace MFM
         d.SetForeground(Drawing::WHITE);
         d.SetBackground(Drawing::BLACK);
 
-	/* As long as the font is monospaced, we can get the text size
-	   of any 2-character string for this centering. */
-	const UPoint textSize = MakeUnsigned(d.GetTextSize("12"));
+        /* As long as the font is monospaced, we can get the text size
+           of any 2-character string for this centering. */
+        const UPoint textSize = MakeUnsigned(d.GetTextSize("12"));
         d.BlitBackedTextCentered(element->GetAtomicSymbol(), UPoint(8, 8), textSize);
 
         d.BlitBackedText(element->GetName(), UPoint(4 + ATOM_DRAW_SIZE, 2),
                          MakeUnsigned(d.GetTextSize(element->GetName())));
 
-	OString64 desc;
-	element->AppendDescription(m_atom, desc);
-	const char* zstr = desc.GetZString();
+        OString64 desc;
+        element->AppendDescription(m_atom, desc);
+        const char* zstr = desc.GetZString();
 
-	d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
-	d.BlitBackedText(zstr, UPoint(4 + ATOM_DRAW_SIZE, 28),
-			 MakeUnsigned(d.GetTextSize(zstr)));
+        d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
+        d.BlitBackedText(zstr, UPoint(4 + ATOM_DRAW_SIZE, 28),
+                         MakeUnsigned(d.GetTextSize(zstr)));
       }
     }
 

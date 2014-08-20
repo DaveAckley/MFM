@@ -254,7 +254,8 @@ namespace MFM
 
     u32 m_sliderConfigCount;
 
-    enum {
+    enum
+    {
       ELEMENTS_PER_ROW = 10,
       ELEMENT_ROWS = (ELEMENT_BOX_SIZE + ELEMENTS_PER_ROW - 1) / ELEMENTS_PER_ROW,
       NON_ELEMENT_ROWS = 3,

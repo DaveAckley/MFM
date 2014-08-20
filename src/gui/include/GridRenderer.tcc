@@ -27,27 +27,6 @@ namespace MFM
       {
         current.SetY(y);
 
-        /*
-        bool renderEW = true;
-
-        switch(m_currentEWRenderMode)
-        {
-        case EVENTWINDOW_RENDER_OFF:
-          renderEW = false; break;
-        case EVENTWINDOW_RENDER_CURRENT:
-          grid.FillLastEventTile(eventLoc);
-          renderEW =
-            current.GetX() == eventLoc.GetX() &&
-            current.GetY() == eventLoc.GetY();
-          break;
-        case EVENTWINDOW_RENDER_ALL:
-          renderEW = true; break;
-          break;
-        default: break;
-        }
-        */
-        /* We haven't been rendering event windows for a while. Remove this soon? */
-
         SPoint selectedAtom;
         SPoint* selectedAtomPtr = NULL;
 
