@@ -253,33 +253,6 @@ namespace MFM
     }
 
     /**
-     * Gets a formatted string representing a working path to the
-     * assets directory of this simulation. This is where the local
-     * copy of the \c res/ directory is kept and should be used for
-     * finding any assets in that location.
-     *
-     * @param format The formatting string used to parse the arguments
-     *               that follow it into a reasonable format.
-     *
-     * @returns \c format , with the location of the local resources
-     *          directory prepended to it.
-     */
-    const char* GetSimDirPathTemporary(const char* format, ...) const
-    {
-      static OverflowableCharBufferByteSink<500> buf;
-      buf.Reset();
-      buf.Printf("%s",m_simDirBasePath);
-      va_list ap;
-      va_start(ap, format);
-      buf.Vprintf(format, ap);
-      if (buf.HasOverflowed())
-      {
-        FAIL(OUT_OF_ROOM);
-      }
-      return buf.GetZString();
-    }
-
-    /**
      * Called at the end of the Reinit() call. This is for custom
      * initialization behavior.
      *
@@ -351,7 +324,7 @@ namespace MFM
 
       LOG.Message("Writing to simulation directory '%s'", GetSimDirPathTemporary(""));
 
-      const char* (subs[]) = { "", "vid", "eps", "tbd", "teps", "save" };
+      const char* (subs[]) = { "", "vid", "eps", "tbd", "teps", "save", "screenshot" };
       for(u32 i = 0; i < sizeof(subs) / sizeof(subs[0]); i++)
       {
         const char* path = GetSimDirPathTemporary("%s", subs[i]);
@@ -640,6 +613,33 @@ namespace MFM
         }
         ReloadCurrentConfigurationPath();
       }
+    }
+
+    /**
+     * Gets a formatted string representing a working path to the
+     * assets directory of this simulation. This is where the local
+     * copy of the \c res/ directory is kept and should be used for
+     * finding any assets in that location.
+     *
+     * @param format The formatting string used to parse the arguments
+     *               that follow it into a reasonable format.
+     *
+     * @returns \c format , with the location of the local resources
+     *          directory prepended to it.
+     */
+    const char* GetSimDirPathTemporary(const char* format, ...) const
+    {
+      static OverflowableCharBufferByteSink<500> buf;
+      buf.Reset();
+      buf.Printf("%s",m_simDirBasePath);
+      va_list ap;
+      va_start(ap, format);
+      buf.Vprintf(format, ap);
+      if (buf.HasOverflowed())
+      {
+        FAIL(OUT_OF_ROOM);
+      }
+      return buf.GetZString();
     }
 
     void ReloadCurrentConfigurationPath()

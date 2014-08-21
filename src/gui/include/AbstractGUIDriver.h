@@ -343,6 +343,57 @@ namespace MFM
 
     }m_saveButton;
 
+    class ScreenshotButton : public AbstractGridButton
+    {
+     private:
+      u32 m_currentScreenshot;
+      SDL_Surface* m_screen;
+      Camera* m_camera;
+      AbstractDriver<GC>* m_driver;
+
+     public:
+      ScreenshotButton() :
+        AbstractGridButton("Screenshot"),
+        m_currentScreenshot(0),
+        m_screen(NULL),
+        m_camera(NULL)
+      {
+        AbstractButton::SetName("Screenshot");
+        Panel::SetDimensions(200, 40);
+      }
+
+      void SetScreen(SDL_Surface* screen)
+      {
+        m_screen = screen;
+      }
+
+      void SetCamera(Camera* camera)
+      {
+        m_camera = camera;
+      }
+
+      void SetDriver(AbstractDriver<GC>* driver)
+      {
+        m_driver = driver;
+      }
+
+      virtual void OnClick(u8 button)
+      {
+        if(m_driver && m_screen && m_camera)
+        {
+          const char * path = m_driver->GetSimDirPathTemporary("screenshot/%010d.png",
+                                                               ++m_currentScreenshot);
+          LOG.Debug("Screenshot saved at %s", path);
+
+          m_camera->DrawSurface(m_screen, path);
+        }
+        else
+        {
+          LOG.Debug("Screenshot not saved; screen is null. Use SetScreen() first.");
+        }
+      }
+    }m_screenshotButton;
+
     struct QuitButton : public AbstractGridButton
     {
       QuitButton() : AbstractGridButton("Quit")
@@ -546,8 +597,13 @@ namespace MFM
       m_buttonPanel.InsertButton(&m_tileViewButton);
       m_buttonPanel.InsertButton(&m_pauseTileButton);
       m_buttonPanel.InsertButton(&m_saveButton);
+      m_buttonPanel.InsertButton(&m_screenshotButton);
       m_buttonPanel.InsertButton(&m_reloadButton);
       m_buttonPanel.InsertButton(&m_quitButton);
+
+      m_screenshotButton.SetDriver(this);
+      m_screenshotButton.SetScreen(screen);
+      m_screenshotButton.SetCamera(&camera);
 
       m_pauseTileButton.SetGridRenderer(m_grend);
 
@@ -1206,7 +1262,8 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
 
         if (m_thisUpdateIsEpoch)
         {
-          if (m_captureScreenshots) {
+          if (m_captureScreenshots)
+          {
             const char * path = Super::GetSimDirPathTemporary("vid/%010d.png", m_thisEpochAEPS);
 
             camera.DrawSurface(screen,path);
