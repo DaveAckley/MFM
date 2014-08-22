@@ -26,6 +26,16 @@ namespace MFM {
          *100+tmp->tm_sec);
     }
 
+    u32 GetDateFromDateTime(u64 datetime)
+    {
+      return (u32) (datetime / (100*100*100));
+    }
+
+    u32 GetTimeFromDateTime(u64 datetime)
+    {
+      return (u32) (datetime % (100*100*100));
+    }
+
     bool GetReadableResourceFile(const char * relativePath, char * result, u32 length)
     {
       if (!length) FAIL(ILLEGAL_ARGUMENT);

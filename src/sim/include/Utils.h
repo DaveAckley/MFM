@@ -38,6 +38,10 @@ namespace MFM
 
     u64 GetDateTime(time_t t) ;
 
+    u32 GetDateFromDateTime(u64 datetime) ;
+
+    u32 GetTimeFromDateTime(u64 datetime) ;
+
     /**
        Look in standard places for relativePath.  Return true if a
        readable file was found, and fills result with an absolute path
