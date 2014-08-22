@@ -115,6 +115,10 @@ namespace MFM
 
     virtual int ReadByte()
     {
+      if (!m_fp)
+      {
+        FAIL(ILLEGAL_STATE);
+      }
       return fgetc(m_fp);
     }
   };
