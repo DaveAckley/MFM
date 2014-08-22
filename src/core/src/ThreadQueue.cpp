@@ -36,17 +36,17 @@ namespace MFM
     {
       if(length + m_heldBytes > THREADQUEUE_MAX_BYTES)
       {
-	LOG.Error("ERROR: THREADQUEUE OVERLOAD!\n");
-	FAIL(OUT_OF_RESOURCES);
+        LOG.Error("ERROR: THREADQUEUE OVERLOAD!\n");
+        FAIL(OUT_OF_RESOURCES);
       }
 
       for(u32 i = 0; i < length; i++)
       {
-	m_queueData[m_writeHead++] = *(bytes++);
-	if(m_writeHead >= THREADQUEUE_MAX_BYTES)
-	{
-	  m_writeHead %= THREADQUEUE_MAX_BYTES;
-	}
+        m_queueData[m_writeHead++] = *(bytes++);
+        if(m_writeHead >= THREADQUEUE_MAX_BYTES)
+        {
+          m_writeHead %= THREADQUEUE_MAX_BYTES;
+        }
       }
       m_heldBytes += length;
     }
@@ -62,7 +62,7 @@ namespace MFM
       *(bytes++) = m_queueData[m_readHead++];
       if(m_readHead >= THREADQUEUE_MAX_BYTES)
       {
-	m_readHead %= THREADQUEUE_MAX_BYTES;
+        m_readHead %= THREADQUEUE_MAX_BYTES;
       }
     }
     m_heldBytes -= bytesAvailable;
@@ -76,11 +76,11 @@ namespace MFM
     {
       pthread_mutex_lock(&m_lock);
       {
-	readBytes += UnsafeRead(bytes + readBytes, length);
-	if(readBytes < length)
-	{
-	  pthread_cond_wait(&m_cond, &m_lock);
-	}
+        readBytes += UnsafeRead(bytes + readBytes, length);
+        if(readBytes < length)
+        {
+          pthread_cond_wait(&m_cond, &m_lock);
+        }
       }
       pthread_mutex_unlock(&m_lock);
     }
@@ -94,18 +94,42 @@ namespace MFM
     {
       pthread_mutex_lock(&m_lock);
       {
-	readBytes = UnsafeRead(bytes, length);
+        readBytes = UnsafeRead(bytes, length);
       }
       pthread_mutex_unlock(&m_lock);
     }
     return readBytes;
   }
 
+  void ThreadQueue::PeekRead(u8* toBuffer, u32 index, u32 length)
+  {
+    pthread_mutex_lock(&m_lock);
+    {
+      if(BytesAvailable() < length + index)
+      {
+        FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
+      }
+
+      u32 readHead = index + m_readHead;
+      for(u32 i = 0; i < length; i++)
+      {
+        *(toBuffer++) = m_queueData[readHead];
+        if(readHead > THREADQUEUE_MAX_BYTES)
+        {
+          readHead %= THREADQUEUE_MAX_BYTES;
+        }
+      }
+    }
+    pthread_mutex_unlock(&m_lock);
+  }
+
   u32 ThreadQueue::BytesAvailable()
   {
     u32 ret;
     pthread_mutex_lock(&m_lock);
-    ret = m_heldBytes;
+    {
+      ret = m_heldBytes;
+    }
     pthread_mutex_unlock(&m_lock);
     return ret;
   }

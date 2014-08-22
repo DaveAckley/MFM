@@ -3,6 +3,7 @@
 #include "Element_Empty.h"
 #include "Logger.h"
 #include "AtomSerializer.h"
+#include "PacketSerializer.h"
 #include "Util.h"
 
 namespace MFM
@@ -767,13 +768,24 @@ namespace MFM
       {
         if (m_connections[dir]->InputByteCount() != 0)
         {
-          LOG.Warning("NON-EMPTY INPUT BUFFER (%d bytes %d) IN %p",
+          LOG.Warning("NON-EMPTY INPUT BUFFER (%d bytes) IN %p. Packets:",
                       m_connections[dir]->InputByteCount(), sizeof(Packet<T>),
                       (void*) this);
+
+          for(u32 i = 0; i < m_connections[dir]->InputByteCount(); i += sizeof(Packet<T>))
+          {
+            u8 packetBuffer[sizeof(Packet<T>)];
+            m_connections[dir]->PeekRead(false, packetBuffer, i, sizeof(Packet<T>));
+
+            Packet<T>* packet = (Packet<T>*)packetBuffer;
+            PacketSerializer<T> serializer(*packet);
+
+            LOG.Warning("  %@", &serializer);
+          }
         }
         if (m_connections[dir]->OutputByteCount() != 0)
         {
-          LOG.Warning("NON-EMPTY OUTPUT BUFFER (%d bytes %d) IN %p",
+          LOG.Warning("NON-EMPTY OUTPUT BUFFER (%d bytes) IN %p",
                       m_connections[dir]->OutputByteCount(), sizeof(Packet<T>),
                       (void*) this);
         }

@@ -178,6 +178,19 @@ namespace MFM
     }
 
     /**
+     * Reads a series of bytes from an underlying queue without
+     * blocking the calling thread.  This FAILs with
+     * ARRAY_INDEX_OUT_OF_BOUNDS if reading will go over the bounds of
+     * this ThreadQueue. This does not consume any bytes from the ThreadQueue .
+     */
+    void PeekRead(bool output, u8* buffer, u32 index, u32 length)
+    {
+      ThreadQueue& queue = output ? m_outbuffer : m_inbuffer;
+
+      queue.PeekRead(buffer, index, length);
+    }
+
+    /**
      * Writes a series of bytes to a specified internal buffer of this
      * Connection.
      *
@@ -215,6 +228,11 @@ namespace MFM
     u32 OutputByteCount()
     {
       return m_outbuffer.BytesAvailable();
+    }
+
+    void LogAllPackets()
+    {
+
     }
 
   };

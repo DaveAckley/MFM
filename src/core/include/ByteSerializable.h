@@ -34,18 +34,20 @@
 #include "ByteSource.h"
 #include <stdarg.h>    /* For ... */
 
-namespace MFM {
-
+namespace MFM
+{
   /**
      ByteSerializable is an interface for an object that can either
      print itself to a ByteSink, read itself from a ByteSource, or
      both.  By default it can do neither; if it can do both, it is
      strongly expected that the two operations invert each other.
    */
-  class ByteSerializable {
-  public:
+  class ByteSerializable
+  {
+   public:
 
-    enum Result {
+    enum Result
+    {
       UNSUPPORTED = -1,
       FAILURE = 0,
       SUCCESS = 1
@@ -79,11 +81,12 @@ namespace MFM {
       return UNSUPPORTED;
     }
 
-    virtual ~ByteSerializable() { }
+    virtual ~ByteSerializable()
+    { }
   };
 
-  class NullByteSerializable : public ByteSerializable {
-
+  class NullByteSerializable : public ByteSerializable
+  {
     virtual Result ReadFrom(ByteSource & byteSource, s32 argument = 0)
     {
       return SUCCESS;
@@ -93,7 +96,6 @@ namespace MFM {
     {
       return SUCCESS;
     }
-
   };
 
   extern NullByteSerializable NullSerializable;

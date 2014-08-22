@@ -43,7 +43,7 @@ namespace MFM
        * This PacketType describes a Tile's intent to write an atom to
        * a specific location.
        */
-      PACKET_WRITE,
+      PACKET_WRITE = 0,
 
       /**
        * Used to keep inter-tile buffers from overflowing, this PacketType
@@ -89,11 +89,6 @@ namespace MFM
     u8 m_generation;
 
     /**
-     * Define a smaller point for intertile indexing
-     */
-    typedef Point<s16> SSPoint;
-
-    /**
      * Used to describe a location during Tile communication.
      */
     SSPoint m_edgeLoc;
@@ -109,14 +104,20 @@ namespace MFM
      * Constructs a new Packet of a given PacketType.
      */
     Packet(PacketType type, u8 generation) :
-      m_type(type), m_generation(generation)
+      m_type(type),
+      m_generation(generation)
     { }
 
-    /**
-     * Constructs an uninitialized Packet.
-    Packet(u8 generation) : m_generation(generation)
-    { }
-     */
+    const char* GetTypeString()
+    {
+      switch(m_type)
+      {
+      case PACKET_WRITE: return "Write";
+      case PACKET_EVENT_COMPLETE: return "Event Complete";
+      case PACKET_EVENT_ACKNOWLEDGE: return "Event Acknowledge";
+      }
+      return "INVALID TYPE";
+    }
 
     /**
      * Gets the PacketType of this Packet.
@@ -230,9 +231,7 @@ namespace MFM
     {
       return ((u8) (m_generation - ourGeneration)) >= U8_MAX / 2;
     }
-
   };
-
 } /* namespace MFM */
 
 #endif /*PACKET_H*/

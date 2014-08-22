@@ -561,9 +561,19 @@ namespace MFM
   typedef Point<s32> SPoint;
 
   /**
-   * A Point which has coordinates of an unsigned integral type.
+   * A Point which has coordinates of an unsigned 32-bit integral type.
    */
   typedef Point<u32> UPoint;
+
+  /**
+   * A point which has coordinates of a signed 16-bit integral type.
+   */
+  typedef Point <s16> SSPoint;
+
+  /**
+   * A point which has coordinates of an unsigned 16-bit integral type.
+   */
+  typedef Point <u16> USPoint;
 
   /**
    * Converts a signed Point to an unsigned Point .

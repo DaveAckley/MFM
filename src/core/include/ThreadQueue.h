@@ -161,6 +161,20 @@ namespace MFM
     u32 Read(u8* bytes, u32 length);
 
     /**
+     * Writes a series of held bytes to a specified buffer. This FAILs
+     * with ARRAY_INDEX_OUT_OF_BOUNDS if reading will go over the
+     * bounds of this ThreadQueue .
+     *
+     * @param toBuffer The buffer to read bytes from this ThreadQueue
+     *                 into.
+     *
+     * @param index The byte index to begin reading from.
+     *
+     * @param length The number of bytes to read from this ThreadQueue .
+     */
+    void PeekRead(u8* toBuffer, u32 index, u32 length);
+
+    /**
      * Gets the number of bytes currently ready to be read from the
      * underlying queue.
      *

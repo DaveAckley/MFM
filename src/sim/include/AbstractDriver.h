@@ -176,7 +176,9 @@ namespace MFM
       else
         m_msSpentOverhead = 0;
 
-      Sleep(m_microsSleepPerFrame/ONE_MILLION, (u64) (m_microsSleepPerFrame%ONE_MILLION)*ONE_THOUSAND);
+      Sleep(m_microsSleepPerFrame/ONE_MILLION,
+            (u64) (m_microsSleepPerFrame%ONE_MILLION)*ONE_THOUSAND);
+
       m_ticksLastStopped = GetTicks(); // and before pausing
 
       grid.Pause();
@@ -199,7 +201,8 @@ namespace MFM
       double thisAERsample = 1000.0 * newEvents / totalSites / thisPeriodMS;
 
       const double BACKWARDS_AVERAGE_RATE = 0.99;
-      m_recentAER = BACKWARDS_AVERAGE_RATE * m_recentAER + (1 - BACKWARDS_AVERAGE_RATE) * thisAERsample;
+      m_recentAER = BACKWARDS_AVERAGE_RATE * m_recentAER +
+                    (1 - BACKWARDS_AVERAGE_RATE) * thisAERsample;
 
       m_overheadPercent = 100.0*m_msSpentOverhead/(m_msSpentRunning+m_msSpentOverhead);
 
@@ -285,9 +288,7 @@ namespace MFM
      * Used by GUI Drivers to register Elements in places needed.
      */
     virtual void PostReinitPhysics()
-    {
-
-    }
+    { }
 
     /**
      * To be defined by the top level driver only. This allows all
@@ -702,7 +703,9 @@ namespace MFM
         this->SetAEPSPerEpoch(this->GetAEPSPerEpoch() + m_acceleration);
       }
 
-      if (m_accelerateAfterEpochs > 0 && m_surgeAfterEpochs > 0 && (epochs % m_surgeAfterEpochs) == 0)
+      if (m_accelerateAfterEpochs > 0 &&
+          m_surgeAfterEpochs > 0 &&
+          (epochs % m_surgeAfterEpochs) == 0)
       {
         ++m_acceleration;
       }
