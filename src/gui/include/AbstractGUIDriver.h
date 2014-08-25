@@ -454,6 +454,7 @@ namespace MFM
         AbstractButton::SetName("BGRButton");
         Panel::SetDimensions(200,40);
         AbstractButton::SetRenderPoint(SPoint(2, 75));
+        Panel::SetVisibility(true);
       }
 
       virtual void OnCheck(bool value)
@@ -557,7 +558,6 @@ namespace MFM
       m_gridPanel.Insert(&m_toolboxPanel, NULL);
 
       m_helpPanel.SetName("Help");
-      m_helpPanel.SetVisibility(false);
       m_helpPanel.SetDimensions(m_screenWidth / 3, m_screenHeight);
       m_helpPanel.SetAnchor(ANCHOR_WEST);
       m_gridPanel.Insert(&m_helpPanel, NULL);
@@ -926,6 +926,13 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
       driver.m_startPaused = false;
     }
 
+    static void DontShowHelpPanelOnStart(const char* not_used, void* driverptr)
+    {
+      AbstractGUIDriver& driver = *((AbstractGUIDriver*)driverptr);
+
+      driver.m_helpPanel.SetVisibility(false);
+    }
+
     void AddDriverArguments()
     {
       Super::AddDriverArguments();
@@ -943,6 +950,9 @@ t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsCon
 
       this->RegisterArgument("Simulation begins upon program startup.",
                              "--run", &SetStartPausedFromArgs, this, false);
+
+      this->RegisterArgument("Help panel is not shown upon startup.",
+                             "-n| --nohelp", &DontShowHelpPanelOnStart, this, false);
     }
 
     EditingTool m_selectedTool;
