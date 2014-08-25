@@ -146,6 +146,8 @@ namespace MFM
     {
       m_grend->DeselectTile();
       m_grend->DeselectAtom();
+      m_cloneOrigin.Set(-1, -1);
+      m_grend->SetCloneOrigin(m_cloneOrigin);
       m_atomViewPanel.SetAtom(NULL);
     }
 
@@ -351,20 +353,24 @@ namespace MFM
                     if(grid.MapGridToTile(cp, tile, site))
                     {
                       m_cloneOrigin.Set(cp.GetX(), cp.GetY());
+                      m_grend->SetCloneOrigin(m_cloneOrigin);
                     }
                     return; /* Only need to do this once. */
                   }
                   else
                   {
-                    SPoint clonePt(m_cloneOrigin.GetX() +
-                                   (pt.GetX() - m_cloneDestination.GetX()),
-                                   m_cloneOrigin.GetY() +
-                                   (pt.GetY() - m_cloneDestination.GetY()));
-                    SPoint tile, site;
-                    if(grid.MapGridToTile(clonePt, tile, site))
+                    if(m_cloneOrigin.GetX() >= 0 && m_cloneOrigin.GetY() >= 0)
                     {
-                      const T* a =  grid.GetAtom(clonePt);
-                      grid.PlaceAtom(*a, pt);
+                      SPoint clonePt(m_cloneOrigin.GetX() +
+                                     (pt.GetX() - m_cloneDestination.GetX()),
+                                     m_cloneOrigin.GetY() +
+                                     (pt.GetY() - m_cloneDestination.GetY()));
+                      SPoint tile, site;
+                      if(grid.MapGridToTile(clonePt, tile, site))
+                      {
+                        const T* a =  grid.GetAtom(clonePt);
+                        grid.PlaceAtom(*a, pt);
+                      }
                     }
                   }
                 }

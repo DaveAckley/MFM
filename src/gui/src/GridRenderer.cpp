@@ -71,6 +71,11 @@ namespace MFM
     m_tileRenderer.SetWindowTL(origin);
   }
 
+  void GridRenderer::SetCloneOrigin(const SPoint& cloneOrigin)
+  {
+    m_cloneOrigin.Set(cloneOrigin.GetX(), cloneOrigin.GetY());
+  }
+
   void GridRenderer::MoveUp(u8 amount)
   {
     m_tileRenderer.MoveUp(amount);
