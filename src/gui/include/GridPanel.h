@@ -210,30 +210,33 @@ namespace MFM
                             mbe.m_event.button.y));
     }
 
+    SPoint ClickPointToAtom(const SPoint& clickPt)
+    {
+      SPoint abs = GetAbsoluteLocation();
+      abs.Set(clickPt.GetX() - abs.GetX(),
+              clickPt.GetY() - abs.GetY());
+
+      TileRenderer& tileRenderer = m_grend->GetTileRenderer();
+      const SPoint& offset = tileRenderer.GetWindowTL();
+
+
+      abs.Set(abs.GetX() - offset.GetX(),
+              abs.GetY() - offset.GetY());
+
+      u32 atomSize = tileRenderer.GetAtomSize();
+
+      abs.Set(abs.GetX() / atomSize,
+              abs.GetY() / atomSize);
+
+      return abs;
+    }
+
     void HandleCloneTool(MouseButtonEvent& mbe)
     {
       if(mbe.m_event.button.button == SDL_BUTTON_LEFT)
       {
-        SPoint clickPt = GetAbsoluteLocation();
-        m_cloneDestination.Set(mbe.m_event.button.x - clickPt.GetX(),
-                               mbe.m_event.button.y - clickPt.GetY());
-
-        TileRenderer& tileRenderer = m_grend->GetTileRenderer();
-        const SPoint& offset = tileRenderer.GetWindowTL();
-
-        SPoint& cp = m_cloneDestination;
-
-        /* Offset it by the corner */
-        cp.SetX(cp.GetX() - offset.GetX());
-        cp.SetY(cp.GetY() - offset.GetY());
-
-        u32 atomSize = tileRenderer.GetAtomSize();
-
-        /* Figure out which atom needs changing */
-        cp.SetX(cp.GetX() / atomSize);
-        cp.SetY(cp.GetY() / atomSize);
-
-        m_cloneDestination.Set(cp.GetX(), cp.GetY());
+        m_cloneDestination = ClickPointToAtom(SPoint(mbe.m_event.button.x,
+                                                     mbe.m_event.button.y));
       }
       HandleCloneTool(mbe.m_event.button.button,
                       SPoint(mbe.m_event.button.x,
@@ -257,7 +260,7 @@ namespace MFM
         m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
         m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
-      PaintMapper(button, clickPt, 0, atom, TOOL_PENCIL);
+      PaintAtom(button, clickPt, 0, atom, TOOL_PENCIL);
     }
 
     void HandleBrushTool(u8 button, SPoint clickPt)
@@ -266,12 +269,12 @@ namespace MFM
         m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
         m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
-      PaintMapper(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(), atom, TOOL_BRUSH);
+      PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(), atom, TOOL_BRUSH);
     }
 
     void HandleEraserTool(u8 button, SPoint clickPt)
     {
-      PaintMapper(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
+      PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
                   Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), TOOL_ERASER);
     }
 
@@ -281,54 +284,30 @@ namespace MFM
         m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
         m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
-        PaintMapper(button, clickPt, 0, atom, TOOL_BUCKET);
+        PaintAtom(button, clickPt, 0, atom, TOOL_BUCKET);
     }
 
     void HandleXRayTool(u8 button, SPoint clickPt)
     {
-      PaintMapper(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
+      PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
                   Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), TOOL_XRAY);
     }
 
     void HandleCloneTool(u8 button, SPoint clickPt)
     {
-      PaintMapper(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
+      PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
                   Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), TOOL_CLONE);
     }
 
-    void PaintMapper(u8 button, SPoint clickPt, s32 brushSize,
-                     T atom, EditingTool tool)
+    void PaintAtom(u8 button, SPoint& clickPt, s32 brushSize,
+                   const T& atom, EditingTool tool)
     {
-      SPoint pt = GetAbsoluteLocation();
-      pt.Set(clickPt.GetX() - pt.GetX(),
-             clickPt.GetY() - pt.GetY());
-
-      PaintAtom(button, *m_mainGrid, pt, brushSize, atom, tool);
-    }
-
-    void PaintAtom(u8 button, Grid<GC>& grid, SPoint& clickPt, s32 brushSize,
-                   T& atom, EditingTool tool)
-    {
-
       /* Only do this when tiles are together to keep from having to
        * deal with caches */
       if(!m_grend->IsRenderingTilesSeparated())
       {
-        TileRenderer& tileRenderer = m_grend->GetTileRenderer();
-        const SPoint& offset = tileRenderer.GetWindowTL();
-
-        SPoint& cp = clickPt;
-
-        /* Offset it by the corner */
-        cp.SetX(cp.GetX() - offset.GetX());
-        cp.SetY(cp.GetY() - offset.GetY());
-
-        u32 atomSize = tileRenderer.GetAtomSize();
-
-        /* Figure out which atom needs changing */
-        cp.SetX(cp.GetX() / atomSize);
-        cp.SetY(cp.GetY() / atomSize);
-
+        Grid<GC>& grid = *m_mainGrid;
+        SPoint cp = ClickPointToAtom(clickPt);
         if(brushSize > 0)
         {
           /* brushSize can't be templated, so let's do this by hand. */
@@ -435,7 +414,7 @@ namespace MFM
       }
     }
 
-    void BucketFill(Grid<GC>& grid, T& atom, SPoint& pt)
+    void BucketFill(Grid<GC>& grid, const T& atom, SPoint& pt)
     {
       MDist<1> md = MDist<1>::get();
 
