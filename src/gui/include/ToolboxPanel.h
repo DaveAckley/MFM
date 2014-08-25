@@ -35,7 +35,7 @@
 #define ELEMENT_BOX_SIZE 70
 #define ELEMENT_RENDER_SIZE 32
 
-#define ELEMENT_BOX_BUTTON_COUNT 7
+#define ELEMENT_BOX_BUTTON_COUNT 8
 #define TOOLBOX_MAX_SLIDERS 8
 
 namespace MFM
@@ -332,7 +332,8 @@ namespace MFM
         ASSET_BUCKET_ICON,
         ASSET_ERASER_ICON,
         ASSET_BRUSH_ICON,
-        ASSET_XRAY_ICON
+        ASSET_XRAY_ICON,
+        ASSET_CLONE_ICON
       };
 
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
@@ -425,7 +426,8 @@ namespace MFM
     {
       return GetSelectedTool() == TOOL_BRUSH  ||
              GetSelectedTool() == TOOL_ERASER ||
-             GetSelectedTool() == TOOL_XRAY;
+             GetSelectedTool() == TOOL_XRAY   ||
+             GetSelectedTool() == TOOL_CLONE;
     }
 
     virtual bool Handle(MouseButtonEvent& mbe)
@@ -511,7 +513,7 @@ namespace MFM
 
         snprintf(brushSizeArray, 64, "%d", m_brushSize);
 
-        const SPoint brushPos = m_toolButtons[TOOL_XRAY].Panel::GetRenderPoint();
+        const SPoint brushPos = m_toolButtons[TOOL_CLONE].Panel::GetRenderPoint();
         UPoint pos(brushPos.GetX() + 32, brushPos.GetY());
         d.BlitBackedText(brushSizeArray, pos, UPoint(128, 128));
       }

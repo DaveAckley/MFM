@@ -79,12 +79,17 @@ namespace MFM
     /* I'm making this a field because of the recursive nature of BucketFill .*/
     u32 m_bucketFillStartType;
 
+    SPoint m_cloneOrigin;
+    SPoint m_cloneDestination;
+
     AtomViewPanel<GC> m_atomViewPanel;
 
    public:
     GridPanel() :
       m_paintingEnabled(false),
-      m_bucketFillStartType(0)
+      m_bucketFillStartType(0),
+      m_cloneOrigin(-1, -1),
+      m_cloneDestination(-1, -1)
     {
       SetName("Grid Panel");
       SetDimensions(SCREEN_INITIAL_WIDTH,
@@ -203,6 +208,36 @@ namespace MFM
                             mbe.m_event.button.y));
     }
 
+    void HandleCloneTool(MouseButtonEvent& mbe)
+    {
+      if(mbe.m_event.button.button == SDL_BUTTON_LEFT)
+      {
+        SPoint clickPt = GetAbsoluteLocation();
+        m_cloneDestination.Set(mbe.m_event.button.x - clickPt.GetX(),
+                               mbe.m_event.button.y - clickPt.GetY());
+
+        TileRenderer& tileRenderer = m_grend->GetTileRenderer();
+        const SPoint& offset = tileRenderer.GetWindowTL();
+
+        SPoint& cp = m_cloneDestination;
+
+        /* Offset it by the corner */
+        cp.SetX(cp.GetX() - offset.GetX());
+        cp.SetY(cp.GetY() - offset.GetY());
+
+        u32 atomSize = tileRenderer.GetAtomSize();
+
+        /* Figure out which atom needs changing */
+        cp.SetX(cp.GetX() / atomSize);
+        cp.SetY(cp.GetY() / atomSize);
+
+        m_cloneDestination.Set(cp.GetX(), cp.GetY());
+      }
+      HandleCloneTool(mbe.m_event.button.button,
+                      SPoint(mbe.m_event.button.x,
+                             mbe.m_event.button.y));
+    }
+
     void HandleAtomSelectorTool(u8 button, SPoint clickPt)
     {
       SPoint pt = GetAbsoluteLocation();
@@ -220,7 +255,7 @@ namespace MFM
         m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
         m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
-      PaintMapper(button, clickPt, 0, atom, false);
+      PaintMapper(button, clickPt, 0, atom, TOOL_PENCIL);
     }
 
     void HandleBrushTool(u8 button, SPoint clickPt)
@@ -229,13 +264,13 @@ namespace MFM
         m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
         m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
-      PaintMapper(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(), atom, false);
+      PaintMapper(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(), atom, TOOL_BRUSH);
     }
 
     void HandleEraserTool(u8 button, SPoint clickPt)
     {
       PaintMapper(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
-                  Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), false);
+                  Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), TOOL_ERASER);
     }
 
     void HandleBucketTool(u8 button, SPoint clickPt)
@@ -244,31 +279,33 @@ namespace MFM
         m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
         m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
-      /* Filling empty results in stack overflow for obvious reasons */
-      if(!Atom<CC>::IsType(atom, Element_Empty<CC>::THE_INSTANCE.GetType()))
-      {
-        PaintMapper(button, clickPt, 0, atom, true);
-      }
+        PaintMapper(button, clickPt, 0, atom, TOOL_BUCKET);
     }
 
     void HandleXRayTool(u8 button, SPoint clickPt)
     {
       PaintMapper(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
-                  Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), false, true);
+                  Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), TOOL_XRAY);
+    }
+
+    void HandleCloneTool(u8 button, SPoint clickPt)
+    {
+      PaintMapper(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
+                  Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), TOOL_CLONE);
     }
 
     void PaintMapper(u8 button, SPoint clickPt, s32 brushSize,
-                     T atom, bool bucket, bool xray = false)
+                     T atom, EditingTool tool)
     {
       SPoint pt = GetAbsoluteLocation();
       pt.Set(clickPt.GetX() - pt.GetX(),
              clickPt.GetY() - pt.GetY());
 
-      PaintAtom(*m_mainGrid, pt, brushSize, atom, bucket, xray);
+      PaintAtom(button, *m_mainGrid, pt, brushSize, atom, tool);
     }
 
-    void PaintAtom(Grid<GC>& grid, SPoint& clickPt, s32 brushSize,
-                   T& atom, bool bucket, bool xray)
+    void PaintAtom(u8 button, Grid<GC>& grid, SPoint& clickPt, s32 brushSize,
+                   T& atom, EditingTool tool)
     {
 
       /* Only do this when tiles are together to keep from having to
@@ -302,9 +339,34 @@ namespace MFM
               if(sqrt((x * x) + (y * y)) <= brushSize &&
                  grid.MapGridToTile(pt, tile, site))
               {
-                if(xray)
+                if(tool == TOOL_XRAY)
                 {
-                  grid.XRayAtom(SPoint(cp.GetX() + x, cp.GetY() + y));
+                  grid.XRayAtom(pt);
+                }
+                else if(tool == TOOL_CLONE)
+                {
+                  if(button == SDL_BUTTON_RIGHT)
+                  {
+                    SPoint tile, site;
+                    if(grid.MapGridToTile(cp, tile, site))
+                    {
+                      m_cloneOrigin.Set(cp.GetX(), cp.GetY());
+                    }
+                    return; /* Only need to do this once. */
+                  }
+                  else
+                  {
+                    SPoint clonePt(m_cloneOrigin.GetX() +
+                                   (pt.GetX() - m_cloneDestination.GetX()),
+                                   m_cloneOrigin.GetY() +
+                                   (pt.GetY() - m_cloneDestination.GetY()));
+                    SPoint tile, site;
+                    if(grid.MapGridToTile(clonePt, tile, site))
+                    {
+                      const T* a =  grid.GetAtom(clonePt);
+                      grid.PlaceAtom(*a, pt);
+                    }
+                  }
                 }
                 else
                 {
@@ -318,7 +380,7 @@ namespace MFM
                 cp.GetX() < TILE_SIDE_LIVE_SITES * W &&
                 cp.GetY() < TILE_SIDE_LIVE_SITES * H)
         {
-          if(bucket)
+          if(tool == TOOL_BUCKET)
           {
             SPoint tile, site;
             if(grid.MapGridToTile(cp, tile, site))
@@ -327,6 +389,35 @@ namespace MFM
               if(m_bucketFillStartType != atom.GetType())
               {
                 BucketFill(grid, atom, cp);
+              }
+            }
+          }
+          else if(tool == TOOL_CLONE)
+          {
+            if(button == SDL_BUTTON_RIGHT)
+            {
+              SPoint tile, site;
+              if(grid.MapGridToTile(cp, tile, site))
+              {
+                m_cloneOrigin.Set(cp.GetX(), cp.GetY());
+                LOG.Debug("Clone Origin Set: (%d, %d)", cp.GetX(), cp.GetY());
+              }
+            }
+            else
+            {
+              SPoint clonePt(m_cloneOrigin.GetX() +
+                             (cp.GetX() - m_cloneDestination.GetX()),
+                             m_cloneOrigin.GetY() +
+                             (cp.GetY() - m_cloneDestination.GetY()));
+              SPoint tile, site;
+              LOG.Debug("Cloning from (%d, %d) to (%d, %d) [clone dest = (%d, %d)]",
+                        clonePt.GetX(), clonePt.GetY(),
+                        cp.GetX(), cp.GetY(),
+                        m_cloneDestination.GetX(), m_cloneDestination.GetY());
+              if(grid.MapGridToTile(clonePt, tile, site))
+              {
+                const T* a =  grid.GetAtom(clonePt);
+                grid.PlaceAtom(*a, cp);
               }
             }
           }
@@ -404,6 +495,9 @@ namespace MFM
             case TOOL_XRAY:
               HandleXRayTool(mbe);
               break;
+            case TOOL_CLONE:
+              HandleCloneTool(mbe);
+              break;
 
             default: break; /* Do the rest later */
             }
@@ -463,7 +557,9 @@ namespace MFM
           case TOOL_ATOM_SELECTOR:
             HandleAtomSelectorTool(mask, SPoint(event.x, event.y));
             break;
-
+          case TOOL_CLONE:
+            HandleCloneTool(mask, SPoint(event.x, event.y));
+            break;
           default:
             /* Some tools don't need to do this */
             break;
