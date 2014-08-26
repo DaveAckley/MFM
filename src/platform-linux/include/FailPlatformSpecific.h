@@ -10,14 +10,14 @@ typedef struct MFMErrorEnvironment * volatile MFMErrorEnvironmentPointer_t;
 struct MFMErrorEnvironment {
   jmp_buf buffer;               /* the system state as of the unwind_protect entry */
   volatile const char * file;   /* the file name of the original failure */
-  volatile int lineno;          /* the line number of the original failure */ 
+  volatile int lineno;          /* the line number of the original failure */
   volatile int thrown;          /* Return value(s) from setjmp call */
   MFMErrorEnvironmentPointer_t prev; /* Back link to previous error environment */
 } ;
 
 
 /* Pointer to thread-local error environment stack top */
-extern "C" 
+extern "C"
   __thread MFMErrorEnvironmentPointer_t * MFMPtrToErrEnvStackPtr;
 
 extern "C" void MFMPrintErrorEnvironment(FILE * stream, MFMErrorEnvironmentPointer_t errenv) ;
@@ -37,21 +37,21 @@ extern "C" const char * MFMFailCodeReason(int failCode) ;
     MFMLongJmpHere((*MFMPtrToErrEnvStackPtr)->buffer,              \
                    MFM_FAIL_CODE_NUMBER(code)),0) :                \
    (MFMFailHere(__FILE__,__LINE__,                                 \
-                MFM_FAIL_CODE_REASON_UNCAUGHT_FAILURE),0))
+                MFM_FAIL_CODE_NUMBER(code)),0))
 
 /**
    Execute 'block', but if any FAIL()'s occur, stop executing 'block'
    at that point and execute 'cleanup'.
 
    NOTE WELL THE FOLLOWING WARNING ABOUT unwind_protect!
-  
-   WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
-   WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
+
+   WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+   WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
 
    To avoid memory allocation and lots of extra C++ hair,
    unwind_protect (and FAIL) are based on the ancient crufty C
    setjmp/longjmp mechanism, rather than the modern slick C++
-   try/catch mechanism.  
+   try/catch mechanism.
 
    That means the following text, from the longjmp(3) man page,
    applies here as well, reading 'unwind_protect' for 'setjmp' and
@@ -85,8 +85,8 @@ extern "C" const char * MFMFailCodeReason(int failCode) ;
    to something else that does the work, and possibly FAILS, without
    affecting the local variables of the caller.
 
-   WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
-   WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
+   WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+   WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
 
  */
 #define unwind_protect(cleanup,block)                                         \

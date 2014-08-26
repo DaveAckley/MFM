@@ -42,12 +42,7 @@ namespace MFM
     void Reset() { m_lastDateTime = 0; }
     virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0)
     {
-      u64 now = Utils::GetDateTimeNow();
-      if (now != m_lastDateTime)
-      {
-        m_lastDateTime = now;
-        m_sequence = 0;
-      }
+      m_lastDateTime = Utils::GetDateTimeNow();
       byteSink.Print(m_lastDateTime);
       if (argument == 0)
       {

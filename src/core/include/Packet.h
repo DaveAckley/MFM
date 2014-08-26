@@ -105,6 +105,7 @@ namespace MFM
      */
     Packet(PacketType type, u8 generation) :
       m_type(type),
+      m_toNeighbor(Dirs::DIR_COUNT), // Init invalid
       m_generation(generation)
     { }
 
@@ -116,7 +117,7 @@ namespace MFM
       case PACKET_EVENT_COMPLETE: return "Event Complete";
       case PACKET_EVENT_ACKNOWLEDGE: return "Event Acknowledge";
       }
-      return "INVALID TYPE";
+      return "INVALID";
     }
 
     /**

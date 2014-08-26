@@ -30,12 +30,17 @@
 
 #include "ByteSerializable.h"
 #include "Packet.h"
+#include "AtomSerializer.h"
 
 namespace MFM
 {
-  template <class T>
+  template <class CC>
   class PacketSerializer : public ByteSerializable
   {
+    typedef typename CC::PARAM_CONFIG P;
+    typedef typename CC::ATOM_TYPE T;
+    enum { BPA = P::BITS_PER_ATOM };
+
    private:
     Packet<T>& m_packet;
 
@@ -47,11 +52,15 @@ namespace MFM
     virtual Result PrintTo(ByteSink& byteSink, s32 argument = 0)
     {
       SPoint loc = m_packet.GetLocation();
-      byteSink.Printf("Packet{size=%d type=%s generation=%d Location=(%d, %d)}",
+      AtomSerializer<CC> atom(m_packet.GetAtom());
+      byteSink.Printf("Pkt%d{%d/%s, gen:%d, nghb:%d, (%d, %d), %@}",
                       sizeof(Packet<T>),
+                      (u32) m_packet.GetType(),
                       m_packet.GetTypeString(),
                       m_packet.GetGeneration(),
-                      loc.GetX(), loc.GetY());
+                      m_packet.GetReceivingNeighbor(),
+                      loc.GetX(), loc.GetY(),
+                      &atom);
 
       return SUCCESS;
     }

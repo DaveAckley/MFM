@@ -27,18 +27,108 @@
 #ifndef THREAD_PAUSER_H
 #define THREAD_PAUSER_H
 
-#include <pthread.h>
+#include "Mutex.h"
 
 namespace MFM
 {
-
-  typedef enum
+  /**
+   * The states of the ThreadPauser state machine
+   */
+  enum ThreadState
   {
-    THREADSTATE_RUNNING = 0,
+    /**
+     * Prev state: THREADSTATE_PAUSE_READY, also none
+     * This state: THREADSTATE_PAUSED
+     * Next state: THREADSTATE_RUN_REQUESTED
+     *
+     * Precondition:  All buffers are empty and no intertile locks are
+     *                held in the whole grid
+     * Entered by:    Outer advances from THREADSTATE_PAUSE_READY; also
+     *                initial state from ctor
+     * Behavior:      Inner waits on condition variable m_pause, for
+     *                the predicate state==THREADSTATE_RUN_REQUESTED.
+     *                Outer is free to access and modify all atomic
+     *                data in all Tiles.
+     * Exited by:     Outer calls RequestRun() and signals condition
+     *                variable m_pause
+     * Postcondition: Inner is awakened.  Outer is not allowed to
+     *                access Tile's atomic data.
+     */
+    THREADSTATE_PAUSED,
+
+    /**
+     * Prev state: THREADSTATE_PAUSED
+     * This state: THREADSTATE_RUN_REQUESTED
+     * Next state: THREADSTATE_RUN_READY
+     *
+     * Precondition:  Tile buffers are empty and no intertile locks are held
+     * Entered by:    Outer calls RequestRun() and signals condvar m_pause
+     * Behavior:      Inner awakens and detects state is RUN_REQUESTED
+     * Exited by:     Inner calls RunReady()
+     * Postcondition: Tile buffers are empty and no intertile locks are held
+     */
+    THREADSTATE_RUN_REQUESTED,
+
+    /**
+     * Prev state: THREADSTATE_RUN_REQUESTED
+     * This state: THREADSTATE_RUN_READY
+     * Next state: THREADSTATE_RUNNING
+     *
+     * Precondition:  Tile buffers are empty and no intertile locks are held
+     * Entered by:    Inner calls RunReady()
+     * Behavior:      Inner waits on condition variable m_run for predicate state == RUNNING
+     * Exited by:     Outer calls Run() and signals condition var m_run
+     * Postcondition: State is THREADSTATE_RUNNING and Inner is awake.
+     */
+    THREADSTATE_RUN_READY,
+
+    /**
+     * Prev state: THREADSTATE_RUN_READY
+     * This state: THREADSTATE_RUNNING
+     * Next state: THREADSTATE_PAUSE_REQUESTED
+     *
+     * Precondition:  All Tiles are THREADSTATE_RUN_READY and all Inner
+     *                threads are waiting on condition var m_run
+     * Entered by:    Outer calls Run() and signals condition var m_run
+     * Behavior:      Inner loops asynchronously performing events
+     * Exited by:     Outer calls RequestPause()
+     * Postcondition: ? State is THREADSTATE_PAUSE_REQUESTED
+     */
+    THREADSTATE_RUNNING,
+
+    /**
+     * Prev state: THREADSTATE_RUNNING
+     * This state: THREADSTATE_PAUSE_REQUESTED
+     * Next state: THREADSTATE_PAUSE_READY
+     *
+     * Precondition:  ? State is THREADSTATE_PAUSE_REQUESTED
+     * Entered by:    Outer calls RequestPause()
+     * Behavior:      Inner finishes current event, including getting ACKs
+     *                from on any connections it has locked
+     * Exited by:     Inner advances state to THREADSTATE_PAUSE_READY when
+     *                it is holding no connection locks
+     * Postcondition: Inner holds no connection locks
+     */
     THREADSTATE_PAUSE_REQUESTED,
-    THREADSTATE_PAUSE_READY,
-    THREADSTATE_PAUSED
-  }ThreadState;
+
+    /**
+     * Prev state: THREADSTATE_PAUSE_REQUESTED
+     * This state: THREADSTATE_PAUSE_READY
+     * Next state: THREADSTATE_PAUSED
+     *
+     * Precondition:  All connections known to Inner are unlocked
+     * Entered by:    Inner advanced state to THREADSTATE_PAUSE_READY
+     * Behavior:      Processes packets from any connections locked by
+     *                its neighbors.
+     * Exited by:     Outer advances state after it observes that all
+     *                Tiles report THREADSTATE_PAUSE_READY
+     * Postcondition: All output buffers (in the whole grid wide) --
+     *                and therefore all input buffers -- are empty,
+     *                and no one holds any intertile locks).
+     */
+    THREADSTATE_PAUSE_READY
+
+  };
 
   /**
    * A threading construct which pauses a looping thread by blocking
@@ -51,27 +141,69 @@ namespace MFM
    private:
 
     /**
-     * The mutex required to lock the looping thread.
+     * The mutex gating all access to the ThreadPauser state
      */
-    pthread_mutex_t m_lock;
+    Mutex m_mutex;
 
     /**
-     * The thread condition required to lock the inner thread.
-     */
-    pthread_cond_t m_pauseCond;
-
-    /**
-     * Used to signal the outer thread that the inner thread has
-     * paused.
-     */
-    pthread_cond_t m_joinCond;
-
-    /**
-     * A flag describing the current state of the inner thread.
+     * The ThreadPauser current state
      */
     ThreadState m_threadState;
 
+    /**
+     * A Mutex::Predicate that waits for THREADSTATE_RUN_REQUESTED
+     */
+    struct StateIsRunRequested : public Mutex::Predicate
+    {
+      ThreadPauser & m_threadPauser;
+      StateIsRunRequested(ThreadPauser & tp) : Predicate(tp.m_mutex), m_threadPauser(tp) { }
+
+      virtual bool EvaluatePredicate()
+      {
+        return m_threadPauser.m_threadState == THREADSTATE_RUN_REQUESTED;
+      }
+    } m_stateIsRunRequested;
+
+    /**
+     * A Mutex::Predicate that waits for THREADSTATE_RUNNING
+     */
+    struct StateIsRunning : public Mutex::Predicate
+    {
+      ThreadPauser & m_threadPauser;
+      StateIsRunning(ThreadPauser & tp) : Predicate(tp.m_mutex), m_threadPauser(tp) { }
+
+      virtual bool EvaluatePredicate()
+      {
+        return m_threadPauser.m_threadState == THREADSTATE_RUNNING;
+      }
+    } m_stateIsRunning;
+
   public:
+
+    ThreadState GetStateBlockingInner()
+    {
+      return GetAdvanceStateInner(false);
+    }
+
+    ThreadState AdvanceStateInner()
+    {
+      return GetAdvanceStateInner(true);
+    }
+
+    ThreadState GetAdvanceStateInner(bool innerReadyToAdvance) ;
+
+    ThreadState GetStateNonblocking() ;
+
+    /**
+     * Given the ThreadPauser is currently in state fromState, advance
+     * it, if necessary, to the next state in the sequence.
+     *
+     * Violates an assertion if the ThreadPauser's current state is
+     * not fromState.
+     *
+     * \returns the (now) current state of the ThreadPauser.
+     */
+    ThreadState AdvanceStateOuter(ThreadState fromState) ;
 
     /**
      * Constructs a new ThreadPauser.
@@ -84,21 +216,76 @@ namespace MFM
     ~ThreadPauser();
 
     /**
-     * Finds out if this ThreadPauser is actively trying to pause the
-     * looping thread.
+     * To be called by the outer thread. This advances the inner
+     * thread from THREADSTATE_RUNNING to THREADSTATE_PAUSE_REQUESTED
      */
-    bool IsPaused();
+    void RequestPause()
+    {
+      AdvanceStateOuter(THREADSTATE_RUNNING);
+    }
 
+    /**
+     * To be called by the outer thread. This advances the inner
+     * thread from THREADSTATE_PAUSED to THREADSTATE_RUN_REQUESTED
+     */
+    void RequestRun()
+    {
+      AdvanceStateOuter(THREADSTATE_PAUSED);
+    }
+
+    /**
+     * To be called by the outer thread. This advances the inner
+     * thread from THREADSTATE_RUN_READY to THREADSTATE_RUNNING
+     */
+    void Run()
+    {
+      AdvanceStateOuter(THREADSTATE_RUN_READY);
+    }
+
+    /**
+     * To be called by the outer thread. Checks to see if the inner
+     * thread is ready to be run.
+     */
+    bool IsRunReady()
+    {
+      return GetStateNonblocking() == THREADSTATE_RUN_READY;
+    }
+
+    /**
+     * To be called by the outer thread. Checks to see if the inner
+     * thread is ready to be paused.
+     */
+    bool IsPauseReady()
+    {
+      return GetStateNonblocking() == THREADSTATE_PAUSE_READY;
+    }
+
+    /**
+     * To be called by the outer thread. ThreadPauser must be in state
+     * THREADSTATE_PAUSE_READY. This returns immediately and pauses
+     * the looping thread.
+     */
+    void Pause()
+    {
+      AdvanceStateOuter(THREADSTATE_PAUSE_READY);
+    }
+
+#if 0
     /**
      * Finds out if an outside thread wishes this ThreadPauser to be
      * paused.
      */
-    bool IsPauseRequested();
+    bool IsPauseRequested()
+    {
+      return GetStateNonblocking() == THREADSTATE_PAUSE_REQUESTED;
+    }
+
 
     /**
-     * Checks to see if the internal thread is ready to be paused.
+     * Finds out if this ThreadPauser is actively trying to pause the
+     * looping thread.
      */
-    bool IsPauseReady();
+    bool IsPaused();
 
     /**
      * Sets this ThreadPauser to be in a state which describes that it
@@ -107,31 +294,13 @@ namespace MFM
     void PauseReady();
 
     /**
-     * Tells this ThreadPauser that an outside thread wishes the
-     * internal thread to pause.
+     * To be called by the looping thread. This pauses the thread
+     * until its state is no longer paused.  ThreadPauser must be in
+     * state THREAD_STATE_PAUSED.
      */
-    void RequestPause();
+    void WaitWhilePaused();
 
-    /**
-     * To be called by the looping thread. This pauses the thread if it
-     * is supposed to be paused.
-     */
-    void WaitIfPaused();
-
-    /**
-     * To be called by the controlling thread. ThreadPauser must be in
-     * state THREADSTATE_PAUSE_READY. This returns immediately and
-     * pauses the looping thread.
-     */
-    void Pause();
-
-    //void PauseBlocking();
-
-    /**
-     * To be called by the controlling thread. This wakes up the looping
-     * thread if it is paused.
-     */
-    void Unpause();
+#endif
   };
 }
 

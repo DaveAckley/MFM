@@ -38,6 +38,7 @@ extern "C" {
   }
   void MFMFailHere(const char * file, const int line, int code) {
     MFMPrintError(stderr, file, line, code);
+    fprintf(stderr, "\n\nUNCAUGHT FAILURE, ABORTING\n\n");
     abort();
   }
 

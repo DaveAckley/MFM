@@ -31,6 +31,7 @@
 #include "itype.h"
 #include "ByteSink.h"
 #include "ByteSerializable.h"
+#include "Mutex.h"
 #include <stdarg.h>
 
 namespace MFM
@@ -186,7 +187,12 @@ namespace MFM
       m_sink(&sink),
       m_logLevel(initialLevel),
       m_timeStamper(&m_defaultTimeStamper)
-    { }
+    {
+    }
+
+    ~Logger()
+    {
+    }
 
     /**
      * Checks to see if this Logger is operating at a higher Level
@@ -229,13 +235,15 @@ namespace MFM
      * @param format The format string used to parse the variatic
      *               argument list .
      *
-     * @param ap The variatic argument list describing the message to
+     * @param ap The variadic argument list describing the message to
      *           be logged.
      */
     void Vreport(Level level, const char * format, va_list & ap)
     {
       if (IfLog(level))
       {
+        Mutex::ScopeLock lock(m_mutex); // Hold lock for this block
+
         m_sink->Printf("%@%s: ",m_timeStamper, StrLevel(level));
         m_sink->Vprintf(format, ap);
         m_sink->Println();
@@ -314,6 +322,12 @@ namespace MFM
   private:
     ByteSink * m_sink;
     Level m_logLevel;
+
+    /**
+     * A lock to ensure only one thread does logging at a time; the
+     * underlying ByteSink routines are not thread-safe.
+     */
+    Mutex m_mutex;
 
     class DefaultTimeStamper : public ByteSerializable
     {

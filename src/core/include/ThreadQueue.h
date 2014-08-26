@@ -30,7 +30,7 @@
 #include "itype.h"
 #include <pthread.h>
 
-#define THREADQUEUE_MAX_BYTES 1536
+#define THREADQUEUE_MAX_BYTES (1536 + 1)  // non-multiple of 16 for testing
 
 namespace MFM
 {
