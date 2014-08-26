@@ -9,7 +9,9 @@
 namespace MFM
 {
   template <class CC>
-  Tile<CC>::Tile() : m_executingWindow(*this)
+  Tile<CC>::Tile() :
+    m_executingWindow(*this),
+    m_generation(0)
   {
     m_lockAttempts = m_lockAttemptsSucceeded = 0;
     Reinit();
@@ -29,7 +31,7 @@ namespace MFM
 
     m_eventsExecuted = 0;
 
-    m_onlyWaitOnBuffers = false;
+    m_executeOwnEvents = true;
 
     m_backgroundRadiationEnabled = false;
 
@@ -124,8 +126,8 @@ namespace MFM
         if (m_atoms[x][y] != otherAtom)
         {
           AtomSerializer<CC> uss(m_atoms[x][y]), thems(otherAtom);
-          LOG.Debug("%p: Mismatch at (%d,%d) dir %d, us: %@, them: %@",
-                    this, x, y, dir, &uss, &thems);
+          LOG.Debug("%s: Mismatch at (%d,%d) dir %d, us: %@, them: %@",
+                    this->GetLabel(), x, y, dir, &uss, &thems);
         }
 
       }
@@ -320,8 +322,8 @@ namespace MFM
     {
       if (atom.GetType() != Element_Empty<CC>::THE_INSTANCE.GetType())
       {
-        LOG.Debug("Not placing type %04x at (%2d,%2d) of %p",
-                  atom.GetType(), pt.GetX(), pt.GetY(), this);
+        LOG.Debug("Not placing type %04x at (%2d,%2d) of %s",
+                  atom.GetType(), pt.GetX(), pt.GetY(), this->GetLabel());
       }
       return;
     }
@@ -569,10 +571,18 @@ namespace MFM
   template <class CC>
   bool Tile<CC>::TryLock(Dir connectionDir)
   {
-    return
-      (IsConnected(connectionDir) &&
-       m_connections[connectionDir]->Lock())
-      || !IsConnected(connectionDir);
+    assert(!m_iLocked[connectionDir]);
+
+    if (!IsConnected(connectionDir))
+    {
+      return true;
+    }
+    if (!m_connections[connectionDir]->Lock())
+    {
+      return false;
+    }
+    m_iLocked[connectionDir] = true;
+    return true;
   }
 
   template <class CC>
@@ -661,11 +671,11 @@ namespace MFM
     const u32 MILLION = 1000000;
     if ((m_lockAttempts % (1*MILLION)) == 0)
     {
-      LOG.Debug("Locks %dM of %dM (%d%%) for %p",
+      LOG.Debug("Locks %dM of %dM (%d%%) for %s",
                 (u32) (m_lockAttemptsSucceeded / MILLION),
                 (u32) (m_lockAttempts / MILLION),
                 (u32) (100 * m_lockAttemptsSucceeded / m_lockAttempts),
-                this);
+                this->GetLabel());
     }
     return success;
   }
@@ -686,7 +696,11 @@ namespace MFM
   {
     if (IsConnected(dir))
     {
+      assert(m_iLocked[dir]);
+
       m_connections[dir]->Unlock();
+
+      m_iLocked[dir] = false;
     }
   }
 
@@ -765,28 +779,34 @@ namespace MFM
     {
       if(IsConnected(dir))
       {
+        u32 threadTag = (((u32) pthread_self())>>8)&0xffff;
         if (m_connections[dir]->InputByteCount() != 0)
         {
-          LOG.Warning("NON-EMPTY INPUT BUFFER (%d bytes) IN %p. Packets:",
-                      m_connections[dir]->InputByteCount(), sizeof(Packet<T>),
-                      (void*) this);
+          LOG.Warning("NON-EMPTY INPUT BUFFER (%d bytes) IN %s%04x. Packets:",
+                      m_connections[dir]->InputByteCount(),
+                      this->GetLabel(),
+                      threadTag);
 
-          for(u32 i = 0; i < m_connections[dir]->InputByteCount(); i += sizeof(Packet<T>))
+          for(u32 i = 0; i + sizeof(Packet<T>) <= m_connections[dir]->InputByteCount(); i += sizeof(Packet<T>))
           {
-            u8 packetBuffer[sizeof(Packet<T>)];
-            m_connections[dir]->PeekRead(false, packetBuffer, i, sizeof(Packet<T>));
+            Packet<T> buffer((PacketType) 0xff, 0xff);  // Deliberately invalid initialization
+            m_connections[dir]->PeekRead(false, (u8*) &buffer, i, sizeof(Packet<T>));
 
-            Packet<T>* packet = (Packet<T>*)packetBuffer;
-            PacketSerializer<T> serializer(*packet);
+            PacketSerializer<CC> serializer(buffer);
 
-            LOG.Warning("  %@", &serializer);
+            LOG.Warning(" %3d%s%04x: %@",
+                        i,
+                        this->GetLabel(),
+                        threadTag,
+                        &serializer);
           }
         }
         if (m_connections[dir]->OutputByteCount() != 0)
         {
-          LOG.Warning("NON-EMPTY OUTPUT BUFFER (%d bytes) IN %p",
-                      m_connections[dir]->OutputByteCount(), sizeof(Packet<T>),
-                      (void*) this);
+          LOG.Warning("NON-EMPTY OUTPUT BUFFER (%d bytes) IN %s%04x",
+                      m_connections[dir]->OutputByteCount(),
+                      this->GetLabel(),
+                      threadTag);
         }
       }
     }
@@ -794,17 +814,26 @@ namespace MFM
 
 
   template <class CC>
-  void Tile<CC>::FlushAndWaitOnAllBuffers(u32 dirWaitWord)
+  bool Tile<CC>::FlushAndWaitOnAllBuffers(u32 dirWaitWord)
   {
     Packet<T> readPack(PACKET_WRITE, m_generation);
     u32 readBytes;
+    bool allLocksFree;
     do
     {
+      allLocksFree = true; // Assume this
+
       /* Flush out all packet buffers */
       for(Dir dir = Dirs::NORTH; dir < Dirs::DIR_COUNT; ++dir)
       {
         if(IsConnected(dir))
         {
+
+          if (m_iLocked[dir] || m_connections[dir]->IsLockedByAnother())
+          {
+            allLocksFree = false;
+          }
+
           while((readBytes = m_connections[dir]->Read(!IS_OWNED_CONNECTION(dir),
                                                       (u8*)&readPack, sizeof(Packet<T>))))
           {
@@ -825,12 +854,15 @@ namespace MFM
             }
             ReceivePacket(readPack);
           }
+
         }
         /* Have we waited long enough without a response? Let's disconnect that tile. */
 
       }
       pthread_yield();
     } while(dirWaitWord);
+
+    return !allLocksFree;
   }
 
   template <class CC>
@@ -844,7 +876,7 @@ namespace MFM
 
         if ((m_failuresErased % 100) == 0)
         {
-          LOG.Debug("%d erasures tile %p", m_failuresErased, this);
+          LOG.Debug("%d erasures tile %s", m_failuresErased, this->GetLabel());
         }
 
         if(!m_executingWindow.GetCenterAtom().IsSane())
@@ -906,38 +938,60 @@ namespace MFM
     {
       RecountAtomsIfNeeded();
 
-      CreateRandomWindow();
+      switch (m_threadPauser.GetStateBlockingInner())
+      {
+      case THREADSTATE_RUN_REQUESTED:
+        m_threadPauser.AdvanceStateInner();
+        break;
 
-      bool locked = false;
-      Dir lockRegion = Dirs::NORTH;
-      if((!m_onlyWaitOnBuffers) &&
-         (!m_threadPauser.IsPauseRequested()) &&
-         (
-           IsInHidden(m_executingWindow.GetCenterInTile()) ||
-           !HasAnyConnections(lockRegion = VisibleAt(m_executingWindow.GetCenterInTile())) ||
-           (locked = LockRegion(lockRegion))
-           ))
-      {
-        DoEvent(locked, lockRegion);
-      }
-      else
-      {
-        if(m_threadPauser.IsPauseRequested())
+      case THREADSTATE_RUN_READY:
+        // The pauser should be blocking us whenever this is true!
+        assert(false);
+        break;
+
+      case THREADSTATE_RUNNING:
+        if (m_executeOwnEvents)
         {
-          m_threadPauser.PauseReady();
-          do
+          // It's showtime!
+          bool locked = false;
+          Dir lockRegion = Dirs::NORTH;
+
+          CreateRandomWindow();
+
+          if (IsInHidden(m_executingWindow.GetCenterInTile()) ||
+              !HasAnyConnections(lockRegion = VisibleAt(m_executingWindow.GetCenterInTile())) ||
+              (locked = LockRegion(lockRegion)))
           {
-            FlushAndWaitOnAllBuffers(0);
-            pthread_yield();
-          } while(m_threadPauser.IsPauseReady());
-          FlushAndWaitOnAllBuffers(0);
-          ReportIfBuffersAreNonEmpty();
-          m_threadPauser.WaitIfPaused();
+            DoEvent(locked, lockRegion);
+          }
         }
         else
         {
           FlushAndWaitOnAllBuffers(0);
         }
+        break;
+
+      case THREADSTATE_PAUSE_REQUESTED:
+        // Confirm we are done with our event (including processing
+        // any needed inbound ACKs, and freeing connection locks) by
+        // advancing to pause ready.
+        m_threadPauser.AdvanceStateInner();
+        break;
+
+      case THREADSTATE_PAUSE_READY:
+        if (FlushAndWaitOnAllBuffers(0))   // Mop up if necessary
+        {
+          pthread_yield();                 // And try to hurry others
+        }
+        break;
+
+      case THREADSTATE_PAUSED:
+        // The pauser should be blocking us whenever this is true!
+        assert(false);
+        break;
+
+      default:
+        assert(false);
       }
     }
   }
@@ -990,14 +1044,21 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
     }
 
-    m_threadPauser.Unpause();
+    m_threadPauser.RequestRun();
   }
 
   template <class CC>
   void Tile<CC>::Pause()
   {
+    // This is kind of the only place we can check this -- running
+    // under the outer (grid) thread rather than the tile -- because
+    // the inner (tile) thread blocks as soon as we pause it..
+    ReportIfBuffersAreNonEmpty();
     m_threadPauser.Pause();
   }
+
+  /*
+  */
 
   template <class CC>
   bool Tile<CC>::IsPauseReady()
@@ -1006,7 +1067,7 @@ namespace MFM
   }
 
   template <class CC>
-  void Tile<CC>::PauseRequested()
+  void Tile<CC>::RequestPause()
   {
     m_threadPauser.RequestPause();
   }
@@ -1022,8 +1083,8 @@ namespace MFM
     }
     if (delta < 0 && -delta > m_atomCount[idx])
     {
-      LOG.Warning("LOST ATOMS %x %d %d (Tile %p) - requesting recount",
-                  (int) atomType,delta,m_atomCount[idx],(void*) this);
+      LOG.Warning("LOST ATOMS %x %d %d (Tile %s) - requesting recount",
+                  (int) atomType,delta,m_atomCount[idx],this->GetLabel());
       m_needRecount = true;
       return;
     }
@@ -1080,7 +1141,7 @@ namespace MFM
   {
     if (m_needRecount)
     {
-      LOG.Message("Recounting atoms (Tile %p)", this);
+      LOG.Message("Recounting atoms (Tile %s)", this->GetLabel());
       RecountAtoms();
       m_needRecount = false;
     }

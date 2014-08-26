@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  Utils.h Globally accessible extension methods
+  DateTimeStamp.h A serializer for date/times
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,42 +19,41 @@
 */
 
 /**
-  \file Utils.h Globally accessible extension methods
+  \file DateTimeStamp.h A serializer for date/times
   \author David H. Ackley.
   \date (C) 2014 All rights reserved.
   \lgpl
  */
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef DATETIMESTAMP_H
+#define DATETIMESTAMP_H
 
 #include <stdlib.h>
-#include <time.h>  /* for nanosleep */
+#include "ByteSerializable.h"
 #include "itype.h"
+#include "Utils.h"
 
 namespace MFM
 {
-  namespace Utils {
-    u64 GetDateTimeNow() ;
-
-    u64 GetDateTime(time_t t) ;
-
-    u32 GetDateFromDateTime(u64 datetime) ;
-
-    u32 GetTimeFromDateTime(u64 datetime) ;
-
-    /**
-       Look in standard places for relativePath.  Return true if a
-       readable file was found, and fills result with an absolute path
-       (up to the given length) that was openable for reading at the
-       time it was checked.  If such a readable file is not found
-       anywhere, set result to a null string and return false.  Fails
-       with ILLEGAL_ARGUMENT if length is zero; will silently truncate
-       paths (and fail to find a file, or worse, possibly find the wrong
-       file) if length is too short.
-    */
-    bool GetReadableResourceFile(const char * relativePath, char * result, u32 length) ;
-
-  }
+  class DateTimeStamp : public ByteSerializable {
+    u64 m_lastDateTime;
+    u32 m_sequence;
+  public:
+    DateTimeStamp() : m_lastDateTime(0), m_sequence(0) { }
+    void Reset() { m_lastDateTime = 0; }
+    virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0)
+    {
+      m_lastDateTime = Utils::GetDateTimeNow();
+      byteSink.Print(m_lastDateTime);
+      if (argument == 0)
+      {
+        byteSink.Print("-");
+        byteSink.Print(m_sequence, Format::LEX32);
+        byteSink.Print(": ");
+      }
+      ++m_sequence;
+      return SUCCESS;
+    }
+  };
 }
 
-#endif /* UTILS_H */
+#endif /* DATETIMESTAMP_H */

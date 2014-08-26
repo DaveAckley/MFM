@@ -21,33 +21,48 @@ namespace MFM {
     char strBuffer[STR_BUFFER_SIZE];
 
     const u32 ROW_HEIGHT = LINE_HEIGHT_PIXELS;
+    const u32 DETAIL_ROW_HEIGHT = DETAIL_LINE_HEIGHT_PIXELS;
     u32 baseY = 0;
 
     sprintf(strBuffer, "%8.3f kAEPS", aeps/1000.0);
 
     drawing.SetFont(m_drawFont);
-    drawing.SetForeground(0xffffffff);
+    drawing.SetForeground(Drawing::WHITE);
     drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
                      Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
     baseY += ROW_HEIGHT;
 
     if (m_displayAER)
     {
-      sprintf(strBuffer, "%8d/frame", AEPSperFrame);
-      drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
-                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
-      baseY += ROW_HEIGHT;
+      drawing.SetFont(m_detailFont);
+      drawing.SetForeground(Drawing::GREY80);
 
       sprintf(strBuffer, "%8.3f AER", aer);
       drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
-      baseY += ROW_HEIGHT;
+      baseY += DETAIL_ROW_HEIGHT;
 
       sprintf(strBuffer, "%8.3f %%ovrhd", overhead);
       drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
-      baseY += ROW_HEIGHT;
+      baseY += DETAIL_ROW_HEIGHT;
 
+      sprintf(strBuffer, "%8d/frame", AEPSperFrame);
+      drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
+                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
+      baseY += DETAIL_ROW_HEIGHT;
+
+      u64 now = Utils::GetDateTimeNow();
+      sprintf(strBuffer, "%d %06d",
+              Utils::GetDateFromDateTime(now),
+              Utils::GetTimeFromDateTime(now)
+              );
+      drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
+                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
+      baseY += DETAIL_ROW_HEIGHT;
+
+      drawing.SetFont(m_drawFont);
+      drawing.SetForeground(Drawing::WHITE);
     }
 
     baseY += ROW_HEIGHT;

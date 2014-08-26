@@ -33,6 +33,7 @@
 #include "itype.h"
 #include "Point.h"
 #include "Random.h"
+#include "Dirs.h"
 
 namespace MFM
 {
@@ -96,6 +97,14 @@ namespace MFM
      */
     u32 GetTableSize(u32 maxRadius) const;
 
+    /**
+     * Get the lowest index corresponding to a distance of \c radius.
+     * Useful for starting an event window iteration at a given distance
+     *
+     * \param radius The radius to find the lowest index of.
+     * \sa GetLastIndex
+     * \sa GetPoint
+     */
     u32 GetFirstIndex(const u32 radius) const
     {
       if (radius >= sizeof(m_firstIndex)/sizeof(m_firstIndex[0]))
@@ -105,6 +114,14 @@ namespace MFM
       return m_firstIndex[radius];
     }
 
+    /**
+     * Get the highest index corresponding to a distance of \c radius.
+     * Useful for ending an event window iteration at a given distance
+     *
+     * \param radius The radius to find the highest index of.
+     * \sa GetFirstIndex
+     * \sa GetPointIndex
+     */
     u32 GetLastIndex(const u32 radius) const
     {
       return GetFirstIndex(radius+1)-1;
@@ -145,6 +162,12 @@ namespace MFM
     s32 m_pointToIndex[EVENT_WINDOW_DIAMETER][EVENT_WINDOW_DIAMETER];
 
     u32 m_firstIndex[R+2];  // m_firstIndex[R+1] holds 'lastIndex[R]'
+
+    void InitEscapesByDirTable();
+    u8 m_escapesByDirection[Dirs::DIR_COUNT][ARRAY_LENGTH];
+
+    void InitHorizonsByDirTable();
+    u8 m_horizonsByDirection[Dirs::DIR_COUNT][ARRAY_LENGTH];
 
   };
 } /* namespace MFM */

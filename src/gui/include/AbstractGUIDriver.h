@@ -794,7 +794,7 @@ namespace MFM
           u64 consumed = 0, totalError = 0;
           for (OurGrid::iterator_type i = grid.begin(); i != grid.end(); ++i) {
             Tile<CC> * t = *i;
-t            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsConsumed(*t);
+            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsConsumed(*t);
             totalError += Element_Consumer<CC>::THE_INSTANCE.GetAndResetBucketError(*t);
           }
 

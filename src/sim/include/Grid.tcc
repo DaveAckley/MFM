@@ -27,6 +27,10 @@ namespace MFM {
       {
         Tile<CC>& ctile = GetTile(x, y);
 
+        OString16 & tbs = ctile.GetLabelPrinter();
+        tbs.Reset();
+        tbs.Printf("[%d,%d]", x, y);
+
         ctile.Reinit();
 
         neighbors = 0;
@@ -224,53 +228,51 @@ namespace MFM {
   }
 
   template <class GC>
-  void Grid<GC>::Pause()
+  void Grid<GC>::DoTileControl(TileControl & tc)
   {
+    // Issue request to all
     for(u32 x = 0; x < W; x++)
     {
       for(u32 y = 0; y < H; y++)
       {
-        GetTile(x, y).PauseRequested();
+        tc.MakeRequest(GetTile(x, y));
       }
     }
-    bool allReady = false;
+
+    // Wait until all acknowledge
     u32 loops = 0;
-    while (!allReady) {
-      allReady = true;
+    bool again;
+    do
+    {
+      again = false;
+
       ++loops;
+
       for(u32 x = 0; x < W; x++)
       {
         for(u32 y = 0; y < H; y++)
         {
-          if(!GetTile(x, y).IsPauseReady())
+          if (!tc.CheckIfReady(GetTile(x, y)))
           {
-            allReady = false;
-            //            pthread_yield();
+            again = true;
+            pthread_yield();
           }
         }
       }
-      Sleep(0,100000);
-    }
-    if (loops > 100)
-      LOG.Debug("Pause looped %d times", loops);
+    } while (again);
 
+    if (loops > 10000)
+    {
+      LOG.Debug("%s control looped %d times",
+                tc.GetName(), loops);
+    }
+
+    // Release the hounds
     for(u32 x = 0; x < W; x++)
     {
       for(u32 y = 0; y < H; y++)
       {
-        GetTile(x, y).Pause();
-      }
-    }
-  }
-
-  template <class GC>
-  void Grid<GC>::Unpause()
-  {
-    for(u32 x = 0; x < W; x++)
-    {
-      for(u32 y = 0; y < H; y++)
-      {
-        GetTile(x, y).Start();
+        tc.Execute(GetTile(x, y));
       }
     }
   }

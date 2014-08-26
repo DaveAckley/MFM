@@ -3,8 +3,9 @@
 #include "ThreadQueue.h"
 #include "Fail.h"
 #include "Logger.h"
+#include "Util.h"
 
-#define MIN(X,Y) ((X) > (Y) ? (Y) : (X))
+// Util.h has this #define MIN(X,Y) ((X) > (Y) ? (Y) : (X))
 
 namespace MFM
 {
@@ -59,7 +60,8 @@ namespace MFM
     u32 bytesAvailable = MIN(length, m_heldBytes);
     for(u32 i = 0; i < bytesAvailable; i++)
     {
-      *(bytes++) = m_queueData[m_readHead++];
+      *(bytes++) = m_queueData[m_readHead];
+      m_queueData[m_readHead++] = 0xdb; // Mark as a dead byte
       if(m_readHead >= THREADQUEUE_MAX_BYTES)
       {
         m_readHead %= THREADQUEUE_MAX_BYTES;
@@ -72,24 +74,26 @@ namespace MFM
   void ThreadQueue::ReadBlocking(u8* bytes, u32 length)
   {
     u32 readBytes = 0;
+    pthread_mutex_lock(&m_lock);
     while(readBytes < length)
     {
-      pthread_mutex_lock(&m_lock);
+      readBytes += UnsafeRead(bytes + readBytes, length - readBytes);
+      if(readBytes < length)
       {
-        readBytes += UnsafeRead(bytes + readBytes, length);
-        if(readBytes < length)
-        {
-          pthread_cond_wait(&m_cond, &m_lock);
-        }
+        pthread_cond_wait(&m_cond, &m_lock);
       }
-      pthread_mutex_unlock(&m_lock);
     }
+    pthread_mutex_unlock(&m_lock);
   }
 
   u32 ThreadQueue::Read(u8* bytes, u32 length)
   {
     u32 readBytes = 0;
     /* Bail if there aren't enough bytes to read. */
+    /* We are checking m_heldBytes without holding the lock because
+       writing to the queue can only make m_heldBytes larger, so if
+       there's enough held bytes now, there still will be even if a
+       write intervenes before we get the lock. */
     if(m_heldBytes >= length)
     {
       pthread_mutex_lock(&m_lock);
@@ -105,7 +109,7 @@ namespace MFM
   {
     pthread_mutex_lock(&m_lock);
     {
-      if(BytesAvailable() < length + index)
+      if(m_heldBytes < length + index)
       {
         FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
       }
@@ -113,8 +117,8 @@ namespace MFM
       u32 readHead = index + m_readHead;
       for(u32 i = 0; i < length; i++)
       {
-        *(toBuffer++) = m_queueData[readHead];
-        if(readHead > THREADQUEUE_MAX_BYTES)
+        *(toBuffer++) = m_queueData[readHead++];
+        if(readHead >= THREADQUEUE_MAX_BYTES)
         {
           readHead %= THREADQUEUE_MAX_BYTES;
         }

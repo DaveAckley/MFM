@@ -38,8 +38,6 @@
 namespace MFM
 {
 
-#define ELT_VERSION 1
-
   /**
    * An element with an index number to help in tracking.
    */
@@ -52,7 +50,10 @@ namespace MFM
 
   public:
     typedef BitVector<P::BITS_PER_ATOM> BVA;
-    enum { BITS_IN_INDEX = 24 };
+    enum {
+      ELT_VERSION = 1,
+      BITS_IN_INDEX = 24
+    };
     typedef BitField<BVA, BITS_IN_INDEX, (P3Atom<P>::P3_STATE_BITS_POS+7)/8*8> AFIndex;
 
     static Element_Indexed THE_INSTANCE;

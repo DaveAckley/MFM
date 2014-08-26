@@ -85,8 +85,8 @@ namespace MFM
       *(messages++) = " [Scroll] Zoom";
       *(messages++) = "";
       *(messages++) = "Toolbox Control:";
-      *(messages++) = " [Left Click] Select / paint element 1";
-      *(messages++) = " [Right Click] Select / paint element 2";
+      *(messages++) = " [Left] Select / paint left / clone to";
+      *(messages++) = " [Right] Select / paint right / clone from";
 
       /*
        * If any more lines are added, don't forget to increase

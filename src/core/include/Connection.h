@@ -28,7 +28,9 @@
 #define CONNECTION_H
 
 #include "ThreadQueue.h"
+#include "Mutex.h"
 #include "itype.h"
+#include "Logger.h"
 #include <assert.h>
 
 namespace MFM
@@ -42,16 +44,11 @@ namespace MFM
   class Connection
   {
   private:
-    /**
-     * The pthread_mutext_t used to allow a thread to lock this
-     * Connection .
-     */
-    pthread_mutex_t m_lock;
 
     /**
-     * If the lock is held, the pthread id of the thread holding it.
+     * A Mutex controlling access to this Connection .
      */
-    pthread_t m_threadId;
+    Mutex m_lock;
 
     /**
      * The two ThreadQueue constructs used for two way IO .
@@ -73,7 +70,6 @@ namespace MFM
     Connection()
     {
       m_connected = false;
-      pthread_mutex_init(&m_lock, NULL);
     }
 
     /**
@@ -81,7 +77,6 @@ namespace MFM
      */
     ~Connection()
     {
-      pthread_mutex_destroy(&m_lock);
     }
 
     /**
@@ -109,6 +104,22 @@ namespace MFM
       return m_connected;
     }
 
+    /** Test if the connection is currently locked by a thread other
+     * than the current thread.
+     *
+     * FAILs with LOCK_FAILURE if the connection is locked by the
+     * current thread.
+     *
+     * @returns true if the lock is currently held by a thread other
+     * than the current thread, and false if the lock is currently
+     * unlocked
+     *
+     */
+    bool IsLockedByAnother()
+    {
+      return m_lock.IsLockedByAnother();
+    }
+
     /** Locks the underlying mutex, allowing for thread-safe execution
      * along this connection.
      *
@@ -116,12 +127,13 @@ namespace MFM
      */
     bool Lock()
     {
-      bool ret = !pthread_mutex_trylock(&m_lock);
-      if (ret)
-      {
-        m_threadId = pthread_self();
+      /*
+      if (m_lock.IHoldThisLock()) {
+        LOG.Debug("Connection %p already owns lock",(void*) this);
+        return false;
       }
-      return ret;
+      */
+      return m_lock.TryLock();
     }
 
     /**
@@ -131,8 +143,7 @@ namespace MFM
      */
     void Unlock()
     {
-      assert(pthread_equal(m_threadId, pthread_self()));
-      pthread_mutex_unlock(&m_lock);
+      m_lock.Unlock();
     }
 
     /**

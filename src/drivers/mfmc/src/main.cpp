@@ -194,6 +194,8 @@ namespace MFM
 
 int main(int argc, const char** argv)
 {
+  MFM::DateTimeStamp stamper;
+  MFM::LOG.SetTimeStamper(&stamper);
   MFM::LOG.SetByteSink(MFM::STDERR);
   MFM::LOG.SetLevel(MFM::LOG.MESSAGE);
 

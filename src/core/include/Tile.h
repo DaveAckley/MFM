@@ -37,6 +37,7 @@
 #include "ElementTable.h"
 #include "Connection.h"
 #include "ThreadPauser.h"
+#include "OverflowableCharBufferByteSink.h"  /* for OString16 */
 
 namespace MFM
 {
@@ -108,6 +109,11 @@ namespace MFM
     static const u32 OWNED_SIDE = TILE_WIDTH-2*R;
 
   private:
+    /**
+     * A brief name or label for this Tile, for reporting and debugging
+     */
+    OString16 m_label;
+
     /** The top of the error stack for thread-local, per-Tile, FAIL
         processing. */
     MFMErrorEnvironmentPointer_t m_errorEnvironmentStackTop;
@@ -191,6 +197,10 @@ namespace MFM
         indexed by EuclidDir. */
     Connection* m_connections[8];
 
+    /** True if this tile currently holds the lock on the associated
+        Connection. */
+    bool m_iLocked[8];
+
     /**
      * The real Connections to half of this Tile's neighbors. Indexing
      * begins at EUDIR_EAST and ends at EUDIR_SOUTHWEST .
@@ -216,7 +226,8 @@ namespace MFM
      */
     bool IsPausedOrOwner()
     {
-      return m_threadPauser.IsPaused() || pthread_equal(pthread_self(), m_thread);
+      return m_threadPauser.GetStateNonblocking()==THREADSTATE_PAUSED
+        || pthread_equal(pthread_self(), m_thread);
     }
 
 #if 0
@@ -232,11 +243,11 @@ namespace MFM
 
     /**
      * A flag which describes how a Tile should be executing. If \c
-     * true , will not execute its own events and will instead only
-     * perform intertile communication. If \c false , will also
-     * execute its own events.
+     * true , will execute its own events. If \c false , will instead
+     * only perform intertile communication, without executing its own
+     * events.
      */
-    bool m_onlyWaitOnBuffers;
+    bool m_executeOwnEvents;
 
     /**
      * The ThreadPauser used to block m_thread when it needs to be paused.
@@ -332,13 +343,14 @@ namespace MFM
     void SendAtom(Dir neighbor, SPoint& atomLoc);
 
     /**
-     * Attempt to lock only the Connection specified. This will return
-     * immediately regardless of acquiring said lock.
+     * Attempt to lock the specified Connection, if it is in use. This
+     * will return immediately regardless of acquiring said lock.
      *
      * @param connectionDir The index of the Connection wanting to lock.
      *
-     * @returns true if the lock for the specified direction is
-     *          acquired.
+     * @returns true if there is no connection in \c connectionDir.
+     *          Otherwise, returns true if the lock for the specified
+     *          direction has been acquired, else false.
      */
     bool TryLock(Dir connectionDir);
 
@@ -434,6 +446,23 @@ namespace MFM
     void DoEvent(bool locked, Dir lockRegion);
 
    public:
+
+    /**
+     * Returns this Tile's label, if any.  May return an empty string,
+     * never returns null.
+     */
+    const char * GetLabel()
+    {
+      return m_label.GetZString();
+    }
+
+    /**
+     * Get access to reset or set the Tile's label.
+     */
+    OString16 & GetLabelPrinter()
+    {
+      return m_label;
+    }
 
     /**
      * Constructs a new Tile.
@@ -896,8 +925,11 @@ namespace MFM
      *
      * @param dirWaitWord A word describing which buffers need to be
      *                    waited on for Packet communication.
+     *
+     * @return true if any connection locks are currently held (by
+     * either end), else false
      */
-    void FlushAndWaitOnAllBuffers(u32 dirWaitWord);
+    bool FlushAndWaitOnAllBuffers(u32 dirWaitWord);
 
     /**
      * Log warnings if connection buffers are not empty.
@@ -915,19 +947,19 @@ namespace MFM
      */
     void SetExecuteOwnEvents(bool value)
     {
-      m_onlyWaitOnBuffers = !value;
+      m_executeOwnEvents = value;
     }
 
     /**
      * Checks to see whether or not this Tile is executing its own
-     * events or if it issimply processing other incoming Packets.
+     * events or if it is simply processing other incoming Packets.
      *
      * @returns \c true if this Tile is executing its own events, else
      *          \c false .
      */
     bool GetExecutingOwnEvents() const
     {
-      return !m_onlyWaitOnBuffers;
+      return m_executeOwnEvents;
     }
 
     /**
@@ -993,6 +1025,28 @@ namespace MFM
     void Pause();
 
     /**
+     * Sees if this Tile is ready to be run.  We let all tiles respond
+     * to a RunRequest before moving on to actually running, so this
+     * method tells whether this Tile has seen the run request .
+     *
+     * @returns \c true if this Tile is ready to be run, else \c
+     *          false .
+     */
+    bool IsRunReady()
+    {
+      return m_threadPauser.IsRunReady();
+    }
+
+    /**
+     * Advances this Tile from THREADSTATE_RUN_READY to
+     * THREADSTATE_RUNNING.
+     */
+    void Run()
+    {
+      m_threadPauser.Run();
+    }
+
+    /**
      * Sees if this Tile is ready to be paused. There is some
      * processing to be done between \c PauseRequested() and \c
      * Pause() , so this method tells whether or not it is time to
@@ -1003,7 +1057,7 @@ namespace MFM
      */
     bool IsPauseReady();
 
-    void PauseRequested();
+    void RequestPause();
 
     /**
      * Adds an offset to the count of a particular type of Atom.

@@ -549,7 +549,9 @@ namespace MFM
       u64 startTime = Utils::GetDateTimeNow();
 
       snprintf(driver.m_simDirBasePath, MAX_PATH_LENGTH - 1,
-               "%s/%ld/", dirPath, startTime);
+               "%s/%d%06d/", dirPath,
+               Utils::GetDateFromDateTime(startTime),
+               Utils::GetTimeFromDateTime(startTime));
 
       driver.m_simDirBasePathLength = strlen(driver.m_simDirBasePath);
 
@@ -657,12 +659,19 @@ namespace MFM
       ExternalConfig<GC> cfg(GetGrid());
       RegisterExternalConfigFunctions<GC>(cfg);
       FileByteSource fs(path);
+      if (fs.IsOpen())
+      {
 
-      cfg.SetByteSource(fs, path);
+        cfg.SetByteSource(fs, path);
 
-      cfg.Read();
+        cfg.Read();
 
-      fs.Close();
+        fs.Close();
+      }
+      else
+      {
+        LOG.Error("Can't read configuration file '%s'", path);
+      }
     }
 
 

@@ -75,6 +75,72 @@ namespace MFM {
 
     u8 m_gridGeneration;
 
+    /**
+     * A synchronized command sequence to the grid
+     */
+    struct TileControl
+    {
+      virtual const char * GetName() = 0;
+
+      virtual void MakeRequest(Tile<CC> &) = 0;
+      virtual bool CheckIfReady(Tile<CC> &) = 0;
+      virtual void Execute(Tile<CC> &) = 0;
+
+    };
+
+    /**
+     * Operations for synchronized grid pausing
+     */
+    struct PauseControl : public TileControl
+    {
+      virtual const char * GetName()
+      {
+        return "Pause";
+      }
+
+      virtual void MakeRequest(Tile<CC> & tile)
+      {
+        tile.RequestPause();
+      }
+      virtual bool CheckIfReady(Tile<CC> & tile)
+      {
+        return tile.IsPauseReady();
+      }
+      virtual void Execute(Tile<CC> & tile)
+      {
+        tile.Pause();
+      }
+    };
+
+    /**
+     * Operations for synchronized grid unpausing
+     */
+    struct RunControl : public TileControl
+    {
+      virtual const char * GetName()
+      {
+        return "Unpause";
+      }
+
+      virtual void MakeRequest(Tile<CC> & tile)
+      {
+        tile.Start();
+      }
+      virtual bool CheckIfReady(Tile<CC> & tile)
+      {
+        return tile.IsRunReady();
+      }
+      virtual void Execute(Tile<CC> & tile)
+      {
+        tile.Run();
+      }
+    };
+
+    /**
+     * Synchronized operations driver.
+     */
+    void DoTileControl(TileControl & tc);
+
   public:
     Random& GetRandom() { return m_random; }
 
@@ -289,9 +355,23 @@ namespace MFM {
       return GetWidth() * Tile<CC>::OWNED_SIDE;
     }
 
-    void Pause();
+    /**
+     * Synchronize and pause the entire grid
+     */
+    void Pause()
+    {
+      PauseControl pc;
+      DoTileControl(pc);
+    }
 
-    void Unpause();
+    /**
+     * Synchronize and unpause the entire grid
+     */
+    void Unpause()
+    {
+      RunControl rc;
+      DoTileControl(rc);
+    }
 
     /**
      * Resets all atom counts and refreshes the atoms counts in

@@ -48,9 +48,10 @@ ifdef MAKE_GUI
 endif
 
 # Common flags: All about errors -- let's help them help us
-COMMON_CFLAGS+=-Wall -pedantic -Werror -Wundef -D DSHARED_DIR=\"$(DSHARED_DIR)\"
-COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror -D DSHARED_DIR=\"$(DSHARED_DIR)\"
-COMMON_LDFLAGS+=-Wl,--fatal-warnings
+# Also: We need pthread!
+COMMON_CFLAGS+=-Wall -pedantic -Werror -Wundef -D DSHARED_DIR=\"$(DSHARED_DIR)\" -pthread
+COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror -D DSHARED_DIR=\"$(DSHARED_DIR)\" -pthread
+COMMON_LDFLAGS+=-Wl,--fatal-warnings -pthread
 
 # Native tool chain
 NATIVE_GCC:=gcc
