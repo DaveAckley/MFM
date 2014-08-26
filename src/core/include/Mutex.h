@@ -31,6 +31,12 @@
 #include <pthread.h>  /* for pthread_mutex_t etc */
 #include "Fail.h"
 
+#ifdef MUTEX_ERROR_CHECKS
+#define MFM_MUTEX_TYPE PTHREAD_MUTEX_ERRORCHECK
+#else
+#define MFM_MUTEX_TYPE PTHREAD_MUTEX_NORMAL
+#endif
+
 namespace MFM
 {
   class Mutex {
@@ -130,7 +136,7 @@ namespace MFM
         FAIL(LOCK_FAILURE);
       }
 
-      if (pthread_mutexattr_settype(&m_attr, PTHREAD_MUTEX_ERRORCHECK))
+      if (pthread_mutexattr_settype(&m_attr, MFM_MUTEX_TYPE))
       {
         FAIL(LOCK_FAILURE);
       }
