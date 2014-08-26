@@ -632,7 +632,6 @@ namespace MFM
   template <class CC>
   bool Tile<CC>::LockRegion(Dir regionDir)
   {
-
     ++m_lockAttempts;
 
     bool success = false;

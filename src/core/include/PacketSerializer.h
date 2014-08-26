@@ -46,7 +46,7 @@ namespace MFM
 
     virtual Result PrintTo(ByteSink& byteSink, s32 argument = 0)
     {
-      SSPoint loc = m_packet.GetLocation();
+      SPoint loc = m_packet.GetLocation();
       byteSink.Printf("Packet{size=%d type=%s generation=%d Location=(%d, %d)}",
                       sizeof(Packet<T>),
                       m_packet.GetTypeString(),

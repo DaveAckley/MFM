@@ -135,7 +135,8 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
 
   template <class CC>
   void TileRenderer::RenderTile(Drawing & drawing, Tile<CC>& t, SPoint& loc, bool renderWindow,
-                                bool renderCache, bool selected, SPoint* selectedAtom)
+                                bool renderCache, bool selected, SPoint* selectedAtom,
+                                SPoint* cloneOrigin)
   {
     // Extract short type names
     typedef typename CC::PARAM_CONFIG P;
@@ -194,6 +195,14 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
 
         drawing.SetForeground(Drawing::YELLOW);
         drawing.DrawRectangle(Rect(ap, UPoint(m_atomDrawSize, m_atomDrawSize)));
+      }
+
+      if(cloneOrigin)
+      {
+        SPoint cp = *cloneOrigin * m_atomDrawSize + realPt;
+
+        drawing.SetForeground(Drawing::CYAN);
+        drawing.DrawRectangle(Rect(cp, UPoint(m_atomDrawSize, m_atomDrawSize)));
       }
     }
   }

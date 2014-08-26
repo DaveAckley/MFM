@@ -38,7 +38,8 @@ namespace MFM
     TOOL_BUCKET,
     TOOL_ERASER,
     TOOL_BRUSH,
-    TOOL_XRAY
+    TOOL_XRAY,
+    TOOL_CLONE
   };
 }
 

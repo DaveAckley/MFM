@@ -13,11 +13,18 @@ namespace MFM
        2 * GC::CORE_CONFIG::PARAM_CONFIG::EVENT_WINDOW_RADIUS);
     const u32 atomSize = m_tileRenderer.GetAtomSize();
     SPoint atomTile(-1, -1);
+    SPoint cloneTile(-1, -1);
 
     if(m_selectedAtom.GetX() >= 0 && m_selectedAtom.GetY() >= 0)
     {
       atomTile.Set(m_selectedAtom.GetX() / (tileSize / atomSize),
                    m_selectedAtom.GetY() / (tileSize / atomSize));
+    }
+
+    if(m_cloneOrigin.GetX() >= 0 && m_cloneOrigin.GetY() >= 0)
+    {
+      cloneTile.Set(m_cloneOrigin.GetX() / (tileSize / atomSize),
+                    m_cloneOrigin.GetY() / (tileSize / atomSize));
     }
 
     for(u32 x = 0; x < grid.GetWidth(); x++)
@@ -28,7 +35,9 @@ namespace MFM
         current.SetY(y);
 
         SPoint selectedAtom;
+        SPoint cloneAtom;
         SPoint* selectedAtomPtr = NULL;
+        SPoint* cloneAtomPtr = NULL;
 
         if(atomTile.Equals(current))
         {
@@ -37,12 +46,20 @@ namespace MFM
           selectedAtomPtr = &selectedAtom;
         }
 
+        if(cloneTile.Equals(current))
+        {
+          cloneAtom.SetX(m_cloneOrigin.GetX() - cloneTile.GetX() * (tileSize / atomSize));
+          cloneAtom.SetY(m_cloneOrigin.GetY() - cloneTile.GetY() * (tileSize / atomSize));
+          cloneAtomPtr = &cloneAtom;
+        }
+
         m_tileRenderer.RenderTile(drawing,
                                   grid.GetTile(x, y),
                                   current, false, m_renderTilesSeparated,
                                   current.GetX() == (s32)m_selectedTile.GetX() &&
                                   current.GetY() == (s32)m_selectedTile.GetY(),
-                                  selectedAtomPtr);
+                                  selectedAtomPtr,
+                                  cloneAtomPtr);
       }
     }
   }

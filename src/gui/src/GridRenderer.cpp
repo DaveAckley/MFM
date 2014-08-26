@@ -3,7 +3,8 @@
 namespace MFM
 {
 
-  GridRenderer::GridRenderer()
+  GridRenderer::GridRenderer() :
+    m_cloneOrigin(-1, -1)
   {
     m_currentEWRenderMode = m_defaultRenderMode;
     m_renderTilesSeparated = m_renderTilesSeparatedDefault;
@@ -69,6 +70,11 @@ namespace MFM
   void GridRenderer::SetDrawOrigin(const SPoint & origin)
   {
     m_tileRenderer.SetWindowTL(origin);
+  }
+
+  void GridRenderer::SetCloneOrigin(const SPoint& cloneOrigin)
+  {
+    m_cloneOrigin.Set(cloneOrigin.GetX(), cloneOrigin.GetY());
   }
 
   void GridRenderer::MoveUp(u8 amount)

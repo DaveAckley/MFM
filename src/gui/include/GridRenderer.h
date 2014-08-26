@@ -62,6 +62,8 @@ namespace MFM
      */
     SPoint m_selectedAtom;
 
+    SPoint m_cloneOrigin;
+
     static const EventWindowRenderMode m_defaultRenderMode =
       EVENTWINDOW_RENDER_OFF;
 
@@ -116,6 +118,8 @@ namespace MFM
     const SPoint & GetDrawOrigin() const ;
 
     void SetDrawOrigin(const SPoint & origin) ;
+
+    void SetCloneOrigin(const SPoint& cloneOrigin) ;
 
     void MoveUp(u8 amount);
 
