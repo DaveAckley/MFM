@@ -96,6 +96,7 @@ namespace MFM
     u32 m_thisEpochAEPS;
     bool m_captureScreenshots;
     u32 m_saveStateIndex;
+    u32 m_epochSaveStateIndex;
 
     Fonts m_fonts;
 
@@ -336,7 +337,7 @@ namespace MFM
 
       virtual void OnClick(u8 button)
       {
-        AbstractGridButton::m_driver->SaveGrid();
+        AbstractGridButton::m_driver->SaveGridWithNextFilename();
       }
 
     private:
@@ -492,6 +493,7 @@ namespace MFM
     virtual void DoEpochEvents(OurGrid& grid, u32 epochs, u32 epochAEPS)
     {
       Super::DoEpochEvents(grid, epochs, epochAEPS);
+      SaveGridWithNextEpochFilename();
       m_thisUpdateIsEpoch = true;
       m_thisEpochAEPS = epochAEPS;
     }
@@ -816,10 +818,8 @@ namespace MFM
 
 
   public:
-    void SaveGrid()
+    void SaveGrid(const char* filename)
     {
-      const char* filename =
-        Super::GetSimDirPathTemporary("save/%D.mfs", m_saveStateIndex++);
 
       LOG.Message("Saving to: %s", filename);
       ExternalConfig<GC> cfg(this->GetGrid());
@@ -830,11 +830,33 @@ namespace MFM
       fs.Close();
     }
 
+    void SaveGridWithNextFilename()
+    {
+        const char* filename =
+          Super::GetSimDirPathTemporary("save/%d.mfs", m_saveStateIndex++);
+        SaveGrid(filename);
+    }
+
+    void SaveGridWithNextEpochFilename()
+    {
+      const char* filename =
+        Super::GetSimDirPathTemporary("autosave/%d.mfs", m_epochSaveStateIndex++);
+      SaveGrid(filename);
+    }
+
+    void SaveGridWithConstantFilename(const char* filename)
+    {
+      const char* finalName =
+        Super::GetSimDirPathTemporary("%s", filename);
+      SaveGrid(finalName);
+    }
+
     AbstractGUIDriver() :
       m_startPaused(true),
       m_thisUpdateIsEpoch(false),
       m_captureScreenshots(false),
       m_saveStateIndex(0),
+      m_epochSaveStateIndex(0),
       m_renderStats(false),
       m_screenWidth(SCREEN_INITIAL_WIDTH),
       m_screenHeight(SCREEN_INITIAL_HEIGHT),
@@ -1318,7 +1340,7 @@ namespace MFM
            Super::GetAEPS() > Super::GetHaltAfterAEPS())
         {
           // Free final save if --haltafteraeps.  Hope for good-looking corpse
-          SaveGrid();
+          SaveGridWithConstantFilename("save/final.mfs");
           running = false;
         }
 

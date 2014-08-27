@@ -120,30 +120,30 @@ namespace MFM
     {
       for(u32 x = 0; x < gridWidth; x++)
       {
-	SPoint currentPt(x, y);
-	/* No need to write empties since they are the default */
-	if(!Atom<CC>::IsType(*m_grid.GetAtom(currentPt),
-			     Element_Empty<CC>::THE_INSTANCE.GetType()))
-	{
-	  byteSink.Printf("GA(");
+        SPoint currentPt(x, y);
+        /* No need to write empties since they are the default */
+        if(!Atom<CC>::IsType(*m_grid.GetAtom(currentPt),
+                             Element_Empty<CC>::THE_INSTANCE.GetType()))
+        {
+          byteSink.Printf("GA(");
 
-	  /* This wil be a little slow, but meh. Makes me miss hash
-	   * tables. */
-	  for(u32 i = 0; i < elems; i++)
-	  {
-	    if(Atom<CC>::IsType(*m_grid.GetAtom(currentPt),
-		 m_elementRegistry.GetEntryElement(i)->GetType()))
-	    {
-	      IntLexEncode(i, lexOutput);
-	      byteSink.Printf("%s", lexOutput);
-	      break;
-	    }
-	  }
+          /* This wil be a little slow, but meh. Makes me miss hash
+           * tables. */
+          for(u32 i = 0; i < elems; i++)
+          {
+            if(Atom<CC>::IsType(*m_grid.GetAtom(currentPt),
+                                m_elementRegistry.GetEntryElement(i)->GetType()))
+            {
+              IntLexEncode(i, lexOutput);
+              byteSink.Printf("%s", lexOutput);
+              break;
+            }
+          }
 
           T temp = *m_grid.GetAtom(currentPt);
           AtomSerializer<CC> as(temp);
-	  byteSink.Printf(",%d,%d,%@)\n", x, y, &as);
-	}
+          byteSink.Printf(",%d,%d,%@)\n", x, y, &as);
+        }
       }
     }
     byteSink.WriteNewline();
@@ -153,13 +153,13 @@ namespace MFM
     {
       for(u32 x = 0; x < GC::GRID_WIDTH; x++)
       {
-	SPoint currentPt(x, y);
+        SPoint currentPt(x, y);
 
-	if(!m_grid.GetTileExecutionStatus(currentPt))
-	{
-	  byteSink.Printf("DisableTile(%d,%d)", x, y);
-	  byteSink.WriteNewline();
-	}
+        if(!m_grid.GetTileExecutionStatus(currentPt))
+        {
+          byteSink.Printf("DisableTile(%d,%d)", x, y);
+          byteSink.WriteNewline();
+        }
       }
     }
 
