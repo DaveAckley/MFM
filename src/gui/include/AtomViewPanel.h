@@ -113,7 +113,14 @@ namespace MFM
 
     void SetAtom(const T* atom)
     {
-      m_atom = atom;
+      if(atom->IsSane())
+      {
+        m_atom = atom;
+      }
+      else
+      {
+        m_atom = NULL;
+      }
     }
 
     void SetGrid(Grid<GC>* grid)
