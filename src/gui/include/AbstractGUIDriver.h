@@ -452,7 +452,7 @@ namespace MFM
       BGRButton() : AbstractGridCheckbox("Writes fault")
       {
         AbstractButton::SetName("BGRButton");
-        Panel::SetDimensions(200,40);
+        Panel::SetDimensions(200,25);
         AbstractButton::SetRenderPoint(SPoint(2, 75));
         Panel::SetVisibility(true);
       }
