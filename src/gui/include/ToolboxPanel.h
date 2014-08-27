@@ -222,6 +222,11 @@ namespace MFM
         m_parent->RebuildSliders();
       }
 
+      virtual bool OnScroll(u8 button)
+      {
+        return false;
+      }
+
      private:
       Element<CC>* m_element;
 

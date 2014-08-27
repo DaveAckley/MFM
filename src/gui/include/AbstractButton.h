@@ -253,6 +253,11 @@ namespace MFM
     {
       if (IsEnabled())
       {
+        if(event.m_event.button.button == SDL_BUTTON_WHEELUP ||
+           event.m_event.button.button == SDL_BUTTON_WHEELDOWN)
+        {
+          return false; /* Don't take wheel events. */
+        }
         if (event.m_event.type == SDL_MOUSEBUTTONUP)      // Execute on up
         {
           OnClick(event.m_event.button.button);
