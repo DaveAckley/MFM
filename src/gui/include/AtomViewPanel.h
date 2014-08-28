@@ -113,7 +113,7 @@ namespace MFM
 
     void SetAtom(const T* atom)
     {
-      if(atom->IsSane())
+      if(atom && atom->IsSane())
       {
         m_atom = atom;
       }
