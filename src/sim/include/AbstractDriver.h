@@ -401,6 +401,7 @@ namespace MFM
     u32 m_aepsPerFrame;
 
     s32 m_AEPSPerEpoch;
+    u32 m_autosavePerEpochs;
     u32 m_accelerateAfterEpochs;
     u32 m_acceleration;
     u32 m_surgeAfterEpochs;
@@ -491,6 +492,19 @@ namespace MFM
         args.Die("AEPS per epoch must be non-negative, not %d", epochAEPS);
       }
       driver.SetAEPSPerEpoch(epochAEPS);
+    }
+
+    static void SetAutosavePerEpochsFromArgs(const char* arg, void* driverptr)
+    {
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
+      u32 val = atoi(arg);
+      if (val < 0)
+      {
+        args.Die("Autosave per epochs must be non-negative, not %d", val);
+      }
+      driver.m_autosavePerEpochs = val;
     }
 
     static void SetPicturesPerRateFromArgs(const char* aeps, void* driverptr)
@@ -608,6 +622,24 @@ namespace MFM
     }
 
   public:
+    void AutosaveGrid(u32 epochs)
+    {
+      const char* filename =
+        GetSimDirPathTemporary("autosave/%D-%D.mfs", epochs, (u32) m_AEPS);
+      SaveGrid(filename);
+    }
+
+    void SaveGrid(const char* filename)
+    {
+
+      LOG.Message("Saving to: %s", filename);
+      ExternalConfig<GC> cfg(this->GetGrid());
+      FILE* fp = fopen(filename, "w");
+      FileByteSink fs(fp);
+
+      cfg.Write(fs);
+      fs.Close();
+    }
 
     void LoadFromConfigurationPath()
     {
@@ -711,6 +743,11 @@ namespace MFM
         fclose(fp);
       }
 
+      if (m_autosavePerEpochs > 0 && (epochs % m_autosavePerEpochs) == 0)
+      {
+        this->AutosaveGrid(epochs);
+      }
+
       if (m_accelerateAfterEpochs > 0 && (epochs % m_accelerateAfterEpochs) == 0)
       {
         this->SetAEPSPerEpoch(this->GetAEPSPerEpoch() + m_acceleration);
@@ -737,6 +774,7 @@ namespace MFM
       m_overheadPercent(0.0),
       m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
       m_AEPSPerEpoch(100),
+      m_autosavePerEpochs(1),
       m_accelerateAfterEpochs(0),
       m_acceleration(1),
       m_surgeAfterEpochs(0),
@@ -812,6 +850,9 @@ namespace MFM
 
       RegisterArgument("Set epoch length to ARG AEPS",
                        "-e|--epoch", &SetAEPSPerEpochFromArgs, this, true);
+
+      RegisterArgument("Autosave grid every ARG epochs (default 1; 0 for never)",
+                       "-a|--autosave", &SetAutosavePerEpochsFromArgs, this, true);
 
       this->RegisterArgument("Increase the epoch length every ARG epochs",
                              "--accelerate",
