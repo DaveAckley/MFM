@@ -14,7 +14,6 @@ namespace MFM {
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;
   typedef GridConfig<OurCoreConfig,5,3> OurGridConfig;
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
-  typedef AbstractSliderConfig<OurCoreConfig> OurSliderConfig;
   struct MFMSimDHSDemo : public AbstractGUIDriver<OurGridConfig>
   {
   private: typedef AbstractGUIDriver<OurGridConfig> Super;

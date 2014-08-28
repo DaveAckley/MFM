@@ -51,7 +51,6 @@ namespace MFM
     enum { W = P::TILE_WIDTH };
 
   public:
-
     // Element Data Slot names
     enum {
       DATUMS_CONSUMED_SLOT,

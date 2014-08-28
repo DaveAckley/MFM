@@ -21,6 +21,7 @@
 /**
   \file Element_Shark.h An element that acts similarly to a Wa-Tor shark
   \author David H. Ackley.
+  \author Trent R. Small.
   \date (C) 2014 All rights reserved.
   \lgpl
  */
@@ -61,7 +62,38 @@ namespace MFM
     static s32 m_sharkEnergyPerFish;
 
   public:
-    enum {
+    virtual u32 GetConfigurableCount()
+    {
+      return 2;
+    }
+
+    virtual s32* GetConfigurableParameter(u32 index)
+    {
+      switch(index)
+      {
+      case 0: return &m_sharkBirthAge;
+      case 1: return &m_sharkEnergyPerFish;
+      default: FAIL(ILLEGAL_ARGUMENT);
+      }
+    }
+
+    virtual s32 GetMaximumValue(u32 index)
+    {
+      return (!index) ? 100 : 50;
+    }
+
+    virtual const char* GetConfigurableName(u32 index)
+    {
+      switch(index)
+      {
+      case 0: return "Birth Age";
+      case 1: return "Energy Per Fish";
+      default: FAIL(ILLEGAL_ARGUMENT);
+      }
+    }
+
+    enum
+    {
       ELEMENT_VERSION = 1
     };
 

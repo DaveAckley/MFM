@@ -28,6 +28,7 @@
 #ifndef ELEMENT_DREG_H
 #define ELEMENT_DREG_H
 
+#include "Configurable.h"
 #include "Element.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
@@ -61,7 +62,50 @@ namespace MFM
 
     static s32 m_dregDeleteDregOdds;
 
+    s32* IndexToParam(u32 index)
+    {
+      switch(index)
+      {
+      case 0: return &m_resOdds;
+      case 1: return &m_dregCreateOdds;
+      case 2: return &m_dregDeleteOdds;
+      case 3: return &m_dregDeleteDregOdds;
+      default: FAIL(ILLEGAL_ARGUMENT); break;
+      }
+    }
+
   public:
+    virtual u32 GetConfigurableCount()
+    {
+      return 4;
+    }
+
+    virtual s32* GetConfigurableParameter(u32 index)
+    {
+      return IndexToParam(index);
+    }
+
+    virtual s32 GetMaximumValue(u32 index)
+    {
+      return 100 * (index > 1 ? 10 : 1);
+    }
+
+    virtual u32 GetSnapResolution(u32 index)
+    {
+      return 10;
+    }
+
+    virtual const char* GetConfigurableName(u32 index)
+    {
+      switch(index)
+      {
+      case 0: return "Res Spawn Odds";
+      case 1: return "Dreg Spawn Odds";
+      case 2: return "Delete Odds";
+      case 3: return "Delete Dreg Odds";
+      default: FAIL(ILLEGAL_ARGUMENT); break;
+      }
+    }
 
     static Element_Dreg THE_INSTANCE;
 

@@ -30,7 +30,6 @@
 #include "EditingTool.h"
 #include "AbstractButton.h"
 #include "Slider.h"
-#include "AbstractSliderConfig.h"
 
 #define ELEMENT_BOX_SIZE 70
 #define ELEMENT_RENDER_SIZE 32
@@ -255,10 +254,6 @@ namespace MFM
 
     u32 m_brushSize;
 
-    const AbstractSliderConfig<CC>* m_sliderConfigs[ELEMENT_BOX_SIZE];
-
-    u32 m_sliderConfigCount;
-
     enum
     {
       ELEMENTS_PER_ROW = 10,
@@ -276,13 +271,17 @@ namespace MFM
       }
 
       /* Set up the new sliders, if any */
-      m_sliderCount = 0;
-      for(u32 i = 0; i < m_sliderConfigCount; i++)
+
+      m_sliderCount = m_primaryElement->GetConfigurableCount();
+      for(u32 i = 0; i < m_sliderCount; i++)
       {
-        if(m_primaryElement == m_sliderConfigs[i]->GetElement())
-        {
-          m_sliderCount = m_sliderConfigs[i]->SetupSliders(m_sliders, TOOLBOX_MAX_SLIDERS);
-        }
+        Slider& s = m_sliders[i];
+
+        s.SetExternalValue(m_primaryElement->GetConfigurableParameter(i));
+        s.SetText(m_primaryElement->GetConfigurableName(i));
+        s.SetMinValue(m_primaryElement->GetMinimumValue(i));
+        s.SetMaxValue(m_primaryElement->GetMaximumValue(i));
+        s.SetSnapResolution(m_primaryElement->GetSnapResolution(i));
       }
 
       /* Put the new sliders in */
@@ -307,8 +306,7 @@ namespace MFM
       m_secondaryElement(NULL),
       m_heldElementCount(0),
       m_sliderCount(0),
-      m_brushSize(2),
-      m_sliderConfigCount(0)
+      m_brushSize(2)
     {
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
       {
@@ -320,11 +318,6 @@ namespace MFM
       {
         m_heldElements[i] = NULL;
       }
-    }
-
-    void ClearSliderConfigs()
-    {
-      m_sliderConfigCount = 0;
     }
 
     void AddButtons()
@@ -400,16 +393,6 @@ namespace MFM
         FAIL(OUT_OF_ROOM);
       }
       m_heldElements[m_heldElementCount++] = element;
-    }
-
-    void RegisterSliderConfig(const AbstractSliderConfig<CC>* config)
-    {
-      if(m_sliderConfigCount >= ELEMENT_BOX_SIZE)
-      {
-        FAIL(OUT_OF_ROOM);
-      }
-
-      m_sliderConfigs[m_sliderConfigCount++] = config;
     }
 
     void ActivateButton(ToolButton* button)

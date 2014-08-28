@@ -28,6 +28,7 @@
 #ifndef ELEMENT_H
 #define ELEMENT_H
 
+#include "Configurable.h"
 #include "itype.h"
 #include "StaticLoader.h"
 #include "EventWindow.h"
@@ -45,7 +46,7 @@ namespace MFM
    * An Element describes how a given type of Atom behaves.
    */
   template <class CC>
-  class Element
+  class Element : public Configurable
   {
    private:
     typedef typename CC::ATOM_TYPE T;

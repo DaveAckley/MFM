@@ -51,7 +51,6 @@ namespace MFM
     typedef typename CC::ATOM_TYPE T;
 
   public:
-
     static Element_Res THE_INSTANCE;
     static const u32 TYPE() {
       return THE_INSTANCE.GetType();

@@ -48,9 +48,37 @@ namespace MFM
 
   private:
 
-    u32 m_bombRange;
+    s32 m_bombRange;
 
   public:
+    virtual u32 GetConfigurableCount()
+    {
+      return 1;
+    }
+
+    virtual s32* GetConfigurableParameter(u32 index)
+    {
+      if(index)
+      {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+      return &m_bombRange;
+    }
+
+    virtual s32 GetMinimumValue(u32 index)
+    {
+      return 0;
+    }
+
+    virtual s32 GetMaximumValue(u32 index)
+    {
+      return 4;
+    }
+
+    virtual const char* GetConfigurableName(u32 index)
+    {
+      return "Bomb Radius";
+    }
 
     static Element_ForkBomb2 THE_INSTANCE;
 

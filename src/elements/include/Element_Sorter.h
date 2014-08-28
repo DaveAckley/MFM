@@ -51,7 +51,6 @@ namespace MFM
     enum { R = P::EVENT_WINDOW_RADIUS };
 
    public:
-
     static Element_Sorter THE_INSTANCE;
     static const u32 TYPE()
     {

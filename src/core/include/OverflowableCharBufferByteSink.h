@@ -223,7 +223,7 @@ namespace MFM {
       /* Check for >= to account for null byte written by snprintf */
       if((m_written = strlen(zstr)) >= BUFSIZE)
       {
-	FAIL(OUT_OF_ROOM);
+        FAIL(OUT_OF_ROOM);
       }
 
       snprintf((char*)m_buf, BUFSIZE, "%s", zstr);

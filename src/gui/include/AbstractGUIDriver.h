@@ -472,11 +472,6 @@ namespace MFM
     GridRenderer m_grend;
     StatsRenderer<GC> m_srend;
 
-    void RegisterSliderConfig(const AbstractSliderConfig<CC>* config)
-    {
-      m_toolboxPanel.RegisterSliderConfig(config);
-    }
-
     GridRenderer & GetGridRenderer()
     {
       return m_grend;

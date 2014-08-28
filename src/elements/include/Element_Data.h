@@ -69,7 +69,7 @@ namespace MFM
     {
       if (!Atom<CC>::IsType(atom,TYPE()))
       {
-	return badType;
+        return badType;
       }
       return atom.GetStateField(STATE_DATA_IDX,STATE_DATA_LEN);
     }
@@ -78,7 +78,7 @@ namespace MFM
     {
       if (!Atom<CC>::IsType(atom,TYPE()))
       {
-	return false;
+        return false;
       }
       atom.SetStateField(STATE_DATA_IDX,STATE_DATA_LEN,value);
       return true;
@@ -91,11 +91,11 @@ namespace MFM
       u32 datum = GetDatum(atom, 0);
       if(datum)
       {
-	desc.Printf("Datum: %d", datum);
+        desc.Printf("Datum: %d", datum);
       }
       else
       {
-	desc.Printf("Datum: INVALID");
+        desc.Printf("Datum: INVALID");
       }
     }
 

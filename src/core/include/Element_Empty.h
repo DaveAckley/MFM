@@ -44,7 +44,6 @@ namespace MFM
     typedef typename CC::ATOM_TYPE T;
 
   public:
-
     static Element_Empty THE_INSTANCE;
 
     Element_Empty() : Element<CC>(MFM_UUID_FOR("Empty", EMPTY_VERSION))

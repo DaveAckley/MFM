@@ -52,7 +52,6 @@ namespace MFM
     enum { R = P::EVENT_WINDOW_RADIUS };
 
   public:
-
     // Element Data Slot names
     enum {
       DATUMS_EMITTED_SLOT,

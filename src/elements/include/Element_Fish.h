@@ -52,12 +52,39 @@ namespace MFM
     static s32 m_fishBirthAge;
 
   public:
-    enum {
+    virtual u32 GetConfigurableCount()
+    {
+      return 1;
+    }
+
+    virtual s32* GetConfigurableParameter(u32 index)
+    {
+      if(index)
+      {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+      return &m_fishBirthAge;
+    }
+
+    virtual s32 GetMaximumValue(u32 index)
+    {
+      return 100;
+    }
+
+    virtual const char* GetConfigurableName(u32 index)
+    {
+      return "Birth Age";
+    }
+
+
+    enum
+    {
       ELEMENT_VERSION = 1
     };
 
     static Element_Fish THE_INSTANCE;
-    static const u32 TYPE() {
+    static const u32 TYPE()
+    {
       return THE_INSTANCE.GetType();
     }
 
