@@ -67,7 +67,7 @@ namespace MFM
   }
 
   template <class CC>
-  bool ElementRegistry<CC>::RegisterElement(const Element<CC>& e)
+  bool ElementRegistry<CC>::RegisterElement(Element<CC>& e)
   {
     if (IsRegistered(e.GetUUID()))
       return false;
@@ -93,7 +93,7 @@ namespace MFM
   }
 
   template <class CC>
-  const Element<CC> * ElementRegistry<CC>::Lookup(const UUID & uuid) const
+  Element<CC> * ElementRegistry<CC>::Lookup(const UUID & uuid) const
   {
     const ElementEntry * ee = FindMatching(uuid);
     if (ee) return ee->m_element;
@@ -101,10 +101,10 @@ namespace MFM
   }
 
   template <class CC>
-  const Element<CC> * ElementRegistry<CC>::LookupCompatible(const UUID & uuid) const
+  Element<CC> * ElementRegistry<CC>::LookupCompatible(const UUID & uuid) const
   {
     // Try exact match first
-    const Element<CC> * ret = Lookup(uuid);
+    Element<CC> * ret = Lookup(uuid);
     if (ret) return ret;
 
     s32 index = FindCompatibleIndex(uuid, -1);

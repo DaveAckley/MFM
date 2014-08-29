@@ -194,7 +194,7 @@ namespace MFM
   template<class GC>
   bool ExternalConfig<GC>::RegisterElement(const UUID & uuid, OString16 & nick)
   {
-    const Element<CC> * elt = m_elementRegistry.Lookup(uuid);
+    Element<CC> * elt = m_elementRegistry.Lookup(uuid);
     const UUID * puuid = 0;
     if (!elt) {
       m_in.Msg(Logger::WARNING, "Unknown element '%@', searching for compatible alternatives", &uuid);
@@ -236,7 +236,7 @@ namespace MFM
   }
 
   template<class GC>
-  const Element<typename GC::CORE_CONFIG> * ExternalConfig<GC>::LookupElement(const OString16 & nick) const
+  Element<typename GC::CORE_CONFIG> * ExternalConfig<GC>::LookupElement(const OString16 & nick) const
   {
     for (u32 i = 0; i < m_registeredElementCount; ++i) {
       const RegElt & re = m_registeredElements[i];

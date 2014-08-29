@@ -197,13 +197,13 @@ namespace MFM
   };
 
   template <class GC>
-  class FunctionCallSetParameter : public ConfigFunctionCall<GC>
+  class FunctionCallSetElementParameter : public ConfigFunctionCall<GC>
   {
     typedef typename GC::CORE_CONFIG CC;
 
    public:
-    FunctionCallSetParameter() :
-      ConfigFunctionCall<GC>("SetParameter")
+    FunctionCallSetElementParameter() :
+      ConfigFunctionCall<GC>("SetElementParameter")
     { }
 
     virtual bool Parse(ExternalConfig<GC> & ec)
@@ -211,14 +211,30 @@ namespace MFM
       LineCountingByteSource & in = ec.GetByteSource();
       in.SkipWhitespace();
 
-      OString64 parm;
-      if (!in.ScanIdentifier(parm))
+      OString16 nick;
+      if (!in.ScanIdentifier(nick))
       {
-        return in.Msg(Logger::ERROR, "Expected parameter name as first argument");
+        return in.Msg(Logger::ERROR, "Expected element nickname as first argument");
       }
 
-      s32 val;
+      s32 index;
+      s32 value;
       s32 ret;
+
+      ret = this->SkipToNextArg(in);
+      if (ret < 0)
+      {
+        return false;
+      }
+      if (ret == 0)
+      {
+        return in.Msg(Logger::ERROR, "Expected second argument (parameter index)");
+      }
+
+      if (!in.Scan(index))
+      {
+        return in.Msg(Logger::ERROR, "Expected decimal parameter index");
+      }
 
       ret = this->SkipToNextArg(in);
       if (ret < 0)
@@ -230,23 +246,14 @@ namespace MFM
         return in.Msg(Logger::ERROR, "Expected second argument (parameter value)");
       }
 
-      if (!in.Scan(val))
+      if (!in.Scan(value))
       {
         return in.Msg(Logger::ERROR, "Expected decimal parameter value");
       }
 
-      const char* pm = parm.GetZString();
-      /* Register all settable parameters here */
+      Element<CC>* elem = ec.LookupElement(nick);
 
-      if(!strcmp(pm, "DregResOdds"))
-      {
-        *(Element_Dreg<CC>::THE_INSTANCE.GetResOddsPtr()) = val;
-      }
-
-      if(!strcmp(pm, "DregCreateOdds"))
-      {
-        *(Element_Dreg<CC>::THE_INSTANCE.GetDregCreateOddsPtr()) = val;
-      }
+      elem->SetConfigurableParameterValue(index, value);
 
       return this->SkipToNextArg(in) == 0;
     }
@@ -273,7 +280,7 @@ namespace MFM
       ec.RegisterFunction(elt);
     }
     {
-      static FunctionCallSetParameter<GC> elt;
+      static FunctionCallSetElementParameter<GC> elt;
       ec.RegisterFunction(elt);
     }
     {

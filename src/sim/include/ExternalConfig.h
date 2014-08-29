@@ -81,7 +81,7 @@ namespace MFM
 
     bool RegisterElement(const UUID & uuid, OString16 & nick) ;
 
-    const Element<CC> * LookupElement(const OString16 & nick) const ;
+    Element<CC> * LookupElement(const OString16 & nick) const ;
 
     bool PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const char* dataStr) ;
 
@@ -116,7 +116,7 @@ namespace MFM
     struct RegElt {
       UUID m_uuid;
       OString16 m_nick;
-      const Element<CC> * m_element;
+      Element<CC> * m_element;
     } m_registeredElements[MAX_REGISTERED_ELEMENTS];
     u32 m_registeredElementCount;
 

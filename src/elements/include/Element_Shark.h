@@ -87,6 +87,16 @@ namespace MFM
       }
     }
 
+    virtual void SetConfigurableParameterValue(u32 index, s32 value)
+    {
+      switch(index)
+      {
+      case 0: m_sharkBirthAge = value; break;
+      case 1: m_sharkEnergyPerFish = value; break;
+      default: FAIL(ILLEGAL_ARGUMENT);
+      }
+    }
+
     virtual s32 GetMaximumValue(u32 index) const
     {
       return (!index) ? 100 : 50;

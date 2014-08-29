@@ -75,9 +75,9 @@ namespace MFM {
 
     bool Load(const UUID & uuid) ;
 
-    const Element<CC> * Lookup(const UUID & uuid) const;
+    Element<CC> * Lookup(const UUID & uuid) const;
 
-    const Element<CC> * LookupCompatible(const UUID & uuid) const;
+    Element<CC> * LookupCompatible(const UUID & uuid) const;
 
     /**
      * Add a path to the search path, if it is not already there.
@@ -95,7 +95,7 @@ namespace MFM {
     /**
      * Store an element in the registry keyed by its uuid
      */
-    bool RegisterElement(const Element<CC>& e) ;
+    bool RegisterElement(Element<CC>& e) ;
 
     /**
      * Gets the number of currently registered Elements inside this
@@ -142,7 +142,7 @@ namespace MFM {
   private:
     struct ElementEntry {
       UUID m_uuid;                   //< Set in all cases
-      const Element<CC>* m_element;  //< Set if element is loaded
+      Element<CC>* m_element;  //< Set if element is loaded
       s32 m_pathIndex;               //< Set if the element was found in this pathentry
 
       ElementEntry() : m_element(0), m_pathIndex(-1) { }

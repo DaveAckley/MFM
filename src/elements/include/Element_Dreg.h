@@ -90,6 +90,11 @@ namespace MFM
       return *IndexToParam(index);
     }
 
+    virtual void SetConfigurableParameterValue(u32 index, s32 value)
+    {
+      *IndexToParam(index) = value;
+    }
+
     virtual s32 GetMaximumValue(u32 index) const
     {
       return 100 * (index <= 1 ? 10 : 1);

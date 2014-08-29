@@ -75,6 +75,15 @@ namespace MFM
       return m_fishBirthAge;
     }
 
+    virtual void SetConfigurableParameterValue(u32 index, s32 value)
+    {
+      if(index)
+      {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+      m_fishBirthAge = value;
+    }
+
     virtual s32 GetMaximumValue(u32 index) const
     {
       return 100;

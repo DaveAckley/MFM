@@ -50,6 +50,11 @@ namespace MFM
       FAIL(ILLEGAL_ARGUMENT);
     }
 
+    virtual void SetConfigurableParameterValue(u32 index, s32 value)
+    {
+      FAIL(ILLEGAL_ARGUMENT);
+    }
+
     virtual s32 GetMinimumValue(u32 index) const
     {
       return 1;

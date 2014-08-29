@@ -74,6 +74,15 @@ namespace MFM
       return m_bombRange;
     }
 
+    virtual void SetConfigurableParameterValue(u32 index, s32 value)
+    {
+      if(index)
+      {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+      m_bombRange = value;
+    }
+
     virtual s32 GetMinimumValue(u32 index) const
     {
       return 0;
