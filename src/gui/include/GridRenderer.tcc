@@ -4,7 +4,7 @@ namespace MFM
 {
 
   template <class GC>
-  void GridRenderer::RenderGrid(Drawing & drawing, Grid<GC>& grid)
+  void GridRenderer::RenderGrid(Drawing & drawing, Grid<GC>& grid, u32 brushSize)
   {
     SPoint current;
     SPoint eventLoc;
@@ -62,6 +62,28 @@ namespace MFM
                                   cloneAtomPtr);
       }
     }
+
+
+    //const u32 hbs = brushSize >> 1;
+    s32 haX = (s32)m_hoveredAtom.GetX();
+    s32 haY = (s32)m_hoveredAtom.GetY();
+    drawing.SetForeground(Drawing::YELLOW);
+
+    SPoint wtl = m_tileRenderer.GetWindowTL();
+    for(s32 x = haX - brushSize; x < haX + brushSize; x++)
+    {
+      for(s32 y = haY - brushSize; y < haY + brushSize; y++)
+      {
+        if(x >= 0 && y >= 0)
+        {
+          if(sqrt(((y - haY) * (y - haY)) + ((x - haX) * (x - haX))) < brushSize)
+          {
+            drawing.FillRect(wtl.GetX() + (x + 0.5) * atomSize,
+                             wtl.GetY() + (y + 0.5) * atomSize, 2, 2);
+          }
+        }
+      }
+    }
   }
 
   template <class GC>
@@ -94,6 +116,19 @@ namespace MFM
 
       m_selectedTile = oldSelectedTile;
     }
+  }
+
+  template <class GC>
+  void GridRenderer::SetHoveredAtom(Grid<GC>& grid, SPoint clickPt)
+  {
+    SPoint selectedAtom(m_selectedAtom.GetX(), m_selectedAtom.GetY());
+
+    SelectAtom(grid, clickPt);
+
+    m_hoveredAtom.Set(m_selectedAtom.GetX(), m_selectedAtom.GetY());
+    m_selectedAtom.Set(selectedAtom.GetX(), selectedAtom.GetY());
+
+    LOG.Debug("Hovered Atom: (%d, %d)", m_hoveredAtom.GetX(), m_hoveredAtom.GetY());
   }
 
   template <class GC>

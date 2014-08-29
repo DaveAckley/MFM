@@ -62,6 +62,8 @@ namespace MFM
      */
     SPoint m_selectedAtom;
 
+    SPoint m_hoveredAtom;
+
     SPoint m_cloneOrigin;
 
     static const EventWindowRenderMode m_defaultRenderMode =
@@ -133,6 +135,11 @@ namespace MFM
 
     void DeselectAtom();
 
+    void DeselectHoveredAtom()
+    {
+      m_hoveredAtom.Set(-1, -1);
+    }
+
     SPoint GetSelectedTile() const;
 
     SPoint GetSelectedAtom() const
@@ -140,14 +147,22 @@ namespace MFM
       return m_selectedAtom;
     }
 
+    SPoint GetHoveredAtom() const
+    {
+      return m_hoveredAtom;
+    }
+
     template <class GC>
-    void RenderGrid(Drawing & drawing, Grid<GC>& grid);
+    void RenderGrid(Drawing & drawing, Grid<GC>& grid, u32 brushSize);
 
     template <class GC>
     void SelectTile(Grid<GC>& grid, SPoint clickPt);
 
     template <class GC>
     void SelectAtom(Grid<GC>& grid, SPoint clickPt);
+
+    template <class GC>
+    void SetHoveredAtom(Grid<GC>& grid, SPoint clickPt);
 
   };
 } /* namespace MFM */

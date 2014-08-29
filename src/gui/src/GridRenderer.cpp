@@ -10,6 +10,7 @@ namespace MFM
     m_renderTilesSeparated = m_renderTilesSeparatedDefault;
     m_selectedTile.Set(-1, -1);
     m_selectedAtom.Set(-1, -1);
+    m_hoveredAtom.Set(-1, -1);
   }
 
   GridRenderer::~GridRenderer()

@@ -156,7 +156,7 @@ namespace MFM
     {
       this->Panel::PaintComponent(drawing);
 
-      m_grend->RenderGrid(drawing, *m_mainGrid);
+      m_grend->RenderGrid(drawing, *m_mainGrid, m_toolboxPanel->GetBrushSize());
     }
 
     void HandleSelectorTool(MouseButtonEvent& mbe)
@@ -523,7 +523,12 @@ namespace MFM
           mask = SDL_BUTTON_RIGHT;
         }
 
-        if(mask && !mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
+        m_grend->SetHoveredAtom(*m_mainGrid, SPoint(event.x, event.y));
+        if(!mask)
+        {
+          m_grend->SetHoveredAtom(*m_mainGrid, SPoint(event.x, event.y));
+        }
+        else if(mask && !mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
         {
           switch(mbe.m_selectedTool)
           {
@@ -549,6 +554,10 @@ namespace MFM
             /* Some tools don't need to do this */
             break;
           }
+        }
+        else
+        {
+          m_grend->DeselectHoveredAtom();
         }
       }
       return false;
