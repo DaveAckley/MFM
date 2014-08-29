@@ -100,6 +100,17 @@ namespace MFM
       uuid.Print(byteSink);
       byteSink.Printf(",%s)", lexOutput);
       byteSink.WriteNewline();
+
+      /* Write element configurable values */
+
+      const Element<CC>* elem = m_elementRegistry.GetEntryElement(i);
+      for(u32 j = 0; j < elem->GetConfigurableCount(); j++)
+      {
+        byteSink.Printf("SetElementParameter(%s, %d, %d)",
+                        lexOutput,
+                        j, elem->GetConfigurableParameterValue(j));
+        byteSink.WriteNewline();
+      }
     }
     byteSink.WriteNewline();
 

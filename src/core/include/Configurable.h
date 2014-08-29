@@ -35,7 +35,7 @@ namespace MFM
   class Configurable
   {
    public:
-    virtual u32 GetConfigurableCount()
+    virtual u32 GetConfigurableCount() const
     {
       return 0;
     }
@@ -45,12 +45,17 @@ namespace MFM
       FAIL(ILLEGAL_ARGUMENT);
     }
 
-    virtual s32 GetMinimumValue(u32 index)
+    virtual s32 GetConfigurableParameterValue(u32 index) const
+    {
+      FAIL(ILLEGAL_ARGUMENT);
+    }
+
+    virtual s32 GetMinimumValue(u32 index) const
     {
       return 1;
     }
 
-    virtual s32 GetMaximumValue(u32 index)
+    virtual s32 GetMaximumValue(u32 index) const
     {
       return 1000;
     }
@@ -60,12 +65,12 @@ namespace MFM
      * snap a slider to a particular number of values. If not
      * specified, the default is one.
      */
-    virtual u32 GetSnapResolution(u32 index)
+    virtual u32 GetSnapResolution(u32 index) const
     {
       return 1;
     }
 
-    virtual const char* GetConfigurableName(u32 index)
+    virtual const char* GetConfigurableName(u32 index) const
     {
       FAIL(ILLEGAL_ARGUMENT);
     }

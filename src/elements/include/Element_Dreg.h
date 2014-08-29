@@ -62,7 +62,7 @@ namespace MFM
 
     static s32 m_dregDeleteDregOdds;
 
-    s32* IndexToParam(u32 index)
+    s32* IndexToParam(u32 index) const
     {
       switch(index)
       {
@@ -75,7 +75,7 @@ namespace MFM
     }
 
   public:
-    virtual u32 GetConfigurableCount()
+    virtual u32 GetConfigurableCount() const
     {
       return 4;
     }
@@ -85,17 +85,22 @@ namespace MFM
       return IndexToParam(index);
     }
 
-    virtual s32 GetMaximumValue(u32 index)
+    virtual s32 GetConfigurableParameterValue(u32 index) const
     {
-      return 100 * (index > 1 ? 10 : 1);
+      return *IndexToParam(index);
     }
 
-    virtual u32 GetSnapResolution(u32 index)
+    virtual s32 GetMaximumValue(u32 index) const
+    {
+      return 100 * (index <= 1 ? 10 : 1);
+    }
+
+    virtual u32 GetSnapResolution(u32 index) const
     {
       return 10;
     }
 
-    virtual const char* GetConfigurableName(u32 index)
+    virtual const char* GetConfigurableName(u32 index) const
     {
       switch(index)
       {

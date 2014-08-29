@@ -23,7 +23,7 @@ namespace MFM
 
       if(!dir)
       {
-	LOG.Warning("  Skipping %s: %s", dirname, strerror(errno));
+        LOG.Warning("  Skipping %s: %s", dirname, strerror(errno));
         continue;
       }
 
@@ -31,23 +31,23 @@ namespace MFM
 
       while((entry = readdir(dir)))
       {
-	/* Files and symbolic links are both OK */
-	if(entry->d_type == DT_LNK ||
-	   entry->d_type == DT_REG)
-	{
-	  if(UUID::LegalFilename(entry->d_name))
-	  {
-	    LOG.Debug("    ELEMENT FOUND: %s", entry->d_name);
+        /* Files and symbolic links are both OK */
+        if(entry->d_type == DT_LNK ||
+           entry->d_type == DT_REG)
+        {
+          if(UUID::LegalFilename(entry->d_name))
+          {
+            LOG.Debug("    ELEMENT FOUND: %s", entry->d_name);
 
 
-	    UUID fileID;
-	    u32 entrylen = strlen(entry->d_name) - 3; /* For '.so' extension */
-	    CharBufferByteSource charSource(entry->d_name, entrylen);
-	    ByteSource& source = charSource;
+            UUID fileID;
+            u32 entrylen = strlen(entry->d_name) - 3; /* For '.so' extension */
+            CharBufferByteSource charSource(entry->d_name, entrylen);
+            ByteSource& source = charSource;
 
-	    fileID.Read(source);
+            fileID.Read(source);
 
-	    RegisterUUID(fileID);
+            RegisterUUID(fileID);
 
             // Update the pathIndex for loading later
             ElementEntry * ee = FindMatching(fileID);
@@ -55,12 +55,12 @@ namespace MFM
               FAIL(ILLEGAL_STATE);
             ee->m_pathIndex = (s32) i;
 
-	  }
-	  else
-	  {
-	    LOG.Debug("    Other file: %s", entry->d_name);
-	  }
-	}
+          }
+          else
+          {
+            LOG.Debug("    Other file: %s", entry->d_name);
+          }
+        }
       }
       closedir(dir);
     }

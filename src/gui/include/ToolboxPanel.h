@@ -277,11 +277,12 @@ namespace MFM
       {
         Slider& s = m_sliders[i];
 
-        s.SetExternalValue(m_primaryElement->GetConfigurableParameter(i));
+        s.SetExternalValue(NULL); /* This keeps bounds changes from setting old value*/
         s.SetText(m_primaryElement->GetConfigurableName(i));
         s.SetMinValue(m_primaryElement->GetMinimumValue(i));
         s.SetMaxValue(m_primaryElement->GetMaximumValue(i));
         s.SetSnapResolution(m_primaryElement->GetSnapResolution(i));
+        s.SetExternalValue(m_primaryElement->GetConfigurableParameter(i));
       }
 
       /* Put the new sliders in */

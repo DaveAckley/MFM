@@ -62,7 +62,7 @@ namespace MFM
     static s32 m_sharkEnergyPerFish;
 
   public:
-    virtual u32 GetConfigurableCount()
+    virtual u32 GetConfigurableCount() const
     {
       return 2;
     }
@@ -77,12 +77,22 @@ namespace MFM
       }
     }
 
-    virtual s32 GetMaximumValue(u32 index)
+    virtual s32 GetConfigurableParameterValue(u32 index) const
+    {
+      switch(index)
+      {
+      case 0: return m_sharkBirthAge;
+      case 1: return m_sharkEnergyPerFish;
+      default: FAIL(ILLEGAL_ARGUMENT);
+      }
+    }
+
+    virtual s32 GetMaximumValue(u32 index) const
     {
       return (!index) ? 100 : 50;
     }
 
-    virtual const char* GetConfigurableName(u32 index)
+    virtual const char* GetConfigurableName(u32 index) const
     {
       switch(index)
       {

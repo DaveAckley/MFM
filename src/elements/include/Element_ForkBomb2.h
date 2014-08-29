@@ -51,7 +51,7 @@ namespace MFM
     s32 m_bombRange;
 
   public:
-    virtual u32 GetConfigurableCount()
+    virtual u32 GetConfigurableCount() const
     {
       return 1;
     }
@@ -65,17 +65,26 @@ namespace MFM
       return &m_bombRange;
     }
 
-    virtual s32 GetMinimumValue(u32 index)
+    virtual s32 GetConfigurableParameterValue(u32 index) const
+    {
+      if(index)
+      {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+      return m_bombRange;
+    }
+
+    virtual s32 GetMinimumValue(u32 index) const
     {
       return 0;
     }
 
-    virtual s32 GetMaximumValue(u32 index)
+    virtual s32 GetMaximumValue(u32 index) const
     {
       return 4;
     }
 
-    virtual const char* GetConfigurableName(u32 index)
+    virtual const char* GetConfigurableName(u32 index) const
     {
       return "Bomb Radius";
     }
