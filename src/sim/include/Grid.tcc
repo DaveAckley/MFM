@@ -246,7 +246,12 @@ namespace MFM {
     {
       again = false;
 
-      ++loops;
+      if (++loops > 100000)
+      {
+        LOG.Error("%s control looped %d times, killing",
+                  tc.GetName(), loops);
+        FAIL(ILLEGAL_STATE);
+      }
 
       for(u32 x = 0; x < W; x++)
       {
@@ -259,9 +264,12 @@ namespace MFM {
           }
         }
       }
+
+      Sleep(0, loops);  // Actually sleeping seems to avoid rare livelock?
+
     } while (again);
 
-    if (loops > 10000)
+    if (loops > 1000)
     {
       LOG.Debug("%s control looped %d times",
                 tc.GetName(), loops);
