@@ -489,7 +489,6 @@ namespace MFM
     virtual void DoEpochEvents(OurGrid& grid, u32 epochs, u32 epochAEPS)
     {
       Super::DoEpochEvents(grid, epochs, epochAEPS);
-      SaveGridWithNextEpochFilename();
       m_thisUpdateIsEpoch = true;
       m_thisEpochAEPS = epochAEPS;
     }
@@ -814,37 +813,19 @@ namespace MFM
 
 
   public:
-    void SaveGrid(const char* filename)
-    {
-
-      LOG.Message("Saving to: %s", filename);
-      ExternalConfig<GC> cfg(this->GetGrid());
-      FILE* fp = fopen(filename, "w");
-      FileByteSink fs(fp);
-
-      cfg.Write(fs);
-      fs.Close();
-    }
 
     void SaveGridWithNextFilename()
     {
         const char* filename =
-          Super::GetSimDirPathTemporary("save/%d.mfs", m_saveStateIndex++);
-        SaveGrid(filename);
-    }
-
-    void SaveGridWithNextEpochFilename()
-    {
-      const char* filename =
-        Super::GetSimDirPathTemporary("autosave/%d.mfs", m_epochSaveStateIndex++);
-      SaveGrid(filename);
+          Super::GetSimDirPathTemporary("save/%D.mfs", m_saveStateIndex++);
+        Super::SaveGrid(filename);
     }
 
     void SaveGridWithConstantFilename(const char* filename)
     {
       const char* finalName =
         Super::GetSimDirPathTemporary("%s", filename);
-      SaveGrid(finalName);
+      Super::SaveGrid(finalName);
     }
 
     AbstractGUIDriver() :

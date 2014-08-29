@@ -153,9 +153,9 @@ namespace MFM
 
       Level oldLevel = m_logLevel;
 
-      Message("[%s->%s]",StrLevel(m_logLevel),StrLevel(newLevel));
+      Debug("[%s->%s]",StrLevel(m_logLevel),StrLevel(newLevel));
       m_logLevel = newLevel;
-      Message("[%s]",StrLevel(m_logLevel));
+      Debug("[%s]",StrLevel(m_logLevel));
 
       return oldLevel;
     }
