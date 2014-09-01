@@ -322,7 +322,7 @@ namespace MFM
               {
                 if(tool == TOOL_XRAY)
                 {
-                  grid.XRayAtom(pt);
+                  grid.MaybeXRayAtom(pt);
                 }
                 else if(tool == TOOL_CLONE)
                 {
