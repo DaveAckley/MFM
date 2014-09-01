@@ -109,6 +109,28 @@ namespace MFM
     return m_threadState; // Return current state and release lock
   }
 
+  const char * ThreadPauser::GetThreadStateName(ThreadState ts)
+  {
+    switch (ts)
+    {
+    case THREADSTATE_PAUSED: return "THREADSTATE_PAUSED";
+    case THREADSTATE_RUN_REQUESTED: return "THREADSTATE_RUN_REQUESTED";
+    case THREADSTATE_RUN_READY: return "THREADSTATE_RUN_READY";
+    case THREADSTATE_RUNNING: return "THREADSTATE_RUNNING";
+    case THREADSTATE_PAUSE_REQUESTED: return "THREADSTATE_PAUSE_REQUESTED";
+    case THREADSTATE_PAUSE_READY: return "THREADSTATE_PAUSE_READY";
+    default: return "invalid ThreadState";
+    }
+  }
+
+  void ThreadPauser::ReportThreadPauserStatus(Logger::Level level)
+  {
+    LOG.Log(level,"   =ThreadPauser %p=", (void*) this);
+    LOG.Log(level,"   =ThreadState: %d (%s)",
+            (int) m_threadState, GetThreadStateName(m_threadState));
+    m_mutex.ReportMutexStatus(level);
+  }
+
   /*
   bool ThreadPauser::IsPaused()
   {

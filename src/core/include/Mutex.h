@@ -240,8 +240,6 @@ namespace MFM
       }
     }
 
-
-
     /**
      * Unlocks the underlying mutex.
      *
@@ -282,6 +280,8 @@ namespace MFM
 
       return true;
     }
+
+    void ReportMutexStatus(int level) ;  // level not Logger::Level to avoid #include loop :(
 
 #ifdef LOSER_LOCK
     /**

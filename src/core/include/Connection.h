@@ -246,6 +246,8 @@ namespace MFM
 
     }
 
+    void ReportConnectionStatus(Logger::Level level, bool owned) ;
+
   };
 }
 
