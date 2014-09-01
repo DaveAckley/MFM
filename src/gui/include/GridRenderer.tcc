@@ -70,9 +70,9 @@ namespace MFM
     drawing.SetForeground(Drawing::YELLOW);
 
     SPoint wtl = m_tileRenderer.GetWindowTL();
-    for(s32 x = haX - brushSize; x < haX + brushSize; x++)
+    for(s32 x = haX - brushSize; x < haX + (s32) brushSize; x++)
     {
-      for(s32 y = haY - brushSize; y < haY + brushSize; y++)
+      for(s32 y = haY - brushSize; y < haY + (s32) brushSize; y++)
       {
         if(x >= 0 && y >= 0)
         {

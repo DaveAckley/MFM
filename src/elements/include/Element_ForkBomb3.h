@@ -48,7 +48,7 @@ namespace MFM
 
   private:
 
-    s32 m_bombRange;
+    u32 m_bombRange;
 
   public:
     virtual u32 GetConfigurableCount() const
@@ -62,7 +62,7 @@ namespace MFM
       {
         FAIL(ILLEGAL_ARGUMENT);
       }
-      return &m_bombRange;
+      return (s32*) &m_bombRange;
     }
 
     virtual s32 GetConfigurableParameterValue(u32 index) const
