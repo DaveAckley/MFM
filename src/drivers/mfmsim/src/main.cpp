@@ -4,7 +4,7 @@
 
 namespace MFM {
 
-  typedef ParamConfig<64,4,8,40> OurParamConfig;
+  typedef ParamConfig<96,4,8,40> OurParamConfig;
   // Mon Jul 28 03:45:08 2014 P1Atom is deprecated with 2.0.2.
   // P3Atom is preferred, but for now we're still supporting
   // P0Atom so using that here for exercise.
