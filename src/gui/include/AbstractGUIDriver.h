@@ -1145,7 +1145,7 @@ namespace MFM
 
     }m_buttonPanel;
 
-    TextPanel<100,100> m_logPanel;
+    TextPanel<120,100> m_logPanel;  // 120 for timestamp and 96 BPA..
     TeeByteSink m_logSplitter;
 
     void SetScreenSize(u32 width, u32 height)
