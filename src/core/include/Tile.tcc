@@ -215,7 +215,10 @@ namespace MFM
         }
         else
         {
-          LOG.Debug("INSANE ATOM RECEIVED");
+          LOG.Debug("%s received insane atom for (%d,%d), discarding",
+                    this->GetLabel(),
+                    packet.GetLocation().GetX(),
+                    packet.GetLocation().GetY());
           PlaceAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), packet.GetLocation());
         }
       }
@@ -818,10 +821,11 @@ namespace MFM
   {
     Packet<T> readPack(PACKET_WRITE, m_generation);
     u32 readBytes;
-    bool allLocksFree;
+    u32 locksStillHeld = 0;
+    u32 loops = 0;
     do
     {
-      allLocksFree = true; // Assume this
+      locksStillHeld = 0; // Assume this
 
       /* Flush out all packet buffers */
       for(Dir dir = Dirs::NORTH; dir < Dirs::DIR_COUNT; ++dir)
@@ -831,7 +835,7 @@ namespace MFM
 
           if (m_iLocked[dir] || m_connections[dir]->IsLockedByAnother())
           {
-            allLocksFree = false;
+            ++locksStillHeld;
           }
 
           while((readBytes = m_connections[dir]->Read(!IS_OWNED_CONNECTION(dir),
@@ -859,10 +863,26 @@ namespace MFM
         /* Have we waited long enough without a response? Let's disconnect that tile. */
 
       }
-      pthread_yield();
+      if (++loops >= 100000)
+      {
+        LOG.Error("Tile %s flush looped %d times, but dirWaitWord (0x%x) still not 0, and %d locks held",
+                  this->GetLabel(), loops, dirWaitWord, locksStillHeld);
+        FAIL(LOCK_FAILURE);  // Not really, but it's a marker
+      }
+
+      if (m_random.OneIn(1000))
+      {
+        // Try sleeping every once in a while
+        Sleep(0, loops);
+      }
+      else
+      {
+        pthread_yield();
+      }
+
     } while(dirWaitWord);
 
-    return !allLocksFree;
+    return locksStillHeld > 0;
   }
 
   template <class CC>
@@ -1096,6 +1116,84 @@ namespace MFM
     else
     {
       m_atomCount[idx] += delta;
+    }
+  }
+
+  template <class CC>
+  void Tile<CC>::ReportTileStatus(Logger::Level level)
+  {
+    LOG.Log(level," ===TILE %s STATUS REPORT===", m_label.GetZString());
+
+    LOG.Log(level,"  ==Tile %s Global==", m_label.GetZString());
+    LOG.Log(level,"   Address: %p", (void*) this);
+    LOG.Log(level,"   Thread id: %p", (void*) m_thread);
+    LOG.Log(level,"   Error stack top: %p", (void*) m_errorEnvironmentStackTop);
+    LOG.Log(level,"   Background radiation: %s", m_backgroundRadiationEnabled?"true":"false");
+
+    LOG.Log(level,"  ==Tile %s Thread==", m_label.GetZString());
+    m_threadPauser.ReportThreadPauserStatus(level);
+
+    LOG.Log(level,"  ==Tile %s Atomic==", m_label.GetZString());
+    LOG.Log(level,"   Recount needed: %s", m_needRecount?"true":"false");
+    LOG.Log(level,"   Illegal atom count: %d", m_illegalAtomCount);
+    LOG.Log(level,"   Last executed atom at: (%d, %d)", m_lastExecutedAtom.GetX(), m_lastExecutedAtom.GetY());
+
+    LOG.Log(level,"  ==Tile %s Events==", m_label.GetZString());
+    LOG.Log(level,"   Events: %dM (total)", (u32) (m_eventsExecuted / 1000000));
+    LOG.Log(level,"    Failed events: %d", m_eventsFailed);
+    LOG.Log(level,"    Failures erased: %d", m_failuresErased);
+
+    const int ONE_MILLION = 1000000;
+    for (u32 r = 0; r < REGION_COUNT; ++r)
+    {
+      const char * lab = "";
+      switch (r) {
+      case REGION_CACHE: lab = "Cache"; break;
+      case REGION_SHARED: lab = "Shared"; break;
+      case REGION_VISIBLE: lab = "Visible"; break;
+      case REGION_HIDDEN: lab = "Hidden"; break;
+      }
+      LOG.Log(level,"   Events: %dM (%s)", (u32) (m_regionEvents[r] / ONE_MILLION), lab);
+    }
+    LOG.Log(level,"   Event locks attempted: %dM", (u32) (m_lockAttempts / ONE_MILLION));
+    LOG.Log(level,"   Event locks succeeded: %dM", (u32) (m_lockAttemptsSucceeded / ONE_MILLION));
+
+    for (u32 r = 0; r < LOCKTYPE_COUNT; ++r)
+    {
+      const char * lab = "";
+      switch (r) {
+      case LOCKTYPE_NONE: lab = "No"; break;
+      case LOCKTYPE_SINGLE: lab = "Single"; break;
+      case LOCKTYPE_TRIPLE: lab = "Triple"; break;
+      }
+      LOG.Log(level,"   %s lock events: %dM", lab, (u32) (m_lockEvents[r] / ONE_MILLION));
+    }
+
+    LOG.Log(level,"  ==Tile %s Connections==", m_label.GetZString());
+    LOG.Log(level,"   -Connection locks held-");
+    for (u32 r = 0; r < Dirs::DIR_COUNT; ++r)
+    {
+      const char * lab = Dirs::GetName(r);
+      LOG.Log(level,"    %s from %s: %s",
+              lab, m_label.GetZString(),
+              m_iLocked[r]?"LOCKED":"unlocked");
+    }
+    LOG.Log(level,"   -Connection details-");
+    for (u32 r = 0; r < Dirs::DIR_COUNT; ++r)
+    {
+      const char * lab = Dirs::GetName(r);
+      Connection * c = m_connections[r];
+      if (!c)
+      {
+        LOG.Log(level,"   %s: No connection", lab);
+      }
+      else
+      {
+        bool iOwnThis = r >= Dirs::EAST && r <= Dirs::SOUTHWEST;
+        LOG.Log(level,"   %s from %s%s: %p",
+                lab, m_label.GetZString(), iOwnThis? " (owned)" : "", (void*) c);
+        c->ReportConnectionStatus(level, iOwnThis);
+      }
     }
   }
 

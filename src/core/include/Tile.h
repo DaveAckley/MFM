@@ -446,6 +446,7 @@ namespace MFM
     void DoEvent(bool locked, Dir lockRegion);
 
    public:
+    void ReportTileStatus(Logger::Level level);
 
     /**
      * Returns this Tile's label, if any.  May return an empty string,
