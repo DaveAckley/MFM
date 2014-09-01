@@ -142,6 +142,8 @@ namespace MFM {
     void DoTileControl(TileControl & tc);
 
   public:
+    void ReportGridStatus(Logger::Level level) ;
+
     Random& GetRandom() { return m_random; }
 
     bool* GetBackgroundRadiationEnabledPointer()
@@ -382,6 +384,8 @@ namespace MFM {
     void PlaceAtom(const T& atom, const SPoint& location);
 
     void XRayAtom(const SPoint& location);
+
+    void MaybeXRayAtom(const SPoint& location);
 
     const T* GetAtom(SPoint& loc)
     {

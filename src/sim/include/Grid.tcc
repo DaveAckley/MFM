@@ -211,6 +211,15 @@ namespace MFM {
   }
 
   template <class GC>
+  void Grid<GC>::MaybeXRayAtom(const SPoint& siteInGrid)
+  {
+    if (m_random.OneIn(10))
+    {
+      XRayAtom(siteInGrid);
+    }
+  }
+
+  template <class GC>
   void Grid<GC>::XRayAtom(const SPoint& siteInGrid)
   {
     SPoint tileInGrid, siteInTile;
@@ -228,6 +237,29 @@ namespace MFM {
   }
 
   template <class GC>
+  void Grid<GC>::ReportGridStatus(Logger::Level level)
+  {
+    LOG.Log(level,"===GRID STATUS REPORT===");
+    LOG.Log(level," Object location + size: %p + %d", (void*) this, sizeof(*this));
+    LOG.Log(level," Size: (%d, %d)", m_width, m_height);
+    LOG.Log(level," Generation: %d", m_gridGeneration);
+    LOG.Log(level," Last event tile: (%d, %d)", m_lastEventTile.GetX(), m_lastEventTile.GetY());
+    LOG.Log(level," Background radiation: %s", m_backgroundRadiationEnabled?"true":"false");
+    LOG.Log(level," Xray odds: %d", m_xraySiteOdds);
+
+    for(u32 x = 0; x < W; x++)
+    {
+      for(u32 y = 0; y < H; y++)
+      {
+        Tile<CC> & tile = GetTile(x,y);
+        LOG.Log(level,"--Grid(%d,%d)=Tile %s (%p)--",
+                x,  y, tile.GetLabel(), (void *) &tile);
+        tile.ReportTileStatus(level);
+      }
+    }
+  }
+
+  template <class GC>
   void Grid<GC>::DoTileControl(TileControl & tc)
   {
     // Issue request to all
@@ -241,17 +273,10 @@ namespace MFM {
 
     // Wait until all acknowledge
     u32 loops = 0;
-    bool again;
+    u32 notReady;
     do
     {
-      again = false;
-
-      if (++loops > 100000)
-      {
-        LOG.Error("%s control looped %d times, killing",
-                  tc.GetName(), loops);
-        FAIL(ILLEGAL_STATE);
-      }
+      notReady = 0;
 
       for(u32 x = 0; x < W; x++)
       {
@@ -259,15 +284,23 @@ namespace MFM {
         {
           if (!tc.CheckIfReady(GetTile(x, y)))
           {
-            again = true;
+            ++notReady;
             pthread_yield();
           }
         }
       }
 
+      if (++loops >= 100000)
+      {
+        LOG.Error("%s control looped %d times, but %d still not ready, killing",
+                  tc.GetName(), loops, notReady);
+        ReportGridStatus(Logger::ERROR);
+        FAIL(ILLEGAL_STATE);
+      }
+
       Sleep(0, loops);  // Actually sleeping seems to avoid rare livelock?
 
-    } while (again);
+    } while (notReady > 0);
 
     if (loops > 1000)
     {
@@ -425,8 +458,7 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::RandomNuke()
   {
-    /* Let's just grab the first tile's RNG for this. */
-    Random& rand = GetTile(0,0).GetRandom();
+    Random& rand = m_random;
 
     SPoint center(rand.Create(W * CC::PARAM_CONFIG::TILE_WIDTH),
 		  rand.Create(H * CC::PARAM_CONFIG::TILE_WIDTH));
