@@ -166,7 +166,7 @@ namespace MFM {
      *
      * @param bit The value to set the bit at \c idx to.
      */
-    void WriteBit(int idx, bool bit);
+    void WriteBit(u32 idx, bool bit);
 
     /**
      * Reads a specified value from a particular bit in this BitVector.
@@ -175,7 +175,7 @@ namespace MFM {
      *
      * @returns The value of the bit at \c idx index.
      */
-    bool ReadBit(int idx);
+    bool ReadBit(u32 idx);
 
     /**
      * Constructs a new BitVector. Set parameters of this BitVector
@@ -300,8 +300,8 @@ namespace MFM {
     }
 
     /**
-     * Store a single bit value into a contiguous range of bits, so
-     * they all have that value.
+     * Store a bit value (or pattern) into a contiguous range of bits,
+     * so they all have that value.
      *
      * @param bits The bits to store.  The supplied bits are tiled
      *                 onto the contiguous range of bits as many times
