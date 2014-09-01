@@ -6,7 +6,7 @@
 
 namespace MFM
 {
-  typedef ParamConfig<64,4,8,40> OurParamConfig;
+  typedef ParamConfig<96,4,8,40> OurParamConfig;
   typedef P3Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom, OurParamConfig> OurCoreConfig;
   //  typedef GridConfig<OurCoreConfig, 5, 3> OurGridConfig;
@@ -42,6 +42,40 @@ namespace MFM
       NeedElement(&Element_Indexed<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Fish<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Shark<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Xtal_Sq1<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Xtal_L12<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Xtal_R12<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Xtal_General<OurCoreConfig>::THE_INSTANCE);
+
+#ifdef MFM_GUI_DRIVER
+      {
+        Element<CC>* elem = &Element_Dreg<OurCoreConfig>::THE_INSTANCE;
+        m_dregSliderConfig.SetElement(elem);
+        AbstractGUIDriver::RegisterSliderConfig(&m_dregSliderConfig);
+      }
+      {
+        Element<CC>* elem = &Element_ForkBomb1<OurCoreConfig>::THE_INSTANCE;
+        m_forkBombRedSliderConfig.SetElement(elem);
+        AbstractGUIDriver::RegisterSliderConfig(&m_forkBombRedSliderConfig);
+      }
+      {
+        Element<CC>* elem = &Element_ForkBomb2<OurCoreConfig>::THE_INSTANCE;
+        m_forkBombBlueSliderConfig.SetElement(elem);
+        AbstractGUIDriver::RegisterSliderConfig(&m_forkBombBlueSliderConfig);
+      }
+      {
+        Element<CC>* elem = &Element_Fish<OurCoreConfig>::THE_INSTANCE;
+        m_fishSliderConfig.SetElement(elem);
+        AbstractGUIDriver::RegisterSliderConfig(&m_fishSliderConfig);
+      }
+      {
+        Element<CC>* elem = &Element_Shark<OurCoreConfig>::THE_INSTANCE;
+        m_sharkSliderConfig.SetElement(elem);
+        AbstractGUIDriver::RegisterSliderConfig(&m_sharkSliderConfig);
+      }
+
+#endif
+>>>>>>> Stashed changes
     }
 
   public:
