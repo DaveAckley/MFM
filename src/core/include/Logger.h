@@ -213,7 +213,7 @@ namespace MFM
      *
      * @param level The logging Level to log this message at.
      *
-     * @param format The format string used to parse the variatic
+     * @param format The format string used to parse the variadic
      *               arguments which follow it.
      *
      * @returns \c true .
@@ -232,7 +232,7 @@ namespace MFM
      *
      * @param level The logging Level to log this message at.
      *
-     * @param format The format string used to parse the variatic
+     * @param format The format string used to parse the variadic
      *               argument list .
      *
      * @param ap The variadic argument list describing the message to
@@ -253,7 +253,7 @@ namespace MFM
     /**
      * Logs a formatted message at the ERROR logging Level .
      *
-     * @param format The format string used to parse the variatic
+     * @param format The format string used to parse the variadic
      *               arguments which follow it.
      */
     void Error(const char * format, ... )
@@ -267,7 +267,7 @@ namespace MFM
     /**
      * Logs a formatted message at the WARNING logging Level .
      *
-     * @param format The format string used to parse the variatic
+     * @param format The format string used to parse the variadic
      *               arguments which follow it.
      */
     void Warning(const char * format, ... )
@@ -281,7 +281,7 @@ namespace MFM
     /**
      * Logs a formatted message at the MESSAGE logging Level .
      *
-     * @param format The format string used to parse the variatic
+     * @param format The format string used to parse the variadic
      *               arguments which follow it.
      */
     void Message(const char * format, ... )
@@ -295,7 +295,7 @@ namespace MFM
     /**
      * Logs a formatted message at the DEBUG logging Level .
      *
-     * @param format The format string used to parse the variatic
+     * @param format The format string used to parse the variadic
      *               arguments which follow it.
      */
     void Debug(const char * format, ... )

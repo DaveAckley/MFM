@@ -28,7 +28,7 @@
 #ifndef ELEMENT_H
 #define ELEMENT_H
 
-#include "Configurable.h"
+#include "Parameters.h"
 #include "itype.h"
 #include "StaticLoader.h"
 #include "EventWindow.h"
@@ -46,12 +46,24 @@ namespace MFM
    * An Element describes how a given type of Atom behaves.
    */
   template <class CC>
-  class Element : public Configurable
+  class Element
   {
    private:
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS };
+
+    /**
+     * The configurable element parameters of this Element . Element
+     * parameters apply globally to all atoms of a given Element.
+     */
+    Parameters m_elementParameters;
+
+    /**
+     * The configurable atomic parameters of this Element . Atomic
+     * parameters apply individually to each atom of a given Element.
+     */
+    Parameters m_atomicParameters;
 
     /**
      * The unique UUID of this Element . Each Element must be given
@@ -544,7 +556,80 @@ namespace MFM
      */
     static const u32 COMPLETE_DIFFUSABILITY = 1000;
 
+    const Parameters & GetElementParameters() const
+    {
+      return m_elementParameters;
+    }
+
+    Parameters & GetElementParameters()
+    {
+      return m_elementParameters;
+    }
+
+    const Parameters & GetAtomicParameters() const
+    {
+      return m_atomicParameters;
+    }
+
+    Parameters & GetAtomicParameters()
+    {
+      return m_atomicParameters;
+    }
+
   };
+
+  template <class CC>
+  struct ElementParameterS32 : public Parameters::S32
+  {
+    ElementParameterS32(Element<CC> * elt,
+                        const char * tag,
+                        const char * name,
+                        const char * description,
+                        s32 min, s32 initial, s32 max, s32 snap)
+      : Parameters::S32(elt->GetElementParameters(), tag, name, description, min, initial, max, snap)
+    {
+    }
+  };
+
+  template <class CC>
+  struct AtomicParameterS32 : public Parameters::S32
+  {
+    AtomicParameterS32(Element<CC> * elt,
+                       const char * tag,
+                       const char * name,
+                       const char * description,
+                       s32 min, s32 initial, s32 max, s32 snap)
+      : Parameters::S32(elt->AtomicParameters(), tag, name, description, min, initial, max, snap)
+    {
+    }
+  };
+
+  template <class CC>
+  struct ElementParameterBool : public Parameters::Bool
+  {
+    ElementParameterBool(Element<CC> * elt,
+                         const char * tag,
+                         const char * name,
+                         const char * description,
+                         bool initial)
+      : Parameters::Bool(elt->GetElementParameters(), tag, name, description, initial)
+    {
+    }
+  };
+
+  template <class CC>
+  struct AtomicParameterBool : public Parameters::Bool
+  {
+    AtomicParameterBool(Element<CC> * elt,
+                        const char * tag,
+                        const char * name,
+                        const char * description,
+                        bool initial)
+      : Parameters::Bool(elt->AtomicParameters(), tag, name, description, initial)
+    {
+    }
+  };
+
 }
 
 #include "Element.tcc"

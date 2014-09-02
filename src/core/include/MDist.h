@@ -142,7 +142,7 @@ namespace MFM
      * Return the coding of offset as a bond if possible.  Returns -1 if
      * the given offset cannot be expressed as a max length radius bond.
      */
-    s32 FromPoint(const Point<s32>& offset, u32 radius);
+    s32 FromPoint(const Point<s32>& offset, u32 radius) const;
 
     /*
      * Fills pt with the point represented by bits.

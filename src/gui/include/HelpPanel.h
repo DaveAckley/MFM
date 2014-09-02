@@ -31,12 +31,6 @@
 #include "AssetManager.h"
 #include "Panel.h"
 
-/**
- * The number of messages which should be displayed upon rendering a
- * HelpPanel .
- */
-#define HELP_MESSAGE_COUNT 28
-
 namespace MFM
 {
   /**
@@ -51,48 +45,7 @@ namespace MFM
      * The messages which are rendered upon rendering of this
      * HelpPanel .
      */
-    const char* m_helpMessages[HELP_MESSAGE_COUNT];
-
-    /**
-     * Initializes all messages in \c m_helpMessages
-     */
-    void RegisterMessages()
-    {
-      const char** messages = m_helpMessages;
-      *(messages++) = "";
-      *(messages++) = "Keyboard:";
-      *(messages++) = " [SPACE] Pause / Start simulation";
-      *(messages++) = " [t] Show toolbox";
-      *(messages++) = "    [Scroll] Brush Size";
-      *(messages++) = " [g] Show grid";
-      *(messages++) = " [m] Toggle memory view";
-      *(messages++) = " [k] Render Atom heatmap";
-      *(messages++) = " [h] Show this help window";
-      *(messages++) = " [l] Show log";
-      *(messages++) = " [p] Render caches";
-      *(messages++) = " [esc] Deselect Tile";
-      *(messages++) = " [r] Toggle recording";
-      *(messages++) = " [arrow keys] Move tiles";
-      *(messages++) = " [,] Decrease AEPS per frame";
-      *(messages++) = " [.] Increase AEPS per frame";
-      *(messages++) = " [i] Show statistics and settings";
-      *(messages++) = "    [a] Show AER statistics";
-      *(messages++) = "    [b] Hide buttons";
-      *(messages++) = " [CTRL+q] Quit";
-      *(messages++) = "";
-      *(messages++) = "Mouse:";
-      *(messages++) = " [Ctrl+Drag] Move tiles";
-      *(messages++) = " [Scroll] Zoom";
-      *(messages++) = "";
-      *(messages++) = "Toolbox Control:";
-      *(messages++) = " [Left] Select / paint left / clone to";
-      *(messages++) = " [Right] Select / paint right / clone from";
-
-      /*
-       * If any more lines are added, don't forget to increase
-       * HELP_MESSAGE_COUNT at the top of this file.
-       */
-    }
+    static const char* m_helpMessages[];
 
   public:
     /**
@@ -100,8 +53,9 @@ namespace MFM
      */
     HelpPanel()
     {
-      RegisterMessages();
       Panel::SetBackground(Drawing::DARK_PURPLE);
+      Panel::SetAnchor(ANCHOR_WEST);
+      Panel::SetAnchor(ANCHOR_SOUTH);
     }
 
     virtual void PaintBorder(Drawing& d)
@@ -118,14 +72,29 @@ namespace MFM
       d.SetForeground(Drawing::WHITE);
       d.SetFont(bigFont);
 
-      d.BlitText("Help", UPoint(0, 0), MakeUnsigned(Panel::GetTextSize(bigFont, "Help")));
+      d.BlitText("Help", UPoint(5, 5), MakeUnsigned(Panel::GetTextSize(bigFont, "Help")));
 
       d.SetFont(smFont);
-      for(u32 i = 0; i < HELP_MESSAGE_COUNT; i++)
+      UPoint maxCorner(0,0);
+
+      for(u32 i = 0; m_helpMessages[i]; i++)
       {
-        d.BlitText(m_helpMessages[i],
-                   UPoint(0, i * 18 + 28),
-                   MakeUnsigned(Panel::GetTextSize(smFont, m_helpMessages[i])));
+        UPoint tsize = MakeUnsigned(Panel::GetTextSize(smFont, m_helpMessages[i]));
+        UPoint pos = UPoint(10, i * 18 + 35);
+        d.BlitText(m_helpMessages[i], pos, tsize);
+
+        maxCorner = max(maxCorner, pos + tsize);
+      }
+      maxCorner += UPoint(10,10);
+
+      if (maxCorner != this->GetDesiredSize())
+      {
+        this->SetDimensions(maxCorner.GetX(), maxCorner.GetY());
+        this->SetDesiredSize(maxCorner.GetX(), maxCorner.GetY());
+        if (Panel::m_parent != 0)
+        {
+          Panel::HandleResize(Panel::m_parent->GetDimensions());
+        }
       }
     }
   };

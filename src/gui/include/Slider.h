@@ -30,125 +30,49 @@
 #include "AssetManager.h"
 #include "CharBufferByteSink.h"
 #include "Drawing.h"
-#include "Panel.h"
 #include "Util.h"
-
-#define SLIDER_WIDTH 150
+#include "Parameters.h"
+#include "ParameterController.h"
 
 namespace MFM
 {
-  class Slider : public Panel
+  class Slider : public ParameterController
   {
   private:
-    s32 m_minValue;
-    s32 m_maxValue;
-
-    s32 m_snapResolution;
-
-    /**
-     * If not \c NULL, will set this value alongside the value inside
-     * the Slider. This is useful for binding some outside value to
-     * this Slider as long as it does not change outside the Slider.
-     */
-    s32* m_externalValue;
+    Parameters::S32 * m_parm;
 
     bool m_dragging;
     s32 m_dragStartX;
     s32 m_preDragVal;
 
-    const char* m_text;
-
   public:
 
-    Slider() :
-      m_minValue(0),
-      m_maxValue(100),
-      m_snapResolution(1),
-      m_externalValue(NULL),
-      m_dragging(false),
-      m_text(NULL)
-    {
-      Init();
-    }
+    enum {
+      SLIDER_WIDTH = 150,
+      SLIDER_HEIGHT = 32,
+      SLIDER_HALF_HEIGHT = (SLIDER_HEIGHT / 2)
+    };
 
-    Slider(s32 maxValue, s32 minValue) :
-      m_minValue(minValue),
-      m_maxValue(maxValue),
-      m_externalValue(NULL),
-      m_dragging(false),
-      m_text(NULL)
+    Slider() :
+      m_parm(0),
+      m_dragging(false)
     {
       Init();
     }
 
     void Init()
     {
-      Panel::SetDimensions(SLIDER_WIDTH * 2, 32);
+      Panel::SetDimensions(SLIDER_WIDTH * 2, SLIDER_HEIGHT);
+      Panel::SetDesiredSize(10000, SLIDER_HEIGHT);
     }
 
-    void SetExternalValue(s32* externalValue)
+    void SetParameter(Parameters::S32* parameter)
     {
-      m_externalValue = externalValue;
-      ClampValue();
-    }
-
-    void SetText(const char* text)
-    {
-      m_text = text;
-    }
-
-    void SetMinValue(s32 value)
-    {
-      m_minValue = value;
-    }
-
-    s32 GetMinValue() const
-    {
-      return m_minValue;
-    }
-
-    void SetMaxValue(s32 value)
-    {
-      m_maxValue = value;
-    }
-
-    s32 GetMaxValue() const
-    {
-      return m_maxValue;
-    }
-
-    void SetValue(s32 value)
-    {
-      if(m_externalValue)
+      m_parm = parameter;
+      if (m_parm)
       {
-        s32 newVal = CLAMP(m_minValue, m_maxValue, value);
-        newVal -= (newVal % m_snapResolution);
-        newVal = CLAMP(m_minValue, m_maxValue, newVal);
-        *m_externalValue = newVal;
+        m_parm->SetValue(m_parm->GetValue());
       }
-    }
-
-    void ClampValue()
-    {
-      if(m_externalValue)
-      {
-        *m_externalValue = CLAMP(m_minValue, m_maxValue, *m_externalValue);
-      }
-    }
-
-    s32 GetValue() const
-    {
-      return *m_externalValue;
-    }
-
-    void SetSnapResolution(s32 snapResolution)
-    {
-      m_snapResolution = snapResolution;
-    }
-
-    s32 GetSnapResolution() const
-    {
-      return m_snapResolution;
     }
 
     virtual void PaintBorder(Drawing& d)
@@ -162,11 +86,11 @@ namespace MFM
         {
           if(GetSliderRect().Contains(event.GetAt() - GetAbsoluteLocation()))
           {
-            if(m_externalValue)
+            if(m_parm)
             {
               m_dragging = true;
               m_dragStartX = event.GetAt().GetX();
-              m_preDragVal = *m_externalValue;
+              m_preDragVal = m_parm->GetValue();
               return true;
             }
           }
@@ -182,12 +106,12 @@ namespace MFM
 
     virtual bool Handle(MouseMotionEvent& event)
     {
-      if(m_dragging)
+      if(m_dragging && m_parm)
       {
         s32 delta = event.m_event.motion.x - m_dragStartX;
-        s32 valDelta = ((delta * m_maxValue) - 16) / (SLIDER_WIDTH - 16);
+        s32 valDelta = ((delta * m_parm->GetMax()) - 16) / (SLIDER_WIDTH - 16);
 
-        SetValue(m_preDragVal + valDelta);
+        m_parm->SetValue(m_preDragVal + valDelta);
       }
       return m_dragging;
     }
@@ -199,6 +123,11 @@ namespace MFM
 
     virtual void PaintComponent(Drawing & d)
     {
+      if (!m_parm)
+      {
+        return;
+      }
+
       d.SetForeground(Drawing::BLACK);
 
       d.SetFont(AssetManager::Get(FONT_ASSET_HELPPANEL_SMALL));
@@ -209,54 +138,46 @@ namespace MFM
       d.DrawVLine(SLIDER_WIDTH - 7, 16, 20);
 
       CharBufferByteSink<16> numBuffer;
-      numBuffer.Printf("%d", m_minValue);
+      numBuffer.Printf("%d", m_parm->GetMin());
       d.BlitText(numBuffer.GetZString(),
                  UPoint(3, 16),
                  UPoint(48, 16));
 
       numBuffer.Reset();
-      numBuffer.Printf("%d", m_maxValue);
+      numBuffer.Printf("%d", m_parm->GetMax());
       d.BlitText(numBuffer.GetZString(),
-                 UPoint(SLIDER_WIDTH - 32, 16),
-                 UPoint(48, 16));
+                 UPoint(SLIDER_WIDTH - 32, SLIDER_HALF_HEIGHT),
+                 UPoint(48, SLIDER_HALF_HEIGHT));
 
       numBuffer.Reset();
-
-      if(m_externalValue)
-      {
-        numBuffer.Printf("%d", *m_externalValue);
-      }
-      else
-      {
-        numBuffer.Printf("?");
-      }
+      numBuffer.Printf("%d", m_parm->GetValue());
 
       d.SetBackground(Drawing::GREY70);
       d.SetForeground(Drawing::WHITE);
       d.BlitBackedText(numBuffer.GetZString(),
-                       UPoint(SLIDER_WIDTH / 2 - 16, 16),
-                       UPoint(48, 16));
+                       UPoint(SLIDER_WIDTH / 2 - 16, SLIDER_HALF_HEIGHT),
+                       UPoint(48, SLIDER_HALF_HEIGHT));
 
       Rect sliderRect = GetSliderRect();
       d.BlitAsset(ASSET_SLIDER_HANDLE,
                   MakeUnsigned(sliderRect.GetPosition()),
                   sliderRect.GetSize());
 
-      if(m_text)
-      {
-        d.BlitBackedText(m_text,
-                         UPoint(SLIDER_WIDTH, 7),
-                         UPoint(SLIDER_WIDTH, 16));
-      }
+      d.BlitBackedText(m_parm->GetName(),
+                       UPoint(SLIDER_WIDTH, 7),
+                       UPoint(SLIDER_WIDTH, SLIDER_HALF_HEIGHT));
     }
 
   private:
 
     inline Rect GetSliderRect()
     {
-      s32 xpos = (((*m_externalValue) * (SLIDER_WIDTH - 7)) / m_maxValue) - 7;
-      return Rect(xpos > 0 ? xpos : 0,
-                  0, 17, 16);
+      s32 xpos = 0;
+      if (m_parm)
+      {
+        xpos = m_parm->MapValue((SLIDER_WIDTH - 7), m_parm->GetValue()) - 7;
+      }
+      return Rect(xpos > 0 ? xpos : 0, 0, 17, SLIDER_HALF_HEIGHT);
     }
   };
 }

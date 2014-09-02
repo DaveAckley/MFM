@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  Element_ForkBomb3.h Randomized light cone painting element
+  Element_Xtal_Sq1.h Square, spacing 1 crystal
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,27 +19,27 @@
 */
 
 /**
-  \file Element_ForkBomb3.h Randomized light cone painter
+  \file Element_Xtal_Sq1.h Square, spacing 1 crystal
   \author David H. Ackley.
   \date (C) 2014 All rights reserved.
   \lgpl
  */
-#ifndef ELEMENT_FORKBOMB3_H
-#define ELEMENT_FORKBOMB3_H
+#ifndef ELEMENT_XTAL_SQ1_H
+#define ELEMENT_XTAL_SQ1_H
 
 #include "Element.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
-#include "AbstractElement_ForkBomb.h"
+#include "AbstractElement_Xtal.h"
 #include "itype.h"
 
 namespace MFM
 {
 
-#define FORKBOMB3_VERSION 1
+#define ELT_VERSION 1
 
   template <class CC>
-  class Element_ForkBomb3 : public AbstractElement_ForkBomb<CC>
+  class Element_Xtal_Sq1 : public AbstractElement_Xtal<CC>
   {
     // Extract short names for parameter types
     typedef typename CC::ATOM_TYPE T;
@@ -48,51 +48,63 @@ namespace MFM
 
   private:
 
-    ElementParameterS32<CC> m_bombCount;
-
   public:
 
-    static Element_ForkBomb3 THE_INSTANCE;
+    static Element_Xtal_Sq1 THE_INSTANCE;
 
-    virtual u32 GetBombRange() const
+    Element_Xtal_Sq1() : AbstractElement_Xtal<CC>(MFM_UUID_FOR("XtalSq1", ELT_VERSION))
     {
-      return (u32) m_bombCount.GetValue(); // Um, not really
+      Element<CC>::SetAtomicSymbol("Xs");
+      Element<CC>::SetName("Square crystal spacing 1");
     }
 
-    Element_ForkBomb3() :
-      AbstractElement_ForkBomb<CC>(MFM_UUID_FOR("BombYellow", FORKBOMB3_VERSION)),
-      m_bombCount(this, "count", "Bomb Count",
-                  "Number of bombs randomly dropped each bomb event",
-                  0, 10, 30, 1)
-
+    virtual u32 DefaultPhysicsColor() const
     {
-      Element<CC>::SetAtomicSymbol("By");
-      Element<CC>::SetName("Yellow Fork Bomb");
+      return 0xff11bb33;
     }
 
     virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
     {
-      return 0xffcccc00;
+      return DefaultPhysicsColor();
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    typedef typename MFM::AbstractElement_Xtal<CC>::XtalSites XtalSites;
+
+    virtual u32 GetSymI(T &atom, EventWindow<CC>& window) const
     {
-      Random & random = window.GetRandom();
-      const MDist<R> md = MDist<R>::get();
-      const u32 loIdx = md.GetFirstIndex(1);
-      const u32 hiIdx = md.GetLastIndex(R);
-      for (u32 i = 0; i < (u32) m_bombCount.GetValue(); ++i)
+      return (u32) PSYM_NORMAL;
+    }
+
+    virtual void GetSites(T & atom, XtalSites & sites, EventWindow<CC>& window) const
+    {
+      static XtalSites isites;
+      static bool initted = false;
+      if (!initted)
       {
-        u32 idx = random.Between(loIdx,hiIdx);
-        window.SetRelativeAtom(md.GetPoint(idx), window.GetCenterAtom());
+        for (s32 x = -R; x <= R; ++x)
+        {
+          for (s32 y = -R; y <= R; ++y)
+          {
+            if (!(x&1) && !(y&1))
+            {
+              SPoint c(x,y);
+              if (c.GetManhattanLength() <= R)
+              {
+                WriteBit(isites, c, true);
+              }
+            }
+          }
+        }
+        initted = true;
       }
+      sites = isites;
     }
 
   };
 
   template <class CC>
-  Element_ForkBomb3<CC> Element_ForkBomb3<CC>::THE_INSTANCE;
+  Element_Xtal_Sq1<CC> Element_Xtal_Sq1<CC>::THE_INSTANCE;
 
 }
 
-#endif /* ELEMENT_FORKBOMB3_H */
+#endif /* ELEMENT_XTAL_SQ1_H */

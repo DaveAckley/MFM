@@ -49,52 +49,10 @@ namespace MFM
       INITIAL_DEFAULT_BIRTH_AGE = 20
     };
 
-    static s32 m_fishBirthAge;
+    ElementParameterS32<CC> m_fishBirthAge;
+    ElementParameterBool<CC> m_fishEvolve;
 
   public:
-    virtual u32 GetConfigurableCount() const
-    {
-      return 1;
-    }
-
-    virtual s32* GetConfigurableParameter(u32 index)
-    {
-      if(index)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
-      return &m_fishBirthAge;
-    }
-
-    virtual s32 GetConfigurableParameterValue(u32 index) const
-    {
-      if(index)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
-      return m_fishBirthAge;
-    }
-
-    virtual void SetConfigurableParameterValue(u32 index, s32 value)
-    {
-      if(index)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
-      m_fishBirthAge = value;
-    }
-
-    virtual s32 GetMaximumValue(u32 index) const
-    {
-      return 100;
-    }
-
-    virtual const char* GetConfigurableName(u32 index) const
-    {
-      return "Birth Age";
-    }
-
-
     enum
     {
       ELEMENT_VERSION = 1
@@ -106,22 +64,24 @@ namespace MFM
       return THE_INSTANCE.GetType();
     }
 
-    Element_Fish() : AbstractElement_WaPat<CC>(MFM_UUID_FOR("Fish", ELEMENT_VERSION))
+    Element_Fish() :
+      AbstractElement_WaPat<CC>(MFM_UUID_FOR("Fish", ELEMENT_VERSION)),
+      m_fishBirthAge(this, "age", "Birth Age",
+                     "Number of events for a fish to mature",
+                     1, INITIAL_DEFAULT_BIRTH_AGE, 100, 1),
+      m_fishEvolve(this, "evo", "Evolvable fish",
+                   "Is fish birth age set by mutable genes?",
+                   false)
     {
       Element<CC>::SetAtomicSymbol("Fi");
       Element<CC>::SetName("Fish");
-    }
-
-    s32* GetFishBirthAgePtr()
-    {
-      return &m_fishBirthAge;
     }
 
     virtual const T & GetDefaultAtom() const
     {
       static T defaultAtom(TYPE(),0,0,0);
 
-      this->SetBirthAge(defaultAtom, m_fishBirthAge);
+      this->SetBirthAge(defaultAtom, (u32) m_fishBirthAge.GetValue());
       this->SetCurrentAge(defaultAtom, 0);
 
       return defaultAtom;
@@ -154,7 +114,7 @@ namespace MFM
       u32 age = this->GetCurrentAge(self);
 
       // Don't use genetic birth age (yet): bool reproable = age >= this->GetBirthAge(self);
-      bool reproable = age >= (u32) m_fishBirthAge;
+      bool reproable = age >= (u32) m_fishBirthAge.GetValue();
 
       if (!reproable)
       {
@@ -204,9 +164,6 @@ namespace MFM
 
   template <class CC>
   Element_Fish<CC> Element_Fish<CC>::THE_INSTANCE;
-
-  template <class CC>
-  s32 Element_Fish<CC>::m_fishBirthAge = INITIAL_DEFAULT_BIRTH_AGE;
 
 }
 

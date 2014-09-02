@@ -26,12 +26,13 @@ namespace MFM {
   Panel::Panel(u32 width, u32 height)
   {
     SetDimensions(width, height);
+    SetDesiredSize(U32_MAX, U32_MAX);  // Wish for a lot by default.
 
     m_forward = m_backward = 0;
     m_parent = m_top = 0;
 
     m_font = 0;
-    m_name = 0;
+    SetName(0);
 
     m_bgColor = Drawing::BLACK;
     m_bdColor = Drawing::GREY;
@@ -141,12 +142,21 @@ namespace MFM {
   {
     m_rect.SetWidth(width);
     m_rect.SetHeight(height);
+  }
+
+  void Panel::SetDesiredSize(u32 width, u32 height)
+  {
     m_desiredSize.Set(width, height);
   }
 
   const UPoint & Panel::GetDimensions() const
   {
     return m_rect.GetSize();
+  }
+
+  const UPoint & Panel::GetDesiredSize() const
+  {
+    return m_desiredSize;
   }
 
   const SPoint & Panel::GetRenderPoint() const
@@ -157,7 +167,7 @@ namespace MFM {
   void Panel::SetRenderPoint(const SPoint & renderPt)
   {
     m_rect.SetPosition(renderPt);
-    m_desiredLocation.Set(renderPt.GetX(), renderPt.GetY());
+    m_desiredLocation.Set(renderPt.GetX(), renderPt.GetY()); // XXX Is this right?
   }
 
   SPoint Panel::GetAbsoluteLocation()

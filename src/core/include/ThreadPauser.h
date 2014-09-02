@@ -28,6 +28,7 @@
 #define THREAD_PAUSER_H
 
 #include "Mutex.h"
+#include "Logger.h"
 
 namespace MFM
 {
@@ -269,6 +270,10 @@ namespace MFM
     {
       AdvanceStateOuter(THREADSTATE_PAUSE_READY);
     }
+
+    static const char * GetThreadStateName(ThreadState ts) ;
+
+    void ReportThreadPauserStatus(Logger::Level level) ;
 
 #if 0
     /**

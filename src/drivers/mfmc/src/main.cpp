@@ -6,7 +6,7 @@
 
 namespace MFM
 {
-  typedef ParamConfig<64,4,8,40> OurParamConfig;
+  typedef ParamConfig<96,4,8,40> OurParamConfig;
   typedef P3Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom, OurParamConfig> OurCoreConfig;
   //  typedef GridConfig<OurCoreConfig, 5, 3> OurGridConfig;
@@ -42,6 +42,10 @@ namespace MFM
       NeedElement(&Element_Indexed<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Fish<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Shark<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Xtal_Sq1<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Xtal_L12<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Xtal_R12<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Xtal_General<OurCoreConfig>::THE_INSTANCE);
     }
 
   public:

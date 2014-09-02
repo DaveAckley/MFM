@@ -38,10 +38,10 @@ namespace MFM {
    */
 
   template <u32 BITS>
-  void BitVector<BITS>::WriteBit(int idx, bool bit)
+  void BitVector<BITS>::WriteBit(u32 idx, bool bit)
   {
-    int arrIdx = idx / BITS_PER_UNIT;
-    int inIdx = idx % BITS_PER_UNIT;
+    u32 arrIdx = idx / BITS_PER_UNIT;
+    u32 inIdx = idx % BITS_PER_UNIT;
     u32 newWord = 0x80000000 >> inIdx;
 
     if(!bit)
@@ -53,8 +53,8 @@ namespace MFM {
   template <u32 BITS>
   bool BitVector<BITS>::ToggleBit(const u32 idx)
   {
-    int arrIdx = idx / BITS_PER_UNIT;
-    int inIdx = idx % BITS_PER_UNIT;
+    u32 arrIdx = idx / BITS_PER_UNIT;
+    u32 inIdx = idx % BITS_PER_UNIT;
     u32 newWord = 0x80000000 >> inIdx;
 
     m_bits[arrIdx] ^= newWord;
@@ -62,10 +62,10 @@ namespace MFM {
   }
 
   template <u32 BITS>
-  bool BitVector<BITS>::ReadBit(int idx)
+  bool BitVector<BITS>::ReadBit(u32 idx)
   {
-    int arrIdx = idx / BITS_PER_UNIT;
-    int intIdx = idx % BITS_PER_UNIT;
+    u32 arrIdx = idx / BITS_PER_UNIT;
+    u32 intIdx = idx % BITS_PER_UNIT;
 
     return m_bits[arrIdx] & (0x80000000 >> intIdx);
   }

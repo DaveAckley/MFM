@@ -117,6 +117,10 @@ namespace MFM
       for (u32 i = loIdx; i <= hiIdx; ++i)
       {
         const SPoint rel = md.GetPoint(i);
+        if (!window.IsLiveSite(rel))
+        {
+          continue;
+        }
         const T & atom = window.GetRelativeAtom(rel);
         const u32 type = atom.GetType();
         const Element<CC> * elt = window.GetTile().GetElement(type);

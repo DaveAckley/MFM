@@ -34,6 +34,7 @@
 #include "Keyboard.h"
 #include "ByteSink.h"
 #include "EditingTool.h"
+#include "OverflowableCharBufferByteSink.h"
 
 namespace MFM {
 
@@ -108,7 +109,7 @@ namespace MFM {
   class Panel
   {
    protected:
-    const char * m_name;
+    OString16 m_name;
 
     Rect m_rect;
     u32 m_bdColor;  // Default border color of this panel
@@ -176,15 +177,27 @@ namespace MFM {
 
     void SetDimensions(u32 width, u32 height);
 
+    void SetDesiredSize(u32 width, u32 height);
+
     const UPoint & GetDimensions() const ;
+
+    const UPoint & GetDesiredSize() const ;
 
     void SetRenderPoint(const SPoint & renderPt);
 
     const SPoint & GetRenderPoint() const ;
 
-    const char * GetName() const { return m_name; }
+    const char * GetName() const { return m_name.GetBuffer(); }
 
-    void SetName(const char * name) { m_name = name; }
+    void SetName(const char * name)
+    {
+      m_name.Reset();
+      if (name)
+      {
+        m_name.Print(name);
+      }
+      m_name.GetZString(); // Ensure null terminated to use GetBuffer()
+    }
 
     void Print(ByteSink & sink, u32 indent = 0) const;
 

@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  Element_ForkBomb1.h Light cone painting element
+  Element_Xtal_R12.h Right-tipped, knight's-J-move crystal
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,66 +19,50 @@
 */
 
 /**
-  \file Element_ForkBomb1.h Light cone painting element
+  \file Element_Xtal_R12.h Right-tipped, knight's-J-move crystal
   \author David H. Ackley.
   \date (C) 2014 All rights reserved.
   \lgpl
  */
-#ifndef ELEMENT_FORKBOMB1_H
-#define ELEMENT_FORKBOMB1_H
+#ifndef ELEMENT_XTAL_R12_H
+#define ELEMENT_XTAL_R12_H
 
 #include "Element.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
-#include "AbstractElement_ForkBomb.h"
+#include "Element_Xtal_L12.h"
 #include "itype.h"
 
 namespace MFM
 {
 
-#define FORKBOMB1_VERSION 1
+#define ELT_VERSION 1
 
   template <class CC>
-  class Element_ForkBomb1 : public AbstractElement_ForkBomb<CC>
+  class Element_Xtal_R12 : public Element_Xtal_L12<CC>
   {
     // Extract short names for parameter types
     typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
-
-  private:
-
-    ElementParameterS32<CC> m_bombRange;
 
   public:
 
-    static Element_ForkBomb1 THE_INSTANCE;
+    static Element_Xtal_R12 THE_INSTANCE;
 
-    virtual u32 GetBombRange() const
+    Element_Xtal_R12() : Element_Xtal_L12<CC>(MFM_UUID_FOR("XtalR12", ELT_VERSION))
     {
-      return (u32) m_bombRange.GetValue();
+      Element<CC>::SetAtomicSymbol("Xr");
+      Element<CC>::SetName("R1,2 crystal");
     }
 
-    Element_ForkBomb1() :
-      AbstractElement_ForkBomb<CC>(MFM_UUID_FOR("BombRed", FORKBOMB1_VERSION)),
-      m_bombRange(this, "range", "Bomb Radius",
-                  "Radius of copying during each bomb event",
-                  0, 2, 4, 1)
+    virtual u32 GetSymI(T &atom, EventWindow<CC>& window) const
     {
-      Element<CC>::SetAtomicSymbol("Br");
-      Element<CC>::SetName("Red Fork Bomb");
+      return (u32) PSYM_FLIPY;
     }
-
-    virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
-    {
-      return 0xffaa0000;
-    }
-
   };
 
   template <class CC>
-  Element_ForkBomb1<CC> Element_ForkBomb1<CC>::THE_INSTANCE;
+  Element_Xtal_R12<CC> Element_Xtal_R12<CC>::THE_INSTANCE;
 
 }
 
-#endif /* ELEMENT_FORKBOMB1_H */
+#endif /* ELEMENT_XTAL_R12_H */

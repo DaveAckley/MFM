@@ -184,6 +184,7 @@ namespace MFM
     void SetDimensions(const SPoint& dimensions)
     {
       m_dimensions = dimensions;
+      Panel::SetDimensions(dimensions.GetX(), dimensions.GetY());
     }
 
     /**

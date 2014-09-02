@@ -28,7 +28,6 @@
 #ifndef ELEMENT_DREG_H
 #define ELEMENT_DREG_H
 
-#include "Configurable.h"
 #include "Element.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
@@ -52,74 +51,21 @@ namespace MFM
 
   private:
 
-    static s32 m_resOdds;
-
-    static s32 m_dregCreateOdds;
-
-
-    static s32 m_dregDeleteOdds;
-
-
-    static s32 m_dregDeleteDregOdds;
-
-    s32* IndexToParam(u32 index) const
-    {
-      switch(index)
-      {
-      case 0: return &m_resOdds;
-      case 1: return &m_dregCreateOdds;
-      case 2: return &m_dregDeleteOdds;
-      case 3: return &m_dregDeleteDregOdds;
-      default: FAIL(ILLEGAL_ARGUMENT); break;
-      }
-    }
+    ElementParameterS32<CC> m_resOdds;
+    ElementParameterS32<CC> m_deleteOdds;
+    ElementParameterS32<CC> m_dregCreateOdds;
+    ElementParameterS32<CC> m_dregDeleteOdds;
 
   public:
-    virtual u32 GetConfigurableCount() const
-    {
-      return 4;
-    }
-
-    virtual s32* GetConfigurableParameter(u32 index)
-    {
-      return IndexToParam(index);
-    }
-
-    virtual s32 GetConfigurableParameterValue(u32 index) const
-    {
-      return *IndexToParam(index);
-    }
-
-    virtual void SetConfigurableParameterValue(u32 index, s32 value)
-    {
-      *IndexToParam(index) = value;
-    }
-
-    virtual s32 GetMaximumValue(u32 index) const
-    {
-      return 100 * (index <= 1 ? 10 : 1);
-    }
-
-    virtual u32 GetSnapResolution(u32 index) const
-    {
-      return 10;
-    }
-
-    virtual const char* GetConfigurableName(u32 index) const
-    {
-      switch(index)
-      {
-      case 0: return "Res Spawn Odds";
-      case 1: return "Dreg Spawn Odds";
-      case 2: return "Delete Odds";
-      case 3: return "Delete Dreg Odds";
-      default: FAIL(ILLEGAL_ARGUMENT); break;
-      }
-    }
 
     static Element_Dreg THE_INSTANCE;
 
-    Element_Dreg() : Element<CC>(MFM_UUID_FOR("Dreg", DREG_VERSION))
+    Element_Dreg()
+      : Element<CC>(MFM_UUID_FOR("Dreg", DREG_VERSION)),
+        m_resOdds(this, "res", "Res Spawn Odds", "Chance of filling an empty site with a Res", 1, 200, 1000, 10),
+        m_deleteOdds(this, "del", "Delete Odds", "Chance of deleting an adjacent non-empty non-Dreg", 1, 100, 1000, 10),
+        m_dregCreateOdds(this, "dreg", "Dreg Spawn Odds", "Chance of filling an empty site with a Dreg", 1, 500, 1000, 10),
+        m_dregDeleteOdds(this, "ddreg", "Delete Dreg Odds", "Chance of deleting an adjacent Dreg", 1, 50, 1000, 10)
     {
       Element<CC>::SetAtomicSymbol("Dr");
       Element<CC>::SetName("Dreg");
@@ -161,23 +107,23 @@ namespace MFM
 
         if(Element_Empty<CC>::THE_INSTANCE.IsType(oldType))
         {
-          if(random.OneIn(m_dregCreateOdds))
+          if(random.OneIn(m_dregCreateOdds.GetValue()))
           {
             atom = Element_Dreg<CC>::THE_INSTANCE.GetDefaultAtom();
           }
-          else if(random.OneIn(m_resOdds))
+          else if(random.OneIn(m_resOdds.GetValue()))
           {
             atom = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
           }
         }
         else if(oldType == Element_Dreg::THE_INSTANCE.GetType())
         {
-          if(random.OneIn(m_dregDeleteDregOdds))
+          if(random.OneIn(m_dregDeleteOdds.GetValue()))
           {
             atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
           }
         }
-        else if(oldType != Element_Wall<CC>::TYPE() && random.OneIn(m_dregDeleteOdds))
+        else if(oldType != Element_Wall<CC>::TYPE() && random.OneIn(m_dregDeleteOdds.GetValue()))
         {
           atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
         }
@@ -189,44 +135,11 @@ namespace MFM
       }
       this->Diffuse(window);
     }
-
-    s32* GetResOddsPtr()
-    {
-      return &m_resOdds;
-    }
-
-    s32* GetDregCreateOddsPtr()
-    {
-      return &m_dregCreateOdds;
-    }
-
-
-    s32* GetDregDeleteOddsPtr()
-    {
-      return &m_dregDeleteOdds;
-    }
-
-
-    s32* GetDregDeleteDregOddsPtr()
-    {
-      return &m_dregDeleteDregOdds;
-    }
   };
 
   template <class CC>
   Element_Dreg<CC> Element_Dreg<CC>::THE_INSTANCE;
 
-  template <class CC>
-  s32 Element_Dreg<CC>::m_resOdds = 200;
-
-  template <class CC>
-  s32 Element_Dreg<CC>::m_dregDeleteOdds = 100;
-
-  template <class CC>
-  s32 Element_Dreg<CC>::m_dregCreateOdds = 500;
-
-  template <class CC>
-  s32 Element_Dreg<CC>::m_dregDeleteDregOdds = 50;
 }
 
 #endif /* ELEMENT_DREG_H */

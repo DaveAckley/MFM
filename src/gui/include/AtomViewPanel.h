@@ -54,7 +54,9 @@ namespace MFM
       m_atom(NULL),
       m_grid(NULL),
       m_toolboxPanel(NULL)
-    { }
+    {
+      Panel::SetDesiredSize(300, 100);
+    }
 
     void SetToolboxPanel(ToolboxPanel<CC>* toolboxPanel)
     {

@@ -3,7 +3,7 @@
 
 namespace MFM {
 
-  typedef ParamConfig<64,4,8,176> OurParamConfig;
+  typedef ParamConfig<96,4,8,176> OurParamConfig;
   //DEPRECATED: typedef P1Atom<OurParamConfig> OurAtom;
   typedef P3Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom,OurParamConfig> OurCoreConfig;

@@ -28,14 +28,14 @@
 #define TOOLBOXPANEL_H
 
 #include "EditingTool.h"
+#include "FileByteSink.h"
+#include "Parameters.h"
 #include "AbstractButton.h"
 #include "Slider.h"
+#include "ParameterControllerBool.h"
 
 #define ELEMENT_BOX_SIZE 70
 #define ELEMENT_RENDER_SIZE 32
-
-#define ELEMENT_BOX_BUTTON_COUNT 8
-#define TOOLBOX_MAX_SLIDERS 8
 
 namespace MFM
 {
@@ -47,6 +47,13 @@ namespace MFM
   class ToolboxPanel : public Panel
   {
   private:
+
+    enum {
+      ELEMENT_BOX_BUTTON_COUNT = 8,
+      TOOLBOX_MAX_CONTROLLERS = 20,
+      TOOLBOX_MAX_SLIDERS = 8,
+      TOOLBOX_MAX_CHECKBOXES = 8
+    };
 
     /**
      * A class representing a Button for selecting a particular
@@ -170,6 +177,13 @@ namespace MFM
         m_element = element;
 
         AbstractButton::SetEnabled(!!m_element);
+
+        if (m_element)
+        {
+          OString16 name;
+          name.Printf("EltBtn-%s",element->GetAtomicSymbol());
+          this->SetName(name.GetZString());
+        }
       }
 
       void SetParent(ToolboxPanel<CC>* parent)
@@ -218,7 +232,7 @@ namespace MFM
         default: break;
         }
 
-        m_parent->RebuildSliders();
+        m_parent->RebuildControllers();
       }
 
       virtual bool OnScroll(u8 button)
@@ -248,9 +262,14 @@ namespace MFM
 
     u32 m_heldElementCount;
 
-    Slider m_sliders[TOOLBOX_MAX_SLIDERS];
+    ParameterController *(m_controllers[TOOLBOX_MAX_CONTROLLERS]);
+    u32 m_controllerCount;
 
+    Slider m_sliders[TOOLBOX_MAX_SLIDERS];
     u32 m_sliderCount;
+
+    ParameterControllerBool m_checkboxes[TOOLBOX_MAX_CHECKBOXES];
+    u32 m_checkboxCount;
 
     u32 m_brushSize;
 
@@ -259,43 +278,113 @@ namespace MFM
       ELEMENTS_PER_ROW = 10,
       ELEMENT_ROWS = (ELEMENT_BOX_SIZE + ELEMENTS_PER_ROW - 1) / ELEMENTS_PER_ROW,
       NON_ELEMENT_ROWS = 3,
-      TOTAL_ROWS = ELEMENT_ROWS + NON_ELEMENT_ROWS
+      TOTAL_ROWS = ELEMENT_ROWS + NON_ELEMENT_ROWS,
+      BORDER_PADDING = 2
     };
 
-    void RebuildSliders()
+    void AddController(ParameterController * spc)
     {
-      /* Remove all of the old sliders */
-      for(u32 i = 0; i < m_sliderCount; i++)
+      MFM_API_ASSERT_NONNULL(spc);
+
+      if (m_controllerCount >= TOOLBOX_MAX_CONTROLLERS)
       {
-        Panel::Remove(m_sliders + i);
+        FAIL(OUT_OF_RESOURCES);
       }
 
-      /* Set up the new sliders, if any */
+      u32 j = m_controllerCount++;
 
-      m_sliderCount = m_primaryElement->GetConfigurableCount();
-      for(u32 i = 0; i < m_sliderCount; i++)
+      m_controllers[j] = spc;
+    }
+
+    void AddSliderController(Parameters::S32 * sp)
+    {
+      // Sliders for S32 parameters
+      MFM_API_ASSERT_NONNULL(sp);
+
+      if (m_sliderCount >= TOOLBOX_MAX_SLIDERS)
       {
-        Slider& s = m_sliders[i];
-
-        s.SetExternalValue(NULL); /* This keeps bounds changes from setting old value*/
-        s.SetText(m_primaryElement->GetConfigurableName(i));
-        s.SetMinValue(m_primaryElement->GetMinimumValue(i));
-        s.SetMaxValue(m_primaryElement->GetMaximumValue(i));
-        s.SetSnapResolution(m_primaryElement->GetSnapResolution(i));
-        s.SetExternalValue(m_primaryElement->GetConfigurableParameter(i));
+        FAIL(OUT_OF_RESOURCES);
       }
 
-      /* Put the new sliders in */
+      u32 j = m_sliderCount++;
+
+      Slider& s = m_sliders[j];
+      s.SetParameter(sp);
+
+      AddController(&s);
+    }
+
+    void AddCheckboxController(Parameters::Bool * bp)
+    {
+      // Checkboxes for Bool parameters
+      MFM_API_ASSERT_NONNULL(bp);
+
+      if (m_checkboxCount >= TOOLBOX_MAX_CHECKBOXES)
+      {
+        FAIL(OUT_OF_RESOURCES);
+      }
+
+      u32 j = m_checkboxCount++;
+
+      ParameterControllerBool & cb = m_checkboxes[j];
+      cb.SetParameter(bp);
+
+      AddController(&cb);
+    }
+
+    void RebuildControllers()
+    {
+
+      /* Remove any old controllers */
+      for(u32 i = 0; i < m_controllerCount; i++)
+      {
+        Panel::Remove(m_controllers[i]);
+      }
+      m_controllerCount = 0;
+
+      /* Set up the new controllers, if any */
+      Parameters & parms = m_primaryElement->GetElementParameters();
+      u32 totalParms = parms.GetParameterCount();
+
+      m_sliderCount = 0;
+      m_checkboxCount = 0;
+      for(u32 i = 0; i < totalParms; i++)
+      {
+        const Parameters::Parameter * parm = parms.GetParameter(i);
+        switch (parm->GetParameterType())
+        {
+        case Parameters::S32_PARAMETER:
+          AddSliderController(Parameters::S32::Cast(parms.GetParameter(i)));
+          break;
+        case Parameters::BOOL_PARAMETER:
+          AddCheckboxController(Parameters::Bool::Cast(parms.GetParameter(i)));
+          break;
+        default:
+          FAIL(ILLEGAL_STATE);
+        }
+      }
+
+      /* Put in the new controllers */
       SPoint rpt(16, 6 + ELEMENT_RENDER_SIZE * TOTAL_ROWS);
-      for(u32 i = 0; i < m_sliderCount; i++)
+      for(u32 i = 0; i < m_controllerCount; i++)
       {
-        m_sliders[i].SetRenderPoint(rpt);
-        Panel::Insert(m_sliders + i, NULL);
-        rpt.SetY(rpt.GetY() + 32);
+        ParameterController * c = m_controllers[i];
+        c->SetRenderPoint(rpt);
+        Panel::Insert(c, NULL);
+        UPoint desired = c->GetDesiredSize();
+        rpt.SetY(rpt.GetY() + desired.GetY());
       }
 
-      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW,
-                           6 + ELEMENT_RENDER_SIZE * TOTAL_ROWS + 32 * m_sliderCount);
+      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW + BORDER_PADDING,
+                           rpt.GetY() + BORDER_PADDING);
+      Panel::SetDesiredSize(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW + BORDER_PADDING,
+                           rpt.GetY() + BORDER_PADDING);
+
+      this->Print(STDOUT);
+
+      // Tell ourselfs to resize (our cheeso repacking)
+      HandleResize(this->m_parent->GetDimensions());
+
     }
 
    public:
@@ -306,7 +395,9 @@ namespace MFM
       m_primaryElement(NULL),
       m_secondaryElement(NULL),
       m_heldElementCount(0),
+      m_controllerCount(0),
       m_sliderCount(0),
+      m_checkboxCount(0),
       m_brushSize(2)
     {
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)

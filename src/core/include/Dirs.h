@@ -48,6 +48,25 @@ namespace MFM {
     static const Dir DIR_COUNT = 8;
 
     /**
+     * map a dir to a readable string
+     */
+    static const char * GetName(Dir dir)
+    {
+      switch (dir)
+      {
+      case NORTH: return "North";
+      case EAST: return "East";
+      case SOUTH: return "South";
+      case WEST: return "West";
+      case NORTHEAST: return "Northeast";
+      case SOUTHEAST: return "Southeast";
+      case SOUTHWEST: return "Southwest";
+      case NORTHWEST: return "Northwest";
+      default: return "INVALID DIRECTION";
+      }
+    }
+
+    /**
      * true iff dir is a corner direction.
      */
     static bool IsCorner(Dir dir) { return dir&1; }
