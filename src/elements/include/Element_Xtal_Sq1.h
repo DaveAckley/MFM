@@ -90,7 +90,7 @@ namespace MFM
               SPoint c(x,y);
               if (c.GetManhattanLength() <= R)
               {
-                WriteBit(isites, c, true);
+                this->WriteBit(isites, c, true);
               }
             }
           }
