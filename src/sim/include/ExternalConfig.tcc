@@ -101,14 +101,18 @@ namespace MFM
       byteSink.Printf(",%s)", lexOutput);
       byteSink.WriteNewline();
 
-      /* Write element configurable values */
+      /* Write configurable element values */
 
       const Element<CC>* elem = m_elementRegistry.GetEntryElement(i);
-      for(u32 j = 0; j < elem->GetConfigurableCount(); j++)
+      const Parameters & parms = elem->GetElementParameters();
+
+      for(u32 j = 0; j < parms.GetParameterCount(); j++)
       {
-        byteSink.Printf("SetElementParameter(%s, %d, %d)",
+        const Parameters::Parameter * p = parms.GetParameter(j);
+        byteSink.Printf(" SetElementParameter(%s,%s,%@)",
                         lexOutput,
-                        j, elem->GetConfigurableParameterValue(j));
+                        p->GetTag(),
+                        p);
         byteSink.WriteNewline();
       }
     }

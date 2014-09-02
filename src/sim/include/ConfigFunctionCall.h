@@ -77,6 +77,13 @@ namespace MFM
      */
     s32 SkipToNextArg(LineCountingByteSource & in) ;
 
+    /**
+     * Skip w/s, read ','.  If ',', skip w/s and return true.
+     * Otherwise, issue error message 'Missing argument, expected ' +
+     * description and return false.
+     */
+    bool SkipToNextExistingArg(LineCountingByteSource & in, const char * description) ;
+
   };
 }
 

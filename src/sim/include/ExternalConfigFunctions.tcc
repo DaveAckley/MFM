@@ -73,21 +73,14 @@ namespace MFM
       }
 
       s32 x, y;
-      s32 ret;
 
       // Umm: P3Atom has 71 non-type bits..
       // OString64 hexData;
       OString128 hexData;
 
-      ret = this->SkipToNextArg(in);
-      if (ret < 0)
+      if (!this->SkipToNextExistingArg(in,"x position"))
       {
         return false;
-      }
-
-      if (ret == 0)
-      {
-        return in.Msg(Logger::ERROR, "Expected second argument");
       }
 
       if (!in.Scan(x))
@@ -95,15 +88,9 @@ namespace MFM
         return in.Msg(Logger::ERROR, "Expected x position");
       }
 
-      ret = this->SkipToNextArg(in);
-      if (ret < 0)
+      if (!this->SkipToNextExistingArg(in,"y position"))
       {
         return false;
-      }
-
-      if (ret == 0)
-      {
-        return in.Msg(Logger::ERROR, "Expected third argument");
       }
 
       if (!in.Scan(y))
@@ -111,15 +98,9 @@ namespace MFM
         return in.Msg(Logger::ERROR, "Expected y position");
       }
 
-      ret = this->SkipToNextArg(in);
-      if(ret < 0)
+      if (!this->SkipToNextExistingArg(in, "atom body"))
       {
         return false;
-      }
-
-      if(ret == 0)
-      {
-        return in.Msg(Logger::ERROR, "Expected fourth argument");
       }
 
       Atom<CC> temp;
@@ -217,43 +198,42 @@ namespace MFM
         return in.Msg(Logger::ERROR, "Expected element nickname as first argument");
       }
 
-      s32 index;
-      s32 value;
-      s32 ret;
-
-      ret = this->SkipToNextArg(in);
-      if (ret < 0)
-      {
-        return false;
-      }
-      if (ret == 0)
-      {
-        return in.Msg(Logger::ERROR, "Expected second argument (parameter index)");
-      }
-
-      if (!in.Scan(index))
-      {
-        return in.Msg(Logger::ERROR, "Expected decimal parameter index");
-      }
-
-      ret = this->SkipToNextArg(in);
-      if (ret < 0)
-      {
-        return false;
-      }
-      if (ret == 0)
-      {
-        return in.Msg(Logger::ERROR, "Expected second argument (parameter value)");
-      }
-
-      if (!in.Scan(value))
-      {
-        return in.Msg(Logger::ERROR, "Expected decimal parameter value");
-      }
-
       Element<CC>* elem = ec.LookupElement(nick);
+      if (!elem)
+      {
+        return in.Msg(Logger::ERROR, "'%s' is not a known element nickname", nick.GetZString());
+      }
+      Parameters & parms = elem->GetElementParameters();
 
-      elem->SetConfigurableParameterValue(index, value);
+      if (!this->SkipToNextExistingArg(in,"parameter tag"))
+      {
+        return false;
+      }
+
+      OString32 paramTag;
+      if (!in.ScanIdentifier(paramTag))
+      {
+        return in.Msg(Logger::ERROR, "Expected parameter tag as second argument");
+      }
+
+      s32 index = parms.GetParameterNumberFromTag(paramTag.GetZString());
+      if (index < 0)
+      {
+        return in.Msg(Logger::ERROR, "'%s' is not a known parameter tag", paramTag.GetZString());
+      }
+
+      Parameters::Parameter * p = parms.GetParameter((u32) index);
+      MFM_API_ASSERT_NONNULL(p);
+
+      if (!this->SkipToNextExistingArg(in,"parameter value"))
+      {
+        return false; // message already issued
+      }
+
+      if (!p->Read(in))
+      {
+        return in.Msg(Logger::ERROR, "Reading value of parameter tag '%s' failed", paramTag.GetZString());
+      }
 
       return this->SkipToNextArg(in) == 0;
     }
