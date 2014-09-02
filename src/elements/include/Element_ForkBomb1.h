@@ -48,71 +48,23 @@ namespace MFM
 
   private:
 
-    s32 m_bombRange;
+    ElementParameterS32<CC> m_bombRange;
 
   public:
-    virtual u32 GetConfigurableCount() const
-    {
-      return 1;
-    }
-
-    virtual s32* GetConfigurableParameter(u32 index)
-    {
-      if(index)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
-      return &m_bombRange;
-    }
-
-    virtual s32 GetConfigurableParameterValue(u32 index) const
-    {
-      if(index)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
-      return m_bombRange;
-    }
-
-    virtual void SetConfigurableParameterValue(u32 index, s32 value)
-    {
-      if(index)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
-      m_bombRange = value;
-    }
-
-    virtual s32 GetMinimumValue(u32 index) const
-    {
-      return 0;
-    }
-
-    virtual s32 GetMaximumValue(u32 index) const
-    {
-      return 4;
-    }
-
-    virtual const char* GetConfigurableName(u32 index) const
-    {
-      return "Bomb Radius";
-    }
 
     static Element_ForkBomb1 THE_INSTANCE;
 
-    s32 * GetBombRangePtr()
-    {
-      return (s32 *) &m_bombRange;
-    }
-
     virtual u32 GetBombRange() const
     {
-      return m_bombRange;
+      return (u32) m_bombRange.GetValue();
     }
 
-    Element_ForkBomb1() : AbstractElement_ForkBomb<CC>(MFM_UUID_FOR("BombRed", FORKBOMB1_VERSION))
+    Element_ForkBomb1() :
+      AbstractElement_ForkBomb<CC>(MFM_UUID_FOR("BombRed", FORKBOMB1_VERSION)),
+      m_bombRange(this, "range", "Bomb Radius",
+                  "Radius of copying during each bomb event",
+                  0, 2, 4, 1)
     {
-      m_bombRange = 2;
       Element<CC>::SetAtomicSymbol("Br");
       Element<CC>::SetName("Red Fork Bomb");
     }

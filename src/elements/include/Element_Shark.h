@@ -58,59 +58,10 @@ namespace MFM
       DEFAULT_ENERGY_PER_FISH = 8
     };
 
-    static s32 m_sharkBirthAge;
-    static s32 m_sharkEnergyPerFish;
+    ElementParameterS32<CC> m_sharkBirthAge;
+    ElementParameterS32<CC> m_sharkEnergyPerFish;
 
   public:
-    virtual u32 GetConfigurableCount() const
-    {
-      return 2;
-    }
-
-    virtual s32* GetConfigurableParameter(u32 index)
-    {
-      switch(index)
-      {
-      case 0: return &m_sharkBirthAge;
-      case 1: return &m_sharkEnergyPerFish;
-      default: FAIL(ILLEGAL_ARGUMENT);
-      }
-    }
-
-    virtual s32 GetConfigurableParameterValue(u32 index) const
-    {
-      switch(index)
-      {
-      case 0: return m_sharkBirthAge;
-      case 1: return m_sharkEnergyPerFish;
-      default: FAIL(ILLEGAL_ARGUMENT);
-      }
-    }
-
-    virtual void SetConfigurableParameterValue(u32 index, s32 value)
-    {
-      switch(index)
-      {
-      case 0: m_sharkBirthAge = value; break;
-      case 1: m_sharkEnergyPerFish = value; break;
-      default: FAIL(ILLEGAL_ARGUMENT);
-      }
-    }
-
-    virtual s32 GetMaximumValue(u32 index) const
-    {
-      return (!index) ? 100 : 50;
-    }
-
-    virtual const char* GetConfigurableName(u32 index) const
-    {
-      switch(index)
-      {
-      case 0: return "Birth Age";
-      case 1: return "Energy Per Fish";
-      default: FAIL(ILLEGAL_ARGUMENT);
-      }
-    }
 
     enum
     {
@@ -135,31 +86,26 @@ namespace MFM
       return THE_INSTANCE.GetType();
     }
 
-    Element_Shark() : AbstractElement_WaPat<CC>(MFM_UUID_FOR("Shark", ELEMENT_VERSION))
+    Element_Shark() :
+      AbstractElement_WaPat<CC>(MFM_UUID_FOR("Shark", ELEMENT_VERSION)),
+      m_sharkBirthAge(this, "age", "Birth Age",
+                      "Number of events for a shark to mature",
+                      1, INITIAL_DEFAULT_BIRTH_AGE, 100, 1),
+      m_sharkEnergyPerFish(this, "energy", "Energy Per Fish",
+                           "Life events gained per fish eaten",
+                           1, DEFAULT_ENERGY_PER_FISH, 50, 1)
     {
       Element<CC>::SetAtomicSymbol("Sh");
       Element<CC>::SetName("Shark");
-
     }
-
-    s32* GetSharkBirthAgePtr()
-    {
-      return &m_sharkBirthAge;
-    }
-
-    s32* GetSharkEnergyPerFishPtr()
-    {
-      return &m_sharkEnergyPerFish;
-    }
-
 
     virtual const T & GetDefaultAtom() const
     {
       static T defaultAtom(TYPE(),0,0,0);
 
-      this->SetBirthAge(defaultAtom, m_sharkBirthAge);
+      this->SetBirthAge(defaultAtom, m_sharkBirthAge.GetValue());
       this->SetCurrentAge(defaultAtom, 0);
-      this->SetSharkEnergy(defaultAtom, m_sharkEnergyPerFish);
+      this->SetSharkEnergy(defaultAtom, m_sharkEnergyPerFish.GetValue());
 
       return defaultAtom;
     }
@@ -208,7 +154,7 @@ namespace MFM
 
       u32 age = this->GetCurrentAge(self);
       // Don't use genetic birth age (yet): bool reproable = age >= this->GetBirthAge(self);
-      bool reproable = age >= (u32) m_sharkBirthAge;
+      bool reproable = age >= (u32) m_sharkBirthAge.GetValue();
 
       if (!reproable)
       {
@@ -243,7 +189,7 @@ namespace MFM
 
       if (fishCount > 0)   // Eating
       {
-        energy = MIN((u32) MAX_SHARK_ENERGY, energy + m_sharkEnergyPerFish);
+        energy = MIN((u32) MAX_SHARK_ENERGY, energy + m_sharkEnergyPerFish.GetValue());
 
         if (reproable)
         {
@@ -287,13 +233,6 @@ namespace MFM
 
   template <class CC>
   Element_Shark<CC> Element_Shark<CC>::THE_INSTANCE;
-
-  template <class CC>
-  s32 Element_Shark<CC>::m_sharkBirthAge = INITIAL_DEFAULT_BIRTH_AGE;
-
-  template <class CC>
-  s32 Element_Shark<CC>::m_sharkEnergyPerFish = DEFAULT_ENERGY_PER_FISH;
-
 }
 
 #endif /* ELEMENT_SHARK_H */

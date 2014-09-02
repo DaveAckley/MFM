@@ -48,71 +48,24 @@ namespace MFM
 
   private:
 
-    u32 m_bombRange;
+    ElementParameterS32<CC> m_bombCount;
 
   public:
-    virtual u32 GetConfigurableCount() const
-    {
-      return 1;
-    }
-
-    virtual s32* GetConfigurableParameter(u32 index)
-    {
-      if(index)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
-      return (s32*) &m_bombRange;
-    }
-
-    virtual s32 GetConfigurableParameterValue(u32 index) const
-    {
-      if(index)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
-      return m_bombRange;
-    }
-
-    virtual void SetConfigurableParameterValue(u32 index, s32 value)
-    {
-      if(index)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
-      m_bombRange = value;
-    }
-
-    virtual s32 GetMinimumValue(u32 index) const
-    {
-      return 0;
-    }
-
-    virtual s32 GetMaximumValue(u32 index) const
-    {
-      return 4;
-    }
-
-    virtual const char* GetConfigurableName(u32 index) const
-    {
-      return "Bomb Radius";
-    }
 
     static Element_ForkBomb3 THE_INSTANCE;
 
-    s32 * GetBombRangePtr()
-    {
-      return (s32 *) &m_bombRange;
-    }
-
     virtual u32 GetBombRange() const
     {
-      return m_bombRange;
+      return (u32) m_bombCount.GetValue(); // Um, not really
     }
 
-    Element_ForkBomb3() : AbstractElement_ForkBomb<CC>(MFM_UUID_FOR("BombYellow", FORKBOMB3_VERSION))
+    Element_ForkBomb3() :
+      AbstractElement_ForkBomb<CC>(MFM_UUID_FOR("BombYellow", FORKBOMB3_VERSION)),
+      m_bombCount(this, "count", "Bomb Count",
+                  "Number of bombs randomly dropped each bomb event",
+                  0, 10, 30, 1)
+
     {
-      m_bombRange = 10;
       Element<CC>::SetAtomicSymbol("By");
       Element<CC>::SetName("Yellow Fork Bomb");
     }
@@ -128,7 +81,7 @@ namespace MFM
       const MDist<R> md = MDist<R>::get();
       const u32 loIdx = md.GetFirstIndex(1);
       const u32 hiIdx = md.GetLastIndex(R);
-      for (u32 i = 0; i < m_bombRange; ++i)
+      for (u32 i = 0; i < (u32) m_bombCount.GetValue(); ++i)
       {
         u32 idx = random.Between(loIdx,hiIdx);
         window.SetRelativeAtom(md.GetPoint(idx), window.GetCenterAtom());
