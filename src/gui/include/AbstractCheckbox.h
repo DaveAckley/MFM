@@ -45,8 +45,7 @@ namespace MFM
      * boolean value and is therefore not ready to be used.
      */
     AbstractCheckbox() :
-      AbstractButton(),
-      m_externalValue(NULL)
+      AbstractButton()
     {
       AbstractCheckbox::OnceOnly();
     }
@@ -57,8 +56,7 @@ namespace MFM
      * given an external backing value in order to be used.
      */
     AbstractCheckbox(const char* text) :
-      AbstractButton(text),
-      m_externalValue(NULL)
+      AbstractButton(text)
     {
       AbstractCheckbox::OnceOnly();
     }
@@ -81,7 +79,7 @@ namespace MFM
     {
       SetChecked(!IsChecked());
 
-      OnCheck(*m_externalValue);
+      OnCheck(IsChecked());
     }
 
     /**
@@ -94,69 +92,21 @@ namespace MFM
     virtual void OnCheck(bool value) = 0;
 
     /**
-     * Checks to see if this AbstractCheckbox is in its on state. If
-     * it is in its on state, its backing boolean value (if it exists)
-     * is guaranteed to be true. If it is not, or does not have a
-     * backing boolean value, this will be \c false .
-     *
-     * @returns \c true if the boolean value backed by this
-     *          AbstractCheckbox is set and is equal to \true , else
-     *          \c false.
+     * Checks to see if this AbstractCheckbox is in its on state.
      */
-    bool IsChecked()
-    {
-      if(m_externalValue)
-      {
-        return *m_externalValue;
-      }
-      return false;
-    }
+    virtual bool IsChecked() const = 0;
 
     /**
-     * Sets the value of the boolean backing this AbstractCheckbox
-     * . If there is no boolean bacing this AbstractCheckbox , this
-     * FAILs with NULL_POINTER .
-     *
-     * @param checked The new value to set the boolean value backing
-     *                this AbstractCheckbox to.
+     * Set this checkbox value to checked.
      */
-    void SetChecked(bool checked)
-    {
-      if(!m_externalValue)
-      {
-        FAIL(NULL_POINTER);
-      }
-      *m_externalValue = checked;
-    }
-
-    /**
-     * Sets the pointer to the boolean value which is backing this
-     * AbstractCheckbox . It is important to set this before using
-     * this AbstractCheckbox .
-     *
-     * @param externalValue The pointer to the boolean value wished to
-     *                      back this AbstractCheckbox . Any
-     *                      modifications to the state of this
-     *                      AbstractCheckbox will also modify the
-     *                      contents of this pointer .
-     */
-    void SetExternalValue(bool* externalValue)
-    {
-      m_externalValue = externalValue;
-    }
+    virtual void SetChecked(bool checked) = 0;
 
   private:
-    /**
-     * The pointer to the boolean value backing this AbstractCheckbox .
-     */
-    bool* m_externalValue;
 
     /**
-     * Gets the Asset which should be drawn depending on the state
-     * held by the boolean pointed to by \c m_externalValue .
+     * Gets the Asset which should be drawn depending on IsChecked()
      *
-     * @returns The Asset which should be drawn depending on the state
-     *          held by the boolean pointed to by \c m_externalValue .
+     * @returns The Asset which should be drawn
      */
     inline Asset GetAsset()
     {
@@ -181,11 +131,76 @@ namespace MFM
     /**
      * To be performed only once during initialization. This is most
      * likely going to be used by constructors to set the default
-     * values of some propterties of this AbstractCheckbox .
+     * values of some properties of this AbstractCheckbox .
      */
     void OnceOnly()
     {
       Panel::SetForeground(Drawing::WHITE);
+    }
+  };
+
+  /**
+   * A subclass of an AbstractCheckbox in which an extern bool * is
+   * used to implement the boolean value.
+   */
+  class AbstractCheckboxExternal : public AbstractCheckbox
+  {
+    bool * m_externalPointer;
+
+  public:
+    AbstractCheckboxExternal(const char * title) :
+      AbstractCheckbox(title),
+      m_externalPointer(0)
+    {
+    }
+
+    /**
+     * Sets the pointer to the boolean value which is backing this
+     * AbstractCheckbox . It is important to set this before using
+     * this AbstractCheckbox .
+     *
+     * @param externalValue The pointer to the boolean value wished to
+     *                      back this AbstractCheckbox . Any
+     *                      modifications to the state of this
+     *                      AbstractCheckbox will also modify the
+     *                      contents of this pointer .
+     */
+    void SetExternalValue(bool * ptr)
+    {
+      m_externalPointer = ptr;
+    }
+
+    /**
+     * Checks to see if this AbstractCheckbox is in its on state. If
+     * it is in its on state, its backing boolean value (if it exists)
+     * is guaranteed to be true. If it is not, or does not have a
+     * backing boolean value, this will be \c false .
+     *
+     * @returns \c true if the boolean value backed by this
+     *          AbstractCheckbox is set and is equal to \true , else
+     *          \c false.
+     */
+    virtual bool IsChecked() const
+    {
+      if (!m_externalPointer)
+      {
+        return false;
+      }
+      return *m_externalPointer;
+    }
+
+    /**
+     * Sets the value of the boolean backing this AbstractCheckbox
+     * . If there is no boolean bacing this AbstractCheckbox , this
+     * FAILs with NULL_POINTER .
+     *
+     * @param checked The new value to set the boolean value backing
+     *                this AbstractCheckbox to.
+     */
+    virtual void SetChecked(bool checked)
+    {
+      MFM_API_ASSERT_NONNULL(m_externalPointer);
+      *m_externalPointer = checked;
     }
   };
 }

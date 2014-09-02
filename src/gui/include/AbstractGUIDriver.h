@@ -160,7 +160,7 @@ namespace MFM
       { }
     };
 
-    class AbstractGridCheckbox : public AbstractCheckbox
+    class AbstractGridCheckbox : public AbstractCheckboxExternal
     {
      public:
       void SetDriver(AbstractGUIDriver & driver)
@@ -172,7 +172,7 @@ namespace MFM
       AbstractGUIDriver * m_driver;
 
       AbstractGridCheckbox(const char* title) :
-        AbstractCheckbox(title),
+        AbstractCheckboxExternal(title),
         m_driver(0)
       { }
     };
@@ -462,7 +462,7 @@ namespace MFM
       virtual void OnCheck(bool value)
       {
         AbstractGridCheckbox::m_driver->GetGrid().SetBackgroundRadiation(
-          AbstractCheckbox::IsChecked());
+          this->IsChecked());
       }
     } m_bgrButton;
 
@@ -545,6 +545,7 @@ namespace MFM
       m_gridPanel.Insert(&m_logPanel, NULL);
       m_logPanel.SetVisibility(false);
       m_logPanel.SetDimensions(m_screenWidth, 160);
+      m_logPanel.SetDesiredSize(U32_MAX, 160);
       m_logPanel.SetAnchor(ANCHOR_SOUTH);
       m_logPanel.SetFont(m_fonts.GetDefaultFont(16));
 
@@ -986,6 +987,8 @@ namespace MFM
         SetName("Statistics Panel");
         SetDimensions(STATS_START_WINDOW_WIDTH,
                       SCREEN_INITIAL_HEIGHT);
+        SetDesiredSize(STATS_START_WINDOW_WIDTH,
+                      U32_MAX);
         SetRenderPoint(SPoint(100000, 0));
         SetForeground(Drawing::WHITE);
         SetBackground(Drawing::DARK_PURPLE);
@@ -1046,8 +1049,8 @@ namespace MFM
     {
       static const u32 MAX_BUTTONS = 16;
       static const u32 CHECKBOX_SPACING_HEIGHT = 26;
-      static const u32 BUTTON_SPACING_HEIGHT = 38;
-      static const u32 BUTTON_HEIGHT = 22;
+      static const u32 BUTTON_SPACING_HEIGHT = 34;
+      static const u32 BUTTON_HEIGHT = 20;
       static const u32 BUTTON_WIDTH = 200;
 
       virtual void PaintBorder(Drawing & config)
@@ -1060,8 +1063,12 @@ namespace MFM
         SetName("ButtonPanel");
         SetDimensions(STATS_START_WINDOW_WIDTH,
                       SCREEN_INITIAL_HEIGHT / 2);
+        SetDesiredSize(U32_MAX, SCREEN_INITIAL_HEIGHT / 2);
+        SetAnchor(ANCHOR_SOUTH);
+        /*
         SetRenderPoint(SPoint(0,
                               SCREEN_INITIAL_HEIGHT / 2));
+        */
         SetForeground(Drawing::WHITE);
         SetBackground(Drawing::DARK_PURPLE);
         SetFont(fonts.GetDefaultFont(20));
