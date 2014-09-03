@@ -98,7 +98,7 @@ namespace MFM
         };
         for (u32 i = 0; i < sizeof(ones)/sizeof(ones[0]); ++i)
         {
-          WriteBit(isites, ones[i], true);
+          this->WriteBit(isites, ones[i], true);
         }
         initted = true;
       }
