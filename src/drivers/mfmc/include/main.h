@@ -9,5 +9,6 @@
 #include "DateTimeStamp.h"
 #include "Element_Dreg.h"
 #include "Element_Res.h"
+#include "Element_Creg.h"
 
 #endif /* MAIN_H */
