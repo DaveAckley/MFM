@@ -477,6 +477,11 @@ namespace MFM
 
     u32 GetBrushSize()
     {
+      if(!Panel::IsVisible())
+      {
+        return 0;
+      }
+
       switch(m_activatedButton->GetEditingTool())
       {
       case TOOL_SELECTOR:
