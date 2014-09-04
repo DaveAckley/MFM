@@ -12,13 +12,15 @@ namespace MFM
     m_drawMemRegions = FULL;
     m_drawGrid = true;
     m_drawDataHeat = false;
-    m_gridColor = 0xff303030;
-    m_sharedColor = 0xffe8757a;
-    m_visibleColor = 0xfff0d470;
-    m_hiddenColor = 0xff423b16;
+    m_gridColor = 0xff202020;
+
+    m_hiddenColor  = 0xff353535;
+    m_visibleColor = 0xff595959;
+    m_sharedColor  = 0xff959595;
+    m_cacheColor   = 0xffc0c0c0;
+
     m_selectedHiddenColor = 0xffffffff;
     m_selectedPausedColor = 0xffafafaf;
-    m_cacheColor = 0xffffc0c0;
     m_windowTL.SetX(0);
     m_windowTL.SetY(0);
   }
