@@ -52,22 +52,29 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
         {
           atomLoc.SetY(y);
 
-          // We're going to examine the atom now.  It might be toxic.
-          unwind_protect({
-              // Flag danger and move on
-              drawing.SetForeground(Drawing::YELLOW);
-              drawing.FillRect(rendPt.GetX(),
-                               rendPt.GetY(),
-                               m_atomDrawSize,
-                               m_atomDrawSize/2);
-              drawing.SetForeground(Drawing::BLACK);
-              drawing.FillRect(rendPt.GetX(),
-                               rendPt.GetY()+m_atomDrawSize/2,
-                               m_atomDrawSize,
-                               m_atomDrawSize/2);
-            },{
-              RenderAtom(drawing, atomLoc, rendPt, tile, lowlight);
-            });
+          if(tile.GetAtom(atomLoc)->IsSane())
+          {
+            RenderAtom(drawing, atomLoc, rendPt, tile, lowlight);
+          }
+          else
+          {
+            for(s32 x = 0; x < m_atomDrawSize; x++)
+            {
+              for(s32 y = 0; y < m_atomDrawSize; y++)
+              {
+                if((x + y + 1) & 4)
+                {
+                  drawing.SetForeground(Drawing::YELLOW);
+                }
+                else
+                {
+                  drawing.SetForeground(Drawing::BLACK);
+                }
+                drawing.FillRect(rendPt.GetX() + x,
+                                 rendPt.GetY() + y, 1, 1);
+              }
+            }
+          }
         }
       }
     }
