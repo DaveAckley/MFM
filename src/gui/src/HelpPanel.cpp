@@ -3,11 +3,13 @@
 namespace MFM
 {
 
-  const char * HelpPanel::m_helpMessages[] = {
+  const char * HelpPanel::m_helpMessages[] =
+  {
     "Keyboard:",
     " [SPACE] Pause / Start simulation",
     " [t] Show toolbox",
     "    [Scroll] Brush Size",
+    "    [Mid-Mouse Element] Lowlighting",
     " [g] Show grid",
     " [m] Toggle memory view",
     " [k] Render Atom heatmap",

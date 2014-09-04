@@ -89,10 +89,10 @@ namespace MFM
       const MDist<R> md = MDist<R>::get();
       u32 cregCount = 0;
       u32 fulli = 0, empti = 0;
-      SPoint fulls[50] = {SPoint(-1, -1)};
-      SPoint empts[50] = {SPoint(-1, -1)};
+      SPoint fulls[50];
+      SPoint empts[50];
 
-      for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(R); i++)
+      for(u32 i = md.GetFirstIndex(0); i <= md.GetLastIndex(R); i++)
       {
         const SPoint& rel = md.GetPoint(i);
         const T& atom = window.GetRelativeAtom(rel);

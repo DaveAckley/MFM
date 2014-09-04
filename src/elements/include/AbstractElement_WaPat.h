@@ -38,12 +38,12 @@ namespace MFM
   template <class CC>
   class AbstractElement_WaPat : public Element<CC>
   {
-  public:
-
+   public:
     // Extract short names for parameter types
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
-    enum {
+    enum
+    {
       R = P::EVENT_WINDOW_RADIUS,
       BITS = P::BITS_PER_ATOM,
 
@@ -57,7 +57,6 @@ namespace MFM
       CURRENT_AGE_LEN = 8,
 
       WAPAT_FIRST_FREE_POS = CURRENT_AGE_POS + CURRENT_AGE_LEN
-
     };
 
     typedef BitField<BitVector<BITS>, CURRENT_AGE_LEN, CURRENT_AGE_POS> AFCurrentAge;
@@ -84,11 +83,10 @@ namespace MFM
     }
 
     AbstractElement_WaPat(const UUID & uuid) : Element<CC>(uuid)
-    {
-    }
+    { }
 
     virtual u32 PercentMovable(const T& you,
-			       const T& me, const SPoint& offset) const
+                               const T& me, const SPoint& offset) const
     {
       return 100;
     }
