@@ -96,6 +96,11 @@ namespace MFM
         m_tool = tool;
       }
 
+      EditingTool GetEditingTool()
+      {
+        return m_tool;
+      }
+
       /**
        * Sets the ToolboxPanel which owns this
        * ToolButton. This is required before clicking any
@@ -472,7 +477,22 @@ namespace MFM
 
     u32 GetBrushSize()
     {
-      return m_brushSize;
+      switch(m_activatedButton->GetEditingTool())
+      {
+      case TOOL_SELECTOR:
+      case TOOL_ATOM_SELECTOR:
+      case TOOL_PENCIL:
+      case TOOL_BUCKET:
+      case TOOL_ERASER:
+        return 1;
+      case TOOL_BRUSH:
+      case TOOL_XRAY:
+      case TOOL_CLONE:
+        return m_brushSize;
+      default:
+        FAIL(ILLEGAL_STATE);
+        return 0;
+      }
     }
 
     Element<CC>* GetSecondaryElement()
