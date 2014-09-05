@@ -108,7 +108,7 @@ namespace MFM
       }
 
       u32 nidx;
-      if(cregCount > m_targetDensity.GetValue())
+      if(cregCount > (u32) m_targetDensity.GetValue())
       {
         nidx = window.GetRandom().Create(fulli);
         window.SetRelativeAtom(fulls[nidx], Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
