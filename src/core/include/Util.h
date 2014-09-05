@@ -30,7 +30,6 @@
 
 #include "itype.h"
 #include "math.h"
-#include <string.h>
 
 namespace MFM {
 
