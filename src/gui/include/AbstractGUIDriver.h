@@ -68,7 +68,7 @@ namespace MFM
 
 #define STATS_WINDOW_WIDTH 288
 
-#define STATS_START_WINDOW_WIDTH 280
+#define STATS_START_WINDOW_WIDTH STATS_WINDOW_WIDTH  // Why two constants?
 #define STATS_START_WINDOW_HEIGHT 120
 
   /* super speedy for now */
@@ -615,6 +615,7 @@ namespace MFM
       m_buttonPanel.InsertButtons();
 
       m_buttonPanel.SetAnchor(ANCHOR_SOUTH);
+      m_buttonPanel.SetAnchor(ANCHOR_EAST);
     }
 
     void Update(OurGrid& grid)
@@ -676,7 +677,7 @@ namespace MFM
       /* View Control */
       if(m_keyboard.SemiAuto(SDLK_a))
       {
-        m_srend.SetDisplayAER(!m_srend.GetDisplayAER());
+        m_srend.SetDisplayAER(1 + m_srend.GetDisplayAER());
       }
       if(m_keyboard.SemiAuto(SDLK_i))
       {
@@ -902,7 +903,7 @@ namespace MFM
       driver->m_screenWidth = STATS_START_WINDOW_WIDTH;
       driver->m_screenHeight = STATS_START_WINDOW_HEIGHT;
       driver->ToggleStatsView();
-      driver->m_srend.SetDisplayAER(!driver->m_srend.GetDisplayAER());
+      driver->m_srend.SetDisplayAER(driver->m_srend.GetMaxDisplayAER());
     }
 
     static void ConfigMinimalView(const char* not_used, void* driverptr)
@@ -1048,10 +1049,10 @@ namespace MFM
     struct ButtonPanel : public Panel
     {
       static const u32 MAX_BUTTONS = 16;
-      static const u32 CHECKBOX_SPACING_HEIGHT = 26;
+      static const u32 CHECKBOX_SPACING_HEIGHT = 32;
       static const u32 BUTTON_SPACING_HEIGHT = 34;
-      static const u32 BUTTON_HEIGHT = 20;
-      static const u32 BUTTON_WIDTH = 200;
+      static const u32 BUTTON_HEIGHT = 30;
+      static const u32 BUTTON_WIDTH = STATS_START_WINDOW_WIDTH;
 
       virtual void PaintBorder(Drawing & config)
       { /* No border please */ }
