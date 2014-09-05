@@ -49,7 +49,7 @@ namespace MFM
   private:
 
     enum {
-      ELEMENT_BOX_BUTTON_COUNT = 8,
+      ELEMENT_BOX_BUTTON_COUNT = 9,
       TOOLBOX_MAX_CONTROLLERS = 20,
       TOOLBOX_MAX_SLIDERS = 8,
       TOOLBOX_MAX_CHECKBOXES = 8
@@ -428,13 +428,13 @@ namespace MFM
         ASSET_ERASER_ICON,
         ASSET_BRUSH_ICON,
         ASSET_XRAY_ICON,
-        ASSET_CLONE_ICON
+        ASSET_CLONE_ICON,
+        ASSET_AIRBRUSH_ICON
       };
 
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
       {
         m_toolButtons[i].SetParent(this);
-
         m_toolButtons[i].Panel::SetRenderPoint(SPoint(16 + i * 32, 3));
         m_toolButtons[i].SetToolIcon(AssetManager::Get(assets[i]));
         Panel::Insert(m_toolButtons + i, NULL);
@@ -493,6 +493,7 @@ namespace MFM
       case TOOL_BRUSH:
       case TOOL_XRAY:
       case TOOL_CLONE:
+      case TOOL_AIRBRUSH:
         return m_brushSize;
       default:
         FAIL(ILLEGAL_STATE);
@@ -529,10 +530,11 @@ namespace MFM
 
     bool IsBrushableSelected()
     {
-      return GetSelectedTool() == TOOL_BRUSH  ||
-             GetSelectedTool() == TOOL_ERASER ||
-             GetSelectedTool() == TOOL_XRAY   ||
-             GetSelectedTool() == TOOL_CLONE;
+      return GetSelectedTool() == TOOL_BRUSH    ||
+             GetSelectedTool() == TOOL_ERASER   ||
+             GetSelectedTool() == TOOL_XRAY     ||
+             GetSelectedTool() == TOOL_CLONE    ||
+             GetSelectedTool() == TOOL_AIRBRUSH;
     }
 
     virtual bool Handle(MouseButtonEvent& mbe)
@@ -618,7 +620,7 @@ namespace MFM
 
         snprintf(brushSizeArray, 64, "%d", m_brushSize);
 
-        const SPoint brushPos = m_toolButtons[TOOL_CLONE].Panel::GetRenderPoint();
+        const SPoint brushPos = m_toolButtons[TOOL_AIRBRUSH].Panel::GetRenderPoint();
         UPoint pos(brushPos.GetX() + 32, brushPos.GetY());
         d.BlitBackedText(brushSizeArray, pos, UPoint(128, 128));
       }

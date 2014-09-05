@@ -46,6 +46,7 @@ namespace MFM
     ASSET_BUCKET_ICON,
     ASSET_XRAY_ICON,
     ASSET_CLONE_ICON,
+    ASSET_AIRBRUSH_ICON,
     ASSET_CHECKBOX_ICON_ON,
     ASSET_CHECKBOX_ICON_OFF,
     ASSET_SLIDER_HANDLE,
@@ -147,6 +148,7 @@ namespace MFM
         surfaces[ASSET_BUCKET_ICON] = LoadImage("images/bucket_icon.png");
         surfaces[ASSET_XRAY_ICON] = LoadImage("images/xray_icon.png");
         surfaces[ASSET_CLONE_ICON] = LoadImage("images/clone_icon.png");
+        surfaces[ASSET_AIRBRUSH_ICON] = LoadImage("images/airbrush_icon.png");
         surfaces[ASSET_CHECKBOX_ICON_ON] = LoadImage("images/checkbox_on.png");
         surfaces[ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
         surfaces[ASSET_SLIDER_HANDLE] = LoadImage("images/slider_handle.png");

@@ -39,7 +39,8 @@ namespace MFM
     TOOL_ERASER,
     TOOL_BRUSH,
     TOOL_XRAY,
-    TOOL_CLONE
+    TOOL_CLONE,
+    TOOL_AIRBRUSH
   };
 }
 
