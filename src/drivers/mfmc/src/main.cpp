@@ -1,7 +1,9 @@
 #include "main.h"
 
+#if 0 // Fri Sep  5 03:03:03 2014 No longer used?
 #ifdef MFM_GUI_DRIVER
   #include "AbstractSliderConfig.h"
+#endif
 #endif
 
 namespace MFM
@@ -12,8 +14,10 @@ namespace MFM
   //  typedef GridConfig<OurCoreConfig, 5, 3> OurGridConfig;
   typedef GridConfig<OurCoreConfig, 5, 3> OurGridConfig;
 
+#if 0 // Fri Sep  5 03:03:18 2014 No longer used?
 #ifdef MFM_GUI_DRIVER
   typedef AbstractSliderConfig<OurCoreConfig> OurSliderConfig;
+#endif
 #endif
 
   struct MFMCDriver : public AbstractDualDriver<OurGridConfig>
@@ -47,6 +51,7 @@ namespace MFM
       NeedElement(&Element_Xtal_R12<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Xtal_General<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Creg<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Dmover<OurCoreConfig>::THE_INSTANCE);
     }
 
   public:
