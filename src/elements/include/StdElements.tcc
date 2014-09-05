@@ -1,3 +1,4 @@
+/* -*- C++ -*- */
 #include "StdElementsHeaders.inc"
 
 namespace MFM {
@@ -9,5 +10,3 @@ namespace MFM {
 #undef XX
   }
 }
-
-

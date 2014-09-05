@@ -9,7 +9,6 @@ namespace MFM
   typedef ParamConfig<96,4,8,40> OurParamConfig;
   typedef P3Atom<OurParamConfig> OurAtom;
   typedef CoreConfig<OurAtom, OurParamConfig> OurCoreConfig;
-  //  typedef GridConfig<OurCoreConfig, 5, 3> OurGridConfig;
   typedef GridConfig<OurCoreConfig, 5, 3> OurGridConfig;
 
 #ifdef MFM_GUI_DRIVER
