@@ -27,7 +27,9 @@ namespace MFM
 
     ClearAtoms();
 
+#if 0
     m_writeFailureOdds = 0;  // Default is reliable
+#endif
 
     m_eventsExecuted = 0;
 
@@ -67,6 +69,7 @@ namespace MFM
       for(u32 y = 0; y < OWNED_SIDE; y++)
       {
         m_siteEvents[x][y] = 0;
+        m_lastChangedEventNumber[x][y] = 0;
       }
     }
 
@@ -169,6 +172,17 @@ namespace MFM
       FAIL(ILLEGAL_ARGUMENT);
     }
     return m_siteEvents[site.GetX()][site.GetY()];
+  }
+
+  template <class CC>
+  u32 Tile<CC>::GetUncachedWriteAge(const SPoint site) const
+  {
+    if (!IsInUncachedTile(site))
+    {
+      FAIL(ILLEGAL_ARGUMENT);
+    }
+    return (u32) (m_eventsExecuted -
+                  m_lastChangedEventNumber[site.GetX()][site.GetY()]);
   }
 
   template <class CC>
@@ -330,8 +344,8 @@ namespace MFM
       }
       return;
     }
-    const T* oldAtom = GetAtom(pt);
-    u32 oldType = 0;
+
+    T newAtom = atom;
     unwind_protect(
     {
       InternalPutAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(),
@@ -339,15 +353,13 @@ namespace MFM
       RecountAtoms();
     },
     {
-      oldType = oldAtom->GetType();
-
       if(m_backgroundRadiationEnabled &&
          m_random.OneIn(BACKGROUND_RADIATION_SITE_ODDS))
       {
-        // Maybe zap oldAtom
-        SingleXRay(pt.GetX(), pt.GetY());
+        // Write fault!
+        newAtom.XRay(m_random, BACKGROUND_RADIATION_BIT_ODDS);
 
-        if (!oldAtom->IsSane())
+        if (!newAtom.IsSane())
         {
           // This is actually more like bogus control flow, rather a
           // 'true' failure :(.  We just want to empty the site and
@@ -355,33 +367,30 @@ namespace MFM
           // detected elsewhere in the code.
           FAIL(INCONSISTENT_ATOM);
         }
+      }
 
-        u32 newOldType = oldAtom->GetType();
-
-        if(newOldType != oldType && !IsInCache(pt))
+      const T& oldAtom = *GetAtom(pt);
+      bool owned = IsOwnedSite(pt);
+      if (oldAtom != newAtom)
+      {
+        if (owned)
         {
-          // Here an xray has changed an atom from a
-          // legal oldType into a legal newOldType
-          IncrAtomCount(oldType, -1);
-          IncrAtomCount(newOldType, 1);
-
+          const SPoint opt = pt - SPoint(R,R); // Really no routine to map into owned coords?
+          m_lastChangedEventNumber[opt.GetX()][opt.GetY()] = m_eventsExecuted;
         }
 
-        // So this is (now) the 'old' atom's type
-        oldType = newOldType;
+        u32 oldType = oldAtom.GetType();
+        u32 newType = newAtom.GetType();
+        if(newType != oldType && owned)
+        {
+          // Here we're displacing an oldType
+          // atom with a newType atom
+          IncrAtomCount(oldType, -1);
+          IncrAtomCount(newType, 1);
+        }
 
+        InternalPutAtom(newAtom,pt.GetX(),pt.GetY());
       }
-
-      u32 newType = atom.GetType();
-      if(newType != oldType && !IsInCache(pt))
-      {
-        // Here we're just displacing an oldType
-        // atom with a newType atom
-        IncrAtomCount(oldType, -1);
-        IncrAtomCount(newType, 1);
-      }
-
-      InternalPutAtom(atom,pt.GetX(),pt.GetY());
     });
   }
 
@@ -823,6 +832,7 @@ namespace MFM
     u32 readBytes;
     u32 locksStillHeld = 0;
     u32 loops = 0;
+    s32 sleepTimer = m_random.Create(10000);
     do
     {
       locksStillHeld = 0; // Assume this
@@ -870,10 +880,11 @@ namespace MFM
         FAIL(LOCK_FAILURE);  // Not really, but it's a marker
       }
 
-      if (m_random.OneIn(1000))
+      if (--sleepTimer < 0)
       {
         // Try sleeping every once in a while
         Sleep(0, loops);
+        sleepTimer = m_random.Create(1000);
       }
       else
       {
