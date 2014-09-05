@@ -1,6 +1,9 @@
 # Who we are
 COMPONENTNAME:=mfms
 
+# Our aliases
+COMPONENTALIASES:= $(COMPONENTNAME)_s  $(COMPONENTNAME)_m $(COMPONENTNAME)_l
+
 # Where's the top
 BASEDIR:=../../..
 
