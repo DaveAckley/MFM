@@ -123,9 +123,11 @@ namespace MFM
      */
     bool m_backgroundRadiationEnabled;
 
+#if 0
     /** The 1-in-this odds of bit corruptions during atom writing.  (0
         means no corruptions).  (NOT YET IMPLEMENTED)  */
     u32 m_writeFailureOdds;
+#endif
 
     /** The ElementTable instance which holds all atom behavior for this
         Tile. */
@@ -169,6 +171,12 @@ namespace MFM
      * site. Indexed as m_siteEvents[x][y], x,y : 0..OWNED_SIDE-1.
      */
     u64 m_siteEvents[OWNED_SIDE][OWNED_SIDE];
+
+    /**
+     * The event number (m_eventsExecuted) as of the last time the
+     * contents of site changed.
+     */
+    u64 m_lastChangedEventNumber[OWNED_SIDE][OWNED_SIDE];
 
     friend class EventWindow<CC>;
 
@@ -854,6 +862,24 @@ namespace MFM
      * @returns The total events that have occured at that site
      */
     u64 GetUncachedSiteEvents(const SPoint site) const ;
+
+    /**
+     * Gets the 'write age' of a specified point in this Tile.
+     * Indexing ignores the cache boundary, so possible range is (0,0)
+     * to (OWNED_SIDE-1,OWNED_SIDE-1).  The write age is the number of
+     * events on this tilesince the contents of the specified point
+     * changed.  To obtain AEPS, divide this value by
+     * Tile::GetSites().
+     *
+     * @param site The coordinates of the location of the site whose
+     *          write age should be retrieved.
+     *
+     * @param y The y coordinate of the location of the site whose
+     *          write age should be retrieved.
+     *
+     * @returns The events since that site's content changed
+     */
+    u32 GetUncachedWriteAge(const SPoint site) const ;
 
     /**
      * Given a Packet , sends a complementary acknowledgement Packet
