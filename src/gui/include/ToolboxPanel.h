@@ -337,9 +337,33 @@ namespace MFM
       AddController(&cb);
     }
 
+   public:
+
+    ToolboxPanel(EditingTool* toolPtr) :
+      m_toolPtr(toolPtr),
+      m_activatedButton(m_toolButtons),
+      m_primaryElement(&Element_Empty<CC>::THE_INSTANCE),
+      m_secondaryElement(&Element_Empty<CC>::THE_INSTANCE),
+      m_heldElementCount(0),
+      m_controllerCount(0),
+      m_sliderCount(0),
+      m_checkboxCount(0),
+      m_brushSize(2)
+    {
+      for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
+      {
+        m_toolButtons[i].SetToolPointer(m_toolPtr);
+        m_toolButtons[i].SetEditingTool((EditingTool)i);
+      }
+
+      for(u32 i = 0; i < ELEMENT_BOX_SIZE; i++)
+      {
+        m_heldElements[i] = NULL;
+      }
+    }
+
     void RebuildControllers()
     {
-
       /* Remove any old controllers */
       for(u32 i = 0; i < m_controllerCount; i++)
       {
@@ -390,31 +414,6 @@ namespace MFM
       // Tell ourselfs to resize (our cheeso repacking)
       HandleResize(this->m_parent->GetDimensions());
 
-    }
-
-   public:
-
-    ToolboxPanel(EditingTool* toolPtr) :
-      m_toolPtr(toolPtr),
-      m_activatedButton(m_toolButtons),
-      m_primaryElement(NULL),
-      m_secondaryElement(NULL),
-      m_heldElementCount(0),
-      m_controllerCount(0),
-      m_sliderCount(0),
-      m_checkboxCount(0),
-      m_brushSize(2)
-    {
-      for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
-      {
-        m_toolButtons[i].SetToolPointer(m_toolPtr);
-        m_toolButtons[i].SetEditingTool((EditingTool)i);
-      }
-
-      for(u32 i = 0; i < ELEMENT_BOX_SIZE; i++)
-      {
-        m_heldElements[i] = NULL;
-      }
     }
 
     void AddButtons()

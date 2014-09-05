@@ -544,6 +544,7 @@ namespace MFM
         }
 
         m_grend->SetHoveredAtom(*m_mainGrid, SPoint(event.x, event.y));
+
         if(!mask)
         {
           m_grend->SetHoveredAtom(*m_mainGrid, SPoint(event.x, event.y));

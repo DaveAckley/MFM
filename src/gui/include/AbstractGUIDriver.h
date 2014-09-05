@@ -553,7 +553,9 @@ namespace MFM
       m_toolboxPanel.SetVisibility(false);
       m_toolboxPanel.SetBackground(Drawing::GREY60);
       m_toolboxPanel.SetAnchor(ANCHOR_WEST);
+      m_toolboxPanel.SetAnchor(ANCHOR_NORTH);
       m_gridPanel.Insert(&m_toolboxPanel, NULL);
+      m_toolboxPanel.RebuildControllers();
 
       m_helpPanel.SetName("Help");
       m_helpPanel.SetDimensions(m_screenWidth / 3, m_screenHeight);
