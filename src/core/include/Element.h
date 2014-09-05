@@ -309,13 +309,13 @@ namespace MFM
      * this Element is constructed and an Atom of this Element may be
      * placed.
      *
-     * @sa U16StaticLoader;
+     * @sa StaticLoader;
      */
     void AllocateType()
     {
       if (!m_hasType)
       {
-        m_type = U16StaticLoader::AllocateType(m_UUID);
+        m_type = StaticLoader<CC,16>::AllocateType(m_UUID);
         m_hasType = true;
         m_defaultAtom = BuildDefaultAtom();
       }
