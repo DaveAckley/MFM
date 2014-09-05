@@ -112,6 +112,7 @@ namespace MFM
     {
       s32 m_current;
       s32 m_min;
+      s32 m_initial;
       s32 m_max;
       s32 m_snap;
 
@@ -153,7 +154,7 @@ namespace MFM
           const char * name,
           const char * description,
           s32 min, s32 initial, s32 max, s32 snap)
-        : Parameter(c, tag, name, description), m_min(min), m_max(max), m_snap(snap)
+        : Parameter(c, tag, name, description), m_min(min), m_initial(initial), m_max(max), m_snap(snap)
       {
         if (m_max < m_min)
         {
