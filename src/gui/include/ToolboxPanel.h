@@ -385,7 +385,7 @@ namespace MFM
       Panel::SetDesiredSize(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW + BORDER_PADDING,
                            rpt.GetY() + BORDER_PADDING);
 
-      this->Print(STDOUT);
+      //debug: this->Print(STDOUT);
 
       // Tell ourselfs to resize (our cheeso repacking)
       HandleResize(this->m_parent->GetDimensions());
@@ -461,6 +461,8 @@ namespace MFM
 
       Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW,
                            6 + ELEMENT_RENDER_SIZE * TOTAL_ROWS);
+      Panel::SetDesiredSize(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW,
+                            6 + ELEMENT_RENDER_SIZE * TOTAL_ROWS);
 
       m_activatedButton = m_toolButtons;
       m_toolButtons[0].ToolButton::SetActivated(true);
