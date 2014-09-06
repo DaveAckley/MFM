@@ -25,7 +25,7 @@ namespace MFM
   typedef ParamConfig<96,4,8,48> OurParamConfigBig;
   typedef P3Atom<OurParamConfigBig> OurAtomBig;
   typedef CoreConfig<OurAtomBig, OurParamConfigBig> OurCoreConfigBig;
-  typedef GridConfig<OurCoreConfigBig, 9, 5> OurGridConfigBig;
+  typedef GridConfig<OurCoreConfigBig, 8, 5> OurGridConfigBig;
 
   template <class GC>
   struct MFMCDriver : public AbstractDualDriver<GC>
