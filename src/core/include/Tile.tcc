@@ -873,7 +873,7 @@ namespace MFM
         /* Have we waited long enough without a response? Let's disconnect that tile. */
 
       }
-      if (++loops >= 100000)
+      if (++loops >= 1000000)
       {
         LOG.Error("Tile %s flush looped %d times, but dirWaitWord (0x%x) still not 0, and %d locks held",
                   this->GetLabel(), loops, dirWaitWord, locksStillHeld);
