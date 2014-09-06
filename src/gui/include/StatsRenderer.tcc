@@ -67,8 +67,11 @@ namespace MFM {
       }
 
       sprintf(strBuffer, "%8.3f AER", aer);
-      drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
-                       Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
+      size = drawing.GetTextSize(strBuffer);
+      loc = UPoint(MAX(0, ((s32) m_dimensions.GetX())-size.GetX()), baseY);
+      drawing.BlitText(strBuffer,
+                       loc,
+                       UPoint(m_dimensions.GetX(), ROW_HEIGHT));
       baseY += DETAIL_ROW_HEIGHT;
 
       if (m_displayAER < 4)
@@ -76,9 +79,12 @@ namespace MFM {
         break;
       }
 
-      sprintf(strBuffer, "%8.3f %%ovrhd", overhead);
-      drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
-                       Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
+      sprintf(strBuffer, "%8.3f %%ov", overhead);
+      size = drawing.GetTextSize(strBuffer);
+      loc = UPoint(MAX(0, ((s32) m_dimensions.GetX())-size.GetX()), baseY);
+      drawing.BlitText(strBuffer,
+                       loc,
+                       UPoint(m_dimensions.GetX(), ROW_HEIGHT));
       baseY += DETAIL_ROW_HEIGHT;
 
       if (m_displayAER < 5)
@@ -87,8 +93,11 @@ namespace MFM {
       }
 
       sprintf(strBuffer, "%8d/frame", AEPSperFrame);
-      drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
-                        Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
+      size = drawing.GetTextSize(strBuffer);
+      loc = UPoint(MAX(0, ((s32) m_dimensions.GetX())-size.GetX()), baseY);
+      drawing.BlitText(strBuffer,
+                       loc,
+                       UPoint(m_dimensions.GetX(), ROW_HEIGHT));
       baseY += DETAIL_ROW_HEIGHT;
 
       if (m_displayAER < 6)
@@ -97,6 +106,11 @@ namespace MFM {
       }
 
     } while (0);
+
+    if (m_displayAER > 0)
+    {
+      baseY += ROW_HEIGHT/2;
+    }
 
     drawing.SetFont(m_drawFont);
     drawing.SetForeground(Drawing::WHITE);
