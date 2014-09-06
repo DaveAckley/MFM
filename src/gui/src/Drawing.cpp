@@ -241,7 +241,10 @@ namespace MFM
     for(u32 i = 0; i < 4; i++)
     {
       backingPt.Set(loc.GetX() + backingPts[i].GetX(), loc.GetY() + backingPts[i].GetY());
-      BlitText(message, MakeUnsigned(backingPt), size);
+      if (CanMakeUnsigned(backingPt))
+      {
+        BlitText(message, MakeUnsigned(backingPt), size);
+      }
     }
 
     SetForeground(oldFG);
