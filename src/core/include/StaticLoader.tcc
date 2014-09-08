@@ -2,14 +2,14 @@
 
 #include "Logger.h"
 namespace MFM {
-  template <u32 BITS>
-  u32 StaticLoader<BITS>::m_counter = 2;
+  template <class CC, u32 BITS>
+  u32 StaticLoader<CC,BITS>::m_counter = 2;
 
-  template <u32 BITS>
-  const UUID *(StaticLoader<BITS>::m_uuids[SLOTS]);
+  template <class CC, u32 BITS>
+  const UUID *(StaticLoader<CC,BITS>::m_uuids[SLOTS]);
 
-  template <u32 BITS>
-  u32 StaticLoader<BITS>::NextType() {
+  template <class CC, u32 BITS>
+  u32 StaticLoader<CC,BITS>::NextType() {
     u32 type;
     do {
       ++m_counter;
@@ -33,8 +33,8 @@ namespace MFM {
     return type;
   }
 
-  template <u32 BITS>
-  u32 StaticLoader<BITS>::AllocateType(const UUID & forUUID) {
+  template <class CC, u32 BITS>
+  u32 StaticLoader<CC,BITS>::AllocateType(const UUID & forUUID) {
     u32 used = 0;
     for (u32 i = 0; i < SLOTS; ++i) {
       if (!m_uuids[i]) continue;
@@ -52,8 +52,8 @@ namespace MFM {
     return type;
   }
 
-  template <u32 BITS>
-  s32 StaticLoader<BITS>::TypeFromUUID(const UUID & forUUID) {
+  template <class CC, u32 BITS>
+  s32 StaticLoader<CC,BITS>::TypeFromUUID(const UUID & forUUID) {
     for (u32 i = 0; i < SLOTS; ++i) {
       if (!m_uuids[i]) continue;
       if (forUUID == *m_uuids[i])
@@ -62,8 +62,8 @@ namespace MFM {
     return -1;
   }
 
-  template <u32 BITS>
-  s32 StaticLoader<BITS>::TypeFromCompatibleUUID(const UUID & forUUID) {
+  template <class CC, u32 BITS>
+  s32 StaticLoader<CC,BITS>::TypeFromCompatibleUUID(const UUID & forUUID) {
     for (u32 i = 0; i < SLOTS; ++i) {
       if (!m_uuids[i]) continue;
       if (m_uuids[i]->Compatible(forUUID))

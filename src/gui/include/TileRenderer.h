@@ -41,7 +41,7 @@ namespace MFM
   {
    private:
     bool m_drawGrid;
-    enum DrawRegionType { NO, EDGE, FULL, MAX} m_drawMemRegions;
+    enum DrawRegionType { FULL, NO, EDGE, AGE, AGE_ONLY, MAX} m_drawMemRegions;
     bool m_drawDataHeat;
     u32 m_atomDrawSize;
 

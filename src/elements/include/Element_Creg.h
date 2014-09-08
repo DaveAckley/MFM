@@ -122,7 +122,7 @@ namespace MFM
         }
       }
 
-      if(cregCount > m_targetDensity.GetValue())
+      if(cregCount > (u32) m_targetDensity.GetValue())
       {
         window.SetRelativeAtom(cregAtom, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
       }

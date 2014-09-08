@@ -234,7 +234,8 @@ namespace MFM {
     ElementCount m_displayElements[MAX_TYPES];
     u32 m_displayElementsInUse;
 
-    bool m_displayAER;
+    u32 m_displayAER;
+    u32 m_maxDisplayAER;
 
     static const u32 MAX_BUTTONS = 16;
     AbstractButton* m_buttons[MAX_BUTTONS];
@@ -246,7 +247,8 @@ namespace MFM {
       m_detailFont(0),
       m_reportersInUse(0),
       m_displayElementsInUse(0),
-      m_displayAER(false),
+      m_displayAER(0),
+      m_maxDisplayAER(5),
       m_registeredButtons(0)
     { }
 
@@ -263,10 +265,7 @@ namespace MFM {
     void ReassignButtonLocations()
     {
       SPoint loc(4, m_reportersInUse * BUTTON_HEIGHT_PIXELS);
-      if(m_displayAER)
-      {
-        loc.SetY(loc.GetY() + 3*LINE_HEIGHT_PIXELS);
-      }
+      loc.SetY(loc.GetY() + m_displayAER*LINE_HEIGHT_PIXELS);
       for(u32 i = 0; i < m_registeredButtons; i++)
       {
         m_buttons[i]->SetLocation(loc);
@@ -293,14 +292,19 @@ namespace MFM {
       m_detailFont = fonts.GetDefaultFont(DETAIL_LINE_HEIGHT_PIXELS - 2);
     }
 
-    bool GetDisplayAER() const
+    u32 GetDisplayAER() const
     {
       return m_displayAER;
     }
 
-    void SetDisplayAER(bool displayAER)
+    u32 GetMaxDisplayAER() const
     {
-      m_displayAER = displayAER;
+      return m_maxDisplayAER;
+    }
+
+    void SetDisplayAER(u32 displayAER)
+    {
+      m_displayAER = displayAER % (m_maxDisplayAER + 1);
       ReassignButtonLocations();
     }
 

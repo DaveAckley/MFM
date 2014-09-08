@@ -1,5 +1,6 @@
 /* -*- C++ -*- */
 #include "Util.h"            /* for MIN and MAX */
+#include "ColorMap.h"        /* for CubeHelix */
 
 namespace MFM
 {
@@ -48,14 +49,40 @@ namespace MFM
         atomLoc.SetX(x);
         for(u32 y = astart; y < aend; y++)
         {
-          rendPt.SetY(pt.GetY() + m_atomDrawSize * y +
-                      m_windowTL.GetY() + cacheOffset);
-          if(rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
-          {
-            atomLoc.SetY(y);
+          atomLoc.SetY(y);
 
-            RenderAtom(drawing, atomLoc, rendPt, tile, lowlight);
+          if ((m_drawMemRegions == AGE || m_drawMemRegions == AGE_ONLY) &&
+              tile.IsOwnedSite(atomLoc))
+          {
+            // Draw background 'write heat' map
+            u32 writeAge = tile.GetUncachedWriteAge(atomLoc -
+                                                    SPoint(P::EVENT_WINDOW_RADIUS,
+                                                           P::EVENT_WINDOW_RADIUS));
+            u32 colorIndex = 0;
+            const u32 MAX_IDX = 10000;       // Potential (interpolated) colors
+            const u32 AGE_PER_AEPS = tile.GetSites();
+            const double MAX_EXPT = 4.0;     // 10**4.0 == 10kAEPS for fully black
+            const double LOG_SCALER = MAX_IDX/MAX_EXPT;
+            double writeAgeAEPS = 1.0 * writeAge / AGE_PER_AEPS + 1;
+
+            colorIndex = MIN(MAX_IDX, (u32) (LOG_SCALER*log10(writeAgeAEPS)));
+            u32 color =
+              ColorMap_CubeHelixRev::THE_INSTANCE.
+              GetInterpolatedColor(colorIndex,0,MAX_IDX,0xffff0000);
+
+            drawing.SetForeground(color);
+            drawing.FillRect(rendPt.GetX(),
+                             rendPt.GetY(),
+                             m_atomDrawSize,
+                             m_atomDrawSize);
+
+            if (m_drawMemRegions == AGE_ONLY)
+            {
+              continue;
+            }
           }
+
+          RenderAtom(drawing, atomLoc, rendPt, tile, lowlight);
         }
       }
     }
@@ -178,6 +205,8 @@ namespace MFM
       switch (m_drawMemRegions)
       {
       default:
+      case AGE_ONLY: // Handled in RenderAtoms
+      case AGE: // Handled in RenderAtoms
       case NO:
         break;
       case FULL:

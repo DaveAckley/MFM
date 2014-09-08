@@ -54,7 +54,7 @@ namespace MFM
      this: 0x0000, 0xffff, 0x00ff, 0xff00, 0x001f, 0x03e0, 0x03ff,
      0x7c00, 0x7c1f, ...
    */
-  template <u32 BITS>
+  template <class CC, u32 BITS>
   class StaticLoader {
     static u32 m_counter;
     static const u32 SLOTS = 1<<BITS;
@@ -88,7 +88,7 @@ namespace MFM
     }
 
   };
-  typedef StaticLoader<16> U16StaticLoader;
+  //typedef StaticLoader<16> U16StaticLoader;
 }
 
 #include "StaticLoader.tcc"
