@@ -55,7 +55,7 @@ namespace MFM
       : Element<CC>(MFM_UUID_FOR("Creg", CREG_VERSION)),
         m_targetDensity(this, "density", "Target Density",
                         "The Creg will try to fill this many spots in its event "
-                        "window with other Creg.", 0, 3, 45, 1)
+                        "window with other Creg.", 0, 3, 41, 1)
 
     {
       Element<CC>::SetAtomicSymbol("Cr");
@@ -98,6 +98,12 @@ namespace MFM
       {
         const SPoint& rel = md.GetPoint(i);
         const T& atom = window.GetRelativeAtom(rel);
+
+        if(Atom<CC>::IsType(atom, Element_Wall<CC>::THE_INSTANCE.GetType()))
+        {
+          continue; /* We're not going to destroy walls.*/
+        }
+
         if(Atom<CC>::IsType(atom, Element<CC>::GetType()))
         {
           cregCount++;
