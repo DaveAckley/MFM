@@ -95,7 +95,6 @@ namespace MFM
     bool m_thisUpdateIsEpoch;
     u32 m_thisEpochAEPS;
     bool m_captureScreenshots;
-    bool m_captureSaveState;
     u32 m_saveStateIndex;
     u32 m_epochSaveStateIndex;
 
@@ -836,7 +835,6 @@ namespace MFM
       m_startPaused(true),
       m_thisUpdateIsEpoch(false),
       m_captureScreenshots(false),
-      m_captureSaveState(false),
       m_saveStateIndex(0),
       m_epochSaveStateIndex(0),
       m_renderStats(false),
@@ -937,13 +935,6 @@ namespace MFM
       driver.m_helpPanel.SetVisibility(false);
     }
 
-    static void SetSaveStatePerAEPSFromArgs(const char* not_used, void* driverptr)
-    {
-      AbstractGUIDriver& driver = *((AbstractGUIDriver*)driverptr);
-
-      driver.m_captureSaveState = true;
-    }
-
     void AddDriverArguments()
     {
       Super::AddDriverArguments();
@@ -964,9 +955,6 @@ namespace MFM
 
       this->RegisterArgument("Help panel is not shown upon startup.",
                              "-n| --nohelp", &DontShowHelpPanelOnStart, this, false);
-
-      this->RegisterArgument("Capture simulator state every epoch",
-                             "-a| --autosave", &SetSaveStatePerAEPSFromArgs, this, false);
     }
 
     EditingTool m_selectedTool;
