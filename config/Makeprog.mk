@@ -4,6 +4,7 @@ BINDIR:=$(BASEDIR)/bin
 
 # Our ultimate goal
 program:	$(BINDIR)/$(COMPONENTNAME)
+	@cd $(BINDIR); for i in $(COMPONENTALIASES); do ln -f -s $(COMPONENTNAME) $$i; done
 
 # Get rules to build our main.o
 include $(BASEDIR)/config/Makelib.mk

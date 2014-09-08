@@ -4,7 +4,7 @@ namespace MFM
 {
   UPoint MakeUnsigned(const SPoint & spoint)
   {
-    if (spoint.GetX() < 0 || spoint.GetY() < 0)
+    if (!CanMakeUnsigned(spoint))
     {
       FAIL(ILLEGAL_ARGUMENT);
     }
@@ -13,10 +13,11 @@ namespace MFM
 
   SPoint MakeSigned(const UPoint & upoint)
   {
-    if (upoint.GetX() > (u32) S32_MAX || upoint.GetY() > (u32) S32_MAX)
+    if (!CanMakeSigned(upoint))
     {
       FAIL(ILLEGAL_ARGUMENT);
     }
     return SPoint((s32) upoint.GetX(), (s32) upoint.GetY());
   }
+
 } /* namespace MFM */

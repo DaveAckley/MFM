@@ -273,9 +273,28 @@ namespace MFM {
 
     // Wait until all acknowledge
     u32 loops = 0;
-    u32 notReady;
+    u32 notReady = 0;
+    s32 sleepTimer = 0;
     do
     {
+      if (++loops >= 100000)
+      {
+        LOG.Error("%s control looped %d times, but %d still not ready, killing",
+                  tc.GetName(), loops, notReady);
+        ReportGridStatus(Logger::ERROR);
+        FAIL(ILLEGAL_STATE);
+      }
+
+      if (--sleepTimer < 0)
+      {
+        Sleep(0, loops);  // Actually sleeping seems to avoid rare livelock?
+        sleepTimer = m_random.Create(1000);
+      }
+      else
+      {
+        pthread_yield();
+      }
+
       notReady = 0;
 
       for(u32 x = 0; x < W; x++)
@@ -289,16 +308,6 @@ namespace MFM {
           }
         }
       }
-
-      if (++loops >= 100000)
-      {
-        LOG.Error("%s control looped %d times, but %d still not ready, killing",
-                  tc.GetName(), loops, notReady);
-        ReportGridStatus(Logger::ERROR);
-        FAIL(ILLEGAL_STATE);
-      }
-
-      Sleep(0, loops);  // Actually sleeping seems to avoid rare livelock?
 
     } while (notReady > 0);
 

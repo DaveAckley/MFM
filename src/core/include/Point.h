@@ -581,8 +581,22 @@ namespace MFM
    * @param spoint The signed Point to convert.
    *
    * @returns An unsigned version of \c spoint .
+   *
+   * FAIL ILLEGAL_ARGUMENT if either coordinate of spoint is negative
    */
   UPoint MakeUnsigned(const SPoint & spoint);
+
+  /**
+   * Check if a signed Point can be passed to MakeUnsigned successfully
+   *
+   * @param spoint The signed Point to check
+   *
+   * @returns true iff neither coordinate of spoint is negative
+   */
+  inline bool CanMakeUnsigned(const SPoint & spoint)
+  {
+    return spoint.GetX() >= 0 && spoint.GetY() >= 0;
+  }
 
   /**
    * Converts an unsigned Point to a signed Point .
@@ -590,8 +604,23 @@ namespace MFM
    * @param upoint The unsigned Point to convert.
    *
    * @returns A signed version of \c upoint .
+   *
+   * FAIL ILLEGAL_ARGUMENT if either coordinate of upoint is greater
+   * than S32_MAX
    */
   SPoint MakeSigned(const UPoint & upoint);
+
+  /**
+   * Check if an unsigned Point can be passed to MakeSigned successfully
+   *
+   * @param upoint The unsigned Point to check
+   *
+   * @returns true iff neither coordinate of upoint is greater than S32_MAX
+   */
+  inline bool CanMakeSigned(const UPoint & upoint)
+  {
+    return upoint.GetX() <= (u32) S32_MAX && upoint.GetY() <= (u32) S32_MAX;
+  }
 
 } /* namespace MFM */
 
