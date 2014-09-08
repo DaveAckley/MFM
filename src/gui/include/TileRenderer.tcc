@@ -96,9 +96,9 @@ namespace MFM
   template <class CC>
   void TileRenderer::RenderBadAtom(Drawing& drawing, const UPoint& rendPt)
   {
-    for(s32 x = 0; x < m_atomDrawSize; x++)
+    for(s32 x = 0; x < (s32)m_atomDrawSize; x++)
     {
-      for(s32 y = 0; y < m_atomDrawSize; y++)
+      for(s32 y = 0; y < (s32)m_atomDrawSize; y++)
       {
         if((x + y + 1) & 4)
         {

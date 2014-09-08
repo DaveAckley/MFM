@@ -408,7 +408,6 @@ namespace MFM
 
     bool m_gridImages;
     bool m_tileImages;
-    //    s32 m_recordTimeBasedDataPerAEPS;
 
     double m_AEPS;
     /**
