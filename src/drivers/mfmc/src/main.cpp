@@ -60,7 +60,6 @@ namespace MFM
       this->NeedElement(&Element_Xtal_General<CC>::THE_INSTANCE);
       this->NeedElement(&Element_Creg<CC>::THE_INSTANCE);
       this->NeedElement(&Element_Dmover<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_City_Street<CC>::THE_INSTANCE);
     }
 
   public:
