@@ -97,12 +97,20 @@ namespace MFM
       pthread_cond_t m_condvar;
       pthread_t m_threadIdOfWaiter;
     public:
+
+      virtual bool EvaluatePrecondition() = 0;
+
       virtual bool EvaluatePredicate() = 0;
 
       Predicate(Mutex & mutex) : m_mutex(mutex)
       {
-         pthread_cond_init(&m_condvar, NULL);
-       }
+        pthread_cond_init(&m_condvar, NULL);
+      }
+
+      ~Predicate()
+      {
+        pthread_cond_destroy(&m_condvar);
+      }
 
       void WaitForCondition()
       {
@@ -111,6 +119,12 @@ namespace MFM
 
         while (!EvaluatePredicate())
         {
+          // If the predicate's not true, the precondition must be
+          if (!EvaluatePrecondition())
+          {
+            FAIL(LOCK_FAILURE);
+          }
+
           m_mutex.CondWait(m_condvar);
         }
       }

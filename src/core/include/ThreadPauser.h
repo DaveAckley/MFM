@@ -159,6 +159,17 @@ namespace MFM
       ThreadPauser & m_threadPauser;
       StateIsRunRequested(ThreadPauser & tp) : Predicate(tp.m_mutex), m_threadPauser(tp) { }
 
+      virtual bool EvaluatePrecondition()
+      {
+        bool ret = m_threadPauser.m_threadState == THREADSTATE_PAUSED;
+        if (!ret)
+        {
+          LOG.Error("PAUSED precondition failed");
+          m_threadPauser.ReportThreadPauserStatus(Logger::ERROR);
+        }
+        return ret;
+      }
+
       virtual bool EvaluatePredicate()
       {
         return m_threadPauser.m_threadState == THREADSTATE_RUN_REQUESTED;
@@ -172,6 +183,17 @@ namespace MFM
     {
       ThreadPauser & m_threadPauser;
       StateIsRunning(ThreadPauser & tp) : Predicate(tp.m_mutex), m_threadPauser(tp) { }
+
+      virtual bool EvaluatePrecondition()
+      {
+        bool ret = m_threadPauser.m_threadState == THREADSTATE_RUN_READY;
+        if (!ret)
+        {
+          LOG.Error("RUN READY precondition failed");
+          m_threadPauser.ReportThreadPauserStatus(Logger::ERROR);
+        }
+        return ret;
+      }
 
       virtual bool EvaluatePredicate()
       {
