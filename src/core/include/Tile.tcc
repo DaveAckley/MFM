@@ -351,6 +351,8 @@ namespace MFM
       InternalPutAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(),
                       pt.GetX(), pt.GetY());
       RecountAtoms();
+      LOG.Warning("Failure during PlaceAtom, erased (%2d,%2d) of %s",
+                  pt.GetX(), pt.GetY(), this->GetLabel());
     },
     {
       if(m_backgroundRadiationEnabled &&
@@ -873,7 +875,7 @@ namespace MFM
         /* Have we waited long enough without a response? Let's disconnect that tile. */
 
       }
-      if (++loops >= 1000000)
+      if (++loops >= 100000000)
       {
         LOG.Error("Tile %s flush looped %d times, but dirWaitWord (0x%x) still not 0, and %d locks held",
                   this->GetLabel(), loops, dirWaitWord, locksStillHeld);
@@ -884,7 +886,7 @@ namespace MFM
       {
         // Try sleeping every once in a while
         Sleep(0, loops);
-        sleepTimer = m_random.Create(1000);
+        sleepTimer = m_random.Create(250);
       }
       else
       {
