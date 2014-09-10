@@ -87,8 +87,10 @@ namespace MFM
     u32 elems = m_elementRegistry.GetEntryCount();
     char lexOutput[24];
 
+#if 0
     if (elems > 25)  // Um handle multidigit codes
       FAIL(INCOMPLETE_CODE);
+#endif
 
     for(u32 i = 0; i < elems; i++)
     {
