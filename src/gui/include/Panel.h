@@ -36,7 +36,8 @@
 #include "EditingTool.h"
 #include "OverflowableCharBufferByteSink.h"
 
-namespace MFM {
+namespace MFM
+{
 
   typedef enum
   {
@@ -148,19 +149,18 @@ namespace MFM {
     bool m_visible;
 
     // A helper function to indent a line, that totally belongs elsewhere
-    static void Indent(ByteSink & sink, u32 count) ;
+    static void Indent(ByteSink& sink, u32 count) ;
 
-  public:
-
+   public:
     Panel(u32 width=0, u32 height=0);
 
     virtual ~Panel();
 
-    void Insert(Panel * child, Panel * afterOrNull) ;
+    void Insert(Panel* child, Panel* afterOrNull) ;
 
-    Panel * Pop() ;
+    Panel* Pop() ;
 
-    void Remove(Panel * child) ;
+    void Remove(Panel* child) ;
 
     void SetVisibility(bool value){ m_visible = value; }
 
