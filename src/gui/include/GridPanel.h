@@ -210,6 +210,13 @@ namespace MFM
                             mbe.m_event.button.y));
     }
 
+    void HandleAirbrushTool(MouseButtonEvent& mbe)
+    {
+      HandleAirbrushTool(mbe.m_event.button.button,
+                         SPoint(mbe.m_event.button.x,
+                                mbe.m_event.button.y));
+    }
+
     SPoint ClickPointToAtom(const SPoint& clickPt)
     {
       SPoint abs = GetAbsoluteLocation();
@@ -270,6 +277,15 @@ namespace MFM
         m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
 
       PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(), atom, TOOL_BRUSH);
+    }
+
+    void HandleAirbrushTool(u8 button, SPoint clickPt)
+    {
+      T atom = (button == SDL_BUTTON_LEFT) ?
+        m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
+        m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
+
+      PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(), atom, TOOL_AIRBRUSH);
     }
 
     void HandleEraserTool(u8 button, SPoint clickPt)
@@ -353,7 +369,8 @@ namespace MFM
                     }
                   }
                 }
-                else
+                else if((tool != TOOL_AIRBRUSH) ||
+                        (m_mainGrid->GetRandom().OneIn(50)))
                 {
                   grid.PlaceAtom(atom, SPoint(cp.GetX() + x, cp.GetY() + y));
                 }
@@ -483,6 +500,9 @@ namespace MFM
             case TOOL_CLONE:
               HandleCloneTool(mbe);
               break;
+            case TOOL_AIRBRUSH:
+              HandleAirbrushTool(mbe);
+              break;
 
             default: break; /* Do the rest later */
             }
@@ -524,6 +544,7 @@ namespace MFM
         }
 
         m_grend->SetHoveredAtom(*m_mainGrid, SPoint(event.x, event.y));
+
         if(!mask)
         {
           m_grend->SetHoveredAtom(*m_mainGrid, SPoint(event.x, event.y));
@@ -549,6 +570,9 @@ namespace MFM
             break;
           case TOOL_CLONE:
             HandleCloneTool(mask, SPoint(event.x, event.y));
+            break;
+          case TOOL_AIRBRUSH:
+            HandleAirbrushTool(mask, SPoint(event.x, event.y));
             break;
           default:
             /* Some tools don't need to do this */

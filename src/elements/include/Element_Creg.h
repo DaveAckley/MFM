@@ -55,7 +55,7 @@ namespace MFM
       : Element<CC>(MFM_UUID_FOR("Creg", CREG_VERSION)),
         m_targetDensity(this, "density", "Target Density",
                         "The Creg will try to fill this many spots in its event "
-                        "window with other Creg.", 0, 3, 45, 1)
+                        "window with other Creg.", 0, 3, 41, 1)
 
     {
       Element<CC>::SetAtomicSymbol("Cr");
@@ -87,36 +87,48 @@ namespace MFM
     virtual void Behavior(EventWindow<CC>& window) const
     {
       const MDist<R> md = MDist<R>::get();
-      u32 cregCount = 0;
-      u32 fulli = 0, empti = 0;
-      SPoint fulls[50];
-      SPoint empts[50];
+      Random& rand = window.GetRandom();
+
+      SPoint cregAtom;
+      s32 cregCount = 0;
+      SPoint nonCregAtom;
+      s32 nonCregCount = 0;
 
       for(u32 i = md.GetFirstIndex(0); i <= md.GetLastIndex(R); i++)
       {
         const SPoint& rel = md.GetPoint(i);
         const T& atom = window.GetRelativeAtom(rel);
+
+        if(Atom<CC>::IsType(atom, Element_Wall<CC>::THE_INSTANCE.GetType()))
+        {
+          continue; /* We're not going to destroy walls.*/
+        }
+
         if(Atom<CC>::IsType(atom, Element<CC>::GetType()))
         {
           cregCount++;
-          fulls[fulli++] = rel;
+          if(rand.OneIn(cregCount))
+          {
+            cregAtom = rel;
+          }
         }
         else
         {
-          empts[empti++] = rel;
+          nonCregCount++;
+          if(rand.OneIn(nonCregCount))
+          {
+            nonCregAtom = rel;
+          }
         }
       }
 
-      u32 nidx;
       if(cregCount > (u32) m_targetDensity.GetValue())
       {
-        nidx = window.GetRandom().Create(fulli);
-        window.SetRelativeAtom(fulls[nidx], Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetRelativeAtom(cregAtom, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
       }
-      else
+      else if(cregCount < m_targetDensity.GetValue())
       {
-        nidx = window.GetRandom().Create(empti);
-        window.SetRelativeAtom(empts[nidx], Element_Creg<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetRelativeAtom(nonCregAtom, Element_Creg<CC>::THE_INSTANCE.GetDefaultAtom());
       }
     }
   };

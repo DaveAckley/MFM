@@ -2,107 +2,174 @@
 #include "Util.h"            /* for MIN and MAX */
 #include "ColorMap.h"        /* for CubeHelix */
 
-namespace MFM {
-
-template <class CC>
-u32 TileRenderer::GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom, u32 selector)
+namespace MFM
 {
-  const Element<CC> * elt = tile.GetElementTable().Lookup(atom.GetType());
-  if (elt)
+
+  template <class CC>
+  u32 TileRenderer::GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom,
+                                 u32 selector)
   {
-    return elt->LocalPhysicsColor(atom,selector);
-  }
-  return 0xffffffff;
-}
-
-template <class CC>
-u32 TileRenderer::GetDataHeatColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom)
-{
-  return GetAtomColor(tile,atom,1);
-}
-
-
-template <class CC>
-void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
-                               bool renderCache, bool lowlight)
-{
-  // Extract short type names
-  typedef typename CC::PARAM_CONFIG P;
-
-  u32 astart = renderCache ? 0 : P::EVENT_WINDOW_RADIUS;
-  u32 aend   = renderCache ? P::TILE_WIDTH : P::TILE_WIDTH - P::EVENT_WINDOW_RADIUS;
-
-  u32 cacheOffset = renderCache ? 0 : -P::EVENT_WINDOW_RADIUS * m_atomDrawSize;
-
-  SPoint atomLoc;
-
-  Point<u32> rendPt;
-
-  for(u32 x = astart; x < aend; x++)
-  {
-    rendPt.SetX(pt.GetX() + m_atomDrawSize * x +
-                m_windowTL.GetX() + cacheOffset);
-    if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX())
+    const Element<CC> * elt = tile.GetElementTable().Lookup(atom.GetType());
+    if (elt)
     {
-      atomLoc.SetX(x);
-      for(u32 y = astart; y < aend; y++)
+      return elt->LocalPhysicsColor(atom,selector);
+    }
+    return 0xffffffff;
+  }
+
+  template <class CC>
+  u32 TileRenderer::GetDataHeatColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom)
+  {
+    return GetAtomColor(tile,atom,1);
+  }
+
+
+  template <class CC>
+  void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
+                                 bool renderCache, bool lowlight)
+  {
+    // Extract short type names
+    typedef typename CC::PARAM_CONFIG P;
+
+    u32 astart = renderCache ? 0 : P::EVENT_WINDOW_RADIUS;
+    u32 aend   = renderCache ? P::TILE_WIDTH : P::TILE_WIDTH - P::EVENT_WINDOW_RADIUS;
+
+    u32 cacheOffset = renderCache ? 0 : -P::EVENT_WINDOW_RADIUS * m_atomDrawSize;
+
+    SPoint atomLoc;
+
+    Point<u32> rendPt;
+
+    for(u32 x = astart; x < aend; x++)
+    {
+      rendPt.SetX(pt.GetX() + m_atomDrawSize * x +
+                  m_windowTL.GetX() + cacheOffset);
+      if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX())
       {
-        rendPt.SetY(pt.GetY() + m_atomDrawSize * y +
-                    m_windowTL.GetY() + cacheOffset);
-        if(rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
+        atomLoc.SetX(x);
+        for(u32 y = astart; y < aend; y++)
         {
-          atomLoc.SetY(y);
-
-          if ((m_drawMemRegions == AGE || m_drawMemRegions == AGE_ONLY) &&
-              tile.IsOwnedSite(atomLoc))
+          rendPt.SetY(pt.GetY() + m_atomDrawSize * y +
+                      m_windowTL.GetY() + cacheOffset);
+          if(rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
           {
-            // Draw background 'write heat' map
-            u32 writeAge = tile.GetUncachedWriteAge(atomLoc -
-                                                    SPoint(P::EVENT_WINDOW_RADIUS, P::EVENT_WINDOW_RADIUS));
-            u32 colorIndex = 0;
-            const u32 MAX_IDX = 10000;       // Potential (interpolated) colors
-            const u32 AGE_PER_AEPS = tile.GetSites();
-            const double MAX_EXPT = 4.0;     // 10**4.0 == 10kAEPS for fully black
-            const double LOG_SCALER = MAX_IDX/MAX_EXPT;
-            double writeAgeAEPS = 1.0 * writeAge / AGE_PER_AEPS + 1;
+            atomLoc.SetY(y);
+            if ((m_drawMemRegions == AGE || m_drawMemRegions == AGE_ONLY) &&
+                tile.IsOwnedSite(atomLoc))
+            {
+              // Draw background 'write heat' map
+              u32 writeAge = tile.GetUncachedWriteAge(atomLoc -
+                                                      SPoint(P::EVENT_WINDOW_RADIUS,
+                                                             P::EVENT_WINDOW_RADIUS));
+              u32 colorIndex = 0;
+              const u32 MAX_IDX = 10000;       // Potential (interpolated) colors
+              const u32 AGE_PER_AEPS = tile.GetSites();
+              const double MAX_EXPT = 4.0;     // 10**4.0 == 10kAEPS for fully black
+              const double LOG_SCALER = MAX_IDX/MAX_EXPT;
+              double writeAgeAEPS = 1.0 * writeAge / AGE_PER_AEPS + 1;
 
-            colorIndex = MIN(MAX_IDX, (u32) (LOG_SCALER*log10(writeAgeAEPS)));
-            u32 color =
+              colorIndex = MIN(MAX_IDX, (u32) (LOG_SCALER*log10(writeAgeAEPS)));
+              u32 color =
               ColorMap_CubeHelixRev::THE_INSTANCE.
               GetInterpolatedColor(colorIndex,0,MAX_IDX,0xffff0000);
 
-            drawing.SetForeground(color);
-            drawing.FillRect(rendPt.GetX(),
-                             rendPt.GetY(),
-                             m_atomDrawSize,
-                             m_atomDrawSize);
+              drawing.SetForeground(color);
+              drawing.FillRect(rendPt.GetX(),
+                               rendPt.GetY(),
+                               m_atomDrawSize,
+                               m_atomDrawSize);
 
-            if (m_drawMemRegions == AGE_ONLY)
-            {
-              continue;
+              if (m_drawMemRegions == AGE_ONLY)
+              {
+                continue;
+              }
             }
-          }
 
-          if(tile.GetAtom(atomLoc)->IsSane())
-          {
             RenderAtom(drawing, atomLoc, rendPt, tile, lowlight);
           }
-          else
+        }
+      }
+    }
+  }
+
+
+  template <class CC>
+  void TileRenderer::RenderBadAtom(Drawing& drawing, const UPoint& rendPt)
+  {
+    for(s32 x = 0; x < (s32)m_atomDrawSize; x++)
+    {
+      for(s32 y = 0; y < (s32)m_atomDrawSize; y++)
+      {
+        if((x + y + 1) & 4)
+        {
+          drawing.SetForeground(Drawing::YELLOW);
+        }
+        else
+        {
+          drawing.SetForeground(Drawing::BLACK);
+        }
+        drawing.FillRect(rendPt.GetX() + x,
+                         rendPt.GetY() + y, 1, 1);
+      }
+    }
+  }
+
+  template <class CC>
+  void TileRenderer::RenderAtom(Drawing & drawing, const SPoint& atomLoc,
+                                const UPoint& rendPt,  Tile<CC>& tile, bool lowlight)
+  {
+    const typename CC::ATOM_TYPE * atom = tile.GetAtom(atomLoc);
+    if(!atom->IsSane())
+    {
+      RenderBadAtom<CC>(drawing, rendPt);
+    }
+    else if(atom->GetType() != Element_Empty<CC>::THE_INSTANCE.GetType())
+    {
+      u32 color;
+      if(m_drawDataHeat)
+      {
+        color = GetDataHeatColor(tile, *atom);
+      }
+      else
+      {
+        color = GetAtomColor(tile, *atom);
+      }
+
+      if(lowlight)
+      {
+        color = Drawing::HalfColor(color);
+      }
+
+      if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX() &&
+         rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
+      {
+        if(color)
+        {
+          // Round up on radius.  Better to overlap than vanish
+          u32 radius = (m_atomDrawSize + 1) / 2;
+
+          drawing.SetForeground(color);
+          drawing.FillCircle(rendPt.GetX(),
+                             rendPt.GetY(),
+                             m_atomDrawSize,
+                             m_atomDrawSize,
+                             radius);
+
+          if (m_atomDrawSize > 40)
           {
-            for(s32 x = 0; x < (s32) m_atomDrawSize; x++)
+            const Element<CC> * elt = tile.GetElement(atom->GetType());
+            if (elt)
             {
-              for(s32 y = 0; y < (s32) m_atomDrawSize; y++)
+              drawing.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
+              const char * sym = elt->GetAtomicSymbol();
+              const SPoint size = drawing.GetTextSize(sym);
+              const UPoint box = UPoint(m_atomDrawSize, m_atomDrawSize);
+              if (size.GetX() > 0 && size.GetY() > 0)
               {
-                if((x + y + 1) & 4)
-                {
-                  drawing.SetForeground(Drawing::YELLOW);
-                }
-                else
-                {
-                  drawing.SetForeground(Drawing::BLACK);
-                }
-                drawing.FillRect(rendPt.GetX() + x,
-                                 rendPt.GetY() + y, 1, 1);
+                const UPoint usize(size.GetX(), size.GetY());
+                drawing.SetBackground(Drawing::BLACK);
+                drawing.SetForeground(Drawing::WHITE);
+                drawing.BlitBackedTextCentered(sym, rendPt, box);
               }
             }
           }
@@ -110,66 +177,6 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
       }
     }
   }
-}
-
-  template <class CC>
-  void TileRenderer::RenderAtom(Drawing & drawing, const SPoint& atomLoc, const UPoint& rendPt,  Tile<CC>& tile, bool lowlight)
-{
-  const typename CC::ATOM_TYPE * atom = tile.GetAtom(atomLoc);
-  if(atom->GetType() != Element_Empty<CC>::THE_INSTANCE.GetType())
-  {
-    u32 color;
-    if(m_drawDataHeat)
-    {
-      color = GetDataHeatColor(tile, *atom);
-    }
-    else
-    {
-      color = GetAtomColor(tile, *atom);
-    }
-
-    if(lowlight)
-    {
-      color = Drawing::HalfColor(color);
-    }
-
-    if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX() &&
-       rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
-    {
-      if(color)
-      {
-        // Round up on radius.  Better to overlap than vanish
-        u32 radius = (m_atomDrawSize + 1) / 2;
-
-        drawing.SetForeground(color);
-        drawing.FillCircle(rendPt.GetX(),
-                           rendPt.GetY(),
-                           m_atomDrawSize,
-                           m_atomDrawSize,
-                           radius);
-
-        if (m_atomDrawSize > 40)
-        {
-          const Element<CC> * elt = tile.GetElement(atom->GetType());
-          if (elt)
-          {
-            drawing.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
-            const char * sym = elt->GetAtomicSymbol();
-            const SPoint size = drawing.GetTextSize(sym);
-            const UPoint box = UPoint(m_atomDrawSize, m_atomDrawSize);
-            if (size.GetX() > 0 && size.GetY() > 0)
-            {
-              const UPoint usize(size.GetX(), size.GetY());
-              drawing.SetBackground(Drawing::BLACK);
-              drawing.SetForeground(Drawing::WHITE);
-              drawing.BlitBackedTextCentered(sym, rendPt, box);
-            }
-          }
-        }
-      }
-    }
-  }
-}
 
   template <class CC>
   void TileRenderer::RenderTile(Drawing & drawing, Tile<CC>& t, SPoint& loc, bool renderWindow,
@@ -198,9 +205,7 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
     realPt.Add(m_windowTL);
 
     if(realPt.GetX() + tileHeight >= 0 &&
-       realPt.GetY() + tileHeight >= 0 /* &&  Go ahead and draw, we'll clip?
-                                          realPt.GetX() < (s32)m_dest->w &&
-                                          realPt.GetY() < (s32)m_dest->h*/)
+       realPt.GetY() + tileHeight >= 0)
     {
       switch (m_drawMemRegions)
       {
@@ -248,7 +253,8 @@ void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
   }
 
   template <class CC>
-  void TileRenderer::RenderEventWindow(Drawing & drawing, SPoint& offset, Tile<CC>& tile, bool renderCache)
+  void TileRenderer::RenderEventWindow(Drawing & drawing, SPoint& offset,
+                                       Tile<CC>& tile, bool renderCache)
   {
     // Extract short type names
     typedef typename CC::PARAM_CONFIG P;

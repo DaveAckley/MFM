@@ -85,6 +85,9 @@ namespace MFM
                     Tile<CC>& tile, bool lowlight);
 
     template <class CC>
+    void RenderBadAtom(Drawing& drawing, const UPoint& rendPt);
+
+    template <class CC>
     u32 GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom, u32 selector = 0);
 
     template <class CC>

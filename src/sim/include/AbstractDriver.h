@@ -408,7 +408,6 @@ namespace MFM
 
     bool m_gridImages;
     bool m_tileImages;
-    //    s32 m_recordTimeBasedDataPerAEPS;
 
     double m_AEPS;
     /**
@@ -535,14 +534,6 @@ namespace MFM
     {
       ((AbstractDriver*)driver)->m_tileImages = 1;
     }
-
-    /*
-    static void SetRecordTimeBasedDataFromArgs(const char* tbdStr, void* driver)
-    {
-      u32 tbdAEPS = atoi(tbdStr);
-      ((AbstractDriver*)driver)->m_recordTimeBasedDataPerAEPS = tbdAEPS;
-    }
-    */
 
     static void SetDataDirFromArgs(const char* dirPath, void* driverPtr)
     {
@@ -743,6 +734,8 @@ namespace MFM
         fclose(fp);
       }
 
+
+
       if (m_autosavePerEpochs > 0 && (epochs % m_autosavePerEpochs) == 0)
       {
         this->AutosaveGrid(epochs);
@@ -867,12 +860,6 @@ namespace MFM
 
       RegisterArgument("Each epoch, write tile AEPS image to per-sim teps/ directory",
                        "--tileImages", &SetTileImages, this, false);
-
-      /*
-      RegisterArgument("Records time based data every ARG aeps",
-                       "-t|--timebd",
-                       &SetRecordTimeBasedDataFromArgs, this, true);
-      */
 
       RegisterArgument("If ARG > 0, Halts after ARG elapsed aeps.",
                        "--haltafteraeps", &SetHaltAfterAEPSFromArgs, this, true);

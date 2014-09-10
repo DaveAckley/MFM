@@ -2,7 +2,6 @@
 
 namespace MFM
 {
-
   /////
   // Standard model
 
@@ -37,30 +36,30 @@ namespace MFM
 
     virtual void DefineNeededElements()
     {
-      NeedElement(&Element_Empty<CC>::THE_INSTANCE);
-      NeedElement(&Element_Wall<CC>::THE_INSTANCE);
-      NeedElement(&Element_Res<CC>::THE_INSTANCE);
-      NeedElement(&Element_Dreg<CC>::THE_INSTANCE);
-      NeedElement(&Element_Sorter<CC>::THE_INSTANCE);
-      NeedElement(&Element_Data<CC>::THE_INSTANCE);
-      NeedElement(&Element_Emitter<CC>::THE_INSTANCE);
-      NeedElement(&Element_Consumer<CC>::THE_INSTANCE);
-      NeedElement(&Element_Block<CC>::THE_INSTANCE);
-      NeedElement(&Element_ForkBomb1<CC>::THE_INSTANCE);
-      NeedElement(&Element_ForkBomb2<CC>::THE_INSTANCE);
-      NeedElement(&Element_ForkBomb3<CC>::THE_INSTANCE);
-      NeedElement(&Element_AntiForkBomb<CC>::THE_INSTANCE);
-      NeedElement(&Element_MQBar<CC>::THE_INSTANCE);
-      NeedElement(&Element_Mover<CC>::THE_INSTANCE);
-      NeedElement(&Element_Indexed<CC>::THE_INSTANCE);
-      NeedElement(&Element_Fish<CC>::THE_INSTANCE);
-      NeedElement(&Element_Shark<CC>::THE_INSTANCE);
-      NeedElement(&Element_Xtal_Sq1<CC>::THE_INSTANCE);
-      NeedElement(&Element_Xtal_L12<CC>::THE_INSTANCE);
-      NeedElement(&Element_Xtal_R12<CC>::THE_INSTANCE);
-      NeedElement(&Element_Xtal_General<CC>::THE_INSTANCE);
-      NeedElement(&Element_Creg<CC>::THE_INSTANCE);
-      NeedElement(&Element_Dmover<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Empty<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Wall<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Res<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Dreg<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Sorter<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Data<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Emitter<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Consumer<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Block<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_ForkBomb1<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_ForkBomb2<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_ForkBomb3<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_AntiForkBomb<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_MQBar<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Mover<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Indexed<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Fish<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Shark<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Xtal_Sq1<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Xtal_L12<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Xtal_R12<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Xtal_General<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Creg<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Dmover<CC>::THE_INSTANCE);
     }
 
   public:

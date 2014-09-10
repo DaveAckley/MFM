@@ -37,7 +37,6 @@ namespace MFM
   class Parameters
   {
    public:
-
     enum KnownParameterTypes
     {
       S32_PARAMETER = 1,
@@ -46,7 +45,9 @@ namespace MFM
       ILLEGAL_PARAMETER = 0
     };
 
-    class Parameter : public ByteSerializable {
+    class Parameter : public ByteSerializable
+    {
+     private:
       const char * m_tag;
       const char * m_name;
       const char * m_description;
@@ -55,9 +56,11 @@ namespace MFM
       Parameter * m_next;
 
     public:
-
-      Parameter(Parameters & c, const char * tag, const char * name, const char * description)
-        : m_tag(tag), m_name(name), m_description(description), m_next(0)
+      Parameter(Parameters& c, const char* tag, const char* name, const char* description)
+        : m_tag(tag),
+          m_name(name),
+          m_description(description),
+          m_next(0)
       {
         if (!m_tag || !m_name || !m_description)
         {
@@ -77,8 +80,7 @@ namespace MFM
       virtual bool Read(ByteSource & bs) = 0;
 
       virtual ~Parameter()
-      {
-      }
+      { }
 
       const char* GetTag() const
       {
@@ -95,12 +97,14 @@ namespace MFM
         return m_description;
       }
 
-      Result PrintTo(ByteSink & bs, s32 argument = 0) {
+      Result PrintTo(ByteSink & bs, s32 argument = 0)
+      {
         Print(bs);
         return SUCCESS;
       }
 
-      Result ReadFrom(ByteSource & bs, s32 argument = 0) {
+      Result ReadFrom(ByteSource & bs, s32 argument = 0)
+      {
         if (Read(bs))
           return SUCCESS;
         return FAILURE;
@@ -149,12 +153,16 @@ namespace MFM
         return true;
       }
 
-      S32(Parameters & c,
-          const char * tag,
-          const char * name,
-          const char * description,
+      S32(Parameters& c,
+          const char* tag,
+          const char* name,
+          const char* description,
           s32 min, s32 initial, s32 max, s32 snap)
-        : Parameter(c, tag, name, description), m_min(min), m_initial(initial), m_max(max), m_snap(snap)
+        : Parameter(c, tag, name, description),
+          m_min(min),
+          m_initial(initial),
+          m_max(max),
+          m_snap(snap)
       {
         if (m_max < m_min)
         {
@@ -203,6 +211,8 @@ namespace MFM
        * Gets the snapping resolution of a parameter. This is used to
        * snap a slider to a particular number of values. If not
        * specified, the default is one.
+       *
+       * @returns The snapping resolution of this Parameter.
        */
       virtual u32 GetSnap() const
       {
@@ -255,12 +265,13 @@ namespace MFM
         return false;
       }
 
-      Bool(Parameters & c,
-          const char * tag,
-          const char * name,
-          const char * description,
+      Bool(Parameters& c,
+          const char* tag,
+          const char* name,
+          const char* description,
           bool initial)
-        : Parameter(c, tag, name, description), m_initial(initial)
+        : Parameter(c, tag, name, description),
+          m_initial(initial)
       {
         SetValue(m_initial);
       }
@@ -370,9 +381,7 @@ namespace MFM
     }
 
   private:
-
-    Parameter * m_firstParameter;
-
+    Parameter* m_firstParameter;
   };
 }
 
