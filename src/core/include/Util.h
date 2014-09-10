@@ -73,6 +73,10 @@ namespace MFM {
     return -1;
   }
 
+  inline static u32 PopCount(const u32 bits) {
+    return __builtin_popcount(bits); // GCC
+  }
+
   template <class T>
   inline T MAX(T x, T y) {
     return (x > y) ? x : y;
