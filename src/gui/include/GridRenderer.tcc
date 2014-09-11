@@ -129,8 +129,6 @@ namespace MFM
 
     m_hoveredAtom.Set(m_selectedAtom.GetX(), m_selectedAtom.GetY());
     m_selectedAtom.Set(selectedAtom.GetX(), selectedAtom.GetY());
-
-    LOG.Debug("Hovered Atom: (%d, %d)", m_hoveredAtom.GetX(), m_hoveredAtom.GetY());
   }
 
   template <class GC>

@@ -44,3 +44,4 @@ tools/cpplint.py
 # I'm putting my research files in the elements folder.
 src/elements/include/Element_City_*
 src/elements/src/Element_City_*
+src/drivers/mfmcity
