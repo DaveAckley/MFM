@@ -33,8 +33,8 @@ ifndef COMMANDS
   MAKEFLAGS += --quiet
 endif
 
-ifndef DSHARED_DIR
-  DSHARED_DIR := $(shell readlink -e $(BASEDIR))
+ifndef SHARED_DIR
+  SHARED_DIR := $(shell readlink -e $(BASEDIR))
 endif
 
 ifdef FIND_DEAD_CODE
@@ -49,8 +49,8 @@ endif
 
 # Common flags: All about errors -- let's help them help us
 # Also: We need pthread!
-COMMON_CFLAGS+=-Wall -pedantic -Werror -Wundef -D DSHARED_DIR=\"$(DSHARED_DIR)\" -pthread
-COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror -D DSHARED_DIR=\"$(DSHARED_DIR)\" -pthread
+COMMON_CFLAGS+=-Wall -pedantic -Werror -Wundef -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
+COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
 COMMON_LDFLAGS+=-Wl,--fatal-warnings -pthread
 
 # Native tool chain
