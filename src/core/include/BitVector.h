@@ -37,11 +37,11 @@
 namespace MFM {
 
   inline s32 _SignExtend32(u32 val, u32 bitwidth) {
-    return ((s32)(val<<(32-bitwidth)))>>bitwidth;
+    return ((s32)(val<<(32-bitwidth)))>>(32-bitwidth);
   }
 
   inline s64 _SignExtend64(u64 val, u32 bitwidth) {
-    return ((s64)(val<<(64-bitwidth)))>>bitwidth;
+    return ((s64)(val<<(64-bitwidth)))>>(64-bitwidth);
   }
 
   inline u32 _GetNOnes32(u32 bitwidth) {
