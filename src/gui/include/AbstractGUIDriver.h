@@ -1266,22 +1266,6 @@ namespace MFM
             fclose(fp);
           }
 
-          /*
-            // Are we accelerating and not yet up to cruising speed?
-            if (m_countOfScreenshotsPerRate > 0 &&
-                m_recordScreenshotPerAEPS < m_maxRecordScreenshotPerAEPS)
-            {
-
-              // Time to step on it?
-              if (++m_countOfScreenshotsAtThisAEPS > m_countOfScreenshotsPerRate)
-              {
-                ++m_recordScreenshotPerAEPS;
-                m_countOfScreenshotsAtThisAEPS = 0;
-              }
-            }
-
-            m_nextScreenshotAEPS += m_recordScreenshotPerAEPS;
-          */
         }
 
         if(Super::GetHaltAfterAEPS() > 0 &&
