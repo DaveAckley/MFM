@@ -777,44 +777,6 @@ namespace MFM
       m_keyboard.Flip();
     }
 
-
-#if 0
-    void ExportTimeBasedData(OurGrid& grid)
-    {
-      /* Current header : */
-      /* # AEPS activesites empty dreg res wall sort-hits sort-misses sort-total sort-hit-pctg sort-bucket-miss-average*/
-
-      if(m_recordTimeBasedDataPerAEPS > 0)
-      {
-        if(m_AEPS > m_nextTimeBasedDataAEPS)
-        {
-          const char* path = GetSimDirPathTemporary("tbd/tbd.txt", m_nextEventCountsAEPS);
-          FILE* fp = fopen(path, "a");
-
-          u64 consumed = 0, totalError = 0;
-          for (OurGrid::iterator_type i = grid.begin(); i != grid.end(); ++i) {
-            Tile<CC> * t = *i;
-            consumed += Element_Consumer<CC>::THE_INSTANCE.GetAndResetDatumsConsumed(*t);
-            totalError += Element_Consumer<CC>::THE_INSTANCE.GetAndResetBucketError(*t);
-          }
-
-          fprintf(fp, "%g %d %d %d %d %d %ld %ld\n",
-                  m_AEPS,
-                  grid.CountActiveSites(),
-                  grid.GetAtomCount(Element_Empty<CC>::TYPE),
-                  grid.GetAtomCount(Element_Dreg<CC>::TYPE),
-                  grid.GetAtomCount(Element_Res<CC>::TYPE),
-                  grid.GetAtomCount(Element_Wall<CC>::TYPE),
-                  consumed, totalError);
-
-          fclose(fp);
-          m_nextTimeBasedDataAEPS += m_recordTimeBasedDataPerAEPS;
-        }
-      }
-    }
-#endif
-
-
   public:
 
     void SaveGridWithNextFilename()
