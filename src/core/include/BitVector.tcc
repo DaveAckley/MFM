@@ -179,6 +179,15 @@ namespace MFM {
   }
 
   template <u32 BITS>
+  void BitVector<BITS>::PrintBinary(ByteSink& ostream) const
+  {
+    for(u32 i = 0; i < BITS; i++)
+    {
+      ostream.Printf("%d", Read(i, 1) ? 1 : 0);
+    }
+  }
+
+  template <u32 BITS>
   bool BitVector<BITS>::Read(ByteSource & istream)
   {
     istream.SkipWhitespace();
@@ -193,6 +202,27 @@ namespace MFM {
       }
 
       temp.Write(i, 4, hex);
+    }
+
+    *this = temp;
+    return true;
+  }
+
+  template <u32 BITS>
+  bool BitVector<BITS>::ReadBinary(ByteSource& istream)
+  {
+    istream.SkipWhitespace();
+
+    BitVector<BITS> temp;
+    for(u32 i = 0; i < BITS; i++)
+    {
+      s32 bit;
+      if(!istream.Scan(bit, Format::BIN, 1))
+      {
+        return false;
+      }
+
+      temp.Write(i, 1, bit);
     }
 
     *this = temp;

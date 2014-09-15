@@ -334,19 +334,44 @@ namespace MFM {
     void Print(ByteSink & ostream) const;
 
     /**
+     * Prints the bits held in this BitVector to a specified ByteSink
+     * in binary format.
+     *
+     * @param ostream The ByteSink to print bits to.
+     */
+    void PrintBinary(ByteSink& ostream) const;
+
+    /**
      * Load this BitVector from a specified ByteSource by reading BITS
-     * / 4 bytes in hex format.  Skips leading whitespace.  Returns
+     * / 4 bytes in hex format.  Skips leading whitespace.  Returns \c
      * true if all went well; returns false if insufficient
      * consecutive hex bytes were available to fully initialize the
-     * BitVector.  When false is returned the ByteSource will be
+     * BitVector .  When false is returned the ByteSource will be
      * positioned just before the first unacceptable byte encountered,
      * and the BitVector will be unchanged.
      *
      * @param istream The ByteSource to read bytes from.
+     *
+     * @returns \c true if all went well, else \c false .
      */
-    bool Read(ByteSource & bs) ;
+    bool Read(ByteSource & bs);
 
-    bool operator==(const BitVector & rhs) const ;
+    /**
+     * Load this BitVector from a specified ByteSource by reading BITS
+     * bytes in binary format. Skips leading whitespace. Returns \c
+     * true if all went well; returns \c false if insufficient
+     * consecutive binary bytes were available to fully initialize the
+     * BitVector . When \c false is returned, the ByteSource will be
+     * positioned just before the first unacceptable byte encountered,
+     * and the BitVector will be unchanged.
+     *
+     * @param istream The ByteSource to read bytes from.
+     *
+     * @returns \c true if all went well, else \c false .
+     */
+    bool ReadBinary(ByteSource& bs);
+
+    bool operator==(const BitVector & rhs) const;
 
   };
 } /* namespace MFM */

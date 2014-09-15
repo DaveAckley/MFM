@@ -51,7 +51,6 @@
 #include "Element_Consumer.h"
 #include "ExternalConfig.h"
 #include "FileByteSource.h"
-#include "NeighborSelectPanel.h"
 #include "Keyboard.h"
 #include "Camera.h"
 #include "AbstractDriver.h"
