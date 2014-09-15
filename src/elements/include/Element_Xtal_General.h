@@ -20,8 +20,8 @@
 
 /**
   \file Element_Xtal_General.h Right-tipped, knight's-J-move crystal
-  \author Trent R. Small.
   \author David H. Ackley.
+  \author Trent R. Small.
   \date (C) 2014 All rights reserved.
   \lgpl
  */
