@@ -92,6 +92,10 @@ namespace MFM
         {
           this->GetBits(defaultAtom).SetBit(i + SITE_PART1_POS);
         }
+        else
+        {
+          this->GetBits(defaultAtom).ClearBit(i + SITE_PART1_POS);
+        }
       }
 
       return defaultAtom;

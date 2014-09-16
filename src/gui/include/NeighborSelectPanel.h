@@ -96,7 +96,7 @@ namespace MFM
       {
         Parameters::Neighborhood<R>* np =
           Parameters::Neighborhood<R>::Cast(ParameterController::GetParameter());
-        np->SetBit(bitNum);
+        np->ClearBit(bitNum);
       }
     }
 
