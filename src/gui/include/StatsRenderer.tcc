@@ -199,8 +199,9 @@ namespace MFM {
     fp.Print(" ");
     fp.Print(AEPSperFrame);
     fp.Print(" ");
-    fp.Printf("%d", (u32) (100.0*aer));
-    fp.Printf("%d", (u32) (100.0*overhead));
+    fp.Print((u64)(100.0 * aer));
+    fp.Print(" ");
+    fp.Print((u64)(100.0 * overhead));
 
     for (u32 i = 0; i < m_reportersInUse; ++i)
     {
