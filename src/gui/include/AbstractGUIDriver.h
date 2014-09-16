@@ -516,7 +516,7 @@ namespace MFM
       if (!getenv("SDL_VIDEO_ALLOW_SCREENSAVER"))          // If user isn't already messing with this
         putenv((char *) "SDL_VIDEO_ALLOW_SCREENSAVER=1");  // Old school sdl 1.2 mechanism
 
-      SDL_Init(SDL_INIT_VIDEO);
+      SDL_Init(SDL_INIT_EVERYTHING);
 
       SetScreenSize(m_screenWidth, m_screenHeight);
 
