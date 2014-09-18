@@ -89,6 +89,8 @@ namespace MFM
      */
     bool m_enabled;
 
+    bool m_justClicked;
+
     /**
      * Initializes this AbstractButton with default values.
      */
@@ -261,6 +263,7 @@ namespace MFM
         }
         if (event.m_event.type == SDL_MOUSEBUTTONUP)      // Execute on up
         {
+          m_justClicked = true;
           OnClick(event.m_event.button.button);
           return true;                                     // We took it
         }
@@ -277,7 +280,22 @@ namespace MFM
       /* As a button, do nothing. */
     }
 
-    virtual void PaintComponent(Drawing & config) ;
+    bool PaintClickHighlight(Drawing& d)
+    {
+      if(m_justClicked)
+      {
+        m_justClicked = false;
+        d.SetForeground(Drawing::YELLOW);
+        d.FillRect(0, 0,
+                   this->Panel::GetDimensions().GetX(), this->Panel::GetDimensions().GetY());
+        return true;
+      }
+      return false;
+    }
+
+    virtual void PaintComponentNonClick(Drawing& d);
+
+    virtual void PaintComponent(Drawing & d);
 
     /**
      * Pure abstract behavior method. This is called if this
