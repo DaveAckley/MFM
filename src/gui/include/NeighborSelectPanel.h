@@ -190,8 +190,6 @@ namespace MFM
                        event.GetAt().GetY() - Panel::GetRenderPoint().GetY());
         buttonRect.SetSize(UPoint(CELL_SIZE, CELL_SIZE));
 
-        LOG.Debug("clicky");
-
         for(u32 i = n.GetFirstIndex(0); i <= n.GetLastIndex(R); i++)
         {
           buttonRect.SetPosition(SPoint(offset + (CELL_SIZE - 1) * n.GetPoint(i).GetX(),

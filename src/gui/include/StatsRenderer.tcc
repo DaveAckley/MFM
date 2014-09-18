@@ -25,7 +25,7 @@ namespace MFM {
     const u32 DETAIL_ROW_HEIGHT = DETAIL_LINE_HEIGHT_PIXELS;
     u32 baseY = 0;
 
-    drawing.SetFont(m_detailFont);
+    drawing.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
     drawing.SetForeground(Drawing::GREY80);
 
     do  // So we can break when done
@@ -112,12 +112,12 @@ namespace MFM {
       baseY += ROW_HEIGHT/2;
     }
 
-    drawing.SetFont(m_drawFont);
+    drawing.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
     drawing.SetForeground(Drawing::WHITE);
 
     sprintf(strBuffer, "%8.3f kAEPS", aeps/1000.0);
 
-    drawing.SetFont(m_drawFont);
+    drawing.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
     drawing.SetForeground(Drawing::WHITE);
     drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
                      Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
@@ -148,7 +148,7 @@ namespace MFM {
 
         output.Printf("%2s %s",datavalue.GetZString(), cs->GetLabel());
 
-        drawing.SetFont(m_drawFont);
+        drawing.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
         drawing.SetForeground(0xffffffff);
         drawing.BlitText(output.GetZString(), Point<u32>(m_drawPoint.GetX(), baseY),
                          Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));

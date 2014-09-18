@@ -98,8 +98,6 @@ namespace MFM
     u32 m_saveStateIndex;
     u32 m_epochSaveStateIndex;
 
-    Fonts m_fonts;
-
     bool m_keyboardPaused;   // Toggled by keyboard space, ' ', SDLK_SPACE
     bool m_singleStep;       // Toggled by Step check box, 's', SDLK_SPACE
     bool m_mousePaused;      // Set if any buttons down, clear if all up
@@ -517,10 +515,9 @@ namespace MFM
         putenv((char *) "SDL_VIDEO_ALLOW_SCREENSAVER=1");  // Old school sdl 1.2 mechanism
 
       SDL_Init(SDL_INIT_EVERYTHING);
+      TTF_Init();
 
       SetScreenSize(m_screenWidth, m_screenHeight);
-
-      m_fonts.Init();
 
       m_rootPanel.SetName("Root");
       m_gridPanel.SetBorder(Drawing::BLACK);
@@ -546,7 +543,7 @@ namespace MFM
       m_logPanel.SetDimensions(m_screenWidth, 160);
       m_logPanel.SetDesiredSize(U32_MAX, 160);
       m_logPanel.SetAnchor(ANCHOR_SOUTH);
-      m_logPanel.SetFont(m_fonts.GetDefaultFont(16));
+      m_logPanel.SetFont(AssetManager::Get(FONT_ASSET_LOGGER));
 
       m_toolboxPanel.SetName("Toolbox");
       m_toolboxPanel.SetVisibility(false);
@@ -563,7 +560,7 @@ namespace MFM
 
       m_rootPanel.Print(STDOUT);
 
-      m_srend.OnceOnly(m_fonts);
+      m_srend.OnceOnly();
 
       SDL_WM_SetCaption(MFM_VERSION_STRING_LONG, NULL);
 
@@ -804,7 +801,7 @@ namespace MFM
       m_screenHeight(SCREEN_INITIAL_HEIGHT),
       m_selectedTool(TOOL_SELECTOR),
       m_toolboxPanel(&m_selectedTool),
-      m_buttonPanel(m_fonts)
+      m_buttonPanel()
     { }
 
     ~AbstractGUIDriver()
@@ -1009,7 +1006,7 @@ namespace MFM
       virtual void PaintBorder(Drawing & config)
       { /* No border please */ }
 
-      ButtonPanel(Fonts & fonts) :
+      ButtonPanel() :
         m_checkboxCount(0),
         m_buttonCount(0)
       {
@@ -1024,7 +1021,7 @@ namespace MFM
         */
         SetForeground(Drawing::WHITE);
         SetBackground(Drawing::DARK_PURPLE);
-        SetFont(fonts.GetDefaultFont(20));
+        SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
       }
 
       void InsertCheckbox(AbstractGridCheckbox* checkbox)
@@ -1132,7 +1129,7 @@ namespace MFM
       m_rootPanel.SetBackground(Drawing::RED);
       m_rootPanel.HandleResize(newDimensions);
 
-      m_rootDrawing.Reset(screen, m_fonts.GetDefaultFont());
+      m_rootDrawing.Reset(screen, AssetManager::Get(FONT_ASSET_ELEMENT));
 
       if(m_renderStats)
       {
@@ -1280,6 +1277,7 @@ namespace MFM
       }
 
       SDL_FreeSurface(screen);
+      TTF_Quit();
       SDL_Quit();
     }
   };

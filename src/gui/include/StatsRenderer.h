@@ -28,12 +28,12 @@
 #define STATSRENDERER_H
 
 #include "AbstractButton.h"
+#include "AssetManager.h"
 #include "SDL_ttf.h"
 #include "Grid.h"
 #include "Utils.h"
 #include "itype.h"
 #include "Point.h"
-#include "Fonts.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
@@ -224,9 +224,6 @@ namespace MFM {
     UPoint m_dimensions;
     SPoint m_drawPoint;
 
-    TTF_Font* m_drawFont;
-    TTF_Font* m_detailFont;
-
     static const u32 MAX_TYPES = 32;
     const DataReporter *(m_reporters[MAX_TYPES]);
     u32 m_reportersInUse;
@@ -243,8 +240,6 @@ namespace MFM {
 
   public:
     StatsRenderer() :
-      m_drawFont(0),
-      m_detailFont(0),
       m_reportersInUse(0),
       m_displayElementsInUse(0),
       m_displayAER(0),
@@ -286,11 +281,8 @@ namespace MFM {
       m_buttons[m_registeredButtons++] = b;
     }
 
-    void OnceOnly(Fonts & fonts)
-    {
-      m_drawFont = fonts.GetDefaultFont(LINE_HEIGHT_PIXELS - 2);
-      m_detailFont = fonts.GetDefaultFont(DETAIL_LINE_HEIGHT_PIXELS - 2);
-    }
+    void OnceOnly()
+    { }
 
     u32 GetDisplayAER() const
     {
@@ -328,17 +320,6 @@ namespace MFM {
       u32 index = m_displayElementsInUse++;
       m_displayElements[index].Set(&grd,&elt);
       return DisplayDataReporter(&m_displayElements[index]);
-    }
-
-    ~StatsRenderer()
-    {
-      /* Sometimes these are the same. Only close one! */
-      if(m_drawFont != m_detailFont)
-      {
-        TTF_CloseFont(m_drawFont);
-        TTF_CloseFont(m_detailFont);
-      }
-      TTF_CloseFont(m_drawFont);
     }
 
     void SetDrawPoint(Point<s32> drawPoint)
