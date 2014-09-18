@@ -169,17 +169,26 @@ namespace MFM {
     enum { H = GC::GRID_HEIGHT};
     enum { R = P::EVENT_WINDOW_RADIUS};
 
-    if (writeHeader) {
+    if (writeHeader)
+    {
       fp.Printf("# AEPS AEPSperFrame AER100 pctOvrhd100");
-      for (u32 i = 0; i < m_reportersInUse; ++i) {
+      for (u32 i = 0; i < m_reportersInUse; ++i)
+      {
         const DataReporter * cs = m_reporters[i];
         // What's this for?        if (cs->GetDecimalPlaces() < 0) continue;
 
         // Try to ensure splitting on spaces will get the right number of names
         fp.WriteByte(' ');
-        for (const char * p = cs->GetLabel(); *p; ++p) {
-          if (isspace(*p)) fp.WriteByte('_');
-          else fp.WriteByte(*p);
+        for (const char * p = cs->GetLabel(); *p; ++p)
+        {
+          if (isspace(*p))
+          {
+            fp.WriteByte('_');
+          }
+          else
+          {
+            fp.WriteByte(*p);
+          }
         }
       }
       fp.Println();
@@ -190,10 +199,12 @@ namespace MFM {
     fp.Print(" ");
     fp.Print(AEPSperFrame);
     fp.Print(" ");
-    fp.Printf("%d", (u32) (100.0*aer));
-    fp.Printf("%d", (u32) (100.0*overhead));
+    fp.Print((u64)(100.0 * aer));
+    fp.Print(" ");
+    fp.Print((u64)(100.0 * overhead));
 
-    for (u32 i = 0; i < m_reportersInUse; ++i) {
+    for (u32 i = 0; i < m_reportersInUse; ++i)
+    {
       const DataReporter * cs = m_reporters[i];
       //if (cs->GetDecimalPlaces() < 0) continue;
       fp.Print(" ");

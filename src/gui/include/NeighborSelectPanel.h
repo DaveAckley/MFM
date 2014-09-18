@@ -28,12 +28,21 @@
 #define NEIGHBOR_SELECT_PANEL_H
 
 #include "Panel.h"
+#include "Parameters.h"
+#include "ParameterController.h"
 
 namespace MFM
 {
   template <u32 R>
-  class NeighborSelectPanel : public Panel
+  class NeighborSelectPanel : public ParameterController
   {
+   public:
+    typedef enum
+    {
+      NEIGHBOR_SELECT_MANY = 0,
+      NEIGHBOR_SELECT_ONE
+    }NeighborhoodSelectMode;
+
    private:
     enum
     {
@@ -41,11 +50,16 @@ namespace MFM
       BORDER_SIZE = 4
     };
 
+    NeighborhoodSelectMode m_selectMode;
+
+    SPoint m_selectedOne;
+
+    //TODO Change this to SITES
+    BitVector<128> m_bitField;
+
     const char* m_text;
 
     static const u32 ENABLED_COLOR = 0xff20a020;
-
-    BitVector<128> m_bitField;
 
     MDist<R> GetNeighborhood()
     {
@@ -67,28 +81,28 @@ namespace MFM
     void SetBit(u32 bitNum)
     {
       m_bitField.WriteBit(bitNum, true);
+      if(ParameterController::GetParameter())
+      {
+        Parameters::Neighborhood<R>* np =
+          Parameters::Neighborhood<R>::Cast(ParameterController::GetParameter());
+        np->SetBit(bitNum);
+      }
     }
 
     void ClearBit(u32 bitNum)
     {
       m_bitField.WriteBit(bitNum, false);
+      if(ParameterController::GetParameter())
+      {
+        Parameters::Neighborhood<R>* np =
+          Parameters::Neighborhood<R>::Cast(ParameterController::GetParameter());
+        np->ClearBit(bitNum);
+      }
     }
 
     bool IsBitOn(u32 bitNum)
     {
       return m_bitField.ReadBit(bitNum);
-    }
-
-   public:
-    NeighborSelectPanel() :
-      Panel()
-    {
-      Panel::SetDesiredSize(300, (2 * BORDER_SIZE) + (R * 2 + 1) * CELL_SIZE);
-    }
-
-    void SetText(const char* text)
-    {
-      m_text = text;
     }
 
     void PaintButtons(Drawing& d)
@@ -105,16 +119,54 @@ namespace MFM
         d.SetForeground(Drawing::BLACK);
         d.FillRect(renderPt.GetX(), renderPt.GetY(), CELL_SIZE, CELL_SIZE);
 
-        if(IsBitOn(i - n.GetFirstIndex(0)))
+        switch(m_selectMode)
         {
-          d.SetForeground(ENABLED_COLOR);
-        }
-        else
-        {
-          d.SetForeground(Panel::GetForeground());
+        case NEIGHBOR_SELECT_MANY:
+          d.SetForeground(IsBitOn(i - n.GetFirstIndex(0)) ?
+                          ENABLED_COLOR : Panel::GetForeground());
+          break;
+        case NEIGHBOR_SELECT_ONE:
+          d.SetForeground(n.GetPoint(i).Equals(m_selectedOne) ?
+                          ENABLED_COLOR : Panel::GetForeground());
         }
         d.FillRect(renderPt.GetX() + 1, renderPt.GetY() + 1, CELL_SIZE - 2, CELL_SIZE - 2);
       }
+    }
+
+    void PaintText(Drawing& d)
+    {
+      UPoint textLoc(R * (CELL_SIZE + 1) * 2 + BORDER_SIZE,
+                     R * (CELL_SIZE - 1) + BORDER_SIZE);
+
+      d.SetForeground(Drawing::WHITE);
+      d.SetBackground(Drawing::GREY40);
+      d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
+      if(m_text)
+      {
+        d.BlitBackedText(m_text, textLoc, MakeUnsigned(d.GetTextSize(m_text)));
+      }
+    }
+
+   public:
+    NeighborSelectPanel() :
+      ParameterController(),
+      m_selectMode(NEIGHBOR_SELECT_MANY),
+      m_selectedOne(0, 0)
+    {
+      Panel::SetDesiredSize(300, (2 * BORDER_SIZE) + (R * 2 + 1) * CELL_SIZE);
+      Panel::SetForeground(Drawing::GREY80);
+    }
+
+    void SetSelectMode(NeighborhoodSelectMode mode)
+    {
+      m_selectMode = mode;
+      m_bitField.Clear();
+      m_selectedOne(0, 0);
+    }
+
+    void SetText(const char* text)
+    {
+      m_text = text;
     }
 
     virtual void PaintComponent(Drawing& d)
@@ -123,6 +175,7 @@ namespace MFM
       d.FillRect(0, 0, Panel::GetDimensions().GetX(), Panel::GetDimensions().GetY());
 
       PaintButtons(d);
+      PaintText(d);
     }
 
     virtual bool Handle(MouseButtonEvent& event)
@@ -137,14 +190,24 @@ namespace MFM
                        event.GetAt().GetY() - Panel::GetRenderPoint().GetY());
         buttonRect.SetSize(UPoint(CELL_SIZE, CELL_SIZE));
 
+        LOG.Debug("clicky");
+
         for(u32 i = n.GetFirstIndex(0); i <= n.GetLastIndex(R); i++)
         {
           buttonRect.SetPosition(SPoint(offset + (CELL_SIZE - 1) * n.GetPoint(i).GetX(),
                                         offset + (CELL_SIZE - 1) * n.GetPoint(i).GetY()));
 
-          if(buttonRect.Contains(event.GetAt()))
+          if(buttonRect.Contains(clickPt))
           {
-            FlipBit(i - n.GetFirstIndex(0));
+            switch(m_selectMode)
+            {
+            case NEIGHBOR_SELECT_MANY:
+              FlipBit(i - n.GetFirstIndex(0));
+              break;
+            case NEIGHBOR_SELECT_ONE:
+              m_selectedOne.Set(n.GetPoint(i).GetX(), n.GetPoint(i).GetY());
+              break;
+            }
             return true;
           }
         }

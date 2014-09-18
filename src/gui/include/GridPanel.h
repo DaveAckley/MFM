@@ -58,6 +58,7 @@ namespace MFM
     enum { R = P::EVENT_WINDOW_RADIUS};
     enum { TILE_SIDE_CACHE_SITES = P::TILE_WIDTH};
     enum { TILE_SIDE_LIVE_SITES = TILE_SIDE_CACHE_SITES - 2*R};
+    enum { MAX_BUCKET_FILL_DEPTH = 10000 };
 
     static const u32 EVENT_WINDOW_RADIUS = R;
     static const u32 GRID_WIDTH_TILES = W;
@@ -390,7 +391,7 @@ namespace MFM
               m_bucketFillStartType = grid.GetTile(tile).GetAtom(site)->GetType();
               if(m_bucketFillStartType != atom.GetType())
               {
-                BucketFill(grid, atom, cp);
+                BucketFill(grid, atom, cp, MAX_BUCKET_FILL_DEPTH);
               }
             }
           }
@@ -431,15 +432,13 @@ namespace MFM
       }
     }
 
-    void BucketFill(Grid<GC>& grid, const T& atom, SPoint& pt)
+    void BucketFill(Grid<GC>& grid, const T& atom, SPoint& pt, u32 depth)
     {
-      MDist<1> md = MDist<1>::get();
-
       grid.PlaceAtom(atom, pt);
-
-      for(u32 i = 0; i < md.GetTableSize(1); i++)
+      SPoint npt;
+      for(u32 i = MDist<1>::get().GetFirstIndex(1); i <= MDist<1>::get().GetLastIndex(1); i++)
       {
-        SPoint npt = md.GetPoint(i);
+        npt = MDist<1>::get().GetPoint(i);
         npt.Add(pt.GetX(), pt.GetY());
 
         if(npt.GetX() >= 0 && npt.GetY() >= 0 &&
@@ -449,7 +448,10 @@ namespace MFM
           if(Atom<CC>::IsType(*grid.GetAtom(npt),
                               m_bucketFillStartType))
           {
-            BucketFill(grid, atom, npt);
+            if(depth)
+            {
+              BucketFill(grid, atom, npt, depth - 1);
+            }
           }
         }
       }

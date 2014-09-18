@@ -21,6 +21,7 @@
 /**
   \file Element_Xtal_General.h Right-tipped, knight's-J-move crystal
   \author David H. Ackley.
+  \author Trent R. Small.
   \date (C) 2014 All rights reserved.
   \lgpl
  */
@@ -62,6 +63,8 @@ namespace MFM
     typedef BitField<BitVector<SITES>, SITE_PART1_LEN, 0> XSSitePart1;
     typedef BitField<BitVector<SITES>, SITE_PART2_LEN, SITE_PART1_LEN> XSSitePart2;
 
+    ElementParameterNeighborhood<CC, R> m_neighborhood;
+
   public:
 
     static Element_Xtal_General THE_INSTANCE;
@@ -70,7 +73,10 @@ namespace MFM
       return THE_INSTANCE.GetType();
     }
 
-    Element_Xtal_General() : AbstractElement_Xtal<CC>(MFM_UUID_FOR("XtalGen", ELT_VERSION))
+    Element_Xtal_General() :
+      AbstractElement_Xtal<CC>(MFM_UUID_FOR("XtalGen", ELT_VERSION)),
+      m_neighborhood(this, "neighborhood", "Neighborhood",
+                     "This Xtal will reproduce to match this neighborhood.")
     {
       Element<CC>::SetAtomicSymbol("Xg");
       Element<CC>::SetName("General crystal");
@@ -79,28 +85,19 @@ namespace MFM
     virtual const T & GetDefaultAtom() const
     {
       static T defaultAtom(TYPE(),0,0,0);
-      bool initted = false;
-      if (!initted)
+
+      for(u32 i = 0; i < SITES; i++)
       {
-        const SPoint ones[] = {
-          SPoint(0,0),
-          SPoint(4,0),
-          SPoint(-4,0),
-          SPoint(0,4),
-          SPoint(0,-4)
-        };
-        const MDist<R> md = MDist<R>::get();
-        for (u32 i = 0; i < sizeof(ones)/sizeof(ones[0]); ++i)
+        if(m_neighborhood.ReadBit(i))
         {
-          s32 idx = md.FromPoint(ones[i], R);
-          if (idx < 0)
-          {
-            FAIL(ILLEGAL_STATE);
-          }
-          this->GetBits(defaultAtom).SetBit(idx + SITE_PART1_POS);
+          this->GetBits(defaultAtom).SetBit(i + SITE_PART1_POS);
         }
-        initted = true;
+        else
+        {
+          this->GetBits(defaultAtom).ClearBit(i + SITE_PART1_POS);
+        }
       }
+
       return defaultAtom;
     }
 

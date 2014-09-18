@@ -332,8 +332,13 @@ namespace MFM {
 
     ~StatsRenderer()
     {
+      /* Sometimes these are the same. Only close one! */
+      if(m_drawFont != m_detailFont)
+      {
+        TTF_CloseFont(m_drawFont);
+        TTF_CloseFont(m_detailFont);
+      }
       TTF_CloseFont(m_drawFont);
-      TTF_CloseFont(m_detailFont);
     }
 
     void SetDrawPoint(Point<s32> drawPoint)

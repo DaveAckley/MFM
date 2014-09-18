@@ -578,6 +578,18 @@ namespace MFM
 
   };
 
+  template <class CC, u32 R>
+  struct ElementParameterNeighborhood : public Parameters::Neighborhood<R>
+  {
+    ElementParameterNeighborhood(Element<CC> * elt,
+                                 const char * tag,
+                                 const char * name,
+                                 const char * description)
+      : Parameters::Neighborhood<R>(elt->GetElementParameters(), tag, name, description)
+    {
+    }
+  };
+
   template <class CC>
   struct ElementParameterS32 : public Parameters::S32
   {

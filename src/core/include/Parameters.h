@@ -28,6 +28,7 @@
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
+#include "BitVector.h"
 #include "ByteSerializable.h"
 #include "OverflowableCharBufferByteSink.h"
 #include "Util.h"
@@ -52,6 +53,8 @@ namespace MFM
        * The KnownParameterTypes which represents a boolean parameter.
        */
       BOOL_PARAMETER = 2,
+
+      NEIGHBORHOOD_PARAMETER = 3,
 
       /**
        * Used to signify that a Parameter is not valid.
@@ -213,6 +216,63 @@ namespace MFM
         return FAILURE;
       }
 
+    };
+
+    template<u32 R>
+    class Neighborhood : public Parameter
+    {
+     public:
+      enum
+      {
+        SITES = (R + 1) * (R + 1) + (R * R)
+      };
+
+      static Neighborhood* Cast(Parameter* p)
+      {
+        return dynamic_cast<Neighborhood*>(p);
+      }
+
+     private:
+
+      BitVector<SITES> m_sites;
+
+     public:
+      Neighborhood(Parameters& c,
+                   const char* tag,
+                   const char* name,
+                   const char* description)
+        : Parameter(c, tag, name, description)
+      { }
+
+      bool ReadBit(const u32 index) const
+      {
+        return m_sites.ReadBit(index);
+      }
+
+      void SetBit(const u32 index)
+      {
+        m_sites.SetBit(index);
+      }
+
+      void ClearBit(const u32 index)
+      {
+        m_sites.ClearBit(index);
+      }
+
+      virtual u32 GetParameterType() const
+      {
+        return NEIGHBORHOOD_PARAMETER;
+      }
+
+      virtual void Print(ByteSink& bs) const
+      {
+        m_sites.PrintBinary(bs);
+      }
+
+      virtual bool Read(ByteSource& bs)
+      {
+        return m_sites.ReadBinary(bs);
+      }
     };
 
     /**
