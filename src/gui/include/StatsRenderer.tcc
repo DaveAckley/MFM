@@ -162,6 +162,10 @@ namespace MFM {
                                                 double aeps, double aer, u32 AEPSperFrame,
                                                 double overhead, bool endOfEpoch)
   {
+    FAIL(DEPRECATED);
+    /* Use AbstractDriver::WriteTimeBasedData instead. */
+
+    /*
     // Extract short names for parameter types
     typedef typename GC::CORE_CONFIG CC;
     typedef typename CC::PARAM_CONFIG P;
@@ -211,6 +215,7 @@ namespace MFM {
       cs->GetValue(fp, endOfEpoch);
     }
     fp.Println();
+    */
   }
 
 } /* namespace MFM */

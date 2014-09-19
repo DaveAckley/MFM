@@ -1246,6 +1246,7 @@ namespace MFM
             camera.DrawSurface(screen,path);
           }
           {
+            /*
             const char * path = Super::GetSimDirPathTemporary("tbd/data.dat");
             bool exists = true;
             {
@@ -1261,6 +1262,8 @@ namespace MFM
                                           Super::GetAEPSPerFrame(),
                                           Super::GetOverheadPercent(), true);
             fclose(fp);
+            */
+            AbstractDriver<GC>::WriteTimeBasedData();
           }
 
         }
