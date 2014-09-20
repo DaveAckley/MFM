@@ -152,6 +152,21 @@ namespace MFM
     ThreadState m_threadState;
 
     /**
+     * The ThreadPauser previous state (for consistency checking)
+     */
+    ThreadState m_threadStatePrevious;
+
+    /**
+     * True if the last state change was officially by outer
+     */
+    bool m_threadStatePreviousOuter;
+
+    /**
+     * Thread id prevailing at the last official state change
+     */
+    pthread_t m_threadStatePreviousThreadId;
+
+    /**
      * A Mutex::Predicate that waits for THREADSTATE_RUN_REQUESTED
      */
     struct StateIsRunRequested : public Mutex::Predicate

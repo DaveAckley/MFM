@@ -8,6 +8,9 @@ namespace MFM
     m_stateIsRunning(*this)
   {
     m_threadState = THREADSTATE_PAUSED;
+    m_threadStatePrevious = (ThreadState) -1; // Invalid previous threadstate
+    m_threadStatePreviousOuter = false;
+    m_threadStatePreviousThreadId = pthread_self();
   }
 
   ThreadPauser::~ThreadPauser()
@@ -24,11 +27,21 @@ namespace MFM
     {
 
     case THREADSTATE_RUN_READY:
+
+      m_threadStatePrevious = m_threadState;
+      m_threadStatePreviousOuter = true;
+      m_threadStatePreviousThreadId = pthread_self();
+
       m_threadState = THREADSTATE_RUNNING;
       m_stateIsRunning.SignalCondition();
       break;
 
     case THREADSTATE_RUNNING:
+
+      m_threadStatePrevious = m_threadState;
+      m_threadStatePreviousOuter = true;
+      m_threadStatePreviousThreadId = pthread_self();
+
       m_threadState = THREADSTATE_PAUSE_REQUESTED;
       break;
 
@@ -37,10 +50,20 @@ namespace MFM
       break;
 
     case THREADSTATE_PAUSE_READY:
+
+      m_threadStatePrevious = m_threadState;
+      m_threadStatePreviousOuter = true;
+      m_threadStatePreviousThreadId = pthread_self();
+
       m_threadState = THREADSTATE_PAUSED;
       break;
 
     case THREADSTATE_PAUSED:
+
+      m_threadStatePrevious = m_threadState;
+      m_threadStatePreviousOuter = true;
+      m_threadStatePreviousThreadId = pthread_self();
+
       m_threadState = THREADSTATE_RUN_REQUESTED;
       m_stateIsRunRequested.SignalCondition();
       break;
@@ -83,7 +106,13 @@ namespace MFM
       // Inner finishes current event, including getting ACKs from any
       // neighbors it has locked, then sets innerReadyToAdvance
       if (innerReadyToAdvance)
+      {
+        m_threadStatePrevious = m_threadState;
+        m_threadStatePreviousOuter = false;
+        m_threadStatePreviousThreadId = pthread_self();
+
         m_threadState = THREADSTATE_PAUSE_READY;
+      }
       break;
 
     case THREADSTATE_PAUSE_READY:
@@ -99,7 +128,13 @@ namespace MFM
     case THREADSTATE_RUN_REQUESTED:
       // Inner acks the run request by setting innerReadyToAdvance here
       if (innerReadyToAdvance)
+      {
+        m_threadStatePrevious = m_threadState;
+        m_threadStatePreviousOuter = false;
+        m_threadStatePreviousThreadId = pthread_self();
+
         m_threadState = THREADSTATE_RUN_READY;
+      }
       break;
 
     default:
@@ -126,88 +161,16 @@ namespace MFM
   void ThreadPauser::ReportThreadPauserStatus(Logger::Level level)
   {
     LOG.Log(level,"   =ThreadPauser %p=", (void*) this);
-    LOG.Log(level,"   =ThreadState: %d (%s)",
+    LOG.Log(level,"   =Current pthread id: %p", (void*) pthread_self());
+    LOG.Log(level,"   =Current ThreadState: %d (%s)",
             (int) m_threadState, GetThreadStateName(m_threadState));
+    LOG.Log(level,"   =Previous ThreadState: %d (%s)",
+            (int) m_threadStatePrevious, GetThreadStateName(m_threadStatePrevious));
+    LOG.Log(level,"   =Previous ThreadState changed by: %s",
+            m_threadStatePreviousOuter ? "Outer" : "Inner");
+    LOG.Log(level,"   =Previous ThreadState changed by thread id: %p",
+            (void*) m_threadStatePreviousThreadId);
+
     m_mutex.ReportMutexStatus(level);
   }
-
-  /*
-  bool ThreadPauser::IsPaused()
-  {
-    bool retval;
-    pthread_mutex_lock(&m_lock);
-    {
-      retval = (m_threadState == THREADSTATE_PAUSED);
-    }
-    pthread_mutex_unlock(&m_lock);
-
-    return retval;
-  }
-
-  bool ThreadPauser::IsPauseRequested()
-  {
-    bool retval;
-    pthread_mutex_lock(&m_lock);
-    {
-      retval = (m_threadState == THREADSTATE_PAUSE_REQUESTED);
-    }
-    pthread_mutex_unlock(&m_lock);
-
-    return retval;
-  }
-
-  bool ThreadPauser::IsPauseReady()
-  {
-    bool retval;
-    pthread_mutex_lock(&m_lock);
-    {
-      retval = (m_threadState == THREADSTATE_PAUSE_READY);
-    }
-    pthread_mutex_unlock(&m_lock);
-
-    return retval;
-  }
-
-  void ThreadPauser::PauseReady()
-  {
-    pthread_mutex_lock(&m_lock);
-    {
-      assert(m_threadState == THREADSTATE_PAUSE_REQUESTED);
-      m_threadState = THREADSTATE_PAUSE_READY;
-    }
-    pthread_mutex_unlock(&m_lock);
-  }
-
-  void ThreadPauser::Pause()
-  {
-    pthread_mutex_lock(&m_lock);
-    {
-      assert(m_threadState == THREADSTATE_PAUSE_READY);
-      m_threadState = THREADSTATE_PAUSED;
-    }
-    pthread_mutex_unlock(&m_lock);
-  }
-
-  void ThreadPauser::RequestRun()
-  {
-    pthread_mutex_lock(&m_lock);
-    {
-      assert(m_threadState == THREADSTATE_PAUSED);
-      m_threadState = THREADSTATE_RUN_REQUESTED;
-    }
-    pthread_mutex_unlock(&m_lock);
-  }
-
-
-  void ThreadPauser::Run()
-  {
-    pthread_mutex_lock(&m_lock);
-    {
-      assert(m_threadState == THREADSTATE_RUN_READY);
-      m_threadState = THREADSTATE_RUNNING;
-      pthread_cond_signal(&m_pauseCond);
-    }
-    pthread_mutex_unlock(&m_lock);
-  }
-  */
 }
