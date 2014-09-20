@@ -29,7 +29,7 @@
 
 #include "EditingTool.h"
 #include "FileByteSink.h"
-#include "Parameters.h"
+#include "Parameter.h"
 #include "AbstractButton.h"
 #include "Slider.h"
 #include "ParameterControllerBool.h"
@@ -48,6 +48,10 @@ namespace MFM
   class ToolboxPanel : public Panel
   {
   private:
+    typedef ElementParameterS32<CC> OurParameterS32; // ToolboxPanel controls Elements (vs AtomViewPanel)
+    typedef ElementParameterBool<CC> OurParameterBool; // ToolboxPanel controls Elements (vs AtomViewPanel)
+    typedef Slider<CC> OurSlider;
+    typedef ParameterControllerBool<CC> OurParameterControllerBool;
 
     enum {
       ELEMENT_BOX_BUTTON_COUNT = 9,
@@ -56,7 +60,8 @@ namespace MFM
       TOOLBOX_MAX_CHECKBOXES = 8,
       TOOLBOX_MAX_NEIGHBORHOODS = 8,
 
-      R = CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS
+      R = CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS,
+      SITES = EVENT_WINDOW_SITES(R)
     };
 
     /**
@@ -271,16 +276,16 @@ namespace MFM
 
     u32 m_heldElementCount;
 
-    ParameterController *(m_controllers[TOOLBOX_MAX_CONTROLLERS]);
+    ParameterController<CC> *(m_controllers[TOOLBOX_MAX_CONTROLLERS]);
     u32 m_controllerCount;
 
-    Slider m_sliders[TOOLBOX_MAX_SLIDERS];
+    OurSlider m_sliders[TOOLBOX_MAX_SLIDERS];
     u32 m_sliderCount;
 
-    ParameterControllerBool m_checkboxes[TOOLBOX_MAX_CHECKBOXES];
+    OurParameterControllerBool m_checkboxes[TOOLBOX_MAX_CHECKBOXES];
     u32 m_checkboxCount;
 
-    NeighborSelectPanel<R> m_neighborhoods[TOOLBOX_MAX_NEIGHBORHOODS];
+    NeighborSelectPanel<CC,R> m_neighborhoods[TOOLBOX_MAX_NEIGHBORHOODS];
     u32 m_neighborhoodCount;
 
     u32 m_brushSize;
@@ -294,7 +299,7 @@ namespace MFM
       BORDER_PADDING = 2
     };
 
-    void AddController(ParameterController * spc)
+    void AddController(ParameterController<CC> * spc)
     {
       MFM_API_ASSERT_NONNULL(spc);
 
@@ -308,7 +313,7 @@ namespace MFM
       m_controllers[j] = spc;
     }
 
-    void AddSliderController(Parameters::S32 * sp)
+    void AddSliderController(ElementParameter<CC> * sp)
     {
       // Sliders for S32 parameters
       MFM_API_ASSERT_NONNULL(sp);
@@ -320,13 +325,13 @@ namespace MFM
 
       u32 j = m_sliderCount++;
 
-      Slider& s = m_sliders[j];
+      OurSlider& s = m_sliders[j];
       s.SetParameter(sp);
 
       AddController(&s);
     }
 
-    void AddCheckboxController(Parameters::Bool * bp)
+    void AddCheckboxController(ElementParameter<CC> * bp)
     {
       // Checkboxes for Bool parameters
       MFM_API_ASSERT_NONNULL(bp);
@@ -338,13 +343,13 @@ namespace MFM
 
       u32 j = m_checkboxCount++;
 
-      ParameterControllerBool & cb = m_checkboxes[j];
-      cb.SetParameter(bp);
+      OurParameterControllerBool & cb = m_checkboxes[j];
+      cb.SetParameter(bp); // FAIL unless castable to PValueTypeBool
 
       AddController(&cb);
     }
 
-    void AddNeighborhoodController(Parameters::Neighborhood<R>* np)
+    void AddNeighborhoodController(ElementParameter<CC> * np)
     {
       MFM_API_ASSERT_NONNULL(np);
 
@@ -355,7 +360,7 @@ namespace MFM
 
       u32 j = m_neighborhoodCount++;
 
-      NeighborSelectPanel<R>& nb = m_neighborhoods[j];
+      NeighborSelectPanel<CC,R>& nb = m_neighborhoods[j];
 
       nb.SetParameter(np);
       nb.SetText(np->GetName());
@@ -398,7 +403,7 @@ namespace MFM
       m_controllerCount = 0;
 
       /* Set up the new controllers, if any */
-      Parameters & parms = m_primaryElement->GetElementParameters();
+      ElementParameters<CC> & parms = m_primaryElement->GetElementParameters();
       u32 totalParms = parms.GetParameterCount();
 
       m_sliderCount = 0;
@@ -406,18 +411,26 @@ namespace MFM
       m_neighborhoodCount = 0;
       for(u32 i = 0; i < totalParms; i++)
       {
-        const Parameters::Parameter * parm = parms.GetParameter(i);
-        switch (parm->GetParameterType())
+        ElementParameter<CC> * parm = parms.GetParameter(i);
+        switch (parm->GetType())
         {
-        case Parameters::S32_PARAMETER:
-          AddSliderController(Parameters::S32::Cast(parms.GetParameter(i)));
+        case VD::S32:
+          AddSliderController(parm);
           break;
-        case Parameters::BOOL_PARAMETER:
-          AddCheckboxController(Parameters::Bool::Cast(parms.GetParameter(i)));
+        case VD::BOOL:
+          AddCheckboxController(parm);
           break;
-        case Parameters::NEIGHBORHOOD_PARAMETER:
-          AddNeighborhoodController(Parameters::Neighborhood<R>::Cast(parms.GetParameter(i)));
-          break;
+        case VD::BITS:
+          {
+            ElementParameterNeighborhood<CC,SITES>* epn =
+              dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>(parm);
+            if (epn)
+            {
+              AddNeighborhoodController(epn);
+            }
+            break;
+          }
+          // ELSE FALL THROUGH
         default:
           FAIL(ILLEGAL_STATE);
         }
@@ -427,7 +440,7 @@ namespace MFM
       SPoint rpt(16, 6 + ELEMENT_RENDER_SIZE * TOTAL_ROWS);
       for(u32 i = 0; i < m_controllerCount; i++)
       {
-        ParameterController * c = m_controllers[i];
+        ParameterController<CC> * c = m_controllers[i];
         c->SetRenderPoint(rpt);
         Panel::Insert(c, NULL);
         UPoint desired = c->GetDesiredSize();

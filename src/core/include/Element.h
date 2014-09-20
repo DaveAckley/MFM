@@ -28,19 +28,21 @@
 #ifndef ELEMENT_H
 #define ELEMENT_H
 
-#include "Parameters.h"
+#include "Atom.h"
+#include "Parameter.h"
 #include "itype.h"
 #include "StaticLoader.h"
 #include "EventWindow.h"
 #include "UUID.h"
 #include "Dirs.h"
 #include "Logger.h"
+#include "BitField.h"
 
 namespace MFM
 {
   typedef u32 ElementType;
 
-  template <class CC> class Atom; // Forward declaration
+  template <class CC> class Atom; // FORWARD
 
   /**
    * An Element describes how a given type of Atom behaves.
@@ -57,13 +59,13 @@ namespace MFM
      * The configurable element parameters of this Element . Element
      * parameters apply globally to all atoms of a given Element.
      */
-    Parameters m_elementParameters;
+    ElementParameters<CC> m_elementParameters;
 
     /**
      * The configurable atomic parameters of this Element . Atomic
      * parameters apply individually to each atom of a given Element.
      */
-    Parameters m_atomicParameters;
+    AtomicParameters<CC> m_atomicParameters;
 
     /**
      * The unique UUID of this Element . Each Element must be given
@@ -156,19 +158,25 @@ namespace MFM
      */
     bool IsValidAtomicSymbol(const char* symbol)
     {
-      u32 len = strlen(symbol);
+      MFM_API_ASSERT_NONNULL(symbol);
 
-      if(len == 2)
+      switch (strlen(symbol))
       {
-        return (symbol[0] >= 'A' && symbol[0] <= 'Z') &&
-               (symbol[1] >= 'a' && symbol[1] <= 'z');
-      }
-      else if(len == 1)
-      {
-        return (symbol[0] >= 'A' && symbol[0] <= 'Z');
-      }
-      else
-      {
+      case 2:
+        if (!(symbol[1] >= 'a' && symbol[1] <= 'z'))
+        {
+          return false;
+        }
+        // FALL THROUGH
+
+      case 1:
+        if (symbol[0] >= 'A' && symbol[0] <= 'Z')
+        {
+          return true;
+        }
+        // FALL THROUGH
+
+      default:
         return false;
       }
     }
@@ -556,25 +564,27 @@ namespace MFM
      */
     static const u32 COMPLETE_DIFFUSABILITY = 1000;
 
-    const Parameters & GetElementParameters() const
+    const ElementParameters<CC> & GetElementParameters() const
     {
       return m_elementParameters;
     }
 
-    Parameters & GetElementParameters()
+    ElementParameters<CC> & GetElementParameters()
     {
       return m_elementParameters;
     }
 
-    const Parameters & GetAtomicParameters() const
+    const AtomicParameters<CC> & GetAtomicParameters() const
     {
       return m_atomicParameters;
     }
 
-    Parameters & GetAtomicParameters()
+    AtomicParameters<CC> & GetAtomicParameters()
     {
       return m_atomicParameters;
     }
+#if 0
+<<<<<<< Updated upstream
 
   };
 
@@ -601,47 +611,10 @@ namespace MFM
       : Parameters::S32(elt->GetElementParameters(), tag, name, description, min, initial, max, snap)
     {
     }
+=======
+>>>>>>> Stashed changes
+#endif
   };
-
-  template <class CC>
-  struct AtomicParameterS32 : public Parameters::S32
-  {
-    AtomicParameterS32(Element<CC> * elt,
-                       const char * tag,
-                       const char * name,
-                       const char * description,
-                       s32 min, s32 initial, s32 max, s32 snap)
-      : Parameters::S32(elt->AtomicParameters(), tag, name, description, min, initial, max, snap)
-    {
-    }
-  };
-
-  template <class CC>
-  struct ElementParameterBool : public Parameters::Bool
-  {
-    ElementParameterBool(Element<CC> * elt,
-                         const char * tag,
-                         const char * name,
-                         const char * description,
-                         bool initial)
-      : Parameters::Bool(elt->GetElementParameters(), tag, name, description, initial)
-    {
-    }
-  };
-
-  template <class CC>
-  struct AtomicParameterBool : public Parameters::Bool
-  {
-    AtomicParameterBool(Element<CC> * elt,
-                        const char * tag,
-                        const char * name,
-                        const char * description,
-                        bool initial)
-      : Parameters::Bool(elt->AtomicParameters(), tag, name, description, initial)
-    {
-    }
-  };
-
 }
 
 #include "Element.tcc"
