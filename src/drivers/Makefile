@@ -1,5 +1,5 @@
 # SUBDIRS here are expected to be independent of each other
-SUBDIRS= mfmc #mfmtest mfmc mfmsim mfmdha mfmbigtile mfmcity #mfmheadless
+SUBDIRS= mfmc mfmtest # mfmc mfmsim mfmdha mfmbigtile mfmcity #mfmheadless
 
 .PHONY:	$(SUBDIRS) all clean realclean
 
