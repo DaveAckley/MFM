@@ -54,7 +54,7 @@ namespace MFM
       ELT_VERSION = 1,
       BITS_IN_INDEX = 24
     };
-    typedef BitField<BVA, BITS_IN_INDEX, (P3Atom<P>::P3_STATE_BITS_POS+7)/8*8> AFIndex;
+    typedef BitField<BVA, VD::U32, BITS_IN_INDEX, (P3Atom<P>::P3_STATE_BITS_POS+7)/8*8> AFIndex;
 
     static Element_Indexed THE_INSTANCE;
     static const u32 TYPE() {
