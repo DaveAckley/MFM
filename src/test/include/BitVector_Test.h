@@ -27,6 +27,8 @@ namespace MFM {
 
     static void Test_bitVectorStoreBits();
 
+    static void Test_bitVectorLong();
+
   };
 } /* namespace MFM */
 #endif /*BITVECTOR_TEST_H*/
