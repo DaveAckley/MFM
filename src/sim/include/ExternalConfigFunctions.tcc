@@ -203,7 +203,7 @@ namespace MFM
       {
         return in.Msg(Logger::ERROR, "'%s' is not a known element nickname", nick.GetZString());
       }
-      Parameters & parms = elem->GetElementParameters();
+      ElementParameters<CC> & parms = elem->GetElementParameters();
 
       if (!this->SkipToNextExistingArg(in,"parameter tag"))
       {
@@ -222,7 +222,7 @@ namespace MFM
         return in.Msg(Logger::ERROR, "'%s' is not a known parameter tag", paramTag.GetZString());
       }
 
-      Parameters::Parameter * p = parms.GetParameter((u32) index);
+      ElementParameter<CC> * p = parms.GetParameter((u32) index);
       MFM_API_ASSERT_NONNULL(p);
 
       if (!this->SkipToNextExistingArg(in,"parameter value"))
@@ -230,7 +230,7 @@ namespace MFM
         return false; // message already issued
       }
 
-      if (!p->Read(in))
+      if (!p->ReadValue(in))
       {
         return in.Msg(Logger::ERROR, "Reading value of parameter tag '%s' failed", paramTag.GetZString());
       }
