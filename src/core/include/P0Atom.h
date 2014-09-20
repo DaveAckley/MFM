@@ -74,19 +74,19 @@ namespace MFM
       TYPE3_LENGTH = 28
     };
     // Type info at end of atom so state bits start at a compile-time known bit position (0)
-    typedef BitField<BitVector<BITS>,P0ATOM_HEADER_LENGTH_SIZE,BITS - P0ATOM_HEADER_LENGTH_SIZE> AFTypeLengthCode;
+    typedef BitField<BitVector<BITS>,VD::U32,P0ATOM_HEADER_LENGTH_SIZE,BITS - P0ATOM_HEADER_LENGTH_SIZE> AFTypeLengthCode;
 
     // These BitFields represent just the extended type information, exclusive of the length code
-    typedef BitField<BitVector<BITS>,TYPE0_LENGTH, AFTypeLengthCode::START - TYPE0_LENGTH> AFTypeLength0;
-    typedef BitField<BitVector<BITS>,TYPE1_LENGTH, AFTypeLengthCode::START - TYPE1_LENGTH> AFTypeLength1;
-    typedef BitField<BitVector<BITS>,TYPE2_LENGTH, AFTypeLengthCode::START - TYPE2_LENGTH> AFTypeLength2;
-    typedef BitField<BitVector<BITS>,TYPE3_LENGTH, AFTypeLengthCode::START - TYPE3_LENGTH> AFTypeLength3;
+    typedef BitField<BitVector<BITS>,VD::U32,TYPE0_LENGTH, AFTypeLengthCode::START - TYPE0_LENGTH> AFTypeLength0;
+    typedef BitField<BitVector<BITS>,VD::U32,TYPE1_LENGTH, AFTypeLengthCode::START - TYPE1_LENGTH> AFTypeLength1;
+    typedef BitField<BitVector<BITS>,VD::U32,TYPE2_LENGTH, AFTypeLengthCode::START - TYPE2_LENGTH> AFTypeLength2;
+    typedef BitField<BitVector<BITS>,VD::U32,TYPE3_LENGTH, AFTypeLengthCode::START - TYPE3_LENGTH> AFTypeLength3;
 
     // These BitFields represent the entire type information, including the length code
-    typedef BitField<BitVector<BITS>,TYPE0_LENGTH + P0ATOM_HEADER_LENGTH_SIZE, AFTypeLength0::START> AFType0;
-    typedef BitField<BitVector<BITS>,TYPE1_LENGTH + P0ATOM_HEADER_LENGTH_SIZE, AFTypeLength1::START> AFType1;
-    typedef BitField<BitVector<BITS>,TYPE2_LENGTH + P0ATOM_HEADER_LENGTH_SIZE, AFTypeLength2::START> AFType2;
-    typedef BitField<BitVector<BITS>,TYPE3_LENGTH + P0ATOM_HEADER_LENGTH_SIZE, AFTypeLength3::START> AFType3;
+    typedef BitField<BitVector<BITS>,VD::U32,TYPE0_LENGTH + P0ATOM_HEADER_LENGTH_SIZE, AFTypeLength0::START> AFType0;
+    typedef BitField<BitVector<BITS>,VD::U32,TYPE1_LENGTH + P0ATOM_HEADER_LENGTH_SIZE, AFTypeLength1::START> AFType1;
+    typedef BitField<BitVector<BITS>,VD::U32,TYPE2_LENGTH + P0ATOM_HEADER_LENGTH_SIZE, AFTypeLength2::START> AFType2;
+    typedef BitField<BitVector<BITS>,VD::U32,TYPE3_LENGTH + P0ATOM_HEADER_LENGTH_SIZE, AFTypeLength3::START> AFType3;
 
   protected:
 
@@ -144,19 +144,20 @@ namespace MFM
 
   public:
 
-    bool IsSane() const
+    bool IsSaneImpl() const
     {
       // P0Atom has no error detection abilities
       return true;
     }
 
-    bool HasBeenRepaired()
+    bool HasBeenRepairedImpl()
     {
       // If somebody thinks it's bad, we can't fix it.
       return false;
     }
 
-    u32 GetType() const {
+    u32 GetTypeImpl() const
+    {
       u32 lengthCode = AFTypeLengthCode::Read(this->m_bits);
       switch (lengthCode) {
       case 0: return AFTypeLength0::Read(this->m_bits);
@@ -199,7 +200,7 @@ namespace MFM
       return this->m_bits.Write(firstState, stateWidth, value);
     }
 
-    void WriteStateBits(ByteSink& ostream) const
+    void WriteStateBitsImpl(ByteSink& ostream) const
     {
       u32 endStateBit = EndStateBit();
 
@@ -209,7 +210,7 @@ namespace MFM
       }
     }
 
-    void ReadStateBits(const char* stateStr)
+    void ReadStateBitsImpl(const char* stateStr)
     {
       u32 endStateBit = EndStateBit();
 
@@ -219,7 +220,7 @@ namespace MFM
       }
     }
 
-    void ReadStateBits(const BitVector<BITS> & bv)
+    void ReadStateBitsImpl(const BitVector<BITS> & bv)
     {
       u32 endStateBit = EndStateBit();
 
@@ -260,10 +261,10 @@ namespace MFM
     void PrintBits(ByteSink & ostream) const
     { this->m_bits.Print(ostream); }
 
-    void Print(ByteSink & ostream) const
+    void PrintImpl(ByteSink & ostream) const
     {
       u32 lengthCode = AFTypeLengthCode::Read();
-      u32 type = GetType();
+      u32 type = this->GetType();
       ostream.Printf("P0[%x/",type);
       u32 length = GetMaxStateSize(lengthCode);
       for (int i = 0; i < length; i += 4) {
