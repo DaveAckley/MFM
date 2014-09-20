@@ -259,7 +259,7 @@ namespace MFM
 
       m_grend->SelectAtom(*m_mainGrid, pt);
       SPoint selectedAtom = m_grend->GetSelectedAtom();
-      m_atomViewPanel.SetAtom(m_mainGrid->GetAtom(selectedAtom));
+      m_atomViewPanel.SetAtom(m_mainGrid->GetWritableAtom(selectedAtom));
     }
 
     void HandlePencilTool(u8 button, SPoint clickPt)
