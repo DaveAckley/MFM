@@ -68,7 +68,7 @@ namespace MFM
       AbstractElement_WaPat<CC>(MFM_UUID_FOR("Fish", ELEMENT_VERSION)),
       m_fishBirthAge(this, "age", "Birth Age",
                      "Number of events for a fish to mature",
-                     1, INITIAL_DEFAULT_BIRTH_AGE, 100, 1),
+                     1, INITIAL_DEFAULT_BIRTH_AGE, 100/*, 1*/),
       m_fishEvolve(this, "evo", "Evolvable fish",
                    "Is fish birth age set by mutable genes?",
                    false)
@@ -108,7 +108,7 @@ namespace MFM
     {
       Random & random = window.GetRandom();
       T self = window.GetCenterAtom();
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
       SPoint emptyRel;
       u32 emptyCount = 0;
       u32 age = this->GetCurrentAge(self);

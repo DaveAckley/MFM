@@ -110,7 +110,7 @@ namespace MFM
         ++datap[DATUMS_EMITTED_SLOT];                  // Count emission attempts
 
         // Pick random nearest empty, if any
-        const MDist<R> md = MDist<R>::get();
+        const MDist<R> & md = MDist<R>::get();
         for (u32 ring = 1; ring <= 2; ++ring)
         {
           u32 emptiesFound = 0;

@@ -46,12 +46,7 @@ namespace MFM
     typedef typename CC::PARAM_CONFIG P;
     enum {
       R = P::EVENT_WINDOW_RADIUS,
-      BITS = P::BITS_PER_ATOM,
-
-      ELT_VERSION = 1,
-
-      BOND_TYPE_LEN = 16 + 1,
-      BOND_TYPE_POS = BITS - BOND_TYPE_LEN
+      ELT_VERSION = 2
     };
 
   private:
@@ -65,7 +60,7 @@ namespace MFM
     Element_Dmover()
       : Element<CC>(MFM_UUID_FOR("Dmover", ELT_VERSION)),
         m_searchRadius(this, "radius", "Scan radius",
-                  "Max radius to search for empty and bonded element.", 0, 1, R, 1)
+                       "Max radius to search for empty and non-empty sites.", 0, 1, R/*, 1*/)
     {
       Element<CC>::SetAtomicSymbol("Dm");
       Element<CC>::SetName("Dmover");
@@ -112,7 +107,7 @@ namespace MFM
     virtual void Behavior(EventWindow<CC>& window) const
     {
       Random & random = window.GetRandom();
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
 
       SPoint emptyRel;
       u32 emptyCount = 0;

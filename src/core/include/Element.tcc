@@ -113,7 +113,7 @@ namespace MFM
   {
     Random & random = window.GetRandom();
     Tile<CC>& tile = window.GetTile();
-    const MDist<R> md = MDist<R>::get();
+    const MDist<R> & md = MDist<R>::get();
 
     SPoint sp;
     md.FillRandomSingleDir(sp, random);
