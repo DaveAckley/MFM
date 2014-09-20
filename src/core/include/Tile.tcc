@@ -42,10 +42,14 @@ namespace MFM
     u32 edges = 0;
     for(Dir i = Dirs::NORTH; edges < Dirs::DIR_COUNT; i = Dirs::CWDir(i), edges++)
     {
+
+      /* We have nothing locked */
+      m_iLocked[i] = false;
+
       if(IS_OWNED_CONNECTION(i))
       {
         /* We own this one! Hook it up. */
-        m_connections[i] = m_ownedConnections + i - Dirs::EAST;
+        m_connections[i] = &m_ownedConnections[i - Dirs::EAST];
       }
       else
       {
