@@ -22,15 +22,32 @@ namespace MFM
     FillIfType(window, offset, Element_Empty<CC>::THE_INSTANCE.GetType(),
                window.GetCenterAtom());
 
-    d = Dirs::CCWDir(Dirs::CCWDir(d));
-    Dirs::FillDir(offset, d);
-    FillIfNotType(window, offset,
-                  Element_City_Sidewalk<CC>::THE_INSTANCE.GetType(),
-                  Element_City_Sidewalk<CC>::THE_INSTANCE.GetDefaultAtom());
+    /* Don't do sidewalks if we can touch an intersection. */
 
-    Dirs::FillDir(offset, Dirs::OppositeDir(d));
-    FillIfNotType(window, offset,
-                  Element_City_Sidewalk<CC>::THE_INSTANCE.GetType(),
-                  Element_City_Sidewalk<CC>::THE_INSTANCE.GetDefaultAtom());
+    if(!MooreBorder(window, Element_City_Intersection<CC>::THE_INSTANCE.GetType()))
+    {
+
+      Dirs::FillDir(offset, Dirs::CCWDir(Dirs::CCWDir(d)));
+      FillIfNotType(window, offset,
+                    Element_City_Sidewalk<CC>::THE_INSTANCE.GetType(),
+                    Element_City_Sidewalk<CC>::THE_INSTANCE.GetDefaultAtom());
+
+      Dirs::FillDir(offset, Dirs::CWDir(Dirs::CWDir(d)));
+      FillIfNotType(window, offset,
+                    Element_City_Sidewalk<CC>::THE_INSTANCE.GetType(),
+                    Element_City_Sidewalk<CC>::THE_INSTANCE.GetDefaultAtom());
+    }
+
+    /* Extra intersection creation */
+
+    Dirs::FillDir(offset, d);
+    if(window.GetRelativeAtom(offset).GetType() ==
+       Element_City_Sidewalk<CC>::THE_INSTANCE.GetType())
+    {
+      window.SetRelativeAtom(offset * (Dirs::IsCorner(d) ? 2 : 3),
+                             Element_City_Intersection<CC>::THE_INSTANCE.GetDefaultAtom());
+      window.SetRelativeAtom(offset, window.GetCenterAtom());
+
+    }
   }
 }

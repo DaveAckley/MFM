@@ -56,6 +56,9 @@ namespace MFM
 
     typedef BitField<BitVector<BITS>, INITIALIZED_LEN, INITIALIZED_POS> AFInitBits;
 
+   private:
+    ElementParameterS32<CC> m_streetCreateOdds;
+
    public:
     static Element_City_Intersection THE_INSTANCE;
 
@@ -80,7 +83,10 @@ namespace MFM
     }
 
     Element_City_Intersection() :
-      Element<CC>(MFM_UUID_FOR("CityIntersection", CITY_VERSION))
+      Element<CC>(MFM_UUID_FOR("CityIntersection", CITY_VERSION)),
+      m_streetCreateOdds(this, "streetCreateOdds",
+                         "Street Odds",
+                         "Odds of creating a street", 1, 5, 100, 1)
     {
       Element<CC>::SetAtomicSymbol("In");
       Element<CC>::SetName("City Intersection");

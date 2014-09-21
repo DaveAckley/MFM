@@ -11,18 +11,26 @@ namespace MFM
     Random& rand = window.GetRandom();
     Dir d;
     SPoint offset;
-    for(u32 i = 0; i < 8; i++)
+    for(u32 i = 0; i < Dirs::DIR_COUNT; i++)
     {
       d = (Dir)i;
       Dirs::FillDir(offset, d);
 
-      if(rand.OneIn(10) &&
-         (window.GetRelativeAtom(offset).GetType() ==
-          Element_Empty<CC>::THE_INSTANCE.GetType()))
+      if(window.GetRelativeAtom(offset).GetType() ==
+          Element_Empty<CC>::THE_INSTANCE.GetType())
       {
-        T newStreet = Element_City_Street<CC>::THE_INSTANCE.GetDefaultAtom();
-        Element_City_Street<CC>::THE_INSTANCE.SetDirection(newStreet, d);
-        window.SetRelativeAtom(offset, newStreet);
+        if(rand.OneIn(m_streetCreateOdds.GetValue()))
+        {
+          Element_City_Street<CC>& st = Element_City_Street<CC>::THE_INSTANCE;
+          T newStreet = st.GetDefaultAtom();
+          st.SetDirection(newStreet, d);
+          window.SetRelativeAtom(offset, newStreet);
+        }
+        else
+        {
+          T newSidewalk = Element_City_Sidewalk<CC>::THE_INSTANCE.GetDefaultAtom();
+          window.SetRelativeAtom(offset, newSidewalk);
+        }
       }
     }
   }

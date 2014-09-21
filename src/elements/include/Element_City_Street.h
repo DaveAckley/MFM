@@ -81,7 +81,7 @@ namespace MFM
       Element<CC>(MFM_UUID_FOR("CityStreet", STREET_VERSION)),
       m_intersectionOdds(this, "intersectionOdds",
                            "Intersection Odds",
-                           "Odds of creating an intersection", 1, 100, 1000, 100)
+                           "Odds of creating an intersection", 1, 50, 500, 10)
     {
       Element<CC>::SetAtomicSymbol("St");
       Element<CC>::SetName("City Street");
@@ -136,6 +136,20 @@ namespace MFM
       {
         window.SetRelativeAtom(offset, atom);
       }
+    }
+
+    bool MooreBorder(EventWindow<CC>& window, u32 type) const
+    {
+      SPoint pt;
+      for(u32 i = 0; i < Dirs::DIR_COUNT; i++)
+      {
+        Dirs::FillDir(pt, (Dir)i);
+        if(window.GetRelativeAtom(pt).GetType() == type)
+        {
+          return true;
+        }
+      }
+      return false;
     }
 
     void DoStreetAndSidewalk(EventWindow<CC>& window, Dir d) const;
