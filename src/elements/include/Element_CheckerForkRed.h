@@ -52,7 +52,7 @@ namespace MFM
     Element_CheckerForkRed()
       : Element<CC>(MFM_UUID_FOR("CheckerForkRed", CHECKERFORK_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("Cb");
+      Element<CC>::SetAtomicSymbol("Cr");
       Element<CC>::SetName("CheckerForkRed");
     }
 
@@ -82,7 +82,6 @@ namespace MFM
 
   template <class CC>
   Element_CheckerForkRed<CC> Element_CheckerForkRed<CC>::THE_INSTANCE;
-
 }
 
 #include "Element_CheckerForkRed.tcc"

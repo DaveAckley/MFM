@@ -82,7 +82,6 @@ namespace MFM
 
   template <class CC>
   Element_CheckerForkBlue<CC> Element_CheckerForkBlue<CC>::THE_INSTANCE;
-
 }
 
 #include "Element_CheckerForkBlue.tcc"
