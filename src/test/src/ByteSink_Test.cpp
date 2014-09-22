@@ -182,6 +182,11 @@ namespace MFM {
       bs.Printf("[IPM:%s=%d]",m_str,arg);
       return SUCCESS;
     }
+
+    Result ReadFrom(ByteSource & source, s32 arg = 0)
+    {
+      return UNSUPPORTED;
+    }
   private:
     const char * m_str;
   };
