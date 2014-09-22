@@ -36,6 +36,8 @@ namespace MFM
   template <class CC, u32 R>
   class NeighborSelectPanel : public ParameterController<CC>
   {
+    typedef ParameterController<CC> Super;
+
     enum
     {
       SITES = EVENT_WINDOW_SITES(R)
@@ -90,6 +92,7 @@ namespace MFM
         ElementParameterNeighborhood<CC,SITES>* np =
           dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>(ParameterController<CC>::GetParameter());
         np->SetBit(bitNum);
+        LOG.Debug("Neighborhood Set#%d = %@", bitNum, np);
       }
     }
 
@@ -101,6 +104,7 @@ namespace MFM
         ElementParameterNeighborhood<CC,SITES>* np =
           dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>(ParameterController<CC>::GetParameter());
         np->ClearBit(bitNum);
+        LOG.Debug("Neighborhood Clear#%d = %@", bitNum, np);
       }
     }
 
@@ -164,6 +168,21 @@ namespace MFM
     {
       Panel::SetDesiredSize(300, (2 * BORDER_SIZE) + (R * 2 + 1) * CELL_SIZE);
       Panel::SetForeground(Drawing::GREY80);
+    }
+
+    void SetParameter(ElementParameter<CC>* pb)
+    {
+      Super::SetParameter(pb);
+      ElementParameterNeighborhood<CC,SITES>* np =
+        dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>(ParameterController<CC>::GetParameter());
+      if (!np)
+      {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+
+      u64 ngb = np->GetValue();
+      m_bitField.WriteLong(0, SITES, ngb);
+      LOG.Debug("Neighborhood initted to %@", np);
     }
 
     void SetSelectMode(NeighborhoodSelectMode mode)

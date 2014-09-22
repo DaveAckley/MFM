@@ -51,7 +51,7 @@ namespace MFM
     {
     }
 
-    void SetParameter(ElementParameter<CC>* pb)
+    virtual void SetParameter(ElementParameter<CC>* pb)
     {
       SetParameter(pb, &pb->GetAtom());
     }
