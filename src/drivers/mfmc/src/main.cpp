@@ -62,6 +62,8 @@ namespace MFM
       this->NeedElement(&Element_Dmover<CC>::THE_INSTANCE);
       this->NeedElement(&Element_CheckerForkBlue<CC>::THE_INSTANCE);
       this->NeedElement(&Element_CheckerForkRed<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Wanderer_Cyan<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Wanderer_Magenta<CC>::THE_INSTANCE);
     }
 
   public:
