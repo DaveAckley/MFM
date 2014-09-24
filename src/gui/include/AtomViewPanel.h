@@ -73,7 +73,7 @@ namespace MFM
       this->SetVisibility(visible);
     }
 
-    void PaintDisplayAtomicControllers(Drawing d, T& atom,const Element<CC>* elt)
+    void PaintDisplayAtomicControllers(Drawing & d, T& atom,const Element<CC>* elt)
     {
       // XXX DESIGN ME
       // XXX WRITE ME
@@ -90,7 +90,7 @@ namespace MFM
           {
             u32 val = 0;
             bool got = p->LoadU32(atom, val);
-            LOG.Debug("u32 %s = %u (%d)", p->GetName(), val, got);
+            LOG.Debug("u32 %s = %d (%d)", p->GetName(), (s32) val, got);
           }
           break;
         default:
