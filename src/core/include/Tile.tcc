@@ -5,6 +5,7 @@
 #include "AtomSerializer.h"
 #include "PacketSerializer.h"
 #include "Util.h"
+#include "UsageTimer.h"
 
 namespace MFM
 {
@@ -992,6 +993,7 @@ namespace MFM
           // It's showtime!
           bool locked = false;
           Dir lockRegion = Dirs::NORTH;
+	  UsageTimer execTimer = UsageTimer::NowThread();
 
           CreateRandomWindow();
 
@@ -1001,6 +1003,12 @@ namespace MFM
           {
             DoEvent(locked, lockRegion);
           }
+
+	  u32 ms = (UsageTimer::NowThread() - execTimer).TotalMicroseconds();
+	  if(ms > 1)
+	  {
+	    LOG.Debug("Atom took longer 1 ms to execute: %d ms", ms);
+	  }
         }
         else
         {

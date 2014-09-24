@@ -22,6 +22,7 @@ namespace MFM {
 
   TTF_Font * Fonts::GetFont(const char * resourcePath, u32 size)
   {
+    FAIL(DEPRECATED);
     Init();
     for (u32 i = 0; i < CACHE_SIZE; ++i)
     {

@@ -70,9 +70,9 @@ namespace MFM
     {
       if(swapIdx < desires[i])
       {
-	Dirs::FillDir(pt, dirs[i]);
-	window.SwapAtoms(pt, SPoint(0, 0));
-	return;
+        Dirs::FillDir(pt, dirs[i]);
+        window.SwapAtoms(pt, SPoint(0, 0));
+        return;
       }
       swapIdx = MAX(swapIdx - desires[i], 0);
     }

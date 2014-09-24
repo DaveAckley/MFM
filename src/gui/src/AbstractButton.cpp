@@ -14,7 +14,8 @@ namespace MFM
   AbstractButton::AbstractButton() :
     m_text(0),
     m_icon(0),
-    m_enabled(true)
+    m_enabled(true),
+    m_justClicked(false)
   {
     Init();
   }
@@ -46,7 +47,15 @@ namespace MFM
   AbstractButton::~AbstractButton()
   { }
 
-  void AbstractButton::PaintComponent(Drawing & drawing)
+  void AbstractButton::PaintComponent(Drawing& d)
+  {
+    if(!PaintClickHighlight(d))
+    {
+      PaintComponentNonClick(d);
+    }
+  }
+
+  void AbstractButton::PaintComponentNonClick(Drawing & drawing)
   {
     // Fade fg and bg toward each other if not enabled.
     drawing.SetForeground(m_enabled? m_fgColor : Drawing::InterpolateColors(m_fgColor,m_bgColor,60));

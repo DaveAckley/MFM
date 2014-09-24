@@ -205,7 +205,7 @@ namespace MFM
         m_parent = parent;
       }
 
-      virtual void PaintComponent(Drawing& d)
+      virtual void PaintComponentNonClick(Drawing& d)
       {
         if(m_element)
         {
