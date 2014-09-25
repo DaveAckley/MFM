@@ -29,8 +29,8 @@ namespace MFM
     {
       while(num)
       {
-	output[--digits] = 'a' + num % 26;
-	num /= 26;
+        output[--digits] = 'a' + num % 26;
+        num /= 26;
       }
     }
   }

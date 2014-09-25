@@ -34,7 +34,6 @@ namespace MFM
   class UsageTimer
   {
    private:
-
     typedef struct rusage RUsage;
 
     const RUsage m_rusage;
@@ -60,6 +59,22 @@ namespace MFM
       return UsageTimer(r);
     }
 
+    long UserMilliseconds()
+    {
+      return m_rusage.ru_utime.tv_sec * 1000 + m_rusage.ru_utime.tv_usec / 1000;
+    }
+
+    long SystemMilliseconds()
+    {
+      return m_rusage.ru_stime.tv_sec * 1000 + m_rusage.ru_stime.tv_usec / 1000;
+    }
+
+    long TotalMilliseconds()
+    {
+      return UserMilliseconds() + SystemMilliseconds();
+    }
+
+
     long UserMicroseconds()
     {
       return m_rusage.ru_utime.tv_sec * 1000000 + m_rusage.ru_utime.tv_usec;
@@ -78,8 +93,17 @@ namespace MFM
     friend UsageTimer operator-(const UsageTimer& lhs, const UsageTimer& rhs)
     {
       RUsage t;
-      t.ru_utime.tv_sec  = lhs.m_rusage.ru_utime.tv_sec - rhs.m_rusage.ru_utime.tv_sec;
-      t.ru_stime.tv_sec  = lhs.m_rusage.ru_stime.tv_sec - rhs.m_rusage.ru_stime.tv_sec;
+      long uus = (lhs.m_rusage.ru_utime.tv_sec * 1000000 + lhs.m_rusage.ru_utime.tv_usec) -
+                 (rhs.m_rusage.ru_utime.tv_sec * 1000000 + rhs.m_rusage.ru_utime.tv_usec);
+
+      long sus = (lhs.m_rusage.ru_stime.tv_sec * 1000000 + lhs.m_rusage.ru_stime.tv_usec) -
+                 (rhs.m_rusage.ru_stime.tv_sec * 1000000 + rhs.m_rusage.ru_stime.tv_usec);
+
+      t.ru_utime.tv_sec  = uus / 1000000;
+      t.ru_utime.tv_usec = uus % 1000000;
+
+      t.ru_stime.tv_sec  = sus / 1000000;
+      t.ru_stime.tv_usec = sus % 1000000;
 
       t.ru_nvcsw    = lhs.m_rusage.ru_nvcsw    - rhs.m_rusage.ru_nvcsw;
       t.ru_nivcsw   = lhs.m_rusage.ru_nivcsw   - rhs.m_rusage.ru_nivcsw;

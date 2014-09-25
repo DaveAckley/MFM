@@ -34,6 +34,7 @@
 #include "itype.h"
 #include "Element.h"
 #include "Element_Empty.h"
+#include "UsageTimer.h"
 
 namespace MFM
 {
@@ -144,7 +145,16 @@ namespace MFM
       {
         const Element<CC> * elt = Lookup(type);
         if (elt == 0) FAIL(UNKNOWN_ELEMENT);
+
+        UsageTimer t = UsageTimer::NowThread();
+
         elt->Behavior(window);
+
+        u32 ms = (UsageTimer::NowThread() - t).TotalMilliseconds();
+        if(ms > 10)
+        {
+          LOG.Debug("Atom (type 0x%x) took %d ms to execute.", type, ms);
+        }
       }
     }
 
