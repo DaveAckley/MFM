@@ -63,7 +63,7 @@ namespace MFM
       AbstractElement_ForkBomb<CC>(MFM_UUID_FOR("BombBlue", FORKBOMB2_VERSION)),
       m_bombRange(this, "range", "Bomb Radius",
                   "Radius of copying during each bomb event",
-                  0, 2, 4, 1)
+                  0, 2, 4/*, 1*/)
     {
       Element<CC>::SetAtomicSymbol("Bb");
       Element<CC>::SetName("Blue Fork Bomb");

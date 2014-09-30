@@ -28,14 +28,20 @@
 #define NEIGHBOR_SELECT_PANEL_H
 
 #include "Panel.h"
-#include "Parameters.h"
+#include "Parameter.h"
 #include "ParameterController.h"
 
 namespace MFM
 {
-  template <u32 R>
-  class NeighborSelectPanel : public ParameterController
+  template <class CC, u32 R>
+  class NeighborSelectPanel : public ParameterController<CC>
   {
+    typedef ParameterController<CC> Super;
+
+    enum
+    {
+      SITES = EVENT_WINDOW_SITES(R)
+    };
    public:
     typedef enum
     {
@@ -61,7 +67,7 @@ namespace MFM
 
     static const u32 ENABLED_COLOR = 0xff20a020;
 
-    MDist<R> GetNeighborhood()
+    MDist<R> & GetNeighborhood() const
     {
       return MDist<R>::get();
     }
@@ -81,22 +87,24 @@ namespace MFM
     void SetBit(u32 bitNum)
     {
       m_bitField.WriteBit(bitNum, true);
-      if(ParameterController::GetParameter())
+      if(ParameterController<CC>::GetParameter())
       {
-        Parameters::Neighborhood<R>* np =
-          Parameters::Neighborhood<R>::Cast(ParameterController::GetParameter());
+        ElementParameterNeighborhood<CC,SITES>* np =
+          dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>(ParameterController<CC>::GetParameter());
         np->SetBit(bitNum);
+        LOG.Debug("Neighborhood Set#%d = %@", bitNum, np);
       }
     }
 
     void ClearBit(u32 bitNum)
     {
       m_bitField.WriteBit(bitNum, false);
-      if(ParameterController::GetParameter())
+      if(ParameterController<CC>::GetParameter())
       {
-        Parameters::Neighborhood<R>* np =
-          Parameters::Neighborhood<R>::Cast(ParameterController::GetParameter());
+        ElementParameterNeighborhood<CC,SITES>* np =
+          dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>(ParameterController<CC>::GetParameter());
         np->ClearBit(bitNum);
+        LOG.Debug("Neighborhood Clear#%d = %@", bitNum, np);
       }
     }
 
@@ -109,7 +117,7 @@ namespace MFM
     {
       s32 offset = R * CELL_SIZE + BORDER_SIZE;
       SPoint renderPt;
-      MDist<R> n = GetNeighborhood();
+      MDist<R> & n = GetNeighborhood();
 
       for(u32 i = n.GetFirstIndex(0); i <= n.GetLastIndex(R); i++)
       {
@@ -149,12 +157,32 @@ namespace MFM
 
    public:
     NeighborSelectPanel() :
-      ParameterController(),
+      ParameterController<CC>(),
       m_selectMode(NEIGHBOR_SELECT_MANY),
       m_selectedOne(0, 0)
     {
+      Init();
+    }
+
+    virtual void Init()
+    {
       Panel::SetDesiredSize(300, (2 * BORDER_SIZE) + (R * 2 + 1) * CELL_SIZE);
       Panel::SetForeground(Drawing::GREY80);
+    }
+
+    void SetParameter(ElementParameter<CC>* pb)
+    {
+      Super::SetParameter(pb);
+      ElementParameterNeighborhood<CC,SITES>* np =
+        dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>(ParameterController<CC>::GetParameter());
+      if (!np)
+      {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+
+      u64 ngb = np->GetValue();
+      m_bitField.WriteLong(0, SITES, ngb);
+      LOG.Debug("Neighborhood initted to %@", np);
     }
 
     void SetSelectMode(NeighborhoodSelectMode mode)
@@ -184,7 +212,7 @@ namespace MFM
          event.m_event.button.button == SDL_BUTTON_LEFT)
       {
         s32 offset = R * CELL_SIZE + BORDER_SIZE;
-        MDist<R> n = GetNeighborhood();
+        MDist<R> & n = GetNeighborhood();
         Rect buttonRect;
         SPoint clickPt(event.GetAt().GetX() - Panel::GetRenderPoint().GetX(),
                        event.GetAt().GetY() - Panel::GetRenderPoint().GetY());

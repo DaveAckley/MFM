@@ -60,7 +60,7 @@ namespace MFM
 
     static u32 GetIndex(const SPoint coord)
     {
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
       s32 idx = md.FromPoint(coord, R);
       if (idx < 0)
       {
@@ -138,7 +138,7 @@ namespace MFM
     {
       Random & random = window.GetRandom();
       const u32 ourType = this->GetType();
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
 
       T self = window.GetCenterAtom();
 

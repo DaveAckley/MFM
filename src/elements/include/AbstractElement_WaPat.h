@@ -59,8 +59,8 @@ namespace MFM
       WAPAT_FIRST_FREE_POS = CURRENT_AGE_POS + CURRENT_AGE_LEN
     };
 
-    typedef BitField<BitVector<BITS>, CURRENT_AGE_LEN, CURRENT_AGE_POS> AFCurrentAge;
-    typedef BitField<BitVector<BITS>, BIRTH_AGE_LEN, BIRTH_AGE_POS> AFBirthAge;
+    typedef BitField<BitVector<BITS>, VD::U32, CURRENT_AGE_LEN, CURRENT_AGE_POS> AFCurrentAge;
+    typedef BitField<BitVector<BITS>, VD::U32, BIRTH_AGE_LEN, BIRTH_AGE_POS> AFBirthAge;
 
     u32 GetCurrentAge(const T& us) const
     {

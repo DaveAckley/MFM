@@ -68,7 +68,7 @@ namespace MFM
       ELEMENT_VERSION = 1
     };
 
-    typedef BitField<BitVector<BITS>, SHARK_ENERGY_LEN, SHARK_ENERGY_POS> AFSharkEnergy;
+    typedef BitField<BitVector<BITS>, VD::U32, SHARK_ENERGY_LEN, SHARK_ENERGY_POS> AFSharkEnergy;
 
     u32 GetSharkEnergy(const T& us) const
     {
@@ -90,10 +90,10 @@ namespace MFM
       AbstractElement_WaPat<CC>(MFM_UUID_FOR("Shark", ELEMENT_VERSION)),
       m_sharkBirthAge(this, "age", "Birth Age",
                       "Number of events for a shark to mature",
-                      1, INITIAL_DEFAULT_BIRTH_AGE, 100, 1),
+                      1, INITIAL_DEFAULT_BIRTH_AGE, 100/*, 1*/),
       m_sharkEnergyPerFish(this, "energy", "Energy Per Fish",
                            "Life events gained per fish eaten",
-                           1, DEFAULT_ENERGY_PER_FISH, 50, 1)
+                           1, DEFAULT_ENERGY_PER_FISH, 50/*, 1*/)
     {
       Element<CC>::SetAtomicSymbol("Sh");
       Element<CC>::SetName("Shark");
@@ -132,7 +132,7 @@ namespace MFM
     {
       Random & random = window.GetRandom();
       T self = window.GetCenterAtom();
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
 
       SPoint fishRel;
       u32 fishCount = 0;

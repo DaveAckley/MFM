@@ -53,6 +53,12 @@ namespace MFM
       ++m_sequence;
       return SUCCESS;
     }
+
+    virtual Result ReadFrom(ByteSource & byteSource, s32 argument = 0)
+    {
+      return UNSUPPORTED;
+    }
+
   };
 }
 

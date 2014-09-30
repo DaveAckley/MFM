@@ -31,15 +31,16 @@
 #include "CharBufferByteSink.h"
 #include "Drawing.h"
 #include "Util.h"
-#include "Parameters.h"
+#include "Parameter.h"
 #include "ParameterController.h"
 
 namespace MFM
 {
-  class Slider : public ParameterController
+  template <class CC>
+  class Slider : public ParameterController<CC>
   {
   private:
-    Parameters::S32 * m_parm;
+    typedef typename CC::ATOM_TYPE T;
 
     bool m_dragging;
     s32 m_dragStartX;
@@ -54,7 +55,6 @@ namespace MFM
     };
 
     Slider() :
-      m_parm(0),
       m_dragging(false)
     {
       Init();
@@ -66,13 +66,39 @@ namespace MFM
       Panel::SetDesiredSize(10000, SLIDER_HEIGHT);
     }
 
-    void SetParameter(Parameters::S32* parameter)
+    // We standardize on s32 for all values.  We blithely assume that,
+    // for a slider, the range of u32 will not be large enough for
+    // that to be a problem.
+    s32 GetValue()
     {
-      m_parm = parameter;
-      if (m_parm)
+      MFM_API_ASSERT_NONNULL(this->m_parameter);
+      MFM_API_ASSERT_NONNULL(this->m_patom);
+      return this->m_parameter->GetBitsAsS32(*this->m_patom);
+    }
+
+    void SetValue(s32 val)
+    {
+      MFM_API_ASSERT_NONNULL(this->m_parameter);
+      MFM_API_ASSERT_NONNULL(this->m_patom);
+      return this->m_parameter->SetBitsAsS32(*this->m_patom, val);
+    }
+
+    void SetSliderTarget(Parameter<CC>* parameter, Atom<CC> * patom)
+    {
+      if (!parameter && !patom)
       {
-        m_parm->SetValue(m_parm->GetValue());
+        this->m_parameter = NULL;
+        this->m_patom = NULL;
+        return;
       }
+
+      if (!parameter || !patom)
+      {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+
+      this->m_parameter = parameter;
+      this->m_patom = patom;
     }
 
     virtual void PaintBorder(Drawing& d)
@@ -84,13 +110,13 @@ namespace MFM
       {
         if(event.m_event.button.button == SDL_BUTTON_LEFT)
         {
-          if(GetSliderRect().Contains(event.GetAt() - GetAbsoluteLocation()))
+          if(GetSliderRect().Contains(event.GetAt() - this->GetAbsoluteLocation()))
           {
-            if(m_parm)
+            if(this->m_parameter)
             {
               m_dragging = true;
               m_dragStartX = event.GetAt().GetX();
-              m_preDragVal = m_parm->GetValue();
+              m_preDragVal = GetValue();
               return true;
             }
           }
@@ -106,12 +132,14 @@ namespace MFM
 
     virtual bool Handle(MouseMotionEvent& event)
     {
-      if(m_dragging && m_parm)
+      if(m_dragging && this->m_parameter)
       {
         s32 delta = event.m_event.motion.x - m_dragStartX;
-        s32 valDelta = ((delta * m_parm->GetMax()) - 16) / (SLIDER_WIDTH - 16);
-
-        m_parm->SetValue(m_preDragVal + valDelta);
+        s32 valDelta = ((delta * this->m_parameter->GetMax()) - 16) / (SLIDER_WIDTH - 16);
+        if (this->m_parameter)
+        {
+          SetValue(m_preDragVal + valDelta);
+        }
       }
       return m_dragging;
     }
@@ -123,7 +151,7 @@ namespace MFM
 
     virtual void PaintComponent(Drawing & d)
     {
-      if (!m_parm)
+      if (!this->m_parameter)
       {
         return;
       }
@@ -138,19 +166,19 @@ namespace MFM
       d.DrawVLine(SLIDER_WIDTH - 7, 16, 20);
 
       CharBufferByteSink<16> numBuffer;
-      numBuffer.Printf("%d", m_parm->GetMin());
+      numBuffer.Printf("%d", this->m_parameter->GetMin());
       d.BlitText(numBuffer.GetZString(),
                  UPoint(3, 16),
                  UPoint(48, 16));
 
       numBuffer.Reset();
-      numBuffer.Printf("%d", m_parm->GetMax());
+      numBuffer.Printf("%d", this->m_parameter->GetMax());
       d.BlitText(numBuffer.GetZString(),
                  UPoint(SLIDER_WIDTH - 32, SLIDER_HALF_HEIGHT),
                  UPoint(48, SLIDER_HALF_HEIGHT));
 
       numBuffer.Reset();
-      numBuffer.Printf("%d", m_parm->GetValue());
+      this->m_parameter->PrintValue(numBuffer, *this->m_patom);
 
       d.SetBackground(Drawing::GREY70);
       d.SetForeground(Drawing::WHITE);
@@ -163,7 +191,7 @@ namespace MFM
                   MakeUnsigned(sliderRect.GetPosition()),
                   sliderRect.GetSize());
 
-      d.BlitBackedText(m_parm->GetName(),
+      d.BlitBackedText(this->m_parameter->GetName(),
                        UPoint(SLIDER_WIDTH, 7),
                        UPoint(SLIDER_WIDTH, SLIDER_HALF_HEIGHT));
     }
@@ -173,9 +201,10 @@ namespace MFM
     inline Rect GetSliderRect()
     {
       s32 xpos = 0;
-      if (m_parm)
+      if (this->m_parameter)
       {
-        xpos = m_parm->MapValue((SLIDER_WIDTH - 7), m_parm->GetValue()) - 7;
+        s32 val = GetValue();
+        xpos = this->m_parameter->MapValue((SLIDER_WIDTH - 7), val) - 7;
       }
       return Rect(xpos > 0 ? xpos : 0, 0, 17, SLIDER_HALF_HEIGHT);
     }

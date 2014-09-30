@@ -32,16 +32,18 @@
 #include "CharBufferByteSink.h"
 #include "Drawing.h"
 #include "Util.h"
-#include "Parameters.h"
+#include "Parameter.h"
 #include "ParameterController.h"
 #include "AbstractCheckbox.h"
 
 namespace MFM
 {
-  class ParameterControllerBool : public ParameterController
+  template <class CC>
+  class ParameterControllerBool : public ParameterController<CC>
   {
   private:
-    typedef ParameterController Super;
+    typedef typename CC::ATOM_TYPE T;
+    typedef Panel Super;
 
     enum {
       PARAMETERCONTROLLERBOOL_WIDTH = 300,
@@ -99,46 +101,27 @@ namespace MFM
       Init();
     }
 
-    const Parameters::Bool * GetParameter() const
+    void SetParameterValue(bool value)
     {
-      const Parameters::Parameter * p = Super::GetParameter();
-      if (!p)
-      {
-        return NULL;
-      }
-
-      if (p->GetParameterType() != Parameters::BOOL_PARAMETER)
+      if (!this->m_parameter || !this->m_patom)
       {
         FAIL(ILLEGAL_STATE);
       }
-      return (const Parameters::Bool *) p;
-    }
-
-    Parameters::Bool * GetParameter()
-    {
-      // Safe. But, barf.
-      return
-        const_cast<Parameters::Bool *>
-        (static_cast<const ParameterControllerBool*>
-         (this)->GetParameter());
-    }
-
-
-    void SetParameterValue(bool value)
-    {
-      if (GetParameter())
-      {
-        GetParameter()->SetValue(value);
-      }
+      this->m_parameter->SetBitsAsS32(*this->m_patom, value? -1 : 0);
     }
 
     bool GetParameterValue() const
     {
-      if (GetParameter())
+      if (!this->m_parameter || !this->m_patom)
       {
-        return GetParameter()->GetValue();
+        FAIL(ILLEGAL_STATE);
       }
-      return false;
+      bool ret;
+      if (!this->m_parameter->LoadBool(*this->m_patom, ret))
+      {
+        FAIL(ILLEGAL_STATE);
+      }
+      return ret;
     }
 
     void Init()
@@ -147,21 +130,8 @@ namespace MFM
       Panel::SetDesiredSize(10000, PARAMETERCONTROLLERBOOL_HEIGHT);
       Panel::SetBackground(Drawing::GREY60);
 
-      Parameters::Bool * bp = GetParameter();
-      if (bp)
-      {
-        SetParameterValue(GetParameterValue());
-      }
       m_checkbox.Init();
     }
-
-    void SetParameter(Parameters::Bool* parameter)
-    {
-      Super::SetParameter(parameter);
-      Init();
-    }
-
-  private:
 
   };
 }

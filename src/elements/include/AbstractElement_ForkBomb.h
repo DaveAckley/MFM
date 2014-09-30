@@ -74,7 +74,7 @@ namespace MFM
 
     virtual void Behavior(EventWindow<CC>& window) const
     {
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
       u32 range = GetBombRange();
       if (range > R)
         range = R;

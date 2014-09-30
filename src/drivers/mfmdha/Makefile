@@ -10,7 +10,7 @@ INCLUDES += $(shell sdl-config --cflags)
 
 # What we need to link
 LIBS += -L $(BASEDIR)/build/core/ -L $(BASEDIR)/build/sim/ -L $(BASEDIR)/build/gui/
-LIBS += -lmfmgui -lmfmsim -lmfmcore -lSDL_ttf -lSDL_image -lSDL -lpng -lm -lpthread -ldl
+LIBS += -lmfmgui -lmfmsim -lmfmcore -lSDL_ttf -lSDL_image -lSDL -lpng -lm -ldl
 
 # Do the program thing
 include $(BASEDIR)/config/Makeprog.mk

@@ -32,7 +32,9 @@
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "itype.h"
+#include "P0Atom.h"
 #include "P1Atom.h"
+#include "P3Atom.h"
 #include "Element_Res.h"  /* For Element_Res::TYPE */
 #include "Element_Wall.h" /* For Element_Wall::TYPE */
 
@@ -62,10 +64,10 @@ namespace MFM
 
     Element_Dreg()
       : Element<CC>(MFM_UUID_FOR("Dreg", DREG_VERSION)),
-        m_resOdds(this, "res", "Res Spawn Odds", "Chance of filling an empty site with a Res", 1, 200, 1000, 10),
-        m_deleteOdds(this, "del", "Delete Odds", "Chance of deleting an adjacent non-empty non-Dreg", 1, 100, 1000, 10),
-        m_dregCreateOdds(this, "dreg", "Dreg Spawn Odds", "Chance of filling an empty site with a Dreg", 1, 500, 1000, 10),
-        m_dregDeleteOdds(this, "ddreg", "Delete Dreg Odds", "Chance of deleting an adjacent Dreg", 1, 50, 1000, 10)
+        m_resOdds(this, "res", "Res Spawn Odds", "Chance of filling an empty site with a Res", 1, 200, 1000/*, 10*/),
+        m_deleteOdds(this, "del", "Delete Odds", "Chance of deleting an adjacent non-empty non-Dreg", 1, 100, 1000/*, 10*/),
+        m_dregCreateOdds(this, "dreg", "Dreg Spawn Odds", "Chance of filling an empty site with a Dreg", 1, 500, 1000/*, 10*/),
+        m_dregDeleteOdds(this, "ddreg", "Delete Dreg Odds", "Chance of deleting an adjacent Dreg", 1, 50, 1000/*, 10*/)
     {
       Element<CC>::SetAtomicSymbol("Dr");
       Element<CC>::SetName("Dreg");

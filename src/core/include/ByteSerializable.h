@@ -62,10 +62,12 @@ namespace MFM
        SUCCESS if the reading was successful and FAIL if there was any
        problem.
      */
-    virtual Result ReadFrom(ByteSource & byteSource, s32 argument = 0)
+    virtual Result ReadFrom(ByteSource & byteSource, s32 argument = 0) = 0;
+    /*
     {
       return UNSUPPORTED;
     }
+    */
 
     /**
        Print a representation of this ByteSerializble to the given \a
@@ -76,10 +78,11 @@ namespace MFM
        printing itself, or SUCCESS if the printing was successful and
        FAIL if there was any problem.
      */
-    virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0)
+    virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0) = 0;
+    /*
     {
       return UNSUPPORTED;
-    }
+      }*/
 
     virtual ~ByteSerializable()
     { }
