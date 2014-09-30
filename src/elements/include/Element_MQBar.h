@@ -52,6 +52,7 @@ namespace MFM
     // Extract short names for parameter types
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
+
     enum { R = P::EVENT_WINDOW_RADIUS };
 
     template <u32 TVBITS>
@@ -109,18 +110,32 @@ namespace MFM
     static const u32 BITS_BAR_COORD_LEN = BITS_WIDE + BITS_HIGH;
 
     static const u32 STATE_BITS_START = P3Atom<P>::P3_STATE_BITS_POS;
-    typedef BitVector<P::BITS_PER_ATOM> BVA;
 
-    typedef BitField<BVA, BITS_BAR_COORD_LEN, STATE_BITS_START> AFSize;
-    typedef BitField<BVA, BITS_BAR_COORD_LEN, AFSize::END> AFPos;
-    typedef BitField<BVA, BITS_SYMI, AFPos::END> AFSymI;
-    typedef BitField<BVA, BITS_TIMER, AFSymI::END> AFTimer;
+    typedef AtomicParameterType<CC, VD::U32, BITS_WIDE, STATE_BITS_START> APBarWidth;
+    typedef AtomicParameterType<CC, VD::U32, BITS_HIGH, APBarWidth::END> APBarHeight;
+    typedef AtomicParameterType<CC, VD::U32, BITS_WIDE, APBarHeight::END> APXPos;
+    typedef AtomicParameterType<CC, VD::U32, BITS_HIGH, APXPos::END> APYPos;
+    typedef AtomicParameterType<CC, VD::U32, BITS_SYMI, APYPos::END> APSymI;
+    typedef AtomicParameterType<CC, VD::U32, BITS_TIMER,APSymI::END> APTimer;
 
-    static const u32 STATE_BITS_END = AFTimer::END;
+    APBarWidth m_barWidth;
+    APBarHeight m_barHeight;
+    APXPos m_xPos;
+    APYPos m_yPos;
+    APSymI m_symI;
+    APTimer m_timer;
+
+    static const u32 STATE_BITS_END = APTimer::END;
     static const u32 STATE_BITS_COUNT = STATE_BITS_END - STATE_BITS_START + 1;
 
     Element_MQBar() :
-      Element<CC>(MFM_UUID_FOR("MQBar", MQBAR_VERSION))
+      Element<CC>(MFM_UUID_FOR("MQBar", MQBAR_VERSION)),
+      m_barWidth(this,"width","Bar Width","Bar width", 0, 15, _GetNOnes32(BITS_WIDE)/*, 1*/),
+      m_barHeight(this,"height","Bar Height","Bar height", 0, 3*15, _GetNOnes32(BITS_HIGH)/*, 1*/),
+      m_xPos(this,"xpos","X pos","X position within bar", 0, 0, _GetNOnes32(BITS_WIDE)/*, 1*/),
+      m_yPos(this,"ypos","Y pos","Y position within bar", 0, 0, _GetNOnes32(BITS_HIGH)/*, 1*/),
+      m_symI(this,"sym","Symmetry","Bar orientation, 0:N, 1:E, 2:S, 3:W", 0, 0, _GetNOnes32(BITS_SYMI)/*, 1*/),
+      m_timer(this,"timer","Timer","Cell maturity timer", 0, 0, _GetNOnes32(BITS_TIMER)/*, 1*/)
     {
       LOG.Message("%@ ctor %p", &this->GetUUID(), this);
 
@@ -131,25 +146,26 @@ namespace MFM
     u32 GetSymI(const T &atom) const {
       if (!IsOurType(atom.GetType()))
         FAIL(ILLEGAL_STATE);
-      return AFSymI::Read(this->GetBits(atom));
+      //return AFSymI::Read(this->GetBits(atom));
+      return m_symI.GetValue(atom);
     }
 
     SPoint GetMax(const T &atom) const {
       if (!IsOurType(atom.GetType()))
         FAIL(ILLEGAL_STATE);
-      return MakeSigned(toUPoint<BITS_WIDE,BITS_HIGH>(AFSize::Read(this->GetBits(atom))));
+      return SPoint(m_barWidth.GetValue(atom), m_barHeight.GetValue(atom));
     }
 
     SPoint GetPos(const T &atom) const {
       if (!IsOurType(atom.GetType()))
         FAIL(ILLEGAL_STATE);
-      return MakeSigned(toUPoint<BITS_WIDE,BITS_HIGH>(AFPos::Read(this->GetBits(atom))));
+      return SPoint(m_xPos.GetValue(atom), m_yPos.GetValue(atom));
     }
 
     u32 GetTimer(const T &atom) const {
       if (!IsOurType(atom.GetType()))
         FAIL(ILLEGAL_STATE);
-      return AFTimer::Read(this->GetBits(atom));
+      return m_timer.GetValue(atom);
     }
 
     bool FitsInRep(const SPoint & v) const {
@@ -161,7 +177,8 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       if (!FitsInRep(v))
         FAIL(ILLEGAL_ARGUMENT);
-      AFSize::Write(this->GetBits(atom),toUTiny<BITS_WIDE,BITS_HIGH>(MakeUnsigned(v)));
+      m_barWidth.SetValue(atom, v.GetX());
+      m_barHeight.SetValue(atom, v.GetY());
     }
 
     void SetPos(T &atom, const SPoint v) const {
@@ -169,7 +186,8 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       if (!FitsInRep(v))
         FAIL(ILLEGAL_ARGUMENT);
-      AFPos::Write(this->GetBits(atom),toUTiny<BITS_WIDE,BITS_HIGH>(MakeUnsigned(v)));
+      m_xPos.SetValue(atom, v.GetX());
+      m_yPos.SetValue(atom, v.GetY());
     }
 
     void SetSymI(T &atom, const u32 sym) const {
@@ -177,7 +195,7 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       if (sym >= PSYM_SYMMETRY_COUNT)
         FAIL(ILLEGAL_ARGUMENT);
-      AFSymI::Write(this->GetBits(atom),sym);
+      m_symI.SetValue(atom, sym);
     }
 
     void SetTimer(T &atom, const u32 tmr) const {
@@ -185,7 +203,7 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       if (tmr > MAX_TIMER_VALUE)
         FAIL(ILLEGAL_ARGUMENT);
-      AFTimer::Write(this->GetBits(atom),tmr);
+      m_timer.SetValue(atom, tmr);
     }
 
     virtual const T & GetDefaultAtom() const
@@ -266,7 +284,7 @@ namespace MFM
       SPoint barMax = this->GetMax(self);
       SPoint myPos = this->GetPos(self);
 
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
 
       SPoint anInconsistent;
       u32 inconsistentCount = 0;

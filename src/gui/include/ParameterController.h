@@ -28,13 +28,17 @@
 #define PARAMETERCONTROLLER_H
 
 #include "Panel.h"
-#include "Parameters.h"
+#include "Parameter.h"
 
 namespace MFM
 {
+  template <class CC>
   class ParameterController : public Panel
   {
-    Parameters::Parameter * m_parameter;
+  protected:
+    typedef typename CC::ATOM_TYPE T;
+    Parameter<CC> * m_parameter;
+    T * m_patom;
 
   public:
 
@@ -47,17 +51,37 @@ namespace MFM
     {
     }
 
-    void SetParameter(Parameters::Parameter * parm)
+    virtual void SetParameter(ElementParameter<CC>* pb)
     {
-      m_parameter = parm;
+      SetParameter(pb, &pb->GetAtom());
     }
 
-    Parameters::Parameter * GetParameter()
+    void SetParameter(Parameter<CC>* pb, T * patom)
+    {
+      if (!pb && !patom)
+      {
+        m_parameter = 0;
+        m_patom = 0;
+        return;
+      }
+
+      if (!pb || !patom)
+      {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+      m_parameter = pb;
+      m_patom = patom;
+      Init();
+    }
+
+    virtual void Init() = 0;
+
+    Parameter<CC> * GetParameter()
     {
       return m_parameter;
     }
 
-    const Parameters::Parameter * GetParameter() const
+    const Parameter<CC> * GetParameter() const
     {
       return m_parameter;
     }

@@ -68,6 +68,10 @@ namespace MFM
   template <u32 R>
   class MDist
   {
+  private:
+    MDist(const MDist &) ;  // Singleton: Declare away copy ctor
+    MDist & operator=(const MDist &) ; // Don't want this either
+
   public:
     /**
      * The diameter of an EventWindow of Radius R .

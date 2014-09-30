@@ -59,8 +59,8 @@ namespace MFM
 
     typedef BitVector<P::BITS_PER_ATOM> BVA;
 
-    typedef BitField<BVA, BITS_DIR, STATE_BITS_START> AFDir;
-    typedef BitField<BVA, BITS_DIST, AFDir::END> AFDist;
+    typedef BitField<BVA, VD::U32, BITS_DIR, STATE_BITS_START> AFDir;
+    typedef BitField<BVA, VD::U32, BITS_DIST, AFDir::END> AFDist;
 
     static const u32 STATE_BITS_END = AFDist::END;
     static const u32 STATE_BITS_COUNT = STATE_BITS_END - STATE_BITS_START + 1;

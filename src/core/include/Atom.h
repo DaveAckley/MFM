@@ -29,6 +29,7 @@
 #define ATOM_H
 
 #include "itype.h"
+#include "VD.h"
 #include "BitVector.h"
 #include "Random.h"
 #include "Util.h"     /* For REQUIRE */
@@ -41,7 +42,7 @@ namespace MFM
 
   template <class CC> class Element; // Forward declaration
   template <class CC> class AtomSerializer; // Forward declaration
-  template <class BV, u32, u32> class BitField;  // Forward declaration
+  template <class BV, VD::Type, u32, u32> class BitField;  // Forward declaration
 
   /**
      An Atom is a fixed-size collection of bits, representing an
@@ -71,8 +72,7 @@ namespace MFM
   {
     // Extract short names for parameter types
     /**
-       The kind of Atom, or sub-class of this Atom, that will be used
-       during compilation.
+       The subclass of this Atom that will be used during compilation.
     */
     typedef typename CC::ATOM_TYPE T;
 
@@ -98,9 +98,10 @@ namespace MFM
     */
     BitVector<BPA> m_bits;
 
+    friend class VD;  // Value Descriptors can mess with our bits
     friend class Element<CC>;  // Let Element mess with our bits
     friend class AtomSerializer<CC>;  // Ditto AtomSerializer
-    template <class BV, u32, u32> friend class BitField;  // Ditto BitField (all instances)
+    template <class BV, VD::Type, u32, u32> friend class BitField;  // Ditto BitField (all instances)
 
   public:
 
@@ -145,9 +146,13 @@ namespace MFM
      * @returns true if this Atom is considered to be in a legal
      * state, else false.
      *
-     * @remarks This is to be defined only by a subclass of Atom.
+     * @remarks This delegates to IsSaneImpl in the subclass of Atom.
      */
-    bool IsSane() const;
+    bool IsSane() const
+    {
+      return static_cast<const T*>(this)->IsSaneImpl();
+    }
+
 
     /**
      * Assuming IsSane has returned false, this attempts to correct
@@ -156,48 +161,68 @@ namespace MFM
      * @returns true if this Atom now has a legal type, false if the
      * type is so damaged it should just be destroyed
      *
-     * @remarks This is to be defined only by a subclass of Atom.
+     * @remarks This delegates to HasBeenRepairedImpl in the subclass of Atom.
      */
-    bool HasBeenRepaired();
+    bool HasBeenRepaired()
+    {
+      return static_cast<T*>(this)->HasBeenRepairedImpl();
+    }
 
     /**
      * Gets the type of this Atom.
      *
      * @returns The type of this Atom.
      *
-     * @remarks This is to be defined only by a subclass of Atom.
+     * @remarks This delegates to GetTypeImpl in the subclass of Atom.
      */
-    u32 GetType() const;
+    u32 GetType() const
+    {
+      return static_cast<const T*>(this)->GetTypeImpl();
+    }
 
     /**
      * Prints this Atom in a semi-readable way to a ByteSink.
      *
-     * @remarks This is to be defined only by a subclass of Atom.
+     * @remarks This delegates to PrintImpl in the subclass of Atom.
      */
-    void Print(ByteSink & ostream) const;
+    void Print(ByteSink & ostream) const
+    {
+      static_cast<const T*>(this)->PrintImpl(ostream);
+    }
 
     /**
      * Writes all bits of this Atom to a ByteSink. These bits must
      * not include the type bits of this Atom.
      *
-     * @remarks This is to be defined only by a subclass of Atom.
+     * @remarks This delegates to WriteStateBits in the subclass of Atom.
      */
-    void WriteStateBits(ByteSink& ostream) const;
+    void WriteStateBits(ByteSink& ostream) const
+    {
+      static_cast<const T*>(this)->WriteStateBitsImpl(ostream);
+    }
 
     /**
      * Reads the State bits of this atom from a given hex-encoded char* .
      *
-     * @remarks This is to be defined only by a subclass of Atom.
+     * @remarks This delegates to ReadStateBits in the subclass of Atom.
      */
-    void ReadStateBits(const char* hexStr);
+    void ReadStateBits(const char* hexStr)
+    {
+      static_cast<T*>(this)->ReadStateBitsImpl(hexStr);
+    }
+
 
     /**
      * Reads the State bits of this atom from a BitVector.  Only
      * the non-type bits are copied.
      *
-     * @remarks This is to be defined only by a subclass of Atom.
+     * @remarks This delegates to ReadStateBits in the subclass of Atom.
      */
-    void ReadStateBits(const BitVector<BPA> & bv);
+    void ReadStateBits(const BitVector<BPA> & bv)
+    {
+      static_cast<T*>(this)->ReadStateBitsImpl(bv);
+    }
+
 
     /**
      * Writes the internal bits of this Atom to a ByteSink in hex format.

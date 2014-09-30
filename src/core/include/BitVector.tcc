@@ -71,6 +71,31 @@ namespace MFM {
   }
 
   template <u32 BITS>
+  u64 BitVector<BITS>::ReadLong(const u32 startIdx, const u32 length) const
+  {
+    const u32 firstLen = MIN((const u32) 32,length);
+    const u32 secondLen = length - firstLen;
+    u64 ret = Read(startIdx + secondLen, firstLen);
+    if (secondLen > 0)
+    {
+      ret |= ((u64) Read(startIdx, secondLen)) << firstLen;
+    }
+    return ret;
+  }
+
+  template <u32 BITS>
+  void BitVector<BITS>::WriteLong(const u32 startIdx, const u32 length, const u64 value)
+  {
+    const u32 firstLen = MIN((const u32) 32,length);
+    const u32 secondLen = length - firstLen;
+    Write(startIdx + secondLen, firstLen, (u32) value);
+    if (secondLen > 0)
+    {
+      Write(startIdx, secondLen, ((u32) (value >> firstLen)));
+    }
+  }
+
+  template <u32 BITS>
   void BitVector<BITS>::Write(u32 startIdx,
                               u32 length,
                               u32 value)
@@ -128,6 +153,8 @@ namespace MFM {
 
     return ret;
   }
+
+
 
   template <u32 BITS>
   void BitVector<BITS>::StoreBits(const u32 bits, const u32 startIdx, const u32 length)

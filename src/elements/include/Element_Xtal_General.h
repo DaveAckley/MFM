@@ -50,20 +50,12 @@ namespace MFM
       R = P::EVENT_WINDOW_RADIUS,
       BITS = P::BITS_PER_ATOM,
 
-      SITES = EVENT_WINDOW_SITES(R),
-      SITE_PART1_POS = P3Atom<P>::P3_STATE_BITS_POS,
-      SITE_PART1_LEN = SITES / 2,
-      SITE_PART2_POS = SITE_PART1_POS + SITE_PART1_LEN,
-      SITE_PART2_LEN = SITES - SITE_PART1_LEN
+      SITES = EVENT_WINDOW_SITES(R)
     };
 
-    typedef BitField<BitVector<BITS>, SITE_PART1_LEN, SITE_PART1_POS> AFSitePart1;
-    typedef BitField<BitVector<BITS>, SITE_PART2_LEN, SITE_PART2_POS> AFSitePart2;
+    typedef BitField<BitVector<BITS>, VD::BITS, SITES, BITS - SITES> AFSites;
 
-    typedef BitField<BitVector<SITES>, SITE_PART1_LEN, 0> XSSitePart1;
-    typedef BitField<BitVector<SITES>, SITE_PART2_LEN, SITE_PART1_LEN> XSSitePart2;
-
-    ElementParameterNeighborhood<CC, R> m_neighborhood;
+    ElementParameterNeighborhood<CC,SITES> m_neighborhood;
 
   public:
 
@@ -76,7 +68,7 @@ namespace MFM
     Element_Xtal_General() :
       AbstractElement_Xtal<CC>(MFM_UUID_FOR("XtalGen", ELT_VERSION)),
       m_neighborhood(this, "neighborhood", "Neighborhood",
-                     "This Xtal will reproduce to match this neighborhood.")
+                     "Newly-drawn Xg's will have this neighborhood.",0)
     {
       Element<CC>::SetAtomicSymbol("Xg");
       Element<CC>::SetName("General crystal");
@@ -85,22 +77,10 @@ namespace MFM
     virtual const T & GetDefaultAtom() const
     {
       static T defaultAtom(TYPE(),0,0,0);
-
-      for(u32 i = 0; i < SITES; i++)
-      {
-        if(m_neighborhood.ReadBit(i))
-        {
-          this->GetBits(defaultAtom).SetBit(i + SITE_PART1_POS);
-        }
-        else
-        {
-          this->GetBits(defaultAtom).ClearBit(i + SITE_PART1_POS);
-        }
-      }
+      AFSites::WriteLong(this->GetBits(defaultAtom), m_neighborhood.GetValue());
 
       return defaultAtom;
     }
-
 
     virtual u32 GetSymI(T &atom, EventWindow<CC>& window) const
     {
@@ -112,6 +92,11 @@ namespace MFM
       return 0xff11bb33;
     }
 
+    virtual u32 DefaultLowlightColor() const
+    {
+      return 0xff0c8023;
+    }
+
     virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
     {
       return DefaultPhysicsColor();
@@ -119,51 +104,19 @@ namespace MFM
 
     typedef typename MFM::AbstractElement_Xtal<CC>::XtalSites XtalSites;
 
-    static u32 mutate(Random & random, u32 val, u32 len)
-    {
-      /*
-      while (random.OneIn(10))
-      {
-        val ^= 1<<random.Create(len);
-      }
-      */
-      return val;
-    }
-
     /**
      * XtalGens are only truly the same if their sites are identical.
      */
     virtual bool IsSameXtal(T & self, const T & otherAtom, EventWindow<CC>& window) const
     {
       return
-        (AFSitePart1::Read(this->GetBits(self)) == AFSitePart1::Read(this->GetBits(otherAtom)))
-        &&
-        (AFSitePart2::Read(this->GetBits(self)) == AFSitePart2::Read(this->GetBits(otherAtom)));
+        AFSites::ReadLong(this->GetBits(self)) == AFSites::ReadLong(this->GetBits(otherAtom));
     }
 
     virtual void GetSites(T & atom, XtalSites & sites, EventWindow<CC>& window) const
     {
-      Random & random = window.GetRandom();
-      u32 buf, mbuf;
-
-      buf = AFSitePart1::Read(this->GetBits(atom));
-      mbuf = mutate(random, buf, SITE_PART2_LEN);
-      if (buf != mbuf)
-      {
-        buf = mbuf;
-        AFSitePart1::Write(this->GetBits(atom), buf);
-      }
-      XSSitePart1::Write(sites, buf);
-
-      buf = AFSitePart2::Read(this->GetBits(atom));
-      mbuf = mutate(random, buf, SITE_PART2_LEN);
-      if (buf != mbuf)
-      {
-        buf = mbuf;
-        AFSitePart2::Write(this->GetBits(atom), buf);
-      }
-
-      XSSitePart2::Write(sites, buf);
+      u64 bits = AFSites::ReadLong(this->GetBits(atom));
+      sites.WriteLong(0, SITES, bits);
     }
 
   };

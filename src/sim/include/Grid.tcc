@@ -277,7 +277,7 @@ namespace MFM {
     s32 sleepTimer = 0;
     do
     {
-      if (++loops >= 100000)
+      if (++loops >= 1000000)
       {
         LOG.Error("%s control looped %d times, but %d still not ready, killing",
                   tc.GetName(), loops, notReady);

@@ -42,10 +42,14 @@ namespace MFM
     u32 edges = 0;
     for(Dir i = Dirs::NORTH; edges < Dirs::DIR_COUNT; i = Dirs::CWDir(i), edges++)
     {
+
+      /* We have nothing locked */
+      m_iLocked[i] = false;
+
       if(IS_OWNED_CONNECTION(i))
       {
         /* We own this one! Hook it up. */
-        m_connections[i] = m_ownedConnections + i - Dirs::EAST;
+        m_connections[i] = &m_ownedConnections[i - Dirs::EAST];
       }
       else
       {
@@ -351,6 +355,8 @@ namespace MFM
       InternalPutAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(),
                       pt.GetX(), pt.GetY());
       RecountAtoms();
+      LOG.Warning("Failure during PlaceAtom, erased (%2d,%2d) of %s",
+                  pt.GetX(), pt.GetY(), this->GetLabel());
     },
     {
       if(m_backgroundRadiationEnabled &&
@@ -873,7 +879,7 @@ namespace MFM
         /* Have we waited long enough without a response? Let's disconnect that tile. */
 
       }
-      if (++loops >= 1000000)
+      if (++loops >= 100000000)
       {
         LOG.Error("Tile %s flush looped %d times, but dirWaitWord (0x%x) still not 0, and %d locks held",
                   this->GetLabel(), loops, dirWaitWord, locksStillHeld);
@@ -884,7 +890,7 @@ namespace MFM
       {
         // Try sleeping every once in a while
         Sleep(0, loops);
-        sleepTimer = m_random.Create(1000);
+        sleepTimer = m_random.Create(250);
       }
       else
       {

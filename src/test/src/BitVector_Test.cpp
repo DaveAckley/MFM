@@ -17,6 +17,7 @@ namespace MFM {
     };
 
   void BitVector_Test::Test_RunTests() {
+    Test_bitVectorLong();
     Test_bitVectorAllocate();
     Test_bitVectorRead();
     Test_bitVectorSize();
@@ -237,6 +238,28 @@ namespace MFM {
     assertUnchanged(4,7);
   }
 
+  void BitVector_Test::Test_bitVectorLong()
+  {
+    BitVector<256>* bits = setup();
+
+    assert(bits->ReadLong(16, 64) == 0x1357111213141234L);
+    assert(bits->ReadLong(0, 32) == 0x24681357L);
+    assert(bits->ReadLong(96, 32) == 0x9abcdef0L);
+    assert(bits->ReadLong(160, 36) == 0x876543214L);
+
+    bits->WriteLong(16,64,0x1300001213141234L);
+    assert(bits->ReadLong(16, 64) == 0x1300001213141234L);
+
+    bits->WriteLong(24,16,0x5711L);
+    assert(bits->ReadLong(16, 64) == 0x1357111213141234L);
+
+    bits->WriteLong(192,64,0x0L);
+    assert(bits->ReadLong(160, 64) == 0x8765432100000000L);
+
+    assert(bits->ReadLong(192, 64) == 0x0L);
+    bits->WriteLong(192,64,(u64) -1L);
+    assert(bits->ReadLong(192, 64) == (u64) -1L);
+  }
 
 } /* namespace MFM */
 

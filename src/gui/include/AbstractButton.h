@@ -269,6 +269,7 @@ namespace MFM
         }
         if (event.m_event.type == SDL_MOUSEBUTTONDOWN)     // But eat down too
         {
+          OnPress(event.m_event.button.button);
           return true;
         }
       }
@@ -308,6 +309,19 @@ namespace MFM
      *               SDL_BUTTON_MIDDLE, or SDL_BUTTON_RIGHT .
      */
     virtual void OnClick(u8 button) = 0;
+
+    /**
+     * This is called when this AbstractButton is enabled and has
+     * decided the button is pressed on it . Overriding this method
+     * allows the subclass of this AbstractButton to behave in any way
+     * it pleases upon button down.
+     *
+     * @param button The SDL mouse button that has been pressed to
+     *               generate this mouse hit, i.e. SDL_BUTTON_LEFT ,
+     *               SDL_BUTTON_MIDDLE, or SDL_BUTTON_RIGHT .
+     */
+    virtual void OnPress(u8 button)
+    { }
   };
 }
 

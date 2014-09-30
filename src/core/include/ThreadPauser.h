@@ -152,12 +152,38 @@ namespace MFM
     ThreadState m_threadState;
 
     /**
+     * The ThreadPauser previous state (for consistency checking)
+     */
+    ThreadState m_threadStatePrevious;
+
+    /**
+     * True if the last state change was officially by outer
+     */
+    bool m_threadStatePreviousOuter;
+
+    /**
+     * Thread id prevailing at the last official state change
+     */
+    pthread_t m_threadStatePreviousThreadId;
+
+    /**
      * A Mutex::Predicate that waits for THREADSTATE_RUN_REQUESTED
      */
     struct StateIsRunRequested : public Mutex::Predicate
     {
       ThreadPauser & m_threadPauser;
       StateIsRunRequested(ThreadPauser & tp) : Predicate(tp.m_mutex), m_threadPauser(tp) { }
+
+      virtual bool EvaluatePrecondition()
+      {
+        bool ret = m_threadPauser.m_threadState == THREADSTATE_PAUSED;
+        if (!ret)
+        {
+          LOG.Error("PAUSED precondition failed");
+          m_threadPauser.ReportThreadPauserStatus(Logger::ERROR);
+        }
+        return ret;
+      }
 
       virtual bool EvaluatePredicate()
       {
@@ -172,6 +198,17 @@ namespace MFM
     {
       ThreadPauser & m_threadPauser;
       StateIsRunning(ThreadPauser & tp) : Predicate(tp.m_mutex), m_threadPauser(tp) { }
+
+      virtual bool EvaluatePrecondition()
+      {
+        bool ret = m_threadPauser.m_threadState == THREADSTATE_RUN_READY;
+        if (!ret)
+        {
+          LOG.Error("RUN READY precondition failed");
+          m_threadPauser.ReportThreadPauserStatus(Logger::ERROR);
+        }
+        return ret;
+      }
 
       virtual bool EvaluatePredicate()
       {

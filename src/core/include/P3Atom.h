@@ -79,9 +79,9 @@ namespace MFM {
 
     };
 
-    typedef BitField<BitVector<BITS>,P3_FIXED_HEADER_LEN,P3_FIXED_HEADER_POS> AFFixedHeader;
-    typedef BitField<BitVector<BITS>,P3_TYPE_BITS_LEN,P3_TYPE_BITS_POS> AFTypeBits;
-    typedef BitField<BitVector<BITS>,P3_ECC_BITS_LEN,P3_ECC_BITS_POS> AFECCBits;
+    typedef BitField<BitVector<BITS>,VD::U32,P3_FIXED_HEADER_LEN,P3_FIXED_HEADER_POS> AFFixedHeader;
+    typedef BitField<BitVector<BITS>,VD::U32,P3_TYPE_BITS_LEN,P3_TYPE_BITS_POS> AFTypeBits;
+    typedef BitField<BitVector<BITS>,VD::U32,P3_ECC_BITS_LEN,P3_ECC_BITS_POS> AFECCBits;
 
   protected:
 
@@ -114,17 +114,17 @@ namespace MFM {
       SetType(type);
     }
 
-    u32 GetType() const {
+    u32 GetTypeImpl() const {
       return AFTypeBits::Read(this->m_bits);
     }
 
-    bool IsSane() const
+    bool IsSaneImpl() const
     {
       u32 fixedHeader = AFFixedHeader::Read(this->m_bits);
       return Parity2D_4x4::Check2DParity(fixedHeader);
     }
 
-    bool HasBeenRepaired()
+    bool HasBeenRepairedImpl()
     {
       u32 fixedHeader = AFFixedHeader::Read(this->m_bits);
       u32 repairedHeader =
@@ -153,7 +153,7 @@ namespace MFM {
       return BITS;
     }
 
-    void WriteStateBits(ByteSink& ostream) const
+    void WriteStateBitsImpl(ByteSink& ostream) const
     {
       for(u32 i = P3_STATE_BITS_POS; i < P3_STATE_BITS_POS + P3_STATE_BITS_LEN; i++)
       {
@@ -161,7 +161,7 @@ namespace MFM {
       }
     }
 
-    void ReadStateBits(const char* stateStr)
+    void ReadStateBitsImpl(const char* stateStr)
     {
       for(u32 i = 0; i < P3_STATE_BITS_LEN; i++)
       {
@@ -169,7 +169,7 @@ namespace MFM {
       }
     }
 
-    void ReadStateBits(const BitVector<BITS> & bv)
+    void ReadStateBitsImpl(const BitVector<BITS> & bv)
     {
       for(u32 i = 0; i < P3_STATE_BITS_LEN; i++)
       {
@@ -204,13 +204,13 @@ namespace MFM {
     void PrintBits(ByteSink & ostream) const
     { this->m_bits.Print(ostream); }
 
-    void Print(ByteSink & ostream) const
+    void PrintImpl(ByteSink & ostream) const
     {
-      u32 type = GetType();
+      u32 type = this->GetType();
       ostream.Printf("P3[%x/",type);
       u32 length = GetMaxStateSize(type);
-      for (int i = 0; i < length; i += 4) {
-        u32 nyb = this->m_bits.GetStateField(i,4);
+      for (u32 i = 0; i < length; i += 4) {
+        u32 nyb = this->GetStateField(i,4);
         ostream.Printf("%x",nyb);
       }
       ostream.Printf("]");

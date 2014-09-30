@@ -49,7 +49,7 @@ namespace MFM {
    * (likely, though not actually necessarily, expressed as hex
    * constants).
    */
-  inline static u64 HexU64(const u32 hi, const u32 lo) {
+  inline u64 HexU64(const u32 hi, const u32 lo) {
     return ((((u64) hi)<<32)|lo);
   }
 
@@ -58,19 +58,93 @@ namespace MFM {
    * using the 'ULL' suffix that -ansi rejects, from two pieces
    * representing the bottom nine decimal digits in 'millions', and
    * the remaining upper decimal digits in 'billions'.  For example:
-   * DecU64(123456,789101,112) == 123456789101112ULL
+   * DecU64(123456,789101112) == 123456789101112ULL
    */
-  inline static u64 DecU64(const u32 billions, const u32 millions) {
+  inline u64 DecU64(const u32 billions, const u32 millions) {
     return ((((u64) billions)*1000000000) + millions);
+  }
+
+  inline s32 _SignExtend32(u32 val, u32 bitwidth) {
+    return ((s32)(val<<(32-bitwidth)))>>(32-bitwidth);
+  }
+
+  inline s64 _SignExtend64(u64 val, u32 bitwidth) {
+    return ((s64)(val<<(64-bitwidth)))>>(64-bitwidth);
+  }
+
+  inline u32 _GetNOnes32(u32 bitwidth) {
+    return (bitwidth >= 32) ? (u32) -1 : (((u32)1)<<bitwidth)-1;
+  }
+
+  inline u64 _GetNOnes64(u32 bitwidth) {
+    return (bitwidth >= 64) ? HexU64((u32)-1,(u32)-1) : (((u64)1)<<bitwidth)-1;
+  }
+
+  inline u32 _ShiftToBitNumber32(u32 value, u32 bitpos) {
+    return value<<bitpos;
+  }
+
+  inline u64 _ShiftToBitNumber64(u32 value, u32 bitpos) {
+    return ((u64) value)<<bitpos;
+  }
+
+  inline u32 _ShiftFromBitNumber32(u32 value, u32 bitpos) {
+    return value>>bitpos;
+  }
+
+  inline u64 _ShiftFromBitNumber64(u64 value, u32 bitpos) {
+    return value>>bitpos;
+  }
+
+  inline u32 _GetMask32(u32 bitpos, u32 bitwidth) {
+    return _ShiftToBitNumber32(_GetNOnes32(bitwidth),bitpos);
+  }
+
+  inline u64 _GetMask64(u32 bitpos, u32 bitwidth) {
+    return _ShiftToBitNumber64(_GetNOnes64(bitwidth),bitpos);
+  }
+
+  inline u32  _ExtractField32(u32 val, u32 bitpos,u32 bitwidth) {
+    return _ShiftFromBitNumber32(val,bitpos)&_GetNOnes32(bitwidth);
+  }
+
+  inline u32  _ExtractUint32(u32 val, u32 bitpos,u32 bitwidth) {
+    return _ExtractField32(val,bitpos,bitwidth);
+  }
+
+  inline s32  _ExtractSint32(u32 val, u32 bitpos,u32 bitwidth) {
+    return _SignExtend32(_ExtractField32(val,bitpos,bitwidth),bitwidth);
+  }
+
+  inline u32 _getParity32(u32 v) {
+    v ^= v >> 16;
+    v ^= v >> 8;
+    v ^= v >> 4;
+    v &= 0xf;
+    return (0x6996 >> v) & 1;
+  }
+
+  // v must be <= 0x7fffffff
+  inline u32 _getNextPowerOf2(u32 v) {
+    v |= v >> 16;
+    v |= v >> 8;
+    v |= v >> 4;
+    v |= v >> 2;
+    v |= v >> 1;
+    return v+1;
   }
 
   /**
    * Right-aligned mask generation.  Returns 0xFFFFFFFF if \a length
    * >= 32
    */
-  inline static u32 MakeMaskClip(const u32 length) {
+  inline u32 MakeMaskClip(const u32 length) {
     if (length<32) return (1u << length) - 1;
     return -1;
+  }
+
+  inline u32 PopCount(const u32 bits) {
+    return __builtin_popcount(bits); // GCC
   }
 
   template <class T>

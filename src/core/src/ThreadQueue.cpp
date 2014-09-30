@@ -9,32 +9,20 @@
 
 namespace MFM
 {
-  ThreadQueue::ThreadQueue()
+  ThreadQueue::ThreadQueue() : m_moreInputIsAvailable(*this)
   {
     m_readHead = m_writeHead = m_heldBytes = 0;
-
-    if(pthread_mutex_init(&m_lock, NULL))
-    {
-      LOG.Error("ThreadQueue Mutex did not initialize.\n");
-      FAIL(OUT_OF_RESOURCES);
-    }
-    if(pthread_cond_init(&m_cond, NULL))
-    {
-      LOG.Error("ThreadQueue Cond did not initialize.\n");
-      FAIL(OUT_OF_RESOURCES);
-    }
   }
 
   ThreadQueue::~ThreadQueue()
-  {
-    pthread_mutex_destroy(&m_lock);
-    pthread_cond_destroy(&m_cond);
-  }
+  { }
 
   void ThreadQueue::Write(u8* bytes, u32 length)
   {
-    pthread_mutex_lock(&m_lock);
+    if (length > 0)
     {
+      Mutex::ScopeLock lock(m_mutex);
+
       if(length + m_heldBytes > THREADQUEUE_MAX_BYTES)
       {
         LOG.Error("ERROR: THREADQUEUE OVERLOAD!\n");
@@ -50,9 +38,8 @@ namespace MFM
         }
       }
       m_heldBytes += length;
+      m_moreInputIsAvailable.SignalCondition();
     }
-    pthread_cond_signal(&m_cond); /* Reading is available! */
-    pthread_mutex_unlock(&m_lock);
   }
 
   u32 ThreadQueue::UnsafeRead(u8* bytes, u32 length)
@@ -73,17 +60,16 @@ namespace MFM
 
   void ThreadQueue::ReadBlocking(u8* bytes, u32 length)
   {
+    Mutex::ScopeLock lock(m_mutex);
     u32 readBytes = 0;
-    pthread_mutex_lock(&m_lock);
     while(readBytes < length)
     {
       readBytes += UnsafeRead(bytes + readBytes, length - readBytes);
       if(readBytes < length)
       {
-        pthread_cond_wait(&m_cond, &m_lock);
+        m_moreInputIsAvailable.WaitForCondition();  // Release lock and wait for data
       }
     }
-    pthread_mutex_unlock(&m_lock);
   }
 
   u32 ThreadQueue::Read(u8* bytes, u32 length)
@@ -96,18 +82,15 @@ namespace MFM
        write intervenes before we get the lock. */
     if(m_heldBytes >= length)
     {
-      pthread_mutex_lock(&m_lock);
-      {
-        readBytes = UnsafeRead(bytes, length);
-      }
-      pthread_mutex_unlock(&m_lock);
+      Mutex::ScopeLock lock(m_mutex);
+      readBytes = UnsafeRead(bytes, length);
     }
     return readBytes;
   }
 
   void ThreadQueue::PeekRead(u8* toBuffer, u32 index, u32 length)
   {
-    pthread_mutex_lock(&m_lock);
+    Mutex::ScopeLock lock(m_mutex);
     {
       if(m_heldBytes < length + index)
       {
@@ -124,26 +107,17 @@ namespace MFM
         }
       }
     }
-    pthread_mutex_unlock(&m_lock);
   }
 
   u32 ThreadQueue::BytesAvailable()
   {
-    u32 ret;
-    pthread_mutex_lock(&m_lock);
-    {
-      ret = m_heldBytes;
-    }
-    pthread_mutex_unlock(&m_lock);
-    return ret;
+    Mutex::ScopeLock lock(m_mutex);
+    return m_heldBytes;
   }
 
   void ThreadQueue::Flush()
   {
-    pthread_mutex_lock(&m_lock);
-    {
-      m_readHead = m_writeHead = m_heldBytes = 0;
-    }
-    pthread_mutex_unlock(&m_lock);
+    Mutex::ScopeLock lock(m_mutex);
+    m_readHead = m_writeHead = m_heldBytes = 0;
   }
 }
