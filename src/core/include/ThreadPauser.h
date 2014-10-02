@@ -172,7 +172,10 @@ namespace MFM
     struct StateIsRunRequested : public Mutex::Predicate
     {
       ThreadPauser & m_threadPauser;
-      StateIsRunRequested(ThreadPauser & tp) : Predicate(tp.m_mutex), m_threadPauser(tp) { }
+      StateIsRunRequested(ThreadPauser & tp) :
+	Predicate(tp.m_mutex, "StateIsRunRequested"),
+	m_threadPauser(tp)
+      { }
 
       virtual bool EvaluatePrecondition()
       {
@@ -197,7 +200,10 @@ namespace MFM
     struct StateIsRunning : public Mutex::Predicate
     {
       ThreadPauser & m_threadPauser;
-      StateIsRunning(ThreadPauser & tp) : Predicate(tp.m_mutex), m_threadPauser(tp) { }
+      StateIsRunning(ThreadPauser & tp) :
+	Predicate(tp.m_mutex, "StateIsRunning"),
+	m_threadPauser(tp)
+      { }
 
       virtual bool EvaluatePrecondition()
       {
