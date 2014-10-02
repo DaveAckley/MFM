@@ -342,6 +342,7 @@ namespace MFM
       GrabSystemLock();
       {
         //printf("Releasing vlock %p\n", (void*)&m_lock);
+	m_threadId = 0;
         m_locked = false;
       }
       ReleaseSystemLock();
