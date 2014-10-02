@@ -63,10 +63,12 @@ namespace MFM
     pthread_t m_threadId;
 
     // Declare away copy ctor; pthread_mutexes can't be copied
-    Mutex(const Mutex & ) ;
+    Mutex(const Mutex &);
 
     void CondWait(pthread_cond_t & condvar)
     {
+      Unlock();
+      printf("Waiting on lock %p for cond %p\n", (void*)&m_lock, (void*)&condvar);
       pthread_cond_wait(&condvar, &m_lock);
 
       // The signal gave us back the lock without going through
@@ -99,7 +101,7 @@ namespace MFM
 
     inline void VirtualCondWait()
     {
-      //printf("Waiting on lock %p for cond %p\n", (void*)&m_lock, (void*)&m_virtualCond);
+      printf("Waiting on lock %p for cond %p\n", (void*)&m_lock, (void*)&m_virtualCond);
       if(pthread_cond_wait(&m_virtualCond, &m_lock))
       {
         FAIL(LOCK_FAILURE);
@@ -108,7 +110,7 @@ namespace MFM
 
     inline void VirtualCondSignal()
     {
-      //printf("Signal on lock  %p for cond %p\n", (void*)&m_lock, (void*)&m_virtualCond);
+      printf("Signal on lock  %p for cond %p\n", (void*)&m_lock, (void*)&m_virtualCond);
       if(pthread_cond_signal(&m_virtualCond))
       {
         FAIL(LOCK_FAILURE);
@@ -122,8 +124,9 @@ namespace MFM
      private:
       Mutex & m_mutex;
      public:
-      ScopeLock(Mutex & mutex) : m_mutex(mutex)
+      ScopeLock(Mutex & mutex, const char* msg) : m_mutex(mutex)
       {
+        printf("%s: ", msg);
         m_mutex.Lock();
       }
       ~ScopeLock()
@@ -329,9 +332,9 @@ namespace MFM
       {
         printf("Releasing vlock %p\n", (void*)&m_lock);
         m_locked = false;
-        VirtualCondSignal();
       }
       ReleaseSystemLock();
+      VirtualCondSignal();
     }
 
     /**
