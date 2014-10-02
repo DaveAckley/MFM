@@ -16,7 +16,7 @@ namespace MFM
   typedef ParamConfig<96,4,8,32> OurParamConfigTiny;
   typedef P3Atom<OurParamConfigTiny> OurAtomTiny;
   typedef CoreConfig<OurAtomTiny, OurParamConfigTiny> OurCoreConfigTiny;
-  typedef GridConfig<OurCoreConfigTiny, 2, 2> OurGridConfigTiny;
+  typedef GridConfig<OurCoreConfigTiny, 1, 1> OurGridConfigTiny;
 
   /////
   // Larger model
