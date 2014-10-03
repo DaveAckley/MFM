@@ -133,7 +133,8 @@ namespace MFM
       return;       // Any confusion, let the engine sort it out first
 
     u32 thisWeight = elt->Diffusability(window, sp, SPoint(0,0));
-    if (random.OddsOf(thisWeight, COMPLETE_DIFFUSABILITY))
+    u32 ourWeight = this->Diffusability(window, SPoint(0,0), sp);
+    if (random.OddsOf(MIN(ourWeight, thisWeight), COMPLETE_DIFFUSABILITY))
       window.SwapAtoms(sp, SPoint(0, 0));
   }
 
