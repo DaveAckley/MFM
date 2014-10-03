@@ -49,12 +49,13 @@ namespace MFM
 
     pthread_mutexattr_t m_attr;
 
-    pthread_cond_t m_virtualCond;
-
     /**
      * True if currently locked
      */
     bool m_locked;
+
+    pthread_cond_t m_virtualCond;
+    bool m_inVCW;
 
     /**
      * If the lock is held, the pthread id of the thread holding
@@ -110,10 +111,12 @@ namespace MFM
     inline void VirtualCondWait()
     {
       //printf("Waiting on lock %p for cond %p\n", (void*)&m_lock, (void*)&m_virtualCond);
+      m_inVCW = true;
       if(pthread_cond_wait(&m_virtualCond, &m_lock))
       {
         FAIL(LOCK_FAILURE);
       }
+      m_inVCW = false;
     }
 
     inline void VirtualCondSignal()
@@ -198,7 +201,9 @@ namespace MFM
      * FAILs with LOCK_FAILURE if the underlying pthread_mutex cannot
      * be initialized.
      */
-    Mutex() : m_locked(false)
+    Mutex() :
+      m_locked(false)
+      , m_inVCW(false)
     {
       if (pthread_mutexattr_init(&m_attr))
       {
