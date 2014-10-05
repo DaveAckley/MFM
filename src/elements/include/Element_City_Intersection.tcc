@@ -19,7 +19,7 @@ namespace MFM
       if(window.GetRelativeAtom(offset).GetType() ==
           Element_Empty<CC>::THE_INSTANCE.GetType())
       {
-        if(rand.OneIn(m_streetCreateOdds.GetValue()))
+        if(rand.OneIn(m_streetCreateOdds.GetValue()) && !(d & 1))
         {
           Element_City_Street<CC>& st = Element_City_Street<CC>::THE_INSTANCE;
           T newStreet = st.GetDefaultAtom();

@@ -15,8 +15,11 @@ namespace MFM
         Element_Empty<CC>::THE_INSTANCE.GetType()) &&
        rand.OneIn(m_intersectionOdds.GetValue()))
     {
-      window.SetRelativeAtom(offset,
-                             Element_City_Intersection<CC>::THE_INSTANCE.GetDefaultAtom());
+      if(!CanSeeElementOfType(window, Element_City_Intersection<CC>::THE_INSTANCE.GetType()))
+      {
+        window.SetRelativeAtom(offset,
+                               Element_City_Intersection<CC>::THE_INSTANCE.GetDefaultAtom());
+      }
     }
 
     FillIfType(window, offset, Element_Empty<CC>::THE_INSTANCE.GetType(),
@@ -44,7 +47,7 @@ namespace MFM
     if(window.GetRelativeAtom(offset).GetType() ==
        Element_City_Sidewalk<CC>::THE_INSTANCE.GetType())
     {
-      window.SetRelativeAtom(offset * (Dirs::IsCorner(d) ? 2 : 3),
+      window.SetRelativeAtom(offset * 2,
                              Element_City_Intersection<CC>::THE_INSTANCE.GetDefaultAtom());
       window.SetRelativeAtom(offset, window.GetCenterAtom());
 

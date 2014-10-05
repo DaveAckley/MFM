@@ -46,8 +46,7 @@ namespace MFM {
     // Extract short type names
     typedef typename GC::CORE_CONFIG CC;
 
-  public:
-
+   public:
     class DataReporter
     {
     public:

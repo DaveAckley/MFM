@@ -74,6 +74,10 @@ namespace MFM
 
     void SetDirection(T& us, const Dir dir) const
     {
+      if(dir & 1)
+      {
+        FAIL(ILLEGAL_ARGUMENT); /* No diagonals */
+      }
       AFStreetDirection::Write(this->GetBits(us), (u32)dir);
     }
 
@@ -90,7 +94,7 @@ namespace MFM
     virtual const T& GetDefaultAtom() const
     {
       static T defaultAtom(TYPE(), 0, 0, 0);
-      this->SetDirection(defaultAtom, Dirs::NORTHEAST);
+      this->SetDirection(defaultAtom, Dirs::NORTH);
 
       return defaultAtom;
     }
@@ -145,6 +149,19 @@ namespace MFM
       {
         Dirs::FillDir(pt, (Dir)i);
         if(window.GetRelativeAtom(pt).GetType() == type)
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    bool CanSeeElementOfType(EventWindow<CC>& window, const u32 type) const
+    {
+      MDist<R>& md = MDist<R>::get();
+      for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(R); i++)
+      {
+        if(window.GetRelativeAtom(md.GetPoint(i)).GetType() == type)
         {
           return true;
         }
