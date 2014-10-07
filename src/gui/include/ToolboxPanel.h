@@ -506,8 +506,8 @@ namespace MFM
       Panel::SetDesiredSize(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW,
                             6 + ELEMENT_RENDER_SIZE * TOTAL_ROWS);
 
-      m_activatedButton = m_toolButtons;
-      m_toolButtons[0].ToolButton::SetActivated(true);
+      /* Set pencil tool to default */
+      m_toolButtons[2].OnClick(SDL_BUTTON_LEFT);
     }
 
     void SetPrimaryElement(Element<CC>* element)
