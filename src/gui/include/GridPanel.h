@@ -329,12 +329,16 @@ namespace MFM
         {
           /* brushSize can't be templated, so let's do this by hand. */
           SPoint tile, site;
+          brushSize--;
+          const s32 brushSqr = brushSize * brushSize;
+          s32 ysqr;
           for(s32 y = -brushSize; y <= brushSize; y++)
           {
+            ysqr = y * y;
             for(s32 x = -brushSize; x <= brushSize; x++)
             {
               SPoint pt(cp.GetX() + x, cp.GetY() + y);
-              if(sqrt((x * x) + (y * y)) <= brushSize &&
+              if(((x * x) + ysqr) <= brushSqr &&
                  grid.MapGridToTile(pt, tile, site))
               {
                 if(tool == TOOL_XRAY)

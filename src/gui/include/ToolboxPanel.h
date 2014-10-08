@@ -35,7 +35,7 @@
 #include "ParameterControllerBool.h"
 #include "NeighborSelectPanel.h"
 
-#define ELEMENT_BOX_SIZE 70
+#define ELEMENT_BOX_SIZE 77
 #define ELEMENT_RENDER_SIZE 32
 
 namespace MFM
@@ -292,7 +292,7 @@ namespace MFM
 
     enum
     {
-      ELEMENTS_PER_ROW = 10,
+      ELEMENTS_PER_ROW = 11,
       ELEMENT_ROWS = (ELEMENT_BOX_SIZE + ELEMENTS_PER_ROW - 1) / ELEMENTS_PER_ROW,
       NON_ELEMENT_ROWS = 3,
       TOTAL_ROWS = ELEMENT_ROWS + NON_ELEMENT_ROWS,
@@ -506,8 +506,8 @@ namespace MFM
       Panel::SetDesiredSize(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW,
                             6 + ELEMENT_RENDER_SIZE * TOTAL_ROWS);
 
-      m_activatedButton = m_toolButtons;
-      m_toolButtons[0].ToolButton::SetActivated(true);
+      /* Set pencil tool to default */
+      m_toolButtons[2].OnClick(SDL_BUTTON_LEFT);
     }
 
     void SetPrimaryElement(Element<CC>* element)

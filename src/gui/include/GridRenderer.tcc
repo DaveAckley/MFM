@@ -66,21 +66,34 @@ namespace MFM
 
     if(brushSize > 0)
     {
-      s32 haX = (s32)m_hoveredAtom.GetX();
-      s32 haY = (s32)m_hoveredAtom.GetY();
+      const s32 haX = (s32)m_hoveredAtom.GetX();
+      const s32 haY = (s32)m_hoveredAtom.GetY();
       drawing.SetForeground(Drawing::YELLOW);
 
+      brushSize--;
       SPoint wtl = m_tileRenderer.GetWindowTL();
-      for(s32 x = haX - brushSize; x < haX + (s32) brushSize; x++)
+      const s32 brushSqr = brushSize * brushSize;
+      s32 xdSqr;
+      for(s32 x = haX - brushSize; x <= haX; x++)
       {
-        for(s32 y = haY - brushSize; y < haY + (s32) brushSize; y++)
+        xdSqr = (x - haX) * (x - haX);
+        for(s32 y = haY - brushSize; y <= haY; y++)
         {
           if(x >= 0 && y >= 0)
           {
-            if(sqrt(((y - haY) * (y - haY)) + ((x - haX) * (x - haX))) < brushSize)
+            if(((y - haY) * (y - haY)) + xdSqr <= brushSqr)
             {
               drawing.FillRect(wtl.GetX() + (x + 0.5) * atomSize,
                                wtl.GetY() + (y + 0.5) * atomSize, 2, 2);
+
+              drawing.FillRect(wtl.GetX() + (x + 2 * (haX - x) + 0.5) * atomSize,
+                               wtl.GetY() + (y + 0.5) * atomSize, 2, 2);
+
+              drawing.FillRect(wtl.GetX() + (x + 0.5) * atomSize,
+                               wtl.GetY() + (y + 2 * (haY - y) + 0.5) * atomSize, 2, 2);
+
+              drawing.FillRect(wtl.GetX() + (x + 2 * (haX - x) + 0.5) * atomSize,
+                               wtl.GetY() + (y + 2 * (haY - y) + 0.5) * atomSize, 2, 2);
             }
           }
         }
