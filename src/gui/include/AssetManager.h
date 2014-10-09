@@ -56,6 +56,7 @@ namespace MFM
   enum FontAsset
   {
     FONT_ASSET_ELEMENT = 0,
+    FONT_ASSET_ELEMENT_BIG,
     FONT_ASSET_HELPPANEL_BIG,
     FONT_ASSET_HELPPANEL_SMALL,
     FONT_ASSET_LOGGER,
@@ -157,6 +158,7 @@ namespace MFM
         surfaces[ASSET_SLIDER_HANDLE] = LoadImage("images/slider_handle.png");
 
         fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/tiny.ttf", 24);
+        fonts[FONT_ASSET_ELEMENT_BIG] = LoadFont("fonts/tiny.ttf", 40);
         fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont("fonts/tiny.ttf", 26);
         fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont("fonts/tiny.ttf", 16);
         fonts[FONT_ASSET_LOGGER] = LoadFont("fonts/tiny.ttf", 15);
