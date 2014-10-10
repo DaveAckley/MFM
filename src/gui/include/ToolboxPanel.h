@@ -486,23 +486,36 @@ namespace MFM
 
     void AddButtons()
     {
-      Asset assets[] =
+      Asset assets[ELEMENT_BOX_BUTTON_COUNT];
+      if(m_bigText)
       {
-        ASSET_SELECTOR_ICON,
-        ASSET_ATOM_SELECTOR_ICON,
-        ASSET_PENCIL_ICON,
-        ASSET_BUCKET_ICON,
-        ASSET_ERASER_ICON,
-        ASSET_BRUSH_ICON,
-        ASSET_XRAY_ICON,
-        ASSET_CLONE_ICON,
-        ASSET_AIRBRUSH_ICON
-      };
+        assets[0] = ASSET_SELECTOR_ICON_BIG;
+        assets[1] = ASSET_ATOM_SELECTOR_ICON_BIG;
+        assets[2] = ASSET_PENCIL_ICON_BIG;
+        assets[3] = ASSET_BUCKET_ICON_BIG;
+        assets[4] = ASSET_ERASER_ICON_BIG;
+        assets[5] = ASSET_BRUSH_ICON_BIG;
+        assets[6] = ASSET_XRAY_ICON_BIG;
+        assets[7] = ASSET_CLONE_ICON_BIG;
+        assets[8] = ASSET_AIRBRUSH_ICON_BIG;
+      }
+      else
+      {
+        assets[0] = ASSET_SELECTOR_ICON;
+        assets[1] = ASSET_ATOM_SELECTOR_ICON;
+        assets[2] = ASSET_PENCIL_ICON;
+        assets[3] = ASSET_BUCKET_ICON;
+        assets[4] = ASSET_ERASER_ICON;
+        assets[5] = ASSET_BRUSH_ICON;
+        assets[6] = ASSET_XRAY_ICON;
+        assets[7] = ASSET_CLONE_ICON;
+        assets[8] = ASSET_AIRBRUSH_ICON;
+      }
 
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
       {
         m_toolButtons[i].SetParent(this);
-        m_toolButtons[i].Panel::SetRenderPoint(SPoint(16 + i * 32, 3));
+        m_toolButtons[i].Panel::SetRenderPoint(SPoint(16 + i * GetElementRenderSize(), 3));
         m_toolButtons[i].SetToolIcon(AssetManager::Get(assets[i]));
         Panel::Insert(m_toolButtons + i, NULL);
       }
@@ -648,7 +661,7 @@ namespace MFM
     virtual void PaintComponent(Drawing& d)
     {
       const u32 ELEMENT_START_X = 64;
-      const u32 ELEMENT_START_Y = 40;
+      const u32 ELEMENT_START_Y = m_bigText ? 64 : 40;
       const u32 ELEMENT_TOOL_SIZE = GetElementRenderSize() + 8;
 
       d.SetForeground(this->Panel::GetBackground());
