@@ -321,6 +321,7 @@ namespace MFM
       u32 j = m_controllerCount++;
 
       m_controllers[j] = spc;
+      m_controllers[j]->SetBigText(m_bigText);
     }
 
     void AddSliderController(ElementParameter<CC> * sp)

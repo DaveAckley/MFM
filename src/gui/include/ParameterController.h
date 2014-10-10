@@ -39,12 +39,19 @@ namespace MFM
     typedef typename CC::ATOM_TYPE T;
     Parameter<CC> * m_parameter;
     T * m_patom;
+    bool m_bigText;
 
   public:
 
     ParameterController() :
-      m_parameter(0)
+      m_parameter(0),
+      m_bigText(false)
     {
+    }
+
+    void SetBigText(bool value)
+    {
+      m_bigText = value;
     }
 
     virtual ~ParameterController()
