@@ -412,6 +412,15 @@ namespace MFM {
      */
     void SwapAtoms(const SPoint& locA, const SPoint& locB);
 
+    /**
+     * Takes the Atom in a specified location and swaps it with an
+     * Atom in the center of this EventWindow.
+     *
+     * @param relative The location of the first Atom to swap with this
+     *                 EventWindow's center atom.
+     */
+    void SwapCenterAtom(const SPoint& relative);
+
   };
 } /* namespace MFM */
 

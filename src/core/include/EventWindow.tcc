@@ -156,5 +156,11 @@ namespace MFM
     m_tile.PlaceAtom(a, arrLocB);
   }
 
+  template <class CC>
+  void EventWindow<CC>::SwapCenterAtom(const SPoint& relative)
+  {
+    SwapAtoms(SPoint(0, 0), relative);
+  }
+
 
 } /* namespace MFM */
