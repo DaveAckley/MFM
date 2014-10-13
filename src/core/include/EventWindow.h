@@ -233,6 +233,62 @@ namespace MFM {
     const T& GetRelativeAtom(const SPoint& offset) const;
 
     /**
+     * Gets an Atom residing at a specified direction from the center
+     * atom inside this EventWindow .
+     *
+     * @param offset The direction, relative to the center of this
+     *               EventWindow , of the Atom to be retreived. If
+     *               this is not inside the EventWindow, will FAIL
+     *               with ILLEGAL_ARGUMENT .
+     *
+     * @returns The Atom at \c offset .
+     */
+    const T& GetRelativeAtom(const Dir mooreOffset) const;
+
+    /**
+     * Replaces the Atom at a specified relative location from the
+     * center Atom of this EventWindow with another specified atom if
+     * the existing atom is of a particular type.
+     *
+     * @param relative The location, relative to the center of this
+     *                 EventWindow, of the Atom to inspect and perhaps
+     *                 replace.
+     *
+     * @param type The type of the Atom supposed to be in the \c
+     *             relative location. If the Atom in \c relative is
+     *             this \c type, it will be replaced with the specified Atom.
+     *
+     * @param atom The Atom to write to \c relative if the existing
+     *             Atom is type \c type .
+     *
+     * @returns \c true if the atom at \c relative was replaced by \c
+     *          atom , else \c false.
+     */
+    const bool FillIfType(const SPoint relative, const u32 type, const T& atom);
+
+    /**
+     * Replaces the Atom at a specified relative location from the
+     * center Atom of this EventWindow with another specified atom if
+     * the existing atom is not of a particular type.
+     *
+     * @param relative The location, relative to the center of this
+     *                 EventWindow, of the Atom to inspect and perhaps
+     *                 replace.
+     *
+     * @param type The type of the Atom supposed to be in the \c
+     *             relative location. If the Atom in \c relative is
+     *             not this \c type, it will be replaced with the
+     *             specified Atom.
+     *
+     * @param atom The Atom to write to \c relative if the existing
+     *             Atom is not type \c type .
+     *
+     * @returns \c true if the atom at \c relative was replaced by \c
+     *          atom , else \c false.
+     */
+    const bool FillIfNotType(const SPoint relative, const u32 type, const T& atom);
+
+    /**
      * Sets an Atom residing at a specified location in this
      * EventWindow to a specified Atom .
      *
@@ -248,20 +304,61 @@ namespace MFM {
     bool SetRelativeAtom(const SPoint& offset, const T & atom);
 
     /**
-     * Scans the event window up to a specified radius (not including
-     * the center atom) and sees whether or not an atom of a specified
+     * Scans this EventWindow up to a specified radius (not including
+     * the center Atom) and sees whether or not an Atom of a specified
      * type exists.
      *
-     * @param type The type of the atom being scanned for.
+     * @param type The type of the Atom being scanned for.
      *
      * @param radius The maximum radius to expand this search to. This
      *               FAILs with ILLEGAL_ARGUMENT if this argument is
      *               greater than the EventWindow radius.
      *
-     * @returns \c true if an atom of type \c type exists within \c
-     *          radius of the center atom, else \c false .
+     * @returns \c true if an Atom of type \c type exists within \c
+     *          radius of the center Atom, else \c false .
      */
     bool CanSeeAtomOfType(const u32 type, const u32 radius) const;
+
+    /**
+     * Scans the moore neighborhood (N, NE, E, SE, S, SW, W, NW) for
+     * an Atom of a specified type.
+     *
+     * @param type The type of the Atom to search for.
+     *
+     * @returns \c true if an Atom of type \c type is within the moore
+     *          neighborhood of the center Atom of this EventWindow,
+     *          else \c false .
+     */
+    bool IsBorderingMoore(const u32 type) const;
+
+    /**
+     * Scans the Von Neumann neighborhood (N, E, S, W) for
+     * an Atom of a specified type.
+     *
+     * @param type The type of the Atom to search for.
+     *
+     * @returns \c true if an Atom of type \c type is within the Von
+     *          Neumann neighborhood of the center Atom of this
+     *          EventWindow, else \c false .
+     */
+    bool IsBorderingVonNeumann(const u32 type) const;
+
+    /**
+     * Scans a specified neighborhood around the center Atom of this
+     * EventWindow for an atom of a given type.
+     *
+     * @param type The type of the Atom to search for.
+     *
+     * @param dirs An array of Dirs to search for an Atom of type \c
+     *             type.
+     *
+     * @param dirCount The number of Dirs located in the \c dirs
+     *                 array.
+     *
+     * @returns \c true if an Atom of type \c type is within the
+     *          specified neighborhood, else \c false .
+     */
+    bool IsBorderingNeighborhood(const u32 type, const Dir* dirs, const u32 dirCount) const;
 
     /**
      * Scans this EventWindow, not counting the center atom, for all
