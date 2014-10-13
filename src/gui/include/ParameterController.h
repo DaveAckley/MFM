@@ -35,19 +35,18 @@ namespace MFM
   template <class CC>
   class ParameterController : public Panel
   {
-  protected:
+   protected:
     typedef typename CC::ATOM_TYPE T;
     Parameter<CC> * m_parameter;
     T * m_patom;
     bool m_bigText;
 
-  public:
+   public:
 
     ParameterController() :
       m_parameter(0),
       m_bigText(false)
-    {
-    }
+    { }
 
     void SetBigText(bool value)
     {
@@ -55,8 +54,7 @@ namespace MFM
     }
 
     virtual ~ParameterController()
-    {
-    }
+    { }
 
     virtual void SetParameter(ElementParameter<CC>* pb)
     {
@@ -92,7 +90,6 @@ namespace MFM
     {
       return m_parameter;
     }
-
   };
 }
 

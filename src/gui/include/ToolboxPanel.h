@@ -322,6 +322,7 @@ namespace MFM
 
       m_controllers[j] = spc;
       m_controllers[j]->SetBigText(m_bigText);
+      LOG.Debug("Inniting %s controllers", m_bigText ? "big" : "normal");
     }
 
     void AddSliderController(ElementParameter<CC> * sp)
@@ -416,6 +417,14 @@ namespace MFM
     void SetBigText(bool value)
     {
       m_bigText = value;
+
+      for(u32 i = 0; i < TOOLBOX_MAX_CONTROLLERS; i++)
+      {
+        if(m_controllers[i])
+        {
+          m_controllers[i]->SetBigText(value);
+        }
+      }
     }
 
     void RebuildControllers()
@@ -466,7 +475,9 @@ namespace MFM
       for(u32 i = 0; i < m_controllerCount; i++)
       {
         ParameterController<CC> * c = m_controllers[i];
+        c->Init();
         c->SetRenderPoint(rpt);
+        c->SetBigText(m_bigText);
         Panel::Insert(c, NULL);
         UPoint desired = c->GetDesiredSize();
         rpt.SetY(rpt.GetY() + desired.GetY());
