@@ -41,25 +41,59 @@ namespace MFM
   template <class CC>
   class ParameterControllerBool : public ParameterController<CC>
   {
-  private:
+   private:
     typedef typename CC::ATOM_TYPE T;
-    typedef Panel Super;
+    typedef ParameterController<CC> Super;
 
-    enum {
+    enum
+    {
       PARAMETERCONTROLLERBOOL_WIDTH = 300,
       PARAMETERCONTROLLERBOOL_HEIGHT = 40,
-      PARAMETERCONTROLLERBOOL_HALF_HEIGHT = (PARAMETERCONTROLLERBOOL_HEIGHT / 2)
+
+      PARAMETERCONTROLLERBOOL_WIDTH_BIG = 400,
+      PARAMETERCONTROLLERBOOL_HEIGHT_BIG = 50
     };
+
+    inline u32 GetScaledWidth()
+    {
+      return Super::m_bigText ?
+      PARAMETERCONTROLLERBOOL_WIDTH_BIG :
+      PARAMETERCONTROLLERBOOL_WIDTH;
+    }
+
+    inline u32 GetScaledHeight()
+    {
+      return Super::m_bigText ?
+      PARAMETERCONTROLLERBOOL_HEIGHT_BIG :
+      PARAMETERCONTROLLERBOOL_HEIGHT;
+    }
 
     class ParmCheckbox : public AbstractCheckbox
     {
+     private:
       typedef AbstractCheckbox Super;
+      typedef ParameterControllerBool PCB;
 
       ParameterControllerBool & m_bc;
-    public:
-      ParmCheckbox(ParameterControllerBool & bc) : m_bc(bc)
+      bool m_bigText;
+
+      inline u32 GetScaledWidth()
       {
+        return m_bigText ?
+        PARAMETERCONTROLLERBOOL_WIDTH_BIG :
+        PARAMETERCONTROLLERBOOL_WIDTH;
       }
+
+      inline u32 GetScaledHeight()
+      {
+        return m_bigText ?
+        PARAMETERCONTROLLERBOOL_HEIGHT_BIG :
+        PARAMETERCONTROLLERBOOL_HEIGHT;
+      }
+
+     public:
+      ParmCheckbox(ParameterControllerBool & bc) : m_bc(bc)
+      { }
 
       virtual bool IsChecked() const
       {
@@ -76,11 +110,13 @@ namespace MFM
         SetChecked(value);
       }
 
-      void Init()
+      void Init(bool bigText = false)
       {
+        m_bigText = bigText;
         this->SetName("ParmCheckBox");
-        this->SetDimensions(SPoint(PARAMETERCONTROLLERBOOL_WIDTH, PARAMETERCONTROLLERBOOL_HEIGHT));
-        this->SetDesiredSize(U32_MAX, PARAMETERCONTROLLERBOOL_HEIGHT);
+        this->SetDimensions(SPoint(GetScaledWidth(),
+                                   GetScaledHeight()));
+        this->SetDesiredSize(U32_MAX, GetScaledHeight());
         this->SetRenderPoint(SPoint(5, 5));
         if (m_bc.GetParameter())
         {
@@ -126,13 +162,14 @@ namespace MFM
 
     void Init()
     {
-      Panel::SetDimensions(PARAMETERCONTROLLERBOOL_WIDTH * 2, PARAMETERCONTROLLERBOOL_HEIGHT);
-      Panel::SetDesiredSize(10000, PARAMETERCONTROLLERBOOL_HEIGHT);
+      Panel::SetDimensions(GetScaledWidth() * 2, GetScaledHeight());
+      Panel::SetDesiredSize(10000, GetScaledHeight());
       Panel::SetBackground(Drawing::GREY60);
 
-      m_checkbox.Init();
-    }
+      m_checkbox.Init(Super::m_bigText);
 
+      LOG.Debug("Innitting %s", Super::m_bigText ? "big" : "normal");
+    }
   };
 }
 
