@@ -52,11 +52,11 @@ namespace MFM
       R = P::EVENT_WINDOW_RADIUS,
       BITS = P::BITS_PER_ATOM,
 
-      BUILDING_FLAG_POS = P3Atom<P>::P3_STATE_BITS_POS,
+      BUILDING_FLAG_POS = P3Atom<P>::ATOM_FIRST_STATE_BIT,
       BUILDING_FLAG_LEN = 1,
 
       BUILDING_TIMER_POS = BUILDING_FLAG_POS + BUILDING_FLAG_LEN,
-      BUILDING_TIMER_LEN = 10,
+      BUILDING_TIMER_LEN = 2,
 
       MAX_TIMER_VALUE = (1 << BUILDING_TIMER_LEN) - 1,
 
@@ -177,10 +177,10 @@ namespace MFM
       }
     }
 
-    bool CanSeeElementOfType(EventWindow<CC>& window, const u32 type) const
+    bool CanSeeElementOfType(EventWindow<CC>& window, const u32 type, u32 radius) const
     {
       MDist<R>& md = MDist<R>::get();
-      for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(R); i++)
+      for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(radius); i++)
       {
         if(window.GetRelativeAtom(md.GetPoint(i)).GetType() == type)
         {

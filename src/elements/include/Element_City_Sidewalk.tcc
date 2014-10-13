@@ -15,7 +15,7 @@ namespace MFM
 
       if(window.GetRelativeAtom(pt).GetType() == Element_Empty<CC>::THE_INSTANCE.GetType())
       {
-        if(!CanSeeElementOfType(window, Element_City_Building<CC>::THE_INSTANCE.GetType()))
+        if(!CanSeeElementOfType(window, Element_City_Building<CC>::THE_INSTANCE.GetType(), 1))
         {
           /* Found it! */
           window.SetRelativeAtom(pt, Element_City_Building<CC>::THE_INSTANCE.GetDefaultAtom());

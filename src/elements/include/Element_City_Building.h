@@ -71,6 +71,8 @@ namespace MFM
     typedef BitField<BitVector<BITS>, MAX_AREA_LEN, MAX_AREA_POS> AFMaxArea;
     typedef BitField<BitVector<BITS>, AREA_INDEX_LEN, AREA_INDEX_POS> AFAreaIndex;
 
+    ElementParameterS32<CC> m_carSpawnOdds;
+
    public:
     static Element_City_Building THE_INSTANCE;
 
@@ -79,7 +81,7 @@ namespace MFM
       AFAreaIndex::Write(this->GetBits(us), val);
     }
 
-    void GetAreaIndex(const T& us) const
+    u32 GetAreaIndex(const T& us) const
     {
       return AFAreaIndex::Read(this->GetBits(us));
     }
@@ -89,7 +91,7 @@ namespace MFM
       AFMaxArea::Write(this->GetBits(us), val);
     }
 
-    void GetMaxArea(const T& us) const
+    u32 GetMaxArea(const T& us) const
     {
       return AFMaxArea::Read(this->GetBits(us));
     }
@@ -138,7 +140,9 @@ namespace MFM
     }
 
     Element_City_Building() :
-      Element<CC>(MFM_UUID_FOR("CityBuilding", BUILDING_VERSION))
+      Element<CC>(MFM_UUID_FOR("CityBuilding", BUILDING_VERSION)),
+      m_carSpawnOdds(this, "carSpawnOdds", "Car Spawn Odds",
+                     "Odds of a building spawning a car.", 1, 1000, 10000, 10)
     {
       Element<CC>::SetAtomicSymbol("Bd");
       Element<CC>::SetName("City Building");
@@ -170,8 +174,14 @@ namespace MFM
     {
       switch(GetSubType(atom))
       {
-      case 0x00: return 0xffff0000;
-      default:   return 0xff800000;
+      case 0x0: return 0xffff0000;
+      case 0x1: return 0xff00ff00;
+      case 0x2: return 0xff0000ff;
+      case 0x3: return 0xffff00ff;
+      case 0x4: return 0xffffff00;
+      case 0x5: return 0xff00ffff;
+      case 0x6: return 0xffff00ff;
+      default:  return 0xff800000;
       }
     }
 
@@ -185,6 +195,56 @@ namespace MFM
       return nowAt.Equals(maybeAt)?Element<CC>::COMPLETE_DIFFUSABILITY:0;
     }
 
+    void SpawnNextBuilding(EventWindow<CC>& window) const
+    {
+      if(GetAreaIndex(window.GetCenterAtom()) < GetMaxArea(window.GetCenterAtom()))
+      {
+        MDist<R>& md = MDist<R>::get();
+        bool spawnedNextBuilding = false;
+        for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(R); i++)
+        {
+          SPoint pt = md.GetPoint(i);
+          T atom;
+
+          if((atom = window.GetRelativeAtom(pt)).GetType() == TYPE())
+          {
+            if(GetSubType(atom) == GetSubType(window.GetCenterAtom()))
+            {
+              if(GetAreaIndex(atom) == GetAreaIndex(window.GetCenterAtom()) + 1)
+              {
+                spawnedNextBuilding = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if(!spawnedNextBuilding)
+        {
+          SPoint empty;
+          u32 emptyCount = 0;
+          for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(1); i++)
+          {
+            SPoint pt = md.GetPoint(i);
+            if(window.GetRelativeAtom(pt).GetType() == Element_Empty<CC>::THE_INSTANCE.GetType())
+            {
+              if(window.GetRandom().OneIn(++emptyCount))
+              {
+                empty = pt;
+              }
+            }
+          }
+
+          if(emptyCount > 0)
+          {
+            T building = window.GetCenterAtom();
+            SetAreaIndex(building, GetAreaIndex(building) + 1);
+            window.SetRelativeAtom(empty, building);
+          }
+        }
+      }
+    }
+
    public:
     virtual void Behavior(EventWindow<CC>& window) const
     {
@@ -196,7 +256,12 @@ namespace MFM
       }
       else
       {
+        if(window.GetRandom().OneIn(m_carSpawnOdds.GetValue()))
+        {
 
+        }
+
+        SpawnNextBuilding(window);
       }
     }
   };
