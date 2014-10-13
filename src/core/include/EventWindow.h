@@ -248,6 +248,64 @@ namespace MFM {
     bool SetRelativeAtom(const SPoint& offset, const T & atom);
 
     /**
+     * Scans the event window up to a specified radius (not including
+     * the center atom) and sees whether or not an atom of a specified
+     * type exists.
+     *
+     * @param type The type of the atom being scanned for.
+     *
+     * @param radius The maximum radius to expand this search to. This
+     *               FAILs with ILLEGAL_ARGUMENT if this argument is
+     *               greater than the EventWindow radius.
+     *
+     * @returns \c true if an atom of type \c type exists within \c
+     *          radius of the center atom, else \c false .
+     */
+    bool CanSeeAtomOfType(const u32 type, const u32 radius) const;
+
+    /**
+     * Scans this EventWindow, not counting the center atom, for all
+     * atoms of a specified type, filling a point with the location of
+     * a single randomly chosen one.
+     *
+     * @param type The type of the atoms to search for and potentially
+     *             randomly pick.
+     *
+     * @param outPoint An output parameter; The SPoint to fill with
+     *                 the coordinates of a randomly chosen atom if
+     *                 one of the correct type is located.
+     *
+     * @returns \c true if an atom of type \c type is found, and
+     *          therefore the contents of \c outPoint may be trusted,
+     *          else \c false .
+     */
+    bool FindRandomLocationOfType(const u32 type, SPoint& outPoint) const;
+
+    /**
+     * Scans a subset of this EventWindow, up to a specified radius
+     * and not counting the center atom, for all atoms of a specified
+     * type, filling a point with the location of a single randomly
+     * chosen one.
+     *
+     * @param type The type of the atoms to search for and potentially
+     *             randomly pick.
+     *
+     * @param radius The maximum radius to search for atoms at. This
+     *               must be greater than 0 and less than the radius
+     *               of this EventWindow, or this will FAIL with
+     *               ILLEGAL_ARGUMENT .
+     *
+     * @param outPoint An output parameter; The SPoint to fill with
+     *                 the coordinates of a randomly chosen atom if
+     *                 one of the correct type is located.
+     *
+     * @returns \c true if an atom of type \c type is found, and
+     *          therefore the contents of \c outPoint may be trusted,
+     *          else \c false .
+     */
+    bool FindRandomLocationOfType(const u32 type, const u32 radius, SPoint& outPoint) const;
+
+    /**
      * Takes the Atom in a specified location and swaps it with an
      * Atom in another location.
      *
