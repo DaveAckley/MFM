@@ -85,7 +85,7 @@ namespace MFM
       Element<CC>(MFM_UUID_FOR("CityStreet", STREET_VERSION)),
       m_intersectionOdds(this, "intersectionOdds",
                            "Intersection Odds",
-                           "Odds of creating an intersection", 1, 50, 500, 10)
+                           "Odds of creating an intersection", 1, 20, 100, 10)
     {
       Element<CC>::SetAtomicSymbol("St");
       Element<CC>::SetName("City Street");
@@ -170,6 +170,14 @@ namespace MFM
     }
 
     void DoStreetAndSidewalk(EventWindow<CC>& window, Dir d) const;
+
+    inline const T& GetIntersection() const;
+
+    inline u32 IntersectionType() const;
+
+    inline const T& GetSidewalk() const;
+
+    inline u32 SidewalkType() const;
 
    public:
     virtual void Behavior(EventWindow<CC>& window) const

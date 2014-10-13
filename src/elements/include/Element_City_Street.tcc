@@ -5,6 +5,30 @@
 namespace MFM
 {
   template <class CC>
+  inline const typename CC::ATOM_TYPE& Element_City_Street<CC>::GetIntersection() const
+  {
+    return Element_City_Intersection<CC>::THE_INSTANCE.GetDefaultAtom();
+  }
+
+  template <class CC>
+  inline u32 Element_City_Street<CC>::IntersectionType() const
+  {
+    return Element_City_Intersection<CC>::THE_INSTANCE.GetType();
+  }
+
+  template <class CC>
+  inline const typename CC::ATOM_TYPE& Element_City_Street<CC>::GetSidewalk() const
+  {
+    return Element_City_Sidewalk<CC>::THE_INSTANCE.GetDefaultAtom();
+  }
+
+  template <class CC>
+  inline u32 Element_City_Street<CC>::SidewalkType() const
+  {
+    return Element_City_Sidewalk<CC>::THE_INSTANCE.GetType();
+  }
+
+  template <class CC>
   void Element_City_Street<CC>::DoStreetAndSidewalk(EventWindow<CC>& window, Dir d) const
   {
     SPoint offset;
@@ -15,10 +39,9 @@ namespace MFM
         Element_Empty<CC>::THE_INSTANCE.GetType()) &&
        rand.OneIn(m_intersectionOdds.GetValue()))
     {
-      if(!CanSeeElementOfType(window, Element_City_Intersection<CC>::THE_INSTANCE.GetType()))
+      if(!CanSeeElementOfType(window, IntersectionType()))
       {
-        window.SetRelativeAtom(offset,
-                               Element_City_Intersection<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetRelativeAtom(offset, GetIntersection());
       }
     }
 
@@ -27,30 +50,34 @@ namespace MFM
 
     /* Don't do sidewalks if we can touch an intersection. */
 
-    if(!MooreBorder(window, Element_City_Intersection<CC>::THE_INSTANCE.GetType()))
+    if(!MooreBorder(window, IntersectionType()))
     {
 
       Dirs::FillDir(offset, Dirs::CCWDir(Dirs::CCWDir(d)));
-      FillIfNotType(window, offset,
-                    Element_City_Sidewalk<CC>::THE_INSTANCE.GetType(),
-                    Element_City_Sidewalk<CC>::THE_INSTANCE.GetDefaultAtom());
+      FillIfNotType(window, offset, SidewalkType(), GetSidewalk());
 
       Dirs::FillDir(offset, Dirs::CWDir(Dirs::CWDir(d)));
-      FillIfNotType(window, offset,
-                    Element_City_Sidewalk<CC>::THE_INSTANCE.GetType(),
-                    Element_City_Sidewalk<CC>::THE_INSTANCE.GetDefaultAtom());
+      FillIfNotType(window, offset, SidewalkType(), GetSidewalk());
     }
 
     /* Extra intersection creation */
 
     Dirs::FillDir(offset, d);
-    if(window.GetRelativeAtom(offset).GetType() ==
-       Element_City_Sidewalk<CC>::THE_INSTANCE.GetType())
+    if(window.GetRelativeAtom(offset).GetType() == SidewalkType())
     {
-      window.SetRelativeAtom(offset * 2,
-                             Element_City_Intersection<CC>::THE_INSTANCE.GetDefaultAtom());
-      window.SetRelativeAtom(offset, window.GetCenterAtom());
-
+      if(window.GetRelativeAtom(offset * 2).GetType() == IntersectionType())
+      {
+        window.SetRelativeAtom(offset, window.GetCenterAtom());
+      }
+      else if(CanSeeElementOfType(window, IntersectionType()))
+      {
+        window.SetCenterAtom(GetSidewalk());
+      }
+      else
+      {
+        window.SetRelativeAtom(offset * 2, GetIntersection());
+        window.SetRelativeAtom(offset, window.GetCenterAtom());
+      }
     }
   }
 }
