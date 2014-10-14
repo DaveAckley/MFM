@@ -26,8 +26,8 @@ namespace MFM
    */
   template <class CC>
   bool Element<CC>::FillPointWithType(EventWindow<CC>& window,
-				       SPoint& pt, const SPoint* relevants, u32 relevantCount,
-				       Dir rotation, ElementType type) const
+                                      SPoint& pt, const SPoint* relevants, u32 relevantCount,
+                                      Dir rotation, ElementType type) const
   {
     Random & random = window.GetRandom();
     u32 possibles = 0;
@@ -37,7 +37,7 @@ namespace MFM
 
       /* Live site?  Right type?  Lucky? */
       if(window.IsLiveSite(current) &&
-	 (window.GetRelativeAtom(current).GetType() == type) &&
+         (window.GetRelativeAtom(current).GetType() == type) &&
          random.OneIn(++possibles))
       {
         pt = current;
@@ -61,7 +61,7 @@ namespace MFM
       u32 atomType= window.GetRelativeAtom(pt).GetType();
 
       desires[i] = (s32)window.GetTile().GetElementTable().Lookup(atomType)->
-	PercentMovable(window.GetCenterAtom(), window.GetRelativeAtom(pt), pt);
+      PercentMovable(window.GetCenterAtom(), window.GetRelativeAtom(pt), pt);
       totalDesire += desires[i];
     }
 
