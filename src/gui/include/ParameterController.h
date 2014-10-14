@@ -32,6 +32,10 @@
 
 namespace MFM
 {
+  /**
+   * An abstraction used for displaying every Element and Atom
+   * Parameter .
+   */
   template <class CC>
   class ParameterController : public Panel
   {

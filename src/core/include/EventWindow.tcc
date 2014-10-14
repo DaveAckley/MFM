@@ -74,7 +74,7 @@ namespace MFM
     {
       if(GetRelativeAtom(md.GetPoint(i)).GetType() == type)
       {
-	return true;
+        return true;
       }
     }
     return false;
@@ -94,8 +94,8 @@ namespace MFM
 
   template <class CC>
   bool EventWindow<CC>::IsBorderingNeighborhood(const u32 type,
-						const Dir* dirs,
-						const u32 dirCount) const
+                                                const Dir* dirs,
+                                                const u32 dirCount) const
   {
     SPoint searchPt;
     for(u32 i = 0; i < dirCount; i++)
@@ -104,7 +104,7 @@ namespace MFM
 
       if(GetRelativeAtom(searchPt).GetType() == type)
       {
-	return true;
+        return true;
       }
     }
     return false;
@@ -118,8 +118,8 @@ namespace MFM
 
   template <class CC>
   bool EventWindow<CC>::FindRandomLocationOfType(const u32 type,
-						 const u32 radius,
-						 SPoint& outPoint) const
+                                                 const u32 radius,
+                                                 SPoint& outPoint) const
   {
     const MDist<R>& md = MDist<R>::get();
     u32 foundPts = 0;
@@ -133,15 +133,48 @@ namespace MFM
     {
       if(GetRelativeAtom(md.GetPoint(i)).GetType() == type)
       {
-	foundPts++;
-	if(GetRandom().OneIn(foundPts))
-	{
-	  outPoint.Set(md.GetPoint(i));
-	}
+        foundPts++;
+        if(GetRandom().OneIn(foundPts))
+        {
+          outPoint.Set(md.GetPoint(i));
+        }
       }
     }
 
     return foundPts > 0;
+  }
+
+  template <class CC>
+  bool EventWindow<CC>::FindRandomInMoore(const u32 type, SPoint& outPoint) const
+  {
+    return FindRandomInNeighborhood(type, MooreNeighborhood,
+                                    sizeof(MooreNeighborhood) / sizeof(Dir), outPoint);
+  }
+
+  template <class CC>
+  bool EventWindow<CC>::FindRandomInVonNeumann(const u32 type, SPoint& outPoint) const
+  {
+    return FindRandomInNeighborhood(type, VonNeumannNeighborhood,
+                                    sizeof(VonNeumannNeighborhood) / sizeof(Dir), outPoint);
+  }
+
+
+  template <class CC>
+  bool EventWindow<CC>::FindRandomInNeighborhood(const u32 type, const Dir* dirs,
+                                                 const u32 dirCount, SPoint& outPoint) const
+  {
+    SPoint searchPt;
+    for(u32 i = 0; i < dirCount; i++)
+    {
+      Dirs::FillDir(searchPt, dirs[i]);
+
+      if(GetRelativeAtom(searchPt).GetType() == type)
+      {
+        Dirs::FillDir(outPoint, dirs[i]);
+        return true;
+      }
+    }
+    return false;
   }
 
   template <class CC>
@@ -154,6 +187,12 @@ namespace MFM
     T b = *m_tile.GetAtom(arrLocB);
     m_tile.PlaceAtom(b, arrLocA);
     m_tile.PlaceAtom(a, arrLocB);
+  }
+
+  template <class CC>
+  void EventWindow<CC>::SwapCenterAtom(const SPoint& relative)
+  {
+    SwapAtoms(SPoint(0, 0), relative);
   }
 
 

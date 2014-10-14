@@ -33,7 +33,8 @@
 #include "MDist.h"  /* for EVENT_WINDOW_SITES */
 #include "PSym.h"   /* For PointSymmetry, Map */
 
-namespace MFM {
+namespace MFM
+{
 
   // Forward declaration
   template <class CC>
@@ -47,7 +48,7 @@ namespace MFM {
   template <class CC>
   class EventWindow
   {
-  private:
+   private:
     // Extract short names for parameter types
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
@@ -164,7 +165,8 @@ namespace MFM {
      *
      * @param center The new center of this EventWindow .
      */
-    void SetCenterInTile(const SPoint& center) {
+    void SetCenterInTile(const SPoint& center)
+    {
       m_center = center;
     }
 
@@ -370,7 +372,9 @@ namespace MFM {
      *
      * @param outPoint An output parameter; The SPoint to fill with
      *                 the coordinates of a randomly chosen atom if
-     *                 one of the correct type is located.
+     *                 one of the correct type is located. If this
+     *                 method returns \c false , the contents of this
+     *                 SPoint are undefined.
      *
      * @returns \c true if an atom of type \c type is found, and
      *          therefore the contents of \c outPoint may be trusted,
@@ -394,13 +398,84 @@ namespace MFM {
      *
      * @param outPoint An output parameter; The SPoint to fill with
      *                 the coordinates of a randomly chosen atom if
-     *                 one of the correct type is located.
+     *                 one of the correct type is located. If this
+     *                 method returns \c false , the contents of this
+     *                 SPoint are undefined.
      *
      * @returns \c true if an atom of type \c type is found, and
      *          therefore the contents of \c outPoint may be trusted,
      *          else \c false .
      */
     bool FindRandomLocationOfType(const u32 type, const u32 radius, SPoint& outPoint) const;
+
+    /**
+     * Searches the Moore neighborhood around the center atom of this
+     * EventWindow for an Atom of a specified type, giving its
+     * location if found.
+     *
+     * @param type The type of the Atom to search for.
+     *
+     * @param outPoint an output parameter; The SPoint to fill with
+     *                 the coordinates of a randomly chosen atom if
+     *                 one of \c type type is located. If this method
+     *                 returns \c false , the contents of this SPoint
+     *                 are undefined.
+     *
+     * @returns \c true if an Atom of type \c type is found, and
+     *          therefore the contents of \c outPoint may be trusted,
+     *          else \c false .
+     *
+     * @see MooreNeighborhood
+     */
+    bool FindRandomInMoore(const u32 type, SPoint& outPoint) const;
+
+    /**
+     * Searches the Moore neighborhood around the center atom of this
+     * EventWindow for an Atom of a specified type, giving its
+     * location if found.
+     *
+     * @param type The type of the Atom to search for.
+     *
+     * @param outPoint an output parameter; The SPoint to fill with
+     *                 the coordinates of a randomly chosen atom if
+     *                 one of \c type type is located. If this method
+     *                 returns \c false , the contents of this SPoint
+     *                 are undefined.
+     *
+     * @returns \c true if an Atom of type \c type is found, and
+     *          therefore the contents of \c outPoint may be trusted,
+     *          else \c false .
+     *
+     * @see VonNeumannNeighborhood
+     */
+    bool FindRandomInVonNeumann(const u32 type, SPoint& outPoint) const;
+
+    /**
+     * Searches a specified neighborhood around the center atom of this
+     * EventWindow for an Atom of a specified type, giving its
+     * location if found.
+     *
+     * @param type The type of the Atom to search for.
+     *
+     * @param dirs An array of Dirs specifying the neighborhood to
+     *             search around the center Atom.
+     *
+     * @param dirCount The number of Dir elements inside of \c dirs .
+     *
+     * @param outPoint an output parameter; The SPoint to fill with
+     *                 the coordinates of a randomly chosen atom if
+     *                 one of \c type type is located. If this method
+     *                 returns \c false , the contents of this SPoint
+     *                 are undefined.
+     *
+     * @returns \c true if an Atom of type \c type is found, and
+     *          therefore the contents of \c outPoint may be trusted,
+     *          else \c false .
+     *
+     * @see VonNeumannNeighborhood
+     */
+    bool FindRandomInNeighborhood(const u32 type, const Dir* dirs,
+                                  const u32 dirCount, SPoint& outPoint) const;
 
     /**
      * Takes the Atom in a specified location and swaps it with an
@@ -411,6 +486,15 @@ namespace MFM {
      * @param locB The location of the second Atom to swap
      */
     void SwapAtoms(const SPoint& locA, const SPoint& locB);
+
+    /**
+     * Takes the Atom in a specified location and swaps it with an
+     * Atom in the center of this EventWindow.
+     *
+     * @param relative The location of the first Atom to swap with this
+     *                 EventWindow's center atom.
+     */
+    void SwapCenterAtom(const SPoint& relative);
 
   };
 } /* namespace MFM */

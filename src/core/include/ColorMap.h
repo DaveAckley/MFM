@@ -27,6 +27,10 @@
 #ifndef COLORMAP_H      /* -*- C++ -*- */
 #define COLORMAP_H
 
+#include "itype.h"
+
+namespace MFM
+{
 /**
  * A bunch of color scales and gradients for heat-map and similar
  * types of displays.  Based on suggestions from colorbrewer2.org,
@@ -37,15 +41,9 @@
  * colors, which have a distinguished center 'break' between two
  * colors
  */
-
-#include "itype.h"
-
-namespace MFM {
-
   class ColorMap
   {
-  public:
-
+   public:
     /**
      * Map value, which must be in the range of min..max to one of
      * five different colors.  If max<=min or value is out of range,
@@ -78,7 +76,7 @@ namespace MFM {
      */
     static ColorMap & GetMap(u32 index);
 
-  private:
+   private:
     virtual const u32 * GetColorArray() const = 0;
     virtual const char * GetName() const = 0;
     virtual u32 GetColorArrayLength() const = 0;
