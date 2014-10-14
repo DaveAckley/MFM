@@ -16,7 +16,7 @@ namespace MFM
     MDist<R>& md = MDist<R>::get();
     SPoint sidewalk;
 
-    if(window.FindRandomLocationOfType(GetSidewalkType(), 1, sidewalk))
+    if(window.FindRandomInVonNeumann(GetSidewalkType(), sidewalk))
     {
       Dir swDir = Dirs::FromOffset(swDir);
 
