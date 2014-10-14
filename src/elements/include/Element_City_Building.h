@@ -220,16 +220,16 @@ namespace MFM
           if(GetSubType(window.GetRelativeAtom(pt)) ==
              GetSubType(window.GetCenterAtom()))
           {
-            if(largestIdx < GetAreaIndex(windown.GetCenterAtom()))
+            if(largestIdx < GetAreaIndex(window.GetCenterAtom()))
             {
-              largestIdx = GetAreaIndex(windown.GetCenterAtom());
+              largestIdx = GetAreaIndex(window.GetCenterAtom());
             }
           }
         }
       }
+      return largestIdx;
     }
-    return largestIdx;
-  }
+
 
   u32 GetSidewalkType() const;
 

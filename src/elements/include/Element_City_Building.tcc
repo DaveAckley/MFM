@@ -11,38 +11,51 @@ namespace MFM
   }
 
   template <class CC>
-  bool DoNBSidewalkCase(EventWindow<CC>& window) const
+  bool Element_City_Building<CC>::DoNBSidewalkCase(EventWindow<CC>& window) const
   {
     MDist<R>& md = MDist<R>::get();
+    SPoint sidewalk;
 
-    for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(1); i++)
+    if(window.FindRandomLocationOfType(GetSidewalkType(), 1, sidewalk))
     {
-      SPoint pt = md.GetPoint(i);
+      Dir swDir = Dirs::FromOffset(swDir);
 
-      if(window.GetRelativeAtom(pt).GetType() == GetSidewalkType())
+      SPoint adjs[2];
+
+      Dirs::FillDir(adjs[0], Dirs::CWDir(swDir));
+      Dirs::FillDir(adjs[1], Dirs::CCWDir(swDir));
+
+      for(u32 i = 0; i < 2; i++)
       {
-        Dir swDir = Dirs::FromOffset(pt);
-        SPoint adjPt;
-
-        Dirs::FillDir(adj, Dirs::CWDir(swDir));
-
-        if(window.GetRelativeAtom(pt).GetType() ==
-           Element_Empty<CC>::THE_INSTANCE.GetType())
+        const T& at = window.GetRelativeAtom(adjs[i]);
+        if(at.GetType() != TYPE())
         {
-          u32 largestIdx = LargestVisibleIndex(window);
+          T copyMe = window.GetCenterAtom();
+          u32 idx = LargetsVisibleIndex(window) + 1;
 
-          T newMe  = window.GetCenterAtom();
-
-          SetAreaIndex(newMe, largestIdx + 1);
-
-          window.SetRelativeAtom(pt, newMe);
-
-          return true;
+          if(idx <= GetMaxArea(copyMe))
+          {
+            SetAreaIndex(copyMe, idx);
+            window.SetRelativeAtom(adjs[i], copyMe);
+          }
         }
       }
     }
     return false;
   }
+
+  template <class CC>
+  bool Element_City_Building<CC>::DoNBPerpGrowthCase(EventWindow<CC>& window) const
+  {
+    return false;
+  }
+
+  template <class CC>
+  bool Element_City_Building<CC>::DoNBCornerGrowthCase(EventWindow<CC>& window) const
+  {
+    return false;
+  }
+
 
   template <class CC>
   void Element_City_Building<CC>::SpawnNextBuilding(EventWindow<CC>& window) const
