@@ -9,8 +9,8 @@ namespace MFM
    public:
     enum
     {
-      CITY_BUILDING_COUNT = 32, /*! MAKE SURE TO CHANGE BOTH !*/
-      CITY_BUILDING_COUNT_LOG2 = 5
+      CITY_BUILDING_COUNT = 16, /*! MAKE SURE TO CHANGE BOTH !*/
+      CITY_BUILDING_COUNT_LOG2 = 4
     };
   };
 }

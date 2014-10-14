@@ -123,7 +123,6 @@ namespace MFM
     {
       return AFSubType::Read(this->GetBits(us));
     }
-
     void SetSubType(T& us, u32 val) const
     {
       AFSubType::Write(this->GetBits(us), val);
@@ -195,6 +194,54 @@ namespace MFM
       return nowAt.Equals(maybeAt)?Element<CC>::COMPLETE_DIFFUSABILITY:0;
     }
 
+    bool MooreBorder(EventWindow<CC>& window, u32 type) const
+    {
+      SPoint pt;
+      for(u32 i = 0; i < Dirs::DIR_COUNT; i++)
+      {
+        Dirs::FillDir(pt, (Dir)i);
+        if(window.GetRelativeAtom(pt).GetType() == type)
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    u32 LargestVisibleIndex(EventWindow<CC>& window) const
+    {
+      MDist<R>& md = MDist<R>::get();
+      u32 largestIdx = 0;
+      for(u32 i = md.GetFirstIndex(0); i <= md.GetLastIndex(R); i++)
+      {
+        SPoint pt = md.GetPoint(i);
+        if(window.GetRelativeAtom(pt).GetType() == TYPE())
+        {
+          if(GetSubType(window.GetRelativeAtom(pt)) ==
+             GetSubType(window.GetCenterAtom()))
+          {
+            if(largestIdx < GetAreaIndex(windown.GetCenterAtom()))
+            {
+              largestIdx = GetAreaIndex(windown.GetCenterAtom());
+            }
+          }
+        }
+      }
+    }
+    return largestIdx;
+  }
+
+  u32 GetSidewalkType() const;
+
+  bool DoNBSidewalkCase(EventWindow<CC>& window) const;
+
+  bool DoNBPerpGrowthCase(EventWindow<CC>& window) const;
+
+  bool DoNBCornerGrowthCase(EventWindow<CC>& window) const;
+
+  void SpawnNextBuilding(EventWindow<CC>& window) const;
+
+#if 0
     void SpawnNextBuilding(EventWindow<CC>& window) const
     {
       if(GetAreaIndex(window.GetCenterAtom()) < GetMaxArea(window.GetCenterAtom()))
@@ -244,6 +291,7 @@ namespace MFM
         }
       }
     }
+#endif
 
    public:
     virtual void Behavior(EventWindow<CC>& window) const
@@ -258,7 +306,7 @@ namespace MFM
       {
         if(window.GetRandom().OneIn(m_carSpawnOdds.GetValue()))
         {
-
+          /* Spawn a car :0 */
         }
 
         SpawnNextBuilding(window);
