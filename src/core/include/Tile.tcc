@@ -992,6 +992,9 @@ namespace MFM
           // It's showtime!
           bool locked = false;
           Dir lockRegion = Dirs::NORTH;
+          /*
+          UsageTimer execTimer = UsageTimer::NowThread();
+          */
 
           CreateRandomWindow();
 
@@ -1001,6 +1004,15 @@ namespace MFM
           {
             DoEvent(locked, lockRegion);
           }
+
+          /*
+          u32 ms = (UsageTimer::NowThread() - execTimer).TotalMicroseconds();
+          if(ms > 1)
+          {
+            LOG.Debug("Atom (type 0x%x) took longer 1 ms to execute: %d ms",
+                      m_executingWindow.GetCenterAtom().GetType(), ms);
+          }
+          */
         }
         else
         {
