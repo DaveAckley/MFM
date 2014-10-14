@@ -430,8 +430,8 @@ namespace MFM
     bool FindRandomInMoore(const u32 type, SPoint& outPoint) const;
 
     /**
-     * Searches the Moore neighborhood around the center atom of this
-     * EventWindow for an Atom of a specified type, giving its
+     * Searches the Von Neumann neighborhood around the center atom of
+     * this EventWindow for an Atom of a specified type, giving its
      * location if found.
      *
      * @param type The type of the Atom to search for.
