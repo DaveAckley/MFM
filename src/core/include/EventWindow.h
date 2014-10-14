@@ -373,14 +373,13 @@ namespace MFM
      * @param outPoint An output parameter; The SPoint to fill with
      *                 the coordinates of a randomly chosen atom if
      *                 one of the correct type is located. If this
-     *                 method returns \c false , the contents of this
+     *                 method returns \c 0 , the contents of this
      *                 SPoint are undefined.
      *
-     * @returns \c true if an atom of type \c type is found, and
-     *          therefore the contents of \c outPoint may be trusted,
-     *          else \c false .
+     * @returns The number of Atoms found in this EventWindow of type
+     *          \c type .
      */
-    bool FindRandomLocationOfType(const u32 type, SPoint& outPoint) const;
+    u32 FindRandomLocationOfType(const u32 type, SPoint& outPoint) const;
 
     /**
      * Scans a subset of this EventWindow, up to a specified radius
@@ -399,14 +398,13 @@ namespace MFM
      * @param outPoint An output parameter; The SPoint to fill with
      *                 the coordinates of a randomly chosen atom if
      *                 one of the correct type is located. If this
-     *                 method returns \c false , the contents of this
+     *                 method returns \c 0 , the contents of this
      *                 SPoint are undefined.
      *
-     * @returns \c true if an atom of type \c type is found, and
-     *          therefore the contents of \c outPoint may be trusted,
-     *          else \c false .
+     * @returns The number of Atoms found in the search radius of
+     *          type \c type .
      */
-    bool FindRandomLocationOfType(const u32 type, const u32 radius, SPoint& outPoint) const;
+    u32 FindRandomLocationOfType(const u32 type, const u32 radius, SPoint& outPoint) const;
 
     /**
      * Searches the Moore neighborhood around the center atom of this
@@ -418,16 +416,15 @@ namespace MFM
      * @param outPoint an output parameter; The SPoint to fill with
      *                 the coordinates of a randomly chosen atom if
      *                 one of \c type type is located. If this method
-     *                 returns \c false , the contents of this SPoint
+     *                 returns \c 0 , the contents of this SPoint
      *                 are undefined.
      *
-     * @returns \c true if an Atom of type \c type is found, and
-     *          therefore the contents of \c outPoint may be trusted,
-     *          else \c false .
+     * @returns The number of Atoms in the center Atom's Moore
+     *          neighborhood of type \c type.
      *
      * @see MooreNeighborhood
      */
-    bool FindRandomInMoore(const u32 type, SPoint& outPoint) const;
+    u32 FindRandomInMoore(const u32 type, SPoint& outPoint) const;
 
     /**
      * Searches the Von Neumann neighborhood around the center atom of
@@ -439,16 +436,15 @@ namespace MFM
      * @param outPoint an output parameter; The SPoint to fill with
      *                 the coordinates of a randomly chosen atom if
      *                 one of \c type type is located. If this method
-     *                 returns \c false , the contents of this SPoint
+     *                 returns \c 0 , the contents of this SPoint
      *                 are undefined.
      *
-     * @returns \c true if an Atom of type \c type is found, and
-     *          therefore the contents of \c outPoint may be trusted,
-     *          else \c false .
+     * @returns The number of Atoms in the center Atom's Von Neumann
+     *          neighborhood of type \c type.
      *
      * @see VonNeumannNeighborhood
      */
-    bool FindRandomInVonNeumann(const u32 type, SPoint& outPoint) const;
+    u32 FindRandomInVonNeumann(const u32 type, SPoint& outPoint) const;
 
     /**
      * Searches a specified neighborhood around the center atom of this
@@ -468,13 +464,12 @@ namespace MFM
      *                 returns \c false , the contents of this SPoint
      *                 are undefined.
      *
-     * @returns \c true if an Atom of type \c type is found, and
-     *          therefore the contents of \c outPoint may be trusted,
-     *          else \c false .
+     * @returns The number of Atoms in the center Atom's defined
+     *          neighborhood of type \c type.
      *
      * @see VonNeumannNeighborhood
      */
-    bool FindRandomInNeighborhood(const u32 type, const Dir* dirs,
+    u32 FindRandomInNeighborhood(const u32 type, const Dir* dirs,
                                   const u32 dirCount, SPoint& outPoint) const;
 
     /**

@@ -40,8 +40,3 @@ src/elements/include/StdElementsHeaders.inc
 
 # Using Google's lint but don't want to commit it.
 tools/cpplint.py
-
-# I'm putting my research files in the elements folder.
-src/elements/include/Element_City_*
-src/elements/src/Element_City_*
-src/drivers/mfmcity
