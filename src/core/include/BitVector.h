@@ -49,7 +49,18 @@ namespace MFM {
   public:
     enum { BITS = B };
 
-    u32 GetLength() const {
+    /**
+     * Gets the number of bits that may be indexed inside this
+     * BitVector.
+     *
+     * @returns The number of bits that may be indexed inside this
+     *          BitVector.
+     *
+     * @remarks The actual number of bits used in this BitVector is
+     * a multiple of \c sizeof(BitUnitType) .
+     */
+    u32 GetLength() const
+    {
       return BITS;
     }
 

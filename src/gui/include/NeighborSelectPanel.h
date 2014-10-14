@@ -193,7 +193,9 @@ namespace MFM
     {
       Super::SetParameter(pb);
       ElementParameterNeighborhood<CC,SITES>* np =
-        dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>(ParameterController<CC>::GetParameter());
+        dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>
+          (ParameterController<CC>::GetParameter());
+
       if (!np)
       {
         FAIL(ILLEGAL_ARGUMENT);
