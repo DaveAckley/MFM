@@ -36,6 +36,7 @@
 #include "ColorMap.h"
 #include "itype.h"
 #include "P1Atom.h"
+#include "WindowScanner.h"
 
 namespace MFM
 {
@@ -106,7 +107,7 @@ namespace MFM
       return this->FillPointWithType(window, pt,
                                      m_southeastSubwindow,
                                      sizeof(m_southeastSubwindow)/
-				     sizeof(m_southeastSubwindow[0]),
+                                     sizeof(m_southeastSubwindow[0]),
                                      subwindow, type);
     }
 
@@ -133,11 +134,11 @@ namespace MFM
 
       if(threshold)
       {
-	desc.Printf("Threshold: %d", threshold);
+        desc.Printf("Threshold: %d", threshold);
       }
       else
       {
-	desc.Printf("Threshold: INVALID");
+        desc.Printf("Threshold: INVALID");
       }
     }
 
@@ -159,9 +160,9 @@ namespace MFM
       Random & random = window.GetRandom();
       SPoint reproducePt;
       T self = window.GetCenterAtom();
-      if(this->FillPointWithType(window, reproducePt,
-                                 Element<CC>::VNNeighbors, 4,
-                                 Dirs::SOUTHEAST, Element_Res<CC>::TYPE()))
+      WindowScanner<CC> scanner(window);
+      if(scanner.FindRandomInVonNeumann(Element_Res<CC>::THE_INSTANCE.GetType(),
+                                        reproducePt) > 0)
       {
         window.SetRelativeAtom(reproducePt, self);
       }

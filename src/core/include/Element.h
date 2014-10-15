@@ -212,26 +212,6 @@ namespace MFM
     }
 
     /**
-     * The four Von Neumann neighbors, represented as four unit
-     * vectors in the four cardinal directions.
-     */
-    static const SPoint VNNeighbors[4];
-
-    /**
-     * Fills a specified SPoint with a randomly selected Von Neumann
-     * neighbor of the center of a specified EventWindow .
-     *
-     * @param window The EventWindow whose center will be scanned for
-     *               an empty Von Neumann neighbor.
-     *
-     * @param pt The SPoint to fill a Von Neumann unit vector with.
-     *
-     * @returns \c true if an empty Von Neumann neighbor is found,
-     *          else \c false .
-     */
-    bool FillAvailableVNNeighbor(EventWindow<CC>& window, SPoint& pt) const;
-
-    /**
      * Master search method for finding an Atom inside an EventWindow .
      *
      * @param window The EventWindow to search.

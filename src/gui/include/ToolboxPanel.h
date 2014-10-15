@@ -716,7 +716,7 @@ namespace MFM
         snprintf(brushSizeArray, 64, "%d", m_brushSize);
 
         const SPoint brushPos = m_toolButtons[TOOL_AIRBRUSH].Panel::GetRenderPoint();
-        UPoint pos(brushPos.GetX() + 32, brushPos.GetY());
+        UPoint pos(brushPos.GetX() + GetElementRenderSize(), brushPos.GetY());
         d.BlitBackedText(brushSizeArray, pos, UPoint(128, 128));
       }
 

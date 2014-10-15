@@ -213,17 +213,6 @@ namespace MFM
      */
     static SPoint FlipSEPointToCorner(const SPoint& pt, const Dir corner);
   };
-
-  const Dir MooreNeighborhood[8] =
-  {
-    Dirs::NORTH, Dirs::NORTHEAST, Dirs::EAST, Dirs::SOUTHEAST,
-    Dirs::SOUTH, Dirs::SOUTHWEST, Dirs::WEST, Dirs::NORTHWEST
-  };
-
-  const Dir VonNeumannNeighborhood[4] =
-  {
-    Dirs::NORTH, Dirs::EAST, Dirs::SOUTH, Dirs::WEST
-  };
 } /* namespace MFM */
 
 #endif /*DIRS_H*/
