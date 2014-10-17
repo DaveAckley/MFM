@@ -44,6 +44,7 @@ namespace MFM
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS };
+    enum { SITES = EVENT_WINDOW_SITES(R) };
     enum { W = P::TILE_WIDTH };
     enum { B = P::ELEMENT_TABLE_BITS };
 
@@ -334,6 +335,50 @@ namespace MFM
     u32 FindRandomLocationOfType(const u32 type, const u32 radius, SPoint& outPoint) const;
 
     /**
+     * Scans a subset of the held EventWindow, specified by a given
+     * set of relative Points, for an Atom of a particular type,
+     * placing the location of a randomly chosen Atom in an output Point.
+     *
+     * @param type The type of the Atom to search for in this subset.
+     *
+     * @param subWindow The array of relative Points to search through.
+     *
+     * @param subCount The length of the \c subWindow array.
+     *
+     * @param outPoint An output parameter; The SPoint to fill with
+     *                 the coordinates of a randomly chosen atom if
+     *                 one of the correct type is located. If this
+     *                 method returns \c 0 , the contents of this
+     *                 SPoint are undefined.
+     *
+     * @returns The number of Atoms found in the subWindow of type \c
+     *          type .
+     */
+    u32 FindRandomInSubWindow(const u32 type, const SPoint* subWindow,
+                              const u32 subCount, SPoint& outPoint) const;
+
+    /**
+     * Scans a subset of the held EventWindow, specified by a given
+     * set of relative Points, for an Atom representing Element_Empty,
+     * placing the location of a randomly chosen Atom in an output Point.
+     *
+     * @param subWindow The array of relative Points to search through.
+     *
+     * @param subCount The length of the \c subWindow array.
+     *
+     * @param outPoint An output parameter; The SPoint to fill with
+     *                 the coordinates of a randomly chosen atom if
+     *                 one of the correct type is located. If this
+     *                 method returns \c 0 , the contents of this
+     *                 SPoint are undefined.
+     *
+     * @returns The number of Atoms found in the subWindow which
+     *          represent Element_Empty .
+     */
+    u32 FindEmptyInSubWindow(const SPoint* subWindow,
+                             const u32 subCount, SPoint& outPoint) const;
+
+    /**
      * Searches a specified neighborhood around the center atom of the
      * held EventWindow for an Atom of a specified type, giving its
      * location if found.
@@ -449,6 +494,61 @@ namespace MFM
      *          neighborhood representing Element_Empty.
      */
     u32 FindEmptyInVonNeumann(SPoint& outPoint) const;
+
+    /**
+     * Searches the held EventWindow under a specified radius for
+     * different types of Atoms, giving the number of Atoms found and
+     * the location of a randomly chosen one for each being searched
+     * for.
+     *
+     * @param radius The radius of the search over the held
+     *               EventWindow in manhattan distance. The center
+     *               Atom is never included in this search.
+     *
+     * @param count The number of Atom - Type pairs being searched
+     *              for.
+     *
+     * @param ... A variadic number of triplets specifying this
+     *            particular search. Each triplet consists of three parts:
+     *
+     *            - SPoint* Output parameter, the location of a randomly chosen
+     *                      Atom of its paired type if one is found.
+     *
+     *            - u32 The Type of the Atom to search for.
+     *
+     *            - u32* Output parameter, the number of Atoms of the paired type
+     *                   encountered during the search.
+     *
+     */
+    void FindRandomAtoms(const u32 radius, const u32 count, ...) const;
+
+    /**
+     * Searches the held EventWindow for different types of Atoms,
+     * giving the number of Atoms found and the location of a randomly
+     * chosen one for each being searched for.
+     *
+     * @param count The number of Atom - Type pairs being searched
+     *              for.
+     *
+     * @param ... A variadic number of triplets specifying this
+     *            particular search. Each triplet consists of three parts:
+     *
+     *            - SPoint* Output parameter, the location of a randomly chosen
+     *                      Atom of its paired type if one is found.
+     *
+     *            - u32 The Type of the Atom to search for.
+     *
+     *            - u32* Output parameter, the number of Atoms of the paired type
+     *                   encountered during the search.
+     *
+     */
+    void FindRandomAtoms(const u32 count, ...) const;
+
+    bool FindRandomAtomsInSubWindows(const u32 count, ...) const;
+
+   private:
+
+    void FindRandomAtoms(const u32 radius, const u32 count, va_list& list) const;
   };
 
   const Dir MooreNeighborhood[8] =

@@ -212,35 +212,6 @@ namespace MFM
     }
 
     /**
-     * Master search method for finding an Atom inside an EventWindow .
-     *
-     * @param window The EventWindow to search.
-     *
-     * @param pt Output, representing a valid location in this search
-     *           which satisfies the search parameters.
-     *
-     * @param relevants The range of SPoints which should be searched
-     *                  using this method.
-     *
-     * @param relevantCount The number of SPoints held by \c relevants .
-     *
-     * @param rotation A symmetric rotation, describing the flipping
-     *                 of the relevant points. This can be used to
-     *                 search for a particular corner, then flipped to
-     *                 searchfor another.
-     *
-     * @param type The type of the Element to search for during this
-     *             search.
-     *
-     *
-     * @returns \c true if any Atoms are found which satisfy the
-     *          search parameters, else \c false .
-     */
-    bool FillPointWithType(EventWindow<CC>& window,
-                           SPoint& pt, const SPoint* relevants, u32 relevantCount,
-                           Dir rotation, ElementType type) const;
-
-    /**
      * Diffuses the central Atom of a given EventWindow based on the
      * empty places around the Atom and the odds that the central Atom
      * can be diffused.
