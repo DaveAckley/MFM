@@ -149,11 +149,21 @@ namespace MFM
           u32 radius = (m_atomDrawSize + 1) / 2;
 
           drawing.SetForeground(color);
-          drawing.FillCircle(rendPt.GetX(),
-                             rendPt.GetY(),
-                             m_atomDrawSize,
-                             m_atomDrawSize,
-                             radius);
+          if(m_renderSquares)
+          {
+            drawing.FillRect(rendPt.GetX(),
+                            rendPt.GetY(),
+                            m_atomDrawSize,
+                            m_atomDrawSize);
+          }
+          else
+          {
+            drawing.FillCircle(rendPt.GetX(),
+                               rendPt.GetY(),
+                               m_atomDrawSize,
+                               m_atomDrawSize,
+                               radius);
+          }
 
           if (m_atomDrawSize > 40)
           {

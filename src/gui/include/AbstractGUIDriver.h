@@ -716,6 +716,10 @@ namespace MFM
       {
         m_gridPanel.ToggleAtomViewPanel();
       }
+      if(m_keyboard.SemiAuto(SDLK_o))
+      {
+        m_gridPanel.ToggleDrawAtomsAsSquares();
+      }
 
       if(m_keyboard.SemiAuto(SDLK_ESCAPE))
       {
