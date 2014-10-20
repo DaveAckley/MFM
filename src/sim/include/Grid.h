@@ -404,9 +404,7 @@ namespace MFM {
       SPoint tileInGrid, siteInTile;
       if (!MapGridToTile(loc, tileInGrid, siteInTile))
       {
-        LOG.Error("Can't get atom at site (%d,%d): Does not map to grid.",
-                  loc.GetX(), loc.GetY());
-        FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+        return NULL;
       }
       return GetTile(tileInGrid).GetWritableAtom(siteInTile);
     }

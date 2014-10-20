@@ -34,6 +34,7 @@
 #include "Slider.h"
 #include "ParameterControllerBool.h"
 #include "NeighborSelectPanel.h"
+#include "MovablePanel.h"
 
 namespace MFM
 {
@@ -42,7 +43,7 @@ namespace MFM
    * a collection of Element drawing tools.
    */
   template<class CC>
-  class ToolboxPanel : public Panel
+  class ToolboxPanel : public MovablePanel
   {
   private:
     typedef ElementParameterS32<CC> OurParameterS32; // ToolboxPanel controls Elements (vs AtomViewPanel)
@@ -632,7 +633,7 @@ namespace MFM
              GetSelectedTool() == TOOL_AIRBRUSH;
     }
 
-    virtual bool Handle(MouseButtonEvent& mbe)
+    virtual bool PostDragHandle(MouseButtonEvent& mbe)
     {
       SDL_MouseButtonEvent & event = mbe.m_event.button;
 
@@ -663,7 +664,7 @@ namespace MFM
       return true;
     }
 
-    virtual bool Handle(MouseMotionEvent& mme)
+    virtual bool PostDragHandle(MouseMotionEvent& mme)
     {
       /* Try to keep the grid from taking this event too */
       return true;
