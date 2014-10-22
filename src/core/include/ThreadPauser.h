@@ -173,8 +173,8 @@ namespace MFM
     {
       ThreadPauser & m_threadPauser;
       StateIsRunRequested(ThreadPauser & tp) :
-	Predicate(tp.m_mutex, "StateIsRunRequested"),
-	m_threadPauser(tp)
+        Predicate(tp.m_mutex),
+        m_threadPauser(tp)
       { }
 
       virtual bool EvaluatePrecondition()
@@ -201,8 +201,8 @@ namespace MFM
     {
       ThreadPauser & m_threadPauser;
       StateIsRunning(ThreadPauser & tp) :
-	Predicate(tp.m_mutex, "StateIsRunning"),
-	m_threadPauser(tp)
+        Predicate(tp.m_mutex),
+        m_threadPauser(tp)
       { }
 
       virtual bool EvaluatePrecondition()

@@ -49,93 +49,42 @@ namespace MFM
 
     pthread_mutexattr_t m_attr;
 
-    pthread_cond_t m_virtualCond;
-
     /**
      * True if currently locked
      */
     bool m_locked;
 
     /**
-     * If the lock is held, the pthread id of the thread holding
-     * it. If not, the contents of this are undefined.
+     * If the lock is held, the pthread id of the thread holding it.
      */
     pthread_t m_threadId;
 
     // Declare away copy ctor; pthread_mutexes can't be copied
-    Mutex(const Mutex &);
+    Mutex(const Mutex & ) ;
 
     void CondWait(pthread_cond_t & condvar)
     {
-      Unlock();
-      //printf("Waiting on lock %p for cond %p\n", (void*)&m_lock, (void*)&condvar);
       pthread_cond_wait(&condvar, &m_lock);
-      //printf("Awakend on lock %p for cond %p\n", (void*)&m_lock, (void*)&condvar);
-      {
-	/* We have the system lock now, so we need to finish the lock routine.*/
 
-	// The signal gave us back the lock without going through
-	// Mutex::Lock; simulate its effects
-	while(m_locked)
-	{
-	  //printf("Waiting vlock   %p\n", (void*)&m_lock);
-	  VirtualCondWait();
-	}
-	m_threadId = pthread_self();
-	m_locked = true;
-	ReleaseSystemLock();
-      }
-    }
-
-    inline void GrabSystemLock()
-    {
-      //printf("Grabbing lock   %p\n", (void*)&m_lock);
-      if(pthread_mutex_lock(&m_lock))
+      // The signal gave us back the lock without going through
+      // Mutex::Lock; simulate its effects
+      if (m_locked)
       {
         FAIL(LOCK_FAILURE);
       }
-      //printf("Grabbed  lock   %p\n", (void*)&m_lock);
+      m_threadId = pthread_self();
+      m_locked = true;
     }
 
-    inline void ReleaseSystemLock()
-    {
-      //printf("Releasing lock  %p\n", (void*)&m_lock);
-      if(pthread_mutex_unlock(&m_lock))
-      {
-        FAIL(LOCK_FAILURE);
-      }
-      //printf("Released  lock  %p\n", (void*)&m_lock);
-    }
-
-    inline void VirtualCondWait()
-    {
-      //printf("Waiting on lock %p for cond %p\n", (void*)&m_lock, (void*)&m_virtualCond);
-      if(pthread_cond_wait(&m_virtualCond, &m_lock))
-      {
-        FAIL(LOCK_FAILURE);
-      }
-    }
-
-    inline void VirtualCondSignal()
-    {
-      //printf("Signal on lock  %p for cond %p\n", (void*)&m_lock, (void*)&m_virtualCond);
-     if(pthread_cond_signal(&m_virtualCond))
-      {
-        FAIL(LOCK_FAILURE);
-      }
-    }
-
-  public:
+   public:
 
     class ScopeLock
     {
      private:
       Mutex & m_mutex;
      public:
-      ScopeLock(Mutex & mutex, const char* msg) : m_mutex(mutex)
+      ScopeLock(Mutex & mutex) : m_mutex(mutex)
       {
-        //printf("%s: ", msg);
-	fflush(stdout);
         m_mutex.Lock();
       }
       ~ScopeLock()
@@ -150,21 +99,12 @@ namespace MFM
       Mutex & m_mutex;
       pthread_cond_t m_condvar;
       pthread_t m_threadIdOfWaiter;
-
      public:
-      virtual bool EvaluatePrecondition() = 0;
-
       virtual bool EvaluatePredicate() = 0;
 
-      Predicate(Mutex & mutex, const char* id) : m_mutex(mutex)
+      Predicate(Mutex & mutex) : m_mutex(mutex)
       {
-	//printf("Predicate(%s) constructed, cond %p\n", id, (void*)&m_condvar);
         pthread_cond_init(&m_condvar, NULL);
-      }
-
-      ~Predicate()
-      {
-        pthread_cond_destroy(&m_condvar);
       }
 
       void WaitForCondition()
@@ -174,12 +114,6 @@ namespace MFM
 
         while (!EvaluatePredicate())
         {
-          // If the predicate's not true, the precondition must be
-          if (!EvaluatePrecondition())
-          {
-            FAIL(LOCK_FAILURE);
-          }
-
           m_mutex.CondWait(m_condvar);
         }
       }
@@ -188,7 +122,6 @@ namespace MFM
       {
         m_mutex.AssertIHoldTheLock();
         pthread_cond_signal(&m_condvar);
-	//printf("Signald cond    %p\n", (void*)&m_condvar);
       }
     };
 
@@ -200,6 +133,7 @@ namespace MFM
      */
     Mutex() : m_locked(false)
     {
+
       if (pthread_mutexattr_init(&m_attr))
       {
         FAIL(LOCK_FAILURE);
@@ -211,11 +145,6 @@ namespace MFM
       }
 
       if (pthread_mutex_init(&m_lock, &m_attr))
-      {
-        FAIL(LOCK_FAILURE);
-      }
-
-      if(pthread_cond_init(&m_virtualCond, NULL))
       {
         FAIL(LOCK_FAILURE);
       }
@@ -244,11 +173,6 @@ namespace MFM
       {
         FAIL(LOCK_FAILURE);
       }
-
-      if(pthread_cond_destroy(&m_virtualCond))
-      {
-        FAIL(LOCK_FAILURE);
-      }
     }
 
     /** Attempt to lock the underlying mutex, without blocking
@@ -265,18 +189,12 @@ namespace MFM
         FAIL(LOCK_FAILURE);
       }
 
-      bool ret = false;
-      GrabSystemLock();
+      bool ret = !pthread_mutex_trylock(&m_lock);
+      if (ret)
       {
-        if(!m_locked)
-        {
-          ret = true;
-          //printf("Grabbing vlock  %p\n", (void*)&m_lock);
-          m_locked = true;
-          m_threadId = pthread_self();
-        }
+        m_locked = true;
+        m_threadId = pthread_self();
       }
-      ReleaseSystemLock();
       return ret;
     }
 
@@ -293,19 +211,16 @@ namespace MFM
         FAIL(LOCK_FAILURE);
       }
 
-      GrabSystemLock();
+      if (pthread_mutex_lock(&m_lock))
       {
-        while(m_locked)
-        {
-          //printf("Waiting vlock   %p\n", (void*)&m_lock);
-          VirtualCondWait();
-        }
-
-        m_threadId = pthread_self();
-        //printf("Grabbing vlock  %p\n", (void*)&m_lock);
-        m_locked = true;
+        FAIL(LOCK_FAILURE);
       }
-      ReleaseSystemLock();
+
+      // Update threadid before declaring locked so, for example, the
+      // first condition in this method can't trigger on a possibly
+      // stale threadid.
+      m_threadId = pthread_self();
+      m_locked = true;
     }
 
     /**
@@ -339,14 +254,9 @@ namespace MFM
     {
       AssertIHoldTheLock();
 
-      GrabSystemLock();
-      {
-        //printf("Releasing vlock %p\n", (void*)&m_lock);
-	m_threadId = 0;
-        m_locked = false;
-      }
-      ReleaseSystemLock();
-      VirtualCondSignal();
+      m_locked = false;
+      m_threadId = 0;
+      pthread_mutex_unlock(&m_lock);
     }
 
     /**

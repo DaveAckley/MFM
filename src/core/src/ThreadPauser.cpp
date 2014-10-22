@@ -19,7 +19,7 @@ namespace MFM
 
   ThreadState ThreadPauser::AdvanceStateOuter(ThreadState fromState)
   {
-    Mutex::ScopeLock lock(m_mutex, "AdvanceStateOuter");  // Hold the lock during this block
+    Mutex::ScopeLock lock(m_mutex);  // Hold the lock during this block
 
     assert(m_threadState == fromState);
 
@@ -81,13 +81,13 @@ namespace MFM
 
   ThreadState ThreadPauser::GetStateNonblocking()
   {
-    Mutex::ScopeLock lock(m_mutex, "GetStateNonBlocking");  // Hold the lock during this block
+    Mutex::ScopeLock lock(m_mutex);  // Hold the lock during this block
     return m_threadState;
   }
 
   ThreadState ThreadPauser::GetAdvanceStateInner(bool innerReadyToAdvance)
   {
-    Mutex::ScopeLock lock(m_mutex, "GetAdvanceStateInner");  // Hold the lock during this block
+    Mutex::ScopeLock lock(m_mutex);  // Hold the lock during this block
 
     switch (m_threadState)
     {
