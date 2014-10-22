@@ -123,6 +123,13 @@ namespace MFM
      */
     bool m_backgroundRadiationEnabled;
 
+    /**
+     * If \c true, will not FAIL upon encountering a threading
+     * problem. This is usually not recomended, as it causes cache
+     * inconsistencies.
+     */
+    bool m_ignoreThreadingProblems;
+
 #if 0
     /** The 1-in-this odds of bit corruptions during atom writing.  (0
         means no corruptions).  (NOT YET IMPLEMENTED)  */
@@ -479,7 +486,22 @@ namespace MFM
     Tile();
 
     /**
-     * Reinitializes a Tile to a like-new (actually, like-OnceOnlyInit()ed) state.
+     * Sets a value in this Tile corresponding to its tolerance of
+     * threading problems.
+     *
+     * @param value If \c true , allows this Tile to ignore threading
+     *              problems encountered during Tile execution. This
+     *              is not normally recommended because since it will
+     *              cause cache inconsistencies, but it will most
+     *              likely keep your instance of the MFM from crashing
+     *              if this is set. If \c false , will crash upon
+     *              detecting a threading problem.
+     */
+    void SetIgnoreThreadingProblems(bool value);
+
+    /**
+     * Reinitializes a Tile to a like-new (actually,
+     * like-OnceOnlyInit()ed) state.
      */
     void Reinit();
 

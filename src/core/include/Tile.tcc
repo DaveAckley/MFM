@@ -10,11 +10,19 @@ namespace MFM
 {
   template <class CC>
   Tile<CC>::Tile() :
+    m_ignoreThreadingProblems(false),
     m_executingWindow(*this),
     m_generation(0)
   {
     m_lockAttempts = m_lockAttemptsSucceeded = 0;
     Reinit();
+  }
+
+  template <class CC>
+  void Tile<CC>::SetIgnoreThreadingProblems(bool value)
+  {
+    m_ignoreThreadingProblems = value;
+    m_threadPauser.SetIgnoreThreadingProblems(value);
   }
 
   template <class CC>
@@ -108,7 +116,18 @@ namespace MFM
   template <class CC>
   void Tile<CC>::CheckCacheFromDir(Dir direction, const Tile & otherTile)
   {
-    assert(IsPausedOrOwner());
+    if(m_ignoreThreadingProblems)
+    {
+      if(!IsPausedOrOwner())
+      {
+        LOG.Error("%s:%s: THREADING PROBLEM ENCOUNTERED! Tile is configured to ignore "
+                  "this problem and will continue execution." __FILE__, __LINE__);
+      }
+    }
+    else
+    {
+      assert(IsPausedOrOwner());
+    }
 
     for(u32 x = 0; x < TILE_WIDTH; x++)
     {
