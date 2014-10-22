@@ -127,9 +127,11 @@ namespace MFM
       T self = window.GetCenterAtom();
 
       // Find nearest-on-right consumable, if any
-      for (u32 i = 1; i < R; ++i) {
+      for (u32 i = 1; i < R; ++i)
+      {
         SPoint consPt(i,0);
-        if(window.GetRelativeAtom(consPt).GetType() == Element_Data<CC>::TYPE())          {
+        if(window.GetRelativeAtom(consPt).GetType() == Element_Data<CC>::TYPE())
+        {
             // Use the expanded info maintained by reprovert to
             // dynamically compute the bucket size.  That info can be
             // temporarily disrupted e.g. by DReg, so going this route

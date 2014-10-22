@@ -5,46 +5,6 @@
 
 namespace MFM
 {
-  template <class CC>
-  const SPoint Element<CC>::VNNeighbors[4] =
-  {
-      SPoint(-1, 0), SPoint(1, 0), SPoint(0, -1), SPoint(0, 1)
-  };
-
-  /* Fills 'pt' with the value of a randomly selected empty von neumann */
-  /* neighbor.                                                          */
-  /* Returns false if there is no valid neighbor to be used.            */
-  template <class CC>
-  bool Element<CC>::FillAvailableVNNeighbor(EventWindow<CC>& window, SPoint& pt) const
-  {
-    return FillPointWithType(window, pt, VNNeighbors, 4, Dirs::SOUTHEAST,
-			     Element_Empty<CC>::THE_INSTANCE.GetType());
-  }
-
-  /* Master search method for finding atoms in regions in a window. If regions are
-     symmetric about the origin, rotation does not make a difference.
-   */
-  template <class CC>
-  bool Element<CC>::FillPointWithType(EventWindow<CC>& window,
-                                      SPoint& pt, const SPoint* relevants, u32 relevantCount,
-                                      Dir rotation, ElementType type) const
-  {
-    Random & random = window.GetRandom();
-    u32 possibles = 0;
-    for(u32 i = 0; i < relevantCount; i++)
-    {
-      SPoint current = Dirs::FlipSEPointToCorner(relevants[i], rotation);
-
-      /* Live site?  Right type?  Lucky? */
-      if(window.IsLiveSite(current) &&
-         (window.GetRelativeAtom(current).GetType() == type) &&
-         random.OneIn(++possibles))
-      {
-        pt = current;
-      }
-    }
-    return possibles > 0;
-  }
 
 #if 0
   template <class CC>

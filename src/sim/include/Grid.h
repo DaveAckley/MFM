@@ -75,6 +75,8 @@ namespace MFM {
 
     u8 m_gridGeneration;
 
+    bool m_ignoreThreadingProblems;
+
     /**
      * A synchronized command sequence to the grid
      */
@@ -161,13 +163,26 @@ namespace MFM {
       m_height(H),
       m_er(elts),
       m_xraySiteOdds(1000),
-      m_gridGeneration(0)
+      m_gridGeneration(0),
+      m_ignoreThreadingProblems(false)
     {
       for (u32 y = 0; y < H; ++y)
       {
         for (u32 x = 0; x < W; ++x)
         {
           LOG.Debug("Tile[%d][%d] @ %p", x, y, &m_tiles[x][y]);
+        }
+      }
+    }
+
+    void SetIgnoreThreadingProblems(bool value)
+    {
+      m_ignoreThreadingProblems = value;
+      for(u32 x = 0; x < W; x++)
+      {
+        for(u32 y = 0; y < H; y++)
+        {
+          GetTile(x, y).SetIgnoreThreadingProblems(value);
         }
       }
     }
@@ -404,9 +419,7 @@ namespace MFM {
       SPoint tileInGrid, siteInTile;
       if (!MapGridToTile(loc, tileInGrid, siteInTile))
       {
-        LOG.Error("Can't get atom at site (%d,%d): Does not map to grid.",
-                  loc.GetX(), loc.GetY());
-        FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+        return NULL;
       }
       return GetTile(tileInGrid).GetWritableAtom(siteInTile);
     }

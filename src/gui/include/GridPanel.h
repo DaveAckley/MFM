@@ -127,6 +127,14 @@ namespace MFM
       m_atomViewPanel.ToggleVisibility();
     }
 
+    void ToggleDrawAtomsAsSquares()
+    {
+      if(m_grend)
+      {
+        m_grend->ToggleDrawAtomsAsSquares();
+      }
+    }
+
     void SetGridRenderer(GridRenderer* grend)
     {
       m_grend = grend;

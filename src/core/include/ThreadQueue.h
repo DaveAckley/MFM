@@ -55,7 +55,7 @@ namespace MFM
     struct MoreInputIsAvailable : public Mutex::Predicate
     {
       ThreadQueue & m_threadQueue;
-      MoreInputIsAvailable(ThreadQueue & tq) : Predicate(tq.m_mutex, "MoreInput"), m_threadQueue(tq) { }
+      MoreInputIsAvailable(ThreadQueue & tq) : Predicate(tq.m_mutex), m_threadQueue(tq) { }
 
       virtual bool EvaluatePrecondition()
       {

@@ -152,7 +152,8 @@ namespace MFM
       else
       {
         m_dragging = false;
-        return true;
+        /* Might want the things underneath to let up too. */
+        return false;
       }
       return false;
     }

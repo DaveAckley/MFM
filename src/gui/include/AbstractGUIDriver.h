@@ -58,6 +58,7 @@
 #include "SDL.h"
 #include "SDL_ttf.h"
 #include "HelpPanel.h"
+#include "MovablePanel.h"
 
 namespace MFM
 {
@@ -715,6 +716,10 @@ namespace MFM
       {
         m_gridPanel.ToggleAtomViewPanel();
       }
+      if(m_keyboard.SemiAuto(SDLK_o))
+      {
+        m_gridPanel.ToggleDrawAtomsAsSquares();
+      }
 
       if(m_keyboard.SemiAuto(SDLK_ESCAPE))
       {
@@ -937,7 +942,7 @@ namespace MFM
 
     ToolboxPanel<CC> m_toolboxPanel;
 
-    class StatisticsPanel : public Panel
+    class StatisticsPanel : public MovablePanel
     {
       StatsRenderer<GC>* m_srend;
       OurGrid* m_mainGrid;
@@ -1004,7 +1009,7 @@ namespace MFM
       virtual void PaintBorder(Drawing & config)
       { /* No border please */ }
 
-      virtual bool Handle(MouseButtonEvent& mbe)
+      virtual bool HandlePostDrag(MouseButtonEvent& mbe)
       {
         return true;  /* Eat the event to keep the grid from taking it */
       }

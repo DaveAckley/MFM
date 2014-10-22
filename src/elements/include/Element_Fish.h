@@ -33,6 +33,7 @@
 #include "itype.h"
 #include "Atom.h"
 #include "AbstractElement_WaPat.h"
+#include "WindowScanner.h"
 
 namespace MFM
 {
@@ -106,12 +107,11 @@ namespace MFM
 
     virtual void Behavior(EventWindow<CC>& window) const
     {
-      Random & random = window.GetRandom();
       T self = window.GetCenterAtom();
-      const MDist<R> & md = MDist<R>::get();
       SPoint emptyRel;
       u32 emptyCount = 0;
       u32 age = this->GetCurrentAge(self);
+      WindowScanner<CC> scanner(window);
 
       // Don't use genetic birth age (yet): bool reproable = age >= this->GetBirthAge(self);
       bool reproable = age >= (u32) m_fishBirthAge.GetValue();
@@ -121,23 +121,7 @@ namespace MFM
         this->SetCurrentAge(self, 1 + age);
       }
 
-      for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(1); ++idx)
-      {
-        const SPoint rel = md.GetPoint(idx);
-        if (!window.IsLiveSite(rel))
-        {
-          continue;
-        }
-        T other = window.GetRelativeAtom(rel);
-        u32 type = other.GetType();
-        if(type == Element_Empty<CC>::THE_INSTANCE.GetType())
-        {
-          if (random.OneIn(++emptyCount))
-          {
-            emptyRel = rel;
-          }
-        }
-      }
+      emptyCount = scanner.FindEmptyInVonNeumann(emptyRel);
 
       if (emptyCount > 0)  // Can move
       {

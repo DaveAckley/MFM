@@ -36,6 +36,7 @@
 #include "ColorMap.h"
 #include "itype.h"
 #include "P1Atom.h"
+#include "WindowScanner.h"
 
 namespace MFM
 {
@@ -61,9 +62,23 @@ namespace MFM
     static const u32 STATE_THRESHOLD_LEN = 32;
     static const u32 STATE_BITS = STATE_THRESHOLD_LEN;
 
-    static const SPoint m_southeastSubwindow[4];
+    static const SPoint m_southeastSubWindow[4];
+    static const SPoint m_northeastSubWindow[4];
+    static const SPoint m_southwestSubWindow[4];
+    static const SPoint m_northwestSubWindow[4];
 
-    Element_Sorter() : Element<CC>(MFM_UUID_FOR("Sorter", SORTER_VERSION))
+    inline u32 GetDataType() const
+    {
+      return Element_Data<CC>::THE_INSTANCE.GetType();
+    }
+
+    inline u32 GetEmptyType() const
+    {
+      return Element_Empty<CC>::THE_INSTANCE.GetType();
+    }
+
+    Element_Sorter() :
+      Element<CC>(MFM_UUID_FOR("Sorter", SORTER_VERSION))
     {
       Element<CC>::SetAtomicSymbol("Sr");
       Element<CC>::SetName("Sorter");
@@ -100,16 +115,6 @@ namespace MFM
       return 100;
     }
 
-    bool FillAvailableSubwindowPoint(EventWindow<CC>& window,
-                                     SPoint& pt, Dir subwindow, ElementType type) const
-    {
-      return this->FillPointWithType(window, pt,
-                                     m_southeastSubwindow,
-                                     sizeof(m_southeastSubwindow)/
-				     sizeof(m_southeastSubwindow[0]),
-                                     subwindow, type);
-    }
-
     virtual u32 DefaultPhysicsColor() const
     {
       return 0xffff0000;
@@ -133,11 +138,11 @@ namespace MFM
 
       if(threshold)
       {
-	desc.Printf("Threshold: %d", threshold);
+        desc.Printf("Threshold: %d", threshold);
       }
       else
       {
-	desc.Printf("Threshold: INVALID");
+        desc.Printf("Threshold: INVALID");
       }
     }
 
@@ -159,56 +164,57 @@ namespace MFM
       Random & random = window.GetRandom();
       SPoint reproducePt;
       T self = window.GetCenterAtom();
-      if(this->FillPointWithType(window, reproducePt,
-                                 Element<CC>::VNNeighbors, 4,
-                                 Dirs::SOUTHEAST, Element_Res<CC>::TYPE()))
+      WindowScanner<CC> scanner(window);
+      if(scanner.FindRandomInVonNeumann(Element_Res<CC>::THE_INSTANCE.GetType(),
+                                        reproducePt) > 0)
       {
         window.SetRelativeAtom(reproducePt, self);
       }
 
-      SPoint seData, neData, swEmpty, nwEmpty, srcPt, dstPt;
       bool movingUp = random.CreateBool();
+
+      SPoint src, dst;
+      bool foundPts;
 
       for(s32 i = 0; i < 2; i++)
       {
-        if(movingUp &&
-           FillAvailableSubwindowPoint(window, seData,
-                                       Dirs::SOUTHEAST,
-                                       Element_Data<CC>::THE_INSTANCE.GetType()) &&
-           FillAvailableSubwindowPoint(window, nwEmpty,
-                                       Dirs::NORTHWEST,
-                                       Element_Empty<CC>::THE_INSTANCE.GetType()))
+        foundPts = false;
+        if(movingUp)
         {
-          srcPt = seData;
-          dstPt = nwEmpty;
-        }
-        else if(!movingUp &&
-                FillAvailableSubwindowPoint(window, neData,
-                                            Dirs::NORTHEAST,
-                                            Element_Data<CC>::THE_INSTANCE.GetType()) &&
-                FillAvailableSubwindowPoint(window, swEmpty,
-                                            Dirs::SOUTHWEST,
-                                            Element_Empty<CC>::THE_INSTANCE.GetType()))
-        {
-          srcPt = neData;
-          dstPt = swEmpty;
+          if(scanner.FindRandomAtomsInSubWindows(2,
+                     &src, GetDataType(), m_southeastSubWindow, 4,
+                     &dst, GetEmptyType(), m_northwestSubWindow, 4))
+          {
+            foundPts = true;
+          }
         }
         else
         {
-          movingUp = !movingUp;
-          continue;
+          if(scanner.FindRandomAtomsInSubWindows(2,
+                     &src, GetDataType(), m_northeastSubWindow, 4,
+                     &dst, GetEmptyType(), m_southwestSubWindow, 4))
+          {
+            foundPts = true;
+          }
         }
 
-        u32 threshold = GetThreshold(window.GetCenterAtom(),0);
-        u32 datum = Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtom(srcPt),0);
-        u32 cmp = (movingUp && (datum < threshold)) || (!movingUp && (datum > threshold));
-        if(cmp)
+        if(foundPts)
         {
-          SetThreshold(self,datum);
-          window.SetCenterAtom(self);
-          window.SwapAtoms(srcPt, dstPt);
-          break;
+          u32 threshold = GetThreshold(window.GetCenterAtom(),0);
+          u32 datum = Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtom(src),0);
+          bool cmp = (movingUp && (datum < threshold)) || (!movingUp && (datum > threshold));
+
+          if(cmp)
+          {
+            SetThreshold(self, datum);
+            window.SetCenterAtom(self);
+            window.SwapAtoms(src, dst);
+            break;
+          }
         }
+
+        movingUp = !movingUp;
+
       }
       this->Diffuse(window);
     }
@@ -218,10 +224,27 @@ namespace MFM
   Element_Sorter<CC> Element_Sorter<CC>::THE_INSTANCE;
 
   template <class CC>
-  const SPoint Element_Sorter<CC>::m_southeastSubwindow[4] =
+  const SPoint Element_Sorter<CC>::m_southeastSubWindow[4] =
   {
     SPoint(1,1),SPoint(1,2),SPoint(2,1),SPoint(2,2)
   };
 
+  template <class CC>
+  const SPoint Element_Sorter<CC>::m_northeastSubWindow[4] =
+  {
+    SPoint(1,-1),SPoint(1,-2),SPoint(2,-1),SPoint(2,-2)
+  };
+
+  template <class CC>
+  const SPoint Element_Sorter<CC>::m_northwestSubWindow[4] =
+  {
+    SPoint(-1,-1),SPoint(-1,-2),SPoint(-2,-1),SPoint(-2,-2)
+  };
+
+  template <class CC>
+  const SPoint Element_Sorter<CC>::m_southwestSubWindow[4] =
+  {
+    SPoint(-1,1),SPoint(-1,2),SPoint(-2,1),SPoint(-2,2)
+  };
 }
 #endif /* ELEMENT_SORTER_H */
