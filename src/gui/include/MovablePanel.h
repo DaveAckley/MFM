@@ -89,6 +89,12 @@ namespace MFM
       }
     }
 
+    virtual void OnMouseExit()
+    {
+      m_dragging = false;
+      PostDragOnMouseExit();
+    }
+
     virtual bool PostDragHandle(MouseButtonEvent& event)
     {
       return false;
@@ -98,6 +104,9 @@ namespace MFM
     {
       return false;
     }
+
+    virtual void PostDragOnMouseExit()
+    { }
   };
 } /* namespace MFM */
 #endif /*PANEL_H*/
