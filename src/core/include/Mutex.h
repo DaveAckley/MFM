@@ -54,6 +54,9 @@ namespace MFM
      */
     bool m_locked;
 
+    pthread_cond_t m_virtualCond;
+    bool m_inVCW;
+
     /**
      * If the lock is held, the pthread id of the thread holding it.
      */
@@ -131,7 +134,9 @@ namespace MFM
      * FAILs with LOCK_FAILURE if the underlying pthread_mutex cannot
      * be initialized.
      */
-    Mutex() : m_locked(false)
+    Mutex() :
+      m_locked(false)
+      , m_inVCW(false)
     {
 
       if (pthread_mutexattr_init(&m_attr))

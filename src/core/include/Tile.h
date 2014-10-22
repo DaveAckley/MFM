@@ -216,6 +216,17 @@ namespace MFM
         Connection. */
     bool m_iLocked[8];
 
+    /** True if this tile is currently in FlushAndWaitOnAllBuffers. */
+    bool m_isFnWing;
+    u32 m_curFnWingDirWaitWord;
+    u32 m_origFnWingDirWaitWord;
+
+    /** True if this tile is currently in trying to advance to pause ready. */
+    bool m_isA2PRed;
+
+    /** True if this tile is currently calling GetStateBlockingInner for switching. */
+    bool m_isGSBIsw;
+
     /**
      * The real Connections to half of this Tile's neighbors. Indexing
      * begins at EUDIR_EAST and ends at EUDIR_SOUTHWEST .

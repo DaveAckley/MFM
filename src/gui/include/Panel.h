@@ -51,7 +51,8 @@ namespace MFM
 
   struct MouseEvent
   {
-    MouseEvent(const Keyboard & keyboard, SDL_Event & event, const EditingTool selectedTool) :
+    MouseEvent(const Keyboard & keyboard, SDL_Event & event,
+               const EditingTool selectedTool) :
       m_keyboard(keyboard),
       m_event(event),
       m_selectedTool(selectedTool)
