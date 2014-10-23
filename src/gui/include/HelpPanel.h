@@ -29,7 +29,7 @@
 #define HELPPANEL_H
 
 #include "AssetManager.h"
-#include "Panel.h"
+#include "MovablePanel.h"
 
 namespace MFM
 {
@@ -37,7 +37,7 @@ namespace MFM
    * A Panel which displays helpful information about the driver it
    * resides in.
    */
-  class HelpPanel : public Panel
+  class HelpPanel : public MovablePanel
   {
   private:
 

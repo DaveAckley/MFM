@@ -19,12 +19,34 @@ namespace MFM
 
   ThreadState ThreadPauser::AdvanceStateOuter(ThreadState fromState)
   {
-    Mutex::ScopeLock lock(m_mutex, "AdvanceStateOuter");  // Hold the lock during this block
+    Mutex::ScopeLock lock(m_mutex);  // Hold the lock during this block
 
-    assert(m_threadState == fromState);
+    if(m_ignoreThreadingProblems)
+    {
+      if(m_threadState != fromState)
+      {
+        LOG.Error("%s:%s: THREADING PROBLEM ENCOUNTERED! ThreadPauser is configured to"
+                  " ignore this problem and will continue execution." __FILE__, __LINE__);
+      }
+    }
+    else
+    {
+      assert(m_threadState == fromState);
+    }
 
     switch (m_threadState)
     {
+
+    case THREADSTATE_RUN_REQUESTED:
+      if(m_ignoreThreadingProblems)
+      {
+        LOG.Error("Pretending THREADSTATE_RUN_REQUESTED is THREADSTATE_RUN_READY");
+      }
+      else
+      {
+        assert(false);
+      }
+      /* FALL THROUGH */
 
     case THREADSTATE_RUN_READY:
 
@@ -46,8 +68,15 @@ namespace MFM
       break;
 
     case THREADSTATE_PAUSE_REQUESTED:
-      assert(false);
-      break;
+      if(m_ignoreThreadingProblems)
+      {
+        LOG.Error("Pretending THREADSTATE_PAUSE_REQUESTED is THREADSTATE_PAUSE_READY");
+      }
+      else
+      {
+        assert(false);
+      }
+      /* FALL THROUGH */
 
     case THREADSTATE_PAUSE_READY:
 
@@ -68,10 +97,6 @@ namespace MFM
       m_stateIsRunRequested.SignalCondition();
       break;
 
-    case THREADSTATE_RUN_REQUESTED:
-      assert(false);
-      break;
-
     default:
       assert(false);
     }
@@ -81,13 +106,13 @@ namespace MFM
 
   ThreadState ThreadPauser::GetStateNonblocking()
   {
-    Mutex::ScopeLock lock(m_mutex, "GetStateNonBlocking");  // Hold the lock during this block
+    Mutex::ScopeLock lock(m_mutex);  // Hold the lock during this block
     return m_threadState;
   }
 
   ThreadState ThreadPauser::GetAdvanceStateInner(bool innerReadyToAdvance)
   {
-    Mutex::ScopeLock lock(m_mutex, "GetAdvanceStateInner");  // Hold the lock during this block
+    Mutex::ScopeLock lock(m_mutex);  // Hold the lock during this block
 
     switch (m_threadState)
     {

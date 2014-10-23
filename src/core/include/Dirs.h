@@ -30,13 +30,14 @@
 
 #include "Point.h"
 
-namespace MFM {
+namespace MFM
+{
 
   typedef u32 Dir;
 
   class Dirs
   {
-  public:
+   public:
     static const Dir NORTH     = 0;
     static const Dir NORTHEAST = 1;
     static const Dir EAST      = 2;
@@ -211,9 +212,7 @@ namespace MFM {
      *          which is also changed.
      */
     static SPoint FlipSEPointToCorner(const SPoint& pt, const Dir corner);
-
   };
-
 } /* namespace MFM */
 
 #endif /*DIRS_H*/

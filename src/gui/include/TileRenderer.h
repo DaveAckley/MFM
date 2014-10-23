@@ -45,6 +45,8 @@ namespace MFM
     bool m_drawDataHeat;
     u32 m_atomDrawSize;
 
+    bool m_renderSquares;
+
     u32 m_gridColor;
 
     u32 m_cacheColor;
@@ -112,6 +114,11 @@ namespace MFM
     bool* GetGridEnabledPointer()
     {
       return &m_drawGrid;
+    }
+
+    void ToggleDrawAtomsAsSquares()
+    {
+      m_renderSquares = !m_renderSquares;
     }
 
     bool* GetDrawDataHeatPointer()

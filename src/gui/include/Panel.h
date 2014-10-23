@@ -51,7 +51,8 @@ namespace MFM
 
   struct MouseEvent
   {
-    MouseEvent(const Keyboard & keyboard, SDL_Event & event, const EditingTool selectedTool) :
+    MouseEvent(const Keyboard & keyboard, SDL_Event & event,
+               const EditingTool selectedTool) :
       m_keyboard(keyboard),
       m_event(event),
       m_selectedTool(selectedTool)
@@ -92,11 +93,15 @@ namespace MFM
     const u32 m_buttonMask;
     const ButtonPositionArray & m_buttonPositionArray;
 
-    MouseMotionEvent(const Keyboard & keyboard, SDL_Event & event, u32 buttonMask, ButtonPositionArray & bpa, const EditingTool selectedTool)
-      : MouseEvent(keyboard, event, selectedTool), m_buttonMask(buttonMask), m_buttonPositionArray(bpa)
+    MouseMotionEvent(const Keyboard & keyboard, SDL_Event & event, u32 buttonMask,
+                     ButtonPositionArray & bpa, const EditingTool selectedTool) :
+      MouseEvent(keyboard, event, selectedTool),
+      m_buttonMask(buttonMask),
+      m_buttonPositionArray(bpa)
     { }
 
     virtual bool Handle(Panel & panel) ;
+
     virtual SPoint GetAt() const
     {
       return SPoint(m_event.motion.x, m_event.motion.y);

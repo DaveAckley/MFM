@@ -21,7 +21,7 @@ namespace MFM
   {
     if (length > 0)
     {
-      Mutex::ScopeLock lock(m_mutex, "TQ::Write");
+      Mutex::ScopeLock lock(m_mutex);
 
       if(length + m_heldBytes > THREADQUEUE_MAX_BYTES)
       {
@@ -60,7 +60,7 @@ namespace MFM
 
   void ThreadQueue::ReadBlocking(u8* bytes, u32 length)
   {
-    Mutex::ScopeLock lock(m_mutex, "TQ::ReadBlocking");
+    Mutex::ScopeLock lock(m_mutex);
     u32 readBytes = 0;
     while(readBytes < length)
     {
@@ -82,7 +82,7 @@ namespace MFM
        write intervenes before we get the lock. */
     if(m_heldBytes >= length)
     {
-      Mutex::ScopeLock lock(m_mutex, "TQ::Read");
+      Mutex::ScopeLock lock(m_mutex);
       readBytes = UnsafeRead(bytes, length);
     }
     return readBytes;
@@ -90,7 +90,7 @@ namespace MFM
 
   void ThreadQueue::PeekRead(u8* toBuffer, u32 index, u32 length)
   {
-    Mutex::ScopeLock lock(m_mutex, "TQ::PeekRead");
+    Mutex::ScopeLock lock(m_mutex);
     {
       if(m_heldBytes < length + index)
       {
@@ -111,13 +111,13 @@ namespace MFM
 
   u32 ThreadQueue::BytesAvailable()
   {
-    Mutex::ScopeLock lock(m_mutex, "TQ::BytesAvailable");
+    Mutex::ScopeLock lock(m_mutex);
     return m_heldBytes;
   }
 
   void ThreadQueue::Flush()
   {
-    Mutex::ScopeLock lock(m_mutex, "TQ::Flush");
+    Mutex::ScopeLock lock(m_mutex);
     m_readHead = m_writeHead = m_heldBytes = 0;
   }
 }

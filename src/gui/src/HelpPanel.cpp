@@ -12,6 +12,7 @@ namespace MFM
     "    [Mid-Mouse Element] Lowlighting",
     " [g] Toggle showing grid",
     " [m] Cycle through memory views",
+    " [o] Render atoms as squares / circles",
     " [k] Render Atom heatmap",
     " [h] Toggle showing this help window",
     " [l] Toggle showing the log",

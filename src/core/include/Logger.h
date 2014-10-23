@@ -242,7 +242,7 @@ namespace MFM
     {
       if (IfLog(level))
       {
-        Mutex::ScopeLock lock(m_mutex, "Vreport"); // Hold lock for this block
+        Mutex::ScopeLock lock(m_mutex); // Hold lock for this block
 
         m_sink->Printf("%@%s: ",m_timeStamper, StrLevel(level));
         m_sink->Vprintf(format, ap);

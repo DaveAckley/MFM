@@ -10,11 +10,19 @@ namespace MFM
 {
   template <class CC>
   Tile<CC>::Tile() :
+    m_ignoreThreadingProblems(false),
     m_executingWindow(*this),
     m_generation(0)
   {
     m_lockAttempts = m_lockAttemptsSucceeded = 0;
     Reinit();
+  }
+
+  template <class CC>
+  void Tile<CC>::SetIgnoreThreadingProblems(bool value)
+  {
+    m_ignoreThreadingProblems = value;
+    m_threadPauser.SetIgnoreThreadingProblems(value);
   }
 
   template <class CC>
@@ -114,7 +122,18 @@ namespace MFM
   template <class CC>
   void Tile<CC>::CheckCacheFromDir(Dir direction, const Tile & otherTile)
   {
-    assert(IsPausedOrOwner());
+    if(m_ignoreThreadingProblems)
+    {
+      if(!IsPausedOrOwner())
+      {
+        LOG.Error("%s:%s: THREADING PROBLEM ENCOUNTERED! Tile is configured to ignore "
+                  "this problem and will continue execution." __FILE__, __LINE__);
+      }
+    }
+    else
+    {
+      assert(IsPausedOrOwner());
+    }
 
     for(u32 x = 0; x < TILE_WIDTH; x++)
     {
@@ -1008,6 +1027,9 @@ namespace MFM
           // It's showtime!
           bool locked = false;
           Dir lockRegion = Dirs::NORTH;
+          /*
+          UsageTimer execTimer = UsageTimer::NowThread();
+          */
 
           CreateRandomWindow();
 
@@ -1017,6 +1039,15 @@ namespace MFM
           {
             DoEvent(locked, lockRegion);
           }
+
+          /*
+          u32 ms = (UsageTimer::NowThread() - execTimer).TotalMicroseconds();
+          if(ms > 1)
+          {
+            LOG.Debug("Atom (type 0x%x) took longer 1 ms to execute: %d ms",
+                      m_executingWindow.GetCenterAtom().GetType(), ms);
+          }
+          */
         }
         else
         {
