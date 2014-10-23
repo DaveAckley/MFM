@@ -281,16 +281,14 @@ namespace MFM {
       {
         if(m_ignoreThreadingProblems)
         {
-          LOG.Error("%s:%s: THREADING PROBLEM ENCOUNTERED! Grid is configured to ignore"
-                    " this problem and will continue execution." __FILE__, __LINE__);
+          LOG.Error("%s:%d: THREADING PROBLEM ENCOUNTERED! Grid is configured to ignore"
+                    " this problem and will continue execution.", __FILE__, __LINE__);
+          return;
         }
-        else
-        {
-          LOG.Error("%s control looped %d times, but %d still not ready, killing",
-                    tc.GetName(), loops, notReady);
-          ReportGridStatus(Logger::ERROR);
-          FAIL(ILLEGAL_STATE);
-        }
+        LOG.Error("%s control looped %d times, but %d still not ready, killing",
+                  tc.GetName(), loops, notReady);
+        ReportGridStatus(Logger::ERROR);
+        FAIL(ILLEGAL_STATE);
       }
 
       if (--sleepTimer < 0)
