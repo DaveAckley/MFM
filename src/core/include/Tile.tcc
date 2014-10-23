@@ -126,8 +126,8 @@ namespace MFM
     {
       if(!IsPausedOrOwner())
       {
-        LOG.Error("%s:%s: THREADING PROBLEM ENCOUNTERED! Tile is configured to ignore "
-                  "this problem and will continue execution." __FILE__, __LINE__);
+        LOG.Error("%s:%d: THREADING PROBLEM ENCOUNTERED! Tile is configured to ignore "
+                  "this problem and will continue execution.", __FILE__, __LINE__);
       }
     }
     else

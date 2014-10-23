@@ -25,8 +25,8 @@ namespace MFM
     {
       if(m_threadState != fromState)
       {
-        LOG.Error("%s:%s: THREADING PROBLEM ENCOUNTERED! ThreadPauser is configured to"
-                  " ignore this problem and will continue execution." __FILE__, __LINE__);
+        LOG.Error("%s:%d: THREADING PROBLEM ENCOUNTERED! ThreadPauser is configured to"
+                  " ignore this problem and will continue execution.", __FILE__, __LINE__);
       }
     }
     else
