@@ -166,6 +166,18 @@ namespace MFM
     }
 
     /**
+     * Sets the icon of this AbstractButton which will render in its
+     * place upon rendering, specified by a loaded Asset.
+     *
+     * @param icon The Asset representing the SDL_Surface to use as
+     *             this AbstractButton's image.
+     */
+    void SetIcon(Asset a)
+    {
+      SetIcon(AssetManager::Get(a));
+    }
+
+    /**
      * Gets the icon that is currently being rendered by this
      * AbstractButton .
      *

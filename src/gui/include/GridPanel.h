@@ -111,6 +111,11 @@ namespace MFM
       Panel::Insert(&m_atomViewPanel, NULL);
     }
 
+    void Init()
+    {
+      m_atomViewPanel.Init();
+    }
+
     AtomViewPanel<GC> * GetAtomViewPanel()
     {
       return &m_atomViewPanel;

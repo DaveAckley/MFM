@@ -1141,6 +1141,7 @@ namespace MFM
 
       UPoint newDimensions(width, height);
 
+      m_gridPanel.Init();
       m_rootPanel.SetDimensions(m_screenWidth, m_screenHeight);
       m_gridPanel.SetDimensions(m_screenWidth, m_screenHeight);
 
