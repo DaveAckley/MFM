@@ -242,19 +242,19 @@ namespace MFM {
   {
     BitVector<256>* bits = setup();
 
-    assert(bits->ReadLong(16, 64) == 0x1357111213141234L);
-    assert(bits->ReadLong(0, 32) == 0x24681357L);
-    assert(bits->ReadLong(96, 32) == 0x9abcdef0L);
-    assert(bits->ReadLong(160, 36) == 0x876543214L);
+    assert(bits->ReadLong(16, 64) == HexU64(0x13571112,0x13141234));
+    assert(bits->ReadLong(0, 32) == HexU64(0x0,0x24681357));
+    assert(bits->ReadLong(96, 32) == HexU64(0x0,0x9abcdef0));
+    assert(bits->ReadLong(160, 36) == HexU64(0x8,0x76543214));
 
-    bits->WriteLong(16,64,0x1300001213141234L);
-    assert(bits->ReadLong(16, 64) == 0x1300001213141234L);
+    bits->WriteLong(16,64,HexU64(0x13000012,0x13141234));
+    assert(bits->ReadLong(16, 64) == HexU64(0x13000012,0x13141234));
 
     bits->WriteLong(24,16,0x5711L);
-    assert(bits->ReadLong(16, 64) == 0x1357111213141234L);
+    assert(bits->ReadLong(16, 64) == HexU64(0x13571112,0x13141234));
 
     bits->WriteLong(192,64,0x0L);
-    assert(bits->ReadLong(160, 64) == 0x8765432100000000L);
+    assert(bits->ReadLong(160, 64) == HexU64(0x87654321,0x00000000));
 
     assert(bits->ReadLong(192, 64) == 0x0L);
     bits->WriteLong(192,64,(u64) -1L);
@@ -262,4 +262,3 @@ namespace MFM {
   }
 
 } /* namespace MFM */
-
