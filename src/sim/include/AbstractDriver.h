@@ -960,8 +960,8 @@ namespace MFM
       RegisterArgument("Load initial configuration from file at path ARG (string)",
                        "-cp|--configpath", &LoadFromConfigFile, this, true);
 
-      RegisterArgument("Allow recovery from threading problems",
-                       "--ignorethreadingproblems", &SetIgnoreThreadingProblems,
+      RegisterArgument("Continue execution after detected thread failures",
+                       "--ignorethreadbugs", &SetIgnoreThreadingProblems,
                        this, false);
     }
 

@@ -1,7 +1,7 @@
 # This is the canonical source of the MFM version number!
 MFM_VERSION_MAJOR:=2
 MFM_VERSION_MINOR:=0
-MFM_VERSION_REV:=7
+MFM_VERSION_REV:=10
 
 
 ################## NOTHING BELOW HERE SHOULD NEED TO CHANGE ##################
