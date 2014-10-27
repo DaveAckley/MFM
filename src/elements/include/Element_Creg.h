@@ -58,7 +58,7 @@ namespace MFM
                         "window with other Creg.", 0, 3, 41/*, 1*/)
 
     {
-      Element<CC>::SetAtomicSymbol("Cr");
+      Element<CC>::SetAtomicSymbol("Cd");
       Element<CC>::SetName("Creg");
     }
 
