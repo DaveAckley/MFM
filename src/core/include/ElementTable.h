@@ -32,6 +32,9 @@
 #include "EventWindow.h"
 #include "Dirs.h"
 #include "itype.h"
+#include "Element.h"
+#include "Element_Empty.h"
+#include "UsageTimer.h"
 
 namespace MFM
 {

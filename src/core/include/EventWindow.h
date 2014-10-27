@@ -33,7 +33,8 @@
 #include "MDist.h"  /* for EVENT_WINDOW_SITES */
 #include "PSym.h"   /* For PointSymmetry, Map */
 
-namespace MFM {
+namespace MFM
+{
 
   // Forward declaration
   template <class CC>
@@ -47,7 +48,7 @@ namespace MFM {
   template <class CC>
   class EventWindow
   {
-  private:
+   private:
     // Extract short names for parameter types
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
@@ -164,7 +165,8 @@ namespace MFM {
      *
      * @param center The new center of this EventWindow .
      */
-    void SetCenterInTile(const SPoint& center) {
+    void SetCenterInTile(const SPoint& center)
+    {
       m_center = center;
     }
 
@@ -233,6 +235,19 @@ namespace MFM {
     const T& GetRelativeAtom(const SPoint& offset) const;
 
     /**
+     * Gets an Atom residing at a specified direction from the center
+     * atom inside this EventWindow .
+     *
+     * @param offset The direction, relative to the center of this
+     *               EventWindow , of the Atom to be retreived. If
+     *               this is not inside the EventWindow, will FAIL
+     *               with ILLEGAL_ARGUMENT .
+     *
+     * @returns The Atom at \c offset .
+     */
+    const T& GetRelativeAtom(const Dir mooreOffset) const;
+
+    /**
      * Sets an Atom residing at a specified location in this
      * EventWindow to a specified Atom .
      *
@@ -256,6 +271,15 @@ namespace MFM {
      * @param locB The location of the second Atom to swap
      */
     void SwapAtoms(const SPoint& locA, const SPoint& locB);
+
+    /**
+     * Takes the Atom in a specified location and swaps it with an
+     * Atom in the center of this EventWindow.
+     *
+     * @param relative The location of the first Atom to swap with this
+     *                 EventWindow's center atom.
+     */
+    void SwapCenterAtom(const SPoint& relative);
 
   };
 } /* namespace MFM */

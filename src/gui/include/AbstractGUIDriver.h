@@ -58,6 +58,7 @@
 #include "SDL.h"
 #include "SDL_ttf.h"
 #include "HelpPanel.h"
+#include "MovablePanel.h"
 
 namespace MFM
 {
@@ -93,12 +94,11 @@ namespace MFM
 
     bool m_startPaused;
     bool m_thisUpdateIsEpoch;
+    bool m_bigText;
     u32 m_thisEpochAEPS;
     bool m_captureScreenshots;
     u32 m_saveStateIndex;
     u32 m_epochSaveStateIndex;
-
-    Fonts m_fonts;
 
     bool m_keyboardPaused;   // Toggled by keyboard space, ' ', SDLK_SPACE
     bool m_singleStep;       // Toggled by Step check box, 's', SDLK_SPACE
@@ -517,10 +517,9 @@ namespace MFM
         putenv((char *) "SDL_VIDEO_ALLOW_SCREENSAVER=1");  // Old school sdl 1.2 mechanism
 
       SDL_Init(SDL_INIT_EVERYTHING);
+      TTF_Init();
 
       SetScreenSize(m_screenWidth, m_screenHeight);
-
-      m_fonts.Init();
 
       m_rootPanel.SetName("Root");
       m_gridPanel.SetBorder(Drawing::BLACK);
@@ -546,10 +545,11 @@ namespace MFM
       m_logPanel.SetDimensions(m_screenWidth, 160);
       m_logPanel.SetDesiredSize(U32_MAX, 160);
       m_logPanel.SetAnchor(ANCHOR_SOUTH);
-      m_logPanel.SetFont(m_fonts.GetDefaultFont(16));
+      m_logPanel.SetFont(AssetManager::Get(FONT_ASSET_LOGGER));
 
       m_toolboxPanel.SetName("Toolbox");
       m_toolboxPanel.SetVisibility(false);
+      m_toolboxPanel.SetBigText(m_bigText);
       m_toolboxPanel.SetBackground(Drawing::GREY60);
       m_toolboxPanel.SetAnchor(ANCHOR_WEST);
       m_toolboxPanel.SetAnchor(ANCHOR_NORTH);
@@ -563,7 +563,7 @@ namespace MFM
 
       m_rootPanel.Print(STDOUT);
 
-      m_srend.OnceOnly(m_fonts);
+      m_srend.OnceOnly();
 
       SDL_WM_SetCaption(MFM_VERSION_STRING_LONG, NULL);
 
@@ -716,6 +716,10 @@ namespace MFM
       {
         m_gridPanel.ToggleAtomViewPanel();
       }
+      if(m_keyboard.SemiAuto(SDLK_o))
+      {
+        m_gridPanel.ToggleDrawAtomsAsSquares();
+      }
 
       if(m_keyboard.SemiAuto(SDLK_ESCAPE))
       {
@@ -796,6 +800,7 @@ namespace MFM
     AbstractGUIDriver() :
       m_startPaused(true),
       m_thisUpdateIsEpoch(false),
+      m_bigText(false),
       m_captureScreenshots(false),
       m_saveStateIndex(0),
       m_epochSaveStateIndex(0),
@@ -804,7 +809,7 @@ namespace MFM
       m_screenHeight(SCREEN_INITIAL_HEIGHT),
       m_selectedTool(TOOL_SELECTOR),
       m_toolboxPanel(&m_selectedTool),
-      m_buttonPanel(m_fonts)
+      m_buttonPanel()
     { }
 
     ~AbstractGUIDriver()
@@ -897,6 +902,15 @@ namespace MFM
       driver.m_helpPanel.SetVisibility(false);
     }
 
+    static void SetIncreaseTextSizeFlag(const char* not_used, void* driverptr)
+    {
+      AbstractGUIDriver& driver = *((AbstractGUIDriver*)driverptr);
+
+      LOG.Debug("Increase text size.\n");
+
+      driver.m_bigText = true;
+    }
+
     void AddDriverArguments()
     {
       Super::AddDriverArguments();
@@ -917,6 +931,9 @@ namespace MFM
 
       this->RegisterArgument("Help panel is not shown upon startup.",
                              "-n| --nohelp", &DontShowHelpPanelOnStart, this, false);
+
+      this->RegisterArgument("Increase button and text size.",
+                             "--bigtext", &SetIncreaseTextSizeFlag, this, false);
     }
 
     EditingTool m_selectedTool;
@@ -925,7 +942,7 @@ namespace MFM
 
     ToolboxPanel<CC> m_toolboxPanel;
 
-    class StatisticsPanel : public Panel
+    class StatisticsPanel : public MovablePanel
     {
       StatsRenderer<GC>* m_srend;
       OurGrid* m_mainGrid;
@@ -992,7 +1009,7 @@ namespace MFM
       virtual void PaintBorder(Drawing & config)
       { /* No border please */ }
 
-      virtual bool Handle(MouseButtonEvent& mbe)
+      virtual bool HandlePostDrag(MouseButtonEvent& mbe)
       {
         return true;  /* Eat the event to keep the grid from taking it */
       }
@@ -1009,7 +1026,7 @@ namespace MFM
       virtual void PaintBorder(Drawing & config)
       { /* No border please */ }
 
-      ButtonPanel(Fonts & fonts) :
+      ButtonPanel() :
         m_checkboxCount(0),
         m_buttonCount(0)
       {
@@ -1024,7 +1041,7 @@ namespace MFM
         */
         SetForeground(Drawing::WHITE);
         SetBackground(Drawing::DARK_PURPLE);
-        SetFont(fonts.GetDefaultFont(20));
+        SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
       }
 
       void InsertCheckbox(AbstractGridCheckbox* checkbox)
@@ -1132,7 +1149,7 @@ namespace MFM
       m_rootPanel.SetBackground(Drawing::RED);
       m_rootPanel.HandleResize(newDimensions);
 
-      m_rootDrawing.Reset(screen, m_fonts.GetDefaultFont());
+      m_rootDrawing.Reset(screen, AssetManager::Get(FONT_ASSET_ELEMENT));
 
       if(m_renderStats)
       {
@@ -1249,6 +1266,7 @@ namespace MFM
             camera.DrawSurface(screen,path);
           }
           {
+            /*
             const char * path = Super::GetSimDirPathTemporary("tbd/data.dat");
             bool exists = true;
             {
@@ -1264,6 +1282,8 @@ namespace MFM
                                           Super::GetAEPSPerFrame(),
                                           Super::GetOverheadPercent(), true);
             fclose(fp);
+            */
+            AbstractDriver<GC>::WriteTimeBasedData();
           }
 
         }
@@ -1280,6 +1300,7 @@ namespace MFM
       }
 
       SDL_FreeSurface(screen);
+      TTF_Quit();
       SDL_Quit();
     }
   };

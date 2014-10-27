@@ -62,7 +62,8 @@ namespace MFM
         bool ret = m_threadQueue.m_heldBytes == 0;
         if (!ret)
         {
-          LOG.Error("MoreInputIsAvailable precondition failed: m_heldBytes = %d", m_threadQueue.m_heldBytes);
+          LOG.Error("MoreInputIsAvailable precondition failed: m_heldBytes = %d",
+		    m_threadQueue.m_heldBytes);
         }
         return ret;
       }

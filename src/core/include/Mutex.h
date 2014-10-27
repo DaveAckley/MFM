@@ -39,8 +39,9 @@
 
 namespace MFM
 {
-  class Mutex {
-  private:
+  class Mutex
+  {
+   private:
     /**
      * The underlying pthread_mutex_t used by this Mutex
      */
@@ -52,6 +53,9 @@ namespace MFM
      * True if currently locked
      */
     bool m_locked;
+
+    pthread_cond_t m_virtualCond;
+    bool m_inVCW;
 
     /**
      * If the lock is held, the pthread id of the thread holding it.
@@ -75,12 +79,13 @@ namespace MFM
       m_locked = true;
     }
 
-  public:
+   public:
 
-    class ScopeLock {
-    private:
+    class ScopeLock
+    {
+     private:
       Mutex & m_mutex;
-    public:
+     public:
       ScopeLock(Mutex & mutex) : m_mutex(mutex)
       {
         m_mutex.Lock();
@@ -91,25 +96,18 @@ namespace MFM
       }
     };
 
-    class Predicate {
-    private:
+    class Predicate
+    {
+     private:
       Mutex & m_mutex;
       pthread_cond_t m_condvar;
       pthread_t m_threadIdOfWaiter;
-    public:
-
-      virtual bool EvaluatePrecondition() = 0;
-
+     public:
       virtual bool EvaluatePredicate() = 0;
 
       Predicate(Mutex & mutex) : m_mutex(mutex)
       {
         pthread_cond_init(&m_condvar, NULL);
-      }
-
-      ~Predicate()
-      {
-        pthread_cond_destroy(&m_condvar);
       }
 
       void WaitForCondition()
@@ -119,12 +117,6 @@ namespace MFM
 
         while (!EvaluatePredicate())
         {
-          // If the predicate's not true, the precondition must be
-          if (!EvaluatePrecondition())
-          {
-            FAIL(LOCK_FAILURE);
-          }
-
           m_mutex.CondWait(m_condvar);
         }
       }
@@ -142,7 +134,9 @@ namespace MFM
      * FAILs with LOCK_FAILURE if the underlying pthread_mutex cannot
      * be initialized.
      */
-    Mutex() : m_locked(false)
+    Mutex() :
+      m_locked(false)
+      , m_inVCW(false)
     {
 
       if (pthread_mutexattr_init(&m_attr))

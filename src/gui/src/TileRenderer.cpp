@@ -9,9 +9,10 @@ namespace MFM
   TileRenderer::TileRenderer()
   {
     m_atomDrawSize = 8;
-    m_drawMemRegions = EDGE;
+    m_drawMemRegions = NO;
     m_drawGrid = true;
     m_drawDataHeat = false;
+    m_renderSquares = false;
     m_gridColor = 0xff202020;
 
     m_hiddenColor  = 0xff353535;

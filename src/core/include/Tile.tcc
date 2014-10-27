@@ -10,11 +10,19 @@ namespace MFM
 {
   template <class CC>
   Tile<CC>::Tile() :
+    m_ignoreThreadingProblems(false),
     m_executingWindow(*this),
     m_generation(0)
   {
     m_lockAttempts = m_lockAttemptsSucceeded = 0;
     Reinit();
+  }
+
+  template <class CC>
+  void Tile<CC>::SetIgnoreThreadingProblems(bool value)
+  {
+    m_ignoreThreadingProblems = value;
+    m_threadPauser.SetIgnoreThreadingProblems(value);
   }
 
   template <class CC>
@@ -30,6 +38,12 @@ namespace MFM
 #if 0
     m_writeFailureOdds = 0;  // Default is reliable
 #endif
+
+    m_isFnWing = false;
+    m_curFnWingDirWaitWord = 0;
+    m_origFnWingDirWaitWord = 0;
+    m_isA2PRed = false;
+    m_isGSBIsw = false;
 
     m_eventsExecuted = 0;
 
@@ -108,7 +122,18 @@ namespace MFM
   template <class CC>
   void Tile<CC>::CheckCacheFromDir(Dir direction, const Tile & otherTile)
   {
-    assert(IsPausedOrOwner());
+    if(m_ignoreThreadingProblems)
+    {
+      if(!IsPausedOrOwner())
+      {
+        LOG.Error("%s:%d: THREADING PROBLEM ENCOUNTERED! Tile is configured to ignore "
+                  "this problem and will continue execution.", __FILE__, __LINE__);
+      }
+    }
+    else
+    {
+      assert(IsPausedOrOwner());
+    }
 
     for(u32 x = 0; x < TILE_WIDTH; x++)
     {
@@ -834,6 +859,9 @@ namespace MFM
   template <class CC>
   bool Tile<CC>::FlushAndWaitOnAllBuffers(u32 dirWaitWord)
   {
+    m_curFnWingDirWaitWord = m_origFnWingDirWaitWord = dirWaitWord;
+    m_isFnWing = true;  // Track where we are
+
     Packet<T> readPack(PACKET_WRITE, m_generation);
     u32 readBytes;
     u32 locksStillHeld = 0;
@@ -866,6 +894,7 @@ namespace MFM
               if(readPack.GetType() == PACKET_EVENT_ACKNOWLEDGE)
               {
                 dirWaitWord &= (~(1 << dir));
+                m_curFnWingDirWaitWord = dirWaitWord;
               }
               else
               {
@@ -898,6 +927,8 @@ namespace MFM
       }
 
     } while(dirWaitWord);
+
+    m_isFnWing = false;
 
     return locksStillHeld > 0;
   }
@@ -975,7 +1006,11 @@ namespace MFM
     {
       RecountAtomsIfNeeded();
 
-      switch (m_threadPauser.GetStateBlockingInner())
+      m_isGSBIsw = true;
+      ThreadState curState = m_threadPauser.GetStateBlockingInner();
+      m_isGSBIsw = false;
+
+      switch (curState)
       {
       case THREADSTATE_RUN_REQUESTED:
         m_threadPauser.AdvanceStateInner();
@@ -992,15 +1027,27 @@ namespace MFM
           // It's showtime!
           bool locked = false;
           Dir lockRegion = Dirs::NORTH;
+          /*
+          UsageTimer execTimer = UsageTimer::NowThread();
+          */
 
           CreateRandomWindow();
 
           if (IsInHidden(m_executingWindow.GetCenterInTile()) ||
-              !HasAnyConnections(lockRegion = VisibleAt(m_executingWindow.GetCenterInTile())) ||
-              (locked = LockRegion(lockRegion)))
+               !HasAnyConnections(lockRegion = VisibleAt(m_executingWindow.GetCenterInTile())) ||
+               (locked = LockRegion(lockRegion)))
           {
             DoEvent(locked, lockRegion);
           }
+
+          /*
+          u32 ms = (UsageTimer::NowThread() - execTimer).TotalMicroseconds();
+          if(ms > 1)
+          {
+            LOG.Debug("Atom (type 0x%x) took longer 1 ms to execute: %d ms",
+                      m_executingWindow.GetCenterAtom().GetType(), ms);
+          }
+          */
         }
         else
         {
@@ -1012,7 +1059,9 @@ namespace MFM
         // Confirm we are done with our event (including processing
         // any needed inbound ACKs, and freeing connection locks) by
         // advancing to pause ready.
+        m_isA2PRed = true;
         m_threadPauser.AdvanceStateInner();
+        m_isA2PRed = false;
         break;
 
       case THREADSTATE_PAUSE_READY:
@@ -1146,6 +1195,11 @@ namespace MFM
     LOG.Log(level,"   Thread id: %p", (void*) m_thread);
     LOG.Log(level,"   Error stack top: %p", (void*) m_errorEnvironmentStackTop);
     LOG.Log(level,"   Background radiation: %s", m_backgroundRadiationEnabled?"true":"false");
+
+    LOG.Log(level,"   In FnWOAB: %s (cur 0x%x, orig 0x%x)",
+            m_isFnWing?"true":"false", m_curFnWingDirWaitWord, m_origFnWingDirWaitWord);
+    LOG.Log(level,"   In A2PRed: %s", m_isA2PRed?"true":"false");
+    LOG.Log(level,"   In GSBIsw: %s", m_isGSBIsw?"true":"false");
 
     LOG.Log(level,"  ==Tile %s Thread==", m_label.GetZString());
     m_threadPauser.ReportThreadPauserStatus(level);

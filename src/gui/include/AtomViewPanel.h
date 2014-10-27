@@ -27,14 +27,14 @@
 #ifndef ATOMVIEWPANEL_H
 #define ATOMVIEWPANEL_H
 
-#include "Panel.h"
+#include "MovablePanel.h"
 #include "Grid.h"
 #include "ToolboxPanel.h"
 
 namespace MFM
 {
   template <class GC>
-  class AtomViewPanel : public Panel
+  class AtomViewPanel : public MovablePanel
   {
    private:
     typedef typename GC::CORE_CONFIG::ATOM_TYPE T;
@@ -50,7 +50,7 @@ namespace MFM
 
    public:
     AtomViewPanel() :
-      Panel(300, 100),
+      MovablePanel(300, 100),
       m_atom(NULL),
       m_grid(NULL),
       m_toolboxPanel(NULL)

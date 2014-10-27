@@ -36,12 +36,14 @@ namespace MFM
   template <class CC, u32 R>
   class NeighborSelectPanel : public ParameterController<CC>
   {
+   private:
     typedef ParameterController<CC> Super;
 
     enum
     {
       SITES = EVENT_WINDOW_SITES(R)
     };
+
    public:
     typedef enum
     {
@@ -53,15 +55,30 @@ namespace MFM
     enum
     {
       CELL_SIZE = 16,
-      BORDER_SIZE = 4
+      BORDER_SIZE = 4,
+
+      CELL_SIZE_BIG = 24
     };
+
+    inline u32 GetCellSize() const
+    {
+      return Super::m_bigText ?
+      CELL_SIZE_BIG :
+      CELL_SIZE;
+    }
+
+    inline FontAsset GetFontAsset() const
+    {
+      return Super::m_bigText ?
+      FONT_ASSET_HELPPANEL_BIG :
+      FONT_ASSET_HELPPANEL_SMALL;
+    }
 
     NeighborhoodSelectMode m_selectMode;
 
     SPoint m_selectedOne;
 
-    //TODO Change this to SITES
-    BitVector<128> m_bitField;
+    BitVector<SITES> m_bitField;
 
     const char* m_text;
 
@@ -90,9 +107,10 @@ namespace MFM
       if(ParameterController<CC>::GetParameter())
       {
         ElementParameterNeighborhood<CC,SITES>* np =
-          dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>(ParameterController<CC>::GetParameter());
+          dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>
+            (ParameterController<CC>::GetParameter());
+
         np->SetBit(bitNum);
-        LOG.Debug("Neighborhood Set#%d = %@", bitNum, np);
       }
     }
 
@@ -102,9 +120,10 @@ namespace MFM
       if(ParameterController<CC>::GetParameter())
       {
         ElementParameterNeighborhood<CC,SITES>* np =
-          dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>(ParameterController<CC>::GetParameter());
+          dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>
+            (ParameterController<CC>::GetParameter());
+
         np->ClearBit(bitNum);
-        LOG.Debug("Neighborhood Clear#%d = %@", bitNum, np);
       }
     }
 
@@ -115,17 +134,17 @@ namespace MFM
 
     void PaintButtons(Drawing& d)
     {
-      s32 offset = R * CELL_SIZE + BORDER_SIZE;
+      s32 offset = R * GetCellSize() + BORDER_SIZE;
       SPoint renderPt;
       MDist<R> & n = GetNeighborhood();
 
       for(u32 i = n.GetFirstIndex(0); i <= n.GetLastIndex(R); i++)
       {
-        renderPt.Set(offset + (CELL_SIZE - 1) * n.GetPoint(i).GetX(),
-                     offset + (CELL_SIZE - 1) * n.GetPoint(i).GetY());
+        renderPt.Set(offset + (GetCellSize() - 1) * n.GetPoint(i).GetX(),
+                     offset + (GetCellSize() - 1) * n.GetPoint(i).GetY());
 
         d.SetForeground(Drawing::BLACK);
-        d.FillRect(renderPt.GetX(), renderPt.GetY(), CELL_SIZE, CELL_SIZE);
+        d.FillRect(renderPt.GetX(), renderPt.GetY(), GetCellSize(), GetCellSize());
 
         switch(m_selectMode)
         {
@@ -137,18 +156,18 @@ namespace MFM
           d.SetForeground(n.GetPoint(i).Equals(m_selectedOne) ?
                           ENABLED_COLOR : Panel::GetForeground());
         }
-        d.FillRect(renderPt.GetX() + 1, renderPt.GetY() + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+        d.FillRect(renderPt.GetX() + 1, renderPt.GetY() + 1, GetCellSize() - 2, GetCellSize() - 2);
       }
     }
 
     void PaintText(Drawing& d)
     {
-      UPoint textLoc(R * (CELL_SIZE + 1) * 2 + BORDER_SIZE,
-                     R * (CELL_SIZE - 1) + BORDER_SIZE);
+      UPoint textLoc(R * (GetCellSize() + 1) * 2 + GetCellSize() + BORDER_SIZE,
+                     R * (GetCellSize() - 1) + BORDER_SIZE);
 
       d.SetForeground(Drawing::WHITE);
       d.SetBackground(Drawing::GREY40);
-      d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
+      d.SetFont(GetFontAsset());
       if(m_text)
       {
         d.BlitBackedText(m_text, textLoc, MakeUnsigned(d.GetTextSize(m_text)));
@@ -166,7 +185,7 @@ namespace MFM
 
     virtual void Init()
     {
-      Panel::SetDesiredSize(300, (2 * BORDER_SIZE) + (R * 2 + 1) * CELL_SIZE);
+      Panel::SetDesiredSize(500, (2 * BORDER_SIZE) + (R * 2 + 1) * GetCellSize());
       Panel::SetForeground(Drawing::GREY80);
     }
 
@@ -174,7 +193,9 @@ namespace MFM
     {
       Super::SetParameter(pb);
       ElementParameterNeighborhood<CC,SITES>* np =
-        dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>(ParameterController<CC>::GetParameter());
+        dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>
+          (ParameterController<CC>::GetParameter());
+
       if (!np)
       {
         FAIL(ILLEGAL_ARGUMENT);
@@ -211,19 +232,17 @@ namespace MFM
       if(event.m_event.type == SDL_MOUSEBUTTONDOWN &&
          event.m_event.button.button == SDL_BUTTON_LEFT)
       {
-        s32 offset = R * CELL_SIZE + BORDER_SIZE;
+        s32 offset = R * GetCellSize() + BORDER_SIZE;
         MDist<R> & n = GetNeighborhood();
         Rect buttonRect;
         SPoint clickPt(event.GetAt().GetX() - Panel::GetRenderPoint().GetX(),
                        event.GetAt().GetY() - Panel::GetRenderPoint().GetY());
-        buttonRect.SetSize(UPoint(CELL_SIZE, CELL_SIZE));
-
-        LOG.Debug("clicky");
+        buttonRect.SetSize(UPoint(GetCellSize(), GetCellSize()));
 
         for(u32 i = n.GetFirstIndex(0); i <= n.GetLastIndex(R); i++)
         {
-          buttonRect.SetPosition(SPoint(offset + (CELL_SIZE - 1) * n.GetPoint(i).GetX(),
-                                        offset + (CELL_SIZE - 1) * n.GetPoint(i).GetY()));
+          buttonRect.SetPosition(SPoint(offset + (GetCellSize() - 1) * n.GetPoint(i).GetX(),
+                                        offset + (GetCellSize() - 1) * n.GetPoint(i).GetY()));
 
           if(buttonRect.Contains(clickPt))
           {

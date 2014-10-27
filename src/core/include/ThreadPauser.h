@@ -167,12 +167,21 @@ namespace MFM
     pthread_t m_threadStatePreviousThreadId;
 
     /**
+     * If /c true , will ignore problems encountered with inconsistent
+     * threading.
+     */
+    bool m_ignoreThreadingProblems;
+
+    /**
      * A Mutex::Predicate that waits for THREADSTATE_RUN_REQUESTED
      */
     struct StateIsRunRequested : public Mutex::Predicate
     {
       ThreadPauser & m_threadPauser;
-      StateIsRunRequested(ThreadPauser & tp) : Predicate(tp.m_mutex), m_threadPauser(tp) { }
+      StateIsRunRequested(ThreadPauser & tp) :
+        Predicate(tp.m_mutex),
+        m_threadPauser(tp)
+      { }
 
       virtual bool EvaluatePrecondition()
       {
@@ -197,7 +206,10 @@ namespace MFM
     struct StateIsRunning : public Mutex::Predicate
     {
       ThreadPauser & m_threadPauser;
-      StateIsRunning(ThreadPauser & tp) : Predicate(tp.m_mutex), m_threadPauser(tp) { }
+      StateIsRunning(ThreadPauser & tp) :
+        Predicate(tp.m_mutex),
+        m_threadPauser(tp)
+      { }
 
       virtual bool EvaluatePrecondition()
       {
@@ -260,6 +272,17 @@ namespace MFM
     void RequestPause()
     {
       AdvanceStateOuter(THREADSTATE_RUNNING);
+    }
+
+    /**
+     * Sets whether or not this ThreadPauser is allowed to ignore
+     * problems consistent with threading bugs. This is not normally
+     * reccomended because it will cause some corruptions, but it may
+     * keep your MFM instance from crashing.
+     */
+    void SetIgnoreThreadingProblems(bool value)
+    {
+      m_ignoreThreadingProblems = value;
     }
 
     /**
