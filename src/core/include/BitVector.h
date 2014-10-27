@@ -36,76 +36,6 @@
 
 namespace MFM {
 
-  inline s32 _SignExtend32(u32 val, u32 bitwidth) {
-    return ((s32)(val<<(32-bitwidth)))>>bitwidth;
-  }
-
-  inline s64 _SignExtend64(u64 val, u32 bitwidth) {
-    return ((s64)(val<<(64-bitwidth)))>>bitwidth;
-  }
-
-  inline u32 _GetNOnes32(u32 bitwidth) {
-    return (((u32)1)<<bitwidth)-1;
-  }
-
-  inline u64 _GetNOnes64(u32 bitwidth) {
-    return (((u64)1)<<bitwidth)-1;
-  }
-
-  inline u32 _ShiftToBitNumber32(u32 value, u32 bitpos) {
-    return value<<bitpos;
-  }
-
-  inline u64 _ShiftToBitNumber64(u32 value, u32 bitpos) {
-    return ((u64) value)<<bitpos;
-  }
-
-  inline u32 _ShiftFromBitNumber32(u32 value, u32 bitpos) {
-    return value>>bitpos;
-  }
-
-  inline u64 _ShiftFromBitNumber64(u64 value, u32 bitpos) {
-    return value>>bitpos;
-  }
-
-  inline u32 _GetMask32(u32 bitpos, u32 bitwidth) {
-    return _ShiftToBitNumber32(_GetNOnes32(bitwidth),bitpos);
-  }
-
-  inline u64 _GetMask64(u32 bitpos, u32 bitwidth) {
-    return _ShiftToBitNumber64(_GetNOnes64(bitwidth),bitpos);
-  }
-
-  inline u32  _ExtractField32(u32 val, u32 bitpos,u32 bitwidth) {
-    return _ShiftFromBitNumber32(val,bitpos)&_GetNOnes32(bitwidth);
-  }
-
-  inline u32  _ExtractUint32(u32 val, u32 bitpos,u32 bitwidth) {
-    return _ExtractField32(val,bitpos,bitwidth);
-  }
-
-  inline s32  _ExtractSint32(u32 val, u32 bitpos,u32 bitwidth) {
-    return _SignExtend32(_ExtractField32(val,bitpos,bitwidth),bitwidth);
-  }
-
-  inline u32 _getParity32(u32 v) {
-    v ^= v >> 16;
-    v ^= v >> 8;
-    v ^= v >> 4;
-    v &= 0xf;
-    return (0x6996 >> v) & 1;
-  }
-
-  // v must be <= 0x7fffffff
-  inline u32 _getNextPowerOf2(u32 v) {
-    v |= v >> 16;
-    v |= v >> 8;
-    v |= v >> 4;
-    v |= v >> 2;
-    v |= v >> 1;
-    return v+1;
-  }
-
   /**
    * A bit vector with reasonably fast operations
    *
@@ -119,7 +49,18 @@ namespace MFM {
   public:
     enum { BITS = B };
 
-    u32 GetLength() const {
+    /**
+     * Gets the number of bits that may be indexed inside this
+     * BitVector.
+     *
+     * @returns The number of bits that may be indexed inside this
+     *          BitVector.
+     *
+     * @remarks The actual number of bits used in this BitVector is
+     * a multiple of \c sizeof(BitUnitType) .
+     */
+    u32 GetLength() const
+    {
       return BITS;
     }
 
@@ -228,6 +169,34 @@ namespace MFM {
      *              BitVector.
      */
     void Write(const u32 startIdx, const u32 length, const u32 value);
+
+    /**
+     * Reads up to 64 bits of a particular section of this BitVector.
+     *
+     * @param startIdx The index of the first bit to read inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param length The number of bits to read from this
+     *               BitVector. This should be in the range \c [0,64] .
+     *
+     * @returns The bits read from the particular section of this
+     *          BitVector.
+     */
+    inline u64 ReadLong(const u32 startIdx, const u32 length) const;
+
+    /**
+     * Writes up to 64 bits of a specified u64 to a section of this BitVector.
+     *
+     * @param startIdx The index of the first bit to write inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param length The number of bits to write to this
+     *               BitVector. This should be in the range \c [0,64] .
+     *
+     * @param value The bits to write to the specified section of this
+     *              BitVector.
+     */
+    void WriteLong(const u32 startIdx, const u32 length, const u64 value);
 
     /**
      * Sets the bit at a specified index in this BitVector.

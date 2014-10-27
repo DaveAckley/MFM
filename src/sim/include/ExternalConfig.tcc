@@ -101,11 +101,11 @@ namespace MFM
       /* Write configurable element values */
 
       const Element<CC>* elem = m_elementRegistry.GetEntryElement(i);
-      const Parameters & parms = elem->GetElementParameters();
+      const ElementParameters<CC> & parms = elem->GetElementParameters();
 
       for(u32 j = 0; j < parms.GetParameterCount(); j++)
       {
-        const Parameters::Parameter * p = parms.GetParameter(j);
+        const ElementParameter<CC> * p = parms.GetParameter(j);
         byteSink.Printf(" SetElementParameter(%s,%s,%@)",
                         lexOutput,
                         p->GetTag(),

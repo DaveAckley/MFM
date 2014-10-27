@@ -52,7 +52,7 @@ namespace MFM
       //////
       // Element state fields
 
-      INFLAMMATION_POS = P3Atom<P>::P3_STATE_BITS_POS,
+      INFLAMMATION_POS = T::ATOM_FIRST_STATE_BIT,
       INFLAMMATION_LEN = 2
 
     };
@@ -72,7 +72,7 @@ namespace MFM
 
   public:
 
-    typedef BitField<BitVector<BITS>,INFLAMMATION_LEN,INFLAMMATION_POS> AFInflammationLevel;
+    typedef BitField<BitVector<BITS>,VD::U32,INFLAMMATION_LEN,INFLAMMATION_POS> AFInflammationLevel;
 
     static Element_AntiForkBomb THE_INSTANCE;
 
@@ -100,7 +100,7 @@ namespace MFM
     {
       Random & random = window.GetRandom();
       const u32 ourType = THE_INSTANCE.GetType();
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
 
       T self = window.GetCenterAtom();
       u32 myInflammationLevel = AFInflammationLevel::Read(self);
@@ -193,7 +193,7 @@ namespace MFM
     }
 
     virtual u32 PercentMovable(const T& you,
-			       const T& me, const SPoint& offset) const
+                               const T& me, const SPoint& offset) const
     {
       return 100;
     }

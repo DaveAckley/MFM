@@ -62,7 +62,6 @@ namespace MFM
     {
       SPoint wanderPt;
       Random& rand = window.GetRandom();
-      MDist<R> md = MDist<R>::get();
       Dir d = (Dir)rand.Create(Dirs::DIR_COUNT);
 
       Dirs::FillDir(wanderPt, d);

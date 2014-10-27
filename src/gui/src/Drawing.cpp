@@ -137,11 +137,11 @@ namespace MFM
     double cx = x+w/2.0;
     double cy = y+h/2.0;
     for(int dy = 1; dy <= radius; dy++)
-      {
-        double dx = floor(sqrt(2.0*radius*dy - dy*dy));
-        DrawHLine((int) (cy + radius - dy), (int) (cx-dx), (int)(cx+dx));
-        DrawHLine((int) (cy - radius + dy), (int) (cx-dx), (int)(cx+dx));
-      }
+    {
+      double dx = floor(sqrt(2.0*radius*dy - dy*dy));
+      DrawHLine((int) (cy + radius - dy), (int) (cx-dx), (int)(cx+dx));
+      DrawHLine((int) (cy - radius + dy), (int) (cx-dx), (int)(cx+dx));
+    }
   }
 
   void Drawing::BlitImage(SDL_Surface* src, UPoint loc, UPoint maxSize) const

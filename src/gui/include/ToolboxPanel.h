@@ -29,14 +29,12 @@
 
 #include "EditingTool.h"
 #include "FileByteSink.h"
-#include "Parameters.h"
+#include "Parameter.h"
 #include "AbstractButton.h"
 #include "Slider.h"
 #include "ParameterControllerBool.h"
 #include "NeighborSelectPanel.h"
-
-#define ELEMENT_BOX_SIZE 70
-#define ELEMENT_RENDER_SIZE 32
+#include "MovablePanel.h"
 
 namespace MFM
 {
@@ -45,9 +43,13 @@ namespace MFM
    * a collection of Element drawing tools.
    */
   template<class CC>
-  class ToolboxPanel : public Panel
+  class ToolboxPanel : public MovablePanel
   {
   private:
+    typedef ElementParameterS32<CC> OurParameterS32; // ToolboxPanel controls Elements (vs AtomViewPanel)
+    typedef ElementParameterBool<CC> OurParameterBool; // ToolboxPanel controls Elements (vs AtomViewPanel)
+    typedef Slider<CC> OurSlider;
+    typedef ParameterControllerBool<CC> OurParameterControllerBool;
 
     enum {
       ELEMENT_BOX_BUTTON_COUNT = 9,
@@ -55,9 +57,25 @@ namespace MFM
       TOOLBOX_MAX_SLIDERS = 8,
       TOOLBOX_MAX_CHECKBOXES = 8,
       TOOLBOX_MAX_NEIGHBORHOODS = 8,
+      ELEMENT_RENDER_SIZE = 32,
+      ELEMENT_BIG_RENDER_SIZE = 48,
+      ELEMENT_BOX_SIZE = 77,
 
-      R = CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS
+      R = CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS,
+      SITES = EVENT_WINDOW_SITES(R)
     };
+
+    bool m_bigText;
+
+    inline u32 GetElementRenderSize()
+    {
+      return m_bigText ? ELEMENT_BIG_RENDER_SIZE : ELEMENT_RENDER_SIZE;
+    }
+
+    inline FontAsset GetElementRenderFont()
+    {
+      return m_bigText ? FONT_ASSET_ELEMENT_BIG : FONT_ASSET_ELEMENT;
+    }
 
     /**
      * A class representing a Button for selecting a particular
@@ -65,15 +83,14 @@ namespace MFM
      */
     class ToolButton : public AbstractButton
     {
-    protected:
+     protected:
       EditingTool* m_toolboxTool;
 
       ToolboxPanel<CC>* m_parent;
 
       EditingTool m_tool;
 
-    public:
-
+     public:
       /**
        * Construct a new ToolButton, pointing at a specified
        * EditingTool location.
@@ -168,8 +185,6 @@ namespace MFM
       ElementButton() :
         AbstractButton()
       {
-        this->Panel::SetDimensions(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
-
         this->Panel::SetBorder(Drawing::GREY70);
 
         this->Panel::SetBackground(Drawing::GREY80);
@@ -202,21 +217,22 @@ namespace MFM
 
       virtual void PaintComponentNonClick(Drawing& d)
       {
+        const u32 SIZE = m_parent->GetElementRenderSize();
         if(m_element)
         {
           d.SetForeground(m_element->PhysicsColor());
-          d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
-          d.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
+          d.FillRect(0, 0, SIZE, SIZE);
+          d.SetFont(AssetManager::Get(m_parent->GetElementRenderFont()));
           d.SetBackground(Drawing::BLACK);
           d.SetForeground(Drawing::WHITE);
           d.BlitBackedTextCentered(m_element->GetAtomicSymbol(),
                                    UPoint(0, 0),
-                                   UPoint(ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE));
+                                   UPoint(SIZE, SIZE));
         }
         else
         {
           d.SetForeground(this->GetForeground());
-          d.FillRect(0, 0, ELEMENT_RENDER_SIZE, ELEMENT_RENDER_SIZE);
+          d.FillRect(0, 0, SIZE, SIZE);
         }
       }
 
@@ -271,30 +287,30 @@ namespace MFM
 
     u32 m_heldElementCount;
 
-    ParameterController *(m_controllers[TOOLBOX_MAX_CONTROLLERS]);
+    ParameterController<CC> *(m_controllers[TOOLBOX_MAX_CONTROLLERS]);
     u32 m_controllerCount;
 
-    Slider m_sliders[TOOLBOX_MAX_SLIDERS];
+    OurSlider m_sliders[TOOLBOX_MAX_SLIDERS];
     u32 m_sliderCount;
 
-    ParameterControllerBool m_checkboxes[TOOLBOX_MAX_CHECKBOXES];
+    OurParameterControllerBool m_checkboxes[TOOLBOX_MAX_CHECKBOXES];
     u32 m_checkboxCount;
 
-    NeighborSelectPanel<R> m_neighborhoods[TOOLBOX_MAX_NEIGHBORHOODS];
+    NeighborSelectPanel<CC,R> m_neighborhoods[TOOLBOX_MAX_NEIGHBORHOODS];
     u32 m_neighborhoodCount;
 
     u32 m_brushSize;
 
     enum
     {
-      ELEMENTS_PER_ROW = 10,
+      ELEMENTS_PER_ROW = 11,
       ELEMENT_ROWS = (ELEMENT_BOX_SIZE + ELEMENTS_PER_ROW - 1) / ELEMENTS_PER_ROW,
       NON_ELEMENT_ROWS = 3,
       TOTAL_ROWS = ELEMENT_ROWS + NON_ELEMENT_ROWS,
       BORDER_PADDING = 2
     };
 
-    void AddController(ParameterController * spc)
+    void AddController(ParameterController<CC> * spc)
     {
       MFM_API_ASSERT_NONNULL(spc);
 
@@ -306,9 +322,11 @@ namespace MFM
       u32 j = m_controllerCount++;
 
       m_controllers[j] = spc;
+      m_controllers[j]->SetBigText(m_bigText);
+      LOG.Debug("Inniting %s controllers", m_bigText ? "big" : "normal");
     }
 
-    void AddSliderController(Parameters::S32 * sp)
+    void AddSliderController(ElementParameter<CC> * sp)
     {
       // Sliders for S32 parameters
       MFM_API_ASSERT_NONNULL(sp);
@@ -320,13 +338,13 @@ namespace MFM
 
       u32 j = m_sliderCount++;
 
-      Slider& s = m_sliders[j];
+      OurSlider& s = m_sliders[j];
       s.SetParameter(sp);
 
       AddController(&s);
     }
 
-    void AddCheckboxController(Parameters::Bool * bp)
+    void AddCheckboxController(ElementParameter<CC> * bp)
     {
       // Checkboxes for Bool parameters
       MFM_API_ASSERT_NONNULL(bp);
@@ -338,13 +356,13 @@ namespace MFM
 
       u32 j = m_checkboxCount++;
 
-      ParameterControllerBool & cb = m_checkboxes[j];
-      cb.SetParameter(bp);
+      OurParameterControllerBool & cb = m_checkboxes[j];
+      cb.SetParameter(bp); // FAIL unless castable to PValueTypeBool
 
       AddController(&cb);
     }
 
-    void AddNeighborhoodController(Parameters::Neighborhood<R>* np)
+    void AddNeighborhoodController(ElementParameter<CC> * np)
     {
       MFM_API_ASSERT_NONNULL(np);
 
@@ -355,7 +373,7 @@ namespace MFM
 
       u32 j = m_neighborhoodCount++;
 
-      NeighborSelectPanel<R>& nb = m_neighborhoods[j];
+      NeighborSelectPanel<CC,R>& nb = m_neighborhoods[j];
 
       nb.SetParameter(np);
       nb.SetText(np->GetName());
@@ -366,6 +384,7 @@ namespace MFM
    public:
 
     ToolboxPanel(EditingTool* toolPtr) :
+      m_bigText(false),
       m_toolPtr(toolPtr),
       m_activatedButton(m_toolButtons),
       m_primaryElement(&Element_Empty<CC>::THE_INSTANCE),
@@ -388,6 +407,27 @@ namespace MFM
       }
     }
 
+    /**
+     * Sets whether or not this ToolboxPanel should render its
+     * components at a large or normal size.
+     *
+     * @param value If \c true , this ToolboxPanel will render its
+     *              child components at an increased size. Else, will
+     *              render its children at the normal size.
+     */
+    void SetBigText(bool value)
+    {
+      m_bigText = value;
+
+      for(u32 i = 0; i < TOOLBOX_MAX_CONTROLLERS; i++)
+      {
+        if(m_controllers[i])
+        {
+          m_controllers[i]->SetBigText(value);
+        }
+      }
+    }
+
     void RebuildControllers()
     {
       /* Remove any old controllers */
@@ -398,7 +438,7 @@ namespace MFM
       m_controllerCount = 0;
 
       /* Set up the new controllers, if any */
-      Parameters & parms = m_primaryElement->GetElementParameters();
+      ElementParameters<CC> & parms = m_primaryElement->GetElementParameters();
       u32 totalParms = parms.GetParameterCount();
 
       m_sliderCount = 0;
@@ -406,37 +446,47 @@ namespace MFM
       m_neighborhoodCount = 0;
       for(u32 i = 0; i < totalParms; i++)
       {
-        const Parameters::Parameter * parm = parms.GetParameter(i);
-        switch (parm->GetParameterType())
+        ElementParameter<CC> * parm = parms.GetParameter(i);
+        switch (parm->GetType())
         {
-        case Parameters::S32_PARAMETER:
-          AddSliderController(Parameters::S32::Cast(parms.GetParameter(i)));
+        case VD::S32:
+          AddSliderController(parm);
           break;
-        case Parameters::BOOL_PARAMETER:
-          AddCheckboxController(Parameters::Bool::Cast(parms.GetParameter(i)));
+        case VD::BOOL:
+          AddCheckboxController(parm);
           break;
-        case Parameters::NEIGHBORHOOD_PARAMETER:
-          AddNeighborhoodController(Parameters::Neighborhood<R>::Cast(parms.GetParameter(i)));
-          break;
+        case VD::BITS:
+          {
+            ElementParameterNeighborhood<CC,SITES>* epn =
+              dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>(parm);
+            if (epn)
+            {
+              AddNeighborhoodController(epn);
+            }
+            break;
+          }
+          // ELSE FALL THROUGH
         default:
           FAIL(ILLEGAL_STATE);
         }
       }
 
       /* Put in the new controllers */
-      SPoint rpt(16, 6 + ELEMENT_RENDER_SIZE * TOTAL_ROWS);
+      SPoint rpt(16, 6 + GetElementRenderSize() * TOTAL_ROWS);
       for(u32 i = 0; i < m_controllerCount; i++)
       {
-        ParameterController * c = m_controllers[i];
+        ParameterController<CC> * c = m_controllers[i];
+        c->Init();
         c->SetRenderPoint(rpt);
+        c->SetBigText(m_bigText);
         Panel::Insert(c, NULL);
         UPoint desired = c->GetDesiredSize();
         rpt.SetY(rpt.GetY() + desired.GetY());
       }
 
-      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW + BORDER_PADDING,
+      Panel::SetDimensions(6 + GetElementRenderSize() * ELEMENTS_PER_ROW + BORDER_PADDING,
                            rpt.GetY() + BORDER_PADDING);
-      Panel::SetDesiredSize(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW + BORDER_PADDING,
+      Panel::SetDesiredSize(6 + GetElementRenderSize() * ELEMENTS_PER_ROW + BORDER_PADDING,
                            rpt.GetY() + BORDER_PADDING);
 
       //debug: this->Print(STDOUT);
@@ -448,23 +498,36 @@ namespace MFM
 
     void AddButtons()
     {
-      Asset assets[] =
+      Asset assets[ELEMENT_BOX_BUTTON_COUNT];
+      if(m_bigText)
       {
-        ASSET_SELECTOR_ICON,
-        ASSET_ATOM_SELECTOR_ICON,
-        ASSET_PENCIL_ICON,
-        ASSET_BUCKET_ICON,
-        ASSET_ERASER_ICON,
-        ASSET_BRUSH_ICON,
-        ASSET_XRAY_ICON,
-        ASSET_CLONE_ICON,
-        ASSET_AIRBRUSH_ICON
-      };
+        assets[0] = ASSET_SELECTOR_ICON_BIG;
+        assets[1] = ASSET_ATOM_SELECTOR_ICON_BIG;
+        assets[2] = ASSET_PENCIL_ICON_BIG;
+        assets[3] = ASSET_BUCKET_ICON_BIG;
+        assets[4] = ASSET_ERASER_ICON_BIG;
+        assets[5] = ASSET_BRUSH_ICON_BIG;
+        assets[6] = ASSET_XRAY_ICON_BIG;
+        assets[7] = ASSET_CLONE_ICON_BIG;
+        assets[8] = ASSET_AIRBRUSH_ICON_BIG;
+      }
+      else
+      {
+        assets[0] = ASSET_SELECTOR_ICON;
+        assets[1] = ASSET_ATOM_SELECTOR_ICON;
+        assets[2] = ASSET_PENCIL_ICON;
+        assets[3] = ASSET_BUCKET_ICON;
+        assets[4] = ASSET_ERASER_ICON;
+        assets[5] = ASSET_BRUSH_ICON;
+        assets[6] = ASSET_XRAY_ICON;
+        assets[7] = ASSET_CLONE_ICON;
+        assets[8] = ASSET_AIRBRUSH_ICON;
+      }
 
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
       {
         m_toolButtons[i].SetParent(this);
-        m_toolButtons[i].Panel::SetRenderPoint(SPoint(16 + i * 32, 3));
+        m_toolButtons[i].Panel::SetRenderPoint(SPoint(16 + i * GetElementRenderSize(), 3));
         m_toolButtons[i].SetToolIcon(AssetManager::Get(assets[i]));
         Panel::Insert(m_toolButtons + i, NULL);
       }
@@ -473,13 +536,15 @@ namespace MFM
       {
         u32 x, y;
 
-        x = 3 + ELEMENT_RENDER_SIZE * (i % ELEMENTS_PER_ROW);
-        y = 3 + ELEMENT_RENDER_SIZE * (3 + (i / ELEMENTS_PER_ROW));
+        x = 3 + GetElementRenderSize() * (i % ELEMENTS_PER_ROW);
+        y = 3 + GetElementRenderSize() * (3 + (i / ELEMENTS_PER_ROW));
 
         /* These will render correctly because ElementButtons render
            grey when SetElement is fed NULL. */
         m_elementButtons[i].SetElement(m_heldElements[i]);
         m_elementButtons[i].SetParent(this);
+        m_elementButtons[i].Panel::SetDimensions(GetElementRenderSize(),
+                                                 GetElementRenderSize());
         m_elementButtons[i].Panel::SetRenderPoint(SPoint(x, y));
 
         Panel::Insert(m_elementButtons + i, NULL);
@@ -488,13 +553,13 @@ namespace MFM
       m_primaryElement   = m_heldElements[0];
       m_secondaryElement = m_heldElements[1];
 
-      Panel::SetDimensions(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW,
-                           6 + ELEMENT_RENDER_SIZE * TOTAL_ROWS);
-      Panel::SetDesiredSize(6 + ELEMENT_RENDER_SIZE * ELEMENTS_PER_ROW,
-                            6 + ELEMENT_RENDER_SIZE * TOTAL_ROWS);
+      Panel::SetDimensions(6 + GetElementRenderSize() * ELEMENTS_PER_ROW,
+                           6 + GetElementRenderSize() * TOTAL_ROWS);
+      Panel::SetDesiredSize(6 + GetElementRenderSize() * ELEMENTS_PER_ROW,
+                            6 + GetElementRenderSize() * TOTAL_ROWS);
 
-      m_activatedButton = m_toolButtons;
-      m_toolButtons[0].ToolButton::SetActivated(true);
+      /* Set pencil tool to default */
+      m_toolButtons[2].OnClick(SDL_BUTTON_LEFT);
     }
 
     void SetPrimaryElement(Element<CC>* element)
@@ -568,7 +633,7 @@ namespace MFM
              GetSelectedTool() == TOOL_AIRBRUSH;
     }
 
-    virtual bool Handle(MouseButtonEvent& mbe)
+    virtual bool PostDragHandle(MouseButtonEvent& mbe)
     {
       SDL_MouseButtonEvent & event = mbe.m_event.button;
 
@@ -599,7 +664,7 @@ namespace MFM
       return true;
     }
 
-    virtual bool Handle(MouseMotionEvent& mme)
+    virtual bool PostDragHandle(MouseMotionEvent& mme)
     {
       /* Try to keep the grid from taking this event too */
       return true;
@@ -608,13 +673,13 @@ namespace MFM
     virtual void PaintComponent(Drawing& d)
     {
       const u32 ELEMENT_START_X = 64;
-      const u32 ELEMENT_START_Y = 40;
-      const u32 ELEMENT_TOOL_SIZE = ELEMENT_RENDER_SIZE + 8;
+      const u32 ELEMENT_START_Y = m_bigText ? 64 : 40;
+      const u32 ELEMENT_TOOL_SIZE = GetElementRenderSize() + 8;
 
       d.SetForeground(this->Panel::GetBackground());
       d.FillRect(0, 0, this->Panel::GetWidth(), this->Panel::GetHeight());
 
-      d.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
+      d.SetFont(AssetManager::Get(GetElementRenderFont()));
 
       if (m_primaryElement)
       {
@@ -652,7 +717,7 @@ namespace MFM
         snprintf(brushSizeArray, 64, "%d", m_brushSize);
 
         const SPoint brushPos = m_toolButtons[TOOL_AIRBRUSH].Panel::GetRenderPoint();
-        UPoint pos(brushPos.GetX() + 32, brushPos.GetY());
+        UPoint pos(brushPos.GetX() + GetElementRenderSize(), brushPos.GetY());
         d.BlitBackedText(brushSizeArray, pos, UPoint(128, 128));
       }
 

@@ -27,20 +27,20 @@
 #ifndef ATOMVIEWPANEL_H
 #define ATOMVIEWPANEL_H
 
-#include "Panel.h"
+#include "MovablePanel.h"
 #include "Grid.h"
 #include "ToolboxPanel.h"
 
 namespace MFM
 {
   template <class GC>
-  class AtomViewPanel : public Panel
+  class AtomViewPanel : public MovablePanel
   {
    private:
     typedef typename GC::CORE_CONFIG::ATOM_TYPE T;
     typedef typename GC::CORE_CONFIG CC;
 
-    const T* m_atom;
+    T* m_atom;
 
     Grid<GC>* m_grid;
 
@@ -50,7 +50,7 @@ namespace MFM
 
    public:
     AtomViewPanel() :
-      Panel(300, 100),
+      MovablePanel(300, 100),
       m_atom(NULL),
       m_grid(NULL),
       m_toolboxPanel(NULL)
@@ -71,6 +71,34 @@ namespace MFM
         (m_toolboxPanel->IsVisible() &&
          m_toolboxPanel->GetSelectedTool() == TOOL_ATOM_SELECTOR));
       this->SetVisibility(visible);
+    }
+
+    void PaintDisplayAtomicControllers(Drawing & d, T& atom,const Element<CC>* elt)
+    {
+      // XXX DESIGN ME
+      // XXX WRITE ME
+      // XXX MAKE ME WORK
+
+      const AtomicParameters<CC> & parms = elt->GetAtomicParameters();
+
+      const AtomicParameter<CC> * p;
+      for (p = parms.GetFirstParameter(); p; p = p->GetNextParameter())
+      {
+        switch (p->GetType())
+        {
+        case VD::U32:
+          {
+            u32 val = 0;
+            bool got = p->LoadU32(atom, val);
+            LOG.Debug("u32 %s = %d (%d)", p->GetName(), (s32) val, got);
+          }
+          break;
+        default:
+          LOG.Debug("u32 %s unknown type %d", p->GetName(), p->GetType());
+        }
+
+      }
+
     }
 
     virtual void PaintComponent(Drawing& d)
@@ -110,10 +138,12 @@ namespace MFM
         d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
         d.BlitBackedText(zstr, UPoint(4 + ATOM_DRAW_SIZE, 28),
                          MakeUnsigned(d.GetTextSize(zstr)));
+
+        PaintDisplayAtomicControllers(d, *m_atom, element);
       }
     }
 
-    void SetAtom(const T* atom)
+    void SetAtom(T* atom)
     {
       if(atom && atom->IsSane())
       {

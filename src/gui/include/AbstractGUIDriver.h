@@ -58,6 +58,7 @@
 #include "SDL.h"
 #include "SDL_ttf.h"
 #include "HelpPanel.h"
+#include "MovablePanel.h"
 
 namespace MFM
 {
@@ -93,6 +94,7 @@ namespace MFM
 
     bool m_startPaused;
     bool m_thisUpdateIsEpoch;
+    bool m_bigText;
     u32 m_thisEpochAEPS;
     bool m_captureScreenshots;
     u32 m_saveStateIndex;
@@ -547,6 +549,7 @@ namespace MFM
 
       m_toolboxPanel.SetName("Toolbox");
       m_toolboxPanel.SetVisibility(false);
+      m_toolboxPanel.SetBigText(m_bigText);
       m_toolboxPanel.SetBackground(Drawing::GREY60);
       m_toolboxPanel.SetAnchor(ANCHOR_WEST);
       m_toolboxPanel.SetAnchor(ANCHOR_NORTH);
@@ -713,6 +716,10 @@ namespace MFM
       {
         m_gridPanel.ToggleAtomViewPanel();
       }
+      if(m_keyboard.SemiAuto(SDLK_o))
+      {
+        m_gridPanel.ToggleDrawAtomsAsSquares();
+      }
 
       if(m_keyboard.SemiAuto(SDLK_ESCAPE))
       {
@@ -793,6 +800,7 @@ namespace MFM
     AbstractGUIDriver() :
       m_startPaused(true),
       m_thisUpdateIsEpoch(false),
+      m_bigText(false),
       m_captureScreenshots(false),
       m_saveStateIndex(0),
       m_epochSaveStateIndex(0),
@@ -894,6 +902,15 @@ namespace MFM
       driver.m_helpPanel.SetVisibility(false);
     }
 
+    static void SetIncreaseTextSizeFlag(const char* not_used, void* driverptr)
+    {
+      AbstractGUIDriver& driver = *((AbstractGUIDriver*)driverptr);
+
+      LOG.Debug("Increase text size.\n");
+
+      driver.m_bigText = true;
+    }
+
     void AddDriverArguments()
     {
       Super::AddDriverArguments();
@@ -914,6 +931,9 @@ namespace MFM
 
       this->RegisterArgument("Help panel is not shown upon startup.",
                              "-n| --nohelp", &DontShowHelpPanelOnStart, this, false);
+
+      this->RegisterArgument("Increase button and text size.",
+                             "--bigtext", &SetIncreaseTextSizeFlag, this, false);
     }
 
     EditingTool m_selectedTool;
@@ -922,7 +942,7 @@ namespace MFM
 
     ToolboxPanel<CC> m_toolboxPanel;
 
-    class StatisticsPanel : public Panel
+    class StatisticsPanel : public MovablePanel
     {
       StatsRenderer<GC>* m_srend;
       OurGrid* m_mainGrid;
@@ -989,7 +1009,7 @@ namespace MFM
       virtual void PaintBorder(Drawing & config)
       { /* No border please */ }
 
-      virtual bool Handle(MouseButtonEvent& mbe)
+      virtual bool HandlePostDrag(MouseButtonEvent& mbe)
       {
         return true;  /* Eat the event to keep the grid from taking it */
       }

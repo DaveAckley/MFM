@@ -51,9 +51,9 @@ namespace MFM {
       log.Warning("We know that you can %s us, %s","hear","Earthman");
       log.Error("Must sterilize");
       assert(!strcmp("11: DBG: 2 captains: Scarlet vs Kirk\n"
-                     "12: MSG: [DBG->WRN]\n"
+                     "12: DBG: [DBG->WRN]\n"  // Sat Sep 20 06:11:26 2014 Log level changes demoted to DBG
                      "13: WRN: We know that you can hear us, Earthman\n"
-                     "14: ERR: Must sterilize\n\000sterilize\n",
+                     "14: ERR: Must sterilize\n",
                      tbuf.GetZString()));
     }
   }
@@ -71,10 +71,10 @@ namespace MFM {
           log.IfLog(j) && log.Log(j,"at %s", Logger::StrLevel((Logger::Level) i));
         }
       }
-      assert(!strcmp("ERR: @MSG\nMSG: [MSG->ERR]\nERR: at ERR\n"
+      assert(!strcmp("ERR: @MSG\nERR: at ERR\n"
                      "ERR: @ERR\nERR: at WRN\nWRN: at WRN\n"
-                     "ERR: @WRN\nMSG: [MSG]\nERR: at MSG\nWRN: at MSG\nMSG: at MSG\n"
-                     "ERR: @MSG\nMSG: [MSG->DBG]\nMSG: [DBG]\nERR: at DBG\nWRN: at DBG\nMSG: at DBG\nDBG: at DBG\n",
+                     "ERR: @WRN\nERR: at MSG\nWRN: at MSG\nMSG: at MSG\n"
+                     "ERR: @MSG\nDBG: [DBG]\nERR: at DBG\nWRN: at DBG\nMSG: at DBG\nDBG: at DBG\n",
                      tbuf.GetZString()));
     }
   }

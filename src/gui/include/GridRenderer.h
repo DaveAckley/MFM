@@ -105,6 +105,11 @@ namespace MFM
 
     void ToggleGrid();
 
+    void ToggleDrawAtomsAsSquares()
+    {
+      m_tileRenderer.ToggleDrawAtomsAsSquares();
+    }
+
     bool* GetGridEnabledPointer()
     {
       return m_tileRenderer.GetGridEnabledPointer();

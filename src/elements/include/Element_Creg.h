@@ -55,10 +55,10 @@ namespace MFM
       : Element<CC>(MFM_UUID_FOR("Creg", CREG_VERSION)),
         m_targetDensity(this, "density", "Target Density",
                         "The Creg will try to fill this many spots in its event "
-                        "window with other Creg.", 0, 3, 41, 1)
+                        "window with other Creg.", 0, 3, 41/*, 1*/)
 
     {
-      Element<CC>::SetAtomicSymbol("Cr");
+      Element<CC>::SetAtomicSymbol("Cd");
       Element<CC>::SetName("Creg");
     }
 
@@ -86,7 +86,7 @@ namespace MFM
 
     virtual void Behavior(EventWindow<CC>& window) const
     {
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
       Random& rand = window.GetRandom();
 
       SPoint cregAtom;

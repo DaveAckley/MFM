@@ -63,7 +63,7 @@ namespace MFM
       AbstractElement_ForkBomb<CC>(MFM_UUID_FOR("BombYellow", FORKBOMB3_VERSION)),
       m_bombCount(this, "count", "Bomb Count",
                   "Number of bombs randomly dropped each bomb event",
-                  0, 10, 30, 1)
+                  0, 10, 30/*, 1*/)
 
     {
       Element<CC>::SetAtomicSymbol("By");
@@ -78,7 +78,7 @@ namespace MFM
     virtual void Behavior(EventWindow<CC>& window) const
     {
       Random & random = window.GetRandom();
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
       const u32 loIdx = md.GetFirstIndex(1);
       const u32 hiIdx = md.GetLastIndex(R);
       for (u32 i = 0; i < (u32) m_bombCount.GetValue(); ++i)

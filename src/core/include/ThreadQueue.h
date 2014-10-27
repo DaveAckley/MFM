@@ -28,9 +28,10 @@
 #define QUE_H
 
 #include "itype.h"
-#include <pthread.h>
+#include "Mutex.h"
+#include "Logger.h"
 
-#define THREADQUEUE_MAX_BYTES (1536 + 1)  // non-multiple of 16 for testing
+#define THREADQUEUE_MAX_BYTES (2048)   // How big does this actually need to be?
 
 namespace MFM
 {
@@ -43,16 +44,35 @@ namespace MFM
   private:
 
     /**
-     * The pthread_mutex_t required to lock this ThreadQueue upon
+     * The mutex required to lock this ThreadQueue upon
      * reading and writing.
      */
-    pthread_mutex_t m_lock;
+    Mutex m_mutex;
 
     /**
-     * The pthread_cond_t required to wake a waiting thread during an
-     * IO conflict.
+     * A Mutex::Predicate that waits for additional input to be available
      */
-    pthread_cond_t m_cond;
+    struct MoreInputIsAvailable : public Mutex::Predicate
+    {
+      ThreadQueue & m_threadQueue;
+      MoreInputIsAvailable(ThreadQueue & tq) : Predicate(tq.m_mutex), m_threadQueue(tq) { }
+
+      virtual bool EvaluatePrecondition()
+      {
+        bool ret = m_threadQueue.m_heldBytes == 0;
+        if (!ret)
+        {
+          LOG.Error("MoreInputIsAvailable precondition failed: m_heldBytes = %d",
+		    m_threadQueue.m_heldBytes);
+        }
+        return ret;
+      }
+
+      virtual bool EvaluatePredicate()
+      {
+        return m_threadQueue.m_heldBytes > 0;
+      }
+    } m_moreInputIsAvailable;
 
     /**
      * The actual data held within this ThreadQueue.
@@ -185,7 +205,7 @@ namespace MFM
 
     /**
      * Erases all held data within this TheadQueue. This should only
-     * be called in erronous cases where the ThreadQueue should no
+     * be called in erroneous cases where the ThreadQueue should no
      * longer need to hold any data inside. This should NEVER be used
      * in tandem with a call to ReadBlocking; this will create a
      * deadlock.

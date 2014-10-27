@@ -39,7 +39,8 @@
 namespace MFM
 {
 
-  template <class CC> class EventWindow; // Forward declaration
+  template <class CC> class Element; // FORWARD
+  template <class CC> class EventWindow; // FORWARD
 
   template <class CC>
   class ElementTable
@@ -126,37 +127,7 @@ namespace MFM
      *
      * @param window The EventWindow to execute an event upon.
      */
-    void Execute(EventWindow<CC>& window)
-    {
-      T atom = window.GetCenterAtom();
-      if (!atom.IsSane())
-      {
-        if (atom.HasBeenRepaired())
-        {
-          window.SetCenterAtom(atom);
-        }
-        else
-        {
-          FAIL(INCONSISTENT_ATOM);
-        }
-      }
-      u32 type = atom.GetType();
-      if(type != Element_Empty<CC>::THE_INSTANCE.GetType())
-      {
-        const Element<CC> * elt = Lookup(type);
-        if (elt == 0) FAIL(UNKNOWN_ELEMENT);
-
-        UsageTimer t = UsageTimer::NowThread();
-
-        elt->Behavior(window);
-
-        u32 ms = (UsageTimer::NowThread() - t).TotalMilliseconds();
-        if(ms > 10)
-        {
-          LOG.Debug("Atom (type 0x%x) took %d ms to execute.", type, ms);
-        }
-      }
-    }
+    void Execute(EventWindow<CC>& window) ;
 
     /**
      * Inserts an Element into this ElementTable.
@@ -165,11 +136,7 @@ namespace MFM
      *
      * @returns \c true .
      */
-    bool RegisterElement(const Element<CC>& e)
-    {
-      Insert(e);
-      return true;
-    }
+    bool RegisterElement(const Element<CC>& e) ;
 
     /**
      * Allocate SLOTS u64's of element-specific data associated with
@@ -198,29 +165,9 @@ namespace MFM
      * In the case of a true return, note that the resulting slots
      * have no particular values.
      */
-    bool AllocateElementDataSlots(const Element<CC>& e, u32 slots) {
-      u32 elementType = e.GetType();
-      return AllocateElementDataSlotsFromType(elementType, slots);
-    }
+    bool AllocateElementDataSlots(const Element<CC>& e, u32 slots) ;
 
-    bool AllocateElementDataSlotsFromType(const u32 elementType, u32 slots) {
-      s32 index = GetIndex(elementType);
-      if (index < 0) return false;
-
-      if (m_hash[index].m_elementDataLength != 0) {
-        if (m_hash[index].m_elementDataLength != slots)
-          return false;
-      } else {
-        if (m_nextFreeElementDataIndex+slots > ELEMENT_DATA_SLOTS)
-          return false;
-
-        m_hash[index].m_elementDataLength = slots;
-        m_hash[index].m_elementDataStart = m_nextFreeElementDataIndex;
-        m_nextFreeElementDataIndex += slots;
-      }
-
-      return true;
-    }
+    bool AllocateElementDataSlotsFromType(const u32 elementType, u32 slots) ;
 
     /**
      * Access the SLOTS u64's of element-specific data associated with
@@ -237,51 +184,13 @@ namespace MFM
      * - E is a registered element that has more or less than SLOTS of
      *   element-specific data associated with it.
      */
-    u64 * GetElementDataSlots(const Element<CC>& e, const u32 slots) {
-      u32 elementType = e.GetType();
-      return GetElementDataSlotsFromType(elementType, slots);
-    }
+    u64 * GetElementDataSlots(const Element<CC>& e, const u32 slots) ;
 
-    u64 * GetElementDataSlotsFromType(const u32 elementType, const u32 slots) {
-      s32 index = GetIndex(elementType);
-      if (index < 0) return 0;
+    u64 * GetElementDataSlotsFromType(const u32 elementType, const u32 slots) ;
 
-      if (m_hash[index].m_elementDataLength == 0) return 0;
-      if (m_hash[index].m_elementDataLength != slots) return 0;
-      return & m_elementData[m_hash[index].m_elementDataStart];
-    }
+    u64 * GetDataAndRegister(const u32 elementType, u32 slots) ;
 
-    u64 * GetDataAndRegister(const u32 elementType, u32 slots)
-    {
-      // Yes, (this use of) the EDS API is pretty awkward.
-
-      // See if already registered
-      u64 * datap = GetElementDataSlotsFromType(elementType, slots);
-
-      if (!datap) {
-
-        // Not yet registered.  If this fails, you probably need to up
-        // the EDS in your ParamConfig.
-        if (!AllocateElementDataSlotsFromType(elementType, slots))
-          FAIL(ILLEGAL_STATE);
-
-        // Now this must succeed
-        datap = GetElementDataSlotsFromType(elementType, slots);
-        if (!datap)
-          FAIL(ILLEGAL_STATE);
-
-        // Init newly registered slots
-        for (u32 i = 0; i < slots; ++i)
-          datap[i] = 0;
-      }
-      return datap;
-    }
-
-    u64 * GetDataIfRegistered(const u32 elementType, u32 slots)
-    {
-      return GetElementDataSlotsFromType(elementType, slots);
-    }
-
+    u64 * GetDataIfRegistered(const u32 elementType, u32 slots) ;
 
   private:
 
@@ -312,11 +221,10 @@ namespace MFM
     u64 m_elementData[ELEMENT_DATA_SLOTS];
     u32 m_nextFreeElementDataIndex;
 
-
   };
 
 } /* namespace MFM */
 
 #include "ElementTable.tcc"
 
-#endif /*ELEMENETTABLE_H*/
+#endif /*ELEMENTTABLE_H*/

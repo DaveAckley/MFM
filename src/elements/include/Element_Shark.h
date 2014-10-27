@@ -68,7 +68,7 @@ namespace MFM
       ELEMENT_VERSION = 1
     };
 
-    typedef BitField<BitVector<BITS>, SHARK_ENERGY_LEN, SHARK_ENERGY_POS> AFSharkEnergy;
+    typedef BitField<BitVector<BITS>, VD::U32, SHARK_ENERGY_LEN, SHARK_ENERGY_POS> AFSharkEnergy;
 
     u32 GetSharkEnergy(const T& us) const
     {
@@ -90,10 +90,10 @@ namespace MFM
       AbstractElement_WaPat<CC>(MFM_UUID_FOR("Shark", ELEMENT_VERSION)),
       m_sharkBirthAge(this, "age", "Birth Age",
                       "Number of events for a shark to mature",
-                      1, INITIAL_DEFAULT_BIRTH_AGE, 100, 1),
+                      1, INITIAL_DEFAULT_BIRTH_AGE, 100/*, 1*/),
       m_sharkEnergyPerFish(this, "energy", "Energy Per Fish",
                            "Life events gained per fish eaten",
-                           1, DEFAULT_ENERGY_PER_FISH, 50, 1)
+                           1, DEFAULT_ENERGY_PER_FISH, 50/*, 1*/)
     {
       Element<CC>::SetAtomicSymbol("Sh");
       Element<CC>::SetName("Shark");
@@ -130,9 +130,8 @@ namespace MFM
 
     virtual void Behavior(EventWindow<CC>& window) const
     {
-      Random & random = window.GetRandom();
       T self = window.GetCenterAtom();
-      const MDist<R> md = MDist<R>::get();
+      WindowScanner<CC> scanner(window);
 
       SPoint fishRel;
       u32 fishCount = 0;
@@ -161,31 +160,9 @@ namespace MFM
         this->SetCurrentAge(self, 1 + age);
       }
 
-      for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(1); ++idx)
-      {
-        const SPoint rel = md.GetPoint(idx);
-        if (!window.IsLiveSite(rel))
-        {
-          continue;
-        }
-        T other = window.GetRelativeAtom(rel);
-        u32 type = other.GetType();
-        if(type == Element_Fish<CC>::THE_INSTANCE.GetType())
-        {
-          if (random.OneIn(++fishCount))
-          {
-            fishRel = rel;
-          }
-        }
-
-        if(type == Element_Empty<CC>::THE_INSTANCE.GetType())
-        {
-          if (random.OneIn(++emptyCount))
-          {
-            emptyRel = rel;
-          }
-        }
-      }
+      scanner.FindRandomAtoms(1, 2,
+                              &fishRel, Element_Fish<CC>::THE_INSTANCE.GetType(), &fishCount,
+                              &emptyRel, Element_Empty<CC>::THE_INSTANCE.GetType(), &emptyCount);
 
       if (fishCount > 0)   // Eating
       {
