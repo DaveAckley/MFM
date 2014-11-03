@@ -14,6 +14,7 @@ namespace MFM
     m_drawDataHeat = false;
     m_renderSquares = false;
     m_gridColor = 0xff202020;
+    m_heatmapSelector = 0;
 
     m_hiddenColor  = 0xff353535;
     m_visibleColor = 0xff595959;

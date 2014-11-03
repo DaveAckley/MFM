@@ -281,17 +281,23 @@ namespace MFM
       { }
     } m_gridRenderButton;
 
-    struct HeatmapButton : public AbstractGridCheckbox
+    struct HeatmapButton : public AbstractGridButton
     {
-      HeatmapButton() : AbstractGridCheckbox("Heatmap")
+      GridPanel<GC>& m_gridPanel;
+
+      HeatmapButton(GridPanel<GC>& gridPanel) :
+        AbstractGridButton("Heatmap"),
+        m_gridPanel(gridPanel)
       {
         AbstractButton::SetName("HeatmapButton");
         Panel::SetDimensions(200,25);
         AbstractButton::SetRenderPoint(SPoint(2, 50));
       }
 
-      virtual void OnCheck(bool value)
-      { }
+      virtual void OnClick(u8 button)
+      {
+        m_gridPanel.IncrementHeatmapSelector();
+      }
     } m_heatmapButton;
 
     class GridStepCheckbox : public AbstractGridButton
@@ -583,11 +589,11 @@ namespace MFM
     {
       m_statisticsPanel.SetAnchor(ANCHOR_EAST);
 
-      m_buttonPanel.InsertCheckbox(&m_heatmapButton);
       m_buttonPanel.InsertCheckbox(&m_gridRenderButton);
       m_buttonPanel.InsertCheckbox(&m_gridRunButton);
       m_buttonPanel.InsertCheckbox(&m_bgrButton);
 
+      m_buttonPanel.InsertButton(&m_heatmapButton);
       m_buttonPanel.InsertButton(&m_gridStepButton);
       m_buttonPanel.InsertButton(&m_clearButton);
       m_buttonPanel.InsertButton(&m_clearGridButton);
@@ -607,7 +613,6 @@ namespace MFM
       m_pauseTileButton.SetGridRenderer(m_grend);
 
       m_gridRenderButton.SetExternalValue(m_grend.GetGridEnabledPointer());
-      m_heatmapButton.SetExternalValue(m_grend.GetDrawDataHeatPointer());
       m_bgrButton.SetExternalValue(AbstractDriver<GC>::GetGrid().
                                    GetBackgroundRadiationEnabledPointer());
       m_gridRunButton.SetExternalValue(&m_keyboardPaused);
@@ -807,6 +812,7 @@ namespace MFM
       m_renderStats(false),
       m_screenWidth(SCREEN_INITIAL_WIDTH),
       m_screenHeight(SCREEN_INITIAL_HEIGHT),
+      m_heatmapButton(m_gridPanel),
       m_selectedTool(TOOL_SELECTOR),
       m_toolboxPanel(&m_selectedTool),
       m_buttonPanel()
