@@ -33,6 +33,8 @@ namespace MFM
 
     typedef AbstractDualDriver<GC> Super;
     typedef typename Super::CC CC;
+    typedef typename Super::CC::PARAM_CONFIG P;
+    typedef typename Super::CC::ATOM_TYPE T;
 
     virtual void DefineNeededElements()
     {
@@ -66,7 +68,31 @@ namespace MFM
       this->NeedElement(&Element_Wanderer_Magenta<CC>::THE_INSTANCE);
     }
 
+    const char* GetSimDirPathTemporary(const char* format, ...) const
+    {
+      static OverflowableCharBufferByteSink<500> buf;
+      buf.Reset();
+
+      buf.Printf("%s", this->GetSimulationBasePath());
+      va_list ap;
+      va_start(ap, format);
+      buf.Vprintf(format, ap);
+      if(buf.HasOverflowed())
+      {
+        FAIL(OUT_OF_ROOM);
+      }
+      return buf.GetZString();
+    }
+
   public:
+    virtual void DoEpochEvents(Grid<GC>& grid, u32 epochs, u32 epochAEPS)
+    {
+      /* Write custom epoch code here */
+
+      /* Leave this line here so the Superclass can run as well. */
+      Super::DoEpochEvents(grid, epochs, epochAEPS);
+    }
+
     virtual void AddDriverArguments()
     {
       Super::AddDriverArguments();
