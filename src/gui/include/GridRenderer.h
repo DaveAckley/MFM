@@ -89,9 +89,9 @@ namespace MFM
     bool IsRenderingTilesSeparated()
     { return m_renderTilesSeparated; }
 
-    void IncrementHeatmapSelector()
+    u32 IncrementHeatmapSelector()
     {
-      m_tileRenderer.IncrementHeatmapSelector();
+      return m_tileRenderer.IncrementHeatmapSelector();
     }
 
     void SetEventWindowRenderMode(EventWindowRenderMode mode);
