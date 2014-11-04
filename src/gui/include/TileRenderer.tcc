@@ -125,15 +125,7 @@ namespace MFM
     }
     else if(atom->GetType() != Element_Empty<CC>::THE_INSTANCE.GetType())
     {
-      u32 color;
-      if(m_drawDataHeat)
-      {
-        color = GetDataHeatColor(tile, *atom);
-      }
-      else
-      {
-        color = GetAtomColor(tile, *atom);
-      }
+      u32 color = GetAtomColor(tile, *atom, m_heatmapSelector);
 
       if(lowlight)
       {

@@ -46,12 +46,13 @@ namespace MFM
   template <class CC>
   class AtomSerializer : public ByteSerializable
   {
+   private:
     typedef typename CC::PARAM_CONFIG P;
     enum { BPA = P::BITS_PER_ATOM };
-  private:
+
     Atom<CC> & m_atom;
 
-  public:
+   public:
     AtomSerializer(Atom<CC> & atom) : m_atom(atom)
     { }
 
