@@ -819,9 +819,7 @@ namespace MFM
     { }
 
     ~AbstractGUIDriver()
-    {
-      AssetManager::Destroy();
-    }
+    { }
 
     virtual void ReinitUs()
     {
@@ -1306,6 +1304,7 @@ namespace MFM
         SDL_Flip(screen);
       }
 
+      AssetManager::Destroy();
       SDL_FreeSurface(screen);
       TTF_Quit();
       SDL_Quit();
