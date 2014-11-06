@@ -68,22 +68,6 @@ namespace MFM
       this->NeedElement(&Element_Wanderer_Magenta<CC>::THE_INSTANCE);
     }
 
-    const char* GetSimDirPathTemporary(const char* format, ...) const
-    {
-      static OverflowableCharBufferByteSink<500> buf;
-      buf.Reset();
-
-      buf.Printf("%s", this->GetSimulationBasePath());
-      va_list ap;
-      va_start(ap, format);
-      buf.Vprintf(format, ap);
-      if(buf.HasOverflowed())
-      {
-        FAIL(OUT_OF_ROOM);
-      }
-      return buf.GetZString();
-    }
-
   public:
     virtual void DoEpochEvents(Grid<GC>& grid, u32 epochs, u32 epochAEPS)
     {

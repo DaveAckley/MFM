@@ -699,6 +699,33 @@ namespace MFM
     }
 
   public:
+    /**
+     * Gets a formatted string representing a working path to the
+     * assets directory of this simulation. This is where the local
+     * copy of the \c res/ directory is kept and should be used for
+     * finding any assets in that location.
+     *
+     * @param format The formatting string used to parse the arguments
+     *               that follow it into a reasonable format.
+     *
+     * @returns \c format , with the location of the local resources
+     *          directory prepended to it.
+     */
+    const char* GetSimDirPathTemporary(const char* format, ...) const
+    {
+      static OverflowableCharBufferByteSink<500> buf;
+      buf.Reset();
+      buf.Printf("%s",m_simDirBasePath);
+      va_list ap;
+      va_start(ap, format);
+      buf.Vprintf(format, ap);
+      if (buf.HasOverflowed())
+      {
+        FAIL(OUT_OF_ROOM);
+      }
+      return buf.GetZString();
+    }
+
     void AutosaveGrid(u32 epochs)
     {
       const char* filename =
@@ -729,33 +756,6 @@ namespace MFM
         }
         ReloadCurrentConfigurationPath();
       }
-    }
-
-    /**
-     * Gets a formatted string representing a working path to the
-     * assets directory of this simulation. This is where the local
-     * copy of the \c res/ directory is kept and should be used for
-     * finding any assets in that location.
-     *
-     * @param format The formatting string used to parse the arguments
-     *               that follow it into a reasonable format.
-     *
-     * @returns \c format , with the location of the local resources
-     *          directory prepended to it.
-     */
-    const char* GetSimDirPathTemporary(const char* format, ...) const
-    {
-      static OverflowableCharBufferByteSink<500> buf;
-      buf.Reset();
-      buf.Printf("%s",m_simDirBasePath);
-      va_list ap;
-      va_start(ap, format);
-      buf.Vprintf(format, ap);
-      if (buf.HasOverflowed())
-      {
-        FAIL(OUT_OF_ROOM);
-      }
-      return buf.GetZString();
     }
 
     void ReloadCurrentConfigurationPath()
