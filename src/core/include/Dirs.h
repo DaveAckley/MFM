@@ -149,6 +149,12 @@ namespace MFM {
      */
     static void FillDir(SPoint& pt, Dir dir);
 
+    static SPoint GetOffset(Dir dir) {
+      SPoint tmp;
+      FillDir(tmp, dir);
+      return tmp;
+    }
+
     /**
      * Translates the coordinates in a SPoint to a Dir . The
      * coordinates in SPoint must be a unit offset (like the ones
