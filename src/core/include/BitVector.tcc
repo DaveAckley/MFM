@@ -206,11 +206,20 @@ namespace MFM {
   }
 
   template <u32 BITS>
-  void BitVector<BITS>::PrintBinary(ByteSink& ostream) const
+  void BitVector<BITS>::PrintBase2(ByteSink& ostream) const
   {
     for(u32 i = 0; i < BITS; i++)
     {
       ostream.Printf("%d", Read(i, 1) ? 1 : 0);
+    }
+  }
+
+  template <u32 BITS>
+  void BitVector<BITS>::PrintBytes(ByteSink& ostream) const
+  {
+    for(u32 w = 0; w < ARRAY_LENGTH; w++)
+    {
+      ostream.Print(m_bits[w], Format::BEU32);
     }
   }
 
@@ -236,7 +245,22 @@ namespace MFM {
   }
 
   template <u32 BITS>
-  bool BitVector<BITS>::ReadBinary(ByteSource& istream)
+  bool BitVector<BITS>::ReadBytes(ByteSource& istream)
+  {
+    BitVector<BITS> temp;
+    for(u32 w = 0; w < ARRAY_LENGTH; w++)
+    {
+      if (!istream.Scan(temp.m_bits[w], Format::BEU32))
+      {
+        return false;
+      }
+    }
+    *this = temp;
+    return true;
+  }
+
+  template <u32 BITS>
+  bool BitVector<BITS>::ReadBase2(ByteSource& istream)
   {
     istream.SkipWhitespace();
 
