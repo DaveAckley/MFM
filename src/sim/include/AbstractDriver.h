@@ -233,9 +233,6 @@ namespace MFM
      */
     void UpdateGrid(OurGrid& grid)
     {
-      const s32 ONE_THOUSAND = 1000;
-      const s32 ONE_MILLION = ONE_THOUSAND*ONE_THOUSAND;
-
       grid.Unpause();  // pausing and unpausing should be overhead!
 
       u32 startMS = GetTicks();  // So get the ticks after unpausing
@@ -244,8 +241,7 @@ namespace MFM
       else
         m_msSpentOverhead = 0;
 
-      Sleep(m_microsSleepPerFrame/ONE_MILLION,
-            (u64) (m_microsSleepPerFrame%ONE_MILLION)*ONE_THOUSAND);
+      SleepUsec(m_microsSleepPerFrame);
 
       m_ticksLastStopped = GetTicks(); // and before pausing
 
@@ -279,7 +275,7 @@ namespace MFM
 
       // Correct up to 20% of current each frame
       m_microsSleepPerFrame = (100+20*err)*m_microsSleepPerFrame/100;
-      m_microsSleepPerFrame = MIN(100000000, MAX(1000, m_microsSleepPerFrame));
+      m_microsSleepPerFrame = MIN(1000000, MAX(1000, m_microsSleepPerFrame));
 
       m_lastFrameAEPS = m_AEPS;
 
@@ -424,7 +420,8 @@ namespace MFM
     }
 
     /**
-     * The main loop which runs this simulation.
+     * The main loop which runs this simulation -- unless overridden
+     * by a subclass.
      */
     virtual void RunHelper()
     {
@@ -780,9 +777,7 @@ namespace MFM
     {
       LOG.Debug("Epoch %d: %d AEPS", epochs, epochAEPS);
 
-      grid.CheckCaches();
-
-      grid.RecountAtoms();
+      // XXX grid.CheckCaches();
 
       if (m_gridImages)
       {
@@ -850,7 +845,7 @@ namespace MFM
       m_currentConfigurationPath(U32_MAX)
     { }
 
-    void Init(u32 argc, const char** argv)
+    void ProcessArguments(u32 argc, const char** argv)
     {
       AddDriverArguments();
 
@@ -1000,13 +995,15 @@ namespace MFM
       m_grid.SetSeed(seed);
     }
 
-    void Reinit()
+    void Init()
     {
       m_lastFrameAEPS = 0;
 
       ReinitUs();
 
-      m_grid.Reinit();
+      m_grid.Init();
+
+      m_grid.InitThreads();
 
       m_grid.Needed(Element_Empty<CC>::THE_INSTANCE);
 
@@ -1017,6 +1014,9 @@ namespace MFM
       PostReinit(m_varguments);
 
       LoadFromConfigurationPath();
+
+      m_grid.SetGridRunning(true);
+
     }
 
     void Run()
