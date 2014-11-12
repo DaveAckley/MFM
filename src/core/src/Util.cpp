@@ -14,7 +14,7 @@ namespace MFM
     return count;
   }
 
-  void IntLexEncode(u32 num, char* output)
+  void IntAlphaEncode(u32 num, char* output)
   {
     u32 digits = DigitCount(num, 26);
     output[digits] = 0;
