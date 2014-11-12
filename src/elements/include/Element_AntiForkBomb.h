@@ -188,7 +188,7 @@ namespace MFM
       } else
       {
         //It's calm and we have reasonable density.  I will patrol.
-        this->Diffuse(window);
+        window.Diffuse();
       }
     }
 

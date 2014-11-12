@@ -152,7 +152,7 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       }
 
-      this->Diffuse(window);
+      window.Diffuse();
     }
   };
 

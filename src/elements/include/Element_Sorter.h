@@ -31,6 +31,7 @@
 #include "Element.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
+#include "ElementUtils.h"
 #include "Element_Res.h"  /* For Element_Res::TYPE */
 #include "Element_Data.h"  /* For Element_Data::TYPE */
 #include "ColorMap.h"
@@ -103,11 +104,11 @@ namespace MFM
     bool FillAvailableSubwindowPoint(EventWindow<CC>& window,
                                      SPoint& pt, Dir subwindow, ElementType type) const
     {
-      return this->FillPointWithType(window, pt,
-                                     m_southeastSubwindow,
-                                     sizeof(m_southeastSubwindow)/
-				     sizeof(m_southeastSubwindow[0]),
-                                     subwindow, type);
+      return ElementUtils::FillPointWithType(window, pt,
+                                             m_southeastSubwindow,
+                                             sizeof(m_southeastSubwindow)/
+                                             sizeof(m_southeastSubwindow[0]),
+                                             subwindow, type);
     }
 
     virtual u32 DefaultPhysicsColor() const
@@ -159,9 +160,9 @@ namespace MFM
       Random & random = window.GetRandom();
       SPoint reproducePt;
       T self = window.GetCenterAtom();
-      if(this->FillPointWithType(window, reproducePt,
-                                 Element<CC>::VNNeighbors, 4,
-                                 Dirs::SOUTHEAST, Element_Res<CC>::TYPE()))
+      if(ElementUtils::FillPointWithType(window, reproducePt,
+                                         ElementUtils::VNNeighbors, 4,
+                                         Dirs::SOUTHEAST, Element_Res<CC>::TYPE()))
       {
         window.SetRelativeAtom(reproducePt, self);
       }
@@ -210,7 +211,7 @@ namespace MFM
           break;
         }
       }
-      this->Diffuse(window);
+      window.Diffuse();
     }
   };
 

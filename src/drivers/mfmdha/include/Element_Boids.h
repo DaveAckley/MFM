@@ -266,7 +266,7 @@ namespace MFM
       const FXP16 MAX_DIST_WGT = R;
       const FXP16 WGT_PER_DIST = MAX_DIST_WGT / MAX_DIST;
 
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
       for (u32 idx = md.GetFirstIndex(0); idx <= md.GetLastIndex(2); ++idx) {
         const SPoint sp = md.GetPoint(idx);
 
@@ -330,7 +330,7 @@ namespace MFM
       u32 resCount = 0;
       SPoint resAt;
 
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
 
       // Scan event window outside self
       for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(R); ++idx) {

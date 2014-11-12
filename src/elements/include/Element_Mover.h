@@ -145,7 +145,7 @@ namespace MFM
         }
       }
 
-      this->Diffuse(window);
+      window.Diffuse();
     }
 
   };

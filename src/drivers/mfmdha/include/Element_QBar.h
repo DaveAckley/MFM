@@ -280,7 +280,7 @@ namespace MFM
       SPoint barMax = GetMax(self);
       SPoint myPos = GetPos(self);
 
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
 
       SPoint anInconsistent;
       u32 inconsistentCount = 0;

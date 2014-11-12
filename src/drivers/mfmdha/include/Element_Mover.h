@@ -94,7 +94,7 @@ namespace MFM
       SPoint empty;
       u32 emptyCount = 0;
 
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
 
       // Scan event window outside self
       for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(1); ++idx) {

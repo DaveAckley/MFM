@@ -87,7 +87,7 @@ namespace MFM
 
     virtual void Behavior(EventWindow<CC>& window) const
     {
-      this->Diffuse(window);
+      window.Diffuse();
     }
   };
 

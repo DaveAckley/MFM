@@ -315,7 +315,7 @@ namespace MFM
       u32 resCount = 0;
       SPoint resAt;
 
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
 
       // Scan event window outside self
       for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(R); ++idx) {
