@@ -190,12 +190,10 @@ namespace MFM {
   }
 
   template<u32 R>
-  MDist<R>& MDist<R>::get()
+  const MDist<R>& MDist<R>::get()
   {
-    static MDist<R> instance;
-    return instance;
+    return THE_INSTANCE;
   }
-
 
   template<u32 R>
   s32 MDist<R>::FromPoint(const Point<s32>& offset, u32 maxRadius) const
@@ -215,12 +213,12 @@ namespace MFM {
   }
 
   template<u32 R>
-  void MDist<R>::FillFromBits(SPoint& pt, u8 bits, u32 maxRadius)
+  void MDist<R>::FillFromBits(SPoint& pt, u8 bits, u32 maxRadius) const
   {
     if (bits >= ARRAY_LENGTH)
       FAIL(ILLEGAL_ARGUMENT);
 
-    Point<s32> & bp = m_indexToPoint[bits];
+    const SPoint & bp = m_indexToPoint[bits];
 
     pt.SetX(bp.GetX());
     pt.SetY(bp.GetY());
