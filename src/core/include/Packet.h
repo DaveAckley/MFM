@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  Packet.h Basic type for inter-tile communication
+  Packet.h Basic definitions for inter-tile communication
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,8 +19,9 @@
 */
 
 /**
-  \file Packet.h Basic type for inter-tile communication
+  \file Packet.h Basic definitions for inter-tile communication
   \author Trent R. Small.
+  \author David H. Ackley.
   \date (C) 2014 All rights reserved.
   \lgpl
  */
@@ -29,210 +30,62 @@
 
 #include "Dirs.h"
 #include "itype.h"
+#include "OverflowableCharBufferByteSink.h"
 
 namespace MFM
 {
 
   /**
-   * An enumeration of all of the kinds of different Packets used
-   * during Tile communication.
+     The type of variable that can contain a raw, unparsed Packet
    */
-  typedef enum
-    {
-      /**
-       * This PacketType describes a Tile's intent to write an atom to
-       * a specific location.
-       */
-      PACKET_WRITE = 0,
-
-      /**
-       * Used to keep inter-tile buffers from overflowing, this PacketType
-       * describes that a Tile has completed processing an event and
-       * is ready to unlock its caches.
-       */
-      PACKET_EVENT_COMPLETE,
-
-      /**
-       * Used to keep inter-tile buffers from overflowing, this
-       * PacketType describes that a Tile has completed all event
-       * processing from another Tile's events. In practice, a Packet
-       * of this PacketType should be sent immediately upon receipt
-       * of a PACKET_EVENT_COMPLETE Packet.
-       */
-      PACKET_EVENT_ACKNOWLEDGE
-
-    }PacketType;
+  typedef OString128 PacketBuffer;
 
   /**
-   * An inter-Tile communication object which holds any and all
-   * information that Tiles need to pass to one another.
+     The type of a variable that can contain a PacketType value
    */
-  template <class T>
-  class Packet
+  typedef u8 PacketTypeCode;
+
+  /**
+     Constants for all the kinds of different Packets used during Tile
+     communication.
+   */
+  namespace PacketType
   {
-  private:
+    /**
+     * The PacketType when an updater is initiating a new cache
+     * update, supplying the event window center coordinate mapped
+     * into the updatee's full untransformed coordinate space.
+     * Format: UPDATE_BEGIN + s16:CX + s16:CY
+     */
+    static const u8 UPDATE_BEGIN = 'b';
 
     /**
-     * The PacketType of this particular packet. Upon receipt, a
-     * Packet's data is interpreted solely from its PacketType.
+     * The PacketType when an updater is supplying a new value for a
+     * site. Format: UPDATE + u8:SITENO + T:ATOM
      */
-    u8 m_type;
+    static const u8 UPDATE = 'u';
 
     /**
-     * Used to describe an edge during Tile communication.
+     * The PacketType when an updater is supplying an old value for
+     * a site as a redundant consistency spot-check.  Format:
+     * CHECK + u8:SITENO + T:ATOM
      */
-    u8 m_toNeighbor;
+    static const u8 CHECK = 'c';
 
     /**
-     * Used to discard obsolete packets after tile resets.
+     * The PacketType when an updater has sent all packets it intends
+     * to for this cache update. Format: UPDATE_END
      */
-    u8 m_generation;
+    static const u8 UPDATE_END = 'e';
 
     /**
-     * Used to describe a location during Tile communication.
+     * The PacketType when an updatee has received an UPDATE_END.
+     * Format: UPDATE_ACK + u8:CONSISTENT_ATOM_COUNT
      */
-    SSPoint m_edgeLoc;
+    static const u8 UPDATE_ACK = 'a';
 
-    /**
-     * Used to describe an Atom during Tile communication.
-     */
-    T m_atom;
+  } /* namespace PacketType */
 
-  public:
-
-    /**
-     * Constructs a new Packet of a given PacketType.
-     */
-    Packet(PacketType type, u8 generation) :
-      m_type(type),
-      m_toNeighbor(Dirs::DIR_COUNT), // Init invalid
-      m_generation(generation)
-    { }
-
-    const char* GetTypeString()
-    {
-      switch(m_type)
-      {
-      case PACKET_WRITE: return "Write";
-      case PACKET_EVENT_COMPLETE: return "Event Complete";
-      case PACKET_EVENT_ACKNOWLEDGE: return "Event Acknowledge";
-      }
-      return "INVALID";
-    }
-
-    /**
-     * Gets the PacketType of this Packet.
-     *
-     * @returns The PacketType of this Packet.
-     */
-    PacketType GetType()
-    {
-      return (PacketType) m_type;
-    }
-
-    /**
-     * Sets the PacketType of this Packet.
-     *
-     * @param type The new PacketType of this Packet.
-     */
-    void SetType(PacketType type)
-    {
-      m_type = type;
-    }
-
-    /**
-     * Sets this Packet's held Atom.
-     *
-     * @param atom The Atom to copy into this Packet. A reference is
-     *             not kept to this Atom.
-     */
-    void SetAtom(const T& atom)
-    {
-      m_atom = atom;
-    }
-
-    /**
-     * Sets this Packet's held EuclidDir neighbor field.
-     *
-     * @param dir The EuclidDir to place inside this Packet.
-     */
-    void SetReceivingNeighbor(Dir dir)
-    {
-      m_toNeighbor = dir;
-    }
-
-    /**
-     * Gets this Packet's held EuclidDir neighbor field.
-     *
-     * @returns This Packet's held Eucliddir neighbor field.
-     */
-    u32 GetReceivingNeighbor()
-    {
-      return m_toNeighbor;
-    }
-
-    /**
-     * Gets a reference to this Packet's held Atom.
-     *
-     * @returns A reference to this Packet's held Atom.
-     */
-    T& GetAtom()
-    {
-      return m_atom;
-    }
-
-    /**
-     * Sets this Packet's held location.
-     *
-     * @param fromPt The SPoint to copy into this Packet.
-     */
-    void SetLocation(const SPoint& fromPt)
-    {
-      m_edgeLoc = SSPoint(fromPt.GetX(), fromPt.GetY());
-    }
-
-    /**
-     * Gets this Packet's held location.
-     *
-     * @returns This Packet's held location.
-     */
-    const SPoint GetLocation() const
-    {
-      return SPoint(m_edgeLoc.GetX(), m_edgeLoc.GetY());
-    }
-
-    /**
-     * Gets this Packet's generation.
-     *
-     * @returns This Packet's generation.
-     */
-    const u8 GetGeneration() const
-    {
-      return m_generation;
-    }
-
-    /**
-     * Gets this Packet's generation.
-     *
-     * @returns This Packet's generation.
-     */
-    void SetGeneration(u8 generation)
-    {
-      m_generation = generation;
-    }
-
-    /**
-     * Determine if this packet is obsolete compared to \c
-     * ourGeneration.
-     *
-     * @returns true iff this packet's generation should be considered
-     * 'less than' \c ourGeneration considering u8 wraparound.
-     */
-    bool IsObsolete(u8 ourGeneration) const
-    {
-      return ((u8) (m_generation - ourGeneration)) >= U8_MAX / 2;
-    }
-  };
 } /* namespace MFM */
 
 #endif /*PACKET_H*/
