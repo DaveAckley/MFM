@@ -33,10 +33,12 @@
 #include "ElementTable.h"
 #include "Random.h"
 #include "GridConfig.h"
+#include "GridTransceiver.h"
 #include "ElementRegistry.h"
 #include "Logger.h"
+#include <time.h>  /* For struct timespec, clock_gettime */
 
-#include "Element_Wall.h"
+//#include "Element_Wall.h"
 
 namespace MFM {
 
@@ -59,13 +61,68 @@ namespace MFM {
 
     u32 m_seed;
 
-    void ReinitSeed();
+    void InitSeed();
 
     const u32 m_width, m_height;
 
     SPoint m_lastEventTile;
 
     Tile<CC> m_tiles[W][H];
+    struct TileDriver {
+      enum State { PAUSED, ADVANCING, EXIT_REQUEST };
+      Mutex m_stateLock;
+      State m_state;
+      SPoint m_loc;
+      Grid* m_gridPtr;
+      pthread_t m_threadId;
+
+      State GetState()
+      {
+        Mutex::ScopeLock lock(m_stateLock);
+        return m_state;
+      }
+
+      void SetState(State newState)
+      {
+        Mutex::ScopeLock lock(m_stateLock);
+        m_state = newState;
+      }
+
+      Tile<CC> & GetTile()
+      {
+        return m_gridPtr->GetTile(m_loc);
+      }
+
+    };
+    TileDriver m_tileDrivers[W][H];
+    bool m_threadsInitted;
+    static void * TileDriverRunner(void *) ;
+
+    struct GTDriver {
+      enum State { PAUSED, ADVANCING, EXIT_REQUEST };
+      Mutex m_stateLock;
+      State m_state;
+      pthread_t m_threadId;
+      timespec m_lastAdvanced;
+
+      GridTransceiver m_channels[W][H][4]; // 4: NE, E, SE, S == dir-Dirs::NORTHEAST
+      State GetState()
+      {
+        Mutex::ScopeLock lock(m_stateLock);
+        return m_state;
+      }
+
+      void SetState(State newState)
+      {
+        Mutex::ScopeLock lock(m_stateLock);
+        m_state = newState;
+      }
+
+      GTDriver() { }
+    };
+
+    GTDriver m_gtDriver;
+    static void * GTDriverRunner(void *) ;
 
     bool m_backgroundRadiationEnabled;
 
@@ -73,41 +130,49 @@ namespace MFM {
 
     s32 m_xraySiteOdds;
 
-    u8 m_gridGeneration;
-
     /**
      * A synchronized command sequence to the grid
      */
-    struct TileControl
+    struct TileDriverControl
     {
       virtual const char * GetName() = 0;
 
-      virtual void MakeRequest(Tile<CC> &) = 0;
-      virtual bool CheckIfReady(Tile<CC> &) = 0;
-      virtual void Execute(Tile<CC> &) = 0;
+      virtual bool CheckPrecondition(TileDriver &) = 0;
+      virtual void MakeRequest(TileDriver &) = 0;
+      virtual bool CheckIfReady(TileDriver &) = 0;
+      virtual void Execute(TileDriver &) = 0;
 
     };
 
     /**
      * Operations for synchronized grid pausing
      */
-    struct PauseControl : public TileControl
+    struct PauseControl : public TileDriverControl
     {
       virtual const char * GetName()
       {
         return "Pause";
       }
 
-      virtual void MakeRequest(Tile<CC> & tile)
+      virtual bool CheckPrecondition(TileDriver & td)
       {
-        tile.RequestPause();
+        Tile<CC> & tile = td.GetTile();
+        return !tile.IsOff();
       }
-      virtual bool CheckIfReady(Tile<CC> & tile)
+
+      virtual void MakeRequest(TileDriver & td)
       {
-        return tile.IsPauseReady();
+        Tile<CC> & tile = td.GetTile();
+        tile.RequestStatePassive();
       }
-      virtual void Execute(Tile<CC> & tile)
+      virtual bool CheckIfReady(TileDriver & td)
       {
+        Tile<CC> & tile = td.GetTile();
+        return tile.IsPassive();
+      }
+      virtual void Execute(TileDriver & td)
+      {
+        Tile<CC> & tile = td.GetTile();
         tile.Pause();
       }
     };
@@ -115,23 +180,32 @@ namespace MFM {
     /**
      * Operations for synchronized grid unpausing
      */
-    struct RunControl : public TileControl
+    struct RunControl : public TileDriverControl
     {
       virtual const char * GetName()
       {
         return "Unpause";
       }
 
-      virtual void MakeRequest(Tile<CC> & tile)
+      virtual bool CheckPrecondition(TileDriver & td)
       {
-        tile.Start();
+        Tile<CC> & tile = td.GetTile();
+        return !tile.IsActive();
       }
-      virtual bool CheckIfReady(Tile<CC> & tile)
+
+      virtual void MakeRequest(TileDriver & td)
       {
-        return tile.IsRunReady();
+        Tile<CC> & tile = td.GetTile();
+        tile.RequestStateActive();
       }
-      virtual void Execute(Tile<CC> & tile)
+      virtual bool CheckIfReady(TileDriver & td)
       {
+        Tile<CC> & tile = td.GetTile();
+        return tile.IsActive();
+      }
+      virtual void Execute(TileDriver & td)
+      {
+        Tile<CC> & tile = td.GetTile();
         tile.Run();
       }
     };
@@ -139,7 +213,7 @@ namespace MFM {
     /**
      * Synchronized operations driver.
      */
-    void DoTileControl(TileControl & tc);
+    void DoTileDriverControl(TileDriverControl & tc);
 
   public:
     void ReportGridStatus(Logger::Level level) ;
@@ -155,13 +229,15 @@ namespace MFM {
 
     void SetSeed(u32 seed);
 
-    Grid(ElementRegistry<CC>& elts) :
-      m_seed(0),
-      m_width(W),
-      m_height(H),
-      m_er(elts),
-      m_xraySiteOdds(1000),
-      m_gridGeneration(0)
+    Grid(ElementRegistry<CC>& elts)
+      : m_seed(0)
+      , m_width(W)
+      , m_height(H)
+      , m_threadsInitted(false)
+      , m_gtDriver()
+      , m_backgroundRadiationEnabled(false)
+      , m_er(elts)
+      , m_xraySiteOdds(1000)
     {
       for (u32 y = 0; y < H; ++y)
       {
@@ -177,7 +253,20 @@ namespace MFM {
       return &m_xraySiteOdds;
     }
 
-    void Reinit();
+    void Init();
+
+    /**
+       Init the 'TileDriver' threads.  This is done separately from
+       (and should happen after) Init() so that we can use a Grid
+       (e.g., for testing) without necessarily dealing with all the
+       threading.
+     */
+    void InitThreads();
+
+    /**
+       Enable or disable the tiles and the transceivers.
+     */
+    void SetGridRunning(bool running) ;
 
     const Element<CC> * LookupElement(u32 elementType) const
     {
@@ -277,8 +366,7 @@ namespace MFM {
     bool GetTileExecutionStatus(const SPoint& tileLoc);
 
     /**
-     * Clears a Tile of all of its held atoms.  Also sets the tile
-     * generation to the grid's generation.
+     * Clears a Tile of all of its held atoms.
      *
      * @param tileLoc The location of the Tile in this Grid to clear.
      */
@@ -286,12 +374,10 @@ namespace MFM {
     {
       Tile<CC> & tile = GetTile(tileLoc);
       tile.ClearAtoms();
-      tile.SetGeneration(m_gridGeneration);
     }
 
     /**
-     * Empties this Grid of all held Atoms.  Also increments the grid
-     * generation.
+     * Empties this Grid of all held Atoms.
      */
     void Clear();
 
@@ -363,7 +449,7 @@ namespace MFM {
     void Pause()
     {
       PauseControl pc;
-      DoTileControl(pc);
+      DoTileDriverControl(pc);
     }
 
     /**
@@ -372,7 +458,7 @@ namespace MFM {
     void Unpause()
     {
       RunControl rc;
-      DoTileControl(rc);
+      DoTileDriverControl(rc);
     }
 
     /**
@@ -452,7 +538,7 @@ namespace MFM {
                     (double)(GetHeightSites() * GetWidthSites()));
     }
 
-    void SurroundRectangleWithWall(s32 x, s32 y, s32 w, s32 h, s32 thickness);
+    //    void SurroundRectangleWithWall(s32 x, s32 y, s32 w, s32 h, s32 thickness);
 
     /**
      * Picks a random site in the grid, then sets all sites in a
