@@ -67,7 +67,7 @@ namespace MFM
 
     static const u32 ENABLED_COLOR = 0xff20a020;
 
-    MDist<R> & GetNeighborhood() const
+    const MDist<R> & GetNeighborhood() const
     {
       return MDist<R>::get();
     }
@@ -117,7 +117,7 @@ namespace MFM
     {
       s32 offset = R * CELL_SIZE + BORDER_SIZE;
       SPoint renderPt;
-      MDist<R> & n = GetNeighborhood();
+      const MDist<R> & n = GetNeighborhood();
 
       for(u32 i = n.GetFirstIndex(0); i <= n.GetLastIndex(R); i++)
       {
@@ -212,7 +212,7 @@ namespace MFM
          event.m_event.button.button == SDL_BUTTON_LEFT)
       {
         s32 offset = R * CELL_SIZE + BORDER_SIZE;
-        MDist<R> & n = GetNeighborhood();
+        const MDist<R> & n = GetNeighborhood();
         Rect buttonRect;
         SPoint clickPt(event.GetAt().GetX() - Panel::GetRenderPoint().GetX(),
                        event.GetAt().GetY() - Panel::GetRenderPoint().GetY());
