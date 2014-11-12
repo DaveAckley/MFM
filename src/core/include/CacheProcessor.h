@@ -98,9 +98,13 @@ namespace MFM {
 
     void ReportCheckFailure()
     {
-      if (m_checkOdds > 1)
+      if (m_checkOdds > 5)
       {
-        m_checkOdds /= 2;
+        m_checkOdds /= 3;
+      }
+      else
+      {
+        m_checkOdds = 1;
       }
     }
 
@@ -146,6 +150,7 @@ namespace MFM {
       PASSIVE,      // Locked by them, Received BeginUpdate from peer
       STATE_COUNT
     };
+
     static const char * GetStateName(const State s)
     {
       switch (s)
@@ -238,8 +243,6 @@ namespace MFM {
      */
     bool Advance() ;
 
-    /*    bool AdvanceUpdating() ; */
-
     bool AdvanceShipping() ;
 
     bool AdvanceReceiving() ;
@@ -247,11 +250,6 @@ namespace MFM {
     bool IsIdle()
     {
       return m_cpState == IDLE;
-    }
-
-    bool IsInactive()
-    {
-      return m_cpState == IDLE /* XXX 201411100725 || m_cpState == PASSIVE*/ ;
     }
 
     /**

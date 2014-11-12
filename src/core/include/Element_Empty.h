@@ -29,13 +29,14 @@
 #define ELEMENT_EMPTY_H
 
 #include "Element.h"
-#include "EventWindow.h"
 #include "itype.h"
 
 namespace MFM
 {
 
 #define EMPTY_VERSION 0
+
+  template <class CC> class EventWindow; // FORWARD
 
   template <class CC>
   class Element_Empty : public Element<CC>
