@@ -29,6 +29,7 @@
 #define MUTEX_H
 
 #include <pthread.h>  /* for pthread_mutex_t etc */
+#include "itype.h"
 #include "Fail.h"
 
 #ifdef MUTEX_ERROR_CHECKS
@@ -63,7 +64,10 @@ namespace MFM
 
     void CondWait(pthread_cond_t & condvar)
     {
-      pthread_cond_wait(&condvar, &m_lock);
+      if (pthread_cond_wait(&condvar, &m_lock))
+      {
+        FAIL(LOCK_FAILURE);
+      }
 
       // The signal gave us back the lock without going through
       // Mutex::Lock; simulate its effects
@@ -96,6 +100,11 @@ namespace MFM
       Mutex & m_mutex;
       pthread_cond_t m_condvar;
       pthread_t m_threadIdOfWaiter;
+      u32 m_wakeupsThisWait;
+
+      Predicate() ; // Declare away
+      Predicate(const Predicate &) ; // Declare away
+      Predicate & operator=(const Predicate &) ; // Declare away
     public:
 
       virtual bool EvaluatePrecondition() = 0;
@@ -104,18 +113,30 @@ namespace MFM
 
       Predicate(Mutex & mutex) : m_mutex(mutex)
       {
-        pthread_cond_init(&m_condvar, NULL);
+        if (pthread_cond_init(&m_condvar, NULL))
+        {
+          FAIL(LOCK_FAILURE);
+        }
       }
 
       ~Predicate()
       {
-        pthread_cond_destroy(&m_condvar);
+        if (pthread_cond_destroy(&m_condvar))
+        {
+          FAIL(LOCK_FAILURE);
+        }
+      }
+
+      u32 GetWakeupsThisWait() const
+      {
+        return m_wakeupsThisWait;
       }
 
       void WaitForCondition()
       {
         m_mutex.AssertIHoldTheLock();
         m_threadIdOfWaiter = m_mutex.m_threadId;
+        m_wakeupsThisWait = 0;
 
         while (!EvaluatePredicate())
         {
@@ -126,13 +147,17 @@ namespace MFM
           }
 
           m_mutex.CondWait(m_condvar);
+          ++m_wakeupsThisWait;
         }
       }
 
       void SignalCondition()
       {
         m_mutex.AssertIHoldTheLock();
-        pthread_cond_signal(&m_condvar);
+        if (pthread_cond_signal(&m_condvar))
+        {
+          FAIL(LOCK_FAILURE);
+        }
       }
     };
 
@@ -203,8 +228,8 @@ namespace MFM
       bool ret = !pthread_mutex_trylock(&m_lock);
       if (ret)
       {
-        m_locked = true;
         m_threadId = pthread_self();
+        m_locked = true;
       }
       return ret;
     }
@@ -217,12 +242,12 @@ namespace MFM
      */
     void Lock()
     {
-      if (m_locked && pthread_equal(m_threadId, pthread_self()))
+      if (pthread_mutex_lock(&m_lock))
       {
         FAIL(LOCK_FAILURE);
       }
 
-      if (pthread_mutex_lock(&m_lock))
+      if (m_locked && pthread_equal(m_threadId, pthread_self()))
       {
         FAIL(LOCK_FAILURE);
       }
@@ -267,7 +292,10 @@ namespace MFM
 
       m_locked = false;
       m_threadId = 0;
-      pthread_mutex_unlock(&m_lock);
+      if (pthread_mutex_unlock(&m_lock))
+      {
+        FAIL(LOCK_FAILURE);
+      }
     }
 
     /**
