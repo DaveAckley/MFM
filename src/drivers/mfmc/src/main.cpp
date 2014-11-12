@@ -84,8 +84,8 @@ namespace MFM
   static int RunSmall(int argc, const char** argv)
   {
     MFMCDriver<OurGridConfigTiny> sim;
-    sim.Init(argc, argv);
-    sim.Reinit();
+    sim.ProcessArguments(argc, argv);
+    sim.Init();
     sim.Run();
     return 0;
   }
@@ -93,8 +93,8 @@ namespace MFM
   static int RunMedium(int argc, const char** argv)
   {
     MFMCDriver<OurGridConfigStd> sim;
-    sim.Init(argc, argv);
-    sim.Reinit();
+    sim.ProcessArguments(argc, argv);
+    sim.Init();
     sim.Run();
     return 0;
   }
@@ -102,8 +102,8 @@ namespace MFM
   static int RunBig(int argc, const char** argv)
   {
     MFMCDriver<OurGridConfigBig> sim;
-    sim.Init(argc, argv);
-    sim.Reinit();
+    sim.ProcessArguments(argc, argv);
+    sim.Init();
     sim.Run();
     return 0;
   }
@@ -116,9 +116,23 @@ static bool EndsWith(const char *string, const char* suffix)
   return xlen <= slen && !strcmp(suffix, &string[slen - xlen]);
 }
 
+namespace MFM
+{
+  struct ThreadStamper : public DateTimeStamp
+  {
+    typedef DateTimeStamp Super;
+    virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0)
+    {
+      Super::PrintTo(byteSink, argument);
+      byteSink.Printf("[%x]", (u32) (((u64) pthread_self())>>8));
+      return SUCCESS;
+    }
+  };
+}
+
 int main(int argc, const char** argv)
 {
-  MFM::DateTimeStamp stamper;
+  MFM::ThreadStamper stamper;
   MFM::LOG.SetTimeStamper(&stamper);
   MFM::LOG.SetByteSink(MFM::STDERR);
   MFM::LOG.SetLevel(MFM::LOG.MESSAGE);
