@@ -16,6 +16,9 @@ namespace MFM
     ereg.RegisterElement(Element_Dreg<TestCoreConfig>::THE_INSTANCE);
 
     Grid<TestGridConfig> grid(ereg);
+    grid.SetSeed(1);
+    grid.Init();
+
     ExternalConfig<TestGridConfig> cfg(grid);
     RegisterExternalConfigFunctions<TestGridConfig>(cfg);
     OverflowableCharBufferByteSink<1024> errs;

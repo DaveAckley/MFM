@@ -11,8 +11,10 @@ namespace MFM {
   class Tile_Test
   {
   public:
+    static void Test_RunTests();
 
     static void Test_tilePlaceAtom();
+    static void Test_tileSquareDistances();
   };
 } /* namespace MFM */
 

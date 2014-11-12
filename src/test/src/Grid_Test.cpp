@@ -13,7 +13,7 @@ namespace MFM {
     TestGrid grid(ereg);
 
     grid.SetSeed(1);
-    grid.Reinit();
+    grid.Init();
 
     grid.Needed(Element_Res<TestCoreConfig>::THE_INSTANCE);
 
