@@ -217,7 +217,6 @@ namespace MFM {
       }
     }
 
-
     if (((s32) m_lockRegion) == -1)
     {
       LOG.Debug("EW::AcquireRegionLocks - none needed");
@@ -243,23 +242,28 @@ namespace MFM {
       {
         // Whups, didn't really need that one.  Leave it null, since
         // the other loops check all MAX_CACHES_TO_UPDATE slots anyway
-        LOG.Debug("EW::AcquireRegionLocks - skip: dir %d unconnected", dir);
+        LOG.Debug("EW::AcquireRegionLocks - skip: %s unconnected",
+                  Dirs::GetName(dir));
         continue;
       }
 
       if (!cp.IsIdle())
       {
-        LOG.Debug("EW::AcquireRegionLocks - fail: dir %d cp not idle", dir);
+        LOG.Debug("EW::AcquireRegionLocks - fail: %s cp not idle",
+                  Dirs::GetName(dir));
         break;  // Already otherwise engaged
       }
 
       bool locked = cp.TryLock();
       if (!locked)
       {
-        LOG.Debug("EW::AcquireRegionLocks - fail: didn't get dir %d lock", dir);
+        LOG.Debug("EW::AcquireRegionLocks - fail: didn't get %s lock",
+                  Dirs::GetName(dir));
         break; // Didn't get the lock
       }
-      LOG.Debug("EW::AcquireRegionLocks #%d, dir %d, locked", got, dir);
+      LOG.Debug("EW::AcquireRegionLocks #%d, %s locked",
+                got,
+                Dirs::GetName(dir));
       m_cacheProcessorsLocked[got] = &cp;
     }
 
@@ -390,7 +394,7 @@ namespace MFM {
       {
         if (m_cacheProcessorsLocked[j] != 0)
         {
-          m_cacheProcessorsLocked[j]->MaybeSendAtom(m_atomBuffer[i], dirty, i);
+          m_cacheProcessorsLocked[j]->MaybeSendAtom( *tile.GetAtom(pt), dirty, i);
         }
       }
     }

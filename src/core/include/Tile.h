@@ -38,6 +38,7 @@
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "CacheProcessor.h"
+#include "LonglivedLock.h"
 #include "OverflowableCharBufferByteSink.h"  /* for OString16 */
 
 namespace MFM
@@ -210,14 +211,6 @@ namespace MFM
      */
     mutable CountData m_cdata;
 
-    /**
-     * Flag that the atom counts in this tile may have changed
-     */
-    void NeedAtomRecount() const
-    {
-      m_cdata.NeedAtomRecount();
-    }
-
     /** Total times we tried to acquire a lock in this Tile */
     u64 m_lockAttempts;
 
@@ -238,20 +231,6 @@ namespace MFM
 
     EventWindow<CC> m_window;
 
-  public:
-
-    CacheProcessor<CC> & GetCacheProcessor(Dir toCache) ;
-
-    const CacheProcessor<CC> & GetCacheProcessor(Dir toCache) const ;
-
-    /*
-    ChannelEnd & GetChannelEnd(Dir toCache) ;
-
-    const ChannelEnd & GetChannelEnd(Dir toCache) const ;
-    */
-
-    void CheckCacheFromDir(Dir direction, const Tile & otherTile) ;
-
   private:
     CacheProcessor<CC> m_cacheProcessors[Dirs::DIR_COUNT];
 
@@ -261,6 +240,25 @@ namespace MFM
        Current state of the Tile state machine
      */
     State m_state;
+
+    /**
+       If tile is not enabled, it processes packets like passive but
+       that's it.  In particular, a tile must be enabled before its
+       state can be changed to ACTIVE.
+     */
+    bool m_enabled;
+
+    /**
+       true if atomic memory may be corrupted (on write) by background
+       radiation.
+     */
+    bool m_backgroundRadiation;
+
+    enum BackgroundRadiationParameters
+    {
+      BACKGROUND_RADIATION_SITE_ODDS = 100,
+      BACKGROUND_RADIATION_BIT_ODDS = 100
+    };
 
     /**
        Mutex controlling access to m_state and m_requestedState
@@ -294,61 +292,6 @@ namespace MFM
      * @return the mapped coordinate
      */
     SPoint GetNeighborLoc(Dir neighbor, const SPoint& atomLoc) const;
-
-#if 0
-    /**
-     * Attempt to lock the specified Channel, along with the Channels
-     * to its left and to its right. This will return immediately
-     * regardless of acquiring said locks, and will unlock all regions
-     * if any locks cannot be acquired.
-     *
-     * @param cornerDir The center EuclidDir to target locking of.
-     *
-     * @returns true if the locks for all of the regions in question
-     *          have been acquired.
-     *
-     * @sa UnlockCorner
-     */
-    bool TryLockCorner(Dir cornerDir);
-
-    /**
-     * Attempt to lock an edge of this Tile. This takes into account the
-     * fact that three regions must be locked when attempting to use
-     * this Tile's corners.
-     *
-     * @param regionDir the EuclidDir of the region in which to lock.
-     *
-     * @returns true if all relevant locks have been acquired.
-     *
-     * @sa UnlockRegion
-     */
-    bool LockRegion(Dir regionDir);
-#endif
-
-#if 0
-    /**
-     * Unlocks the Connection of the specified direction, along with the
-     * Connections to its left and to its right. This must only be called
-     * if these locks have already been acquired!
-     *
-     * @param corner The center EuclidDir of the three wished to unlock.
-     *
-     * @sa LockCorner
-     */
-    void UnlockCorner(Dir corner);
-
-    /**
-     * Unlocks an edge of this Tile. This takes into account the fact
-     * that three regions must be unlocked when attempting to use this
-     * Tile's corners. This must only be called exactly once after a
-     * matching call to LockRegion() has returned true!
-     *
-     * @param regionDir The direction of which to give up the lock.
-     *
-     * @sa LockRegion
-     */
-    void UnlockRegion(Dir regionDir);
-#endif
 
     /**
      * Gets the TileRegion that a specified index, from the center of
@@ -387,30 +330,18 @@ namespace MFM
      */
     bool ConsiderStateChange() ;
 
-#if 0
- XXX REWRITE FOR CacheProcessors or ditch
-    /**
-       Check if none of our event windows are currently tied up doing
-       cache notifications from one of our events.  Return true if
-       none are, false otherwise.
-     */
-    bool AllEventWindowsFree() ;
-#endif
-
     /**
        Try to start an(other) event in this Tile.  Return true if any
-       possibly valuable work was done.  On a true return, all the following have happened, in order:
-       <ol>
-       <li>a event center coordinate has been selected,
-       <li>an EventWindow has been allocated,
-       <li>any necessary locks have been acquired,
-       <li>the event window has been loaded from the Tile,
-       <li>the center atom element behavior has been run,
+       possibly valuable work was done.  On a true return, all the
+       following have happened, in order:
+
+       <ol> <li>a event center coordinate has been selected, <li>the
+       EventWindow has been allocated, <li>any necessary locks have
+       been acquired, <li>the event window has been loaded from the
+       Tile, <li>the center atom element behavior has been run,
        <li>any site changes have been written back to the local Tile,
-
-       <li>'UpdateBegin' packets have been shipped to (though not
+       and <li>'UpdateBegin' packets have been shipped to (though not
        necessarily received by) all relevant neighbors,
-
      */
     bool InitiateEvent() ;
 
@@ -423,6 +354,53 @@ namespace MFM
     bool AdvanceCommunication() ;
 
    public:
+    void SetBackgroundRadiation(bool value);
+
+    void XRay(u32 siteOdds, u32 bitOdds) ;
+
+    void SetCacheRedundancy(u32 redundancyOddsType)
+    {
+      for (u32 d = 0; d < Dirs::DIR_COUNT; ++d)
+      {
+        CacheProcessor<CC> & cp = m_cacheProcessors[d];
+        cp.SetCacheRedundancy(redundancyOddsType);
+      }
+    }
+
+    double GetAverageCacheRedundancy() const
+    {
+      u32 count = 0;
+      double sumPercent = 0.0;
+
+      for (u32 d = 0; d < Dirs::DIR_COUNT; ++d)
+      {
+        const CacheProcessor<CC> & cp = m_cacheProcessors[d];
+        if (cp.IsConnected())
+        {
+          ++count;
+          sumPercent += 100.0 / cp.GetCurrentCacheRedundancy();
+        }
+      }
+      if (count == 0)
+      {
+        return -1;
+      }
+      return sumPercent / count;
+    }
+
+    /**
+     * Flag that the atom counts in this tile may have changed
+     */
+    void NeedAtomRecount() const
+    {
+      m_cdata.NeedAtomRecount();
+    }
+
+    CacheProcessor<CC> & GetCacheProcessor(Dir toCache) ;
+
+    const CacheProcessor<CC> & GetCacheProcessor(Dir toCache) const ;
+
+    void CheckCacheFromDir(Dir direction, const Tile & otherTile) ;
 
     MFMErrorEnvironmentPointer_t * GetErrorEnvironmentStackTop()
     {
@@ -432,6 +410,11 @@ namespace MFM
     bool IsActive() const
     {
       return GetCurrentState() == ACTIVE;
+    }
+
+    bool IsEnabled() const
+    {
+      return m_enabled;
     }
 
     bool IsOff() const
@@ -515,7 +498,7 @@ namespace MFM
      *
      * @param toCache The cache to share with other.
      */
-    void Connect(AbstractChannel& channel, bool onSideA, Dir toCache) ;
+    void Connect(AbstractChannel& channel, LonglivedLock & lock, Dir toCache) ;
 
     /**
      * Gets the number of sites in this Tile in sites, excluding caches.
@@ -706,6 +689,21 @@ namespace MFM
      * @returns true if pt is a live site in this Tile, else false.
      */
     bool IsLiveSite(const SPoint & location) const;
+
+    /**
+     * Checks to see if a specified local point is a site that
+     * currently might receive cache updates in this particular Tile.
+     * The truth of this predicate depends in part on the connectivity
+     * of this Tile.  Therefore, even given the same location as
+     * argument, the return value from this method could change over
+     * time, if the connectivity of this Tile changes.
+     *
+     * @param pt The local location in question
+     *
+     * @returns true if pt currently might receive cache updates,
+     * given current connectivity.
+     */
+    bool IsReachableAsCache(const SPoint & location) const;
 
     /**
      * Checks to see if a specified SPoint is in a given region of this
@@ -1054,9 +1052,14 @@ namespace MFM
     }
     */
 
-    void RequestStatePassive()
+    void SetDisabled()
     {
-      SetRequestedState(PASSIVE);
+      m_enabled = false;
+    }
+
+    void SetEnabled()
+    {
+      m_enabled = true;
     }
 
     void Pause()
@@ -1070,6 +1073,11 @@ namespace MFM
     void RequestStateActive()
     {
       SetRequestedState(ACTIVE);
+    }
+
+    void RequestStatePassive()
+    {
+      SetRequestedState(PASSIVE);
     }
 
     void RequestStateOff()

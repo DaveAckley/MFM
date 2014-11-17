@@ -82,6 +82,8 @@ namespace MFM {
       {
         m_buf[m_written++] = 'X';
       }
+
+      m_buf[m_written] = '\0'; // HELGRIND
     }
 
     /**
@@ -142,7 +144,7 @@ namespace MFM {
      */
     const char * GetZString()
     {
-      m_buf[m_written] = '\0';
+      // HELGRIND      m_buf[m_written] = '\0';
       return GetBuffer();
     }
 

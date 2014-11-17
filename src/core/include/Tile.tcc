@@ -12,6 +12,8 @@ namespace MFM
     : m_cdata(*this)
     , m_window(*this)
     , m_state(OFF)
+    , m_enabled(true)
+    , m_backgroundRadiation(false)
     , m_requestedState(OFF)
   {
     Init();
@@ -35,6 +37,22 @@ namespace MFM
   }
 
   template <class CC>
+  void Tile<CC>::XRay(u32 siteOdds, u32 bitOdds)
+  {
+    Random & random = GetRandom();
+    for(u32 x = 0; x < TILE_WIDTH; x++)
+    {
+      for(u32 y = 0; y < TILE_WIDTH; y++)
+      {
+        if (random.OneIn(siteOdds))
+        {
+          m_atoms[x][y].XRay(random, bitOdds);
+        }
+      }
+    }
+  }
+
+  template <class CC>
   void Tile<CC>::ClearAtoms()
   {
     for(u32 x = 0; x < TILE_WIDTH; x++)
@@ -48,7 +66,7 @@ namespace MFM
   }
 
   template <class CC>
-  void Tile<CC>::Connect(AbstractChannel& channel, bool onSideA, Dir toCache)
+  void Tile<CC>::Connect(AbstractChannel& channel, LonglivedLock & lock, Dir toCache)
   {
     CacheProcessor<CC> & cxn = GetCacheProcessor(toCache);
 
@@ -57,9 +75,7 @@ namespace MFM
       FAIL(ILLEGAL_STATE);
     }
 
-    // Map their full untransformed origin to our full untransformed frame
-    SPoint remoteOrigin = Dirs::GetOffset(toCache) * OWNED_SIDE;
-    cxn.ClaimCacheProcessor(*this, channel, onSideA, remoteOrigin);
+    cxn.ClaimCacheProcessor(*this, channel, lock, toCache);
   }
 
   template <class CC>
@@ -262,6 +278,12 @@ namespace MFM
                   pt.GetX(), pt.GetY(), this->GetLabel());
     },
     {
+      if(m_backgroundRadiation &&
+         m_random.OneIn(BACKGROUND_RADIATION_SITE_ODDS))
+      {
+        // Write fault!
+        newAtom.XRay(m_random, BACKGROUND_RADIATION_BIT_ODDS);
+      }
 
       const T& oldAtom = *GetAtom(pt);
       bool owned = IsOwnedSite(pt);
@@ -287,25 +309,50 @@ namespace MFM
   }
 
   template <class CC>
+  bool Tile<CC>::IsReachableAsCache(const SPoint & location) const
+  {
+    if (!IsInCache(location))
+    {
+      return false;
+    }
+
+    Dir dir = CacheAt(location);
+    if (IsConnected(dir))
+    {
+      return true;
+    }
+
+    if (Dirs::IsCorner(dir))
+    {
+      if (IsConnected(Dirs::CCWDir(dir)))
+      {
+        return true;
+      }
+      if (IsConnected(Dirs::CWDir(dir)))
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  template <class CC>
   bool Tile<CC>::IsLiveSite(const SPoint & location) const
   {
-    return IsInTile(location) &&
-      (!IsInCache(location) || IsConnected(CacheAt(location)));
+    if (!IsInTile(location))
+    {
+      return false;
+    }
+    if (IsOwnedSite(location))
+    {
+      return true;
+    }
+    if (IsReachableAsCache(location))
+    {
+      return true;
+    }
+    return false;
   }
-
-#if 0
-  template <class CC>
-  bool Tile<CC>::IsOwnedSite(const SPoint & location)
-  {
-    return IsInUncachedTile(TileCoordToOwned(location));
-  }
-
-  template <class CC>
-  bool Tile<CC>::IsInCache(const SPoint& pt)
-  {
-    return IsInTile(pt) && ! IsOwnedSite(pt);
-  }
-#endif
 
   template <class CC>
   bool Tile<CC>::IsInUncachedTile(const SPoint& pt)
@@ -382,7 +429,13 @@ namespace MFM
     }
 
     bool didWork = false;
-    switch (GetCurrentState())
+    State curState = GetCurrentState();
+    if (!m_enabled)
+    {
+      curState = PASSIVE;
+    }
+
+    switch (curState)
     {
     case OFF:
       break;
@@ -401,22 +454,6 @@ namespace MFM
     return didWork;
   }
 
-#if 0
-  template <class CC>
-  EventWindow<CC> & Tile<CC>::GetEventWindowFor(const SPoint & pt)
-  {
-    for (u32 i = 0; i < EVENTWINDOWS_PER_TILE; ++i)
-    {
-      EventWindow<CC> & ew = m_windows[i];
-      if (ew.IsFree())
-      {
-        return ew;
-      }
-    }
-    FAIL(ILLEGAL_STATE);
-  }
-#endif
-
   template <class CC>
   bool Tile<CC>::AllCacheProcessorsIdle()
   {
@@ -430,6 +467,12 @@ namespace MFM
     MFM_LOG_DBG6(("Tile %s All CPs idle",
                   this->GetLabel()));
     return true;
+  }
+
+  template <class CC>
+  void Tile<CC>::SetBackgroundRadiation(bool on)
+  {
+    m_backgroundRadiation = on;
   }
 
   template <class CC>
@@ -450,6 +493,11 @@ namespace MFM
     if (m_state == m_requestedState)
     {
       return true;
+    }
+
+    if (!m_enabled)
+    {
+      return false;
     }
 
     switch (m_requestedState)
@@ -489,7 +537,7 @@ namespace MFM
     }
 
     //INITIATE_EVENT,
-    SPoint pt = OwnedCoordToTile(SPoint(GetRandom(), OWNED_SIDE, OWNED_SIDE));
+    SPoint pt = GetRandomOwnedCoord();
     return m_window.TryEventAt(pt);
   }
 

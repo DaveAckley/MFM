@@ -248,8 +248,7 @@ namespace MFM
 
       virtual void OnClick(u8 button)
       {
-        FAIL(INCOMPLETE_CODE);
-        //AbstractGridButton::m_driver->GetGrid().XRay();
+        AbstractGridButton::m_driver->GetGrid().XRay();
       }
     } m_xrayButton;
 
@@ -439,9 +438,9 @@ namespace MFM
 
         if(selectedTile.GetX() >= 0 && selectedTile.GetY() >= 0)
         {
-          AbstractGridButton::m_driver->GetGrid().SetTileToExecuteOnly(
+          AbstractGridButton::m_driver->GetGrid().SetTileEnabled(
             selectedTile,
-            !AbstractGridButton::m_driver->GetGrid().GetTileExecutionStatus(selectedTile));
+            !AbstractGridButton::m_driver->GetGrid().IsTileEnabled(selectedTile));
         }
 
       }
@@ -459,11 +458,8 @@ namespace MFM
 
       virtual void OnCheck(bool value)
       {
-        FAIL(INCOMPLETE_CODE);
-        /*
         AbstractGridCheckbox::m_driver->GetGrid().SetBackgroundRadiation(
           this->IsChecked());
-        */
       }
     } m_bgrButton;
 
@@ -484,7 +480,8 @@ namespace MFM
       m_statisticsPanel.SetAEPS(Super::GetAEPS());
       m_statisticsPanel.SetAER(Super::GetRecentAER());  // Use backwards averaged value
       m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
-      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
+      //      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
+      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
     }
 
     virtual void DoEpochEvents(OurGrid& grid, u32 epochs, u32 epochAEPS)
@@ -534,7 +531,9 @@ namespace MFM
       m_statisticsPanel.SetAEPS(Super::GetAEPS());
       m_statisticsPanel.SetAER(Super::GetRecentAER());
       m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
-      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
+
+  //      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
+      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
       m_statisticsPanel.SetVisibility(false);
 
       m_rootPanel.Insert(&m_gridPanel, NULL);
