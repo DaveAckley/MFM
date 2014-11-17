@@ -8,7 +8,6 @@ namespace MFM {
 
   void GridTransceiver_Test::Test_Basic() {
     GridTransceiver pt;
-    assert(pt.GetChannelState() == AbstractChannel::CHANNEL_UNOWNED);
 
     pt.SetEnabled(true);
     assert(pt.CanRead(true) == 0);

@@ -32,51 +32,18 @@
 namespace MFM
 {
   /**
-   * An AbstractChannel mediates locking and bidirectional
-   * communications between two Tiles, which are denoted A and B.
+   * An AbstractChannel mediates bidirectional communications between
+   * two Tiles, which are denoted A and B.
    */
   class AbstractChannel
   {
 
   public:
-    enum State
-    {
-      CHANNEL_UNOWNED,          // Channel is unowned
-      CHANNEL_A_OWNER,          // A owns the channel
-      CHANNEL_B_OWNER           // B owns the channel
-    };
-
     /**
      * Destroys this AbstractChannel.
      */
     virtual ~AbstractChannel()
     { }
-
-    /**
-     * Get the current channel state.  The result is only advisory
-     * (i.e., it may have changed by the time caller looks at it)
-     * unless the caller owns the channel.
-     */
-    virtual State GetChannelState() = 0;
-
-    /**
-     * Atomically check and possibly update the channel state as
-     * follows: If the channel state is currently CHANNEL_UNOWNED,
-     * change it to CHANNEL_A_OWNER (if byA is true) or
-     * CHANNEL_B_OWNER (if byA is false) and return true.  Otherwise
-     * do not change the channel state and return false.
-     */
-    virtual bool TryLock(bool byA) = 0;
-
-    /**
-     * Atomically check and possibly update the channel state as
-     * follows: If the channel state is currently CHANNEL_A_OWNER and
-     * byA is true, or the channel state is CHANNEL_B_OWNER and byA is
-     * false, change the channel state to CHANNEL_UNOWNED and return
-     * true.  Otherwise do not change the channel state and return
-     * false.
-     */
-    virtual bool Unlock(bool byA) = 0;
 
     /**
      * Return a lower bound on the number of bytes that A (if byA) or
