@@ -269,8 +269,11 @@ namespace MFM
   bool ExternalConfig<GC>::PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const BitVector<BPA> & bv)
   {
     SPoint pt(x, y);
-    m_grid.PlaceAtom(elt.GetDefaultAtom(), pt);
-    m_grid.GetWritableAtom(pt)->ReadStateBits(bv);
+    T atom = elt.GetDefaultAtom();
+
+    atom.ReadStateBits(bv);
+    m_grid.PlaceAtom(atom, pt);
+
     return true;
   }
 }

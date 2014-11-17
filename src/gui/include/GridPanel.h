@@ -116,9 +116,9 @@ namespace MFM
       m_atomViewPanel.Init();
     }
 
-    void IncrementHeatmapSelector()
+    u32 IncrementHeatmapSelector()
     {
-      m_grend->IncrementHeatmapSelector();
+      return m_grend->IncrementHeatmapSelector();
     }
 
     AtomViewPanel<GC> * GetAtomViewPanel()

@@ -286,7 +286,7 @@ namespace MFM
       GridPanel<GC>& m_gridPanel;
 
       HeatmapButton(GridPanel<GC>& gridPanel) :
-        AbstractGridButton("Heatmap"),
+        AbstractGridButton("Heatmap: 0"),
         m_gridPanel(gridPanel)
       {
         AbstractButton::SetName("HeatmapButton");
@@ -296,7 +296,12 @@ namespace MFM
 
       virtual void OnClick(u8 button)
       {
-        m_gridPanel.IncrementHeatmapSelector();
+        OString16 heatmapText;
+        u32 heatIdx = m_gridPanel.IncrementHeatmapSelector();
+        heatmapText.Reset();
+        heatmapText.Printf("Heatmap: %d", heatIdx);
+
+        AbstractButton::SetText(heatmapText.GetZString());
       }
     } m_heatmapButton;
 

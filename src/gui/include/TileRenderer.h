@@ -153,10 +153,12 @@ namespace MFM
       ChangeAtomSize(false, around);
     }
 
-    void IncrementHeatmapSelector()
+    u32 IncrementHeatmapSelector()
     {
       m_heatmapSelector++;
       m_heatmapSelector %= MAX_HEATMAP_SELECTIONS;
+
+      return m_heatmapSelector;
     }
 
     void ChangeAtomSize(bool increase, SPoint around) ;

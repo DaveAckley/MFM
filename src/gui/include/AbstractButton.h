@@ -75,7 +75,7 @@ namespace MFM
     /**
      * The text that will render on this AbstractButton .
      */
-    const char* m_text;
+    char m_text[64];
 
     /**
      * An optional icon. If not NULL, will render instead of the default
@@ -223,7 +223,12 @@ namespace MFM
      */
     void SetText(const char* text)
     {
-      m_text = text;
+      u32 textlen = MIN(strlen(text),
+                        sizeof(m_text) / sizeof(char));
+      for(u32 i = 0; i < textlen; i++)
+      {
+        m_text[i] = text[i];
+      }
     }
 
     /**
