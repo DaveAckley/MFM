@@ -161,6 +161,7 @@ namespace MFM
     Random m_random;
 
     friend class EventWindow<CC>;
+    friend class CacheProcessor<CC>;
 
     /** The Atoms currently held by this Tile, including caches. */
     T m_atoms[TILE_WIDTH][TILE_WIDTH];
