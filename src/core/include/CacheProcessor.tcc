@@ -117,9 +117,10 @@ namespace MFM
       FAIL(ILLEGAL_STATE);  // You say ship more than a whole window?
     }
 
-    MFM_LOG_DBG7(("CP %s %s (%d,%d) send #%d (%d,%d)",
+    MFM_LOG_DBG7(("CP %s %s [%s] (%d,%d) send #%d (%d,%d)",
                   m_tile->GetLabel(),
                   Dirs::GetName(m_cacheDir),
+                  Dirs::GetName(m_centerRegion),
                   m_farSideOrigin.GetX(),
                   m_farSideOrigin.GetY(),
                   siteNumber,
@@ -266,14 +267,14 @@ namespace MFM
     {
       ReportCleanUpdate(m_toSendCount);
     }
-    MFM_LOG_DBG7(("CP %s %s reply %d<->%d : %d",
+    MFM_LOG_DBG7(("CP %s %s [%s] reply %d<->%d : %d",
                   m_tile->GetLabel(),
                   Dirs::GetName(m_cacheDir),
+                  Dirs::GetName(m_centerRegion),
                   consistentCount,
                   m_toSendCount,
                   m_checkOdds));
-    Unlock(); // Finally!
-    SetIdle();
+    SetStateInternal(BLOCKING);
   }
 
   template <class CC>
@@ -296,6 +297,7 @@ namespace MFM
     case IDLE:    // During idle we just receive
     case PASSIVE: // During passive we receive
     case RECEIVING: return AdvanceReceiving();
+    case BLOCKING: return AdvanceBlocking();
     default:
       FAIL(ILLEGAL_STATE);
     }
@@ -388,6 +390,71 @@ namespace MFM
     }
   }
 
+  template <class CC>
+  void CacheProcessor<CC>::Unblock()
+  {
+    if (m_cpState != BLOCKING)
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    SetIdle();
+    m_centerRegion = (Dir) -1;
+    Unlock();  // FINALLY
+  }
+
+  template <class CC>
+  CacheProcessor<CC> & CacheProcessor<CC>::GetSibling(Dir forDirection)
+  {
+    if (!m_tile)
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    return m_tile->GetCacheProcessor(forDirection);
+  }
+
+  template <class CC>
+  bool CacheProcessor<CC>::AdvanceBlocking()
+  {
+    s32 needed = 1;
+    Dir baseDir = m_centerRegion;
+
+    if (Dirs::IsCorner(baseDir))
+    {
+      needed = 3;
+      baseDir = Dirs::CCWDir(baseDir);
+    }
+
+    // Check if every-relevant-body is blocking
+    s32 got = 0;
+    for (Dir dir = baseDir; got < needed; ++got, dir = Dirs::CWDir(dir))
+    {
+      CacheProcessor<CC> & cp = GetSibling(dir);
+      if (cp.IsConnected() && !cp.IsBlocking())
+      {
+        break;
+      }
+    }
+
+    if (got < needed)
+    {
+      return false;  // Somebody still working
+    }
+
+    // All are done, unblock all, including ourselves
+    got = 0;
+    for (Dir dir = baseDir; got < needed; ++got, dir = Dirs::CWDir(dir))
+    {
+      CacheProcessor<CC> & cp = GetSibling(dir);
+      if (cp.IsConnected())
+      {
+        cp.Unblock();
+      }
+    }
+
+    return true;
+  }
 
 #if 0
     ChannelEnd & cxn = m_channelEnd;
