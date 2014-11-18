@@ -197,6 +197,9 @@ namespace MFM
     const SPoint soffset = md.GetPoint(siteNumber);
     SPoint loc = soffset + m_eventCenter;
 
+    // Get old for debug output
+    T oldAtom = *m_tile->GetAtom(loc);
+
     bool consistent =
       m_tile->ApplyCacheUpdate(isDifferent, inboundAtom, loc);
 
@@ -210,6 +213,7 @@ namespace MFM
       {
         T a(inboundAtom); // Get a non-const atom..
         AtomSerializer<CC> as(a);
+        AtomSerializer<CC> oldas(oldAtom);
 
         // Develop a secret grid-global address! shh don't tell ackley!
         s32 tilex = -1, tiley = -1;
@@ -218,7 +222,7 @@ namespace MFM
         cbs.Scanf("[%d,%d]",&tilex,&tiley);
         SPoint gloc = SPoint(tilex,tiley) * Tile<CC>::OWNED_SIDE + loc;
 
-        LOG.Warning("NC%s %s%c%c {%03d,%03d} #%2d(%2d,%2d)+(%2d,%2d)==(%2d,%2d) [%04x/%@]",
+        LOG.Warning("NC%s %s%c%c {%03d,%03d} #%2d(%2d,%2d)+(%2d,%2d)==(%2d,%2d) [%04x/%@] [%04x/%@]",
                     isDifferent? "U" : "C",
                     tlb,
                     csgn(m_farSideOrigin.GetX()),
@@ -233,7 +237,9 @@ namespace MFM
                     loc.GetX(),
                     loc.GetY(),
                     inboundAtom.GetType(),
-                    &as);
+                    &as,
+                    oldAtom.GetType(),
+                    &oldas);
       }
     }
   }
@@ -286,10 +292,13 @@ namespace MFM
       return false;
     }
 
-    MFM_LOG_DBG7(("CP %s %s Advance in state %s",
-                  m_tile->GetLabel(),
-                  Dirs::GetName(m_cacheDir),
-                  GetStateName(m_cpState)));
+    if (m_cpState != IDLE)
+    {
+      MFM_LOG_DBG7(("CP %s %s Advance in state %s",
+                    m_tile->GetLabel(),
+                    Dirs::GetName(m_cacheDir),
+                    GetStateName(m_cpState)));
+    }
 
     switch (m_cpState)
     {
