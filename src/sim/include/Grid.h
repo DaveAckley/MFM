@@ -68,6 +68,14 @@ namespace MFM {
     SPoint m_lastEventTile;
 
     Tile<CC> m_tiles[W][H];
+    LonglivedLock m_intertileLocks[W][H][3]; // 3: E, SE, S == dir-Dirs::EAST
+
+    /**
+       Get the long-lived lock controlling cache activity going in
+       direction dir from the Tile at (xtile,ytile) in the Grid.
+     */
+    LonglivedLock & GetIntertileLock(u32 xtile, u32 ytile, Dir dir) ;
+
     struct TileDriver {
       enum State { PAUSED, ADVANCING, EXIT_REQUEST };
       Mutex m_stateLock;
@@ -75,6 +83,7 @@ namespace MFM {
       SPoint m_loc;
       Grid* m_gridPtr;
       pthread_t m_threadId;
+      GridTransceiver m_channels[4]; // 4: NE, E, SE, S == dir-Dirs::NORTHEAST
 
       State GetState()
       {
@@ -98,32 +107,6 @@ namespace MFM {
     bool m_threadsInitted;
     static void * TileDriverRunner(void *) ;
 
-    struct GTDriver {
-      enum State { PAUSED, ADVANCING, EXIT_REQUEST };
-      Mutex m_stateLock;
-      State m_state;
-      pthread_t m_threadId;
-      timespec m_lastAdvanced;
-
-      GridTransceiver m_channels[W][H][4]; // 4: NE, E, SE, S == dir-Dirs::NORTHEAST
-      State GetState()
-      {
-        Mutex::ScopeLock lock(m_stateLock);
-        return m_state;
-      }
-
-      void SetState(State newState)
-      {
-        Mutex::ScopeLock lock(m_stateLock);
-        m_state = newState;
-      }
-
-      GTDriver() { }
-    };
-
-    GTDriver m_gtDriver;
-    static void * GTDriverRunner(void *) ;
-
     bool m_backgroundRadiationEnabled;
 
     ElementRegistry<CC> m_er;
@@ -142,6 +125,15 @@ namespace MFM {
       virtual bool CheckIfReady(TileDriver &) = 0;
       virtual void Execute(TileDriver &) = 0;
 
+      /**
+         Called once per op at the beginning
+       */
+      virtual void PreGridControl(Grid&) = 0;
+
+      /**
+         Called once per op at the end
+       */
+      virtual void PostGridControl(Grid&) = 0;
     };
 
     /**
@@ -175,6 +167,16 @@ namespace MFM {
         Tile<CC> & tile = td.GetTile();
         tile.Pause();
       }
+
+      virtual void PreGridControl(Grid& grid)
+      {
+      }
+
+      virtual void PostGridControl(Grid& grid)
+      {
+        grid.SetGridRunning(false);
+      }
+
     };
 
     /**
@@ -182,6 +184,7 @@ namespace MFM {
      */
     struct RunControl : public TileDriverControl
     {
+
       virtual const char * GetName()
       {
         return "Unpause";
@@ -196,6 +199,7 @@ namespace MFM {
       virtual void MakeRequest(TileDriver & td)
       {
         Tile<CC> & tile = td.GetTile();
+        tile.NeedAtomRecount();
         tile.RequestStateActive();
       }
       virtual bool CheckIfReady(TileDriver & td)
@@ -205,9 +209,18 @@ namespace MFM {
       }
       virtual void Execute(TileDriver & td)
       {
-        Tile<CC> & tile = td.GetTile();
-        tile.Run();
+        // We're already running; nothing to do
       }
+
+      virtual void PreGridControl(Grid& grid)
+      {
+        grid.SetGridRunning(true);
+      }
+
+      virtual void PostGridControl(Grid& grid)
+      {
+      }
+
     };
 
     /**
@@ -216,6 +229,9 @@ namespace MFM {
     void DoTileDriverControl(TileDriverControl & tc);
 
   public:
+    double GetAverageCacheRedundancy() const;
+    void SetCacheRedundancy(u32 redundancyOddsType) ;
+
     void ReportGridStatus(Logger::Level level) ;
 
     Random& GetRandom() { return m_random; }
@@ -234,7 +250,6 @@ namespace MFM {
       , m_width(W)
       , m_height(H)
       , m_threadsInitted(false)
-      , m_gtDriver()
       , m_backgroundRadiationEnabled(false)
       , m_er(elts)
       , m_xraySiteOdds(1000)
@@ -367,7 +382,7 @@ namespace MFM {
      *              executing its own events. Else, this Tile will
      *              only process Packets from other Tiles.
      */
-    void SetTileToExecuteOnly(const SPoint& tileLoc, bool value);
+    void SetTileEnabled(const SPoint& tileLoc, bool value);
 
     /**
      * Checks whether or not a specific Tile is currently executing
@@ -375,7 +390,7 @@ namespace MFM {
      *
      * @param tileLoc The location of the Tile in this Grid to check.
      */
-    bool GetTileExecutionStatus(const SPoint& tileLoc);
+    bool IsTileEnabled(const SPoint& tileLoc);
 
     /**
      * Clears a Tile of all of its held atoms.
@@ -510,10 +525,22 @@ namespace MFM {
     void FillLastEventTile(SPoint& out);
 
     inline Tile<CC> & GetTile(const SPoint& pt)
-    {return GetTile(pt.GetX(), pt.GetY());}
+    {
+      if (!IsLegalTileIndex(pt))
+      {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+      return GetTile(pt.GetX(), pt.GetY());
+    }
 
     inline const Tile<CC> & GetTile(const SPoint& pt) const
-    {return GetTile(pt.GetX(), pt.GetY());}
+    {
+      if (!IsLegalTileIndex(pt))
+      {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+      return GetTile(pt.GetX(), pt.GetY());
+    }
 
     inline Tile<CC> & GetTile(u32 x, u32 y)
     { return m_tiles[x][y]; }

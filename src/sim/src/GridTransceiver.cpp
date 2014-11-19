@@ -5,11 +5,24 @@ namespace MFM
 {
   GridTransceiver::GridTransceiver()
     : m_enabled(false)
-    , m_state(CHANNEL_UNOWNED)
     , m_bytesPerSecond(500000) // default ~500KBps == ~4Mbps
     , m_maxBytesInFlight(1)
     , m_excessNanoseconds(0)
   {
+    timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    m_lastAdvanced = now;
+  }
+
+  bool GridTransceiver::AdvanceToTime(const timespec & now)
+  {
+    const u32 ONE_BILLION = 1000*1000*1000;
+
+    // We keep max time lapse under 2 secs
+    u32 secs = MIN(1, (s32) (now.tv_sec - m_lastAdvanced.tv_sec));
+    u32 nanoselapsed = (u32) (((s32) secs*ONE_BILLION) + (now.tv_nsec - m_lastAdvanced.tv_nsec));
+    m_lastAdvanced = now;
+    return Advance(nanoselapsed);
   }
 
   bool GridTransceiver::Advance(u32 nanoseconds)

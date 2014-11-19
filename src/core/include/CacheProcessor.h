@@ -63,7 +63,32 @@ namespace MFM {
      */
     Tile<CC> * m_tile;
 
+    /**
+       The lock controlling who can be the active side of a
+       transaction involving this cache processor.  Long-lived locks
+       on edges are shared by up to two cache processors; those on
+       corners, by up to four.
+     */
+    LonglivedLock * m_longlivedLock;
+
+    /**
+       Our cache direction, used as an owner index for the long lived
+       lock, since any given lock can't be claimed from the same
+       direction twice.
+     */
+    u32 m_cacheDir;
+
     enum {
+      /**
+         MIN_CHECK_ODDS is the minimum value of m_checkOdds.
+         1-in-MIN_CHECK_ODDS is the \e maximum amount of redundancy
+         added to packet transfers to monitor remote cache quality.
+         Normally has a value of 1, meaning that in the worst case, \e
+         all atoms in the event window will be sent regardless of
+         whether they changed or not
+       */
+      MIN_CHECK_ODDS = 1,
+
       /**
          MAX_CHECK_ODDS is the maximum value of m_checkOdds.
          1-in-MAX_CHECK_ODDS is the \e minimum amount of redundancy
@@ -72,24 +97,38 @@ namespace MFM {
          below this value, causing the \e actual redundancy to be
          higher, at least temporarily.
        */
-      MAX_CHECK_ODDS = 25,
+      MAX_CHECK_ODDS = 20,
 
       /**
          INITIAL_CHECK_ODDS is the initial value of m_checkOdds.
+         \sa MIN_CHECK_ODDS
          \sa MAX_CHECK_ODDS
          \sa m_checkOdds
        */
-      INITIAL_CHECK_ODDS = 10
+      INITIAL_CHECK_ODDS = 1
     };
 
     /**
        The current odds of including redundant check packets in the
        cache update stream.  Atoms that did \e not change during an
        event will also be transmitted, using type PACKET_CHECK, with
-       odds of 1-in-this.  Minimum value is 1, meaning all such
-       packets will be transmitted; maximum value is MAX_CHECK_ODDS.
+       odds of 1-in-this.  Minimum value is MIN_CHECK_ODDS; maximum
+       value is MAX_CHECK_ODDS.
      */
     u32 m_checkOdds;
+
+    /**
+       The current number of consistent atoms acked since the last
+       possibility of increasing m_checkOdds.
+     */
+    u32 m_remoteConsistentAtomCount;
+
+    /**
+       If true, automatically adjust m_checkOdds based on the reported
+       accuracy of the remote cache content; otherwise leave
+       m_checkOdds unchanged.
+     */
+    bool m_useAdaptiveRedundancy;
 
     u32 GetCheckOdds() const
     {
@@ -98,21 +137,25 @@ namespace MFM {
 
     void ReportCheckFailure()
     {
-      if (m_checkOdds > 5)
+      if (m_useAdaptiveRedundancy)
       {
-        m_checkOdds /= 3;
-      }
-      else
-      {
-        m_checkOdds = 1;
+        m_checkOdds = MIN_CHECK_ODDS;
       }
     }
 
-    void ReportCleanUpdate()
+    void ReportCleanUpdate(u32 consistentAtoms)
     {
-      if (m_checkOdds < MAX_CHECK_ODDS)
+      if (m_useAdaptiveRedundancy)
       {
-        ++m_checkOdds;
+        m_remoteConsistentAtomCount += consistentAtoms;
+        if (m_remoteConsistentAtomCount >= SITE_COUNT)
+        {
+          m_remoteConsistentAtomCount -= SITE_COUNT;
+          if (m_checkOdds < MAX_CHECK_ODDS)
+          {
+            ++m_checkOdds;
+          }
+        }
       }
     }
 
@@ -199,8 +242,9 @@ namespace MFM {
 
     void SetStateInternal(State state)
     {
-      MFM_LOG_DBG6(("CP %s (%d,%d): %s->%s",
+      MFM_LOG_DBG6(("CP %s %s (%d,%d): %s->%s",
                     m_tile->GetLabel(),
+                    Dirs::GetName(m_cacheDir),
                     m_farSideOrigin.GetX(),
                     m_farSideOrigin.GetY(),
                     GetStateName(m_cpState),
@@ -209,6 +253,38 @@ namespace MFM {
     }
 
   public:
+    enum RedundancyOdds {
+      MAX,
+      MIN,
+      INITIAL,
+      ADAPTIVE
+    };
+
+    u32 GetCurrentCacheRedundancy() const
+    {
+      return m_checkOdds;
+    }
+
+    void SetCacheRedundancy(u32 type)
+    {
+      m_useAdaptiveRedundancy = false;
+      switch (type)
+      {
+      case MAX:
+        m_checkOdds = MAX_CHECK_ODDS;
+        break;
+      case MIN:
+        m_checkOdds = MIN_CHECK_ODDS;
+        break;
+      case INITIAL:
+        m_checkOdds = INITIAL_CHECK_ODDS;
+        break;
+      case ADAPTIVE:
+        m_useAdaptiveRedundancy = true;
+      default:
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+    }
 
     void ReportCacheProcessorStatus(Logger::Level level) ;
 
@@ -285,12 +361,16 @@ namespace MFM {
 
     bool TryLock()
     {
-      return m_channelEnd.TryLock();
+      return GetLonglivedLock().TryLock(this);
     }
 
     void Unlock()
     {
-      m_channelEnd.Unlock();
+      bool ret = GetLonglivedLock().Unlock(this);
+      if (!ret)
+      {
+        FAIL(LOCK_FAILURE);
+      }
     }
 
     bool IsConnected() const
@@ -298,21 +378,28 @@ namespace MFM {
       return m_channelEnd.IsConnected();
     }
 
-    void ClaimCacheProcessor(Tile<CC>& tile, AbstractChannel& channel, bool onSideA, SPoint remoteOrigin)
+    void ClaimCacheProcessor(Tile<CC>& tile, AbstractChannel& channel, LonglivedLock & lock, Dir toCache)
     {
-      if (m_tile)
+      if (m_tile || m_longlivedLock)
       {
         FAIL(ILLEGAL_STATE);
       }
 
       m_tile = &tile;
+      m_longlivedLock = &lock;
+      m_cacheDir = toCache;
+
+      // Map their full untransformed origin to our full untransformed frame
+      SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir) * Tile<CC>::OWNED_SIDE;
       m_farSideOrigin = remoteOrigin;
+
+      bool onSideA = (m_cacheDir >= Dirs::NORTHEAST && m_cacheDir <= Dirs::SOUTH);
       m_channelEnd.ClaimChannelEnd(channel, onSideA);
     }
 
     void AssertConnected() const
     {
-      if (!m_tile)
+      if (!m_tile || !m_longlivedLock)
       {
         FAIL(ILLEGAL_STATE);
       }
@@ -327,6 +414,18 @@ namespace MFM {
     {
       AssertConnected();
       return *m_tile;
+    }
+
+    /**
+     * Gets the long-lived lock that must be held for us to be on the
+     * active side of a cache transaction
+     *
+     * @returns The LonglivedLock associated with this cache processor
+     */
+    LonglivedLock& GetLonglivedLock()
+    {
+      AssertConnected();
+      return *m_longlivedLock;
     }
 
     /**
@@ -355,7 +454,10 @@ namespace MFM {
 
     CacheProcessor()
       : m_tile(0)
+      , m_longlivedLock(0)
       , m_checkOdds(INITIAL_CHECK_ODDS)
+      , m_remoteConsistentAtomCount(0)
+      , m_useAdaptiveRedundancy(true)
       , m_cpState(IDLE)
       , m_eventCenter(0,0)
       , m_farSideOrigin(0,0)

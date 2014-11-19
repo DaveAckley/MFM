@@ -210,46 +210,6 @@ namespace MFM
     ////
     // BEGIN AbstractChannel interface
 
-    virtual State GetChannelState()
-    {
-      Mutex::ScopeLock lock(m_access);
-      return m_state;
-    }
-
-    /**
-       \copydoc AbstractChannel::TryLock
-       \fail ILLEGAL_STATE if the GridTransceiver is not enabled
-    */
-    virtual bool TryLock(bool byA)
-    {
-      FailUnlessEnabled();
-
-      Mutex::ScopeLock lock(m_access);
-      if (m_state != CHANNEL_UNOWNED)
-      {
-        return false;
-      }
-      m_state = OwnerOf(byA);
-      return true;
-    }
-
-    /**
-       \copydoc AbstractChannel::Unlock
-       \fail ILLEGAL_STATE if the GridTransceiver is not enabled
-    */
-    virtual bool Unlock(bool byA)
-    {
-      FailUnlessEnabled();
-
-      Mutex::ScopeLock lock(m_access);
-      if (m_state == OwnerOf(byA))
-      {
-        m_state = CHANNEL_UNOWNED;
-        return true;
-      }
-      return false;
-    }
-
     /**
        \copydoc AbstractChannel::CanWrite
        \fail ILLEGAL_STATE if the GridTransceiver is not enabled
@@ -327,6 +287,12 @@ namespace MFM
     }
 
     /**
+       Simulate channel communications given the actual wall clock
+       time is now.  Return true if any communications occurred.
+     */
+    bool AdvanceToTime(const timespec & now) ;
+
+    /**
        Simulate channel communications as if time equal to
        nanosecondsElapsed had passed since the last call on Advance.
        Return true if any communications occurred.
@@ -373,16 +339,12 @@ namespace MFM
     }
 
   private:
+
     friend class GridTransceiver_Test;
 
     u32 IdxOf(bool byA)
     {
       return byA ? 0 : 1;
-    }
-
-    State OwnerOf(bool byA)
-    {
-      return byA ? CHANNEL_A_OWNER : CHANNEL_B_OWNER;
     }
 
     Mutex m_access;
@@ -411,13 +373,13 @@ namespace MFM
       }
     }
 
-    State m_state;
-
     u32 m_bytesPerSecond;
 
     u32 m_maxBytesInFlight;
 
     u32 m_excessNanoseconds;  // Accumulated unused nanos from previous Advances
+
+    timespec m_lastAdvanced;
 
     struct ByteChannel {
 

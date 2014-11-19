@@ -3,6 +3,7 @@
 
 namespace MFM
 {
+#if 0
   const char * GetChannelStateName(u32 state)
   {
     switch (state)
@@ -13,44 +14,15 @@ namespace MFM
     default: return "illegal state";
     }
   }
+#endif
+
   void ChannelEnd::ReportChannelEndStatus(Logger::Level level)
   {
-    LOG.Log(level,"    ==ChannelEnd %p [chn %p] SIDE %s==",
+    LOG.Log(level,"    ==ChannelEnd %p [chn %p] ==",
             (void*) this,
-            (void*) m_channel,
-            m_onSideA ? "A" : "B");
+            (void*) m_channel);
     LOG.Log(level,"     PacketLength: %d", m_packetLength);
     LOG.Log(level,"     Pending length: %d", m_packetBuffer.GetLength());
-    if (m_channel)
-    {
-      AbstractChannel::State acs = m_channel->GetChannelState();
-      const char * who;
-      if (acs == AbstractChannel::CHANNEL_UNOWNED)
-      {
-        who = "";
-      }
-      else
-      {
-        if ((acs == AbstractChannel::CHANNEL_A_OWNER) == m_onSideA)
-        {
-          who = "(US)";
-        }
-        else
-        {
-          who = "(THEM)";
-        }
-      }
-
-      LOG.Log(level,"     State %s %s",
-              GetChannelStateName(acs),
-              who);
-      LOG.Log(level,"     Side A: CW %d, CR %d",
-              m_channel->CanWrite(true),
-              m_channel->CanRead(true));
-      LOG.Log(level,"     Side B: CW %d, CR %d",
-              m_channel->CanWrite(false),
-              m_channel->CanRead(false));
-    }
   }
 
   PacketBuffer * ChannelEnd::ReceivePacket()

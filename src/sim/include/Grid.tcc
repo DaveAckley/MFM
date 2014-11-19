@@ -9,6 +9,54 @@
 namespace MFM {
 
   template <class GC>
+  LonglivedLock & Grid<GC>::GetIntertileLock(u32 x, u32 y, Dir dir)
+  {
+    switch (dir)
+    {
+    case Dirs::NORTH:
+      MFM_API_ASSERT_ARG(y > 0);
+      --y;
+      dir = Dirs::SOUTH;
+      break;
+
+    case Dirs::NORTHEAST:
+      MFM_API_ASSERT_ARG(y > 0);
+      --y;
+      dir = Dirs::SOUTHEAST;
+      break;
+
+    case Dirs::EAST:
+    case Dirs::SOUTHEAST:
+    case Dirs::SOUTH:
+      // Ready to rock
+      break;
+
+    case Dirs::SOUTHWEST:
+      MFM_API_ASSERT_ARG(x > 0);
+      --x;
+      dir = Dirs::SOUTHEAST;
+      break;
+
+    case Dirs::WEST:
+      MFM_API_ASSERT_ARG(x > 0);
+      --x;
+      dir = Dirs::EAST;
+      break;
+
+    case Dirs::NORTHWEST:
+      MFM_API_ASSERT_ARG(x > 0 && y > 0);
+      --x;
+      --y;
+      dir = Dirs::SOUTHEAST;
+      break;
+
+    default:
+      FAIL(ILLEGAL_STATE);
+    }
+    return m_intertileLocks[x][y][dir - Dirs::EAST];
+  }
+
+  template <class GC>
   void Grid<GC>::Init() {
 
     /* Reseed grid PRNG and push seeds to the tile PRNGs */
@@ -30,9 +78,19 @@ namespace MFM {
         OString16 tbs;
         tbs.Printf("[%d,%d]", x, y);
         ctile.SetLabel(tbs.GetZString());
+      }
+    }
 
+    // Connect them up
+    for(u32 x = 0; x < m_width; x++)
+    {
+      for(u32 y = 0; y < m_height; y++)
+      {
         for (Dir d = Dirs::NORTHEAST; d <= Dirs::SOUTH; ++d)
         {
+          SPoint tpt(x,y);
+          Tile<CC>& ctile = GetTile(tpt);
+
           SPoint npt = tpt + Dirs::GetOffset(d);
 
           if (!IsLegalTileIndex(npt))
@@ -40,11 +98,16 @@ namespace MFM {
             continue;
           }
 
-          Tile<CC>& otile = GetTile(npt);
-          GridTransceiver & gt = m_gtDriver.m_channels[x][y][d - Dirs::NORTHEAST];
+          TileDriver & td = m_tileDrivers[x][y];
+          GridTransceiver & gt = td.m_channels[d - Dirs::NORTHEAST];
+          LonglivedLock & ctl = GetIntertileLock(x,y,d);
 
-          ctile.Connect(gt, true, d);
-          otile.Connect(gt, false, Dirs::OppositeDir(d));
+          Tile<CC>& otile = GetTile(npt);
+          Dir odir = Dirs::OppositeDir(d);
+          LonglivedLock & otl = GetIntertileLock(npt.GetX(),npt.GetY(),odir);
+
+          ctile.Connect(gt, ctl, d);
+          otile.Connect(gt, otl, odir);
 
           gt.SetEnabled(true);
           gt.SetDataRate(100000000);
@@ -55,17 +118,47 @@ namespace MFM {
   }
 
   template <class GC>
+  double Grid<GC>::GetAverageCacheRedundancy() const
+  {
+    u32 count = 0;
+    double sum = 0.0;
+    for(u32 x = 0; x < m_width; x++)
+    {
+      for(u32 y = 0; y < m_height; y++)
+      {
+        const Tile<CC> & tile = GetTile(x,y);
+        double red = tile.GetAverageCacheRedundancy();
+        if (red >= 0)
+        {
+          sum += red;
+          count++;
+        }
+      }
+    }
+    if (count == 0)
+    {
+      return -1.0;
+    }
+    return sum / count;
+  }
+
+  template <class GC>
+  void Grid<GC>::SetCacheRedundancy(u32 redundancyOddsType)
+  {
+    for(u32 x = 0; x < m_width; x++)
+    {
+      for(u32 y = 0; y < m_height; y++)
+      {
+        Tile<CC> & tile = GetTile(x,y);
+        tile.SetCacheRedundancy(redundancyOddsType);
+      }
+    }
+  }
+
+  template <class GC>
   void Grid<GC>::InitThreads()
   {
     if (m_threadsInitted)
-    {
-      FAIL(ILLEGAL_STATE);
-    }
-
-    /* Init the GridTransceivers driver */
-    GTDriver & gtd = m_gtDriver;
-    gtd.SetState(GTDriver::PAUSED);
-    if (pthread_create(&gtd.m_threadId, NULL, GTDriverRunner, &gtd))
     {
       FAIL(ILLEGAL_STATE);
     }
@@ -93,8 +186,8 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::SetGridRunning(bool running)
   {
-    /* Notify the transceivers */
-    m_gtDriver.SetState(running ? GTDriver::ADVANCING : GTDriver::PAUSED);
+    //    /* Notify the transceivers */
+    //    m_gtDriver.SetState(running ? GTDriver::ADVANCING : GTDriver::PAUSED);
 
     /* Notify the Tiles */
     for(u32 x = 0; x < m_width; x++)
@@ -132,78 +225,31 @@ namespace MFM {
         break;
 
       case TileDriver::ADVANCING:
-      if (ctile.Advance())
       {
-        // We accomplished something.  Go again.
-        // continue;
-      }
-      // ELSE FALL THROUGH
-
-      case TileDriver::PAUSED:
-        if (ctile.GetRandom().OneIn(5))
-        {
-          // Sleep a little
-          SleepUsec(ctile.GetRandom().Between(10,50));  // 0.5ms..5ms
-        }
-        else
-        {
-          pthread_yield();
-        }
-      }
-    }
-
-    return NULL;
-  }
-
-  template <class GC>
-  void* Grid<GC>::GTDriverRunner(void * arg)
-  {
-    if (!arg)
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
-
-    GTDriver & gtd = * (GTDriver*) arg;
-
-    while (true)
-    {
-      switch (gtd.GetState())
-      {
-      case GTDriver::EXIT_REQUEST:
-        break;
-
-      case GTDriver::ADVANCING:
-      {
+        // Drive this tile's transceivers
         timespec now;
         clock_gettime(CLOCK_MONOTONIC, &now);
-        const u32 ONE_BILLION = 1000*1000*1000;
-
-        // We keep max time lapse under 2 secs
-        u32 secs = MIN(1, (s32) (now.tv_sec - gtd.m_lastAdvanced.tv_sec));
-        u32 nanoselapsed = (u32) (((s32) secs*ONE_BILLION) + (now.tv_nsec - gtd.m_lastAdvanced.tv_nsec));
-        gtd.m_lastAdvanced = now;
-
-        bool didWork = false;
-        for (u32 x = 0; x < W; ++x)
-          for (u32 y = 0; y < H; ++y)
-            for (u32 d = 0; d < 4; ++d)
-            {
-              GridTransceiver & gt = gtd.m_channels[x][y][d];
-              didWork |= gt.Advance(nanoselapsed);
-            }
-        if (didWork)
+        for (u32 c = 0; c < 4; ++c)
         {
-          // We accomplished something.  Go again.
-          continue;
+          td->m_channels[c].AdvanceToTime(now);
         }
-        // ELSE FALL THROUGH
+
+        // Drive the tile itself
+        if (!ctile.Advance())
+        {
+          // We accomplished nothing.  Let somebody else try
+          pthread_yield();
+        }
+        break;
       }
 
-      case GTDriver::PAUSED:
-        // Pretend we advanced before sleeping, in case a state change is coming
-        clock_gettime(CLOCK_MONOTONIC, &gtd.m_lastAdvanced);
+      case TileDriver::PAUSED:
         // Sleep a little
-        //SleepUsec(1000);
+        SleepUsec(ctile.GetRandom().Between(10,100));  // 0.01ms..1ms
+        break;
+
+      default:
+        FAIL(ILLEGAL_STATE);
       }
     }
 
@@ -235,20 +281,24 @@ namespace MFM {
   }
 
   template <class GC>
-  void Grid<GC>::SetTileToExecuteOnly(const SPoint& tileLoc, bool value)
+  void Grid<GC>::SetTileEnabled(const SPoint& tileLoc, bool isEnabled)
   {
-    if(tileLoc.GetX() >= 0 && tileLoc.GetY() >= 0 &&
-       tileLoc.GetX() < W  && tileLoc.GetY() < H)
+    Tile<CC> & tile = GetTile(tileLoc);
+    if (isEnabled)
     {
-      FAIL(INCOMPLETE_CODE);
-      //GetTile(tileLoc).SetExecuteOwnEvents(value);
+      tile.SetEnabled();
     }
+    else
+    {
+      tile.SetDisabled();
+    }
+
   }
 
   template <class GC>
-  bool Grid<GC>::GetTileExecutionStatus(const SPoint& tileLoc)
+  bool Grid<GC>::IsTileEnabled(const SPoint& tileLoc)
   {
-    return GetTile(tileLoc).IsActive();
+    return GetTile(tileLoc).IsEnabled();
   }
 
   template <class GC>
@@ -396,6 +446,9 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::DoTileDriverControl(TileDriverControl & tc)
   {
+    // Initial grid changes
+    tc.PreGridControl(*this);
+
     // Ensure everybody is ready for the request
     for(u32 x = 0; x < W; x++)
     {
@@ -405,7 +458,7 @@ namespace MFM {
         if (!tc.CheckPrecondition(td))
         {
           LOG.Error("%s control precondition failed at (%d,%d)=Tile %s (%p)--",
-                    x,  y, td.GetTile().GetLabel(), (void *) &td);
+                    tc.GetName(), x,  y, td.GetTile().GetLabel(), (void *) &td);
           ReportGridStatus(Logger::ERROR);
           FAIL(ILLEGAL_STATE);
         }
@@ -487,6 +540,9 @@ namespace MFM {
         tc.Execute(td);
       }
     }
+
+    // Final grid changes
+    tc.PostGridControl(*this);
   }
 
   template <class GC>

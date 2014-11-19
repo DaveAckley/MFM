@@ -23,7 +23,8 @@ namespace MFM
   AbstractButton::AbstractButton(const char* text) :
     m_text(text),
     m_icon(0),
-    m_enabled(true)
+    m_enabled(true),
+    m_justClicked(false)
   {
     Init();
   }
@@ -31,7 +32,8 @@ namespace MFM
   AbstractButton::AbstractButton(SDL_Surface* icon) :
     m_text(0),
     m_icon(icon),
-    m_enabled(true)
+    m_enabled(true),
+    m_justClicked(false)
   {
     Init();
   }
@@ -39,7 +41,8 @@ namespace MFM
   AbstractButton::AbstractButton(const char* text, SDL_Surface* icon) :
     m_text(text),
     m_icon(icon),
-    m_enabled(true)
+    m_enabled(true),
+    m_justClicked(false)
   {
     Init();
   }

@@ -1,6 +1,7 @@
 /* -*- C++ -*- */
 
 #include "PacketIO.h"
+#include "CharBufferByteSource.h"
 
 namespace MFM
 {
@@ -116,8 +117,9 @@ namespace MFM
       FAIL(ILLEGAL_STATE);  // You say ship more than a whole window?
     }
 
-    MFM_LOG_DBG7(("CP %s (%d,%d) send #%d (%d,%d)",
+    MFM_LOG_DBG7(("CP %s %s (%d,%d) send #%d (%d,%d)",
                   m_tile->GetLabel(),
+                  Dirs::GetName(m_cacheDir),
                   m_farSideOrigin.GetX(),
                   m_farSideOrigin.GetY(),
                   siteNumber,
@@ -165,6 +167,13 @@ namespace MFM
     m_consistentAtomCount = 0;  // Ready for my update..
   }
 
+  static u8 csgn(s32 n)
+  {
+    if (n < 0) return '-';
+    if (n > 0) return '+';
+    return '0';
+  }
+
   template <class CC>
   void CacheProcessor<CC>::ReceiveAtom(bool isDifferent, s32 siteNumber, const T & inboundAtom)
   {
@@ -184,7 +193,8 @@ namespace MFM
     }
 
     const MDist<R> & md = MDist<R>::get();
-    SPoint loc = md.GetPoint(siteNumber) + m_eventCenter;
+    const SPoint soffset = md.GetPoint(siteNumber);
+    SPoint loc = soffset + m_eventCenter;
 
     bool consistent =
       m_tile->ApplyCacheUpdate(isDifferent, inboundAtom, loc);
@@ -193,16 +203,38 @@ namespace MFM
     {
       ++m_consistentAtomCount;
     }
+    else
+    {
+      if (LOG.IfLog(Logger::WARNING))
+      {
+        T a(inboundAtom); // Get a non-const atom..
+        AtomSerializer<CC> as(a);
 
-    MFM_LOG_DBG6(("CP %s (%d,%d) %s site #%d arrived for (%d, %d) -> %s",
-                  m_tile->GetLabel(),
-                  m_farSideOrigin.GetX(),
-                  m_farSideOrigin.GetY(),
-                  isDifferent? "Updated" : "Check",
-                  siteNumber,
-                  loc.GetX(),
-                  loc.GetY(),
-                  consistent ? "Consistent" : "Inconsistent"));
+        // Develop a secret grid-global address! shh don't tell ackley!
+        s32 tilex = -1, tiley = -1;
+        const char * tlb = m_tile->GetLabel();
+        CharBufferByteSource cbs(tlb,strlen(tlb));
+        cbs.Scanf("[%d,%d]",&tilex,&tiley);
+        SPoint gloc = SPoint(tilex,tiley) * Tile<CC>::OWNED_SIDE + loc;
+
+        LOG.Warning("NC%s %s%c%c {%03d,%03d} #%2d(%2d,%2d)+(%2d,%2d)==(%2d,%2d) [%04x/%@]",
+                    isDifferent? "U" : "C",
+                    tlb,
+                    csgn(m_farSideOrigin.GetX()),
+                    csgn(m_farSideOrigin.GetY()),
+                    gloc.GetX(),
+                    gloc.GetY(),
+                    siteNumber,
+                    soffset.GetX(),
+                    soffset.GetY(),
+                    m_eventCenter.GetX(),
+                    m_eventCenter.GetY(),
+                    loc.GetX(),
+                    loc.GetY(),
+                    inboundAtom.GetType(),
+                    &as);
+      }
+    }
   }
 
   template <class CC>
@@ -232,14 +264,13 @@ namespace MFM
     }
     else
     {
-      ReportCleanUpdate();
+      ReportCleanUpdate(m_toSendCount);
     }
-    MFM_LOG_DBG7(("CP %s (%d,%d) reply %d<->%d : %d",
-              m_tile->GetLabel(),
-              m_farSideOrigin.GetX(),
-              m_farSideOrigin.GetY(),
-              consistentCount,
-              m_toSendCount,
+    MFM_LOG_DBG7(("CP %s %s reply %d<->%d : %d",
+                  m_tile->GetLabel(),
+                  Dirs::GetName(m_cacheDir),
+                  consistentCount,
+                  m_toSendCount,
                   m_checkOdds));
     Unlock(); // Finally!
     SetIdle();
@@ -254,10 +285,9 @@ namespace MFM
       return false;
     }
 
-    MFM_LOG_DBG7(("CP %s (%d,%d) Advance in state %s",
+    MFM_LOG_DBG7(("CP %s %s Advance in state %s",
                   m_tile->GetLabel(),
-                  m_farSideOrigin.GetX(),
-                  m_farSideOrigin.GetY(),
+                  Dirs::GetName(m_cacheDir),
                   GetStateName(m_cpState)));
 
     switch (m_cpState)
@@ -294,8 +324,9 @@ namespace MFM
   template <class CC>
   bool CacheProcessor<CC>::AdvanceShipping()
   {
-    MFM_LOG_DBG7(("CP %s (%d,%d): Advance shipping",
+    MFM_LOG_DBG7(("CP %s %s (%d,%d): Advance shipping",
                   m_tile->GetLabel(),
+                  Dirs::GetName(m_cacheDir),
                   m_farSideOrigin.GetX(),
                   m_farSideOrigin.GetY()));
     bool didWork = false;
@@ -311,10 +342,9 @@ namespace MFM
       }
       didWork = true;
       ++m_sentCount;
-      MFM_LOG_DBG7(("CP %s (%d,%d): Ship %d (site #%d)",
+      MFM_LOG_DBG7(("CP %s %s: Ship %d (site #%d)",
                     m_tile->GetLabel(),
-                    m_farSideOrigin.GetX(),
-                    m_farSideOrigin.GetY(),
+                    Dirs::GetName(m_cacheDir),
                     m_sentCount,
                     cpi.m_siteNumber));
     }

@@ -31,6 +31,7 @@
 #include "Fail.h"
 #include "Logger.h"
 #include "AbstractChannel.h"
+#include "LonglivedLock.h"
 #include "OverflowableCharBufferByteSink.h"
 #include "Packet.h"
 
@@ -94,6 +95,7 @@ namespace MFM
       return m_channel != 0;
     }
 
+#if 0
     bool TryLock()
     {
       AssertConnected();
@@ -110,6 +112,7 @@ namespace MFM
 
       return m_channel->Unlock(m_onSideA);
     }
+#endif
 
     u32 CanWrite()
     {
@@ -161,6 +164,7 @@ namespace MFM
       m_owner = tag;
     }
 
+#if 0
     bool IsLockedByUs() const
     {
       return IsLockedBy(true);
@@ -183,6 +187,7 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       }
     }
+#endif
 
     void ClaimChannelEnd(AbstractChannel& channel, bool onSideA)
     {
