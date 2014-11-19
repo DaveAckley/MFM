@@ -4,6 +4,7 @@
 /* Get some types for us to test */
 #include "Test_Common.h"
 
+#include "GridTransceiver_Test.h"
 #include "ElementRegistry_Test.h"
 #include "ByteSource_Test.h"
 #include "LineTailByteSink_Test.h"

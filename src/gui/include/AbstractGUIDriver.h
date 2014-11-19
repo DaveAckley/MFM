@@ -250,7 +250,8 @@ namespace MFM
 
       virtual void OnClick(u8 button)
       {
-        AbstractGridButton::m_driver->GetGrid().XRay();
+        FAIL(INCOMPLETE_CODE);
+        //AbstractGridButton::m_driver->GetGrid().XRay();
       }
     } m_xrayButton;
 
@@ -460,8 +461,11 @@ namespace MFM
 
       virtual void OnCheck(bool value)
       {
+        FAIL(INCOMPLETE_CODE);
+        /*
         AbstractGridCheckbox::m_driver->GetGrid().SetBackgroundRadiation(
           this->IsChecked());
+        */
       }
     } m_bgrButton;
 
@@ -640,10 +644,7 @@ namespace MFM
       }
       else
       {
-        const s32 ONE_THOUSAND = 1000;
-        const s32 ONE_MILLION = ONE_THOUSAND*ONE_THOUSAND;
-
-        Sleep(0,33*ONE_MILLION); // 33 ms ~= 30 fps idle
+        SleepMsec(33); // 33 ms ~= 30 fps idle
       }
     }
 

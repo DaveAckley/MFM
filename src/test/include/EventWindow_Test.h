@@ -10,9 +10,13 @@ class EventWindow_Test
 
 public:
 
-  static void Test_eventwindowConstruction();
+  static void Test_EventWindowConstruction();
 
-  static void Test_eventwindowWrite();
+  static void Test_EventWindowNoLockOpen();
+
+  static void Test_EventWindowWrite();
+
+  static void Test_RunTests();
 };
 } /* namespace MFM */
 #endif /*EVENTWINDOW_TEST_H*/

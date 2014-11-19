@@ -85,17 +85,17 @@ namespace MFM
     /* First, register all elements. */
 
     u32 elems = m_elementRegistry.GetEntryCount();
-    char lexOutput[24];
+    char alphaOutput[24];
 
     for(u32 i = 0; i < elems; i++)
     {
       const UUID& uuid = m_elementRegistry.GetEntryUUID(i);
 
-      IntLexEncode(i, lexOutput);
+      IntAlphaEncode(i, alphaOutput);
 
       byteSink.Printf("RegisterElement(");
       uuid.Print(byteSink);
-      byteSink.Printf(",%s)", lexOutput);
+      byteSink.Printf(",%s)", alphaOutput);
       byteSink.WriteNewline();
 
       /* Write configurable element values */
@@ -107,7 +107,7 @@ namespace MFM
       {
         const ElementParameter<CC> * p = parms.GetParameter(j);
         byteSink.Printf(" SetElementParameter(%s,%s,%@)",
-                        lexOutput,
+                        alphaOutput,
                         p->GetTag(),
                         p);
         byteSink.WriteNewline();
@@ -146,8 +146,8 @@ namespace MFM
             if(Atom<CC>::IsType(*m_grid.GetAtom(currentPt),
                                 m_elementRegistry.GetEntryElement(i)->GetType()))
             {
-              IntLexEncode(i, lexOutput);
-              byteSink.Printf("%s", lexOutput);
+              IntAlphaEncode(i, alphaOutput);
+              byteSink.Printf("%s", alphaOutput);
               break;
             }
           }
@@ -166,8 +166,9 @@ namespace MFM
       for(u32 x = 0; x < GC::GRID_WIDTH; x++)
       {
         SPoint currentPt(x, y);
+        Tile<CC> & tile = m_grid.GetTile(currentPt);
 
-        if(!m_grid.GetTileExecutionStatus(currentPt))
+        if(tile.GetCurrentState() != Tile<CC>::ACTIVE)
         {
           byteSink.Printf("DisableTile(%d,%d)", x, y);
           byteSink.WriteNewline();
@@ -250,7 +251,8 @@ namespace MFM
   template<class GC>
   void ExternalConfig<GC>::SetTileToExecuteOnly(const SPoint& tileLoc, bool value)
   {
-    m_grid.SetTileToExecuteOnly(tileLoc, value);
+    FAIL(INCOMPLETE_CODE);
+    //m_grid.SetTileToExecuteOnly(tileLoc, value);
   }
 
   template<class GC>

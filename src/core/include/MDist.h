@@ -81,7 +81,9 @@ namespace MFM
     /**
      * Access the singleton MDist of any given size.
      */
-    static MDist<R> & get();
+    static const MDist<R> & get();
+
+    static const MDist<R> THE_INSTANCE;
 
     /**
      * Fills a given SPoint with a random Von Neumann unit vector.
@@ -152,7 +154,7 @@ namespace MFM
      * Fills pt with the point represented by bits.
      * Uses a 4-bit rep if maxRadius less than 3
      */
-    void FillFromBits(SPoint& pt, u8 bits, u32 maxRadius);
+    void FillFromBits(SPoint& pt, u8 bits, u32 maxRadius) const;
 
   private:
     static const u32 ARRAY_LENGTH = EVENT_WINDOW_SITES(R);
@@ -174,6 +176,10 @@ namespace MFM
     u8 m_horizonsByDirection[Dirs::DIR_COUNT][ARRAY_LENGTH];
 
   };
+
+  template <u32 R>
+  const MDist<R> MDist<R>::THE_INSTANCE;
+
 } /* namespace MFM */
 
 #include "MDist.tcc"

@@ -32,7 +32,6 @@
 #include "Parameter.h"
 #include "itype.h"
 #include "StaticLoader.h"
-#include "EventWindow.h"
 #include "UUID.h"
 #include "Dirs.h"
 #include "Logger.h"
@@ -43,6 +42,7 @@ namespace MFM
   typedef u32 ElementType;
 
   template <class CC> class Atom; // FORWARD
+  template <class CC> class EventWindow; // FORWARD
 
   /**
    * An Element describes how a given type of Atom behaves.
@@ -107,7 +107,7 @@ namespace MFM
      */
     const char* m_name;
 
-   protected:
+   public:
 
     /**
      * Describes how the default Atom of this Element should be
@@ -129,7 +129,7 @@ namespace MFM
      *
      * @returns The BitVector held inside \c atom .
      */
-    const BitVector<P::BITS_PER_ATOM> & GetBits(const T & atom) const
+    static const BitVector<P::BITS_PER_ATOM> & GetBits(const T & atom)
     {
       return atom.m_bits;
     }
@@ -141,7 +141,7 @@ namespace MFM
      *
      * @returns The BitVector held inside \c atom .
      */
-    BitVector<P::BITS_PER_ATOM> & GetBits(T & atom) const
+    static BitVector<P::BITS_PER_ATOM> & GetBits(T & atom)
     {
       return atom.m_bits;
     }
@@ -181,6 +181,7 @@ namespace MFM
       }
     }
 
+  protected:
     /**
      * Sets the Atomic Symbol of this Element, which is mainly used
      * during the rendering of this Element .
@@ -212,17 +213,6 @@ namespace MFM
     }
 
     /**
-     * Diffuses the central Atom of a given EventWindow based on the
-     * empty places around the Atom and the odds that the central Atom
-     * can be diffused.
-     *
-     * @param window The EventWindow of which the central Atom should
-     *               attempt to be diffused.
-     */
-    void Diffuse(EventWindow<CC>& window) const;
-
-
-    /**
      * Determines how likely an Atom of this type is to be swapped
      * with during diffusal.
      *
@@ -251,15 +241,6 @@ namespace MFM
     {
       LOG.Debug("Constructed %@",&m_UUID);
     }
-
-    /*
-    // For use by Element_Empty only!
-    Element(const UUID & uuid, u32 type) : m_UUID(uuid), m_type(type),
-                                           m_hasType(true),
-                                           m_renderLowlight(false),
-                                           m_atomicSymbol("!!")
-    { }
-    */
 
     /**
      * Assigns the type of this Element using the U16StaticLoader
@@ -534,37 +515,6 @@ namespace MFM
     {
       return m_atomicParameters;
     }
-#if 0
-<<<<<<< Updated upstream
-
-  };
-
-  template <class CC, u32 R>
-  struct ElementParameterNeighborhood : public Parameters::Neighborhood<R>
-  {
-    ElementParameterNeighborhood(Element<CC> * elt,
-                                 const char * tag,
-                                 const char * name,
-                                 const char * description)
-      : Parameters::Neighborhood<R>(elt->GetElementParameters(), tag, name, description)
-    {
-    }
-  };
-
-  template <class CC>
-  struct ElementParameterS32 : public Parameters::S32
-  {
-    ElementParameterS32(Element<CC> * elt,
-                        const char * tag,
-                        const char * name,
-                        const char * description,
-                        s32 min, s32 initial, s32 max, s32 snap)
-      : Parameters::S32(elt->GetElementParameters(), tag, name, description, min, initial, max, snap)
-    {
-    }
-=======
->>>>>>> Stashed changes
-#endif
   };
 }
 

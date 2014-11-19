@@ -220,13 +220,14 @@ namespace MFM {
      */
     OverflowableCharBufferByteSink<BUFSIZE>& operator=(const char* zstr)
     {
-      /* Check for >= to account for null byte written by snprintf */
-      if((m_written = strlen(zstr)) >= BUFSIZE)
+      if(strlen(zstr) >= GetCapacity())
       {
         FAIL(OUT_OF_ROOM);
       }
 
-      snprintf((char*)m_buf, BUFSIZE, "%s", zstr);
+      Reset();
+      Print(zstr);
+      GetZString(); // null terminate
 
       return *this;
     }

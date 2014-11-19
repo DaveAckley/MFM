@@ -29,7 +29,6 @@
 #define ELEMENTTABLE_H
 
 #include "BitVector.h"
-#include "EventWindow.h"
 #include "Dirs.h"
 #include "itype.h"
 #include "Element.h"
