@@ -267,6 +267,7 @@ namespace MFM {
       , m_height(H)
       , m_threadsInitted(false)
       , m_backgroundRadiationEnabled(false)
+      , m_warpFactor(-1)
       , m_er(elts)
       , m_xraySiteOdds(1000)
     {
