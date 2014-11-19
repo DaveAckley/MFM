@@ -304,11 +304,19 @@ namespace MFM {
 
     /**
      * Prints the bits held in this BitVector to a specified ByteSink
-     * in binary format.
+     * in base 2 format.
      *
      * @param ostream The ByteSink to print bits to.
      */
-    void PrintBinary(ByteSink& ostream) const;
+    void PrintBase2(ByteSink& ostream) const;
+
+    /**
+     * Prints the bytes held in this BitVector to a specified ByteSink
+     * as unformatted raw bytes
+     *
+     * @param ostream The ByteSink to print bytes to.
+     */
+    void PrintBytes(ByteSink& ostream) const;
 
     /**
      * Load this BitVector from a specified ByteSource by reading BITS
@@ -327,18 +335,33 @@ namespace MFM {
 
     /**
      * Load this BitVector from a specified ByteSource by reading BITS
-     * bytes in binary format. Skips leading whitespace. Returns \c
+     * bits in base 2 format. Skips leading whitespace. Returns \c
      * true if all went well; returns \c false if insufficient
-     * consecutive binary bytes were available to fully initialize the
-     * BitVector . When \c false is returned, the ByteSource will be
-     * positioned just before the first unacceptable byte encountered,
-     * and the BitVector will be unchanged.
+     * consecutive '0's and '1's bytes were available to fully
+     * initialize the BitVector . When \c false is returned, the
+     * ByteSource will be positioned just before the first
+     * unacceptable byte encountered, and the BitVector will be
+     * unchanged.
      *
      * @param istream The ByteSource to read bytes from.
      *
      * @returns \c true if all went well, else \c false .
      */
-    bool ReadBinary(ByteSource& bs);
+    bool ReadBase2(ByteSource& bs);
+
+    /**
+     * Load this BitVector from a specified ByteSource by reading raw
+     * bytes of the form written by PrintBytes.  Returns \c true if
+     * all went well; returns \c false if insufficient bytes were
+     * available to fully initialize the BitVector . When \c false is
+     * returned, the ByteSource position is undefined, but the
+     * BitVector is unchanged.
+     *
+     * @param istream The ByteSource to read bytes from.
+     *
+     * @returns \c true if all went well, else \c false .
+     */
+    bool ReadBytes(ByteSource& bs);
 
     bool operator==(const BitVector & rhs) const;
 

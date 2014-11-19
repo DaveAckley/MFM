@@ -73,7 +73,7 @@ namespace MFM
       {
 	return -1;
       }
-      return m_input[m_read++];
+      return (u8) m_input[m_read++]; // cast for non-negative result
     }
 
     /**

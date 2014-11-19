@@ -120,10 +120,13 @@ namespace MFM
     u32 GetManhattanLength() const;
 
     /**
-     * Gets the maximum of the x and y coordinates and returns the
-     * largest one; i.e. \c MAX(x,y) .
+     * Gets the maximum absolute value of the x and y coordinates;
+     * i.e. \c MAX(abs(x),abs(y)) .  This value is also known as the
+     * 'maximum metric', the 'L-infinity norm', and the 'Chebyshev
+     * distance'
      *
-     * @returns The maximum of the coordinates in this Point .
+     * @returns The maximum of the absolute values of the coordinates
+     * in this Point .
      */
     u32 GetMaximumLength() const;
 

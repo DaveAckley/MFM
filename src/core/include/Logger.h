@@ -34,6 +34,10 @@
 #include "Mutex.h"
 #include <stdarg.h>
 
+#define MFM_LOG_DBG5(args) do {if (LOG.IfLog((Logger::Level) 5)) {LOG.Debug args ;}} while (0)
+#define MFM_LOG_DBG6(args) do {if (LOG.IfLog((Logger::Level) 6)) {LOG.Debug args ;}} while (0)
+#define MFM_LOG_DBG7(args) do {if (LOG.IfLog((Logger::Level) 7)) {LOG.Debug args ;}} while (0)
+
 namespace MFM
 {
 
