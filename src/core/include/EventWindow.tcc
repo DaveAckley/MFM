@@ -9,21 +9,46 @@
 namespace MFM {
 
   template <class CC>
-  bool EventWindow<CC>::TryEventAt(const SPoint & center)
+  bool EventWindow<CC>::TryEventAt(const SPoint & tcenter)
   {
     LOG.Debug("EW::TryEventAt(%d,%d)",
-              center.GetX(),
-              center.GetY());
+              tcenter.GetX(),
+              tcenter.GetY());
     ++m_eventWindowsAttempted;
-    if (!InitForEvent(center))
+
+    if (RejectOnRecency(tcenter))
     {
       return false;
     }
 
-    ++m_eventWindowsExecuted;
+    if (!InitForEvent(tcenter))
+    {
+      return false;
+    }
+
+    RecordEventAtTileCoord(tcenter);
     ExecuteEvent();
 
     return true;
+  }
+
+  template <class CC>
+  void EventWindow<CC>::RecordEventAtTileCoord(const SPoint tcoord)
+  {
+    ++m_eventWindowsExecuted;
+    Tile<CC> & t = GetTile();
+    SPoint owned = Tile<CC>::TileCoordToOwned(tcoord);
+    t.m_lastEventEventNumber[owned.GetX()][owned.GetY()] = m_eventWindowsExecuted;
+  }
+
+  template <class CC>
+  bool EventWindow<CC>::RejectOnRecency(const SPoint tcoord)
+  {
+    Tile<CC> & t = GetTile();
+    const u32 warpFactor = t.GetWarpFactor();
+    SPoint owned = Tile<CC>::TileCoordToOwned(tcoord);
+    u32 eventAge = t.GetUncachedEventAge(owned);
+    return !GetRandom().OddsOf(eventAge + warpFactor*t.GetSites(), 10*t.GetSites());
   }
 
   template <class CC>
@@ -137,73 +162,6 @@ namespace MFM {
     return true;
   }
 
-#if 0
-  template <class CC>
-  bool EventWindow<CC>::Advance()
-  {
-    switch (m_ewState)
-    {
-    case COMPUTE:
-      // COMPUTE finishes atomically; can't be here
-    default: FAIL(ILLEGAL_STATE);
-    case FREE:
-      return false;
-
-    case COMMUNICATE:
-      {
-        return SendCacheUpdates();
-      }
-    }
-  }
-#endif
-
-  template <class CC>
-  bool EventWindow<CC>::SendCacheUpdates()
-  {
-    FAIL(INCOMPLETE_CODE);  // XXX REIMPLEMENT|DITCH ME
-#if 0
-    Tile<CC> & t = GetTile();
-    Random & random = t.GetRandom();
-    PacketIO pbuffer;
-    bool didWork = false;
-    for (u32 i = 0; i < MAX_CACHES_TO_UPDATE; ++i)
-    {
-      CacheUpdateInfo & cui = m_cacheInfo[i];
-      if (cui.m_lockedTo == (Dir) -1)
-      {
-        continue;
-      }
-      ChannelEnd & cxn = t.GetChannelEnd(cui.m_lockedTo);
-      const u32 checkOdds = cxn.GetCheckOdds();
-      while (cui.m_atomsConsidered < SITE_COUNT)
-      {
-        bool dirty = m_isDirtySite[cui.m_atomsConsidered];
-        if (dirty || random.OneIn(checkOdds))
-        {
-          if (!pbuffer.SendAtom<CC>(dirty ? PACKET_UPDATE : PACKET_CHECK,
-                                    cxn, cui.m_atomsConsidered,
-                                    m_atomBuffer[cui.m_atomsConsidered]))
-          {
-            break; // No room.  Try again later; don't advance m_atomsConsidered
-          }
-          else
-          {
-            didWork |= true;
-          }
-        }
-        ++cui.m_atomsConsidered;
-      }
-    }
-    return didWork;
-#endif
-  }
-
-  template <class CC>
-  bool EventWindow<CC>::ReceiveCacheReplies()
-  {
-    FAIL(INCOMPLETE_CODE);
-  }
-
   template <class CC>
   bool EventWindow<CC>::AcquireRegionLocks()
   {
@@ -223,18 +181,23 @@ namespace MFM {
       return true;  // Nobody is needed
     }
 
-    s32 needed = 1;
-    s32 got = 0;
+    // At least one lock may be needed
+
     Tile<CC> & tile = GetTile();
-    Dir dir = m_lockRegion;
+    Dir baseDir = m_lockRegion;
+    Dir stopDir = Dirs::CWDir(baseDir);
+    u32 needed = 1;
     if (Dirs::IsCorner(m_lockRegion))
     {
+      baseDir = Dirs::CCWDir(baseDir);
+      stopDir = Dirs::CWDir(stopDir);
       needed = 3;
-      dir = Dirs::CCWDir(dir);
     }
 
     LOG.Debug("EW::AcquireRegionLocks - checking %d", needed);
-    for (; got < needed; ++got, dir = Dirs::CWDir(dir))
+
+    u32 got = 0;
+    for (Dir dir = baseDir; dir != stopDir; dir = Dirs::CWDir(dir))
     {
       CacheProcessor<CC> & cp = tile.GetCacheProcessor(dir);
 
@@ -244,6 +207,7 @@ namespace MFM {
         // the other loops check all MAX_CACHES_TO_UPDATE slots anyway
         LOG.Debug("EW::AcquireRegionLocks - skip: %s unconnected",
                   Dirs::GetName(dir));
+        --needed;
         continue;
       }
 
@@ -265,6 +229,7 @@ namespace MFM {
                 got,
                 Dirs::GetName(dir));
       m_cacheProcessorsLocked[got] = &cp;
+      ++got;
     }
 
     if (got < needed)
@@ -325,6 +290,7 @@ namespace MFM {
     {
       m_cacheProcessorsLocked[i] = 0;
     }
+
   }
 
   template <class CC>
@@ -383,18 +349,21 @@ namespace MFM {
     {
       const SPoint & pt = md.GetPoint(i) + m_center;
       bool dirty = false;
-      if (m_isLiveSite[i] && m_atomBuffer[i] != *tile.GetAtom(pt))
+      if (m_isLiveSite[i])
       {
-        tile.PlaceAtom(m_atomBuffer[i], pt);
-        dirty = true;
-      }
-
-      // Let the CPs see even unchanged atoms, for spot checks
-      for (u32 j = 0; j < maxCacheUsed; ++j)
-      {
-        if (m_cacheProcessorsLocked[j] != 0)
+        if (m_atomBuffer[i] != *tile.GetAtom(pt))
         {
-          m_cacheProcessorsLocked[j]->MaybeSendAtom( *tile.GetAtom(pt), dirty, i);
+          tile.PlaceAtom(m_atomBuffer[i], pt);
+          dirty = true;
+        }
+
+        // Let the CPs see even some unchanged atoms, for spot checks
+        for (u32 j = 0; j < maxCacheUsed; ++j)
+        {
+          if (m_cacheProcessorsLocked[j] != 0)
+          {
+            m_cacheProcessorsLocked[j]->MaybeSendAtom( *tile.GetAtom(pt), dirty, i);
+          }
         }
       }
     }

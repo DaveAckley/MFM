@@ -132,6 +132,16 @@ namespace MFM
       }
     }
 
+    u32 GetWarpFactor() const
+    {
+      return m_warpFactor;
+    }
+
+    void SetWarpFactor(u32 warp)
+    {
+      m_warpFactor = MIN(10u, warp);
+    }
+
   private:
 
     static SPoint TileCoordToOwned(const SPoint & tileCoord)
@@ -225,6 +235,13 @@ namespace MFM
     u64 m_lastChangedEventNumber[OWNED_SIDE][OWNED_SIDE];
 
     /**
+     * The event number (GetEventsExecuted()) as of the last time the
+     * site had an event.  Signed so we can initialize it to less than
+     * zero for a running start.
+     */
+    s64 m_lastEventEventNumber[OWNED_SIDE][OWNED_SIDE];
+
+    /**
      * The number of events which have occurred in every individual
      * site. Indexed as m_siteEvents[x][y], x,y : 0..OWNED_SIDE-1.
      */
@@ -270,6 +287,14 @@ namespace MFM
        Next state of the Tile state machine
      */
     State m_requestedState;
+
+    /**
+       How much event window selection should maximize the AER vs the
+       flatness of space, in the range of 0..10.  Value 0 adds
+       substantial pressure to distribute events evenly over sites;
+       value 10 adds none.  Default value: 3.
+     */
+    u32 m_warpFactor;
 
     /**
      * Sets m_executingWindow to a new random location in this
@@ -612,6 +637,30 @@ namespace MFM
     }
 
     /**
+     * Checks to see if a specified local point is contained within a
+     * Tile's caches or shared.  Such points are potential targets for
+     * writes via the cache protocol.
+     *
+     * @param pt The local location which is in question of being inside
+     *        of a cache or a shared region.
+     *
+     * @returns true if pt is in a cache or a shared cache, else false.
+     */
+    static bool IsInShared(const SPoint& point)
+    {
+      u32 sqdist = GetSquareDistanceFromCenter(point);
+      return sqdist <= TILE_WIDTH / 2 && sqdist > TILE_WIDTH / 2 - 2 * EVENT_WINDOW_RADIUS;
+    }
+
+    /**
+       Is this cache location currently a possible event center on an
+       adjacent tile?
+       \return true iff is it
+       \fails ILLEGAL_ARGUMENT if location is not a cache location
+     */
+    bool IsCacheSitePossibleEventCenter(const SPoint & location) const ;
+
+    /**
      * Checks to see if a specified point is in Hidden memory, and therefore
      * does not require a lock to execute.
      *
@@ -693,18 +742,19 @@ namespace MFM
 
     /**
      * Checks to see if a specified local point is a site that
-     * currently might receive cache updates in this particular Tile.
-     * The truth of this predicate depends in part on the connectivity
-     * of this Tile.  Therefore, even given the same location as
-     * argument, the return value from this method could change over
-     * time, if the connectivity of this Tile changes.
+     * currently might receive cache protocol updates in this
+     * particular Tile.  The truth of this predicate depends in part
+     * on the connectivity of this Tile.  Therefore, even given the
+     * same location as argument, the return value from this method
+     * could change over time, if the connectivity of this Tile
+     * changes.
      *
      * @param pt The local location in question
      *
-     * @returns true if pt currently might receive cache updates,
-     * given current connectivity.
+     * @returns true if pt currently might receive cache protocol
+     * updates, given current connectivity.
      */
-    bool IsReachableAsCache(const SPoint & location) const;
+    bool IsReachableViaCacheProtocol(const SPoint & location) const;
 
     /**
      * Checks to see if a specified SPoint is in a given region of this
@@ -747,26 +797,28 @@ namespace MFM
     Dir CacheAt(const SPoint& pt) const;
 
     /**
-     * Finds the region of shared memory in this Tile which contains a
-     * specified SPoint.
+     * Finds the region of cache or shared memory in this Tile which
+     * contains a specified SPoint.
      *
      * @param pt The SPoint which should specify a location within
-     *           shared memory.
+     *           cache or shared memory.
      *
-     * @returns The direction of the shared memory specified by pt, or
-     *          (Dir)-1 if pt is not in shared memory.
+     * @returns The direction of the cache or shared memory specified
+     *          by pt, or (Dir)-1 if pt is not in cache or shared
+     *          memory.
      */
     Dir SharedAt(const SPoint& pt) const;
 
     /**
-     * Finds the region of visible memory in this Tile which contains a
-     * specified SPoint.
+     * Finds the region of cache, shared, or visible memory in this
+     * Tile which contains a specified SPoint.
      *
      * @param pt The SPoint which should specify a location within
-     *           visible memory.
+     *           cache, shared, or visible memory.
      *
-     * @returns The direction of the visible memory specified by pt, or
-     *          (Dir)-1 if pt is not in visible memory.
+     * @returns The direction of the cache, shared, or visible memory
+     *          specified by pt, or (Dir)-1 if pt is not in cache,
+     *          shared, or visible memory.
      */
     Dir VisibleAt(const SPoint& pt) const;
 
@@ -903,52 +955,31 @@ namespace MFM
      * Gets the 'write age' of a specified point in this Tile.
      * Indexing ignores the cache boundary, so possible range is (0,0)
      * to (OWNED_SIDE-1,OWNED_SIDE-1).  The write age is the number of
-     * events on this tilesince the contents of the specified point
+     * events on this tile since the contents of the specified point
      * changed.  To obtain AEPS, divide this value by
      * Tile::GetSites().
      *
      * @param site The coordinates of the location of the site whose
      *          write age should be retrieved.
      *
-     * @param y The y coordinate of the location of the site whose
-     *          write age should be retrieved.
-     *
      * @returns The events since that site's content changed
      */
     u32 GetUncachedWriteAge(const SPoint site) const ;
 
-
-#if 0
-#endif
-
-#if 0 /* Doesn't exist? */
     /**
-     * Given a Packet , sends a complementary acknowledgement Packet
-     * describing that this Packet has received and processed all
-     * relevant Packets.
+     * Gets the 'event age' of a specified point in this Tile.
+     * Indexing ignores the cache boundary, so possible range is (0,0)
+     * to (OWNED_SIDE-1,OWNED_SIDE-1).  The event age is the number of
+     * events on this tile since the last event at the specified point
+     * changed.  To obtain AEPS, divide this value by
+     * Tile::GetSites().
      *
-     * @param packet The Packet of which a complementary Packet will
-     *               be constructed and sent.
-     */
-    void SendAcknowledgmentPacket(Packet<T>& packet);
-
-    /**
-     * Processes a Packet, performing all necessary operations defined by
-     * Packet semantics.
+     * @param site The coordinates of the location of the site whose
+     *          event age should be retrieved.
      *
-     * @param packet The Packet which this Tile will process.
+     * @returns The events since that site's content changed
      */
-    void ReceivePacket(Packet<T>& packet);
-
-    /**
-     * Gets a Pointer to the next Packet which is queued inside of
-     * m_outgoingPackets, consuming it in the process.
-     *
-     * @returns A Pointer to the next Packet in m_outgoingPackets, or
-     *          NULL if it does not exist.
-     */
-    Packet<T>* NextPacket();
-#endif
+    u32 GetUncachedEventAge(const SPoint site) const ;
 
     /**
      * Fills a specified Point with the coordinates of the last EventWindow center.

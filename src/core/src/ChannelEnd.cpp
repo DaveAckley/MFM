@@ -3,19 +3,6 @@
 
 namespace MFM
 {
-#if 0
-  const char * GetChannelStateName(u32 state)
-  {
-    switch (state)
-    {
-    case AbstractChannel::CHANNEL_UNOWNED: return "UNOWNED";
-    case AbstractChannel::CHANNEL_A_OWNER: return "A OWNER";
-    case AbstractChannel::CHANNEL_B_OWNER: return "B OWNER";
-    default: return "illegal state";
-    }
-  }
-#endif
-
   void ChannelEnd::ReportChannelEndStatus(Logger::Level level)
   {
     LOG.Log(level,"    ==ChannelEnd %p [chn %p] ==",

@@ -98,6 +98,8 @@ namespace MFM {
     u64 m_eventWindowsAttempted;
     u64 m_eventWindowsExecuted;
 
+    void RecordEventAtTileCoord(const SPoint tcoord) ;
+
     /**
      * Note the atom buffer is maintained in 'direct' coordinates, as
      * if the chosen symmetry is always PSYM_NORMAL.  For accesses by
@@ -168,6 +170,8 @@ namespace MFM {
      */
     bool TryEventAt(const SPoint & center) ;
 
+    bool RejectOnRecency(const SPoint tcoord) ;
+
     /**
      * Set up for an event at center, which represented in full,
      * untransformed Tile coordinates.
@@ -186,9 +190,6 @@ namespace MFM {
 
     friend class EventWindow_Test;
     friend class Tile<CC>;
-
-    bool SendCacheUpdates() ;
-    bool ReceiveCacheReplies() ;
 
     /**
      * Attempt to lock the specified direction for use by this
