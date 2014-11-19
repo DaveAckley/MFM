@@ -251,16 +251,17 @@ namespace MFM
   template<class GC>
   void ExternalConfig<GC>::SetTileToExecuteOnly(const SPoint& tileLoc, bool value)
   {
-    FAIL(INCOMPLETE_CODE);
-    //m_grid.SetTileToExecuteOnly(tileLoc, value);
+    m_grid.SetTileEnabled(tileLoc, !value);
   }
 
   template<class GC>
   bool ExternalConfig<GC>::PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const char* hexData)
   {
     SPoint pt(x, y);
-    m_grid.PlaceAtom(elt.GetDefaultAtom(), pt);
-    m_grid.GetWritableAtom(pt)->ReadStateBits(hexData);
+    T atom = elt.GetDefaultAtom();
+
+    atom.ReadStateBits(hexData);
+    m_grid.PlaceAtom(atom, pt);
     return true;
   }
 
@@ -268,8 +269,10 @@ namespace MFM
   bool ExternalConfig<GC>::PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const BitVector<BPA> & bv)
   {
     SPoint pt(x, y);
-    m_grid.PlaceAtom(elt.GetDefaultAtom(), pt);
-    m_grid.GetWritableAtom(pt)->ReadStateBits(bv);
+    T atom = elt.GetDefaultAtom();
+
+    atom.ReadStateBits(bv);
+    m_grid.PlaceAtom(atom, pt);
     return true;
   }
 }

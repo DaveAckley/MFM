@@ -78,6 +78,19 @@ namespace MFM {
      */
     u32 m_cacheDir;
 
+    /**
+       The 'center region' of the event we are part of.  If
+       m_centerRegion is an edge, it must be equal to m_cacheDir, and
+       that implies we are the only CP involved in this event, so we
+       can unlock as soon as we are done.  If m_centerRegion is a
+       corner and unequal to m_cacheDir, we enter BLOCKING when we are
+       done and do not unlock ourselves.  If m_centerRegion is a
+       corner and equal to m_cacheDir, we enter BLOCKING when we are
+       done, and then while BLOCKING, we check if both our neighbors
+       are also BLOCKING.  When they are, we unlock all three of us.
+     */
+    Dir m_centerRegion;
+
     enum {
       /**
          MIN_CHECK_ODDS is the minimum value of m_checkOdds.
@@ -190,6 +203,7 @@ namespace MFM {
       LOADING,      // Locked by us, event changes loading into m_toSend
       SHIPPING,     // Locked by us, shipping event changes to peer
       RECEIVING,    // Locked by us, waiting for ack/nak from peer
+      BLOCKING,     // Locked by us, waiting for other linked CP's
       PASSIVE,      // Locked by them, Received BeginUpdate from peer
       STATE_COUNT
     };
@@ -203,6 +217,7 @@ namespace MFM {
       case LOADING: return "LOADING";
       case SHIPPING: return "SHIPPING";
       case RECEIVING: return "RECEIVING";
+      case BLOCKING: return "BLOCKING";
       case PASSIVE: return "PASSIVE";
       default: return "illegal state";
       }
@@ -242,9 +257,10 @@ namespace MFM {
 
     void SetStateInternal(State state)
     {
-      MFM_LOG_DBG6(("CP %s %s (%d,%d): %s->%s",
+      MFM_LOG_DBG6(("CP %s %s [%s] (%d,%d): %s->%s",
                     m_tile->GetLabel(),
                     Dirs::GetName(m_cacheDir),
+                    Dirs::GetName(m_centerRegion),
                     m_farSideOrigin.GetX(),
                     m_farSideOrigin.GetY(),
                     GetStateName(m_cpState),
@@ -323,10 +339,21 @@ namespace MFM {
 
     bool AdvanceReceiving() ;
 
+    bool AdvanceBlocking() ;
+
+    void Unblock() ;
+
     bool IsIdle()
     {
       return m_cpState == IDLE;
     }
+
+    bool IsBlocking()
+    {
+      return m_cpState == BLOCKING;
+    }
+
+    CacheProcessor & GetSibling(Dir inDirection) ;
 
     /**
        Check if this atom is visible to far end cache, and if so,
@@ -359,9 +386,14 @@ namespace MFM {
 
     bool ShipBufferAsPacket(PacketBuffer & pb) ;
 
-    bool TryLock()
+    bool TryLock(Dir centerRegion)
     {
-      return GetLonglivedLock().TryLock(this);
+      bool ret = GetLonglivedLock().TryLock(this);
+      if (ret)
+      {
+        m_centerRegion = centerRegion;
+      }
+      return ret;
     }
 
     void Unlock()
@@ -371,6 +403,7 @@ namespace MFM {
       {
         FAIL(LOCK_FAILURE);
       }
+      m_centerRegion = (Dir) -1;
     }
 
     bool IsConnected() const
@@ -455,6 +488,8 @@ namespace MFM {
     CacheProcessor()
       : m_tile(0)
       , m_longlivedLock(0)
+      , m_cacheDir(0)
+      , m_centerRegion((Dir) -1)
       , m_checkOdds(INITIAL_CHECK_ODDS)
       , m_remoteConsistentAtomCount(0)
       , m_useAdaptiveRedundancy(true)

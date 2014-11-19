@@ -57,8 +57,7 @@ namespace MFM
 
       default:
       case RESULT_FAIL:
-        LOG.Error("Lock failure");
-        return false; //FAIL(LOCK_FAILURE);
+        FAIL(LOCK_FAILURE);
       }
     }
 

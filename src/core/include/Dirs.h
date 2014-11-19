@@ -49,6 +49,14 @@ namespace MFM
     static const Dir DIR_COUNT = 8;
 
     /**
+       Check if a value is a legal Dir
+     */
+    static bool IsLegalDir(s32 val)
+    {
+      return val >= (s32) NORTH && val <= (s32) NORTHWEST;
+    }
+
+    /**
      * map a dir to a readable string
      */
     static const char * GetName(Dir dir)
@@ -63,6 +71,7 @@ namespace MFM
       case SOUTHEAST: return "Southeast";
       case SOUTHWEST: return "Southwest";
       case NORTHWEST: return "Northwest";
+      case (Dir) -1: return "No direction";
       default: return "INVALID DIRECTION";
       }
     }

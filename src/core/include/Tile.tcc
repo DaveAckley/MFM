@@ -87,10 +87,10 @@ namespace MFM
   template <class CC>
   const CacheProcessor<CC> & Tile<CC>::GetCacheProcessor(Dir toCache) const
   {
-    if (toCache < Dirs::NORTH || toCache > Dirs::NORTHWEST)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
+    if (!Dirs::IsLegalDir(toCache))
+    {
+      FAIL(ILLEGAL_ARGUMENT);
+    }
 
     return m_cacheProcessors[toCache];
   }

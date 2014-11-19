@@ -254,7 +254,7 @@ namespace MFM {
         break;  // Already otherwise engaged
       }
 
-      bool locked = cp.TryLock();
+      bool locked = cp.TryLock(m_lockRegion);
       if (!locked)
       {
         LOG.Debug("EW::AcquireRegionLocks - fail: didn't get %s lock",
