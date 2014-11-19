@@ -465,31 +465,4 @@ namespace MFM
     return true;
   }
 
-#if 0
-    ChannelEnd & cxn = m_channelEnd;
-    PacketIO pbuffer;
-
-      while (cui.m_atomsConsidered < SITE_COUNT)
-      {
-        bool dirty = m_isDirtySite[cui.m_atomsConsidered];
-        if (dirty || random.OneIn(checkOdds))
-        {
-          if (!pbuffer.SendAtom<CC>(dirty ? PACKET_UPDATE : PACKET_CHECK,
-                                    cxn, cui.m_atomsConsidered,
-                                    m_atomBuffer[cui.m_atomsConsidered]))
-          {
-            break; // No room.  Try again later; don't advance m_atomsConsidered
-          }
-          else
-          {
-            didWork |= true;
-          }
-        }
-        ++cui.m_atomsConsidered;
-      }
-    }
-    return didWork;
-  }
-#endif
-
 }

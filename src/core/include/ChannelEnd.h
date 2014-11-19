@@ -95,25 +95,6 @@ namespace MFM
       return m_channel != 0;
     }
 
-#if 0
-    bool TryLock()
-    {
-      AssertConnected();
-      return m_channel->TryLock(m_onSideA);
-    }
-
-    bool Unlock()
-    {
-      AssertConnected();
-      if (!IsLockedByUs())
-      {
-        FAIL(LOCK_FAILURE);
-      }
-
-      return m_channel->Unlock(m_onSideA);
-    }
-#endif
-
     u32 CanWrite()
     {
       AssertConnected();
@@ -163,31 +144,6 @@ namespace MFM
       }
       m_owner = tag;
     }
-
-#if 0
-    bool IsLockedByUs() const
-    {
-      return IsLockedBy(true);
-    }
-
-    bool IsLockedByThem() const
-    {
-      return IsLockedBy(false);
-    }
-
-    bool IsLockedBy(bool us) const
-    {
-      AssertConnected();
-      switch (m_channel->GetChannelState())
-      {
-      case AbstractChannel::CHANNEL_UNOWNED: return false;
-      case AbstractChannel::CHANNEL_A_OWNER: return us == m_onSideA;
-      case AbstractChannel::CHANNEL_B_OWNER: return us != m_onSideA;
-      default:
-        FAIL(ILLEGAL_STATE);
-      }
-    }
-#endif
 
     void ClaimChannelEnd(AbstractChannel& channel, bool onSideA)
     {
