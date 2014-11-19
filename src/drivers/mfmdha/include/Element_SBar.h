@@ -260,7 +260,7 @@ namespace MFM
       SPoint myPos = GetPos(self);
       //      myPos.Print(stderr);
 
-      const MDist<R> md = MDist<R>::get();
+      const MDist<R> & md = MDist<R>::get();
 
       SPoint anInconsistent;
       u32 inconsistentCount = 0;

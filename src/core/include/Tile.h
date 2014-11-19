@@ -255,7 +255,7 @@ namespace MFM
   private:
     CacheProcessor<CC> m_cacheProcessors[Dirs::DIR_COUNT];
 
-    bool AllCacheProcessorsInactive();
+    bool AllCacheProcessorsIdle();
 
     /**
        Current state of the Tile state machine

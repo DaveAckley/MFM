@@ -31,6 +31,7 @@
 #include "Element.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
+#include "ElementUtils.h"
 #include "Element_Res.h"  /* For Element_Res::TYPE */
 #include "Element_Data.h"  /* For Element_Data::TYPE */
 #include "ColorMap.h"
@@ -216,7 +217,7 @@ namespace MFM
         movingUp = !movingUp;
 
       }
-      this->Diffuse(window);
+      window.Diffuse();
     }
   };
 

@@ -135,7 +135,7 @@ namespace MFM
           window.SetRelativeAtom(dir, atom);
         }
       }
-      this->Diffuse(window);
+      window.Diffuse();
     }
   };
 

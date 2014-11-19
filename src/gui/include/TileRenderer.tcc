@@ -210,7 +210,7 @@ namespace MFM
 
     u32 tileHeight = P::TILE_WIDTH * m_atomDrawSize;
 
-    bool lowlight = !t.GetExecutingOwnEvents();
+    bool lowlight = !t.IsActive();
 
     realPt.Add(m_windowTL);
 
@@ -266,12 +266,12 @@ namespace MFM
   void TileRenderer::RenderEventWindow(Drawing & drawing, SPoint& offset,
                                        Tile<CC>& tile, bool renderCache)
   {
+    FAIL(INCOMPLETE_CODE);
+
+#if 0 // Sun Oct 19 11:39:41 2014 Unreimplemented since not currently in use
     // Extract short type names
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS};
-
-    SPoint winCenter;
-    tile.FillLastExecutedAtom(winCenter);
 
     SPoint atomLoc;
     SPoint eventCenter;
@@ -282,7 +282,7 @@ namespace MFM
     u32 tableSize = EVENT_WINDOW_SITES(R);
     for(u32 i = 0; i < tableSize; i++)
     {
-      MDist<R>::get().FillFromBits(atomLoc, i, R);
+      const MDist<R>::get().FillFromBits(atomLoc, i, R);
       atomLoc.Add(eventCenter);
       atomLoc.Add(cacheOffset, cacheOffset);
 
@@ -297,6 +297,7 @@ namespace MFM
 
       RenderAtomBG(drawing, offset, atomLoc, drawColor);
     }
+#endif
   }
 
   template <class CC>

@@ -109,7 +109,8 @@ namespace MFM
 
     static const u32 BITS_BAR_COORD_LEN = BITS_WIDE + BITS_HIGH;
 
-    static const u32 STATE_BITS_START = P3Atom<P>::P3_STATE_BITS_POS;
+    //static const u32 STATE_BITS_START = P3Atom<P>::P3_STATE_BITS_POS;
+    static const u32 STATE_BITS_START = T::ATOM_FIRST_STATE_BIT;
 
     typedef AtomicParameterType<CC, VD::U32, BITS_WIDE, STATE_BITS_START> APBarWidth;
     typedef AtomicParameterType<CC, VD::U32, BITS_HIGH, APBarWidth::END> APBarHeight;

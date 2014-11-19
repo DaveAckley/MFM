@@ -112,7 +112,7 @@ namespace MFM
                 window.GetCenterInTile().GetX(),
                 window.GetCenterInTile().GetY());
 
-      this->Diffuse(window);
+      window.Diffuse();
     }
 
     virtual const T & GetDefaultAtom() const
