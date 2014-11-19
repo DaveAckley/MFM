@@ -14,14 +14,15 @@ namespace MFM {
     UUID u1("Hi",1,2,3,4);
 
     assert(!strcmp(u1.GetLabel(),"Hi"));
-    assert(u1.GetVersion() == 1);
+    assert(u1.GetUUIDVersion() == UUID::API_VERSION);
+    assert(u1.GetElementVersion() == 1);
     assert(u1.GetHexDate() == 2);
     assert(u1.GetHexTime() == 3);
     assert(u1.GetConfigurationCode() == 4);
 
     UUID u2("Hi", 1, 0x20140516, 0x190447, 4);
     assert(!strcmp(u2.GetLabel(),"Hi"));
-    assert(u2.GetVersion() == 1);
+    assert(u2.GetElementVersion() == 1);
     assert(u2.GetHexDate() == 0x20140516);
     assert(u2.GetHexTime() == 0x190447);
     assert(u2.GetConfigurationCode() == 4);
@@ -72,19 +73,19 @@ namespace MFM {
 
   static void Test_Print() {
     UUID u1("Sorter",1,2,3,4);
-    Test_Vprintf_Result("foo[Sorter-11141213]bar", "foo[%@]bar", &u1);
-    Test_Vprintf_Result("([Sorter-11141213])", "([%#@])", 1234, &u1);
+    Test_Vprintf_Result("foo[Sorter-1111141213]bar", "foo[%@]bar", &u1);
+    Test_Vprintf_Result("([Sorter-1111141213])", "([%#@])", 1234, &u1);
 
     UUID u2("Hi", 2, 0x20140516, 0x191339, 0x8899);
-    Test_Vprintf_Result("foo/Hi-12488998201405166191339/bar", "foo/%@/bar", &u2);
+    Test_Vprintf_Result("foo/Hi-1112488998201405166191339/bar", "foo/%@/bar", &u2);
 
     UUID u3("VacuousSnareDrumwithKickbackReburn",
             87, 0x20140516, 0x214811, 0x109);
-    Test_Vprintf_Result("[VacuousSnareDrumwithKickbackReburn-28731098201405166214811]",
+    Test_Vprintf_Result("[VacuousSnareDrumwithKickbackReburn-1128731098201405166214811]",
                         "[%@]", &u3);
 
     UUID u4("W", 1, 2, 3, 4);
-    Test_Vprintf_Result("fooW-11141213bar", "foo%@bar", &u4);
+    Test_Vprintf_Result("fooW-1111141213bar", "foo%@bar", &u4);
   }
 
   static void Test_Vprintf_Read(const UUID & u) {
@@ -111,4 +112,3 @@ namespace MFM {
   }
 
 } /* namespace MFM */
-

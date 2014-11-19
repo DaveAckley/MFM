@@ -25,7 +25,8 @@ namespace MFM {
   {
     return CompatibleLabel(other)
       && CompatibleConfigurationCode(other)
-      && m_apiVersion == other.m_apiVersion;
+      && m_uuidVersion == other.m_uuidVersion
+      && m_elementVersion == other.m_elementVersion;
   }
 
   bool UUID::CompatibleButStrictlyNewer(const UUID & other) const
@@ -50,8 +51,9 @@ namespace MFM {
   void UUID::Print(ByteSink & bs) const
   {
     bs.Print(GetLabel());
-    bs.Printf("-%D%X%X%X",
-              m_apiVersion,
+    bs.Printf("-%D%D%X%X%X",
+              m_uuidVersion,
+              m_elementVersion,
               m_configurationCode,
               m_hexDate,
               m_hexTime);
@@ -61,7 +63,8 @@ namespace MFM {
 
     // Read everything before changing anything..
     OString64 cbbs;
-    u32 apiversion = 0;
+    u32 uuidversion = 0;
+    u32 elementversion = 0;
     u32 configurationCode = 0;
     u32 hexdate = 0;
     u32 hextime = 0;
@@ -73,7 +76,10 @@ namespace MFM {
     if (cbbs.HasOverflowed() || !LegalLabel(cbbs.GetZString()))
       return false;
 
-    if (!bs.Scan(apiversion, Format::LEX32)) return false;
+    if (!bs.Scan(uuidversion, Format::LEX32)) return false;
+    if (uuidversion != API_VERSION) return false;
+
+    if (!bs.Scan(elementversion, Format::LEX32)) return false;
     if (!bs.Scan(configurationCode, Format::LXX32)) return false;
     if (!bs.Scan(hexdate, Format::LXX32)) return false;
     if (!bs.Scan(hextime, Format::LXX32)) return false;
@@ -82,22 +88,22 @@ namespace MFM {
     m_label.Print(cbbs.GetZString());
     m_label.GetZString();  // null terminate
 
-    m_apiVersion = apiversion;
+    m_uuidVersion = uuidversion;
+    m_elementVersion = elementversion;
     m_configurationCode = configurationCode;
     m_hexDate = hexdate;
     m_hexTime = hextime;
     return true;
   }
 
-
   bool UUID::operator==(const UUID & other) const
   {
     return
-      m_apiVersion == other.m_apiVersion &&
+      m_uuidVersion == other.m_uuidVersion &&
+      m_elementVersion == other.m_elementVersion &&
       m_hexDate == other.m_hexDate &&
       m_hexTime == other.m_hexTime &&
       strcmp(GetLabel(),other.GetLabel())==0;
   }
 
 }
-

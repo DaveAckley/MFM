@@ -15,6 +15,7 @@ namespace MFM
     , m_enabled(true)
     , m_backgroundRadiation(false)
     , m_requestedState(OFF)
+    , m_warpFactor(3)
   {
     Init();
   }
@@ -30,6 +31,7 @@ namespace MFM
     ClearAtoms();
 
   }
+
   template <class CC>
   typename CC::ATOM_TYPE Tile<CC>::GetEmptyAtom() const
   {
@@ -63,6 +65,18 @@ namespace MFM
       }
     }
     NeedAtomRecount();
+
+    for(u32 x = 0; x < OWNED_SIDE; x++)
+    {
+      for(u32 y = 0; y < OWNED_SIDE; y++)
+      {
+        m_lastChangedEventNumber[x][y] = 0;
+
+        // Set last event deep in the past to avoid initial color
+        m_lastEventEventNumber[x][y] = -1000*GetSites();
+      }
+    }
+
   }
 
   template <class CC>
@@ -160,6 +174,17 @@ namespace MFM
     }
     return (u32) (GetEventsExecuted() -
                   m_lastChangedEventNumber[site.GetX()][site.GetY()]);
+  }
+
+  template <class CC>
+  u32 Tile<CC>::GetUncachedEventAge(const SPoint site) const
+  {
+    if (!IsInUncachedTile(site))
+    {
+      FAIL(ILLEGAL_ARGUMENT);
+    }
+    return (u32) (GetEventsExecuted() -
+                  m_lastEventEventNumber[site.GetX()][site.GetY()]);
   }
 
   template <class CC>
@@ -309,14 +334,14 @@ namespace MFM
   }
 
   template <class CC>
-  bool Tile<CC>::IsReachableAsCache(const SPoint & location) const
+  bool Tile<CC>::IsReachableViaCacheProtocol(const SPoint & location) const
   {
-    if (!IsInCache(location))
+    if (!IsInShared(location))
     {
       return false;
     }
 
-    Dir dir = CacheAt(location);
+    Dir dir = SharedAt(location);
     if (IsConnected(dir))
     {
       return true;
@@ -337,6 +362,17 @@ namespace MFM
   }
 
   template <class CC>
+  bool Tile<CC>::IsCacheSitePossibleEventCenter(const SPoint & location) const
+  {
+    if (!IsInCache(location))
+    {
+      FAIL(ILLEGAL_ARGUMENT);
+    }
+
+    return IsConnected(CacheAt(location));
+  }
+
+  template <class CC>
   bool Tile<CC>::IsLiveSite(const SPoint & location) const
   {
     if (!IsInTile(location))
@@ -347,11 +383,10 @@ namespace MFM
     {
       return true;
     }
-    if (IsReachableAsCache(location))
-    {
-      return true;
-    }
-    return false;
+
+    // In-tile + not-owned => in-cache
+
+    return IsCacheSitePossibleEventCenter(location);
   }
 
   template <class CC>

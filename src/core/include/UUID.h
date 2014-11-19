@@ -33,7 +33,8 @@
 #include "ByteSerializable.h"
 #include <string.h>    /* For strlen, strncpy */
 
-#define MFM_UUID_FOR(label, apiVersion) UUID(label,(u32) apiVersion, (u32) MFM_BUILD_DATE, (u32) MFM_BUILD_TIME, UUID::ComputeConfigurationCode<CC>())
+#define MFM_UUID_FOR(label, elementVersion) \
+  UUID(label,(u32) elementVersion, (u32) MFM_BUILD_DATE, (u32) MFM_BUILD_TIME, UUID::ComputeConfigurationCode<CC>())
 
 namespace MFM {
 
@@ -44,14 +45,33 @@ namespace MFM {
   class UUID : public ByteSerializable {
   public:
 
-    UUID() : m_configurationCode(0), m_apiVersion(0), m_hexDate(0), m_hexTime(0)
+    /**
+       This is the version of the UUID system itself (not the version
+       of any particular element).  This must and shall only be
+       incremented when the serialized format of UUIDs changes.  The
+       UUID API version must always remain the first component of the
+       UUID after the element name, and if it mismatches what is
+       expected, the UUID shall be declared incompatible without even
+       reading the rest of the UUID.
+     */
+    static const u32 API_VERSION = 1;
+
+    UUID() : m_configurationCode(0), m_elementVersion(0), m_uuidVersion(1), m_hexDate(0), m_hexTime(0)
     {
       m_label.Reset();
       m_label.GetZString();
     }
 
+    /**
+       ComputeFullConfigurationCode produces a 32 bit value that
+       depends on all configuration parameters.  In API version 0
+       (prior to v2.1.0), Element UUIDs included this code and
+       required it to be identical between element versions.
+
+       @sa ComputeConfigurationCode
+     */
     template <class CC>
-    static u32 ComputeConfigurationCode() {
+    static u32 ComputeFullConfigurationCode() {
       u32 val = 0;
       val = (val<<4) + CC::ATOM_TYPE::ATOM_CATEGORY;
       val = (val<<4) + CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS;
@@ -62,9 +82,34 @@ namespace MFM {
       return val;
     }
 
-    UUID(const char * label, const u32 apiVersion, const u32 decDate, const u32 decTime, const u32 configCode)
+    /**
+       ComputeConfigurationCode produces a 16 bit value that depends
+       on all configuration parameters that could plausibly affect
+       Element behavior -- specifically, the ATOM_CATEGORY (e.g., the
+       P3 Atom), the EVENT_WINDOW_RADIUS, and the BITS_PER_ATOM.  (All
+       current ATOM_CATEGORY have specific requirements for
+       BITS_PER_ATOM, so it's not exactly clear why the latter is
+       included separately) dependent on the ATOM_CATEGORY).
+
+       In API version 1, Element UUIDs include this code and require
+       it to be identical between element versions.
+
+       \sa ComputeFullConfigurationCode
+       \since UUID API version 1
+     */
+    template <class CC>
+    static u32 ComputeConfigurationCode() {
+      u32 val = 0;
+      val = (val<<4) + CC::ATOM_TYPE::ATOM_CATEGORY;
+      val = (val<<4) + CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS;
+      val = (val<<8) + CC::PARAM_CONFIG::BITS_PER_ATOM;
+      return val;
+    }
+
+    UUID(const char * label, const u32 elementVersion, const u32 decDate, const u32 decTime, const u32 configCode)
       : m_configurationCode(configCode),
-        m_apiVersion(apiVersion),
+        m_elementVersion(elementVersion),
+        m_uuidVersion(API_VERSION),
         m_hexDate(decDate), m_hexTime(decTime)
     {
       if (!label)
@@ -115,7 +160,8 @@ namespace MFM {
     const char * GetLabel() const {
       return m_label.GetBuffer();  // m_label writers have ensured null-termination
     }
-    u32 GetVersion() const { return m_apiVersion; }
+    u32 GetElementVersion() const { return m_elementVersion; }
+    u32 GetUUIDVersion() const { return m_uuidVersion; }
     u32 GetHexDate() const { return m_hexDate; }
     u32 GetHexTime() const { return m_hexTime; }
     u32 GetConfigurationCode() const { return m_configurationCode; }
@@ -160,7 +206,8 @@ namespace MFM {
 
     OString64 m_label;
     u32 m_configurationCode;
-    u32 m_apiVersion;
+    u32 m_elementVersion;
+    u32 m_uuidVersion;
     u32 m_hexDate;
     u32 m_hexTime;
 

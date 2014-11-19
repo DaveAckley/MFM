@@ -108,6 +108,7 @@ namespace MFM {
     static void * TileDriverRunner(void *) ;
 
     bool m_backgroundRadiationEnabled;
+    s32 m_warpFactor;
 
     ElementRegistry<CC> m_er;
 
@@ -229,6 +230,21 @@ namespace MFM {
     void DoTileDriverControl(TileDriverControl & tc);
 
   public:
+    s32 GetWarpFactor() const
+    {
+      return m_warpFactor;
+    }
+
+    void SetWarpFactor(s32 wf)
+    {
+      if (wf < 0 || wf > 10)
+      {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+
+      m_warpFactor = wf;
+    }
+
     double GetAverageCacheRedundancy() const;
     void SetCacheRedundancy(u32 redundancyOddsType) ;
 

@@ -658,6 +658,19 @@ namespace MFM
       driver.m_haltAfterAEPS = atoi(aeps);
     }
 
+    static void SetWarpFactorFromArgs(const char* wfs, void* driverptr)
+    {
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
+      s32 warpFactor = atoi(wfs);
+      if (warpFactor < 0 || warpFactor > 10)
+      {
+        args.Die("Warp factor must be 0..10, not '%s'", wfs);
+      }
+      driver.m_grid.SetWarpFactor(warpFactor);
+    }
+
     static void LoadFromConfigFile(const char* path, void* driverptr)
     {
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
@@ -815,8 +828,6 @@ namespace MFM
         fclose(fp);
       }
 
-
-
       if (m_autosavePerEpochs > 0 && (epochs % m_autosavePerEpochs) == 0)
       {
         this->AutosaveGrid(epochs);
@@ -834,7 +845,6 @@ namespace MFM
         ++m_acceleration;
       }
     }
-
 
     AbstractDriver() :
       m_neededElementCount(0),
@@ -955,9 +965,8 @@ namespace MFM
       RegisterArgument("Load initial configuration from file at path ARG (string)",
                        "-cp|--configpath", &LoadFromConfigFile, this, true);
 
-      RegisterArgument("Continue execution after detected thread failures",
-                       "--ignorethreadbugs", &SetIgnoreThreadingProblems,
-                       this, false);
+      RegisterArgument("Set warp factor 0..10 (0: flattest space; 10: highest AER)",
+                       "-wf|--warpfactor", &SetWarpFactorFromArgs, this, true);
     }
 
 

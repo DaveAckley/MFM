@@ -15,11 +15,17 @@ namespace MFM
     m_renderSquares = false;
     m_gridColor = 0xff202020;
 
+#if 0 // Too much range for me..  Also we'd like a lighter palette background on some choice..
     m_hiddenColor  = 0xff353535;
     m_visibleColor = 0xff595959;
     m_sharedColor  = 0xff959595;
     m_cacheColor   = 0xffc0c0c0;
-
+#else
+    m_hiddenColor  = Drawing::InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 85);
+    m_visibleColor = Drawing::InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 90);
+    m_sharedColor  = Drawing::InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 95);
+    m_cacheColor   = Drawing::InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 100);
+#endif
     m_selectedHiddenColor = 0xffffffff;
     m_selectedPausedColor = 0xffafafaf;
     m_windowTL.SetX(0);
