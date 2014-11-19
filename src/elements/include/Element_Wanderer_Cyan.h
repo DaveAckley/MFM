@@ -56,7 +56,7 @@ namespace MFM
     Element_Wanderer_Cyan()
       : AbstractElement_Wanderer<CC>(MFM_UUID_FOR("WandererCyan", WANDERER_VERSION)),
         m_wanderDistance(this, "cyanWanderDistance", "Wander Distance",
-                         "Wander Distance", 0, 1, R/*, 1*/)
+                         "Wander Distance", 0, 1, R)
     {
       Element<CC>::SetAtomicSymbol("Wc");
       Element<CC>::SetName("WandererCyan");
