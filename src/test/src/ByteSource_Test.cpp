@@ -326,7 +326,7 @@ namespace MFM {
 
   static void Test_ScanfComplex() {
 
-    tester.Reset("\n\n\tFoo( 12, bar, Hi-122348201405166191339)\n");
+    tester.Reset("\n\n\tFoo( 12, bar, Hi-11122348201405166191339)\n");
     CharBufferByteSink<100> funcName;
 
     assert(4 == tester.Scanf("%#[\t\n ]%[A-Za-z0-9]%#[\t\n ](",&funcName));
@@ -357,5 +357,3 @@ namespace MFM {
   }
 
 } /* namespace MFM */
-
-
