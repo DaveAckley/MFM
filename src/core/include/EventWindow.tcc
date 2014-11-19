@@ -399,6 +399,14 @@ namespace MFM {
   }
 
   template <class CC>
+  const typename CC::ATOM_TYPE& EventWindow<CC>::GetRelativeAtom(const Dir mooreOffset) const
+  {
+    SPoint pt;
+    Dirs::FillDir(pt, mooreOffset);
+    return GetRelativeAtom(pt);
+  }
+
+  template <class CC>
   void EventWindow<CC>::SwapAtoms(const SPoint& locA, const SPoint& locB)
   {
     u32 idxa = MapToIndexValid(locA);
@@ -408,6 +416,5 @@ namespace MFM {
     m_atomBuffer[idxa] = m_atomBuffer[idxb];
     m_atomBuffer[idxb] = tmp;
   }
-
 
 } /* namespace MFM */

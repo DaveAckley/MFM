@@ -130,9 +130,8 @@ namespace MFM
 
     virtual void Behavior(EventWindow<CC>& window) const
     {
-      Random & random = window.GetRandom();
       T self = window.GetCenterAtom();
-      const MDist<R> & md = MDist<R>::get();
+      WindowScanner<CC> scanner(window);
 
       SPoint fishRel;
       u32 fishCount = 0;
@@ -161,31 +160,9 @@ namespace MFM
         this->SetCurrentAge(self, 1 + age);
       }
 
-      for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(1); ++idx)
-      {
-        const SPoint rel = md.GetPoint(idx);
-        if (!window.IsLiveSite(rel))
-        {
-          continue;
-        }
-        T other = window.GetRelativeAtom(rel);
-        u32 type = other.GetType();
-        if(type == Element_Fish<CC>::THE_INSTANCE.GetType())
-        {
-          if (random.OneIn(++fishCount))
-          {
-            fishRel = rel;
-          }
-        }
-
-        if(type == Element_Empty<CC>::THE_INSTANCE.GetType())
-        {
-          if (random.OneIn(++emptyCount))
-          {
-            emptyRel = rel;
-          }
-        }
-      }
+      scanner.FindRandomAtoms(1, 2,
+                              &fishRel, Element_Fish<CC>::THE_INSTANCE.GetType(), &fishCount,
+                              &emptyRel, Element_Empty<CC>::THE_INSTANCE.GetType(), &emptyCount);
 
       if (fishCount > 0)   // Eating
       {

@@ -31,6 +31,8 @@
 #include "BitVector.h"
 #include "Dirs.h"
 #include "itype.h"
+#include "Element.h"
+#include "Element_Empty.h"
 
 namespace MFM
 {

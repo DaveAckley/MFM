@@ -50,12 +50,22 @@ namespace MFM
     ASSET_CHECKBOX_ICON_ON,
     ASSET_CHECKBOX_ICON_OFF,
     ASSET_SLIDER_HANDLE,
+    ASSET_SELECTOR_ICON_BIG,
+    ASSET_ATOM_SELECTOR_ICON_BIG,
+    ASSET_PENCIL_ICON_BIG,
+    ASSET_ERASER_ICON_BIG,
+    ASSET_BRUSH_ICON_BIG,
+    ASSET_BUCKET_ICON_BIG,
+    ASSET_XRAY_ICON_BIG,
+    ASSET_CLONE_ICON_BIG,
+    ASSET_AIRBRUSH_ICON_BIG,
     ASSET_COUNT
   };
 
   enum FontAsset
   {
     FONT_ASSET_ELEMENT = 0,
+    FONT_ASSET_ELEMENT_BIG,
     FONT_ASSET_HELPPANEL_BIG,
     FONT_ASSET_HELPPANEL_SMALL,
     FONT_ASSET_LOGGER,
@@ -155,8 +165,18 @@ namespace MFM
         surfaces[ASSET_CHECKBOX_ICON_ON] = LoadImage("images/checkbox_on.png");
         surfaces[ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
         surfaces[ASSET_SLIDER_HANDLE] = LoadImage("images/slider_handle.png");
+        surfaces[ASSET_SELECTOR_ICON_BIG] = LoadImage("images/selector_icon_big.png");
+        surfaces[ASSET_ATOM_SELECTOR_ICON_BIG] = LoadImage("images/atom_selector_icon_big.png");
+        surfaces[ASSET_PENCIL_ICON_BIG] = LoadImage("images/pencil_icon_big.png");
+        surfaces[ASSET_ERASER_ICON_BIG] = LoadImage("images/eraser_icon_big.png");
+        surfaces[ASSET_BRUSH_ICON_BIG] = LoadImage("images/brush_icon_big.png");
+        surfaces[ASSET_BUCKET_ICON_BIG] = LoadImage("images/bucket_icon_big.png");
+        surfaces[ASSET_XRAY_ICON_BIG] = LoadImage("images/xray_icon_big.png");
+        surfaces[ASSET_CLONE_ICON_BIG] = LoadImage("images/clone_icon_big.png");
+        surfaces[ASSET_AIRBRUSH_ICON_BIG] = LoadImage("images/airbrush_icon_big.png");
 
         fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/tiny.ttf", 24);
+        fonts[FONT_ASSET_ELEMENT_BIG] = LoadFont("fonts/tiny.ttf", 40);
         fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont("fonts/tiny.ttf", 26);
         fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont("fonts/tiny.ttf", 16);
         fonts[FONT_ASSET_LOGGER] = LoadFont("fonts/tiny.ttf", 15);

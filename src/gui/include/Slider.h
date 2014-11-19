@@ -39,19 +39,25 @@ namespace MFM
   template <class CC>
   class Slider : public ParameterController<CC>
   {
-  private:
+   private:
     typedef typename CC::ATOM_TYPE T;
 
     bool m_dragging;
     s32 m_dragStartX;
     s32 m_preDragVal;
 
-  public:
+   public:
 
-    enum {
+    enum
+    {
       SLIDER_WIDTH = 150,
       SLIDER_HEIGHT = 32,
-      SLIDER_HALF_HEIGHT = (SLIDER_HEIGHT / 2)
+
+      SLIDER_WIDTH_BIG = 300,
+      SLIDER_HEIGHT_BIG = 64,
+
+      SLIDER_HALF_HEIGHT = (SLIDER_HEIGHT / 2),
+      SLIDER_HALF_HEIGHT_BIG = (SLIDER_HEIGHT_BIG / 2)
     };
 
     Slider() :
@@ -60,16 +66,37 @@ namespace MFM
       Init();
     }
 
+    inline u32 GetSliderWidth() const
+    {
+      return ParameterController<CC>::m_bigText ? SLIDER_WIDTH_BIG : SLIDER_WIDTH;
+    }
+
+    inline u32 GetSliderHeight() const
+    {
+      return ParameterController<CC>::m_bigText ? SLIDER_HEIGHT_BIG : SLIDER_HEIGHT;
+    }
+
+    inline u32 GetSliderHalfHeight() const
+    {
+      return ParameterController<CC>::m_bigText ? SLIDER_HALF_HEIGHT_BIG : SLIDER_HALF_HEIGHT;
+    }
+
+    inline FontAsset GetRenderFont() const
+    {
+      return ParameterController<CC>::m_bigText ? FONT_ASSET_ELEMENT :
+      FONT_ASSET_HELPPANEL_SMALL;
+    }
+
     void Init()
     {
-      Panel::SetDimensions(SLIDER_WIDTH * 2, SLIDER_HEIGHT);
-      Panel::SetDesiredSize(10000, SLIDER_HEIGHT);
+      Panel::SetDimensions(GetSliderWidth() * 2, GetSliderHeight());
+      Panel::SetDesiredSize(10000, GetSliderHeight());
     }
 
     // We standardize on s32 for all values.  We blithely assume that,
     // for a slider, the range of u32 will not be large enough for
     // that to be a problem.
-    s32 GetValue()
+    s32 GetValue() const
     {
       MFM_API_ASSERT_NONNULL(this->m_parameter);
       MFM_API_ASSERT_NONNULL(this->m_patom);
@@ -125,7 +152,8 @@ namespace MFM
       else
       {
         m_dragging = false;
-        return true;
+        /* Might want the things underneath to let up too. */
+        return false;
       }
       return false;
     }
@@ -135,7 +163,15 @@ namespace MFM
       if(m_dragging && this->m_parameter)
       {
         s32 delta = event.m_event.motion.x - m_dragStartX;
-        s32 valDelta = ((delta * this->m_parameter->GetMax()) - 16) / (SLIDER_WIDTH - 16);
+        s32 valDelta = delta * ((double)this->m_parameter->GetMax() / GetSliderWidth());
+
+        if(delta < 0)
+        {
+          if(valDelta >= 0)
+          {
+            valDelta = 0;
+          }
+        }
         if (this->m_parameter)
         {
           SetValue(m_preDragVal + valDelta);
@@ -158,12 +194,12 @@ namespace MFM
 
       d.SetForeground(Drawing::BLACK);
 
-      d.SetFont(AssetManager::Get(FONT_ASSET_HELPPANEL_SMALL));
+      d.SetFont(AssetManager::Get(GetRenderFont()));
 
-      d.DrawHLine(16, 7, SLIDER_WIDTH - 7);
+      d.DrawHLine(16, 7, GetSliderWidth() - 7);
 
       d.DrawVLine(7, 16, 20);
-      d.DrawVLine(SLIDER_WIDTH - 7, 16, 20);
+      d.DrawVLine(GetSliderWidth() - 7, 16, 20);
 
       CharBufferByteSink<16> numBuffer;
       numBuffer.Printf("%d", this->m_parameter->GetMin());
@@ -174,8 +210,8 @@ namespace MFM
       numBuffer.Reset();
       numBuffer.Printf("%d", this->m_parameter->GetMax());
       d.BlitText(numBuffer.GetZString(),
-                 UPoint(SLIDER_WIDTH - 32, SLIDER_HALF_HEIGHT),
-                 UPoint(48, SLIDER_HALF_HEIGHT));
+                 UPoint(GetSliderWidth() - 32, GetSliderHalfHeight()),
+                 UPoint(48, GetSliderHalfHeight()));
 
       numBuffer.Reset();
       this->m_parameter->PrintValue(numBuffer, *this->m_patom);
@@ -183,8 +219,8 @@ namespace MFM
       d.SetBackground(Drawing::GREY70);
       d.SetForeground(Drawing::WHITE);
       d.BlitBackedText(numBuffer.GetZString(),
-                       UPoint(SLIDER_WIDTH / 2 - 16, SLIDER_HALF_HEIGHT),
-                       UPoint(48, SLIDER_HALF_HEIGHT));
+                       UPoint(GetSliderWidth() / 2 - 16, GetSliderHalfHeight()),
+                       UPoint(48, GetSliderHalfHeight()));
 
       Rect sliderRect = GetSliderRect();
       d.BlitAsset(ASSET_SLIDER_HANDLE,
@@ -192,21 +228,21 @@ namespace MFM
                   sliderRect.GetSize());
 
       d.BlitBackedText(this->m_parameter->GetName(),
-                       UPoint(SLIDER_WIDTH, 7),
-                       UPoint(SLIDER_WIDTH, SLIDER_HALF_HEIGHT));
+                       UPoint(GetSliderWidth(), 7),
+                       UPoint(GetSliderWidth(), GetSliderHalfHeight()));
     }
 
   private:
 
-    inline Rect GetSliderRect()
+    inline Rect GetSliderRect() const
     {
       s32 xpos = 0;
       if (this->m_parameter)
       {
         s32 val = GetValue();
-        xpos = this->m_parameter->MapValue((SLIDER_WIDTH - 7), val) - 7;
+        xpos = this->m_parameter->MapValue((GetSliderWidth() - 7), val) - 7;
       }
-      return Rect(xpos > 0 ? xpos : 0, 0, 17, SLIDER_HALF_HEIGHT);
+      return Rect(xpos > 0 ? xpos : 0, 0, 17, GetSliderHalfHeight());
     }
   };
 }

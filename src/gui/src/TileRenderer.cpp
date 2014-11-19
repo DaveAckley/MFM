@@ -12,6 +12,7 @@ namespace MFM
     m_drawMemRegions = NO;
     m_drawGrid = true;
     m_drawDataHeat = false;
+    m_renderSquares = false;
     m_gridColor = 0xff202020;
 
 #if 0 // Too much range for me..  Also we'd like a lighter palette background on some choice..
