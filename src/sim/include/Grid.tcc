@@ -78,6 +78,11 @@ namespace MFM {
         OString16 tbs;
         tbs.Printf("[%d,%d]", x, y);
         ctile.SetLabel(tbs.GetZString());
+
+        if (m_warpFactor >= 0)
+        {
+          ctile.SetWarpFactor((u32) m_warpFactor);
+        }
       }
     }
 
