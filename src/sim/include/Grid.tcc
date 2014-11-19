@@ -486,14 +486,8 @@ namespace MFM {
     s32 sleepTimer = 100000000; // XXX m_random.Between(1000,10000);
     do
     {
-      if (++loops >= 25000)
+      if (++loops >= 1000000)
       {
-        if(m_ignoreThreadingProblems)
-        {
-          LOG.Error("%s:%d: THREADING PROBLEM ENCOUNTERED! Grid is configured to ignore"
-                    " this problem and will continue execution.", __FILE__, __LINE__);
-          return;
-        }
         LOG.Error("%s control looped %d times, but %d still not ready, killing",
                   tc.GetName(), loops, notReady);
         ReportGridStatus(Logger::ERROR);

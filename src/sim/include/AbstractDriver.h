@@ -201,11 +201,6 @@ namespace MFM
       fp.Println();
     }
 
-    void SetIgnoreThreadingProblems(bool value)
-    {
-      m_ignoreThreadingProblems = value;
-    }
-
     void WriteTimeBasedData()
     {
       const char* path = GetSimDirPathTemporary("tbd/data.dat");
@@ -422,8 +417,6 @@ namespace MFM
       m_elementRegistry.Init();
 
       DefineNeededElements();
-
-      m_grid.SetIgnoreThreadingProblems(m_ignoreThreadingProblems);
     }
 
     /**
@@ -480,8 +473,6 @@ namespace MFM
 
     bool m_gridImages;
     bool m_tileImages;
-
-    bool m_ignoreThreadingProblems;
 
     double m_AEPS;
     /**
@@ -686,15 +677,6 @@ namespace MFM
       ++driver.m_configurationPathCount;
     }
 
-    static void SetIgnoreThreadingProblems(const char* not_used, void* driverptr)
-    {
-      AbstractDriver& driver = *((AbstractDriver*)driverptr);
-
-      LOG.Warning("Threading errors treatead as warnings. Beware of inconsistencies.");
-
-      driver.SetIgnoreThreadingProblems(true);
-    }
-
     void CheckEpochProcessing(OurGrid& grid)
     {
       if (m_AEPSPerEpoch >= 0 || m_accelerateAfterEpochs > 0 || m_surgeAfterEpochs > 0)
@@ -864,7 +846,6 @@ namespace MFM
       m_surgeAfterEpochs(0),
       m_gridImages(false),
       m_tileImages(false),
-      m_ignoreThreadingProblems(false),
       m_AEPS(0),
       m_recentAER(0),
       m_lastTotalEvents(0),
