@@ -90,8 +90,9 @@ namespace MFM
 
   void VArguments::ProcessArguments(u32 argc, const char** argv)
   {
-    for(u32 i = 0; i < argc; i++)
+    for(u32 i = 1; i < argc; i++) // 1 to skip program name
     {
+      bool handled = false;
       for(u32 j = 0; j < m_heldArguments; j++)
       {
 	VArg& arg = m_argDescriptors[j];
@@ -101,6 +102,7 @@ namespace MFM
 	if(MatchesFilter(argv[i], arg.m_filter))
 	{
 	  arg.m_appeared = true;
+          handled = true;
 
 	  if(arg.m_argsNeeded && i >= argc - 1)
             Die("'%s' requires an argument", argv[i]);
@@ -108,7 +110,6 @@ namespace MFM
 	  if(arg.m_argsNeeded && arg.m_function)
 	  {
 	    arg.m_function(arg.m_value = argv[++i], arg.m_handlerArg);
-	    break;
 	  }
 	  else if(arg.m_function)
 	  {
@@ -117,10 +118,15 @@ namespace MFM
 	  else if(arg.m_argsNeeded)
 	  {
 	    arg.m_value = argv[++i];
-	    break;
 	  }
 	}
       }
+
+      if (!handled)
+      {
+        Die("Unrecognized argument '%s'", argv[i]);
+      }
+
     }
   }
 

@@ -36,6 +36,7 @@ namespace MFM {
 
     const char* argv[] =
       {
+        "program name",
 	"-t",
 	"--foo",
 	"bar",

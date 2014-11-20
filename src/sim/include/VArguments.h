@@ -127,7 +127,7 @@ namespace MFM
 
     /**
      * Fails, to be called upon an illegal command line argument. This
-     * method terminates wiht exit(0) .
+     * method terminates with exit(1) .
      *
      * @param format The format used to print a printf-style format
      *               string describing the failure.
