@@ -27,6 +27,7 @@
 #ifndef ATOMVIEWPANEL_H
 #define ATOMVIEWPANEL_H
 
+#include "CloseWindowButton.h"
 #include "MovablePanel.h"
 #include "Grid.h"
 #include "ToolboxPanel.h"
@@ -46,6 +47,8 @@ namespace MFM
 
     ToolboxPanel<CC>* m_toolboxPanel;
 
+    CloseWindowButton m_closeWindowButton;
+
     static const u32 ATOM_DRAW_SIZE = 40;
 
    public:
@@ -53,9 +56,14 @@ namespace MFM
       MovablePanel(300, 100),
       m_atom(NULL),
       m_grid(NULL),
-      m_toolboxPanel(NULL)
+      m_toolboxPanel(NULL),
+      m_closeWindowButton(this)
+    { }
+
+    void Init()
     {
       Panel::SetDesiredSize(300, 100);
+      m_closeWindowButton.Init();
     }
 
     void SetToolboxPanel(ToolboxPanel<CC>* toolboxPanel)
@@ -96,9 +104,7 @@ namespace MFM
         default:
           LOG.Debug("u32 %s unknown type %d", p->GetName(), p->GetType());
         }
-
       }
-
     }
 
     virtual void PaintComponent(Drawing& d)
@@ -137,6 +143,15 @@ namespace MFM
 
         d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
         d.BlitBackedText(zstr, UPoint(4 + ATOM_DRAW_SIZE, 28),
+                         MakeUnsigned(d.GetTextSize(zstr)));
+
+        OString64 atomBody;
+        AtomSerializer<CC> serializer(*m_atom);
+        atomBody.Printf("%@", &serializer);
+        zstr = atomBody.GetZString();
+
+        d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
+        d.BlitBackedText(zstr, UPoint(4 + ATOM_DRAW_SIZE, ATOM_DRAW_SIZE - 4),
                          MakeUnsigned(d.GetTextSize(zstr)));
 
         PaintDisplayAtomicControllers(d, *m_atom, element);

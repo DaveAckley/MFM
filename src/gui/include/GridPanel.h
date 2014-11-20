@@ -111,6 +111,16 @@ namespace MFM
       Panel::Insert(&m_atomViewPanel, NULL);
     }
 
+    void Init()
+    {
+      m_atomViewPanel.Init();
+    }
+
+    u32 IncrementHeatmapSelector()
+    {
+      return m_grend->IncrementHeatmapSelector();
+    }
+
     AtomViewPanel<GC> * GetAtomViewPanel()
     {
       return &m_atomViewPanel;

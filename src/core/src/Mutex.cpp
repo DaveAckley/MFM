@@ -18,6 +18,5 @@ namespace MFM
               (void*) this);
     }
 
-    LOG.Log(level,  "    In VCW: %s", m_inVCW?"true":"false");
   }
 }

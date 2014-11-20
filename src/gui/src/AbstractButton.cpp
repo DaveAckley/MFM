@@ -9,10 +9,14 @@ namespace MFM
     this->SetForeground(BUTTON_COLOR);
     this->SetBorder(BUTTON_BORDER_COLOR);
     this->SetBackground(BUTTON_BACKGROUND_COLOR);
+
+    for(u32 i = 0; i < sizeof(m_text) / sizeof(char); i++)
+    {
+      m_text[i] = 0;
+    }
   }
 
   AbstractButton::AbstractButton() :
-    m_text(0),
     m_icon(0),
     m_enabled(true),
     m_justClicked(false)
@@ -21,16 +25,15 @@ namespace MFM
   }
 
   AbstractButton::AbstractButton(const char* text) :
-    m_text(text),
     m_icon(0),
     m_enabled(true),
     m_justClicked(false)
   {
     Init();
+    SetText(text);
   }
 
   AbstractButton::AbstractButton(SDL_Surface* icon) :
-    m_text(0),
     m_icon(icon),
     m_enabled(true),
     m_justClicked(false)
@@ -39,12 +42,12 @@ namespace MFM
   }
 
   AbstractButton::AbstractButton(const char* text, SDL_Surface* icon) :
-    m_text(text),
     m_icon(icon),
     m_enabled(true),
     m_justClicked(false)
   {
     Init();
+    SetText(text);
   }
 
   AbstractButton::~AbstractButton()

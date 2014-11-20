@@ -33,6 +33,8 @@ namespace MFM
 
     typedef AbstractDualDriver<GC> Super;
     typedef typename Super::CC CC;
+    typedef typename Super::CC::PARAM_CONFIG P;
+    typedef typename Super::CC::ATOM_TYPE T;
 
     virtual void DefineNeededElements()
     {
@@ -67,6 +69,14 @@ namespace MFM
     }
 
   public:
+    virtual void DoEpochEvents(Grid<GC>& grid, u32 epochs, u32 epochAEPS)
+    {
+      /* Write custom epoch code here */
+
+      /* Leave this line here so the Superclass can run as well. */
+      Super::DoEpochEvents(grid, epochs, epochAEPS);
+    }
+
     virtual void AddDriverArguments()
     {
       Super::AddDriverArguments();

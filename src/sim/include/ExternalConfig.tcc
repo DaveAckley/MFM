@@ -262,6 +262,7 @@ namespace MFM
 
     atom.ReadStateBits(hexData);
     m_grid.PlaceAtom(atom, pt);
+
     return true;
   }
 
@@ -273,6 +274,7 @@ namespace MFM
 
     atom.ReadStateBits(bv);
     m_grid.PlaceAtom(atom, pt);
+
     return true;
   }
 }

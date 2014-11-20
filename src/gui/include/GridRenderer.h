@@ -89,6 +89,11 @@ namespace MFM
     bool IsRenderingTilesSeparated()
     { return m_renderTilesSeparated; }
 
+    u32 IncrementHeatmapSelector()
+    {
+      return m_tileRenderer.IncrementHeatmapSelector();
+    }
+
     void SetEventWindowRenderMode(EventWindowRenderMode mode);
 
     UPoint GetDimensions() const;

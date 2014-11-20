@@ -59,6 +59,7 @@ namespace MFM
     ASSET_XRAY_ICON_BIG,
     ASSET_CLONE_ICON_BIG,
     ASSET_AIRBRUSH_ICON_BIG,
+    ASSET_CLOSE_WINDOW_ICON,
     ASSET_COUNT
   };
 
@@ -174,6 +175,7 @@ namespace MFM
         surfaces[ASSET_XRAY_ICON_BIG] = LoadImage("images/xray_icon_big.png");
         surfaces[ASSET_CLONE_ICON_BIG] = LoadImage("images/clone_icon_big.png");
         surfaces[ASSET_AIRBRUSH_ICON_BIG] = LoadImage("images/airbrush_icon_big.png");
+        surfaces[ASSET_CLOSE_WINDOW_ICON] = LoadImage("images/close_window_icon.png");
 
         fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/tiny.ttf", 24);
         fonts[FONT_ASSET_ELEMENT_BIG] = LoadFont("fonts/tiny.ttf", 40);
