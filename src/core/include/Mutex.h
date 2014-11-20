@@ -55,9 +55,6 @@ namespace MFM
      */
     bool m_locked;
 
-    pthread_cond_t m_virtualCond;
-    bool m_inVCW;
-
     /**
      * If the lock is held, the pthread id of the thread holding it.
      */
@@ -146,6 +143,11 @@ namespace MFM
 
         while (!EvaluatePredicate())
         {
+          // If the predicate's not true, the precondition must be
+          if (!EvaluatePrecondition())
+          {
+            FAIL(LOCK_FAILURE);
+          }
           m_mutex.CondWait(m_condvar);
           ++m_wakeupsThisWait;
         }
@@ -169,7 +171,6 @@ namespace MFM
      */
     Mutex() :
       m_locked(false)
-      , m_inVCW(false)
     {
 
       if (pthread_mutexattr_init(&m_attr))
