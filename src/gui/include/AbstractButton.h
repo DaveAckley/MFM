@@ -75,7 +75,7 @@ namespace MFM
     /**
      * The text that will render on this AbstractButton .
      */
-    const char* m_text;
+    char m_text[64];
 
     /**
      * An optional icon. If not NULL, will render instead of the default
@@ -166,6 +166,18 @@ namespace MFM
     }
 
     /**
+     * Sets the icon of this AbstractButton which will render in its
+     * place upon rendering, specified by a loaded Asset.
+     *
+     * @param icon The Asset representing the SDL_Surface to use as
+     *             this AbstractButton's image.
+     */
+    void SetIcon(Asset a)
+    {
+      SetIcon(AssetManager::Get(a));
+    }
+
+    /**
      * Gets the icon that is currently being rendered by this
      * AbstractButton .
      *
@@ -211,7 +223,12 @@ namespace MFM
      */
     void SetText(const char* text)
     {
-      m_text = text;
+      u32 textlen = MIN(strlen(text),
+                        sizeof(m_text) / sizeof(char));
+      for(u32 i = 0; i < textlen; i++)
+      {
+        m_text[i] = text[i];
+      }
     }
 
     /**

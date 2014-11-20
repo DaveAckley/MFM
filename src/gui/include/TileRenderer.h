@@ -60,6 +60,13 @@ namespace MFM
 
     Point<u32> m_dimensions;
 
+    u32 m_heatmapSelector;
+
+    enum
+    {
+      MAX_HEATMAP_SELECTIONS = 5
+    };
+
     template <class CC>
     void RenderMemRegions(Drawing & drawing, SPoint& pt,
                           bool renderCache, bool selected, bool lowlight);
@@ -144,6 +151,14 @@ namespace MFM
     void DecreaseAtomSize(SPoint around)
     {
       ChangeAtomSize(false, around);
+    }
+
+    u32 IncrementHeatmapSelector()
+    {
+      m_heatmapSelector++;
+      m_heatmapSelector %= MAX_HEATMAP_SELECTIONS;
+
+      return m_heatmapSelector;
     }
 
     void ChangeAtomSize(bool increase, SPoint around) ;

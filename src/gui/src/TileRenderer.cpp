@@ -14,6 +14,7 @@ namespace MFM
     m_drawDataHeat = false;
     m_renderSquares = false;
     m_gridColor = 0xff202020;
+    m_heatmapSelector = 0;
 
 #if 0 // Too much range for me..  Also we'd like a lighter palette background on some choice..
     m_hiddenColor  = 0xff353535;
