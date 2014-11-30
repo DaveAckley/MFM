@@ -23,6 +23,15 @@ namespace MFM {
   }
 
   template <u32 BITS>
+  BitVector<BITS>::BitVector(const u32 value)
+  {
+    Clear();
+    u32 startIdx = (u32) MAX(0, ((s32) BITS) - 32);
+    u32 length = BITS - startIdx;
+    Write(startIdx, length, value);
+  }
+
+  template <u32 BITS>
   void BitVector<BITS>::Clear()
   {
     memset(m_bits, 0, sizeof(m_bits));

@@ -13,6 +13,8 @@ namespace MFM {
   public:
     static void Test_RunTests();
 
+    static void Test_bitVectorCtors();
+
     static void Test_bitVectorAllocate();
 
     static void Test_bitVectorRead();

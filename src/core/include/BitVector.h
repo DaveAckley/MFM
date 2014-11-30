@@ -133,7 +133,7 @@ namespace MFM {
     BitVector(const BitVector & other);
 
     /**
-     * Constructs a BitVector with specified inital value.
+     * Constructs a BitVector with specified initial value.
      *
      * @param values A pointer to a big-endian array of values to
      *               initialize this BitVector to. This array must
@@ -141,6 +141,15 @@ namespace MFM {
      *               can hold (specified as a template parameter).
      */
     BitVector(const u32 * const values);
+
+    /**
+     * Constructs a BitVector that's all zeroes except the rightmost
+     * 32 bits have a specified initial value.
+     *
+     * @param value A value to place in the rightmost 32 bits of the
+     *               BitVector.
+     */
+    BitVector(const u32 value);
 
     /**
      * Reads up to 32 bits of a particular section of this BitVector.

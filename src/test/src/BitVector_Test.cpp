@@ -17,6 +17,7 @@ namespace MFM {
     };
 
   void BitVector_Test::Test_RunTests() {
+    Test_bitVectorCtors();
     Test_bitVectorLong();
     Test_bitVectorAllocate();
     Test_bitVectorRead();
@@ -236,6 +237,34 @@ namespace MFM {
     assertUnchanged(0,2);
     assert(bits->Read( 96,32) == 0x9aadbef0);
     assertUnchanged(4,7);
+  }
+
+  void BitVector_Test::Test_bitVectorCtors()
+  {
+    {
+      BitVector<10> bv;
+      assert(bv.Read(0,10)==0);
+    }
+    {
+      BitVector<30> bv;
+      assert(bv.Read(0,30)==0);
+    }
+    {
+      BitVector<60> bv;
+      assert(bv.ReadLong(0,60)==0);
+    }
+    {
+      BitVector<12> bv(0x1234);
+      assert(bv.Read(0,12)==0x234);
+    }
+    {
+      BitVector<30> bv(0xdeadbeef);
+      assert(bv.Read(0,30)==0x1eadbeef);
+    }
+    {
+      BitVector<60> bv(0xdeadbeef);
+      assert(bv.ReadLong(0,60)==0xdeadbeef);
+    }
   }
 
   void BitVector_Test::Test_bitVectorLong()
