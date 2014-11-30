@@ -53,6 +53,8 @@ COMMON_CFLAGS+=-Wall -pedantic -Werror -Wundef -D SHARED_DIR=\"$(SHARED_DIR)\" -
 COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
 COMMON_LDFLAGS+=-Wl,--fatal-warnings -pthread
 
+LIBS+=-lrt  # Ubuntu 12.04 needs this for clock_gettime
+
 # Native tool chain
 NATIVE_GCC:=gcc
 NATIVE_GPP:=g++
