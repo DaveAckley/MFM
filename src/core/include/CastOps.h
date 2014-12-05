@@ -30,6 +30,10 @@
 #ifndef CASTOPS_H
 #define CASTOPS_H
 
+#include "itype.h"
+#include "Util.h"
+#include "Fail.h"
+
 namespace MFM {
 
   //Casts
