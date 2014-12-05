@@ -28,9 +28,15 @@
 #ifndef ULAMDEFS_H
 #define ULAMDEFS_H
 
+#include "Fail.h"
 #include "itype.h"
+#include "Util.h"
+#include "VD.h"
 #include "BitField.h"
+#include "CastOps.h"
+#include "Parameter.h"
 #include "DefaultElement.h"
+#include "CoreConfig.h"
 #include "ParamConfig.h"
 #include "P3Atom.h"
 
