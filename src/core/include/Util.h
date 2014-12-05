@@ -64,19 +64,19 @@ namespace MFM {
     return ((((u64) billions)*1000000000) + ones);
   }
 
-  inline s32 _SignExtend32(u32 val, u32 bitwidth) {
-    return ((s32)(val<<(32-bitwidth)))>>(32-bitwidth);
+  inline s32 _SignExtend32(u32 val, const u32 bitwidth) {
+    return ((bitwidth < 32) ? (((s32)(val<<(32-bitwidth)))>>(32-bitwidth)) : (s32) val);
   }
 
-  inline s64 _SignExtend64(u64 val, u32 bitwidth) {
-    return ((s64)(val<<(64-bitwidth)))>>(64-bitwidth);
+  inline s64 _SignExtend64(u64 val, const u32 bitwidth) {
+    return ((bitwidth < 64) ? (((s64)(val<<(64-bitwidth)))>>(64-bitwidth)) : (s64) val);
   }
 
-  inline u32 _GetNOnes32(u32 bitwidth) {
+  inline u32 _GetNOnes32(const u32 bitwidth) {
     return (bitwidth >= 32) ? (u32) -1 : (((u32)1)<<bitwidth)-1;
   }
 
-  inline u64 _GetNOnes64(u32 bitwidth) {
+  inline u64 _GetNOnes64(const u32 bitwidth) {
     return (bitwidth >= 64) ? HexU64((u32)-1,(u32)-1) : (((u64)1)<<bitwidth)-1;
   }
 
