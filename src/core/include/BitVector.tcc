@@ -31,6 +31,26 @@ namespace MFM {
     Write(startIdx, length, value);
   }
 
+#if 0 // NOT IMPLEMENTED: UNCLEAR SEMANTICS
+  template <u32 S>
+  BitVector<S>::BitVector(const s32 value)
+  {
+    m_stg[WORDS-1] = (u32) value;
+  }
+
+  template <u32 S>
+  BitVector<S>::BitVector(const u64 value)
+  {
+    m_stg[WORDS-1] = value;
+  }
+
+  template <u32 S>
+  BitVector<S>::BitVector(const s64 value)
+  {
+    m_stg[WORDS-1] = (u64) value;
+  }
+#endif
+
   template <u32 BITS>
   void BitVector<BITS>::Clear()
   {

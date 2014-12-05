@@ -945,6 +945,22 @@ namespace MFM
       atom.Print(io);
     }
 
+    /// Also provide un-type-checked access (note use of VD::BITS
+    /// instead of VDTYPE) for use by the ulam compiler (which already
+    /// knows the types of everything)
+
+    static u32 Read(const BVA & bv) { return BitField<BVA, VD::BITS, LEN, POS>::Read(bv); }
+
+    static void Write(BVA & bv, const u32 val) { BitField<BVA, VD::BITS, LEN, POS>::Write(bv, val); }
+
+    static u32 ReadArray(const BVA & bv, const u32 index, const u32 unitsize) {
+      return BitField<BVA, VD::BITS, LEN, POS>::ReadArray(bv, index, unitsize);
+    }
+
+    static void WriteArray(BVA & bv, const u32 val, const u32 index, const u32 unitsize) {
+      BitField<BVA, VD::BITS, LEN, POS>::WriteArray(bv, val, index, unitsize);
+    }
+
   };
 
   template <class PARM>

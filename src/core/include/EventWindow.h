@@ -383,6 +383,22 @@ namespace MFM
       return m_atomBuffer[0];
     }
 
+#if 0 // ulam gencode may have been expecting this
+    static EventWindow & Get() {
+      static EventWindow THE_EVENT_WINDOW;
+      return THE_EVENT_WINDOW;
+    }
+#endif
+
+    /**
+     * Get a atom by site number, for reading or writing
+     */
+    T& GetAtom(u32 siteNumber)
+    {
+      if (siteNumber >= SITE_COUNT) FAIL(ILLEGAL_ARGUMENT);
+      return m_atomBuffer[siteNumber];
+    }
+
     /**
      * Sets the Atom in the center of this EventWindow to a specified Atom .
      *

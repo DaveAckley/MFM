@@ -101,6 +101,47 @@ namespace MFM {
     }
 
     /**
+     * Read an element of an array, interpreting the entire bitfield
+     * as a contiguous sequence of items each of which is size \c
+     * unitsize.  Both the unit size and the array index are specified
+     * at runtime.
+     *
+     * @param bv The BV to read bits from.
+     *
+     * @param index The array index to read
+     *
+     * @param unitsize The number of bits per array item
+     *
+     * @returns the \c unitsize bits from \bv, starting at position \c
+     *          index * \c unitsize within this BitField.
+     */
+    static u32 ReadArray(const BV & bv, const u32 index, const u32 unitsize)
+    {
+      return bv.Read((index * unitsize) + IDX, unitsize);
+    }
+
+    /**
+     * Write an element of an array, interpreting the entire bitfield
+     * as a contiguous sequence of items each of which is size \c
+     * unitsize.  Both the unit size and the array index are specified
+     * at runtime.
+     *
+     * @param bv The BV to write bits to.
+     *
+     * @param val the value to write to \bv (taking only the bottom \c
+     * unitsize bits).
+     *
+     * @param index The array index to write
+     *
+     * @param unitsize The number of bits per array item.
+     *
+     */
+    static void WriteArray(BV & bv, const u32 val, const u32 index, const u32 unitsize)
+    {
+      bv.Write((index * unitsize) + IDX, unitsize, val);
+    }
+
+    /**
      * Sets bit bitnum within this BitField (with bitnum 0 meaning the
      * leftmost bit of this field).
      *
