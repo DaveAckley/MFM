@@ -22,6 +22,7 @@ namespace MFM {
     memcpy(m_bits,other.m_bits,sizeof(m_bits));
   }
 
+  // This is the general case..
   template <u32 BITS>
   BitVector<BITS>::BitVector(const u32 value)
   {
@@ -29,6 +30,13 @@ namespace MFM {
     u32 startIdx = (u32) MAX(0, ((s32) BITS) - 32);
     u32 length = BITS - startIdx;
     Write(startIdx, length, value);
+  }
+
+  // ..but this one special case helps g++ codegen tremendously!
+  template <>
+  inline BitVector<32>::BitVector(const u32 value)
+  {
+    m_bits[0] = value;
   }
 
 #if 0 // NOT IMPLEMENTED: UNCLEAR SEMANTICS
