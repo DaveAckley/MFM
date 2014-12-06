@@ -28,6 +28,7 @@ INCLUDES += -I $(BASEDIR)/src/core/include -I $(ULAM_SRC_DIR)/../include
 PHONY_TARGETS:=ulam_cppcompile ulam_checkvar
 
 ULAM_OBJ_FILE := $(patsubst %.cpp,$(ULAM_BLD_DIR)/%.o,$(ULAM_CPP_FILE))
+#$(info "UCF($(ULAM_CPP_FILE))")
 #$(info "UOF($(ULAM_OBJ_FILE))")
 #$(info "USD($(ULAM_SRC_DIR))")
 #$(info "MRD($(MFM_ROOT_DIR))")
