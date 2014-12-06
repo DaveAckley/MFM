@@ -324,4 +324,19 @@ namespace MFM {
 
   }
 
+  template <u32 BITS>
+  void BitVector<BITS>::FromArray(const u32 array[ARRAY_LENGTH])
+  {
+    for(u32 i = 0; i < ARRAY_LENGTH; i++)
+      m_bits[i] = array[i];
+  }
+
+  template <u32 BITS>
+  void BitVector<BITS>::ToArray(u32 array[ARRAY_LENGTH]) const
+  {
+    for(u32 i = 0; i < ARRAY_LENGTH; i++)
+      array[i] = m_bits[i];
+  }
+
+
 } /* namespace MFM */

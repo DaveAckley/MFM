@@ -374,6 +374,10 @@ namespace MFM {
 
     bool operator==(const BitVector & rhs) const;
 
+    void ToArray(u32 array[ARRAY_LENGTH]) const;
+
+    void FromArray(const u32 array[ARRAY_LENGTH]);
+
   };
 } /* namespace MFM */
 
