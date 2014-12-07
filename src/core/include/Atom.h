@@ -104,6 +104,8 @@ namespace MFM
     template <class BV, VD::Type, u32, u32> friend class BitField;  // Ditto BitField (all instances)
 
   public:
+    const BitVector<BPA>& GetBits() const { return m_bits; }
+    BitVector<BPA>& GetBits() { return m_bits; }
 
     Atom()
     {
