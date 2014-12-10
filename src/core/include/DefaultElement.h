@@ -32,8 +32,7 @@
 namespace MFM
 {
   /**
-   * An DefaultElement mediates bidirectional communications between
-   * two Tiles, which are denoted A and B.
+   * A DefaultElement is a concrete element, primarily for use by culam.
    */
   template <class CC>
   class DefaultElement : public Element<CC>
