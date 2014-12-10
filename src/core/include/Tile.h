@@ -485,6 +485,10 @@ namespace MFM
       return m_window.GetEventWindowsExecuted();
     }
 
+    EventWindow<CC> & GetEventWindow() {
+      return m_window;
+    }
+
     /**
      * Returns this Tile's label, if any.  May return an empty string,
      * never returns null.
