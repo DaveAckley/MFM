@@ -39,10 +39,10 @@
 #include "CoreConfig.h"
 #include "ParamConfig.h"
 #include "P3Atom.h"
+#include "UlamContext.h"
 
 namespace MFM
 {
-
 }
 
 #endif /* ULAMDEFS_H */
