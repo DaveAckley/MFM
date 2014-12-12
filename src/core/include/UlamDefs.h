@@ -35,7 +35,7 @@
 #include "BitField.h"
 #include "CastOps.h"
 #include "Parameter.h"
-#include "DefaultElement.h"
+#include "UlamElement.h"
 #include "CoreConfig.h"
 #include "ParamConfig.h"
 #include "P3Atom.h"

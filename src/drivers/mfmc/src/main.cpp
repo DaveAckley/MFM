@@ -1,5 +1,9 @@
 #include "main.h"
 
+#ifdef ULAM_CUSTOM_ELEMENTS
+#include "UlamCustomElements.h"
+#endif
+
 namespace MFM
 {
   /////
@@ -38,6 +42,10 @@ namespace MFM
 
     virtual void DefineNeededElements()
     {
+#ifdef ULAM_CUSTOM_ELEMENTS
+      DefineNeededUlamCustomElements(this);
+#else
+      //#error no custom wsu
       this->NeedElement(&Element_Empty<CC>::THE_INSTANCE);
       this->NeedElement(&Element_Wall<CC>::THE_INSTANCE);
       this->NeedElement(&Element_Res<CC>::THE_INSTANCE);
@@ -66,6 +74,7 @@ namespace MFM
       this->NeedElement(&Element_CheckerForkRed<CC>::THE_INSTANCE);
       this->NeedElement(&Element_Wanderer_Cyan<CC>::THE_INSTANCE);
       this->NeedElement(&Element_Wanderer_Magenta<CC>::THE_INSTANCE);
+#endif /* ULAM_CUSTOM_ELEMENTS */
     }
 
   public:

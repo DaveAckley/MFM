@@ -43,6 +43,7 @@ namespace MFM
 
   template <class CC> class Atom; // FORWARD
   template <class CC> class EventWindow; // FORWARD
+  template <class CC> class UlamElement; // FORWARD
 
   /**
    * An Element describes how a given type of Atom behaves.
@@ -277,6 +278,25 @@ namespace MFM
       return m_type;
     }
 
+    void MakeAlternateNameForTestingInternal(const Element & asThis)
+    {
+      if (m_hasType)
+      {
+        FAIL(ILLEGAL_STATE);
+      }
+      if (!asThis.m_hasType)
+      {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+      if (GetUUID() != asThis.GetUUID())
+      {
+        FAIL(ILLEGAL_STATE);
+      }
+      m_type = asThis.GetType();
+      m_hasType = true;
+      m_defaultAtom = BuildDefaultAtom();
+    }
+
     /**
      * Gets the Atomic Symbol of this Element . If this has not been
      * set, the default Atomic Symbol is the invalid symbol "!!" .
@@ -306,7 +326,7 @@ namespace MFM
      * @param atom A pointer to an Atom (guaranteed to be an instance
      *             of this Element ) to append a description of.
      *
-     * @param desc The OverflowabeleCharBufferByteSink to append the
+     * @param desc The OverflowableCharBufferByteSink to append the
      *             description to.
      */
     virtual void AppendDescription(const T* atom, OString64& desc) const
@@ -347,6 +367,15 @@ namespace MFM
      * currently being executed.
      */
     virtual void Behavior(EventWindow<CC>& window) const = 0;
+
+    /**
+       Downcast an Element pointer to an UlamElement pointer, if
+       possible.
+     */
+    virtual const UlamElement<CC> * AsUlamElement() const
+    {
+      return 0;
+    }
 
     /**
      * Gets the default Atom of this Element . If this Element has not
