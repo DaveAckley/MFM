@@ -296,14 +296,15 @@ namespace MFM
      */
     u32 m_warpFactor;
 
+#if 0
     /**
      * Sets m_executingWindow to a new random location in this
      * Tile. This new location is guaranteed to be valid and ready for
      * execution.
      */
     void OpenEventWindow();
-
     void CloseEventWindow();
+#endif
 
     /**
      * Compute the coordinates of \c atomLoc in a neighboring tile.
@@ -356,6 +357,7 @@ namespace MFM
      */
     bool ConsiderStateChange() ;
 
+#if 0
     /**
        Try to start an(other) event in this Tile.  Return true if any
        possibly valuable work was done.  On a true return, all the
@@ -370,6 +372,7 @@ namespace MFM
        necessarily received by) all relevant neighbors,
      */
     bool InitiateEvent() ;
+#endif
 
     bool AdvanceComputation() ;
 
