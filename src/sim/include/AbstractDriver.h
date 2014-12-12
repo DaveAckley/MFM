@@ -66,7 +66,7 @@ namespace MFM
   template<class GC>
   class AbstractDriver
   {
-  protected:
+  public:
 
     /**
      * The CoreConfig used to describe templated pieces of the core
