@@ -173,12 +173,6 @@ namespace MFM
 
     bool RejectOnRecency(const SPoint tcoord) ;
 
-    /**
-     * Set up for an event at center, which represented in full,
-     * untransformed Tile coordinates.
-     */
-    bool InitForEvent(const SPoint & center) ;
-
     void ExecuteEvent() ;
 
     void ExecuteBehavior() ;
@@ -223,6 +217,14 @@ namespace MFM
 
 
   public:
+
+    /**
+     * Set up for an event at center, which represented in full,
+     * untransformed Tile coordinates.  Public primarily for ulam
+     * element testing.
+     */
+    bool InitForEvent(const SPoint & center) ;
+
     u64 GetEventWindowsAttempted() const
     {
       return m_eventWindowsAttempted;
@@ -383,20 +385,22 @@ namespace MFM
       return m_atomBuffer[0];
     }
 
-#if 0 // ulam gencode may have been expecting this
-    static EventWindow & Get() {
-      static EventWindow THE_EVENT_WINDOW;
-      return THE_EVENT_WINDOW;
-    }
-#endif
-
     /**
-     * Get a atom by site number, for reading or writing
+     * Get a copy of an atom by site number
      */
-    T& GetAtom(u32 siteNumber)
+    T GetAtom(u32 siteNumber) const
     {
       if (siteNumber >= SITE_COUNT) FAIL(ILLEGAL_ARGUMENT);
       return m_atomBuffer[siteNumber];
+    }
+
+    /**
+     * Write an atom to a given site number
+     */
+    void SetAtom(u32 siteNumber, const T & newAtom)
+    {
+      if (siteNumber >= SITE_COUNT) FAIL(ILLEGAL_ARGUMENT);
+      m_atomBuffer[siteNumber] = newAtom;
     }
 
     /**
