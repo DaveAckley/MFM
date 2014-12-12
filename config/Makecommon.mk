@@ -15,7 +15,10 @@ include $(BASEDIR)/src/platform-$(MFM_TARGET)/MakePlatform.mk
 # foo/src/            All foo-specific source codes (which other components can't see)
 # foo/include/        All foo-specific header files (which other components can see)
 #
+INCLUDES+=$(EXTERNAL_INCLUDES)
 INCLUDES+=-I include
+
+LIBS+=$(EXTERNAL_LIBS)
 
 ### TOOL STUFF
 
@@ -59,6 +62,7 @@ ARCHIVENAME := lib$(ARCHIVEBASENAME).a
 ARCHIVEPATH := $(BUILDDIR)/$(ARCHIVENAME)
 
 ### EXTRA DEFINES
+DEFINES+= $(EXTERNAL_DEFINES)
 DEFINES+=-DMFM_BUILD_DATE=$(shell date -u +0x%Y%m%d)
 DEFINES+=-DMFM_BUILD_TIME=$(shell date -u +0x%H%M%S)
 DEFINES+=-DMFM_BUILT_BY=$(shell whoami)

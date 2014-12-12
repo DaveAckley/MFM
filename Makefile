@@ -1,6 +1,11 @@
 # For now, we'll assume we're building on linux only
 PLATFORMS=linux
 
+####
+# Variables exported to submakes
+
+export ULAM_CUSTOM_ELEMENTS
+
 .PHONY:	$(PLATFORMS) all clean realclean tar
 
 sim:	PLATFORMS:=sim

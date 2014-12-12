@@ -2,6 +2,7 @@
 #
 # Given environmental variables:
 #
+#   ULAM_CPPFLAGS  : Additional compilation flags supplied by ulam
 #   ULAM_SRC_DIR   : Where the .cpp is located
 #   ULAM_BLD_DIR   : Where to place compiled intermediates
 #   ULAM_BIN_DIR   : Where to place linked programs
@@ -26,6 +27,8 @@ ifdef MFM_ROOT_DIR
 endif
 
 INCLUDES += -I $(BASEDIR)/src/core/include -I $(ULAM_SRC_DIR)/../include
+CPPFLAGS += $(ULAM_CPPFLAGS)
+$(info "ULAMICF($(CPPFLAGS))")
 
 #DEBUGS += -g2
 
@@ -33,15 +36,14 @@ PHONY_TARGETS:=ulam_program ulam_cppcompile ulam_checkvar
 
 ULAM_OBJ_FILE := $(patsubst %.cpp,$(ULAM_BLD_DIR)/%.o,$(ULAM_CPP_FILE))
 ULAM_EXE_FILE := $(patsubst %.cpp,$(ULAM_BIN_DIR)/%,$(ULAM_CPP_FILE))
+#$(info "UXF($(ULAM_EXE_FILE))")
 #$(info "UCF($(ULAM_CPP_FILE))")
 #$(info "UOF($(ULAM_OBJ_FILE))")
 #$(info "USD($(ULAM_SRC_DIR))")
 #$(info "MRD($(MFM_ROOT_DIR))")
 
-ulam_program:	ulam_cppcompile $(ULAM_EXE_FILE)
-	@if [ ! -r "$(ULAM_SRC_DIR)/$(ULAM_CPP_FILE)" ] ; then \
-	  echo "Cannot read $(ULAM_SRC_DIR)/$(ULAM_CPP_FILE)"; exit 10 ; fi
-	echo "COMPILED " $(ULAM_SRC_DIR)/$(ULAM_CPP_FILE)
+ulam_program:	FORCE # ulam_cppcompile $(ULAM_EXE_FILE) $(info "ULAGFOPROM")
+	make -C $(BASEDIR) EXTERNAL_DEFINES=-DULAM_CUSTOM_ELEMENTS EXTERNAL_INCLUDES=-I foo
 
 ulam_cppcompile:	ulam_checkvar $(ULAM_OBJ_FILE)
 	@if [ ! -r "$(ULAM_SRC_DIR)/$(ULAM_CPP_FILE)" ] ; then \

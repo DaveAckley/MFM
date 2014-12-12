@@ -2,6 +2,8 @@
 
 BINDIR:=$(BASEDIR)/bin
 
+all:	program
+
 # Our ultimate goal
 program:	$(BINDIR)/$(COMPONENTNAME)
 	@cd $(BINDIR); for i in $(COMPONENTALIASES); do ln -f -s $(COMPONENTNAME) $$i; done
