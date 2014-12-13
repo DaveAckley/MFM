@@ -188,7 +188,7 @@ namespace MFM
 
           // Next question: Is point site empty and thus potential growth spot?
 
-          bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
+          bool isEmpty = T::ATOM_EMPTY_TYPE==otherType;
 
           if (isEmpty)
           {
@@ -239,7 +239,7 @@ namespace MFM
           }
           else
           {
-            bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
+            bool isEmpty = T::ATOM_EMPTY_TYPE==otherType;
 
             if (isEmpty)
             {

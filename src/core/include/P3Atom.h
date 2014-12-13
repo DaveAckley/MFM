@@ -45,7 +45,9 @@ namespace MFM {
   {
   public: enum
   {
-    ATOM_CATEGORY = 3
+    ATOM_CATEGORY = 3,
+    // ATOM_FIRST_STATE_BIT declared below
+    ATOM_EMPTY_TYPE = 0xffff
   };
   private:
     typedef CoreConfig< P3Atom<PC>, PC> CC;
@@ -101,7 +103,7 @@ namespace MFM {
   public:
 
     //    P3Atom(u32 type = Element_Empty<CC>::THE_INSTANCE.GetType(), u32 z1 = 0, u32 z2 = 0, u32 stateBits = 0)
-    P3Atom(u32 type = 0, u32 z1 = 0, u32 z2 = 0, u32 stateBits = 0)
+    P3Atom(u32 type = ATOM_EMPTY_TYPE, u32 z1 = 0, u32 z2 = 0, u32 stateBits = 0)
     {
       COMPILATION_REQUIREMENT< 32 <= BITS-1 >();
 

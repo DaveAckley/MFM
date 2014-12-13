@@ -50,7 +50,8 @@ namespace MFM
     enum
     {
       ATOM_CATEGORY = 0,
-      ATOM_FIRST_STATE_BIT = 0
+      ATOM_FIRST_STATE_BIT = 0,
+      ATOM_EMPTY_TYPE = 0
     };
   private:
 
@@ -234,7 +235,7 @@ namespace MFM
       return EndStateBit(lengthCode);
     }
 
-    P0Atom(u32 type = 0, u32 longc = 0, u32 shortc = 0, u32 statec = 0)
+    P0Atom(u32 type = ATOM_EMPTY_TYPE, u32 longc = 0, u32 shortc = 0, u32 statec = 0)
     {
       InitAtom(type,longc,shortc,statec);
     }

@@ -34,7 +34,17 @@ namespace MFM {
   }
 
   template <class CC, u32 BITS>
+  u32 StaticLoader<CC,BITS>::AllocateEmptyType(const UUID & forUUID) {
+    return AllocateTypeInternal(forUUID, (s32) CC::ATOM_TYPE::ATOM_EMPTY_TYPE);
+  }
+
+  template <class CC, u32 BITS>
   u32 StaticLoader<CC,BITS>::AllocateType(const UUID & forUUID) {
+    return AllocateTypeInternal(forUUID, -1);
+  }
+
+  template <class CC, u32 BITS>
+  u32 StaticLoader<CC,BITS>::AllocateTypeInternal(const UUID & forUUID, s32 useThisType) {
     u32 used = 0;
     for (u32 i = 0; i < SLOTS; ++i) {
       if (!m_uuids[i]) continue;
@@ -47,7 +57,17 @@ namespace MFM {
     if (used == SLOTS)
       FAIL(OUT_OF_ROOM);
 
-    u32 type = NextType();
+    u32 type;
+    if (useThisType >= 0)
+    {
+      type = (u32) useThisType;
+    } else {
+      type = NextType();
+    }
+
+    if (type >= SLOTS)
+      FAIL(ILLEGAL_STATE);
+
     m_uuids[type] = &forUUID;
     return type;
   }

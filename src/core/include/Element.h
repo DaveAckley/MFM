@@ -263,6 +263,22 @@ namespace MFM
     }
 
     /**
+     * Declare that this element is the Empty element, and assign it
+     * the specific type reserved for that element.
+     *
+     * @sa StaticLoader;
+     */
+    void AllocateEmptyType()
+    {
+      if (!m_hasType)
+      {
+        m_type = StaticLoader<CC,16>::AllocateEmptyType(m_UUID);
+        m_hasType = true;
+        m_defaultAtom = BuildDefaultAtom();
+      }
+    }
+
+    /**
      * Gets the unique type of this Element . If the type has not been
      * assigned yet (by using \c AllocateType() ), this will FAIL with
      * ILLEGAL_STATE .

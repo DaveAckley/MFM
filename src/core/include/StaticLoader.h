@@ -61,8 +61,12 @@ namespace MFM
     static const UUID *(m_uuids[SLOTS]);
     static u32 NextType() ;
 
+    static u32 AllocateTypeInternal(const UUID & forUUID, s32 useThisType) ;
+
   public:
     static u32 AllocateType(const UUID & forUUID) ;
+
+    static u32 AllocateEmptyType(const UUID & forUUID) ;
 
     /**
      * Return the type assigned to \a forUUID, or -1 if the UUID is

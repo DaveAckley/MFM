@@ -49,7 +49,7 @@ namespace MFM
 
     Element_Empty() : Element<CC>(MFM_UUID_FOR("Empty", EMPTY_VERSION))
     {
-      Element<CC>::AllocateType(); // For empty only, allocate type immediately
+      Element<CC>::AllocateEmptyType(); // A special method just for Empty!
       Element<CC>::SetAtomicSymbol("E");
       Element<CC>::SetName("Empty");
     }

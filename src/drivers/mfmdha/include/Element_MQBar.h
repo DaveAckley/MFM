@@ -303,7 +303,7 @@ namespace MFM
             const T other = window.GetRelativeAtom(sp);
             const u32 otherType = other.GetType();
 
-            bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
+            bool isEmpty = T::ATOM_EMPTY_TYPE == othertype;
 
             if (isEmpty) {
 
@@ -369,7 +369,7 @@ namespace MFM
             }
             else {
 
-              bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
+              bool isEmpty = T::ATOM_EMPTY_TYPE==otherType;
 
               if (isEmpty) ++consistentCount;
               else {

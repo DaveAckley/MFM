@@ -64,8 +64,16 @@ namespace MFM
      In addition to the 'virtually virtual' methods that Atom
      subclasses must provide (i.e., the methods documented as 'This is
      to be defined only by a subclass of Atom'), Atom subclasses must
-     also provide compile time constants: ATOM_CATEGORY and
-     ATOM_FIRST_STATE_BIT.
+     also provide compile time constants:
+
+     ATOM_CATEGORY - The basic identifying number of the atom, e.g.,
+     the P0Atom is category 0 and the P3Atom is category 3.
+
+     ATOM_FIRST_STATE_BIT - The smallest bit position where user state
+     can be stored
+
+     ATOM_EMPTY_TYPE - The type number corresponding to the Empty atom
+     in this category.
   */
   template <class CC>
   class Atom
@@ -206,7 +214,7 @@ namespace MFM
     /**
      * Reads the State bits of this atom from a given hex-encoded char* .
      *
-     * @remarks This delegates to ReadStateBits in the subclass of Atom.
+     * @remarks This delegates to ReadStateBitsImpl in the subclass of Atom.
      */
     void ReadStateBits(const char* hexStr)
     {
