@@ -132,7 +132,7 @@ namespace MFM
       ElementTable<CC> & et = tile.GetElementTable();
       const Element<CC> * eltptr = et.Lookup(type);
       if (!eltptr) return -1;
-      const UlamElement<CC> * ueltptr = eltptr->asUlamElement();
+      const UlamElement<CC> * ueltptr = eltptr->AsUlamElement();
       if (!ueltptr) return -2;
       s32 ret = ueltptr->PositionOfDataMemberType(dataMemberTypeName);
       if (ret < 0) return -3;
