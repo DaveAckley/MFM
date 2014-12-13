@@ -96,6 +96,49 @@ namespace MFM
       FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
     }
 
+    /**
+       Find the first position of a data member, specified by its \c
+       dataMemberTypeName, in an UlamElement specified by its \c type
+       number, if such as UlamElement exists and has such a data
+       member.
+
+       \param type an element type number, hopefully of an UlamElement
+
+       \param dataMemberTypeName the name of the type to search for in
+              the data members of the found UlamElement.
+
+       \return The smallest bit position of an occurrence of the type
+               \c dataMemberTypeName in this element, if any.  Note
+               that a return value of 0 corresponds to the
+               ATOM_FIRST_STATE_BIT of the atom.
+
+               A return value of -1 indicates the given \c type is not
+               associated with any known type of element.
+
+               A return value of -2 indicates the given \c type is
+               associated with an Element that is not an UlamElement,
+               so its data members cannot be searched.
+
+               A return value of -3 indicates the given \c type is
+               associated with an UlamElement, which did not contain a
+               data member of the named type.
+
+       \sa T::ATOM_FIRST_STATE_BIT
+       \sa PositionOfDataMemberType
+     */
+    static s32 PositionOfDataMember(u32 type, const char * dataMemberTypeName)
+    {
+      Tile<CC> & tile = UlamContext<CC>::Get().GetTile();
+      ElementTable<CC> & et = tile.GetElementTable();
+      const Element<CC> * eltptr = et.Lookup(type);
+      if (!eltptr) return -1;
+      const UlamElement<CC> * ueltptr = eltptr.asUlamElement();
+      if (!ueltptr) return -2;
+      s32 ret = ueltptr->PositionOfDataMemberType(dataMemberTypeName);
+      if (ret < 0) return -3;
+      return ret;
+    }
+
     virtual u32 DefaultPhysicsColor() const
     {
       // Colored white by default
