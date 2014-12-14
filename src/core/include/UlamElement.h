@@ -24,8 +24,8 @@
   \date (C) 2014 All rights reserved.
   \lgpl
  */
-#ifndef DEFAULTELEMENT_H
-#define DEFAULTELEMENT_H
+#ifndef ULAMELEMENT_H
+#define ULAMELEMENT_H
 
 #include "Element.h"
 #include "Tile.h"
@@ -34,17 +34,42 @@
 
 namespace MFM
 {
+  struct UlamElementInfo
+  {
+    virtual const char * GetName() const = 0;
+    virtual const char * GetSymbol() const = 0;
+    virtual const char * GetSummary() const = 0;
+    virtual const char * GetDetails() const = 0;
+    virtual const char * GetAuthor() const = 0;
+    virtual const char * GetLicense() const = 0;
+    virtual const u32 GetVersion() const = 0;
+    virtual const u32 GetNumColors() const = 0;
+    virtual const u32 GetColor(u32 colnum) const = 0;
+    virtual const u32 GetSymmetry() const
+    {
+      return PSYM_DEG000L;
+    }
+    virtual ~UlamElementInfo() { }
+  };
+
   /**
-   * A UlamElement is a concrete element, primarily for use by culam.
+   * A UlamElement is a concrete element primarily for use by culam.
    */
   template <class CC>
   class UlamElement : public Element<CC>
   {
     typedef typename CC::ATOM_TYPE T;
+    const UlamElementInfo * m_info;
 
   public:
     UlamElement(const UUID & uuid) : Element<CC>(uuid)
     { }
+
+    void SetInfo(const UlamElementInfo * info) {
+      m_info = info;
+      this->SetName(m_info->GetName());
+      this->SetAtomicSymbol(m_info->GetSymbol());
+    }
 
     /**
      * Destroys this UlamElement.
@@ -57,6 +82,10 @@ namespace MFM
       Tile<CC> & tile = window.GetTile();
       UlamContext<CC> & uc = UlamContext<CC>::Get();
       uc.SetTile(tile);
+
+      u32 sym = m_info ? m_info->GetSymmetry() : PSYM_DEG000L;
+      window.SetSymmetry((PointSymmetry) sym);
+
       T me = window.GetCenterAtom();
       T orig = me;
       Uf_6behave(me);
@@ -141,8 +170,16 @@ namespace MFM
 
     virtual u32 DefaultPhysicsColor() const
     {
-      // Colored white by default
+      if (m_info && m_info->GetNumColors() > 0)
+        return m_info->GetColor(0);
       return 0xffffffff;
+    }
+
+    virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
+    {
+      if (m_info && m_info->GetNumColors() > selector)
+        return m_info->GetColor(selector);
+      return this->PhysicsColor();
     }
 
     virtual u32 PercentMovable(const T& you,
@@ -150,9 +187,7 @@ namespace MFM
     {
       return 0;
     }
-
-
   };
-}
+} // MFM
 
-#endif /* DEFAULTELEMENT_H */
+#endif /* ULAMELEMENT_H */
