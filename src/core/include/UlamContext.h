@@ -28,12 +28,12 @@
 #ifndef ULAMCONTEXT_H
 #define ULAMCONTEXT_H
 
-#include "Tile.h"
-#include "Random.h"
-#include "EventWindow.h"
-
 namespace MFM
 {
+  template <class CC> class Tile; // FORWARD
+  template <class CC> class EventWindow; // FORWARD
+  class Random; // FORWARD
+
   template <class CC>
   class UlamContext {
     Tile<CC> * m_tile;

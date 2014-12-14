@@ -1,5 +1,8 @@
 /* -*- C++ -*- */
 #include "Fail.h"
+#include "Tile.h"
+#include "Random.h"
+#include "EventWindow.h"
 
 namespace MFM {
 
@@ -41,8 +44,8 @@ namespace MFM {
 
   template <class CC>
   UlamContext<CC> & UlamContext<CC>::Get() {
+    // an UlamContext is (way) mutable!  It must be per thread!
+    static __thread UlamContext<CC> THE_INSTANCE;
     return THE_INSTANCE;
   }
-
-  template <class CC> UlamContext<CC> UlamContext<CC>::THE_INSTANCE;
 }
