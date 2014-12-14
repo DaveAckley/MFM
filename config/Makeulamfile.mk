@@ -28,7 +28,7 @@ endif
 
 INCLUDES += -I $(BASEDIR)/src/core/include -I $(ULAM_SRC_DIR)/../include
 CPPFLAGS += $(ULAM_CPPFLAGS)
-$(info "ULAMICF($(CPPFLAGS))")
+#$(info "ULAMICF($(CPPFLAGS))")
 
 #DEBUGS += -g2
 
@@ -43,7 +43,7 @@ ULAM_EXE_FILE := $(patsubst %.cpp,$(ULAM_BIN_DIR)/%,$(ULAM_CPP_FILE))
 #$(info "MRD($(MFM_ROOT_DIR))")
 
 ulam_program:	FORCE # ulam_cppcompile $(ULAM_EXE_FILE) $(info "ULAGFOPROM")
-	make -C $(BASEDIR) EXTERNAL_DEFINES=-DULAM_CUSTOM_ELEMENTS EXTERNAL_INCLUDES=-I foo
+#	make -C $(BASEDIR) EXTERNAL_DEFINES=-DULAM_CUSTOM_ELEMENTS EXTERNAL_INCLUDES=-I foo
 
 ulam_cppcompile:	ulam_checkvar $(ULAM_OBJ_FILE)
 	@if [ ! -r "$(ULAM_SRC_DIR)/$(ULAM_CPP_FILE)" ] ; then \
