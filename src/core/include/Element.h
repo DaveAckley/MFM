@@ -164,7 +164,8 @@ namespace MFM
       switch (strlen(symbol))
       {
       case 2:
-        if (!(symbol[1] >= 'a' && symbol[1] <= 'z'))
+        if (!(symbol[1] >= 'a' && symbol[1] <= 'z')
+            && !(symbol[1] >= 'A' && symbol[1] <= 'Z')) // v2.1: allow two uppercase
         {
           return false;
         }
