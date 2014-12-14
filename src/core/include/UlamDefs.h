@@ -35,11 +35,12 @@
 #include "BitField.h"
 #include "CastOps.h"
 #include "Parameter.h"
-#include "UlamElement.h"
+#include "Element.h"
 #include "CoreConfig.h"
 #include "ParamConfig.h"
 #include "P3Atom.h"
 #include "UlamContext.h"
+#include "UlamElement.h"
 
 namespace MFM
 {
