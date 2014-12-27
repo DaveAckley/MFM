@@ -196,7 +196,7 @@ namespace MFM {
   }
 
   template<u32 R>
-  s32 MDist<R>::FromPoint(const Point<s32>& offset, u32 maxRadius) const
+  s32 MDist<R>::FromPoint(const SPoint& offset, u32 maxRadius) const
   {
     u32 x = (u32) (offset.GetX()+R);
     u32 y = (u32) (offset.GetY()+R);

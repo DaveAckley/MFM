@@ -133,28 +133,53 @@ namespace MFM
       return GetFirstIndex(radius+1)-1;
     }
 
-    const SPoint & GetPoint(const u32 index) const
+    /**
+       Get the relative coordinates of a given \c siteNumber, which
+       siteNumber 0 representing the center at (0,0).  For legal
+       siteNumbers, this method is inverted by GetSiteNumber()
+
+       \param siteNumber The siteNumber, from 0 to ARRAY_LENGTH - 1
+
+       \return The corresponding point
+
+       \fails ILLEGAL_ARGUMENT if siteNumber is greater than or equal
+       to ARRAY_LENGTH
+
+       \sa GetSiteNumber
+       \sa FromPoint
+     */
+    const SPoint & GetPoint(const u32 siteNumber) const
     {
-      if (index >= ARRAY_LENGTH)
+      if (siteNumber >= ARRAY_LENGTH)
       {
         FAIL(ILLEGAL_ARGUMENT);
       }
-      return m_indexToPoint[index];
+      return m_indexToPoint[siteNumber];
     }
 
-    MDist();
+    /**
+     * Convert a relative offset to the corresponding site number, if
+     * possible.  Returns -1 if the given offset cannot be expressed
+     * as a max length radius bond.
+     */
+    s32 GetSiteNumber(const SPoint & offset) const
+    {
+      return FromPoint(offset, R);
+    }
 
     /**
      * Return the coding of offset as a bond if possible.  Returns -1 if
      * the given offset cannot be expressed as a max length radius bond.
      */
-    s32 FromPoint(const Point<s32>& offset, u32 radius) const;
+    s32 FromPoint(const SPoint& offset, u32 radius) const;
 
     /*
      * Fills pt with the point represented by bits.
      * Uses a 4-bit rep if maxRadius less than 3
      */
     void FillFromBits(SPoint& pt, u8 bits, u32 maxRadius) const;
+
+    MDist();
 
   private:
     static const u32 ARRAY_LENGTH = EVENT_WINDOW_SITES(R);
