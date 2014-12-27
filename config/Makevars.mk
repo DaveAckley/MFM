@@ -11,12 +11,14 @@ SHELL:=/bin/bash
 
 ifndef DEBUG
   OPTFLAGS += -O99
+#  ${info NO DEBUG SO OPTFLAGS=$(OPTFLAGS)}
 else
   OPTFLAGS += -g2
   # Default to commands if debugging
   ifndef COMMANDS
     COMMANDS := 1
   endif
+#  ${info DEBUG=$(DEBUG) SO OPTFLAGS=$(OPTFLAGS)}
 endif
 
 ifndef PROFILE

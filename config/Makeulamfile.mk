@@ -17,7 +17,7 @@
 COMPONENTNAME:=ulam
 MFM_TARGET:=linux
 #COMMANDS:=1
-DEBUG:=1
+#DEBUG:=1
 
 dodo:=$(shell printenv)
 ifdef MFM_ROOT_DIR
@@ -42,8 +42,7 @@ ULAM_EXE_FILE := $(patsubst %.cpp,$(ULAM_BIN_DIR)/%,$(ULAM_CPP_FILE))
 #$(info "USD($(ULAM_SRC_DIR))")
 #$(info "MRD($(MFM_ROOT_DIR))")
 
-ulam_program:	FORCE # ulam_cppcompile $(ULAM_EXE_FILE) $(info "ULAGFOPROM")
-#	make -C $(BASEDIR) EXTERNAL_DEFINES=-DULAM_CUSTOM_ELEMENTS EXTERNAL_INCLUDES=-I foo
+ulam_program:	$(ULAM_EXE_FILE)
 
 ulam_cppcompile:	ulam_checkvar $(ULAM_OBJ_FILE)
 	@if [ ! -r "$(ULAM_SRC_DIR)/$(ULAM_CPP_FILE)" ] ; then \
