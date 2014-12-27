@@ -46,6 +46,11 @@ namespace MFM
   template <class CC> class UlamElement; // FORWARD
 
   /**
+   * A standard basis for specifying degrees of diffusability.
+   */
+  static const u32 COMPLETE_DIFFUSABILITY = 1000;
+
+  /**
    * An Element describes how a given type of Atom behaves.
    */
   template <class CC>
@@ -165,7 +170,8 @@ namespace MFM
       {
       case 2:
         if (!(symbol[1] >= 'a' && symbol[1] <= 'z')
-            && !(symbol[1] >= 'A' && symbol[1] <= 'Z')) // v2.1: allow two uppercase
+            && !(symbol[1] >= 'A' && symbol[1] <= 'Z')  // v2.1: allow two uppercase
+            && !(symbol[1] >= '0' && symbol[1] <= '9')) // v2.1: and one digit
         {
           return false;
         }
@@ -213,18 +219,6 @@ namespace MFM
     {
       m_name = name;
     }
-
-    /**
-     * Determines how likely an Atom of this type is to be swapped
-     * with during diffusal.
-     *
-     * @returns an integral percentage, from 0 to 100, describing the
-     *          desire of an atom of this type to be moved; 0 being
-     *          impossible to move and 100 being completely fine with
-     *          moving.
-     */
-    virtual u32 PercentMovable(const T& you,
-                               const T& me, const SPoint& offset) const = 0;
 
    public:
 
@@ -536,11 +530,6 @@ namespace MFM
     {
       return (nowAt == maybeAt)? COMPLETE_DIFFUSABILITY : 0;
     }
-
-    /**
-     * A standard basis for specifying degrees of diffusability.
-     */
-    static const u32 COMPLETE_DIFFUSABILITY = 1000;
 
     const ElementParameters<CC> & GetElementParameters() const
     {
