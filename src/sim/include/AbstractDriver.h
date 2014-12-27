@@ -817,7 +817,7 @@ namespace MFM
 
       if (m_accelerateAfterEpochs > 0 && (epochs % m_accelerateAfterEpochs) == 0)
       {
-        this->SetAEPSPerEpoch(this->GetAEPSPerEpoch() + m_acceleration);
+        this->SetAEPSPerEpoch(MAX(1u, this->GetAEPSPerEpoch() + m_acceleration));
       }
 
       if (m_accelerateAfterEpochs > 0 &&
@@ -836,7 +836,7 @@ namespace MFM
       m_startTimeMS(0),
       m_msSpentRunning(0),
       m_msSpentOverhead(0),
-      m_microsSleepPerFrame(50000),
+      m_microsSleepPerFrame(1000),
       m_overheadPercent(0.0),
       m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
       m_AEPSPerEpoch(100),
