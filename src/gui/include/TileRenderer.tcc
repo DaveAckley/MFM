@@ -58,9 +58,9 @@ namespace MFM
                 tile.IsOwnedSite(atomLoc))
             {
               // Draw background 'write heat' map
-              u32 writeAge = tile.GetUncachedWriteAge(atomLoc -
-                                                      SPoint(P::EVENT_WINDOW_RADIUS,
-                                                             P::EVENT_WINDOW_RADIUS));
+              u32 writeAge = tile.GetUncachedWriteAge32(atomLoc -
+                                                        SPoint(P::EVENT_WINDOW_RADIUS,
+                                                               P::EVENT_WINDOW_RADIUS));
               u32 colorIndex = 0;
               const u32 MAX_IDX = 10000;       // Potential (interpolated) colors
               const u32 AGE_PER_AEPS = tile.GetSites();
