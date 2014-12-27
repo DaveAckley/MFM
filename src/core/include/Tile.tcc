@@ -166,25 +166,47 @@ namespace MFM
   }
 
   template <class CC>
-  u32 Tile<CC>::GetUncachedWriteAge(const SPoint site) const
+  u32 Tile<CC>::GetUncachedWriteAge32(const SPoint site) const
   {
-    if (!IsInUncachedTile(site))
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
-    return (u32) (GetEventsExecuted() -
-                  m_lastChangedEventNumber[site.GetX()][site.GetY()]);
+    const u32 A_BILLION = 1000*1000*1000;
+    u64 age = GetUncachedWriteAge(site);
+    if (age > A_BILLION) return A_BILLION;
+    return (u32) age;
   }
 
   template <class CC>
-  u32 Tile<CC>::GetUncachedEventAge(const SPoint site) const
+  u64 Tile<CC>::GetUncachedWriteAge(const SPoint site) const
   {
     if (!IsInUncachedTile(site))
     {
       FAIL(ILLEGAL_ARGUMENT);
     }
-    return (u32) (GetEventsExecuted() -
-                  m_lastEventEventNumber[site.GetX()][site.GetY()]);
+    return
+      GetEventsExecuted() -
+      m_lastChangedEventNumber[site.GetX()][site.GetY()];
+  }
+
+
+  template <class CC>
+  u64 Tile<CC>::GetUncachedEventAge(const SPoint site) const
+  {
+    if (!IsInUncachedTile(site))
+    {
+      FAIL(ILLEGAL_ARGUMENT);
+    }
+    return
+      GetEventsExecuted() -
+      m_lastEventEventNumber[site.GetX()][site.GetY()];
+  }
+
+
+  template <class CC>
+  u32 Tile<CC>::GetUncachedEventAge32(const SPoint site) const
+  {
+    const u32 A_BILLION = 1000*1000*1000;
+    u64 age = GetUncachedEventAge(site);
+    if (age > A_BILLION) return A_BILLION;
+    return (u32) age;
   }
 
   template <class CC>

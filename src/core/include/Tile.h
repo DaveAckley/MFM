@@ -959,6 +959,25 @@ namespace MFM
     }
 
     /**
+     * Gets the 'write age' of a specified point in this Tile, up to
+     * one billion.  Indexing ignores the cache boundary, so possible
+     * range is (0,0) to (OWNED_SIDE-1,OWNED_SIDE-1).  The write age
+     * is the number of events on this tile since the contents of the
+     * specified point changed.  To obtain AEPS, divide this value by
+     * Tile::GetSites().
+     *
+     * @param site The coordinates of the location of the site whose
+     *          write age should be retrieved.
+     *
+     * @returns The events since that site's content changed, if less
+     * than one billion, else one billion.
+     *
+     * @sa GetUncachedWriteAge
+     *
+     */
+    u32 GetUncachedWriteAge32(const SPoint site) const ;
+
+    /**
      * Gets the 'write age' of a specified point in this Tile.
      * Indexing ignores the cache boundary, so possible range is (0,0)
      * to (OWNED_SIDE-1,OWNED_SIDE-1).  The write age is the number of
@@ -970,8 +989,29 @@ namespace MFM
      *          write age should be retrieved.
      *
      * @returns The events since that site's content changed
+     *
+     * @sa GetUncachedWriteAge32
+     *
      */
-    u32 GetUncachedWriteAge(const SPoint site) const ;
+    u64 GetUncachedWriteAge(const SPoint site) const ;
+
+    /**
+     * Gets the 'event age' of a specified point in this Tile, up to
+     * one billion.  Indexing ignores the cache boundary, so possible
+     * range is (0,0) to (OWNED_SIDE-1,OWNED_SIDE-1).  The event age
+     * is the number of events on this tile since the last event at
+     * the specified point changed.  To obtain AEPS, divide this value
+     * by Tile::GetSites().
+     *
+     * @param site The coordinates of the location of the site whose
+     *          event age should be retrieved.
+     *
+     * @returns The events since that site's content changed, if less
+     * than one billion, else one billion
+     *
+     * @sa GetUncachedEventAge
+     */
+    u32 GetUncachedEventAge32(const SPoint site) const ;
 
     /**
      * Gets the 'event age' of a specified point in this Tile.
@@ -985,8 +1025,10 @@ namespace MFM
      *          event age should be retrieved.
      *
      * @returns The events since that site's content changed
+     *
+     * @sa GetUncachedEventAge32
      */
-    u32 GetUncachedEventAge(const SPoint site) const ;
+    u64 GetUncachedEventAge(const SPoint site) const ;
 
     /**
      * Fills a specified Point with the coordinates of the last EventWindow center.
