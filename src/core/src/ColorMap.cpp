@@ -188,4 +188,3 @@ XXB(CubeHelixRev)
   }
 
 } /* namespace MFM */
-
