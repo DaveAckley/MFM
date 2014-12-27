@@ -40,11 +40,11 @@ namespace MFM {
     bool success = ew.TryEventAt(center);
     assert(success);
 
-    TestAtom catom = ew.GetCenterAtom();
+    TestAtom catom = ew.GetCenterAtomDirect();
 
     assert(catom.GetType() == WALL_TYPE);
 
-    catom = ew.GetRelativeAtom(zero);
+    catom = ew.GetRelativeAtomDirect(zero);
 
     assert(catom.GetType() == WALL_TYPE);
 
@@ -84,8 +84,8 @@ namespace MFM {
     bool res = ew.TryEventAt(center);
     assert(res);
 
-    ew.SetRelativeAtom(zero, TestAtom(DREG_TYPE,0,0,0));
-    ew.SetRelativeAtom(absolute, TestAtom(RES_TYPE,0,0,0));
+    ew.SetRelativeAtomDirect(zero, TestAtom(DREG_TYPE,0,0,0));
+    ew.SetRelativeAtomDirect(absolute, TestAtom(RES_TYPE,0,0,0));
 
     assert(erased1->GetType() == EMPTY_TYPE);
     assert(erased2->GetType() == EMPTY_TYPE);
