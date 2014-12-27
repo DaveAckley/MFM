@@ -164,12 +164,12 @@ namespace MFM
     {
       Random & random = window.GetRandom();
       SPoint reproducePt;
-      T self = window.GetCenterAtom();
+      T self = window.GetCenterAtomSym();
       WindowScanner<CC> scanner(window);
       if(scanner.FindRandomInVonNeumann(Element_Res<CC>::THE_INSTANCE.GetType(),
                                         reproducePt) > 0)
       {
-        window.SetRelativeAtom(reproducePt, self);
+        window.SetRelativeAtomSym(reproducePt, self);
       }
 
       bool movingUp = random.CreateBool();
@@ -201,15 +201,15 @@ namespace MFM
 
         if(foundPts)
         {
-          u32 threshold = GetThreshold(window.GetCenterAtom(),0);
-          u32 datum = Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtom(src),0);
+          u32 threshold = GetThreshold(window.GetCenterAtomSym(),0);
+          u32 datum = Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtomSym(src),0);
           bool cmp = (movingUp && (datum < threshold)) || (!movingUp && (datum > threshold));
 
           if(cmp)
           {
             SetThreshold(self, datum);
-            window.SetCenterAtom(self);
-            window.SwapAtoms(src, dst);
+            window.SetCenterAtomSym(self);
+            window.SwapAtomsSym(src, dst);
             break;
           }
         }

@@ -84,7 +84,7 @@ namespace MFM
       for (u32 i = 0; i < (u32) m_bombCount.GetValue(); ++i)
       {
         u32 idx = random.Between(loIdx,hiIdx);
-        window.SetRelativeAtom(md.GetPoint(idx), window.GetCenterAtom());
+        window.SetRelativeAtomSym(md.GetPoint(idx), window.GetCenterAtomSym());
       }
     }
 

@@ -108,7 +108,7 @@ namespace MFM
   void AbstractElement_Reprovert<CC>::ReproduceVertically(EventWindow<CC>& window) const
   {
     Random & random = window.GetRandom();
-    T self = window.GetCenterAtom();
+    T self = window.GetCenterAtomSym();
     s32 gap = GetGap(self,0);
 
     u32 selfType = self.GetType();
@@ -117,12 +117,12 @@ namespace MFM
     bool down = random.CreateBool();
     SPoint repPt(0, down ? gap : -gap);
 
-    if (!window.IsLiveSite(repPt))
+    if (!window.IsLiveSiteSym(repPt))
     {
       return;
     }
 
-    T other = window.GetRelativeAtom(repPt);
+    T other = window.GetRelativeAtomSym(repPt);
     u32 otherType = other.GetType();
 
     bool weChanged = false;
@@ -137,7 +137,7 @@ namespace MFM
       // their neighbors faster than their neighbors listen to them.
       SetBelow(newAtom, down || belowSelf==0 ? 0 : belowSelf + 1);
       SetAbove(newAtom, !down || aboveSelf==0 ? 0 : aboveSelf + 1);
-      window.SetRelativeAtom(repPt, newAtom);
+      window.SetRelativeAtomSym(repPt, newAtom);
 
     } else if (otherType == selfType) {
       s32 belowThem = GetBelow(other,0);
@@ -170,7 +170,7 @@ namespace MFM
     }
 
     if (weChanged)
-      window.SetCenterAtom(self);
+      window.SetCenterAtomSym(self);
   }
 
 

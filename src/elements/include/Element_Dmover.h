@@ -120,11 +120,11 @@ namespace MFM
            ++idx)
       {
         const SPoint rel = md.GetPoint(idx);
-        if (!window.IsLiveSite(rel))
+        if (!window.IsLiveSiteSym(rel))
         {
           continue;
         }
-        T other = window.GetRelativeAtom(rel);
+        T other = window.GetRelativeAtomSym(rel);
         u32 otherType = other.GetType();
 
         bool isOtherEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
@@ -148,7 +148,7 @@ namespace MFM
 
       if (emptyCount > 0 && occupiedCount > 0)  // We have a move
       {
-        window.SwapAtoms(emptyRel, occupiedRel);
+        window.SwapAtomsSym(emptyRel, occupiedRel);
       }
     }
   };

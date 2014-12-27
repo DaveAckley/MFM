@@ -81,7 +81,7 @@ namespace MFM
     {
       Random & random = window.GetRandom();
 
-      T self = window.GetCenterAtom();
+      T self = window.GetCenterAtomSym();
       const u32 selfType = self.GetType();
 
       if (!IsMoverType(selfType))
@@ -103,11 +103,11 @@ namespace MFM
       for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(1); ++idx) {
         const SPoint sp = md.GetPoint(idx);
 
-        if (!window.IsLiveSite(sp))
+        if (!window.IsLiveSiteSym(sp))
           continue;
 
         // Empty or occupied?
-        const T other = window.GetRelativeAtom(sp);
+        const T other = window.GetRelativeAtomSym(sp);
         const u32 otherType = other.GetType();
         bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
 
@@ -131,17 +131,17 @@ namespace MFM
 
       if (occupCount > 0) {
 
-        const T other = window.GetRelativeAtom(occup);
+        const T other = window.GetRelativeAtomSym(occup);
         const u32 otherType = other.GetType();
         bool isRes = otherType == Element_Res<CC>::TYPE();
 
         // Is it Res, and no other Movers, and we're inclined to convert?
 
         if (isRes && moverCount==0 && resCount > 1) {
-          window.SetRelativeAtom(occup,self);  // Be Like Me!
+          window.SetRelativeAtomSym(occup,self);  // Be Like Me!
         } else if (emptyCount > 0) {
           // If have empty and occup, swap
-          window.SwapAtoms(occup,empty);
+          window.SwapAtomsSym(occup,empty);
         }
       }
 

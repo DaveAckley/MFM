@@ -102,9 +102,9 @@ namespace MFM
       SPoint dir;
       MDist<R>::get().FillRandomSingleDir(dir, random);
 
-      if (window.IsLiveSite(dir))
+      if (window.IsLiveSiteDirect(dir))
       {
-        T atom = window.GetRelativeAtom(dir);
+        T atom = window.GetRelativeAtomDirect(dir);
         u32 oldType = atom.GetType();
 
         if(Element_Empty<CC>::THE_INSTANCE.IsType(oldType))
@@ -132,7 +132,7 @@ namespace MFM
 
         if(atom.GetType() != oldType)
         {
-          window.SetRelativeAtom(dir, atom);
+          window.SetRelativeAtomDirect(dir, atom);
         }
       }
       window.Diffuse();

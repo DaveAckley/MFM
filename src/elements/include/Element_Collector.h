@@ -72,7 +72,7 @@ namespace MFM
     {
       Random & random = window.GetRandom();
 
-      T self = window.GetCenterAtom();
+      T self = window.GetCenterAtomSym();
       const u32 selfType = self.GetType();
 
       if (!IsMyType(selfType))
@@ -95,11 +95,11 @@ namespace MFM
       for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(2); ++idx) {
         const SPoint sp = md.GetPoint(idx);
 
-        if (!window.IsLiveSite(sp))
+        if (!window.IsLiveSiteSym(sp))
           continue;
 
         // Empty or occupied?
-        const T other = window.GetRelativeAtom(sp);
+        const T other = window.GetRelativeAtomSym(sp);
         const u32 otherType = other.GetType();
         bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
 
@@ -129,10 +129,10 @@ namespace MFM
         for (u32 idx = md.GetFirstIndex(1); idx <= md.GetLastIndex(2); ++idx) {
           const SPoint sp = md.GetPoint(idx) + occup;
 
-          if (!window.IsLiveSite(sp))
+          if (!window.IsLiveSiteSym(sp))
             continue;
 
-          const T other = window.GetRelativeAtom(sp);
+          const T other = window.GetRelativeAtomSym(sp);
           const u32 otherType = other.GetType();
 
           // One of them?  One of them?
@@ -143,12 +143,12 @@ namespace MFM
 
         if ((otherCount == 0 || random.OneIn(100*otherCount)) && emptyCount > 0) {
           // They are alone (or unlucky) and we have an empty nearish us.  Pull them in
-          window.SwapAtoms(occup,empty);
+          window.SwapAtomsSym(occup,empty);
         } else {
 
           // Nothing to do.  Clonebomb?
           if (resCount > 1 && meCount == 0) {
-            window.SetRelativeAtom(resLoc,self);  // Be Like Me!
+            window.SetRelativeAtomSym(resLoc,self);  // Be Like Me!
           }
         }
       }

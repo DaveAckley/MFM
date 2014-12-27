@@ -140,7 +140,7 @@ namespace MFM
       const u32 ourType = this->GetType();
       const MDist<R> & md = MDist<R>::get();
 
-      T self = window.GetCenterAtom();
+      T self = window.GetCenterAtomSym();
 
       // Find out what this Xtal looks like
       XtalSites xtalSites;
@@ -174,13 +174,13 @@ namespace MFM
         const SPoint sp = md.GetPoint(idx);
 
         // First question: Is this a live site?
-        if (!window.IsLiveSite(sp))
+        if (!window.IsLiveSiteSym(sp))
           continue;
 
         // Second question: Is this a point site or a field site?
         bool isPoint = xtalSites.ReadBit(idx) !=0 ;
 
-        const T other = window.GetRelativeAtom(sp);
+        const T other = window.GetRelativeAtomSym(sp);
         const u32 otherType = other.GetType();
 
         if (isPoint) {
@@ -276,29 +276,29 @@ namespace MFM
       //     own kind?  If so, assume we're the problem, and res out.
       if (usFieldSites.count > totalConsistentPointSiteCount)
       {
-        window.SetCenterAtom(Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetCenterAtomSym(Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
       }
       // (1) Is there a field us and a point empty?  If so, swap them
       else if (usFieldSites.count > 0 && inconsistentEmptyPointSites.count > 0)
       {
-        window.SwapAtoms(usFieldSites.sampleSite, inconsistentEmptyPointSites.sampleSite);
+        window.SwapAtomsSym(usFieldSites.sampleSite, inconsistentEmptyPointSites.sampleSite);
       }
       // (2) Is there a point res?  If so, make it us
       else if (inconsistentResPointSites.count > 0)
       {
-        window.SetRelativeAtom(inconsistentResPointSites.sampleSite, self);
+        window.SetRelativeAtomSym(inconsistentResPointSites.sampleSite, self);
       }
       // (3) Is there a point empty and a field res?  If so, swap and make the point us
       else if (resFieldSites.count > 0 && inconsistentEmptyPointSites.count > 0)
       {
-        window.SwapAtoms(resFieldSites.sampleSite, inconsistentEmptyPointSites.sampleSite);
-        window.SetRelativeAtom(inconsistentEmptyPointSites.sampleSite, self);
+        window.SwapAtomsSym(resFieldSites.sampleSite, inconsistentEmptyPointSites.sampleSite);
+        window.SetRelativeAtomSym(inconsistentEmptyPointSites.sampleSite, self);
       }
       // (4) Is there a point non-us-xtal?  If so, res it out
       else if (inconsistentXtalPointSites.count > 0 && inconsistentEmptyPointSites.count > 0)
       {
-        window.SetRelativeAtom(inconsistentXtalPointSites.sampleSite,
-                               Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetRelativeAtomSym(inconsistentXtalPointSites.sampleSite,
+                                  Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
       }
 
       /*

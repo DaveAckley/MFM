@@ -102,7 +102,7 @@ namespace MFM
       const u32 ourType = THE_INSTANCE.GetType();
       const MDist<R> & md = MDist<R>::get();
 
-      T self = window.GetCenterAtom();
+      T self = window.GetCenterAtomSym();
       u32 myInflammationLevel = AFInflammationLevel::Read(self);
 
       const u32 loIdx = md.GetFirstIndex(1);
@@ -117,11 +117,11 @@ namespace MFM
       for (u32 i = loIdx; i <= hiIdx; ++i)
       {
         const SPoint rel = md.GetPoint(i);
-        if (!window.IsLiveSite(rel))
+        if (!window.IsLiveSiteSym(rel))
         {
           continue;
         }
-        const T & atom = window.GetRelativeAtom(rel);
+        const T & atom = window.GetRelativeAtomSym(rel);
         const u32 type = atom.GetType();
         const Element<CC> * elt = window.GetTile().GetElement(type);
         if (elt == &Element_Empty<CC>::THE_INSTANCE)
@@ -153,38 +153,38 @@ namespace MFM
       {
         u32 inflammationLevel = maxInflammation - 1;
 
-        T inflamedUs = window.GetCenterAtom();
+        T inflamedUs = window.GetCenterAtomSym();
         AFInflammationLevel::Write(inflamedUs, inflammationLevel);
-        window.SetCenterAtom(inflamedUs);
+        window.SetCenterAtomSym(inflamedUs);
 
         //DEFEND AT ALL COSTS!
         for (u32 i = loIdx; i <= hiIdx; ++i)
         {
           const SPoint rel = md.GetPoint(i);
-          const T & atom = window.GetRelativeAtom(rel);
+          const T & atom = window.GetRelativeAtomSym(rel);
           const u32 type = atom.GetType();
           if (type != ourType || AFInflammationLevel::Read(atom) < inflammationLevel)
           {
-            window.SetRelativeAtom(rel, inflamedUs);
+            window.SetRelativeAtomSym(rel, inflamedUs);
           }
         }
       }
       else if (myInflammationLevel > 0)
       {
         AFInflammationLevel::Write(self, myInflammationLevel - 1);
-        window.SetCenterAtom(self);
+        window.SetCenterAtomSym(self);
       }
       else if (usCount < m_minDensity)
       {
         //It's calm around here, but need more of us on patrol
         if (emptyCount > 0)
         {
-          window.SetRelativeAtom(randomEmpty, THE_INSTANCE.GetDefaultAtom());
+          window.SetRelativeAtomSym(randomEmpty, THE_INSTANCE.GetDefaultAtom());
         }
       } else if (usCount > m_maxDensity)
       {
         //It's calm and there's too many of us.  I sacrifice myself for the team.
-        window.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetCenterAtomSym(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
       } else
       {
         //It's calm and we have reasonable density.  I will patrol.

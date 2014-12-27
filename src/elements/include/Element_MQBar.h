@@ -270,7 +270,7 @@ namespace MFM
     virtual void Behavior(EventWindow<CC>& window) const
     {
       // Get self, sanity check
-      T self = window.GetCenterAtom();
+      T self = window.GetCenterAtomSym();
       const u32 selfType = self.GetType();
       if (!IsOurType(selfType)) FAIL(ILLEGAL_STATE);
 
@@ -321,7 +321,7 @@ namespace MFM
           if (inBar) {
             // Next question: Site empty?
 
-            const T other = window.GetRelativeAtom(sp);
+            const T other = window.GetRelativeAtomSym(sp);
             const u32 otherType = other.GetType();
 
             bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
@@ -378,7 +378,7 @@ namespace MFM
           // really like it not to have Bar's in it
 
           if (inBar) {
-            const T other = window.GetRelativeAtom(sp);
+            const T other = window.GetRelativeAtomSym(sp);
             const u32 otherType = other.GetType();
 
             bool isRes = otherType == Element_Res<CC>::TYPE();
@@ -417,12 +417,12 @@ namespace MFM
         if (consistentCount > 3 * inconsistentCount) {
 
           // Yes.  Punish selected loser
-          window.SetRelativeAtom(anInconsistent, unmakeGuy);
+          window.SetRelativeAtomSym(anInconsistent, unmakeGuy);
 
         } else if (inconsistentCount > 3 * consistentCount) {
 
           // If we're way inconsistent, let's res out and let them have us
-          window.SetCenterAtom(Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetCenterAtomSym(Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
 
         } else {
 
@@ -443,15 +443,15 @@ namespace MFM
       } else {
         // No inconsistencies.  Do we have something to make, and eat?
         if (makeCount > 0 && eatCount > 0) {
-          window.SetRelativeAtom(toMake, makeGuy);
-          window.SetRelativeAtom(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetRelativeAtomSym(toMake, makeGuy);
+          window.SetRelativeAtomSym(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
         }
         else {
           // Super-special case: Are we the max corner and all consistent?
           if (myPos == barMax-SPoint(1,1)) {
             // Is there an empty off end to us?
             SPoint offset(0,2);
-            T offEnd = window.GetRelativeAtom(offset);
+            T offEnd = window.GetRelativeAtomSym(offset);
             const u32 offType = offEnd.GetType();
             if (Element_Empty<CC>::THE_INSTANCE.IsType(offType) && eatCount > 0) {
               T corner = self;
@@ -462,8 +462,8 @@ namespace MFM
               SetSymI(corner,symi);
               SetPos(corner,SPoint(0,0));
               SetTimer(corner,0);
-              window.SetRelativeAtom(offset, corner);
-              window.SetRelativeAtom(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+              window.SetRelativeAtomSym(offset, corner);
+              window.SetRelativeAtomSym(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
             }
           }
           {
@@ -473,7 +473,7 @@ namespace MFM
               if (random.OneIn(ourTimer+1))  {
                 ++ourTimer;
                 SetTimer(self,ourTimer);
-                window.SetCenterAtom(self);
+                window.SetCenterAtomSym(self);
               }
             }
           }

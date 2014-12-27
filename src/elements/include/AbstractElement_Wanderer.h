@@ -68,12 +68,12 @@ namespace MFM
 
       wanderPt *= Dirs::IsCorner(d) ? (GetWanderDistance() / 2) : GetWanderDistance();
 
-      if(window.IsLiveSite(wanderPt))
+      if(window.IsLiveSiteSym(wanderPt))
       {
-        if(window.GetRelativeAtom(wanderPt).GetType() ==
+        if(window.GetRelativeAtomSym(wanderPt).GetType() ==
            Element_Empty<CC>::THE_INSTANCE.GetType())
         {
-          window.SwapAtoms(wanderPt, SPoint(0, 0));
+          window.SwapAtomsSym(wanderPt, SPoint(0, 0));
         }
       }
     }

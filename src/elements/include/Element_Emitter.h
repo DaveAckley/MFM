@@ -118,11 +118,11 @@ namespace MFM
           for (u32 idx = md.GetFirstIndex(ring); idx <= md.GetLastIndex(ring); ++idx)
           {
             const SPoint sp = md.GetPoint(idx);
-            if (!window.IsLiveSite(sp))
+            if (!window.IsLiveSiteSym(sp))
             {
               continue;
             }
-            const T other = window.GetRelativeAtom(sp);
+            const T other = window.GetRelativeAtomSym(sp);
             const u32 otherType = other.GetType();
             bool isEmpty = otherType == Element_Empty<CC>::THE_INSTANCE.GetType();
             if (isEmpty && random.OneIn(++emptiesFound))
@@ -132,7 +132,7 @@ namespace MFM
           {
             T atom = Element_Data<CC>::THE_INSTANCE.GetDefaultAtom();
             Element_Data<CC>::THE_INSTANCE.SetDatum(atom,random.Between(DATA_MINVAL, DATA_MAXVAL));
-            window.SetRelativeAtom(emptyPoint, atom);
+            window.SetRelativeAtomSym(emptyPoint, atom);
             return;
           }
         }

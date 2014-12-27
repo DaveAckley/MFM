@@ -146,7 +146,7 @@ namespace MFM
 
     virtual void Behavior(EventWindow<CC>& window) const
     {
-      u32 val = GetDatum(window.GetCenterAtom(),-1);
+      u32 val = GetDatum(window.GetCenterAtomSym(),-1);
       if (val < DATA_MINVAL || val > DATA_MAXVAL)
       {
         FAIL(ILLEGAL_STATE);

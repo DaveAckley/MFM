@@ -11,9 +11,9 @@ namespace MFM
     for(Dir d = Dirs::NORTH; i < 4; d = Dirs::CWDir(Dirs::CWDir(d)), i++)
     {
       Dirs::FillDir(pt, d);
-      if(window.IsLiveSite(pt))
+      if(window.IsLiveSiteSym(pt))
       {
-        window.SetRelativeAtom(pt, Element_CheckerForkBlue<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetRelativeAtomSym(pt, Element_CheckerForkBlue<CC>::THE_INSTANCE.GetDefaultAtom());
       }
     }
   }

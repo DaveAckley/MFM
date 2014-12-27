@@ -96,7 +96,7 @@ namespace MFM
     // Non-diffusable
     virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
     {
-      return nowAt.Equals(maybeAt)?Element<CC>::COMPLETE_DIFFUSABILITY:0;
+      return nowAt.Equals(maybeAt)?COMPLETE_DIFFUSABILITY:0;
     }
 
     virtual u32 PercentMovable(const T& you,
@@ -107,7 +107,7 @@ namespace MFM
 
     virtual void Behavior(EventWindow<CC>& window) const
     {
-      T self = window.GetCenterAtom();
+      T self = window.GetCenterAtomSym();
       SPoint emptyRel;
       u32 emptyCount = 0;
       u32 age = this->GetCurrentAge(self);
@@ -128,19 +128,19 @@ namespace MFM
         if (reproable)     // and leave kid behind
         {
           this->SetCurrentAge(self,0);
-          window.SetCenterAtom(self);
+          window.SetCenterAtomSym(self);
         }
         else               // or leave empty behind
         {
-          window.SetCenterAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetCenterAtomSym(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
         }
-        window.SetRelativeAtom(emptyRel,self); // move or repro
+        window.SetRelativeAtomSym(emptyRel,self); // move or repro
       }
       else                 // Can't move
       {
         if (!reproable)    // But if immature
         {
-          window.SetCenterAtom(self);  // Can age
+          window.SetCenterAtomSym(self);  // Can age
         }
       }
     }

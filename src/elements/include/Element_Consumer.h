@@ -124,13 +124,13 @@ namespace MFM
       //      Random & random = window.GetRandom();
       this->ReproduceVertically(window);
 
-      T self = window.GetCenterAtom();
+      T self = window.GetCenterAtomSym();
 
       // Find nearest-on-right consumable, if any
       for (u32 i = 1; i < R; ++i)
       {
         SPoint consPt(i,0);
-        if(window.GetRelativeAtom(consPt).GetType() == Element_Data<CC>::TYPE())
+        if(window.GetRelativeAtomSym(consPt).GetType() == Element_Data<CC>::TYPE())
         {
             // Use the expanded info maintained by reprovert to
             // dynamically compute the bucket size.  That info can be
@@ -143,7 +143,7 @@ namespace MFM
             u32 range = above + below + 1;
             const u32 bucketSize = DATA_MAXVAL / range;
 
-            u32 val = Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtom(consPt), 0);
+            u32 val = Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtomSym(consPt), 0);
 
             u32 minBucketVal = bucketSize * above;
             u32 maxBucketVal = bucketSize * (above + 1);
@@ -175,7 +175,7 @@ namespace MFM
               datap[DATUMS_CONSUMED_SLOT], datap[TOTAL_BUCKET_ERROR_SLOT],
               ((double)datap[TOTAL_BUCKET_ERROR_SLOT])/datap[DATUMS_CONSUMED_SLOT]);
             */
-            window.SetRelativeAtom(consPt, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+            window.SetRelativeAtomSym(consPt, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
             break;
           }
       }

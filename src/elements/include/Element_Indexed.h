@@ -104,7 +104,7 @@ namespace MFM
 
     virtual void Behavior(EventWindow<CC>& window) const
     {
-      T self = window.GetCenterAtom();
+      T self = window.GetCenterAtomSym();
 
       LOG.Debug("IDX#%3d@%p(%2d,%2d)",
                 AFIndex::Read(this->GetBits(self)),

@@ -97,7 +97,7 @@ namespace MFM
       for(u32 i = md.GetFirstIndex(0); i <= md.GetLastIndex(R); i++)
       {
         const SPoint& rel = md.GetPoint(i);
-        const T& atom = window.GetRelativeAtom(rel);
+        const T& atom = window.GetRelativeAtomSym(rel);
 
         if(Atom<CC>::IsType(atom, Element_Wall<CC>::THE_INSTANCE.GetType()))
         {
@@ -124,11 +124,11 @@ namespace MFM
 
       if(cregCount > (u32) m_targetDensity.GetValue())
       {
-        window.SetRelativeAtom(cregAtom, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetRelativeAtomSym(cregAtom, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
       }
       else if(cregCount < m_targetDensity.GetValue())
       {
-        window.SetRelativeAtom(nonCregAtom, Element_Creg<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetRelativeAtomSym(nonCregAtom, Element_Creg<CC>::THE_INSTANCE.GetDefaultAtom());
       }
     }
   };

@@ -95,7 +95,7 @@ namespace MFM
 
     virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
     {
-      return nowAt.Equals(maybeAt)?Element<CC>::COMPLETE_DIFFUSABILITY:0;
+      return nowAt.Equals(maybeAt)?COMPLETE_DIFFUSABILITY:0;
     }
 
     virtual u32 PercentMovable(const T& you,
