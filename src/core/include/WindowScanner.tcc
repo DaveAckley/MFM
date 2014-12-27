@@ -221,9 +221,9 @@ namespace MFM
     u32 atomCount = 0;
     for(u32 i = 0; i < subCount; i++)
     {
-      if(m_win.IsLiveSite(subWindow[i]))
+      if(m_win.IsLiveSiteSym(subWindow[i]))
       {
-        if(m_win.GetRelativeAtom(subWindow[i]).GetType() == type)
+        if(m_win.GetRelativeAtomSym(subWindow[i]).GetType() == type)
         {
           atomCount++;
           if(m_rand.OneIn(atomCount))
@@ -255,9 +255,9 @@ namespace MFM
     {
       Dirs::FillDir(searchPt, dirs[i]);
 
-      if(m_win.IsLiveSite(searchPt))
+      if(m_win.IsLiveSiteSym(searchPt))
       {
-        if(m_win.GetRelativeAtom(searchPt).GetType() == type)
+        if(m_win.GetRelativeAtomSym(searchPt).GetType() == type)
         {
           ptsFound++;
           if(m_rand.OneIn(ptsFound))
@@ -389,11 +389,11 @@ namespace MFM
     for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(radius); i++)
     {
       SPoint pt = md.GetPoint(i);
-      if(m_win.IsLiveSite(pt))
+      if(m_win.IsLiveSiteSym(pt))
       {
         for(u32 j = 0; j < count; j++)
         {
-          if(m_win.GetRelativeAtom(pt).GetType() == types[j])
+          if(m_win.GetRelativeAtomSym(pt).GetType() == types[j])
           {
             (*(outCounts[j]))++;
             if(rand.OneIn(*(outCounts[j])))

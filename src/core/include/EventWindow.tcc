@@ -88,16 +88,16 @@ namespace MFM {
     Tile<CC> & t = GetTile();
     unwind_protect(
     {
-      if(!GetCenterAtom().IsSane())
+      if(!GetCenterAtomDirect().IsSane())
       {
         LOG.Debug("FE(INSANE)");
       }
       else
       {
-        LOG.Debug("FE(%x) (SANE)",GetCenterAtom().GetType());
+        LOG.Debug("FE(%x) (SANE)",GetCenterAtomDirect().GetType());
       }
 
-      SetCenterAtom(t.GetEmptyAtom());
+      SetCenterAtomDirect(t.GetEmptyAtom());
     },
     {
       LOG.Debug("ET::Execute");
@@ -118,14 +118,14 @@ namespace MFM {
 
     // Don't diffuse stuff into the great nowhere, but consider
     // 'bouncing' off the edge of the universe
-    if (!window.IsLiveSite(sp)) {
+    if (!window.IsLiveSiteDirect(sp)) {
       sp *= -1;
-      if (!window.IsLiveSite(sp))  // Wow this is a tight universe!
+      if (!window.IsLiveSiteDirect(sp))  // Wow this is a tight universe!
         return;
     }
 
-    T us = window.GetCenterAtom();
-    T other = window.GetRelativeAtom(sp);
+    T us = window.GetCenterAtomDirect();
+    T other = window.GetRelativeAtomDirect(sp);
     const Element<CC> * ourElt = tile.GetElement(us.GetType());
     const Element<CC> * elt = tile.GetElement(other.GetType());
 
@@ -134,8 +134,8 @@ namespace MFM {
 
     u32 thisWeight = elt->Diffusability(window, sp, SPoint(0,0));
     u32 ourWeight = ourElt->Diffusability(window, SPoint(0,0), sp);
-    if (random.OddsOf(MIN(ourWeight, thisWeight), Element<CC>::COMPLETE_DIFFUSABILITY))
-      window.SwapAtoms(sp, SPoint(0, 0));
+    if (random.OddsOf(MIN(ourWeight, thisWeight), COMPLETE_DIFFUSABILITY))
+      window.SwapAtomsDirect(sp, SPoint(0, 0));
   }
 
   template <class CC>
@@ -294,17 +294,23 @@ namespace MFM {
   }
 
   template <class CC>
-  SPoint EventWindow<CC>::MapToTileValid(const SPoint& offset) const
+  SPoint EventWindow<CC>::MapToTileSymValid(const SPoint& offset) const
   {
     if (!InWindow(offset)) FAIL(ILLEGAL_ARGUMENT);
     return MapToTile(offset);
   }
 
   template <class CC>
-  u32 EventWindow<CC>::MapToIndexValid(const SPoint & loc) const
+  u32 EventWindow<CC>::MapToIndexSymValid(const SPoint & loc) const
+  {
+    return MapToIndexDirectValid(SymMap(loc, m_sym, SPoint(2*R, 2*R)));
+  }
+
+  template <class CC>
+  u32 EventWindow<CC>::MapToIndexDirectValid(const SPoint & loc) const
   {
     const MDist<R> & md = MDist<R>::get();
-    s32 index = md.FromPoint(Map(loc,m_sym,loc),R);
+    s32 index = md.FromPoint(loc,R);
     if (index < 0)
     {
       FAIL(ILLEGAL_ARGUMENT);
@@ -381,9 +387,9 @@ namespace MFM {
   }
 
   template <class CC>
-  bool EventWindow<CC>::SetRelativeAtom(const SPoint& offset, const T & atom)
+  bool EventWindow<CC>::SetRelativeAtomSym(const SPoint& offset, const T & atom)
   {
-    u32 idx = MapToIndexValid(offset);
+    u32 idx = MapToIndexSymValid(offset);
     if (m_isLiveSite[idx])
     {
       m_atomBuffer[idx] = atom;
@@ -393,24 +399,80 @@ namespace MFM {
   }
 
   template <class CC>
-  const typename CC::ATOM_TYPE& EventWindow<CC>::GetRelativeAtom(const SPoint& offset) const
+  bool EventWindow<CC>::SetRelativeAtomDirect(const SPoint& offset, const T & atom)
   {
-    return m_atomBuffer[MapToIndexValid(offset)];
+    u32 idx = MapToIndexDirectValid(offset);
+    if (m_isLiveSite[idx])
+    {
+      m_atomBuffer[idx] = atom;
+      return true;
+    }
+    return false;
   }
 
   template <class CC>
-  const typename CC::ATOM_TYPE& EventWindow<CC>::GetRelativeAtom(const Dir mooreOffset) const
+  const typename CC::ATOM_TYPE& EventWindow<CC>::GetRelativeAtomSym(const SPoint& offset) const
+  {
+    return m_atomBuffer[MapToIndexSymValid(offset)];
+  }
+
+  template <class CC>
+  const typename CC::ATOM_TYPE& EventWindow<CC>::GetRelativeAtomDirect(const SPoint& offset) const
+  {
+    return m_atomBuffer[MapToIndexDirectValid(offset)];
+  }
+
+  template <class CC>
+  const typename CC::ATOM_TYPE& EventWindow<CC>::GetRelativeAtomSym(const Dir mooreOffset) const
   {
     SPoint pt;
     Dirs::FillDir(pt, mooreOffset);
-    return GetRelativeAtom(pt);
+    return GetRelativeAtomSym(pt);
   }
 
   template <class CC>
-  void EventWindow<CC>::SwapAtoms(const SPoint& locA, const SPoint& locB)
+  const typename CC::ATOM_TYPE& EventWindow<CC>::GetRelativeAtomDirect(const Dir mooreOffset) const
   {
-    u32 idxa = MapToIndexValid(locA);
-    u32 idxb = MapToIndexValid(locB);
+    SPoint pt;
+    Dirs::FillDir(pt, mooreOffset);
+    return GetRelativeAtomDirect(pt);
+  }
+
+  template <class CC>
+  void EventWindow<CC>::SwapAtomsSym(const u32 syma, const u32 symb)
+  {
+    u32 idxa = MapIndexToIndexSymValid(syma);
+    u32 idxb = MapIndexToIndexSymValid(symb);
+
+    T tmp = m_atomBuffer[idxa];
+    m_atomBuffer[idxa] = m_atomBuffer[idxb];
+    m_atomBuffer[idxb] = tmp;
+  }
+
+  template <class CC>
+  void EventWindow<CC>::SwapAtomsDirect(const u32 idxa, const u32 idxb)
+  {
+    T tmp = m_atomBuffer[idxa];
+    m_atomBuffer[idxa] = m_atomBuffer[idxb];
+    m_atomBuffer[idxb] = tmp;
+  }
+
+  template <class CC>
+  void EventWindow<CC>::SwapAtomsSym(const SPoint& locA, const SPoint& locB)
+  {
+    u32 idxa = MapToIndexSymValid(locA);
+    u32 idxb = MapToIndexSymValid(locB);
+
+    T tmp = m_atomBuffer[idxa];
+    m_atomBuffer[idxa] = m_atomBuffer[idxb];
+    m_atomBuffer[idxb] = tmp;
+  }
+
+  template <class CC>
+  void EventWindow<CC>::SwapAtomsDirect(const SPoint& locA, const SPoint& locB)
+  {
+    u32 idxa = MapToIndexDirectValid(locA);
+    u32 idxb = MapToIndexDirectValid(locB);
 
     T tmp = m_atomBuffer[idxa];
     m_atomBuffer[idxa] = m_atomBuffer[idxb];

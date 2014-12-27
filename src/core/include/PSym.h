@@ -78,31 +78,31 @@ namespace MFM {
      we know at compile-time what transformation we want.
    */
   template <PointSymmetry PSYM>
-  inline SPoint Map(const SPoint & in) ;
+  inline SPoint SymMap(const SPoint & in) ;
 
-  template <> inline SPoint Map<PSYM_DEG000L>(const SPoint & in) {  return SPoint( in.GetX(), in.GetY()); }    // x -> x, y -> y
-  template <> inline SPoint Map<PSYM_DEG090L>(const SPoint & in) {  return SPoint(-in.GetY(), in.GetX()); }    // x -> y, y ->-x
-  template <> inline SPoint Map<PSYM_DEG180L>(const SPoint & in) {  return SPoint(-in.GetX(),-in.GetY()); }    // x ->-x, y ->-y
-  template <> inline SPoint Map<PSYM_DEG270L>(const SPoint & in) {  return SPoint( in.GetY(),-in.GetX()); }    // x ->-y, y -> x
-  template <> inline SPoint Map<PSYM_DEG000R>(const SPoint & in) {  return SPoint( in.GetX(),-in.GetY()); }    // x -> x, y ->-y
-  template <> inline SPoint Map<PSYM_DEG090R>(const SPoint & in) {  return SPoint( in.GetY(), in.GetX()); }    // x -> y, y -> x
-  template <> inline SPoint Map<PSYM_DEG180R>(const SPoint & in) {  return SPoint(-in.GetX(), in.GetY()); }    // x ->-x, y -> y
-  template <> inline SPoint Map<PSYM_DEG270R>(const SPoint & in) {  return SPoint(-in.GetY(),-in.GetX()); }    // x ->-y, y ->-x
+  template <> inline SPoint SymMap<PSYM_DEG000L>(const SPoint & in) {  return SPoint( in.GetX(), in.GetY()); }    // x -> x, y -> y
+  template <> inline SPoint SymMap<PSYM_DEG090L>(const SPoint & in) {  return SPoint(-in.GetY(), in.GetX()); }    // x -> y, y ->-x
+  template <> inline SPoint SymMap<PSYM_DEG180L>(const SPoint & in) {  return SPoint(-in.GetX(),-in.GetY()); }    // x ->-x, y ->-y
+  template <> inline SPoint SymMap<PSYM_DEG270L>(const SPoint & in) {  return SPoint( in.GetY(),-in.GetX()); }    // x ->-y, y -> x
+  template <> inline SPoint SymMap<PSYM_DEG000R>(const SPoint & in) {  return SPoint( in.GetX(),-in.GetY()); }    // x -> x, y ->-y
+  template <> inline SPoint SymMap<PSYM_DEG090R>(const SPoint & in) {  return SPoint( in.GetY(), in.GetX()); }    // x -> y, y -> x
+  template <> inline SPoint SymMap<PSYM_DEG180R>(const SPoint & in) {  return SPoint(-in.GetX(), in.GetY()); }    // x ->-x, y -> y
+  template <> inline SPoint SymMap<PSYM_DEG270R>(const SPoint & in) {  return SPoint(-in.GetY(),-in.GetX()); }    // x ->-y, y ->-x
 
   /**
      A general-purpose point symmetry coord mapping function, for when
      we don't know at compile-time what transformation we want.
    */
-  inline SPoint Map(const SPoint & in, const PointSymmetry psym, const SPoint & ifNone) {
+  inline SPoint SymMap(const SPoint & in, const PointSymmetry psym, const SPoint & ifNone) {
     switch (psym) {
-    case PSYM_DEG000L: return Map<PSYM_DEG000L>(in);
-    case PSYM_DEG090L: return Map<PSYM_DEG090L>(in);
-    case PSYM_DEG180L: return Map<PSYM_DEG180L>(in);
-    case PSYM_DEG270L: return Map<PSYM_DEG270L>(in);
-    case PSYM_DEG000R: return Map<PSYM_DEG000R>(in);
-    case PSYM_DEG090R: return Map<PSYM_DEG090R>(in);
-    case PSYM_DEG180R: return Map<PSYM_DEG180R>(in);
-    case PSYM_DEG270R: return Map<PSYM_DEG270R>(in);
+    case PSYM_DEG000L: return SymMap<PSYM_DEG000L>(in);
+    case PSYM_DEG090L: return SymMap<PSYM_DEG090L>(in);
+    case PSYM_DEG180L: return SymMap<PSYM_DEG180L>(in);
+    case PSYM_DEG270L: return SymMap<PSYM_DEG270L>(in);
+    case PSYM_DEG000R: return SymMap<PSYM_DEG000R>(in);
+    case PSYM_DEG090R: return SymMap<PSYM_DEG090R>(in);
+    case PSYM_DEG180R: return SymMap<PSYM_DEG180R>(in);
+    case PSYM_DEG270R: return SymMap<PSYM_DEG270R>(in);
     default: return ifNone;
     }
   }

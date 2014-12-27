@@ -60,12 +60,12 @@ namespace MFM {
   template <class CC>
   void ElementTable<CC>::Execute(EventWindow<CC>& window)
   {
-    T atom = window.GetCenterAtom();
+    T atom = window.GetCenterAtomDirect();
     if (!atom.IsSane())
     {
       if (atom.HasBeenRepaired())
       {
-        window.SetCenterAtom(atom);
+        window.SetCenterAtomDirect(atom);
       }
       else
       {

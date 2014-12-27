@@ -136,22 +136,15 @@ namespace MFM
     State m_ewState;
 
     /**
-     * Low-level, private because this does not guarantee loc is in
-     * the window!
+     * Produce the absolute tile location for a given
+     * eventwindow-relative coordinate loc.  Maps loc through the
+     * current symmetry and then offsets by the event window position.
+     * This is a low-level, private method that does not check if
+     * loc is actually in the window.
      */
     SPoint MapToTile(const SPoint & loc) const
     {
-      return Map(loc,m_sym,loc)+m_center;
-    }
-
-    /**
-     * Map a relative coordinate through the psymmetry and into an
-     * index into the atomBuffer.  Returns -1 for illegal coords
-     */
-    s32 MapToIndex(const SPoint & loc) const
-    {
-      const MDist<R> & md = MDist<R>::get();
-      return FromPoint(Map(loc,m_sym,loc),R);
+      return SymMap(loc,m_sym,loc)+m_center;
     }
 
     /**
@@ -272,14 +265,47 @@ namespace MFM
     /**
      * FAIL(ILLEGAL_ARGUMENT) if offset is not in the event window
      */
-    SPoint MapToTileValid(const SPoint & offset) const ;
+    SPoint MapToTileSymValid(const SPoint & offset) const ;
+
+    /**
+     * Map a site number into a point, and then map that point through
+     * the current symmetry.  Fails on illegal siteNumbers
+     *
+     * \sa MapToIndexSymValid
+     */
+    SPoint MapToPointSymValid(const u32 siteNumber) const
+    {
+      const MDist<R> & md = MDist<R>::get();
+      SPoint direct = md.GetPoint(siteNumber);
+      return SymMap(direct,m_sym,direct);
+    }
+
+    /**
+     * Map a site number into a point, and then map that point through
+     * the current symmetry, then map that point back to a site
+     * number.  Fails on illegal siteNumbers
+     */
+    u32 MapIndexToIndexSymValid(const u32 siteNumber) const
+    {
+      SPoint sym = MapToPointSymValid(siteNumber);
+      return MapToIndexDirectValid(sym);
+    }
 
     /**
      * Map a relative coordinate through the psymmetry and into an
      * index into the atomBuffer.  FAIL(ILLEGAL_ARGUMENT) if offset is
      * not in the event window
      */
-    u32 MapToIndexValid(const SPoint & loc) const ;
+    u32 MapToIndexSymValid(const SPoint & loc) const ;
+
+    /**
+     * Map a relative coordinate into a site number.  Note this method
+     * DOES NOT apply the current symmetry to loc.
+     * FAIL(ILLEGAL_ARGUMENT) if loc is not in the event window
+     *
+     * \sa MapToIndexSymValid
+     */
+    u32 MapToIndexDirectValid(const SPoint & loc) const ;
 
     /**
      * Gets the PointSymmetry currently used by this EventWindow .
@@ -323,17 +349,57 @@ namespace MFM
     /**
      * Checks to see if a particular SPoint, relative to the center of
      * this EventWindow, points to a Site that may be used during
-     * event execution.
+     * event execution.  Note this version DOES NOT apply the current
+     * symmetry to location
      *
-     * @param location The relative point to check for liveliness in
+     * @param location The relative point to check for liveness in
      *                 this EventWindow .
      *
      * @returns \c true if this site may be reached during event
      *          execution, else \c false .
+     *
+     * \sa IsLiveSiteSym
      */
-    bool IsLiveSite(const SPoint & location) const
+    bool IsLiveSiteDirect(const SPoint & location) const
     {
-      return m_isLiveSite[MapToIndexValid(location)];
+      return m_isLiveSite[MapToIndexDirectValid(location)];
+    }
+
+    /**
+     * Checks to see if a particular SPoint, relative to the center of
+     * this EventWindow, points to a Site that may be used during
+     * event execution, when mapped through the current symmetry.
+     *
+     * @param location The relative point to check for liveness in
+     *                 this EventWindow .
+     *
+     * @returns \c true if this site may be reached during event
+     *          execution, else \c false .
+     *
+     * \sa IsLiveSite
+     */
+    bool IsLiveSiteSym(const SPoint & location) const
+    {
+      return m_isLiveSite[MapToIndexSymValid(location)];
+    }
+
+    /**
+     * Checks to see if a particular site Number, relative to the
+     * center of this EventWindow, points to a Site that may be used
+     * during event execution, when mapped through the current
+     * symmetry.
+     *
+     * @param siteNumber The site number to check for liveness in this
+     *                 EventWindow .
+     *
+     * @returns \c true if this site may be reached during event
+     *          execution, else \c false .
+     *
+     * \sa IsLiveSite
+     */
+    bool IsLiveSiteSym(const u32 siteNumber) const
+    {
+      return m_isLiveSite[MapIndexToIndexSymValid(siteNumber)];
     }
 
     /**
@@ -375,47 +441,100 @@ namespace MFM
 
     /**
      * Gets the immutable Atom which resides in the center of this
-     * EventWindow.
+     * EventWindow.  Same function as GetCenterAtomSym .
      *
      * @returns The immutable Atom which resides in the center of this
      * EventWindow.
+     *
      */
-    const T& GetCenterAtom() const
+    const T& GetCenterAtomDirect() const
     {
       return m_atomBuffer[0];
     }
 
     /**
-     * Get a copy of an atom by site number
+     * Gets the immutable Atom which resides in the center of this
+     * EventWindow.  Same function as GetCenterAtomDirect .
+     *
+     * @returns The immutable Atom which resides in the center of this
+     * EventWindow.
      */
-    T GetAtom(u32 siteNumber) const
+    const T& GetCenterAtomSym() const
+    {
+      return m_atomBuffer[0];
+    }
+
+    T& GetCenterAtomSym()
+    {
+      return m_atomBuffer[0];
+    }
+
+    /**
+     * Get a copy of an atom by site number, without mapping
+     * siteNumber through the current symmetry
+     */
+    T GetAtomDirect(u32 siteNumber) const
     {
       if (siteNumber >= SITE_COUNT) FAIL(ILLEGAL_ARGUMENT);
       return m_atomBuffer[siteNumber];
     }
 
     /**
-     * Write an atom to a given site number
+     * Get a copy of an atom by site number, after mapping siteNumber
+     * through the current symmetry
      */
-    void SetAtom(u32 siteNumber, const T & newAtom)
+    T GetAtomSym(u32 siteNumber) const
+    {
+      return m_atomBuffer[MapIndexToIndexSymValid(siteNumber)];
+    }
+
+    /**
+     * Write an atom to a given site number, without mapping
+     * siteNumber through the current symmetry
+     */
+    void SetAtomDirect(u32 siteNumber, const T & newAtom)
     {
       if (siteNumber >= SITE_COUNT) FAIL(ILLEGAL_ARGUMENT);
       m_atomBuffer[siteNumber] = newAtom;
     }
 
     /**
-     * Sets the Atom in the center of this EventWindow to a specified Atom .
+     * Write an atom after mapping the given siteNumber through the
+     * current symmetry
+     */
+    void SetAtomSym(u32 siteNumber, const T & newAtom)
+    {
+      m_atomBuffer[MapIndexToIndexSymValid(siteNumber)] = newAtom;
+    }
+
+    /**
+     * Sets the Atom in the center of this EventWindow to a specified
+     * Atom .  This function has the same behavior as SetCenterAtomSym .
      *
      * @param atom The Atom that will now reside in the center of this
      *             EventWindow .
      */
-    void SetCenterAtom(const T& atom)
+    void SetCenterAtomDirect(const T& atom)
     {
       m_atomBuffer[0] = atom;
     }
 
     /**
-     * Gets an Atom residing at a specified location inside this EventWindow .
+     * Sets the Atom in the center of this EventWindow to a specified
+     * Atom .  This function has the same behavior as
+     * SetCenterAtomDirect .
+     *
+     * @param atom The Atom that will now reside in the center of this
+     *             EventWindow .
+     */
+    void SetCenterAtomSym(const T& atom)
+    {
+      m_atomBuffer[0] = atom;
+    }
+
+    /**
+     * Gets an Atom residing at a specified location, mapped through
+     * the current symmetry.
      *
      * @param offset The location, relative to the center of this
      *               EventWindow , of the Atom to be retreived. If
@@ -423,12 +542,30 @@ namespace MFM
      *               with ILLEGAL_ARGUMENT .
      *
      * @returns The Atom at \c offset .
+     *
+     * \sa GetRelativeAtomDirect
      */
-    const T& GetRelativeAtom(const SPoint& offset) const;
+    const T& GetRelativeAtomSym(const SPoint& offset) const;
+
+    /**
+     * Gets an Atom residing at a specified location, without mapping
+     * through the current symmetry.
+     *
+     * @param offset The location, relative to the center of this
+     *               EventWindow , of the Atom to be retreived. If
+     *               this is not inside the EventWindow, will FAIL
+     *               with ILLEGAL_ARGUMENT .
+     *
+     * @returns The Atom at \c offset .
+     *
+     * \sa GetRelativeAtomSym
+     */
+    const T& GetRelativeAtomDirect(const SPoint& offset) const;
 
     /**
      * Gets an Atom residing at a specified direction from the center
-     * atom inside this EventWindow .
+     * atom inside this EventWindow, mapped through the current
+     * symmetry .
      *
      * @param offset The direction, relative to the center of this
      *               EventWindow , of the Atom to be retreived. If
@@ -436,12 +573,30 @@ namespace MFM
      *               with ILLEGAL_ARGUMENT .
      *
      * @returns The Atom at \c offset .
+     *
+     * \sa GetRelativeAtomDirect(const Dir)
      */
-    const T& GetRelativeAtom(const Dir mooreOffset) const;
+    const T& GetRelativeAtomSym(const Dir mooreOffset) const;
 
     /**
-     * Sets an Atom residing at a specified location in this
-     * EventWindow to a specified Atom .
+     * Gets an Atom residing at a specified direction from the center
+     * atom inside this EventWindow, without mapping through the
+     * current symmetry .
+     *
+     * @param offset The direction, relative to the center of this
+     *               EventWindow , of the Atom to be retreived. If
+     *               this is not inside the EventWindow, will FAIL
+     *               with ILLEGAL_ARGUMENT .
+     *
+     * @returns The Atom at \c offset .
+     *
+     * \sa GetRelativeAtomSym(const Dir)
+     */
+    const T& GetRelativeAtomDirect(const Dir mooreOffset) const;
+
+    /**
+     * Sets an Atom residing at a specified location, mapped through
+     * the current symmetry, to a specified Atom .
      *
      * @param offset The location, relative to the center of this
      *               EventWindow , of the Atom to be set. If this is
@@ -451,19 +606,73 @@ namespace MFM
      * @param atom The Atom to place in this EventWindow .
      *
      * @returns \c true .
+     *
+     * \sa SetRelativeAtomDirect
      */
-    bool SetRelativeAtom(const SPoint& offset, const T & atom);
+    bool SetRelativeAtomSym(const SPoint& offset, const T & atom);
+
+    /**
+     * Sets an Atom residing at a specified location, without mapping
+     * through the current symmetry, to a specified Atom .
+     *
+     * @param offset The location, relative to the center of this
+     *               EventWindow , of the Atom to be set. If this is
+     *               not inside the EventWindow, will FAIL with
+     *               ILLEGAL_ARGUMENT .
+     *
+     * @param atom The Atom to place in this EventWindow .
+     *
+     * @returns \c true .
+     *
+     * \sa SetRelativeAtomSym
+     */
+    bool SetRelativeAtomDirect(const SPoint& offset, const T & atom);
+
+    /**
+     * Takes the Atom in a specified site number and swaps it with an
+     * Atom at another site number, with both site numbers mapped
+     * through the current symmetry.
+     *
+     * @param locA The site number of the first Atom to swap
+     *
+     * @param locB The site number of the second Atom to swap
+     */
+    void SwapAtomsSym(const u32 siteA, const u32 siteB);
+
+    /**
+     * Takes the Atom in a specified site number and swaps it with an
+     * Atom at another site number, without mapping either site number
+     * through the current symmetry.
+     *
+     * @param locA The site number of the first Atom to swap
+     *
+     * @param locB The site number of the second Atom to swap
+     */
+    void SwapAtomsDirect(const u32 siteA, const u32 siteB);
 
     /**
      * Takes the Atom in a specified location and swaps it with an
-     * Atom in another location.
+     * Atom in another location, with both locations mapped through
+     * the current symmetry.
      *
      * @param locA The location of the first Atom to swap
      *
      * @param locB The location of the second Atom to swap
      */
-    void SwapAtoms(const SPoint& locA, const SPoint& locB);
+    void SwapAtomsSym(const SPoint& locA, const SPoint& locB);
 
+    /**
+     * Takes the Atom in a specified location and swaps it with an
+     * Atom in another location, with neither location mapped through
+     * the current symmetry.
+     *
+     * @param locA The location of the first Atom to swap
+     *
+     * @param locB The location of the second Atom to swap
+     */
+    void SwapAtomsDirect(const SPoint& locA, const SPoint& locB);
+
+#if 0
     /**
      * Takes the Atom in a specified location and swaps it with an
      * Atom in the center of this EventWindow.
@@ -472,6 +681,7 @@ namespace MFM
      *                 EventWindow's center atom.
      */
     void SwapCenterAtom(const SPoint& relative);
+#endif
 
   };
 } /* namespace MFM */
