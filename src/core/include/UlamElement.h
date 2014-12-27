@@ -32,10 +32,54 @@
 #include "EventWindow.h"
 #include "UlamContext.h"
 
+#ifndef Ud_Ui_Ut_102328Unsigned
+#define Ud_Ui_Ut_102328Unsigned
+namespace MFM{
+  struct Ui_Ut_102328Unsigned
+  {
+    typedef BitField<BitVector<32>, VD::U32, 32, 0> BF;
+    BitVector<32> m_stg;
+    Ui_Ut_102328Unsigned() : m_stg() { }
+    Ui_Ut_102328Unsigned(const u32 d) : m_stg(d) {}
+    Ui_Ut_102328Unsigned(const Ui_Ut_102328Unsigned& d) : m_stg(d.m_stg) {}
+    ~Ui_Ut_102328Unsigned() {}
+    const u32 read() const { return BF::Read(m_stg); }
+    void write(const u32 v) { BF::Write(m_stg, v); }
+  };
+} //MFM
+#endif /*Ud_Ui_Ut_102328Unsigned */
+
+// Unsigned(8) [4] -- for ARGB colors
+#ifndef Ud_Ui_Ut_14188Unsigned
+#define Ud_Ui_Ut_14188Unsigned
+namespace MFM{
+  struct Ui_Ut_14188Unsigned
+  {
+    typedef BitField<BitVector<32>, VD::BITS, 32, 0> BF;
+    BitVector<32> m_stg;
+    Ui_Ut_14188Unsigned() : m_stg() { }
+    Ui_Ut_14188Unsigned(const u32 d) : m_stg(d) {}
+    Ui_Ut_14188Unsigned(const Ui_Ut_14188Unsigned& d) : m_stg(d.m_stg) {}
+    ~Ui_Ut_14188Unsigned() {}
+    const u32 read() const { return BF::Read(m_stg); }   //reads entire array
+    const u32 readArrayItem(const u32 index, const u32 unitsize) const { return BF::ReadArray(m_stg, index, unitsize); }
+    void write(const u32 v) { BF::Write(m_stg, v); }   //writes entire array
+    void writeArrayItem(const u32 v, const u32 index, const u32 unitsize) { BF::WriteArray(m_stg, v, index, unitsize); }
+  };
+} //MFM
+#endif /*Ud_Ui_Ut_14188Unsigned */
+
 namespace MFM
 {
+  template <class CC> class UlamElement; // FORWARD
+
+  template <class CC>
   struct UlamElementInfo
   {
+    typedef typename CC::ATOM_TYPE T;
+
+    const UlamElement<CC> & m_instance;
+
     virtual const char * GetName() const = 0;
     virtual const char * GetSymbol() const = 0;
     virtual const char * GetSummary() const = 0;
@@ -44,11 +88,17 @@ namespace MFM
     virtual const char * GetLicense() const = 0;
     virtual const u32 GetVersion() const = 0;
     virtual const u32 GetNumColors() const = 0;
-    virtual const u32 GetColor(u32 colnum) const = 0;
-    virtual const u32 GetSymmetry() const
+    virtual const u32 GetColor(T atom, u32 colnum) const = 0;
+    virtual const u32 GetSymmetry() const = 0;
+
+    virtual const u32 GetPercentDiffusability() const
     {
-      return PSYM_DEG000L;
+      return 100;
     }
+
+    UlamElementInfo(const UlamElement<CC> & instance)
+      : m_instance(instance)
+    { }
     virtual ~UlamElementInfo() { }
   };
 
@@ -58,14 +108,15 @@ namespace MFM
   template <class CC>
   class UlamElement : public Element<CC>
   {
+    typedef Element<CC> Super;
     typedef typename CC::ATOM_TYPE T;
-    const UlamElementInfo * m_info;
+    const UlamElementInfo<CC> * m_info;
 
   public:
     UlamElement(const UUID & uuid) : Element<CC>(uuid)
     { }
 
-    void SetInfo(const UlamElementInfo * info) {
+    void SetInfo(const UlamElementInfo<CC> * info) {
       m_info = info;
       this->SetName(m_info->GetName());
       this->SetAtomicSymbol(m_info->GetSymbol());
@@ -86,12 +137,8 @@ namespace MFM
       u32 sym = m_info ? m_info->GetSymmetry() : PSYM_DEG000L;
       window.SetSymmetry((PointSymmetry) sym);
 
-      T me = window.GetCenterAtom();
-      T orig = me;
+      T & me = window.GetCenterAtomSym();
       Uf_6behave(me);
-      T post = window.GetCenterAtom();
-      if ( me != orig && orig == post) // If I've changed but not the world
-        window.SetCenterAtom(me);     // write me back.
     }
 
     /**
@@ -101,6 +148,24 @@ namespace MFM
     virtual void Uf_6behave(T& self) const
     {
       // Empty by default
+    }
+
+    /**
+       Ulam elements that define 'Unsigned getColor()' will override
+       this method, and it will be called during graphics rendering!
+
+       Note the Uv_4self in this method IS A COPY of the atom being
+       rendered -- any changes made to Uv_4self during this method
+       will vanish when it returns.
+
+       Note also that THERE IS NO EVENT IN PROGRESS when this method
+       is called!  Any attempt to access event services during this
+       method will fail!  That includes event window accesses AND
+       random numbers!
+     */
+    virtual Ui_Ut_14188Unsigned Uf_8getColor(T& Uv_4self, Ui_Ut_102328Unsigned Uv_8selector)
+    {
+      return Ui_Ut_14188Unsigned(0xffffffff);
     }
 
     virtual const UlamElement<CC> * AsUlamElement() const
@@ -171,21 +236,22 @@ namespace MFM
     virtual u32 DefaultPhysicsColor() const
     {
       if (m_info && m_info->GetNumColors() > 0)
-        return m_info->GetColor(0);
+        return m_info->GetColor(this->GetDefaultAtom(), 0);
       return 0xffffffff;
     }
 
     virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
     {
       if (m_info && m_info->GetNumColors() > selector)
-        return m_info->GetColor(selector);
+        return m_info->GetColor(atom, selector);
       return this->PhysicsColor();
     }
 
-    virtual u32 PercentMovable(const T& you,
-                               const T& me, const SPoint& offset) const
+    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
     {
-      return 0;
+      if (nowAt == maybeAt || !m_info) return COMPLETE_DIFFUSABILITY;
+      return
+        COMPLETE_DIFFUSABILITY * m_info->GetPercentDiffusability() / 100;
     }
   };
 } // MFM
