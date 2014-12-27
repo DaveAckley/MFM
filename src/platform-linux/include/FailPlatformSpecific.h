@@ -31,13 +31,16 @@ extern "C" const char * MFMFailCodeReason(int failCode) ;
 #define MFM_FAIL_CODE_NUMBER(code) (MFM_FAIL_CODE_REASON_##code)
 
 #define FAIL(code)                                                 \
+  FAIL_BY_NUMBER(MFM_FAIL_CODE_NUMBER(code))
+
+#define FAIL_BY_NUMBER(number)                                     \
   ((MFMPtrToErrEnvStackPtr && *MFMPtrToErrEnvStackPtr)?            \
    ((*MFMPtrToErrEnvStackPtr)->file = __FILE__,                    \
     (*MFMPtrToErrEnvStackPtr)->lineno = __LINE__,                  \
     MFMLongJmpHere((*MFMPtrToErrEnvStackPtr)->buffer,              \
-                   MFM_FAIL_CODE_NUMBER(code)),0) :                \
+                   number),0) :                                    \
    (MFMFailHere(__FILE__,__LINE__,                                 \
-                MFM_FAIL_CODE_NUMBER(code)),0))
+                number),0))
 
 /**
    Execute 'block', but if any FAIL()'s occur, stop executing 'block'
@@ -110,4 +113,3 @@ do {									      \
 
 
 #endif /*FAILPLATFORMSPECIFIC_H*/
-
