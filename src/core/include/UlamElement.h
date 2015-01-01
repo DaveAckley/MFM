@@ -88,8 +88,8 @@ namespace MFM
     virtual const char * GetLicense() const = 0;
     virtual const u32 GetVersion() const = 0;
     virtual const u32 GetNumColors() const = 0;
-    virtual const u32 GetColor(T atom, u32 colnum) const = 0;
-    virtual const u32 GetSymmetry() const = 0;
+    virtual const u32 GetColor(UlamContext<CC>& uc, T atom, u32 colnum) const = 0;
+    virtual const u32 GetSymmetry(UlamContext<CC>& uc) const = 0;
 
     virtual const u32 GetPercentDiffusability() const
     {
@@ -131,21 +131,21 @@ namespace MFM
     virtual void Behavior(EventWindow<CC>& window) const
     {
       Tile<CC> & tile = window.GetTile();
-      UlamContext<CC> & uc = UlamContext<CC>::Get();
+      UlamContext<CC> uc;
       uc.SetTile(tile);
 
-      u32 sym = m_info ? m_info->GetSymmetry() : PSYM_DEG000L;
+      u32 sym = m_info ? m_info->GetSymmetry(uc) : PSYM_DEG000L;
       window.SetSymmetry((PointSymmetry) sym);
 
       T & me = window.GetCenterAtomSym();
-      Uf_6behave(me);
+      Uf_6behave(uc, me);
     }
 
     /**
        Ulam elements that define 'Void behave()' will override this
        method, and it will be called on events!
      */
-    virtual void Uf_6behave(T& self) const
+    virtual void Uf_6behave(UlamContext<CC> & uc, T& self) const
     {
       // Empty by default
     }
@@ -163,7 +163,9 @@ namespace MFM
        method will fail!  That includes event window accesses AND
        random numbers!
      */
-    virtual Ui_Ut_14188Unsigned Uf_8getColor(T& Uv_4self, Ui_Ut_102328Unsigned Uv_8selector)
+    virtual Ui_Ut_14188Unsigned Uf_8getColor(UlamContext<CC>& uc,
+                                             T& Uv_4self,
+                                             Ui_Ut_102328Unsigned Uv_8selector)
     {
       return Ui_Ut_14188Unsigned(0xffffffff);
     }
@@ -220,9 +222,9 @@ namespace MFM
        \sa T::ATOM_FIRST_STATE_BIT
        \sa PositionOfDataMemberType
      */
-    static s32 PositionOfDataMember(u32 type, const char * dataMemberTypeName)
+    static s32 PositionOfDataMember(UlamContext<CC>& uc, u32 type, const char * dataMemberTypeName)
     {
-      Tile<CC> & tile = UlamContext<CC>::Get().GetTile();
+      Tile<CC> & tile = uc.GetTile();
       ElementTable<CC> & et = tile.GetElementTable();
       const Element<CC> * eltptr = et.Lookup(type);
       if (!eltptr) return -1;
@@ -235,15 +237,19 @@ namespace MFM
 
     virtual u32 DefaultPhysicsColor() const
     {
-      if (m_info && m_info->GetNumColors() > 0)
-        return m_info->GetColor(this->GetDefaultAtom(), 0);
+      if (m_info && m_info->GetNumColors() > 0) {
+        UlamContext<CC> uc;
+        return m_info->GetColor(uc, this->GetDefaultAtom(), 0);
+      }
       return 0xffffffff;
     }
 
     virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
     {
-      if (m_info && m_info->GetNumColors() > selector)
-        return m_info->GetColor(atom, selector);
+      if (m_info && m_info->GetNumColors() > selector) {
+        UlamContext<CC> uc;
+        return m_info->GetColor(uc, atom, selector);
+      }
       return this->PhysicsColor();
     }
 

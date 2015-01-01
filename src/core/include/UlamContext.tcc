@@ -42,10 +42,4 @@ namespace MFM {
     return GetTile().GetEventWindow();
   }
 
-  template <class CC>
-  UlamContext<CC> & UlamContext<CC>::Get() {
-    // an UlamContext is (way) mutable!  It must be per thread!
-    static __thread UlamContext<CC> THE_INSTANCE;
-    return THE_INSTANCE;
-  }
 }

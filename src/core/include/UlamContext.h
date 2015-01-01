@@ -51,9 +51,6 @@ namespace MFM
 
     EventWindow<CC> & GetEventWindow() ;
 
-    static UlamContext & Get() ;
-
-    static UlamContext THE_INSTANCE ;
   };
 }
 
