@@ -439,6 +439,7 @@ XXX
 
     case 'b': type = Format::BIN; goto printbase;
     case 'o': type = Format::OCT; goto printbase;
+    case 'u': type = Format::DEC; goto printbase;
     case 'd':
       if (alt) {
         type = Format::DEC;
