@@ -33,6 +33,7 @@
 #include "ByteSerializable.h"
 #include "Mutex.h"
 #include <stdarg.h>
+#include <stdlib.h>  /* for abort() */
 
 #define MFM_LOG_DBG3(args) do {if (LOG.IfLog((Logger::Level) 3)) {LOG.Message args ;}} while (0)
 #define MFM_LOG_DBG4(args) do {if (LOG.IfLog((Logger::Level) 4)) {LOG.Debug args ;}} while (0)
@@ -249,10 +250,15 @@ namespace MFM
       if (IfLog(level))
       {
         Mutex::ScopeLock lock(m_mutex); // Hold lock for this block
-
-        m_sink->Printf("%@%s: ",m_timeStamper, StrLevel(level));
-        m_sink->Vprintf(format, ap);
-        m_sink->Println();
+        unwind_protect(
+        {
+          abort(); // Logger is not prepared to handle failures during printing!
+        },
+        {
+          m_sink->Printf("%@%s: ",m_timeStamper, StrLevel(level));
+          m_sink->Vprintf(format, ap);
+          m_sink->Println();
+        });
       }
     }
 
