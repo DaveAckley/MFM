@@ -72,12 +72,38 @@ namespace MFM {
     return ((bitwidth < 64) ? (((s64)(val<<(64-bitwidth)))>>(64-bitwidth)) : (s64) val);
   }
 
-  inline u32 _GetNOnes32(const u32 bitwidth) {
-    return (bitwidth >= 32) ? (u32) -1 : (((u32)1)<<bitwidth)-1;
+  /**
+     Get a bit mask with the rightmost \c bitwidth bits set, when
+     bitwidth is known to be at most 31.  Return value is undefined
+     bitwidth >= 32.  \sa _GetNOnes32
+   */
+  inline u32 _GetNOnes31(const u32 bitwidth) {
+    return (((u32)1)<<bitwidth)-1;
   }
 
+  /**
+     Get a bit mask with the rightmost \c bitwidth bits set.  Returns
+     32 ones for bitwidth >= 32.  \sa _GetNOnes31
+   */
+  inline u32 _GetNOnes32(const u32 bitwidth) {
+    return (bitwidth >= 32) ? (u32) -1 : _GetNOnes31(bitwidth);
+  }
+
+  /**
+     Get a bit mask with the rightmost \c bitwidth bits set, when
+     bitwidth is known to be at most 63.  Return value is undefined
+     bitwidth >= 64.  \sa _GetNOnes64
+   */
+  inline u64 _GetNOnes63(const u32 bitwidth) {
+    return (((u64)1)<<bitwidth)-1;
+  }
+
+  /**
+     Get a bit mask with the rightmost \c bitwidth bits set.  Returns
+     64 ones for bitwidth >= 64.  \sa _GetNOnes63
+   */
   inline u64 _GetNOnes64(const u32 bitwidth) {
-    return (bitwidth >= 64) ? HexU64((u32)-1,(u32)-1) : (((u64)1)<<bitwidth)-1;
+    return (bitwidth >= 64) ? HexU64((u32)-1,(u32)-1) : _GetNOnes63(bitwidth);
   }
 
   inline u32 _ShiftToBitNumber32(u32 value, u32 bitpos) {
@@ -132,6 +158,28 @@ namespace MFM {
     v |= v >> 2;
     v |= v >> 1;
     return v+1;
+  }
+
+  // Modified from https://graphics.stanford.edu/~seander/bithacks.html#IntegerLogDeBruijn
+  static const u32 MultiplyDeBruijnBitPosition[32] =
+  {
+    0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
+    8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
+  };
+  /**
+     Get the log_2 of v.  Since it's a log, v should really be greater
+     than 0, but this returns 0 for v==0.  The return value is the
+     highest bit position set in v, counting from bit position 0 on
+     the right.  So _getLogBase2(1)==0, _getLogBase2(2)==1,
+     _getLogBase2(8)==3.
+   */
+  inline u32 _getLogBase2(u32 v) {
+    v |= v >> 1; // first round down to one less than a power of 2
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    return MultiplyDeBruijnBitPosition[(u32)(v * 0x07C4ACDDU) >> 27];
   }
 
   /**

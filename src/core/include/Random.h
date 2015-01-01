@@ -69,8 +69,18 @@ namespace MFM
     u32 Create() ;
 
     /**
+     * Gets a uniform pseudo-random number from 0..2**nbits-1.  FAILs
+     * ILLEGAL_ARGUMENT if nbits > 32.
+     *
+     * @param nbits The number of right-justified random bits to get.
+     *
+     * @returns A pseudo-random number in the range [0, 2**nbits) .
+     */
+    u32 CreateBits(u32 nbits) ;
+
+    /**
      * Gets a uniform pseudo-random number from 0..max-1.  FAILs
-     * ILLEGAL_ARGUMENT if max==0.
+     * ILLEGAL_ARGUMENT if max==0.  Returns 0 if max==1.
      *
      * @param max The exclusive upper bound of the generated number.
      *
@@ -147,9 +157,12 @@ namespace MFM
     void SetSeed(u32 seed)
     {
       _generator.seedMT_MFM(seed);
+      _bitsRemaining = 0;
     }
 
   private:
+    s32 _bitsRemaining;
+    u32 _bitBuffer;
     RandMT _generator;
 
   };
@@ -163,18 +176,40 @@ namespace MFM
     return _generator.randomMT();
   }
 
+  inline u32 Random::CreateBits(const u32 nbits)
+  {
+    if (nbits >= 32)
+    {
+      if (nbits > 32)
+        FAIL(ILLEGAL_ARGUMENT);
+      return Create();
+    }
+
+    // nbits <= 31
+    if ((_bitsRemaining -= nbits) < 0)
+    {
+      _bitBuffer = Create();
+      _bitsRemaining = 32-nbits;
+    }
+    u32 ret = _bitBuffer;
+    _bitBuffer >>= nbits;
+    return ret & _GetNOnes31(nbits);
+  }
+
   // Avoid modulus artifacts by sampling from round powers of 2 and rejecting
   inline u32 Random::Create(const u32 maxval)
   {
-    if (maxval==0)
+    if (maxval<=1)
     {
-      FAIL(ILLEGAL_ARGUMENT);
+      if (maxval==0)
+        FAIL(ILLEGAL_ARGUMENT);
+      return 0;
     }
-    int bitmask = _getNextPowerOf2(maxval)-1;
+    u32 nbits = _getLogBase2(maxval)+1; // +1: log2(2) == 1 -> need 2 bits
     u32 ret;
     do
     {  // loop executes less than two times on average
-      ret = Create()&bitmask;
+      ret = CreateBits(nbits);
     } while (ret >= maxval);
 
     return ret;

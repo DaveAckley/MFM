@@ -6,6 +6,7 @@ namespace MFM {
 
   void Random_Test::Test_RunTests() {
     Test_randomSetSeed();
+    Test_randomDeterministics();
   }
 
   Random & Random_Test::setup()

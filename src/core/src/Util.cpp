@@ -3,6 +3,7 @@
 
 namespace MFM
 {
+
   u32 DigitCount(u32 num, u32 base)
   {
     u32 count = 0;
