@@ -217,6 +217,20 @@ namespace MFM {
     return val > 0 ? val : (-val);
   }
 
+  inline u32 UABS32(s32 val)
+  {
+    if(val >= 0) return (u32) val;
+    if(val == S32_MIN) return ((u32) S32_MAX) + 1;
+    return (u32) -val;
+  }
+
+  inline u64 UABS64(s64 val)
+  {
+    if(val >= 0) return (u64) val;
+    if(val == S64_MIN) return ((u64) S64_MAX) + 1;
+    return (u64) -val;
+  }
+
   template <class T>
   inline T SGN(T x) {
     return (T) ((x > 0) ? 1 : (x < 0 ? -1 : 0));
