@@ -29,6 +29,7 @@ namespace MFM
     RegisterElement(Element_Empty<CC>::THE_INSTANCE);
 
     ClearAtoms();
+    ClearTileParameters();
 
   }
 

@@ -102,6 +102,11 @@ namespace MFM
     }
 
     /**
+     * The maximum number of tile parameters
+     */
+    enum { MAX_TILE_PARAMETERS = 16 };
+
+    /**
      * The area of this Tile in sites.
      */
     enum { TILE_SIZE = TILE_WIDTH * TILE_WIDTH };
@@ -169,6 +174,26 @@ namespace MFM
 
     /** The PRNG used for generating all random numbers in this Tile. */
     Random m_random;
+
+  private:
+
+    s32 m_keyValues[MAX_TILE_PARAMETERS];
+
+    void ClearTileParameters()
+    {
+      for (u32 i = 0; i < MAX_TILE_PARAMETERS; ++i)
+      {
+        m_keyValues[i] = S32_MIN;
+      }
+    }
+
+    void CopyTileParameters(const Tile & hero)
+    {
+      for (u32 i = 0; i < MAX_TILE_PARAMETERS; ++i)
+      {
+        m_keyValues[i] = hero.m_keyValues[i];
+      }
+    }
 
     friend class EventWindow<CC>;
     friend class CacheProcessor<CC>;
@@ -516,6 +541,15 @@ namespace MFM
      * Initializes an Tile
      */
     void Init();
+
+    /** Copy tile parameters and other modifiable behavior from
+        heroTile
+     */
+    void CopyHero(const Tile & heroTile)
+    {
+      CopyTileParameters(heroTile);
+      SetWarpFactor(heroTile.GetWarpFactor());
+    }
 
     /**
      * Resets all Atoms and their counts to the Empty atom.
@@ -1184,6 +1218,34 @@ namespace MFM
     void RegisterElement(const Element<CC> & anElement)
     {
       m_elementTable.RegisterElement(anElement);
+    }
+
+  public:
+
+    /**
+     * Sets a parameter in this Tile
+     *
+     * @param key a small u32 specifying the parameter slot to set
+     *
+     * @param value the new value to place in the key slot
+     */
+    void SetTileParameter(const u32 key, const s32 value)
+    {
+      if (key >= MAX_TILE_PARAMETERS) FAIL(ILLEGAL_ARGUMENT);
+      m_keyValues[key] = value;
+    }
+
+    /**
+     * Gets a parameter in this Tile
+     *
+     * @param key a small u32 specifying the parameter slot to get
+     *
+     * @returns the current value in the key slot
+     */
+    s32 GetTileParameter(const u32 key)
+    {
+      if (key >= MAX_TILE_PARAMETERS) FAIL(ILLEGAL_ARGUMENT);
+      return m_keyValues[key];
     }
 
   };
