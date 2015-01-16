@@ -6,6 +6,7 @@
 
 namespace MFM
 {
+
   /////
   // Standard model
 
@@ -64,6 +65,21 @@ namespace MFM
     typedef typename Super::CC::PARAM_CONFIG P;
     typedef typename Super::CC::ATOM_TYPE T;
 
+    struct ThreadStamper : public DateTimeStamp
+    {
+      typedef DateTimeStamp Super;
+      MFMCDriver &driver;
+      ThreadStamper(MFMCDriver &driver) : driver(driver) { }
+      virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0)
+      {
+        Super::PrintTo(byteSink, argument);
+        byteSink.Printf("%dAEPS [%x]",
+                        (u32) driver.GetAEPS(),
+                        (u32) (((u64) pthread_self())>>8));
+        return SUCCESS;
+      }
+    };
+
     virtual void DefineNeededElements()
     {
 #ifdef ULAM_CUSTOM_ELEMENTS
@@ -101,7 +117,29 @@ namespace MFM
 #endif /* ULAM_CUSTOM_ELEMENTS */
     }
 
+    ThreadStamper m_stamper;
+
   public:
+
+    void SwitchToInternalLogging()
+    {
+      const char* path = this->GetSimDirPathTemporary("log/log.txt");
+      LOG.Message("Switching log target to: %s", path);
+      FILE* fp = fopen(path, "w");
+      if (!fp) FAIL(IO_ERROR);
+      {
+        static FileByteSink fbs(fp);
+        LOG.SetByteSink(fbs);
+      }
+      LOG.Message("Switched to log target: %s", path);
+      LOG.Message("Command line: %s", this->GetCommandLine());
+    }
+
+    MFMCDriver() : m_stamper(*this)
+    {
+      MFM::LOG.SetTimeStamper(&m_stamper);
+    }
+
     virtual void DoEpochEvents(Grid<GC>& grid, u32 epochs, u32 epochAEPS)
     {
       /* Write custom epoch code here */
@@ -127,7 +165,9 @@ namespace MFM
   static int RunSmall(int argc, const char** argv)
   {
     MFMCDriver<OurGridConfigTiny> sim;
+
     sim.ProcessArguments(argc, argv);
+    sim.SwitchToInternalLogging();
     sim.Init();
     sim.Run();
     return 0;
@@ -137,6 +177,7 @@ namespace MFM
   {
     MFMCDriver<OurGridConfigStd> sim;
     sim.ProcessArguments(argc, argv);
+    sim.SwitchToInternalLogging();
     sim.Init();
     sim.Run();
     return 0;
@@ -146,6 +187,7 @@ namespace MFM
   {
     MFMCDriver<OurGridConfigAlt> sim;
     sim.ProcessArguments(argc, argv);
+    sim.SwitchToInternalLogging();
     sim.Init();
     sim.Run();
     return 0;
@@ -155,6 +197,7 @@ namespace MFM
   {
     MFMCDriver<OurGridConfigBig> sim;
     sim.ProcessArguments(argc, argv);
+    sim.SwitchToInternalLogging();
     sim.Init();
     sim.Run();
     return 0;
@@ -164,6 +207,7 @@ namespace MFM
   {
     MFMCDriver<OurGridConfigBigTile> sim;
     sim.ProcessArguments(argc, argv);
+    sim.SwitchToInternalLogging();
     sim.Init();
     sim.Run();
     return 0;
@@ -173,6 +217,7 @@ namespace MFM
   {
     MFMCDriver<OurGridConfigMediumTile> sim;
     sim.ProcessArguments(argc, argv);
+    sim.SwitchToInternalLogging();
     sim.Init();
     sim.Run();
     return 0;
@@ -186,24 +231,9 @@ static bool EndsWith(const char *string, const char* suffix)
   return xlen <= slen && !strcmp(suffix, &string[slen - xlen]);
 }
 
-namespace MFM
-{
-  struct ThreadStamper : public DateTimeStamp
-  {
-    typedef DateTimeStamp Super;
-    virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0)
-    {
-      Super::PrintTo(byteSink, argument);
-      byteSink.Printf("[%x]", (u32) (((u64) pthread_self())>>8));
-      return SUCCESS;
-    }
-  };
-}
-
 int main(int argc, const char** argv)
 {
-  MFM::ThreadStamper stamper;
-  MFM::LOG.SetTimeStamper(&stamper);
+  // Early early logging
   MFM::LOG.SetByteSink(MFM::STDERR);
   MFM::LOG.SetLevel(MFM::LOG.MESSAGE);
 
