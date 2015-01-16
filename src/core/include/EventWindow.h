@@ -85,12 +85,14 @@ namespace MFM
   template <class CC>
   class EventWindow
   {
-   private:
+  private:
     // Extract short names for parameter types
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS };
+  public:
     enum { SITE_COUNT = EVENT_WINDOW_SITES(R) };
+  private:
     enum { W = P::TILE_WIDTH };
     enum { B = P::ELEMENT_TABLE_BITS };
 
