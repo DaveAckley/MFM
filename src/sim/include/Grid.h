@@ -70,6 +70,8 @@ namespace MFM {
     Tile<CC> m_tiles[W][H];
     LonglivedLock m_intertileLocks[W][H][3]; // 3: E, SE, S == dir-Dirs::EAST
 
+    Tile<CC> m_heroTile;    // Model for the actual m_tiles
+
     /**
        Get the long-lived lock controlling cache activity going in
        direction dir from the Tile at (xtile,ytile) in the Grid.
@@ -108,7 +110,6 @@ namespace MFM {
     static void * TileDriverRunner(void *) ;
 
     bool m_backgroundRadiationEnabled;
-    s32 m_warpFactor;
 
     ElementRegistry<CC> m_er;
 
@@ -232,7 +233,7 @@ namespace MFM {
   public:
     s32 GetWarpFactor() const
     {
-      return m_warpFactor;
+      return m_heroTile.GetWarpFactor();
     }
 
     void SetWarpFactor(s32 wf)
@@ -242,7 +243,7 @@ namespace MFM {
         FAIL(ILLEGAL_ARGUMENT);
       }
 
-      m_warpFactor = wf;
+      m_heroTile.SetWarpFactor(wf);
     }
 
     double GetAverageCacheRedundancy() const;
@@ -267,17 +268,11 @@ namespace MFM {
       , m_height(H)
       , m_threadsInitted(false)
       , m_backgroundRadiationEnabled(false)
-      , m_warpFactor(-1)
       , m_er(elts)
       , m_xraySiteOdds(1000)
     {
-      for (u32 y = 0; y < H; ++y)
-      {
-        for (u32 x = 0; x < W; ++x)
-        {
-          LOG.Debug("Tile[%d][%d] @ %p", x, y, &m_tiles[x][y]);
-        }
-      }
+      for (iterator_type i = begin(); i != end(); ++i)
+        LOG.Debug("Tile[%d][%d] @ %p", i.GetX(), i.GetY(), &(*i));
     }
 
     s32* GetXraySiteOddsPtr()
@@ -315,26 +310,28 @@ namespace MFM {
       anElement.AllocateType();         // Force a type now
       m_er.RegisterElement(anElement);  // Make sure we're in here (How could we not?)
 
-      for(u32 i = 0; i < W; i++)
-      {
-        for(u32 j = 0; j < H; j++)
-        {
-          m_tiles[i][j].RegisterElement(anElement);
-        }
-      }
+      for (iterator_type i = begin(); i != end(); ++i)
+        i->RegisterElement(anElement);
+
       LOG.Message("Assigned type 0x%04x for %@",anElement.GetType(),&anElement.GetUUID());
+    }
+
+    void SetTileParameter(u32 key, s32 value)
+    {
+      m_heroTile.SetTileParameter(key, value);
+      LOG.Message("Tile parameter key %d set to value %d", key, value);
     }
 
     /**
      * A minimal iterator over the Tiles of a grid.  Access via Grid::begin().
      */
-    template <typename PointerType> class MyIterator
+    template <typename ItemType, typename GridType> class MyIterator
     {
-      Grid & g;
+      GridType & g;
       s32 i;
       s32 j;
     public:
-      MyIterator(Grid<GC> & g, int i = 0, int j = 0) : g(g), i(i), j(j) { }
+      MyIterator(GridType & g, int i = 0, int j = 0) : g(g), i(i), j(j) { }
 
       bool operator!=(const MyIterator &m) const { return i != m.i || j != m.j; }
       void operator++()
@@ -356,18 +353,28 @@ namespace MFM {
         return rows*g.W + cols;
       }
 
-      PointerType operator*() const
+      ItemType & operator*() const
+      {
+        return g.m_tiles[i][j];
+      }
+
+      ItemType * operator->() const
       {
         return &g.m_tiles[i][j];
       }
+
+      SPoint At() const { return SPoint(i,j); }
+      u32 GetX() const { return (u32) i; }
+      u32 GetY() const { return (u32) j; }
+
     };
 
-    typedef MyIterator<Tile<CC>*> iterator_type;
-    typedef MyIterator<const Tile<CC>*> const_iterator_type;
+    typedef MyIterator< Tile<CC>, Grid<GC> > iterator_type;
+    typedef MyIterator< const Tile<CC>, const Grid<GC> > const_iterator_type;
 
     iterator_type begin() { return iterator_type(*this); }
 
-    const_iterator_type begin() const { return iterator_type(*this); }
+    const_iterator_type begin() const { return const_iterator_type(*this); }
 
     iterator_type end() { return iterator_type(*this,0,H); }
 

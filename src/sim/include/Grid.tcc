@@ -66,24 +66,18 @@ namespace MFM {
 
     /* Init the tiles */
 
-    for(u32 x = 0; x < m_width; x++)
+    for (iterator_type i = begin(); i != end(); ++i)
     {
-      for(u32 y = 0; y < m_height; y++)
-      {
-        SPoint tpt(x,y);
-        Tile<CC>& ctile = GetTile(tpt);
+      SPoint tpt = i.At();
+      Tile<CC> & ctile = *i;
 
-        ctile.Init();
+      ctile.Init();
 
-        OString16 tbs;
-        tbs.Printf("[%d,%d]", x, y);
-        ctile.SetLabel(tbs.GetZString());
+      OString16 tbs;
+      tbs.Printf("[%d,%d]", tpt.GetX(), tpt.GetY());
+      ctile.SetLabel(tbs.GetZString());
 
-        if (m_warpFactor >= 0)
-        {
-          ctile.SetWarpFactor((u32) m_warpFactor);
-        }
-      }
+      ctile.CopyHero(m_heroTile);
     }
 
     // Connect them up
@@ -169,19 +163,16 @@ namespace MFM {
     }
 
     /* Init the tile thread drivers */
-    for(u32 x = 0; x < m_width; x++)
+    for (iterator_type i = begin(); i != end(); ++i)
     {
-      for(u32 y = 0; y < m_height; y++)
+      SPoint tpt = i.At();
+      TileDriver & td = m_tileDrivers[tpt.GetX()][tpt.GetY()];
+      td.m_loc = tpt;
+      td.m_gridPtr = this;
+      td.SetState(TileDriver::PAUSED);
+      if (pthread_create(&td.m_threadId, NULL, TileDriverRunner, &td))
       {
-        SPoint tpt(x,y);
-        TileDriver & td = m_tileDrivers[x][y];
-        td.m_loc = tpt;
-        td.m_gridPtr = this;
-        td.SetState(TileDriver::PAUSED);
-        if (pthread_create(&td.m_threadId, NULL, TileDriverRunner, &td))
-        {
-          FAIL(ILLEGAL_STATE);
-        }
+        FAIL(ILLEGAL_STATE);
       }
     }
 
@@ -276,13 +267,8 @@ namespace MFM {
     }
 
     m_random.SetSeed(m_seed);
-    for(u32 i = 0; i < W; i++)
-    {
-      for(u32 j = 0; j < H; j++)
-        {
-          m_tiles[i][j].GetRandom().SetSeed(m_random.Create());
-        }
-    }
+    for (iterator_type i = begin(); i != end(); ++i)
+      i->GetRandom().SetSeed(m_random.Create());
   }
 
   template <class GC>
@@ -347,9 +333,8 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::RecountAtoms()
   {
-    for(u32 i = 0; i < W; i++)
-      for(u32 j = 0; j < H; j++)
-        m_tiles[i][j].RecountAtoms();
+    for (iterator_type i = begin(); i != end(); ++i)
+      i->RecountAtoms();
   }
 
   template <class GC>
@@ -436,15 +421,13 @@ namespace MFM {
     LOG.Log(level," Background radiation: %s", m_backgroundRadiationEnabled?"true":"false");
     LOG.Log(level," Xray odds: %d", m_xraySiteOdds);
 
-    for(u32 x = 0; x < W; x++)
+    for (iterator_type i = begin(); i != end(); ++i)
     {
-      for(u32 y = 0; y < H; y++)
-      {
-        Tile<CC> & tile = GetTile(x,y);
-        LOG.Log(level,"--Grid(%d,%d)=Tile %s (%p)--",
-                x,  y, tile.GetLabel(), (void *) &tile);
+      i->GetRandom().SetSeed(m_random.Create());
+      Tile<CC> & tile = *i;
+      LOG.Log(level,"--Grid(%d,%d)=Tile %s (%p)--",
+              i.GetX(),  i.GetY(), tile.GetLabel(), (void *) &tile);
         tile.ReportTileStatus(level);
-      }
     }
   }
 
@@ -455,29 +438,27 @@ namespace MFM {
     tc.PreGridControl(*this);
 
     // Ensure everybody is ready for the request
-    for(u32 x = 0; x < W; x++)
+    for (iterator_type i = begin(); i != end(); ++i)
     {
-      for(u32 y = 0; y < H; y++)
+      u32 x = i.GetX();
+      u32 y = i.GetY();
+      TileDriver & td = m_tileDrivers[x][y];
+      if (!tc.CheckPrecondition(td))
       {
-        TileDriver & td = m_tileDrivers[x][y];
-        if (!tc.CheckPrecondition(td))
-        {
-          LOG.Error("%s control precondition failed at (%d,%d)=Tile %s (%p)--",
-                    tc.GetName(), x,  y, td.GetTile().GetLabel(), (void *) &td);
-          ReportGridStatus(Logger::ERROR);
-          FAIL(ILLEGAL_STATE);
-        }
+        LOG.Error("%s control precondition failed at (%d,%d)=Tile %s (%p)--",
+                  tc.GetName(), x,  y, td.GetTile().GetLabel(), (void *) &td);
+        ReportGridStatus(Logger::ERROR);
+        FAIL(ILLEGAL_STATE);
       }
     }
 
     // Issue request to all
-    for(u32 x = 0; x < W; x++)
+    for (iterator_type i = begin(); i != end(); ++i)
     {
-      for(u32 y = 0; y < H; y++)
-      {
-        TileDriver & td = m_tileDrivers[x][y];
-        tc.MakeRequest(td);
-      }
+      u32 x = i.GetX();
+      u32 y = i.GetY();
+      TileDriver & td = m_tileDrivers[x][y];
+      tc.MakeRequest(td);
     }
 
     // Wait until all acknowledge
@@ -509,16 +490,15 @@ namespace MFM {
 
       notReady = 0;
 
-      for(u32 x = 0; x < W; x++)
+      for (iterator_type i = begin(); i != end(); ++i)
       {
-        for(u32 y = 0; y < H; y++)
+        u32 x = i.GetX();
+        u32 y = i.GetY();
+        TileDriver & td = m_tileDrivers[x][y];
+        if (!tc.CheckIfReady(td))
         {
-          TileDriver & td = m_tileDrivers[x][y];
-          if (!tc.CheckIfReady(td))
-          {
-            ++notReady;
-            pthread_yield();
-          }
+          ++notReady;
+          pthread_yield();
         }
       }
 
@@ -531,13 +511,12 @@ namespace MFM {
     }
 
     // Release the hounds
-    for(u32 x = 0; x < W; x++)
+    for (iterator_type i = begin(); i != end(); ++i)
     {
-      for(u32 y = 0; y < H; y++)
-      {
-        TileDriver & td = m_tileDrivers[x][y];
-        tc.Execute(td);
-      }
+      u32 x = i.GetX();
+      u32 y = i.GetY();
+      TileDriver & td = m_tileDrivers[x][y];
+      tc.Execute(td);
     }
 
     // Final grid changes
@@ -555,13 +534,9 @@ namespace MFM {
   u64 Grid<GC>::GetTotalEventsExecuted() const
   {
     u64 total = 0;
-    for(u32 x = 0; x < W; x++)
-    {
-      for(u32 y = 0; y < H; y++)
-      {
-        total += m_tiles[x][y].GetEventsExecuted();
-      }
-    }
+    for (const_iterator_type i = begin(); i != end(); ++i)
+      total += i->GetEventsExecuted();
+
     return total;
   }
 
@@ -639,9 +614,8 @@ namespace MFM {
   u32 Grid<GC>::GetAtomCount(ElementType atomType) const
   {
     u32 total = 0;
-    for(u32 i = 0; i < W; i++)
-      for(u32 j = 0; j < H; j++)
-        total += m_tiles[i][j].GetAtomCount(atomType);
+    for (const_iterator_type i = begin(); i != end(); ++i)
+      total += i->GetAtomCount(atomType);
 
     return total;
   }
@@ -714,27 +688,19 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::Clear()
   {
-    for(u32 x = 0; x < W; x++)
-    {
-      for(u32 y = 0; y < H; y++)
-      {
-	EmptyTile(SPoint(x, y));
-      }
-    }
+    for (iterator_type i = begin(); i != end(); ++i)
+      EmptyTile(i.At());
   }
 
   template <class GC>
   void Grid<GC>::CheckCaches()
   {
-    for(u32 x = 0; x < W; x++)
+    for (iterator_type i = begin(); i != end(); ++i)
     {
-      for(u32 y = 0; y < H; y++)
-      {
-        const SPoint usp(x,y);
-        const Tile<CC> & tile = GetTile(usp);
+      const SPoint usp = i.At();
+      const Tile<CC> & tile = GetTile(usp);
 
-        FAIL(INCOMPLETE_CODE);
-      }
+      FAIL(INCOMPLETE_CODE);
     }
   }
 
@@ -779,27 +745,17 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::SetBackgroundRadiation(bool value)
   {
-    for(u32 x = 0; x < W; x++)
-    {
-      for(u32 y = 0; y < H; y++)
-      {
-	GetTile(x, y).SetBackgroundRadiation(value);
-      }
-    }
+    for (iterator_type i = begin(); i != end(); ++i)
+      i->SetBackgroundRadiation(value);
+
     m_backgroundRadiationEnabled = value;
   }
 
   template <class GC>
   void Grid<GC>::XRay()
   {
-    for(u32 x = 0; x < W; x++)
-    {
-      for(u32 y = 0; y < H; y++)
-      {
-	GetTile(x,y).XRay(m_xraySiteOdds,
-			  XRAY_BIT_ODDS);
-      }
-    }
+    for (iterator_type i = begin(); i != end(); ++i)
+      i->XRay(m_xraySiteOdds, XRAY_BIT_ODDS);
   }
 
   template <class GC>
@@ -808,13 +764,9 @@ namespace MFM {
     u32 acc   = 0,
         sides = GetTile(0,0).GetSites();
 
-    for(u32 x = 0; x < W; x++)
-    {
-      for(u32 y = 0; y < H; y++)
-      {
-	acc += GetTile(x,y).IsOff() ? 0 : sides;
-      }
-    }
+    for (const_iterator_type i = begin(); i != end(); ++i)
+      acc += i->IsOff() ? 0 : sides;
+
     return acc;
   }
 
