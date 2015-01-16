@@ -147,6 +147,8 @@ namespace MFM {
 
     void Printf(const char * format, ...) ;
 
+    void PrintAbbreviatedNumber(u64 number) ;
+
     void Vprintf(const char * format, va_list & ap) ;
 
   private:

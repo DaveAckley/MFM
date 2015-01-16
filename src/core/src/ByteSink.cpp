@@ -279,6 +279,20 @@ XXX
     }
   }
 
+
+  void ByteSink::PrintAbbreviatedNumber(u64 num) {
+    u64 scaler = 1000;
+    const char suffixes[] = "_KMGTQ";
+    for (u32 i = 0; i < sizeof(suffixes); ++i) {
+      if (num < scaler) {
+        Printf("%d",(u32) num);
+        if (i > 0) Printf("%c",suffixes[i]);
+        break;
+      }
+      num /= scaler;
+    }
+  }
+
   void ByteSink::Print(u64 num, Format::Type code, s32 fieldWidth, u8 padChar)
   {
 
