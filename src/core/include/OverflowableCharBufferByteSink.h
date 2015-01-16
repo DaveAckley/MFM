@@ -259,6 +259,21 @@ namespace MFM {
    * An OverflowableCharBufferByteSink with a capacity of 128 bytes.
    */
   typedef OverflowableCharBufferByteSink<128 + 2> OString128;
+
+  /**
+   * An OverflowableCharBufferByteSink with a capacity of 256 bytes.
+   */
+  typedef OverflowableCharBufferByteSink<256 + 2> OString256;
+
+  /**
+   * An OverflowableCharBufferByteSink with a capacity of 512 bytes.
+   */
+  typedef OverflowableCharBufferByteSink<512 + 2> OString512;
+
+  /**
+   * An OverflowableCharBufferByteSink with a capacity of 1024 bytes.
+   */
+  typedef OverflowableCharBufferByteSink<1024 + 2> OString1024;
 }
 
 #endif /* OVERFLOWABLECHARBUFFERBYTESINK_H */
