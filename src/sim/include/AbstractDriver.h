@@ -252,7 +252,7 @@ namespace MFM
 
       u64 totalEvents = grid.GetTotalEventsExecuted();
       u32 totalSites = grid.GetTotalSites();
-      m_AEPS = totalEvents / totalSites;
+      m_AEPS = totalEvents / ((double) totalSites);
       m_AER = 1000 * (m_AEPS / m_msSpentRunning);
 
       u64 newEvents = totalEvents - m_lastTotalEvents;
@@ -391,7 +391,7 @@ namespace MFM
 
       const char* (subs[]) =
       {
-        "", "vid", "eps", "tbd", "teps", "save", "screenshot", "autosave"
+        "", "vid", "eps", "tbd", "teps", "save", "screenshot", "autosave", "log"
       };
 
       for(u32 i = 0; i < sizeof(subs) / sizeof(subs[0]); i++)
@@ -495,6 +495,7 @@ namespace MFM
     u32 m_epochCount;
 
     VArguments m_varguments;
+    OString1024 m_commandLineArguments;
 
     u32 m_configurationPathCount;
     u32 m_currentConfigurationPath;
@@ -640,6 +641,24 @@ namespace MFM
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
 
       driver.m_elementRegistry.AddPath(path);
+    }
+
+    static void IgnoreComment(const char* kv, void* driverptr)
+    {
+      // A Good Job Well Done!
+    }
+
+    static void RegisterKeyValue(const char* kv, void* driverptr)
+    {
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
+      u32 key;
+      s32 value;
+      char dummy;
+      if (sscanf(kv,"%u:%d%c",&key,&value,&dummy) != 2)
+        args.Die("-kv argument must be a number pair like '0:3', not '%s'", kv);
+      driver.m_grid.SetTileParameter(key, value);
     }
 
     static void SetHaltAfterAEPSFromArgs(const char* aeps, void* driverptr)
@@ -855,8 +874,25 @@ namespace MFM
       m_currentConfigurationPath(U32_MAX)
     { }
 
+    void SaveCommandLine(u32 argc, const char** argv)
+    {
+      m_commandLineArguments.Reset();
+      for (u32 i = 0; i < argc; ++i) {
+        if (i) m_commandLineArguments.Printf(" ");
+        m_commandLineArguments.Printf("%s",argv[i]);
+      }
+      m_commandLineArguments.GetZString(); // null terminate
+    }
+
+    const char * GetCommandLine() const
+    {
+      return m_commandLineArguments.GetBuffer();
+    }
+
     void ProcessArguments(u32 argc, const char** argv)
     {
+      SaveCommandLine(argc,argv);
+
       AddDriverArguments();
 
       SetSeed(1);
@@ -948,6 +984,13 @@ namespace MFM
 
       RegisterArgument("Set warp factor 0..10 (0: flattest space; 10: highest AER)",
                        "-wf|--warpfactor", &SetWarpFactorFromArgs, this, true);
+
+      RegisterArgument("Add a key=value pair to simulation parameters (string)",
+                       "-kv|--keyvalue", &RegisterKeyValue, this, true);
+
+      RegisterArgument("Command line comment, logged but otherwise ignored (string)",
+                       "-#|--comment", &IgnoreComment, this, true);
+
     }
 
 
@@ -1018,7 +1061,8 @@ namespace MFM
 
       m_grid.InitThreads();
 
-      m_grid.Needed(Element_Empty<CC>::THE_INSTANCE);
+      //m_grid.Needed(Element_Empty<CC>::THE_INSTANCE);
+      NeedElement(&Element_Empty<CC>::THE_INSTANCE);
 
       ReinitPhysics();
 
