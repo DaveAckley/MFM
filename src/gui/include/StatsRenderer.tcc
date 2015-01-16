@@ -67,9 +67,14 @@ namespace MFM {
       }
 
       sprintf(strBuffer, "%8.3f AER", aer);
-      size = drawing.GetTextSize(strBuffer);
+      OString128 ob;
+      ob.Printf("%s_",strBuffer);
+      u64 sites = grid.GetTotalSites();
+      ob.PrintAbbreviatedNumber(sites);
+      const char * str = ob.GetZString();
+      size = drawing.GetTextSize(str);
       loc = UPoint(MAX(0, ((s32) m_dimensions.GetX())-size.GetX()), baseY);
-      drawing.BlitText(strBuffer,
+      drawing.BlitText(str,
                        loc,
                        UPoint(m_dimensions.GetX(), ROW_HEIGHT));
       baseY += DETAIL_ROW_HEIGHT;

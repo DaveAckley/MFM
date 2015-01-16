@@ -201,8 +201,7 @@ namespace MFM {
         u64 sum = 0;
         for (typename Grid<GC>::iterator_type i = m_grid->begin(); i != m_grid->end(); ++i)
         {
-          Tile<CC> * t = *i;
-          ElementTable<CC> & et = t->GetElementTable();
+          ElementTable<CC> & et = i->GetElementTable();
           u64 * eds = et.GetElementDataSlotsFromType(m_elementType,m_outOfSlots);
           if (!eds)
           {
