@@ -2,6 +2,7 @@
 #include "Fail.h"
 #include "Util.h"   /* For MAX */
 #include <math.h>   /* For sqrt */
+#include <stdio.h>  /* For sscanf */
 
 namespace MFM
 {
@@ -109,6 +110,7 @@ namespace MFM
     m_y %= scalar;
   }
 
+#if 0
   /**
    * Seeks a char* for a specified char. If this char is not found by
    * the time this function seeks to the end (specified by strlen), this
@@ -139,25 +141,23 @@ namespace MFM
     }
     return start;
   }
+#endif
 
-
+#if 0 // Mon Jan 19 03:36:58 2015 Not used?
   template <class T>
   void Point<T>::Parse(char* buffer)
   {
-    /*
-     * SEEK FAILs if argument 2 is not found in argument 1 before
-     * strlen(argument 1) is reached.
-     */
-    buffer = SEEK(buffer, '(') + 1;
+    MFM_API_ASSERT_NONNULL(buffer);
 
-    m_x = (T)atoi(buffer);
-
-    buffer = SEEK(buffer, ',') + 1;
-
-    m_y = (T)atoi(buffer);
-
-    buffer = SEEK(buffer, ')');
+    s8 dummy;
+    s32 x, y;
+    s32 ret = sscanf(buffer, "(%d,%d)%c", &x, &y, &dummy);
+    if (ret != 2)
+      FAIL(ILLEGAL_ARGUMENT);
+    m_x = x;
+    m_y = y;
   }
+#endif
 
 
   template <class T>

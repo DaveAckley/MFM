@@ -307,6 +307,7 @@ namespace MFM
       return m_x == 0 && m_y == 0;
     }
 
+#if 0 // Mon Jan 19 03:36:46 2015 Not used?
     /**
      * Parses a char* for a Point of \emph{integral} type in the format
      * "(x,y)" with no whitespace. This treats any read values as
@@ -316,6 +317,7 @@ namespace MFM
      * @param buffer The char* to parse a point directly from.
      */
     void Parse(char* buffer);
+#endif
 
     /**
      * Creates a Point consisting of the maximum x coordinate of two
