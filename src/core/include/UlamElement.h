@@ -78,8 +78,6 @@ namespace MFM
   {
     typedef typename CC::ATOM_TYPE T;
 
-    const UlamElement<CC> & m_instance;
-
     virtual const char * GetName() const = 0;
     virtual const char * GetSymbol() const = 0;
     virtual const char * GetSummary() const = 0;
@@ -96,9 +94,7 @@ namespace MFM
       return 100;
     }
 
-    UlamElementInfo(const UlamElement<CC> & instance)
-      : m_instance(instance)
-    { }
+    UlamElementInfo() { }
     virtual ~UlamElementInfo() { }
   };
 
