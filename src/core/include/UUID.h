@@ -89,7 +89,7 @@ namespace MFM {
        P3 Atom), the EVENT_WINDOW_RADIUS, and the BITS_PER_ATOM.  (All
        current ATOM_CATEGORY have specific requirements for
        BITS_PER_ATOM, so it's not exactly clear why the latter is
-       included separately) dependent on the ATOM_CATEGORY).
+       included separately.)
 
        In API version 1, Element UUIDs include this code and require
        it to be identical between element versions.
