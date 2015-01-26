@@ -38,6 +38,7 @@ namespace MFM {
     ++m_eventWindowsExecuted;
     Tile<CC> & t = GetTile();
     SPoint owned = Tile<CC>::TileCoordToOwned(tcoord);
+    t.m_lastEventCenterOwned = owned;
     t.m_lastEventEventNumber[owned.GetX()][owned.GetY()] = m_eventWindowsExecuted;
   }
 

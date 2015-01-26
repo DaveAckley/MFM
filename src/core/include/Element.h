@@ -235,7 +235,7 @@ namespace MFM
                                  m_atomicSymbol("!!"),
                                  m_name("UNNAMED")
     {
-      LOG.Debug("Constructed %@",&m_UUID);
+      LOG.Debug("Constructed %@ at %p", &m_UUID, this);
     }
 
     /**
