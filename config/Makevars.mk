@@ -52,10 +52,15 @@ endif
 # Common flags: All about errors -- let's help them help us
 # Also: We need pthread!
 COMMON_CFLAGS+=-Wall -pedantic -Werror -Wundef -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
+# not reliable enough: COMMON_CPPFLAGS+=-Wmissing-noreturn -ansi -pedantic -Wall -Werror -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
 COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
 COMMON_LDFLAGS+=-Wl,--fatal-warnings -pthread
 
-LIBS+=-lrt  # Ubuntu 12.04 needs this for clock_gettime
+# Ubuntu 12.04 needs this for clock_gettime
+LIBS+=-lrt
+
+#### DYNAMIC LOADING
+LIBS+=-ldl
 
 # Native tool chain
 NATIVE_GCC:=gcc
