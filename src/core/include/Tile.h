@@ -267,6 +267,12 @@ namespace MFM
     s64 m_lastEventEventNumber[OWNED_SIDE][OWNED_SIDE];
 
     /**
+     * The coord of the last event (the one that caused
+     * m_lastEventEventNumber to change most recently).
+     */
+    SPoint m_lastEventCenterOwned;
+
+    /**
      * The number of events which have occurred in every individual
      * site. Indexed as m_siteEvents[x][y], x,y : 0..OWNED_SIDE-1.
      */
@@ -409,6 +415,8 @@ namespace MFM
 
    public:
     void SetBackgroundRadiation(bool value);
+
+    void SingleXRay(const SPoint & at, u32 bitOdds) ;
 
     void XRay(u32 siteOdds, u32 bitOdds) ;
 
@@ -1071,7 +1079,10 @@ namespace MFM
      *            EventWindow center. All previous data held within this
      *            Point will be erased.
      */
-    void FillLastExecutedAtom(SPoint& out);
+    void FillLastExecutedAtom(SPoint& out)
+    {
+      out = m_lastEventCenterOwned;
+    }
 
     /**
      * Store an atom anywhere in the Tile, using the 'raw' coordinate

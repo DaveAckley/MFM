@@ -40,6 +40,13 @@ namespace MFM
   }
 
   template <class CC>
+  void Tile<CC>::SingleXRay(const SPoint & at, u32 bitOdds)
+  {
+    Random & random = GetRandom();
+    GetWritableAtom(at.GetX(), at.GetY())->XRay(random, bitOdds);
+  }
+
+  template <class CC>
   void Tile<CC>::XRay(u32 siteOdds, u32 bitOdds)
   {
     Random & random = GetRandom();
