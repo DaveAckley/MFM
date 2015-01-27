@@ -121,20 +121,6 @@ namespace MFM
 
   public:
 
-    void SwitchToInternalLogging()
-    {
-      const char* path = this->GetSimDirPathTemporary("log/log.txt");
-      LOG.Message("Switching log target to: %s", path);
-      FILE* fp = fopen(path, "w");
-      if (!fp) FAIL(IO_ERROR);
-      {
-        static FileByteSink fbs(fp);
-        LOG.SetByteSink(fbs);
-      }
-      LOG.Message("Switched to log target: %s", path);
-      LOG.Message("Command line: %s", this->GetCommandLine());
-    }
-
     MFMCDriver() : m_stamper(*this)
     {
       MFM::LOG.SetTimeStamper(&m_stamper);
