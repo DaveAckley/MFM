@@ -258,9 +258,8 @@ namespace MFM
   void TileRenderer::RenderEventWindow(Drawing & drawing, SPoint& offset,
                                        Tile<CC>& tile, bool renderCache)
   {
-    FAIL(INCOMPLETE_CODE);
 
-#if 0 // Sun Oct 19 11:39:41 2014 Unreimplemented since not currently in use
+#if 1 // Sun Oct 19 11:39:41 2014 Unreimplemented since not currently in use
     // Extract short type names
     typedef typename CC::PARAM_CONFIG P;
     enum { R = P::EVENT_WINDOW_RADIUS};
@@ -274,7 +273,7 @@ namespace MFM
     u32 tableSize = EVENT_WINDOW_SITES(R);
     for(u32 i = 0; i < tableSize; i++)
     {
-      const MDist<R>::get().FillFromBits(atomLoc, i, R);
+      MDist<R>::get().FillFromBits(atomLoc, i, R);
       atomLoc.Add(eventCenter);
       atomLoc.Add(cacheOffset, cacheOffset);
 
