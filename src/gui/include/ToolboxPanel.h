@@ -323,7 +323,7 @@ namespace MFM
 
       m_controllers[j] = spc;
       m_controllers[j]->SetBigText(m_bigText);
-      LOG.Debug("Inniting %s controllers", m_bigText ? "big" : "normal");
+      LOG.Debug("Initting %s controllers", m_bigText ? "big" : "normal");
     }
 
     void AddSliderController(ElementParameter<CC> * sp)
