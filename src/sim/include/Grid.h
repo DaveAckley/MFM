@@ -483,6 +483,20 @@ namespace MFM {
     }
 
     /**
+     * Shut down all tile threads
+     */
+    void ShutdownTileThreads()
+    {
+      /* Notify the Tile threads */
+      for (iterator_type i = begin(); i != end(); ++i)
+      {
+        TileDriver & td = m_tileDrivers[i.GetX()][i.GetY()];
+        td.SetState(TileDriver::EXIT_REQUEST);
+        pthread_yield();
+      }
+    }
+
+    /**
      * Synchronize and pause the entire grid
      */
     void Pause()

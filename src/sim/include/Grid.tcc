@@ -213,11 +213,13 @@ namespace MFM {
 
     ctile.RequestStatePassive();
 
-    while (true)
+    bool running = true;
+    while (running)
     {
       switch (td->GetState())
       {
       case TileDriver::EXIT_REQUEST:
+        running = false;
         break;
 
       case TileDriver::ADVANCING:
@@ -402,11 +404,8 @@ namespace MFM {
       FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
     }
 
-    FAIL(INCOMPLETE_CODE);
-    /*
     Tile<CC> & owner = GetTile(tileInGrid);
-    owner.SingleXRay(siteInTile.GetX(), siteInTile.GetY());
-    */
+    owner.SingleXRay(siteInTile, 100);
     /* This doesn't focus on xraying across caches, which I suppose is
      * the correct behavior. */
   }
