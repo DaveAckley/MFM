@@ -59,11 +59,13 @@ namespace MFM {
       NeedElement(&Element_ForkBomb3<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_AntiForkBomb<OurCoreConfig>::THE_INSTANCE);
       NeedElement(&Element_Collector<OurCoreConfig>::THE_INSTANCE);
+#if 0
       if (!m_qbarInstance)
       {
         FAIL(ILLEGAL_STATE);
       }
       NeedElement(m_qbarInstance);
+#endif
       NeedElement(&Element_Mover<OurCoreConfig>::THE_INSTANCE);
     }
 
@@ -166,6 +168,7 @@ namespace MFM {
 #endif
     }
 
+#if 0
     Element<OurCoreConfig> * m_qbarInstance;
 
     void LoadPlugin()
@@ -208,6 +211,7 @@ namespace MFM {
         FAIL(IO_ERROR);
       }
     }
+#endif
   };
 
   struct MFMSimSBarDemo : public AbstractGUIDriver<OurGridConfig>
@@ -306,16 +310,22 @@ int main(int argc, const char** argv)
   default:
   case 0: {
     MFM::MFMSimQBDemo sim(whichSim);
-    sim.LoadPlugin();
-    sim.Init(argc, argv);
-    sim.Reinit();
+
+    sim.ProcessArguments(argc, argv);
+    sim.SwitchToInternalLogging();
+    //    sim.LoadPlugin();
+    sim.Init();
+
     sim.Run();
     break;
   }
   case 2: {
     MFM::MFMSimSBarDemo sim;
-    sim.Init(argc, argv);
-    sim.Reinit();
+
+    sim.ProcessArguments(argc, argv);
+    sim.SwitchToInternalLogging();
+    sim.Init();
+
     sim.Run();
     break;
   }
