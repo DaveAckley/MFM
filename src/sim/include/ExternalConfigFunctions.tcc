@@ -6,6 +6,84 @@
 namespace MFM
 {
   template <class GC>
+  class FunctionCallMFSVersion : public ConfigFunctionCall<GC>
+  {
+   public:
+    FunctionCallMFSVersion() : ConfigFunctionCall<GC>("MFSVersion")
+    { }
+
+    virtual bool Parse(ExternalConfig<GC> & ec)
+    {
+      LineCountingByteSource & in = ec.GetByteSource();
+      in.SkipWhitespace();
+      u32 mfsVersion;
+      if (!in.Scan(mfsVersion))
+        return in.Msg(Logger::ERROR, "Error reading MFS file version");
+      s32 ret = this->SkipToNextArg(in);
+      if (ret != 0)
+        return in.Msg(Logger::ERROR, "Expected ')' after MFS file version");
+      if (mfsVersion > ExternalConfig<GC>::MFS_VERSION)
+        return in.Msg(Logger::ERROR, "MFS file version (%u) newer than expected (%u)",
+                      mfsVersion, ExternalConfig<GC>::MFS_VERSION);
+      return true;
+    }
+
+    virtual void Print(ByteSink & in) { FAIL(UNSUPPORTED_OPERATION); }
+
+    virtual void Apply(ExternalConfig<GC> & ec) { /* Work already done */ }
+
+  };
+
+  template <class GC>
+  class FunctionCallDefineGridSize : public ConfigFunctionCall<GC>
+  {
+   public:
+    FunctionCallDefineGridSize() : ConfigFunctionCall<GC>("DefineGridSize")
+    { }
+
+    virtual bool Parse(ExternalConfig<GC> & ec)
+    {
+      LineCountingByteSource & in = ec.GetByteSource();
+      in.SkipWhitespace();
+      const u32 PARM_COUNT = 4;
+      u32 parms[PARM_COUNT];
+      for (u32 i = 0; i < PARM_COUNT; ++i) {
+        if (!in.Scan(parms[i]))
+          return in.Msg(Logger::ERROR, "Error reading DefineGridSize parameter #%u", i);
+        s32 ret = this->SkipToNextArg(in);
+        if (i == PARM_COUNT-1) {
+          if (ret != 0)
+            return in.Msg(Logger::ERROR, "Expected ')' after DefineGridSize parameters");
+        } else {
+          if (ret != 1)
+            return in.Msg(Logger::ERROR, "Expected ',' after DefineGridSize parameter #%u", i);
+        }
+      }
+
+      Grid<GC> & grid = ec.GetGrid();
+      if (grid.GetWidthSites() != parms[0])
+        in.Msg(Logger::WARNING, "DefineGridSize sites wide (%u) not equal to actual sites wide (%u)",
+               parms[0], grid.GetWidthSites());
+      if (grid.GetHeightSites() != parms[1])
+        in.Msg(Logger::WARNING, "DefineGridSize sites high (%u) not equal to actual sites high (%u)",
+               parms[1], grid.GetHeightSites());
+      if (grid.GetWidth() != parms[2])
+        in.Msg(Logger::WARNING, "DefineGridSize tiles wide (%u) not equal to actual tiles wide (%u)",
+               parms[2], grid.GetWidth());
+      if (grid.GetHeight() != parms[3])
+        in.Msg(Logger::WARNING, "DefineGridSize tiles high (%u) not equal to actual tiles high (%u)",
+               parms[3], grid.GetHeight());
+      return true;
+    }
+
+    virtual void Print(ByteSink & in) { FAIL(UNSUPPORTED_OPERATION); }
+
+    virtual void Apply(ExternalConfig<GC> & ec) { /* Work already done */ }
+
+  };
+
+
+  template <class GC>
   class FunctionCallRegisterElement : public ConfigFunctionCall<GC>
   {
    public:
@@ -251,6 +329,14 @@ namespace MFM
   template <class GC>
   void RegisterExternalConfigFunctions(ExternalConfig<GC> & ec)
   {
+    {
+      static FunctionCallMFSVersion<GC> elt;
+      ec.RegisterFunction(elt);
+    }
+    {
+      static FunctionCallDefineGridSize<GC> elt;
+      ec.RegisterFunction(elt);
+    }
     {
       static FunctionCallRegisterElement<GC> elt;
       ec.RegisterFunction(elt);

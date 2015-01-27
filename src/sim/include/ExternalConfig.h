@@ -51,6 +51,7 @@ namespace MFM
     enum { BPA = P::BITS_PER_ATOM };
 
   public:
+    enum { MFS_VERSION = 2 };
 
     /*
      * Construct a new ExternalConfig referencing a specified Grid
@@ -92,6 +93,11 @@ namespace MFM
     LineCountingByteSource & GetByteSource()
     {
       return m_in;
+    }
+
+    Grid<GC> & GetGrid()
+    {
+      return m_grid;
     }
 
   private:

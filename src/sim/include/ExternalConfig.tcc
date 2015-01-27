@@ -82,6 +82,16 @@ namespace MFM
   template<class GC>
   void ExternalConfig<GC>::Write(ByteSink& byteSink)
   {
+    /* Minus-first-th, identify mfs version. */
+    byteSink.Printf("MFSVersion(%u)\n", MFS_VERSION);
+
+    /* Zeroth, identify grid size in sites and tiles. */
+    byteSink.Printf("DefineGridSize(%u,%u,%u,%u)\n",
+                    m_grid.GetWidthSites(),
+                    m_grid.GetHeightSites(),
+                    m_grid.GetWidth(),
+                    m_grid.GetHeight());
+
     /* First, register all elements. */
 
     u32 elems = m_elementRegistry.GetEntryCount();
