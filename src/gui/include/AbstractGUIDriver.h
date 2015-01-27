@@ -800,13 +800,6 @@ namespace MFM
         Super::SaveGrid(filename);
     }
 
-    void SaveGridWithConstantFilename(const char* filename)
-    {
-      const char* finalName =
-        Super::GetSimDirPathTemporary("%s", filename);
-      Super::SaveGrid(finalName);
-    }
-
     AbstractGUIDriver() :
       m_startPaused(true),
       m_thisUpdateIsEpoch(false),
@@ -1275,37 +1268,9 @@ namespace MFM
 
             camera.DrawSurface(screen,path);
           }
-          {
-            /*
-            const char * path = Super::GetSimDirPathTemporary("tbd/data.dat");
-            bool exists = true;
-            {
-              FILE* fp = fopen(path, "r");
-              if (!fp) exists = false;
-              else fclose(fp);
-            }
-            FILE* fp = fopen(path, "a");
-            FileByteSink fbs(fp);
-            m_srend.WriteRegisteredCounts(fbs, !exists, Super::GetGrid(),
-                                          Super::GetAEPS(),
-                                          Super::GetAER(),
-                                          Super::GetAEPSPerFrame(),
-                                          Super::GetOverheadPercent(), true);
-            fclose(fp);
-            */
-            AbstractDriver<GC>::WriteTimeBasedData();
-          }
-
         }
 
-        if(Super::GetHaltAfterAEPS() > 0 &&
-           Super::GetAEPS() > Super::GetHaltAfterAEPS())
-        {
-          // Free final save if --haltafteraeps.  Hope for good-looking corpse
-          SaveGridWithConstantFilename("save/final.mfs");
-          running = false;
-        }
-
+        running = this->RunHelperExiter();
         SDL_Flip(screen);
       }
 
