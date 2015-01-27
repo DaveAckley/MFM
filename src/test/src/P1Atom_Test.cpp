@@ -8,6 +8,7 @@
 
 namespace MFM {
 
+#if 0 // DEPRECATED Mon Jan 19 20:34:29 2015
 typedef P1Atom<TestParamConfig> TestP1Atom;
 
 void P1Atom_Test::Test_p1atomState()
@@ -127,5 +128,6 @@ void P1Atom_Test::Test_p1atomAddSB()
 
   assert(atom.GetShortBondCount() == 10);
 }
+#endif
 
 } /* namespace MFM */
