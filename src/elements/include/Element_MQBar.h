@@ -228,10 +228,12 @@ namespace MFM
       return 0xffffff00;
     }
 
+    /*
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff7f7f00;
     }
+    */
 
     virtual u32 PercentMovable(const T& you, const T& me, const SPoint& offset) const
     {

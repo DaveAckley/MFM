@@ -86,10 +86,12 @@ namespace MFM
        This color will be the color rendered when your element is
        rendered in lowlighting.
      */
+    /* use default (halfcolor)
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff2a241c;
     }
+    */
 
     /*
       This is a short description of your element.

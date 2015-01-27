@@ -88,10 +88,12 @@ namespace MFM
       return 0xff00ff00;
     }
 
+    /*
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff00af00;
     }
+    */
 
     virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
     {

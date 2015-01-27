@@ -85,15 +85,6 @@ namespace MFM
     }
 
     /*
-       <<TEMPLATE>> This color will be the color rendered when your
-                    element is rendered in lowlighting.
-     */
-    virtual u32 DefaultLowlightColor() const
-    {
-      return 0xff770077;
-    }
-
-    /*
       <<TEMPLATE>> This is a short description of your element.
      */
     virtual const char* GetDescription() const

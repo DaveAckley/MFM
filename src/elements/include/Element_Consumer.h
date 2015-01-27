@@ -108,10 +108,12 @@ namespace MFM
       return 0xff202030;
     }
 
+    /*
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff101018;
     }
+    */
 
     virtual const char* GetDescription() const
     {

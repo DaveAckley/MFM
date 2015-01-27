@@ -73,10 +73,12 @@ namespace MFM
       return 0xffff00ff;
     }
 
+    /*
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff7f007f;
     }
+    */
 
    protected:
     virtual u32 GetWanderDistance() const
