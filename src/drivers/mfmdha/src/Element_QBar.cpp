@@ -9,7 +9,7 @@ extern "C" {
     return (void *) & (MFM::Element_QBar<MFM::OurCoreConfig>::THE_INSTANCE);
   }
   typedef void* (*FuncPtr)();
-  FuncPtr get_static_element_pointer[] = { getref };
+  FuncPtr get_static_element_library_pointer[] = { getref };
 }
 
 #endif /* ELEMENT_PLUG_IN */
