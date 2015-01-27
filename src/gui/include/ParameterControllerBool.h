@@ -168,7 +168,7 @@ namespace MFM
 
       m_checkbox.Init(Super::m_bigText);
 
-      LOG.Debug("Innitting %s", Super::m_bigText ? "big" : "normal");
+      LOG.Debug("Initting %s", Super::m_bigText ? "big" : "normal");
     }
   };
 }

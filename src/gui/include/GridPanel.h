@@ -325,13 +325,13 @@ namespace MFM
     void HandleXRayTool(u8 button, SPoint clickPt)
     {
       PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
-                  Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), TOOL_XRAY);
+                Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), TOOL_XRAY);
     }
 
     void HandleCloneTool(u8 button, SPoint clickPt)
     {
       PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
-                  Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), TOOL_CLONE);
+                Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), TOOL_CLONE);
     }
 
     void PaintAtom(u8 button, SPoint& clickPt, s32 brushSize,
