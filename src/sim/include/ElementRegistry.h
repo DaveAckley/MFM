@@ -36,13 +36,15 @@ namespace MFM {
 
   /**
    * The ElementRegistry holds information about all Elements known to
-   * a simulation, whether or not they are actually loaded into the
-   * running image, and whether or not they (currently) have been
-   * 'Needed' into a grid and thereby assigned a type number.  It is
-   * meant for use only during initialization and is therefore dog
-   * slow.  It also maintains a search list of directories within
-   * which it will search for dynamically loadable elements, on
-   * demand.
+   * a simulation.
+
+   ** Other documentation that used to be here is believed to have
+   ** rotted and has been deleted.  New documention to follow when the
+   ** dust begins to settle.
+
+   * It is meant for use only during simulation initialization and is
+   * therefore dog slow.  It maintains a list of .so files from which
+   * it will dynamically load elements, during initialization.
    */
   template <class CC>
   class ElementRegistry
@@ -50,8 +52,7 @@ namespace MFM {
   public:
     enum {
       TABLE_SIZE = 100,
-      MAX_PATHS = 20,
-      MAX_PATH_LEN = 256
+      MAX_PATHS = 20
     };
 
   private:
@@ -59,7 +60,12 @@ namespace MFM {
     // Extract short type names
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
-    typedef OverflowableCharBufferByteSink<MAX_PATH_LEN> PathString ;
+
+    /**
+       Return negative on dl error, otherwise non-negative number of
+       elements loaded
+     */
+    s32 LoadLibrary(OString256 & librarypath) ;
 
   public:
 
@@ -68,6 +74,10 @@ namespace MFM {
     ~ElementRegistry() { }
 
     void Init();
+
+    u32 GetRegisteredElementCount() const;
+
+    Element<CC> * GetRegisteredElement(u32 index) ;
 
     bool IsRegistered(const UUID & uuid) const;
 
@@ -80,10 +90,18 @@ namespace MFM {
     Element<CC> * LookupCompatible(const UUID & uuid) const;
 
     /**
-     * Add a path to the search path, if it is not already there.
-     * Fails with OUT_OF_ROOM if no more paths can be added.
+     * Add a library path to the registry paths, if it is not already
+     * there.  Fails with OUT_OF_ROOM if no more paths can be added.
      */
-    void AddPath(const char * path) ;
+    void AddLibraryPath(const char * path) ;
+
+    /**
+     * Load all the libraries that were previously added with
+     * AddLibraryPath, and 'Need' all the elements contained therein.
+     * Returns negative on error, otherwise the number of elements
+     * loaded.
+     */
+    s32 LoadLibraries() ;
 
     /**
      * Store a dynamically-loadable element in the registry keyed by
@@ -175,8 +193,8 @@ namespace MFM {
       return -1;
     }
 
-    PathString m_searchPaths[MAX_PATHS];
-    u32 m_searchPathsCount;
+    OString256 m_libraryPaths[MAX_PATHS];
+    u32 m_libraryPathsCount;
 
   };
 

@@ -3,6 +3,8 @@
 #include <errno.h>  /* For errno */
 #include <string.h> /* For strerror */
 #include <dirent.h> /* For opendir */
+#include "ElementLibraryLoader.h"
+#include "Fail.h"
 
 namespace MFM
 {
@@ -10,14 +12,24 @@ namespace MFM
   template <class CC>
   void ElementRegistry<CC>::Init()
   {
+    LOG.Debug("Loading ElementLibraries from %d file(s)...", m_libraryPathsCount);
+    s32 elements = LoadLibraries();
+    if (elements < 0)
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+    LOG.Debug("Got %d elements", elements);
+
+#if 0
+    FAIL(INCOMPLETE_CODE); // XXXX DEIMPLEMENTED
 
     /* Scan all element directories for any <UUID>.so files, then
      * register them. */
 
-    LOG.Debug("Searching for elements in %d directories...", m_searchPathsCount);
-    for(u32 i = 0; i < m_searchPathsCount; i++)
+    LOG.Debug("Searching for elements in %d directories...", m_libraryPathsCount);
+    for(u32 i = 0; i < m_libraryPathsCount; i++)
     {
-      const char* dirname = m_searchPaths[i].GetZString();
+      const char* dirname = m_libraryPaths[i].GetZString();
       LOG.Debug("  Searching %s for shared libs:", dirname);
       DIR* dir = opendir(dirname);
 
@@ -64,6 +76,22 @@ namespace MFM
       }
       closedir(dir);
     }
+#endif
+  }
+
+  template <class CC>
+  u32 ElementRegistry<CC>::GetRegisteredElementCount() const
+  {
+    return m_registeredElementsCount;
+  }
+
+  template <class CC>
+  Element<CC> * ElementRegistry<CC>::GetRegisteredElement(u32 index)
+  {
+    if (index >= m_registeredElementsCount)
+      FAIL(ILLEGAL_ARGUMENT);
+    ElementEntry & ee =  m_registeredElements[index];
+    return ee.m_element;
   }
 
   template <class CC>
@@ -136,11 +164,12 @@ namespace MFM
   }
 
   template <class CC>
-  void ElementRegistry<CC>::AddPath(const char * path)
+  void ElementRegistry<CC>::AddLibraryPath(const char * path)
   {
     if (!path)
       FAIL(NULL_POINTER);
-    PathString xpath;
+
+    OString256 xpath;
     xpath = path;
     if (path[0] == '~') {
       const char * home = getenv("HOME");
@@ -150,19 +179,63 @@ namespace MFM
       }
     }
 
-    for (u32 i = 0; i < m_searchPathsCount; ++i) {
-      if (m_searchPaths[i].Equals(xpath))
+    for (u32 i = 0; i < m_libraryPathsCount; ++i) {
+      if (m_libraryPaths[i].Equals(xpath))
         return;
     }
-    if (m_searchPathsCount >= MAX_PATHS)
+    if (m_libraryPathsCount >= MAX_PATHS)
       FAIL(OUT_OF_ROOM);
-    m_searchPaths[m_searchPathsCount] = xpath;
-    ++m_searchPathsCount;
+    m_libraryPaths[m_libraryPathsCount] = xpath;
+    ++m_libraryPathsCount;
+  }
+
+  template <class CC>
+  s32 ElementRegistry<CC>::LoadLibraries()
+  {
+    u32 elementCount = 0;
+    for (u32 i = 0; i < m_libraryPathsCount; ++i) {
+      s32 ret = LoadLibrary(m_libraryPaths[i]);
+      if (ret < 0) return ret;
+      elementCount += (u32) ret;
+    }
+    return (s32) elementCount;
+  }
+
+  template <class CC>
+  s32 ElementRegistry<CC>::LoadLibrary(OString256 & libraryPath)
+  {
+    ElementLibraryLoader<CC> ell;
+
+    const char * err;
+    err = ell.Open(libraryPath);
+    if (err != 0) {
+      LOG.Error("Dynamic library failure on %s", err);
+      return -1;
+    }
+
+    ElementLibrary<CC> * el = 0;
+    err = ell.LoadLibrary(&el);
+    if (err != 0) {
+      LOG.Error("ElementLibrary not loadable from %s", err);
+      return -1;
+    }
+    u32 count = el->m_count;
+    for (u32 i = 0; i < count; ++i) {
+      Element<CC> * elt = el->m_ptrArray[i];
+      if (!elt)
+        FAIL(ILLEGAL_STATE);
+      UUID uuid = elt->GetUUID();
+      if (!RegisterElement(*elt))
+        LOG.Warning("Already registered: %@", &uuid);
+      else
+        LOG.Message("Loaded %@ at %p from %s", &uuid, elt, libraryPath.GetZString());
+    }
+    return count;
   }
 
   template <class CC>
   ElementRegistry<CC>::ElementRegistry()
-    : m_registeredElementsCount(0), m_searchPathsCount(0)
+    : m_registeredElementsCount(0), m_libraryPathsCount(0)
   {
 
   }
