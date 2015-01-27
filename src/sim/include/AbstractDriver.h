@@ -147,6 +147,15 @@ namespace MFM
 
     void NeedElement(Element<CC>* element)
     {
+      for (u32 i = 0; i < m_neededElementCount; ++i)
+      {
+        if (m_neededElements[i] == element)
+          return;
+
+        if (m_neededElements[i]->GetUUID() == element->GetUUID())
+          FAIL(ILLEGAL_STATE);
+      }
+
       if(m_neededElementCount >= MAX_NEEDED_ELEMENTS)
       {
         FAIL(OUT_OF_ROOM);
@@ -154,6 +163,12 @@ namespace MFM
 
       m_neededElements[m_neededElementCount++] = element;
     }
+
+    virtual void WriteTimeBasedCustomHeader(FileByteSink& fp)
+    { }
+
+    virtual void WriteTimeBasedCustomData(FileByteSink& fp)
+    { }
 
     void WriteTimeBasedData(FileByteSink& fp, bool exists)
     {
@@ -182,6 +197,7 @@ namespace MFM
             }
           }
         }
+        WriteTimeBasedCustomHeader(fp);
         fp.Println();
       }
 
@@ -198,6 +214,8 @@ namespace MFM
         fp.WriteByte(' ');
         fp.Print((u32)GetGrid().GetAtomCount(m_neededElements[i]->GetType()));
       }
+
+      WriteTimeBasedCustomData(fp);
       fp.Println();
     }
 
@@ -386,7 +404,6 @@ namespace MFM
       {
         SetDataDirFromArgs(NULL, this);
       }
-
       LOG.Message("Writing to simulation directory '%s'", GetSimDirPathTemporary(""));
 
       const char* (subs[]) =
@@ -404,17 +421,12 @@ namespace MFM
         }
       }
 
-      /* Initialize tbd.txt */
-      const char* path = GetSimDirPathTemporary("tbd/tbd.txt");
-      FILE* fp = fopen(path, "w");
-      fprintf(fp, "#AEPS activesites empty dreg res wall sort-hits"
-              "sort-misses sort-total sort-hit-pctg\n");
-      fclose(fp);
-
-      m_elementRegistry.AddPath("~/.mfm/res/elements");
-      m_elementRegistry.AddPath(SHARED_DIR "/res/elements");
-      m_elementRegistry.AddPath("./bin");
       m_elementRegistry.Init();
+      u32 dlcount = m_elementRegistry.GetRegisteredElementCount();
+      for (u32 i = 0; i < dlcount; ++i)
+      {
+        NeedElement(m_elementRegistry.GetRegisteredElement(i));
+      }
 
       DefineNeededElements();
     }
@@ -430,12 +442,26 @@ namespace MFM
       while(running)
       {
         UpdateGrid(m_grid);
-
-        if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
-        {
-          running = false;
-        }
+        running = RunHelperExiter();
       }
+    }
+
+    virtual bool RunHelperExiter() {
+      if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
+      {
+        // Free final save if --haltafteraeps.  Hope for good-looking corpse
+        SaveGridWithConstantFilename("save/final.mfs");
+        m_grid.ShutdownTileThreads();
+        return false;
+      }
+      return true;
+    }
+
+    void SaveGridWithConstantFilename(const char* filename)
+    {
+      const char* finalName =
+        GetSimDirPathTemporary("%s", filename);
+      SaveGrid(finalName);
     }
 
     void SetAEPSPerEpoch(u32 aeps)
@@ -636,11 +662,11 @@ namespace MFM
       }
     }
 
-    static void RegisterElementPath(const char* path, void* driverptr)
+    static void RegisterElementLibraryPath(const char* path, void* driverptr)
     {
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
 
-      driver.m_elementRegistry.AddPath(path);
+      driver.m_elementRegistry.AddLibraryPath(path);
     }
 
     static void IgnoreComment(const char* kv, void* driverptr)
@@ -811,6 +837,8 @@ namespace MFM
 
       // XXX grid.CheckCaches();
 
+      WriteTimeBasedData();
+
       if (m_gridImages)
       {
         const char * path = GetSimDirPathTemporary("eps/%010d.ppm", epochAEPS);
@@ -887,6 +915,20 @@ namespace MFM
     const char * GetCommandLine() const
     {
       return m_commandLineArguments.GetBuffer();
+    }
+
+    void SwitchToInternalLogging()
+    {
+      const char* path = this->GetSimDirPathTemporary("log/log.txt");
+      LOG.Message("Switching log target to: %s", path);
+      FILE* fp = fopen(path, "w");
+      if (!fp) FAIL(IO_ERROR);
+      {
+        static FileByteSink fbs(fp);
+        LOG.SetByteSink(fbs);
+      }
+      LOG.Message("Switched to log target: %s", path);
+      LOG.Message("Command line: %s", this->GetCommandLine());
     }
 
     void ProcessArguments(u32 argc, const char** argv)
@@ -976,8 +1018,8 @@ namespace MFM
       RegisterArgument("Store data in per-sim directories under ARG (string)",
                        "-d|--dir", &SetDataDirFromArgs, this, true);
 
-      RegisterArgument("Add ARG as a path to search for element libraries",
-                       "-ep|--elementpath", &RegisterElementPath, this, true);
+      RegisterArgument("Add ARG as the path to an element library (.so)",
+                       "-ep|--elementpath", &RegisterElementLibraryPath, this, true);
 
       RegisterArgument("Load initial configuration from file at path ARG (string)",
                        "-cp|--configpath", &LoadFromConfigFile, this, true);
