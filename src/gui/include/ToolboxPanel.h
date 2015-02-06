@@ -42,14 +42,14 @@ namespace MFM
    * A class representing the Panel which allows a user to select from
    * a collection of Element drawing tools.
    */
-  template<class CC>
+  template<class EC>
   class ToolboxPanel : public MovablePanel
   {
   private:
-    typedef ElementParameterS32<CC> OurParameterS32; // ToolboxPanel controls Elements (vs AtomViewPanel)
-    typedef ElementParameterBool<CC> OurParameterBool; // ToolboxPanel controls Elements (vs AtomViewPanel)
-    typedef Slider<CC> OurSlider;
-    typedef ParameterControllerBool<CC> OurParameterControllerBool;
+    typedef ElementParameterS32<EC> OurParameterS32; // ToolboxPanel controls Elements (vs AtomViewPanel)
+    typedef ElementParameterBool<EC> OurParameterBool; // ToolboxPanel controls Elements (vs AtomViewPanel)
+    typedef Slider<EC> OurSlider;
+    typedef ParameterControllerBool<EC> OurParameterControllerBool;
 
     enum {
       ELEMENT_BOX_BUTTON_COUNT = 9,
@@ -61,7 +61,7 @@ namespace MFM
       ELEMENT_BIG_RENDER_SIZE = 48,
       ELEMENT_BOX_SIZE = 77,
 
-      R = CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS,
+      R = EC::EVENT_WINDOW_RADIUS,
       SITES = EVENT_WINDOW_SITES(R)
     };
 
@@ -86,7 +86,7 @@ namespace MFM
      protected:
       EditingTool* m_toolboxTool;
 
-      ToolboxPanel<CC>* m_parent;
+      ToolboxPanel<EC>* m_parent;
 
       EditingTool m_tool;
 
@@ -127,7 +127,7 @@ namespace MFM
        * ToolButton. This is required before clicking any
        * ToolButton.
        */
-      void SetParent(ToolboxPanel<CC>* parent)
+      void SetParent(ToolboxPanel<EC>* parent)
       {
         m_parent = parent;
       }
@@ -196,7 +196,7 @@ namespace MFM
         AbstractButton::SetEnabled(false);
       }
 
-      void SetElement(Element<CC>* element)
+      void SetElement(Element<EC>* element)
       {
         m_element = element;
 
@@ -210,7 +210,7 @@ namespace MFM
         }
       }
 
-      void SetParent(ToolboxPanel<CC>* parent)
+      void SetParent(ToolboxPanel<EC>* parent)
       {
         m_parent = parent;
       }
@@ -236,7 +236,7 @@ namespace MFM
         }
       }
 
-      Element<CC>* GetElement()
+      Element<EC>* GetElement()
       {
         return m_element;
       }
@@ -266,9 +266,9 @@ namespace MFM
       }
 
      private:
-      Element<CC>* m_element;
+      Element<EC>* m_element;
 
-      ToolboxPanel<CC>* m_parent;
+      ToolboxPanel<EC>* m_parent;
     };
 
     EditingTool* m_toolPtr;
@@ -277,17 +277,17 @@ namespace MFM
 
     ToolButton m_toolButtons[ELEMENT_BOX_BUTTON_COUNT];
 
-    Element<CC>* m_primaryElement;
+    Element<EC>* m_primaryElement;
 
-    Element<CC>* m_secondaryElement;
+    Element<EC>* m_secondaryElement;
 
-    Element<CC>* m_heldElements[ELEMENT_BOX_SIZE];
+    Element<EC>* m_heldElements[ELEMENT_BOX_SIZE];
 
     ElementButton m_elementButtons[ELEMENT_BOX_SIZE];
 
     u32 m_heldElementCount;
 
-    ParameterController<CC> *(m_controllers[TOOLBOX_MAX_CONTROLLERS]);
+    ParameterController<EC> *(m_controllers[TOOLBOX_MAX_CONTROLLERS]);
     u32 m_controllerCount;
 
     OurSlider m_sliders[TOOLBOX_MAX_SLIDERS];
@@ -296,7 +296,7 @@ namespace MFM
     OurParameterControllerBool m_checkboxes[TOOLBOX_MAX_CHECKBOXES];
     u32 m_checkboxCount;
 
-    NeighborSelectPanel<CC,R> m_neighborhoods[TOOLBOX_MAX_NEIGHBORHOODS];
+    NeighborSelectPanel<EC,R> m_neighborhoods[TOOLBOX_MAX_NEIGHBORHOODS];
     u32 m_neighborhoodCount;
 
     u32 m_brushSize;
@@ -310,7 +310,7 @@ namespace MFM
       BORDER_PADDING = 2
     };
 
-    void AddController(ParameterController<CC> * spc)
+    void AddController(ParameterController<EC> * spc)
     {
       MFM_API_ASSERT_NONNULL(spc);
 
@@ -326,7 +326,7 @@ namespace MFM
       LOG.Debug("Initting %s controllers", m_bigText ? "big" : "normal");
     }
 
-    void AddSliderController(ElementParameter<CC> * sp)
+    void AddSliderController(ElementParameter<EC> * sp)
     {
       // Sliders for S32 parameters
       MFM_API_ASSERT_NONNULL(sp);
@@ -344,7 +344,7 @@ namespace MFM
       AddController(&s);
     }
 
-    void AddCheckboxController(ElementParameter<CC> * bp)
+    void AddCheckboxController(ElementParameter<EC> * bp)
     {
       // Checkboxes for Bool parameters
       MFM_API_ASSERT_NONNULL(bp);
@@ -362,7 +362,7 @@ namespace MFM
       AddController(&cb);
     }
 
-    void AddNeighborhoodController(ElementParameter<CC> * np)
+    void AddNeighborhoodController(ElementParameter<EC> * np)
     {
       MFM_API_ASSERT_NONNULL(np);
 
@@ -373,7 +373,7 @@ namespace MFM
 
       u32 j = m_neighborhoodCount++;
 
-      NeighborSelectPanel<CC,R>& nb = m_neighborhoods[j];
+      NeighborSelectPanel<EC,R>& nb = m_neighborhoods[j];
 
       nb.SetParameter(np);
       nb.SetText(np->GetName());
@@ -387,8 +387,8 @@ namespace MFM
       m_bigText(false),
       m_toolPtr(toolPtr),
       m_activatedButton(m_toolButtons),
-      m_primaryElement(&Element_Empty<CC>::THE_INSTANCE),
-      m_secondaryElement(&Element_Empty<CC>::THE_INSTANCE),
+      m_primaryElement(&Element_Empty<EC>::THE_INSTANCE),
+      m_secondaryElement(&Element_Empty<EC>::THE_INSTANCE),
       m_heldElementCount(0),
       m_controllerCount(0),
       m_sliderCount(0),
@@ -438,7 +438,7 @@ namespace MFM
       m_controllerCount = 0;
 
       /* Set up the new controllers, if any */
-      ElementParameters<CC> & parms = m_primaryElement->GetElementParameters();
+      ElementParameters<EC> & parms = m_primaryElement->GetElementParameters();
       u32 totalParms = parms.GetParameterCount();
 
       m_sliderCount = 0;
@@ -446,7 +446,7 @@ namespace MFM
       m_neighborhoodCount = 0;
       for(u32 i = 0; i < totalParms; i++)
       {
-        ElementParameter<CC> * parm = parms.GetParameter(i);
+        ElementParameter<EC> * parm = parms.GetParameter(i);
         switch (parm->GetType())
         {
         case VD::S32:
@@ -457,8 +457,8 @@ namespace MFM
           break;
         case VD::BITS:
           {
-            ElementParameterNeighborhood<CC,SITES>* epn =
-              dynamic_cast<ElementParameterNeighborhood<CC,SITES>*>(parm);
+            ElementParameterNeighborhood<EC,SITES>* epn =
+              dynamic_cast<ElementParameterNeighborhood<EC,SITES>*>(parm);
             if (epn)
             {
               AddNeighborhoodController(epn);
@@ -475,7 +475,7 @@ namespace MFM
       SPoint rpt(16, 6 + GetElementRenderSize() * TOTAL_ROWS);
       for(u32 i = 0; i < m_controllerCount; i++)
       {
-        ParameterController<CC> * c = m_controllers[i];
+        ParameterController<EC> * c = m_controllers[i];
         c->Init();
         c->SetRenderPoint(rpt);
         c->SetBigText(m_bigText);
@@ -562,13 +562,13 @@ namespace MFM
       m_toolButtons[2].OnClick(SDL_BUTTON_LEFT);
     }
 
-    void SetPrimaryElement(Element<CC>* element)
+    void SetPrimaryElement(Element<EC>* element)
     { m_primaryElement = element; }
 
-    Element<CC>* GetPrimaryElement()
+    Element<EC>* GetPrimaryElement()
     { return m_primaryElement; }
 
-    void SetSecondaryElement(Element<CC>* element)
+    void SetSecondaryElement(Element<EC>* element)
     { m_secondaryElement = element; }
 
     u32 GetBrushSize()
@@ -597,10 +597,10 @@ namespace MFM
       }
     }
 
-    Element<CC>* GetSecondaryElement()
+    Element<EC>* GetSecondaryElement()
     { return m_secondaryElement; }
 
-    void RegisterElement(Element<CC>* element)
+    void RegisterElement(Element<EC>* element)
     {
       if(m_heldElementCount >= ELEMENT_BOX_SIZE)
       {

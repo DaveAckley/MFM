@@ -88,7 +88,7 @@ namespace MFM
 
    protected:
     typedef typename Super::OurGrid OurGrid;
-    typedef typename Super::CC CC;
+    typedef typename GC::EVENT_CONFIG EC;
     enum { W = GC::GRID_WIDTH};
     enum { H = GC::GRID_HEIGHT};
 
@@ -855,7 +855,7 @@ namespace MFM
       m_grend.ToggleMemDraw();
     }
 
-    void RegisterToolboxElement(Element<CC>* element)
+    void RegisterToolboxElement(Element<EC>* element)
     {
       m_toolboxPanel.RegisterElement(element);
     }
@@ -942,7 +942,7 @@ namespace MFM
 
     GridPanel<GC> m_gridPanel;
 
-    ToolboxPanel<CC> m_toolboxPanel;
+    ToolboxPanel<EC> m_toolboxPanel;
 
     class StatisticsPanel : public MovablePanel
     {

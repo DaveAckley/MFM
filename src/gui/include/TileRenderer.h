@@ -67,50 +67,54 @@ namespace MFM
       MAX_HEATMAP_SELECTIONS = 5
     };
 
-    template <class CC>
+    template <class EC>
     void RenderMemRegions(Drawing & drawing, SPoint& pt,
-                          bool renderCache, bool selected, bool lowlight);
+                          bool renderCache, bool selected, bool lowlight,
+                          const u32 TILE_SIDE);
 
-    template <class CC>
+    template <class EC>
     void RenderVisibleRegionOutlines(Drawing & drawing, SPoint& pt, bool renderCache,
-                                     bool selected, bool lowlight);
+                                     bool selected, bool lowlight,
+                                     const u32 TILE_SIDE);
 
-    template <class CC>
+    template <class EC>
     void RenderMemRegion(Drawing & drawing, SPoint& pt, int regID,
-                         u32 color, bool renderCache);
+                         u32 color, bool renderCache,
+                         const u32 TILE_SIDE);
 
-    template <class CC>
-    void RenderGrid(Drawing & drawing, SPoint* pt, bool renderCache);
+    template <class EC>
+    void RenderGrid(Drawing & drawing, SPoint* pt, bool renderCache,
+                    const u32 TILE_SIDE);
 
     void RenderAtomBG(Drawing & drawing, SPoint& offset, Point<int>& atomloc,
                       u32 color);
 
-    template <class CC>
-    void RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
+    template <class EC>
+    void RenderAtoms(Drawing & drawing, SPoint& pt, Tile<EC>& tile,
                      bool renderCache, bool lowlight);
 
-    template <class CC>
+    template <class EC>
     void RenderAtom(Drawing & drawing, const SPoint& atomLoc, const UPoint& rendPt,
-                    Tile<CC>& tile, bool lowlight);
+                    Tile<EC>& tile, bool lowlight);
 
-    template <class CC>
+    template <class EC>
     void RenderBadAtom(Drawing& drawing, const UPoint& rendPt);
 
-    template <class CC>
-    u32 GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom, u32 selector = 0);
+    template <class EC>
+    u32 GetAtomColor(Tile<EC>& tile, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom, u32 selector = 0);
 
-    template <class CC>
-    u32 GetDataHeatColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom);
+    template <class EC>
+    u32 GetDataHeatColor(Tile<EC>& tile, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom);
 
-    template <class CC>
-    void RenderEventWindow(Drawing & drawing, SPoint& offset, Tile<CC>& tile, bool renderCache);
+    template <class EC>
+    void RenderEventWindow(Drawing & drawing, SPoint& offset, Tile<EC>& tile, bool renderCache);
 
   public:
 
     TileRenderer();
 
-    template <class CC>
-    void RenderTile(Drawing & drawing, Tile<CC>& t, SPoint& loc, bool renderWindow,
+    template <class EC>
+    void RenderTile(Drawing & drawing, Tile<EC>& t, SPoint& loc, bool renderWindow,
                     bool renderCache, bool selected, SPoint* selectedAtom, SPoint* cloneOrigin);
 
     void SetDimensions(Point<u32> dimensions)

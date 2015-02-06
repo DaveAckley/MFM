@@ -38,14 +38,15 @@ namespace MFM
   class AtomViewPanel : public MovablePanel
   {
    private:
-    typedef typename GC::CORE_CONFIG::ATOM_TYPE T;
-    typedef typename GC::CORE_CONFIG CC;
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
     T* m_atom;
 
     Grid<GC>* m_grid;
 
-    ToolboxPanel<CC>* m_toolboxPanel;
+    ToolboxPanel<EC>* m_toolboxPanel;
 
     CloseWindowButton m_closeWindowButton;
 
@@ -66,7 +67,7 @@ namespace MFM
       m_closeWindowButton.Init();
     }
 
-    void SetToolboxPanel(ToolboxPanel<CC>* toolboxPanel)
+    void SetToolboxPanel(ToolboxPanel<EC>* toolboxPanel)
     {
       m_toolboxPanel = toolboxPanel;
     }
@@ -81,15 +82,15 @@ namespace MFM
       this->SetVisibility(visible);
     }
 
-    void PaintDisplayAtomicControllers(Drawing & d, T& atom,const Element<CC>* elt)
+    void PaintDisplayAtomicControllers(Drawing & d, T& atom,const Element<EC>* elt)
     {
       // XXX DESIGN ME
       // XXX WRITE ME
       // XXX MAKE ME WORK
 
-      const AtomicParameters<CC> & parms = elt->GetAtomicParameters();
+      const AtomicParameters<EC> & parms = elt->GetAtomicParameters();
 
-      const AtomicParameter<CC> * p;
+      const AtomicParameter<EC> * p;
       for (p = parms.GetFirstParameter(); p; p = p->GetNextParameter())
       {
         switch (p->GetType())
@@ -122,7 +123,7 @@ namespace MFM
       }
       else
       {
-        const Element<CC>* element = m_grid->LookupElement(m_atom->GetType());
+        const Element<EC>* element = m_grid->LookupElement(m_atom->GetType());
         d.SetForeground(element->DefaultPhysicsColor());
         d.FillCircle(2, 2, ATOM_DRAW_SIZE, ATOM_DRAW_SIZE, ATOM_DRAW_SIZE >> 1);
         d.SetFont(FONT_ASSET_ELEMENT);
@@ -146,7 +147,7 @@ namespace MFM
                          MakeUnsigned(d.GetTextSize(zstr)));
 
         OString64 atomBody;
-        AtomSerializer<CC> serializer(*m_atom);
+        AtomSerializer<AC> serializer(*m_atom);
         atomBody.Printf("%@", &serializer);
         zstr = atomBody.GetZString();
 

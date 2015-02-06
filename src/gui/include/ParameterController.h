@@ -36,12 +36,13 @@ namespace MFM
    * An abstraction used for displaying every Element and Atom
    * Parameter .
    */
-  template <class CC>
+  template <class EC>
   class ParameterController : public Panel
   {
    protected:
-    typedef typename CC::ATOM_TYPE T;
-    Parameter<CC> * m_parameter;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    Parameter<EC> * m_parameter;
     T * m_patom;
     bool m_bigText;
 
@@ -60,12 +61,12 @@ namespace MFM
     virtual ~ParameterController()
     { }
 
-    virtual void SetParameter(ElementParameter<CC>* pb)
+    virtual void SetParameter(ElementParameter<EC>* pb)
     {
       SetParameter(pb, &pb->GetAtom());
     }
 
-    void SetParameter(Parameter<CC>* pb, T * patom)
+    void SetParameter(Parameter<EC>* pb, T * patom)
     {
       if (!pb && !patom)
       {
@@ -85,12 +86,12 @@ namespace MFM
 
     virtual void Init() = 0;
 
-    Parameter<CC> * GetParameter()
+    Parameter<EC> * GetParameter()
     {
       return m_parameter;
     }
 
-    const Parameter<CC> * GetParameter() const
+    const Parameter<EC> * GetParameter() const
     {
       return m_parameter;
     }

@@ -38,12 +38,13 @@
 
 namespace MFM
 {
-  template <class CC>
-  class ParameterControllerBool : public ParameterController<CC>
+  template <class EC>
+  class ParameterControllerBool : public ParameterController<EC>
   {
    private:
-    typedef typename CC::ATOM_TYPE T;
-    typedef ParameterController<CC> Super;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    typedef ParameterController<EC> Super;
 
     enum
     {

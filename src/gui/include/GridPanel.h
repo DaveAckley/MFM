@@ -50,13 +50,13 @@ namespace MFM
   {
    public:
     // Extract short type names
-    typedef typename GC::CORE_CONFIG CC;
-    typedef typename CC::PARAM_CONFIG P;
-    typedef typename CC::ATOM_TYPE T;
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
     enum { W = GC::GRID_WIDTH};
     enum { H = GC::GRID_HEIGHT};
-    enum { R = P::EVENT_WINDOW_RADIUS};
-    enum { TILE_SIDE_CACHE_SITES = P::TILE_WIDTH};
+    enum { R = EC::EVENT_WINDOW_RADIUS};
+    enum { TILE_SIDE_CACHE_SITES = GC::TILE_SIDE};
     enum { TILE_SIDE_LIVE_SITES = TILE_SIDE_CACHE_SITES - 2*R};
     enum { MAX_BUCKET_FILL_DEPTH = 10000 };
 
@@ -68,11 +68,12 @@ namespace MFM
     static const u32 GRID_HEIGHT_LIVE_TILES = H * TILE_SIDE_LIVE_SITES;
 
     typedef Grid<GC> OurGrid;
+    typedef Tile<EC> OurTile;
 
    private:
     GridRenderer* m_grend;
     OurGrid* m_mainGrid;
-    ToolboxPanel<CC>* m_toolboxPanel;
+    ToolboxPanel<EC>* m_toolboxPanel;
     SPoint m_leftButtonDragStart;
     SPoint m_leftButtonGridStart;
     bool m_paintingEnabled;
@@ -150,7 +151,7 @@ namespace MFM
       m_grend = grend;
     }
 
-    void SetToolboxPanel(ToolboxPanel<CC>* toolboxPanel)
+    void SetToolboxPanel(ToolboxPanel<EC>* toolboxPanel)
     {
       m_toolboxPanel = toolboxPanel;
       m_atomViewPanel.SetToolboxPanel(m_toolboxPanel);
@@ -310,7 +311,7 @@ namespace MFM
     void HandleEraserTool(u8 button, SPoint clickPt)
     {
       PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
-                  Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), TOOL_ERASER);
+                  Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom(), TOOL_ERASER);
     }
 
     void HandleBucketTool(u8 button, SPoint clickPt)
@@ -325,13 +326,13 @@ namespace MFM
     void HandleXRayTool(u8 button, SPoint clickPt)
     {
       PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
-                Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), TOOL_XRAY);
+                Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom(), TOOL_XRAY);
     }
 
     void HandleCloneTool(u8 button, SPoint clickPt)
     {
       PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
-                Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(), TOOL_CLONE);
+                Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom(), TOOL_CLONE);
     }
 
     void PaintAtom(u8 button, SPoint& clickPt, s32 brushSize,
@@ -467,7 +468,7 @@ namespace MFM
            npt.GetX() < TILE_SIDE_LIVE_SITES * W &&
            npt.GetY() < TILE_SIDE_LIVE_SITES * H)
         {
-          if(Atom<CC>::IsType(*grid.GetAtom(npt),
+          if(Atom<AC>::IsType(*grid.GetAtom(npt),
                               m_bucketFillStartType))
           {
             if(depth)

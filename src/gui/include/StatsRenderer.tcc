@@ -12,11 +12,10 @@ namespace MFM {
   void StatsRenderer<GC>::RenderGridStatistics(Drawing & drawing, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool endOfEpoch)
   {
     // Extract short names for parameter types
-    typedef typename GC::CORE_CONFIG CC;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename GC::EVENT_CONFIG EC;
     enum { W = GC::GRID_WIDTH};
     enum { H = GC::GRID_HEIGHT};
-    enum { R = P::EVENT_WINDOW_RADIUS};
+    enum { R = EC::EVENT_WINDOW_RADIUS};
 
     const u32 STR_BUFFER_SIZE = 128;
     char strBuffer[STR_BUFFER_SIZE];

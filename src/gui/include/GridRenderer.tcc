@@ -9,8 +9,8 @@ namespace MFM
     SPoint current;
     SPoint eventLoc;
     const u32 tileSize = m_tileRenderer.GetAtomSize() *
-      (GC::CORE_CONFIG::PARAM_CONFIG::TILE_WIDTH -
-       2 * GC::CORE_CONFIG::PARAM_CONFIG::EVENT_WINDOW_RADIUS);
+      (GC::TILE_SIDE -
+       2 * GC::EVENT_CONFIG::EVENT_WINDOW_RADIUS);
     const u32 atomSize = m_tileRenderer.GetAtomSize();
     SPoint atomTile(-1, -1);
     SPoint cloneTile(-1, -1);
@@ -116,8 +116,8 @@ namespace MFM
       u32 atomSize = m_tileRenderer.GetAtomSize();
 
       u32 tileSize = atomSize *
-        (GC::CORE_CONFIG::PARAM_CONFIG::TILE_WIDTH -
-         2 * GC::CORE_CONFIG::PARAM_CONFIG::EVENT_WINDOW_RADIUS);
+        (GC::TILE_SIDE -
+         2 * GC::EVENT_CONFIG::EVENT_WINDOW_RADIUS);
 
       m_selectedAtom.Set(-1, -1);
 
@@ -156,12 +156,12 @@ namespace MFM
     cp.SetY(cp.GetY() - offset.GetY());
 
     u32 tileSize = m_tileRenderer.GetAtomSize() *
-      (GC::CORE_CONFIG::PARAM_CONFIG::TILE_WIDTH + 1);
+      (GC::TILE_SIDE + 1);
 
     if(!m_renderTilesSeparated)
     {
       tileSize -= m_tileRenderer.GetAtomSize() *
-        (GC::CORE_CONFIG::PARAM_CONFIG::EVENT_WINDOW_RADIUS * 2 + 1);
+        (GC::EVENT_CONFIG::EVENT_WINDOW_RADIUS * 2 + 1);
     }
 
     m_selectedTile.Set(-1, -1);
