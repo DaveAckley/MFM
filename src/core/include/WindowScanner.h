@@ -36,23 +36,22 @@ namespace MFM
    * A wrapper for the EventWindow class which allows for EventWindow
    * searching and other powerful EventWindow modifications.
    */
-  template <class CC>
+  template <class EC>
   class WindowScanner
   {
    private:
     /* Extract short names for parameter types */
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
     enum { SITES = EVENT_WINDOW_SITES(R) };
-    enum { W = P::TILE_WIDTH };
-    enum { B = P::ELEMENT_TABLE_BITS };
+    //    enum { W = P::TILE_WIDTH };
 
     /**
      * A reference to the EventWindow which an instance of this class
      * may read or write to.
      */
-    EventWindow<CC>& m_win;
+    EventWindow<EC>& m_win;
 
     /**
      * The Random reference held by \c m_win , pulled out for
@@ -76,7 +75,7 @@ namespace MFM
      * @param window A reference to the EventWindow which the new
      *               instance of this class may read or write to.
      */
-    WindowScanner(EventWindow<CC>& window);
+    WindowScanner(EventWindow<EC>& window);
 
     /**
      * Deconstructs this WindowScanner .

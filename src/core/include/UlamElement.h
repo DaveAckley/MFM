@@ -71,12 +71,13 @@ namespace MFM{
 
 namespace MFM
 {
-  template <class CC> class UlamElement; // FORWARD
+  template <class EC> class UlamElement; // FORWARD
 
-  template <class CC>
+  template <class EC>
   struct UlamElementInfo
   {
-    typedef typename CC::ATOM_TYPE T;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
     virtual const char * GetName() const = 0;
     virtual const char * GetSymbol() const = 0;
@@ -86,8 +87,8 @@ namespace MFM
     virtual const char * GetLicense() const = 0;
     virtual const u32 GetVersion() const = 0;
     virtual const u32 GetNumColors() const = 0;
-    virtual const u32 GetColor(UlamContext<CC>& uc, T atom, u32 colnum) const = 0;
-    virtual const u32 GetSymmetry(UlamContext<CC>& uc) const = 0;
+    virtual const u32 GetColor(UlamContext<EC>& uc, T atom, u32 colnum) const = 0;
+    virtual const u32 GetSymmetry(UlamContext<EC>& uc) const = 0;
 
     virtual const u32 GetPercentDiffusability() const
     {
@@ -101,18 +102,19 @@ namespace MFM
   /**
    * A UlamElement is a concrete element primarily for use by culam.
    */
-  template <class CC>
-  class UlamElement : public Element<CC>
+  template <class EC>
+  class UlamElement : public Element<EC>
   {
-    typedef Element<CC> Super;
-    typedef typename CC::ATOM_TYPE T;
-    const UlamElementInfo<CC> * m_info;
+    typedef Element<EC> Super;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    const UlamElementInfo<EC> * m_info;
 
   public:
-    UlamElement(const UUID & uuid) : Element<CC>(uuid)
+    UlamElement(const UUID & uuid) : Element<EC>(uuid)
     { }
 
-    void SetInfo(const UlamElementInfo<CC> * info) {
+    void SetInfo(const UlamElementInfo<EC> * info) {
       m_info = info;
       this->SetName(m_info->GetName());
       this->SetAtomicSymbol(m_info->GetSymbol());
@@ -124,10 +126,10 @@ namespace MFM
     virtual ~UlamElement()
     { }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
-      Tile<CC> & tile = window.GetTile();
-      UlamContext<CC> uc;
+      Tile<EC> & tile = window.GetTile();
+      UlamContext<EC> uc;
       uc.SetTile(tile);
 
       u32 sym = m_info ? m_info->GetSymmetry(uc) : PSYM_DEG000L;
@@ -141,7 +143,7 @@ namespace MFM
        Ulam elements that define 'Void behave()' will override this
        method, and it will be called on events!
      */
-    virtual void Uf_6behave(UlamContext<CC> & uc, T& self) const
+    virtual void Uf_6behave(UlamContext<EC> & uc, T& self) const
     {
       // Empty by default
     }
@@ -159,14 +161,14 @@ namespace MFM
        method will fail!  That includes event window accesses AND
        random numbers!
      */
-    virtual Ui_Ut_14188Unsigned Uf_8getColor(UlamContext<CC>& uc,
+    virtual Ui_Ut_14188Unsigned Uf_8getColor(UlamContext<EC>& uc,
                                              T& Uv_4self,
                                              Ui_Ut_102328Unsigned Uv_8selector)
     {
       return Ui_Ut_14188Unsigned(0xffffffff);
     }
 
-    virtual const UlamElement<CC> * AsUlamElement() const
+    virtual const UlamElement<EC> * AsUlamElement() const
     {
       return this;
     }
@@ -218,13 +220,13 @@ namespace MFM
        \sa T::ATOM_FIRST_STATE_BIT
        \sa PositionOfDataMemberType
      */
-    static s32 PositionOfDataMember(UlamContext<CC>& uc, u32 type, const char * dataMemberTypeName)
+    static s32 PositionOfDataMember(UlamContext<EC>& uc, u32 type, const char * dataMemberTypeName)
     {
-      Tile<CC> & tile = uc.GetTile();
-      ElementTable<CC> & et = tile.GetElementTable();
-      const Element<CC> * eltptr = et.Lookup(type);
+      Tile<EC> & tile = uc.GetTile();
+      ElementTable<EC> & et = tile.GetElementTable();
+      const Element<EC> * eltptr = et.Lookup(type);
       if (!eltptr) return -1;
-      const UlamElement<CC> * ueltptr = eltptr->AsUlamElement();
+      const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
       if (!ueltptr) return -2;
       s32 ret = ueltptr->PositionOfDataMemberType(dataMemberTypeName);
       if (ret < 0) return -3;
@@ -234,7 +236,7 @@ namespace MFM
     virtual u32 DefaultPhysicsColor() const
     {
       if (m_info && m_info->GetNumColors() > 0) {
-        UlamContext<CC> uc;
+        UlamContext<EC> uc;
         return m_info->GetColor(uc, this->GetDefaultAtom(), 0);
       }
       return 0xffffffff;
@@ -243,13 +245,13 @@ namespace MFM
     virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
     {
       if (m_info && m_info->GetNumColors() > selector) {
-        UlamContext<CC> uc;
+        UlamContext<EC> uc;
         return m_info->GetColor(uc, atom, selector);
       }
       return this->PhysicsColor();
     }
 
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
+    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const
     {
       if (nowAt == maybeAt || !m_info) return COMPLETE_DIFFUSABILITY;
       return

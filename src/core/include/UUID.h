@@ -34,7 +34,7 @@
 #include <string.h>    /* For strlen, strncpy */
 
 #define MFM_UUID_FOR(label, elementVersion) \
-  UUID(label,(u32) elementVersion, (u32) MFM_BUILD_DATE, (u32) MFM_BUILD_TIME, UUID::ComputeConfigurationCode<CC>())
+  UUID(label,(u32) elementVersion, (u32) MFM_BUILD_DATE, (u32) MFM_BUILD_TIME, UUID::ComputeConfigurationCode<EC>())
 
 namespace MFM {
 
@@ -69,17 +69,21 @@ namespace MFM {
        required it to be identical between element versions.
 
        @sa ComputeConfigurationCode
+       @Deprecated in MFMv3
      */
-    template <class CC>
+    template <class TC>
     static u32 ComputeFullConfigurationCode() {
+      FAIL(DEPRECATED);
+#if 0
       u32 val = 0;
-      val = (val<<4) + CC::ATOM_TYPE::ATOM_CATEGORY;
-      val = (val<<4) + CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS;
-      val = (val<<4) + CC::PARAM_CONFIG::ELEMENT_TABLE_BITS;
-      val = (val<<4) + CC::PARAM_CONFIG::ELEMENT_DATA_SLOTS;
-      val = (val<<8) + CC::PARAM_CONFIG::TILE_WIDTH;
-      val = (val<<8) + CC::PARAM_CONFIG::BITS_PER_ATOM;
+      val = (val<<4) + TC::EVENT_CONFIG::ATOM_CONFIG::ATOM_CATEGORY;
+      val = (val<<4) + TC::EVENT_CONFIG::EVENT_WINDOW_RADIUS;
+      val = (val<<4) + TC::EVENT_CONFIG::ELEMENT_TABLE_BITS;
+      val = (val<<4) + TC::EVENT_CONFIG::ELEMENT_DATA_SLOTS;
+      val = (val<<8) + 0; // XXX TILE_SIDE is no longer static!
+      val = (val<<8) + TC::EVENT_CONFIG::ATOM_CONFIG::BITS_PER_ATOM;
       return val;
+#endif
     }
 
     /**
@@ -97,12 +101,12 @@ namespace MFM {
        \sa ComputeFullConfigurationCode
        \since UUID API version 1
      */
-    template <class CC>
+    template <class EC>
     static u32 ComputeConfigurationCode() {
       u32 val = 0;
-      val = (val<<4) + CC::ATOM_TYPE::ATOM_CATEGORY;
-      val = (val<<4) + CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS;
-      val = (val<<8) + CC::PARAM_CONFIG::BITS_PER_ATOM;
+      val = (val<<4) + EC::ATOM_CONFIG::ATOM_CATEGORY;
+      val = (val<<4) + EC::EVENT_WINDOW_RADIUS;
+      val = (val<<8) + EC::ATOM_CONFIG::BITS_PER_ATOM;
       return val;
     }
 

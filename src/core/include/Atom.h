@@ -33,6 +33,7 @@
 #include "BitVector.h"
 #include "Random.h"
 #include "Util.h"     /* For REQUIRE */
+#include "AtomConfig.h"
 #include "Logger.h"
 #include "ByteSource.h"
 #include "OverflowableCharBufferByteSink.h"
@@ -40,8 +41,8 @@
 namespace MFM
 {
 
-  template <class CC> class Element; // Forward declaration
-  template <class CC> class AtomSerializer; // Forward declaration
+  template <class EC> class Element; // Forward declaration
+  template <class AC> class AtomSerializer; // Forward declaration
   template <class BV, VD::Type, u32, u32> class BitField;  // Forward declaration
 
   /**
@@ -62,9 +63,9 @@ namespace MFM
      template type rather than by base class polymorphism.
 
      In addition to the 'virtually virtual' methods that Atom
-     subclasses must provide (i.e., the methods documented as 'This is
-     to be defined only by a subclass of Atom'), Atom subclasses must
-     also provide compile time constants:
+     subclasses must provide (i.e., the methods ending in 'Impl' that
+     are used but undefined in this class), Atom subclasses must also
+     provide compile time constants:
 
      ATOM_CATEGORY - The basic identifying number of the atom, e.g.,
      the P0Atom is category 0 and the P3Atom is category 3.
@@ -75,29 +76,27 @@ namespace MFM
      ATOM_EMPTY_TYPE - The type number corresponding to the Empty atom
      in this category.
   */
-  template <class CC>
+  template <class AC>
   class Atom
   {
+  public:
+
     // Extract short names for parameter types
+
+    /**
+        The specific AtomConfig is use for this atom
+    */
+    typedef AC ATOM_CONFIG;
+
     /**
        The subclass of this Atom that will be used during compilation.
     */
-    typedef typename CC::ATOM_TYPE T;
-
-    /**
-       A collection of parameters, which are expanded upon below.
-    */
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename ATOM_CONFIG::ATOM_TYPE T;
 
     /**
        The number of bits that every atom will occupy.
     */
-    enum { BPA = P::BITS_PER_ATOM };
-
-    /**
-       The radius of all event windows.
-    */
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    enum { BPA = ATOM_CONFIG::BITS_PER_ATOM };
 
   protected:
     /**
@@ -107,8 +106,9 @@ namespace MFM
     BitVector<BPA> m_bits;
 
     friend class VD;  // Value Descriptors can mess with our bits
-    friend class Element<CC>;  // Let Element mess with our bits
-    friend class AtomSerializer<CC>;  // Ditto AtomSerializer
+    friend class AtomSerializer<AC>;  // Ditto AtomSerializer
+
+    template <class EC> friend class Element;  // Let Elements mess with our bits
     template <class BV, VD::Type, u32, u32> friend class BitField;  // Ditto BitField (all instances)
 
   public:
@@ -188,6 +188,16 @@ namespace MFM
     u32 GetType() const
     {
       return static_cast<const T*>(this)->GetTypeImpl();
+    }
+
+    /**
+     * Sets this Atom to be the empty atom.
+     *
+     * @remarks This delegates to SetEmptyImpl in the subclass of Atom.
+     */
+    void SetEmpty()
+    {
+      return static_cast<T*>(this)->SetEmptyImpl();
     }
 
     /**

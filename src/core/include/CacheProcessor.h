@@ -37,7 +37,7 @@
 
 namespace MFM {
 
-  template <class CC> class Tile; // FORWARD
+  template <class EC> class Tile; // FORWARD
 
   /**
     CacheProcessors mediate both sides of the intertile cache update
@@ -45,23 +45,20 @@ namespace MFM {
     transport, and above with the Tile and EventWindow, for the atoms
     and their metadata to be transported.
   */
-  template <class CC>
+  template <class EC>
   class CacheProcessor
   {
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
     enum { SITE_COUNT = EVENT_WINDOW_SITES(R) };
-    enum { TILE_WIDTH = P::TILE_WIDTH };
-
-  private:
 
     /**
        Where to apply inbound cache updates (and where outbound cache
        updates ultimately originate, though we don't care about that.)
      */
-    Tile<CC> * m_tile;
+    Tile<EC> * m_tile;
 
     /**
        The lock controlling who can be the active side of a
@@ -269,6 +266,7 @@ namespace MFM {
     }
 
   public:
+
     enum RedundancyOdds {
       MAX,
       MIN,
@@ -411,7 +409,7 @@ namespace MFM {
       return m_channelEnd.IsConnected();
     }
 
-    void ClaimCacheProcessor(Tile<CC>& tile, AbstractChannel& channel, LonglivedLock & lock, Dir toCache)
+    void ClaimCacheProcessor(Tile<EC>& tile, AbstractChannel& channel, LonglivedLock & lock, Dir toCache)
     {
       if (m_tile || m_longlivedLock)
       {
@@ -423,7 +421,7 @@ namespace MFM {
       m_cacheDir = toCache;
 
       // Map their full untransformed origin to our full untransformed frame
-      SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir) * Tile<CC>::OWNED_SIDE;
+      SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir) * m_tile->OWNED_SIDE;
       m_farSideOrigin = remoteOrigin;
 
       bool onSideA = (m_cacheDir >= Dirs::NORTHEAST && m_cacheDir <= Dirs::SOUTH);
@@ -443,7 +441,7 @@ namespace MFM {
      *
      * @returns The Tile that this EventWindow is taking place inside.
      */
-    Tile<CC>& GetTile()
+    Tile<EC>& GetTile()
     {
       AssertConnected();
       return *m_tile;

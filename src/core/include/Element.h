@@ -41,9 +41,9 @@ namespace MFM
 {
   typedef u32 ElementType;
 
-  template <class CC> class Atom; // FORWARD
-  template <class CC> class EventWindow; // FORWARD
-  template <class CC> class UlamElement; // FORWARD
+  template <class EC> class Atom; // FORWARD
+  template <class EC> class EventWindow; // FORWARD
+  template <class EC> class UlamElement; // FORWARD
 
   /**
    * A standard basis for specifying degrees of diffusability.
@@ -53,25 +53,26 @@ namespace MFM
   /**
    * An Element describes how a given type of Atom behaves.
    */
-  template <class CC>
+  template <class EC>
   class Element
   {
    private:
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
+    enum { BPA = AC::BITS_PER_ATOM };
 
     /**
      * The configurable element parameters of this Element . Element
      * parameters apply globally to all atoms of a given Element.
      */
-    ElementParameters<CC> m_elementParameters;
+    ElementParameters<EC> m_elementParameters;
 
     /**
      * The configurable atomic parameters of this Element . Atomic
      * parameters apply individually to each atom of a given Element.
      */
-    AtomicParameters<CC> m_atomicParameters;
+    AtomicParameters<EC> m_atomicParameters;
 
     /**
      * The unique UUID of this Element . Each Element must be given
@@ -135,7 +136,7 @@ namespace MFM
      *
      * @returns The BitVector held inside \c atom .
      */
-    static const BitVector<P::BITS_PER_ATOM> & GetBits(const T & atom)
+    static const BitVector<BPA> & GetBits(const T & atom)
     {
       return atom.m_bits;
     }
@@ -147,7 +148,7 @@ namespace MFM
      *
      * @returns The BitVector held inside \c atom .
      */
-    static BitVector<P::BITS_PER_ATOM> & GetBits(T & atom)
+    static BitVector<BPA> & GetBits(T & atom)
     {
       return atom.m_bits;
     }
@@ -251,7 +252,7 @@ namespace MFM
     {
       if (!m_hasType)
       {
-        m_type = StaticLoader<CC,16>::AllocateType(m_UUID);
+        m_type = StaticLoader<EC,16>::AllocateType(m_UUID);
         m_hasType = true;
         m_defaultAtom = BuildDefaultAtom();
       }
@@ -267,7 +268,7 @@ namespace MFM
     {
       if (!m_hasType)
       {
-        m_type = StaticLoader<CC,16>::AllocateEmptyType(m_UUID);
+        m_type = StaticLoader<EC,16>::AllocateEmptyType(m_UUID);
         m_hasType = true;
         m_defaultAtom = BuildDefaultAtom();
       }
@@ -377,13 +378,13 @@ namespace MFM
      * @param window The EventWindow describing the Event which is
      * currently being executed.
      */
-    virtual void Behavior(EventWindow<CC>& window) const = 0;
+    virtual void Behavior(EventWindow<EC>& window) const = 0;
 
     /**
        Downcast an Element pointer to an UlamElement pointer, if
        possible.
      */
-    virtual const UlamElement<CC> * AsUlamElement() const
+    virtual const UlamElement<EC> * AsUlamElement() const
     {
       return 0;
     }
@@ -515,7 +516,7 @@ namespace MFM
      * By default all atoms are considered diffusable, and they return
      * COMPLETE_DIFFUSABILITY chances for every suggested move
      */
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
+    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const
     {
       return COMPLETE_DIFFUSABILITY;
     }
@@ -526,27 +527,27 @@ namespace MFM
        Diffusability of every position except when \a nowAt == \a
        maybeAt.
     */
-    u32 NoDiffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
+    u32 NoDiffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const
     {
       return (nowAt == maybeAt)? COMPLETE_DIFFUSABILITY : 0;
     }
 
-    const ElementParameters<CC> & GetElementParameters() const
+    const ElementParameters<EC> & GetElementParameters() const
     {
       return m_elementParameters;
     }
 
-    ElementParameters<CC> & GetElementParameters()
+    ElementParameters<EC> & GetElementParameters()
     {
       return m_elementParameters;
     }
 
-    const AtomicParameters<CC> & GetAtomicParameters() const
+    const AtomicParameters<EC> & GetAtomicParameters() const
     {
       return m_atomicParameters;
     }
 
-    AtomicParameters<CC> & GetAtomicParameters()
+    AtomicParameters<EC> & GetAtomicParameters()
     {
       return m_atomicParameters;
     }

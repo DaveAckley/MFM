@@ -5,8 +5,8 @@
 
 namespace MFM
 {
-  template <class CC>
-  bool PacketIO::SendUpdateBegin(CacheProcessor<CC> & cxn, const SPoint & localCenter)
+  template <class EC>
+  bool PacketIO::SendUpdateBegin(CacheProcessor<EC> & cxn, const SPoint & localCenter)
   {
     SPoint center = cxn.LocalToRemote(localCenter);
     m_buffer.Reset();
@@ -14,8 +14,8 @@ namespace MFM
     return cxn.ShipBufferAsPacket(m_buffer);
   }
 
-  template <class CC>
-  bool PacketIO::ReceiveUpdateBegin(CacheProcessor<CC> & cxn, ByteSource & bs)
+  template <class EC>
+  bool PacketIO::ReceiveUpdateBegin(CacheProcessor<EC> & cxn, ByteSource & bs)
   {
     u8 ptype;
     s16 cx, cy;
@@ -28,33 +28,36 @@ namespace MFM
     return true;
   }
 
-  template <class CC>
-  bool PacketIO::SendUpdateEnd(CacheProcessor<CC> & cxn)
+  template <class EC>
+  bool PacketIO::SendUpdateEnd(CacheProcessor<EC> & cxn)
   {
     m_buffer.Reset();
     m_buffer.Printf("%c", PacketType::UPDATE_END);
     return cxn.ShipBufferAsPacket(m_buffer);
   }
 
-  template <class CC>
-  bool PacketIO::ReceiveUpdateEnd(CacheProcessor<CC> & cxn, ByteSource & bs)
+  template <class EC>
+  bool PacketIO::ReceiveUpdateEnd(CacheProcessor<EC> & cxn, ByteSource & bs)
   {
     cxn.ReceiveUpdateEnd();
     return true;
   }
 
 
-  template <class CC>
-  bool PacketIO::SendAtom(PacketTypeCode ptype, CacheProcessor<CC> & cxn, u16 siteNumber, const typename CC::ATOM_TYPE & atom)
+  template <class EC>
+  bool PacketIO::SendAtom(PacketTypeCode ptype,
+                          CacheProcessor<EC> & cxn,
+                          u16 siteNumber,
+                          const typename EC::ATOM_CONFIG::ATOM_TYPE & atom)
   {
     m_buffer.Reset();
     m_buffer.Printf("%c%c",ptype,siteNumber);
-    Element<CC>::GetBits(atom).PrintBytes(m_buffer);
+    Element<EC>::GetBits(atom).PrintBytes(m_buffer);
     return cxn.ShipBufferAsPacket(m_buffer);
   }
 
-  template <class CC>
-  bool PacketIO::ReceiveAtom(CacheProcessor<CC> & cxn, ByteSource & bs)
+  template <class EC>
+  bool PacketIO::ReceiveAtom(CacheProcessor<EC> & cxn, ByteSource & bs)
   {
     u8 ptype;
     u8 site;
@@ -67,8 +70,8 @@ namespace MFM
       return false;
     }
 
-    typename CC::ATOM_TYPE atom;
-    if (!Element<CC>::GetBits(atom).ReadBytes(bs))
+    typename EC::ATOM_CONFIG::ATOM_TYPE atom;
+    if (!Element<EC>::GetBits(atom).ReadBytes(bs))
     {
       return false;
     }
@@ -83,16 +86,16 @@ namespace MFM
     return true;
   }
 
-  template <class CC>
-  bool PacketIO::SendReply(u8 consistentCount, CacheProcessor<CC> & cxn)
+  template <class EC>
+  bool PacketIO::SendReply(u8 consistentCount, CacheProcessor<EC> & cxn)
   {
     m_buffer.Reset();
     m_buffer.Printf("%c%c", PacketType::UPDATE_ACK, consistentCount);
     return cxn.ShipBufferAsPacket(m_buffer);
   }
 
-  template <class CC>
-  bool PacketIO::ReceiveReply(CacheProcessor<CC> & cxn, ByteSource & bs)
+  template <class EC>
+  bool PacketIO::ReceiveReply(CacheProcessor<EC> & cxn, ByteSource & bs)
   {
     u8 ptype;
     u8 consistentCount;
@@ -105,8 +108,8 @@ namespace MFM
     return true;
   }
 
-  template <class CC>
-  bool PacketIO::HandlePacket(CacheProcessor<CC> & cxn, PacketBuffer & buf)
+  template <class EC>
+  bool PacketIO::HandlePacket(CacheProcessor<EC> & cxn, PacketBuffer & buf)
   {
     CharBufferByteSource cbs(buf.GetBuffer(), buf.GetLength());
     switch (cbs.Peek())

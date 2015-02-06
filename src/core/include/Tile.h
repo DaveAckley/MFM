@@ -35,6 +35,7 @@
 #include "Packet.h"
 #include "Point.h"
 #include "Element.h"
+#include "Site.h"
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "CacheProcessor.h"
@@ -62,8 +63,14 @@ namespace MFM
      The representation of a single indefinitely scalable hardware
      tile (currently simulated; hopefully soon also running natively).
 
-     A Tile includes a set of sites that hold Atoms, and a set of
-     EventWindows within which events are performed.
+     The Tile ctor is given the size of the Tile and the actual
+     storage for the sites that hold Atoms.  The array size,
+     therefore, isn't compiled-in, which does slow down some pretty
+     inner-loopish functions, but also means that classes depending on
+     Tile services do not have to be recompiled for each different
+     Tile size.  In particular, Elements -- relying on Tile services
+     such as EventWindow and Random -- can be separately compiled and
+     dynamically loaded without knowing the intended Tile extent.
 
      A Tile is a state machine driven by the method Advance(), which
      may delegate to AdvanceComputation() to initiate an event (if the
@@ -72,19 +79,79 @@ namespace MFM
      initiated by others).
 
    */
-  template <class CC>
+  template <class EC>  // An EventConfig
   class Tile
   {
-    // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-
   public:
+    // Extract short names for parameter types
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    typedef typename EC::SITE S;
 
     // Promote some parameter names
-    enum { EVENT_WINDOW_RADIUS = P::EVENT_WINDOW_RADIUS };
-    enum { TILE_WIDTH = P::TILE_WIDTH };
-    enum { ELEMENT_TABLE_BITS = P::ELEMENT_TABLE_BITS };
+    enum { EVENT_WINDOW_RADIUS = EC::EVENT_WINDOW_RADIUS };
+
+    /**
+     * ELEMENT_TABLE_SIZE is the number of possible element types for
+     * this EventConfig.
+     */
+    enum { ELEMENT_TABLE_SIZE = 1u<<AC::ATOM_TYPE_BITS };
+
+    /**
+     * The length of a side of this (necessarily square) Tile in sites.
+     */
+    const u32 TILE_SIDE;
+
+    /**
+     * The edge length of the portion of a Tile that is 'owned' by the
+     * Tile itself -- i.e., excluding the cache boundary.
+     */
+    const u32 OWNED_SIDE;
+
+    Tile(const u32 tileSide, S * sites) ;
+
+    /**
+       Get a const reference to the Site at position \c index of the
+       tile, \e including the caches, so index ranges from
+       0..TILE_SIDE-1 in both x and y.
+     */
+    const S & GetSite(const SPoint index) const
+    {
+      UPoint uidx = MakeUnsigned(index);
+      if (uidx.GetX() >= TILE_SIDE || uidx.GetY() >= TILE_SIDE)
+        FAIL(ILLEGAL_ARGUMENT);
+      return m_sites[uidx.GetY()*TILE_SIDE + uidx.GetX()];
+    }
+
+    /**
+       Get a mutable reference to the Site at position \c index of the
+       tile, \e including the caches, so index ranges from
+       0..TILE_SIDE-1 in both x and y.
+     */
+    S & GetSite(const SPoint index)
+    {
+      return const_cast<S &>(static_cast<const Tile<EC>*>(this)->GetSite(index));
+    }
+
+    /**
+       Get a const reference to the Site at position \c index of the
+       tile, \e excluding the caches, so index ranges from
+       0..OWNED_SIDE-1 in both x and y.
+     */
+    const S & GetUncachedSite(const SPoint index) const
+    {
+      return GetSite(index + SPoint(EVENT_WINDOW_RADIUS,EVENT_WINDOW_RADIUS));
+    }
+
+    /**
+       Get a mutable reference to the Site at position \c index of the
+       tile, \e excluding the caches, so index ranges from
+       0..OWNED_SIDE-1 in both x and y.
+     */
+    S & GetUncachedSite(const SPoint index)
+    {
+      return GetSite(index + SPoint(EVENT_WINDOW_RADIUS,EVENT_WINDOW_RADIUS));
+    }
 
     /**
        Get the coordinate of a randomly selected 'owned' site in this
@@ -105,19 +172,6 @@ namespace MFM
      * The maximum number of tile parameters
      */
     enum { MAX_TILE_PARAMETERS = 16 };
-
-    /**
-     * The area of this Tile in sites.
-     */
-    enum { TILE_SIZE = TILE_WIDTH * TILE_WIDTH };
-
-    enum { ELEMENT_TABLE_SIZE = 1u<<ELEMENT_TABLE_BITS };
-
-    /**
-     * The edge length of the portion of a Tile that is 'owned' by the
-     * Tile itself -- i.e., excluding the cache boundary.
-     */
-    enum { OWNED_SIDE = TILE_WIDTH - 2*EVENT_WINDOW_RADIUS };
 
     enum State
     {
@@ -149,6 +203,8 @@ namespace MFM
 
   private:
 
+    S * const m_sites;
+
     static SPoint TileCoordToOwned(const SPoint & tileCoord)
     {
       return tileCoord - SPoint(EVENT_WINDOW_RADIUS,EVENT_WINDOW_RADIUS);
@@ -170,7 +226,7 @@ namespace MFM
 
     /** The ElementTable instance which holds all atom behavior for this
         Tile. */
-    ElementTable<CC> m_elementTable;
+    ElementTable<EC> m_elementTable;
 
     /** The PRNG used for generating all random numbers in this Tile. */
     Random m_random;
@@ -195,11 +251,77 @@ namespace MFM
       }
     }
 
-    friend class EventWindow<CC>;
-    friend class CacheProcessor<CC>;
+    friend class EventWindow<EC>;
+    friend class CacheProcessor<EC>;
 
-    /** The Atoms currently held by this Tile, including caches. */
-    T m_atoms[TILE_WIDTH][TILE_WIDTH];
+
+  public:
+
+    /**
+     * A minimal iterator over the Sites of a tile.  Access via Tile::begin().
+     */
+    template <class SITETYPE, class TILETYPE> class TileIterator
+    {
+      TILETYPE & t;
+      s32 i;
+      s32 j;
+    public:
+      TileIterator(TILETYPE & tile, int i = 0, int j = 0)
+        : t(tile), i(i), j(j) { }
+
+      bool operator!=(const TileIterator &m) const
+      {
+        return &t != &m.t || i != m.i || j != m.j;
+      }
+
+      void operator++()
+      {
+        if (j < (s32) t.TILE_SIDE)
+        {
+          i++;
+          if (i >= (s32) t.TILE_SIDE)
+          {
+            i = 0;
+            j++;
+          }
+        }
+      }
+
+      int operator-(const TileIterator &m) const
+      {
+        s32 rows = j-m.j;
+        s32 cols = i-m.i;
+        return rows*t.TILE_SIDE + cols;
+      }
+
+      SITETYPE & operator*() const
+      {
+        return t.GetSite(At());
+      }
+
+      SITETYPE * operator->() const
+      {
+        return &t.GetSite(At());
+      }
+
+      SPoint At() const { return SPoint(i,j); }
+      u32 GetX() const { return (u32) i; }
+      u32 GetY() const { return (u32) j; }
+
+    };
+
+    typedef TileIterator< S, Tile<EC> > iterator_type;
+    typedef TileIterator< const S, const Tile<EC> > const_iterator_type;
+
+    iterator_type begin() { return iterator_type(*this); }
+
+    const_iterator_type begin() const { return const_iterator_type(*this); }
+
+    iterator_type end() { return iterator_type(*this,0,TILE_SIDE); }
+
+    const_iterator_type end() const { return const_iterator_type(*this, 0,TILE_SIDE); }
+
+  private:
 
     struct CountData {
       CountData(const Tile& t)
@@ -257,14 +379,14 @@ namespace MFM
      * The event number (GetEventsExecuted()) as of the last time the
      * contents of site changed.
      */
-    u64 m_lastChangedEventNumber[OWNED_SIDE][OWNED_SIDE];
+    //    u64 m_lastChangedEventNumber[TILE_SIDE][TILE_SIDE];
 
     /**
      * The event number (GetEventsExecuted()) as of the last time the
      * site had an event.  Signed so we can initialize it to less than
      * zero for a running start.
      */
-    s64 m_lastEventEventNumber[OWNED_SIDE][OWNED_SIDE];
+    //    s64 m_lastEventEventNumber[TILE_SIDE][TILE_SIDE];
 
     /**
      * The coord of the last event (the one that caused
@@ -274,14 +396,13 @@ namespace MFM
 
     /**
      * The number of events which have occurred in every individual
-     * site. Indexed as m_siteEvents[x][y], x,y : 0..OWNED_SIDE-1.
+     * site. Indexed as m_siteEvents[x][y], x,y : 0..TILE_SIDE-1.
      */
-    u64 m_siteEvents[OWNED_SIDE][OWNED_SIDE];
+    //u64 m_siteEvents[TILE_SIDE][TILE_SIDE];
 
-    EventWindow<CC> m_window;
+    EventWindow<EC> m_window;
 
-  private:
-    CacheProcessor<CC> m_cacheProcessors[Dirs::DIR_COUNT];
+    CacheProcessor<EC> m_cacheProcessors[Dirs::DIR_COUNT];
 
     bool AllCacheProcessorsIdle();
 
@@ -424,7 +545,7 @@ namespace MFM
     {
       for (u32 d = 0; d < Dirs::DIR_COUNT; ++d)
       {
-        CacheProcessor<CC> & cp = m_cacheProcessors[d];
+        CacheProcessor<EC> & cp = m_cacheProcessors[d];
         cp.SetCacheRedundancy(redundancyOddsType);
       }
     }
@@ -436,7 +557,7 @@ namespace MFM
 
       for (u32 d = 0; d < Dirs::DIR_COUNT; ++d)
       {
-        const CacheProcessor<CC> & cp = m_cacheProcessors[d];
+        const CacheProcessor<EC> & cp = m_cacheProcessors[d];
         if (cp.IsConnected())
         {
           ++count;
@@ -458,9 +579,9 @@ namespace MFM
       m_cdata.NeedAtomRecount();
     }
 
-    CacheProcessor<CC> & GetCacheProcessor(Dir toCache) ;
+    CacheProcessor<EC> & GetCacheProcessor(Dir toCache) ;
 
-    const CacheProcessor<CC> & GetCacheProcessor(Dir toCache) const ;
+    const CacheProcessor<EC> & GetCacheProcessor(Dir toCache) const ;
 
     void CheckCacheFromDir(Dir direction, const Tile & otherTile) ;
 
@@ -521,7 +642,7 @@ namespace MFM
       return m_window.GetEventWindowsExecuted();
     }
 
-    EventWindow<CC> & GetEventWindow() {
+    EventWindow<EC> & GetEventWindow() {
       return m_window;
     }
 
@@ -539,11 +660,6 @@ namespace MFM
       m_label.Reset();
       m_label.Print(label);
     }
-
-    /**
-     * Constructs a new Tile.
-     */
-    Tile();
 
     /**
      * Initializes an Tile
@@ -586,9 +702,9 @@ namespace MFM
     /**
      * Gets the width of this Tile in sites, including caches.
      */
-    u32 GetTileWidth()
+    u32 GetTileSide()
     {
-      return TILE_WIDTH;
+      return TILE_SIDE;
     }
 
     /**
@@ -602,7 +718,7 @@ namespace MFM
      *
      * @returns a reference to this Tile's ElementTable.
      */
-    ElementTable<CC> & GetElementTable()
+    ElementTable<EC> & GetElementTable()
     {
       return m_elementTable;
     }
@@ -617,7 +733,7 @@ namespace MFM
      *
      * @returns a reference to this Tile's ElementTable.
      */
-    const ElementTable<CC> & GetElementTable() const
+    const ElementTable<EC> & GetElementTable() const
     {
       return m_elementTable;
     }
@@ -628,7 +744,7 @@ namespace MFM
      * @returns a pointer to the Element associated with \a
      *          elementType, or NULL if there is no such Element.
      */
-    const Element<CC> * GetElement(const u32 elementType) const
+    const Element<EC> * GetElement(const u32 elementType) const
     {
       return m_elementTable.Lookup(elementType);
     }
@@ -648,23 +764,19 @@ namespace MFM
 
     /**
      * Finds the maximum ('square') distance from the center of the
-     * Tile to this point.  This computation requires the TILE_WIDTH
-     * be even, and returns 1 for all of the four 'centermost' sites.
+     * Tile to this point.  This computation assumes the TILE_SIDE is
+     * even (see ctor), and returns 1 for all of the four 'centermost'
+     * sites.
      *
      * @param point The Point whose distance should be computed
      *
      * @returns The square distance from the Tile center to the given
      * site, greater than or equal to 1
      */
-    static u32 GetSquareDistanceFromCenter(const SPoint& point)
+    u32 GetSquareDistanceFromCenter(const SPoint& point) const
     {
-      // Require even TILE_WIDTH.  (This computation would be cheaper
-      // if TILE_WIDTH was guaranteed odd, but that violates MFM
-      // tradition, at least.  So cast tradition in stone.)
-      COMPILATION_REQUIREMENT<2 * (TILE_WIDTH / 2) == TILE_WIDTH>();
-
       // Do everything at double scale to get the rounding right
-      const SPoint doubleResCenter(TILE_WIDTH - 1, TILE_WIDTH - 1);
+      const SPoint doubleResCenter(TILE_SIDE - 1, TILE_SIDE - 1);
       const SPoint doubleResPoint = point * 2;
       u32 doubleResDistance = (doubleResPoint - doubleResCenter).GetMaximumLength();
       return (doubleResDistance + 1) / 2;
@@ -679,10 +791,10 @@ namespace MFM
      *
      * @returns true if pt is in a cache, else false.
      */
-    static bool IsInCache(const SPoint& point)
+    bool IsInCache(const SPoint& point) const
     {
       u32 sqdist = GetSquareDistanceFromCenter(point);
-      return sqdist <= TILE_WIDTH / 2 && sqdist > TILE_WIDTH / 2 - EVENT_WINDOW_RADIUS;
+      return sqdist <= TILE_SIDE / 2 && sqdist > TILE_SIDE / 2 - EVENT_WINDOW_RADIUS;
     }
 
     /**
@@ -695,10 +807,10 @@ namespace MFM
      *
      * @returns true if pt is in a cache or a shared cache, else false.
      */
-    static bool IsInShared(const SPoint& point)
+    bool IsInShared(const SPoint& point) const
     {
       u32 sqdist = GetSquareDistanceFromCenter(point);
-      return sqdist <= TILE_WIDTH / 2 && sqdist > TILE_WIDTH / 2 - 2 * EVENT_WINDOW_RADIUS;
+      return sqdist <= TILE_SIDE / 2 && sqdist > TILE_SIDE / 2 - 2 * EVENT_WINDOW_RADIUS;
     }
 
     /**
@@ -717,9 +829,9 @@ namespace MFM
      *
      * @returns true if pt is in Hidden memory.
      */
-    static bool IsInHidden(const SPoint& point)
+    bool IsInHidden(const SPoint& point) const
     {
-      return GetSquareDistanceFromCenter(point) <= TILE_WIDTH / 2 - 3 * EVENT_WINDOW_RADIUS;
+      return GetSquareDistanceFromCenter(point) <= TILE_SIDE / 2 - 3 * EVENT_WINDOW_RADIUS;
     }
 
     /**
@@ -731,9 +843,9 @@ namespace MFM
      *
      * @returns true if pt is an owned site of this Tile, else false.
      */
-    static bool IsOwnedSite(const SPoint & point)
+    bool IsOwnedSite(const SPoint & point) const
     {
-      return GetSquareDistanceFromCenter(point) <= TILE_WIDTH / 2 - 1 * EVENT_WINDOW_RADIUS;
+      return GetSquareDistanceFromCenter(point) <= TILE_SIDE / 2 - 1 * EVENT_WINDOW_RADIUS;
     }
 
     /**
@@ -749,10 +861,10 @@ namespace MFM
      *
      * @sa GetAtom(const SPoint& pt)
      */
-    static inline bool IsInTile(const SPoint& pt)
+    inline bool IsInTile(const SPoint& pt) const
     {
       // Unsigned so possible negative coords wrap around to big positives
-      return ((u32) pt.GetX()) < TILE_WIDTH && ((u32) pt.GetY() < TILE_WIDTH);
+      return ((u32) pt.GetX()) < TILE_SIDE && ((u32) pt.GetY() < TILE_SIDE);
     }
 
     /**
@@ -772,15 +884,15 @@ namespace MFM
      * @sa GetUncachedAtom(s32 x, s32 y)
      * @sa GetUncachedSiteEvents(const SPoint site)
      */
-    static inline bool IsInUncachedTile(const SPoint& pt);
+    inline bool IsInUncachedTile(const SPoint& pt) const;
 
     /**
      * Checks to see if a specified local point is a site that
      * currently might receive events in this particular Tile.  Note
-     * this method is not static, because liveness depends on the
-     * connectivity of this Tile.  Therefore, even given the same
-     * location as argument, the return value from this method could
-     * change over time, if the connectivity of this Tile changes.
+     * that liveness depends on the connectivity of this Tile.
+     * Therefore, even given the same location as argument, the return
+     * value from this method could change over time, if the
+     * connectivity of this Tile changes.
      *
      * @param pt The local location which is in question of being
      *           a live site that receives events in this Tile
@@ -878,9 +990,10 @@ namespace MFM
      *
      * @returns A pointer to the Atom at location pt.
      */
-    const T* GetAtom(const SPoint& pt) const
+    const T* GetAtom(const SPoint & pt) const
     {
-      return GetAtom(pt.GetX(), pt.GetY());
+      const S & site = GetSite(pt);
+      return &site.GetAtom();
     }
 
     /**
@@ -888,49 +1001,6 @@ namespace MFM
      *
      * @param pt The location of the Atom to retrieve.
      *
-     * @returns A pointer to the Atom at location pt.
-     *
-     * @remarks Because we need to be able to load an Atom's body
-     *          through a configuration file, and this is the only
-     *          place where Atoms are unique, we need to be able to
-     *          access them in a writable way. Therefore, we have this
-     *          non-const accessor. Use GetAtom if not writing to this
-     *          Atom.
-     */
-    T* GetWritableAtom(const SPoint& pt)
-    {
-      return GetWritableAtom(pt.GetX(), pt.GetY());
-    }
-
-    /**
-     * Gets an Atom from a specified point in this Tile.
-     *
-     * @param x The x coordinate of the location of the Atom to
-     *          retrieve.
-
-     * @param y The y coordinate of the location of the Atom to
-     *          retrieve.
-     *
-     * @returns A pointer to the Atom at the specified location.
-     */
-    const T* GetAtom(s32 x, s32 y) const
-    {
-      if (((u32) x) >= TILE_WIDTH || ((u32) y) >= TILE_WIDTH)
-      {
-        FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
-      }
-      return &m_atoms[x][y];
-    }
-
-    /**
-     * Gets an Atom from a specified point in this Tile.
-     *
-     * @param x The x coordinate of the location of the Atom to
-     *          retrieve.
-
-     * @param y The y coordinate of the location of the Atom to
-     *          retrieve.
-     *
      * @returns A pointer to the Atom at the specified location.
      *
      * @remarks Because we need to be able to load an Atom's body
@@ -940,13 +1010,10 @@ namespace MFM
      *          non-const accessor. Use GetAtom if not writing to this
      *          Atom.
      */
-    T* GetWritableAtom(s32 x, s32 y)
+    T* GetWritableAtom(const SPoint & pt)
     {
-      if (((u32) x) >= TILE_WIDTH || ((u32) y) >= TILE_WIDTH)
-      {
-        FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
-      }
-      return &m_atoms[x][y];
+      S & site = GetSite(pt);
+      return &site.GetAtom();
     }
 
     /**
@@ -981,7 +1048,6 @@ namespace MFM
       return GetAtom(x + EVENT_WINDOW_RADIUS, y + EVENT_WINDOW_RADIUS);
     }
 
-
     /**
      * Gets the site event count for a specified point in this Tile.
      * Indexing ignores the cache boundary, so possible range is (0,0)
@@ -995,10 +1061,7 @@ namespace MFM
      *
      * @returns The total events that have occured at that site
      */
-    u64 GetUncachedSiteEvents(const SPoint site) const
-    {
-      FAIL(INCOMPLETE_CODE);
-    }
+    u64 GetUncachedSiteEvents(const SPoint site) const ;
 
     /**
      * Gets the 'write age' of a specified point in this Tile, up to
@@ -1136,6 +1199,7 @@ namespace MFM
      */
     void IncrementAtomHistogram(s32 count[ELEMENT_TABLE_SIZE]);
 
+#if 0
     /**
      * Stores an Atom after ensuring valid indices but performing no
      * other actions (e.g., no counts are adjusted).
@@ -1146,6 +1210,7 @@ namespace MFM
      *
      */
     void InternalPutAtom(const T & atom, s32 x, s32 y);
+#endif
 
     /**
      * Creates and starts the event thread for this Tile
@@ -1226,7 +1291,7 @@ namespace MFM
      *
      * @param the Element to register into this Tile's ElementTable.
      */
-    void RegisterElement(const Element<CC> & anElement)
+    void RegisterElement(const Element<EC> & anElement)
     {
       m_elementTable.RegisterElement(anElement);
     }

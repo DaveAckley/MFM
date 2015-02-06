@@ -37,9 +37,7 @@
 namespace MFM
 {
 
-  // Forward declaration
-  template <class CC>
-  class Tile;
+  template <class EC> class Tile; // FORWARD
 
   /**
      An EventWindow provides access for an Element to a selected
@@ -82,21 +80,21 @@ namespace MFM
 
      - While in state COMMUNICATE, the EventWind
    */
-  template <class CC>
+  template <class EC>
   class EventWindow
   {
   private:
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
   public:
     enum { SITE_COUNT = EVENT_WINDOW_SITES(R) };
   private:
-    enum { W = P::TILE_WIDTH };
-    enum { B = P::ELEMENT_TABLE_BITS };
+    //XXX enum { W = P::TILE_WIDTH };
+    //XXX enum { B = P::ELEMENT_TABLE_BITS };
 
-    Tile<CC> & m_tile;
+    Tile<EC> & m_tile;
 
     u64 m_eventWindowsAttempted;
     u64 m_eventWindowsExecuted;
@@ -110,7 +108,6 @@ namespace MFM
      * before accessing the buffer.
      */
     T m_atomBuffer[SITE_COUNT];
-
     bool m_isLiveSite[SITE_COUNT];
 
     SPoint m_center;
@@ -118,7 +115,7 @@ namespace MFM
     Dir m_lockRegion;
 
     enum { MAX_CACHES_TO_UPDATE = 3 };
-    CacheProcessor<CC> * m_cacheProcessorsLocked[MAX_CACHES_TO_UPDATE];
+    CacheProcessor<EC> * m_cacheProcessorsLocked[MAX_CACHES_TO_UPDATE];
 
     PointSymmetry m_sym;
 
@@ -179,7 +176,7 @@ namespace MFM
     void StoreToTile() ;
 
     friend class EventWindow_Test;
-    friend class Tile<CC>;
+    friend class Tile<EC>;
 
     /**
      * Attempt to lock the specified direction for use by this
@@ -343,7 +340,7 @@ namespace MFM
      *
      * @returns The Tile that this EventWindow is taking place inside.
      */
-    Tile<CC>& GetTile()
+    Tile<EC>& GetTile()
     {
       return m_tile;
     }
@@ -410,7 +407,7 @@ namespace MFM
      *
      * @param tile The Tile which this EventWindow will take place in.
      */
-    EventWindow(Tile<CC> & tile) ;
+    EventWindow(Tile<EC> & tile) ;
 
     /**
      * Get the position this EventWindow within the Tile it resides

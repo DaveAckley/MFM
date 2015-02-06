@@ -8,12 +8,12 @@
 
 namespace MFM {
 
-  template <class CC>
-  bool EventWindow<CC>::TryEventAt(const SPoint & tcenter)
+  template <class EC>
+  bool EventWindow<EC>::TryEventAt(const SPoint & tcenter)
   {
-    LOG.Debug("EW::TryEventAt(%d,%d)",
-              tcenter.GetX(),
-              tcenter.GetY());
+    LOG.Debug2("EW::TryEventAt(%d,%d)",
+               tcenter.GetX(),
+               tcenter.GetY());
     ++m_eventWindowsAttempted;
 
     if (RejectOnRecency(tcenter))
@@ -32,30 +32,30 @@ namespace MFM {
     return true;
   }
 
-  template <class CC>
-  void EventWindow<CC>::RecordEventAtTileCoord(const SPoint tcoord)
+  template <class EC>
+  void EventWindow<EC>::RecordEventAtTileCoord(const SPoint tcoord)
   {
     ++m_eventWindowsExecuted;
-    Tile<CC> & t = GetTile();
-    SPoint owned = Tile<CC>::TileCoordToOwned(tcoord);
+    Tile<EC> & t = GetTile();
+    SPoint owned = Tile<EC>::TileCoordToOwned(tcoord);
     t.m_lastEventCenterOwned = owned;
-    t.m_lastEventEventNumber[owned.GetX()][owned.GetY()] = m_eventWindowsExecuted;
+    t.GetSite(owned).SetLastEventEventNumber(m_eventWindowsExecuted);
   }
 
-  template <class CC>
-  bool EventWindow<CC>::RejectOnRecency(const SPoint tcoord)
+  template <class EC>
+  bool EventWindow<EC>::RejectOnRecency(const SPoint tcoord)
   {
-    Tile<CC> & t = GetTile();
+    Tile<EC> & t = GetTile();
     const u32 warpFactor = t.GetWarpFactor();
-    SPoint owned = Tile<CC>::TileCoordToOwned(tcoord);
+    SPoint owned = Tile<EC>::TileCoordToOwned(tcoord);
     u32 eventAge = t.GetUncachedEventAge(owned);
     return !GetRandom().OddsOf(eventAge + warpFactor*t.GetSites(), 10*t.GetSites());
   }
 
-  template <class CC>
-  void EventWindow<CC>::ExecuteEvent()
+  template <class EC>
+  void EventWindow<EC>::ExecuteEvent()
   {
-    LOG.Debug("EW::ExecuteEvent");
+    LOG.Debug2("EW::ExecuteEvent");
     if (m_ewState != COMPUTE)
     {
       FAIL(ILLEGAL_STATE);
@@ -66,10 +66,10 @@ namespace MFM {
     InitiateCommunications();
   }
 
-  template <class CC>
-  void EventWindow<CC>::InitiateCommunications()
+  template <class EC>
+  void EventWindow<EC>::InitiateCommunications()
   {
-    LOG.Debug("EW::InitiateCommunications");
+    LOG.Debug2("EW::InitiateCommunications");
     if (m_ewState != COMPUTE)
     {
       FAIL(ILLEGAL_STATE);
@@ -82,11 +82,11 @@ namespace MFM {
     m_ewState = FREE;
   }
 
-  template <class CC>
-  void EventWindow<CC>::ExecuteBehavior()
+  template <class EC>
+  void EventWindow<EC>::ExecuteBehavior()
   {
-    LOG.Debug("EW::ExecuteBehavior");
-    Tile<CC> & t = GetTile();
+    LOG.Debug2("EW::ExecuteBehavior");
+    Tile<EC> & t = GetTile();
     unwind_protect(
     {
       if(!GetCenterAtomDirect().IsSane())
@@ -101,17 +101,17 @@ namespace MFM {
       SetCenterAtomDirect(t.GetEmptyAtom());
     },
     {
-      LOG.Debug("ET::Execute");
+      LOG.Debug2("ET::Execute");
       t.GetElementTable().Execute(*this);
     });
   }
 
-  template <class CC>
-  void EventWindow<CC>::Diffuse()
+  template <class EC>
+  void EventWindow<EC>::Diffuse()
   {
     EventWindow & window = *this;
     Random & random = window.GetRandom();
-    Tile<CC>& tile = window.GetTile();
+    Tile<EC>& tile = window.GetTile();
     const MDist<R> & md = MDist<R>::get();
 
     SPoint sp;
@@ -127,8 +127,8 @@ namespace MFM {
 
     T us = window.GetCenterAtomDirect();
     T other = window.GetRelativeAtomDirect(sp);
-    const Element<CC> * ourElt = tile.GetElement(us.GetType());
-    const Element<CC> * elt = tile.GetElement(other.GetType());
+    const Element<EC> * ourElt = tile.GetElement(us.GetType());
+    const Element<EC> * elt = tile.GetElement(other.GetType());
 
     if (!other.IsSane() || !(elt = tile.GetElement(other.GetType())))
       return;       // Any confusion, let the engine sort it out first
@@ -139,10 +139,10 @@ namespace MFM {
       window.SwapAtomsDirect(sp, SPoint(0, 0));
   }
 
-  template <class CC>
-  bool EventWindow<CC>::InitForEvent(const SPoint & center)
+  template <class EC>
+  bool EventWindow<EC>::InitForEvent(const SPoint & center)
   {
-    LOG.Debug("EW::InitForEvent(%d,%d)",center.GetX(),center.GetY());
+    LOG.Debug2("EW::InitForEvent(%d,%d)",center.GetX(),center.GetY());
 
     if (!IsFree())
     {
@@ -151,7 +151,7 @@ namespace MFM {
 
     if (!AcquireAllLocks(center))
     {
-      LOG.Debug("EW::InitForEvent - abandoned");
+      LOG.Debug2("EW::InitForEvent - abandoned");
       return false;
     }
 
@@ -163,10 +163,10 @@ namespace MFM {
     return true;
   }
 
-  template <class CC>
-  bool EventWindow<CC>::AcquireRegionLocks()
+  template <class EC>
+  bool EventWindow<EC>::AcquireRegionLocks()
   {
-    LOG.Debug("EW::AcquireRegionLocks");
+    LOG.Debug2("EW::AcquireRegionLocks");
     // We cannot still have any cacheprocessors in use
     for (u32 i = 0; i < MAX_CACHES_TO_UPDATE; ++i)
     {
@@ -178,13 +178,13 @@ namespace MFM {
 
     if (((s32) m_lockRegion) == -1)
     {
-      LOG.Debug("EW::AcquireRegionLocks - none needed");
+      LOG.Debug2("EW::AcquireRegionLocks - none needed");
       return true;  // Nobody is needed
     }
 
     // At least one lock may be needed
 
-    Tile<CC> & tile = GetTile();
+    Tile<EC> & tile = GetTile();
     Dir baseDir = m_lockRegion;
     Dir stopDir = Dirs::CWDir(baseDir);
     u32 needed = 1;
@@ -195,18 +195,18 @@ namespace MFM {
       needed = 3;
     }
 
-    LOG.Debug("EW::AcquireRegionLocks - checking %d", needed);
+    LOG.Debug2("EW::AcquireRegionLocks - checking %d", needed);
 
     u32 got = 0;
     for (Dir dir = baseDir; dir != stopDir; dir = Dirs::CWDir(dir))
     {
-      CacheProcessor<CC> & cp = tile.GetCacheProcessor(dir);
+      CacheProcessor<EC> & cp = tile.GetCacheProcessor(dir);
 
       if (!cp.IsConnected())
       {
         // Whups, didn't really need that one.  Leave it null, since
         // the other loops check all MAX_CACHES_TO_UPDATE slots anyway
-        LOG.Debug("EW::AcquireRegionLocks - skip: %s unconnected",
+        LOG.Debug2("EW::AcquireRegionLocks - skip: %s unconnected",
                   Dirs::GetName(dir));
         --needed;
         continue;
@@ -214,7 +214,7 @@ namespace MFM {
 
       if (!cp.IsIdle())
       {
-        LOG.Debug("EW::AcquireRegionLocks - fail: %s cp not idle",
+        LOG.Debug2("EW::AcquireRegionLocks - fail: %s cp not idle",
                   Dirs::GetName(dir));
         break;  // Already otherwise engaged
       }
@@ -222,11 +222,11 @@ namespace MFM {
       bool locked = cp.TryLock(m_lockRegion);
       if (!locked)
       {
-        LOG.Debug("EW::AcquireRegionLocks - fail: didn't get %s lock",
+        LOG.Debug2("EW::AcquireRegionLocks - fail: didn't get %s lock",
                   Dirs::GetName(dir));
         break; // Didn't get the lock
       }
-      LOG.Debug("EW::AcquireRegionLocks #%d, %s locked",
+      LOG.Debug2("EW::AcquireRegionLocks #%d, %s locked",
                 got,
                 Dirs::GetName(dir));
       m_cacheProcessorsLocked[got] = &cp;
@@ -235,15 +235,15 @@ namespace MFM {
 
     if (got < needed)
     {
-      LOG.Debug("EW::AcquireRegionLocks - got %d but needed %d", got, needed);
+      LOG.Debug2("EW::AcquireRegionLocks - got %d but needed %d", got, needed);
       // Opps, didn't get all, free any we got
       for (u32 i = 0; i < MAX_CACHES_TO_UPDATE; ++i)
       {
         if (m_cacheProcessorsLocked[i])
         {
-          CacheProcessor<CC> & cp = *m_cacheProcessorsLocked[i];
+          CacheProcessor<EC> & cp = *m_cacheProcessorsLocked[i];
           cp.Unlock();
-          LOG.Debug("EW::AcquireRegionLocks #%d freed", i);
+          LOG.Debug2("EW::AcquireRegionLocks #%d freed", i);
           m_cacheProcessorsLocked[i] = 0;
         }
       }
@@ -256,7 +256,7 @@ namespace MFM {
     {
       if (m_cacheProcessorsLocked[i])
       {
-        LOG.Debug("EW::AcquireRegionLocks activate #%d", i);
+        LOG.Debug2("EW::AcquireRegionLocks activate #%d", i);
         m_cacheProcessorsLocked[i]->Activate();
       }
     }
@@ -264,16 +264,16 @@ namespace MFM {
     return true;
   }
 
-  template <class CC>
-  bool EventWindow<CC>::AcquireAllLocks(const SPoint& tileCenter)
+  template <class EC>
+  bool EventWindow<EC>::AcquireAllLocks(const SPoint& tileCenter)
   {
-    Tile<CC> & t = GetTile();
+    Tile<EC> & t = GetTile();
     m_lockRegion = t.GetLockDirection(tileCenter);
     return AcquireRegionLocks();
   }
 
-  template <class CC>
-  EventWindow<CC>::EventWindow(Tile<CC> & tile)
+  template <class EC>
+  EventWindow<EC>::EventWindow(Tile<EC> & tile)
     : m_tile(tile)
     , m_eventWindowsAttempted(0)
     , m_eventWindowsExecuted(0)
@@ -294,21 +294,21 @@ namespace MFM {
 
   }
 
-  template <class CC>
-  SPoint EventWindow<CC>::MapToTileSymValid(const SPoint& offset) const
+  template <class EC>
+  SPoint EventWindow<EC>::MapToTileSymValid(const SPoint& offset) const
   {
     if (!InWindow(offset)) FAIL(ILLEGAL_ARGUMENT);
     return MapToTile(offset);
   }
 
-  template <class CC>
-  u32 EventWindow<CC>::MapToIndexSymValid(const SPoint & loc) const
+  template <class EC>
+  u32 EventWindow<EC>::MapToIndexSymValid(const SPoint & loc) const
   {
     return MapToIndexDirectValid(SymMap(loc, m_sym, SPoint(2*R, 2*R)));
   }
 
-  template <class CC>
-  u32 EventWindow<CC>::MapToIndexDirectValid(const SPoint & loc) const
+  template <class EC>
+  u32 EventWindow<EC>::MapToIndexDirectValid(const SPoint & loc) const
   {
     const MDist<R> & md = MDist<R>::get();
     s32 index = md.FromPoint(loc,R);
@@ -319,11 +319,11 @@ namespace MFM {
     return (u32) index;
   }
 
-  template <class CC>
-  void EventWindow<CC>::LoadFromTile()
+  template <class EC>
+  void EventWindow<EC>::LoadFromTile()
   {
     const MDist<R> & md = MDist<R>::get();
-    Tile<CC> & tile = GetTile();
+    Tile<EC> & tile = GetTile();
     for (u32 i = 0; i < SITE_COUNT; ++i)
     {
       const SPoint & pt = md.GetPoint(i) + m_center;
@@ -332,10 +332,10 @@ namespace MFM {
     }
   }
 
-  template <class CC>
-  void EventWindow<CC>::StoreToTile()
+  template <class EC>
+  void EventWindow<EC>::StoreToTile()
   {
-    LOG.Debug("EW::StoreToTile");
+    LOG.Debug2("EW::StoreToTile");
 
     // First initialize the cache processors
     u32 maxCacheUsed = 0;
@@ -350,7 +350,7 @@ namespace MFM {
 
     // Now write back changes and notify the cps
     const MDist<R> & md = MDist<R>::get();
-    Tile<CC> & tile = GetTile();
+    Tile<EC> & tile = GetTile();
 
     for (u32 i = 0; i < SITE_COUNT; ++i)
     {
@@ -375,7 +375,7 @@ namespace MFM {
       }
     }
 
-    LOG.Debug("EW::StoreToTile releasing up to %d", maxCacheUsed);
+    LOG.Debug2("EW::StoreToTile releasing up to %d", maxCacheUsed);
     // Finally, release the cache processors to take it from here
     for (u32 i = 0;i < maxCacheUsed; ++i)
     {
@@ -387,8 +387,8 @@ namespace MFM {
     }
   }
 
-  template <class CC>
-  bool EventWindow<CC>::SetRelativeAtomSym(const SPoint& offset, const T & atom)
+  template <class EC>
+  bool EventWindow<EC>::SetRelativeAtomSym(const SPoint& offset, const T & atom)
   {
     u32 idx = MapToIndexSymValid(offset);
     if (m_isLiveSite[idx])
@@ -399,8 +399,8 @@ namespace MFM {
     return false;
   }
 
-  template <class CC>
-  bool EventWindow<CC>::SetRelativeAtomDirect(const SPoint& offset, const T & atom)
+  template <class EC>
+  bool EventWindow<EC>::SetRelativeAtomDirect(const SPoint& offset, const T & atom)
   {
     u32 idx = MapToIndexDirectValid(offset);
     if (m_isLiveSite[idx])
@@ -411,36 +411,36 @@ namespace MFM {
     return false;
   }
 
-  template <class CC>
-  const typename CC::ATOM_TYPE& EventWindow<CC>::GetRelativeAtomSym(const SPoint& offset) const
+  template <class EC>
+  const typename EC::ATOM_CONFIG::ATOM_TYPE& EventWindow<EC>::GetRelativeAtomSym(const SPoint& offset) const
   {
     return m_atomBuffer[MapToIndexSymValid(offset)];
   }
 
-  template <class CC>
-  const typename CC::ATOM_TYPE& EventWindow<CC>::GetRelativeAtomDirect(const SPoint& offset) const
+  template <class EC>
+  const typename EC::ATOM_CONFIG::ATOM_TYPE& EventWindow<EC>::GetRelativeAtomDirect(const SPoint& offset) const
   {
     return m_atomBuffer[MapToIndexDirectValid(offset)];
   }
 
-  template <class CC>
-  const typename CC::ATOM_TYPE& EventWindow<CC>::GetRelativeAtomSym(const Dir mooreOffset) const
+  template <class EC>
+  const typename EC::ATOM_CONFIG::ATOM_TYPE& EventWindow<EC>::GetRelativeAtomSym(const Dir mooreOffset) const
   {
     SPoint pt;
     Dirs::FillDir(pt, mooreOffset);
     return GetRelativeAtomSym(pt);
   }
 
-  template <class CC>
-  const typename CC::ATOM_TYPE& EventWindow<CC>::GetRelativeAtomDirect(const Dir mooreOffset) const
+  template <class EC>
+  const typename EC::ATOM_CONFIG::ATOM_TYPE& EventWindow<EC>::GetRelativeAtomDirect(const Dir mooreOffset) const
   {
     SPoint pt;
     Dirs::FillDir(pt, mooreOffset);
     return GetRelativeAtomDirect(pt);
   }
 
-  template <class CC>
-  void EventWindow<CC>::SwapAtomsSym(const u32 syma, const u32 symb)
+  template <class EC>
+  void EventWindow<EC>::SwapAtomsSym(const u32 syma, const u32 symb)
   {
     u32 idxa = MapIndexToIndexSymValid(syma);
     u32 idxb = MapIndexToIndexSymValid(symb);
@@ -450,16 +450,16 @@ namespace MFM {
     m_atomBuffer[idxb] = tmp;
   }
 
-  template <class CC>
-  void EventWindow<CC>::SwapAtomsDirect(const u32 idxa, const u32 idxb)
+  template <class EC>
+  void EventWindow<EC>::SwapAtomsDirect(const u32 idxa, const u32 idxb)
   {
     T tmp = m_atomBuffer[idxa];
     m_atomBuffer[idxa] = m_atomBuffer[idxb];
     m_atomBuffer[idxb] = tmp;
   }
 
-  template <class CC>
-  void EventWindow<CC>::SwapAtomsSym(const SPoint& locA, const SPoint& locB)
+  template <class EC>
+  void EventWindow<EC>::SwapAtomsSym(const SPoint& locA, const SPoint& locB)
   {
     u32 idxa = MapToIndexSymValid(locA);
     u32 idxb = MapToIndexSymValid(locB);
@@ -469,8 +469,8 @@ namespace MFM {
     m_atomBuffer[idxb] = tmp;
   }
 
-  template <class CC>
-  void EventWindow<CC>::SwapAtomsDirect(const SPoint& locA, const SPoint& locB)
+  template <class EC>
+  void EventWindow<EC>::SwapAtomsDirect(const SPoint& locA, const SPoint& locB)
   {
     u32 idxa = MapToIndexDirectValid(locA);
     u32 idxb = MapToIndexDirectValid(locB);

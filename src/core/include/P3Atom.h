@@ -33,28 +33,33 @@
 #include "BitField.h"
 #include "Atom.h"
 #include "Element.h"
-#include "CoreConfig.h"
-#include "ParamConfig.h"
+#include "AtomConfig.h"
 #include "Util.h"      /* For COMPILATION_REQUIREMENT */
 #include "Parity2D_4x4.h"
 
 namespace MFM {
 
-  template <class PC>
-  class P3Atom : public Atom< CoreConfig< P3Atom<PC>, PC> >
-  {
-  public: enum
-  {
-    ATOM_CATEGORY = 3,
-    // ATOM_FIRST_STATE_BIT declared below
-    ATOM_EMPTY_TYPE = 0xffff
+  class P3Atom; // FORWARD
+
+  struct P3AtomConfig : public AtomConfig {
+    typedef P3Atom ATOM_TYPE;
+    enum { ATOM_CATEGORY = 3 };
+    enum { BITS_PER_ATOM = 96 };
+    enum { ATOM_TYPE_BITS = 16 };
+    enum { ATOM_EMPTY_TYPE = 0xffff };
+    enum { ATOM_FIRST_STATE_BIT = 25 };
+    enum { ATOM_LAST_STATE_BIT = BITS_PER_ATOM - 1 };
   };
-  private:
-    typedef CoreConfig< P3Atom<PC>, PC> CC;
+
+  class P3Atom : public Atom< P3AtomConfig >
+  {
+    typedef P3AtomConfig AC;
 
   public:
+    enum { ATOM_EMPTY_TYPE = 0xffff };
+
     enum {
-      BITS = PC::BITS_PER_ATOM,
+      BITS = AC::BITS_PER_ATOM,
 
       //////
       // P3 header configuration: Header is in low-bits end of the bitvector
@@ -102,7 +107,6 @@ namespace MFM {
 
   public:
 
-    //    P3Atom(u32 type = Element_Empty<CC>::THE_INSTANCE.GetType(), u32 z1 = 0, u32 z2 = 0, u32 stateBits = 0)
     P3Atom(u32 type = ATOM_EMPTY_TYPE, u32 z1 = 0, u32 z2 = 0, u32 stateBits = 0)
     {
       COMPILATION_REQUIREMENT< 32 <= BITS-1 >();
@@ -126,6 +130,11 @@ namespace MFM {
       return Parity2D_4x4::Check2DParity(fixedHeader);
     }
 
+    void SetEmptyImpl()
+    {
+      SetType(ATOM_EMPTY_TYPE);
+    }
+
     bool HasBeenRepairedImpl()
     {
       u32 fixedHeader = AFFixedHeader::Read(this->m_bits);
@@ -141,7 +150,6 @@ namespace MFM {
 
       return true;
     }
-
 
     u32 GetMaxStateSize(u32 type) const {
       return P3_STATE_BITS_LEN;

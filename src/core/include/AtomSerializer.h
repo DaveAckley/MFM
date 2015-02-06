@@ -43,17 +43,16 @@ namespace MFM
    * has virtual functions and we're not going to pay for a vtable
    * pointer in each Atom..
    */
-  template <class CC>
+  template <class AC>
   class AtomSerializer : public ByteSerializable
   {
    private:
-    typedef typename CC::PARAM_CONFIG P;
-    enum { BPA = P::BITS_PER_ATOM };
+    enum { BPA = AC::BITS_PER_ATOM };
 
-    Atom<CC> & m_atom;
+    Atom<AC> & m_atom;
 
    public:
-    AtomSerializer(Atom<CC> & atom) : m_atom(atom)
+    AtomSerializer(Atom<AC> & atom) : m_atom(atom)
     { }
 
     Result PrintTo(ByteSink & bs, s32 argument = 0)

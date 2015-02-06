@@ -7,23 +7,23 @@
 
 namespace MFM {
 
-  template <class CC>
-  s32 ElementTable<CC>::GetIndex(u32 elementType) const
+  template <class EC>
+  s32 ElementTable<EC>::GetIndex(u32 elementType) const
   {
     u32 slot = SlotFor(elementType);
     if (m_hash[slot].m_element == 0) return -1;
     return (s32) slot;
   }
 
-  template <class CC>
-  u32 ElementTable<CC>::SlotFor(u32 elementType) const
+  template <class EC>
+  u32 ElementTable<EC>::SlotFor(u32 elementType) const
   {
     u32 collide = 0;
     u32 slot = elementType;
     while (true)
     {
       slot %= SIZE;
-      const Element<CC> * elt = m_hash[slot].m_element;
+      const Element<EC> * elt = m_hash[slot].m_element;
       if (elt==0 || elt->GetType() == elementType)
         return slot;   // Empty or match: This is the slot for you
       ++collide;
@@ -31,8 +31,8 @@ namespace MFM {
     }
   }
 
-  template <class CC>
-  void ElementTable<CC>::Insert(const Element<CC> & theElement)
+  template <class EC>
+  void ElementTable<EC>::Insert(const Element<EC> & theElement)
   {
     u32 type = theElement.GetType();
     u32 slotFor = SlotFor(type);
@@ -51,14 +51,14 @@ namespace MFM {
     }
   }
 
-  template <class CC>
-  const Element<CC> * ElementTable<CC>::Lookup(u32 elementType) const
+  template <class EC>
+  const Element<EC> * ElementTable<EC>::Lookup(u32 elementType) const
   {
     return m_hash[SlotFor(elementType)].m_element;
   }
 
-  template <class CC>
-  void ElementTable<CC>::Execute(EventWindow<CC>& window)
+  template <class EC>
+  void ElementTable<EC>::Execute(EventWindow<EC>& window)
   {
     T atom = window.GetCenterAtomDirect();
     if (!atom.IsSane())
@@ -73,36 +73,37 @@ namespace MFM {
       }
     }
     u32 type = atom.GetType();
-    if(type != Element_Empty<CC>::THE_INSTANCE.GetType())
+    if(type != Element_Empty<EC>::THE_INSTANCE.GetType())
     {
-      const Element<CC> * elt = Lookup(type);
+      const Element<EC> * elt = Lookup(type);
       if (elt == 0) FAIL(UNKNOWN_ELEMENT);
       elt->Behavior(window);
     }
   }
 
-  template <class CC>
-  bool ElementTable<CC>::RegisterElement(const Element<CC>& e)
+  template <class EC>
+  bool ElementTable<EC>::RegisterElement(const Element<EC>& e)
   {
     Insert(e);
     return true;
   }
 
-  template <class CC>
-  ElementTable<CC>::ElementTable()
+  template <class EC>
+  ElementTable<EC>::ElementTable()
   {
     Reinit();
   }
 
-  template <class CC>
-  bool ElementTable<CC>::AllocateElementDataSlots(const Element<CC>& e, u32 slots)
+#if 0
+  template <class EC>
+  bool ElementTable<EC>::AllocateElementDataSlots(const Element<EC>& e, u32 slots)
   {
     u32 elementType = e.GetType();
     return AllocateElementDataSlotsFromType(elementType, slots);
   }
 
-  template <class CC>
-  bool ElementTable<CC>::AllocateElementDataSlotsFromType(const u32 elementType, u32 slots)
+  template <class EC>
+  bool ElementTable<EC>::AllocateElementDataSlotsFromType(const u32 elementType, u32 slots)
   {
     s32 index = GetIndex(elementType);
     if (index < 0) return false;
@@ -122,15 +123,15 @@ namespace MFM {
     return true;
   }
 
-  template <class CC>
-  u64 * ElementTable<CC>::GetElementDataSlots(const Element<CC>& e, const u32 slots)
+  template <class EC>
+  u64 * ElementTable<EC>::GetElementDataSlots(const Element<EC>& e, const u32 slots)
   {
     u32 elementType = e.GetType();
     return GetElementDataSlotsFromType(elementType, slots);
   }
 
-  template <class CC>
-  u64 * ElementTable<CC>::GetElementDataSlotsFromType(const u32 elementType, const u32 slots)
+  template <class EC>
+  u64 * ElementTable<EC>::GetElementDataSlotsFromType(const u32 elementType, const u32 slots)
   {
     s32 index = GetIndex(elementType);
     if (index < 0) return 0;
@@ -140,8 +141,8 @@ namespace MFM {
     return & m_elementData[m_hash[index].m_elementDataStart];
   }
 
-  template <class CC>
-  u64 * ElementTable<CC>::GetDataAndRegister(const u32 elementType, u32 slots)
+  template <class EC>
+  u64 * ElementTable<EC>::GetDataAndRegister(const u32 elementType, u32 slots)
   {
     // Yes, (this use of) the EDS API is pretty awkward.
 
@@ -168,19 +169,20 @@ namespace MFM {
     return datap;
   }
 
-  template <class CC>
-  u64 * ElementTable<CC>::GetDataIfRegistered(const u32 elementType, u32 slots)
+  template <class EC>
+  u64 * ElementTable<EC>::GetDataIfRegistered(const u32 elementType, u32 slots)
   {
     return GetElementDataSlotsFromType(elementType, slots);
   }
+#endif
 
-  template <class CC>
-  void ElementTable<CC>::Reinit()
+  template <class EC>
+  void ElementTable<EC>::Reinit()
   {
     m_hashSlotsInUse = 0;
     for (u32 i = 0; i < SIZE; ++i)
       m_hash[i].Clear();
-    m_nextFreeElementDataIndex = 0;
+    //XXX    m_nextFreeElementDataIndex = 0;
   }
 
 } /* namespace MFM */
