@@ -2,14 +2,14 @@
 
 #ifdef ELEMENT_PLUG_IN
 
-#include "LocalConfig.h"
+#include "StdEventConfig.h"
 
 extern "C" {
   static void * getref() {
-    return (void *) & (MFM::Element_QBar<MFM::OurCoreConfig>::THE_INSTANCE);
+    return (void *) & (MFM::Element_QBar<MFM::StdEventConfig>::THE_INSTANCE);
   }
   typedef void* (*FuncPtr)();
-  FuncPtr get_static_element_pointer[] = { getref };
+  FuncPtr get_static_element_library_pointer[] = { getref };
 }
 
 #endif /* ELEMENT_PLUG_IN */

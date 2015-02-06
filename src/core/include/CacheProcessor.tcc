@@ -5,8 +5,8 @@
 
 namespace MFM
 {
-  template <class CC>
-  void CacheProcessor<CC>::ReportCacheProcessorStatus(Logger::Level level)
+  template <class EC>
+  void CacheProcessor<EC>::ReportCacheProcessorStatus(Logger::Level level)
   {
     if (!m_tile)
     {
@@ -29,8 +29,8 @@ namespace MFM
     m_channelEnd.ReportChannelEndStatus(level);
   }
 
-  template <class CC>
-  bool CacheProcessor<CC>::IsSiteNumberVisible(u16 siteNumber)
+  template <class EC>
+  bool CacheProcessor<EC>::IsSiteNumberVisible(u16 siteNumber)
   {
     const MDist<R> & md = MDist<R>::get();
 
@@ -39,24 +39,26 @@ namespace MFM
     return IsCoordVisibleToPeer(local);
   }
 
-  template <class CC>
-  bool CacheProcessor<CC>::IsCoordVisibleToPeer(const SPoint & local)
+  template <class EC>
+  bool CacheProcessor<EC>::IsCoordVisibleToPeer(const SPoint & local)
   {
+    Tile<EC> & tile = GetTile();
+
     // Map full untransformed local tile coord into the remote space
     SPoint remote = LocalToRemote(local);
 
     // Get its distance from the remote tile center
-    u32 dist = Tile<CC>::GetSquareDistanceFromCenter(remote);
+    u32 dist = tile.GetSquareDistanceFromCenter(remote);
 
     // Distances up to a tile radius are visible
-    bool visible = dist <= TILE_WIDTH / 2;
+    bool visible = dist <= tile.TILE_SIDE / 2;
 
     // Which is what you asked
     return visible;
   }
 
-  template <class CC>
-  void CacheProcessor<CC>::StartShipping()
+  template <class EC>
+  void CacheProcessor<EC>::StartShipping()
   {
     if (m_cpState != LOADING)
     {
@@ -73,8 +75,8 @@ namespace MFM
     }
   }
 
-  template <class CC>
-  void CacheProcessor<CC>::StartLoading(const SPoint & eventCenter)
+  template <class EC>
+  void CacheProcessor<EC>::StartLoading(const SPoint & eventCenter)
   {
     if (m_cpState != ACTIVE)
     {
@@ -87,8 +89,8 @@ namespace MFM
     m_sentCount = 0;
   }
 
-  template <class CC>
-  void CacheProcessor<CC>::MaybeSendAtom(const T & atom, bool changed, u16 siteNumber)
+  template <class EC>
+  void CacheProcessor<EC>::MaybeSendAtom(const T & atom, bool changed, u16 siteNumber)
   {
     if (m_cpState != LOADING)
     {
@@ -101,7 +103,7 @@ namespace MFM
       return;
     }
 
-    Tile<CC> & t = GetTile();
+    Tile<EC> & t = GetTile();
     Random & random = t.GetRandom();
     const u32 checkOdds = GetCheckOdds();
 
@@ -135,8 +137,8 @@ namespace MFM
     cpi.m_type = changed ? PacketType::UPDATE : PacketType::CHECK;
   }
 
-  template <class CC>
-  bool CacheProcessor<CC>::ShipBufferAsPacket(PacketBuffer & pb)
+  template <class EC>
+  bool CacheProcessor<EC>::ShipBufferAsPacket(PacketBuffer & pb)
   {
     if (pb.HasOverflowed())
     {
@@ -155,8 +157,8 @@ namespace MFM
     return true;
   }
 
-  template <class CC>
-  void CacheProcessor<CC>::BeginUpdate(SPoint onCenter)
+  template <class EC>
+  void CacheProcessor<EC>::BeginUpdate(SPoint onCenter)
   {
     if (m_cpState != IDLE)
     {
@@ -175,8 +177,8 @@ namespace MFM
     return '0';
   }
 
-  template <class CC>
-  void CacheProcessor<CC>::ReceiveAtom(bool isDifferent, s32 siteNumber, const T & inboundAtom)
+  template <class EC>
+  void CacheProcessor<EC>::ReceiveAtom(bool isDifferent, s32 siteNumber, const T & inboundAtom)
   {
     if (m_cpState != PASSIVE || m_tile == 0)
     {
@@ -212,15 +214,15 @@ namespace MFM
       if (LOG.IfLog(Logger::WARNING))
       {
         T a(inboundAtom); // Get a non-const atom..
-        AtomSerializer<CC> as(a);
-        AtomSerializer<CC> oldas(oldAtom);
+        AtomSerializer<AC> as(a);
+        AtomSerializer<AC> oldas(oldAtom);
 
         // Develop a secret grid-global address! shh don't tell ackley!
         s32 tilex = -1, tiley = -1;
-        const char * tlb = m_tile->GetLabel();
+        const char * tlb = GetTile().GetLabel();
         CharBufferByteSource cbs(tlb,strlen(tlb));
         cbs.Scanf("[%d,%d]",&tilex,&tiley);
-        SPoint gloc = SPoint(tilex,tiley) * Tile<CC>::OWNED_SIDE + loc;
+        SPoint gloc = SPoint(tilex,tiley) * GetTile().OWNED_SIDE + loc;
 
         LOG.Warning("NC%s %s%c%c {%03d,%03d} #%2d(%2d,%2d)+(%2d,%2d)==(%2d,%2d) [%04x/%@] [%04x/%@]",
                     isDifferent? "U" : "C",
@@ -244,8 +246,8 @@ namespace MFM
     }
   }
 
-  template <class CC>
-  void CacheProcessor<CC>::ReceiveUpdateEnd()
+  template <class EC>
+  void CacheProcessor<EC>::ReceiveUpdateEnd()
   {
     if (m_cpState != PASSIVE)
     {
@@ -258,8 +260,8 @@ namespace MFM
     SetIdle();
   }
 
-  template <class CC>
-  void CacheProcessor<CC>::ReceiveReply(u32 consistentCount)
+  template <class EC>
+  void CacheProcessor<EC>::ReceiveReply(u32 consistentCount)
   {
     if (m_cpState != RECEIVING)
     {
@@ -274,7 +276,7 @@ namespace MFM
       ReportCleanUpdate(m_toSendCount);
     }
     MFM_LOG_DBG7(("CP %s %s [%s] reply %d<->%d : %d",
-                  m_tile->GetLabel(),
+                  GetTile().GetLabel(),
                   Dirs::GetName(m_cacheDir),
                   Dirs::GetName(m_centerRegion),
                   consistentCount,
@@ -283,8 +285,8 @@ namespace MFM
     SetStateInternal(BLOCKING);
   }
 
-  template <class CC>
-  bool CacheProcessor<CC>::Advance()
+  template <class EC>
+  bool CacheProcessor<EC>::Advance()
   {
     // If we're unconnected, we're not working
     if (!m_tile)
@@ -295,7 +297,7 @@ namespace MFM
     if (m_cpState != IDLE)
     {
       MFM_LOG_DBG7(("CP %s %s Advance in state %s",
-                    m_tile->GetLabel(),
+                    GetTile().GetLabel(),
                     Dirs::GetName(m_cacheDir),
                     GetStateName(m_cpState)));
     }
@@ -312,8 +314,8 @@ namespace MFM
     }
   }
 
-  template <class CC>
-  void CacheProcessor<CC>::Activate()
+  template <class EC>
+  void CacheProcessor<EC>::Activate()
   {
     if (m_cpState != IDLE)
     {
@@ -322,8 +324,8 @@ namespace MFM
     SetStateInternal(ACTIVE);
   }
 
-  template <class CC>
-  void CacheProcessor<CC>::SetIdle()
+  template <class EC>
+  void CacheProcessor<EC>::SetIdle()
   {
     if (m_cpState == IDLE)
     {
@@ -332,11 +334,11 @@ namespace MFM
     SetStateInternal(IDLE);
   }
 
-  template <class CC>
-  bool CacheProcessor<CC>::AdvanceShipping()
+  template <class EC>
+  bool CacheProcessor<EC>::AdvanceShipping()
   {
     MFM_LOG_DBG7(("CP %s %s (%d,%d): Advance shipping",
-                  m_tile->GetLabel(),
+                  GetTile().GetLabel(),
                   Dirs::GetName(m_cacheDir),
                   m_farSideOrigin.GetX(),
                   m_farSideOrigin.GetY()));
@@ -354,7 +356,7 @@ namespace MFM
       didWork = true;
       ++m_sentCount;
       MFM_LOG_DBG7(("CP %s %s: Ship %d (site #%d)",
-                    m_tile->GetLabel(),
+                    GetTile().GetLabel(),
                     Dirs::GetName(m_cacheDir),
                     m_sentCount,
                     cpi.m_siteNumber));
@@ -374,8 +376,8 @@ namespace MFM
     return didWork;
   }
 
-  template <class CC>
-  bool CacheProcessor<CC>::AdvanceReceiving()
+  template <class EC>
+  bool CacheProcessor<EC>::AdvanceReceiving()
   {
     bool didWork = false;
     if (!IsConnected())
@@ -399,8 +401,8 @@ namespace MFM
     }
   }
 
-  template <class CC>
-  void CacheProcessor<CC>::Unblock()
+  template <class EC>
+  void CacheProcessor<EC>::Unblock()
   {
     if (m_cpState != BLOCKING)
     {
@@ -412,8 +414,8 @@ namespace MFM
     Unlock();  // FINALLY
   }
 
-  template <class CC>
-  CacheProcessor<CC> & CacheProcessor<CC>::GetSibling(Dir forDirection)
+  template <class EC>
+  CacheProcessor<EC> & CacheProcessor<EC>::GetSibling(Dir forDirection)
   {
     if (!m_tile)
     {
@@ -423,8 +425,8 @@ namespace MFM
     return m_tile->GetCacheProcessor(forDirection);
   }
 
-  template <class CC>
-  bool CacheProcessor<CC>::AdvanceBlocking()
+  template <class EC>
+  bool CacheProcessor<EC>::AdvanceBlocking()
   {
     s32 needed = 1;
     Dir baseDir = m_centerRegion;
@@ -439,7 +441,7 @@ namespace MFM
     s32 got = 0;
     for (Dir dir = baseDir; got < needed; ++got, dir = Dirs::CWDir(dir))
     {
-      CacheProcessor<CC> & cp = GetSibling(dir);
+      CacheProcessor<EC> & cp = GetSibling(dir);
       if (cp.IsConnected() && !cp.IsBlocking())
       {
         break;
@@ -455,7 +457,7 @@ namespace MFM
     got = 0;
     for (Dir dir = baseDir; got < needed; ++got, dir = Dirs::CWDir(dir))
     {
-      CacheProcessor<CC> & cp = GetSibling(dir);
+      CacheProcessor<EC> & cp = GetSibling(dir);
       if (cp.IsConnected())
       {
         cp.Unblock();

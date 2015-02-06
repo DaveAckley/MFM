@@ -30,11 +30,11 @@
 #define STDELEMENTS_H
 
 #include "itype.h"
-#include "CoreConfig.h"
+#include "EventConfig.h"
 
 namespace MFM {
 
-  template <class CC>
+  template <class EC>
   class StdElements {
   private:
     u32 m_stdElements;
@@ -47,4 +47,3 @@ namespace MFM {
 #include "StdElements.tcc"
 
 #endif /*STDELEMENTS_H*/
-

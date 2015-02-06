@@ -42,6 +42,8 @@ ULAM_EXE_FILE := $(patsubst %.cpp,$(ULAM_BIN_DIR)/%,$(ULAM_CPP_FILE))
 #$(info "USD($(ULAM_SRC_DIR))")
 #$(info "MRD($(MFM_ROOT_DIR))")
 
+ELEMENT_PIC_CPPFLAGS := -shared -fPIC -DELEMENT_PLUG_IN
+
 ulam_program:	$(ULAM_EXE_FILE)
 
 ulam_cppcompile:	ulam_checkvar $(ULAM_OBJ_FILE)
@@ -51,7 +53,7 @@ ulam_cppcompile:	ulam_checkvar $(ULAM_OBJ_FILE)
 
 # Pattern rule for cpp files (matches $(ULAM_OBJ_FILE))
 $(ULAM_BLD_DIR)/%.o:	$(ULAM_SRC_DIR)/%.cpp $(ALLDEP) #$(info DJDHD $(ULAM_BLD_DIR)/%.d)
-	$(GPP) $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+	$(GPP) $(ELEMENT_PIC_CPPFLAGS) $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
 
 # Rule for linking ulam programs
 $(ULAM_EXE_FILE):	 $(ULAM_OBJ_FILE)

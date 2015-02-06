@@ -37,22 +37,22 @@
 namespace MFM
 {
 
-  template <class CC> class Element; // FORWARD
-  template <class CC> class EventWindow; // FORWARD
+  template <class EC> class Element; // FORWARD
+  template <class EC> class EventWindow; // FORWARD
 
-  template <class CC>
+  template <class EC>
   class ElementTable
   {
     // Extract short type names
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { B = P::ELEMENT_TABLE_BITS};
-    enum { R = P::EVENT_WINDOW_RADIUS};
-    enum { ELEMENT_DATA_SLOTS = P::ELEMENT_DATA_SLOTS};
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { B = AC::ATOM_TYPE_BITS};
+    enum { R = EC::EVENT_WINDOW_RADIUS};
+    //XXX currently deprecated    enum { ELEMENT_DATA_SLOTS = P::ELEMENT_DATA_SLOTS};
 
   public:
     // -3 to avoid 2**k and 2**k-1 sizes; they seem to beat against type assignments
-    static const u32 SIZE = (1u<<B) - 3;
+    static const u32 SIZE = (1u<<(B/2)) - 3; // ~250
 
     /**
      * Reinitialize this ElementTable to empty.
@@ -65,7 +65,7 @@ namespace MFM
      *
      * @param theElement The Element to insert into this ElementTable .
      */
-    void Insert(const Element<CC> & theElement) ;
+    void Insert(const Element<EC> & theElement) ;
 
     /**
      * Gets the capacity of this ElementTable, in Elements that may be
@@ -116,7 +116,7 @@ namespace MFM
      *          this table. If an Element with this type is not found
      *          in this ElementTable, will return NULL .
      */
-    const Element<CC> * Lookup(u32 elementType) const;
+    const Element<EC> * Lookup(u32 elementType) const;
 
     /**
      * Executes the behavior method of the Element in the center of a
@@ -125,7 +125,7 @@ namespace MFM
      *
      * @param window The EventWindow to execute an event upon.
      */
-    void Execute(EventWindow<CC>& window) ;
+    void Execute(EventWindow<EC>& window) ;
 
     /**
      * Inserts an Element into this ElementTable.
@@ -134,7 +134,7 @@ namespace MFM
      *
      * @returns \c true .
      */
-    bool RegisterElement(const Element<CC>& e) ;
+    bool RegisterElement(const Element<EC>& e) ;
 
     /**
      * Allocate SLOTS u64's of element-specific data associated with
@@ -163,7 +163,7 @@ namespace MFM
      * In the case of a true return, note that the resulting slots
      * have no particular values.
      */
-    bool AllocateElementDataSlots(const Element<CC>& e, u32 slots) ;
+    bool AllocateElementDataSlots(const Element<EC>& e, u32 slots) ;
 
     bool AllocateElementDataSlotsFromType(const u32 elementType, u32 slots) ;
 
@@ -182,7 +182,7 @@ namespace MFM
      * - E is a registered element that has more or less than SLOTS of
      *   element-specific data associated with it.
      */
-    u64 * GetElementDataSlots(const Element<CC>& e, const u32 slots) ;
+    u64 * GetElementDataSlots(const Element<EC>& e, const u32 slots) ;
 
     u64 * GetElementDataSlotsFromType(const u32 elementType, const u32 slots) ;
 
@@ -210,14 +210,14 @@ namespace MFM
         m_elementDataStart = 0;
         m_elementDataLength = 0;
       }
-      const Element<CC>* m_element;
+      const Element<EC>* m_element;
       u16 m_elementDataStart;
       u16 m_elementDataLength;
     } m_hash[SIZE];
     u32 m_hashSlotsInUse;
 
-    u64 m_elementData[ELEMENT_DATA_SLOTS];
-    u32 m_nextFreeElementDataIndex;
+    //XXX    u64 m_elementData[ELEMENT_DATA_SLOTS];
+    //XXX    u32 m_nextFreeElementDataIndex;
 
   };
 

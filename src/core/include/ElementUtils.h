@@ -49,8 +49,8 @@ namespace MFM
      * @returns \c true if an empty Von Neumann neighbor is found,
      *          else \c false .
      */
-    template <class CC>
-    bool FillAvailableVNNeighbor(EventWindow<CC>& window, SPoint& pt);
+    template <class EC>
+    bool FillAvailableVNNeighbor(EventWindow<EC>& window, SPoint& pt);
 
     /**
      * Master search method for finding an Atom inside an EventWindow .
@@ -77,8 +77,8 @@ namespace MFM
      * @returns \c true if any Atoms are found which satisfy the
      *          search parameters, else \c false .
      */
-    template <class CC>
-    bool FillPointWithType(EventWindow<CC>& window,
+    template <class EC>
+    bool FillPointWithType(EventWindow<EC>& window,
                            SPoint& pt, const SPoint* relevants, u32 relevantCount,
                            Dir rotation, ElementType type);
   } /* namespace ElementUtils */

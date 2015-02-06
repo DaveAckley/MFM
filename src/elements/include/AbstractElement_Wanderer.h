@@ -31,17 +31,16 @@
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "itype.h"
-#include "P1Atom.h"
 
 namespace MFM
 {
-  template <class CC>
-  class AbstractElement_Wanderer : public Element<CC>
+  template <class EC>
+  class AbstractElement_Wanderer : public Element<EC>
   {
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
    protected:
     virtual u32 GetWanderDistance() const = 0;
@@ -49,7 +48,7 @@ namespace MFM
    public:
 
     AbstractElement_Wanderer(UUID u)
-      : Element<CC>(u)
+      : Element<EC>(u)
     { }
 
     virtual u32 PercentMovable(const T& you,
@@ -58,7 +57,7 @@ namespace MFM
       return 100;
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       SPoint wanderPt;
       Random& rand = window.GetRandom();
@@ -71,7 +70,7 @@ namespace MFM
       if(window.IsLiveSiteSym(wanderPt))
       {
         if(window.GetRelativeAtomSym(wanderPt).GetType() ==
-           Element_Empty<CC>::THE_INSTANCE.GetType())
+           Element_Empty<EC>::THE_INSTANCE.GetType())
         {
           window.SwapAtomsSym(wanderPt, SPoint(0, 0));
         }

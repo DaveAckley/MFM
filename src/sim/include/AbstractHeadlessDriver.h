@@ -30,9 +30,7 @@
 #include "Logger.h"
 #include "FileByteSink.h"
 #include "itype.h"
-#include "ParamConfig.h"
 #include "GridConfig.h"
-#include "CoreConfig.h"
 #include "Tile.h"
 #include "Grid.h"
 #include "ElementTable.h"
@@ -53,7 +51,6 @@ namespace MFM
 
   protected:
     typedef typename Super::OurGrid OurGrid;
-    typedef typename Super::CC CC;
 
     AbstractHeadlessDriver() : AbstractDriver<GC>()
     { }

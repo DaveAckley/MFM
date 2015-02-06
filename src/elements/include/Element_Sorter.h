@@ -36,21 +36,20 @@
 #include "Element_Data.h"  /* For Element_Data::TYPE */
 #include "ColorMap.h"
 #include "itype.h"
-#include "P1Atom.h"
 #include "WindowScanner.h"
 
 namespace MFM
 {
 
-#define SORTER_VERSION 1
-
-  template <class CC>
-  class Element_Sorter : public Element<CC>
+  template <class EC>
+  class Element_Sorter : public Element<EC>
   {
+    enum {  SORTER_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
    public:
     static Element_Sorter THE_INSTANCE;
@@ -70,24 +69,24 @@ namespace MFM
 
     inline u32 GetDataType() const
     {
-      return Element_Data<CC>::THE_INSTANCE.GetType();
+      return Element_Data<EC>::THE_INSTANCE.GetType();
     }
 
     inline u32 GetEmptyType() const
     {
-      return Element_Empty<CC>::THE_INSTANCE.GetType();
+      return Element_Empty<EC>::THE_INSTANCE.GetType();
     }
 
     Element_Sorter() :
-      Element<CC>(MFM_UUID_FOR("Sorter", SORTER_VERSION))
+      Element<EC>(MFM_UUID_FOR("Sorter", SORTER_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("Sr");
-      Element<CC>::SetName("Sorter");
+      Element<EC>::SetAtomicSymbol("Sr");
+      Element<EC>::SetName("Sorter");
     }
 
     u32 GetThreshold(const T &atom, u32 badType) const
     {
-      if (!Atom<CC>::IsType(atom,TYPE()))
+      if (!Atom<AC>::IsType(atom,TYPE()))
       {
         return badType;
       }
@@ -96,7 +95,7 @@ namespace MFM
 
     bool SetThreshold(T &atom, u32 value) const
     {
-      if (!Atom<CC>::IsType(atom,TYPE()))
+      if (!Atom<AC>::IsType(atom,TYPE()))
       {
         return false;
       }
@@ -121,10 +120,12 @@ namespace MFM
       return 0xffff0000;
     }
 
+    /*
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff7f0000;
     }
+    */
 
     virtual const char* GetDescription() const
     {
@@ -156,17 +157,17 @@ namespace MFM
           GetInterpolatedColor(GetThreshold(atom,0),DATA_MINVAL,DATA_MAXVAL,0xffff0000);
 
       default:
-        return Element<CC>::PhysicsColor();
+        return Element<EC>::PhysicsColor();
       }
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       Random & random = window.GetRandom();
       SPoint reproducePt;
       T self = window.GetCenterAtomSym();
-      WindowScanner<CC> scanner(window);
-      if(scanner.FindRandomInVonNeumann(Element_Res<CC>::THE_INSTANCE.GetType(),
+      WindowScanner<EC> scanner(window);
+      if(scanner.FindRandomInVonNeumann(Element_Res<EC>::THE_INSTANCE.GetType(),
                                         reproducePt) > 0)
       {
         window.SetRelativeAtomSym(reproducePt, self);
@@ -202,7 +203,7 @@ namespace MFM
         if(foundPts)
         {
           u32 threshold = GetThreshold(window.GetCenterAtomSym(),0);
-          u32 datum = Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtomSym(src),0);
+          u32 datum = Element_Data<EC>::THE_INSTANCE.GetDatum(window.GetRelativeAtomSym(src),0);
           bool cmp = (movingUp && (datum < threshold)) || (!movingUp && (datum > threshold));
 
           if(cmp)
@@ -221,29 +222,29 @@ namespace MFM
     }
   };
 
-  template <class CC>
-  Element_Sorter<CC> Element_Sorter<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Sorter<EC> Element_Sorter<EC>::THE_INSTANCE;
 
-  template <class CC>
-  const SPoint Element_Sorter<CC>::m_southeastSubWindow[4] =
+  template <class EC>
+  const SPoint Element_Sorter<EC>::m_southeastSubWindow[4] =
   {
     SPoint(1,1),SPoint(1,2),SPoint(2,1),SPoint(2,2)
   };
 
-  template <class CC>
-  const SPoint Element_Sorter<CC>::m_northeastSubWindow[4] =
+  template <class EC>
+  const SPoint Element_Sorter<EC>::m_northeastSubWindow[4] =
   {
     SPoint(1,-1),SPoint(1,-2),SPoint(2,-1),SPoint(2,-2)
   };
 
-  template <class CC>
-  const SPoint Element_Sorter<CC>::m_northwestSubWindow[4] =
+  template <class EC>
+  const SPoint Element_Sorter<EC>::m_northwestSubWindow[4] =
   {
     SPoint(-1,-1),SPoint(-1,-2),SPoint(-2,-1),SPoint(-2,-2)
   };
 
-  template <class CC>
-  const SPoint Element_Sorter<CC>::m_southwestSubWindow[4] =
+  template <class EC>
+  const SPoint Element_Sorter<EC>::m_southwestSubWindow[4] =
   {
     SPoint(-1,1),SPoint(-1,2),SPoint(-2,1),SPoint(-2,2)
   };

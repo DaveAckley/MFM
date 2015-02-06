@@ -6,15 +6,15 @@
 
 namespace MFM
 {
-  template <class CC>
-  WindowScanner<CC>::WindowScanner(EventWindow<CC>& window) :
+  template <class EC>
+  WindowScanner<EC>::WindowScanner(EventWindow<EC>& window) :
     m_win(window),
     m_rand(window.GetRandom()),
-    EMPTY_TYPE(Element_Empty<CC>::THE_INSTANCE.GetType())
+    EMPTY_TYPE(Element_Empty<EC>::THE_INSTANCE.GetType())
   { }
 
-  template <class CC>
-  bool WindowScanner<CC>::FillIfType(const SPoint& relative, const u32 type, const T& atom)
+  template <class EC>
+  bool WindowScanner<EC>::FillIfType(const SPoint& relative, const u32 type, const T& atom)
   {
     bool replaced = false;
     if(m_win.IsLiveSite(relative))
@@ -28,8 +28,8 @@ namespace MFM
     return replaced;
   }
 
-  template <class CC>
-  bool WindowScanner<CC>::FillIfNotType(const SPoint& relative,
+  template <class EC>
+  bool WindowScanner<EC>::FillIfNotType(const SPoint& relative,
                                         const u32 type, const T& atom)
   {
     bool replaced = false;
@@ -45,14 +45,14 @@ namespace MFM
     return replaced;
   }
 
-  template <class CC>
-  bool WindowScanner<CC>::FillIfEmpty(const SPoint& relative, const T& atom)
+  template <class EC>
+  bool WindowScanner<EC>::FillIfEmpty(const SPoint& relative, const T& atom)
   {
     return m_win.FillIfType(relative, EMPTY_TYPE, atom);
   }
 
-  template <class CC>
-  bool WindowScanner<CC>::CanSeeAtomOfType(const u32 type, const u32 radius) const
+  template <class EC>
+  bool WindowScanner<EC>::CanSeeAtomOfType(const u32 type, const u32 radius) const
   {
     const MDist<R>& md = MDist<R>::get();
 
@@ -74,8 +74,8 @@ namespace MFM
     return false;
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::CountAtomsOfType(const u32 type, const u32 radius) const
+  template <class EC>
+  u32 WindowScanner<EC>::CountAtomsOfType(const u32 type, const u32 radius) const
   {
     const MDist<R>& md = MDist<R>::get();
     u32 atomCount = 0;
@@ -98,14 +98,14 @@ namespace MFM
     return atomCount;
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::CountEmptyAtoms(const u32 radius) const
+  template <class EC>
+  u32 WindowScanner<EC>::CountEmptyAtoms(const u32 radius) const
   {
     return CountAtomsOfType(EMPTY_TYPE, radius);
   }
 
-  template <class CC>
-  bool WindowScanner<CC>::IsBorderingNeighborhood(const u32 type,
+  template <class EC>
+  bool WindowScanner<EC>::IsBorderingNeighborhood(const u32 type,
                                                   const Dir* neighborhood,
                                                   const u32 dirCount) const
   {
@@ -124,24 +124,24 @@ namespace MFM
     return false;
   }
 
-  template <class CC>
-  bool WindowScanner<CC>::IsBorderingMoore(const u32 type) const
+  template <class EC>
+  bool WindowScanner<EC>::IsBorderingMoore(const u32 type) const
   {
     return IsBorderingNeighborhood(type,
                                    MooreNeighborhood,
                                    MOORE_NEIGHBORHOOD_SIZE);
   }
 
-  template <class CC>
-  bool WindowScanner<CC>::IsBorderingVonNeumann(const u32 type) const
+  template <class EC>
+  bool WindowScanner<EC>::IsBorderingVonNeumann(const u32 type) const
   {
     return IsBorderingNeighborhood(type,
                                    VonNeumannNeighborhood,
                                    VON_NEUMANN_NEIGHBORHOOD_SIZE);
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::CountInNeighborhood(const u32 type,
+  template <class EC>
+  u32 WindowScanner<EC>::CountInNeighborhood(const u32 type,
                                            const Dir* neighborhood,
                                            const u32 dirCount) const
   {
@@ -162,30 +162,30 @@ namespace MFM
     return atomCount;
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::CountMooreNeighbors(const u32 type) const
+  template <class EC>
+  u32 WindowScanner<EC>::CountMooreNeighbors(const u32 type) const
   {
     return CountInNeighborhood(type,
                                MooreNeighborhood,
                                MOORE_NEIGHBORHOOD_SIZE);
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::CountVonNeumannNeighbors(const u32 type) const
+  template <class EC>
+  u32 WindowScanner<EC>::CountVonNeumannNeighbors(const u32 type) const
   {
     return CountInNeighborhood(type,
                                VonNeumannNeighborhood,
                                VON_NEUMANN_NEIGHBORHOOD_SIZE);
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::FindRandomLocationOfType(const u32 type, SPoint& outPoint) const
+  template <class EC>
+  u32 WindowScanner<EC>::FindRandomLocationOfType(const u32 type, SPoint& outPoint) const
   {
     return FindRandomLocationOfType(type, R, outPoint);
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::FindRandomLocationOfType(const u32 type,
+  template <class EC>
+  u32 WindowScanner<EC>::FindRandomLocationOfType(const u32 type,
                                                   const u32 radius,
                                                   SPoint& outPoint) const
   {
@@ -214,8 +214,8 @@ namespace MFM
   return foundPts;
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::FindRandomInSubWindow(const u32 type, const SPoint* subWindow,
+  template <class EC>
+  u32 WindowScanner<EC>::FindRandomInSubWindow(const u32 type, const SPoint* subWindow,
                                                const u32 subCount, SPoint& outPoint) const
   {
     u32 atomCount = 0;
@@ -236,15 +236,15 @@ namespace MFM
     return atomCount;
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::FindEmptyInSubWindow(const SPoint* subWindow,
+  template <class EC>
+  u32 WindowScanner<EC>::FindEmptyInSubWindow(const SPoint* subWindow,
                                               const u32 subCount, SPoint& outPoint) const
   {
     return FindRandomInSubWindow(EMPTY_TYPE, subWindow, subCount, outPoint);
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::FindRandomInNeighborhood(const u32 type,
+  template <class EC>
+  u32 WindowScanner<EC>::FindRandomInNeighborhood(const u32 type,
                                                   const Dir* dirs,
                                                   const u32 dirCount,
                                                   SPoint& outPoint) const
@@ -270,8 +270,8 @@ namespace MFM
     return ptsFound;
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::FindEmptyInNeighborhood(const Dir* dirs,
+  template <class EC>
+  u32 WindowScanner<EC>::FindEmptyInNeighborhood(const Dir* dirs,
                                                  const u32 dirCount,
                                                  SPoint& outPoint) const
   {
@@ -281,8 +281,8 @@ namespace MFM
                                     outPoint);
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::FindRandomInMoore(const u32 type, SPoint& outPoint) const
+  template <class EC>
+  u32 WindowScanner<EC>::FindRandomInMoore(const u32 type, SPoint& outPoint) const
   {
     return FindRandomInNeighborhood(type,
                                     MooreNeighborhood,
@@ -290,8 +290,8 @@ namespace MFM
                                     outPoint);
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::FindRandomInVonNeumann(const u32 type, SPoint& outPoint) const
+  template <class EC>
+  u32 WindowScanner<EC>::FindRandomInVonNeumann(const u32 type, SPoint& outPoint) const
   {
     return FindRandomInNeighborhood(type,
                                     VonNeumannNeighborhood,
@@ -299,24 +299,24 @@ namespace MFM
                                     outPoint);
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::FindEmptyInMoore(SPoint& outPoint) const
+  template <class EC>
+  u32 WindowScanner<EC>::FindEmptyInMoore(SPoint& outPoint) const
   {
     return FindEmptyInNeighborhood(MooreNeighborhood,
                                    MOORE_NEIGHBORHOOD_SIZE,
                                    outPoint);
   }
 
-  template <class CC>
-  u32 WindowScanner<CC>::FindEmptyInVonNeumann(SPoint& outPoint) const
+  template <class EC>
+  u32 WindowScanner<EC>::FindEmptyInVonNeumann(SPoint& outPoint) const
   {
     return FindEmptyInNeighborhood(VonNeumannNeighborhood,
                                    VON_NEUMANN_NEIGHBORHOOD_SIZE,
                                    outPoint);
   }
 
-  template <class CC>
-  void WindowScanner<CC>::FindRandomAtoms(const u32 radius, const u32 count, ...) const
+  template <class EC>
+  void WindowScanner<EC>::FindRandomAtoms(const u32 radius, const u32 count, ...) const
   {
     va_list argList;
     va_start(argList, count);
@@ -326,8 +326,8 @@ namespace MFM
     va_end(argList);
   }
 
-  template <class CC>
-  void WindowScanner<CC>::FindRandomAtoms(const u32 count, ...) const
+  template <class EC>
+  void WindowScanner<EC>::FindRandomAtoms(const u32 count, ...) const
   {
     va_list argList;
     va_start(argList, count);
@@ -337,8 +337,8 @@ namespace MFM
     va_end(argList);
   }
 
-  template <class CC>
-  bool WindowScanner<CC>::FindRandomAtomsInSubWindows(const u32 count, ...) const
+  template <class EC>
+  bool WindowScanner<EC>::FindRandomAtomsInSubWindows(const u32 count, ...) const
   {
     va_list argList;
     bool foundAll = true;
@@ -362,8 +362,8 @@ namespace MFM
     return foundAll;
   }
 
-  template <class CC>
-  void WindowScanner<CC>::FindRandomAtoms(const u32 radius, const u32 count, va_list& list) const
+  template <class EC>
+  void WindowScanner<EC>::FindRandomAtoms(const u32 radius, const u32 count, va_list& list) const
   {
     /* Can't ask for more than SITES things, right? */
     if(count > SITES)

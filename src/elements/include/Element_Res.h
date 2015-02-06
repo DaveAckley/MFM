@@ -32,23 +32,23 @@
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "itype.h"
-#include "P1Atom.h"
 
 namespace MFM
 {
-
-#define RES_VERSION 1
 
   /**
    * A basic 'Resource' element, created in controlled amounts by DReg
    * and available for use by other Elements that wish to have
    * controlled growth.
    */
-  template <class CC>
-  class Element_Res : public Element<CC>
+  template <class EC>
+  class Element_Res : public Element<EC>
   {
+    enum { RES_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
   public:
     static Element_Res THE_INSTANCE;
@@ -56,10 +56,10 @@ namespace MFM
       return THE_INSTANCE.GetType();
     }
 
-    Element_Res() : Element<CC>(MFM_UUID_FOR("Res", RES_VERSION))
+    Element_Res() : Element<EC>(MFM_UUID_FOR("Res", RES_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("R");
-      Element<CC>::SetName("Res");
+      Element<EC>::SetAtomicSymbol("R");
+      Element<EC>::SetName("Res");
     }
 
     virtual u32 PercentMovable(const T& you,
@@ -73,11 +73,6 @@ namespace MFM
       return 0xff676700;
     }
 
-    virtual u32 DefaultLowlightColor() const
-    {
-      return 0xff333300;
-    }
-
     virtual const char* GetDescription() const
     {
       return "The Element which represents a universal resource. Other atoms may freely "
@@ -85,14 +80,14 @@ namespace MFM
              "regulatory properties.";
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       window.Diffuse();
     }
   };
 
-  template <class CC>
-  Element_Res<CC> Element_Res<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Res<EC> Element_Res<EC>::THE_INSTANCE;
 
 }
 

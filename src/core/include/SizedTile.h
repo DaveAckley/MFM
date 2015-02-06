@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
-  CoreConfig.h Support for modularized compile-time parameters
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  SizedTile.h A Tile with size and storage
+  Copyright (C) 2015 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -19,39 +19,38 @@
 */
 
 /**
-  \file CoreConfig.h Support for modularized compile-time parameters
+  \file SizedTile.h A Tile with size and storage
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \date (C) 2015 All rights reserved.
   \lgpl
  */
-#ifndef CORECONFIG_H
-#define CORECONFIG_H
+#ifndef SIZEDTILE_H
+#define SIZEDTILE_H
 
-#include "itype.h"
+#include "Tile.h"
 
-namespace MFM {
+namespace MFM
+{
 
   /**
-   * A template class used to hold all compile-time parameters needed
-   * for compilations in the MFM core.
+     A SizedTile provides a completed Tile, possessing a size and site
+     storage, and offering a default constructor so that arrays of
+     SizedTiles can be formed.
    */
-  template <class A,  // An Atom type
-            class P>  // A ParamConfig
-  struct CoreConfig {
+  template <class EC, u32 SIDE>
+  class SizedTile : public Tile<EC>
+  {
+  public:
+    typedef typename EC::SITE SITE;
 
-    /**
-     * ATOM_TYPE is the type of the atom for this CoreConfiguration.
-     */
-    typedef A ATOM_TYPE;
+    enum { TILE_SIDE = SIDE };
+    enum { TILE_SITES = TILE_SIDE * TILE_SIDE };
 
-    /**
-     * PARAM_CONFIG is the type of the parameters configuration for
-     * this CoreConfiguration.
-     */
-    typedef P PARAM_CONFIG;
+    SizedTile() : Tile<EC>(TILE_SIDE, m_sites) { }
 
+  private:
+    SITE m_sites[TILE_SITES];
   };
-
 } /* namespace MFM */
 
-#endif /*CORECONFIG_H*/
+#endif /*SIZEDTILE_H*/

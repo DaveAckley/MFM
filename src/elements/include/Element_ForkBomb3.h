@@ -36,19 +36,19 @@
 namespace MFM
 {
 
-#define FORKBOMB3_VERSION 1
-
-  template <class CC>
-  class Element_ForkBomb3 : public AbstractElement_ForkBomb<CC>
+  template <class EC>
+  class Element_ForkBomb3 : public AbstractElement_ForkBomb<EC>
   {
+    enum {  FORKBOMB3_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   private:
 
-    ElementParameterS32<CC> m_bombCount;
+    ElementParameterS32<EC> m_bombCount;
 
   public:
 
@@ -60,14 +60,14 @@ namespace MFM
     }
 
     Element_ForkBomb3() :
-      AbstractElement_ForkBomb<CC>(MFM_UUID_FOR("BombYellow", FORKBOMB3_VERSION)),
+      AbstractElement_ForkBomb<EC>(MFM_UUID_FOR("BombYellow", FORKBOMB3_VERSION)),
       m_bombCount(this, "count", "Bomb Count",
                   "Number of bombs randomly dropped each bomb event",
                   0, 10, 30/*, 1*/)
 
     {
-      Element<CC>::SetAtomicSymbol("By");
-      Element<CC>::SetName("Yellow Fork Bomb");
+      Element<EC>::SetAtomicSymbol("By");
+      Element<EC>::SetName("Yellow Fork Bomb");
     }
 
     virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
@@ -75,7 +75,7 @@ namespace MFM
       return 0xffcccc00;
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       Random & random = window.GetRandom();
       const MDist<R> & md = MDist<R>::get();
@@ -90,8 +90,8 @@ namespace MFM
 
   };
 
-  template <class CC>
-  Element_ForkBomb3<CC> Element_ForkBomb3<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_ForkBomb3<EC> Element_ForkBomb3<EC>::THE_INSTANCE;
 
 }
 

@@ -36,17 +36,17 @@
 namespace MFM
 {
 
-  template <class CC>
-  class Element_Block : public Element<CC>
+  template <class EC>
+  class Element_Block : public Element<EC>
   {
     // Short names for params
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   public:
     enum {
-      BLOCK_VERSION = 1
+      BLOCK_VERSION = 2
     };
 
     static Element_Block THE_INSTANCE;
@@ -55,10 +55,10 @@ namespace MFM
       return THE_INSTANCE.GetType();
     }
 
-    Element_Block() : Element<CC>(MFM_UUID_FOR("Block", BLOCK_VERSION))
+    Element_Block() : Element<EC>(MFM_UUID_FOR("Block", BLOCK_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("B");
-      Element<CC>::SetName("Block");
+      Element<EC>::SetAtomicSymbol("B");
+      Element<EC>::SetName("Block");
     }
 
     virtual const T & GetDefaultAtom() const
@@ -72,12 +72,14 @@ namespace MFM
       return 0xff00ff00;
     }
 
+    /*
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff00af00;
     }
+    */
 
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
+    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const
     {
       return nowAt.Equals(maybeAt)?COMPLETE_DIFFUSABILITY:0;
     }
@@ -88,12 +90,12 @@ namespace MFM
       return 0;
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {}
   };
 
-  template <class CC>
-  Element_Block<CC> Element_Block<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Block<EC> Element_Block<EC>::THE_INSTANCE;
 }
 
 #endif /* ELEMENT_BLOCK_H */

@@ -12,8 +12,8 @@ namespace MFM
 
   static void TestBasic()
   {
-    ElementRegistry<TestCoreConfig> ereg;
-    ereg.RegisterElement(Element_Dreg<TestCoreConfig>::THE_INSTANCE);
+    ElementRegistry<TestEventConfig> ereg;
+    ereg.RegisterElement(Element_Dreg<TestEventConfig>::THE_INSTANCE);
 
     Grid<TestGridConfig> grid(ereg);
     grid.SetSeed(1);

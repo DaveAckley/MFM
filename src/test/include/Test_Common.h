@@ -2,28 +2,30 @@
 #define TEST_COMMON_H
 
 #include "Grid.h"
-#include "P0Atom.h"
-#include "ParamConfig.h"
+#include "EventConfig.h"
+#include "P3Atom.h"
 #include "ElementTable.h"
 #include "EventWindow.h"
-#include "Tile.h"
+#include "SizedTile.h"
 
 namespace MFM {
 
   /* Some types for us to test */
-  typedef ParamConfig<> TestParamConfig;
   //  Deprecating P1Atom Sun Jul 27 18:00:05 2014
   // typedef P1Atom<TestParamConfig> TestAtom;
-  typedef P0Atom<TestParamConfig> TestAtom;
-  typedef CoreConfig<TestAtom, TestParamConfig> TestCoreConfig;
+  //  Deprecating P0Atom for MFMv3 Fri Jan 30 13:45:35 2015
+  // typedef P0Atom<TestParamConfig> TestAtom;
+  typedef P3Atom TestAtom;
+  typedef Site<P3AtomConfig> TestSite;
+  typedef EventConfig<TestSite, 4> TestEventConfig;
 
-  typedef GridConfig<TestCoreConfig,4,3> TestGridConfig;
+  typedef GridConfig<TestEventConfig,40,4,3> TestGridConfig;
   typedef Grid<TestGridConfig> TestGrid;
-  typedef ElementTable<TestCoreConfig> TestElementTable;
-  typedef EventWindow<TestCoreConfig> TestEventWindow;
-  typedef Tile<TestCoreConfig> TestTile;
+  typedef TestGrid::GridTile TestTile;
+
+  typedef ElementTable<TestEventConfig> TestElementTable;
+  typedef EventWindow<TestEventConfig> TestEventWindow;
 
 } /* namespace MFM */
 
 #endif /*TEST_COMMON_H*/
-

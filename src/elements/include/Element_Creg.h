@@ -35,31 +35,31 @@
 namespace MFM
 {
 
-#define CREG_VERSION 1
-
-  template <class CC>
-  class Element_Creg : public Element<CC>
+  template <class EC>
+  class Element_Creg : public Element<EC>
   {
+    enum {  CREG_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
    private:
-    ElementParameterS32<CC> m_targetDensity;
+    ElementParameterS32<EC> m_targetDensity;
 
    public:
-    static Element_Creg<CC> THE_INSTANCE;
+    static Element_Creg<EC> THE_INSTANCE;
 
     Element_Creg()
-      : Element<CC>(MFM_UUID_FOR("Creg", CREG_VERSION)),
+      : Element<EC>(MFM_UUID_FOR("Creg", CREG_VERSION)),
         m_targetDensity(this, "density", "Target Density",
                         "The Creg will try to fill this many spots in its event "
                         "window with other Creg.", 0, 3, 41/*, 1*/)
 
     {
-      Element<CC>::SetAtomicSymbol("Cd");
-      Element<CC>::SetName("Creg");
+      Element<EC>::SetAtomicSymbol("Cd");
+      Element<EC>::SetName("Creg");
     }
 
     virtual u32 PercentMovable(const T& you,
@@ -73,10 +73,12 @@ namespace MFM
       return 0xffff8300;
     }
 
+    /*
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff774100;
     }
+    */
 
     virtual const char* GetDescription() const
     {
@@ -84,7 +86,7 @@ namespace MFM
              "on a configurable parameter.";
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       const MDist<R> & md = MDist<R>::get();
       Random& rand = window.GetRandom();
@@ -99,12 +101,12 @@ namespace MFM
         const SPoint& rel = md.GetPoint(i);
         const T& atom = window.GetRelativeAtomSym(rel);
 
-        if(Atom<CC>::IsType(atom, Element_Wall<CC>::THE_INSTANCE.GetType()))
+        if(Atom<AC>::IsType(atom, Element_Wall<EC>::THE_INSTANCE.GetType()))
         {
           continue; /* We're not going to destroy walls.*/
         }
 
-        if(Atom<CC>::IsType(atom, Element<CC>::GetType()))
+        if(Atom<AC>::IsType(atom, Element<EC>::GetType()))
         {
           cregCount++;
           if(rand.OneIn(cregCount))
@@ -124,17 +126,17 @@ namespace MFM
 
       if(cregCount > (u32) m_targetDensity.GetValue())
       {
-        window.SetRelativeAtomSym(cregAtom, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetRelativeAtomSym(cregAtom, Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
       }
       else if(cregCount < m_targetDensity.GetValue())
       {
-        window.SetRelativeAtomSym(nonCregAtom, Element_Creg<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetRelativeAtomSym(nonCregAtom, Element_Creg<EC>::THE_INSTANCE.GetDefaultAtom());
       }
     }
   };
 
-  template <class CC>
-  Element_Creg<CC> Element_Creg<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Creg<EC> Element_Creg<EC>::THE_INSTANCE;
 
 }
 

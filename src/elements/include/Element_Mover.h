@@ -9,11 +9,9 @@
 #include "Element_Res.h"
 #include "itype.h"
 #include "FXP.h"
-#include "P1Atom.h"
 
 namespace MFM
 {
-#define MOVER_VERSION 1
 
   /**
     An element that moves other elements around and causes trouble for
@@ -25,13 +23,15 @@ namespace MFM
    */
 
 
-  template <class CC>
-  class Element_Mover : public Element<CC>
+  template <class EC>
+  class Element_Mover : public Element<EC>
   {
+    enum { MOVER_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   public:
 
@@ -50,10 +50,10 @@ namespace MFM
       return type==TYPE();
     }
 
-    Element_Mover() : Element<CC>(MFM_UUID_FOR("Mover", MOVER_VERSION))
+    Element_Mover() : Element<EC>(MFM_UUID_FOR("Mover", MOVER_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("Mv");
-      Element<CC>::SetName("Mover");
+      Element<EC>::SetAtomicSymbol("Mv");
+      Element<EC>::SetName("Mover");
     }
 
     virtual const T & GetDefaultAtom() const
@@ -67,17 +67,19 @@ namespace MFM
       return 0xff0030e0;
     }
 
+    /*
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff001870;
     }
+    */
 
     virtual u32 PercentMovable(const T& you, const T& me, const SPoint& offset) const
     {
       return 100;
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       Random & random = window.GetRandom();
 
@@ -109,18 +111,18 @@ namespace MFM
         // Empty or occupied?
         const T other = window.GetRelativeAtomSym(sp);
         const u32 otherType = other.GetType();
-        bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
+        bool isEmpty = Element_Empty<EC>::THE_INSTANCE.IsType(otherType);
 
         if (isEmpty) {
           if (random.OneIn(++emptyCount)) {
             empty = sp;
           }
         } else {
-          if (otherType == Element_Mover<CC>::THE_INSTANCE.GetType())
+          if (otherType == Element_Mover<EC>::THE_INSTANCE.GetType())
             ++moverCount;
-          else if (otherType == Element_Dreg<CC>::THE_INSTANCE.GetType())
+          else if (otherType == Element_Dreg<EC>::THE_INSTANCE.GetType())
             ++dregCount;
-          else if (otherType == Element_Res<CC>::THE_INSTANCE.GetType())
+          else if (otherType == Element_Res<EC>::THE_INSTANCE.GetType())
             ++resCount;
 
           if (random.OneIn(++occupCount)) {
@@ -133,7 +135,7 @@ namespace MFM
 
         const T other = window.GetRelativeAtomSym(occup);
         const u32 otherType = other.GetType();
-        bool isRes = otherType == Element_Res<CC>::TYPE();
+        bool isRes = otherType == Element_Res<EC>::TYPE();
 
         // Is it Res, and no other Movers, and we're inclined to convert?
 
@@ -150,8 +152,8 @@ namespace MFM
 
   };
 
-  template <class CC>
-  Element_Mover<CC> Element_Mover<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Mover<EC> Element_Mover<EC>::THE_INSTANCE;
 
 }
 

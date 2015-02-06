@@ -31,20 +31,19 @@
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "itype.h"
-#include "P1Atom.h"
 
 namespace MFM
 {
 
-#define WALL_VERSION 1
-
-  template <class CC>
-  class Element_Wall : public Element<CC>
+  template <class EC>
+  class Element_Wall : public Element<EC>
   {
+    enum {  WALL_VERSION = 2 };
+
     // Short names for params
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   public:
     static Element_Wall THE_INSTANCE;
@@ -52,10 +51,10 @@ namespace MFM
       return THE_INSTANCE.GetType();
     }
 
-    Element_Wall() : Element<CC>(MFM_UUID_FOR("Wall", WALL_VERSION))
+    Element_Wall() : Element<EC>(MFM_UUID_FOR("Wall", WALL_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("W");
-      Element<CC>::SetName("Wall");
+      Element<EC>::SetAtomicSymbol("W");
+      Element<EC>::SetName("Wall");
     }
 
     virtual const T & GetDefaultAtom() const
@@ -69,10 +68,12 @@ namespace MFM
       return 0xffffffff;
     }
 
+    /*
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff202020;
     }
+    */
 
     virtual const char* GetDescription() const
     {
@@ -81,7 +82,7 @@ namespace MFM
              "DREG will not.";
     }
 
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
+    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const
     {
       return nowAt.Equals(maybeAt)?COMPLETE_DIFFUSABILITY:0;
     }
@@ -92,12 +93,12 @@ namespace MFM
       return 0;
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     { }
   };
 
-  template <class CC>
-  Element_Wall<CC> Element_Wall<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Wall<EC> Element_Wall<EC>::THE_INSTANCE;
 }
 
 #endif /* ELEMENT_WALL_H */

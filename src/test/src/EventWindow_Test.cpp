@@ -5,7 +5,6 @@
 #include "assert.h"
 #include "EventWindow_Test.h"
 #include "EventWindow.h"
-#include "P1Atom.h"
 #include "Point.h"
 
 namespace MFM {
@@ -26,12 +25,12 @@ namespace MFM {
   void EventWindow_Test::Test_EventWindowNoLockOpen()
   {
     TestTile tile;
-    Element_Wall<TestCoreConfig>::THE_INSTANCE.AllocateType(); // Need something non-diffusing..
-    tile.RegisterElement(Element_Wall<TestCoreConfig>::THE_INSTANCE);
+    Element_Wall<TestEventConfig>::THE_INSTANCE.AllocateType(); // Need something non-diffusing..
+    tile.RegisterElement(Element_Wall<TestEventConfig>::THE_INSTANCE);
 
     SPoint center(15, 20);  // Hitting no caches, for starters
     SPoint zero(0, 0);
-    const u32 WALL_TYPE = Element_Wall<TestCoreConfig>::THE_INSTANCE.GetType();
+    const u32 WALL_TYPE = Element_Wall<TestEventConfig>::THE_INSTANCE.GetType();
 
     tile.PlaceAtom(TestAtom(WALL_TYPE,0,0,0), center);
 
@@ -53,10 +52,10 @@ namespace MFM {
   void EventWindow_Test::Test_EventWindowWrite()
   {
     TestTile tile;
-    Element_Dreg<TestCoreConfig>::THE_INSTANCE.AllocateType();
-    Element_Res<TestCoreConfig>::THE_INSTANCE.AllocateType();
-    tile.RegisterElement(Element_Dreg<TestCoreConfig>::THE_INSTANCE);
-    tile.RegisterElement(Element_Res<TestCoreConfig>::THE_INSTANCE);
+    Element_Dreg<TestEventConfig>::THE_INSTANCE.AllocateType();
+    Element_Res<TestEventConfig>::THE_INSTANCE.AllocateType();
+    tile.RegisterElement(Element_Dreg<TestEventConfig>::THE_INSTANCE);
+    tile.RegisterElement(Element_Res<TestEventConfig>::THE_INSTANCE);
 
     // We must ensure neither center nor 'absolute' ends up hitting the
     // cache!  Our TestTile has no connections, so Tile::PlaceAtom
@@ -64,10 +63,10 @@ namespace MFM {
     SPoint center(8, 8);
     SPoint absolute(-2, 0);
     SPoint zero(0, 0);
-    const u32 DREG_TYPE = Element_Dreg<TestCoreConfig>::THE_INSTANCE.GetType();
-    const u32 RES_TYPE = Element_Res<TestCoreConfig>::THE_INSTANCE.GetType();
+    const u32 DREG_TYPE = Element_Dreg<TestEventConfig>::THE_INSTANCE.GetType();
+    const u32 RES_TYPE = Element_Res<TestEventConfig>::THE_INSTANCE.GetType();
 
-    const u32 EMPTY_TYPE = Element_Empty<TestCoreConfig>::THE_INSTANCE.GetType();
+    const u32 EMPTY_TYPE = Element_Empty<TestEventConfig>::THE_INSTANCE.GetType();
 
     absolute.Add(center);
 

@@ -29,6 +29,7 @@
 #define MUTEX_H
 
 #include <pthread.h>  /* for pthread_mutex_t etc */
+#include <errno.h>    /* for EBUSY */
 #include "itype.h"
 #include "Fail.h"
 
@@ -228,13 +229,18 @@ namespace MFM
         FAIL(LOCK_FAILURE);
       }
 
-      bool ret = !pthread_mutex_trylock(&m_lock);
-      if (ret)
-      {
+      int status = pthread_mutex_trylock(&m_lock);
+
+      if (status == 0) {
         m_threadId = pthread_self();
         m_locked = true;
+        return true;
       }
-      return ret;
+
+      if (status != EBUSY)
+        FAIL(LOCK_FAILURE);
+
+      return false;
     }
 
     /** Locks the underlying mutex, blocking as long as necessary to
@@ -245,7 +251,8 @@ namespace MFM
      */
     void Lock()
     {
-      if (pthread_mutex_lock(&m_lock))
+      int status = pthread_mutex_lock(&m_lock);
+      if (status != 0)
       {
         FAIL(LOCK_FAILURE);
       }
@@ -256,7 +263,7 @@ namespace MFM
       }
 
       // Update threadid before declaring locked so, for example, the
-      // first condition in this method can't trigger on a possibly
+      // second condition in this method can't trigger on a possibly
       // stale threadid.
       m_threadId = pthread_self();
       m_locked = true;

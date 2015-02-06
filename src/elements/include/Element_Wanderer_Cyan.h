@@ -31,35 +31,34 @@
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "itype.h"
-#include "P1Atom.h"
 #include "AbstractElement_Wanderer.h"
 
 namespace MFM
 {
 
-#define WANDERER_VERSION 1
-
-  template <class CC>
-  class Element_Wanderer_Cyan : public AbstractElement_Wanderer<CC>
+  template <class EC>
+  class Element_Wanderer_Cyan : public AbstractElement_Wanderer<EC>
   {
+    enum {  WANDERER_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
    private:
-    ElementParameterS32<CC> m_wanderDistance;
+    ElementParameterS32<EC> m_wanderDistance;
 
    public:
     static Element_Wanderer_Cyan THE_INSTANCE;
 
     Element_Wanderer_Cyan()
-      : AbstractElement_Wanderer<CC>(MFM_UUID_FOR("WandererCyan", WANDERER_VERSION)),
+      : AbstractElement_Wanderer<EC>(MFM_UUID_FOR("WandererCyan", WANDERER_VERSION)),
         m_wanderDistance(this, "cyanWanderDistance", "Wander Distance",
                          "Wander Distance", 0, 1, R)
     {
-      Element<CC>::SetAtomicSymbol("Wc");
-      Element<CC>::SetName("WandererCyan");
+      Element<EC>::SetAtomicSymbol("Wc");
+      Element<EC>::SetName("WandererCyan");
     }
 
     virtual u32 PercentMovable(const T& you,
@@ -73,10 +72,12 @@ namespace MFM
       return 0xff00ffff;
     }
 
+    /*
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff007f7f;
     }
+    */
 
    protected:
     virtual u32 GetWanderDistance() const
@@ -85,8 +86,8 @@ namespace MFM
     }
   };
 
-  template <class CC>
-  Element_Wanderer_Cyan<CC> Element_Wanderer_Cyan<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Wanderer_Cyan<EC> Element_Wanderer_Cyan<EC>::THE_INSTANCE;
 
 }
 

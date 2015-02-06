@@ -5,11 +5,11 @@
 namespace MFM
 {
 
-  template <class CC>
-  u32 TileRenderer::GetAtomColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom,
+  template <class EC>
+  u32 TileRenderer::GetAtomColor(Tile<EC>& tile, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom,
                                  u32 selector)
   {
-    const Element<CC> * elt = tile.GetElementTable().Lookup(atom.GetType());
+    const Element<EC> * elt = tile.GetElementTable().Lookup(atom.GetType());
     if (elt)
     {
       return elt->LocalPhysicsColor(atom,selector);
@@ -17,24 +17,21 @@ namespace MFM
     return 0xffffffff;
   }
 
-  template <class CC>
-  u32 TileRenderer::GetDataHeatColor(Tile<CC>& tile, const typename CC::ATOM_TYPE& atom)
+  template <class EC>
+  u32 TileRenderer::GetDataHeatColor(Tile<EC>& tile, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom)
   {
     return GetAtomColor(tile,atom,1);
   }
 
 
-  template <class CC>
-  void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<CC>& tile,
+  template <class EC>
+  void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<EC>& tile,
                                  bool renderCache, bool lowlight)
   {
-    // Extract short type names
-    typedef typename CC::PARAM_CONFIG P;
+    u32 astart = renderCache ? 0 : EC::EVENT_WINDOW_RADIUS;
+    u32 aend   = renderCache ? tile.TILE_SIDE : tile.TILE_SIDE - EC::EVENT_WINDOW_RADIUS;
 
-    u32 astart = renderCache ? 0 : P::EVENT_WINDOW_RADIUS;
-    u32 aend   = renderCache ? P::TILE_WIDTH : P::TILE_WIDTH - P::EVENT_WINDOW_RADIUS;
-
-    u32 cacheOffset = renderCache ? 0 : -P::EVENT_WINDOW_RADIUS * m_atomDrawSize;
+    u32 cacheOffset = renderCache ? 0 : -EC::EVENT_WINDOW_RADIUS * m_atomDrawSize;
 
     SPoint atomLoc;
 
@@ -59,8 +56,8 @@ namespace MFM
             {
               // Draw background 'write heat' map
               u32 writeAge = tile.GetUncachedWriteAge32(atomLoc -
-                                                        SPoint(P::EVENT_WINDOW_RADIUS,
-                                                               P::EVENT_WINDOW_RADIUS));
+                                                        SPoint(EC::EVENT_WINDOW_RADIUS,
+                                                               EC::EVENT_WINDOW_RADIUS));
               u32 colorIndex = 0;
               const u32 MAX_IDX = 10000;       // Potential (interpolated) colors
               const u32 AGE_PER_AEPS = tile.GetSites();
@@ -70,8 +67,8 @@ namespace MFM
 
               colorIndex = MIN(MAX_IDX, (u32) (LOG_SCALER*log10(writeAgeAEPS)));
               u32 color =
-              ColorMap_CubeHelixRev::THE_INSTANCE.
-              GetInterpolatedColor(colorIndex,0,MAX_IDX,0xffff0000);
+                ColorMap_CubeHelixRev::THE_INSTANCE.
+                GetInterpolatedColor(colorIndex,0,MAX_IDX,0xffff0000);
 
               drawing.SetForeground(color);
               drawing.FillRect(rendPt.GetX(),
@@ -93,7 +90,7 @@ namespace MFM
   }
 
 
-  template <class CC>
+  template <class EC>
   void TileRenderer::RenderBadAtom(Drawing& drawing, const UPoint& rendPt)
   {
     for(s32 x = 0; x < (s32)m_atomDrawSize; x++)
@@ -114,16 +111,16 @@ namespace MFM
     }
   }
 
-  template <class CC>
+  template <class EC>
   void TileRenderer::RenderAtom(Drawing & drawing, const SPoint& atomLoc,
-                                const UPoint& rendPt,  Tile<CC>& tile, bool lowlight)
+                                const UPoint& rendPt,  Tile<EC>& tile, bool lowlight)
   {
-    const typename CC::ATOM_TYPE * atom = tile.GetAtom(atomLoc);
+    const typename EC::ATOM_CONFIG::ATOM_TYPE * atom = tile.GetAtom(atomLoc);
     if(!atom->IsSane())
     {
-      RenderBadAtom<CC>(drawing, rendPt);
+      RenderBadAtom<EC>(drawing, rendPt);
     }
-    else if(atom->GetType() != Element_Empty<CC>::THE_INSTANCE.GetType())
+    else if(atom->GetType() != Element_Empty<EC>::THE_INSTANCE.GetType())
     {
       u32 color = GetAtomColor(tile, *atom, m_heatmapSelector);
 
@@ -159,7 +156,7 @@ namespace MFM
 
           if (m_atomDrawSize > 40)
           {
-            const Element<CC> * elt = tile.GetElement(atom->GetType());
+            const Element<EC> * elt = tile.GetElement(atom->GetType());
             if (elt)
             {
               drawing.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
@@ -180,27 +177,26 @@ namespace MFM
     }
   }
 
-  template <class CC>
-  void TileRenderer::RenderTile(Drawing & drawing, Tile<CC>& t, SPoint& loc, bool renderWindow,
+  template <class EC>
+  void TileRenderer::RenderTile(Drawing & drawing, Tile<EC>& t, SPoint& loc, bool renderWindow,
                                 bool renderCache, bool selected, SPoint* selectedAtom,
                                 SPoint* cloneOrigin)
   {
-    // Extract short type names
-    typedef typename CC::PARAM_CONFIG P;
+    const u32 TILE_SIDE = t.TILE_SIDE;
 
     SPoint multPt(loc);
 
     const s32 INTER_CACHE_GAP = 1;
     s32 spacing = renderCache ?
-                  P::TILE_WIDTH + INTER_CACHE_GAP :
-                  P::TILE_WIDTH - P::EVENT_WINDOW_RADIUS * 2;
+                  TILE_SIDE + INTER_CACHE_GAP :
+                  TILE_SIDE - EC::EVENT_WINDOW_RADIUS * 2;
 
     multPt.Multiply(spacing * m_atomDrawSize);
 
     SPoint realPt(multPt);
 
 
-    u32 tileHeight = P::TILE_WIDTH * m_atomDrawSize;
+    u32 tileHeight = TILE_SIDE * m_atomDrawSize;
 
     bool lowlight = !t.IsActive();
 
@@ -217,10 +213,10 @@ namespace MFM
       case NO:
         break;
       case FULL:
-        RenderMemRegions<CC>(drawing, multPt, renderCache, selected, lowlight);
+        RenderMemRegions<EC>(drawing, multPt, renderCache, selected, lowlight, TILE_SIDE);
         break;
       case EDGE:
-        RenderVisibleRegionOutlines<CC>(drawing, multPt, renderCache, selected, lowlight);
+        RenderVisibleRegionOutlines<EC>(drawing, multPt, renderCache, selected, lowlight, TILE_SIDE);
         break;
       }
 
@@ -233,7 +229,7 @@ namespace MFM
 
       if(m_drawGrid)
       {
-        RenderGrid<CC>(drawing, &multPt, renderCache);
+        RenderGrid<EC>(drawing, &multPt, renderCache, TILE_SIDE);
       }
 
       if(selectedAtom)
@@ -254,16 +250,14 @@ namespace MFM
     }
   }
 
-  template <class CC>
+  template <class EC>
   void TileRenderer::RenderEventWindow(Drawing & drawing, SPoint& offset,
-                                       Tile<CC>& tile, bool renderCache)
+                                       Tile<EC>& tile, bool renderCache)
   {
-    FAIL(INCOMPLETE_CODE);
 
-#if 0 // Sun Oct 19 11:39:41 2014 Unreimplemented since not currently in use
+#if 1 // Sun Oct 19 11:39:41 2014 Unreimplemented since not currently in use
     // Extract short type names
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS};
+    enum { R = EC::EVENT_WINDOW_RADIUS};
 
     SPoint atomLoc;
     SPoint eventCenter;
@@ -274,7 +268,7 @@ namespace MFM
     u32 tableSize = EVENT_WINDOW_SITES(R);
     for(u32 i = 0; i < tableSize; i++)
     {
-      const MDist<R>::get().FillFromBits(atomLoc, i, R);
+      MDist<R>::get().FillFromBits(atomLoc, i, R);
       atomLoc.Add(eventCenter);
       atomLoc.Add(cacheOffset, cacheOffset);
 
@@ -292,76 +286,80 @@ namespace MFM
 #endif
   }
 
-  template <class CC>
+  template <class EC>
   void TileRenderer::RenderMemRegions(Drawing & drawing, SPoint& pt,
-                                      bool renderCache, bool selected, bool lowlight)
+                                      bool renderCache, bool selected, bool lowlight,
+                                      const u32 TILE_SIDE)
   {
     // Extract short type names
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS};
+    enum { R = EC::EVENT_WINDOW_RADIUS};
 
     int regID = 0;
     if(renderCache)
     {
-      RenderMemRegion<CC>(drawing, pt, regID++, !lowlight ?
-                          m_cacheColor : Drawing::HalfColor(m_cacheColor), renderCache);
+      RenderMemRegion<EC>(drawing, pt, regID++, !lowlight ?
+                          m_cacheColor : Drawing::HalfColor(m_cacheColor), renderCache,
+                          TILE_SIDE);
     }
-    RenderMemRegion<CC>(drawing, pt, regID++, !lowlight ?
-                          m_sharedColor : Drawing::HalfColor(m_sharedColor), renderCache);
-    RenderMemRegion<CC>(drawing, pt, regID++, !lowlight ?
-                          m_visibleColor : Drawing::HalfColor(m_visibleColor), renderCache);
-    RenderMemRegion<CC>(drawing, pt, regID,
+    RenderMemRegion<EC>(drawing, pt, regID++, !lowlight ?
+                        m_sharedColor : Drawing::HalfColor(m_sharedColor), renderCache,
+                        TILE_SIDE);
+    RenderMemRegion<EC>(drawing, pt, regID++, !lowlight ?
+                        m_visibleColor : Drawing::HalfColor(m_visibleColor), renderCache,
+                        TILE_SIDE);
+    RenderMemRegion<EC>(drawing, pt, regID,
                         selected ? m_selectedHiddenColor :
                                    (!lowlight ?
                                     m_hiddenColor : Drawing::HalfColor(m_hiddenColor)),
-                        renderCache);
+                        renderCache,
+                        TILE_SIDE);
   }
 
-  template <class CC>
+  template <class EC>
   void TileRenderer::RenderVisibleRegionOutlines(Drawing & drawing, SPoint& pt,
-                                                 bool renderCache, bool selected, bool lowlight)
+                                                 bool renderCache, bool selected, bool lowlight,
+                                                 const u32 TILE_SIDE)
   {
     u32 regID = renderCache ? 2 : 1;
 
-
     if(!lowlight)
     {
-      RenderMemRegion<CC>(drawing, pt, regID,
-                          selected ? 0xff606060 : 0xff202020, renderCache);
+      RenderMemRegion<EC>(drawing, pt, regID,
+                          selected ? 0xff606060 : 0xff202020, renderCache,
+                          TILE_SIDE);
     }
     else
     {
-      RenderMemRegion<CC>(drawing, pt, regID,
-                          selected ? 0xff303030 : 0xff101010, renderCache);
+      RenderMemRegion<EC>(drawing, pt, regID,
+                          selected ? 0xff303030 : 0xff101010, renderCache,
+                          TILE_SIDE);
     }
   }
 
-  template <class CC>
+  template <class EC>
   void TileRenderer::RenderMemRegion(Drawing & drawing, SPoint& pt, int regID,
-                                     Uint32 color, bool renderCache)
+                                     Uint32 color, bool renderCache,
+                                     const u32 TILE_SIDE)
   {
-    // Extract short names for parameter types
-    typedef typename CC::PARAM_CONFIG P;
-
     int tileSize;
     if(!renderCache)
     {
       /* Subtract out the cache's width */
       tileSize = m_atomDrawSize *
-        (P::TILE_WIDTH - 2 * P::EVENT_WINDOW_RADIUS);
+        (TILE_SIDE - 2 * EC::EVENT_WINDOW_RADIUS);
     }
     else
     {
-      tileSize = m_atomDrawSize * P::TILE_WIDTH;
+      tileSize = m_atomDrawSize * TILE_SIDE;
     }
 
-    int ewrSize = P::EVENT_WINDOW_RADIUS * m_atomDrawSize;
+    int ewrSize = EC::EVENT_WINDOW_RADIUS * m_atomDrawSize;
 
     /* Find rectangle to fill. */
-    Point<s32> topPt(pt.GetX() + (ewrSize * regID) + m_windowTL.GetX(),
-                     pt.GetY() + (ewrSize * regID) + m_windowTL.GetY());
-    Point<s32> botPt(MIN((s32)m_dimensions.GetX(), topPt.GetX() + (tileSize - (ewrSize * regID * 2))),
-                     MIN((s32)m_dimensions.GetY(), topPt.GetY() + (tileSize - (ewrSize * regID * 2))));
+    SPoint topPt(pt.GetX() + (ewrSize * regID) + m_windowTL.GetX(),
+                 pt.GetY() + (ewrSize * regID) + m_windowTL.GetY());
+    SPoint botPt(MIN((s32)m_dimensions.GetX(), topPt.GetX() + (tileSize - (ewrSize * regID * 2))),
+                 MIN((s32)m_dimensions.GetY(), topPt.GetY() + (tileSize - (ewrSize * regID * 2))));
 
     drawing.FillRect(topPt.GetX(), topPt.GetY(),
                      botPt.GetX() - topPt.GetX(),
@@ -369,24 +367,22 @@ namespace MFM
                      color);
   }
 
-  template <class CC>
-  void TileRenderer::RenderGrid(Drawing & drawing, SPoint* pt, bool renderCache)
+  template <class EC>
+  void TileRenderer::RenderGrid(Drawing & drawing, SPoint* pt, bool renderCache, const u32 TILE_SIDE)
   {
-// Extract short type names
-    typedef typename CC::PARAM_CONFIG P;
     s32 lineLen, linesToDraw;
 
     if(!renderCache)
     {
       lineLen = m_atomDrawSize *
-        (P::TILE_WIDTH - 2 * P::EVENT_WINDOW_RADIUS);
-      linesToDraw = P::TILE_WIDTH +
-        1 - (2 * P::EVENT_WINDOW_RADIUS);
+        (TILE_SIDE - 2 * EC::EVENT_WINDOW_RADIUS);
+      linesToDraw = TILE_SIDE +
+        1 - (2 * EC::EVENT_WINDOW_RADIUS);
     }
     else
     {
-      lineLen = m_atomDrawSize * P::TILE_WIDTH;
-      linesToDraw = P::TILE_WIDTH + 1;
+      lineLen = m_atomDrawSize * TILE_SIDE;
+      linesToDraw = TILE_SIDE + 1;
     }
 
     s32 lowBound =

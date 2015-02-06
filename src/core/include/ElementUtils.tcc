@@ -9,17 +9,17 @@ namespace MFM
     /* Fills 'pt' with the value of a randomly selected empty von neumann */
     /* neighbor.                                                          */
     /* Returns false if there is no valid neighbor to be used.            */
-    template <class CC>
-    bool FillAvailableVNNeighbor(EventWindow<CC>& window, SPoint& pt)
+    template <class EC>
+    bool FillAvailableVNNeighbor(EventWindow<EC>& window, SPoint& pt)
     {
-      return FillPointWithType(window, pt, VNNeighbors, 4, Dirs::SOUTHEAST, Element_Empty<CC>::GetType());
+      return FillPointWithType(window, pt, VNNeighbors, 4, Dirs::SOUTHEAST, Element_Empty<EC>::GetType());
     }
 
     /* Master search method for finding atoms in regions in a window. If regions are
        symmetric about the origin, rotation does not make a difference.
     */
-    template <class CC>
-    bool FillPointWithType(EventWindow<CC>& window,
+    template <class EC>
+    bool FillPointWithType(EventWindow<EC>& window,
                            SPoint& pt, const SPoint* relevants, u32 relevantCount,
                            Dir rotation, ElementType type)
     {

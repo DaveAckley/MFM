@@ -29,49 +29,49 @@
 
 #include "Packet.h"
 #include "OverflowableCharBufferByteSink.h"
-#include "CoreConfig.h"
+#include "EventConfig.h"
 #include "AtomSerializer.h"
 #include "itype.h"
 
 namespace MFM
 {
-  template <class CC> class CacheProcessor; // FORWARD
+  template <class EC> class CacheProcessor; // FORWARD
 
   class PacketIO {
     PacketBuffer m_buffer;
   public:
-    template <class CC>
-    bool SendUpdateBegin(CacheProcessor<CC> & cxn, const SPoint & localCenter) ;
+    template <class EC>
+    bool SendUpdateBegin(CacheProcessor<EC> & cxn, const SPoint & localCenter) ;
 
-    template <class CC>
-    bool SendUpdateEnd(CacheProcessor<CC> & cxn) ;
+    template <class EC>
+    bool SendUpdateEnd(CacheProcessor<EC> & cxn) ;
 
-    template <class CC>
-    bool SendAtom(PacketTypeCode ptype, CacheProcessor<CC> & cxn,
-                  u16 siteNumber, const typename CC::ATOM_TYPE & atom) ;
+    template <class EC>
+    bool SendAtom(PacketTypeCode ptype, CacheProcessor<EC> & cxn,
+                  u16 siteNumber, const typename EC::ATOM_CONFIG::ATOM_TYPE & atom) ;
 
-    template <class CC>
-    bool SendReply(PacketTypeCode ptype, CacheProcessor<CC> & cxn) ;
+    template <class EC>
+    bool SendReply(PacketTypeCode ptype, CacheProcessor<EC> & cxn) ;
 
     /**
        Parse (and dispatch to ReceiveXXX methods herein) to deal with
        the packet in buf.  \returns true if all went well, \returns
        false if some problem.
      */
-    template <class CC>
-    bool HandlePacket(CacheProcessor<CC> & cxn, PacketBuffer & buf) ;
+    template <class EC>
+    bool HandlePacket(CacheProcessor<EC> & cxn, PacketBuffer & buf) ;
 
-    template <class CC>
-    bool ReceiveUpdateBegin(CacheProcessor<CC> & cxn, ByteSource & buf) ;
+    template <class EC>
+    bool ReceiveUpdateBegin(CacheProcessor<EC> & cxn, ByteSource & buf) ;
 
-    template <class CC>
-    bool ReceiveAtom(CacheProcessor<CC> & cxn, ByteSource & buf) ;
+    template <class EC>
+    bool ReceiveAtom(CacheProcessor<EC> & cxn, ByteSource & buf) ;
 
-    template <class CC>
-    bool ReceiveUpdateEnd(CacheProcessor<CC> & cxn, ByteSource & buf) ;
+    template <class EC>
+    bool ReceiveUpdateEnd(CacheProcessor<EC> & cxn, ByteSource & buf) ;
 
-    template <class CC>
-    bool ReceiveReply(CacheProcessor<CC> & cxn, ByteSource & buf) ;
+    template <class EC>
+    bool ReceiveReply(CacheProcessor<EC> & cxn, ByteSource & buf) ;
 
   };
 

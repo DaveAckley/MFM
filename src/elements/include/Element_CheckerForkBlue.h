@@ -35,25 +35,25 @@
 namespace MFM
 {
 
-  #define CHECKERFORK_VERSION 1
-
-  template <class CC>
-  class Element_CheckerForkBlue : public Element<CC>
+  template <class EC>
+  class Element_CheckerForkBlue : public Element<EC>
   {
+    enum {  CHECKERFORK_VERSION = 1 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   public:
 
-    static Element_CheckerForkBlue<CC> THE_INSTANCE;
+    static Element_CheckerForkBlue<EC> THE_INSTANCE;
 
     Element_CheckerForkBlue()
-      : Element<CC>(MFM_UUID_FOR("CheckerForkBlue", CHECKERFORK_VERSION))
+      : Element<EC>(MFM_UUID_FOR("CheckerForkBlue", CHECKERFORK_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("Cb");
-      Element<CC>::SetName("CheckerForkBlue");
+      Element<EC>::SetAtomicSymbol("Cb");
+      Element<EC>::SetName("CheckerForkBlue");
     }
 
     virtual u32 PercentMovable(const T& you,
@@ -67,21 +67,23 @@ namespace MFM
       return 0xff800080;
     }
 
+    /*
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff400040;
     }
+    */
 
     virtual const char* GetDescription() const
     {
       return "Blue Circular Dependency tutorial Element";
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const;
+    virtual void Behavior(EventWindow<EC>& window) const;
   };
 
-  template <class CC>
-  Element_CheckerForkBlue<CC> Element_CheckerForkBlue<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_CheckerForkBlue<EC> Element_CheckerForkBlue<EC>::THE_INSTANCE;
 }
 
 #include "Element_CheckerForkBlue.tcc"

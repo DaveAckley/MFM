@@ -132,7 +132,7 @@ namespace MFM
      * @param format The format used to print a printf-style format
      *               string describing the failure.
      */
-    void Die(const char * format, ...);
+    void Die(const char * format, ...) __attribute__ ((noreturn)) ;
 
     /**
      * Registers a new command line argument to this VArguments instance.
@@ -226,7 +226,7 @@ namespace MFM
      * Prints all held arguments to stdout. This is called when the
      * default 'help' command line argument is invoked.
      */
-    void Usage() const;
+    void Usage() const  __attribute__ ((noreturn)) ;
   };
 }
 

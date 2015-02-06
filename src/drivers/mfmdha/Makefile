@@ -10,7 +10,7 @@ INCLUDES += $(shell sdl-config --cflags)
 
 # What we need to link
 LIBS += -L $(BASEDIR)/build/core/ -L $(BASEDIR)/build/sim/ -L $(BASEDIR)/build/gui/
-LIBS += -lmfmgui -lmfmsim -lmfmcore -lSDL_ttf -lSDL_image -lSDL -lpng -lm -ldl
+LIBS += -lmfmgui -lmfmsim -lmfmcore -lSDL_ttf -lSDL_image -lSDL -lpng -lm
 
 # Do the program thing
 include $(BASEDIR)/config/Makeprog.mk
@@ -23,5 +23,5 @@ LDFLAGS += -rdynamic
 # Add dependency to make the plugin
 $(BINDIR)/$(COMPONENTNAME):	$(BINDIR)/Element_MQBar-Plugin.so
 
-$(BINDIR)/Element_MQBar-Plugin.so:	src/Element_MQBar.cpp include/Element_MQBar.h include/LocalConfig.h
+$(BINDIR)/Element_MQBar-Plugin.so:	src/Element_MQBar.cpp include/Element_MQBar.h
 	$(GPP) -shared -fPIC -DELEMENT_PLUG_IN $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -o"$@" "$<"

@@ -69,7 +69,7 @@ namespace MFM {
     for (iterator_type i = begin(); i != end(); ++i)
     {
       SPoint tpt = i.At();
-      Tile<CC> & ctile = *i;
+      Tile<EC> & ctile = *i;
 
       ctile.Init();
 
@@ -88,7 +88,7 @@ namespace MFM {
         for (Dir d = Dirs::NORTHEAST; d <= Dirs::SOUTH; ++d)
         {
           SPoint tpt(x,y);
-          Tile<CC>& ctile = GetTile(tpt);
+          Tile<EC>& ctile = GetTile(tpt);
 
           SPoint npt = tpt + Dirs::GetOffset(d);
 
@@ -101,7 +101,7 @@ namespace MFM {
           GridTransceiver & gt = td.m_channels[d - Dirs::NORTHEAST];
           LonglivedLock & ctl = GetIntertileLock(x,y,d);
 
-          Tile<CC>& otile = GetTile(npt);
+          Tile<EC>& otile = GetTile(npt);
           Dir odir = Dirs::OppositeDir(d);
           LonglivedLock & otl = GetIntertileLock(npt.GetX(),npt.GetY(),odir);
 
@@ -125,7 +125,7 @@ namespace MFM {
     {
       for(u32 y = 0; y < m_height; y++)
       {
-        const Tile<CC> & tile = GetTile(x,y);
+        const Tile<EC> & tile = GetTile(x,y);
         double red = tile.GetAverageCacheRedundancy();
         if (red >= 0)
         {
@@ -148,7 +148,7 @@ namespace MFM {
     {
       for(u32 y = 0; y < m_height; y++)
       {
-        Tile<CC> & tile = GetTile(x,y);
+        Tile<EC> & tile = GetTile(x,y);
         tile.SetCacheRedundancy(redundancyOddsType);
       }
     }
@@ -200,7 +200,7 @@ namespace MFM {
   void* Grid<GC>::TileDriverRunner(void * arg)
   {
     TileDriver * td = (TileDriver*) arg;
-    Tile<CC> & ctile = td->GetTile();
+    Tile<EC> & ctile = td->GetTile();
 
     // Init error stack pointer (for this thread only)
     MFMPtrToErrEnvStackPtr = ctile.GetErrorEnvironmentStackTop();
@@ -213,11 +213,13 @@ namespace MFM {
 
     ctile.RequestStatePassive();
 
-    while (true)
+    bool running = true;
+    while (running)
     {
       switch (td->GetState())
       {
       case TileDriver::EXIT_REQUEST:
+        running = false;
         break;
 
       case TileDriver::ADVANCING:
@@ -248,7 +250,7 @@ namespace MFM {
         FAIL(ILLEGAL_STATE);
       }
     }
-
+    LOG.Debug("Tile %s thread exiting", ctile.GetLabel());
     return NULL;
   }
 
@@ -274,7 +276,7 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::SetTileEnabled(const SPoint& tileLoc, bool isEnabled)
   {
-    Tile<CC> & tile = GetTile(tileLoc);
+    Tile<EC> & tile = GetTile(tileLoc);
     if (isEnabled)
     {
       tile.SetEnabled();
@@ -318,7 +320,7 @@ namespace MFM {
     if (siteInGrid.GetX() < 0 || siteInGrid.GetY() < 0)
       return false;
 
-    SPoint t = siteInGrid/Tile<CC>::OWNED_SIDE;
+    SPoint t = siteInGrid/OWNED_SIDE;
 
     if (!IsLegalTileIndex(t))
       return false;
@@ -326,7 +328,7 @@ namespace MFM {
     // Set up return values
     tileInGrid = t;
     siteInTile =
-      siteInGrid % Tile<CC>::OWNED_SIDE;  // get index into just 'owned' sites
+      siteInGrid % OWNED_SIDE;  // get index into just 'owned' sites
     return true;
   }
 
@@ -347,7 +349,7 @@ namespace MFM {
       FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
     }
 
-    Tile<CC> & owner = GetTile(tileInGrid);
+    Tile<EC> & owner = GetTile(tileInGrid);
     owner.PlaceAtom(atom, siteInTile);
 
     Dir startDir = owner.SharedAt(siteInTile);
@@ -370,14 +372,14 @@ namespace MFM {
 
       if (!IsLegalTileIndex(otherTileIndex)) continue;  // edge of grid
 
-      Tile<CC> & other = GetTile(otherTileIndex);
+      Tile<EC> & other = GetTile(otherTileIndex);
 
       // siteInTile is in tileInGrid's shared region, indexed with
       // including-cache coords.  Offsetting by the owned size
       // (excluding caches) maps into including-cache coords on their
       // side.  Hmm.
 
-      SPoint otherIndex = siteInTile - tileOffset * Tile<CC>::OWNED_SIDE;
+      SPoint otherIndex = siteInTile - tileOffset * OWNED_SIDE;
 
       other.PlaceAtom(atom,otherIndex);
     }
@@ -402,11 +404,8 @@ namespace MFM {
       FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
     }
 
-    FAIL(INCOMPLETE_CODE);
-    /*
-    Tile<CC> & owner = GetTile(tileInGrid);
-    owner.SingleXRay(siteInTile.GetX(), siteInTile.GetY());
-    */
+    Tile<EC> & owner = GetTile(tileInGrid);
+    owner.SingleXRay(siteInTile, 100);
     /* This doesn't focus on xraying across caches, which I suppose is
      * the correct behavior. */
   }
@@ -424,7 +423,7 @@ namespace MFM {
     for (iterator_type i = begin(); i != end(); ++i)
     {
       i->GetRandom().SetSeed(m_random.Create());
-      Tile<CC> & tile = *i;
+      Tile<EC> & tile = *i;
       LOG.Log(level,"--Grid(%d,%d)=Tile %s (%p)--",
               i.GetX(),  i.GetY(), tile.GetLabel(), (void *) &tile);
         tile.ReportTileStatus(level);
@@ -569,8 +568,8 @@ namespace MFM {
   void Grid<GC>::WriteEPSAverageImage(ByteSink & outstrm) const
   {
     u64 max = 0;
-    const u32 swidth = Tile<CC>::OWNED_SIDE;
-    const u32 sheight = Tile<CC>::OWNED_SIDE;
+    const u32 swidth = OWNED_SIDE;
+    const u32 sheight = OWNED_SIDE;
     const u32 tileCt = GetHeight() * GetWidth();
 
     for(u32 pass = 0; pass < 2; pass++)
@@ -620,53 +619,16 @@ namespace MFM {
     return total;
   }
 
-#if 0
-  template <class GC>
-  void Grid<GC>::SurroundRectangleWithWall(s32 sx, s32 sy, s32 w, s32 h, s32 thickness)
-  {
-    if(thickness > 0)
-    {
-      SPoint aloc;
-      T atom(Element_Wall<CC>::THE_INSTANCE.GetDefaultAtom());
-      /* Draw out one rectangle */
-      for(s32 x = sx; x <= sx + w; x++)
-      {
-	aloc.SetX(x);
-	aloc.SetY(sy);
-
-	PlaceAtom(atom, aloc);
-
-	aloc.SetY(sy + h);
-	PlaceAtom(atom, aloc);
-      }
-
-      for(s32 y = sy; y <= sy + h; y++)
-      {
-	aloc.SetY(y);
-	aloc.SetX(sx);
-
-	PlaceAtom(atom, aloc);
-
-	aloc.SetX(sx + w);
-	PlaceAtom(atom, aloc);
-      }
-
-      /* Recursively create a larger one around us */
-      SurroundRectangleWithWall(sx - 1, sy - 1, w + 2, h + 2, thickness - 1);
-    }
-  }
-#endif
-
   template <class GC>
   void Grid<GC>::RandomNuke()
   {
     Random& rand = m_random;
 
-    SPoint center(rand.Create(W * CC::PARAM_CONFIG::TILE_WIDTH),
-		  rand.Create(H * CC::PARAM_CONFIG::TILE_WIDTH));
+    SPoint center(rand.Create(W * TILE_SIDE),
+		  rand.Create(H * TILE_SIDE));
 
-    u32 radius = rand.Between(5, CC::PARAM_CONFIG::TILE_WIDTH);
-    T atom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+    u32 radius = rand.Between(5, TILE_SIDE);
+    T atom(Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
 
     SPoint siteInGrid, tileInGrid, siteInTile;
     for(s32 x = center.GetX() - radius; x < (s32)(center.GetX() + radius); x++)
@@ -698,49 +660,11 @@ namespace MFM {
     for (iterator_type i = begin(); i != end(); ++i)
     {
       const SPoint usp = i.At();
-      const Tile<CC> & tile = GetTile(usp);
+      const Tile<EC> & tile = GetTile(usp);
 
       FAIL(INCOMPLETE_CODE);
     }
   }
-
-#if 0
-  template <class CC>
-  void Tile<CC>::CheckCaches()
-  {
-    // XXX assert(IsPausedOrOwner());
-
-    for(u32 x = 0; x < TILE_WIDTH; x++)
-    {
-      for(u32 y = 0; y < TILE_WIDTH; y++)
-      {
-        const SPoint sp(x,y);
-        if (!IsInCache(sp)) continue;
-
-        Dir dir = CacheAt(sp);
-        if (dir != direction)
-        {
-          continue;
-        }
-        if (!IsConnected(dir))
-        {
-          continue;
-        }
-
-        const SPoint rp(GetNeighborLoc(dir, sp));
-
-        T otherAtom = *otherTile.GetAtom(rp);
-        if (m_atoms[x][y] != otherAtom)
-        {
-          AtomSerializer<CC> uss(m_atoms[x][y]), thems(otherAtom);
-          LOG.Debug("%s: Mismatch at (%d,%d) dir %d, us: %@, them: %@",
-                    this->GetLabel(), x, y, dir, &uss, &thems);
-        }
-
-      }
-    }
-  }
-#endif
 
   template <class GC>
   void Grid<GC>::SetBackgroundRadiation(bool value)

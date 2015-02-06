@@ -69,21 +69,21 @@ namespace MFM
   public:
 
     /**
-     * The CoreConfig used to describe templated pieces of the core
+     * The EventConfig used to describe templated pieces of the core
      * components.
      */
-    typedef typename GC::CORE_CONFIG CC;
+    typedef typename GC::EVENT_CONFIG EC;
 
     /**
-     * The ParamConfig used to configure several templated pieces of
+     * The AtomConfig used to configure several templated pieces of
      * the core components.
      */
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
 
     /**
      * The type of every Atom used in this simulation.
      */
-    typedef typename CC::ATOM_TYPE T;
+    typedef typename AC::ATOM_TYPE T;
 
     /**
      * Exported from the GridConfiguration, the enumerated width of
@@ -101,12 +101,7 @@ namespace MFM
      * Exported from the GridConfiguration, the enumerated size of
      * every EventWindow used by this simulation.
      */
-    enum { R = P::EVENT_WINDOW_RADIUS};
-
-    /**
-     * The size of every EventWindow used by this simulation.
-     */
-    static const u32 EVENT_WINDOW_RADIUS = R;
+    enum { EVENT_WINDOW_RADIUS = EC::EVENT_WINDOW_RADIUS};
 
     /**
      * The width of the Grid used by this simulation.
@@ -122,13 +117,13 @@ namespace MFM
      * Template shortcut for an ElementRegistry with the correct
      * template parameters.
      */
-    typedef ElementRegistry<CC> OurElementRegistry;
+    typedef ElementRegistry<EC> OurElementRegistry;
 
     /**
      * Template shortcut for an instance of StdElements with the
      * correct template parameters.
      */
-    typedef StdElements<CC> OurStdElements;
+    typedef StdElements<EC> OurStdElements;
 
     /**
      * Template shortcut for a Grid with the correct template
@@ -140,13 +135,22 @@ namespace MFM
      * Template shortcut for an ElementTable with the correct template
      * parameters.
      */
-    typedef ElementTable<CC> OurElementTable;
+    typedef ElementTable<EC> OurElementTable;
 
-    Element<CC>* m_neededElements[MAX_NEEDED_ELEMENTS];
+    Element<EC>* m_neededElements[MAX_NEEDED_ELEMENTS];
     u32 m_neededElementCount;
 
-    void NeedElement(Element<CC>* element)
+    void NeedElement(Element<EC>* element)
     {
+      for (u32 i = 0; i < m_neededElementCount; ++i)
+      {
+        if (m_neededElements[i] == element)
+          return;
+
+        if (m_neededElements[i]->GetUUID() == element->GetUUID())
+          FAIL(ILLEGAL_STATE);
+      }
+
       if(m_neededElementCount >= MAX_NEEDED_ELEMENTS)
       {
         FAIL(OUT_OF_ROOM);
@@ -155,14 +159,22 @@ namespace MFM
       m_neededElements[m_neededElementCount++] = element;
     }
 
+    virtual void WriteTimeBasedCustomHeader(FileByteSink& fp)
+    { }
+
+    virtual void WriteTimeBasedCustomData(FileByteSink& fp)
+    { }
+
     void WriteTimeBasedData(FileByteSink& fp, bool exists)
     {
+#if 0
       // Extract short names for parameter types
-      typedef typename GC::CORE_CONFIG CC;
+      typedef typename GC::EVENT_CONFIG CC;
       typedef typename CC::PARAM_CONFIG P;
       enum { W = GC::GRID_WIDTH};
       enum { H = GC::GRID_HEIGHT};
       enum { R = P::EVENT_WINDOW_RADIUS};
+#endif
 
       if(!exists)
       {
@@ -182,6 +194,7 @@ namespace MFM
             }
           }
         }
+        WriteTimeBasedCustomHeader(fp);
         fp.Println();
       }
 
@@ -198,6 +211,8 @@ namespace MFM
         fp.WriteByte(' ');
         fp.Print((u32)GetGrid().GetAtomCount(m_neededElements[i]->GetType()));
       }
+
+      WriteTimeBasedCustomData(fp);
       fp.Println();
     }
 
@@ -386,7 +401,6 @@ namespace MFM
       {
         SetDataDirFromArgs(NULL, this);
       }
-
       LOG.Message("Writing to simulation directory '%s'", GetSimDirPathTemporary(""));
 
       const char* (subs[]) =
@@ -404,17 +418,12 @@ namespace MFM
         }
       }
 
-      /* Initialize tbd.txt */
-      const char* path = GetSimDirPathTemporary("tbd/tbd.txt");
-      FILE* fp = fopen(path, "w");
-      fprintf(fp, "#AEPS activesites empty dreg res wall sort-hits"
-              "sort-misses sort-total sort-hit-pctg\n");
-      fclose(fp);
-
-      m_elementRegistry.AddPath("~/.mfm/res/elements");
-      m_elementRegistry.AddPath(SHARED_DIR "/res/elements");
-      m_elementRegistry.AddPath("./bin");
       m_elementRegistry.Init();
+      u32 dlcount = m_elementRegistry.GetRegisteredElementCount();
+      for (u32 i = 0; i < dlcount; ++i)
+      {
+        NeedElement(m_elementRegistry.GetRegisteredElement(i));
+      }
 
       DefineNeededElements();
     }
@@ -430,12 +439,27 @@ namespace MFM
       while(running)
       {
         UpdateGrid(m_grid);
-
-        if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
-        {
-          running = false;
-        }
+        running = RunHelperExiter();
       }
+
+    }
+
+    virtual bool RunHelperExiter() {
+      if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
+      {
+        // Free final save if --haltafteraeps.  Hope for good-looking corpse
+        SaveGridWithConstantFilename("save/final.mfs");
+        m_grid.ShutdownTileThreads();
+        return false;
+      }
+      return true;
+    }
+
+    void SaveGridWithConstantFilename(const char* filename)
+    {
+      const char* finalName =
+        GetSimDirPathTemporary("%s", filename);
+      SaveGrid(finalName);
     }
 
     void SetAEPSPerEpoch(u32 aeps)
@@ -531,9 +555,15 @@ namespace MFM
       exit(0);
     }
 
-    static void SetLoggingLevel(const char* level, void* not_needed)
+    static void SetLoggingLevel(const char* level, void* driverptr)
     {
-      LOG.SetLevel(atoi(level));
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
+      s32 val = Logger::ParseLevel(level);
+      if (val < 0)
+        args.Die("'%s' not recognized as a logging level", level);
+      LOG.SetLevel((Logger::Level) val);
     }
 
     static void SetSeedFromArgs(const char* seedstr, void* driver)
@@ -636,11 +666,11 @@ namespace MFM
       }
     }
 
-    static void RegisterElementPath(const char* path, void* driverptr)
+    static void RegisterElementLibraryPath(const char* path, void* driverptr)
     {
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
 
-      driver.m_elementRegistry.AddPath(path);
+      driver.m_elementRegistry.AddLibraryPath(path);
     }
 
     static void IgnoreComment(const char* kv, void* driverptr)
@@ -811,6 +841,8 @@ namespace MFM
 
       // XXX grid.CheckCaches();
 
+      WriteTimeBasedData();
+
       if (m_gridImages)
       {
         const char * path = GetSimDirPathTemporary("eps/%010d.ppm", epochAEPS);
@@ -887,6 +919,20 @@ namespace MFM
     const char * GetCommandLine() const
     {
       return m_commandLineArguments.GetBuffer();
+    }
+
+    void SwitchToInternalLogging()
+    {
+      const char* path = this->GetSimDirPathTemporary("log/log.txt");
+      LOG.Message("Switching log target to: %s", path);
+      FILE* fp = fopen(path, "w");
+      if (!fp) FAIL(IO_ERROR);
+      {
+        static FileByteSink fbs(fp);
+        LOG.SetByteSink(fbs);
+      }
+      LOG.Message("Switched to log target: %s", path);
+      LOG.Message("Command line: %s", this->GetCommandLine());
     }
 
     void ProcessArguments(u32 argc, const char** argv)
@@ -976,8 +1022,8 @@ namespace MFM
       RegisterArgument("Store data in per-sim directories under ARG (string)",
                        "-d|--dir", &SetDataDirFromArgs, this, true);
 
-      RegisterArgument("Add ARG as a path to search for element libraries",
-                       "-ep|--elementpath", &RegisterElementPath, this, true);
+      RegisterArgument("Add ARG as the path to an element library (.so)",
+                       "-ep|--elementpath", &RegisterElementLibraryPath, this, true);
 
       RegisterArgument("Load initial configuration from file at path ARG (string)",
                        "-cp|--configpath", &LoadFromConfigFile, this, true);
@@ -1061,8 +1107,8 @@ namespace MFM
 
       m_grid.InitThreads();
 
-      //m_grid.Needed(Element_Empty<CC>::THE_INSTANCE);
-      NeedElement(&Element_Empty<CC>::THE_INSTANCE);
+      //m_grid.Needed(Element_Empty<EC>::THE_INSTANCE);
+      NeedElement(&Element_Empty<EC>::THE_INSTANCE);
 
       ReinitPhysics();
 
@@ -1086,6 +1132,7 @@ namespace MFM
        },
        {
          RunHelper();
+         LOG.Message("Simulation driver exiting");
        });
     }
   };

@@ -8,13 +8,10 @@
 #include "Element_Res.h"
 #include "itype.h"
 #include "FXP.h"
-#include "P1Atom.h"
 #include "ColorMap.h"
 
 namespace MFM
 {
-
-#define DBAR_VERSION 1
 
   // Forward
   template <class CC> class Element_SBar ;
@@ -55,13 +52,13 @@ namespace MFM
    */
 
 
-  template <class CC>
-  class Element_DBar : public Element<CC>
+  template <class EC>
+  class Element_DBar : public Element<EC>
   {
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
     template <u32 TVBITS>
     static u32 toSignMag(s32 value) {
@@ -149,7 +146,9 @@ namespace MFM
     static const u32 STATE_SYMI_LEN = BITS_SYMI;
     static const u32 STATE_BITS = STATE_SYMI_IDX + STATE_SYMI_LEN;
 
-    Element_DBar() : Element<CC>(MFM_UUID_FOR("DBar", DBAR_VERSION)) { }
+    enum { DBAR_VERSION = 2 };
+
+    Element_DBar() : Element<EC>(MFM_UUID_FOR("DBar", DBAR_VERSION)) { }
 
     u32 GetSymI(const T &atom) const {
       if (!IsOurType(atom.GetType()))
@@ -239,21 +238,21 @@ namespace MFM
                                0xffff0000);
       }
       default:
-        return Element<CC>::PhysicsColor();
+        return Element<EC>::PhysicsColor();
       }
     }
 
     /**
        We do not diffuse
      */
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
+    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const {
       return this->NoDiffusability(ew, nowAt, maybeAt);
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       // Get self, sanity check
-      T self = window.GetCenterAtom();
+      T self = window.GetCenterAtomSym();
       const u32 selfType = self.GetType();
       if (!IsOurType(selfType)) FAIL(ILLEGAL_STATE);
 
@@ -299,10 +298,10 @@ namespace MFM
           if (inBar) {
             // Next question: Site empty?
 
-            const T other = window.GetRelativeAtom(sp);
+            const T other = window.GetRelativeAtomSym(sp);
             const u32 otherType = other.GetType();
 
-            bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
+            bool isEmpty = Element_Empty<EC>::THE_INSTANCE.IsType(otherType);
 
             if (isEmpty) {
 
@@ -329,7 +328,7 @@ namespace MFM
                 } else if (random.OneIn(++inconsistentCount)) {
                   anInconsistent = sp;
                   // Inconsistent Bars decay to Res
-                  unmakeGuy = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
+                  unmakeGuy = Element_Res<EC>::THE_INSTANCE.GetDefaultAtom();
                 }
               }
 
@@ -340,10 +339,10 @@ namespace MFM
           // and if not that, empty, but we'd really like it not to
           // have Bar's in it
 
-            const T other = window.GetRelativeAtom(sp);
+            const T other = window.GetRelativeAtomSym(sp);
             const u32 otherType = other.GetType();
 
-            bool isRes = otherType == Element_Res<CC>::TYPE();
+            bool isRes = otherType == Element_Res<EC>::TYPE();
             if (isRes) {
               ++consistentCount;
               if (random.OneIn(++eatCount)) {
@@ -352,7 +351,7 @@ namespace MFM
             }
             else {
 
-              bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
+              bool isEmpty = Element_Empty<EC>::THE_INSTANCE.IsType(otherType);
 
               if (isEmpty) ++consistentCount;
               else {
@@ -360,7 +359,7 @@ namespace MFM
                 if (iDBar) {
                   if (random.OneIn(++inconsistentCount)) {
                     anInconsistent = sp;
-                    unmakeGuy = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+                    unmakeGuy = Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom();
                   }
                 }
               }
@@ -375,35 +374,35 @@ namespace MFM
         // Next question: Are we much more consistent than inconsistent?
         if (consistentCount > 3*inconsistentCount) {
           // Yes.  Punish selected loser
-          window.SetRelativeAtom(anInconsistent, unmakeGuy);
+          window.SetRelativeAtomSym(anInconsistent, unmakeGuy);
         } else if (inconsistentCount > 3*consistentCount) {
           // If we're way inconsistent, let's res out and let them have us
-          window.SetCenterAtom(Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetCenterAtomSym(Element_Res<EC>::THE_INSTANCE.GetDefaultAtom());
         }
       } else {
         // No inconsistencies.  Do we have something to make, and eat?
         if (makeCount > 0 && eatCount > 0) {
-          window.SetRelativeAtom(toMake, makeGuy);
-          window.SetRelativeAtom(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetRelativeAtomSym(toMake, makeGuy);
+          window.SetRelativeAtomSym(toEat, Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
         }
         else {
           // Super-special case: Are we the max corner and all consistent?
           if (myPos == barMax-SPoint(1,1)) {
             // Is there an empty off end to us?
             SPoint offset(0,2);
-            T offEnd = window.GetRelativeAtom(offset);
+            T offEnd = window.GetRelativeAtomSym(offset);
             const u32 offType = offEnd.GetType();
-            if (Element_Empty<CC>::THE_INSTANCE.IsType(offType) && eatCount > 0) {
+            if (Element_Empty<EC>::THE_INSTANCE.IsType(offType) && eatCount > 0) {
               //              T corner = self;
-              T corner = Element_SBar<CC>::THE_INSTANCE.GetAtom(barMax,SPoint(0,0));
+              T corner = Element_SBar<EC>::THE_INSTANCE.GetAtom(barMax,SPoint(0,0));
               u32 symi = GetSymI(self);
               symi = (symi+6)%PSYM_SYMMETRY_COUNT;
               //              ++symi;
               //              if (symi > PSYM_DEG270L)
               //                symi = PSYM_DEG000L;
-              Element_SBar<CC>::THE_INSTANCE.SetSymI(corner,symi);
-              window.SetRelativeAtom(offset, corner);
-              window.SetRelativeAtom(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+              Element_SBar<EC>::THE_INSTANCE.SetSymI(corner,symi);
+              window.SetRelativeAtomSym(offset, corner);
+              window.SetRelativeAtomSym(toEat, Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
             }
           }
         }
@@ -413,8 +412,8 @@ namespace MFM
 
   };
 
-  template <class CC>
-  Element_DBar<CC> Element_DBar<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_DBar<EC> Element_DBar<EC>::THE_INSTANCE;
 
 }
 

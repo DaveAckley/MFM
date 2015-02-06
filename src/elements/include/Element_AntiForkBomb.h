@@ -37,22 +37,22 @@
 namespace MFM
 {
 
-#define ANTIFORKBOMB_VERSION 1
-
-  template <class CC>
-  class Element_AntiForkBomb : public Element<CC>
+  template <class EC>
+  class Element_AntiForkBomb : public Element<EC>
   {
+    enum {  ANTIFORKBOMB_VERSION = 1 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
     enum {
-      R = P::EVENT_WINDOW_RADIUS,
-      BITS = P::BITS_PER_ATOM,
+      R = EC::EVENT_WINDOW_RADIUS,
+      BITS = AC::BITS_PER_ATOM,
 
       //////
       // Element state fields
 
-      INFLAMMATION_POS = T::ATOM_FIRST_STATE_BIT,
+      INFLAMMATION_POS = AC::ATOM_FIRST_STATE_BIT,
       INFLAMMATION_LEN = 2
 
     };
@@ -76,12 +76,12 @@ namespace MFM
 
     static Element_AntiForkBomb THE_INSTANCE;
 
-    Element_AntiForkBomb() : Element<CC>(MFM_UUID_FOR("AntiFork", ANTIFORKBOMB_VERSION))
+    Element_AntiForkBomb() : Element<EC>(MFM_UUID_FOR("AntiFork", ANTIFORKBOMB_VERSION))
     {
       m_minDensity = 1;
       m_maxDensity = 3;
-      Element<CC>::SetAtomicSymbol("Af");
-      Element<CC>::SetName("Anti-Fork Bomb");
+      Element<EC>::SetAtomicSymbol("Af");
+      Element<EC>::SetName("Anti-Fork Bomb");
     }
 
     virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
@@ -96,7 +96,7 @@ namespace MFM
       return ((level*LEVEL_INCREMENT + (255-3*LEVEL_INCREMENT))<<8) | 0xff000000;
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       Random & random = window.GetRandom();
       const u32 ourType = THE_INSTANCE.GetType();
@@ -123,8 +123,8 @@ namespace MFM
         }
         const T & atom = window.GetRelativeAtomSym(rel);
         const u32 type = atom.GetType();
-        const Element<CC> * elt = window.GetTile().GetElement(type);
-        if (elt == &Element_Empty<CC>::THE_INSTANCE)
+        const Element<EC> * elt = window.GetTile().GetElement(type);
+        if (elt == &Element_Empty<EC>::THE_INSTANCE)
         {
           if (random.OneIn(++emptyCount))
           {
@@ -141,7 +141,7 @@ namespace MFM
           {
             randomSelf = rel;
           }
-        } else if (dynamic_cast<const AbstractElement_ForkBomb<CC>*>(elt))
+        } else if (dynamic_cast<const AbstractElement_ForkBomb<EC>*>(elt))
         {
           // We see a pathogen!  Danger danger!  Red alert!
           maxInflammation = 4;
@@ -184,7 +184,7 @@ namespace MFM
       } else if (usCount > m_maxDensity)
       {
         //It's calm and there's too many of us.  I sacrifice myself for the team.
-        window.SetCenterAtomSym(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetCenterAtomSym(Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
       } else
       {
         //It's calm and we have reasonable density.  I will patrol.
@@ -206,8 +206,8 @@ namespace MFM
 
   };
 
-  template <class CC>
-  Element_AntiForkBomb<CC> Element_AntiForkBomb<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_AntiForkBomb<EC> Element_AntiForkBomb<EC>::THE_INSTANCE;
 
 }
 

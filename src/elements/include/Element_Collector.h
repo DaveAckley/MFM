@@ -8,7 +8,6 @@
 #include "Element_Res.h"
 #include "itype.h"
 #include "FXP.h"
-#include "P1Atom.h"
 
 namespace MFM
 {
@@ -19,17 +18,17 @@ namespace MFM
    */
 
 
-  template <class CC>
-  class Element_Collector : public Element<CC>
+  template <class EC>
+  class Element_Collector : public Element<EC>
   {
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   public:
     enum {
-      COLLECTOR_VERSION = 1
+      COLLECTOR_VERSION = 2
     };
 
     static Element_Collector THE_INSTANCE;
@@ -41,10 +40,10 @@ namespace MFM
       return type==TYPE();
     }
 
-    Element_Collector() : Element<CC>(MFM_UUID_FOR("PileMaker", COLLECTOR_VERSION))
+    Element_Collector() : Element<EC>(MFM_UUID_FOR("PileMaker", COLLECTOR_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("Pm");
-      Element<CC>::SetName("Collector (PileMaker)");
+      Element<EC>::SetAtomicSymbol("Pm");
+      Element<EC>::SetName("Collector (PileMaker)");
     }
 
     virtual const T & GetDefaultAtom() const
@@ -58,17 +57,19 @@ namespace MFM
       return 0xff00c8c8;
     }
 
+    /*
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff007070;
     }
+    */
 
     virtual u32 PercentMovable(const T& you, const T& me, const SPoint& offset) const
     {
       return 100;
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       Random & random = window.GetRandom();
 
@@ -101,7 +102,7 @@ namespace MFM
         // Empty or occupied?
         const T other = window.GetRelativeAtomSym(sp);
         const u32 otherType = other.GetType();
-        bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
+        bool isEmpty = Element_Empty<EC>::THE_INSTANCE.IsType(otherType);
 
         if (isEmpty) {
           if (random.OneIn(++emptyCount)) {
@@ -110,7 +111,7 @@ namespace MFM
         } else {
           if (otherType == selfType)
             ++meCount;
-          else if (otherType == Element_Res<CC>::THE_INSTANCE.GetType()) {
+          else if (otherType == Element_Res<EC>::THE_INSTANCE.GetType()) {
             if (random.OneIn(++resCount)) {
               resLoc = sp;
             }
@@ -158,8 +159,8 @@ namespace MFM
 
   };
 
-  template <class CC>
-  Element_Collector<CC> Element_Collector<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Collector<EC> Element_Collector<EC>::THE_INSTANCE;
 
 }
 

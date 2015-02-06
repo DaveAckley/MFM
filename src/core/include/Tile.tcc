@@ -7,9 +7,14 @@
 
 namespace MFM
 {
-  template <class CC>
-  Tile<CC>::Tile()
-    : m_cdata(*this)
+  template <class EC>
+  Tile<EC>::Tile(const u32 tileSide, S * sites)
+    : TILE_SIDE(tileSide)
+    , OWNED_SIDE(TILE_SIDE - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
+    , m_sites(sites)
+    , m_cdata(*this)
+    , m_lockAttempts(0)
+    , m_lockAttemptsSucceeded(0)
     , m_window(*this)
     , m_state(OFF)
     , m_enabled(true)
@@ -17,90 +22,83 @@ namespace MFM
     , m_requestedState(OFF)
     , m_warpFactor(3)
   {
+    // TILE_SIDE can't be too small, and we must apparently have sites..
+    if (TILE_SIDE < 3*EVENT_WINDOW_RADIUS || m_sites == 0)
+      FAIL(ILLEGAL_ARGUMENT);
+
+    // Require even TILE_SIDE.  (The 'GetSquareDistanceFromCenter'
+    // computation would be cheaper if TILE_SIDE was guaranteed odd,
+    // but that violates a MFM tradition that is now cast in stone.)
+    if (2 * TILE_SIDE / 2 != TILE_SIDE)
+      FAIL(ILLEGAL_ARGUMENT);
+
     Init();
   }
 
-  template <class CC>
-  void Tile<CC>::Init()
+  template <class EC>
+  void Tile<EC>::Init()
   {
     m_elementTable.Reinit();
 
-    Element_Empty<CC>::THE_INSTANCE.AllocateType();
-    RegisterElement(Element_Empty<CC>::THE_INSTANCE);
+    Element_Empty<EC>::THE_INSTANCE.AllocateType();
+    RegisterElement(Element_Empty<EC>::THE_INSTANCE);
 
     ClearAtoms();
     ClearTileParameters();
 
   }
 
-  template <class CC>
-  typename CC::ATOM_TYPE Tile<CC>::GetEmptyAtom() const
+  template <class EC>
+  typename EC::ATOM_CONFIG::ATOM_TYPE Tile<EC>::GetEmptyAtom() const
   {
-    return Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+    return Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom();
   }
 
-  template <class CC>
-  void Tile<CC>::XRay(u32 siteOdds, u32 bitOdds)
+  template <class EC>
+  void Tile<EC>::SingleXRay(const SPoint & at, u32 bitOdds)
   {
     Random & random = GetRandom();
-    for(u32 x = 0; x < TILE_WIDTH; x++)
-    {
-      for(u32 y = 0; y < TILE_WIDTH; y++)
-      {
-        if (random.OneIn(siteOdds))
-        {
-          m_atoms[x][y].XRay(random, bitOdds);
-        }
-      }
+    GetWritableAtom(at)->XRay(random, bitOdds);
+  }
+
+  template <class EC>
+  void Tile<EC>::XRay(u32 siteOdds, u32 bitOdds)
+  {
+    Random & random = GetRandom();
+    for(iterator_type i = begin(); i != end(); ++i) {
+      if (random.OneIn(siteOdds))
+        i->GetAtom().XRay(random, bitOdds);
     }
   }
 
-  template <class CC>
-  void Tile<CC>::ClearAtoms()
+  template <class EC>
+  void Tile<EC>::ClearAtoms()
   {
-    for(u32 x = 0; x < TILE_WIDTH; x++)
-    {
-      for(u32 y = 0; y < TILE_WIDTH; y++)
-      {
-        m_atoms[x][y] = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
-      }
+    for(iterator_type i = begin(); i != end(); ++i) {
+      i->Clear();
     }
     NeedAtomRecount();
-
-    for(u32 x = 0; x < OWNED_SIDE; x++)
-    {
-      for(u32 y = 0; y < OWNED_SIDE; y++)
-      {
-        m_lastChangedEventNumber[x][y] = 0;
-
-        // Set last event deep in the past to avoid initial color
-        m_lastEventEventNumber[x][y] = -1000*GetSites();
-      }
-    }
-
   }
 
-  template <class CC>
-  void Tile<CC>::Connect(AbstractChannel& channel, LonglivedLock & lock, Dir toCache)
+  template <class EC>
+  void Tile<EC>::Connect(AbstractChannel& channel, LonglivedLock & lock, Dir toCache)
   {
-    CacheProcessor<CC> & cxn = GetCacheProcessor(toCache);
+    CacheProcessor<EC> & cxn = GetCacheProcessor(toCache);
 
     if (cxn.IsConnected())
-    {
       FAIL(ILLEGAL_STATE);
-    }
 
     cxn.ClaimCacheProcessor(*this, channel, lock, toCache);
   }
 
-  template <class CC>
-  CacheProcessor<CC> & Tile<CC>::GetCacheProcessor(Dir toCache)
+  template <class EC>
+  CacheProcessor<EC> & Tile<EC>::GetCacheProcessor(Dir toCache)
   {
-    return const_cast<CacheProcessor<CC>&>(static_cast<const Tile<CC>*>(this)->GetCacheProcessor(toCache));
+    return const_cast<CacheProcessor<EC>&>(static_cast<const Tile<EC>*>(this)->GetCacheProcessor(toCache));
   }
 
-  template <class CC>
-  const CacheProcessor<CC> & Tile<CC>::GetCacheProcessor(Dir toCache) const
+  template <class EC>
+  const CacheProcessor<EC> & Tile<EC>::GetCacheProcessor(Dir toCache) const
   {
     if (!Dirs::IsLegalDir(toCache))
     {
@@ -110,64 +108,44 @@ namespace MFM
     return m_cacheProcessors[toCache];
   }
 
-  template <class CC>
-  Random& Tile<CC>::GetRandom()
+  template <class EC>
+  Random& Tile<EC>::GetRandom()
   {
     return m_random;
   }
 
-  template <class CC>
-  s32 Tile<CC>::CountData::GetAtomCount(u32 type)
+  template <class EC>
+  s32 Tile<EC>::CountData::GetAtomCount(u32 type)
   {
     s32 idx = m_tile.m_elementTable.GetIndex(type);
     if (idx < 0)
-    {
       return -1;
-    }
 
     RecountIfNeeded();
 
     return m_atomCount[idx];
   }
 
-  template <class CC>
-  void Tile<CC>::CountData::RecountAtoms()
+  template <class EC>
+  void Tile<EC>::CountData::RecountAtoms()
   {
-    for(u32 i = 0; i < ELEMENT_TABLE_SIZE; i++)
-    {
-      m_atomCount[i] = 0;
-    }
+    for(u32 i = 0; i < ELEMENT_TABLE_SIZE; i++) m_atomCount[i] = 0;
 
     m_illegalAtomCount = 0;
 
-    for(u32 x = 0; x < TILE_WIDTH; x++)
-    {
-      for(u32 y = 0; y < TILE_WIDTH; y++)
-      {
-        const SPoint pt(x,y);
+    for(const_iterator_type i = m_tile.begin(); i != m_tile.end(); ++i) {
+      if (m_tile.IsInCache(i.At())) continue;
 
-        if (m_tile.IsInCache(pt))
-        {
-          continue;
-        }
+      u32 atype = i->GetAtom().GetType();
+      s32 idx = m_tile.m_elementTable.GetIndex(atype);
 
-        u32 atype = m_tile.m_atoms[x][y].GetType();
-        s32 idx = m_tile.m_elementTable.GetIndex(atype);
-
-        if (idx < 0)
-        {
-          ++m_illegalAtomCount;
-        }
-        else
-        {
-          ++m_atomCount[idx];
-        }
-      }
+      if (idx < 0) ++m_illegalAtomCount;
+      else ++m_atomCount[idx];
     }
   }
 
-  template <class CC>
-  u32 Tile<CC>::GetUncachedWriteAge32(const SPoint site) const
+  template <class EC>
+  u32 Tile<EC>::GetUncachedWriteAge32(const SPoint site) const
   {
     const u32 A_BILLION = 1000*1000*1000;
     u64 age = GetUncachedWriteAge(site);
@@ -175,34 +153,31 @@ namespace MFM
     return (u32) age;
   }
 
-  template <class CC>
-  u64 Tile<CC>::GetUncachedWriteAge(const SPoint site) const
+  template <class EC>
+  u64 Tile<EC>::GetUncachedWriteAge(const SPoint at) const
   {
-    if (!IsInUncachedTile(site))
-    {
+    if (!IsInUncachedTile(at))
       FAIL(ILLEGAL_ARGUMENT);
-    }
+
     return
       GetEventsExecuted() -
-      m_lastChangedEventNumber[site.GetX()][site.GetY()];
+      GetUncachedSite(at).GetLastChangedEventNumber();
+}
+
+  template <class EC>
+  u64 Tile<EC>::GetUncachedEventAge(const SPoint at) const
+  {
+    if (!IsInUncachedTile(at))
+      FAIL(ILLEGAL_ARGUMENT);
+
+    return
+      (u64) ((s64) GetEventsExecuted() -
+             GetUncachedSite(at).GetLastEventEventNumber());
   }
 
 
-  template <class CC>
-  u64 Tile<CC>::GetUncachedEventAge(const SPoint site) const
-  {
-    if (!IsInUncachedTile(site))
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
-    return
-      GetEventsExecuted() -
-      m_lastEventEventNumber[site.GetX()][site.GetY()];
-  }
-
-
-  template <class CC>
-  u32 Tile<CC>::GetUncachedEventAge32(const SPoint site) const
+  template <class EC>
+  u32 Tile<EC>::GetUncachedEventAge32(const SPoint site) const
   {
     const u32 A_BILLION = 1000*1000*1000;
     u64 age = GetUncachedEventAge(site);
@@ -210,6 +185,16 @@ namespace MFM
     return (u32) age;
   }
 
+  template <class EC>
+  u64 Tile<EC>::GetUncachedSiteEvents(const SPoint at) const
+  {
+    if (!IsInUncachedTile(at))
+      FAIL(ILLEGAL_ARGUMENT);
+
+    return GetUncachedSite(at).GetEventCount();
+  }
+
+#if 0
   template <class CC>
   void Tile<CC>::InternalPutAtom(const T & atom, s32 x, s32 y)
   {
@@ -219,70 +204,55 @@ namespace MFM
     }
     m_atoms[x][y] = atom;
   }
+#endif
 
-  template <class CC>
+  template <class EC>
   template <u32 REACH>
-  Dir Tile<CC>::RegionAt(const SPoint& sp) const
+  Dir Tile<EC>::RegionAt(const SPoint& sp) const
   {
     UPoint pt = MakeUnsigned(sp);
 
-    if(pt.GetX() < REACH)
-    {
-      if(pt.GetY() < REACH)
-      {
-        return Dirs::NORTHWEST;
-      }
-      else if(pt.GetY() >= TILE_WIDTH - REACH)
-      {
-        return Dirs::SOUTHWEST;
-      }
+    if(pt.GetX() < REACH) {
+
+      if(pt.GetY() < REACH) return Dirs::NORTHWEST;
+      if(pt.GetY() >= TILE_SIDE - REACH) return Dirs::SOUTHWEST;
       return Dirs::WEST;
-    }
-    else if(pt.GetX() >= TILE_WIDTH - REACH)
-    {
-      if(pt.GetY() < REACH)
-      {
-        return Dirs::NORTHEAST;
-      }
-      else if(pt.GetY() >= TILE_WIDTH - REACH)
-      {
-        return Dirs::SOUTHEAST;
-      }
+
+    } else if(pt.GetX() >= TILE_SIDE - REACH) {
+
+      if(pt.GetY() < REACH) return Dirs::NORTHEAST;
+      if(pt.GetY() >= TILE_SIDE - REACH) return Dirs::SOUTHEAST;
       return Dirs::EAST;
+
     }
 
-    if(pt.GetY() < REACH)
-    {
-      return Dirs::NORTH;
-    }
-    else if(pt.GetY() >= TILE_WIDTH - REACH)
-    {
-      return Dirs::SOUTH;
-    }
+    // X in neither east nor west reach
 
+    if(pt.GetY() < REACH) return Dirs::NORTH;
+    if(pt.GetY() >= TILE_SIDE - REACH) return Dirs::SOUTH;
     return (Dir)-1;
   }
 
-  template <class CC>
-  Dir Tile<CC>::CacheAt(const SPoint& pt) const
+  template <class EC>
+  Dir Tile<EC>::CacheAt(const SPoint& pt) const
   {
     return RegionAt<EVENT_WINDOW_RADIUS>(pt);
   }
 
-  template <class CC>
-  Dir Tile<CC>::SharedAt(const SPoint& pt) const
+  template <class EC>
+  Dir Tile<EC>::SharedAt(const SPoint& pt) const
   {
     return RegionAt<EVENT_WINDOW_RADIUS * 2>(pt);
   }
 
-  template <class CC>
-  Dir Tile<CC>::VisibleAt(const SPoint& pt) const
+  template <class EC>
+  Dir Tile<EC>::VisibleAt(const SPoint& pt) const
   {
     return RegionAt<EVENT_WINDOW_RADIUS * 3>(pt);
   }
 
-  template <class CC>
-  bool Tile<CC>::ApplyCacheUpdate(bool isDifferent, const T& atom, const SPoint& site)
+  template <class EC>
+  bool Tile<EC>::ApplyCacheUpdate(bool isDifferent, const T& atom, const SPoint& site)
   {
     if (IsInHidden(site))  // That would make no sense
     {
@@ -304,12 +274,12 @@ namespace MFM
     return consistent;
   }
 
-  template <class CC>
-  void Tile<CC>::PlaceAtom(const T& atom, const SPoint& pt)
+  template <class EC>
+  void Tile<EC>::PlaceAtom(const T& atom, const SPoint& pt)
   {
     if (!IsLiveSite(pt))
     {
-      if (atom.GetType() != Element_Empty<CC>::THE_INSTANCE.GetType())
+      if (atom.GetType() != Element_Empty<EC>::THE_INSTANCE.GetType())
       {
         LOG.Debug("Not placing type %04x at (%2d,%2d) of %s",
                   atom.GetType(), pt.GetX(), pt.GetY(), this->GetLabel());
@@ -317,11 +287,11 @@ namespace MFM
       return;
     }
 
+    Site<AC> & site = GetSite(pt);
     T newAtom = atom;
     unwind_protect(
     {
-      InternalPutAtom(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom(),
-                      pt.GetX(), pt.GetY());
+      site.GetAtom().SetEmpty();
       LOG.Warning("Failure during PlaceAtom, erased (%2d,%2d) of %s",
                   pt.GetX(), pt.GetY(), this->GetLabel());
     },
@@ -333,31 +303,28 @@ namespace MFM
         newAtom.XRay(m_random, BACKGROUND_RADIATION_BIT_ODDS);
       }
 
-      const T& oldAtom = *GetAtom(pt);
+      const T& oldAtom = site.GetAtom();
       bool owned = IsOwnedSite(pt);
-      if (oldAtom != newAtom)
-      {
+
+      if (oldAtom != newAtom) {
         NeedAtomRecount();
         if (owned)
-        {
-          const SPoint opt = TileCoordToOwned(pt);
-          m_lastChangedEventNumber[opt.GetX()][opt.GetY()] = GetEventsExecuted();
-        }
+          site.SetLastChangedEventNumber(GetEventsExecuted());
 
-        InternalPutAtom(newAtom,pt.GetX(),pt.GetY());
+        site.PutAtom(newAtom);
       }
     });
   }
 
-  template <class CC>
-  bool Tile<CC>::IsConnected(Dir dir) const
+  template <class EC>
+  bool Tile<EC>::IsConnected(Dir dir) const
   {
-    const CacheProcessor<CC> & cxn = GetCacheProcessor(dir);
+    const CacheProcessor<EC> & cxn = GetCacheProcessor(dir);
     return cxn.IsConnected();
   }
 
-  template <class CC>
-  bool Tile<CC>::IsReachableViaCacheProtocol(const SPoint & location) const
+  template <class EC>
+  bool Tile<EC>::IsReachableViaCacheProtocol(const SPoint & location) const
   {
     if (!IsInShared(location))
     {
@@ -384,8 +351,8 @@ namespace MFM
     return false;
   }
 
-  template <class CC>
-  bool Tile<CC>::IsCacheSitePossibleEventCenter(const SPoint & location) const
+  template <class EC>
+  bool Tile<EC>::IsCacheSitePossibleEventCenter(const SPoint & location) const
   {
     if (!IsInCache(location))
     {
@@ -395,8 +362,8 @@ namespace MFM
     return IsConnected(CacheAt(location));
   }
 
-  template <class CC>
-  bool Tile<CC>::IsLiveSite(const SPoint & location) const
+  template <class EC>
+  bool Tile<EC>::IsLiveSite(const SPoint & location) const
   {
     if (!IsInTile(location))
     {
@@ -412,14 +379,14 @@ namespace MFM
     return IsCacheSitePossibleEventCenter(location);
   }
 
-  template <class CC>
-  bool Tile<CC>::IsInUncachedTile(const SPoint& pt)
+  template <class EC>
+  bool Tile<EC>::IsInUncachedTile(const SPoint& pt) const
   {
     return ((u32) pt.GetX()) < OWNED_SIDE && ((u32) pt.GetY() < OWNED_SIDE);
   }
 
-  template <class CC>
-  bool Tile<CC>::HasAnyConnections(Dir regionDir) const
+  template <class EC>
+  bool Tile<EC>::HasAnyConnections(Dir regionDir) const
   {
     switch(regionDir)
     {
@@ -443,19 +410,17 @@ namespace MFM
     }
   }
 
-  template <class CC>
-  TileRegion Tile<CC>::RegionFromIndex(const u32 index)
+  template <class EC>
+  TileRegion Tile<EC>::RegionFromIndex(const u32 index)
   {
-    // Extract short names for parameter types
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    enum { R = EVENT_WINDOW_RADIUS };
 
-    if(index > P::TILE_WIDTH)
+    if(index > TILE_SIDE)
     {
       FAIL(ARRAY_INDEX_OUT_OF_BOUNDS); /* Index out of Tile bounds */
     }
 
-    const u32 hiddenWidth = P::TILE_WIDTH - R * 6;
+    const u32 hiddenWidth = TILE_SIDE - R * 6;
 
     if(index < R * REGION_HIDDEN)
     {
@@ -471,15 +436,15 @@ namespace MFM
     }
   }
 
-  template <class CC>
-  TileRegion Tile<CC>::RegionIn(const SPoint& pt)
+  template <class EC>
+  TileRegion Tile<EC>::RegionIn(const SPoint& pt)
   {
     return MIN(RegionFromIndex((u32)pt.GetX()),
                RegionFromIndex((u32)pt.GetY()));
   }
 
-  template <class CC>
-  bool Tile<CC>::Advance()
+  template <class EC>
+  bool Tile<EC>::Advance()
   {
     if (!ConsiderStateChange())
     {
@@ -512,8 +477,8 @@ namespace MFM
     return didWork;
   }
 
-  template <class CC>
-  bool Tile<CC>::AllCacheProcessorsIdle()
+  template <class EC>
+  bool Tile<EC>::AllCacheProcessorsIdle()
   {
     for (u32 d = 0; d < Dirs::DIR_COUNT; ++d)
     {
@@ -527,24 +492,25 @@ namespace MFM
     return true;
   }
 
-  template <class CC>
-  void Tile<CC>::SetBackgroundRadiation(bool on)
+  template <class EC>
+  void Tile<EC>::SetBackgroundRadiation(bool on)
   {
     m_backgroundRadiation = on;
   }
 
-  template <class CC>
-  void Tile<CC>::SetRequestedState(State state)
+  template <class EC>
+  void Tile<EC>::SetRequestedState(State state)
   {
     Mutex::ScopeLock lock(m_stateAccess);
-    LOG.Debug("Requesting state %s for Tile %s",
+    LOG.Debug1("Requesting state %s for Tile %s (current: %s)",
               GetStateName(state),
-              this->GetLabel());
+              this->GetLabel(),
+              GetStateName(m_state));
     m_requestedState = state;
   }
 
-  template <class CC>
-  bool Tile<CC>::ConsiderStateChange()
+  template <class EC>
+  bool Tile<EC>::ConsiderStateChange()
   {
     Mutex::ScopeLock lock(m_stateAccess);
 
@@ -584,8 +550,8 @@ namespace MFM
     return true;
   }
 
-  template <class CC>
-  bool Tile<CC>::AdvanceComputation()
+  template <class EC>
+  bool Tile<EC>::AdvanceComputation()
   {
 
     //NON_ACTIVE,
@@ -599,20 +565,20 @@ namespace MFM
     return m_window.TryEventAt(pt);
   }
 
-  template <class CC>
-  bool Tile<CC>::AdvanceCommunication()
+  template <class EC>
+  bool Tile<EC>::AdvanceCommunication()
   {
     bool didWork = false;
     for (u32 i = 0; i < Dirs::DIR_COUNT; ++i)
     {
-      CacheProcessor<CC> & cp = m_cacheProcessors[i];
+      CacheProcessor<EC> & cp = m_cacheProcessors[i];
       didWork |= cp.Advance();
     }
     return didWork;
   }
 
-  template <class CC>
-  void Tile<CC>::ReportTileStatus(Logger::Level level)
+  template <class EC>
+  void Tile<EC>::ReportTileStatus(Logger::Level level)
   {
     LOG.Log(level," ===TILE %s STATUS REPORT: cur %s req %s===",
             m_label.GetZString(),
@@ -631,7 +597,7 @@ namespace MFM
 
     for (u32 d = Dirs::NORTH; d <= Dirs::NORTHWEST; ++d)
     {
-      CacheProcessor<CC> & cp = GetCacheProcessor(d);
+      CacheProcessor<EC> & cp = GetCacheProcessor(d);
       cp.ReportCacheProcessorStatus(level);
     }
   }

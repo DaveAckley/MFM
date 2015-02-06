@@ -37,21 +37,22 @@
 
 namespace MFM
 {
-  template <class CC> class Element;  // FORWARD
+  template <class EC> class Element;  // FORWARD
 
-  template <class CC> class AtomicParameter; // FORWARD
-  template <class CC> class ElementParameter; // FORWARD
+  template <class EC> class AtomicParameter; // FORWARD
+  template <class EC> class ElementParameter; // FORWARD
 
   template <class PARM> class Parameters; // FORWARD
 
-  template <class CC> class AtomicParameters; // FORWARD
-  template <class CC> class ElementParameters; // FORWARD
+  template <class EC> class AtomicParameters; // FORWARD
+  template <class EC> class ElementParameters; // FORWARD
 
-  template <class CC>
+  template <class EC>
   class Parameter : public ByteSerializable
   {
   private:
-    typedef typename CC::ATOM_TYPE T;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
     /**
      * The value description this parameter is using.
@@ -131,10 +132,10 @@ namespace MFM
     {
       switch (this->GetType())
       {
-      case VD::U32: bs.Print(m_vDesc.GetValueU32<CC>(atom)); break;
-      case VD::S32: bs.Print(m_vDesc.GetValueS32<CC>(atom)); break;
-      case VD::BOOL: bs.Print(m_vDesc.GetValueBool<CC>(atom)); break;
-      case VD::UNARY: bs.Print(m_vDesc.GetValueUnary<CC>(atom)); break;
+      case VD::U32: bs.Print(m_vDesc.GetValueU32<AC>(atom)); break;
+      case VD::S32: bs.Print(m_vDesc.GetValueS32<AC>(atom)); break;
+      case VD::BOOL: bs.Print(m_vDesc.GetValueBool<AC>(atom)); break;
+      case VD::UNARY: bs.Print(m_vDesc.GetValueUnary<AC>(atom)); break;
       default: FAIL(ILLEGAL_STATE);
       }
     }
@@ -147,14 +148,14 @@ namespace MFM
         {
           u32 val;
           if (!bs.Scan(val)) return false;
-          m_vDesc.SetValueU32<CC>(atom,val);
+          m_vDesc.SetValueU32<AC>(atom,val);
           return true;
         }
       case VD::S32:
         {
           s32 val;
           if (!bs.Scan(val)) return false;
-          m_vDesc.SetValueS32<CC>(atom,val);
+          m_vDesc.SetValueS32<AC>(atom,val);
           return true;
         }
       case VD::BOOL:
@@ -163,11 +164,11 @@ namespace MFM
           if (!bs.ScanIdentifier(temp)) return false;
           if (temp.Equals("true"))
           {
-            m_vDesc.SetValueBool<CC>(atom,true);
+            m_vDesc.SetValueBool<AC>(atom,true);
           }
           else if (temp.Equals("false"))
           {
-            m_vDesc.SetValueBool<CC>(atom,false);
+            m_vDesc.SetValueBool<AC>(atom,false);
           }
           else
           {
@@ -179,7 +180,7 @@ namespace MFM
         {
           u32 val;
           if (!bs.Scan(val)) return false;
-          m_vDesc.SetValueUnary<CC>(atom,val);
+          m_vDesc.SetValueUnary<AC>(atom,val);
           return true;
         }
       default: FAIL(ILLEGAL_STATE);
@@ -191,12 +192,12 @@ namespace MFM
 
     s32 GetBitsAsS32(const T& atom) const
     {
-      return m_vDesc.GetBitsAsS32<CC>(atom);
+      return m_vDesc.GetBitsAsS32<AC>(atom);
     }
 
     void SetBitsAsS32(T& atom, const s32 val) const
     {
-      m_vDesc.SetBitsAsS32<CC>(atom, val);
+      m_vDesc.SetBitsAsS32<AC>(atom, val);
     }
 
     /////////
@@ -204,12 +205,12 @@ namespace MFM
 
     u64 GetBitsAsU64(const T& atom) const
     {
-      return m_vDesc.GetBitsAsU64<CC>(atom);
+      return m_vDesc.GetBitsAsU64<AC>(atom);
     }
 
     void SetBitsAsU64(T& atom, const u64 val) const
     {
-      m_vDesc.SetBitsAsU64<CC>(atom, val);
+      m_vDesc.SetBitsAsU64<AC>(atom, val);
     }
 
     /////////
@@ -222,7 +223,7 @@ namespace MFM
     {
       if (this->GetType()==VD::U32)
       {
-        store = m_vDesc.GetValueU32<CC>(atom);
+        store = m_vDesc.GetValueU32<AC>(atom);
         return true;
       }
       return false;
@@ -268,7 +269,7 @@ namespace MFM
     {
       if (this->GetType()==VD::BOOL)
       {
-        store = m_vDesc.GetValueBool<CC>(atom);
+        store = m_vDesc.GetValueBool<AC>(atom);
         return true;
       }
       return false;
@@ -369,22 +370,22 @@ namespace MFM
 
 namespace MFM
 {
-  template <class CC> class Parameters; // FORWARD
+  template <class EC> class Parameters; // FORWARD
 
-  template <class CC>
-  class ElementParameter : public Parameter<CC>
+  template <class EC>
+  class ElementParameter : public Parameter<EC>
   {
-    typedef Parameter<CC> Super;
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef Parameter<EC> Super;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
-    friend class Parameters< ElementParameter<CC> >;
+    friend class Parameters< ElementParameter<EC> >;
     ElementParameter * m_next;
 
     T m_storage;
 
     enum {
-      BPA = P::BITS_PER_ATOM,
+      BPA = AC::BITS_PER_ATOM,
       PARM_LENGTH = 32,
       START_POS = BPA - PARM_LENGTH,
 
@@ -443,11 +444,11 @@ namespace MFM
       return m_next;
     }
 
-    ElementParameter(Element<CC> * elt, u32 type, const char * tag,
+    ElementParameter(Element<EC> * elt, u32 type, const char * tag,
                      const char * name, const char * description,
                      s32 min, s32 vdef, s32 max) ;
 
-    ElementParameter(Element<CC> * elt, u32 type, const char * tag,
+    ElementParameter(Element<EC> * elt, u32 type, const char * tag,
                      const char * name, const char * description,
                      u64 vdef) ;
 
@@ -461,7 +462,7 @@ namespace MFM
 
     void SetBitsAsS32(const s32 val)
     {
-      Parameter<CC>::SetBitsAsS32(m_storage, val);
+      Parameter<EC>::SetBitsAsS32(m_storage, val);
     }
 
     u64 GetBitsAsU64() const
@@ -471,7 +472,7 @@ namespace MFM
 
     void SetBitsAsU64(const u64 val)
     {
-      Parameter<CC>::SetBitsAsU64(m_storage, val);
+      Parameter<EC>::SetBitsAsU64(m_storage, val);
     }
 
     virtual void Reset()
@@ -554,11 +555,11 @@ namespace MFM
     }
   };
 
-  template <class CC>
-  class ElementParameterU32 : public ElementParameter<CC>
+  template <class EC>
+  class ElementParameterU32 : public ElementParameter<EC>
   {
   public:
-    ElementParameterU32(Element<CC> * elt, const char * tag,
+    ElementParameterU32(Element<EC> * elt, const char * tag,
                         const char * name, const char * description,
                         u32 min, u32 vdef, u32 max) ;
     u32 GetValue() const
@@ -589,11 +590,11 @@ namespace MFM
 
   };
 
-  template <class CC>
-  class ElementParameterS32 : public ElementParameter<CC>
+  template <class EC>
+  class ElementParameterS32 : public ElementParameter<EC>
   {
   public:
-    ElementParameterS32(Element<CC> * elt, const char * tag,
+    ElementParameterS32(Element<EC> * elt, const char * tag,
                         const char * name, const char * description,
                         s32 min, s32 vdef, s32 max) ;
     s32 GetValue() const
@@ -624,11 +625,11 @@ namespace MFM
 
   };
 
-  template <class CC>
-  class ElementParameterBool : public ElementParameter<CC>
+  template <class EC>
+  class ElementParameterBool : public ElementParameter<EC>
   {
   public:
-    ElementParameterBool(Element<CC> * elt, const char * tag,
+    ElementParameterBool(Element<EC> * elt, const char * tag,
                          const char * name, const char * description,
                          bool vdef) ;
     bool GetValue() const
@@ -668,21 +669,21 @@ namespace MFM
 
   };
 
-  template <class CC, u32 LENGTH>
-  class ElementParameterBits : public ElementParameter<CC>
+  template <class EC, u32 LENGTH>
+  class ElementParameterBits : public ElementParameter<EC>
   {
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
     enum {
-      BPA = P::BITS_PER_ATOM,
+      BPA = AC::BITS_PER_ATOM,
       START_POS = BPA - LENGTH
     };
     typedef BitVector<BPA> BV;
     typedef BitField<BV, VD::BITS, LENGTH, START_POS> FieldBitsLength;
 
   public:
-    ElementParameterBits(Element<CC> * elt, const char * tag,
+    ElementParameterBits(Element<EC> * elt, const char * tag,
                          const char * name, const char * description,
                          u64 vdef) ;
     u64 GetValue() const
@@ -711,14 +712,14 @@ namespace MFM
     }
   };
 
-  template <class CC, u32 SITES>
-  class ElementParameterNeighborhood : public ElementParameterBits<CC,SITES>
+  template <class EC, u32 SITES>
+  class ElementParameterNeighborhood : public ElementParameterBits<EC,SITES>
   {
   public:
-    ElementParameterNeighborhood(Element<CC> * elt, const char * tag,
+    ElementParameterNeighborhood(Element<EC> * elt, const char * tag,
                                  const char * name, const char * description,
                                  u64 vdef) :
-      ElementParameterBits<CC,SITES>(elt, tag, name, description, vdef)
+      ElementParameterBits<EC,SITES>(elt, tag, name, description, vdef)
     { }
 
     virtual ByteSerializable::Result PrintTo(ByteSink & byteSink, s32 argument = 0)
@@ -853,13 +854,14 @@ namespace MFM
 
   };
 
-  template <class CC>
-  class AtomicParameter : public Parameter<CC>
+  template <class EC>
+  class AtomicParameter : public Parameter<EC>
   {
-    typedef Parameter<CC> Super;
-    typedef typename CC::ATOM_TYPE T;
+    typedef Parameter<EC> Super;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
-    friend class Parameters< AtomicParameter<CC> >;
+    friend class Parameters< AtomicParameter<EC> >;
     AtomicParameter * m_next;
 
   public:
@@ -894,19 +896,19 @@ namespace MFM
 
     virtual void Reset(T & atom) const = 0;
 
-    AtomicParameter<CC>(Element<CC> * pl, const char * tag,
+    AtomicParameter<EC>(Element<EC> * pl, const char * tag,
                         const char * name, const char * description,
                         const VD & vdesc) ;
   };
 
-  template <class CC, VD::Type VT, u32 LEN, u32 POS>
-  class AtomicParameterType : AtomicParameter<CC>
+  template <class EC, VD::Type VT, u32 LEN, u32 POS>
+  class AtomicParameterType : AtomicParameter<EC>
   {
   public:
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
-    typedef BitVector<P::BITS_PER_ATOM> BVA;
+    typedef BitVector<AC::BITS_PER_ATOM> BVA;
     typedef BitField<BVA, VT, LEN, POS> Field;
 
     // Lift BitField properties (particularly END) up to parameter level
@@ -922,7 +924,7 @@ namespace MFM
 
     const VTYPE m_vdefault;  // public, but const, whatever
 
-    AtomicParameterType(Element<CC> * pl, const char * tag,
+    AtomicParameterType(Element<EC> * pl, const char * tag,
                         const char * name, const char * description,
                         const VTYPE & vmin, const VTYPE & vdefault, const VTYPE & vmax) ;
 
@@ -1142,8 +1144,8 @@ namespace MFM
     }
   };
 
-  template<class CC>
-  class ElementParameters : public Parameters< ElementParameter<CC> >
+  template<class EC>
+  class ElementParameters : public Parameters< ElementParameter<EC> >
   {
   public:
 
@@ -1152,7 +1154,7 @@ namespace MFM
      */
     void Reset()
     {
-      for (ElementParameter<CC> * p = this->m_firstParameter; p; p = p->m_next)
+      for (ElementParameter<EC> * p = this->m_firstParameter; p; p = p->m_next)
       {
         p->Reset();
       }
@@ -1160,11 +1162,12 @@ namespace MFM
 
   };
 
-  template<class CC>
-  class AtomicParameters : public Parameters< AtomicParameter<CC> >
+  template<class EC>
+  class AtomicParameters : public Parameters< AtomicParameter<EC> >
   {
   public:
-    typedef typename CC::ATOM_TYPE T;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
     /**
      * On the given Atom, reset all AtomicParameters inside this
@@ -1172,7 +1175,7 @@ namespace MFM
      */
     void Reset(T & atom) const
     {
-      for (AtomicParameter<CC> * p = this->m_firstParameter; p; p = p->m_next)
+      for (AtomicParameter<EC> * p = this->m_firstParameter; p; p = p->m_next)
       {
         p->Reset(atom);
       }

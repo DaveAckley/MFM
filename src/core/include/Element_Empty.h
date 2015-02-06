@@ -34,24 +34,25 @@
 namespace MFM
 {
 
-#define EMPTY_VERSION 0
+  template <class EC> class EventWindow; // FORWARD
 
-  template <class CC> class EventWindow; // FORWARD
-
-  template <class CC>
-  class Element_Empty : public Element<CC>
+  template <class EC>
+  class Element_Empty : public Element<EC>
   {
+    enum { EMPTY_VERSION = 1 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
   public:
     static Element_Empty THE_INSTANCE;
 
-    Element_Empty() : Element<CC>(MFM_UUID_FOR("Empty", EMPTY_VERSION))
+    Element_Empty() : Element<EC>(MFM_UUID_FOR("Empty", EMPTY_VERSION))
     {
-      Element<CC>::AllocateEmptyType(); // A special method just for Empty!
-      Element<CC>::SetAtomicSymbol("E");
-      Element<CC>::SetName("Empty");
+      Element<EC>::AllocateEmptyType(); // A special method just for Empty!
+      Element<EC>::SetAtomicSymbol("E");
+      Element<EC>::SetName("Empty");
     }
 
     virtual u32 PercentMovable(const T& you,
@@ -75,12 +76,12 @@ namespace MFM
       return 0x00000000;
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     { }
   };
 
-  template <class CC>
-  Element_Empty<CC> Element_Empty<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Empty<EC> Element_Empty<EC>::THE_INSTANCE;
 }
 
 #endif /* ELEMENT_EMPTY_H */

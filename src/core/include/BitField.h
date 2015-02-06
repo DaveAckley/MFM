@@ -155,8 +155,8 @@ namespace MFM {
       return bv.SetBit(START+bitnum);
     }
 
-    template <class CC>
-    static void SetBit(Atom<CC> & atom, u32 bitnum)
+    template <class AC>
+    static void SetBit(Atom<AC> & atom, u32 bitnum)
     {
       return atom.m_bits.SetBit(START+bitnum);
     }
@@ -175,8 +175,8 @@ namespace MFM {
       return bv.ClearBit(START+bitnum);
     }
 
-    template <class CC>
-    static void ClearBit(Atom<CC> & atom, u32 bitnum)
+    template <class AC>
+    static void ClearBit(Atom<AC> & atom, u32 bitnum)
     {
       return atom.m_bits.ClearBit(START+bitnum);
     }
@@ -195,8 +195,8 @@ namespace MFM {
       return bv.ToggleBit(START+bitnum);
     }
 
-    template <class CC>
-    static void ToggleBit(Atom<CC> & atom, u32 bitnum)
+    template <class AC>
+    static void ToggleBit(Atom<AC> & atom, u32 bitnum)
     {
       return atom.m_bits.ToggleBit(START+bitnum);
     }
@@ -218,8 +218,8 @@ namespace MFM {
       return bv.ReadBit(START+bitnum);
     }
 
-    template <class CC>
-    static bool ReadBit(const Atom<CC> & atom, u32 bitnum)
+    template <class AC>
+    static bool ReadBit(const Atom<AC> & atom, u32 bitnum)
     {
       return atom.m_bits.ReadBit(START+bitnum);
     }
@@ -235,87 +235,87 @@ namespace MFM {
       bv.WriteLong(START,LENGTH,val);
     }
 
-    template <class CC>
-    static u32 Read(const Atom<CC> & atom)
+    template <class AC>
+    static u32 Read(const Atom<AC> & atom)
     {
       return Read(atom.m_bits);
     }
 
-    template <class CC>
-    static void Write(Atom<CC> & atom, u32 val)
+    template <class AC>
+    static void Write(Atom<AC> & atom, u32 val)
     {
       Write(atom.m_bits, val);
     }
 
     //////
     // Type specific: u32
-    template <class CC>
-    static void Load(const Atom<CC> & atom, u32 & val)
+    template <class AC>
+    static void Load(const Atom<AC> & atom, u32 & val)
     {
       val = Read(atom);
     }
 
-    template <class CC>
-    static void Store(Atom<CC> & atom, const u32 & val)
+    template <class AC>
+    static void Store(Atom<AC> & atom, const u32 & val)
     {
       Write(atom,val);
     }
 
     //////
     // Type specific: s32
-    template <class CC>
-    static void Load(const Atom<CC> & atom, s32 & val)
+    template <class AC>
+    static void Load(const Atom<AC> & atom, s32 & val)
     {
       u32 v = Read(atom);
       val = _SignExtend32(v, LENGTH);
     }
 
-    template <class CC>
-    static void Store(Atom<CC> & atom, const s32 & val)
+    template <class AC>
+    static void Store(Atom<AC> & atom, const s32 & val)
     {
       Write(atom,(u32) val);
     }
 
     //////
     // Type specific: bool
-    template <class CC>
-    static void Load(const Atom<CC> & atom, bool & val)
+    template <class AC>
+    static void Load(const Atom<AC> & atom, bool & val)
     {
       u32 v = Read(atom);
       val = PopCount(v) > LENGTH/2;
     }
 
-    template <class CC>
-    static void Store(Atom<CC> & atom, const bool & val)
+    template <class AC>
+    static void Store(Atom<AC> & atom, const bool & val)
     {
       Write(atom,val? _GetNOnes32(LENGTH) : 0u);
     }
 
     //////
     // Type specific: BITS
-    template <class CC>
-    static void Load(const Atom<CC> & atom, u64 & val)
+    template <class AC>
+    static void Load(const Atom<AC> & atom, u64 & val)
     {
       val = ReadLong(atom.m_bits);
     }
 
-    template <class CC>
-    static void Store(Atom<CC> & atom, const u64 & val)
+    template <class AC>
+    static void Store(Atom<AC> & atom, const u64 & val)
     {
       WriteLong(atom.m_bits,val);
     }
 
 
-    template <class CC>
-    static VTYPE GetValue(const Atom<CC> & a)
+    template <class AC>
+    static VTYPE GetValue(const Atom<AC> & a)
     {
       VTYPE temp;
       Load(a, temp);
       return temp;
     }
 
-    template <class CC>
-    static void SetValue(Atom<CC> & a, VTYPE val)
+    template <class AC>
+    static void SetValue(Atom<AC> & a, VTYPE val)
     {
       Store(a, val);
     }

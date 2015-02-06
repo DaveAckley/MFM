@@ -36,32 +36,33 @@
 namespace MFM
 {
 
-#define ELT_VERSION 1
-
-  template <class CC>
-  class Element_Xtal_R12 : public Element_Xtal_L12<CC>
+  template <class EC>
+  class Element_Xtal_R12 : public Element_Xtal_L12<EC>
   {
+    enum {  ELT_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
   public:
 
     static Element_Xtal_R12 THE_INSTANCE;
 
-    Element_Xtal_R12() : Element_Xtal_L12<CC>(MFM_UUID_FOR("XtalR12", ELT_VERSION))
+    Element_Xtal_R12() : Element_Xtal_L12<EC>(MFM_UUID_FOR("XtalR12", ELT_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("Xr");
-      Element<CC>::SetName("R1,2 crystal");
+      Element<EC>::SetAtomicSymbol("Xr");
+      Element<EC>::SetName("R1,2 crystal");
     }
 
-    virtual u32 GetSymI(T &atom, EventWindow<CC>& window) const
+    virtual u32 GetSymI(T &atom, EventWindow<EC>& window) const
     {
       return (u32) PSYM_FLIPY;
     }
   };
 
-  template <class CC>
-  Element_Xtal_R12<CC> Element_Xtal_R12<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Xtal_R12<EC> Element_Xtal_R12<EC>::THE_INSTANCE;
 
 }
 

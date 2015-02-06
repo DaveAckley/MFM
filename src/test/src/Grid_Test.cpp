@@ -1,6 +1,5 @@
 #include "assert.h"
 #include "Grid.h"
-#include "P1Atom.h"
 #include "Grid_Test.h"
 #include "Element_Res.h"
 
@@ -9,15 +8,15 @@ namespace MFM {
   void Grid_Test::Test_gridPlaceAtom()
   {
 
-    ElementRegistry<TestCoreConfig> ereg;
+    ElementRegistry<TestEventConfig> ereg;
     TestGrid grid(ereg);
 
     grid.SetSeed(1);
     grid.Init();
 
-    grid.Needed(Element_Res<TestCoreConfig>::THE_INSTANCE);
+    grid.Needed(Element_Res<TestEventConfig>::THE_INSTANCE);
 
-    TestAtom atom(Element_Res<TestCoreConfig>::THE_INSTANCE.GetDefaultAtom());
+    TestAtom atom(Element_Res<TestEventConfig>::THE_INSTANCE.GetDefaultAtom());
 
     SPoint gloc(5, 10);
 

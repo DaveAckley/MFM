@@ -36,15 +36,15 @@
 namespace MFM
 {
 
-#define ELT_VERSION 1
-
-  template <class CC>
-  class Element_Xtal_Sq1 : public AbstractElement_Xtal<CC>
+  template <class EC>
+  class Element_Xtal_Sq1 : public AbstractElement_Xtal<EC>
   {
+    enum {  ELT_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   private:
 
@@ -52,10 +52,10 @@ namespace MFM
 
     static Element_Xtal_Sq1 THE_INSTANCE;
 
-    Element_Xtal_Sq1() : AbstractElement_Xtal<CC>(MFM_UUID_FOR("XtalSq1", ELT_VERSION))
+    Element_Xtal_Sq1() : AbstractElement_Xtal<EC>(MFM_UUID_FOR("XtalSq1", ELT_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("Xs");
-      Element<CC>::SetName("Square crystal spacing 1");
+      Element<EC>::SetAtomicSymbol("Xs");
+      Element<EC>::SetName("Square crystal spacing 1");
     }
 
     virtual u32 DefaultPhysicsColor() const
@@ -68,14 +68,14 @@ namespace MFM
       return DefaultPhysicsColor();
     }
 
-    typedef typename MFM::AbstractElement_Xtal<CC>::XtalSites XtalSites;
+    typedef typename MFM::AbstractElement_Xtal<EC>::XtalSites XtalSites;
 
-    virtual u32 GetSymI(T &atom, EventWindow<CC>& window) const
+    virtual u32 GetSymI(T &atom, EventWindow<EC>& window) const
     {
       return (u32) PSYM_NORMAL;
     }
 
-    virtual void GetSites(T & atom, XtalSites & sites, EventWindow<CC>& window) const
+    virtual void GetSites(T & atom, XtalSites & sites, EventWindow<EC>& window) const
     {
       static XtalSites isites;
       static bool initted = false;
@@ -102,8 +102,8 @@ namespace MFM
 
   };
 
-  template <class CC>
-  Element_Xtal_Sq1<CC> Element_Xtal_Sq1<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Xtal_Sq1<EC> Element_Xtal_Sq1<EC>::THE_INSTANCE;
 
 }
 

@@ -38,25 +38,25 @@
 namespace MFM
 {
 
-  template <class CC>
-  class Element_Fish : public AbstractElement_WaPat<CC>
+  template <class EC>
+  class Element_Fish : public AbstractElement_WaPat<EC>
   {
     // Short names for params
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
     enum {
-      R = P::EVENT_WINDOW_RADIUS,
+      R = EC::EVENT_WINDOW_RADIUS,
 
       INITIAL_DEFAULT_BIRTH_AGE = 20
     };
 
-    ElementParameterS32<CC> m_fishBirthAge;
-    ElementParameterBool<CC> m_fishEvolve;
+    ElementParameterS32<EC> m_fishBirthAge;
+    ElementParameterBool<EC> m_fishEvolve;
 
   public:
     enum
     {
-      ELEMENT_VERSION = 1
+      ELEMENT_VERSION = 2
     };
 
     static Element_Fish THE_INSTANCE;
@@ -66,7 +66,7 @@ namespace MFM
     }
 
     Element_Fish() :
-      AbstractElement_WaPat<CC>(MFM_UUID_FOR("Fish", ELEMENT_VERSION)),
+      AbstractElement_WaPat<EC>(MFM_UUID_FOR("Fish", ELEMENT_VERSION)),
       m_fishBirthAge(this, "age", "Birth Age",
                      "Number of events for a fish to mature",
                      1, INITIAL_DEFAULT_BIRTH_AGE, 100/*, 1*/),
@@ -74,8 +74,8 @@ namespace MFM
                    "Is fish birth age set by mutable genes?",
                    false)
     {
-      Element<CC>::SetAtomicSymbol("Fi");
-      Element<CC>::SetName("Fish");
+      Element<EC>::SetAtomicSymbol("Fi");
+      Element<EC>::SetName("Fish");
     }
 
     virtual const T & GetDefaultAtom() const
@@ -94,7 +94,7 @@ namespace MFM
     }
 
     // Non-diffusable
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
+    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const
     {
       return nowAt.Equals(maybeAt)?COMPLETE_DIFFUSABILITY:0;
     }
@@ -105,13 +105,13 @@ namespace MFM
       return 0;
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       T self = window.GetCenterAtomSym();
       SPoint emptyRel;
       u32 emptyCount = 0;
       u32 age = this->GetCurrentAge(self);
-      WindowScanner<CC> scanner(window);
+      WindowScanner<EC> scanner(window);
 
       // Don't use genetic birth age (yet): bool reproable = age >= this->GetBirthAge(self);
       bool reproable = age >= (u32) m_fishBirthAge.GetValue();
@@ -132,7 +132,7 @@ namespace MFM
         }
         else               // or leave empty behind
         {
-          window.SetCenterAtomSym(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetCenterAtomSym(Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
         }
         window.SetRelativeAtomSym(emptyRel,self); // move or repro
       }
@@ -146,8 +146,8 @@ namespace MFM
     }
   };
 
-  template <class CC>
-  Element_Fish<CC> Element_Fish<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Fish<EC> Element_Fish<EC>::THE_INSTANCE;
 
 }
 

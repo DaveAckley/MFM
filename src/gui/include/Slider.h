@@ -36,11 +36,12 @@
 
 namespace MFM
 {
-  template <class CC>
-  class Slider : public ParameterController<CC>
+  template <class EC>
+  class Slider : public ParameterController<EC>
   {
    private:
-    typedef typename CC::ATOM_TYPE T;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
     bool m_dragging;
     s32 m_dragStartX;
@@ -68,22 +69,22 @@ namespace MFM
 
     inline u32 GetSliderWidth() const
     {
-      return ParameterController<CC>::m_bigText ? SLIDER_WIDTH_BIG : SLIDER_WIDTH;
+      return ParameterController<EC>::m_bigText ? SLIDER_WIDTH_BIG : SLIDER_WIDTH;
     }
 
     inline u32 GetSliderHeight() const
     {
-      return ParameterController<CC>::m_bigText ? SLIDER_HEIGHT_BIG : SLIDER_HEIGHT;
+      return ParameterController<EC>::m_bigText ? SLIDER_HEIGHT_BIG : SLIDER_HEIGHT;
     }
 
     inline u32 GetSliderHalfHeight() const
     {
-      return ParameterController<CC>::m_bigText ? SLIDER_HALF_HEIGHT_BIG : SLIDER_HALF_HEIGHT;
+      return ParameterController<EC>::m_bigText ? SLIDER_HALF_HEIGHT_BIG : SLIDER_HALF_HEIGHT;
     }
 
     inline FontAsset GetRenderFont() const
     {
-      return ParameterController<CC>::m_bigText ? FONT_ASSET_ELEMENT :
+      return ParameterController<EC>::m_bigText ? FONT_ASSET_ELEMENT :
       FONT_ASSET_HELPPANEL_SMALL;
     }
 
@@ -110,7 +111,7 @@ namespace MFM
       return this->m_parameter->SetBitsAsS32(*this->m_patom, val);
     }
 
-    void SetSliderTarget(Parameter<CC>* parameter, Atom<CC> * patom)
+    void SetSliderTarget(Parameter<EC>* parameter, Atom<EC> * patom)
     {
       if (!parameter && !patom)
       {

@@ -30,26 +30,26 @@
 
 namespace MFM
 {
-  template <class CC> class Tile; // FORWARD
-  template <class CC> class EventWindow; // FORWARD
+  template <class EC> class Tile; // FORWARD
+  template <class EC> class EventWindow; // FORWARD
   class Random; // FORWARD
 
-  template <class CC>
+  template <class EC>
   class UlamContext {
-    Tile<CC> * m_tile;
+    Tile<EC> * m_tile;
     void AssertTile() ;
 
   public:
 
     UlamContext() ;
 
-    void SetTile(Tile<CC> & t) ;
+    void SetTile(Tile<EC> & t) ;
 
-    Tile<CC> & GetTile() ;
+    Tile<EC> & GetTile() ;
 
     Random & GetRandom() ;
 
-    EventWindow<CC> & GetEventWindow() ;
+    EventWindow<EC> & GetEventWindow() ;
 
   };
 }

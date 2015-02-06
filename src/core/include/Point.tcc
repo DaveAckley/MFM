@@ -110,56 +110,6 @@ namespace MFM
     m_y %= scalar;
   }
 
-#if 0
-  /**
-   * Seeks a char* for a specified char. If this char is not found by
-   * the time this function seeks to the end (specified by strlen), this
-   * function calls FAIL(ARRAY_INDEX_OUT_OF_BOUNDS) . Therefore, this
-   * function runs in O(n) time in terms of the length of the given
-   * char* .
-   *
-   * @param start The start of the char* to scan.
-   *
-   * @param seekchar The char to look for in start.
-   *
-   * @returns start, seeked to the first occurrence of seekchar.
-   */
-  static char* SEEK(char* start, char seekchar)
-  {
-    MFM::u32 len = strlen(start);
-    MFM::u32 curChar = 0;
-
-    while(*start != seekchar)
-    {
-      curChar++;
-      start++;
-
-      if(curChar >= len)
-      {
-	FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
-      }
-    }
-    return start;
-  }
-#endif
-
-#if 0 // Mon Jan 19 03:36:58 2015 Not used?
-  template <class T>
-  void Point<T>::Parse(char* buffer)
-  {
-    MFM_API_ASSERT_NONNULL(buffer);
-
-    s8 dummy;
-    s32 x, y;
-    s32 ret = sscanf(buffer, "(%d,%d)%c", &x, &y, &dummy);
-    if (ret != 2)
-      FAIL(ILLEGAL_ARGUMENT);
-    m_x = x;
-    m_y = y;
-  }
-#endif
-
-
   template <class T>
   void Point<T>::SetX(T x)
   {

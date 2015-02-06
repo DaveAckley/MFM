@@ -8,7 +8,6 @@
 #include "Element_Res.h"
 #include "itype.h"
 #include "FXP.h"
-#include "P1Atom.h"
 #include "ColorMap.h"
 
 namespace MFM
@@ -41,13 +40,13 @@ namespace MFM
    */
 
 
-  template <class CC>
-  class Element_Bar : public Element<CC>
+  template <class EC>
+  class Element_Bar : public Element<EC>
   {
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
     template <u32 TVBITS>
     static u32 toSignMag(s32 value) {
@@ -219,11 +218,11 @@ namespace MFM
                                0xffff0000);
       }
       default:
-        return Element<CC>::PhysicsColor();
+        return Element<EC>::PhysicsColor();
       }
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       Random & random = window.GetRandom();
 
@@ -299,7 +298,7 @@ namespace MFM
                 } else if (random.OneIn(++inconsistentCount)) {
                   anInconsistent = sp;
                   // Inconsistent Bars decay to Res
-                  unmakeGuy = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
+                  unmakeGuy = Element_Res<EC>::THE_INSTANCE.GetDefaultAtom();
                 }
               }
 
@@ -313,7 +312,7 @@ namespace MFM
             const T other = window.GetRelativeAtom(sp);
             const u32 otherType = other.GetType();
 
-            bool isRes = otherType == Element_Res<CC>::TYPE;
+            bool isRes = otherType == Element_Res<EC>::TYPE;
             if (isRes) {
               ++consistentCount;
               if (random.OneIn(++eatCount)) {
@@ -326,11 +325,11 @@ namespace MFM
 
               if (isEmpty) ++consistentCount;
               else {
-                bool isBar = otherType == Element_Bar<CC>::TYPE;
+                bool isBar = otherType == Element_Bar<EC>::TYPE;
                 if (isBar) {
                   if (random.OneIn(++inconsistentCount)) {
                     anInconsistent = sp;
-                    unmakeGuy = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+                    unmakeGuy = Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom();
                   }
                 }
               }
@@ -348,13 +347,13 @@ namespace MFM
           window.SetRelativeAtom(anInconsistent, unmakeGuy);
         } else if (inconsistentCount > 3*consistentCount) {
           // If we're way inconsistent, let's res out and let them have us
-          window.SetCenterAtom(Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetCenterAtom(Element_Res<EC>::THE_INSTANCE.GetDefaultAtom());
         }
       } else {
         // No inconsistencies.  Do we have something to make, and eat?
         if (makeCount > 0 && eatCount > 0) {
           window.SetRelativeAtom(toMake, makeGuy);
-          window.SetRelativeAtom(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetRelativeAtom(toEat, Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
         }
       }
 
@@ -362,8 +361,8 @@ namespace MFM
 
   };
 
-  template <class CC>
-  Element_Bar<CC> Element_Bar<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Bar<EC> Element_Bar<EC>::THE_INSTANCE;
 
 }
 

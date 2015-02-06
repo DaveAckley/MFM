@@ -36,17 +36,17 @@
 namespace MFM
 {
 
-  template <class CC>
-  class Element_Rocket : public Element<CC>
+  template <class EC>
+  class Element_Rocket : public Element<EC>
   {
     // Short names for params
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   public:
     enum {
-      ELT_VERSION = 1,
+      ELT_VERSION = 2,
 
       //////
       // Element field sizes
@@ -54,10 +54,10 @@ namespace MFM
       BITS_DIR = 3,
       BITS_DIST = 5,
 
-      STATE_BITS_START = P3Atom<P>::P3_STATE_BITS_POS
+      STATE_BITS_START = AC::ATOM_FIRST_STATE_BIT
     };
 
-    typedef BitVector<P::BITS_PER_ATOM> BVA;
+    typedef BitVector<AC::BITS_PER_ATOM> BVA;
 
     typedef BitField<BVA, VD::U32, BITS_DIR, STATE_BITS_START> AFDir;
     typedef BitField<BVA, VD::U32, BITS_DIST, AFDir::END> AFDist;
@@ -71,10 +71,10 @@ namespace MFM
       return THE_INSTANCE.GetType();
     }
 
-    Element_Rocket() : Element<CC>(MFM_UUID_FOR("Rocket", ELT_VERSION))
+    Element_Rocket() : Element<EC>(MFM_UUID_FOR("Rocket", ELT_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("Rk");
-      Element<CC>::SetName("Rocket");
+      Element<EC>::SetAtomicSymbol("Rk");
+      Element<EC>::SetName("Rocket");
     }
 
     virtual const T & GetDefaultAtom() const
@@ -88,12 +88,14 @@ namespace MFM
       return 0xff00ff00;
     }
 
+    /*
     virtual u32 DefaultLowlightColor() const
     {
       return 0xff00af00;
     }
+    */
 
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
+    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const
     {
       return nowAt.Equals(maybeAt)?COMPLETE_DIFFUSABILITY:0;
     }
@@ -104,7 +106,7 @@ namespace MFM
       return 0;
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       // Phase 0: Self check
       // Phase 1: See / Scan
@@ -163,8 +165,8 @@ namespace MFM
     }
   };
 
-  template <class CC>
-  Element_Rocket<CC> Element_Rocket<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Rocket<EC> Element_Rocket<EC>::THE_INSTANCE;
 }
 
 #endif /* ELEMENT_ROCKET_H */
