@@ -121,9 +121,9 @@ namespace MFM
   template <class GC>
   class FunctionCallGA : public ConfigFunctionCall<GC>
   {
-    typedef typename GC::CORE_CONFIG CC;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { BPA = P::BITS_PER_ATOM };
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef typename EC::ATOM_CONFIG AC;
+    enum { BPA = AC::BITS_PER_ATOM };
 
    public:
     FunctionCallGA() : ConfigFunctionCall<GC>("GA")
@@ -144,7 +144,7 @@ namespace MFM
         return in.Msg(Logger::ERROR, "Identifier too long '%s'", nick.GetZString());
       }
 
-      const Element<CC> * pelt = ec.LookupElement(nick);
+      const Element<EC> * pelt = ec.LookupElement(nick);
       if (!pelt)
       {
         return in.Msg(Logger::ERROR, "'%@' isn't a registered element nickname", &nick);
@@ -181,8 +181,8 @@ namespace MFM
         return false;
       }
 
-      Atom<CC> temp;
-      AtomSerializer<CC> as(temp);
+      Atom<AC> temp;
+      AtomSerializer<AC> as(temp);
       if (in.Scanf("%@",&as) != 1)
       {
         return in.Msg(Logger::ERROR, "Expected hex-encoded Atom body");
@@ -206,7 +206,7 @@ namespace MFM
   class FunctionCallDisableTile : public ConfigFunctionCall<GC>
   {
    private:
-    typedef typename GC::CORE_CONFIG CC;
+    typedef typename GC::EVENT_CONFIG EC;
 
    public:
     FunctionCallDisableTile() :
@@ -258,7 +258,7 @@ namespace MFM
   template <class GC>
   class FunctionCallSetElementParameter : public ConfigFunctionCall<GC>
   {
-    typedef typename GC::CORE_CONFIG CC;
+    typedef typename GC::EVENT_CONFIG EC;
 
    public:
     FunctionCallSetElementParameter() :
@@ -276,12 +276,12 @@ namespace MFM
         return in.Msg(Logger::ERROR, "Expected element nickname as first argument");
       }
 
-      Element<CC>* elem = ec.LookupElement(nick);
+      Element<EC>* elem = ec.LookupElement(nick);
       if (!elem)
       {
         return in.Msg(Logger::ERROR, "'%s' is not a known element nickname", nick.GetZString());
       }
-      ElementParameters<CC> & parms = elem->GetElementParameters();
+      ElementParameters<EC> & parms = elem->GetElementParameters();
 
       if (!this->SkipToNextExistingArg(in,"parameter tag"))
       {
@@ -300,7 +300,7 @@ namespace MFM
         return in.Msg(Logger::ERROR, "'%s' is not a known parameter tag", paramTag.GetZString());
       }
 
-      ElementParameter<CC> * p = parms.GetParameter((u32) index);
+      ElementParameter<EC> * p = parms.GetParameter((u32) index);
       MFM_API_ASSERT_NONNULL(p);
 
       if (!this->SkipToNextExistingArg(in,"parameter value"))

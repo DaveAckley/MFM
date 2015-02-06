@@ -110,12 +110,12 @@ namespace MFM
 
       /* Write configurable element values */
 
-      const Element<CC>* elem = m_elementRegistry.GetEntryElement(i);
-      const ElementParameters<CC> & parms = elem->GetElementParameters();
+      const Element<EC>* elem = m_elementRegistry.GetEntryElement(i);
+      const ElementParameters<EC> & parms = elem->GetElementParameters();
 
       for(u32 j = 0; j < parms.GetParameterCount(); j++)
       {
-        const ElementParameter<CC> * p = parms.GetParameter(j);
+        const ElementParameter<EC> * p = parms.GetParameter(j);
         byteSink.Printf(" SetElementParameter(%s,%s,%@)",
                         alphaOutput,
                         p->GetTag(),
@@ -128,14 +128,14 @@ namespace MFM
     /* Then, GA all live atoms. */
 
     /* The grid size in sites excluding caches */
-    const u32 gridWidth = CC::PARAM_CONFIG::TILE_WIDTH *
+    const u32 gridWidth = TILE_SIDE *
       GC::GRID_WIDTH -
-      CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS *
+      EVENT_WINDOW_RADIUS *
       GC::GRID_WIDTH * 2;
 
-    const u32 gridHeight = CC::PARAM_CONFIG::TILE_WIDTH *
+    const u32 gridHeight = TILE_SIDE *
       GC::GRID_HEIGHT -
-      CC::PARAM_CONFIG::EVENT_WINDOW_RADIUS *
+      EVENT_WINDOW_RADIUS *
       GC::GRID_HEIGHT * 2;
 
     for(u32 y = 0; y < gridHeight; y++)
@@ -144,8 +144,8 @@ namespace MFM
       {
         SPoint currentPt(x, y);
         /* No need to write empties since they are the default */
-        if(!Atom<CC>::IsType(*m_grid.GetAtom(currentPt),
-                             Element_Empty<CC>::THE_INSTANCE.GetType()))
+        if(!Atom<AC>::IsType(*m_grid.GetAtom(currentPt),
+                             Element_Empty<EC>::THE_INSTANCE.GetType()))
         {
           byteSink.Printf("GA(");
 
@@ -153,7 +153,7 @@ namespace MFM
            * tables. */
           for(u32 i = 0; i < elems; i++)
           {
-            if(Atom<CC>::IsType(*m_grid.GetAtom(currentPt),
+            if(Atom<AC>::IsType(*m_grid.GetAtom(currentPt),
                                 m_elementRegistry.GetEntryElement(i)->GetType()))
             {
               IntAlphaEncode(i, alphaOutput);
@@ -163,7 +163,7 @@ namespace MFM
           }
 
           T temp = *m_grid.GetAtom(currentPt);
-          AtomSerializer<CC> as(temp);
+          AtomSerializer<AC> as(temp);
           byteSink.Printf(",%d,%d,%@)\n", x, y, &as);
         }
       }
@@ -176,9 +176,9 @@ namespace MFM
       for(u32 x = 0; x < GC::GRID_WIDTH; x++)
       {
         SPoint currentPt(x, y);
-        Tile<CC> & tile = m_grid.GetTile(currentPt);
+        Tile<EC> & tile = m_grid.GetTile(currentPt);
 
-        if(tile.GetCurrentState() != Tile<CC>::ACTIVE)
+        if(tile.GetCurrentState() != Tile<EC>::ACTIVE)
         {
           byteSink.Printf("DisableTile(%d,%d)", x, y);
           byteSink.WriteNewline();
@@ -206,7 +206,7 @@ namespace MFM
   template<class GC>
   bool ExternalConfig<GC>::RegisterElement(const UUID & uuid, OString16 & nick)
   {
-    Element<CC> * elt = m_elementRegistry.Lookup(uuid);
+    Element<EC> * elt = m_elementRegistry.Lookup(uuid);
     const UUID * puuid = 0;
     if (!elt) {
       m_in.Msg(Logger::WARNING, "Unknown element '%@', searching for compatible alternatives", &uuid);
@@ -248,7 +248,7 @@ namespace MFM
   }
 
   template<class GC>
-  Element<typename GC::CORE_CONFIG> * ExternalConfig<GC>::LookupElement(const OString16 & nick) const
+  Element<typename GC::EVENT_CONFIG> * ExternalConfig<GC>::LookupElement(const OString16 & nick) const
   {
     for (u32 i = 0; i < m_registeredElementCount; ++i) {
       const RegElt & re = m_registeredElements[i];
@@ -265,7 +265,7 @@ namespace MFM
   }
 
   template<class GC>
-  bool ExternalConfig<GC>::PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const char* hexData)
+  bool ExternalConfig<GC>::PlaceAtom(const Element<EC> & elt, s32 x, s32 y, const char* hexData)
   {
     SPoint pt(x, y);
     T atom = elt.GetDefaultAtom();
@@ -277,7 +277,7 @@ namespace MFM
   }
 
   template<class GC>
-  bool ExternalConfig<GC>::PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const BitVector<BPA> & bv)
+  bool ExternalConfig<GC>::PlaceAtom(const Element<EC> & elt, s32 x, s32 y, const BitVector<BPA> & bv)
   {
     SPoint pt(x, y);
     T atom = elt.GetDefaultAtom();

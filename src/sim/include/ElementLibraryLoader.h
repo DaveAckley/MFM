@@ -15,7 +15,7 @@
 
 namespace MFM {
 
-  template <class CC>
+  template <class EC>
   class ElementLibraryLoader {
   public:
 
@@ -34,7 +34,7 @@ namespace MFM {
        return 0;
     }
 
-    const char * LoadLibrary(ElementLibrary<CC> ** elpp)
+    const char * LoadLibrary(ElementLibrary<EC> ** elpp)
     {
       if (!m_dlHandle)
         FAIL(ILLEGAL_STATE);
@@ -53,13 +53,13 @@ namespace MFM {
         return dlsym_error;
       }
 
-      ElementLibrary<CC> ** elp = reinterpret_cast<ElementLibrary<CC> **>(symptr);
+      ElementLibrary<EC> ** elp = reinterpret_cast<ElementLibrary<EC> **>(symptr);
       if (!elp || !*elp)
       {
         return "Accessor to ElementLibrary failed";
       }
 
-      ElementLibrary<CC> * el = *elp;
+      ElementLibrary<EC> * el = *elp;
       if (el->m_magic != ELEMENT_LIBRARY_MAGIC)
       {
         return "Bad ElementLibrary magic number";

@@ -46,7 +46,7 @@ namespace MFM {
    * therefore dog slow.  It maintains a list of .so files from which
    * it will dynamically load elements, during initialization.
    */
-  template <class CC>
+  template <class EC>
   class ElementRegistry
   {
   public:
@@ -58,8 +58,8 @@ namespace MFM {
   private:
 
     // Extract short type names
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
     /**
        Return negative on dl error, otherwise non-negative number of
@@ -77,7 +77,7 @@ namespace MFM {
 
     u32 GetRegisteredElementCount() const;
 
-    Element<CC> * GetRegisteredElement(u32 index) ;
+    Element<EC> * GetRegisteredElement(u32 index) ;
 
     bool IsRegistered(const UUID & uuid) const;
 
@@ -85,9 +85,9 @@ namespace MFM {
 
     bool Load(const UUID & uuid) ;
 
-    Element<CC> * Lookup(const UUID & uuid) const;
+    Element<EC> * Lookup(const UUID & uuid) const;
 
-    Element<CC> * LookupCompatible(const UUID & uuid) const;
+    Element<EC> * LookupCompatible(const UUID & uuid) const;
 
     /**
      * Add a library path to the registry paths, if it is not already
@@ -113,7 +113,7 @@ namespace MFM {
     /**
      * Store an element in the registry keyed by its uuid
      */
-    bool RegisterElement(Element<CC>& e) ;
+    bool RegisterElement(Element<EC>& e) ;
 
     /**
      * Gets the number of currently registered Elements inside this
@@ -149,7 +149,7 @@ namespace MFM {
      *
      * @returns The Element of the element loaded at this partuclar index.
      */
-    const Element<CC>* GetEntryElement(u32 entryIdx) const
+    const Element<EC>* GetEntryElement(u32 entryIdx) const
     {
       if (entryIdx >= GetEntryCount())
         FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
@@ -160,7 +160,7 @@ namespace MFM {
   private:
     struct ElementEntry {
       UUID m_uuid;                   //< Set in all cases
-      Element<CC>* m_element;  //< Set if element is loaded
+      Element<EC>* m_element;  //< Set if element is loaded
       s32 m_pathIndex;               //< Set if the element was found in this pathentry
 
       ElementEntry() : m_element(0), m_pathIndex(-1) { }

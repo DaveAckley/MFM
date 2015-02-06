@@ -45,10 +45,13 @@ namespace MFM
   template<class GC>
   class ExternalConfig
   {
-    typedef typename GC::CORE_CONFIG CC;
-    typedef typename CC::PARAM_CONFIG P;
-    typedef typename CC::ATOM_TYPE T;
-    enum { BPA = P::BITS_PER_ATOM };
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+
+    enum { BPA = AC::BITS_PER_ATOM };
+    enum { TILE_SIDE = GC::TILE_SIDE };
+    enum { EVENT_WINDOW_RADIUS = EC::EVENT_WINDOW_RADIUS };
 
   public:
     enum { MFS_VERSION = 2 };
@@ -82,11 +85,11 @@ namespace MFM
 
     bool RegisterElement(const UUID & uuid, OString16 & nick) ;
 
-    Element<CC> * LookupElement(const OString16 & nick) const ;
+    Element<EC> * LookupElement(const OString16 & nick) const ;
 
-    bool PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const char* dataStr) ;
+    bool PlaceAtom(const Element<EC> & elt, s32 x, s32 y, const char* dataStr) ;
 
-    bool PlaceAtom(const Element<CC> & elt, s32 x, s32 y, const BitVector<BPA> & bv) ;
+    bool PlaceAtom(const Element<EC> & elt, s32 x, s32 y, const BitVector<BPA> & bv) ;
 
     void SetTileToExecuteOnly(const SPoint& tileLoc, bool value);
 
@@ -112,7 +115,7 @@ namespace MFM
     /**
      * The ElementRegistry to lookup UUIDs in.
      */
-    ElementRegistry<CC>& m_elementRegistry;
+    ElementRegistry<EC>& m_elementRegistry;
 
 #define MAX_REGISTERED_FUNCTIONS 64
     ConfigFunctionCall<GC> * (m_registeredFunctions[MAX_REGISTERED_FUNCTIONS]);
@@ -122,7 +125,7 @@ namespace MFM
     struct RegElt {
       UUID m_uuid;
       OString16 m_nick;
-      Element<CC> * m_element;
+      Element<EC> * m_element;
     } m_registeredElements[MAX_REGISTERED_ELEMENTS];
     u32 m_registeredElementCount;
 

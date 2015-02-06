@@ -6,7 +6,7 @@
 
 namespace MFM {
 
-  template <class CC>
+  template <class EC>
   struct ElementLibrary {
     u32 m_magic;
     u8 m_version;
@@ -14,7 +14,7 @@ namespace MFM {
     u16 m_count;
     u32 m_date;
     u32 m_time;
-    Element<CC> ** m_ptrArray;
+    Element<EC> ** m_ptrArray;
   };
 
   enum { ELEMENT_LIBRARY_MAGIC = 0xfea57000 };

@@ -9,8 +9,8 @@
 namespace MFM
 {
 
-  template <class CC>
-  void ElementRegistry<CC>::Init()
+  template <class EC>
+  void ElementRegistry<EC>::Init()
   {
     LOG.Debug("Loading ElementLibraries from %d file(s)...", m_libraryPathsCount);
     s32 elements = LoadLibraries();
@@ -79,14 +79,14 @@ namespace MFM
 #endif
   }
 
-  template <class CC>
-  u32 ElementRegistry<CC>::GetRegisteredElementCount() const
+  template <class EC>
+  u32 ElementRegistry<EC>::GetRegisteredElementCount() const
   {
     return m_registeredElementsCount;
   }
 
-  template <class CC>
-  Element<CC> * ElementRegistry<CC>::GetRegisteredElement(u32 index)
+  template <class EC>
+  Element<EC> * ElementRegistry<EC>::GetRegisteredElement(u32 index)
   {
     if (index >= m_registeredElementsCount)
       FAIL(ILLEGAL_ARGUMENT);
@@ -94,8 +94,8 @@ namespace MFM
     return ee.m_element;
   }
 
-  template <class CC>
-  bool ElementRegistry<CC>::RegisterElement(Element<CC>& e)
+  template <class EC>
+  bool ElementRegistry<EC>::RegisterElement(Element<EC>& e)
   {
     if (IsRegistered(e.GetUUID()))
       return false;
@@ -107,8 +107,8 @@ namespace MFM
     return true;
   }
 
-  template <class CC>
-  bool ElementRegistry<CC>::RegisterUUID(const UUID & uuid)
+  template <class EC>
+  bool ElementRegistry<EC>::RegisterUUID(const UUID & uuid)
   {
     if (IsRegistered(uuid))
       return false;
@@ -120,19 +120,19 @@ namespace MFM
     return true;
   }
 
-  template <class CC>
-  Element<CC> * ElementRegistry<CC>::Lookup(const UUID & uuid) const
+  template <class EC>
+  Element<EC> * ElementRegistry<EC>::Lookup(const UUID & uuid) const
   {
     const ElementEntry * ee = FindMatching(uuid);
     if (ee) return ee->m_element;
     return 0;
   }
 
-  template <class CC>
-  Element<CC> * ElementRegistry<CC>::LookupCompatible(const UUID & uuid) const
+  template <class EC>
+  Element<EC> * ElementRegistry<EC>::LookupCompatible(const UUID & uuid) const
   {
     // Try exact match first
-    Element<CC> * ret = Lookup(uuid);
+    Element<EC> * ret = Lookup(uuid);
     if (ret) return ret;
 
     s32 index = FindCompatibleIndex(uuid, -1);
@@ -142,8 +142,8 @@ namespace MFM
     return m_registeredElements[index].m_element;
   }
 
-  template <class CC>
-  bool ElementRegistry<CC>::IsRegistered(const UUID & uuid) const
+  template <class EC>
+  bool ElementRegistry<EC>::IsRegistered(const UUID & uuid) const
   {
     for (u32 i = 0; i < m_registeredElementsCount; ++i) {
       if (m_registeredElements[i].m_uuid==uuid)
@@ -152,8 +152,8 @@ namespace MFM
     return false;
   }
 
-  template <class CC>
-  bool ElementRegistry<CC>::IsLoaded(const UUID & uuid) const
+  template <class EC>
+  bool ElementRegistry<EC>::IsLoaded(const UUID & uuid) const
   {
     for (u32 i = 0; i < m_registeredElementsCount; ++i) {
       const ElementEntry & ee = m_registeredElements[i];
@@ -163,8 +163,8 @@ namespace MFM
     return false;
   }
 
-  template <class CC>
-  void ElementRegistry<CC>::AddLibraryPath(const char * path)
+  template <class EC>
+  void ElementRegistry<EC>::AddLibraryPath(const char * path)
   {
     if (!path)
       FAIL(NULL_POINTER);
@@ -189,8 +189,8 @@ namespace MFM
     ++m_libraryPathsCount;
   }
 
-  template <class CC>
-  s32 ElementRegistry<CC>::LoadLibraries()
+  template <class EC>
+  s32 ElementRegistry<EC>::LoadLibraries()
   {
     u32 elementCount = 0;
     for (u32 i = 0; i < m_libraryPathsCount; ++i) {
@@ -201,10 +201,10 @@ namespace MFM
     return (s32) elementCount;
   }
 
-  template <class CC>
-  s32 ElementRegistry<CC>::LoadLibrary(OString256 & libraryPath)
+  template <class EC>
+  s32 ElementRegistry<EC>::LoadLibrary(OString256 & libraryPath)
   {
-    ElementLibraryLoader<CC> ell;
+    ElementLibraryLoader<EC> ell;
 
     const char * err;
     err = ell.Open(libraryPath);
@@ -213,7 +213,7 @@ namespace MFM
       return -1;
     }
 
-    ElementLibrary<CC> * el = 0;
+    ElementLibrary<EC> * el = 0;
     err = ell.LoadLibrary(&el);
     if (err != 0) {
       LOG.Error("ElementLibrary not loadable from %s", err);
@@ -221,7 +221,7 @@ namespace MFM
     }
     u32 count = el->m_count;
     for (u32 i = 0; i < count; ++i) {
-      Element<CC> * elt = el->m_ptrArray[i];
+      Element<EC> * elt = el->m_ptrArray[i];
       if (!elt)
         FAIL(ILLEGAL_STATE);
       UUID uuid = elt->GetUUID();
@@ -233,8 +233,8 @@ namespace MFM
     return count;
   }
 
-  template <class CC>
-  ElementRegistry<CC>::ElementRegistry()
+  template <class EC>
+  ElementRegistry<EC>::ElementRegistry()
     : m_registeredElementsCount(0), m_libraryPathsCount(0)
   {
 

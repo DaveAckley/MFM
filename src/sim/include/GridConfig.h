@@ -28,29 +28,24 @@
 #define GRIDCONFIG_H
 
 #include "itype.h"
+#include "EventConfig.h"
 
 namespace MFM {
 
   /**
-   * A template class used to hold all compile-time GridConfiguration
-   * parameters for a MFM.  We make all MFM template classes depend on
-   * this one type, rather than having each depend on whichever
-   * compile-time parameters they reference.
-   *
-   * If an additional compile-time parameter is needed, rather than
-   * having to add it to thousands of template declarations throughout
-   * the codebase, we just add it here, and then modify only the
-   * template classes that need to use the new parameter.
+   * A template class used to hold compile-time parameters for an MFM
+   * at the Tile-to-Grid level.
    */
-  template <class CC,      // CoreConfig
-            u32 W = 5,     // Grid width in tiles
-            u32 H = 3>     // Grid height in tiles
+  template <class EC,      // EventConfig
+            u32 SIDE,      // Tile side in sites
+            u32 W,         // Grid width in tiles
+            u32 H>         // Grid height in tiles
   struct GridConfig {
 
     /**
-     * CORE_CONFIG is the Config type for the core MFM parameters.
+     * EVENT_CONFIG is the Config type for the core MFM parameters.
      */
-    typedef CC CORE_CONFIG;
+    typedef EC EVENT_CONFIG;
 
     /**
      * GRID_WIDTH is the number of columns of tiles in this Grid
@@ -60,9 +55,21 @@ namespace MFM {
 
     /**
      * GRID_HEIGHT is the number of rows of tiles in this Grid
-     * Configuration.
+     * Config.
      */
     enum { GRID_HEIGHT = H };
+
+    /**
+     * TILE_SIDE is the number of sites wide (and high) for a tile in
+     * this GridConfig
+     */
+    enum { TILE_SIDE = SIDE };
+
+    /**
+     * OWNED_SIDE is the number of sites wide (and high) for a tile in
+     * this GridConfig, excluding the caches
+     */
+    enum { OWNED_SIDE = TILE_SIDE - 2 * EC::EVENT_WINDOW_RADIUS };
 
   };
 

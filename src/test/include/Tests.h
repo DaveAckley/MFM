@@ -19,7 +19,7 @@
 #include "MDist_Test.h"
 #include "BitVector_Test.h"
 #include "Point_Test.h"
-#include "P1Atom_Test.h"
+//XXX Deprecated #include "P1Atom_Test.h"
 #include "Tile_Test.h"
 #include "Grid_Test.h"
 #include "EventWindow_Test.h"
