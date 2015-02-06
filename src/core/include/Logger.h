@@ -31,9 +31,11 @@
 #include "itype.h"
 #include "ByteSink.h"
 #include "ByteSerializable.h"
+#include "Util.h"
 #include "Mutex.h"
 #include <stdarg.h>
-#include <stdlib.h>  /* for abort() */
+#include <strings.h> /* for strcasecmp */
+#include <stdlib.h>  /* for abort(), strtol() */
 
 #define MFM_LOG_DBG3(args) do {if (LOG.IfLog((Logger::Level) 3)) {LOG.Message args ;}} while (0)
 #define MFM_LOG_DBG4(args) do {if (LOG.IfLog((Logger::Level) 4)) {LOG.Debug args ;}} while (0)
@@ -68,8 +70,8 @@ namespace MFM
       DEBUG3,
       ALL,
 
-      MIN = NONE,
-      MAX = ALL
+      MIN_LEVEL = NONE,
+      MAX_LEVEL = ALL
     };
 
     /**
@@ -97,6 +99,64 @@ namespace MFM
     }
 
     /**
+     * Translates a zero-terminated string to a Level, if possible.
+     *
+     * @param zstr A string to recognize as a level number or name .
+     *
+     * @returns Negative to mean not recognized, else a level
+     */
+    static s32 ParseLevel(const char * zstr)
+    {
+      if (!zstr) FAIL(ILLEGAL_ARGUMENT);
+
+      // Recognize plain numbers, allow any
+      char * ez;
+      s32 num = strtol(zstr, &ez, 0);
+      if (*zstr != 0 && *ez == 0) {
+        // String is a number.  Clamp it to legal range.
+        return (Level) MIN((s32) MAX_LEVEL, MAX((s32) MIN_LEVEL, num));
+      }
+
+      if (!strcasecmp(zstr,"None") ||
+          !strcasecmp(zstr,"NON"))
+        return NONE;
+
+      if (!strcasecmp(zstr,"Error") ||
+          !strcasecmp(zstr,"ERR"))
+        return ERROR;
+
+      if (!strcasecmp(zstr,"Warning") ||
+          !strcasecmp(zstr,"Warn") ||
+          !strcasecmp(zstr,"WRN"))
+        return WARNING;
+
+      if (!strcasecmp(zstr,"Message") ||
+          !strcasecmp(zstr,"MSG"))
+        return MESSAGE;
+
+      if (!strcasecmp(zstr,"Debug") ||
+          !strcasecmp(zstr,"DBG"))
+        return DEBUG;
+
+      if (!strcasecmp(zstr,"Debug1") ||
+          !strcasecmp(zstr,"DBG1"))
+        return DEBUG1;
+
+      if (!strcasecmp(zstr,"Debug2") ||
+          !strcasecmp(zstr,"DBG2"))
+        return DEBUG2;
+
+      if (!strcasecmp(zstr,"Debug3") ||
+          !strcasecmp(zstr,"DBG3"))
+        return DEBUG3;
+
+      if (!strcasecmp(zstr,"All"))
+        return ALL;
+
+      return -1;
+    }
+
+    /**
      * Checks to see if a specified level number represents a Level in
      * this Logger .
      *
@@ -105,9 +165,9 @@ namespace MFM
      *
      * @returns \c true if \c levelNumber represents a valid logging Level .
      */
-    static bool ValidLevel(s32 levelNumber)
+    static bool IsValidLevel(s32 levelNumber)
     {
-      return levelNumber >= MIN && levelNumber <= MAX;
+      return levelNumber >= MIN_LEVEL && levelNumber <= MAX_LEVEL;
     }
 
     /**
@@ -148,7 +208,7 @@ namespace MFM
      */
     Level SetLevel(Level newLevel)
     {
-      if (!ValidLevel(newLevel))
+      if (!IsValidLevel(newLevel))
       {
         FAIL(ILLEGAL_ARGUMENT);
       }
@@ -315,6 +375,34 @@ namespace MFM
       va_list ap;
       va_start(ap, format);
       Vreport(DEBUG, format, ap);
+      va_end(ap);
+    }
+
+    /**
+     * Logs a formatted message at the DEBUG1 logging Level .
+     *
+     * @param format The format string used to parse the variadic
+     *               arguments which follow it.
+     */
+    void Debug1(const char * format, ... )
+    {
+      va_list ap;
+      va_start(ap, format);
+      Vreport(DEBUG1, format, ap);
+      va_end(ap);
+    }
+
+    /**
+     * Logs a formatted message at the DEBUG2 logging Level .
+     *
+     * @param format The format string used to parse the variadic
+     *               arguments which follow it.
+     */
+    void Debug2(const char * format, ... )
+    {
+      va_list ap;
+      va_start(ap, format);
+      Vreport(DEBUG2, format, ap);
       va_end(ap);
     }
 
