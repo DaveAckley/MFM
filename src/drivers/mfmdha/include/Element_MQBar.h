@@ -14,8 +14,6 @@
 namespace MFM
 {
 
-#define QBAR_VERSION 4
-
   /**
     A moving bar-forming class, with symmetry, that grows a
     quadrilateral of itself, and advances a stability-based state
@@ -117,6 +115,8 @@ namespace MFM
 
     static const u32 STATE_BITS_END = AFTimer::END;
     static const u32 STATE_BITS_COUNT = STATE_BITS_END - STATE_BITS_START + 1;
+
+    enum { QBAR_VERSION = 4 };
 
     Element_MQBar() :
       Element<CC>(MFM_UUID_FOR("MQBar", QBAR_VERSION))

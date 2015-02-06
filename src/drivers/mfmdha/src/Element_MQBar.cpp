@@ -2,11 +2,12 @@
 
 #ifdef ELEMENT_PLUG_IN
 
-#include "LocalConfig.h"
+#include "StdEventConfig.h"
+#include "ElementLibrary.h"
 
 extern "C" {
-  static MFM::Element<MFM::OurCoreConfig> * (elementPtrArray[]) = { &MFM::Element_MQBar<MFM::OurCoreConfig>::THE_INSTANCE };
-  static MFM::ElementLibrary<MFM::OurCoreConfig> el = {
+  static MFM::Element<MFM::StdEventConfig> * (elementPtrArray[]) = { &MFM::Element_MQBar<MFM::StdEventConfig>::THE_INSTANCE };
+  static MFM::ElementLibrary<MFM::StdEventConfig> el = {
     MFM::ELEMENT_LIBRARY_MAGIC,
     MFM::ELEMENT_LIBRARY_VERSION,
     0,
@@ -15,7 +16,7 @@ extern "C" {
     MFM_BUILD_TIME,
     elementPtrArray
   };
-  void * get_static_element_library_pointer =  &el;
+  void * mfm_get_static_element_library_pointer =  &el;
 }
 
 #endif /* ELEMENT_PLUG_IN */

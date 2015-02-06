@@ -8,7 +8,6 @@
 #include "Element_Res.h"
 #include "itype.h"
 #include "FXP.h"
-#include "P1Atom.h"
 
 namespace MFM
 {

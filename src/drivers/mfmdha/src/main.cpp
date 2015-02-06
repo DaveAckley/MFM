@@ -4,7 +4,7 @@
 #include "Element_SBar.h"
 #include "Element_DBar.h"
 #include "Element_Mover.h"
-#include "LocalConfig.h"
+#include "StdEventConfig.h"
 #include "StdElements.h"
 #include <dlfcn.h>          /* For dlopen etc */
 
@@ -12,9 +12,10 @@ extern "C" typedef void * (*MFM_Element_Plugin_Get_Static_Pointer)();
 
 namespace MFM {
 
-  typedef GridConfig<OurCoreConfig,3,2> OurSmallGridConfig;
-  typedef GridConfig<OurCoreConfig,5,3> OurBigGridConfig;
-  //  typedef GridConfig<OurCoreConfig,5,3> OurBigGridConfig;
+  typedef StdAtom OurAtom;
+  typedef StdEventConfig OurEventConfig;
+  typedef GridConfig<OurEventConfig,50,3,2> OurSmallGridConfig;
+  typedef GridConfig<OurEventConfig,50,5,3> OurBigGridConfig;
   typedef OurBigGridConfig OurGridConfig;
 
   typedef StatsRenderer<OurGridConfig> OurStatsRenderer;
@@ -29,7 +30,7 @@ namespace MFM {
     MFMSimQBDemo(int whichSim)
       : m_whichSim(whichSim)
     {
-      StdElements<OurCoreConfig> se;
+      StdElements<OurEventConfig> se;
       LOG.Debug("Standard elements %d", se.GetStdElementCount());
     }
 
@@ -45,20 +46,20 @@ namespace MFM {
 
     virtual void DefineNeededElements()
     {
-      NeedElement(&Element_Empty<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_Wall<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_Data<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_Emitter<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_Consumer<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_Sorter<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_Block<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_ForkBomb1<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_ForkBomb2<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_ForkBomb3<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_AntiForkBomb<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_Collector<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Empty<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_Dreg<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_Res<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_Wall<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_Data<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_Emitter<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_Consumer<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_Sorter<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_Block<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_ForkBomb1<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_ForkBomb2<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_ForkBomb3<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_AntiForkBomb<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_Collector<OurEventConfig>::THE_INSTANCE);
 #if 0
       if (!m_qbarInstance)
       {
@@ -66,7 +67,7 @@ namespace MFM {
       }
       NeedElement(m_qbarInstance);
 #endif
-      NeedElement(&Element_Mover<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Mover<OurEventConfig>::THE_INSTANCE);
     }
 
     virtual void HandleResize()
@@ -82,25 +83,25 @@ namespace MFM {
       OurStatsRenderer & srend = GetStatsRenderer();
 
       m_sortingSlots[0].Set(mainGrid, "Data in",
-                            Element_Emitter<OurCoreConfig>::THE_INSTANCE.GetType(),
-                            Element_Emitter<OurCoreConfig>::DATUMS_EMITTED_SLOT,
-                            Element_Emitter<OurCoreConfig>::DATA_SLOT_COUNT,
+                            Element_Emitter<OurEventConfig>::THE_INSTANCE.GetType(),
+                            Element_Emitter<OurEventConfig>::DATUMS_EMITTED_SLOT,
+                            Element_Emitter<OurEventConfig>::DATA_SLOT_COUNT,
                             true);
       m_sortingSlots[1].Set(mainGrid, "Overflow",
-                            Element_Emitter<OurCoreConfig>::THE_INSTANCE.GetType(),
-                            Element_Emitter<OurCoreConfig>::DATUMS_REJECTED_SLOT,
-                            Element_Emitter<OurCoreConfig>::DATA_SLOT_COUNT,
+                            Element_Emitter<OurEventConfig>::THE_INSTANCE.GetType(),
+                            Element_Emitter<OurEventConfig>::DATUMS_REJECTED_SLOT,
+                            Element_Emitter<OurEventConfig>::DATA_SLOT_COUNT,
                             true);
 
       m_sortingSlots[2].Set(mainGrid, "Data out",
-                            Element_Consumer<OurCoreConfig>::THE_INSTANCE.GetType(),
-                            Element_Consumer<OurCoreConfig>::DATUMS_CONSUMED_SLOT,
-                            Element_Consumer<OurCoreConfig>::DATA_SLOT_COUNT,
+                            Element_Consumer<OurEventConfig>::THE_INSTANCE.GetType(),
+                            Element_Consumer<OurEventConfig>::DATUMS_CONSUMED_SLOT,
+                            Element_Consumer<OurEventConfig>::DATA_SLOT_COUNT,
                             true);
       m_sortingSlots[3].Set(mainGrid, "Sort error",
-                            Element_Consumer<OurCoreConfig>::THE_INSTANCE.GetType(),
-                            Element_Consumer<OurCoreConfig>::TOTAL_BUCKET_ERROR_SLOT,
-                            Element_Consumer<OurCoreConfig>::DATA_SLOT_COUNT,
+                            Element_Consumer<OurEventConfig>::THE_INSTANCE.GetType(),
+                            Element_Consumer<OurEventConfig>::TOTAL_BUCKET_ERROR_SLOT,
+                            Element_Consumer<OurEventConfig>::DATA_SLOT_COUNT,
                             true);
 
       for (u32 i = 0; i < 4; ++i)
@@ -117,15 +118,15 @@ namespace MFM {
       if (center.GetY()&1) center += SPoint(0,1);
       if (!m_qbarInstance)
         FAIL(ILLEGAL_STATE);
-      //      OurAtom aBoid1(((Element_QBar<OurCoreConfig>*) m_qbarInstance)->GetAtom(QBAR_SIZE,center));
+      //      OurAtom aBoid1(((Element_QBar<OurEventConfig>*) m_qbarInstance)->GetAtom(QBAR_SIZE,center));
       OurAtom aBoid1(m_qbarInstance->GetDefaultAtom());
-      //      ((Element_QBar<OurCoreConfig>*) m_qbarInstance)->SetSymI(aBoid1, 0);
+      //      ((Element_QBar<OurEventConfig>*) m_qbarInstance)->SetSymI(aBoid1, 0);
 
-      OurAtom aDReg(Element_Dreg<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
+      OurAtom aDReg(Element_Dreg<OurEventConfig>::THE_INSTANCE.GetDefaultAtom());
 
-      u32 realWidth = Tile<OurCoreConfig>::OWNED_SIDE;
+      u32 realWidth = Tile<OurEventConfig>::OWNED_SIDE;
 
-      // printf("atom size %ld\n",8*sizeof(MFM::Atom<OurCoreConfig>));
+      // printf("atom size %ld\n",8*sizeof(MFM::Atom<OurEventConfig>));
 
       SPoint aloc(20, 30);
       SPoint sloc(20, 10);
@@ -146,7 +147,7 @@ namespace MFM {
           tloc.Subtract(seedAtomPlace);
           if (tloc.GetMaximumLength() < 12 && tloc.GetMaximumLength() > 4)
           {
-            if (Element_Empty<OurCoreConfig>::THE_INSTANCE.IsType(
+            if (Element_Empty<OurEventConfig>::THE_INSTANCE.IsType(
                   mainGrid.GetAtom(aloc)->GetType()))
             {
               mainGrid.PlaceAtom(aDReg, aloc);
@@ -158,7 +159,7 @@ namespace MFM {
             mainGrid.PlaceAtom(aBoid1, seedAtomPlace);
             if (addMover)
             {
-              T mover = Element_Mover<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom();
+              T mover = Element_Mover<OurEventConfig>::THE_INSTANCE.GetDefaultAtom();
               mainGrid.PlaceAtom(mover, e2loc);
             }
             once = false;
@@ -169,7 +170,7 @@ namespace MFM {
     }
 
 #if 0
-    Element<OurCoreConfig> * m_qbarInstance;
+    Element<OurEventConfig> * m_qbarInstance;
 
     void LoadPlugin()
     {
@@ -204,7 +205,7 @@ namespace MFM {
       FuncPtrArray & ary = * (FuncPtrArray*) symptr;
       FuncPtr fp = ary[0];
       void * result = fp();
-      m_qbarInstance = (Element<OurCoreConfig> *) result;
+      m_qbarInstance = (Element<OurEventConfig> *) result;
       if (!m_qbarInstance)
       {
         LOG.Error("Accessor failed");
@@ -237,12 +238,12 @@ namespace MFM {
 
     virtual void DefineNeededElements()
     {
-      NeedElement(&Element_Empty<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_Dreg<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_Res<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_SBar<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_DBar<OurCoreConfig>::THE_INSTANCE);
-      NeedElement(&Element_Mover<OurCoreConfig>::THE_INSTANCE);
+      NeedElement(&Element_Empty<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_Dreg<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_Res<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_SBar<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_DBar<OurEventConfig>::THE_INSTANCE);
+      NeedElement(&Element_Mover<OurEventConfig>::THE_INSTANCE);
     }
 
     virtual void HandleResize()
@@ -256,17 +257,17 @@ namespace MFM {
 
       const SPoint SD_BAR_SIZE(21,55);
       const SPoint center = SD_BAR_SIZE/4;
-      OurAtom aBoid1(Element_SBar<OurCoreConfig>::THE_INSTANCE.GetAtom(SD_BAR_SIZE,center));
-      Element_SBar<OurCoreConfig>::THE_INSTANCE.SetSymI(aBoid1, 3);
+      OurAtom aBoid1(Element_SBar<OurEventConfig>::THE_INSTANCE.GetAtom(SD_BAR_SIZE,center));
+      Element_SBar<OurEventConfig>::THE_INSTANCE.SetSymI(aBoid1, 3);
 
-      OurAtom aBoid2(Element_DBar<OurCoreConfig>::THE_INSTANCE.GetAtom(SD_BAR_SIZE,center));
-      Element_DBar<OurCoreConfig>::THE_INSTANCE.SetSymI(aBoid2, PSYM_DEG000L);
+      OurAtom aBoid2(Element_DBar<OurEventConfig>::THE_INSTANCE.GetAtom(SD_BAR_SIZE,center));
+      Element_DBar<OurEventConfig>::THE_INSTANCE.SetSymI(aBoid2, PSYM_DEG000L);
 
-      OurAtom aDReg(Element_Dreg<OurCoreConfig>::THE_INSTANCE.GetDefaultAtom());
+      OurAtom aDReg(Element_Dreg<OurEventConfig>::THE_INSTANCE.GetDefaultAtom());
 
-      u32 realWidth = Tile<OurCoreConfig>::OWNED_SIDE;
+      u32 realWidth = OurGrid::OWNED_SIDE;
 
-      // printf("atom size %ld\n",8*sizeof(MFM::Atom<OurCoreConfig>));
+      // printf("atom size %ld\n",8*sizeof(MFM::Atom<OurEventConfig>));
 
       SPoint aloc(20, 30);
       SPoint sloc(20, 10);

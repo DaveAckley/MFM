@@ -1,5 +1,7 @@
 #include "main.h"
 
+#include <sys/resource.h>  // For getrlimit / setrlimit
+
 #ifdef ULAM_CUSTOM_ELEMENTS
 #include "UlamCustomElements.h"
 #endif
@@ -8,52 +10,35 @@ namespace MFM
 {
 
   /////
-  // Standard model
+  // For all models
 
-  typedef ParamConfig<96,4,8,40> OurParamConfigStd;
-  typedef P3Atom<OurParamConfigStd> OurAtomStd;
-  typedef CoreConfig<OurAtomStd, OurParamConfigStd> OurCoreConfigStd;
-  typedef GridConfig<OurCoreConfigStd, 5, 3> OurGridConfigStd;
+  typedef P3Atom OurAtomAll;
+  typedef Site<P3AtomConfig> OurSiteAll;
+  typedef EventConfig<OurSiteAll,4> OurEventConfigAll;
+
+  /////
+  // Standard model
+  typedef GridConfig<OurEventConfigAll, 40, 5, 3> OurGridConfigStd;
 
   /////
   // Alternate model (flatter space)
-
-  typedef ParamConfig<96,4,8,68> OurParamConfigAlt;
-  typedef P3Atom<OurParamConfigAlt> OurAtomAlt;
-  typedef CoreConfig<OurAtomAlt, OurParamConfigAlt> OurCoreConfigAlt;
-  typedef GridConfig<OurCoreConfigAlt, 3, 2> OurGridConfigAlt;
+  typedef GridConfig<OurEventConfigAll, 68, 3, 2> OurGridConfigAlt;
 
   /////
   // Tiny model
-
-  typedef ParamConfig<96,4,8,32> OurParamConfigTiny;
-  typedef P3Atom<OurParamConfigTiny> OurAtomTiny;
-  typedef CoreConfig<OurAtomTiny, OurParamConfigTiny> OurCoreConfigTiny;
-  typedef GridConfig<OurCoreConfigTiny, 2, 2> OurGridConfigTiny;
+  typedef GridConfig<OurEventConfigAll, 32, 2, 2> OurGridConfigTiny;
 
   /////
   // Larger model
-
-  typedef ParamConfig<96,4,8,48> OurParamConfigBig;
-  typedef P3Atom<OurParamConfigBig> OurAtomBig;
-  typedef CoreConfig<OurAtomBig, OurParamConfigBig> OurCoreConfigBig;
-  typedef GridConfig<OurCoreConfigBig, 8, 5> OurGridConfigBig;
+  typedef GridConfig<OurEventConfigAll, 48, 8, 5> OurGridConfigBig;
 
   /////
   // BigTile model
-
-  typedef ParamConfig<96,4,8,176> OurParamConfigBigTile;
-  typedef P3Atom<OurParamConfigBigTile> OurAtomBigTile;
-  typedef CoreConfig<OurAtomBigTile, OurParamConfigBigTile> OurCoreConfigBigTile;
-  typedef GridConfig<OurCoreConfigBigTile, 1, 1> OurGridConfigBigTile;
+  typedef GridConfig<OurEventConfigAll, 176, 1, 1> OurGridConfigBigTile;
 
   /////
   // MediumTile model
-
-  typedef ParamConfig<96,4,8,96> OurParamConfigMediumTile;
-  typedef P3Atom<OurParamConfigMediumTile> OurAtomMediumTile;
-  typedef CoreConfig<OurAtomMediumTile, OurParamConfigMediumTile> OurCoreConfigMediumTile;
-  typedef GridConfig<OurCoreConfigMediumTile, 1, 1> OurGridConfigMediumTile;
+  typedef GridConfig<OurEventConfigAll, 96, 1, 1> OurGridConfigMediumTile;
 
   template <class GC>
   struct MFMCDriver : public AbstractDualDriver<GC>
@@ -61,9 +46,9 @@ namespace MFM
   private:
 
     typedef AbstractDualDriver<GC> Super;
-    typedef typename Super::CC CC;
-    typedef typename Super::CC::PARAM_CONFIG P;
-    typedef typename Super::CC::ATOM_TYPE T;
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
     struct ThreadStamper : public DateTimeStamp
     {
@@ -86,34 +71,34 @@ namespace MFM
       DefineNeededUlamCustomElements(this);
 #else
       //#error no custom wsu
-      this->NeedElement(&Element_Empty<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Wall<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Res<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Dreg<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Sorter<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Data<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Emitter<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Consumer<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Block<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_ForkBomb1<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_ForkBomb2<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_ForkBomb3<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_AntiForkBomb<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_MQBar<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Mover<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Indexed<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Fish<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Shark<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Xtal_Sq1<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Xtal_L12<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Xtal_R12<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Xtal_General<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Creg<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Dmover<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_CheckerForkBlue<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_CheckerForkRed<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Wanderer_Cyan<CC>::THE_INSTANCE);
-      this->NeedElement(&Element_Wanderer_Magenta<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Empty<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Wall<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Res<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Dreg<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Sorter<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Data<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Emitter<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Consumer<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Block<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_ForkBomb1<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_ForkBomb2<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_ForkBomb3<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_AntiForkBomb<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_MQBar<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Mover<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Indexed<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Fish<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Shark<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Xtal_Sq1<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Xtal_L12<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Xtal_R12<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Xtal_General<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Creg<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Dmover<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_CheckerForkBlue<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_CheckerForkRed<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Wanderer_Cyan<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_Wanderer_Magenta<EC>::THE_INSTANCE);
 #endif /* ULAM_CUSTOM_ELEMENTS */
     }
 
@@ -148,10 +133,10 @@ namespace MFM
     { }
   };
 
-  static int RunSmall(int argc, const char** argv)
+  template <class CONFIG>
+  int SimRunner(int argc, const char** argv)
   {
-    MFMCDriver<OurGridConfigTiny> sim;
-
+    MFMCDriver<CONFIG> sim;
     sim.ProcessArguments(argc, argv);
     sim.SwitchToInternalLogging();
     sim.Init();
@@ -159,94 +144,60 @@ namespace MFM
     return 0;
   }
 
-  static int RunMedium(int argc, const char** argv)
+  static bool EndsWith(const char *string, const char* suffix)
   {
-    MFMCDriver<OurGridConfigStd> sim;
-    sim.ProcessArguments(argc, argv);
-    sim.SwitchToInternalLogging();
-    sim.Init();
-    sim.Run();
-    return 0;
+    MFM::u32 slen = strlen(string);
+    MFM::u32 xlen = strlen(suffix);
+    return xlen <= slen && !strcmp(suffix, &string[slen - xlen]);
   }
 
-  static int RunAlternate(int argc, const char** argv)
+
+  template <class CONFIG>
+  int SimCheckAndRun(int argc, const char** argv)
   {
-    MFMCDriver<OurGridConfigAlt> sim;
-    sim.ProcessArguments(argc, argv);
-    sim.SwitchToInternalLogging();
-    sim.Init();
-    sim.Run();
-    return 0;
+    struct rlimit lim;
+    if (getrlimit(RLIMIT_STACK, &lim))
+      fprintf(stderr,"WARNING: Unable to check stack size (may segfault): %s\n",
+              strerror(errno));
+    else {
+      const rlim_t needed = 110*sizeof(MFMCDriver<CONFIG>) / 100;  // Ready to give 110% sir
+      const rlim_t have = lim.rlim_cur;
+      if (have < needed) {
+        if (lim.rlim_max < needed)
+          fprintf(stderr,"WARNING: Max stack size too small (%ld, need %ld): May segfault!\n",
+                  have, needed);
+        else {
+          // Let's try upping the limit..
+          lim.rlim_cur = needed;
+          if (setrlimit(RLIMIT_STACK, &lim))
+            fprintf(stderr,"WARNING: Unable to increase stack limit (may segfault): %s\n",
+                    strerror(errno));
+          else
+            LOG.Message("NOTE: Simulation needs more space; stack limit increased from %dK to %dK",
+                        (u32) (have/1024), (u32) (needed/1024));
+        }
+      }
+    }
+    return SimRunner<CONFIG>(argc,argv);
   }
 
-  static int RunBig(int argc, const char** argv)
+  int MainDispatch(int argc, const char** argv)
   {
-    MFMCDriver<OurGridConfigBig> sim;
-    sim.ProcessArguments(argc, argv);
-    sim.SwitchToInternalLogging();
-    sim.Init();
-    sim.Run();
-    return 0;
-  }
+    // Early early logging
+    LOG.SetByteSink(STDERR);
+    LOG.SetLevel(LOG.MESSAGE);
 
-  static int RunBigTile(int argc, const char** argv)
-  {
-    MFMCDriver<OurGridConfigBigTile> sim;
-    sim.ProcessArguments(argc, argv);
-    sim.SwitchToInternalLogging();
-    sim.Init();
-    sim.Run();
-    return 0;
+    if (EndsWith(argv[0],"_s"))  return SimCheckAndRun<OurGridConfigTiny>(argc, argv);
+    if (EndsWith(argv[0],"_l"))  return SimCheckAndRun<OurGridConfigBig>(argc, argv);
+    if (EndsWith(argv[0],"_1l")) return SimCheckAndRun<OurGridConfigBigTile>(argc, argv);
+    if (EndsWith(argv[0],"_1m")) return SimCheckAndRun<OurGridConfigMediumTile>(argc, argv);
+    if (EndsWith(argv[0],"_a"))  return SimCheckAndRun<OurGridConfigAlt>(argc, argv);
+    //if (EndsWith(argv[0],"_m"))   ..or anything else
+    return SimCheckAndRun<OurGridConfigStd>(argc, argv);
   }
-
-  static int RunMediumTile(int argc, const char** argv)
-  {
-    MFMCDriver<OurGridConfigMediumTile> sim;
-    sim.ProcessArguments(argc, argv);
-    sim.SwitchToInternalLogging();
-    sim.Init();
-    sim.Run();
-    return 0;
-  }
-}
-
-static bool EndsWith(const char *string, const char* suffix)
-{
-  MFM::u32 slen = strlen(string);
-  MFM::u32 xlen = strlen(suffix);
-  return xlen <= slen && !strcmp(suffix, &string[slen - xlen]);
 }
 
 int main(int argc, const char** argv)
 {
-  // Early early logging
-  MFM::LOG.SetByteSink(MFM::STDERR);
-  MFM::LOG.SetLevel(MFM::LOG.MESSAGE);
-
-  if (EndsWith(argv[0],"_s"))
-  {
-    return MFM::RunSmall(argc, argv);
-  }
-
-  if (EndsWith(argv[0],"_l"))
-  {
-    return MFM::RunBig(argc, argv);
-  }
-
-  if (EndsWith(argv[0],"_1l"))
-  {
-    return MFM::RunBigTile(argc, argv);
-  }
-
-  if (EndsWith(argv[0],"_1m"))
-  {
-    return MFM::RunMediumTile(argc, argv);
-  }
-
-  if (EndsWith(argv[0],"_a"))
-  {
-    return MFM::RunAlternate(argc, argv);
-  }
-
-  return MFM::RunMedium(argc, argv);
+  return MFM::MainDispatch(argc,argv);
 }

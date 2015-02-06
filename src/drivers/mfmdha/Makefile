@@ -23,5 +23,5 @@ LDFLAGS += -rdynamic
 # Add dependency to make the plugin
 $(BINDIR)/$(COMPONENTNAME):	$(BINDIR)/Element_MQBar-Plugin.so
 
-$(BINDIR)/Element_MQBar-Plugin.so:	src/Element_MQBar.cpp include/Element_MQBar.h include/LocalConfig.h
+$(BINDIR)/Element_MQBar-Plugin.so:	src/Element_MQBar.cpp include/Element_MQBar.h
 	$(GPP) -shared -fPIC -DELEMENT_PLUG_IN $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -o"$@" "$<"
