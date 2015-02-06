@@ -29,7 +29,7 @@
 #define GRID_H
 
 #include "itype.h"
-#include "Tile.h"
+#include "SizedTile.h"
 #include "ElementTable.h"
 #include "Random.h"
 #include "GridConfig.h"
@@ -37,8 +37,6 @@
 #include "ElementRegistry.h"
 #include "Logger.h"
 #include <time.h>  /* For struct timespec, clock_gettime */
-
-//#include "Element_Wall.h"
 
 namespace MFM {
 
@@ -48,13 +46,18 @@ namespace MFM {
   template <class GC>
   class Grid
   {
+  public:
     // Extract short type names
-    typedef typename GC::CORE_CONFIG CC;
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
     enum { W = GC::GRID_WIDTH};
     enum { H = GC::GRID_HEIGHT};
-    enum { R = P::EVENT_WINDOW_RADIUS};
+    enum { R = EC::EVENT_WINDOW_RADIUS};
+    enum { TILE_SIDE = GC::TILE_SIDE};
+    enum { OWNED_SIDE = TILE_SIDE - 2 * R }; // Duplicating the OWNED_SIDE computation in Tile.tcc!
+
+    typedef SizedTile<EC,TILE_SIDE> GridTile;
 
   private:
     Random m_random;
@@ -67,10 +70,10 @@ namespace MFM {
 
     SPoint m_lastEventTile;
 
-    Tile<CC> m_tiles[W][H];
+    GridTile m_tiles[W][H];
     LonglivedLock m_intertileLocks[W][H][3]; // 3: E, SE, S == dir-Dirs::EAST
 
-    Tile<CC> m_heroTile;    // Model for the actual m_tiles
+    GridTile m_heroTile;    // Model for the actual m_tiles
 
     /**
        Get the long-lived lock controlling cache activity going in
@@ -99,7 +102,7 @@ namespace MFM {
         m_state = newState;
       }
 
-      Tile<CC> & GetTile()
+      Tile<EC> & GetTile()
       {
         return m_gridPtr->GetTile(m_loc);
       }
@@ -111,7 +114,7 @@ namespace MFM {
 
     bool m_backgroundRadiationEnabled;
 
-    ElementRegistry<CC> m_er;
+    ElementRegistry<EC> m_er;
 
     s32 m_xraySiteOdds;
 
@@ -150,23 +153,23 @@ namespace MFM {
 
       virtual bool CheckPrecondition(TileDriver & td)
       {
-        Tile<CC> & tile = td.GetTile();
+        Tile<EC> & tile = td.GetTile();
         return !tile.IsOff();
       }
 
       virtual void MakeRequest(TileDriver & td)
       {
-        Tile<CC> & tile = td.GetTile();
+        Tile<EC> & tile = td.GetTile();
         tile.RequestStatePassive();
       }
       virtual bool CheckIfReady(TileDriver & td)
       {
-        Tile<CC> & tile = td.GetTile();
+        Tile<EC> & tile = td.GetTile();
         return tile.IsPassive();
       }
       virtual void Execute(TileDriver & td)
       {
-        Tile<CC> & tile = td.GetTile();
+        Tile<EC> & tile = td.GetTile();
         tile.Pause();
       }
 
@@ -194,19 +197,19 @@ namespace MFM {
 
       virtual bool CheckPrecondition(TileDriver & td)
       {
-        Tile<CC> & tile = td.GetTile();
+        Tile<EC> & tile = td.GetTile();
         return !tile.IsActive();
       }
 
       virtual void MakeRequest(TileDriver & td)
       {
-        Tile<CC> & tile = td.GetTile();
+        Tile<EC> & tile = td.GetTile();
         tile.NeedAtomRecount();
         tile.RequestStateActive();
       }
       virtual bool CheckIfReady(TileDriver & td)
       {
-        Tile<CC> & tile = td.GetTile();
+        Tile<EC> & tile = td.GetTile();
         return tile.IsActive();
       }
       virtual void Execute(TileDriver & td)
@@ -231,6 +234,7 @@ namespace MFM {
     void DoTileDriverControl(TileDriverControl & tc);
 
   public:
+
     s32 GetWarpFactor() const
     {
       return m_heroTile.GetWarpFactor();
@@ -262,7 +266,7 @@ namespace MFM {
 
     void SetSeed(u32 seed);
 
-    Grid(ElementRegistry<CC>& elts)
+    Grid(ElementRegistry<EC>& elts)
       : m_seed(0)
       , m_width(W)
       , m_height(H)
@@ -295,17 +299,17 @@ namespace MFM {
      */
     void SetGridRunning(bool running) ;
 
-    const Element<CC> * LookupElement(u32 elementType) const
+    const Element<EC> * LookupElement(u32 elementType) const
     {
       return m_tiles[0][0].GetElementTable().Lookup(elementType);
     }
 
-    ElementRegistry<CC>& GetElementRegistry()
+    ElementRegistry<EC>& GetElementRegistry()
     {
       return m_er;
     }
 
-    void Needed(Element<CC> & anElement)
+    void Needed(Element<EC> & anElement)
     {
       anElement.AllocateType();         // Force a type now
       m_er.RegisterElement(anElement);  // Make sure we're in here (How could we not?)
@@ -369,8 +373,8 @@ namespace MFM {
 
     };
 
-    typedef MyIterator< Tile<CC>, Grid<GC> > iterator_type;
-    typedef MyIterator< const Tile<CC>, const Grid<GC> > const_iterator_type;
+    typedef MyIterator< Tile<EC>, Grid<GC> > iterator_type;
+    typedef MyIterator< const Tile<EC>, const Grid<GC> > const_iterator_type;
 
     iterator_type begin() { return iterator_type(*this); }
 
@@ -411,7 +415,7 @@ namespace MFM {
      */
     void EmptyTile(const SPoint& tileLoc)
     {
-      Tile<CC> & tile = GetTile(tileLoc);
+      Tile<EC> & tile = GetTile(tileLoc);
       tile.ClearAtoms();
     }
 
@@ -471,7 +475,7 @@ namespace MFM {
      */
     static u32 GetHeightSites()
     {
-      return GetHeight() * Tile<CC>::OWNED_SIDE;
+      return GetHeight() * OWNED_SIDE;
     }
 
     /**
@@ -479,7 +483,7 @@ namespace MFM {
      */
     static u32 GetWidthSites()
     {
-      return GetWidth() * Tile<CC>::OWNED_SIDE;
+      return GetWidth() * OWNED_SIDE;
     }
 
     /**
@@ -487,13 +491,13 @@ namespace MFM {
      */
     void ShutdownTileThreads()
     {
-      /* Notify the Tile threads */
+      LOG.Message("Sending exit requests to the tiles");
       for (iterator_type i = begin(); i != end(); ++i)
       {
         TileDriver & td = m_tileDrivers[i.GetX()][i.GetY()];
         td.SetState(TileDriver::EXIT_REQUEST);
-        pthread_yield();
       }
+      SleepMsec(500);
     }
 
     /**
@@ -550,7 +554,7 @@ namespace MFM {
 
     void FillLastEventTile(SPoint& out);
 
-    inline Tile<CC> & GetTile(const SPoint& pt)
+    inline Tile<EC> & GetTile(const SPoint& pt)
     {
       if (!IsLegalTileIndex(pt))
       {
@@ -559,7 +563,7 @@ namespace MFM {
       return GetTile(pt.GetX(), pt.GetY());
     }
 
-    inline const Tile<CC> & GetTile(const SPoint& pt) const
+    inline const Tile<EC> & GetTile(const SPoint& pt) const
     {
       if (!IsLegalTileIndex(pt))
       {
@@ -568,10 +572,10 @@ namespace MFM {
       return GetTile(pt.GetX(), pt.GetY());
     }
 
-    inline Tile<CC> & GetTile(u32 x, u32 y)
+    inline Tile<EC> & GetTile(u32 x, u32 y)
     { return m_tiles[x][y]; }
 
-    inline const Tile<CC> & GetTile(u32 x, u32 y) const
+    inline const Tile<EC> & GetTile(u32 x, u32 y) const
     { return m_tiles[x][y]; }
 
     /* Don't count caches! */
@@ -597,7 +601,7 @@ namespace MFM {
      */
     double GetEmptySitePercentage() const
     {
-      return 1.0 - ((double)GetAtomCount(Element_Empty<CC>::THE_INSTANCE.GetType()) /
+      return 1.0 - ((double)GetAtomCount(Element_Empty<EC>::THE_INSTANCE.GetType()) /
                     (double)(GetHeightSites() * GetWidthSites()));
     }
 
