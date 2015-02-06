@@ -36,36 +36,36 @@
 namespace MFM
 {
 
-  #define TEMPLATE_VERSION 1
-
-  template <class CC>
-  class Element_Template : public Element<CC> /* <<TEMPLATE>> Replace class name with yours */
+  template <class EC>
+  class Element_Template : public Element<EC> /* <<TEMPLATE>> Replace class name with yours */
   {
+    enum {  TEMPLATE_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   private:
 
-    ElementParameterS32<CC> m_sampleParameter;
+    ElementParameterS32<EC> m_sampleParameter;
 
     /* <<TEMPLATE>> Add any configurable parameters here. */
 
   public:
 
-    /* <<TEMPLATE>> Replace class name with yours. Don't forget the '<CC>'. */
-    static Element_Template<CC> THE_INSTANCE;
+    /* <<TEMPLATE>> Replace class name with yours. Don't forget the '<EC>'. */
+    static Element_Template<EC> THE_INSTANCE;
 
     Element_Template()
-      : Element<CC>(MFM_UUID_FOR("Template", TEMPLATE_VERSION)),
+      : Element<EC>(MFM_UUID_FOR("Template", TEMPLATE_VERSION)),
         /* <<TEMPLATE>> Initialize all configurable parameters here. */
         m_sampleParameter(this, "sample", "Sample Parameter",
                   "This is the description for a sample parameter.", 1, 200, 1000, 10)
     {
       /* <<TEMPLATE>> Set atomic symbol and name for your element. */
-      Element<CC>::SetAtomicSymbol("Tm");
-      Element<CC>::SetName("Template");
+      Element<EC>::SetAtomicSymbol("Tm");
+      Element<EC>::SetName("Template");
     }
 
     /*
@@ -98,7 +98,7 @@ namespace MFM
                    element is chosen for an event. See the tutorial in
                    the wiki for further information.
      */
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
     }
   };
@@ -106,8 +106,8 @@ namespace MFM
   /*
      <<TEMPLATE>> Rename the class names here to the class name of your element.
   */
-  template <class CC>
-  Element_Template<CC> Element_Template<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Template<EC> Element_Template<EC>::THE_INSTANCE;
 
 }
 

@@ -35,21 +35,21 @@
 #include "Element_Data.h"
 #include "AbstractElement_Reprovert.h"
 #include "itype.h"
-#include "P1Atom.h"
 
 namespace MFM
 {
 
-#define EMITTER_VERSION 1
 #define DATA_CREATE_PER_1000 150
 
-  template <class CC>
-  class Element_Emitter : public AbstractElement_Reprovert<CC>
+  template <class EC>
+  class Element_Emitter : public AbstractElement_Reprovert<EC>
   {
+    enum { EMITTER_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   public:
     // Element Data Slot names
@@ -62,16 +62,16 @@ namespace MFM
     static Element_Emitter THE_INSTANCE;
 
     virtual T BuildDefaultAtom() const {
-      T defaultAtom(this->GetType(), 0, 0, AbstractElement_Reprovert<CC>::STATE_BITS);
+      T defaultAtom(this->GetType(), 0, 0, AbstractElement_Reprovert<EC>::STATE_BITS);
       this->SetGap(defaultAtom,2);
       return defaultAtom;
     }
 
     Element_Emitter() :
-      AbstractElement_Reprovert<CC>(MFM_UUID_FOR("Emitter", EMITTER_VERSION))
+      AbstractElement_Reprovert<EC>(MFM_UUID_FOR("Emitter", EMITTER_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("Em");
-      Element<CC>::SetName("Emitter");
+      Element<EC>::SetAtomicSymbol("Em");
+      Element<EC>::SetName("Emitter");
     }
 
     virtual u32 PercentMovable(const T& you, const T& me, const SPoint& offset) const
@@ -97,7 +97,7 @@ namespace MFM
              "payloads.";
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       Random & random = window.GetRandom();
 
@@ -105,11 +105,13 @@ namespace MFM
 
       if(random.OddsOf(DATA_CREATE_PER_1000,1000))
       {
-        Tile<CC> & tile = window.GetTile();
-        ElementTable<CC> & et = tile.GetElementTable();
+#if 0 //XXX Fri Jan 30 22:12:52 2015 EDS unreimplemented in v3
+        Tile<EC> & tile = window.GetTile();
+        ElementTable<EC> & et = tile.GetElementTable();
 
         u64 * datap = et.GetDataAndRegister(this->GetType(), DATA_SLOT_COUNT);
         ++datap[DATUMS_EMITTED_SLOT];                  // Count emission attempts
+#endif
 
         // Pick random nearest empty, if any
         const MDist<R> & md = MDist<R>::get();
@@ -126,26 +128,26 @@ namespace MFM
             }
             const T other = window.GetRelativeAtomSym(sp);
             const u32 otherType = other.GetType();
-            bool isEmpty = otherType == Element_Empty<CC>::THE_INSTANCE.GetType();
+            bool isEmpty = otherType == Element_Empty<EC>::THE_INSTANCE.GetType();
             if (isEmpty && random.OneIn(++emptiesFound))
               emptyPoint = sp;
           }
           if (emptiesFound > 0)
           {
-            T atom = Element_Data<CC>::THE_INSTANCE.GetDefaultAtom();
-            Element_Data<CC>::THE_INSTANCE.SetDatum(atom,random.Between(DATA_MINVAL, DATA_MAXVAL));
+            T atom = Element_Data<EC>::THE_INSTANCE.GetDefaultAtom();
+            Element_Data<EC>::THE_INSTANCE.SetDatum(atom,random.Between(DATA_MINVAL, DATA_MAXVAL));
             window.SetRelativeAtomSym(emptyPoint, atom);
             return;
           }
         }
 
-        ++datap[DATUMS_REJECTED_SLOT];  // Opps, no room at the inn
+        //XXX        ++datap[DATUMS_REJECTED_SLOT];  // Opps, no room at the inn
       }
     }
   };
 
-  template <class CC>
-  Element_Emitter<CC> Element_Emitter<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Emitter<EC> Element_Emitter<EC>::THE_INSTANCE;
 }
 
 #endif /* ELEMENT_EMITTER_H */

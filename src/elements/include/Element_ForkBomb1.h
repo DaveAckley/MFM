@@ -36,19 +36,19 @@
 namespace MFM
 {
 
-#define FORKBOMB1_VERSION 1
-
-  template <class CC>
-  class Element_ForkBomb1 : public AbstractElement_ForkBomb<CC>
+  template <class EC>
+  class Element_ForkBomb1 : public AbstractElement_ForkBomb<EC>
   {
+    enum {  FORKBOMB1_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   private:
 
-    ElementParameterS32<CC> m_bombRange;
+    ElementParameterS32<EC> m_bombRange;
 
   public:
 
@@ -60,13 +60,13 @@ namespace MFM
     }
 
     Element_ForkBomb1() :
-      AbstractElement_ForkBomb<CC>(MFM_UUID_FOR("BombRed", FORKBOMB1_VERSION)),
+      AbstractElement_ForkBomb<EC>(MFM_UUID_FOR("BombRed", FORKBOMB1_VERSION)),
       m_bombRange(this, "range", "Bomb Radius",
                   "Radius of copying during each bomb event",
                   0, 2, 4/*, 1*/)
     {
-      Element<CC>::SetAtomicSymbol("Br");
-      Element<CC>::SetName("Red Fork Bomb");
+      Element<EC>::SetAtomicSymbol("Br");
+      Element<EC>::SetName("Red Fork Bomb");
     }
 
     virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
@@ -76,8 +76,8 @@ namespace MFM
 
   };
 
-  template <class CC>
-  Element_ForkBomb1<CC> Element_ForkBomb1<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_ForkBomb1<EC> Element_ForkBomb1<EC>::THE_INSTANCE;
 
 }
 

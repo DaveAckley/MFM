@@ -32,45 +32,42 @@
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "itype.h"
-#include "P0Atom.h"
-#include "P1Atom.h"
-#include "P3Atom.h"
 #include "Element_Res.h"  /* For Element_Res::TYPE */
 #include "Element_Wall.h" /* For Element_Wall::TYPE */
 
 namespace MFM
 {
 
-#define DREG_VERSION 1
-
-  template <class CC>
-  class Element_Dreg : public Element<CC>
+  template <class EC>
+  class Element_Dreg : public Element<EC>
   {
+    enum {  DREG_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   private:
 
-    ElementParameterS32<CC> m_resOdds;
-    ElementParameterS32<CC> m_deleteOdds;
-    ElementParameterS32<CC> m_dregCreateOdds;
-    ElementParameterS32<CC> m_dregDeleteOdds;
+    ElementParameterS32<EC> m_resOdds;
+    ElementParameterS32<EC> m_deleteOdds;
+    ElementParameterS32<EC> m_dregCreateOdds;
+    ElementParameterS32<EC> m_dregDeleteOdds;
 
   public:
 
     static Element_Dreg THE_INSTANCE;
 
     Element_Dreg()
-      : Element<CC>(MFM_UUID_FOR("Dreg", DREG_VERSION)),
+      : Element<EC>(MFM_UUID_FOR("Dreg", DREG_VERSION)),
         m_resOdds(this, "res", "Res Spawn Odds", "Chance of filling an empty site with a Res", 1, 200, 1000/*, 10*/),
         m_deleteOdds(this, "del", "Delete Odds", "Chance of deleting an adjacent non-empty non-Dreg", 1, 100, 1000/*, 10*/),
         m_dregCreateOdds(this, "dreg", "Dreg Spawn Odds", "Chance of filling an empty site with a Dreg", 1, 500, 1000/*, 10*/),
         m_dregDeleteOdds(this, "ddreg", "Delete Dreg Odds", "Chance of deleting an adjacent Dreg", 1, 50, 1000/*, 10*/)
     {
-      Element<CC>::SetAtomicSymbol("Dr");
-      Element<CC>::SetName("Dreg");
+      Element<EC>::SetAtomicSymbol("Dr");
+      Element<EC>::SetName("Dreg");
     }
 
     virtual u32 PercentMovable(const T& you,
@@ -97,7 +94,7 @@ namespace MFM
              "nearby Atoms by creating RES atoms and deleting nearby atoms.";
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       Random & random = window.GetRandom();
 
@@ -109,27 +106,27 @@ namespace MFM
         T atom = window.GetRelativeAtomDirect(dir);
         u32 oldType = atom.GetType();
 
-        if(Element_Empty<CC>::THE_INSTANCE.IsType(oldType))
+        if(Element_Empty<EC>::THE_INSTANCE.IsType(oldType))
         {
           if(random.OneIn(m_dregCreateOdds.GetValue()))
           {
-            atom = Element_Dreg<CC>::THE_INSTANCE.GetDefaultAtom();
+            atom = Element_Dreg<EC>::THE_INSTANCE.GetDefaultAtom();
           }
           else if(random.OneIn(m_resOdds.GetValue()))
           {
-            atom = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
+            atom = Element_Res<EC>::THE_INSTANCE.GetDefaultAtom();
           }
         }
         else if(oldType == Element_Dreg::THE_INSTANCE.GetType())
         {
           if(random.OneIn(m_dregDeleteOdds.GetValue()))
           {
-            atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+            atom = Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom();
           }
         }
-        else if(oldType != Element_Wall<CC>::TYPE() && random.OneIn(m_dregDeleteOdds.GetValue()))
+        else if(oldType != Element_Wall<EC>::TYPE() && random.OneIn(m_dregDeleteOdds.GetValue()))
         {
-          atom = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+          atom = Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom();
         }
 
         if(atom.GetType() != oldType)
@@ -141,8 +138,8 @@ namespace MFM
     }
   };
 
-  template <class CC>
-  Element_Dreg<CC> Element_Dreg<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Dreg<EC> Element_Dreg<EC>::THE_INSTANCE;
 
 }
 

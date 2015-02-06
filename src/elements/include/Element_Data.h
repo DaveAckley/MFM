@@ -33,7 +33,6 @@
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "itype.h"
-#include "P1Atom.h"
 
 #define DATA_MAXVAL 1000000
 #define DATA_MINVAL 1
@@ -41,19 +40,20 @@
 namespace MFM
 {
 
-#define DATA_VERSION 1
-
-  template <class CC>
-  class Element_Data : public Element<CC>
+  template <class EC>
+  class Element_Data : public Element<EC>
   {
+    enum {  DATA_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
    public:
-    Element_Data() : Element<CC>(MFM_UUID_FOR("Data", DATA_VERSION))
+    Element_Data() : Element<EC>(MFM_UUID_FOR("Data", DATA_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("Dt");
-      Element<CC>::SetName("Data");
+      Element<EC>::SetAtomicSymbol("Dt");
+      Element<EC>::SetName("Data");
     }
 
     static Element_Data THE_INSTANCE;
@@ -67,7 +67,7 @@ namespace MFM
 
     u32 GetDatum(const T &atom, u32 badType) const
     {
-      if (!Atom<CC>::IsType(atom,TYPE()))
+      if (!Atom<AC>::IsType(atom,TYPE()))
       {
         return badType;
       }
@@ -76,7 +76,7 @@ namespace MFM
 
     bool SetDatum(T &atom, u32 value) const
     {
-      if (!Atom<CC>::IsType(atom,TYPE()))
+      if (!Atom<AC>::IsType(atom,TYPE()))
       {
         return false;
       }
@@ -142,11 +142,11 @@ namespace MFM
         return ColorMap_CubeHelixRev::THE_INSTANCE.
           GetInterpolatedColor(GetDatum(atom,0),DATA_MINVAL,DATA_MAXVAL,0xffff0000);
       default:
-        return Element<CC>::PhysicsColor();
+        return Element<EC>::PhysicsColor();
       }
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       u32 val = GetDatum(window.GetCenterAtomSym(),-1);
       if (val < DATA_MINVAL || val > DATA_MAXVAL)
@@ -158,8 +158,8 @@ namespace MFM
     }
   };
 
-  template <class CC>
-  Element_Data<CC> Element_Data<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Data<EC> Element_Data<EC>::THE_INSTANCE;
 
 }
 

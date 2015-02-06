@@ -41,30 +41,30 @@ namespace MFM
   /**
    * An element with an index number to help in tracking.
    */
-  template <class CC>
-  class Element_Indexed : public Element<CC>
+  template <class EC>
+  class Element_Indexed : public Element<EC>
   {
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
   public:
-    typedef BitVector<P::BITS_PER_ATOM> BVA;
+    typedef BitVector<AC::BITS_PER_ATOM> BVA;
     enum {
-      ELT_VERSION = 1,
+      ELT_VERSION = 2,
       BITS_IN_INDEX = 24
     };
-    typedef BitField<BVA, VD::U32, BITS_IN_INDEX, (P3Atom<P>::P3_STATE_BITS_POS+7)/8*8> AFIndex;
+    typedef BitField<BVA, VD::U32, BITS_IN_INDEX, (AC::ATOM_FIRST_STATE_BIT+7)/8*8> AFIndex;
 
     static Element_Indexed THE_INSTANCE;
     static const u32 TYPE() {
       return THE_INSTANCE.GetType();
     }
 
-    Element_Indexed() : Element<CC>(MFM_UUID_FOR("Indexed", ELT_VERSION))
+    Element_Indexed() : Element<EC>(MFM_UUID_FOR("Indexed", ELT_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("Ix");
-      Element<CC>::SetName("Indexed");
+      Element<EC>::SetAtomicSymbol("Ix");
+      Element<EC>::SetName("Indexed");
     }
 
     virtual u32 PercentMovable(const T& you,
@@ -104,7 +104,7 @@ namespace MFM
       return "An Element wih an index number.";
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       T self = window.GetCenterAtomSym();
 
@@ -127,8 +127,8 @@ namespace MFM
 
   };
 
-  template <class CC>
-  Element_Indexed<CC> Element_Indexed<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Indexed<EC> Element_Indexed<EC>::THE_INSTANCE;
 
 }
 

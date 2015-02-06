@@ -38,16 +38,16 @@ namespace MFM
 {
 
 
-  template <class CC>
-  class AbstractElement_Reprovert : public Element<CC>
+  template <class EC>
+  class AbstractElement_Reprovert : public Element<EC>
   {
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   public:
-    AbstractElement_Reprovert(const UUID & uuid) : Element<CC>(uuid) { }
+    AbstractElement_Reprovert(const UUID & uuid) : Element<EC>(uuid) { }
 
     static const u32 STATE_BELOW_IDX = 0;
     static const u32 STATE_BELOW_LEN = 9;
@@ -61,34 +61,34 @@ namespace MFM
     static const u32 MAX_ABOVE = (1<<STATE_ABOVE_LEN)-1;
 
     u32 GetBelow(const T &atom, u32 badType) const {
-      if (!Atom<CC>::IsType(atom,Element<CC>::GetType())) return badType;
+      if (!Atom<AC>::IsType(atom,Element<EC>::GetType())) return badType;
       return atom.GetStateField(STATE_BELOW_IDX,STATE_BELOW_LEN);
     }
 
     bool SetBelow(T &atom, u32 value) const {
-      if (!Atom<CC>::IsType(atom,Element<CC>::GetType())) return false;
+      if (!Atom<AC>::IsType(atom,Element<EC>::GetType())) return false;
       atom.SetStateField(STATE_BELOW_IDX,STATE_BELOW_LEN,value);
       return true;
     }
 
     u32 GetAbove(const T &atom, u32 badType) const {
-      if (!Atom<CC>::IsType(atom,Element<CC>::GetType())) return badType;
+      if (!Atom<AC>::IsType(atom,Element<EC>::GetType())) return badType;
       return atom.GetStateField(STATE_ABOVE_IDX,STATE_ABOVE_LEN);
     }
 
     bool SetAbove(T &atom, u32 value) const {
-      if (!Atom<CC>::IsType(atom,Element<CC>::GetType())) return false;
+      if (!Atom<AC>::IsType(atom,Element<EC>::GetType())) return false;
       atom.SetStateField(STATE_ABOVE_IDX,STATE_ABOVE_LEN,value);
       return true;
     }
 
     u32 GetGap(const T &atom, u32 badType) const {
-      if (!Atom<CC>::IsType(atom,Element<CC>::GetType())) return badType;
+      if (!Atom<AC>::IsType(atom,Element<EC>::GetType())) return badType;
       return atom.GetStateField(STATE_GAP_IDX,STATE_GAP_LEN)+1;
     }
 
     bool SetGap(T &atom, u32 value) const {
-      if (value==0 || !Atom<CC>::IsType(atom,Element<CC>::GetType())) return false;
+      if (value==0 || !Atom<AC>::IsType(atom,Element<EC>::GetType())) return false;
       atom.SetStateField(STATE_GAP_IDX,STATE_GAP_LEN,value-1);
       return true;
     }
@@ -96,16 +96,16 @@ namespace MFM
     /**
        Reprovert Elements do not diffuse
      */
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
+    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const {
       return this->NoDiffusability(ew, nowAt, maybeAt);
     }
 
-    void ReproduceVertically(EventWindow<CC>& window) const;
+    void ReproduceVertically(EventWindow<EC>& window) const;
 
   };
 
-  template <class CC>
-  void AbstractElement_Reprovert<CC>::ReproduceVertically(EventWindow<CC>& window) const
+  template <class EC>
+  void AbstractElement_Reprovert<EC>::ReproduceVertically(EventWindow<EC>& window) const
   {
     Random & random = window.GetRandom();
     T self = window.GetCenterAtomSym();
@@ -127,7 +127,7 @@ namespace MFM
 
     bool weChanged = false;
 
-    if (Element_Empty<CC>::THE_INSTANCE.IsType(otherType)) {
+    if (Element_Empty<EC>::THE_INSTANCE.IsType(otherType)) {
       T newAtom = self;
 
       // New guys are assumed maximally extreme in their direction

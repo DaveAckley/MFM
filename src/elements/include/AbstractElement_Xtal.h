@@ -36,23 +36,23 @@
 
 namespace MFM
 {
-  template <class CC>
-  class AbstractElement_Xtal : public Element<CC>
+  template <class EC>
+  class AbstractElement_Xtal : public Element<EC>
   {
   public:
 
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
     enum {
-      R = P::EVENT_WINDOW_RADIUS,
+      R = EC::EVENT_WINDOW_RADIUS,
       SITES = EVENT_WINDOW_SITES(R),
-      BITS = P::BITS_PER_ATOM,
+      BITS = AC::BITS_PER_ATOM,
 
       //////
       // Element state fields
 
-      XTAL_FIRST_FREE_POS = P3Atom<P>::P3_STATE_BITS_POS
+      XTAL_FIRST_FREE_POS = AC::ATOM_FIRST_STATE_BIT
 
     };
 
@@ -79,7 +79,7 @@ namespace MFM
       sites.WriteBit(GetIndex(coord), val);
     }
 
-    virtual void GetSites(T & atom, XtalSites & xites, EventWindow<CC>& window) const = 0;
+    virtual void GetSites(T & atom, XtalSites & xites, EventWindow<EC>& window) const = 0;
 
     /**
      * Called when self and otherAtom are identical subtypes of
@@ -89,21 +89,21 @@ namespace MFM
      * true by default, but is overridden by, for example,
      * Element_Xtal_General.
      */
-    virtual bool IsSameXtal(T & self, const T & otherAtom, EventWindow<CC>& window) const
+    virtual bool IsSameXtal(T & self, const T & otherAtom, EventWindow<EC>& window) const
     {
       return true;
     }
 
-    virtual u32 GetSymI(T &atom, EventWindow<CC>& window) const = 0;
+    virtual u32 GetSymI(T &atom, EventWindow<EC>& window) const = 0;
 
-    AbstractElement_Xtal(const UUID & uuid) : Element<CC>(uuid)
+    AbstractElement_Xtal(const UUID & uuid) : Element<EC>(uuid)
     {
     }
 
     /**
        Xtals don't diffuse
      */
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
+    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const
     {
       return this->NoDiffusability(ew, nowAt, maybeAt);
     }
@@ -113,10 +113,10 @@ namespace MFM
       return 0;
     }
 
-    bool IsAbstractXtalType(EventWindow<CC>& window, u32 type) const
+    bool IsAbstractXtalType(EventWindow<EC>& window, u32 type) const
     {
-      const Element<CC> * elt = window.GetTile().GetElement(type);
-      return dynamic_cast<const AbstractElement_Xtal<CC>*>(elt) != 0;
+      const Element<EC> * elt = window.GetTile().GetElement(type);
+      return dynamic_cast<const AbstractElement_Xtal<EC>*>(elt) != 0;
     }
 
     struct SiteSampler {
@@ -134,7 +134,7 @@ namespace MFM
       }
     };
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       Random & random = window.GetRandom();
       const u32 ourType = this->GetType();
@@ -196,7 +196,7 @@ namespace MFM
           }
           else
           {
-            bool isRes = otherType == Element_Res<CC>::TYPE();
+            bool isRes = otherType == Element_Res<EC>::TYPE();
             if (isRes)
             {
               inconsistentResPointSites.Sample(sp, other);
@@ -232,7 +232,7 @@ namespace MFM
           // but we'd really like it not to be us-xtal
           ++totalFieldSiteCount;
 
-          bool isRes = otherType == Element_Res<CC>::TYPE();
+          bool isRes = otherType == Element_Res<EC>::TYPE();
           if (isRes)
           {
             resFieldSites.Sample(sp, other);
@@ -276,7 +276,7 @@ namespace MFM
       //     own kind?  If so, assume we're the problem, and res out.
       if (usFieldSites.count > totalConsistentPointSiteCount)
       {
-        window.SetCenterAtomSym(Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetCenterAtomSym(Element_Res<EC>::THE_INSTANCE.GetDefaultAtom());
       }
       // (1) Is there a field us and a point empty?  If so, swap them
       else if (usFieldSites.count > 0 && inconsistentEmptyPointSites.count > 0)
@@ -298,34 +298,9 @@ namespace MFM
       else if (inconsistentXtalPointSites.count > 0 && inconsistentEmptyPointSites.count > 0)
       {
         window.SetRelativeAtomSym(inconsistentXtalPointSites.sampleSite,
-                                  Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
+                                  Element_Res<EC>::THE_INSTANCE.GetDefaultAtom());
       }
 
-      /*
-      if (inconsistentCount > 0)
-      {
-        // Next question: Are we strictly more consistent than inconsistent?
-        if (consistentCount > inconsistentCount && !random.OneIn(xtalSiteCount + 1))
-        {
-          // Yes.  Punish selected loser
-          window.SetRelativeAtom(anInconsistent, unmakeGuy);
-        }
-        else if (inconsistentCount > consistentCount)
-        {
-          // If we're strictly more inconsistent, res out and let them have us
-          window.SetCenterAtom(Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
-        }
-      }
-      else
-      {
-        // No inconsistencies.  Do we have something to make, and eat?
-        if (makeCount > 0 && eatCount > 0)
-        {
-          window.SetRelativeAtom(toMake, makeGuy);
-          window.SetRelativeAtom(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
-        }
-      }
-      */
     }
   };
 }

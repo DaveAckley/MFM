@@ -41,14 +41,13 @@
 
 namespace MFM
 {
-  template <class CC>
-  class Element_Consumer : public AbstractElement_Reprovert<CC>
+  template <class EC>
+  class Element_Consumer : public AbstractElement_Reprovert<EC>
   {
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
-    enum { W = P::TILE_WIDTH };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   public:
     // Element Data Slot names
@@ -61,21 +60,21 @@ namespace MFM
     static Element_Consumer THE_INSTANCE;
 
     virtual T BuildDefaultAtom() const {
-      T defaultAtom(this->GetType(), 0, 0, AbstractElement_Reprovert<CC>::STATE_BITS);
+      T defaultAtom(this->GetType(), 0, 0, AbstractElement_Reprovert<EC>::STATE_BITS);
       this->SetGap(defaultAtom,1); // Pack consumers adjacent
       return defaultAtom;
     }
 
     Element_Consumer()
-      : AbstractElement_Reprovert<CC>(MFM_UUID_FOR("Consumer",1))
+      : AbstractElement_Reprovert<EC>(MFM_UUID_FOR("Consumer",1))
     {
-      Element<CC>::SetAtomicSymbol("Cn");
-      Element<CC>::SetName("Consumer");
+      Element<EC>::SetAtomicSymbol("Cn");
+      Element<EC>::SetName("Consumer");
     }
 
-    u64 GetAndResetDatumsConsumed(Tile<CC> & t) const
+    u64 GetAndResetDatumsConsumed(Tile<EC> & t) const
     {
-      ElementTable<CC> & et = t.GetElementTable();
+      ElementTable<EC> & et = t.GetElementTable();
       u64 * datap = et.GetDataIfRegistered(this->GetType(), DATA_SLOT_COUNT);
       if (!datap)
         return 0;
@@ -85,9 +84,9 @@ namespace MFM
       return ret;
     }
 
-    u64 GetAndResetBucketError(Tile<CC> & t) const
+    u64 GetAndResetBucketError(Tile<EC> & t) const
     {
-      ElementTable<CC> & et = t.GetElementTable();
+      ElementTable<EC> & et = t.GetElementTable();
       u64 * datap = et.GetDataIfRegistered(this->GetType(), DATA_SLOT_COUNT);
       if (!datap)
         return 0;
@@ -121,7 +120,7 @@ namespace MFM
              "information on its position and the DATA consumed.";
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       //      Random & random = window.GetRandom();
       this->ReproduceVertically(window);
@@ -132,7 +131,7 @@ namespace MFM
       for (u32 i = 1; i < R; ++i)
       {
         SPoint consPt(i,0);
-        if(window.GetRelativeAtomSym(consPt).GetType() == Element_Data<CC>::TYPE())
+        if(window.GetRelativeAtomSym(consPt).GetType() == Element_Data<EC>::TYPE())
         {
             // Use the expanded info maintained by reprovert to
             // dynamically compute the bucket size.  That info can be
@@ -145,7 +144,7 @@ namespace MFM
             u32 range = above + below + 1;
             const u32 bucketSize = DATA_MAXVAL / range;
 
-            u32 val = Element_Data<CC>::THE_INSTANCE.GetDatum(window.GetRelativeAtomSym(consPt), 0);
+            u32 val = Element_Data<EC>::THE_INSTANCE.GetDatum(window.GetRelativeAtomSym(consPt), 0);
 
             u32 minBucketVal = bucketSize * above;
             u32 maxBucketVal = bucketSize * (above + 1);
@@ -157,12 +156,16 @@ namespace MFM
 
             u32 bucketsOff = diff / bucketSize;
 
-            Tile<CC> & tile = window.GetTile();
-            ElementTable<CC> & et = tile.GetElementTable();
+#if 0 //XXX  Fri Jan 30 22:13:11 2015 EDS unreimplemented
+
+            Tile<EC> & tile = window.GetTile();
+            ElementTable<EC> & et = tile.GetElementTable();
 
             u64 * datap = et.GetDataAndRegister(this->GetType(), DATA_SLOT_COUNT);
             ++datap[DATUMS_CONSUMED_SLOT];                 // Count datums consumed
             datap[TOTAL_BUCKET_ERROR_SLOT] += bucketsOff;  // Count total bucket error
+#endif
+            LOG.Debug("Consumed %d bucketsOff",bucketsOff);
 
             /*
               printf("[%d:%d:%d/bs %d>%d<%d=%d]Export!: %d %ld %ld %f\n",
@@ -177,15 +180,15 @@ namespace MFM
               datap[DATUMS_CONSUMED_SLOT], datap[TOTAL_BUCKET_ERROR_SLOT],
               ((double)datap[TOTAL_BUCKET_ERROR_SLOT])/datap[DATUMS_CONSUMED_SLOT]);
             */
-            window.SetRelativeAtomSym(consPt, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+            window.SetRelativeAtomSym(consPt, Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
             break;
           }
       }
     }
   };
 
-  template <class CC>
-  Element_Consumer<CC> Element_Consumer<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Consumer<EC> Element_Consumer<EC>::THE_INSTANCE;
 }
 
 #endif /* ELEMENT_CONSUMER_H */

@@ -35,22 +35,22 @@
 
 namespace MFM
 {
-  template <class CC>
-  class AbstractElement_WaPat : public Element<CC>
+  template <class EC>
+  class AbstractElement_WaPat : public Element<EC>
   {
    public:
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
     enum
     {
-      R = P::EVENT_WINDOW_RADIUS,
-      BITS = P::BITS_PER_ATOM,
+      R = EC::EVENT_WINDOW_RADIUS,
+      BITS = AC::BITS_PER_ATOM,
 
       //////
       // Element state fields
 
-      BIRTH_AGE_POS = P3Atom<P>::P3_STATE_BITS_POS,
+      BIRTH_AGE_POS = AC::ATOM_FIRST_STATE_BIT,
       BIRTH_AGE_LEN = 8,
 
       CURRENT_AGE_POS = BIRTH_AGE_POS + BIRTH_AGE_LEN,
@@ -82,7 +82,7 @@ namespace MFM
       AFBirthAge::Write(this->GetBits(us), age);
     }
 
-    AbstractElement_WaPat(const UUID & uuid) : Element<CC>(uuid)
+    AbstractElement_WaPat(const UUID & uuid) : Element<EC>(uuid)
     { }
 
     virtual u32 PercentMovable(const T& you,

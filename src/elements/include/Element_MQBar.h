@@ -46,14 +46,14 @@ namespace MFM
    */
 
 
-  template <class CC>
-  class Element_MQBar : public Element<CC>
+  template <class EC>
+  class Element_MQBar : public Element<EC>
   {
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
     template <u32 TVBITS>
     static u32 toMag(u32 value) {
@@ -112,12 +112,12 @@ namespace MFM
     //static const u32 STATE_BITS_START = P3Atom<P>::P3_STATE_BITS_POS;
     static const u32 STATE_BITS_START = T::ATOM_FIRST_STATE_BIT;
 
-    typedef AtomicParameterType<CC, VD::U32, BITS_WIDE, STATE_BITS_START> APBarWidth;
-    typedef AtomicParameterType<CC, VD::U32, BITS_HIGH, APBarWidth::END> APBarHeight;
-    typedef AtomicParameterType<CC, VD::U32, BITS_WIDE, APBarHeight::END> APXPos;
-    typedef AtomicParameterType<CC, VD::U32, BITS_HIGH, APXPos::END> APYPos;
-    typedef AtomicParameterType<CC, VD::U32, BITS_SYMI, APYPos::END> APSymI;
-    typedef AtomicParameterType<CC, VD::U32, BITS_TIMER,APSymI::END> APTimer;
+    typedef AtomicParameterType<EC, VD::U32, BITS_WIDE, STATE_BITS_START> APBarWidth;
+    typedef AtomicParameterType<EC, VD::U32, BITS_HIGH, APBarWidth::END> APBarHeight;
+    typedef AtomicParameterType<EC, VD::U32, BITS_WIDE, APBarHeight::END> APXPos;
+    typedef AtomicParameterType<EC, VD::U32, BITS_HIGH, APXPos::END> APYPos;
+    typedef AtomicParameterType<EC, VD::U32, BITS_SYMI, APYPos::END> APSymI;
+    typedef AtomicParameterType<EC, VD::U32, BITS_TIMER,APSymI::END> APTimer;
 
     APBarWidth m_barWidth;
     APBarHeight m_barHeight;
@@ -130,7 +130,7 @@ namespace MFM
     static const u32 STATE_BITS_COUNT = STATE_BITS_END - STATE_BITS_START + 1;
 
     Element_MQBar() :
-      Element<CC>(MFM_UUID_FOR("MQBar", MQBAR_VERSION)),
+      Element<EC>(MFM_UUID_FOR("MQBar", MQBAR_VERSION)),
       m_barWidth(this,"width","Bar Width","Bar width", 0, 15, _GetNOnes32(BITS_WIDE)/*, 1*/),
       m_barHeight(this,"height","Bar Height","Bar height", 0, 3*15, _GetNOnes32(BITS_HIGH)/*, 1*/),
       m_xPos(this,"xpos","X pos","X position within bar", 0, 0, _GetNOnes32(BITS_WIDE)/*, 1*/),
@@ -140,8 +140,8 @@ namespace MFM
     {
       LOG.Message("%@ ctor %p", &this->GetUUID(), this);
 
-      Element<CC>::SetAtomicSymbol("Mq");
-      Element<CC>::SetName("MQBar");
+      Element<EC>::SetAtomicSymbol("Mq");
+      Element<EC>::SetName("MQBar");
     }
 
     u32 GetSymI(const T &atom) const {
@@ -256,7 +256,7 @@ namespace MFM
         {
           u32 timer = GetTimer(atom);
           return ColorMap_SEQ6_GnBu::THE_INSTANCE.
-            GetInterpolatedColor(timer,0,MAX_TIMER_VALUE - 1, Element<CC>::PhysicsColor());
+            GetInterpolatedColor(timer,0,MAX_TIMER_VALUE - 1, Element<EC>::PhysicsColor());
         }
       }
       return 0x0;
@@ -265,11 +265,11 @@ namespace MFM
     /**
        We do not diffuse
      */
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
+    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const {
       return this->NoDiffusability(ew, nowAt, maybeAt);
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       // Get self, sanity check
       T self = window.GetCenterAtomSym();
@@ -326,7 +326,7 @@ namespace MFM
             const T other = window.GetRelativeAtomSym(sp);
             const u32 otherType = other.GetType();
 
-            bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
+            bool isEmpty = Element_Empty<EC>::THE_INSTANCE.IsType(otherType);
 
             if (isEmpty) {
 
@@ -367,7 +367,7 @@ namespace MFM
                   if (otherTimer < ourTimer && random.OneIn(++inconsistentCount)) {
                     anInconsistent = sp;
                     // Inconsistent Bars decay to Res
-                    unmakeGuy = Element_Res<CC>::THE_INSTANCE.GetDefaultAtom();
+                    unmakeGuy = Element_Res<EC>::THE_INSTANCE.GetDefaultAtom();
                   }
                 }
               }
@@ -383,7 +383,7 @@ namespace MFM
             const T other = window.GetRelativeAtomSym(sp);
             const u32 otherType = other.GetType();
 
-            bool isRes = otherType == Element_Res<CC>::TYPE();
+            bool isRes = otherType == Element_Res<EC>::TYPE();
             if (isRes) {
               ++consistentCount;
               if (random.OneIn(++eatCount)) {
@@ -392,7 +392,7 @@ namespace MFM
             }
             else {
 
-              bool isEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
+              bool isEmpty = Element_Empty<EC>::THE_INSTANCE.IsType(otherType);
 
               if (isEmpty) ++consistentCount;
               else {
@@ -401,7 +401,7 @@ namespace MFM
                   u32 iQBarTimer = GetTimer(other);
                   if (iQBarTimer < ourTimer && random.OneIn(++inconsistentCount)) {
                     anInconsistent = sp;
-                    unmakeGuy = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+                    unmakeGuy = Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom();
                   }
                 }
               }
@@ -424,7 +424,7 @@ namespace MFM
         } else if (inconsistentCount > 3 * consistentCount) {
 
           // If we're way inconsistent, let's res out and let them have us
-          window.SetCenterAtomSym(Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetCenterAtomSym(Element_Res<EC>::THE_INSTANCE.GetDefaultAtom());
 
         } else {
 
@@ -446,7 +446,7 @@ namespace MFM
         // No inconsistencies.  Do we have something to make, and eat?
         if (makeCount > 0 && eatCount > 0) {
           window.SetRelativeAtomSym(toMake, makeGuy);
-          window.SetRelativeAtomSym(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetRelativeAtomSym(toEat, Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
         }
         else {
           // Super-special case: Are we the max corner and all consistent?
@@ -455,7 +455,7 @@ namespace MFM
             SPoint offset(0,2);
             T offEnd = window.GetRelativeAtomSym(offset);
             const u32 offType = offEnd.GetType();
-            if (Element_Empty<CC>::THE_INSTANCE.IsType(offType) && eatCount > 0) {
+            if (Element_Empty<EC>::THE_INSTANCE.IsType(offType) && eatCount > 0) {
               T corner = self;
               u32 symi = GetSymI(self);
               ++symi;
@@ -465,7 +465,7 @@ namespace MFM
               SetPos(corner,SPoint(0,0));
               SetTimer(corner,0);
               window.SetRelativeAtomSym(offset, corner);
-              window.SetRelativeAtomSym(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+              window.SetRelativeAtomSym(toEat, Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
             }
           }
           {
@@ -486,8 +486,8 @@ namespace MFM
 
   };
 
-  template <class CC>
-  Element_MQBar<CC> Element_MQBar<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_MQBar<EC> Element_MQBar<EC>::THE_INSTANCE;
 
 }
 

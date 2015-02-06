@@ -39,17 +39,17 @@
 namespace MFM
 {
 
-  template <class CC>
-  class Element_Shark : public AbstractElement_WaPat<CC>
+  template <class EC>
+  class Element_Shark : public AbstractElement_WaPat<EC>
   {
     // Short names for params
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
     enum {
-      R = P::EVENT_WINDOW_RADIUS,
-      BITS = P::BITS_PER_ATOM,
+      R = EC::EVENT_WINDOW_RADIUS,
+      BITS = AC::BITS_PER_ATOM,
 
-      SHARK_ENERGY_POS = AbstractElement_WaPat<CC>::WAPAT_FIRST_FREE_POS,
+      SHARK_ENERGY_POS = AbstractElement_WaPat<EC>::WAPAT_FIRST_FREE_POS,
       SHARK_ENERGY_LEN = 9,
 
       MAX_SHARK_ENERGY = (1<<SHARK_ENERGY_LEN) - 1,
@@ -58,8 +58,8 @@ namespace MFM
       DEFAULT_ENERGY_PER_FISH = 8
     };
 
-    ElementParameterS32<CC> m_sharkBirthAge;
-    ElementParameterS32<CC> m_sharkEnergyPerFish;
+    ElementParameterS32<EC> m_sharkBirthAge;
+    ElementParameterS32<EC> m_sharkEnergyPerFish;
 
   public:
 
@@ -87,7 +87,7 @@ namespace MFM
     }
 
     Element_Shark() :
-      AbstractElement_WaPat<CC>(MFM_UUID_FOR("Shark", ELEMENT_VERSION)),
+      AbstractElement_WaPat<EC>(MFM_UUID_FOR("Shark", ELEMENT_VERSION)),
       m_sharkBirthAge(this, "age", "Birth Age",
                       "Number of events for a shark to mature",
                       1, INITIAL_DEFAULT_BIRTH_AGE, 100/*, 1*/),
@@ -95,8 +95,8 @@ namespace MFM
                            "Life events gained per fish eaten",
                            1, DEFAULT_ENERGY_PER_FISH, 50/*, 1*/)
     {
-      Element<CC>::SetAtomicSymbol("Sh");
-      Element<CC>::SetName("Shark");
+      Element<EC>::SetAtomicSymbol("Sh");
+      Element<EC>::SetName("Shark");
     }
 
     virtual const T & GetDefaultAtom() const
@@ -117,7 +117,7 @@ namespace MFM
     }
 
     // Non-diffusable
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const
+    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const
     {
       return nowAt.Equals(maybeAt)?COMPLETE_DIFFUSABILITY:0;
     }
@@ -128,10 +128,10 @@ namespace MFM
       return 0;
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       T self = window.GetCenterAtomSym();
-      WindowScanner<CC> scanner(window);
+      WindowScanner<EC> scanner(window);
 
       SPoint fishRel;
       u32 fishCount = 0;
@@ -144,7 +144,7 @@ namespace MFM
 
       if (starved)
       {
-        window.SetCenterAtomSym(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetCenterAtomSym(Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
         return;
       }
 
@@ -161,8 +161,8 @@ namespace MFM
       }
 
       scanner.FindRandomAtoms(1, 2,
-                              &fishRel, Element_Fish<CC>::THE_INSTANCE.GetType(), &fishCount,
-                              &emptyRel, Element_Empty<CC>::THE_INSTANCE.GetType(), &emptyCount);
+                              &fishRel, Element_Fish<EC>::THE_INSTANCE.GetType(), &fishCount,
+                              &emptyRel, Element_Empty<EC>::THE_INSTANCE.GetType(), &emptyCount);
 
       if (fishCount > 0)   // Eating
       {
@@ -182,7 +182,7 @@ namespace MFM
         }
         else               // or leave empty behind
         {
-          window.SetCenterAtomSym(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetCenterAtomSym(Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
         }
         window.SetRelativeAtomSym(fishRel,self); // move or repro
       }
@@ -197,7 +197,7 @@ namespace MFM
         }
         else               // or leave empty behind
         {
-          window.SetCenterAtomSym(Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetCenterAtomSym(Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
         }
         window.SetRelativeAtomSym(emptyRel,self); // move or repro
       }
@@ -208,8 +208,8 @@ namespace MFM
     }
   };
 
-  template <class CC>
-  Element_Shark<CC> Element_Shark<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Shark<EC> Element_Shark<EC>::THE_INSTANCE;
 }
 
 #endif /* ELEMENT_SHARK_H */

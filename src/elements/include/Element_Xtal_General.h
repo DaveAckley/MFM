@@ -37,25 +37,25 @@
 namespace MFM
 {
 
-#define ELT_VERSION 1
-
-  template <class CC>
-  class Element_Xtal_General : public AbstractElement_Xtal<CC>
+  template <class EC>
+  class Element_Xtal_General : public AbstractElement_Xtal<EC>
   {
+    enum {  ELT_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
 
     enum {
-      R = P::EVENT_WINDOW_RADIUS,
-      BITS = P::BITS_PER_ATOM,
+      R = EC::EVENT_WINDOW_RADIUS,
+      BITS = AC::BITS_PER_ATOM,
 
       SITES = EVENT_WINDOW_SITES(R)
     };
 
     typedef BitField<BitVector<BITS>, VD::BITS, SITES, BITS - SITES> AFSites;
 
-    ElementParameterNeighborhood<CC,SITES> m_neighborhood;
+    ElementParameterNeighborhood<EC,SITES> m_neighborhood;
 
   public:
 
@@ -66,12 +66,12 @@ namespace MFM
     }
 
     Element_Xtal_General() :
-      AbstractElement_Xtal<CC>(MFM_UUID_FOR("XtalGen", ELT_VERSION)),
+      AbstractElement_Xtal<EC>(MFM_UUID_FOR("XtalGen", ELT_VERSION)),
       m_neighborhood(this, "neighborhood", "Neighborhood",
                      "Newly-drawn Xg's will have this neighborhood.",0)
     {
-      Element<CC>::SetAtomicSymbol("Xg");
-      Element<CC>::SetName("General crystal");
+      Element<EC>::SetAtomicSymbol("Xg");
+      Element<EC>::SetName("General crystal");
     }
 
     virtual const T & GetDefaultAtom() const
@@ -82,7 +82,7 @@ namespace MFM
       return defaultAtom;
     }
 
-    virtual u32 GetSymI(T &atom, EventWindow<CC>& window) const
+    virtual u32 GetSymI(T &atom, EventWindow<EC>& window) const
     {
       return (u32) PSYM_NORMAL;
     }
@@ -106,18 +106,18 @@ namespace MFM
     }
     */
 
-    typedef typename MFM::AbstractElement_Xtal<CC>::XtalSites XtalSites;
+    typedef typename MFM::AbstractElement_Xtal<EC>::XtalSites XtalSites;
 
     /**
      * XtalGens are only truly the same if their sites are identical.
      */
-    virtual bool IsSameXtal(T & self, const T & otherAtom, EventWindow<CC>& window) const
+    virtual bool IsSameXtal(T & self, const T & otherAtom, EventWindow<EC>& window) const
     {
       return
         AFSites::ReadLong(this->GetBits(self)) == AFSites::ReadLong(this->GetBits(otherAtom));
     }
 
-    virtual void GetSites(T & atom, XtalSites & sites, EventWindow<CC>& window) const
+    virtual void GetSites(T & atom, XtalSites & sites, EventWindow<EC>& window) const
     {
       u64 bits = AFSites::ReadLong(this->GetBits(atom));
       sites.WriteLong(0, SITES, bits);
@@ -125,8 +125,8 @@ namespace MFM
 
   };
 
-  template <class CC>
-  Element_Xtal_General<CC> Element_Xtal_General<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Xtal_General<EC> Element_Xtal_General<EC>::THE_INSTANCE;
 
 }
 

@@ -34,16 +34,15 @@
 
 namespace MFM
 {
-
-#define FORKBOMBBASE_VERSION 1
-
-  template <class CC>
-  class AbstractElement_ForkBomb : public Element<CC>
+  template <class EC>
+  class AbstractElement_ForkBomb : public Element<EC>
   {
+    enum { FORKBOMBBASE_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   private:
 
@@ -56,7 +55,7 @@ namespace MFM
 
     virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const = 0;
 
-    AbstractElement_ForkBomb(const UUID & uuid) : Element<CC>(uuid)
+    AbstractElement_ForkBomb(const UUID & uuid) : Element<EC>(uuid)
     {
     }
 
@@ -72,7 +71,7 @@ namespace MFM
       return LocalPhysicsColor(temp, 0);
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       const MDist<R> & md = MDist<R>::get();
       u32 range = GetBombRange();

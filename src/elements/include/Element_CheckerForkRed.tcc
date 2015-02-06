@@ -3,8 +3,8 @@
 
 namespace MFM
 {
-  template <class CC>
-  void Element_CheckerForkRed<CC>::Behavior(EventWindow<CC>& window) const
+  template <class EC>
+  void Element_CheckerForkRed<EC>::Behavior(EventWindow<EC>& window) const
   {
     SPoint pt;
     int i = 0;
@@ -13,7 +13,7 @@ namespace MFM
       Dirs::FillDir(pt, d);
       if(window.IsLiveSiteSym(pt))
       {
-        window.SetRelativeAtomSym(pt, Element_CheckerForkBlue<CC>::THE_INSTANCE.GetDefaultAtom());
+        window.SetRelativeAtomSym(pt, Element_CheckerForkBlue<EC>::THE_INSTANCE.GetDefaultAtom());
       }
     }
   }

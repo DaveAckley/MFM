@@ -35,25 +35,25 @@
 namespace MFM
 {
 
-  #define CHECKERFORK_VERSION 1
-
-  template <class CC>
-  class Element_CheckerForkRed : public Element<CC>
+  template <class EC>
+  class Element_CheckerForkRed : public Element<EC>
   {
+    enum { CHECKERFORK_VERSION = 2 };
+
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
   public:
 
-    static Element_CheckerForkRed<CC> THE_INSTANCE;
+    static Element_CheckerForkRed<EC> THE_INSTANCE;
 
     Element_CheckerForkRed()
-      : Element<CC>(MFM_UUID_FOR("CheckerForkRed", CHECKERFORK_VERSION))
+      : Element<EC>(MFM_UUID_FOR("CheckerForkRed", CHECKERFORK_VERSION))
     {
-      Element<CC>::SetAtomicSymbol("Cr");
-      Element<CC>::SetName("CheckerForkRed");
+      Element<EC>::SetAtomicSymbol("Cr");
+      Element<EC>::SetName("CheckerForkRed");
     }
 
     virtual u32 PercentMovable(const T& you,
@@ -79,11 +79,11 @@ namespace MFM
       return "Red Circular Dependency tutorial Element";
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const;
+    virtual void Behavior(EventWindow<EC>& window) const;
   };
 
-  template <class CC>
-  Element_CheckerForkRed<CC> Element_CheckerForkRed<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_CheckerForkRed<EC> Element_CheckerForkRed<EC>::THE_INSTANCE;
 }
 
 #include "Element_CheckerForkRed.tcc"

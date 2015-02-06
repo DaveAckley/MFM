@@ -38,32 +38,32 @@
 namespace MFM
 {
 
-  template <class CC>
-  class Element_Dmover : public Element<CC>
+  template <class EC>
+  class Element_Dmover : public Element<EC>
   {
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
     enum {
-      R = P::EVENT_WINDOW_RADIUS,
-      ELT_VERSION = 2
+      R = EC::EVENT_WINDOW_RADIUS,
+      ELT_VERSION = 3
     };
 
   private:
 
-    ElementParameterS32<CC> m_searchRadius;
+    ElementParameterS32<EC> m_searchRadius;
 
   public:
 
-    static Element_Dmover<CC> THE_INSTANCE;
+    static Element_Dmover<EC> THE_INSTANCE;
 
     Element_Dmover()
-      : Element<CC>(MFM_UUID_FOR("Dmover", ELT_VERSION)),
+      : Element<EC>(MFM_UUID_FOR("Dmover", ELT_VERSION)),
         m_searchRadius(this, "radius", "Scan radius",
                        "Max radius to search for empty and non-empty sites.", 0, 1, R/*, 1*/)
     {
-      Element<CC>::SetAtomicSymbol("Dm");
-      Element<CC>::SetName("Dmover");
+      Element<EC>::SetAtomicSymbol("Dm");
+      Element<EC>::SetName("Dmover");
     }
 
     /*
@@ -106,7 +106,7 @@ namespace MFM
       chosen for an event. See the tutorial in the wiki for further
       information.
      */
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       Random & random = window.GetRandom();
       const MDist<R> & md = MDist<R>::get();
@@ -129,7 +129,7 @@ namespace MFM
         T other = window.GetRelativeAtomSym(rel);
         u32 otherType = other.GetType();
 
-        bool isOtherEmpty = Element_Empty<CC>::THE_INSTANCE.IsType(otherType);
+        bool isOtherEmpty = Element_Empty<EC>::THE_INSTANCE.IsType(otherType);
 
         if(rel.GetY() < 0 && isOtherEmpty)  // negative Y is up
         {
@@ -158,8 +158,8 @@ namespace MFM
   /*
     The singleton instance of the Dmover element.
   */
-  template <class CC>
-  Element_Dmover<CC> Element_Dmover<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_Dmover<EC> Element_Dmover<EC>::THE_INSTANCE;
 
 }
 
