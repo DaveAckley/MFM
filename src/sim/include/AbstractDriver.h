@@ -69,21 +69,21 @@ namespace MFM
   public:
 
     /**
-     * The CoreConfig used to describe templated pieces of the core
+     * The EventConfig used to describe templated pieces of the core
      * components.
      */
-    typedef typename GC::CORE_CONFIG CC;
+    typedef typename GC::EVENT_CONFIG EC;
 
     /**
-     * The ParamConfig used to configure several templated pieces of
+     * The AtomConfig used to configure several templated pieces of
      * the core components.
      */
-    typedef typename CC::PARAM_CONFIG P;
+    typedef typename EC::ATOM_CONFIG AC;
 
     /**
      * The type of every Atom used in this simulation.
      */
-    typedef typename CC::ATOM_TYPE T;
+    typedef typename AC::ATOM_TYPE T;
 
     /**
      * Exported from the GridConfiguration, the enumerated width of
@@ -101,12 +101,7 @@ namespace MFM
      * Exported from the GridConfiguration, the enumerated size of
      * every EventWindow used by this simulation.
      */
-    enum { R = P::EVENT_WINDOW_RADIUS};
-
-    /**
-     * The size of every EventWindow used by this simulation.
-     */
-    static const u32 EVENT_WINDOW_RADIUS = R;
+    enum { EVENT_WINDOW_RADIUS = EC::EVENT_WINDOW_RADIUS};
 
     /**
      * The width of the Grid used by this simulation.
@@ -122,13 +117,13 @@ namespace MFM
      * Template shortcut for an ElementRegistry with the correct
      * template parameters.
      */
-    typedef ElementRegistry<CC> OurElementRegistry;
+    typedef ElementRegistry<EC> OurElementRegistry;
 
     /**
      * Template shortcut for an instance of StdElements with the
      * correct template parameters.
      */
-    typedef StdElements<CC> OurStdElements;
+    typedef StdElements<EC> OurStdElements;
 
     /**
      * Template shortcut for a Grid with the correct template
@@ -140,12 +135,12 @@ namespace MFM
      * Template shortcut for an ElementTable with the correct template
      * parameters.
      */
-    typedef ElementTable<CC> OurElementTable;
+    typedef ElementTable<EC> OurElementTable;
 
-    Element<CC>* m_neededElements[MAX_NEEDED_ELEMENTS];
+    Element<EC>* m_neededElements[MAX_NEEDED_ELEMENTS];
     u32 m_neededElementCount;
 
-    void NeedElement(Element<CC>* element)
+    void NeedElement(Element<EC>* element)
     {
       for (u32 i = 0; i < m_neededElementCount; ++i)
       {
@@ -172,12 +167,14 @@ namespace MFM
 
     void WriteTimeBasedData(FileByteSink& fp, bool exists)
     {
+#if 0
       // Extract short names for parameter types
-      typedef typename GC::CORE_CONFIG CC;
+      typedef typename GC::EVENT_CONFIG CC;
       typedef typename CC::PARAM_CONFIG P;
       enum { W = GC::GRID_WIDTH};
       enum { H = GC::GRID_HEIGHT};
       enum { R = P::EVENT_WINDOW_RADIUS};
+#endif
 
       if(!exists)
       {
@@ -444,6 +441,7 @@ namespace MFM
         UpdateGrid(m_grid);
         running = RunHelperExiter();
       }
+
     }
 
     virtual bool RunHelperExiter() {
@@ -557,9 +555,15 @@ namespace MFM
       exit(0);
     }
 
-    static void SetLoggingLevel(const char* level, void* not_needed)
+    static void SetLoggingLevel(const char* level, void* driverptr)
     {
-      LOG.SetLevel(atoi(level));
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
+      s32 val = Logger::ParseLevel(level);
+      if (val < 0)
+        args.Die("'%s' not recognized as a logging level", level);
+      LOG.SetLevel((Logger::Level) val);
     }
 
     static void SetSeedFromArgs(const char* seedstr, void* driver)
@@ -1103,8 +1107,8 @@ namespace MFM
 
       m_grid.InitThreads();
 
-      //m_grid.Needed(Element_Empty<CC>::THE_INSTANCE);
-      NeedElement(&Element_Empty<CC>::THE_INSTANCE);
+      //m_grid.Needed(Element_Empty<EC>::THE_INSTANCE);
+      NeedElement(&Element_Empty<EC>::THE_INSTANCE);
 
       ReinitPhysics();
 
@@ -1128,6 +1132,7 @@ namespace MFM
        },
        {
          RunHelper();
+         LOG.Message("Simulation driver exiting");
        });
     }
   };
