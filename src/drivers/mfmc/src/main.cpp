@@ -138,7 +138,7 @@ namespace MFM
   {
     MFMCDriver<CONFIG> sim;
     sim.ProcessArguments(argc, argv);
-    sim.SwitchToInternalLogging();
+    sim.AddInternalLogging();
     sim.Init();
     sim.Run();
     return 0;

@@ -39,6 +39,7 @@
 #include "OverflowableCharBufferByteSink.h"
 #include "FileByteSource.h"
 #include "FileByteSink.h"
+#include "TeeByteSink.h"
 #include "itype.h"
 #include "Grid.h"
 #include "ElementTable.h"
@@ -921,17 +922,21 @@ namespace MFM
       return m_commandLineArguments.GetBuffer();
     }
 
-    void SwitchToInternalLogging()
+    void AddInternalLogging()
     {
       const char* path = this->GetSimDirPathTemporary("log/log.txt");
-      LOG.Message("Switching log target to: %s", path);
+      LOG.Message("Logging to: %s", path);
       FILE* fp = fopen(path, "w");
       if (!fp) FAIL(IO_ERROR);
       {
         static FileByteSink fbs(fp);
-        LOG.SetByteSink(fbs);
+        static TeeByteSink logT;
+
+        ByteSink * old = LOG.SetByteSink(logT);
+        logT.SetSink1(old);
+        logT.SetSink2(&fbs);
       }
-      LOG.Message("Switched to log target: %s", path);
+      LOG.Message("Added log target: %s", path);
       LOG.Message("Command line: %s", this->GetCommandLine());
     }
 

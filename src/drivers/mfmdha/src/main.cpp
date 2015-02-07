@@ -313,7 +313,7 @@ int main(int argc, const char** argv)
     MFM::MFMSimQBDemo sim(whichSim);
 
     sim.ProcessArguments(argc, argv);
-    sim.SwitchToInternalLogging();
+    sim.AddInternalLogging();
     //    sim.LoadPlugin();
     sim.Init();
 
@@ -324,7 +324,7 @@ int main(int argc, const char** argv)
     MFM::MFMSimSBarDemo sim;
 
     sim.ProcessArguments(argc, argv);
-    sim.SwitchToInternalLogging();
+    sim.AddInternalLogging();
     sim.Init();
 
     sim.Run();
