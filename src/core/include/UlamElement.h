@@ -163,7 +163,7 @@ namespace MFM
      */
     virtual Ui_Ut_14188Unsigned Uf_8getColor(UlamContext<EC>& uc,
                                              T& Uv_4self,
-                                             Ui_Ut_102328Unsigned Uv_8selector)
+                                             Ui_Ut_102328Unsigned Uv_8selector) const
     {
       return Ui_Ut_14188Unsigned(0xffffffff);
     }
