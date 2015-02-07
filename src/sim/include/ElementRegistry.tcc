@@ -19,64 +19,6 @@ namespace MFM
       FAIL(ILLEGAL_STATE);
     }
     LOG.Debug("Got %d elements", elements);
-
-#if 0
-    FAIL(INCOMPLETE_CODE); // XXXX DEIMPLEMENTED
-
-    /* Scan all element directories for any <UUID>.so files, then
-     * register them. */
-
-    LOG.Debug("Searching for elements in %d directories...", m_libraryPathsCount);
-    for(u32 i = 0; i < m_libraryPathsCount; i++)
-    {
-      const char* dirname = m_libraryPaths[i].GetZString();
-      LOG.Debug("  Searching %s for shared libs:", dirname);
-      DIR* dir = opendir(dirname);
-
-      if(!dir)
-      {
-        LOG.Warning("  Skipping %s: %s", dirname, strerror(errno));
-        continue;
-      }
-
-      struct dirent *entry = NULL;
-
-      while((entry = readdir(dir)))
-      {
-        /* Files and symbolic links are both OK */
-        if(entry->d_type == DT_LNK ||
-           entry->d_type == DT_REG)
-        {
-          if(UUID::LegalFilename(entry->d_name))
-          {
-            LOG.Debug("    ELEMENT FOUND: %s", entry->d_name);
-
-
-            UUID fileID;
-            u32 entrylen = strlen(entry->d_name) - 3; /* For '.so' extension */
-            CharBufferByteSource charSource(entry->d_name, entrylen);
-            ByteSource& source = charSource;
-
-            fileID.Read(source);
-
-            RegisterUUID(fileID);
-
-            // Update the pathIndex for loading later
-            ElementEntry * ee = FindMatching(fileID);
-            if (!ee)
-              FAIL(ILLEGAL_STATE);
-            ee->m_pathIndex = (s32) i;
-
-          }
-          else
-          {
-            LOG.Debug("    Other file: %s", entry->d_name);
-          }
-        }
-      }
-      closedir(dir);
-    }
-#endif
   }
 
   template <class EC>
@@ -221,7 +163,10 @@ namespace MFM
     }
     u32 count = el->m_count;
     for (u32 i = 0; i < count; ++i) {
-      Element<EC> * elt = el->m_ptrArray[i];
+      ElementLibraryStub<EC> * els = el->m_stubPtrArray[i];
+      if (!els)
+        FAIL(ILLEGAL_STATE);
+      Element<EC> * elt = els->GetElement();
       if (!elt)
         FAIL(ILLEGAL_STATE);
       UUID uuid = elt->GetUUID();

@@ -3,8 +3,58 @@
 #define ELEMENTLIBRARY_H
 
 #include "Element.h"
+#include "UlamElement.h"
 
 namespace MFM {
+  template <class EC>
+  struct ElementLibraryStub {
+    virtual ~ElementLibraryStub() { }
+    virtual Element<EC> * GetElement() = 0;
+  };
+
+  /**
+     An ElementLibraryStub specifically for UlamElements
+   */
+  template <class EC>
+  struct UlamElementLibraryStub : ElementLibraryStub<EC>
+  {
+    UlamElement<EC> & m_elt;
+    const UlamElementInfo<EC> * m_info;
+    UlamElementLibraryStub(UlamElement<EC> & eltr, UlamElementInfo<EC> * infop)
+      : m_elt(eltr), m_info(infop)
+    {
+    }
+
+    Element<EC> * GetElement()
+    {
+      if (m_info)
+        m_elt.SetInfo(m_info);
+      return &m_elt;
+    }
+  };
+
+  /**
+     An ElementLibraryStub specifically for the UlamElement Empty
+   */
+  template <class EC>
+  struct UlamEmptyElementLibraryStub : ElementLibraryStub<EC>
+  {
+    UlamElement<EC> & m_elt;
+    const UlamElementInfo<EC> * m_info;
+    UlamEmptyElementLibraryStub(UlamElement<EC> & eltr, UlamElementInfo<EC> * infop)
+      : m_elt(eltr), m_info(infop)
+    {
+      // Give the ulam Empty the official empty type
+      m_elt.AllocateEmptyType();
+      //Element_Empty<EC>::THE_INSTANCE;
+    }
+
+    Element<EC> * GetElement()
+    {
+      FAIL(ILLEGAL_STATE);
+      return 0;
+    }
+  };
 
   template <class EC>
   struct ElementLibrary {
@@ -14,7 +64,7 @@ namespace MFM {
     u16 m_count;
     u32 m_date;
     u32 m_time;
-    Element<EC> ** m_ptrArray;
+    ElementLibraryStub<EC> ** m_stubPtrArray;
   };
 
   enum { ELEMENT_LIBRARY_MAGIC = 0xfea57000 };
