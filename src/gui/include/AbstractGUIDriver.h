@@ -653,7 +653,8 @@ namespace MFM
       }
       else
       {
-        SleepMsec(33); // 33 ms ~= 30 fps idle
+        //        SleepMsec(33); // 33 ms ~= 30 fps idle
+        SleepMsec(100); // 100 ms ~= 10 fps idle
       }
     }
 
