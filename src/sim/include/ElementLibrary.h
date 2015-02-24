@@ -13,6 +13,29 @@ namespace MFM {
   };
 
   /**
+     An ElementLibraryStub for C++ Elements.  C++ Elements do not have
+     an analog to UlamElementInfo -- everything is handled directly by
+     the specific element subclass code -- so their library stub
+     GetElement() method (hopefully, apparently, at the moment)
+     doesn't need to do anything.
+   */
+  template <class EC>
+  struct CPPElementLibraryStub : ElementLibraryStub<EC>
+  {
+    Element<EC> & m_elt;
+    CPPElementLibraryStub(Element<EC> & eltr)
+      : m_elt(eltr)
+    {
+    }
+
+    Element<EC> * GetElement()
+    {
+      return &m_elt;
+    }
+  };
+
+
+  /**
      An ElementLibraryStub specifically for UlamElements
    */
   template <class EC>
