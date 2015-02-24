@@ -43,13 +43,13 @@ namespace MFM
    */
 
 
-  template <class CC>
-  class Element_MQBar : public Element<CC>
+  template <class EC>
+  class Element_MQBar : public Element<EC>
   {
     // Extract short names for parameter types
-    typedef typename CC::ATOM_TYPE T;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { R = P::EVENT_WINDOW_RADIUS };
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
     template <u32 TVBITS>
     static u32 toMag(u32 value) {
@@ -88,6 +88,7 @@ namespace MFM
   public:
 
     static Element_MQBar THE_INSTANCE;
+
     static const u32 TYPE() {
       return THE_INSTANCE.GetType();
     }
@@ -119,11 +120,12 @@ namespace MFM
     enum { QBAR_VERSION = 4 };
 
     Element_MQBar() :
-      Element<CC>(MFM_UUID_FOR("MQBar", QBAR_VERSION))
+      Element<EC>(MFM_UUID_FOR("MQBar", QBAR_VERSION))
     {
       LOG.Message("%@ ctor %p", &this->GetUUID(), this);
 
-      Element<CC>::SetAtomicSymbol("Mq");
+      Element<EC>::SetAtomicSymbol("Mq");
+      Element<EC>::SetName("MQBar");
     }
 
     u32 GetSymI(const T &atom) const {
@@ -242,11 +244,11 @@ namespace MFM
     /**
        We do not diffuse
      */
-    virtual u32 Diffusability(EventWindow<CC> & ew, SPoint nowAt, SPoint maybeAt) const {
+    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const {
       return this->NoDiffusability(ew, nowAt, maybeAt);
     }
 
-    virtual void Behavior(EventWindow<CC>& window) const
+    virtual void Behavior(EventWindow<EC>& window) const
     {
       // Get self, sanity check
       T self = window.GetCenterAtom();
@@ -360,7 +362,7 @@ namespace MFM
             const T other = window.GetRelativeAtom(sp);
             const u32 otherType = other.GetType();
 
-            bool isRes = otherType == Element_Res<CC>::TYPE();
+            bool isRes = otherType == Element_Res<EC>::TYPE();
             if (isRes) {
               ++consistentCount;
               if (random.OneIn(++eatCount)) {
@@ -378,7 +380,7 @@ namespace MFM
                   u32 iQBarTimer = GetTimer(other);
                   if (iQBarTimer < ourTimer && random.OneIn(++inconsistentCount)) {
                     anInconsistent = sp;
-                    unmakeGuy = Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom();
+                    unmakeGuy = Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom();
                   }
                 }
               }
@@ -401,7 +403,7 @@ namespace MFM
         } else if (inconsistentCount > 3 * consistentCount) {
 
           // If we're way inconsistent, let's res out and let them have us
-          window.SetCenterAtom(Element_Res<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetCenterAtom(Element_Res<EC>::THE_INSTANCE.GetDefaultAtom());
 
         } else {
 
@@ -423,7 +425,7 @@ namespace MFM
         // No inconsistencies.  Do we have something to make, and eat?
         if (makeCount > 0 && eatCount > 0) {
           window.SetRelativeAtom(toMake, makeGuy);
-          window.SetRelativeAtom(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+          window.SetRelativeAtom(toEat, Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
         }
         else {
           // Super-special case: Are we the max corner and all consistent?
@@ -432,7 +434,7 @@ namespace MFM
             SPoint offset(0,2);
             T offEnd = window.GetRelativeAtom(offset);
             const u32 offType = offEnd.GetType();
-            if (Element_Empty<CC>::THE_INSTANCE.IsType(offType) && eatCount > 0) {
+            if (Element_Empty<EC>::THE_INSTANCE.IsType(offType) && eatCount > 0) {
               T corner = self;
               u32 symi = GetSymI(self);
               ++symi;
@@ -442,7 +444,7 @@ namespace MFM
               SetPos(corner,SPoint(0,0));
               SetTimer(corner,0);
               window.SetRelativeAtom(offset, corner);
-              window.SetRelativeAtom(toEat, Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom());
+              window.SetRelativeAtom(toEat, Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
             }
           }
           {
@@ -463,8 +465,8 @@ namespace MFM
 
   };
 
-  template <class CC>
-  Element_MQBar<CC> Element_MQBar<CC>::THE_INSTANCE;
+  template <class EC>
+  Element_MQBar<EC> Element_MQBar<EC>::THE_INSTANCE;
 
 }
 
