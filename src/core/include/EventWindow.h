@@ -209,6 +209,10 @@ namespace MFM
 
 
   public:
+    bool TryEventAtForTesting(const SPoint & center)
+    {
+      return TryEventAt(center);
+    }
 
     /**
      * Set up for an event at center, which represented in full,
