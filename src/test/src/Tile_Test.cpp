@@ -43,7 +43,8 @@ namespace MFM {
   void Tile_Test::Test_tilePlaceAtom()
   {
     TestTile tile;
-    Element_Res<TestEventConfig>::THE_INSTANCE.AllocateType();
+    ElementTypeNumberMap<TestEventConfig> etnm;
+    Element_Res<TestEventConfig>::THE_INSTANCE.AllocateType(etnm);
     tile.RegisterElement(Element_Res<TestEventConfig>::THE_INSTANCE);
 
     TestAtom atom(Element_Res<TestEventConfig>::THE_INSTANCE.GetDefaultAtom());

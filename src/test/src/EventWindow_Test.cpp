@@ -25,7 +25,8 @@ namespace MFM {
   void EventWindow_Test::Test_EventWindowNoLockOpen()
   {
     TestTile tile;
-    Element_Wall<TestEventConfig>::THE_INSTANCE.AllocateType(); // Need something non-diffusing..
+    ElementTypeNumberMap<TestEventConfig> etnm;
+    Element_Wall<TestEventConfig>::THE_INSTANCE.AllocateType(etnm); // Need something non-diffusing..
     tile.RegisterElement(Element_Wall<TestEventConfig>::THE_INSTANCE);
 
     SPoint center(15, 20);  // Hitting no caches, for starters
@@ -52,8 +53,9 @@ namespace MFM {
   void EventWindow_Test::Test_EventWindowWrite()
   {
     TestTile tile;
-    Element_Dreg<TestEventConfig>::THE_INSTANCE.AllocateType();
-    Element_Res<TestEventConfig>::THE_INSTANCE.AllocateType();
+    ElementTypeNumberMap<TestEventConfig> etnm;
+    Element_Dreg<TestEventConfig>::THE_INSTANCE.AllocateType(etnm);
+    Element_Res<TestEventConfig>::THE_INSTANCE.AllocateType(etnm);
     tile.RegisterElement(Element_Dreg<TestEventConfig>::THE_INSTANCE);
     tile.RegisterElement(Element_Res<TestEventConfig>::THE_INSTANCE);
 

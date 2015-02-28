@@ -31,7 +31,7 @@
 #include "Atom.h"
 #include "Parameter.h"
 #include "itype.h"
-#include "StaticLoader.h"
+#include "ElementTypeNumberMap.h"
 #include "UUID.h"
 #include "Dirs.h"
 #include "Logger.h"
@@ -61,6 +61,7 @@ namespace MFM
     typedef typename AC::ATOM_TYPE T;
     enum { R = EC::EVENT_WINDOW_RADIUS };
     enum { BPA = AC::BITS_PER_ATOM };
+    enum { ELEMENT_EMPTY_TYPE = T::ATOM_EMPTY_TYPE };
 
     /**
      * The configurable element parameters of this Element . Element
@@ -240,19 +241,18 @@ namespace MFM
     }
 
     /**
-     * Assigns the type of this Element using the U16StaticLoader
-     * . This type is only assigned if it has not been assigned
-     * already. Once this type has been allocated, the default Atom of
-     * this Element is constructed and an Atom of this Element may be
-     * placed.
+     * Assigns the type of this Element using the supplied
+     * ElementTypeNumberMap . This type is only assigned if it has not
+     * been assigned already. Once this type has been allocated, the
+     * default Atom of this Element is constructed and an Atom of this
+     * Element may be placed.
      *
-     * @sa StaticLoader;
      */
-    void AllocateType()
+    void AllocateType(ElementTypeNumberMap<EC>& etnm)
     {
       if (!m_hasType)
       {
-        m_type = StaticLoader<EC,16>::AllocateType(m_UUID);
+        m_type = etnm.AllocateType(m_UUID);
         m_hasType = true;
         m_defaultAtom = BuildDefaultAtom();
       }
@@ -262,13 +262,12 @@ namespace MFM
      * Declare that this element is the Empty element, and assign it
      * the specific type reserved for that element.
      *
-     * @sa StaticLoader;
      */
     void AllocateEmptyType()
     {
       if (!m_hasType)
       {
-        m_type = StaticLoader<EC,16>::AllocateEmptyType(m_UUID);
+        m_type = ELEMENT_EMPTY_TYPE;
         m_hasType = true;
         m_defaultAtom = BuildDefaultAtom();
       }

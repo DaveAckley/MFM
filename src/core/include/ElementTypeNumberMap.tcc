@@ -2,14 +2,10 @@
 
 #include "Logger.h"
 namespace MFM {
-  template <class EC, u32 BITS>
-  u32 StaticLoader<EC,BITS>::m_counter = 2;
 
-  template <class EC, u32 BITS>
-  const UUID *(StaticLoader<EC,BITS>::m_uuids[SLOTS]);
+  template <class EC>
+  u32 ElementTypeNumberMap<EC>::NextType() {
 
-  template <class EC, u32 BITS>
-  u32 StaticLoader<EC,BITS>::NextType() {
     u32 type;
     do {
       ++m_counter;
@@ -28,27 +24,28 @@ namespace MFM {
         }
       }
       LOG.Debug("trying 0x%04x",type);
-    } while (m_uuids[type] != 0);
+    } while (type == ELEMENT_EMPTY_TYPE || m_uuids[type] != 0);
     LOG.Debug("taking 0x%04x",type);
     return type;
   }
 
-  template <class EC, u32 BITS>
-  u32 StaticLoader<EC,BITS>::AllocateEmptyType(const UUID & forUUID) {
-    return AllocateTypeInternal(forUUID, (s32) EC::ATOM_CONFIG::ATOM_EMPTY_TYPE);
+  template <class EC>
+  u32 ElementTypeNumberMap<EC>::AllocateEmptyType(const UUID & forUUID) {
+    return AllocateTypeInternal(forUUID, (s32) ELEMENT_EMPTY_TYPE);
   }
 
-  template <class EC, u32 BITS>
-  u32 StaticLoader<EC,BITS>::AllocateType(const UUID & forUUID) {
+  template <class EC>
+  u32 ElementTypeNumberMap<EC>::AllocateType(const UUID & forUUID) {
     return AllocateTypeInternal(forUUID, -1);
   }
 
-  template <class EC, u32 BITS>
-  u32 StaticLoader<EC,BITS>::AllocateTypeInternal(const UUID & forUUID, s32 useThisType) {
+  template <class EC>
+  u32 ElementTypeNumberMap<EC>::AllocateTypeInternal(const UUID & forUUID, s32 useThisType) {
     u32 used = 0;
     for (u32 i = 0; i < SLOTS; ++i) {
       if (!m_uuids[i]) continue;
       ++used;
+      if (i == ELEMENT_EMPTY_TYPE) continue;
 
       if (forUUID == *m_uuids[i]) {
         if (useThisType >= 0 && useThisType != (s32) i)
@@ -75,8 +72,8 @@ namespace MFM {
     return type;
   }
 
-  template <class EC, u32 BITS>
-  s32 StaticLoader<EC,BITS>::TypeFromUUID(const UUID & forUUID) {
+  template <class EC>
+  s32 ElementTypeNumberMap<EC>::TypeFromUUID(const UUID & forUUID) {
     for (u32 i = 0; i < SLOTS; ++i) {
       if (!m_uuids[i]) continue;
       if (forUUID == *m_uuids[i])
@@ -85,8 +82,8 @@ namespace MFM {
     return -1;
   }
 
-  template <class EC, u32 BITS>
-  s32 StaticLoader<EC,BITS>::TypeFromCompatibleUUID(const UUID & forUUID) {
+  template <class EC>
+  s32 ElementTypeNumberMap<EC>::TypeFromCompatibleUUID(const UUID & forUUID) {
     for (u32 i = 0; i < SLOTS; ++i) {
       if (!m_uuids[i]) continue;
       if (m_uuids[i]->Compatible(forUUID))

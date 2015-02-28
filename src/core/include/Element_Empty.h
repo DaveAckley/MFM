@@ -44,6 +44,7 @@ namespace MFM
     // Extract short names for parameter types
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
+    enum { EMPTY_ELEMENT_TYPE = T::ATOM_EMPTY_TYPE };
 
   public:
     static Element_Empty THE_INSTANCE;

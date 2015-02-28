@@ -70,6 +70,8 @@ namespace MFM {
 
     SPoint m_lastEventTile;
 
+    ElementTypeNumberMap<EC> m_elementTypeNumberMap;
+
     GridTile m_tiles[W][H];
     LonglivedLock m_intertileLocks[W][H][3]; // 3: E, SE, S == dir-Dirs::EAST
 
@@ -311,7 +313,7 @@ namespace MFM {
 
     void Needed(Element<EC> & anElement)
     {
-      anElement.AllocateType();         // Force a type now
+      anElement.AllocateType(m_elementTypeNumberMap);         // Force a type now
       m_er.RegisterElement(anElement);  // Make sure we're in here (How could we not?)
 
       for (iterator_type i = begin(); i != end(); ++i)

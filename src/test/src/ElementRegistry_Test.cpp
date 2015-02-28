@@ -6,11 +6,12 @@
 namespace MFM {
 
   static void Test_Basic() {
+    ElementTypeNumberMap<TestEventConfig> etnm;
     ElementRegistry<TestEventConfig> er;
     UUID u1("Sorter",1,2,3,4);
     assert(!er.IsRegistered(u1));
     assert(!er.IsLoaded(u1));
-    Element_Empty<TestEventConfig>::THE_INSTANCE.AllocateType();
+    Element_Empty<TestEventConfig>::THE_INSTANCE.AllocateType(etnm);
     er.RegisterElement(Element_Empty<TestEventConfig>::THE_INSTANCE);
 
     assert(!er.IsRegistered(u1));

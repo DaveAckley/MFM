@@ -50,18 +50,21 @@ namespace MFM {
      */
     typedef typename SITE::ATOM_CONFIG ATOM_CONFIG;
 
-#if 0 // Let's not pull this up; it can be confusing.  Users should drill down to AC for it
-    /**
-     * T is the type of Atom used in this EventConfig.
-     */
-    typedef typename ATOM_CONFIG::ATOM_TYPE T;
-#endif
-
     /**
      * EVENT_WINDOW_RADIUS is the size of the event window for this
      * EventConfig.
      */
     enum { EVENT_WINDOW_RADIUS = R };
+
+    /**
+     * ELEMENT_TYPE_BITS is the number of bits used to represent an
+     * element type number.  For now we're hardcoding this at 16,
+     * here, as a compromise between, on the one hand, rewriting the
+     * whole template chain again so soon after we just did it (circa
+     * Jan 2015), and, on the other hand, hardcoding 16 deeper into
+     * the code via something like ElementTypeNumberMap16.
+     */
+    enum { ELEMENT_TYPE_BITS = 16 };
 
   };
 

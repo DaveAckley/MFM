@@ -40,7 +40,7 @@ namespace MFM
   {
     m_elementTable.Reinit();
 
-    Element_Empty<EC>::THE_INSTANCE.AllocateType();
+    Element_Empty<EC>::THE_INSTANCE.AllocateEmptyType();
     RegisterElement(Element_Empty<EC>::THE_INSTANCE);
 
     ClearAtoms();
