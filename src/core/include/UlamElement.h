@@ -85,6 +85,7 @@ namespace MFM
     virtual const char * GetDetails() const = 0;
     virtual const char * GetAuthor() const = 0;
     virtual const char * GetLicense() const = 0;
+    virtual bool GetPlaceable() const = 0;
     virtual const u32 GetVersion() const = 0;
     virtual const u32 GetNumColors() const = 0;
     virtual const u32 GetColor(UlamContext<EC>& uc, T atom, u32 colnum) const = 0;
@@ -111,6 +112,7 @@ namespace MFM
     const UlamElementInfo<EC> * m_info;
 
   public:
+
     UlamElement(const UUID & uuid) : Element<EC>(uuid)
     { }
 
@@ -149,8 +151,9 @@ namespace MFM
     }
 
     /**
-       Ulam elements that define 'Unsigned getColor()' will override
-       this method, and it will be called during graphics rendering!
+       Ulam elements defining 'Unsigned getColor(Unsigned selector)'
+       will override this method, and it will be called during
+       graphics rendering!
 
        Note the Uv_4self in this method IS A COPY of the atom being
        rendered -- any changes made to Uv_4self during this method
@@ -166,6 +169,16 @@ namespace MFM
                                              Ui_Ut_102328Unsigned Uv_8selector) const
     {
       return Ui_Ut_14188Unsigned(0xffffffff);
+    }
+
+    virtual bool GetPlaceable() const
+    {
+      return m_info?m_info->GetPlaceable() : true;
+    }
+
+    virtual UlamElement* AsUlamElement()
+    {
+      return this;
     }
 
     virtual const UlamElement<EC> * AsUlamElement() const

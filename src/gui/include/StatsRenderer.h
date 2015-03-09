@@ -116,7 +116,8 @@ namespace MFM {
       {
         if (m_element)
         {
-          return m_element->GetUUID().GetLabel();
+          //          return m_element->GetUUID().GetLabel();
+          return m_element->GetName();
         }
         return "<unset>";
       }

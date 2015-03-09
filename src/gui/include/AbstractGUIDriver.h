@@ -842,9 +842,12 @@ namespace MFM
     {
       for(u32 i = 0; i < AbstractDriver<GC>::m_neededElementCount; i++)
       {
-        GetStatsRenderer().DisplayStatsForElement(AbstractDriver<GC>::GetGrid(),
-                                                  *(AbstractDriver<GC>::m_neededElements[i]));
-        this->RegisterToolboxElement(AbstractDriver<GC>::m_neededElements[i]);
+        Element<EC> * elt = AbstractDriver<GC>::m_neededElements[i];
+        GetStatsRenderer().DisplayStatsForElement(AbstractDriver<GC>::GetGrid(), *elt);
+
+        const UlamElement<EC> * ue = elt->AsUlamElement();
+        if (!ue || ue->GetPlaceable())
+          this->RegisterToolboxElement(elt);
       }
     }
 

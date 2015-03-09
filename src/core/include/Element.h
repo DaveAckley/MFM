@@ -387,6 +387,10 @@ namespace MFM
     {
       return 0;
     }
+    virtual UlamElement<EC> * AsUlamElement()
+    {
+      return 0;
+    }
 
     /**
      * Gets the default Atom of this Element . If this Element has not
