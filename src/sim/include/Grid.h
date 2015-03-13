@@ -601,7 +601,7 @@ namespace MFM {
      *
      * @returns a percentage of the occupied sites in this Grid .
      */
-    double GetEmptySitePercentage() const
+    double GetFullSitePercentage() const
     {
       return 1.0 - ((double)GetAtomCount(Element_Empty<EC>::THE_INSTANCE.GetType()) /
                     (double)(GetHeightSites() * GetWidthSites()));

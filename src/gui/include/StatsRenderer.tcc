@@ -129,7 +129,7 @@ namespace MFM {
     baseY += ROW_HEIGHT;
     baseY += ROW_HEIGHT;
 
-    sprintf(strBuffer, "%8.3f %%full", grid.GetEmptySitePercentage() * 100);
+    sprintf(strBuffer, "%8.3f %%full", grid.GetFullSitePercentage() * 100);
     drawing.BlitText(strBuffer, UPoint(m_drawPoint.GetX(), baseY),
                      UPoint(m_dimensions.GetX(), ROW_HEIGHT));
 

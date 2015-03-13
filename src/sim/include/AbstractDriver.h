@@ -168,14 +168,6 @@ namespace MFM
 
     void WriteTimeBasedData(FileByteSink& fp, bool exists)
     {
-#if 0
-      // Extract short names for parameter types
-      typedef typename GC::EVENT_CONFIG CC;
-      typedef typename CC::PARAM_CONFIG P;
-      enum { W = GC::GRID_WIDTH};
-      enum { H = GC::GRID_HEIGHT};
-      enum { R = P::EVENT_WINDOW_RADIUS};
-#endif
 
       if(!exists)
       {
@@ -446,10 +438,14 @@ namespace MFM
     }
 
     virtual bool RunHelperExiter() {
-      if(m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
+      double full = m_grid.GetFullSitePercentage();
+      if((m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
+         || (m_haltOnEmpty && full == 0.0)
+         || (m_haltOnFull && full == 1.0))
       {
-        // Free final save if --haltafteraeps.  Hope for good-looking corpse
+        // Free final save if halting on --halt*.  Hope for good-looking corpse.
         SaveGridWithConstantFilename("save/final.mfs");
+        WriteTimeBasedData();
         m_grid.ShutdownTileThreads();
         return false;
       }
@@ -481,6 +477,8 @@ namespace MFM
 
     u32 m_ticksLastStopped;
     u32 m_haltAfterAEPS;
+    bool m_haltOnEmpty;
+    bool m_haltOnFull;
 
     u64 m_startTimeMS;
     u64 m_msSpentRunning;
@@ -620,6 +618,16 @@ namespace MFM
       {                                    // it'll happen immediately
         driver->m_acceleration = 0;        // so push acceleration back
       }
+    }
+
+    static void SetHaltOnEmpty(const char* not_needed, void* driver)
+    {
+      ((AbstractDriver*)driver)->m_haltOnEmpty = 1;
+    }
+
+    static void SetHaltOnFull(const char* not_needed, void* driver)
+    {
+      ((AbstractDriver*)driver)->m_haltOnFull = 1;
     }
 
     static void SetGridImages(const char* not_needed, void* driver)
@@ -840,8 +848,6 @@ namespace MFM
     {
       LOG.Debug("Epoch %d: %d AEPS", epochs, epochAEPS);
 
-      // XXX grid.CheckCaches();
-
       WriteTimeBasedData();
 
       if (m_gridImages)
@@ -878,6 +884,8 @@ namespace MFM
       {
         ++m_acceleration;
       }
+
+
     }
 
     AbstractDriver() :
@@ -885,6 +893,8 @@ namespace MFM
       m_grid(m_elementRegistry),
       m_ticksLastStopped(0),
       m_haltAfterAEPS(0),
+      m_haltOnEmpty(false),
+      m_haltOnFull(false),
       m_startTimeMS(0),
       m_msSpentRunning(0),
       m_msSpentOverhead(0),
@@ -1023,6 +1033,12 @@ namespace MFM
 
       RegisterArgument("If ARG > 0, Halts after ARG elapsed aeps.",
                        "--haltafteraeps", &SetHaltAfterAEPSFromArgs, this, true);
+
+      RegisterArgument("Halts if grid is empty.",
+                       "--haltonempty", &SetHaltOnEmpty, this, false);
+
+      RegisterArgument("Halts if grid is full.",
+                       "--haltonfull", &SetHaltOnFull, this, false);
 
       RegisterArgument("Store data in per-sim directories under ARG (string)",
                        "-d|--dir", &SetDataDirFromArgs, this, true);
