@@ -124,6 +124,7 @@ namespace MFM {
      */
     BitVector();
 
+#if 0 // Fri Mar 13 16:04:59 2015 XXX TESTING GCC CODE GEN IMPACTS
     /**
      * Copy-constructor for a BitVector. Creates an identical copy of
      * the specified BitVector.
@@ -131,6 +132,7 @@ namespace MFM {
      * @param other The BitVector to copy properties of.
      */
     BitVector(const BitVector & other);
+#endif // Fri Mar 13 16:04:59 2015 XXX TESTING GCC CODE GEN IMPACTS
 
     /**
      * Constructs a BitVector with specified initial value.

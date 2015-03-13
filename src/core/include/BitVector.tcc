@@ -16,11 +16,13 @@ namespace MFM {
     memcpy(m_bits,values,sizeof(m_bits));
   }
 
+#if 0 // Fri Mar 13 16:04:59 2015 XXX TESTING GCC CODE GEN IMPACTS
   template <u32 BITS>
   BitVector<BITS>::BitVector(const BitVector & other)
   {
     memcpy(m_bits,other.m_bits,sizeof(m_bits));
   }
+#endif // Fri Mar 13 16:04:59 2015 XXX TESTING GCC CODE GEN IMPACTS
 
   // This is the general case..
   template <u32 BITS>
