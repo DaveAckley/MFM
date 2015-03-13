@@ -44,6 +44,7 @@ namespace MFM {
    */
   class UUID : public ByteSerializable {
   public:
+    typedef OString256 OStringUUIDName;
 
     /**
        This is the version of the UUID system itself (not the version
@@ -136,7 +137,7 @@ namespace MFM {
       if (!label)
         return false;
 
-      OString64 buf;
+      OStringUUIDName buf;
 
       ZStringByteSource zbs(label);
       if (!zbs.ScanCamelIdentifier(buf))
@@ -208,7 +209,7 @@ namespace MFM {
 
     s32 CompareDateOnly(const UUID & other) const ;
 
-    OString64 m_label;
+    OStringUUIDName m_label;
     u32 m_configurationCode;
     u32 m_elementVersion;
     u32 m_uuidVersion;

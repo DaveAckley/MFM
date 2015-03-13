@@ -62,7 +62,7 @@ namespace MFM {
   bool UUID::Read(ByteSource & bs) {
 
     // Read everything before changing anything..
-    OString64 cbbs;
+    OStringUUIDName cbbs;
     u32 uuidversion = 0;
     u32 elementversion = 0;
     u32 configurationCode = 0;
