@@ -40,6 +40,10 @@ namespace MFM
   // MediumTile model
   typedef GridConfig<OurEventConfigAll, 96, 1, 1> OurGridConfigMediumTile;
 
+  /////
+  // SmallerTile model
+  typedef GridConfig<OurEventConfigAll, 58, 1, 1> OurGridConfigSmallTile; //==50x50 after cache edge
+
   template <class GC>
   struct MFMCDriver : public AbstractDualDriver<GC>
   {
@@ -191,6 +195,7 @@ namespace MFM
     if (EndsWith(argv[0],"_l"))  return SimCheckAndRun<OurGridConfigBig>(argc, argv);
     if (EndsWith(argv[0],"_1l")) return SimCheckAndRun<OurGridConfigBigTile>(argc, argv);
     if (EndsWith(argv[0],"_1m")) return SimCheckAndRun<OurGridConfigMediumTile>(argc, argv);
+    if (EndsWith(argv[0],"_1s")) return SimCheckAndRun<OurGridConfigSmallTile>(argc, argv);
     if (EndsWith(argv[0],"_a"))  return SimCheckAndRun<OurGridConfigAlt>(argc, argv);
     //if (EndsWith(argv[0],"_m"))   ..or anything else
     return SimCheckAndRun<OurGridConfigStd>(argc, argv);
