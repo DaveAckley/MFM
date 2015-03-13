@@ -46,39 +46,39 @@ namespace MFM
 
      The EventWindow <-> Tile interaction during events works as follows:
 
-     - During Tile::AdvanceComputation, tile selects an available
-       EventWindow (one in state FREE).  If there are none, the
-       computation cannot be advanced.
+     - During Tile::AdvanceComputation, tile selects a random coord in
+       its owned region, and calls EventWindow::TryEventAt, using its
+       (one and only) EventWindow.
 
-     - Tile calls EventWindow::TryEvent on the selected EventWindow.
+     - TryEventAt first does filtering for the desired degree of
+       spatial flatness (RejectOnRecency).  Then it goes to
+       InitForEvent, which attempts to acquire all necessary locks.
+       If either filtering or locking fails, the event attempt fails.
+       (If Tile::AdvanceComputation sees a false return from
+       TryEventAt, it returns false, indicating the computation did
+       not advance.)
 
-     - TryEvent selects a random tile location and attempts to perform
-       an event there.  If it can't acquire all locks, it sets itself
-       FREE and returns false.  (If Tile::AdvanceComputation sees a
-       false return from TryEvent, it returns false, indicating the
-       computation did not advance.)
+     - Otherwise, EventWindow::TryEventAt (via InitForEvent) has
+       successfully locked all needed CacheProcessors (if any), and it
+       sets up to perform an event at the selected center, loads that
+       center's neighborhood from the tile, updates statistics, and
+       performs the event, up to the cache notifications stage.  It
+       writes all site changes back to its own Tile, in the process
+       notifying all locked CacheProcessors about the neighborhood
+       contents, and the CacheProcessors copy any atoms they want to
+       their shipping buffers.  (CacheProcessors want atoms that are
+       (1) visible to the far side and (2) either changed by the
+       event, or selected randomly for a redundancy spot check.)
 
-     - Otherwise, TryEvent has successfully acquired all needed locks
-       (if any), and it performs an event at the selected center, up
-       to the cache notifications stage.  It writes all site changes
-       back to its own Tile, in the process creating a bitmask
-       indicating which sites have changed, enters state COMMUNICATE,
-       and returns the result of a call on EventWindow::Advance().
+     - At that point, TryEventAt returns, and EventWindow processing
+       is finished.  That means Tile::AdvanceComputation is finished,
+       and the Tile moves on to AdvanceCommunication, during which it
+       advances all its CacheProcessors once.  Then Tile::Advance
+       returns.  Subsequent Tile::Advance calls will return to
+       EventWindow::TryEventAt, but until all the relevant cache
+       processors have finished flushing, the associated directions
+       won't be lockable.
 
-     - On EventWindow::Advance() in state COMMUNICATE, the EventWindow
-       queues outbound site update packets to each locked neighbor,
-       using the bitmask and a per-neighbor counter to track which
-       update needs to be sent next, if buffer full conditions prevent
-       the entire update from being sent simultaneously (can this
-       happen?  Can we engineer it out?)  It may also send redundant
-       'check packets' to spot check the neighbor's cache for
-       consistency.  On each call to Advance(), the EventWindow
-       handles as many inbound and outbound packets as it can without
-       blocking, and returns true until everything is completed and
-       the EventWindow has returned to state FREE, at which point
-       Advance returns false.
-
-     - While in state COMMUNICATE, the EventWind
    */
   template <class EC>
   class EventWindow
