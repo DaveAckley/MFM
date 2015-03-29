@@ -1,0 +1,232 @@
+#!/usr/bin/perl -Tw
+# -*- mode:perl -*-
+
+sub BEGIN {
+    # Seal us up a bit for living la vida tainted
+    $ENV{'PATH'} = "/bin:/usr/bin";
+    delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+}
+
+<<<INCLUDE:common.pl.inc>>>
+
+use File::Temp qw(tempdir);
+use MIME::Base64 qw(decode_base64);
+use Crypt::OpenSSL::RSA;
+
+my (undef, $binDir, $scriptName) = File::Spec ->splitpath($0);
+$binDir =~ s!/$!!;
+
+my $progname = NextArg();
+die "No program name" unless defined $progname;
+SetProgramName($progname);
+
+my $optverb = NextArg() || "";
+my $verb = lc($optverb);
+if ($verb eq "help" || $verb eq "-h") {
+    print <<EOH;
+
+SYNOPSIS:
+
+$progname help
+$progname -h
+    Print this help
+
+$progname verify
+    Check the file signature but do not run it
+
+$progname unpack [DESTINATION_DIRECTORY]
+    Verify and unpack the file but do not run it
+
+$progname
+$progname run
+    Run the file if it is signed by a recognized handle
+
+EOH
+    exit 0;
+}
+
+my %verbs = (
+    "" => 1,
+    "verify" => 1,
+    "run" => 1,
+    "unpack" => 1,
+    "" => 1,
+);
+
+UDie("Unknown command '$optverb'")
+    unless defined $verbs{$verb};
+
+open MFZ, "<", $progname or die "Can't read '$progname' as .mfz file: $!";
+
+my $firstLine = <MFZ>;
+
+die "Bad .mfz header in '$progname'"
+    unless defined $firstLine and $firstLine eq MFZRUN_HEADER;
+
+my $keydir = GetPublicKeyDir();
+
+my $u = new IO::Uncompress::Unzip(*MFZ)
+    or die "Cannot read $progname: $UnzipError";
+
+my @outerpaths = UnzipStreamToMemory($u);
+if (0) {
+    for my $op (@outerpaths) {
+        print $op->[0]." ".$op->[1]." ".$op->[2]." ".length($op->[3])."\n";
+    }
+}
+
+my ($zippath,$zipname,undef,$zipdata) = FindName(\@outerpaths,MFZ_ZIP_NAME,undef);
+die "Incorrect .mfz packing" unless defined($zipname);
+
+my ($sigpath,$signame,undef,$sigdata) = FindName(\@outerpaths,MFZ_SIG_NAME,undef);
+die ".mfz signature not found" unless defined($signame);
+
+my $u2 = new IO::Uncompress::Unzip(\$zipdata)
+    or die "Cannot read $zippath/$zipname: $UnzipError";
+
+my $destdir;
+if ($verb eq "unpack") {
+    my $optdir = NextArg();
+    if ($optdir =~ /^(.+)$/) {
+        $destdir = $1;  # Gah.
+    } else {
+        $destdir = $progname;
+        UDie("Specify where to unpack '$progname': Non-standard name (no .mfz extension)")
+            unless $destdir =~ /^(.+)[.]mfz$/;
+        $destdir = $1;
+        UDie("Specify where to unpack '$progname': Default location '$destdir' already exists")
+            if -e $destdir;
+    }
+}
+
+if (!defined $destdir) {
+    my $template = "mfzXXXXXXXX";
+    $destdir =
+        tempdir( $template,
+                 TMPDIR => 1,
+                 CLEANUP => ($verb ne "unpack")
+        );
+}
+
+my @innerpaths = UnzipStream($u2, $destdir);
+my ($pubkeypath,$pubkeyname) = FindName(\@innerpaths,MFZ_PUBKEY_NAME,undef);
+die "Incorrect .mfz packing - missing pubkey" unless defined($pubkeyname);
+my $fullpubkeypath = "$pubkeypath/$pubkeyname";
+
+my $fullpubstring = ReadWholeFile($fullpubkeypath);
+my ($pubhandle, $pubkey) = SplitHandleFromKey($fullpubstring);
+UDie("Bad format public key") unless defined $pubhandle;
+
+my $rsapub = Crypt::OpenSSL::RSA->new_public_key($pubkey);
+$rsapub->use_pkcs1_padding();
+$rsapub->use_sha512_hash();
+
+my $sig = decode_base64($sigdata);
+die "Invalid signature '$sigdata'/'$sig'" unless $rsapub->verify($zipdata, $sig);
+
+ValidatePubKey($pubhandle,$pubkey);
+my $fingerprint = ComputeFingerprintFromFullPublicKey($fullpubstring);
+
+print "SIGNED BY RECOGNIZED HANDLE: $pubhandle ($fingerprint)\n";
+if ($verb eq "verify") {
+    exit 0;
+}
+
+if ($verb eq "unpack") {
+    print "UNPACKED INTO: $destdir\n";
+    exit 0;
+}
+
+my @mfmargs;
+
+for my $prec (@innerpaths) {
+    my ($path, $name, $time) = @{$prec};
+    my $fullpath = "$path$name";
+    if ($name eq "libcue.so") {
+        push @mfmargs, "-ep", $fullpath;
+    } elsif ($name =~ /[.]mfs$/) {
+        push @mfmargs, "-cp", $fullpath;
+    } elsif ($name eq "args.txt") {
+        push @mfmargs, processArgs($fullpath);
+    } elsif ($name eq MFZ_PUBKEY_NAME) {
+        # Don't need a complaint about this one
+    } else {
+        print STDERR "Unrecognized/unused: $name\n";
+    }
+}
+my $cmd = "$binDir/mfms";
+unshift @mfmargs, $cmd;
+print "@mfmargs\n";
+my $result = system $cmd @mfmargs;
+sleep 1;
+exit $result;
+
+sub processArgs {
+    my $path = shift;
+    open ARGTXT, "<", $path or die "Can't open args: $!";
+    my $line = <ARGTXT>;
+    close ARGTXT or die "Can't close args: $!";
+    chomp($line);
+    die "Bad content in args.txt '$line'"
+        unless $line =~ /^\s*(:?[-=a-zA-Z0-9: ]*)\s*$/;
+    return split(/\s+/,$1);
+}
+
+sub CheckForPubKey {
+    my $handle = shift;
+    my $path = GetPublicKeyFile($handle);
+    if (-r $path) {
+        return ($path, ReadPublicKeyFile($handle));
+    }
+    return ($path);
+}
+
+sub SavePubKey {
+    my ($handle, $pubkey) = @_;
+    my $pubkeypath = GetPublicKeyFile($handle);
+    WriteWholeFile($pubkeypath, $pubkey);
+    return $pubkeypath;
+}
+
+sub ValidatePubKey {
+    my ($handle, $pubstring) = @_;
+    my ($path, $knownpub) = CheckForPubKey($handle);
+    if (defined($knownpub)) {
+        if ($pubstring ne $knownpub) {
+            print "\nERROR: '$handle' is known (found in '$path') but supplied public key doesn't match!($knownpub:$pubstring)\n";
+            exit 3;
+        }
+    } else {
+        my $decided = 0;
+        while (!$decided) {
+            print <<EOM;
+WARNING!
+WARNING: $progname signer handle '$handle' is not recognized!
+WARNING: Running untrusted code is dangerous!
+WARNING: You have three choices here:
+WARNING: Q - Quit running this program now (default, recommended)
+WARNING: R - Run the program anyway (caution!)
+WARNING: S - Save this handle as trusted and run the program now (caution!)
+WARNING!
+EOM
+            print "What do you want to do? [Qrs] ";
+            my $answer;
+            chomp($answer = <>);
+            $answer = 'q' if ($answer eq "");
+            $answer = lc($answer);
+            if ($answer eq 'q') {
+                print "Quit\n";
+                exit 1;
+            }
+            if ($answer eq 's') {
+                my $path = SavePubKey($handle, $pubstring);
+                print "Saved handle to $path\n";
+            }
+            if ($answer eq 's' || $answer eq 'r') {
+                $decided = 1;
+            } else {
+                print "Unrecognized reply; please choose 'q', 'r', or 's'\n";
+            }
+        }
+    }
+}

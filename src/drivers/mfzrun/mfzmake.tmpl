@@ -1,0 +1,231 @@
+#!/usr/bin/perl -Tw
+# -*- mode:perl -*-
+
+sub BEGIN {
+    # Seal us up a bit for living la vida tainted
+    $ENV{'PATH'} = "/bin:/usr/bin";
+    delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+}
+
+<<<INCLUDE:common.pl.inc>>>
+
+use Crypt::OpenSSL::RSA;
+
+use MIME::Base64  qw(encode_base64);
+
+use IO::Compress::Zip qw(zip $ZipError);
+
+sub NoVerb {
+    UDie("Missing command");
+}
+
+sub Help {
+    print <<EOH;
+
+mfzmake: Low-level tool to generate .mfz files
+
+SYNOPSIS: $0 COMMAND FILES..
+
+COMMAND FORMS:
+
+$0 help  [or]  -h  [or]  --help
+
+    Print this help and exit
+
+$0 version   [or]  -v
+
+    Print mfzmake version number and exit
+
+$0 make HANDLE MFZFILETOMAKE filetopack1 filetopack2..
+
+    Create a runnable mfz file named MFZFILETOMAKE containing the
+    supplied files (along with the HANDLE's public keyfile), signed by
+    HANDLE's private key.
+
+    Certain filetopack names and globs are recognized and handled
+    specially by mfzmake and/or mfzrun, including:
+
+       (1) FOO.so files    -> mapped to -ep FOO.so by mfzrun
+       (2) FOO.mfs files   -> mapped to -cp FOO.mfs by mfzrun
+       (3) FOO.ulam files  -> mapped nowhere by mfzrun (might be used by ulam for rebuilding)
+       (4) args.txt files  -> mapped to additional command line arguments by mfzrun
+       (4) other files     -> mapped nowhere by mfzrun (but accepted and packed by mfzmake)
+
+$0 keygen HANDLE
+
+EOH
+    exit(0);
+}
+
+my $verb = NextArg();
+NoVerb() unless defined $verb;
+Help() if $verb eq "help" or $verb eq "-h" or $verb eq "--help";
+VersionExit() if $verb eq "version" or $verb eq "-v";
+UDie("Unknown switch '$verb'") if $verb =~ /^-/;
+
+DoMake() if $verb eq "make";
+DoKeygen() if $verb eq "keygen";
+DoVerify() if $verb eq "verify";
+UDie("Unknown command '$verb'");
+
+############################3
+# DoMake
+
+sub DoMake {
+    my $handle = NextArg();
+    UntaintHandleIfLegal(\$handle)
+        or UDie("Bad handle '$handle'");
+
+    my $privkeyfile = GetPrivateKeyFile($handle);
+    $privkeyfile = ReadableFileOrDie("private key file", $privkeyfile);
+
+    my $pubkeyfile =  GetPublicKeyFile($handle);
+    $pubkeyfile = ReadableFileOrDie("public key file", $pubkeyfile);
+
+    my $pubkeydata = ReadWholeFile($pubkeyfile);
+
+    my $mfzfile = NextArg();
+    $mfzfile = WritableFileOrDie("MFZ file", $mfzfile);
+    $mfzfile =~ /[.]mfz$/ or UDie("Supplied MFZ filename '$mfzfile' doesn't end in '.mfz'");
+
+    my @files = RestOfArgs();
+    scalar(@files) or UDie("No files to pack?");
+
+    for my $file (@files) {
+        ReadableFileOrDie("file to pack", $file);
+    }
+    my $inner = MakeInnerZip($pubkeydata, @files);
+
+    my $signed = SignString($privkeyfile, $inner);
+#    WriteWholeFile($mfzfile,MFZRUN_HEADER.$signed.$inner,0644);
+    my $outer = MakeOuterZip($signed,$inner);
+    WriteWholeFile($mfzfile,MFZRUN_HEADER.$outer,0644);
+    print "Wrote '$mfzfile'\n";
+    exit 0;
+}
+
+############################3
+
+sub DoVerify {
+    my $mfzpath = NextArg();
+    IDie "IMPLEMENT ME";
+}
+
+sub DoKeygen {
+    my $handle = NextArg();
+    UntaintHandleIfLegal(\$handle)
+        or UDie("Bad handle '$handle'");
+
+    my $privkeyfile = GetPrivateKeyFile($handle);
+    $privkeyfile = WritableFileOrDie("private key file", $privkeyfile);
+
+    my $pubkeyfile =  GetPublicKeyFile($handle);
+    $pubkeyfile = WritableFileOrDie("public key file", $pubkeyfile);
+
+    my $errors = 0;
+    if (-e $privkeyfile) {
+        ++$errors;
+        print STDERR "ERROR: A private key file for '$handle' already exists ($privkeyfile)\n";
+    }
+    if (-e $pubkeyfile) {
+        ++$errors;
+        print STDERR "ERROR: A public key file for '$handle' already exists ($pubkeyfile)\n";
+    }
+    if ($errors > 0) {
+        my $desc = "that file";
+        if ($errors > 1) {
+            $desc = "those files";
+        }
+        print STDERR "ERROR: To generate a new key pair for '$handle', first remove $desc\n";
+        exit 4;
+    }
+
+    my $rsa = Crypt::OpenSSL::RSA->generate_key(1024);
+
+    my $privkey =  $rsa->get_private_key_string();
+    my $fullprivkey = JoinHandleToKey($handle,$privkey);
+    WriteWholeFile($privkeyfile, $fullprivkey, 0600);
+
+    my $pubkey = $rsa->get_public_key_string();
+    my $fullpubkey = JoinHandleToKey($handle,$pubkey);
+    WriteWholeFile($pubkeyfile, $fullpubkey);
+
+    # calculate digest from string/buffer
+    my $fingerprint = ComputeFingerprintFromFullPublicKey($fullpubkey);
+
+    print "Generated private key for '$handle' into $privkeyfile\n";
+    print "Generated public key for '$handle' into $pubkeyfile\n";
+    print "Handle: $handle ($fingerprint)\n";
+    exit 0;
+}
+
+
+############################
+# Internal routines
+
+sub MakeInnerZip {
+    my ($pubkeydata,@files) = @_;
+    my $compressedoutput;
+    my $z = new IO::Compress::Zip
+        \$compressedoutput,
+        Name          => MFZ_PUBKEY_NAME,
+        CanonicalName => 1,
+        BinModeIn     => 1
+        or IDie("Zip init failed for inner: $ZipError");
+    $z->print ($pubkeydata);
+
+    for my $file (@files) {
+        UDie("'$file' is handled automatically, cannot pack it explicitly")
+            if $file eq MFZ_PUBKEY_NAME;
+        $z->newStream(
+            Name          => $file,
+            CanonicalName => 1,
+            BinModeIn     => 1,
+            ExtAttr       => 0666 << 16)
+            or die "Zip reinit failed on '$file': $ZipError\n";
+
+        open (my $fh, "<", $file) or UDie("Can't read '$file': $!");
+        while (<$fh>) { $z->print ($_); }
+        close $fh or IDie("Failed closing '$file': $!");
+    }
+
+    close $z;
+    return $compressedoutput;
+}
+
+sub MakeOuterZip {
+    my ($signature,$inner) = @_;
+    my $compressedoutput;
+    my $z = new IO::Compress::Zip
+        \$compressedoutput,
+        Name          => MFZ_SIG_NAME,
+        CanonicalName => 1,
+        BinModeIn     => 1
+        or IDie("Zip init failed for outer: $ZipError");
+    $z->print($signature);
+
+    $z->newStream(
+        Name          => MFZ_ZIP_NAME,
+        CanonicalName => 1,
+        BinModeIn     => 1,
+        ExtAttr       => 0666 << 16)
+        or die "Zip reinit failed for outer: $ZipError\n";
+    $z->print($inner);
+
+    close $z;
+    return $compressedoutput;
+}
+
+sub SignString {
+    my ($privkeyfile, $datatosign) = @_;
+
+    my $keystring = ReadWholeFile( $privkeyfile );
+    my $privatekey = Crypt::OpenSSL::RSA->new_private_key($keystring);
+    $privatekey->use_pkcs1_padding();
+    $privatekey->use_sha512_hash();
+    my $signature = $privatekey->sign($datatosign);
+    return encode_base64($signature, '');
+}
+
+## REACHED EOF
+exit 2;

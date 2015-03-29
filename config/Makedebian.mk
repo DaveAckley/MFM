@@ -2,6 +2,7 @@
 DEB_PROGRAMS_TO_INSTALL += mfmcl mfmcl_s mfmcl_m mfmcl_l
 DEB_PROGRAMS_TO_INSTALL += mfms mfms_s mfms_m mfms_l
 DEB_PROGRAMS_TO_INSTALL += mfmtest
+DEB_PROGRAMS_TO_INSTALL += mfzmake mfzrun
 DEB_PROGRAMS_PATHS_TO_INSTALL := $(DEB_PROGRAMS_TO_INSTALL:%=bin/%)
 DEB_MFM_BINDIR := $(DESTDIR)/usr/bin
 DEB_MFM_RESDIR := $(DESTDIR)/usr/share/mfm/res
