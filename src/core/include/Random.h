@@ -50,7 +50,10 @@ namespace MFM
      * Creates a new Random instance that is ready to be used.
      */
     Random()
-    { }
+    {
+      static u32 counter = 0;
+      SetSeed(++counter);
+    }
 
     /**
      * Creates a new Random instance, initialized using a specified
@@ -124,11 +127,7 @@ namespace MFM
     template <int P>
     bool OddsOf(FXP<P> thisMany, FXP<P> outOfThisMany)
     {
-      if (outOfThisMany <= 0)
-      {
-	FAIL(ILLEGAL_ARGUMENT);
-      }
-
+      MFM_API_ASSERT_ARG(outOfThisMany > 0);
       if (thisMany <= 0)
       {
 	return false;
@@ -180,8 +179,7 @@ namespace MFM
   {
     if (nbits >= 32)
     {
-      if (nbits > 32)
-        FAIL(ILLEGAL_ARGUMENT);
+      MFM_API_ASSERT_ARG(nbits==32);
       return Create();
     }
 
@@ -201,8 +199,7 @@ namespace MFM
   {
     if (maxval<=1)
     {
-      if (maxval==0)
-        FAIL(ILLEGAL_ARGUMENT);
+      MFM_API_ASSERT_ARG(maxval==1);
       return 0;
     }
     u32 nbits = _getLogBase2(maxval)+1; // +1: log2(2) == 1 -> need 2 bits
@@ -222,12 +219,80 @@ namespace MFM
 
   inline s32 Random::Between(s32 min, s32 max)
   {
-    if (max<min)
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
+    MFM_API_ASSERT_ARG(max>=min);
     u32 range = (u32) (max-min+1);
     return ((s32) Create(range)) + min;
   }
+
+  template <class ITEM_TYPE, u32 SIZE>
+  void Shuffle(Random & random, ITEM_TYPE array[SIZE])
+  {
+    for (u32 i = 0; i < SIZE; ++i)
+    {
+      u32 j = random.Between(i, SIZE - 1);
+      ITEM_TYPE temp = array[i];
+      array[i] = array[j];
+      array[j] = temp;
+    }
+  }
+
+
+  /**
+   * A shuffling iterator from 0..MAX-1, to reduce
+   * order-of-consideration bias.
+   */
+  template <u32 MAX,u32 BIT_ODDS=5>
+  class RandomIterator
+  {
+    u32 m_indices[MAX];
+    u32 m_index;
+  public:
+    RandomIterator()
+      : m_index(0)
+    {
+      for (u32 i = 0; i < MAX; ++i) m_indices[i] = i;
+    }
+
+    bool ShuffleOrReset(Random & random)
+    {
+      bool ret = random.CreateBits(BIT_ODDS)==0;
+      if (ret)
+        Shuffle(random);
+      else
+        Reset();
+      return ret;
+    }
+
+    void Shuffle(Random & random)
+    {
+      for (u32 i = 0; i < MAX; ++i)
+      {
+        u32 j = random.Between(i, MAX - 1);
+        u32 temp = m_indices[i];
+        m_indices[i] = m_indices[j];
+        m_indices[j] = temp;
+      }
+
+      Reset();
+    }
+
+    void Reset()
+    {
+      m_index = 0;
+    }
+
+    u32 Next()
+    {
+      if (m_index >= MAX) FAIL(OUT_OF_BOUNDS);
+      return m_indices[m_index++];
+    }
+
+    bool HasNext() const
+    {
+      return m_index < MAX;
+    }
+
+  };
+
 } /* namespace MFM */
 #endif
