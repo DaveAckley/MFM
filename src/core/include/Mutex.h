@@ -66,17 +66,12 @@ namespace MFM
 
     void CondWait(pthread_cond_t & condvar)
     {
-      if (pthread_cond_wait(&condvar, &m_lock))
-      {
-        FAIL(LOCK_FAILURE);
-      }
+      MFM_API_ASSERT(!pthread_cond_wait(&condvar, &m_lock), LOCK_FAILURE);
 
       // The signal gave us back the lock without going through
       // Mutex::Lock; simulate its effects
-      if (m_locked)
-      {
-        FAIL(LOCK_FAILURE);
-      }
+      MFM_API_ASSERT(!m_locked, LOCK_FAILURE);
+
       m_threadId = pthread_self();
       m_locked = true;
     }
@@ -117,18 +112,12 @@ namespace MFM
 
       Predicate(Mutex & mutex) : m_mutex(mutex)
       {
-        if (pthread_cond_init(&m_condvar, NULL))
-        {
-          FAIL(LOCK_FAILURE);
-        }
+        MFM_API_ASSERT(!pthread_cond_init(&m_condvar, NULL), LOCK_FAILURE);
       }
 
       ~Predicate()
       {
-        if (pthread_cond_destroy(&m_condvar))
-        {
-          FAIL(LOCK_FAILURE);
-        }
+        MFM_API_ASSERT(!pthread_cond_destroy(&m_condvar), LOCK_FAILURE);
       }
 
       u32 GetWakeupsThisWait() const
@@ -145,10 +134,7 @@ namespace MFM
         while (!EvaluatePredicate())
         {
           // If the predicate's not true, the precondition must be
-          if (!EvaluatePrecondition())
-          {
-            FAIL(LOCK_FAILURE);
-          }
+          MFM_API_ASSERT(EvaluatePrecondition(), LOCK_FAILURE);
           m_mutex.CondWait(m_condvar);
           ++m_wakeupsThisWait;
         }
@@ -157,10 +143,7 @@ namespace MFM
       void SignalCondition()
       {
         m_mutex.AssertIHoldTheLock();
-        if (pthread_cond_signal(&m_condvar))
-        {
-          FAIL(LOCK_FAILURE);
-        }
+        MFM_API_ASSERT(!pthread_cond_signal(&m_condvar), LOCK_FAILURE);
       }
     };
 
@@ -174,20 +157,9 @@ namespace MFM
       m_locked(false)
     {
 
-      if (pthread_mutexattr_init(&m_attr))
-      {
-        FAIL(LOCK_FAILURE);
-      }
-
-      if (pthread_mutexattr_settype(&m_attr, MFM_MUTEX_TYPE))
-      {
-        FAIL(LOCK_FAILURE);
-      }
-
-      if (pthread_mutex_init(&m_lock, &m_attr))
-      {
-        FAIL(LOCK_FAILURE);
-      }
+      MFM_API_ASSERT(!pthread_mutexattr_init(&m_attr), LOCK_FAILURE);
+      MFM_API_ASSERT(!pthread_mutexattr_settype(&m_attr, MFM_MUTEX_TYPE), LOCK_FAILURE);
+      MFM_API_ASSERT(!pthread_mutex_init(&m_lock, &m_attr), LOCK_FAILURE);
     }
 
     /**
@@ -199,20 +171,9 @@ namespace MFM
      */
     ~Mutex()
     {
-      if (m_locked)
-      {
-        FAIL(LOCK_FAILURE);
-      }
-
-      if (pthread_mutex_destroy(&m_lock))
-      {
-        FAIL(LOCK_FAILURE);
-      }
-
-      if (pthread_mutexattr_destroy(&m_attr))
-      {
-        FAIL(LOCK_FAILURE);
-      }
+      MFM_API_ASSERT(!m_locked, LOCK_FAILURE);
+      MFM_API_ASSERT(!pthread_mutex_destroy(&m_lock), LOCK_FAILURE);
+      MFM_API_ASSERT(!pthread_mutexattr_destroy(&m_attr), LOCK_FAILURE);
     }
 
     /** Attempt to lock the underlying mutex, without blocking
@@ -224,10 +185,7 @@ namespace MFM
      */
     bool TryLock()
     {
-      if (m_locked && pthread_equal(m_threadId, pthread_self()))
-      {
-        FAIL(LOCK_FAILURE);
-      }
+      MFM_API_ASSERT(!m_locked || !pthread_equal(m_threadId, pthread_self()), LOCK_FAILURE);
 
       int status = pthread_mutex_trylock(&m_lock);
 
@@ -237,9 +195,7 @@ namespace MFM
         return true;
       }
 
-      if (status != EBUSY)
-        FAIL(LOCK_FAILURE);
-
+      MFM_API_ASSERT(status == EBUSY, LOCK_FAILURE);
       return false;
     }
 
@@ -252,15 +208,8 @@ namespace MFM
     void Lock()
     {
       int status = pthread_mutex_lock(&m_lock);
-      if (status != 0)
-      {
-        FAIL(LOCK_FAILURE);
-      }
-
-      if (m_locked && pthread_equal(m_threadId, pthread_self()))
-      {
-        FAIL(LOCK_FAILURE);
-      }
+      MFM_API_ASSERT(status == 0, LOCK_FAILURE);
+      MFM_API_ASSERT(!m_locked || !pthread_equal(m_threadId, pthread_self()), LOCK_FAILURE);
 
       // Update threadid before declaring locked so, for example, the
       // second condition in this method can't trigger on a possibly
@@ -278,15 +227,8 @@ namespace MFM
      */
     void AssertIHoldTheLock()
     {
-      if (!m_locked)
-      {
-        FAIL(LOCK_FAILURE);
-      }
-
-      if (!pthread_equal(m_threadId, pthread_self()))
-      {
-        FAIL(LOCK_FAILURE);
-      }
+      MFM_API_ASSERT(m_locked, LOCK_FAILURE);
+      MFM_API_ASSERT(pthread_equal(m_threadId, pthread_self()), LOCK_FAILURE);
     }
 
     /**
@@ -302,10 +244,7 @@ namespace MFM
 
       m_locked = false;
       m_threadId = 0;
-      if (pthread_mutex_unlock(&m_lock))
-      {
-        FAIL(LOCK_FAILURE);
-      }
+      MFM_API_ASSERT(!pthread_mutex_unlock(&m_lock), LOCK_FAILURE);
     }
 
     /**
@@ -325,10 +264,7 @@ namespace MFM
         return false;
       }
 
-      if (pthread_equal(m_threadId, pthread_self()))
-      {
-        FAIL(LOCK_FAILURE);
-      }
+      MFM_API_ASSERT(!pthread_equal(m_threadId, pthread_self()), LOCK_FAILURE);
 
       return true;
     }

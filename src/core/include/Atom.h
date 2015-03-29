@@ -265,10 +265,7 @@ namespace MFM
       u32 len = strlen(hexStr);
       u32 bitLen = len * 4;
 
-      if(bitLen > BPA)
-      {
-	FAIL(ILLEGAL_ARGUMENT);
-      }
+      MFM_API_ASSERT_ARG(bitLen <= BPA);
 
       m_bits.Clear();
 

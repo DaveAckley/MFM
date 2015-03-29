@@ -84,10 +84,7 @@ namespace MFM
 
     void AssertConnected() const
     {
-      if (!m_channel)
-      {
-        FAIL(ILLEGAL_STATE);
-      }
+      MFM_API_ASSERT_STATE(m_channel);
     }
 
     bool IsConnected() const
@@ -138,19 +135,13 @@ namespace MFM
     void SetOwner(s32 tag)
     {
       AssertConnected();
-      if ((m_owner < 0) == (tag < 0))
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
+      MFM_API_ASSERT_ARG((m_owner < 0) != (tag < 0));
       m_owner = tag;
     }
 
     void ClaimChannelEnd(AbstractChannel& channel, bool onSideA)
     {
-      if (m_channel != 0)
-      {
-        FAIL(ILLEGAL_STATE);
-      }
+      MFM_API_ASSERT_STATE(m_channel == 0);
       m_channel = &channel;
       m_onSideA = onSideA;
     }

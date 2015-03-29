@@ -98,8 +98,7 @@ namespace MFM {
 
     void SetType(u32 type) {
 
-      if (type >= P3_TYPE_COUNT)
-        FAIL(ILLEGAL_ARGUMENT);
+      MFM_API_ASSERT_ARG(type < P3_TYPE_COUNT);
 
       // Generate ECC and store all in header
       AFFixedHeader::Write(this->m_bits,Parity2D_4x4::Add2DParity(type));
@@ -111,11 +110,8 @@ namespace MFM {
     {
       COMPILATION_REQUIREMENT< 32 <= BITS-1 >();
 
-      if (z1 != 0 || z2 != 0)
-        FAIL(ILLEGAL_ARGUMENT);
-
-      if (stateBits > P3_STATE_BITS_LEN)
-        FAIL(OUT_OF_ROOM);
+      MFM_API_ASSERT_ARG(z1 == 0 && z2 == 0);
+      MFM_API_ASSERT(stateBits <= P3_STATE_BITS_LEN, OUT_OF_ROOM);
 
       SetType(type);
     }
@@ -194,8 +190,7 @@ namespace MFM {
      */
     u32 GetStateField(u32 stateIndex, u32 stateWidth) const
     {
-      if (stateWidth > P3_STATE_BITS_LEN)
-        FAIL(ILLEGAL_ARGUMENT);
+      MFM_API_ASSERT_ARG(stateWidth <= P3_STATE_BITS_LEN);
       return this->m_bits.Read(P3_STATE_BITS_POS + stateIndex, stateWidth);
     }
 
@@ -206,8 +201,7 @@ namespace MFM {
      */
     void SetStateField(u32 stateIndex, u32 stateWidth, u32 value)
     {
-      if (stateWidth > P3_STATE_BITS_LEN)
-        FAIL(ILLEGAL_ARGUMENT);
+      MFM_API_ASSERT_ARG(stateWidth <= P3_STATE_BITS_LEN);
       return this->m_bits.Write(P3_STATE_BITS_POS + stateIndex, stateWidth, value);
     }
 

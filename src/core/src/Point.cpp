@@ -4,19 +4,13 @@ namespace MFM
 {
   UPoint MakeUnsigned(const SPoint & spoint)
   {
-    if (!CanMakeUnsigned(spoint))
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
+    MFM_API_ASSERT_ARG(CanMakeUnsigned(spoint));
     return UPoint((u32) spoint.GetX(), (u32) spoint.GetY());
   }
 
   SPoint MakeSigned(const UPoint & upoint)
   {
-    if (!CanMakeSigned(upoint))
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
+    MFM_API_ASSERT_ARG(CanMakeSigned(upoint));
     return SPoint((s32) upoint.GetX(), (s32) upoint.GetY());
   }
 

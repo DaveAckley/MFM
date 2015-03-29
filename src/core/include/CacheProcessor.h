@@ -397,10 +397,7 @@ namespace MFM {
     void Unlock()
     {
       bool ret = GetLonglivedLock().Unlock(this);
-      if (!ret)
-      {
-        FAIL(LOCK_FAILURE);
-      }
+      MFM_API_ASSERT(ret, LOCK_FAILURE);
       m_centerRegion = (Dir) -1;
     }
 
@@ -411,10 +408,7 @@ namespace MFM {
 
     void ClaimCacheProcessor(Tile<EC>& tile, AbstractChannel& channel, LonglivedLock & lock, Dir toCache)
     {
-      if (m_tile || m_longlivedLock)
-      {
-        FAIL(ILLEGAL_STATE);
-      }
+      MFM_API_ASSERT_STATE(!m_tile && !m_longlivedLock);
 
       m_tile = &tile;
       m_longlivedLock = &lock;
@@ -430,10 +424,7 @@ namespace MFM {
 
     void AssertConnected() const
     {
-      if (!m_tile || !m_longlivedLock)
-      {
-        FAIL(ILLEGAL_STATE);
-      }
+      MFM_API_ASSERT_STATE(m_tile && m_longlivedLock);
     }
 
     /**

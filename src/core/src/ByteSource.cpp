@@ -60,8 +60,7 @@ namespace MFM {
     }
 
     // Here to read in base 2..36
-    if (code < 2 || code > 36)
-      FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_ARG(code >= 2 && code <= 36);
 
     // Skip leading spaces (only, not other 'whitespace')
     do {
@@ -110,8 +109,7 @@ namespace MFM {
   bool ByteSource::Scan(ByteSerializable & byteSerializable, s32 argument)
   {
     ByteSerializable::Result res = byteSerializable.ReadFrom(*this, argument);
-    if (res == ByteSerializable::UNSUPPORTED)
-      FAIL(UNSUPPORTED_OPERATION);
+    MFM_API_ASSERT(res != ByteSerializable::UNSUPPORTED, UNSUPPORTED_OPERATION);
     return res == ByteSerializable::SUCCESS;
   }
 
@@ -149,11 +147,8 @@ namespace MFM {
 
   s32 ByteSource::ScanSetFormat(ByteSink & result, const char * & setSpec)
   {
-    if (!setSpec)
-      FAIL(NULL_POINTER);
-
-    if (*setSpec++ != '[')
-      FAIL(BAD_FORMAT_ARG);
+    MFM_API_ASSERT_NONNULL(setSpec);
+    MFM_API_ASSERT(*setSpec++ == '[', BAD_FORMAT_ARG);
 
     typedef BitVector<256> CharMap;
     CharMap map;
@@ -183,8 +178,7 @@ namespace MFM {
         if (prevCh < 0 || next == ']')     // Then '-' is not special
           map.SetBit((u32) ch);
         else {
-          if (prevCh > next)
-            FAIL(BAD_FORMAT_ARG);
+          MFM_API_ASSERT(prevCh <= next, BAD_FORMAT_ARG);
           map.SetBits(prevCh, next - prevCh + 1);
 
           prevCh = next;  // Apparently [a-b-e] matches 'c', so..
@@ -194,8 +188,7 @@ namespace MFM {
       } else map.SetBit((u32) ch);
     }
 
-    if (!complete)
-      FAIL(BAD_FORMAT_ARG);
+    MFM_API_ASSERT(complete, BAD_FORMAT_ARG);
 
     s32 count = 0;
     s32 ch;

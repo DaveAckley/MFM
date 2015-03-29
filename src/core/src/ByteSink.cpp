@@ -30,8 +30,7 @@ namespace MFM {
  */
   void ByteSink::Print(const char * str, s32 fieldWidth, u8 padChar)
   {
-    if (!str)
-      FAIL(NULL_POINTER);
+    MFM_API_ASSERT_NONNULL(str);
 
     s32 len = strlen(str);
 
@@ -59,8 +58,7 @@ namespace MFM {
 
   void ByteSink::Print(const u8 * str, u32 len, s32 fieldWidth, u8 padChar)
   {
-    if (!str)
-      FAIL(NULL_POINTER);
+    MFM_API_ASSERT_NONNULL(str);
 
     while (fieldWidth > (s32) len) {
       WriteByte(padChar);

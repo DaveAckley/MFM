@@ -60,10 +60,7 @@ namespace MFM
   template <class EC>
   void CacheProcessor<EC>::StartShipping()
   {
-    if (m_cpState != LOADING)
-    {
-      FAIL(ILLEGAL_STATE);
-    }
+    MFM_API_ASSERT_STATE(m_cpState == LOADING);
 
     // Now it's about shipping
     SetStateInternal(SHIPPING);
@@ -78,11 +75,7 @@ namespace MFM
   template <class EC>
   void CacheProcessor<EC>::StartLoading(const SPoint & eventCenter)
   {
-    if (m_cpState != ACTIVE)
-    {
-      FAIL(ILLEGAL_STATE);
-    }
-
+    MFM_API_ASSERT_STATE(m_cpState == ACTIVE);
     SetStateInternal(LOADING);
     m_eventCenter = eventCenter;
     m_toSendCount = 0;
@@ -92,10 +85,7 @@ namespace MFM
   template <class EC>
   void CacheProcessor<EC>::MaybeSendAtom(const T & atom, bool changed, u16 siteNumber)
   {
-    if (m_cpState != LOADING)
-    {
-      FAIL(ILLEGAL_STATE);
-    }
+    MFM_API_ASSERT_STATE(m_cpState == LOADING);
 
     // If far side can't see it, done
     if (!IsSiteNumberVisible(siteNumber))
@@ -114,10 +104,7 @@ namespace MFM
     }
 
     // Time to pack this puppy up for travel
-    if (m_toSendCount >= SITE_COUNT)
-    {
-      FAIL(ILLEGAL_STATE);  // You say ship more than a whole window?
-    }
+    MFM_API_ASSERT_STATE(m_toSendCount < SITE_COUNT);  // You say ship a whole window or more?
 
     MFM_LOG_DBG7(("CP %s %s [%s] (%d,%d) send #%d (%d,%d)",
                   m_tile->GetLabel(),
@@ -140,10 +127,7 @@ namespace MFM
   template <class EC>
   bool CacheProcessor<EC>::ShipBufferAsPacket(PacketBuffer & pb)
   {
-    if (pb.HasOverflowed())
-    {
-      FAIL(OUT_OF_ROOM);
-    }
+    MFM_API_ASSERT(!pb.HasOverflowed(), OUT_OF_ROOM);
 
     u32 plen = pb.GetLength();
     if (m_channelEnd.CanWrite() <= plen) // Total write will be plen+1
@@ -160,10 +144,7 @@ namespace MFM
   template <class EC>
   void CacheProcessor<EC>::BeginUpdate(SPoint onCenter)
   {
-    if (m_cpState != IDLE)
-    {
-      FAIL(ILLEGAL_STATE);
-    }
+    MFM_API_ASSERT_STATE(m_cpState == IDLE);
 
     SetStateInternal(PASSIVE);
     m_eventCenter = onCenter;
@@ -180,20 +161,9 @@ namespace MFM
   template <class EC>
   void CacheProcessor<EC>::ReceiveAtom(bool isDifferent, s32 siteNumber, const T & inboundAtom)
   {
-    if (m_cpState != PASSIVE || m_tile == 0)
-    {
-      FAIL(ILLEGAL_STATE);
-    }
-
-    if (siteNumber < 0 || siteNumber >= SITE_COUNT)
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
-
-    if (!IsSiteNumberVisible((u16) siteNumber))
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
+    MFM_API_ASSERT_STATE(m_cpState == PASSIVE && m_tile != 0);
+    MFM_API_ASSERT_ARG(siteNumber >= 0 && siteNumber < SITE_COUNT);
+    MFM_API_ASSERT_ARG(IsSiteNumberVisible((u16) siteNumber));
 
     const MDist<R> & md = MDist<R>::get();
     const SPoint soffset = md.GetPoint(siteNumber);
@@ -249,10 +219,7 @@ namespace MFM
   template <class EC>
   void CacheProcessor<EC>::ReceiveUpdateEnd()
   {
-    if (m_cpState != PASSIVE)
-    {
-      FAIL(ILLEGAL_STATE);
-    }
+    MFM_API_ASSERT_STATE(m_cpState == PASSIVE);
     MFM_LOG_DBG7(("Replying to UE, %d consistent",
                   m_consistentAtomCount));
     PacketIO pbuffer;
@@ -263,10 +230,8 @@ namespace MFM
   template <class EC>
   void CacheProcessor<EC>::ReceiveReply(u32 consistentCount)
   {
-    if (m_cpState != RECEIVING)
-    {
-      FAIL(ILLEGAL_STATE);
-    }
+    MFM_API_ASSERT_STATE(m_cpState == RECEIVING);
+
     if (consistentCount != m_toSendCount)
     {
       ReportCheckFailure();
@@ -317,20 +282,14 @@ namespace MFM
   template <class EC>
   void CacheProcessor<EC>::Activate()
   {
-    if (m_cpState != IDLE)
-    {
-      FAIL(ILLEGAL_STATE);
-    }
+    MFM_API_ASSERT_STATE(m_cpState == IDLE);
     SetStateInternal(ACTIVE);
   }
 
   template <class EC>
   void CacheProcessor<EC>::SetIdle()
   {
-    if (m_cpState == IDLE)
-    {
-      FAIL(ILLEGAL_STATE);
-    }
+    MFM_API_ASSERT_STATE(m_cpState != IDLE);
     SetStateInternal(IDLE);
   }
 
@@ -404,10 +363,7 @@ namespace MFM
   template <class EC>
   void CacheProcessor<EC>::Unblock()
   {
-    if (m_cpState != BLOCKING)
-    {
-      FAIL(ILLEGAL_STATE);
-    }
+    MFM_API_ASSERT_STATE(m_cpState == BLOCKING);
 
     SetIdle();
     m_centerRegion = (Dir) -1;
@@ -417,10 +373,7 @@ namespace MFM
   template <class EC>
   CacheProcessor<EC> & CacheProcessor<EC>::GetSibling(Dir forDirection)
   {
-    if (!m_tile)
-    {
-      FAIL(ILLEGAL_STATE);
-    }
+    MFM_API_ASSERT_STATE(m_tile);
 
     return m_tile->GetCacheProcessor(forDirection);
   }

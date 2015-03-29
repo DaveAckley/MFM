@@ -142,11 +142,8 @@ namespace MFM {
     if (length == 0)
       return;
 
-    if (startIdx+length > BITS)
-      FAIL(ILLEGAL_ARGUMENT);
-
-    if (length > sizeof(BitUnitType) * CHAR_BIT)
-      FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_ARG(startIdx + length <= BITS);
+    MFM_API_ASSERT_ARG(length <= sizeof(BitUnitType) * CHAR_BIT);
 
     /* Since we're writing no more than 32 bits into an array of 32 bit
        words, we can't need to touch more than two of them.  So unroll
@@ -170,11 +167,8 @@ namespace MFM {
     if (length == 0)
       return 0;
 
-    if (startIdx+length > BITS)
-      FAIL(ILLEGAL_ARGUMENT);
-
-    if (length > sizeof(BitUnitType) * CHAR_BIT)
-      FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_ARG(startIdx + length <= BITS);
+    MFM_API_ASSERT_ARG(length <= sizeof(BitUnitType) * CHAR_BIT);
 
     /* See Write(u32,u32,u32) for theory, such as it is */
 

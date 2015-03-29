@@ -86,10 +86,7 @@ namespace MFM
      */
     void Unread()
     {
-      if (m_unread)
-      {
-	FAIL(ILLEGAL_STATE);
-      }
+      MFM_API_ASSERT_STATE(!m_unread);
       m_unread = true;
       --m_read;
     }

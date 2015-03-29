@@ -7,8 +7,7 @@ namespace MFM {
 
   UUID::UUID(ByteSource & bs)
   {
-    if (!ReadFrom(bs))
-      FAIL(ILLEGAL_INPUT);
+    MFM_API_ASSERT(ReadFrom(bs), ILLEGAL_INPUT);
   }
 
   bool UUID::CompatibleLabel(const UUID & other) const

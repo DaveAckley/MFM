@@ -12,14 +12,10 @@ namespace MFM
       m_name(name),
       m_description(description)
   {
-    if (!m_tag || !m_name || !m_description)
-    {
-      FAIL(NULL_POINTER);
-    }
-    if (!strlen(m_tag) || !strlen(m_name))
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
+    MFM_API_ASSERT_NONNULL(m_tag);
+    MFM_API_ASSERT_NONNULL(m_name);
+    MFM_API_ASSERT_NONNULL(m_description);
+    MFM_API_ASSERT_ARG(strlen(m_tag) > 0 && strlen(m_name) > 0);
   }
 
   template <class EC>

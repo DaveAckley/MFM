@@ -75,16 +75,6 @@ namespace MFM {
     template <class TC>
     static u32 ComputeFullConfigurationCode() {
       FAIL(DEPRECATED);
-#if 0
-      u32 val = 0;
-      val = (val<<4) + TC::EVENT_CONFIG::ATOM_CONFIG::ATOM_CATEGORY;
-      val = (val<<4) + TC::EVENT_CONFIG::EVENT_WINDOW_RADIUS;
-      val = (val<<4) + TC::EVENT_CONFIG::ELEMENT_TABLE_BITS;
-      val = (val<<4) + TC::EVENT_CONFIG::ELEMENT_DATA_SLOTS;
-      val = (val<<8) + 0; // XXX TILE_SIDE is no longer static!
-      val = (val<<8) + TC::EVENT_CONFIG::ATOM_CONFIG::BITS_PER_ATOM;
-      return val;
-#endif
     }
 
     /**
@@ -117,10 +107,8 @@ namespace MFM {
         m_uuidVersion(API_VERSION),
         m_hexDate(decDate), m_hexTime(decTime)
     {
-      if (!label)
-        FAIL(NULL_POINTER);
-      if (!LegalLabel(label))
-        FAIL(ILLEGAL_ARGUMENT);
+      MFM_API_ASSERT_NONNULL(label);
+      MFM_API_ASSERT_ARG(LegalLabel(label));
 
       m_label.Reset();
       m_label.Print(label);

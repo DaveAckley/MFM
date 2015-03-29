@@ -641,7 +641,7 @@ namespace MFM {
 
   inline s32 _BinOpDivideInt32(s32 vala, s32 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     u32 mask = _GetNOnes32(bitwidth);
     s32 extvala = _SignExtend32(vala & mask, bitwidth);
     s32	extvalb = _SignExtend32(valb & mask, bitwidth);
@@ -650,7 +650,7 @@ namespace MFM {
 
   inline s64 _BinOpDivideInt64(s64 vala, s64 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     u64 mask = _GetNOnes64(bitwidth);
     s64 extvala = _SignExtend64(vala & mask, bitwidth);
     s64	extvalb = _SignExtend64(valb & mask, bitwidth);
@@ -659,7 +659,7 @@ namespace MFM {
 
   inline s32 _BinOpModInt32(s32 vala, s32 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     u32 mask = _GetNOnes32(bitwidth);
     s32 extvala = _SignExtend32(vala & mask, bitwidth);
     s32	extvalb = _SignExtend32(valb & mask, bitwidth);
@@ -668,7 +668,7 @@ namespace MFM {
 
   inline s64 _BinOpModInt64(s64 vala, s64 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     u64 mask = _GetNOnes64(bitwidth);
     s64 extvala = _SignExtend64(vala & mask, bitwidth);
     s64	extvalb = _SignExtend64(valb & mask, bitwidth);
@@ -714,28 +714,28 @@ namespace MFM {
 
   inline u32 _BinOpDivideUnsigned32(u32 vala, u32 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     u32 mask = _GetNOnes32(bitwidth);
     return _Unsigned32ToUnsigned32((vala & mask) / (valb & mask), bitwidth, bitwidth);
   }
 
   inline u64 _BinOpDivideUnsigned64(u64 vala, u64 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     u64 mask = _GetNOnes64(bitwidth);
     return _Unsigned64ToUnsigned64((vala & mask) / (valb & mask), bitwidth, bitwidth);
   }
 
   inline u32 _BinOpModUnsigned32(u32 vala, u32 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     u32 mask = _GetNOnes32(bitwidth);
     return _Unsigned32ToUnsigned32((vala & mask) % (valb & mask), bitwidth, bitwidth);
   }
 
   inline u64 _BinOpModUnsigned64(u64 vala, u64 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     u64 mask = _GetNOnes64(bitwidth);
     return _Unsigned64ToUnsigned64((vala & mask) % (valb & mask), bitwidth, bitwidth);
   }
@@ -786,7 +786,7 @@ namespace MFM {
 
   inline u32 _BinOpDivideUnary32(u32 vala, u32 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     s32 binvala = _Unary32ToInt32(vala, bitwidth, 32);
     s32 binvalb = _Unary32ToInt32(valb, bitwidth, 32);
     return _Int32ToUnary32(binvala / binvalb, 32, bitwidth);
@@ -794,7 +794,7 @@ namespace MFM {
 
   inline u64 _BinOpDivideUnary64(u64 vala, u64 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     s64 binvala = _Unary64ToInt64(vala, bitwidth, 64);
     s64 binvalb = _Unary64ToInt64(valb, bitwidth, 64);
     return _Int64ToUnary64(binvala / binvalb, 64, bitwidth);
@@ -802,7 +802,7 @@ namespace MFM {
 
   inline u32 _BinOpModUnary32(u32 vala, u32 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     s32 binvala = _Unary32ToInt32(vala, bitwidth, 32);
     s32 binvalb = _Unary32ToInt32(valb, bitwidth, 32);
     return _Int32ToUnary32(binvala % binvalb, 32, bitwidth);
@@ -810,7 +810,7 @@ namespace MFM {
 
   inline u64 _BinOpModUnary64(u64 vala, u64 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     s64 binvala = _Unary64ToInt64(vala, bitwidth, 64);
     s64 binvalb = _Unary64ToInt64(valb, bitwidth, 64);
     return _Int64ToUnary64(binvala % binvalb, 64, bitwidth);
@@ -863,7 +863,7 @@ namespace MFM {
 
   inline u32 _BinOpDivideBool32(u32 vala, u32 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     s32 binvala = _Bool32ToInt32(vala, bitwidth, 32);
     s32 binvalb = _Bool32ToInt32(valb, bitwidth, 32);
     return _Int32ToBool32(binvala / binvalb, 32, bitwidth);
@@ -871,7 +871,7 @@ namespace MFM {
 
   inline u64 _BinOpDivideBool64(u64 vala, u64 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     s64 binvala = _Bool64ToInt64(vala, bitwidth, 64);
     s64 binvalb = _Bool64ToInt64(valb, bitwidth, 64);
     return _Int64ToBool64(binvala / binvalb, 64, bitwidth);
@@ -879,7 +879,7 @@ namespace MFM {
 
   inline u32 _BinOpModBool32(u32 vala, u32 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     s32 binvala = _Bool32ToInt32(vala, bitwidth, 32);
     s32 binvalb = _Bool32ToInt32(valb, bitwidth, 32);
     return _Int32ToBool32(binvala % binvalb, 32, bitwidth);
@@ -887,7 +887,7 @@ namespace MFM {
 
   inline u64 _BinOpModBool64(u64 vala, u64 valb, u32 bitwidth)
   {
-    if(valb == 0) FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_NONZERO(valb);
     s64 binvala = _Bool64ToInt64(vala, bitwidth, 64);
     s64 binvalb = _Bool64ToInt64(valb, bitwidth, 64);
     return _Int64ToBool64(binvala % binvalb, 64, bitwidth);

@@ -203,11 +203,8 @@ namespace MFM
      */
     void SetAtomicSymbol(const char* symbol)
     {
-      if(!IsValidAtomicSymbol(symbol))
-      {
-        /* Single or double letters only, like the periodic table. */
-        FAIL(ILLEGAL_ARGUMENT);
-      }
+      /* Single or double letters only, like the periodic table. */
+      MFM_API_ASSERT_ARG(IsValidAtomicSymbol(symbol));
       m_atomicSymbol = symbol;
     }
 
@@ -282,27 +279,15 @@ namespace MFM
      */
     u32 GetType() const
     {
-      if (!m_hasType)
-      {
-        FAIL(ILLEGAL_STATE);
-      }
+      MFM_API_ASSERT_STATE(m_hasType);
       return m_type;
     }
 
     void MakeAlternateNameForTestingInternal(const Element & asThis)
     {
-      if (m_hasType)
-      {
-        FAIL(ILLEGAL_STATE);
-      }
-      if (!asThis.m_hasType)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
-      if (GetUUID() != asThis.GetUUID())
-      {
-        FAIL(ILLEGAL_STATE);
-      }
+      MFM_API_ASSERT_STATE(m_hasType);
+      MFM_API_ASSERT_ARG(asThis.m_hasType);
+      MFM_API_ASSERT_STATE(GetUUID() == asThis.GetUUID());
       m_type = asThis.GetType();
       m_hasType = true;
       m_defaultAtom = BuildDefaultAtom();
@@ -406,10 +391,7 @@ namespace MFM
      */
     virtual const T & GetDefaultAtom() const
     {
-      if (!m_hasType)
-      {
-        FAIL(ILLEGAL_STATE);
-      }
+      MFM_API_ASSERT_STATE(m_hasType);
       return m_defaultAtom;
     }
 

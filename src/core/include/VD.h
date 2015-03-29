@@ -65,10 +65,7 @@ namespace MFM
 
     static void AssertValidType(u32 type)
     {
-      if (!ValidType(type))
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
+      MFM_API_ASSERT_ARG(ValidType(type));
     }
 
     static const char *(m_typeNames[TYPE_COUNT]);
@@ -125,10 +122,7 @@ namespace MFM
 
     void AssertInRangeByLength(s32 val) const
     {
-      if (!InRangeByLength(val))
-      {
-        FAIL(OUT_OF_BOUNDS);
-      }
+      MFM_API_ASSERT(InRangeByLength(val), OUT_OF_BOUNDS);
     }
 
     u32 GetType() const
@@ -163,20 +157,14 @@ namespace MFM
 
     void AssertInRange(s32 val) const
     {
-      if (!InRange(val))
-      {
-        FAIL(OUT_OF_BOUNDS);
-      }
+      MFM_API_ASSERT(InRange(val), OUT_OF_BOUNDS);
     }
 
     VD(u32 type, u32 len, u32 pos, s32 min, s32 vdef, s32 max)
       : m_type(type), m_length(len), m_start(pos), m_min(min), m_vdef(vdef), m_max(max), m_longdef(0)
     {
       AssertValidType(m_type);
-      if (m_length > 32 || m_type == BITS)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
+      MFM_API_ASSERT_ARG(m_length <= 32 && m_type != BITS);
       AssertInRangeByLength(m_min);
       AssertInRangeByLength(m_max);
       AssertInRange(m_vdef);
@@ -185,18 +173,12 @@ namespace MFM
     VD(u32 type, u32 len, u32 pos, u64 longdef)
       : m_type(type), m_length(len), m_start(pos), m_min(0), m_vdef(0), m_max(0), m_longdef(longdef)
     {
-      if (m_type != BITS || m_length > 64)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
+      MFM_API_ASSERT_ARG(m_type == BITS && m_length <= 64);
     }
 
     void AssertIsType(u32 type) const
     {
-      if (m_type != type)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
+      MFM_API_ASSERT_ARG(m_type == type);
     }
 
     static u32 MakeMask(u32 length)

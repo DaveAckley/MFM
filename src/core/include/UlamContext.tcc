@@ -12,14 +12,14 @@ namespace MFM {
   template <class EC>
   void UlamContext<EC>::SetTile(Tile<EC> & t)
   {
-    if (m_tile) FAIL(ILLEGAL_STATE);
+    MFM_API_ASSERT_STATE(!m_tile);
     m_tile = & t;
   }
 
   template <class EC>
   void UlamContext<EC>::AssertTile()
   {
-    if (!m_tile) FAIL(ILLEGAL_STATE);
+    MFM_API_ASSERT_STATE(m_tile);
   }
 
   template <class EC>

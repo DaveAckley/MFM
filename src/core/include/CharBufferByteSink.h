@@ -63,13 +63,9 @@ namespace MFM
      */
     virtual void WriteBytes(const u8 * data, const u32 len)
     {
-      if (m_written + len < BUFSIZE-1)
-      {
-        memcpy(&m_buf[m_written], data, len);
-        m_written += len;
-        return;
-      }
-      FAIL(OUT_OF_ROOM);
+      MFM_API_ASSERT(m_written + len < BUFSIZE-1, OUT_OF_ROOM);
+      memcpy(&m_buf[m_written], data, len);
+      m_written += len;
     }
 
     /**

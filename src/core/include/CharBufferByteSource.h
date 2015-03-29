@@ -55,10 +55,7 @@ namespace MFM
 	m_length(length),
 	m_read(0)
     {
-      if (!input)
-      {
-        FAIL(NULL_POINTER);
-      }
+      MFM_API_ASSERT_NONNULL(input);
     }
 
     /**
@@ -89,10 +86,7 @@ namespace MFM
      */
     void ChangeBuffer(const char * newBuffer, u32 bufferLength)
     {
-      if (!newBuffer)
-      {
-        FAIL(NULL_POINTER);
-      }
+      MFM_API_ASSERT_NONNULL(newBuffer);
       m_input = newBuffer;
       m_length = bufferLength;
 

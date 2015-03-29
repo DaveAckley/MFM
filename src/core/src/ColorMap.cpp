@@ -40,8 +40,7 @@ namespace MFM {
   };
 
   ColorMap & ColorMap::GetMap(u32 index) {
-    if (index >= GetMapCount())
-      FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_ARG(index < GetMapCount());
     return *ColorMapInstances[index];
   }
 

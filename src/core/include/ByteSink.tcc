@@ -4,8 +4,7 @@ namespace MFM {
 
   template <class UNSIGNED_TYPE>
   void ByteSink::PrintInBase(UNSIGNED_TYPE n, u32 base, s32 width, u8 pad) {
-    if (base < 2 || base > 36)
-      FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_ARG(base >= 2 && base <= 36);
 
     u8 buf[8 * sizeof(UNSIGNED_TYPE)]; // Worst case is binary at 8 u8's per byte
     u32 i = 0;

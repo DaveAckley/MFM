@@ -113,10 +113,7 @@ namespace MFM
      */
     u32 GetFirstIndex(const u32 radius) const
     {
-      if (radius >= sizeof(m_firstIndex)/sizeof(m_firstIndex[0]))
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
+      MFM_API_ASSERT_ARG(radius < sizeof(m_firstIndex)/sizeof(m_firstIndex[0]));
       return m_firstIndex[radius];
     }
 
@@ -150,10 +147,7 @@ namespace MFM
      */
     const SPoint & GetPoint(const u32 siteNumber) const
     {
-      if (siteNumber >= ARRAY_LENGTH)
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
+      MFM_API_ASSERT_ARG(siteNumber < ARRAY_LENGTH);
       return m_indexToPoint[siteNumber];
     }
 

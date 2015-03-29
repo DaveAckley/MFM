@@ -50,10 +50,7 @@ namespace MFM
      */
     static u32 Strlen(const char * ptr)
     {
-      if (!ptr)
-      {
-        FAIL(NULL_POINTER);
-      }
+      MFM_API_ASSERT_NONNULL(ptr);
       return strlen(ptr);
     }
 

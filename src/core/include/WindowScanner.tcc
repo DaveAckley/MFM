@@ -56,10 +56,7 @@ namespace MFM
   {
     const MDist<R>& md = MDist<R>::get();
 
-    if(radius == 0 || radius > R)
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
+    MFM_API_ASSERT_ARG(radius != 0 && radius <= R);
 
     for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(radius); i++)
     {
@@ -80,10 +77,7 @@ namespace MFM
     const MDist<R>& md = MDist<R>::get();
     u32 atomCount = 0;
 
-    if(radius == 0 || radius > R)
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
+    MFM_API_ASSERT_ARG(radius != 0 && radius <= R);
 
     for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(radius); i++)
     {
@@ -192,10 +186,7 @@ namespace MFM
     const MDist<R>& md = MDist<R>::get();
     u32 foundPts = 0;
 
-    if(radius == 0 || radius > R)
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
+    MFM_API_ASSERT_ARG(radius != 0 && radius <= R);
 
     for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(radius); i++)
     {
@@ -366,10 +357,7 @@ namespace MFM
   void WindowScanner<EC>::FindRandomAtoms(const u32 radius, const u32 count, va_list& list) const
   {
     /* Can't ask for more than SITES things, right? */
-    if(count > SITES)
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
+    MFM_API_ASSERT_ARG(count <= SITES);
 
     const MDist<R>& md = MDist<R>::get();
     Random& rand = m_win.GetRandom();

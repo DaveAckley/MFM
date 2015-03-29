@@ -1121,15 +1121,8 @@ namespace MFM
      */
     void AddParameter(PARM * np)
     {
-      if (!np)
-      {
-        FAIL(NULL_POINTER);
-      }
-
-      if (np->m_next)  // Already added somewhere
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
+      MFM_API_ASSERT_NONNULL(np);
+      MFM_API_ASSERT_ARG(!(np->m_next));  // Already added somewhere
 
       PARM ** pPtr = &m_firstParameter;
       for (PARM * p = *pPtr; p; pPtr = &p->m_next, p = p->m_next)
