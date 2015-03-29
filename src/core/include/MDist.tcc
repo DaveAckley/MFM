@@ -215,8 +215,7 @@ namespace MFM {
   template<u32 R>
   void MDist<R>::FillFromBits(SPoint& pt, u8 bits, u32 maxRadius) const
   {
-    if (bits >= ARRAY_LENGTH)
-      FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_ARG(bits < ARRAY_LENGTH);
 
     const SPoint & bp = m_indexToPoint[bits];
 
