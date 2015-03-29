@@ -116,12 +116,21 @@ namespace MFM
 
     enum { MAX_CACHES_TO_UPDATE = 3 };
     CacheProcessor<EC> * m_cacheProcessorsLocked[MAX_CACHES_TO_UPDATE];
+    RandomIterator<MAX_CACHES_TO_UPDATE> m_cpli;
 
     PointSymmetry m_sym;
 
     bool AcquireAllLocks(const SPoint& centerSite) ;
 
     bool AcquireRegionLocks() ;
+
+    enum LockStatus {
+      LOCK_UNNEEDED,
+      LOCK_UNAVAILABLE,
+      LOCK_ACQUIRED
+    };
+
+    LockStatus AcquireDirLock(Dir dir) ;
 
     /**
        EventWindow states
@@ -478,7 +487,7 @@ namespace MFM
      */
     T GetAtomDirect(u32 siteNumber) const
     {
-      if (siteNumber >= SITE_COUNT) FAIL(ILLEGAL_ARGUMENT);
+      MFM_API_ASSERT_ARG(siteNumber < SITE_COUNT);
       return m_atomBuffer[siteNumber];
     }
 
@@ -497,7 +506,7 @@ namespace MFM
      */
     void SetAtomDirect(u32 siteNumber, const T & newAtom)
     {
-      if (siteNumber >= SITE_COUNT) FAIL(ILLEGAL_ARGUMENT);
+      MFM_API_ASSERT_ARG(siteNumber < SITE_COUNT);
       m_atomBuffer[siteNumber] = newAtom;
     }
 
