@@ -37,11 +37,11 @@
 #include <strings.h> /* for strcasecmp */
 #include <stdlib.h>  /* for abort(), strtol() */
 
-#define MFM_LOG_DBG3(args) do {if (LOG.IfLog((Logger::Level) 3)) {LOG.Message args ;}} while (0)
-#define MFM_LOG_DBG4(args) do {if (LOG.IfLog((Logger::Level) 4)) {LOG.Debug args ;}} while (0)
-#define MFM_LOG_DBG5(args) do {if (LOG.IfLog((Logger::Level) 5)) {LOG.Debug args ;}} while (0)
-#define MFM_LOG_DBG6(args) do {if (LOG.IfLog((Logger::Level) 6)) {LOG.Debug args ;}} while (0)
-#define MFM_LOG_DBG7(args) do {if (LOG.IfLog((Logger::Level) 7)) {LOG.Debug args ;}} while (0)
+#define MFM_LOG_DBG3(args) do {if (__builtin_expect(LOG.IfLog((Logger::Level) 3),0)) {LOG.Message args ;}} while (0)
+#define MFM_LOG_DBG4(args) do {if (__builtin_expect(LOG.IfLog((Logger::Level) 4),0)) {LOG.Debug args ;}} while (0)
+#define MFM_LOG_DBG5(args) do {if (__builtin_expect(LOG.IfLog((Logger::Level) 5),0)) {LOG.Debug args ;}} while (0)
+#define MFM_LOG_DBG6(args) do {if (__builtin_expect(LOG.IfLog((Logger::Level) 6),0)) {LOG.Debug args ;}} while (0)
+#define MFM_LOG_DBG7(args) do {if (__builtin_expect(LOG.IfLog((Logger::Level) 7),0)) {LOG.Debug args ;}} while (0)
 
 namespace MFM
 {
@@ -107,7 +107,7 @@ namespace MFM
      */
     static s32 ParseLevel(const char * zstr)
     {
-      if (!zstr) FAIL(ILLEGAL_ARGUMENT);
+      MFM_API_ASSERT_ARG(zstr);
 
       // Recognize plain numbers, allow any
       char * ez;
@@ -208,10 +208,7 @@ namespace MFM
      */
     Level SetLevel(Level newLevel)
     {
-      if (!IsValidLevel(newLevel))
-      {
-        FAIL(ILLEGAL_ARGUMENT);
-      }
+      MFM_API_ASSERT_ARG(IsValidLevel(newLevel));
 
       if (newLevel == m_logLevel)
       {

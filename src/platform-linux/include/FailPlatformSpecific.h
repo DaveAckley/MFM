@@ -97,14 +97,14 @@ do {									      \
   MFMErrorEnvironment unwindProtect_errorEnvironment;			      \
   unwindProtect_errorEnvironment.prev = (*MFMPtrToErrEnvStackPtr);	      \
   (*MFMPtrToErrEnvStackPtr) = &unwindProtect_errorEnvironment;                \
-  if ((unwindProtect_errorEnvironment.thrown =			              \
-       setjmp(unwindProtect_errorEnvironment.buffer)) != 0) {		      \
-    /* Currently nothing special to do */                                     \
-  } else {								      \
+  unwindProtect_errorEnvironment.thrown = setjmp(unwindProtect_errorEnvironment.buffer); \
+  if (__builtin_expect(unwindProtect_errorEnvironment.thrown,0)) {            \
+    /* something FAILed, but nothing special to do here */                    \
+  } else {                                                                    \
     {block}								      \
   }                                                                           \
   (*MFMPtrToErrEnvStackPtr) = (*MFMPtrToErrEnvStackPtr)->prev;                \
-  if (unwindProtect_errorEnvironment.thrown) {				      \
+  if (__builtin_expect(unwindProtect_errorEnvironment.thrown,0)) {            \
     int MFMThrownFailCode __attribute__ ((unused)) =                          \
       unwindProtect_errorEnvironment.thrown;                                  \
     {cleanup}	                                                              \
