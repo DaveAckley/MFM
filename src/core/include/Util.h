@@ -174,13 +174,19 @@ namespace MFM {
      _getLogBase2(8)==3.
    */
   inline u32 _getLogBase2(u32 v) {
+#if 1
+    if (v==0) return 0;
+    return 31 - __builtin_clz(v);
+#else
     v |= v >> 1; // first round down to one less than a power of 2
     v |= v >> 2;
     v |= v >> 4;
     v |= v >> 8;
     v |= v >> 16;
     return MultiplyDeBruijnBitPosition[(u32)(v * 0x07C4ACDDU) >> 27];
+#endif
   }
+
 
   /**
    * Right-aligned mask generation.  Returns 0xFFFFFFFF if \a length
@@ -419,6 +425,7 @@ namespace MFM {
     const u32 M = K*K;
     Sleep(microseconds/M, (microseconds%M)*DecU64(0,K));
   }
+
 }
 
 #endif /* UTIL_H */
