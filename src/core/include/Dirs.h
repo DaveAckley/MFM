@@ -29,6 +29,7 @@
 #define DIRS_H
 
 #include "Point.h"
+#include "Fail.h"
 
 namespace MFM
 {
@@ -228,6 +229,9 @@ namespace MFM
      */
     static SPoint FlipSEPointToCorner(const SPoint& pt, const Dir corner);
   };
+
+  typedef RandomIterator<Dirs::DIR_COUNT,4> RandomDirIterator;
+
 } /* namespace MFM */
 
 #endif /*DIRS_H*/
