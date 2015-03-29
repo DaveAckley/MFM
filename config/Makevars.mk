@@ -10,7 +10,7 @@ endif
 SHELL:=/bin/bash
 
 ifndef DEBUG
-  OPTFLAGS += -O99
+  OPTFLAGS += -O99 -msse4.2
 #  ${info NO DEBUG SO OPTFLAGS=$(OPTFLAGS)}
 else
   OPTFLAGS += -g2
