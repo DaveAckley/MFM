@@ -23,14 +23,12 @@ namespace MFM
     , m_warpFactor(3)
   {
     // TILE_SIDE can't be too small, and we must apparently have sites..
-    if (TILE_SIDE < 3*EVENT_WINDOW_RADIUS || m_sites == 0)
-      FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_ARG(TILE_SIDE >= 3*EVENT_WINDOW_RADIUS && m_sites != 0);
 
     // Require even TILE_SIDE.  (The 'GetSquareDistanceFromCenter'
     // computation would be cheaper if TILE_SIDE was guaranteed odd,
     // but that violates a MFM tradition that is now cast in stone.)
-    if (2 * TILE_SIDE / 2 != TILE_SIDE)
-      FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_ARG(2 * TILE_SIDE / 2 == TILE_SIDE);
 
     Init();
   }
@@ -45,6 +43,8 @@ namespace MFM
 
     ClearAtoms();
     ClearTileParameters();
+
+    m_dirIterator.Shuffle(m_random);
 
   }
 
@@ -85,8 +85,7 @@ namespace MFM
   {
     CacheProcessor<EC> & cxn = GetCacheProcessor(toCache);
 
-    if (cxn.IsConnected())
-      FAIL(ILLEGAL_STATE);
+    MFM_API_ASSERT_STATE(!cxn.IsConnected());
 
     cxn.ClaimCacheProcessor(*this, channel, lock, toCache);
   }
@@ -100,11 +99,7 @@ namespace MFM
   template <class EC>
   const CacheProcessor<EC> & Tile<EC>::GetCacheProcessor(Dir toCache) const
   {
-    if (!Dirs::IsLegalDir(toCache))
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
-
+    MFM_API_ASSERT_ARG(Dirs::IsLegalDir(toCache));
     return m_cacheProcessors[toCache];
   }
 
@@ -156,8 +151,7 @@ namespace MFM
   template <class EC>
   u64 Tile<EC>::GetUncachedWriteAge(const SPoint at) const
   {
-    if (!IsInUncachedTile(at))
-      FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_ARG(IsInUncachedTile(at));
 
     return
       GetEventsExecuted() -
@@ -167,8 +161,7 @@ namespace MFM
   template <class EC>
   u64 Tile<EC>::GetUncachedEventAge(const SPoint at) const
   {
-    if (!IsInUncachedTile(at))
-      FAIL(ILLEGAL_ARGUMENT);
+    MFM_API_ASSERT_ARG(IsInUncachedTile(at));
 
     return
       (u64) ((s64) GetEventsExecuted() -
@@ -188,9 +181,7 @@ namespace MFM
   template <class EC>
   u64 Tile<EC>::GetUncachedSiteEvents(const SPoint at) const
   {
-    if (!IsInUncachedTile(at))
-      FAIL(ILLEGAL_ARGUMENT);
-
+    MFM_API_ASSERT_ARG(IsInUncachedTile(at));
     return GetUncachedSite(at).GetEventCount();
   }
 
@@ -254,10 +245,7 @@ namespace MFM
   template <class EC>
   bool Tile<EC>::ApplyCacheUpdate(bool isDifferent, const T& atom, const SPoint& site)
   {
-    if (IsInHidden(site))  // That would make no sense
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
+    MFM_API_ASSERT_ARG(!IsInHidden(site));  // That would make no sense
 
     bool consistent;
     const T& oldAtom = *GetAtom(site);
@@ -354,11 +342,7 @@ namespace MFM
   template <class EC>
   bool Tile<EC>::IsCacheSitePossibleEventCenter(const SPoint & location) const
   {
-    if (!IsInCache(location))
-    {
-      FAIL(ILLEGAL_ARGUMENT);
-    }
-
+    MFM_API_ASSERT_ARG(IsInCache(location));
     return IsConnected(CacheAt(location));
   }
 
@@ -480,9 +464,9 @@ namespace MFM
   template <class EC>
   bool Tile<EC>::AllCacheProcessorsIdle()
   {
-    for (u32 d = 0; d < Dirs::DIR_COUNT; ++d)
+    for (u32 i = 0; i < Dirs::DIR_COUNT; ++i)  // Can doing this in order create bias??
     {
-      if (!m_cacheProcessors[d].IsIdle())
+      if (!m_cacheProcessors[i].IsIdle())
       {
         return false;
       }
@@ -569,8 +553,9 @@ namespace MFM
   bool Tile<EC>::AdvanceCommunication()
   {
     bool didWork = false;
-    for (u32 i = 0; i < Dirs::DIR_COUNT; ++i)
+    for (m_dirIterator.ShuffleOrReset(m_random); m_dirIterator.HasNext(); )
     {
+      u32 i = m_dirIterator.Next();
       CacheProcessor<EC> & cp = m_cacheProcessors[i];
       didWork |= cp.Advance();
     }

@@ -118,8 +118,7 @@ namespace MFM
     const S & GetSite(const SPoint index) const
     {
       UPoint uidx = MakeUnsigned(index);
-      if (uidx.GetX() >= TILE_SIDE || uidx.GetY() >= TILE_SIDE)
-        FAIL(ILLEGAL_ARGUMENT);
+      MFM_API_ASSERT_ARG(uidx.GetX() < TILE_SIDE && uidx.GetY() < TILE_SIDE);
       return m_sites[uidx.GetY()*TILE_SIDE + uidx.GetX()];
     }
 
@@ -403,6 +402,7 @@ namespace MFM
     EventWindow<EC> m_window;
 
     CacheProcessor<EC> m_cacheProcessors[Dirs::DIR_COUNT];
+    RandomDirIterator m_dirIterator;
 
     bool AllCacheProcessorsIdle();
 
@@ -1307,7 +1307,7 @@ namespace MFM
      */
     void SetTileParameter(const u32 key, const s32 value)
     {
-      if (key >= MAX_TILE_PARAMETERS) FAIL(ILLEGAL_ARGUMENT);
+      MFM_API_ASSERT_ARG(key < MAX_TILE_PARAMETERS);
       m_keyValues[key] = value;
     }
 
@@ -1320,7 +1320,7 @@ namespace MFM
      */
     s32 GetTileParameter(const u32 key)
     {
-      if (key >= MAX_TILE_PARAMETERS) FAIL(ILLEGAL_ARGUMENT);
+      MFM_API_ASSERT_ARG(key < MAX_TILE_PARAMETERS);
       return m_keyValues[key];
     }
 
