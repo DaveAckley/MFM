@@ -73,8 +73,9 @@ namespace MFM
     {
 #ifdef ULAM_CUSTOM_ELEMENTS
       DefineNeededUlamCustomElements(this);
-#else
-      //#error no custom wsu
+#endif /* ULAM_CUSTOM_ELEMENTS */
+
+      //Always include the old buddies?
       this->NeedElement(&Element_Empty<EC>::THE_INSTANCE);
       this->NeedElement(&Element_Wall<EC>::THE_INSTANCE);
       this->NeedElement(&Element_Res<EC>::THE_INSTANCE);
@@ -103,7 +104,6 @@ namespace MFM
       this->NeedElement(&Element_CheckerForkRed<EC>::THE_INSTANCE);
       this->NeedElement(&Element_Wanderer_Cyan<EC>::THE_INSTANCE);
       this->NeedElement(&Element_Wanderer_Magenta<EC>::THE_INSTANCE);
-#endif /* ULAM_CUSTOM_ELEMENTS */
     }
 
     ThreadStamper m_stamper;
