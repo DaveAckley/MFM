@@ -328,6 +328,12 @@ namespace MFM {
       LOG.Message("Tile parameter key %d set to value %d", key, value);
     }
 
+    RandomIterator<W*H> m_rgi;
+    SPoint IteratorIndexToCoord(const u32 idx) const
+    {
+      return SPoint(idx % W, idx / W);
+    }
+
     /**
      * A minimal iterator over the Tiles of a grid.  Access via Grid::begin().
      */

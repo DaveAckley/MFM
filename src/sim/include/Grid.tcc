@@ -62,14 +62,17 @@ namespace MFM {
     /* Reseed grid PRNG and push seeds to the tile PRNGs */
     InitSeed();
 
+    /* Give the tile iterator an initial shuffle */
+    m_rgi.Shuffle(m_random);
+
     m_backgroundRadiationEnabled = false;
 
     /* Init the tiles */
 
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
-      SPoint tpt = i.At();
-      Tile<EC> & ctile = *i;
+      SPoint tpt = IteratorIndexToCoord(m_rgi.Next());
+      Tile<EC> & ctile = GetTile(tpt);
 
       ctile.Init();
 
@@ -163,9 +166,9 @@ namespace MFM {
     }
 
     /* Init the tile thread drivers */
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
-      SPoint tpt = i.At();
+      SPoint tpt = IteratorIndexToCoord(m_rgi.Next());
       TileDriver & td = m_tileDrivers[tpt.GetX()][tpt.GetY()];
       td.m_loc = tpt;
       td.m_gridPtr = this;
@@ -186,13 +189,11 @@ namespace MFM {
     //    m_gtDriver.SetState(running ? GTDriver::ADVANCING : GTDriver::PAUSED);
 
     /* Notify the Tiles */
-    for(u32 x = 0; x < m_width; x++)
+    for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
-      for(u32 y = 0; y < m_height; y++)
-      {
-        TileDriver & td = m_tileDrivers[x][y];
-        td.SetState(running? TileDriver::ADVANCING : TileDriver::PAUSED);
-      }
+      SPoint tpt = IteratorIndexToCoord(m_rgi.Next());
+      TileDriver & td = m_tileDrivers[tpt.GetX()][tpt.GetY()];
+      td.SetState(running? TileDriver::ADVANCING : TileDriver::PAUSED);
     }
   }
 
@@ -422,7 +423,6 @@ namespace MFM {
 
     for (iterator_type i = begin(); i != end(); ++i)
     {
-      i->GetRandom().SetSeed(m_random.Create());
       Tile<EC> & tile = *i;
       LOG.Log(level,"--Grid(%d,%d)=Tile %s (%p)--",
               i.GetX(),  i.GetY(), tile.GetLabel(), (void *) &tile);
@@ -437,8 +437,9 @@ namespace MFM {
     tc.PreGridControl(*this);
 
     // Ensure everybody is ready for the request
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
+      SPoint i = IteratorIndexToCoord(m_rgi.Next());
       u32 x = i.GetX();
       u32 y = i.GetY();
       TileDriver & td = m_tileDrivers[x][y];
@@ -452,8 +453,9 @@ namespace MFM {
     }
 
     // Issue request to all
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
+      SPoint i = IteratorIndexToCoord(m_rgi.Next());
       u32 x = i.GetX();
       u32 y = i.GetY();
       TileDriver & td = m_tileDrivers[x][y];
@@ -489,8 +491,9 @@ namespace MFM {
 
       notReady = 0;
 
-      for (iterator_type i = begin(); i != end(); ++i)
+      for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
       {
+        SPoint i = IteratorIndexToCoord(m_rgi.Next());
         u32 x = i.GetX();
         u32 y = i.GetY();
         TileDriver & td = m_tileDrivers[x][y];
@@ -510,8 +513,9 @@ namespace MFM {
     }
 
     // Release the hounds
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
+      SPoint i = IteratorIndexToCoord(m_rgi.Next());
       u32 x = i.GetX();
       u32 y = i.GetY();
       TileDriver & td = m_tileDrivers[x][y];
