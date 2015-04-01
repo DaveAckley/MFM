@@ -279,12 +279,19 @@ XXX
 
 
   void ByteSink::PrintAbbreviatedNumber(u64 num) {
-    u64 scaler = 1000;
+    const u32 scaler = 1000;
     const char suffixes[] = "_KMGTQ";
     for (u32 i = 0; i < sizeof(suffixes); ++i) {
       if (num < scaler) {
         Printf("%d",(u32) num);
         if (i > 0) Printf("%c",suffixes[i]);
+        break;
+      }
+      if (num < 10*scaler && i < sizeof(suffixes) - 1) {
+        u32 unum = (u32) num;
+        u32 intpart = unum / scaler;
+        u32 fracpart = (unum - intpart * scaler) / 100;
+        Printf("%d.%d%c", intpart, fracpart, suffixes[i + 1]);
         break;
       }
       num /= scaler;
