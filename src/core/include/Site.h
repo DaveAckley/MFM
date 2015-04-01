@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  Site.h A location for a single atom
+  Site.h A location for a single atom and associated state
   Copyright (C) 2015 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 */
 
 /**
-  \file Site.h A location for a single atom
+  \file Site.h A location for a single atom and associated state
   \author David H. Ackley.
   \date (C) 2015 All rights reserved.
   \lgpl
@@ -51,20 +51,53 @@ namespace MFM
     typedef typename ATOM_CONFIG::ATOM_TYPE T;
 
   private:
-    u64 m_eventCount;
-    s64 m_lastEventEventNumber;
-    u64 m_lastChangedEventNumber;
     T m_atom;
+    T m_state;
+    T m_base;
+    u64 m_eventCount;
+    u64 m_lastChangedEventNumber;
+    s64 m_lastEventEventNumber;
+    u32 m_rgbIn;
+    u32 m_rgbOut;
+    u32 m_senseIn;
+    u32 m_motorOut;
     bool m_isLiveSite;
 
   public:
-    T & GetAtom() { return m_atom; }
+    Site()
+      : m_eventCount(0)
+      , m_lastChangedEventNumber(0)
+      , m_lastEventEventNumber(0)
+      , m_rgbIn(0)
+      , m_rgbOut(0)
+      , m_senseIn(0)
+      , m_motorOut(0)
+      , m_isLiveSite(true)
+    { }
 
+    u32 GetRGBIn() const { return m_rgbIn; }
+    void SetRGBIn(u32 newRGB) { m_rgbIn = newRGB; }
+
+    u32 GetRGBOut() const { return m_rgbOut; }
+    void SetRGBOut(u32 newRGB) { m_rgbOut = newRGB; }
+
+    u32 GetSenseIn() const { return m_senseIn; }
+    void SetSenseIn(u32 newSense) { m_senseIn = newSense; }
+
+    u32 GetMotorOut() const { return m_motorOut; }
+    void SetMotorOut(u32 newMotor) { m_motorOut = newMotor; }
+
+    void PutAtom(const T & newAtom) { m_atom = newAtom; }
+    T & GetAtom() { return m_atom; }
     const T & GetAtom() const { return m_atom; }
 
-    void PutAtom(const T & newAtom) {
-      m_atom = newAtom;
-    }
+    void PutStateAtom(const T & newState) { m_state = newState; }
+    T & GetStateAtom() { return m_state; }
+    const T & GetStateAtom() const { return m_state; }
+
+    void PutBaseAtom(const T & newBase) { m_base = newBase; }
+    T & GetBaseAtom() { return m_base; }
+    const T & GetBaseAtom() const { return m_base; }
 
     void Clear() {
       m_atom.SetEmpty();
