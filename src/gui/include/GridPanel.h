@@ -53,19 +53,18 @@ namespace MFM
     typedef typename GC::EVENT_CONFIG EC;
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
-    enum { W = GC::GRID_WIDTH};
-    enum { H = GC::GRID_HEIGHT};
+    u32 GetGridWidthSites() const {
+      MFM_API_ASSERT_NONNULL(m_mainGrid);
+      return m_mainGrid->GetWidthSites();
+    }
+    u32 GetGridHeightSites() const {
+      MFM_API_ASSERT_NONNULL(m_mainGrid);
+      return m_mainGrid->GetHeightSites();
+    }
     enum { R = EC::EVENT_WINDOW_RADIUS};
     enum { TILE_SIDE_CACHE_SITES = GC::TILE_SIDE};
     enum { TILE_SIDE_LIVE_SITES = TILE_SIDE_CACHE_SITES - 2*R};
     enum { MAX_BUCKET_FILL_DEPTH = 10000 };
-
-    static const u32 EVENT_WINDOW_RADIUS = R;
-    static const u32 GRID_WIDTH_TILES = W;
-    static const u32 GRID_HEIGHT_TILES = H;
-
-    static const u32 GRID_WIDTH_LIVE_SITES = W * TILE_SIDE_LIVE_SITES;
-    static const u32 GRID_HEIGHT_LIVE_TILES = H * TILE_SIDE_LIVE_SITES;
 
     typedef Grid<GC> OurGrid;
     typedef Tile<EC> OurTile;
@@ -403,8 +402,8 @@ namespace MFM
           }
         }
         else if(cp.GetX() >= 0 && cp.GetY() >= 0 &&
-                cp.GetX() < TILE_SIDE_LIVE_SITES * W &&
-                cp.GetY() < TILE_SIDE_LIVE_SITES * H)
+                cp.GetX() < GetGridWidthSites() &&
+                cp.GetY() < GetGridHeightSites())
         {
           if(tool == TOOL_BUCKET)
           {
@@ -465,8 +464,8 @@ namespace MFM
         npt.Add(pt.GetX(), pt.GetY());
 
         if(npt.GetX() >= 0 && npt.GetY() >= 0 &&
-           npt.GetX() < TILE_SIDE_LIVE_SITES * W &&
-           npt.GetY() < TILE_SIDE_LIVE_SITES * H)
+           npt.GetX() < GetGridWidthSites() &&
+           npt.GetY() < GetGridHeightSites())
         {
           if(Atom<AC>::IsType(*grid.GetAtom(npt),
                               m_bucketFillStartType))

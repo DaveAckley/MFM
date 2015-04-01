@@ -168,7 +168,7 @@ namespace MFM
 
     if(cp.GetX() > 0 && cp.GetY() > 0)
     {
-      for(u32 x = 0; x < GC::GRID_WIDTH + 1; x++)
+      for(u32 x = 0; x < grid.GetWidth() + 1; x++)
       {
         if(x * tileSize >= (u32)cp.GetX())
         {
@@ -176,7 +176,7 @@ namespace MFM
           break;
         }
       }
-      for(u32 y = 0; y < GC::GRID_HEIGHT + 1; y++)
+      for(u32 y = 0; y < grid.GetHeight() + 1; y++)
       {
         if(y * tileSize >= (u32)cp.GetY())
         {

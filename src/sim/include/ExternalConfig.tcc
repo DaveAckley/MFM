@@ -11,9 +11,11 @@
 namespace MFM
 {
   template<class GC>
-  ExternalConfig<GC>::ExternalConfig(Grid<GC>& grid) :
-    m_grid(grid), m_elementRegistry(grid.GetElementRegistry()),
-    m_registeredFunctionCount(0), m_registeredElementCount(0)
+  ExternalConfig<GC>::ExternalConfig(Grid<GC>& grid)
+    : m_grid(grid)
+    , m_elementRegistry(grid.GetElementRegistry())
+    , m_registeredFunctionCount(0)
+    , m_registeredElementCount(0)
   {
     m_in.SetErrorByteSink(STDERR);
   }
@@ -128,15 +130,8 @@ namespace MFM
     /* Then, GA all live atoms. */
 
     /* The grid size in sites excluding caches */
-    const u32 gridWidth = TILE_SIDE *
-      GC::GRID_WIDTH -
-      EVENT_WINDOW_RADIUS *
-      GC::GRID_WIDTH * 2;
-
-    const u32 gridHeight = TILE_SIDE *
-      GC::GRID_HEIGHT -
-      EVENT_WINDOW_RADIUS *
-      GC::GRID_HEIGHT * 2;
+    const u32 gridWidth = m_grid.GetWidthSites();
+    const u32 gridHeight = m_grid.GetHeightSites();
 
     for(u32 y = 0; y < gridHeight; y++)
     {
@@ -171,9 +166,9 @@ namespace MFM
     byteSink.WriteNewline();
 
     /* Set Tile geometry */
-    for(u32 y = 0; y < GC::GRID_HEIGHT; y++)
+    for(u32 y = 0; y < m_grid.GetHeight(); y++)
     {
-      for(u32 x = 0; x < GC::GRID_WIDTH; x++)
+      for(u32 x = 0; x < m_grid.GetWidth(); x++)
       {
         SPoint currentPt(x, y);
         Tile<EC> & tile = m_grid.GetTile(currentPt);
