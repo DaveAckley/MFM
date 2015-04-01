@@ -347,7 +347,7 @@ namespace MFM
       return SkipSet(WHITESPACE_SET);
     }
 
-    s32 Scanf(const char * format, ...) ;  // NYI
+    s32 Scanf(const char * format, ...) ;
     s32 Vscanf(const char * format, va_list & ap) ;
 
   private:
