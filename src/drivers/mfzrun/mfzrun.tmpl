@@ -86,7 +86,7 @@ my $u2 = new IO::Uncompress::Unzip(\$zipdata)
 
 my $destdir;
 if ($verb eq "unpack") {
-    my $optdir = NextArg();
+    my $optdir = NextArg() || "";
     if ($optdir =~ /^(.+)$/) {
         $destdir = $1;  # Gah.
     } else {
@@ -132,11 +132,6 @@ if ($verb eq "verify") {
     exit 0;
 }
 
-if ($verb eq "unpack") {
-    print "UNPACKED INTO: $destdir\n";
-    exit 0;
-}
-
 my @mfmargs;
 
 for my $prec (@innerpaths) {
@@ -156,7 +151,14 @@ for my $prec (@innerpaths) {
 }
 my $cmd = "$binDir/mfms";
 unshift @mfmargs, $cmd;
+
 print "@mfmargs\n";
+
+if ($verb eq "unpack") {
+    print "UNPACKED INTO: $destdir\n";
+    exit 0;
+}
+
 my $result = system $cmd @mfmargs;
 sleep 1;
 exit $result;
