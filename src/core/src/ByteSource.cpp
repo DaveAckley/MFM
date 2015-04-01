@@ -209,7 +209,8 @@ namespace MFM {
   const char * ByteSource::WHITESPACE_SET = "[ \n\t\v]";
   const char * ByteSource::NON_WHITESPACE_SET = "[^ \n\t\v]";
 
-  s32 ByteSource::Scanf(const char * format, ...) {
+  s32 ByteSource::Scanf(const char * format, ...)
+  {
     va_list ap;
     va_start(ap, format);
     s32 ret = Vscanf(format, ap);
@@ -246,7 +247,8 @@ namespace MFM {
 
 
 
-  s32 ByteSource::Vscanf(const char * format, va_list & ap) {
+  s32 ByteSource::Vscanf(const char * format, va_list & ap)
+  {
     MFM_API_ASSERT_NONNULL(format);
 
     u8 p;
