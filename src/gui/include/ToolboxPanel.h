@@ -395,6 +395,13 @@ namespace MFM
       m_checkboxCount(0),
       m_brushSize(2)
     {
+      SetName("ToolboxPanel");
+
+      for(u32 i = 0; i < TOOLBOX_MAX_CONTROLLERS; i++)
+      {
+        m_controllers[i] = 0;
+      }
+
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
       {
         m_toolButtons[i].SetToolPointer(m_toolPtr);
