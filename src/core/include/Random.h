@@ -35,6 +35,7 @@
 #include "BitVector.h"
 #include "FXP.h"
 #include "Fail.h"
+#include "Util.h" // For UForNumber
 
 namespace MFM
 {
@@ -244,13 +245,16 @@ namespace MFM
   template <u32 MAX,u32 BIT_ODDS=5>
   class RandomIterator
   {
-    u32 m_indices[MAX];
+    const u32 m_limit;
     u32 m_index;
+    typedef typename UForNumber<MAX-1>::type U; // Smallest size that holds 0..MAX-1
+    U m_indices[MAX];
   public:
-    RandomIterator()
-      : m_index(0)
+    RandomIterator(u32 max = MAX)
+      : m_limit(max)
+      , m_index(0)
     {
-      for (u32 i = 0; i < MAX; ++i) m_indices[i] = i;
+      for (u32 i = 0; i < m_limit; ++i) m_indices[i] = (U) i;
     }
 
     bool ShuffleOrReset(Random & random)
@@ -265,10 +269,10 @@ namespace MFM
 
     void Shuffle(Random & random)
     {
-      for (u32 i = 0; i < MAX; ++i)
+      for (u32 i = 0; i < m_limit; ++i)
       {
-        u32 j = random.Between(i, MAX - 1);
-        u32 temp = m_indices[i];
+        u32 j = random.Between(i, m_limit - 1);
+        U temp = m_indices[i];
         m_indices[i] = m_indices[j];
         m_indices[j] = temp;
       }
@@ -283,13 +287,13 @@ namespace MFM
 
     u32 Next()
     {
-      if (m_index >= MAX) FAIL(OUT_OF_BOUNDS);
+      if (m_index >= m_limit) FAIL(OUT_OF_BOUNDS);
       return m_indices[m_index++];
     }
 
     bool HasNext() const
     {
-      return m_index < MAX;
+      return m_index < m_limit;
     }
 
   };
