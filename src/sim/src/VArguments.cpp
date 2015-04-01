@@ -90,7 +90,15 @@ namespace MFM
 
   void VArguments::ProcessArguments(u32 argc, const char** argv)
   {
-    for(u32 i = 1; i < argc; i++) // 1 to skip program name
+    m_programName = argv[0];
+
+    u32 initIndex = 1;          // 1 to skip program name
+    if (argc > 1 && *argv[1] == '{')  // Also skip geometry arg if present
+    {
+      ++initIndex;
+    }
+
+    for(u32 i = initIndex; i < argc; i++)
     {
       bool handled = false;
       for(u32 j = 0; j < m_heldArguments; j++)
@@ -170,8 +178,11 @@ namespace MFM
     fprintf(stderr,
 	    "Movable Feast Machine (%s)\n"
 	    "\n"
-	    "Usage:",
-            MFM_VERSION_STRING_SHORT
+	    "Usage:\n"
+	    "  %s [GEOMETRY] [SWITCHES]\n"
+            "\n",
+            MFM_VERSION_STRING_SHORT,
+            m_programName?m_programName:""
             );
 
     for(u32 i = 0; i < m_heldArguments; i++)

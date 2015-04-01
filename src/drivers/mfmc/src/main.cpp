@@ -8,6 +8,76 @@
 
 namespace MFM
 {
+  template <class GC, u32 W, u32 H>
+  struct Model {
+    typedef GC GRID_CONFIG;
+    enum { WIDTH = W, HEIGHT = H };
+  };
+
+  struct GridConfigCode {
+
+    enum TileType { TileUNSPEC, TileA, TileB, TileC, TileD, TileE, TileF, TileG, TileH, TileI };
+    enum { MIN_TYPE_CHAR = 'A', MAX_TYPE_CHAR = 'I' };
+
+    TileType tileType;
+    u32 gridWidth;
+    u32 gridHeight;
+
+    GridConfigCode(TileType t = TileUNSPEC, u32 width = 0, u32 height = 0)
+      : tileType(t)
+      , gridWidth(width)
+      , gridHeight(height)
+    { }
+
+    bool Set(TileType t, u32 width, u32 height)
+    {
+      return SetTileType(t) && SetGridWidth(width) && SetGridHeight(height);
+    }
+
+    bool SetTileType(TileType t)
+    {
+      if (tileType != TileUNSPEC || t == TileUNSPEC)
+        return false;
+      tileType = t;
+      return true;
+    }
+
+    bool SetGridWidth(u32 width) {
+      if (gridWidth != 0 || width == 0)
+        return false;
+      gridWidth = width;
+      return true;
+    }
+
+    bool SetGridHeight(u32 height) {
+      if (gridHeight != 0 || height == 0)
+        return false;
+      gridHeight = height;
+      return true;
+    }
+
+    bool Read(ByteSource & bs)
+    {
+      u32 w, h;
+      u8 ch;
+
+      if (bs.Scanf("{%d%c%d}", &w, &ch, &h) != 5)
+        return false;
+
+      if (ch < GridConfigCode::MIN_TYPE_CHAR ||
+          ch > GridConfigCode::MAX_TYPE_CHAR)
+        return false;
+
+      if (bs.Read() >= 0)  // need EOF here
+        return false;
+
+      SetGridWidth(w);
+      SetGridHeight(h);
+      SetTileType((GridConfigCode::TileType)
+                  ((ch - GridConfigCode::MIN_TYPE_CHAR) + GridConfigCode::TileA));
+      return true;
+    }
+  };
 
   /////
   // For all models
@@ -17,32 +87,26 @@ namespace MFM
   typedef EventConfig<OurSiteAll,4> OurEventConfigAll;
 
   /////
-  // Standard model
-  typedef GridConfig<OurEventConfigAll, 40, 5, 3> OurGridConfigStd;
+  // Tile types
+  typedef GridConfig<OurEventConfigAll, 24> OurGridConfigTileA; // 256 sites/tile
+  typedef GridConfig<OurEventConfigAll, 32> OurGridConfigTileB; // 576 sites/tile
+  typedef GridConfig<OurEventConfigAll, 40> OurGridConfigTileC; // 1024 sites/tile
+  typedef GridConfig<OurEventConfigAll, 54> OurGridConfigTileD; // 2116 sites/tile
+  typedef GridConfig<OurEventConfigAll, 72> OurGridConfigTileE; // 4096 sites/tile
+  typedef GridConfig<OurEventConfigAll, 98> OurGridConfigTileF; // 8100 sites/tile
+  typedef GridConfig<OurEventConfigAll,136> OurGridConfigTileG; // 16384 sites/tile
+  typedef GridConfig<OurEventConfigAll,188> OurGridConfigTileH; // 32400 sites/tile
+  typedef GridConfig<OurEventConfigAll,264> OurGridConfigTileI; // 65536 sites/tile
 
   /////
-  // Alternate model (flatter space)
-  typedef GridConfig<OurEventConfigAll, 68, 3, 2> OurGridConfigAlt;
-
-  /////
-  // Tiny model
-  typedef GridConfig<OurEventConfigAll, 32, 2, 2> OurGridConfigTiny;
-
-  /////
-  // Larger model
-  typedef GridConfig<OurEventConfigAll, 48, 8, 5> OurGridConfigBig;
-
-  /////
-  // BigTile model
-  typedef GridConfig<OurEventConfigAll, 176, 1, 1> OurGridConfigBigTile;
-
-  /////
-  // MediumTile model
-  typedef GridConfig<OurEventConfigAll, 96, 1, 1> OurGridConfigMediumTile;
-
-  /////
-  // SmallerTile model
-  typedef GridConfig<OurEventConfigAll, 58, 1, 1> OurGridConfigSmallTile; //==50x50 after cache edge
+  // Standard models
+  static const GridConfigCode gccModelStd(GridConfigCode::TileC, 5, 3);     // Default
+  static const GridConfigCode gccModelAlt(GridConfigCode::TileE, 3, 2);     // Alternate model (flatter space)
+  static const GridConfigCode gccModelTiny(GridConfigCode::TileB, 2, 2);    // Tiny model
+  static const GridConfigCode gccModelBig(GridConfigCode::TileD, 8, 5);     // Larger model
+  static const GridConfigCode gccModelBig1(GridConfigCode::TileH, 1, 1);    // BigTile model
+  static const GridConfigCode gccModelMedium1(GridConfigCode::TileF, 1, 1); // MediumTile model
+  static const GridConfigCode gccModelSmall1(GridConfigCode::TileE, 1, 1);  // SmallerTile model
 
   template <class GC>
   struct MFMCDriver : public AbstractDualDriver<GC>
@@ -110,7 +174,9 @@ namespace MFM
 
   public:
 
-    MFMCDriver() : m_stamper(*this)
+    MFMCDriver(u32 gridWidth, u32 gridHeight)
+      : Super(gridWidth, gridHeight)
+      , m_stamper(*this)
     {
       MFM::LOG.SetTimeStamper(&m_stamper);
     }
@@ -138,9 +204,9 @@ namespace MFM
   };
 
   template <class CONFIG>
-  int SimRunner(int argc, const char** argv)
+  int SimRunner(int argc, const char** argv,u32 gridWidth,u32 gridHeight)
   {
-    MFMCDriver<CONFIG> sim;
+    MFMCDriver<CONFIG> sim(gridWidth,gridHeight);
     sim.ProcessArguments(argc, argv);
     sim.AddInternalLogging();
     sim.Init();
@@ -148,16 +214,12 @@ namespace MFM
     return 0;
   }
 
-  static bool EndsWith(const char *string, const char* suffix)
-  {
-    MFM::u32 slen = strlen(string);
-    MFM::u32 xlen = strlen(suffix);
-    return xlen <= slen && !strcmp(suffix, &string[slen - xlen]);
-  }
-
-
+  /* Note that all the stack size checking is likely moot at this
+     point because we've moved the grid to the heap to allow runtime
+     grid sizing (since we're not in core/ here).  But it shouldn't
+     hurt anything so for now anyway we're leaving it in. */
   template <class CONFIG>
-  int SimCheckAndRun(int argc, const char** argv)
+  int SimCheckAndRun(int argc, const char** argv, u32 gridWidth, u32 gridHeight)
   {
     struct rlimit lim;
     if (getrlimit(RLIMIT_STACK, &lim))
@@ -182,7 +244,51 @@ namespace MFM
         }
       }
     }
-    return SimRunner<CONFIG>(argc,argv);
+    return SimRunner<CONFIG>(argc,argv,gridWidth,gridHeight);
+  }
+
+  int SimRunConfig(const GridConfigCode & gcc, int argc, const char** argv)
+  {
+    u32 w = gcc.gridWidth;
+    u32 h = gcc.gridHeight;
+    switch (gcc.tileType)
+    {
+#define XX(CODE) case GridConfigCode::CODE: return SimCheckAndRun<OurGridConfig##CODE>(argc, argv, w, h)
+      XX(TileA);
+      XX(TileB);
+      XX(TileC);
+      XX(TileD);
+      XX(TileE);
+      XX(TileF);
+      XX(TileG);
+      XX(TileH);
+      XX(TileI);
+#undef XX
+    default:
+      FAIL(ILLEGAL_STATE);
+    }
+  }
+
+  bool CheckForConfigCode(GridConfigCode & gcc, int argc, const char ** argv)
+  {
+    if (argc < 2) return false;
+
+    GridConfigCode tmp;
+    CharBufferByteSource cbs(argv[1], strlen(argv[1]));
+
+    if (!tmp.Read(cbs)) return false;
+
+    gcc = tmp;
+    return true;
+
+#if 0
+    if (EndsWith(argv[0],"_s")) gcc.Set(gccModelTiny);
+    if (EndsWith(argv[0],"_l")) gcc.Set(gccModelBig);
+    if (EndsWith(argv[0],"_1l")) gcc.Set(gccModelBig1);
+    if (EndsWith(argv[0],"_1m")) gcc.Set(gccModelMedium1);
+    if (EndsWith(argv[0],"_1s")) gcc.Set(gccModelSmall1);
+    if (EndsWith(argv[0],"_a")) gcc.Set(gccModelAlt);
+#endif
   }
 
   int MainDispatch(int argc, const char** argv)
@@ -191,14 +297,16 @@ namespace MFM
     LOG.SetByteSink(STDERR);
     LOG.SetLevel(LOG.MESSAGE);
 
-    if (EndsWith(argv[0],"_s"))  return SimCheckAndRun<OurGridConfigTiny>(argc, argv);
-    if (EndsWith(argv[0],"_l"))  return SimCheckAndRun<OurGridConfigBig>(argc, argv);
-    if (EndsWith(argv[0],"_1l")) return SimCheckAndRun<OurGridConfigBigTile>(argc, argv);
-    if (EndsWith(argv[0],"_1m")) return SimCheckAndRun<OurGridConfigMediumTile>(argc, argv);
-    if (EndsWith(argv[0],"_1s")) return SimCheckAndRun<OurGridConfigSmallTile>(argc, argv);
-    if (EndsWith(argv[0],"_a"))  return SimCheckAndRun<OurGridConfigAlt>(argc, argv);
-    //if (EndsWith(argv[0],"_m"))   ..or anything else
-    return SimCheckAndRun<OurGridConfigStd>(argc, argv);
+    GridConfigCode gcc;
+    if (!CheckForConfigCode(gcc,argc,argv))
+    {
+      // Default anything still unset
+      gcc.SetTileType(GridConfigCode::TileC);
+      gcc.SetGridWidth(5);
+      gcc.SetGridHeight(3);
+    }
+
+    return SimRunConfig(gcc, argc, argv);
   }
 }
 

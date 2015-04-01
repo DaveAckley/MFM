@@ -9,7 +9,7 @@ namespace MFM {
   {
 
     ElementRegistry<TestEventConfig> ereg;
-    TestGrid grid(ereg);
+    TestGrid grid(ereg,4,3);
 
     grid.SetSeed(1);
     grid.Init();

@@ -19,7 +19,7 @@ namespace MFM {
   typedef Site<P3AtomConfig> TestSite;
   typedef EventConfig<TestSite, 4> TestEventConfig;
 
-  typedef GridConfig<TestEventConfig,40,4,3> TestGridConfig;
+  typedef GridConfig<TestEventConfig,40> TestGridConfig;
   typedef Grid<TestGridConfig> TestGrid;
   typedef TestGrid::GridTile TestTile;
 

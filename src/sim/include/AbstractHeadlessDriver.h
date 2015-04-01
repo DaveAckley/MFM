@@ -52,7 +52,8 @@ namespace MFM
   protected:
     typedef typename Super::OurGrid OurGrid;
 
-    AbstractHeadlessDriver() : AbstractDriver<GC>()
+    AbstractHeadlessDriver(u32 gridWidth, u32 gridHeight)
+      : AbstractDriver<GC>(gridWidth, gridHeight)
     { }
 
     virtual void AddDriverArguments()

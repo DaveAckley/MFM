@@ -51,8 +51,9 @@ namespace MFM {
     typedef typename GC::EVENT_CONFIG EC;
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
-    enum { W = GC::GRID_WIDTH};
-    enum { H = GC::GRID_HEIGHT};
+
+    enum { MAX_TILES_SUPPORTED = 500 };  // Yeah right.  Used for sizing m_rgi
+
     enum { R = EC::EVENT_WINDOW_RADIUS};
     enum { TILE_SIDE = GC::TILE_SIDE};
     enum { OWNED_SIDE = TILE_SIDE - 2 * R }; // Duplicating the OWNED_SIDE computation in Tile.tcc!
@@ -72,8 +73,14 @@ namespace MFM {
 
     ElementTypeNumberMap<EC> m_elementTypeNumberMap;
 
-    GridTile m_tiles[W][H];
-    LonglivedLock m_intertileLocks[W][H][3]; // 3: E, SE, S == dir-Dirs::EAST
+    GridTile * const m_tiles;
+    GridTile & _getTile(u32 x, u32 y) { return m_tiles[x*m_height + y]; }
+    const GridTile & _getTile(u32 x, u32 y) const { return m_tiles[x*m_height + y]; }
+
+    LonglivedLock * const m_intertileLocks;
+    LonglivedLock & _getIntertileLock(u32 x, u32 y, u32 i) {
+      return m_intertileLocks[(x*m_height + y) * 3 + i];
+    }
 
     GridTile m_heroTile;    // Model for the actual m_tiles
 
@@ -110,7 +117,12 @@ namespace MFM {
       }
 
     };
-    TileDriver m_tileDrivers[W][H];
+
+    TileDriver * const m_tileDrivers;
+    TileDriver & _getTileDriver(u32 x, u32 y) {
+      return m_tileDrivers[x*m_height + y];
+    }
+
     bool m_threadsInitted;
     static void * TileDriverRunner(void *) ;
 
@@ -268,15 +280,21 @@ namespace MFM {
 
     void SetSeed(u32 seed);
 
-    Grid(ElementRegistry<EC>& elts)
+    Grid(ElementRegistry<EC>& elts, u32 width, u32 height)
       : m_seed(0)
-      , m_width(W)
-      , m_height(H)
+      , m_width(width)
+      , m_height(height)
+      , m_tiles(new GridTile[m_width * m_height])
+      , m_intertileLocks(new LonglivedLock[m_width * m_height * 3])
+      , m_tileDrivers(new TileDriver[m_width * m_height * 3])
       , m_threadsInitted(false)
       , m_backgroundRadiationEnabled(false)
       , m_er(elts)
       , m_xraySiteOdds(1000)
+      , m_rgi(m_width * m_height)
     {
+
+
       for (iterator_type i = begin(); i != end(); ++i)
         LOG.Debug("Tile[%d][%d] @ %p", i.GetX(), i.GetY(), &(*i));
     }
@@ -303,7 +321,7 @@ namespace MFM {
 
     const Element<EC> * LookupElement(u32 elementType) const
     {
-      return m_tiles[0][0].GetElementTable().Lookup(elementType);
+      return _getTile(0,0).GetElementTable().Lookup(elementType);
     }
 
     ElementRegistry<EC>& GetElementRegistry()
@@ -328,10 +346,10 @@ namespace MFM {
       LOG.Message("Tile parameter key %d set to value %d", key, value);
     }
 
-    RandomIterator<W*H> m_rgi;
+    RandomIterator<MAX_TILES_SUPPORTED> m_rgi;
     SPoint IteratorIndexToCoord(const u32 idx) const
     {
-      return SPoint(idx % W, idx / W);
+      return SPoint(idx % m_width, idx / m_width);
     }
 
     /**
@@ -348,10 +366,10 @@ namespace MFM {
       bool operator!=(const MyIterator &m) const { return i != m.i || j != m.j; }
       void operator++()
       {
-        if (j < g.H)
+        if (j < g.m_height)
         {
           i++;
-          if (i >= g.W)
+          if (i >= g.m_width)
           {
             i = 0;
             j++;
@@ -362,17 +380,17 @@ namespace MFM {
       {
         s32 rows = j-m.j;
         s32 cols = i-m.i;
-        return rows*g.W + cols;
+        return rows*g.m_width + cols;
       }
 
       ItemType & operator*() const
       {
-        return g.m_tiles[i][j];
+        return g._getTile(i,j);
       }
 
       ItemType * operator->() const
       {
-        return &g.m_tiles[i][j];
+        return &g._getTile(i,j);
       }
 
       SPoint At() const { return SPoint(i,j); }
@@ -388,12 +406,16 @@ namespace MFM {
 
     const_iterator_type begin() const { return const_iterator_type(*this); }
 
-    iterator_type end() { return iterator_type(*this,0,H); }
+    iterator_type end() { return iterator_type(*this,0,m_height); }
 
-    const_iterator_type end() const { return const_iterator_type(*this, 0,H); }
+    const_iterator_type end() const { return const_iterator_type(*this, 0,m_height); }
 
     ~Grid()
-    { }
+    {
+      delete [] m_tiles;
+      delete [] m_intertileLocks;
+      delete [] m_tileDrivers;
+    }
 
     /**
      * Used to tell this Tile whether or not to actually execute any
@@ -471,17 +493,17 @@ namespace MFM {
     /**
      * Return the Grid height in Tiles
      */
-    static u32 GetHeight() { return H; }
+    u32 GetHeight() const { return m_height; }
 
     /**
      * Return the Grid width in Tiles
      */
-    static u32 GetWidth() { return W; }
+    u32 GetWidth() const { return m_width; }
 
     /**
      * Return the Grid height in (non-cache) sites
      */
-    static u32 GetHeightSites()
+    u32 GetHeightSites() const
     {
       return GetHeight() * OWNED_SIDE;
     }
@@ -489,7 +511,7 @@ namespace MFM {
     /**
      * Return the Grid width in (non-cache) sites
      */
-    static u32 GetWidthSites()
+    u32 GetWidthSites() const
     {
       return GetWidth() * OWNED_SIDE;
     }
@@ -502,7 +524,7 @@ namespace MFM {
       LOG.Message("Sending exit requests to the tiles");
       for (iterator_type i = begin(); i != end(); ++i)
       {
-        TileDriver & td = m_tileDrivers[i.GetX()][i.GetY()];
+        TileDriver & td = _getTileDriver(i.GetX(),i.GetY());
         td.SetState(TileDriver::EXIT_REQUEST);
       }
       SleepMsec(500);
@@ -581,13 +603,13 @@ namespace MFM {
     }
 
     inline Tile<EC> & GetTile(u32 x, u32 y)
-    { return m_tiles[x][y]; }
+    { return _getTile(x,y); }
 
     inline const Tile<EC> & GetTile(u32 x, u32 y) const
-    { return m_tiles[x][y]; }
+    { return _getTile(x,y); }
 
     /* Don't count caches! */
-    static inline const u32 GetTotalSites()
+    inline const u32 GetTotalSites()
     { return GetWidthSites() * GetHeightSites(); }
 
     u64 GetTotalEventsExecuted() const;

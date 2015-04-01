@@ -15,7 +15,7 @@ namespace MFM
     ElementRegistry<TestEventConfig> ereg;
     ereg.RegisterElement(Element_Dreg<TestEventConfig>::THE_INSTANCE);
 
-    Grid<TestGridConfig> grid(ereg);
+    Grid<TestGridConfig> grid(ereg,4,3);
     grid.SetSeed(1);
     grid.Init();
 

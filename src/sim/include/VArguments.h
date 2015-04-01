@@ -50,6 +50,11 @@ namespace MFM
   private:
 
     /**
+     * The program name as obtained from argv[0] by ProcessArguments.
+     */
+    const char * m_programName;
+
+    /**
      * A struct representing a single registry of a command line
      * argument, meant to be used internally by VArguments.
      */
@@ -57,12 +62,12 @@ namespace MFM
     {
 
       /**
-       * The descriptions of each installed command line arguments.
+       * The description of an installed command line argument.
        */
       const char* m_description;
 
       /**
-       * The flags of each command line argument, separated by the '|'
+       * The flags of a command line argument, separated by the '|'
        * character. For instance, "-h|--help" would match both "-h"
        * and "--help".  If m_filter is NULL, this entry is a 'section
        * header', used only when providing help, rather than an actual

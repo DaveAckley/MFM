@@ -37,9 +37,7 @@ namespace MFM {
    * at the Tile-to-Grid level.
    */
   template <class EC,      // EventConfig
-            u32 SIDE,      // Tile side in sites
-            u32 W,         // Grid width in tiles
-            u32 H>         // Grid height in tiles
+            u32 SIDE>
   struct GridConfig {
 
     /**
@@ -47,6 +45,7 @@ namespace MFM {
      */
     typedef EC EVENT_CONFIG;
 
+#if 0
     /**
      * GRID_WIDTH is the number of columns of tiles in this Grid
      * Configuration.
@@ -58,6 +57,7 @@ namespace MFM {
      * Config.
      */
     enum { GRID_HEIGHT = H };
+#endif
 
     /**
      * TILE_SIDE is the number of sites wide (and high) for a tile in

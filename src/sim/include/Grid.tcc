@@ -53,7 +53,7 @@ namespace MFM {
     default:
       FAIL(ILLEGAL_STATE);
     }
-    return m_intertileLocks[x][y][dir - Dirs::EAST];
+    return _getIntertileLock(x,y,dir - Dirs::EAST);
   }
 
   template <class GC>
@@ -100,7 +100,7 @@ namespace MFM {
             continue;
           }
 
-          TileDriver & td = m_tileDrivers[x][y];
+          TileDriver & td = _getTileDriver(x,y);
           GridTransceiver & gt = td.m_channels[d - Dirs::NORTHEAST];
           LonglivedLock & ctl = GetIntertileLock(x,y,d);
 
@@ -169,7 +169,7 @@ namespace MFM {
     for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
       SPoint tpt = IteratorIndexToCoord(m_rgi.Next());
-      TileDriver & td = m_tileDrivers[tpt.GetX()][tpt.GetY()];
+      TileDriver & td = _getTileDriver(tpt.GetX(),tpt.GetY());
       td.m_loc = tpt;
       td.m_gridPtr = this;
       td.SetState(TileDriver::PAUSED);
@@ -192,7 +192,7 @@ namespace MFM {
     for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
       SPoint tpt = IteratorIndexToCoord(m_rgi.Next());
-      TileDriver & td = m_tileDrivers[tpt.GetX()][tpt.GetY()];
+      TileDriver & td = _getTileDriver(tpt.GetX(),tpt.GetY());
       td.SetState(running? TileDriver::ADVANCING : TileDriver::PAUSED);
     }
   }
@@ -300,7 +300,7 @@ namespace MFM {
   {
     if (tileInGrid.GetX() < 0 || tileInGrid.GetY() < 0)
       return false;
-    if (tileInGrid.GetX() >= (s32) W || tileInGrid.GetY() >= (s32) H)
+    if (tileInGrid.GetX() >= (s32) m_width || tileInGrid.GetY() >= (s32) m_height)
       return false;
     return true;
   }
@@ -442,7 +442,7 @@ namespace MFM {
       SPoint i = IteratorIndexToCoord(m_rgi.Next());
       u32 x = i.GetX();
       u32 y = i.GetY();
-      TileDriver & td = m_tileDrivers[x][y];
+      TileDriver & td = _getTileDriver(x,y);
       if (!tc.CheckPrecondition(td))
       {
         LOG.Error("%s control precondition failed at (%d,%d)=Tile %s (%p)--",
@@ -458,7 +458,7 @@ namespace MFM {
       SPoint i = IteratorIndexToCoord(m_rgi.Next());
       u32 x = i.GetX();
       u32 y = i.GetY();
-      TileDriver & td = m_tileDrivers[x][y];
+      TileDriver & td = _getTileDriver(x,y);
       tc.MakeRequest(td);
     }
 
@@ -496,7 +496,7 @@ namespace MFM {
         SPoint i = IteratorIndexToCoord(m_rgi.Next());
         u32 x = i.GetX();
         u32 y = i.GetY();
-        TileDriver & td = m_tileDrivers[x][y];
+        TileDriver & td = _getTileDriver(x,y);
         if (!tc.CheckIfReady(td))
         {
           ++notReady;
@@ -518,7 +518,7 @@ namespace MFM {
       SPoint i = IteratorIndexToCoord(m_rgi.Next());
       u32 x = i.GetX();
       u32 y = i.GetY();
-      TileDriver & td = m_tileDrivers[x][y];
+      TileDriver & td = _getTileDriver(x,y);
       tc.Execute(td);
     }
 
@@ -628,8 +628,8 @@ namespace MFM {
   {
     Random& rand = m_random;
 
-    SPoint center(rand.Create(W * TILE_SIDE),
-		  rand.Create(H * TILE_SIDE));
+    SPoint center(rand.Create(m_width * TILE_SIDE),
+		  rand.Create(m_height * TILE_SIDE));
 
     u32 radius = rand.Between(5, TILE_SIDE);
     T atom(Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());

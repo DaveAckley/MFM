@@ -89,14 +89,13 @@ namespace MFM
    protected:
     typedef typename Super::OurGrid OurGrid;
     typedef typename GC::EVENT_CONFIG EC;
-    enum { W = GC::GRID_WIDTH};
-    enum { H = GC::GRID_HEIGHT};
 
     bool m_startPaused;
     bool m_thisUpdateIsEpoch;
     bool m_bigText;
     u32 m_thisEpochAEPS;
     bool m_captureScreenshots;
+    s32 m_screenshotTargetFPS;
     u32 m_saveStateIndex;
     u32 m_epochSaveStateIndex;
 
@@ -197,8 +196,8 @@ namespace MFM
         GridRenderer & grend = AbstractGridButton::m_driver->GetGridRenderer();
 
         const SPoint selTile = grend.GetSelectedTile();
-        if(selTile.GetX() >= 0 && selTile.GetX() < W &&
-           selTile.GetY() >= 0 && selTile.GetY() < H)
+        if(selTile.GetX() >= 0 && selTile.GetX() < grid.GetWidth() &&
+           selTile.GetY() >= 0 && selTile.GetY() < grid.GetHeight())
         {
           grid.EmptyTile(grend.GetSelectedTile());
         }
@@ -493,8 +492,9 @@ namespace MFM
       m_statisticsPanel.SetAEPS(Super::GetAEPS());
       m_statisticsPanel.SetAER(Super::GetRecentAER());  // Use backwards averaged value
       m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
-      //      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
-      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
+      m_statisticsPanel.SetCurrentAEPSPerEpoch(this->GetAEPSPerEpoch());
+      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
+      //      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
     }
 
     virtual void DoEpochEvents(OurGrid& grid, u32 epochs, u32 epochAEPS)
@@ -801,20 +801,21 @@ namespace MFM
         Super::SaveGrid(filename);
     }
 
-    AbstractGUIDriver() :
-      m_startPaused(true),
-      m_thisUpdateIsEpoch(false),
-      m_bigText(false),
-      m_captureScreenshots(false),
-      m_saveStateIndex(0),
-      m_epochSaveStateIndex(0),
-      m_renderStats(false),
-      m_screenWidth(SCREEN_INITIAL_WIDTH),
-      m_screenHeight(SCREEN_INITIAL_HEIGHT),
-      m_heatmapButton(m_gridPanel),
-      m_selectedTool(TOOL_SELECTOR),
-      m_toolboxPanel(&m_selectedTool),
-      m_buttonPanel()
+    AbstractGUIDriver(u32 gridWidth, u32 gridHeight)
+      : Super(gridWidth, gridHeight)
+      , m_startPaused(true)
+      , m_thisUpdateIsEpoch(false)
+      , m_bigText(false)
+      , m_captureScreenshots(false)
+      , m_saveStateIndex(0)
+      , m_epochSaveStateIndex(0)
+      , m_renderStats(false)
+      , m_screenWidth(SCREEN_INITIAL_WIDTH)
+      , m_screenHeight(SCREEN_INITIAL_HEIGHT)
+      , m_heatmapButton(m_gridPanel)
+      , m_selectedTool(TOOL_SELECTOR)
+      , m_toolboxPanel(&m_selectedTool)
+      , m_buttonPanel()
     { }
 
     ~AbstractGUIDriver()
@@ -887,11 +888,20 @@ namespace MFM
       driver->m_screenHeight = MINIMAL_START_WINDOW_WIDTH;
     }
 
-    static void SetRecordScreenshotPerAEPSFromArgs(const char* aeps, void* driverptr)
+    static void SetRecordScreenshotPerAEPSFromArgs(const char* fpsstr, void* driverptr)
     {
       AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
+      VArguments& args = driver->m_varguments;
+
+      s32 out;
+      const char * errmsg = AbstractDriver<GC>::GetNumberFromString(fpsstr, out, 0, 1000);
+      if (errmsg)
+      {
+        args.Die("Bad FPS '%s': %s", fpsstr, errmsg);
+      }
 
       driver->m_captureScreenshots = true;
+      driver->m_srend.SetScreenshotTargetFPS(out);
     }
 
     static void SetStartPausedFromArgs(const char* not_used, void* driverptr)
@@ -929,8 +939,8 @@ namespace MFM
       this->RegisterArgument("Start with a minimal-sized window.",
                              "--startminimal", &ConfigMinimalView, this, false);
 
-      this->RegisterArgument("Capture a screenshot every epoch",
-                             "-p|--pngs", &SetRecordScreenshotPerAEPSFromArgs, this, false);
+      this->RegisterArgument("Record a png per epoch for playback at ARG fps",
+                             "-p|--pngs", &SetRecordScreenshotPerAEPSFromArgs, this, true);
 
       this->RegisterArgument("Simulation begins upon program startup.",
                              "--run", &SetStartPausedFromArgs, this, false);
@@ -956,6 +966,7 @@ namespace MFM
       double m_AER;
       double m_overheadPercent;
       u32 m_aepsPerFrame;
+      u32 m_currentAEPSPerEpoch;
 
      public:
       StatisticsPanel() : m_srend(NULL)
@@ -969,6 +980,7 @@ namespace MFM
         SetForeground(Drawing::WHITE);
         SetBackground(Drawing::DARK_PURPLE);
         m_AEPS = m_AER = 0.0;
+        m_currentAEPSPerEpoch = 0;
         m_aepsPerFrame = 0;
         m_overheadPercent = 0.0;
       }
@@ -986,6 +998,11 @@ namespace MFM
       void SetAEPS(double aeps)
       {
         m_AEPS = aeps;
+      }
+
+      void SetCurrentAEPSPerEpoch(u32 aepsPerEpoch)
+      {
+        m_currentAEPSPerEpoch = aepsPerEpoch;
       }
 
       void SetAER(double aer)
@@ -1009,7 +1026,8 @@ namespace MFM
         this->Panel::PaintComponent(drawing);
         m_srend->RenderGridStatistics(drawing, *m_mainGrid,
                                       m_AEPS, m_AER, m_aepsPerFrame,
-                                      m_overheadPercent, false);
+                                      m_overheadPercent, false,
+                                      m_currentAEPSPerEpoch);
       }
 
       virtual void PaintBorder(Drawing & config)

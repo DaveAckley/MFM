@@ -55,7 +55,7 @@ namespace MFM
 
   protected:
 
-    AbstractDualDriver()
+    AbstractDualDriver(u32 gridWidth, u32 gridHeight) : Super(gridWidth, gridHeight)
     { }
 
     virtual void AddDriverArguments()

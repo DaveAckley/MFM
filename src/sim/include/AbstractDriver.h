@@ -86,6 +86,7 @@ namespace MFM
      */
     typedef typename AC::ATOM_TYPE T;
 
+#if 0
     /**
      * Exported from the GridConfiguration, the enumerated width of
      * the Grid used by this simulation.
@@ -97,6 +98,7 @@ namespace MFM
      * the Grid used by this simulation.
      */
     enum { H = GC::GRID_HEIGHT};
+#endif
 
     /**
      * Exported from the GridConfiguration, the enumerated size of
@@ -107,12 +109,12 @@ namespace MFM
     /**
      * The width of the Grid used by this simulation.
      */
-    static const u32 GRID_WIDTH = W;
+    const u32 GRID_WIDTH;
 
     /**
      * The height of the Grid used by this simulation.
      */
-    static const u32 GRID_HEIGHT = H;
+    const u32 GRID_HEIGHT;
 
     /**
      * Template shortcut for an ElementRegistry with the correct
@@ -469,7 +471,7 @@ namespace MFM
       return m_AEPSPerEpoch;
     }
 
-  private:
+  protected:
 
     OurElementRegistry m_elementRegistry;
     OurStdElements m_se;
@@ -565,14 +567,40 @@ namespace MFM
       LOG.SetLevel((Logger::Level) val);
     }
 
-    static void SetSeedFromArgs(const char* seedstr, void* driver)
+    static const char * GetNumberFromString(const char* str, s32 & output, s32 min, s32 max)
     {
-      u32 seed = atoi(seedstr);
+      MFM_API_ASSERT_NONNULL(str);
+      if (*str == 0) return "Empty argument";
+
+      char * ez;
+      s32 num = strtol(str, &ez, 0);
+      if (*str != 0 && *ez == 0) {
+        if (num < min) return "Numeric argument too small";
+        if (num > max) return "Numeric argument too large";
+        output = num;
+        return NULL;
+      }
+      return "Non-numeric in argument";
+    }
+
+    static void SetSeedFromArgs(const char* seedstr, void* driverptr)
+    {
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
+      s32 out;
+      const char * errmsg = GetNumberFromString(seedstr, out, 0, S32_MAX);
+      if (errmsg)
+      {
+        args.Die("Bad seed '%s': %s", seedstr, errmsg);
+      }
+
+      u32 seed = (u32) out;
       if(!seed)
       {
         seed = time(0);
       }
-      ((AbstractDriver*)driver)->SetSeed(seed);
+      driver.SetSeed(seed);
     }
 
     static void SetAEPSPerEpochFromArgs(const char* aepsStr, void* driverptr)
@@ -580,12 +608,14 @@ namespace MFM
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
       VArguments& args = driver.m_varguments;
 
-      u32 epochAEPS = atoi(aepsStr);
-      if (epochAEPS < 0)
+      s32 out;
+      const char * errmsg = AbstractDriver<GC>::GetNumberFromString(aepsStr, out, 0, S32_MAX);
+      if (errmsg)
       {
-        args.Die("AEPS per epoch must be non-negative, not %d", epochAEPS);
+        args.Die("Bad AEPS '%s': %s", aepsStr, errmsg);
       }
-      driver.SetAEPSPerEpoch(epochAEPS);
+
+      driver.SetAEPSPerEpoch((u32) out);
     }
 
     static void SetAutosavePerEpochsFromArgs(const char* arg, void* driverptr)
@@ -593,30 +623,48 @@ namespace MFM
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
       VArguments& args = driver.m_varguments;
 
-      u32 val = atoi(arg);
-      if (val < 0)
+      s32 out;
+      const char * errmsg = AbstractDriver<GC>::GetNumberFromString(arg, out, 0, S32_MAX);
+      if (errmsg)
       {
-        args.Die("Autosave per epochs must be non-negative, not %d", val);
+        args.Die("Bad autosave per epochs '%s': %s", arg, errmsg);
       }
-      driver.m_autosavePerEpochs = val;
+
+      driver.m_autosavePerEpochs = (u32) out;
     }
 
     static void SetPicturesPerRateFromArgs(const char* aeps, void* driverptr)
     {
-      AbstractDriver* driver = (AbstractDriver*)driverptr;
+      AbstractDriver& driver = *(AbstractDriver*)driverptr;
+      VArguments& args = driver.m_varguments;
 
-      driver->m_accelerateAfterEpochs = atoi(aeps);
+      s32 out;
+      const char * errmsg = AbstractDriver<GC>::GetNumberFromString(aeps, out, 0, S32_MAX);
+      if (errmsg)
+      {
+        args.Die("Bad accelerate '%s': %s", aeps, errmsg);
+      }
+
+      driver.m_accelerateAfterEpochs = out;
     }
 
     static void SetSurgePerEpochFromArgs(const char* aeps, void* driverptr)
     {
-      AbstractDriver* driver = (AbstractDriver*)driverptr;
+      AbstractDriver& driver = *(AbstractDriver*)driverptr;
+      VArguments& args = driver.m_varguments;
 
-      driver->m_surgeAfterEpochs = atoi(aeps);
+      s32 out;
+      const char * errmsg = AbstractDriver<GC>::GetNumberFromString(aeps, out, 0, S32_MAX);
+      if (errmsg)
+      {
+        args.Die("Bad surged '%s': %s", aeps, errmsg);
+      }
 
-      if (driver->m_surgeAfterEpochs > 0)  // If actually surging
+      driver.m_surgeAfterEpochs = out;
+
+      if (driver.m_surgeAfterEpochs > 0)   // If actually surging
       {                                    // it'll happen immediately
-        driver->m_acceleration = 0;        // so push acceleration back
+        driver.m_acceleration = 0;         // so push acceleration back
       }
     }
 
@@ -703,8 +751,16 @@ namespace MFM
     static void SetHaltAfterAEPSFromArgs(const char* aeps, void* driverptr)
     {
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
 
-      driver.m_haltAfterAEPS = atoi(aeps);
+      s32 out;
+      const char * errmsg = AbstractDriver<GC>::GetNumberFromString(aeps, out, 0, S32_MAX);
+      if (errmsg)
+      {
+        args.Die("Bad AEPS '%s': %s", aeps, errmsg);
+      }
+
+      driver.m_haltAfterAEPS = (u32) out;
     }
 
     static void SetWarpFactorFromArgs(const char* wfs, void* driverptr)
@@ -712,12 +768,14 @@ namespace MFM
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
       VArguments& args = driver.m_varguments;
 
-      s32 warpFactor = atoi(wfs);
-      if (warpFactor < 0 || warpFactor > 10)
+      s32 out;
+      const char * errmsg = AbstractDriver<GC>::GetNumberFromString(wfs, out, 0, 10);
+      if (errmsg)
       {
-        args.Die("Warp factor must be 0..10, not '%s'", wfs);
+        args.Die("Warp factor '%s' not in 0..10: %s", wfs, errmsg);
       }
-      driver.m_grid.SetWarpFactor(warpFactor);
+
+      driver.m_grid.SetWarpFactor(out);
     }
 
     static void LoadFromConfigFile(const char* path, void* driverptr)
@@ -888,33 +946,35 @@ namespace MFM
 
     }
 
-    AbstractDriver() :
-      m_neededElementCount(0),
-      m_grid(m_elementRegistry),
-      m_ticksLastStopped(0),
-      m_haltAfterAEPS(0),
-      m_haltOnEmpty(false),
-      m_haltOnFull(false),
-      m_startTimeMS(0),
-      m_msSpentRunning(0),
-      m_msSpentOverhead(0),
-      m_microsSleepPerFrame(1000),
-      m_overheadPercent(0.0),
-      m_aepsPerFrame(INITIAL_AEPS_PER_FRAME),
-      m_AEPSPerEpoch(100),
-      m_autosavePerEpochs(10),
-      m_accelerateAfterEpochs(0),
-      m_acceleration(1),
-      m_surgeAfterEpochs(0),
-      m_gridImages(false),
-      m_tileImages(false),
-      m_AEPS(0),
-      m_recentAER(0),
-      m_lastTotalEvents(0),
-      m_nextEpochAEPS(0),
-      m_epochCount(0),
-      m_configurationPathCount(0),
-      m_currentConfigurationPath(U32_MAX)
+    AbstractDriver(u32 gridWidth, u32 gridHeight)
+      : GRID_WIDTH(gridWidth)
+      , GRID_HEIGHT(gridHeight)
+      , m_neededElementCount(0)
+      , m_grid(m_elementRegistry, GRID_WIDTH, GRID_HEIGHT)
+      , m_ticksLastStopped(0)
+      , m_haltAfterAEPS(0)
+      , m_haltOnEmpty(false)
+      , m_haltOnFull(false)
+      , m_startTimeMS(0)
+      , m_msSpentRunning(0)
+      , m_msSpentOverhead(0)
+      , m_microsSleepPerFrame(1000)
+      , m_overheadPercent(0.0)
+      , m_aepsPerFrame(INITIAL_AEPS_PER_FRAME)
+      , m_AEPSPerEpoch(100)
+      , m_autosavePerEpochs(10)
+      , m_accelerateAfterEpochs(0)
+      , m_acceleration(1)
+      , m_surgeAfterEpochs(0)
+      , m_gridImages(false)
+      , m_tileImages(false)
+      , m_AEPS(0)
+      , m_recentAER(0)
+      , m_lastTotalEvents(0)
+      , m_nextEpochAEPS(0)
+      , m_epochCount(0)
+      , m_configurationPathCount(0)
+      , m_currentConfigurationPath(U32_MAX)
     { }
 
     void SaveCommandLine(u32 argc, const char** argv)
@@ -1017,11 +1077,11 @@ namespace MFM
       RegisterArgument("Autosave grid every ARG epochs (default 1; 0 for never)",
                        "-a|--autosave", &SetAutosavePerEpochsFromArgs, this, true);
 
-      this->RegisterArgument("Increase the epoch length every ARG epochs",
+      RegisterArgument("Increase the epoch length every ARG epochs",
                              "--accelerate",
                              &SetPicturesPerRateFromArgs, this, true);
 
-      this->RegisterArgument("Increase the epoch length acceleration every ARG epochs",
+      RegisterArgument("Increase the epoch length acceleration every ARG epochs",
                              "--surge",
                              &SetSurgePerEpochFromArgs, this, true);
 
