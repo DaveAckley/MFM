@@ -194,6 +194,7 @@ namespace MFM {
     void Reset()
     {
       m_written = 0;
+      m_buf[m_written] = '\0';
       m_overflowed = false;
     }
 
