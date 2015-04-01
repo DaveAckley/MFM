@@ -9,12 +9,10 @@
 namespace MFM {
 
   template <class GC>
-  void StatsRenderer<GC>::RenderGridStatistics(Drawing & drawing, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool endOfEpoch)
+  void StatsRenderer<GC>::RenderGridStatistics(Drawing & drawing, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool endOfEpoch, u32 aepsInCurrentEpoch)
   {
     // Extract short names for parameter types
     typedef typename GC::EVENT_CONFIG EC;
-    enum { W = GC::GRID_WIDTH};
-    enum { H = GC::GRID_HEIGHT};
     enum { R = EC::EVENT_WINDOW_RADIUS};
 
     const u32 STR_BUFFER_SIZE = 128;
@@ -65,11 +63,21 @@ namespace MFM {
         break;
       }
 
-      sprintf(strBuffer, "%8.3f AER", aer);
       OString128 ob;
-      ob.Printf("%s_",strBuffer);
-      u64 sites = grid.GetTotalSites();
-      ob.PrintAbbreviatedNumber(sites);
+      if (m_screenshotTargetFPS < 0)
+      {
+        sprintf(strBuffer, "%8.3f AER", aer);
+        ob.Printf("%s_",strBuffer);
+        u64 sites = grid.GetTotalSites();
+        ob.PrintAbbreviatedNumber(sites);
+      }
+      else
+      {
+        u64 displayedAER = aepsInCurrentEpoch*m_screenshotTargetFPS;
+        ob.PrintAbbreviatedNumber(displayedAER);
+        ob.Printf(" AER_%dfps", m_screenshotTargetFPS);
+      }
+
       const char * str = ob.GetZString();
       size = drawing.GetTextSize(str);
       loc = UPoint(MAX(0, ((s32) m_dimensions.GetX())-size.GetX()), baseY);
@@ -167,59 +175,6 @@ namespace MFM {
                                                 double overhead, bool endOfEpoch)
   {
     FAIL(DEPRECATED);
-    /* Use AbstractDriver::WriteTimeBasedData instead. */
-
-    /*
-    // Extract short names for parameter types
-    typedef typename GC::CORE_CONFIG CC;
-    typedef typename CC::PARAM_CONFIG P;
-    enum { W = GC::GRID_WIDTH};
-    enum { H = GC::GRID_HEIGHT};
-    enum { R = P::EVENT_WINDOW_RADIUS};
-
-    if (writeHeader)
-    {
-      fp.Printf("# AEPS AEPSperFrame AER100 pctOvrhd100");
-      for (u32 i = 0; i < m_reportersInUse; ++i)
-      {
-        const DataReporter * cs = m_reporters[i];
-        // What's this for?        if (cs->GetDecimalPlaces() < 0) continue;
-
-        // Try to ensure splitting on spaces will get the right number of names
-        fp.WriteByte(' ');
-        for (const char * p = cs->GetLabel(); *p; ++p)
-        {
-          if (isspace(*p))
-          {
-            fp.WriteByte('_');
-          }
-          else
-          {
-            fp.WriteByte(*p);
-          }
-        }
-      }
-      fp.Println();
-    }
-
-    //fprintf(fp,"%8.3f", aeps/1000.0);
-    fp.Print((u64) aeps);
-    fp.Print(" ");
-    fp.Print(AEPSperFrame);
-    fp.Print(" ");
-    fp.Print((u64)(100.0 * aer));
-    fp.Print(" ");
-    fp.Print((u64)(100.0 * overhead));
-
-    for (u32 i = 0; i < m_reportersInUse; ++i)
-    {
-      const DataReporter * cs = m_reporters[i];
-      //if (cs->GetDecimalPlaces() < 0) continue;
-      fp.Print(" ");
-      cs->GetValue(fp, endOfEpoch);
-    }
-    fp.Println();
-    */
   }
 
 } /* namespace MFM */

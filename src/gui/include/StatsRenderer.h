@@ -235,6 +235,8 @@ namespace MFM {
     u32 m_displayAER;
     u32 m_maxDisplayAER;
 
+    s32 m_screenshotTargetFPS;
+
     static const u32 MAX_BUTTONS = 16;
     AbstractButton* m_buttons[MAX_BUTTONS];
     u32 m_registeredButtons;
@@ -245,6 +247,7 @@ namespace MFM {
       m_displayElementsInUse(0),
       m_displayAER(0),
       m_maxDisplayAER(5),
+      m_screenshotTargetFPS(-1),
       m_registeredButtons(0)
     { }
 
@@ -295,6 +298,11 @@ namespace MFM {
       return m_maxDisplayAER;
     }
 
+    void SetScreenshotTargetFPS(s32 fps)
+    {
+      m_screenshotTargetFPS = fps;
+    }
+
     void SetDisplayAER(u32 displayAER)
     {
       m_displayAER = displayAER % (m_maxDisplayAER + 1);
@@ -333,7 +341,7 @@ namespace MFM {
       m_dimensions = dimensions;
     }
 
-    void RenderGridStatistics(Drawing & drawing, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool endOfEpoch);
+    void RenderGridStatistics(Drawing & drawing, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool endOfEpoch, u32 aepsInCurrentEpoch);
 
     void WriteRegisteredCounts(ByteSink & fp, bool writeHeader, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool doResets);
   };
