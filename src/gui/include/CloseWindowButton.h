@@ -58,6 +58,7 @@ namespace MFM
 
     void Init()
     {
+      SetName("CloseWindow");
       SDL_Surface* icon = AssetManager::Get(ASSET_CLOSE_WINDOW_ICON);
       AbstractButton::SetIcon(icon);
       Panel::SetDimensions(icon->w, icon->h);
