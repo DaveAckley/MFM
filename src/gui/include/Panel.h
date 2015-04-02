@@ -117,7 +117,7 @@ namespace MFM
    protected:
     OString16 m_name;
 
-    Rect m_rect;
+    Rect m_rect;    // Size and location of panel relative to parent
     u32 m_bdColor;  // Default border color of this panel
     u32 m_bgColor;  // Default background color of this panel
     u32 m_fgColor;  // Default foreground color of this panel
@@ -204,6 +204,10 @@ namespace MFM
       m_name.GetZString(); // Ensure null terminated to use GetBuffer()
     }
 
+    /**
+       Primarily for debugging, print a text rendering of this panel
+       and its children.
+     */
     void Print(ByteSink & sink, u32 indent = 0) const;
 
     /**
@@ -282,6 +286,10 @@ namespace MFM
      */
     SPoint GetAbsoluteLocation();
 
+    bool Contains(SPoint& pt)
+    {
+      return m_rect.Contains(pt);
+    }
 
     virtual void Paint(Drawing & config);
 
@@ -352,11 +360,24 @@ namespace MFM
     virtual bool Handle(MouseMotionEvent & event) ;
 
     /**
-     * Called when a MouseMotionEvent happens which is equivalent to
-     * the mouse exiting this Panel . This is, for instance, useful if
-     * a Panel needs to stop following the mouse
-     */
-    virtual void OnMouseExit();
+       Called when a MouseMotionEvent happens which is equivalent to
+       the mouse exiting this Panel . This is, for instance, useful if
+       a Panel needs to stop following the mouse.  By default, does
+       nothing.
+    */
+    virtual void OnMouseExit()
+    {
+      /* No behavior by default */
+    }
+
+    /**
+       Called when a MouseMotionEvent happens which is equivalent to
+       the mouse entering this Panel . By default, does nothing.
+    */
+    virtual void OnMouseEnter()
+    {
+      /* No behavior by default */
+    }
 
     /**
      * Respond to the resizing of this panel's parent.

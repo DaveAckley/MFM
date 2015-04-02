@@ -304,9 +304,6 @@ namespace MFM {
 
   }
 
-  void Panel::OnMouseExit()
-  { /* No behavior by default */ }
-
   bool Panel::Dispatch(MouseEvent & event, const Rect & existing)
   {
 
@@ -343,9 +340,13 @@ namespace MFM {
 
       if(newFocus != oldFocus)
       {
-        if(oldFocus)
+        if (oldFocus)
         {
           oldFocus->OnMouseExit();
+        }
+        if (newFocus)
+        {
+          newFocus->OnMouseEnter();
         }
       }
       m_focusedChild = newFocus;
