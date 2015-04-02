@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  AbstractButton.h Clickable Panel
+  AbstractButton.h Clickable Label
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 */
 
 /**
-  \file AbstractButton.h Clickable Panel
+  \file AbstractButton.h Clickable Label
   \author Trent R. Small.
   \author David H. Ackley.
   \date (C) 2014 All rights reserved.
@@ -29,59 +29,18 @@
 #define ABSTRACTBUTTON_H
 
 #include "itype.h"
-#include "SDL.h"
-#include "SDL_ttf.h"
-#include "Point.h"
-#include "Panel.h"
-#include "Drawing.h"
+#include "Label.h"
 
 namespace MFM
 {
   /**
-   * A Panel which behaves as a button, built with abstract behavior
+   * A Label which behaves as a button, built with abstract behavior
    * upon clicks.
    */
-  class AbstractButton : public Panel
+  class AbstractButton : public Label
   {
    private:
-
-    /**
-     * Default color for the border of every AbstractButton
-     */
-    static const u32 BUTTON_BORDER_COLOR = Drawing::GREY10;
-
-    /**
-     * Default color for the background of every AbstractButton
-     */
-    static const u32 BUTTON_BACKGROUND_COLOR = Drawing::GREY20;
-
-    /**
-     * Default color for the foreground of every AbstractButton
-     */
-    static const u32 BUTTON_COLOR = Drawing::GREY90;
-
-    /**
-     * The size of this AbstractButton when being rendered and
-     * processing mouse hits.
-     */
-    SPoint m_dimensions;
-
-    /**
-     * The location of this AbstractButton relative to the Panel that
-     * is containing it.
-     */
-    SPoint m_location;
-
-    /**
-     * The text that will render on this AbstractButton .
-     */
-    char m_text[64];
-
-    /**
-     * An optional icon. If not NULL, will render instead of the default
-     * rendering scheme.
-     */
-    SDL_Surface* m_icon;
+    typedef Label Super;
 
     /**
      * A flag indicating whether or not this AbstractButton is enabled
@@ -89,20 +48,23 @@ namespace MFM
      */
     bool m_enabled;
 
+    u32 m_enabledFg;
+    u32 m_enabledBg;
+
+    u32 m_disabledFg;
+    u32 m_disabledBg;
+
     bool m_justClicked;
 
-    /**
-     * Initializes this AbstractButton with default values.
-     */
-    void Init() ;
-
   public:
+
+    void Init() ;
 
     /**
      * Constructs an AbstractButton with default parameters and
      * default coloring scheme.
      */
-    AbstractButton();
+    AbstractButton() ;
 
     /**
      * Constructs an AbstractButton with given text to be rendered
@@ -111,7 +73,7 @@ namespace MFM
      * @param text The text to render on top of this AbstractButton
      *             upon rendering.
      */
-    AbstractButton(const char* text);
+    AbstractButton(const char* text) ;
 
     /**
      * Constructs an AbstractButton with a given icon to be rendered
@@ -136,70 +98,9 @@ namespace MFM
     AbstractButton(const char* text, SDL_Surface* icon);
 
     /**
-     * Deconstructs this AbstractButton.
+     * Destructs this AbstractButton.
      */
     ~AbstractButton();
-
-    /**
-     * Sets the location of this AbstractButton, relative to the Panel
-     * which it is located inside of, at which to render this
-     * AbstractButton and process mouse hits.
-     *
-     * @param location The new location that this AbstractButton will
-     *                 reside at.
-     */
-    void SetLocation(const SPoint& location)
-    {
-      m_location = location;
-    }
-
-    /**
-     * Sets the icon of this AbstractButton which will render in its
-     * place upon rendering.
-     *
-     * @param icon A pointer to the SDL_Surface which will render upon
-     *             rendering of this AbstractButton.
-     */
-    void SetIcon(SDL_Surface* icon)
-    {
-      m_icon = icon;
-    }
-
-    /**
-     * Sets the icon of this AbstractButton which will render in its
-     * place upon rendering, specified by a loaded Asset.
-     *
-     * @param icon The Asset representing the SDL_Surface to use as
-     *             this AbstractButton's image.
-     */
-    void SetIcon(Asset a)
-    {
-      SetIcon(AssetManager::Get(a));
-    }
-
-    /**
-     * Gets the icon that is currently being rendered by this
-     * AbstractButton .
-     *
-     * @returns The icon that is currently being rendered by this
-     *          AbstractButton .
-     */
-    SDL_Surface* GetIcon()
-    {
-      return m_icon;
-    }
-
-    /**
-     * Sets the size of this AbstractButton which will affect how it
-     * is rendered on the screen and how mouse hits are processed.
-     *
-     * @param dimensions The new size of this AbstractButton .
-     */
-    void SetDimensions(const SPoint& dimensions)
-    {
-      m_dimensions = dimensions;
-      Panel::SetDimensions(dimensions.GetX(), dimensions.GetY());
-    }
 
     /**
      * Sets whether or not this AbstractButton will be enabled, and
@@ -215,35 +116,6 @@ namespace MFM
     }
 
     /**
-     * Sets the text that will be rendered on top of this
-     * AbstractButton upon rendering.
-     *
-     * @param text The new text that will be rendered on top of this
-     * AbstractButton upon rendering.
-     */
-    void SetText(const char* text)
-    {
-      u32 textlen = MIN(strlen(text),
-                        sizeof(m_text) / sizeof(char));
-      for(u32 i = 0; i < textlen; i++)
-      {
-        m_text[i] = text[i];
-      }
-    }
-
-    /**
-     * Gets the text that is currently being rendered on top of this
-     * AbstractButton upon rendering.
-     *
-     * @returns The text that is currently being rendered on top of this
-     * AbstractButton upon rendering.
-     */
-    const char* GetText()
-    {
-      return m_text;
-    }
-
-    /**
      * Checks to see whether or not this AbstractButton is enabled and
      * is therefore responding to mouse hits.
      *
@@ -255,16 +127,29 @@ namespace MFM
       return m_enabled;
     }
 
-    /**
-     * Checks to see whether or not a given SPoint lies within the
-     * bounds of this AbstractButton. This is used during mouse hit
-     * processing to see whether or not this AbstractButton has been
-     * clicked on.
-     *
-     * @param pt The SPoint in question of existing within the bounds
-     *           of this AbstractButton.
-     */
-    bool Contains(SPoint& pt);
+    void SetDisabledForeground(u32 rgb) { m_disabledFg = rgb; }
+    void SetDisabledBackground(u32 rgb) { m_disabledBg = rgb; }
+    void SetEnabledForeground(u32 rgb) { m_enabledFg = rgb; }
+    void SetEnabledBackground(u32 rgb) { m_enabledBg = rgb; }
+
+    u32 GetDisabledForeground() const { return m_disabledFg; }
+    u32 GetDisabledBackground() const { return m_disabledBg; }
+    u32 GetEnabledForeground() const { return m_enabledFg; }
+    u32 GetEnabledBackground() const { return m_enabledBg; }
+
+    u32 SetForeground(const u32 color)
+    {
+      u32 old = Super::SetForeground(color);
+      SetEnabledForeground(color);
+      return old;
+    }
+
+    u32 SetBackground(const u32 color)
+    {
+      u32 old = Super::SetBackground(color);
+      SetEnabledBackground(color);
+      return old;
+    }
 
     /////////
     //// Panel Methods
@@ -291,11 +176,6 @@ namespace MFM
         }
       }
       return false;
-    }
-
-    virtual void HandleResize(const UPoint& parentSize)
-    {
-      /* As a button, do nothing. */
     }
 
     bool PaintClickHighlight(Drawing& d)
