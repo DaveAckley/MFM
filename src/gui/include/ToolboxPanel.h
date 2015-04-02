@@ -533,6 +533,7 @@ namespace MFM
 
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
       {
+        m_toolButtons[i].Init();
         m_toolButtons[i].SetParent(this);
         m_toolButtons[i].Panel::SetRenderPoint(SPoint(16 + i * GetElementRenderSize(), 3));
         m_toolButtons[i].SetToolIcon(AssetManager::Get(assets[i]));
