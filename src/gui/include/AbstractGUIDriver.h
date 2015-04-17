@@ -129,6 +129,10 @@ namespace MFM
     u32 m_screenWidth;
     u32 m_screenHeight;
 
+    s32 m_desiredScreenWidth;
+    s32 m_desiredScreenHeight;
+
+    bool m_screenResizable;
 
     /************************************/
     /*******ABSTRACT BUTTONS*************/
@@ -531,6 +535,9 @@ namespace MFM
       SDL_Init(SDL_INIT_EVERYTHING);
       TTF_Init();
 
+      if (m_desiredScreenWidth > 0) m_screenWidth = (u32) m_desiredScreenWidth;
+      if (m_desiredScreenHeight > 0) m_screenHeight = (u32) m_desiredScreenHeight;
+
       SetScreenSize(m_screenWidth, m_screenHeight);
 
       m_rootPanel.SetName("Root");
@@ -812,6 +819,9 @@ namespace MFM
       , m_renderStats(false)
       , m_screenWidth(SCREEN_INITIAL_WIDTH)
       , m_screenHeight(SCREEN_INITIAL_HEIGHT)
+      , m_desiredScreenWidth(-1)
+      , m_desiredScreenHeight(-1)
+      , m_screenResizable(true)
       , m_heatmapButton(m_gridPanel)
       , m_selectedTool(TOOL_SELECTOR)
       , m_toolboxPanel(&m_selectedTool)
@@ -904,6 +914,42 @@ namespace MFM
       driver->m_srend.SetScreenshotTargetFPS(out);
     }
 
+    static void SetScreenWidthFromArgs(const char* str, void* driverptr)
+    {
+      AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
+      VArguments& args = driver->m_varguments;
+
+      s32 out;
+      const char * errmsg = AbstractDriver<GC>::GetNumberFromString(str, out, 0, 10000);
+      if (errmsg)
+      {
+        args.Die("Bad screen width '%s': %s", str, errmsg);
+      }
+
+      driver->m_desiredScreenWidth = out;
+    }
+
+    static void SetScreenHeightFromArgs(const char* str, void* driverptr)
+    {
+      AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
+      VArguments& args = driver->m_varguments;
+
+      s32 out;
+      const char * errmsg = AbstractDriver<GC>::GetNumberFromString(str, out, 0, 10000);
+      if (errmsg)
+      {
+        args.Die("Bad screen height '%s': %s", str, errmsg);
+      }
+
+      driver->m_desiredScreenHeight = out;
+    }
+
+    static void SetScreenSizeFixed(const char* str, void* driverptr)
+    {
+      AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
+      driver->m_screenResizable = false;
+    }
+
     static void SetStartPausedFromArgs(const char* not_used, void* driverptr)
     {
       AbstractGUIDriver& driver = *((AbstractGUIDriver*)driverptr);
@@ -938,6 +984,15 @@ namespace MFM
 
       this->RegisterArgument("Start with a minimal-sized window.",
                              "--startminimal", &ConfigMinimalView, this, false);
+
+      this->RegisterArgument("Request a starting screen width of ARG pixels.",
+                             "--screenwidth|--sw", &SetScreenWidthFromArgs, this, true);
+
+      this->RegisterArgument("Request a starting screen height of ARG pixels.",
+                             "--screenheight|--sh", &SetScreenHeightFromArgs, this, true);
+
+      this->RegisterArgument("Request a fixed-size (non-resizable) window.",
+                             "--screenfixed|--sf", &SetScreenSizeFixed, this, false);
 
       this->RegisterArgument("Record a png per epoch for playback at ARG fps",
                              "-p|--pngs", &SetRecordScreenshotPerAEPSFromArgs, this, true);
@@ -1153,8 +1208,9 @@ namespace MFM
     {
       m_screenWidth = width;
       m_screenHeight = height;
-      screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32,
-                                SDL_SWSURFACE | SDL_RESIZABLE);
+      u32 flags = SDL_SWSURFACE;
+      if (m_screenResizable) flags |= SDL_RESIZABLE;
+      screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32, flags);
 
       AssetManager::Initialize();
 
