@@ -32,42 +32,39 @@
 #include "EventWindow.h"
 #include "UlamContext.h"
 
-#ifndef Ud_Ui_Ut_102328Unsigned
-#define Ud_Ui_Ut_102328Unsigned
+// Unsigned(32)
+#ifndef Ud_Ui_Ut_102321u
+#define Ud_Ui_Ut_102321u
 namespace MFM{
-  struct Ui_Ut_102328Unsigned
+  struct Ui_Ut_102321u
   {
     typedef BitField<BitVector<32>, VD::U32, 32, 0> BF;
     BitVector<32> m_stg;
-    Ui_Ut_102328Unsigned() : m_stg() { }
-    Ui_Ut_102328Unsigned(const u32 d) : m_stg(d) {}
-    Ui_Ut_102328Unsigned(const Ui_Ut_102328Unsigned& d) : m_stg(d.m_stg) {}
-    ~Ui_Ut_102328Unsigned() {}
+    Ui_Ut_102321u() : m_stg() { }
+    Ui_Ut_102321u(const u32 d) : m_stg(d) {}
     const u32 read() const { return BF::Read(m_stg); }
     void write(const u32 v) { BF::Write(m_stg, v); }
   };
 } //MFM
-#endif /*Ud_Ui_Ut_102328Unsigned */
+#endif /*Ud_Ui_Ut_102321u */
 
 // Unsigned(8) [4] -- for ARGB colors
-#ifndef Ud_Ui_Ut_14188Unsigned
-#define Ud_Ui_Ut_14188Unsigned
+#ifndef Ud_Ui_Ut_14181u
+#define Ud_Ui_Ut_14181u
 namespace MFM{
-  struct Ui_Ut_14188Unsigned
+  struct Ui_Ut_14181u
   {
     typedef BitField<BitVector<32>, VD::BITS, 32, 0> BF;
     BitVector<32> m_stg;
-    Ui_Ut_14188Unsigned() : m_stg() { }
-    Ui_Ut_14188Unsigned(const u32 d) : m_stg(d) {}
-    Ui_Ut_14188Unsigned(const Ui_Ut_14188Unsigned& d) : m_stg(d.m_stg) {}
-    ~Ui_Ut_14188Unsigned() {}
+    Ui_Ut_14181u() : m_stg() { }
+    Ui_Ut_14181u(const u32 d) : m_stg(d) {}
     const u32 read() const { return BF::Read(m_stg); }   //reads entire array
     const u32 readArrayItem(const u32 index, const u32 unitsize) const { return BF::ReadArray(m_stg, index, unitsize); }
     void write(const u32 v) { BF::Write(m_stg, v); }   //writes entire array
     void writeArrayItem(const u32 v, const u32 index, const u32 unitsize) { BF::WriteArray(m_stg, v, index, unitsize); }
   };
 } //MFM
-#endif /*Ud_Ui_Ut_14188Unsigned */
+#endif /*Ud_Ui_Ut_14181u */
 
 namespace MFM
 {
@@ -164,11 +161,11 @@ namespace MFM
        method will fail!  That includes event window accesses AND
        random numbers!
      */
-    virtual Ui_Ut_14188Unsigned Uf_8getColor(UlamContext<EC>& uc,
+    virtual Ui_Ut_14181u Uf_8getColor(UlamContext<EC>& uc,
                                              T& Uv_4self,
-                                             Ui_Ut_102328Unsigned Uv_8selector) const
+                                             Ui_Ut_102321u Uv_8selector) const
     {
-      return Ui_Ut_14188Unsigned(0xffffffff);
+      return Ui_Ut_14181u(0xffffffff);
     }
 
     virtual bool GetPlaceable() const
