@@ -16,8 +16,33 @@ namespace MFM
 
   struct GridConfigCode {
 
-    enum TileType { TileUNSPEC, TileA, TileB, TileC, TileD, TileE, TileF, TileG, TileH, TileI };
-    enum { MIN_TYPE_CHAR = 'A', MAX_TYPE_CHAR = 'I' };
+    enum TileType { TileUNSPEC
+#define XX(A,B) , Tile##A
+#include "TileSizes.inc"
+#undef XX
+      , TileUPPER_BOUND
+    };
+
+    static u8 GetTileTypeCode(TileType t)
+    {
+      switch (t)
+      {
+#define XX(A,B) case Tile##A: return *#A;
+#include "TileSizes.inc"
+#undef XX
+      default: FAIL(ILLEGAL_ARGUMENT);
+      }
+    }
+
+    static u8 GetMinTypeCode()
+    {
+      return GetTileTypeCode((TileType) (TileUNSPEC + 1));
+    }
+
+    static u8 GetMaxTypeCode()
+    {
+      return GetTileTypeCode((TileType) (TileUPPER_BOUND - 1));
+    }
 
     TileType tileType;
     u32 gridWidth;
@@ -64,8 +89,8 @@ namespace MFM
       if (bs.Scanf("{%d%c%d}", &w, &ch, &h) != 5)
         return false;
 
-      if (ch < GridConfigCode::MIN_TYPE_CHAR ||
-          ch > GridConfigCode::MAX_TYPE_CHAR)
+      if (ch < GridConfigCode::GetMinTypeCode() ||
+          ch > GridConfigCode::GetMaxTypeCode())
         return false;
 
       if (bs.Read() >= 0)  // need EOF here
@@ -74,7 +99,7 @@ namespace MFM
       SetGridWidth(w);
       SetGridHeight(h);
       SetTileType((GridConfigCode::TileType)
-                  ((ch - GridConfigCode::MIN_TYPE_CHAR) + GridConfigCode::TileA));
+                  ((ch - GridConfigCode::GetMinTypeCode()) + GridConfigCode::TileA));
       return true;
     }
   };
@@ -88,6 +113,11 @@ namespace MFM
 
   /////
   // Tile types
+#define XX(A,B) \
+  typedef GridConfig<OurEventConfigAll, B> OurGridConfigTile##A;
+#include "TileSizes.inc"
+#undef XX
+  /*
   typedef GridConfig<OurEventConfigAll, 24> OurGridConfigTileA; // 256 sites/tile
   typedef GridConfig<OurEventConfigAll, 32> OurGridConfigTileB; // 576 sites/tile
   typedef GridConfig<OurEventConfigAll, 40> OurGridConfigTileC; // 1024 sites/tile
@@ -97,6 +127,7 @@ namespace MFM
   typedef GridConfig<OurEventConfigAll,136> OurGridConfigTileG; // 16384 sites/tile
   typedef GridConfig<OurEventConfigAll,188> OurGridConfigTileH; // 32400 sites/tile
   typedef GridConfig<OurEventConfigAll,264> OurGridConfigTileI; // 65536 sites/tile
+  */
 
   /////
   // Standard models
@@ -172,6 +203,19 @@ namespace MFM
 
     ThreadStamper m_stamper;
 
+    static void PrintTileTypes(const char* not_needed, void* nullForShort)
+    {
+      fprintf(stderr, "Supported tile types\n");
+
+#define XX(A,B) \
+    fprintf(stderr, "  Type '%s': %d non-cache sites (%d x %d site storage)\n", #A, (B-8)*(B-8), B, B);
+#include "TileSizes.inc"
+#undef XX
+
+      exit(0);
+    }
+
+
   public:
 
     MFMCDriver(u32 gridWidth, u32 gridHeight)
@@ -192,6 +236,12 @@ namespace MFM
     virtual void AddDriverArguments()
     {
       Super::AddDriverArguments();
+      this->RegisterSection("Driver-specific switches");
+
+      this->RegisterArgument("Display the supported tile types, then exit.",
+                             "--tiles", &PrintTileTypes, NULL, false);
+
+
     }
 
     virtual void OnceOnly(VArguments& args)
@@ -253,16 +303,8 @@ namespace MFM
     u32 h = gcc.gridHeight;
     switch (gcc.tileType)
     {
-#define XX(CODE) case GridConfigCode::CODE: return SimCheckAndRun<OurGridConfig##CODE>(argc, argv, w, h)
-      XX(TileA);
-      XX(TileB);
-      XX(TileC);
-      XX(TileD);
-      XX(TileE);
-      XX(TileF);
-      XX(TileG);
-      XX(TileH);
-      XX(TileI);
+#define XX(A,B) case GridConfigCode::Tile##A: return SimCheckAndRun<OurGridConfigTile##A>(argc, argv, w, h);
+#include "TileSizes.inc"
 #undef XX
     default:
       FAIL(ILLEGAL_STATE);

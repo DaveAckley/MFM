@@ -180,7 +180,10 @@ namespace MFM
 	    "\n"
 	    "Usage:\n"
 	    "  %s [GEOMETRY] [SWITCHES]\n"
-            "\n",
+            "\n"
+            " GEOMETRY is a 'tile type' placed between a grid width and a grid height,\n"
+            " and surrounded by '{}'s.  For example, geometry '{5C3}' denotes a grid\n"
+            " 5 wide by 3 high of tiles of type 'C' (1K sites/tile).\n",
             MFM_VERSION_STRING_SHORT,
             m_programName?m_programName:""
             );
