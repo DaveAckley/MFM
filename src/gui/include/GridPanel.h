@@ -31,6 +31,7 @@
 #include "itype.h"
 #include "MDist.h"
 #include "Panel.h"
+#include "Sense.h"
 #include "GridRenderer.h"
 #include "EditingTool.h"
 #include "ToolboxPanel.h"
@@ -484,6 +485,19 @@ namespace MFM
       SDL_MouseButtonEvent & event = mbe.m_event.button;
       if(event.type == SDL_MOUSEBUTTONDOWN)
       {
+        {
+          typename Grid<GC>::GridTouchEvent gte;
+          gte.m_touchType = TOUCH_TYPE_PROXIMITY;
+          gte.m_gridAtomCoord = ClickPointToAtom(SPoint(event.x, event.y));
+
+          if (event.button == SDL_BUTTON_LEFT)
+            gte.m_touchType =  TOUCH_TYPE_LIGHT;
+          else if(event.button == SDL_BUTTON_RIGHT)
+            gte.m_touchType =  TOUCH_TYPE_HEAVY;
+
+          m_mainGrid->SenseTouchAt(gte);
+        }
+
         SPoint pt = GetAbsoluteLocation();
         pt.Set(event.x - pt.GetX(),
                event.y - pt.GetY());
@@ -557,23 +571,26 @@ namespace MFM
       }
       else
       {
+        typename Grid<GC>::GridTouchEvent gte;
+        gte.m_touchType = TOUCH_TYPE_PROXIMITY;
+        gte.m_gridAtomCoord = ClickPointToAtom(SPoint(event.x, event.y));
+
         u8 mask = 0;
         if(mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT))
         {
           mask = SDL_BUTTON_LEFT;
+          gte.m_touchType =  TOUCH_TYPE_LIGHT;
         }
         else if(mbe.m_buttonMask & (1 << SDL_BUTTON_RIGHT))
         {
           mask = SDL_BUTTON_RIGHT;
+          gte.m_touchType =  TOUCH_TYPE_HEAVY;
         }
 
         m_grend->SetHoveredAtom(*m_mainGrid, SPoint(event.x, event.y));
+        m_mainGrid->SenseTouchAt(gte);
 
-        if(!mask)
-        {
-          m_grend->SetHoveredAtom(*m_mainGrid, SPoint(event.x, event.y));
-        }
-        else if(mask && !mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
+        if(mask && !mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
         {
           switch(mbe.m_selectedTool)
           {
