@@ -17,11 +17,11 @@ namespace MFM
   bool WindowScanner<EC>::FillIfType(const SPoint& relative, const u32 type, const T& atom)
   {
     bool replaced = false;
-    if(m_win.IsLiveSite(relative))
+    if(m_win.IsLiveSiteDirect(relative))
     {
-      if(m_win.GetRelativeAtom(relative).GetType() == type)
+      if(m_win.GetRelativeAtomDirect(relative).GetType() == type)
       {
-        m_win.SetRelativeAtom(relative, atom);
+        m_win.SetRelativeAtomDirect(relative, atom);
         replaced = true;
       }
     }
@@ -34,11 +34,11 @@ namespace MFM
   {
     bool replaced = false;
 
-    if(m_win.IsLiveSite(relative))
+    if(m_win.IsLiveSiteDirect(relative))
     {
-      if(m_win.GetRelativeAtom(relative).GetType() != type)
+      if(m_win.GetRelativeAtomDirect(relative).GetType() != type)
       {
-        m_win.SetRelativeAtom(relative, atom);
+        m_win.SetRelativeAtomDirect(relative, atom);
         replaced = true;
       }
     }
@@ -60,9 +60,9 @@ namespace MFM
 
     for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(radius); i++)
     {
-      if(m_win.IsLiveSite(md.GetPoint(i)))
+      if(m_win.IsLiveSiteDirect(md.GetPoint(i)))
       {
-        if(m_win.GetRelativeAtom(md.GetPoint(i)).GetType() == type)
+        if(m_win.GetRelativeAtomDirect(md.GetPoint(i)).GetType() == type)
         {
           return true;
         }
@@ -81,9 +81,9 @@ namespace MFM
 
     for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(radius); i++)
     {
-      if(m_win.IsLiveSite(md.GetPoint(i)))
+      if(m_win.IsLiveSiteDirect(md.GetPoint(i)))
       {
-        if(m_win.GetRelativeAtom(md.GetPoint(i)).GetType() == type)
+        if(m_win.GetRelativeAtomDirect(md.GetPoint(i)).GetType() == type)
         {
           atomCount++;
         }
@@ -107,9 +107,9 @@ namespace MFM
     for(u32 i = 0; i < dirCount; i++)
     {
       Dirs::FillDir(searchPt, neighborhood[i]);
-      if(m_win.IsLiveSite(searchPt))
+      if(m_win.IsLiveSiteDirect(searchPt))
       {
-        if(m_win.GetRelativeAtom(searchPt).GetType() == type)
+        if(m_win.GetRelativeAtomDirect(searchPt).GetType() == type)
         {
           return true;
         }
@@ -145,9 +145,9 @@ namespace MFM
     {
       Dirs::FillDir(searchPt, neighborhood[i]);
 
-      if(m_win.IsLiveSite(searchPt))
+      if(m_win.IsLiveSiteDirect(searchPt))
       {
-        if(m_win.GetRelativeAtom(searchPt).GetType() == type)
+        if(m_win.GetRelativeAtomDirect(searchPt).GetType() == type)
         {
           atomCount++;
         }
@@ -190,9 +190,9 @@ namespace MFM
 
     for(u32 i = md.GetFirstIndex(1); i <= md.GetLastIndex(radius); i++)
     {
-      if(m_win.IsLiveSite(md.GetPoint(i)))
+      if(m_win.IsLiveSiteDirect(md.GetPoint(i)))
       {
-        if(m_win.GetRelativeAtom(md.GetPoint(i)).GetType() == type)
+        if(m_win.GetRelativeAtomDirect(md.GetPoint(i)).GetType() == type)
         {
           foundPts++;
           if(m_rand.OneIn(foundPts))

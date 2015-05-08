@@ -199,6 +199,13 @@ namespace MFM
       this->NeedElement(&Element_CheckerForkRed<EC>::THE_INSTANCE);
       this->NeedElement(&Element_Wanderer_Cyan<EC>::THE_INSTANCE);
       this->NeedElement(&Element_Wanderer_Magenta<EC>::THE_INSTANCE);
+
+      this->NeedElement(&Element_City_Building<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_City_Car<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_City_Intersection<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_City_Park<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_City_Sidewalk<EC>::THE_INSTANCE);
+      this->NeedElement(&Element_City_Street<EC>::THE_INSTANCE);
     }
 
     ThreadStamper m_stamper;
