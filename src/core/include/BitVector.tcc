@@ -4,33 +4,33 @@
 #include <string.h> /* For memset, memcpy */
 
 namespace MFM {
-  template <u32 BITS>
-  BitVector<BITS>::BitVector()
+  template <u32 B>
+  BitVector<B>::BitVector()
   {
     Clear();
   }
 
-  template <u32 BITS>
-  BitVector<BITS>::BitVector(const u32 * const values)
+  template <u32 B>
+  BitVector<B>::BitVector(const u32 * const values)
   {
     memcpy(m_bits,values,sizeof(m_bits));
   }
 
 #if 0 // Fri Mar 13 16:04:59 2015 XXX TESTING GCC CODE GEN IMPACTS
-  template <u32 BITS>
-  BitVector<BITS>::BitVector(const BitVector & other)
+  template <u32 B>
+  BitVector<B>::BitVector(const BitVector & other)
   {
     memcpy(m_bits,other.m_bits,sizeof(m_bits));
   }
 #endif // Fri Mar 13 16:04:59 2015 XXX TESTING GCC CODE GEN IMPACTS
 
   // This is the general case..
-  template <u32 BITS>
-  BitVector<BITS>::BitVector(const u32 value)
+  template <u32 B>
+  BitVector<B>::BitVector(const u32 value)
   {
     Clear();
-    u32 startIdx = (u32) MAX(0, ((s32) BITS) - 32);
-    u32 length = BITS - startIdx;
+    u32 startIdx = (u32) MAX(0, ((s32) B) - 32);
+    u32 length = B - startIdx;
     Write(startIdx, length, value);
   }
 
@@ -61,8 +61,8 @@ namespace MFM {
   }
 #endif
 
-  template <u32 BITS>
-  void BitVector<BITS>::Clear()
+  template <u32 B>
+  void BitVector<B>::Clear()
   {
     memset(m_bits, 0, sizeof(m_bits));
   }
@@ -76,8 +76,8 @@ namespace MFM {
    * and Write(), to avoid going per-bit)
    */
 
-  template <u32 BITS>
-  void BitVector<BITS>::WriteBit(u32 idx, bool bit)
+  template <u32 B>
+  void BitVector<B>::WriteBit(u32 idx, bool bit)
   {
     u32 arrIdx = idx / BITS_PER_UNIT;
     u32 inIdx = idx % BITS_PER_UNIT;
@@ -89,8 +89,8 @@ namespace MFM {
       m_bits[arrIdx] |= newWord;
   }
 
-  template <u32 BITS>
-  bool BitVector<BITS>::ToggleBit(const u32 idx)
+  template <u32 B>
+  bool BitVector<B>::ToggleBit(const u32 idx)
   {
     u32 arrIdx = idx / BITS_PER_UNIT;
     u32 inIdx = idx % BITS_PER_UNIT;
@@ -100,8 +100,8 @@ namespace MFM {
     return m_bits[arrIdx] & newWord;
   }
 
-  template <u32 BITS>
-  bool BitVector<BITS>::ReadBit(u32 idx)
+  template <u32 B>
+  bool BitVector<B>::ReadBit(u32 idx)
   {
     u32 arrIdx = idx / BITS_PER_UNIT;
     u32 intIdx = idx % BITS_PER_UNIT;
@@ -109,8 +109,8 @@ namespace MFM {
     return m_bits[arrIdx] & (0x80000000 >> intIdx);
   }
 
-  template <u32 BITS>
-  u64 BitVector<BITS>::ReadLong(const u32 startIdx, const u32 length) const
+  template <u32 B>
+  u64 BitVector<B>::ReadLong(const u32 startIdx, const u32 length) const
   {
     const u32 firstLen = MIN((const u32) 32,length);
     const u32 secondLen = length - firstLen;
@@ -122,8 +122,8 @@ namespace MFM {
     return ret;
   }
 
-  template <u32 BITS>
-  void BitVector<BITS>::WriteLong(const u32 startIdx, const u32 length, const u64 value)
+  template <u32 B>
+  void BitVector<B>::WriteLong(const u32 startIdx, const u32 length, const u64 value)
   {
     const u32 firstLen = MIN((const u32) 32,length);
     const u32 secondLen = length - firstLen;
@@ -134,15 +134,15 @@ namespace MFM {
     }
   }
 
-  template <u32 BITS>
-  void BitVector<BITS>::Write(u32 startIdx,
+  template <u32 B>
+  void BitVector<B>::Write(u32 startIdx,
                               u32 length,
                               u32 value)
   {
     if (length == 0)
       return;
 
-    MFM_API_ASSERT_ARG(startIdx + length <= BITS);
+    MFM_API_ASSERT_ARG(startIdx + length <= B);
     MFM_API_ASSERT_ARG(length <= sizeof(BitUnitType) * CHAR_BIT);
 
     /* Since we're writing no more than 32 bits into an array of 32 bit
@@ -161,13 +161,13 @@ namespace MFM {
       WriteToUnit(firstUnitIdx + 1, 0, length - firstUnitLength, value);
   }
 
-  template <u32 BITS>
-  u32 BitVector<BITS>::Read(const u32 startIdx, const u32 length) const
+  template <u32 B>
+  u32 BitVector<B>::Read(const u32 startIdx, const u32 length) const
   {
     if (length == 0)
       return 0;
 
-    MFM_API_ASSERT_ARG(startIdx + length <= BITS);
+    MFM_API_ASSERT_ARG(startIdx + length <= B);
     MFM_API_ASSERT_ARG(length <= sizeof(BitUnitType) * CHAR_BIT);
 
     /* See Write(u32,u32,u32) for theory, such as it is */
@@ -189,12 +189,12 @@ namespace MFM {
 
 
 
-  template <u32 BITS>
-  void BitVector<BITS>::StoreBits(const u32 bits, const u32 startIdx, const u32 length)
+  template <u32 B>
+  void BitVector<B>::StoreBits(const u32 bits, const u32 startIdx, const u32 length)
   {
     if (!length) return;
 
-    const u32 stopIdx = MIN((u32) BITS, startIdx + length) - 1;
+    const u32 stopIdx = MIN((u32) B, startIdx + length) - 1;
 
     const u32 firstUnitIdx = startIdx / BITS_PER_UNIT;
     const u32 firstUnitFirstBit = startIdx % BITS_PER_UNIT;
@@ -231,24 +231,24 @@ namespace MFM {
     }
   }
 
-  template <u32 BITS>
-  void BitVector<BITS>::Print(ByteSink & ostream) const
+  template <u32 B>
+  void BitVector<B>::Print(ByteSink & ostream) const
   {
-    for (u32 i = 0; i < BITS; i += 4)
+    for (u32 i = 0; i < B; i += 4)
       ostream.Printf("%x",Read(i,4));
   }
 
-  template <u32 BITS>
-  void BitVector<BITS>::PrintBase2(ByteSink& ostream) const
+  template <u32 B>
+  void BitVector<B>::PrintBase2(ByteSink& ostream) const
   {
-    for(u32 i = 0; i < BITS; i++)
+    for(u32 i = 0; i < B; i++)
     {
       ostream.Printf("%d", Read(i, 1) ? 1 : 0);
     }
   }
 
-  template <u32 BITS>
-  void BitVector<BITS>::PrintBytes(ByteSink& ostream) const
+  template <u32 B>
+  void BitVector<B>::PrintBytes(ByteSink& ostream) const
   {
     for(u32 w = 0; w < ARRAY_LENGTH; w++)
     {
@@ -256,13 +256,13 @@ namespace MFM {
     }
   }
 
-  template <u32 BITS>
-  bool BitVector<BITS>::Read(ByteSource & istream)
+  template <u32 B>
+  bool BitVector<B>::Read(ByteSource & istream)
   {
     istream.SkipWhitespace();
 
-    BitVector<BITS> temp;
-    for (u32 i = 0; i < BITS; i += 4)
+    BitVector<B> temp;
+    for (u32 i = 0; i < B; i += 4)
     {
       s32 hex;
       if (!istream.Scan(hex, Format::HEX, 1))
@@ -277,10 +277,10 @@ namespace MFM {
     return true;
   }
 
-  template <u32 BITS>
-  bool BitVector<BITS>::ReadBytes(ByteSource& istream)
+  template <u32 B>
+  bool BitVector<B>::ReadBytes(ByteSource& istream)
   {
-    BitVector<BITS> temp;
+    BitVector<B> temp;
     for(u32 w = 0; w < ARRAY_LENGTH; w++)
     {
       if (!istream.Scan(temp.m_bits[w], Format::BEU32))
@@ -292,13 +292,13 @@ namespace MFM {
     return true;
   }
 
-  template <u32 BITS>
-  bool BitVector<BITS>::ReadBase2(ByteSource& istream)
+  template <u32 B>
+  bool BitVector<B>::ReadBase2(ByteSource& istream)
   {
     istream.SkipWhitespace();
 
-    BitVector<BITS> temp;
-    for(u32 i = 0; i < BITS; i++)
+    BitVector<B> temp;
+    for(u32 i = 0; i < B; i++)
     {
       s32 bit;
       if(!istream.Scan(bit, Format::BIN, 1))
@@ -313,22 +313,22 @@ namespace MFM {
     return true;
   }
 
-  template <u32 BITS>
-  bool BitVector<BITS>::operator==(const BitVector & rhs) const
+  template <u32 B>
+  bool BitVector<B>::operator==(const BitVector & rhs) const
   {
     return 0 == memcmp(m_bits, rhs.m_bits, sizeof(m_bits));
 
   }
 
-  template <u32 BITS>
-  void BitVector<BITS>::FromArray(const u32 array[ARRAY_LENGTH])
+  template <u32 B>
+  void BitVector<B>::FromArray(const u32 array[ARRAY_LENGTH])
   {
     for(u32 i = 0; i < ARRAY_LENGTH; i++)
       m_bits[i] = array[i];
   }
 
-  template <u32 BITS>
-  void BitVector<BITS>::ToArray(u32 array[ARRAY_LENGTH]) const
+  template <u32 B>
+  void BitVector<B>::ToArray(u32 array[ARRAY_LENGTH]) const
   {
     for(u32 i = 0; i < ARRAY_LENGTH; i++)
       array[i] = m_bits[i];

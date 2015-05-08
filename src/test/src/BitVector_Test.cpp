@@ -17,6 +17,15 @@ namespace MFM {
     };
 
   void BitVector_Test::Test_RunTests() {
+    {
+      BitVector<0> zeroSizeShouldCompileOK;
+      assert(sizeof(zeroSizeShouldCompileOK) * 8 == BitVector<256>::BITS_PER_UNIT);
+
+      assert(zeroSizeShouldCompileOK.Read(0, 0) == 0);  // Only legal read args
+      zeroSizeShouldCompileOK.Write(0, 0, 0x87654321);  // Ignored
+
+      assert(zeroSizeShouldCompileOK.Read(0, 0) == 0); // Still nothing there
+    }
     Test_bitVectorCtors();
     Test_bitVectorLong();
     Test_bitVectorAllocate();

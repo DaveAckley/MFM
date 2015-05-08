@@ -47,7 +47,7 @@ namespace MFM {
   class BitVector
   {
   public:
-    enum { BITS = B };
+    enum { BITS = ((B==0) ? 1 : B) }; // Avoid zero length array
 
     /**
      * Gets the number of bits that may be indexed inside this
