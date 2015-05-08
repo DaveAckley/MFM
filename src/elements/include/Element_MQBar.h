@@ -240,9 +240,9 @@ namespace MFM
       return 0;
     }
 
-
-    virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const
+    virtual u32 LocalPhysicsColor(const Site<AC>& site, u32 selector) const
     {
+      const T& atom  = site.GetAtom();
       switch (selector) {
       case 1: {
         SPoint barMax = GetMax(atom);

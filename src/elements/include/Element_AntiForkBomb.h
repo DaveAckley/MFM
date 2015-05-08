@@ -84,12 +84,15 @@ namespace MFM
       Element<EC>::SetName("Anti-Fork Bomb");
     }
 
-    virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
+    enum { DEFAULT_COLOR = 0xff333333 };
+
+    virtual u32 LocalPhysicsColor(const Site<AC>& site, u32 selector) const
     {
+      const T& atom  = site.GetAtom();
       u32 level = AFInflammationLevel::Read(atom);  // 0..3
       if (level == 0)
       {
-        return 0xff333333; // Grey20
+        return DEFAULT_COLOR; // Grey20
       }
 
       const u32 LEVEL_INCREMENT = 50;
@@ -200,8 +203,7 @@ namespace MFM
 
     virtual u32 DefaultPhysicsColor() const
     {
-      T temp;
-      return LocalPhysicsColor(temp, 0);
+      return DEFAULT_COLOR;
     }
 
   };

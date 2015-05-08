@@ -53,7 +53,7 @@ namespace MFM
      */
     virtual u32 GetBombRange() const = 0;
 
-    virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const = 0;
+    virtual u32 LocalPhysicsColor(const Site<AC>& site, u32 selector) const = 0;
 
     AbstractElement_ForkBomb(const UUID & uuid) : Element<EC>(uuid)
     {
@@ -67,8 +67,10 @@ namespace MFM
 
     virtual u32 DefaultPhysicsColor() const
     {
+      Site<AC> s;
       T temp;
-      return LocalPhysicsColor(temp, 0);
+      s.PutAtom(temp);
+      return LocalPhysicsColor(s, 0);
     }
 
     virtual void Behavior(EventWindow<EC>& window) const

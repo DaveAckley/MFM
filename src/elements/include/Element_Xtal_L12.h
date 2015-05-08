@@ -67,10 +67,12 @@ namespace MFM
       return 0xff11bb33;
     }
 
+    /*
     virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
     {
       return DefaultPhysicsColor();
     }
+    */
 
     typedef typename MFM::AbstractElement_Xtal<EC>::XtalSites XtalSites;
 
