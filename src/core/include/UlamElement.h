@@ -85,7 +85,7 @@ namespace MFM
     virtual bool GetPlaceable() const = 0;
     virtual const u32 GetVersion() const = 0;
     virtual const u32 GetNumColors() const = 0;
-    virtual const u32 GetColor(UlamContext<EC>& uc, T atom, u32 colnum) const = 0;
+    virtual const u32 GetElementColor() const = 0;
     virtual const u32 GetSymmetry(UlamContext<EC>& uc) const = 0;
 
     virtual const u32 GetPercentDiffusability() const
@@ -245,19 +245,20 @@ namespace MFM
 
     virtual u32 DefaultPhysicsColor() const
     {
-      if (m_info && m_info->GetNumColors() > 0) {
-        UlamContext<EC> uc;
-        return m_info->GetColor(uc, this->GetDefaultAtom(), 0);
+      if (m_info) {
+        return m_info->GetElementColor();
       }
       return 0xffffffff;
     }
 
     virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
     {
+      /* XXX REWRITE!
       if (m_info && m_info->GetNumColors() > selector) {
         UlamContext<EC> uc;
         return m_info->GetColor(uc, atom, selector);
       }
+      */
       return this->PhysicsColor();
     }
 

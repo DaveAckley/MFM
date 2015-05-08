@@ -32,6 +32,7 @@
 #include "SizedTile.h"
 #include "ElementTable.h"
 #include "Random.h"
+#include "Sense.h"
 #include "GridConfig.h"
 #include "GridTransceiver.h"
 #include "ElementRegistry.h"
@@ -248,6 +249,16 @@ namespace MFM {
     void DoTileDriverControl(TileDriverControl & tc);
 
   public:
+    struct GridTouchEvent {
+      SiteTouchType m_touchType;
+      SPoint m_gridAtomCoord;
+      GridTouchEvent()
+        : m_touchType(TOUCH_TYPE_NONE)
+        , m_gridAtomCoord(0,0)
+      { }
+    };
+
+    void SenseTouchAt(const GridTouchEvent & gridTouchEvent);
 
     s32 GetWarpFactor() const
     {

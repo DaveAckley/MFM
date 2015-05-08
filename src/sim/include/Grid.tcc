@@ -306,6 +306,20 @@ namespace MFM {
   }
 
   template <class GC>
+  void Grid<GC>::SenseTouchAt(const GridTouchEvent & gte)
+  {
+    SPoint tileInGrid, siteInTile;
+    if (!MapGridToTile(gte.m_gridAtomCoord, tileInGrid, siteInTile))
+    {
+      return;  // ain't no touch
+    }
+
+    Tile<EC> & owner = GetTile(tileInGrid);
+    Site<AC> & site = owner.GetSite(siteInTile);
+    site.Sense(gte.m_touchType);
+  }
+
+  template <class GC>
   bool Grid<GC>::MapGridToTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const
   {
     SPoint myTile, mySite;

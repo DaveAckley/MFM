@@ -29,12 +29,13 @@
 
 #include "itype.h"
 #include "AtomConfig.h"
+#include "Base.h"
 
 namespace MFM
 {
 
   /**
-     An Site provides a single Atom plus all information associated
+     A Site holds a Base and an Atom, and all information associated
      with that Atom, such as access times, ages, and so forth.  It is
      a template depending only on an AtomConfig (AC).
    */
@@ -52,52 +53,41 @@ namespace MFM
 
   private:
     T m_atom;
-    T m_state;
-    T m_base;
+    Base<AC> m_base;
     u64 m_eventCount;
     u64 m_lastChangedEventNumber;
     s64 m_lastEventEventNumber;
-    u32 m_rgbIn;
-    u32 m_rgbOut;
-    u32 m_senseIn;
-    u32 m_motorOut;
     bool m_isLiveSite;
 
   public:
     Site()
       : m_eventCount(0)
       , m_lastChangedEventNumber(0)
-      , m_lastEventEventNumber(0)
-      , m_rgbIn(0)
-      , m_rgbOut(0)
-      , m_senseIn(0)
-      , m_motorOut(0)
+      , m_lastEventEventNumber(S32_MIN) // init deep in past
       , m_isLiveSite(true)
     { }
 
-    u32 GetRGBIn() const { return m_rgbIn; }
-    void SetRGBIn(u32 newRGB) { m_rgbIn = newRGB; }
+    void Sense(SiteTouchType stt)
+    {
+      m_base.GetSensory().Touch(stt, m_lastEventEventNumber);
+    }
 
-    u32 GetRGBOut() const { return m_rgbOut; }
-    void SetRGBOut(u32 newRGB) { m_rgbOut = newRGB; }
+    bool InRecentProximity()
+    {
+      return TOUCH_TYPE_PROXIMITY == m_base.GetSensory().RecentTouch(m_lastEventEventNumber);
+    }
 
-    u32 GetSenseIn() const { return m_senseIn; }
-    void SetSenseIn(u32 newSense) { m_senseIn = newSense; }
-
-    u32 GetMotorOut() const { return m_motorOut; }
-    void SetMotorOut(u32 newMotor) { m_motorOut = newMotor; }
+    bool HasRecentLightTouch()
+    {
+      return TOUCH_TYPE_LIGHT == m_base.GetSensory().RecentTouch(m_lastEventEventNumber);
+    }
 
     void PutAtom(const T & newAtom) { m_atom = newAtom; }
     T & GetAtom() { return m_atom; }
     const T & GetAtom() const { return m_atom; }
 
-    void PutStateAtom(const T & newState) { m_state = newState; }
-    T & GetStateAtom() { return m_state; }
-    const T & GetStateAtom() const { return m_state; }
-
-    void PutBaseAtom(const T & newBase) { m_base = newBase; }
-    T & GetBaseAtom() { return m_base; }
-    const T & GetBaseAtom() const { return m_base; }
+    Base<AC> & GetBase() { return m_base; }
+    const Base<AC> & GetBase() const { return m_base; }
 
     void Clear() {
       m_atom.SetEmpty();
@@ -126,6 +116,7 @@ namespace MFM
 
     void SetLastEventEventNumber(u64 eventNumber) {
       m_lastEventEventNumber = (s64) eventNumber;
+      m_base.SetLastEventEventNumber(eventNumber);
     }
 
   };

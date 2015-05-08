@@ -29,6 +29,7 @@
 #define ELEMENT_H
 
 #include "Atom.h"
+#include "Site.h"
 #include "Parameter.h"
 #include "itype.h"
 #include "ElementTypeNumberMap.h"
@@ -41,7 +42,6 @@ namespace MFM
 {
   typedef u32 ElementType;
 
-  template <class EC> class Atom; // FORWARD
   template <class EC> class EventWindow; // FORWARD
   template <class EC> class UlamElement; // FORWARD
 
@@ -473,8 +473,8 @@ namespace MFM
      * wanting to use a gradient or some other variable color based on
      * the body of the specified Atom .
      *
-     * @param atom The Atom of this element of which to find a color
-     *             for.
+     * @param site The Site containing an Atom of this Element, of
+     *             which the color is to be found.
      *
      * @param selector An additional argument which may be used to
      *                 determine the color of which to render \c atom
@@ -482,7 +482,7 @@ namespace MFM
      *
      * @returns The 32-bit ARGB color of which to render \c atom with.
      */
-    virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
+    virtual u32 LocalPhysicsColor(const Site<AC>& site, u32 selector) const
     {
       return PhysicsColor();
     }

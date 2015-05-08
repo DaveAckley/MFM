@@ -6,22 +6,25 @@ namespace MFM
 {
 
   template <class EC>
-  u32 TileRenderer::GetAtomColor(Tile<EC>& tile, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom,
+  u32 TileRenderer::GetSiteColor(Tile<EC>& tile, const Site<typename EC::ATOM_CONFIG> & site,
                                  u32 selector)
   {
+    const typename EC::ATOM_CONFIG::ATOM_TYPE & atom = site.GetAtom();
     const Element<EC> * elt = tile.GetElementTable().Lookup(atom.GetType());
     if (elt)
     {
-      return elt->LocalPhysicsColor(atom,selector);
+      return elt->LocalPhysicsColor(site,selector);
     }
     return 0xffffffff;
   }
 
+#if 0
   template <class EC>
   u32 TileRenderer::GetDataHeatColor(Tile<EC>& tile, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom)
   {
     return GetAtomColor(tile,atom,1);
   }
+#endif
 
 
   template <class EC>
@@ -115,61 +118,62 @@ namespace MFM
   void TileRenderer::RenderAtom(Drawing & drawing, const SPoint& atomLoc,
                                 const UPoint& rendPt,  Tile<EC>& tile, bool lowlight)
   {
-    const typename EC::ATOM_CONFIG::ATOM_TYPE * atom = tile.GetAtom(atomLoc);
-    if(!atom->IsSane())
+    typedef typename EC::ATOM_CONFIG::ATOM_TYPE T;
+    const Site<typename EC::ATOM_CONFIG> & site = tile.GetSite(atomLoc);
+    const T & atom = site.GetAtom();
+    if(!atom.IsSane())
     {
       RenderBadAtom<EC>(drawing, rendPt);
     }
-    else if(atom->GetType() != Element_Empty<EC>::THE_INSTANCE.GetType())
+    else if(atom.GetType() == T::ATOM_EMPTY_TYPE) return;
+
+    u32 color = GetSiteColor(tile, site, m_heatmapSelector);
+
+    if(lowlight)
     {
-      u32 color = GetAtomColor(tile, *atom, m_heatmapSelector);
+      color = Drawing::HalfColor(color);
+    }
 
-      if(lowlight)
+    if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX() &&
+       rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
+    {
+      if(color)
       {
-        color = Drawing::HalfColor(color);
-      }
+        // Round up on radius.  Better to overlap than vanish
+        u32 radius = (m_atomDrawSize + 1) / 2;
 
-      if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX() &&
-         rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
-      {
-        if(color)
+        drawing.SetForeground(color);
+        if(m_renderSquares)
         {
-          // Round up on radius.  Better to overlap than vanish
-          u32 radius = (m_atomDrawSize + 1) / 2;
+          drawing.FillRect(rendPt.GetX(),
+                           rendPt.GetY(),
+                           m_atomDrawSize,
+                           m_atomDrawSize);
+        }
+        else
+        {
+          drawing.FillCircle(rendPt.GetX(),
+                             rendPt.GetY(),
+                             m_atomDrawSize,
+                             m_atomDrawSize,
+                             radius);
+        }
 
-          drawing.SetForeground(color);
-          if(m_renderSquares)
+        if (m_atomDrawSize > 40)
+        {
+          const Element<EC> * elt = tile.GetElement(atom.GetType());
+          if (elt)
           {
-            drawing.FillRect(rendPt.GetX(),
-                            rendPt.GetY(),
-                            m_atomDrawSize,
-                            m_atomDrawSize);
-          }
-          else
-          {
-            drawing.FillCircle(rendPt.GetX(),
-                               rendPt.GetY(),
-                               m_atomDrawSize,
-                               m_atomDrawSize,
-                               radius);
-          }
-
-          if (m_atomDrawSize > 40)
-          {
-            const Element<EC> * elt = tile.GetElement(atom->GetType());
-            if (elt)
+            drawing.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
+            const char * sym = elt->GetAtomicSymbol();
+            const SPoint size = drawing.GetTextSize(sym);
+            const UPoint box = UPoint(m_atomDrawSize, m_atomDrawSize);
+            if (size.GetX() > 0 && size.GetY() > 0)
             {
-              drawing.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
-              const char * sym = elt->GetAtomicSymbol();
-              const SPoint size = drawing.GetTextSize(sym);
-              const UPoint box = UPoint(m_atomDrawSize, m_atomDrawSize);
-              if (size.GetX() > 0 && size.GetY() > 0)
-              {
-                const UPoint usize(size.GetX(), size.GetY());
-                drawing.SetBackground(Drawing::BLACK);
-                drawing.SetForeground(Drawing::WHITE);
-                drawing.BlitBackedTextCentered(sym, rendPt, box);
-              }
+              const UPoint usize(size.GetX(), size.GetY());
+              drawing.SetBackground(Drawing::BLACK);
+              drawing.SetForeground(Drawing::WHITE);
+              drawing.BlitBackedTextCentered(sym, rendPt, box);
             }
           }
         }

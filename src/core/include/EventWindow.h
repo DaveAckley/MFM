@@ -33,6 +33,7 @@
 #include "CacheProcessor.h"
 #include "MDist.h"  /* for EVENT_WINDOW_SITES */
 #include "PSym.h"   /* For PointSymmetry, Map */
+#include "Base.h"
 
 namespace MFM
 {
@@ -86,6 +87,7 @@ namespace MFM
   private:
     // Extract short names for parameter types
     typedef typename EC::ATOM_CONFIG AC;
+    typedef typename EC::SITE S;
     typedef typename AC::ATOM_TYPE T;
     enum { R = EC::EVENT_WINDOW_RADIUS };
   public:
@@ -109,6 +111,8 @@ namespace MFM
      */
     T m_atomBuffer[SITE_COUNT];
     bool m_isLiveSite[SITE_COUNT];
+
+    Base<AC> m_centerBase;
 
     SPoint m_center;
 
@@ -229,6 +233,16 @@ namespace MFM
      * element testing.
      */
     bool InitForEvent(const SPoint & center) ;
+
+    const Base<AC> & GetBase() const
+    {
+      return m_centerBase;
+    }
+
+    Base<AC> & GetBase()
+    {
+      return m_centerBase;
+    }
 
     u64 GetEventWindowsAttempted() const
     {

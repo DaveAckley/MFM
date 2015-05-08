@@ -3,6 +3,7 @@
 #include "Tile.h"
 #include "Random.h"
 #include "EventWindow.h"
+#include "Base.h"
 
 namespace MFM {
 
@@ -41,6 +42,12 @@ namespace MFM {
   {
     AssertTile();
     return GetTile().GetEventWindow();
+  }
+
+  template <class EC>
+  Base<typename EC::ATOM_CONFIG> & UlamContext<EC>::GetBase()
+  {
+    return GetEventWindow().GetBase();
   }
 
 }

@@ -30,12 +30,17 @@
 
 namespace MFM
 {
+  template <class AC> class Base; // FORWARD
   template <class EC> class Tile; // FORWARD
   template <class EC> class EventWindow; // FORWARD
   class Random; // FORWARD
 
   template <class EC>
   class UlamContext {
+
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename EC::SITE S;
+
     Tile<EC> * m_tile;
     void AssertTile() ;
 
@@ -50,6 +55,8 @@ namespace MFM
     Random & GetRandom() ;
 
     EventWindow<EC> & GetEventWindow() ;
+
+    Base<AC> & GetBase() ;
 
   };
 }

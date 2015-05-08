@@ -343,6 +343,9 @@ namespace MFM {
   {
     const MDist<R> & md = MDist<R>::get();
     Tile<EC> & tile = GetTile();
+
+    m_centerBase = tile.GetSite(SPoint(0,0)).GetBase();
+
     for (u32 i = 0; i < SITE_COUNT; ++i)
     {
       const SPoint & pt = md.GetPoint(i) + m_center;
@@ -372,6 +375,9 @@ namespace MFM {
     // Now write back changes and notify the cps
     const MDist<R> & md = MDist<R>::get();
     Tile<EC> & tile = GetTile();
+
+    // Write back base changes if any
+    tile.GetSite(SPoint(0,0)).GetBase() = m_centerBase;
 
     for (u32 i = 0; i < SITE_COUNT; ++i)
     {

@@ -101,10 +101,12 @@ namespace MFM
     void RenderBadAtom(Drawing& drawing, const UPoint& rendPt);
 
     template <class EC>
-    u32 GetAtomColor(Tile<EC>& tile, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom, u32 selector = 0);
+    u32 GetSiteColor(Tile<EC>& tile, const Site<typename EC::ATOM_CONFIG> & site, u32 selector = 0);
 
+#if 0
     template <class EC>
     u32 GetDataHeatColor(Tile<EC>& tile, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom);
+#endif
 
     template <class EC>
     void RenderEventWindow(Drawing & drawing, SPoint& offset, Tile<EC>& tile, bool renderCache);
