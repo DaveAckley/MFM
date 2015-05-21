@@ -139,19 +139,38 @@ namespace MFM {
      * OverflowableCharBufferByteSink . It is guaranteed to be null
      * terminated.
      *
+     * IMPLEMENTATION NOTE: Before v3.0.0, GetZString was not const,
+     * because it would explicitly null-terminate the buffer before
+     * returning it.  That null termination and non-constness was how
+     * GetZString differed from GetBuffer, which didn't null terminate
+     * and was const.  However, doing the null terminatation in
+     * GetZString caused possible data races between threads, and --
+     * although those races may ultimately have been provably harmless
+     * -- in the end OverflowableCharBufferByteSink was modified so
+     * that it maintains the buffer as null terminated at all times.
+     * Therefore, GetZString is now const and there is no fundamental
+     * difference between GetZString and GetBuffer -- but it is
+     * recommended to use GetZString when the caller will be counting
+     * on the null termination of the buffer, and GetBuffer only when
+     * the caller will not.
+     *
      * @returns A null terminated string representing this
      *          OverflowableCharBufferByteSink .
      */
-    const char * GetZString()
+    const char * GetZString() const
     {
-      // HELGRIND      m_buf[m_written] = '\0';
       return GetBuffer();
     }
 
     /**
      * Gets the immutable char buffer held by this
-     * OverflowableCharBufferByteSink . This is NOT guaranteed to be
-     * null terminated!
+     * OverflowableCharBufferByteSink .
+     *
+     * IMPLEMENTATION NOTE: Before v3.0.0, the return from this
+     * function was NOT guaranteed to be null terminated, but it now
+     * is.  See additional notes at GetZString .
+     *
+     * \sa GetZString
      *
      * @returns A pointer to the string representing this
      *          OverflowableCharBufferByteSink which may not be null
