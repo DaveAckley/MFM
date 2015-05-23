@@ -68,6 +68,81 @@ namespace MFM{
 
 namespace MFM
 {
+  struct UlamTypeInfoPrimitive {
+    enum PrimType { VOID, INT, UNSIGNED, BOOL, UNARY, BITS };
+
+    static bool PrimTypeFromChar(const u8 ch, PrimType & result) ;
+
+    static u8 CharFromPrimType(const PrimType type) ;
+
+    static const char * NameFromPrimType(const PrimType type) ;
+
+    static u32 DefaultSizeFromPrimType(const PrimType type) ;
+
+    u8 m_primType;
+    u8 m_bitSize;
+    u16 m_arrayLength;
+
+    PrimType GetPrimType() const
+    {
+      return (PrimType) m_primType;
+    }
+
+    bool InitFrom(const char * mangledName)
+    {
+      CharBufferByteSource cbs(mangledName,strlen(mangledName));
+      return InitFrom(cbs);
+    }
+
+    bool InitFrom(ByteSource & bs) ;
+
+    void PrintMangled(ByteSink & bs) const ;
+    void PrintPretty(ByteSink & bs) const ;
+  };
+
+  const u32 MAX_CLASS_NAME_LENGTH = 64;
+  const u32 MAX_CLASS_PARAMETERS = 16;
+  typedef OverflowableCharBufferByteSink<MAX_CLASS_NAME_LENGTH> OStringClassName;
+
+  struct UlamTypeInfoClassParameter {
+    UlamTypeInfoPrimitive m_classParameterType;
+    u32 m_value;  // overloaded depending on type
+  };
+
+  typedef UlamTypeInfoClassParameter UlamTypeInfoClassParameterArray[MAX_CLASS_PARAMETERS];
+
+  struct UlamTypeInfoClass {
+    enum ClassType { ELEMENT, QUARK };
+
+    static bool ClassTypeFromChar(const u8 ch, ClassType & result) ;
+
+    static u8 CharFromClassType(const ClassType type) ;
+
+    static const char * NameFromClassType(const ClassType type) ;
+
+    ClassType m_classType;
+    OStringClassName m_name;
+    u32 m_arrayLength;
+    u32 m_bitSize;
+    u32 m_parameterCount;
+    UlamTypeInfoClassParameterArray m_classParameters;
+
+    bool InitFrom(const char * mangledName)
+    {
+      CharBufferByteSource cbs(mangledName,strlen(mangledName));
+      return InitFrom(cbs);
+    }
+
+    bool InitFrom(ByteSource & cbs) ;
+
+    void PrintMangled(ByteSink & bs) const ;
+    void PrintPretty(ByteSink & bs) const ;
+
+  };
+}
+
+namespace MFM
+{
   template <class EC> class UlamElement; // FORWARD
 
   template <class EC>
