@@ -3,6 +3,69 @@
 
 namespace MFM
 {
+
+  bool UlamTypeInfo::InitFrom(ByteSource & cbs)
+  {
+    cbs.SkipWhitespace();
+    u8 code;
+    if (cbs.Scanf("U%c_",&code) != 3) return false;
+
+    Category cat;
+    if (code=='e') cat = ELEMENT;
+    else if (code=='q') cat = QUARK;
+    else if (code=='i') cat = PRIM;
+    else return false;
+
+    if (cat == PRIM)
+    {
+      if (cbs.Scanf("Ut_") != 3) return false;
+      if (!m_utip.InitFrom(cbs)) return false;
+    }
+    else
+    {
+      if (!m_utic.InitFrom(cbs)) return false;
+    }
+    m_category = cat;
+    return true;
+  }
+
+  void UlamTypeInfo::PrintMangled(ByteSink & bs) const
+  {
+    switch (m_category)
+    {
+    case PRIM:
+      bs.Printf("Ui_Ut_");
+      m_utip.PrintMangled(bs);
+      break;
+    case ELEMENT:
+    case QUARK:
+      bs.Printf("U%c_",m_category==ELEMENT?'e':'q');
+      m_utic.PrintMangled(bs);
+      break;
+    case UNKNOWN:
+    default:
+      FAIL(ILLEGAL_STATE);
+    }
+  }
+
+  void UlamTypeInfo::PrintPretty(ByteSink & bs) const
+  {
+    switch (m_category)
+    {
+    case PRIM:
+      m_utip.PrintPretty(bs);
+      break;
+    case ELEMENT:
+    case QUARK:
+      bs.Printf("%s ",m_category==ELEMENT?"element":"quark");
+      m_utic.PrintPretty(bs);
+      break;
+    case UNKNOWN:
+    default:
+      FAIL(ILLEGAL_STATE);
+    }
+  }
+
   bool UlamTypeInfoPrimitive::PrimTypeFromChar(const u8 ch, PrimType & result)
   {
     PrimType type;
@@ -94,29 +157,8 @@ namespace MFM
       bs.Printf("[%d]", m_arrayLength);
   }
 
-  bool UlamTypeInfoClass::ClassTypeFromChar(const u8 ch, ClassType & result)
-  {
-    ClassType type;
-    switch (ch) {
-    case 'e': type = ELEMENT; break;
-    case 'q': type = QUARK; break;
-    default: return false;
-    }
-    result = type;
-    return true;
-  }
-
   bool UlamTypeInfoClass::InitFrom(ByteSource & cbs)
   {
-    cbs.SkipWhitespace();
-    u8 code;
-    if (cbs.Scanf("U%c_",&code) != 3) return false;
-
-    ClassType type;
-    if (code=='e') type = ELEMENT;
-    else if (code=='q') type = QUARK;
-    else return false;
-
     u32 arraylen, bitsize, namelen, parms;
     if (!cbs.Scan(arraylen, Format::LEX32, 0)) return false;
     if (!cbs.Scan(bitsize, Format::LEX32, 0)) return false;
@@ -154,7 +196,6 @@ namespace MFM
         parameters[i] = uticp;
     }
 
-    m_classType = type;
     m_name = name;
     m_arrayLength = arraylen;
     m_bitSize = bitsize;
@@ -167,28 +208,9 @@ namespace MFM
     return true;
   }
 
-  u8 UlamTypeInfoClass::CharFromClassType(const ClassType type)
-  {
-    switch (type) {
-    case ELEMENT: return 'e';
-    case QUARK: return 'q';
-    }
-    FAIL(ILLEGAL_ARGUMENT);
-  }
-
-  const char * UlamTypeInfoClass::NameFromClassType(const ClassType type)
-  {
-    switch (type) {
-    case ELEMENT: return "element";
-    case QUARK: return "quark";
-    }
-    FAIL(ILLEGAL_ARGUMENT);
-  }
-
   void UlamTypeInfoClass::PrintMangled(ByteSink & bs) const
   {
-    bs.Printf("U%c_%D%D%H%s",
-              CharFromClassType(m_classType),
+    bs.Printf("%D%D%H%s",
               m_arrayLength,
               m_bitSize,
               m_name.GetLength(),
@@ -219,9 +241,7 @@ namespace MFM
 
   void UlamTypeInfoClass::PrintPretty(ByteSink & bs) const
   {
-    bs.Printf("%s %s",
-              NameFromClassType(m_classType),
-              m_name.GetZString());
+    bs.Printf("%s", m_name.GetZString());
 
     if (m_parameterCount==0)
       return;

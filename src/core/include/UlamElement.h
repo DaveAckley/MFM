@@ -68,6 +68,7 @@ namespace MFM{
 
 namespace MFM
 {
+
   struct UlamTypeInfoPrimitive {
     enum PrimType { VOID, INT, UNSIGNED, BOOL, UNARY, BITS };
 
@@ -112,15 +113,7 @@ namespace MFM
   typedef UlamTypeInfoClassParameter UlamTypeInfoClassParameterArray[MAX_CLASS_PARAMETERS];
 
   struct UlamTypeInfoClass {
-    enum ClassType { ELEMENT, QUARK };
 
-    static bool ClassTypeFromChar(const u8 ch, ClassType & result) ;
-
-    static u8 CharFromClassType(const ClassType type) ;
-
-    static const char * NameFromClassType(const ClassType type) ;
-
-    ClassType m_classType;
     OStringClassName m_name;
     u32 m_arrayLength;
     u32 m_bitSize;
@@ -137,6 +130,66 @@ namespace MFM
 
     void PrintMangled(ByteSink & bs) const ;
     void PrintPretty(ByteSink & bs) const ;
+
+  };
+
+  struct UlamTypeInfo {
+    UlamTypeInfoClass m_utic;
+    UlamTypeInfoPrimitive m_utip;
+
+    enum Category { PRIM, ELEMENT, QUARK, UNKNOWN } m_category;
+
+    UlamTypeInfo() : m_category(UNKNOWN) { }
+
+    bool InitFrom(const char * mangledName)
+    {
+      CharBufferByteSource cbs(mangledName,strlen(mangledName));
+      return InitFrom(cbs);
+    }
+
+    bool InitFrom(ByteSource & cbs) ;
+
+    void PrintMangled(ByteSink & bs) const ;
+    void PrintPretty(ByteSink & bs) const ;
+
+  };
+
+  struct UlamClassDataMemberInfo {
+    const char * m_mangledType;
+    const char * m_dataMemberName;
+    u32 m_bitPosition;
+
+    UlamClassDataMemberInfo(const char * mangled, const char *name, u32 pos)
+      : m_mangledType(mangled)
+      , m_dataMemberName(name)
+      , m_bitPosition(pos)
+    { }
+  };
+
+  struct UlamClass {
+    /**
+       Specify the number of data members in this class.  To be
+       overridden by subclasses of UlamClassInfo.
+
+       \return -1 means the data members are unknown
+
+       \return 0 means no data members, so GetDataMemberInfo should
+       not be called.
+
+     */
+    s32 GetDataMemberCount()
+    {
+      return -1;
+    }
+
+    /**
+       Gain access to the info about a specific data member in this
+       class.  To be overridden by subclasses of UlamClassInfo.
+     */
+    const UlamClassDataMemberInfo & GetDataMemberInfo(u32 dataMemberNumber)
+    {
+      FAIL(ILLEGAL_STATE);
+    }
 
   };
 }
@@ -176,7 +229,7 @@ namespace MFM
    * A UlamElement is a concrete element primarily for use by culam.
    */
   template <class EC>
-  class UlamElement : public Element<EC>
+  class UlamElement : public Element<EC>, public UlamClass
   {
     typedef Element<EC> Super;
     typedef typename EC::ATOM_CONFIG AC;

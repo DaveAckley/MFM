@@ -10,26 +10,22 @@ namespace MFM {
     UlamTypeCase(const char * m, const char * p) : mangled(m), pretty(p) { }
   };
 
-  const UlamTypeCase primCases[] =
+  const UlamTypeCase allCases[] =
     {
-      UlamTypeCase("10111i","Int(1)"),
-      UlamTypeCase("102321y","Unary"),
-      UlamTypeCase("102321u","Unsigned"),
-      UlamTypeCase("102321t","Bits"),
-      UlamTypeCase("102311t","Bits(31)"),
-      UlamTypeCase("10191y","Unary(9)"),
-      UlamTypeCase("10111b","Bool"),
-      UlamTypeCase("10161b","Bool(6)"),
-      UlamTypeCase("112321i","Int[1]"),
-      UlamTypeCase("211121y","Unary(2)[11]"),
-      UlamTypeCase("232111b","Bool[32]"),
-      UlamTypeCase("18141t","Bits(4)[8]"),
-      UlamTypeCase("19131b","Bool(3)[9]")
+      UlamTypeCase("Ui_Ut_10111i","Int(1)"),
+      UlamTypeCase("Ui_Ut_102321y","Unary"),
+      UlamTypeCase("Ui_Ut_102321u","Unsigned"),
+      UlamTypeCase("Ui_Ut_102321t","Bits"),
+      UlamTypeCase("Ui_Ut_102311t","Bits(31)"),
+      UlamTypeCase("Ui_Ut_10191y","Unary(9)"),
+      UlamTypeCase("Ui_Ut_10111b","Bool"),
+      UlamTypeCase("Ui_Ut_10161b","Bool(6)"),
+      UlamTypeCase("Ui_Ut_112321i","Int[1]"),
+      UlamTypeCase("Ui_Ut_211121y","Unary(2)[11]"),
+      UlamTypeCase("Ui_Ut_232111b","Bool[32]"),
+      UlamTypeCase("Ui_Ut_18141t","Bits(4)[8]"),
+      UlamTypeCase("Ui_Ut_19131b","Bool(3)[9]"),
 
-    };
-
-  const UlamTypeCase classCases[] =
-    {
       UlamTypeCase("Uq_10104Fail10","quark Fail"),
       UlamTypeCase("Ue_102419212Display64x3210","element Display64x32"),
       UlamTypeCase("Ue_102689214WindowServices10","element WindowServices"),
@@ -42,36 +38,21 @@ namespace MFM {
     };
 
   void UlamElement_Test::Test_RunTests() {
-    {
-      for (u32 i = 0; i < sizeof(primCases)/sizeof(primCases[0]); ++i) {
-        CharBufferByteSource cbs(primCases[i].mangled, strlen(primCases[i].mangled));
-        UlamTypeInfoPrimitive utip;
-        assert(utip.InitFrom(cbs));
 
-        OString512 os;
-        utip.PrintMangled(os);
-        assert(!strcmp(primCases[i].mangled,os.GetZString()));
+    for (u32 i = 0; i < sizeof(allCases)/sizeof(allCases[0]); ++i) {
+      CharBufferByteSource cbs(allCases[i].mangled, strlen(allCases[i].mangled));
+      UlamTypeInfo utin;
+      assert(utin.InitFrom(cbs));
 
-        os.Reset();
-        utip.PrintPretty(os);
-        assert(!strcmp(primCases[i].pretty,os.GetZString()));
-      }
-    }
-    {
-      for (u32 i = 0; i < sizeof(classCases)/sizeof(classCases[0]); ++i) {
-        CharBufferByteSource cbs(classCases[i].mangled, strlen(classCases[i].mangled));
-        UlamTypeInfoClass utic;
-        assert(utic.InitFrom(cbs));
+      OString512 os;
+      utin.PrintMangled(os);
+      assert(!strcmp(allCases[i].mangled,os.GetZString()));
 
-        OString512 os;
-        utic.PrintMangled(os);
-        assert(!strcmp(classCases[i].mangled,os.GetZString()));
-
-        os.Reset();
-        utic.PrintPretty(os);
-        assert(!strcmp(classCases[i].pretty,os.GetZString()));
-      }
+      os.Reset();
+      utin.PrintPretty(os);
+      assert(!strcmp(allCases[i].pretty,os.GetZString()));
     }
   }
+
 
 } /* namespace MFM */
