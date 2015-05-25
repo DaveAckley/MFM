@@ -15,7 +15,7 @@ INCLUDES += -I $(BASEDIR)/src/core/include -I $(BASEDIR)/src/elements/include -I
 
 # What we need to link
 LIBS += -L $(BASEDIR)/build/core/ -L $(BASEDIR)/build/elements/ -L $(BASEDIR)/build/sim/
-LIBS += -lmfmsim -lmfmelements -lmfmcore -lm
+LIBS += -lmfmsim -lmfmelements -Wl,--whole-archive -lmfmcore -Wl,--no-whole-archive -lm
 
 # Do the program thing
 include $(BASEDIR)/config/Makeprog.mk
