@@ -13,12 +13,11 @@ namespace MFM
     Category cat;
     if (code=='e') cat = ELEMENT;
     else if (code=='q') cat = QUARK;
-    else if (code=='i') cat = PRIM;
+    else if (code=='t') cat = PRIM;
     else return false;
 
     if (cat == PRIM)
     {
-      if (cbs.Scanf("Ut_") != 3) return false;
       if (!m_utip.InitFrom(cbs)) return false;
     }
     else
@@ -34,7 +33,7 @@ namespace MFM
     switch (m_category)
     {
     case PRIM:
-      bs.Printf("Ui_Ut_");
+      bs.Printf("Ut_");
       m_utip.PrintMangled(bs);
       break;
     case ELEMENT:
