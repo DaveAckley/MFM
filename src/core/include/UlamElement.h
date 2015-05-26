@@ -181,8 +181,24 @@ namespace MFM
 
   struct UlamClass {
     /**
+       Specify the mangled name of this class.  To be
+       overridden by subclasses of UlamClass.
+
+       \return a pointer to a statically-allocated const char *.
+       Never returns NULL.
+
+     */
+    virtual const char * GetMangledClassName() const
+    = 0;
+    /*
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+    */
+
+    /**
        Specify the number of data members in this class.  To be
-       overridden by subclasses of UlamClassInfo.
+       overridden by subclasses of UlamClass.
 
        \return -1 means the data members are unknown
 
