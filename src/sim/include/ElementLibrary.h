@@ -12,6 +12,14 @@ namespace MFM {
     virtual Element<EC> * GetElement() = 0;
   };
 
+  /*
+  template <class EC>
+  struct ElementLibraryExtensionStub {
+    virtual ~ElementLibraryExtensionStub() { }
+    virtual bool * DoInstall() = 0;
+  };
+  */
+
   /**
      An ElementLibraryStub for C++ Elements.  C++ Elements do not have
      an analog to UlamElementInfo -- everything is handled directly by

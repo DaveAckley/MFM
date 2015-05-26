@@ -726,8 +726,13 @@ namespace MFM
     static void RegisterElementLibraryPath(const char* path, void* driverptr)
     {
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
 
-      driver.m_elementRegistry.AddLibraryPath(path);
+      const char * result = driver.m_elementRegistry.AddLibraryPath(path);
+      if (result)
+      {
+        args.Die("Bad element library path '%s': %s", path, result);
+      }
     }
 
     static void IgnoreComment(const char* kv, void* driverptr)

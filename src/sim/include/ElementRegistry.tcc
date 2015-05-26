@@ -4,6 +4,7 @@
 #include <string.h> /* For strerror */
 #include <dirent.h> /* For opendir */
 #include "ElementLibraryLoader.h"
+#include "Utils.h"
 #include "Fail.h"
 
 namespace MFM
@@ -106,29 +107,30 @@ namespace MFM
   }
 
   template <class EC>
-  void ElementRegistry<EC>::AddLibraryPath(const char * path)
+  const char * ElementRegistry<EC>::AddLibraryPath(const char * path)
   {
     if (!path)
       FAIL(NULL_POINTER);
 
-    OString256 xpath;
-    xpath = path;
-    if (path[0] == '~') {
-      const char * home = getenv("HOME");
-      if (home) {
-        xpath.Reset();
-        xpath.Printf("%s%s", home, path + 1);
-      }
+    LibraryPathString xpath;
+    Utils::NormalizePath(path, xpath);
+    if (xpath.HasOverflowed())
+      return "Library path too long";
+    const char * err = Utils::ReadablePath(xpath);
+    if (err) return err;
+
+    for (u32 i = 0; i < m_libraryPathsCount; ++i)
+    {
+      if (m_libraryPaths[i].Equals(xpath))
+        return 0;
     }
 
-    for (u32 i = 0; i < m_libraryPathsCount; ++i) {
-      if (m_libraryPaths[i].Equals(xpath))
-        return;
-    }
     if (m_libraryPathsCount >= MAX_PATHS)
-      FAIL(OUT_OF_ROOM);
+      return "Too many library paths";
+
     m_libraryPaths[m_libraryPathsCount] = xpath;
     ++m_libraryPathsCount;
+    return 0;
   }
 
   template <class EC>

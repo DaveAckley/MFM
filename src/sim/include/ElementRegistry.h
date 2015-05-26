@@ -50,6 +50,9 @@ namespace MFM {
   class ElementRegistry
   {
   public:
+
+    typedef OString256 LibraryPathString;
+
     enum {
       TABLE_SIZE = 100,
       MAX_PATHS = 20
@@ -65,7 +68,7 @@ namespace MFM {
        Return negative on dl error, otherwise non-negative number of
        elements loaded
      */
-    s32 LoadLibrary(OString256 & librarypath) ;
+    s32 LoadLibrary(LibraryPathString & librarypath) ;
 
   public:
 
@@ -91,9 +94,11 @@ namespace MFM {
 
     /**
      * Add a library path to the registry paths, if it is not already
-     * there.  Fails with OUT_OF_ROOM if no more paths can be added.
+     * there.  Fails with NULL_POINTER if path is null.  Returns 0 if
+     * all went well, else a static error message describing what went
+     * wrong ("Path too long", "Path not readable", "Too many paths").
      */
-    void AddLibraryPath(const char * path) ;
+    const char * AddLibraryPath(const char * path) ;
 
     /**
      * Load all the libraries that were previously added with
@@ -193,7 +198,7 @@ namespace MFM {
       return -1;
     }
 
-    OString256 m_libraryPaths[MAX_PATHS];
+    LibraryPathString m_libraryPaths[MAX_PATHS];
     u32 m_libraryPathsCount;
 
   };

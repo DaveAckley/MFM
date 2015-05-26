@@ -68,6 +68,163 @@ namespace MFM{
 
 namespace MFM
 {
+
+  struct UlamTypeInfoPrimitive {
+    enum PrimType { VOID, INT, UNSIGNED, BOOL, UNARY, BITS };
+
+    static bool PrimTypeFromChar(const u8 ch, PrimType & result) ;
+
+    static u8 CharFromPrimType(const PrimType type) ;
+
+    static const char * NameFromPrimType(const PrimType type) ;
+
+    static u32 DefaultSizeFromPrimType(const PrimType type) ;
+
+    u8 m_primType;
+    u8 m_bitSize;
+    u16 m_arrayLength;
+
+    PrimType GetPrimType() const
+    {
+      return (PrimType) m_primType;
+    }
+
+    bool InitFrom(const char * mangledName)
+    {
+      CharBufferByteSource cbs(mangledName,strlen(mangledName));
+      return InitFrom(cbs);
+    }
+
+    bool InitFrom(ByteSource & bs) ;
+
+    void PrintMangled(ByteSink & bs) const ;
+    void PrintPretty(ByteSink & bs) const ;
+  };
+
+  const u32 MAX_CLASS_NAME_LENGTH = 64;
+  const u32 MAX_CLASS_PARAMETERS = 16;
+  typedef OverflowableCharBufferByteSink<MAX_CLASS_NAME_LENGTH> OStringClassName;
+
+  struct UlamTypeInfoClassParameter {
+    UlamTypeInfoPrimitive m_classParameterType;
+    u32 m_value;  // overloaded depending on type
+  };
+
+  typedef UlamTypeInfoClassParameter UlamTypeInfoClassParameterArray[MAX_CLASS_PARAMETERS];
+
+  struct UlamTypeInfoClass {
+
+    OStringClassName m_name;
+    u32 m_arrayLength;
+    u32 m_bitSize;
+    u32 m_parameterCount;
+    UlamTypeInfoClassParameterArray m_classParameters;
+
+    bool InitFrom(const char * mangledName)
+    {
+      CharBufferByteSource cbs(mangledName,strlen(mangledName));
+      return InitFrom(cbs);
+    }
+
+    bool InitFrom(ByteSource & cbs) ;
+
+    void PrintMangled(ByteSink & bs) const ;
+    void PrintPretty(ByteSink & bs) const ;
+
+  };
+
+  struct UlamTypeInfo {
+    UlamTypeInfoClass m_utic;
+    UlamTypeInfoPrimitive m_utip;
+
+    enum Category { PRIM, ELEMENT, QUARK, UNKNOWN } m_category;
+
+    UlamTypeInfo() : m_category(UNKNOWN) { }
+
+    bool InitFrom(const char * mangledName)
+    {
+      CharBufferByteSource cbs(mangledName,strlen(mangledName));
+      return InitFrom(cbs);
+    }
+
+    bool InitFrom(ByteSource & cbs) ;
+
+    void PrintMangled(ByteSink & bs) const ;
+    void PrintPretty(ByteSink & bs) const ;
+
+    u32 GetBitSize() const
+    {
+      switch (m_category)
+      {
+      case PRIM: return m_utip.m_bitSize;
+      case ELEMENT:
+      case QUARK:
+        return m_utic.m_bitSize;
+      default:
+        FAIL(ILLEGAL_STATE);
+      }
+    }
+
+  };
+
+  struct UlamClassDataMemberInfo {
+    const char * m_mangledType;
+    const char * m_dataMemberName;
+    u32 m_bitPosition;
+
+    UlamClassDataMemberInfo(const char * mangled, const char *name, u32 pos)
+      : m_mangledType(mangled)
+      , m_dataMemberName(name)
+      , m_bitPosition(pos)
+    { }
+  };
+
+  struct UlamClass {
+    /**
+       Specify the mangled name of this class.  To be
+       overridden by subclasses of UlamClass.
+
+       \return a pointer to a statically-allocated const char *.
+       Never returns NULL.
+
+     */
+    virtual const char * GetMangledClassName() const
+    = 0;
+    /*
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+    */
+
+    /**
+       Specify the number of data members in this class.  To be
+       overridden by subclasses of UlamClass.
+
+       \return -1 means the data members are unknown
+
+       \return 0 means no data members, so GetDataMemberInfo should
+       not be called.
+
+     */
+    virtual s32 GetDataMemberCount() const
+    {
+      return -1;
+    }
+
+    /**
+       Gain access to the info about a specific data member in this
+       class.  To be overridden by subclasses of UlamClassInfo.
+     */
+    virtual const UlamClassDataMemberInfo & GetDataMemberInfo(u32 dataMemberNumber) const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+  };
+}
+
+namespace MFM
+{
   template <class EC> class UlamElement; // FORWARD
 
   template <class EC>
@@ -101,7 +258,7 @@ namespace MFM
    * A UlamElement is a concrete element primarily for use by culam.
    */
   template <class EC>
-  class UlamElement : public Element<EC>
+  class UlamElement : public Element<EC>, public UlamClass
   {
     typedef Element<EC> Super;
     typedef typename EC::ATOM_CONFIG AC;
@@ -112,6 +269,50 @@ namespace MFM
 
     UlamElement(const UUID & uuid) : Element<EC>(uuid)
     { }
+
+    /**
+       Flag values determining what Print(Atom,u32) prints
+       \sa Print(ByteSink&, const T&, u32)
+     */
+    enum PrintFlags {
+      PRINT_SYMBOL =          0x00000001, //< Include element symbol
+      PRINT_FULL_NAME =       0x00000002, //< Include element name
+      PRINT_ATOM_BODY =       0x00000004, //< Include entire atom in hex
+      PRINT_MEMBER_VALUES =   0x00000008, //< Include data member values
+      PRINT_MEMBER_NAMES =    0x00000010, //< Include data member names
+      PRINT_MEMBER_TYPES =    0x00000020, //< Include data member types
+      PRINT_SIZE0_MEMBERS =   0x00000040, //< Include size 0 data members
+      PRINT_MEMBER_ARRAYS =   0x00000080, //< Print array values individually
+      PRINT_RECURSE_QUARKS =  0x00000100, //< Print quarks recursively
+
+      /** (Composite value) Print nothing */
+      PRINT_NOTHING = 0,
+
+      /** (Composite value) Print element symbol and entire atom in hex */
+      PRINT_HEX_ATOM = PRINT_SYMBOL|PRINT_ATOM_BODY,
+
+      /** (Composite value) Print element symbol and its data member values in declaration order */
+      PRINT_TOP_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_VALUES,
+
+      /** (Composite value) Print element symbol and its data member names and values in declaration order */
+      PRINT_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_NAMES|PRINT_MEMBER_VALUES,
+
+      /** (Composite value) Print element symbol and data member values, expanding quarks */
+      PRINT_QUARK_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_VALUES|PRINT_RECURSE_QUARKS,
+
+      /** (Composite value) Print element symbol and data member values, expanding quarks and arrays */
+      PRINT_ALL_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_VALUES|PRINT_RECURSE_QUARKS|PRINT_MEMBER_ARRAYS,
+
+      /** (Composite value) Print far too much */
+      PRINT_EVERYTHING = -1
+
+    };
+    /**
+       Print the contents of atom to the given ByteSink, including
+       various details as specified by flags.
+       \sa PrintFlags
+     */
+    void Print(ByteSink & bs, const T & atom, u32 flags) const ;
 
     void SetInfo(const UlamElementInfo<EC> * info) {
       m_info = info;
@@ -270,5 +471,7 @@ namespace MFM
     }
   };
 } // MFM
+
+#include "UlamElement.tcc"
 
 #endif /* ULAMELEMENT_H */

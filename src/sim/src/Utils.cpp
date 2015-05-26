@@ -1,6 +1,10 @@
 #include "Utils.h"
 #include "Fail.h"
 #include <stdlib.h>
+#include <unistd.h> /* for open(), close() */
+#include <fcntl.h>  /* for O_RDONLY */
+#include <string.h> /* for strerror */
+#include <errno.h> /* for errno */
 
 namespace MFM {
   namespace Utils {
@@ -36,6 +40,17 @@ namespace MFM {
       return (u32) (datetime % (100*100*100));
     }
 
+    const char * ReadablePath(const char * path)
+    {
+      s32 fd = open(path, O_RDONLY);
+      if (fd >= 0)
+      {
+        close(fd);
+        return 0;
+      }
+      return strerror(errno);
+    }
+
     bool GetReadableResourceFile(const char * relativePath, char * result, u32 length)
     {
       if (!length) FAIL(ILLEGAL_ARGUMENT);
@@ -64,5 +79,6 @@ namespace MFM {
       result[0] = '\0';
       return false;
     }
+
   }
 }

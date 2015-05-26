@@ -28,12 +28,14 @@
 #define UTILS_H
 
 #include <stdlib.h>
-#include <time.h>  /* for nanosleep */
+#include <time.h>   /* for nanosleep */
 #include "itype.h"
+#include "OverflowableCharBufferByteSink.h"
 
 namespace MFM
 {
   namespace Utils {
+
     u64 GetDateTimeNow() ;
 
     u64 GetDateTime(time_t t) ;
@@ -48,12 +50,40 @@ namespace MFM
        (up to the given length) that was openable for reading at the
        time it was checked.  If such a readable file is not found
        anywhere, set result to a null string and return false.  Fails
-       with ILLEGAL_ARGUMENT if length is zero; will silently truncate
-       paths (and fail to find a file, or worse, possibly find the wrong
-       file) if length is too short.
+       with ILLEGAL_ARGUMENT if relativePath or result is NULL or if
+       length is zero; will silently truncate paths (and fail to find
+       a file, or worse, possibly find the wrong file) if length is
+       too short.
     */
     bool GetReadableResourceFile(const char * relativePath, char * result, u32 length) ;
 
+    /**
+       Copy path to buffer, an OString of some size, while expanding a
+       leading '~' in path by replacing it with getenv("HOME") if
+       defined, in buffer.  Fails with ILLEGAL_ARGUMENT if path is
+       NULL; if the (possibly expanded) path did not fit in buffer,
+       buffer.HasOverflowed() will be true after the call.
+    */
+    template<u32 BUFSIZE>
+    void NormalizePath(const char * path, OverflowableCharBufferByteSink<BUFSIZE> & buffer)
+    {
+      buffer = path;
+      if (path[0] == '~') {
+        const char * home = getenv("HOME");
+        if (home) {
+          buffer.Reset();
+          buffer.Printf("%s%s", home, path + 1);
+        }
+      }
+    }
+
+    const char * ReadablePath(const char * path) ;
+
+    template<u32 BUFSIZE>
+    const char * ReadablePath(const OverflowableCharBufferByteSink<BUFSIZE> & path)
+    {
+      return ReadablePath(path.GetZString());
+    }
   }
 }
 

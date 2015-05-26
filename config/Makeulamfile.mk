@@ -35,6 +35,8 @@ CPPFLAGS += $(ULAM_CPPFLAGS)
 PHONY_TARGETS:=ulam_program ulam_cppcompile ulam_checkvar
 
 ULAM_OBJ_FILE := $(patsubst %.cpp,$(ULAM_BLD_DIR)/%.o,$(ULAM_CPP_FILE))
+ULAM_CUSTOM_OBJ_FILE := $(ULAM_BLD_DIR)/UlamCustomElements.o
+ULAM_TEST_DRIVER_OBJ_FILE := $(ULAM_BLD_DIR)/testdriver.o
 ULAM_EXE_FILE := $(patsubst %.cpp,$(ULAM_BIN_DIR)/%,$(ULAM_CPP_FILE))
 #$(info "UXF($(ULAM_EXE_FILE))")
 #$(info "UCF($(ULAM_CPP_FILE))")
@@ -57,7 +59,7 @@ $(ULAM_BLD_DIR)/%.o:	$(ULAM_SRC_DIR)/%.cpp $(ALLDEP) #$(info DJDHD $(ULAM_BLD_DI
 
 # Rule for linking ulam programs
 $(ULAM_EXE_FILE):	 $(ULAM_OBJ_FILE)
-	$(GPP) $(LDFLAGS) $(ULAM_OBJ_FILE) $(LIBS) -o $@
+	$(GPP) $(LDFLAGS) $(ULAM_OBJ_FILE) $(ULAM_CUSTOM_OBJ_FILE) $(ULAM_TEST_DRIVER_OBJ_FILE) $(LIBS) -o $@
 
 ulam_checkvar:
 	@if [ ! -d "$(ULAM_SRC_DIR)" ] ; then echo "ULAM_SRC_DIR='$(ULAM_SRC_DIR)' is not a dir"; exit 11 ; fi
@@ -65,7 +67,7 @@ ulam_checkvar:
 	@if [ ! -d "$(ULAM_BIN_DIR)" ] ; then echo "ULAM_BIN_DIR='$(ULAM_BIN_DIR)' is not a dir"; exit 13 ; fi
 	@if [ ! -d "$(MFM_ROOT_DIR)" ] ; then echo "MFM_ROOT_DIR='$(MFM_ROOT_DIR)' is not a dir"; exit 14 ; fi
 
-LIBS := -L $(ULAM_BLD_DIR) -l culam $(LIBS)
+#LIBS := -L $(ULAM_BLD_DIR) -l culam $(LIBS)
 
 LIBS += -L $(BASEDIR)/build/core -l mfmcore
 

@@ -17,6 +17,8 @@ int main(int argc, char** argv)
     MFM::LOG.SetLevel(MFM::LOG.ALL);
   }
 
+  TEST(UlamElement_Test);
+
   TEST(GridTransceiver_Test);
   TEST(ElementRegistry_Test);
   TEST(ByteSource_Test);
