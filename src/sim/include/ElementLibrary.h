@@ -12,14 +12,6 @@ namespace MFM {
     virtual Element<EC> * GetElement() = 0;
   };
 
-  /*
-  template <class EC>
-  struct ElementLibraryExtensionStub {
-    virtual ~ElementLibraryExtensionStub() { }
-    virtual bool * DoInstall() = 0;
-  };
-  */
-
   /**
      An ElementLibraryStub for C++ Elements.  C++ Elements do not have
      an analog to UlamElementInfo -- everything is handled directly by
@@ -91,15 +83,21 @@ namespace MFM {
   struct ElementLibrary {
     u32 m_magic;
     u8 m_version;
-    u8 m_reservedFlags;
-    u16 m_count;
+    u8 m_subversion;
+    u16 m_reservedFlags;
     u32 m_date;
     u32 m_time;
-    ElementLibraryStub<EC> ** m_stubPtrArray;
+    u32 m_elementCount;
+    ElementLibraryStub<EC> ** m_elementStubPtrArray;
+    u32 m_otherUlamClassCount;
+    UlamClass ** m_otherUlamClassPtrArray;
   };
 
   enum { ELEMENT_LIBRARY_MAGIC = 0xfea57000 };
-  enum { ELEMENT_LIBRARY_VERSION = 1 };
+  enum {
+    ELEMENT_LIBRARY_VERSION = 2,
+    ELEMENT_LIBRARY_SUBVERSION = 0
+  };
 
 }
 
