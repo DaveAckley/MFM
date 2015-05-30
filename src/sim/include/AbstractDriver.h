@@ -413,7 +413,7 @@ namespace MFM
         }
       }
 
-      m_elementRegistry.Init();
+      m_elementRegistry.Init(m_grid.GetUlamClassRegistry());
       u32 dlcount = m_elementRegistry.GetRegisteredElementCount();
       for (u32 i = 0; i < dlcount; ++i)
       {

@@ -260,6 +260,11 @@ namespace MFM {
 
     void SenseTouchAt(const GridTouchEvent & gridTouchEvent);
 
+    UlamClassRegistry & GetUlamClassRegistry()
+    {
+      return m_heroTile.GetUlamClassRegistry();
+    }
+
     s32 GetWarpFactor() const
     {
       return m_heroTile.GetWarpFactor();

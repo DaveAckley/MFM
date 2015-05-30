@@ -39,6 +39,7 @@
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "CacheProcessor.h"
+#include "UlamClass.h"
 #include "LonglivedLock.h"
 #include "OverflowableCharBufferByteSink.h"  /* for OString16 */
 
@@ -230,7 +231,7 @@ namespace MFM
     /** The PRNG used for generating all random numbers in this Tile. */
     Random m_random;
 
-  private:
+    UlamClassRegistry m_ucr;
 
     s32 m_keyValues[MAX_TILE_PARAMETERS];
 
@@ -255,6 +256,10 @@ namespace MFM
 
 
   public:
+
+    UlamClassRegistry & GetUlamClassRegistry() { return m_ucr; }
+
+    const UlamClassRegistry & GetUlamClassRegistry() const { return m_ucr; }
 
     /**
      * A minimal iterator over the Sites of a tile.  Access via Tile::begin().
@@ -673,6 +678,7 @@ namespace MFM
     {
       CopyTileParameters(heroTile);
       SetWarpFactor(heroTile.GetWarpFactor());
+      m_ucr = heroTile.m_ucr;
     }
 
     /**
