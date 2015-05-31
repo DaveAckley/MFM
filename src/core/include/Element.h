@@ -420,7 +420,7 @@ namespace MFM
      * help with this Element . This string must not include newlines;
      * they will be added when they are needed.
      *
-     * @returns A helpful description string breifely describing the
+     * @returns A helpful description string briefly describing the
      *          behavior of this Element.
      */
     virtual const char* GetDescription() const
