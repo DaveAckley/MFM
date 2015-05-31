@@ -79,6 +79,7 @@ namespace MFM
     virtual const char * GetSummary() const = 0;
     virtual const char * GetDetails() const = 0;
     virtual const char * GetAuthor() const = 0;
+    virtual const char * GetCopyright() const = 0;
     virtual const char * GetLicense() const = 0;
     virtual bool GetPlaceable() const = 0;
     virtual const u32 GetVersion() const = 0;
