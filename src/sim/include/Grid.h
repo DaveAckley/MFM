@@ -265,6 +265,11 @@ namespace MFM {
       return m_heroTile.GetUlamClassRegistry();
     }
 
+    const UlamClassRegistry & GetUlamClassRegistry() const
+    {
+      return m_heroTile.GetUlamClassRegistry();
+    }
+
     s32 GetWarpFactor() const
     {
       return m_heroTile.GetWarpFactor();
