@@ -177,11 +177,11 @@ namespace MFM
         surfaces[ASSET_AIRBRUSH_ICON_BIG] = LoadImage("images/airbrush_icon_big.png");
         surfaces[ASSET_CLOSE_WINDOW_ICON] = LoadImage("images/close_window_icon.png");
 
-        fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/tiny.ttf", 24);
-        fonts[FONT_ASSET_ELEMENT_BIG] = LoadFont("fonts/tiny.ttf", 40);
-        fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont("fonts/tiny.ttf", 26);
-        fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont("fonts/tiny.ttf", 16);
-        fonts[FONT_ASSET_LOGGER] = LoadFont("fonts/tiny.ttf", 15);
+        fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/Inconsolata.ttf", 26);
+        fonts[FONT_ASSET_ELEMENT_BIG] = LoadFont("fonts/Inconsolata.ttf", 40);
+        fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont("fonts/Inconsolata.ttf", 26);
+        fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont("fonts/Inconsolata.ttf", 20);
+        fonts[FONT_ASSET_LOGGER] = LoadFont("fonts/Inconsolata.ttf", 14);
 
         initialized = true;
       }
