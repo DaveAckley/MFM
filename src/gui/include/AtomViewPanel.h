@@ -31,6 +31,7 @@
 #include "MovablePanel.h"
 #include "Grid.h"
 #include "ToolboxPanel.h"
+#include "TreeViewPanel.h"
 
 namespace MFM
 {
@@ -38,6 +39,7 @@ namespace MFM
   class AtomViewPanel : public MovablePanel
   {
    private:
+    typedef MovablePanel Super;
     typedef typename GC::EVENT_CONFIG EC;
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
@@ -49,22 +51,28 @@ namespace MFM
     ToolboxPanel<EC>* m_toolboxPanel;
 
     CloseWindowButton m_closeWindowButton;
+    TreeViewPanel m_treeViewPanel;
 
     static const u32 ATOM_DRAW_SIZE = 40;
 
    public:
-    AtomViewPanel() :
-      MovablePanel(300, 100),
-      m_atom(NULL),
-      m_grid(NULL),
-      m_toolboxPanel(NULL),
-      m_closeWindowButton(this)
-    { }
+    AtomViewPanel()
+      : MovablePanel(300, 100)
+      , m_atom(NULL)
+      , m_grid(NULL)
+      , m_toolboxPanel(NULL)
+      , m_closeWindowButton(this) // Inserts itself into us
+      , m_treeViewPanel()
+    {
+      // Mon Jun  1 03:33:42 2015 NOT READY FOR PRIME TIME
+      // this->Panel::Insert(&m_treeViewPanel, NULL);
+    }
 
     void Init()
     {
-      Panel::SetDesiredSize(300, 100);
+      Panel::SetDesiredSize(500, 300);
       m_closeWindowButton.Init();
+      m_treeViewPanel.Init();
     }
 
     void SetToolboxPanel(ToolboxPanel<EC>* toolboxPanel)
@@ -110,14 +118,11 @@ namespace MFM
 
     virtual void PaintComponent(Drawing& d)
     {
-      d.SetBackground(Panel::GetBackground());
-      d.SetForeground(Panel::GetForeground());
-      d.FillRect(Rect(SPoint(0, 0), Panel::GetDimensions()));
+      this->Super::PaintComponent(d);
 
       if(!m_atom || !m_grid)
       {
         d.SetFont(AssetManager::Get(FONT_ASSET_HELPPANEL_SMALL));
-        d.SetForeground(Drawing::BLACK);
         const char* message = "No atom selected.";
         d.BlitText(message, UPoint(32, 32), MakeUnsigned(d.GetTextSize(message)));
       }
@@ -132,8 +137,8 @@ namespace MFM
 
         /* As long as the font is monospaced, we can get the text size
            of any 2-character string for this centering. */
-        const UPoint textSize = MakeUnsigned(d.GetTextSize("12"));
-        d.BlitBackedTextCentered(element->GetAtomicSymbol(), UPoint(8, 8), textSize);
+        const UPoint elementTextSize = MakeUnsigned(d.GetTextSize("12"));
+        d.BlitBackedTextCentered(element->GetAtomicSymbol(), UPoint(8, 8), elementTextSize);
 
         d.BlitBackedText(element->GetName(), UPoint(4 + ATOM_DRAW_SIZE, 2),
                          MakeUnsigned(d.GetTextSize(element->GetName())));
@@ -143,7 +148,11 @@ namespace MFM
         const char* zstr = desc.GetZString();
 
         d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
-        d.BlitBackedText(zstr, UPoint(4 + ATOM_DRAW_SIZE, 28),
+        const u32 LINE_X_START = 4 + ATOM_DRAW_SIZE;
+        const u32 LINE_Y_START = 28;
+        const u32 LINE_HEIGHT = 14;
+
+        d.BlitBackedText(zstr, UPoint(LINE_X_START, LINE_Y_START + 0 * LINE_HEIGHT),
                          MakeUnsigned(d.GetTextSize(zstr)));
 
         OString64 atomBody;
@@ -152,10 +161,28 @@ namespace MFM
         zstr = atomBody.GetZString();
 
         d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
-        d.BlitBackedText(zstr, UPoint(4 + ATOM_DRAW_SIZE, ATOM_DRAW_SIZE - 4),
+        d.BlitBackedText(zstr, UPoint(LINE_X_START, LINE_Y_START + 1 * LINE_HEIGHT),
                          MakeUnsigned(d.GetTextSize(zstr)));
 
-        PaintDisplayAtomicControllers(d, *m_atom, element);
+        const UlamElement<EC> * uelt = element->AsUlamElement();
+        if (!uelt)
+          PaintDisplayAtomicControllers(d, *m_atom, element);
+        else
+        {
+          const UlamClassRegistry & ucr = m_grid->GetUlamClassRegistry();
+          OString128 buff;
+          const u32 printFlags =
+            UlamClass::PRINT_MEMBER_NAMES |
+            UlamClass::PRINT_MEMBER_VALUES |
+            UlamClass::PRINT_RECURSE_QUARKS;
+          uelt->Print(ucr, buff, *m_atom, printFlags);
+          zstr = buff.GetZString();
+
+          d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
+          d.BlitBackedText(zstr, UPoint(LINE_X_START, LINE_Y_START + 2 * LINE_HEIGHT),
+                           MakeUnsigned(d.GetTextSize(zstr)));
+
+        }
       }
     }
 
