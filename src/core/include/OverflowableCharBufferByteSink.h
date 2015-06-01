@@ -45,10 +45,10 @@ namespace MFM {
     /**
      * Constructs a new CharBufferByteSink representing the empty string.
      */
-    OverflowableCharBufferByteSink() :
-      m_written(0),
-      m_overflowed(false)
-      { }
+    OverflowableCharBufferByteSink()
+    {
+      Reset();
+    }
 
     /**
      * Writes a series of bytes to this OveflowableCharBufferByteSink
