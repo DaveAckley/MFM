@@ -54,7 +54,9 @@ namespace MFM
     CloseWindowButton(Panel* parentPanel) :
       AbstractButton(),
       m_parentPanel(parentPanel)
-    { }
+    {
+      m_parentPanel->Panel::Insert(this, NULL);
+    }
 
     void Init()
     {
@@ -63,8 +65,6 @@ namespace MFM
       AbstractButton::SetIcon(icon);
       Panel::SetDimensions(icon->w, icon->h);
       Panel::SetRenderPoint(SPoint(2, 2));
-      Panel::m_parent = NULL;
-      m_parentPanel->Panel::Insert(this, NULL);
     }
 
     /**
