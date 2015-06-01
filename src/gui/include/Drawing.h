@@ -271,14 +271,16 @@ namespace MFM {
 
     /**
        Draw message in the current font using the current foreground
-       color.  Fail ILLEGAL_STATE if the current font is null.
+       color, at the given size, starting at the given loc.  Fail
+       ILLEGAL_STATE if the current font is null.
      */
     void BlitText(const char* message, UPoint loc, UPoint size) const;
 
     /**
      * Draw a message in the current font using the current background
      * color as a backing color to another drawn layer using the
-     * foreground color. Fail ILLEGAL_STATE if the current font is null.
+     * foreground color, at the given size, starting at the given
+     * loc. Fail ILLEGAL_STATE if the current font is null.
      */
     void BlitBackedText(const char* message, UPoint loc, UPoint size);
 
