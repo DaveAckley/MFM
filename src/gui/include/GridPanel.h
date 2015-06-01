@@ -105,8 +105,8 @@ namespace MFM
 
       m_atomViewPanel.SetName("AtomViewer");
       m_atomViewPanel.SetRenderPoint(SPoint(326, 0));
-      m_atomViewPanel.SetBackground(Drawing::BLACK);
-      m_atomViewPanel.SetForeground(Drawing::GREY70);
+      m_atomViewPanel.SetBackground(Drawing::GREY20);
+      m_atomViewPanel.SetForeground(Drawing::GREY80);
       m_atomViewPanel.SetVisibility(false);
 
       Panel::Insert(&m_atomViewPanel, NULL);

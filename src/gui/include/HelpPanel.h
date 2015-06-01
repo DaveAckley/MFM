@@ -77,10 +77,12 @@ namespace MFM
       d.SetFont(smFont);
       UPoint maxCorner(0,0);
 
+      const u32 TEXT_Y_START = 2*TTF_FontHeight(bigFont);
+      const u32 LINE_HEIGHT = TTF_FontHeight(smFont);
       for(u32 i = 0; m_helpMessages[i]; i++)
       {
         UPoint tsize = MakeUnsigned(Panel::GetTextSize(smFont, m_helpMessages[i]));
-        UPoint pos = UPoint(10, i * 18 + 35);
+        UPoint pos = UPoint(10, i * LINE_HEIGHT + TEXT_Y_START);
         d.BlitText(m_helpMessages[i], pos, tsize);
 
         maxCorner = max(maxCorner, pos + tsize);
