@@ -46,7 +46,7 @@ namespace MFM {
 
   inline s64 _Int64ToInt64(s64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    const s64 maxdestval = _GetNOnes64(srcbitwidth-1);
+    const s64 maxdestval = _GetNOnes64(destbitwidth-1);
     const s64 mindestval = ~maxdestval;
     return CLAMP<s64>(mindestval, maxdestval, val);
   }
