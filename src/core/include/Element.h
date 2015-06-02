@@ -322,10 +322,9 @@ namespace MFM
      * @param atom A pointer to an Atom (guaranteed to be an instance
      *             of this Element ) to append a description of.
      *
-     * @param desc The OverflowableCharBufferByteSink to append the
-     *             description to.
+     * @param desc The ByteSink to append the description to.
      */
-    virtual void AppendDescription(const T* atom, OString64& desc) const
+    virtual void AppendDescription(const T* atom, ByteSink& desc) const
     {
       /* Default to no description */
     }

@@ -128,110 +128,122 @@ namespace MFM
         d.SetFont(AssetManager::Get(FONT_ASSET_HELPPANEL_SMALL));
         const char* message = "No atom selected.";
         d.BlitText(message, UPoint(32, 32), MakeUnsigned(d.GetTextSize(message)));
+        return;
       }
-      else
+
+      OString256 buff;
+      AtomSerializer<AC> serializer(*m_atom);
+
+      const u32 ATOM_X_START = 20;
+      const u32 ATOM_Y_START = 10;
+      const u32 etype = m_atom->GetType();
+      const Element<EC>* element = m_grid->LookupElement(etype);
+
+      if (!element)
       {
-        const u32 ATOM_X_START = 20;
-        const u32 ATOM_Y_START = 10;
-        const Element<EC>* element = m_grid->LookupElement(m_atom->GetType());
-        d.SetForeground(Panel::GetForeground());
-        d.FillCircle(ATOM_X_START-1, ATOM_Y_START-1, ATOM_DRAW_SIZE + 2, ATOM_DRAW_SIZE + 2, (ATOM_DRAW_SIZE >> 1) + 1);
-        d.SetForeground(element->DefaultPhysicsColor());
-        d.FillCircle(ATOM_X_START, ATOM_Y_START, ATOM_DRAW_SIZE, ATOM_DRAW_SIZE, ATOM_DRAW_SIZE >> 1);
-        d.SetFont(FONT_ASSET_ELEMENT);
-        d.SetForeground(Drawing::WHITE);
-        d.SetBackground(Drawing::BLACK);
+        buff.Printf("Unknown type '0x%04x' in: %@", etype, &serializer);
+        const char * str = buff.GetZString();
+        d.SetFont(AssetManager::Get(FONT_ASSET_HELPPANEL_SMALL));
+        d.BlitBackedText(str, UPoint(32, 32), MakeUnsigned(d.GetTextSize(str)));
+        return;
+      }
 
-        /* As long as the font is monospaced, we can get the text size
-           of any 2-character string for this centering. */
-        //        const UPoint elementTextSize = MakeUnsigned(d.GetTextSize("12"));
-        d.BlitBackedTextCentered(element->GetAtomicSymbol(),
-                                 UPoint(ATOM_X_START, ATOM_Y_START), UPoint(ATOM_DRAW_SIZE, ATOM_DRAW_SIZE));
+      d.SetForeground(Panel::GetForeground());
+      d.FillCircle(ATOM_X_START-1, ATOM_Y_START-1, ATOM_DRAW_SIZE + 2, ATOM_DRAW_SIZE + 2, (ATOM_DRAW_SIZE >> 1) + 1);
+      d.SetForeground(element->DefaultPhysicsColor());
+      d.FillCircle(ATOM_X_START, ATOM_Y_START, ATOM_DRAW_SIZE, ATOM_DRAW_SIZE, ATOM_DRAW_SIZE >> 1);
+      d.SetFont(FONT_ASSET_ELEMENT);
+      d.SetForeground(Drawing::WHITE);
+      d.SetBackground(Drawing::BLACK);
 
-        UPoint nameSize = MakeUnsigned(d.GetTextSize(element->GetName()));
-        d.BlitBackedText(element->GetName(),
-                         UPoint(ATOM_X_START + 3*ATOM_DRAW_SIZE/2,
-                                ATOM_Y_START + ATOM_DRAW_SIZE - nameSize.GetY()), // bottom align text
-                         nameSize);
+      /* Center on the draw_size x draw_size box */
+      d.BlitBackedTextCentered(element->GetAtomicSymbol(),
+                               UPoint(ATOM_X_START, ATOM_Y_START), UPoint(ATOM_DRAW_SIZE, ATOM_DRAW_SIZE));
 
-        OString64 desc;
-        element->AppendDescription(m_atom, desc);
-        const char* zstr = desc.GetZString();
+      UPoint nameSize = MakeUnsigned(d.GetTextSize(element->GetName()));
+      d.BlitBackedText(element->GetName(),
+                       UPoint(ATOM_X_START + 3*ATOM_DRAW_SIZE/2,
+                              ATOM_Y_START + ATOM_DRAW_SIZE - nameSize.GetY()), // bottom align text
+                       nameSize);
 
-        d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
-        const u32 LINE_X_START = 4 + ATOM_DRAW_SIZE;
-        const u32 LINE_Y_START = 28;
-        const u32 LINE_HEIGHT = TTF_FontLineSkip(d.GetFont());
-        const u32 INDENT_AMOUNT = LINE_HEIGHT;
+      buff.Reset();
+      element->AppendDescription(m_atom, buff);
+      const char* zstr = buff.GetZString();
 
-        d.BlitBackedText(zstr, UPoint(LINE_X_START, LINE_Y_START + 0 * LINE_HEIGHT),
-                         MakeUnsigned(d.GetTextSize(zstr)));
+      d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
+      const u32 LINE_X_START = 4 + ATOM_DRAW_SIZE;
+      const u32 LINE_Y_START = 28;
+      const u32 LINE_HEIGHT = TTF_FontLineSkip(d.GetFont());
+      const u32 INDENT_AMOUNT = LINE_HEIGHT;
 
-        OString64 atomBody;
-        AtomSerializer<AC> serializer(*m_atom);
-        atomBody.Printf("%@", &serializer);
-        zstr = atomBody.GetZString();
+      d.BlitBackedText(zstr, UPoint(LINE_X_START, LINE_Y_START + 0 * LINE_HEIGHT),
+                       MakeUnsigned(d.GetTextSize(zstr)));
 
-        d.BlitBackedText(zstr, UPoint(LINE_X_START, LINE_Y_START + 1 * LINE_HEIGHT),
-                         MakeUnsigned(d.GetTextSize(zstr)));
+      buff.Reset();
+      buff.Printf("%@", &serializer);
+      zstr = buff.GetZString();
 
-        const UlamElement<EC> * uelt = element->AsUlamElement();
-        if (!uelt)
-          PaintDisplayAtomicControllers(d, *m_atom, element);
-        else
+      d.BlitBackedText(zstr, UPoint(LINE_X_START, LINE_Y_START + 1 * LINE_HEIGHT),
+                       MakeUnsigned(d.GetTextSize(zstr)));
+
+      const UlamElement<EC> * uelt = element->AsUlamElement();
+      if (!uelt)
+      {
+        PaintDisplayAtomicControllers(d, *m_atom, element);
+        return;
+      }
+
+      const UlamClassRegistry & ucr = m_grid->GetUlamClassRegistry();
+
+      const u32 printFlags =
+        UlamClass::PRINT_MEMBER_NAMES |
+        UlamClass::PRINT_MEMBER_VALUES |
+        UlamClass::PRINT_RECURSE_QUARKS;
+
+      uelt->Print(ucr, buff, *m_atom, printFlags);
+      zstr = buff.GetZString();
+      u32 indent = 0;
+      u32 lineNum = 1;
+      OString64 lineBuff;
+
+      for (u8 ch = *zstr; ch; ch = *++zstr)
+      {
+        s32 oldIndent = indent;
+        s32 oldLineNum = lineNum;
+        if (ch == '(')
         {
-          const UlamClassRegistry & ucr = m_grid->GetUlamClassRegistry();
-          OString128 buff;
-          const u32 printFlags =
-            UlamClass::PRINT_MEMBER_NAMES |
-            UlamClass::PRINT_MEMBER_VALUES |
-            UlamClass::PRINT_RECURSE_QUARKS;
-          uelt->Print(ucr, buff, *m_atom, printFlags);
-          zstr = buff.GetZString();
-          u32 indent = 0;
-          u32 lineNum = 1;
-          OString64 lineBuff;
-
-          for (u8 ch = *zstr; ch; ch = *++zstr)
-          {
-            s32 oldIndent = indent;
-            s32 oldLineNum = lineNum;
-            if (ch == '(')
-            {
-              ++lineNum;
-              ++indent;
-            }
-            else if (ch == ')')
-            {
-              --indent;
-            }
-            else if (ch == ',')
-            {
-              ++lineNum;
-            }
-            if (oldIndent != indent || oldLineNum != lineNum)
-            {
-              if (lineBuff.GetLength() > 0)
-              {
-                const char * line = lineBuff.GetZString();
-                d.BlitBackedText(line, UPoint(LINE_X_START + oldIndent * INDENT_AMOUNT, LINE_Y_START + oldLineNum * LINE_HEIGHT),
-                                 MakeUnsigned(d.GetTextSize(line)));
-                lineBuff.Reset();
-              }
-            } else
-            {
-              lineBuff.Printf("%c", ch);
-            }
-          }
-          UPoint ds = Panel::GetDesiredSize();
-          u32 dy = MAX(200u,LINE_Y_START + (lineNum + 1) * LINE_HEIGHT);
-          if (dy != ds.GetY())
-          {
-            ds.SetY(dy);
-            Panel::SetDesiredSize(ds.GetX(), ds.GetY());
-            HandleResize(this->m_parent->GetDimensions());
-          }
+          ++lineNum;
+          ++indent;
         }
+        else if (ch == ')')
+        {
+          --indent;
+        }
+        else if (ch == ',')
+        {
+          ++lineNum;
+        }
+        if (oldIndent != indent || oldLineNum != lineNum)
+        {
+          if (lineBuff.GetLength() > 0)
+          {
+            const char * line = lineBuff.GetZString();
+            d.BlitBackedText(line, UPoint(LINE_X_START + oldIndent * INDENT_AMOUNT, LINE_Y_START + oldLineNum * LINE_HEIGHT),
+                             MakeUnsigned(d.GetTextSize(line)));
+            lineBuff.Reset();
+          }
+        } else
+        {
+          lineBuff.Printf("%c", ch);
+        }
+      }
+      UPoint ds = Panel::GetDesiredSize();
+      u32 dy = MAX(200u,LINE_Y_START + (lineNum + 1) * LINE_HEIGHT);
+      if (dy != ds.GetY())
+      {
+        ds.SetY(dy);
+        Panel::SetDesiredSize(ds.GetX(), ds.GetY());
+        HandleResize(this->m_parent->GetDimensions());
       }
     }
 
