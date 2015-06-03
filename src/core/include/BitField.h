@@ -101,6 +101,17 @@ namespace MFM {
     }
 
     /**
+     * writes the contents of a u64 into a window (which is represented by this
+     * BitField) of a specified BV.
+     *
+     * @param bv The BV to write bits to.
+     */
+    static void WriteLong(BV & bv, u64 val)
+    {
+      bv.WriteLong(START,LENGTH,val);
+    }
+
+    /**
      * Read an element of an array, interpreting the entire bitfield
      * as a contiguous sequence of items each of which is size \c
      * unitsize.  Both the unit size and the array index are specified
@@ -139,6 +150,47 @@ namespace MFM {
     static void WriteArray(BV & bv, const u32 val, const u32 index, const u32 unitsize)
     {
       bv.Write((index * unitsize) + IDX, unitsize, val);
+    }
+
+    /**
+     * Read an element of an array, interpreting the entire bitfield
+     * as a contiguous sequence of items each of which is size \c
+     * unitsize.  Both the unit size and the array index are specified
+     * at runtime.
+     *
+     * @param bv The BV to read bits from.
+     *
+     * @param index The array index to read
+     *
+     * @param unitsize The number of bits per array item
+     *
+     * @returns the \c unitsize bits from \bv, starting at position \c
+     *          index * \c unitsize within this BitField.
+     */
+    static u64 ReadArrayLong(const BV & bv, const u32 index, const u32 unitsize)
+    {
+      return bv.ReadLong((index * unitsize) + IDX, unitsize);
+    }
+
+    /**
+     * Write an element of an array, interpreting the entire bitfield
+     * as a contiguous sequence of items each of which is size \c
+     * unitsize.  Both the unit size and the array index are specified
+     * at runtime.
+     *
+     * @param bv The BV to write bits to.
+     *
+     * @param val the value to write to \bv (taking only the bottom \c
+     * unitsize bits).
+     *
+     * @param index The array index to write
+     *
+     * @param unitsize The number of bits per array item.
+     *
+     */
+    static void WriteArrayLong(BV & bv, const u64 val, const u32 index, const u32 unitsize)
+    {
+      bv.WriteLong((index * unitsize) + IDX, unitsize, val);
     }
 
     /**
@@ -222,17 +274,6 @@ namespace MFM {
     static bool ReadBit(const Atom<AC> & atom, u32 bitnum)
     {
       return atom.m_bits.ReadBit(START+bitnum);
-    }
-
-    /**
-     * writes the contents of a u64 into a window (which is represented by this
-     * BitField) of a specified BV.
-     *
-     * @param bv The BV to write bits to.
-     */
-    static void WriteLong(BV & bv, u64 val)
-    {
-      bv.WriteLong(START,LENGTH,val);
     }
 
     template <class AC>

@@ -11,10 +11,10 @@ namespace MFM
 {
 
   template <class EC>
-  void ElementRegistry<EC>::Init()
+  void ElementRegistry<EC>::Init(UlamClassRegistry & ucr)
   {
     LOG.Debug("Loading ElementLibraries from %d file(s)...", m_libraryPathsCount);
-    s32 elements = LoadLibraries();
+    s32 elements = LoadLibraries(ucr);
     if (elements < 0)
     {
       FAIL(ILLEGAL_STATE);
@@ -134,11 +134,11 @@ namespace MFM
   }
 
   template <class EC>
-  s32 ElementRegistry<EC>::LoadLibraries()
+  s32 ElementRegistry<EC>::LoadLibraries(UlamClassRegistry & ucr)
   {
     u32 elementCount = 0;
     for (u32 i = 0; i < m_libraryPathsCount; ++i) {
-      s32 ret = LoadLibrary(m_libraryPaths[i]);
+      s32 ret = LoadLibrary(ucr, m_libraryPaths[i]);
       if (ret < 0) return ret;
       elementCount += (u32) ret;
     }
@@ -146,7 +146,7 @@ namespace MFM
   }
 
   template <class EC>
-  s32 ElementRegistry<EC>::LoadLibrary(OString256 & libraryPath)
+  s32 ElementRegistry<EC>::LoadLibrary(UlamClassRegistry & ucr, OString256 & libraryPath)
   {
     ElementLibraryLoader<EC> ell;
 
@@ -163,9 +163,9 @@ namespace MFM
       LOG.Error("ElementLibrary not loadable from %s", err);
       return -1;
     }
-    u32 count = el->m_count;
+    u32 count = el->m_elementCount;
     for (u32 i = 0; i < count; ++i) {
-      ElementLibraryStub<EC> * els = el->m_stubPtrArray[i];
+      ElementLibraryStub<EC> * els = el->m_elementStubPtrArray[i];
       if (!els)
         FAIL(ILLEGAL_STATE);
       Element<EC> * elt = els->GetElement();
@@ -176,13 +176,31 @@ namespace MFM
         LOG.Warning("Already registered: %@", &uuid);
       else
         LOG.Message("Loaded %@ at %p from %s", &uuid, elt, libraryPath.GetZString());
+
+      UlamElement<EC> * uelt = elt->AsUlamElement();
+      if (uelt) {
+        if (!ucr.RegisterUlamClass(*uelt))
+          LOG.Warning("Ulam Class '%s' already registered", uelt->GetMangledClassName());
+      }
     }
-    return count;
+
+    u32 ocount = el->m_otherUlamClassCount;
+    for (u32 i = 0; i < ocount; ++i) {
+      UlamClass *ucp = el->m_otherUlamClassPtrArray[i];
+      if (!ucp)
+        FAIL(ILLEGAL_STATE);
+      if (!ucr.RegisterUlamClass(*ucp))
+        LOG.Warning("Ulam Class '%s' already registered", ucp->GetMangledClassName());
+      else
+        LOG.Message("Loaded Ulam Class %s at %p from %s", ucp->GetMangledClassName(), ucp, libraryPath.GetZString());
+    }
+    return count + ocount;
   }
 
   template <class EC>
   ElementRegistry<EC>::ElementRegistry()
-    : m_registeredElementsCount(0), m_libraryPathsCount(0)
+    : m_registeredElementsCount(0)
+    , m_libraryPathsCount(0)
   {
 
   }

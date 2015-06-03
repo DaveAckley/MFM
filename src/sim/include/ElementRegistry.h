@@ -30,6 +30,7 @@
 
 #include "itype.h"
 #include "Element.h"
+#include "UlamElement.h"
 #include "OverflowableCharBufferByteSink.h"
 
 namespace MFM {
@@ -66,9 +67,9 @@ namespace MFM {
 
     /**
        Return negative on dl error, otherwise non-negative number of
-       elements loaded
+       elements and quarks loaded
      */
-    s32 LoadLibrary(LibraryPathString & librarypath) ;
+    s32 LoadLibrary(UlamClassRegistry & ucr, LibraryPathString & librarypath) ;
 
   public:
 
@@ -76,7 +77,7 @@ namespace MFM {
 
     ~ElementRegistry() { }
 
-    void Init();
+    void Init(UlamClassRegistry & ucr);
 
     u32 GetRegisteredElementCount() const;
 
@@ -106,7 +107,7 @@ namespace MFM {
      * Returns negative on error, otherwise the number of elements
      * loaded.
      */
-    s32 LoadLibraries() ;
+    s32 LoadLibraries(UlamClassRegistry & ucr) ;
 
     /**
      * Store a dynamically-loadable element in the registry keyed by
@@ -161,8 +162,8 @@ namespace MFM {
       return m_registeredElements[entryIdx].m_element;
     }
 
-
   private:
+
     struct ElementEntry {
       UUID m_uuid;                   //< Set in all cases
       Element<EC>* m_element;  //< Set if element is loaded

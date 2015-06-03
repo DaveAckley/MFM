@@ -7,7 +7,35 @@
 namespace MFM {
 
   template <class EC>
-  void UlamElement<EC>::Print(ByteSink & bs, const T & atom, u32 flags) const
+  void UlamElement<EC>::Behavior(EventWindow<EC>& window) const
+  {
+    Tile<EC> & tile = window.GetTile();
+    UlamContext<EC> uc;
+    uc.SetTile(tile);
+
+    u32 sym = m_info ? m_info->GetSymmetry(uc) : PSYM_DEG000L;
+    window.SetSymmetry((PointSymmetry) sym);
+
+    T & me = window.GetCenterAtomSym();
+    Uf_6behave(uc, me);
+  }
+
+  template <class EC>
+  s32 UlamElement<EC>::PositionOfDataMember(UlamContext<EC>& uc, u32 type, const char * dataMemberTypeName)
+  {
+    Tile<EC> & tile = uc.GetTile();
+    ElementTable<EC> & et = tile.GetElementTable();
+    const Element<EC> * eltptr = et.Lookup(type);
+    if (!eltptr) return -1;
+    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
+    if (!ueltptr) return -2;
+    s32 ret = ueltptr->PositionOfDataMemberType(dataMemberTypeName);
+    if (ret < 0) return -3;
+    return ret;
+  }
+
+  template <class EC>
+  void UlamElement<EC>::Print(const UlamClassRegistry & ucr, ByteSink & bs, const T & atom, u32 flags) const
   {
     if (!flags) return;
 
@@ -23,55 +51,6 @@ namespace MFM {
       bs.Printf(":%@", &as);
     }
 
-    if (flags & (PRINT_MEMBER_VALUES|PRINT_MEMBER_NAMES|PRINT_MEMBER_TYPES))
-    {
-      bool opened = false;
-      for (s32 i = 0; i < GetDataMemberCount(); ++i)
-      {
-        const UlamClassDataMemberInfo & dmi = GetDataMemberInfo((u32) i);
-        UlamTypeInfo utin;
-        if (!utin.InitFrom(dmi.m_mangledType))
-          FAIL(ILLEGAL_STATE);
-
-        // Skip size 0 members unless they reeeally want them
-        if (utin.GetBitSize() == 0 && !(flags & PRINT_SIZE0_MEMBERS)) continue;
-
-        if (!opened)
-        {
-          opened = true;
-          bs.Printf("(");
-        }
-        else
-        {
-          bs.Printf(",");
-        }
-        if (flags & PRINT_MEMBER_TYPES)
-        {
-          utin.PrintPretty(bs);
-          bs.Printf(" ");
-        }
-
-        if (flags & PRINT_MEMBER_NAMES)
-        {
-          bs.Printf("%s", dmi.m_dataMemberName);
-          if (flags & PRINT_MEMBER_VALUES)
-            bs.Printf("=");
-        }
-
-        if (flags & PRINT_MEMBER_VALUES)
-        {
-          // For starters just dig out the bits and print them
-          u32 val = atom.GetBits().Read(dmi.m_bitPosition + T::ATOM_FIRST_STATE_BIT, utin.GetBitSize());
-
-          if (utin.m_category == UlamTypeInfo::QUARK ||
-              (utin.m_category == UlamTypeInfo::PRIM && utin.m_utip.GetPrimType() >= UlamTypeInfoPrimitive::BOOL))
-            bs.Printf("0x%x", val);
-          else
-            bs.Printf("%d", val);
-        }
-      }
-      if (opened)
-        bs.Printf(")");
-    }
+    this->PrintClassMembers<EC>(ucr,bs,atom,flags,0);
   }
 }
