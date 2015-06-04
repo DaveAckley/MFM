@@ -131,7 +131,7 @@ namespace MFM {
     template <u32 OTHER_SIZE>
     bool Equals(const OverflowableCharBufferByteSink<OTHER_SIZE> & str) const
     {
-      return GetLength() == str.GetLength() && !memcmp(m_buf, str.m_buf, GetLength());
+      return GetLength() == str.GetLength() && !memcmp(GetBuffer(), str.GetBuffer(), GetLength());
     }
 
     /**
