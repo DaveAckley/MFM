@@ -31,6 +31,7 @@
 #include <sys/stat.h>  /* for mkdir */
 #include <sys/types.h> /* for mkdir */
 #include <errno.h>     /* for errno */
+#include <fcntl.h>     /* for O_WRONLY */
 #include "Utils.h"     /* for GetDateTimeNow */
 #include "Logger.h"
 #include "AssetManager.h"
@@ -119,6 +120,9 @@ namespace MFM
     //u32 m_nextEventCountsAEPS;
     //u32 m_nextScreenshotAEPS;
     //u32 m_nextTimeBasedDataAEPS;
+
+    bool m_batchMode;
+    s32 m_backupStdout;
 
     Keyboard m_keyboard;
     Camera camera;
@@ -532,7 +536,52 @@ namespace MFM
       if (!getenv("SDL_VIDEO_ALLOW_SCREENSAVER"))          // If user isn't already messing with this
         putenv((char *) "SDL_VIDEO_ALLOW_SCREENSAVER=1");  // Old school sdl 1.2 mechanism
 
-      SDL_Init(SDL_INIT_EVERYTHING);
+      if (m_batchMode)
+      {
+        /* Special disgusting hacks to run SDL in ncurses, but then
+           suppress the ncurses output, so that we can run what looks
+           like a 'GUI' to SDL with no actual display anywhere.  Is
+           there not some less-disgusting SDL1.2 way to do this??
+        */
+
+        // Step 1: Hack environmental variables to pick driver
+        if (!getenv("CACA_DRIVER") && !getenv("SDL_VIDEODRIVER"))
+        {
+          putenv((char *) "CACA_DRIVER=ncurses");
+          putenv((char *) "SDL_VIDEODRIVER=caca");
+        }
+        else
+        {
+          fprintf(stderr,"CACA_DRIVER and/or SDL_VIDEODRIVER set in env; could not set batchmode\n");
+          exit(-1);
+        }
+
+        // Step 2: Temporarily dump stdout
+
+        s32 newdesc;
+        fflush(stdout);
+        m_backupStdout = dup(1);
+        newdesc = open("/dev/null", O_WRONLY);
+        dup2(newdesc, 1);
+        close(newdesc);
+
+        // Step 3: Initialize SDL
+        if ( SDL_Init(0) == -1)
+        {
+          fprintf(stderr,"Could not initialize SDL: %s.\n", SDL_GetError());
+          exit(-1);
+        }
+
+        // This done later in setscreensize..
+        // SDL_Surface * s = SDL_SetVideoMode(1920, 1080, 32, SDL_SWSURFACE|SDL_NOFRAME);
+
+        LOG.Message("SDL initialized for batch mode");
+      }
+      else
+      {
+        SDL_Init(SDL_INIT_EVERYTHING);
+      }
+
       TTF_Init();
 
       if (m_desiredScreenWidth > 0) m_screenWidth = (u32) m_desiredScreenWidth;
@@ -596,6 +645,22 @@ namespace MFM
 
       // Again to 'set' stuff?
       SetScreenSize(m_screenWidth, m_screenHeight);
+
+      if (m_batchMode)
+      {
+        /* Unhook our secret wires, since hopefully the ncurses
+           initialization is done by now, and we won't actually draw
+           anything on it later anyway?
+        */
+        if (m_backupStdout >= 0)
+        {
+          fflush(stdout);
+          dup2(m_backupStdout, 1);
+          close(m_backupStdout);
+          m_backupStdout = -1;
+        }
+      }
+
     }
 
   private:
@@ -817,6 +882,8 @@ namespace MFM
       , m_saveStateIndex(0)
       , m_epochSaveStateIndex(0)
       , m_renderStats(false)
+      , m_batchMode(false)
+      , m_backupStdout(-1)
       , m_screenWidth(SCREEN_INITIAL_WIDTH)
       , m_screenHeight(SCREEN_INITIAL_HEIGHT)
       , m_desiredScreenWidth(-1)
@@ -888,6 +955,13 @@ namespace MFM
       driver->m_screenHeight = STATS_START_WINDOW_HEIGHT;
       driver->ToggleStatsView();
       driver->m_srend.SetDisplayAER(driver->m_srend.GetMaxDisplayAER());
+    }
+
+    static void ConfigBatchMode(const char* not_used, void* driverptr)
+    {
+      AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
+
+      driver->m_batchMode = true;
     }
 
     static void ConfigMinimalView(const char* not_used, void* driverptr)
@@ -977,7 +1051,10 @@ namespace MFM
     {
       Super::AddDriverArguments();
 
-      this->RegisterSection("GUI switches");
+      this->RegisterArgumentSection("GUI switches");
+
+      this->RegisterArgument("Provide no GUI at all (batch mode).",
+                             "--no-gui", &ConfigBatchMode, this, false);
 
       this->RegisterArgument("Start with only the statistics view on the screen.",
                              "--startwithoutgrid", &ConfigStatsOnlyView, this, false);

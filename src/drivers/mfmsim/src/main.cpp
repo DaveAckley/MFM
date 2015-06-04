@@ -29,7 +29,7 @@ namespace MFM {
     {
       Super::AddDriverArguments();
 
-      RegisterSection("Simulation-specific switches");
+      RegisterArgumentSection("Simulation-specific switches");
 
       RegisterArgument("Object that ARG is pointless (demo switch).",
                        "--pointless", &SayArgPointless, (void*) &GetVArguments(), true);

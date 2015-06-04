@@ -243,7 +243,7 @@ namespace MFM
     virtual void AddDriverArguments()
     {
       Super::AddDriverArguments();
-      this->RegisterSection("Driver-specific switches");
+      this->RegisterArgumentSection("Driver-specific switches");
 
       this->RegisterArgument("Display the supported tile types, then exit.",
                              "--tiles", &PrintTileTypes, NULL, false);
