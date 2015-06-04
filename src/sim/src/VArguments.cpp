@@ -40,7 +40,7 @@ namespace MFM
     arg.m_handlerArg = handlerArg;
   }
 
-  void VArguments::RegisterSection(const char* sectionLabel)
+  void VArguments::RegisterArgumentSection(const char* sectionLabel)
   {
     if(m_heldArguments >= VARGUMENTS_MAX_SIZE)
     {

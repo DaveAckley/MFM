@@ -32,11 +32,11 @@
 
 namespace MFM
 {
-  template<typename> class ExternalConfig;
+  template<typename> class ExternalConfigSection; // FORWARD
 
   /**
    * An interface representing a function call that can appear in a
-   * config file
+   * config file section
    */
   template<class GC>
   class ConfigFunctionCall
@@ -46,8 +46,7 @@ namespace MFM
 
     ConfigFunctionCall(const char * name) :
       m_functionName(name), m_valid(false)
-    {
-    }
+    { }
 
     bool IsValid()
     {
@@ -59,11 +58,11 @@ namespace MFM
       return m_functionName;
     }
 
-    virtual bool Parse(ExternalConfig<GC> & ec) = 0;
+    virtual bool Parse() = 0;
 
     virtual void Print(ByteSink & in) = 0;
 
-    virtual void Apply(ExternalConfig<GC> & ec) = 0;
+    virtual void Apply() = 0;
 
     virtual ~ConfigFunctionCall() { }
 
@@ -87,7 +86,7 @@ namespace MFM
   };
 }
 
-#include "ExternalConfig.h"
+#include "ExternalConfigSection.h"
 #include "ConfigFunctionCall.tcc"
 
 #endif /* CONFIGFUNCTIONCALL_H */

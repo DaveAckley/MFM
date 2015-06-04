@@ -46,6 +46,7 @@ namespace MFM
      * through this descriptor.
      */
     FILE * m_file;
+    bool m_lineBuffered;  //< If true, flush after each \n written
 
   public:
 
@@ -56,8 +57,9 @@ namespace MFM
      * @param file The FILE* wihch all bytes written to this
      *             FileByteSink are written to.
      */
-    FileByteSink(FILE * file) :
-      m_file(file)
+    FileByteSink(FILE * file, bool buffered = false)
+      : m_file(file)
+      , m_lineBuffered(buffered)
     {
       if (!file)
       {
@@ -71,9 +73,24 @@ namespace MFM
       {
 	FAIL(NULL_POINTER);
       }
-      size_t wrote = fwrite(data, 1, len, m_file);
-      if (wrote != len)
-        FAIL(IO_ERROR);
+      if (!m_lineBuffered)
+      {
+        size_t wrote = fwrite(data, 1, len, m_file);
+        if (wrote != len)
+          FAIL(IO_ERROR);
+      }
+      else
+      {
+        for (u32 i = 0; i < len; ++i)
+        {
+          u8 ch = data[i];
+          size_t wrote = fwrite(&ch, 1, 1, m_file);
+          if (wrote != 1)
+            FAIL(IO_ERROR);
+          if (ch == '\n')
+            fflush(m_file);
+        }
+      }
     }
 
     /**

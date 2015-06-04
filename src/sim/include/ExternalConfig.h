@@ -32,12 +32,12 @@
 #include "OverflowableCharBufferByteSink.h"  /* For OString16 */
 #include "LineCountingByteSource.h"
 #include "ByteSink.h"
-#include "ElementRegistry.h"
+#include "ExternalConfigSection.h"
 
 namespace MFM
 {
 
-  template<typename> class ConfigFunctionCall;
+  template<class GC> class AbstractDriver; // FORWARD
 
   /**
    * Structure for reading and writing the current grid configuration
@@ -54,53 +54,42 @@ namespace MFM
     enum { EVENT_WINDOW_RADIUS = EC::EVENT_WINDOW_RADIUS };
 
   public:
-    enum { MFS_VERSION = 2 };
+    // MFS_VERSION = 1 Original minimal version
+    // MFS_VERSION = 2 (2014/2015) Add grid size info
+    // MFS_VERSION = 3 (2015) Add sections
+    enum { MFS_VERSION = 3 };
 
     /*
-     * Construct a new ExternalConfig referencing a specified Grid
+     * Construct a new ExternalConfig associated with a specific driver
      *
-     * @param grid The grid to read from or write to.
+     * @param driver The driver to read from or write to.
      */
-    ExternalConfig(Grid<GC>& grid);
+    ExternalConfig(AbstractDriver<GC>& driver);
 
     void SetByteSource(ByteSource & byteSource, const char * label) ;
 
     void SetErrorByteSink(ByteSink & errorsTo) ;
 
+    void RegisterSection(ExternalConfigSection<GC>& ecs);
+
+
     /**
-     * Reads a configuration to the grid specified at construction.
+     * Reads a configuration to the driver specified at construction.
      * \returns true if the loading succeeded; false if the
      * configuration file is invalid (in which case an error has been
-     * printed to \a errors, and the grid may be in a partially-loaded
-     * or otherwise incomplete state.)
+     * printed to \a errors, and the driver may be in a
+     * partially-loaded or otherwise incomplete state.)
      */
     bool Read();
 
     /**
-     * Writes the current grid configuration to the give \a ByteSink.
+     * Writes the current driver configuration to the given \a ByteSink.
      */
     void Write(ByteSink & byteSink);
-
-    void RegisterFunction(ConfigFunctionCall<GC> & fc) ;
-
-    bool RegisterElement(const UUID & uuid, OString16 & nick) ;
-
-    Element<EC> * LookupElement(const OString16 & nick) const ;
-
-    bool PlaceAtom(const Element<EC> & elt, s32 x, s32 y, const char* dataStr) ;
-
-    bool PlaceAtom(const Element<EC> & elt, s32 x, s32 y, const BitVector<BPA> & bv) ;
-
-    void SetTileToExecuteOnly(const SPoint& tileLoc, bool value);
 
     LineCountingByteSource & GetByteSource()
     {
       return m_in;
-    }
-
-    Grid<GC> & GetGrid()
-    {
-      return m_grid;
     }
 
   private:
@@ -108,31 +97,17 @@ namespace MFM
     ByteSink * m_errorsTo;
 
     /**
-     * The Grid to read from or write to.
+     * The driver to read from or write to.
      */
-    Grid<GC>& m_grid;
+    AbstractDriver<GC>& m_driver;
 
-    /**
-     * The ElementRegistry to lookup UUIDs in.
-     */
-    ElementRegistry<EC>& m_elementRegistry;
-
-#define MAX_REGISTERED_FUNCTIONS 64
-    ConfigFunctionCall<GC> * (m_registeredFunctions[MAX_REGISTERED_FUNCTIONS]);
-    u32 m_registeredFunctionCount;
-
-#define MAX_REGISTERED_ELEMENTS 64
-    struct RegElt {
-      UUID m_uuid;
-      OString16 m_nick;
-      Element<EC> * m_element;
-    } m_registeredElements[MAX_REGISTERED_ELEMENTS];
-    u32 m_registeredElementCount;
+    static const u32 MAX_REGISTERED_SECTIONS = 10;
+    ExternalConfigSection<GC> * (m_registeredSections[MAX_REGISTERED_SECTIONS]);
+    u32 m_registeredSectionCount;
 
   };
 }
 
-#include "ConfigFunctionCall.h"
 #include "ExternalConfig.tcc"
 
 #endif /* EXTERNALCONFIG_H */

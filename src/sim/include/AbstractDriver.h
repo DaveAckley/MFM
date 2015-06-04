@@ -35,7 +35,7 @@
 #include "Util.h"
 #include "Utils.h"     /* for GetDateTimeNow, Sleep */
 #include "ExternalConfig.h"
-#include "ExternalConfigFunctions.h"
+#include "ExternalConfigSectionGrid.h"
 #include "OverflowableCharBufferByteSink.h"
 #include "FileByteSource.h"
 #include "FileByteSink.h"
@@ -86,36 +86,6 @@ namespace MFM
      */
     typedef typename AC::ATOM_TYPE T;
 
-#if 0
-    /**
-     * Exported from the GridConfiguration, the enumerated width of
-     * the Grid used by this simulation.
-     */
-    enum { W = GC::GRID_WIDTH};
-
-    /**
-     * Exported from the GridConfiguration, the enumerated height of
-     * the Grid used by this simulation.
-     */
-    enum { H = GC::GRID_HEIGHT};
-#endif
-
-    /**
-     * Exported from the GridConfiguration, the enumerated size of
-     * every EventWindow used by this simulation.
-     */
-    enum { EVENT_WINDOW_RADIUS = EC::EVENT_WINDOW_RADIUS};
-
-    /**
-     * The width of the Grid used by this simulation.
-     */
-    const u32 GRID_WIDTH;
-
-    /**
-     * The height of the Grid used by this simulation.
-     */
-    const u32 GRID_HEIGHT;
-
     /**
      * Template shortcut for an ElementRegistry with the correct
      * template parameters.
@@ -140,8 +110,21 @@ namespace MFM
      */
     typedef ElementTable<EC> OurElementTable;
 
-    Element<EC>* m_neededElements[MAX_NEEDED_ELEMENTS];
-    u32 m_neededElementCount;
+    /**
+     * Exported from the GridConfiguration, the enumerated size of
+     * every EventWindow used by this simulation.
+     */
+    enum { EVENT_WINDOW_RADIUS = EC::EVENT_WINDOW_RADIUS};
+
+    /**
+     * The width of the Grid used by this simulation.
+     */
+    const u32 GRID_WIDTH;
+
+    /**
+     * The height of the Grid used by this simulation.
+     */
+    const u32 GRID_HEIGHT;
 
     void NeedElement(Element<EC>* element)
     {
@@ -471,64 +454,6 @@ namespace MFM
       return m_AEPSPerEpoch;
     }
 
-  protected:
-
-    OurElementRegistry m_elementRegistry;
-    OurStdElements m_se;
-    OurGrid m_grid;
-
-    u32 m_ticksLastStopped;
-    u32 m_haltAfterAEPS;
-    bool m_haltOnEmpty;
-    bool m_haltOnFull;
-
-    u64 m_startTimeMS;
-    u64 m_msSpentRunning;
-    u64 m_msSpentOverhead;
-    s32 m_microsSleepPerFrame;
-    double m_overheadPercent;
-    double m_lastFrameAEPS;
-    u32 m_aepsPerFrame;
-
-    s32 m_AEPSPerEpoch;
-    u32 m_autosavePerEpochs;
-    u32 m_accelerateAfterEpochs;
-    u32 m_acceleration;
-    u32 m_surgeAfterEpochs;
-
-    bool m_gridImages;
-    bool m_tileImages;
-
-    double m_AEPS;
-    /**
-     * The absolute event rate since the beginning of the simulation
-     */
-    double m_AER;
-
-    /**
-     * The recent event rate computed by backwards averaging
-     */
-    double m_recentAER;
-
-    /**
-     * The previous value of Grid::GetTotalEventsExecuted, for
-     * computing m_recentAET
-     */
-    u64 m_lastTotalEvents;
-
-    u32 m_nextEpochAEPS;
-    u32 m_epochCount;
-
-    VArguments m_varguments;
-    OString1024 m_commandLineArguments;
-
-    u32 m_configurationPathCount;
-    u32 m_currentConfigurationPath;
-    const char* (m_configurationPaths[MAX_CONFIGURATION_PATHS]);
-
-    char m_simDirBasePath[MAX_PATH_LENGTH];
-    u32 m_simDirBasePathLength;
-
     u32 GetTicks()
     {
       struct timeval tv;
@@ -850,11 +775,10 @@ namespace MFM
     {
 
       LOG.Message("Saving to: %s", filename);
-      ExternalConfig<GC> cfg(this->GetGrid());
       FILE* fp = fopen(filename, "w");
       FileByteSink fs(fp);
 
-      cfg.Write(fs);
+      m_externalConfig.Write(fs);
       fs.Close();
     }
 
@@ -882,16 +806,12 @@ namespace MFM
 
       LOG.Debug("Loading configuration from %s...", path);
 
-      ExternalConfig<GC> cfg(GetGrid());
-      RegisterExternalConfigFunctions<GC>(cfg);
       FileByteSource fs(path);
       if (fs.IsOpen())
       {
 
-        cfg.SetByteSource(fs, path);
-
-        cfg.Read();
-
+        m_externalConfig.SetByteSource(fs, path);
+        m_externalConfig.Read();
         fs.Close();
       }
       else
@@ -965,6 +885,7 @@ namespace MFM
       , m_msSpentOverhead(0)
       , m_microsSleepPerFrame(1000)
       , m_overheadPercent(0.0)
+      , m_lastFrameAEPS(INITIAL_AEPS_PER_FRAME)
       , m_aepsPerFrame(INITIAL_AEPS_PER_FRAME)
       , m_AEPSPerEpoch(100)
       , m_autosavePerEpochs(10)
@@ -973,14 +894,20 @@ namespace MFM
       , m_surgeAfterEpochs(0)
       , m_gridImages(false)
       , m_tileImages(false)
-      , m_AEPS(0)
+      , m_AEPS(0.0)
+      , m_AER(0.0)
       , m_recentAER(0)
       , m_lastTotalEvents(0)
       , m_nextEpochAEPS(0)
       , m_epochCount(0)
       , m_configurationPathCount(0)
       , m_currentConfigurationPath(U32_MAX)
-    { }
+      , m_simDirBasePathLength(0)
+      , m_externalConfig(*this)
+      , m_externalConfigSectionGrid(m_externalConfig, m_grid)
+    {
+      m_externalConfig.RegisterSection(m_externalConfigSectionGrid);
+    }
 
     void SaveCommandLine(u32 argc, const char** argv)
     {
@@ -1004,7 +931,7 @@ namespace MFM
       FILE* fp = fopen(path, "w");
       if (!fp) FAIL(IO_ERROR);
       {
-        static FileByteSink fbs(fp);
+        static FileByteSink fbs(fp, true);
         static TeeByteSink logT;
 
         ByteSink * old = LOG.SetByteSink(logT);
@@ -1042,9 +969,9 @@ namespace MFM
       m_varguments.RegisterArgument(description, filter, func, handlerArg, runFunc);
     }
 
-    void RegisterSection(const char* sectionLabel)
+    void RegisterArgumentSection(const char* sectionLabel)
     {
-      m_varguments.RegisterSection(sectionLabel);
+      m_varguments.RegisterArgumentSection(sectionLabel);
     }
 
     /**
@@ -1059,7 +986,7 @@ namespace MFM
      */
     virtual void AddDriverArguments()
     {
-      RegisterSection("General switches");
+      RegisterArgumentSection("General switches");
 
       RegisterArgument("Display this help message, then exit.",
                        "-h|--help", &PrintArgUsage, (void*)(&m_varguments), false);
@@ -1221,6 +1148,73 @@ namespace MFM
          LOG.Message("Simulation driver exiting");
        });
     }
+
+  protected:
+
+    OurElementRegistry m_elementRegistry;
+
+    Element<EC>* m_neededElements[MAX_NEEDED_ELEMENTS];
+    u32 m_neededElementCount;
+
+    OurStdElements m_se;
+    OurGrid m_grid;
+
+    u32 m_ticksLastStopped;
+    u32 m_haltAfterAEPS;
+    bool m_haltOnEmpty;
+    bool m_haltOnFull;
+
+    u64 m_startTimeMS;
+    u64 m_msSpentRunning;
+    u64 m_msSpentOverhead;
+    s32 m_microsSleepPerFrame;
+    double m_overheadPercent;
+    double m_lastFrameAEPS;
+    u32 m_aepsPerFrame;
+
+    s32 m_AEPSPerEpoch;
+    u32 m_autosavePerEpochs;
+    u32 m_accelerateAfterEpochs;
+    u32 m_acceleration;
+    u32 m_surgeAfterEpochs;
+
+    bool m_gridImages;
+    bool m_tileImages;
+
+    double m_AEPS;
+
+    /**
+     * The absolute event rate since the beginning of the simulation
+     */
+    double m_AER;
+
+    /**
+     * The recent event rate computed by backwards averaging
+     */
+    double m_recentAER;
+
+    /**
+     * The previous value of Grid::GetTotalEventsExecuted, for
+     * computing m_recentAET
+     */
+    u64 m_lastTotalEvents;
+
+    u32 m_nextEpochAEPS;
+    u32 m_epochCount;
+
+    VArguments m_varguments;
+    OString1024 m_commandLineArguments;
+
+    u32 m_configurationPathCount;
+    u32 m_currentConfigurationPath;
+    const char* (m_configurationPaths[MAX_CONFIGURATION_PATHS]);
+
+    char m_simDirBasePath[MAX_PATH_LENGTH];
+    u32 m_simDirBasePathLength;
+
+    ExternalConfig<GC> m_externalConfig;
+    ExternalConfigSectionGrid<GC> m_externalConfigSectionGrid;
+
   };
 }
 

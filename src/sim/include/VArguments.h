@@ -170,12 +170,12 @@ namespace MFM
      * Defines a new command line argument section in this VArguments
      * instance.  Subsequent RegisterArgument calls will be described
      * as part of section \a label, unless and until another
-     * RegisterSection call.
+     * RegisterArgumentSection call.
      *
      * @param label The name of the section, printed out as part of
      *                    program usage help.
      */
-    void RegisterSection(const char* label);
+    void RegisterArgumentSection(const char* label);
 
     /**
      * To be called after all arguments are registered. This will parse

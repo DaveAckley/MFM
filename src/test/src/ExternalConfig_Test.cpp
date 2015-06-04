@@ -1,14 +1,22 @@
 /* -*- C++ -*- */
 #include "Test_Common.h"
 #include "assert.h"
-#include "ExternalConfigFunctions.h"
+//#include "ExternalConfigFunctions.h"
 #include "ExternalConfig_Test.h"
 #include "ZStringByteSource.h"
 #include "FileByteSink.h"  /* For STDERR */
 #include "Element_Dreg.h"
+#include "AbstractDriver.h"
 
 namespace MFM
 {
+  struct TestDriver : public AbstractDriver<TestGridConfig>
+  {
+    TestDriver() : AbstractDriver(1,1) { }
+    void ReinitEden() { FAIL(ILLEGAL_STATE); }
+    void DefineNeededElements() { FAIL(ILLEGAL_STATE); }
+  };
+
 
   static void TestBasic()
   {
@@ -19,8 +27,9 @@ namespace MFM
     grid.SetSeed(1);
     grid.Init();
 
-    ExternalConfig<TestGridConfig> cfg(grid);
-    RegisterExternalConfigFunctions<TestGridConfig>(cfg);
+    TestDriver td;
+
+    ExternalConfig<TestGridConfig> cfg(td);
     OverflowableCharBufferByteSink<1024> errs;
     cfg.SetErrorByteSink(errs);
     //    LOG.Error("DREG %@", &Element_Dreg<TestCoreConfig>::THE_INSTANCE.GetUUID());

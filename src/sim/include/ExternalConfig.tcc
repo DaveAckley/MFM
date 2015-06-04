@@ -4,18 +4,12 @@
 #include <string.h>
 #include <ctype.h>
 
-#define MAX_LINE_LEN 150
-#define MAX_ARG_LEN 64
-#define MAX_ARGUMENTS 16
-
 namespace MFM
 {
   template<class GC>
-  ExternalConfig<GC>::ExternalConfig(Grid<GC>& grid)
-    : m_grid(grid)
-    , m_elementRegistry(grid.GetElementRegistry())
-    , m_registeredFunctionCount(0)
-    , m_registeredElementCount(0)
+  ExternalConfig<GC>::ExternalConfig(AbstractDriver<GC>& driver)
+    : m_driver(driver)
+    , m_registeredSectionCount(0)
   {
     m_in.SetErrorByteSink(STDERR);
   }
@@ -36,7 +30,21 @@ namespace MFM
   template<class GC>
   bool ExternalConfig<GC>::Read()
   {
-    m_grid.Clear();
+    /* Only thing not in a section (and before all sections) is
+       the mfs version. */
+
+    m_in.SkipWhitespace();
+    u32 version;
+    if (6 != m_in.Scanf("MFS/%d\n",&version))
+      return m_in.Msg(Logger::ERROR, "Expected MFS version header");
+
+    if (version > MFS_VERSION)
+      return m_in.Msg(Logger::ERROR, "File version MFS/%u newer than us (MFS/%u)",
+                      version, MFS_VERSION);
+
+    if (version < MFS_VERSION)
+      m_in.Msg(Logger::WARNING, "File version MFS/% older than us (MFS/%u)",
+               version, MFS_VERSION);
 
     while (true) {
 
@@ -55,28 +63,53 @@ namespace MFM
       }
 
       m_in.Unread();
-      OString64 cbbs;
-      if (1 != m_in.Scanf("%[_a-zA-Z0-9]",&cbbs))
-        return m_in.Msg(Logger::ERROR, "Expected function name");
-      if (cbbs.HasOverflowed())
-        return m_in.Msg(Logger::ERROR, "Function name too long '%@'", &cbbs);
 
-      m_in.SkipWhitespace();
-      if (1 != m_in.Scanf("("))
-        return m_in.Msg(Logger::ERROR, "Expected open parenthesis");
+      OString32 sectionName;
+      if (3 != m_in.Scanf("[%[_a-zA-Z0-9]]",&sectionName))
+        return m_in.Msg(Logger::ERROR, "Expected [section] name");
 
-      bool handled = false;
-      for (u32 i = 0; i < m_registeredFunctionCount; ++i) {
-        ConfigFunctionCall<GC> & fc = *m_registeredFunctions[i];
-        if (cbbs.Equals(fc.m_functionName)) {
-          if (!fc.Parse(*this)) return false;  // Error message already issued
-          handled = true;
+      if (sectionName.HasOverflowed())
+        return m_in.Msg(Logger::ERROR, "Section name too long '[%@]'", &sectionName);
+
+      bool found = false;
+
+      for (u32 i = 0; i < m_registeredSectionCount; ++i) {
+        ExternalConfigSection<GC> * ecs = m_registeredSections[i];
+        if (sectionName.Equals(ecs->GetSectionName())) {
+          found = true;
+          if (!ecs->ReadSection()) return false;  // Error message already issued
           break;
         }
       }
 
-      if (!handled)
-        return m_in.Msg(Logger::ERROR, "Unknown function '%s'",cbbs.GetZString());
+      if (!found)
+      {
+        // Try to skip unknown section
+        while (true)
+        {
+          ch = m_in.Read();
+          if (ch == EOF)
+            return m_in.Msg(Logger::ERROR, "EOF while searching for '[/%s]'", sectionName.GetZString());
+
+          if (ch != '\n') continue;
+
+          m_in.SkipWhitespace();
+
+          OString64 cbbs;
+          if (1 != m_in.Scanf("[/%[_a-zA-Z0-9]]",&cbbs))
+            continue;
+
+          if (!cbbs.Equals(sectionName))
+            return m_in.Msg(Logger::ERROR, "Cannot close '[%s]' with '[/%s]'",
+                            sectionName.GetZString(),
+                            cbbs.GetZString());
+
+          break; // matching section close found
+        }
+        m_in.Msg(Logger::WARNING, "Skipped unknown section '[%s]'",
+                 sectionName.GetZString());
+        continue; // back to section loop
+      }
     }
     return true;
   }
@@ -84,202 +117,30 @@ namespace MFM
   template<class GC>
   void ExternalConfig<GC>::Write(ByteSink& byteSink)
   {
-    /* Minus-first-th, identify mfs version. */
-    byteSink.Printf("MFSVersion(%u)\n", MFS_VERSION);
+    /* First, identify mfs version. */
+    byteSink.Printf("MFS/%u\n", MFS_VERSION);
 
-    /* Zeroth, identify grid size in sites and tiles. */
-    byteSink.Printf("DefineGridSize(%u,%u,%u,%u)\n",
-                    m_grid.GetWidthSites(),
-                    m_grid.GetHeightSites(),
-                    m_grid.GetWidth(),
-                    m_grid.GetHeight());
-
-    /* First, register all elements. */
-
-    u32 elems = m_elementRegistry.GetEntryCount();
-    char alphaOutput[24];
-
-    for(u32 i = 0; i < elems; i++)
-    {
-      const UUID& uuid = m_elementRegistry.GetEntryUUID(i);
-
-      IntAlphaEncode(i, alphaOutput);
-
-      byteSink.Printf("RegisterElement(");
-      uuid.Print(byteSink);
-      byteSink.Printf(",%s)", alphaOutput);
-      byteSink.WriteNewline();
-
-      /* Write configurable element values */
-
-      const Element<EC>* elem = m_elementRegistry.GetEntryElement(i);
-      const ElementParameters<EC> & parms = elem->GetElementParameters();
-
-      for(u32 j = 0; j < parms.GetParameterCount(); j++)
-      {
-        const ElementParameter<EC> * p = parms.GetParameter(j);
-        byteSink.Printf(" SetElementParameter(%s,%s,%@)",
-                        alphaOutput,
-                        p->GetTag(),
-                        p);
-        byteSink.WriteNewline();
-      }
+    /* Then each section goes, in registration order */
+    for (u32 i = 0; i < m_registeredSectionCount; ++i) {
+      ExternalConfigSection<GC> * ecs = m_registeredSections[i];
+      byteSink.Printf("\n[%s]\n",ecs->GetSectionName());
+      ecs->WriteSection(byteSink);
+      byteSink.Printf("\n[/%s]\n",ecs->GetSectionName());
     }
-    byteSink.WriteNewline();
-
-    /* Then, GA all live atoms. */
-
-    /* The grid size in sites excluding caches */
-    const u32 gridWidth = m_grid.GetWidthSites();
-    const u32 gridHeight = m_grid.GetHeightSites();
-
-    for(u32 y = 0; y < gridHeight; y++)
-    {
-      for(u32 x = 0; x < gridWidth; x++)
-      {
-        SPoint currentPt(x, y);
-        /* No need to write empties since they are the default */
-        if(!Atom<AC>::IsType(*m_grid.GetAtom(currentPt),
-                             Element_Empty<EC>::THE_INSTANCE.GetType()))
-        {
-          byteSink.Printf("GA(");
-
-          /* This wil be a little slow, but meh. Makes me miss hash
-           * tables. */
-          for(u32 i = 0; i < elems; i++)
-          {
-            if(Atom<AC>::IsType(*m_grid.GetAtom(currentPt),
-                                m_elementRegistry.GetEntryElement(i)->GetType()))
-            {
-              IntAlphaEncode(i, alphaOutput);
-              byteSink.Printf("%s", alphaOutput);
-              break;
-            }
-          }
-
-          T temp = *m_grid.GetAtom(currentPt);
-          AtomSerializer<AC> as(temp);
-          byteSink.Printf(",%d,%d,%@)\n", x, y, &as);
-        }
-      }
-    }
-    byteSink.WriteNewline();
-
-    /* Set Tile geometry */
-    for(u32 y = 0; y < m_grid.GetHeight(); y++)
-    {
-      for(u32 x = 0; x < m_grid.GetWidth(); x++)
-      {
-        SPoint currentPt(x, y);
-        Tile<EC> & tile = m_grid.GetTile(currentPt);
-
-        if(tile.GetCurrentState() != Tile<EC>::ACTIVE)
-        {
-          byteSink.Printf("DisableTile(%d,%d)", x, y);
-          byteSink.WriteNewline();
-        }
-      }
-    }
-
-    /* Set any additional parameters */
   }
 
   template<class GC>
-  void ExternalConfig<GC>::RegisterFunction(ConfigFunctionCall<GC> & fc)
+  void ExternalConfig<GC>::RegisterSection(ExternalConfigSection<GC>& section)
   {
-    for (u32 i = 0; i < m_registeredFunctionCount; ++i) {
-      ConfigFunctionCall<GC> & rfc = *m_registeredFunctions[i];
-      if (!strcmp(fc.m_functionName, rfc.m_functionName))
+    for (u32 i = 0; i < m_registeredSectionCount; ++i) {
+      ExternalConfigSection<GC> & ecs = *m_registeredSections[i];
+      if (!strcmp(section.GetSectionName(), ecs.GetSectionName()))
         FAIL(DUPLICATE_ENTRY);
     }
-    if (m_registeredFunctionCount >= sizeof(m_registeredFunctions)/sizeof(m_registeredFunctions[0]))
+    if (m_registeredSectionCount >= sizeof(m_registeredSections)/sizeof(m_registeredSections[0]))
       FAIL(OUT_OF_ROOM);
 
-    m_registeredFunctions[m_registeredFunctionCount++] = &fc;
+    m_registeredSections[m_registeredSectionCount++] = &section;
   }
 
-  template<class GC>
-  bool ExternalConfig<GC>::RegisterElement(const UUID & uuid, OString16 & nick)
-  {
-    Element<EC> * elt = m_elementRegistry.Lookup(uuid);
-    const UUID * puuid = 0;
-    if (!elt) {
-      m_in.Msg(Logger::WARNING, "Unknown element '%@', searching for compatible alternatives", &uuid);
-
-      elt =  m_elementRegistry.LookupCompatible(uuid);
-      if (!elt)
-        return m_in.Msg(Logger::WARNING, "No alternatives found for unknown/unregistered element '%@'", &uuid);
-
-      puuid = &elt->GetUUID();
-      m_in.Msg(Logger::WARNING, "Substituting '%@' for '%@'", puuid, &uuid);
-    }
-    else
-    {
-      puuid = &elt->GetUUID();
-    }
-
-    if (!puuid)
-      FAIL(NULL_POINTER);
-
-    for (u32 i = 0; i < m_registeredElementCount; ++i) {
-      RegElt & re = m_registeredElements[i];
-      if (puuid->Equals(re.m_uuid))
-        return m_in.Msg(Logger::ERROR,"Element '%@' already registered as '%s'", &re.m_uuid, re.m_nick.GetZString());
-      if (re.m_nick.Equals(nick))
-        return m_in.Msg(Logger::ERROR,"Element nicknamed '%s' already registered for UUID '%@'",
-                        nick.GetZString(), &re.m_uuid);
-    }
-    if (m_registeredElementCount >= sizeof(m_registeredElements)/sizeof(m_registeredElements[0]))
-      return m_in.Msg(Logger::ERROR,"No room for more registered Elements");
-
-    m_registeredElements[m_registeredElementCount].m_uuid = *puuid;
-    m_registeredElements[m_registeredElementCount].m_nick = nick;
-    m_registeredElements[m_registeredElementCount].m_element = elt;
-    ++m_registeredElementCount;
-
-    m_in.Msg(Logger::MESSAGE,"Registration %d: Nickname '%s' -> UUID '%@'", m_registeredElementCount, nick.GetZString(), puuid);
-
-    return true;
-  }
-
-  template<class GC>
-  Element<typename GC::EVENT_CONFIG> * ExternalConfig<GC>::LookupElement(const OString16 & nick) const
-  {
-    for (u32 i = 0; i < m_registeredElementCount; ++i) {
-      const RegElt & re = m_registeredElements[i];
-      if (re.m_nick.Equals(nick))
-        return re.m_element;
-    }
-    return 0;
-  }
-
-  template<class GC>
-  void ExternalConfig<GC>::SetTileToExecuteOnly(const SPoint& tileLoc, bool value)
-  {
-    m_grid.SetTileEnabled(tileLoc, !value);
-  }
-
-  template<class GC>
-  bool ExternalConfig<GC>::PlaceAtom(const Element<EC> & elt, s32 x, s32 y, const char* hexData)
-  {
-    SPoint pt(x, y);
-    T atom = elt.GetDefaultAtom();
-
-    atom.ReadStateBits(hexData);
-    m_grid.PlaceAtom(atom, pt);
-
-    return true;
-  }
-
-  template<class GC>
-  bool ExternalConfig<GC>::PlaceAtom(const Element<EC> & elt, s32 x, s32 y, const BitVector<BPA> & bv)
-  {
-    SPoint pt(x, y);
-    T atom = elt.GetDefaultAtom();
-
-    atom.ReadStateBits(bv);
-    m_grid.PlaceAtom(atom, pt);
-
-    return true;
-  }
 }
