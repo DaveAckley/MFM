@@ -906,6 +906,10 @@ namespace MFM
       , m_externalConfig(*this)
       , m_externalConfigSectionGrid(m_externalConfig, m_grid)
     {
+    }
+
+    virtual void RegisterExternalConfigSections()
+    {
       m_externalConfig.RegisterSection(m_externalConfigSectionGrid);
     }
 
@@ -944,6 +948,8 @@ namespace MFM
 
     void ProcessArguments(u32 argc, const char** argv)
     {
+      RegisterExternalConfigSections();
+
       SaveCommandLine(argc,argv);
 
       AddDriverArguments();
