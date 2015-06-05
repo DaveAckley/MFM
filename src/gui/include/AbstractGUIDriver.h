@@ -96,7 +96,7 @@ namespace MFM
     bool m_bigText;
     u32 m_thisEpochAEPS;
     bool m_captureScreenshots;
-    s32 m_screenshotTargetFPS;
+    //UNUSED?? XXX    s32 m_screenshotTargetFPS;
     u32 m_saveStateIndex;
     u32 m_epochSaveStateIndex;
 
@@ -105,13 +105,14 @@ namespace MFM
     bool m_mousePaused;      // Set if any buttons down, clear if all up
     bool m_gridPaused;       // Set if keyboard || mouse paused, checked by UpdateGrid
     bool m_reinitRequested;
+
     void RequestReinit()
     {
       m_reinitRequested = true;
     }
 
     bool m_renderStats;
-    u32 m_ticksLastStopped;
+    //XXX NOT USED? u32 m_ticksLastStopped;
 
     //s32 m_recordScreenshotPerAEPS;
     //s32 m_maxRecordScreenshotPerAEPS;
@@ -125,8 +126,8 @@ namespace MFM
     s32 m_backupStdout;
 
     Keyboard m_keyboard;
-    Camera camera;
-    SDL_Surface* screen;
+    Camera m_camera;
+    SDL_Surface* m_screen;
     Panel m_rootPanel;
     Drawing m_rootDrawing;
 
@@ -327,7 +328,7 @@ namespace MFM
         AbstractGridButton::m_driver->m_singleStep = true;
         AbstractGridButton::m_driver->m_keyboardPaused = false;
       }
-    }m_gridStepButton;
+    } m_gridStepButton;
 
     struct TileViewButton : public AbstractGridButton
     {
@@ -360,7 +361,7 @@ namespace MFM
 
     private:
 
-    }m_saveButton;
+    } m_saveButton;
 
     class ScreenshotButton : public AbstractGridButton
     {
@@ -411,7 +412,7 @@ namespace MFM
           LOG.Debug("Screenshot not saved; screen is null. Use SetScreen() first.");
         }
       }
-    }m_screenshotButton;
+    } m_screenshotButton;
 
     struct QuitButton : public AbstractGridButton
     {
@@ -464,7 +465,7 @@ namespace MFM
         }
 
       }
-    }m_pauseTileButton;
+    } m_pauseTileButton;
 
     struct BGRButton : public AbstractGridCheckbox
     {
@@ -484,186 +485,6 @@ namespace MFM
     } m_bgrButton;
 
     HelpPanel m_helpPanel;
-
-  protected: /* Need these for our buttons at driver level */
-    GridRenderer m_grend;
-    StatsRenderer<GC> m_srend;
-
-    GridRenderer & GetGridRenderer()
-    {
-      return m_grend;
-    }
-
-    virtual void PostUpdate()
-    {
-      /* Update the stats renderer */
-      m_statisticsPanel.SetAEPS(Super::GetAEPS());
-      m_statisticsPanel.SetAER(Super::GetRecentAER());  // Use backwards averaged value
-      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
-      m_statisticsPanel.SetCurrentAEPSPerEpoch(this->GetAEPSPerEpoch());
-      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
-      //      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
-    }
-
-    virtual void DoEpochEvents(OurGrid& grid, u32 epochs, u32 epochAEPS)
-    {
-      Super::DoEpochEvents(grid, epochs, epochAEPS);
-      m_thisUpdateIsEpoch = true;
-      m_thisEpochAEPS = epochAEPS;
-    }
-
-    virtual void OnceOnly(VArguments& args)
-    {
-      /// Mux our screen logger into the LOGing path, before calling parent!
-      {
-
-        ByteSink * old = LOG.SetByteSink(m_logSplitter);
-        m_logSplitter.SetSink1(old);
-        m_logSplitter.SetSink2(&m_logPanel.GetByteSink());
-      }
-
-      // Let the parent 'go first'!
-      Super::OnceOnly(args);
-
-      /*
-      if (m_countOfScreenshotsPerRate > 0) {
-        m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
-        m_recordScreenshotPerAEPS = 1;
-        m_countOfScreenshotsAtThisAEPS = 0;
-      }
-      */
-
-      if (!getenv("SDL_VIDEO_ALLOW_SCREENSAVER"))          // If user isn't already messing with this
-        putenv((char *) "SDL_VIDEO_ALLOW_SCREENSAVER=1");  // Old school sdl 1.2 mechanism
-
-      if (m_batchMode)
-      {
-        /* Special disgusting hacks to run SDL in ncurses, but then
-           suppress the ncurses output, so that we can run what looks
-           like a 'GUI' to SDL with no actual display anywhere.  Is
-           there not some less-disgusting SDL1.2 way to do this??
-        */
-
-        // Step 1: Hack environmental variables to pick driver
-        if (!getenv("CACA_DRIVER") && !getenv("SDL_VIDEODRIVER"))
-        {
-          putenv((char *) "CACA_DRIVER=ncurses");
-          putenv((char *) "SDL_VIDEODRIVER=caca");
-        }
-        else
-        {
-          fprintf(stderr,"CACA_DRIVER and/or SDL_VIDEODRIVER set in env; could not set batchmode\n");
-          exit(-1);
-        }
-
-        // Step 2: Temporarily dump stdout
-
-        s32 newdesc;
-        fflush(stdout);
-        m_backupStdout = dup(1);
-        newdesc = open("/dev/null", O_WRONLY);
-        dup2(newdesc, 1);
-        close(newdesc);
-
-        // Step 3: Initialize SDL
-        if ( SDL_Init(0) == -1)
-        {
-          fprintf(stderr,"Could not initialize SDL: %s.\n", SDL_GetError());
-          exit(-1);
-        }
-
-        // This done later in setscreensize..
-        // SDL_Surface * s = SDL_SetVideoMode(1920, 1080, 32, SDL_SWSURFACE|SDL_NOFRAME);
-
-        LOG.Message("SDL initialized for batch mode");
-      }
-      else
-      {
-        SDL_Init(SDL_INIT_EVERYTHING);
-      }
-
-      TTF_Init();
-
-      if (m_desiredScreenWidth > 0) m_screenWidth = (u32) m_desiredScreenWidth;
-      if (m_desiredScreenHeight > 0) m_screenHeight = (u32) m_desiredScreenHeight;
-
-      SetScreenSize(m_screenWidth, m_screenHeight);
-
-      m_rootPanel.SetName("Root");
-      m_gridPanel.SetBorder(Drawing::BLACK);
-      m_gridPanel.SetGridRenderer(&m_grend);
-      m_gridPanel.SetToolboxPanel(&m_toolboxPanel);
-      m_gridPanel.SetGrid(&Super::GetGrid());
-
-      m_statisticsPanel.SetStatsRenderer(&m_srend);
-      m_statisticsPanel.SetGrid(&Super::GetGrid());
-      m_statisticsPanel.SetAEPS(Super::GetAEPS());
-      m_statisticsPanel.SetAER(Super::GetRecentAER());
-      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
-
-  //      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
-      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
-      m_statisticsPanel.SetVisibility(false);
-
-      m_rootPanel.Insert(&m_gridPanel, NULL);
-      m_gridPanel.Insert(&m_statisticsPanel, NULL);
-      m_statisticsPanel.Insert(&m_buttonPanel, NULL);
-      m_buttonPanel.SetVisibility(true);
-
-      m_gridPanel.Insert(&m_logPanel, NULL);
-      m_logPanel.SetVisibility(false);
-      m_logPanel.SetDimensions(m_screenWidth, 160);
-      m_logPanel.SetDesiredSize(U32_MAX, 160);
-      m_logPanel.SetAnchor(ANCHOR_SOUTH);
-      m_logPanel.SetFont(AssetManager::Get(FONT_ASSET_LOGGER));
-
-      m_toolboxPanel.SetName("Toolbox");
-      m_toolboxPanel.SetVisibility(false);
-      m_toolboxPanel.SetBigText(m_bigText);
-      m_toolboxPanel.SetBackground(Drawing::GREY60);
-      m_toolboxPanel.SetAnchor(ANCHOR_WEST);
-      m_toolboxPanel.SetAnchor(ANCHOR_NORTH);
-      m_gridPanel.Insert(&m_toolboxPanel, NULL);
-      m_toolboxPanel.RebuildControllers();
-
-      m_helpPanel.SetName("Help");
-      m_helpPanel.SetDimensions(m_screenWidth / 3, m_screenHeight);
-      m_helpPanel.SetAnchor(ANCHOR_WEST);
-      m_gridPanel.Insert(&m_helpPanel, NULL);
-
-      m_rootPanel.Print(STDOUT);
-
-      m_srend.OnceOnly();
-
-      SDL_WM_SetCaption(MFM_VERSION_STRING_LONG, NULL);
-
-      m_ticksLastStopped = 0;
-
-      m_reinitRequested = false;
-
-      OnceOnlyButtons();
-
-      // Again to 'set' stuff?
-      SetScreenSize(m_screenWidth, m_screenHeight);
-
-      if (m_batchMode)
-      {
-        /* Unhook our secret wires, since hopefully the ncurses
-           initialization is done by now, and we won't actually draw
-           anything on it later anyway?
-        */
-        if (m_backupStdout >= 0)
-        {
-          fflush(stdout);
-          dup2(m_backupStdout, 1);
-          close(m_backupStdout);
-          m_backupStdout = -1;
-        }
-      }
-
-    }
-
-  private:
 
     void OnceOnlyButtons()
     {
@@ -687,8 +508,8 @@ namespace MFM
       m_buttonPanel.InsertButton(&m_quitButton);
 
       m_screenshotButton.SetDriver(this);
-      m_screenshotButton.SetScreen(screen);
-      m_screenshotButton.SetCamera(&camera);
+      m_screenshotButton.SetScreen(m_screen);
+      m_screenshotButton.SetCamera(&m_camera);
 
       m_pauseTileButton.SetGridRenderer(m_grend);
 
@@ -864,6 +685,185 @@ namespace MFM
       m_keyboard.Flip();
     }
 
+  protected: /* Need these for our buttons at driver level */
+
+    GridRenderer m_grend;
+    StatsRenderer<GC> m_srend;
+
+    GridRenderer & GetGridRenderer()
+    {
+      return m_grend;
+    }
+
+    virtual void PostUpdate()
+    {
+      /* Update the stats renderer */
+      m_statisticsPanel.SetAEPS(Super::GetAEPS());
+      m_statisticsPanel.SetAER(Super::GetRecentAER());  // Use backwards averaged value
+      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
+      m_statisticsPanel.SetCurrentAEPSPerEpoch(this->GetAEPSPerEpoch());
+      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
+      //      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
+    }
+
+    virtual void DoEpochEvents(OurGrid& grid, u32 epochs, u32 epochAEPS)
+    {
+      Super::DoEpochEvents(grid, epochs, epochAEPS);
+      m_thisUpdateIsEpoch = true;
+      m_thisEpochAEPS = epochAEPS;
+    }
+
+    virtual void OnceOnly(VArguments& args)
+    {
+      /// Mux our screen logger into the LOGing path, before calling parent!
+      {
+
+        ByteSink * old = LOG.SetByteSink(m_logSplitter);
+        m_logSplitter.SetSink1(old);
+        m_logSplitter.SetSink2(&m_logPanel.GetByteSink());
+      }
+
+      // Let the parent 'go first'!
+      Super::OnceOnly(args);
+
+      /*
+      if (m_countOfScreenshotsPerRate > 0) {
+        m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
+        m_recordScreenshotPerAEPS = 1;
+        m_countOfScreenshotsAtThisAEPS = 0;
+      }
+      */
+
+      if (!getenv("SDL_VIDEO_ALLOW_SCREENSAVER"))          // If user isn't already messing with this
+        putenv((char *) "SDL_VIDEO_ALLOW_SCREENSAVER=1");  // Old school sdl 1.2 mechanism
+
+      if (m_batchMode)
+      {
+        /* Special disgusting hacks to run SDL in ncurses, but then
+           suppress the ncurses output, so that we can run what looks
+           like a 'GUI' to SDL with no actual display anywhere.  Is
+           there not some less-disgusting SDL1.2 way to do this??
+        */
+
+        // Step 1: Hack environmental variables to pick driver
+        if (!getenv("CACA_DRIVER") && !getenv("SDL_VIDEODRIVER"))
+        {
+          putenv((char *) "CACA_DRIVER=ncurses");
+          putenv((char *) "SDL_VIDEODRIVER=caca");
+        }
+        else
+        {
+          fprintf(stderr,"CACA_DRIVER and/or SDL_VIDEODRIVER set in env; could not set batchmode\n");
+          exit(-1);
+        }
+
+        // Step 2: Temporarily dump stdout
+
+        s32 newdesc;
+        fflush(stdout);
+        m_backupStdout = dup(1);
+        newdesc = open("/dev/null", O_WRONLY);
+        dup2(newdesc, 1);
+        close(newdesc);
+
+        // Step 3: Initialize SDL
+        if ( SDL_Init(0) == -1)
+        {
+          fprintf(stderr,"Could not initialize SDL: %s.\n", SDL_GetError());
+          exit(-1);
+        }
+
+        // This done later in setscreensize..
+        // SDL_Surface * s = SDL_SetVideoMode(1920, 1080, 32, SDL_SWSURFACE|SDL_NOFRAME);
+
+        LOG.Message("SDL initialized for batch mode");
+      }
+      else
+      {
+        SDL_Init(SDL_INIT_EVERYTHING);
+      }
+
+      TTF_Init();
+
+      if (m_desiredScreenWidth > 0) m_screenWidth = (u32) m_desiredScreenWidth;
+      if (m_desiredScreenHeight > 0) m_screenHeight = (u32) m_desiredScreenHeight;
+
+      SetScreenSize(m_screenWidth, m_screenHeight);
+
+      m_rootPanel.SetName("Root");
+      m_gridPanel.SetBorder(Drawing::BLACK);
+      m_gridPanel.SetGridRenderer(&m_grend);
+      m_gridPanel.SetToolboxPanel(&m_toolboxPanel);
+      m_gridPanel.SetGrid(&Super::GetGrid());
+
+      m_statisticsPanel.SetStatsRenderer(&m_srend);
+      m_statisticsPanel.SetGrid(&Super::GetGrid());
+      m_statisticsPanel.SetAEPS(Super::GetAEPS());
+      m_statisticsPanel.SetAER(Super::GetRecentAER());
+      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
+
+  //      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
+      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
+      m_statisticsPanel.SetVisibility(false);
+
+      m_rootPanel.Insert(&m_gridPanel, NULL);
+      m_gridPanel.Insert(&m_statisticsPanel, NULL);
+      m_statisticsPanel.Insert(&m_buttonPanel, NULL);
+      m_buttonPanel.SetVisibility(true);
+
+      m_gridPanel.Insert(&m_logPanel, NULL);
+      m_logPanel.SetVisibility(false);
+      m_logPanel.SetDimensions(m_screenWidth, 160);
+      m_logPanel.SetDesiredSize(U32_MAX, 160);
+      m_logPanel.SetAnchor(ANCHOR_SOUTH);
+      m_logPanel.SetFont(AssetManager::Get(FONT_ASSET_LOGGER));
+
+      m_toolboxPanel.SetName("Toolbox");
+      m_toolboxPanel.SetVisibility(false);
+      m_toolboxPanel.SetBigText(m_bigText);
+      m_toolboxPanel.SetBackground(Drawing::GREY60);
+      m_toolboxPanel.SetAnchor(ANCHOR_WEST);
+      m_toolboxPanel.SetAnchor(ANCHOR_NORTH);
+      m_gridPanel.Insert(&m_toolboxPanel, NULL);
+      m_toolboxPanel.RebuildControllers();
+
+      m_helpPanel.SetName("Help");
+      m_helpPanel.SetDimensions(m_screenWidth / 3, m_screenHeight);
+      m_helpPanel.SetAnchor(ANCHOR_WEST);
+      m_gridPanel.Insert(&m_helpPanel, NULL);
+
+      m_rootPanel.Print(STDOUT);
+
+      m_srend.OnceOnly();
+
+      SDL_WM_SetCaption(MFM_VERSION_STRING_LONG, NULL);
+
+      //m_ticksLastStopped = 0;
+
+      m_reinitRequested = false;
+
+      OnceOnlyButtons();
+
+      // Again to 'set' stuff?
+      SetScreenSize(m_screenWidth, m_screenHeight);
+
+      if (m_batchMode)
+      {
+        /* Unhook our secret wires, since hopefully the ncurses
+           initialization is done by now, and we won't actually draw
+           anything on it later anyway?
+        */
+        if (m_backupStdout >= 0)
+        {
+          fflush(stdout);
+          dup2(m_backupStdout, 1);
+          close(m_backupStdout);
+          m_backupStdout = -1;
+        }
+      }
+
+    }
+
   public:
 
     void SaveGridWithNextFilename()
@@ -878,12 +878,19 @@ namespace MFM
       , m_startPaused(true)
       , m_thisUpdateIsEpoch(false)
       , m_bigText(false)
+      , m_thisEpochAEPS(0)
       , m_captureScreenshots(false)
       , m_saveStateIndex(0)
       , m_epochSaveStateIndex(0)
+      , m_keyboardPaused(false)
+      , m_singleStep(false)
+      , m_mousePaused(false)
+      , m_gridPaused(false)
+      , m_reinitRequested(false)
       , m_renderStats(false)
       , m_batchMode(false)
       , m_backupStdout(-1)
+      , m_screen(0)
       , m_screenWidth(SCREEN_INITIAL_WIDTH)
       , m_screenHeight(SCREEN_INITIAL_HEIGHT)
       , m_desiredScreenWidth(-1)
@@ -1287,11 +1294,11 @@ namespace MFM
       m_screenHeight = height;
       u32 flags = SDL_SWSURFACE;
       if (m_screenResizable) flags |= SDL_RESIZABLE;
-      screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32, flags);
+      m_screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32, flags);
 
       AssetManager::Initialize();
 
-      if (screen == 0)
+      if (m_screen == 0)
       {
         FAIL(ILLEGAL_STATE);
       }
@@ -1307,7 +1314,7 @@ namespace MFM
       m_rootPanel.SetBackground(Drawing::RED);
       m_rootPanel.HandleResize(newDimensions);
 
-      m_rootDrawing.Reset(screen, AssetManager::Get(FONT_ASSET_ELEMENT));
+      m_rootDrawing.Reset(m_screen, AssetManager::Get(FONT_ASSET_ELEMENT));
 
       if(m_renderStats)
       {
@@ -1421,16 +1428,16 @@ namespace MFM
           {
             const char * path = Super::GetSimDirPathTemporary("vid/%010d.png", m_thisEpochAEPS);
 
-            camera.DrawSurface(screen,path);
+            m_camera.DrawSurface(m_screen,path);
           }
         }
 
         running = this->RunHelperExiter();
-        SDL_Flip(screen);
+        SDL_Flip(m_screen);
       }
 
       AssetManager::Destroy();
-      SDL_FreeSurface(screen);
+      SDL_FreeSurface(m_screen);
       TTF_Quit();
       SDL_Quit();
     }
