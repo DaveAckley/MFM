@@ -201,6 +201,10 @@ namespace MFM {
     return __builtin_popcount(bits); // GCC
   }
 
+  inline u32 PopCount64(const u64 bits) {
+    return __builtin_popcountll(bits); // GCC
+  }
+
   template <class T>
   inline T MAX(T x, T y) {
     return (x > y) ? x : y;
@@ -370,6 +374,17 @@ namespace MFM {
    * @returns The digits of \c num when interpreted in \c base base.
    */
   extern u32 DigitCount(u32 num, u32 base);
+
+  /**
+   * Counts the number of digits in a given long number, in a given base.
+   *
+   * @param num The number to count the digits of.
+   *
+   * @param base The base to interpret \c num in when counting digits.
+   *
+   * @returns The digits of \c num when interpreted in \c base base.
+   */
+  extern u32 DigitCount64(u64 num, u32 base);
 
   /**
    * Encodes an integral number as a series of alphabetic bytes.

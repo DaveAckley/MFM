@@ -71,7 +71,7 @@ namespace MFM {
 
   inline s64 _Bool64ToInt64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    s32 count1s = PopCount(val & _GetNOnes64(srcbitwidth));
+    s32 count1s = PopCount64(val & _GetNOnes64(srcbitwidth));
     return (s64) ((count1s > (s32) (srcbitwidth - count1s)) ? 1 : 0);
   }
 
@@ -82,7 +82,7 @@ namespace MFM {
 
   inline s64 _Unary64ToInt64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    return (s64) PopCount(val & _GetNOnes64(srcbitwidth));
+    return (s64) PopCount64(val & _GetNOnes64(srcbitwidth));
   }
 
   inline s32 _Bits32ToInt32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
@@ -105,7 +105,7 @@ namespace MFM {
 
   inline u32 _Bool64ToBool64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    s32 count1s = PopCount(val & _GetNOnes64(srcbitwidth));
+    s32 count1s = PopCount64(val & _GetNOnes64(srcbitwidth));
     // == when even number bits is ignored (warning at def)
     return (u64) ((count1s > (s32) (srcbitwidth - count1s)) ? _GetNOnes64(destbitwidth) : 0);
   }
@@ -158,7 +158,7 @@ namespace MFM {
 
   inline bool _Bool64ToCbool(u64 val, const u32 srcbitwidth)
   {
-    s32 count1s = PopCount(val & _GetNOnes64(srcbitwidth));
+    s32 count1s = PopCount64(val & _GetNOnes64(srcbitwidth));
     return (count1s > (s32) (srcbitwidth - count1s));  // == when even number bits is ignored (warning at def)
   }
 
@@ -172,7 +172,7 @@ namespace MFM {
   inline u64 _CboolToBool64(bool val, const u32 destbitwidth)
   {
     if(val)
-      return _GetNOnes32(destbitwidth); //saturate
+      return _GetNOnes64(destbitwidth); //saturate
     return 0;
   }
 
@@ -219,7 +219,7 @@ namespace MFM {
 
   inline u64 _Bool64ToUnsigned64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    s32 count1s = PopCount(val & _GetNOnes64(srcbitwidth));
+    s32 count1s = PopCount64(val & _GetNOnes64(srcbitwidth));
     return ((count1s > (s32) (srcbitwidth - count1s)) ? 1 : 0);
   }
 
@@ -230,7 +230,7 @@ namespace MFM {
 
   inline u64 _Unary64ToUnsigned64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    return PopCount(val & _GetNOnes64(srcbitwidth));
+    return PopCount64(val & _GetNOnes64(srcbitwidth));
   }
 
   inline u32 _Bits32ToUnsigned32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
@@ -331,7 +331,7 @@ namespace MFM {
 
   inline u64 _Bool64ToUnary64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    s32 count1s = PopCount(val & _GetNOnes64(srcbitwidth));
+    s32 count1s = PopCount64(val & _GetNOnes64(srcbitwidth));
     return ((count1s > (s32) (srcbitwidth - count1s)) ? 1 : 0);
   }
 
@@ -347,7 +347,7 @@ namespace MFM {
   {
     const u32 maxdestval = destbitwidth;
     const u32 mindestval = 0;
-    u32 count1s = PopCount(val & _GetNOnes64(srcbitwidth));
+    u32 count1s = PopCount64(val & _GetNOnes64(srcbitwidth));
     return _GetNOnes64(CLAMP<u32>(mindestval, maxdestval, count1s));
   }
 
@@ -375,7 +375,7 @@ namespace MFM {
   inline u64 _LogicalBangBool64(u64 val, u32 bitwidth)
   {
     u64 mask = _GetNOnes64(bitwidth);
-    s32 count1s = PopCount(val & mask);
+    s32 count1s = PopCount64(val & mask);
     return ((count1s > (s32) (bitwidth - count1s)) ? 0 : mask);  // == when even number bits is ignored (warning at def)
   }
 
@@ -402,8 +402,8 @@ namespace MFM {
   inline u64 _BitwiseOrUnary64(u64 vala, u64 valb, u32 bitwidth)
   {
     u64 mask = _GetNOnes64(bitwidth);
-    u64 maska = _GetNOnes64(PopCount(vala & mask));
-    u64 maskb = _GetNOnes64(PopCount(valb & mask));
+    u64 maska = _GetNOnes64(PopCount64(vala & mask));
+    u64 maskb = _GetNOnes64(PopCount64(valb & mask));
     return maska | maskb;  //"max"
   }
 
@@ -418,8 +418,8 @@ namespace MFM {
   inline u64 _BitwiseAndUnary64(u64 vala, u64 valb, u32 bitwidth)
   {
     u64 mask = _GetNOnes64(bitwidth);
-    u64 maska = _GetNOnes64(PopCount(vala & mask));
-    u64 maskb = _GetNOnes64(PopCount(valb & mask));
+    u64 maska = _GetNOnes64(PopCount64(vala & mask));
+    u64 maskb = _GetNOnes64(PopCount64(valb & mask));
     return maska & maskb;  //"min"
   }
 
@@ -434,8 +434,8 @@ namespace MFM {
   inline u64 _BitwiseXorUnary64(u64 vala, u64 valb, u32 bitwidth)
   {
     u64 mask = _GetNOnes64(bitwidth);
-    u32 counta = PopCount(vala & mask);
-    u32 countb = PopCount(valb & mask);
+    u32 counta = PopCount64(vala & mask);
+    u32 countb = PopCount64(valb & mask);
     return _GetNOnes64(MAX<u32>(counta, countb) - MIN<u32>(counta, countb)); //right-justified ^
   }
 
@@ -1322,7 +1322,7 @@ namespace MFM {
   inline u64 _ShiftOpRightUnary64(u64 vala, u32 shft, u32 bitwidth)
   {
     u64 mask = _GetNOnes64(bitwidth);
-    u32 binvala = PopCount(vala & mask);     //in binary
+    u32 binvala = PopCount64(vala & mask);     //in binary
     return _GetNOnes64(binvala >> shft) & mask;
   }
 
@@ -1336,7 +1336,7 @@ namespace MFM {
   inline u64 _ShiftOpLeftUnary64(u64 vala, u32 shft, u32 bitwidth)
   {
     u64 mask = _GetNOnes64(bitwidth);
-    u32 binvala = PopCount(vala & mask);     //in binary
+    u32 binvala = PopCount64(vala & mask);     //in binary
     return _GetNOnes64(binvala << shft) & mask;
   }
 

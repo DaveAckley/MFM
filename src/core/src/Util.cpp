@@ -15,6 +15,17 @@ namespace MFM
     return count;
   }
 
+  u32 DigitCount64(u64 num, u32 base)
+  {
+    u32 count = 0;
+    while(num)
+    {
+      count++;
+      num /= base;
+    }
+    return count;
+  }
+
   void IntAlphaEncode(u32 num, char* output)
   {
     u32 digits = DigitCount(num, 26);
