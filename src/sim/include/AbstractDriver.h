@@ -771,6 +771,11 @@ namespace MFM
       SaveGrid(filename);
     }
 
+    ExternalConfig<GC> & GetExternalConfig()
+    {
+      return m_externalConfig;
+    }
+
     void SaveGrid(const char* filename)
     {
 
