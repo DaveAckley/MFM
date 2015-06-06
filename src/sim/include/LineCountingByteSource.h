@@ -48,7 +48,7 @@ namespace MFM
      */
     LineCountingByteSource() :
       m_bs(NULL),
-      m_errs(&DevNull),
+      m_errs(&DevNullByteSink),
       m_label("unknown source"),
       m_lineNum(1),
       m_byteNum(0)
