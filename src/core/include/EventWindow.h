@@ -93,8 +93,6 @@ namespace MFM
   public:
     enum { SITE_COUNT = EVENT_WINDOW_SITES(R) };
   private:
-    //XXX enum { W = P::TILE_WIDTH };
-    //XXX enum { B = P::ELEMENT_TABLE_BITS };
 
     Tile<EC> & m_tile;
 

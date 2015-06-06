@@ -216,9 +216,6 @@ namespace MFM
     } m_hash[SIZE];
     u32 m_hashSlotsInUse;
 
-    //XXX    u64 m_elementData[ELEMENT_DATA_SLOTS];
-    //XXX    u32 m_nextFreeElementDataIndex;
-
   };
 
 } /* namespace MFM */
