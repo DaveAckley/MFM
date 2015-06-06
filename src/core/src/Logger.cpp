@@ -2,5 +2,5 @@
 
 namespace MFM {
 
-  Logger LOG(DevNull, Logger::ERROR);
+  Logger LOG(DevNullByteSink, Logger::ERROR);
 }

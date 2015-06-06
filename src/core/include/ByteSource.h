@@ -224,7 +224,7 @@ namespace MFM
      */
     s32 SkipSet(const char * setSpec)
     {
-      return ScanSet(DevNull, setSpec);
+      return ScanSet(DevNullByteSink, setSpec);
     }
 
     s32 ScanSetFormat(ByteSink & result, const char * & setSpec) ;

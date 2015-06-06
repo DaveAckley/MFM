@@ -1,10 +1,18 @@
 #include "ByteSink.h"
+#include "ByteSource.h"
 #include "ByteSerializable.h"
 #include <string.h>   /* For strlen */
 
 namespace MFM {
 
-  DiscardBytes DevNull;
+  DiscardBytes DevNullByteSink;
+
+  void ByteSink::Copy(ByteSource & restOfThis)
+  {
+    s32 ch;
+    while ((ch = restOfThis.Read()) >= 0)
+      WriteByte((u8) ch);
+  }
 
   void ByteSink::Print(ByteSerializable & byteSerializable, s32 argument)
   {
@@ -202,7 +210,7 @@ namespace MFM {
   \fails BAD_FORMAT_ARG If \a code is an illegal code.  The legal codes are #BEU32, #BEU16 or
   #BYTE, or any value from 2 to 36 (which includes #DEC, #HEX, #OCT, #BIN, and #B36).
 
-XXX
+XXX UPDATE!
   Sample all-ASCII printable packet generation:
   \usage
   \code
@@ -217,7 +225,7 @@ XXX
     }
   \endcode
 
-XXX
+XXX UPDATE
   Sample binary packet generation:
   \usage
   \code
@@ -351,7 +359,7 @@ XXX
      (which includes #DEC, #HEX, #OCT, #BIN, and #B36).
 
      \usage
-     XXX
+     XXX UPDATE
      \code
      ...
      int signedNum = -1;

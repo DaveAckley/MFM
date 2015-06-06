@@ -34,6 +34,7 @@
 
 namespace MFM {
 
+  class ByteSource;   // FORWARD
   class ByteSerializable;   // FORWARD
 
   /**
@@ -92,7 +93,16 @@ namespace MFM {
       WriteByte('\n');
     }
 
+    /**
+       Base class destructor does nothing virtually
+     */
     virtual ~ByteSink() { }
+
+    /**
+       Copy to this ByteSink any bytes remaining in restOfThis,
+       leaving restOfThis at EOF.
+     */
+    void Copy(ByteSource & restOfThis) ;
 
     void Print(const char * str, s32 fieldWidth = -1, u8 padChar = ' ');
     void Print(const u8 * str, u32 len, s32 fieldWidth = -1, u8 padChar = ' ');
@@ -183,7 +193,7 @@ namespace MFM {
 
   };
 
-  extern DiscardBytes DevNull;
+  extern DiscardBytes DevNullByteSink;
 
 }
 

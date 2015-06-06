@@ -353,7 +353,7 @@ namespace MFM {
           ByteSink * bs = 0;
           if (!alt)
             bs = va_arg(ap,ByteSink*);
-          if (!bs) bs = &DevNull;
+          if (!bs) bs = &DevNullByteSink;
           s32 res = ScanSetFormat(*bs, format); // Advances format to ']' or FAILs
           if (res < 0)
             return -matches;
