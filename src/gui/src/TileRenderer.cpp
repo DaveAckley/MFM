@@ -64,9 +64,23 @@ namespace MFM
     m_drawGrid = !m_drawGrid;
   }
 
-  void TileRenderer::ToggleMemDraw()
+  u32 TileRenderer::ToggleMemDraw()
   {
-    m_drawMemRegions = (DrawRegionType) ((m_drawMemRegions+1)%MAX);
+    return m_drawMemRegions = (DrawRegionType) ((m_drawMemRegions+1)%MAX);
+  }
+
+  const char * TileRenderer::GetMemDrawName() const
+  {
+    switch (m_drawMemRegions)
+    {
+    case FULL:     return "Light tile";
+    case NO:       return "None";
+    case EDGE:     return "Dark tile";
+    case AGE:      return "Change age";
+    case AGE_ONLY: return "Age only";
+    default:
+      return "unknown";
+    }
   }
 
   void TileRenderer::ToggleDataHeat()
@@ -112,6 +126,11 @@ namespace MFM
     SPoint newAround = atomLoc * m_atomDrawSize + m_windowTL;
     SPoint delta = newAround - around;
     m_windowTL -= delta;
+  }
+
+  void TileRenderer::Move(SPoint amount)
+  {
+    m_windowTL += amount;
   }
 
   void TileRenderer::MoveUp(u8 amount)

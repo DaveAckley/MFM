@@ -202,8 +202,6 @@ namespace MFM {
         u64 sum = 0;
         for (typename Grid<GC>::iterator_type i = m_grid->begin(); i != m_grid->end(); ++i)
         {
-          //XXX DEIMPLEMENTED          ElementTable<EC> & et = i->GetElementTable();
-          //XXX DEIMPLEMENTED          u64 * eds = et.GetElementDataSlotsFromType(m_elementType,m_outOfSlots);
           u64 * eds = 0;
 
           if (!eds)

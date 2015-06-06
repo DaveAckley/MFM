@@ -58,9 +58,14 @@ namespace MFM
     m_tileRenderer.ToggleGrid();
   }
 
-  void GridRenderer::ToggleMemDraw()
+  u32 GridRenderer::ToggleMemDraw()
   {
-    m_tileRenderer.ToggleMemDraw();
+    return m_tileRenderer.ToggleMemDraw();
+  }
+
+  const char * GridRenderer::GetMemDrawName() const
+  {
+    return m_tileRenderer.GetMemDrawName();
   }
 
   const SPoint & GridRenderer::GetDrawOrigin() const
@@ -76,6 +81,11 @@ namespace MFM
   void GridRenderer::SetCloneOrigin(const SPoint& cloneOrigin)
   {
     m_cloneOrigin.Set(cloneOrigin.GetX(), cloneOrigin.GetY());
+  }
+
+  void GridRenderer::Move(SPoint amount)
+  {
+    m_tileRenderer.Move(amount);
   }
 
   void GridRenderer::MoveUp(u8 amount)

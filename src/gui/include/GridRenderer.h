@@ -125,13 +125,17 @@ namespace MFM
       return m_tileRenderer.GetDrawDataHeatPointer();
     }
 
-    void ToggleMemDraw();
+    u32 ToggleMemDraw();
+
+    const char * GetMemDrawName() const ;
 
     const SPoint & GetDrawOrigin() const ;
 
     void SetDrawOrigin(const SPoint & origin) ;
 
     void SetCloneOrigin(const SPoint& cloneOrigin) ;
+
+    void Move(SPoint amount);
 
     void MoveUp(u8 amount);
 
