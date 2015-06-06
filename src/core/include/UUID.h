@@ -60,7 +60,6 @@ namespace MFM {
     UUID() : m_configurationCode(0), m_elementVersion(0), m_uuidVersion(1), m_hexDate(0), m_hexTime(0)
     {
       m_label.Reset();
-      m_label.GetZString();
     }
 
     /**
@@ -112,7 +111,6 @@ namespace MFM {
 
       m_label.Reset();
       m_label.Print(label);
-      m_label.GetZString(); // Ensure label is null-terminated
     }
 
     /**

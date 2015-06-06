@@ -84,8 +84,7 @@ namespace MFM {
     if (!bs.Scan(hextime, Format::LXX32)) return false;
 
     m_label.Reset();
-    m_label.Print(cbbs.GetZString());
-    m_label.GetZString();  // null terminate
+    cbbs.AppendTo(m_label);
 
     m_uuidVersion = uuidversion;
     m_elementVersion = elementversion;
