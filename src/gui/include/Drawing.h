@@ -64,9 +64,9 @@ namespace MFM {
     SDL_Surface * m_dest;
 
     /**
-       Current font for text operations
+       Current font asset for text operations
      */
-    TTF_Font* m_font;
+    FontAsset m_fontAsset;
 
     static void SetSDLColor(SDL_Color & set, const u32 from) ;
     static void GetSDLColor(const SDL_Color & from, u32 & to) ;
@@ -108,7 +108,7 @@ namespace MFM {
       return 0xff000000 | (r << 16) | (g << 8) | b;
     }
 
-    Drawing(SDL_Surface * dest = 0, TTF_Font * font = 0) ;
+    Drawing(SDL_Surface * dest = 0, FontAsset font = FONT_ASSET_NONE) ;
 
     /**
        Return a weighted average of color1 and color2, averaging the
@@ -149,7 +149,7 @@ namespace MFM {
     /**
        Reset Drawing based on surface and given font
      */
-    void Reset(SDL_Surface * dest, TTF_Font * font);
+    void Reset(SDL_Surface * dest, FontAsset font);
 
     /**
        Fill with current background color
@@ -192,15 +192,7 @@ namespace MFM {
       return old;
     }
 
-    /**
-       Get the current font.  May return null.  Text operations will
-       fail ILLEGAL_STATE if attempted with a null font.
-     */
-    TTF_Font* GetFont() const
-    {
-      return m_font;
-    }
-
+#if 0
     /**
        Set the current font.  Null may be passed in to clear the
        current font.  Text operations will fail ILLEGAL_STATE if
@@ -212,6 +204,7 @@ namespace MFM {
       m_font = newFont;
       return old;
     }
+#endif
 
     /**
      * Set the current font to one loaded by the AssetManager.
@@ -222,9 +215,16 @@ namespace MFM {
      * @param returns The TTF_Font which was loaded by this Drawing
      *                instance before calling this method.
      */
-    TTF_Font* SetFont(FontAsset asset)
+    FontAsset SetFont(FontAsset asset)
     {
-      return SetFont(AssetManager::Get(asset));
+      FontAsset old = m_fontAsset;
+      m_fontAsset = asset;
+      return old;
+    }
+
+    FontAsset GetFont() const
+    {
+      return m_fontAsset;
     }
 
     /**
@@ -299,7 +299,7 @@ namespace MFM {
      * Return the SPoint(width, height) of message when rendered in
      * thisFont, or SPoint(-1,-1) if any problem occurs
      */
-    SPoint GetTextSizeInFont(const char* message, TTF_Font * thisFont) ;
+    SPoint GetTextSizeInFont(const char* message, FontAsset font) ;
 
     /**
      * Draw a specified image to a specified part of the screen.
@@ -307,9 +307,14 @@ namespace MFM {
     void BlitImage(SDL_Surface* image, UPoint loc, UPoint maxSize) const;
 
     /**
-     * Draw a specified Asset (corresponding to an SDL_Surface*) to the screen.
+     * Draw a specified ImageAsset (corresponding to an SDL_Surface*) to the screen.
      */
-    void BlitAsset(Asset asset, UPoint loc, UPoint maxSize) const;
+    void BlitImageAsset(ImageAsset asset, UPoint loc, UPoint maxSize) const;
+
+    /**
+     * Draw a specified ImageAsset at loc in its own maximum size.
+     */
+    void BlitImageAsset(ImageAsset asset, UPoint loc) const;
 
 
     static void Convert(const Rect & rect, SDL_Rect & toFill) ;

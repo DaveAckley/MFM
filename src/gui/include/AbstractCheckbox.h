@@ -66,8 +66,7 @@ namespace MFM
 
     virtual void PaintComponent(Drawing& d)
     {
-      SDL_Surface* icon = GetIcon();
-      d.BlitAsset(GetAsset(), UPoint(0, 0), UPoint(icon->w, icon->h));
+      d.BlitImageAsset(GetImageAsset(), UPoint(0, 0));
 
       d.SetForeground(Panel::GetForeground());
 
@@ -106,15 +105,16 @@ namespace MFM
     /**
      * Gets the Asset which should be drawn depending on IsChecked()
      *
-     * @returns The Asset which should be drawn
+     * @returns The ImageAsset which should be drawn
      */
-    inline Asset GetAsset()
+    inline ImageAsset GetImageAsset()
     {
       return IsChecked() ?
-        ASSET_CHECKBOX_ICON_ON :
-        ASSET_CHECKBOX_ICON_OFF ;
+        IMAGE_ASSET_CHECKBOX_ICON_ON :
+        IMAGE_ASSET_CHECKBOX_ICON_OFF ;
     }
 
+#if 0
     /**
      * Gets the SDL_Surface pointer which should be drawn depending on
      * the state held by the boolean value pointed to by \c m_externalValue .
@@ -127,6 +127,7 @@ namespace MFM
     {
       return AssetManager::Get(GetAsset());
     }
+#endif
 
     /**
      * To be performed only once during initialization. This is most

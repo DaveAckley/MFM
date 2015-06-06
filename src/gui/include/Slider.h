@@ -84,8 +84,8 @@ namespace MFM
 
     inline FontAsset GetRenderFont() const
     {
-      return ParameterController<EC>::m_bigText ? FONT_ASSET_ELEMENT :
-      FONT_ASSET_HELPPANEL_SMALL;
+      return
+        ParameterController<EC>::m_bigText ? FONT_ASSET_ELEMENT : FONT_ASSET_HELPPANEL_SMALL;
     }
 
     void Init()
@@ -195,7 +195,7 @@ namespace MFM
 
       d.SetForeground(Drawing::BLACK);
 
-      d.SetFont(AssetManager::Get(GetRenderFont()));
+      d.SetFont(GetRenderFont());
 
       d.DrawHLine(16, 7, GetSliderWidth() - 7);
 
@@ -224,9 +224,9 @@ namespace MFM
                        UPoint(48, GetSliderHalfHeight()));
 
       Rect sliderRect = GetSliderRect();
-      d.BlitAsset(ASSET_SLIDER_HANDLE,
-                  MakeUnsigned(sliderRect.GetPosition()),
-                  sliderRect.GetSize());
+      d.BlitImageAsset(IMAGE_ASSET_SLIDER_HANDLE,
+                       MakeUnsigned(sliderRect.GetPosition()),
+                       sliderRect.GetSize());
 
       d.BlitBackedText(this->m_parameter->GetName(),
                        UPoint(GetSliderWidth(), 7),

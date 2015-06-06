@@ -63,8 +63,10 @@ namespace MFM
 
     virtual void PaintComponent(Drawing& d)
     {
-      TTF_Font* bigFont = AssetManager::Get(FONT_ASSET_HELPPANEL_BIG);
-      TTF_Font* smFont  = AssetManager::Get(FONT_ASSET_HELPPANEL_SMALL);
+      FontAsset bigFont = FONT_ASSET_HELPPANEL_BIG;
+      FontAsset smFont  = FONT_ASSET_HELPPANEL_SMALL;
+      TTF_Font * bgf = AssetManager::GetReal(bigFont);
+      TTF_Font * smf = AssetManager::GetReal(smFont);
 
       d.SetForeground(Panel::GetBackground());
       d.FillRect(0, 0, Panel::GetWidth(), Panel::GetHeight());
@@ -77,8 +79,8 @@ namespace MFM
       d.SetFont(smFont);
       UPoint maxCorner(0,0);
 
-      const u32 TEXT_Y_START = 2*TTF_FontHeight(bigFont);
-      const u32 LINE_HEIGHT = TTF_FontHeight(smFont);
+      const u32 TEXT_Y_START = 2*TTF_FontHeight(bgf);
+      const u32 LINE_HEIGHT = TTF_FontHeight(smf);
       for(u32 i = 0; m_helpMessages[i]; i++)
       {
         UPoint tsize = MakeUnsigned(Panel::GetTextSize(smFont, m_helpMessages[i]));
@@ -93,9 +95,9 @@ namespace MFM
       {
         this->SetDimensions(maxCorner.GetX(), maxCorner.GetY());
         this->SetDesiredSize(maxCorner.GetX(), maxCorner.GetY());
-        if (Panel::m_parent != 0)
+        if (Panel::GetParent() != 0)
         {
-          Panel::HandleResize(Panel::m_parent->GetDimensions());
+          Panel::HandleResize(Panel::GetParent()->GetDimensions());
         }
       }
     }

@@ -67,12 +67,12 @@ namespace MFM
     to = (0xff<<24)|(from.r<<16)|(from.g<<8)|from.b;
   }
 
-  Drawing::Drawing(SDL_Surface * dest, TTF_Font * font)
+  Drawing::Drawing(SDL_Surface * dest, FontAsset font)
   {
     Reset(dest,font);
   }
 
-  void Drawing::Reset(SDL_Surface * dest, TTF_Font * font)
+  void Drawing::Reset(SDL_Surface * dest, FontAsset font)
   {
     m_dest = dest;
     m_rect.SetPosition(SPoint());
@@ -85,7 +85,7 @@ namespace MFM
     m_fgColor = YELLOW;
     m_bgColor = BLACK;
 
-    m_font = font;
+    m_fontAsset = font;
   }
 
   void Drawing::Clear()
@@ -164,19 +164,28 @@ namespace MFM
     SDL_BlitSurface(src, NULL, m_dest, &rect);
   }
 
-  void Drawing::BlitAsset(Asset asset, UPoint loc, UPoint maxSize) const
+  void Drawing::BlitImageAsset(ImageAsset asset, UPoint loc, UPoint maxSize) const
   {
-    BlitImage(AssetManager::Get(asset), loc, maxSize);
+    if (asset != IMAGE_ASSET_NONE)
+      BlitImage(AssetManager::GetReal(asset), loc, maxSize);
+  }
+
+  void Drawing::BlitImageAsset(ImageAsset asset, UPoint loc) const
+  {
+    if (asset == IMAGE_ASSET_NONE) return;
+    SDL_Surface* s= AssetManager::GetReal(asset);
+    UPoint maxsize(s->w, s->h);
+    BlitImage(s, loc, maxsize);
   }
 
   void Drawing::BlitText(const char* message, UPoint loc, UPoint size) const
   {
-    if (!m_font) FAIL(ILLEGAL_STATE);
+    TTF_Font * ttfont = AssetManager::GetReal(m_fontAsset);
 
     SDL_Color sdl_color;
     SetSDLColor(sdl_color,m_fgColor);
 
-    SDL_Surface* text = TTF_RenderText_Blended(m_font, message, sdl_color);
+    SDL_Surface* text = TTF_RenderText_Blended(ttfont, message, sdl_color);
 
     SDL_Rect rect;
     rect.x = loc.GetX() + m_rect.GetX();
@@ -200,16 +209,18 @@ namespace MFM
 
   SPoint Drawing::GetTextSize(const char* message)
   {
-    return GetTextSizeInFont(message, GetFont());
+    return GetTextSizeInFont(message, m_fontAsset);
   }
 
-  SPoint Drawing::GetTextSizeInFont(const char* message, TTF_Font * font)
+  SPoint Drawing::GetTextSizeInFont(const char* message, FontAsset font)
   {
+    TTF_Font * ttfont = AssetManager::Get(font);
+
     s32 w = -1;
     s32 h = -1;
-    if (font)
+    if (ttfont)
     {
-      if (TTF_SizeText(font, message, &w, &h) != 0)
+      if (TTF_SizeText(ttfont, message, &w, &h) != 0)
       {
         w = h = -1;  // Might TTF_SizeText have messed with them?
       }

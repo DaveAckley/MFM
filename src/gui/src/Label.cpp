@@ -9,31 +9,32 @@ namespace MFM
     this->SetForeground(LABEL_COLOR);
     this->SetBorder(LABEL_BORDER_COLOR);
     this->SetBackground(LABEL_BACKGROUND_COLOR);
+    this->SetFont(FONT_ASSET_LABEL);
 
     m_text.Reset();
   }
 
   Label::Label()
-    : m_icon(0)
+    : m_iconAsset(IMAGE_ASSET_NONE)
   {
     Init();
   }
 
   Label::Label(const char* text)
-    : m_icon(0)
+    : m_iconAsset(IMAGE_ASSET_NONE)
   {
     Init();
     SetText(text);
   }
 
-  Label::Label(SDL_Surface* icon)
-    : m_icon(icon)
+  Label::Label(ImageAsset icon)
+    : m_iconAsset(icon)
   {
     Init();
   }
 
-  Label::Label(const char* text, SDL_Surface* icon)
-    : m_icon(icon)
+  Label::Label(const char* text, ImageAsset icon)
+    : m_iconAsset(icon)
   {
     Init();
     SetText(text);
@@ -48,10 +49,8 @@ namespace MFM
     drawing.SetBackground(GetBackground());
     drawing.Clear();
 
-    if(m_icon)
-    {
-      drawing.BlitImage(m_icon, UPoint(0,0), Panel::GetDimensions());
-    }
+    // Does nothing if IMAGE_ASSET_NONE
+    drawing.BlitImageAsset(m_iconAsset, UPoint(0,0));
 
     if(m_text.GetLength() > 0)
     {

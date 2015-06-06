@@ -125,7 +125,7 @@ namespace MFM
 
       if(!m_atom || !m_grid)
       {
-        d.SetFont(AssetManager::Get(FONT_ASSET_HELPPANEL_SMALL));
+        d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
         const char* message = "No atom selected.";
         d.BlitText(message, UPoint(32, 32), MakeUnsigned(d.GetTextSize(message)));
         return;
@@ -143,7 +143,7 @@ namespace MFM
       {
         buff.Printf("Unknown type '0x%04x' in: %@", etype, &serializer);
         const char * str = buff.GetZString();
-        d.SetFont(AssetManager::Get(FONT_ASSET_HELPPANEL_SMALL));
+        d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
         d.BlitBackedText(str, UPoint(32, 32), MakeUnsigned(d.GetTextSize(str)));
         return;
       }
@@ -173,7 +173,7 @@ namespace MFM
       d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
       const u32 LINE_X_START = 4 + ATOM_DRAW_SIZE;
       const u32 LINE_Y_START = 28;
-      const u32 LINE_HEIGHT = TTF_FontLineSkip(d.GetFont());
+      const u32 LINE_HEIGHT = TTF_FontLineSkip(AssetManager::GetReal(d.GetFont()));
       const u32 INDENT_AMOUNT = LINE_HEIGHT;
 
       d.BlitBackedText(zstr, UPoint(LINE_X_START, LINE_Y_START + 0 * LINE_HEIGHT),
@@ -243,7 +243,9 @@ namespace MFM
       {
         ds.SetY(dy);
         Panel::SetDesiredSize(ds.GetX(), ds.GetY());
-        HandleResize(this->m_parent->GetDimensions());
+        Panel * parent = this->GetParent();
+        if (parent)
+          HandleResize(parent->GetDimensions());
       }
     }
 

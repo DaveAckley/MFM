@@ -39,7 +39,7 @@
 namespace MFM
 {
   /**
-   * A Panel which does nothing except display some text.
+   * A Panel which displays some text and possibly an icon.
    */
   class Label : public Panel
   {
@@ -69,7 +69,7 @@ namespace MFM
      * An optional icon. If not NULL, will render instead of the default
      * rendering scheme.
      */
-    SDL_Surface* m_icon;
+    ImageAsset m_iconAsset;
 
     /**
      * Initializes this Label
@@ -97,10 +97,10 @@ namespace MFM
      * Constructs a Label with a given icon to be rendered
      * instead of the default rendering scheme.
      *
-     * @param icon A pointer to the SDL_Surface which will be rendered
-     *             upon rendering of this AbstactButton.
+     * @param icon An ImageAsset to use when rendering this
+     *             AbstactButton.
      */
-    Label(SDL_Surface* icon);
+    Label(ImageAsset icon);
 
     /**
      * Constructs a Label with a given string and a given
@@ -113,7 +113,7 @@ namespace MFM
      * @param icon The icon which will render as this Label
      *             upon rendering.
      */
-    Label(const char* text, SDL_Surface* icon);
+    Label(const char* text, ImageAsset icon);
 
     /**
      * Destructor.
@@ -135,27 +135,15 @@ namespace MFM
     }
 
     /**
-     * Sets the icon of this Label which will render in its
-     * place upon rendering.
+     * Sets the icon of this Label which will render in its place upon
+     * rendering, specified by a loaded Asset.
      *
-     * @param icon A pointer to the SDL_Surface which will render upon
-     *             rendering of this Label.
+     * @param icon The ImageAsset to use as this Label's image, or
+     *             IMAGE_ASSET_NONE to disable icon rendering.
      */
-    void SetIcon(SDL_Surface* icon)
+    void SetIconAsset(ImageAsset a)
     {
-      m_icon = icon;
-    }
-
-    /**
-     * Sets the icon of this Label which will render in its
-     * place upon rendering, specified by a loaded Asset.
-     *
-     * @param icon The Asset representing the SDL_Surface to use as
-     *             this Label's image.
-     */
-    void SetIcon(Asset a)
-    {
-      SetIcon(AssetManager::Get(a));
+      m_iconAsset = a;
     }
 
     /**
@@ -165,9 +153,9 @@ namespace MFM
      * @returns The icon that is currently being rendered by this
      *          Label .
      */
-    SDL_Surface* GetIcon()
+    ImageAsset GetIconAsset() const
     {
-      return m_icon;
+      return m_iconAsset;
     }
 
     /**

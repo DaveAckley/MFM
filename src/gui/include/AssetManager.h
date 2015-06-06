@@ -36,31 +36,34 @@
 
 namespace MFM
 {
-  enum Asset
+  enum ImageAsset
   {
-    ASSET_SELECTOR_ICON = 0,
-    ASSET_ATOM_SELECTOR_ICON,
-    ASSET_PENCIL_ICON,
-    ASSET_ERASER_ICON,
-    ASSET_BRUSH_ICON,
-    ASSET_BUCKET_ICON,
-    ASSET_XRAY_ICON,
-    ASSET_CLONE_ICON,
-    ASSET_AIRBRUSH_ICON,
-    ASSET_CHECKBOX_ICON_ON,
-    ASSET_CHECKBOX_ICON_OFF,
-    ASSET_SLIDER_HANDLE,
-    ASSET_SELECTOR_ICON_BIG,
-    ASSET_ATOM_SELECTOR_ICON_BIG,
-    ASSET_PENCIL_ICON_BIG,
-    ASSET_ERASER_ICON_BIG,
-    ASSET_BRUSH_ICON_BIG,
-    ASSET_BUCKET_ICON_BIG,
-    ASSET_XRAY_ICON_BIG,
-    ASSET_CLONE_ICON_BIG,
-    ASSET_AIRBRUSH_ICON_BIG,
-    ASSET_CLOSE_WINDOW_ICON,
-    ASSET_COUNT
+    IMAGE_ASSET_SELECTOR_ICON = 0,
+    IMAGE_ASSET_ATOM_SELECTOR_ICON,
+    IMAGE_ASSET_PENCIL_ICON,
+    IMAGE_ASSET_ERASER_ICON,
+    IMAGE_ASSET_BRUSH_ICON,
+    IMAGE_ASSET_BUCKET_ICON,
+    IMAGE_ASSET_XRAY_ICON,
+    IMAGE_ASSET_CLONE_ICON,
+    IMAGE_ASSET_AIRBRUSH_ICON,
+    IMAGE_ASSET_CHECKBOX_ICON_ON,
+    IMAGE_ASSET_CHECKBOX_ICON_OFF,
+    IMAGE_ASSET_SLIDER_HANDLE,
+    IMAGE_ASSET_SELECTOR_ICON_BIG,
+    IMAGE_ASSET_ATOM_SELECTOR_ICON_BIG,
+    IMAGE_ASSET_PENCIL_ICON_BIG,
+    IMAGE_ASSET_ERASER_ICON_BIG,
+    IMAGE_ASSET_BRUSH_ICON_BIG,
+    IMAGE_ASSET_BUCKET_ICON_BIG,
+    IMAGE_ASSET_XRAY_ICON_BIG,
+    IMAGE_ASSET_CLONE_ICON_BIG,
+    IMAGE_ASSET_AIRBRUSH_ICON_BIG,
+    IMAGE_ASSET_CLOSE_WINDOW_ICON,
+
+    // MUST REMAIN LAST
+    IMAGE_ASSET_NONE,
+    IMAGE_ASSET_COUNT = IMAGE_ASSET_NONE
   };
 
   enum FontAsset
@@ -70,14 +73,18 @@ namespace MFM
     FONT_ASSET_HELPPANEL_BIG,
     FONT_ASSET_HELPPANEL_SMALL,
     FONT_ASSET_LOGGER,
-    FONT_ASSET_COUNT
+    FONT_ASSET_LABEL,
+
+    // MUST REMAIN LAST
+    FONT_ASSET_NONE,
+    FONT_ASSET_COUNT=FONT_ASSET_NONE
   };
 
   class AssetManager
   {
   private:
 
-    static SDL_Surface* surfaces[ASSET_COUNT];
+    static SDL_Surface* surfaces[IMAGE_ASSET_COUNT];
 
     static TTF_Font* fonts[FONT_ASSET_COUNT];
 
@@ -146,6 +153,11 @@ namespace MFM
 
   public:
 
+    static bool IsInitialized()
+    {
+      return initialized;
+    }
+
     /**
      * Initializes all held Assets. This should only be called once a
      * screen has been created by SDL_SetVideoMode .
@@ -154,34 +166,35 @@ namespace MFM
     {
       if(!initialized)
       {
-        surfaces[ASSET_SELECTOR_ICON] = LoadImage("images/selector_icon.png");
-        surfaces[ASSET_ATOM_SELECTOR_ICON] = LoadImage("images/atom_selector_icon.png");
-        surfaces[ASSET_PENCIL_ICON] = LoadImage("images/pencil_icon.png");
-        surfaces[ASSET_ERASER_ICON] = LoadImage("images/eraser_icon.png");
-        surfaces[ASSET_BRUSH_ICON] = LoadImage("images/brush_icon.png");
-        surfaces[ASSET_BUCKET_ICON] = LoadImage("images/bucket_icon.png");
-        surfaces[ASSET_XRAY_ICON] = LoadImage("images/xray_icon.png");
-        surfaces[ASSET_CLONE_ICON] = LoadImage("images/clone_icon.png");
-        surfaces[ASSET_AIRBRUSH_ICON] = LoadImage("images/airbrush_icon.png");
-        surfaces[ASSET_CHECKBOX_ICON_ON] = LoadImage("images/checkbox_on.png");
-        surfaces[ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
-        surfaces[ASSET_SLIDER_HANDLE] = LoadImage("images/slider_handle.png");
-        surfaces[ASSET_SELECTOR_ICON_BIG] = LoadImage("images/selector_icon_big.png");
-        surfaces[ASSET_ATOM_SELECTOR_ICON_BIG] = LoadImage("images/atom_selector_icon_big.png");
-        surfaces[ASSET_PENCIL_ICON_BIG] = LoadImage("images/pencil_icon_big.png");
-        surfaces[ASSET_ERASER_ICON_BIG] = LoadImage("images/eraser_icon_big.png");
-        surfaces[ASSET_BRUSH_ICON_BIG] = LoadImage("images/brush_icon_big.png");
-        surfaces[ASSET_BUCKET_ICON_BIG] = LoadImage("images/bucket_icon_big.png");
-        surfaces[ASSET_XRAY_ICON_BIG] = LoadImage("images/xray_icon_big.png");
-        surfaces[ASSET_CLONE_ICON_BIG] = LoadImage("images/clone_icon_big.png");
-        surfaces[ASSET_AIRBRUSH_ICON_BIG] = LoadImage("images/airbrush_icon_big.png");
-        surfaces[ASSET_CLOSE_WINDOW_ICON] = LoadImage("images/close_window_icon.png");
+        surfaces[IMAGE_ASSET_SELECTOR_ICON] = LoadImage("images/selector_icon.png");
+        surfaces[IMAGE_ASSET_ATOM_SELECTOR_ICON] = LoadImage("images/atom_selector_icon.png");
+        surfaces[IMAGE_ASSET_PENCIL_ICON] = LoadImage("images/pencil_icon.png");
+        surfaces[IMAGE_ASSET_ERASER_ICON] = LoadImage("images/eraser_icon.png");
+        surfaces[IMAGE_ASSET_BRUSH_ICON] = LoadImage("images/brush_icon.png");
+        surfaces[IMAGE_ASSET_BUCKET_ICON] = LoadImage("images/bucket_icon.png");
+        surfaces[IMAGE_ASSET_XRAY_ICON] = LoadImage("images/xray_icon.png");
+        surfaces[IMAGE_ASSET_CLONE_ICON] = LoadImage("images/clone_icon.png");
+        surfaces[IMAGE_ASSET_AIRBRUSH_ICON] = LoadImage("images/airbrush_icon.png");
+        surfaces[IMAGE_ASSET_CHECKBOX_ICON_ON] = LoadImage("images/checkbox_on.png");
+        surfaces[IMAGE_ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
+        surfaces[IMAGE_ASSET_SLIDER_HANDLE] = LoadImage("images/slider_handle.png");
+        surfaces[IMAGE_ASSET_SELECTOR_ICON_BIG] = LoadImage("images/selector_icon_big.png");
+        surfaces[IMAGE_ASSET_ATOM_SELECTOR_ICON_BIG] = LoadImage("images/atom_selector_icon_big.png");
+        surfaces[IMAGE_ASSET_PENCIL_ICON_BIG] = LoadImage("images/pencil_icon_big.png");
+        surfaces[IMAGE_ASSET_ERASER_ICON_BIG] = LoadImage("images/eraser_icon_big.png");
+        surfaces[IMAGE_ASSET_BRUSH_ICON_BIG] = LoadImage("images/brush_icon_big.png");
+        surfaces[IMAGE_ASSET_BUCKET_ICON_BIG] = LoadImage("images/bucket_icon_big.png");
+        surfaces[IMAGE_ASSET_XRAY_ICON_BIG] = LoadImage("images/xray_icon_big.png");
+        surfaces[IMAGE_ASSET_CLONE_ICON_BIG] = LoadImage("images/clone_icon_big.png");
+        surfaces[IMAGE_ASSET_AIRBRUSH_ICON_BIG] = LoadImage("images/airbrush_icon_big.png");
+        surfaces[IMAGE_ASSET_CLOSE_WINDOW_ICON] = LoadImage("images/close_window_icon.png");
 
         fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/Inconsolata.ttf", 26);
         fonts[FONT_ASSET_ELEMENT_BIG] = LoadFont("fonts/Inconsolata.ttf", 40);
         fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont("fonts/Inconsolata.ttf", 26);
         fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont("fonts/Inconsolata.ttf", 20);
         fonts[FONT_ASSET_LOGGER] = LoadFont("fonts/Inconsolata.ttf", 14);
+        fonts[FONT_ASSET_LABEL] = LoadFont("fonts/Inconsolata.ttf", 20);
 
         initialized = true;
       }
@@ -194,13 +207,13 @@ namespace MFM
     {
       if(initialized)
       {
-        for(Asset i = ASSET_SELECTOR_ICON; i < ASSET_COUNT; i = (Asset)(i + 1))
+        for(ImageAsset i = (ImageAsset) 0; i < IMAGE_ASSET_COUNT; i = (ImageAsset) (i + 1))
         {
           SDL_FreeSurface(surfaces[i]);
           surfaces[i] = NULL;
         }
 
-        for(FontAsset i = FONT_ASSET_ELEMENT; i < FONT_ASSET_COUNT; i = (FontAsset)(i + 1))
+        for(FontAsset i = (FontAsset) 0; i < FONT_ASSET_COUNT; i = (FontAsset) (i + 1))
         {
           TTF_CloseFont(fonts[i]);
           fonts[i] = NULL;
@@ -210,14 +223,32 @@ namespace MFM
       }
     }
 
-    static SDL_Surface* Get(Asset a)
+    static SDL_Surface* Get(ImageAsset a)
     {
+      if (!initialized) FAIL(ILLEGAL_STATE);
+      if (a >= IMAGE_ASSET_NONE) return 0;
       return surfaces[a];
+    }
+
+    static SDL_Surface* GetReal(ImageAsset a)
+    {
+      SDL_Surface* s = Get(a);
+      if (!s) FAIL(ILLEGAL_ARGUMENT);
+      return s;
     }
 
     static TTF_Font* Get(FontAsset a)
     {
+      if (!initialized) FAIL(ILLEGAL_STATE);
+      if (a >= FONT_ASSET_NONE) return 0;
       return fonts[a];
+    }
+
+    static TTF_Font* GetReal(FontAsset a)
+    {
+      TTF_Font * f = Get(a);
+      if (!f) FAIL(ILLEGAL_ARGUMENT);
+      return f;
     }
   };
 }

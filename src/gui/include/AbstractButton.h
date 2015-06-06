@@ -82,7 +82,7 @@ namespace MFM
      * @param icon A pointer to the SDL_Surface which will be rendered
      *             upon rendering of this AbstactButton.
      */
-    AbstractButton(SDL_Surface* icon);
+    AbstractButton(ImageAsset icon);
 
     /**
      * Constructs an AbstractButton with a given string and a given
@@ -95,10 +95,10 @@ namespace MFM
      * @param icon The icon which will render as this AbstractButton
      *             upon rendering.
      */
-    AbstractButton(const char* text, SDL_Surface* icon);
+    AbstractButton(const char* text, ImageAsset icon);
 
     /**
-     * Destructs this AbstractButton.
+     * Deconstructs this AbstractButton.
      */
     ~AbstractButton();
 

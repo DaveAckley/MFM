@@ -28,7 +28,7 @@ namespace MFM
     Init();
   }
 
-  AbstractButton::AbstractButton(SDL_Surface* icon)
+  AbstractButton::AbstractButton(ImageAsset icon)
     : Label(icon)
     , m_enabled(true)
     , m_justClicked(false)
@@ -36,7 +36,7 @@ namespace MFM
     Init();
   }
 
-  AbstractButton::AbstractButton(const char* text, SDL_Surface* icon)
+  AbstractButton::AbstractButton(const char* text, ImageAsset icon)
     : Label(text, icon)
     , m_enabled(true)
     , m_justClicked(false)

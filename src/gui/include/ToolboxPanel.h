@@ -134,16 +134,20 @@ namespace MFM
 
       /**
        * Sets the icon of this ToolButton to a particular
-       * SDL_Surface*, which will be rendered when needed.
+       * ImageAsset, which will be rendered when needed.
        *
-       * @param icon The SDL_Surface* which represents this
+       * @param icon The ImageAsset which represents this
        * ToolButton's icon.
        */
-      void SetToolIcon(SDL_Surface* icon)
+      void SetToolIcon(ImageAsset icon)
       {
-        SetIcon(icon);
-        this->Panel::SetDimensions(icon->w, icon->h);
-      }
+        SetIconAsset(icon);
+        SDL_Surface * s = AssetManager::Get(icon);
+        // XXX is it known we'll have a surface yet?  what is the
+        // semantics we want here?
+        if (s)
+          this->Panel::SetDimensions(s->w, s->h);
+       }
 
       /**
        * Sets the visual properties of this ToolButton to
@@ -205,7 +209,7 @@ namespace MFM
         if (m_element)
         {
           OString16 name;
-          name.Printf("EltBtn-%s",element->GetAtomicSymbol());
+          name.Printf("EltBtn_%s",element->GetAtomicSymbol());
           this->SetName(name.GetZString());
         }
       }
@@ -222,7 +226,7 @@ namespace MFM
         {
           d.SetForeground(m_element->PhysicsColor());
           d.FillRect(0, 0, SIZE, SIZE);
-          d.SetFont(AssetManager::Get(m_parent->GetElementRenderFont()));
+          d.SetFont(m_parent->GetElementRenderFont());
           d.SetBackground(Drawing::BLACK);
           d.SetForeground(Drawing::WHITE);
           d.BlitBackedTextCentered(m_element->GetAtomicSymbol(),
@@ -499,44 +503,47 @@ namespace MFM
       //debug: this->Print(STDOUT);
 
       // Tell ourselfs to resize (our cheeso repacking)
-      HandleResize(this->m_parent->GetDimensions());
+      HandleResize(this->GetParent()->GetDimensions());
 
     }
 
     void AddButtons()
     {
-      Asset assets[ELEMENT_BOX_BUTTON_COUNT];
+      ImageAsset assets[ELEMENT_BOX_BUTTON_COUNT];
       if(m_bigText)
       {
-        assets[0] = ASSET_SELECTOR_ICON_BIG;
-        assets[1] = ASSET_ATOM_SELECTOR_ICON_BIG;
-        assets[2] = ASSET_PENCIL_ICON_BIG;
-        assets[3] = ASSET_BUCKET_ICON_BIG;
-        assets[4] = ASSET_ERASER_ICON_BIG;
-        assets[5] = ASSET_BRUSH_ICON_BIG;
-        assets[6] = ASSET_XRAY_ICON_BIG;
-        assets[7] = ASSET_CLONE_ICON_BIG;
-        assets[8] = ASSET_AIRBRUSH_ICON_BIG;
+        assets[0] = IMAGE_ASSET_SELECTOR_ICON_BIG;
+        assets[1] = IMAGE_ASSET_ATOM_SELECTOR_ICON_BIG;
+        assets[2] = IMAGE_ASSET_PENCIL_ICON_BIG;
+        assets[3] = IMAGE_ASSET_BUCKET_ICON_BIG;
+        assets[4] = IMAGE_ASSET_ERASER_ICON_BIG;
+        assets[5] = IMAGE_ASSET_BRUSH_ICON_BIG;
+        assets[6] = IMAGE_ASSET_XRAY_ICON_BIG;
+        assets[7] = IMAGE_ASSET_CLONE_ICON_BIG;
+        assets[8] = IMAGE_ASSET_AIRBRUSH_ICON_BIG;
       }
       else
       {
-        assets[0] = ASSET_SELECTOR_ICON;
-        assets[1] = ASSET_ATOM_SELECTOR_ICON;
-        assets[2] = ASSET_PENCIL_ICON;
-        assets[3] = ASSET_BUCKET_ICON;
-        assets[4] = ASSET_ERASER_ICON;
-        assets[5] = ASSET_BRUSH_ICON;
-        assets[6] = ASSET_XRAY_ICON;
-        assets[7] = ASSET_CLONE_ICON;
-        assets[8] = ASSET_AIRBRUSH_ICON;
+        assets[0] = IMAGE_ASSET_SELECTOR_ICON;
+        assets[1] = IMAGE_ASSET_ATOM_SELECTOR_ICON;
+        assets[2] = IMAGE_ASSET_PENCIL_ICON;
+        assets[3] = IMAGE_ASSET_BUCKET_ICON;
+        assets[4] = IMAGE_ASSET_ERASER_ICON;
+        assets[5] = IMAGE_ASSET_BRUSH_ICON;
+        assets[6] = IMAGE_ASSET_XRAY_ICON;
+        assets[7] = IMAGE_ASSET_CLONE_ICON;
+        assets[8] = IMAGE_ASSET_AIRBRUSH_ICON;
       }
 
       for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
       {
+        OString16 name;
+        name.Printf("ToolButton%D",i);
         m_toolButtons[i].Init();
+        m_toolButtons[i].SetName(name.GetZString());
         m_toolButtons[i].SetParent(this);
         m_toolButtons[i].Panel::SetRenderPoint(SPoint(16 + i * GetElementRenderSize(), 3));
-        m_toolButtons[i].SetToolIcon(AssetManager::Get(assets[i]));
+        m_toolButtons[i].SetToolIcon(assets[i]);
         Panel::Insert(m_toolButtons + i, NULL);
       }
 
@@ -549,7 +556,10 @@ namespace MFM
 
         /* These will render correctly because ElementButtons render
            grey when SetElement is fed NULL. */
+        OString16 name;
+        name.Printf("Element%D",i);
         m_elementButtons[i].SetElement(m_heldElements[i]);
+        m_elementButtons[i].SetName(name.GetZString());
         m_elementButtons[i].SetParent(this);
         m_elementButtons[i].Panel::SetDimensions(GetElementRenderSize(),
                                                  GetElementRenderSize());
@@ -687,7 +697,7 @@ namespace MFM
       d.SetForeground(this->Panel::GetBackground());
       d.FillRect(0, 0, this->Panel::GetWidth(), this->Panel::GetHeight());
 
-      d.SetFont(AssetManager::Get(GetElementRenderFont()));
+      d.SetFont(GetElementRenderFont());
 
       if (m_primaryElement)
       {

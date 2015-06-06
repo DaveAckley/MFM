@@ -164,7 +164,7 @@ namespace MFM
           const Element<EC> * elt = tile.GetElement(atom.GetType());
           if (elt)
           {
-            drawing.SetFont(AssetManager::Get(FONT_ASSET_ELEMENT));
+            drawing.SetFont(FONT_ASSET_ELEMENT);
             const char * sym = elt->GetAtomicSymbol();
             const SPoint size = drawing.GetTextSize(sym);
             const UPoint box = UPoint(m_atomDrawSize, m_atomDrawSize);

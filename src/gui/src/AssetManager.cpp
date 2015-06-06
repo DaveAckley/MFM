@@ -3,7 +3,7 @@
 
 namespace MFM
 {
-  SDL_Surface* AssetManager::surfaces[ASSET_COUNT] = { NULL };
+  SDL_Surface* AssetManager::surfaces[IMAGE_ASSET_COUNT] = { NULL };
 
   TTF_Font* AssetManager::fonts[FONT_ASSET_COUNT] = { NULL };
 
