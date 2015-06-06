@@ -127,6 +127,7 @@ namespace MFM
   typedef GridConfig<OurEventConfigAll,136> OurGridConfigTileG; // 16384 sites/tile
   typedef GridConfig<OurEventConfigAll,188> OurGridConfigTileH; // 32400 sites/tile
   typedef GridConfig<OurEventConfigAll,264> OurGridConfigTileI; // 65536 sites/tile
+  typedef GridConfig<OurEventConfigAll,370> OurGridConfigTileJ; // 131044 sites/tile
   */
 
   /////
