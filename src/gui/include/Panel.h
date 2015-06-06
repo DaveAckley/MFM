@@ -31,10 +31,10 @@
 #include "Point.h"
 #include "Rect.h"
 #include "Drawing.h"
-#include "Keyboard.h"
 #include "ByteSink.h"
 #include "EditingTool.h"
 #include "OverflowableCharBufferByteSink.h"
+#include "AssetManager.h"
 
 namespace MFM
 {
@@ -51,14 +51,14 @@ namespace MFM
 
   struct MouseEvent
   {
-    MouseEvent(const Keyboard & keyboard, SDL_Event & event,
+    MouseEvent(const u32 & keyboardModifiers, SDL_Event & event,
                const EditingTool selectedTool) :
-      m_keyboard(keyboard),
+      m_keyboardModifiers(keyboardModifiers),
       m_event(event),
       m_selectedTool(selectedTool)
     { }
 
-    const Keyboard & m_keyboard;
+    const u32 & m_keyboardModifiers;
     SDL_Event & m_event;
     const EditingTool m_selectedTool;
 
@@ -73,9 +73,9 @@ namespace MFM
 
   struct MouseButtonEvent : public MouseEvent
   {
-    MouseButtonEvent(const Keyboard & keyboard,
+    MouseButtonEvent(const u32 & keyboardModifiers,
                      SDL_Event & event, const EditingTool selectedTool) :
-      MouseEvent(keyboard, event, selectedTool)
+      MouseEvent(keyboardModifiers, event, selectedTool)
     { }
 
     virtual bool Handle(Panel & panel) ;
@@ -93,9 +93,9 @@ namespace MFM
     const u32 m_buttonMask;
     const ButtonPositionArray & m_buttonPositionArray;
 
-    MouseMotionEvent(const Keyboard & keyboard, SDL_Event & event, u32 buttonMask,
+    MouseMotionEvent(const u32 & keyboardModifiers, SDL_Event & event, u32 buttonMask,
                      ButtonPositionArray & bpa, const EditingTool selectedTool) :
-      MouseEvent(keyboard, event, selectedTool),
+      MouseEvent(keyboardModifiers, event, selectedTool),
       m_buttonMask(buttonMask),
       m_buttonPositionArray(bpa)
     { }
@@ -114,8 +114,9 @@ namespace MFM
    */
   class Panel
   {
-   protected:
-    OString16 m_name;
+  private:
+    typedef OString32 PanelNameString;
+    PanelNameString m_name;
 
     Rect m_rect;    // Size and location of panel relative to parent
     u32 m_bdColor;  // Default border color of this panel
@@ -123,9 +124,10 @@ namespace MFM
     u32 m_fgColor;  // Default foreground color of this panel
 
     /**
-     * Preferred font for text operations, if any
+     * Preferred font for text operations, if any, specified as an
+     * AssetManager::FontAsset
      */
-    TTF_Font* m_font;
+    FontAsset m_fontAsset;
 
     /**
      * The size that this Panel wants to be, when given enough room.
@@ -156,14 +158,23 @@ namespace MFM
     // A helper function to indent a line, that totally belongs elsewhere
     static void Indent(ByteSink& sink, u32 count) ;
 
-   public:
+  public:
+    void SaveAll(ByteSink& to) const ;
+
+    static bool IsLegalPanelName(const char * name) ;
+
+    static bool ScanPanelName(ByteSource & in, ByteSink & out) ;
+
     Panel(u32 width=0, u32 height=0);
 
     virtual ~Panel();
 
     void Insert(Panel* child, Panel* afterOrNull) ;
 
-    Panel* Pop() ;
+    Panel * GetParent() { return m_parent; }
+
+    Panel * GetTop() { return m_top; }
+    //    Panel* Pop() ;
 
     void Remove(Panel* child) ;
 
@@ -209,6 +220,52 @@ namespace MFM
        and its children.
      */
     void Print(ByteSink & sink, u32 indent = 0) const;
+
+    /**
+       Print the full name (i.e., including all its ancestors) of this
+       panel.
+     */
+    void PrintFullName(ByteSink & sink) const ;
+
+    /**
+       Find the panel referred to by the name(s) on in.  If in does
+       not begin with the name of this Panel, return null.  If it
+       does, return the Panel returned by DereferenceDescendants, if
+       any.
+     */
+    Panel * DereferenceFullName(ByteSource & in) ;
+
+    /**
+       Find the panel referred to by the name(s) on in.  If in begins
+       with a '.', there is at least one more level to be dereferenced
+       in the children of this.  If in does not begin with a '.', this
+       is the answer.  Return null if not found
+     */
+    Panel * DereferenceDescendants(ByteSource & in) ;
+
+    /**
+       For configuration saving, print a loadable representation this
+       panel's properties, starting with its full name.
+     */
+    void Save(ByteSink & sink) const;
+
+    virtual void SaveDetails(ByteSink & sink) const
+    {
+      /* No details to save, by default */
+    }
+
+    /**
+       For configuration restoring, load a representation of this
+       panel's properties, as saved by Save(ByteSink&), assuming the
+       name has already been read
+     */
+    bool Load(ByteSource & source) ;
+
+    virtual bool LoadDetails(ByteSource & source)
+    {
+      /* No details to load, by default */
+      return true;
+    }
 
     /**
        Get the current background color.
@@ -269,13 +326,16 @@ namespace MFM
        drawing operations will use the prevailing font
        (Drawing::GetFont()) if this returns null.
     */
-    TTF_Font* GetFont() const ;
+    TTF_Font* GetFontReal() const ;
+
+    FontAsset GetFont() const ;
 
     /**
-       Set the default font for this panel.  Null may be passed in to
-       clear the default font.  Returns prior value.
+       Set the default font for this panel, specified as an FontAsset.
+       FONT_ASSET_NONE may be passed in to clear the default font.
+       Returns prior value.
     */
-    TTF_Font* SetFont(TTF_Font * newFont) ;
+    FontAsset SetFont(FontAsset newFont) ;
 
     /**
      * Gets the absolute location of this Panel from the window that
@@ -407,7 +467,8 @@ namespace MFM
      *          SDL_Surface generated by rendering \c text in \c font
      *          font.
      */
-    SPoint GetTextSize(TTF_Font * font, const char * text);
+    SPoint GetTextSize(FontAsset font, const char * text);
+    //    SPoint GetTextSize(TTF_Font * font, const char * text);
 
   };
 } /* namespace MFM */

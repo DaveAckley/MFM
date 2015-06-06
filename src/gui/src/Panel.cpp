@@ -31,7 +31,7 @@ namespace MFM {
     m_forward = m_backward = 0;
     m_parent = m_top = 0;
 
-    m_font = 0;
+    m_fontAsset = FONT_ASSET_NONE;
     SetName(0);
 
     m_bgColor = Drawing::BLACK;
@@ -86,10 +86,177 @@ namespace MFM {
     sink.Printf("]\n");
   }
 
+  void Panel::PrintFullName(ByteSink & sink) const
+  {
+    if (m_parent)
+    {
+      m_parent->PrintFullName(sink);
+      sink.Printf(".");
+    }
+    sink.Printf("%s",GetName());
+  }
+
+  Panel * Panel::DereferenceFullName(ByteSource & in)
+  {
+    PanelNameString pns;
+    if (!ScanPanelName(in,pns) || !pns.Equals(this->GetName()))
+      return 0;
+
+    return this->DereferenceDescendants(in);
+  }
+
+  Panel * Panel::DereferenceDescendants(ByteSource & in)
+  {
+    if (in.Peek() != '.') return this;
+    in.Read(); // discard .
+
+    PanelNameString pns;
+    if (!ScanPanelName(in,pns)) return 0;
+
+    Panel * p = m_top;
+    while (p) {
+      if (pns.Equals(p->GetName()))
+        return p->DereferenceDescendants(in);
+      p = p->m_backward;
+      if (p == m_top) p = 0;
+    }
+    return 0;
+  }
+
+  bool Panel::Load(ByteSource & source)
+  {
+    Rect tmp_m_rect;
+    RectSerializer rs(tmp_m_rect);
+    if (2 != source.Scanf(",%@", &rs))
+      return false;
+
+    u32 tmp_m_bdColor;
+    u32 tmp_m_bgColor;
+    u32 tmp_m_fgColor;
+
+    if (4 != source.Scanf(",0x%08x", &tmp_m_bdColor)) return false;
+    if (4 != source.Scanf(",0x%08x", &tmp_m_bgColor)) return false;
+    if (4 != source.Scanf(",0x%08x", &tmp_m_fgColor)) return false;
+
+    u32 tmp_m_fontAsset;
+    if (2 != source.Scanf(",%d", &tmp_m_fontAsset)) return false;
+    if (tmp_m_fontAsset > FONT_ASSET_NONE) return false;
+
+    UPoint tmp_m_desiredSize;
+    UPointSerializer uptmp(tmp_m_desiredSize);
+    if (2 != source.Scanf(",%@",&uptmp)) return false;
+
+    SPoint tmp_m_desiredLocation;
+    SPointSerializer sptmp(tmp_m_desiredLocation);
+    if (2 != source.Scanf(",%@",&sptmp)) return false;
+
+    bool tmp_m_visible;
+    OString16 buf;
+    if (2 != source.Scanf(",%[a-z]",&buf)) return false;
+    if (buf.Equals("visible")) tmp_m_visible = true;
+    else if (buf.Equals("hidden")) tmp_m_visible = false;
+    else return false;
+
+    if (!this->LoadDetails(source)) return false;
+
+    m_rect = tmp_m_rect;
+
+    m_bdColor = tmp_m_bdColor;
+    m_bgColor = tmp_m_bgColor;
+    m_fgColor = tmp_m_fgColor;
+
+    m_fontAsset = (FontAsset) tmp_m_fontAsset;
+
+    m_desiredSize = tmp_m_desiredSize;
+    m_desiredLocation = tmp_m_desiredLocation;
+
+    m_visible = tmp_m_visible;
+
+    return true;
+  }
+
+  void Panel::Save(ByteSink & sink) const
+  {
+    PrintFullName(sink);
+    {
+      Rect tmp(m_rect);
+      RectSerializer rs(tmp);
+      sink.Printf(",%@", &rs);
+    }
+    {
+      sink.Printf(",0x%08x",m_bdColor);
+      sink.Printf(",0x%08x",m_bgColor);
+      sink.Printf(",0x%08x",m_fgColor);
+    }
+    {
+      sink.Printf(",%d",m_fontAsset);
+    }
+    {
+      UPoint tsz(m_desiredSize);
+      UPointSerializer tmp(tsz);
+      sink.Printf(",%@",&tmp);
+    }
+    {
+      SPoint tsz(m_desiredLocation);
+      SPointSerializer tmp(tsz);
+      sink.Printf(",%@",&tmp);
+    }
+    {
+      sink.Printf(",%s",m_visible?"visible":"hidden");
+    }
+
+    this->SaveDetails(sink);
+  }
+
+  void Panel::SaveAll(ByteSink & sink) const
+  {
+    sink.Printf("PanelConfig(");
+    Save(sink);
+    sink.Printf(")\n");
+    Panel * p = m_top;
+    while (p) {
+      p->SaveAll(sink);
+      p = p->m_backward;
+      if (p == m_top) p = 0;
+    }
+  }
+
+  bool Panel::IsLegalPanelName(const char * name)
+  {
+    if (!name) FAIL(NULL_POINTER);
+    CharBufferByteSource in(name, strlen(name));
+    return ScanPanelName(in, DevNullByteSink);
+  }
+
+  bool Panel::ScanPanelName(ByteSource & in, ByteSink & out)
+  {
+    PanelNameString pns;
+    in.Scanf("%[a-zA-Z]%[_a-zA-Z0-9]",&pns,&pns);
+    if (pns.GetLength() == 0 || pns.HasOverflowed())
+      return false;
+    pns.AppendTo(out);
+    return true;
+  }
+
   void Panel::Insert(Panel * child, Panel * after)
   {
     if (!child) FAIL(NULL_POINTER);
     if (child->m_parent) FAIL(ILLEGAL_ARGUMENT);
+
+    // Must have a legal name!
+    if (!IsLegalPanelName(child->m_name.GetZString()))
+      FAIL(BAD_NAME);
+
+    // Must not duplicate any existing kid name!
+    if (m_top)
+    {
+      Panel * p = m_top;
+      do {
+        p = p->m_forward;
+        if (child->m_name.Equals(p->m_name))
+          FAIL(DUPLICATE_ENTRY);
+      } while (p != m_top);
+    }
 
     if (!m_top) {
 
@@ -128,13 +295,17 @@ namespace MFM {
     child->m_backward = 0;
   }
 
-  TTF_Font* Panel::GetFont() const {
-    return m_font;
+  TTF_Font* Panel::GetFontReal() const {
+    return AssetManager::Get(m_fontAsset);
   }
 
-  TTF_Font*  Panel::SetFont(TTF_Font * newFont) {
-    TTF_Font* old = m_font;
-    m_font = newFont;
+  FontAsset Panel::GetFont() const {
+    return m_fontAsset;
+  }
+
+  FontAsset  Panel::SetFont(FontAsset newFont) {
+    FontAsset old = m_fontAsset;
+    m_fontAsset = newFont;
     return old;
   }
 
@@ -192,9 +363,9 @@ namespace MFM {
       drawing.TransformWindow(m_rect);
       drawing.GetWindow(cur);
 
-      TTF_Font* oldFont = 0;
-      TTF_Font* font = GetFont();
-      if (font)
+      FontAsset oldFont = FONT_ASSET_NONE;
+      FontAsset font = GetFont();
+      if (font != FONT_ASSET_NONE)
       {
         oldFont = drawing.SetFont(font);
       }
@@ -362,13 +533,14 @@ namespace MFM {
     return event.Handle(*this);
   }
 
-  SPoint Panel::GetTextSize(TTF_Font * font, const char * text)
+  SPoint Panel::GetTextSize(FontAsset font, const char * text)
   {
+    TTF_Font * ttfont = AssetManager::GetReal(font);
     s32 width, height;
-    if (!TTF_SizeText(font, text, &width, &height))
+    if (TTF_SizeText(ttfont, text, &width, &height) != 0)
     {
-      return SPoint(width,height);
+      width = height = 0;
     }
-    return SPoint(0,0);
+    return SPoint(width,height);
   }
 } /* namespace MFM */
