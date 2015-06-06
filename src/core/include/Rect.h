@@ -30,6 +30,7 @@
 #include "itype.h"
 #include "Point.h"
 #include "Random.h"
+#include "ByteSerializable.h"
 #include <stdio.h>  /* For FILE */
 
 namespace MFM
@@ -282,6 +283,43 @@ namespace MFM
       return *this;
     }
   };
+
+  class RectSerializer : public ByteSerializable
+  {
+  private:
+    Rect & m_rect;
+
+   public:
+    RectSerializer(Rect & rect) : m_rect(rect)
+    { }
+
+    Result PrintTo(ByteSink & bs, s32 argument = 0)
+    {
+      bs.Printf("(%dx%d@%d,%d)",
+                m_rect.GetWidth(),
+                m_rect.GetHeight(),
+                m_rect.GetX(),
+                m_rect.GetY());
+      return SUCCESS;
+    }
+
+    Result ReadFrom(ByteSource & bs, s32 argument = 0)
+    {
+      u32 w,h;
+      s32 x,y;
+
+      if (9 != bs.Scanf("(%dx%d@%d,%d)", &w, &h, &x, &y))
+        return FAILURE;
+
+      m_rect.SetWidth(w);
+      m_rect.SetHeight(h);
+      m_rect.SetX(x);
+      m_rect.SetY(y);
+      return SUCCESS;
+    }
+
+  };
+
 } /* namespace MFM */
 
 #endif /*RECT_H*/

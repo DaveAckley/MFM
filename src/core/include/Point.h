@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include "itype.h"
 #include "Random.h"
+#include "ByteSerializable.h"
 #include "Util.h"  /* For MAX and MIN */
 
 namespace MFM
@@ -614,6 +615,42 @@ namespace MFM
   {
     return upoint.GetX() <= (u32) S32_MAX && upoint.GetY() <= (u32) S32_MAX;
   }
+
+  template <class T>
+  class PointSerializer : public ByteSerializable
+  {
+  private:
+    Point<T> & m_point;
+
+   public:
+    PointSerializer(Point<T> & point) : m_point(point)
+    { }
+
+    Result PrintTo(ByteSink & bs, s32 argument = 0)
+    {
+      bs.Printf("[%d,%d]",
+                m_point.GetX(),
+                m_point.GetY());
+      return SUCCESS;
+    }
+
+    Result ReadFrom(ByteSource & bs, s32 argument = 0)
+    {
+      s32 x,y;
+
+      if (5 != bs.Scanf("[%d,%d]", &x, &y))
+        return FAILURE;
+
+      m_point.SetX(x);
+      m_point.SetY(y);
+      return SUCCESS;
+    }
+  };
+
+  typedef PointSerializer<u32> UPointSerializer;
+
+  typedef PointSerializer<s32> SPointSerializer;
+
 
 } /* namespace MFM */
 

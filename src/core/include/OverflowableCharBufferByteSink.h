@@ -235,7 +235,8 @@ namespace MFM {
      * null terminated string to this OverflowableCharBufferByteSink
      * . After this is called, and if there is enough room in this
      * OverflowableCharBufferByteSink , it will represent the
-     * specified string.
+     * specified string.  FAILs with OUT_OF_ROOM if the given content
+     * does not fit in this OverflowableCharBufferByteSink .
      *
      * @param zstr The null terminated string which is wished to be
      *             represented by this OverflowableCharBufferByteSink .
@@ -249,9 +250,17 @@ namespace MFM {
 
       Reset();
       Print(zstr);
-      GetZString(); // null terminate
 
       return *this;
+    }
+
+    /**
+     * Append a copy of the current contents of this to other (or as
+     * much of it as will fit).
+     */
+    void AppendTo(ByteSink & other) const
+    {
+      other.WriteBytes((const u8 *) GetBuffer(), GetLength());
     }
 
   private:
