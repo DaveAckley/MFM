@@ -177,7 +177,7 @@ namespace MFM {
     if (m_bitSize != DefaultSizeFromPrimType(GetPrimType()))
       bs.Printf("(%d)", m_bitSize);
 
-    if (m_arrayLength > 0) // XXXX ???? #*#!!@#(%$*@(
+    if (m_arrayLength > 0)
       bs.Printf("[%d]", m_arrayLength);
   }
 
@@ -265,7 +265,7 @@ namespace MFM {
 
   void UlamTypeInfoClass::PrintPretty(ByteSink & bs) const
   {
-    bs.Printf("%s", m_name.GetZString());
+    m_name.AppendTo(bs);
 
     if (m_parameterCount==0)
       return;
