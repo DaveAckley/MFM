@@ -180,15 +180,15 @@ namespace MFM {
     const char * p;
 
     p = "[a]";
-    tester.ScanSetFormat(DevNull, p);
+    tester.ScanSetFormat(DevNullByteSink, p);
     assert(*p == 0);
 
     p = "[^a-zA-Z0-9-]!";
-    tester.ScanSetFormat(DevNull, p);
+    tester.ScanSetFormat(DevNullByteSink, p);
     assert(*p == '!');
 
     p = "[]^-]@";
-    tester.ScanSetFormat(DevNull, p);
+    tester.ScanSetFormat(DevNullByteSink, p);
     assert(*p == '@');
   }
 
