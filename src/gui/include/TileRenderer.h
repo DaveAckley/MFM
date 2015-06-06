@@ -112,6 +112,7 @@ namespace MFM
     void RenderEventWindow(Drawing & drawing, SPoint& offset, Tile<EC>& tile, bool renderCache);
 
   public:
+    const char * GetMemDrawName() const;
 
     TileRenderer();
 
@@ -176,9 +177,11 @@ namespace MFM
 
     void ToggleGrid();
 
-    void ToggleMemDraw();
+    u32 ToggleMemDraw();
 
     void ToggleDataHeat();
+
+    void Move(SPoint amount);
 
     void MoveUp(u8 amount);
 
