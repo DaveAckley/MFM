@@ -55,15 +55,17 @@ namespace MFM
       AbstractButton(),
       m_parentPanel(parentPanel)
     {
+      SetName("CloseWindow");
       m_parentPanel->Panel::Insert(this, NULL);
     }
 
     void Init()
     {
-      SetName("CloseWindow");
-      SDL_Surface* icon = AssetManager::Get(ASSET_CLOSE_WINDOW_ICON);
-      AbstractButton::SetIcon(icon);
-      Panel::SetDimensions(icon->w, icon->h);
+      AbstractButton::SetIconAsset(IMAGE_ASSET_CLOSE_WINDOW_ICON);
+      SDL_Surface * s = AssetManager::Get(IMAGE_ASSET_CLOSE_WINDOW_ICON);
+      // XXX is it known we'll have a surface yet?
+      if (s)
+        this->Panel::SetDimensions(s->w, s->h);
       Panel::SetRenderPoint(SPoint(2, 2));
     }
 

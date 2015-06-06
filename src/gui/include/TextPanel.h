@@ -44,7 +44,7 @@ namespace MFM {
   public:
     TextPanel()
     {
-      SetName("Text Panel");
+      SetName("TextPanel");
       SetRenderPoint(SPoint(0, 0));
       SetForeground(Drawing::GREEN);
       SetBackground(Drawing::GREY05);
@@ -85,7 +85,7 @@ namespace MFM {
         case SDL_BUTTON_WHEELUP:
         case SDL_BUTTON_WHEELDOWN:
           s32 dir = event.button == SDL_BUTTON_WHEELDOWN ? -1 : 1;
-          if (mbe.m_keyboard.ShiftHeld()) dir *= 10;
+          if (mbe.m_keyboardModifiers & KMOD_SHIFT) dir *= 10;
 
           m_bottomLineShown = MAX<s32>(0, MIN<s32>(m_bottomLineShown + dir, m_text.GetLines()));
           break;
@@ -149,7 +149,7 @@ namespace MFM {
       if (m_panelHeight == 0)
         m_panelHeight = 1;  // WTF:(
 
-      TTF_Font * font = drawing.GetFont();
+      TTF_Font * font = AssetManager::Get(drawing.GetFont());
       if (!font) return;  // WTF?
 
       m_fontHeight = TTF_FontLineSkip(font);

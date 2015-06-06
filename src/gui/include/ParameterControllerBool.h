@@ -94,7 +94,9 @@ namespace MFM
 
      public:
       ParmCheckbox(ParameterControllerBool & bc) : m_bc(bc)
-      { }
+      {
+        this->SetName("ParmCtrlCheckBox");
+      }
 
       virtual bool IsChecked() const
       {

@@ -93,7 +93,7 @@ namespace MFM
       m_cloneOrigin(-1, -1),
       m_cloneDestination(-1, -1)
     {
-      SetName("Grid Panel");
+      SetName("GridPanel");
       SetDimensions(SCREEN_INITIAL_WIDTH,
                     SCREEN_INITIAL_HEIGHT);
       SetRenderPoint(SPoint(0, 0));
@@ -508,7 +508,7 @@ namespace MFM
           /* FALL THROUGH */
         case SDL_BUTTON_MIDDLE:
         case SDL_BUTTON_RIGHT:
-          if(!mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
+          if(!(mbe.m_keyboardModifiers & KMOD_CTRL) && m_paintingEnabled)
           {
             switch(mbe.m_selectedTool)
             {
@@ -558,7 +558,7 @@ namespace MFM
     virtual bool Handle(MouseMotionEvent& mbe)
     {
       SDL_MouseMotionEvent & event = mbe.m_event.motion;
-      if (mbe.m_keyboard.CtrlHeld())
+      if (mbe.m_keyboardModifiers & KMOD_CTRL)
       {
         if(mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT))
         {
@@ -588,7 +588,7 @@ namespace MFM
         m_grend->SetHoveredAtom(*m_mainGrid, SPoint(event.x, event.y));
         m_mainGrid->SenseTouchAt(gte);
 
-        if(mask && !mbe.m_keyboard.CtrlHeld() && m_paintingEnabled)
+        if(mask && !(mbe.m_keyboardModifiers & KMOD_CTRL) && m_paintingEnabled)
         {
           switch(mbe.m_selectedTool)
           {
