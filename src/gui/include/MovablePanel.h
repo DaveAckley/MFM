@@ -60,7 +60,7 @@ namespace MFM
     {
       if(event.m_event.type == SDL_MOUSEBUTTONDOWN)
       {
-        if(event.m_keyboard.CtrlHeld())
+        if(event.m_keyboardModifiers & KMOD_CTRL)
         {
           BeginDrag(event);
           return true;
