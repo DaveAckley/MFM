@@ -1,21 +1,63 @@
 #include "ByteSource.h"
 #include "ByteSerializable.h"
 #include "BitVector.h"
+#include <ctype.h>  /* for tolower */
 
 namespace MFM {
 
-  bool ByteSource::Scan(u64 & result)
+  bool ByteSource::Scan(u64 & result, Format::Type code)
   {
-    u64 num = 0;
-    for (u32 i = 0; i < 8; ++i)
+    u32 base = 10;
+    switch (code)
     {
-      s32 ch = Read();
-      if (ch < 0)
-        return false;
-      num = (num << 8) | ch;
+    case Format::BEU64:
+      {
+        u64 num = 0;
+        for (u32 i = 0; i < 8; ++i)
+        {
+          s32 ch = Read();
+          if (ch < 0)
+            return false;
+          num = (num << 8) | ch;
+        }
+        result = num;
+      }
+      return true;
+
+    case Format::LXX64:
+      base = 16;
+      // FALL THROUGH
+    case Format::LEX64:
+      {
+        u32 len;
+        if (!ScanLexDigits(len)) return false;
+
+        u64 num = 0;
+        for (u32 i = 0; i < len; ++i)
+        {
+          s32 ch = Read();
+          if (ch < 0)
+            return false;
+          u8 uch = (u8) tolower(ch);
+          u32 dig;
+          if (uch >= '0' && uch <= '9')
+            dig = uch-'0';
+          else if (uch >= 'a' && uch < 'a'+base-10)
+            dig = uch-'a'+10;
+          else
+          {
+            Unread();
+            return false;
+          }
+          num = (num * base) + dig;
+        }
+        result = num;
+      }
+      return true;
+
+    default:
+      FAIL(ILLEGAL_ARGUMENT);
     }
-    result = num;
-    return true;
   }
 
   bool ByteSource::Scan(s32 & result, Format::Type code, u32 fieldWidth)
@@ -316,7 +358,7 @@ namespace MFM {
       case 'q':
         {
           u64 res64;
-          if (!Scan(res64)) return -matches;
+          if (!Scan(res64,Format::BEU64)) return -matches;
           StorePtr8(ap, res64);
           ++matches;
         }
@@ -327,6 +369,9 @@ namespace MFM {
       case 'd': type = Format::DEC; goto store;
       case 'x': type = Format::HEX; goto store;
       case 't': type = Format::B36; goto store;
+
+      case 'D': type = Format::LEX32; goto store;
+      case 'X': type = Format::LXX32; goto store;
 
       store:
         if (!Scan(result,(Format::Type) type, fieldWidth))
@@ -355,7 +400,7 @@ namespace MFM {
             bs = va_arg(ap,ByteSink*);
           if (!bs) bs = &DevNullByteSink;
           s32 res = ScanSetFormat(*bs, format); // Advances format to ']' or FAILs
-          if (res < 0)
+          if (res <= 0)
             return -matches;
           ++matches;
         }

@@ -55,6 +55,19 @@ namespace MFM
     { }
 
     /**
+     * Reset this ByteSource to an initialized state.  Zeros the read
+     * count and clears any unread char.  Virtual so subclasses may
+     * add behavior of their own; they should ensure they call
+     * Super::Reset() if they do.
+     */
+    virtual void Reset()
+    {
+      m_read = 0;
+      m_lastRead = -1;
+      m_unread = false;
+    }
+
+    /**
      * Gets the next logical single 32-bit character from this
      * ByteSource. If there was an \c Unread() operation on this
      * ByteSource before this \c Read() operation, the last character
@@ -133,29 +146,32 @@ namespace MFM
     }
 
     /**
-     * Performs a binary read of the next 64 bits to come out of this
-     * ByteSource . These bytes are stored in the specified u64 ,
-     * where the first bytes read are stored in its MSB end.
+     * Read a 64 bit quantity from this ByteSource , specified in one
+     * of a few supported formats.  On success, the read value is
+     * stored in the specified u64 and true is returned.
      *
      * @param result The location to store the next 64 bits to come
      *        out of this ByteSource.
      *
-     * @returns \c true if the next 64 bits are read successfully from
-     *          this ByteSource, else \c false.
+     * @param code The format to read.  May be Format::BEU64 to read
+     *        in raw binary, Format::LEX64 to read lex-encoded
+     *        decimal, or Format::LXX64 to read lex-encoded
+     *        hexadecimal
+     *
+     * @returns \c true if a 64 bit value in the specified format was
+     *          read successfully from this ByteSource, else \c false.
      */
-    bool Scan(u64 & result) ;
+    bool Scan(u64 & result, Format::Type code) ;
 
     /**
      * Performs several types of reads of a 32-bit number, depending
      * on the provided format.
      *
      * @param result The location to store the read binary formatted
-     *               32-bit number.
+     *               32-bit number .
      *
      * @param code The format to treat the next bytes read from this
-     *             ByteSource as, including various numeric bases
-     *             (such as binary, octal, decimal, hexadecimal) and
-     *             network-order binary representations.
+     *             ByteSource as, be it binary or ascii in nature.
      *
      * @param fieldWidth The maximum number of characters which will
      *                   be read during this call.
@@ -278,7 +294,7 @@ namespace MFM
 
     /**
      * Scans this ByteSource for a hexadecimal string, i.e. a string
-     * consisting of both upper and lowercase hexadecimal digits.
+     * consisting of hexadecimal digits (either upper or lowercase).
      *
      * @param result The ByteSink which collects the all characters
      *               that match the rules for being a hexadecimal
@@ -349,6 +365,21 @@ namespace MFM
 
     s32 Scanf(const char * format, ...) ;
     s32 Vscanf(const char * format, va_list & ap) ;
+
+  protected:
+
+    /**
+       Allow subclasses to check if a ByteSource is currently in an
+       'unread' status or not.  Access is protected since this is
+       considered an implementation detail, but some subclasses (e.g.,
+       LineCountingByteSource) benefit from knowing precisely where
+       the source is at certain times.
+
+       \returns true if this ByteSource currently has an 'unread' byte
+       pending, false otherwise.
+
+     */
+    static bool IsUnread(const ByteSource & bs) { return bs.m_unread; }
 
   private:
     s32 ReadCounted(u32 & maxLen)
