@@ -37,6 +37,7 @@
 #include "GridTransceiver.h"
 #include "ElementRegistry.h"
 #include "Logger.h"
+#include "LineCountingByteSource.h"
 #include <time.h>  /* For struct timespec, clock_gettime */
 
 namespace MFM {
@@ -580,6 +581,30 @@ namespace MFM {
     void XRayAtom(const SPoint& location);
 
     void MaybeXRayAtom(const SPoint& location);
+
+    void SaveSite(const SPoint& loc, ByteSink& bs) const
+    {
+      SPoint tileInGrid, siteInTile;
+      if (!MapGridToTile(loc, tileInGrid, siteInTile))
+      {
+        LOG.Error("Site (%d,%d) does not map to grid.",
+                  loc.GetX(), loc.GetY());
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+      GetTile(tileInGrid).SaveSite(siteInTile,bs);
+    }
+
+    bool LoadSite(const SPoint& loc, LineCountingByteSource& bs)
+    {
+      SPoint tileInGrid, siteInTile;
+      if (!MapGridToTile(loc, tileInGrid, siteInTile))
+      {
+        LOG.Error("Site (%d,%d) does not map to grid.",
+                  loc.GetX(), loc.GetY());
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+      return GetTile(tileInGrid).LoadSite(siteInTile,bs);
+    }
 
     const T* GetAtom(SPoint& loc)
     {

@@ -351,7 +351,7 @@ namespace MFM {
   void Grid<GC>::RecountAtoms()
   {
     for (iterator_type i = begin(); i != end(); ++i)
-      i->RecountAtoms();
+      i->NeedAtomRecount();
   }
 
   template <class GC>
