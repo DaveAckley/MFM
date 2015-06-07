@@ -66,15 +66,31 @@ namespace MFM
 
       lcbs.SkipWhitespace();
       if (1 != lcbs.Scanf("("))
-        return lcbs.Msg(Logger::ERROR, "Expected open parenthesis");
+        return lcbs.Msg(Logger::ERROR, "Expected open parenthesis after '%@'", &cbbs);
 
       bool handled = false;
+      u32 functionErrors = 0;
       for (u32 i = 0; i < m_registeredFunctionCount; ++i) {
         ConfigFunctionCall<GC> & fc = *m_registeredFunctions[i];
         if (cbbs.Equals(fc.m_functionName)) {
-          if (!fc.Parse()) return false;  // Error message already issued
+          if (!fc.Parse()) {
+            if (this->ContinueOnErrors())
+            {
+              ++functionErrors;
+              lcbs.Msg(Logger::ERROR, "[%s] error (#%d) during '%s' load, trying to continue",
+                       GetSectionName(),
+                       functionErrors,
+                       fc.m_functionName);
+              lcbs.SkipSet("[^\n]");
+              handled = true;
+              break;
+            }
+            lcbs.Msg(Logger::ERROR, "[%s] fatal error during '%s' load, aborting",
+                     GetSectionName(),
+                     fc.m_functionName);
+            return false;
+          }
           handled = true;
-          break;
         }
       }
 

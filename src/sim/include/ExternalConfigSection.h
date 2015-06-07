@@ -55,6 +55,8 @@ namespace MFM
 
     virtual const char * GetSectionName() const = 0;
 
+    virtual bool ContinueOnErrors() const = 0;
+
     /**
        Method called before section reading begins.  Return false to
        abort the read.
