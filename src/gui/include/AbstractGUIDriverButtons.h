@@ -148,6 +148,7 @@ namespace MFM
   {
     HeatmapButton(GridPanel<GC>& gridPanel) ;
     virtual void OnClick(u8 button) ;
+    void UpdateLabel() ;
   private:
     GridPanel<GC>& m_gridPanel;
   };
@@ -164,8 +165,8 @@ namespace MFM
   {
     TileViewButton() ;
     virtual void OnClick(u8 button) ;
-  private:
     void UpdateLabel() ;
+  private:
   };
 
   template<class GC>

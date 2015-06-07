@@ -100,14 +100,20 @@ namespace MFM
   }
 
   template <class GC>
-  void HeatmapButton<GC>::OnClick(u8 button)
+  void HeatmapButton<GC>::UpdateLabel()
   {
-    OString16 heatmapText;
-    u32 heatIdx = m_gridPanel.IncrementHeatmapSelector();
-    heatmapText.Reset();
+    OString32 heatmapText;
+    u32 heatIdx = m_gridPanel.GetHeatmapSelector();
     heatmapText.Printf("Color type: %d", heatIdx);
 
-    AbstractButton::SetText(heatmapText.GetZString());
+     AbstractButton::SetText(heatmapText.GetZString());
+  }
+
+  template <class GC>
+  void HeatmapButton<GC>::OnClick(u8 button)
+  {
+    m_gridPanel.IncrementHeatmapSelector();
+    UpdateLabel();
   }
 
   template <class GC>
