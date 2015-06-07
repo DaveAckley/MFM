@@ -252,6 +252,16 @@ namespace MFM
       return m_eventWindowsExecuted;
     }
 
+    void SetEventWindowsAttempted(u64 attempts)
+    {
+      m_eventWindowsAttempted = attempts;
+    }
+
+    void SetEventWindowsExecuted(u64 executed)
+    {
+      m_eventWindowsExecuted = executed;
+    }
+
     void Diffuse() ;
 
     bool IsFree() const
