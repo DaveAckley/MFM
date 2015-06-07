@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
   LineCountingByteSource.h Wrapper class to count line and byte positions
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2015 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 /**
   \file LineCountingByteSource.h Wrapper class to count line and byte positions
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014-2015 All rights reserved.
   \lgpl
  */
 #ifndef LINECOUNTINGBYTESOURCE_H
@@ -41,18 +41,29 @@ namespace MFM
    */
   class LineCountingByteSource : public ByteSource
   {
-   public:
+    typedef ByteSource Super;
+  public:
     /**
      * Construct a new LineCountingByteSource which is not attached to
      * another ByteSource and is notready for use.
      */
-    LineCountingByteSource() :
-      m_bs(NULL),
-      m_errs(&DevNullByteSink),
-      m_label("unknown source"),
-      m_lineNum(1),
-      m_byteNum(0)
+    LineCountingByteSource()
+      : Super()
+      , m_bs(NULL)
+      , m_errs(&DevNullByteSink)
+      , m_label("unknown source")
+      , m_lineNum(1)
+      , m_byteNum(0)
+      , m_prevLineBytes(0)
     { }
+
+    virtual void Reset()
+    {
+      Super::Reset();
+      m_lineNum = 1;
+      m_byteNum = 0;
+      m_prevLineBytes = 0;
+    }
 
     /**
      * Sets the ByteSource which will be monitored through this
@@ -63,6 +74,7 @@ namespace MFM
     void SetByteSource(ByteSource & bs)
     {
       m_bs = &bs;
+      Reset();
     }
 
     /**
@@ -166,7 +178,7 @@ namespace MFM
      */
     void PrintPosition(ByteSink & b) const
     {
-      b.Printf("%s:%d:%d:", m_label, m_lineNum, m_byteNum);
+      b.Printf("%s:%d:%d:", m_label, GetLineNum(), GetByteNum());
     }
 
     /**
@@ -178,38 +190,62 @@ namespace MFM
      */
     u32 GetLineNum() const
     {
+      MFM_API_ASSERT_NONNULL(m_bs);
+
+      if (IsUnread(*m_bs) && m_byteNum == 0)
+      {
+        return m_lineNum - 1;
+      }
+
       return m_lineNum;
     }
 
     /**
-     * Gets the number of bytes which have been read from this
-     * LineCountingByteSource .
+     * Gets the number of bytes which have been read on the current
+     * line .
      *
-     * @returns The number of bytes which have been read from this
-     *          LineCountingByteSource .
+     * @returns The byte number of the current position on the current
+     * line, starting from 0
      */
     u32 GetByteNum() const
     {
+      MFM_API_ASSERT_NONNULL(m_bs);
+
+      if (IsUnread(*m_bs))
+      {
+        if (m_byteNum == 0)
+        {
+          return m_prevLineBytes;
+        }
+        else
+        {
+          return m_byteNum - 1;
+        }
+      }
       return m_byteNum;
     }
 
     virtual int ReadByte()
     {
-      if (!m_bs)
-      {
-        FAIL(ILLEGAL_STATE);
-      }
-      // Note this sucker doesn't currently deal with Unread!  Counts
-      // can be off by a byte or a line!
+      MFM_API_ASSERT_NONNULL(m_bs);
+
+      bool reread = IsUnread(*m_bs);
+
       s32 byte = m_bs->ReadByte();
-      if (byte == '\n')
+
+      if (!reread)  // Only update stats on new reads
       {
-        ++m_lineNum;
-        m_byteNum = 0;
-      }
-      else
-      {
-        ++m_byteNum;
+
+        if (byte == '\n')
+        {
+          ++m_lineNum;
+          m_prevLineBytes = m_byteNum;
+          m_byteNum = 0;
+        }
+        else if (byte >= 0)  // Don't count EOFs as taking space
+        {
+          ++m_byteNum;
+        }
       }
       return byte;
     }
@@ -220,6 +256,7 @@ namespace MFM
     const char * m_label;
     u32 m_lineNum;
     u32 m_byteNum;
+    u32 m_prevLineBytes;
   };
 }
 
