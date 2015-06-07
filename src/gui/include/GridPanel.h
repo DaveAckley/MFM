@@ -72,12 +72,21 @@ namespace MFM
 
     bool LoadDetails(ByteSource & source)
     {
+      u32 tmp_m_paintingEnabled;
+      if (2 != source.Scanf(",%d",&tmp_m_paintingEnabled))
+        return false;
+
       MFM_API_ASSERT_NONNULL(m_grend);
-      return m_grend->LoadDetails(source);
+      if (!m_grend->LoadDetails(source))
+        return false;
+
+      m_paintingEnabled = tmp_m_paintingEnabled;
+      return true;
     }
 
     void SaveDetails(ByteSink & sink) const
     {
+      sink.Printf(",%d",m_paintingEnabled);
       MFM_API_ASSERT_NONNULL(m_grend);
       m_grend->SaveDetails(sink);
     }

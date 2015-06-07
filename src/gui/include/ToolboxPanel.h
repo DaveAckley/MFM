@@ -416,6 +416,29 @@ namespace MFM
       {
         m_heldElements[i] = NULL;
       }
+
+      for(u32 i = 0; i < TOOLBOX_MAX_SLIDERS; i++)
+      {
+        OString16 str;
+        str.Printf("Slider%D",i);
+        m_sliders[i].SetName(str.GetZString());
+      }
+
+      for(u32 i = 0; i < TOOLBOX_MAX_CHECKBOXES; i++)
+      {
+        OString16 str;
+        str.Printf("Checkbox%D",i);
+        m_checkboxes[i].SetName(str.GetZString());
+      }
+
+      for(u32 i = 0; i < TOOLBOX_MAX_NEIGHBORHOODS; i++)
+      {
+        OString16 str;
+        str.Printf("Neighborhood%D",i);
+        m_neighborhoods[i].SetName(str.GetZString());
+      }
+
+
     }
 
     /**
