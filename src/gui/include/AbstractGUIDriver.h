@@ -45,15 +45,6 @@
 #include "ToolboxPanel.h"
 #include "TeeByteSink.h"
 #include "StatsRenderer.h"
-
-#if 0
-#include "Element_Empty.h" /* Need common elements */
-#include "Element_Dreg.h"
-#include "Element_Res.h"
-#include "Element_Wall.h"
-#include "Element_Consumer.h"
-#endif
-
 #include "ExternalConfig.h"
 #include "ExternalConfigSectionMFMS.h"
 #include "FileByteSource.h"
@@ -99,7 +90,6 @@ namespace MFM
     bool m_bigText;
     u32 m_thisEpochAEPS;
     bool m_captureScreenshots;
-    //UNUSED?? XXX    s32 m_screenshotTargetFPS;
     u32 m_saveStateIndex;
     u32 m_epochSaveStateIndex;
 
@@ -556,6 +546,107 @@ namespace MFM
         Super::SaveGrid(filename);
     }
 
+    void SaveScreenConfig(ByteSink& bs)
+    {
+      bs.Printf("%D%D%D%D",
+                m_screenWidth, m_screenHeight,
+                m_desiredScreenWidth, m_desiredScreenHeight);
+      bs.Printf("%D%D%D%D",
+                m_startPaused, m_thisUpdateIsEpoch,
+                m_bigText, m_thisEpochAEPS);
+      bs.Printf("%D%D%D",
+                m_captureScreenshots, m_saveStateIndex,
+                m_epochSaveStateIndex);
+      bs.Printf("%D%D%D%D",
+                m_keyboardPaused, m_singleStep,
+                m_mousePaused, m_gridPaused);
+      bs.Printf("%D%D%D%D",
+                m_reinitRequested, m_renderStats,
+                m_batchMode,m_screenResizable);
+    }
+
+    bool LoadScreenConfig(LineCountingByteSource& bs)
+    {
+      u32 tmp_m_screenWidth;
+      u32 tmp_m_screenHeight;
+      u32 tmp_m_desiredScreenWidth;
+      u32 tmp_m_desiredScreenHeight;
+
+      if (4 != bs.Scanf("%D%D%D%D",
+                        &tmp_m_screenWidth,
+                        &tmp_m_screenHeight,
+                        &tmp_m_desiredScreenWidth,
+                        &tmp_m_desiredScreenHeight))
+        return false;
+
+      u32 tmp_m_startPaused;
+      u32 tmp_m_thisUpdateIsEpoch;
+      u32 tmp_m_bigText;
+      u32 tmp_m_thisEpochAEPS;
+      if (4 != bs.Scanf("%D%D%D%D",
+                        &tmp_m_startPaused,
+                        &tmp_m_thisUpdateIsEpoch,
+                        &tmp_m_bigText,
+                        &tmp_m_thisEpochAEPS))
+        return false;
+
+      u32 tmp_m_captureScreenshots;
+      u32 tmp_m_saveStateIndex;
+      u32 tmp_m_epochSaveStateIndex;
+      if (3 != bs.Scanf("%D%D%D",
+                        &tmp_m_captureScreenshots,
+                        &tmp_m_saveStateIndex,
+                        &tmp_m_epochSaveStateIndex))
+        return false;
+
+      u32 tmp_m_keyboardPaused;
+      u32 tmp_m_singleStep;
+      u32 tmp_m_mousePaused;
+      u32 tmp_m_gridPaused;
+      if (4 != bs.Scanf("%D%D%D%D",
+                        &tmp_m_keyboardPaused,
+                        &tmp_m_singleStep,
+                        &tmp_m_mousePaused,
+                        &tmp_m_gridPaused))
+        return false;
+
+      u32 tmp_m_reinitRequested;
+      u32 tmp_m_renderStats;
+      u32 tmp_m_batchMode;
+      u32 tmp_m_screenResizable;
+      if (4 != bs.Scanf("%D%D%D%D",
+                        &tmp_m_reinitRequested,
+                        &tmp_m_renderStats,
+                        &tmp_m_batchMode,
+                        &tmp_m_screenResizable))
+        return false;
+
+      m_screenWidth = tmp_m_screenWidth;
+      m_screenHeight = tmp_m_screenHeight;
+      m_desiredScreenWidth = tmp_m_desiredScreenWidth;
+      m_desiredScreenHeight = tmp_m_desiredScreenHeight;
+      m_startPaused = tmp_m_startPaused;
+      m_thisUpdateIsEpoch = tmp_m_thisUpdateIsEpoch;
+      m_bigText = tmp_m_bigText;
+      m_thisEpochAEPS = tmp_m_thisEpochAEPS;
+      m_captureScreenshots = tmp_m_captureScreenshots;
+      //      m_saveStateIndex = tmp_m_saveStateIndex;
+      //      m_epochSaveStateIndex = tmp_m_epochSaveStateIndex;
+      m_keyboardPaused = tmp_m_keyboardPaused;
+      m_singleStep = tmp_m_singleStep;
+      m_mousePaused = tmp_m_mousePaused;
+      m_gridPaused = tmp_m_gridPaused;
+      m_reinitRequested = tmp_m_reinitRequested;
+      m_renderStats = tmp_m_renderStats;
+      m_batchMode = tmp_m_batchMode;
+      m_screenResizable = tmp_m_screenResizable;
+
+      m_tileViewButton.UpdateLabel();
+      m_heatmapButton.UpdateLabel();
+
+      return true;
+    }
+
     AbstractGUIDriver(u32 gridWidth, u32 gridHeight)
       : Super(gridWidth, gridHeight)
       , m_startPaused(true)
@@ -849,6 +940,45 @@ namespace MFM
         m_aepsPerFrame = apf;
       }
 
+      bool LoadDetails(ByteSource & source)
+      {
+        u32 tmp_m_AEPS;
+        u32 tmp_m_AER;
+        u32 tmp_m_overheadPercent;
+        u32 tmp_m_aepsPerFrame;
+        u32 tmp_m_currentAEPSPerEpoch;
+        if (6 != source.Scanf(",%D%D%D%D%D",
+                              &tmp_m_AEPS,
+                              &tmp_m_AER,
+                              &tmp_m_overheadPercent,
+                              &tmp_m_aepsPerFrame,
+                              &tmp_m_currentAEPSPerEpoch))
+          return false;
+
+        MFM_API_ASSERT_NONNULL(m_srend);
+        if (!m_srend->LoadDetails(source)) return false;
+
+        m_AEPS = tmp_m_AEPS / 10.0;
+        m_AER = tmp_m_AER / 100.0;
+        m_overheadPercent = tmp_m_overheadPercent / 1000.0;
+        m_aepsPerFrame = tmp_m_aepsPerFrame;
+        m_currentAEPSPerEpoch = tmp_m_currentAEPSPerEpoch;
+        return true;
+      }
+
+      void SaveDetails(ByteSink & sink) const
+      {
+        sink.Printf(",%D%D%D%D%D",
+                    (u32)(10*m_AEPS),
+                    (u32)(100*m_AER),
+                    (u32)(1000*m_overheadPercent),
+                    m_aepsPerFrame,
+                    m_currentAEPSPerEpoch);
+
+        MFM_API_ASSERT_NONNULL(m_srend);
+        m_srend->SaveDetails(sink);
+      }
+
     protected:
       virtual void PaintComponent(Drawing& drawing)
       {
@@ -978,6 +1108,11 @@ namespace MFM
     TextPanel<200,100> m_logPanel;  // 200 for big timestamps and such..
     TeeByteSink m_logSplitter;
 
+    void ResetScreenSize()
+    {
+      SetScreenSize(m_screenWidth, m_screenHeight);
+    }
+
     void SetScreenSize(u32 width, u32 height)
     {
       m_screenWidth = width;
@@ -985,6 +1120,13 @@ namespace MFM
       u32 flags = SDL_SWSURFACE;
       if (m_screenResizable) flags |= SDL_RESIZABLE;
       m_screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32, flags);
+
+      u32 gotWidth = SDL_GetVideoSurface()->w;
+      u32 gotHeight = SDL_GetVideoSurface()->h;
+      if (gotWidth != m_screenWidth || gotHeight != m_screenHeight)
+        LOG.Message("Screen %dx%d (wanted %dx%d)",
+                    gotWidth, gotHeight,
+                    m_screenWidth, m_screenHeight);
 
       AssetManager::Initialize();
 
