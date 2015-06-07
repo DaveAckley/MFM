@@ -34,6 +34,55 @@ namespace MFM
   }
 
   template <class EC>
+  void Tile<EC>::SaveTile(ByteSink & to) const
+  {
+    to.Printf(",");
+    to.Print(m_lockAttempts,Format::LXX64);
+    to.Print(m_lockAttemptsSucceeded,Format::LXX64);
+    to.Print(m_window.GetEventWindowsExecuted(),Format::LXX64);
+    to.Print(m_window.GetEventWindowsAttempted(),Format::LXX64);
+    to.Printf(",%D%D%D",
+              m_enabled,
+              m_backgroundRadiation,
+              m_warpFactor);
+  }
+
+  template <class EC>
+  bool Tile<EC>::LoadTile(LineCountingByteSource & from)
+  {
+    if (1 != from.Scanf(",")) return false;
+
+    u64 tmp_m_lockAttempts;
+    u64 tmp_m_lockAttemptsSucceeded;
+    u64 tmp_EventWindowsExecuted;
+    u64 tmp_EventWindowsAttempted;
+    u32 tmp_m_enabled;
+    u32 tmp_m_backgroundRadiation;
+    u32 tmp_m_warpFactor;
+    if (!from.Scan(tmp_m_lockAttempts,Format::LXX64)) return false;
+    if (!from.Scan(tmp_m_lockAttemptsSucceeded,Format::LXX64)) return false;
+    if (!from.Scan(tmp_EventWindowsExecuted,Format::LXX64)) return false;
+    if (!from.Scan(tmp_EventWindowsAttempted,Format::LXX64)) return false;
+    if (4 != from.Scanf(",%D%D%D",
+                        &tmp_m_enabled,
+                        &tmp_m_backgroundRadiation,
+                        &tmp_m_warpFactor))
+      return false;
+
+    m_lockAttempts = tmp_m_lockAttempts;
+    m_lockAttemptsSucceeded = tmp_m_lockAttemptsSucceeded;
+    m_window.SetEventWindowsExecuted(tmp_EventWindowsExecuted);
+    m_window.SetEventWindowsAttempted(tmp_EventWindowsAttempted);
+    m_enabled = tmp_m_enabled;
+    m_backgroundRadiation = tmp_m_backgroundRadiation;
+    m_warpFactor = tmp_m_warpFactor;
+
+    return true;
+
+  }
+
+
+  template <class EC>
   void Tile<EC>::Init()
   {
     m_elementTable.Reinit();

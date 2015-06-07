@@ -28,6 +28,9 @@
 #define BASE_H
 
 #include "Sense.h"
+#include "ByteSink.h"
+#include "LineCountingByteSource.h"
+#include "AtomSerializer.h"
 
 namespace MFM {
 
@@ -52,6 +55,38 @@ namespace MFM {
     u64 m_lastEventEventNumber;
 
   public:
+
+    void SaveConfig(ByteSink& bs) const
+    {
+      {
+        T temp = m_state;
+        AtomSerializer<AC> as(temp);
+        bs.Printf(",%@", &as);
+      }
+      {
+        T temp = m_base;
+        AtomSerializer<AC> as(temp);
+        bs.Printf(",%@", &as);
+      }
+    }
+
+    bool LoadConfig(LineCountingByteSource & bs)
+    {
+      T temp_m_state;
+      AtomSerializer<AC> as1(temp_m_state);
+      if (2 != bs.Scanf(",%@", &as1))
+        return false;
+
+      T temp_m_base;
+      AtomSerializer<AC> as2(temp_m_base);
+      if (2 != bs.Scanf(",%@", &as2))
+        return false;
+
+      m_state = temp_m_state;
+      m_base = temp_m_base;
+
+      return true;
+    }
 
     void SetLastEventEventNumber(u64 eventNumber)
     {

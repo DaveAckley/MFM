@@ -67,6 +67,40 @@ namespace MFM
       , m_isLiveSite(true)
     { }
 
+    void SaveConfig(ByteSink& bs) const
+    {
+      bs.Printf(",%D", m_isLiveSite);
+      // 64 bit stuff not yet exposed via Printf..
+      bs.Print(m_eventCount, Format::LXX64);
+      bs.Print(m_lastChangedEventNumber, Format::LXX64);
+      bs.Print(m_lastEventEventNumber, Format::LXX64);
+      m_base.SaveConfig(bs);
+    }
+
+    bool LoadConfig(LineCountingByteSource& bs)
+    {
+      u32 tmp_m_isLiveSite;
+      if (2 != bs.Scanf(",%D", &tmp_m_isLiveSite)) return false;
+
+      u64 tmp_m_eventCount;
+      u64 tmp_m_lastChangedEventNumber;
+      u64 tmp_m_lastEventEventNumber;
+
+      // 64 bit stuff not yet exposed via Scanf..
+      if (!bs.Scan(tmp_m_eventCount, Format::LXX64)) return false;
+      if (!bs.Scan(tmp_m_lastChangedEventNumber, Format::LXX64)) return false;
+      if (!bs.Scan(tmp_m_lastEventEventNumber, Format::LXX64)) return false;
+
+      if (!m_base.LoadConfig(bs))
+        return false;
+
+      m_isLiveSite = tmp_m_isLiveSite;
+      m_eventCount = tmp_m_eventCount;
+      m_lastChangedEventNumber = tmp_m_lastChangedEventNumber;
+      m_lastEventEventNumber = tmp_m_lastEventEventNumber;
+      return true;
+    }
+
     void Sense(SiteTouchType stt)
     {
       m_base.GetSensory().Touch(stt, m_lastEventEventNumber);

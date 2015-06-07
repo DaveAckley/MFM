@@ -42,6 +42,7 @@
 #include "UlamClass.h"
 #include "LonglivedLock.h"
 #include "OverflowableCharBufferByteSink.h"  /* for OString16 */
+#include "LineCountingByteSource.h"
 
 namespace MFM
 {
@@ -110,6 +111,10 @@ namespace MFM
     const u32 OWNED_SIDE;
 
     Tile(const u32 tileSide, S * sites) ;
+
+    void SaveTile(ByteSink & to) const ;
+
+    bool LoadTile(LineCountingByteSource & from) ;
 
     /**
        Get a const reference to the Site at position \c index of the
@@ -380,29 +385,10 @@ namespace MFM
     u64 m_lockAttemptsSucceeded;
 
     /**
-     * The event number (GetEventsExecuted()) as of the last time the
-     * contents of site changed.
-     */
-    //    u64 m_lastChangedEventNumber[TILE_SIDE][TILE_SIDE];
-
-    /**
-     * The event number (GetEventsExecuted()) as of the last time the
-     * site had an event.  Signed so we can initialize it to less than
-     * zero for a running start.
-     */
-    //    s64 m_lastEventEventNumber[TILE_SIDE][TILE_SIDE];
-
-    /**
      * The coord of the last event (the one that caused
      * m_lastEventEventNumber to change most recently).
      */
     SPoint m_lastEventCenterOwned;
-
-    /**
-     * The number of events which have occurred in every individual
-     * site. Indexed as m_siteEvents[x][y], x,y : 0..TILE_SIDE-1.
-     */
-    //u64 m_siteEvents[TILE_SIDE][TILE_SIDE];
 
     EventWindow<EC> m_window;
 
@@ -452,16 +438,6 @@ namespace MFM
        value 10 adds none.  Default value: 3.
      */
     u32 m_warpFactor;
-
-#if 0
-    /**
-     * Sets m_executingWindow to a new random location in this
-     * Tile. This new location is guaranteed to be valid and ready for
-     * execution.
-     */
-    void OpenEventWindow();
-    void CloseEventWindow();
-#endif
 
     /**
      * Compute the coordinates of \c atomLoc in a neighboring tile.
@@ -513,23 +489,6 @@ namespace MFM
        not currently perform it.
      */
     bool ConsiderStateChange() ;
-
-#if 0
-    /**
-       Try to start an(other) event in this Tile.  Return true if any
-       possibly valuable work was done.  On a true return, all the
-       following have happened, in order:
-
-       <ol> <li>a event center coordinate has been selected, <li>the
-       EventWindow has been allocated, <li>any necessary locks have
-       been acquired, <li>the event window has been loaded from the
-       Tile, <li>the center atom element behavior has been run,
-       <li>any site changes have been written back to the local Tile,
-       and <li>'UpdateBegin' packets have been shipped to (though not
-       necessarily received by) all relevant neighbors,
-     */
-    bool InitiateEvent() ;
-#endif
 
     bool AdvanceComputation() ;
 
@@ -1053,6 +1012,17 @@ namespace MFM
     {
       return GetAtom(x + EVENT_WINDOW_RADIUS, y + EVENT_WINDOW_RADIUS);
     }
+
+    void SaveSite(const SPoint &siteInTile, ByteSink& bs) const
+    {
+      GetSite(siteInTile).SaveConfig(bs);
+    }
+
+    bool LoadSite(const SPoint &siteInTile, LineCountingByteSource& bs)
+    {
+      return GetSite(siteInTile).LoadConfig(bs);
+    }
+
 
     /**
      * Gets the site event count for a specified point in this Tile.
