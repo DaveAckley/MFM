@@ -112,6 +112,11 @@ namespace MFM
     void RenderEventWindow(Drawing & drawing, SPoint& offset, Tile<EC>& tile, bool renderCache);
 
   public:
+    bool LoadDetails(ByteSource & source) ;
+
+    void SaveDetails(ByteSink & sink) const ;
+
+
     const char * GetMemDrawName() const;
 
     TileRenderer();
@@ -123,6 +128,11 @@ namespace MFM
     void SetDimensions(Point<u32> dimensions)
     {
       m_dimensions = dimensions;
+    }
+
+    UPoint GetDimensions() const
+    {
+      return m_dimensions;
     }
 
     bool* GetGridEnabledPointer()
@@ -165,6 +175,11 @@ namespace MFM
       m_heatmapSelector++;
       m_heatmapSelector %= MAX_HEATMAP_SELECTIONS;
 
+      return m_heatmapSelector;
+    }
+
+    u32 GetHeatmapSelector()
+    {
       return m_heatmapSelector;
     }
 

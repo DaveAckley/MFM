@@ -4,6 +4,60 @@
 namespace MFM
 {
 
+  void TileRenderer::SaveDetails(ByteSink & sink) const
+  {
+    sink.Printf(",%D%D%D%D%D%D",
+                m_drawGrid,
+                m_drawMemRegions,
+                m_drawDataHeat,
+                m_atomDrawSize,
+                m_renderSquares,
+                m_heatmapSelector);
+
+    {
+      SPoint tmp(m_windowTL);
+      SPointSerializer sp(tmp);
+      sink.Printf(",%@",&sp);
+    }
+    {
+      UPoint tmp(m_dimensions);
+      UPointSerializer up(tmp);
+      sink.Printf(",%@",&up);
+    }
+  }
+
+  bool TileRenderer::LoadDetails(ByteSource & source)
+  {
+    u32 tmp[6];
+    if (7 != source.Scanf(",%D%D%D%D%D%D",
+                          &tmp[0], &tmp[1], &tmp[2],
+                          &tmp[3], &tmp[4], &tmp[5]))
+      return false;
+
+    SPoint tmps(m_windowTL);
+    SPointSerializer sp(tmps);
+    if (2 != source.Scanf(",%@",&sp))
+      return false;
+
+    UPoint tmpu(m_dimensions);
+    UPointSerializer up(tmpu);
+    if (2 != source.Scanf(",%@",&up))
+      return false;
+
+    m_drawGrid = tmp[0];
+    m_drawMemRegions = (DrawRegionType) tmp[1];
+    m_drawDataHeat = tmp[2];
+    m_atomDrawSize = tmp[3];
+    m_renderSquares = tmp[4];
+    m_heatmapSelector = tmp[5];
+
+    m_windowTL = tmps;
+    m_dimensions = tmpu;
+
+    return true;
+  }
+
+
 #define MAX_ATOM_SIZE 256
 
   TileRenderer::TileRenderer()

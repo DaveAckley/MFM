@@ -9,6 +9,23 @@
 namespace MFM {
 
   template <class GC>
+  void StatsRenderer<GC>::SaveDetails(ByteSink & sink) const
+  {
+    sink.Printf(",%d",m_displayAER);
+  }
+
+  template <class GC>
+  bool StatsRenderer<GC>::LoadDetails(ByteSource & source)
+  {
+    u32 daer;
+    if (2!=source.Scanf(",%d",&daer))
+      return false;
+
+    m_displayAER = daer;
+    return true;
+  }
+
+  template <class GC>
   void StatsRenderer<GC>::RenderGridStatistics(Drawing & drawing, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool endOfEpoch, u32 aepsInCurrentEpoch)
   {
     // Extract short names for parameter types

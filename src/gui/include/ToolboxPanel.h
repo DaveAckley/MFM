@@ -180,7 +180,7 @@ namespace MFM
       virtual void OnClick(u8 button)
       {
         *m_toolboxTool = m_tool;
-        m_parent->ActivateButton(this);
+        m_parent->ActivateButton(this->m_tool);
       }
     };
 
@@ -277,7 +277,7 @@ namespace MFM
 
     EditingTool* m_toolPtr;
 
-    ToolButton* m_activatedButton;
+    u32 m_activatedButtonIndex;
 
     ToolButton m_toolButtons[ELEMENT_BOX_BUTTON_COUNT];
 
@@ -390,7 +390,7 @@ namespace MFM
     ToolboxPanel(EditingTool* toolPtr) :
       m_bigText(false),
       m_toolPtr(toolPtr),
-      m_activatedButton(m_toolButtons),
+      m_activatedButtonIndex(0),
       m_primaryElement(&Element_Empty<EC>::THE_INSTANCE),
       m_secondaryElement(&Element_Empty<EC>::THE_INSTANCE),
       m_heldElementCount(0),
@@ -596,7 +596,7 @@ namespace MFM
         return 0;
       }
 
-      switch(m_activatedButton->GetEditingTool())
+      switch(m_toolButtons[m_activatedButtonIndex].GetEditingTool())
       {
       case TOOL_SELECTOR:
       case TOOL_ATOM_SELECTOR:
@@ -627,14 +627,13 @@ namespace MFM
       m_heldElements[m_heldElementCount++] = element;
     }
 
-    void ActivateButton(ToolButton* button)
+    void ActivateButton(u32 buttonIndex)
     {
-      if(m_activatedButton)
-      {
-        m_activatedButton->SetActivated(false);
-      }
-      m_activatedButton = button;
-      button->SetActivated(true);
+      if (buttonIndex >= ELEMENT_BOX_BUTTON_COUNT)
+        FAIL(ILLEGAL_ARGUMENT);
+      m_toolButtons[m_activatedButtonIndex].SetActivated(false);
+      m_activatedButtonIndex = buttonIndex;
+      m_toolButtons[m_activatedButtonIndex].SetActivated(true);
     }
 
     EditingTool GetSelectedTool()
@@ -740,6 +739,37 @@ namespace MFM
       }
 
     }
+
+    void SaveDetails(ByteSink & sink) const
+    {
+      sink.Printf(",%D%D%D",
+                  m_bigText,
+                  m_activatedButtonIndex,
+                  m_brushSize);
+    }
+
+    bool LoadDetails(ByteSource & source)
+    {
+      u32 tmp_m_bigText;
+      u32 tmp_m_activatedButtonIndex;
+      u32 tmp_m_brushSize;
+      if (4 != source.Scanf(",%D%D%D",
+                            &tmp_m_bigText,
+                            &tmp_m_activatedButtonIndex,
+                            &tmp_m_brushSize))
+        return false;
+
+      m_bigText = tmp_m_bigText;
+      m_brushSize = tmp_m_brushSize;
+
+      ActivateButton(tmp_m_activatedButtonIndex);
+
+      MFM_API_ASSERT_NONNULL(m_toolPtr);
+      *m_toolPtr = (EditingTool) m_activatedButtonIndex;
+
+      return true;
+    }
+
   };
 }
 

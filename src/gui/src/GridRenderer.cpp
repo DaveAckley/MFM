@@ -2,6 +2,24 @@
 
 namespace MFM
 {
+  void GridRenderer::SaveDetails(ByteSink & sink) const
+  {
+    sink.Printf(",%d",m_renderTilesSeparated);
+    sink.Printf(",%d",m_currentEWRenderMode);
+    m_tileRenderer.SaveDetails(sink);
+  }
+
+  bool GridRenderer::LoadDetails(ByteSource & source)
+  {
+    u32 tmp_m_renderTilesSeparated;
+    u32 tmp_m_currentEWRenderMode;
+    if (2 != source.Scanf(",%d",&tmp_m_renderTilesSeparated)) return false;
+    if (2 != source.Scanf(",%d",&tmp_m_currentEWRenderMode)) return false;
+    if (!m_tileRenderer.LoadDetails(source)) return false;
+    m_renderTilesSeparated = tmp_m_renderTilesSeparated;
+    m_currentEWRenderMode = (EventWindowRenderMode) tmp_m_currentEWRenderMode;
+    return true;
+  }
 
   GridRenderer::GridRenderer() :
     m_cloneOrigin(-1, -1)
@@ -24,12 +42,11 @@ namespace MFM
 
   UPoint GridRenderer::GetDimensions() const
   {
-    return m_dimensions;
+    return m_tileRenderer.GetDimensions();
   }
 
   void GridRenderer::SetDimensions(Point<u32> dimensions)
   {
-    m_dimensions = dimensions;
     m_tileRenderer.SetDimensions(dimensions);
   }
 

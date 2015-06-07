@@ -219,6 +219,9 @@ namespace MFM {
       }
     };
 
+    bool LoadDetails(ByteSource & source) ;
+    void SaveDetails(ByteSink & sink) const ;
+
   private:
     UPoint m_dimensions;
     SPoint m_drawPoint;

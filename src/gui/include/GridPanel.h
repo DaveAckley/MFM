@@ -70,6 +70,18 @@ namespace MFM
     typedef Grid<GC> OurGrid;
     typedef Tile<EC> OurTile;
 
+    bool LoadDetails(ByteSource & source)
+    {
+      MFM_API_ASSERT_NONNULL(m_grend);
+      return m_grend->LoadDetails(source);
+    }
+
+    void SaveDetails(ByteSink & sink) const
+    {
+      MFM_API_ASSERT_NONNULL(m_grend);
+      m_grend->SaveDetails(sink);
+    }
+
    private:
     GridRenderer* m_grend;
     OurGrid* m_mainGrid;
@@ -118,6 +130,11 @@ namespace MFM
     u32 IncrementHeatmapSelector()
     {
       return m_grend->IncrementHeatmapSelector();
+    }
+
+    u32 GetHeatmapSelector()
+    {
+      return m_grend->GetHeatmapSelector();
     }
 
     AtomViewPanel<GC> * GetAtomViewPanel()

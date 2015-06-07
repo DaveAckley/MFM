@@ -31,6 +31,8 @@
 #include "Drawing.h"
 #include "TileRenderer.h"
 #include "AtomViewPanel.h"
+#include "ByteSource.h"
+#include "ByteSink.h"
 
 namespace MFM
 {
@@ -49,7 +51,7 @@ namespace MFM
 
     TileRenderer m_tileRenderer;
 
-    UPoint m_dimensions;
+    //    UPoint m_dimensions;
 
     SPoint m_selectedTile;
 
@@ -77,6 +79,10 @@ namespace MFM
 
    public:
 
+    bool LoadDetails(ByteSource & source) ;
+
+    void SaveDetails(ByteSink & sink) const ;
+
     GridRenderer(TileRenderer* tr);
 
     GridRenderer();
@@ -92,6 +98,10 @@ namespace MFM
     u32 IncrementHeatmapSelector()
     {
       return m_tileRenderer.IncrementHeatmapSelector();
+    }
+    u32 GetHeatmapSelector()
+    {
+      return m_tileRenderer.GetHeatmapSelector();
     }
 
     void SetEventWindowRenderMode(EventWindowRenderMode mode);
