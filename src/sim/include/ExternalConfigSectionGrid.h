@@ -77,11 +77,27 @@ namespace MFM
   };
 
   template <class GC>
+  struct FunctionCallTile : public ConfigFunctionCallGrid<GC>
+  {
+    FunctionCallTile(ExternalConfigSectionGrid<GC> & ec) ;
+    virtual bool Parse() ;
+  };
+
+  template <class GC>
+  struct FunctionCallSite : public ConfigFunctionCallGrid<GC>
+  {
+    FunctionCallSite(ExternalConfigSectionGrid<GC> & ec) ;
+    virtual bool Parse() ;
+  };
+
+#if 0
+  template <class GC>
   struct FunctionCallDisableTile : public ConfigFunctionCallGrid<GC>
   {
     FunctionCallDisableTile(ExternalConfigSectionGrid<GC> & ec) ;
     virtual bool Parse() ;
   };
+#endif
 
   template <class GC>
   struct FunctionCallSetElementParameter : public ConfigFunctionCallGrid<GC>
@@ -116,7 +132,14 @@ namespace MFM
 
     virtual void WriteSection(ByteSink & byteSink);
 
+    virtual bool ContinueOnErrors() const
+    {
+      return false;
+    }
+
     virtual bool ReadInit() ;
+
+    virtual bool ReadFinalize() ;
 
     bool RegisterElement(const UUID & uuid, OString16 & nick) ;
 
@@ -158,9 +181,10 @@ namespace MFM
 
     FunctionCallDefineGridSize<GC> m_fcDefineGridSize;
     FunctionCallRegisterElement<GC> m_fcRegisterElement;
+    FunctionCallTile<GC> m_fcTile;
     FunctionCallGA<GC> m_fcGA;
+    FunctionCallSite<GC> m_fcSite;
     FunctionCallSetElementParameter<GC> m_fcSetElementParameter;
-    FunctionCallDisableTile<GC> m_fcDisableTile;
 
   };
 }

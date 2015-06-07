@@ -141,6 +141,66 @@ namespace MFM
   }
 
   template <class GC>
+  FunctionCallTile<GC>::FunctionCallTile(ExternalConfigSectionGrid<GC> & ec)
+    : ConfigFunctionCallGrid<GC>("Tile",ec)
+  {
+    ec.RegisterFunction(*this);
+  }
+
+  template <class GC>
+  bool FunctionCallTile<GC>::Parse()
+  {
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef typename EC::ATOM_CONFIG AC;
+    enum { BPA = AC::BITS_PER_ATOM };
+
+    ExternalConfigSectionGrid<GC> & ec = this->GetECSG();
+    LineCountingByteSource & in = ec.GetByteSource();
+    Grid<GC> & grid = ec.GetGrid();
+    in.SkipWhitespace();
+
+    u32 x, y;
+    if (3 != in.Scanf("%d,%d",&x,&y))
+      return false;
+    if (x >= grid.GetWidth() || y >= grid.GetHeight())
+      return false;
+    if (!grid.GetTile(SPoint(x,y)).LoadTile(in))
+      return false;
+    return in.Scanf(")") == 1;
+  }
+
+
+  template <class GC>
+  FunctionCallSite<GC>::FunctionCallSite(ExternalConfigSectionGrid<GC> & ec)
+    : ConfigFunctionCallGrid<GC>("Site",ec)
+  {
+    ec.RegisterFunction(*this);
+  }
+
+  template <class GC>
+  bool FunctionCallSite<GC>::Parse()
+  {
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef typename EC::ATOM_CONFIG AC;
+    enum { BPA = AC::BITS_PER_ATOM };
+
+    ExternalConfigSectionGrid<GC> & ec = this->GetECSG();
+    LineCountingByteSource & in = ec.GetByteSource();
+    in.SkipWhitespace();
+
+    s32 tmp_x, tmp_y;
+    if (3 != in.Scanf("%d,%d",&tmp_x,&tmp_y))
+      return false;
+
+    if (!ec.GetGrid().LoadSite(SPoint(tmp_x,tmp_y), in))
+      return false;
+
+    return in.Scanf(")") == 1;
+  }
+
+
+#if 0
+  template <class GC>
   FunctionCallDisableTile<GC>::FunctionCallDisableTile(ExternalConfigSectionGrid<GC> & ec)
     : ConfigFunctionCallGrid<GC>("DisableTile",ec)
   {
@@ -178,6 +238,7 @@ namespace MFM
 
     return this->SkipToNextArg(in) == 0;
   }
+#endif
 
   template <class GC>
   FunctionCallSetElementParameter<GC>::FunctionCallSetElementParameter(ExternalConfigSectionGrid<GC> & ec)
@@ -237,15 +298,23 @@ namespace MFM
     , m_elementRegistry(grid.GetElementRegistry())
     , m_fcDefineGridSize(*this)
     , m_fcRegisterElement(*this)
+    , m_fcTile(*this)
     , m_fcGA(*this)
+    , m_fcSite(*this)
     , m_fcSetElementParameter(*this)
-    , m_fcDisableTile(*this)
   { }
 
   template<class GC>
   bool ExternalConfigSectionGrid<GC>::ReadInit()
   {
     m_grid.Clear();
+    return true;
+  }
+
+  template<class GC>
+  bool ExternalConfigSectionGrid<GC>::ReadFinalize()
+  {
+    m_grid.RecountAtoms();
     return true;
   }
 
@@ -292,7 +361,19 @@ namespace MFM
     }
     byteSink.WriteNewline();
 
-    /* Then, GA all live atoms. */
+    /* Then write the tile config */
+    for(u32 y = 0; y < m_grid.GetHeight(); y++)
+    {
+      for(u32 x = 0; x < m_grid.GetWidth(); x++)
+      {
+        byteSink.Printf("Tile(%d,%d",x,y);
+        m_grid.GetTile(SPoint(x,y)).SaveTile(byteSink);
+        byteSink.Printf(")\n");
+      }
+    }
+
+    /* Then, write ALL the damn sites, */
+    /* and GA all live atoms. */
 
     /* The grid size in sites excluding caches */
     const u32 gridWidth = m_grid.GetWidthSites();
@@ -303,6 +384,11 @@ namespace MFM
       for(u32 x = 0; x < gridWidth; x++)
       {
         SPoint currentPt(x, y);
+
+        byteSink.Printf("Site(%d,%d",x,y);
+        m_grid.SaveSite(currentPt,byteSink);
+        byteSink.Printf(")\n");
+
         /* No need to write empties since they are the default */
         if(!Atom<AC>::IsType(*m_grid.GetAtom(currentPt),
                              Element_Empty<EC>::THE_INSTANCE.GetType()))
@@ -330,6 +416,9 @@ namespace MFM
     }
     byteSink.WriteNewline();
 
+#if 0 // Tile config inbound off the port bow!
+    // XXX Every tile always shows up as disabled?
+    // XXX and we should have a TileConfig instead of this anyway
     /* Set Tile geometry */
     for(u32 y = 0; y < m_grid.GetHeight(); y++)
     {
@@ -345,6 +434,7 @@ namespace MFM
         }
       }
     }
+#endif
   }
 
   template<class GC>
