@@ -37,18 +37,20 @@
 namespace MFM {
 
   //Casts
-  inline s32 _Int32ToInt32(s32 val, const u32 srcbitwidth, const u32 destbitwidth)
+  inline s32 _Int32ToInt32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
+    s32 extval = _SignExtend32(val, srcbitwidth);
     const s32 maxdestval = _GetNOnes32(destbitwidth-1);  //positive
     const s32 mindestval = ~maxdestval;
-    return CLAMP<s32>(mindestval, maxdestval, val);
+    return CLAMP<s32>(mindestval, maxdestval, extval);
   }
 
-  inline s64 _Int64ToInt64(s64 val, const u32 srcbitwidth, const u32 destbitwidth)
+  inline s64 _Int64ToInt64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
+    s64 extval = _SignExtend64(val, srcbitwidth);
     const s64 maxdestval = _GetNOnes64(destbitwidth-1);
     const s64 mindestval = ~maxdestval;
-    return CLAMP<s64>(mindestval, maxdestval, val);
+    return CLAMP<s64>(mindestval, maxdestval, extval);
   }
 
   inline s32 _Unsigned32ToInt32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
@@ -110,14 +112,16 @@ namespace MFM {
     return (u64) ((count1s > (s32) (srcbitwidth - count1s)) ? _GetNOnes64(destbitwidth) : 0);
   }
 
-  inline u32 _Int32ToBool32(s32 val, const u32 srcbitwidth, const u32 destbitwidth)
+  inline u32 _Int32ToBool32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    return  (u32) (((val & _GetNOnes32(srcbitwidth)) != 0) ? _GetNOnes32(destbitwidth) : 0);
+    s32 extval = _SignExtend32(val, srcbitwidth);
+    return  (u32) (((extval & _GetNOnes32(srcbitwidth)) != 0) ? _GetNOnes32(destbitwidth) : 0);
   }
 
-  inline u64 _Int64ToBool64(s64 val, const u32 srcbitwidth, const u32 destbitwidth)
+  inline u64 _Int64ToBool64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    return  (u64) (((val & _GetNOnes64(srcbitwidth)) != 0) ? _GetNOnes64(destbitwidth) : 0);
+    s64 extval = _SignExtend64(val, srcbitwidth);
+    return  (u64) (((extval & _GetNOnes64(srcbitwidth)) != 0) ? _GetNOnes64(destbitwidth) : 0);
   }
 
   inline u32 _Unsigned32ToBool32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
@@ -177,24 +181,28 @@ namespace MFM {
   }
 
   //To UNSIGNED:
-  inline u32 _Int32ToUnsigned32(s32 val, const u32 srcbitwidth, const u32 destbitwidth)
+  inline u32 _Int32ToUnsigned32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    if(val <= 0)
+    s32 extval = _SignExtend32(val, srcbitwidth);
+
+    if(extval <= 0)
       return 0;
 
     const u32 maxdestval = _GetNOnes32(destbitwidth);
     const u32 mindestval = 0;
-    return CLAMP<u32>(mindestval, maxdestval, (u32) val);
+    return CLAMP<u32>(mindestval, maxdestval, (u32) extval);
   }
 
-  inline u64 _Int64ToUnsigned64(s64 val, const u32 srcbitwidth, const u32 destbitwidth)
+  inline u64 _Int64ToUnsigned64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    if(val <= 0)
+    s64 extval = _SignExtend64(val, srcbitwidth);
+
+    if(extval <= 0)
       return 0;
 
     const u64 maxdestval = _GetNOnes64(destbitwidth);
     const u64 mindestval = 0;
-    return CLAMP<u64>(mindestval, maxdestval, (u64) val);
+    return CLAMP<u64>(mindestval, maxdestval, (u64) extval);
   }
 
   inline u32 _Unsigned32ToUnsigned32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
@@ -244,7 +252,7 @@ namespace MFM {
   }
 
   //To BITS:
-  inline u32 _Int32ToBits32(s32 val, const u32 srcbitwidth, const u32 destbitwidth)
+  inline u32 _Int32ToBits32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
     return (u32) (val & _GetNOnes32(srcbitwidth));
   }
@@ -295,18 +303,20 @@ namespace MFM {
   }
 
   //To UNARY:
-  inline u32 _Int32ToUnary32(s32 val, const u32 srcbitwidth, const u32 destbitwidth)
+  inline u32 _Int32ToUnary32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
+    s32 extval = _SignExtend32(val, srcbitwidth);
     const s32 maxdestval = destbitwidth;
     const s32 mindestval = 0;
-    return (u32) _GetNOnes32(CLAMP<s32>(mindestval, maxdestval, val));
+    return (u32) _GetNOnes32(CLAMP<s32>(mindestval, maxdestval, extval));
   }
 
-  inline u64 _Int64ToUnary64(s64 val, const u32 srcbitwidth, const u32 destbitwidth)
+  inline u64 _Int64ToUnary64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
+    s64 extval = _SignExtend64(val, srcbitwidth);
     const s64 maxdestval = destbitwidth;
     const s64 mindestval = 0;
-    return (u64) _GetNOnes64(CLAMP<s64>(mindestval, maxdestval, val));
+    return (u64) _GetNOnes64(CLAMP<s64>(mindestval, maxdestval, extval));
   }
 
   inline u32 _Unsigned32ToUnary32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
@@ -591,88 +601,78 @@ namespace MFM {
   }
 
   // Ariths On INT:
-  inline s32 _BinOpAddInt32(s32 vala, s32 valb, u32 bitwidth)
+  inline s32 _BinOpAddInt32(u32 vala, u32 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes32(bitwidth);
-    s32 extvala = _SignExtend32(vala & mask, bitwidth);
-    s32	extvalb = _SignExtend32(valb & mask, bitwidth);
-    return _Int32ToInt32(extvala + extvalb, 32, bitwidth);
+    s32 extvala = _SignExtend32(vala, bitwidth);
+    s32	extvalb = _SignExtend32(valb, bitwidth);
+    return _Int32ToInt32((u32) extvala + extvalb, 32, bitwidth); //wants u32
   }
 
-  inline s64 _BinOpAddInt64(s64 vala, s64 valb, u32 bitwidth)
+  inline s64 _BinOpAddInt64(u64 vala, u64 valb, u32 bitwidth)
   {
-    u64 mask = _GetNOnes64(bitwidth);
-    s64 extvala = _SignExtend64(vala & mask, bitwidth);
-    s64	extvalb = _SignExtend64(valb & mask, bitwidth);
-    return _Int64ToInt64(extvala + extvalb, 64, bitwidth);
+    s64 extvala = _SignExtend64(vala, bitwidth);
+    s64	extvalb = _SignExtend64(valb, bitwidth);
+    return _Int64ToInt64((u64) extvala + extvalb, 64, bitwidth);
   }
 
-  inline s32 _BinOpSubtractInt32(s32 vala, s32 valb, u32 bitwidth)
+  inline s32 _BinOpSubtractInt32(u32 vala, u32 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes32(bitwidth);
-    s32 extvala = _SignExtend32(vala & mask, bitwidth);
-    s32	extvalb = _SignExtend32(valb & mask, bitwidth);
-    return _Int32ToInt32(extvala - extvalb, 32, bitwidth);
+    s32 extvala = _SignExtend32(vala, bitwidth);
+    s32	extvalb = _SignExtend32(valb, bitwidth);
+    return _Int32ToInt32((u32) extvala - extvalb, 32, bitwidth);
   }
 
-  inline s64 _BinOpSubtractInt64(s64 vala, s64 valb, u32 bitwidth)
+  inline s64 _BinOpSubtractInt64(u64 vala, u64 valb, u32 bitwidth)
   {
-    u64 mask = _GetNOnes64(bitwidth);
-    s64 extvala = _SignExtend64(vala & mask, bitwidth);
-    s64	extvalb = _SignExtend64(valb & mask, bitwidth);
-    return _Int64ToInt64(extvala - extvalb, 64, bitwidth);
+    s64 extvala = _SignExtend64(vala, bitwidth);
+    s64	extvalb = _SignExtend64(valb, bitwidth);
+    return _Int64ToInt64((u64) extvala - extvalb, 64, bitwidth);
   }
 
-  inline s32 _BinOpMultiplyInt32(s32 vala, s32 valb, u32 bitwidth)
+  inline s32 _BinOpMultiplyInt32(u32 vala, u32 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes32(bitwidth);
-    s32 extvala = _SignExtend32(vala & mask, bitwidth);
-    s32	extvalb = _SignExtend32(valb & mask, bitwidth);
-    return _Int32ToInt32(extvala * extvalb, 32, bitwidth);
+    s32 extvala = _SignExtend32(vala, bitwidth);
+    s32	extvalb = _SignExtend32(valb, bitwidth);
+    return _Int32ToInt32((u32) extvala * extvalb, 32, bitwidth);
   }
 
-  inline s64 _BinOpMultiplyInt64(s64 vala, s64 valb, u32 bitwidth)
+  inline s64 _BinOpMultiplyInt64(u64 vala, u64 valb, u32 bitwidth)
   {
-    u64 mask = _GetNOnes64(bitwidth);
-    s64 extvala = _SignExtend64(vala & mask, bitwidth);
-    s64	extvalb = _SignExtend64(valb & mask, bitwidth);
-    return _Int64ToInt64(extvala * extvalb, 64, bitwidth);
+    s64 extvala = _SignExtend64(vala, bitwidth);
+    s64	extvalb = _SignExtend64(valb, bitwidth);
+    return _Int64ToInt64((u64) extvala * extvalb, 64, bitwidth);
   }
 
-  inline s32 _BinOpDivideInt32(s32 vala, s32 valb, u32 bitwidth)
+  inline s32 _BinOpDivideInt32(u32 vala, u32 valb, u32 bitwidth)
   {
     MFM_API_ASSERT_NONZERO(valb);
-    u32 mask = _GetNOnes32(bitwidth);
-    s32 extvala = _SignExtend32(vala & mask, bitwidth);
-    s32	extvalb = _SignExtend32(valb & mask, bitwidth);
-    return _Int32ToInt32(extvala / extvalb, 32, bitwidth);
+    s32 extvala = _SignExtend32(vala, bitwidth);
+    s32	extvalb = _SignExtend32(valb, bitwidth);
+    return _Int32ToInt32((u32) extvala / extvalb, 32, bitwidth);
   }
 
-  inline s64 _BinOpDivideInt64(s64 vala, s64 valb, u32 bitwidth)
+  inline s64 _BinOpDivideInt64(u64 vala, u64 valb, u32 bitwidth)
   {
     MFM_API_ASSERT_NONZERO(valb);
-    u64 mask = _GetNOnes64(bitwidth);
-    s64 extvala = _SignExtend64(vala & mask, bitwidth);
-    s64	extvalb = _SignExtend64(valb & mask, bitwidth);
-    return _Int64ToInt64(extvala / extvalb, 64, bitwidth);
+    s64 extvala = _SignExtend64(vala, bitwidth);
+    s64	extvalb = _SignExtend64(valb, bitwidth);
+    return _Int64ToInt64((u64) extvala / extvalb, 64, bitwidth);
   }
 
-  inline s32 _BinOpModInt32(s32 vala, s32 valb, u32 bitwidth)
+  inline s32 _BinOpModInt32(u32 vala, u32 valb, u32 bitwidth)
   {
     MFM_API_ASSERT_NONZERO(valb);
-    u32 mask = _GetNOnes32(bitwidth);
-    s32 extvala = _SignExtend32(vala & mask, bitwidth);
-    s32	extvalb = _SignExtend32(valb & mask, bitwidth);
-    return _Int32ToInt32(extvala % extvalb, 32, bitwidth);
+    s32 extvala = _SignExtend32(vala, bitwidth);
+    s32	extvalb = _SignExtend32(valb, bitwidth);
+    return _Int32ToInt32((u32) extvala % extvalb, 32, bitwidth);
   }
 
-  inline s64 _BinOpModInt64(s64 vala, s64 valb, u32 bitwidth)
+  inline s64 _BinOpModInt64(u64 vala, u64 valb, u32 bitwidth)
   {
     MFM_API_ASSERT_NONZERO(valb);
-    u64 mask = _GetNOnes64(bitwidth);
-    s64 extvala = _SignExtend64(vala & mask, bitwidth);
-    s64	extvalb = _SignExtend64(valb & mask, bitwidth);
-    return _Int64ToInt64(extvala % extvalb, 64, bitwidth);
+    s64 extvala = _SignExtend64(vala, bitwidth);
+    s64	extvalb = _SignExtend64(valb, bitwidth);
+    return _Int64ToInt64((u64) extvala % extvalb, 64, bitwidth);
   }
 
   // Ariths On UNSIGNED:
@@ -691,13 +691,13 @@ namespace MFM {
   inline u32 _BinOpSubtractUnsigned32(u32 vala, u32 valb, u32 bitwidth)
   {
     u32 mask = _GetNOnes32(bitwidth);
-    return _Unsigned32ToUnsigned32((vala & mask) - (valb & mask), bitwidth, bitwidth);
+    return _Int32ToUnsigned32((vala & mask) - (valb & mask), bitwidth, bitwidth);
   }
 
   inline u64 _BinOpSubtractUnsigned64(u64 vala, u64 valb, u32 bitwidth)
   {
     u64 mask = _GetNOnes64(bitwidth);
-    return _Unsigned64ToUnsigned64((vala & mask) - (valb & mask), bitwidth, bitwidth);
+    return _Int64ToUnsigned64((vala & mask) - (valb & mask), bitwidth, bitwidth);
   }
 
   inline u32 _BinOpMultiplyUnsigned32(u32 vala, u32 valb, u32 bitwidth)
@@ -744,76 +744,76 @@ namespace MFM {
   //convert to binary before the operation; then convert back to unary
   inline u32 _BinOpAddUnary32(u32 vala, u32 valb, u32 bitwidth)
   {
-    s32 binvala = _Unary32ToInt32(vala, bitwidth, 32);
-    s32 binvalb = _Unary32ToInt32(valb, bitwidth, 32);
-    return _Int32ToUnary32(binvala + binvalb, 32, bitwidth);
+    u32 binvala = _Unary32ToUnsigned32(vala, bitwidth, 32);
+    u32 binvalb = _Unary32ToUnsigned32(valb, bitwidth, 32);
+    return _Unsigned32ToUnary32(binvala + binvalb, 32, bitwidth);
   }
 
   inline u64 _BinOpAddUnary64(u64 vala, u64 valb, u32 bitwidth)
   {
-    s64 binvala = _Unary64ToInt64(vala, bitwidth, 64);
-    s64 binvalb = _Unary64ToInt64(valb, bitwidth, 64);
-    return _Int64ToUnary64(binvala + binvalb, 64, bitwidth);
+    u64 binvala = _Unary64ToUnsigned64(vala, bitwidth, 64);
+    u64 binvalb = _Unary64ToUnsigned64(valb, bitwidth, 64);
+    return _Unsigned64ToUnary64(binvala + binvalb, 64, bitwidth);
   }
 
   inline u32 _BinOpSubtractUnary32(u32 vala, u32 valb, u32 bitwidth)
   {
-    s32 binvala = _Unary32ToInt32(vala, bitwidth, 32);
-    s32 binvalb = _Unary32ToInt32(valb, bitwidth, 32);
+    u32 binvala = _Unary32ToUnsigned32(vala, bitwidth, 32);
+    u32 binvalb = _Unary32ToUnsigned32(valb, bitwidth, 32);
     return _Int32ToUnary32(binvala - binvalb, 32, bitwidth);
   }
 
   inline u64 _BinOpSubtractUnary64(u64 vala, u64 valb, u32 bitwidth)
   {
-    s64 binvala = _Unary64ToInt64(vala, bitwidth, 64);
-    s64 binvalb = _Unary64ToInt64(valb, bitwidth, 64);
+    u64 binvala = _Unary64ToUnsigned64(vala, bitwidth, 64);
+    u64 binvalb = _Unary64ToUnsigned64(valb, bitwidth, 64);
     return _Int64ToUnary64(binvala - binvalb, 64, bitwidth);
   }
 
   inline u32 _BinOpMultiplyUnary32(u32 vala, u32 valb, u32 bitwidth)
   {
-    s32 binvala = _Unary32ToInt32(vala, bitwidth, 32);
-    s32 binvalb = _Unary32ToInt32(valb, bitwidth, 32);
-    return _Int32ToUnary32(binvala * binvalb, 32, bitwidth);
+    u32 binvala = _Unary32ToUnsigned32(vala, bitwidth, 32);
+    u32 binvalb = _Unary32ToUnsigned32(valb, bitwidth, 32);
+    return _Unsigned32ToUnary32(binvala * binvalb, 32, bitwidth);
   }
 
   inline u64 _BinOpMultiplyUnary64(u64 vala, u64 valb, u32 bitwidth)
   {
-    s64 binvala = _Unary64ToInt64(vala, bitwidth, 64);
-    s64 binvalb = _Unary64ToInt64(valb, bitwidth, 64);
-    return _Int64ToUnary64(binvala * binvalb, 64, bitwidth);
+    u64 binvala = _Unary64ToUnsigned64(vala, bitwidth, 64);
+    u64 binvalb = _Unary64ToUnsigned64(valb, bitwidth, 64);
+    return _Unsigned64ToUnary64(binvala * binvalb, 64, bitwidth);
   }
 
   inline u32 _BinOpDivideUnary32(u32 vala, u32 valb, u32 bitwidth)
   {
     MFM_API_ASSERT_NONZERO(valb);
-    s32 binvala = _Unary32ToInt32(vala, bitwidth, 32);
-    s32 binvalb = _Unary32ToInt32(valb, bitwidth, 32);
-    return _Int32ToUnary32(binvala / binvalb, 32, bitwidth);
+    u32 binvala = _Unary32ToUnsigned32(vala, bitwidth, 32);
+    u32 binvalb = _Unary32ToUnsigned32(valb, bitwidth, 32);
+    return _Unsigned32ToUnary32(binvala / binvalb, 32, bitwidth);
   }
 
   inline u64 _BinOpDivideUnary64(u64 vala, u64 valb, u32 bitwidth)
   {
     MFM_API_ASSERT_NONZERO(valb);
-    s64 binvala = _Unary64ToInt64(vala, bitwidth, 64);
-    s64 binvalb = _Unary64ToInt64(valb, bitwidth, 64);
-    return _Int64ToUnary64(binvala / binvalb, 64, bitwidth);
+    u64 binvala = _Unary64ToUnsigned64(vala, bitwidth, 64);
+    u64 binvalb = _Unary64ToUnsigned64(valb, bitwidth, 64);
+    return _Unsigned64ToUnary64(binvala / binvalb, 64, bitwidth);
   }
 
   inline u32 _BinOpModUnary32(u32 vala, u32 valb, u32 bitwidth)
   {
     MFM_API_ASSERT_NONZERO(valb);
-    s32 binvala = _Unary32ToInt32(vala, bitwidth, 32);
-    s32 binvalb = _Unary32ToInt32(valb, bitwidth, 32);
-    return _Int32ToUnary32(binvala % binvalb, 32, bitwidth);
+    u32 binvala = _Unary32ToUnsigned32(vala, bitwidth, 32);
+    u32 binvalb = _Unary32ToUnsigned32(valb, bitwidth, 32);
+    return _Unsigned32ToUnary32(binvala % binvalb, 32, bitwidth);
   }
 
   inline u64 _BinOpModUnary64(u64 vala, u64 valb, u32 bitwidth)
   {
     MFM_API_ASSERT_NONZERO(valb);
-    s64 binvala = _Unary64ToInt64(vala, bitwidth, 64);
-    s64 binvalb = _Unary64ToInt64(valb, bitwidth, 64);
-    return _Int64ToUnary64(binvala % binvalb, 64, bitwidth);
+    u64 binvala = _Unary64ToUnsigned64(vala, bitwidth, 64);
+    u64 binvalb = _Unary64ToUnsigned64(valb, bitwidth, 64);
+    return _Unsigned64ToUnary64(binvala % binvalb, 64, bitwidth);
   }
 
 
@@ -821,76 +821,78 @@ namespace MFM {
   //convert to binary before the operation; then convert back to bool
   inline u32 _BinOpAddBool32(u32 vala, u32 valb, u32 bitwidth)
   {
-    s32 binvala = _Bool32ToInt32(vala, bitwidth, 32);
-    s32 binvalb = _Bool32ToInt32(valb, bitwidth, 32);
-    return _Int32ToBool32(binvala + binvalb, 32, bitwidth);
+    u32 binvala = _Bool32ToUnsigned32(vala, bitwidth, 32);
+    u32 binvalb = _Bool32ToUnsigned32(valb, bitwidth, 32);
+    return _Unsigned32ToBool32(binvala + binvalb, 32, bitwidth);
   }
 
   inline u64 _BinOpAddBool64(u64 vala, u64 valb, u32 bitwidth)
   {
-    s64 binvala = _Bool64ToInt64(vala, bitwidth, 64);
-    s64 binvalb = _Bool64ToInt64(valb, bitwidth, 64);
-    return _Int64ToBool64(binvala + binvalb, 64, bitwidth);
+    u64 binvala = _Bool64ToUnsigned64(vala, bitwidth, 64);
+    u64 binvalb = _Bool64ToUnsigned64(valb, bitwidth, 64);
+    return _Unsigned64ToBool64(binvala + binvalb, 64, bitwidth);
   }
 
   inline u32 _BinOpSubtractBool32(u32 vala, u32 valb, u32 bitwidth)
   {
-    s32 binvala = _Bool32ToInt32(vala, bitwidth, 32);
-    s32 binvalb = _Bool32ToInt32(valb, bitwidth, 32);
-    return _Int32ToBool32(binvala - binvalb, 32, bitwidth);
+    u32 binvala = _Bool32ToUnsigned32(vala, bitwidth, 32);
+    u32 binvalb = _Bool32ToUnsigned32(valb, bitwidth, 32);
+    u32 diff = _Int32ToUnsigned32(binvala - binvalb, 32, bitwidth);
+    return _Unsigned32ToBool32(diff, bitwidth, bitwidth);
   }
 
   inline u64 _BinOpSubtractBool64(u64 vala, u64 valb, u32 bitwidth)
   {
-    s64 binvala = _Bool64ToInt64(vala, bitwidth, 64);
-    s64 binvalb = _Bool64ToInt64(valb, bitwidth, 64);
-    return _Int64ToBool64(binvala - binvalb, 64, bitwidth);
+    u64 binvala = _Bool64ToUnsigned64(vala, bitwidth, 64);
+    u64 binvalb = _Bool64ToUnsigned64(valb, bitwidth, 64);
+    u64 diff = _Int64ToUnsigned64(binvala - binvalb, 64, bitwidth);
+    return _Unsigned64ToBool64(diff, bitwidth, bitwidth);
   }
 
   inline u32 _BinOpMultiplyBool32(u32 vala, u32 valb, u32 bitwidth)
   {
-    s32 binvala = _Bool32ToInt32(vala, bitwidth, 32);
-    s32 binvalb = _Bool32ToInt32(valb, bitwidth, 32);
-    return _Int32ToBool32(binvala * binvalb, 32, bitwidth);
+    u32 binvala = _Bool32ToUnsigned32(vala, bitwidth, 32);
+    u32 binvalb = _Bool32ToUnsigned32(valb, bitwidth, 32);
+    return _Unsigned32ToBool32(binvala * binvalb, 32, bitwidth);
   }
 
   inline u64 _BinOpMultiplyBool64(u64 vala, u64 valb, u32 bitwidth)
   {
-    s64 binvala = _Bool64ToInt64(vala, bitwidth, 64);
-    s64 binvalb = _Bool64ToInt64(valb, bitwidth, 64);
-    return _Int64ToBool64(binvala * binvalb, 64, bitwidth);
+    u64 binvala = _Bool64ToUnsigned64(vala, bitwidth, 64);
+    u64 binvalb = _Bool64ToUnsigned64(valb, bitwidth, 64);
+    return _Unsigned64ToBool64(binvala * binvalb, 64, bitwidth);
   }
 
   inline u32 _BinOpDivideBool32(u32 vala, u32 valb, u32 bitwidth)
   {
     MFM_API_ASSERT_NONZERO(valb);
-    s32 binvala = _Bool32ToInt32(vala, bitwidth, 32);
-    s32 binvalb = _Bool32ToInt32(valb, bitwidth, 32);
-    return _Int32ToBool32(binvala / binvalb, 32, bitwidth);
+    u32 binvala = _Bool32ToUnsigned32(vala, bitwidth, 32);
+    u32 binvalb = _Bool32ToUnsigned32(valb, bitwidth, 32);
+    return _Unsigned32ToBool32(binvala / binvalb, 32, bitwidth);
   }
 
   inline u64 _BinOpDivideBool64(u64 vala, u64 valb, u32 bitwidth)
   {
     MFM_API_ASSERT_NONZERO(valb);
-    s64 binvala = _Bool64ToInt64(vala, bitwidth, 64);
-    s64 binvalb = _Bool64ToInt64(valb, bitwidth, 64);
-    return _Int64ToBool64(binvala / binvalb, 64, bitwidth);
+    u64 binvala = _Bool64ToUnsigned64(vala, bitwidth, 64);
+    u64 binvalb = _Bool64ToUnsigned64(valb, bitwidth, 64);
+    return _Unsigned64ToBool64(binvala / binvalb, 64, bitwidth);
   }
 
   inline u32 _BinOpModBool32(u32 vala, u32 valb, u32 bitwidth)
   {
     MFM_API_ASSERT_NONZERO(valb);
-    s32 binvala = _Bool32ToInt32(vala, bitwidth, 32);
-    s32 binvalb = _Bool32ToInt32(valb, bitwidth, 32);
-    return _Int32ToBool32(binvala % binvalb, 32, bitwidth);
+    u32 binvala = _Bool32ToUnsigned32(vala, bitwidth, 32);
+    u32 binvalb = _Bool32ToUnsigned32(valb, bitwidth, 32);
+    return _Unsigned32ToBool32(binvala % binvalb, 32, bitwidth);
   }
 
   inline u64 _BinOpModBool64(u64 vala, u64 valb, u32 bitwidth)
   {
     MFM_API_ASSERT_NONZERO(valb);
-    s64 binvala = _Bool64ToInt64(vala, bitwidth, 64);
-    s64 binvalb = _Bool64ToInt64(valb, bitwidth, 64);
-    return _Int64ToBool64(binvala % binvalb, 64, bitwidth);
+    u64 binvala = _Bool64ToUnsigned64(vala, bitwidth, 64);
+    u64 binvalb = _Bool64ToUnsigned64(valb, bitwidth, 64);
+    return _Unsigned64ToBool64(binvala % binvalb, 64, bitwidth);
   }
 
   //COMPARISONS
@@ -898,97 +900,85 @@ namespace MFM {
   //CompOps on INTS:
   inline u32 _BinOpCompareEqEqInt32(s32 vala, s32 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes32(bitwidth);
-    s32 extvala = _SignExtend32(vala & mask, bitwidth);
-    s32	extvalb = _SignExtend32(valb & mask, bitwidth);
+    s32 extvala = _SignExtend32(vala, bitwidth);
+    s32	extvalb = _SignExtend32(valb, bitwidth);
     return _CboolToBool32(extvala == extvalb, BITS_PER_BOOL);
   }
 
   inline u64 _BinOpCompareEqEqInt64(s64 vala, s64 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes64(bitwidth);
-    s64 extvala = _SignExtend64(vala & mask, bitwidth);
-    s64	extvalb = _SignExtend64(valb & mask, bitwidth);
+    s64 extvala = _SignExtend64(vala, bitwidth);
+    s64	extvalb = _SignExtend64(valb, bitwidth);
     return _CboolToBool64(extvala == extvalb, BITS_PER_BOOL);
   }
 
   inline u32 _BinOpCompareNotEqInt32(s32 vala, s32 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes32(bitwidth);
-    s32 extvala = _SignExtend32(vala & mask, bitwidth);
-    s32	extvalb = _SignExtend32(valb & mask, bitwidth);
+    s32 extvala = _SignExtend32(vala, bitwidth);
+    s32	extvalb = _SignExtend32(valb, bitwidth);
     return _CboolToBool32(extvala != extvalb, BITS_PER_BOOL);
   }
 
   inline u64 _BinOpCompareNotEqInt64(s64 vala, s64 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes64(bitwidth);
-    s64 extvala = _SignExtend64(vala & mask, bitwidth);
-    s64	extvalb = _SignExtend64(valb & mask, bitwidth);
+    s64 extvala = _SignExtend64(vala, bitwidth);
+    s64	extvalb = _SignExtend64(valb, bitwidth);
     return _CboolToBool64(extvala != extvalb, BITS_PER_BOOL);
   }
 
   inline u32 _BinOpCompareLessThanInt32(s32 vala, s32 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes32(bitwidth);
-    s32 extvala = _SignExtend32(vala & mask, bitwidth);
-    s32	extvalb = _SignExtend32(valb & mask, bitwidth);
+    s32 extvala = _SignExtend32(vala, bitwidth);
+    s32	extvalb = _SignExtend32(valb, bitwidth);
     return _CboolToBool32(extvala < extvalb, BITS_PER_BOOL);
   }
 
   inline u64 _BinOpCompareLessThanInt64(s64 vala, s64 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes64(bitwidth);
-    s64 extvala = _SignExtend64(vala & mask, bitwidth);
-    s64	extvalb = _SignExtend64(valb & mask, bitwidth);
+    s64 extvala = _SignExtend64(vala, bitwidth);
+    s64	extvalb = _SignExtend64(valb, bitwidth);
     return _CboolToBool64(extvala < extvalb, BITS_PER_BOOL);
   }
 
   inline u32 _BinOpCompareGreaterThanInt32(s32 vala, s32 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes32(bitwidth);
-    s32 extvala = _SignExtend32(vala & mask, bitwidth);
-    s32	extvalb = _SignExtend32(valb & mask, bitwidth);
+    s32 extvala = _SignExtend32(vala, bitwidth);
+    s32	extvalb = _SignExtend32(valb, bitwidth);
     return _CboolToBool32(extvala > extvalb, BITS_PER_BOOL);
   }
 
   inline u64 _BinOpCompareGreaterThanInt64(s64 vala, s64 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes64(bitwidth);
-    s64 extvala = _SignExtend64(vala & mask, bitwidth);
-    s64	extvalb = _SignExtend64(valb & mask, bitwidth);
+    s64 extvala = _SignExtend64(vala, bitwidth);
+    s64	extvalb = _SignExtend64(valb, bitwidth);
     return _CboolToBool64(extvala > extvalb, BITS_PER_BOOL);
   }
 
   inline u32 _BinOpCompareLessEqualInt32(s32 vala, s32 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes32(bitwidth);
-    s32 extvala = _SignExtend32(vala & mask, bitwidth);
-    s32	extvalb = _SignExtend32(valb & mask, bitwidth);
+    s32 extvala = _SignExtend32(vala, bitwidth);
+    s32	extvalb = _SignExtend32(valb, bitwidth);
     return _CboolToBool32(extvala <= extvalb, BITS_PER_BOOL);
   }
 
   inline u64 _BinOpCompareLessEqualInt64(s64 vala, s64 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes64(bitwidth);
-    s64 extvala = _SignExtend64(vala & mask, bitwidth);
-    s64	extvalb = _SignExtend64(valb & mask, bitwidth);
+    s64 extvala = _SignExtend64(vala, bitwidth);
+    s64	extvalb = _SignExtend64(valb, bitwidth);
     return _CboolToBool64(extvala <= extvalb, BITS_PER_BOOL);
   }
 
   inline u32 _BinOpCompareGreaterEqualInt32(s32 vala, s32 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes32(bitwidth);
-    s32 extvala = _SignExtend32(vala & mask, bitwidth);
-    s32	extvalb = _SignExtend32(valb & mask, bitwidth);
+    s32 extvala = _SignExtend32(vala, bitwidth);
+    s32	extvalb = _SignExtend32(valb, bitwidth);
     return _CboolToBool32(extvala >= extvalb, BITS_PER_BOOL);
   }
 
   inline u64 _BinOpCompareGreaterEqualInt64(s64 vala, s64 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes64(bitwidth);
-    s64 extvala = _SignExtend64(vala & mask, bitwidth);
-    s64	extvalb = _SignExtend64(valb & mask, bitwidth);
+    s64 extvala = _SignExtend64(vala, bitwidth);
+    s64	extvalb = _SignExtend64(valb, bitwidth);
     return _CboolToBool64(extvala >= extvalb, BITS_PER_BOOL);
   }
 
@@ -1251,12 +1241,14 @@ namespace MFM {
 
   inline s32 _ShiftOpLeftInt32(s32 vala, u32 shft, u32 bitwidth)
   {
+    if(shft == 32) return 0; //instead of self
     u32 mask = _GetNOnes32(bitwidth);
     return ((vala << shft) & mask);
   }
 
   inline s64 _ShiftOpLeftInt64(s64 vala, u32 shft, u32 bitwidth)
   {
+    if(shft == 64) return 0; //instead of self
     u64 mask = _GetNOnes64(bitwidth);
     return ((vala << shft) & mask);
   }
@@ -1276,12 +1268,14 @@ namespace MFM {
 
   inline u32 _ShiftOpLeftUnsigned32(u32 vala, u32 shft, u32 bitwidth)
   {
+    if(shft == 32) return 0; //instead of self
     u32 mask = _GetNOnes32(bitwidth);
     return ((vala << shft) & mask);
   }
 
   inline u64 _ShiftOpLeftUnsigned64(u64 vala, u32 shft, u32 bitwidth)
   {
+    if(shft == 64) return 0; //instead of self
     u64 mask = _GetNOnes64(bitwidth);
     return ((vala << shft) & mask);
   }
@@ -1301,12 +1295,14 @@ namespace MFM {
 
   inline u32 _ShiftOpLeftBool32(u32 vala, u32 shft, u32 bitwidth)
   {
+    if(shft == 32) return 0; //instead of self
     u32 binvala = _Bool32ToBits32(vala, bitwidth, bitwidth);
     return _Bits32ToBool32((binvala << shft), bitwidth, bitwidth);
   }
 
   inline u64 _ShiftOpLeftBool64(u64 vala, u32 shft, u32 bitwidth)
   {
+    if(shft == 64) return 0; //instead of self
     u32 binvala = _Bool64ToBits64(vala, bitwidth, bitwidth);
     return _Bits64ToBool64((binvala >> shft), bitwidth, bitwidth);
   }
@@ -1328,6 +1324,7 @@ namespace MFM {
 
   inline u32 _ShiftOpLeftUnary32(u32 vala, u32 shft, u32 bitwidth)
   {
+    if(shft == 32) return 0; //instead of self
     u32 mask = _GetNOnes32(bitwidth);
     u32 binvala = PopCount(vala & mask);     //in binary
     return _GetNOnes32(binvala << shft) & mask;
@@ -1335,6 +1332,7 @@ namespace MFM {
 
   inline u64 _ShiftOpLeftUnary64(u64 vala, u32 shft, u32 bitwidth)
   {
+    if(shft == 64) return 0; //instead of self
     u64 mask = _GetNOnes64(bitwidth);
     u32 binvala = PopCount64(vala & mask);     //in binary
     return _GetNOnes64(binvala << shft) & mask;
@@ -1355,12 +1353,14 @@ namespace MFM {
 
   inline u32 _ShiftOpLeftBits32(u32 vala, u32 shft, u32 bitwidth)
   {
+    if(shft == 32) return 0; //instead of self
     u32 mask = _GetNOnes32(bitwidth);
     return ((vala << shft) & mask);
   }
 
   inline u64 _ShiftOpLeftBits64(u64 vala, u32 shft, u32 bitwidth)
   {
+    if(shft == 64) return 0; //instead of self
     u64 mask = _GetNOnes64(bitwidth);
     return ((vala << shft) & mask);
   }
