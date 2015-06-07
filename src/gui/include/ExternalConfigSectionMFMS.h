@@ -56,6 +56,13 @@ namespace MFM
   };
 
   template <class GC>
+  struct FunctionCallScreenConfig : public ConfigFunctionCallMFMS<GC>
+  {
+    FunctionCallScreenConfig(ExternalConfigSectionMFMS<GC> & ec) ;
+    virtual bool Parse() ;
+  };
+
+  template <class GC>
   struct FunctionCallPanelConfig : public ConfigFunctionCallMFMS<GC>
   {
     FunctionCallPanelConfig(ExternalConfigSectionMFMS<GC> & ec) ;
@@ -78,6 +85,13 @@ namespace MFM
     {
       return "MFMS";
     }
+
+    virtual bool ContinueOnErrors() const
+    {
+      return true;
+    }
+
+    virtual bool ReadFinalize() ;
 
     /*
      * Construct a new ExternalConfigSectionMFMS referencing a specified Grid
@@ -104,6 +118,7 @@ namespace MFM
 
     FunctionCallPanelConfig<GC> m_fcPanelConfig;
     FunctionCallPanelProperty<GC> m_fcPanelProperty;
+    FunctionCallScreenConfig<GC> m_fcScreenConfig;
 
   };
 }

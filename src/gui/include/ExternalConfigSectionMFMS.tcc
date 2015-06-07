@@ -8,6 +8,31 @@
 namespace MFM
 {
   template <class GC>
+  FunctionCallScreenConfig<GC>::FunctionCallScreenConfig(ExternalConfigSectionMFMS<GC> & ec)
+    : ConfigFunctionCallMFMS<GC>("ScreenConfig", ec)
+  {
+    ec.RegisterFunction(*this);
+  }
+
+  template <class GC>
+  bool FunctionCallScreenConfig<GC>::Parse()
+  {
+    ExternalConfigSectionMFMS<GC> & ec = this->GetECSM();
+    AbstractGUIDriver<GC> & ad = ec.GetDriver();
+    LineCountingByteSource & in = ec.GetByteSource();
+
+    if (!ad.LoadScreenConfig(in))
+      return false;
+
+    in.SkipWhitespace();
+    if (in.Read() != ')')
+      return false;
+
+    return true;
+  }
+
+
+  template <class GC>
   FunctionCallPanelConfig<GC>::FunctionCallPanelConfig(ExternalConfigSectionMFMS<GC> & ec)
     : ConfigFunctionCallMFMS<GC>("PanelConfig", ec)
   {
@@ -61,6 +86,7 @@ namespace MFM
     , m_guid(guid)
     , m_fcPanelConfig(*this)
     , m_fcPanelProperty(*this)
+    , m_fcScreenConfig(*this)
   { }
 
 
@@ -74,8 +100,19 @@ namespace MFM
   template<class GC>
   void ExternalConfigSectionMFMS<GC>::WriteSection(ByteSink& byteSink)
   {
-    const Panel & root = m_guid.GetRootPanel();
+    const Panel & root = GetDriver().GetRootPanel();
     root.SaveAll(byteSink);
+    byteSink.Printf("ScreenConfig(");
+    GetDriver().SaveScreenConfig(byteSink);
+    byteSink.Printf(")\n");
+  }
+
+  template<class GC>
+  bool ExternalConfigSectionMFMS<GC>::ReadFinalize()
+  {
+    AbstractGUIDriver<GC> & ad = GetDriver();
+    ad.ResetScreenSize();
+    return true;
   }
 
 }
