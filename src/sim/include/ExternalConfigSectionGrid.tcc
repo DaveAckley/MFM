@@ -464,7 +464,10 @@ namespace MFM
     for (u32 i = 0; i < m_registeredElementCount; ++i) {
       RegElt & re = m_registeredElements[i];
       if (puuid->Equals(re.m_uuid))
-        return lcbs.Msg(Logger::ERROR,"Element '%@' already registered as '%s'", &re.m_uuid, re.m_nick.GetZString());
+      {
+        lcbs.Msg(Logger::WARNING,"Element '%@' already registered as '%s', skipping", &re.m_uuid, re.m_nick.GetZString());
+        return true;
+      }
       if (re.m_nick.Equals(nick))
         return lcbs.Msg(Logger::ERROR,"Element nicknamed '%s' already registered for UUID '%@'",
                         nick.GetZString(), &re.m_uuid);
