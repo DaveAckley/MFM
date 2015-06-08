@@ -35,6 +35,7 @@
 #include "Util.h"
 #include "Utils.h"     /* for GetDateTimeNow, Sleep */
 #include "ExternalConfig.h"
+#include "ExternalConfigSectionDriver.h"
 #include "ExternalConfigSectionGrid.h"
 #include "OverflowableCharBufferByteSink.h"
 #include "FileByteSource.h"
@@ -228,7 +229,7 @@ namespace MFM
     {
       grid.Unpause();  // pausing and unpausing should be overhead!
 
-      u32 startMS = GetTicks();  // So get the ticks after unpausing
+      u64 startMS = GetTicks();  // So get the ticks after unpausing
       if (m_ticksLastStopped != 0)
         m_msSpentOverhead += startMS - m_ticksLastStopped;
       else
@@ -454,15 +455,27 @@ namespace MFM
       return m_AEPSPerEpoch;
     }
 
-    u32 GetTicks()
+    void InitTicks(u64 priorTicks)
+    {
+      m_totalPriorTicks = priorTicks;
+      m_currentTickBasis = GetTicksSinceEpoch();
+    }
+
+    u64 GetTicksSinceEpoch() const
     {
       struct timeval tv;
       gettimeofday(&tv, NULL);
 
-      /* ms since epoch */
-      u64 ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+      /* cast since what's a time_t */
+      return ((u64) tv.tv_sec) * 1000 + tv.tv_usec / 1000;
+    }
 
-      return  ms - m_startTimeMS;
+    u64 GetTicks() const
+    {
+      return
+        GetTicksSinceEpoch()
+        - m_currentTickBasis
+        + m_totalPriorTicks;
     }
 
     /***********************************
@@ -764,6 +777,123 @@ namespace MFM
       return buf.GetZString();
     }
 
+    void SaveRuntimeData(ByteSink & sink) const
+    {
+      sink.Print(this->GetTicks(), Format::LXX64); // current ticks becomes prior ticks on load
+      sink.Print(m_msSpentRunning, Format::LXX64);
+      sink.Print(m_msSpentOverhead, Format::LXX64);
+      sink.Print(m_microsSleepPerFrame, Format::LXX32);
+      sink.Print((u64)(m_overheadPercent * 100000), Format::LXX64);
+      sink.Print((u64)(m_lastFrameAEPS * 100000), Format::LXX64);
+      sink.Print(m_aepsPerFrame, Format::LXX32);
+      sink.Printf(",");
+
+      sink.Print(m_AEPSPerEpoch, Format::LXX32);
+      sink.Print(m_autosavePerEpochs, Format::LXX32);
+      sink.Print(m_accelerateAfterEpochs, Format::LXX32);
+      sink.Print(m_acceleration, Format::LXX32);
+      sink.Print(m_surgeAfterEpochs, Format::LXX32);
+      sink.Printf(",");
+
+      sink.Print(m_gridImages, Format::LXX32);
+      sink.Print(m_tileImages, Format::LXX32);
+      sink.Printf(",");
+
+      sink.Print((u64)(m_AEPS * 100000), Format::LXX64);
+      sink.Print((u64)(m_AER * 100000), Format::LXX64);
+      sink.Print((u64)(m_recentAER * 100000), Format::LXX64);
+      sink.Print(m_lastTotalEvents,Format::LXX64);
+      sink.Printf(",");
+
+      sink.Print(m_nextEpochAEPS,Format::LXX32);
+      sink.Print(m_epochCount,Format::LXX32);
+    }
+
+    bool LoadRuntimeData(LineCountingByteSource & source)
+    {
+      u64 tmp_GetTicks;
+      u64 tmp_m_msSpentRunning;
+      u64 tmp_m_msSpentOverhead;
+      u32 tmp_m_microsSleepPerFrame;
+      u64 tmp_m_overheadPercent;
+      u64 tmp_m_lastFrameAEPS;
+      u32 tmp_m_aepsPerFrame;
+      if (!source.Scan(tmp_GetTicks, Format::LXX64)) return false;
+      if (!source.Scan(tmp_m_msSpentRunning, Format::LXX64)) return false;
+      if (!source.Scan(tmp_m_msSpentOverhead, Format::LXX64)) return false;
+      if (!source.Scan(tmp_m_microsSleepPerFrame, Format::LXX32)) return false;
+      if (!source.Scan(tmp_m_overheadPercent, Format::LXX64)) return false;
+      if (!source.Scan(tmp_m_lastFrameAEPS, Format::LXX64)) return false;
+      if (!source.Scan(tmp_m_aepsPerFrame, Format::LXX32)) return false;
+      if (1 != source.Scanf(",")) return false;
+
+      u32 tmp_m_AEPSPerEpoch;
+      u32 tmp_m_autosavePerEpochs;
+      u32 tmp_m_accelerateAfterEpochs;
+      u32 tmp_m_acceleration;
+      u32 tmp_m_surgeAfterEpochs;
+
+      if (!source.Scan(tmp_m_AEPSPerEpoch, Format::LXX32)) return false;
+      if (!source.Scan(tmp_m_autosavePerEpochs, Format::LXX32)) return false;
+      if (!source.Scan(tmp_m_accelerateAfterEpochs, Format::LXX32)) return false;
+      if (!source.Scan(tmp_m_acceleration, Format::LXX32)) return false;
+      if (!source.Scan(tmp_m_surgeAfterEpochs, Format::LXX32)) return false;
+      if (1 != source.Scanf(",")) return false;
+
+      u32 tmp_m_gridImages;
+      u32 tmp_m_tileImages;
+
+      if (!source.Scan(tmp_m_gridImages, Format::LXX32)) return false;
+      if (!source.Scan(tmp_m_tileImages, Format::LXX32)) return false;
+      if (1 != source.Scanf(",")) return false;
+
+      u64 tmp_m_AEPS;
+      u64 tmp_m_AER;
+      u64 tmp_m_recentAER;
+      u64 tmp_m_lastTotalEvents;
+
+      if (!source.Scan(tmp_m_AEPS, Format::LXX64)) return false;
+      if (!source.Scan(tmp_m_AER, Format::LXX64)) return false;
+      if (!source.Scan(tmp_m_recentAER, Format::LXX64)) return false;
+      if (!source.Scan(tmp_m_lastTotalEvents,Format::LXX64)) return false;
+      if (1 != source.Scanf(",")) return false;
+
+      u32 tmp_m_nextEpochAEPS;
+      u32 tmp_m_epochCount;
+
+      if (!source.Scan(tmp_m_nextEpochAEPS,Format::LXX32)) return false;
+      if (!source.Scan(tmp_m_epochCount,Format::LXX32)) return false;
+
+      //// success begins
+
+      m_totalPriorTicks = tmp_GetTicks;
+      m_msSpentRunning = tmp_m_msSpentRunning;
+      m_msSpentOverhead = tmp_m_msSpentOverhead;
+      m_microsSleepPerFrame = tmp_m_microsSleepPerFrame;
+      m_overheadPercent = tmp_m_overheadPercent / 100000.0;
+      m_lastFrameAEPS = tmp_m_lastFrameAEPS / 100000.0;
+      m_aepsPerFrame = tmp_m_aepsPerFrame;
+
+      m_AEPSPerEpoch = tmp_m_AEPSPerEpoch;
+      m_autosavePerEpochs = tmp_m_autosavePerEpochs;
+      m_accelerateAfterEpochs = tmp_m_accelerateAfterEpochs;
+      m_acceleration = tmp_m_acceleration;
+      m_surgeAfterEpochs = tmp_m_surgeAfterEpochs;
+
+      m_gridImages = tmp_m_gridImages;
+      m_tileImages = tmp_m_tileImages;
+
+      m_AEPS = tmp_m_AEPS / 100000.0;
+      m_AER = tmp_m_AER / 100000.0;
+      m_recentAER = tmp_m_recentAER / 100000.0;
+      m_lastTotalEvents = tmp_m_lastTotalEvents;
+
+      m_nextEpochAEPS = tmp_m_nextEpochAEPS;
+      m_epochCount = tmp_m_epochCount;
+
+      return true;
+    }
+
     void AutosaveGrid(u32 epochs)
     {
       const char* filename =
@@ -882,10 +1012,11 @@ namespace MFM
       , m_neededElementCount(0)
       , m_grid(m_elementRegistry, GRID_WIDTH, GRID_HEIGHT)
       , m_ticksLastStopped(0)
+      , m_totalPriorTicks(0)
+      , m_currentTickBasis(0)
       , m_haltAfterAEPS(0)
       , m_haltOnEmpty(false)
       , m_haltOnFull(false)
-      , m_startTimeMS(0)
       , m_msSpentRunning(0)
       , m_msSpentOverhead(0)
       , m_microsSleepPerFrame(1000)
@@ -909,12 +1040,15 @@ namespace MFM
       , m_currentConfigurationPath(U32_MAX)
       , m_simDirBasePathLength(0)
       , m_externalConfig(*this)
+      , m_externalConfigSectionDriver(m_externalConfig, *this)
       , m_externalConfigSectionGrid(m_externalConfig, m_grid)
     {
+      InitTicks(0); // Overwritten later on -cp load
     }
 
     virtual void RegisterExternalConfigSections()
     {
+      m_externalConfig.RegisterSection(m_externalConfigSectionDriver);
       m_externalConfig.RegisterSection(m_externalConfigSectionGrid);
     }
 
@@ -962,8 +1096,6 @@ namespace MFM
       SetSeed(1);
 
       m_varguments.ProcessArguments(argc, argv);
-
-      m_startTimeMS = GetTicks();
 
       OnceOnly(m_varguments);
     }
@@ -1087,6 +1219,16 @@ namespace MFM
       m_AER = aer;
     }
 
+    u64 GetMsSpentRunning() const
+    {
+      return m_msSpentRunning;
+    }
+
+    void SetMsSpentRunning(u64 ms)
+    {
+      m_msSpentRunning = ms;
+    }
+
     double GetRecentAER()
     {
       return m_recentAER;
@@ -1102,9 +1244,19 @@ namespace MFM
       return m_aepsPerFrame;
     }
 
+    void SetAEPSPerFrame(u32 aepsPerFrame)
+    {
+      m_aepsPerFrame = aepsPerFrame;
+    }
+
     double GetOverheadPercent()
     {
       return m_overheadPercent;
+    }
+
+    void SetOverheadPercent(double overheadPercent)
+    {
+      m_overheadPercent = overheadPercent;
     }
 
     OurGrid & GetGrid()
@@ -1170,12 +1322,13 @@ namespace MFM
     OurStdElements m_se;
     OurGrid m_grid;
 
-    u32 m_ticksLastStopped;
+    u64 m_ticksLastStopped;
+    u64 m_totalPriorTicks;
+    u64 m_currentTickBasis;
     u32 m_haltAfterAEPS;
     bool m_haltOnEmpty;
     bool m_haltOnFull;
 
-    u64 m_startTimeMS;
     u64 m_msSpentRunning;
     u64 m_msSpentOverhead;
     s32 m_microsSleepPerFrame;
@@ -1224,6 +1377,7 @@ namespace MFM
     u32 m_simDirBasePathLength;
 
     ExternalConfig<GC> m_externalConfig;
+    ExternalConfigSectionDriver<GC> m_externalConfigSectionDriver;
     ExternalConfigSectionGrid<GC> m_externalConfigSectionGrid;
 
   };
