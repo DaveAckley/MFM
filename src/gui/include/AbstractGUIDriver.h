@@ -38,6 +38,7 @@
 #include "AbstractButton.h"
 #include "AbstractCheckbox.h"
 #include "AtomViewPanel.h"
+#include "StatisticsPanel.h"
 #include "Tile.h"
 #include "GridRenderer.h"
 #include "GridPanel.h"
@@ -56,26 +57,10 @@
 #include "HelpPanel.h"
 #include "MovablePanel.h"
 #include "AbstractGUIDriverButtons.h"
+#include "GUIConstants.h"
 
 namespace MFM
 {
-#define FRAMES_PER_SECOND 100.0
-
-#define CAMERA_SLOW_SPEED 2
-#define CAMERA_FAST_SPEED 50
-
-#define STATS_WINDOW_WIDTH 288
-
-#define STATS_START_WINDOW_WIDTH STATS_WINDOW_WIDTH  // Why two constants?
-#define STATS_START_WINDOW_HEIGHT 120
-
-  /* super speedy for now */
-#define MINIMAL_START_WINDOW_WIDTH 1
-#define MINIMAL_START_WINDOW_HEIGHT 1
-
-
-#define MAX_PATH_LENGTH 1000
-#define MIN_PATH_RESERVED_LENGTH 100
 
   template<class GC>
   class AbstractGUIDriver : public AbstractDriver<GC>
@@ -563,6 +548,13 @@ namespace MFM
       bs.Printf("%D%D%D%D",
                 m_reinitRequested, m_renderStats,
                 m_batchMode,m_screenResizable);
+
+      bs.Printf(",%D%D%D%D",
+                (u32) (1000 * this->GetAER()),
+                (u32) (1000 * this->GetRecentAER()),
+                (u32) (1000 * this->GetOverheadPercent()),
+                this->GetAEPSPerFrame());
+      bs.Print(this->GetMsSpentRunning(),Format::LXX64);
     }
 
     bool LoadScreenConfig(LineCountingByteSource& bs)
@@ -621,6 +613,21 @@ namespace MFM
                         &tmp_m_screenResizable))
         return false;
 
+      u32 tmp_GetAER;
+      u32 tmp_GetRecentAER;
+      u32 tmp_GetOverheadPercent;
+      u32 tmp_GetAEPSPerFrame;
+      if (5 != bs.Scanf(",%D%D%D%D",
+                        &tmp_GetAER,
+                        &tmp_GetRecentAER,
+                        &tmp_GetOverheadPercent,
+                        &tmp_GetAEPSPerFrame))
+        return false;
+
+      u64 tmp_GetMsSpentRunning;
+      if (!bs.Scan(tmp_GetMsSpentRunning,Format::LXX64))
+        return false;
+
       m_screenWidth = tmp_m_screenWidth;
       m_screenHeight = tmp_m_screenHeight;
       m_desiredScreenWidth = tmp_m_desiredScreenWidth;
@@ -630,16 +637,26 @@ namespace MFM
       m_bigText = tmp_m_bigText;
       m_thisEpochAEPS = tmp_m_thisEpochAEPS;
       m_captureScreenshots = tmp_m_captureScreenshots;
+      // Sun Jun 7 18:34:44 2015 Restoring m_saveStateIndex means we
+      // fail to start at 10.mfs in the new simulation save/ directory
       //      m_saveStateIndex = tmp_m_saveStateIndex;
       //      m_epochSaveStateIndex = tmp_m_epochSaveStateIndex;
       m_keyboardPaused = tmp_m_keyboardPaused;
       m_singleStep = tmp_m_singleStep;
-      m_mousePaused = tmp_m_mousePaused;
-      m_gridPaused = tmp_m_gridPaused;
+      // Sun Jun  7 18:34:11 2015 Restoring mousePaused means EVERY use of
+      // the 'Save' button leads to a paused restart!
+      //      m_mousePaused = tmp_m_mousePaused;
+      //      m_gridPaused = tmp_m_gridPaused;
       m_reinitRequested = tmp_m_reinitRequested;
       m_renderStats = tmp_m_renderStats;
       m_batchMode = tmp_m_batchMode;
       m_screenResizable = tmp_m_screenResizable;
+
+      this->SetAER(tmp_GetAER/1000.0);
+      this->SetRecentAER(tmp_GetRecentAER/1000.0);
+      this->SetOverheadPercent(tmp_GetOverheadPercent/1000.0);
+      this->SetAEPSPerFrame(tmp_GetAEPSPerFrame);
+      this->SetMsSpentRunning(tmp_GetMsSpentRunning);
 
       m_tileViewButton.UpdateLabel();
       m_heatmapButton.UpdateLabel();
@@ -878,125 +895,7 @@ namespace MFM
 
     ToolboxPanel<EC> m_toolboxPanel;
 
-    class StatisticsPanel : public MovablePanel
-    {
-      StatsRenderer<GC>* m_srend;
-      OurGrid* m_mainGrid;
-      double m_AEPS;
-      double m_AER;
-      double m_overheadPercent;
-      u32 m_aepsPerFrame;
-      u32 m_currentAEPSPerEpoch;
-
-     public:
-      StatisticsPanel() : m_srend(NULL)
-      {
-        SetName("StatisticsPanel");
-        SetDimensions(STATS_START_WINDOW_WIDTH,
-                      SCREEN_INITIAL_HEIGHT);
-        SetDesiredSize(STATS_START_WINDOW_WIDTH,
-                      U32_MAX);
-        SetRenderPoint(SPoint(100000, 0));
-        SetForeground(Drawing::WHITE);
-        SetBackground(Drawing::DARK_PURPLE);
-        m_AEPS = m_AER = 0.0;
-        m_currentAEPSPerEpoch = 0;
-        m_aepsPerFrame = 0;
-        m_overheadPercent = 0.0;
-      }
-
-      void SetStatsRenderer(StatsRenderer<GC>* srend)
-      {
-        m_srend = srend;
-      }
-
-      void SetGrid(OurGrid* mainGrid)
-      {
-        m_mainGrid = mainGrid;
-      }
-
-      void SetAEPS(double aeps)
-      {
-        m_AEPS = aeps;
-      }
-
-      void SetCurrentAEPSPerEpoch(u32 aepsPerEpoch)
-      {
-        m_currentAEPSPerEpoch = aepsPerEpoch;
-      }
-
-      void SetAER(double aer)
-      {
-        m_AER = aer;
-      }
-
-      void SetOverheadPercent(double overheadPercent)
-      {
-        m_overheadPercent = overheadPercent;
-      }
-
-      void SetAEPSPerFrame(u32 apf)
-      {
-        m_aepsPerFrame = apf;
-      }
-
-      bool LoadDetails(ByteSource & source)
-      {
-        u32 tmp_m_AEPS;
-        u32 tmp_m_AER;
-        u32 tmp_m_overheadPercent;
-        u32 tmp_m_aepsPerFrame;
-        u32 tmp_m_currentAEPSPerEpoch;
-        if (6 != source.Scanf(",%D%D%D%D%D",
-                              &tmp_m_AEPS,
-                              &tmp_m_AER,
-                              &tmp_m_overheadPercent,
-                              &tmp_m_aepsPerFrame,
-                              &tmp_m_currentAEPSPerEpoch))
-          return false;
-
-        MFM_API_ASSERT_NONNULL(m_srend);
-        if (!m_srend->LoadDetails(source)) return false;
-
-        m_AEPS = tmp_m_AEPS / 10.0;
-        m_AER = tmp_m_AER / 100.0;
-        m_overheadPercent = tmp_m_overheadPercent / 1000.0;
-        m_aepsPerFrame = tmp_m_aepsPerFrame;
-        m_currentAEPSPerEpoch = tmp_m_currentAEPSPerEpoch;
-        return true;
-      }
-
-      void SaveDetails(ByteSink & sink) const
-      {
-        sink.Printf(",%D%D%D%D%D",
-                    (u32)(10*m_AEPS),
-                    (u32)(100*m_AER),
-                    (u32)(1000*m_overheadPercent),
-                    m_aepsPerFrame,
-                    m_currentAEPSPerEpoch);
-
-        MFM_API_ASSERT_NONNULL(m_srend);
-        m_srend->SaveDetails(sink);
-      }
-
-    protected:
-      virtual void PaintComponent(Drawing& drawing)
-      {
-        this->Panel::PaintComponent(drawing);
-        m_srend->RenderGridStatistics(drawing, *m_mainGrid,
-                                      m_AEPS, m_AER, m_aepsPerFrame,
-                                      m_overheadPercent, false,
-                                      m_currentAEPSPerEpoch);
-      }
-
-      virtual void PaintBorder(Drawing & config)
-      { /* No border please */ }
-
-      virtual bool HandlePostDrag(MouseButtonEvent& mbe)
-      {
-        return true;  /* Eat the event to keep the grid from taking it */
-      }
-    }m_statisticsPanel;
+    StatisticsPanel<GC> m_statisticsPanel;
 
     struct ButtonPanel : public Panel
     {
