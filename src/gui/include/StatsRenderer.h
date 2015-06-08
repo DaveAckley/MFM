@@ -219,14 +219,14 @@ namespace MFM {
       }
     };
 
-    bool LoadDetails(ByteSource & source) ;
+    bool LoadDetails(LineCountingByteSource & source) ;
     void SaveDetails(ByteSink & sink) const ;
 
   private:
     UPoint m_dimensions;
     SPoint m_drawPoint;
 
-    static const u32 MAX_TYPES = 32;
+    static const u32 MAX_TYPES = 100;
     const DataReporter *(m_reporters[MAX_TYPES]);
     u32 m_reportersInUse;
 
