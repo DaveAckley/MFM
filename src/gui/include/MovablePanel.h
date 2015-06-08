@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  MovablePanel.h Dragging layer for panels which wich to be dragged
+  MovablePanel.h Dragging layer for panels which can be dragged
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 */
 
 /**
-  \file MovablePanel.h Dragging layer for panels which wich to be dragged
+  \file MovablePanel.h Dragging layer for panels which can be dragged
   \author Trent R. Small.
   \date (C) 2014 All rights reserved.
   \lgpl
