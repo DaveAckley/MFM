@@ -9,7 +9,7 @@ namespace MFM
     m_tileRenderer.SaveDetails(sink);
   }
 
-  bool GridRenderer::LoadDetails(ByteSource & source)
+  bool GridRenderer::LoadDetails(LineCountingByteSource & source)
   {
     u32 tmp_m_renderTilesSeparated;
     u32 tmp_m_currentEWRenderMode;

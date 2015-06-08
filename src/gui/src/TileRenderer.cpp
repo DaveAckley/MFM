@@ -26,7 +26,7 @@ namespace MFM
     }
   }
 
-  bool TileRenderer::LoadDetails(ByteSource & source)
+  bool TileRenderer::LoadDetails(LineCountingByteSource & source)
   {
     u32 tmp[6];
     if (7 != source.Scanf(",%D%D%D%D%D%D",

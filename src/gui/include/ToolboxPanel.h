@@ -771,7 +771,7 @@ namespace MFM
                   m_brushSize);
     }
 
-    bool LoadDetails(ByteSource & source)
+    bool LoadDetails(LineCountingByteSource & source)
     {
       u32 tmp_m_bigText;
       u32 tmp_m_activatedButtonIndex;

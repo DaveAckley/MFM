@@ -123,7 +123,7 @@ namespace MFM {
     return 0;
   }
 
-  bool Panel::Load(ByteSource & source)
+  bool Panel::Load(LineCountingByteSource & source)
   {
     Rect tmp_m_rect;
     RectSerializer rs(tmp_m_rect);

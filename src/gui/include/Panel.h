@@ -259,9 +259,9 @@ namespace MFM
        panel's properties, as saved by Save(ByteSink&), assuming the
        name has already been read
      */
-    bool Load(ByteSource & source) ;
+    bool Load(LineCountingByteSource & source) ;
 
-    virtual bool LoadDetails(ByteSource & source)
+    virtual bool LoadDetails(LineCountingByteSource & source)
     {
       /* No details to load, by default */
       return true;

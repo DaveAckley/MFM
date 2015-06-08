@@ -79,7 +79,7 @@ namespace MFM
 
    public:
 
-    bool LoadDetails(ByteSource & source) ;
+    bool LoadDetails(LineCountingByteSource & source) ;
 
     void SaveDetails(ByteSink & sink) const ;
 

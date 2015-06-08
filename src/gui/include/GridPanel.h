@@ -37,9 +37,7 @@
 #include "ToolboxPanel.h"
 #include "Util.h"
 #include <math.h> /* for sqrt */
-
-#define SCREEN_INITIAL_WIDTH 1280
-#define SCREEN_INITIAL_HEIGHT 1024
+#include "GUIConstants.h"
 
 namespace MFM
 {
@@ -70,7 +68,7 @@ namespace MFM
     typedef Grid<GC> OurGrid;
     typedef Tile<EC> OurTile;
 
-    bool LoadDetails(ByteSource & source)
+    bool LoadDetails(LineCountingByteSource & source)
     {
       u32 tmp_m_paintingEnabled;
       if (2 != source.Scanf(",%d",&tmp_m_paintingEnabled))

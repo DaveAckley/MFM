@@ -15,7 +15,7 @@ namespace MFM {
   }
 
   template <class GC>
-  bool StatsRenderer<GC>::LoadDetails(ByteSource & source)
+  bool StatsRenderer<GC>::LoadDetails(LineCountingByteSource & source)
   {
     u32 daer;
     if (2!=source.Scanf(",%d",&daer))

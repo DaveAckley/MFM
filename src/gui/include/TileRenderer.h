@@ -112,7 +112,7 @@ namespace MFM
     void RenderEventWindow(Drawing & drawing, SPoint& offset, Tile<EC>& tile, bool renderCache);
 
   public:
-    bool LoadDetails(ByteSource & source) ;
+    bool LoadDetails(LineCountingByteSource & source) ;
 
     void SaveDetails(ByteSink & sink) const ;
 
