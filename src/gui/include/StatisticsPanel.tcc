@@ -9,13 +9,13 @@
 namespace MFM {
 
   template <class GC>
-  void StatsRenderer<GC>::SaveDetails(ByteSink & sink) const
+  void StatisticsPanel<GC>::StatsRendererSaveDetails(ByteSink & sink) const
   {
     sink.Printf(",%d",m_displayAER);
   }
 
   template <class GC>
-  bool StatsRenderer<GC>::LoadDetails(LineCountingByteSource & source)
+  bool StatisticsPanel<GC>::StatsRendererLoadDetails(LineCountingByteSource & source)
   {
     u32 daer;
     if (2!=source.Scanf(",%d",&daer))
@@ -26,14 +26,15 @@ namespace MFM {
   }
 
   template <class GC>
-  void StatsRenderer<GC>::RenderGridStatistics(Drawing & drawing, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool endOfEpoch, u32 aepsInCurrentEpoch)
+  void StatisticsPanel<GC>::RenderGridStatistics(Drawing & drawing, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool endOfEpoch, u32 aepsInCurrentEpoch)
   {
+
     // Extract short names for parameter types
     typedef typename GC::EVENT_CONFIG EC;
     enum { R = EC::EVENT_WINDOW_RADIUS};
 
-    const u32 STR_BUFFER_SIZE = 128;
-    char strBuffer[STR_BUFFER_SIZE];
+    const u32 BUFSIZE = 128;
+    char strBuffer[BUFSIZE];
 
     const u32 ROW_HEIGHT = LINE_HEIGHT_PIXELS;
     const u32 DETAIL_ROW_HEIGHT = DETAIL_LINE_HEIGHT_PIXELS;
@@ -42,6 +43,8 @@ namespace MFM {
     drawing.SetFont(FONT_ASSET_ELEMENT);
     drawing.SetForeground(Drawing::GREY80);
 
+    UPoint dims = this->GetDimensions();
+
     do  // So we can break when done
     {
       if (m_displayAER < 1)
@@ -49,12 +52,16 @@ namespace MFM {
         break;
       }
 
-      SPoint size = drawing.GetTextSize(MFM_VERSION_STRING_SHORT);
-      UPoint loc(MAX(0, ((s32) m_dimensions.GetX())-size.GetX()), baseY);
+      const char * runLabel = m_runLabel.GetZString();
+      if (strlen(runLabel) == 0)
+        runLabel = MFM_VERSION_STRING_SHORT;
 
-      drawing.BlitText(MFM_VERSION_STRING_SHORT,
+      SPoint size = drawing.GetTextSize(runLabel);
+      UPoint loc(MAX(0, ((s32) dims.GetX())-size.GetX()), baseY);
+
+      drawing.BlitText(runLabel,
                        loc,
-                       UPoint(m_dimensions.GetX(), ROW_HEIGHT));
+                       UPoint(dims.GetX(), ROW_HEIGHT));
       baseY += DETAIL_ROW_HEIGHT;
 
       if (m_displayAER < 2)
@@ -63,16 +70,15 @@ namespace MFM {
       }
 
       u64 now = Utils::GetDateTimeNow();
-      sprintf(strBuffer, " %d %06d",
-              Utils::GetDateFromDateTime(now),
-              Utils::GetTimeFromDateTime(now)
-              );
-
+      snprintf(strBuffer,BUFSIZE," %d %06d",
+               Utils::GetDateFromDateTime(now),
+               Utils::GetTimeFromDateTime(now)
+               );
       size = drawing.GetTextSize(strBuffer);
-      loc = UPoint(MAX(0, ((s32) m_dimensions.GetX())-size.GetX()), baseY);
+      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX()), baseY);
       drawing.BlitText(strBuffer,
                        loc,
-                       UPoint(m_dimensions.GetX(), ROW_HEIGHT));
+                       UPoint(dims.GetX(), ROW_HEIGHT));
       baseY += DETAIL_ROW_HEIGHT;
 
       if (m_displayAER < 3)
@@ -97,10 +103,10 @@ namespace MFM {
 
       const char * str = ob.GetZString();
       size = drawing.GetTextSize(str);
-      loc = UPoint(MAX(0, ((s32) m_dimensions.GetX())-size.GetX()), baseY);
+      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX()), baseY);
       drawing.BlitText(str,
                        loc,
-                       UPoint(m_dimensions.GetX(), ROW_HEIGHT));
+                       UPoint(dims.GetX(), ROW_HEIGHT));
       baseY += DETAIL_ROW_HEIGHT;
 
       if (m_displayAER < 4)
@@ -110,10 +116,10 @@ namespace MFM {
 
       sprintf(strBuffer, "%8.3f %%ov", overhead);
       size = drawing.GetTextSize(strBuffer);
-      loc = UPoint(MAX(0, ((s32) m_dimensions.GetX())-size.GetX()), baseY);
+      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX()), baseY);
       drawing.BlitText(strBuffer,
                        loc,
-                       UPoint(m_dimensions.GetX(), ROW_HEIGHT));
+                       UPoint(dims.GetX(), ROW_HEIGHT));
       baseY += DETAIL_ROW_HEIGHT;
 
       if (m_displayAER < 5)
@@ -123,10 +129,10 @@ namespace MFM {
 
       sprintf(strBuffer, "%8d/frame", AEPSperFrame);
       size = drawing.GetTextSize(strBuffer);
-      loc = UPoint(MAX(0, ((s32) m_dimensions.GetX())-size.GetX()), baseY);
+      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX()), baseY);
       drawing.BlitText(strBuffer,
                        loc,
-                       UPoint(m_dimensions.GetX(), ROW_HEIGHT));
+                       UPoint(dims.GetX(), ROW_HEIGHT));
       baseY += DETAIL_ROW_HEIGHT;
 
       if (m_displayAER < 6)
@@ -149,14 +155,14 @@ namespace MFM {
     drawing.SetFont(FONT_ASSET_ELEMENT);
     drawing.SetForeground(Drawing::WHITE);
     drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
-                     Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
+                     Point<u32>(dims.GetX(), ROW_HEIGHT));
 
     baseY += ROW_HEIGHT;
     baseY += ROW_HEIGHT;
 
     sprintf(strBuffer, "%8.3f %%full", grid.GetFullSitePercentage() * 100);
     drawing.BlitText(strBuffer, UPoint(m_drawPoint.GetX(), baseY),
-                     UPoint(m_dimensions.GetX(), ROW_HEIGHT));
+                     UPoint(dims.GetX(), ROW_HEIGHT));
 
     baseY += ROW_HEIGHT; // skip a line
     for (u32 i = 0; i < m_reportersInUse; ++i)
@@ -180,14 +186,14 @@ namespace MFM {
         drawing.SetFont(FONT_ASSET_ELEMENT);
         drawing.SetForeground(0xffffffff);
         drawing.BlitText(output.GetZString(), Point<u32>(m_drawPoint.GetX(), baseY),
-                         Point<u32>(m_dimensions.GetX(), ROW_HEIGHT));
+                         Point<u32>(dims.GetX(), ROW_HEIGHT));
         baseY += ROW_HEIGHT;
       }
     }
   }
 
   template <class GC>
-  void StatsRenderer<GC>::WriteRegisteredCounts(ByteSink & fp, bool writeHeader, Grid<GC>& grid,
+  void StatisticsPanel<GC>::WriteRegisteredCounts(ByteSink & fp, bool writeHeader, Grid<GC>& grid,
                                                 double aeps, double aer, u32 AEPSperFrame,
                                                 double overhead, bool endOfEpoch)
   {
