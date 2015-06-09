@@ -32,6 +32,7 @@
 #include <sys/types.h> /* for mkdir */
 #include <errno.h>     /* for errno */
 #include <fcntl.h>     /* for O_WRONLY */
+#include <unistd.h>    /* for dup */
 #include "Utils.h"     /* for GetDateTimeNow */
 #include "Logger.h"
 #include "AssetManager.h"
@@ -45,7 +46,6 @@
 #include "TextPanel.h"
 #include "ToolboxPanel.h"
 #include "TeeByteSink.h"
-#include "StatsRenderer.h"
 #include "ExternalConfig.h"
 #include "ExternalConfigSectionMFMS.h"
 #include "FileByteSource.h"
@@ -58,6 +58,7 @@
 #include "MovablePanel.h"
 #include "AbstractGUIDriverButtons.h"
 #include "GUIConstants.h"
+#include "Keyboard.h"
 
 namespace MFM
 {
@@ -108,21 +109,22 @@ namespace MFM
     XRayButton<GC> m_xrayButton;
     GridRunCheckbox<GC> m_gridRunButton;
     GridRenderButton<GC> m_gridRenderButton;
-    HeatmapButton<GC>  m_heatmapButton;
     GridStepCheckbox<GC> m_gridStepButton;
-    TileViewButton<GC> m_tileViewButton;
+    FgViewButton<GC>  m_fgViewButton;
+    BgViewButton<GC> m_bgViewButton;
     SaveButton<GC> m_saveButton;
     ScreenshotButton<GC> m_screenshotButton;
     QuitButton<GC> m_quitButton;
     ReloadButton<GC> m_reloadButton;
     PauseTileButton<GC> m_pauseTileButton;
     BGRButton<GC> m_bgrButton;
+    LogButton<GC> m_logButton;
 
     HelpPanel m_helpPanel;
 
     GridRenderer m_grend;
     SPoint m_grendMove;
-    StatsRenderer<GC> m_srend;
+    Keyboard m_keyboardMap;
 
   public:
     const Panel & GetRootPanel() const { return m_rootPanel; }
@@ -140,18 +142,19 @@ namespace MFM
       m_buttonPanel.InsertCheckbox(&m_gridRenderButton);
       m_buttonPanel.InsertCheckbox(&m_gridRunButton);
       m_buttonPanel.InsertCheckbox(&m_bgrButton);
+      m_buttonPanel.InsertCheckbox(&m_logButton);
 
-      m_buttonPanel.InsertButton(&m_heatmapButton);
       m_buttonPanel.InsertButton(&m_gridStepButton);
-      m_buttonPanel.InsertButton(&m_clearButton);
-      m_buttonPanel.InsertButton(&m_clearGridButton);
+      m_buttonPanel.InsertButton(&m_fgViewButton);
+      m_buttonPanel.InsertButton(&m_bgViewButton);
       m_buttonPanel.InsertButton(&m_xrayButton);
       m_buttonPanel.InsertButton(&m_nukeButton);
-      m_buttonPanel.InsertButton(&m_tileViewButton);
-      m_buttonPanel.InsertButton(&m_pauseTileButton);
-      m_buttonPanel.InsertButton(&m_saveButton);
       m_buttonPanel.InsertButton(&m_screenshotButton);
+      m_buttonPanel.InsertButton(&m_saveButton);
       m_buttonPanel.InsertButton(&m_reloadButton);
+      m_buttonPanel.InsertButton(&m_clearButton);
+      m_buttonPanel.InsertButton(&m_clearGridButton);
+      m_buttonPanel.InsertButton(&m_pauseTileButton);
       m_buttonPanel.InsertButton(&m_quitButton);
 
       m_screenshotButton.SetDriver(this);
@@ -168,8 +171,8 @@ namespace MFM
       m_buttonPanel.SetButtonDrivers(*this);
       m_buttonPanel.InsertButtons();
 
-      m_buttonPanel.SetAnchor(ANCHOR_SOUTH);
-      m_buttonPanel.SetAnchor(ANCHOR_EAST);
+      //      m_buttonPanel.SetAnchor(ANCHOR_SOUTH);
+      //      m_buttonPanel.SetAnchor(ANCHOR_EAST);
     }
 
     void Update(OurGrid& grid)
@@ -214,21 +217,110 @@ namespace MFM
       m_logPanel.ToggleVisibility();
     }
 
+    inline void ToggleHelpView()
+    {
+      m_helpPanel.ToggleVisibility();
+    }
+
     inline void ToggleToolbox()
     {
       m_toolboxPanel.ToggleVisibility();
       m_gridPanel.SetPaintingEnabled(m_toolboxPanel.IsVisible());
     }
 
+    static bool KeyHandlerToggleToolbox(u32, u32, void* arg)
+    {
+      AbstractGUIDriver & d = *(AbstractGUIDriver*) arg;
+      d.ToggleToolbox();
+      return true;
+    }
+
+    static bool KeyHandlerToggleStats(u32, u32, void* arg)
+    {
+      AbstractGUIDriver & d = *(AbstractGUIDriver*) arg;
+      d.ToggleStatsView();
+      return true;
+    }
+
+    static bool KeyHandlerToggleLog(u32, u32, void* arg)
+    {
+      AbstractGUIDriver & d = *(AbstractGUIDriver*) arg;
+      d.ToggleLogView();
+      return true;
+    }
+
+    static bool KeyHandlerToggleHelp(u32, u32, void* arg)
+    {
+      AbstractGUIDriver & d = *(AbstractGUIDriver*) arg;
+      d.ToggleHelpView();
+      return true;
+    }
+
+    static bool KeyHandlerToggleButtons(u32, u32, void* arg)
+    {
+      AbstractGUIDriver & d = *(AbstractGUIDriver*) arg;
+      d.m_buttonPanel.ToggleVisibility();
+      return true;
+    }
+
+    static bool KeyHandlerQuit(u32, u32, void*)
+    {
+      exit(0);
+    }
+    static bool KeyHandlerDisplayAER(u32, u32, void* arg)
+    {
+      AbstractGUIDriver & d = *(AbstractGUIDriver*) arg;
+      d.m_statisticsPanel.SetDisplayAER(1 + d.m_statisticsPanel.GetDisplayAER());
+      return true;
+    }
+
+    static bool KeyHandlerLeftButtonClicker(u32, u32, void *arg)
+    {
+      MFM_API_ASSERT_NONNULL(arg);
+      AbstractButton * ab = (AbstractButton*) arg;
+      ab->OnClick(SDL_BUTTON_LEFT);
+      return true;
+    }
+
+    void RegisterButtonAccelerator(AbstractButton & ab)
+    {
+      u32 keysym, mods;
+      if (!ab.GetKeyboardAccelerator(keysym, mods)) return;
+      m_keyboardMap.RegisterKeyFunction(keysym, mods, KeyHandlerLeftButtonClicker, &ab);
+    }
+
+
+    void RegisterKeyboardFunctions()
+    {
+      RegisterButtonAccelerator(m_quitButton);
+      RegisterButtonAccelerator(m_saveButton);
+      RegisterButtonAccelerator(m_nukeButton);
+      RegisterButtonAccelerator(m_xrayButton);
+      RegisterButtonAccelerator(m_gridRunButton);
+      RegisterButtonAccelerator(m_bgrButton);
+      RegisterButtonAccelerator(m_logButton);
+      RegisterButtonAccelerator(m_gridRenderButton);
+      RegisterButtonAccelerator(m_gridStepButton);
+      RegisterButtonAccelerator(m_bgViewButton);
+      RegisterButtonAccelerator(m_fgViewButton);
+      RegisterButtonAccelerator(m_screenshotButton);
+
+      m_keyboardMap.RegisterKeyFunction(SDLK_a, 0, KeyHandlerDisplayAER, this);
+      m_keyboardMap.RegisterKeyFunction(SDLK_t, 0, KeyHandlerToggleToolbox, this);
+      m_keyboardMap.RegisterKeyFunction(SDLK_i, 0, KeyHandlerToggleStats, this);
+      m_keyboardMap.RegisterKeyFunction(SDLK_h, 0, KeyHandlerToggleHelp, this);
+      m_keyboardMap.RegisterKeyFunction(SDLK_b, KMOD_CTRL, KeyHandlerToggleButtons, this);
+
+      //        m_gridPanel.ToggleDrawAtomsAsSquares();
+
+    }
+
     void KeyboardUpdate(SDL_KeyboardEvent & key, OurGrid& grid)
     {
-      bool isPress = key.type == SDL_KEYDOWN;
-      SDLMod mod = key.keysym.mod;
-      u32 keysym = key.keysym.sym;
-      bool isCtrl = (mod & KMOD_CTRL);
-      bool isShift = (mod & KMOD_SHIFT);
-      bool isAlt = (mod & KMOD_ALT);
-      bool anyMods = isCtrl || isShift || isAlt;
+
+      m_keyboardMap.HandleEvent(key);
+
+#if 0
 
       u32 speed = isShift ? CAMERA_FAST_SPEED : CAMERA_SLOW_SPEED;
 
@@ -256,24 +348,7 @@ namespace MFM
         else m_grendMove.SetX(0);
       }
 
-      if (!isPress) return;  // From here on only keypresses matter
 
-      if(keysym == SDLK_q && isCtrl)
-      {
-        exit(0);
-      }
-
-      if(keysym == SDLK_a && !anyMods)
-      {
-        m_srend.SetDisplayAER(1 + m_srend.GetDisplayAER());
-      }
-      else if(keysym == SDLK_i && !anyMods)
-      {
-        ToggleStatsView();
-      }
-      else if(keysym == SDLK_g && !anyMods)
-      {
-        m_grend.ToggleGrid();
       }
       else if(keysym == SDLK_b && !anyMods)
       {
@@ -281,7 +356,7 @@ namespace MFM
       }
       else if(keysym == SDLK_m && !anyMods)
       {
-        m_grend.ToggleMemDraw();
+        m_grend.NextDrawBackgroundType();
       }
       else if(keysym ==SDLK_k && !anyMods)
       {
@@ -340,6 +415,7 @@ namespace MFM
       {
         Super::IncrementAEPSPerFrame(isCtrl ? 10 : 1);
       }
+#endif
     }
 
     GridRenderer & GetGridRenderer()
@@ -448,7 +524,6 @@ namespace MFM
       m_gridPanel.SetToolboxPanel(&m_toolboxPanel);
       m_gridPanel.SetGrid(&Super::GetGrid());
 
-      m_statisticsPanel.SetStatsRenderer(&m_srend);
       m_statisticsPanel.SetGrid(&Super::GetGrid());
       m_statisticsPanel.SetAEPS(Super::GetAEPS());
       m_statisticsPanel.SetAER(Super::GetRecentAER());
@@ -459,8 +534,8 @@ namespace MFM
       m_statisticsPanel.SetVisibility(false);
 
       m_rootPanel.Insert(&m_gridPanel, NULL);
+      m_gridPanel.Insert(&m_buttonPanel, NULL);
       m_gridPanel.Insert(&m_statisticsPanel, NULL);
-      m_statisticsPanel.Insert(&m_buttonPanel, NULL);
       m_buttonPanel.SetVisibility(true);
 
       m_gridPanel.Insert(&m_logPanel, NULL);
@@ -486,8 +561,6 @@ namespace MFM
       m_gridPanel.Insert(&m_helpPanel, NULL);
 
       m_rootPanel.Print(STDOUT);
-
-      m_srend.OnceOnly();
 
       SDL_WM_SetCaption(MFM_VERSION_STRING_LONG, NULL);
 
@@ -632,7 +705,11 @@ namespace MFM
       m_screenHeight = tmp_m_screenHeight;
       m_desiredScreenWidth = tmp_m_desiredScreenWidth;
       m_desiredScreenHeight = tmp_m_desiredScreenHeight;
-      m_startPaused = tmp_m_startPaused;
+
+      // Mon Jun 8 11:48:17 2015 Restoring m_startPaused seems to mean
+      // we can't ever start running unless the original run that led
+      // the the original save had --run
+      //      m_startPaused = tmp_m_startPaused;
       m_thisUpdateIsEpoch = tmp_m_thisUpdateIsEpoch;
       m_bigText = tmp_m_bigText;
       m_thisEpochAEPS = tmp_m_thisEpochAEPS;
@@ -658,8 +735,8 @@ namespace MFM
       this->SetAEPSPerFrame(tmp_GetAEPSPerFrame);
       this->SetMsSpentRunning(tmp_GetMsSpentRunning);
 
-      m_tileViewButton.UpdateLabel();
-      m_heatmapButton.UpdateLabel();
+      m_bgViewButton.UpdateLabel();
+      m_fgViewButton.UpdateLabel();
 
       return true;
     }
@@ -687,7 +764,8 @@ namespace MFM
       , m_desiredScreenWidth(-1)
       , m_desiredScreenHeight(-1)
       , m_screenResizable(true)
-      , m_heatmapButton(m_gridPanel)
+      , m_fgViewButton()
+      , m_bgViewButton()
       , m_selectedTool(TOOL_SELECTOR)
       , m_toolboxPanel(&m_selectedTool)
       , m_buttonPanel()
@@ -720,12 +798,13 @@ namespace MFM
       for(u32 i = 0; i < AbstractDriver<GC>::m_neededElementCount; i++)
       {
         Element<EC> * elt = AbstractDriver<GC>::m_neededElements[i];
-        GetStatsRenderer().DisplayStatsForElement(AbstractDriver<GC>::GetGrid(), *elt);
+        m_statisticsPanel.DisplayStatsForElement(AbstractDriver<GC>::GetGrid(), *elt);
 
         const UlamElement<EC> * ue = elt->AsUlamElement();
         if (!ue || ue->GetPlaceable())
           this->RegisterToolboxElement(elt);
       }
+      RegisterKeyboardFunctions();
     }
 
     virtual void HandleResize()
@@ -733,7 +812,7 @@ namespace MFM
 
     void ToggleTileView()
     {
-      m_grend.ToggleMemDraw();
+      m_grend.NextDrawBackgroundType();
     }
 
     void RegisterToolboxElement(Element<EC>* element)
@@ -753,7 +832,7 @@ namespace MFM
       driver->m_screenWidth = STATS_START_WINDOW_WIDTH;
       driver->m_screenHeight = STATS_START_WINDOW_HEIGHT;
       driver->ToggleStatsView();
-      driver->m_srend.SetDisplayAER(driver->m_srend.GetMaxDisplayAER());
+      driver->m_statisticsPanel.SetDisplayAER(driver->m_statisticsPanel.GetMaxDisplayAER());
     }
 
     static void ConfigBatchMode(const char* not_used, void* driverptr)
@@ -784,7 +863,24 @@ namespace MFM
       }
 
       driver->m_captureScreenshots = true;
-      driver->m_srend.SetScreenshotTargetFPS(out);
+      driver->m_statisticsPanel.SetScreenshotTargetFPS(out);
+    }
+
+    static void SetRunLabelFromArgs(const char* label, void* driverptr)
+    {
+      AbstractGUIDriver* driver = (AbstractGUIDriver<GC>*)driverptr;
+
+      driver->SetRunLabel(label);
+    }
+
+    const char * GetRunLabel() const
+    {
+      return m_statisticsPanel.GetRunLabel().GetZString();
+    }
+
+    void SetRunLabel(const char * label)
+    {
+      m_statisticsPanel.SetRunLabel(label);
     }
 
     static void SetScreenWidthFromArgs(const char* str, void* driverptr)
@@ -887,6 +983,10 @@ namespace MFM
 
       this->RegisterArgument("Increase button and text size.",
                              "--bigtext", &SetIncreaseTextSizeFlag, this, false);
+
+      this->RegisterArgument("Place label at top of statistics.",
+                             "--label", &SetRunLabelFromArgs, this, true);
+
     }
 
     EditingTool m_selectedTool;
@@ -897,8 +997,9 @@ namespace MFM
 
     StatisticsPanel<GC> m_statisticsPanel;
 
-    struct ButtonPanel : public Panel
+    struct ButtonPanel : public MovablePanel
     {
+      static const u32 INITIAL_WIDTH = STATS_START_WINDOW_WIDTH;
       static const u32 MAX_BUTTONS = 16;
       static const u32 CHECKBOX_SPACING_HEIGHT = 32;
       static const u32 BUTTON_SPACING_HEIGHT = 34;
@@ -915,18 +1016,15 @@ namespace MFM
         SetName("ButtonPanel");
         SetDimensions(STATS_START_WINDOW_WIDTH,
                       SCREEN_INITIAL_HEIGHT / 2);
-        SetDesiredSize(U32_MAX, SCREEN_INITIAL_HEIGHT / 2);
+        SetDesiredSize(STATS_START_WINDOW_WIDTH, SCREEN_INITIAL_HEIGHT / 2);
         SetAnchor(ANCHOR_SOUTH);
-        /*
-        SetRenderPoint(SPoint(0,
-                              SCREEN_INITIAL_HEIGHT / 2));
-        */
+        SetAnchor(ANCHOR_EAST);
         SetForeground(Drawing::WHITE);
-        SetBackground(Drawing::DARK_PURPLE);
+        SetBackground(Drawing::LIGHTER_DARK_PURPLE);
         SetFont(FONT_ASSET_ELEMENT);
       }
 
-      void InsertCheckbox(AbstractGridCheckbox<GC>* checkbox)
+      void InsertCheckbox(AbstractGridCheckboxExternal<GC>* checkbox)
       {
         if(m_checkboxCount >= MAX_BUTTONS)
         {
@@ -977,8 +1075,9 @@ namespace MFM
         }
       }
 
-     private:
-      AbstractGridCheckbox<GC>* m_checkboxes[MAX_BUTTONS];
+    private:
+
+      AbstractGridCheckboxExternal<GC>* m_checkboxes[MAX_BUTTONS];
       AbstractGridButton<GC>*   m_buttons[MAX_BUTTONS];
 
       u32 m_checkboxCount;
@@ -1056,16 +1155,11 @@ namespace MFM
         m_grend.SetDimensions(UPoint(m_screenWidth,m_screenHeight));
       }
 
-      m_srend.SetDrawPoint(SPoint(0,0));
-      m_srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, m_screenHeight));
+      //      m_srend.SetDrawPoint(SPoint(0,0));
+      //      m_srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, m_screenHeight));
 
       printf("Screen resize: %d x %d\n", width, height);
       HandleResize();
-    }
-
-    StatsRenderer<GC> & GetStatsRenderer()
-    {
-      return m_srend;
     }
 
     void RunHelper()
