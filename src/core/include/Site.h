@@ -123,6 +123,14 @@ namespace MFM
     Base<AC> & GetBase() { return m_base; }
     const Base<AC> & GetBase() const { return m_base; }
 
+    u32 GetPaint() const {
+      return GetBase().GetPaint();
+    }
+
+    void SetPaint(u32 paint) {
+      GetBase().SetPaint(paint);
+    }
+
     void Clear() {
       m_atom.SetEmpty();
       m_eventCount = 0;

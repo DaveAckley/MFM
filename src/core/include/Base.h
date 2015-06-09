@@ -53,37 +53,58 @@ namespace MFM {
     T m_base;
     SiteSensors m_sensory;
     u64 m_lastEventEventNumber;
+    u32 m_paint;
 
   public:
+    Base()
+      : m_lastEventEventNumber(0)
+      , m_paint(0xffffffff)
+    { }
+
+    u32 GetPaint() const
+    {
+      return m_paint;
+    }
+
+    void SetPaint(u32 paint)
+    {
+      m_paint = paint;
+    }
 
     void SaveConfig(ByteSink& bs) const
     {
+      bs.Printf(",#%08x",m_paint);
       {
-        T temp = m_state;
-        AtomSerializer<AC> as(temp);
+        T tmp = m_state;
+        AtomSerializer<AC> as(tmp);
         bs.Printf(",%@", &as);
       }
       {
-        T temp = m_base;
-        AtomSerializer<AC> as(temp);
+        T tmp = m_base;
+        AtomSerializer<AC> as(tmp);
         bs.Printf(",%@", &as);
       }
     }
 
     bool LoadConfig(LineCountingByteSource & bs)
     {
-      T temp_m_state;
-      AtomSerializer<AC> as1(temp_m_state);
+      u32 tmp_m_paint;
+      if (3 != bs.Scanf(",#%08x", &tmp_m_paint))
+        return false;
+
+      T tmp_m_state;
+      AtomSerializer<AC> as1(tmp_m_state);
       if (2 != bs.Scanf(",%@", &as1))
         return false;
 
-      T temp_m_base;
-      AtomSerializer<AC> as2(temp_m_base);
+      T tmp_m_base;
+      AtomSerializer<AC> as2(tmp_m_base);
       if (2 != bs.Scanf(",%@", &as2))
         return false;
 
-      m_state = temp_m_state;
-      m_base = temp_m_base;
+      m_state = tmp_m_state;
+      m_base = tmp_m_base;
+      m_paint = tmp_m_paint;
 
       return true;
     }
