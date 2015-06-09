@@ -125,7 +125,7 @@ namespace MFM
       ExternalConfigSection<GC> * ecs = m_registeredSections[i];
       byteSink.Printf("\n[%s]\n",ecs->GetSectionName());
       ecs->WriteSection(byteSink);
-      byteSink.Printf("\n[/%s]\n",ecs->GetSectionName());
+      byteSink.Printf("[/%s]\n",ecs->GetSectionName());
     }
   }
 
