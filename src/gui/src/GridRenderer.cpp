@@ -60,11 +60,6 @@ namespace MFM
     m_renderTilesSeparated = !m_renderTilesSeparated;
   }
 
-  void GridRenderer::ToggleDataHeatmap()
-  {
-    m_tileRenderer.ToggleDataHeat();
-  }
-
   void GridRenderer::DecreaseAtomSize(SPoint around)
   {
     m_tileRenderer.DecreaseAtomSize(around);
@@ -75,14 +70,9 @@ namespace MFM
     m_tileRenderer.ToggleGrid();
   }
 
-  u32 GridRenderer::ToggleMemDraw()
+  u32 GridRenderer::NextDrawBackgroundType()
   {
-    return m_tileRenderer.ToggleMemDraw();
-  }
-
-  const char * GridRenderer::GetMemDrawName() const
-  {
-    return m_tileRenderer.GetMemDrawName();
+    return m_tileRenderer.NextDrawBackgroundType();
   }
 
   const SPoint & GridRenderer::GetDrawOrigin() const

@@ -8,11 +8,11 @@ namespace MFM
   {
     sink.Printf(",%D%D%D%D%D%D",
                 m_drawGrid,
-                m_drawMemRegions,
+                m_drawBackgroundType,
                 m_drawDataHeat,
                 m_atomDrawSize,
                 m_renderSquares,
-                m_heatmapSelector);
+                m_drawForegroundType);
 
     {
       SPoint tmp(m_windowTL);
@@ -45,11 +45,11 @@ namespace MFM
       return false;
 
     m_drawGrid = tmp[0];
-    m_drawMemRegions = (DrawRegionType) tmp[1];
+    m_drawBackgroundType = (DrawBackgroundType) tmp[1];
     m_drawDataHeat = tmp[2];
     m_atomDrawSize = tmp[3];
     m_renderSquares = tmp[4];
-    m_heatmapSelector = tmp[5];
+    m_drawForegroundType = (DrawForegroundType) tmp[5];
 
     m_windowTL = tmps;
     m_dimensions = tmpu;
@@ -63,12 +63,12 @@ namespace MFM
   TileRenderer::TileRenderer()
   {
     m_atomDrawSize = 8;
-    m_drawMemRegions = NO;
+    m_drawBackgroundType = DRAW_BACKGROUND_DARK_TILE;
     m_drawGrid = true;
     m_drawDataHeat = false;
     m_renderSquares = false;
     m_gridColor = 0xff202020;
-    m_heatmapSelector = 0;
+    m_drawForegroundType = DRAW_FOREGROUND_ELEMENT;
 
 #if 0 // Too much range for me..  Also we'd like a lighter palette background on some choice..
     m_hiddenColor  = 0xff353535;
@@ -118,20 +118,37 @@ namespace MFM
     m_drawGrid = !m_drawGrid;
   }
 
-  u32 TileRenderer::ToggleMemDraw()
+  u32 TileRenderer::NextDrawBackgroundType()
   {
-    return m_drawMemRegions = (DrawRegionType) ((m_drawMemRegions+1)%MAX);
+    return
+      m_drawBackgroundType =
+      (DrawBackgroundType) ((m_drawBackgroundType + 1) % DRAW_BACKGROUND_TYPE_COUNT);
   }
 
-  const char * TileRenderer::GetMemDrawName() const
+  const char * TileRenderer::GetDrawBackgroundTypeName() const
   {
-    switch (m_drawMemRegions)
+    switch (m_drawBackgroundType)
     {
-    case FULL:     return "Light tile";
-    case NO:       return "None";
-    case EDGE:     return "Dark tile";
-    case AGE:      return "Change age";
-    case AGE_ONLY: return "Age only";
+    case DRAW_BACKGROUND_LIGHT_TILE:  return "Light tile";
+    case DRAW_BACKGROUND_NONE:        return "None";
+    case DRAW_BACKGROUND_DARK_TILE:   return "Dark tile";
+    case DRAW_BACKGROUND_CHANGE_AGE:  return "Change age";
+    case DRAW_BACKGROUND_SITE:        return "Site";
+    default:
+      return "unknown";
+    }
+  }
+
+  const char * TileRenderer::GetDrawForegroundTypeName() const
+  {
+    switch (m_drawForegroundType)
+    {
+    case DRAW_FOREGROUND_ELEMENT:  return "Element";
+    case DRAW_FOREGROUND_ATOM_1:   return "Atom #1";
+    case DRAW_FOREGROUND_ATOM_2:   return "Atom #2";
+    case DRAW_FOREGROUND_ATOM_3:   return "Atom #3";
+    case DRAW_FOREGROUND_SITE:     return "Site";
+    case DRAW_FOREGROUND_NONE:     return "None";
     default:
       return "unknown";
     }

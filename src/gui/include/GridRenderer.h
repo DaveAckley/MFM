@@ -95,13 +95,24 @@ namespace MFM
     bool IsRenderingTilesSeparated()
     { return m_renderTilesSeparated; }
 
-    u32 IncrementHeatmapSelector()
+    u32 NextDrawForegroundType()
     {
-      return m_tileRenderer.IncrementHeatmapSelector();
+      return m_tileRenderer.NextDrawForegroundType();
     }
-    u32 GetHeatmapSelector()
+
+    u32 GetDrawForegroundType()
     {
-      return m_tileRenderer.GetHeatmapSelector();
+      return m_tileRenderer.GetDrawForegroundType();
+    }
+
+    const char * GetDrawForegroundTypeName() const
+    {
+      return m_tileRenderer.GetDrawForegroundTypeName();
+    }
+
+    const char * GetDrawBackgroundTypeName() const
+    {
+      return m_tileRenderer.GetDrawBackgroundTypeName();
     }
 
     void SetEventWindowRenderMode(EventWindowRenderMode mode);
@@ -113,8 +124,6 @@ namespace MFM
     void IncreaseAtomSize(SPoint around = SPoint(0,0));
 
     void ToggleTileSeparation();
-
-    void ToggleDataHeatmap();
 
     void DecreaseAtomSize(SPoint around = SPoint(0,0));
 
@@ -135,9 +144,7 @@ namespace MFM
       return m_tileRenderer.GetDrawDataHeatPointer();
     }
 
-    u32 ToggleMemDraw();
-
-    const char * GetMemDrawName() const ;
+    u32 NextDrawBackgroundType();
 
     const SPoint & GetDrawOrigin() const ;
 

@@ -134,14 +134,19 @@ namespace MFM
       m_atomViewPanel.Init();
     }
 
-    u32 IncrementHeatmapSelector()
+    u32 NextDrawForegroundType()
     {
-      return m_grend->IncrementHeatmapSelector();
+      return m_grend->NextDrawForegroundType();
     }
 
-    u32 GetHeatmapSelector()
+    u32 GetDrawForegroundType()
     {
-      return m_grend->GetHeatmapSelector();
+      return m_grend->GetDrawForegroundType();
+    }
+
+    const char * GetDrawForegroundTypeName() const
+    {
+      return m_grend->GetDrawForegroundTypeName();
     }
 
     AtomViewPanel<GC> * GetAtomViewPanel()

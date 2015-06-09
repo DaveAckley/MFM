@@ -5,8 +5,9 @@
 namespace MFM
 {
 
+#if 0
   template <class EC>
-  u32 TileRenderer::GetSiteColor(Tile<EC>& tile, const Site<typename EC::ATOM_CONFIG> & site,
+  u32 TileRenderer::GetForegroundColor(Tile<EC>& tile, const Site<typename EC::ATOM_CONFIG> & site,
                                  u32 selector)
   {
     const typename EC::ATOM_CONFIG::ATOM_TYPE & atom = site.GetAtom();
@@ -17,6 +18,7 @@ namespace MFM
     }
     return 0xffffffff;
   }
+#endif
 
 #if 0
   template <class EC>
@@ -54,8 +56,7 @@ namespace MFM
           if(rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
           {
             atomLoc.SetY(y);
-            if ((m_drawMemRegions == AGE || m_drawMemRegions == AGE_ONLY) &&
-                tile.IsOwnedSite(atomLoc))
+            if (m_drawBackgroundType == DRAW_BACKGROUND_CHANGE_AGE && tile.IsOwnedSite(atomLoc))
             {
               // Draw background 'write heat' map
               u32 writeAge = tile.GetUncachedWriteAge32(atomLoc -
@@ -78,13 +79,18 @@ namespace MFM
                                rendPt.GetY(),
                                m_atomDrawSize,
                                m_atomDrawSize);
-
-              if (m_drawMemRegions == AGE_ONLY)
-              {
-                continue;
-              }
             }
+            else if (m_drawBackgroundType == DRAW_BACKGROUND_SITE && tile.IsOwnedSite(atomLoc))
+            {
+              typedef typename EC::ATOM_CONFIG AC;
+              const Site<AC> & site = tile.GetSite(atomLoc);
 
+              drawing.SetForeground(site.GetPaint());
+              drawing.FillRect(rendPt.GetX(),
+                               rendPt.GetY(),
+                               m_atomDrawSize,
+                               m_atomDrawSize);
+            }
             RenderAtom(drawing, atomLoc, rendPt, tile, lowlight);
           }
         }
@@ -118,26 +124,68 @@ namespace MFM
   void TileRenderer::RenderAtom(Drawing & drawing, const SPoint& atomLoc,
                                 const UPoint& rendPt,  Tile<EC>& tile, bool lowlight)
   {
-    typedef typename EC::ATOM_CONFIG::ATOM_TYPE T;
-    const Site<typename EC::ATOM_CONFIG> & site = tile.GetSite(atomLoc);
-    const T & atom = site.GetAtom();
-    if(!atom.IsSane())
+
+    if (m_drawForegroundType == DRAW_FOREGROUND_NONE) return;
+
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    const Site<AC> & site = tile.GetSite(atomLoc);
+
+    u32 color;
+    const char * elementLabel = 0;
+    const u32 LABEL_ATOM_SIZE = 36;
+
+    if (m_drawForegroundType == DRAW_FOREGROUND_SITE)
     {
-      RenderBadAtom<EC>(drawing, rendPt);
+      color = site.GetPaint();
     }
-    else if(atom.GetType() == T::ATOM_EMPTY_TYPE) return;
-
-    u32 color = GetSiteColor(tile, site, m_heatmapSelector);
-
-    if(lowlight)
+    else
     {
-      color = Drawing::HalfColor(color);
+
+      const T & atom = site.GetAtom();
+      if(!atom.IsSane())
+      {
+        RenderBadAtom<EC>(drawing, rendPt);
+        return;
+      }
+
+      u32 type = atom.GetType();
+
+      if (type == T::ATOM_EMPTY_TYPE) return;
+
+      const Element<EC> * elt = tile.GetElementTable().Lookup(type);
+      if (!elt)
+      {
+        RenderBadAtom<EC>(drawing, rendPt);
+        return;
+      }
+
+      if (m_atomDrawSize >= LABEL_ATOM_SIZE)
+      {
+        elementLabel = elt->GetAtomicSymbol();
+      }
+
+      if (m_drawForegroundType == DRAW_FOREGROUND_ELEMENT)
+      {
+        color = elt->PhysicsColor();
+      }
+      else if (m_drawForegroundType >= DRAW_FOREGROUND_ATOM_1 &&
+               m_drawForegroundType <= DRAW_FOREGROUND_ATOM_3)
+      {
+        color = elt->LocalPhysicsColor(site,m_drawForegroundType - DRAW_FOREGROUND_ATOM_1 + 1);
+      }
+      else
+        FAIL(ILLEGAL_STATE);
+
+      if(lowlight)
+      {
+        color = Drawing::HalfColor(color);
+      }
     }
 
     if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX() &&
        rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
     {
-      if(color)
       {
         // Round up on radius.  Better to overlap than vanish
         u32 radius = (m_atomDrawSize + 1) / 2;
@@ -159,22 +207,17 @@ namespace MFM
                              radius);
         }
 
-        if (m_atomDrawSize > 40)
+        if (elementLabel)
         {
-          const Element<EC> * elt = tile.GetElement(atom.GetType());
-          if (elt)
+          drawing.SetFont(FONT_ASSET_ELEMENT);
+          const SPoint size = drawing.GetTextSize(elementLabel);
+          const UPoint box = UPoint(m_atomDrawSize, m_atomDrawSize);
+          if (size.GetX() > 0 && size.GetY() > 0)
           {
-            drawing.SetFont(FONT_ASSET_ELEMENT);
-            const char * sym = elt->GetAtomicSymbol();
-            const SPoint size = drawing.GetTextSize(sym);
-            const UPoint box = UPoint(m_atomDrawSize, m_atomDrawSize);
-            if (size.GetX() > 0 && size.GetY() > 0)
-            {
-              const UPoint usize(size.GetX(), size.GetY());
-              drawing.SetBackground(Drawing::BLACK);
-              drawing.SetForeground(Drawing::WHITE);
-              drawing.BlitBackedTextCentered(sym, rendPt, box);
-            }
+            const UPoint usize(size.GetX(), size.GetY());
+            drawing.SetBackground(Drawing::BLACK);
+            drawing.SetForeground(Drawing::WHITE);
+            drawing.BlitBackedTextCentered(elementLabel, rendPt, box);
           }
         }
       }
@@ -209,17 +252,23 @@ namespace MFM
     if(realPt.GetX() + tileHeight >= 0 &&
        realPt.GetY() + tileHeight >= 0)
     {
-      switch (m_drawMemRegions)
+      switch (m_drawBackgroundType)
       {
       default:
-      case AGE_ONLY: // Handled in RenderAtoms
-      case AGE: // Handled in RenderAtoms
-      case NO:
+      case DRAW_BACKGROUND_SITE: // Handled in RenderAtoms
+        // FALL THROUGH
+
+      case DRAW_BACKGROUND_CHANGE_AGE: // Handled in RenderAtoms
+        // FALL THROUGH
+
+      case DRAW_BACKGROUND_NONE:
         break;
-      case FULL:
+
+      case DRAW_BACKGROUND_LIGHT_TILE:
         RenderMemRegions<EC>(drawing, multPt, renderCache, selected, lowlight, TILE_SIDE);
         break;
-      case EDGE:
+
+      case DRAW_BACKGROUND_DARK_TILE:
         RenderVisibleRegionOutlines<EC>(drawing, multPt, renderCache, selected, lowlight, TILE_SIDE);
         break;
       }

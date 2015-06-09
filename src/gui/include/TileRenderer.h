@@ -41,7 +41,26 @@ namespace MFM
   {
    private:
     bool m_drawGrid;
-    enum DrawRegionType { FULL, NO, EDGE, AGE, AGE_ONLY, MAX} m_drawMemRegions;
+    enum DrawBackgroundType {
+      DRAW_BACKGROUND_LIGHT_TILE,       //< Light grey rendering of tile regions
+      DRAW_BACKGROUND_NONE,             //< No background rendering
+      DRAW_BACKGROUND_DARK_TILE,        //< Dark grey rendering of hidden regions
+      DRAW_BACKGROUND_CHANGE_AGE,       //< CubeHelix rendering of events-since-change
+      DRAW_BACKGROUND_SITE,             //< Last color painted on site
+      DRAW_BACKGROUND_TYPE_COUNT
+    } m_drawBackgroundType;
+
+    enum DrawForegroundType {
+      DRAW_FOREGROUND_ELEMENT,  //< Hardcoded physics color
+      DRAW_FOREGROUND_ATOM_1,   //< Dynamic per-atom rendering type 1
+      DRAW_FOREGROUND_ATOM_2,   //< Dynamic per-atom rendering type 2
+      DRAW_FOREGROUND_ATOM_3,   //< Dynamic per-atom rendering type 3
+      DRAW_FOREGROUND_SITE,     //< Last color painted on site
+      DRAW_FOREGROUND_NONE,     //< Do not draw atoms at all
+      DRAW_FOREGROUND_TYPE_COUNT
+    } m_drawForegroundType;
+
+
     bool m_drawDataHeat;
     u32 m_atomDrawSize;
 
@@ -58,14 +77,7 @@ namespace MFM
 
     SPoint m_windowTL;
 
-    Point<u32> m_dimensions;
-
-    u32 m_heatmapSelector;
-
-    enum
-    {
-      MAX_HEATMAP_SELECTIONS = 5
-    };
+    UPoint m_dimensions;
 
     template <class EC>
     void RenderMemRegions(Drawing & drawing, SPoint& pt,
@@ -116,8 +128,9 @@ namespace MFM
 
     void SaveDetails(ByteSink & sink) const ;
 
+    const char * GetDrawBackgroundTypeName() const;
 
-    const char * GetMemDrawName() const;
+    const char * GetDrawForegroundTypeName() const;
 
     TileRenderer();
 
@@ -125,7 +138,7 @@ namespace MFM
     void RenderTile(Drawing & drawing, Tile<EC>& t, SPoint& loc, bool renderWindow,
                     bool renderCache, bool selected, SPoint* selectedAtom, SPoint* cloneOrigin);
 
-    void SetDimensions(Point<u32> dimensions)
+    void SetDimensions(UPoint dimensions)
     {
       m_dimensions = dimensions;
     }
@@ -170,17 +183,16 @@ namespace MFM
       ChangeAtomSize(false, around);
     }
 
-    u32 IncrementHeatmapSelector()
+    DrawForegroundType NextDrawForegroundType()
     {
-      m_heatmapSelector++;
-      m_heatmapSelector %= MAX_HEATMAP_SELECTIONS;
-
-      return m_heatmapSelector;
+      return
+        m_drawForegroundType =
+        (DrawForegroundType) ((m_drawForegroundType + 1) % DRAW_FOREGROUND_TYPE_COUNT);
     }
 
-    u32 GetHeatmapSelector()
+    u32 GetDrawForegroundType()
     {
-      return m_heatmapSelector;
+      return m_drawForegroundType;
     }
 
     void ChangeAtomSize(bool increase, SPoint around) ;
@@ -192,7 +204,7 @@ namespace MFM
 
     void ToggleGrid();
 
-    u32 ToggleMemDraw();
+    u32 NextDrawBackgroundType();
 
     void ToggleDataHeat();
 
