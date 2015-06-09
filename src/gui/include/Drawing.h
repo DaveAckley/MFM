@@ -96,6 +96,7 @@ namespace MFM {
 
     static const int GREY = GREY50;
     static const int DARK_PURPLE = 0xff200020;
+    static const int LIGHTER_DARK_PURPLE = 0xff300030;
     static const int ORANGE = 0xffff6600;
 
     static u32 HalfColor(u32 input)
