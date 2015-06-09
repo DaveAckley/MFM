@@ -72,7 +72,7 @@ namespace MFM
   };
 
   template<class GC>
-  class AbstractGridCheckbox : public AbstractCheckboxExternal
+  class AbstractGridCheckboxExternal : public AbstractCheckboxExternal
   {
   public:
 
@@ -87,7 +87,7 @@ namespace MFM
       return *m_driver;
     }
 
-    AbstractGridCheckbox(const char* title)
+    AbstractGridCheckboxExternal(const char* title)
       : AbstractCheckboxExternal(title)
       , m_driver(0)
     { }
@@ -96,6 +96,26 @@ namespace MFM
     AbstractGUIDriver<GC> * m_driver;
 
   };
+
+  template<class GC>
+  class AbstractGridCheckbox : public AbstractGridCheckboxExternal<GC>
+  {
+  public:
+
+    AbstractGridCheckbox(const char* title)
+      : AbstractGridCheckboxExternal<GC>(title)
+      , m_driver(0)
+      , m_checked(false)
+    {
+      this->SetExternalValue(&m_checked);
+    }
+
+  private:
+    AbstractGUIDriver<GC> * m_driver;
+    bool m_checked;
+  };
+
+
 
   /************************************/
   /******CONCRETE BUTTONS**************/
@@ -120,6 +140,12 @@ namespace MFM
   {
     NukeButton() ;
     virtual void OnClick(u8 button) ;
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_n;
+      mod = KMOD_CTRL;
+      return true;
+    }
   };
 
   template<class GC>
@@ -127,30 +153,53 @@ namespace MFM
   {
     XRayButton() ;
     virtual void OnClick(u8 button) ;
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_x;
+      mod = 0;
+      return true;
+    }
   };
 
   template<class GC>
-  struct GridRunCheckbox : public AbstractGridCheckbox<GC>
+  struct GridRunCheckbox : public AbstractGridCheckboxExternal<GC>
   {
     GridRunCheckbox() ;
     virtual void OnCheck(bool value) ;
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_SPACE;
+      mod = 0;
+      return true;
+    }
   };
 
   template<class GC>
-  struct GridRenderButton : public AbstractGridCheckbox<GC>
+  struct GridRenderButton : public AbstractGridCheckboxExternal<GC>
   {
     GridRenderButton() ;
     virtual void OnCheck(bool value) ;
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_g;
+      mod = 0;
+      return true;
+    }
+
   };
 
   template<class GC>
-  struct HeatmapButton : public AbstractGridButton<GC>
+  struct FgViewButton : public AbstractGridButton<GC>
   {
-    HeatmapButton(GridPanel<GC>& gridPanel) ;
+    FgViewButton() ;
     virtual void OnClick(u8 button) ;
     void UpdateLabel() ;
-  private:
-    GridPanel<GC>& m_gridPanel;
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_f;
+      mod = 0;
+      return true;
+    }
   };
 
   template<class GC>
@@ -158,13 +207,25 @@ namespace MFM
   {
     GridStepCheckbox() ;
     virtual void OnClick(u8 button) ;
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_s;
+      mod = 0;
+      return true;
+    }
   };
 
   template<class GC>
-  struct TileViewButton : public AbstractGridButton<GC>
+  struct BgViewButton : public AbstractGridButton<GC>
   {
-    TileViewButton() ;
+    BgViewButton() ;
     virtual void OnClick(u8 button) ;
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_b;
+      mod = 0;
+      return true;
+    }
     void UpdateLabel() ;
   private:
   };
@@ -174,6 +235,12 @@ namespace MFM
   {
     SaveButton() ;
     virtual void OnClick(u8 button) ;
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_s;
+      mod = KMOD_CTRL;
+      return true;
+    }
   };
 
   template<class GC>
@@ -187,6 +254,12 @@ namespace MFM
     void SetDriver(AbstractDriver<GC>* driver) ;
 
     virtual void OnClick(u8 button) ;
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_p;
+      mod = 0;
+      return true;
+    }
 
   private:
     u32 m_currentScreenshot;
@@ -200,6 +273,12 @@ namespace MFM
   {
     QuitButton() ;
     virtual void OnClick(u8 button) ;
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_q;
+      mod = KMOD_CTRL;
+      return true;
+    }
   };
 
   template<class GC>
@@ -207,6 +286,12 @@ namespace MFM
   {
     ReloadButton() ;
     virtual void OnClick(u8 button) ;
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_r;
+      mod = KMOD_CTRL;
+      return true;
+    }
   };
 
   template<class GC>
@@ -217,10 +302,29 @@ namespace MFM
   };
 
   template<class GC>
-  struct BGRButton : public AbstractGridCheckbox<GC>
+  struct BGRButton : public AbstractGridCheckboxExternal<GC>
   {
     BGRButton() ;
     virtual void OnCheck(bool value) ;
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_x;
+      mod = KMOD_CTRL;
+      return true;
+    }
+  };
+
+  template<class GC>
+  struct LogButton : public AbstractGridCheckbox<GC>
+  {
+    LogButton() ;
+    virtual void OnCheck(bool value) ;
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_l;
+      mod = 0;
+      return true;
+    }
   };
 
 } /* namespace MFM */

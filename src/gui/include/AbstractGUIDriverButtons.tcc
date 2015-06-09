@@ -7,7 +7,6 @@ namespace MFM
   {
     AbstractButton::SetName("ClearButton");
     Panel::SetDimensions(200,40);
-    AbstractButton::SetRenderPoint(SPoint(2, 250));
   }
 
   template <class GC>
@@ -28,7 +27,6 @@ namespace MFM
   {
     AbstractButton::SetName("ClearGridButton");
     Panel::SetDimensions(200,40);
-    AbstractButton::SetRenderPoint(SPoint(2, 250));
   }
 
   template <class GC>
@@ -42,7 +40,6 @@ namespace MFM
   {
     AbstractButton::SetName("NukeButton");
     Panel::SetDimensions(200,40);
-    AbstractButton::SetRenderPoint(SPoint(2, 100));
   }
 
   template <class GC>
@@ -56,7 +53,6 @@ namespace MFM
   {
     AbstractButton::SetName("XRayButton");
     Panel::SetDimensions(200,40);
-    AbstractButton::SetRenderPoint(SPoint(2, 150));
   }
 
   template <class GC>
@@ -66,11 +62,10 @@ namespace MFM
   }
 
   template <class GC>
-  GridRunCheckbox<GC>::GridRunCheckbox() : AbstractGridCheckbox<GC>("Pause")
+  GridRunCheckbox<GC>::GridRunCheckbox() : AbstractGridCheckboxExternal<GC>("Pause")
   {
     AbstractButton::SetName("GridRunButton");
     Panel::SetDimensions(200, 25);
-    AbstractButton::SetRenderPoint(SPoint(2, 0));
   }
 
   template <class GC>
@@ -78,11 +73,10 @@ namespace MFM
   { }
 
   template <class GC>
-  GridRenderButton<GC>::GridRenderButton() : AbstractGridCheckbox<GC>("Grid")
+  GridRenderButton<GC>::GridRenderButton() : AbstractGridCheckboxExternal<GC>("Grid")
   {
     AbstractButton::SetName("GridRenderButton");
     Panel::SetDimensions(200,25);
-    AbstractButton::SetRenderPoint(SPoint(2, 25));
   }
 
   template <class GC>
@@ -90,29 +84,27 @@ namespace MFM
   { }
 
   template <class GC>
-  HeatmapButton<GC>::HeatmapButton(GridPanel<GC>& gridPanel)
-    : AbstractGridButton<GC>("Color type: 0")
-    , m_gridPanel(gridPanel)
+  FgViewButton<GC>::FgViewButton()
+    : AbstractGridButton<GC>("Front: Element")
   {
-    AbstractButton::SetName("HeatmapButton");
+    AbstractButton::SetName("FgViewButton");
     Panel::SetDimensions(200,25);
-    AbstractButton::SetRenderPoint(SPoint(2, 50));
   }
 
   template <class GC>
-  void HeatmapButton<GC>::UpdateLabel()
+  void FgViewButton<GC>::UpdateLabel()
   {
-    OString32 heatmapText;
-    u32 heatIdx = m_gridPanel.GetHeatmapSelector();
-    heatmapText.Printf("Color type: %d", heatIdx);
+    OString32 fgText;
+    fgText.Printf("Front: %s",
+                  this->GetGridRenderer().GetDrawForegroundTypeName());
 
-     AbstractButton::SetText(heatmapText.GetZString());
+     AbstractButton::SetText(fgText.GetZString());
   }
 
   template <class GC>
-  void HeatmapButton<GC>::OnClick(u8 button)
+  void FgViewButton<GC>::OnClick(u8 button)
   {
-    m_gridPanel.IncrementHeatmapSelector();
+    this->GetGridRenderer().NextDrawForegroundType();
     UpdateLabel();
   }
 
@@ -121,7 +113,6 @@ namespace MFM
   {
     AbstractButton::SetName("GridStepButton");
     Panel::SetDimensions(200, 40);
-    AbstractButton::SetRenderPoint(SPoint(2, 200));
   }
 
   template <class GC>
@@ -132,26 +123,25 @@ namespace MFM
   }
 
   template <class GC>
-  TileViewButton<GC>::TileViewButton() : AbstractGridButton<GC>("View")
+  BgViewButton<GC>::BgViewButton() : AbstractGridButton<GC>("Back: Light tile")
   {
-    AbstractButton::SetName("TileViewButton");
+    AbstractButton::SetName("BgViewButton");
     Panel::SetDimensions(200,40);
-    AbstractButton::SetRenderPoint(SPoint(2, 200));
   }
 
   template <class GC>
-  void TileViewButton<GC>::UpdateLabel()
+  void BgViewButton<GC>::UpdateLabel()
   {
     OString32 label;
-    label.Printf("View: %s",
-                 this->GetGridRenderer().GetMemDrawName());
+    label.Printf("Back: %s",
+                 this->GetGridRenderer().GetDrawBackgroundTypeName());
     AbstractButton::SetText(label.GetZString());
   }
 
   template <class GC>
-  void TileViewButton<GC>::OnClick(u8 button)
+  void BgViewButton<GC>::OnClick(u8 button)
   {
-    this->GetGridRenderer().ToggleMemDraw();
+    this->GetGridRenderer().NextDrawBackgroundType();
     UpdateLabel();
   }
 
@@ -160,7 +150,6 @@ namespace MFM
   {
     AbstractButton::SetName("SaveButton");
     Panel::SetDimensions(200, 40);
-    AbstractButton::SetRenderPoint(SPoint(2, 300));
   }
 
   template <class GC>
@@ -220,7 +209,6 @@ namespace MFM
   {
     AbstractButton::SetName("QuitButton");
     Panel::SetDimensions(200,40);
-    AbstractButton::SetRenderPoint(SPoint(2, 350));
   }
 
   template<class GC>
@@ -234,7 +222,6 @@ namespace MFM
   {
     AbstractButton::SetName("ReloadButton");
     Panel::SetDimensions(200,40);
-    AbstractButton::SetRenderPoint(SPoint(2, 350));
   }
 
   template<class GC>
@@ -248,7 +235,6 @@ namespace MFM
   {
     AbstractButton::SetName("PauseTileButton");
     Panel::SetDimensions(200, 40);
-    AbstractButton::SetRenderPoint(SPoint(2, 400));
   }
 
   template<class GC>
@@ -264,11 +250,10 @@ namespace MFM
   }
 
   template<class GC>
-  BGRButton<GC>::BGRButton() : AbstractGridCheckbox<GC>("Writes fault")
+  BGRButton<GC>::BGRButton() : AbstractGridCheckboxExternal<GC>("Writes fault")
   {
     AbstractButton::SetName("BGRButton");
     Panel::SetDimensions(250,25);
-    AbstractButton::SetRenderPoint(SPoint(2, 75));
     Panel::SetVisibility(true);
   }
 
@@ -276,6 +261,20 @@ namespace MFM
   void BGRButton<GC>::OnCheck(bool value)
   {
     this->GetDriver().GetGrid().SetBackgroundRadiation(this->IsChecked());
+  }
+
+  template<class GC>
+  LogButton<GC>::LogButton() : AbstractGridCheckbox<GC>("Show log")
+  {
+    AbstractButton::SetName("LogButton");
+    Panel::SetDimensions(250,25);
+    Panel::SetVisibility(true);
+  }
+
+  template<class GC>
+  void LogButton<GC>::OnCheck(bool value)
+  {
+    this->GetDriver().m_logPanel.SetVisibility(this->IsChecked());
   }
 
 } /* namespace MFM */
