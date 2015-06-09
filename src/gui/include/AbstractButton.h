@@ -161,21 +161,21 @@ namespace MFM
         if(event.m_event.button.button == SDL_BUTTON_WHEELUP ||
            event.m_event.button.button == SDL_BUTTON_WHEELDOWN)
         {
-          return false; /* Don't take wheel events. */
+          return Super::Handle(event); /* Don't take wheel events. */
         }
-        if (event.m_event.type == SDL_MOUSEBUTTONUP)      // Execute on up
+        if (event.m_event.type == SDL_MOUSEBUTTONUP && event.m_keyboardModifiers == 0)      // Execute on up
         {
           m_justClicked = true;
           OnClick(event.m_event.button.button);
           return true;                                     // We took it
         }
-        if (event.m_event.type == SDL_MOUSEBUTTONDOWN)     // But eat down too
+        if (event.m_event.type == SDL_MOUSEBUTTONDOWN && event.m_keyboardModifiers == 0)     // But eat down too
         {
           OnPress(event.m_event.button.button);
           return true;
         }
       }
-      return false;
+      return Super::Handle(event);
     }
 
     bool PaintClickHighlight(Drawing& d)
@@ -219,6 +219,19 @@ namespace MFM
      */
     virtual void OnPress(u8 button)
     { }
+
+    /**
+     * This is during initialization to see if this AbstractButton has
+     * a global keyboard accelerator associated with it.  If it
+     * returns false, no keyboard accelerator will be installed.  If
+     * it returns true, keysym and mods will have been initialized to
+     * the key and modifiers used to 'click' this button
+     *
+     */
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mods)
+    {
+      return false;
+    }
   };
 }
 

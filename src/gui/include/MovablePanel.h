@@ -36,7 +36,9 @@ namespace MFM
    private:
     SPoint m_dragPoint;
     SPoint m_preDragLocation;
+    SPoint m_preDragSize;
     bool m_dragging;
+    bool m_ctrlDragging;
 
    public:
     MovablePanel(u32 width = 0, u32 height = 0) :
@@ -44,25 +46,28 @@ namespace MFM
       m_dragging(false)
     { }
 
-    void BeginDrag(MouseButtonEvent& event)
+    void BeginDrag(MouseButtonEvent& event, bool ctrl)
     {
       m_dragging = true;
+      m_ctrlDragging = ctrl;
       m_dragPoint = event.GetAt();
       m_preDragLocation = Panel::GetRenderPoint();
+      m_preDragSize = MakeSigned(Panel::GetDimensions());
     }
 
     void EndDrag()
     {
       m_dragging = false;
+      m_ctrlDragging = false;
     }
 
     virtual bool Handle(MouseButtonEvent& event)
     {
       if(event.m_event.type == SDL_MOUSEBUTTONDOWN)
       {
-        if(event.m_keyboardModifiers & KMOD_CTRL)
+        if(event.m_keyboardModifiers & (KMOD_CTRL | KMOD_SHIFT))
         {
-          BeginDrag(event);
+          BeginDrag(event, event.m_keyboardModifiers & KMOD_CTRL);
           return true;
         }
       }
@@ -80,7 +85,19 @@ namespace MFM
       if(m_dragging)
       {
         SPoint dragOffset = event.GetAt() - m_dragPoint;
-        Panel::SetRenderPoint(m_preDragLocation + dragOffset);
+        if (m_ctrlDragging)
+        {
+          Panel::SetRenderPoint(m_preDragLocation + dragOffset);
+        }
+        else
+        {
+          const s32 MIN_WINDOW_EDGE = 10;
+          SPoint newsize =
+            max(m_preDragSize + dragOffset,
+                SPoint(MIN_WINDOW_EDGE,MIN_WINDOW_EDGE));
+          Panel::SetDimensions(newsize.GetX(), newsize.GetY());
+          Panel::SetDesiredSize(newsize.GetX(), newsize.GetY());
+        }
         return true;
       }
       else

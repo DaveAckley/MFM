@@ -32,7 +32,7 @@
 #include "SDL.h"
 #include "SDL_ttf.h"
 #include "Point.h"
-#include "Panel.h"
+#include "MovablePanel.h"
 #include "Drawing.h"
 #include "Fail.h"
 
@@ -41,7 +41,7 @@ namespace MFM
   /**
    * A Panel which displays some text and possibly an icon.
    */
-  class Label : public Panel
+  class Label : public MovablePanel
   {
    private:
 
