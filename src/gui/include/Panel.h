@@ -118,6 +118,9 @@ namespace MFM
     typedef OString32 PanelNameString;
     PanelNameString m_name;
 
+    typedef OString64 PanelDocString;
+    PanelDocString m_doc; //< Used as help text and tool tip
+
     Rect m_rect;    // Size and location of panel relative to parent
     u32 m_bdColor;  // Default border color of this panel
     u32 m_bgColor;  // Default background color of this panel
@@ -159,6 +162,18 @@ namespace MFM
     static void Indent(ByteSink& sink, u32 count) ;
 
   public:
+    void SetDoc(const char * doc)
+    {
+      MFM_API_ASSERT_NONNULL(doc);
+      m_doc.Reset();
+      m_doc.Printf("%s", doc);
+    }
+
+    const char * GetDoc() const
+    {
+      return m_doc.GetZString();
+    }
+
     void SaveAll(ByteSink& to) const ;
 
     static bool IsLegalPanelName(const char * name) ;
