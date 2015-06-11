@@ -57,7 +57,7 @@ namespace MFM {
 
       const char * (paths[]) = {
         "~/.mfm",                // Possible per-user customizations first
-        SHARED_DIR,             // Source tree root
+        SHARED_DIR,              // Source tree root
         "/usr/share/mfm",        // Debian install location
         "."                      // Last desperate hope
       };
