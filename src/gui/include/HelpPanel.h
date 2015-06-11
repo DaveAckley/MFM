@@ -53,6 +53,7 @@ namespace MFM
      */
     HelpPanel()
     {
+      Panel::SetName("HelpPanel");
       Panel::SetBackground(Drawing::DARK_PURPLE);
       Panel::SetAnchor(ANCHOR_WEST);
       Panel::SetAnchor(ANCHOR_SOUTH);
