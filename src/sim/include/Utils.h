@@ -34,14 +34,39 @@
 
 namespace MFM
 {
+  /**
+     Utility functions at the sim/ level of the code.  Unlike the
+     functions in Util.h , functions here can use the awesome
+     firepower of this fully-armed and operational Linux system,
+     including things like dates and file systems.
+   */
   namespace Utils {
 
+    /**
+       Return the current time, formatted as described under
+       GetDateTime().
+
+       \sa GetDateTime
+     */
     u64 GetDateTimeNow() ;
 
+    /**
+       Return the given time, formatted so that if the result is
+       printed in decimal, it will produce a (currently) length 14
+       string like 20150611132732, structured as YYYYMMDDHHMMSS.
+     */
     u64 GetDateTime(time_t t) ;
 
+    /**
+       Given a datetime formatted as by GetDateTime(), return the
+       YYYMMDD portion of it, like 20150611 from 20150611132732
+    */
     u32 GetDateFromDateTime(u64 datetime) ;
 
+    /**
+       Given a datetime formatted as by GetDateTime(), return the
+       HHMMSS portion of it, like 132732 from 20150611132732
+    */
     u32 GetTimeFromDateTime(u64 datetime) ;
 
     /**
@@ -77,8 +102,26 @@ namespace MFM
       }
     }
 
+    /**
+       Return null if path can currently be successfully opened for
+       reading, or return a string describing the error if it cannot.
+
+       The returned string is static and (of course) should not be
+       freed.
+
+       \sa ReadablePath(const OverflowableCharBufferByteSink<BUFSIZE> & )
+     */
     const char * ReadablePath(const char * path) ;
 
+    /**
+       Return null if path can currently be successfully opened for
+       reading, or return a string describing the error if it cannot.
+
+       The returned string is static and (of course) should not be
+       freed.
+
+       \sa ReadablePath(const char *)
+     */
     template<u32 BUFSIZE>
     const char * ReadablePath(const OverflowableCharBufferByteSink<BUFSIZE> & path)
     {

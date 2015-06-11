@@ -19,6 +19,7 @@ sim:	PLATFORMS:=sim
 
 all:	$(PLATFORMS)
 
+export MFM_VERSION_NUMBER
 doc:	FORCE
 	mkdir -p doc/ref
 	doxygen

@@ -37,7 +37,7 @@ namespace MFM
    * A template class for a ByteSink into a fixed-size char buffer.
    * If the fixed-size buffer overflows,
    * CharBufferByteSink::WriteBytes will FAIL with OUT_OF_ROOM.  For
-   * an alternative possibly more useful approach, see \ref
+   * an alternate, typically more useful, approach, see \ref
    * OverflowableCharBufferByteSink.
    */
   template <int BUFSIZE>
