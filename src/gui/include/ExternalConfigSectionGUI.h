@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  ExternalConfigSectionMFMS.h Support for persisting MFMS GUI information
+  ExternalConfigSectionGUI.h Support for persisting MFMS GUI information
   Copyright (C) 2015 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,26 +19,26 @@
 */
 
 /**
-  \file ExternalConfigSectionMFMS.h Support for persisting MFMS GUI information
+  \file ExternalConfigSectionGUI.h Support for persisting MFMS GUI information
   \author David H. Ackley.
   \date (C) 2015 All rights reserved.
   \lgpl
  */
-#ifndef EXTERNALCONFIGSECTIONMFMS_H
-#define EXTERNALCONFIGSECTIONMFMS_H
+#ifndef EXTERNALCONFIGSECTIONGUI_H
+#define EXTERNALCONFIGSECTIONGUI_H
 
 #include "ExternalConfig.h"
 
 namespace MFM
 {
   template <class GC> class AbstractGUIDriver; // FORWARD
-  template <class GC> class ExternalConfigSectionMFMS; // FORWARD
+  template <class GC> class ExternalConfigSectionGUI; // FORWARD
 
   template<class GC>
-  class ConfigFunctionCallMFMS : public ConfigFunctionCall<GC>
+  class ConfigFunctionCallGUI : public ConfigFunctionCall<GC>
   {
   public:
-    ConfigFunctionCallMFMS(const char * name, ExternalConfigSectionMFMS<GC> & ecsm)
+    ConfigFunctionCallGUI(const char * name, ExternalConfigSectionGUI<GC> & ecsm)
       : ConfigFunctionCall<GC>(name)
       , m_ecsm(ecsm)
     { }
@@ -49,41 +49,41 @@ namespace MFM
     virtual void Apply() { /* Work already done */ }
 
   private:
-    ExternalConfigSectionMFMS<GC> & m_ecsm;
+    ExternalConfigSectionGUI<GC> & m_ecsm;
 
   protected:
-    ExternalConfigSectionMFMS<GC> & GetECSM() { return m_ecsm; }
+    ExternalConfigSectionGUI<GC> & GetECSM() { return m_ecsm; }
   };
 
   template <class GC>
-  struct FunctionCallScreenConfig : public ConfigFunctionCallMFMS<GC>
+  struct FunctionCallScreenConfig : public ConfigFunctionCallGUI<GC>
   {
-    FunctionCallScreenConfig(ExternalConfigSectionMFMS<GC> & ec) ;
+    FunctionCallScreenConfig(ExternalConfigSectionGUI<GC> & ec) ;
     virtual bool Parse() ;
   };
 
   template <class GC>
-  struct FunctionCallPanelConfig : public ConfigFunctionCallMFMS<GC>
+  struct FunctionCallPanelConfig : public ConfigFunctionCallGUI<GC>
   {
-    FunctionCallPanelConfig(ExternalConfigSectionMFMS<GC> & ec) ;
+    FunctionCallPanelConfig(ExternalConfigSectionGUI<GC> & ec) ;
     virtual bool Parse() ;
   };
 
   template <class GC>
-  struct FunctionCallPanelProperty : public ConfigFunctionCallMFMS<GC>
+  struct FunctionCallPanelProperty : public ConfigFunctionCallGUI<GC>
   {
-    FunctionCallPanelProperty(ExternalConfigSectionMFMS<GC> & ec) ;
+    FunctionCallPanelProperty(ExternalConfigSectionGUI<GC> & ec) ;
     virtual bool Parse() ;
   };
 
   template<class GC>
-  class ExternalConfigSectionMFMS : public ExternalConfigSection<GC>
+  class ExternalConfigSectionGUI : public ExternalConfigSection<GC>
   {
 
   public:
     virtual const char * GetSectionName() const
     {
-      return "MFMS";
+      return "GUI";
     }
 
     virtual bool ContinueOnErrors() const
@@ -94,11 +94,11 @@ namespace MFM
     virtual bool ReadFinalize() ;
 
     /*
-     * Construct a new ExternalConfigSectionMFMS referencing a specified Grid
+     * Construct a new ExternalConfigSectionGUI referencing a specified Grid
      *
      * @param grid The grid to read from or write to.
      */
-    ExternalConfigSectionMFMS(ExternalConfig<GC>& ec, AbstractGUIDriver<GC>& guid);
+    ExternalConfigSectionGUI(ExternalConfig<GC>& ec, AbstractGUIDriver<GC>& guid);
 
     virtual void WriteSection(ByteSink & byteSink);
 
@@ -123,6 +123,6 @@ namespace MFM
   };
 }
 
-#include "ExternalConfigSectionMFMS.tcc"
+#include "ExternalConfigSectionGUI.tcc"
 
-#endif /* EXTERNALCONFIGSECTIONMFMS_H */
+#endif /* EXTERNALCONFIGSECTIONGUI_H */
