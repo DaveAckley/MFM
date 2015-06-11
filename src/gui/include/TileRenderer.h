@@ -148,20 +148,27 @@ namespace MFM
       return m_dimensions;
     }
 
-    bool* GetGridEnabledPointer()
-    {
-      return &m_drawGrid;
-    }
-
     void ToggleDrawAtomsAsSquares()
     {
       m_renderSquares = !m_renderSquares;
     }
 
+    void SetDrawGrid(bool draw)
+    {
+      m_drawGrid = draw;
+    }
+
+    bool IsDrawGrid() const
+    {
+      return m_drawGrid;
+    }
+
+#if 0
     bool* GetDrawDataHeatPointer()
     {
       return &m_drawDataHeat;
     }
+#endif
 
     const SPoint& GetWindowTL() const
     {

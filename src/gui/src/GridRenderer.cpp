@@ -40,6 +40,7 @@ namespace MFM
     m_currentEWRenderMode = mode;
   }
 
+#if 0 // XXX KILLGREX
   UPoint GridRenderer::GetDimensions() const
   {
     return m_tileRenderer.GetDimensions();
@@ -54,12 +55,14 @@ namespace MFM
   {
     m_tileRenderer.IncreaseAtomSize(around);
   }
+#endif
 
   void GridRenderer::ToggleTileSeparation()
   {
     m_renderTilesSeparated = !m_renderTilesSeparated;
   }
 
+#if 0 // XXX KILLGREX
   void GridRenderer::DecreaseAtomSize(SPoint around)
   {
     m_tileRenderer.DecreaseAtomSize(around);
@@ -84,12 +87,14 @@ namespace MFM
   {
     m_tileRenderer.SetWindowTL(origin);
   }
+#endif
 
   void GridRenderer::SetCloneOrigin(const SPoint& cloneOrigin)
   {
     m_cloneOrigin.Set(cloneOrigin.GetX(), cloneOrigin.GetY());
   }
 
+#if 0 // XXX KILLGREX
   void GridRenderer::Move(SPoint amount)
   {
     m_tileRenderer.Move(amount);
@@ -114,6 +119,7 @@ namespace MFM
   {
     m_tileRenderer.MoveRight(amount);
   }
+#endif
 
   void GridRenderer::DeselectTile()
   {
