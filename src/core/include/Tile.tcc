@@ -18,7 +18,7 @@ namespace MFM
     , m_window(*this)
     , m_state(OFF)
     , m_enabled(true)
-    , m_backgroundRadiation(false)
+    , m_backgroundRadiationEnabled(false)
     , m_requestedState(OFF)
     , m_warpFactor(3)
   {
@@ -43,7 +43,7 @@ namespace MFM
     to.Print(m_window.GetEventWindowsAttempted(),Format::LXX64);
     to.Printf(",%D%D%D",
               m_enabled,
-              m_backgroundRadiation,
+              m_backgroundRadiationEnabled,
               m_warpFactor);
   }
 
@@ -57,7 +57,7 @@ namespace MFM
     u64 tmp_EventWindowsExecuted;
     u64 tmp_EventWindowsAttempted;
     u32 tmp_m_enabled;
-    u32 tmp_m_backgroundRadiation;
+    u32 tmp_m_backgroundRadiationEnabled;
     u32 tmp_m_warpFactor;
     if (!from.Scan(tmp_m_lockAttempts,Format::LXX64)) return false;
     if (!from.Scan(tmp_m_lockAttemptsSucceeded,Format::LXX64)) return false;
@@ -65,7 +65,7 @@ namespace MFM
     if (!from.Scan(tmp_EventWindowsAttempted,Format::LXX64)) return false;
     if (4 != from.Scanf(",%D%D%D",
                         &tmp_m_enabled,
-                        &tmp_m_backgroundRadiation,
+                        &tmp_m_backgroundRadiationEnabled,
                         &tmp_m_warpFactor))
       return false;
 
@@ -74,7 +74,7 @@ namespace MFM
     m_window.SetEventWindowsExecuted(tmp_EventWindowsExecuted);
     m_window.SetEventWindowsAttempted(tmp_EventWindowsAttempted);
     m_enabled = tmp_m_enabled;
-    m_backgroundRadiation = tmp_m_backgroundRadiation;
+    m_backgroundRadiationEnabled = tmp_m_backgroundRadiationEnabled;
     m_warpFactor = tmp_m_warpFactor;
 
     return true;
@@ -117,6 +117,16 @@ namespace MFM
     for(iterator_type i = begin(); i != end(); ++i) {
       if (random.OneIn(siteOdds))
         i->GetAtom().XRay(random, bitOdds);
+    }
+  }
+
+  template <class EC>
+  void Tile<EC>::Thin(u32 siteOdds)
+  {
+    Random & random = GetRandom();
+    for(iterator_type i = begin(); i != end(); ++i) {
+      if (random.OneIn(siteOdds))
+        i->Clear();
     }
   }
 
@@ -333,7 +343,7 @@ namespace MFM
                   pt.GetX(), pt.GetY(), this->GetLabel());
     },
     {
-      if(m_backgroundRadiation &&
+      if(m_backgroundRadiationEnabled &&
          m_random.OneIn(BACKGROUND_RADIATION_SITE_ODDS))
       {
         // Write fault!
@@ -526,9 +536,15 @@ namespace MFM
   }
 
   template <class EC>
-  void Tile<EC>::SetBackgroundRadiation(bool on)
+  void Tile<EC>::SetBackgroundRadiationEnabled(bool on)
   {
-    m_backgroundRadiation = on;
+    m_backgroundRadiationEnabled = on;
+  }
+
+  template <class EC>
+  void Tile<EC>::SetForegroundRadiationEnabled(bool on)
+  {
+    m_foregroundRadiationEnabled = on;
   }
 
   template <class EC>

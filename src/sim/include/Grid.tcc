@@ -685,12 +685,21 @@ namespace MFM {
   }
 
   template <class GC>
-  void Grid<GC>::SetBackgroundRadiation(bool value)
+  void Grid<GC>::SetBackgroundRadiationEnabled(bool value)
   {
     for (iterator_type i = begin(); i != end(); ++i)
-      i->SetBackgroundRadiation(value);
+      i->SetBackgroundRadiationEnabled(value);
 
     m_backgroundRadiationEnabled = value;
+  }
+
+  template <class GC>
+  void Grid<GC>::SetForegroundRadiationEnabled(bool value)
+  {
+    for (iterator_type i = begin(); i != end(); ++i)
+      i->SetForegroundRadiationEnabled(value);
+
+    m_foregroundRadiationEnabled = value;
   }
 
   template <class GC>
@@ -698,6 +707,13 @@ namespace MFM {
   {
     for (iterator_type i = begin(); i != end(); ++i)
       i->XRay(m_xraySiteOdds, XRAY_BIT_ODDS);
+  }
+
+  template <class GC>
+  void Grid<GC>::Thin()
+  {
+    for (iterator_type i = begin(); i != end(); ++i)
+      i->Thin(m_xraySiteOdds);
   }
 
   template <class GC>

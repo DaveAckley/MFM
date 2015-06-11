@@ -413,7 +413,13 @@ namespace MFM
        true if atomic memory may be corrupted (on write) by background
        radiation.
      */
-    bool m_backgroundRadiation;
+    bool m_backgroundRadiationEnabled;
+
+    /**
+       true if atomic memory may be corrupted (on read) by background
+       radiation.
+     */
+    bool m_foregroundRadiationEnabled;
 
     enum BackgroundRadiationParameters
     {
@@ -499,11 +505,15 @@ namespace MFM
     bool AdvanceCommunication() ;
 
    public:
-    void SetBackgroundRadiation(bool value);
+    void SetBackgroundRadiationEnabled(bool value);
+
+    void SetForegroundRadiationEnabled(bool value);
 
     void SingleXRay(const SPoint & at, u32 bitOdds) ;
 
     void XRay(u32 siteOdds, u32 bitOdds) ;
+
+    void Thin(u32 siteOdds) ;
 
     void SetCacheRedundancy(u32 redundancyOddsType)
     {
@@ -959,6 +969,28 @@ namespace MFM
     {
       const S & site = GetSite(pt);
       return &site.GetAtom();
+    }
+
+    /**
+     * Gets an Atom from a specified point in this Tile, for the
+     * purpose of filling an event window with it.  The distinction
+     * between this and other 'GetAtom' methods is that if foreground
+     * radiation is enabled, the result of GetAtomForEventWindow may
+     * have been corrupted.
+     *
+     * @param pt The location of the Atom to retrieve.
+     *
+     * @returns A (possibly corrupted) copy of the Atom at location pt.
+     */
+    const T GetAtomForEventWindow(const SPoint & pt) const
+    {
+      const S & site = GetSite(pt);
+      T atom = site.GetAtom();
+      if (m_foregroundRadiationEnabled)
+      {
+        FAIL(INCOMPLETE_CODE);
+      }
+      return atom;
     }
 
     /**

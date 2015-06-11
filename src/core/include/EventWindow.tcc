@@ -349,7 +349,7 @@ namespace MFM {
     for (u32 i = 0; i < SITE_COUNT; ++i)
     {
       const SPoint & pt = md.GetPoint(i) + m_center;
-      m_atomBuffer[i] = *tile.GetAtom(pt);
+      m_atomBuffer[i] = tile.GetAtomForEventWindow(pt);
       m_isLiveSite[i] = tile.IsLiveSite(pt);
     }
   }

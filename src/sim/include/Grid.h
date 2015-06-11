@@ -128,7 +128,8 @@ namespace MFM {
     bool m_threadsInitted;
     static void * TileDriverRunner(void *) ;
 
-    bool m_backgroundRadiationEnabled;
+    bool m_backgroundRadiationEnabled; // shadows value pushed to tiles
+    bool m_foregroundRadiationEnabled; // shadows value pushed to tiles
 
     ElementRegistry<EC> m_er;
 
@@ -293,11 +294,6 @@ namespace MFM {
 
     Random& GetRandom() { return m_random; }
 
-    bool* GetBackgroundRadiationEnabledPointer()
-    {
-      return &m_backgroundRadiationEnabled;
-    }
-
     friend class GridRenderer;
 
     void SetSeed(u32 seed);
@@ -311,8 +307,9 @@ namespace MFM {
       , m_tileDrivers(new TileDriver[m_width * m_height * 3])
       , m_threadsInitted(false)
       , m_backgroundRadiationEnabled(false)
+      , m_foregroundRadiationEnabled(false)
       , m_er(elts)
-      , m_xraySiteOdds(1000)
+      , m_xraySiteOdds(100)
       , m_rgi(m_width * m_height)
     {
 
@@ -693,29 +690,42 @@ namespace MFM {
      * Sets whether or not background radiation will begin mutating
      * the Atoms of this Grid upon writing.
      */
-    void SetBackgroundRadiation(bool value);
-
-    /**
-     * Toggles the background radiation in this Grid .
-     */
-    void ToggleBackgroundRadiation()
-    {
-      SetBackgroundRadiation(!m_backgroundRadiationEnabled);
-    }
+    void SetBackgroundRadiationEnabled(bool value);
 
     /**
      * Checks to see if this Grid is currently administering
-     * background radiataion.
+     * background radiation.
      */
-    bool IsBackgroundRadiataionEnabled()
+    bool IsBackgroundRadiationEnabled() const
     {
       return m_backgroundRadiationEnabled;
+    }
+
+
+    /**
+     * Sets whether or not foreground radiation will begin mutating
+     * the Atoms of this Grid upon reading.
+     */
+    void SetForegroundRadiationEnabled(bool value);
+
+    /**
+     * Checks to see if this Grid is currently administering
+     * foreground radiation.
+     */
+    bool IsForegroundRadiationEnabled() const
+    {
+      return m_foregroundRadiationEnabled;
     }
 
     /**
      * Randomly flips bits in randomly selected sites in this grid.
      */
     void XRay();
+
+    /**
+     * Randomly erases randomly selected sites in this grid.
+     */
+    void Thin();
 
     u32 CountActiveSites() const;
   };
