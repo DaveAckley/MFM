@@ -113,11 +113,6 @@ namespace MFM
                      color);
   }
 
-  void TileRenderer::ToggleGrid()
-  {
-    m_drawGrid = !m_drawGrid;
-  }
-
   u32 TileRenderer::NextDrawBackgroundType()
   {
     return
