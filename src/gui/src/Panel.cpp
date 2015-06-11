@@ -86,6 +86,20 @@ namespace MFM {
     sink.Printf("]\n");
   }
 
+  u32 Panel::GetChildCount() const
+  {
+    u32 count = 0;
+    if (m_top) {
+      Panel * p = m_top;
+      do {
+        p = p->m_forward;
+        ++count;
+      } while (p != m_top);
+    }
+    return count;
+  }
+
+
   void Panel::PrintFullName(ByteSink & sink) const
   {
     if (m_parent)
@@ -370,6 +384,11 @@ namespace MFM {
         oldFont = drawing.SetFont(font);
       }
 
+      const u32 oldfg = drawing.GetForeground();
+      const u32 oldbg = drawing.GetForeground();
+      drawing.SetForeground(m_fgColor);
+      drawing.SetBackground(m_bgColor);
+
       PaintComponent(drawing);
       PaintBorder(drawing);
 
@@ -380,6 +399,9 @@ namespace MFM {
 
       if (oldFont)
         drawing.SetFont(oldFont);
+
+      drawing.SetForeground(oldfg);
+      drawing.SetBackground(oldbg);
     }
   }
 
@@ -400,8 +422,6 @@ namespace MFM {
 
   void Panel::PaintComponent(Drawing & drawing)
   {
-    drawing.SetForeground(m_fgColor);
-    drawing.SetBackground(m_bgColor);
     drawing.Clear();
   }
 
