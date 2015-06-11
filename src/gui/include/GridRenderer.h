@@ -89,12 +89,10 @@ namespace MFM
 
     ~GridRenderer();
 
-    TileRenderer& GetTileRenderer()
-    { return m_tileRenderer; }
-
     bool IsRenderingTilesSeparated()
     { return m_renderTilesSeparated; }
 
+#if 0 // XXX KILLGREX
     u32 NextDrawForegroundType()
     {
       return m_tileRenderer.NextDrawForegroundType();
@@ -114,26 +112,45 @@ namespace MFM
     {
       return m_tileRenderer.GetDrawBackgroundTypeName();
     }
+#endif
 
     void SetEventWindowRenderMode(EventWindowRenderMode mode);
 
-    UPoint GetDimensions() const;
+// XXX KILLGREX    UPoint GetDimensions() const;
 
-    void SetDimensions(UPoint dimensions);
+// XXX KILLGREX    void SetDimensions(UPoint dimensions);
 
-    void IncreaseAtomSize(SPoint around = SPoint(0,0));
+// XXX KILLGREX    void IncreaseAtomSize(SPoint around = SPoint(0,0));
 
     void ToggleTileSeparation();
 
-    void DecreaseAtomSize(SPoint around = SPoint(0,0));
+// XXX KILLGREX    void DecreaseAtomSize(SPoint around = SPoint(0,0));
 
-    void ToggleGrid();
+// XXX KILLGREX    void ToggleGrid();
 
+#if 0 // XXX KILLGREX
     void ToggleDrawAtomsAsSquares()
     {
       m_tileRenderer.ToggleDrawAtomsAsSquares();
     }
 
+    void SetDrawGrid(bool draw)
+    {
+      m_tileRenderer.SetDrawGrid(draw);
+    }
+
+    bool IsDrawGrid() const
+    {
+      return m_tileRenderer.IsDrawGrid();
+    }
+#endif
+
+    TileRenderer & GetTileRenderer() { return m_tileRenderer; }
+
+    const TileRenderer & GetTileRenderer() const { return m_tileRenderer; }
+
+
+#if 0
     bool* GetGridEnabledPointer()
     {
       return m_tileRenderer.GetGridEnabledPointer();
@@ -143,24 +160,25 @@ namespace MFM
     {
       return m_tileRenderer.GetDrawDataHeatPointer();
     }
+#endif
 
-    u32 NextDrawBackgroundType();
+// XXX KILLGREX    u32 NextDrawBackgroundType();
 
-    const SPoint & GetDrawOrigin() const ;
+// XXX KILLGREX    const SPoint & GetDrawOrigin() const ;
 
-    void SetDrawOrigin(const SPoint & origin) ;
+// XXX KILLGREX    void SetDrawOrigin(const SPoint & origin) ;
 
     void SetCloneOrigin(const SPoint& cloneOrigin) ;
 
-    void Move(SPoint amount);
+// XXX KILLGREX    void Move(SPoint amount);
 
-    void MoveUp(u8 amount);
+// XXX KILLGREX    void MoveUp(u8 amount);
 
-    void MoveDown(u8 amount);
+// XXX KILLGREX    void MoveDown(u8 amount);
 
-    void MoveLeft(u8 amount);
+// XXX KILLGREX    void MoveLeft(u8 amount);
 
-    void MoveRight(u8 amount);
+// XXX KILLGREX    void MoveRight(u8 amount);
 
     void DeselectTile();
 
