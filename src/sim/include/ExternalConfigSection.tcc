@@ -12,6 +12,7 @@ namespace MFM
   ExternalConfigSection<GC>::ExternalConfigSection(ExternalConfig<GC> & ec)
     : m_ec(ec)
     , m_registeredFunctionCount(0)
+    , m_sectionEnabled(true)
   {
   }
 
@@ -26,9 +27,10 @@ namespace MFM
   {
     LineCountingByteSource & lcbs = m_ec.GetByteSource();
 
-    if (!ReadInit())
+    if (this->IsEnabled() && !ReadInit())
       return false;
 
+    u32 functionErrors = 0;
     OString64 cbbs;
     while (true) {
 
@@ -40,21 +42,22 @@ namespace MFM
         return lcbs.Msg(Logger::ERROR, "I/O error (%d)", -ch);
       }
 
-      if (ch == '#') {
-        // Line comment.  Skip to newline and try again
-        lcbs.SkipSet("[^\n]");
-        continue;
-      }
-
       if (ch == '[') {
-        // End of current section or error
+        // Then end of current section, or error
         const char * secname = GetSectionName();
         cbbs.Reset();
         if (3 != lcbs.Scanf("/%[_a-zA-Z0-9]]",&cbbs) ||
             !cbbs.Equals(secname))
           return lcbs.Msg(Logger::ERROR, "Expected [/%s]", secname);
 
-        return ReadFinalize();
+        return !this->IsEnabled() || ReadFinalize();
+      }
+
+      if (ch == '#' || !this->IsEnabled()) {
+        // Line comment, or entire section is disabled.
+        // Either way, skip to newline and try again
+        lcbs.SkipSet("[^\n]");
+        continue;
       }
 
       lcbs.Unread();
@@ -69,7 +72,6 @@ namespace MFM
         return lcbs.Msg(Logger::ERROR, "Expected open parenthesis after '%@'", &cbbs);
 
       bool handled = false;
-      u32 functionErrors = 0;
       for (u32 i = 0; i < m_registeredFunctionCount; ++i) {
         ConfigFunctionCall<GC> & fc = *m_registeredFunctions[i];
         if (cbbs.Equals(fc.m_functionName)) {

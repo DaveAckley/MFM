@@ -88,6 +88,16 @@ namespace MFM
      */
     bool ReadSection();
 
+    bool IsEnabled() const
+    {
+      return m_sectionEnabled;
+    }
+
+    void SetEnabled(bool value)
+    {
+      m_sectionEnabled = value;
+    }
+
     /**
      * Writes the current section information to the given
      * \a ByteSink.
@@ -107,10 +117,11 @@ namespace MFM
   private:
     ExternalConfig<GC>& m_ec;
 
-    static const u32 MAX_REGISTERED_FUNCTIONS = 64;
+    static const u32 MAX_REGISTERED_FUNCTIONS = 16;
     ConfigFunctionCall<GC> * (m_registeredFunctions[MAX_REGISTERED_FUNCTIONS]);
     u32 m_registeredFunctionCount;
 
+    bool m_sectionEnabled;
   };
 }
 

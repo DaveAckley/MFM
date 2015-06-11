@@ -939,6 +939,12 @@ namespace MFM
 
       const char * path = m_configurationPaths[m_currentConfigurationPath];
 
+      LoadMFS(path);
+    }
+
+    bool LoadMFS(const char * path)
+    {
+
       LOG.Debug("Loading configuration from %s...", path);
 
       FileByteSource fs(path);
@@ -948,11 +954,11 @@ namespace MFM
         m_externalConfig.SetByteSource(fs, path);
         m_externalConfig.Read();
         fs.Close();
+        return true;
       }
-      else
-      {
-        LOG.Error("Can't read configuration file '%s'", path);
-      }
+
+      LOG.Error("Can't read configuration file '%s'", path);
+      return false;
     }
 
 
@@ -1259,10 +1265,8 @@ namespace MFM
       m_overheadPercent = overheadPercent;
     }
 
-    OurGrid & GetGrid()
-    {
-      return m_grid;
-    }
+    OurGrid & GetGrid() { return m_grid; }
+    const OurGrid & GetGrid() const { return m_grid; }
 
     void SetSeed(u32 seed)
     {
@@ -1379,6 +1383,13 @@ namespace MFM
     ExternalConfig<GC> m_externalConfig;
     ExternalConfigSectionDriver<GC> m_externalConfigSectionDriver;
     ExternalConfigSectionGrid<GC> m_externalConfigSectionGrid;
+
+  public:
+    bool IsLoadDriverSection() const { return m_externalConfigSectionDriver.IsEnabled(); }
+    void SetLoadDriverSection(bool val) { m_externalConfigSectionDriver.SetEnabled(val); }
+
+    bool IsLoadGridSection() const { return m_externalConfigSectionGrid.IsEnabled(); }
+    void SetLoadGridSection(bool val) { m_externalConfigSectionGrid.SetEnabled(val); }
 
   };
 }
