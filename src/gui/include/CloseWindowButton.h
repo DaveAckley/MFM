@@ -89,7 +89,7 @@ namespace MFM
     {
       if(button == SDL_BUTTON_LEFT)
       {
-        m_parentPanel->SetVisibility(false);
+        m_parentPanel->SetVisible(false);
       }
     }
   };

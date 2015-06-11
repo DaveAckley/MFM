@@ -124,7 +124,7 @@ namespace MFM
 
       m_atomViewPanel.SetName("AtomViewer");
       m_atomViewPanel.SetRenderPoint(SPoint(326, 0));
-      m_atomViewPanel.SetVisibility(false);
+      m_atomViewPanel.SetVisible(false);
 
       Panel::Insert(&m_atomViewPanel, NULL);
     }
@@ -134,6 +134,7 @@ namespace MFM
       m_atomViewPanel.Init();
     }
 
+#if 0 // XXX KILLGREX
     u32 NextDrawForegroundType()
     {
       return m_grend->NextDrawForegroundType();
@@ -148,6 +149,7 @@ namespace MFM
     {
       return m_grend->GetDrawForegroundTypeName();
     }
+#endif
 
     AtomViewPanel<GC> * GetAtomViewPanel()
     {
@@ -165,6 +167,7 @@ namespace MFM
       m_atomViewPanel.ToggleVisibility();
     }
 
+#if 0
     void ToggleDrawAtomsAsSquares()
     {
       if(m_grend)
@@ -172,6 +175,7 @@ namespace MFM
         m_grend->ToggleDrawAtomsAsSquares();
       }
     }
+#endif
 
     void SetGridRenderer(GridRenderer* grend)
     {
@@ -509,6 +513,8 @@ namespace MFM
 
     virtual bool Handle(MouseButtonEvent& mbe)
     {
+      TileRenderer& tileRenderer = m_grend->GetTileRenderer();
+
       SDL_MouseButtonEvent & event = mbe.m_event.button;
       if(event.type == SDL_MOUSEBUTTONDOWN)
       {
@@ -533,7 +539,7 @@ namespace MFM
         {
         case SDL_BUTTON_LEFT:
           m_leftButtonDragStart = pt;
-          m_leftButtonGridStart = m_grend->GetDrawOrigin();
+          m_leftButtonGridStart = tileRenderer.GetWindowTL();
           /* FALL THROUGH */
         case SDL_BUTTON_MIDDLE:
         case SDL_BUTTON_RIGHT:
@@ -574,10 +580,10 @@ namespace MFM
           }
           break;
         case SDL_BUTTON_WHEELUP:
-          m_grend->IncreaseAtomSize(pt);
+          tileRenderer.IncreaseAtomSize(pt);
           break;
         case SDL_BUTTON_WHEELDOWN:
-          m_grend->DecreaseAtomSize(pt);
+          tileRenderer.DecreaseAtomSize(pt);
           break;
         }
       }
@@ -586,6 +592,7 @@ namespace MFM
 
     virtual bool Handle(MouseMotionEvent& mbe)
     {
+      TileRenderer& tileRenderer = m_grend->GetTileRenderer();
       SDL_MouseMotionEvent & event = mbe.m_event.motion;
       if (mbe.m_keyboardModifiers & KMOD_CTRL)
       {
@@ -593,7 +600,7 @@ namespace MFM
         {
           SPoint nowAt(event.x, event.y);
           SPoint delta = nowAt - m_leftButtonDragStart;
-          m_grend->SetDrawOrigin(m_leftButtonGridStart+delta);
+          tileRenderer.SetWindowTL(m_leftButtonGridStart+delta);
         }
       }
       else

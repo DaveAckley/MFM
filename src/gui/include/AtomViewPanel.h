@@ -90,7 +90,7 @@ namespace MFM
         (Panel::IsVisible() ||
         (m_toolboxPanel->IsVisible() &&
          m_toolboxPanel->GetSelectedTool() == TOOL_ATOM_SELECTOR));
-      this->SetVisibility(visible);
+      this->SetVisible(visible);
     }
 
     void PaintDisplayAtomicControllers(Drawing & d, T& atom,const Element<EC>* elt)

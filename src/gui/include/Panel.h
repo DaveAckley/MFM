@@ -191,16 +191,12 @@ namespace MFM
     Panel * GetTop() { return m_top; }
     //    Panel* Pop() ;
 
+    u32 GetChildCount() const ;
+
     void Remove(Panel* child) ;
 
-    void SetVisibility(bool value){ m_visible = value; }
-
-    void ToggleVisibility(){ m_visible = !m_visible; }
-
-    bool IsVisible()
-    {
-      return m_visible;
-    }
+    void SetVisible(bool value){ m_visible = value; }
+    bool IsVisible() const { return m_visible; }
 
     u32 GetWidth() const {return m_rect.GetWidth();}
 
@@ -373,14 +369,12 @@ namespace MFM
        beginning of the painting process.  The default implementation
        (which may be accessed, if overridden, via
        this->Panel::IsVisible) does nothing; overriding
-       implementations may use SetVisibility and/or ToggleVisibility
-       to alter the visibility of this Panel before its painting
-       begins in earnest.  Note this method is called only during
-       painting; during dispatching the m_visible variable is checked
-       directly.
+       implementations may use SetVisible to alter the visibility of
+       this Panel before its painting begins in earnest.  Note this
+       method is called only during painting; during dispatching the
+       m_visible variable is checked directly.
 
-       @sa SetVisibility
-       @sa ToggleVisibility
+       @sa SetVisible
 
      */
     virtual void PaintUpdateVisibility(Drawing & config);
