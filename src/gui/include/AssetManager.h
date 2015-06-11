@@ -33,6 +33,7 @@
 #include "SDL_ttf.h"
 #include "Logger.h"
 #include "Utils.h"
+#include "Point.h"
 
 namespace MFM
 {
@@ -74,6 +75,10 @@ namespace MFM
     FONT_ASSET_HELPPANEL_SMALL,
     FONT_ASSET_LOGGER,
     FONT_ASSET_LABEL,
+    FONT_ASSET_BUTTON_SMALL,
+    FONT_ASSET_BUTTON_MEDIUM,
+    FONT_ASSET_BUTTON = FONT_ASSET_BUTTON_MEDIUM,
+    FONT_ASSET_BUTTON_BIG,
 
     // MUST REMAIN LAST
     FONT_ASSET_NONE,
@@ -189,12 +194,19 @@ namespace MFM
         surfaces[IMAGE_ASSET_AIRBRUSH_ICON_BIG] = LoadImage("images/airbrush_icon_big.png");
         surfaces[IMAGE_ASSET_CLOSE_WINDOW_ICON] = LoadImage("images/close_window_icon.png");
 
-        fonts[FONT_ASSET_ELEMENT] = LoadFont("fonts/Inconsolata.ttf", 26);
-        fonts[FONT_ASSET_ELEMENT_BIG] = LoadFont("fonts/Inconsolata.ttf", 40);
-        fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont("fonts/Inconsolata.ttf", 26);
-        fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont("fonts/Inconsolata.ttf", 20);
-        fonts[FONT_ASSET_LOGGER] = LoadFont("fonts/Inconsolata.ttf", 14);
-        fonts[FONT_ASSET_LABEL] = LoadFont("fonts/Inconsolata.ttf", 20);
+        const char * FIX_FONT = "fonts/Inconsolata.ttf";
+        const char * PRO_FONT = "fonts/Mate-Regular.ttf";
+        const char * PSC_FONT = "fonts/MateSC-Regular.ttf";
+
+        fonts[FONT_ASSET_ELEMENT] = LoadFont(FIX_FONT, 26);
+        fonts[FONT_ASSET_ELEMENT_BIG] = LoadFont(FIX_FONT, 40);
+        fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont(PSC_FONT, 26);
+        fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont(PRO_FONT, 22);
+        fonts[FONT_ASSET_LOGGER] = LoadFont(FIX_FONT, 14);
+        fonts[FONT_ASSET_LABEL] = LoadFont(PSC_FONT, 20);
+        fonts[FONT_ASSET_BUTTON_SMALL] = LoadFont(PSC_FONT, 16);
+        fonts[FONT_ASSET_BUTTON_MEDIUM] = LoadFont(PSC_FONT, 20);
+        fonts[FONT_ASSET_BUTTON_BIG] = LoadFont(PSC_FONT, 24);
 
         initialized = true;
       }
@@ -221,6 +233,12 @@ namespace MFM
 
         initialized = false;
       }
+    }
+
+    static UPoint GetSize(ImageAsset a)
+    {
+      SDL_Surface * s = GetReal(a);
+      return UPoint(s->w, s->h);
     }
 
     static SDL_Surface* Get(ImageAsset a)
