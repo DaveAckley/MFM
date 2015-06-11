@@ -51,9 +51,6 @@ namespace MFM
     u32 m_enabledFg;
     u32 m_enabledBg;
 
-    u32 m_disabledFg;
-    u32 m_disabledBg;
-
     bool m_justClicked;
 
   public:
@@ -115,6 +112,16 @@ namespace MFM
       m_enabled = isEnabled;
     }
 
+    void SetEnabledFg(u32 fgColor)
+    {
+      m_enabledFg = fgColor;
+    }
+
+    void SetEnabledBg(u32 bgColor)
+    {
+      m_enabledBg = bgColor;
+    }
+
     /**
      * Checks to see whether or not this AbstractButton is enabled and
      * is therefore responding to mouse hits.
@@ -125,30 +132,6 @@ namespace MFM
     bool IsEnabled() const
     {
       return m_enabled;
-    }
-
-    void SetDisabledForeground(u32 rgb) { m_disabledFg = rgb; }
-    void SetDisabledBackground(u32 rgb) { m_disabledBg = rgb; }
-    void SetEnabledForeground(u32 rgb) { m_enabledFg = rgb; }
-    void SetEnabledBackground(u32 rgb) { m_enabledBg = rgb; }
-
-    u32 GetDisabledForeground() const { return m_disabledFg; }
-    u32 GetDisabledBackground() const { return m_disabledBg; }
-    u32 GetEnabledForeground() const { return m_enabledFg; }
-    u32 GetEnabledBackground() const { return m_enabledBg; }
-
-    u32 SetForeground(const u32 color)
-    {
-      u32 old = Super::SetForeground(color);
-      SetEnabledForeground(color);
-      return old;
-    }
-
-    u32 SetBackground(const u32 color)
-    {
-      u32 old = Super::SetBackground(color);
-      SetEnabledBackground(color);
-      return old;
     }
 
     /////////
@@ -194,6 +177,14 @@ namespace MFM
     virtual void PaintComponentNonClick(Drawing& d);
 
     virtual void PaintComponent(Drawing & d);
+
+    void SetColorsFromEnabling();
+
+    /**
+       Do the raised/sunken thing with a brightened and darkened
+       version of the border color.
+     */
+    void PaintBorder(Drawing & drawing);
 
     /**
      * Pure abstract behavior method. This is called if this

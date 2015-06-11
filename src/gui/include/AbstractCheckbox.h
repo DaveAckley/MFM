@@ -40,6 +40,8 @@ namespace MFM
   class AbstractCheckbox : public AbstractButton
   {
    public:
+    typedef AbstractButton Super;
+
     /**
      * Constructs a new AbstractCheckbox which is not linked to a
      * boolean value and is therefore not ready to be used.
@@ -66,12 +68,31 @@ namespace MFM
 
     virtual void PaintComponent(Drawing& d)
     {
-      d.BlitImageAsset(GetImageAsset(), UPoint(0, 0));
+      this->SetColorsFromEnabling();
 
       d.SetForeground(Panel::GetForeground());
+      d.SetBackground(Panel::GetBackground());
+      d.Clear();
 
-      d.BlitText(AbstractButton::GetText(), UPoint(32, 0),
-                 AbstractButton::GetDimensions());
+      ImageAsset icon = GetImageAsset();
+      UPoint iconSize = AssetManager::GetSize(icon);
+      u32 sy = 0;
+      if (Panel::GetHeight() > iconSize.GetY())
+        sy = (Panel::GetHeight() - iconSize.GetY()) / 2;
+
+      d.BlitImageAsset(icon, UPoint(0, sy));
+
+      const char * text = AbstractButton::GetText();
+      if(strlen(text))
+      {
+        SPoint dims = MakeSigned(Panel::GetDimensions());
+        SPoint norg = SPoint((s32) iconSize.GetX(), 0);
+        dims -= norg;
+        SPoint textSize = Panel::GetTextSize(d.GetFont(), text);
+        SPoint renderAt = max((dims - textSize)/2, SPoint(0,0)) + norg;
+
+        d.BlitText(text, MakeUnsigned(renderAt), GetDimensions());
+      }
     }
 
     virtual void OnClick(u8 button)
@@ -114,21 +135,6 @@ namespace MFM
         IMAGE_ASSET_CHECKBOX_ICON_OFF ;
     }
 
-#if 0
-    /**
-     * Gets the SDL_Surface pointer which should be drawn depending on
-     * the state held by the boolean value pointed to by \c m_externalValue .
-     *
-     * @returns The SDL_Surface pointer which should be drawn
-     *          depending on the state held by the boolean value
-     *          pointed to by \c m_externalValue .
-     */
-    inline SDL_Surface* GetIcon()
-    {
-      return AssetManager::Get(GetAsset());
-    }
-#endif
-
     /**
      * To be performed only once during initialization. This is most
      * likely going to be used by constructors to set the default
@@ -136,10 +142,13 @@ namespace MFM
      */
     void OnceOnly()
     {
-      Panel::SetForeground(Drawing::WHITE);
+      SetForeground(Drawing::WHITE);
+      SetBackground(Drawing::GREY10);
+      //      SetBackground(Drawing::ORANGE);
     }
   };
 
+#if 0
   /**
    * A subclass of an AbstractCheckbox in which an extern bool * is
    * used to implement the boolean value.
@@ -204,6 +213,7 @@ namespace MFM
       *m_externalPointer = checked;
     }
   };
+#endif
 }
 
 #endif /* ABSTRACTCHECKBOX_H */
