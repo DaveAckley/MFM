@@ -20,9 +20,10 @@ sub NoVerb {
 }
 
 sub Help {
+    my $v = VERSION;
     print <<EOH;
 
-mfzmake: Low-level tool to generate .mfz files
+MFZ format file packer version $v
 
 SYNOPSIS: $0 COMMAND FILES..
 
@@ -38,20 +39,23 @@ $0 version   [or]  -v
 
 $0 make HANDLE MFZFILETOMAKE filetopack1 filetopack2..
 
-    Create a runnable mfz file named MFZFILETOMAKE containing the
-    supplied files (along with the HANDLE's public keyfile), signed by
-    HANDLE's private key.
+    Create a mfz file named MFZFILETOMAKE that can be run by mfzrun
+    containing the supplied files (along with the HANDLE's public
+    keyfile), signed by HANDLE's private key.
 
     Certain filetopack names and globs are recognized and handled
-    specially by mfzmake and/or mfzrun, including:
+    specially by mfzmake and/or mfzrun, including (for any FOO):
 
-       (1) FOO.so files    -> mapped to -ep FOO.so by mfzrun
-       (2) FOO.mfs files   -> mapped to -cp FOO.mfs by mfzrun
-       (3) FOO.ulam files  -> mapped nowhere by mfzrun (might be used by ulam for rebuilding)
-       (4) args.txt files  -> mapped to additional command line arguments by mfzrun
-       (4) other files     -> mapped nowhere by mfzrun (but accepted and packed by mfzmake)
+       (1) FOO.so    -> mfzrun maps this to -ep FOO.so
+       (2) FOO.mfs   -> mfzrun maps this to -cp FOO.mfs
+       (3) FOO.ulam  -> unused by mfzrun (but ulam might use)
+       (4) args.txt  -> mfzrun adds content to command line arguments
+
+    Any other files are accepted and packed by mfzmake, by unused by mfzrun.
 
 $0 keygen HANDLE
+
+    Generate a signing key for HANDLE.
 
 EOH
     exit(0);
@@ -177,14 +181,18 @@ sub MakeInnerZip {
     for my $file (@files) {
         UDie("'$file' is handled automatically, cannot pack it explicitly")
             if $file eq MFZ_PUBKEY_NAME;
+
+        open (my $fh, "<", $file) or UDie("Can't read '$file': $!");
+        my $modtime = (stat($fh))[9];
+
         $z->newStream(
             Name          => $file,
             CanonicalName => 1,
             BinModeIn     => 1,
+            Time          => $modtime,
             ExtAttr       => 0666 << 16)
             or die "Zip reinit failed on '$file': $ZipError\n";
 
-        open (my $fh, "<", $file) or UDie("Can't read '$file': $!");
         while (<$fh>) { $z->print ($_); }
         close $fh or IDie("Failed closing '$file': $!");
     }
