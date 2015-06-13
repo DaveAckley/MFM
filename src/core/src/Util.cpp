@@ -55,4 +55,23 @@ namespace MFM
 
     nanosleep(&tspec, NULL);
   }
+
+  u32 InterpolateColors(const u32 color1, const u32 color2, const u32 percentOfColor1)
+  {
+    if (percentOfColor1 >= 100) return color1;
+    if (percentOfColor1 == 0) return color2;
+
+    const u32 percentOfColor2 = 100 - percentOfColor1;
+    u32 res = 0;
+    for (u32 i = 0; i < 32; i += 8) {
+      u32 comp1 = (color1 >> i) & 0xff;
+      u32 comp2 = (color2 >> i) & 0xff;
+      u32 mix = (percentOfColor1 * comp1 + percentOfColor2 * comp2) / 100;
+      res |= mix << i;
+    }
+
+    return res;
+  }
+
+
 }

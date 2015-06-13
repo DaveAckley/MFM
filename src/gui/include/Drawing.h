@@ -96,7 +96,7 @@ namespace MFM {
 
     static const int GREY = GREY50;
     static const int DARK_PURPLE = 0xff200020;
-    static const int LIGHTER_DARK_PURPLE = 0xff300030;
+    static const int LIGHTER_DARK_PURPLE = 0xff280028;
     static const int ORANGE = 0xffff6600;
 
     static u32 HalfColor(u32 input)
@@ -110,17 +110,6 @@ namespace MFM {
     }
 
     Drawing(SDL_Surface * dest = 0, FontAsset font = FONT_ASSET_NONE) ;
-
-    /**
-       Return a weighted average of color1 and color2, averaging the
-       RGBA components separately.  If percentOfColor1 is 0, return
-       color2.  If percentOfColor1 is 100 or greater, return color1.
-
-       Such linear mixing in RGBA works okay when mixing with white or
-       black, but in general it isn't necessarily sensible in physical
-       or perceptual terms.
-     */
-    static u32 InterpolateColors(const u32 color1, const u32 color2, u32 percentOfColor1);
 
     /**
        Update the drawing window.  The GetX() and GetY() of rect

@@ -441,6 +441,27 @@ namespace MFM {
     Sleep(microseconds/M, (microseconds%M)*DecU64(0,K));
   }
 
+  /**
+     Return a weighted average of color1 and color2, averaging the
+     RGBA components separately.  If percentOfColor1 is 0, return
+     color2.  If percentOfColor1 is 100 or greater, return color1.
+
+     Such linear mixing in RGBA works okay when mixing with white or
+     black, but in general it isn't necessarily sensible in physical
+     or perceptual terms.
+  */
+  u32 InterpolateColors(const u32 color1, const u32 color2, u32 percentOfColor1);
+
+  inline u32 DarkenColor(const u32 color, const u32 percentToDarken)
+  {
+    return InterpolateColors(0xff000000, color, percentToDarken);
+  }
+
+  inline u32 BrightenColor(const u32 color, const u32 percentToBrighten)
+  {
+    return InterpolateColors(0xffffffff, color, percentToBrighten);
+  }
+
 }
 
 #endif /* UTIL_H */
