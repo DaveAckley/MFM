@@ -6,7 +6,7 @@ namespace MFM
 {
   void AbstractButton::Init()
   {
-    this->SetEnabledFg(Drawing::GREY90);
+    this->SetEnabledFg(Drawing::GREY80);
     this->SetEnabledBg(Drawing::GREY20);
     this->SetFont(FONT_ASSET_BUTTON);
   }
@@ -54,8 +54,8 @@ namespace MFM
 
     const u32 bd = Panel::GetBorder();
     const u32 PERCENT_ORIG = 80;
-    const u32 topc = Drawing::InterpolateColors(bd, top, PERCENT_ORIG);
-    const u32 botc = Drawing::InterpolateColors(bd, bot, PERCENT_ORIG);
+    const u32 topc = InterpolateColors(bd, top, PERCENT_ORIG);
+    const u32 botc = InterpolateColors(bd, bot, PERCENT_ORIG);
 
     const u32 height = Panel::GetHeight();
     const u32 width = Panel::GetWidth();
@@ -83,8 +83,8 @@ namespace MFM
     u32 bg = m_enabledBg;
     if (!m_enabled)
     {
-      const u32 nfg = Drawing::InterpolateColors(fg, bg, 36);
-      bg = Drawing::InterpolateColors(bg, fg, 100);
+      const u32 nfg = InterpolateColors(fg, bg, 36);
+      bg = InterpolateColors(bg, fg, 100);
       fg = nfg;
     }
     Panel::SetForeground(fg);
