@@ -257,7 +257,7 @@ namespace MFM
       return m_statisticsPanel.IsVisible();
     }
 
-    static bool KeyHandlerToggleButtons(u32, u32, void* arg)
+    static bool KeyHandlerToggleButtons(u32, u32, void* arg, bool)
     {
       AbstractGUIDriver & d = *(AbstractGUIDriver*) arg;
       d.m_buttonPanel.SetVisible(!d.m_buttonPanel.IsVisible());
@@ -268,14 +268,14 @@ namespace MFM
     {
       exit(0);
     }
-    static bool KeyHandlerDisplayAER(u32, u32, void* arg)
+    static bool KeyHandlerDisplayAER(u32, u32, void* arg, bool)
     {
       AbstractGUIDriver & d = *(AbstractGUIDriver*) arg;
       d.m_statisticsPanel.SetDisplayAER(1 + d.m_statisticsPanel.GetDisplayAER());
       return true;
     }
 
-    static bool KeyHandlerLeftButtonClicker(u32, u32, void *arg)
+    static bool KeyHandlerLeftButtonClicker(u32, u32, void *arg, bool)
     {
       MFM_API_ASSERT_NONNULL(arg);
       AbstractButton * ab = (AbstractButton*) arg;
@@ -576,6 +576,7 @@ namespace MFM
       m_toolboxPanel.SetAnchor(ANCHOR_WEST);
       m_toolboxPanel.SetAnchor(ANCHOR_NORTH);
       m_gridPanel.Insert(&m_toolboxPanel, NULL);
+      m_toolboxPanel.AddButtons();
       m_toolboxPanel.RebuildControllers();
 
       // Put toolbox above info..
@@ -837,13 +838,6 @@ namespace MFM
 
     virtual void HandleResize()
     { }
-
-#if 0
-    void ToggleTileView()
-    {
-      m_grend.NextDrawBackgroundType();
-    }
-#endif
 
     void RegisterToolboxElement(Element<EC>* element)
     {
