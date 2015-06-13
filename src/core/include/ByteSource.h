@@ -32,6 +32,7 @@
 #include "Format.h"
 #include "ByteSink.h"
 #include <stdarg.h>    /* For ... */
+#include <ctype.h>     /* For tolower */
 
 namespace MFM
 {
@@ -290,6 +291,66 @@ namespace MFM
       }
       ScanSet(result, "[_a-zA-Z0-9]");
       return true;
+    }
+
+    /**
+     * Scans this ByteSource for a double-quoted string, using %XX
+     * hex-escaping for all non-printable characters plus " and %
+     *
+     * @param result The ByteSink to which all the characters of the
+     *               string (de-quoted and de-escaped) will be
+     *               appended.
+     *
+     * @returns \c true if the next characters of this ByteSource
+     *          (after whitespace) were successfully read as a
+     *          double-quoted string.
+     */
+    bool ScanDoubleQuotedString(ByteSink & result)
+    {
+      SkipWhitespace();
+      if (Read() != '"')
+      {
+        Unread();
+        return false;
+      }
+      enum { REGULAR, ESCAPE1, ESCAPE2 } state = REGULAR;
+      u8 buf;
+      while (true) {
+        s32 ch = Read();
+        if (ch < 0 || ch == '\n')
+        {
+          Unread();
+          return false;
+        }
+        if (state == REGULAR)
+        {
+          if (ch == '"') return true;
+          if (ch != '%') result.Printf("%c",ch);
+          else
+          {
+            state = ESCAPE1;
+            buf = 0;
+          }
+          continue;
+        }
+
+        // state == ESCAPE1 or 2
+        ch = tolower(ch);
+        if (ch >= '0' && ch <= '9') buf = (buf<<4) + (ch - '0');
+        else if (ch >= 'a' && ch <= 'f') buf = (buf<<4) + (ch - 'a' + 10);
+        else
+        {
+          Unread();
+          return false;
+        }
+
+        if (state == ESCAPE1) state = ESCAPE2;
+        else
+        {
+          result.Printf("%c",buf);
+          state = REGULAR;
+        }
+      }
     }
 
     /**

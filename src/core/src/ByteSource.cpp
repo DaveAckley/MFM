@@ -314,11 +314,17 @@ namespace MFM {
       // Here we read an '%'
       alt = false;
       fieldWidth = -1;
+      s32 pointerSize = -1;
       //NYI: padChar = ' ';
 
     again:
       u32 type = 0;
       switch (p = *format++) {
+      case '?':
+        if (pointerSize >= 0) FAIL(ILLEGAL_ARGUMENT);
+        pointerSize = va_arg(ap,s32);
+        goto again;
+
       case '#': alt = true; goto again;
 
       case '0':
@@ -364,6 +370,19 @@ namespace MFM {
         }
         break;
 
+      // %w is optional whitespace: counts as match even if none, consumes no arg
+      case 'w':
+        SkipWhitespace();
+        ++matches;
+        break;
+
+      // %W is mandatory whitespace: fails unless at least one, consumes no arg
+      case 'W':
+        if (SkipWhitespace() == 0)
+          return -matches;
+        ++matches;
+        break;
+
       case 'b': type = Format::BIN; goto store;
       case 'o': type = Format::OCT; goto store;
       case 'd': type = Format::DEC; goto store;
@@ -376,7 +395,14 @@ namespace MFM {
       store:
         if (!Scan(result,(Format::Type) type, fieldWidth))
           return -matches;
-        StorePtr4(ap, (u32) result);
+        switch (pointerSize)
+        {
+        case -1:
+        case 4: StorePtr4(ap, (u32) result); break;
+        case 2: StorePtr2(ap, (u16) result); break;
+        case 1: StorePtr1(ap, (u8) result); break;
+        default: FAIL(ILLEGAL_STATE);
+        }
         ++matches;
         break;
 

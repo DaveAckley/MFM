@@ -2,10 +2,25 @@
 #include "ByteSource.h"
 #include "ByteSerializable.h"
 #include <string.h>   /* For strlen */
+#include <ctype.h>    /* For isprint */
 
 namespace MFM {
 
   DiscardBytes DevNullByteSink;
+
+  void ByteSink::PrintDoubleQuotedString(const char * zstring)
+  {
+    WriteByte('"');
+    u8 ch;
+    while ((ch = *zstring++))
+    {
+      if (!isprint(ch) || ch == '"' || ch == '%')
+        Printf("%%%02x",ch);
+      else
+        WriteByte(ch);
+    }
+    WriteByte('"');
+  }
 
   void ByteSink::Copy(ByteSource & restOfThis)
   {
@@ -521,7 +536,6 @@ XXX UPDATE
     default:                    // Either I don't know that code, or you're bogus.
       FAIL(BAD_FORMAT_ARG);     // Either way, I die.  You're welcome.
     }
+    }
   }
-}
-
 }

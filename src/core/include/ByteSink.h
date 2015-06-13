@@ -161,6 +161,8 @@ namespace MFM {
 
     void Vprintf(const char * format, va_list & ap) ;
 
+    void PrintDoubleQuotedString(const char * zstring) ;
+
   private:
     template <class UNSIGNED_TYPE>
     static u32 CountDigits(UNSIGNED_TYPE num, u32 base) {
