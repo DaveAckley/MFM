@@ -87,24 +87,10 @@ namespace MFM
       return (u32) PSYM_NORMAL;
     }
 
-    virtual u32 DefaultPhysicsColor() const
+    virtual u32 GetElementColor() const
     {
       return 0xff11bb33;
     }
-
-    /*
-    virtual u32 DefaultLowlightColor() const
-    {
-      return 0xff0c8023;
-    }
-    */
-
-    /*
-    virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
-    {
-      return DefaultPhysicsColor();
-    }
-    */
 
     typedef typename MFM::AbstractElement_Xtal<EC>::XtalSites XtalSites;
 

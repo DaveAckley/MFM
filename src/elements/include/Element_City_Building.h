@@ -159,17 +159,12 @@ namespace MFM
       return 0;
     }
 
-    virtual u32 DefaultPhysicsColor() const
+    virtual u32 GetElementColor() const
     {
       return 0xff800000;
     }
 
-    virtual u32 DefaultLowlightColor() const
-    {
-      return 0xff426344;
-    }
-
-    virtual u32 LocalPhysicsColor(const Site<AC>& site, u32 selector) const
+    virtual u32 GetAtomColor(const Site<AC>& site, u32 selector) const
     {
       const T& atom  = site.GetAtom();
       switch(GetSubType(atom))

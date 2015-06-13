@@ -77,21 +77,10 @@ namespace MFM
     }
 
     /* This color will be the default rendering color for your element. */
-    virtual u32 DefaultPhysicsColor() const
+    virtual u32 GetElementColor() const
     {
       return 0xffd2b486;
     }
-
-    /*
-       This color will be the color rendered when your element is
-       rendered in lowlighting.
-     */
-    /* use default (halfcolor)
-    virtual u32 DefaultLowlightColor() const
-    {
-      return 0xff2a241c;
-    }
-    */
 
     /*
       This is a short description of your element.

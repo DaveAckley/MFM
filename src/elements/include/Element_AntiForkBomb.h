@@ -86,7 +86,7 @@ namespace MFM
 
     enum { DEFAULT_COLOR = 0xff333333 };
 
-    virtual u32 LocalPhysicsColor(const Site<AC>& site, u32 selector) const
+    virtual u32 GetAtomColor(const Site<AC>& site, u32 selector) const
     {
       const T& atom  = site.GetAtom();
       u32 level = AFInflammationLevel::Read(atom);  // 0..3
@@ -201,7 +201,7 @@ namespace MFM
       return 100;
     }
 
-    virtual u32 DefaultPhysicsColor() const
+    virtual u32 GetElementColor() const
     {
       return DEFAULT_COLOR;
     }

@@ -68,7 +68,7 @@ namespace MFM
       return 100;
     }
 
-    virtual u32 DefaultPhysicsColor() const
+    virtual u32 GetElementColor() const
     {
       return 0xff676700;
     }

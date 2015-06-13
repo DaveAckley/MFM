@@ -1,7 +1,7 @@
 #ifndef ELEMENT_BOIDS2_H   /* -*- C++ -*- */
 #define ELEMENT_BOIDS2_H
 
-#include "Element_Boids.h"    
+#include "Element_Boids.h"
 
 namespace MFM
 {
@@ -21,13 +21,13 @@ namespace MFM
 
     Element_Boids2() { }
 
-    virtual const T & GetDefaultAtom() const 
+    virtual const T & GetDefaultAtom() const
     {
       static T defaultAtom(TYPE,0,0,Element_Boids<CC>::STATE_BITS);
       return defaultAtom;
     }
 
-    virtual u32 DefaultPhysicsColor() const 
+    virtual u32 GetElementColor() const
     {
       return 0xfff00000;
     }

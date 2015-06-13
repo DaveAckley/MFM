@@ -70,11 +70,6 @@ namespace MFM
       Element<EC>::SetName("Yellow Fork Bomb");
     }
 
-    virtual u32 LocalPhysicsColor(const Site<AC>& site, u32 selector) const
-    {
-      return 0xffcccc00;
-    }
-
     virtual void Behavior(EventWindow<EC>& window) const
     {
       Random & random = window.GetRandom();
@@ -86,6 +81,11 @@ namespace MFM
         u32 idx = random.Between(loIdx,hiIdx);
         window.SetRelativeAtomSym(md.GetPoint(idx), window.GetCenterAtomSym());
       }
+    }
+
+    virtual u32 GetElementColor() const
+    {
+      return 0xffcccc00;
     }
 
   };

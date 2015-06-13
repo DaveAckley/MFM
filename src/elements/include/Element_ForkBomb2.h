@@ -69,7 +69,7 @@ namespace MFM
       Element<EC>::SetName("Blue Fork Bomb");
     }
 
-    virtual u32 LocalPhysicsColor(const Site<AC>& site, u32 selector) const
+    virtual u32 GetElementColor() const
     {
       return 0xff0000aa;
     }

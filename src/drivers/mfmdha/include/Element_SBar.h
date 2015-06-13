@@ -205,21 +205,17 @@ namespace MFM
       return atom;
     }
 
-    virtual u32 DefaultPhysicsColor() const
+    virtual u32 GetElementColor() const
     {
       return 0xffffff00;
     }
 
-    virtual u32 DefaultLowlightColor() const
-    {
-      return 0xff7f7f00;
-    }
     virtual u32 PercentMovable(const T& you, const T& me, const SPoint& offset) const
     {
       return 0;
     }
 
-    virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const
+    virtual u32 GetAtomColor(const T & atom, u32 selector) const
     {
       switch (selector) {
       case 1: {
@@ -231,7 +227,7 @@ namespace MFM
                                0xffff0000);
       }
       default:
-        return Element<EC>::PhysicsColor();
+        return Element<EC>::GetElementColor();
       }
     }
 

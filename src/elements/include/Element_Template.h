@@ -79,7 +79,7 @@ namespace MFM
     }
 
     /* <<TEMPLATE>> This color will be the default rendering color for your element. */
-    virtual u32 DefaultPhysicsColor() const
+    virtual u32 GetElementColor() const
     {
       return 0xffff00ff;
     }

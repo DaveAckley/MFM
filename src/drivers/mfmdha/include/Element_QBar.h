@@ -224,7 +224,7 @@ namespace MFM
       return atom;
     }
 
-    virtual u32 DefaultPhysicsColor() const
+    virtual u32 GetElementColor() const
     {
       return 0xffffff00;
     }
@@ -235,7 +235,7 @@ namespace MFM
     }
 
 
-    virtual u32 LocalPhysicsColor(const T & atom, u32 selector) const
+    virtual u32 GetAtomColor(const T & atom, u32 selector) const
     {
       switch (selector) {
       case 1: {
@@ -250,7 +250,7 @@ namespace MFM
         {
           u32 timer = GetTimer(atom);
           return ColorMap_SEQ6_GnBu::THE_INSTANCE.
-            GetInterpolatedColor(timer,0,MAX_TIMER_VALUE-1, Element<EC>::PhysicsColor());
+            GetInterpolatedColor(timer,0,MAX_TIMER_VALUE-1, Element<EC>::GetElementColor());
         }
       }
       return 0x0;

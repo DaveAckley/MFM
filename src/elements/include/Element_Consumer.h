@@ -102,17 +102,10 @@ namespace MFM
       return 0;
     }
 
-    virtual u32 DefaultPhysicsColor() const
+    virtual u32 GetElementColor() const
     {
       return 0xff202030;
     }
-
-    /*
-    virtual u32 DefaultLowlightColor() const
-    {
-      return 0xff101018;
-    }
-    */
 
     virtual const char* GetDescription() const
     {

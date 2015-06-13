@@ -62,17 +62,10 @@ namespace MFM
       Element<EC>::SetName("L1,2 crystal");
     }
 
-    virtual u32 DefaultPhysicsColor() const
+    virtual u32 GetElementColor() const
     {
       return 0xff11bb33;
     }
-
-    /*
-    virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
-    {
-      return DefaultPhysicsColor();
-    }
-    */
 
     typedef typename MFM::AbstractElement_Xtal<EC>::XtalSites XtalSites;
 
