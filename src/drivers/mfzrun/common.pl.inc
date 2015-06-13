@@ -8,7 +8,7 @@ use File::Temp qw(tempdir);
 use IO::Uncompress::Unzip qw($UnzipError);
 use Digest::SHA qw(sha512_hex);
 
-sub VERSION { 1.0 }
+sub VERSION { "1.0" }
 sub MFZRUN_HEADER { "MFZ(".VERSION.")\n" }
 sub MFZ_PUBKEY_NAME { "MFZPUBKEY.DAT" }
 sub MFZ_SIG_NAME { "MFZSIG.DAT" }
@@ -255,13 +255,15 @@ sub UnzipStream {
 #            print STDERR "Writing $destfile\n";
             my $fh = IO::File->new($destfile, "w")
                 or die "Couldn't write to $destfile: $!";
+            my $length = 0;
             while (($status = $u->read($buff)) > 0) {
+                 $length += length($buff);
 #                print STDERR "Read ".length($buff)."\n";
                 $fh->write($buff);
             }
             $fh->close();
             $totouch = $destfile;
-            push @paths, [$destdir, $name, $stored_time];
+            push @paths, [$destdir, $name, $stored_time, $length];
         }
 
         utime ($stored_time, $stored_time, $totouch)
