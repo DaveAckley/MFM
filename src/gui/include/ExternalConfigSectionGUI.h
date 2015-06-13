@@ -28,6 +28,7 @@
 #define EXTERNALCONFIGSECTIONGUI_H
 
 #include "ExternalConfig.h"
+#include "Panel.h"
 
 namespace MFM
 {
@@ -38,9 +39,9 @@ namespace MFM
   class ConfigFunctionCallGUI : public ConfigFunctionCall<GC>
   {
   public:
-    ConfigFunctionCallGUI(const char * name, ExternalConfigSectionGUI<GC> & ecsm)
+    ConfigFunctionCallGUI(const char * name, ExternalConfigSectionGUI<GC> & ecsg)
       : ConfigFunctionCall<GC>(name)
-      , m_ecsm(ecsm)
+      , m_ecsg(ecsg)
     { }
     virtual bool Parse() = 0;
 
@@ -49,10 +50,10 @@ namespace MFM
     virtual void Apply() { /* Work already done */ }
 
   private:
-    ExternalConfigSectionGUI<GC> & m_ecsm;
+    ExternalConfigSectionGUI<GC> & m_ecsg;
 
   protected:
-    ExternalConfigSectionGUI<GC> & GetECSM() { return m_ecsm; }
+    ExternalConfigSectionGUI<GC> & GetECSG() { return m_ecsg; }
   };
 
   template <class GC>
@@ -109,7 +110,19 @@ namespace MFM
       return m_guid;
     }
 
+    void SetLastPanelConfig(Panel * p)
+    {
+      m_lastPanelConfig = p;
+    }
+
+    Panel * GetLastPanelConfig()
+    {
+      return m_lastPanelConfig;
+    }
+
   private:
+
+    Panel * m_lastPanelConfig;
 
     /**
      * The AbstractGUIDriver to configure or read from.
