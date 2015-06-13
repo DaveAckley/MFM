@@ -17,28 +17,37 @@ my (undef, $binDir, $scriptName) = File::Spec ->splitpath($0);
 $binDir =~ s!/$!!;
 
 my $progname = NextArg();
-die "No program name" unless defined $progname;
-SetProgramName($progname);
-
 my $optverb = NextArg() || "";
+if (!defined($progname)) {
+    $progname = "YOURMFZFILE.mfz";
+    $optverb = "help";
+}
+#SetProgramName($progname);
+
 my $verb = lc($optverb);
 if ($verb eq "help" || $verb eq "-h") {
+    my $v = VERSION;
     print <<EOH;
+MFZ format simulation runner version $v
 
-SYNOPSIS:
+SYNOPSIS: $0 FILE.mfz [COMMAND]
 
-$progname help
-$progname -h
+$0
+$0 $progname help
+$0 $progname -h
     Print this help
 
-$progname verify
+$0 $progname verify
     Check the file signature but do not run it
 
-$progname unpack [DESTINATION_DIRECTORY]
+$0 $progname list
+    Check the file signature and list contents but do not run it
+
+$0 $progname unpack [DESTINATION_DIRECTORY]
     Verify and unpack the file but do not run it
 
-$progname
-$progname run
+$0 $progname
+$0 $progname run
     Run the file if it is signed by a recognized handle
 
 EOH
@@ -50,13 +59,14 @@ my %verbs = (
     "verify" => 1,
     "run" => 1,
     "unpack" => 1,
+    "list" => 1,
     "" => 1,
 );
 
 UDie("Unknown command '$optverb'")
     unless defined $verbs{$verb};
 
-open MFZ, "<", $progname or die "Can't read '$progname' as .mfz file: $!";
+open MFZ, "<", $progname or die "Can't read '$progname' as .mfz file: $!\n";
 
 my $firstLine = <MFZ>;
 
@@ -129,6 +139,39 @@ my $fingerprint = ComputeFingerprintFromFullPublicKey($fullpubstring);
 
 print "SIGNED BY RECOGNIZED HANDLE: $pubhandle ($fingerprint)\n";
 if ($verb eq "verify") {
+    exit 0;
+}
+if ($verb eq "list") {
+    my $maxpath = 0;
+    my $maxname = 0;
+    my $maxtime = 0;
+    my $maxsize = 0;
+    for my $prec (@innerpaths) {
+        my ($path, $name, $time, $size) = @{$prec};
+        $path =~ s!^$destdir/!!;
+        $time = localtime($time);
+        $maxpath = length($path) if length($path) > $maxpath;
+        $maxname = length($name) if length($name) > $maxname;
+        $maxtime = length($time) if length($time) > $maxtime;
+        $maxsize = length($size) if length($size) > $maxsize;
+    }
+    printf("FILES:\n%*s  %*s  %*s  %*s\n",
+           -$maxpath, ($maxpath > 4)?"Path":"",
+           -$maxname, "Name",
+           $maxsize, "Size",
+           -$maxtime, "Time"
+        );
+    for my $prec (@innerpaths) {
+        my ($path, $name, $time, $size) = @{$prec};
+        $path =~ s!^$destdir/!!;
+        $time = localtime($time);
+        printf("%*s  %*s  %*s  %*s\n",
+               -$maxpath, $path,
+               -$maxname, $name,
+               $maxsize, $size,
+               -$maxtime, $time
+            );
+    }
     exit 0;
 }
 
