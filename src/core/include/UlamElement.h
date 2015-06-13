@@ -83,7 +83,6 @@ namespace MFM
     virtual const char * GetLicense() const = 0;
     virtual bool GetPlaceable() const = 0;
     virtual const u32 GetVersion() const = 0;
-    virtual const u32 GetNumColors() const = 0;
     virtual const u32 GetElementColor() const = 0;
     virtual const u32 GetSymmetry(UlamContext<EC>& uc) const = 0;
 
@@ -155,12 +154,15 @@ namespace MFM
        is called!  Any attempt to access event services during this
        method will fail!  That includes event window accesses AND
        random numbers!
+
+       This base class implementation, if not overridden, yields the
+       element color for all atoms and selectors.
      */
     virtual Ui_Ut_14181u Uf_8getColor(UlamContext<EC>& uc,
-                                             T& Uv_4self,
-                                             Ui_Ut_102321u Uv_8selector) const
+                                      T& Uv_4self,
+                                      Ui_Ut_102321u Uv_8selector) const
     {
-      return Ui_Ut_14181u(0xffffffff);
+      return Ui_Ut_14181u(this->GetElementColor());
     }
 
     virtual bool GetPlaceable() const
@@ -227,7 +229,7 @@ namespace MFM
      */
     static s32 PositionOfDataMember(UlamContext<EC>& uc, u32 type, const char * dataMemberTypeName) ;
 
-    virtual u32 DefaultPhysicsColor() const
+    virtual u32 GetElementColor() const
     {
       if (m_info) {
         return m_info->GetElementColor();
@@ -235,15 +237,18 @@ namespace MFM
       return 0xffffffff;
     }
 
-    virtual u32 LocalPhysicsColor(const T& atom, u32 selector) const
+    virtual u32 GetAtomColor(const Site<AC>& site, u32 selector) const
     {
-      /* XXX REWRITE!
-      if (m_info && m_info->GetNumColors() > selector) {
-        UlamContext<EC> uc;
-        return m_info->GetColor(uc, atom, selector);
-      }
-      */
-      return this->PhysicsColor();
+      if (selector == 0)
+        return GetElementColor();
+
+      UlamContext<EC> uc;
+      T temp(site.GetAtom());
+      Ui_Ut_102321u sel(selector);
+      //      Ui_Ut_102321u dynColor;
+      Ui_Ut_14181u dynColor;
+      dynColor = Uf_8getColor(uc, temp, sel);
+      return dynColor.read();
     }
 
     virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const

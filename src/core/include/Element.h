@@ -395,23 +395,23 @@ namespace MFM
     }
 
     /**
-     * Gets the current 32-bit ARGB color which this all Atoms of this
-     * Element should be rendered with.
+     * Gets the 32-bit ARGB color that represents this Element,
+     * independent of any atomic details, possibly modified by
+     * user-requested lowlighting etc.
      *
-     * @param The selected current 32-bit ARGB color which is
-     *        suggested to render any Atom of this Element with.
      */
-    virtual u32 PhysicsColor() const
+    u32 GetStaticColor() const
     {
+      u32 baseColor = this->GetElementColor();
+
       if(m_renderLowlight)
       {
-        return DefaultLowlightColor();
+        baseColor = DarkenColor(baseColor, 50);
       }
-      else
-      {
-        return DefaultPhysicsColor();
-      }
+
+      return baseColor;
     }
+
 
     /**
      * Gets a string of a short description of the behavior of this
@@ -428,34 +428,13 @@ namespace MFM
     }
 
     /**
-     * Gets the 32-bit ARGB formatted color that all Atoms of this
-     * Element will be drawn with.
+     * Gets the 32-bit ARGB formatted color represents this element,
+     * independent of any atomic details.
      *
-     * @returns The 32-bit ARGB formatted color that all Atoms of this
-     *          Element will be drawn with.
+     * @returns The 32-bit ARGB formatted color that represents this
+     * element.
      */
-    virtual u32 DefaultPhysicsColor() const = 0;
-
-    /**
-     * Gets the 32-bit ARGB formatted color that all Atoms of this
-     * Element will be drawn with when they have lowlight drawing
-     * enabled.
-     *
-     * @returns The lowlight color to draw all Atoms of this Element
-     *          with.
-     */
-    virtual u32 DefaultLowlightColor() const
-    {
-      u8 r, g, b;
-      u32 oc = DefaultPhysicsColor();
-
-      /* Shift them one more to divide by 2 */
-      r = (oc & 0x00ff0000) >> 17;
-      g = (oc & 0x0000ff00) >> 9;
-      b = (oc & 0x000000ff) >> 1;
-
-      return 0xff000000 | (r << 16) | (g << 8) | b;
-    }
+    virtual u32 GetElementColor() const = 0;
 
     /**
      * Toggles the lowlight / normal rendering of all Atoms of this
@@ -467,23 +446,44 @@ namespace MFM
     }
 
     /**
-     * Used during rendering, will select a color for any Atom of this
-     * Element to be rendered with. This should be overridden if
-     * wanting to use a gradient or some other variable color based on
-     * the body of the specified Atom .
+     * For use during rendering, return the color to render a specific
+     * Atom of this Element.  The default base class implementation
+     * returns GetElementColor() for all atoms.  This should be
+     * overridden if wanting to use a gradient or some other variable
+     * color based on the body of the specified Atom .
      *
      * @param site The Site containing an Atom of this Element, of
      *             which the color is to be found.
      *
      * @param selector An additional argument which may be used to
-     *                 determine the color of which to render \c atom
-     *                 .
+     *                 determine the color of which to render \c atom.
+     *                 Values in the range of 1..3 are defined; a
+     *                 value of 0 should be treated as requesting the
+     *                 GetElementColor() .
      *
      * @returns The 32-bit ARGB color of which to render \c atom with.
      */
-    virtual u32 LocalPhysicsColor(const Site<AC>& site, u32 selector) const
+    virtual u32 GetAtomColor(const Site<AC>& site, u32 selector) const
     {
-      return PhysicsColor();
+      return GetElementColor();
+    }
+
+    /**
+     * Gets the 32-bit ARGB color that represents a specific atom of
+     * this Element, possibly computed on the fly, and possibly
+     * modified by user-requested lowlighting etc.
+     *
+     */
+    u32 GetDynamicColor(const Site<AC>& site, u32 selector) const
+    {
+      u32 baseColor = this->GetAtomColor(site, selector);
+
+      if(m_renderLowlight)
+      {
+        baseColor = DarkenColor(baseColor, 50);
+      }
+
+      return baseColor;
     }
 
     /**

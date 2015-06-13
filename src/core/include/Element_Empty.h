@@ -67,14 +67,9 @@ namespace MFM
       return "The Element which represents empty space. Events do not occur for this Element.";
     }
 
-    virtual u32 DefaultPhysicsColor() const
+    virtual u32 GetElementColor() const
     {
       return 0x00000000;                    // Not black.. transparent
-    }
-
-    virtual u32 DefaultLowlightColor() const
-    {
-      return 0x00000000;
     }
 
     virtual void Behavior(EventWindow<EC>& window) const
