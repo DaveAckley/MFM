@@ -34,9 +34,7 @@
 
 namespace MFM {
 
-  typedef bool (*KeyHandlerFunction)(u32 keysym, u32 mods, void * arg);
-
-  typedef bool *KeyTrackerPointer;
+  typedef bool (*KeyHandlerFunction)(u32 keysym, u32 mods, void * arg, bool isPress);
 
   class Keyboard
   {
@@ -49,7 +47,8 @@ namespace MFM {
         m_mods = 0;
         m_functionPtr = 0;
         m_functionArg = 0;
-        m_trackerPtr = 0;
+        m_onPress = false;
+        m_onRelease = false;
         m_inUse = false;
       }
       KeyHandlerFunction m_functionPtr;
@@ -58,18 +57,20 @@ namespace MFM {
       u32 m_keysym;
       u32 m_mods;
       bool m_inUse;
+      bool m_onPress;
+      bool m_onRelease;
     };
 
-    void RegisterKey(u32 keysym, u32 mods, KeyHandlerFunction fptr, void * functionArg, KeyTrackerPointer tptr) ;
+    void RegisterKey(u32 keysym, u32 mods, KeyHandlerFunction fptr, void * functionArg, bool onPress, bool onRelease) ;
 
-    void RegisterKeyFunction(u32 keysym, u32 mods, KeyHandlerFunction fptr, void * functionArg = 0)
+    void RegisterKeyFunction(u32 keysym, u32 mods, KeyHandlerFunction fptr, void * functionArg)
     {
-      RegisterKey(keysym, mods, fptr, functionArg, 0);
+      RegisterKey(keysym, mods, fptr, functionArg, true, false);
     }
 
-    void RegisterKeyTracker(u32 keysym, u32 mods, KeyTrackerPointer tptr)
+    void RegisterKeyTracker(u32 keysym, u32 mods, KeyHandlerFunction fptr, void * functionArg)
     {
-      RegisterKey(keysym, mods, 0, 0, tptr);
+      RegisterKey(keysym, mods, fptr, functionArg, true, true);
     }
 
     bool UnregisterKey(u32 keysym, u32 mods) ;
@@ -86,7 +87,7 @@ namespace MFM {
 
   private:
 
-    bool Release(u32 keysym) ;
+    bool Release(u32 keysym, u32 mods) ;
 
     bool Press(u32 keysym, u32 mods) ;
 
