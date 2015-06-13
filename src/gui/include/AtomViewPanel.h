@@ -150,11 +150,12 @@ namespace MFM
 
       d.SetForeground(Panel::GetForeground());
       d.FillCircle(ATOM_X_START-1, ATOM_Y_START-1, ATOM_DRAW_SIZE + 2, ATOM_DRAW_SIZE + 2, (ATOM_DRAW_SIZE >> 1) + 1);
-      d.SetForeground(element->DefaultPhysicsColor());
+      d.SetForeground(element->GetStaticColor());
       d.FillCircle(ATOM_X_START, ATOM_Y_START, ATOM_DRAW_SIZE, ATOM_DRAW_SIZE, ATOM_DRAW_SIZE >> 1);
       d.SetFont(FONT_ASSET_ELEMENT);
       d.SetForeground(Drawing::WHITE);
       d.SetBackground(Drawing::BLACK);
+      // XXX ALSO DRAW WITH GetDynamicColor, if that is currently different
 
       /* Center on the draw_size x draw_size box */
       d.BlitBackedTextCentered(element->GetAtomicSymbol(),

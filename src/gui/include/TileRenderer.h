@@ -81,12 +81,12 @@ namespace MFM
 
     template <class EC>
     void RenderMemRegions(Drawing & drawing, SPoint& pt,
-                          bool renderCache, bool selected, bool lowlight,
+                          bool renderCache, bool selected, bool lowlightTile,
                           const u32 TILE_SIDE);
 
     template <class EC>
     void RenderVisibleRegionOutlines(Drawing & drawing, SPoint& pt, bool renderCache,
-                                     bool selected, bool lowlight,
+                                     bool selected, bool lowlightTile,
                                      const u32 TILE_SIDE);
 
     template <class EC>
@@ -103,11 +103,11 @@ namespace MFM
 
     template <class EC>
     void RenderAtoms(Drawing & drawing, SPoint& pt, Tile<EC>& tile,
-                     bool renderCache, bool lowlight);
+                     bool renderCache, bool lowlightTile);
 
     template <class EC>
     void RenderAtom(Drawing & drawing, const SPoint& atomLoc, const UPoint& rendPt,
-                    Tile<EC>& tile, bool lowlight);
+                    Tile<EC>& tile, bool lowlightTile);
 
     template <class EC>
     void RenderBadAtom(Drawing& drawing, const UPoint& rendPt);
@@ -124,9 +124,9 @@ namespace MFM
     void RenderEventWindow(Drawing & drawing, SPoint& offset, Tile<EC>& tile, bool renderCache);
 
   public:
-    bool LoadDetails(LineCountingByteSource & source) ;
+    bool TileRendererLoadDetails(const char * key, LineCountingByteSource & source) ;
 
-    void SaveDetails(ByteSink & sink) const ;
+    void TileRendererSaveDetails(ByteSink & sink) const ;
 
     const char * GetDrawBackgroundTypeName() const;
 

@@ -5,33 +5,9 @@
 namespace MFM
 {
 
-#if 0
-  template <class EC>
-  u32 TileRenderer::GetForegroundColor(Tile<EC>& tile, const Site<typename EC::ATOM_CONFIG> & site,
-                                 u32 selector)
-  {
-    const typename EC::ATOM_CONFIG::ATOM_TYPE & atom = site.GetAtom();
-    const Element<EC> * elt = tile.GetElementTable().Lookup(atom.GetType());
-    if (elt)
-    {
-      return elt->LocalPhysicsColor(site,selector);
-    }
-    return 0xffffffff;
-  }
-#endif
-
-#if 0
-  template <class EC>
-  u32 TileRenderer::GetDataHeatColor(Tile<EC>& tile, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom)
-  {
-    return GetAtomColor(tile,atom,1);
-  }
-#endif
-
-
   template <class EC>
   void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<EC>& tile,
-                                 bool renderCache, bool lowlight)
+                                 bool renderCache, bool lowlightTile)
   {
     u32 astart = renderCache ? 0 : EC::EVENT_WINDOW_RADIUS;
     u32 aend   = renderCache ? tile.TILE_SIDE : tile.TILE_SIDE - EC::EVENT_WINDOW_RADIUS;
@@ -91,7 +67,7 @@ namespace MFM
                                m_atomDrawSize,
                                m_atomDrawSize);
             }
-            RenderAtom(drawing, atomLoc, rendPt, tile, lowlight);
+            RenderAtom(drawing, atomLoc, rendPt, tile, lowlightTile);
           }
         }
       }
@@ -122,7 +98,7 @@ namespace MFM
 
   template <class EC>
   void TileRenderer::RenderAtom(Drawing & drawing, const SPoint& atomLoc,
-                                const UPoint& rendPt,  Tile<EC>& tile, bool lowlight)
+                                const UPoint& rendPt,  Tile<EC>& tile, bool lowlightTile)
   {
 
     if (m_drawForegroundType == DRAW_FOREGROUND_NONE) return;
@@ -167,19 +143,19 @@ namespace MFM
 
       if (m_drawForegroundType == DRAW_FOREGROUND_ELEMENT)
       {
-        color = elt->PhysicsColor();
+        color = elt->GetStaticColor();
       }
       else if (m_drawForegroundType >= DRAW_FOREGROUND_ATOM_1 &&
                m_drawForegroundType <= DRAW_FOREGROUND_ATOM_3)
       {
-        color = elt->LocalPhysicsColor(site,m_drawForegroundType - DRAW_FOREGROUND_ATOM_1 + 1);
+        color = elt->GetDynamicColor(site,m_drawForegroundType - DRAW_FOREGROUND_ATOM_1 + 1);
       }
       else
         FAIL(ILLEGAL_STATE);
 
-      if(lowlight)
+      if(lowlightTile)
       {
-        color = Drawing::HalfColor(color);
+        color = DarkenColor(color,50);
       }
     }
 
@@ -245,7 +221,7 @@ namespace MFM
 
     u32 tileHeight = TILE_SIDE * m_atomDrawSize;
 
-    bool lowlight = !t.IsActive();
+    bool lowlightTile = !t.IsActive();
 
     realPt.Add(m_windowTL);
 
@@ -265,11 +241,11 @@ namespace MFM
         break;
 
       case DRAW_BACKGROUND_LIGHT_TILE:
-        RenderMemRegions<EC>(drawing, multPt, renderCache, selected, lowlight, TILE_SIDE);
+        RenderMemRegions<EC>(drawing, multPt, renderCache, selected, lowlightTile, TILE_SIDE);
         break;
 
       case DRAW_BACKGROUND_DARK_TILE:
-        RenderVisibleRegionOutlines<EC>(drawing, multPt, renderCache, selected, lowlight, TILE_SIDE);
+        RenderVisibleRegionOutlines<EC>(drawing, multPt, renderCache, selected, lowlightTile, TILE_SIDE);
         break;
       }
 
@@ -278,7 +254,7 @@ namespace MFM
         RenderEventWindow(drawing, multPt, t, renderCache);
       }
 
-      RenderAtoms(drawing, multPt, t, renderCache, lowlight);
+      RenderAtoms(drawing, multPt, t, renderCache, lowlightTile);
 
       if(m_drawGrid)
       {
@@ -341,7 +317,7 @@ namespace MFM
 
   template <class EC>
   void TileRenderer::RenderMemRegions(Drawing & drawing, SPoint& pt,
-                                      bool renderCache, bool selected, bool lowlight,
+                                      bool renderCache, bool selected, bool lowlightTile,
                                       const u32 TILE_SIDE)
   {
     // Extract short type names
@@ -350,19 +326,19 @@ namespace MFM
     int regID = 0;
     if(renderCache)
     {
-      RenderMemRegion<EC>(drawing, pt, regID++, !lowlight ?
+      RenderMemRegion<EC>(drawing, pt, regID++, !lowlightTile ?
                           m_cacheColor : Drawing::HalfColor(m_cacheColor), renderCache,
                           TILE_SIDE);
     }
-    RenderMemRegion<EC>(drawing, pt, regID++, !lowlight ?
+    RenderMemRegion<EC>(drawing, pt, regID++, !lowlightTile ?
                         m_sharedColor : Drawing::HalfColor(m_sharedColor), renderCache,
                         TILE_SIDE);
-    RenderMemRegion<EC>(drawing, pt, regID++, !lowlight ?
+    RenderMemRegion<EC>(drawing, pt, regID++, !lowlightTile ?
                         m_visibleColor : Drawing::HalfColor(m_visibleColor), renderCache,
                         TILE_SIDE);
     RenderMemRegion<EC>(drawing, pt, regID,
                         selected ? m_selectedHiddenColor :
-                                   (!lowlight ?
+                                   (!lowlightTile ?
                                     m_hiddenColor : Drawing::HalfColor(m_hiddenColor)),
                         renderCache,
                         TILE_SIDE);
@@ -370,12 +346,12 @@ namespace MFM
 
   template <class EC>
   void TileRenderer::RenderVisibleRegionOutlines(Drawing & drawing, SPoint& pt,
-                                                 bool renderCache, bool selected, bool lowlight,
+                                                 bool renderCache, bool selected, bool lowlightTile,
                                                  const u32 TILE_SIDE)
   {
     u32 regID = renderCache ? 2 : 1;
 
-    if(!lowlight)
+    if(!lowlightTile)
     {
       RenderMemRegion<EC>(drawing, pt, regID,
                           selected ? 0xff606060 : 0xff202020, renderCache,
