@@ -33,6 +33,7 @@ namespace MFM
 {
   class MovablePanel : public Panel
   {
+    typedef Panel Super;
    private:
     SPoint m_dragPoint;
     SPoint m_preDragLocation;
@@ -59,6 +60,16 @@ namespace MFM
     {
       m_dragging = false;
       m_ctrlDragging = false;
+    }
+
+    virtual void SaveDetails(ByteSink& sink) const
+    {
+      Super::SaveDetails(sink);
+    }
+
+    virtual bool LoadDetails(const char * key, LineCountingByteSource& source)
+    {
+      return Super::LoadDetails(key, source);
     }
 
     virtual bool Handle(MouseButtonEvent& event)

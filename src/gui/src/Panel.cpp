@@ -137,96 +137,89 @@ namespace MFM {
     return 0;
   }
 
-  bool Panel::Load(LineCountingByteSource & source)
+  bool Panel::LoadDetails(const char * key, LineCountingByteSource & source)
   {
-    Rect tmp_m_rect;
-    RectSerializer rs(tmp_m_rect);
-    if (2 != source.Scanf(",%@", &rs))
-      return false;
+    if (!strcmp("loc",key))
+    {
+      RectSerializer rs(m_rect);
+      return 1 == source.Scanf("%@", &rs);
+    }
 
-    u32 tmp_m_bdColor;
-    u32 tmp_m_bgColor;
-    u32 tmp_m_fgColor;
+    if (!strcmp("doc",key))
+    {
+      m_doc.Reset();
+      return source.ScanDoubleQuotedString(m_doc);
+    }
 
-    if (4 != source.Scanf(",0x%08x", &tmp_m_bdColor)) return false;
-    if (4 != source.Scanf(",0x%08x", &tmp_m_bgColor)) return false;
-    if (4 != source.Scanf(",0x%08x", &tmp_m_fgColor)) return false;
+    if (!strcmp("bdc",key)) return 1 == source.Scanf("%08x",&m_bdColor);
+    if (!strcmp("bgc",key)) return 1 == source.Scanf("%08x",&m_bgColor);
+    if (!strcmp("fgc",key)) return 1 == source.Scanf("%08x",&m_fgColor);
 
-    u32 tmp_m_fontAsset;
-    if (2 != source.Scanf(",%d", &tmp_m_fontAsset)) return false;
-    if (tmp_m_fontAsset > FONT_ASSET_NONE) return false;
+    if (!strcmp("fnt",key))
+    {
+      u32 tmp;
+      if (1 != source.Scanf("%d",&tmp)) return false;
+      if (tmp > FONT_ASSET_NONE) return false;
+      m_fontAsset = (FontAsset) tmp;
+      return true;
+    }
 
-    UPoint tmp_m_desiredSize;
-    UPointSerializer uptmp(tmp_m_desiredSize);
-    if (2 != source.Scanf(",%@",&uptmp)) return false;
+    if (!strcmp("dsz",key))
+    {
+      UPointSerializer uptmp(m_desiredSize);
+      return 1 == source.Scanf("%@",&uptmp);
+    }
 
-    SPoint tmp_m_desiredLocation;
-    SPointSerializer sptmp(tmp_m_desiredLocation);
-    if (2 != source.Scanf(",%@",&sptmp)) return false;
+    if (!strcmp("dlc",key))
+    {
+      SPointSerializer sptmp(m_desiredLocation);
+      return 1 == source.Scanf("%@",&sptmp);
+    }
 
-    bool tmp_m_visible;
-    OString16 buf;
-    if (2 != source.Scanf(",%[a-z]",&buf)) return false;
-    if (buf.Equals("visible")) tmp_m_visible = true;
-    else if (buf.Equals("hidden")) tmp_m_visible = false;
-    else return false;
+    if (!strcmp("vis",key)) return 1 == source.Scanf("%?d", sizeof m_visible, &m_visible);
 
-    if (!this->LoadDetails(source)) return false;
-
-    m_rect = tmp_m_rect;
-
-    m_bdColor = tmp_m_bdColor;
-    m_bgColor = tmp_m_bgColor;
-    m_fgColor = tmp_m_fgColor;
-
-    m_fontAsset = (FontAsset) tmp_m_fontAsset;
-
-    m_desiredSize = tmp_m_desiredSize;
-    m_desiredLocation = tmp_m_desiredLocation;
-
-    m_visible = tmp_m_visible;
-
-    return true;
+    return false; // That's all we got.
   }
 
-  void Panel::Save(ByteSink & sink) const
+  void Panel::SaveDetails(ByteSink & sink) const
   {
-    PrintFullName(sink);
     {
       Rect tmp(m_rect);
       RectSerializer rs(tmp);
-      sink.Printf(",%@", &rs);
+      sink.Printf(" PP(loc=%@)\n", &rs);
+    }
+    sink.Printf(" PP(doc=");
+    sink.PrintDoubleQuotedString(m_doc.GetZString());
+    sink.Printf(")\n");
+    {
+      sink.Printf(" PP(bdc=%08x)\n",m_bdColor);
+      sink.Printf(" PP(bgc=%08x)\n",m_bgColor);
+      sink.Printf(" PP(fgc=%08x)\n",m_fgColor);
     }
     {
-      sink.Printf(",0x%08x",m_bdColor);
-      sink.Printf(",0x%08x",m_bgColor);
-      sink.Printf(",0x%08x",m_fgColor);
-    }
-    {
-      sink.Printf(",%d",m_fontAsset);
+      sink.Printf(" PP(fnt=%d)\n",m_fontAsset);
     }
     {
       UPoint tsz(m_desiredSize);
       UPointSerializer tmp(tsz);
-      sink.Printf(",%@",&tmp);
+      sink.Printf(" PP(dsz=%@)\n",&tmp);
     }
     {
       SPoint tsz(m_desiredLocation);
       SPointSerializer tmp(tsz);
-      sink.Printf(",%@",&tmp);
+      sink.Printf(" PP(dlc=%@)\n",&tmp);
     }
     {
-      sink.Printf(",%s",m_visible?"visible":"hidden");
+      sink.Printf(" PP(vis=%d)\n",m_visible);
     }
-
-    this->SaveDetails(sink);
   }
 
   void Panel::SaveAll(ByteSink & sink) const
   {
     sink.Printf("PanelConfig(");
-    Save(sink);
+    PrintFullName(sink);
     sink.Printf(")\n");
+    SaveDetails(sink);
     Panel * p = m_top;
     while (p) {
       p->SaveAll(sink);

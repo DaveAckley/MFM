@@ -104,39 +104,46 @@ namespace MFM
       m_aepsPerFrame = apf;
     }
 
-    bool LoadDetails(LineCountingByteSource & source)
+    bool LoadDetails(const char * key, LineCountingByteSource & source)
     {
-      u32 tmp_m_AEPS;
-      u32 tmp_m_AER;
-      u32 tmp_m_overheadPercent;
-      u32 tmp_m_aepsPerFrame;
-      u32 tmp_m_currentAEPSPerEpoch;
-      if (6 != source.Scanf(",%D%D%D%D%D",
-                            &tmp_m_AEPS,
-                            &tmp_m_AER,
-                            &tmp_m_overheadPercent,
-                            &tmp_m_aepsPerFrame,
-                            &tmp_m_currentAEPSPerEpoch))
-        return false;
+      if (Super::LoadDetails(key, source)) return true;
 
-      if (!StatsRendererLoadDetails(source)) return false;
+      if (!strcmp("spaeps",key))
+      {
+        u32 tmp;
+        if (1 != source.Scanf("%D", &tmp)) return false;
+        m_AEPS = tmp / 10.0;
+        return true;
+      }
+      if (!strcmp("spaer",key))
+      {
+        u32 tmp;
+        if (1 != source.Scanf("%D", &tmp)) return false;
+        m_AER = tmp / 100.0;
+        return true;
+      }
+      if (!strcmp("spovh",key))
+      {
+        u32 tmp;
+        if (1 != source.Scanf("%D", &tmp)) return false;
+        m_overheadPercent = tmp / 1000.0;
+        return true;
+      }
+      if (!strcmp("spapf",key)) return 1 == source.Scanf("%D", &m_aepsPerFrame);
+      if (!strcmp("spape",key)) return 1 == source.Scanf("%D", &m_currentAEPSPerEpoch);
 
-      m_AEPS = tmp_m_AEPS / 10.0;
-      m_AER = tmp_m_AER / 100.0;
-      m_overheadPercent = tmp_m_overheadPercent / 1000.0;
-      m_aepsPerFrame = tmp_m_aepsPerFrame;
-      m_currentAEPSPerEpoch = tmp_m_currentAEPSPerEpoch;
-      return true;
+      return StatsRendererLoadDetails(key, source);
     }
 
     void SaveDetails(ByteSink & sink) const
     {
-      sink.Printf(",%D%D%D%D%D",
-                  (u32)(10*m_AEPS),
-                  (u32)(100*m_AER),
-                  (u32)(1000*m_overheadPercent),
-                  m_aepsPerFrame,
-                  m_currentAEPSPerEpoch);
+      Super::SaveDetails(sink);
+
+      sink.Printf(" PP(spaeps=%D)\n", (u32)(10*m_AEPS));
+      sink.Printf(" PP(spaer=%D)\n", (u32)(100*m_AER));
+      sink.Printf(" PP(spovh=%D)\n", (u32)(1000*m_overheadPercent));
+      sink.Printf(" PP(spapf=%D)\n", m_aepsPerFrame);
+      sink.Printf(" PP(spape=%D)\n", m_currentAEPSPerEpoch);
 
       StatsRendererSaveDetails(sink);
     }
@@ -329,7 +336,7 @@ namespace MFM
       }
     };
 
-    bool StatsRendererLoadDetails(LineCountingByteSource & source) ;
+    bool StatsRendererLoadDetails(const char * key, LineCountingByteSource & source) ;
     void StatsRendererSaveDetails(ByteSink & sink) const ;
 
   private:

@@ -2,23 +2,18 @@
 
 namespace MFM
 {
-  void GridRenderer::SaveDetails(ByteSink & sink) const
+  void GridRenderer::GridRendererSaveDetails(ByteSink & sink) const
   {
-    sink.Printf(",%d",m_renderTilesSeparated);
-    sink.Printf(",%d",m_currentEWRenderMode);
-    m_tileRenderer.SaveDetails(sink);
+    sink.Printf(" PP(grrts=%d)\n",m_renderTilesSeparated);
+    sink.Printf(" PP(grcrm=%d)\n",m_currentEWRenderMode);
+    m_tileRenderer.TileRendererSaveDetails(sink);
   }
 
-  bool GridRenderer::LoadDetails(LineCountingByteSource & source)
+  bool GridRenderer::GridRendererLoadDetails(const char * key, LineCountingByteSource & source)
   {
-    u32 tmp_m_renderTilesSeparated;
-    u32 tmp_m_currentEWRenderMode;
-    if (2 != source.Scanf(",%d",&tmp_m_renderTilesSeparated)) return false;
-    if (2 != source.Scanf(",%d",&tmp_m_currentEWRenderMode)) return false;
-    if (!m_tileRenderer.LoadDetails(source)) return false;
-    m_renderTilesSeparated = tmp_m_renderTilesSeparated;
-    m_currentEWRenderMode = (EventWindowRenderMode) tmp_m_currentEWRenderMode;
-    return true;
+    if (!strcmp("grrts",key)) return 1 == source.Scanf("%?d", sizeof m_renderTilesSeparated, &m_renderTilesSeparated);
+    if (!strcmp("grcrm",key)) return 1 == source.Scanf("%?d", sizeof m_currentEWRenderMode, &m_currentEWRenderMode);
+    return m_tileRenderer.TileRendererLoadDetails(key, source);
   }
 
   GridRenderer::GridRenderer() :

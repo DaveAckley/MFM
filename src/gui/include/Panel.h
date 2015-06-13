@@ -254,29 +254,9 @@ namespace MFM
      */
     Panel * DereferenceDescendants(ByteSource & in) ;
 
-    /**
-       For configuration saving, print a loadable representation this
-       panel's properties, starting with its full name.
-     */
-    void Save(ByteSink & sink) const;
+    virtual void SaveDetails(ByteSink & sink) const ;
 
-    virtual void SaveDetails(ByteSink & sink) const
-    {
-      /* No details to save, by default */
-    }
-
-    /**
-       For configuration restoring, load a representation of this
-       panel's properties, as saved by Save(ByteSink&), assuming the
-       name has already been read
-     */
-    bool Load(LineCountingByteSource & source) ;
-
-    virtual bool LoadDetails(LineCountingByteSource & source)
-    {
-      /* No details to load, by default */
-      return true;
-    }
+    virtual bool LoadDetails(const char * key, LineCountingByteSource & source) ;
 
     /**
        Get the current background color.

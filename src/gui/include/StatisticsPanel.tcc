@@ -11,18 +11,14 @@ namespace MFM {
   template <class GC>
   void StatisticsPanel<GC>::StatsRendererSaveDetails(ByteSink & sink) const
   {
-    sink.Printf(",%d",m_displayAER);
+    sink.Printf(" PP(daer=%d)\n",m_displayAER);
   }
 
   template <class GC>
-  bool StatisticsPanel<GC>::StatsRendererLoadDetails(LineCountingByteSource & source)
+  bool StatisticsPanel<GC>::StatsRendererLoadDetails(const char * key, LineCountingByteSource & source)
   {
-    u32 daer;
-    if (2!=source.Scanf(",%d",&daer))
-      return false;
-
-    m_displayAER = daer;
-    return true;
+    if (!strcmp("daer",key)) return 1 == source.Scanf("%?d", sizeof m_displayAER, &m_displayAER);
+    return false;
   }
 
   template <class GC>
@@ -57,7 +53,7 @@ namespace MFM {
         runLabel = MFM_VERSION_STRING_SHORT;
 
       SPoint size = drawing.GetTextSize(runLabel);
-      UPoint loc(MAX(0, ((s32) dims.GetX())-size.GetX()), baseY);
+      UPoint loc(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
 
       drawing.BlitText(runLabel,
                        loc,
@@ -70,12 +66,12 @@ namespace MFM {
       }
 
       u64 now = Utils::GetDateTimeNow();
-      snprintf(strBuffer,BUFSIZE," %d %06d",
+      snprintf(strBuffer,BUFSIZE,"%d %06d",
                Utils::GetDateFromDateTime(now),
                Utils::GetTimeFromDateTime(now)
                );
       size = drawing.GetTextSize(strBuffer);
-      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX()), baseY);
+      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
       drawing.BlitText(strBuffer,
                        loc,
                        UPoint(dims.GetX(), ROW_HEIGHT));
@@ -89,7 +85,7 @@ namespace MFM {
       OString128 ob;
       if (m_screenshotTargetFPS < 0)
       {
-        sprintf(strBuffer, "%8.3f AER", aer);
+        sprintf(strBuffer, "%0.3f AER", aer);
         ob.Printf("%s_",strBuffer);
         u64 sites = grid.GetTotalSites();
         ob.PrintAbbreviatedNumber(sites);
@@ -103,7 +99,7 @@ namespace MFM {
 
       const char * str = ob.GetZString();
       size = drawing.GetTextSize(str);
-      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX()), baseY);
+      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
       drawing.BlitText(str,
                        loc,
                        UPoint(dims.GetX(), ROW_HEIGHT));
@@ -114,9 +110,9 @@ namespace MFM {
         break;
       }
 
-      sprintf(strBuffer, "%8.3f %%ov", overhead);
+      sprintf(strBuffer, "%0.3f %%ov", overhead);
       size = drawing.GetTextSize(strBuffer);
-      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX()), baseY);
+      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
       drawing.BlitText(strBuffer,
                        loc,
                        UPoint(dims.GetX(), ROW_HEIGHT));
@@ -127,9 +123,9 @@ namespace MFM {
         break;
       }
 
-      sprintf(strBuffer, "%8d/frame", AEPSperFrame);
+      sprintf(strBuffer, "%d/frame", AEPSperFrame);
       size = drawing.GetTextSize(strBuffer);
-      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX()), baseY);
+      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
       drawing.BlitText(strBuffer,
                        loc,
                        UPoint(dims.GetX(), ROW_HEIGHT));

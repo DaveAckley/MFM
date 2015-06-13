@@ -45,6 +45,7 @@ namespace MFM
   template<class EC>
   class ToolboxPanel : public MovablePanel
   {
+    typedef MovablePanel Super;
   private:
     typedef ElementParameterS32<EC> OurParameterS32; // ToolboxPanel controls Elements (vs AtomViewPanel)
     typedef ElementParameterBool<EC> OurParameterBool; // ToolboxPanel controls Elements (vs AtomViewPanel)
@@ -103,7 +104,7 @@ namespace MFM
         m_toolboxTool(0),
         m_parent(0)
       {
-        this->Panel::SetBackground(Drawing::GREY90);
+        this->Panel::SetBackground(Drawing::GREY40);
         this->Panel::SetBorder(Drawing::GREY40);
       }
 
@@ -163,11 +164,11 @@ namespace MFM
         // COMPILE ON 12.04.
         if (activated)
         {
-          SetBackground(Drawing::GREY40);
+          SetEnabledBg(Drawing::GREY40);
         }
         else
         {
-          SetBackground(Drawing::GREY80);
+          SetEnabledBg(Drawing::GREY80);
         }
       }
 
@@ -224,7 +225,7 @@ namespace MFM
         const u32 SIZE = m_parent->GetElementRenderSize();
         if(m_element)
         {
-          d.SetForeground(m_element->PhysicsColor());
+          d.SetForeground(m_element->GetElementColor());
           d.FillRect(0, 0, SIZE, SIZE);
           d.SetFont(m_parent->GetElementRenderFont());
           d.SetBackground(Drawing::BLACK);
@@ -532,6 +533,10 @@ namespace MFM
 
     void AddButtons()
     {
+      // Clear all then re-add
+      Panel * p;
+      while ((p = this->GetTop())) this->Remove(p);
+
       ImageAsset assets[ELEMENT_BOX_BUTTON_COUNT];
       if(m_bigText)
       {
@@ -563,6 +568,7 @@ namespace MFM
         OString16 name;
         name.Printf("ToolButton%D",i);
         m_toolButtons[i].Init();
+        m_toolButtons[i].SetActivated(false);
         m_toolButtons[i].SetName(name.GetZString());
         m_toolButtons[i].SetParent(this);
         m_toolButtons[i].Panel::SetRenderPoint(SPoint(16 + i * GetElementRenderSize(), 3));
@@ -591,8 +597,8 @@ namespace MFM
         Panel::Insert(m_elementButtons + i, NULL);
       }
 
-      m_primaryElement   = m_heldElements[0];
-      m_secondaryElement = m_heldElements[1];
+      SetPrimaryElement(m_heldElements[0]);
+      SetSecondaryElement(m_heldElements[1]);
 
       Panel::SetDimensions(6 + GetElementRenderSize() * ELEMENTS_PER_ROW,
                            6 + GetElementRenderSize() * TOTAL_ROWS);
@@ -604,13 +610,25 @@ namespace MFM
     }
 
     void SetPrimaryElement(Element<EC>* element)
-    { m_primaryElement = element; }
+    {
+      if (element)
+        m_primaryElement = element;
+      else
+        m_primaryElement = &Element_Empty<EC>::THE_INSTANCE;
+    }
 
     Element<EC>* GetPrimaryElement()
-    { return m_primaryElement; }
+    {
+      return m_primaryElement;
+    }
 
     void SetSecondaryElement(Element<EC>* element)
-    { m_secondaryElement = element; }
+    {
+      if (element)
+        m_secondaryElement = element;
+      else
+        m_secondaryElement = &Element_Empty<EC>::THE_INSTANCE;
+    }
 
     u32 GetBrushSize()
     {
@@ -723,7 +741,7 @@ namespace MFM
 
       if (m_primaryElement)
       {
-        d.SetForeground(m_primaryElement->PhysicsColor());
+        d.SetForeground(m_primaryElement->GetStaticColor());
         d.FillCircle(ELEMENT_START_X, ELEMENT_START_Y, ELEMENT_TOOL_SIZE,
                      ELEMENT_TOOL_SIZE, ELEMENT_TOOL_SIZE / 2);
 
@@ -736,7 +754,7 @@ namespace MFM
       if (m_secondaryElement)
       {
         const u32 SECONDARY_X_START = ELEMENT_START_X + ELEMENT_TOOL_SIZE;
-        d.SetForeground(m_secondaryElement->PhysicsColor());
+        d.SetForeground(m_secondaryElement->GetStaticColor());
         d.FillCircle(SECONDARY_X_START, ELEMENT_START_Y, ELEMENT_TOOL_SIZE,
                      ELEMENT_TOOL_SIZE, ELEMENT_TOOL_SIZE / 2);
 
@@ -765,32 +783,27 @@ namespace MFM
 
     void SaveDetails(ByteSink & sink) const
     {
-      sink.Printf(",%D%D%D",
-                  m_bigText,
-                  m_activatedButtonIndex,
-                  m_brushSize);
+      Super::SaveDetails(sink);
+      sink.Printf(" PP(bigt=%d)\n", m_bigText);
+      sink.Printf(" PP(brshz=%d)\n", m_brushSize);
+      sink.Printf(" PP(abidx=%d)\n", m_activatedButtonIndex);
     }
 
-    bool LoadDetails(LineCountingByteSource & source)
+    bool LoadDetails(const char * key, LineCountingByteSource & source)
     {
-      u32 tmp_m_bigText;
-      u32 tmp_m_activatedButtonIndex;
-      u32 tmp_m_brushSize;
-      if (4 != source.Scanf(",%D%D%D",
-                            &tmp_m_bigText,
-                            &tmp_m_activatedButtonIndex,
-                            &tmp_m_brushSize))
-        return false;
+      if (Super::LoadDetails(key, source)) return true;
+      if (!strcmp("bigt",key)) return 1 == source.Scanf("%?d", sizeof m_bigText, &m_bigText);
+      if (!strcmp("brshz",key)) return 1 == source.Scanf("%?d", sizeof m_brushSize, &m_brushSize);
+      if (!strcmp("abidx",key))
+      {
+        if (1 != source.Scanf("%?d", sizeof m_activatedButtonIndex, &m_activatedButtonIndex)) return false;
+        ActivateButton(m_activatedButtonIndex);
+        MFM_API_ASSERT_NONNULL(m_toolPtr);
+        *m_toolPtr = (EditingTool) m_activatedButtonIndex;
+        return true;
+      }
 
-      m_bigText = tmp_m_bigText;
-      m_brushSize = tmp_m_brushSize;
-
-      ActivateButton(tmp_m_activatedButtonIndex);
-
-      MFM_API_ASSERT_NONNULL(m_toolPtr);
-      *m_toolPtr = (EditingTool) m_activatedButtonIndex;
-
-      return true;
+      return false;
     }
 
   };

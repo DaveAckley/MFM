@@ -47,6 +47,7 @@ namespace MFM
   template <class GC>
   class GridPanel : public Panel
   {
+    typedef Panel Super;
    public:
     // Extract short type names
     typedef typename GC::EVENT_CONFIG EC;
@@ -68,25 +69,23 @@ namespace MFM
     typedef Grid<GC> OurGrid;
     typedef Tile<EC> OurTile;
 
-    bool LoadDetails(LineCountingByteSource & source)
+    bool LoadDetails(const char * key, LineCountingByteSource & source)
     {
-      u32 tmp_m_paintingEnabled;
-      if (2 != source.Scanf(",%d",&tmp_m_paintingEnabled))
-        return false;
+      if (Super::LoadDetails(key, source)) return true;
+
+      if (!strcmp("gpe",key))
+        return 1 == source.Scanf("%?d",sizeof m_paintingEnabled, &m_paintingEnabled);
 
       MFM_API_ASSERT_NONNULL(m_grend);
-      if (!m_grend->LoadDetails(source))
-        return false;
-
-      m_paintingEnabled = tmp_m_paintingEnabled;
-      return true;
+      return m_grend->GridRendererLoadDetails(key, source);
     }
 
-    void SaveDetails(ByteSink & sink) const
+    virtual void SaveDetails(ByteSink & sink) const
     {
-      sink.Printf(",%d",m_paintingEnabled);
+      Super::SaveDetails(sink);
+      sink.Printf(" PP(gpe=%d)\n",m_paintingEnabled);
       MFM_API_ASSERT_NONNULL(m_grend);
-      m_grend->SaveDetails(sink);
+      m_grend->GridRendererSaveDetails(sink);
     }
 
    private:

@@ -79,9 +79,9 @@ namespace MFM
 
    public:
 
-    bool LoadDetails(LineCountingByteSource & source) ;
+    bool GridRendererLoadDetails(const char * key, LineCountingByteSource & source) ;
 
-    void SaveDetails(ByteSink & sink) const ;
+    void GridRendererSaveDetails(ByteSink & sink) const ;
 
     GridRenderer(TileRenderer* tr);
 

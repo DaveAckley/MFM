@@ -4,57 +4,49 @@
 namespace MFM
 {
 
-  void TileRenderer::SaveDetails(ByteSink & sink) const
+  void TileRenderer::TileRendererSaveDetails(ByteSink & sink) const
   {
-    sink.Printf(",%D%D%D%D%D%D",
-                m_drawGrid,
-                m_drawBackgroundType,
-                m_drawDataHeat,
-                m_atomDrawSize,
-                m_renderSquares,
-                m_drawForegroundType);
+    sink.Printf(" PP(traz=%d)\n", m_atomDrawSize);
+    sink.Printf(" PP(trbt=%d)\n", m_drawBackgroundType);
+    sink.Printf(" PP(trdg=%d)\n", m_drawGrid);
+    sink.Printf(" PP(trdh=%d)\n", m_drawDataHeat);
+    sink.Printf(" PP(trft=%d)\n", m_drawForegroundType);
+    sink.Printf(" PP(trrs=%d)\n", m_renderSquares);
 
     {
       SPoint tmp(m_windowTL);
       SPointSerializer sp(tmp);
-      sink.Printf(",%@",&sp);
+      sink.Printf(" PP(trtl=%@)\n",&sp);
     }
     {
       UPoint tmp(m_dimensions);
       UPointSerializer up(tmp);
-      sink.Printf(",%@",&up);
+      sink.Printf(" PP(trdm=%@)\n",&up);
     }
   }
 
-  bool TileRenderer::LoadDetails(LineCountingByteSource & source)
+  bool TileRenderer::TileRendererLoadDetails(const char * key, LineCountingByteSource & source)
   {
-    u32 tmp[6];
-    if (7 != source.Scanf(",%D%D%D%D%D%D",
-                          &tmp[0], &tmp[1], &tmp[2],
-                          &tmp[3], &tmp[4], &tmp[5]))
-      return false;
+    if (!strcmp("traz",key)) return 1 == source.Scanf("%?d", sizeof m_atomDrawSize, &m_atomDrawSize);
+    if (!strcmp("trbt",key)) return 1 == source.Scanf("%?d", sizeof m_drawBackgroundType, &m_drawBackgroundType);
+    if (!strcmp("trdg",key)) return 1 == source.Scanf("%?d", sizeof m_drawGrid, &m_drawGrid);
+    if (!strcmp("trdh",key)) return 1 == source.Scanf("%?d", sizeof m_drawDataHeat, &m_drawDataHeat);
+    if (!strcmp("trft",key)) return 1 == source.Scanf("%?d", sizeof m_drawForegroundType, &m_drawForegroundType);
+    if (!strcmp("trrs",key)) return 1 == source.Scanf("%?d", sizeof m_renderSquares, &m_renderSquares);
 
-    SPoint tmps(m_windowTL);
-    SPointSerializer sp(tmps);
-    if (2 != source.Scanf(",%@",&sp))
-      return false;
+    if (!strcmp("trtl",key))
+    {
+      SPointSerializer sp(m_windowTL);
+      return 1 == source.Scanf("%@",&sp);
+    }
 
-    UPoint tmpu(m_dimensions);
-    UPointSerializer up(tmpu);
-    if (2 != source.Scanf(",%@",&up))
-      return false;
+    if (!strcmp("trdm",key))
+    {
+      UPointSerializer up(m_dimensions);
+      return 1 == source.Scanf("%@",&up);
+    }
 
-    m_drawGrid = tmp[0];
-    m_drawBackgroundType = (DrawBackgroundType) tmp[1];
-    m_drawDataHeat = tmp[2];
-    m_atomDrawSize = tmp[3];
-    m_renderSquares = tmp[4];
-    m_drawForegroundType = (DrawForegroundType) tmp[5];
-
-    m_windowTL = tmps;
-    m_dimensions = tmpu;
-
-    return true;
+    return false;
   }
 
 
@@ -70,17 +62,11 @@ namespace MFM
     m_gridColor = 0xff202020;
     m_drawForegroundType = DRAW_FOREGROUND_ELEMENT;
 
-#if 0 // Too much range for me..  Also we'd like a lighter palette background on some choice..
-    m_hiddenColor  = 0xff353535;
-    m_visibleColor = 0xff595959;
-    m_sharedColor  = 0xff959595;
-    m_cacheColor   = 0xffc0c0c0;
-#else
-    m_hiddenColor  = Drawing::InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 76);
-    m_visibleColor = Drawing::InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 84);
-    m_sharedColor  = Drawing::InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 92);
-    m_cacheColor   = Drawing::InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 100);
-#endif
+    m_hiddenColor  = InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 76);
+    m_visibleColor = InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 84);
+    m_sharedColor  = InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 92);
+    m_cacheColor   = InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 100);
+
     m_selectedHiddenColor = 0xffffffff;
     m_selectedPausedColor = 0xffafafaf;
     m_windowTL.SetX(0);
