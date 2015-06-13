@@ -144,76 +144,8 @@ namespace MFM
     {
       SetForeground(Drawing::WHITE);
       SetBackground(Drawing::GREY10);
-      //      SetBackground(Drawing::ORANGE);
     }
   };
-
-#if 0
-  /**
-   * A subclass of an AbstractCheckbox in which an extern bool * is
-   * used to implement the boolean value.
-   */
-  class AbstractCheckboxExternal : public AbstractCheckbox
-  {
-    bool * m_externalPointer;
-
-  public:
-    AbstractCheckboxExternal(const char * title) :
-      AbstractCheckbox(title),
-      m_externalPointer(0)
-    {
-    }
-
-    /**
-     * Sets the pointer to the boolean value which is backing this
-     * AbstractCheckbox . It is important to set this before using
-     * this AbstractCheckbox .
-     *
-     * @param externalValue The pointer to the boolean value wished to
-     *                      back this AbstractCheckbox . Any
-     *                      modifications to the state of this
-     *                      AbstractCheckbox will also modify the
-     *                      contents of this pointer .
-     */
-    void SetExternalValue(bool * ptr)
-    {
-      m_externalPointer = ptr;
-    }
-
-    /**
-     * Checks to see if this AbstractCheckbox is in its on state. If
-     * it is in its on state, its backing boolean value (if it exists)
-     * is guaranteed to be true. If it is not, or does not have a
-     * backing boolean value, this will be \c false .
-     *
-     * @returns \c true if the boolean value backed by this
-     *          AbstractCheckbox is set and is equal to \true , else
-     *          \c false.
-     */
-    virtual bool IsChecked() const
-    {
-      if (!m_externalPointer)
-      {
-        return false;
-      }
-      return *m_externalPointer;
-    }
-
-    /**
-     * Sets the value of the boolean backing this AbstractCheckbox
-     * . If there is no boolean bacing this AbstractCheckbox , this
-     * FAILs with NULL_POINTER .
-     *
-     * @param checked The new value to set the boolean value backing
-     *                this AbstractCheckbox to.
-     */
-    virtual void SetChecked(bool checked)
-    {
-      MFM_API_ASSERT_NONNULL(m_externalPointer);
-      *m_externalPointer = checked;
-    }
-  };
-#endif
 }
 
 #endif /* ABSTRACTCHECKBOX_H */
