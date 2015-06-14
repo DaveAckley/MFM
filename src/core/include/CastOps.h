@@ -605,42 +605,42 @@ namespace MFM {
   {
     s32 extvala = _SignExtend32(vala, bitwidth);
     s32	extvalb = _SignExtend32(valb, bitwidth);
-    return _Int32ToInt32((u32) extvala + extvalb, 32, bitwidth); //wants u32
+    return _Int32ToInt32((u32) (extvala + extvalb), 32, bitwidth); //wants u32
   }
 
   inline s64 _BinOpAddInt64(u64 vala, u64 valb, u32 bitwidth)
   {
     s64 extvala = _SignExtend64(vala, bitwidth);
     s64	extvalb = _SignExtend64(valb, bitwidth);
-    return _Int64ToInt64((u64) extvala + extvalb, 64, bitwidth);
+    return _Int64ToInt64((u64) (extvala + extvalb), 64, bitwidth);
   }
 
   inline s32 _BinOpSubtractInt32(u32 vala, u32 valb, u32 bitwidth)
   {
     s32 extvala = _SignExtend32(vala, bitwidth);
     s32	extvalb = _SignExtend32(valb, bitwidth);
-    return _Int32ToInt32((u32) extvala - extvalb, 32, bitwidth);
+    return _Int32ToInt32((u32) (extvala - extvalb), 32, bitwidth);
   }
 
   inline s64 _BinOpSubtractInt64(u64 vala, u64 valb, u32 bitwidth)
   {
     s64 extvala = _SignExtend64(vala, bitwidth);
     s64	extvalb = _SignExtend64(valb, bitwidth);
-    return _Int64ToInt64((u64) extvala - extvalb, 64, bitwidth);
+    return _Int64ToInt64((u64) (extvala - extvalb), 64, bitwidth);
   }
 
   inline s32 _BinOpMultiplyInt32(u32 vala, u32 valb, u32 bitwidth)
   {
     s32 extvala = _SignExtend32(vala, bitwidth);
     s32	extvalb = _SignExtend32(valb, bitwidth);
-    return _Int32ToInt32((u32) extvala * extvalb, 32, bitwidth);
+    return _Int32ToInt32((u32) (extvala * extvalb), 32, bitwidth);
   }
 
   inline s64 _BinOpMultiplyInt64(u64 vala, u64 valb, u32 bitwidth)
   {
     s64 extvala = _SignExtend64(vala, bitwidth);
     s64	extvalb = _SignExtend64(valb, bitwidth);
-    return _Int64ToInt64((u64) extvala * extvalb, 64, bitwidth);
+    return _Int64ToInt64((u64) (extvala * extvalb), 64, bitwidth);
   }
 
   inline s32 _BinOpDivideInt32(u32 vala, u32 valb, u32 bitwidth)
@@ -648,7 +648,7 @@ namespace MFM {
     MFM_API_ASSERT_NONZERO(valb);
     s32 extvala = _SignExtend32(vala, bitwidth);
     s32	extvalb = _SignExtend32(valb, bitwidth);
-    return _Int32ToInt32((u32) extvala / extvalb, 32, bitwidth);
+    return _Int32ToInt32((u32) (extvala / extvalb), 32, bitwidth);
   }
 
   inline s64 _BinOpDivideInt64(u64 vala, u64 valb, u32 bitwidth)
@@ -656,7 +656,7 @@ namespace MFM {
     MFM_API_ASSERT_NONZERO(valb);
     s64 extvala = _SignExtend64(vala, bitwidth);
     s64	extvalb = _SignExtend64(valb, bitwidth);
-    return _Int64ToInt64((u64) extvala / extvalb, 64, bitwidth);
+    return _Int64ToInt64((u64) (extvala / extvalb), 64, bitwidth);
   }
 
   inline s32 _BinOpModInt32(u32 vala, u32 valb, u32 bitwidth)
@@ -664,7 +664,7 @@ namespace MFM {
     MFM_API_ASSERT_NONZERO(valb);
     s32 extvala = _SignExtend32(vala, bitwidth);
     s32	extvalb = _SignExtend32(valb, bitwidth);
-    return _Int32ToInt32((u32) extvala % extvalb, 32, bitwidth);
+    return _Int32ToInt32((u32) (extvala % extvalb), 32, bitwidth);
   }
 
   inline s64 _BinOpModInt64(u64 vala, u64 valb, u32 bitwidth)
@@ -672,7 +672,7 @@ namespace MFM {
     MFM_API_ASSERT_NONZERO(valb);
     s64 extvala = _SignExtend64(vala, bitwidth);
     s64	extvalb = _SignExtend64(valb, bitwidth);
-    return _Int64ToInt64((u64) extvala % extvalb, 64, bitwidth);
+    return _Int64ToInt64((u64) (extvala % extvalb), 64, bitwidth);
   }
 
   // Ariths On UNSIGNED:
@@ -690,14 +690,20 @@ namespace MFM {
 
   inline u32 _BinOpSubtractUnsigned32(u32 vala, u32 valb, u32 bitwidth)
   {
-    u32 mask = _GetNOnes32(bitwidth);
-    return _Int32ToUnsigned32((vala & mask) - (valb & mask), bitwidth, bitwidth);
+    const u32 mask = _GetNOnes32(bitwidth);
+    const u32 amask = vala & mask;
+    const u32 bmask = valb & mask;
+    if (amask <= bmask) return 0;
+    return amask - bmask;
   }
 
   inline u64 _BinOpSubtractUnsigned64(u64 vala, u64 valb, u32 bitwidth)
   {
-    u64 mask = _GetNOnes64(bitwidth);
-    return _Int64ToUnsigned64((vala & mask) - (valb & mask), bitwidth, bitwidth);
+    const u64 mask = _GetNOnes64(bitwidth);
+    const u64 amask = vala & mask;
+    const u64 bmask = valb & mask;
+    if (amask <= bmask) return 0;
+    return amask - bmask;
   }
 
   inline u32 _BinOpMultiplyUnsigned32(u32 vala, u32 valb, u32 bitwidth)
@@ -758,16 +764,16 @@ namespace MFM {
 
   inline u32 _BinOpSubtractUnary32(u32 vala, u32 valb, u32 bitwidth)
   {
-    u32 binvala = _Unary32ToUnsigned32(vala, bitwidth, 32);
-    u32 binvalb = _Unary32ToUnsigned32(valb, bitwidth, 32);
-    return _Int32ToUnary32(binvala - binvalb, 32, bitwidth);
+    s32 binvala = _Unary32ToInt32(vala, bitwidth, 32);
+    s32 binvalb = _Unary32ToInt32(valb, bitwidth, 32);
+    return _Int32ToUnary32((u32) (binvala - binvalb), 32, bitwidth);
   }
 
   inline u64 _BinOpSubtractUnary64(u64 vala, u64 valb, u32 bitwidth)
   {
-    u64 binvala = _Unary64ToUnsigned64(vala, bitwidth, 64);
-    u64 binvalb = _Unary64ToUnsigned64(valb, bitwidth, 64);
-    return _Int64ToUnary64(binvala - binvalb, 64, bitwidth);
+    s64 binvala = _Unary64ToInt64(vala, bitwidth, 64);
+    s64 binvalb = _Unary64ToInt64(valb, bitwidth, 64);
+    return _Int64ToUnary64((u64) (binvala - binvalb), 64, bitwidth);
   }
 
   inline u32 _BinOpMultiplyUnary32(u32 vala, u32 valb, u32 bitwidth)
