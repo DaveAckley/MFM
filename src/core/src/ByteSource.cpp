@@ -383,6 +383,26 @@ namespace MFM {
         ++matches;
         break;
 
+        // %z to match a zero-terminated string.  Must match entirely,
+        // if it does, it counts as one match regardless of its
+        // length.  If it doesn't match, caller isn't told how far
+        // through the string the scanner got.
+      case 'z':
+        {
+          const u8 * zstr = va_arg(ap,const u8 *);
+          MFM_API_ASSERT_NONNULL(zstr);
+          u8 ch;
+          while ((ch = *zstr++)) {
+            result = Read();
+            if (result < 0)
+              return matches;
+            if ((u8) result != ch)
+              return -matches;
+          }
+          ++matches;
+        }
+        break;
+
       case 'b': type = Format::BIN; goto store;
       case 'o': type = Format::OCT; goto store;
       case 'd': type = Format::DEC; goto store;
