@@ -125,9 +125,10 @@ namespace MFM
      * @returns \c true if \c point lies within this Rect , else \c
      *          false .
      */
-    bool Contains(const SPoint & point)
+    bool Contains(const SPoint & point) const
     {
-      return point.BoundedBy(m_position, m_position + MakeSigned(m_size));
+      // Need (-1,-1) because BoundedBy includes the upperBound
+      return point.BoundedBy(m_position, m_position + MakeSigned(m_size) + SPoint(-1, -1));
     }
 
     /**
