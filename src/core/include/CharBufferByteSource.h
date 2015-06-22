@@ -94,9 +94,9 @@ namespace MFM
     }
 
     /**
-     * Effectively clears this CharBufferByteSource, making all bytes
-     * since either construction or \c ChangeBuffer() available again
-     * from the beginning of the buffer.
+     * Resets the read position of this CharBufferByteSource, making
+     * all bytes since either construction or \c ChangeBuffer()
+     * available again from the beginning of the buffer.
      */
     void Reset()
     {
