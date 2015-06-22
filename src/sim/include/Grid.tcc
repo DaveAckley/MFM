@@ -316,6 +316,13 @@ namespace MFM {
 
     Tile<EC> & owner = GetTile(tileInGrid);
     Site<AC> & site = owner.GetSite(siteInTile);
+
+    //////// NOTE WE ARE RACING AGAINST THE TILE THREADS HERE!
+    //
+    // This code is (typically expected to be) running on the driver
+    // thread, while events in the tile threads can be accesssing the
+    // same Site data.  We are DELIBERATELY LETTING THIS HAPPEN woah.
+    //
     site.Sense(gte.m_touchType);
   }
 
@@ -327,6 +334,15 @@ namespace MFM {
     tileInGrid = myTile;
     siteInTile = mySite+SPoint(R,R);      // adjust to full Tile indexing
     return true;
+  }
+
+  template <class GC>
+  bool Grid<GC>::IsGridCoord(const SPoint & siteInGrid) const
+  {
+    if (siteInGrid.GetX() < 0 || siteInGrid.GetY() < 0)
+      return false;
+
+    return IsLegalTileIndex(siteInGrid/OWNED_SIDE);
   }
 
   template <class GC>
@@ -355,7 +371,7 @@ namespace MFM {
   }
 
   template <class GC>
-  void Grid<GC>::PlaceAtom(const T& atom, const SPoint& siteInGrid)
+  void Grid<GC>:: PlaceAtom(const T& atom, const SPoint& siteInGrid)
   {
     SPoint tileInGrid, siteInTile;
     if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))

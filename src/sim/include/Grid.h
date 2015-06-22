@@ -482,9 +482,18 @@ namespace MFM {
 
     /**
      * Return true iff tileInGrid is a legal tile coordinate in this
-     * grid.  If this returns false, GetTile(tileInGrid) is unsafe.
+     * grid, meaning it's in the range (0,0) to (tilesWide-1,
+     * tilesHigh-1).  If this returns false, GetTile(tileInGrid) is
+     * unsafe.
      */
     bool IsLegalTileIndex(const SPoint & tileInGrid) const;
+
+    /**
+     * Return true iff siteInGrid is a legal site coordinate in this
+     * grid.  If this returns false, GetAtom(siteInGrid) and
+     * PlaceAtom(T, siteInGrid) will FAIL.
+     */
+    bool IsGridCoord(const SPoint & siteInGrid) const;
 
     /**
      * Find the grid coordinate of the 'owning tile' (i.e., ignoring
