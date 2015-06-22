@@ -58,7 +58,13 @@ namespace MFM
   template <class T>
   double Point<T>::GetEuclideanLength() const
   {
-    return sqrt(m_x * m_x + m_y * m_y);
+    return sqrt(this->GetEuclideanLengthSquared());
+  }
+
+  template <class T>
+  u32 Point<T>::GetEuclideanLengthSquared() const
+  {
+    return (u32) (m_x * m_x + m_y * m_y);
   }
 
   template <class T>

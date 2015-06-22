@@ -140,6 +140,15 @@ namespace MFM
     double GetEuclideanLength() const;
 
     /**
+     * Gets the square of the Euclidean distance of this Point from
+     * the origin .
+     *
+     * @returns The square of the euclidean length of the vector held
+     * by this Point .
+     */
+    u32 GetEuclideanLengthSquared() const;
+
+    /**
      * Sets the held coordinates of this Point to \c 0 .
      */
     void Clear()
