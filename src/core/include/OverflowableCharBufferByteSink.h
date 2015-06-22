@@ -51,6 +51,20 @@ namespace MFM {
     }
 
     /**
+     * Constructs a new OverflowableCharBufferByteSink containing a
+     * copy of the given zero-terminated string.  Note the
+     * initialization may cause the OverflowableCharBufferByteSink to
+     * overflow; callers should test HasOverflowed() after
+     * construction if they are uncertain.  FAILs if zstr is null.
+     */
+    OverflowableCharBufferByteSink(const char * zstr)
+    {
+      MFM_API_ASSERT_NONNULL(zstr);
+      Reset();
+      WriteBytes((const u8 *) zstr, strlen(zstr));
+    }
+
+    /**
      * Writes a series of bytes to this OveflowableCharBufferByteSink
      * . If overflow occurs, will append an 'X' to the end of this
      * internal string.
