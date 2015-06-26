@@ -27,7 +27,7 @@
 #ifndef TOOLBOXPANEL_H
 #define TOOLBOXPANEL_H
 
-#include "EditingTool.h"
+#include "GridTool.h"
 #include "FileByteSink.h"
 #include "Parameter.h"
 #include "AbstractButton.h"
@@ -42,18 +42,22 @@ namespace MFM
    * A class representing the Panel which allows a user to select from
    * a collection of Element drawing tools.
    */
-  template<class EC>
+  template<class GC>
   class ToolboxPanel : public MovablePanel
   {
-    typedef MovablePanel Super;
   private:
+    typedef MovablePanel Super;
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+
     typedef ElementParameterS32<EC> OurParameterS32; // ToolboxPanel controls Elements (vs AtomViewPanel)
     typedef ElementParameterBool<EC> OurParameterBool; // ToolboxPanel controls Elements (vs AtomViewPanel)
     typedef Slider<EC> OurSlider;
     typedef ParameterControllerBool<EC> OurParameterControllerBool;
 
     enum {
-      ELEMENT_BOX_BUTTON_COUNT = 9,
+      MAX_GRIDTOOL_BUTTONS = 9,
       TOOLBOX_MAX_CONTROLLERS = 20,
       TOOLBOX_MAX_SLIDERS = 8,
       TOOLBOX_MAX_CHECKBOXES = 8,
@@ -68,6 +72,8 @@ namespace MFM
 
     bool m_bigText;
 
+    bool m_siteEdit;
+
     inline u32 GetElementRenderSize()
     {
       return m_bigText ? ELEMENT_BIG_RENDER_SIZE : ELEMENT_RENDER_SIZE;
@@ -78,49 +84,88 @@ namespace MFM
       return m_bigText ? FONT_ASSET_ELEMENT_BIG : FONT_ASSET_ELEMENT;
     }
 
+    class SiteEditorCheckbox : public AbstractCheckbox
+    {
+    private:
+      ToolboxPanel<GC> & m_toolboxPanel;
+
+    public:
+      SiteEditorCheckbox(ToolboxPanel<GC> & tbp)
+        : AbstractCheckbox("Edit bases")
+        , m_toolboxPanel(tbp)
+      {
+        AbstractButton::SetName("BaseEdit");
+        Panel::SetDoc("Edit bases rather than atoms");
+        Panel::SetFont(FONT_ASSET_BUTTON_MEDIUM);
+
+        this->SetEnabledBg(Drawing::GREY60);
+        this->SetEnabledFg(Drawing::BLACK);
+
+      }
+
+      virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+      {
+        keysym = SDLK_e;
+        mod = KMOD_CTRL;
+        return true;
+      }
+
+      virtual bool IsChecked() const
+      {
+        return m_toolboxPanel.IsSiteEdit();
+      }
+
+      virtual void OnCheck(bool checked)
+      {
+        this->SetChecked(checked);
+      }
+
+      virtual void SetChecked(bool checked)
+      {
+        m_toolboxPanel.SetSiteEdit(checked);
+      }
+
+    };
+
     /**
      * A class representing a Button for selecting a particular
-     * EditingTool.
+     * GridTool.
      */
     class ToolButton : public AbstractButton
     {
-     protected:
-      EditingTool* m_toolboxTool;
-
-      ToolboxPanel<EC>* m_parent;
-
-      EditingTool m_tool;
+    private:
+      GridToolShapeUpdater<GC> * m_gridTool;
+      ToolboxPanel<GC>* m_toolbox;
 
      public:
       /**
-       * Construct a new ToolButton, pointing at a specified
-       * EditingTool location.
-       *
-       * @param toolboxTool An EditingTool pointer, the contents of
-       * which should be modified upon clicking this Button.
+       * Construct a new ToolButton
        */
       ToolButton() :
         AbstractButton(),
-        m_toolboxTool(0),
-        m_parent(0)
+        m_gridTool(0),
+        m_toolbox(0)
       {
         this->Panel::SetBackground(Drawing::GREY40);
         this->Panel::SetBorder(Drawing::GREY40);
       }
 
-      void SetToolPointer(EditingTool* toolboxTool)
+      void SetGridTool(GridToolShapeUpdater<GC>& gridTool)
       {
-        m_toolboxTool = toolboxTool;
+        m_gridTool = &gridTool;
+        SetIconAsset(GetGridTool().GetImageAsset());
       }
 
-      void SetEditingTool(EditingTool tool)
+      GridToolShapeUpdater<GC> & GetGridTool()
       {
-        m_tool = tool;
+        MFM_API_ASSERT_NONNULL(m_gridTool);
+        return *m_gridTool;
       }
 
-      EditingTool GetEditingTool()
+      const GridToolShapeUpdater<GC> & GetGridTool() const
       {
-        return m_tool;
+        MFM_API_ASSERT_NONNULL(m_gridTool);
+        return *m_gridTool;
       }
 
       /**
@@ -128,47 +173,37 @@ namespace MFM
        * ToolButton. This is required before clicking any
        * ToolButton.
        */
-      void SetParent(ToolboxPanel<EC>* parent)
+      void SetToolbox(ToolboxPanel<GC>& parent)
       {
-        m_parent = parent;
+        m_toolbox = &parent;
+      }
+
+      ToolboxPanel<GC>& GetToolbox()
+      {
+        MFM_API_ASSERT_NONNULL(m_toolbox);
+        return *m_toolbox;
       }
 
       /**
-       * Sets the icon of this ToolButton to a particular
-       * ImageAsset, which will be rendered when needed.
+       * Tell this button it is or isn't the selected tool
        *
-       * @param icon The ImageAsset which represents this
-       * ToolButton's icon.
-       */
-      void SetToolIcon(ImageAsset icon)
-      {
-        SetIconAsset(icon);
-        SDL_Surface * s = AssetManager::Get(icon);
-        // XXX is it known we'll have a surface yet?  what is the
-        // semantics we want here?
-        if (s)
-          this->Panel::SetDimensions(s->w, s->h);
-       }
-
-      /**
-       * Sets the visual properties of this ToolButton to
-       * appear that it is activated or deactivated.
-       *
-       * @param activated If \c true, this ToolButton will
+       * @param selected If \c true, this ToolButton will
        *                  appear active. If not, it will appear
        *                  disabled.
        */
-      void SetActivated(bool activated)
+      void SetSelected(bool selected)
       {
         // DO NOT REWRITE THIS 'IF' AS A QUESTION-COLON; IT DOES NOT
         // COMPILE ON 12.04.
-        if (activated)
+        if (selected)
         {
           SetEnabledBg(Drawing::GREY40);
+          this->GetGridTool().Selected();
         }
         else
         {
           SetEnabledBg(Drawing::GREY80);
+          this->GetGridTool().Deselected();
         }
       }
 
@@ -180,8 +215,83 @@ namespace MFM
        */
       virtual void OnClick(u8 button)
       {
-        *m_toolboxTool = m_tool;
-        m_parent->ActivateButton(this->m_tool);
+        this->GetToolbox().SelectToolButton(*this);
+      }
+    };
+
+    /**
+     * A class representing a Button for selecting a particular
+     * shape for the current GridTool.
+     */
+    class ShapeButton : public AbstractButton
+    {
+    private:
+      ToolboxPanel<GC>& m_toolbox;
+      const ToolShape m_shape;
+
+     public:
+      /**
+       * Construct a new ShapeButton
+       */
+      ShapeButton(ToolboxPanel & tbp, u32 shape, ImageAsset icon, const char * name, const char * doc)
+        : AbstractButton(icon)
+        , m_toolbox(tbp)
+        , m_shape((ToolShape) shape)
+      {
+        if (shape >= SHAPE_COUNT)
+          FAIL(ILLEGAL_ARGUMENT);
+
+        MFM_API_ASSERT_NONNULL(name);
+        MFM_API_ASSERT_NONNULL(doc);
+
+        this->Panel::SetName(name);
+        this->Panel::SetDoc(doc);
+
+        this->Panel::SetBackground(Drawing::GREY40);
+        this->Panel::SetBorder(Drawing::GREY40);
+      }
+
+      ToolShape GetShape()
+      {
+        return m_shape;
+      }
+
+      ToolboxPanel<GC>& GetToolbox()
+      {
+        return m_toolbox;
+      }
+
+      /**
+       * Tell this button it is or isn't the selected shape
+       *
+       * @param selected If \c true, this ShapeButton will
+       *                  appear active. If not, it will appear
+       *                  disabled.
+       */
+      void SetSelected(bool selected)
+      {
+        // DO NOT REWRITE THIS 'IF' AS A QUESTION-COLON; IT DOES NOT
+        // COMPILE ON 12.04.
+        if (selected)
+        {
+          SetEnabledBg(Drawing::GREY40);
+        }
+        else
+        {
+          SetEnabledBg(Drawing::GREY80);
+        }
+      }
+
+      /**
+       * This hook is invoked when a user clicks on this button,
+       * therefore setting the active tool to the shape of this
+       * ShapeButton.
+       *
+       * @param button The button on the mouse that was pressed.
+       */
+      virtual void OnClick(u8 button)
+      {
+        this->GetToolbox().SelectShapeButton(*this);
       }
     };
 
@@ -215,7 +325,7 @@ namespace MFM
         }
       }
 
-      void SetParent(ToolboxPanel<EC>* parent)
+      void SetParent(ToolboxPanel<GC>* parent)
       {
         m_parent = parent;
       }
@@ -231,7 +341,7 @@ namespace MFM
           d.SetBackground(Drawing::BLACK);
           d.SetForeground(Drawing::WHITE);
           d.BlitBackedTextCentered(m_element->GetAtomicSymbol(),
-                                   UPoint(0, 0),
+                                   SPoint(0, 0),
                                    UPoint(SIZE, SIZE));
         }
         else
@@ -273,14 +383,68 @@ namespace MFM
      private:
       Element<EC>* m_element;
 
-      ToolboxPanel<EC>* m_parent;
+      ToolboxPanel<GC>* m_parent;
     };
 
-    EditingTool* m_toolPtr;
-
+    ToolButton * m_selectedToolButton;
     u32 m_activatedButtonIndex;
 
-    ToolButton m_toolButtons[ELEMENT_BOX_BUTTON_COUNT];
+    void SelectToolButton(ToolButton & newToolButton)
+    {
+      if (m_selectedToolButton)
+        m_selectedToolButton->SetSelected(false);
+
+      m_selectedToolButton = &newToolButton;
+      m_selectedToolButton->SetSelected(true);
+
+      GridToolShapeUpdater<GC> & gt = m_selectedToolButton->GetGridTool();
+
+      m_roundShapeButton.SetSelected(false);
+      m_diamondShapeButton.SetSelected(false);
+      m_squareShapeButton.SetSelected(false);
+
+      if (gt.GetMaxVariableRadius())  // If it has a radius, it supports shape
+      {
+        switch (gt.GetToolShape()) {
+        case ROUND_SHAPE:  SelectShapeButton(m_roundShapeButton); break;
+        case DIAMOND_SHAPE:  SelectShapeButton(m_diamondShapeButton); break;
+        case SQUARE_SHAPE:  SelectShapeButton(m_squareShapeButton); break;
+        default: FAIL(ILLEGAL_STATE);
+        }
+      }
+      else
+      {
+        m_selectedShapeButton = 0;
+      }
+    }
+
+    ShapeButton * m_selectedShapeButton;
+
+    void SelectShapeButton(ShapeButton & newShapeButton)
+    {
+      if (m_selectedShapeButton)
+        m_selectedShapeButton->SetSelected(false);
+
+      m_selectedShapeButton = &newShapeButton;
+      m_selectedShapeButton->SetSelected(true);
+
+      if(m_selectedToolButton)
+      {
+        GridToolShapeUpdater<GC> & gt = m_selectedToolButton->GetGridTool();
+
+        if (gt.GetMaxVariableRadius())  // If it has a radius, it supports shape
+          gt.SetToolShape(m_selectedShapeButton->GetShape());
+      }
+    }
+
+    ToolButton m_toolButtons[MAX_GRIDTOOL_BUTTONS];
+    u32 m_toolButtonsInUse;
+
+    SiteEditorCheckbox m_siteEditCheckbox;
+
+    ShapeButton m_roundShapeButton;
+    ShapeButton m_diamondShapeButton;
+    ShapeButton m_squareShapeButton;
 
     Element<EC>* m_primaryElement;
 
@@ -303,8 +467,6 @@ namespace MFM
 
     NeighborSelectPanel<EC,R> m_neighborhoods[TOOLBOX_MAX_NEIGHBORHOODS];
     u32 m_neighborhoodCount;
-
-    u32 m_brushSize;
 
     enum
     {
@@ -388,17 +550,41 @@ namespace MFM
 
    public:
 
-    ToolboxPanel(EditingTool* toolPtr) :
-      m_bigText(false),
-      m_toolPtr(toolPtr),
-      m_activatedButtonIndex(0),
-      m_primaryElement(&Element_Empty<EC>::THE_INSTANCE),
-      m_secondaryElement(&Element_Empty<EC>::THE_INSTANCE),
-      m_heldElementCount(0),
-      m_controllerCount(0),
-      m_sliderCount(0),
-      m_checkboxCount(0),
-      m_brushSize(2)
+    bool IsSiteEdit()
+    {
+      return m_siteEdit;
+    }
+
+    void SetSiteEdit(bool edit)
+    {
+      m_siteEdit = edit;
+    }
+
+
+    AbstractButton & RegisterGridTool(GridToolShapeUpdater<GC> & gt)
+    {
+      if (m_toolButtonsInUse >= MAX_GRIDTOOL_BUTTONS)
+        FAIL(OUT_OF_ROOM);
+      ToolButton & tb = m_toolButtons[m_toolButtonsInUse++];
+      tb.SetGridTool(gt);
+      return tb;
+    }
+
+    ToolboxPanel()
+      : m_bigText(false)
+      , m_siteEdit(false)
+      , m_selectedToolButton(0)
+      , m_toolButtonsInUse(0)
+      , m_siteEditCheckbox(*this)
+      , m_roundShapeButton(*this, ROUND_SHAPE, IMAGE_ASSET_ROUND_SHAPE_ICON, "Round", "Use a round-shaped brush")
+      , m_diamondShapeButton(*this, DIAMOND_SHAPE, IMAGE_ASSET_DIAMOND_SHAPE_ICON, "Diamond", "Use a diamond-shaped brush")
+      , m_squareShapeButton(*this, SQUARE_SHAPE, IMAGE_ASSET_SQUARE_SHAPE_ICON, "Square", "Use a square-shaped brush")
+      , m_primaryElement(&Element_Empty<EC>::THE_INSTANCE)
+      , m_secondaryElement(&Element_Empty<EC>::THE_INSTANCE)
+      , m_heldElementCount(0)
+      , m_controllerCount(0)
+      , m_sliderCount(0)
+      , m_checkboxCount(0)
     {
       SetName("ToolboxPanel");
 
@@ -407,10 +593,9 @@ namespace MFM
         m_controllers[i] = 0;
       }
 
-      for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
+      for(u32 i = 0; i < MAX_GRIDTOOL_BUTTONS; i++)
       {
-        m_toolButtons[i].SetToolPointer(m_toolPtr);
-        m_toolButtons[i].SetEditingTool((EditingTool)i);
+        m_toolButtons[i].SetToolbox(*this);
       }
 
       for(u32 i = 0; i < ELEMENT_BOX_SIZE; i++)
@@ -537,7 +722,8 @@ namespace MFM
       Panel * p;
       while ((p = this->GetTop())) this->Remove(p);
 
-      ImageAsset assets[ELEMENT_BOX_BUTTON_COUNT];
+      /*
+      ImageAsset assets[MAX_GRIDTOOL_BUTTONS];
       if(m_bigText)
       {
         assets[0] = IMAGE_ASSET_SELECTOR_ICON_BIG;
@@ -562,19 +748,48 @@ namespace MFM
         assets[7] = IMAGE_ASSET_CLONE_ICON;
         assets[8] = IMAGE_ASSET_AIRBRUSH_ICON;
       }
+      */
 
-      for(u32 i = 0; i < ELEMENT_BOX_BUTTON_COUNT; i++)
+      for(u32 i = 0; i < m_toolButtonsInUse; i++)
       {
         OString16 name;
         name.Printf("ToolButton%D",i);
+        m_toolButtons[i].GetGridTool(); // Blow assertion if we don't have a tool by now
         m_toolButtons[i].Init();
-        m_toolButtons[i].SetActivated(false);
+        m_toolButtons[i].SetSelected(false);
         m_toolButtons[i].SetName(name.GetZString());
-        m_toolButtons[i].SetParent(this);
+        m_toolButtons[i].SetToolbox(*this);
+        m_toolButtons[i].Panel::SetDimensions(GetElementRenderSize(),
+                                              GetElementRenderSize());
         m_toolButtons[i].Panel::SetRenderPoint(SPoint(16 + i * GetElementRenderSize(), 3));
-        m_toolButtons[i].SetToolIcon(assets[i]);
         Panel::Insert(m_toolButtons + i, NULL);
       }
+
+      u32 imgSize = 22;
+      u32 btnSize = 26;
+      const SPoint shapeSize(btnSize,btnSize);
+      u32 iconIndent = (btnSize - imgSize) / 2;
+      const SPoint iconAt(iconIndent, iconIndent);
+
+      m_roundShapeButton.Panel::SetRenderPoint(SPoint(16 + (m_toolButtonsInUse + 1) * GetElementRenderSize(), 3));
+      m_diamondShapeButton.Panel::SetRenderPoint(SPoint(16 + (m_toolButtonsInUse + 2) * GetElementRenderSize(), 3));
+      m_squareShapeButton.Panel::SetRenderPoint(SPoint(16 + (m_toolButtonsInUse + 3) * GetElementRenderSize(), 3));
+
+      m_roundShapeButton.Panel::SetDimensions(btnSize,btnSize);
+      m_diamondShapeButton.Panel::SetDimensions(btnSize,btnSize);
+      m_squareShapeButton.Panel::SetDimensions(btnSize,btnSize);
+
+      m_roundShapeButton.Label::SetIconPosition(iconAt);
+      m_diamondShapeButton.Label::SetIconPosition(iconAt);
+      m_squareShapeButton.Label::SetIconPosition(iconAt);
+
+      Panel::Insert(&m_roundShapeButton, NULL);
+      Panel::Insert(&m_diamondShapeButton, NULL);
+      Panel::Insert(&m_squareShapeButton, NULL);
+
+      m_siteEditCheckbox.Panel::SetRenderPoint(SPoint(0,0)); // put anywhere, let startup-file sort it out
+      m_siteEditCheckbox.Panel::SetDimensions(200,100); // ditto
+      Panel::Insert(&m_siteEditCheckbox, NULL);
 
       for(u32 i = 0; i < ELEMENT_BOX_SIZE; i++)
       {
@@ -605,8 +820,6 @@ namespace MFM
       Panel::SetDesiredSize(6 + GetElementRenderSize() * ELEMENTS_PER_ROW,
                             6 + GetElementRenderSize() * TOTAL_ROWS);
 
-      /* Set pencil tool to default */
-      m_toolButtons[2].OnClick(SDL_BUTTON_LEFT);
     }
 
     void SetPrimaryElement(Element<EC>* element)
@@ -630,34 +843,14 @@ namespace MFM
         m_secondaryElement = &Element_Empty<EC>::THE_INSTANCE;
     }
 
-    u32 GetBrushSize()
-    {
-      if(!Panel::IsVisible())
-      {
-        return 0;
-      }
-
-      switch(m_toolButtons[m_activatedButtonIndex].GetEditingTool())
-      {
-      case TOOL_SELECTOR:
-      case TOOL_ATOM_SELECTOR:
-      case TOOL_PENCIL:
-      case TOOL_BUCKET:
-      case TOOL_ERASER:
-        return 1;
-      case TOOL_BRUSH:
-      case TOOL_XRAY:
-      case TOOL_CLONE:
-      case TOOL_AIRBRUSH:
-        return m_brushSize;
-      default:
-        FAIL(ILLEGAL_STATE);
-        return 0;
-      }
-    }
-
     Element<EC>* GetSecondaryElement()
     { return m_secondaryElement; }
+
+    GridTool<GC> * GetCurrentTool()
+    {
+      if (!m_selectedToolButton) return 0;
+      return &m_selectedToolButton->GetGridTool();
+    }
 
     void RegisterElement(Element<EC>* element)
     {
@@ -666,29 +859,6 @@ namespace MFM
         FAIL(OUT_OF_ROOM);
       }
       m_heldElements[m_heldElementCount++] = element;
-    }
-
-    void ActivateButton(u32 buttonIndex)
-    {
-      if (buttonIndex >= ELEMENT_BOX_BUTTON_COUNT)
-        FAIL(ILLEGAL_ARGUMENT);
-      m_toolButtons[m_activatedButtonIndex].SetActivated(false);
-      m_activatedButtonIndex = buttonIndex;
-      m_toolButtons[m_activatedButtonIndex].SetActivated(true);
-    }
-
-    EditingTool GetSelectedTool()
-    {
-      return *m_toolPtr;
-    }
-
-    bool IsBrushableSelected()
-    {
-      return GetSelectedTool() == TOOL_BRUSH    ||
-             GetSelectedTool() == TOOL_ERASER   ||
-             GetSelectedTool() == TOOL_XRAY     ||
-             GetSelectedTool() == TOOL_CLONE    ||
-             GetSelectedTool() == TOOL_AIRBRUSH;
     }
 
     virtual bool PostDragHandle(MouseButtonEvent& mbe)
@@ -701,22 +871,15 @@ namespace MFM
         return true;
       }
 
-      if(IsBrushableSelected())
+      if(m_selectedToolButton)
       {
-        switch(event.button)
-        {
-        case SDL_BUTTON_WHEELUP:
-          m_brushSize++;
-          break;
-        case SDL_BUTTON_WHEELDOWN:
-          if (m_brushSize > 0)
-          {
-            m_brushSize--;
-          }
-          break;
-        default:
-          break;
-        }
+        GridToolShapeUpdater<GC> & gt = m_selectedToolButton->GetGridTool();
+        u32 radius = gt.GetRadius();
+
+        if (radius > 0 &&
+            (event.button == SDL_BUTTON_WHEELUP ||
+             event.button == SDL_BUTTON_WHEELDOWN))
+          gt.Press(mbe);
       }
 
       return true;
@@ -748,7 +911,7 @@ namespace MFM
         d.SetBackground(Drawing::BLACK);
         d.SetForeground(Drawing::WHITE);
         d.BlitBackedTextCentered(m_primaryElement->GetAtomicSymbol(),
-                                 UPoint(ELEMENT_START_X, ELEMENT_START_Y),
+                                 SPoint(ELEMENT_START_X, ELEMENT_START_Y),
                                  UPoint(ELEMENT_TOOL_SIZE, ELEMENT_TOOL_SIZE));
       }
       if (m_secondaryElement)
@@ -761,22 +924,28 @@ namespace MFM
         d.SetBackground(Drawing::BLACK);
         d.SetForeground(Drawing::WHITE);
         d.BlitBackedTextCentered(m_secondaryElement->GetAtomicSymbol(),
-                                 UPoint(SECONDARY_X_START, ELEMENT_START_Y),
+                                 SPoint(SECONDARY_X_START, ELEMENT_START_Y),
                                  UPoint(ELEMENT_TOOL_SIZE, ELEMENT_TOOL_SIZE));
       }
 
-      if(IsBrushableSelected())
+      if(m_selectedToolButton)
       {
-        d.SetBackground(Drawing::BLACK);
-        d.SetForeground(Drawing::WHITE);
+        GridToolShapeUpdater<GC> & gt = m_selectedToolButton->GetGridTool();
+        u32 radius = gt.GetRadius();
 
-        char brushSizeArray[64];
+        if (radius > 0)
+        {
+          d.SetBackground(Drawing::BLACK);
+          d.SetForeground(Drawing::WHITE);
 
-        snprintf(brushSizeArray, 64, "%d", m_brushSize);
+          char brushSizeArray[64];
 
-        const SPoint brushPos = m_toolButtons[TOOL_AIRBRUSH].Panel::GetRenderPoint();
-        UPoint pos(brushPos.GetX() + GetElementRenderSize(), brushPos.GetY());
-        d.BlitBackedText(brushSizeArray, pos, UPoint(128, 128));
+          snprintf(brushSizeArray, 64, "%2d", radius);
+
+          const SPoint brushPos = m_toolButtons[m_toolButtonsInUse - 1].Panel::GetRenderPoint();
+          SPoint pos(brushPos.GetX() + GetElementRenderSize(), brushPos.GetY());
+          d.BlitBackedText(brushSizeArray, pos, UPoint(128, 128));
+        }
       }
 
     }
@@ -784,24 +953,44 @@ namespace MFM
     void SaveDetails(ByteSink & sink) const
     {
       Super::SaveDetails(sink);
-      sink.Printf(" PP(bigt=%d)\n", m_bigText);
-      sink.Printf(" PP(brshz=%d)\n", m_brushSize);
-      sink.Printf(" PP(abidx=%d)\n", m_activatedButtonIndex);
+
+      s32 selIdx = -1;
+      for(u32 i = 0; i < m_toolButtonsInUse; i++)
+      {
+        if (m_selectedToolButton == &m_toolButtons[i])
+          selIdx = i;
+        m_toolButtons[i].GetGridTool().SaveDetails(sink);
+      }
+
+      sink.Printf(" PP(stbi=%d)\n", selIdx);
+      sink.Printf(" PP(site=%d)\n", m_siteEdit);
     }
 
     bool LoadDetails(const char * key, LineCountingByteSource & source)
     {
       if (Super::LoadDetails(key, source)) return true;
-      if (!strcmp("bigt",key)) return 1 == source.Scanf("%?d", sizeof m_bigText, &m_bigText);
-      if (!strcmp("brshz",key)) return 1 == source.Scanf("%?d", sizeof m_brushSize, &m_brushSize);
-      if (!strcmp("abidx",key))
+
+      for(u32 i = 0; i < m_toolButtonsInUse; i++)
       {
-        if (1 != source.Scanf("%?d", sizeof m_activatedButtonIndex, &m_activatedButtonIndex)) return false;
-        ActivateButton(m_activatedButtonIndex);
-        MFM_API_ASSERT_NONNULL(m_toolPtr);
-        *m_toolPtr = (EditingTool) m_activatedButtonIndex;
+        if (m_toolButtons[i].GetGridTool().LoadDetails(key, source))
+          return true;
+      }
+
+      if (!strcmp(key,"stbi"))
+      {
+        s32 selIdx;
+        if (1 != source.Scanf("%?d", sizeof selIdx, &selIdx))
+          return false;
+        for(u32 i = 0; i < m_toolButtonsInUse; i++)
+        {
+          m_toolButtons[i].SetSelected(false);
+        }
+        if (selIdx >= 0 && selIdx < m_toolButtonsInUse)
+          m_toolButtons[selIdx].OnClick(SDL_BUTTON_LEFT);
         return true;
       }
+
+      if (!strcmp(key,"site")) return 1 == source.Scanf("%?d", sizeof m_siteEdit, &m_siteEdit);
 
       return false;
     }
