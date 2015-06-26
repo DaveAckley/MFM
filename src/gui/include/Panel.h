@@ -51,16 +51,13 @@ namespace MFM
 
   struct MouseEvent
   {
-    MouseEvent(const u32 & keyboardModifiers, SDL_Event & event,
-               const EditingTool selectedTool) :
-      m_keyboardModifiers(keyboardModifiers),
-      m_event(event),
-      m_selectedTool(selectedTool)
+    MouseEvent(const u32 & keyboardModifiers, SDL_Event & event)
+      : m_keyboardModifiers(keyboardModifiers)
+      , m_event(event)
     { }
 
     const u32 & m_keyboardModifiers;
     SDL_Event & m_event;
-    const EditingTool m_selectedTool;
 
     virtual ~MouseEvent()
     { }
@@ -73,9 +70,8 @@ namespace MFM
 
   struct MouseButtonEvent : public MouseEvent
   {
-    MouseButtonEvent(const u32 & keyboardModifiers,
-                     SDL_Event & event, const EditingTool selectedTool) :
-      MouseEvent(keyboardModifiers, event, selectedTool)
+    MouseButtonEvent(const u32 & keyboardModifiers, SDL_Event & event) :
+      MouseEvent(keyboardModifiers, event)
     { }
 
     virtual bool Handle(Panel & panel) ;
@@ -94,10 +90,10 @@ namespace MFM
     const ButtonPositionArray & m_buttonPositionArray;
 
     MouseMotionEvent(const u32 & keyboardModifiers, SDL_Event & event, u32 buttonMask,
-                     ButtonPositionArray & bpa, const EditingTool selectedTool) :
-      MouseEvent(keyboardModifiers, event, selectedTool),
-      m_buttonMask(buttonMask),
-      m_buttonPositionArray(bpa)
+                     ButtonPositionArray & bpa)
+      : MouseEvent(keyboardModifiers, event)
+      , m_buttonMask(buttonMask)
+      , m_buttonPositionArray(bpa)
     { }
 
     virtual bool Handle(Panel & panel) ;
