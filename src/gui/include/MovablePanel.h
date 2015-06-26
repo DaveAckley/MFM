@@ -98,7 +98,12 @@ namespace MFM
         SPoint dragOffset = event.GetAt() - m_dragPoint;
         if (m_ctrlDragging)
         {
-          Panel::SetRenderPoint(m_preDragLocation + dragOffset);
+          SPoint newRender = m_preDragLocation + dragOffset;
+          Panel::SetRenderPoint(newRender);
+          LOG.Debug("[%s] render point: (%d,%d)",
+                    this->GetName(),
+                    newRender.GetX(),
+                    newRender.GetY());
         }
         else
         {
@@ -108,6 +113,10 @@ namespace MFM
                 SPoint(MIN_WINDOW_EDGE,MIN_WINDOW_EDGE));
           Panel::SetDimensions(newsize.GetX(), newsize.GetY());
           Panel::SetDesiredSize(newsize.GetX(), newsize.GetY());
+          LOG.Debug("[%s] size: (%d,%d)",
+                    this->GetName(),
+                    newsize.GetX(),
+                    newsize.GetY());
         }
         return true;
       }
