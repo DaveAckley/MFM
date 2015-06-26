@@ -237,15 +237,14 @@ namespace MFM
       return 0xffffffff;
     }
 
-    virtual u32 GetAtomColor(const Site<AC>& site, u32 selector) const
+    virtual u32 GetAtomColor(const T& atom, u32 selector) const
     {
       if (selector == 0)
         return GetElementColor();
 
       UlamContext<EC> uc;
-      T temp(site.GetAtom());
+      T temp(atom);
       Ui_Ut_102321u sel(selector);
-      //      Ui_Ut_102321u dynColor;
       Ui_Ut_14181u dynColor;
       dynColor = Uf_8getColor(uc, temp, sel);
       return dynColor.read();

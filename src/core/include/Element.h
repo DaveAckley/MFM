@@ -40,6 +40,7 @@
 
 namespace MFM
 {
+
   typedef u32 ElementType;
 
   template <class EC> class EventWindow; // FORWARD
@@ -452,8 +453,8 @@ namespace MFM
      * overridden if wanting to use a gradient or some other variable
      * color based on the body of the specified Atom .
      *
-     * @param site The Site containing an Atom of this Element, of
-     *             which the color is to be found.
+     * @param atom The atom of this Element, of which its current
+     *             color is to be found.
      *
      * @param selector An additional argument which may be used to
      *                 determine the color of which to render \c atom.
@@ -463,7 +464,7 @@ namespace MFM
      *
      * @returns The 32-bit ARGB color of which to render \c atom with.
      */
-    virtual u32 GetAtomColor(const Site<AC>& site, u32 selector) const
+    virtual u32 GetAtomColor(const T& atom, u32 selector) const
     {
       return GetElementColor();
     }
@@ -474,9 +475,9 @@ namespace MFM
      * modified by user-requested lowlighting etc.
      *
      */
-    u32 GetDynamicColor(const Site<AC>& site, u32 selector) const
+    u32 GetDynamicColor(const T& atom, u32 selector) const
     {
-      u32 baseColor = this->GetAtomColor(site, selector);
+      u32 baseColor = this->GetAtomColor(atom, selector);
 
       if(m_renderLowlight)
       {
