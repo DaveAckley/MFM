@@ -41,7 +41,7 @@
 #include "AtomViewPanel.h"
 #include "StatisticsPanel.h"
 #include "Tile.h"
-#include "GridRenderer.h"
+//#include "GridRenderer.h"
 #include "GridPanel.h"
 #include "TextPanel.h"
 #include "ToolboxPanel.h"
@@ -57,6 +57,7 @@
 #include "HelpPanel.h"
 #include "MovablePanel.h"
 #include "AbstractGUIDriverButtons.h"
+#include "AbstractGUIDriverTools.h"
 #include "GUIConstants.h"
 #include "Keyboard.h"
 
@@ -82,7 +83,7 @@ namespace MFM
 
     bool m_keyboardPaused;   // Toggled by keyboard space, ' ', SDLK_SPACE
     bool m_singleStep;       // Toggled by Step check box, 's', SDLK_SPACE
-    bool m_mousePaused;      // Set if any buttons down, clear if all up
+    bool m_mousePaused;      // Set if any buttons down (with modifiers?), clear if all up
     bool m_gridPaused;       // Set if keyboard || mouse paused, checked by UpdateGrid
     bool m_reinitRequested;
 
@@ -111,6 +112,7 @@ namespace MFM
     ThinButton<GC> m_thinButton;
     GridRunCheckbox<GC> m_gridRunButton;
     GridRenderButton<GC> m_gridRenderButton;
+    CacheRenderButton<GC> m_cacheRenderButton;
     GridStepCheckbox<GC> m_gridStepButton;
     FgViewButton<GC>  m_fgViewButton;
     BgViewButton<GC> m_bgViewButton;
@@ -131,9 +133,23 @@ namespace MFM
 
     HelpPanel m_helpPanel;
 
-    GridRenderer m_grend;
     SPoint m_grendMove;
     Keyboard m_keyboardMap;
+
+    TileRenderer<EC> m_tileRenderer;
+
+    GridPanel<GC> m_gridPanel;
+    ToolboxPanel<GC> m_toolboxPanel;
+
+    GridToolPencil<GC> m_gridToolPencil;
+    GridToolEraser<GC> m_gridToolEraser;
+    GridToolBrush<GC> m_gridToolBrush;
+    GridToolAirBrush<GC> m_gridToolAirBrush;
+    GridToolXRay<GC> m_gridToolXRay;
+    GridToolBucket<GC> m_gridToolBucket;
+    GridToolClone<GC> m_gridToolClone;
+
+    StatisticsPanel<GC> m_statisticsPanel;
 
   public:
     const Panel & GetRootPanel() const { return m_rootPanel; }
@@ -152,6 +168,17 @@ namespace MFM
       hd.SetDriver(*this);
     }
 
+    void OnceOnlyTools()
+    {
+      m_toolboxPanel.RegisterGridTool(m_gridToolPencil);
+      m_toolboxPanel.RegisterGridTool(m_gridToolEraser);
+      m_toolboxPanel.RegisterGridTool(m_gridToolBrush);
+      m_toolboxPanel.RegisterGridTool(m_gridToolAirBrush);
+      m_toolboxPanel.RegisterGridTool(m_gridToolXRay);
+      m_toolboxPanel.RegisterGridTool(m_gridToolBucket);
+      m_toolboxPanel.RegisterGridTool(m_gridToolClone);
+    }
+
     void OnceOnlyButtons()
     {
       m_statisticsPanel.SetAnchor(ANCHOR_EAST);
@@ -159,6 +186,7 @@ namespace MFM
       m_buttonPanel.SetAnchor(ANCHOR_EAST);
 
       InsertAndRegisterButton(m_gridRenderButton);
+      InsertAndRegisterButton(m_cacheRenderButton);
       InsertAndRegisterButton(m_gridRunButton);
       InsertAndRegisterButton(m_bgrButton);
       InsertAndRegisterButton(m_fgrButton);
@@ -185,7 +213,6 @@ namespace MFM
       InsertAndRegisterButton(m_pauseTileButton);
       InsertAndRegisterButton(m_quitButton);
 
-      m_screenshotButton.SetDriver(this);
       m_screenshotButton.SetScreen(m_screen);
       m_screenshotButton.SetCamera(&m_camera);
 
@@ -193,7 +220,7 @@ namespace MFM
 
     void Update(OurGrid& grid)
     {
-      TileRenderer& tileRenderer = m_grend.GetTileRenderer();
+      // XXX      TileRenderer& tileRenderer = m_grend.GetTileRenderer();
 
       if (m_singleStep)
       {
@@ -212,7 +239,7 @@ namespace MFM
       }
 
       // Slew camera
-      tileRenderer.Move(m_grendMove);
+      //XXX      tileRenderer.Move(m_grendMove);
 
     }
 
@@ -239,7 +266,10 @@ namespace MFM
     void SetToolboxVisible(bool vis)
     {
       m_toolboxPanel.SetVisible(vis);
-      m_gridPanel.SetPaintingEnabled(m_toolboxPanel.IsVisible());
+      if (vis)
+        m_gridPanel.SetGridTool(m_toolboxPanel.GetCurrentTool());
+      else
+        m_gridPanel.SetGridTool(0);
     }
 
     bool IsToolboxVisible() const
@@ -401,8 +431,10 @@ namespace MFM
 #endif
     }
 
+#if 0
     GridRenderer & GetGridRenderer() { return m_grend; }
     const GridRenderer & GetGridRenderer() const { return m_grend; }
+#endif
 
     virtual void PostUpdate()
     {
@@ -413,6 +445,11 @@ namespace MFM
       m_statisticsPanel.SetCurrentAEPSPerEpoch(this->GetAEPSPerEpoch());
       m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
       //      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
+    }
+
+    u32 GetThisEpochAEPS() const
+    {
+      return m_thisEpochAEPS;
     }
 
     virtual void DoEpochEvents(OurGrid& grid, u32 epochs, u32 epochAEPS)
@@ -544,9 +581,10 @@ namespace MFM
 
       m_rootPanel.SetName("Root");
       m_gridPanel.SetBorder(Drawing::BLACK);
-      m_gridPanel.SetGridRenderer(&m_grend);
-      m_gridPanel.SetToolboxPanel(&m_toolboxPanel);
+      //XXX      m_gridPanel.SetGridRenderer(&m_grend);
+      //XXX      m_gridPanel.SetToolboxPanel(&m_toolboxPanel);
       m_gridPanel.SetGrid(&Super::GetGrid());
+      m_gridPanel.SetTileRenderer(&m_tileRenderer);
 
       m_statisticsPanel.SetGrid(&Super::GetGrid());
       m_statisticsPanel.SetAEPS(Super::GetAEPS());
@@ -570,7 +608,7 @@ namespace MFM
       m_logPanel.SetFont(FONT_ASSET_LOGGER);
 
       m_toolboxPanel.SetName("Toolbox");
-      m_toolboxPanel.SetVisible(false);
+      m_toolboxPanel.SetVisible(true);
       m_toolboxPanel.SetBigText(m_bigText);
       m_toolboxPanel.SetBackground(Drawing::GREY60);
       m_toolboxPanel.SetAnchor(ANCHOR_WEST);
@@ -596,6 +634,8 @@ namespace MFM
 
       OnceOnlyButtons();
 
+      OnceOnlyTools();
+
       // Again to 'set' stuff?
       SetScreenSize(m_screenWidth, m_screenHeight);
 
@@ -614,10 +654,12 @@ namespace MFM
         }
       }
 
-      LoadStartFile();  // Hopefully this is late enough in bootseq..
     }
 
   public:
+    TileRenderer<EC> & GetTileRenderer() { return m_tileRenderer; }
+    const TileRenderer<EC> & GetTileRenderer() const { return m_tileRenderer; }
+
     void SetSingleStep(bool single) { m_singleStep = single; }
     bool IsSingleStep() const { return m_singleStep; }
 
@@ -740,7 +782,13 @@ namespace MFM
       m_thisUpdateIsEpoch = tmp_m_thisUpdateIsEpoch;
       m_bigText = tmp_m_bigText;
       m_thisEpochAEPS = tmp_m_thisEpochAEPS;
-      m_captureScreenshots = tmp_m_captureScreenshots;
+
+      // Sat Jun 13 17:14:47 2015 Restoring screenshots means we
+      // ignore the -p command line argument -- at least with the
+      // startup file.  I think we'd like to give priority to the
+      // command line, for this kind of thing, especially since an
+      // .mfz file contains a command line.
+      //      m_captureScreenshots = tmp_m_captureScreenshots;
       // Sun Jun 7 18:34:44 2015 Restoring m_saveStateIndex means we
       // fail to start at 10.mfs in the new simulation save/ directory
       //      m_saveStateIndex = tmp_m_saveStateIndex;
@@ -793,8 +841,15 @@ namespace MFM
       , m_screenResizable(true)
       , m_fgViewButton()
       , m_bgViewButton()
-      , m_selectedTool(TOOL_SELECTOR)
-      , m_toolboxPanel(&m_selectedTool)
+      , m_gridPanel()
+      , m_toolboxPanel()
+      , m_gridToolPencil(m_gridPanel, m_toolboxPanel)
+      , m_gridToolEraser(m_gridPanel, m_toolboxPanel)
+      , m_gridToolBrush(m_gridPanel, m_toolboxPanel)
+      , m_gridToolAirBrush(m_gridPanel, m_toolboxPanel)
+      , m_gridToolXRay(m_gridPanel, m_toolboxPanel)
+      , m_gridToolBucket(m_gridPanel, m_toolboxPanel)
+      , m_gridToolClone(m_gridPanel, m_toolboxPanel)
       , m_buttonPanel()
       , m_externalConfigSectionGUI(AbstractDriver<GC>::GetExternalConfig(),*this)
     {
@@ -820,6 +875,9 @@ namespace MFM
       m_renderStats = false;
 
       m_toolboxPanel.AddButtons();
+
+      LoadStartFile();  // This had better be late enough in bootseq..
+
     }
 
     virtual void PostReinitPhysics()
@@ -1030,14 +1088,6 @@ namespace MFM
 
     }
 
-    EditingTool m_selectedTool;
-
-    GridPanel<GC> m_gridPanel;
-
-    ToolboxPanel<EC> m_toolboxPanel;
-
-    StatisticsPanel<GC> m_statisticsPanel;
-
     struct ButtonPanel : public MovablePanel
     {
       static const u32 INITIAL_WIDTH = STATS_START_WINDOW_WIDTH;
@@ -1118,6 +1168,7 @@ namespace MFM
 
       m_rootDrawing.Reset(m_screen, FONT_ASSET_ELEMENT);
 
+#if 0
       TileRenderer& tileRenderer = m_grend.GetTileRenderer();
 
       if(m_renderStats)
@@ -1128,6 +1179,7 @@ namespace MFM
       {
         tileRenderer.SetDimensions(UPoint(m_screenWidth,m_screenHeight));
       }
+#endif
 
       //      m_srend.SetDrawPoint(SPoint(0,0));
       //      m_srend.SetDimensions(UPoint(STATS_WINDOW_WIDTH, m_screenHeight));
@@ -1156,6 +1208,10 @@ namespace MFM
         {
           switch(event.type)
           {
+          default:
+            LOG.Debug("Unhandled SDL event type %d", event.type);
+            break;
+
           case SDL_VIDEORESIZE:
             SetScreenSize(event.resize.w, event.resize.h);
             break;
@@ -1176,7 +1232,7 @@ namespace MFM
 
           mousebuttondispatch:
             {
-              MouseButtonEvent mbe(keyboardModifiers, event, m_selectedTool);
+              MouseButtonEvent mbe(keyboardModifiers, event);
               m_rootPanel.Dispatch(mbe,
                                    Rect(SPoint(),
                                         UPoint(m_screenWidth,m_screenHeight)));
@@ -1186,7 +1242,7 @@ namespace MFM
           case SDL_MOUSEMOTION:
           {
             MouseMotionEvent mme(keyboardModifiers, event,
-                                 mouseButtonsDown, dragStartPositions, m_selectedTool);
+                                 mouseButtonsDown, dragStartPositions);
             m_rootPanel.Dispatch(mme,
                                  Rect(SPoint(),
                                       UPoint(m_screenWidth,m_screenHeight)));
@@ -1219,13 +1275,13 @@ namespace MFM
           }
         }
 
-        m_mousePaused = mouseButtonsDown != 0;
+        m_mousePaused = mouseButtonsDown != 0 && keyboardModifiers != 0;
 
         /* Limit framerate */
         s32 sleepMS = (s32)
-          ((1000.0 / FRAMES_PER_SECOND) -
+          ((1000.0 / FRAMES_PER_SECOND_IDLE) -
            (SDL_GetTicks() - lastFrame));
-        if(sleepMS > 0)
+        if(m_gridPaused && sleepMS > 0)
         {
           SDL_Delay(sleepMS);
         }
@@ -1244,7 +1300,7 @@ namespace MFM
         {
           if (m_captureScreenshots)
           {
-            const char * path = Super::GetSimDirPathTemporary("vid/%010d.png", m_thisEpochAEPS);
+            const char * path = Super::GetSimDirPathTemporary("vid/%D.png", m_thisEpochAEPS);
 
             m_camera.DrawSurface(m_screen,path);
           }

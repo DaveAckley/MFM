@@ -29,8 +29,10 @@
 #define ABSTRACTGUIDRIVERBUTTONS_H
 
 #include "Grid.h"
-#include "GridRenderer.h"
 #include "TileRenderer.h"
+#include "AbstractButton.h"
+#include "AbstractCheckbox.h"
+#include "Camera.h"
 
 namespace MFM
 {
@@ -40,6 +42,9 @@ namespace MFM
   template<class GC>
   class HasGUIDriver {
   public:
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef TileRenderer<EC> OurTileRenderer;
+
     HasGUIDriver()
       : m_driver(0)
     { }
@@ -68,11 +73,8 @@ namespace MFM
     Grid<GC> & GetGrid() { return GetDriver().GetGrid(); }
     const Grid<GC> & GetGrid() const { return GetDriver().GetGrid(); }
 
-    GridRenderer & GetGridRenderer() { return this->GetDriver().GetGridRenderer(); }
-    const GridRenderer & GetGridRenderer() const { return this->GetDriver().GetGridRenderer(); }
-
-    TileRenderer & GetTileRenderer() { return this->GetGridRenderer().GetTileRenderer(); }
-    const TileRenderer & GetTileRenderer() const { return this->GetGridRenderer().GetTileRenderer(); }
+    OurTileRenderer & GetTileRenderer() { return this->GetDriver().GetTileRenderer(); }
+    const OurTileRenderer & GetTileRenderer() const { return this->GetDriver().GetTileRenderer(); }
 
   private:
     AbstractGUIDriver<GC> * m_driver;
@@ -141,6 +143,8 @@ namespace MFM
 
     virtual void OnClick(u8 button)
     {
+      FAIL(INCOMPLETE_CODE);
+#if 0
       GridRenderer & grend = this->GetGridRenderer();
 
       const SPoint selTile = grend.GetSelectedTile();
@@ -149,6 +153,7 @@ namespace MFM
       {
         this->GetGrid().EmptyTile(grend.GetSelectedTile());
       }
+#endif
     }
 
   };
@@ -310,6 +315,35 @@ namespace MFM
   };
 
   template<class GC>
+  struct CacheRenderButton : public AbstractGridCheckbox<GC>
+  {
+    CacheRenderButton()
+      : AbstractGridCheckbox<GC>("Cache")
+    {
+      AbstractButton::SetName("CacheRenderButton");
+      Panel::SetDoc("Do/don't include cache sites around the tiles");
+      Panel::SetFont(FONT_ASSET_BUTTON_MEDIUM);
+    }
+
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_c;
+      mod = 0;
+      return true;
+    }
+
+    virtual bool IsChecked() const
+    {
+      return this->GetTileRenderer().IsDrawCaches();
+    }
+
+    virtual void SetChecked(bool value)
+    {
+      this->GetTileRenderer().SetDrawCaches(value);
+    }
+  };
+
+  template<class GC>
   struct LoadGridSectionButton : public AbstractGridCheckbox<GC>
   {
     LoadGridSectionButton()
@@ -394,7 +428,7 @@ namespace MFM
   struct FgViewButton : public AbstractGridButton<GC>
   {
     FgViewButton()
-      : AbstractGridButton<GC>("Front: Element")
+      : AbstractGridButton<GC>("Front: Atom #1")
     {
       AbstractButton::SetName("FgViewButton");
       Panel::SetDoc("Change atom ('front') rendering method");
@@ -453,7 +487,7 @@ namespace MFM
   struct BgViewButton : public AbstractGridButton<GC>
   {
     BgViewButton()
-      : AbstractGridButton<GC>("Back: Light tile")
+      : AbstractGridButton<GC>("Back: Base #1")
     {
       AbstractButton::SetName("BgViewButton");
       Panel::SetDoc("Change site ('back') rendering method");
@@ -477,7 +511,7 @@ namespace MFM
     {
       OString32 label;
       label.Printf("Back: %s",
-                   this->GetTileRenderer().GetDrawBackgroundTypeName());
+                    this->GetTileRenderer().GetDrawBackgroundTypeName());
       AbstractButton::SetText(label.GetZString());
     }
   };
@@ -536,18 +570,15 @@ namespace MFM
       m_camera = camera;
     }
 
-    void SetDriver(AbstractDriver<GC>* driver)
-    {
-      m_driver = driver;
-    }
-
     virtual void OnClick(u8 button)
     {
-      if(m_driver && m_screen && m_camera)
+      if(m_screen && m_camera)
       {
+        const u32 aeps = this->GetDriver().GetThisEpochAEPS();
         const char * path =
-          m_driver->GetSimDirPathTemporary("screenshot/%D.png",
-                                           ++m_currentScreenshot);
+          this->GetDriver().GetSimDirPathTemporary("screenshot/%D-%D.png",
+                                                   aeps,
+                                                   ++m_currentScreenshot);
         m_camera->DrawSurface(m_screen, path);
 
         LOG.Message("Screenshot saved at %s", path);
@@ -633,6 +664,8 @@ namespace MFM
 
     virtual void OnClick(u8 button)
     {
+      FAIL(INCOMPLETE_CODE);
+#if 0
       SPoint selectedTile = this->GetGridRenderer().GetSelectedTile();
 
       if(selectedTile.GetX() >= 0 && selectedTile.GetY() >= 0)
@@ -640,6 +673,7 @@ namespace MFM
         bool isEnabled = this->GetGrid().IsTileEnabled(selectedTile);
         this->GetGrid().SetTileEnabled(selectedTile, !isEnabled);
       }
+#endif
     }
   };
 
@@ -770,6 +804,7 @@ namespace MFM
       Panel::SetDoc("Do/don't show the toolbox window");
       Panel::SetFont(FONT_ASSET_BUTTON_BIG);
     }
+
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_t;
@@ -779,14 +814,13 @@ namespace MFM
 
     virtual bool IsChecked() const
     {
-      return  this->GetDriver().IsToolboxVisible();
+      return this->GetDriver().IsToolboxVisible();
     }
 
-   virtual void SetChecked(bool value)
+    virtual void SetChecked(bool value)
     {
       this->GetDriver().SetToolboxVisible(value);
     }
-
   };
 
   template<class GC>
