@@ -230,6 +230,16 @@ namespace MFM {
     }
 
     /**
+     * Stores the given bit at a specified index in this BitVector.
+     *
+     * @param idx The index to store the bit into, where the MSB is
+     *        indexed at \c 0 .
+     */
+    void StoreBit(const u32 idx, bool bit) {
+      Write(idx, 1, bit ? 1 : 0);
+    }
+
+    /**
      * Reads a single bit at a specified index from this BitVector.
      *
      * @param idx The index of the bit to read.
