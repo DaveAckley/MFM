@@ -4,437 +4,305 @@
 
 namespace MFM
 {
+  template <class EC>
+  TileRenderer<EC>::TileRenderer()
+    : m_drawBackgroundType(DRAW_SITE_DARK_TILE)
+    , m_drawForegroundType(DRAW_SITE_ATOM_1)
+    , m_drawEventWindow(false)
+    , m_drawGridLines(true)
+    , m_drawCacheSites(true)
+    , m_drawBases(false)
+    , m_atomSizeDit(DEFAULT_ATOM_SIZE_DIT)
+    , m_renderSquares(false)
+    , m_gridLineColor(Drawing::GREY30)
+  {
+    m_regionColors[OurTile::REGION_CACHE] = InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 100);
+    m_regionColors[OurTile::REGION_SHARED] = InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 92);
+    m_regionColors[OurTile::REGION_VISIBLE] = InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 84);
+    m_regionColors[OurTile::REGION_HIDDEN] = InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 76);
+  }
 
   template <class EC>
-  void TileRenderer::RenderAtoms(Drawing & drawing, SPoint& pt, Tile<EC>& tile,
-                                 bool renderCache, bool lowlightTile)
+  SPoint TileRenderer<EC>::ComputeDrawSizeDit(const Tile<EC> & tile, u32 tileRegion) const
   {
-    u32 astart = renderCache ? 0 : EC::EVENT_WINDOW_RADIUS;
-    u32 aend   = renderCache ? tile.TILE_SIDE : tile.TILE_SIDE - EC::EVENT_WINDOW_RADIUS;
+    const u32 drawDiameterSites = tile.TILE_SIDE - 2 * EWR * tileRegion;
+    const u32 drawSideDit = drawDiameterSites * m_atomSizeDit;
+    return SPoint(drawSideDit, drawSideDit);
+  }
 
-    u32 cacheOffset = renderCache ? 0 : -EC::EVENT_WINDOW_RADIUS * m_atomDrawSize;
-
-    SPoint atomLoc;
-
-    Point<u32> rendPt;
-
-    for(u32 x = astart; x < aend; x++)
+  template <class EC>
+  void TileRenderer<EC>::PaintSites(Drawing & drawing,
+                                    const DrawSiteType drawType,
+                                    const DrawSiteShape shape,
+                                    const SPoint ditOrigin,
+                                    const Tile<EC> & tile)
+  {
+    // First deal with the whole-tile cases
+    switch (drawType)
     {
-      rendPt.SetX(pt.GetX() + m_atomDrawSize * x +
-                  m_windowTL.GetX() + cacheOffset);
-      if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX())
+    default: break;  // Deal with illegal or non-floodable below
+
+    case DRAW_SITE_NONE:
+      // That was easy
+      return;
+
+    case DRAW_SITE_DARK_TILE:
       {
-        atomLoc.SetX(x);
-        for(u32 y = astart; y < aend; y++)
+        Rect r(ditOrigin + ComputeDrawInsetDit(tile, OurTile::REGION_VISIBLE),
+               MakeUnsigned(ComputeDrawSizeDit(tile, OurTile::REGION_VISIBLE)));
+        drawing.FillRectDit(r, Drawing::GREY20);
+      }
+      return;
+
+    case DRAW_SITE_LIGHT_TILE:
+      {
+        for (u32 i = OurTile::REGION_CACHE; i <= OurTile::REGION_HIDDEN; ++i)
         {
-          rendPt.SetY(pt.GetY() + m_atomDrawSize * y +
-                      m_windowTL.GetY() + cacheOffset);
-          if(rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
-          {
-            atomLoc.SetY(y);
-            if (m_drawBackgroundType == DRAW_BACKGROUND_CHANGE_AGE && tile.IsOwnedSite(atomLoc))
-            {
-              // Draw background 'write heat' map
-              u32 writeAge = tile.GetUncachedWriteAge32(atomLoc -
-                                                        SPoint(EC::EVENT_WINDOW_RADIUS,
-                                                               EC::EVENT_WINDOW_RADIUS));
-              u32 colorIndex = 0;
-              const u32 MAX_IDX = 10000;       // Potential (interpolated) colors
-              const u32 AGE_PER_AEPS = tile.GetSites();
-              const double MAX_EXPT = 4.0;     // 10**4.0 == 10kAEPS for fully black
-              const double LOG_SCALER = MAX_IDX/MAX_EXPT;
-              double writeAgeAEPS = 1.0 * writeAge / AGE_PER_AEPS + 1;
+          if (!IsRegionDrawn(tile, i)) continue;
 
-              colorIndex = MIN(MAX_IDX, (u32) (LOG_SCALER*log10(writeAgeAEPS)));
-              u32 color =
-                ColorMap_CubeHelixRev::THE_INSTANCE.
-                GetInterpolatedColor(colorIndex,0,MAX_IDX,0xffff0000);
-
-              drawing.SetForeground(color);
-              drawing.FillRect(rendPt.GetX(),
-                               rendPt.GetY(),
-                               m_atomDrawSize,
-                               m_atomDrawSize);
-            }
-            else if (m_drawBackgroundType == DRAW_BACKGROUND_SITE && tile.IsOwnedSite(atomLoc))
-            {
-              typedef typename EC::ATOM_CONFIG AC;
-              const Site<AC> & site = tile.GetSite(atomLoc);
-
-              drawing.SetForeground(site.GetPaint());
-              drawing.FillRect(rendPt.GetX(),
-                               rendPt.GetY(),
-                               m_atomDrawSize,
-                               m_atomDrawSize);
-            }
-            RenderAtom(drawing, atomLoc, rendPt, tile, lowlightTile);
-          }
+          Rect r(ditOrigin + ComputeDrawInsetDit(tile, i),
+                 MakeUnsigned(ComputeDrawSizeDit(tile, i)));
+          drawing.FillRectDit(r, m_regionColors[i]);
         }
       }
+      return;
+    }
+
+    // Here we need to iterate over the sites
+    typename OurTile::const_iterator_type end = tile.end(m_drawCacheSites);
+    for (typename OurTile::const_iterator_type i = tile.begin(m_drawCacheSites); i != end; ++i)
+    {
+      SPoint siteInTileCoord = i.At();
+      SPoint screenDitForSite = ditOrigin + siteInTileCoord * m_atomSizeDit;
+      PaintSiteAtDit(drawing, drawType, shape, screenDitForSite, *i, tile);
     }
   }
 
 
   template <class EC>
-  void TileRenderer::RenderBadAtom(Drawing& drawing, const UPoint& rendPt)
+  void TileRenderer<EC>::PaintUnderlays(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile)
   {
-    for(s32 x = 0; x < (s32)m_atomDrawSize; x++)
+    if (m_drawEventWindow)
+      FAIL(INCOMPLETE_CODE);
+  }
+
+  template <class EC>
+  void TileRenderer<EC>::PaintOverlays(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile)
+  {
+    if (m_drawGridLines)
     {
-      for(s32 y = 0; y < (s32)m_atomDrawSize; y++)
+      u32 outerRegion = m_drawCacheSites ? OurTile::REGION_CACHE : OurTile::REGION_SHARED;
+      SPoint tileSizeDit = ComputeDrawSizeDit(tile, outerRegion);
+
+      for (u32 ditOff = 0; ditOff <= tileSizeDit.GetX(); ditOff += m_atomSizeDit)
       {
-        if((x + y + 1) & 4)
-        {
-          drawing.SetForeground(Drawing::YELLOW);
-        }
-        else
-        {
-          drawing.SetForeground(Drawing::BLACK);
-        }
-        drawing.FillRect(rendPt.GetX() + x,
-                         rendPt.GetY() + y, 1, 1);
+        drawing.DrawHLineDit(ditOrigin.GetY() + ditOff,
+                             ditOrigin.GetX(), ditOrigin.GetX() + tileSizeDit.GetX(),
+                             m_gridLineColor);
+        drawing.DrawVLineDit(ditOrigin.GetX() + ditOff,
+                             ditOrigin.GetY(), ditOrigin.GetY() + tileSizeDit.GetY(),
+                             m_gridLineColor);
       }
     }
   }
 
   template <class EC>
-  void TileRenderer::RenderAtom(Drawing & drawing, const SPoint& atomLoc,
-                                const UPoint& rendPt,  Tile<EC>& tile, bool lowlightTile)
+  void TileRenderer<EC>::PaintTileAtDit(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile)
   {
+    PaintSites(drawing, m_drawBackgroundType, DRAW_SHAPE_FILL, ditOrigin, tile);
+    PaintUnderlays(drawing, ditOrigin, tile);  // E.g. an event window
 
-    if (m_drawForegroundType == DRAW_FOREGROUND_NONE) return;
+    PaintSites(drawing, m_drawForegroundType, DRAW_SHAPE_CIRCLE, ditOrigin, tile);
+    PaintOverlays(drawing, ditOrigin, tile);   // E.g., a tool footprint
+  }
 
-    typedef typename EC::ATOM_CONFIG AC;
-    typedef typename AC::ATOM_TYPE T;
-    const Site<AC> & site = tile.GetSite(atomLoc);
-
-    u32 color;
-    const char * elementLabel = 0;
-    const u32 LABEL_ATOM_SIZE = 36;
-
-    if (m_drawForegroundType == DRAW_FOREGROUND_SITE)
+  template <class EC>
+  void TileRenderer<EC>::PaintSiteAtDit(Drawing & drawing,
+                                        const DrawSiteType drawType,
+                                        const DrawSiteShape shape,
+                                        const SPoint ditOrigin,
+                                        const Site<AC> & site,
+                                        const Tile<EC> & inTile)
+  {
+    u32 selector = 0;
+    bool fromBase = false;
+    switch (drawType)
     {
-      color = site.GetPaint();
+    default:
+      FAIL(ILLEGAL_STATE);
+
+    case DRAW_SITE_NONE:
+    case DRAW_SITE_DARK_TILE:
+    case DRAW_SITE_LIGHT_TILE:
+      // Flat backgrounds were handled per-tile..
+      return;
+
+    case DRAW_SITE_CHANGE_AGE:
+      {
+        const u32 writeAge = site.GetWriteAge();
+        const u32 MAX_IDX = 10000;       // Potential (interpolated) colors
+        const u32 AGE_PER_AEPS = 1; // Counting site events directly.., was: tile.GetSites();
+        const double MAX_EXPT = 4.0;     // 10**4.0 == 10kAEPS for fully black
+        const double LOG_SCALER = MAX_IDX/MAX_EXPT;
+        const double writeAgeAEPS = 1.0 * writeAge / AGE_PER_AEPS + 1;
+        const u32 colorIndex = MIN(MAX_IDX, (u32) (LOG_SCALER*log10(writeAgeAEPS)));
+        const u32 color =
+          ColorMap_CubeHelixRev::THE_INSTANCE.
+          GetInterpolatedColor(colorIndex,0,MAX_IDX,0xffff0000);
+
+        PaintShapeForSite(drawing, shape, ditOrigin, color);
+      }
+      return;
+
+    case DRAW_SITE_PAINT:
+      {
+        PaintShapeForSite(drawing, shape, ditOrigin, site.GetPaint());
+      }
+      return;
+
+    case DRAW_SITE_ELEMENT: break;
+    case DRAW_SITE_ATOM_1: selector = 1; break;
+    case DRAW_SITE_ATOM_2: selector = 2; break;
+
+    case DRAW_SITE_BASE: fromBase = true; break;
+    case DRAW_SITE_BASE_1: fromBase = true; selector = 1; break;
+    case DRAW_SITE_BASE_2: fromBase = true; selector = 2; break;
+
+    }
+
+    // Here if we need to do atom-specific painting
+
+    u32 drawColor;
+    const char * elementLabel  = 0;
+
+    const T & atom = fromBase ? site.GetBase().GetBaseAtom() : site.GetAtom();
+    if(!atom.IsSane())
+    {
+      // XXX HANDLE INSANE SHAPE?
+      PaintBadAtomAtDit(drawing, ditOrigin);
+      return;
+    }
+
+    u32 type = atom.GetType();
+
+    if (type == T::ATOM_EMPTY_TYPE) return;
+
+    const Element<EC> * elt = inTile.GetElementTable().Lookup(type);
+    if (!elt)
+    {
+      // XXX HANDLE INSANE SHAPE? DITTO
+      PaintBadAtomAtDit(drawing, ditOrigin);
+      return;
+    }
+
+    const u32 LABEL_ATOM_SIZE_DIT = Drawing::MapPixToDit(50);
+    if (m_atomSizeDit >= LABEL_ATOM_SIZE_DIT)
+    {
+      elementLabel = elt->GetAtomicSymbol();
+    }
+
+    if (selector == 0)
+    {
+      drawColor = elt->GetStaticColor();
     }
     else
     {
+      drawColor = elt->GetDynamicColor(atom, selector);
+    }
+    PaintShapeForSite(drawing, shape, ditOrigin, drawColor);
 
-      const T & atom = site.GetAtom();
-      if(!atom.IsSane())
-      {
-        RenderBadAtom<EC>(drawing, rendPt);
-        return;
-      }
+    const u32 atomDit = m_atomSizeDit;
 
-      u32 type = atom.GetType();
+    UPoint pixSize = Drawing::MapDitToPix(UPoint(atomDit, atomDit));
+    SPoint pixOrigin = Drawing::MapDitToPix(ditOrigin);
 
-      if (type == T::ATOM_EMPTY_TYPE) return;
+    if (elementLabel && shape == DRAW_SHAPE_CIRCLE)
+    {
+      drawing.SetFont(FONT_ASSET_ELEMENT);
+      const SPoint size = drawing.GetTextSize(elementLabel);
 
-      const Element<EC> * elt = tile.GetElementTable().Lookup(type);
-      if (!elt)
-      {
-        RenderBadAtom<EC>(drawing, rendPt);
-        return;
-      }
-
-      if (m_atomDrawSize >= LABEL_ATOM_SIZE)
-      {
-        elementLabel = elt->GetAtomicSymbol();
-      }
-
-      if (m_drawForegroundType == DRAW_FOREGROUND_ELEMENT)
-      {
-        color = elt->GetStaticColor();
-      }
-      else if (m_drawForegroundType >= DRAW_FOREGROUND_ATOM_1 &&
-               m_drawForegroundType <= DRAW_FOREGROUND_ATOM_3)
-      {
-        color = elt->GetDynamicColor(site,m_drawForegroundType - DRAW_FOREGROUND_ATOM_1 + 1);
-      }
-      else
-        FAIL(ILLEGAL_STATE);
-
-      if(lowlightTile)
-      {
-        color = DarkenColor(color,50);
-      }
+      drawing.SetBackground(Drawing::BLACK);
+      drawing.SetForeground(Drawing::WHITE);
+      drawing.BlitBackedTextCentered(elementLabel, pixOrigin, pixSize);
     }
 
-    if(rendPt.GetX() + m_atomDrawSize < m_dimensions.GetX() &&
-       rendPt.GetY() + m_atomDrawSize < m_dimensions.GetY())
+  }
+
+  template <class EC>
+  void TileRenderer<EC>::PaintShapeForSite(Drawing & drawing, const DrawSiteShape shape, const SPoint ditOrigin, u32 color)
+  {
+    switch (shape)
     {
+    default: FAIL(INCOMPLETE_CODE);
+    case DRAW_SHAPE_CIRCLE:
       {
-        // Round up on radius.  Better to overlap than vanish
-        u32 radius = (m_atomDrawSize + 1) / 2;
-
-        drawing.SetForeground(color);
-        if(m_renderSquares)
-        {
-          drawing.FillRect(rendPt.GetX(),
-                           rendPt.GetY(),
-                           m_atomDrawSize,
-                           m_atomDrawSize);
-        }
-        else
-        {
-          drawing.FillCircle(rendPt.GetX(),
-                             rendPt.GetY(),
-                             m_atomDrawSize,
-                             m_atomDrawSize,
-                             radius);
-        }
-
-        if (elementLabel)
-        {
-          drawing.SetFont(FONT_ASSET_ELEMENT);
-          const SPoint size = drawing.GetTextSize(elementLabel);
-          const UPoint box = UPoint(m_atomDrawSize, m_atomDrawSize);
-          if (size.GetX() > 0 && size.GetY() > 0)
-          {
-            const UPoint usize(size.GetX(), size.GetY());
-            drawing.SetBackground(Drawing::BLACK);
-            drawing.SetForeground(Drawing::WHITE);
-            drawing.BlitBackedTextCentered(elementLabel, rendPt, box);
-          }
-        }
+        Rect r(ditOrigin, UPoint(m_atomSizeDit, m_atomSizeDit));
+        drawing.FillCircleDit(r, m_atomSizeDit/2, color);
       }
+      break;
+    case DRAW_SHAPE_FILL:
+      {
+        Rect r(ditOrigin, UPoint(m_atomSizeDit, m_atomSizeDit));
+        drawing.FillRectDit(r, color);
+      }
+      break;
     }
   }
 
   template <class EC>
-  void TileRenderer::RenderTile(Drawing & drawing, Tile<EC>& t, SPoint& loc, bool renderWindow,
-                                bool renderCache, bool selected, SPoint* selectedAtom,
-                                SPoint* cloneOrigin)
+  void TileRenderer<EC>::PaintBadAtomAtDit(Drawing & drawing, const SPoint ditOrigin)
   {
-    const u32 TILE_SIDE = t.TILE_SIDE;
+    Rect r(Drawing::MapDitToPix(ditOrigin), Drawing::MapDitToPix(UPoint(m_atomSizeDit, m_atomSizeDit)));
+    drawing.BlitImageAssetTiled(IMAGE_ASSET_BAD_ATOM_TILE, r);
+  }
 
-    SPoint multPt(loc);
-
-    const s32 INTER_CACHE_GAP = 1;
-    s32 spacing = renderCache ?
-                  TILE_SIDE + INTER_CACHE_GAP :
-                  TILE_SIDE - EC::EVENT_WINDOW_RADIUS * 2;
-
-    multPt.Multiply(spacing * m_atomDrawSize);
-
-    SPoint realPt(multPt);
-
-
-    u32 tileHeight = TILE_SIDE * m_atomDrawSize;
-
-    bool lowlightTile = !t.IsActive();
-
-    realPt.Add(m_windowTL);
-
-    if(realPt.GetX() + tileHeight >= 0 &&
-       realPt.GetY() + tileHeight >= 0)
+  template <class EC>
+  const char * TileRenderer<EC>::GetDrawSiteTypeName(DrawSiteType t)
+  {
+    switch (t)
     {
-      switch (m_drawBackgroundType)
-      {
-      default:
-      case DRAW_BACKGROUND_SITE: // Handled in RenderAtoms
-        // FALL THROUGH
-
-      case DRAW_BACKGROUND_CHANGE_AGE: // Handled in RenderAtoms
-        // FALL THROUGH
-
-      case DRAW_BACKGROUND_NONE:
-        break;
-
-      case DRAW_BACKGROUND_LIGHT_TILE:
-        RenderMemRegions<EC>(drawing, multPt, renderCache, selected, lowlightTile, TILE_SIDE);
-        break;
-
-      case DRAW_BACKGROUND_DARK_TILE:
-        RenderVisibleRegionOutlines<EC>(drawing, multPt, renderCache, selected, lowlightTile, TILE_SIDE);
-        break;
-      }
-
-      if(renderWindow)
-      {
-        RenderEventWindow(drawing, multPt, t, renderCache);
-      }
-
-      RenderAtoms(drawing, multPt, t, renderCache, lowlightTile);
-
-      if(m_drawGrid)
-      {
-        RenderGrid<EC>(drawing, &multPt, renderCache, TILE_SIDE);
-      }
-
-      if(selectedAtom)
-      {
-        SPoint ap = *selectedAtom * m_atomDrawSize + realPt;
-
-        drawing.SetForeground(Drawing::YELLOW);
-        drawing.DrawRectangle(Rect(ap, UPoint(m_atomDrawSize, m_atomDrawSize)));
-      }
-
-      if(cloneOrigin)
-      {
-        SPoint cp = *cloneOrigin * m_atomDrawSize + realPt;
-
-        drawing.SetForeground(Drawing::CYAN);
-        drawing.DrawRectangle(Rect(cp, UPoint(m_atomDrawSize, m_atomDrawSize)));
-      }
+    default:
+      FAIL(ILLEGAL_ARGUMENT);
+    case DRAW_SITE_ELEMENT:       return "Element";
+    case DRAW_SITE_ATOM_1:        return "Atom #1";
+    case DRAW_SITE_ATOM_2:        return "Atom #2";
+    case DRAW_SITE_BASE:          return "Base";
+    case DRAW_SITE_BASE_1:        return "Base #1";
+    case DRAW_SITE_BASE_2:        return "Base #2";
+    case DRAW_SITE_LIGHT_TILE:    return "Light tile";
+    case DRAW_SITE_DARK_TILE:     return "Dark tile";
+    case DRAW_SITE_CHANGE_AGE:    return "Change age";
+    case DRAW_SITE_PAINT:         return "Site paint";
+    case DRAW_SITE_NONE:          return "None";
     }
   }
 
   template <class EC>
-  void TileRenderer::RenderEventWindow(Drawing & drawing, SPoint& offset,
-                                       Tile<EC>& tile, bool renderCache)
+  void TileRenderer<EC>::TileRendererSaveDetails(ByteSink & sink) const
   {
-
-#if 1 // Sun Oct 19 11:39:41 2014 Unreimplemented since not currently in use
-    // Extract short type names
-    enum { R = EC::EVENT_WINDOW_RADIUS};
-
-    SPoint atomLoc;
-    SPoint eventCenter;
-    u32 cacheOffset = renderCache ? 0 : -R;
-    u32 drawColor = Drawing::WHITE;
-
-    tile.FillLastExecutedAtom(eventCenter);
-    u32 tableSize = EVENT_WINDOW_SITES(R);
-    for(u32 i = 0; i < tableSize; i++)
-    {
-      MDist<R>::get().FillFromBits(atomLoc, i, R);
-      atomLoc.Add(eventCenter);
-      atomLoc.Add(cacheOffset, cacheOffset);
-
-      if(i == 0)  // Center atom first in indexing.
-      {
-        drawColor = Drawing::GREEN;
-      }
-      else
-      {
-        drawColor = Drawing::WHITE;
-      }
-
-      RenderAtomBG(drawing, offset, atomLoc, drawColor);
-    }
-#endif
+    sink.Printf(" PP(traz=%d)\n", m_atomSizeDit);
+    sink.Printf(" PP(trbt=%d)\n", m_drawBackgroundType);
+    sink.Printf(" PP(trdc=%d)\n", m_drawCacheSites);
+    sink.Printf(" PP(trdg=%d)\n", m_drawGridLines);
+    sink.Printf(" PP(trev=%d)\n", m_drawEventWindow);
+    sink.Printf(" PP(trft=%d)\n", m_drawForegroundType);
+    sink.Printf(" PP(trgc=%d)\n", m_gridLineColor);
+    sink.Printf(" PP(trrs=%d)\n", m_renderSquares);
   }
 
   template <class EC>
-  void TileRenderer::RenderMemRegions(Drawing & drawing, SPoint& pt,
-                                      bool renderCache, bool selected, bool lowlightTile,
-                                      const u32 TILE_SIDE)
+  bool TileRenderer<EC>::TileRendererLoadDetails(const char * key, LineCountingByteSource & source)
   {
-    // Extract short type names
-    enum { R = EC::EVENT_WINDOW_RADIUS};
+    if (!strcmp("traz",key)) return 1 == source.Scanf("%?d", sizeof m_atomSizeDit, &m_atomSizeDit);
+    if (!strcmp("trbt",key)) return 1 == source.Scanf("%?d", sizeof m_drawBackgroundType, &m_drawBackgroundType);
+    if (!strcmp("trdc",key)) return 1 == source.Scanf("%?d", sizeof m_drawCacheSites, &m_drawCacheSites);
+    if (!strcmp("trdg",key)) return 1 == source.Scanf("%?d", sizeof m_drawGridLines, &m_drawGridLines);
+    if (!strcmp("trev",key)) return 1 == source.Scanf("%?d", sizeof m_drawEventWindow, &m_drawEventWindow);
+    if (!strcmp("trft",key)) return 1 == source.Scanf("%?d", sizeof m_drawForegroundType, &m_drawForegroundType);
+    if (!strcmp("trgc",key)) return 1 == source.Scanf("%?d", sizeof m_gridLineColor, &m_gridLineColor);
+    if (!strcmp("trrs",key)) return 1 == source.Scanf("%?d", sizeof m_renderSquares, &m_renderSquares);
 
-    int regID = 0;
-    if(renderCache)
-    {
-      RenderMemRegion<EC>(drawing, pt, regID++, !lowlightTile ?
-                          m_cacheColor : Drawing::HalfColor(m_cacheColor), renderCache,
-                          TILE_SIDE);
-    }
-    RenderMemRegion<EC>(drawing, pt, regID++, !lowlightTile ?
-                        m_sharedColor : Drawing::HalfColor(m_sharedColor), renderCache,
-                        TILE_SIDE);
-    RenderMemRegion<EC>(drawing, pt, regID++, !lowlightTile ?
-                        m_visibleColor : Drawing::HalfColor(m_visibleColor), renderCache,
-                        TILE_SIDE);
-    RenderMemRegion<EC>(drawing, pt, regID,
-                        selected ? m_selectedHiddenColor :
-                                   (!lowlightTile ?
-                                    m_hiddenColor : Drawing::HalfColor(m_hiddenColor)),
-                        renderCache,
-                        TILE_SIDE);
+    return false;
   }
 
-  template <class EC>
-  void TileRenderer::RenderVisibleRegionOutlines(Drawing & drawing, SPoint& pt,
-                                                 bool renderCache, bool selected, bool lowlightTile,
-                                                 const u32 TILE_SIDE)
-  {
-    u32 regID = renderCache ? 2 : 1;
-
-    if(!lowlightTile)
-    {
-      RenderMemRegion<EC>(drawing, pt, regID,
-                          selected ? 0xff606060 : 0xff202020, renderCache,
-                          TILE_SIDE);
-    }
-    else
-    {
-      RenderMemRegion<EC>(drawing, pt, regID,
-                          selected ? 0xff303030 : 0xff101010, renderCache,
-                          TILE_SIDE);
-    }
-  }
-
-  template <class EC>
-  void TileRenderer::RenderMemRegion(Drawing & drawing, SPoint& pt, int regID,
-                                     Uint32 color, bool renderCache,
-                                     const u32 TILE_SIDE)
-  {
-    int tileSize;
-    if(!renderCache)
-    {
-      /* Subtract out the cache's width */
-      tileSize = m_atomDrawSize *
-        (TILE_SIDE - 2 * EC::EVENT_WINDOW_RADIUS);
-    }
-    else
-    {
-      tileSize = m_atomDrawSize * TILE_SIDE;
-    }
-
-    int ewrSize = EC::EVENT_WINDOW_RADIUS * m_atomDrawSize;
-
-    /* Find rectangle to fill. */
-    SPoint topPt(pt.GetX() + (ewrSize * regID) + m_windowTL.GetX(),
-                 pt.GetY() + (ewrSize * regID) + m_windowTL.GetY());
-    SPoint botPt(MIN((s32)m_dimensions.GetX(), topPt.GetX() + (tileSize - (ewrSize * regID * 2))),
-                 MIN((s32)m_dimensions.GetY(), topPt.GetY() + (tileSize - (ewrSize * regID * 2))));
-
-    drawing.FillRect(topPt.GetX(), topPt.GetY(),
-                     botPt.GetX() - topPt.GetX(),
-                     botPt.GetY() - topPt.GetY(),
-                     color);
-  }
-
-  template <class EC>
-  void TileRenderer::RenderGrid(Drawing & drawing, SPoint* pt, bool renderCache, const u32 TILE_SIDE)
-  {
-    s32 lineLen, linesToDraw;
-
-    if(!renderCache)
-    {
-      lineLen = m_atomDrawSize *
-        (TILE_SIDE - 2 * EC::EVENT_WINDOW_RADIUS);
-      linesToDraw = TILE_SIDE +
-        1 - (2 * EC::EVENT_WINDOW_RADIUS);
-    }
-    else
-    {
-      lineLen = m_atomDrawSize * TILE_SIDE;
-      linesToDraw = TILE_SIDE + 1;
-    }
-
-    s32 lowBound =
-      MIN((s32)m_dimensions.GetY(), pt->GetY() + m_windowTL.GetY() + lineLen);
-
-    drawing.SetForeground(m_gridColor);
-    for(int x = 0; x < linesToDraw; x++)
-    {
-      drawing.DrawVLine(pt->GetX() + x * m_atomDrawSize +
-                        m_windowTL.GetX(),
-                        pt->GetY() + m_windowTL.GetY(),
-                        lowBound);
-    }
-
-    s32 rightBound =
-      MIN((s32)m_dimensions.GetX(), pt->GetX() + m_windowTL.GetX() + lineLen);
-
-    for(int y = 0; y < linesToDraw; y++)
-    {
-      drawing.DrawHLine(pt->GetY() + y * m_atomDrawSize +
-                        m_windowTL.GetY(),
-                        pt->GetX() + m_windowTL.GetX(),
-                        rightBound);
-    }
-  }
 } /* namespace MFM */

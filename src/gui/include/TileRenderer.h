@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
-  TileRenderer.h SDL_Surface renderer for the Tile structure
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  TileRenderer.h Code and configuration for rendering tiles
+  Copyright (C) 2014-2015 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -19,211 +19,209 @@
 */
 
 /**
-  \file TileRenderer.h SDL_Surface renderer for the Tile structure
+  \file TileRenderer.h Code and configuration for rendering tiles
+  \author Dave Ackley
   \author Trent R. Small.
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014-2015 All rights reserved.
   \lgpl
  */
 #ifndef TILERENDERER_H
 #define TILERENDERER_H
 
-#include "Drawing.h"
-#include "ElementTable.h"
 #include "Tile.h"
-#include "Panel.h"
-#include "Point.h"
-#include "SDL.h"
-
+#include "Site.h"
+#include "Drawing.h"
 
 namespace MFM
 {
+  template  <class EC>
   class TileRenderer
   {
-   private:
-    bool m_drawGrid;
-    enum DrawBackgroundType {
-      DRAW_BACKGROUND_LIGHT_TILE,       //< Light grey rendering of tile regions
-      DRAW_BACKGROUND_NONE,             //< No background rendering
-      DRAW_BACKGROUND_DARK_TILE,        //< Dark grey rendering of hidden regions
-      DRAW_BACKGROUND_CHANGE_AGE,       //< CubeHelix rendering of events-since-change
-      DRAW_BACKGROUND_SITE,             //< Last color painted on site
-      DRAW_BACKGROUND_TYPE_COUNT
-    } m_drawBackgroundType;
-
-    enum DrawForegroundType {
-      DRAW_FOREGROUND_ELEMENT,  //< Hardcoded physics color
-      DRAW_FOREGROUND_ATOM_1,   //< Dynamic per-atom rendering type 1
-      DRAW_FOREGROUND_ATOM_2,   //< Dynamic per-atom rendering type 2
-      DRAW_FOREGROUND_ATOM_3,   //< Dynamic per-atom rendering type 3
-      DRAW_FOREGROUND_SITE,     //< Last color painted on site
-      DRAW_FOREGROUND_NONE,     //< Do not draw atoms at all
-      DRAW_FOREGROUND_TYPE_COUNT
-    } m_drawForegroundType;
-
-
-    bool m_drawDataHeat;
-    u32 m_atomDrawSize;
-
-    bool m_renderSquares;
-
-    u32 m_gridColor;
-
-    u32 m_cacheColor;
-    u32 m_sharedColor;
-    u32 m_visibleColor;
-    u32 m_hiddenColor;
-    u32 m_selectedHiddenColor;
-    u32 m_selectedPausedColor;
-
-    SPoint m_windowTL;
-
-    UPoint m_dimensions;
-
-    template <class EC>
-    void RenderMemRegions(Drawing & drawing, SPoint& pt,
-                          bool renderCache, bool selected, bool lowlightTile,
-                          const u32 TILE_SIDE);
-
-    template <class EC>
-    void RenderVisibleRegionOutlines(Drawing & drawing, SPoint& pt, bool renderCache,
-                                     bool selected, bool lowlightTile,
-                                     const u32 TILE_SIDE);
-
-    template <class EC>
-    void RenderMemRegion(Drawing & drawing, SPoint& pt, int regID,
-                         u32 color, bool renderCache,
-                         const u32 TILE_SIDE);
-
-    template <class EC>
-    void RenderGrid(Drawing & drawing, SPoint* pt, bool renderCache,
-                    const u32 TILE_SIDE);
-
-    void RenderAtomBG(Drawing & drawing, SPoint& offset, Point<int>& atomloc,
-                      u32 color);
-
-    template <class EC>
-    void RenderAtoms(Drawing & drawing, SPoint& pt, Tile<EC>& tile,
-                     bool renderCache, bool lowlightTile);
-
-    template <class EC>
-    void RenderAtom(Drawing & drawing, const SPoint& atomLoc, const UPoint& rendPt,
-                    Tile<EC>& tile, bool lowlightTile);
-
-    template <class EC>
-    void RenderBadAtom(Drawing& drawing, const UPoint& rendPt);
-
-    template <class EC>
-    u32 GetSiteColor(Tile<EC>& tile, const Site<typename EC::ATOM_CONFIG> & site, u32 selector = 0);
-
-#if 0
-    template <class EC>
-    u32 GetDataHeatColor(Tile<EC>& tile, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom);
-#endif
-
-    template <class EC>
-    void RenderEventWindow(Drawing & drawing, SPoint& offset, Tile<EC>& tile, bool renderCache);
-
   public:
+
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+    typedef typename EC::SITE S;
+    typedef Tile<EC> OurTile;
+    typedef Site<AC> OurSite;
+
+    enum { EWR = EC::EVENT_WINDOW_RADIUS };
+
+    enum {
+      MINIMUM_ATOM_SIZE_DIT =    1 * Drawing::DIT_PER_PIX,
+      DEFAULT_ATOM_SIZE_DIT =   16 * Drawing::DIT_PER_PIX,
+      MAXIMUM_ATOM_SIZE_DIT = 1024 * Drawing::DIT_PER_PIX
+    };
+
+    enum DrawSiteType {
+      DRAW_SITE_ELEMENT,         //< Static color of event layer atom
+      DRAW_SITE_ATOM_1,          //< Dynamic per-atom rendering type 1
+      DRAW_SITE_ATOM_2,          //< Dynamic per-atom rendering type 2
+      DRAW_SITE_BASE,            //< Static color of base atom
+      DRAW_SITE_BASE_1,          //< Dynamic base-atom rendering type 1
+      DRAW_SITE_BASE_2,          //< Dynamic base-atom rendering type 2
+      DRAW_SITE_LIGHT_TILE,      //< Light grey rendering of tile regions
+      DRAW_SITE_DARK_TILE,       //< Dark grey rendering of hidden regions
+      DRAW_SITE_CHANGE_AGE,      //< CubeHelix rendering of events-since-change
+      DRAW_SITE_PAINT,           //< Last color painted on site
+      DRAW_SITE_NONE,            //< Do not draw atoms at all
+      DRAW_SITE_TYPE_COUNT
+    };
+
+    enum DrawSiteShape {
+      DRAW_SHAPE_FILL,           //< Flood fill site entirely (square)
+      DRAW_SHAPE_CIRCLE,         //< Draw circle touching site edges
+      DRAW_SHAPE_CBOX,           //< Draw 3x3 centered square
+      DRAW_SHAPE_COUNT
+    };
+
     bool TileRendererLoadDetails(const char * key, LineCountingByteSource & source) ;
 
     void TileRendererSaveDetails(ByteSink & sink) const ;
 
-    const char * GetDrawBackgroundTypeName() const;
+    const char * GetDrawBackgroundTypeName() const
+    {
+      return GetDrawSiteTypeName(m_drawBackgroundType);
+    }
 
-    const char * GetDrawForegroundTypeName() const;
+    const char * GetDrawForegroundTypeName() const
+    {
+      return GetDrawSiteTypeName(m_drawForegroundType);
+    }
+    static const char * GetDrawSiteTypeName(DrawSiteType t) ;
+
+    /**
+       How much space will it currently take to draw this whole tile?
+     */
+    SPoint ComputeDrawSizeDit(const OurTile & tile) const
+    {
+      return ComputeDrawSizeDit(tile, m_drawCacheSites ? OurTile::REGION_CACHE : OurTile::REGION_SHARED);
+    }
+
+    SPoint ComputeDrawSizeDit(const OurTile & tile, u32 tileRegion) const;
+
+    /**
+       Is this region currently being drawn at all?
+     */
+    bool IsRegionDrawn(const OurTile & tile, u32 tileRegion) const
+    {
+      if (m_drawCacheSites) return tileRegion >= OurTile::REGION_CACHE;
+      return tileRegion >= OurTile::REGION_SHARED;
+    }
+
+    /**
+       Where should this region be drawn inside the whole tile,
+       assuming the tile top-left is (0,0)?  FAILs if the region
+       should not be drawn at all
+     */
+    SPoint ComputeDrawInsetDit(const OurTile & tile, u32 tileRegion) const
+    {
+      u32 outer  = m_drawCacheSites ? OurTile::REGION_CACHE : OurTile::REGION_SHARED;
+      if (tileRegion < outer) FAIL(ILLEGAL_ARGUMENT);
+      u32 ditsIn = m_atomSizeDit * EWR * (tileRegion - outer);
+      return SPoint(ditsIn, ditsIn);
+    }
 
     TileRenderer();
 
-    template <class EC>
-    void RenderTile(Drawing & drawing, Tile<EC>& t, SPoint& loc, bool renderWindow,
-                    bool renderCache, bool selected, SPoint* selectedAtom, SPoint* cloneOrigin);
+    void PaintTileAtDit(Drawing & drawing,
+                        const SPoint ditOrigin, const OurTile & tile) ;
 
-    void SetDimensions(UPoint dimensions)
-    {
-      m_dimensions = dimensions;
-    }
+    void PaintSites(Drawing & drawing,
+                    const DrawSiteType drawType, const DrawSiteShape shape,
+                    const SPoint ditOrigin, const OurTile & tile) ;
 
-    UPoint GetDimensions() const
-    {
-      return m_dimensions;
-    }
+    void PaintSiteAtDit(Drawing & drawing,
+                        const DrawSiteType drawType, const DrawSiteShape shape,
+                        const SPoint ditOrigin, const OurSite & site, const OurTile & inTile) ;
 
-    void ToggleDrawAtomsAsSquares()
-    {
-      m_renderSquares = !m_renderSquares;
-    }
+    void PaintShapeForSite(Drawing & drawing, const DrawSiteShape shape, const SPoint ditOrigin, u32 color);
 
-    void SetDrawGrid(bool draw)
-    {
-      m_drawGrid = draw;
-    }
+    void PaintBadAtomAtDit(Drawing & drawing, const SPoint ditOrigin) ;
+
+    void PaintUnderlays(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile) ;
+
+    void PaintOverlays(Drawing & drawing, const SPoint ditOrigin, const OurTile & tile) ;
 
     bool IsDrawGrid() const
     {
-      return m_drawGrid;
+      return m_drawGridLines;
     }
 
-#if 0
-    bool* GetDrawDataHeatPointer()
+    void SetDrawGrid(bool value)
     {
-      return &m_drawDataHeat;
+      m_drawGridLines = value;
     }
-#endif
 
-    const SPoint& GetWindowTL() const
+    bool IsDrawCaches() const
     {
-      return m_windowTL;
+      return m_drawCacheSites;
     }
 
-    void SetWindowTL(const SPoint & newTL)
+    void SetDrawCaches(bool value)
     {
-      m_windowTL = newTL;
+      m_drawCacheSites = value;
     }
 
-    void IncreaseAtomSize(SPoint around)
+    bool IsDrawBases() const
     {
-      ChangeAtomSize(true, around);
+      return m_drawBases;
     }
 
-    void DecreaseAtomSize(SPoint around)
+    void SetDrawBases(bool value)
     {
-      ChangeAtomSize(false, around);
+      m_drawBases = value;
     }
 
-    DrawForegroundType NextDrawForegroundType()
+    u32 NextDrawBackgroundType()
     {
-      return
-        m_drawForegroundType =
-        (DrawForegroundType) ((m_drawForegroundType + 1) % DRAW_FOREGROUND_TYPE_COUNT);
+      return m_drawBackgroundType = (DrawSiteType) ((m_drawBackgroundType + 1) % DRAW_SITE_TYPE_COUNT);
     }
 
-    u32 GetDrawForegroundType()
+    u32 NextDrawForegroundType()
     {
-      return m_drawForegroundType;
+      return m_drawForegroundType = (DrawSiteType) ((m_drawForegroundType + 1) % DRAW_SITE_TYPE_COUNT);
     }
 
-    void ChangeAtomSize(bool increase, SPoint around) ;
-
-    u32 GetAtomSize()
+    u32 GetAtomSizeDit() const
     {
-      return m_atomDrawSize;
+      return m_atomSizeDit;
     }
 
-    void ToggleGrid();
+    void SetAtomSizeDit(u32 newdit)
+    {
+      if (newdit==0) FAIL(ILLEGAL_ARGUMENT);
+      m_atomSizeDit = newdit;
+    }
 
-    u32 NextDrawBackgroundType();
+  private:
 
-    void ToggleDataHeat();
+    DrawSiteType m_drawBackgroundType;
 
-    void Move(SPoint amount);
+    DrawSiteType m_drawForegroundType;
 
-    void MoveUp(u8 amount);
+    bool m_drawEventWindow;
 
-    void MoveDown(u8 amount);
+    bool m_drawGridLines;
 
-    void MoveLeft(u8 amount);
+    bool m_drawCacheSites;
 
-    void MoveRight(u8 amount);
+    bool m_drawBases;
+
+    u32 m_atomSizeDit;
+
+    bool m_renderSquares;
+
+    u32 m_gridLineColor;
+
+    u32 m_regionColors[Tile<EC>::REGION_COUNT];
+
+    /* XXX
+    u32 m_selectedHiddenColor;
+    u32 m_selectedPausedColor;
+    */
+
+
   };
 } /* namespace MFM */
 
