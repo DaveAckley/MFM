@@ -35,28 +35,27 @@ namespace MFM {
     TOUCH_TYPE_NONE,
     TOUCH_TYPE_PROXIMITY,
     TOUCH_TYPE_LIGHT,
-    TOUCH_TYPE_MEDIUM,
     TOUCH_TYPE_HEAVY
   };
 
   struct SiteTouchSensor {
     SiteTouchType m_touchType;
-    u64 m_lastTouchEventNumber;
+    u64 m_lastTouchEventCount;
 
-    void Touch(SiteTouchType type, u64 eventNumber)
+    void Touch(SiteTouchType type, u64 eventCount)
     {
       m_touchType = type;
-      m_lastTouchEventNumber = eventNumber;
+      m_lastTouchEventCount = eventCount;
     }
 
-    SiteTouchType RecentTouch(u64 relativeToEventNumber) const
+    SiteTouchType RecentTouch(u64 relativeToEventCount) const
     {
-      return RecentTouch(relativeToEventNumber, 10);
+      return RecentTouch(relativeToEventCount, 10);
     }
 
-    SiteTouchType RecentTouch(u64 relativeToEventNumber, u32 withinEvents) const
+    SiteTouchType RecentTouch(u64 relativeToEventCount, u32 withinSiteEvents) const
     {
-      if (m_lastTouchEventNumber + withinEvents <= relativeToEventNumber)
+      if (m_lastTouchEventCount + withinSiteEvents >= relativeToEventCount)
         return m_touchType;
       return TOUCH_TYPE_NONE;
     }
@@ -65,14 +64,14 @@ namespace MFM {
   struct SiteSensors {
     SiteTouchSensor m_touchSensor;
 
-    void Touch(SiteTouchType type, u64 eventNumber)
+    void Touch(SiteTouchType type, u64 eventCount)
     {
-      m_touchSensor.Touch(type, eventNumber);
+      m_touchSensor.Touch(type, eventCount);
     }
 
-    SiteTouchType RecentTouch(u64 eventNumber)
+    SiteTouchType RecentTouch(u64 eventCount) const
     {
-      return m_touchSensor.RecentTouch(eventNumber);
+      return m_touchSensor.RecentTouch(eventCount);
     }
   };
 }
