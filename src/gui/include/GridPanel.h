@@ -32,8 +32,7 @@
 #include "MDist.h"
 #include "Panel.h"
 #include "Sense.h"
-#include "GridRenderer.h"
-#include "EditingTool.h"
+#include "TileRenderer.h"
 #include "ToolboxPanel.h"
 #include "Util.h"
 #include <math.h> /* for sqrt */
@@ -41,6 +40,8 @@
 
 namespace MFM
 {
+  template <class GC> class GridTool;    // FORWARD
+
   /**
    * A template class for displaying the Grid in a Panel.
    */
@@ -53,63 +54,99 @@ namespace MFM
     typedef typename GC::EVENT_CONFIG EC;
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
-    u32 GetGridWidthSites() const {
-      MFM_API_ASSERT_NONNULL(m_mainGrid);
-      return m_mainGrid->GetWidthSites();
-    }
-    u32 GetGridHeightSites() const {
-      MFM_API_ASSERT_NONNULL(m_mainGrid);
-      return m_mainGrid->GetHeightSites();
-    }
-    enum { R = EC::EVENT_WINDOW_RADIUS};
-    enum { TILE_SIDE_CACHE_SITES = GC::TILE_SIDE};
-    enum { TILE_SIDE_LIVE_SITES = TILE_SIDE_CACHE_SITES - 2*R};
-    enum { MAX_BUCKET_FILL_DEPTH = 10000 };
+
+    enum { R = EC::EVENT_WINDOW_RADIUS };
 
     typedef Grid<GC> OurGrid;
     typedef Tile<EC> OurTile;
+    typedef Site<AC> OurSite;
+    typedef TileRenderer<EC> OurTileRenderer;
+    typedef GridTool<GC> OurGridTool;
 
     bool LoadDetails(const char * key, LineCountingByteSource & source)
     {
       if (Super::LoadDetails(key, source)) return true;
+      if (this->GetTileRenderer().TileRendererLoadDetails(key, source)) return true;
 
-      if (!strcmp("gpe",key))
-        return 1 == source.Scanf("%?d",sizeof m_paintingEnabled, &m_paintingEnabled);
+      if (!strcmp("gpog",key))
+      {
+        SPointSerializer sp(m_gridOriginDit);
+        return 1 == source.Scanf("%@",&sp);
+      }
 
-      MFM_API_ASSERT_NONNULL(m_grend);
-      return m_grend->GridRendererLoadDetails(key, source);
+      return false;
     }
 
     virtual void SaveDetails(ByteSink & sink) const
     {
       Super::SaveDetails(sink);
-      sink.Printf(" PP(gpe=%d)\n",m_paintingEnabled);
-      MFM_API_ASSERT_NONNULL(m_grend);
-      m_grend->GridRendererSaveDetails(sink);
+      this->GetTileRenderer().TileRendererSaveDetails(sink);
+
+      {
+        SPoint tmp(m_gridOriginDit);
+        SPointSerializer sp(tmp);
+        sink.Printf(" PP(gpog=%@)\n", &sp);
+      }
     }
 
+    OurTileRenderer & GetTileRenderer()
+    {
+      MFM_API_ASSERT_NONNULL(m_tileRenderer);
+      return *m_tileRenderer;
+    }
+
+    const OurTileRenderer & GetTileRenderer() const
+    {
+      MFM_API_ASSERT_NONNULL(m_tileRenderer);
+      return *m_tileRenderer;
+    }
+
+    void SetTileRenderer(OurTileRenderer * tr)
+    {
+      MFM_API_ASSERT_NONNULL(tr);
+      if (m_tileRenderer) FAIL(ILLEGAL_STATE);
+      m_tileRenderer = tr;
+    }
+
+    u32 GetAtomDit() const { return GetTileRenderer().GetAtomSizeDit(); }
+
    private:
-    GridRenderer* m_grend;
+    OurTileRenderer * m_tileRenderer;
+    void SetAtomDit(u32 newdit) { GetTileRenderer().SetAtomSizeDit(newdit); }
+
     OurGrid* m_mainGrid;
-    ToolboxPanel<EC>* m_toolboxPanel;
-    SPoint m_leftButtonDragStart;
-    SPoint m_leftButtonGridStart;
-    bool m_paintingEnabled;
+    OurGridTool* m_currentGridTool;
+    SPoint m_gridOriginDit;
 
-    /* I'm making this a field because of the recursive nature of BucketFill .*/
-    u32 m_bucketFillStartType;
+    SPoint m_leftButtonDragStartPix;
+    SPoint m_leftButtonGridStartDit;
 
-    SPoint m_cloneOrigin;
-    SPoint m_cloneDestination;
+    void ZoomAroundPix(SPoint aroundPix, u32 newAtomDrawDit)
+    {
+      if (newAtomDrawDit < OurTileRenderer::MINIMUM_ATOM_SIZE_DIT)
+        newAtomDrawDit = OurTileRenderer::MINIMUM_ATOM_SIZE_DIT;
 
-    AtomViewPanel<GC> m_atomViewPanel;
+      if (newAtomDrawDit > OurTileRenderer::MAXIMUM_ATOM_SIZE_DIT)
+        newAtomDrawDit = OurTileRenderer::MAXIMUM_ATOM_SIZE_DIT;
+
+      SPoint aroundDit = aroundPix * Drawing::DIT_PER_PIX;
+      double oldSize = GetAtomDit();
+      double atomx =  (aroundDit.GetX() - m_gridOriginDit.GetX()) / oldSize;
+      double atomy =  (aroundDit.GetY() - m_gridOriginDit.GetY()) / oldSize;
+
+      SetAtomDit(newAtomDrawDit);
+
+      double newAroundDitX = atomx * GetAtomDit() + m_gridOriginDit.GetX();
+      double newAroundDitY = atomy * GetAtomDit() + m_gridOriginDit.GetY();
+
+      double deltax = newAroundDitX - aroundDit.GetX();
+      double deltay = newAroundDitY - aroundDit.GetY();
+      m_gridOriginDit -= SPoint((s32) deltax, (s32) deltay);
+    }
 
    public:
-    GridPanel() :
-      m_paintingEnabled(false),
-      m_bucketFillStartType(0),
-      m_cloneOrigin(-1, -1),
-      m_cloneDestination(-1, -1)
+
+    GridPanel()
     {
       SetName("GridPanel");
       SetDimensions(SCREEN_INITIAL_WIDTH,
@@ -117,550 +154,318 @@ namespace MFM
       SetRenderPoint(SPoint(0, 0));
       SetForeground(Drawing::BLACK);
       SetBackground(Drawing::BLACK);
+      //      SetBackground(Drawing::ORANGE);
 
-      m_grend = NULL;
+      m_gridOriginDit = SPoint(0,0);
+
       m_mainGrid = NULL;
 
-      m_atomViewPanel.SetName("AtomViewer");
-      m_atomViewPanel.SetRenderPoint(SPoint(326, 0));
-      m_atomViewPanel.SetVisible(false);
-
-      Panel::Insert(&m_atomViewPanel, NULL);
+      m_currentGridTool = NULL;
     }
 
     void Init()
     {
-      m_atomViewPanel.Init();
-    }
-
-#if 0 // XXX KILLGREX
-    u32 NextDrawForegroundType()
-    {
-      return m_grend->NextDrawForegroundType();
-    }
-
-    u32 GetDrawForegroundType()
-    {
-      return m_grend->GetDrawForegroundType();
-    }
-
-    const char * GetDrawForegroundTypeName() const
-    {
-      return m_grend->GetDrawForegroundTypeName();
-    }
-#endif
-
-    AtomViewPanel<GC> * GetAtomViewPanel()
-    {
-      return &m_atomViewPanel;
     }
 
     void SetGrid(OurGrid* mainGrid)
     {
       m_mainGrid = mainGrid;
-      m_atomViewPanel.SetGrid(m_mainGrid);
     }
 
-    void ToggleAtomViewPanel()
+    OurGrid & GetGrid()
     {
-      m_atomViewPanel.ToggleVisibility();
+      MFM_API_ASSERT_NONNULL(m_mainGrid);
+      return * m_mainGrid;
     }
 
-#if 0
-    void ToggleDrawAtomsAsSquares()
+    const OurGrid & GetGrid() const
     {
-      if(m_grend)
+      MFM_API_ASSERT_NONNULL(m_mainGrid);
+      return * m_mainGrid;
+    }
+
+    void SetGridTool(OurGridTool * gridTool)
+    {
+      m_currentGridTool = gridTool;
+    }
+
+    OurGridTool * GetGridTool()
+    {
+      return m_currentGridTool;
+    }
+
+    Rect MapTileInGridToScreenDit(const OurTile & tile, const SPoint tileCoord) const
+    {
+      u32 atomDit = GetAtomDit();
+      bool caches = GetTileRenderer().IsDrawCaches();
+      u32 sizeDit;
+      u32 spacingDit;
+      if (caches)
       {
-        m_grend->ToggleDrawAtomsAsSquares();
+        sizeDit = tile.TILE_SIDE * atomDit;
+        spacingDit = sizeDit + atomDit / 2;
       }
-    }
-#endif
-
-    void SetGridRenderer(GridRenderer* grend)
-    {
-      m_grend = grend;
-    }
-
-    void SetToolboxPanel(ToolboxPanel<EC>* toolboxPanel)
-    {
-      m_toolboxPanel = toolboxPanel;
-      m_atomViewPanel.SetToolboxPanel(m_toolboxPanel);
-    }
-
-    void SetPaintingEnabled(bool isPaintingEnabled)
-    {
-      m_paintingEnabled = isPaintingEnabled;
-    }
-
-    void DeselectAtomAndTile()
-    {
-      m_grend->DeselectTile();
-      m_grend->DeselectAtom();
-      m_cloneOrigin.Set(-1, -1);
-      m_grend->SetCloneOrigin(m_cloneOrigin);
-      m_atomViewPanel.SetAtom(NULL);
-    }
-
-   protected:
-    virtual void PaintComponent(Drawing& drawing)
-    {
-      this->Panel::PaintComponent(drawing);
-
-      m_grend->RenderGrid(drawing, *m_mainGrid, m_toolboxPanel->GetBrushSize());
-    }
-
-    void HandleSelectorTool(MouseButtonEvent& mbe)
-    {
-      SPoint pt = GetAbsoluteLocation();
-      pt.Set(mbe.m_event.button.x - pt.GetX(),
-             mbe.m_event.button.y - pt.GetY());
-
-      m_grend->SelectTile(*m_mainGrid, pt);
-    }
-
-    void HandleAtomSelectorTool(MouseButtonEvent& mbe)
-    {
-      HandleAtomSelectorTool(mbe.m_event.button.button,
-                             SPoint(mbe.m_event.button.x,
-                                    mbe.m_event.button.y));
-    }
-
-    void HandlePencilTool(MouseButtonEvent& mbe)
-    {
-      HandlePencilTool(mbe.m_event.button.button,
-                       SPoint(mbe.m_event.button.x,
-                              mbe.m_event.button.y));
-    }
-
-    void HandleBrushTool(MouseButtonEvent& mbe)
-    {
-      HandleBrushTool(mbe.m_event.button.button,
-                      SPoint(mbe.m_event.button.x,
-                             mbe.m_event.button.y));
-    }
-
-    void HandleEraserTool(MouseButtonEvent& mbe)
-    {
-      HandleEraserTool(mbe.m_event.button.button,
-                       SPoint(mbe.m_event.button.x,
-                              mbe.m_event.button.y));
-    }
-
-    void HandleBucketTool(MouseButtonEvent& mbe)
-    {
-      HandleBucketTool(mbe.m_event.button.button,
-                       SPoint(mbe.m_event.button.x,
-                              mbe.m_event.button.y));
-    }
-
-    void HandleXRayTool(MouseButtonEvent& mbe)
-    {
-      HandleXRayTool(mbe.m_event.button.button,
-                     SPoint(mbe.m_event.button.x,
-                            mbe.m_event.button.y));
-    }
-
-    void HandleAirbrushTool(MouseButtonEvent& mbe)
-    {
-      HandleAirbrushTool(mbe.m_event.button.button,
-                         SPoint(mbe.m_event.button.x,
-                                mbe.m_event.button.y));
-    }
-
-    SPoint ClickPointToAtom(const SPoint& clickPt)
-    {
-      SPoint abs = GetAbsoluteLocation();
-      abs.Set(clickPt.GetX() - abs.GetX(),
-              clickPt.GetY() - abs.GetY());
-
-      TileRenderer& tileRenderer = m_grend->GetTileRenderer();
-      const SPoint& offset = tileRenderer.GetWindowTL();
-
-
-      abs.Set(abs.GetX() - offset.GetX(),
-              abs.GetY() - offset.GetY());
-
-      u32 atomSize = tileRenderer.GetAtomSize();
-
-      abs.Set(abs.GetX() / atomSize,
-              abs.GetY() / atomSize);
-
-      return abs;
-    }
-
-    void HandleCloneTool(MouseButtonEvent& mbe)
-    {
-      if(mbe.m_event.button.button == SDL_BUTTON_LEFT)
+      else
       {
-        m_cloneDestination = ClickPointToAtom(SPoint(mbe.m_event.button.x,
-                                                     mbe.m_event.button.y));
+        sizeDit = tile.OWNED_SIDE * atomDit;
+        spacingDit = sizeDit;
       }
-      HandleCloneTool(mbe.m_event.button.button,
-                      SPoint(mbe.m_event.button.x,
-                             mbe.m_event.button.y));
+      return Rect(tileCoord * spacingDit + m_gridOriginDit, UPoint(sizeDit,sizeDit));
+
     }
 
-    void HandleAtomSelectorTool(u8 button, SPoint clickPt)
+    OurSite * GetSiteAtScreenDit(const SPoint screenDit, bool includeCaches)
     {
-      SPoint pt = GetAbsoluteLocation();
-      pt.Set(clickPt.GetX() - pt.GetX(),
-             clickPt.GetY() - pt.GetY());
-
-      m_grend->SelectAtom(*m_mainGrid, pt);
-      SPoint selectedAtom = m_grend->GetSelectedAtom();
-      m_atomViewPanel.SetAtom(m_mainGrid->GetWritableAtom(selectedAtom));
-    }
-
-    void HandlePencilTool(u8 button, SPoint clickPt)
-    {
-      T atom = (button == SDL_BUTTON_LEFT) ?
-        m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
-        m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
-
-      PaintAtom(button, clickPt, 0, atom, TOOL_PENCIL);
-    }
-
-    void HandleBrushTool(u8 button, SPoint clickPt)
-    {
-      T atom = (button == SDL_BUTTON_LEFT) ?
-        m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
-        m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
-
-      PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(), atom, TOOL_BRUSH);
-    }
-
-    void HandleAirbrushTool(u8 button, SPoint clickPt)
-    {
-      T atom = (button == SDL_BUTTON_LEFT) ?
-        m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
-        m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
-
-      PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(), atom, TOOL_AIRBRUSH);
-    }
-
-    void HandleEraserTool(u8 button, SPoint clickPt)
-    {
-      PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
-                  Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom(), TOOL_ERASER);
-    }
-
-    void HandleBucketTool(u8 button, SPoint clickPt)
-    {
-      T atom = (button == SDL_BUTTON_LEFT) ?
-        m_toolboxPanel->GetPrimaryElement()->GetDefaultAtom() :
-        m_toolboxPanel->GetSecondaryElement()->GetDefaultAtom();
-
-        PaintAtom(button, clickPt, 0, atom, TOOL_BUCKET);
-    }
-
-    void HandleXRayTool(u8 button, SPoint clickPt)
-    {
-      PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
-                Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom(), TOOL_XRAY);
-    }
-
-    void HandleCloneTool(u8 button, SPoint clickPt)
-    {
-      PaintAtom(button, clickPt, (s32)m_toolboxPanel->GetBrushSize(),
-                Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom(), TOOL_CLONE);
-    }
-
-    void PaintAtom(u8 button, SPoint& clickPt, s32 brushSize,
-                   const T& atom, EditingTool tool)
-    {
-      /* Only do this when tiles are together to keep from having to
-       * deal with caches */
-      if(!m_grend->IsRenderingTilesSeparated())
+      bool cachesDrawn = GetTileRenderer().IsDrawCaches();
+      u32 atomDit = GetAtomDit();
+      for (typename Grid<GC>::iterator_type i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
       {
-        Grid<GC>& grid = *m_mainGrid;
-        SPoint cp = ClickPointToAtom(clickPt);
-        if(brushSize > 0)
+        OurTile & tile = *i;
+        SPoint tileCoord = i.At();
+        const Rect screenRectForTileDit = MapTileInGridToScreenDit(tile, tileCoord);
+        if (screenRectForTileDit.Contains(screenDit))
         {
-          /* brushSize can't be templated, so let's do this by hand. */
-          SPoint tile, site;
-          brushSize--;
-          const s32 brushSqr = brushSize * brushSize;
-          s32 ysqr;
-          for(s32 y = -brushSize; y <= brushSize; y++)
+          SPoint siteCoord = (screenDit - screenRectForTileDit.GetPosition()) / atomDit;
+          if (cachesDrawn)
           {
-            ysqr = y * y;
-            for(s32 x = -brushSize; x <= brushSize; x++)
-            {
-              SPoint pt(cp.GetX() + x, cp.GetY() + y);
-              if(((x * x) + ysqr) <= brushSqr &&
-                 grid.MapGridToTile(pt, tile, site))
-              {
-                if(tool == TOOL_XRAY)
-                {
-                  grid.MaybeXRayAtom(pt);
-                }
-                else if(tool == TOOL_CLONE)
-                {
-                  if(button == SDL_BUTTON_RIGHT)
-                  {
-                    SPoint tile, site;
-                    if(grid.MapGridToTile(cp, tile, site))
-                    {
-                      m_cloneOrigin.Set(cp.GetX(), cp.GetY());
-                      m_grend->SetCloneOrigin(m_cloneOrigin);
-                    }
-                    return; /* Only need to do this once. */
-                  }
-                  else
-                  {
-                    if(m_cloneOrigin.GetX() >= 0 && m_cloneOrigin.GetY() >= 0)
-                    {
-                      SPoint clonePt(m_cloneOrigin.GetX() +
-                                     (pt.GetX() - m_cloneDestination.GetX()),
-                                     m_cloneOrigin.GetY() +
-                                     (pt.GetY() - m_cloneDestination.GetY()));
-                      SPoint tile, site;
-                      if(grid.MapGridToTile(clonePt, tile, site))
-                      {
-                        const T* a =  grid.GetAtom(clonePt);
-                        grid.PlaceAtom(*a, pt);
-                      }
-                    }
-                  }
-                }
-                else if((tool != TOOL_AIRBRUSH) ||
-                        (m_mainGrid->GetRandom().OneIn(50)))
-                {
-                  grid.PlaceAtom(atom, SPoint(cp.GetX() + x, cp.GetY() + y));
-                }
-              }
-            }
+            if (!includeCaches && tile.RegionIn(siteCoord) == OurTile::REGION_CACHE)
+              return 0;
+            return &tile.GetSite(siteCoord);
+          }
+          else
+          {
+            if (tile.IsInUncachedTile(siteCoord))
+              return &tile.GetUncachedSite(siteCoord);
+            return 0;
           }
         }
-        else if(cp.GetX() >= 0 && cp.GetY() >= 0 &&
-                cp.GetX() < GetGridWidthSites() &&
-                cp.GetY() < GetGridHeightSites())
+      }
+
+      return 0;
+    }
+
+    OurSite * GetSiteAtGridCoord(const UPoint gridCoord)
+    {
+      FAIL(INCOMPLETE_CODE);
+    }
+
+    bool GetGridCoordAtScreenDit(const SPoint screenDit, UPoint & gridCoord)
+    {
+      bool cachesDrawn = GetTileRenderer().IsDrawCaches();
+      u32 atomDit = GetAtomDit();
+      for (typename Grid<GC>::iterator_type i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
+      {
+        OurTile & tile = *i;
+        SPoint tileCoord = i.At();
+        const Rect screenRectForTileDit = MapTileInGridToScreenDit(tile, tileCoord);
+        if (screenRectForTileDit.Contains(screenDit))
         {
-          if(tool == TOOL_BUCKET)
+          const SPoint siteInTileCoord = (screenDit - screenRectForTileDit.GetPosition()) / atomDit;
+          SPoint siteInGridCoord;
+          if (cachesDrawn)
           {
-            SPoint tile, site;
-            if(grid.MapGridToTile(cp, tile, site))
+            if (tile.RegionIn(siteInTileCoord) == OurTile::REGION_CACHE)
             {
-              m_bucketFillStartType = grid.GetTile(tile).GetAtom(site)->GetType();
-              if(m_bucketFillStartType != atom.GetType())
-              {
-                BucketFill(grid, atom, cp, MAX_BUCKET_FILL_DEPTH);
-              }
-            }
-          }
-          else if(tool == TOOL_CLONE)
-          {
-            if(button == SDL_BUTTON_RIGHT)
-            {
-              SPoint tile, site;
-              if(grid.MapGridToTile(cp, tile, site))
-              {
-                m_cloneOrigin.Set(cp.GetX(), cp.GetY());
-                LOG.Debug("Clone Origin Set: (%d, %d)", cp.GetX(), cp.GetY());
-              }
+              Dir dir = tile.CacheAt(siteInTileCoord);
+              if (dir < 0) FAIL(ILLEGAL_STATE);
+              SPoint offset;
+              Dirs::FillDir(offset, dir);
+              SPoint otherTileCoord = tileCoord + offset;
+              if (!m_mainGrid->IsLegalTileIndex(otherTileCoord))
+                return false;
+
+              // Hmm, is it this mysterious code again?  (Grid.tcc:404)
+              SPoint siteInOtherTile = siteInTileCoord - offset*tile.OWNED_SIDE;
+              siteInGridCoord = otherTileCoord * tile.OWNED_SIDE + OurTile::TileCoordToOwned(siteInOtherTile);
             }
             else
             {
-              SPoint clonePt(m_cloneOrigin.GetX() +
-                             (cp.GetX() - m_cloneDestination.GetX()),
-                             m_cloneOrigin.GetY() +
-                             (cp.GetY() - m_cloneDestination.GetY()));
-              SPoint tile, site;
-              LOG.Debug("Cloning from (%d, %d) to (%d, %d) [clone dest = (%d, %d)]",
-                        clonePt.GetX(), clonePt.GetY(),
-                        cp.GetX(), cp.GetY(),
-                        m_cloneDestination.GetX(), m_cloneDestination.GetY());
-              if(grid.MapGridToTile(clonePt, tile, site))
-              {
-                const T* a =  grid.GetAtom(clonePt);
-                grid.PlaceAtom(*a, cp);
-              }
+              siteInGridCoord = tileCoord * tile.OWNED_SIDE + OurTile::TileCoordToOwned(siteInTileCoord);
             }
           }
           else
           {
-            grid.PlaceAtom(atom, cp);
+            siteInGridCoord = tileCoord * tile.OWNED_SIDE + siteInTileCoord;
           }
+          gridCoord = MakeUnsigned(siteInGridCoord);
+          return true;
         }
+      }
+
+      return false;
+    }
+
+    bool GetScreenRectDitOfGridCoord(const UPoint & gridCoord, Rect & screenRectDit)
+    {
+      SPoint tileInGrid;
+      SPoint siteInTile;
+      if (!m_mainGrid->MapGridToTile(MakeSigned(gridCoord), tileInGrid, siteInTile))
+        return false;
+      OurTile & tile = m_mainGrid->GetTile(tileInGrid);
+      const Rect screenRectForTileDit = MapTileInGridToScreenDit(tile, tileInGrid);
+      u32 atomDit = this->GetAtomDit();
+      bool caches = GetTileRenderer().IsDrawCaches();
+      if (!caches)
+        siteInTile -= SPoint(R,R);
+      screenRectDit =
+        Rect(siteInTile * atomDit + screenRectForTileDit.GetPosition(),
+             UPoint(atomDit, atomDit));
+      return true;
+    }
+
+
+    void PaintTiles(Drawing & drawing)
+    {
+      GetTileRenderer().SetDrawBases(m_currentGridTool && m_currentGridTool->IsSiteEdit());
+      for (typename Grid<GC>::iterator_type i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
+      {
+        SPoint tileCoord = i.At();
+        Rect screenDitForTile = MapTileInGridToScreenDit(*i,tileCoord);
+        GetTileRenderer().PaintTileAtDit(drawing, screenDitForTile.GetPosition(), *i);
       }
     }
 
-    void BucketFill(Grid<GC>& grid, const T& atom, SPoint& pt, u32 depth)
-    {
-      grid.PlaceAtom(atom, pt);
-      SPoint npt;
-      for(u32 i = MDist<1>::get().GetFirstIndex(1); i <= MDist<1>::get().GetLastIndex(1); i++)
-      {
-        npt = MDist<1>::get().GetPoint(i);
-        npt.Add(pt.GetX(), pt.GetY());
+    void PaintGridOverlays(Drawing & drawing) ;
 
-        if(npt.GetX() >= 0 && npt.GetY() >= 0 &&
-           npt.GetX() < GetGridWidthSites() &&
-           npt.GetY() < GetGridHeightSites())
-        {
-          if(Atom<AC>::IsType(*grid.GetAtom(npt),
-                              m_bucketFillStartType))
-          {
-            if(depth)
-            {
-              BucketFill(grid, atom, npt, depth - 1);
-            }
-          }
-        }
-      }
+   public:
+
+    virtual void PaintComponent(Drawing& drawing)
+    {
+      this->Panel::PaintComponent(drawing);
+
+      this->PaintTiles(drawing);
+
+      this->PaintGridOverlays(drawing);
+    }
+
+    static bool IsLeftOrRightSetInButtonMask(u32 mask)
+    {
+      return mask & ((1 << SDL_BUTTON_LEFT)|(1 << SDL_BUTTON_RIGHT));
+    }
+
+    static bool IsLeftSetInButtonMask(u32 mask)
+    {
+      return mask & (1 << SDL_BUTTON_LEFT);
+    }
+
+    static bool IsRightSetInButtonMask(u32 mask)
+    {
+      return mask & (1 << SDL_BUTTON_RIGHT);
     }
 
     virtual bool Handle(MouseButtonEvent& mbe)
     {
-      TileRenderer& tileRenderer = m_grend->GetTileRenderer();
-
       SDL_MouseButtonEvent & event = mbe.m_event.button;
+      if(event.type == SDL_MOUSEBUTTONUP)
+      {
+        if (m_currentGridTool)
+        {
+          m_currentGridTool->Release(mbe);
+          return true;
+        }
+      }
+
       if(event.type == SDL_MOUSEBUTTONDOWN)
       {
+        if (m_currentGridTool)
         {
-          typename Grid<GC>::GridTouchEvent gte;
-          gte.m_touchType = TOUCH_TYPE_PROXIMITY;
-          gte.m_gridAtomCoord = ClickPointToAtom(SPoint(event.x, event.y));
-
-          if (event.button == SDL_BUTTON_LEFT)
-            gte.m_touchType =  TOUCH_TYPE_LIGHT;
-          else if(event.button == SDL_BUTTON_RIGHT)
-            gte.m_touchType =  TOUCH_TYPE_HEAVY;
-
-          m_mainGrid->SenseTouchAt(gte);
+          if(IsLeftOrRightSetInButtonMask(1<<event.button) &&
+             (mbe.m_keyboardModifiers == 0))
+          {
+            m_currentGridTool->Press(mbe);
+            return true;
+          }
         }
 
-        SPoint pt = GetAbsoluteLocation();
-        pt.Set(event.x - pt.GetX(),
-               event.y - pt.GetY());
+#if 0
+        if (event.button == SDL_BUTTON_LEFT/* && !m_paintingEnabled*/)
+        {
+          typename Grid<GC>::GridTouchEvent gte;
+          gte.m_touchType = TOUCH_TYPE_LIGHT;
+          if (mbe.m_keyboardModifiers & KMOD_SHIFT)
+            gte.m_touchType = TOUCH_TYPE_HEAVY;
+          gte.m_gridAtomCoord = ClickPointToAtom(SPoint(event.x, event.y));
+          m_mainGrid->SenseTouchAt(gte);
+        }
+#endif
+        SPoint hitAtScreenPix = GetAbsoluteLocation();
+        hitAtScreenPix.Set(event.x - hitAtScreenPix.GetX(),
+                           event.y - hitAtScreenPix.GetY());
 
         switch (event.button)
         {
         case SDL_BUTTON_LEFT:
-          m_leftButtonDragStart = pt;
-          m_leftButtonGridStart = tileRenderer.GetWindowTL();
-          /* FALL THROUGH */
-        case SDL_BUTTON_MIDDLE:
-        case SDL_BUTTON_RIGHT:
-          if(!(mbe.m_keyboardModifiers & KMOD_CTRL) && m_paintingEnabled)
-          {
-            switch(mbe.m_selectedTool)
-            {
-            case TOOL_SELECTOR:
-              HandleSelectorTool(mbe);
-              break;
-            case TOOL_ATOM_SELECTOR:
-              HandleAtomSelectorTool(mbe);
-              break;
-            case TOOL_PENCIL:
-              HandlePencilTool(mbe);
-              break;
-            case TOOL_ERASER:
-              HandleEraserTool(mbe);
-              break;
-            case TOOL_BRUSH:
-              HandleBrushTool(mbe);
-              break;
-            case TOOL_BUCKET:
-              HandleBucketTool(mbe);
-              break;
-            case TOOL_XRAY:
-              HandleXRayTool(mbe);
-              break;
-            case TOOL_CLONE:
-              HandleCloneTool(mbe);
-              break;
-            case TOOL_AIRBRUSH:
-              HandleAirbrushTool(mbe);
-              break;
-
-            default: break; /* Do the rest later */
-            }
-          }
+          m_leftButtonDragStartPix = hitAtScreenPix;
+          m_leftButtonGridStartDit = m_gridOriginDit;
+          return true;
+        default:
+          LOG.Message("MBE %d,%d + %d",
+                      mbe.m_event.button.x,
+                      mbe.m_event.button.y,
+                      mbe.m_keyboardModifiers);
           break;
         case SDL_BUTTON_WHEELUP:
-          tileRenderer.IncreaseAtomSize(pt);
-          break;
-        case SDL_BUTTON_WHEELDOWN:
-          tileRenderer.DecreaseAtomSize(pt);
-          break;
-        }
-      }
-      return true;
-    }
-
-    virtual bool Handle(MouseMotionEvent& mbe)
-    {
-      TileRenderer& tileRenderer = m_grend->GetTileRenderer();
-      SDL_MouseMotionEvent & event = mbe.m_event.motion;
-      if (mbe.m_keyboardModifiers & KMOD_CTRL)
-      {
-        if(mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT))
-        {
-          SPoint nowAt(event.x, event.y);
-          SPoint delta = nowAt - m_leftButtonDragStart;
-          tileRenderer.SetWindowTL(m_leftButtonGridStart+delta);
-        }
-      }
-      else
-      {
-        typename Grid<GC>::GridTouchEvent gte;
-        gte.m_touchType = TOUCH_TYPE_PROXIMITY;
-        gte.m_gridAtomCoord = ClickPointToAtom(SPoint(event.x, event.y));
-
-        u8 mask = 0;
-        if(mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT))
-        {
-          mask = SDL_BUTTON_LEFT;
-          gte.m_touchType =  TOUCH_TYPE_LIGHT;
-        }
-        else if(mbe.m_buttonMask & (1 << SDL_BUTTON_RIGHT))
-        {
-          mask = SDL_BUTTON_RIGHT;
-          gte.m_touchType =  TOUCH_TYPE_HEAVY;
-        }
-
-        m_grend->SetHoveredAtom(*m_mainGrid, SPoint(event.x, event.y));
-        m_mainGrid->SenseTouchAt(gte);
-
-        if(mask && !(mbe.m_keyboardModifiers & KMOD_CTRL) && m_paintingEnabled)
-        {
-          switch(mbe.m_selectedTool)
           {
-          case TOOL_PENCIL:
-            HandlePencilTool(mask, SPoint(event.x, event.y));
+            u32 newDit;
+            if (mbe.m_keyboardModifiers & KMOD_SHIFT)
+              newDit = GetAtomDit() + Drawing::DIT_PER_PIX / 8;
+            else
+              newDit = 17*GetAtomDit()/16;
+            ZoomAroundPix(hitAtScreenPix, newDit);
             break;
-          case TOOL_ERASER:
-            HandleEraserTool(mask, SPoint(event.x, event.y));
-            break;
-          case TOOL_BRUSH:
-            HandleBrushTool(mask, SPoint(event.x, event.y));
-            break;
-          case TOOL_XRAY:
-            HandleXRayTool(mask, SPoint(event.x, event.y));
-            break;
-          case TOOL_ATOM_SELECTOR:
-            HandleAtomSelectorTool(mask, SPoint(event.x, event.y));
-            break;
-          case TOOL_CLONE:
-            HandleCloneTool(mask, SPoint(event.x, event.y));
-            break;
-          case TOOL_AIRBRUSH:
-            HandleAirbrushTool(mask, SPoint(event.x, event.y));
-            break;
-          default:
-            /* Some tools don't need to do this */
+          }
+        case SDL_BUTTON_WHEELDOWN:
+          {
+            u32 newDit;
+            if (GetAtomDit() > Drawing::DIT_PER_PIX)
+            {
+              if (mbe.m_keyboardModifiers & KMOD_SHIFT)
+                newDit = GetAtomDit() - Drawing::DIT_PER_PIX / 8;
+              else
+                newDit = 15*GetAtomDit()/16;
+              ZoomAroundPix(hitAtScreenPix, newDit);
+            }
             break;
           }
         }
-        else
+      }
+      return false;
+    }
+
+    virtual bool Handle(MouseMotionEvent& mme)
+    {
+      SDL_MouseMotionEvent & event = mme.m_event.motion;
+      if (mme.m_keyboardModifiers & KMOD_CTRL)
+      {
+        if(mme.m_buttonMask & (1 << SDL_BUTTON_LEFT))
         {
-          m_grend->DeselectHoveredAtom();
+          SPoint nowAt(event.x, event.y);
+          SPoint delta = nowAt - m_leftButtonDragStartPix;
+          m_gridOriginDit = m_leftButtonGridStartDit + Drawing::MapPixToDit(delta);
         }
+        return true;
+      }
+      if (m_currentGridTool)
+      {
+        if(/*IsLeftOrRightSetInButtonMask(mme.m_buttonMask) && */
+           (mme.m_keyboardModifiers == 0))
+        {
+          m_currentGridTool->Drag(mme);
+          return true;
+        }
+      }
+
+      {
+        LOG.Debug("MME %d,%d + %d",
+                  mme.m_event.motion.x,
+                  mme.m_event.motion.y,
+                  mme.m_keyboardModifiers);
       }
       return false;
     }
   };
 } /* namespace MFM */
+
+#include "GridPanel.tcc"
 
 #endif /* GRIDPANEL_H */
