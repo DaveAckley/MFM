@@ -72,6 +72,11 @@ namespace MFM
     ImageAsset m_iconAsset;
 
     /**
+     * Where to render the icon, if present.  Default (0,0)
+     */
+    SPoint m_iconPosition;
+
+    /**
      * Initializes this Label
      */
     void Init() ;
@@ -156,6 +161,29 @@ namespace MFM
     ImageAsset GetIconAsset() const
     {
       return m_iconAsset;
+    }
+
+    /**
+     * Gets the current position of the icon currently being rendered
+     * by this Label , if any
+     *
+     * @returns The position the icon will be rendered at if it exists
+     */
+    SPoint GetIconPosition() const
+    {
+      return m_iconPosition;
+    }
+
+    /**
+     * Sets the position the icon of this Label will be rendered at,
+     * if it is being used.
+     *
+     * @param pt The point within the Label as which to render the
+     * icon
+     */
+    void SetIconPosition(const SPoint pt)
+    {
+      m_iconPosition = pt;
     }
 
     /**
