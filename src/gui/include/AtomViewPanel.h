@@ -48,7 +48,7 @@ namespace MFM
 
     Grid<GC>* m_grid;
 
-    ToolboxPanel<EC>* m_toolboxPanel;
+    ToolboxPanel<GC>* m_toolboxPanel;
 
     CloseWindowButton m_closeWindowButton;
     TreeViewPanel m_treeViewPanel;
@@ -78,7 +78,7 @@ namespace MFM
       m_treeViewPanel.Init();
     }
 
-    void SetToolboxPanel(ToolboxPanel<EC>* toolboxPanel)
+    void SetToolboxPanel(ToolboxPanel<GC>* toolboxPanel)
     {
       m_toolboxPanel = toolboxPanel;
     }
@@ -127,7 +127,7 @@ namespace MFM
       {
         d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
         const char* message = "No atom selected.";
-        d.BlitText(message, UPoint(32, 32), MakeUnsigned(d.GetTextSize(message)));
+        d.BlitText(message, SPoint(32, 32), MakeUnsigned(d.GetTextSize(message)));
         return;
       }
 
@@ -144,7 +144,7 @@ namespace MFM
         buff.Printf("Unknown type '0x%04x' in: %@", etype, &serializer);
         const char * str = buff.GetZString();
         d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
-        d.BlitBackedText(str, UPoint(32, 32), MakeUnsigned(d.GetTextSize(str)));
+        d.BlitBackedText(str, SPoint(32, 32), MakeUnsigned(d.GetTextSize(str)));
         return;
       }
 
@@ -177,14 +177,14 @@ namespace MFM
       const u32 LINE_HEIGHT = TTF_FontLineSkip(AssetManager::GetReal(d.GetFont()));
       const u32 INDENT_AMOUNT = LINE_HEIGHT;
 
-      d.BlitBackedText(zstr, UPoint(LINE_X_START, LINE_Y_START + 0 * LINE_HEIGHT),
+      d.BlitBackedText(zstr, SPoint(LINE_X_START, LINE_Y_START + 0 * LINE_HEIGHT),
                        MakeUnsigned(d.GetTextSize(zstr)));
 
       buff.Reset();
       buff.Printf("%@", &serializer);
       zstr = buff.GetZString();
 
-      d.BlitBackedText(zstr, UPoint(LINE_X_START, LINE_Y_START + 1 * LINE_HEIGHT),
+      d.BlitBackedText(zstr, SPoint(LINE_X_START, LINE_Y_START + 1 * LINE_HEIGHT),
                        MakeUnsigned(d.GetTextSize(zstr)));
 
       const UlamElement<EC> * uelt = element->AsUlamElement();
@@ -229,7 +229,8 @@ namespace MFM
           if (lineBuff.GetLength() > 0)
           {
             const char * line = lineBuff.GetZString();
-            d.BlitBackedText(line, UPoint(LINE_X_START + oldIndent * INDENT_AMOUNT, LINE_Y_START + oldLineNum * LINE_HEIGHT),
+            d.BlitBackedText(line,
+                             SPoint(LINE_X_START + oldIndent * INDENT_AMOUNT, LINE_Y_START + oldLineNum * LINE_HEIGHT),
                              MakeUnsigned(d.GetTextSize(line)));
             lineBuff.Reset();
           }
