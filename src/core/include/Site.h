@@ -30,6 +30,7 @@
 #include "itype.h"
 #include "AtomConfig.h"
 #include "Base.h"
+#include "AtomSerializer.h"
 
 namespace MFM
 {
@@ -55,65 +56,107 @@ namespace MFM
     T m_atom;
     Base<AC> m_base;
     u64 m_eventCount;
-    u64 m_lastChangedEventNumber;
-    s64 m_lastEventEventNumber;
+    u64 m_lastChangedEventCount;  // in units of Site event count
+    u64 m_lastEventNumber;        // in units of total tile events
     bool m_isLiveSite;
 
   public:
     Site()
       : m_eventCount(0)
-      , m_lastChangedEventNumber(0)
-      , m_lastEventEventNumber(S32_MIN) // init deep in past
+      , m_lastChangedEventCount(0)
+      , m_lastEventNumber(0)
       , m_isLiveSite(true)
     { }
 
-    void SaveConfig(ByteSink& bs) const
+    void RecordEventAtSite(u64 eventNumber)
+    {
+      ++m_eventCount;
+      m_lastEventNumber = eventNumber;
+    }
+
+    void SaveConfig(ByteSink& bs, AtomTypeFormatter<AC> & atf) const
     {
       bs.Printf(",%D", m_isLiveSite);
       // 64 bit stuff not yet exposed via Printf..
       bs.Print(m_eventCount, Format::LXX64);
-      bs.Print(m_lastChangedEventNumber, Format::LXX64);
-      bs.Print(m_lastEventEventNumber, Format::LXX64);
-      m_base.SaveConfig(bs);
+      bs.Print(m_lastChangedEventCount, Format::LXX64);
+      bs.Print(m_lastEventNumber, Format::LXX64);
+
+      {
+        T tmp = m_atom;
+        bs.Printf(",");
+        atf.PrintAtomType(tmp, bs);
+        AtomSerializer<AC> as(tmp);
+        bs.Printf(",%@", &as);
+      }
+
+      m_base.SaveConfig(bs, atf);
     }
 
-    bool LoadConfig(LineCountingByteSource& bs)
+    bool LoadConfig(LineCountingByteSource& bs, AtomTypeFormatter<AC> & atf)
     {
       u32 tmp_m_isLiveSite;
       if (2 != bs.Scanf(",%D", &tmp_m_isLiveSite)) return false;
 
       u64 tmp_m_eventCount;
-      u64 tmp_m_lastChangedEventNumber;
-      u64 tmp_m_lastEventEventNumber;
+      u64 tmp_m_lastChangedEventCount;
+      u64 tmp_m_lastEventNumber;
 
       // 64 bit stuff not yet exposed via Scanf..
       if (!bs.Scan(tmp_m_eventCount, Format::LXX64)) return false;
-      if (!bs.Scan(tmp_m_lastChangedEventNumber, Format::LXX64)) return false;
-      if (!bs.Scan(tmp_m_lastEventEventNumber, Format::LXX64)) return false;
+      if (!bs.Scan(tmp_m_lastChangedEventCount, Format::LXX64)) return false;
+      if (!bs.Scan(tmp_m_lastEventNumber, Format::LXX64)) return false;
 
-      if (!m_base.LoadConfig(bs))
+      // Arrgh, this code is hideous AND copy-pasted from Base.h :( XXX
+      if (1 != bs.Scanf(",")) return false;
+
+      T defaultAtom;
+      {
+        if (!atf.ParseAtomType(bs, defaultAtom)) // All we care about is the type..
+          return false;
+
+        T tmp_m_atom;
+        AtomSerializer<AC> as2(tmp_m_atom);
+        if (2 != bs.Scanf(",%@", &as2))
+          return false;
+
+        for (u32 i = T::ATOM_FIRST_STATE_BIT; i < T::BPA; ++i) // merge and pray.  jus'tryin't'elp
+        {
+          defaultAtom.GetBits().StoreBit(i, tmp_m_atom.GetBits().ReadBit(i));
+        }
+      }
+
+      if (!m_base.LoadConfig(bs, atf))
         return false;
+
+      m_atom = defaultAtom;
 
       m_isLiveSite = tmp_m_isLiveSite;
       m_eventCount = tmp_m_eventCount;
-      m_lastChangedEventNumber = tmp_m_lastChangedEventNumber;
-      m_lastEventEventNumber = tmp_m_lastEventEventNumber;
+      m_lastChangedEventCount = tmp_m_lastChangedEventCount;
+      m_lastEventNumber = tmp_m_lastEventNumber;
+
       return true;
     }
 
     void Sense(SiteTouchType stt)
     {
-      m_base.GetSensory().Touch(stt, m_lastEventEventNumber);
+      m_base.GetSensory().Touch(stt, m_eventCount);
     }
 
-    bool InRecentProximity()
+    bool InRecentProximity() const
     {
-      return TOUCH_TYPE_PROXIMITY == m_base.GetSensory().RecentTouch(m_lastEventEventNumber);
+      return TOUCH_TYPE_PROXIMITY == RecentTouch();
+    }
+
+    u32 RecentTouch() const
+    {
+      return m_base.GetSensory().RecentTouch(m_eventCount);
     }
 
     bool HasRecentLightTouch()
     {
-      return TOUCH_TYPE_LIGHT == m_base.GetSensory().RecentTouch(m_lastEventEventNumber);
+      return TOUCH_TYPE_LIGHT == RecentTouch();
     }
 
     void PutAtom(const T & newAtom) { m_atom = newAtom; }
@@ -134,31 +177,27 @@ namespace MFM
     void Clear() {
       m_atom.SetEmpty();
       m_eventCount = 0;
-      m_lastChangedEventNumber = 0;
-
-      // Set last event deep in the past to avoid initial color
-      m_lastEventEventNumber = S32_MIN; // (stored into s64..)
+      m_lastChangedEventCount = 0;
     }
 
     u64 GetEventCount() const {
       return m_eventCount;
     }
 
-    u64 GetLastChangedEventNumber() const {
-      return m_lastChangedEventNumber;
+    u64 GetLastChangedEventCount() const {
+      return m_lastChangedEventCount;
     }
 
-    void SetLastChangedEventNumber(u64 eventNumber) {
-      m_lastChangedEventNumber = eventNumber;
+    void MarkChanged() {
+      m_lastChangedEventCount = m_eventCount;
     }
 
-    s64 GetLastEventEventNumber() const {
-      return m_lastEventEventNumber;
+    u64 GetWriteAge() const {
+      return m_eventCount - m_lastChangedEventCount;
     }
 
-    void SetLastEventEventNumber(u64 eventNumber) {
-      m_lastEventEventNumber = (s64) eventNumber;
-      m_base.SetLastEventEventNumber(eventNumber);
+    u64 GetEventAge(u64 currentEventNumber) const {
+      return m_lastEventNumber - currentEventNumber;
     }
 
   };
