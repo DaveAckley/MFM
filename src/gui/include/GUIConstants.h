@@ -35,7 +35,7 @@ namespace MFM
     SCREEN_INITIAL_WIDTH = 1280,
     SCREEN_INITIAL_HEIGHT = 1024,
 
-    FRAMES_PER_SECOND = 100,
+    FRAMES_PER_SECOND_IDLE = 15,  //< Redisplay rate when simulation paused
 
     CAMERA_SLOW_SPEED = 2,
     CAMERA_FAST_SPEED = 50,
