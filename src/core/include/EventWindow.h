@@ -33,6 +33,7 @@
 #include "CacheProcessor.h"
 #include "MDist.h"  /* for EVENT_WINDOW_SITES */
 #include "PSym.h"   /* For PointSymmetry, Map */
+#include "Site.h"
 #include "Base.h"
 
 namespace MFM
@@ -232,6 +233,11 @@ namespace MFM
      */
     bool InitForEvent(const SPoint & center) ;
 
+    const Site<AC> & GetSite() const
+    {
+      return GetTile().GetSite(m_center);
+    }
+
     const Base<AC> & GetBase() const
     {
       return m_centerBase;
@@ -376,6 +382,11 @@ namespace MFM
      * @returns The Tile that this EventWindow is taking place inside.
      */
     Tile<EC>& GetTile()
+    {
+      return m_tile;
+    }
+
+    const Tile<EC>& GetTile() const
     {
       return m_tile;
     }

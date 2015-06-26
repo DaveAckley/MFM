@@ -39,7 +39,8 @@ namespace MFM {
     Tile<EC> & t = GetTile();
     SPoint owned = Tile<EC>::TileCoordToOwned(tcoord);
     t.m_lastEventCenterOwned = owned;
-    t.GetSite(owned).SetLastEventEventNumber(m_eventWindowsExecuted);
+    //t.GetSite(owned).SetLastEventEventNumber(m_eventWindowsExecuted);
+    t.GetSite(tcoord).RecordEventAtSite(m_eventWindowsExecuted);
   }
 
   template <class EC>
@@ -344,7 +345,7 @@ namespace MFM {
     const MDist<R> & md = MDist<R>::get();
     Tile<EC> & tile = GetTile();
 
-    m_centerBase = tile.GetSite(SPoint(0,0)).GetBase();
+    m_centerBase = tile.GetSite(m_center).GetBase();
 
     for (u32 i = 0; i < SITE_COUNT; ++i)
     {
@@ -377,7 +378,7 @@ namespace MFM {
     Tile<EC> & tile = GetTile();
 
     // Write back base changes if any
-    tile.GetSite(SPoint(0,0)).GetBase() = m_centerBase;
+    tile.GetSite(m_center).GetBase() = m_centerBase;
 
     for (u32 i = 0; i < SITE_COUNT; ++i)
     {
