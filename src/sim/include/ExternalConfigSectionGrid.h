@@ -38,6 +38,7 @@ namespace MFM
   class ConfigFunctionCallGrid : public ConfigFunctionCall<GC>
   {
   public:
+
     ConfigFunctionCallGrid(const char * name, ExternalConfigSectionGrid<GC> & ecsg)
       : ConfigFunctionCall<GC>(name)
       , m_ecsg(ecsg)
@@ -53,6 +54,7 @@ namespace MFM
 
   protected:
     ExternalConfigSectionGrid<GC> & GetECSG() { return m_ecsg; }
+
   };
 
   template <class GC>
@@ -107,7 +109,9 @@ namespace MFM
   };
 
   template<class GC>
-  class ExternalConfigSectionGrid : public ExternalConfigSection<GC>
+  class ExternalConfigSectionGrid
+    : public ExternalConfigSection<GC>
+    , public AtomTypeFormatter<typename GC::EVENT_CONFIG::ATOM_CONFIG>
   {
     typedef typename GC::EVENT_CONFIG EC;
     typedef typename EC::ATOM_CONFIG AC;
@@ -118,6 +122,9 @@ namespace MFM
     enum { EVENT_WINDOW_RADIUS = EC::EVENT_WINDOW_RADIUS };
 
   public:
+    virtual bool ParseAtomType(LineCountingByteSource &in, T& dest) ;
+    virtual void PrintAtomType(const T&, ByteSink&) ;
+
     virtual const char * GetSectionName() const
     {
       return "Grid";
@@ -150,6 +157,8 @@ namespace MFM
     bool PlaceAtom(const Element<EC> & elt, s32 x, s32 y, const BitVector<BPA> & bv) ;
 
     void SetTileToExecuteOnly(const SPoint& tileLoc, bool value);
+
+    const Element<EC> * ParseElementIdentifier(LineCountingByteSource &in) ;
 
     Grid<GC> & GetGrid()
     {

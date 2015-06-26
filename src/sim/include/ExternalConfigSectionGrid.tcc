@@ -89,6 +89,33 @@ namespace MFM
   }
 
   template <class GC>
+  const Element<typename GC::EVENT_CONFIG> * ExternalConfigSectionGrid<GC>::ParseElementIdentifier(LineCountingByteSource &in)
+  {
+    in.SkipWhitespace();
+
+    OString16 nick;
+    if (!in.ScanIdentifier(nick))
+    {
+      in.Msg(Logger::ERROR, "Expected identifier as first argument");
+      return 0;
+    }
+
+    if (nick.HasOverflowed())
+    {
+      in.Msg(Logger::ERROR, "Identifier too long '%s'", nick.GetZString());
+      return 0;
+   }
+    const Element<EC> * pelt = this->LookupElement(nick);
+    if (!pelt)
+    {
+      in.Msg(Logger::ERROR, "'%@' isn't a registered element nickname", &nick);
+      return 0;
+    }
+
+    return pelt;
+  }
+
+  template <class GC>
   bool FunctionCallGA<GC>::Parse()
   {
     typedef typename GC::EVENT_CONFIG EC;
@@ -97,18 +124,9 @@ namespace MFM
 
     ExternalConfigSectionGrid<GC> & ec = this->GetECSG();
     LineCountingByteSource & in = ec.GetByteSource();
-    in.SkipWhitespace();
+    const Element<EC> * pelt = ec.ParseElementIdentifier(in);
 
-    OString16 nick;
-    if (!in.ScanIdentifier(nick))
-      return in.Msg(Logger::ERROR, "Expected identifier as first argument");
-
-    if (nick.HasOverflowed())
-      return in.Msg(Logger::ERROR, "Identifier too long '%s'", nick.GetZString());
-
-    const Element<EC> * pelt = ec.LookupElement(nick);
-    if (!pelt)
-      return in.Msg(Logger::ERROR, "'%@' isn't a registered element nickname", &nick);
+    if (!pelt) return false; // error message already issued
 
     s32 x, y;
 
@@ -192,7 +210,7 @@ namespace MFM
     if (3 != in.Scanf("%d,%d",&tmp_x,&tmp_y))
       return false;
 
-    if (!ec.GetGrid().LoadSite(SPoint(tmp_x,tmp_y), in))
+    if (!ec.GetGrid().LoadSite(SPoint(tmp_x,tmp_y), in, ec))
       return false;
 
     return in.Scanf(")") == 1;
@@ -331,18 +349,18 @@ namespace MFM
     /* First, register all elements. */
 
     u32 elems = m_elementRegistry.GetEntryCount();
-    char alphaOutput[24];
 
     for(u32 i = 0; i < elems; i++)
     {
-      const UUID& uuid = m_elementRegistry.GetEntryUUID(i);
+      Element<EC> * elt = m_elementRegistry.GetRegisteredElement(i);
+      if (!elt) continue;
+      OString16 nick;
+      this->PrintAtomType(elt->GetDefaultAtom(), nick);
 
-      IntAlphaEncode(i, alphaOutput);
-
-      byteSink.Printf("RegisterElement(");
-      uuid.Print(byteSink);
-      byteSink.Printf(",%s)", alphaOutput);
-      byteSink.WriteNewline();
+      UUID uuid = m_elementRegistry.GetEntryUUID(i);
+      byteSink.Printf("RegisterElement(%@,%s)\n",
+                      &uuid,
+                      nick.GetZString());
 
       /* Write configurable element values */
 
@@ -353,7 +371,7 @@ namespace MFM
       {
         const ElementParameter<EC> * p = parms.GetParameter(j);
         byteSink.Printf(" SetElementParameter(%s,%s,%@)",
-                        alphaOutput,
+                        nick.GetZString(),
                         p->GetTag(),
                         p);
         byteSink.WriteNewline();
@@ -386,8 +404,10 @@ namespace MFM
         SPoint currentPt(x, y);
 
         byteSink.Printf("Site(%d,%d",x,y);
-        m_grid.SaveSite(currentPt,byteSink);
+        m_grid.SaveSite(currentPt,byteSink,*this);
         byteSink.Printf(")\n");
+
+#if 0 // Site(..) includes the event layer atoms
 
         /* No need to write empties since they are the default */
         if(!Atom<AC>::IsType(*m_grid.GetAtom(currentPt),
@@ -412,6 +432,8 @@ namespace MFM
           AtomSerializer<AC> as(temp);
           byteSink.Printf(",%d,%d,%@)\n", x, y, &as);
         }
+#endif
+
       }
     }
     byteSink.WriteNewline();
@@ -525,4 +547,27 @@ namespace MFM
 
     return true;
   }
+
+
+  template <class GC>
+  bool ExternalConfigSectionGrid<GC>::ParseAtomType(LineCountingByteSource &in, T& dest) //typename GC::EVENT_CONFIG::ATOM_CONFIG::ATOM_TYPE
+  {
+    const Element<EC> * pelt = ParseElementIdentifier(in);
+    if (!pelt)
+    {
+      return false;
+    }
+
+    dest = pelt->GetDefaultAtom();
+    return true;
+  }
+
+  template <class GC>
+  void ExternalConfigSectionGrid<GC>::PrintAtomType(const T& atom, ByteSink& bs)
+  {
+    // We have arranged to use the (to-become) old type as the atom
+    // tag..  Very convenient here.
+    bs.Printf("T%04x",atom.GetType());
+  }
+
 }
