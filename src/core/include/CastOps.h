@@ -1061,6 +1061,31 @@ namespace MFM {
     return _CboolToBool64(((vala & mask) >= (valb & mask)), BITS_PER_BOOL);
   }
 
+  //CompOps on UNSIGNED
+  inline u32 _BinOpCompareEqEqBits32(u32 vala, u32 valb, u32 bitwidth)
+  {
+    u32 mask = _GetNOnes32(bitwidth);
+    return _CboolToBool32(((vala & mask) == (valb & mask)), BITS_PER_BOOL);
+  }
+
+  inline u64 _BinOpCompareEqEqBits64(u64 vala, u64 valb, u32 bitwidth)
+  {
+    u64 mask = _GetNOnes64(bitwidth);
+    return _CboolToBool64(((vala & mask) == (valb & mask)), BITS_PER_BOOL);
+  }
+
+  inline u32 _BinOpCompareNotEqBits32(u32 vala, u32 valb, u32 bitwidth)
+  {
+    u32 mask = _GetNOnes32(bitwidth);
+    return _CboolToBool32(((vala & mask) != (valb & mask)), BITS_PER_BOOL);
+  }
+
+  inline u64 _BinOpCompareNotEqBits64(u64 vala, u64 valb, u32 bitwidth)
+  {
+    u64 mask = _GetNOnes64(bitwidth);
+    return _CboolToBool64(((vala & mask) != (valb & mask)), BITS_PER_BOOL);
+  }
+
   //CompOps on BOOL
   inline u32 _BinOpCompareEqEqBool32(u32 vala, u32 valb, u32 bitwidth)
   {
