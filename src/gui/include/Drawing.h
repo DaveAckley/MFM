@@ -220,18 +220,62 @@ namespace MFM {
     /**
        Draw a one-pixel high horizontal line in the current foreground color
      */
-    void DrawHLine(int y, int startX, int endX) const;
+    void DrawHLine(int y, int startX, int endX) const
+    {
+      DrawHLine(y,startX,endX,m_fgColor);
+    }
+
+    /**
+       Draw a one-pixel high horizontal line in the given color
+     */
+    void DrawHLine(int y, int startX, int endX, u32 color) const;
+
+
+    void DrawHLineDit(int y, int startX, int endX) const
+    {
+      DrawHLineDit(y, startX, endX, m_fgColor);
+    }
+
+    void DrawHLineDit(int y, int startX, int endX, u32 color) const
+    {
+      DrawHLine(MapDitToPix(y), MapDitToPix(startX), MapDitToPix(endX), color);
+    }
 
     /**
        Draw a one-pixel wide vertical line in the current foreground color
      */
-    void DrawVLine(int x, int startY, int endY) const;
+    void DrawVLine(int x, int startY, int endY) const
+    {
+      DrawVLine(x,startY,endY,m_fgColor);
+    }
+
+    /**
+       Draw a one-pixel wide vertical line in the given color
+     */
+    void DrawVLine(int x, int startY, int endY, u32 color) const ;
+
+
+    void DrawVLineDit(int x, int startY, int endY) const
+    {
+      DrawVLineDit(x, startY, endY, m_fgColor);
+    }
+
+    void DrawVLineDit(int x, int startY, int endY, u32 color) const
+    {
+      DrawVLine(MapDitToPix(x), MapDitToPix(startY), MapDitToPix(endY), color);
+    }
 
     /**
        Draw a box with one-pixel lines just inside the given Rect, in
        the current foreground color
      */
     void DrawRectangle(const Rect & rect) const;
+
+    /**
+       Draw a box with one-pixel lines just inside the given Rect,
+       measured in dits, in the current foreground color
+     */
+    void DrawRectDit(const Rect & rect) const;
 
     /**
        Fill the given rectangle with the current foreground color
@@ -243,6 +287,12 @@ namespace MFM {
        the foreground color
      */
     void FillRect(int x, int y, int w, int h, u32 color) const;
+
+    /**
+       Fill the given rectangle, measured in dit, with the given
+       color, without changing the foreground color.
+     */
+    void FillRectDit(const Rect & rectDit, u32 color) const ;
 
     /**
        Fill the given rectangle with the current foreground color
@@ -258,13 +308,19 @@ namespace MFM {
      */
      void FillCircle(int x, int y, int w, int h, int radius) const;
 
+    /**
+       Fill a circle of the given radius with the current foreground
+       color.  The center of the circle is at (x+w/2, y+h/2).
+     */
+    void FillCircleDit(const Rect & rect, u32 radiusDits, u32 color) const;
+
 
     /**
        Draw message in the current font using the current foreground
        color, clipping to the given size, starting at the given loc.
        Fail ILLEGAL_STATE if the current font is null.
      */
-    void BlitText(const char* message, UPoint loc, UPoint size) const;
+    void BlitText(const char* message, SPoint loc, UPoint size) const;
 
     /**
      * Draw a message in the current font using the current background
@@ -272,12 +328,12 @@ namespace MFM {
      * foreground color, clipping to the given size, starting at the
      * given loc. Fail ILLEGAL_STATE if the current font is null.
      */
-    void BlitBackedText(const char* message, UPoint loc, UPoint size);
+    void BlitBackedText(const char* message, SPoint loc, UPoint size);
 
     /**
      * Just like BlitBackedText but center message on loc + size / 2
      */
-    void BlitBackedTextCentered(const char* message, UPoint loc, UPoint size);
+    void BlitBackedTextCentered(const char* message, SPoint loc, UPoint size);
 
     /**
      * Return the SPoint(width, height) of message when rendered in
@@ -294,22 +350,64 @@ namespace MFM {
     /**
      * Draw a specified image to a specified part of the screen.
      */
-    void BlitImage(SDL_Surface* image, UPoint loc, UPoint maxSize) const;
+    void BlitImage(SDL_Surface* image, SPoint loc, UPoint maxSize) const;
 
     /**
      * Draw a specified ImageAsset (corresponding to an SDL_Surface*) to the screen.
      */
-    void BlitImageAsset(ImageAsset asset, UPoint loc, UPoint maxSize) const;
+    void BlitImageAsset(ImageAsset asset, SPoint loc, UPoint maxSize) const;
+
+    /**
+     * Tile copies of a specified image to a specified part of the screen.
+     */
+    void BlitImageTiled(SDL_Surface* image, const Rect & destRegion) const;
+
+    /**
+     * Tile copies of a specified image to a specified part of the screen.
+     */
+    void BlitImageAssetTiled(ImageAsset asset, const Rect & destRegion) const;
 
     /**
      * Draw a specified ImageAsset at loc in its own maximum size.
      */
-    void BlitImageAsset(ImageAsset asset, UPoint loc) const;
+    void BlitImageAsset(ImageAsset asset, SPoint loc) const;
 
 
     static void Convert(const Rect & rect, SDL_Rect & toFill) ;
 
+    /*
+      Support for cheapo (i.e., no antialiasing) subpixel rendering
+     */
+    static const u32 DIT_PER_PIX = 256;
+
+    static s32 MapPixToDit(s32 pix) { return pix * (s32) DIT_PER_PIX; }
+
+    static u32 MapPixToDit(u32 pix) { return pix * DIT_PER_PIX; }
+
+    static s32 MapDitToPix(s32 dit) { return (s32) (dit + DIT_PER_PIX / 2) / (s32) DIT_PER_PIX; }
+
+    static u32 MapDitToPix(u32 dit) { return (dit + DIT_PER_PIX / 2) / DIT_PER_PIX; }
+
+    static SPoint MapPixToDit(const SPoint pix)
+    {
+      return SPoint(MapPixToDit(pix.GetX()), MapPixToDit(pix.GetY()));
+    }
+
+    static SPoint MapDitToPix(const SPoint & dit)
+    {
+      return SPoint(MapDitToPix(dit.GetX()), MapDitToPix(dit.GetY()));
+    }
+
+    static UPoint MapDitToPix(const UPoint & pdit) {
+      return UPoint(MapDitToPix(pdit.GetX()),MapDitToPix(pdit.GetY()));
+    }
+
+    static Rect MapDitToPix(const Rect & rectdit) {
+      return Rect(MapDitToPix(rectdit.GetPosition()), MapDitToPix(rectdit.GetSize()));
+    }
+
   private:
+
     // Let's try to deprecate SetPixel.  Bounds-checking every pixel is
     // slow, and SDL_FillRect is (like SSE) fast and also clips against
     // the surface cliprect so it's bounds-checking anyway?
@@ -317,11 +415,12 @@ namespace MFM {
                                 u32 x, u32 y,
                                 u32 color)
     {
-      if(x >= 0 && y >= 0 && x < (u32)dest->w && y < (u32)dest->h)
-        {
-          ((u32*)dest->pixels)[x + y * dest->w] = color;
-        }
+      if(x < (u32)dest->w && y < (u32)dest->h)
+      {
+        ((u32*)dest->pixels)[x + y * dest->w] = color;
+      }
     }
+
   };
 } /* namespace MFM */
 

@@ -76,14 +76,14 @@ namespace MFM
     FillRect(0, 0, m_rect.GetWidth(), m_rect.GetHeight(), m_bgColor);
   }
 
-  void Drawing::DrawHLine(int y, int startX, int endX) const
+  void Drawing::DrawHLine(int y, int startX, int endX, u32 color) const
   {
-    FillRect(startX,y,endX-startX,1);
+    FillRect(startX, y, endX-startX, 1, color);
   }
 
-  void Drawing::DrawVLine(int x, int startY, int endY) const
+  void Drawing::DrawVLine(int x, int startY, int endY, u32 color) const
   {
-    FillRect(x,startY,1,endY-startY);
+    FillRect(x, startY, 1, endY-startY, color);
   }
 
   void Drawing::DrawRectangle(const Rect & rect) const
@@ -93,6 +93,15 @@ namespace MFM
 
     DrawVLine(rect.GetX(),rect.GetY(),rect.GetY()+rect.GetHeight());
     DrawVLine(rect.GetX()+rect.GetWidth()-1,rect.GetY(),rect.GetY()+rect.GetHeight());
+  }
+
+  void Drawing::DrawRectDit(const Rect & rect) const
+  {
+    DrawHLineDit(rect.GetY(),rect.GetX(),rect.GetX()+rect.GetWidth());
+    DrawHLineDit(rect.GetY()+rect.GetHeight()-1,rect.GetX(),rect.GetX()+rect.GetWidth());
+
+    DrawVLineDit(rect.GetX(),rect.GetY(),rect.GetY()+rect.GetHeight());
+    DrawVLineDit(rect.GetX()+rect.GetWidth()-1,rect.GetY(),rect.GetY()+rect.GetHeight());
   }
 
   void Drawing::FillRect(int x, int y, int w, int h) const
@@ -115,6 +124,29 @@ namespace MFM
     SDL_FillRect(m_dest, &rect, color);
   }
 
+  void Drawing::FillRectDit(const Rect & r, u32 color) const
+  {
+    FillRect(MapDitToPix(r.GetX()),
+             MapDitToPix(r.GetY()),
+             MapDitToPix(r.GetWidth()),
+             MapDitToPix(r.GetHeight()),
+             color);
+  }
+
+  void Drawing::FillCircleDit(const Rect & r, u32 radiusdit, u32 color) const
+  {
+    int rad = (int) MapPixToDit(MapDitToPix(radiusdit));
+    double cxdit = r.GetX()+r.GetWidth()/2.0;
+    double cydit = r.GetY()+r.GetHeight()/2.0;
+    for(int dydit = 0; dydit <= rad; dydit += DIT_PER_PIX)
+    {
+      double dxdit = floor(sqrt(2.0*rad*dydit - 1.0*dydit*dydit));
+      DrawHLineDit((int) (cydit + rad - dydit), (int) (cxdit-dxdit), (int)(cxdit+dxdit), color);
+      DrawHLineDit((int) (cydit - rad + dydit), (int) (cxdit-dxdit), (int)(cxdit+dxdit), color);
+    }
+  }
+
+
   void Drawing::FillCircle(int x, int y, int w, int h, int radius) const
   {
     double cx = x+w/2.0;
@@ -127,7 +159,7 @@ namespace MFM
     }
   }
 
-  void Drawing::BlitImage(SDL_Surface* src, UPoint loc, UPoint maxSize) const
+  void Drawing::BlitImage(SDL_Surface* src, SPoint loc, UPoint maxSize) const
   {
     if(!src)
     {
@@ -147,13 +179,13 @@ namespace MFM
     SDL_BlitSurface(src, NULL, m_dest, &rect);
   }
 
-  void Drawing::BlitImageAsset(ImageAsset asset, UPoint loc, UPoint maxSize) const
+  void Drawing::BlitImageAsset(ImageAsset asset, SPoint loc, UPoint maxSize) const
   {
     if (asset != IMAGE_ASSET_NONE)
       BlitImage(AssetManager::GetReal(asset), loc, maxSize);
   }
 
-  void Drawing::BlitImageAsset(ImageAsset asset, UPoint loc) const
+  void Drawing::BlitImageAsset(ImageAsset asset, SPoint loc) const
   {
     if (asset == IMAGE_ASSET_NONE) return;
     SDL_Surface* s= AssetManager::GetReal(asset);
@@ -161,7 +193,44 @@ namespace MFM
     BlitImage(s, loc, maxsize);
   }
 
-  void Drawing::BlitText(const char* message, UPoint loc, UPoint size) const
+  void Drawing::BlitImageTiled(SDL_Surface* src, const Rect & destRegion) const
+  {
+    if(!src)
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    // Don't draw outside destregion or existing clip
+    Rect target = destRegion;
+    target &= m_rect;
+
+    SDL_Rect clip;
+    Convert(target, clip);
+
+    SDL_SetClipRect(m_dest, &clip);
+
+    SDL_Rect rect;
+    rect.w = src->w;
+    rect.h = src->h;
+
+    for (s32 y = 0; y < (s32) destRegion.GetHeight(); y += (s32) src->h)
+    {
+      for (s32 x = 0; x < (s32) destRegion.GetWidth(); x += (s32) src->w)
+      {
+        rect.x = destRegion.GetX() + x;
+        rect.y = destRegion.GetY() + y;
+        SDL_BlitSurface(src, NULL, m_dest, &rect);
+      }
+    }
+  }
+
+  void Drawing::BlitImageAssetTiled(ImageAsset asset, const Rect & destRegion) const
+  {
+    if (asset != IMAGE_ASSET_NONE)
+      BlitImageTiled(AssetManager::GetReal(asset), destRegion);
+  }
+
+  void Drawing::BlitText(const char* message, SPoint loc, UPoint size) const
   {
     TTF_Font * ttfont = AssetManager::GetReal(m_fontAsset);
 
@@ -211,20 +280,20 @@ namespace MFM
     return SPoint(w,h);
   }
 
-  void Drawing::BlitBackedTextCentered(const char* message, UPoint loc, UPoint size)
+  void Drawing::BlitBackedTextCentered(const char* message, SPoint loc, UPoint size)
   {
+    SPoint ssize = MakeSigned(size);
     SPoint tsize = GetTextSize(message);
     if (tsize.GetX() < 0 || tsize.GetY() < 0)
     {
       tsize = SPoint(0,0);  // WTF?
     }
-    UPoint utsize(tsize.GetX(), tsize.GetY());
 
     // Extra subtraction because blit backing makes text 1 pixel bigger all around
-    BlitBackedText(message, loc + size / 2 - utsize / 2 - UPoint(1, 1), size);
+    BlitBackedText(message, loc + ssize / 2 - tsize / 2 - SPoint(1, 1), size);
   }
 
-  void Drawing::BlitBackedText(const char* message, UPoint loc, UPoint size)
+  void Drawing::BlitBackedText(const char* message, SPoint loc, UPoint size)
   {
     u32 oldFG = GetForeground();
     SPoint backingPt;
@@ -235,10 +304,7 @@ namespace MFM
     for(u32 i = 0; i < 4; i++)
     {
       backingPt.Set(loc.GetX() + backingPts[i].GetX(), loc.GetY() + backingPts[i].GetY());
-      if (CanMakeUnsigned(backingPt))
-      {
-        BlitText(message, MakeUnsigned(backingPt), size);
-      }
+      BlitText(message, backingPt, size);
     }
 
     SetForeground(oldFG);

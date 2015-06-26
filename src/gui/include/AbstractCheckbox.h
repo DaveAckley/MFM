@@ -80,7 +80,7 @@ namespace MFM
       if (Panel::GetHeight() > iconSize.GetY())
         sy = (Panel::GetHeight() - iconSize.GetY()) / 2;
 
-      d.BlitImageAsset(icon, UPoint(0, sy));
+      d.BlitImageAsset(icon, SPoint(0, sy));
 
       const char * text = AbstractButton::GetText();
       if(strlen(text))
@@ -91,7 +91,7 @@ namespace MFM
         SPoint textSize = Panel::GetTextSize(d.GetFont(), text);
         SPoint renderAt = max((dims - textSize)/2, SPoint(0,0)) + norg;
 
-        d.BlitText(text, MakeUnsigned(renderAt), GetDimensions());
+        d.BlitText(text, renderAt, GetDimensions());
       }
     }
 
