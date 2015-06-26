@@ -27,25 +27,31 @@ namespace MFM {
     u32 next = 0;
     const SPoint center(R,R);
 
-    // For every length from small to large
+    // For every manhattan length from small to large
     for (u32 length = 0; length<=R; ++length)
     {
       m_firstIndex[length] = next;
 
-      // Scan the whole event window
-      for (u32 x = 0; x<EVENT_WINDOW_DIAMETER; ++x)
+      // For each maximum length up to the manhattan length
+      for (u32 max = 0; max <= length; ++max)
       {
-        for (u32 y = 0; y<EVENT_WINDOW_DIAMETER; ++y)
-	{
-          Point<s32> p(x,y);
-          p.Subtract(center);
+        // Scan the whole event window
+        for (u32 x = 0; x<EVENT_WINDOW_DIAMETER; ++x)
+        {
+          for (u32 y = 0; y<EVENT_WINDOW_DIAMETER; ++y)
+          {
+            Point<s32> p(x,y);
+            p.Subtract(center);
 
-          // And accumulate points of the given length
-          if (p.GetManhattanLength()==length)
-	  {
-            m_indexToPoint[next] = p;
-            m_pointToIndex[x][y] = next;
-            ++next;
+            // And pick up available points that fit in both length bounds
+            if (m_pointToIndex[x][y] < 0
+                && p.GetManhattanLength() <= length
+                && p.GetMaximumLength() <= max)
+            {
+              m_indexToPoint[next] = p;
+              m_pointToIndex[x][y] = next;
+              ++next;
+            }
           }
         }
       }
