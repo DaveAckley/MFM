@@ -212,11 +212,12 @@ namespace MFM
     { }
 
     /**
-     * This is during initialization to see if this AbstractButton has
-     * a global keyboard accelerator associated with it.  If it
-     * returns false, no keyboard accelerator will be installed.  If
-     * it returns true, keysym and mods will have been initialized to
-     * the key and modifiers used to 'click' this button
+     * This is called during initialization to see if this
+     * AbstractButton has a global keyboard accelerator associated
+     * with it.  If it returns false, no keyboard accelerator will be
+     * installed.  If it returns true, keysym and mods will have been
+     * initialized to the key and modifiers used to 'click' this
+     * button
      *
      */
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mods)
