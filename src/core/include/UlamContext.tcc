@@ -4,6 +4,7 @@
 #include "Random.h"
 #include "EventWindow.h"
 #include "Base.h"
+#include "Site.h"
 
 namespace MFM {
 
@@ -18,13 +19,20 @@ namespace MFM {
   }
 
   template <class EC>
-  void UlamContext<EC>::AssertTile()
+  void UlamContext<EC>::AssertTile() const
   {
     MFM_API_ASSERT_STATE(m_tile);
   }
 
   template <class EC>
   Tile<EC> & UlamContext<EC>::GetTile()
+  {
+    AssertTile();
+    return * m_tile;
+  }
+
+  template <class EC>
+  const Tile<EC> & UlamContext<EC>::GetTile() const
   {
     AssertTile();
     return * m_tile;
@@ -38,6 +46,13 @@ namespace MFM {
   }
 
   template <class EC>
+  const EventWindow<EC> & UlamContext<EC>::GetEventWindow() const
+  {
+    AssertTile();
+    return GetTile().GetEventWindow();
+  }
+
+  template <class EC>
   EventWindow<EC> & UlamContext<EC>::GetEventWindow()
   {
     AssertTile();
@@ -48,6 +63,12 @@ namespace MFM {
   Base<typename EC::ATOM_CONFIG> & UlamContext<EC>::GetBase()
   {
     return GetEventWindow().GetBase();
+  }
+
+  template <class EC>
+  const Site<typename EC::ATOM_CONFIG> & UlamContext<EC>::GetSite() const
+  {
+    return GetEventWindow().GetSite();
   }
 
 }

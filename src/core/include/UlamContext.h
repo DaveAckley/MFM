@@ -31,6 +31,7 @@
 namespace MFM
 {
   template <class AC> class Base; // FORWARD
+  template <class AC> class Site; // FORWARD
   template <class EC> class Tile; // FORWARD
   template <class EC> class EventWindow; // FORWARD
   class Random; // FORWARD
@@ -42,7 +43,7 @@ namespace MFM
     typedef typename EC::SITE S;
 
     Tile<EC> * m_tile;
-    void AssertTile() ;
+    void AssertTile() const;
 
   public:
 
@@ -52,11 +53,17 @@ namespace MFM
 
     Tile<EC> & GetTile() ;
 
+    const Tile<EC> & GetTile() const ;
+
     Random & GetRandom() ;
 
     EventWindow<EC> & GetEventWindow() ;
 
+    const EventWindow<EC> & GetEventWindow() const ;
+
     Base<AC> & GetBase() ;
+
+    const Site<AC> & GetSite() const ;
 
   };
 }
