@@ -114,7 +114,7 @@ namespace MFM
   void Tile<EC>::XRay(u32 siteOdds, u32 bitOdds)
   {
     Random & random = GetRandom();
-    for(iterator_type i = begin(); i != end(); ++i) {
+    for(iterator_type i = beginAll(); i != endAll(); ++i) { // hitting caches too
       if (random.OneIn(siteOdds))
         i->GetAtom().XRay(random, bitOdds);
     }
@@ -124,7 +124,7 @@ namespace MFM
   void Tile<EC>::Thin(u32 siteOdds)
   {
     Random & random = GetRandom();
-    for(iterator_type i = begin(); i != end(); ++i) {
+    for(iterator_type i = beginOwned(); i != endOwned(); ++i) {
       if (random.OneIn(siteOdds))
         i->Clear();
     }
@@ -133,7 +133,7 @@ namespace MFM
   template <class EC>
   void Tile<EC>::ClearAtoms()
   {
-    for(iterator_type i = begin(); i != end(); ++i) {
+    for(iterator_type i = beginAll(); i != endAll(); ++i) {
       i->Clear();
     }
     NeedAtomRecount();
@@ -187,8 +187,7 @@ namespace MFM
 
     m_illegalAtomCount = 0;
 
-    for(const_iterator_type i = m_tile.begin(); i != m_tile.end(); ++i) {
-      if (m_tile.IsInCache(i.At())) continue;
+    for(const_iterator_type i = m_tile.beginOwned(); i != m_tile.endOwned(); ++i) {
 
       u32 atype = i->GetAtom().GetType();
       s32 idx = m_tile.m_elementTable.GetIndex(atype);
@@ -211,10 +210,12 @@ namespace MFM
   u64 Tile<EC>::GetUncachedWriteAge(const SPoint at) const
   {
     MFM_API_ASSERT_ARG(IsInUncachedTile(at));
-
+    /**
     return
       GetEventsExecuted() -
       GetUncachedSite(at).GetLastChangedEventNumber();
+    */
+    return GetUncachedSite(at).GetWriteAge();
 }
 
   template <class EC>
@@ -222,9 +223,12 @@ namespace MFM
   {
     MFM_API_ASSERT_ARG(IsInUncachedTile(at));
 
+    /* XXX
     return
-      (u64) ((s64) GetEventsExecuted() -
+      (u64) ((s64)  -
              GetUncachedSite(at).GetLastEventEventNumber());
+    */
+    return GetUncachedSite(at).GetEventAge(GetEventsExecuted());
   }
 
 
@@ -322,7 +326,7 @@ namespace MFM
   }
 
   template <class EC>
-  void Tile<EC>::PlaceAtom(const T& atom, const SPoint& pt)
+  void Tile<EC>::PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt)
   {
     if (!IsLiveSite(pt))
     {
@@ -335,10 +339,11 @@ namespace MFM
     }
 
     Site<AC> & site = GetSite(pt);
+    T & oldAtom = placeInBase ? site.GetBase().GetBaseAtom() : site.GetAtom();
     T newAtom = atom;
     unwind_protect(
     {
-      site.GetAtom().SetEmpty();
+      oldAtom.SetEmpty();
       LOG.Warning("Failure during PlaceAtom, erased (%2d,%2d) of %s",
                   pt.GetX(), pt.GetY(), this->GetLabel());
     },
@@ -350,15 +355,14 @@ namespace MFM
         newAtom.XRay(m_random, BACKGROUND_RADIATION_BIT_ODDS);
       }
 
-      const T& oldAtom = site.GetAtom();
       bool owned = IsOwnedSite(pt);
 
       if (oldAtom != newAtom) {
         NeedAtomRecount();
         if (owned)
-          site.SetLastChangedEventNumber(GetEventsExecuted());
+          site.MarkChanged();
 
-        site.PutAtom(newAtom);
+        oldAtom = newAtom;
       }
     });
   }
@@ -454,11 +458,11 @@ namespace MFM
   }
 
   template <class EC>
-  TileRegion Tile<EC>::RegionFromIndex(const u32 index)
+  typename Tile<EC>::Region Tile<EC>::RegionFromIndex(const u32 index)
   {
     enum { R = EVENT_WINDOW_RADIUS };
 
-    if(index > TILE_SIDE)
+    if(index >= TILE_SIDE)
     {
       FAIL(ARRAY_INDEX_OUT_OF_BOUNDS); /* Index out of Tile bounds */
     }
@@ -467,11 +471,12 @@ namespace MFM
 
     if(index < R * REGION_HIDDEN)
     {
-      return (TileRegion)(index / R);
+      return (Region)(index / R);
     }
     else if(index >= R * REGION_HIDDEN + hiddenWidth)
     {
-      return (TileRegion)((index - (R * REGION_HIDDEN) - hiddenWidth) / R);
+      //XXX WTGDFingJCFingFFFingF?      return (Region)((index - (R * REGION_HIDDEN) - hiddenWidth) / R);
+      return (Region)((TILE_SIDE - index - 1) / R);
     }
     else
     {
@@ -480,7 +485,7 @@ namespace MFM
   }
 
   template <class EC>
-  TileRegion Tile<EC>::RegionIn(const SPoint& pt)
+  typename Tile<EC>::Region Tile<EC>::RegionIn(const SPoint& pt)
   {
     return MIN(RegionFromIndex((u32)pt.GetX()),
                RegionFromIndex((u32)pt.GetY()));
@@ -611,6 +616,9 @@ namespace MFM
 
     //INITIATE_EVENT,
     SPoint pt = GetRandomOwnedCoord();
+    if (RegionIn(pt) == REGION_CACHE)
+      FAIL(ILLEGAL_STATE);
+
     return m_window.TryEventAt(pt);
   }
 

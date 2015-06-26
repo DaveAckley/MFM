@@ -49,19 +49,6 @@ namespace MFM
 #define IS_OWNED_CONNECTION(X) ((X) - Dirs::EAST >= 0 && (X) - Dirs::EAST < 4)
 
   /**
-   * An enumeration of the kinds of memory regions which may exist in
-   * a Tile.
-   */
-  typedef enum
-  {
-    REGION_CACHE   = 0,
-    REGION_SHARED  = 1,
-    REGION_VISIBLE = 2,
-    REGION_HIDDEN  = 3,
-    REGION_COUNT
-  } TileRegion;
-
-  /**
      The representation of a single indefinitely scalable hardware
      tile (currently simulated; hopefully soon also running natively).
 
@@ -109,6 +96,19 @@ namespace MFM
      * Tile itself -- i.e., excluding the cache boundary.
      */
     const u32 OWNED_SIDE;
+
+    /**
+     * An enumeration of the kinds of memory regions which may exist in
+     * a Tile.
+     */
+    enum Region
+    {
+      REGION_CACHE   = 0,
+      REGION_SHARED  = 1,
+      REGION_VISIBLE = 2,
+      REGION_HIDDEN  = 3,
+      REGION_COUNT
+    };
 
     Tile(const u32 tileSide, S * sites) ;
 
@@ -206,19 +206,10 @@ namespace MFM
       m_warpFactor = MIN(10u, warp);
     }
 
+
   private:
 
     S * const m_sites;
-
-    static SPoint TileCoordToOwned(const SPoint & tileCoord)
-    {
-      return tileCoord - SPoint(EVENT_WINDOW_RADIUS,EVENT_WINDOW_RADIUS);
-    }
-
-    static SPoint OwnedCoordToTile(const SPoint & ownedCoord)
-    {
-      return ownedCoord + SPoint(EVENT_WINDOW_RADIUS,EVENT_WINDOW_RADIUS);
-    }
 
     /**
      * A brief name or label for this Tile, for reporting and debugging
@@ -262,6 +253,29 @@ namespace MFM
 
   public:
 
+    static SPoint TileCoordToOwned(const SPoint & tileCoord)
+    {
+      return tileCoord - SPoint(EVENT_WINDOW_RADIUS,EVENT_WINDOW_RADIUS);
+    }
+
+    static SPoint OwnedCoordToTile(const SPoint & ownedCoord)
+    {
+      return ownedCoord + SPoint(EVENT_WINDOW_RADIUS,EVENT_WINDOW_RADIUS);
+    }
+
+    /**
+     * Gets the Region that a specified point is inside of. This
+     * method fails upon an argument which does not point at a memory
+     * region.
+     *
+     * @param pt The SPoint, which must be pointing at a memory region
+     *           within this Tile, of which to find the region it is
+     *           pointing at.
+     *
+     * @returns The Region that pt is pointing at.
+     */
+    Region RegionIn(const SPoint& pt);
+
     UlamClassRegistry & GetUlamClassRegistry() { return m_ucr; }
 
     const UlamClassRegistry & GetUlamClassRegistry() const { return m_ucr; }
@@ -272,11 +286,16 @@ namespace MFM
     template <class SITETYPE, class TILETYPE> class TileIterator
     {
       TILETYPE & t;
+      const u32 INDENT;
       s32 i;
       s32 j;
     public:
-      TileIterator(TILETYPE & tile, int i = 0, int j = 0)
-        : t(tile), i(i), j(j) { }
+      TileIterator(TILETYPE & tile, u32 indent, int i, int j)
+        : t(tile)
+        , INDENT(indent)
+        , i(i)
+        , j(j)
+      { }
 
       bool operator!=(const TileIterator &m) const
       {
@@ -285,50 +304,92 @@ namespace MFM
 
       void operator++()
       {
-        if (j < (s32) t.TILE_SIDE)
+        if (j < (s32) (t.TILE_SIDE - INDENT))
         {
           i++;
-          if (i >= (s32) t.TILE_SIDE)
+          if (i >= (s32) (t.TILE_SIDE - INDENT))
           {
-            i = 0;
+            i = INDENT;
             j++;
           }
         }
       }
 
+      /* NEED THIS?
       int operator-(const TileIterator &m) const
       {
         s32 rows = j-m.j;
         s32 cols = i-m.i;
-        return rows*t.TILE_SIDE + cols;
+        return rows*(t.TILE_SIDE - 2*INDENT) + cols;
       }
+      */
 
       SITETYPE & operator*() const
       {
-        return t.GetSite(At());
+        return t.GetSite(AtSite());
       }
 
       SITETYPE * operator->() const
       {
-        return &t.GetSite(At());
+        return &t.GetSite(AtSite());
       }
 
-      SPoint At() const { return SPoint(i,j); }
-      u32 GetX() const { return (u32) i; }
-      u32 GetY() const { return (u32) j; }
+      /* AtSite() etc methods are always absolute full Tile coords */
+      SPoint AtSite() const { return SPoint(GetXSite(),GetYSite()); }
+      u32 GetXSite() const { return (u32) i; }
+      u32 GetYSite() const { return (u32) j; }
+
+      /* At() etc methods are relative to iteration origin (maybe all, maybe owned) */
+      SPoint At() const { return SPoint(GetX(),GetY()); }
+      u32 GetX() const { return (u32) (i - INDENT); }
+      u32 GetY() const { return (u32) (j - INDENT); }
 
     };
 
     typedef TileIterator< S, Tile<EC> > iterator_type;
     typedef TileIterator< const S, const Tile<EC> > const_iterator_type;
 
-    iterator_type begin() { return iterator_type(*this); }
+    iterator_type beginAll() {
+      return iterator_type(*this, 0, 0, 0);
+    }
+    const_iterator_type beginAll() const {
+      return const_iterator_type(*this, 0, 0, 0);
+    }
 
-    const_iterator_type begin() const { return const_iterator_type(*this); }
+    iterator_type endAll() {
+      return iterator_type(*this, 0, 0, TILE_SIDE);
+    }
+    const_iterator_type endAll() const {
+      return const_iterator_type(*this, 0, 0, TILE_SIDE);
+    }
 
-    iterator_type end() { return iterator_type(*this,0,TILE_SIDE); }
+    iterator_type beginOwned() {
+      return iterator_type(*this, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS);
+    }
+    const_iterator_type beginOwned() const {
+      return const_iterator_type(*this, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS);
+    }
 
-    const_iterator_type end() const { return const_iterator_type(*this, 0,TILE_SIDE); }
+    iterator_type endOwned() {
+      return iterator_type(*this, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS, TILE_SIDE - EVENT_WINDOW_RADIUS);
+    }
+    const_iterator_type endOwned() const {
+      return const_iterator_type(*this, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS, TILE_SIDE - EVENT_WINDOW_RADIUS);
+    }
+
+    iterator_type begin(bool all) {
+      if (all) return beginAll(); return beginOwned();
+    }
+    const_iterator_type begin(bool all) const {
+      if (all) return beginAll(); return beginOwned();
+    }
+
+    iterator_type end(bool all) {
+      if (all) return endAll(); return endOwned();
+    }
+    const_iterator_type end(bool all) const {
+      if (all) return endAll(); return endOwned();
+    }
 
   private:
 
@@ -460,27 +521,14 @@ namespace MFM
     SPoint GetNeighborLoc(Dir neighbor, const SPoint& atomLoc) const;
 
     /**
-     * Gets the TileRegion that a specified index, from the center of
+     * Gets the Region that a specified index, from the center of
      * the edge of a Tile, reaches to.
      *
      * @param index The index to check region membership of.
      *
-     * @returns The TileRegion which index will reach.
+     * @returns The Region which index will reach.
      */
-    TileRegion RegionFromIndex(const u32 index);
-
-    /**
-     * Gets the TileRegion that a specified point is inside of. This
-     * method fails upon an argument which does not point at a memory
-     * region.
-     *
-     * @param pt The SPoint, which much be pointing at a memory region
-     *           within this Tile, of which to find the region it is
-     *           pointing at.
-     *
-     * @returns The TileRegion that pt is pointing at.
-     */
-    TileRegion RegionIn(const SPoint& pt);
+    Region RegionFromIndex(const u32 index);
 
     /**
      * Performs a single Event on the generated EventWindow .
@@ -616,7 +664,13 @@ namespace MFM
       return m_window.GetEventWindowsExecuted();
     }
 
-    EventWindow<EC> & GetEventWindow() {
+    EventWindow<EC> & GetEventWindow()
+    {
+      return m_window;
+    }
+
+    const EventWindow<EC> & GetEventWindow() const
+    {
       return m_window;
     }
 
@@ -967,8 +1021,16 @@ namespace MFM
      */
     const T* GetAtom(const SPoint & pt) const
     {
+      return GetAtomInSite(false, pt);
+    }
+
+    const T* GetAtomInSite(bool getFromBase, const SPoint & pt) const
+    {
       const S & site = GetSite(pt);
-      return &site.GetAtom();
+      if (getFromBase)
+        return &site.GetBase().GetBaseAtom();
+      else
+        return &site.GetAtom();
     }
 
     /**
@@ -1045,14 +1107,14 @@ namespace MFM
       return GetAtom(x + EVENT_WINDOW_RADIUS, y + EVENT_WINDOW_RADIUS);
     }
 
-    void SaveSite(const SPoint &siteInTile, ByteSink& bs) const
+    void SaveSite(const SPoint &siteInTile, ByteSink& bs, AtomTypeFormatter<AC> & atf) const
     {
-      GetSite(siteInTile).SaveConfig(bs);
+      GetSite(siteInTile).SaveConfig(bs,atf);
     }
 
-    bool LoadSite(const SPoint &siteInTile, LineCountingByteSource& bs)
+    bool LoadSite(const SPoint &siteInTile, LineCountingByteSource& bs, AtomTypeFormatter<AC> & atf)
     {
-      return GetSite(siteInTile).LoadConfig(bs);
+      return GetSite(siteInTile).LoadConfig(bs,atf);
     }
 
 
@@ -1163,7 +1225,12 @@ namespace MFM
      * @param pt The local location in which to store atom.
      * @sa PlaceInternalAtom
      */
-    void PlaceAtom(const T& atom, const SPoint& pt);
+    void PlaceAtom(const T& atom, const SPoint& pt)
+    {
+      PlaceAtomInSite(false, atom, pt);
+    }
+
+    void PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt);
 
     /**
      * Store and/or consistency check an atom against the current
