@@ -166,7 +166,7 @@ namespace MFM {
 
     struct ElementEntry {
       UUID m_uuid;                   //< Set in all cases
-      Element<EC>* m_element;  //< Set if element is loaded
+      Element<EC>* m_element;        //< Set if element is loaded
       s32 m_pathIndex;               //< Set if the element was found in this pathentry
 
       ElementEntry() : m_element(0), m_pathIndex(-1) { }
