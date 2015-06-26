@@ -49,16 +49,13 @@ namespace MFM {
     // Extract short names for parameter types
     typedef typename ATOM_CONFIG::ATOM_TYPE T;
 
-    T m_state;
     T m_base;
     SiteSensors m_sensory;
-    u64 m_lastEventEventNumber;
     u32 m_paint;
 
   public:
     Base()
-      : m_lastEventEventNumber(0)
-      , m_paint(0xffffffff)
+      : m_paint(0xff000000)
     { }
 
     u32 GetPaint() const
@@ -71,30 +68,24 @@ namespace MFM {
       m_paint = paint;
     }
 
-    void SaveConfig(ByteSink& bs) const
+    void SaveConfig(ByteSink& bs, AtomTypeFormatter<AC> & atf) const
     {
-      bs.Printf(",#%08x",m_paint);
-      {
-        T tmp = m_state;
-        AtomSerializer<AC> as(tmp);
-        bs.Printf(",%@", &as);
-      }
+      bs.Printf(",");
+      atf.PrintAtomType(m_base, bs);
       {
         T tmp = m_base;
         AtomSerializer<AC> as(tmp);
         bs.Printf(",%@", &as);
       }
+      bs.Printf(",#%08x",m_paint);
     }
 
-    bool LoadConfig(LineCountingByteSource & bs)
+    bool LoadConfig(LineCountingByteSource & bs, AtomTypeFormatter<AC> & atf)
     {
-      u32 tmp_m_paint;
-      if (3 != bs.Scanf(",#%08x", &tmp_m_paint))
-        return false;
+      if (1 != bs.Scanf(",")) return false;
 
-      T tmp_m_state;
-      AtomSerializer<AC> as1(tmp_m_state);
-      if (2 != bs.Scanf(",%@", &as1))
+      T defaultAtom;
+      if (!atf.ParseAtomType(bs, defaultAtom)) // All we care about is the type..
         return false;
 
       T tmp_m_base;
@@ -102,40 +93,20 @@ namespace MFM {
       if (2 != bs.Scanf(",%@", &as2))
         return false;
 
-      m_state = tmp_m_state;
-      m_base = tmp_m_base;
+      for (u32 i = T::ATOM_FIRST_STATE_BIT; i < T::BPA; ++i) // merge and pray.  jus'tryin't'elp
+      {
+        defaultAtom.GetBits().StoreBit(i, tmp_m_base.GetBits().ReadBit(i));
+      }
+
+      u32 tmp_m_paint;
+      if (3 != bs.Scanf(",#%08x", &tmp_m_paint))
+        return false;
+
+      m_base = defaultAtom;
       m_paint = tmp_m_paint;
 
       return true;
     }
-
-    void SetLastEventEventNumber(u64 eventNumber)
-    {
-      m_lastEventEventNumber = eventNumber;
-    }
-
-    const u64 GetLastEventEventNumber() const
-    {
-      return m_lastEventEventNumber;
-    }
-
-    /**
-    u32 GetRGBIn() const { return m_rgbIn; }
-    void SetRGBIn(u32 newRGB) { m_rgbIn = newRGB; }
-
-    u32 GetRGBOut() const { return m_rgbOut; }
-    void SetRGBOut(u32 newRGB) { m_rgbOut = newRGB; }
-
-    u32 GetSenseIn() const { return m_senseIn; }
-    void SetSenseIn(u32 newSense) { m_senseIn = newSense; }
-
-    u32 GetMotorOut() const { return m_motorOut; }
-    void SetMotorOut(u32 newMotor) { m_motorOut = newMotor; }
-    */
-
-    void PutStateAtom(const T & newState) { m_state = newState; }
-    T & GetStateAtom() { return m_state; }
-    const T & GetStateAtom() const { return m_state; }
 
     void PutBaseAtom(const T & newBase) { m_base = newBase; }
     T & GetBaseAtom() { return m_base; }
