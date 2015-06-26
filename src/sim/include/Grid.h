@@ -584,11 +584,13 @@ namespace MFM {
 
     void PlaceAtom(const T& atom, const SPoint& location);
 
+    void PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& location);
+
     void XRayAtom(const SPoint& location);
 
     void MaybeXRayAtom(const SPoint& location);
 
-    void SaveSite(const SPoint& loc, ByteSink& bs) const
+    void SaveSite(const SPoint& loc, ByteSink& bs, AtomTypeFormatter<AC> & atf) const
     {
       SPoint tileInGrid, siteInTile;
       if (!MapGridToTile(loc, tileInGrid, siteInTile))
@@ -597,10 +599,10 @@ namespace MFM {
                   loc.GetX(), loc.GetY());
         FAIL(ILLEGAL_ARGUMENT);
       }
-      GetTile(tileInGrid).SaveSite(siteInTile,bs);
+      GetTile(tileInGrid).SaveSite(siteInTile,bs,atf);
     }
 
-    bool LoadSite(const SPoint& loc, LineCountingByteSource& bs)
+    bool LoadSite(const SPoint& loc, LineCountingByteSource& bs, AtomTypeFormatter<AC> & atf)
     {
       SPoint tileInGrid, siteInTile;
       if (!MapGridToTile(loc, tileInGrid, siteInTile))
@@ -609,10 +611,15 @@ namespace MFM {
                   loc.GetX(), loc.GetY());
         FAIL(ILLEGAL_ARGUMENT);
       }
-      return GetTile(tileInGrid).LoadSite(siteInTile,bs);
+      return GetTile(tileInGrid).LoadSite(siteInTile,bs,atf);
     }
 
     const T* GetAtom(SPoint& loc)
+    {
+      return GetAtomInSite(false, loc);
+    }
+
+    const T* GetAtomInSite(bool getFromBase, SPoint& loc)
     {
       SPoint tileInGrid, siteInTile;
       if (!MapGridToTile(loc, tileInGrid, siteInTile))
@@ -621,7 +628,7 @@ namespace MFM {
                   loc.GetX(), loc.GetY());
         FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
       }
-      return GetTile(tileInGrid).GetAtom(siteInTile);
+      return GetTile(tileInGrid).GetAtomInSite(getFromBase, siteInTile);
     }
 
     T* GetWritableAtom(SPoint& loc)

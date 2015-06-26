@@ -373,6 +373,12 @@ namespace MFM {
   template <class GC>
   void Grid<GC>:: PlaceAtom(const T& atom, const SPoint& siteInGrid)
   {
+    this->PlaceAtomInSite(false, atom, siteInGrid);
+  }
+
+  template <class GC>
+  void Grid<GC>:: PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& siteInGrid)
+  {
     SPoint tileInGrid, siteInTile;
     if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
     {
@@ -381,7 +387,7 @@ namespace MFM {
     }
 
     Tile<EC> & owner = GetTile(tileInGrid);
-    owner.PlaceAtom(atom, siteInTile);
+    owner.PlaceAtomInSite(placeInBase, atom, siteInTile);
 
     Dir startDir = owner.SharedAt(siteInTile);
 
@@ -412,7 +418,7 @@ namespace MFM {
 
       SPoint otherIndex = siteInTile - tileOffset * OWNED_SIDE;
 
-      other.PlaceAtom(atom,otherIndex);
+      other.PlaceAtomInSite(placeInBase, atom, otherIndex);
     }
   }
 
