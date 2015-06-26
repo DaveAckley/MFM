@@ -61,6 +61,10 @@ namespace MFM
     IMAGE_ASSET_CLONE_ICON_BIG,
     IMAGE_ASSET_AIRBRUSH_ICON_BIG,
     IMAGE_ASSET_CLOSE_WINDOW_ICON,
+    IMAGE_ASSET_BAD_ATOM_TILE,
+    IMAGE_ASSET_ROUND_SHAPE_ICON,
+    IMAGE_ASSET_DIAMOND_SHAPE_ICON,
+    IMAGE_ASSET_SQUARE_SHAPE_ICON,
 
     // MUST REMAIN LAST
     IMAGE_ASSET_NONE,
@@ -193,6 +197,11 @@ namespace MFM
         surfaces[IMAGE_ASSET_CLONE_ICON_BIG] = LoadImage("images/clone_icon_big.png");
         surfaces[IMAGE_ASSET_AIRBRUSH_ICON_BIG] = LoadImage("images/airbrush_icon_big.png");
         surfaces[IMAGE_ASSET_CLOSE_WINDOW_ICON] = LoadImage("images/close_window_icon.png");
+        surfaces[IMAGE_ASSET_BAD_ATOM_TILE] = LoadImage("images/bad_atom_tile.png");
+
+        surfaces[IMAGE_ASSET_ROUND_SHAPE_ICON] = LoadImage("images/round_shape_icon_222.png");
+        surfaces[IMAGE_ASSET_DIAMOND_SHAPE_ICON] = LoadImage("images/diamond_shape_icon_222.png");
+        surfaces[IMAGE_ASSET_SQUARE_SHAPE_ICON] = LoadImage("images/square_shape_icon_222.png");
 
         const char * FIX_FONT = "fonts/Inconsolata.ttf";
         const char * PRO_FONT = "fonts/Mate-Regular.ttf";
