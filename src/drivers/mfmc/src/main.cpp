@@ -351,9 +351,9 @@ namespace MFM
     if (!CheckForConfigCode(gcc,argc,argv))
     {
       // Default anything still unset
-      gcc.SetTileType(GridConfigCode::TileC);
-      gcc.SetGridWidth(5);
-      gcc.SetGridHeight(3);
+      gcc.SetTileType(GridConfigCode::TileD);
+      gcc.SetGridWidth(2);
+      gcc.SetGridHeight(2);
     }
 
     return SimRunConfig(gcc, argc, argv);
