@@ -183,7 +183,9 @@ namespace MFM {
         if (!zline) {
           printf("WTF %d\n", line);
         }
-        drawing.BlitText(zline, UPoint(ELEVATOR_WIDTH, y), UPoint(GetWidth(), m_fontHeight));
+        drawing.BlitText(zline,
+                         SPoint(ELEVATOR_WIDTH, y),
+                         UPoint(GetWidth(), m_fontHeight));
         y -= m_fontHeight;
         if (y < 0) break;
       }

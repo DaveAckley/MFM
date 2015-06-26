@@ -53,7 +53,7 @@ namespace MFM {
         runLabel = MFM_VERSION_STRING_SHORT;
 
       SPoint size = drawing.GetTextSize(runLabel);
-      UPoint loc(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
+      SPoint loc(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
 
       drawing.BlitText(runLabel,
                        loc,
@@ -71,7 +71,7 @@ namespace MFM {
                Utils::GetTimeFromDateTime(now)
                );
       size = drawing.GetTextSize(strBuffer);
-      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
+      loc = SPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
       drawing.BlitText(strBuffer,
                        loc,
                        UPoint(dims.GetX(), ROW_HEIGHT));
@@ -99,7 +99,7 @@ namespace MFM {
 
       const char * str = ob.GetZString();
       size = drawing.GetTextSize(str);
-      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
+      loc = SPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
       drawing.BlitText(str,
                        loc,
                        UPoint(dims.GetX(), ROW_HEIGHT));
@@ -112,7 +112,7 @@ namespace MFM {
 
       sprintf(strBuffer, "%0.3f %%ov", overhead);
       size = drawing.GetTextSize(strBuffer);
-      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
+      loc = SPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
       drawing.BlitText(strBuffer,
                        loc,
                        UPoint(dims.GetX(), ROW_HEIGHT));
@@ -125,7 +125,7 @@ namespace MFM {
 
       sprintf(strBuffer, "%d/frame", AEPSperFrame);
       size = drawing.GetTextSize(strBuffer);
-      loc = UPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
+      loc = SPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
       drawing.BlitText(strBuffer,
                        loc,
                        UPoint(dims.GetX(), ROW_HEIGHT));
@@ -150,14 +150,16 @@ namespace MFM {
 
     drawing.SetFont(FONT_ASSET_ELEMENT);
     drawing.SetForeground(Drawing::WHITE);
-    drawing.BlitText(strBuffer, Point<u32>(m_drawPoint.GetX(), baseY),
-                     Point<u32>(dims.GetX(), ROW_HEIGHT));
+    drawing.BlitText(strBuffer,
+                     SPoint(m_drawPoint.GetX(), baseY),
+                     UPoint(dims.GetX(), ROW_HEIGHT));
 
     baseY += ROW_HEIGHT;
     baseY += ROW_HEIGHT;
 
     sprintf(strBuffer, "%8.3f %%full", grid.GetFullSitePercentage() * 100);
-    drawing.BlitText(strBuffer, UPoint(m_drawPoint.GetX(), baseY),
+    drawing.BlitText(strBuffer,
+                     SPoint(m_drawPoint.GetX(), baseY),
                      UPoint(dims.GetX(), ROW_HEIGHT));
 
     baseY += ROW_HEIGHT; // skip a line
@@ -181,8 +183,9 @@ namespace MFM {
 
         drawing.SetFont(FONT_ASSET_ELEMENT);
         drawing.SetForeground(0xffffffff);
-        drawing.BlitText(output.GetZString(), Point<u32>(m_drawPoint.GetX(), baseY),
-                         Point<u32>(dims.GetX(), ROW_HEIGHT));
+        drawing.BlitText(output.GetZString(),
+                         SPoint(m_drawPoint.GetX(), baseY),
+                         UPoint(dims.GetX(), ROW_HEIGHT));
         baseY += ROW_HEIGHT;
       }
     }

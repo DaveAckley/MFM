@@ -205,13 +205,13 @@ namespace MFM
       CharBufferByteSink<16> numBuffer;
       numBuffer.Printf("%d", this->m_parameter->GetMin());
       d.BlitText(numBuffer.GetZString(),
-                 UPoint(3, 16),
+                 SPoint(3, 16),
                  UPoint(48, 16));
 
       numBuffer.Reset();
       numBuffer.Printf("%d", this->m_parameter->GetMax());
       d.BlitText(numBuffer.GetZString(),
-                 UPoint(GetSliderWidth() - 32, GetSliderHalfHeight()),
+                 SPoint(GetSliderWidth() - 32, GetSliderHalfHeight()),
                  UPoint(48, GetSliderHalfHeight()));
 
       numBuffer.Reset();
@@ -220,16 +220,16 @@ namespace MFM
       d.SetBackground(Drawing::GREY70);
       d.SetForeground(Drawing::WHITE);
       d.BlitBackedText(numBuffer.GetZString(),
-                       UPoint(GetSliderWidth() / 2 - 16, GetSliderHalfHeight()),
+                       SPoint(GetSliderWidth() / 2 - 16, GetSliderHalfHeight()),
                        UPoint(48, GetSliderHalfHeight()));
 
       Rect sliderRect = GetSliderRect();
       d.BlitImageAsset(IMAGE_ASSET_SLIDER_HANDLE,
-                       MakeUnsigned(sliderRect.GetPosition()),
+                       sliderRect.GetPosition(),
                        sliderRect.GetSize());
 
       d.BlitBackedText(this->m_parameter->GetName(),
-                       UPoint(GetSliderWidth(), 7),
+                       SPoint(GetSliderWidth(), 7),
                        UPoint(GetSliderWidth(), GetSliderHalfHeight()));
     }
 

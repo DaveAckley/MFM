@@ -75,7 +75,7 @@ namespace MFM
       d.SetForeground(Drawing::WHITE);
       d.SetFont(bigFont);
 
-      d.BlitText("Help", UPoint(5, 5), MakeUnsigned(Panel::GetTextSize(bigFont, "Help")));
+      d.BlitText("Help", SPoint(5, 5), MakeUnsigned(Panel::GetTextSize(bigFont, "Help")));
 
       d.SetFont(smFont);
       UPoint maxCorner(0,0);
@@ -85,10 +85,10 @@ namespace MFM
       for(u32 i = 0; m_helpMessages[i]; i++)
       {
         UPoint tsize = MakeUnsigned(Panel::GetTextSize(smFont, m_helpMessages[i]));
-        UPoint pos = UPoint(10, i * LINE_HEIGHT + TEXT_Y_START);
+        SPoint pos(10, i * LINE_HEIGHT + TEXT_Y_START);
         d.BlitText(m_helpMessages[i], pos, tsize);
 
-        maxCorner = max(maxCorner, pos + tsize);
+        maxCorner = max(maxCorner, MakeUnsigned(pos) + tsize);
       }
       maxCorner += UPoint(10,10);
 

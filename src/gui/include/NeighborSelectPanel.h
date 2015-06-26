@@ -162,7 +162,7 @@ namespace MFM
 
     void PaintText(Drawing& d)
     {
-      UPoint textLoc(R * (GetCellSize() + 1) * 2 + GetCellSize() + BORDER_SIZE,
+      SPoint textLoc(R * (GetCellSize() + 1) * 2 + GetCellSize() + BORDER_SIZE,
                      R * (GetCellSize() - 1) + BORDER_SIZE);
 
       d.SetForeground(Drawing::WHITE);
