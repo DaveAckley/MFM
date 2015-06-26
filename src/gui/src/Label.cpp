@@ -16,6 +16,7 @@ namespace MFM
 
   Label::Label()
     : m_iconAsset(IMAGE_ASSET_NONE)
+    , m_iconPosition(0,0)
   {
     Init();
   }
@@ -50,7 +51,7 @@ namespace MFM
     drawing.Clear();
 
     // Does nothing if IMAGE_ASSET_NONE
-    drawing.BlitImageAsset(m_iconAsset, UPoint(0,0));
+    drawing.BlitImageAsset(m_iconAsset, m_iconPosition);
 
     if(m_text.GetLength() > 0)
     {
@@ -59,7 +60,7 @@ namespace MFM
       SPoint textSize = Panel::GetTextSize(drawing.GetFont(), zstr);
       SPoint renderAt = max((dims-textSize)/2, SPoint(0,0));
 
-      drawing.BlitText(zstr, MakeUnsigned(renderAt), GetDimensions());
+      drawing.BlitText(zstr, renderAt, GetDimensions());
     }
   }
 
