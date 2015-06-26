@@ -223,9 +223,8 @@ namespace MFM
       return 0xff808080;
     }
 
-    virtual u32 GetAtomColor(const Site<AC>& site, u32 selector) const
+    virtual u32 GetAtomColor(const T& atom, u32 selector) const
     {
-      const T& atom  = site.GetAtom();
       if(IsReadyToBuild(atom))
       {
         return 0xff707070;

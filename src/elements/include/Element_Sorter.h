@@ -141,9 +141,8 @@ namespace MFM
       }
     }
 
-    virtual u32 GetAtomColor(const Site<AC>& site, u32 selector) const
+    virtual u32 GetAtomColor(const T& atom, u32 selector) const
     {
-      const T& atom  = site.GetAtom();
       switch (selector)
       {
       case 1:

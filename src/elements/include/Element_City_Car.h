@@ -141,9 +141,8 @@ namespace MFM
       return 0xffffff00;
     }
 
-    virtual u32 GetAtomColor(const Site<AC>& site, u32 selector) const
+    virtual u32 GetAtomColor(const T& atom, u32 selector) const
     {
-      const T& atom  = site.GetAtom();
       switch(GetDestType(atom))
       {
       case 0x0: return 0xffff0000;
