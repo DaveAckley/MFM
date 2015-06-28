@@ -325,7 +325,7 @@ namespace MFM
      *
      * @param desc The ByteSink to append the description to.
      */
-    virtual void AppendDescription(const T* atom, ByteSink& desc) const
+    virtual void AppendDescription(const T& atom, ByteSink& desc) const
     {
       /* Default to no description */
     }
