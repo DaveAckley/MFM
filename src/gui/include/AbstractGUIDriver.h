@@ -115,6 +115,7 @@ namespace MFM
     CacheRenderButton<GC> m_cacheRenderButton;
     GridStepCheckbox<GC> m_gridStepButton;
     FgViewButton<GC>  m_fgViewButton;
+    MdViewButton<GC>  m_mdViewButton;
     BgViewButton<GC> m_bgViewButton;
     SaveButton<GC> m_saveButton;
     ScreenshotButton<GC> m_screenshotButton;
@@ -131,16 +132,17 @@ namespace MFM
     LoadGridSectionButton<GC> m_loadGridSectionButton;
     LoadGUISectionButton<GC> m_loadGUISectionButton;
 
-    HelpPanel m_helpPanel;
-
     SPoint m_grendMove;
     Keyboard m_keyboardMap;
+
+    HelpPanel m_helpPanel;
 
     TileRenderer<EC> m_tileRenderer;
 
     GridPanel<GC> m_gridPanel;
     ToolboxPanel<GC> m_toolboxPanel;
 
+    GridToolAtomView<GC> m_gridToolAtomView;
     GridToolPencil<GC> m_gridToolPencil;
     GridToolEraser<GC> m_gridToolEraser;
     GridToolBrush<GC> m_gridToolBrush;
@@ -150,6 +152,7 @@ namespace MFM
     GridToolClone<GC> m_gridToolClone;
 
     StatisticsPanel<GC> m_statisticsPanel;
+    DisplayAER<GC> m_displayAER;
 
   public:
     const Panel & GetRootPanel() const { return m_rootPanel; }
@@ -170,6 +173,9 @@ namespace MFM
 
     void OnceOnlyTools()
     {
+      m_gridPanel.GetAtomViewPanel().SetGrid(Super::GetGrid());
+      m_gridToolAtomView.SetAtomViewPanel(m_gridPanel.GetAtomViewPanel());
+      m_toolboxPanel.RegisterGridTool(m_gridToolAtomView);
       m_toolboxPanel.RegisterGridTool(m_gridToolPencil);
       m_toolboxPanel.RegisterGridTool(m_gridToolEraser);
       m_toolboxPanel.RegisterGridTool(m_gridToolBrush);
@@ -201,6 +207,7 @@ namespace MFM
 
       InsertAndRegisterButton(m_gridStepButton);
       InsertAndRegisterButton(m_fgViewButton);
+      InsertAndRegisterButton(m_mdViewButton);
       InsertAndRegisterButton(m_bgViewButton);
       InsertAndRegisterButton(m_xrayButton);
       InsertAndRegisterButton(m_thinButton);
@@ -298,13 +305,8 @@ namespace MFM
     {
       exit(0);
     }
-    static bool KeyHandlerDisplayAER(u32, u32, void* arg, bool)
-    {
-      AbstractGUIDriver & d = *(AbstractGUIDriver*) arg;
-      d.m_statisticsPanel.SetDisplayAER(1 + d.m_statisticsPanel.GetDisplayAER());
-      return true;
-    }
 
+#if 0
     static bool KeyHandlerLeftButtonClicker(u32, u32, void *arg, bool)
     {
       MFM_API_ASSERT_NONNULL(arg);
@@ -312,20 +314,17 @@ namespace MFM
       ab->OnClick(SDL_BUTTON_LEFT);
       return true;
     }
+#endif
 
     void RegisterButtonAccelerator(AbstractButton & ab)
     {
-      u32 keysym, mods;
-      if (!ab.GetKeyboardAccelerator(keysym, mods)) return;
-      m_keyboardMap.RegisterKeyFunction(keysym, mods, KeyHandlerLeftButtonClicker, &ab);
+      m_keyboardMap.Register(ab);
     }
 
     void RegisterKeyboardFunctions()
     {
-      m_keyboardMap.RegisterKeyFunction(SDLK_a, 0, KeyHandlerDisplayAER, this);
-      m_keyboardMap.RegisterKeyFunction(SDLK_b, KMOD_CTRL, KeyHandlerToggleButtons, this);
-      //        m_gridPanel.ToggleDrawAtomsAsSquares();
-
+      m_keyboardMap.Register(m_displayAER);
+      m_keyboardMap.Register(m_buttonPanel);
     }
 
     void KeyboardUpdate(SDL_KeyboardEvent & key, OurGrid& grid)
@@ -596,6 +595,27 @@ namespace MFM
       m_statisticsPanel.SetVisible(false);
 
       m_rootPanel.Insert(&m_gridPanel, NULL);
+
+      m_helpPanel.SetDimensions(1000, 500);
+      m_helpPanel.SetDesiredSize(1000, 500);
+      m_helpPanel.SetFont(FONT_ASSET_HELPPANEL_SMALL);
+      m_helpPanel.SetAnchor(ANCHOR_EAST);
+      m_helpPanel.SetAnchor(ANCHOR_SOUTH);
+
+      m_gridPanel.Insert(&m_helpPanel, NULL);
+
+      m_toolboxPanel.SetName("Toolbox");
+      m_toolboxPanel.SetVisible(true);
+      m_toolboxPanel.SetBigText(m_bigText);
+      m_toolboxPanel.SetBackground(Drawing::GREY60);
+      m_toolboxPanel.SetAnchor(ANCHOR_WEST);
+      m_toolboxPanel.SetAnchor(ANCHOR_NORTH);
+
+      // Put toolbox below help but above most..
+      m_gridPanel.Insert(&m_toolboxPanel, NULL);
+      m_toolboxPanel.AddButtons();
+      m_toolboxPanel.RebuildControllers();
+
       m_gridPanel.Insert(&m_buttonPanel, NULL);
       m_buttonPanel.SetVisible(true);
 
@@ -607,24 +627,9 @@ namespace MFM
       m_logPanel.SetAnchor(ANCHOR_SOUTH);
       m_logPanel.SetFont(FONT_ASSET_LOGGER);
 
-      m_toolboxPanel.SetName("Toolbox");
-      m_toolboxPanel.SetVisible(true);
-      m_toolboxPanel.SetBigText(m_bigText);
-      m_toolboxPanel.SetBackground(Drawing::GREY60);
-      m_toolboxPanel.SetAnchor(ANCHOR_WEST);
-      m_toolboxPanel.SetAnchor(ANCHOR_NORTH);
-      m_gridPanel.Insert(&m_toolboxPanel, NULL);
-      m_toolboxPanel.AddButtons();
-      m_toolboxPanel.RebuildControllers();
-
-      // Put toolbox above info..
       m_gridPanel.Insert(&m_statisticsPanel, NULL);
 
-      m_helpPanel.SetDimensions(m_screenWidth / 3, m_screenHeight);
-      m_helpPanel.SetAnchor(ANCHOR_WEST);
-      m_gridPanel.Insert(&m_helpPanel, NULL);
-
-      m_rootPanel.Print(STDOUT);
+      //      m_rootPanel.Print(STDOUT);
 
       SDL_WM_SetCaption(MFM_VERSION_STRING_LONG, NULL);
 
@@ -810,8 +815,9 @@ namespace MFM
       this->SetAEPSPerFrame(tmp_GetAEPSPerFrame);
       this->SetMsSpentRunning(tmp_GetMsSpentRunning);
 
-      m_bgViewButton.UpdateLabel();
       m_fgViewButton.UpdateLabel();
+      m_mdViewButton.UpdateLabel();
+      m_bgViewButton.UpdateLabel();
 
       return true;
     }
@@ -839,10 +845,39 @@ namespace MFM
       , m_desiredScreenWidth(-1)
       , m_desiredScreenHeight(-1)
       , m_screenResizable(true)
+      , m_clearButton()
+      , m_clearGridButton()
+      , m_nukeButton()
+      , m_xrayButton()
+      , m_thinButton()
+      , m_gridRunButton()
+      , m_gridRenderButton()
+      , m_cacheRenderButton()
+      , m_gridStepButton()
       , m_fgViewButton()
+      , m_mdViewButton()
       , m_bgViewButton()
+      , m_saveButton()
+      , m_screenshotButton()
+      , m_quitButton()
+      , m_reloadButton()
+      , m_pauseTileButton()
+      , m_bgrButton()
+      , m_fgrButton()
+      , m_logButton()
+      , m_showHelpButton()
+      , m_showToolboxButton()
+      , m_showInfoBoxButton()
+      , m_loadDriverSectionButton()
+      , m_loadGridSectionButton()
+      , m_loadGUISectionButton()
+      , m_grendMove()
+      , m_keyboardMap()
+      , m_helpPanel(m_keyboardMap)
+      , m_tileRenderer()
       , m_gridPanel()
       , m_toolboxPanel()
+      , m_gridToolAtomView(m_gridPanel, m_toolboxPanel)
       , m_gridToolPencil(m_gridPanel, m_toolboxPanel)
       , m_gridToolEraser(m_gridPanel, m_toolboxPanel)
       , m_gridToolBrush(m_gridPanel, m_toolboxPanel)
@@ -850,6 +885,8 @@ namespace MFM
       , m_gridToolXRay(m_gridPanel, m_toolboxPanel)
       , m_gridToolBucket(m_gridPanel, m_toolboxPanel)
       , m_gridToolClone(m_gridPanel, m_toolboxPanel)
+      , m_statisticsPanel()
+      , m_displayAER(m_statisticsPanel)
       , m_buttonPanel()
       , m_externalConfigSectionGUI(AbstractDriver<GC>::GetExternalConfig(),*this)
     {
@@ -1088,8 +1125,25 @@ namespace MFM
 
     }
 
-    struct ButtonPanel : public MovablePanel
+    struct ButtonPanel : public MovablePanel, public KeyboardCommandFunction
     {
+      virtual s32 GetSection() { return HELP_SECTION_WINDOWS; }
+
+      virtual const char * GetDoc() { return "Toggle showing the button window"; }
+
+      virtual bool GetKey(u32& keysym, u32& mods)
+      {
+        keysym = SDLK_b;
+        mods = KMOD_CTRL;
+        return true;
+      }
+
+      virtual bool ExecuteFunction(u32 keysym, u32 mods)
+      {
+        this->SetVisible(!this->IsVisible());
+        return true;
+      }
+
       static const u32 INITIAL_WIDTH = STATS_START_WINDOW_WIDTH;
       static const u32 MAX_BUTTONS = 16;
       static const u32 CHECKBOX_SPACING_HEIGHT = 32;
