@@ -52,22 +52,17 @@ namespace MFM
      * default coloring scheme.
      */
     CloseWindowButton(Panel* parentPanel) :
-      AbstractButton(),
+      AbstractButton(IMAGE_ASSET_CLOSE_WINDOW_ICON),
       m_parentPanel(parentPanel)
     {
       SetName("CloseWindow");
       m_parentPanel->Panel::Insert(this, NULL);
+      this->SetRenderPoint(SPoint(2, 2));
+      this->SetDimensions(SPoint(16, 16));
     }
 
-    void Init()
-    {
-      AbstractButton::SetIconAsset(IMAGE_ASSET_CLOSE_WINDOW_ICON);
-      SDL_Surface * s = AssetManager::Get(IMAGE_ASSET_CLOSE_WINDOW_ICON);
-      // XXX is it known we'll have a surface yet?
-      if (s)
-        this->Panel::SetDimensions(s->w, s->h);
-      Panel::SetRenderPoint(SPoint(2, 2));
-    }
+    // KeyboardCommandFunction interface
+    s32 GetSection() { return HELP_SECTION_WINDOWS; }
 
     /**
      * Deconstructs this AbstractButton.
