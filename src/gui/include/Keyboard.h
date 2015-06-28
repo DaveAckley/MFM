@@ -31,55 +31,94 @@
 #include "SDL.h"
 #include "itype.h"
 #include "Fail.h"
+#include "ByteSink.h"
 
 namespace MFM {
 
-  typedef bool (*KeyHandlerFunction)(u32 keysym, u32 mods, void * arg, bool isPress);
+  enum FunctionSection
+  {
+    HELP_SECTION_WINDOWS,
+    HELP_SECTION_RUNNING,
+    HELP_SECTION_DISPLAY,
+    HELP_SECTION_EDITING,
+    HELP_SECTION_MISC
+  };
+
+  class KeyboardCommandFunction {
+  public:
+
+    KeyboardCommandFunction() { }
+
+    virtual ~KeyboardCommandFunction() { }
+
+    /** Get section number for this function. */
+    virtual s32 GetSection() = 0;
+
+    /** Get one-line description for help panel.  Called during initialization. */
+    virtual const char * GetDoc() = 0;
+
+    /** Get keysym and modifiers for execution and help.  Called
+        during initialization.  Return false to not install a keyboard
+        accelerator
+    */
+    virtual bool GetKey(u32& keysym, u32& mods) = 0;
+
+    /** Called when the associated keysym and mods are pressed. */
+    virtual bool ExecuteFunction(u32 keysym, u32 mods) = 0;
+  };
 
   class Keyboard
   {
   public:
     static const u32 MAX_BINDINGS = 100;
 
+    static void PrintKeyName(ByteSink & bs, u32 keysym, u32 mods) ;
+
+    static const char * GetSectionName(const FunctionSection fs) ;
+
+    void PrintHelp(ByteSink& bs) const ;
+
     struct KeyEntry {
       void Init() {
+        m_commandPtr = 0;
         m_keysym = 0;
         m_mods = 0;
-        m_functionPtr = 0;
-        m_functionArg = 0;
-        m_onPress = false;
-        m_onRelease = false;
+        m_accelerated = false;
         m_inUse = false;
+        m_section = -1;
+        m_order = 0;
       }
-      KeyHandlerFunction m_functionPtr;
-      void * m_functionArg;
-      bool * m_trackerPtr;
+      void PrintKeyName(ByteSink & bs) const
+      {
+        if (m_accelerated)
+          Keyboard::PrintKeyName(bs, m_keysym, m_mods);
+      }
+
+      KeyboardCommandFunction * m_commandPtr;
       u32 m_keysym;
       u32 m_mods;
       bool m_inUse;
-      bool m_onPress;
-      bool m_onRelease;
+      bool m_accelerated;
+      s8 m_section;
+      u8 m_order;
     };
 
-    void RegisterKey(u32 keysym, u32 mods, KeyHandlerFunction fptr, void * functionArg, bool onPress, bool onRelease) ;
+    void Register(KeyboardCommandFunction & kcf) ;
 
-    void RegisterKeyFunction(u32 keysym, u32 mods, KeyHandlerFunction fptr, void * functionArg)
-    {
-      RegisterKey(keysym, mods, fptr, functionArg, true, false);
-    }
-
-    void RegisterKeyTracker(u32 keysym, u32 mods, KeyHandlerFunction fptr, void * functionArg)
-    {
-      RegisterKey(keysym, mods, fptr, functionArg, true, true);
-    }
-
-    bool UnregisterKey(u32 keysym, u32 mods) ;
+    bool Unregister(KeyboardCommandFunction & kcf) ;
 
     Keyboard() ;
+
+    u32 FindNextInOrder(s32 section) ;
+
 
     KeyEntry & FindFreeEntry() ;
 
     KeyEntry * FindMatchingEntry(u32 keysym, u32 mods) ;
+
+    KeyEntry * FindMatchingEntry(KeyboardCommandFunction & kcf) ;
+
+    const KeyEntry * FindSecOrdEntry(u32 section, u32 order) const ;
 
     ~Keyboard() { }
 
@@ -151,7 +190,7 @@ namespace MFM {
     };
 
     typedef KeyboardAcceleratorIterator<Keyboard, KeyEntry> iterator_type;
-    typedef const KeyboardAcceleratorIterator<const Keyboard,const KeyEntry> const_iterator_type;
+    typedef KeyboardAcceleratorIterator<const Keyboard,const KeyEntry> const_iterator_type;
 
     iterator_type begin() { return iterator_type(*this); }
 
