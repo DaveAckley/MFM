@@ -33,6 +33,7 @@
 #include "AbstractButton.h"
 #include "AbstractCheckbox.h"
 #include "Camera.h"
+#include "StatisticsPanel.h"
 
 namespace MFM
 {
@@ -85,6 +86,16 @@ namespace MFM
   {
   public:
 
+    virtual s32 GetSection() { return HELP_SECTION_EDITING; }
+    virtual const char * GetDoc() { return Panel::GetDoc(); }
+    virtual bool GetKey(u32& keysym, u32& mods) {
+      return this->GetKeyboardAccelerator(keysym, mods);
+    }
+    virtual bool ExecuteFunction(u32 keysym, u32 mods) {
+      OnClick(SDL_BUTTON_LEFT);
+      return true;
+    }
+
     virtual AbstractButton & GetAbstractButton()
     {
       return *this;
@@ -104,6 +115,12 @@ namespace MFM
     AbstractGridCheckbox(const char* title)
       : AbstractCheckbox(title)
     {
+    }
+
+    virtual s32 GetSection() = 0;
+
+    virtual bool GetKey(u32& keysym, u32& mods) {
+      return GetKeyboardAccelerator(keysym, mods);
     }
 
     virtual AbstractButton & GetAbstractButton()
@@ -133,7 +150,7 @@ namespace MFM
       Panel::SetDoc("Clear selected tile if any");
       Panel::SetFont(FONT_ASSET_BUTTON_SMALL);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_EDITING; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_t;
@@ -168,7 +185,7 @@ namespace MFM
       Panel::SetDoc("Clear entire grid");
       Panel::SetFont(FONT_ASSET_BUTTON_MEDIUM);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_EDITING; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_g;
@@ -193,7 +210,7 @@ namespace MFM
       Panel::SetDoc("Clear a random-sized circle at a random location");
       Panel::SetFont(FONT_ASSET_BUTTON_MEDIUM);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_EDITING; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_n;
@@ -217,7 +234,7 @@ namespace MFM
       Panel::SetDoc("Set 1% of sites empty");
       Panel::SetFont(FONT_ASSET_BUTTON_MEDIUM);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_EDITING; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_t;
@@ -241,7 +258,7 @@ namespace MFM
       Panel::SetDoc("In 1% of sites, flip 1% of bits");
       Panel::SetFont(FONT_ASSET_BUTTON_MEDIUM);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_EDITING; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_x;
@@ -266,7 +283,7 @@ namespace MFM
       Panel::SetDoc("Pause/run the grid");
       Panel::SetFont(FONT_ASSET_BUTTON_BIG);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_RUNNING; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_SPACE;
@@ -292,9 +309,10 @@ namespace MFM
       : AbstractGridCheckbox<GC>("Grid")
     {
       AbstractButton::SetName("GridRenderButton");
-      Panel::SetDoc("Do/don't draw grid of lines around the sites");
+      Panel::SetDoc("Toggle drawing grid lines around the sites");
       Panel::SetFont(FONT_ASSET_BUTTON_MEDIUM);
     }
+    virtual s32 GetSection() { return HELP_SECTION_DISPLAY; }
 
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
@@ -321,10 +339,10 @@ namespace MFM
       : AbstractGridCheckbox<GC>("Cache")
     {
       AbstractButton::SetName("CacheRenderButton");
-      Panel::SetDoc("Do/don't include cache sites around the tiles");
+      Panel::SetDoc("Toggle drawing the tile caches");
       Panel::SetFont(FONT_ASSET_BUTTON_MEDIUM);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_DISPLAY; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_c;
@@ -350,10 +368,10 @@ namespace MFM
       : AbstractGridCheckbox<GC>("Grid")
     {
       AbstractButton::SetName("LoadGridSectionButton");
-      Panel::SetDoc("Do/don't include [GRID] section when loading");
+      Panel::SetDoc("Toggle including [GRID] section when loading");
       Panel::SetFont(FONT_ASSET_BUTTON_SMALL);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_RUNNING; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       return false;
@@ -377,7 +395,7 @@ namespace MFM
       : AbstractGridCheckbox<GC>("GUI")
     {
       AbstractButton::SetName("LoadGUISectionButton");
-      Panel::SetDoc("Do/don't include [GUI] section when loading");
+      Panel::SetDoc("Toggle including [GUI] section when loading");
       Panel::SetFont(FONT_ASSET_BUTTON_SMALL);
     }
 
@@ -385,7 +403,7 @@ namespace MFM
     {
       return false;
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_RUNNING; }
     virtual bool IsChecked() const
     {
       return this->GetDriver().IsLoadGUISection();
@@ -404,10 +422,10 @@ namespace MFM
       : AbstractGridCheckbox<GC>("Driver")
     {
       AbstractButton::SetName("LoadDriverSectionButton");
-      Panel::SetDoc("Do/don't include [DRIVER] section when loading");
+      Panel::SetDoc("Toggle including [DRIVER] section when loading");
       Panel::SetFont(FONT_ASSET_BUTTON_SMALL);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_RUNNING; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       return false;
@@ -431,10 +449,10 @@ namespace MFM
       : AbstractGridButton<GC>("Front: Atom #1")
     {
       AbstractButton::SetName("FgViewButton");
-      Panel::SetDoc("Change atom ('front') rendering method");
+      Panel::SetDoc("Change front layer rendering method");
       Panel::SetFont(FONT_ASSET_BUTTON_BIG);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_DISPLAY; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_f;
@@ -450,37 +468,46 @@ namespace MFM
 
     void UpdateLabel()
     {
-      OString32 fgText;
-      fgText.Printf("Front: %s",
-                    this->GetTileRenderer().GetDrawForegroundTypeName());
-      AbstractButton::SetText(fgText.GetZString());
+      OString32 text;
+      text.Printf("Front: %s",
+                  this->GetTileRenderer().GetDrawForegroundTypeName());
+      AbstractButton::SetText(text.GetZString());
     }
 
   };
 
   template<class GC>
-  struct GridStepCheckbox : public AbstractGridButton<GC>
+  struct MdViewButton : public AbstractGridButton<GC>
   {
-    GridStepCheckbox()
-      : AbstractGridButton<GC>("Step")
+    MdViewButton()
+      : AbstractGridButton<GC>("Middle: Atom #1")
     {
-      AbstractButton::SetName("GridStepButton");
-      Panel::SetDoc("'Single' step (~1 AEPS) the grid");
+      AbstractButton::SetName("MdViewButton");
+      Panel::SetDoc("Change middle layer rendering method");
       Panel::SetFont(FONT_ASSET_BUTTON_BIG);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_DISPLAY; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
-      keysym = SDLK_s;
+      keysym = SDLK_m;
       mod = 0;
       return true;
     }
 
     virtual void OnClick(u8 button)
     {
-      this->GetDriver().SetSingleStep(true);
-      this->GetDriver().SetKeyboardPaused(false);
+      this->GetTileRenderer().NextDrawMidgroundType();
+      UpdateLabel();
     }
+
+    void UpdateLabel()
+    {
+      OString32 text;
+      text.Printf("Middle: %s",
+                  this->GetTileRenderer().GetDrawMidgroundTypeName());
+      AbstractButton::SetText(text.GetZString());
+    }
+
   };
 
   template<class GC>
@@ -490,10 +517,10 @@ namespace MFM
       : AbstractGridButton<GC>("Back: Base #1")
     {
       AbstractButton::SetName("BgViewButton");
-      Panel::SetDoc("Change site ('back') rendering method");
+      Panel::SetDoc("Change back rendering method");
       Panel::SetFont(FONT_ASSET_BUTTON_BIG);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_DISPLAY; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_b;
@@ -509,10 +536,36 @@ namespace MFM
 
     void UpdateLabel()
     {
-      OString32 label;
-      label.Printf("Back: %s",
-                    this->GetTileRenderer().GetDrawBackgroundTypeName());
-      AbstractButton::SetText(label.GetZString());
+      OString32 text;
+      text.Printf("Back: %s",
+                  this->GetTileRenderer().GetDrawBackgroundTypeName());
+      AbstractButton::SetText(text.GetZString());
+    }
+  };
+
+
+  template<class GC>
+  struct GridStepCheckbox : public AbstractGridButton<GC>
+  {
+    GridStepCheckbox()
+      : AbstractGridButton<GC>("Step")
+    {
+      AbstractButton::SetName("GridStepButton");
+      Panel::SetDoc("'Single' step (~1 AEPS) the grid");
+      Panel::SetFont(FONT_ASSET_BUTTON_BIG);
+    }
+    virtual s32 GetSection() { return HELP_SECTION_RUNNING; }
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_s;
+      mod = 0;
+      return true;
+    }
+
+    virtual void OnClick(u8 button)
+    {
+      this->GetDriver().SetSingleStep(true);
+      this->GetDriver().SetKeyboardPaused(false);
     }
   };
 
@@ -526,6 +579,7 @@ namespace MFM
       Panel::SetDoc("Save simulation state in next filename");
       Panel::SetFont(FONT_ASSET_BUTTON_BIG);
     }
+    virtual s32 GetSection() { return HELP_SECTION_RUNNING; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_s;
@@ -606,7 +660,7 @@ namespace MFM
       Panel::SetDoc("Exit simulation");
       Panel::SetFont(FONT_ASSET_BUTTON_BIG);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_RUNNING; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_q;
@@ -630,7 +684,7 @@ namespace MFM
       Panel::SetDoc("Load (next) -cp saved file from command line");
       Panel::SetFont(FONT_ASSET_BUTTON_BIG);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_RUNNING; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_l;
@@ -687,6 +741,7 @@ namespace MFM
       Panel::SetDoc("In 1% of site updates, do/don't flip 1% of bits");
       Panel::SetFont(FONT_ASSET_BUTTON_SMALL);
     }
+    virtual s32 GetSection() { return HELP_SECTION_EDITING; }
 
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
@@ -718,6 +773,7 @@ namespace MFM
       Panel::SetFont(FONT_ASSET_BUTTON_SMALL);
       AbstractButton::SetEnabled(false);
     }
+    virtual s32 GetSection() { return HELP_SECTION_EDITING; }
 
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
@@ -745,9 +801,10 @@ namespace MFM
       : AbstractGridCheckbox<GC>("Show log")
     {
       AbstractButton::SetName("LogButton");
-      Panel::SetDoc("Do/don't show the log window");
+      Panel::SetDoc("Toggle showing the log window");
       Panel::SetFont(FONT_ASSET_BUTTON_MEDIUM);
     }
+    virtual s32 GetSection() { return HELP_SECTION_WINDOWS; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_l;
@@ -774,9 +831,10 @@ namespace MFM
       : AbstractGridCheckbox<GC>("Show help")
     {
       AbstractButton::SetName("ShowHelpButton");
-      Panel::SetDoc("Do/don't show the help window");
+      Panel::SetDoc("Toggle showing the help window");
       Panel::SetFont(FONT_ASSET_BUTTON_BIG);
     }
+    virtual s32 GetSection() { return HELP_SECTION_WINDOWS; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_h;
@@ -801,10 +859,10 @@ namespace MFM
       : AbstractGridCheckbox<GC>("Show tools")
     {
       AbstractButton::SetName("ToolboxButton");
-      Panel::SetDoc("Do/don't show the toolbox window");
+      Panel::SetDoc("Toggle showing the toolbox window");
       Panel::SetFont(FONT_ASSET_BUTTON_BIG);
     }
-
+    virtual s32 GetSection() { return HELP_SECTION_WINDOWS; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_t;
@@ -830,9 +888,10 @@ namespace MFM
       : AbstractGridCheckbox<GC>("Show info")
     {
       AbstractButton::SetName("InfoButton");
-      Panel::SetDoc("Do/don't show the statistics info window");
+      Panel::SetDoc("Toggle showing the info window");
       Panel::SetFont(FONT_ASSET_BUTTON_BIG);
     }
+    virtual s32 GetSection() { return HELP_SECTION_WINDOWS; }
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_i;
@@ -852,6 +911,33 @@ namespace MFM
 
   };
 
+  template<class GC>
+  struct DisplayAER : public KeyboardCommandFunction
+  {
+    typedef KeyboardCommandFunction Super;
+    StatisticsPanel<GC> & m_sp;
+    DisplayAER(StatisticsPanel<GC> & sp)
+      : Super()
+      , m_sp(sp)
+    { }
+
+    virtual s32 GetSection() { return HELP_SECTION_DISPLAY; }
+
+    virtual const char * GetDoc() { return "Add information to info display, or reset."; }
+
+    virtual bool GetKey(u32& keysym, u32& mods)
+    {
+      keysym = SDLK_a;
+      mods = 0;
+      return true;
+    }
+
+    virtual bool ExecuteFunction(u32 keysym, u32 mods)
+    {
+      m_sp.SetDisplayAER(1 + m_sp.GetDisplayAER());
+      return true;
+    }
+  };
 
 } /* namespace MFM */
 
