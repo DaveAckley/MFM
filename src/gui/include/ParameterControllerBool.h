@@ -35,6 +35,7 @@
 #include "Parameter.h"
 #include "ParameterController.h"
 #include "AbstractCheckbox.h"
+#include "GUIConstants.h"
 
 namespace MFM
 {
@@ -48,10 +49,10 @@ namespace MFM
 
     enum
     {
-      PARAMETERCONTROLLERBOOL_WIDTH = 300,
+      PARAMETERCONTROLLERBOOL_WIDTH = TOOLBOX_WIDTH,
       PARAMETERCONTROLLERBOOL_HEIGHT = 40,
 
-      PARAMETERCONTROLLERBOOL_WIDTH_BIG = 400,
+      PARAMETERCONTROLLERBOOL_WIDTH_BIG = TOOLBOX_WIDTH,
       PARAMETERCONTROLLERBOOL_HEIGHT_BIG = 50
     };
 
