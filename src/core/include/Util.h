@@ -160,12 +160,6 @@ namespace MFM {
     return v+1;
   }
 
-  // Modified from https://graphics.stanford.edu/~seander/bithacks.html#IntegerLogDeBruijn
-  static const u32 MultiplyDeBruijnBitPosition[32] =
-  {
-    0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
-    8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
-  };
   /**
      Get the log_2 of v.  Since it's a log, v should really be greater
      than 0, but this returns 0 for v==0.  The return value is the
@@ -173,20 +167,30 @@ namespace MFM {
      the right.  So _getLogBase2(1)==0, _getLogBase2(2)==1,
      _getLogBase2(8)==3.
    */
-  inline u32 _getLogBase2(u32 v) {
 #if 1
+  inline u32 _getLogBase2(u32 v) {
     if (v==0) return 0;
     return 31 - __builtin_clz(v);
+  }
+
 #else
+
+  // Modified from https://graphics.stanford.edu/~seander/bithacks.html#IntegerLogDeBruijn
+  static const u32 MultiplyDeBruijnBitPosition[32] =
+  {
+    0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
+    8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
+  };
+
+  inline u32 _getLogBase2(u32 v) {
     v |= v >> 1; // first round down to one less than a power of 2
     v |= v >> 2;
     v |= v >> 4;
     v |= v >> 8;
     v |= v >> 16;
     return MultiplyDeBruijnBitPosition[(u32)(v * 0x07C4ACDDU) >> 27];
-#endif
   }
-
+#endif
 
   /**
    * Right-aligned mask generation.  Returns 0xFFFFFFFF if \a length
