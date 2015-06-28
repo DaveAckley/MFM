@@ -57,15 +57,6 @@ namespace MFM
     typedef ParameterControllerBool<EC> OurParameterControllerBool;
 
     enum {
-      MAX_GRIDTOOL_BUTTONS = 9,
-      TOOLBOX_MAX_CONTROLLERS = 20,
-      TOOLBOX_MAX_SLIDERS = 8,
-      TOOLBOX_MAX_CHECKBOXES = 8,
-      TOOLBOX_MAX_NEIGHBORHOODS = 8,
-      ELEMENT_RENDER_SIZE = 32,
-      ELEMENT_BIG_RENDER_SIZE = 48,
-      ELEMENT_BOX_SIZE = 77,
-
       R = EC::EVENT_WINDOW_RADIUS,
       SITES = EVENT_WINDOW_SITES(R)
     };
@@ -88,6 +79,7 @@ namespace MFM
     {
     private:
       ToolboxPanel<GC> & m_toolboxPanel;
+      u32 m_oldBackDraw;
 
     public:
       SiteEditorCheckbox(ToolboxPanel<GC> & tbp)
@@ -100,7 +92,6 @@ namespace MFM
 
         this->SetEnabledBg(Drawing::GREY60);
         this->SetEnabledFg(Drawing::BLACK);
-
       }
 
       virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
@@ -138,6 +129,12 @@ namespace MFM
       ToolboxPanel<GC>* m_toolbox;
 
      public:
+
+      virtual s32 GetSection() { return HELP_SECTION_EDITING; }
+      virtual const char * GetDoc() { return Panel::GetDoc(); }
+      virtual bool GetKey(u32& keysym, u32& mods) { return false; }
+      virtual bool ExecuteFunction(u32 keysym, u32 mods) { return false; }
+
       /**
        * Construct a new ToolButton
        */
@@ -230,6 +227,11 @@ namespace MFM
       const ToolShape m_shape;
 
      public:
+      virtual s32 GetSection() { return HELP_SECTION_EDITING; }
+      virtual const char * GetDoc() { return this->Panel::GetDoc(); }
+      virtual bool GetKey(u32& keysym, u32& mods) { return false; }
+      virtual bool ExecuteFunction(u32 keysym, u32 mods) { return false; }
+
       /**
        * Construct a new ShapeButton
        */
@@ -297,6 +299,11 @@ namespace MFM
 
     struct ElementButton : public AbstractButton
     {
+      virtual s32 GetSection() { return HELP_SECTION_EDITING; }
+      virtual const char * GetDoc() { return "Click left/right: select element as primary/secondary"; }
+      virtual bool GetKey(u32& keysym, u32& mods) { return false; }
+      virtual bool ExecuteFunction(u32 keysym, u32 mods) { return false; }
+
       ElementButton() :
         AbstractButton()
       {
@@ -309,6 +316,10 @@ namespace MFM
         this->Panel::SetBorder(Drawing::GREY60);
 
         AbstractButton::SetEnabled(false);
+
+        this->MovablePanel::SetMovable(false);
+
+        this->MovablePanel::SetResizable(false);
       }
 
       void SetElement(Element<EC>* element)
@@ -468,15 +479,6 @@ namespace MFM
     NeighborSelectPanel<EC,R> m_neighborhoods[TOOLBOX_MAX_NEIGHBORHOODS];
     u32 m_neighborhoodCount;
 
-    enum
-    {
-      ELEMENTS_PER_ROW = 11,
-      ELEMENT_ROWS = (ELEMENT_BOX_SIZE + ELEMENTS_PER_ROW - 1) / ELEMENTS_PER_ROW,
-      NON_ELEMENT_ROWS = 3,
-      TOTAL_ROWS = ELEMENT_ROWS + NON_ELEMENT_ROWS,
-      BORDER_PADDING = 2
-    };
-
     void AddController(ParameterController<EC> * spc)
     {
       MFM_API_ASSERT_NONNULL(spc);
@@ -549,6 +551,11 @@ namespace MFM
     }
 
    public:
+
+    virtual s32 GetSection() { return HELP_SECTION_EDITING; }
+    virtual const char * GetDoc() { return "A collection of grid editing tools"; }
+    virtual bool GetKey(u32& keysym, u32& mods) { return false; }
+    virtual bool ExecuteFunction(u32 keysym, u32 mods) { return false; }
 
     bool IsSiteEdit()
     {
@@ -704,10 +711,8 @@ namespace MFM
         rpt.SetY(rpt.GetY() + desired.GetY());
       }
 
-      Panel::SetDimensions(6 + GetElementRenderSize() * ELEMENTS_PER_ROW + BORDER_PADDING,
-                           rpt.GetY() + BORDER_PADDING);
-      Panel::SetDesiredSize(6 + GetElementRenderSize() * ELEMENTS_PER_ROW + BORDER_PADDING,
-                           rpt.GetY() + BORDER_PADDING);
+      Panel::SetDimensions(TOOLBOX_WIDTH, rpt.GetY() + BORDER_PADDING);
+      Panel::SetDesiredSize(TOOLBOX_WIDTH, rpt.GetY() + BORDER_PADDING);
 
       //debug: this->Print(STDOUT);
 
