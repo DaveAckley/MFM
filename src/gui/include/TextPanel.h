@@ -28,7 +28,7 @@
 #define TEXTPANEL_H
 
 #include "itype.h"
-#include "Panel.h"
+#include "MovablePanel.h"
 #include "LineTailByteSink.h"
 
 namespace MFM {
@@ -37,12 +37,29 @@ namespace MFM {
    * lines of text each no longer than a given number of columns.
    */
   template <u32 COLUMNS, u32 LINES>
-  class TextPanel : public Panel
+  class TextPanel : public MovablePanel
   {
-  private: typedef Panel Super;
+  private:
+    typedef MovablePanel Super;
 
   public:
+    typedef LineTailByteSink<LINES,COLUMNS> TextPanelByteSink;
+
     TextPanel()
+      : Super()
+      , m_text()
+      , m_bottomLineShown(0)
+      , m_lastBytesWritten(0)
+      , m_leftButtonDragStart(-1,-1)
+      , m_dragStartElevatorBottom(0)
+      , m_panelHeight(100)
+      , m_fontHeight(10)
+      , m_neededHeight(10)
+      , m_linesInPanel(10)
+      , m_textLines(1)
+      , m_elevatorRange(1)
+      , m_elevatorBottom(0)
+      , m_elevatorHeight(10)
     {
       SetName("TextPanel");
       SetRenderPoint(SPoint(0, 0));
@@ -53,11 +70,64 @@ namespace MFM {
       m_bottomLineShown = 0;
     }
 
-    ByteSink & GetByteSink() {
+    TextPanelByteSink & GetByteSink() {
       return m_text;
     }
 
   protected:
+
+    virtual void SaveDetails(ByteSink& sink) const
+    {
+      Super::SaveDetails(sink);
+      sink.Printf(" PP(blsn=%d)\n",m_bottomLineShown);
+      sink.Printf(" PP(clrt=1)\n");
+      for (u32 i = 0; i < m_text.GetLines(); ++i)
+      {
+        const char * z = m_text.GetZString(i);
+        if (i == m_text.GetLines() - 1 && strlen(z) == 0)
+          break;             // Skip last empty line.. (see below)
+        sink.Printf(" PP(txln=");
+        sink.PrintDoubleQuotedString(z);
+        sink.Printf(")\n");
+      }
+      sink.Printf(" PP(snap=%d)\n",m_lastBytesWritten != m_text.GetBytesWritten());
+    }
+
+    virtual bool LoadDetails(const char * key, LineCountingByteSource& source)
+    {
+      if (Super::LoadDetails(key, source)) return true;
+
+      if (!strcmp("blsn",key)) return 1 == source.Scanf("%d",&m_bottomLineShown);
+      if (!strcmp("clrt",key) && 1 == source.Scanf("1"))
+      {
+        m_text.Reset();
+        return true;
+      }
+      if (!strcmp("txln",key))
+      {
+        OString128 buf;
+        if (!source.ScanDoubleQuotedString(buf)) return false;
+        m_text.Printf("%s\n",buf.GetZString()); // (see above) ..it's implied by this \n
+        return true;
+      }
+      if (!strcmp("snap",key))
+      {
+        u32 moreText;
+        if (1 != source.Scanf("%d",&moreText)) return false;
+        if (moreText)
+          m_lastBytesWritten = 0;
+        else
+          m_lastBytesWritten = m_text.GetBytesWritten();
+        return true;
+      }
+      return false;
+    }
+
+    void ScrollToTop()
+    {
+      m_bottomLineShown = m_textLines - m_linesInPanel;
+    }
+
     virtual void PaintComponent(Drawing& drawing)
     {
       Super::PaintComponent(drawing);
@@ -67,7 +137,7 @@ namespace MFM {
     virtual bool Handle(MouseButtonEvent& mbe)
     {
       SDL_MouseButtonEvent & event = mbe.m_event.button;
-      if(event.type == SDL_MOUSEBUTTONDOWN) {
+      if(event.type == SDL_MOUSEBUTTONDOWN && mbe.m_keyboardModifiers == 0) {
 
         SPoint pt = GetAbsoluteLocation();
         pt.Set(event.x - pt.GetX(),
@@ -87,12 +157,12 @@ namespace MFM {
           s32 dir = event.button == SDL_BUTTON_WHEELDOWN ? -1 : 1;
           if (mbe.m_keyboardModifiers & KMOD_SHIFT) dir *= 10;
 
-          m_bottomLineShown = MAX<s32>(0, MIN<s32>(m_bottomLineShown + dir, m_text.GetLines()));
+          m_bottomLineShown = MAX<s32>(0, MIN<s32>(m_bottomLineShown + dir, m_textLines - m_linesInPanel));
           break;
         }
+        return true;
       }
-
-      return true;
+      return Super::Handle(mbe);
     }
 
     virtual bool Handle(MouseMotionEvent& mbe)
@@ -108,17 +178,17 @@ namespace MFM {
         SPoint nowAt(event.x, event.y);
         s32 deltay = nowAt.GetY() - m_leftButtonDragStart.GetY();
         m_bottomLineShown = ElevatorBottomToBottomLine(m_dragStartElevatorBottom + deltay);
+        return true;
       }
 
-      // Whether we did anything or not, we're eating the move here
-      return true;
+      return Super::Handle(mbe);
     }
 
   private:
-    static const u32 ELEVATOR_WIDTH = 12;
+    static const u32 ELEVATOR_WIDTH = 18;
     static const u32 ELEVATOR_COLOR = 0xff007f00;
 
-    LineTailByteSink<LINES,COLUMNS> m_text;
+    TextPanelByteSink m_text;
     u32 m_bottomLineShown;
     u32 m_lastBytesWritten;
 
@@ -128,6 +198,7 @@ namespace MFM {
     u32 m_panelHeight;
     u32 m_fontHeight;
     u32 m_neededHeight;
+    u32 m_linesInPanel;
     u32 m_textLines;
     u32 m_elevatorRange;
     u32 m_elevatorBottom;
@@ -140,11 +211,12 @@ namespace MFM {
       newElevatorBottom = MAX<s32>(0, MIN<s32>(newElevatorBottom, m_panelHeight - m_elevatorHeight));
 
       s32 newBot = m_textLines - newElevatorBottom * m_textLines / m_elevatorRange;
-      return MAX<s32>(0, MIN<s32>(newBot, m_text.GetLines()));
+      return MAX<s32>(0, MIN<s32>(newBot, m_textLines - m_linesInPanel));
     }
 
     void RenderText(Drawing & drawing)
     {
+      drawing.SetFont(Panel::GetFont());
       m_panelHeight = GetHeight();
       if (m_panelHeight == 0)
         m_panelHeight = 1;  // WTF:(
@@ -156,13 +228,16 @@ namespace MFM {
       if (m_fontHeight == 0)
         m_fontHeight = 1;   // WTF!
 
-      // Figure out size of elevator
       m_textLines = m_text.GetLines();
+      m_linesInPanel = m_panelHeight / m_fontHeight;
+
       m_neededHeight = m_textLines * m_fontHeight;
 
       m_elevatorHeight = m_panelHeight;
       if (m_neededHeight > m_panelHeight)
-        m_elevatorHeight = m_panelHeight * m_panelHeight / m_neededHeight;
+      {
+        m_elevatorHeight = m_panelHeight * m_linesInPanel / (m_textLines - m_linesInPanel);
+      }
 
       // Figure out elevator position
       if (m_lastBytesWritten != m_text.GetBytesWritten()) {
@@ -172,7 +247,11 @@ namespace MFM {
         m_bottomLineShown = 0;
       }
 
-      m_elevatorRange = m_panelHeight - m_elevatorHeight;
+      if (m_panelHeight <= m_elevatorHeight)
+        m_elevatorRange = 1;
+      else
+        m_elevatorRange = m_panelHeight - m_elevatorHeight;
+
       m_elevatorBottom = m_elevatorRange * (m_textLines - m_bottomLineShown) / m_textLines;
 
       drawing.FillRect(1, m_elevatorBottom, ELEVATOR_WIDTH-2, m_elevatorHeight, ELEVATOR_COLOR);
