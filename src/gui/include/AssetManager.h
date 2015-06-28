@@ -75,6 +75,7 @@ namespace MFM
   {
     FONT_ASSET_ELEMENT = 0,
     FONT_ASSET_ELEMENT_BIG,
+    FONT_ASSET_ELEMENT_SMALL,
     FONT_ASSET_HELPPANEL_BIG,
     FONT_ASSET_HELPPANEL_SMALL,
     FONT_ASSET_LOGGER,
@@ -204,13 +205,14 @@ namespace MFM
         surfaces[IMAGE_ASSET_SQUARE_SHAPE_ICON] = LoadImage("images/square_shape_icon_222.png");
 
         const char * FIX_FONT = "fonts/Inconsolata.ttf";
-        const char * PRO_FONT = "fonts/Mate-Regular.ttf";
+        //        const char * PRO_FONT = "fonts/Mate-Regular.ttf";
         const char * PSC_FONT = "fonts/MateSC-Regular.ttf";
 
         fonts[FONT_ASSET_ELEMENT] = LoadFont(FIX_FONT, 26);
         fonts[FONT_ASSET_ELEMENT_BIG] = LoadFont(FIX_FONT, 40);
-        fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont(PSC_FONT, 26);
-        fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont(PRO_FONT, 22);
+        fonts[FONT_ASSET_ELEMENT_SMALL] = LoadFont(FIX_FONT, 22);
+        fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont(FIX_FONT, 26);
+        fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont(FIX_FONT, 22);
         fonts[FONT_ASSET_LOGGER] = LoadFont(FIX_FONT, 14);
         fonts[FONT_ASSET_LABEL] = LoadFont(PSC_FONT, 20);
         fonts[FONT_ASSET_BUTTON_SMALL] = LoadFont(PSC_FONT, 16);
