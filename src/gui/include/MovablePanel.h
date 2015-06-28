@@ -40,12 +40,35 @@ namespace MFM
     SPoint m_preDragSize;
     bool m_dragging;
     bool m_ctrlDragging;
+    bool m_movable;
+    bool m_resizable;
 
    public:
-    MovablePanel(u32 width = 0, u32 height = 0) :
-      Panel(width, height),
-      m_dragging(false)
+    MovablePanel(u32 width = 0, u32 height = 0)
+      : Panel(width, height)
+      , m_dragging(false)
+      , m_ctrlDragging(false)
+      , m_movable(true)
+      , m_resizable(true)
     { }
+
+
+    void SetMovable(bool canmove)
+    {
+      m_movable = canmove;
+    }
+    void SetResizable(bool canresize)
+    {
+      m_resizable = canresize;
+    }
+    bool IsMovable() const
+    {
+      return m_movable;
+    }
+    bool IsResizable() const
+    {
+      return m_resizable;
+    }
 
     void BeginDrag(MouseButtonEvent& event, bool ctrl)
     {
@@ -76,7 +99,12 @@ namespace MFM
     {
       if(event.m_event.type == SDL_MOUSEBUTTONDOWN)
       {
-        if(event.m_keyboardModifiers & (KMOD_CTRL | KMOD_SHIFT))
+        if(IsMovable() && (event.m_keyboardModifiers & KMOD_CTRL))
+        {
+          BeginDrag(event, event.m_keyboardModifiers & KMOD_CTRL);
+          return true;
+        }
+        if(IsResizable() && (event.m_keyboardModifiers & KMOD_SHIFT))
         {
           BeginDrag(event, event.m_keyboardModifiers & KMOD_CTRL);
           return true;
