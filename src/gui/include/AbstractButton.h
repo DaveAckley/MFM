@@ -30,14 +30,16 @@
 
 #include "itype.h"
 #include "Label.h"
+#include "Keyboard.h"
 
 namespace MFM
 {
   /**
    * A Label which behaves as a button, built with abstract behavior
-   * upon clicks.
+   * upon clicks, which may be associated with a keyboard accelerator
+   * command to act as a click.
    */
-  class AbstractButton : public Label
+  class AbstractButton : public Label, public KeyboardCommandFunction
   {
    private:
     typedef Label Super;
