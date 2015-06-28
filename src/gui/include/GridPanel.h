@@ -33,7 +33,6 @@
 #include "Panel.h"
 #include "Sense.h"
 #include "TileRenderer.h"
-#include "ToolboxPanel.h"
 #include "Util.h"
 #include <math.h> /* for sqrt */
 #include "GUIConstants.h"
@@ -62,6 +61,7 @@ namespace MFM
     typedef Site<AC> OurSite;
     typedef TileRenderer<EC> OurTileRenderer;
     typedef GridTool<GC> OurGridTool;
+    typedef AtomViewPanel<GC> OurAtomViewPanel;
 
     bool LoadDetails(const char * key, LineCountingByteSource & source)
     {
@@ -121,6 +121,8 @@ namespace MFM
     SPoint m_leftButtonDragStartPix;
     SPoint m_leftButtonGridStartDit;
 
+    OurAtomViewPanel m_avp;
+
     void ZoomAroundPix(SPoint aroundPix, u32 newAtomDrawDit)
     {
       if (newAtomDrawDit < OurTileRenderer::MINIMUM_ATOM_SIZE_DIT)
@@ -145,8 +147,19 @@ namespace MFM
     }
 
    public:
+    OurAtomViewPanel & GetAtomViewPanel() {
+      return m_avp;
+    }
 
     GridPanel()
+      : Super()
+      , m_tileRenderer(0)
+      , m_mainGrid(0)
+      , m_currentGridTool(0)
+      , m_gridOriginDit(0,0)
+      , m_leftButtonDragStartPix(0,0)
+      , m_leftButtonGridStartDit (0,0)
+      , m_avp()
     {
       SetName("GridPanel");
       SetDimensions(SCREEN_INITIAL_WIDTH,
@@ -155,12 +168,9 @@ namespace MFM
       SetForeground(Drawing::BLACK);
       SetBackground(Drawing::BLACK);
       //      SetBackground(Drawing::ORANGE);
-
-      m_gridOriginDit = SPoint(0,0);
-
-      m_mainGrid = NULL;
-
-      m_currentGridTool = NULL;
+      m_avp.SetVisible(false);
+      m_avp.SetRenderPoint(SPoint(300,30));
+      this->Insert(&m_avp, 0);
     }
 
     void Init()
@@ -325,7 +335,12 @@ namespace MFM
       }
     }
 
-    void PaintGridOverlays(Drawing & drawing) ;
+    void PaintGridOverlays(Drawing & drawing)
+    {
+      if (m_currentGridTool)
+        m_currentGridTool->PaintOverlay(drawing);
+    }
+
 
    public:
 
@@ -465,7 +480,5 @@ namespace MFM
     }
   };
 } /* namespace MFM */
-
-#include "GridPanel.tcc"
 
 #endif /* GRIDPANEL_H */

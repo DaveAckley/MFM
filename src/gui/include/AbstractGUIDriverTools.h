@@ -58,6 +58,7 @@
 #include "Grid.h"
 #include "GridTool.h"
 #include "AssetManager.h"
+#include "AtomViewPanel.h"
 
 namespace MFM
 {
@@ -350,6 +351,83 @@ namespace MFM
       // get here
       FAIL(ILLEGAL_STATE);
     }
+
+  };
+
+
+  template<class GC>
+  class GridToolAtomView : public GridToolShapeUpdater<GC>
+  {
+    typedef GridToolShapeUpdater<GC> Super;
+
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+
+    enum { R = EC::EVENT_WINDOW_RADIUS};
+
+    AtomViewPanel<GC> * m_avp;
+
+  public:
+
+    void SetAtomViewPanel(AtomViewPanel<GC> & avp)
+    {
+      m_avp = &avp;
+    }
+
+    AtomViewPanel<GC> & GetAtomViewPanel()
+    {
+      MFM_API_ASSERT_NONNULL(m_avp);
+      return *m_avp;
+    }
+
+    void SetAtomCoord(SPoint gridCoord)
+    {
+      GetAtomViewPanel().SetAtomCoord(gridCoord, this->GetToolboxPanel().IsSiteEdit());
+    }
+
+    GridToolAtomView(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
+      : Super("atomview", gp, tbp, IMAGE_ASSET_ATOM_SELECTOR_ICON)
+    { }
+
+    virtual u32 GetMaxVariableRadius()
+    {
+      return 0;
+    }
+
+    virtual void UpdateGridAround(UPoint point)
+    {
+      SetAtomCoord(MakeSigned(point));
+    }
+
+    virtual void UpdateGridCoord(UPoint point)
+    {
+      // We overrode UpdateGridAround, so 'it should be impossible' to
+      // get here
+      FAIL(ILLEGAL_STATE);
+    }
+
+#if 0
+
+    void BoxEdge(Drawing & drawing, const SPoint gridCoord, u32 color)
+    {
+      if (!this->GetGrid().IsGridCoord(gridCoord)) return;
+      UPoint boxCoord = MakeUnsigned(gridCoord);
+      Rect screenRectDit;
+      GridPanel<GC> & gp = this->GetGridPanel();
+      if (!gp.GetScreenRectDitOfGridCoord(boxCoord, screenRectDit))
+        return;  // WTH?
+      drawing.SetForeground(color);
+      drawing.DrawRectDit(screenRectDit);
+    }
+
+
+    virtual void PaintOverlay(Drawing & drawing)
+    {
+      if (!HasAtomCoord()) return;
+      BoxEdge(drawing, m_atomCoord, (Utils::GetDateTimeNow()&1) ? Drawing::WHITE : Drawing::BLACK);
+    }
+#endif
 
   };
 

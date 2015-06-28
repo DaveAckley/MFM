@@ -30,7 +30,6 @@
 #include "CloseWindowButton.h"
 #include "MovablePanel.h"
 #include "Grid.h"
-#include "ToolboxPanel.h"
 #include "TreeViewPanel.h"
 
 namespace MFM
@@ -44,13 +43,33 @@ namespace MFM
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
-    T* m_atom;
+    SPoint m_gridCoord;
+    bool m_inBase;
 
     Grid<GC>* m_grid;
 
-    ToolboxPanel<GC>* m_toolboxPanel;
+    struct ClearAtomCoordButton : public CloseWindowButton
+    {
+      typedef CloseWindowButton Super;
 
-    CloseWindowButton m_closeWindowButton;
+      const char * GetDoc() { return "Close atom view panel"; }
+      virtual bool GetKey(u32& keysym, u32& mods) { return false; }
+      bool ExecuteFunction(u32 keysym, u32 mods) { return false; }
+
+      ClearAtomCoordButton(AtomViewPanel<GC> & avp)
+        : Super(&avp)
+        , m_avp(avp)
+      { }
+
+      AtomViewPanel<GC> & m_avp;
+
+      virtual void OnClick(u8 button)
+      {
+        m_avp.ClearAtomCoord();
+      }
+    };
+
+    ClearAtomCoordButton m_closeWindowButton;
     TreeViewPanel m_treeViewPanel;
 
     static const u32 ATOM_DRAW_SIZE = 40;
@@ -58,17 +77,23 @@ namespace MFM
    public:
     AtomViewPanel()
       : MovablePanel(300, 100)
-      , m_atom(NULL)
+      , m_gridCoord(-1,-1)
+      , m_inBase(false)
       , m_grid(NULL)
-      , m_toolboxPanel(NULL)
-      , m_closeWindowButton(this) // Inserts itself into us
+      , m_closeWindowButton(*this) // Inserts itself into us
       , m_treeViewPanel()
     {
+      SetName("AtomViewPanel");
       SetBackground(Drawing::GREY20);
       SetForeground(Drawing::GREY80);
 
       // Mon Jun  1 03:33:42 2015 NOT READY FOR PRIME TIME
       // this->Panel::Insert(&m_treeViewPanel, NULL);
+    }
+
+    bool HasGridCoord() const
+    {
+      return m_gridCoord.GetX() >= 0 && m_gridCoord.GetY() >= 0;
     }
 
     void Init()
@@ -78,19 +103,9 @@ namespace MFM
       m_treeViewPanel.Init();
     }
 
-    void SetToolboxPanel(ToolboxPanel<GC>* toolboxPanel)
-    {
-      m_toolboxPanel = toolboxPanel;
-    }
-
     virtual void PaintUpdateVisibility(Drawing& d)
     {
-      bool visible =
-        m_toolboxPanel != NULL &&
-        (Panel::IsVisible() ||
-        (m_toolboxPanel->IsVisible() &&
-         m_toolboxPanel->GetSelectedTool() == TOOL_ATOM_SELECTOR));
-      this->SetVisible(visible);
+      this->SetVisible(HasGridCoord());
     }
 
     void PaintDisplayAtomicControllers(Drawing & d, T& atom,const Element<EC>* elt)
@@ -119,11 +134,34 @@ namespace MFM
       }
     }
 
+    void DrawElementLogo(Drawing & d, FontAsset font, s32 xstart, s32 ystart, u32 drawSize, u32 color, const char * symbol)
+    {
+      d.SetForeground(Panel::GetForeground());
+      d.FillCircle(xstart-1, ystart-1, drawSize + 2, drawSize + 2, (drawSize >> 1) + 1);
+      d.SetForeground(color);
+      d.FillCircle(xstart, ystart, drawSize, drawSize, drawSize >> 1);
+      d.SetFont(font);
+      d.SetForeground(Drawing::WHITE);
+      d.SetBackground(Drawing::BLACK);
+
+      /* Center on the draw_size x draw_size box */
+      d.BlitBackedTextCentered(symbol,
+                               SPoint(xstart, ystart), UPoint(drawSize, drawSize));
+
+    }
+
+    void PrintLine(Drawing & d, const u32 baseX, u32 & currentY, const u32 lineHeight, const char * zstr)
+    {
+      d.BlitBackedText(zstr, SPoint(baseX, currentY),
+                       MakeUnsigned(d.GetTextSize(zstr)));
+      currentY += lineHeight;
+    }
+
     virtual void PaintComponent(Drawing& d)
     {
       this->Super::PaintComponent(d);
 
-      if(!m_atom || !m_grid)
+      if(!HasGridCoord())
       {
         d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
         const char* message = "No atom selected.";
@@ -131,13 +169,39 @@ namespace MFM
         return;
       }
 
+      Grid<GC>& grid = this->GetGrid();
+      const T* catom = grid.GetAtomInSite(m_inBase, m_gridCoord);
+      if (!catom)
+        FAIL(INCOMPLETE_CODE); // what to do?
+      T atom(*catom); // Get a non-const atom so serializer can use it sigh.
+
       OString256 buff;
-      AtomSerializer<AC> serializer(*m_atom);
+      AtomSerializer<AC> serializer(atom);
 
       const u32 ATOM_X_START = 20;
-      const u32 ATOM_Y_START = 10;
-      const u32 etype = m_atom->GetType();
+      const u32 ATOM_Y_START = 25;
+      u32 baseX = ATOM_X_START;
+      u32 currentY = 2;
+
+      const u32 etype = atom.GetType();
       const Element<EC>* element = m_grid->LookupElement(etype);
+      {
+        SPoint tileInGrid, siteInTile;
+        if (!grid.MapGridToTile(m_gridCoord, tileInGrid, siteInTile))
+          FAIL(ILLEGAL_STATE);
+
+        SPointSerializer tsp(tileInGrid);
+        SPointSerializer ssp(siteInTile);
+        buff.Reset();
+        buff.Printf("%s Layer, Site %@, Tile %@",
+                    m_inBase?"Base":"Event",
+                    &ssp, &tsp);
+        const char * str = buff.GetZString();
+        d.SetFont(FONT_ASSET_LOGGER);
+        d.BlitBackedText(str, SPoint(baseX, currentY), MakeUnsigned(d.GetTextSize(str)));
+      }
+
+      currentY = ATOM_Y_START;
 
       if (!element)
       {
@@ -148,49 +212,64 @@ namespace MFM
         return;
       }
 
-      d.SetForeground(Panel::GetForeground());
-      d.FillCircle(ATOM_X_START-1, ATOM_Y_START-1, ATOM_DRAW_SIZE + 2, ATOM_DRAW_SIZE + 2, (ATOM_DRAW_SIZE >> 1) + 1);
-      d.SetForeground(element->GetStaticColor());
-      d.FillCircle(ATOM_X_START, ATOM_Y_START, ATOM_DRAW_SIZE, ATOM_DRAW_SIZE, ATOM_DRAW_SIZE >> 1);
-      d.SetFont(FONT_ASSET_ELEMENT);
-      d.SetForeground(Drawing::WHITE);
-      d.SetBackground(Drawing::BLACK);
-      // XXX ALSO DRAW WITH GetDynamicColor, if that is currently different
+      u32 staticColor = element->GetStaticColor();
+      const char * sym = element->GetAtomicSymbol();
+      this->DrawElementLogo(d, FONT_ASSET_ELEMENT, baseX, currentY, ATOM_DRAW_SIZE, staticColor, sym);
 
-      /* Center on the draw_size x draw_size box */
-      d.BlitBackedTextCentered(element->GetAtomicSymbol(),
-                               UPoint(ATOM_X_START, ATOM_Y_START), UPoint(ATOM_DRAW_SIZE, ATOM_DRAW_SIZE));
+      u32 curX = baseX + ATOM_DRAW_SIZE;
+      const u32 DCOLOR_SIZE = ATOM_DRAW_SIZE - 8;
+      u32 dcolor[3];
+      dcolor[0] = staticColor;
+      dcolor[1] = element->GetDynamicColor(atom, 1);
+      dcolor[2] = element->GetDynamicColor(atom, 2);
+      bool show1 = false, show2 = false, bothsame = false;
+      if (dcolor[1] != dcolor[0]) show1 = true;
+      if (dcolor[2] != dcolor[0]) show2 = true;
+      if (dcolor[2] == dcolor[1]) {
+        bothsame = true;
+        show2 = false;
+      }
+      if (show1)
+      {
+        const char * l = bothsame ? "" : "1";
+        this->DrawElementLogo(d, FONT_ASSET_ELEMENT_SMALL, curX, currentY, DCOLOR_SIZE, dcolor[1], l);
+        curX += DCOLOR_SIZE;
+      }
+      if (show2)
+      {
+        this->DrawElementLogo(d, FONT_ASSET_ELEMENT_SMALL, curX, currentY, DCOLOR_SIZE, dcolor[2], "2");
+        curX += DCOLOR_SIZE;
+      }
 
       UPoint nameSize = MakeUnsigned(d.GetTextSize(element->GetName()));
       d.BlitBackedText(element->GetName(),
-                       UPoint(ATOM_X_START + 3*ATOM_DRAW_SIZE/2,
-                              ATOM_Y_START + ATOM_DRAW_SIZE - nameSize.GetY()), // bottom align text
+                       SPoint(curX,
+                              currentY + ATOM_DRAW_SIZE - nameSize.GetY()), // bottom align text
                        nameSize);
 
+      currentY += ATOM_DRAW_SIZE;
+
       buff.Reset();
-      element->AppendDescription(m_atom, buff);
+      element->AppendDescription(atom, buff);
       const char* zstr = buff.GetZString();
 
       d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
-      const u32 LINE_X_START = 4 + ATOM_DRAW_SIZE;
-      const u32 LINE_Y_START = 28;
+      const u32 LINE_X_START = baseX + 4;
       const u32 LINE_HEIGHT = TTF_FontLineSkip(AssetManager::GetReal(d.GetFont()));
       const u32 INDENT_AMOUNT = LINE_HEIGHT;
 
-      d.BlitBackedText(zstr, SPoint(LINE_X_START, LINE_Y_START + 0 * LINE_HEIGHT),
-                       MakeUnsigned(d.GetTextSize(zstr)));
+      this->PrintLine(d, LINE_X_START, currentY, LINE_HEIGHT, zstr);
 
       buff.Reset();
       buff.Printf("%@", &serializer);
       zstr = buff.GetZString();
 
-      d.BlitBackedText(zstr, SPoint(LINE_X_START, LINE_Y_START + 1 * LINE_HEIGHT),
-                       MakeUnsigned(d.GetTextSize(zstr)));
+      this->PrintLine(d, LINE_X_START, currentY, LINE_HEIGHT, zstr);
 
       const UlamElement<EC> * uelt = element->AsUlamElement();
       if (!uelt)
       {
-        PaintDisplayAtomicControllers(d, *m_atom, element);
+        PaintDisplayAtomicControllers(d, atom, element);
         return;
       }
 
@@ -201,7 +280,8 @@ namespace MFM
         UlamClass::PRINT_MEMBER_VALUES |
         UlamClass::PRINT_RECURSE_QUARKS;
 
-      uelt->Print(ucr, buff, *m_atom, printFlags);
+      buff.Reset();
+      uelt->Print(ucr, buff, atom, printFlags);
       zstr = buff.GetZString();
       u32 indent = 0;
       u32 lineNum = 1;
@@ -230,7 +310,7 @@ namespace MFM
           {
             const char * line = lineBuff.GetZString();
             d.BlitBackedText(line,
-                             SPoint(LINE_X_START + oldIndent * INDENT_AMOUNT, LINE_Y_START + oldLineNum * LINE_HEIGHT),
+                             SPoint(baseX + oldIndent * INDENT_AMOUNT, currentY + oldLineNum * LINE_HEIGHT),
                              MakeUnsigned(d.GetTextSize(line)));
             lineBuff.Reset();
           }
@@ -240,7 +320,7 @@ namespace MFM
         }
       }
       UPoint ds = Panel::GetDesiredSize();
-      u32 dy = MAX(200u,LINE_Y_START + (lineNum + 1) * LINE_HEIGHT);
+      u32 dy = MAX(200u,currentY + (lineNum + 1) * LINE_HEIGHT);
       if (dy != ds.GetY())
       {
         ds.SetY(dy);
@@ -251,22 +331,28 @@ namespace MFM
       }
     }
 
-    void SetAtom(T* atom)
+    void ClearAtomCoord()
     {
-      if(atom && atom->IsSane())
-      {
-        m_atom = atom;
-      }
-      else
-      {
-        m_atom = NULL;
-      }
+      m_gridCoord = SPoint(-1,-1);
     }
 
-    void SetGrid(Grid<GC>* grid)
+    void SetAtomCoord(SPoint gridCoord, bool inBase)
     {
-      m_grid = grid;
+      m_gridCoord = gridCoord;
+      m_inBase = inBase;
     }
+
+    void SetGrid(Grid<GC>& grid)
+    {
+      m_grid = &grid;
+    }
+
+    Grid<GC> & GetGrid()
+    {
+      MFM_API_ASSERT_NONNULL(m_grid);
+      return *m_grid;
+    }
+
   };
 }
 
