@@ -7,7 +7,8 @@ namespace MFM
   template <class EC>
   TileRenderer<EC>::TileRenderer()
     : m_drawBackgroundType(DRAW_SITE_DARK_TILE)
-    , m_drawForegroundType(DRAW_SITE_ATOM_1)
+    , m_drawMidgroundType(DRAW_SITE_ATOM_1)
+    , m_drawForegroundType(DRAW_SITE_NONE)
     , m_drawEventWindow(false)
     , m_drawGridLines(true)
     , m_drawCacheSites(true)
@@ -109,10 +110,15 @@ namespace MFM
   template <class EC>
   void TileRenderer<EC>::PaintTileAtDit(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile)
   {
-    PaintSites(drawing, m_drawBackgroundType, DRAW_SHAPE_FILL, ditOrigin, tile);
+    PaintSites(drawing,
+               (m_drawBases && !IsBaseVisible()) ? DRAW_SITE_BASE : m_drawBackgroundType,
+               DRAW_SHAPE_FILL, ditOrigin, tile);
     PaintUnderlays(drawing, ditOrigin, tile);  // E.g. an event window
 
-    PaintSites(drawing, m_drawForegroundType, DRAW_SHAPE_CIRCLE, ditOrigin, tile);
+    PaintSites(drawing, m_drawMidgroundType, DRAW_SHAPE_CIRCLE, ditOrigin, tile);
+
+    PaintSites(drawing, m_drawForegroundType, DRAW_SHAPE_CDOT, ditOrigin, tile);
+
     PaintOverlays(drawing, ditOrigin, tile);   // E.g., a tool footprint
   }
 
@@ -246,6 +252,17 @@ namespace MFM
         drawing.FillRectDit(r, color);
       }
       break;
+    case DRAW_SHAPE_CDOT:
+      {
+        u32 dotDit = m_atomSizeDit / 5;
+        if (dotDit < Drawing::DIT_PER_PIX) dotDit = Drawing::DIT_PER_PIX;
+        UPoint fullSize(m_atomSizeDit, m_atomSizeDit);
+        UPoint size(dotDit,dotDit);
+        SPoint inset = MakeSigned(fullSize - size) / 2;
+        Rect r(ditOrigin + inset, size);
+        drawing.FillRectDit(r, color);
+      }
+      break;
     }
   }
 
@@ -285,6 +302,7 @@ namespace MFM
     sink.Printf(" PP(trdc=%d)\n", m_drawCacheSites);
     sink.Printf(" PP(trdg=%d)\n", m_drawGridLines);
     sink.Printf(" PP(trev=%d)\n", m_drawEventWindow);
+    sink.Printf(" PP(trmt=%d)\n", m_drawMidgroundType);
     sink.Printf(" PP(trft=%d)\n", m_drawForegroundType);
     sink.Printf(" PP(trgc=%d)\n", m_gridLineColor);
     sink.Printf(" PP(trrs=%d)\n", m_renderSquares);
@@ -298,6 +316,7 @@ namespace MFM
     if (!strcmp("trdc",key)) return 1 == source.Scanf("%?d", sizeof m_drawCacheSites, &m_drawCacheSites);
     if (!strcmp("trdg",key)) return 1 == source.Scanf("%?d", sizeof m_drawGridLines, &m_drawGridLines);
     if (!strcmp("trev",key)) return 1 == source.Scanf("%?d", sizeof m_drawEventWindow, &m_drawEventWindow);
+    if (!strcmp("trmt",key)) return 1 == source.Scanf("%?d", sizeof m_drawMidgroundType, &m_drawMidgroundType);
     if (!strcmp("trft",key)) return 1 == source.Scanf("%?d", sizeof m_drawForegroundType, &m_drawForegroundType);
     if (!strcmp("trgc",key)) return 1 == source.Scanf("%?d", sizeof m_gridLineColor, &m_gridLineColor);
     if (!strcmp("trrs",key)) return 1 == source.Scanf("%?d", sizeof m_renderSquares, &m_renderSquares);

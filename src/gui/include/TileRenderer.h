@@ -71,7 +71,7 @@ namespace MFM
     enum DrawSiteShape {
       DRAW_SHAPE_FILL,           //< Flood fill site entirely (square)
       DRAW_SHAPE_CIRCLE,         //< Draw circle touching site edges
-      DRAW_SHAPE_CBOX,           //< Draw 3x3 centered square
+      DRAW_SHAPE_CDOT,           //< Draw small centered dot
       DRAW_SHAPE_COUNT
     };
 
@@ -84,10 +84,17 @@ namespace MFM
       return GetDrawSiteTypeName(m_drawBackgroundType);
     }
 
+    const char * GetDrawMidgroundTypeName() const
+    {
+      return GetDrawSiteTypeName(m_drawMidgroundType);
+    }
+
     const char * GetDrawForegroundTypeName() const
     {
       return GetDrawSiteTypeName(m_drawForegroundType);
     }
+
+
     static const char * GetDrawSiteTypeName(DrawSiteType t) ;
 
     /**
@@ -178,6 +185,11 @@ namespace MFM
       return m_drawBackgroundType = (DrawSiteType) ((m_drawBackgroundType + 1) % DRAW_SITE_TYPE_COUNT);
     }
 
+    u32 NextDrawMidgroundType()
+    {
+      return m_drawMidgroundType = (DrawSiteType) ((m_drawMidgroundType + 1) % DRAW_SITE_TYPE_COUNT);
+    }
+
     u32 NextDrawForegroundType()
     {
       return m_drawForegroundType = (DrawSiteType) ((m_drawForegroundType + 1) % DRAW_SITE_TYPE_COUNT);
@@ -195,9 +207,21 @@ namespace MFM
     }
 
   private:
+    static bool IsDrawBase(DrawSiteType t)
+    {
+      return t >= DRAW_SITE_BASE && t <= DRAW_SITE_BASE_2;
+    }
+
+    bool IsBaseVisible()
+    {
+      return
+        IsDrawBase(m_drawBackgroundType) ||
+        IsDrawBase(m_drawMidgroundType) ||
+        IsDrawBase(m_drawForegroundType);
+    }
 
     DrawSiteType m_drawBackgroundType;
-
+    DrawSiteType m_drawMidgroundType;
     DrawSiteType m_drawForegroundType;
 
     bool m_drawEventWindow;
