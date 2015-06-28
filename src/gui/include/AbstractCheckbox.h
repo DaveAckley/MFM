@@ -95,6 +95,14 @@ namespace MFM
       }
     }
 
+    virtual s32 GetSection() { return HELP_SECTION_MISC; } // If not overridden
+    virtual const char * GetDoc() { return this->Panel::GetDoc(); } // If not overridden
+    virtual bool GetKey(u32& keysym, u32& mods) { return false; } // If not overridden
+    virtual bool ExecuteFunction(u32 keysym, u32 mods) {
+      OnClick(SDL_BUTTON_LEFT);
+      return true;
+    }
+
     virtual void OnClick(u8 button)
     {
       SetChecked(!IsChecked());
