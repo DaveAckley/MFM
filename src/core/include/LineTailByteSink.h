@@ -103,7 +103,7 @@ namespace MFM
 
     /**
      * Gets the number of bytes that have been written to this
-     * LineTailByteSink .
+     * LineTailByteSink since the last Reset().
      *
      * @returns The number of bytes that have been written to this
      *          LineTailByteSink .
@@ -114,8 +114,10 @@ namespace MFM
     }
 
     /**
-     * Gets the number of lines that have been encountered during the
-     * lifetime of this LineTailByteSink .
+     * Gets the number of lines currently stored in this
+     * LineTailByteSink .  Note that an empty or Clear()
+     * LineTailByteSink is considered to have one line (not zero!) in
+     * it -- a line which happens to be empty.
      *
      * @returns The number of lines that have been encountered by this
      *          LineTailByteSink, from 1 up to LINES .
@@ -126,13 +128,10 @@ namespace MFM
     }
 
     /**
-     * Get the contents of \a whichLine as a zero-terminated string.
-     * If there is (currently) no line \a whichLine, return NULL
-     */
-
-    /**
      * Gets the contents of a line held by this LineTailByteSink ,
-     * where the line at index \c 0 is the oldest line .
+     * where the line at index \c 0 is the oldest line, and GetLines()
+     * - 1 is the newest line.  Returns NULL if whichLine is out of
+     * range.
      *
      * @param whichLine the index of the line to get from this
      *                  LineTailByteSink .
@@ -140,7 +139,7 @@ namespace MFM
      * @returns A pointer to the zero-terminated line at \c whichLine
      *          index in this LineTailByteSink .
      */
-    const char * GetZString(u32 whichLine)
+    const char * GetZString(u32 whichLine) const
     {
       if (whichLine >= GetLines())
       {
@@ -153,7 +152,7 @@ namespace MFM
 
     /**
      * Discard the oldest \a lines lines, if there are that many,
-     * otherwise just do a Reset.
+     * otherwise just do a Clear.
      */
 
     /**
@@ -161,24 +160,38 @@ namespace MFM
      *
      * @param lines The number of lines to discard from this
      *              LineTailByteSink . If this is more than the number
-     *              of lines held , will call \c Reset() .
+     *              of lines held , will call \c Clear() .
      */
     void Trim(u32 lines)
     {
       if (lines >= GetLines())
       {
-	Reset();
+	Clear();
       }
       else m_firstLine = (m_firstLine + lines) % LINES;
     }
 
     /**
-     * Clears this LineTailByteSink , as if it is newly constructed .
+     * Clears this LineTailByteSink , leaving it empty.  Note this
+     * differs from Reset() because Clear() does \e not reset the
+     * number of bytes written, so GetBytesWritten() will (typically)
+     * not return zero after a Clear() call.
      */
-    void Reset()
+    void Clear()
     {
       m_firstLine = m_nextLine = 0;
       m_lines[m_nextLine].Reset();
+    }
+
+    /**
+     * Resets this LineTailByteSink , as if it is newly constructed,
+     * so that GetBytesWritten() will return zero after a Reset()
+     * call.
+     */
+    void Reset()
+    {
+      Clear();
+      m_bytesWritten = 0;
     }
 
   private:
