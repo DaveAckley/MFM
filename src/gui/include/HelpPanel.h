@@ -1,6 +1,6 @@
  /*                                              -*- mode:C++ -*-
   HelpPanel.h Panel for displaying controls and other help information
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2015 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,86 +22,75 @@
   \file HelpPanel.h Panel for displaying controls and other help information
   \author Trent R. Small.
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014-2015 All rights reserved.
   \lgpl
  */
 #ifndef HELPPANEL_H
 #define HELPPANEL_H
 
-#include "AssetManager.h"
-#include "MovablePanel.h"
+#include "Keyboard.h"
+#include "TextPanel.h"
+#include "GUIConstants.h"
 
 namespace MFM
 {
+
   /**
    * A Panel which displays helpful information about the driver it
    * resides in.
    */
-  class HelpPanel : public MovablePanel
+  class HelpPanel : public TextPanel<HELP_PANEL_COLUMNS,HELP_PANEL_ROWS>
   {
   private:
+    typedef TextPanel<HELP_PANEL_COLUMNS,HELP_PANEL_ROWS> Super;
 
-    /**
-     * The messages which are rendered upon rendering of this
-     * HelpPanel .
-     */
-    static const char* m_helpMessages[];
+    const Keyboard & m_keyboard;
+    bool m_isGenerated;
+
+    void GenerateHelpText()
+    {
+      Super::TextPanelByteSink & bs = Super::GetByteSink();
+      bs.Reset();
+      m_keyboard.PrintHelp(bs);
+      m_isGenerated = true;
+    }
 
   public:
     /**
      * Constructs a new HelpPanel that is ready to be used.
      */
-    HelpPanel()
+    HelpPanel(const Keyboard & acceleratorMap)
+      : m_keyboard(acceleratorMap)
+      , m_isGenerated(false)
     {
       Panel::SetName("HelpPanel");
       Panel::SetBackground(Drawing::DARK_PURPLE);
-      Panel::SetAnchor(ANCHOR_WEST);
-      Panel::SetAnchor(ANCHOR_SOUTH);
+      Panel::SetForeground(Drawing::WHITE);
     }
 
-    virtual void PaintBorder(Drawing& d)
-    { /* No border */ }
-
-    virtual void PaintComponent(Drawing& d)
+    virtual void SaveDetails(ByteSink& sink) const
     {
-      FontAsset bigFont = FONT_ASSET_HELPPANEL_BIG;
-      FontAsset smFont  = FONT_ASSET_HELPPANEL_SMALL;
-      TTF_Font * bgf = AssetManager::GetReal(bigFont);
-      TTF_Font * smf = AssetManager::GetReal(smFont);
+      Super::SaveDetails(sink);
+      sink.Printf(" PP(isgn=%d)\n",m_isGenerated);
+    }
 
-      d.SetForeground(Panel::GetBackground());
-      d.FillRect(0, 0, Panel::GetWidth(), Panel::GetHeight());
+    virtual bool LoadDetails(const char * key, LineCountingByteSource& source)
+    {
+      if (Super::LoadDetails(key, source)) return true;
 
-      d.SetForeground(Drawing::WHITE);
-      d.SetFont(bigFont);
+      if (!strcmp("isgn",key)) return 1 == source.Scanf("%d",&m_isGenerated);
+      return false;
+    }
 
-      d.BlitText("Help", SPoint(5, 5), MakeUnsigned(Panel::GetTextSize(bigFont, "Help")));
-
-      d.SetFont(smFont);
-      UPoint maxCorner(0,0);
-
-      const u32 TEXT_Y_START = 2*TTF_FontHeight(bgf);
-      const u32 LINE_HEIGHT = TTF_FontHeight(smf);
-      for(u32 i = 0; m_helpMessages[i]; i++)
+    virtual void PaintUpdateVisibility(Drawing& d)
+    {
+      if (!m_isGenerated)
       {
-        UPoint tsize = MakeUnsigned(Panel::GetTextSize(smFont, m_helpMessages[i]));
-        SPoint pos(10, i * LINE_HEIGHT + TEXT_Y_START);
-        d.BlitText(m_helpMessages[i], pos, tsize);
-
-        maxCorner = max(maxCorner, MakeUnsigned(pos) + tsize);
-      }
-      maxCorner += UPoint(10,10);
-
-      if (maxCorner != this->GetDesiredSize())
-      {
-        this->SetDimensions(maxCorner.GetX(), maxCorner.GetY());
-        this->SetDesiredSize(maxCorner.GetX(), maxCorner.GetY());
-        if (Panel::GetParent() != 0)
-        {
-          Panel::HandleResize(Panel::GetParent()->GetDimensions());
-        }
+        GenerateHelpText();
+        ScrollToTop();
       }
     }
+
   };
 }
 
