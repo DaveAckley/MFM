@@ -212,7 +212,7 @@ namespace MFM
         fonts[FONT_ASSET_ELEMENT_BIG] = LoadFont(FIX_FONT, 40);
         fonts[FONT_ASSET_ELEMENT_SMALL] = LoadFont(FIX_FONT, 22);
         fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont(FIX_FONT, 26);
-        fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont(FIX_FONT, 22);
+        fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont(FIX_FONT, 20);
         fonts[FONT_ASSET_LOGGER] = LoadFont(FIX_FONT, 14);
         fonts[FONT_ASSET_LABEL] = LoadFont(PSC_FONT, 20);
         fonts[FONT_ASSET_BUTTON_SMALL] = LoadFont(PSC_FONT, 16);

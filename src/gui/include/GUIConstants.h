@@ -49,7 +49,7 @@ namespace MFM
     MINIMAL_START_WINDOW_HEIGHT = 1,
 
     HELP_PANEL_COLUMNS = 100,
-    HELP_PANEL_ROWS = 64,
+    HELP_PANEL_ROWS = 100,
 
     // Unrefactored magic out of ToolboxPanel.h
     MAX_GRIDTOOL_BUTTONS = 9,
