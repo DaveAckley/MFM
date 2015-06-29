@@ -143,6 +143,7 @@ namespace MFM
     ToolboxPanel<GC> m_toolboxPanel;
 
     GridToolAtomView<GC> m_gridToolAtomView;
+    GridToolTileSelect<GC> m_gridToolTileSelect;
     GridToolPencil<GC> m_gridToolPencil;
     GridToolEraser<GC> m_gridToolEraser;
     GridToolBrush<GC> m_gridToolBrush;
@@ -153,8 +154,11 @@ namespace MFM
 
     StatisticsPanel<GC> m_statisticsPanel;
     DisplayAER<GC> m_displayAER;
+    IncreaseAEPSPerFrame<GC> m_increaseAEPSPerFrame;
+    DecreaseAEPSPerFrame<GC> m_decreaseAEPSPerFrame;
 
   public:
+
     const Panel & GetRootPanel() const { return m_rootPanel; }
     Panel & GetRootPanel() { return m_rootPanel; }
 
@@ -171,18 +175,25 @@ namespace MFM
       hd.SetDriver(*this);
     }
 
+    void InsertAndRegisterGridTool(GridToolShapeUpdater<GC> & gt)
+    {
+      AbstractButton & ab = m_toolboxPanel.RegisterGridTool(gt);
+      RegisterButtonAccelerator(ab);
+    }
+
     void OnceOnlyTools()
     {
       m_gridPanel.GetAtomViewPanel().SetGrid(Super::GetGrid());
       m_gridToolAtomView.SetAtomViewPanel(m_gridPanel.GetAtomViewPanel());
-      m_toolboxPanel.RegisterGridTool(m_gridToolAtomView);
-      m_toolboxPanel.RegisterGridTool(m_gridToolPencil);
-      m_toolboxPanel.RegisterGridTool(m_gridToolEraser);
-      m_toolboxPanel.RegisterGridTool(m_gridToolBrush);
-      m_toolboxPanel.RegisterGridTool(m_gridToolAirBrush);
-      m_toolboxPanel.RegisterGridTool(m_gridToolXRay);
-      m_toolboxPanel.RegisterGridTool(m_gridToolBucket);
-      m_toolboxPanel.RegisterGridTool(m_gridToolClone);
+      InsertAndRegisterGridTool(m_gridToolPencil);
+      InsertAndRegisterGridTool(m_gridToolEraser);
+      InsertAndRegisterGridTool(m_gridToolBrush);
+      InsertAndRegisterGridTool(m_gridToolAirBrush);
+      InsertAndRegisterGridTool(m_gridToolXRay);
+      InsertAndRegisterGridTool(m_gridToolBucket);
+      InsertAndRegisterGridTool(m_gridToolClone);
+      InsertAndRegisterGridTool(m_gridToolAtomView);
+      InsertAndRegisterGridTool(m_gridToolTileSelect);
     }
 
     void OnceOnlyButtons()
@@ -294,6 +305,16 @@ namespace MFM
       return m_statisticsPanel.IsVisible();
     }
 
+    void TogglePauseOnSelectedTiles()
+    {
+      m_gridPanel.TogglePauseOnSelectedTiles();
+    }
+
+    void ClearSelectedTiles()
+    {
+      m_gridPanel.ClearSelectedTiles();
+    }
+
     static bool KeyHandlerToggleButtons(u32, u32, void* arg, bool)
     {
       AbstractGUIDriver & d = *(AbstractGUIDriver*) arg;
@@ -306,16 +327,6 @@ namespace MFM
       exit(0);
     }
 
-#if 0
-    static bool KeyHandlerLeftButtonClicker(u32, u32, void *arg, bool)
-    {
-      MFM_API_ASSERT_NONNULL(arg);
-      AbstractButton * ab = (AbstractButton*) arg;
-      ab->OnClick(SDL_BUTTON_LEFT);
-      return true;
-    }
-#endif
-
     void RegisterButtonAccelerator(AbstractButton & ab)
     {
       m_keyboardMap.Register(ab);
@@ -325,6 +336,8 @@ namespace MFM
     {
       m_keyboardMap.Register(m_displayAER);
       m_keyboardMap.Register(m_buttonPanel);
+      m_keyboardMap.Register(m_increaseAEPSPerFrame);
+      m_keyboardMap.Register(m_decreaseAEPSPerFrame);
     }
 
     void KeyboardUpdate(SDL_KeyboardEvent & key, OurGrid& grid)
@@ -360,40 +373,6 @@ namespace MFM
         if (isPress) m_grendMove.SetX(speed);
         else m_grendMove.SetX(0);
       }
-
-
-      else if(keysym == SDLK_b && !anyMods)
-      {
-        m_buttonPanel.ToggleVisibility();
-      }
-      else if(keysym == SDLK_m && !anyMods)
-      {
-        m_grend.NextDrawBackgroundType();
-      }
-      else if(keysym ==SDLK_k && !anyMods)
-      {
-        m_grend.ToggleDataHeatmap();
-      }
-      else if(keysym == SDLK_h && !anyMods)
-      {
-        m_helpPanel.ToggleVisibility();
-      }
-      else if(keysym == SDLK_l && !anyMods)
-      {
-        ToggleLogView();
-      }
-      else if(keysym == SDLK_p && !anyMods)
-      {
-        m_grend.ToggleTileSeparation();
-      }
-      else if(keysym == SDLK_v && !anyMods)
-      {
-        m_gridPanel.ToggleAtomViewPanel();
-      }
-      else if(keysym == SDLK_o && !anyMods)
-      {
-        m_gridPanel.ToggleDrawAtomsAsSquares();
-      }
       else if(keysym == SDLK_ESCAPE && !anyMods)
       {
         m_gridPanel.DeselectAtomAndTile();
@@ -406,19 +385,6 @@ namespace MFM
         else
           LOG.Message("Not capturing screenshots");
       }
-      else if(keysym == SDLK_t && !anyMods)
-      {
-        ToggleToolbox();
-      }
-      else if(keysym == SDLK_SPACE && !anyMods)
-      {
-        m_keyboardPaused = !m_keyboardPaused;
-      }
-      else if(keysym == SDLK_s && !anyMods)
-      {
-        m_singleStep = true;
-        m_keyboardPaused = false;
-      }
       else if(keysym == SDLK_COMMA)
       {
         Super::DecrementAEPSPerFrame(isCtrl ? 10 : 1);
@@ -430,13 +396,9 @@ namespace MFM
 #endif
     }
 
-#if 0
-    GridRenderer & GetGridRenderer() { return m_grend; }
-    const GridRenderer & GetGridRenderer() const { return m_grend; }
-#endif
-
     virtual void PostUpdate()
     {
+#if 0 // stats panel now renders the live data.
       /* Update the stats renderer */
       m_statisticsPanel.SetAEPS(Super::GetAEPS());
       m_statisticsPanel.SetAER(Super::GetRecentAER());  // Use backwards averaged value
@@ -444,6 +406,7 @@ namespace MFM
       m_statisticsPanel.SetCurrentAEPSPerEpoch(this->GetAEPSPerEpoch());
       m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
       //      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
+#endif
     }
 
     u32 GetThisEpochAEPS() const
@@ -580,18 +543,18 @@ namespace MFM
 
       m_rootPanel.SetName("Root");
       m_gridPanel.SetBorder(Drawing::BLACK);
-      //XXX      m_gridPanel.SetGridRenderer(&m_grend);
-      //XXX      m_gridPanel.SetToolboxPanel(&m_toolboxPanel);
       m_gridPanel.SetGrid(&Super::GetGrid());
       m_gridPanel.SetTileRenderer(&m_tileRenderer);
 
+#if 0
       m_statisticsPanel.SetGrid(&Super::GetGrid());
       m_statisticsPanel.SetAEPS(Super::GetAEPS());
       m_statisticsPanel.SetAER(Super::GetRecentAER());
       m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
 
-  //      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
-      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
+      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
+      //      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
+#endif
       m_statisticsPanel.SetVisible(false);
 
       m_rootPanel.Insert(&m_gridPanel, NULL);
@@ -629,7 +592,7 @@ namespace MFM
 
       m_gridPanel.Insert(&m_statisticsPanel, NULL);
 
-      //      m_rootPanel.Print(STDOUT);
+      //Getting pretty long..      m_rootPanel.Print(STDOUT);
 
       SDL_WM_SetCaption(MFM_VERSION_STRING_LONG, NULL);
 
@@ -878,6 +841,7 @@ namespace MFM
       , m_gridPanel()
       , m_toolboxPanel()
       , m_gridToolAtomView(m_gridPanel, m_toolboxPanel)
+      , m_gridToolTileSelect(m_gridPanel, m_toolboxPanel)
       , m_gridToolPencil(m_gridPanel, m_toolboxPanel)
       , m_gridToolEraser(m_gridPanel, m_toolboxPanel)
       , m_gridToolBrush(m_gridPanel, m_toolboxPanel)
@@ -885,8 +849,10 @@ namespace MFM
       , m_gridToolXRay(m_gridPanel, m_toolboxPanel)
       , m_gridToolBucket(m_gridPanel, m_toolboxPanel)
       , m_gridToolClone(m_gridPanel, m_toolboxPanel)
-      , m_statisticsPanel()
+      , m_statisticsPanel(*this)
       , m_displayAER(m_statisticsPanel)
+      , m_increaseAEPSPerFrame(*this)
+      , m_decreaseAEPSPerFrame(*this)
       , m_buttonPanel()
       , m_externalConfigSectionGUI(AbstractDriver<GC>::GetExternalConfig(),*this)
     {
