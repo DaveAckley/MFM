@@ -73,7 +73,9 @@ namespace MFM
     typedef typename AC::ATOM_TYPE T;
 
     GridToolPencil(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
-      : Super("pencil", gp, tbp, IMAGE_ASSET_PENCIL_ICON)
+      : Super("pencil", gp, tbp,
+              IMAGE_ASSET_PENCIL_ICON,
+              "Use pencil tool (draw atoms)")
     {
       Super::SetToolShape(DIAMOND_SHAPE);
     }
@@ -99,7 +101,9 @@ namespace MFM
     typedef typename AC::ATOM_TYPE T;
 
     GridToolEraser(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
-      : Super("eraser", gp, tbp, IMAGE_ASSET_ERASER_ICON)
+      : Super("eraser", gp, tbp,
+              IMAGE_ASSET_ERASER_ICON,
+              "Use eraser tool (set sites empty)")
     {
       Super::SetToolShape(DIAMOND_SHAPE);
     }
@@ -123,7 +127,9 @@ namespace MFM
     typedef typename AC::ATOM_TYPE T;
 
     GridToolBrush(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
-      : Super("brush", gp, tbp, IMAGE_ASSET_BRUSH_ICON)
+      : Super("brush", gp, tbp,
+              IMAGE_ASSET_BRUSH_ICON,
+              "Use brush tool (draw atoms)")
     {
       Super::SetToolShape(ROUND_SHAPE);
     }
@@ -149,7 +155,9 @@ namespace MFM
     typedef typename AC::ATOM_TYPE T;
 
     GridToolAirBrush(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
-      : Super("air", gp, tbp, IMAGE_ASSET_AIRBRUSH_ICON)
+      : Super("air", gp, tbp,
+              IMAGE_ASSET_AIRBRUSH_ICON,
+              "Use airbrush tool (draw atoms in random sites)")
     {
       Super::SetToolShape(ROUND_SHAPE);
     }
@@ -178,7 +186,9 @@ namespace MFM
     typedef typename AC::ATOM_TYPE T;
 
     GridToolXRay(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
-      : Super("xray", gp, tbp, IMAGE_ASSET_XRAY_ICON)
+      : Super("xray", gp, tbp,
+              IMAGE_ASSET_XRAY_ICON,
+              "Use xray tool (flip bits in random sites)")
     {
       Super::SetToolShape(ROUND_SHAPE);
     }
@@ -328,7 +338,9 @@ namespace MFM
   public:
 
     GridToolBucket(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
-      : Super("bucket", gp, tbp, IMAGE_ASSET_BUCKET_ICON)
+      : Super("bucket", gp, tbp,
+              IMAGE_ASSET_BUCKET_ICON,
+              "Use bucket tool (flood fill atoms)")
     { }
 
     /**
@@ -387,7 +399,9 @@ namespace MFM
     }
 
     GridToolAtomView(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
-      : Super("atomview", gp, tbp, IMAGE_ASSET_ATOM_SELECTOR_ICON)
+      : Super("atomview", gp, tbp,
+              IMAGE_ASSET_ATOM_SELECTOR_ICON,
+              "Use atom select tool (examine atom internals)")
     { }
 
     virtual u32 GetMaxVariableRadius()
@@ -431,6 +445,51 @@ namespace MFM
 
   };
 
+
+  template<class GC>
+  class GridToolTileSelect : public GridToolShapeUpdater<GC>
+  {
+    typedef GridToolShapeUpdater<GC> Super;
+
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+
+    enum { R = EC::EVENT_WINDOW_RADIUS};
+
+  public:
+
+    GridToolTileSelect(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
+      : Super("tileselect", gp, tbp,
+              IMAGE_ASSET_SELECTOR_ICON,
+              "Use tile select tool (select/deselect tiles)")
+    { }
+
+    virtual u32 GetMaxVariableRadius()
+    {
+      return 0;
+    }
+
+    virtual void UpdateGridAround(UPoint point)
+    {
+      Grid<GC> & grid = this->GetGrid();
+
+      SPoint tileInGrid, siteInTile;
+      if (!grid.MapGridToTile(MakeSigned(point), tileInGrid, siteInTile))
+        return;
+
+      GridPanel<GC> & gp = this->GetGridPanel();
+      gp.SetTileSelected(MakeUnsigned(tileInGrid), this->IsMainFunction());
+    }
+
+    virtual void UpdateGridCoord(UPoint point)
+    {
+      // We overrode UpdateGridAround, so 'it should be impossible' to
+      // get here
+      FAIL(ILLEGAL_STATE);
+    }
+
+  };
 
   template<class GC>
   class GridToolClone : public GridToolShapeUpdater<GC>
@@ -520,7 +579,9 @@ namespace MFM
     typedef typename AC::ATOM_TYPE T;
 
     GridToolClone(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
-      : Super("clone", gp, tbp, IMAGE_ASSET_CLONE_ICON)
+      : Super("clone", gp, tbp,
+              IMAGE_ASSET_CLONE_ICON,
+              "Use clone tool (copy regions)")
       , m_srcCoord(-1,-1)
       , m_destCoord(-1,-1)
     { }

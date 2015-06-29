@@ -144,10 +144,10 @@ namespace MFM
   struct ClearButton : public AbstractGridButton<GC>
   {
     ClearButton()
-      : AbstractGridButton<GC>("Clear Tile")
+      : AbstractGridButton<GC>("Clear Tiles")
     {
       AbstractButton::SetName("ClearButton");
-      Panel::SetDoc("Clear selected tile if any");
+      Panel::SetDoc("Clear selected tiles if any");
       Panel::SetFont(FONT_ASSET_BUTTON_SMALL);
     }
     virtual s32 GetSection() { return HELP_SECTION_EDITING; }
@@ -160,17 +160,7 @@ namespace MFM
 
     virtual void OnClick(u8 button)
     {
-      FAIL(INCOMPLETE_CODE);
-#if 0
-      GridRenderer & grend = this->GetGridRenderer();
-
-      const SPoint selTile = grend.GetSelectedTile();
-      if(selTile.GetX() >= 0 && selTile.GetX() < this->GetGrid().GetWidth() &&
-         selTile.GetY() >= 0 && selTile.GetY() < this->GetGrid().GetHeight())
-      {
-        this->GetGrid().EmptyTile(grend.GetSelectedTile());
-      }
-#endif
+      this->GetDriver().ClearSelectedTiles();
     }
 
   };
@@ -702,10 +692,10 @@ namespace MFM
   struct PauseTileButton : public AbstractGridButton<GC>
   {
     PauseTileButton()
-      : AbstractGridButton<GC>("Pause Tile")
+      : AbstractGridButton<GC>("Pause Tiles")
     {
       AbstractButton::SetName("PauseTileButton");
-      Panel::SetDoc("Pause/unpause selected tile if any");
+      Panel::SetDoc("Pause/unpause selected tiles if any");
       Panel::SetFont(FONT_ASSET_BUTTON_SMALL);
     }
 
@@ -718,16 +708,7 @@ namespace MFM
 
     virtual void OnClick(u8 button)
     {
-      FAIL(INCOMPLETE_CODE);
-#if 0
-      SPoint selectedTile = this->GetGridRenderer().GetSelectedTile();
-
-      if(selectedTile.GetX() >= 0 && selectedTile.GetY() >= 0)
-      {
-        bool isEnabled = this->GetGrid().IsTileEnabled(selectedTile);
-        this->GetGrid().SetTileEnabled(selectedTile, !isEnabled);
-      }
-#endif
+      this->GetDriver().TogglePauseOnSelectedTiles();
     }
   };
 
@@ -935,6 +916,75 @@ namespace MFM
     virtual bool ExecuteFunction(u32 keysym, u32 mods)
     {
       m_sp.SetDisplayAER(1 + m_sp.GetDisplayAER());
+      return true;
+    }
+  };
+
+  template<class GC>
+  struct AdjustAEPSPerFrame : public KeyboardCommandFunction
+  {
+    typedef KeyboardCommandFunction Super;
+    AbstractDriver<GC> & m_ad;
+    AdjustAEPSPerFrame(AbstractDriver<GC> & ad)
+      : Super()
+      , m_ad(ad)
+    { }
+
+    AbstractDriver<GC> & GetDriver() { return m_ad; }
+
+    // hide these down in misc because big increments delay epoch
+    // processing -- not to be used lightly
+    virtual s32 GetSection() { return HELP_SECTION_MISC; }
+
+    virtual const char * GetDoc() = 0;
+
+    virtual bool GetKey(u32& keysym, u32& mods) = 0;
+
+    virtual bool ExecuteFunction(u32 keysym, u32 mods) = 0;
+  };
+
+  template<class GC>
+  struct IncreaseAEPSPerFrame : public AdjustAEPSPerFrame<GC>
+  {
+    typedef AdjustAEPSPerFrame<GC> Super;
+    IncreaseAEPSPerFrame(AbstractDriver<GC> & ad)
+      : Super(ad)
+    { }
+
+    virtual const char * GetDoc() { return "Increase AEPS run per redisplay";  }
+
+    virtual bool GetKey(u32& keysym, u32& mods)
+    {
+      keysym = SDLK_PERIOD;
+      mods = 0;
+      return true;
+    }
+
+    virtual bool ExecuteFunction(u32 keysym, u32 mods) {
+      this->GetDriver().IncreaseAEPSPerFrame();
+      return true;
+    }
+  };
+
+  template<class GC>
+  struct DecreaseAEPSPerFrame : public AdjustAEPSPerFrame<GC>
+  {
+    typedef AdjustAEPSPerFrame<GC> Super;
+    DecreaseAEPSPerFrame(AbstractDriver<GC> & ad)
+      : Super(ad)
+    { }
+
+    virtual const char * GetDoc() { return "Decrease AEPS run per redisplay";  }
+
+    virtual bool GetKey(u32& keysym, u32& mods)
+    {
+      keysym = SDLK_COMMA;
+      mods = 0;
+      return true;
+    }
+
+    virtual bool ExecuteFunction(u32 keysym, u32 mods) {
+      this->GetDriver().DecreaseAEPSPerFrame();
       return true;
     }
   };
