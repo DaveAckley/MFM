@@ -573,10 +573,12 @@ namespace MFM
       return true;
     }
 
+#if 0 // Mon Jun 29 04:45:42 2015 XXX enabled means ONLY do or don't ORIGINATE events.. all other processing continues
     if (!m_enabled)
     {
       return false;
     }
+#endif
 
     switch (m_requestedState)
     {
@@ -611,6 +613,12 @@ namespace MFM
     //NON_ACTIVE,
     if (!IsActive())
     {
+      return false;
+    }
+
+    if (!IsEnabled())
+    {
+      SleepMsec(2);
       return false;
     }
 
