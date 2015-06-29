@@ -74,6 +74,32 @@ namespace MFM
         return 1 == source.Scanf("%@",&sp);
       }
 
+      if (!strcmp("tslr",key))
+      {
+        u32 doit;
+        if (1 != source.Scanf("%d", &doit) || !doit)
+          return false;
+        this->UnselectAllTiles();
+        return true;
+      }
+
+      {
+        CharBufferByteSource cbbs(key, strlen(key));
+        u32 rowidx;
+        if (5 == cbbs.Scanf("tsli%D",&rowidx))
+        {
+          if ((rowidx % 32) != 0) return false;
+          if (rowidx + 32 >= MAX_TILES_IN_GRID) return false;
+
+          u32 selbits;
+          if (1 != source.Scanf("%08x)", &selbits))
+            return false;
+
+          m_selectedTiles.Write(rowidx, 32, selbits);
+          return true;
+        }
+      }
+
       return false;
     }
 
@@ -86,6 +112,16 @@ namespace MFM
         SPoint tmp(m_gridOriginDit);
         SPointSerializer sp(tmp);
         sink.Printf(" PP(gpog=%@)\n", &sp);
+      }
+
+      {
+        sink.Printf(" PP(tslr=1)\n");
+        for (u32 i = 0; i < MAX_TILES_IN_GRID; i += 32)
+        {
+          u32 selbits = m_selectedTiles.Read(i, 32);
+          if (selbits != 0)
+            sink.Printf(" PP(tsli%D=%08x)\n", i, selbits);
+        }
       }
     }
 
@@ -110,6 +146,68 @@ namespace MFM
 
     u32 GetAtomDit() const { return GetTileRenderer().GetAtomSizeDit(); }
 
+    void PaintSelectedTileMarkers(Drawing & drawing)
+    {
+      OurGrid & grid = GetGrid();
+      drawing.SetForeground(Drawing::YELLOW);
+      for (u32 tx = 0; tx < grid.GetWidth(); ++tx)
+      {
+        for (u32 ty = 0; ty < grid.GetHeight(); ++ty)
+        {
+          UPoint utc(tx,ty);
+          if (IsTileSelected(utc))
+          {
+            SPoint tc(tx,ty); // sigh
+            Rect rdit = MapTileInGridToScreenDit(grid.GetTile(tc), tc);
+            drawing.DrawRectDit(rdit);
+          }
+        }
+      }
+    }
+
+    void TogglePauseOnSelectedTiles()
+    {
+      OurGrid & grid = GetGrid();
+      for (u32 tx = 0; tx < grid.GetWidth(); ++tx)
+      {
+        for (u32 ty = 0; ty < grid.GetHeight(); ++ty)
+        {
+          SPoint tc(tx,ty);
+          if (IsTileSelected(MakeUnsigned(tc)))
+            grid.SetTileEnabled(tc, !grid.IsTileEnabled(tc));
+        }
+      }
+    }
+
+    void ClearSelectedTiles()
+    {
+      OurGrid & grid = GetGrid();
+      for (u32 tx = 0; tx < grid.GetWidth(); ++tx)
+      {
+        for (u32 ty = 0; ty < grid.GetHeight(); ++ty)
+        {
+          SPoint tc(tx,ty);
+          if (IsTileSelected(MakeUnsigned(tc)))
+            grid.EmptyTile(tc);
+        }
+      }
+    }
+
+    bool IsTileSelected(UPoint positionInGrid)
+    {
+      return m_selectedTiles.ReadBit(ToTileSelectIndex(positionInGrid));
+    }
+
+    void SetTileSelected(UPoint positionInGrid, bool selected)
+    {
+      m_selectedTiles.WriteBit(ToTileSelectIndex(positionInGrid), selected);
+    }
+
+    void UnselectAllTiles()
+    {
+      m_selectedTiles.Clear();
+    }
+
    private:
     OurTileRenderer * m_tileRenderer;
     void SetAtomDit(u32 newdit) { GetTileRenderer().SetAtomSizeDit(newdit); }
@@ -122,6 +220,21 @@ namespace MFM
     SPoint m_leftButtonGridStartDit;
 
     OurAtomViewPanel m_avp;
+
+    enum {
+      MAX_GRID_SIDE = 128,  // Yeah right.  More power to you..
+      MAX_TILES_IN_GRID = MAX_GRID_SIDE * MAX_GRID_SIDE
+    };
+
+    BitVector<MAX_TILES_IN_GRID> m_selectedTiles;
+
+    u32 ToTileSelectIndex(UPoint positionInGrid)
+    {
+      u32 x = positionInGrid.GetX(), y = positionInGrid.GetY();
+      if (x >= MAX_GRID_SIDE || y >= MAX_GRID_SIDE)
+        FAIL(ILLEGAL_ARGUMENT);
+      return x*MAX_GRID_SIDE + y;
+    }
 
     void ZoomAroundPix(SPoint aroundPix, u32 newAtomDrawDit)
     {
@@ -224,6 +337,7 @@ namespace MFM
 
     }
 
+#if 0
     OurSite * GetSiteAtScreenDit(const SPoint screenDit, bool includeCaches)
     {
       bool cachesDrawn = GetTileRenderer().IsDrawCaches();
@@ -253,6 +367,7 @@ namespace MFM
 
       return 0;
     }
+#endif
 
     OurSite * GetSiteAtGridCoord(const UPoint gridCoord)
     {
@@ -339,6 +454,7 @@ namespace MFM
     {
       if (m_currentGridTool)
         m_currentGridTool->PaintOverlay(drawing);
+      PaintSelectedTileMarkers(drawing);
     }
 
 
@@ -392,17 +508,20 @@ namespace MFM
           }
         }
 
-#if 0
-        if (event.button == SDL_BUTTON_LEFT/* && !m_paintingEnabled*/)
+        if (event.button == SDL_BUTTON_LEFT && !m_currentGridTool)
         {
-          typename Grid<GC>::GridTouchEvent gte;
-          gte.m_touchType = TOUCH_TYPE_LIGHT;
-          if (mbe.m_keyboardModifiers & KMOD_SHIFT)
-            gte.m_touchType = TOUCH_TYPE_HEAVY;
-          gte.m_gridAtomCoord = ClickPointToAtom(SPoint(event.x, event.y));
-          m_mainGrid->SenseTouchAt(gte);
+          UPoint gridCoord;
+          if (this->GetGridCoordAtScreenDit(Drawing::MapPixToDit(mbe.GetAt()), gridCoord))
+          {
+            typename Grid<GC>::GridTouchEvent gte;
+            gte.m_touchType = TOUCH_TYPE_LIGHT;
+            if (mbe.m_keyboardModifiers & KMOD_SHIFT)
+              gte.m_touchType = TOUCH_TYPE_HEAVY;
+            gte.m_gridAtomCoord = MakeSigned(gridCoord);
+            m_mainGrid->SenseTouchAt(gte);
+          }
         }
-#endif
+
         SPoint hitAtScreenPix = GetAbsoluteLocation();
         hitAtScreenPix.Set(event.x - hitAtScreenPix.GetX(),
                            event.y - hitAtScreenPix.GetY());
