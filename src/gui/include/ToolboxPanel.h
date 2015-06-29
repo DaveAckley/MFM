@@ -127,21 +127,40 @@ namespace MFM
     private:
       GridToolShapeUpdater<GC> * m_gridTool;
       ToolboxPanel<GC>* m_toolbox;
+      s32 m_keysym;
+      u32 m_mods;
 
      public:
 
       virtual s32 GetSection() { return HELP_SECTION_EDITING; }
       virtual const char * GetDoc() { return Panel::GetDoc(); }
-      virtual bool GetKey(u32& keysym, u32& mods) { return false; }
-      virtual bool ExecuteFunction(u32 keysym, u32 mods) { return false; }
+      virtual bool GetKey(u32& keysym, u32& mods)
+      {
+        if (m_keysym < 0)
+          return false;
+        keysym = m_keysym;
+        mods = m_mods;
+        return true;
+      }
+
+      virtual bool ExecuteFunction(u32 keysym, u32 mods) {
+        if (m_keysym >= 0 && keysym == (u32) m_keysym && mods == mods)
+        {
+          OnClick(SDL_BUTTON_LEFT);
+          return true;
+        }
+        return false;
+      }
 
       /**
        * Construct a new ToolButton
        */
-      ToolButton() :
-        AbstractButton(),
-        m_gridTool(0),
-        m_toolbox(0)
+      ToolButton()
+        : AbstractButton()
+        , m_gridTool(0)
+        , m_toolbox(0)
+        , m_keysym(-1)
+        , m_mods(0)
       {
         this->Panel::SetBackground(Drawing::GREY40);
         this->Panel::SetBorder(Drawing::GREY40);
@@ -151,6 +170,12 @@ namespace MFM
       {
         m_gridTool = &gridTool;
         SetIconAsset(GetGridTool().GetImageAsset());
+      }
+
+      void SetKeysym(s32 key, u32 mods)
+      {
+        m_keysym = key;
+        m_mods = mods;
       }
 
       GridToolShapeUpdater<GC> & GetGridTool()
@@ -574,6 +599,11 @@ namespace MFM
         FAIL(OUT_OF_ROOM);
       ToolButton & tb = m_toolButtons[m_toolButtonsInUse++];
       tb.SetGridTool(gt);
+      tb.Panel::SetDoc(gt.GetDoc());
+      if (m_toolButtonsInUse <= 9)
+      {
+        tb.SetKeysym(m_toolButtonsInUse + '0', 0);
+      }
       return tb;
     }
 
@@ -898,7 +928,7 @@ namespace MFM
 
     virtual void PaintComponent(Drawing& d)
     {
-      const u32 ELEMENT_START_X = 64;
+      const u32 ELEMENT_START_X = 20;
       const u32 ELEMENT_START_Y = m_bigText ? 64 : 40;
       const u32 ELEMENT_TOOL_SIZE = GetElementRenderSize() + 8;
 
