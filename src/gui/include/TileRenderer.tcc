@@ -110,6 +110,14 @@ namespace MFM
   template <class EC>
   void TileRenderer<EC>::PaintTileAtDit(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile)
   {
+    if (!tile.IsEnabled())
+    {
+        Rect rv(ditOrigin + ComputeDrawInsetDit(tile, OurTile::REGION_VISIBLE),
+                MakeUnsigned(ComputeDrawSizeDit(tile, OurTile::REGION_VISIBLE)));
+        drawing.FillRectDit(rv, Drawing::GREY10);
+
+        return;
+    }
     PaintSites(drawing,
                (m_drawBases && !IsBaseVisible()) ? DRAW_SITE_BASE : m_drawBackgroundType,
                DRAW_SHAPE_FILL, ditOrigin, tile);
