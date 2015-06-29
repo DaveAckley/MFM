@@ -152,6 +152,7 @@ namespace MFM
     bool m_initiateFunction; // Meaning press vs drag
     SPoint m_lastGridCoord; // Tracks last coord pressed or dragged over
     ToolShape m_toolShape;
+    OString64 m_doc;
 
   public:
     const char * GetTag() const
@@ -159,7 +160,12 @@ namespace MFM
       return m_tag.GetZString();
     }
 
-    GridToolShapeUpdater(const char * tag, GridPanel<GC> & gp, ToolboxPanel<GC> & tbp, ImageAsset iconNumber)
+    const char * GetDoc() const
+    {
+      return m_doc.GetZString();
+    }
+
+    GridToolShapeUpdater(const char * tag, GridPanel<GC> & gp, ToolboxPanel<GC> & tbp, ImageAsset iconNumber, const char * doc)
       : Super(gp, tbp, iconNumber)
       , m_tag(tag)
       , m_toolRadius(-1)
@@ -167,7 +173,10 @@ namespace MFM
       , m_initiateFunction(false)
       , m_lastGridCoord(-1,-1)
       , m_toolShape(ROUND_SHAPE)  // subclasses may call SetToolShape to have other default
-    { }
+      , m_doc(doc)
+    {
+      MFM_API_ASSERT_NONNULL(doc);
+    }
 
     void SetToolShape(u32 shape)
     {
