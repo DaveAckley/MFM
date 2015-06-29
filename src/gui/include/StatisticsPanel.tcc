@@ -22,8 +22,16 @@ namespace MFM {
   }
 
   template <class GC>
-  void StatisticsPanel<GC>::RenderGridStatistics(Drawing & drawing, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool endOfEpoch, u32 aepsInCurrentEpoch)
+  void StatisticsPanel<GC>::RenderGridStatistics(Drawing & drawing)
   {
+    OurDriver & ad = this->GetDriver();
+    OurGrid& grid = ad.GetGrid();
+    double aeps = ad.GetAEPS();
+    double aer = ad.GetRecentAER();
+    u32 AEPSperFrame = ad.GetAEPSPerFrame();
+    double overhead = ad.GetOverheadPercent();
+    bool endOfEpoch = false;
+    u32 aepsInCurrentEpoch = ad.GetAEPSPerEpoch();
 
     // Extract short names for parameter types
     typedef typename GC::EVENT_CONFIG EC;
@@ -189,14 +197,6 @@ namespace MFM {
         baseY += ROW_HEIGHT;
       }
     }
-  }
-
-  template <class GC>
-  void StatisticsPanel<GC>::WriteRegisteredCounts(ByteSink & fp, bool writeHeader, Grid<GC>& grid,
-                                                double aeps, double aer, u32 AEPSperFrame,
-                                                double overhead, bool endOfEpoch)
-  {
-    FAIL(DEPRECATED);
   }
 
 } /* namespace MFM */

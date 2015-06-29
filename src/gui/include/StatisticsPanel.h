@@ -31,7 +31,7 @@
 #include "MovablePanel.h"
 #include "GUIConstants.h"
 #include "Grid.h"
-#include "AbstractButton.h"
+#include "AbstractDriver.h"
 
 namespace MFM
 {
@@ -40,24 +40,31 @@ namespace MFM
   {
     typedef MovablePanel Super;
 
+    typedef AbstractDriver<GC> OurDriver;
     typedef Grid<GC> OurGrid;
     typedef typename GC::EVENT_CONFIG EC;
 
-    OurGrid* m_mainGrid;
+    OurDriver & m_driver;
+#if 0
     double m_AEPS;
     double m_AER;
     double m_overheadPercent;
     u32 m_aepsPerFrame;
     u32 m_currentAEPSPerEpoch;
+#endif
 
   public:
-    StatisticsPanel()
-      : m_reportersInUse(0)
+    OurDriver & GetDriver() { return m_driver; }
+
+    StatisticsPanel(AbstractDriver<GC> & ad)
+      : MovablePanel()
+      , m_driver(ad)
+      , m_reportersInUse(0)
       , m_displayElementsInUse(0)
       , m_displayAER(2)
       , m_maxDisplayAER(5)
       , m_screenshotTargetFPS(-1)
-      , m_registeredButtons(0)
+        //      , m_registeredButtons(0)
       , m_drawPoint(10,0)
     {
       SetName("StatisticsPanel");
@@ -68,69 +75,11 @@ namespace MFM
       SetRenderPoint(SPoint(100000, 0));
       SetForeground(Drawing::WHITE);
       SetBackground(Drawing::DARK_PURPLE);
-      m_AEPS = m_AER = 0.0;
-      m_currentAEPSPerEpoch = 0;
-      m_aepsPerFrame = 0;
-      m_overheadPercent = 0.0;
-    }
-
-    void SetGrid(OurGrid* mainGrid)
-    {
-      m_mainGrid = mainGrid;
-    }
-
-    void SetAEPS(double aeps)
-    {
-      m_AEPS = aeps;
-    }
-
-    void SetCurrentAEPSPerEpoch(u32 aepsPerEpoch)
-    {
-      m_currentAEPSPerEpoch = aepsPerEpoch;
-    }
-
-    void SetAER(double aer)
-    {
-      m_AER = aer;
-    }
-
-    void SetOverheadPercent(double overheadPercent)
-    {
-      m_overheadPercent = overheadPercent;
-    }
-
-    void SetAEPSPerFrame(u32 apf)
-    {
-      m_aepsPerFrame = apf;
     }
 
     bool LoadDetails(const char * key, LineCountingByteSource & source)
     {
       if (Super::LoadDetails(key, source)) return true;
-
-      if (!strcmp("spaeps",key))
-      {
-        u32 tmp;
-        if (1 != source.Scanf("%D", &tmp)) return false;
-        m_AEPS = tmp / 10.0;
-        return true;
-      }
-      if (!strcmp("spaer",key))
-      {
-        u32 tmp;
-        if (1 != source.Scanf("%D", &tmp)) return false;
-        m_AER = tmp / 100.0;
-        return true;
-      }
-      if (!strcmp("spovh",key))
-      {
-        u32 tmp;
-        if (1 != source.Scanf("%D", &tmp)) return false;
-        m_overheadPercent = tmp / 1000.0;
-        return true;
-      }
-      if (!strcmp("spapf",key)) return 1 == source.Scanf("%D", &m_aepsPerFrame);
-      if (!strcmp("spape",key)) return 1 == source.Scanf("%D", &m_currentAEPSPerEpoch);
 
       return StatsRendererLoadDetails(key, source);
     }
@@ -139,12 +88,6 @@ namespace MFM
     {
       Super::SaveDetails(sink);
 
-      sink.Printf(" PP(spaeps=%D)\n", (u32)(10*m_AEPS));
-      sink.Printf(" PP(spaer=%D)\n", (u32)(100*m_AER));
-      sink.Printf(" PP(spovh=%D)\n", (u32)(1000*m_overheadPercent));
-      sink.Printf(" PP(spapf=%D)\n", m_aepsPerFrame);
-      sink.Printf(" PP(spape=%D)\n", m_currentAEPSPerEpoch);
-
       StatsRendererSaveDetails(sink);
     }
 
@@ -152,10 +95,7 @@ namespace MFM
     virtual void PaintComponent(Drawing& drawing)
     {
       this->Panel::PaintComponent(drawing);
-      this->RenderGridStatistics(drawing, *m_mainGrid,
-                                 m_AEPS, m_AER, m_aepsPerFrame,
-                                 m_overheadPercent, false,
-                                 m_currentAEPSPerEpoch);
+      this->RenderGridStatistics(drawing);
     }
 
     virtual void PaintBorder(Drawing & config)
@@ -355,14 +295,22 @@ namespace MFM
 
     s32 m_screenshotTargetFPS;
 
+#if 0 // Mon Jun 29 12:11:56 2015  WTF?  Prehistory?
     static const u32 MAX_BUTTONS = 16;
     AbstractButton* m_buttons[MAX_BUTTONS];
     u32 m_registeredButtons;
+#endif
 
     UPoint m_drawPoint;
 
   public:
 
+    enum {
+      LINE_HEIGHT_PIXELS = 32,
+      DETAIL_LINE_HEIGHT_PIXELS = 32
+    };
+
+#if 0
     void ClearButtons()
     {
       m_registeredButtons = 0;
@@ -396,6 +344,7 @@ namespace MFM
 
       m_buttons[m_registeredButtons++] = b;
     }
+#endif
 
     u32 GetDisplayAER() const
     {
@@ -415,7 +364,7 @@ namespace MFM
     void SetDisplayAER(u32 displayAER)
     {
       m_displayAER = displayAER % (m_maxDisplayAER + 1);
-      ReassignButtonLocations();
+      //      ReassignButtonLocations();
     }
 
     const char * GetRunLabel() const
@@ -452,9 +401,7 @@ namespace MFM
       return DisplayDataReporter(&m_displayElements[index]);
     }
 
-    void RenderGridStatistics(Drawing & drawing, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool endOfEpoch, u32 aepsInCurrentEpoch);
-
-    void WriteRegisteredCounts(ByteSink & fp, bool writeHeader, Grid<GC>& grid, double aeps, double aer, u32 AEPSperFrame, double overhead, bool doResets);
+    void RenderGridStatistics(Drawing & drawing);
 
   };
 } /* namespace MFM */
