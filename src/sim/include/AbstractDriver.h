@@ -265,11 +265,16 @@ namespace MFM
       m_overheadPercent = 100.0*m_msSpentOverhead/(m_msSpentRunning+m_msSpentOverhead);
 
       double diff = m_AEPS - m_lastFrameAEPS;
-      double err = MIN(1.0, MAX(-1.0, m_aepsPerFrame - diff));
+      double err = MIN(5.0, MAX(-5.0, m_aepsPerFrame - diff));
 
-      // Correct up to 20% of current each frame
-      m_microsSleepPerFrame = (100+20*err)*m_microsSleepPerFrame/100;
-      m_microsSleepPerFrame = MIN(1000000, MAX(1000, m_microsSleepPerFrame));
+      // Correct up to 10% of current each frame
+      m_microsSleepPerFrame = (100+2*err)*m_microsSleepPerFrame/100;
+      m_microsSleepPerFrame = MIN(100000000, MAX(1000, m_microsSleepPerFrame));
+
+      LOG.Debug("diff=%d err100=%d usleep=%d",
+                (s32) diff,
+                (s32) (err*100),
+                m_microsSleepPerFrame);
 
       m_lastFrameAEPS = m_AEPS;
 
@@ -279,38 +284,35 @@ namespace MFM
     }
 
     /**
-     * Subtracts \c m_aepsPerFrame (or, the number of AEPS which
-     * should elapse every call to \c UpdateGrid() ) by one, keeping it
-     * above \c 0 at all times.
+     * Reduce the \c m_aepsPerFrame (or, the number of AEPS which
+     * should elapse every call to \c UpdateGrid() ), keeping it above
+     * \c 0 at all times.
      *
      * @param amount The amount of AEPS per frame to decrement by.
      */
-    void DecrementAEPSPerFrame(u32 amount)
+    void DecreaseAEPSPerFrame()
     {
-      if(m_aepsPerFrame <= amount)
-      {
-        m_aepsPerFrame = 1;
-      }
-      else
-      {
-        m_aepsPerFrame -= amount;
-      }
+      u32 decr = 0;
+      if(m_aepsPerFrame > 100) decr = 50;
+      else if (m_aepsPerFrame > 10) decr = 5;
+      else if (m_aepsPerFrame > 1) decr = 1;
+      m_aepsPerFrame -= decr;
     }
 
     /**
-     * Adds one to \c m_aepsPerFrame (or, the number of AEPS which
+     * Increase the \c m_aepsPerFrame (or, the number of AEPS which
      * should elapse every call to \c UpdateGrid() ), keeping it
      * below \c 1000 at all times.
      *
      * @param amount The amount of AEPS per frame to increment by.
      */
-    void IncrementAEPSPerFrame(u32 amount)
+    void IncreaseAEPSPerFrame()
     {
-      m_aepsPerFrame += amount;
-      if(m_aepsPerFrame >= 1000)
-      {
-        m_aepsPerFrame = 1000;
-      }
+      u32 incr = 0;
+      if (m_aepsPerFrame < 10) incr = 1;
+      else if (m_aepsPerFrame < 100) incr = 5;
+      else if (m_aepsPerFrame < 1000) incr = 50;
+      m_aepsPerFrame += incr;
     }
 
     /**
