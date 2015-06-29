@@ -260,7 +260,8 @@ namespace MFM {
       for (s32 line = m_textLines - m_bottomLineShown - 1; line >= 0; --line) {
         const char * zline = m_text.GetZString(line);
         if (!zline) {
-          printf("WTF %d\n", line);
+          LOG.Error("WTF %d\n", line);
+          break;
         }
         drawing.BlitText(zline,
                          SPoint(ELEVATOR_WIDTH, y),
