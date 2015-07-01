@@ -514,11 +514,9 @@ namespace MFM
           if (this->GetGridCoordAtScreenDit(Drawing::MapPixToDit(mbe.GetAt()), gridCoord))
           {
             typename Grid<GC>::GridTouchEvent gte;
-            gte.m_touchType = TOUCH_TYPE_LIGHT;
-            if (mbe.m_keyboardModifiers & KMOD_SHIFT)
-              gte.m_touchType = TOUCH_TYPE_HEAVY;
+            gte.m_touchType = TOUCH_TYPE_HEAVY;
             gte.m_gridAtomCoord = MakeSigned(gridCoord);
-            m_mainGrid->SenseTouchAt(gte);
+            m_mainGrid->SenseTouchAround(gte);
           }
         }
 
@@ -585,6 +583,21 @@ namespace MFM
            (mme.m_keyboardModifiers == 0))
         {
           m_currentGridTool->Drag(mme);
+          return true;
+        }
+      }
+      else
+      {
+        UPoint gridCoord;
+        if (this->GetGridCoordAtScreenDit(Drawing::MapPixToDit(mme.GetAt()), gridCoord))
+        {
+          typename Grid<GC>::GridTouchEvent gte;
+          if (mme.m_buttonMask == 0)
+            gte.m_touchType = TOUCH_TYPE_PROXIMITY;
+          else
+            gte.m_touchType = TOUCH_TYPE_LIGHT;
+          gte.m_gridAtomCoord = MakeSigned(gridCoord);
+          m_mainGrid->SenseTouchAround(gte);
           return true;
         }
       }
