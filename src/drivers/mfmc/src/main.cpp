@@ -168,45 +168,47 @@ namespace MFM
     virtual void DefineNeededElements()
     {
 #ifdef ULAM_CUSTOM_ELEMENTS
-      DefineNeededUlamCustomElements(this);
+      if (!m_suppressStdElements)
+        DefineNeededUlamCustomElements(this);
 #endif /* ULAM_CUSTOM_ELEMENTS */
 
-      //Always include the old buddies?
-      this->NeedElement(&Element_Empty<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Wall<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Res<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Dreg<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Sorter<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Data<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Emitter<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Consumer<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Block<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_ForkBomb1<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_ForkBomb2<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_ForkBomb3<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_AntiForkBomb<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_MQBar<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Mover<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Indexed<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Fish<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Shark<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Xtal_Sq1<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Xtal_L12<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Xtal_R12<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Xtal_General<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Creg<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Dmover<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_CheckerForkBlue<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_CheckerForkRed<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Wanderer_Cyan<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_Wanderer_Magenta<EC>::THE_INSTANCE);
+      if (this->m_includeCPPDemos)
+      {
+        this->NeedElement(&Element_Wall<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Res<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Dreg<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Sorter<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Data<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Emitter<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Consumer<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Block<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_ForkBomb1<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_ForkBomb2<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_ForkBomb3<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_AntiForkBomb<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_MQBar<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Mover<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Indexed<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Fish<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Shark<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Xtal_Sq1<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Xtal_L12<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Xtal_R12<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Xtal_General<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Creg<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Dmover<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_CheckerForkBlue<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_CheckerForkRed<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Wanderer_Cyan<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Wanderer_Magenta<EC>::THE_INSTANCE);
 
-      this->NeedElement(&Element_City_Building<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_City_Car<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_City_Intersection<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_City_Park<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_City_Sidewalk<EC>::THE_INSTANCE);
-      this->NeedElement(&Element_City_Street<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_City_Building<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_City_Car<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_City_Intersection<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_City_Park<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_City_Sidewalk<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_City_Street<EC>::THE_INSTANCE);
+      }
     }
 
     ThreadStamper m_stamper;

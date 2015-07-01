@@ -618,6 +618,16 @@ namespace MFM
       ((AbstractDriver*)driver)->m_haltOnFull = 1;
     }
 
+    static void SetNoStdFromArgs(const char* not_needed, void* driver)
+    {
+      ((AbstractDriver*)driver)->m_suppressStdElements = 1;
+    }
+
+    static void SetCppDemosFromArgs(const char* not_needed, void* driver)
+    {
+      ((AbstractDriver*)driver)->m_includeCPPDemos = 1;
+    }
+
     static void SetGridImages(const char* not_needed, void* driver)
     {
       ((AbstractDriver*)driver)->m_gridImages = 1;
@@ -1025,6 +1035,8 @@ namespace MFM
       , m_haltAfterAEPS(0)
       , m_haltOnEmpty(false)
       , m_haltOnFull(false)
+      , m_suppressStdElements(false)
+      , m_includeCPPDemos(false)
       , m_msSpentRunning(0)
       , m_msSpentOverhead(0)
       , m_microsSleepPerFrame(1000)
@@ -1186,6 +1198,12 @@ namespace MFM
       RegisterArgument("Store data in per-sim directories under ARG (string)",
                        "-d|--dir", &SetDataDirFromArgs, this, true);
 
+      RegisterArgument("Suppress loading standard ulam elements (DReg, etc)",
+                       "--no-std", &SetNoStdFromArgs, this, false);
+
+      RegisterArgument("Include (older) C++ demo elements (City, etc)",
+                       "--cpp-demos", &SetCppDemosFromArgs, this, false);
+
       RegisterArgument("Add ARG as the path to an element library (.so)",
                        "-ep|--elementpath", &RegisterElementLibraryPath, this, true);
 
@@ -1289,7 +1307,6 @@ namespace MFM
 
       m_grid.InitThreads();
 
-      //m_grid.Needed(Element_Empty<EC>::THE_INSTANCE);
       NeedElement(&Element_Empty<EC>::THE_INSTANCE);
 
       ReinitPhysics();
@@ -1334,6 +1351,8 @@ namespace MFM
     u32 m_haltAfterAEPS;
     bool m_haltOnEmpty;
     bool m_haltOnFull;
+    bool m_suppressStdElements;
+    bool m_includeCPPDemos;
 
     u64 m_msSpentRunning;
     u64 m_msSpentOverhead;
