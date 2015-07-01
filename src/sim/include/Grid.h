@@ -260,7 +260,12 @@ namespace MFM {
       { }
     };
 
-    void SenseTouchAt(const GridTouchEvent & gridTouchEvent);
+    void SenseTouchAround(const GridTouchEvent & gridTouchEvent) ;
+
+  private:
+    void SenseTouchAt(const SPoint gridCoord, SiteTouchType touch) ;
+
+  public:
 
     UlamClassRegistry & GetUlamClassRegistry()
     {

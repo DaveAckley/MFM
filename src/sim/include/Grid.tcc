@@ -306,10 +306,26 @@ namespace MFM {
   }
 
   template <class GC>
-  void Grid<GC>::SenseTouchAt(const GridTouchEvent & gte)
+  void Grid<GC>::SenseTouchAround(const GridTouchEvent & gte)
+  {
+    const MDist<R> & md = MDist<R>::get();
+    u32 lim = (u32) m_random.Between(0,R);
+    for (u32 radius = 0; radius <= lim; ++radius)
+    {
+      u32 sqv = (radius + 3)*(radius + 3);
+      for (u32 sn = md.GetFirstIndex(radius); sn <= md.GetLastIndex(radius); ++sn)
+      {
+        if (m_random.OddsOf(8,sqv))
+          this->SenseTouchAt(gte.m_gridAtomCoord + md.GetPoint(sn), gte.m_touchType);
+      }
+    }
+  }
+
+  template <class GC>
+  void Grid<GC>::SenseTouchAt(const SPoint gridCoord, SiteTouchType touch)
   {
     SPoint tileInGrid, siteInTile;
-    if (!MapGridToTile(gte.m_gridAtomCoord, tileInGrid, siteInTile))
+    if (!MapGridToTile(gridCoord, tileInGrid, siteInTile))
     {
       return;  // ain't no touch
     }
@@ -323,7 +339,7 @@ namespace MFM {
     // thread, while events in the tile threads can be accesssing the
     // same Site data.  We are DELIBERATELY LETTING THIS HAPPEN woah.
     //
-    site.Sense(gte.m_touchType);
+    site.Sense(touch);
   }
 
   template <class GC>
