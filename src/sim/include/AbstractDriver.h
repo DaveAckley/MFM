@@ -1157,7 +1157,7 @@ namespace MFM
       RegisterArgument("Set epoch length to ARG AEPS",
                        "-e|--epoch", &SetAEPSPerEpochFromArgs, this, true);
 
-      RegisterArgument("Autosave grid every ARG epochs (default 1; 0 for never)",
+      RegisterArgument("Autosave grid every ARG epochs (default 10; 0 for never)",
                        "-a|--autosave", &SetAutosavePerEpochsFromArgs, this, true);
 
       RegisterArgument("Increase the epoch length every ARG epochs",
