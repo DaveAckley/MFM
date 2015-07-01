@@ -255,7 +255,7 @@ namespace MFM
 
       d.SetFont(FONT_ASSET_HELPPANEL_SMALL);
       const u32 LINE_X_START = baseX + 4;
-      const u32 LINE_HEIGHT = TTF_FontLineSkip(AssetManager::GetReal(d.GetFont()));
+      const u32 LINE_HEIGHT = AssetManager::GetFontLineSkip(d.GetFont());
       const u32 INDENT_AMOUNT = LINE_HEIGHT;
 
       this->PrintLine(d, LINE_X_START, currentY, LINE_HEIGHT, zstr);
