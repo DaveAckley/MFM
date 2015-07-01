@@ -182,20 +182,6 @@ namespace MFM {
       return old;
     }
 
-#if 0
-    /**
-       Set the current font.  Null may be passed in to clear the
-       current font.  Text operations will fail ILLEGAL_STATE if
-       attempted with a null font.  Returns prior value.
-     */
-    TTF_Font* SetFont(TTF_Font * newFont)
-    {
-      TTF_Font* old = m_font;
-      m_font = newFont;
-      return old;
-    }
-#endif
-
     /**
      * Set the current font to one loaded by the AssetManager.
      *
