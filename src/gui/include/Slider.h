@@ -43,26 +43,33 @@ namespace MFM
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
-    bool m_dragging;
-    s32 m_dragStartX;
-    s32 m_preDragVal;
+    bool m_hitIn; // If button down was ours and we're still tracking motion
 
    public:
 
     enum
     {
       SLIDER_WIDTH = 150,
-      SLIDER_HEIGHT = 32,
+      SLIDER_HEIGHT = 50,
 
       SLIDER_WIDTH_BIG = 300,
       SLIDER_HEIGHT_BIG = 64,
 
       SLIDER_HALF_HEIGHT = (SLIDER_HEIGHT / 2),
-      SLIDER_HALF_HEIGHT_BIG = (SLIDER_HEIGHT_BIG / 2)
+      SLIDER_HALF_HEIGHT_BIG = (SLIDER_HEIGHT_BIG / 2),
+
+      SLIDER_Y = 16,
+      SLIDER_X_INDENTS = 12,
+      SLIDER_TIC_HEIGHT = 4,
+      SLIDER_TEXT_Y = SLIDER_Y + SLIDER_TIC_HEIGHT,
+
+      SLIDER_ICON_WIDTH = 17, // ?? ICON SIZE?
+
+      _UNUSED_COMMA_EATER_REMAINS_AT_END_
     };
 
     Slider() :
-      m_dragging(false)
+      m_hitIn(false)
     {
       Init();
     }
@@ -104,6 +111,13 @@ namespace MFM
       return this->m_parameter->GetBitsAsS32(*this->m_patom);
     }
 
+    s32 GetDefaultValue() const
+    {
+      MFM_API_ASSERT_NONNULL(this->m_parameter);
+      MFM_API_ASSERT_NONNULL(this->m_patom);
+      return this->m_parameter->GetDefault();
+    }
+
     void SetValue(s32 val)
     {
       MFM_API_ASSERT_NONNULL(this->m_parameter);
@@ -134,56 +148,58 @@ namespace MFM
 
     virtual bool Handle(MouseButtonEvent& event)
     {
+      m_hitIn = false; // Any button event except down in us means not us
+
       if(event.m_event.button.type == SDL_MOUSEBUTTONDOWN)
       {
         if(event.m_event.button.button == SDL_BUTTON_LEFT)
         {
-          if(GetSliderRect().Contains(event.GetAt() - this->GetAbsoluteLocation()))
+          SPoint localpos = event.GetAt() - this->GetAbsoluteLocation();
+          if(GetSliderHitArea().Contains(localpos))
+          {
+            m_hitIn = true;
+            if(this->m_parameter)
+            {
+              this->SetValueToMappedX(localpos.GetX());
+              return true;
+            }
+          }
+          if (GetTextHitArea().Contains(localpos))
           {
             if(this->m_parameter)
             {
-              m_dragging = true;
-              m_dragStartX = event.GetAt().GetX();
-              m_preDragVal = GetValue();
+              this->SetValue(this->GetDefaultValue());
               return true;
             }
           }
         }
-      }
-      else
-      {
-        m_dragging = false;
-        /* Might want the things underneath to let up too. */
-        return false;
       }
       return false;
     }
 
     virtual bool Handle(MouseMotionEvent& event)
     {
-      if(m_dragging && this->m_parameter)
+      if(m_hitIn && event.m_event.button.button == SDL_BUTTON_LEFT)
       {
-        s32 delta = event.m_event.motion.x - m_dragStartX;
-        s32 valDelta = delta * ((double)this->m_parameter->GetMax() / GetSliderWidth());
-
-        if(delta < 0)
+        SPoint localpos = event.GetAt() - this->GetAbsoluteLocation();
+        if(GetSliderHitArea().Contains(localpos))
         {
-          if(valDelta >= 0)
+          if(this->m_parameter)
           {
-            valDelta = 0;
+            this->SetValueToMappedX(localpos.GetX());
           }
         }
-        if (this->m_parameter)
-        {
-          SetValue(m_preDragVal + valDelta);
-        }
+        // As long as the button's down, we're taking this event even
+        // if it's outside the hit area, to hold on to the focus in
+        // case it comes back into the hit area.
+        return true;
       }
-      return m_dragging;
+      return false;
     }
 
     virtual void OnMouseExit()
     {
-      m_dragging = false;
+      m_hitIn = false;
     }
 
     virtual void PaintComponent(Drawing & d)
@@ -195,45 +211,95 @@ namespace MFM
 
       d.SetForeground(Drawing::BLACK);
 
-      d.SetFont(GetRenderFont());
+      FontAsset font = GetRenderFont();
+      d.SetFont(font);
+      const u32 TEXT_HEIGHT = AssetManager::GetFontLineSkip(font);
 
-      d.DrawHLine(16, 7, GetSliderWidth() - 7);
+      d.DrawHLine(SLIDER_Y, SLIDER_X_INDENTS, GetSliderWidth() - SLIDER_X_INDENTS);
 
-      d.DrawVLine(7, 16, 20);
-      d.DrawVLine(GetSliderWidth() - 7, 16, 20);
+      d.DrawVLine(SLIDER_X_INDENTS, SLIDER_Y, SLIDER_TEXT_Y);
+      d.DrawVLine(GetSliderWidth() - SLIDER_X_INDENTS, SLIDER_Y, SLIDER_TEXT_Y);
 
-      CharBufferByteSink<16> numBuffer;
+      OString16 numBuffer;
       numBuffer.Printf("%d", this->m_parameter->GetMin());
+      UPoint tsize;
+      tsize = AssetManager::GetFontTextSize(font, numBuffer.GetZString());
       d.BlitText(numBuffer.GetZString(),
-                 SPoint(3, 16),
-                 UPoint(48, 16));
+                 SPoint(SLIDER_X_INDENTS - tsize.GetX() / 2, SLIDER_TEXT_Y),
+                 UPoint(tsize.GetX(), TEXT_HEIGHT));
 
       numBuffer.Reset();
       numBuffer.Printf("%d", this->m_parameter->GetMax());
+      tsize = AssetManager::GetFontTextSize(font, numBuffer.GetZString());
+
       d.BlitText(numBuffer.GetZString(),
-                 SPoint(GetSliderWidth() - 32, GetSliderHalfHeight()),
-                 UPoint(48, GetSliderHalfHeight()));
+                 SPoint(GetSliderWidth() - tsize.GetX() / 2, SLIDER_TEXT_Y),
+                 UPoint(tsize.GetX(), TEXT_HEIGHT));
 
       numBuffer.Reset();
       this->m_parameter->PrintValue(numBuffer, *this->m_patom);
+      tsize = AssetManager::GetFontTextSize(font, numBuffer.GetZString());
 
       d.SetBackground(Drawing::GREY70);
       d.SetForeground(Drawing::WHITE);
       d.BlitBackedText(numBuffer.GetZString(),
-                       SPoint(GetSliderWidth() / 2 - 16, GetSliderHalfHeight()),
-                       UPoint(48, GetSliderHalfHeight()));
+                       SPoint(GetSliderWidth() / 2 - tsize.GetX() / 2, SLIDER_Y + 1),
+                       UPoint(tsize.GetX(), TEXT_HEIGHT));
 
       Rect sliderRect = GetSliderRect();
-      d.BlitImageAsset(IMAGE_ASSET_SLIDER_HANDLE,
+      d.BlitImageAsset(m_hitIn ? IMAGE_ASSET_SLIDER_HANDLE_ACTIVE : IMAGE_ASSET_SLIDER_HANDLE,
                        sliderRect.GetPosition(),
                        sliderRect.GetSize());
 
+      if (!IsAtDefault())
+        d.SetForeground(Drawing::YELLOW);
+      tsize = AssetManager::GetFontTextSize(font, this->m_parameter->GetName());
       d.BlitBackedText(this->m_parameter->GetName(),
-                       SPoint(GetSliderWidth(), 7),
-                       UPoint(GetSliderWidth(), GetSliderHalfHeight()));
+                       SPoint(GetSliderWidth(), 0),
+                       UPoint(tsize.GetX(), TEXT_HEIGHT));
     }
 
   private:
+
+    bool IsAtDefault() const
+    {
+      return this->GetValue() == this->GetDefaultValue();
+    }
+
+    void SetValueToMappedX(u32 xhit)
+    {
+      SetValue(MapXToParmVal(xhit));
+    }
+
+    s32 MapXToParmVal(u32 xhit)
+    {
+      double frac = 1.0 * ((s32) xhit - SLIDER_X_INDENTS) / (GetSliderWidth() - 2 * SLIDER_X_INDENTS);
+      frac = CLAMP<double>(0.0, 1.0, frac);
+      s32 min = this->m_parameter->GetMin();
+      s32 max = this->m_parameter->GetMax();
+      return (s32) ((frac * (max - min)) + min);
+    }
+
+    inline Rect GetSliderHitArea() const
+    {
+      // Add a buffer around the slider, for less fussy GUI, and (in
+      // width) to ensure we can reach min/max despite granularity
+      const s32 HIT_WIDTH_BUFFER = SLIDER_X_INDENTS / 2;
+      const s32 HIT_HEIGHT_BUFFER = SLIDER_Y / 2;
+      return Rect(SLIDER_X_INDENTS - HIT_WIDTH_BUFFER,
+                  0 - HIT_HEIGHT_BUFFER,
+                  GetSliderWidth() - 2 * SLIDER_X_INDENTS + 2 * HIT_WIDTH_BUFFER,
+                  SLIDER_Y + 2 * HIT_HEIGHT_BUFFER);
+    }
+
+    inline Rect GetTextHitArea() const
+    {
+      FontAsset font = GetRenderFont();
+      const u32 TEXT_HEIGHT = AssetManager::GetFontLineSkip(font);
+
+      UPoint tsize = AssetManager::GetFontTextSize(font, this->m_parameter->GetName());
+      return Rect(GetSliderWidth(), 0, tsize.GetX(), TEXT_HEIGHT);
+    }
 
     inline Rect GetSliderRect() const
     {
@@ -241,9 +307,12 @@ namespace MFM
       if (this->m_parameter)
       {
         s32 val = GetValue();
-        xpos = this->m_parameter->MapValue((GetSliderWidth() - 7), val) - 7;
+        xpos =
+          this->m_parameter->MapValue((GetSliderWidth() - 2 * SLIDER_X_INDENTS), val)
+          + SLIDER_X_INDENTS
+          - SLIDER_ICON_WIDTH / 2;
       }
-      return Rect(xpos > 0 ? xpos : 0, 0, 17, GetSliderHalfHeight());
+      return Rect(xpos >= 0 ? xpos : 0, 0, SLIDER_ICON_WIDTH, GetSliderHalfHeight());
     }
   };
 }

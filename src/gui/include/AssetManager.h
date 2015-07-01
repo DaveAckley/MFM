@@ -51,6 +51,7 @@ namespace MFM
     IMAGE_ASSET_CHECKBOX_ICON_ON,
     IMAGE_ASSET_CHECKBOX_ICON_OFF,
     IMAGE_ASSET_SLIDER_HANDLE,
+    IMAGE_ASSET_SLIDER_HANDLE_ACTIVE,
     IMAGE_ASSET_SELECTOR_ICON_BIG,
     IMAGE_ASSET_ATOM_SELECTOR_ICON_BIG,
     IMAGE_ASSET_PENCIL_ICON_BIG,
@@ -188,6 +189,7 @@ namespace MFM
         surfaces[IMAGE_ASSET_CHECKBOX_ICON_ON] = LoadImage("images/checkbox_on.png");
         surfaces[IMAGE_ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
         surfaces[IMAGE_ASSET_SLIDER_HANDLE] = LoadImage("images/slider_handle.png");
+        surfaces[IMAGE_ASSET_SLIDER_HANDLE_ACTIVE] = LoadImage("images/slider_handle_active.png");
         surfaces[IMAGE_ASSET_SELECTOR_ICON_BIG] = LoadImage("images/selector_icon_big.png");
         surfaces[IMAGE_ASSET_ATOM_SELECTOR_ICON_BIG] = LoadImage("images/atom_selector_icon_big.png");
         surfaces[IMAGE_ASSET_PENCIL_ICON_BIG] = LoadImage("images/pencil_icon_big.png");
@@ -278,6 +280,30 @@ namespace MFM
       TTF_Font * f = Get(a);
       if (!f) FAIL(ILLEGAL_ARGUMENT);
       return f;
+    }
+
+    /**
+       Get the 'line skip' -- the recommended interline spacing -- of
+       font asset \c a
+
+       \fails ILLEGAL_ARGUMENT if there is no font associated with \c a
+     */
+    static u32 GetFontLineSkip(FontAsset a)
+    {
+      TTF_Font * f = GetReal(a);
+      return TTF_FontLineSkip(f);
+    }
+
+    static UPoint GetFontTextSize(FontAsset font, const char * text)
+    {
+      MFM_API_ASSERT_NONNULL(text);
+      TTF_Font * ttfont = GetReal(font);
+      s32 width, height;
+      if (TTF_SizeText(ttfont, text, &width, &height) != 0)
+      {
+        width = height = 0;
+      }
+      return MakeUnsigned(SPoint(width,height));
     }
   };
 }
