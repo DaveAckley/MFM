@@ -252,7 +252,7 @@ namespace MFM
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
       keysym = SDLK_x;
-      mod = 0;
+      mod = KMOD_CTRL;
       return true;
     }
 
@@ -726,7 +726,7 @@ namespace MFM
 
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
-      keysym = SDLK_x;
+      keysym = SDLK_w;
       mod = KMOD_CTRL;
       return true;
     }
@@ -758,8 +758,8 @@ namespace MFM
 
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
     {
-      keysym = SDLK_x;
-      mod = KMOD_CTRL|KMOD_SHIFT;
+      keysym = SDLK_r;
+      mod = KMOD_CTRL;
       return true;
     }
 
