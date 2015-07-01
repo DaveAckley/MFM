@@ -235,8 +235,7 @@ namespace MFM
         s32 offset = R * GetCellSize() + BORDER_SIZE;
         const MDist<R> & n = GetNeighborhood();
         Rect buttonRect;
-        SPoint clickPt(event.GetAt().GetX() - Panel::GetRenderPoint().GetX(),
-                       event.GetAt().GetY() - Panel::GetRenderPoint().GetY());
+        SPoint clickPt = event.GetAt() - this->GetAbsoluteLocation();
         buttonRect.SetSize(UPoint(GetCellSize(), GetCellSize()));
 
         for(u32 i = n.GetFirstIndex(0); i <= n.GetLastIndex(R); i++)
