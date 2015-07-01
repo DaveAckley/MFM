@@ -289,8 +289,8 @@ namespace MFM
 
       for (u8 ch = *zstr; ch; ch = *++zstr)
       {
-        s32 oldIndent = indent;
-        s32 oldLineNum = lineNum;
+        u32 oldIndent = indent;
+        u32 oldLineNum = lineNum;
         if (ch == '(')
         {
           ++lineNum;

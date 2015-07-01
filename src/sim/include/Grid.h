@@ -390,10 +390,10 @@ namespace MFM {
       bool operator!=(const MyIterator &m) const { return i != m.i || j != m.j; }
       void operator++()
       {
-        if (j < g.m_height)
+        if (j < (s32) g.m_height)
         {
           i++;
-          if (i >= g.m_width)
+          if (i >= (s32) g.m_width)
           {
             i = 0;
             j++;

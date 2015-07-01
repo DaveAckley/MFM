@@ -95,7 +95,7 @@ namespace MFM
       u32 outerRegion = m_drawCacheSites ? OurTile::REGION_CACHE : OurTile::REGION_SHARED;
       SPoint tileSizeDit = ComputeDrawSizeDit(tile, outerRegion);
 
-      for (u32 ditOff = 0; ditOff <= tileSizeDit.GetX(); ditOff += m_atomSizeDit)
+      for (s32 ditOff = 0; ditOff <= tileSizeDit.GetX(); ditOff += m_atomSizeDit)
       {
         drawing.DrawHLineDit(ditOrigin.GetY() + ditOff,
                              ditOrigin.GetX(), ditOrigin.GetX() + tileSizeDit.GetX(),

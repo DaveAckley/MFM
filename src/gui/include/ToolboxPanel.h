@@ -1020,7 +1020,7 @@ namespace MFM
         {
           m_toolButtons[i].SetSelected(false);
         }
-        if (selIdx >= 0 && selIdx < m_toolButtonsInUse)
+        if (selIdx >= 0 && selIdx < (s32) m_toolButtonsInUse)
           m_toolButtons[selIdx].OnClick(SDL_BUTTON_LEFT);
         return true;
       }
