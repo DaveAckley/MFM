@@ -548,12 +548,6 @@ namespace MFM {
 
   SPoint Panel::GetTextSize(FontAsset font, const char * text)
   {
-    TTF_Font * ttfont = AssetManager::GetReal(font);
-    s32 width, height;
-    if (TTF_SizeText(ttfont, text, &width, &height) != 0)
-    {
-      width = height = 0;
-    }
-    return SPoint(width,height);
+    return MakeSigned(AssetManager::GetFontTextSize(font,text));
   }
 } /* namespace MFM */
