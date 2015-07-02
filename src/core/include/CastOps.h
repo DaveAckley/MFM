@@ -1,8 +1,8 @@
 /* -*- mode:C++ -*- */
 /**
   CastOps.h Primitive casting and ALU operations
-  Copyright (C) 2014 The Regents of the University of New Mexico.
-  Copyright (C) 2014 Ackleyshack LLC.
+  Copyright (C) 2014-2015 The Regents of the University of New Mexico.
+  Copyright (C) 2014-2015 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@
   \file CastOps.h Primitive casting and ALU operations
   \author Elenas S. Ackley.
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014-2015 All rights reserved.
   \lgpl
  */
 #ifndef CASTOPS_H
@@ -389,15 +389,25 @@ namespace MFM {
     return ((count1s > (s32) (bitwidth - count1s)) ? 0 : mask);  // == when even number bits is ignored (warning at def)
   }
 
-
-  inline s32 _UnaryMinusInt32(s32 val, u32 bitwidth)
+  //Unary OP: Minus
+  inline s32 _UnaryMinusInt32(u32 val, u32 bitwidth)
   {
-    return -val;  //assumes sign extended ???
+    s32 extval = _SignExtend32(val, bitwidth);
+    if(extval == S32_MIN)
+      return S32_MAX; //saturating, closest answer
+    const s32 maxdestval = _GetNOnes32(bitwidth-1);  //positive
+    const s32 mindestval = ~maxdestval;
+    return CLAMP<s32>(mindestval, maxdestval, -extval);
   }
 
-  inline s64 _UnaryMinusInt64(s64 val, u32 bitwidth)
+  inline s64 _UnaryMinusInt64(u64 val, u32 bitwidth)
   {
-    return -val;  //assumes sign extended ???
+    s64 extval = _SignExtend64(val, bitwidth);
+    if(extval == S64_MIN)
+      return S64_MAX; //saturating, closest answer
+    const s64 maxdestval = _GetNOnes64(bitwidth-1);  //positive
+    const s64 mindestval = ~maxdestval;
+    return CLAMP<s64>(mindestval, maxdestval, -extval);
   }
 
   //Bitwise Binary Ops:
