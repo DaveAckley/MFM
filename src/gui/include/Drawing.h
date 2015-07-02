@@ -371,8 +371,13 @@ namespace MFM {
     static u32 MapPixToDit(u32 pix) { return pix * DIT_PER_PIX; }
 
     static s32 MapDitToPix(s32 dit) { return (s32) (dit + DIT_PER_PIX / 2) / (s32) DIT_PER_PIX; }
-
     static u32 MapDitToPix(u32 dit) { return (dit + DIT_PER_PIX / 2) / DIT_PER_PIX; }
+
+    static s32 MapDitToPixCeiling(s32 dit) { return (s32) (dit + DIT_PER_PIX - 1) / (s32) DIT_PER_PIX; }
+    static u32 MapDitToPixCeiling(u32 dit) { return (dit + DIT_PER_PIX - 1) / DIT_PER_PIX; }
+
+    static s32 MapDitToPixFloor(s32 dit) { return (s32) (dit + 0) / (s32) DIT_PER_PIX; }
+    static u32 MapDitToPixFloor(u32 dit) { return (dit + 0) / DIT_PER_PIX; }
 
     static SPoint MapPixToDit(const SPoint pix)
     {

@@ -128,8 +128,8 @@ namespace MFM
   {
     FillRect(MapDitToPix(r.GetX()),
              MapDitToPix(r.GetY()),
-             MapDitToPix(r.GetWidth()),
-             MapDitToPix(r.GetHeight()),
+             MapDitToPixCeiling(r.GetWidth()),
+             MapDitToPixCeiling(r.GetHeight()),
              color);
   }
 
