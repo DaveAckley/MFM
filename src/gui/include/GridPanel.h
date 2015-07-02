@@ -540,7 +540,7 @@ namespace MFM
           {
             u32 newDit;
             if (mbe.m_keyboardModifiers & KMOD_SHIFT)
-              newDit = GetAtomDit() + Drawing::DIT_PER_PIX / 8;
+              newDit = GetAtomDit() + 1;
             else
               newDit = 17*GetAtomDit()/16;
             ZoomAroundPix(hitAtScreenPix, newDit);
@@ -552,7 +552,7 @@ namespace MFM
             if (GetAtomDit() > Drawing::DIT_PER_PIX)
             {
               if (mbe.m_keyboardModifiers & KMOD_SHIFT)
-                newDit = GetAtomDit() - Drawing::DIT_PER_PIX / 8;
+                newDit = GetAtomDit() - 1;
               else
                 newDit = 15*GetAtomDit()/16;
               ZoomAroundPix(hitAtScreenPix, newDit);
