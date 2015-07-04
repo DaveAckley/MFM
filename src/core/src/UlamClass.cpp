@@ -201,8 +201,8 @@ namespace MFM {
     UlamTypeInfoClassParameterArray parameters;
     for (u32 i = 0; i < parms; ++i)
     {
-      UlamTypeInfoClassParameter uticp;
-      if (!uticp.m_classParameterType.InitFrom(cbs)) return false;
+      UlamTypeInfoParameter uticp;
+      if (!uticp.m_parameterType.InitFrom(cbs)) return false;
 
       s32 ch = cbs.Read();
       if (ch < 0) return false;
@@ -223,10 +223,10 @@ namespace MFM {
     m_name = name;
     m_arrayLength = arraylen;
     m_bitSize = bitsize;
-    m_parameterCount = parms;
+    m_classParameterCount = parms;
 
     for (u32 i = 0; i < MAX_CLASS_PARAMETERS; ++i)
-      if (i < m_parameterCount)
+      if (i < m_classParameterCount)
         m_classParameters[i] = parameters[i];
 
     return true;
@@ -240,14 +240,14 @@ namespace MFM {
               m_name.GetLength(),
               m_name.GetZString());
 
-    bs.Printf("%D",m_parameterCount);
+    bs.Printf("%D",m_classParameterCount);
 
-    for (u32 i = 0; i < m_parameterCount; ++i)
+    for (u32 i = 0; i < m_classParameterCount; ++i)
     {
       if (i < MAX_CLASS_PARAMETERS)
       {
-        m_classParameters[i].m_classParameterType.PrintMangled(bs);
-        if (m_classParameters[i].m_classParameterType.GetPrimType() == UlamTypeInfoPrimitive::INT
+        m_classParameters[i].m_parameterType.PrintMangled(bs);
+        if (m_classParameters[i].m_parameterType.GetPrimType() == UlamTypeInfoPrimitive::INT
             && ((s32) m_classParameters[i].m_value) < 0)
         {
           if (((s32) m_classParameters[i].m_value) == S32_MIN)
@@ -267,17 +267,17 @@ namespace MFM {
   {
     m_name.AppendTo(bs);
 
-    if (m_parameterCount==0)
+    if (m_classParameterCount==0)
       return;
 
     bs.Printf("(");
-    for (u32 i = 0; i < m_parameterCount; ++i)
+    for (u32 i = 0; i < m_classParameterCount; ++i)
     {
       if (i > 0) bs.Printf(",");
       if (i < MAX_CLASS_PARAMETERS)
       {
-        m_classParameters[i].m_classParameterType.PrintPretty(bs);
-        switch (m_classParameters[i].m_classParameterType.GetPrimType())
+        m_classParameters[i].m_parameterType.PrintPretty(bs);
+        switch (m_classParameters[i].m_parameterType.GetPrimType())
         {
         case UlamTypeInfoPrimitive::INT:
           bs.Printf("=%d",m_classParameters[i].m_value);

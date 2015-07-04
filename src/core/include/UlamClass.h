@@ -67,22 +67,36 @@ namespace MFM
 
   const u32 MAX_CLASS_NAME_LENGTH = 64;
   const u32 MAX_CLASS_PARAMETERS = 16;
+  const u32 MAX_MODEL_PARAMETERS = 16;
   typedef OverflowableCharBufferByteSink<MAX_CLASS_NAME_LENGTH> OStringClassName;
 
-  struct UlamTypeInfoClassParameter {
-    UlamTypeInfoPrimitive m_classParameterType;
+  struct UlamTypeInfoParameter {
+    UlamTypeInfoPrimitive m_parameterType;
     u32 m_value;  // overloaded depending on type
   };
 
-  typedef UlamTypeInfoClassParameter UlamTypeInfoClassParameterArray[MAX_CLASS_PARAMETERS];
+  struct UlamTypeInfoModelParameter  {
+    const char * m_parameterName;
+    const char * m_parameterDoc;
+    UlamTypeInfoParameter m_typeAndValue;
+    u32 m_min;      // overloaded depending on type
+    u32 m_default;  // overloaded depending on type
+    u32 m_max;      // overloaded depending on type
+  };
+
+  typedef UlamTypeInfoParameter UlamTypeInfoClassParameterArray[MAX_CLASS_PARAMETERS];
+
+  typedef UlamTypeInfoModelParameter UlamTypeInfoModelParameterArray[MAX_MODEL_PARAMETERS];
 
   struct UlamTypeInfoClass {
 
     OStringClassName m_name;
     u32 m_arrayLength;
     u32 m_bitSize;
-    u32 m_parameterCount;
+    u32 m_classParameterCount;
+    u32 m_modelParameterCount;
     UlamTypeInfoClassParameterArray m_classParameters;
+    UlamTypeInfoModelParameterArray m_modelParameters;
 
     bool InitFrom(const char * mangledName)
     {
@@ -94,7 +108,6 @@ namespace MFM
 
     void PrintMangled(ByteSink & bs) const ;
     void PrintPretty(ByteSink & bs) const ;
-
   };
 
   struct UlamTypeInfo {
@@ -176,6 +189,12 @@ namespace MFM
   };
 
   struct UlamClass {
+
+    void AddModelParameter(const char * mangledName, BitVector<32> & current, u32 min, u32 def, u32 max)
+    {
+      FAIL(INCOMPLETE_CODE);
+    }
+
     /**
        Specify the mangled name of this class.  To be
        overridden by subclasses of UlamClass.
