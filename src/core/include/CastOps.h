@@ -1270,26 +1270,28 @@ namespace MFM {
   //Shift INTS:
   inline s32 _ShiftOpRightInt32(s32 vala, u32 shft, u32 bitwidth)
   {
+    if(shft >= 32) return 0;
     u32 mask = _GetNOnes32(bitwidth);
     return ((vala >> shft) & mask);   //sign extension???
   }
 
   inline s64 _ShiftOpRightInt64(s64 vala, u32 shft, u32 bitwidth)
   {
+    if(shft >= 64) return 0;
     u64 mask = _GetNOnes64(bitwidth);
     return ((vala >> shft) & mask);   //sign extension???
   }
 
   inline s32 _ShiftOpLeftInt32(s32 vala, u32 shft, u32 bitwidth)
   {
-    if(shft == 32) return 0; //instead of self
+    if(shft >= 32) return 0; //instead of self
     u32 mask = _GetNOnes32(bitwidth);
     return ((vala << shft) & mask);
   }
 
   inline s64 _ShiftOpLeftInt64(s64 vala, u32 shft, u32 bitwidth)
   {
-    if(shft == 64) return 0; //instead of self
+    if(shft >= 64) return 0; //instead of self
     u64 mask = _GetNOnes64(bitwidth);
     return ((vala << shft) & mask);
   }
@@ -1297,26 +1299,28 @@ namespace MFM {
   //Shift UNSIGNED:
   inline u32 _ShiftOpRightUnsigned32(u32 vala, u32 shft, u32 bitwidth)
   {
+    if(shft >= 32) return 0;
     u32 mask = _GetNOnes32(bitwidth);
     return ((vala >> shft) & mask);
   }
 
   inline u64 _ShiftOpRightUnsigned64(u64 vala, u32 shft, u32 bitwidth)
   {
+    if(shft >= 64) return 0;
     u64 mask = _GetNOnes64(bitwidth);
     return ((vala >> shft) & mask);
   }
 
   inline u32 _ShiftOpLeftUnsigned32(u32 vala, u32 shft, u32 bitwidth)
   {
-    if(shft == 32) return 0; //instead of self
+    if(shft >= 32) return 0; //instead of self
     u32 mask = _GetNOnes32(bitwidth);
     return ((vala << shft) & mask);
   }
 
   inline u64 _ShiftOpLeftUnsigned64(u64 vala, u32 shft, u32 bitwidth)
   {
-    if(shft == 64) return 0; //instead of self
+    if(shft >= 64) return 0; //instead of self
     u64 mask = _GetNOnes64(bitwidth);
     return ((vala << shft) & mask);
   }
@@ -1324,26 +1328,28 @@ namespace MFM {
   //Shift BOOL:
   inline u32 _ShiftOpRightBool32(u32 vala, u32 shft, u32 bitwidth)
   {
+    if(shft >= 32) return 0;
     u32 binvala = _Bool32ToBits32(vala, bitwidth, bitwidth);
     return _Bits32ToBool32((binvala >> shft), bitwidth, bitwidth);
   }
 
   inline u64 _ShiftOpRightBool64(u64 vala, u32 shft, u32 bitwidth)
   {
+    if(shft >= 64) return 0;
     u32 binvala = _Bool64ToBits64(vala, bitwidth, bitwidth);
     return _Bits64ToBool64((binvala >> shft), bitwidth, bitwidth);
   }
 
   inline u32 _ShiftOpLeftBool32(u32 vala, u32 shft, u32 bitwidth)
   {
-    if(shft == 32) return 0; //instead of self
+    if(shft >= 32) return 0; //instead of self
     u32 binvala = _Bool32ToBits32(vala, bitwidth, bitwidth);
     return _Bits32ToBool32((binvala << shft), bitwidth, bitwidth);
   }
 
   inline u64 _ShiftOpLeftBool64(u64 vala, u32 shft, u32 bitwidth)
   {
-    if(shft == 64) return 0; //instead of self
+    if(shft >= 64) return 0; //instead of self
     u32 binvala = _Bool64ToBits64(vala, bitwidth, bitwidth);
     return _Bits64ToBool64((binvala >> shft), bitwidth, bitwidth);
   }
@@ -1351,6 +1357,7 @@ namespace MFM {
   //Shift UNARY:
   inline u32 _ShiftOpRightUnary32(u32 vala, u32 shft, u32 bitwidth)
   {
+    if(shft >= 32) return 0;
     u32 mask = _GetNOnes32(bitwidth);
     u32 binvala = PopCount(vala & mask);     //in binary
     return _GetNOnes32(binvala >> shft) & mask;
@@ -1358,6 +1365,7 @@ namespace MFM {
 
   inline u64 _ShiftOpRightUnary64(u64 vala, u32 shft, u32 bitwidth)
   {
+    if(shft >= 64) return 0;
     u64 mask = _GetNOnes64(bitwidth);
     u32 binvala = PopCount64(vala & mask);     //in binary
     return _GetNOnes64(binvala >> shft) & mask;
@@ -1365,7 +1373,7 @@ namespace MFM {
 
   inline u32 _ShiftOpLeftUnary32(u32 vala, u32 shft, u32 bitwidth)
   {
-    if(shft == 32) return 0; //instead of self
+    if(shft >= 32) return 0; //instead of self
     u32 mask = _GetNOnes32(bitwidth);
     u32 binvala = PopCount(vala & mask);     //in binary
     return _GetNOnes32(binvala << shft) & mask;
@@ -1373,7 +1381,7 @@ namespace MFM {
 
   inline u64 _ShiftOpLeftUnary64(u64 vala, u32 shft, u32 bitwidth)
   {
-    if(shft == 64) return 0; //instead of self
+    if(shft >= 64) return 0; //instead of self
     u64 mask = _GetNOnes64(bitwidth);
     u32 binvala = PopCount64(vala & mask);     //in binary
     return _GetNOnes64(binvala << shft) & mask;
@@ -1382,26 +1390,28 @@ namespace MFM {
   //Shift BITS:
   inline u32 _ShiftOpRightBits32(u32 vala, u32 shft, u32 bitwidth)
   {
+    if(shft >= 32) return 0;
     u32 mask = _GetNOnes32(bitwidth);
     return ((vala >> shft) & mask);
   }
 
   inline u64 _ShiftOpRightBits64(u64 vala, u32 shft, u32 bitwidth)
   {
+    if(shft >= 64) return 0;
     u64 mask = _GetNOnes64(bitwidth);
     return ((vala >> shft) & mask);
   }
 
   inline u32 _ShiftOpLeftBits32(u32 vala, u32 shft, u32 bitwidth)
   {
-    if(shft == 32) return 0; //instead of self
+    if(shft >= 32) return 0; //instead of self
     u32 mask = _GetNOnes32(bitwidth);
     return ((vala << shft) & mask);
   }
 
   inline u64 _ShiftOpLeftBits64(u64 vala, u32 shft, u32 bitwidth)
   {
-    if(shft == 64) return 0; //instead of self
+    if(shft >= 64) return 0; //instead of self
     u64 mask = _GetNOnes64(bitwidth);
     return ((vala << shft) & mask);
   }
