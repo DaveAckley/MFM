@@ -1268,6 +1268,7 @@ namespace MFM {
 
   //SHIFT OPS
   //Shift INTS:
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline s32 _ShiftOpRightInt32(s32 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 32) return 0;
@@ -1275,6 +1276,7 @@ namespace MFM {
     return ((vala >> shft) & mask);   //sign extension???
   }
 
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline s64 _ShiftOpRightInt64(s64 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 64) return 0;
@@ -1282,6 +1284,7 @@ namespace MFM {
     return ((vala >> shft) & mask);   //sign extension???
   }
 
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline s32 _ShiftOpLeftInt32(s32 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 32) return 0; //instead of self
@@ -1289,6 +1292,7 @@ namespace MFM {
     return ((vala << shft) & mask);
   }
 
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline s64 _ShiftOpLeftInt64(s64 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 64) return 0; //instead of self
@@ -1297,6 +1301,7 @@ namespace MFM {
   }
 
   //Shift UNSIGNED:
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline u32 _ShiftOpRightUnsigned32(u32 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 32) return 0;
@@ -1304,6 +1309,7 @@ namespace MFM {
     return ((vala >> shft) & mask);
   }
 
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline u64 _ShiftOpRightUnsigned64(u64 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 64) return 0;
@@ -1311,6 +1317,7 @@ namespace MFM {
     return ((vala >> shft) & mask);
   }
 
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline u32 _ShiftOpLeftUnsigned32(u32 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 32) return 0; //instead of self
@@ -1318,6 +1325,7 @@ namespace MFM {
     return ((vala << shft) & mask);
   }
 
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline u64 _ShiftOpLeftUnsigned64(u64 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 64) return 0; //instead of self
@@ -1326,6 +1334,7 @@ namespace MFM {
   }
 
   //Shift BOOL:
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline u32 _ShiftOpRightBool32(u32 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 32) return 0;
@@ -1333,6 +1342,7 @@ namespace MFM {
     return _Bits32ToBool32((binvala >> shft), bitwidth, bitwidth);
   }
 
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline u64 _ShiftOpRightBool64(u64 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 64) return 0;
@@ -1340,6 +1350,7 @@ namespace MFM {
     return _Bits64ToBool64((binvala >> shft), bitwidth, bitwidth);
   }
 
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline u32 _ShiftOpLeftBool32(u32 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 32) return 0; //instead of self
@@ -1347,6 +1358,7 @@ namespace MFM {
     return _Bits32ToBool32((binvala << shft), bitwidth, bitwidth);
   }
 
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline u64 _ShiftOpLeftBool64(u64 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 64) return 0; //instead of self
@@ -1355,6 +1367,7 @@ namespace MFM {
   }
 
   //Shift UNARY:
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline u32 _ShiftOpRightUnary32(u32 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 32) return 0;
@@ -1363,6 +1376,7 @@ namespace MFM {
     return _GetNOnes32(binvala >> shft) & mask;
   }
 
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline u64 _ShiftOpRightUnary64(u64 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 64) return 0;
@@ -1371,6 +1385,7 @@ namespace MFM {
     return _GetNOnes64(binvala >> shft) & mask;
   }
 
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline u32 _ShiftOpLeftUnary32(u32 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 32) return 0; //instead of self
@@ -1379,6 +1394,7 @@ namespace MFM {
     return _GetNOnes32(binvala << shft) & mask;
   }
 
+  //NOTE: Only _ShiftOp(Right|Left)Bits(32|64) are currently emitted by the compiler
   inline u64 _ShiftOpLeftUnary64(u64 vala, u32 shft, u32 bitwidth)
   {
     if(shft >= 64) return 0; //instead of self
