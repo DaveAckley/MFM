@@ -50,7 +50,7 @@ namespace MFM
   template <class EC>
   class Parameter : public ByteSerializable
   {
-  private:
+  protected:
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
@@ -185,6 +185,16 @@ namespace MFM
         }
       default: FAIL(ILLEGAL_STATE);
       }
+    }
+
+    u32 GetValueOutOfType(T& atom) const
+    {
+      return m_vDesc.LoadValueByType<AC>(atom);
+    }
+
+    void SetValueIntoType(T& atom, const u32 val) const
+    {
+      m_vDesc.StoreValueByType<AC>(atom, val);
     }
 
     /////////
@@ -483,7 +493,7 @@ namespace MFM
       }
       else
       {
-        this->SetBitsAsS32(this->GetVD().GetDefault());
+        this->SetValueIntoType(m_storage, this->GetVD().GetDefault());
       }
     }
 
@@ -534,7 +544,7 @@ namespace MFM
       return FieldUnary::GetValue(m_storage);
     }
 
-    void SetValueUnary(const u32 val) const
+    void SetValueUnary(const u32 val)
     {
       FieldUnary::SetValue(m_storage, val);
     }
@@ -549,7 +559,7 @@ namespace MFM
       return val;
     }
 
-    void SetValueBits(const u64 val) const
+    void SetValueBits(const u64 val)
     {
       FieldBits::SetValue(m_storage, val);
     }
@@ -569,6 +579,41 @@ namespace MFM
     void SetValue(u32 val)
     {
       return this->SetValueU32(val);
+    }
+
+    virtual ByteSerializable::Result PrintTo(ByteSink & byteSink, s32 argument = 0)
+    {
+      byteSink.Printf("%u", this->GetValue());
+      return ByteSerializable::SUCCESS;
+    }
+
+    virtual ByteSerializable::Result ReadFrom(ByteSource & byteSource, s32 argument = 0)
+    {
+      u32 val;
+      if (byteSource.Scanf("%u", &val) != 1)
+      {
+        return ByteSerializable::FAILURE;
+      }
+      this->SetValue(val);
+      return ByteSerializable::SUCCESS;
+    }
+
+  };
+
+  template <class EC>
+  class ElementParameterUnary : public ElementParameter<EC>
+  {
+  public:
+    ElementParameterUnary(Element<EC> * elt, const char * tag,
+                        const char * name, const char * description,
+                        u32 min, u32 vdef, u32 max) ;
+    u32 GetValue() const
+    {
+      return this->GetValueUnary();
+    }
+    void SetValue(u32 val)
+    {
+      return this->SetValueUnary(val);
     }
 
     virtual ByteSerializable::Result PrintTo(ByteSink & byteSink, s32 argument = 0)

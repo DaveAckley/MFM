@@ -45,6 +45,14 @@ namespace MFM
     : ElementParameter<EC>(elt, VD::U32, tag, name, description, (s32) min, (s32) vdef, (s32) max)
   { }
 
+
+  template <class EC>
+  ElementParameterUnary<EC>::ElementParameterUnary(Element<EC> * elt, const char * tag,
+                                                   const char * name, const char * description,
+                                                   u32 min, u32 vdef, u32 max)
+    : ElementParameter<EC>(elt, VD::UNARY, tag, name, description, (s32) min, (s32) vdef, (s32) max)
+  { }
+
   template <class EC>
   ElementParameterS32<EC>::ElementParameterS32(Element<EC> * elt, const char * tag,
                                                const char * name, const char * description,
