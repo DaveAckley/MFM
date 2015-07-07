@@ -173,7 +173,10 @@ namespace MFM
         FAIL(ILLEGAL_STATE);
       UUID uuid = elt->GetUUID();
       if (!RegisterElement(*elt))
-        LOG.Warning("Already registered: %@", &uuid);
+      {
+        LOG.Warning("Already registered: %@, skipping", &uuid);
+        continue;
+      }
       else
         LOG.Message("Loaded %@ at %p from %s", &uuid, elt, libraryPath.GetZString());
 
