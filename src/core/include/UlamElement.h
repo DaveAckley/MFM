@@ -91,6 +91,11 @@ namespace MFM
       return 100;
     }
 
+    // No longer needed? Going via existing parameter registry and access routes
+    // virtual const u32 GetModelParameterCount() const = 0;
+
+    // virtual UlamTypeInfoModelParameter<EC> & GetModelParameter(u32 index) const = 0;
+
     UlamElementInfo() { }
     virtual ~UlamElementInfo() { }
   };
@@ -110,6 +115,12 @@ namespace MFM
 
     UlamElement(const UUID & uuid) : Element<EC>(uuid)
     { }
+
+    const UlamElementInfo<EC> & GetUlamElementInfo() const
+    {
+      MFM_API_ASSERT_NONNULL(m_info);
+      return * m_info;
+    }
 
     /**
        Print the contents of atom to the given ByteSink, including

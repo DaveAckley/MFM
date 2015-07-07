@@ -295,4 +295,28 @@ namespace MFM {
     bs.Printf(")");
   }
 
+  u64 UlamTypeInfoPrimitive::GetExtremeOfScalarType(bool wantMax) const
+  {
+    AssertScalar();
+    switch (m_primType) {
+    default:
+      FAIL(ILLEGAL_STATE);
+    case VOID:
+      FAIL(ILLEGAL_STATE);
+    case INT:
+      if (wantMax) return _GetNOnes64(m_bitSize-1);
+      return ((u64)1)<<(m_bitSize-1);
+    case BITS: // Treat bits like unsigned even though they're not
+    case UNSIGNED:
+      if (wantMax) return _GetNOnes64(m_bitSize);
+      return (u64) 0;
+    case BOOL: // Treat bool as ordered even though it's not
+      if (wantMax) return 1;
+      return 0;
+    case UNARY:
+      if (wantMax) return m_bitSize;
+      return 0;
+    }
+  }
+
 }
