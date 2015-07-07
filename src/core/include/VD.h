@@ -255,6 +255,12 @@ namespace MFM
     template <class AC> u32 GetValueUnary(const typename AC::ATOM_TYPE & a) const ;
     template <class AC> void SetValueUnary(typename AC::ATOM_TYPE & a, const u32 val) const ;
 
+    ///Generic by VD type
+    template <class AC> void StoreValueByType(typename AC::ATOM_TYPE & a, const u32 val) const ;
+
+    ///Generic by VD type -> s32
+    template <class AC> s32 LoadValueByType(typename AC::ATOM_TYPE & a) const ;
+
   };
 
   template <VD::Type VTYPE> struct VTypeToType { /* INVALID WON'T COMPILE WITHOUT TYPE */ };

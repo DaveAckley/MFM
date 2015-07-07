@@ -166,4 +166,48 @@ namespace MFM
     SetFieldAsUnary<AC>(m_length, m_start, a, val);
   }
 
+  template <class AC>
+  void VD::StoreValueByType(typename AC::ATOM_TYPE & a, const u32 val) const
+  {
+    switch(m_type) {
+    case INVALID:
+    default:
+      FAIL(ILLEGAL_STATE);
+    case U32:
+      this->SetValueU32<AC>(a, val);
+      break;
+    case S32:
+      this->SetValueS32<AC>(a, (s32) val);
+      break;
+    case BOOL:
+      this->SetValueBool<AC>(a, val != 0);
+      break;
+    case UNARY:
+      this->SetValueUnary<AC>(a, val);
+      break;
+    case BITS:
+      this->SetBitsAsS32<AC>(a, (s32) val);
+      break;
+    }
+  }
+
+  template <class AC>
+  s32 VD::LoadValueByType(typename AC::ATOM_TYPE & a) const
+  {
+    switch(m_type) {
+    case INVALID:
+    default:
+      FAIL(ILLEGAL_STATE);
+    case U32:
+      return this->GetValueU32<AC>(a);
+    case S32:
+      return (s32) this->GetValueS32<AC>(a);
+    case BOOL:
+      return this->GetValueBool<AC>(a) ? 1 : 0;
+    case UNARY:
+      return this->GetValueUnary<AC>(a);
+    case BITS:
+      return this->GetBitsAsS32<AC>(a);
+    }
+  }
 }
