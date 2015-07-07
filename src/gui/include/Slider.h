@@ -92,13 +92,14 @@ namespace MFM
     inline FontAsset GetRenderFont() const
     {
       return
-        ParameterController<EC>::m_bigText ? FONT_ASSET_ELEMENT : FONT_ASSET_HELPPANEL_SMALL;
+        ParameterController<EC>::m_bigText ? FONT_ASSET_BUTTON_BIG : FONT_ASSET_BUTTON_MEDIUM;
     }
 
     void Init()
     {
       Panel::SetDimensions(GetSliderWidth() * 2, GetSliderHeight());
       Panel::SetDesiredSize(10000, GetSliderHeight());
+      Panel::SetFont(FONT_ASSET_BUTTON);
     }
 
     // We standardize on s32 for all values.  We blithely assume that,
@@ -108,7 +109,8 @@ namespace MFM
     {
       MFM_API_ASSERT_NONNULL(this->m_parameter);
       MFM_API_ASSERT_NONNULL(this->m_patom);
-      return this->m_parameter->GetBitsAsS32(*this->m_patom);
+      //      return this->m_parameter->GetBitsAsS32(*this->m_patom);
+      return (s32) this->m_parameter->GetValueOutOfType(*this->m_patom);
     }
 
     s32 GetDefaultValue() const
@@ -122,9 +124,11 @@ namespace MFM
     {
       MFM_API_ASSERT_NONNULL(this->m_parameter);
       MFM_API_ASSERT_NONNULL(this->m_patom);
-      return this->m_parameter->SetBitsAsS32(*this->m_patom, val);
+      //XXX      return this->m_parameter->SetBitsAsS32(*this->m_patom, val);
+      this->m_parameter->SetValueIntoType(*this->m_patom, (u32) val);
     }
 
+#if 0 // Tue Jul  7 00:25:28 2015 Not used?
     void SetSliderTarget(Parameter<EC>* parameter, Atom<EC> * patom)
     {
       if (!parameter && !patom)
@@ -142,6 +146,7 @@ namespace MFM
       this->m_parameter = parameter;
       this->m_patom = patom;
     }
+#endif
 
     virtual void PaintBorder(Drawing& d)
     { /* No border*/ }

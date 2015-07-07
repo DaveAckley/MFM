@@ -121,7 +121,7 @@ namespace MFM
         this->SetDimensions(SPoint(GetScaledWidth(),
                                    GetScaledHeight()));
         this->SetDesiredSize(U32_MAX, GetScaledHeight());
-        this->SetRenderPoint(SPoint(5, 5));
+        this->SetRenderPoint(SPoint(0, 0));
         if (m_bc.GetParameter())
         {
           this->SetText(m_bc.GetParameter()->GetName());
@@ -147,7 +147,8 @@ namespace MFM
       {
         FAIL(ILLEGAL_STATE);
       }
-      this->m_parameter->SetBitsAsS32(*this->m_patom, value? -1 : 0);
+      this->m_parameter->SetValueIntoType(*this->m_patom, (u32) value);
+      //      this->m_parameter->SetBitsAsS32(*this->m_patom, value? -1 : 0);
     }
 
     bool GetParameterValue() const
@@ -168,9 +169,11 @@ namespace MFM
     {
       Panel::SetDimensions(GetScaledWidth() * 2, GetScaledHeight());
       Panel::SetDesiredSize(10000, GetScaledHeight());
-      Panel::SetBackground(Drawing::GREY60);
 
       m_checkbox.Init(Super::m_bigText);
+      m_checkbox.SetEnabledBg(Drawing::GREY60);
+      m_checkbox.SetEnabledFg(Drawing::WHITE);
+      m_checkbox.SetFont(FONT_ASSET_BUTTON_MEDIUM);
 
       LOG.Debug("Initting %s", Super::m_bigText ? "big" : "normal");
     }

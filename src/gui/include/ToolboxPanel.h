@@ -523,6 +523,7 @@ namespace MFM
     void AddSliderController(ElementParameter<EC> * sp)
     {
       // Sliders for S32 parameters
+      // Mon Jul  6 04:43:15 2015  (trying to squeeze U32 in here too, at least temporarily)
       MFM_API_ASSERT_NONNULL(sp);
 
       if (m_sliderCount >= TOOLBOX_MAX_SLIDERS)
@@ -685,14 +686,8 @@ namespace MFM
       }
     }
 
-    void RebuildControllers()
+    void AddElementParameters()
     {
-      /* Remove any old controllers */
-      for(u32 i = 0; i < m_controllerCount; i++)
-      {
-        Panel::Remove(m_controllers[i]);
-      }
-      m_controllerCount = 0;
 
       /* Set up the new controllers, if any */
       ElementParameters<EC> & parms = m_primaryElement->GetElementParameters();
@@ -706,6 +701,8 @@ namespace MFM
         ElementParameter<EC> * parm = parms.GetParameter(i);
         switch (parm->GetType())
         {
+        case VD::UNARY:
+        case VD::U32:
         case VD::S32:
           AddSliderController(parm);
           break;
@@ -743,6 +740,18 @@ namespace MFM
 
       Panel::SetDimensions(TOOLBOX_WIDTH, rpt.GetY() + BORDER_PADDING);
       Panel::SetDesiredSize(TOOLBOX_WIDTH, rpt.GetY() + BORDER_PADDING);
+    }
+
+    void RebuildControllers()
+    {
+      /* Remove any old controllers */
+      for(u32 i = 0; i < m_controllerCount; i++)
+      {
+        Panel::Remove(m_controllers[i]);
+      }
+      m_controllerCount = 0;
+
+      AddElementParameters();
 
       //debug: this->Print(STDOUT);
 
@@ -750,6 +759,7 @@ namespace MFM
       HandleResize(this->GetParent()->GetDimensions());
 
     }
+
 
     void AddButtons()
     {
