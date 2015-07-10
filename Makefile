@@ -13,6 +13,8 @@ TOP_MFM_BUILD_TIME:=$(shell date -u +0x%H%M%S)
 export TOP_MFM_BUILD_DATE
 export TOP_MFM_BUILD_TIME
 
+export BASEDIR=$(CURDIR)
+
 .PHONY:	$(PLATFORMS) all clean realclean tar
 
 sim:	PLATFORMS:=sim
