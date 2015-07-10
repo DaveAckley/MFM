@@ -8,6 +8,7 @@ sub BEGIN {
 }
 
 <<<INCLUDE:common.pl.inc>>>
+SetUDieMsg("Type '$0' for help\n");
 
 use File::Temp qw(tempdir);
 use MIME::Base64 qw(decode_base64);
@@ -66,7 +67,11 @@ my %verbs = (
 UDie("Unknown command '$optverb'")
     unless defined $verbs{$verb};
 
-open MFZ, "<", $progname or die "Can't read '$progname' as .mfz file: $!\n";
+if (!open MFZ, "<", $progname) {
+    warn "Try just '$0' for help\n"
+        if $progname =~ /^-?-?h(elp)?$/;
+    die "Can't read '$progname' as .mfz file: $!\n";
+}
 
 my $firstLine = <MFZ>;
 

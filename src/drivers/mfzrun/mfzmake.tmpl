@@ -8,6 +8,7 @@ sub BEGIN {
 }
 
 <<<INCLUDE:common.pl.inc>>>
+SetUDieMsg("Type '$0 help' for help\n");
 
 use Crypt::OpenSSL::RSA;
 
@@ -41,7 +42,8 @@ $0 make HANDLE MFZFILETOMAKE filetopack1 filetopack2..
 
     Create a mfz file named MFZFILETOMAKE that can be run by mfzrun
     containing the supplied files (along with the HANDLE's public
-    keyfile), signed by HANDLE's private key.
+    keyfile), signed by HANDLE's private key.  If HANDLE is '-',
+    use the default handle (see 'mfzmake default', below).
 
     Certain filetopack names and globs are recognized and handled
     specially by mfzmake and/or mfzrun, including (for any FOO):
@@ -49,13 +51,18 @@ $0 make HANDLE MFZFILETOMAKE filetopack1 filetopack2..
        (1) FOO.so    -> mfzrun maps this to -ep FOO.so
        (2) FOO.mfs   -> mfzrun maps this to -cp FOO.mfs
        (3) FOO.ulam  -> unused by mfzrun (but ulam might use)
-       (4) args.txt  -> mfzrun adds content to command line arguments
+       (4) args.txt  -> mfzrun adds content to command line arguments (NOT YET IMPLEMENTED)
 
-    Any other files are accepted and packed by mfzmake, by unused by mfzrun.
+    Other files are accepted and packed by mfzmake, but unused by mfzrun.
 
 $0 keygen HANDLE
 
     Generate a signing key for HANDLE.
+
+$0 default HANDLE
+
+    Make HANDLE (which must already exist) be the default handle for
+    this user.  If HANDLE is '-', remove any existing default handle.
 
 EOH
     exit(0);
@@ -64,11 +71,12 @@ EOH
 my $verb = NextArg();
 NoVerb() unless defined $verb;
 Help() if $verb eq "help" or $verb eq "-h" or $verb eq "--help";
-VersionExit() if $verb eq "version" or $verb eq "-v";
+VersionExit("mfzmake") if $verb eq "version" or $verb eq "-v";
 UDie("Unknown switch '$verb'") if $verb =~ /^-/;
 
 DoMake() if $verb eq "make";
 DoKeygen() if $verb eq "keygen";
+DoDefaultHandle() if $verb eq "default";
 DoVerify() if $verb eq "verify";
 UDie("Unknown command '$verb'");
 
@@ -76,9 +84,7 @@ UDie("Unknown command '$verb'");
 # DoMake
 
 sub DoMake {
-    my $handle = NextArg();
-    UntaintHandleIfLegal(\$handle)
-        or UDie("Bad handle '$handle'");
+    my $handle = GetLegalHandle(NextArg());
 
     my $privkeyfile = GetPrivateKeyFile($handle);
     $privkeyfile = ReadableFileOrDie("private key file", $privkeyfile);
@@ -160,6 +166,47 @@ sub DoKeygen {
     print "Generated private key for '$handle' into $privkeyfile\n";
     print "Generated public key for '$handle' into $pubkeyfile\n";
     print "Handle: $handle ($fingerprint)\n";
+    exit 0;
+}
+
+sub DoDefaultHandle {
+    my $handle = NextArg();
+    if ($handle eq "-") {
+        my $defaulthandlefile = GetDefaultHandleFile();
+        if (!-e $defaulthandlefile) {
+            print STDERR "WARN: No default handle to remove\n";
+        } else {
+            if (unlink $defaulthandlefile) {
+                print STDERR "NOTE: Default handle cleared\n";
+            } else {
+                print STDERR "WARN: Could not remove '$defaulthandlefile': $!\n";
+                exit 1;
+            }
+        }
+        exit 0;
+    }
+
+    UntaintHandleIfLegal(\$handle)
+        or UDie("Bad handle '$handle'");
+
+    my $privkeyfile = GetPrivateKeyFile($handle);
+    if (!-e $privkeyfile) {
+        print STDERR "ERROR: Handle '$handle' not found\n";
+        exit 1;
+    }
+    $privkeyfile = ReadableFileOrDie("private key file", $privkeyfile);
+
+    my $defaulthandlefile = GetDefaultHandleFile();
+    my $old = GetDefaultHandle();
+    if (defined $old) {
+        if ($handle ne $old) {
+            print STDERR "WARN: Replacing previous default handle '$old'\n";
+        }
+    }
+    WriteWholeFile($defaulthandlefile,$handle,0700);
+    if (!defined $old) {
+        print STDERR "NOTE: '$handle' set as default handle\n";
+    }
     exit 0;
 }
 

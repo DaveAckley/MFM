@@ -1,4 +1,4 @@
-###
+##
 # Begin: common.pl.inc
 
 use Carp;
@@ -19,17 +19,23 @@ sub SetProgramName {
     $programName = shift;
 }
 
-sub UDie {
-    my $msg = shift;
-    print STDERR "\nError: $msg\n";
-    print STDERR "Type '$programName help' for help\n";
-    exit(1);
-}
-
 sub IDie {
     my $msg = shift;
     print STDERR "\nInternal Error: $msg\n";
     confess "I suck";
+}
+
+my $UDIE_MSG;
+sub SetUDieMsg {
+    $UDIE_MSG = shift;
+}
+
+sub UDie {
+    my $msg = shift;
+    IDie("Unset UDie message") unless defined $UDIE_MSG;
+    print STDERR "\nError: $msg\n";
+    print STDERR $UDIE_MSG;
+    exit(1);
 }
 
 my $userHomeDir = glob "~/.mfm";
@@ -94,6 +100,43 @@ sub ReadPublicKeyFile {
     return ($key, ComputeFingerprintFromFullPublicKey($data));
 }
 
+sub GetConfigDir {
+    my $cfgdir = InitMFMSubDir("config");
+    chmod 0700, $cfgdir;
+    return $cfgdir;
+}
+
+sub GetLegalHandle {
+    my $handle = shift;
+    if ($handle eq "-") {
+        my $defaulthandle = GetDefaultHandle();
+        if (!defined $defaulthandle) {
+            print STDERR "ERROR: No default handle, so cannot use '-' as handle\n";
+            exit 1;
+        }
+        return $defaulthandle;
+    }
+
+    UntaintHandleIfLegal(\$handle)
+        or UDie("Bad handle '$handle'");
+    return $handle;
+}
+
+sub GetDefaultHandleFile {
+    my $dir = GetConfigDir();
+    my $def = "$dir/defaultHandle";
+    return $def;
+}
+
+sub GetDefaultHandle {
+    my $file = GetDefaultHandleFile();
+    if (-r $file) {
+        my $handle = ReadWholeFile($file);
+        return $handle if UntaintHandleIfLegal(\$handle);
+    }
+    return undef;
+}
+
 sub GetPrivateKeyDir {
     my $privdir = InitMFMSubDir("private_keys");
     chmod 0700, $privdir;
@@ -121,7 +164,9 @@ sub ReadPrivateKeyFile {
 }
 
 sub VersionExit {
-    print VERSION."\n";
+    my $pname = shift;
+    $pname = "" unless defined $pname;
+    print "$pname-".VERSION."\n";
     exit(0);
 }
 
@@ -176,7 +221,7 @@ sub WriteWholeFile {
 sub UntaintHandleIfLegal {
     my $ref = shift;
     return 0
-        unless $$ref =~ /^ *(:?[a-zA-Z][-., a-zA-Z0-9]{0,62}) *$/;
+        unless $$ref =~ /^\s*(:?[a-zA-Z][-., a-zA-Z0-9]{0,62})\s*$/;
     $$ref = $1;
     return 1;
 }
