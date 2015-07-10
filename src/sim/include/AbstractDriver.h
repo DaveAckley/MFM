@@ -1317,7 +1317,7 @@ namespace MFM
 
       LoadFromConfigurationPath();
 
-      m_grid.SetGridRunning(true);
+      m_grid.SetGridRunning(false);
 
     }
 
