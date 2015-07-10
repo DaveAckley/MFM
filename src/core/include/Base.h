@@ -78,6 +78,8 @@ namespace MFM {
         bs.Printf(",%@", &as);
       }
       bs.Printf(",#%08x",m_paint);
+
+      m_sensory.SaveConfig(bs, atf);
     }
 
     bool LoadConfig(LineCountingByteSource & bs, AtomTypeFormatter<AC> & atf)
@@ -100,6 +102,9 @@ namespace MFM {
 
       u32 tmp_m_paint;
       if (3 != bs.Scanf(",#%08x", &tmp_m_paint))
+        return false;
+
+      if (!m_sensory.LoadConfig(bs, atf))
         return false;
 
       m_base = defaultAtom;

@@ -28,6 +28,8 @@
 #define SENSE_H
 
 #include "itype.h"
+#include "ByteSink.h"
+#include "AtomSerializer.h"
 
 namespace MFM {
 
@@ -59,6 +61,28 @@ namespace MFM {
         return m_touchType;
       return TOUCH_TYPE_NONE;
     }
+
+    template <class AC>
+    void SaveConfig(ByteSink& bs, AtomTypeFormatter<AC> & atf) const
+    {
+      bs.Printf(",%D", m_touchType);
+      bs.Print(m_lastTouchEventCount, Format::LXX64);
+    }
+
+    template <class AC>
+    bool LoadConfig(LineCountingByteSource & bs, AtomTypeFormatter<AC> & atf)
+    {
+      u32 tmp_m_touchType;
+      if (2 != bs.Scanf(",%D", &tmp_m_touchType)) return false;
+
+      u64 tmp_m_lastTouchEventCount;
+      if (!bs.Scan(tmp_m_lastTouchEventCount, Format::LXX64)) return false;
+
+      m_touchType = (SiteTouchType) tmp_m_touchType;
+      m_lastTouchEventCount = tmp_m_lastTouchEventCount;
+      return true;
+    }
+
   };
 
   struct SiteSensors {
@@ -73,6 +97,20 @@ namespace MFM {
     {
       return m_touchSensor.RecentTouch(eventCount);
     }
+
+    template<class AC>
+    void SaveConfig(ByteSink& bs, AtomTypeFormatter<AC> & atf) const
+    {
+      m_touchSensor.SaveConfig(bs,atf);
+    }
+
+    template<class AC>
+    bool LoadConfig(LineCountingByteSource & bs, AtomTypeFormatter<AC> & atf)
+    {
+      return m_touchSensor.LoadConfig(bs,atf);
+    }
+
+
   };
 }
 
