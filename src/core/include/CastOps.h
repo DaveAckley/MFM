@@ -65,12 +65,12 @@ namespace MFM {
   //C-UNSIGNED
   inline u32 _Unsigned32ToCu32(u32 val, const u32 srcbitwidth)
   {
-    return val & _GetNOnes32(srcbitwidth);
+    return val;
   }
 
   inline u64 _Unsigned64ToCu64(u64 val, const u32 srcbitwidth)
   {
-    return val & _GetNOnes64(srcbitwidth);
+    return val;
   }
 
   inline u32 _Cu32ToUnsigned32(u32 val, const u32 destbitwidth)
@@ -538,18 +538,14 @@ namespace MFM {
 
   inline u32 _Unary32ToUnary32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    const u32 maxdestval = destbitwidth;
-    const u32 mindestval = 0;
-    u32 count1s = PopCount(val & _GetNOnes32(srcbitwidth));
-    return _GetNOnes32(CLAMP<u32>(mindestval, maxdestval, count1s));
+    u32 cval = _Unary32ToCu32(val, srcbitwidth);
+    return _Cu32ToUnary32(cval, destbitwidth);
   }
 
   inline u64 _Unary64ToUnary64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    const u32 maxdestval = destbitwidth;
-    const u32 mindestval = 0;
-    u32 count1s = PopCount64(val & _GetNOnes64(srcbitwidth));
-    return _GetNOnes64(CLAMP<u32>(mindestval, maxdestval, count1s));
+    u64 cval = _Unary64ToCu64(val, srcbitwidth);
+    return _Cu64ToUnary64(cval, destbitwidth);
   }
 
   inline u32 _Bits32ToUnary32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
