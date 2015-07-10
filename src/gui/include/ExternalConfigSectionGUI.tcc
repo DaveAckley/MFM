@@ -142,6 +142,7 @@ namespace MFM
   {
     AbstractGUIDriver<GC> & ad = GetDriver();
     ad.ResetScreenSize();
+    ad.SetToolboxVisible(ad.IsToolboxVisible()); // hack to set gridtool correctly :(
     return true;
   }
 
