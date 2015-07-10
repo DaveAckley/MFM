@@ -215,6 +215,7 @@ namespace MFM {
     ctile.RequestStatePassive();
 
     bool running = true;
+    u32 pauseUsec = 0;
     while (running)
     {
       switch (td->GetState())
@@ -239,12 +240,15 @@ namespace MFM {
           // We accomplished nothing.  Let somebody else try
           pthread_yield();
         }
+        pauseUsec = 0;
         break;
       }
 
       case TileDriver::PAUSED:
         // Sleep a little
-        SleepUsec(ctile.GetRandom().Between(10,100));  // 0.01ms..1ms
+        if (pauseUsec < 100000)
+          pauseUsec += ctile.GetRandom().Between(10,100);
+        SleepUsec(pauseUsec);
         break;
 
       default:
@@ -723,6 +727,23 @@ namespace MFM {
   }
 
   template <class GC>
+  void Grid<GC>::RefreshAllCaches()
+  {
+    const u32 gridWidth = this->GetWidthSites();
+    const u32 gridHeight = this->GetHeightSites();
+
+    for(u32 y = 0; y < gridHeight; y++)
+    {
+      for(u32 x = 0; x < gridWidth; x++)
+      {
+        SPoint currentPt(x, y);
+        T atom = *this->GetAtom(currentPt);
+        this->PlaceAtom(atom, currentPt);  // This updates caches
+      }
+    }
+  }
+
+  template <class GC>
   void Grid<GC>::SetBackgroundRadiationEnabled(bool value)
   {
     for (iterator_type i = begin(); i != end(); ++i)
@@ -761,7 +782,8 @@ namespace MFM {
         sides = GetTile(0,0).GetSites();
 
     for (const_iterator_type i = begin(); i != end(); ++i)
-      acc += i->IsOff() ? 0 : sides;
+      //      acc += i->IsOff() ? 0 : sides;
+      acc +=  sides;
 
     return acc;
   }

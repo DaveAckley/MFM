@@ -216,48 +216,6 @@ namespace MFM
     return in.Scanf(")") == 1;
   }
 
-
-#if 0
-  template <class GC>
-  FunctionCallDisableTile<GC>::FunctionCallDisableTile(ExternalConfigSectionGrid<GC> & ec)
-    : ConfigFunctionCallGrid<GC>("DisableTile",ec)
-  {
-    ec.RegisterFunction(*this);
-  }
-
-  template <class GC>
-  bool FunctionCallDisableTile<GC>::Parse()
-  {
-    ExternalConfigSectionGrid<GC> & ec = this->GetECSG();
-    LineCountingByteSource& in = ec.GetByteSource();
-
-    in.SkipWhitespace();
-
-    u32 x, y;
-
-    if(!in.Scan(x))
-      return in.Msg(Logger::ERROR, "Expected decimal x-coordinate parameter");
-
-    s32 ret;
-
-    ret = this->SkipToNextArg(in);
-    if(ret < 0)
-      return false;
-
-    if(ret == 0)
-      return in.Msg(Logger::ERROR, "Expected second decimal y-coordinate parameter");
-
-    if(!in.Scan(y))
-      return in.Msg(Logger::ERROR, "Expected second decimal y-coordinate parameter");
-
-    SPoint tilePt(x, y);
-
-    ec.SetTileToExecuteOnly(tilePt, false);
-
-    return this->SkipToNextArg(in) == 0;
-  }
-#endif
-
   template <class GC>
   FunctionCallSetElementParameter<GC>::FunctionCallSetElementParameter(ExternalConfigSectionGrid<GC> & ec)
     : ConfigFunctionCallGrid<GC>("SetElementParameter",ec)
@@ -332,6 +290,7 @@ namespace MFM
   template<class GC>
   bool ExternalConfigSectionGrid<GC>::ReadFinalize()
   {
+    m_grid.RefreshAllCaches();
     m_grid.RecountAtoms();
     return true;
   }

@@ -100,6 +100,11 @@ namespace MFM {
       Grid* m_gridPtr;
       pthread_t m_threadId;
       GridTransceiver m_channels[4]; // 4: NE, E, SE, S == dir-Dirs::NORTHEAST
+      TileDriver()
+        : m_state(PAUSED)
+        , m_loc(-1,-1)
+        , m_gridPtr(0)
+      { }
 
       State GetState()
       {
@@ -484,6 +489,14 @@ namespace MFM {
      * Report debug messages for any discrepancies.
      */
     void CheckCaches();
+
+    /**
+     * Update all cache sites from their corresponding source,
+     * 'non-physically'.  This is thread-unsafe and no tile driver
+     * threads should be active, else races and inconsistencies are
+     * likely.
+     */
+    void RefreshAllCaches();
 
     /**
      * Return true iff tileInGrid is a legal tile coordinate in this
