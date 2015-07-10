@@ -187,6 +187,12 @@ namespace MFM
         }
         u32 type = m_element->GetType();
         u32 allSites = m_grid->CountActiveSites();
+        if (allSites == 0)
+        {
+          bs.Printf("%d ?%%", 0);
+          return;
+        }
+
         u32 count = m_grid->GetAtomCount(type);
         double pct = 100.0 * count / allSites;
 
