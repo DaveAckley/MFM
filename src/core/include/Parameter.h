@@ -132,10 +132,10 @@ namespace MFM
     {
       switch (this->GetType())
       {
-      case VD::U32: bs.Print(m_vDesc.GetValueU32<AC>(atom)); break;
-      case VD::S32: bs.Print(m_vDesc.GetValueS32<AC>(atom)); break;
-      case VD::BOOL: bs.Print(m_vDesc.GetValueBool<AC>(atom)); break;
-      case VD::UNARY: bs.Print(m_vDesc.GetValueUnary<AC>(atom)); break;
+      case VD::U32: bs.Print(m_vDesc.GetValueU32<T>(atom)); break;
+      case VD::S32: bs.Print(m_vDesc.GetValueS32<T>(atom)); break;
+      case VD::BOOL: bs.Print(m_vDesc.GetValueBool<T>(atom)); break;
+      case VD::UNARY: bs.Print(m_vDesc.GetValueUnary<T>(atom)); break;
       default: FAIL(ILLEGAL_STATE);
       }
     }
@@ -148,14 +148,14 @@ namespace MFM
         {
           u32 val;
           if (!bs.Scan(val)) return false;
-          m_vDesc.SetValueU32<AC>(atom,val);
+          m_vDesc.SetValueU32<T>(atom,val);
           return true;
         }
       case VD::S32:
         {
           s32 val;
           if (!bs.Scan(val)) return false;
-          m_vDesc.SetValueS32<AC>(atom,val);
+          m_vDesc.SetValueS32<T>(atom,val);
           return true;
         }
       case VD::BOOL:
@@ -164,11 +164,11 @@ namespace MFM
           if (!bs.ScanIdentifier(temp)) return false;
           if (temp.Equals("true"))
           {
-            m_vDesc.SetValueBool<AC>(atom,true);
+            m_vDesc.SetValueBool<T>(atom,true);
           }
           else if (temp.Equals("false"))
           {
-            m_vDesc.SetValueBool<AC>(atom,false);
+            m_vDesc.SetValueBool<T>(atom,false);
           }
           else
           {
@@ -180,7 +180,7 @@ namespace MFM
         {
           u32 val;
           if (!bs.Scan(val)) return false;
-          m_vDesc.SetValueUnary<AC>(atom,val);
+          m_vDesc.SetValueUnary<T>(atom,val);
           return true;
         }
       default: FAIL(ILLEGAL_STATE);
@@ -189,12 +189,12 @@ namespace MFM
 
     u32 GetValueOutOfType(T& atom) const
     {
-      return m_vDesc.LoadValueByType<AC>(atom);
+      return m_vDesc.LoadValueByType<T>(atom);
     }
 
     void SetValueIntoType(T& atom, const u32 val) const
     {
-      m_vDesc.StoreValueByType<AC>(atom, val);
+      m_vDesc.StoreValueByType<T>(atom, val);
     }
 
     /////////
@@ -202,12 +202,12 @@ namespace MFM
 
     s32 GetBitsAsS32(const T& atom) const
     {
-      return m_vDesc.GetBitsAsS32<AC>(atom);
+      return m_vDesc.GetBitsAsS32<T>(atom);
     }
 
     void SetBitsAsS32(T& atom, const s32 val) const
     {
-      m_vDesc.SetBitsAsS32<AC>(atom, val);
+      m_vDesc.SetBitsAsS32<T>(atom, val);
     }
 
     /////////
@@ -215,12 +215,12 @@ namespace MFM
 
     u64 GetBitsAsU64(const T& atom) const
     {
-      return m_vDesc.GetBitsAsU64<AC>(atom);
+      return m_vDesc.GetBitsAsU64<T>(atom);
     }
 
     void SetBitsAsU64(T& atom, const u64 val) const
     {
-      m_vDesc.SetBitsAsU64<AC>(atom, val);
+      m_vDesc.SetBitsAsU64<T>(atom, val);
     }
 
     /////////
@@ -233,7 +233,7 @@ namespace MFM
     {
       if (this->GetType()==VD::U32)
       {
-        store = m_vDesc.GetValueU32<AC>(atom);
+        store = m_vDesc.GetValueU32<T>(atom);
         return true;
       }
       return false;
@@ -279,7 +279,7 @@ namespace MFM
     {
       if (this->GetType()==VD::BOOL)
       {
-        store = m_vDesc.GetValueBool<AC>(atom);
+        store = m_vDesc.GetValueBool<T>(atom);
         return true;
       }
       return false;
@@ -541,12 +541,12 @@ namespace MFM
 
     u32 GetValueUnary() const
     {
-      return FieldUnary::GetValue(m_storage);
+      return (u32) this->m_vDesc.LoadValueByType(m_storage);
     }
 
     void SetValueUnary(const u32 val)
     {
-      FieldUnary::SetValue(m_storage, val);
+      this->m_vDesc.StoreValueByType(m_storage, val);
     }
 
     /////////

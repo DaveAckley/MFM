@@ -195,71 +195,71 @@ namespace MFM
 
     /////////
     /// Raw bits value
-    template <class AC> static u32 GetFieldAsBits(const u32 length, const u32 start, const typename AC::ATOM_TYPE & a) ;
-    template <class AC> static void SetFieldAsBits(const u32 length, const u32 start, typename AC::ATOM_TYPE & a, const u32 val) ;
+    template <class T> static u32 GetFieldAsBits(const u32 length, const u32 start, const T& a) ;
+    template <class T> static void SetFieldAsBits(const u32 length, const u32 start, T& a, const u32 val) ;
 
-    template <class AC> static u64 GetLongFieldAsBits(const u32 length, const u32 start, const typename AC::ATOM_TYPE & a) ;
-    template <class AC> static void SetLongFieldAsBits(const u32 length, const u32 start, typename AC::ATOM_TYPE & a, const u64 val) ;
+    template <class T> static u64 GetLongFieldAsBits(const u32 length, const u32 start, const T& a) ;
+    template <class T> static void SetLongFieldAsBits(const u32 length, const u32 start, T& a, const u64 val) ;
 
     /**
      * Get a raw bit field cast as an s32 -- without checking whether
      * this VD is an S32.  For use by generic routines like Sliders
      * that treat everything as an S32.
      */
-    template <class AC> s32 GetBitsAsS32(const typename AC::ATOM_TYPE & a) const ;
+    template <class T> s32 GetBitsAsS32(const T& a) const ;
 
     /**
      * Set a raw bit field from an s32 -- without checking whether
      * this VD is an S32.  For use by generic routines like Sliders
      * that treat everything as an S32.
      */
-    template <class AC> void SetBitsAsS32(typename AC::ATOM_TYPE & a, s32 val) const ;
+    template <class T> void SetBitsAsS32(T& a, s32 val) const ;
 
     /**
      * Get a raw bit field cast as a u64 -- without checking whether
      * this VD is a BITS.
      */
-    template <class AC> u64 GetBitsAsU64(const typename AC::ATOM_TYPE & a) const ;
+    template <class T> u64 GetBitsAsU64(const T& a) const ;
 
     /**
      * Set a raw bit field from an u64 -- without checking whether
      * this VD is a BITS.
      */
-    template <class AC> void SetBitsAsU64(typename AC::ATOM_TYPE & a, u64 val) const ;
+    template <class T> void SetBitsAsU64(T& a, u64 val) const ;
 
     /////////
     /// u32 value
-    template <class AC> static u32 GetFieldAsU32(const u32 length, const u32 start, const typename AC::ATOM_TYPE & a) ;
-    template <class AC> static void SetFieldAsU32(const u32 length, const u32 start, typename AC::ATOM_TYPE & a, const u32 val) ;
-    template <class AC> u32 GetValueU32(const typename AC::ATOM_TYPE & a) const ;
-    template <class AC> void SetValueU32(typename AC::ATOM_TYPE & a, const u32 val) const ;
+    template <class T> static u32 GetFieldAsU32(const u32 length, const u32 start, const T& a) ;
+    template <class T> static void SetFieldAsU32(const u32 length, const u32 start, T& a, const u32 val) ;
+    template <class T> u32 GetValueU32(const T& a) const ;
+    template <class T> void SetValueU32(T& a, const u32 val) const ;
 
     /////////
     /// s32 value
-    template <class AC> static s32 GetFieldAsS32(const u32 length, const u32 start, const typename AC::ATOM_TYPE & a) ;
-    template <class AC> static void SetFieldAsS32(const u32 length, const u32 start, typename AC::ATOM_TYPE & a, const s32 val) ;
-    template <class AC> s32 GetValueS32(const typename AC::ATOM_TYPE & a) const ;
-    template <class AC> void SetValueS32(typename AC::ATOM_TYPE & a, const s32 val) const ;
+    template <class T> static s32 GetFieldAsS32(const u32 length, const u32 start, const T& a) ;
+    template <class T> static void SetFieldAsS32(const u32 length, const u32 start, T& a, const s32 val) ;
+    template <class T> s32 GetValueS32(const T& a) const ;
+    template <class T> void SetValueS32(T& a, const s32 val) const ;
 
     /////////
     /// bool value
-    template <class AC> static bool GetFieldAsBool(const u32 length, const u32 start, const typename AC::ATOM_TYPE & a) ;
-    template <class AC> static void SetFieldAsBool(const u32 length, const u32 start, typename AC::ATOM_TYPE & a, const bool val) ;
-    template <class AC> bool GetValueBool(const typename AC::ATOM_TYPE & a) const ;
-    template <class AC> void SetValueBool(typename AC::ATOM_TYPE & a, const bool val) const ;
+    template <class T> static bool GetFieldAsBool(const u32 length, const u32 start, const T& a) ;
+    template <class T> static void SetFieldAsBool(const u32 length, const u32 start, T& a, const bool val) ;
+    template <class T> bool GetValueBool(const T& a) const ;
+    template <class T> void SetValueBool(T& a, const bool val) const ;
 
     /////////
     /// unary value
-    template <class AC> static u32 GetFieldAsUnary(const u32 length, const u32 start, const typename AC::ATOM_TYPE & a) ;
-    template <class AC> static void SetFieldAsUnary(const u32 length, const u32 start, typename AC::ATOM_TYPE & a, const u32 val) ;
-    template <class AC> u32 GetValueUnary(const typename AC::ATOM_TYPE & a) const ;
-    template <class AC> void SetValueUnary(typename AC::ATOM_TYPE & a, const u32 val) const ;
+    template <class T> static u32 GetFieldAsUnary(const u32 length, const u32 start, const T& a) ;
+    template <class T> static void SetFieldAsUnary(const u32 length, const u32 start, T& a, const u32 val) ;
+    template <class T> u32 GetValueUnary(const T& a) const ;
+    template <class T> void SetValueUnary(T& a, const u32 val) const ;
 
     ///Generic by VD type
-    template <class AC> void StoreValueByType(typename AC::ATOM_TYPE & a, const u32 val) const ;
+    template <class T> void StoreValueByType(T & a, const u32 val) const ;
 
     ///Generic by VD type -> s32
-    template <class AC> s32 LoadValueByType(typename AC::ATOM_TYPE & a) const ;
+    template <class T> s32 LoadValueByType(T & a) const ;
 
   };
 

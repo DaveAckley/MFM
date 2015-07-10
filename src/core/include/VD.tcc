@@ -3,50 +3,50 @@
 
 namespace MFM
 {
-  template <class AC>
-  u32 VD::GetFieldAsBits(const u32 length, const u32 start, const typename AC::ATOM_TYPE & a)
+  template <class T>
+  u32 VD::GetFieldAsBits(const u32 length, const u32 start, const T& a)
   {
     return a.m_bits.Read(start, length);
   }
 
-  template <class AC>
-  void VD::SetFieldAsBits(const u32 length, const u32 start, typename AC::ATOM_TYPE & a, const u32 val)
+  template <class T>
+  void VD::SetFieldAsBits(const u32 length, const u32 start, T& a, const u32 val)
   {
     a.m_bits.Write(start, length, val);
   }
 
-  template <class AC>
-  u64 VD::GetLongFieldAsBits(const u32 length, const u32 start, const typename AC::ATOM_TYPE & a)
+  template <class T>
+  u64 VD::GetLongFieldAsBits(const u32 length, const u32 start, const T& a)
   {
     return a.m_bits.ReadLong(start, length);
   }
 
-  template <class AC>
-  void VD::SetLongFieldAsBits(const u32 length, const u32 start, typename AC::ATOM_TYPE & a, const u64 val)
+  template <class T>
+  void VD::SetLongFieldAsBits(const u32 length, const u32 start, T& a, const u64 val)
   {
     a.m_bits.WriteLong(start, length, val);
   }
 
-  template <class AC>
-  u64 VD::GetBitsAsU64(const typename AC::ATOM_TYPE & a) const
+  template <class T>
+  u64 VD::GetBitsAsU64(const T& a) const
   {
-    return GetLongFieldAsBits<AC>(m_length, m_start, a);
+    return GetLongFieldAsBits<T>(m_length, m_start, a);
   }
 
-  template <class AC>
-  void VD::SetBitsAsU64(typename AC::ATOM_TYPE & a, u64 val) const
+  template <class T>
+  void VD::SetBitsAsU64(T& a, u64 val) const
   {
-    SetLongFieldAsBits<AC>(m_length, m_start, a, val);
+    SetLongFieldAsBits<T>(m_length, m_start, a, val);
   }
 
-  template <class AC>
-  s32 VD::GetBitsAsS32(const typename AC::ATOM_TYPE & a) const
+  template <class T>
+  s32 VD::GetBitsAsS32(const T& a) const
   {
-    return (s32) GetFieldAsBits<AC>(m_length, m_start, a);
+    return (s32) GetFieldAsBits<T>(m_length, m_start, a);
   }
 
-  template <class AC>
-  void VD::SetBitsAsS32(typename AC::ATOM_TYPE & a, s32 val) const
+  template <class T>
+  void VD::SetBitsAsS32(T& a, s32 val) const
   {
     if (val < m_min)
     {
@@ -56,158 +56,158 @@ namespace MFM
     {
       val = m_max;
     }
-    SetFieldAsBits<AC>(m_length, m_start, a, (u32) val);
+    SetFieldAsBits<T>(m_length, m_start, a, (u32) val);
   }
 
-  template <class AC>
-  u32 VD::GetFieldAsU32(const u32 length, const u32 start, const typename AC::ATOM_TYPE & a)
+  template <class T>
+  u32 VD::GetFieldAsU32(const u32 length, const u32 start, const T& a)
   {
-    return GetFieldAsBits<AC>(length, start, a);
+    return GetFieldAsBits<T>(length, start, a);
   }
 
-  template <class AC>
-  void VD::SetFieldAsU32(const u32 length, const u32 start, typename AC::ATOM_TYPE & a, const u32 val)
+  template <class T>
+  void VD::SetFieldAsU32(const u32 length, const u32 start, T& a, const u32 val)
   {
-    SetFieldAsBits<AC>(length, start, a, val);
+    SetFieldAsBits<T>(length, start, a, val);
   }
 
-  template <class AC>
-  u32 VD::GetValueU32(const typename AC::ATOM_TYPE & a) const
-  {
-    AssertIsType(U32);
-    return GetFieldAsBits<AC>(m_length, m_start, a);
-  }
-
-  template <class AC>
-  void VD::SetValueU32(typename AC::ATOM_TYPE & a, const u32 val) const
+  template <class T>
+  u32 VD::GetValueU32(const T& a) const
   {
     AssertIsType(U32);
-    SetFieldAsBits<AC>(m_length, m_start, a, val);
+    return GetFieldAsBits<T>(m_length, m_start, a);
   }
 
-  template <class AC>
-  s32 VD::GetFieldAsS32(const u32 length, const u32 start, const typename AC::ATOM_TYPE & a)
+  template <class T>
+  void VD::SetValueU32(T& a, const u32 val) const
+  {
+    AssertIsType(U32);
+    SetFieldAsBits<T>(m_length, m_start, a, val);
+  }
+
+  template <class T>
+  s32 VD::GetFieldAsS32(const u32 length, const u32 start, const T& a)
   {
     const u32 SIGN_SHIFT = 32 - length;
-    return ((s32) GetFieldAsU32<AC>(length, start, a)<<SIGN_SHIFT)>>SIGN_SHIFT;
+    return ((s32) GetFieldAsU32<T>(length, start, a)<<SIGN_SHIFT)>>SIGN_SHIFT;
   }
 
-  template <class AC>
-  void VD::SetFieldAsS32(const u32 length, const u32 start, typename AC::ATOM_TYPE & a, const s32 val)
+  template <class T>
+  void VD::SetFieldAsS32(const u32 length, const u32 start, T& a, const s32 val)
   {
-    SetFieldAsU32<AC>(length, start, a, (u32) val);
+    SetFieldAsU32<T>(length, start, a, (u32) val);
   }
 
-  template <class AC>
-  s32 VD::GetValueS32(const typename AC::ATOM_TYPE & a) const
-  {
-    AssertIsType(S32);
-    return GetFieldAsS32<AC>(m_length, m_start, a);
-  }
-
-  template <class AC>
-  void VD::SetValueS32(typename AC::ATOM_TYPE & a, const s32 val) const
+  template <class T>
+  s32 VD::GetValueS32(const T& a) const
   {
     AssertIsType(S32);
-    SetFieldAsS32<AC>(m_length, m_start, a, val);
+    return GetFieldAsS32<T>(m_length, m_start, a);
+  }
+
+  template <class T>
+  void VD::SetValueS32(T& a, const s32 val) const
+  {
+    AssertIsType(S32);
+    SetFieldAsS32<T>(m_length, m_start, a, val);
   }
 
 
-  template <class AC>
-  bool VD::GetFieldAsBool(const u32 length, const u32 start, const typename AC::ATOM_TYPE & a)
+  template <class T>
+  bool VD::GetFieldAsBool(const u32 length, const u32 start, const T& a)
   {
-    const u32 ones = __builtin_popcount(GetFieldAsU32<AC>(length, start, a));
+    const u32 ones = __builtin_popcount(GetFieldAsU32<T>(length, start, a));
     return ones > length - ones;
   }
 
-  template <class AC>
-  void VD::SetFieldAsBool(const u32 length, const u32 start, typename AC::ATOM_TYPE & a, const bool val)
+  template <class T>
+  void VD::SetFieldAsBool(const u32 length, const u32 start, T& a, const bool val)
   {
-    SetFieldAsU32<AC>(length, start, a, val ? MakeMask(length) : 0u);
+    SetFieldAsU32<T>(length, start, a, val ? MakeMask(length) : 0u);
   }
 
-  template <class AC>
-  bool VD::GetValueBool(const typename AC::ATOM_TYPE & a) const
-  {
-    AssertIsType(BOOL);
-    return GetFieldAsBool<AC>(m_length, m_start, a);
-  }
-
-  template <class AC>
-  void VD::SetValueBool(typename AC::ATOM_TYPE & a, const bool val) const
+  template <class T>
+  bool VD::GetValueBool(const T& a) const
   {
     AssertIsType(BOOL);
-    SetFieldAsBool<AC>(m_length, m_start, a, val);
+    return GetFieldAsBool<T>(m_length, m_start, a);
   }
 
-  template <class AC>
-  u32 VD::GetFieldAsUnary(const u32 length, const u32 start, const typename AC::ATOM_TYPE & a)
+  template <class T>
+  void VD::SetValueBool(T& a, const bool val) const
   {
-    return __builtin_popcount(GetFieldAsU32<AC>(length, start, a));
+    AssertIsType(BOOL);
+    SetFieldAsBool<T>(m_length, m_start, a, val);
   }
 
-  template <class AC>
-  void VD::SetFieldAsUnary(const u32 length, const u32 start, typename AC::ATOM_TYPE & a, const u32 val)
+  template <class T>
+  u32 VD::GetFieldAsUnary(const u32 length, const u32 start, const T& a)
   {
-    SetFieldAsU32<AC>(length, start, a, MakeMask(val));
+    return __builtin_popcount(GetFieldAsU32<T>(length, start, a));
   }
 
-  template <class AC>
-  u32 VD::GetValueUnary(const typename AC::ATOM_TYPE & a) const
+  template <class T>
+  void VD::SetFieldAsUnary(const u32 length, const u32 start, T& a, const u32 val)
+  {
+    SetFieldAsU32<T>(length, start, a, MakeMask(val));
+  }
+
+  template <class T>
+  u32 VD::GetValueUnary(const T& a) const
   {
     AssertIsType(UNARY);
-    return GetFieldAsUnary<AC>(m_length, m_start, a);
+    return GetFieldAsUnary<T>(m_length, m_start, a);
   }
 
-  template <class AC>
-  void VD::SetValueUnary(typename AC::ATOM_TYPE & a, const u32 val) const
+  template <class T>
+  void VD::SetValueUnary(T& a, const u32 val) const
   {
     AssertIsType(UNARY);
-    SetFieldAsUnary<AC>(m_length, m_start, a, val);
+    SetFieldAsUnary<T>(m_length, m_start, a, val);
   }
 
-  template <class AC>
-  void VD::StoreValueByType(typename AC::ATOM_TYPE & a, const u32 val) const
+  template <class T>
+  void VD::StoreValueByType(T & a, const u32 val) const
   {
     switch(m_type) {
     case INVALID:
     default:
       FAIL(ILLEGAL_STATE);
     case U32:
-      this->SetValueU32<AC>(a, val);
+      this->SetValueU32<T>(a, val);
       break;
     case S32:
-      this->SetValueS32<AC>(a, (s32) val);
+      this->SetValueS32<T>(a, (s32) val);
       break;
     case BOOL:
-      this->SetValueBool<AC>(a, val != 0);
+      this->SetValueBool<T>(a, val != 0);
       break;
     case UNARY:
-      this->SetValueUnary<AC>(a, val);
+      this->SetValueUnary<T>(a, val);
       break;
     case BITS:
-      this->SetBitsAsS32<AC>(a, (s32) val);
+      this->SetBitsAsS32<T>(a, (s32) val);
       break;
     }
   }
 
-  template <class AC>
-  s32 VD::LoadValueByType(typename AC::ATOM_TYPE & a) const
+  template <class T>
+  s32 VD::LoadValueByType(T & a) const
   {
     switch(m_type) {
     case INVALID:
     default:
       FAIL(ILLEGAL_STATE);
     case U32:
-      return this->GetValueU32<AC>(a);
+      return this->GetValueU32<T>(a);
     case S32:
-      return (s32) this->GetValueS32<AC>(a);
+      return (s32) this->GetValueS32<T>(a);
     case BOOL:
-      return this->GetValueBool<AC>(a) ? 1 : 0;
+      return this->GetValueBool<T>(a) ? 1 : 0;
     case UNARY:
-      return this->GetValueUnary<AC>(a);
+      return this->GetValueUnary<T>(a);
     case BITS:
-      return this->GetBitsAsS32<AC>(a);
+      return this->GetBitsAsS32<T>(a);
     }
   }
 }
