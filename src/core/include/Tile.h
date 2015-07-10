@@ -1274,24 +1274,6 @@ namespace MFM
      */
     void IncrementAtomHistogram(s32 count[ELEMENT_TABLE_SIZE]);
 
-#if 0
-    /**
-     * Stores an Atom after ensuring valid indices but performing no
-     * other actions (e.g., no counts are adjusted).
-     *
-     * @param atom An atom to store
-     * @param sx x coordinate in Tile (including caches)
-     * @param sy y coordinate in Tile (including caches)
-     *
-     */
-    void InternalPutAtom(const T & atom, s32 x, s32 y);
-#endif
-
-    /**
-     * Creates and starts the event thread for this Tile
-     */
-    void StartEventThread();
-
     /**
      * Sees if this Tile is currently running.
      *
