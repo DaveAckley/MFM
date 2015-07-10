@@ -14,7 +14,6 @@ namespace MFM
     , m_drawCacheSites(true)
     , m_drawBases(false)
     , m_atomSizeDit(DEFAULT_ATOM_SIZE_DIT)
-    , m_renderSquares(false)
     , m_gridLineColor(Drawing::GREY30)
   {
     m_regionColors[OurTile::REGION_CACHE] = InterpolateColors(Drawing::WHITE, Drawing::DARK_PURPLE, 100);
@@ -313,7 +312,6 @@ namespace MFM
     sink.Printf(" PP(trmt=%d)\n", m_drawMidgroundType);
     sink.Printf(" PP(trft=%d)\n", m_drawForegroundType);
     sink.Printf(" PP(trgc=%d)\n", m_gridLineColor);
-    sink.Printf(" PP(trrs=%d)\n", m_renderSquares);
   }
 
   template <class EC>
@@ -327,7 +325,6 @@ namespace MFM
     if (!strcmp("trmt",key)) return 1 == source.Scanf("%?d", sizeof m_drawMidgroundType, &m_drawMidgroundType);
     if (!strcmp("trft",key)) return 1 == source.Scanf("%?d", sizeof m_drawForegroundType, &m_drawForegroundType);
     if (!strcmp("trgc",key)) return 1 == source.Scanf("%?d", sizeof m_gridLineColor, &m_gridLineColor);
-    if (!strcmp("trrs",key)) return 1 == source.Scanf("%?d", sizeof m_renderSquares, &m_renderSquares);
 
     return false;
   }

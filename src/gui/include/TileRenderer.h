@@ -234,8 +234,6 @@ namespace MFM
 
     u32 m_atomSizeDit;
 
-    bool m_renderSquares;
-
     u32 m_gridLineColor;
 
     u32 m_regionColors[Tile<EC>::REGION_COUNT];
