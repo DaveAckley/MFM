@@ -36,6 +36,13 @@ namespace MFM
   extern const char * MFM_VERSION_STRING_SHORT;
 
   /**
+   * A string representing the git repo tree commit of the source that
+   * was compiled to produce this instance of the Movable Feast
+   * Machine.
+   */
+  extern const char * MFM_TREE_VERSION_STRING;
+
+  /**
    * A string representing the extended version number of this
    * instance of the Movable Feast Machine.
    */

@@ -10,12 +10,12 @@ namespace MFM {
     xstr(MFM_VERSION_MINOR) "."
     xstr(MFM_VERSION_REV);
   const char * MFM_VERSION_STRING_LONG =
+    "MFM-" xstr(MFM_VERSION_MAJOR) "." xstr(MFM_VERSION_MINOR) "." xstr(MFM_VERSION_REV)
+    " on " xstr(MFM_BUILD_DATE) "+" xstr(MFM_BUILD_TIME)
+    " by " xstr(MFM_BUILT_BY) "@" xstr(MFM_BUILT_ON)
+    " of " xstr(MFM_TREE_VERSION)
+    ;
+  const char * MFM_TREE_VERSION_STRING =
     "MFM-"
-    xstr(MFM_VERSION_MAJOR) "."
-    xstr(MFM_VERSION_MINOR) "."
-    xstr(MFM_VERSION_REV) "-"
-    xstr(MFM_BUILD_DATE) "-"
-    xstr(MFM_BUILD_TIME) "-"
-    xstr(MFM_BUILT_BY) "@"
-    xstr(MFM_BUILT_ON);
+    xstr(MFM_TREE_VERSION);
 }
