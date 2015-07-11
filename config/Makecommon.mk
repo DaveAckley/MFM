@@ -1,5 +1,12 @@
 ############ Nothing below here should need to be changed ############
 
+# Make a build timestamp just once at the top, so everybody in this
+# build agrees on it (so we avoid spurious element UUID mismatches)
+ifndef TOP_MFM_BUILD_DATE
+ export TOP_MFM_BUILD_DATE:=$(shell date -u +0x%Y%m%d)
+ export TOP_MFM_BUILD_TIME:=$(shell date -u +0x%H%M%S)
+endif
+
 include $(BASEDIR)/config/Makeversion.mk
 include $(BASEDIR)/config/Makevars.mk
 
@@ -15,8 +22,23 @@ include $(BASEDIR)/src/platform-$(MFM_TARGET)/MakePlatform.mk
 # foo/src/            All foo-specific source codes (which other components can't see)
 # foo/include/        All foo-specific header files (which other components can see)
 #
+
 INCLUDES+=$(EXTERNAL_INCLUDES)
 INCLUDES+=-I include
+
+### EXTRA DEFINES
+# Argh, DEFINES is seen as user-set and make is ignoring our changes.
+# We're completely lost in the weeds!  Drop the bomb!  Drop the
+# override bomb!
+override DEFINES+= $(EXTERNAL_DEFINES)
+override DEFINES+=-DMFM_BUILD_DATE=$(TOP_MFM_BUILD_DATE)
+override DEFINES+=-DMFM_BUILD_TIME=$(TOP_MFM_BUILD_TIME)
+override DEFINES+=-DMFM_BUILT_BY=$(shell whoami)
+override DEFINES+=-DMFM_BUILT_ON=$(shell hostname)
+override DEFINES+=-DMFM_VERSION_MAJOR=$(MFM_VERSION_MAJOR)
+override DEFINES+=-DMFM_VERSION_MINOR=$(MFM_VERSION_MINOR)
+override DEFINES+=-DMFM_VERSION_REV=$(MFM_VERSION_REV)
+override DEFINES+=-DMFM_TREE_VERSION="$(MFM_TREE_VERSION)"
 
 LIBS+=$(EXTERNAL_LIBS)
 
@@ -63,17 +85,6 @@ endif
 ARCHIVEBASENAME := mfm$(COMPONENTNAME)
 ARCHIVENAME := lib$(ARCHIVEBASENAME).a
 ARCHIVEPATH := $(BUILDDIR)/$(ARCHIVENAME)
-
-### EXTRA DEFINES
-DEFINES+= $(EXTERNAL_DEFINES)
-DEFINES+=-DMFM_BUILD_DATE=$(TOP_MFM_BUILD_DATE)
-DEFINES+=-DMFM_BUILD_TIME=$(TOP_MFM_BUILD_TIME)
-DEFINES+=-DMFM_BUILT_BY=$(shell whoami)
-DEFINES+=-DMFM_BUILT_ON=$(shell hostname)
-DEFINES+=-DMFM_VERSION_MAJOR=$(MFM_VERSION_MAJOR)
-DEFINES+=-DMFM_VERSION_MINOR=$(MFM_VERSION_MINOR)
-DEFINES+=-DMFM_VERSION_REV=$(MFM_VERSION_REV)
-DEFINES+=-DMFM_TREE_VERSION="$(MFM_TREE_VERSION)"
 
 ### PATTERN RULES
 
