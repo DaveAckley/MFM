@@ -1,17 +1,10 @@
-# For now, we'll assume we're building on linux only
+# For now (heh), we'll assume we're building on linux only
 PLATFORMS=linux
 
 ####
 # Variables exported to submakes
 
 export ULAM_CUSTOM_ELEMENTS
-
-# Try to make a build timestamp just once at the top, so everybody
-# coming out of this build agrees on it.
-TOP_MFM_BUILD_DATE:=$(shell date -u +0x%Y%m%d)
-TOP_MFM_BUILD_TIME:=$(shell date -u +0x%H%M%S)
-export TOP_MFM_BUILD_DATE
-export TOP_MFM_BUILD_TIME
 
 export BASEDIR=$(CURDIR)
 
@@ -30,7 +23,6 @@ clean:  $(PLATFORMS)
 
 realclean:  $(PLATFORMS)
 	rm -f bin/*
-	rm -f res/elements/*.so
 	rm -rf build/
 	rm -rf doc/ref
 
