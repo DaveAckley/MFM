@@ -182,6 +182,28 @@ namespace MFM {
     void PrintInBase(UNSIGNED_TYPE num, u32 base, s32 width = 0, u8 pad = ' ') ;
   };
 
+  /**
+     A ByteSink that can be converted to a ZString, and reset to
+     empty, in some sensible way.  Note that this interface does \e
+     not promise any strong functional constraints among Reset, Printf
+     (say, or any other writing method), and GetZString.
+   */
+  class ZStringableByteSink : public ByteSink
+  {
+  public:
+
+    /**
+     * Resets this ZStringableByteSink back to its initial state.
+     */
+    virtual void Reset() = 0;
+
+    /**
+     * Gets the current contents of this ZStringableByteSink
+     */
+    virtual const char * GetZString() const = 0;
+
+  };
+
   class DiscardBytes : public ByteSink {
   public:
 

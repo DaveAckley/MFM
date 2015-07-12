@@ -33,12 +33,12 @@
 namespace MFM {
 
   /**
-   * A ByteSink that holds up to BUFSIZE - 2 data bytes.  If that
-   * limit is reached, an 'X' is appended at the end of the ByteSink,
-   * and further data written is discarded.
+   * A ZStringableByteSink that holds up to BUFSIZE - 2 data bytes.
+   * If that limit is reached, an 'X' is appended at the end of the
+   * ByteSink, and further data written is discarded.
    */
   template <u32 BUFSIZE>
-  class OverflowableCharBufferByteSink : public ByteSink
+  class OverflowableCharBufferByteSink : public ZStringableByteSink
   {
   public:
 
@@ -171,7 +171,7 @@ namespace MFM {
      * @returns A null terminated string representing this
      *          OverflowableCharBufferByteSink .
      */
-    const char * GetZString() const
+    virtual const char * GetZString() const
     {
       return GetBuffer();
     }
