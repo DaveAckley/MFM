@@ -43,3 +43,6 @@ tools/cpplint.py
 
 # Leave out unofficially '-held' files
 *-hold
+
+# Ignore the version file made for non-git builds
+TREEVERSION.mk
