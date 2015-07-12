@@ -40,11 +40,11 @@ namespace MFM {
     const u32 BUFSIZE = 128;
     char strBuffer[BUFSIZE];
 
-    const u32 ROW_HEIGHT = LINE_HEIGHT_PIXELS;
-    const u32 DETAIL_ROW_HEIGHT = DETAIL_LINE_HEIGHT_PIXELS;
+    FontAsset font = drawing.GetFont();
+    const u32 ROW_HEIGHT = AssetManager::GetFontLineSkip(font);
+    const u32 DETAIL_ROW_HEIGHT = ROW_HEIGHT;
     u32 baseY = 0;
 
-    drawing.SetFont(FONT_ASSET_ELEMENT);
     drawing.SetForeground(Drawing::GREY80);
 
     UPoint dims = this->GetDimensions();
@@ -151,12 +151,10 @@ namespace MFM {
       baseY += ROW_HEIGHT/2;
     }
 
-    drawing.SetFont(FONT_ASSET_ELEMENT);
     drawing.SetForeground(Drawing::WHITE);
 
     sprintf(strBuffer, "%8.3f kAEPS", aeps/1000.0);
 
-    drawing.SetFont(FONT_ASSET_ELEMENT);
     drawing.SetForeground(Drawing::WHITE);
     drawing.BlitText(strBuffer,
                      SPoint(m_drawPoint.GetX(), baseY),
@@ -189,7 +187,6 @@ namespace MFM {
 
         output.Printf("%2s %s",datavalue.GetZString(), cs->GetLabel());
 
-        drawing.SetFont(FONT_ASSET_ELEMENT);
         drawing.SetForeground(0xffffffff);
         drawing.BlitText(output.GetZString(),
                          SPoint(m_drawPoint.GetX(), baseY),
