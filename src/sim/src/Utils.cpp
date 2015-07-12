@@ -5,6 +5,7 @@
 #include <fcntl.h>  /* for O_RDONLY */
 #include <string.h> /* for strerror */
 #include <errno.h> /* for errno */
+#include "OverflowableCharBufferByteSink.h"
 
 namespace MFM {
   namespace Utils {
@@ -51,9 +52,9 @@ namespace MFM {
       return strerror(errno);
     }
 
-    bool GetReadableResourceFile(const char * relativePath, char * result, u32 length)
+    bool GetReadableResourceFile(const char * relativePath, ByteSink& result)
     {
-      if (!length) FAIL(ILLEGAL_ARGUMENT);
+      OString512 buffer;
 
       const char * (paths[]) = {
         "~/.mfm",                // Possible per-user customizations first
@@ -66,18 +67,34 @@ namespace MFM {
       for (u32 i = 0; i < sizeof(paths)/sizeof(paths[0]); ++i) {
 
         const char * dir = paths[i];
+        buffer.Reset();
         if (dir[0] == '~' && home)
-          snprintf(result, length, "%s%s/res/%s",home,dir+1,relativePath);
+          buffer.Printf("%s%s/res/%s",home,dir+1,relativePath);
         else
-          snprintf(result, length, "%s/res/%s",dir,relativePath);
-        FILE * f = fopen(result,"r");
+          buffer.Printf("%s/res/%s",dir,relativePath);
+        FILE * f = fopen(buffer.GetZString(),"r");
         if (f) {
           fclose(f);
+          result.Printf("%s",buffer.GetZString());
           return true;
         }
       }
-      result[0] = '\0';
       return false;
+    }
+
+    void NormalizePath(const char * path, ByteSink & buffer)
+    {
+      MFM_API_ASSERT_NONNULL(path);
+      const char * home = getenv("HOME");
+      if (path[0] == '~' && home)
+      {
+        buffer.Printf("%s%s", home, path + 1);
+      }
+      else
+      {
+        buffer.Printf("%s", path);  // ..just be literal
+      }
+
     }
 
   }

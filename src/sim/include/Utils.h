@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <time.h>   /* for nanosleep */
 #include "itype.h"
-#include "OverflowableCharBufferByteSink.h"
+#include "ByteSink.h"
 
 namespace MFM
 {
@@ -74,33 +74,23 @@ namespace MFM
        readable file was found, and fills result with an absolute path
        (up to the given length) that was openable for reading at the
        time it was checked.  If such a readable file is not found
-       anywhere, set result to an empty string and return false.  Fails
-       with ILLEGAL_ARGUMENT if relativePath or result is NULL or if
-       length is zero; will silently truncate paths (and fail to find
-       a file, or worse, possibly find the wrong file) if length is
-       too short.
+       anywhere, set result to an empty string and return false.
+       Fails with ILLEGAL_ARGUMENT if relativePath or result is NULL
+       or if length is zero; will silently truncate paths (and fail to
+       find a file, or worse, possibly find the wrong file) if length
+       is too short (but if result supports the HasOverflowed()
+       method, that can be checked after the call.)
     */
-    bool GetReadableResourceFile(const char * relativePath, char * result, u32 length) ;
+    bool GetReadableResourceFile(const char * relativePath, ByteSink & result) ;
 
     /**
-       Copy path to buffer, an OString of some size, while expanding a
-       leading '~' in path by replacing it with getenv("HOME") if
-       defined, in buffer.  Fails with ILLEGAL_ARGUMENT if path is
+       Copy path to buffer, while expanding a leading '~' in path by
+       replacing it with getenv("HOME") if defined.  Fails if path is
        NULL; if the (possibly expanded) path did not fit in buffer,
-       buffer.HasOverflowed() will be true after the call.
+       buffer.HasOverflowed() will be true after the call (assuming
+       buffer supports that method).
     */
-    template<u32 BUFSIZE>
-    void NormalizePath(const char * path, OverflowableCharBufferByteSink<BUFSIZE> & buffer)
-    {
-      buffer = path;
-      if (path[0] == '~') {
-        const char * home = getenv("HOME");
-        if (home) {
-          buffer.Reset();
-          buffer.Printf("%s%s", home, path + 1);
-        }
-      }
-    }
+    void NormalizePath(const char * path, ByteSink & buffer) ;
 
     /**
        Return null if path can currently be successfully opened for
@@ -113,20 +103,6 @@ namespace MFM
      */
     const char * ReadablePath(const char * path) ;
 
-    /**
-       Return null if path can currently be successfully opened for
-       reading, or return a string describing the error if it cannot.
-
-       The returned string is static and (of course) should not be
-       freed.
-
-       \sa ReadablePath(const char *)
-     */
-    template<u32 BUFSIZE>
-    const char * ReadablePath(const OverflowableCharBufferByteSink<BUFSIZE> & path)
-    {
-      return ReadablePath(path.GetZString());
-    }
   }
 }
 

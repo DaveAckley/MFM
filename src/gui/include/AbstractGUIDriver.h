@@ -72,7 +72,7 @@ namespace MFM
     typedef typename Super::OurGrid OurGrid;
     typedef typename GC::EVENT_CONFIG EC;
 
-    char m_startFile[MAX_PATH_LENGTH];
+    OString512 m_startFile;
     bool m_startPaused;
     bool m_thisUpdateIsEpoch;
     bool m_bigText;
@@ -423,13 +423,13 @@ namespace MFM
 
     void LoadStartFile()
     {
-      if (strlen(m_startFile) == 0)
+      if (m_startFile.GetLength() == 0)
       {
         LOG.Debug("Start file loading suppressed");
         return;
       }
-      if (!this->LoadMFS(m_startFile))
-        LOG.Error("Start file (%s) loading failed", m_startFile);
+      if (!this->LoadMFS(m_startFile.GetZString()))
+        LOG.Error("Start file (%s) loading failed", m_startFile.GetZString());
     }
 
     virtual void OnceOnly(VArguments& args)
@@ -447,11 +447,11 @@ namespace MFM
 
       /// Default the start file
       {
-        if (strlen(m_startFile) > 0)
+        if (m_startFile.GetLength() > 0)
         {
-          if (!strcmp(m_startFile,"-"))  // erase '-' -- so no start file
+          if (!strcmp(m_startFile.GetZString(),"-"))  // erase '-' -- so no start file
           {
-            m_startFile[0] = 0;
+            m_startFile.Reset();
           }
         }
         else
@@ -467,12 +467,15 @@ namespace MFM
 #undef STR
 #undef XSTR
 
-          if (!Utils::GetReadableResourceFile(defaultStartFile,
-                                              m_startFile, MAX_PATH_LENGTH))
+          if (!Utils::GetReadableResourceFile(defaultStartFile, m_startFile))
           {
             LOG.Warning("Default start file (%s) not found; things may be weird",
                         defaultStartFile);
-            m_startFile[0] = 0;
+            m_startFile.Reset();
+          }
+          else
+          {
+
           }
         }
       }
@@ -856,7 +859,7 @@ namespace MFM
       , m_buttonPanel()
       , m_externalConfigSectionGUI(AbstractDriver<GC>::GetExternalConfig(),*this)
     {
-      m_startFile[0] = 0;
+      m_startFile.Reset();
     }
 
     ~AbstractGUIDriver()
@@ -962,13 +965,12 @@ namespace MFM
     {
       AbstractGUIDriver& driver = *((AbstractGUIDriver<GC>*)driverptr);
       VArguments& args = driver.m_varguments;
-      if (strlen(driver.m_startFile))
+      if (driver.m_startFile.GetLength() > 0)
         args.Die("Start file specified twice (was '%s', here '%s')",
-                 driver.m_startFile,
+                 driver.m_startFile.GetZString(),
                  path);
-      strncpy(driver.m_startFile, path, MAX_PATH_LENGTH);
-      driver.m_startFile[MAX_PATH_LENGTH - 1] = 0;
-      if (strcmp(driver.m_startFile, path))
+      driver.m_startFile.Printf("%s",path);
+      if (driver.m_startFile.HasOverflowed())
         args.Die("Start file path too long '%s'", path);
     }
 

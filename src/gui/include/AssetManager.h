@@ -34,6 +34,7 @@
 #include "Logger.h"
 #include "Utils.h"
 #include "Point.h"
+#include "OverflowableCharBufferByteSink.h"
 
 namespace MFM
 {
@@ -103,13 +104,13 @@ namespace MFM
 
     static SDL_Surface* LoadImage(const char* relativeFilename)
     {
-      const u32 BUFFER_SIZE = 1024;
-      char filename[BUFFER_SIZE];
+      OString512 path;
       SDL_Surface* loaded = NULL;
       SDL_Surface* opped = NULL;
 
-      if(Utils::GetReadableResourceFile(relativeFilename, filename, BUFFER_SIZE))
+      if(Utils::GetReadableResourceFile(relativeFilename, path) && !path.HasOverflowed())
       {
+        const char * filename = path.GetZString();
         loaded = IMG_Load(filename);
 
         if(loaded)
@@ -137,12 +138,12 @@ namespace MFM
 
     static TTF_Font* LoadFont(const char* relativePath, u32 size)
     {
-      const u32 BUFFER_SIZE = 1024;
+      OString512 filename;
       TTF_Font* font = NULL;
-      char path[BUFFER_SIZE];
 
-      if(Utils::GetReadableResourceFile(relativePath, path, BUFFER_SIZE))
+      if(Utils::GetReadableResourceFile(relativePath, filename))
       {
+        const char * path = filename.GetZString();
         font = TTF_OpenFont(path, size);
 
         if(!font)
