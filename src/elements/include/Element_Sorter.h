@@ -127,7 +127,7 @@ namespace MFM
              "algorithm for details.";
     }
 
-    virtual void AppendDescription(const T& atom, OString64& desc) const
+    virtual void AppendDescription(const T& atom, ByteSink& desc) const
     {
       u32 threshold = GetThreshold(atom, 0);
 

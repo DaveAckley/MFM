@@ -21,7 +21,7 @@ namespace MFM {
 
     ElementLibraryLoader() : m_dlHandle(0) { }
 
-    const char * Open(OString256 & path)
+    const char * Open(ZStringableByteSink & path)
     {
        m_dlHandle = dlopen(path.GetZString(), RTLD_LAZY|RTLD_GLOBAL);
 

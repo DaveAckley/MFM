@@ -116,7 +116,7 @@ namespace MFM
     Utils::NormalizePath(path, xpath);
     if (xpath.HasOverflowed())
       return "Library path too long";
-    const char * err = Utils::ReadablePath(xpath);
+    const char * err = Utils::ReadablePath(xpath.GetZString());
     if (err) return err;
 
     for (u32 i = 0; i < m_libraryPathsCount; ++i)

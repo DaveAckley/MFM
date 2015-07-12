@@ -84,7 +84,7 @@ namespace MFM
       return true;
     }
 
-    virtual void AppendDescription(const T& atom, OString64& desc) const
+    virtual void AppendDescription(const T& atom, ByteSink& desc) const
     {
       u32 datum = GetDatum(atom, 0);
       if(datum)
