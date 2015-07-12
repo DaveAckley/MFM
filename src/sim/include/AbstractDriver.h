@@ -384,6 +384,34 @@ namespace MFM
       }
       LOG.Message("Writing to simulation directory '%s'", GetSimDirPathTemporary(""));
 
+      if (!this->m_suppressStdElements)
+      {
+        const char * LIBUECORE_PATH = "elements/libuecore.so";
+        OString512 buffer;
+        if (!Utils::GetReadableResourceFile(LIBUECORE_PATH, buffer))
+        {
+          LOG.Error("Can't find standard elements file '%s'", LIBUECORE_PATH);
+        }
+        else
+        {
+          m_elementRegistry.AddLibraryPath(buffer.GetZString());
+        }
+      }
+
+      if (this->m_includeUEDemos)
+      {
+        const char * LIBUEDEMOS_PATH = "elements/libuedemos.so";
+        OString512 buffer;
+        if (!Utils::GetReadableResourceFile(LIBUEDEMOS_PATH, buffer))
+        {
+          LOG.Error("Can't find ulam demo elements file '%s'", LIBUEDEMOS_PATH);
+        }
+        else
+        {
+          m_elementRegistry.AddLibraryPath(buffer.GetZString());
+        }
+      }
+
       const char* (subs[]) =
       {
         "", "vid", "eps", "tbd", "teps", "save", "screenshot", "autosave", "log"
@@ -623,6 +651,11 @@ namespace MFM
       ((AbstractDriver*)driver)->m_suppressStdElements = 1;
     }
 
+    static void SetUEDemosFromArgs(const char* not_needed, void* driver)
+    {
+      ((AbstractDriver*)driver)->m_includeUEDemos = 1;
+    }
+
     static void SetCppDemosFromArgs(const char* not_needed, void* driver)
     {
       ((AbstractDriver*)driver)->m_includeCPPDemos = 1;
@@ -776,7 +809,7 @@ namespace MFM
      */
     const char* GetSimDirPathTemporary(const char* format, ...) const
     {
-      static OverflowableCharBufferByteSink<500> buf;
+      static OString512 buf;
       buf.Reset();
       buf.Printf("%s",m_simDirBasePath);
       va_list ap;
@@ -1036,6 +1069,7 @@ namespace MFM
       , m_haltOnEmpty(false)
       , m_haltOnFull(false)
       , m_suppressStdElements(false)
+      , m_includeUEDemos(false)
       , m_includeCPPDemos(false)
       , m_msSpentRunning(0)
       , m_msSpentOverhead(0)
@@ -1198,8 +1232,11 @@ namespace MFM
       RegisterArgument("Store data in per-sim directories under ARG (string)",
                        "-d|--dir", &SetDataDirFromArgs, this, true);
 
-      RegisterArgument("Suppress loading standard ulam elements (DReg, etc)",
+      RegisterArgument("Suppress loading core ulam elements (DReg, etc)",
                        "--no-std", &SetNoStdFromArgs, this, false);
+
+      RegisterArgument("Include some Ulam demo elements",
+                       "--ue-demos", &SetUEDemosFromArgs, this, false);
 
       RegisterArgument("Include (older) C++ demo elements (City, etc)",
                        "--cpp-demos", &SetCppDemosFromArgs, this, false);
@@ -1352,6 +1389,7 @@ namespace MFM
     bool m_haltOnEmpty;
     bool m_haltOnFull;
     bool m_suppressStdElements;
+    bool m_includeUEDemos;
     bool m_includeCPPDemos;
 
     u64 m_msSpentRunning;

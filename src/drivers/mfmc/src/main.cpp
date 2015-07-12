@@ -168,9 +168,8 @@ namespace MFM
     virtual void DefineNeededElements()
     {
 #ifdef ULAM_CUSTOM_ELEMENTS
-      if (!m_suppressStdElements)
-        DefineNeededUlamCustomElements(this);
-#endif /* ULAM_CUSTOM_ELEMENTS */
+      DefineNeededUlamCustomElements(this);
+#endif
 
       if (this->m_includeCPPDemos)
       {
