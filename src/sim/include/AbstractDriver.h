@@ -989,20 +989,30 @@ namespace MFM
 
     bool LoadMFS(const char * path)
     {
+      OString512 buf;
+      if (path[0] == '/')
+      {
+        buf.Printf("%s",path); // absolute path
+      }
+      else if (!Utils::GetReadableResourceFile(path, buf))
+      {
+        LOG.Error("Can't find configuration file '%s'", path);
+        return false;
+      }
 
-      LOG.Debug("Loading configuration from %s...", path);
+      LOG.Debug("Loading configuration from %s...", buf.GetZString());
 
-      FileByteSource fs(path);
+      FileByteSource fs(buf.GetZString());
       if (fs.IsOpen())
       {
-
-        m_externalConfig.SetByteSource(fs, path);
+        m_externalConfig.SetByteSource(fs, buf.GetZString());
         m_externalConfig.Read();
         fs.Close();
+        LOG.Message("Loaded configuration '%s'", buf.GetZString());
         return true;
       }
 
-      LOG.Error("Can't read configuration file '%s'", path);
+      LOG.Error("Can't read configuration file '%s'", buf.GetZString());
       return false;
     }
 
