@@ -16,12 +16,12 @@ MFM_VERSION_REV:=5
 MFM_VERSION_NUMBER:=$(MFM_VERSION_MAJOR).$(MFM_VERSION_MINOR).$(MFM_VERSION_REV)
 
 # Get the repo version (and save it for possible non-git-repo builds downstream)
-HAVE_GIT_DESCRIBE:=$(shell cd $(BASEDIR) && git describe 2>&1 >/dev/null && echo $$?)
-ifeq ($(HAVE_GIT_DESCRIBE),0)
+HAVE_GIT_DESCRIBE_MFM:=$(shell cd $(BASEDIR) && git describe 2>&1 >/dev/null && echo $$?)
+ifeq ($(HAVE_GIT_DESCRIBE_MFM),0)
   MFM_TREE_VERSION:=$(shell cd $(BASEDIR) && git describe)
-  $(shell echo "MFM_TREE_VERSION:=$(MFM_TREE_VERSION)" > TREEVERSION.mk)
+  $(shell echo "MFM_TREE_VERSION:=$(MFM_TREE_VERSION)" > MFM_TREEVERSION.mk)
 else
   MFM_TREE_VERSION:=unknown-rev
-  -include TREEVERSION.mk
+  -include MFM_TREEVERSION.mk
 endif
 export MFM_TREE_VERSION
