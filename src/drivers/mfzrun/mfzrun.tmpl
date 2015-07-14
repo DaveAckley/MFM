@@ -193,8 +193,10 @@ for my $prec (@innerpaths) {
         push @mfmargs, processArgs($fullpath);
     } elsif ($name eq MFZ_PUBKEY_NAME) {
         # Don't need a complaint about this one
+    } elsif ($name =~ /[.]ulam$/) {
+        print STDERR "Skipping ulam source: $name\n";
     } else {
-        print STDERR "Unrecognized/unused: $name\n";
+        print STDERR "Unrecognized file type, ignored: $name\n";
     }
 }
 my $cmd = "$binDir/mfms";
