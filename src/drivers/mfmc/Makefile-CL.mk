@@ -8,7 +8,7 @@ COMPONENTALIASES:= $(COMPONENTNAME)_s  $(COMPONENTNAME)_m $(COMPONENTNAME)_l
 BASEDIR:=../../..
 
 # Depend on us too
-ALLDEP += $(BASEDIR)/src/drivers/mfmc/Makefile-CL
+ALLDEP += $(BASEDIR)/src/drivers/mfmc/Makefile-CL.mk
 
 # What we need to build
 INCLUDES += -I $(BASEDIR)/src/core/include -I $(BASEDIR)/src/elements/include -I $(BASEDIR)/src/sim/include
