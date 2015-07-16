@@ -173,6 +173,11 @@ namespace MFM {
     return 31 - __builtin_clz(v);
   }
 
+  inline u32 _getLogBase2Long(u64 v) {
+    if (v==0) return 0;
+    return 63 - __builtin_clzll(v);
+  }
+
 #else
 
   // Modified from https://graphics.stanford.edu/~seander/bithacks.html#IntegerLogDeBruijn
