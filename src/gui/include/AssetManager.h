@@ -183,7 +183,7 @@ namespace MFM
         surfaces[IMAGE_ASSET_PENCIL_ICON] = LoadImage("images/pencil_icon.png");
         surfaces[IMAGE_ASSET_ERASER_ICON] = LoadImage("images/eraser_icon.png");
         surfaces[IMAGE_ASSET_BRUSH_ICON] = LoadImage("images/brush_icon.png");
-        surfaces[IMAGE_ASSET_BUCKET_ICON] = LoadImage("images/bucket_icon.png");
+        surfaces[IMAGE_ASSET_BUCKET_ICON] = LoadImage("images/bucket2_icon.png");
         surfaces[IMAGE_ASSET_XRAY_ICON] = LoadImage("images/xray_icon.png");
         surfaces[IMAGE_ASSET_CLONE_ICON] = LoadImage("images/clone_icon.png");
         surfaces[IMAGE_ASSET_AIRBRUSH_ICON] = LoadImage("images/airbrush_icon.png");
@@ -196,7 +196,7 @@ namespace MFM
         surfaces[IMAGE_ASSET_PENCIL_ICON_BIG] = LoadImage("images/pencil_icon_big.png");
         surfaces[IMAGE_ASSET_ERASER_ICON_BIG] = LoadImage("images/eraser_icon_big.png");
         surfaces[IMAGE_ASSET_BRUSH_ICON_BIG] = LoadImage("images/brush_icon_big.png");
-        surfaces[IMAGE_ASSET_BUCKET_ICON_BIG] = LoadImage("images/bucket_icon_big.png");
+        surfaces[IMAGE_ASSET_BUCKET_ICON_BIG] = LoadImage("images/bucket2_icon_big.png");
         surfaces[IMAGE_ASSET_XRAY_ICON_BIG] = LoadImage("images/xray_icon_big.png");
         surfaces[IMAGE_ASSET_CLONE_ICON_BIG] = LoadImage("images/clone_icon_big.png");
         surfaces[IMAGE_ASSET_AIRBRUSH_ICON_BIG] = LoadImage("images/airbrush_icon_big.png");
