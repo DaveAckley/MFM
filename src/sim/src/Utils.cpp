@@ -59,7 +59,8 @@ namespace MFM {
       const char * (paths[]) = {
         "~/.mfm",                // Possible per-user customizations first
         SHARED_DIR,              // Source tree root
-        "/usr/share/mfm",        // Debian install location
+        "/usr/lib/ulam/MFM",     // Debian install location of ulam w/mfm
+        "/usr/share/mfm",        // Debian install location of mfm (old)
         "."                      // Last desperate hope
       };
       const char * home = getenv("HOME");
