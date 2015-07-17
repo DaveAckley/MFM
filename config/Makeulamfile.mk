@@ -26,8 +26,9 @@ ifdef MFM_ROOT_DIR
  include $(BASEDIR)/config/Makecommon.mk
 endif
 
-INCLUDES += -I $(BASEDIR)/src/core/include -I $(ULAM_SRC_DIR)/../include
-CPPFLAGS += $(ULAM_CPPFLAGS)
+# (See 'EXTRA DEFINES' in Makecommon.mk.  And weep for the humanity.)
+override INCLUDES += -I $(BASEDIR)/src/core/include -I $(ULAM_SRC_DIR)/../include
+override CPPFLAGS += $(ULAM_CPPFLAGS)
 #$(info "ULAMICF($(CPPFLAGS))")
 
 #DEBUGS += -g2

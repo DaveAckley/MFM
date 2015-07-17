@@ -23,8 +23,11 @@ include $(BASEDIR)/src/platform-$(MFM_TARGET)/MakePlatform.mk
 # foo/include/        All foo-specific header files (which other components can see)
 #
 
-INCLUDES+=$(EXTERNAL_INCLUDES)
-INCLUDES+=-I include
+# (And now the INCLUDES are dying -- but only on the launchpad build,
+# not when I build locally! :( Gah!  See 'EXTRA DEFINES', below.  Drop
+# the override bomb!)
+override INCLUDES+=$(EXTERNAL_INCLUDES)
+override INCLUDES+=-I include
 
 ### EXTRA DEFINES
 # Argh, DEFINES is seen as user-set and make is ignoring our changes.
@@ -40,7 +43,9 @@ override DEFINES+=-DMFM_VERSION_MINOR=$(MFM_VERSION_MINOR)
 override DEFINES+=-DMFM_VERSION_REV=$(MFM_VERSION_REV)
 override DEFINES+=-DMFM_TREE_VERSION="$(MFM_TREE_VERSION)"
 
-LIBS+=$(EXTERNAL_LIBS)
+# (AAAaand, we are now adopting a preemptive first strike policy!  See
+# 'EXTRA DEFINES', above.  Drop the override bomb!)
+override LIBS+=$(EXTERNAL_LIBS)
 
 ### TOOL STUFF
 
