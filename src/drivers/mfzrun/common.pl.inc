@@ -111,7 +111,7 @@ sub GetLegalHandle {
     if ($handle eq "-") {
         my $defaulthandle = GetDefaultHandle();
         if (!defined $defaulthandle) {
-            print STDERR "ERROR: No default handle, so cannot use '-' as handle\n";
+            print STDERR "ERROR: No default handle, so cannot use '-' as handle (try 'mfzmake help'?)\n";
             exit 1;
         }
         return $defaulthandle;
