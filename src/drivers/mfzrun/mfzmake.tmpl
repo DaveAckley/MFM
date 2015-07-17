@@ -68,6 +68,9 @@ EOH
     exit(0);
 }
 
+my @zipOtherOptions;
+ConfigureZipOptions();  # Ubuntu 12.04's zip module doesn't know CanonicalName! :(
+
 my $verb = NextArg();
 NoVerb() unless defined $verb;
 Help() if $verb eq "help" or $verb eq "-h" or $verb eq "--help";
@@ -213,6 +216,34 @@ sub DoDefaultHandle {
 
 ############################
 # Internal routines
+# convert module-name to path
+
+sub GetModuleVersion {
+    my $mod = shift;
+    my $file = $mod;
+    $file =~ s{::}{/}gsmx;
+    $file .= '.pm';
+
+    # Pull in the module, if it exists
+    eval { require $file }
+    or die "can't find module $mod\n";
+
+    # Get the version from the module, if defined
+    my $ver;
+    { no strict 'refs';
+      $ver = ${$mod . "::VERSION"} || 'UNKNOWN';
+    }
+    return $ver;
+}
+
+sub ConfigureZipOptions {
+    my $zipVer = GetModuleVersion("IO::Compress::Zip");
+    if ($zipVer >= 2.039) {
+        @zipOtherOptions = ( CanonicalName => 1 );
+    }
+#    print "$zipVer/@zipOtherOptions\n";
+}
+
 
 sub MakeInnerZip {
     my ($pubkeydata,@files) = @_;
@@ -220,7 +251,7 @@ sub MakeInnerZip {
     my $z = new IO::Compress::Zip
         \$compressedoutput,
         Name          => MFZ_PUBKEY_NAME,
-        CanonicalName => 1,
+        @zipOtherOptions,
         BinModeIn     => 1
         or IDie("Zip init failed for inner: $ZipError");
     $z->print ($pubkeydata);
@@ -234,7 +265,7 @@ sub MakeInnerZip {
 
         $z->newStream(
             Name          => $file,
-            CanonicalName => 1,
+            @zipOtherOptions,
             BinModeIn     => 1,
             Time          => $modtime,
             ExtAttr       => 0666 << 16)
@@ -254,14 +285,14 @@ sub MakeOuterZip {
     my $z = new IO::Compress::Zip
         \$compressedoutput,
         Name          => MFZ_SIG_NAME,
-        CanonicalName => 1,
+        @zipOtherOptions,
         BinModeIn     => 1
         or IDie("Zip init failed for outer: $ZipError");
     $z->print($signature);
 
     $z->newStream(
         Name          => MFZ_ZIP_NAME,
-        CanonicalName => 1,
+        @zipOtherOptions,
         BinModeIn     => 1,
         ExtAttr       => 0666 << 16)
         or die "Zip reinit failed for outer: $ZipError\n";
