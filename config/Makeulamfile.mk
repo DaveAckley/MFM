@@ -45,7 +45,7 @@ ULAM_EXE_FILE := $(patsubst %.cpp,$(ULAM_BIN_DIR)/%,$(ULAM_CPP_FILE))
 #$(info "USD($(ULAM_SRC_DIR))")
 #$(info "MRD($(MFM_ROOT_DIR))")
 
-ELEMENT_PIC_CPPFLAGS := -shared -fPIC -DELEMENT_PLUG_IN
+override ELEMENT_PIC_CPPFLAGS := -shared -fPIC -DELEMENT_PLUG_IN
 
 ulam_program:	$(ULAM_EXE_FILE)
 
@@ -70,6 +70,6 @@ ulam_checkvar:
 
 #LIBS := -L $(ULAM_BLD_DIR) -l culam $(LIBS)
 
-LIBS += -L $(BASEDIR)/build/core -l mfmcore
+override LIBS += -L $(BASEDIR)/build/core -l mfmcore
 
 .PHONY:	$(PHONY_TARGETS)

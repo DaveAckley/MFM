@@ -57,10 +57,10 @@ COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror -D SHARED_DIR=\"$(SHARED_DIR)\" -
 COMMON_LDFLAGS+=-Wl,--fatal-warnings -pthread
 
 # Ubuntu 12.04 needs this for clock_gettime
-LIBS+=-lrt
+override LIBS+=-lrt
 
 #### DYNAMIC LOADING
-LIBS+=-ldl
+override LIBS+=-ldl
 
 # Native tool chain
 NATIVE_GCC:=gcc
