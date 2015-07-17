@@ -11,13 +11,13 @@ BASEDIR:=../../..
 ALLDEP += $(BASEDIR)/src/drivers/mfmc/Makefile-GUI.mk
 
 # What we need to build
-INCLUDES += -I $(BASEDIR)/src/core/include -I $(BASEDIR)/src/elements/include -I $(BASEDIR)/src/sim/include -I $(BASEDIR)/src/gui/include
-INCLUDES += $(shell sdl-config --cflags)
-DEFINES += -D MFM_GUI_DRIVER
+override INCLUDES += -I $(BASEDIR)/src/core/include -I $(BASEDIR)/src/elements/include -I $(BASEDIR)/src/sim/include -I $(BASEDIR)/src/gui/include
+override INCLUDES += $(shell sdl-config --cflags)
+override DEFINES += -D MFM_GUI_DRIVER
 
 # What we need to link
-LIBS += -L $(BASEDIR)/build/core/ -L $(BASEDIR)/build/elements/ -L $(BASEDIR)/build/sim/ -L $(BASEDIR)/build/gui/
-LIBS += -lmfmgui -lmfmsim -lmfmelements  -Wl,--whole-archive -lmfmcore -Wl,--no-whole-archive -lSDL -lSDL_ttf -lSDL_image -lpng -lm
+override LIBS += -L $(BASEDIR)/build/core/ -L $(BASEDIR)/build/elements/ -L $(BASEDIR)/build/sim/ -L $(BASEDIR)/build/gui/
+override LIBS += -lmfmgui -lmfmsim -lmfmelements  -Wl,--whole-archive -lmfmcore -Wl,--no-whole-archive -lSDL -lSDL_ttf -lSDL_image -lpng -lm
 
 # Do the program thing
 include $(BASEDIR)/config/Makeprog.mk
