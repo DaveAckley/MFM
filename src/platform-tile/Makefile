@@ -5,7 +5,7 @@ COMPONENTNAME:=platform-tile
 BASEDIR:=../..
 
 # What we need from outside
-INCLUDES += 
+override INCLUDES +=
 
 # Do the library thing
 include $(BASEDIR)/config/Makelib.mk

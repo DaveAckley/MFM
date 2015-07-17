@@ -5,7 +5,7 @@ COMPONENTNAME:=elements
 BASEDIR:=../..
 
 # What we need from outside
-INCLUDES += -I $(BASEDIR)/src/core/include
+override INCLUDES += -I $(BASEDIR)/src/core/include
 
 # Magic def to put newlines in patsubst results
 define \n
@@ -28,4 +28,3 @@ $(BASEDIR)/build/$(COMPONENTNAME)/StdElements.o:	include/StdElements.inc
 $(BASEDIR)/build/$(COMPONENTNAME)/StdElements.o:	include/StdElements.tcc
 $(BASEDIR)/build/$(COMPONENTNAME)/StdElements.o:	include/StdElementsHeaders.inc
 $(BASEDIR)/build/$(COMPONENTNAME)/StdElements.o:	src/StdElements.cpp
-
