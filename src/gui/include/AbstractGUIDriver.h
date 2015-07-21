@@ -1276,12 +1276,12 @@ namespace MFM
             {
               u32 mod = 0;
               switch (event.key.keysym.sym) {
-              case SDLK_LSHIFT:  mod = KMOD_LSHIFT; goto mod;
-              case SDLK_RSHIFT:  mod = KMOD_RSHIFT; goto mod;
-              case SDLK_LCTRL:   mod = KMOD_LCTRL; goto mod;
-              case SDLK_RCTRL:   mod = KMOD_RCTRL; goto mod;
-              case SDLK_LALT:    mod = KMOD_LALT; goto mod;
-              case SDLK_RALT:    mod = KMOD_RALT; goto mod;
+              case SDLK_LSHIFT:  mod = KMOD_SHIFT; goto mod;
+              case SDLK_RSHIFT:  mod = KMOD_SHIFT; goto mod;
+              case SDLK_LCTRL:   mod = KMOD_CTRL; goto mod;
+              case SDLK_RCTRL:   mod = KMOD_CTRL; goto mod;
+              case SDLK_LALT:    mod = KMOD_ALT; goto mod;
+              case SDLK_RALT:    mod = KMOD_ALT; goto mod;
               mod:
                 if (event.type == SDL_KEYDOWN)
                   keyboardModifiers |= mod;
