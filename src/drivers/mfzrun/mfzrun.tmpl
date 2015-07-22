@@ -48,8 +48,9 @@ $0 $progname unpack [DESTINATION_DIRECTORY]
     Verify and unpack the file but do not run it
 
 $0 $progname
-$0 $progname run
-    Run the file if it is signed by a recognized handle
+$0 $progname run [ARG ARG..]
+    Run the file if it is signed by a recognized handle, possibly
+    with additional arguments passed to the simulator.
 
 EOH
     exit 0;
@@ -66,6 +67,12 @@ my %verbs = (
 
 UDie("Unknown command '$optverb'")
     unless defined $verbs{$verb};
+
+if ($verb ne "run") {
+    my $fx = NextArg();
+    UDie("Unrecognized extra arguments (beginning with '$fx')")
+        if defined $fx;
+}
 
 if (!open MFZ, "<", $progname) {
     warn "Try just '$0' for help\n"
@@ -190,7 +197,14 @@ for my $prec (@innerpaths) {
     } elsif ($name =~ /[.]mfs$/) {
         push @mfmargs, "-cp", $fullpath;
     } elsif ($name eq "args.txt") {
-        push @mfmargs, processArgs($fullpath);
+        my @fileArgs = processArgs($fullpath);
+        if (defined $fileArgs[0]) {
+            if ($fileArgs[0] =~ /^\{/) {
+                my $geom = shift @fileArgs;
+                unshift @mfmargs, $geom;
+            }
+            push @mfmargs, @fileArgs;
+        }
     } elsif ($name eq MFZ_PUBKEY_NAME) {
         # Don't need a complaint about this one
     } elsif ($name =~ /[.]ulam$/) {
@@ -199,6 +213,27 @@ for my $prec (@innerpaths) {
         print STDERR "Unrecognized file type, ignored: $name\n";
     }
 }
+
+if ($verb eq "run" && scalar(@ARGV) > 0) { # any remaining args are for mfms
+    my @args = purifyArgs(@ARGV);
+    my $arg;
+    while (defined($arg = shift @args)) {
+        if ($arg =~ /^\{/) {  # geometry if present goes at the front
+
+            if (defined $mfmargs[0] && $mfmargs[0] =~ /^\{/) {
+                if ($arg ne $mfmargs[0]) {
+                    print STDERR "WARNING: Overriding prior geometry '$mfmargs[0]' with '$arg'\n";
+                    $mfmargs[0] = $arg;  # replace at front
+                }
+            } else {
+                unshift @mfmargs, $arg;  # insert at front
+            }
+        } else {   # everything else goes at the end.
+            push @mfmargs, $arg;
+        }
+    }
+}
+
 my $cmd = "$binDir/mfms";
 unshift @mfmargs, $cmd;
 
@@ -210,7 +245,7 @@ if ($verb eq "unpack") {
 }
 
 my $result = system $cmd @mfmargs;
-sleep 1;
+sleep 0.25;
 exit $result;
 
 sub processArgs {
@@ -219,9 +254,25 @@ sub processArgs {
     my $line = <ARGTXT>;
     close ARGTXT or die "Can't close args: $!";
     chomp($line);
-    die "Bad content in args.txt '$line'"
-        unless $line =~ /^\s*(:?[-=a-zA-Z0-9: ]*)\s*$/;
-    return split(/\s+/,$1);
+    my @args = split(" ",$line);
+    return purifyArgs(@args);
+}
+
+sub purifyArgs {
+    my @args = @_;
+    for (my $i = 0; $i < scalar(@args); ++$i) {
+        my $arg = $args[$i];
+        if ($i == 0) {
+            if ($arg =~ /^({\d+[a-zA-Z]\d+})$/) {
+                $args[0] = $1;
+                next;
+            }
+        }
+        UDie("Bad content in argument: '$arg'")
+            unless $arg =~ m!^\s*(:?[-=a-zA-Z0-9:./]*)\s*$!;
+        $args[$i] = $1;
+    }
+    return @args;
 }
 
 sub CheckForPubKey {
