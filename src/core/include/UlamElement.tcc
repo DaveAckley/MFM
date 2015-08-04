@@ -1,3 +1,4 @@
+/* -*- C++ -*- */
 #include "Fail.h"
 #include "Tile.h"
 #include "Random.h"
