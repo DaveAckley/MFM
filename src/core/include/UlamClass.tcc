@@ -116,80 +116,92 @@ namespace MFM {
         {
           // For starters just dig out the bits and print them
           u32 bitsize = utin.GetBitSize();
-          u32 val = atom.GetBits().Read(baseStatePos + dmi.m_bitPosition + T::ATOM_FIRST_STATE_BIT, bitsize);
+          u32 arraysize = utin.GetArrayLength();
 
-          if (utin.m_category == UlamTypeInfo::QUARK)
+          for (u32 idx = 0; idx < MAX(arraysize,1u); ++idx)
           {
-            if (flags & PRINT_RECURSE_QUARKS)
+            if (arraysize > 0)
             {
-              const char * mangledName = dmi.m_mangledType;
-              const UlamClass * memberClass = ucr.GetUlamClassByMangledName(mangledName);
-              if (memberClass)
+              if (idx==0) bs.Printf("[%d]",arraysize);
+              bs.Printf(", [%d]=",idx);
+            }
+
+            u64 val = atom.GetBits().ReadLong(baseStatePos + dmi.m_bitPosition 
+                                              + T::ATOM_FIRST_STATE_BIT 
+                                              + idx * bitsize, 
+                                              bitsize);
+
+            if (utin.m_category == UlamTypeInfo::QUARK)
+            {
+              if (flags & PRINT_RECURSE_QUARKS)
               {
-                memberClass->PrintClassMembers<EC>(ucr, bs, atom, flags, baseStatePos + dmi.m_bitPosition);
-                continue;
+                const char * mangledName = dmi.m_mangledType;
+                const UlamClass * memberClass = ucr.GetUlamClassByMangledName(mangledName);
+                if (memberClass)
+                {
+                  memberClass->PrintClassMembers<EC>(ucr, bs, atom, flags, baseStatePos + dmi.m_bitPosition);
+                  continue;
+                }
               }
-            }
-            bs.Printf("0x%x", val); // Just do hex if no recursion or unknown class
-            continue;
-          }
-
-          if (utin.m_category != UlamTypeInfo::PRIM) FAIL(ILLEGAL_STATE); // Can't happen now right?
-
-          switch (utin.m_utip.GetPrimType())
-          {
-          case UlamTypeInfoPrimitive::INT:
-            {
-              s32 cval = _SignExtend32(val,bitsize);
-              bs.Printf("%d", cval);
-              if (flags & PRINT_MEMBER_BITVALS) bs.Printf("/0x%x", val);
-              break;
+              bs.Printf("0x%x", val); // Just do hex if no recursion or unknown class
+              continue;
             }
 
-          case UlamTypeInfoPrimitive::UNSIGNED:
-            {
-              bs.Printf("%u", val);
-              if (flags & PRINT_MEMBER_BITVALS) bs.Printf("/0x%x", val);
-              break;
-            }
+            if (utin.m_category != UlamTypeInfo::PRIM) FAIL(ILLEGAL_STATE); // Can't happen now right?
 
-          case UlamTypeInfoPrimitive::BOOL:
+            switch (utin.m_utip.GetPrimType())
             {
-              bool cval = _Bool32ToCbool(val,bitsize);
-              bs.Printf("%s", cval?"true":"false");
-              if (flags & PRINT_MEMBER_BITVALS) bs.Printf("/0x%x", val);
-              break;
-            }
-
-          case UlamTypeInfoPrimitive::UNARY:
-            {
-              s32 cval = _Unary32ToInt32(val,bitsize,32);
-              bs.Printf("%d", cval);
-              if (flags & PRINT_MEMBER_BITVALS) bs.Printf("/0x%x", val);
-              break;
-            }
-
-          case UlamTypeInfoPrimitive::BITS:
-            {
-              bs.Printf("0x%x", val);  // use hex for bits
-              if (flags & PRINT_MEMBER_BITVALS)  // and binary for 'raw'
+            case UlamTypeInfoPrimitive::INT:
               {
-                bs.Printf("/");
-                char fmt[6] = "%000b";
-                if (bitsize > 9) fmt[2] = '0'+bitsize/10;
-                fmt[3] = '0'+bitsize%10;
-                bs.Printf(fmt, val);
+                s64 cval = _SignExtend64(val,bitsize);
+                bs.Print(cval);
+                if (flags & PRINT_MEMBER_BITVALS) addHex(bs,val);
+                break;
               }
-              break;
-            }
 
-          case UlamTypeInfoPrimitive::VOID:
-            {
-              bs.Printf("void"); // should be impossible?
-              break;
+            case UlamTypeInfoPrimitive::UNSIGNED:
+              {
+                bs.Print(val);
+                if (flags & PRINT_MEMBER_BITVALS) addHex(bs,val);
+                break;
+              }
+
+            case UlamTypeInfoPrimitive::BOOL:
+              {
+                bool cval = _Bool64ToCbool(val,bitsize);
+                bs.Printf("%s", cval?"true":"false");
+                if (flags & PRINT_MEMBER_BITVALS) addHex(bs, val);
+                break;
+              }
+
+            case UlamTypeInfoPrimitive::UNARY:
+              {
+                u32 cval = (u32) _Unary64ToInt64(val,bitsize,32);
+                bs.Printf("%d", cval);
+                if (flags & PRINT_MEMBER_BITVALS) addHex(bs, val);
+                break;
+              }
+
+            case UlamTypeInfoPrimitive::BITS:
+              {
+                bs.Printf("0x");  // use hex for bits
+                bs.Print(val, Format::HEX);
+                if (flags & PRINT_MEMBER_BITVALS)  // and binary for 'raw'
+                {
+                  bs.Printf("/");
+                  bs.Print(val, Format::BIN, bitsize, '0');
+                }
+                break;
+              }
+
+            case UlamTypeInfoPrimitive::VOID:
+              {
+                bs.Printf("void"); // should be impossible?
+                break;
+              }
+            default:
+              FAIL(ILLEGAL_STATE);
             }
-          default:
-            FAIL(ILLEGAL_STATE);
           }
         }
       }

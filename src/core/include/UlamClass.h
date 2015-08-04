@@ -210,6 +210,19 @@ namespace MFM
       }
     }
 
+    u32 GetArrayLength() const
+    {
+      switch (m_category)
+      {
+      case PRIM: return m_utip.GetArrayLength();
+      case QUARK:
+        return m_utic.m_arrayLength;
+      case ELEMENT:
+      default:
+        FAIL(ILLEGAL_STATE);
+      }
+    }
+
   };
 
   template <class P>
@@ -362,6 +375,8 @@ namespace MFM
                            const typename EC::ATOM_CONFIG::ATOM_TYPE& atom,
                            u32 flags,
                            u32 baseStatePos) const ;
+
+    static void addHex(ByteSink & bs, u64 val) ;
 
   };
 
