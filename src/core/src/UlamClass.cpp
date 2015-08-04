@@ -3,6 +3,12 @@
 
 namespace MFM {
 
+  void UlamClass::addHex(ByteSink & bs, u64 val) 
+  {
+    bs.Printf("/0x");
+    bs.Print(val, Format::HEX);
+  }
+
   s32 UlamClassRegistry::GetUlamClassIndex(const char *mangledName) const
   {
     if (!mangledName) FAIL(NULL_POINTER);
