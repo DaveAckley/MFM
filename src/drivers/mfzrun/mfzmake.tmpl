@@ -16,6 +16,8 @@ use MIME::Base64  qw(encode_base64);
 
 use IO::Compress::Zip qw(zip $ZipError);
 
+use Cwd 'abs_path';
+
 sub NoVerb {
     UDie("Missing command");
 }
@@ -259,6 +261,7 @@ sub MakeInnerZip {
     for my $file (@files) {
         UDie("'$file' is handled automatically, cannot pack it explicitly")
             if $file eq MFZ_PUBKEY_NAME;
+        $file = abs_path($file);
 
         open (my $fh, "<", $file) or UDie("Can't read '$file': $!");
         my $modtime = (stat($fh))[9];
