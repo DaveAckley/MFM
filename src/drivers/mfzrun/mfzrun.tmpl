@@ -43,6 +43,7 @@ $0 $progname verify
 
 $0 $progname list
     Check the file signature and list contents but do not run it
+    (use LIST to print full paths)
 
 $0 $progname unpack [DESTINATION_DIRECTORY]
     Verify and unpack the file but do not run it
@@ -167,6 +168,9 @@ if ($verb eq "list") {
         $maxtime = length($time) if length($time) > $maxtime;
         $maxsize = length($size) if length($size) > $maxsize;
     }
+    my $maxlen = 40;
+    $maxlen = 1000000 if ($optverb eq "LIST");
+    $maxpath = $maxlen if $maxpath > $maxlen;
     printf("FILES:\n%*s  %*s  %*s  %*s\n",
            -$maxpath, ($maxpath > 4)?"Path":"",
            -$maxname, "Name",
@@ -176,6 +180,12 @@ if ($verb eq "list") {
     for my $prec (@innerpaths) {
         my ($path, $name, $time, $size) = @{$prec};
         $path =~ s!^$destdir/!!;
+        my $ellipsis = "[...]";
+        my $clip = length($path) - ($maxpath - length($ellipsis));
+        if ($clip > 0) {
+            # /4 since ends of paths seem more informative
+            substr($path, ($maxpath-length($ellipsis))/4, $clip) = $ellipsis;
+        }
         $time = localtime($time);
         printf("%*s  %*s  %*s  %*s\n",
                -$maxpath, $path,
