@@ -75,6 +75,9 @@ namespace MFM
 
      ATOM_EMPTY_TYPE - The type number corresponding to the Empty atom
      in this category.
+
+     ATOM_UNDEFINED_TYPE - The type number corresponding to the
+     undefined/illegal/subatomic atom in this category.
   */
   template <class AC>
   class Atom

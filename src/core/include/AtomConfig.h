@@ -66,6 +66,12 @@ namespace MFM {
     // enum { ATOM_EMPTY_TYPE = 0xffff };
 
     /**
+       ATOM_UNDEFINED_TYPE is the type number reserved to mean
+       'undefined/illegal/subatomic' in an atom of this configuration.
+    */
+    // enum { ATOM_UNDEFINED_TYPE = 0x0000 };
+
+    /**
       ATOM_FIRST_STATE_BIT is the bit number of the first (lowest)
       user-accessible state bit in the atom of this configuration.
      */

@@ -36,6 +36,18 @@ namespace MFM {
   }
 
   template <class EC>
+  bool UlamElement<EC>::IsMethod(UlamContext<EC>& uc, u32 type, const char * quarkTypeName)
+  {
+    Tile<EC> & tile = uc.GetTile();
+    ElementTable<EC> & et = tile.GetElementTable();
+    const Element<EC> * eltptr = et.Lookup(type);
+    if (!eltptr) return false;
+    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
+    if (!ueltptr) return false;
+    return ueltptr->internalCMethodImplementingIs(quarkTypeName);
+  }
+
+  template <class EC>
   void UlamElement<EC>::Print(const UlamClassRegistry & ucr, ByteSink & bs, const T & atom, u32 flags) const
   {
     if (!flags) return;
