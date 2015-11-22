@@ -323,7 +323,7 @@ namespace MFM
 
        \return ptr to function pointers
      */
-    virtual VfuncPtr getVTableEntry(u32 idx)
+    virtual VfuncPtr getVTableEntry(u32 idx) const
     {
       FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
       return (VfuncPtr) NULL;

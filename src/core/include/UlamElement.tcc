@@ -52,6 +52,9 @@ namespace MFM {
   VfuncPtr UlamElement<EC>::GetVTableEntry(UlamContext<EC>& uc, const T& atom, u32 idx)
   {
     u32 atype = atom.GetType();
+    if(atype == T::ATOM_UNDEFINED_TYPE)
+      FAIL(ILLEGAL_STATE);  // needs 'quark type' vtable support
+
     Tile<EC> & tile = uc.GetTile();
     ElementTable<EC> & et = tile.GetElementTable();
     const Element<EC> * eltptr = et.Lookup(atype);
