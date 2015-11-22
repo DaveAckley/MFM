@@ -47,6 +47,20 @@ namespace MFM {
     return ueltptr->internalCMethodImplementingIs(quarkTypeName);
   }
 
+  typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
+  template <class EC>
+  VfuncPtr UlamElement<EC>::GetVTableEntry(UlamContext<EC>& uc, const T& atom, u32 idx)
+  {
+    u32 atype = atom.GetType();
+    Tile<EC> & tile = uc.GetTile();
+    ElementTable<EC> & et = tile.GetElementTable();
+    const Element<EC> * eltptr = et.Lookup(atype);
+    if (!eltptr) return NULL;
+    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
+    if (!ueltptr) return NULL;
+    return ueltptr->getVTableEntry(idx);
+  }
+
   template <class EC>
   void UlamElement<EC>::Print(const UlamClassRegistry & ucr, ByteSink & bs, const T & atom, u32 flags) const
   {

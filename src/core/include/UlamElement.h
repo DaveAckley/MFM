@@ -315,7 +315,21 @@ namespace MFM
        \sa T::ATOM_FIRST_STATE_BIT
        \sa internalCMethodImplementingIs
      */
-    static bool IsMethod(UlamContext<EC>& uc, u32 type, const char * quarkTypeName) ;
+    static bool IsMethod(UlamContext<EC>& uc, u32 type, const char * quarkTypeName);
+
+    typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
+    /**
+       Return vtable of this element, or NULL if there isn't one.
+
+       \return ptr to function pointers
+     */
+    virtual VfuncPtr getVTableEntry(u32 idx)
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+      return (VfuncPtr) NULL;
+    }
+
+    static VfuncPtr GetVTableEntry(UlamContext<EC>& uc, const T& atom, u32 idx);
 
     virtual u32 GetElementColor() const
     {
