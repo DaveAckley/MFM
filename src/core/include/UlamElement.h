@@ -90,6 +90,7 @@ namespace MFM{
     BitVector<BPA>& getBits() { return m_stgToChange.GetBits(); }
     const BitVector<BPA>& getBits() const { return m_stgToChange.GetBits(); }
     T& getRef() { return m_stgToChange; }
+    u32 getType() { return m_stgToChange.GetType(); }
     const u32 getPosOffset() const { return m_pos; }
   };
 } //MFM
@@ -329,7 +330,7 @@ namespace MFM
       return (VfuncPtr) NULL;
     }
 
-    static VfuncPtr GetVTableEntry(UlamContext<EC>& uc, const T& atom, u32 idx);
+    static VfuncPtr GetVTableEntry(UlamContext<EC>& uc, const T& atom, u32 atype, u32 idx);
 
     virtual u32 GetElementColor() const
     {
