@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamContext.h Access to the environment surrounding executing ulam code
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2015 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,9 +23,10 @@
   \file UlamContext.h Access to the environment surrounding executing ulam code
   \author David H. Ackley
   \author Elena S. Ackley
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014-2015 All rights reserved.
   \lgpl
  */
+
 #ifndef ULAMCONTEXT_H
 #define ULAMCONTEXT_H
 
@@ -44,6 +46,7 @@ namespace MFM
 
     Tile<EC> * m_tile;
     void AssertTile() const;
+    UlamClass * m_self;
 
   public:
 
@@ -64,6 +67,10 @@ namespace MFM
     Base<AC> & GetBase() ;
 
     const Site<AC> & GetSite() const ;
+
+    UlamClass * GetSelf() const;
+
+    void SetSelf(UlamClass * self);
 
   };
 }

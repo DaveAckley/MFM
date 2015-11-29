@@ -71,4 +71,16 @@ namespace MFM {
     return GetEventWindow().GetSite();
   }
 
-}
+  template <class EC>
+  UlamClass * UlamContext<EC>::GetSelf() const
+  {
+    return m_self;
+  }
+
+  template <class EC>
+  void UlamContext<EC>::SetSelf(UlamClass * self)
+  {
+    m_self = self;
+  }
+
+} //MFM

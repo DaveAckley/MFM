@@ -22,48 +22,6 @@ namespace MFM {
   }
 
   template <class EC>
-  s32 UlamElement<EC>::PositionOfDataMember(UlamContext<EC>& uc, u32 type, const char * dataMemberTypeName)
-  {
-    Tile<EC> & tile = uc.GetTile();
-    ElementTable<EC> & et = tile.GetElementTable();
-    const Element<EC> * eltptr = et.Lookup(type);
-    if (!eltptr) return -1;
-    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
-    if (!ueltptr) return -2;
-    s32 ret = ueltptr->PositionOfDataMemberType(dataMemberTypeName);
-    if (ret < 0) return -3;
-    return ret;
-  }
-
-  template <class EC>
-  bool UlamElement<EC>::IsMethod(UlamContext<EC>& uc, u32 type, const char * quarkTypeName)
-  {
-    Tile<EC> & tile = uc.GetTile();
-    ElementTable<EC> & et = tile.GetElementTable();
-    const Element<EC> * eltptr = et.Lookup(type);
-    if (!eltptr) return false;
-    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
-    if (!ueltptr) return false;
-    return ueltptr->internalCMethodImplementingIs(quarkTypeName);
-  }
-
-  typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
-  template <class EC>
-  VfuncPtr UlamElement<EC>::GetVTableEntry(UlamContext<EC>& uc, const T& atom, u32 atype, u32 idx)
-  {
-    if(atype == T::ATOM_UNDEFINED_TYPE)
-      FAIL(ILLEGAL_STATE);  // needs 'quark type' vtable support
-
-    Tile<EC> & tile = uc.GetTile();
-    ElementTable<EC> & et = tile.GetElementTable();
-    const Element<EC> * eltptr = et.Lookup(atype);
-    if (!eltptr) return NULL;
-    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
-    if (!ueltptr) return NULL;
-    return ueltptr->getVTableEntry(idx);
-  }
-
-  template <class EC>
   void UlamElement<EC>::Print(const UlamClassRegistry & ucr, ByteSink & bs, const T & atom, u32 flags) const
   {
     if (!flags) return;
@@ -82,4 +40,4 @@ namespace MFM {
 
     this->PrintClassMembers<EC>(ucr,bs,atom,flags,0);
   }
-}
+} //MFM

@@ -2,72 +2,47 @@
 
 #include "CastOps.h" /* For _Int32ToInt32, etc */
 
-namespace MFM {
   template <class EC>
-  UlamTypeInfoModelParameterS32<EC>::UlamTypeInfoModelParameterS32(
-                  UlamElement<EC> & theElement,
-                  const char * mangledType,
-                  const char * ulamName,
-                  const char * briefDescription,
-                  const char * details,
-                  s32 * minOrNull,
-                  s32 * defaultOrNull,
-                  s32 * maxOrNull,
-                  const char * units)
-  : ElementParameterS32<EC>(&theElement, ulamName, briefDescription, details,
-                            GetDefaulted(minOrNull, GetMinOfAs<s32>(mangledType)),
-                            GetDefaulted(defaultOrNull, 0),
-                            GetDefaulted(maxOrNull, GetMaxOfAs<s32>(mangledType)))
-    , m_parameterUnits(units)
-  { }
+  s32 UlamElement<EC>::PositionOfDataMember(UlamContext<EC>& uc, u32 type, const char * dataMemberTypeName)
+  {
+    Tile<EC> & tile = uc.GetTile();
+    ElementTable<EC> & et = tile.GetElementTable();
+    const Element<EC> * eltptr = et.Lookup(type);
+    if (!eltptr) return -1;
+    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
+    if (!ueltptr) return -2;
+    s32 ret = ueltptr->PositionOfDataMemberType(dataMemberTypeName);
+    if (ret < 0) return -3;
+    return ret;
+  } //PositionOfDataMember (static)
 
   template <class EC>
-  UlamTypeInfoModelParameterU32<EC>::UlamTypeInfoModelParameterU32(
-                  UlamElement<EC> & theElement,
-                  const char * mangledType,
-                  const char * ulamName,
-                  const char * briefDescription,
-                  const char * details,
-                  u32 * minOrNull,
-                  u32 * defaultOrNull,
-                  u32 * maxOrNull,
-                  const char * units)
-  : ElementParameterU32<EC>(&theElement, ulamName, briefDescription, details,
-                            GetDefaulted(minOrNull, GetMinOfAs<u32>(mangledType)),
-                            GetDefaulted(defaultOrNull, 0u),
-                            GetDefaulted(maxOrNull, GetMaxOfAs<u32>(mangledType)))
-    , m_parameterUnits(units)
-  { }
+  bool UlamElement<EC>::IsMethod(UlamContext<EC>& uc, u32 type, const char * quarkTypeName)
+  {
+    Tile<EC> & tile = uc.GetTile();
+    ElementTable<EC> & et = tile.GetElementTable();
+    const Element<EC> * eltptr = et.Lookup(type);
+    if (!eltptr) return false;
+    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
+    if (!ueltptr) return false;
+    return ueltptr->internalCMethodImplementingIs(quarkTypeName);
+  } //IsMethod (static)
 
-
+  typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
   template <class EC>
-  UlamTypeInfoModelParameterUnary<EC>::UlamTypeInfoModelParameterUnary(
-                  UlamElement<EC> & theElement,
-                  const char * mangledType,
-                  const char * ulamName,
-                  const char * briefDescription,
-                  const char * details,
-                  u32 * minOrNull,
-                  u32 * defaultOrNull,
-                  u32 * maxOrNull,
-                  const char * units)
-  : ElementParameterUnary<EC>(&theElement, ulamName, briefDescription, details,
-                              GetDefaulted(minOrNull, GetMinOfAs<u32>(mangledType)),
-                              GetDefaulted(defaultOrNull, 0u),
-                              GetDefaulted(maxOrNull, GetMaxOfAs<u32>(mangledType)))
-    , m_parameterUnits(units)
-  { }
+  VfuncPtr UlamElement<EC>::GetVTableEntry(UlamContext<EC>& uc, const T& atom, u32 atype, u32 idx)
+  {
+    if(atype == T::ATOM_UNDEFINED_TYPE)
+      FAIL(ILLEGAL_STATE);  // needs 'quark type' vtable support
 
-  template <class EC>
-  UlamTypeInfoModelParameterBool<EC>::UlamTypeInfoModelParameterBool(
-                  UlamElement<EC> & theElement,
-                  const char * mangledType,
-                  const char * ulamName,
-                  const char * briefDescription,
-                  const char * details,
-                  bool defvalue)
-    : ElementParameterBool<EC>(&theElement, ulamName, briefDescription, details, defvalue)
-  { }
+    Tile<EC> & tile = uc.GetTile();
+    ElementTable<EC> & et = tile.GetElementTable();
+    const Element<EC> * eltptr = et.Lookup(atype);
+    if (!eltptr) return NULL;
+    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
+    if (!ueltptr) return NULL;
+    return ueltptr->getVTableEntry(idx);
+  } //GetVTableEntry (static)
 
   template <class EC>
   void UlamClass::PrintClassMembers(const UlamClassRegistry & ucr,
@@ -126,9 +101,9 @@ namespace MFM {
               bs.Printf(", [%d]=",idx);
             }
 
-            u64 val = atom.GetBits().ReadLong(baseStatePos + dmi.m_bitPosition 
-                                              + T::ATOM_FIRST_STATE_BIT 
-                                              + idx * bitsize, 
+            u64 val = atom.GetBits().ReadLong(baseStatePos + dmi.m_bitPosition
+                                              + T::ATOM_FIRST_STATE_BIT
+                                              + idx * bitsize,
                                               bitsize);
 
             if (utin.m_category == UlamTypeInfo::QUARK)
@@ -208,5 +183,6 @@ namespace MFM {
       if (opened)
         bs.Printf(")");
     }
-  }
-}
+  } //PrintClassMembers
+
+} //MFM
