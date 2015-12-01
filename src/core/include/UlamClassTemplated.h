@@ -74,12 +74,14 @@ namespace MFM {
   template <class EC>
   class UlamClassTemplated : public UlamClass
   {
+
+  public:
     /**
        Find the first position of a data member in this element by the
        name of its type, if any exist.
 
        \return The smallest bit position of an occurrence of the type
-               \c dataMemberTypeName in this element, if any, or -1 to
+       \c dataMemberTypeName in this element, if any, or -1 to
                indicate the given type is not used as a data member in
                this UlamElement.  A return value of 0 corresponds to
                the ATOM_FIRST_STATE_BIT of the atom.
