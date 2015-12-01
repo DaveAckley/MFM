@@ -40,6 +40,6 @@ namespace MFM {
       bs.Printf(":%@", &as);
     }
 
-    this->UlamClass::PrintClassMembers<EC>(ucr,bs,atom,flags,0);
+    ((UlamClass *) this)->PrintClassMembers<EC>(ucr,bs,atom,flags,0);
   }
 } //MFM

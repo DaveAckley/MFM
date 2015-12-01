@@ -19,22 +19,32 @@ namespace MFM {
     return -1;
   }
 
-    bool UlamClassRegistry::IsRegisteredUlamClass(const char *mangledName) const
-    {
-      return GetUlamClassIndex(mangledName) >= 0;
-    }
+  bool UlamClassRegistry::RegisterUlamClass(UlamClass& uc)
+  {
+    if (IsRegisteredUlamClass(uc.GetMangledClassName()))
+      return false;
+    if (m_registeredUlamClassCount >= TABLE_SIZE)
+      FAIL(OUT_OF_ROOM);
+    m_registeredUlamClasses[m_registeredUlamClassCount++] = &uc;
+    return true;
+  }
 
-    const UlamClass* UlamClassRegistry::GetUlamClassByMangledName(const char *mangledName) const
-    {
-      s32 idx = GetUlamClassIndex(mangledName);
-      if (idx < 0) return 0;
-      return GetUlamClassByIndex((u32) idx);
-    }
+  bool UlamClassRegistry::IsRegisteredUlamClass(const char *mangledName) const
+  {
+    return GetUlamClassIndex(mangledName) >= 0;
+  }
 
-    const UlamClass* UlamClassRegistry::GetUlamClassByIndex(u32 index) const
-    {
-      if (index >= m_registeredUlamClassCount) FAIL(ILLEGAL_ARGUMENT);
-      return m_registeredUlamClasses[index];
-    }
+  const UlamClass* UlamClassRegistry::GetUlamClassByMangledName(const char *mangledName) const
+  {
+    s32 idx = GetUlamClassIndex(mangledName);
+    if (idx < 0) return 0;
+    return GetUlamClassByIndex((u32) idx);
+  }
+
+  const UlamClass* UlamClassRegistry::GetUlamClassByIndex(u32 index) const
+  {
+    if (index >= m_registeredUlamClassCount) FAIL(ILLEGAL_ARGUMENT);
+    return m_registeredUlamClasses[index];
+  }
 
 } //MFM

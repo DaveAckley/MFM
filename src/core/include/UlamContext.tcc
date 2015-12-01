@@ -5,9 +5,11 @@
 #include "EventWindow.h"
 #include "Base.h"
 #include "Site.h"
-#include "UlamClass.h"
+//#include "UlamClass.h"
 
 namespace MFM {
+
+  template <class EC> class UlamClassTemplated; //forward
 
   template <class EC>
   UlamContext<EC>::UlamContext() : m_tile(0) { }

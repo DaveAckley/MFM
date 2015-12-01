@@ -30,8 +30,8 @@
 #define ULAMTYPEINFO_H
 
 #include "itype.h"
-#include "UlamClass.h"
-#include "UlamElement.h"
+//#include "UlamClass.h"
+//#include "UlamElement.h"
 #include "Parameter.h"
 
 namespace MFM
@@ -226,6 +226,8 @@ namespace MFM {
 
 namespace MFM {
 
+  template <class EC> class UlamElement; //forward
+
   /** MODEL PARAMETERS */
   template <class EC>
   struct UlamTypeInfoModelParameterS32 : ElementParameterS32<EC> {
@@ -248,6 +250,8 @@ namespace MFM {
 
 namespace MFM{
 
+  template <class EC> class UlamElement; //forward
+
   template <class EC>
   struct UlamTypeInfoModelParameterU32 : ElementParameterU32<EC> {
     const char * GetUnits() const { return m_parameterUnits; }
@@ -269,6 +273,8 @@ namespace MFM{
 
 namespace MFM {
 
+  template <class EC> class UlamElement; //forward
+
   template <class EC>
   struct UlamTypeInfoModelParameterUnary : ElementParameterUnary<EC> {
     const char * GetUnits() const { return m_parameterUnits; }
@@ -289,6 +295,8 @@ namespace MFM {
 } //MFM
 
 namespace MFM {
+
+  template <class EC> class UlamElement; //forward
 
   template <class EC>
   struct UlamTypeInfoModelParameterBool : ElementParameterBool<EC> {

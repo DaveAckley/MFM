@@ -71,8 +71,6 @@ namespace MFM{
 
 namespace MFM {
 
-  //class UlamClass; // FORWARD
-
   template <class EC>
   class UlamClassTemplated : public UlamClass
   {

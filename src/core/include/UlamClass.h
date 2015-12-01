@@ -39,8 +39,6 @@ namespace MFM
 
   struct UlamClassDataMemberInfo; //forward
 
-  struct UlamTypeInfo; //forward
-
   struct UlamClass
   {
     /**
