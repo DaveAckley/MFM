@@ -1,5 +1,4 @@
-#include "UlamClassInfo.h"
-
+#include "../include/UlamTypeInfo.h"
 
 namespace MFM
 {

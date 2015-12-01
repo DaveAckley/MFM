@@ -36,6 +36,7 @@
 #include "AtomConfig.h"
 #include "Util.h"      /* For COMPILATION_REQUIREMENT */
 #include "Parity2D_4x4.h"
+#include "UlamClassRegistry.h"
 
 namespace MFM {
 

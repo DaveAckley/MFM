@@ -36,6 +36,8 @@ namespace MFM
   template <class AC> class Site; // FORWARD
   template <class EC> class Tile; // FORWARD
   template <class EC> class EventWindow; // FORWARD
+  template <class EC> class UlamClassTemplated; //FORWARD
+
   class Random; // FORWARD
 
   template <class EC>
@@ -46,7 +48,7 @@ namespace MFM
 
     Tile<EC> * m_tile;
     void AssertTile() const;
-    UlamClass * m_self;
+    UlamClassTemplated<EC> * m_self;
 
   public:
 
@@ -68,12 +70,13 @@ namespace MFM
 
     const Site<AC> & GetSite() const ;
 
-    UlamClass * GetSelf() const;
+    UlamClassTemplated<EC> * GetSelf() const;
 
-    void SetSelf(UlamClass * self);
+    void SetSelf(UlamClassTemplated<EC> * self);
 
   };
-}
+
+} //MFM
 
 #include "UlamContext.tcc"
 

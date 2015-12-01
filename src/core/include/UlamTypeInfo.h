@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  UlamClassInfo.h An abstract base class for ULAM info
+  UlamTypeInfo.h An abstract base class for ULAM info
   Copyright (C) 2015 The Regents of the University of New Mexico.  All rights reserved.
   Copyright (C) 2015 Ackleyshack LLC.
 
@@ -20,18 +20,22 @@
 */
 
 /**
-  \file UlamClassInfo.h An abstract base class for ULAM info
+  \file UlamTypeInfo.h An abstract base class for ULAM info
   \author David H. Ackley.
   \author Elenas S. Ackley.
   \date (C) 2015 All rights reserved.
   \lgpl
  */
-#ifndef ULAMCLASSINFO_H
-#define ULAMCLASSINFO_H
+#ifndef ULAMTYPEINFO_H
+#define ULAMTYPEINFO_H
+
+#include "itype.h"
+#include "UlamClass.h"
+#include "UlamElement.h"
+#include "Parameter.h"
 
 namespace MFM
 {
-  struct UlamClass; // FORWARD
 
   struct UlamTypeInfoPrimitive {
     enum PrimType { VOID, INT, UNSIGNED, BOOL, UNARY, BITS };
@@ -82,7 +86,9 @@ namespace MFM
     u64 GetExtremeOfScalarType(bool wantMax) const ;
 
   };
+} //MFM
 
+namespace MFM {
   const u32 MAX_CLASS_NAME_LENGTH = 64;
   const u32 MAX_CLASS_PARAMETERS = 16;
   typedef OverflowableCharBufferByteSink<MAX_CLASS_NAME_LENGTH> OStringClassName;
@@ -91,8 +97,9 @@ namespace MFM
     UlamTypeInfoPrimitive m_parameterType;
     u32 m_value;  // overloaded depending on type
   };
+} //MFM
 
-
+namespace MFM {
   typedef UlamTypeInfoParameter UlamTypeInfoClassParameterArray[MAX_CLASS_PARAMETERS];
 
   struct UlamTypeInfoClass {
@@ -115,6 +122,9 @@ namespace MFM
     void PrintMangled(ByteSink & bs) const ;
     void PrintPretty(ByteSink & bs) const ;
   };
+} //MFM
+
+namespace MFM {
 
   struct UlamTypeInfo {
     UlamTypeInfoClass m_utic;
@@ -163,6 +173,10 @@ namespace MFM
 
   };
 
+} //MFM
+
+namespace MFM {
+
   template <class P>
   static P GetMinOfAs(const char * mangledType)
   {
@@ -190,6 +204,11 @@ namespace MFM
     return *ptr;
   }
 
+} //MFM
+
+
+namespace MFM {
+
   struct UlamClassDataMemberInfo {
     const char * m_mangledType;
     const char * m_dataMemberName;
@@ -201,6 +220,11 @@ namespace MFM
       , m_bitPosition(pos)
     { }
   };
+
+} //MFM
+
+
+namespace MFM {
 
   /** MODEL PARAMETERS */
   template <class EC>
@@ -220,6 +244,10 @@ namespace MFM
     const char * m_parameterUnits;
   };
 
+} //MFM
+
+namespace MFM{
+
   template <class EC>
   struct UlamTypeInfoModelParameterU32 : ElementParameterU32<EC> {
     const char * GetUnits() const { return m_parameterUnits; }
@@ -236,6 +264,10 @@ namespace MFM
                                   const char * units) ;
     const char * m_parameterUnits;
   };
+
+} //MFM
+
+namespace MFM {
 
   template <class EC>
   struct UlamTypeInfoModelParameterUnary : ElementParameterUnary<EC> {
@@ -254,20 +286,24 @@ namespace MFM
     const char * m_parameterUnits;
   };
 
+} //MFM
+
+namespace MFM {
+
   template <class EC>
   struct UlamTypeInfoModelParameterBool : ElementParameterBool<EC> {
 
     UlamTypeInfoModelParameterBool(
-                                  UlamElement<EC> & theElement,
-                                  const char * mangledType,
-                                  const char * ulamName,
-                                  const char * briefDescription,
-                                  const char * details,
-                                  bool defvalue) ;
+				   UlamElement<EC> & theElement,
+				   const char * mangledType,
+				   const char * ulamName,
+				   const char * briefDescription,
+				   const char * details,
+				   bool defvalue) ;
   };
 
 } //MFM
 
-#include "UlamClassInfo.tcc"
+#include "UlamTypeInfo.tcc"
 
-#endif /* ULAMCLASSINFO_H */
+#endif /* ULAMTYPEINFO_H */

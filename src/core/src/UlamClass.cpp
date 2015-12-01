@@ -1,5 +1,13 @@
-
 #include "UlamClass.h"
+#include "Fail.h"
+#include "Tile.h"
+#include "Random.h"
+#include "EventWindow.h"
+#include "Base.h"
+#include "UlamTypeInfo.h"
+
+#include "CastOps.h" /* For _Int32ToInt32, etc */
+
 
 namespace MFM {
 
@@ -9,48 +17,145 @@ namespace MFM {
     bs.Print(val, Format::HEX);
   }
 
-  bool UlamClassRegistry::RegisterUlamClass(UlamClass& uc)
+  template <class EC>
+  void UlamClass::PrintClassMembers(const UlamClassRegistry & ucr,
+                                    ByteSink & bs,
+                                    const typename EC::ATOM_CONFIG::ATOM_TYPE& atom,
+                                    u32 flags,
+                                    u32 baseStatePos) const
   {
-    if (IsRegisteredUlamClass(uc.GetMangledClassName()))
-      return false;
-    if (m_registeredUlamClassCount >= TABLE_SIZE)
-      FAIL(OUT_OF_ROOM);
-    m_registeredUlamClasses[m_registeredUlamClassCount++] = &uc;
-    return true;
-  }
-
-  s32 UlamClassRegistry::GetUlamClassIndex(const char *mangledName) const
-  {
-    if (!mangledName) FAIL(NULL_POINTER);
-
-    for (u32 i = 0; i < m_registeredUlamClassCount; ++i)
+    typedef typename EC::ATOM_CONFIG::ATOM_TYPE T;
+    if (flags & (PRINT_MEMBER_VALUES|PRINT_MEMBER_NAMES|PRINT_MEMBER_TYPES))
     {
-      UlamClass * uc = m_registeredUlamClasses[i];
-      if (!uc) FAIL(ILLEGAL_STATE);
+      bool opened = false;
+      for (s32 i = 0; i < GetDataMemberCount(); ++i)
+      {
+        const UlamClassDataMemberInfo & dmi = GetDataMemberInfo((u32) i);
+	UlamTypeInfo utin;
+        if (!utin.InitFrom(dmi.m_mangledType))
+          FAIL(ILLEGAL_STATE);
 
-      const char * mang = uc->GetMangledClassName();
-      if (!strcmp(mang, mangledName))
-        return (s32) i;
-    }
-    return -1;
-  }
+        // Skip size 0 members unless they reeeally want them
+        if (utin.GetBitSize() == 0 && !(flags & PRINT_SIZE0_MEMBERS)) continue;
 
-    bool UlamClassRegistry::IsRegisteredUlamClass(const char *mangledName) const
-    {
-      return GetUlamClassIndex(mangledName) >= 0;
-    }
+        if (!opened)
+        {
+          opened = true;
+          bs.Printf("(");
+        }
+        else
+        {
+          bs.Printf(",");
+        }
+        if (flags & PRINT_MEMBER_TYPES)
+        {
+          utin.PrintPretty(bs);
+          bs.Printf(" ");
+        }
 
-    const UlamClass* UlamClassRegistry::GetUlamClassByMangledName(const char *mangledName) const
-    {
-      s32 idx = GetUlamClassIndex(mangledName);
-      if (idx < 0) return 0;
-      return GetUlamClassByIndex((u32) idx);
-    }
+        if (flags & PRINT_MEMBER_NAMES)
+        {
+          bs.Printf("%s", dmi.m_dataMemberName);
+          if (flags & PRINT_MEMBER_VALUES)
+            bs.Printf("=");
+        }
 
-    const UlamClass* UlamClassRegistry::GetUlamClassByIndex(u32 index) const
-    {
-      if (index >= m_registeredUlamClassCount) FAIL(ILLEGAL_ARGUMENT);
-      return m_registeredUlamClasses[index];
+        if (flags & PRINT_MEMBER_VALUES)
+        {
+          // For starters just dig out the bits and print them
+          u32 bitsize = utin.GetBitSize();
+          u32 arraysize = utin.GetArrayLength();
+
+          for (u32 idx = 0; idx < MAX(arraysize,1u); ++idx)
+          {
+            if (arraysize > 0)
+            {
+              if (idx==0) bs.Printf("[%d]",arraysize);
+              bs.Printf(", [%d]=",idx);
+            }
+
+            u64 val = atom.GetBits().ReadLong(baseStatePos + dmi.m_bitPosition
+                                              + T::ATOM_FIRST_STATE_BIT
+                                              + idx * bitsize,
+                                              bitsize);
+
+            if (utin.m_category == UlamTypeInfo::QUARK)
+            {
+              if (flags & PRINT_RECURSE_QUARKS)
+              {
+                const char * mangledName = dmi.m_mangledType;
+                const UlamClass * memberClass = ucr.GetUlamClassByMangledName(mangledName);
+                if (memberClass)
+                {
+                  memberClass->PrintClassMembers<EC>(ucr, bs, atom, flags, baseStatePos + dmi.m_bitPosition);
+                  continue;
+                }
+              }
+              bs.Printf("0x%x", val); // Just do hex if no recursion or unknown class
+              continue;
+            }
+
+            if (utin.m_category != UlamTypeInfo::PRIM) FAIL(ILLEGAL_STATE); // Can't happen now right?
+
+            switch (utin.m_utip.GetPrimType())
+            {
+            case UlamTypeInfoPrimitive::INT:
+              {
+                s64 cval = _SignExtend64(val,bitsize);
+                bs.Print(cval);
+                if (flags & PRINT_MEMBER_BITVALS) addHex(bs,val);
+                break;
+              }
+
+            case UlamTypeInfoPrimitive::UNSIGNED:
+              {
+                bs.Print(val);
+                if (flags & PRINT_MEMBER_BITVALS) addHex(bs,val);
+                break;
+              }
+
+            case UlamTypeInfoPrimitive::BOOL:
+              {
+                bool cval = _Bool64ToCbool(val,bitsize);
+                bs.Printf("%s", cval?"true":"false");
+                if (flags & PRINT_MEMBER_BITVALS) addHex(bs, val);
+                break;
+              }
+
+            case UlamTypeInfoPrimitive::UNARY:
+              {
+                u32 cval = (u32) _Unary64ToInt64(val,bitsize,32);
+                bs.Printf("%d", cval);
+                if (flags & PRINT_MEMBER_BITVALS) addHex(bs, val);
+                break;
+              }
+
+            case UlamTypeInfoPrimitive::BITS:
+              {
+                bs.Printf("0x");  // use hex for bits
+                bs.Print(val, Format::HEX);
+                if (flags & PRINT_MEMBER_BITVALS)  // and binary for 'raw'
+                {
+                  bs.Printf("/");
+                  bs.Print(val, Format::BIN, bitsize, '0');
+                }
+                break;
+              }
+
+            case UlamTypeInfoPrimitive::VOID:
+              {
+                bs.Printf("void"); // should be impossible?
+                break;
+              }
+            default:
+              FAIL(ILLEGAL_STATE);
+            }
+          }
+        }
+      }
+      if (opened)
+        bs.Printf(")");
     }
+  } //PrintClassMembers
 
 } //MFM

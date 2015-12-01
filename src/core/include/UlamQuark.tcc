@@ -5,7 +5,6 @@
 #include "EventWindow.h"
 #include "Base.h"
 
-
 namespace MFM {
 
 } //MFM

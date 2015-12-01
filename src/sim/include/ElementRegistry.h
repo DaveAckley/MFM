@@ -31,6 +31,7 @@
 #include "itype.h"
 #include "Element.h"
 #include "UlamElement.h"
+#include "UlamClassRegistry.h"
 #include "OverflowableCharBufferByteSink.h"
 
 namespace MFM {

@@ -4,6 +4,8 @@
 #include "Random.h"
 #include "EventWindow.h"
 #include "Base.h"
+#include "UlamClass.h"
+#include "UlamClassRegistry.h"
 
 namespace MFM {
 
@@ -26,11 +28,11 @@ namespace MFM {
   {
     if (!flags) return;
 
-    if (flags & PRINT_SYMBOL) bs.Printf("(%s)", this->GetAtomicSymbol());
+    if (flags & UlamClass::PRINT_SYMBOL) bs.Printf("(%s)", this->GetAtomicSymbol());
 
-    if (flags & PRINT_FULL_NAME) bs.Printf("%s",this->GetName());
+    if (flags & UlamClass::PRINT_FULL_NAME) bs.Printf("%s",this->GetName());
 
-    if (flags & PRINT_ATOM_BODY)
+    if (flags & UlamClass::PRINT_ATOM_BODY)
     {
       typedef typename EC::ATOM_CONFIG AC;
       T dup = atom; // Get mutable copy (lame AtomSerializer)
@@ -38,6 +40,6 @@ namespace MFM {
       bs.Printf(":%@", &as);
     }
 
-    this->PrintClassMembers<EC>(ucr,bs,atom,flags,0);
+    this->UlamClass::PrintClassMembers<EC>(ucr,bs,atom,flags,0);
   }
 } //MFM

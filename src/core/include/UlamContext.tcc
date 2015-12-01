@@ -5,6 +5,7 @@
 #include "EventWindow.h"
 #include "Base.h"
 #include "Site.h"
+#include "UlamClass.h"
 
 namespace MFM {
 
@@ -72,13 +73,13 @@ namespace MFM {
   }
 
   template <class EC>
-  UlamClass * UlamContext<EC>::GetSelf() const
+  UlamClassTemplated<EC> * UlamContext<EC>::GetSelf() const
   {
     return m_self;
   }
 
   template <class EC>
-  void UlamContext<EC>::SetSelf(UlamClass * self)
+  void UlamContext<EC>::SetSelf(UlamClassTemplated<EC> * self)
   {
     m_self = self;
   }

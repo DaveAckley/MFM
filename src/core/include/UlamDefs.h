@@ -39,6 +39,11 @@
 #include "P3Atom.h"
 #include "UlamContext.h"
 #include "UlamElement.h"
+#include "UlamQuark.h"
+#include "UlamClass.h"
+#include "UlamClassTemplated.h"
+#include "UlamClassRegistry.h"
+#include "UlamTypeInfo.h"
 
 namespace MFM
 {

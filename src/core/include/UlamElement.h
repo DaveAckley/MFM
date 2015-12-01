@@ -27,7 +27,7 @@
 #ifndef ULAMELEMENT_H
 #define ULAMELEMENT_H
 
-#include "UlamClass.h"
+#include "UlamClassTemplated.h"
 
 // Unsigned(32)
 #ifndef Ud_Ui_Ut_102321u
@@ -100,11 +100,15 @@ namespace MFM
     virtual ~UlamElementInfo() { }
   };
 
+} //MFM
+
+
+namespace MFM {
   /**
    * A UlamElement is a concrete element primarily for use by culam.
    */
   template <class EC>
-  class UlamElement : public Element<EC>, public UlamClass
+  class UlamElement : public Element<EC>, public UlamClassTemplated<EC>
   {
     typedef Element<EC> Super;
     typedef typename EC::ATOM_CONFIG AC;
@@ -214,6 +218,7 @@ namespace MFM
         COMPLETE_DIFFUSABILITY * m_info->GetPercentDiffusability() / 100;
     }
   };
+
 } // MFM
 
 #include "UlamElement.tcc"

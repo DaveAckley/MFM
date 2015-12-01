@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  UlamQuark.h A concrete base class for ULAM quarks
+  UlamClassRegistry.h A class for the registration of ULAM quarks and elements
   Copyright (C) 2015 The Regents of the University of New Mexico.  All rights reserved.
   Copyright (C) 2015 Ackleyshack LLC.
 
@@ -20,38 +20,42 @@
 */
 
 /**
-  \file UlamQuark.h A concrete base class for ULAM quark
+  \file UlamClassRegistry.h A class for the registration of ULAM quarks and elements
   \author David H. Ackley.
-  \author Elena S. Ackley.
+  \author Elenas S. Ackley.
   \date (C) 2015 All rights reserved.
   \lgpl
  */
-#ifndef ULAMQUARK_H
-#define ULAMQUARK_H
 
-#include "UlamClassTemplated.h"
+#ifndef ULAMCLASSREGISTRY_H
+#define ULAMCLASSREGISTRY_H
+
+#include "itype.h"
 
 namespace MFM {
 
-  /**
-   * A UlamQuark is a concrete quark primarily for use by culam.
-   */
-  template <class EC>
-  class UlamQuark : public UlamClassTemplated<EC>
-  {
-    typedef typename EC::ATOM_CONFIG AC;
-    typedef typename AC::ATOM_TYPE T;
+  struct UlamClass; //FORWARD
 
-  public:
+  struct UlamClassRegistry {
+    enum {
+      TABLE_SIZE = 100
+    };
 
-    UlamQuark(const UUID & uuid) : UlamClassTemplated<EC>() { }
+    bool RegisterUlamClass(UlamClass& uc) ;
 
-    virtual ~UlamQuark() { }
+    s32 GetUlamClassIndex(const char *) const;
 
+    bool IsRegisteredUlamClass(const char *mangledName) const;
+
+    const UlamClass * GetUlamClassByMangledName(const char *mangledName) const;
+
+    const UlamClass * GetUlamClassByIndex(u32 index) const;
+
+    UlamClass * m_registeredUlamClasses[TABLE_SIZE];
+    u32 m_registeredUlamClassCount;
   };
 
 } //MFM
+#include "UlamClassRegistry.tcc"
 
-#include "UlamQuark.tcc"
-
-#endif /* ULAMQUARK_H */
+#endif /* ULAMCLASSREGISTRY_H */
