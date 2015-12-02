@@ -24,15 +24,15 @@ namespace MFM {
   }
 
   template <class EC>
-  void UlamElement<EC>::Print(const UlamClassRegistry & ucr, ByteSink & bs, const T & atom, u32 flags) const
+  void UlamElement<EC>::Print(const UlamClassRegistry<EC> & ucr, ByteSink & bs, const T & atom, u32 flags) const
   {
     if (!flags) return;
 
-    if (flags & UlamClass::PRINT_SYMBOL) bs.Printf("(%s)", this->GetAtomicSymbol());
+    if (flags & UlamClass<EC>::PRINT_SYMBOL) bs.Printf("(%s)", this->GetAtomicSymbol());
 
-    if (flags & UlamClass::PRINT_FULL_NAME) bs.Printf("%s",this->GetName());
+    if (flags & UlamClass<EC>::PRINT_FULL_NAME) bs.Printf("%s",this->GetName());
 
-    if (flags & UlamClass::PRINT_ATOM_BODY)
+    if (flags & UlamClass<EC>::PRINT_ATOM_BODY)
     {
       typedef typename EC::ATOM_CONFIG AC;
       T dup = atom; // Get mutable copy (lame AtomSerializer)
@@ -40,6 +40,6 @@ namespace MFM {
       bs.Printf(":%@", &as);
     }
 
-    this->UlamClass::PrintClassMembers<EC>(ucr,bs,atom,flags,0);
+    this->UlamClass<EC>::PrintClassMembers(ucr,bs,atom,flags,0);
   }
 } //MFM

@@ -29,7 +29,7 @@
 #ifndef ULAMQUARK_H
 #define ULAMQUARK_H
 
-#include "UlamClassTemplated.h"
+#include "UlamClass.h"
 
 namespace MFM {
 
@@ -37,14 +37,14 @@ namespace MFM {
    * A UlamQuark is a concrete quark primarily for use by culam.
    */
   template <class EC>
-  class UlamQuark : public UlamClassTemplated<EC>
+  class UlamQuark : public UlamClass<EC>
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
   public:
 
-    UlamQuark(const UUID & uuid) : UlamClassTemplated<EC>() { }
+    UlamQuark(const UUID & uuid) : UlamClass<EC>() { }
 
     virtual ~UlamQuark() { }
 

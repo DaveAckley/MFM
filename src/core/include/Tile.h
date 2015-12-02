@@ -228,7 +228,7 @@ namespace MFM
     /** The PRNG used for generating all random numbers in this Tile. */
     Random m_random;
 
-    UlamClassRegistry m_ucr;
+    UlamClassRegistry<EC> m_ucr;
 
     s32 m_keyValues[MAX_TILE_PARAMETERS];
 
@@ -277,9 +277,9 @@ namespace MFM
      */
     Region RegionIn(const SPoint& pt);
 
-    UlamClassRegistry & GetUlamClassRegistry() { return m_ucr; }
+    UlamClassRegistry<EC> & GetUlamClassRegistry() { return m_ucr; }
 
-    const UlamClassRegistry & GetUlamClassRegistry() const { return m_ucr; }
+    const UlamClassRegistry<EC> & GetUlamClassRegistry() const { return m_ucr; }
 
     /**
      * A minimal iterator over the Sites of a tile.  Access via Tile::begin().

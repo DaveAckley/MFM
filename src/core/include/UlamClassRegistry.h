@@ -34,24 +34,25 @@
 
 namespace MFM {
 
-  struct UlamClass; //FORWARD
+  template <class EC> struct UlamClass; //FORWARD
 
+  template <class EC>
   struct UlamClassRegistry {
     enum {
       TABLE_SIZE = 100
     };
 
-    bool RegisterUlamClass(UlamClass& uc) ;
+    bool RegisterUlamClass(UlamClass<EC>& uc) ;
 
     s32 GetUlamClassIndex(const char *) const;
 
     bool IsRegisteredUlamClass(const char *mangledName) const;
 
-    const UlamClass * GetUlamClassByMangledName(const char *mangledName) const;
+    const UlamClass<EC> * GetUlamClassByMangledName(const char *mangledName) const;
 
-    const UlamClass * GetUlamClassByIndex(u32 index) const;
+    const UlamClass<EC> * GetUlamClassByIndex(u32 index) const;
 
-    UlamClass * m_registeredUlamClasses[TABLE_SIZE];
+    UlamClass<EC> * m_registeredUlamClasses[TABLE_SIZE];
     u32 m_registeredUlamClassCount;
   };
 

@@ -272,12 +272,12 @@ namespace MFM {
 
   public:
 
-    UlamClassRegistry & GetUlamClassRegistry()
+    UlamClassRegistry<EC> & GetUlamClassRegistry()
     {
       return m_heroTile.GetUlamClassRegistry();
     }
 
-    const UlamClassRegistry & GetUlamClassRegistry() const
+    const UlamClassRegistry<EC> & GetUlamClassRegistry() const
     {
       return m_heroTile.GetUlamClassRegistry();
     }

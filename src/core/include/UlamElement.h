@@ -27,7 +27,7 @@
 #ifndef ULAMELEMENT_H
 #define ULAMELEMENT_H
 
-#include "UlamClassTemplated.h"
+#include "UlamClass.h"
 
 // Unsigned(32)
 #ifndef Ud_Ui_Ut_102321u
@@ -108,7 +108,7 @@ namespace MFM {
    * A UlamElement is a concrete element primarily for use by culam.
    */
   template <class EC>
-  class UlamElement : public Element<EC>, public UlamClassTemplated<EC>
+  class UlamElement : public Element<EC>, public UlamClass<EC>
   {
     typedef Element<EC> Super;
     typedef typename EC::ATOM_CONFIG AC;
@@ -132,7 +132,7 @@ namespace MFM {
        various details as specified by flags.
        \sa PrintFlags
      */
-    void Print(const UlamClassRegistry & ucr, ByteSink & bs, const T & atom, u32 flags) const ;
+    void Print(const UlamClassRegistry<EC> & ucr, ByteSink & bs, const T & atom, u32 flags) const ;
 
     void SetInfo(const UlamElementInfo<EC> * info) {
       m_info = info;

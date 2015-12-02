@@ -6,12 +6,55 @@
 #include "EventWindow.h"
 #include "Base.h"
 #include "UlamTypeInfo.h"
+
 #include "CastOps.h" /* For _Int32ToInt32, etc */
 
 namespace MFM {
 
   template <class EC>
-  void UlamClass::PrintClassMembers(const UlamClassRegistry & ucr,
+  s32 UlamClass<EC>::PositionOfDataMember(UlamContext<EC>& uc, u32 type, const char * dataMemberTypeName)
+  {
+    Tile<EC> & tile = uc.GetTile();
+    ElementTable<EC> & et = tile.GetElementTable();
+    const Element<EC> * eltptr = et.Lookup(type);
+    if (!eltptr) return -1;
+    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
+    if (!ueltptr) return -2;
+    s32 ret = ueltptr->PositionOfDataMemberType(dataMemberTypeName);
+    if (ret < 0) return -3;
+    return ret;
+  } //PositionOfDataMember (static)
+
+  template <class EC>
+  bool UlamClass<EC>::IsMethod(UlamContext<EC>& uc, u32 type, const char * quarkTypeName)
+  {
+    Tile<EC> & tile = uc.GetTile();
+    ElementTable<EC> & et = tile.GetElementTable();
+    const Element<EC> * eltptr = et.Lookup(type);
+    if (!eltptr) return false;
+    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
+    if (!ueltptr) return false;
+    return ueltptr->internalCMethodImplementingIs(quarkTypeName);
+  } //IsMethod (static)
+
+  typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
+  template <class EC>
+  VfuncPtr UlamClass<EC>::GetVTableEntry(UlamContext<EC>& uc, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom, u32 atype, u32 idx)
+  {
+    if( atype == EC::ATOM_CONFIG::ATOM_TYPE::ATOM_UNDEFINED_TYPE )
+      FAIL(ILLEGAL_STATE);  // needs 'quark type' vtable support
+
+    Tile<EC> & tile = uc.GetTile();
+    ElementTable<EC> & et = tile.GetElementTable();
+    const Element<EC> * eltptr = et.Lookup(atype);
+    if (!eltptr) return NULL;
+    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
+    if (!ueltptr) return NULL;
+    return ueltptr->getVTableEntry(idx);
+  } //GetVTableEntry (static)
+
+  template <class EC>
+  void UlamClass<EC>::PrintClassMembers(const UlamClassRegistry<EC> & ucr,
                                     ByteSink & bs,
                                     const typename EC::ATOM_CONFIG::ATOM_TYPE& atom,
                                     u32 flags,
@@ -80,7 +123,7 @@ namespace MFM {
                 const UlamClass * memberClass = ucr.GetUlamClassByMangledName(mangledName);
                 if (memberClass)
                 {
-                  memberClass->PrintClassMembers<EC>(ucr, bs, atom, flags, baseStatePos + dmi.m_bitPosition);
+                  memberClass->PrintClassMembers(ucr, bs, atom, flags, baseStatePos + dmi.m_bitPosition);
                   continue;
                 }
               }
@@ -151,5 +194,11 @@ namespace MFM {
     }
   } //PrintClassMembers
 
+  template <class EC>
+  void UlamClass<EC>::addHex(ByteSink & bs, u64 val)
+  {
+    bs.Printf("/0x");
+    bs.Print(val, Format::HEX);
+  }
 
 } //MFM
