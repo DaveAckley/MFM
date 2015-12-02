@@ -30,8 +30,6 @@
 #define ULAMTYPEINFO_H
 
 #include "itype.h"
-//#include "UlamClass.h"
-//#include "UlamElement.h"
 #include "Parameter.h"
 
 namespace MFM

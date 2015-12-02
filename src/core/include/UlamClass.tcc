@@ -10,9 +10,6 @@
 
 namespace MFM {
 
-//struct UlamTypeInfo; //forward
-
-
   template <class EC>
   void UlamClass::PrintClassMembers(const UlamClassRegistry & ucr,
                                     ByteSink & bs,
