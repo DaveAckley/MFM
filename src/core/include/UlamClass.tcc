@@ -12,13 +12,9 @@
 namespace MFM {
 
   template <class EC>
-  s32 UlamClass<EC>::PositionOfDataMember(UlamContext<EC>& uc, u32 type, const char * dataMemberTypeName)
+  s32 UlamClass<EC>::PositionOfDataMember(const UlamContext<EC>& uc, u32 type, const char * dataMemberTypeName)
   {
-    Tile<EC> & tile = uc.GetTile();
-    ElementTable<EC> & et = tile.GetElementTable();
-    const Element<EC> * eltptr = et.Lookup(type);
-    if (!eltptr) return -1;
-    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
+    const UlamElement<EC> * ueltptr = (UlamElement<EC> *) uc.LookupElementTypeFromContext(type);
     if (!ueltptr) return -2;
     s32 ret = ueltptr->PositionOfDataMemberType(dataMemberTypeName);
     if (ret < 0) return -3;
@@ -26,29 +22,20 @@ namespace MFM {
   } //PositionOfDataMember (static)
 
   template <class EC>
-  bool UlamClass<EC>::IsMethod(UlamContext<EC>& uc, u32 type, const char * quarkTypeName)
+  bool UlamClass<EC>::IsMethod(const UlamContext<EC>& uc, u32 type, const char * quarkTypeName)
   {
-    Tile<EC> & tile = uc.GetTile();
-    ElementTable<EC> & et = tile.GetElementTable();
-    const Element<EC> * eltptr = et.Lookup(type);
-    if (!eltptr) return false;
-    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
+    const UlamElement<EC> * ueltptr = (UlamElement<EC> *) uc.LookupElementTypeFromContext(type);
     if (!ueltptr) return false;
     return ueltptr->internalCMethodImplementingIs(quarkTypeName);
   } //IsMethod (static)
 
   typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
   template <class EC>
-  VfuncPtr UlamClass<EC>::GetVTableEntry(UlamContext<EC>& uc, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom, u32 atype, u32 idx)
+  VfuncPtr UlamClass<EC>::GetVTableEntry(const UlamContext<EC>& uc, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom, u32 atype, u32 idx)
   {
     if( atype == EC::ATOM_CONFIG::ATOM_TYPE::ATOM_UNDEFINED_TYPE )
       FAIL(ILLEGAL_STATE);  // needs 'quark type' vtable support
-
-    Tile<EC> & tile = uc.GetTile();
-    ElementTable<EC> & et = tile.GetElementTable();
-    const Element<EC> * eltptr = et.Lookup(atype);
-    if (!eltptr) return NULL;
-    const UlamElement<EC> * ueltptr = eltptr->AsUlamElement();
+    const UlamElement<EC> * ueltptr = (UlamElement<EC> *) uc.LookupElementTypeFromContext(atype);
     if (!ueltptr) return NULL;
     return ueltptr->getVTableEntry(idx);
   } //GetVTableEntry (static)

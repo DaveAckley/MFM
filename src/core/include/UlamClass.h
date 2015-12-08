@@ -123,7 +123,7 @@ namespace MFM
        \sa T::ATOM_FIRST_STATE_BIT
        \sa PositionOfDataMemberType
      */
-    static s32 PositionOfDataMember(UlamContext<EC>& uc, u32 type, const char * dataMemberTypeName) ;
+    static s32 PositionOfDataMember(const UlamContext<EC>& uc, u32 type, const char * dataMemberTypeName) ;
 
 
     /**
@@ -168,7 +168,7 @@ namespace MFM
        \sa T::ATOM_FIRST_STATE_BIT
        \sa internalCMethodImplementingIs
      */
-    static bool IsMethod(UlamContext<EC>& uc, u32 type, const char * quarkTypeName);
+    static bool IsMethod(const UlamContext<EC>& uc, u32 type, const char * quarkTypeName);
 
     typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
     /**
@@ -182,7 +182,7 @@ namespace MFM
       return (VfuncPtr) NULL;
     }
 
-    static VfuncPtr GetVTableEntry(UlamContext<EC>& uc, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom, u32 atype, u32 idx);
+    static VfuncPtr GetVTableEntry(const UlamContext<EC>& uc, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom, u32 atype, u32 idx);
 
 
     /**

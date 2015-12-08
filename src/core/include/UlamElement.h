@@ -84,7 +84,7 @@ namespace MFM
     virtual bool GetPlaceable() const = 0;
     virtual const u32 GetVersion() const = 0;
     virtual const u32 GetElementColor() const = 0;
-    virtual const u32 GetSymmetry(UlamContext<EC>& uc) const = 0;
+    virtual const u32 GetSymmetry(const UlamContext<EC>& uc) const = 0;
 
     virtual const u32 GetPercentDiffusability() const
     {
@@ -146,7 +146,7 @@ namespace MFM {
        Ulam elements that define 'Void behave()' will override this
        method, and it will be called on events!
      */
-    virtual void Uf_6behave(UlamContext<EC> & uc, T& self) const
+    virtual void Uf_6behave(const UlamContext<EC> & uc, T& self) const
     {
       // Empty by default
     }
@@ -168,7 +168,7 @@ namespace MFM {
        This base class implementation, if not overridden, yields the
        element color for all atoms and selectors.
      */
-    virtual Ui_Ut_14181u Uf_8getColor(UlamContext<EC>& uc,
+    virtual Ui_Ut_14181u Uf_8getColor(const UlamContext<EC>& uc,
                                       T& Uv_4self,
                                       Ui_Ut_102321u Uv_8selector) const
     {
@@ -203,7 +203,7 @@ namespace MFM {
       if (selector == 0)
         return GetElementColor();
 
-      UlamContext<EC> uc;
+      const UlamContext<EC> uc;
       T temp(atom);
       Ui_Ut_102321u sel(selector);
       Ui_Ut_14181u dynColor;

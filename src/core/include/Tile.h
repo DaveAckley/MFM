@@ -39,7 +39,6 @@
 #include "EventWindow.h"
 #include "ElementTable.h"
 #include "CacheProcessor.h"
-//#include "UlamClass.h"
 #include "UlamClassRegistry.h"
 #include "LonglivedLock.h"
 #include "OverflowableCharBufferByteSink.h"  /* for OString16 */

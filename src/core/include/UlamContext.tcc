@@ -6,13 +6,20 @@
 #include "Base.h"
 #include "Site.h"
 //#include "UlamClass.h"
+#include "Element.h"
 
 namespace MFM {
 
-  template <class EC> class UlamClassTemplated; //forward
+  template <class EC> class UlamClass; //forward
 
   template <class EC>
-  UlamContext<EC>::UlamContext() : m_tile(0) { }
+  UlamContext<EC>::UlamContext() : m_tile(0), m_effectiveSelf(NULL) { }
+
+  template <class EC>
+  UlamContext<EC>::UlamContext(const UlamContext<EC>& cxref , const UlamClass<EC> * ucp) : m_tile(cxref.m_tile), m_effectiveSelf(ucp){ }
+
+  template <class EC>
+  UlamContext<EC>::UlamContext(const UlamContext<EC>& cxref) : m_tile(cxref.m_tile), m_effectiveSelf(cxref.m_effectiveSelf){ }
 
   template <class EC>
   void UlamContext<EC>::SetTile(Tile<EC> & t)
@@ -75,15 +82,26 @@ namespace MFM {
   }
 
   template <class EC>
-  UlamClassTemplated<EC> * UlamContext<EC>::GetSelf() const
+  const UlamClass<EC> * UlamContext<EC>::GetEffectiveSelf() const
   {
-    return m_self;
+    return m_effectiveSelf;
   }
 
   template <class EC>
-  void UlamContext<EC>::SetSelf(UlamClassTemplated<EC> * self)
+  UlamClass<EC> * UlamContext<EC>::GetEffectiveSelf()
   {
-    m_self = self;
+    return m_effectiveSelf;
   }
+
+  template <class EC>
+  const UlamClass<EC> * UlamContext<EC>::LookupElementTypeFromContext(u32 etype) const
+  {
+    const Tile<EC> & tile = GetTile();
+    const ElementTable<EC> & et = tile.GetElementTable();
+    const Element<EC> * eltptr = et.Lookup(etype);
+    if (!eltptr) return NULL;
+    const UlamElement<EC> * ueltptr =  eltptr->AsUlamElement();
+    return ueltptr; //might be NULL
+  } //LookupElementTypeFromContext
 
 } //MFM

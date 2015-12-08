@@ -30,13 +30,15 @@
 #ifndef ULAMCONTEXT_H
 #define ULAMCONTEXT_H
 
+#include "itype.h"
+
 namespace MFM
 {
   template <class AC> class Base; // FORWARD
   template <class AC> class Site; // FORWARD
   template <class EC> class Tile; // FORWARD
   template <class EC> class EventWindow; // FORWARD
-  template <class EC> class UlamClassTemplated; //FORWARD
+  template <class EC> class UlamClass; //FORWARD
 
   class Random; // FORWARD
 
@@ -46,13 +48,15 @@ namespace MFM
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename EC::SITE S;
 
-    Tile<EC> * m_tile;
+    mutable Tile<EC> * m_tile;
     void AssertTile() const;
-    UlamClassTemplated<EC> * m_self;
+    const UlamClass<EC> * m_effectiveSelf;
 
   public:
 
-    UlamContext() ;
+    UlamContext();
+    UlamContext(const UlamContext<EC>& cxref , const UlamClass<EC> * ucp);
+    UlamContext(const UlamContext<EC>& cxref);
 
     void SetTile(Tile<EC> & t) ;
 
@@ -70,10 +74,11 @@ namespace MFM
 
     const Site<AC> & GetSite() const ;
 
-    UlamClassTemplated<EC> * GetSelf() const;
+    const UlamClass<EC> * GetEffectiveSelf() const;
 
-    void SetSelf(UlamClassTemplated<EC> * self);
+    UlamClass<EC> * GetEffectiveSelf();
 
+    const UlamClass<EC> * LookupElementTypeFromContext(u32 etype) const ;
   };
 
 } //MFM
