@@ -1,5 +1,7 @@
-#include "UlamElement.h"
+#include "UlamQuark.h"
+
 
 namespace MFM
 {
+
 } //MFM
