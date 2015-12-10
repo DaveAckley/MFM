@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
-  UlamDefs.h A roll-up of files and definitions for ULAM compiled output
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  UlamQuark.h A concrete base class for ULAM quarks
+  Copyright (C) 2015 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -19,33 +20,38 @@
 */
 
 /**
-  \file UlamDefs.h A roll-up of files and definitions for ULAM compiled output
-  \author David H. Ackley
-  \author Elena S. Ackley
-  \date (C) 2014 All rights reserved.
+  \file UlamQuark.h A concrete base class for ULAM quark
+  \author David H. Ackley.
+  \author Elena S. Ackley.
+  \date (C) 2015 All rights reserved.
   \lgpl
  */
-#ifndef ULAMDEFS_H
-#define ULAMDEFS_H
+#ifndef ULAMQUARK_H
+#define ULAMQUARK_H
 
-#include "Fail.h"
-#include "itype.h"
-#include "Util.h"
-#include "VD.h"
-#include "BitField.h"
-#include "CastOps.h"
-#include "Parameter.h"
-#include "Element.h"
-#include "P3Atom.h"
-#include "UlamContext.h"
-#include "UlamElement.h"
-#include "UlamQuark.h"
 #include "UlamClass.h"
-#include "UlamClassRegistry.h"
-#include "UlamTypeInfo.h"
 
-namespace MFM
-{
-}
+namespace MFM {
 
-#endif /* ULAMDEFS_H */
+  /**
+   * A UlamQuark is a concrete quark primarily for use by culam.
+   */
+  template <class EC>
+  class UlamQuark : public UlamClass<EC>
+  {
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+
+  public:
+
+    UlamQuark(const UUID & uuid) : UlamClass<EC>() { }
+
+    virtual ~UlamQuark() { }
+
+  };
+
+} //MFM
+
+#include "UlamQuark.tcc"
+
+#endif /* ULAMQUARK_H */

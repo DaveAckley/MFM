@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamContext.h Access to the environment surrounding executing ulam code
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2015 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,11 +23,14 @@
   \file UlamContext.h Access to the environment surrounding executing ulam code
   \author David H. Ackley
   \author Elena S. Ackley
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014-2015 All rights reserved.
   \lgpl
  */
+
 #ifndef ULAMCONTEXT_H
 #define ULAMCONTEXT_H
+
+#include "itype.h"
 
 namespace MFM
 {
@@ -34,6 +38,8 @@ namespace MFM
   template <class AC> class Site; // FORWARD
   template <class EC> class Tile; // FORWARD
   template <class EC> class EventWindow; // FORWARD
+  template <class EC> class UlamClass; //FORWARD
+
   class Random; // FORWARD
 
   template <class EC>
@@ -42,12 +48,15 @@ namespace MFM
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename EC::SITE S;
 
-    Tile<EC> * m_tile;
+    mutable Tile<EC> * m_tile;
     void AssertTile() const;
+    const UlamClass<EC> * m_effectiveSelf;
 
   public:
 
-    UlamContext() ;
+    UlamContext();
+    UlamContext(const UlamContext<EC>& cxref , const UlamClass<EC> * ucp);
+    UlamContext(const UlamContext<EC>& cxref);
 
     void SetTile(Tile<EC> & t) ;
 
@@ -65,8 +74,14 @@ namespace MFM
 
     const Site<AC> & GetSite() const ;
 
+    const UlamClass<EC> * GetEffectiveSelf() const;
+
+    UlamClass<EC> * GetEffectiveSelf();
+
+    const UlamClass<EC> * LookupElementTypeFromContext(u32 etype) const ;
   };
-}
+
+} //MFM
 
 #include "UlamContext.tcc"
 

@@ -273,12 +273,12 @@ namespace MFM
         return;
       }
 
-      const UlamClassRegistry & ucr = m_grid->GetUlamClassRegistry();
+      const UlamClassRegistry<EC> & ucr = m_grid->GetUlamClassRegistry();
 
       const u32 printFlags =
-        UlamClass::PRINT_MEMBER_NAMES |
-        UlamClass::PRINT_MEMBER_VALUES |
-        UlamClass::PRINT_RECURSE_QUARKS;
+        UlamClass<EC>::PRINT_MEMBER_NAMES |
+        UlamClass<EC>::PRINT_MEMBER_VALUES |
+        UlamClass<EC>::PRINT_RECURSE_QUARKS;
 
       buff.Reset();
       uelt->Print(ucr, buff, atom, printFlags);

@@ -372,6 +372,7 @@ namespace MFM
     {
       return 0;
     }
+
     virtual UlamElement<EC> * AsUlamElement()
     {
       return 0;
