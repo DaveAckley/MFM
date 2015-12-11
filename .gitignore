@@ -45,4 +45,4 @@ tools/cpplint.py
 *-hold
 
 # Ignore the version file made for non-git builds
-TREEVERSION.mk
+*TREEVERSION.mk
