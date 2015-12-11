@@ -78,6 +78,7 @@ namespace MFM
     bool m_bigText;
     u32 m_thisEpochAEPS;
     bool m_captureScreenshots;
+    bool m_pastFirstUpdate;
     u32 m_saveStateIndex;
     u32 m_epochSaveStateIndex;
 
@@ -795,6 +796,7 @@ namespace MFM
       , m_bigText(false)
       , m_thisEpochAEPS(0)
       , m_captureScreenshots(false)
+      , m_pastFirstUpdate(false)
       , m_saveStateIndex(0)
       , m_epochSaveStateIndex(0)
       , m_keyboardPaused(false)
@@ -1312,7 +1314,18 @@ namespace MFM
 
         m_thisUpdateIsEpoch = false;  // Assume it's not
 
+        if (m_captureScreenshots && !m_pastFirstUpdate)
+        {
+          m_rootDrawing.Clear();
+          m_rootPanel.Paint(m_rootDrawing);
+          const char * path = Super::GetSimDirPathTemporary("screenshot/%D-%D.png",
+                                                            m_thisEpochAEPS,
+                                                            0);
+          m_camera.DrawSurface(m_screen,path);
+        }
         Update(Super::GetGrid());
+
+        m_pastFirstUpdate = true;
 
         m_rootDrawing.Clear();
 

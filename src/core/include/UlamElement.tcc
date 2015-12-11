@@ -15,12 +15,13 @@ namespace MFM {
     Tile<EC> & tile = window.GetTile();
     UlamContext<EC> uc;
     uc.SetTile(tile);
+    UlamContext<EC> ucs(uc,this);
 
-    u32 sym = m_info ? m_info->GetSymmetry(UlamContext<EC>(uc, this)) : PSYM_DEG000L;
+    u32 sym = m_info ? m_info->GetSymmetry(ucs) : PSYM_DEG000L;
     window.SetSymmetry((PointSymmetry) sym);
 
     T & me = window.GetCenterAtomSym();
-    Uf_6behave(uc, me);
+    Uf_6behave(ucs, me);
   }
 
   template <class EC>
