@@ -134,6 +134,11 @@ namespace MFM {
       SetType(ATOM_EMPTY_TYPE);
     }
 
+    void SetUndefinedImpl()
+    {
+      SetType(ATOM_UNDEFINED_TYPE);
+    }
+
     bool HasBeenRepairedImpl()
     {
       u32 fixedHeader = AFFixedHeader::Read(this->m_bits);
