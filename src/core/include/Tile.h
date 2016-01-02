@@ -678,7 +678,7 @@ namespace MFM
      * Returns this Tile's label, if any.  May return an empty string,
      * never returns null.
      */
-    const char * GetLabel()
+    const char * GetLabel() const
     {
       return m_label.GetZString();
     }
