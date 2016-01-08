@@ -32,86 +32,92 @@
 #include "UlamClass.h"
 
 // Unsigned(32)
-#ifndef Ud_Ui_Ut_102321u4auto
-#define Ud_Ui_Ut_102321u4auto
+#ifndef Ud_Ui_Ut_r102321u
+#define Ud_Ui_Ut_r102321u
 namespace MFM{
   template<class EC, u32 POS>
-  struct Ui_Ut_102321u4auto : public AutoRefBase<EC>
+  struct Ui_Ut_r102321u : public AutoRefBase<EC>
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
 
-    typedef AtomicParameterType<EC, VD::U32, 32u, POS>  Up_Us;
-    Ui_Ut_102321u4auto(T& targ, u32 idx) : AutoRefBase<EC>(targ, idx) { }
-    Ui_Ut_102321u4auto(AutoRefBase<EC>& arg, u32 idx) : AutoRefBase<EC>(arg, idx) { }
-    const u32 read() const { return Up_Us::Read(AutoRefBase<EC>::getBits()); }
-    void write(const u32 v) { Up_Us::Write(AutoRefBase<EC>::getBits(), v); }
+    Ui_Ut_r102321u(T& targ, u32 idx) : AutoRefBase<EC>(targ, idx) { }
+    Ui_Ut_r102321u(AutoRefBase<EC>& arg, u32 idx) : AutoRefBase<EC>(arg, idx) { }
+    const u32 read() const { return AutoRefBase<EC>::read(32u); }
+    void write(const u32 v) { AutoRefBase<EC>::write(v, 32u); }
   };
 } //MFM
-#endif /*Ud_Ui_Ut_102321u4auto */
+#endif /*Ud_Ui_Ut_r102321u */
 
 #ifndef Ud_Ui_Ut_102321u
 #define Ud_Ui_Ut_102321u
 namespace MFM{
-
   template<class EC>
-  struct Ui_Ut_102321u : public Ui_Ut_102321u4auto<EC, 64u>
+  struct Ui_Ut_102321u : public Ui_Ut_r102321u<EC, 64u>
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
 
+    typedef BitField<BitVector<BPA>, VD::U32, 32, 64> BF;
     T m_stg;  //storage here!
 
-    Ui_Ut_102321u() : Ui_Ut_102321u4auto<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { }
-    Ui_Ut_102321u(const u32 d) : Ui_Ut_102321u4auto<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { Ui_Ut_102321u4auto<EC, 64u>::write(d); }
+    Ui_Ut_102321u() : Ui_Ut_r102321u<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { }
+    Ui_Ut_102321u(const u32 d) : Ui_Ut_r102321u<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { Ui_Ut_r102321u<EC, 64u>::write(d)	\
+	; }
     ~Ui_Ut_102321u() {}
+    const u32 read() const { return BF::Read(AutoRefBase<EC>::getBits()); }
+    void write(const u32 v) { BF::Write(AutoRefBase<EC>::getBits(), v); }
   };
 } //MFM
 #endif /*Ud_Ui_Ut_102321u */
 
 // Unsigned(8) [4] -- for ARGB colors
-#ifndef Ud_Ui_Ut_14181u4auto
-#define Ud_Ui_Ut_14181u4auto
+#ifndef Ud_Ui_Ut_r14181u
+#define Ud_Ui_Ut_r14181u
 namespace MFM{
   template<class EC, u32 POS>
-  struct Ui_Ut_14181u4auto : public AutoRefBase<EC>
+  struct Ui_Ut_r14181u : public AutoRefBase<EC>
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
 
-    typedef AtomicParameterType<EC, VD::U32, 32u, POS>  Up_Us;
-    Ui_Ut_14181u4auto(T& targ, u32 idx) : AutoRefBase<EC>(targ, idx) { }
-    Ui_Ut_14181u4auto(AutoRefBase<EC>& arg, u32 idx) : AutoRefBase<EC>(arg, idx) { }
-    const u32 read() const { return Up_Us::Read(AutoRefBase<EC>::getBits()); }   //reads entire array
+    Ui_Ut_r14181u(T& targ, u32 idx) : AutoRefBase<EC>(targ, idx) { }
+    Ui_Ut_r14181u(AutoRefBase<EC>& arg, u32 idx) : AutoRefBase<EC>(arg, idx) { }
+    const u32 read() const { return AutoRefBase<EC>::read(32u); } //reads entire array
     const u32 readArrayItem(const u32 index, const u32 itemlen) const { return AutoRefBase<EC>::readArrayItem(index, itemlen); }
-    void write(const u32 v) { Up_Us::Write(AutoRefBase<EC>::getBits(), v); }   //writes entire array
+    void write(const u32 v) { AutoRefBase<EC>::write(v, 32u); } //writes entire array
     void writeArrayItem(const u32 v, const u32 index, const u32 itemlen) { AutoRefBase<EC>::writeArrayItem(v, index, itemlen); }
   };
 } //MFM
-#endif /*Ud_Ui_Ut_14181u4auto */
+#endif /*Ud_Ui_Ut_r14181u */
 
 #ifndef Ud_Ui_Ut_14181u
 #define Ud_Ui_Ut_14181u
 namespace MFM{
 
   template<class EC>
-  struct Ui_Ut_14181u : public Ui_Ut_14181u4auto<EC, 64u>
+  struct Ui_Ut_14181u : public Ui_Ut_r14181u<EC, 64u>
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
 
+    typedef BitField<BitVector<BPA>, VD::BITS, 32, 64> BF;
     T m_stg;  //storage here!
 
-    Ui_Ut_14181u() : Ui_Ut_14181u4auto<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { }
-    Ui_Ut_14181u(const u32 d) : Ui_Ut_14181u4auto<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { Ui_Ut_14181u4auto<EC, 64u>::write(d); }
+    Ui_Ut_14181u() : Ui_Ut_r14181u<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { }
+    Ui_Ut_14181u(const u32 d) : Ui_Ut_r14181u<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { Ui_Ut_r14181u<EC, 64u>::write(d); }
     ~Ui_Ut_14181u() {}
+    const u32 read() const { return BF::Read(AutoRefBase<EC>::getBits()); }   //reads entire array
+    const u32 readArrayItem(const u32 index, const u32 itemlen) const { return AutoRefBase<EC>::readArrayItem(index, itemlen); }
+    void write(const u32 v) { BF::Write(AutoRefBase<EC>::getBits(), v); }   //writes entire array
+    void writeArrayItem(const u32 v, const u32 index, const u32 itemlen) { AutoRefBase<EC>::writeArrayItem(v, index, itemlen); }
   };
 } //MFM
-#endif /*Ud_Ui_Ut_14181u */
+#endif
 
 namespace MFM
 {
