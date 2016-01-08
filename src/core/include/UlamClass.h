@@ -53,12 +53,12 @@ namespace MFM{
     AutoRefBase(AutoRefBase<EC>& arg, u32 idx) : m_stgToChange(arg.getRef()), m_pos(arg.getPosOffset() + idx) { }
     ~AutoRefBase( ){ }
 
-    const u32 read(u32 len) const { return m_stgToChange.GetBits().Read(m_pos + T::ATOM_FIRST_STATE_BIT, len); }
+    const u32 read(u32 len) const { return getBits().Read(m_pos + T::ATOM_FIRST_STATE_BIT, len); }
     const T read() const { return m_stgToChange; } //entire atom
-    const u32 readArrayItem(u32 index, u32 itemlen) { return m_stgToChange.GetBits().Read((index * itemlen) + m_pos + T::ATOM_FIRST_STATE_BIT, itemlen); }
-    void write(const u32 v, u32 len) { m_stgToChange.GetBits().Write(m_pos + T::ATOM_FIRST_STATE_BIT, len, v);}
+    const u32 readArrayItem(const u32 index, const u32 itemlen) const { return getBits().Read((index * itemlen) + m_pos + T::ATOM_FIRST_STATE_BIT, itemlen); }
+    void write(const u32 v, u32 len) { getBits().Write(m_pos + T::ATOM_FIRST_STATE_BIT, len, v);}
     void write(const T& t) { m_stgToChange = t; } //entire atom
-    void writeArrayItem(const u32 v, u32 index, u32 itemlen) { m_stgToChange.GetBits().Write((index * itemlen) + m_pos + T::ATOM_FIRST_STATE_BIT, itemlen, v); }
+    void writeArrayItem(const u32 v, const u32 index, const u32 itemlen) { getBits().Write((index * itemlen) + m_pos + T::ATOM_FIRST_STATE_BIT, itemlen, v); }
     BitVector<BPA>& getBits() { return m_stgToChange.GetBits(); }
     const BitVector<BPA>& getBits() const { return m_stgToChange.GetBits(); }
     T& getRef() { return m_stgToChange; }
