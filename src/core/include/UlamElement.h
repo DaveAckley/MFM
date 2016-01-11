@@ -64,8 +64,8 @@ namespace MFM{
     T m_stg;  //storage here!
 
     Ui_Ut_102321u() : Ui_Ut_r102321u<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { }
-    Ui_Ut_102321u(const u32 d) : Ui_Ut_r102321u<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { Ui_Ut_r102321u<EC, 64u>::write(d)	\
-	; }
+    Ui_Ut_102321u(const u32 d) : Ui_Ut_r102321u<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { Ui_Ut_r102321u<EC, 64u>::write(d); }
+    Ui_Ut_102321u(const Ui_Ut_102321u& other) : Ui_Ut_r102321u<EC, 64u>(m_stg, 39u), m_stg(other.m_stg) { }
     ~Ui_Ut_102321u() {}
     const u32 read() const { return BF::Read(AutoRefBase<EC>::getBits()); }
     void write(const u32 v) { BF::Write(AutoRefBase<EC>::getBits(), v); }
@@ -110,6 +110,7 @@ namespace MFM{
 
     Ui_Ut_14181u() : Ui_Ut_r14181u<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { }
     Ui_Ut_14181u(const u32 d) : Ui_Ut_r14181u<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { Ui_Ut_r14181u<EC, 64u>::write(d); }
+    Ui_Ut_14181u(const Ui_Ut_14181u& other) : Ui_Ut_r14181u<EC, 64u>(m_stg, 39u), m_stg(other.m_stg) { }
     ~Ui_Ut_14181u() {}
     const u32 read() const { return BF::Read(AutoRefBase<EC>::getBits()); }   //reads entire array
     const u32 readArrayItem(const u32 index, const u32 itemlen) const { return AutoRefBase<EC>::readArrayItem(index, itemlen); }
