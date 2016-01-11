@@ -35,6 +35,7 @@
 #include "PSym.h"   /* For PointSymmetry, Map */
 #include "Site.h"
 #include "Base.h"
+#include "ByteSink.h"
 
 namespace MFM
 {
@@ -178,6 +179,8 @@ namespace MFM
     bool RejectOnRecency(const SPoint tcoord) ;
 
     void ExecuteEvent() ;
+
+    void PrintEventSite(ByteSink & bs) ;
 
     void ExecuteBehavior() ;
 

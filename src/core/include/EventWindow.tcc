@@ -78,19 +78,39 @@ namespace MFM {
   }
 
   template <class EC>
+  void EventWindow<EC>::PrintEventSite(ByteSink & bs) 
+  {
+    Tile<EC> & t = GetTile();
+    SPointSerializer ssp(m_center);
+    bs.Printf("T%s@S%@", t.GetLabel(), &ssp);
+  }
+
+  template <class EC>
   void EventWindow<EC>::ExecuteBehavior()
   {
     MFM_LOG_DBG6(("EW::ExecuteBehavior"));
     Tile<EC> & t = GetTile();
     unwind_protect(
     {
+      OString256 buff;
+      PrintEventSite(buff);
+      buff.Printf(":");
+
+      const char * failFile = MFMThrownFromFile;
+      const unsigned lineno = MFMThrownFromLineNo;
+      const char * failMsg = MFMFailCodeReason(MFMThrownFailCode);
       if(!GetCenterAtomDirect().IsSane())
       {
-        LOG.Debug("FE(INSANE)");
+        LOG.Debug("%s FE(INSANE)",buff.GetZString());
       }
       else
       {
-        LOG.Debug("FE(%x) (SANE)",GetCenterAtomDirect().GetType());
+        LOG.Message("%s behave() failed at %s:%d: %s (site type 0x%04x)",
+                    buff.GetZString(),
+                    failFile,
+                    lineno,
+                    failMsg,
+                    GetCenterAtomDirect().GetType());
       }
 
       SetCenterAtomDirect(t.GetEmptyAtom());
