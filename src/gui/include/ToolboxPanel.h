@@ -423,7 +423,6 @@ namespace MFM
     };
 
     ToolButton * m_selectedToolButton;
-    u32 m_activatedButtonIndex;
 
     void SelectToolButton(ToolButton & newToolButton)
     {
@@ -612,6 +611,7 @@ namespace MFM
       : m_bigText(false)
       , m_siteEdit(false)
       , m_selectedToolButton(0)
+      , m_selectedShapeButton(0)
       , m_toolButtonsInUse(0)
       , m_siteEditCheckbox(*this)
       , m_roundShapeButton(*this, ROUND_SHAPE, IMAGE_ASSET_ROUND_SHAPE_ICON, "Round", "Use a round-shaped brush")
