@@ -990,15 +990,12 @@ namespace MFM
     bool LoadMFS(const char * path)
     {
       OString512 buf;
-      if (path[0] == '/')
+      // Accept absolute paths and check resource dirs for relative paths
+      if (path[0] == '/' || !Utils::GetReadableResourceFile(path, buf))
       {
-        buf.Printf("%s",path); // absolute path
-      }
-      else if (!Utils::GetReadableResourceFile(path, buf))
-      {
-        LOG.Error("Can't find configuration file '%s'", path);
-        return false;
-      }
+        buf.Printf("%s",path); // absolute path or not resource relative
+      } 
+      /* else buf filled with resource path */
 
       LOG.Debug("Loading configuration from %s...", buf.GetZString());
 
