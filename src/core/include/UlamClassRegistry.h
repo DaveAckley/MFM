@@ -42,6 +42,8 @@ namespace MFM {
       TABLE_SIZE = 100
     };
 
+    UlamClassRegistry() : m_registeredUlamClassCount(0) { }
+
     bool RegisterUlamClass(UlamClass<EC>& uc) ;
 
     s32 GetUlamClassIndex(const char *) const;

@@ -16,7 +16,8 @@ namespace MFM {
     memcpy(m_bits,values,sizeof(m_bits));
   }
 
-#if 0 // Fri Mar 13 16:04:59 2015 XXX TESTING GCC CODE GEN IMPACTS
+#if 1 // Mon Jan 11 20:33:04 2016 Need this for Ui_Ut copy ctors?
+//#if 0 // Fri Mar 13 16:04:59 2015 XXX TESTING GCC CODE GEN IMPACTS
   template <u32 B>
   BitVector<B>::BitVector(const BitVector & other)
   {

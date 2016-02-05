@@ -108,7 +108,7 @@ void Init(UlamClassRegistry<EC> & ucr);
      * Returns negative on error, otherwise the number of elements
      * loaded.
      */
-s32 LoadLibraries(UlamClassRegistry<EC> & ucr) ;
+    s32 LoadLibraries(UlamClassRegistry<EC> & ucr) ;
 
     /**
      * Store a dynamically-loadable element in the registry keyed by

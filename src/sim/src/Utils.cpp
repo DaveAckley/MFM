@@ -1,5 +1,6 @@
 #include "Utils.h"
 #include "Fail.h"
+#include "Logger.h" /* for LOG */
 #include <stdlib.h>
 #include <unistd.h> /* for open(), close() */
 #include <fcntl.h>  /* for O_RDONLY */
@@ -73,11 +74,13 @@ namespace MFM {
           buffer.Printf("%s%s/res/%s",home,dir+1,relativePath);
         else
           buffer.Printf("%s/res/%s",dir,relativePath);
-        FILE * f = fopen(buffer.GetZString(),"r");
-        if (f) {
-          fclose(f);
+        const char * errmsg = ReadablePath(buffer.GetZString());
+        if (!errmsg) {
+          LOG.Debug("Found resource file '%s'", buffer.GetZString());
           result.Printf("%s",buffer.GetZString());
           return true;
+        } else {
+          LOG.Debug("Resource file candidate '%s' not readable: %s", buffer.GetZString(), errmsg);
         }
       }
       return false;

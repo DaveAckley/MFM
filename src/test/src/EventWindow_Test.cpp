@@ -35,7 +35,9 @@ namespace MFM {
 
     tile.PlaceAtom(TestAtom(WALL_TYPE,0,0,0), center);
 
-    TestEventWindow ew(tile);
+    TestEventWindow & ew = tile.GetEventWindow();
+
+    ew.SetEventWindowsExecuted(1000000); // make event 0 look very old to avoid recency reject
 
     bool success = ew.TryEventAt(center);
     assert(success);
@@ -80,7 +82,8 @@ namespace MFM {
     assert(erased1->GetType() == EMPTY_TYPE);
     assert(erased2->GetType() == EMPTY_TYPE);
 
-    TestEventWindow ew(tile);
+    TestEventWindow & ew = tile.GetEventWindow();
+    ew.SetEventWindowsExecuted(1000000); // make event 0 look very old to avoid recency reject
 
     bool res = ew.TryEventAt(center);
     assert(res);

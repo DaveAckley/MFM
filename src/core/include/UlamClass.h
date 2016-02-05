@@ -33,7 +33,6 @@
 #include "itype.h"
 #include "Element.h"
 #include "UlamContext.h"
-#include "UlamClassRegistry.h"
 
 #ifndef Ud_AUTOREFBASE
 #define Ud_AUTOREFBASE
@@ -70,6 +69,8 @@ namespace MFM{
 
 namespace MFM
 {
+
+  template <class EC> struct UlamClassRegistry; // FORWARD
 
   struct UlamClassDataMemberInfo; //forward
 
