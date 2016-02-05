@@ -446,7 +446,9 @@ namespace MFM {
             bs = va_arg(ap,ByteSink*);
           if (!bs) bs = &DevNullByteSink;
           s32 res = ScanSetFormat(*bs, format); // Advances format to ']' or FAILs
-          if (res <= 0)
+          if (res < 0)
+            return -matches;
+          if (res == 0 && fieldWidth != 0) // Special case: Allow %0[set] to match nothing
             return -matches;
           ++matches;
         }
