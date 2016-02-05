@@ -35,7 +35,7 @@ namespace MFM
   template <class EC> class UlamContext; // FORWARD
 
   template <class EC>
-  struct BitsRef
+  struct BitRef
   {
 
     typedef typename EC::ATOM_CONFIG AC;
@@ -53,7 +53,7 @@ namespace MFM
     u8 shift2;  // distance to left shift right-justified unit2 bits, or 0 if there is no unit2
     u8 pos, len;
 
-    BitsRef(u32 p, u32 l) ;
+    BitRef(u32 p, u32 l) ;
 
     u32 Read(const T & stg) const ;
 
@@ -79,10 +79,11 @@ namespace MFM {
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
+    enum { POS_ORIGIN = T::ATOM_FIRST_STATE_BIT };
 
     const UlamClass<EC> * m_effSelf;
     T & m_stg;
-    BitsRef<EC> m_ref;
+    BitRef<EC> m_ref;
 
   public:
 
@@ -107,11 +108,27 @@ namespace MFM {
 
     void WriteLong(u64 val) { m_ref.WriteLong(m_stg, val); }
 
-    u32 GetPos() const { return m_ref.GetPos(); }
+    u32 GetPos() const { return m_ref.GetPos() - POS_ORIGIN; }
  
     u32 GetLen() const { return m_ref.GetLen(); }
 
+    u32 GetType() const { return m_stg.GetType(); }
+
+    const UlamClass<EC> * GetEffectiveSelf() const { return m_effSelf; }
+
+    T & GetStorage() { return m_stg; }
+
+    const T & GetStorage() const { return m_stg; }
+
   };
+
+#if 0
+  template <class EC, u32 OFFSET, u32 LEN>
+  class UlamRefFixed : public UlamRef
+  {
+    UlamRefFixed(T& stg, UlamClass<EC> * effself) : UlamRef(OFFSET, LEN, 
+  }
+#endif
 
 } // MFM
 

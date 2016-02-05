@@ -5,7 +5,7 @@
 namespace MFM {
 
   template <class EC>
-  BitsRef<EC>::BitsRef(u32 p, u32 l) {
+  BitRef<EC>::BitRef(u32 p, u32 l) {
     const u32 BITS_PER_UNIT = BitVector<1>::BITS_PER_UNIT;
     MFM_API_ASSERT_ARG(p + l <= BITS_PER_ATOM);
     const u32 startIdx = p;
@@ -44,7 +44,7 @@ namespace MFM {
   }
 
   template <class EC>
-  u32 BitsRef<EC>::Read(const T & stg) const 
+  u32 BitRef<EC>::Read(const T & stg) const 
   { 
     const BV & bv = stg.GetBits();
     u32 val = (bv.m_bits[idx1] & mask1) >> shift1;
@@ -54,7 +54,7 @@ namespace MFM {
   }
 
   template <class EC>
-  void BitsRef<EC>::Write(T & stg, u32 val) const 
+  void BitRef<EC>::Write(T & stg, u32 val) const 
   { 
     BV & bv = stg.GetBits();
     bv.m_bits[idx1] =
@@ -65,7 +65,7 @@ namespace MFM {
   }
 
   template <class EC>
-  u64 BitsRef<EC>::ReadLong(const T & stg) const 
+  u64 BitRef<EC>::ReadLong(const T & stg) const 
   { 
     const BV & bv = stg.GetBits();
     u64 val = (bv.m_bits[idx1] & mask1) >> shift1;
@@ -79,7 +79,7 @@ namespace MFM {
   }
 
   template <class EC>
-  void BitsRef<EC>::WriteLong(T & stg, u64 val) const 
+  void BitRef<EC>::WriteLong(T & stg, u64 val) const 
   { 
     BV & bv = stg.GetBits();
     bv.m_bits[idx1] =
@@ -99,16 +99,16 @@ namespace MFM {
   UlamRef<EC>::UlamRef(u32 pos, u32 len, T& stg, UlamClass<EC> * effself) 
     : m_effSelf(effself) 
     , m_stg(stg)
-    , m_ref(pos, len)
+    , m_ref(pos + POS_ORIGIN, len)
   { 
-    MFM_API_ASSERT_ARG(pos + len <= T::BITS);
+    MFM_API_ASSERT_ARG(pos + POS_ORIGIN + len <= T::BITS);
   }
 
   template <class EC>
   UlamRef<EC>::UlamRef(UlamRef & existing, u32 pos, u32 len, UlamClass<EC> * effself) 
     : m_effSelf(effself)
     , m_stg(existing.m_stg)
-    , m_ref(pos + existing.GetPos(), len)
+    , m_ref(pos + existing.GetPos() + POS_ORIGIN, len)
   {
     MFM_API_ASSERT_ARG(pos + len <= existing.GetLen());
   }

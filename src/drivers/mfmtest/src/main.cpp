@@ -17,6 +17,7 @@ int main(int argc, char** argv)
     MFM::LOG.SetLevel(MFM::LOG.ALL);
   }
 
+  TEST(BitRef_Test);
   TEST(UlamRef_Test);
   TEST(UlamElement_Test);
 

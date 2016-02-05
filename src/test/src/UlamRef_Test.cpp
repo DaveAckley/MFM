@@ -8,9 +8,16 @@ namespace MFM {
 
   const u32 vals[3] =
     {
-      0x87654321, // 0..31
-      0x44332211, // 32..63
-      0xfedbca09  // 64..95
+      0x87654321 >> 25, // 0..31
+      (0x87654321 << 7) | (0x44332211 >> 25), // 32..63
+      (0x44332211 << 7) | (0xfedbca09 >> 25)  // 64..95
+    };
+
+  const u32 svals[3] =
+    {
+      0x87654321, // 25..56
+      0x44332211, // 57..88
+      0xfedbca09 >> 25  // 89..95
     };
 
   TestAtom UlamRef_Test::setup()
@@ -31,6 +38,7 @@ namespace MFM {
     Test_UlamRefReadLong();
     Test_UlamRefWrite();
     Test_UlamRefWriteLong();
+    Test_UlamRefEffSelf();
   }
 
   void UlamRef_Test::Test_UlamRefRead()
@@ -38,12 +46,13 @@ namespace MFM {
     {
       TestAtom t = setup();
       for (u32 i = 0; i < 96/32; ++i) {
-        TestUlamRef ur(i*32, 32, t, 0);
+        u32 len = i==2 ? 7 : 32;
+        TestUlamRef ur(i*32, len, t, 0);
 
         assert(ur.GetPos() == i*32);
-        assert(ur.GetLen() == 32);
+        assert(ur.GetLen() == len);
 
-        assert(ur.Read() == vals[i]);
+        assert(ur.Read() == svals[i]);
       }
     }
 
@@ -58,8 +67,8 @@ namespace MFM {
         assert(ur.Read() == 0x76543214);
       }
       {
-        TestUlamRef ur(32+16, 32, t, 0);
-        assert(ur.Read() == 0x2211fedb);
+        TestUlamRef ur(32+16, 20, t, 0);
+        assert(ur.Read() == 0x2211f);
       }
       {
         TestUlamRef ur(28, 4, t, 0);
@@ -77,12 +86,13 @@ namespace MFM {
     {
       TestAtom t = setup();
       for (u32 i = 0; i < 96/32; ++i) {
-        TestUlamRef ur(i*32, 32, t, 0);
+        u32 len = i==2 ? 7 : 32;
+        TestUlamRef ur(i*32, len, t, 0);
 
         assert(ur.GetPos() == i*32);
-        assert(ur.GetLen() == 32);
+        assert(ur.GetLen() == len);
 
-        assert(ur.ReadLong() == vals[i]);
+        assert(ur.ReadLong() == svals[i]);
       }
     }
 
@@ -109,20 +119,16 @@ namespace MFM {
         assert(ur.ReadLong() == HexU64(0x4,0x4332211F));
       }
       {
-        TestUlamRef ur(16, 64, t, 0);
-        assert(ur.ReadLong() == HexU64(0x43214433,0x2211fedb));
+        TestUlamRef ur(16, 52, t, 0);
+        assert(ur.ReadLong() == HexU64(0x43214,0x4332211f));
       }
       {
         TestUlamRef ur(31, 2, t, 0);
         assert(ur.ReadLong() == 0x2);
       }
       {
-        TestUlamRef ur(32, 64, t, 0);
-        assert(ur.ReadLong() == HexU64(0x44332211,0xfedbca09));
-      }
-      {
-        TestUlamRef ur(32, 60, t, 0);
-        assert(ur.ReadLong() == HexU64(0x4433221,0x1fedbca0));
+        TestUlamRef ur(32, 36, t, 0);
+        assert(ur.ReadLong() == HexU64(0x4,0x4332211f));
       }
     }
   }
@@ -132,19 +138,20 @@ namespace MFM {
     {
       TestAtom t = setup();
       for (u32 i = 0; i < 96/32; ++i) {
-        TestUlamRef ur(i*32, 32, t, 0);
+        u32 len = i==2 ? 7 : 32;
+        TestUlamRef ur(i*32, len, t, 0);
 
         assert(ur.GetPos() == i*32);
-        assert(ur.GetLen() == 32);
+        assert(ur.GetLen() == len);
 
-        assert(ur.Read() == vals[i]);
+        assert(ur.Read() == svals[i]);
         ur.Write(i);
         assert(ur.Read() == i);
       }
     }
     {
       TestAtom t = setup();
-      for (u32 i = 0; i < 96/8; ++i) {
+      for (u32 i = 0; i < 71/8; ++i) {
         TestUlamRef ur(i*8, 8, t, 0);
 
         assert(ur.GetPos() == i*8);
@@ -152,7 +159,7 @@ namespace MFM {
 
         ur.Write(27*i); // will start overflowing
       }
-      for (u32 i = 0; i < 96/8; ++i) {
+      for (u32 i = 0; i < 71/8; ++i) {
         TestUlamRef ur(i*8, 8, t, 0);
 
         assert(ur.GetPos() == i*8);
@@ -184,8 +191,8 @@ namespace MFM {
         TestUlamRef ur4(32, 32, t, 0);
         assert(ur4.Read() == 0xce332211);
 
-        TestUlamRef ur5(64, 32, t, 0);
-        assert(ur5.Read() == 0xfedbca09);
+        TestUlamRef ur5(64, 7, t, 0);
+        assert(ur5.Read() == 0xfe>>1);
       }
     }
   }
@@ -195,35 +202,35 @@ namespace MFM {
     {
       TestAtom t = setup();
       for (u32 i = 0; i < 96/32; ++i) {
-        TestUlamRef ur(i*32, 32, t, 0);
+        u32 len = i==2 ? 7 : 32;
+        TestUlamRef ur(i*32, len, t, 0);
 
         assert(ur.GetPos() == i*32);
-        assert(ur.GetLen() == 32);
+        assert(ur.GetLen() == len);
 
-        assert(ur.Read() == vals[i]);
+        assert(ur.Read() == svals[i]);
         ur.WriteLong(i);
         assert(ur.Read() == i);
       }
     }
     {
       TestAtom t = setup();
-      TestUlamRef ur(28, 60, t, 0);
+      TestUlamRef ur(8, 60, t, 0);
 
       ur.WriteLong(HexU64(0xdeadbee,0xfd00df00));
       assert(ur.ReadLong() == HexU64(0xdeadbee,0xfd00df00));
 
-      TestUlamRef ur0(0, 32, t, 0);
-      TestUlamRef ur1(32, 32, t, 0);
-      TestUlamRef ur2(64, 32, t, 0);
+      TestUlamRef ur0(0, 8, t, 0);
+      TestUlamRef ur1(8, 36, t, 0);
+      TestUlamRef ur2(44, 60-36, t, 0);
 
-      assert(ur0.Read() == 0x8765432d);
-      assert(ur0.ReadLong() == HexU64(0x0,0x8765432d));
+      assert(ur0.Read() == 0x87);
+      assert(ur0.ReadLong() == HexU64(0x0,0x87));
 
-      assert(ur1.Read() == 0xeadbeefd);
-      assert(ur1.ReadLong() == HexU64(0x0,0xeadbeefd));
+      assert(ur1.ReadLong() == HexU64(0xd,0xeadbeefd));
 
-      assert(ur2.Read() == 0x00df0009);
-      assert(ur2.ReadLong() == HexU64(0x0,0x00df0009));
+      assert(ur2.Read() == 0x00df00);
+      assert(ur2.ReadLong() == HexU64(0x0,0x00df00));
     }
 
     {
@@ -235,42 +242,42 @@ namespace MFM {
 
       TestUlamRef ur0(0, 32, t, 0);
       TestUlamRef ur1(32, 32, t, 0);
-      TestUlamRef ur2(64, 32, t, 0);
+      TestUlamRef ur2(64, 4, t, 0);
 
       assert(ur0.Read() == 0x87654321);
       assert(ur1.Read() == 0xffffffff);
-      assert(ur2.Read() == 0xfedbca09);
+      assert(ur2.Read() == 0xf);
 
       ur.WriteLong(0L);
 
       assert(ur0.Read() == 0x87654320);
       assert(ur1.Read() == 0x0);
-      assert(ur2.Read() == 0x7edbca09);
+      assert(ur2.Read() == 0x7);
     }
     {
       TestAtom t = setup();
 
       TestUlamRef ur01(0, 64, t, 0);
-      TestUlamRef ur12(32, 64, t, 0);
+      TestUlamRef ur12(32, 68-32, t, 0);
 
       TestUlamRef ur0(0, 32, t, 0);
       TestUlamRef ur1(32, 32, t, 0);
-      TestUlamRef ur2(64, 32, t, 0);
+      TestUlamRef ur2(64, 71-64, t, 0);
 
       assert(ur0.Read() == 0x87654321);
       assert(ur1.Read() == 0x44332211);
-      assert(ur2.Read() == 0xfedbca09);
+      assert(ur2.Read() == 0x7f);
 
       ur01.WriteLong(HexU64(0x01234567,0x89abcdef));
 
       assert(ur0.Read() == 0x01234567);
       assert(ur1.Read() == 0x89abcdef);
-      assert(ur2.Read() == 0xfedbca09);
+      assert(ur2.Read() == 0x7f);
 
       ur12.WriteLong(HexU64(0x246800ee,0xee00aaaa));
       assert(ur0.Read() == 0x01234567);
-      assert(ur1.Read() == 0x246800ee);
-      assert(ur2.Read() == 0xee00aaaa);
+      assert(ur1.Read() == 0xeee00aaa);
+      assert(ur2.Read() == 0x57);
 
     }
   }
@@ -294,18 +301,28 @@ namespace MFM {
 
     {
       TestAtom t = setup();
-      TestUlamRef ur(0, 96, t, 0);
+      TestUlamRef ur(0, 71, t, 0);
       assert(ur.GetPos() == 0);
-      assert(ur.GetLen() == 96);
+      assert(ur.GetLen() == 71);
 
-      TestUlamRef ur2(ur, 80, 16, 0);
-      assert(ur2.GetPos() == 80);
+      TestUlamRef ur2(ur, 55, 16, 0);
+      assert(ur2.GetPos() == 55);
       assert(ur2.GetLen() == 16);
 
       TestUlamRef ur3(ur2, 10, 6, 0);
-      assert(ur3.GetPos() == 90);
+      assert(ur3.GetPos() == 65);
       assert(ur3.GetLen() == 6);
     }
   }
+
+  void UlamRef_Test::Test_UlamRefEffSelf()
+  {
+    {
+      TestAtom t = setup();
+      TestUlamRef ur(0, 71, t, 0);
+      assert(ur.GetEffectiveSelf() == 0);
+    }
+  }
+
 
 } /* namespace MFM */
