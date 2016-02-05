@@ -6,6 +6,7 @@
 #include "EventWindow.h"
 #include "Base.h"
 #include "UlamTypeInfo.h"
+#include "UlamClassRegistry.h"
 
 #include "CastOps.h" /* For _Int32ToInt32, etc */
 

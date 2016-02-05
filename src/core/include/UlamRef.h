@@ -45,13 +45,17 @@ namespace MFM
 
     u32 mask1;  // mask for unit1 bits left-shifted by shift1
     u32 mask2;  // mask for unit2 bits (if any) left-shifted by shift2
-    u8 idx1;    // index of unit1
+    u8 idx;     // index of unit1
     u8 len1;    // number of bits for unit1
     u8 shift1;  // distance to left shift right-justified unit1 bits to reach dest
-    u8 idx2;    // index of unit2, or 0 if there is no unit2
     u8 len2;    // number of bits for unit2, or 0 if there is no unit2
     u8 shift2;  // distance to left shift right-justified unit2 bits, or 0 if there is no unit2
-    u8 pos, len;
+    u8 pos;     // absolute starting bit index
+    u8 len;     // total bit length.  Note that if len1 + len2 < len
+                // (which is only relevant for ReadLong/WriteLong),
+                // then three units, not just two, are involved.  In
+                // that case, all of unit[idx+1] is used, and len2,
+                // shift2, and mask2 apply to unit[idx+2]
 
     BitRef(u32 p, u32 l) ;
 
@@ -90,7 +94,7 @@ namespace MFM {
     /**
        Construct an UlamRef 'from scratch'
      */
-    UlamRef(u32 pos, u32 len, T& stg, UlamClass<EC> * effself) ;
+    UlamRef(u32 pos, u32 len, T& stg, const UlamClass<EC> * effself) ;
 
     /**
        Construct an UlamRef that's relative to an existing UlamRef.
@@ -98,7 +102,7 @@ namespace MFM {
        pos, and this pos + len must fit within the len supplied to the
        existing UlamRef.
      */
-    UlamRef(UlamRef & existing, u32 pos, u32 len, UlamClass<EC> * effself) ;
+    UlamRef(UlamRef & existing, u32 pos, u32 len, const UlamClass<EC> * effself) ;
 
     u32 Read() const { return m_ref.Read(m_stg); }
 
@@ -122,13 +126,32 @@ namespace MFM {
 
   };
 
-#if 0
   template <class EC, u32 OFFSET, u32 LEN>
-  class UlamRefFixed : public UlamRef
+  struct UlamRefFixed : public UlamRef<EC>
   {
-    UlamRefFixed(T& stg, UlamClass<EC> * effself) : UlamRef(OFFSET, LEN, 
-  }
-#endif
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+
+    UlamRefFixed(T& stg, const UlamClass<EC> * effself) 
+      : UlamRef<EC>(OFFSET, LEN,  stg, effself)
+    { }
+    UlamRefFixed(UlamRef<EC>& parent, const UlamClass<EC> * effself) 
+      : UlamRef<EC>(parent, OFFSET, LEN, effself)
+    { }
+  };
+
+  template <class EC>
+  struct UlamRefAtom : public UlamRefFixed<EC, 0, EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT>
+  { 
+    typedef UlamRefFixed<EC, 0, EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT> Super;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+
+    UlamRefAtom(T& stg, const UlamClass<EC> * effself) 
+      : Super(stg, effself)
+    { }
+  };
+
 
 } // MFM
 

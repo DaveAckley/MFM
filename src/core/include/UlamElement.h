@@ -30,6 +30,7 @@
 #define ULAMELEMENT_H
 
 #include "UlamClass.h"
+#include "UlamRef.h"
 
 // Unsigned(32)
 #ifndef Ud_Ui_Ut_r102321u
@@ -203,7 +204,7 @@ namespace MFM {
        Ulam elements that define 'Void behave()' will override this
        method, and it will be called on events!
      */
-    virtual void Uf_6behave(const UlamContext<EC> & uc, T& self) const
+    virtual void Uf_6behave(const UlamContext<EC> & uc, UlamRef<EC>& self) const
     {
       // Empty by default
     }

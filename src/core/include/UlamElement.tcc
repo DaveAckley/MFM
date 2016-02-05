@@ -4,6 +4,7 @@
 #include "Random.h"
 #include "EventWindow.h"
 #include "Base.h"
+#include "UlamRef.h"
 #include "UlamClass.h"
 #include "UlamClassRegistry.h"
 
@@ -15,13 +16,12 @@ namespace MFM {
     Tile<EC> & tile = window.GetTile();
     UlamContext<EC> uc;
     uc.SetTile(tile);
-    UlamContext<EC> ucs(uc,this);
 
-    u32 sym = m_info ? m_info->GetSymmetry(ucs) : PSYM_DEG000L;
+    u32 sym = m_info ? m_info->GetSymmetry(uc) : PSYM_DEG000L;
     window.SetSymmetry((PointSymmetry) sym);
 
-    T & me = window.GetCenterAtomSym();
-    Uf_6behave(ucs, me);
+    UlamRefAtom<EC> ur(window.GetCenterAtomSym(), this);
+    Uf_6behave(uc, ur);
   }
 
   template <class EC>
