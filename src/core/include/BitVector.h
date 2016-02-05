@@ -36,6 +36,8 @@
 
 namespace MFM {
 
+  template <class EC> class BitsRef; // FORWARD
+
   /**
    * A bit vector with reasonably fast operations
    *
@@ -70,6 +72,7 @@ namespace MFM {
     static const u32 ARRAY_LENGTH = (BITS + BITS_PER_UNIT - 1) / BITS_PER_UNIT;
 
   private:
+    template <typename EC> friend class BitsRef;
     BitUnitType m_bits[ARRAY_LENGTH];
 
     /**
