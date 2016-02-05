@@ -50,12 +50,11 @@ namespace MFM
 
     mutable Tile<EC> * m_tile;
     void AssertTile() const;
-    const UlamClass<EC> * m_effectiveSelf;
 
   public:
 
     UlamContext();
-    UlamContext(const UlamContext<EC>& cxref , const UlamClass<EC> * ucp);
+    //    UlamContext(const UlamContext<EC>& cxref , const UlamClass<EC> * ucp);
     UlamContext(const UlamContext<EC>& cxref);
 
     void SetTile(Tile<EC> & t) ;
@@ -73,10 +72,6 @@ namespace MFM
     Base<AC> & GetBase() ;
 
     const Site<AC> & GetSite() const ;
-
-    const UlamClass<EC> * GetEffectiveSelf() const;
-
-    UlamClass<EC> * GetEffectiveSelf();
 
     const UlamClass<EC> * LookupElementTypeFromContext(u32 etype) const ;
   };

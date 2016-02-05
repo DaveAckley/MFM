@@ -13,13 +13,10 @@ namespace MFM {
   template <class EC> class UlamClass; //forward
 
   template <class EC>
-  UlamContext<EC>::UlamContext() : m_tile(0), m_effectiveSelf(NULL) { }
+  UlamContext<EC>::UlamContext() : m_tile(0) { }
 
   template <class EC>
-  UlamContext<EC>::UlamContext(const UlamContext<EC>& cxref , const UlamClass<EC> * ucp) : m_tile(cxref.m_tile), m_effectiveSelf(ucp){ }
-
-  template <class EC>
-  UlamContext<EC>::UlamContext(const UlamContext<EC>& cxref) : m_tile(cxref.m_tile), m_effectiveSelf(cxref.m_effectiveSelf){ }
+  UlamContext<EC>::UlamContext(const UlamContext<EC>& cxref) : m_tile(cxref.m_tile) { }
 
   template <class EC>
   void UlamContext<EC>::SetTile(Tile<EC> & t)
@@ -79,18 +76,6 @@ namespace MFM {
   const Site<typename EC::ATOM_CONFIG> & UlamContext<EC>::GetSite() const
   {
     return GetEventWindow().GetSite();
-  }
-
-  template <class EC>
-  const UlamClass<EC> * UlamContext<EC>::GetEffectiveSelf() const
-  {
-    return m_effectiveSelf;
-  }
-
-  template <class EC>
-  UlamClass<EC> * UlamContext<EC>::GetEffectiveSelf()
-  {
-    return m_effectiveSelf;
   }
 
   template <class EC>
