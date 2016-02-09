@@ -204,7 +204,7 @@ namespace MFM {
        Ulam elements that define 'Void behave()' will override this
        method, and it will be called on events!
      */
-    virtual void Uf_6behave(const UlamContext<EC> & uc, UlamRef<EC>& self) const
+    virtual void Uf_6behave(const UlamContext<EC> & uc, const UlamRef<EC>& ur) const
     {
       // Empty by default
     }
@@ -227,7 +227,7 @@ namespace MFM {
        element color for all atoms and selectors.
      */
     virtual Ui_Ut_14181u<EC> Uf_8getColor(const UlamContext<EC>& uc,
-					  T& Uv_4self,
+					  const UlamRef<EC>& ur,
 					  Ui_Ut_102321u<EC> Uv_8selector) const
     {
       return Ui_Ut_14181u<EC>(this->GetElementColor());
