@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  UlamRef.h A base for ulam references 
+  UlamRef.h A base for ulam references
   Copyright (C) 2016 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -68,7 +68,7 @@ namespace MFM
     void WriteLong(T & stg, u64 val) const;
 
     u32 GetPos() const { return pos; }
- 
+
     u32 GetLen() const { return len; }
   };
 } //MFM
@@ -102,7 +102,7 @@ namespace MFM {
        pos, and this pos + len must fit within the len supplied to the
        existing UlamRef.
      */
-    UlamRef(UlamRef & existing, u32 pos, u32 len, const UlamClass<EC> * effself) ;
+    UlamRef(const UlamRef & existing, u32 pos, u32 len, const UlamClass<EC> * effself) ;
 
     u32 Read() const { return m_ref.Read(m_stg); }
 
@@ -113,7 +113,7 @@ namespace MFM {
     void WriteLong(u64 val) { m_ref.WriteLong(m_stg, val); }
 
     u32 GetPos() const { return m_ref.GetPos() - POS_ORIGIN; }
- 
+
     u32 GetLen() const { return m_ref.GetLen(); }
 
     u32 GetType() const { return m_stg.GetType(); }
@@ -132,24 +132,29 @@ namespace MFM {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
-    UlamRefFixed(T& stg, const UlamClass<EC> * effself) 
+    UlamRefFixed(T& stg, const UlamClass<EC> * effself)
       : UlamRef<EC>(OFFSET, LEN,  stg, effself)
     { }
-    UlamRefFixed(UlamRef<EC>& parent, const UlamClass<EC> * effself) 
+    UlamRefFixed(const UlamRef<EC>& parent, const UlamClass<EC> * effself)
       : UlamRef<EC>(parent, OFFSET, LEN, effself)
     { }
   };
 
   template <class EC>
   struct UlamRefAtom : public UlamRefFixed<EC, 0, EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT>
-  { 
+  {
     typedef UlamRefFixed<EC, 0, EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT> Super;
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
-    UlamRefAtom(T& stg, const UlamClass<EC> * effself) 
+    UlamRefAtom(T& stg, const UlamClass<EC> * effself)
       : Super(stg, effself)
     { }
+
+    UlamRefAtom(const UlamRefAtom<EC>& existing, const UlamClass<EC> * effself)
+      : Super(existing, effself)
+    { }
+
   };
 
 
