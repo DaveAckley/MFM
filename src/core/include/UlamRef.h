@@ -141,9 +141,9 @@ namespace MFM {
   };
 
   template <class EC>
-  struct UlamRefAtom : public UlamRefFixed<EC, 0, EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT>
+  struct UlamRefAtom : public UlamRefFixed<EC, 0, EC::ATOM_CONFIG::ATOM_TYPE::BITS_PER_ATOM - EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT>
   {
-    typedef UlamRefFixed<EC, 0, EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT> Super;
+    typedef UlamRefFixed<EC, 0, EC::ATOM_CONFIG::ATOM_TYPE::BITS_PER_ATOM - EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT> Super;
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
