@@ -135,17 +135,20 @@ namespace MFM {
     UlamRefFixed(T& stg, const UlamClass<EC> * effself)
       : UlamRef<EC>(OFFSET, LEN,  stg, effself)
     { }
+
     UlamRefFixed(const UlamRef<EC>& parent, const UlamClass<EC> * effself)
       : UlamRef<EC>(parent, OFFSET, LEN, effself)
     { }
   };
 
   template <class EC>
-  struct UlamRefAtom : public UlamRefFixed<EC, 0, EC::ATOM_CONFIG::ATOM_TYPE::BITS_PER_ATOM - EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT>
+  struct UlamRefAtom : public UlamRefFixed<EC, 0, EC::ATOM_CONFIG::BITS_PER_ATOM - EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT>
   {
-    typedef UlamRefFixed<EC, 0, EC::ATOM_CONFIG::ATOM_TYPE::BITS_PER_ATOM - EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT> Super;
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
+    enum { BPA = AC::BITS_PER_ATOM };
+
+    typedef UlamRefFixed<EC, 0, BPA - T::ATOM_FIRST_STATE_BIT> Super;
 
     UlamRefAtom(T& stg, const UlamClass<EC> * effself)
       : Super(stg, effself)
