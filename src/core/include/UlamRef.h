@@ -158,6 +158,8 @@ namespace MFM {
       : Super(existing, effself)
     { }
 
+    const T& ReadAtom() const { return Super::GetStorage(); }
+    void WriteAtom(const T& tval) { Super::GetStorage() = tval; }
   };
 
 
