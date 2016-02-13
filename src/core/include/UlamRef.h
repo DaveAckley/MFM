@@ -120,9 +120,11 @@ namespace MFM {
 
     const UlamClass<EC> * GetEffectiveSelf() const { return m_effSelf; }
 
-    T & GetStorage() { return m_stg; }
+    T ReadAtom() const { return m_stg; } //a copy
 
-    const T & GetStorage() const { return m_stg; }
+    void WriteAtom(const T& tval) { m_stg = tval; }
+
+    T & GetStorage() { return m_stg; }
 
   };
 
@@ -158,8 +160,6 @@ namespace MFM {
       : Super(existing, effself)
     { }
 
-    const T& ReadAtom() const { return Super::GetStorage(); }
-    void WriteAtom(const T& tval) { Super::GetStorage() = tval; }
   };
 
 
