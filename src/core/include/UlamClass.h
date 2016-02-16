@@ -183,7 +183,7 @@ namespace MFM
       return (VfuncPtr) NULL;
     }
 
-    static VfuncPtr GetVTableEntry(const UlamContext<EC>& uc, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom, u32 atype, u32 idx);
+    static VfuncPtr GetVTableEntry(const UlamContext<EC>& uc, u32 atype, u32 idx);
 
     static void PureVirtualFunctionCalled()
     {

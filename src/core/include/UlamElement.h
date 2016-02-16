@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamElement.h A concrete base class for ULAM elements
-  Copyright (C) 2014-2015 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015 Ackleyshack, LLC.
+  Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2016 Ackleyshack, LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file UlamElement.h A concrete base class for ULAM elements
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2014-2015 All rights reserved.
+  \date (C) 2014-2016 All rights reserved.
   \lgpl
  */
 #ifndef ULAMELEMENT_H
@@ -47,11 +47,8 @@ namespace MFM{
     typedef UlamRefFixed<EC, 39, 32u > Up_Us;
     T m_stg;  //storage here!
 
-    const u32 read() const { return Up_Us::Read(); }
-    void write(const u32 v) { Up_Us::Write(v); }
-
     Ui_Ut_102321u() : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { }
-    Ui_Ut_102321u(const u32 d) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { write(d); }
+    Ui_Ut_102321u(const u32 d) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { Up_Us::Write(d); }
     Ui_Ut_102321u(const Ui_Ut_102321u& other) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(other.m_stg) { }
     ~Ui_Ut_102321u() {}
   };
@@ -73,17 +70,12 @@ namespace MFM{
     typedef UlamRefFixed<EC, 39, 32u > Up_Us;
     T m_stg;  //storage here!
 
-    const u32 read() const { return Up_Us::Read(); } //reads entire array
-    const u32 readArrayItem(const u32 index, const u32 itemlen) const { return UlamRef<EC>(*this, index * itemlen, itemlen, NULL).Read(); }
-
-    void write(const u32 v) { Up_Us::Write(v); } //writes entire array
-    void writeArrayItem(const u32 v, const u32 index, const u32 itemlen) { UlamRef<EC>(*this, index * itemlen, itemlen, NULL).Write(v); }
-
     Ui_Ut_14181u() : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { }
-    Ui_Ut_14181u(const u32 d) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { write(d); }
+    Ui_Ut_14181u(const u32 d) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { Up_Us::Write(d); }
     Ui_Ut_14181u(const Ui_Ut_14181u& other) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(other.m_stg) { }
     ~Ui_Ut_14181u() {}
-
+    const u32 readArrayItem(const u32 index, const u32 itemlen) const { return UlamRef<EC>(*this, index * itemlen, itemlen, NULL).Read(); }
+    void writeArrayItem(const u32 v, const u32 index, const u32 itemlen) { UlamRef<EC>(*this, index * itemlen, itemlen, NULL).Write(v); }
   };
 } //MFM
 #endif /*Ud_Ui_Ut_14181u */
@@ -232,7 +224,7 @@ namespace MFM {
       T temp(atom);
       Ui_Ut_102321u<EC> sel(selector);
       Ui_Ut_14181u<EC> dynColor = Uf_8getColor(uc, UlamRefAtom<EC>(temp, this), sel);
-      return dynColor.read();
+      return dynColor.Read();
     }
 
     virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const
