@@ -33,93 +33,60 @@
 #include "UlamRef.h"
 
 // Unsigned(32)
-#ifndef Ud_Ui_Ut_r102321u
-#define Ud_Ui_Ut_r102321u
-namespace MFM{
-  template<class EC, u32 POS>
-  struct Ui_Ut_r102321u : public AutoRefBase<EC>
-  {
-    typedef typename EC::ATOM_CONFIG AC;
-    typedef typename AC::ATOM_TYPE T;
-    enum { BPA = AC::BITS_PER_ATOM };
-
-    Ui_Ut_r102321u(T& targ, u32 idx) : AutoRefBase<EC>(targ, idx) { }
-    Ui_Ut_r102321u(AutoRefBase<EC>& arg, u32 idx) : AutoRefBase<EC>(arg, idx) { }
-    const u32 read() const { return AutoRefBase<EC>::read(32u); }
-    void write(const u32 v) { AutoRefBase<EC>::write(v, 32u); }
-  };
-} //MFM
-#endif /*Ud_Ui_Ut_r102321u */
-
 #ifndef Ud_Ui_Ut_102321u
 #define Ud_Ui_Ut_102321u
 namespace MFM{
+
   template<class EC>
-  struct Ui_Ut_102321u : public Ui_Ut_r102321u<EC, 64u>
+  struct Ui_Ut_102321u : public UlamRefFixed<EC, 39u, 32u>
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
 
-    typedef BitField<BitVector<BPA>, VD::U32, 32, 64> BF;
+    typedef UlamRefFixed<EC, 39, 32u > Up_Us;
     T m_stg;  //storage here!
 
-    Ui_Ut_102321u() : Ui_Ut_r102321u<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { }
-    Ui_Ut_102321u(const u32 d) : Ui_Ut_r102321u<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { Ui_Ut_r102321u<EC, 64u>::write(d); }
-    Ui_Ut_102321u(const Ui_Ut_102321u& other) : Ui_Ut_r102321u<EC, 64u>(m_stg, 39u), m_stg(other.m_stg) { }
+    const u32 read() const { return Up_Us::Read(); }
+    void write(const u32 v) { Up_Us::Write(v); }
+
+    Ui_Ut_102321u() : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { }
+    Ui_Ut_102321u(const u32 d) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { write(d); }
+    Ui_Ut_102321u(const Ui_Ut_102321u& other) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(other.m_stg) { }
     ~Ui_Ut_102321u() {}
-    const u32 read() const { return BF::Read(AutoRefBase<EC>::getBits()); }
-    void write(const u32 v) { BF::Write(AutoRefBase<EC>::getBits(), v); }
   };
 } //MFM
 #endif /*Ud_Ui_Ut_102321u */
 
-// Unsigned(8) [4] -- for ARGB colors
-#ifndef Ud_Ui_Ut_r14181u
-#define Ud_Ui_Ut_r14181u
-namespace MFM{
-  template<class EC, u32 POS>
-  struct Ui_Ut_r14181u : public AutoRefBase<EC>
-  {
-    typedef typename EC::ATOM_CONFIG AC;
-    typedef typename AC::ATOM_TYPE T;
-    enum { BPA = AC::BITS_PER_ATOM };
-
-    Ui_Ut_r14181u(T& targ, u32 idx) : AutoRefBase<EC>(targ, idx) { }
-    Ui_Ut_r14181u(AutoRefBase<EC>& arg, u32 idx) : AutoRefBase<EC>(arg, idx) { }
-    const u32 read() const { return AutoRefBase<EC>::read(32u); } //reads entire array
-    const u32 readArrayItem(const u32 index, const u32 itemlen) const { return AutoRefBase<EC>::readArrayItem(index, itemlen); }
-    void write(const u32 v) { AutoRefBase<EC>::write(v, 32u); } //writes entire array
-    void writeArrayItem(const u32 v, const u32 index, const u32 itemlen) { AutoRefBase<EC>::writeArrayItem(v, index, itemlen); }
-  };
-} //MFM
-#endif /*Ud_Ui_Ut_r14181u */
-
+//Unsigned(8) [4]
 #ifndef Ud_Ui_Ut_14181u
 #define Ud_Ui_Ut_14181u
 namespace MFM{
 
   template<class EC>
-  struct Ui_Ut_14181u : public Ui_Ut_r14181u<EC, 64u>
+  struct Ui_Ut_14181u : public UlamRefFixed<EC, 39u, 32u>
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
 
-    typedef BitField<BitVector<BPA>, VD::BITS, 32, 64> BF;
+    typedef UlamRefFixed<EC, 39, 32u > Up_Us;
     T m_stg;  //storage here!
 
-    Ui_Ut_14181u() : Ui_Ut_r14181u<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { }
-    Ui_Ut_14181u(const u32 d) : Ui_Ut_r14181u<EC, 64u>(m_stg, 39u), m_stg(T::ATOM_UNDEFINED_TYPE) { Ui_Ut_r14181u<EC, 64u>::write(d); }
-    Ui_Ut_14181u(const Ui_Ut_14181u& other) : Ui_Ut_r14181u<EC, 64u>(m_stg, 39u), m_stg(other.m_stg) { }
+    const u32 read() const { return Up_Us::Read(); } //reads entire array
+    const u32 readArrayItem(const u32 index, const u32 itemlen) const { return UlamRef<EC>(*this, index * itemlen, itemlen, NULL).Read(); }
+
+    void write(const u32 v) { Up_Us::Write(v); } //writes entire array
+    void writeArrayItem(const u32 v, const u32 index, const u32 itemlen) { UlamRef<EC>(*this, index * itemlen, itemlen, NULL).Write(v); }
+
+    Ui_Ut_14181u() : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { }
+    Ui_Ut_14181u(const u32 d) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { write(d); }
+    Ui_Ut_14181u(const Ui_Ut_14181u& other) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(other.m_stg) { }
     ~Ui_Ut_14181u() {}
-    const u32 read() const { return BF::Read(AutoRefBase<EC>::getBits()); }   //reads entire array
-    const u32 readArrayItem(const u32 index, const u32 itemlen) const { return AutoRefBase<EC>::readArrayItem(index, itemlen); }
-    void write(const u32 v) { BF::Write(AutoRefBase<EC>::getBits(), v); }   //writes entire array
-    void writeArrayItem(const u32 v, const u32 index, const u32 itemlen) { AutoRefBase<EC>::writeArrayItem(v, index, itemlen); }
+
   };
 } //MFM
-#endif
+#endif /*Ud_Ui_Ut_14181u */
 
 namespace MFM
 {
@@ -204,7 +171,7 @@ namespace MFM {
        Ulam elements that define 'Void behave()' will override this
        method, and it will be called on events!
      */
-    virtual void Uf_6behave(const UlamContext<EC> & uc, UlamRef<EC>& self) const
+    virtual void Uf_6behave(const UlamContext<EC> & uc, const UlamRef<EC>& ur) const
     {
       // Empty by default
     }
@@ -227,7 +194,7 @@ namespace MFM {
        element color for all atoms and selectors.
      */
     virtual Ui_Ut_14181u<EC> Uf_8getColor(const UlamContext<EC>& uc,
-					  T& Uv_4self,
+					  const UlamRef<EC>& ur,
 					  Ui_Ut_102321u<EC> Uv_8selector) const
     {
       return Ui_Ut_14181u<EC>(this->GetElementColor());
@@ -264,7 +231,7 @@ namespace MFM {
       const UlamContext<EC> uc;
       T temp(atom);
       Ui_Ut_102321u<EC> sel(selector);
-      Ui_Ut_14181u<EC> dynColor = Uf_8getColor(uc, temp, sel);
+      Ui_Ut_14181u<EC> dynColor = Uf_8getColor(uc, UlamRefAtom<EC>(temp, this), sel);
       return dynColor.read();
     }
 
