@@ -32,7 +32,7 @@ namespace MFM {
 
   typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
   template <class EC>
-  VfuncPtr UlamClass<EC>::GetVTableEntry(const UlamContext<EC>& uc, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom, u32 atype, u32 idx)
+  VfuncPtr UlamClass<EC>::GetVTableEntry(const UlamContext<EC>& uc, u32 atype, u32 idx)
   {
     if( atype == EC::ATOM_CONFIG::ATOM_TYPE::ATOM_UNDEFINED_TYPE )
       FAIL(ILLEGAL_STATE);  // needs 'quark type' vtable support
