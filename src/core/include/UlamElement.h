@@ -47,15 +47,15 @@ namespace MFM{
     typedef UlamRefFixed<EC, 39, 32u > Up_Us;
     T m_stg;  //storage here!
 
-    Ui_Ut_102321u() : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { }
-    Ui_Ut_102321u(const u32 d) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { Up_Us::Write(d); }
-    Ui_Ut_102321u(const Ui_Ut_102321u& other) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(other.m_stg) { }
+    Ui_Ut_102321u() : Up_Us(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { }
+    Ui_Ut_102321u(const u32 d) : Up_Us(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { Up_Us::Write(d); }
+    Ui_Ut_102321u(const Ui_Ut_102321u& other) : Up_Us(m_stg, NULL), m_stg(other.m_stg) { }
     ~Ui_Ut_102321u() {}
   };
 } //MFM
 #endif /*Ud_Ui_Ut_102321u */
 
-//Unsigned(8) [4]
+//Unsigned(8) [4] (e.g. t3531)
 #ifndef Ud_Ui_Ut_14181u
 #define Ud_Ui_Ut_14181u
 namespace MFM{
@@ -70,9 +70,9 @@ namespace MFM{
     typedef UlamRefFixed<EC, 39, 32u > Up_Us;
     T m_stg;  //storage here!
 
-    Ui_Ut_14181u() : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { }
-    Ui_Ut_14181u(const u32 d) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { Up_Us::Write(d); }
-    Ui_Ut_14181u(const Ui_Ut_14181u& other) : UlamRefFixed<EC, 39u, 32u >(m_stg, NULL), m_stg(other.m_stg) { }
+    Ui_Ut_14181u() : Up_Us(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { }
+    Ui_Ut_14181u(const u32 d) : Up_Us(m_stg, NULL), m_stg(T::ATOM_UNDEFINED_TYPE) { Up_Us::Write(d); }
+    Ui_Ut_14181u(const Ui_Ut_14181u& other) : Up_Us(m_stg, NULL), m_stg(other.m_stg) { }
     ~Ui_Ut_14181u() {}
     const u32 readArrayItem(const u32 index, const u32 itemlen) const { return UlamRef<EC>(*this, index * itemlen, itemlen, NULL).Read(); }
     void writeArrayItem(const u32 v, const u32 index, const u32 itemlen) { UlamRef<EC>(*this, index * itemlen, itemlen, NULL).Write(v); }
