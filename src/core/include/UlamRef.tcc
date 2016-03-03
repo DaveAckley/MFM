@@ -35,7 +35,7 @@ namespace MFM {
         len2 -= 32;
       }
       shift2 = BITS_PER_UNIT - len2;
-      mask2 = MakeMaskClip(length - firstUnitLength) << (BITS_PER_UNIT - (length - firstUnitLength));
+      mask2 = MakeMaskClip(len2) << shift2;
     } else {
       shift2 = len2 = 0;
       mask2 = 0;
