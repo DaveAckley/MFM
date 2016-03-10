@@ -71,12 +71,31 @@ namespace MFM
 {
 
   template <class EC> struct UlamClassRegistry; // FORWARD
+  template <class EC> struct UlamQuark; // FORWARD
 
   struct UlamClassDataMemberInfo; //forward
 
   template <class EC>
   struct UlamClass
   {
+    /**
+       Downcast an UlamClass* to an UlamQuark* if possible.  Returns
+       null if this is not an UlamQuark.
+     */
+    virtual UlamQuark<EC>* AsUlamQuark()
+    {
+      return 0;
+    }
+
+    /**
+       Downcast a const UlamClass* to a const UlamQuark* if possible.
+       Returns null if this is not an UlamQuark.
+     */
+    virtual const UlamQuark<EC> * AsUlamQuark() const
+    {
+      return 0;
+    }
+
     /**
        Find the first position of a data member in this element by the
        name of its type, if any exist.

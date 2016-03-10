@@ -501,8 +501,23 @@ namespace MFM
     }
 
     /**
+     * Gets a modifiable reference to the Atom at the center of this
+     * EventWindow.  Same function as GetCenterAtomSym (since
+     * symmetries don't affect the center atom).
+     *
+     * @returns A reference to the Atom at the center of this
+     * EventWindow.
+     *
+     */
+    T& GetCenterAtomDirect() 
+    {
+      return m_atomBuffer[0];
+    }
+
+    /**
      * Gets the immutable Atom which resides in the center of this
-     * EventWindow.  Same function as GetCenterAtomDirect .
+     * EventWindow.  Same function as GetCenterAtomDirect  (since
+     * symmetries don't affect the center atom).
      *
      * @returns The immutable Atom which resides in the center of this
      * EventWindow.
@@ -512,6 +527,15 @@ namespace MFM
       return m_atomBuffer[0];
     }
 
+    /**
+     * Gets a modifiable reference to the Atom at the center of this
+     * EventWindow.  Same function as GetCenterAtomDirect (since
+     * symmetries don't affect the center atom).
+     *
+     * @returns A reference to the Atom at the center of this
+     * EventWindow.
+     *
+     */
     T& GetCenterAtomSym()
     {
       return m_atomBuffer[0];

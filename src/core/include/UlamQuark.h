@@ -48,6 +48,16 @@ namespace MFM {
 
     virtual ~UlamQuark() { }
 
+    virtual UlamQuark<EC>* AsUlamQuark()
+    {
+      return this;
+    }
+
+    virtual const UlamQuark<EC> * AsUlamQuark() const
+    {
+      return this;
+    }
+
   };
 
 } //MFM

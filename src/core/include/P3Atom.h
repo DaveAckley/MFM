@@ -109,7 +109,7 @@ namespace MFM {
 
   public:
 
-    P3Atom(u32 type = ATOM_EMPTY_TYPE, u32 z1 = 0, u32 z2 = 0, u32 stateBits = 0)
+    explicit P3Atom(u32 type = ATOM_EMPTY_TYPE, u32 z1 = 0, u32 z2 = 0, u32 stateBits = 0)
     {
       COMPILATION_REQUIREMENT< 32 <= BITS-1 >();
 
