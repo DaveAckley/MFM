@@ -61,6 +61,9 @@ namespace MFM
       SITES = EVENT_WINDOW_SITES(R)
     };
 
+    const char * m_hoverElementLabel;
+    SPoint m_hoverElementLabelAt;
+
     bool m_bigText;
 
     bool m_siteEdit;
@@ -328,6 +331,18 @@ namespace MFM
       virtual const char * GetDoc() { return "Click left/right: select element as primary/secondary"; }
       virtual bool GetKey(u32& keysym, u32& mods) { return false; }
       virtual bool ExecuteFunction(u32 keysym, u32 mods) { return false; }
+
+      virtual bool PostDragHandle(MouseMotionEvent& event)
+      {
+        if (m_parent && m_element) 
+        {
+          SPoint onParent = event.GetAt();
+          onParent -= m_parent->GetAbsoluteLocation();
+          m_parent->SetElementLabel(m_element->GetName(), onParent);
+          return true;
+        }
+        return false;
+      }
 
       ElementButton() :
         AbstractButton()
@@ -607,8 +622,15 @@ namespace MFM
       return tb;
     }
 
+    void SetElementLabel(const char * label, const SPoint at) 
+    {
+      m_hoverElementLabel = label;
+      m_hoverElementLabelAt = at;
+    }
+
     ToolboxPanel()
-      : m_bigText(false)
+      : m_hoverElementLabel(0)
+      , m_bigText(false)
       , m_siteEdit(false)
       , m_selectedToolButton(0)
       , m_selectedShapeButton(0)
@@ -932,6 +954,9 @@ namespace MFM
 
     virtual bool PostDragHandle(MouseMotionEvent& mme)
     {
+      SPoint s;
+      SetElementLabel(0, s);
+
       /* Try to keep the grid from taking this event too */
       return true;
     }
@@ -991,6 +1016,42 @@ namespace MFM
           SPoint pos(brushPos.GetX() + GetElementRenderSize(), brushPos.GetY());
           d.BlitBackedText(brushSizeArray, pos, UPoint(128, 128));
         }
+      }
+    }
+
+    virtual void PaintFloat(Drawing& d)
+    {
+
+      if (m_hoverElementLabel)
+      {
+        d.SetFont(FONT_ASSET_BUTTON_BIG);
+
+        UPoint tsize = MakeUnsigned(d.GetTextSize(m_hoverElementLabel)); // praying for no font failures urgh
+        UPoint offset(8,16);
+        UPoint border(4,4);
+
+        s32 xpos, ypos;
+        u32 wid, hei;
+        xpos = m_hoverElementLabelAt.GetX() - border.GetX()/2 + offset.GetX();
+        ypos = m_hoverElementLabelAt.GetY() - border.GetY()/2 + offset.GetY();
+        wid = tsize.GetX() + border.GetX();
+        hei = tsize.GetY() + border.GetY();
+
+        // Get as much as possible in the window (favoring a prefix if
+        // need be)
+
+        Rect wdw;
+        d.GetWindow(wdw);
+
+        if (xpos < 0 || wid > wdw.GetWidth()) xpos = 0;
+        else if (xpos + wid > wdw.GetWidth()) xpos = wdw.GetWidth() - wid;
+
+        if (ypos < 0 || hei > wdw.GetHeight()) ypos = 0;
+        else if (ypos + hei > wdw.GetHeight()) ypos = wdw.GetHeight() - hei;
+
+        d.FillRect(xpos, ypos, wid, hei, Drawing::YELLOW);
+        d.SetForeground(Drawing::BLACK);
+        d.BlitText(m_hoverElementLabel, SPoint(xpos, ypos), tsize);
       }
 
     }

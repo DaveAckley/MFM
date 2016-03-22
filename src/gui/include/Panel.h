@@ -379,6 +379,13 @@ namespace MFM
     virtual void PaintChildren(Drawing & config);
 
     /**
+       Paint material, if any, that is supposed to 'float' over the
+       component and its children.  The default implementation paints
+       nothing. 
+     */
+    virtual void PaintFloat(Drawing & config);
+
+    /**
        Dispatch a mouse event, to the appropriate subpanel depending on
        the stacking order and the position of the mouse.  Panels should
        override the Handle(MouseButtonEvent) and/or

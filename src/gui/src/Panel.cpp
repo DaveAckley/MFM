@@ -388,6 +388,9 @@ namespace MFM {
       drawing.SetWindow(cur);
       PaintChildren(drawing);
 
+      drawing.SetWindow(cur);
+      PaintFloat(drawing);
+
       drawing.SetWindow(old);
 
       if (oldFont)
@@ -396,6 +399,11 @@ namespace MFM {
       drawing.SetForeground(oldfg);
       drawing.SetBackground(oldbg);
     }
+  }
+
+  void Panel::PaintFloat(Drawing & drawing)
+  {
+    /* Overridable, empty by default */
   }
 
   void Panel::PaintChildren(Drawing & drawing)
