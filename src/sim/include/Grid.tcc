@@ -346,6 +346,30 @@ namespace MFM {
     site.Sense(touch);
   }
 
+
+  template <class GC>
+  bool Grid<GC>::RunEventIfPausedAt(const SPoint & gridCoord)
+  {
+    SPoint tileInGrid, siteInTile;
+    if (!MapGridToTile(gridCoord, tileInGrid, siteInTile))
+    {
+      return false;  // ain't no touch
+    }
+
+    Tile<EC> & owner = GetTile(tileInGrid);
+
+    if (owner.IsActive()) return false;  // Not paused?  Is this how we check?
+
+    if (owner.RegionIn(siteInTile) != owner.REGION_HIDDEN)
+      return false;           // Cache involvment not allowed
+
+    EventWindow<EC> & ew = owner.GetEventWindow();
+    bool attempt = ew.TryForceEventAt(siteInTile);
+
+    return attempt;
+  }
+
+
   template <class GC>
   bool Grid<GC>::MapGridToTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const
   {

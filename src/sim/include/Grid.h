@@ -514,6 +514,13 @@ namespace MFM {
     bool IsGridCoord(const SPoint & siteInGrid) const;
 
     /**
+     * Run an event at siteInGrid if the grid is paused and siteInGrid
+     * is legal, and return true.  Return false if siteInGrid is
+     * illegal or the grid is not paused.
+     */
+    bool RunEventIfPausedAt(const SPoint & siteInGrid);
+
+    /**
      * Find the grid coordinate of the 'owning tile' (i.e., ignoring
      * caches) for the give siteInGrid.  Return false if there isn't
      * one, otherwise set tileInGrid and siteInTile appropriately and

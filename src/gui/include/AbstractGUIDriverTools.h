@@ -176,6 +176,34 @@ namespace MFM
   };
 
   template<class GC>
+  class GridToolEvent : public GridToolShapeUpdater<GC>
+  {
+  public:
+    typedef GridToolShapeUpdater<GC> Super;
+
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+
+    GridToolEvent(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
+      : Super("event", gp, tbp,
+              IMAGE_ASSET_EVENT_ICON,
+              "Use spark tool (deliver events)")
+    {
+      Super::SetToolShape(DIAMOND_SHAPE);
+    }
+
+    virtual void UpdateGridCoord(UPoint gridCoord)
+    {
+      const Element<EC> * elt = this->GetSelectedElement();
+      MFM_API_ASSERT_NONNULL(elt);
+
+      Grid<GC> & grid = this->GetGrid();
+      grid.RunEventIfPausedAt(MakeSigned(gridCoord));
+    }
+  };
+
+  template<class GC>
   class GridToolXRay : public GridToolShapeUpdater<GC>
   {
   public:
@@ -545,7 +573,8 @@ namespace MFM
     {
       // Here we expect to have a src coord, dest coord, and gridCoord
       if (!this->HasSrcCoord() || !this->HasDestCoord())
-        FAIL(ILLEGAL_STATE);
+        return;  // But just fail silently if luser forgot to pick an anchor
+
       SPoint mouseDelta = gridCoord - GetDestCoord();
 
       u32 uradius = this->GetRadius();

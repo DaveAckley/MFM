@@ -224,6 +224,8 @@ namespace MFM
 
 
   public:
+    bool TryForceEventAt(const SPoint & center) ;
+
     bool TryEventAtForTesting(const SPoint & center)
     {
       return TryEventAt(center);

@@ -152,6 +152,7 @@ namespace MFM
     GridToolXRay<GC> m_gridToolXRay;
     GridToolBucket<GC> m_gridToolBucket;
     GridToolClone<GC> m_gridToolClone;
+    GridToolEvent<GC> m_gridToolEvent;
 
     StatisticsPanel<GC> m_statisticsPanel;
     DisplayAER<GC> m_displayAER;
@@ -188,11 +189,13 @@ namespace MFM
       m_gridToolAtomView.SetAtomViewPanel(m_gridPanel.GetAtomViewPanel());
       InsertAndRegisterGridTool(m_gridToolPencil);
       InsertAndRegisterGridTool(m_gridToolEraser);
-      InsertAndRegisterGridTool(m_gridToolBrush);
+      // XXX Consider killing the brush to make room for the spark
+      //      InsertAndRegisterGridTool(m_gridToolBrush);
       InsertAndRegisterGridTool(m_gridToolAirBrush);
       InsertAndRegisterGridTool(m_gridToolXRay);
       InsertAndRegisterGridTool(m_gridToolBucket);
       InsertAndRegisterGridTool(m_gridToolClone);
+      InsertAndRegisterGridTool(m_gridToolEvent);
       InsertAndRegisterGridTool(m_gridToolAtomView);
       InsertAndRegisterGridTool(m_gridToolTileSelect);
     }
@@ -854,6 +857,7 @@ namespace MFM
       , m_gridToolXRay(m_gridPanel, m_toolboxPanel)
       , m_gridToolBucket(m_gridPanel, m_toolboxPanel)
       , m_gridToolClone(m_gridPanel, m_toolboxPanel)
+      , m_gridToolEvent(m_gridPanel, m_toolboxPanel)
       , m_statisticsPanel(*this)
       , m_displayAER(m_statisticsPanel)
       , m_increaseAEPSPerFrame(*this)

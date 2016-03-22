@@ -9,6 +9,26 @@
 namespace MFM {
 
   template <class EC>
+  bool EventWindow<EC>::TryForceEventAt(const SPoint & tcenter)
+  {
+    MFM_LOG_DBG6(("EW::TryForceEventAt(%d,%d)",
+                  tcenter.GetX(),
+                  tcenter.GetY()));
+    ++m_eventWindowsAttempted;
+
+    if (!InitForEvent(tcenter))
+    {
+      return false;
+    }
+
+    RecordEventAtTileCoord(tcenter);
+    ExecuteEvent();
+
+    return true;
+  }
+
+
+  template <class EC>
   bool EventWindow<EC>::TryEventAt(const SPoint & tcenter)
   {
     MFM_LOG_DBG6(("EW::TryEventAt(%d,%d)",
@@ -49,7 +69,7 @@ namespace MFM {
     Tile<EC> & t = GetTile();
     const u32 warpFactor = t.GetWarpFactor();
     SPoint owned = Tile<EC>::TileCoordToOwned(tcoord);
-    u32 eventAge = t.GetUncachedEventAge(owned);
+    u32 eventAge = t.GetUncachedEventAge32(owned);  // max age at one billion
     return !GetRandom().OddsOf(eventAge + warpFactor*t.GetSites(), 10*t.GetSites());
   }
 
