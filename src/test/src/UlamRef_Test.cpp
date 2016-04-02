@@ -44,7 +44,8 @@ namespace MFM {
   void UlamRef_Test::Test_UlamRefRead()
   {
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
       for (u32 i = 0; i < 96/32; ++i) {
         u32 len = i==2 ? 7 : 32;
         TestUlamRef ur(i*32, len, t, 0);
@@ -57,7 +58,8 @@ namespace MFM {
     }
 
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
       {
         TestUlamRef ur(16, 24, t, 0);
         assert(ur.Read() == 0x432144);
@@ -84,7 +86,8 @@ namespace MFM {
   void UlamRef_Test::Test_UlamRefReadLong()
   {
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
       for (u32 i = 0; i < 96/32; ++i) {
         u32 len = i==2 ? 7 : 32;
         TestUlamRef ur(i*32, len, t, 0);
@@ -97,7 +100,8 @@ namespace MFM {
     }
 
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
       {
         TestUlamRef ur(0, 64, t, 0);
         assert(ur.ReadLong() == HexU64(0x87654321,0x44332211));
@@ -136,7 +140,9 @@ namespace MFM {
   void UlamRef_Test::Test_UlamRefWrite()
   {
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
+
       for (u32 i = 0; i < 96/32; ++i) {
         u32 len = i==2 ? 7 : 32;
         TestUlamRef ur(i*32, len, t, 0);
@@ -150,7 +156,8 @@ namespace MFM {
       }
     }
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
       for (u32 i = 0; i < 71/8; ++i) {
         TestUlamRef ur(i*8, 8, t, 0);
 
@@ -170,7 +177,8 @@ namespace MFM {
     }
 
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
       {
         TestUlamRef ur(16, 24, t, 0);
         assert(ur.Read() == 0x432144);
@@ -200,7 +208,8 @@ namespace MFM {
   void UlamRef_Test::Test_UlamRefWriteLong()
   {
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
       for (u32 i = 0; i < 96/32; ++i) {
         u32 len = i==2 ? 7 : 32;
         TestUlamRef ur(i*32, len, t, 0);
@@ -214,7 +223,9 @@ namespace MFM {
       }
     }
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
+
       TestUlamRef ur(8, 60, t, 0);
 
       ur.WriteLong(HexU64(0xdeadbee,0xfd00df00));
@@ -234,7 +245,8 @@ namespace MFM {
     }
 
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
 
       TestUlamRef ur(31, 34, t, 0);
 
@@ -255,7 +267,8 @@ namespace MFM {
       assert(ur2.Read() == 0x7);
     }
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
 
       TestUlamRef ur01(0, 64, t, 0);
       TestUlamRef ur12(32, 68-32, t, 0);
@@ -285,7 +298,9 @@ namespace MFM {
   void UlamRef_Test::Test_UlamRefCtors()
   {
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
+
       TestUlamRef ur(0, 10, t, 0);
       assert(ur.GetPos() == 0);
       assert(ur.GetLen() == 10);
@@ -300,7 +315,9 @@ namespace MFM {
     }
 
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
+
       TestUlamRef ur(0, 71, t, 0);
       assert(ur.GetPos() == 0);
       assert(ur.GetLen() == 71);
@@ -318,7 +335,8 @@ namespace MFM {
   void UlamRef_Test::Test_UlamRefEffSelf()
   {
     {
-      TestAtom t = setup();
+      TestAtom ta = setup();
+      AtomBitStorage<TestEventConfig> t(ta);
       TestUlamRef ur(0, 71, t, 0);
       assert(ur.GetEffectiveSelf() == 0);
     }
