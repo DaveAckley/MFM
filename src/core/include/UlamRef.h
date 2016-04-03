@@ -137,6 +137,10 @@ namespace MFM {
     {
       return T::BPA;
     }
+
+    T ReadAtom() const { return m_stg; } //a copy
+
+    void WriteAtom(const T& tval) { m_stg = tval; }
   };
 
   /**
@@ -222,12 +226,6 @@ namespace MFM {
     u32 GetType() const { return m_stg.GetType(); }
 
     const UlamClass<EC> * GetEffectiveSelf() const { return m_effSelf; }
-
-    /* XXX NOT YET REIMPLEMENTED
-    T ReadAtom() const { return m_stg; } //a copy
-
-    void WriteAtom(const T& tval) { m_stg = tval; }
-    */
 
     BitStorage<EC> & GetStorage() { return m_stg; }
   };
