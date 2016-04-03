@@ -105,11 +105,13 @@ namespace MFM {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
-    AtomBitStorage(T & atom) : m_stg(atom) { }
+    AtomBitStorage(const T & toCopy) : m_stg(toCopy) { }
+
+    AtomBitStorage() { }
 
     enum { POS_ORIGIN = T::ATOM_FIRST_STATE_BIT };
 
-    T& m_stg;
+    T m_stg;
 
     virtual u32 Read(u32 pos, u32 len) const 
     {
@@ -143,9 +145,11 @@ namespace MFM {
   template <class EC, class BV>
   struct BitVectorStorage : public BitStorage<EC> {
 
-    BitVectorStorage(BV & bv) : m_stg(bv) { }
+    BitVectorStorage(const BV & toCopy) : m_stg(toCopy) { }
 
-    BV& m_stg;
+    BitVectorStorage() { }
+
+    BV m_stg;
 
     virtual u32 Read(u32 pos, u32 len) const 
     {
