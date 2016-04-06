@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamClass.h An abstract base class for ULAM quarks and elements
-  Copyright (C) 2015 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015 Ackleyshack LLC.
+  Copyright (C) 2015-2016 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2016 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file UlamClass.h An abstract base class for ULAM quarks and elements
   \author David H. Ackley.
   \author Elenas S. Ackley.
-  \date (C) 2015 All rights reserved.
+  \date (C) 2015-2016 All rights reserved.
   \lgpl
  */
 
@@ -33,39 +33,6 @@
 #include "itype.h"
 #include "Element.h"
 #include "UlamContext.h"
-
-#ifndef Ud_AUTOREFBASE
-#define Ud_AUTOREFBASE
-namespace MFM{
-
-  template<class EC>
-  struct AutoRefBase
-  {
-    typedef typename EC::ATOM_CONFIG AC;
-    typedef typename AC::ATOM_TYPE T;
-    enum { BPA = AC::BITS_PER_ATOM };
-
-    T& m_stgToChange;  //ref to storage here!
-    const u32 m_pos;   //pos in atom
-
-    AutoRefBase(T& targ, u32 idx) : m_stgToChange(targ), m_pos(idx) { }
-    AutoRefBase(AutoRefBase<EC>& arg, u32 idx) : m_stgToChange(arg.getRef()), m_pos(arg.getPosOffset() + idx) { }
-    ~AutoRefBase( ){ }
-
-    const u32 read(u32 len) const { return getBits().Read(m_pos + T::ATOM_FIRST_STATE_BIT, len); }
-    const T read() const { return m_stgToChange; } //entire atom
-    const u32 readArrayItem(const u32 index, const u32 itemlen) const { return getBits().Read((index * itemlen) + m_pos + T::ATOM_FIRST_STATE_BIT, itemlen); }
-    void write(const u32 v, u32 len) { getBits().Write(m_pos + T::ATOM_FIRST_STATE_BIT, len, v);}
-    void write(const T& t) { m_stgToChange = t; } //entire atom
-    void writeArrayItem(const u32 v, const u32 index, const u32 itemlen) { getBits().Write((index * itemlen) + m_pos + T::ATOM_FIRST_STATE_BIT, itemlen, v); }
-    BitVector<BPA>& getBits() { return m_stgToChange.GetBits(); }
-    const BitVector<BPA>& getBits() const { return m_stgToChange.GetBits(); }
-    T& getRef() { return m_stgToChange; }
-    u32 getType() { return m_stgToChange.GetType(); }
-    const u32 getPosOffset() const { return m_pos; }
-  };
-} //MFM
-#endif /*Ud_AUTOREFBASE */
 
 namespace MFM
 {
