@@ -33,6 +33,8 @@ namespace MFM {
   }
 
   void UlamRef_Test::Test_RunTests() {
+    Test_UlamRefReadBV();
+    Test_UlamRefWriteBV();
     Test_UlamRefCtors();
     Test_UlamRefRead();
     Test_UlamRefReadLong();
@@ -328,6 +330,150 @@ namespace MFM {
       assert(ur.GetEffectiveSelf() == 0);
     }
   }
+
+
+  void UlamRef_Test::Test_UlamRefReadBV()
+  {
+    {
+      BitVectorBitStorage<TestEventConfig,BitVector<320> > t;
+      for (u32 i = 0; i < 320/8; ++i) // init to 0x010203..2728
+        t.Write(i * 8, 8, i + 1);
+      
+      BitVector<4> b04;
+      BitVector<8> b08;
+      BitVector<16> b16;
+      BitVector<32> b32;
+      BitVector<64> b64;
+      BitVector<80> b80;
+
+      t.ReadBV(0, b04);
+      assert(b04.Read(0,4) == 0x0);
+      t.ReadBV(4, b04);
+      assert(b04.Read(0,4) == 0x1);
+      t.ReadBV(28, b04);
+      assert(b04.Read(0,4) == 0x4);
+
+      t.ReadBV(0, b16);
+      assert(b16.Read(0,16) == 0x0102);
+      t.ReadBV(8, b16);
+      assert(b16.Read(0,16) == 0x0203);
+      t.ReadBV(24, b16);
+      assert(b16.Read(0,16) == 0x0405);
+
+      t.ReadBV(0, b32);
+      assert(b32.Read(0,32) == 0x01020304);
+      t.ReadBV(8, b32);
+      assert(b32.Read(0,32) == 0x02030405);
+
+      t.ReadBV(0, b64);
+      assert(b64.ReadLong(0,64) == 0x0102030405060708L);
+      t.ReadBV(8, b64);
+      assert(b64.ReadLong(0,64) == 0x0203040506070809L);
+
+      t.ReadBV(0, b80);
+      assert(b80.ReadLong(0,64) ==  0x0102030405060708L);
+      assert(b80.Read(64,16) ==     0x090a);
+      t.ReadBV(24, b80);
+      assert(b80.ReadLong(0,64) ==  0x0405060708090a0bL);
+      assert(b80.Read(64,16) ==     0x0c0d);
+
+    }
+
+    {
+      BitVectorBitStorage<TestEventConfig,BitVector<16> > t;
+      t.Write(0,16,0xab98);
+      
+      BitVector<4> b04;
+      BitVector<8> b08;
+      BitVector<16> b16;
+
+      t.ReadBV(0, b04);
+      assert(b04.Read(0,4) == 0xa);
+      t.ReadBV(4, b04);
+      assert(b04.Read(0,4) == 0xb);
+      t.ReadBV(12, b04);
+      assert(b04.Read(0,4) == 0x8);
+
+      t.ReadBV(0, b08);
+      assert(b08.Read(0,8) == 0xab);
+      t.ReadBV(4, b08);
+      assert(b08.Read(0,8) == 0xb9);
+      t.ReadBV(8, b08);
+      assert(b08.Read(0,8) == 0x98);
+
+      t.ReadBV(0, b16);
+      assert(b16.Read(0,16) == 0xab98);
+
+    }
+
+  }
+
+
+  void UlamRef_Test::Test_UlamRefWriteBV()
+  {
+    {
+      BitVectorBitStorage<TestEventConfig,BitVector<320> > t;
+      for (u32 i = 0; i < 320/8; ++i) // init to 0x010203..2728
+        t.Write(i * 8, 8, i + 1);
+      
+      BitVector<4> b04(0xe);
+      BitVector<8> b08(0x3f);
+      BitVector<16> b16(0xabcd);
+      BitVector<32> b32(0x12345678);
+
+      t.WriteBV(0, b04);
+      assert(t.Read(0,32) == 0xe1020304);
+      t.WriteBV(4, b04);
+      assert(t.Read(0,32) == 0xee020304);
+      t.WriteBV(28, b04);
+      assert(t.Read(0,32) == 0xee02030e);
+
+      t.WriteBV(0, b08);
+      assert(t.Read(0,32) == 0x3f02030e);
+      t.WriteBV(8, b08);
+      assert(t.Read(0,32) == 0x3f3f030e);
+      t.WriteBV(24, b08);
+      assert(t.Read(0,32) == 0x3f3f033f);
+
+      t.WriteBV(0, b16);
+      assert(t.Read(0,32) == 0xabcd033f);
+      t.WriteBV(8, b16);
+      assert(t.Read(0,32) == 0xababcd3f);
+      t.WriteBV(24, b16);
+      assert(t.ReadLong(0,64) == 0xababcdabcd060708L);
+
+      t.WriteBV(0, b32);
+      assert(t.ReadLong(0,64) == 0x12345678cd060708L);
+      t.WriteBV(8, b32);
+      assert(t.ReadLong(0,64) == 0x1212345678060708L);
+
+    }
+
+    {
+      BitVectorBitStorage<TestEventConfig,BitVector<16> > t;
+      t.Write(0,16,0xab98);
+      
+      BitVector<4> b04(0x9);
+      BitVector<8> b08(0xba);
+      BitVector<16> b16(0xdead);
+
+      assert(t.Read(0,16) == 0xab98);
+      t.WriteBV(0, b04);
+      assert(t.Read(0,16) == 0x9b98);
+      t.WriteBV(4, b04);
+      assert(t.Read(0,16) == 0x9998);
+      t.WriteBV(12, b04);
+      assert(t.Read(0,16) == 0x9999);
+
+      t.WriteBV(0, b08);
+      assert(t.Read(0,16) == 0xba99);
+      t.WriteBV(4, b08);
+      assert(t.Read(0,16) == 0xbba9);
+      t.WriteBV(8, b08);
+      assert(t.Read(0,16) == 0xbbba);
+    }
+  }
+
 
 
 } /* namespace MFM */

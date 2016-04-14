@@ -26,6 +26,10 @@ namespace MFM {
 
     static void Test_UlamRefEffSelf();
 
+    static void Test_UlamRefReadBV();
+
+    static void Test_UlamRefWriteBV();
+
   };
 } /* namespace MFM */
 #endif /*ULAMREF_TEST_H*/
