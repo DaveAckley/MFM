@@ -114,39 +114,35 @@ namespace MFM {
     */
     virtual void WriteBig(u32 pos, u32 len, const BV96& val) = 0;
 
+    /**
+       Copy \c LEN bits from positions \c pos through \c pos + LEN - 1
+       of \c this to positions 0 through LEN - 1 of \c rtnbv
+    */
     template<u32 LEN>
     void ReadBV(u32 pos, BitVector<LEN>& rtnbv) const
     {
-      u32 i;
-      const u32 BITS = 32;
-      for(i = 0; i + BITS < LEN; i += BITS)
-	{
-	  u32 x = Read(pos + i, BITS);
-	  rtnbv.Write(i, BITS, x);
-	}
-      if(i < LEN)
-	{
-	  u32 x = Read(pos + i, LEN - i); //fails if (pos + i > LEN)
-	  rtnbv.Write(i, LEN - i, x);
-	}
-    } //ReadBV
+      u32 amt = 32;
+      for (u32 i = 0; i < LEN; i += amt)
+      {
+        if (i + amt > LEN) amt = LEN - i;
+        rtnbv.Write(i, amt, this->Read(pos + i, amt));
+      }
+    }
 
+    /**
+       Copy \c LEN bits from positions 0 through LEN - 1 of \c val
+       to positions \c pos through \c pos + LEN - 1 of \c this.
+    */
     template<u32 LEN>
     void WriteBV(u32 pos, const BitVector<LEN>& val)
     {
-      u32 i;
-      const u32 BITS = 32;
-      for(i = 0; i + BITS < LEN; i+= BITS)
-	{
-	  u32 x = val.Read(pos + i, BITS);
-	  Write(i, BITS, x);
-	}
-      if(i < LEN)
-	{
-	  u32 x = val.Read(pos + i, LEN - i); //fails if (pos + i > LEN)
-	  Write(i, LEN - i, x);
-	}
-    } //WriteBV
+      u32 amt = 32;
+      for (u32 i = 0; i < LEN; i += amt)
+      {
+        if (i + amt > LEN) amt = LEN - i;
+        this->Write(pos + i, amt, val.Read(i, amt));
+      }
+    }
 
     /**
 	ReadAtom: returns a formatted atom, length T::BPA
@@ -367,9 +363,6 @@ namespace MFM {
 
     //UlamRefFixed(BitStorage<EC>& stg, u32 origin, const UlamClass<EC> * effself)
     //  : UlamRef<EC>(POS, LEN, origin, stg, effself)
-    UlamRefFixed(BitStorage<EC>& stg, const UlamClass<EC> * effself)
-      : UlamRef<EC>(POS, LEN, stg, effself)
-    { }
 
     UlamRefFixed(const UlamRef<EC>& parent, const UlamClass<EC> * effself)
       : UlamRef<EC>(parent, POS, LEN, effself)
@@ -378,23 +371,20 @@ namespace MFM {
 
   template <class EC>
   //struct UlamRefAtom : public UlamRefFixed<EC, 0, EC::ATOM_CONFIG::BITS_PER_ATOM - EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT>
-  struct UlamRefAtom : public UlamRefFixed<EC, 0, EC::ATOM_CONFIG::BITS_PER_ATOM>
+  struct UlamRefAtom : public UlamRef<EC>
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
 
-    //typedef UlamRefFixed<EC, 0, BPA - T::ATOM_FIRST_STATE_BIT> Super;
-    typedef UlamRefFixed<EC, 0, BPA> Super;
-
     //UlamRefAtom(BitStorage<EC>& stg, u32 origin, const UlamClass<EC> * effself)
     //  : Super(stg, origin, effself)
-    UlamRefAtom(BitStorage<EC>& stg, const UlamClass<EC> * effself)
-      : Super(stg, effself)
+    UlamRefAtom(BitStorage<EC>& stg, u32 startIdx, const UlamClass<EC> * effself)
+      : UlamRef<EC>(stg, startIdx, BPA, effself)
     { }
 
     UlamRefAtom(const UlamRefAtom<EC>& existing, const UlamClass<EC> * effself)
-      : Super(existing, effself)
+      : UlamRef<EC>(existing, 0, BPA, effself)
     { }
 
     //u32 GetType() { AtomBitStorage<EC>& abs = (AtomBitStorage<EC>&) UlamRef<EC>::GetStorage(); return abs.GetType(); }
