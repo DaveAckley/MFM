@@ -380,7 +380,7 @@ namespace MFM {
     //UlamRefAtom(BitStorage<EC>& stg, u32 origin, const UlamClass<EC> * effself)
     //  : Super(stg, origin, effself)
     UlamRefAtom(BitStorage<EC>& stg, u32 startIdx, const UlamClass<EC> * effself)
-      : UlamRef<EC>(stg, startIdx, BPA, effself)
+      : UlamRef<EC>(startIdx, BPA, stg, effself)
     { }
 
     UlamRefAtom(const UlamRefAtom<EC>& existing, const UlamClass<EC> * effself)

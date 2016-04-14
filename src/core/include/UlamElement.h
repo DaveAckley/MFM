@@ -224,7 +224,7 @@ namespace MFM {
       T temp(atom);
       Ui_Ut_102321u<EC> sel(selector);
       AtomBitStorage<EC> atbs(temp);
-      UlamRefAtom<EC> ur(atbs, this);
+      UlamRefAtom<EC> ur(atbs, 0u, this);
       Ui_Ut_14181u<EC> dynColor = Uf_8getColor(uc, ur, sel);
       return dynColor.Read();
     }
