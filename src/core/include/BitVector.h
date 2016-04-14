@@ -38,6 +38,10 @@ namespace MFM {
 
   template <class EC> class BitRef; // FORWARD
 
+  template <u32 B> class BitVector; // FORWARD
+
+  typedef BitVector<96> BV96;
+
   /**
    * A bit vector with reasonably fast operations
    *
@@ -225,7 +229,7 @@ namespace MFM {
      * @returns The bits read from the particular section of this
      *          BitVector, left-justified in the BV96.
      */
-    inline BitVector<96> ReadBig(const u32 startIdx, const u32 length) const;
+    inline BV96 ReadBig(const u32 startIdx, const u32 length) const;
 
     /**
      * Writes up to 96 bits of a specified BV96 to a section of this BitVector.
@@ -239,7 +243,7 @@ namespace MFM {
      * @param value The bits \c [0, length - 1] of value are written
      *              to the specified section of this BitVector.
      */
-    void WriteBig(const u32 startIdx, const u32 length, const BitVector<96> value);
+    void WriteBig(const u32 startIdx, const u32 length, const BV96 value);
 
     /**
      * Sets the bit at a specified index in this BitVector.

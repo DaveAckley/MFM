@@ -21,7 +21,7 @@ namespace MFM {
     window.SetSymmetry((PointSymmetry) sym);
 
     AtomBitStorage<EC> atbs(window.GetCenterAtomSym());
-    UlamRefAtom<EC> ur(atbs, 0u, this);
+    UlamRefAtom<EC> ur(atbs, this);
     Uf_6behave(uc, ur);
   }
 

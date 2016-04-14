@@ -96,15 +96,16 @@ namespace MFM {
 
 
   template <class EC>
-  UlamRef<EC>::UlamRef(u32 pos, u32 len, u32 origin, BitStorage<EC>& stg, const UlamClass<EC> * effself)
+  //UlamRef<EC>::UlamRef(u32 pos, u32 len, u32 origin, BitStorage<EC>& stg, const UlamClass<EC> * effself)
+  UlamRef<EC>::UlamRef(u32 pos, u32 len, BitStorage<EC>& stg, const UlamClass<EC> * effself)
     : m_effSelf(effself)
     , m_stg(stg)
     , m_pos(pos)
     , m_len(len)
-    , m_origin(origin)
+      //    , m_origin(origin)
   {
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
-    MFM_API_ASSERT_ARG(m_origin <= m_stg.GetBitSize());
+    //MFM_API_ASSERT_ARG(m_origin <= m_stg.GetBitSize());
   }
 
   template <class EC>
@@ -113,10 +114,10 @@ namespace MFM {
     , m_stg(existing.m_stg)
     , m_pos(pos + existing.GetPos())
     , m_len(len)
-    , m_origin(existing.GetOrigin())
+      //, m_origin(existing.GetOrigin())
   {
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
-    MFM_API_ASSERT_ARG(m_origin <= m_stg.GetBitSize());
+    //MFM_API_ASSERT_ARG(m_origin <= m_stg.GetBitSize());
   }
 
 

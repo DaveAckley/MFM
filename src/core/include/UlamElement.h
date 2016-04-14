@@ -38,12 +38,12 @@
 namespace MFM{
 
   template<class EC>
-  struct Ui_Ut_102321u : public BitVectorStorage<EC, BitVector<32u> >
+  struct Ui_Ut_102321u : public BitVectorBitStorage<EC, BitVector<32u> >
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
-    typedef BitVectorStorage<EC, BitVector<32> > BVS;
+    typedef BitVectorBitStorage<EC, BitVector<32> > BVS;
 
     Ui_Ut_102321u() { }
     Ui_Ut_102321u(const u32 d) { Write(d); }
@@ -61,12 +61,12 @@ namespace MFM{
 namespace MFM{
 
   template<class EC>
-  struct Ui_Ut_14181u : public BitVectorStorage<EC, BitVector<32u> >
+  struct Ui_Ut_14181u : public BitVectorBitStorage<EC, BitVector<32u> >
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
-    typedef BitVectorStorage<EC, BitVector<32> > BVS;
+    typedef BitVectorBitStorage<EC, BitVector<32> > BVS;
 
     Ui_Ut_14181u() { }
     Ui_Ut_14181u(const u32 d) { Write(d); }
@@ -224,7 +224,7 @@ namespace MFM {
       T temp(atom);
       Ui_Ut_102321u<EC> sel(selector);
       AtomBitStorage<EC> atbs(temp);
-      UlamRefAtom<EC> ur(atbs, 0u, this);
+      UlamRefAtom<EC> ur(atbs, this);
       Ui_Ut_14181u<EC> dynColor = Uf_8getColor(uc, ur, sel);
       return dynColor.Read();
     }
