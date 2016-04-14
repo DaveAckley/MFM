@@ -55,6 +55,20 @@ namespace MFM
     }
 
     /**
+       Downcast an UlamClass* to an UlamElement* if possible.  Returns
+       null if this is not an UlamElement.  
+     */
+    virtual const UlamElement<EC>* AsUlamElement() const
+    {
+      return 0;
+    }
+
+    virtual UlamElement<EC>* AsUlamElement()
+    {
+      return 0;
+    }
+
+    /**
        Downcast a const UlamClass* to a const UlamQuark* if possible.
        Returns null if this is not an UlamQuark.
      */

@@ -197,11 +197,17 @@ namespace MFM {
       return m_info?m_info->GetPlaceable() : true;
     }
 
+    /**
+       Override AsUlamElement in BOTH Element<EC> AND UlamClass<EC>
+     */
     virtual UlamElement* AsUlamElement()
     {
       return this;
     }
 
+    /**
+       Override AsUlamElement in BOTH Element<EC> AND UlamClass<EC>
+     */
     virtual const UlamElement<EC> * AsUlamElement() const
     {
       return this;
