@@ -346,9 +346,7 @@ namespace MFM {
       BitVector<64> b64;
       BitVector<80> b80;
 
-#if 0 /* tests suppressed until compile failure figured out */
-      t.ReadBV(0, b04);
-
+      t.ReadBV<4>(0, b04);
 
       assert(b04.Read(0,4) == 0x0);
       t.ReadBV(4, b04);
@@ -380,9 +378,7 @@ namespace MFM {
       assert(b80.ReadLong(0,64) ==  0x0405060708090a0bL);
       assert(b80.Read(64,16) ==     0x0c0d);
 
-#endif
     }
-#if 0
 
     {
       BitVectorBitStorage<TestEventConfig,BitVector<16> > t;
@@ -410,14 +406,13 @@ namespace MFM {
       assert(b16.Read(0,16) == 0xab98);
 
     }
-#endif
 
   }
 
 
   void UlamRef_Test::Test_UlamRefWriteBV()
   {
-#if 0
+
     {
       BitVectorBitStorage<TestEventConfig,BitVector<320> > t;
       for (u32 i = 0; i < 320/8; ++i) // init to 0x010203..2728
@@ -479,7 +474,7 @@ namespace MFM {
       t.WriteBV(8, b08);
       assert(t.Read(0,16) == 0xbbba);
     }
-#endif
+
   }
 
 

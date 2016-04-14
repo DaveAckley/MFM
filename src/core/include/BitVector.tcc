@@ -138,16 +138,26 @@ namespace MFM {
   template <u32 B>
   BV96 BitVector<B>::ReadBig(const u32 startIdx, const u32 length) const
   {
-    //MFM_API_ASSERT_ARG(0);
-    FAIL(INCOMPLETE_CODE);
-    return BV96();
+    BV96 ret;
+
+    u32 amt = BITS_PER_UNIT;
+    for (u32 i = 0; i < length; i += amt)
+    {
+      if (i + amt > length) amt = length - i;
+      ret.Write(i, amt, this->Read(startIdx + i, amt));
+    }
+    return ret;
   }
 
   template <u32 B>
   void BitVector<B>::WriteBig(const u32 startIdx, const u32 length, const BV96 value)
   {
-    //MFM_API_ASSERT_ARG(0);
-    FAIL(INCOMPLETE_CODE);
+    u32 amt = BITS_PER_UNIT;
+    for (u32 i = 0; i < length; i += amt)
+    {
+      if (i + amt > length) amt = length - i;
+      this->Write(startIdx + i, amt, value.Read(i, amt));
+    }
   }
 
   template <u32 B>
@@ -173,8 +183,13 @@ namespace MFM {
 
     WriteToUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength, value >> (length - firstUnitLength));
 
-    if (hasSecondUnit)
-      WriteToUnit(firstUnitIdx + 1, 0, length - firstUnitLength, value);
+    // NOTE: The ARRAY_LENGTH > 1 clause of the following 'if' is
+    // strictly unnecessary, since it is implied by hasSecondUnit --
+    // but without it, gcc's optimizer (at least in some versions)
+    // mistakenly declares an array bounds warning (which we treat as
+    // an error) when inlining the code involving firstUnitIdx + 1
+    if (ARRAY_LENGTH > 1 && hasSecondUnit) 
+      WriteToUnit(firstUnitIdx + 1, 0, length - firstUnitLength, value); 
   }
 
   template <u32 B>
@@ -195,7 +210,12 @@ namespace MFM {
 
     u32 ret = ReadFromUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength);
 
-    if (hasSecondUnit) {
+    // NOTE: The ARRAY_LENGTH > 1 clause of the following 'if' is
+    // strictly unnecessary, since it is implied by hasSecondUnit --
+    // but without it, gcc's optimizer (at least in some versions)
+    // mistakenly declares an array bounds warning (which we treat as
+    // an error) when inlining the code involving firstUnitIdx + 1
+    if (ARRAY_LENGTH > 1 && hasSecondUnit) { 
       const u32 secondUnitLength = length - firstUnitLength;
       ret = (ret << secondUnitLength) | ReadFromUnit(firstUnitIdx + 1, 0, secondUnitLength);
     }
