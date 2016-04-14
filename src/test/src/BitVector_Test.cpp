@@ -66,6 +66,38 @@ namespace MFM {
       BitVector<64> foo;
       assert(foo.Read(64-31, 31)==0);
     }
+
+
+    {
+      BV96 foo;
+
+      foo = bits->ReadBig(0,96);
+      assert(foo.Read(0, 32) == 0x24681357);
+      assert(foo.Read(32, 32) == 0x11121314);
+      assert(foo.Read(64, 32) == 0x12345678);
+
+      foo = bits->ReadBig(160,96);
+      assert(foo.Read(0, 32) == 0x87654321);
+      assert(foo.Read(32, 32) == 0x44332211);
+      assert(foo.Read(64, 32) == 0xfedbca09);
+
+    }
+
+    {
+      BV96 foo;
+
+      foo = bits->ReadBig(0,32);
+      assert(foo.Read(0, 32) == 0x24681357);
+      assert(foo.Read(32, 32) == 0);
+      assert(foo.Read(64, 32) == 0);
+
+      foo = bits->ReadBig(160,64);
+      assert(foo.Read(0, 32) == 0x87654321);
+      assert(foo.Read(32, 32) == 0x44332211);
+      assert(foo.Read(64, 32) == 0);
+
+    }
+
   }
 
   void BitVector_Test::Test_bitVectorSize()
@@ -86,6 +118,34 @@ namespace MFM {
     assert(bits->Read(0, 32) == 0x2468a0a0);
     assert(bits->Read(32, 32) == 0xb0b01314);
     assert(bits->Read(224, 32) == 0xfedbca09);
+
+    // WriteBig
+    {
+      BitVector<256>* bb = setup();
+      u32 fooBits[] = {0xabc123ee,0x55667788,0x01020304};
+      BV96 foo(fooBits);
+
+      bb->WriteBig(0,32,foo);
+      assert(bits->Read(0, 32) == 0xabc123ee);
+      assert(bits->Read(32, 32) == 0x11121314);
+      assert(bits->Read(64, 32) == 0x12345678);
+
+      bb->WriteBig(64,64,foo);
+      assert(bits->Read(0, 32) == 0xabc123ee);
+      assert(bits->Read(32, 32) == 0x11121314);
+      assert(bits->Read(64, 32) == 0xabc123ee);
+      assert(bits->Read(96, 32) == 0x55667788);
+      assert(bits->Read(128, 32) == 0x0fedcba9);
+
+      bb->WriteBig(32,96,foo);
+      assert(bits->Read(0, 32) == 0xabc123ee);
+      assert(bits->Read(32, 32) == 0xabc123ee);
+      assert(bits->Read(64, 32) == 0x55667788);
+      assert(bits->Read(96, 32) == 0x01020304);
+      assert(bits->Read(128, 32) == 0x0fedcba9);
+
+    }
+
   }
 
   void BitVector_Test::Test_bitVectorSplitWrites()
