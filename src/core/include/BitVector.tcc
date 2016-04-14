@@ -136,6 +136,21 @@ namespace MFM {
   }
 
   template <u32 B>
+  BV96 BitVector<B>::ReadBig(const u32 startIdx, const u32 length) const
+  {
+    //MFM_API_ASSERT_ARG(0);
+    FAIL(INCOMPLETE_CODE);
+    return BV96();
+  }
+
+  template <u32 B>
+  void BitVector<B>::WriteBig(const u32 startIdx, const u32 length, const BV96 value)
+  {
+    //MFM_API_ASSERT_ARG(0);
+    FAIL(INCOMPLETE_CODE);
+  }
+
+  template <u32 B>
   void BitVector<B>::Write(u32 startIdx,
                               u32 length,
                               u32 value)

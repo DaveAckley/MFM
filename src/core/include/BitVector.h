@@ -38,6 +38,10 @@ namespace MFM {
 
   template <class EC> class BitRef; // FORWARD
 
+  template <u32 B> class BitVector; // FORWARD
+
+  typedef BitVector<96> BV96;
+
   /**
    * A bit vector with reasonably fast operations
    *
@@ -167,7 +171,7 @@ namespace MFM {
      *               BitVector. This should be in the range \c [1,32] .
      *
      * @returns The bits read from the particular section of this
-     *          BitVector.
+     *          BitVector, right-justified.
      */
     inline u32 Read(const u32 startIdx, const u32 length) const;
 
@@ -195,7 +199,7 @@ namespace MFM {
      *               BitVector. This should be in the range \c [0,64] .
      *
      * @returns The bits read from the particular section of this
-     *          BitVector.
+     *          BitVector, right-justified.
      */
     inline u64 ReadLong(const u32 startIdx, const u32 length) const;
 
@@ -212,6 +216,34 @@ namespace MFM {
      *              BitVector.
      */
     void WriteLong(const u32 startIdx, const u32 length, const u64 value);
+
+    /**
+     * Reads up to 96 bits of a particular section of this BitVector.
+     *
+     * @param startIdx The index of the first bit to read inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param length The number of bits to read from this
+     *               BitVector. This should be in the range \c [0,96] .
+     *
+     * @returns The bits read from the particular section of this
+     *          BitVector, left-justified in the BV96.
+     */
+    inline BV96 ReadBig(const u32 startIdx, const u32 length) const;
+
+    /**
+     * Writes up to 96 bits of a specified BV96 to a section of this BitVector.
+     *
+     * @param startIdx The index of the first bit to write inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param length The number of bits to write to this
+     *               BitVector. This should be in the range \c [0,96] .
+     *
+     * @param value The bits \c [0, length - 1] of value are written
+     *              to the specified section of this BitVector.
+     */
+    void WriteBig(const u32 startIdx, const u32 length, const BV96 value);
 
     /**
      * Sets the bit at a specified index in this BitVector.
@@ -395,6 +427,7 @@ namespace MFM {
     void FromArray(const u32 array[ARRAY_LENGTH]);
 
   };
+
 } /* namespace MFM */
 
 #include "BitVector.tcc"
