@@ -43,14 +43,15 @@ namespace MFM{
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
-    typedef BitVectorBitStorage<EC, BitVector<32> > BVS;
+    typedef BitVector<32> BV;
+    typedef BitVectorBitStorage<EC, BV> BVS;
 
+    u32 read() const { return BVS::Read(0u, 32u); }
+    void write(const u32 v) { BVS::Write(0u, 32u, v); }
     Ui_Ut_102321u() { }
-    Ui_Ut_102321u(const u32 d) { Write(d); }
-    Ui_Ut_102321u(const Ui_Ut_102321u& other) { Write(other.Read()); }
+    Ui_Ut_102321u(const u32 d) { write(d); }
+    Ui_Ut_102321u(const Ui_Ut_102321u& other) { write(other.read()); }
     ~Ui_Ut_102321u() {}
-    const u32 Read() const { return BVS::Read(0u, 32u); }
-    void Write(const u32 v) { BVS::Write(0u, 32u, v); }
   };
 } //MFM
 #endif /*Ud_Ui_Ut_102321u */
@@ -66,16 +67,17 @@ namespace MFM{
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
-    typedef BitVectorBitStorage<EC, BitVector<32> > BVS;
+    typedef BitVector<32> BV;
+    typedef BitVectorBitStorage<EC, BV> BVS;
 
-    Ui_Ut_14181u() { }
-    Ui_Ut_14181u(const u32 d) { Write(d); }
-    Ui_Ut_14181u(const Ui_Ut_14181u& other) { Write(other.Read()); }
-    ~Ui_Ut_14181u() {}
-    const u32 Read() const { return BVS::Read(0u, 32u); } //reads entire array
-    const u32 readArrayItem(const u32 index, const u32 itemlen) const { return BVS::Read(index * itemlen, itemlen); }
-    void Write(const u32 v) { BVS::Write(0u, 32u, v); } //writes entire array
+    u32 read() const { return BVS::Read(0u, 32u); } //reads entire array
+    u32 readArrayItem(const u32 index, const u32 itemlen) const { return BVS::Read(index * itemlen, itemlen); }
+    void write(const u32 v) { BVS::Write(0u, 32u, v); } //writes entire array
     void writeArrayItem(const u32 v, const u32 index, const u32 itemlen) { BVS::Write(index * itemlen, itemlen, v); }
+    Ui_Ut_14181u() { }
+    Ui_Ut_14181u(const u32 d) { u32 n = 4u; while(n--) { writeArrayItem(d, n, 8); } }
+    Ui_Ut_14181u(const Ui_Ut_14181u& other) { write(other.read()); }
+    ~Ui_Ut_14181u() {}
   };
 } //MFM
 #endif /*Ud_Ui_Ut_14181u */
@@ -232,7 +234,7 @@ namespace MFM {
       AtomBitStorage<EC> atbs(temp);
       UlamRefAtom<EC> ur(atbs, 0u, this);
       Ui_Ut_14181u<EC> dynColor = Uf_8getColor(uc, ur, sel);
-      return dynColor.Read();
+      return dynColor.read();
     }
 
     virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const

@@ -45,6 +45,11 @@ namespace MFM
   template <class EC>
   struct UlamClass
   {
+    virtual u32 GetClassLength() const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
     /**
        Downcast an UlamClass* to an UlamQuark* if possible.  Returns
        null if this is not an UlamQuark.
@@ -56,7 +61,7 @@ namespace MFM
 
     /**
        Downcast an UlamClass* to an UlamElement* if possible.  Returns
-       null if this is not an UlamElement.  
+       null if this is not an UlamElement.
      */
     virtual const UlamElement<EC>* AsUlamElement() const
     {

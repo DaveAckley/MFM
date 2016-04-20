@@ -233,39 +233,36 @@ namespace MFM {
 
     AtomBitStorage() : m_stg() { }
 
-    enum { POS_ORIGIN = T::ATOM_FIRST_STATE_BIT };
-    //enum { POS_ORIGIN = 0 }; //absolute
-
     T m_stg;
 
     virtual u32 Read(u32 pos, u32 len) const
     {
-      return m_stg.GetBits().Read(pos + POS_ORIGIN, len);
+      return m_stg.GetBits().Read(pos, len);
     }
 
     virtual void Write(u32 pos, u32 len, u32 val)
     {
-      m_stg.GetBits().Write(pos + POS_ORIGIN, len, val);
+      m_stg.GetBits().Write(pos, len, val);
     }
 
     virtual u64 ReadLong(u32 pos, u32 len) const
     {
-      return m_stg.GetBits().ReadLong(pos + POS_ORIGIN, len);
+      return m_stg.GetBits().ReadLong(pos, len);
     }
 
     virtual void WriteLong(u32 pos, u32 len, u64 val)
     {
-      m_stg.GetBits().WriteLong(pos + POS_ORIGIN, len, val);
+      m_stg.GetBits().WriteLong(pos, len, val);
     }
 
     virtual BV96 ReadBig(u32 pos, u32 len) const
     {
-      return m_stg.GetBits().ReadBig(pos + POS_ORIGIN, len);
+      return m_stg.GetBits().ReadBig(pos, len);
     }
 
     virtual void WriteBig(u32 pos, u32 len, const BV96& val)
     {
-      m_stg.GetBits().WriteBig(pos + POS_ORIGIN, len, val);
+      m_stg.GetBits().WriteBig(pos, len, val);
     }
 
     virtual T ReadAtom(u32 pos) const
@@ -300,20 +297,17 @@ namespace MFM {
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
-    //enum { POS_ORIGIN = T::ATOM_FIRST_STATE_BIT };
 
     const UlamClass<EC> * m_effSelf;
     BitStorage<EC> & m_stg;
     u32 m_pos;
     u32 m_len;
-    //u32 m_origin;
 
   public:
 
     /**
        Construct an UlamRef 'from scratch'
      */
-    //UlamRef(u32 pos, u32 len, u32 origin, BitStorage<EC>& stg, const UlamClass<EC> * effself) ;
     UlamRef(u32 pos, u32 len, BitStorage<EC>& stg, const UlamClass<EC> * effself) ;
 
     /**
@@ -321,11 +315,6 @@ namespace MFM {
        The 'pos' supplied here will be relative to the the existing
        pos, and this pos + len must fit within the len supplied to the
        existing UlamRef.
-
-       Origin is the bit position of the beginning of the atom/element.
-       When the storage is not an atom (e.g. immediate quark), origin
-       is the bit size of the storage;
-       For an atom, or an atom of a transient, origin is >= 0.
      */
     UlamRef(const UlamRef<EC> & existing, u32 pos, u32 len, const UlamClass<EC> * effself) ;
 
@@ -337,9 +326,9 @@ namespace MFM {
 
     void WriteLong(u64 val) { m_stg.WriteLong(m_pos, m_len, val); }
 
-    T ReadAtom() const { return m_stg.ReadAtom(m_pos); } //was m_origin
+    T ReadAtom() const { return m_stg.ReadAtom(m_pos); }
 
-    void WriteAtom(const T& val) { m_stg.WriteAtom(m_pos, val); } //was m_origin
+    void WriteAtom(const T& val) { m_stg.WriteAtom(m_pos, val); }
 
     u32 GetPos() const { return m_pos; }
 
@@ -349,10 +338,24 @@ namespace MFM {
 
     BitStorage<EC> & GetStorage() { return m_stg; }
 
-    //u32 GetOrigin() const { return m_origin; }
+    virtual u32 GetType() const
+    {
+      MFM_API_ASSERT_ARG(m_effSelf);
+      const UlamElement<EC> * eltptr = GetEffectiveSelf()->AsUlamElement();
+      if(!eltptr) return T::ATOM_UNDEFINED_TYPE; //quark
+      return eltptr->GetType();
+    } //GetType
 
-    //bool IsValidOrigin() { return (GetOrigin() < GetStorage().GetBitSize()); }
-
+    T CreateAtom() const
+    {
+      MFM_API_ASSERT_ARG(m_effSelf);
+      const UlamElement<EC> * eltptr = GetEffectiveSelf()->AsUlamElement();
+      if(!eltptr) FAIL(ILLEGAL_ARGUMENT);
+      u32 len = eltptr->GetClassLength();
+      AtomBitStorage<EC> atmp(eltptr->GetDefaultAtom());
+      atmp.WriteBig(0u + T::ATOM_FIRST_STATE_BIT, len, m_stg.ReadBig(GetPos(), len));
+      return atmp.ReadAtom();
+    }
   }; //UlamRef
 
   template <class EC, u32 POS, u32 LEN>
@@ -361,6 +364,7 @@ namespace MFM {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
+    //omit BitStorage constructor since doesn't support transients
     //UlamRefFixed(BitStorage<EC>& stg, u32 origin, const UlamClass<EC> * effself)
     //  : UlamRef<EC>(POS, LEN, origin, stg, effself)
 
@@ -370,15 +374,12 @@ namespace MFM {
   }; //UlamRefFixed
 
   template <class EC>
-  //struct UlamRefAtom : public UlamRefFixed<EC, 0, EC::ATOM_CONFIG::BITS_PER_ATOM - EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT>
   struct UlamRefAtom : public UlamRef<EC>
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
 
-    //UlamRefAtom(BitStorage<EC>& stg, u32 origin, const UlamClass<EC> * effself)
-    //  : Super(stg, origin, effself)
     UlamRefAtom(BitStorage<EC>& stg, u32 startIdx, const UlamClass<EC> * effself)
       : UlamRef<EC>(startIdx, BPA, stg, effself)
     { }
@@ -387,8 +388,7 @@ namespace MFM {
       : UlamRef<EC>(existing, 0, BPA, effself)
     { }
 
-    //u32 GetType() { AtomBitStorage<EC>& abs = (AtomBitStorage<EC>&) UlamRef<EC>::GetStorage(); return abs.GetType(); }
-    u32 GetType() { return UlamRef<EC>::ReadAtom().GetType(); }
+    virtual u32 GetType() { return UlamRef<EC>::ReadAtom().GetType(); }
   }; //UlamRefAtom
 
 
