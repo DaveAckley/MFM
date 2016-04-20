@@ -232,7 +232,7 @@ namespace MFM {
       T temp(atom);
       Ui_Ut_102321u<EC> sel(selector);
       AtomBitStorage<EC> atbs(temp);
-      UlamRefAtom<EC> ur(atbs, 0u, this);
+      UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this);
       Ui_Ut_14181u<EC> dynColor = Uf_8getColor(uc, ur, sel);
       return dynColor.read();
     }

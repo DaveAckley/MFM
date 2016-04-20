@@ -373,25 +373,6 @@ namespace MFM {
     { }
   }; //UlamRefFixed
 
-  template <class EC>
-  struct UlamRefAtom : public UlamRef<EC>
-  {
-    typedef typename EC::ATOM_CONFIG AC;
-    typedef typename AC::ATOM_TYPE T;
-    enum { BPA = AC::BITS_PER_ATOM };
-
-    UlamRefAtom(BitStorage<EC>& stg, u32 startIdx, const UlamClass<EC> * effself)
-      : UlamRef<EC>(startIdx, BPA, stg, effself)
-    { }
-
-    UlamRefAtom(const UlamRefAtom<EC>& existing, const UlamClass<EC> * effself)
-      : UlamRef<EC>(existing, 0, BPA, effself)
-    { }
-
-    virtual u32 GetType() { return UlamRef<EC>::ReadAtom().GetType(); }
-  }; //UlamRefAtom
-
-
 } // MFM
 
 #include "UlamRef.tcc"
