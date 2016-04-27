@@ -50,7 +50,7 @@ namespace MFM{
     void write(const u32 v) { BVS::Write(0u, 32u, v); }
     Ui_Ut_102321u() { }
     Ui_Ut_102321u(const u32 d) { write(d); }
-    Ui_Ut_102321u(const Ui_Ut_102321u& other) { write(other.read()); }
+    Ui_Ut_102321u(const Ui_Ut_102321u& other) { this->write(other.read()); }
     ~Ui_Ut_102321u() {}
   };
 } //MFM
@@ -71,12 +71,10 @@ namespace MFM{
     typedef BitVectorBitStorage<EC, BV> BVS;
 
     u32 read() const { return BVS::Read(0u, 32u); } //reads entire array
-    u32 readArrayItem(const u32 index, const u32 itemlen) const { return BVS::Read(index * itemlen, itemlen); }
     void write(const u32 v) { BVS::Write(0u, 32u, v); } //writes entire array
-    void writeArrayItem(const u32 v, const u32 index, const u32 itemlen) { BVS::Write(index * itemlen, itemlen, v); }
     Ui_Ut_14181u() { }
-    Ui_Ut_14181u(const u32 d) { u32 n = 4u; while(n--) { writeArrayItem(d, n, 8); } }
-    Ui_Ut_14181u(const Ui_Ut_14181u& other) { write(other.read()); }
+    Ui_Ut_14181u(const u32 d) { write(d); }
+    Ui_Ut_14181u(const Ui_Ut_14181u& other) { this->write(other.read()); }
     ~Ui_Ut_14181u() {}
   };
 } //MFM

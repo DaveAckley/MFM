@@ -99,18 +99,17 @@ namespace MFM {
     virtual void WriteLong(u32 pos, u32 len, u64 val) = 0;
 
     /**
-       ReadBig: read len bits starting at index \c pos as defined by
-                BitStorage subclasses; return them left-justified at
-                position 0..len-1.  Fails if pos + len > size of this
-                storage.  Fails if len > 96.
+       ReadBig: read len bits starting at index \c pos; return them
+                left-justified at position 0..len-1.  Fails if pos +
+                len > size of this storage.  Fails if len > 96.
     */
     virtual BV96 ReadBig(u32 pos, u32 len) const = 0;
 
     /**
        WriteBig: read len bits starting at position 0 in val; write
-                len bits into this storage starting from index \c pos
-                as defined by BitStorage subclasses; Fails if pos +
-                len > size of this storage.  Fails if len > 96.
+                len bits into this storage starting from index \c pos;
+                Fails if pos + len > size of this storage.  Fails if
+                len > 96.
     */
     virtual void WriteBig(u32 pos, u32 len, const BV96& val) = 0;
 

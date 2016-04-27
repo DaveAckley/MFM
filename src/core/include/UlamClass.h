@@ -39,6 +39,7 @@ namespace MFM
 
   template <class EC> struct UlamClassRegistry; // FORWARD
   template <class EC> struct UlamQuark; // FORWARD
+  template <class EC> struct UlamTransient; // FORWARD
 
   struct UlamClassDataMemberInfo; //forward
 
@@ -54,6 +55,11 @@ namespace MFM
        Downcast an UlamClass* to an UlamQuark* if possible.  Returns
        null if this is not an UlamQuark.
      */
+    virtual const UlamQuark<EC>* AsUlamQuark() const
+    {
+      return 0;
+    }
+
     virtual UlamQuark<EC>* AsUlamQuark()
     {
       return 0;
@@ -74,12 +80,12 @@ namespace MFM
     }
 
     /**
-       Downcast a const UlamClass* to a const UlamQuark* if possible.
-       Returns null if this is not an UlamQuark.
+       Downcast a const UlamClass* to a const UlamTransient* if possible.
+       Returns null if this is not an UlamTransient.
      */
-    virtual const UlamQuark<EC> * AsUlamQuark() const
+    virtual bool IsUlamTransient() const
     {
-      return 0;
+      return false;
     }
 
     /**

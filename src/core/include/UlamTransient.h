@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
-  UlamQuark.h A concrete base class for ULAM quarks
-  Copyright (C) 2015-2016 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015-2016 Ackleyshack LLC.
+  UlamTransient.h A concrete base class for ULAM transients
+  Copyright (C) 2016 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2016 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -20,49 +20,47 @@
 */
 
 /**
-  \file UlamQuark.h A concrete base class for ULAM quark
+  \file UlamTransient.h A concrete base class for ULAM transient
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2015-2016 All rights reserved.
+  \date (C) 2016 All rights reserved.
   \lgpl
- */
-#ifndef ULAMQUARK_H
-#define ULAMQUARK_H
+*/
+#ifndef ULAMTRANSIENT_H
+#define ULAMTRANSIENT_H
 
 #include "UlamClass.h"
+#include "UUID.h"
+#include "UlamRef.h"
 
 namespace MFM {
-
   /**
-   * A UlamQuark is a concrete quark primarily for use by culam.
+   * A UlamTransient is a concrete transient primarily for use by culam.
    */
   template <class EC>
-  class UlamQuark : public UlamClass<EC>
+  class UlamTransient : public UlamClass<EC>
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
   public:
 
-    UlamQuark(const UUID & uuid) : UlamClass<EC>() { }
+    UlamTransient(const UUID & uuid) : UlamClass<EC>() { }
 
-    virtual ~UlamQuark() { }
+    virtual ~UlamTransient() { }
 
-    virtual UlamQuark<EC>* AsUlamQuark()
+    virtual bool IsUlamTransient() const
     {
-      return this;
+      return true;
     }
 
-    virtual const UlamQuark<EC> * AsUlamQuark() const
-    {
-      return this;
-    }
+    virtual bool getDefaultTransient(BitStorage<EC> & bvsref) const = 0;
 
-    virtual u32 getDefaultQuark() const = 0;
+  private:
   };
 
 } //MFM
 
-#include "UlamQuark.tcc"
+#include "UlamTransient.tcc"
 
-#endif /* ULAMQUARK_H */
+#endif /* ULAMTRANSIENT_H */
