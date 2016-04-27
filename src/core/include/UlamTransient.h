@@ -54,7 +54,7 @@ namespace MFM {
       return true;
     }
 
-    virtual bool getDefaultTransient(BitStorage<EC> & bvsref) const = 0;
+    virtual void getDefaultTransient(u32 pos, BitStorage<EC> & bvsref) const = 0;
 
   private:
   };
