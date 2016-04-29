@@ -218,6 +218,82 @@ namespace MFM {
     void WriteLong(const u32 startIdx, const u32 length, const u64 value);
 
     /**
+     * Copy an arbitrary subsection of this BitVector to a different
+     * BitVector \c dstbv.  Template parameter \c BITS is the size \c
+     * dstbv.
+     *
+     * @param srcStartIdx The index of the first bit to read inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param dstStartIdx The index of the first bit to write inside
+     *                 \c dstbv, where the MSB is indexed at \c 0 .
+     *
+     * @param length The number of bits to copy.
+     *
+     * @param dstbv The destination BitVector<BITS> that is written
+     *              in positions [dstStartIdx, dstStartIdx + length - 1].
+     *
+     * @fails ILLEGAL_ARGUMENT if dstbv is the same object as this, or
+     *                         srcStartIdx + length is greater than
+     *                         the number of bits in this, or
+     *                         dstStartIdx + length is greater than
+     *                         the number of bits in dstbv
+     *
+     * @sa ReadBV, WriteBV
+     *
+     */
+    template <u32 BITS>
+    inline void CopyBV(const u32 srcStartIdx, const u32 dstStartIdx, const u32 length, BitVector<BITS> & dstbv) const
+    {
+      MFM_API_ASSERT_ARG(((void*) this) != ((void*) &dstbv)); // Ensure distinct ptrs; can't move within yourself
+      u32 amt = BITS_PER_UNIT;
+      for (u32 i = 0; i < length; i += amt)
+      {
+        if (i + amt > length) amt = length - i;
+        dstbv.Write(dstStartIdx + i, amt, this->Read(srcStartIdx + i, amt));
+      }
+    }
+
+    /**
+     * Reads an arbitrary subsection of this BitVector into all of \c
+     * rtnbv.  Template parameter \c BITS determines the number of
+     * bits read.
+     *
+     * @param startIdx The index of the first bit to read inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param rtnbv The BitVector<BITS> modified to hold the read bits .
+     *
+     * @sa WriteBV, CopyBV
+     *
+     */
+    template <u32 BITS>
+    inline void ReadBV(const u32 startIdx, BitVector<BITS> & rtnbv) const
+    {
+      this->CopyBV(startIdx, 0, BITS, rtnbv);
+    }
+
+    /**
+     * Writes all of an arbitrary BitVector starting a specified
+     * position in this BitVector.  Template parameter \c BITS
+     * determines the number of bits written.
+     *
+     * @param startIdx The index of the first bit to write inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param val The bits in \c [0, BITS - 1] of val are written to
+     *              the specified section of this BitVector.
+     *
+     * @sa ReadBV, CopyBV
+     *
+     */
+    template<u32 BITS>
+    void WriteBV(const u32 startIdx, const BitVector<BITS>& val)
+    {
+      val.CopyBV(0, startIdx, BITS, *this);
+    }
+
+    /**
      * Reads up to 96 bits of a particular section of this BitVector.
      *
      * @param startIdx The index of the first bit to read inside this
@@ -229,7 +305,12 @@ namespace MFM {
      * @returns The bits read from the particular section of this
      *          BitVector, left-justified in the BV96.
      */
-    inline BV96 ReadBig(const u32 startIdx, const u32 length) const;
+    inline BV96 ReadBig(const u32 startIdx, const u32 length) const
+    {
+      BV96 val;
+      this->CopyBV(startIdx, 0, length, val);
+      return val;
+    }
 
     /**
      * Writes up to 96 bits of a specified BV96 to a section of this BitVector.
@@ -243,7 +324,10 @@ namespace MFM {
      * @param value The bits \c [0, length - 1] of value are written
      *              to the specified section of this BitVector.
      */
-    void WriteBig(const u32 startIdx, const u32 length, const BV96 value);
+    void WriteBig(const u32 startIdx, const u32 length, const BV96 value)
+    {
+      value.CopyBV(0, startIdx, length, *this);
+    }
 
     /**
      * Sets the bit at a specified index in this BitVector.

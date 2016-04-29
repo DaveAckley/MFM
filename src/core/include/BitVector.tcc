@@ -136,31 +136,6 @@ namespace MFM {
   }
 
   template <u32 B>
-  BV96 BitVector<B>::ReadBig(const u32 startIdx, const u32 length) const
-  {
-    BV96 ret;
-
-    u32 amt = BITS_PER_UNIT;
-    for (u32 i = 0; i < length; i += amt)
-    {
-      if (i + amt > length) amt = length - i;
-      ret.Write(i, amt, this->Read(startIdx + i, amt));
-    }
-    return ret;
-  }
-
-  template <u32 B>
-  void BitVector<B>::WriteBig(const u32 startIdx, const u32 length, const BV96 value)
-  {
-    u32 amt = BITS_PER_UNIT;
-    for (u32 i = 0; i < length; i += amt)
-    {
-      if (i + amt > length) amt = length - i;
-      this->Write(startIdx + i, amt, value.Read(i, amt));
-    }
-  }
-
-  template <u32 B>
   void BitVector<B>::Write(u32 startIdx,
                               u32 length,
                               u32 value)

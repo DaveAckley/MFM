@@ -3,7 +3,6 @@
 #include "itype.h"
 
 namespace MFM {
-
   const u32 vals[8] =
     {
       0x24681357, // 0   0
@@ -35,9 +34,10 @@ namespace MFM {
     Test_bitVectorSplitWrites();
     Test_bitVectorSetAndClearBits();
     Test_bitVectorStoreBits();
+    Test_bitVectorReadWriteBV();
   }
 
-  static BitVector<256> bits;
+  static BitVector<256> bits(vals);
 
   BitVector<256>* BitVector_Test::setup()
   {
@@ -306,6 +306,44 @@ namespace MFM {
     assertUnchanged(0,2);
     assert(bits->Read( 96,32) == 0x9aadbef0);
     assertUnchanged(4,7);
+  }
+
+  void BitVector_Test::Test_bitVectorReadWriteBV()
+  {
+    BitVector<256> bits; // 0 init
+
+    BitVector<4> dig;
+    BitVector<32> dug;
+
+    for (u32 i = 0; i <16; ++i)
+    {
+      dig.Write(0,4,i);
+      bits.WriteBV(i*4, dig);
+    }
+
+    bits.ReadBV(0, dug);
+    assert(dug.Read(  0,32) == 0x01234567);
+
+    bits.ReadBV(32, dug);
+    assert(dug.Read( 0,32) == 0x89abcdef);
+
+    bits.ReadBV(48, dug);
+    assert(dug.Read( 0,32) == 0xcdef0000);
+
+    BitVector<100> big;
+    bits.ReadBV(0, big);
+    big.Write(100 - 4, 4, 0xe);
+    bits.WriteBV(4,big);
+    bits.WriteBV(128,big);
+
+    assert(bits.Read(  0,32) == 0x00123456);
+    assert(bits.Read( 32,32) == 0x789abcde);
+    assert(bits.Read( 64,32) == 0xf0000000);
+    assert(bits.Read( 96,32) == 0x0e000000);
+    assert(bits.Read(128,32) == 0x01234567);
+    assert(bits.Read(160,32) == 0x89abcdef);
+    assert(bits.Read(192,32) == 0x00000000);
+    assert(bits.Read(224,32) == 0xe0000000);
   }
 
   void BitVector_Test::Test_bitVectorCtors()
