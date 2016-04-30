@@ -40,7 +40,7 @@ namespace MFM {
       shift2 = len2 = 0;
       mask2 = 0;
     }
-  }
+  } //BitRef constructor
 
   template <class EC>
   u32 BitRef<EC>::Read(const T & stg) const
@@ -50,7 +50,7 @@ namespace MFM {
     if (len2)
       val = (val<<len2) | ((bv.m_bits[idx+1] & mask2) >> shift2);
     return val;
-  }
+  } //Read
 
   template <class EC>
   void BitRef<EC>::Write(T & stg, u32 val) const
@@ -61,7 +61,7 @@ namespace MFM {
     if (len2)
       bv.m_bits[idx+1] =
         (bv.m_bits[idx+1] & ~mask2) | (val << shift2); // can just shift out the idx bits
-  }
+  } //Write
 
   template <class EC>
   u64 BitRef<EC>::ReadLong(const T & stg) const
@@ -75,7 +75,7 @@ namespace MFM {
       val = (val<<len2) | ((bv.m_bits[last] & mask2) >> shift2);
     }
     return val;
-  }
+  } //ReadLong
 
   template <class EC>
   void BitRef<EC>::WriteLong(T & stg, u64 val) const
@@ -92,20 +92,16 @@ namespace MFM {
       bv.m_bits[last] =
         (bv.m_bits[last] & ~mask2) | (u32) (val << shift2); // can just shift out the idx bits
     }
-  }
-
+  } //WriteLong
 
   template <class EC>
-  //UlamRef<EC>::UlamRef(u32 pos, u32 len, u32 origin, BitStorage<EC>& stg, const UlamClass<EC> * effself)
   UlamRef<EC>::UlamRef(u32 pos, u32 len, BitStorage<EC>& stg, const UlamClass<EC> * effself)
     : m_effSelf(effself)
     , m_stg(stg)
     , m_pos(pos)
     , m_len(len)
-      //    , m_origin(origin)
   {
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
-    //MFM_API_ASSERT_ARG(m_origin <= m_stg.GetBitSize());
   }
 
   template <class EC>
@@ -114,10 +110,8 @@ namespace MFM {
     , m_stg(existing.m_stg)
     , m_pos(pos + existing.GetPos())
     , m_len(len)
-      //, m_origin(existing.GetOrigin())
   {
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
-    //MFM_API_ASSERT_ARG(m_origin <= m_stg.GetBitSize());
   }
 
 
