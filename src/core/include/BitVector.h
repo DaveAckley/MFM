@@ -42,6 +42,8 @@ namespace MFM {
 
   typedef BitVector<96> BV96;
 
+  typedef BitVector<8192> BV8K;
+
   /**
    * A bit vector with reasonably fast operations
    *

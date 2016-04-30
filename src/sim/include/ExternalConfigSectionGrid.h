@@ -34,6 +34,7 @@ namespace MFM
 {
   template <class GC> class ExternalConfigSectionGrid; // FORWARD
 
+  /** Base class for grid-related configuration function calls used in .MFS files */
   template<class GC>
   class ConfigFunctionCallGrid : public ConfigFunctionCall<GC>
   {
