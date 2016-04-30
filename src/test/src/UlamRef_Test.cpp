@@ -338,7 +338,7 @@ namespace MFM {
       BitVectorBitStorage<TestEventConfig,BitVector<320> > t;
       for (u32 i = 0; i < 320/8; ++i) // init to 0x010203..2728
         t.Write(i * 8, 8, i + 1);
-      
+
       BitVector<4> b04;
       BitVector<8> b08;
       BitVector<16> b16;
@@ -383,7 +383,7 @@ namespace MFM {
     {
       BitVectorBitStorage<TestEventConfig,BitVector<16> > t;
       t.Write(0,16,0xab98);
-      
+
       BitVector<4> b04;
       BitVector<8> b08;
       BitVector<16> b16;
@@ -417,7 +417,7 @@ namespace MFM {
       BitVectorBitStorage<TestEventConfig,BitVector<320> > t;
       for (u32 i = 0; i < 320/8; ++i) // init to 0x010203..2728
         t.Write(i * 8, 8, i + 1);
-      
+
       BitVector<4> b04(0xe);
       BitVector<8> b08(0x3f);
       BitVector<16> b16(0xabcd);
@@ -454,7 +454,7 @@ namespace MFM {
     {
       BitVectorBitStorage<TestEventConfig,BitVector<16> > t;
       t.Write(0,16,0xab98);
-      
+
       BitVector<4> b04(0x9);
       BitVector<8> b08(0xba);
       BitVector<16> b16(0xdead);
