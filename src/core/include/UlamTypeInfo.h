@@ -207,6 +207,7 @@ namespace MFM {
 
 namespace MFM {
 
+  /** A descriptor for a single data member in an ULAM class */
   struct UlamClassDataMemberInfo {
     const char * m_mangledType;
     const char * m_dataMemberName;
@@ -250,6 +251,7 @@ namespace MFM{
 
   template <class EC> class UlamElement; //forward
 
+  /** A descriptor for a single unsigned-value ULAM model parameter */
   template <class EC>
   struct UlamTypeInfoModelParameterU32 : ElementParameterU32<EC> {
     const char * GetUnits() const { return m_parameterUnits; }
