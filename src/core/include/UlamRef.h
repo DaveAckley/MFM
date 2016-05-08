@@ -220,19 +220,17 @@ namespace MFM {
   }; //BitVectorBitStorage
 
   /**
-     A BitStorage for a single atom
+     A BitStorage for single existing T&
    */
   template <class EC>
-  struct AtomBitStorage : public BitStorage<EC> {
+  struct AtomRefBitStorage : public BitStorage<EC> {
 
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
-    AtomBitStorage(const T & toCopy) : m_stg(toCopy) { }
+    AtomRefBitStorage(T & toModify) : m_stg(toModify) { }
 
-    AtomBitStorage() : m_stg() { }
-
-    T m_stg;
+    T& m_stg;
 
     virtual u32 Read(u32 pos, u32 len) const
     {
@@ -285,7 +283,24 @@ namespace MFM {
 
     void WriteAtom(const T& tval) { m_stg = tval; }
 
+  }; //AtomRefBitStorage
+
+  /**
+     A BitStorage for a single atom
+   */
+  template <class EC>
+  struct AtomBitStorage : public AtomRefBitStorage<EC> {
+
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+
+    AtomBitStorage(const T & toCopy) : AtomRefBitStorage<EC>(m_copy), m_copy(toCopy) { }
+
+    AtomBitStorage() : AtomRefBitStorage<EC>(m_copy) { }
+
+    T m_copy;
   }; //AtomBitStorage
+
 
 
   /**
