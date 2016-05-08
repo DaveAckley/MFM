@@ -23,11 +23,11 @@ namespace MFM {
   } //PositionOfDataMember (static)
 
   template <class EC>
-  bool UlamClass<EC>::IsMethod(const UlamContext<EC>& uc, u32 type, const char * quarkTypeName)
+  bool UlamClass<EC>::IsMethod(const UlamContext<EC>& uc, u32 type, const UlamClass<EC> * classPtr)
   {
     const UlamElement<EC> * ueltptr = (UlamElement<EC> *) uc.LookupElementTypeFromContext(type);
     if (!ueltptr) return false;
-    return ueltptr->internalCMethodImplementingIs(quarkTypeName);
+    return ueltptr->internalCMethodImplementingIs(classPtr);
   } //IsMethod (static)
 
   typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use

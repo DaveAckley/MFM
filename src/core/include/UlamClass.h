@@ -137,19 +137,19 @@ namespace MFM
      */
     static s32 PositionOfDataMember(const UlamContext<EC>& uc, u32 type, const char * dataMemberTypeName) ;
 
-
     /**
-       Find the ancestor of quark in this element's family tree by the
-       name of its type, if any exist.
+       Find the ancestor of quark in this element's family tree by comparing the
+       address of its static THE_INSTANCE type, if any exist.
 
        \return true if they are related;
 
        \sa T::ATOM_FIRST_STATE_BIT
      */
-    virtual bool internalCMethodImplementingIs(const char * quarkTypeName) const
+    virtual bool internalCMethodImplementingIs(const UlamClass<EC> * cptrarg) const
     {
       FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
     }
+
 
     /**
        Compare type of this element to atom
@@ -161,12 +161,11 @@ namespace MFM
     bool internalCMethodImplementingIs(const typename EC::ATOM_CONFIG::ATOM_TYPE& targ) const
     {
       FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
-      //return (this->GetType() == targ.GetType());
     }
 
     /**
        Discover if quark Type, specified by its \c
-       quarkTypeName, in an UlamElement specified by its \c type
+       INSTANCE address, in an UlamElement specified by its \c type
        number, if such as UlamElement exists and inherits from such a quark.
 
        \param type an element type number, hopefully of an UlamElement
@@ -180,9 +179,11 @@ namespace MFM
        \sa T::ATOM_FIRST_STATE_BIT
        \sa internalCMethodImplementingIs
      */
-    static bool IsMethod(const UlamContext<EC>& uc, u32 type, const char * quarkTypeName);
+    static bool IsMethod(const UlamContext<EC>& uc, u32 type, const UlamClass<EC> * classPtr);
+
 
     typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
+
     /**
        Return vtable of this element, or NULL if there isn't one.
 
