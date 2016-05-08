@@ -17,7 +17,7 @@ namespace MFM {
     {
       0x87654321, // 25..56
       0x44332211, // 57..88
-      0xfedbca09 >> 25  // 89..95
+      0xfedbca09  // 89..95
     };
 
   TestAtom UlamRef_Test::setup()
@@ -26,7 +26,7 @@ namespace MFM {
     TestAtom t;
     BitVector<96> & bv = t.GetBits();
     for (u32 i = 0; i < 96/32; ++i) {
-      bv.Write(i*32, 32, vals[i]);
+      bv.Write(i*32, 32, svals[i]);
     }
 
     return t;
@@ -48,7 +48,7 @@ namespace MFM {
     {
       AtomBitStorage<TestEventConfig> t(setup());
       for (u32 i = 0; i < 96/32; ++i) {
-        u32 len = i==2 ? 7 : 32;
+        u32 len = 32;
         TestUlamRef ur(i*32, len, t, 0);
 
         assert(ur.GetPos() == i*32);
@@ -88,7 +88,7 @@ namespace MFM {
     {
       AtomBitStorage<TestEventConfig> t(setup());
       for (u32 i = 0; i < 96/32; ++i) {
-        u32 len = i==2 ? 7 : 32;
+        u32 len = 32;
         TestUlamRef ur(i*32, len, t, 0);
 
         assert(ur.GetPos() == i*32);
@@ -141,7 +141,7 @@ namespace MFM {
       AtomBitStorage<TestEventConfig> t(setup());
 
       for (u32 i = 0; i < 96/32; ++i) {
-        u32 len = i==2 ? 7 : 32;
+        u32 len = 32;
         TestUlamRef ur(i*32, len, t, 0);
 
         assert(ur.GetPos() == i*32);
@@ -206,7 +206,7 @@ namespace MFM {
     {
       AtomBitStorage<TestEventConfig> t(setup());
       for (u32 i = 0; i < 96/32; ++i) {
-        u32 len = i==2 ? 7 : 32;
+        u32 len = 32;
         TestUlamRef ur(i*32, len, t, 0);
 
         assert(ur.GetPos() == i*32);

@@ -20,7 +20,7 @@ namespace MFM {
     u32 sym = m_info ? m_info->GetSymmetry(uc) : PSYM_DEG000L;
     window.SetSymmetry((PointSymmetry) sym);
 
-    AtomBitStorage<EC> atbs(window.GetCenterAtomSym());
+    AtomRefBitStorage<EC> atbs(window.GetCenterAtomSym());
     UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this);
     Uf_6behave(uc, ur);
   }
