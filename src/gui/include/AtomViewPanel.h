@@ -276,9 +276,9 @@ namespace MFM
       const UlamClassRegistry<EC> & ucr = m_grid->GetUlamClassRegistry();
 
       const u32 printFlags =
-        UlamClass<EC>::PRINT_MEMBER_NAMES |
-        UlamClass<EC>::PRINT_MEMBER_VALUES |
-        UlamClass<EC>::PRINT_RECURSE_QUARKS;
+        UlamClassPrintFlags::PRINT_MEMBER_NAMES |
+        UlamClassPrintFlags::PRINT_MEMBER_VALUES |
+        UlamClassPrintFlags::PRINT_RECURSE_QUARKS;
 
       buff.Reset();
       uelt->Print(ucr, buff, atom, printFlags);
