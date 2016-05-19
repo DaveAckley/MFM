@@ -26,4 +26,16 @@ namespace MFM {
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
   }
 
+  template <class EC>
+  void UlamRef<EC>::Print(const UlamClassRegistry<EC>&uc, ByteSink& bs, u32 printFlags) const
+  {
+    if (!m_effSelf) 
+    {
+      bs.Printf("UlamRef[pos=%d,len=%d,NULL]", m_pos, m_len);
+      return;
+    }
+
+    m_effSelf->PrintClassMembers(uc, bs, m_stg, printFlags, m_pos);
+  }
+
 } //MFM
