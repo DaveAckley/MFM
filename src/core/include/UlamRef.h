@@ -29,6 +29,7 @@
 
 #include "UlamClass.h"
 #include "BitStorage.h"
+#include "ByteSink.h"
 
 namespace MFM
 {
@@ -100,6 +101,9 @@ namespace MFM
       atmp.WriteBig(0u + T::ATOM_FIRST_STATE_BIT, len, m_stg.ReadBig(GetPos(), len));
       return atmp.ReadAtom();
     }
+
+    void Print(const UlamClassRegistry<EC>&, ByteSink&, u32 printFlags) const;
+
   }; //UlamRef
 
   template <class EC, u32 POS, u32 LEN>

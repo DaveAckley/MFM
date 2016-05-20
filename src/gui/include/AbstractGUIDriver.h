@@ -1153,7 +1153,7 @@ namespace MFM
 
     } m_buttonPanel;
 
-    TextPanel<200,100> m_logPanel;  // 200 for big timestamps and such..
+    TextPanel<256,100> m_logPanel;  // 256 for big timestamps and FAIL paths..
     TeeByteSink m_logSplitter;
 
     void ResetScreenSize()

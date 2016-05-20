@@ -19,6 +19,7 @@ namespace MFM
     , m_state(OFF)
     , m_enabled(true)
     , m_backgroundRadiationEnabled(false)
+    , m_foregroundRadiationEnabled(false)
     , m_requestedState(OFF)
     , m_warpFactor(3)
   {

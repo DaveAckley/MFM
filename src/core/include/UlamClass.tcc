@@ -48,6 +48,17 @@ namespace MFM {
                                     u32 flags,
                                     u32 baseStatePos) const
   {
+    AtomBitStorage<EC> abs(atom);
+    PrintClassMembers(ucr, bs, abs, flags, baseStatePos);
+  }
+
+  template <class EC>
+  void UlamClass<EC>::PrintClassMembers(const UlamClassRegistry<EC> & ucr,
+                                        ByteSink & bs,
+                                        const BitStorage<EC>& stg,
+                                        u32 flags,
+                                        u32 baseStatePos) const
+  {
     typedef typename EC::ATOM_CONFIG::ATOM_TYPE T;
     if (flags & (PRINT_MEMBER_VALUES|PRINT_MEMBER_NAMES|PRINT_MEMBER_TYPES))
     {
@@ -98,10 +109,10 @@ namespace MFM {
               bs.Printf(", [%d]=",idx);
             }
 
-            u64 val = atom.GetBits().ReadLong(baseStatePos + dmi.m_bitPosition
-                                              + T::ATOM_FIRST_STATE_BIT
-                                              + idx * bitsize,
-                                              bitsize);
+            u64 val = stg.ReadLong(baseStatePos + dmi.m_bitPosition
+                                   + T::ATOM_FIRST_STATE_BIT
+                                   + idx * bitsize,
+                                   bitsize);
 
             if (utin.m_category == UlamTypeInfo::QUARK)
             {
@@ -111,7 +122,7 @@ namespace MFM {
                 const UlamClass * memberClass = ucr.GetUlamClassByMangledName(mangledName);
                 if (memberClass)
                 {
-                  memberClass->PrintClassMembers(ucr, bs, atom, flags, baseStatePos + dmi.m_bitPosition);
+                  memberClass->PrintClassMembers(ucr, bs, stg, flags, baseStatePos + dmi.m_bitPosition);
                   continue;
                 }
               }

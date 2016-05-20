@@ -33,6 +33,7 @@
 #include "itype.h"
 #include "Element.h"
 #include "UlamContext.h"
+#include "BitStorage.h"
 
 namespace MFM
 {
@@ -43,8 +44,51 @@ namespace MFM
 
   struct UlamClassDataMemberInfo; //forward
 
+  /**
+     Wrapper class to provide the UlamClass::PrintClassMember flags
+     outside of a template without polluting the MFM namespace
+     directly.
+  */
+  struct UlamClassPrintFlags {
+    /**
+       Flag values determining what Print(Atom,u32) prints
+       \sa Print(ByteSink&, const T&, u32)
+    */
+    enum {
+      PRINT_SYMBOL =          0x00000001, //< Include element symbol
+      PRINT_FULL_NAME =       0x00000002, //< Include element name
+      PRINT_ATOM_BODY =       0x00000004, //< Include entire atom in hex
+      PRINT_MEMBER_VALUES =   0x00000008, //< Include data member values
+      PRINT_MEMBER_BITVALS =  0x00000010, //< Include data member values as bits in hex
+      PRINT_MEMBER_NAMES =    0x00000020, //< Include data member names
+      PRINT_MEMBER_TYPES =    0x00000040, //< Include data member types
+      PRINT_SIZE0_MEMBERS =   0x00000080, //< Include size 0 data members
+      PRINT_MEMBER_ARRAYS =   0x00000100, //< Print array values individually
+      PRINT_RECURSE_QUARKS =  0x00000200, //< Print quarks recursively
+
+      /** (Composite value) Print element symbol and entire atom in hex */
+      PRINT_HEX_ATOM = PRINT_SYMBOL|PRINT_ATOM_BODY,
+
+      /** (Composite value) Print element symbol and its data member values in declaration order */
+      PRINT_TOP_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_VALUES,
+
+      /** (Composite value) Print element symbol and its data member names and values in declaration order */
+      PRINT_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_NAMES|PRINT_MEMBER_VALUES,
+
+      /** (Composite value) Print element symbol and data member values, expanding quarks */
+      PRINT_QUARK_MEMBERS = PRINT_MEMBERS|PRINT_RECURSE_QUARKS,
+
+      /** (Composite value) Print element symbol and data member values, expanding quarks and arrays */
+      PRINT_ALL_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_VALUES|PRINT_RECURSE_QUARKS|PRINT_MEMBER_ARRAYS,
+
+      /** (Composite value) Print far too much */
+      PRINT_EVERYTHING = -1
+    };
+  };
+
+
   template <class EC>
-  struct UlamClass
+  struct UlamClass : UlamClassPrintFlags
   {
     virtual u32 GetClassLength() const
     {
@@ -236,40 +280,11 @@ namespace MFM
       FAIL(ILLEGAL_STATE);
     }
 
-    /**
-       Flag values determining what Print(Atom,u32) prints
-       \sa Print(ByteSink&, const T&, u32)
-     */
-    enum PrintFlags {
-      PRINT_SYMBOL =          0x00000001, //< Include element symbol
-      PRINT_FULL_NAME =       0x00000002, //< Include element name
-      PRINT_ATOM_BODY =       0x00000004, //< Include entire atom in hex
-      PRINT_MEMBER_VALUES =   0x00000008, //< Include data member values
-      PRINT_MEMBER_BITVALS =  0x00000010, //< Include data member values as bits in hex
-      PRINT_MEMBER_NAMES =    0x00000020, //< Include data member names
-      PRINT_MEMBER_TYPES =    0x00000040, //< Include data member types
-      PRINT_SIZE0_MEMBERS =   0x00000080, //< Include size 0 data members
-      PRINT_MEMBER_ARRAYS =   0x00000100, //< Print array values individually
-      PRINT_RECURSE_QUARKS =  0x00000200, //< Print quarks recursively
-
-      /** (Composite value) Print element symbol and entire atom in hex */
-      PRINT_HEX_ATOM = PRINT_SYMBOL|PRINT_ATOM_BODY,
-
-      /** (Composite value) Print element symbol and its data member values in declaration order */
-      PRINT_TOP_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_VALUES,
-
-      /** (Composite value) Print element symbol and its data member names and values in declaration order */
-      PRINT_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_NAMES|PRINT_MEMBER_VALUES,
-
-      /** (Composite value) Print element symbol and data member values, expanding quarks */
-      PRINT_QUARK_MEMBERS = PRINT_MEMBERS|PRINT_RECURSE_QUARKS,
-
-      /** (Composite value) Print element symbol and data member values, expanding quarks and arrays */
-      PRINT_ALL_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_VALUES|PRINT_RECURSE_QUARKS|PRINT_MEMBER_ARRAYS,
-
-      /** (Composite value) Print far too much */
-      PRINT_EVERYTHING = -1
-    };
+    void PrintClassMembers(const UlamClassRegistry<EC> & ucr,
+			   ByteSink & bs,
+			   const BitStorage<EC>& stg,
+			   u32 flags,
+			   u32 baseStatePos) const ;
 
     void PrintClassMembers(const UlamClassRegistry<EC> & ucr,
 			   ByteSink & bs,
