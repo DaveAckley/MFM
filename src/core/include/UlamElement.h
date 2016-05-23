@@ -134,6 +134,11 @@ namespace MFM {
 
   public:
 
+    enum SpecialVirtualVTableIndices {
+      BEHAVE_VTABLE_INDEX = 0,
+      GETCOLOR_VTABLE_INDEX = 1
+    };
+
     UlamElement(const UUID & uuid) : Element<EC>(uuid) { }
 
     virtual ~UlamElement() { }
@@ -159,15 +164,7 @@ namespace MFM {
 
     virtual void Behavior(EventWindow<EC>& window) const ;
 
-    /**
-       Ulam elements that define 'Void behave()' will override this
-       method, and it will be called on events!
-     */
-    virtual void Uf_6behave(const UlamContext<EC> & uc, UlamRef<EC>& ur) const
-    {
-      // Empty by default
-    }
-
+#if 0
     /**
        Ulam elements defining 'Unsigned getColor(Unsigned selector)'
        will override this method, and it will be called during
@@ -191,6 +188,7 @@ namespace MFM {
     {
       return Ui_Ut_14181u<EC>(this->GetElementColor());
     }
+#endif
 
     virtual bool GetPlaceable() const
     {
@@ -231,7 +229,11 @@ namespace MFM {
       Ui_Ut_102321u<EC> sel(selector);
       AtomBitStorage<EC> atbs(temp);
       UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this);
-      Ui_Ut_14181u<EC> dynColor = Uf_8getColor(uc, ur, sel);
+      //Ui_Ut_14181u<EC> dynColor = Uf_8getColor(uc, ur, sel);
+      // how to do an ulam virtual function call in c++
+      typedef Ui_Ut_14181u<EC> (* Uf_8getColor11102321u) (const UlamContext<EC>&, UlamRef<EC>&, Ui_Ut_102321u<EC> );
+      Ui_Ut_14181u<EC> dynColor = ((Uf_8getColor11102321u) this->getVTableEntry(GETCOLOR_VTABLE_INDEX)) (uc, ur, sel);
+
       return dynColor.read();
     }
 
