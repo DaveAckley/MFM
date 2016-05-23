@@ -22,7 +22,10 @@ namespace MFM {
 
     AtomRefBitStorage<EC> atbs(window.GetCenterAtomSym());
     UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this);
-    Uf_6behave(uc, ur);
+
+    // how to do an ulam virtual function call in c++
+    typedef void (* Uf_6behave) (const UlamContext<EC>&, UlamRef<EC>& );
+    ((Uf_6behave) this->getVTableEntry(BEHAVE_VTABLE_INDEX)) (uc, ur);
   }
 
   template <class EC>
