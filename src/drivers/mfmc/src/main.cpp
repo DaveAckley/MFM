@@ -361,6 +361,28 @@ namespace MFM
   }
 }
 
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+        const MFM::UlamRef<MFM::OurEventConfigAll>& rur) __attribute__ ((used)) ;
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+        const MFM::AtomBitStorage<MFM::OurEventConfigAll>& abs) __attribute__ ((used)) ;
+
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+        const MFM::AtomBitStorage<MFM::OurEventConfigAll>& abs)
+{
+  const MFM::Tile<MFM::OurEventConfigAll>& rtile = ruc.GetTile();
+  MFM::DebugPrint<MFM::OurEventConfigAll>(rtile, abs, MFM::STDERR);  
+  MFM::STDERR.Printf("\n");
+}
+
+
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+        const MFM::UlamRef<MFM::OurEventConfigAll>& rur)
+{
+  const MFM::Tile<MFM::OurEventConfigAll>& rtile = ruc.GetTile();
+  MFM::DebugPrint<MFM::OurEventConfigAll>(rtile, rur, MFM::STDERR);  
+  MFM::STDERR.Printf("\n");
+}
+
 int main(int argc, const char** argv)
 {
   return MFM::MainDispatch(argc,argv);

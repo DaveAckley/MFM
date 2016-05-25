@@ -43,13 +43,22 @@ namespace MFM {
 
   template <class EC>
   void UlamClass<EC>::PrintClassMembers(const UlamClassRegistry<EC> & ucr,
-                                    ByteSink & bs,
-                                    const typename EC::ATOM_CONFIG::ATOM_TYPE& atom,
-                                    u32 flags,
-                                    u32 baseStatePos) const
+                                        ByteSink & bs,
+                                        const typename EC::ATOM_CONFIG::ATOM_TYPE& atom,
+                                        u32 flags,
+                                        u32 baseStatePos,
+                                        u32 indent) const
   {
     AtomBitStorage<EC> abs(atom);
-    PrintClassMembers(ucr, bs, abs, flags, baseStatePos);
+    PrintClassMembers(ucr, bs, abs, flags, baseStatePos, indent);
+  }
+
+  inline static void doNL(ByteSink & bs, u32 flags, u32 indent) {
+    if (flags & UlamClassPrintFlags::PRINT_INDENTED_LINES) 
+    {
+      bs.Printf("\n");
+      for (u32 i = 0; i < indent; ++i) bs.Printf(" ");
+    }
   }
 
   template <class EC>
@@ -57,7 +66,8 @@ namespace MFM {
                                         ByteSink & bs,
                                         const BitStorage<EC>& stg,
                                         u32 flags,
-                                        u32 baseStatePos) const
+                                        u32 baseStatePos,
+                                        u32 indent) const
   {
     typedef typename EC::ATOM_CONFIG::ATOM_TYPE T;
     if (flags & (PRINT_MEMBER_VALUES|PRINT_MEMBER_NAMES|PRINT_MEMBER_TYPES))
@@ -77,10 +87,13 @@ namespace MFM {
         {
           opened = true;
           bs.Printf("(");
+          ++indent;
+          doNL(bs,flags,indent);
         }
         else
         {
           bs.Printf(",");
+          doNL(bs,flags,indent);
         }
         if (flags & PRINT_MEMBER_TYPES)
         {
@@ -122,7 +135,7 @@ namespace MFM {
                 const UlamClass * memberClass = ucr.GetUlamClassByMangledName(mangledName);
                 if (memberClass)
                 {
-                  memberClass->PrintClassMembers(ucr, bs, stg, flags, baseStatePos + dmi.m_bitPosition);
+                  memberClass->PrintClassMembers(ucr, bs, stg, flags, baseStatePos + dmi.m_bitPosition, indent + 1);
                   continue;
                 }
               }
@@ -188,8 +201,9 @@ namespace MFM {
           }
         }
       }
-      if (opened)
-        bs.Printf(")");
+      if (opened) --indent;
+      doNL(bs,flags,indent);
+      if (opened) bs.Printf(")");
     }
   } //PrintClassMembers
 

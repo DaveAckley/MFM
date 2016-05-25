@@ -65,6 +65,7 @@ namespace MFM
       PRINT_SIZE0_MEMBERS =   0x00000080, //< Include size 0 data members
       PRINT_MEMBER_ARRAYS =   0x00000100, //< Print array values individually
       PRINT_RECURSE_QUARKS =  0x00000200, //< Print quarks recursively
+      PRINT_INDENTED_LINES =  0x00000400, //< Add newlines and indents
 
       /** (Composite value) Print element symbol and entire atom in hex */
       PRINT_HEX_ATOM = PRINT_SYMBOL|PRINT_ATOM_BODY,
@@ -284,13 +285,15 @@ namespace MFM
 			   ByteSink & bs,
 			   const BitStorage<EC>& stg,
 			   u32 flags,
-			   u32 baseStatePos) const ;
+			   u32 baseStatePos,
+                           u32 indent = 0) const ;
 
     void PrintClassMembers(const UlamClassRegistry<EC> & ucr,
 			   ByteSink & bs,
 			   const typename EC::ATOM_CONFIG::ATOM_TYPE& atom,
 			   u32 flags,
-			   u32 baseStatePos) const ;
+			   u32 baseStatePos,
+                           u32 indent = 0) const ;
 
     static void addHex(ByteSink & bs, u64 val) ;
   };

@@ -48,6 +48,7 @@
 #include "StdElements.h"
 #include "ElementRegistry.h"
 #include "Version.h"
+#include "DebugTools.h"
 
 
 #define MAX_PATH_LENGTH 1000

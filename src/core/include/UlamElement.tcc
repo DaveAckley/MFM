@@ -29,13 +29,15 @@ namespace MFM {
   }
 
   template <class EC>
-  void UlamElement<EC>::Print(const UlamClassRegistry<EC> & ucr, ByteSink & bs, const T & atom, u32 flags) const
+  void UlamElement<EC>::Print(const UlamClassRegistry<EC> & ucr, ByteSink & bs, const T & atom, u32 flags, u32 basestatepos) const
   {
     if (!flags) return;
 
-    if (flags & UlamClass<EC>::PRINT_SYMBOL) bs.Printf("(%s)", this->GetAtomicSymbol());
+    if (flags & UlamClass<EC>::PRINT_SYMBOL) bs.Printf("(%s) ", this->GetAtomicSymbol());
 
     if (flags & UlamClass<EC>::PRINT_FULL_NAME) bs.Printf("%s",this->GetName());
+
+    if (flags & UlamClass<EC>::PRINT_INDENTED_LINES) bs.Printf("\n ");
 
     if (flags & UlamClass<EC>::PRINT_ATOM_BODY)
     {
@@ -45,6 +47,8 @@ namespace MFM {
       bs.Printf(":%@", &as);
     }
 
-    this->UlamClass<EC>::PrintClassMembers(ucr,bs,atom,flags,0);
+    if (flags & UlamClass<EC>::PRINT_INDENTED_LINES) bs.Printf("\n");
+
+    this->UlamClass<EC>::PrintClassMembers(ucr,bs,atom,flags,basestatepos);
   }
 } //MFM
