@@ -154,7 +154,7 @@ namespace MFM {
        various details as specified by flags.
        \sa PrintFlags
      */
-    void Print(const UlamClassRegistry<EC> & ucr, ByteSink & bs, const T & atom, u32 flags) const ;
+    void Print(const UlamClassRegistry<EC> & ucr, ByteSink & bs, const T & atom, u32 flags, u32 basestatepos = 0) const ;
 
     void SetInfo(const UlamElementInfo<EC> * info) {
       m_info = info;
@@ -229,7 +229,7 @@ namespace MFM {
       Ui_Ut_102321u<EC> sel(selector);
       AtomBitStorage<EC> atbs(temp);
       UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this);
-      //Ui_Ut_14181u<EC> dynColor = Uf_8getColor(uc, ur, sel);
+
       // how to do an ulam virtual function call in c++
       typedef Ui_Ut_14181u<EC> (* Uf_8getColor11102321u) (const UlamContext<EC>&, UlamRef<EC>&, Ui_Ut_102321u<EC> );
       Ui_Ut_14181u<EC> dynColor = ((Uf_8getColor11102321u) this->getVTableEntry(GETCOLOR_VTABLE_INDEX)) (uc, ur, sel);

@@ -35,6 +35,16 @@ namespace MFM {
       return;
     }
 
+    const UlamElement<EC> * ue = m_effSelf->AsUlamElement();
+    if (ue) 
+    {
+      const T atom = this->ReadAtom();
+      ue->Print(uc, bs, atom, printFlags, m_pos);
+      return;
+    }
+
+    // If this isn't an ulam element, MFM doesn't have name info for
+    // its type, but we can still print its class members
     m_effSelf->PrintClassMembers(uc, bs, m_stg, printFlags, m_pos);
   }
 
