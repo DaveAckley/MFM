@@ -31,7 +31,9 @@
 #include "Point.h"
 #include "Rect.h"
 #include "Drawing.h"
+#include "Keyboard.h"
 #include "ByteSink.h"
+#include "FileByteSink.h" // For STDERR
 #include "EditingTool.h"
 #include "OverflowableCharBufferByteSink.h"
 #include "AssetManager.h"
@@ -49,7 +51,37 @@ namespace MFM
 
   class Panel;   // FORWARD
 
-  struct MouseEvent
+  struct DispatchableEvent {
+
+    virtual ~DispatchableEvent() { }
+
+    // Double dispatch support
+    virtual bool Handle(Panel & panel) = 0;
+
+    virtual SPoint GetAt() const = 0;
+  };
+
+  struct KeyboardEvent : public DispatchableEvent
+  {
+    bool m_isPress;
+    bool m_modifiers;
+    SPoint m_lastMousePosition;
+    SDL_KeyboardEvent & m_event;
+
+    KeyboardEvent(SDL_KeyboardEvent e, const SPoint lastKnownMouse)
+      : m_isPress(e.type == SDL_KEYDOWN)
+      , m_modifiers(Keyboard::MergeMods(e.keysym.mod))
+      , m_lastMousePosition(lastKnownMouse)
+      , m_event(e)
+    { }
+
+    virtual bool Handle(Panel & panel) ;
+
+    virtual SPoint GetAt() const { return m_lastMousePosition; }
+
+  };
+
+  struct MouseEvent : public DispatchableEvent
   {
     MouseEvent(const u32 & keyboardModifiers, SDL_Event & event)
       : m_keyboardModifiers(keyboardModifiers)
@@ -59,13 +91,6 @@ namespace MFM
     const u32 & m_keyboardModifiers;
     SDL_Event & m_event;
 
-    virtual ~MouseEvent()
-    { }
-
-    // Double dispatch support
-    virtual bool Handle(Panel & panel) = 0;
-
-    virtual SPoint GetAt() const = 0;
   };
 
   struct MouseButtonEvent : public MouseEvent
@@ -189,6 +214,20 @@ namespace MFM
 
     u32 GetChildCount() const ;
 
+    /**
+       Lower \c child to the bottom of this panel's stacking order.
+       Fails NULL_POINTER if child is null.  Fails ILLEGAL_STATE if
+       child is not currently in this panel
+     */
+    void LowerToBottom(Panel * child) ;
+
+    /**
+       Raise \c child to the top of this panel's stacking order.
+       Fails NULL_POINTER if child is null.  Fails ILLEGAL_STATE if
+       child is not currently in this panel
+     */
+    void RaiseToTop(Panel * child) ;
+
     void Remove(Panel* child) ;
 
     void SetVisible(bool value){ m_visible = value; }
@@ -223,10 +262,14 @@ namespace MFM
     }
 
     /**
-       Primarily for debugging, print a text rendering of this panel
-       and its children.
+       Print a text rendering of this panel and its children.
      */
-    void Print(ByteSink & sink, u32 indent = 0) const;
+    void Print(ByteSink & sink, u32 depth = U32_MAX, u32 indent = 0) const;
+    
+    /** Debugging shortcuts
+     */
+    void Print() const __attribute__ ((used)) ;
+    void Print1() const __attribute__ ((used)) ;
 
     /**
        Print the full name (i.e., including all its ancestors) of this
@@ -386,13 +429,24 @@ namespace MFM
     virtual void PaintFloat(Drawing & config);
 
     /**
-       Dispatch a mouse event, to the appropriate subpanel depending on
-       the stacking order and the position of the mouse.  Panels should
-       override the Handle(MouseButtonEvent) and/or
-       Handle(MouseMotionEvent) method if they wish to handle such
-       events.  Returns true if any panel claimed to handle the event.
+       Dispatch an event to the appropriate subpanel, potentially
+       depending on: who wants the event, the panel stacking order and
+       layout, and the position of the mouse.  Panels should override
+       appropriate the Handle(KeyboardEvent),
+       Handle(MouseButtonEvent), and/or Handle(MouseMotionEvent)
+       method for the events they wish to handle.  Returns true if any
+       panel claimed to handle the event.
      */
-    virtual bool Dispatch(MouseEvent & event, const Rect & rect);
+    virtual bool Dispatch(DispatchableEvent & event, const Rect & rect);
+
+    /**
+       Respond to a KeyboardEvent
+
+       @returns true if the event should be considered handled.  The
+                default implementation does nothing and returns
+                false.
+     */
+    virtual bool Handle(KeyboardEvent & event) ;
 
     /**
        Respond to a MouseButtonEvent (this includes scroll wheel

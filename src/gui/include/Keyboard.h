@@ -130,11 +130,11 @@ namespace MFM {
 
     bool Press(u32 keysym, u32 mods) ;
 
-    static u32 MergeMods(u32 mods) ;
-
     KeyEntry m_keyBindings[MAX_BINDINGS];
 
   public:
+
+    static u32 MergeMods(u32 mods) ;
 
     template <class KEYBOARD, class KEYENTRY>
     class KeyboardAcceleratorIterator

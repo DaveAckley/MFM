@@ -95,6 +95,11 @@ namespace MFM
       return Super::LoadDetails(key, source);
     }
 
+    virtual bool Handle(KeyboardEvent& event)
+    {
+      return Super::Handle(event);
+    }
+
     virtual bool Handle(MouseButtonEvent& event)
     {
       if(event.m_event.type == SDL_MOUSEBUTTONDOWN)

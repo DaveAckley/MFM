@@ -439,7 +439,17 @@ namespace MFM
 
     virtual void UpdateGridAround(UPoint point)
     {
-      SetAtomCoord(MakeSigned(point));
+      GridPanel<GC> & gp = this->GetGridPanel();
+      if (!this->IsMainFunction() && !gp.GetAtomViewPanelLookingAtPointIfAny(point))
+      {
+        AtomViewPanel<GC> * pavp = gp.GetInvisibleAtomViewPanelIfAny();
+        if (pavp)
+        {
+          gp.SelectAtomViewPanel(*pavp);
+        }
+      }
+
+      SetAtomCoord(MakeSigned(point)); // in new or prior
     }
 
     virtual void UpdateGridCoord(UPoint point)
@@ -448,28 +458,6 @@ namespace MFM
       // get here
       FAIL(ILLEGAL_STATE);
     }
-
-#if 0
-
-    void BoxEdge(Drawing & drawing, const SPoint gridCoord, u32 color)
-    {
-      if (!this->GetGrid().IsGridCoord(gridCoord)) return;
-      UPoint boxCoord = MakeUnsigned(gridCoord);
-      Rect screenRectDit;
-      GridPanel<GC> & gp = this->GetGridPanel();
-      if (!gp.GetScreenRectDitOfGridCoord(boxCoord, screenRectDit))
-        return;  // WTH?
-      drawing.SetForeground(color);
-      drawing.DrawRectDit(screenRectDit);
-    }
-
-
-    virtual void PaintOverlay(Drawing & drawing)
-    {
-      if (!HasAtomCoord()) return;
-      BoxEdge(drawing, m_atomCoord, (Utils::GetDateTimeNow()&1) ? Drawing::WHITE : Drawing::BLACK);
-    }
-#endif
 
   };
 

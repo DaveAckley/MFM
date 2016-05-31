@@ -185,8 +185,8 @@ namespace MFM
 
     void OnceOnlyTools()
     {
-      m_gridPanel.GetAtomViewPanel().SetGrid(Super::GetGrid());
-      m_gridToolAtomView.SetAtomViewPanel(m_gridPanel.GetAtomViewPanel());
+      m_gridPanel.InitAtomViewPanels(Super::GetGrid(), &m_gridToolAtomView);
+      //      m_gridToolAtomView.SetAtomViewPanel(m_gridPanel.GetAtomViewPanel(0));
       InsertAndRegisterGridTool(m_gridToolPencil);
       InsertAndRegisterGridTool(m_gridToolEraser);
       // XXX Consider killing the brush to make room for the spark
@@ -344,10 +344,15 @@ namespace MFM
       m_keyboardMap.Register(m_decreaseAEPSPerFrame);
     }
 
-    void KeyboardUpdate(SDL_KeyboardEvent & key, OurGrid& grid)
+    void KeyboardUpdate(SDL_KeyboardEvent & key, OurGrid& grid, const SPoint where)
     {
-      // XXX We should let the panel tree take a crack at the event
-      // XXX first, then fallback to these global accelerators
+      {
+        KeyboardEvent kbe(key, where);
+        if (m_rootPanel.Dispatch(kbe,
+                                 Rect(SPoint(),
+                                      UPoint(m_screenWidth,m_screenHeight))))
+          return;
+      }
       m_keyboardMap.HandleEvent(key);
 
 #if 0
@@ -1229,6 +1234,7 @@ namespace MFM
       u32 mouseButtonsDown = 0;
       u32 keyboardModifiers = 0;
       ButtonPositionArray dragStartPositions;
+      SPoint lastKnownMousePosition;
 
       while(running)
       {
@@ -1249,11 +1255,13 @@ namespace MFM
             break;
 
           case SDL_MOUSEBUTTONUP:
+            lastKnownMousePosition.Set(event.button.x, event.button.y);
             mouseButtonsDown &= ~(1<<(event.button.button));
             dragStartPositions[event.button.button].Set(-1,-1);
             goto mousebuttondispatch;
 
           case SDL_MOUSEBUTTONDOWN:
+            lastKnownMousePosition.Set(event.button.x, event.button.y);
             mouseButtonsDown |= 1<<(event.button.button);
             dragStartPositions[event.button.button].Set(event.button.x,event.button.y);
             // FALL THROUGH
@@ -1269,6 +1277,7 @@ namespace MFM
 
           case SDL_MOUSEMOTION:
           {
+            lastKnownMousePosition.Set(event.motion.x, event.motion.y);
             MouseMotionEvent mme(keyboardModifiers, event,
                                  mouseButtonsDown, dragStartPositions);
             m_rootPanel.Dispatch(mme,
@@ -1295,7 +1304,7 @@ namespace MFM
                   keyboardModifiers &= ~mod;
                 break;
               default:
-                KeyboardUpdate(event.key, this->GetGrid());
+                KeyboardUpdate(event.key, this->GetGrid(), lastKnownMousePosition);
                 break;
               }
             }

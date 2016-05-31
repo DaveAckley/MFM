@@ -21,7 +21,8 @@
 /**
   \file ToolboxPanel.h A Panel for selecting editing tools
   \author Trent R. Small
-  \date (C) 2014 All rights reserved.
+  \author Dave Ackley
+  \date (C) 2014, 2016 All rights reserved.
   \lgpl
 */
 #ifndef TOOLBOXPANEL_H

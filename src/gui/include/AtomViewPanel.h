@@ -34,6 +34,8 @@
 
 namespace MFM
 {
+  template <class GC> class GridPanel; // FORWARD
+
   template <class GC>
   class AtomViewPanel : public MovablePanel
   {
@@ -47,6 +49,7 @@ namespace MFM
     bool m_inBase;
 
     Grid<GC>* m_grid;
+    GridPanel<GC>* m_gridPanel;
 
     struct ClearAtomCoordButton : public CloseWindowButton
     {
@@ -80,6 +83,7 @@ namespace MFM
       , m_gridCoord(-1,-1)
       , m_inBase(false)
       , m_grid(NULL)
+      , m_gridPanel(NULL)
       , m_closeWindowButton(*this) // Inserts itself into us
       , m_treeViewPanel()
     {
@@ -94,6 +98,11 @@ namespace MFM
     bool HasGridCoord() const
     {
       return m_gridCoord.GetX() >= 0 && m_gridCoord.GetY() >= 0;
+    }
+
+    const SPoint & GetGridCoord() const
+    {
+      return m_gridCoord;
     }
 
     void Init()
@@ -157,9 +166,24 @@ namespace MFM
       currentY += lineHeight;
     }
 
+    /**
+       Highlight our border if we're the selected one
+     */
+    virtual void PaintBorder(Drawing & d)
+    {
+      u32 oldBd = GetBorder();
+      if (GetGridPanel().IsSelectedAtomViewPanel(*this))
+        SetBorder(Drawing::YELLOW);
+
+      this->Super::PaintBorder(d);
+      SetBorder(oldBd);
+    }
+
     virtual void PaintComponent(Drawing& d)
     {
       this->Super::PaintComponent(d);
+
+      //      d.DrawLineDitColor(10000, 20000, 0, 55000, Drawing::BLUE);
 
       if(!HasGridCoord())
       {
@@ -331,6 +355,12 @@ namespace MFM
       }
     }
 
+    virtual bool Handle(KeyboardEvent& kbe) ;
+
+    virtual bool Handle(MouseButtonEvent& mbe) ;
+
+    virtual bool Handle(MouseMotionEvent& mme) ;
+
     void ClearAtomCoord()
     {
       m_gridCoord = SPoint(-1,-1);
@@ -344,6 +374,7 @@ namespace MFM
 
     void SetGrid(Grid<GC>& grid)
     {
+      MFM_API_ASSERT_NULL(m_grid);
       m_grid = &grid;
     }
 
@@ -353,7 +384,21 @@ namespace MFM
       return *m_grid;
     }
 
+    void SetGridPanel(GridPanel<GC>& gridPanel)
+    {
+      MFM_API_ASSERT_NULL(m_gridPanel);
+      m_gridPanel = &gridPanel;
+    }
+
+    GridPanel<GC> & GetGridPanel()
+    {
+      MFM_API_ASSERT_NONNULL(m_gridPanel);
+      return *m_gridPanel;
+    }
+
   };
 }
+
+#include "AtomViewPanel.tcc"
 
 #endif /* ATOMVIEWPANEL_H */
