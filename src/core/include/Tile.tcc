@@ -3,6 +3,8 @@
 #include "Element_Empty.h"
 #include "Logger.h"
 #include "AtomSerializer.h"
+#include "EventHistoryBuffer.h"
+  
 #include "Util.h"
 
 namespace MFM

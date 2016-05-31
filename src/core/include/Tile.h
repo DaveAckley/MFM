@@ -37,7 +37,7 @@
 #include "Element.h"
 #include "Site.h"
 #include "EventWindow.h"
-#include "EventHistoryBuffer.h"
+#include "EventHistoryItem.h"
 #include "ElementTable.h"
 #include "CacheProcessor.h"
 #include "UlamClassRegistry.h"
@@ -48,6 +48,8 @@
 namespace MFM
 {
 #define IS_OWNED_CONNECTION(X) ((X) - Dirs::EAST >= 0 && (X) - Dirs::EAST < 4)
+
+  template <class EC> class EventHistoryBuffer; // FORWARD
 
   /**
      The representation of a single indefinitely scalable hardware
