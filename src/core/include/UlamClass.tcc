@@ -122,8 +122,13 @@ namespace MFM {
               bs.Printf(", [%d]=",idx);
             }
 
+            u32 offset = T::ATOM_FIRST_STATE_BIT;
+
+            if (this->IsUlamTransient()) 
+              offset = 0;
+
             u64 val = stg.ReadLong(baseStatePos + dmi.m_bitPosition
-                                   + T::ATOM_FIRST_STATE_BIT
+                                   + offset
                                    + idx * bitsize,
                                    bitsize);
 
