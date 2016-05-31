@@ -5,6 +5,7 @@
 #include "Tile.h"
 #include "ChannelEnd.h"
 #include "PacketIO.h"
+#include "EventHistoryBuffer.h"
 
 namespace MFM {
 
@@ -416,6 +417,10 @@ namespace MFM {
     // Now write back changes and notify the cps
     const MDist<R> & md = MDist<R>::get();
     Tile<EC> & tile = GetTile();
+
+    // Record the event in the tile history
+    EventHistoryBuffer<EC> & ehb = tile.GetEventHistoryBuffer();
+    ehb.AddEventWindow(*this);
 
     // Write back base changes if any
     tile.GetSite(m_center).GetBase() = m_centerBase;

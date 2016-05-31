@@ -37,6 +37,7 @@
 #include "Element.h"
 #include "Site.h"
 #include "EventWindow.h"
+#include "EventHistoryBuffer.h"
 #include "ElementTable.h"
 #include "CacheProcessor.h"
 #include "UlamClassRegistry.h"
@@ -110,11 +111,43 @@ namespace MFM
       REGION_COUNT
     };
 
-    Tile(const u32 tileSide, S * sites) ;
+    Tile(const u32 tileSide, S * sites, const u32 eventbuffersize, EventHistoryItem * items) ;
 
     void SaveTile(ByteSink & to) const ;
 
     bool LoadTile(LineCountingByteSource & from) ;
+
+    const EventHistoryBuffer<EC> & GetEventHistoryBuffer() const { return m_eventHistoryBuffer; }
+
+    EventHistoryBuffer<EC> & GetEventHistoryBuffer() { return m_eventHistoryBuffer; }
+
+    /**
+       Get the site-in-tile number of a given position \c index of the
+       tile, \e including the caches, so index ranges from
+       0..TILE_SIDE-1 in both x and y.  Return value is in
+       0..(TILE_SIDE * TILE_SIDE - 1).  Fails if index x or y is
+       greater than or equal to the tile side, or negative.
+     */
+    u32 GetSiteInTileNumber(const SPoint index) const
+    {
+      UPoint uidx = MakeUnsigned(index);
+      MFM_API_ASSERT_ARG(uidx.GetX() < TILE_SIDE && uidx.GetY() < TILE_SIDE);
+      return uidx.GetY()*TILE_SIDE + uidx.GetX();
+    }
+
+    /**
+       Get the coordinate of a given \c siteInTileNumber in the tile,
+       \e including the caches, so return value ranges from
+       0..TILE_SIDE-1 in both x and y.  Return value is in 0..  1).
+       Fails if siteInTileNumber is greater than or equal to TILE_SIDE
+       * TILE_SIDE.  Returns SPoint (even though both x and y will be
+       non-negative) to invert GetSiteInTileNumber()
+     */
+    SPoint GetCoordOfSiteInTileNumber(u32 siteInTileNumber) const
+    {
+      MFM_API_ASSERT_ARG(siteInTileNumber < TILE_SIDE*TILE_SIDE);
+      return SPoint(siteInTileNumber % TILE_SIDE, siteInTileNumber / TILE_SIDE);
+    }
 
     /**
        Get a const reference to the Site at position \c index of the
@@ -123,9 +156,7 @@ namespace MFM
      */
     const S & GetSite(const SPoint index) const
     {
-      UPoint uidx = MakeUnsigned(index);
-      MFM_API_ASSERT_ARG(uidx.GetX() < TILE_SIDE && uidx.GetY() < TILE_SIDE);
-      return m_sites[uidx.GetY()*TILE_SIDE + uidx.GetX()];
+      return m_sites[GetSiteInTileNumber(index)];
     }
 
     /**
@@ -205,7 +236,6 @@ namespace MFM
     {
       m_warpFactor = MIN(10u, warp);
     }
-
 
   private:
 
@@ -505,6 +535,11 @@ namespace MFM
        value 10 adds none.  Default value: 3.
      */
     u32 m_warpFactor;
+
+    /**
+       Record of recent past events for debugging and such
+     */
+    EventHistoryBuffer<EC> m_eventHistoryBuffer;
 
     /**
      * Compute the coordinates of \c atomLoc in a neighboring tile.

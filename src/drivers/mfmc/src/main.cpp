@@ -111,10 +111,12 @@ namespace MFM
   typedef Site<P3AtomConfig> OurSiteAll;
   typedef EventConfig<OurSiteAll,4> OurEventConfigAll;
 
+  enum { EVENT_HISTORY_SIZE = 100000 };
+
   /////
   // Tile types
 #define XX(A,B) \
-  typedef GridConfig<OurEventConfigAll, B> OurGridConfigTile##A;
+  typedef GridConfig<OurEventConfigAll, B, EVENT_HISTORY_SIZE> OurGridConfigTile##A;
 #include "TileSizes.inc"
 #undef XX
   /*
