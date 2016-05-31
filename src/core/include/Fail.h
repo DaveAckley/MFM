@@ -49,6 +49,7 @@ enum MFMFailureCodes{
 
 #define MFM_API_ASSERT(expr,code) do { if (__builtin_expect(!(expr), 0)) FAIL(code); } while (0)
 #define MFM_API_ASSERT_NONNULL(expr) MFM_API_ASSERT(expr,NULL_POINTER)
+#define MFM_API_ASSERT_NULL(expr) MFM_API_ASSERT((expr)==0,NON_NULL_POINTER)
 #define MFM_API_ASSERT_ZERO(expr) MFM_API_ASSERT((expr)==0,NON_ZERO)
 #define MFM_API_ASSERT_NONZERO(expr) MFM_API_ASSERT((expr)!=0,ZERO)
 #define MFM_API_ASSERT_ARG(expr) MFM_API_ASSERT(expr,ILLEGAL_ARGUMENT)
