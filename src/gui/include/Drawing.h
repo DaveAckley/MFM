@@ -252,6 +252,36 @@ namespace MFM {
     }
 
     /**
+       Draw a solid one pixel line in the current foreground color
+     */
+    void DrawLineDit(int startX, int startY, int endX, int endY) const
+    {
+      DrawLineDitColor(startX, startY, endX, endY, m_fgColor);
+    }
+
+    /**
+       Draw a solid one pixel line in the given color
+     */
+    void DrawLineDitColor(int startX, int startY, int endX, int endY, u32 color) const
+    {
+      DrawMaskedLineDitColor(startX, startY, endX, endY, color, -1);
+    }
+
+    /**
+       Draw a solid or dashed one pixel line in the current foreground color
+     */
+    void DrawMaskedLineDit(int startX, int startY, int endX, int endY, u32 mask) const
+    {
+      DrawMaskedLineDitColor(startX, startY, endX, endY, m_fgColor, mask);
+    }
+
+    /**
+       Draw a solid or dashed one pixel line in the given color
+     */
+    void DrawMaskedLineDitColor(int startX, int startY, int endX, int endY, u32 color, u32 mask) const;
+
+
+    /**
        Draw a box with one-pixel lines just inside the given Rect, in
        the current foreground color
      */
@@ -273,6 +303,12 @@ namespace MFM {
        the foreground color
      */
     void FillRect(int x, int y, int w, int h, u32 color) const;
+
+    /**
+       Fill the given rectangle, measured in dit, with the given
+       color, without changing the foreground color
+     */
+    void FillRectDit(int x, int y, int w, int h, u32 color) const;
 
     /**
        Fill the given rectangle, measured in dit, with the given
@@ -391,6 +427,10 @@ namespace MFM {
 
     static UPoint MapDitToPix(const UPoint & pdit) {
       return UPoint(MapDitToPix(pdit.GetX()),MapDitToPix(pdit.GetY()));
+    }
+
+    static UPoint MapPixToDit(const UPoint & pix) {
+      return UPoint(MapPixToDit(pix.GetX()),MapPixToDit(pix.GetY()));
     }
 
     static Rect MapDitToPix(const Rect & rectdit) {

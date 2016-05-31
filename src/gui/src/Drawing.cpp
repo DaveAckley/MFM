@@ -86,6 +86,49 @@ namespace MFM
     FillRect(x, startY, 1, endY-startY, color);
   }
 
+  void Drawing::DrawMaskedLineDitColor(int x1, int y1, int x2, int y2, u32 color, u32 mask) const
+  {
+
+    // Bresenham's line algorithm, via stackoverflow and Rosetta code, ditified and dashified
+    const bool steep = (ABS(y2 - y1) > ABS(x2 - x1));
+    if(steep)
+    {
+      SWAP(x1, y1);
+      SWAP(x2, y2);
+    }
+
+    if(x1 > x2)
+    {
+      SWAP(x1, x2);
+      SWAP(y1, y2);
+    }
+
+    const int dx = x2 - x1;
+    const int dy = ABS(y2 - y1);
+
+    const int INCR_DITS = DIT_PER_PIX;
+    float error = dx / 2.0f;
+    const int ystep = (y1 < y2) ? INCR_DITS : -INCR_DITS;
+    int y = (int)y1;
+
+    const int maxX = (int)x2;
+
+    for(int x=(int) x1; x<maxX; x += INCR_DITS, mask = (mask<<1) | (mask>>31)) 
+    {
+      if (mask & (1<<31)) {
+        if(steep) FillRectDit(y, x, INCR_DITS, INCR_DITS, color);
+        else      FillRectDit(x, y, INCR_DITS, INCR_DITS, color);
+      }
+
+      error -= dy;
+      if(error < 0)
+      {
+        y += ystep;
+        error += dx;
+      }
+    }
+  }
+
   void Drawing::DrawRectangle(const Rect & rect) const
   {
     DrawHLine(rect.GetY(),rect.GetX(),rect.GetX()+rect.GetWidth());
@@ -124,13 +167,18 @@ namespace MFM
     SDL_FillRect(m_dest, &rect, color);
   }
 
+  void Drawing::FillRectDit(int x, int y, int w, int h, u32 color) const
+  {
+    FillRect(MapDitToPix(x),
+             MapDitToPix(y),
+             MapDitToPixCeiling(w),
+             MapDitToPixCeiling(h),
+             color);
+  }
+
   void Drawing::FillRectDit(const Rect & r, u32 color) const
   {
-    FillRect(MapDitToPix(r.GetX()),
-             MapDitToPix(r.GetY()),
-             MapDitToPixCeiling(r.GetWidth()),
-             MapDitToPixCeiling(r.GetHeight()),
-             color);
+    FillRectDit(r.GetX(), r.GetY(), r.GetWidth(), r.GetHeight(), color);
   }
 
   void Drawing::FillCircleDit(const Rect & r, u32 radiusdit, u32 color) const
