@@ -130,6 +130,8 @@ namespace MFM
       return GetFirstIndex(radius+1)-1;
     }
 
+    u32 GetSiteCount() const { return ARRAY_LENGTH; }
+
     /**
        Get the relative coordinates of a given \c siteNumber, which
        siteNumber 0 representing the center at (0,0).  For legal
