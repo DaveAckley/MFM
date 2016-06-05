@@ -512,6 +512,21 @@ namespace MFM {
 
     void FromArray(const u32 array[ARRAY_LENGTH]);
 
+    /**
+     * Compute the number of 1 (set) bits in this BitVector, starting
+     * from index \c startIdx (default: 0) and counting the next \c
+     * length bits (default: All of the bits from startIdx to the
+     * end).
+     *
+     * @param startIdx First bit to include in the population count
+     *
+     * @param length The maximum number of bits to include in the
+     * population count
+     *
+     * @returns The number of 1 bits counted.
+     */
+    u32 PopulationCount(const u32 startIdx = 0, const u32 length = B) const;
+
   };
 
 } /* namespace MFM */

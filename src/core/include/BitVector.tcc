@@ -4,6 +4,7 @@
 #include <string.h> /* For memset, memcpy */
 
 namespace MFM {
+
   template <u32 B>
   BitVector<B>::BitVector()
   {
@@ -343,6 +344,32 @@ namespace MFM {
   {
     for(u32 i = 0; i < ARRAY_LENGTH; i++)
       array[i] = m_bits[i];
+  }
+
+  template <u32 B>
+  u32 BitVector<B>::PopulationCount(const u32 startIdx, const u32 len) const
+  {
+    const u32 end = MIN(B, startIdx + len);
+    const u32 length = end - startIdx;
+
+    if (length <= 32) return PopCount(Read(startIdx, length));
+
+    // We are not going to end in the same word in which we started
+    u32 ones = 0;
+    u32 idx = startIdx / 32;
+
+    if (startIdx % 32 != 0)
+    {
+      ones += PopCount(Read(startIdx, 32 - (startIdx % 32)));
+      ++idx;
+    }
+
+    while (idx < end / 32)
+      ones += PopCount(m_bits[idx++]);
+
+    if (idx * 32 < end)
+      ones += PopCount(Read(idx * 32, end - idx * 32));
+    return ones;
   }
 
 
