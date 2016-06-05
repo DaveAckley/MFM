@@ -83,12 +83,13 @@ namespace MFM
     u32 bg = m_enabledBg;
     if (!m_enabled)
     {
-      const u32 nfg = InterpolateColors(fg, bg, 36);
-      bg = InterpolateColors(bg, fg, 100);
+      const u32 nfg = InterpolateColors(fg, bg, 80);
+      bg = InterpolateColors(bg, fg, 80);
       fg = nfg;
     }
     Panel::SetForeground(fg);
     Panel::SetBackground(bg);
+    Label::GetIconAsset().SetEnabled(m_enabled);
   }
 
   void AbstractButton::PaintComponentNonClick(Drawing & drawing)

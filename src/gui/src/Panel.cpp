@@ -40,7 +40,7 @@ namespace MFM {
     m_forward = m_backward = 0;
     m_parent = m_top = 0;
 
-    m_fontAsset = FONT_ASSET_NONE;
+    m_fontAsset = FONT_ASSET_DEFAULT_FIXED;
     SetName(0);
 
     m_bgColor = Drawing::BLACK;

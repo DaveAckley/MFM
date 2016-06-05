@@ -139,28 +139,47 @@ namespace MFM
     /////////
     //// Panel Methods
 
+    // Handle mouse button action inside our walls
     virtual bool Handle(MouseButtonEvent & event)
     {
+      // Take default behavior if any keyboard modifiers
+      if (event.m_keyboardModifiers) return Super::Handle(event);
+
       if (IsEnabled())
       {
-        if(event.m_event.button.button == SDL_BUTTON_WHEELUP ||
-           event.m_event.button.button == SDL_BUTTON_WHEELDOWN)
+        // Ignore wheelies
+        if(event.m_event.button.button != SDL_BUTTON_WHEELUP &&
+           event.m_event.button.button != SDL_BUTTON_WHEELDOWN)
         {
-          return Super::Handle(event); /* Don't take wheel events. */
-        }
-        if (event.m_event.type == SDL_MOUSEBUTTONUP && event.m_keyboardModifiers == 0)      // Execute on up
-        {
-          m_justClicked = true;
-          OnClick(event.m_event.button.button);
-          return true;                                     // We took it
-        }
-        if (event.m_event.type == SDL_MOUSEBUTTONDOWN && event.m_keyboardModifiers == 0)     // But eat down too
-        {
-          OnPress(event.m_event.button.button);
-          return true;
+          if (event.m_event.type == SDL_MOUSEBUTTONUP)      // Click on up
+          {
+            m_justClicked = true;
+            OnClick(event.m_event.button.button);
+          }
+          else if (event.m_event.type == SDL_MOUSEBUTTONDOWN) // But report down too in case
+          {
+            OnPress(event.m_event.button.button);
+          }
         }
       }
-      return Super::Handle(event);
+      
+      // Eat all modifier-free events that are inside us
+      return true;
+    }
+
+    // Handle mouse motion inside our walls
+    virtual bool Handle(MouseMotionEvent & event)
+    {
+      // Take default behavior if any keyboard modifiers
+      if (event.m_keyboardModifiers) return Super::Handle(event);
+
+      // Otherwise eat it
+      return true;
+    }
+
+    virtual void PaintUpdateVisibility(Drawing & config)
+    {
+      UpdateEnabling();
     }
 
     bool PaintClickHighlight(Drawing& d)
@@ -199,6 +218,15 @@ namespace MFM
      *               SDL_BUTTON_MIDDLE, or SDL_BUTTON_RIGHT .
      */
     virtual void OnClick(u8 button) = 0;
+
+    /**
+     * UpdateEnabling is called early in the painting process.  By
+     * default it does nothing, but subclasses of AbstractButton can
+     * override this method to recheck if this button should be
+     * enabled and call SetEnabled as needed.
+     */
+    virtual void UpdateEnabling() 
+    { /* empty */ }
 
     /**
      * This is called when this AbstractButton is enabled and has

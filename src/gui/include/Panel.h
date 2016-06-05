@@ -135,8 +135,10 @@ namespace MFM
    */
   class Panel
   {
-  private:
+  public:
     typedef OString32 PanelNameString;
+
+  private:
     PanelNameString m_name;
 
     typedef OString64 PanelDocString;
@@ -250,6 +252,8 @@ namespace MFM
     const SPoint & GetRenderPoint() const ;
 
     const char * GetName() const { return m_name.GetBuffer(); }
+
+    PanelNameString & GetWritableName() { return m_name; }
 
     void SetName(const char * name)
     {
@@ -387,11 +391,12 @@ namespace MFM
        Update the visibility of this Panel, if desired, at the
        beginning of the painting process.  The default implementation
        (which may be accessed, if overridden, via
-       this->Panel::IsVisible) does nothing; overriding
-       implementations may use SetVisible to alter the visibility of
-       this Panel before its painting begins in earnest.  Note this
-       method is called only during painting; during dispatching the
-       m_visible variable is checked directly.
+       this->Panel::IsVisible) does nothing (so needing to access it
+       is unlikely except for symmetry); overriding implementations
+       may use SetVisible to alter the visibility of this Panel before
+       its painting begins in earnest.  Note this method is called
+       only during painting; during dispatching the m_visible variable
+       is checked directly.
 
        @sa SetVisible
 

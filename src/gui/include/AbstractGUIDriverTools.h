@@ -74,7 +74,7 @@ namespace MFM
 
     GridToolPencil(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("pencil", gp, tbp,
-              IMAGE_ASSET_PENCIL_ICON,
+              ZSLOT_GRIDTOOL_PENCIL,
               "Use pencil tool (draw atoms)")
     {
       Super::SetToolShape(DIAMOND_SHAPE);
@@ -102,7 +102,7 @@ namespace MFM
 
     GridToolEraser(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("eraser", gp, tbp,
-              IMAGE_ASSET_ERASER_ICON,
+              ZSLOT_GRIDTOOL_ERASER,
               "Use eraser tool (set sites empty)")
     {
       Super::SetToolShape(DIAMOND_SHAPE);
@@ -128,7 +128,7 @@ namespace MFM
 
     GridToolBrush(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("brush", gp, tbp,
-              IMAGE_ASSET_BRUSH_ICON,
+              ZSLOT_TRANSPORT_STOP, // XXX Deprecated, so what icon?
               "Use brush tool (draw atoms)")
     {
       Super::SetToolShape(ROUND_SHAPE);
@@ -156,7 +156,7 @@ namespace MFM
 
     GridToolAirBrush(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("air", gp, tbp,
-              IMAGE_ASSET_AIRBRUSH_ICON,
+              ZSLOT_GRIDTOOL_AIRBRUSH,
               "Use airbrush tool (draw atoms in random sites)")
     {
       Super::SetToolShape(ROUND_SHAPE);
@@ -187,7 +187,7 @@ namespace MFM
 
     GridToolEvent(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("event", gp, tbp,
-              IMAGE_ASSET_EVENT_ICON,
+              ZSLOT_GRIDTOOL_SPARK,
               "Use spark tool (deliver events)")
     {
       Super::SetToolShape(DIAMOND_SHAPE);
@@ -215,7 +215,7 @@ namespace MFM
 
     GridToolXRay(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("xray", gp, tbp,
-              IMAGE_ASSET_XRAY_ICON,
+              ZSLOT_GRIDTOOL_XRAY,
               "Use xray tool (flip bits in random sites)")
     {
       Super::SetToolShape(ROUND_SHAPE);
@@ -367,7 +367,7 @@ namespace MFM
 
     GridToolBucket(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("bucket", gp, tbp,
-              IMAGE_ASSET_BUCKET_ICON,
+              ZSLOT_GRIDTOOL_BUCKET,
               "Use bucket tool (flood fill atoms)")
     { }
 
@@ -428,7 +428,7 @@ namespace MFM
 
     GridToolAtomView(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("atomview", gp, tbp,
-              IMAGE_ASSET_ATOM_SELECTOR_ICON,
+              ZSLOT_GRIDTOOL_ATOM_SELECT,
               "Use atom select tool (examine atom internals)")
     { }
 
@@ -477,7 +477,7 @@ namespace MFM
 
     GridToolTileSelect(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("tileselect", gp, tbp,
-              IMAGE_ASSET_SELECTOR_ICON,
+              ZSLOT_GRIDTOOL_TILE_SELECT,
               "Use tile select tool (select/deselect tiles)")
     { }
 
@@ -597,7 +597,7 @@ namespace MFM
 
     GridToolClone(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("clone", gp, tbp,
-              IMAGE_ASSET_CLONE_ICON,
+              ZSLOT_GRIDTOOL_CLONE,
               "Use clone tool (copy regions)")
       , m_srcCoord(-1,-1)
       , m_destCoord(-1,-1)

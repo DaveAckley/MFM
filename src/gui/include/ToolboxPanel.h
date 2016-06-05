@@ -173,7 +173,7 @@ namespace MFM
       void SetGridTool(GridToolShapeUpdater<GC>& gridTool)
       {
         m_gridTool = &gridTool;
-        SetIconAsset(GetGridTool().GetImageAsset());
+        SetIconSlot(GetGridTool().GetIconSlot());
       }
 
       void SetKeysym(s32 key, u32 mods)
@@ -264,13 +264,15 @@ namespace MFM
       /**
        * Construct a new ShapeButton
        */
-      ShapeButton(ToolboxPanel & tbp, u32 shape, ImageAsset icon, const char * name, const char * doc)
-        : AbstractButton(icon)
+      ShapeButton(ToolboxPanel & tbp, u32 shape, MasterIconZSheetSlot slot, const char * name, const char * doc)
+        : AbstractButton()
         , m_toolbox(tbp)
         , m_shape((ToolShape) shape)
       {
         if (shape >= SHAPE_COUNT)
           FAIL(ILLEGAL_ARGUMENT);
+
+        this->SetIconSlot(slot);
 
         MFM_API_ASSERT_NONNULL(name);
         MFM_API_ASSERT_NONNULL(doc);
@@ -637,9 +639,9 @@ namespace MFM
       , m_selectedShapeButton(0)
       , m_toolButtonsInUse(0)
       , m_siteEditCheckbox(*this)
-      , m_roundShapeButton(*this, ROUND_SHAPE, IMAGE_ASSET_ROUND_SHAPE_ICON, "Round", "Use a round-shaped brush")
-      , m_diamondShapeButton(*this, DIAMOND_SHAPE, IMAGE_ASSET_DIAMOND_SHAPE_ICON, "Diamond", "Use a diamond-shaped brush")
-      , m_squareShapeButton(*this, SQUARE_SHAPE, IMAGE_ASSET_SQUARE_SHAPE_ICON, "Square", "Use a square-shaped brush")
+      , m_roundShapeButton(*this, ROUND_SHAPE, ZSLOT_TOOLSHAPE_ROUND, "Round", "Use a round-shaped brush")
+      , m_diamondShapeButton(*this, DIAMOND_SHAPE, ZSLOT_TOOLSHAPE_DIAMOND, "Diamond", "Use a diamond-shaped brush")
+      , m_squareShapeButton(*this, SQUARE_SHAPE, ZSLOT_TOOLSHAPE_SQUARE, "Square", "Use a square-shaped brush")
       , m_primaryElement(&Element_Empty<EC>::THE_INSTANCE)
       , m_secondaryElement(&Element_Empty<EC>::THE_INSTANCE)
       , m_heldElementCount(0)

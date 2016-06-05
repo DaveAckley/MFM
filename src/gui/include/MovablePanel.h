@@ -165,14 +165,15 @@ namespace MFM
       PostDragOnMouseExit();
     }
 
+    // By default, eat all other click and motions inside a movable panel
     virtual bool PostDragHandle(MouseButtonEvent& event)
     {
-      return false;
+      return true;
     }
 
     virtual bool PostDragHandle(MouseMotionEvent& event)
     {
-      return false;
+      return true;
     }
 
     virtual void PostDragOnMouseExit()

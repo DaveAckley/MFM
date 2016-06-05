@@ -241,6 +241,59 @@ namespace MFM
     BlitImage(s, loc, maxsize);
   }
 
+  void Drawing::BlitIconAsset(const IconAsset & iconasset, u32 atSize, SPoint destLoc) const
+  {
+    u32 slot = iconasset.GetIconSlot();
+    if (slot == ZSLOT_NONE) return;
+
+    ImageAsset ia = iconasset.GetImageAsset();
+    if (ia == IMAGE_ASSET_NONE) return;
+
+    SDL_Surface* s= AssetManager::GetReal(ia);
+
+    u32 idx = IconAsset::FindZSheetRowIndex(atSize);
+    u32 height = ZSHEET_HEIGHTS[idx];
+    SPoint pos;
+    if (iconasset.IsEnabled()) 
+    {
+      pos.Set(height * slot, ZSHEET_IMAGE_HEIGHT - ZSHEET_START_ROWS[idx] - height);
+    }
+    else
+    {
+      u32 icons = s->w/200;
+      u32 xstart = s->w - icons*height;
+      pos.Set(xstart + height * slot, ZSHEET_START_ROWS[idx]);
+    }
+    Rect srcRect(pos, UPoint(height, height));
+    BlitSubImage(s, srcRect, destLoc);
+  }
+
+  void Drawing::BlitSubImage(SDL_Surface* src, const Rect & srcRegion, SPoint destLoc) const
+  {
+    if(!src)
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    // Get size from src region
+    Rect target = srcRegion;
+
+    // And position from dest, mapped to screen coordinates
+    target.SetPosition(destLoc + m_rect.GetPosition());
+
+    // Clip against current drawing window
+    target &= m_rect;
+
+    SDL_Rect clip;
+    Convert(target, clip);
+
+    SDL_Rect srcClip;
+    Convert(srcRegion, srcClip);
+
+    SDL_SetClipRect(m_dest, &clip);
+    SDL_BlitSurface(src, &srcClip, m_dest, &clip);
+  }
+
   void Drawing::BlitImageTiled(SDL_Surface* src, const Rect & destRegion) const
   {
     if(!src)

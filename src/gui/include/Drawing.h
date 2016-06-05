@@ -379,6 +379,26 @@ namespace MFM {
      */
     void BlitImageAsset(ImageAsset asset, SPoint loc, UPoint maxSize) const;
 
+    /** 
+      Draw a portion of a source image to a destination location on
+      the screen.  The \c srcRegion determines the size and position
+      within the \c src image that may be copied.  The \c destLoc
+      determines where the copied image portion is to be placed on the
+      screen.  The rectangle implied by the srcRegion size and the
+      destLoc position is clipped against the current drawing window
+      and the remaining area, if any, is drawn.
+     
+     */
+    void BlitSubImage(SDL_Surface* src, const Rect & srcRegion, SPoint destLoc) const;
+
+    /** 
+      Draw \c icon at (about) \c size high at \c destLoc on the
+      screen.  If icon.IsEnabled() is true, draw the original 'bright'
+      version of the icon, otherwise draw the 'dimmed' version in
+      which all colors are compressed towards 50% grey.
+     */
+    void BlitIconAsset(const IconAsset & icon, u32 size, SPoint destLoc) const;
+
     /**
      * Tile copies of a specified image to a specified part of the screen.
      */

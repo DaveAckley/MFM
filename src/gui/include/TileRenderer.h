@@ -150,6 +150,10 @@ namespace MFM
 
     void PaintOverlays(Drawing & drawing, const SPoint ditOrigin, const OurTile & tile) ;
 
+    void PaintTileHistoryInfo(Drawing & drawing, const SPoint ditOrigin, const OurTile & tile) ;
+
+    void OutlineEventWindowInTile(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile, SPoint site, u32 color) ;
+
     bool IsDrawGrid() const
     {
       return m_drawGridLines;

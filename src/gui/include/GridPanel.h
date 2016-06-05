@@ -27,6 +27,7 @@
 #ifndef GRIDPANEL_H
 #define GRIDPANEL_H
 
+#include "ReplayPanel.h"
 #include "AtomViewPanel.h"
 #include "itype.h"
 #include "MDist.h"
@@ -159,8 +160,10 @@ namespace MFM
           if (IsTileSelected(utc))
           {
             SPoint tc(tx,ty); // sigh
-            Rect rdit = MapTileInGridToScreenDit(grid.GetTile(tc), tc);
+            OurTile & tile = grid.GetTile(tc);
+            Rect rdit = MapTileInGridToScreenDit(tile, tc);
             drawing.DrawRectDit(rdit);
+            GetTileRenderer().PaintTileHistoryInfo(drawing, rdit.GetPosition(), tile);
           }
         }
       }
@@ -192,6 +195,11 @@ namespace MFM
             grid.EmptyTile(tc);
         }
       }
+    }
+
+    bool AreAnyTilesSelected()
+    {
+      return m_selectedTiles.PopulationCount() != 0;
     }
 
     bool IsTileSelected(UPoint positionInGrid)

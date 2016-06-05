@@ -141,6 +141,8 @@ namespace MFM
     TileRenderer<EC> m_tileRenderer;
 
     GridPanel<GC> m_gridPanel;
+    ReplayPanel<GC> m_replayPanel;
+
     ToolboxPanel<GC> m_toolboxPanel;
 
     GridToolAtomView<GC> m_gridToolAtomView;
@@ -238,6 +240,7 @@ namespace MFM
       m_screenshotButton.SetScreen(m_screen);
       m_screenshotButton.SetCamera(&m_camera);
 
+      m_buttonPanel.Insert(&m_replayPanel,0);
     }
 
     void Update(OurGrid& grid)
@@ -852,6 +855,7 @@ namespace MFM
       , m_helpPanel(m_keyboardMap)
       , m_tileRenderer()
       , m_gridPanel()
+      , m_replayPanel(m_gridPanel)
       , m_toolboxPanel()
       , m_gridToolAtomView(m_gridPanel, m_toolboxPanel)
       , m_gridToolTileSelect(m_gridPanel, m_toolboxPanel)
