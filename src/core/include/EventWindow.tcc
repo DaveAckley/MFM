@@ -6,6 +6,7 @@
 #include "ChannelEnd.h"
 #include "PacketIO.h"
 #include "EventHistoryBuffer.h"
+#include "CacheProcessor.h"
 
 namespace MFM {
 

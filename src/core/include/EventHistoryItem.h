@@ -28,6 +28,7 @@
 #define EVENTHISTORYITEM_H
 
 #include "itype.h"
+#include "Point.h"
 #include "Fail.h"
 
 namespace MFM
@@ -41,8 +42,7 @@ namespace MFM
      of initial states of previous events, depending on the size of
      the buffer and the amount of change the events caused.
 
-     It is sixteen bytes (using the P3Atom) and the first byte is
-     always a type code.
+     Each item is 12 bytes long; the first byte is always a type code.
 
    */
   union EventHistoryItem
@@ -56,21 +56,14 @@ namespace MFM
 
     u8 m_type;                  // alias for m_type in each item type
 
-    struct StartItem {
-      u8 m_type;                // ==START 
-      u8 m_siteInTileHigh;      // Really u24 siteInTile
-      u16 m_siteInTileLow;
-      u32 m_windowCountHigh;    // Top 32 bits of EventWindowsAttempted
-      u32 m_windowCountLow;     // Bottom 32 bits of EventWindowsAttempted
-    } mStartItem;
-
-    struct EndItem {
-      u8 m_type;                // ==END
+    struct HeaderItem {
+      u8 m_type;                // ==START or END
       u8 m_count;               // Total items in this event excluding START but including END
       u8 m_pad[2];              // (unused)
-      u32 m_windowCountHigh;    // Top 32 bits of EventWindowsAttempted
-      u32 m_windowCountLow;     // Bottom 32 bits of EventWindowsAttempted
-    } mEndItem;
+      s16 m_siteInTileX;        // Absolute X pos of event in tile (can be negative for caches)
+      s16 m_siteInTileY;        // Absolute Y pos of event in tile
+      u32 m_eventNumber;        // Number of this event in history
+    } mHeaderItem;
 
     struct DeltaItem {
       u8 m_type;                // ==DELTA
@@ -86,31 +79,25 @@ namespace MFM
       m_type = UNUSED;
     }
 
-    void MakeStart(u32 siteInTile, u64 count) 
+    void MakeStart(const SPoint siteInTile, u32 eventNumber) 
     {
-      const u32 SITE_BITS = 24;
-      const u32 SITE_MASK = (1<<SITE_BITS)-1;
-
-      const u32 SITE_LOW_BITS = 16;
-      const u32 SITE_LOW_MASK = (1<<SITE_LOW_BITS)-1;
-
-      MFM_API_ASSERT_ARG((siteInTile & ~SITE_MASK) == 0);
-
-      StartItem & s = this->mStartItem;
+      HeaderItem & s = this->mHeaderItem;
       s.m_type = START;
-      s.m_siteInTileHigh = siteInTile >> SITE_LOW_BITS;
-      s.m_siteInTileLow = siteInTile & SITE_LOW_MASK;
-      s.m_windowCountLow = (u32) (count>>0);
-      s.m_windowCountHigh = (u32) (count>>32);
+      s.m_siteInTileX = siteInTile.GetX();
+      s.m_siteInTileY = siteInTile.GetY();
+      s.m_eventNumber = eventNumber;
     }
 
-    void MakeEnd(u32 itemsInEvent, u64 windowcount) 
+    void MakeEnd(const EventHistoryItem & startItem, u32 itemsInEvent) 
     {
-      EndItem & e = this->mEndItem;
+      MFM_API_ASSERT_ARG(startItem.IsStart());
+      const HeaderItem & start = startItem.mHeaderItem;
+      HeaderItem & e = this->mHeaderItem;
       e.m_type = END;
+      e.m_siteInTileX = start.m_siteInTileX;
+      e.m_siteInTileY = start.m_siteInTileY;
       e.m_count = itemsInEvent; 
-      e.m_windowCountLow = (u32) (windowcount>>0);
-      e.m_windowCountHigh = (u32) (windowcount>>32);
+      e.m_eventNumber = start.m_eventNumber;
     }
 
     void MakeDelta(u32 siteInWindow, u32 itemInEvent, u32 wordInAtom, u32 oldv, u32 newv) 
@@ -124,6 +111,51 @@ namespace MFM
       d.m_newValue = newv;
     }
 
+    u32 GetHeaderEventNumber() const 
+    {
+      MFM_API_ASSERT_STATE(IsType(START) || IsType(END));
+      const HeaderItem & s = this->mHeaderItem;
+      return s.m_eventNumber;
+    }
+
+    SPoint GetHeaderSiteInTile() const 
+    {
+      MFM_API_ASSERT_STATE(IsType(START) || IsType(END));
+      const HeaderItem & s = this->mHeaderItem;
+      return SPoint(s.m_siteInTileX, s.m_siteInTileY);
+    }
+
+    u32 GetHeaderItems() const 
+    {
+      MFM_API_ASSERT_STATE(IsType(START) || IsType(END));
+      const HeaderItem & e = this->mHeaderItem;
+      return e.m_count;
+    }
+
+    void Print(ByteSink & bs) const;
+
+    Type GetType() const { return (Type) this->m_type; }
+    const char * GetTypeName() const
+    {
+      switch (GetType()) {
+      case START: return "START";
+      case DELTA: return "DELTA";
+      case END:   return "END";
+      case UNUSED: return "UNUSED";
+      default: return "INVAL?";
+      }
+    }
+
+    bool IsEnd() const { return IsType(END); }
+    bool IsStart() const { return IsType(START); }
+    bool IsDelta() const { return IsType(DELTA); }
+    bool IsUnused() const { return IsType(UNUSED); }
+    bool IsHeader() const { return IsStart() || IsEnd(); }
+
+    bool IsType(Type type) const
+    {
+      return this->m_type == type;
+    }
   };
 } /* namespace MFM */
 

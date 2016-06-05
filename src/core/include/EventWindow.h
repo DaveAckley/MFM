@@ -30,7 +30,6 @@
 
 #include "Point.h"
 #include "itype.h"
-#include "CacheProcessor.h"
 #include "MDist.h"  /* for EVENT_WINDOW_SITES */
 #include "PSym.h"   /* For PointSymmetry, Map */
 #include "Site.h"
@@ -41,6 +40,7 @@ namespace MFM
 {
 
   template <class EC> class Tile; // FORWARD
+  template <class EC> class CacheProcessor; // FORWARD
 
   /**
      An EventWindow provides access for an Element to a selected
