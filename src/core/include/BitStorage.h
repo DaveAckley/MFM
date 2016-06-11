@@ -165,6 +165,8 @@ namespace MFM {
 
     BitVectorBitStorage(const BV & toCopy) : m_stg(toCopy) { }
 
+    BitVectorBitStorage(const u32 * const values) : m_stg(values) { }
+
     BitVectorBitStorage() { }
 
     BV m_stg;
