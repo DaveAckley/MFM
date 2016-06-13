@@ -79,7 +79,7 @@ namespace MFM {
    */
 
   template <u32 B>
-  void BitVector<B>::WriteBit(u32 idx, bool bit)
+  void BitVector<B>::WriteBitUnsafe(const u32 idx, const bool bit)
   {
     u32 arrIdx = idx / BITS_PER_UNIT;
     u32 inIdx = idx % BITS_PER_UNIT;
@@ -92,7 +92,15 @@ namespace MFM {
   }
 
   template <u32 B>
-  bool BitVector<B>::ToggleBit(const u32 idx)
+  bool BitVector<B>::ReadBitUnsafe(const u32 idx) const 
+  {
+    u32 arrIdx = idx / BITS_PER_UNIT;
+    u32 intIdx = idx % BITS_PER_UNIT;
+    return m_bits[arrIdx] & (0x80000000 >> intIdx);
+  }
+
+  template <u32 B>
+  bool BitVector<B>::ToggleBitUnsafe(const u32 idx)
   {
     u32 arrIdx = idx / BITS_PER_UNIT;
     u32 inIdx = idx % BITS_PER_UNIT;
@@ -100,15 +108,6 @@ namespace MFM {
 
     m_bits[arrIdx] ^= newWord;
     return m_bits[arrIdx] & newWord;
-  }
-
-  template <u32 B>
-  bool BitVector<B>::ReadBit(u32 idx)
-  {
-    u32 arrIdx = idx / BITS_PER_UNIT;
-    u32 intIdx = idx % BITS_PER_UNIT;
-
-    return m_bits[arrIdx] & (0x80000000 >> intIdx);
   }
 
   template <u32 B>
