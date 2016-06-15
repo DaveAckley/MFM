@@ -169,32 +169,6 @@ namespace MFM {
 
     virtual u32 GetEventWindowBoundary() const ;
 
-#if 0
-    /**
-       Ulam elements defining 'Unsigned getColor(Unsigned selector)'
-       will override this method, and it will be called during
-       graphics rendering!
-
-       Note the Uv_4self in this method IS A COPY of the atom being
-       rendered -- any changes made to Uv_4self during this method
-       will vanish when it returns.
-
-       Note also that THERE IS NO EVENT IN PROGRESS when this method
-       is called!  Any attempt to access event services during this
-       method will fail!  That includes event window accesses AND
-       random numbers!
-
-       This base class implementation, if not overridden, yields the
-       element color for all atoms and selectors.
-     */
-    virtual Ui_Ut_14181u<EC> Uf_8getColor(const UlamContext<EC>& uc,
-					  UlamRef<EC>& ur,
-					  Ui_Ut_102321u<EC> Uv_8selector) const
-    {
-      return Ui_Ut_14181u<EC>(this->GetElementColor());
-    }
-#endif
-
     virtual bool GetPlaceable() const
     {
       return m_info?m_info->GetPlaceable() : true;
