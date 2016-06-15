@@ -11,6 +11,13 @@
 namespace MFM {
 
   template <class EC>
+  u32 UlamElement<EC>::GetEventWindowBoundary() const 
+  {
+    if (!m_info) return Super::GetEventWindowBoundary();
+    return m_info->GetEventWindowBoundary();
+  }
+
+  template <class EC>
   void UlamElement<EC>::Behavior(EventWindow<EC>& window) const
   {
     Tile<EC> & tile = window.GetTile();
@@ -26,6 +33,33 @@ namespace MFM {
     // how to do an ulam virtual function call in c++
     typedef void (* Uf_6behave) (const UlamContext<EC>&, UlamRef<EC>& );
     ((Uf_6behave) this->getVTableEntry(BEHAVE_VTABLE_INDEX)) (uc, ur);
+  }
+
+  template <class EC>
+  u32 UlamElement<EC>::GetAtomColor(const T& atom, u32 selector) const
+  {
+    if (selector == 0)
+      return GetElementColor();
+
+    const UlamContext<EC> uc;
+    T temp(atom);
+    Ui_Ut_102321u<EC> sel(selector);
+    AtomBitStorage<EC> atbs(temp);
+    UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this);
+
+    // how to do an ulam virtual function call in c++
+    typedef Ui_Ut_14181u<EC> (* Uf_8getColor11102321u) (const UlamContext<EC>&, UlamRef<EC>&, Ui_Ut_102321u<EC>& );
+    Ui_Ut_14181u<EC> dynColor = ((Uf_8getColor11102321u) this->getVTableEntry(GETCOLOR_VTABLE_INDEX)) (uc, ur, sel);
+    
+    return dynColor.read();
+  }
+
+  template <class EC>
+  u32 UlamElement<EC>::Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const
+  {
+    if (nowAt == maybeAt || !m_info) return COMPLETE_DIFFUSABILITY;
+    return
+      COMPLETE_DIFFUSABILITY * m_info->GetPercentDiffusability() / 100;
   }
 
   template <class EC>
