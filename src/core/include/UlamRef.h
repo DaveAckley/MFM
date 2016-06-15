@@ -83,26 +83,16 @@ namespace MFM
 
     BitStorage<EC> & GetStorage() { return m_stg; }
 
-    virtual u32 GetType() const
-    {
-      MFM_API_ASSERT_ARG(m_effSelf);
-      const UlamElement<EC> * eltptr = GetEffectiveSelf()->AsUlamElement();
-      if(!eltptr) return T::ATOM_UNDEFINED_TYPE; //quark
-      return eltptr->GetType();
-    } //GetType
+    virtual u32 GetType() const ;
 
-    T CreateAtom() const
-    {
-      MFM_API_ASSERT_ARG(m_effSelf);
-      const UlamElement<EC> * eltptr = GetEffectiveSelf()->AsUlamElement();
-      if(!eltptr) FAIL(ILLEGAL_ARGUMENT);
-      u32 len = eltptr->GetClassLength();
-      AtomBitStorage<EC> atmp(eltptr->GetDefaultAtom());
-      atmp.WriteBig(0u + T::ATOM_FIRST_STATE_BIT, len, m_stg.ReadBig(GetPos(), len));
-      return atmp.ReadAtom();
-    }
+    T CreateAtom() const ;
 
     void Print(const UlamClassRegistry<EC>&, ByteSink&, u32 printFlags) const;
+
+  private:
+    // Declare away copy ctor
+    UlamRef(const UlamRef<EC> & existing) ;
+
 
   }; //UlamRef
 
