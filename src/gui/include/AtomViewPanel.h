@@ -305,7 +305,7 @@ namespace MFM
         UlamClassPrintFlags::PRINT_RECURSE_QUARKS;
 
       buff.Reset();
-      uelt->Print(ucr, buff, atom, printFlags);
+      uelt->Print(ucr, buff, atom, printFlags, T::ATOM_FIRST_STATE_BIT);
       zstr = buff.GetZString();
       u32 indent = 0;
       u32 lineNum = 1;
