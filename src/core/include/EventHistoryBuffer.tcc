@@ -114,7 +114,7 @@ namespace MFM {
 
     const MDist<R> & md = MDist<R>::get();
 
-    for (u32 i = 0; i < ew.SITE_COUNT; ++i)
+    for (u32 i = 0; i < ew.GetBoundedSiteCount(); ++i)
     {
       const SPoint pt = md.GetPoint(i) + ctr;
       RecordAtomChanges(i, *t.GetAtom(pt), ew.GetAtomDirect(i));

@@ -268,6 +268,12 @@ namespace MFM
   template <u32 REACH>
   Dir Tile<EC>::RegionAt(const SPoint& sp) const
   {
+    return RegionAtReach(sp, REACH);
+  }
+
+  template <class EC>
+  Dir Tile<EC>::RegionAtReach(const SPoint& sp, const u32 REACH) const
+  {
     UPoint pt = MakeUnsigned(sp);
 
     if(pt.GetX() < REACH) {

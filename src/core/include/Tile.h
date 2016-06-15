@@ -1,7 +1,7 @@
 /* -*- mode:C++ -*- */
 /**
   Tile.h An independent hardware unit capable of tiling space
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file Tile.h An independent hardware unit capable of tiling space
   \author Trent R. Small.
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014-2016 All rights reserved.
   \lgpl
  */
 #ifndef TILE_H
@@ -118,6 +118,10 @@ namespace MFM
     void SaveTile(ByteSink & to) const ;
 
     bool LoadTile(LineCountingByteSource & from) ;
+
+    bool IsHistoryActive() const { return GetEventHistoryBuffer().IsHistoryActive(); }
+
+    void SetHistoryActive(bool active) { return GetEventHistoryBuffer().SetHistoryActive(active); }
 
     const EventHistoryBuffer<EC> & GetEventHistoryBuffer() const { return m_eventHistoryBuffer; }
 
@@ -1001,16 +1005,19 @@ namespace MFM
     template <u32 REACH>
     Dir RegionAt(const SPoint& pt) const;
 
+    Dir RegionAtReach(const SPoint& sp, const u32 reach) const ;
+
     /**
       Return ((Dir) -1) if no locks are needed to perform an event at
-      pt.  Otherwise return the 'center direction' in which locks are
-      needed, and return true.  When GetLockDirection returns other
-      than -1, if dir is an edge, only that lock is needed, and if dir
-      is a corner, it and the two adjacent edges are all needed.
+      pt, given an event window radius bounded by bound.  Otherwise
+      return the 'center direction' in which locks are needed, and
+      return true.  When GetLockDirection returns other than -1, if
+      dir is an edge, only that lock is needed, and if dir is a
+      corner, it and the two adjacent edges are all needed.
      */
-    Dir GetLockDirection(const SPoint& pt) const
+    Dir GetLockDirection(const SPoint& pt, const u32 boundary) const
     {
-      return VisibleAt(pt);
+      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1);
     }
 
     /**

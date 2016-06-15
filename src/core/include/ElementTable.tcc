@@ -57,6 +57,7 @@ namespace MFM {
     return m_hash[SlotFor(elementType)].m_element;
   }
 
+#if 0
   template <class EC>
   void ElementTable<EC>::Execute(EventWindow<EC>& window)
   {
@@ -80,6 +81,7 @@ namespace MFM {
       elt->Behavior(window);
     }
   }
+#endif
 
   template <class EC>
   bool ElementTable<EC>::RegisterElement(const Element<EC>& e)

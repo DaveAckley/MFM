@@ -31,7 +31,6 @@
 #include "BitVector.h"
 #include "Dirs.h"
 #include "itype.h"
-#include "Element.h"
 #include "Element_Empty.h"
 
 namespace MFM
@@ -39,6 +38,8 @@ namespace MFM
 
   template <class EC> class Element; // FORWARD
   template <class EC> class EventWindow; // FORWARD
+
+  typedef u32 ElementType;
 
   template <class EC>
   class ElementTable
@@ -118,6 +119,7 @@ namespace MFM
      */
     const Element<EC> * Lookup(u32 elementType) const;
 
+#if 0 /* Now handled in eventwindow */
     /**
      * Executes the behavior method of the Element in the center of a
      * specified EventWindow. This method finds the central Element by
@@ -126,6 +128,7 @@ namespace MFM
      * @param window The EventWindow to execute an event upon.
      */
     void Execute(EventWindow<EC>& window) ;
+#endif
 
     /**
      * Inserts an Element into this ElementTable.

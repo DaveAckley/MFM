@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
   Element.h Base of all MFM elemental types
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2016 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@
   \file Element.h Base of all MFM elemental types
   \author Trent R. Small.
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014, 2016 All rights reserved.
   \lgpl
  */
 #ifndef ELEMENT_H
@@ -40,8 +40,6 @@
 
 namespace MFM
 {
-
-  typedef u32 ElementType;
 
   template <class EC> class EventWindow; // FORWARD
   template <class EC> class UlamElement; // FORWARD
@@ -117,6 +115,37 @@ namespace MFM
     const char* m_name;
 
    public:
+
+    /**
+     * Get the smallest event window radius that this element does \e
+     * NOT need to access during an event.  The default implementation
+     * returns R + 1, indicating the full window from 0..R may be
+     * accessed.  However, elements can override this method to
+     * declare a smaller boundary if they wish, which will allow them
+     * to execute closer to tile edges without locking -- and thus
+     * tend to increase their effective event rate.  In addition,
+     * declaring a smaller event boundary reduces overall event
+     * processing costs and may, down the road, be granted some
+     * particular advantage (such as increased write or hold power) in
+     * exchange.  Any attempt to access the event window at the
+     * boundary distance or greater will fail and cause the offending
+     * atom to be erased.
+     *
+     * The Empty element, uniquely, declares a boundary of 0, meaning
+     * it doesn't even need to access itself.  Utterly passive
+     * elements like Wall can declare a boundary of 1, allowing access
+     * to \e only themselves.  Similarly, von Neumann neighborhood
+     * elements can declare a boundary of 2, while Moore neighborhood
+     * elements must declare a boundary of at least 3.
+     *
+     * @returns The smallest event window radius this Element will
+     * never access.  Return values larger than R + 1 are treated as R
+     * + 1.  
+     */
+    virtual u32 GetEventWindowBoundary() const
+    {
+      return R + 1;
+    }
 
     /**
      * Describes how the default Atom of this Element should be
