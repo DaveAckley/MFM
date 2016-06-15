@@ -31,13 +31,14 @@
 #define ULAMCLASS_H
 
 #include "itype.h"
-#include "Element.h"
-#include "UlamContext.h"
 #include "BitStorage.h"
 
 namespace MFM
 {
 
+  template <class EC> class Element; // FORWARD
+  template <class EC> class UlamElement; // FORWARD
+  template <class EC> struct UlamContext; // FORWARD
   template <class EC> struct UlamClassRegistry; // FORWARD
   template <class EC> struct UlamQuark; // FORWARD
   template <class EC> struct UlamTransient; // FORWARD

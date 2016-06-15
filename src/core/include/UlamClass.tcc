@@ -1,12 +1,13 @@
 /* -*- C++ -*- */
 
 #include "Fail.h"
-#include "Tile.h"
+//#include "Tile.h"
 #include "Random.h"
-#include "EventWindow.h"
+//#include "EventWindow.h"
 #include "Base.h"
 #include "UlamTypeInfo.h"
 #include "UlamClassRegistry.h"
+#include "UlamContext.h"
 
 #include "CastOps.h" /* For _Int32ToInt32, etc */
 
@@ -69,7 +70,7 @@ namespace MFM {
                                         u32 baseStatePos,
                                         u32 indent) const
   {
-    typedef typename EC::ATOM_CONFIG::ATOM_TYPE T;
+    //    typedef typename EC::ATOM_CONFIG::ATOM_TYPE T;
     if (flags & (PRINT_MEMBER_VALUES|PRINT_MEMBER_NAMES|PRINT_MEMBER_TYPES))
     {
       bool opened = false;
@@ -122,10 +123,14 @@ namespace MFM {
               bs.Printf(", [%d]=",idx);
             }
 
+#if 0 
             u32 offset = T::ATOM_FIRST_STATE_BIT;
 
             if (this->IsUlamTransient()) 
               offset = 0;
+#else
+            u32 offset = 0;  // barf.  barf barf barf
+#endif
 
             u64 val = stg.ReadLong(baseStatePos + dmi.m_bitPosition
                                    + offset
