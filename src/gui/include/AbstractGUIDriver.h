@@ -132,6 +132,7 @@ namespace MFM
     LoadDriverSectionButton<GC> m_loadDriverSectionButton;
     LoadGridSectionButton<GC> m_loadGridSectionButton;
     LoadGUISectionButton<GC> m_loadGUISectionButton;
+    EventHistoryStrategyButton<GC> m_eventHistoryStrategyButton;
 
     SPoint m_grendMove;
     Keyboard m_keyboardMap;
@@ -165,6 +166,9 @@ namespace MFM
 
     const Panel & GetRootPanel() const { return m_rootPanel; }
     Panel & GetRootPanel() { return m_rootPanel; }
+
+    const GridPanel<GC> & GetGridPanel() const { return m_gridPanel; }
+    GridPanel<GC> & GetGridPanel() { return m_gridPanel; }
 
     void RequestReinit()
     {
@@ -221,6 +225,7 @@ namespace MFM
       InsertAndRegisterButton(m_loadDriverSectionButton);
       InsertAndRegisterButton(m_loadGridSectionButton);
       InsertAndRegisterButton(m_loadGUISectionButton);
+      InsertAndRegisterButton(m_eventHistoryStrategyButton);
 
       InsertAndRegisterButton(m_gridStepButton);
       InsertAndRegisterButton(m_fgViewButton);
@@ -850,6 +855,7 @@ namespace MFM
       , m_loadDriverSectionButton()
       , m_loadGridSectionButton()
       , m_loadGUISectionButton()
+      , m_eventHistoryStrategyButton()
       , m_grendMove()
       , m_keyboardMap()
       , m_helpPanel(m_keyboardMap)

@@ -560,6 +560,40 @@ namespace MFM
   };
 
   template<class GC>
+  struct EventHistoryStrategyButton : public AbstractGridButton<GC>
+  {
+    EventHistoryStrategyButton()
+      : AbstractGridButton<GC>("Event history: Tile")
+    {
+      AbstractButton::SetName("EventHistoryStrategyButton");
+      Panel::SetDoc("Change event recording strategy");
+      Panel::SetFont(FONT_ASSET_BUTTON_SMALL);
+    }
+    virtual s32 GetSection() { return HELP_SECTION_RUNNING; }
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_h;
+      mod = KMOD_SHIFT;
+      return true;
+    }
+
+    virtual void OnClick(u8 button)
+    {
+      this->GetDriver().GetGridPanel().NextEventHistoryStrategy();
+      UpdateLabel();
+    }
+
+    void UpdateLabel()
+    {
+      OString32 text;
+      text.Printf("Event history: %s",
+                  this->GetDriver().GetGridPanel().GetEventHistoryStrategyName());
+      AbstractButton::SetText(text.GetZString());
+    }
+
+  };
+
+  template<class GC>
   struct SaveButton : public AbstractGridButton<GC>
   {
     SaveButton()

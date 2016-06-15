@@ -43,6 +43,13 @@ namespace MFM
   template <class GC> class GridTool;    // FORWARD
   template <class GC> class GridToolAtomView;    // FORWARD
 
+  enum EventHistoryStrategy {
+    EVENT_HISTORY_STRATEGY_NONE,      //< Event history recording is off globally
+    EVENT_HISTORY_STRATEGY_SELECTED,  //< Event history recording on selected tiles only
+    EVENT_HISTORY_STRATEGY_ALL,       //< Event history recording on all tiles
+    EVENT_HISTORY_STRATEGY_COUNT
+  };
+
   /**
    * A template class for displaying the Grid in a Panel.
    */
@@ -64,6 +71,19 @@ namespace MFM
     typedef TileRenderer<EC> OurTileRenderer;
     typedef GridTool<GC> OurGridTool;
     typedef AtomViewPanel<GC> OurAtomViewPanel;
+
+    const char * GetEventHistoryStrategyName() const
+    {
+      return GetEventHistoryStrategyName(m_eventHistoryStrategy);
+    }
+
+    static const char * GetEventHistoryStrategyName(EventHistoryStrategy t) ;
+
+    u32 NextEventHistoryStrategy()
+    {
+      m_recheckTileSelections = true;
+      return m_eventHistoryStrategy = (EventHistoryStrategy) ((m_eventHistoryStrategy + 1) % EVENT_HISTORY_STRATEGY_COUNT);
+    }
 
     bool LoadDetails(const char * key, LineCountingByteSource & source)
     {
@@ -197,6 +217,24 @@ namespace MFM
       }
     }
 
+    void UpdateTileEventHistoryStrategy()
+    {
+      OurGrid & grid = GetGrid();
+      for (u32 tx = 0; tx < grid.GetWidth(); ++tx)
+      {
+        for (u32 ty = 0; ty < grid.GetHeight(); ++ty)
+        {
+          SPoint tc(tx,ty);
+          Tile<EC> & tile = grid.GetTile(tc);
+          bool active = 
+            (m_eventHistoryStrategy == EVENT_HISTORY_STRATEGY_ALL) ||
+            ((m_eventHistoryStrategy == EVENT_HISTORY_STRATEGY_SELECTED) &&
+             IsTileSelected(MakeUnsigned(tc)));
+          tile.SetHistoryActive(active);
+        }
+      }
+    }
+
     bool AreAnyTilesSelected()
     {
       return m_selectedTiles.PopulationCount() != 0;
@@ -209,11 +247,13 @@ namespace MFM
 
     void SetTileSelected(UPoint positionInGrid, bool selected)
     {
+      m_recheckTileSelections = true;
       m_selectedTiles.WriteBit(ToTileSelectIndex(positionInGrid), selected);
     }
 
     void UnselectAllTiles()
     {
+      m_recheckTileSelections = true;
       m_selectedTiles.Clear();
     }
 
@@ -242,6 +282,9 @@ namespace MFM
     };
 
     BitVector<MAX_TILES_IN_GRID> m_selectedTiles;
+    bool m_recheckTileSelections;
+    EventHistoryStrategy m_eventHistoryStrategy;
+
 
     u32 ToTileSelectIndex(UPoint positionInGrid)
     {
@@ -365,6 +408,9 @@ namespace MFM
       , m_leftButtonDragStartPix(0,0)
       , m_leftButtonGridStartDit (0,0)
       , m_selectedAvp(-1)
+      , m_selectedTiles()
+      , m_recheckTileSelections(true)
+      , m_eventHistoryStrategy(EVENT_HISTORY_STRATEGY_SELECTED)
     {
       SetName("GridPanel");
       SetDimensions(SCREEN_INITIAL_WIDTH,
@@ -580,20 +626,17 @@ namespace MFM
                           avpRectDit.GetX()+avpRectDit.GetWidth(),
                           avpRectDit.GetY()+avpRectDit.GetHeight(),
                           DASH_MASK);
-      /*
-      d.DrawMaskedLineDitColor(gridCoordScreenDit.GetX(),
-                               gridCoordScreenDit.GetY(),
-                               avpRectDit.GetX(),
-                               avpRectDit.GetY(),
-                               Drawing::BLUE,
-                               DASH_MASK);
-      d.DrawMaskedLineDitColor(gridCoordScreenDit.GetX(),
-                               gridCoordScreenDit.GetY(),
-                               avpRectDit.GetX(),
-                               avpRectDit.GetY(),
-                               Drawing::BLUE,
-                               DASH_MASK);
-      */
+
+      d.DrawMaskedLineDit(gridCoordScreenDit.GetX()+gridCoordScreenDit.GetWidth(),
+                          gridCoordScreenDit.GetY(),
+                          avpRectDit.GetX()+avpRectDit.GetWidth(),
+                          avpRectDit.GetY(),
+                          DASH_MASK);
+      d.DrawMaskedLineDit(gridCoordScreenDit.GetX(),
+                          gridCoordScreenDit.GetY()+gridCoordScreenDit.GetHeight(),
+                          avpRectDit.GetX(),
+                          avpRectDit.GetY()+avpRectDit.GetHeight(),
+                          DASH_MASK);
 
       d.SetForeground(oldFg);
     }
@@ -608,12 +651,22 @@ namespace MFM
         PaintAtomViewCallouts(drawing, m_avps[i]);
     }
 
+    void RecheckTileSelections()
+    {
+      if (m_recheckTileSelections)
+      {
+        UpdateTileEventHistoryStrategy();
+        m_recheckTileSelections = false;
+      }
+    }
 
    public:
 
     virtual void PaintComponent(Drawing& drawing)
     {
-      this->Panel::PaintComponent(drawing);
+      RecheckTileSelections();
+
+      this->Super::PaintComponent(drawing);
 
       this->PaintTiles(drawing);
 
@@ -763,5 +816,7 @@ namespace MFM
     }
   };
 } /* namespace MFM */
+
+#include "GridPanel.tcc"
 
 #endif /* GRIDPANEL_H */
