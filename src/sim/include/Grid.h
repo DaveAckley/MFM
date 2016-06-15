@@ -58,9 +58,10 @@ namespace MFM {
 
     enum { R = EC::EVENT_WINDOW_RADIUS};
     enum { TILE_SIDE = GC::TILE_SIDE};
+    enum { EVENT_HISTORY_SIZE = GC::EVENT_HISTORY_SIZE};
     enum { OWNED_SIDE = TILE_SIDE - 2 * R }; // Duplicating the OWNED_SIDE computation in Tile.tcc!
 
-    typedef SizedTile<EC,TILE_SIDE> GridTile;
+    typedef SizedTile<EC,TILE_SIDE,EVENT_HISTORY_SIZE> GridTile;
 
   private:
     Random m_random;
@@ -309,7 +310,8 @@ namespace MFM {
     void SetSeed(u32 seed);
 
     Grid(ElementRegistry<EC>& elts, u32 width, u32 height)
-      : m_seed(0)
+      : m_random()
+      , m_seed(0)
       , m_width(width)
       , m_height(height)
       , m_tiles(new GridTile[m_width * m_height])

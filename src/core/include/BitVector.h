@@ -116,16 +116,24 @@ namespace MFM {
      *
      * @param bit The value to set the bit at \c idx to.
      */
-    void WriteBit(u32 idx, bool bit);
+    void WriteBit(u32 idx, bool bit)
+    {
+      MFM_API_ASSERT_ARG(idx < B);
+      WriteBitUnsafe(idx, bit);
+    }
 
     /**
-     * Reads a specified value from a particular bit in this BitVector.
+     * Reads a single bit at a specified index from this BitVector.
      *
-     * @param idx The bit to read, where the MSB is index 0.
+     * @param idx The index of the bit to read.
      *
-     * @returns The value of the bit at \c idx index.
+     * @returns \c true if this bit is set, else \c false .
      */
-    bool ReadBit(u32 idx);
+    bool ReadBit(const u32 idx) const 
+    {
+      MFM_API_ASSERT_ARG(idx < B);
+      return ReadBitUnsafe(idx);
+    }
 
     /**
      * Constructs a new BitVector. Set parameters of this BitVector
@@ -147,10 +155,15 @@ namespace MFM {
     /**
      * Constructs a BitVector with specified initial value.
      *
-     * @param values A pointer to a big-endian array of values to
-     *               initialize this BitVector to. This array must
-     *               contain at least as many bits as this BitVector
-     *               can hold (specified as a template parameter).
+     * @param values A pointer to an array of 'appropriate-endian'
+     *               data -- meaning the byte order of the data must
+     *               match that of the machine running this code -- to
+     *               initialize this BitVector.  (For example,
+     *               executing (values[0]>>31) on this machine must
+     *               obtain the value to be returned by GetBit(0)).
+     *               The values array must contain at least as many
+     *               bits as this BitVector can hold (specified as a
+     *               template parameter).
      */
     BitVector(const u32 * const values);
 
@@ -332,13 +345,26 @@ namespace MFM {
     }
 
     /**
+     * Gets the bit at a specified index in this BitVector.  (Same as
+     * \c ReadBit).
+     *
+     * @param idx The index of the bit to access, where the MSB is
+     *        indexed at \c 0 .
+     */
+    bool GetBit(u32 idx) const
+    {
+      return ReadBit(idx);
+    }
+
+    /**
      * Sets the bit at a specified index in this BitVector.
      *
      * @param idx The index of the bit to set, where the MSB is
      *        indexed at \c 0 .
      */
     void SetBit(const u32 idx) {
-      Write(idx, 1, 1);
+      MFM_API_ASSERT_ARG(idx < B);
+      WriteBitUnsafe(idx, true);
     }
 
     /**
@@ -348,7 +374,8 @@ namespace MFM {
      *        indexed at \c 0 .
      */
     void ClearBit(const u32 idx) {
-      Write(idx, 1, 0);
+      MFM_API_ASSERT_ARG(idx < B);
+      WriteBitUnsafe(idx, false);
     }
 
     /**
@@ -358,19 +385,13 @@ namespace MFM {
      *        indexed at \c 0 .
      */
     void StoreBit(const u32 idx, bool bit) {
-      Write(idx, 1, bit ? 1 : 0);
+      MFM_API_ASSERT_ARG(idx < B);
+      WriteBitUnsafe(idx, bit);
     }
 
-    /**
-     * Reads a single bit at a specified index from this BitVector.
-     *
-     * @param idx The index of the bit to read.
-     *
-     * @returns \c 1 if this bit is set, else \c 0 .
-     */
-    bool ReadBit(const u32 idx) const {
-      return Read(idx, 1) != 0;
-    }
+    void WriteBitUnsafe(const u32 idx, const bool bit) ;
+
+    bool ReadBitUnsafe(const u32 idx) const ;
 
     /**
      * Flips the bit at a specified index in this BitVector.
@@ -379,7 +400,13 @@ namespace MFM {
      * @param idx The index of the bit to toggle, where the MSB is
      *        indexed at \c 0 .
      */
-    bool ToggleBit(const u32 idx);
+    bool ToggleBit(const u32 idx)
+    {
+      MFM_API_ASSERT_ARG(idx < B);
+      return ToggleBitUnsafe(idx);
+    }
+
+    bool ToggleBitUnsafe(const u32 idx) ;
 
     /**
      * Set a contiguous range of bits, so they all have value 1.
@@ -511,6 +538,21 @@ namespace MFM {
     void ToArray(u32 array[ARRAY_LENGTH]) const;
 
     void FromArray(const u32 array[ARRAY_LENGTH]);
+
+    /**
+     * Compute the number of 1 (set) bits in this BitVector, starting
+     * from index \c startIdx (default: 0) and counting the next \c
+     * length bits (default: All of the bits from startIdx to the
+     * end).
+     *
+     * @param startIdx First bit to include in the population count
+     *
+     * @param length The maximum number of bits to include in the
+     * population count
+     *
+     * @returns The number of 1 bits counted.
+     */
+    u32 PopulationCount(const u32 startIdx = 0, const u32 length = B) const;
 
   };
 

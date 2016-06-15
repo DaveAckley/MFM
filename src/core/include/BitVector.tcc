@@ -4,6 +4,7 @@
 #include <string.h> /* For memset, memcpy */
 
 namespace MFM {
+
   template <u32 B>
   BitVector<B>::BitVector()
   {
@@ -78,7 +79,7 @@ namespace MFM {
    */
 
   template <u32 B>
-  void BitVector<B>::WriteBit(u32 idx, bool bit)
+  void BitVector<B>::WriteBitUnsafe(const u32 idx, const bool bit)
   {
     u32 arrIdx = idx / BITS_PER_UNIT;
     u32 inIdx = idx % BITS_PER_UNIT;
@@ -91,7 +92,15 @@ namespace MFM {
   }
 
   template <u32 B>
-  bool BitVector<B>::ToggleBit(const u32 idx)
+  bool BitVector<B>::ReadBitUnsafe(const u32 idx) const 
+  {
+    u32 arrIdx = idx / BITS_PER_UNIT;
+    u32 intIdx = idx % BITS_PER_UNIT;
+    return m_bits[arrIdx] & (0x80000000 >> intIdx);
+  }
+
+  template <u32 B>
+  bool BitVector<B>::ToggleBitUnsafe(const u32 idx)
   {
     u32 arrIdx = idx / BITS_PER_UNIT;
     u32 inIdx = idx % BITS_PER_UNIT;
@@ -99,15 +108,6 @@ namespace MFM {
 
     m_bits[arrIdx] ^= newWord;
     return m_bits[arrIdx] & newWord;
-  }
-
-  template <u32 B>
-  bool BitVector<B>::ReadBit(u32 idx)
-  {
-    u32 arrIdx = idx / BITS_PER_UNIT;
-    u32 intIdx = idx % BITS_PER_UNIT;
-
-    return m_bits[arrIdx] & (0x80000000 >> intIdx);
   }
 
   template <u32 B>
@@ -343,6 +343,32 @@ namespace MFM {
   {
     for(u32 i = 0; i < ARRAY_LENGTH; i++)
       array[i] = m_bits[i];
+  }
+
+  template <u32 B>
+  u32 BitVector<B>::PopulationCount(const u32 startIdx, const u32 len) const
+  {
+    const u32 end = MIN(B, startIdx + len);
+    const u32 length = end - startIdx;
+
+    if (length <= 32) return PopCount(Read(startIdx, length));
+
+    // We are not going to end in the same word in which we started
+    u32 ones = 0;
+    u32 idx = startIdx / 32;
+
+    if (startIdx % 32 != 0)
+    {
+      ones += PopCount(Read(startIdx, 32 - (startIdx % 32)));
+      ++idx;
+    }
+
+    while (idx < end / 32)
+      ones += PopCount(m_bits[idx++]);
+
+    if (idx * 32 < end)
+      ones += PopCount(Read(idx * 32, end - idx * 32));
+    return ones;
   }
 
 

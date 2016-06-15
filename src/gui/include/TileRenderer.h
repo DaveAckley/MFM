@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
   TileRenderer.h Code and configuration for rendering tiles
-  Copyright (C) 2014-2015 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@
   \file TileRenderer.h Code and configuration for rendering tiles
   \author Dave Ackley
   \author Trent R. Small.
-  \date (C) 2014-2015 All rights reserved.
+  \date (C) 2014-2016 All rights reserved.
   \lgpl
  */
 #ifndef TILERENDERER_H
@@ -94,7 +94,6 @@ namespace MFM
       return GetDrawSiteTypeName(m_drawForegroundType);
     }
 
-
     static const char * GetDrawSiteTypeName(DrawSiteType t) ;
 
     /**
@@ -149,6 +148,10 @@ namespace MFM
     void PaintUnderlays(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile) ;
 
     void PaintOverlays(Drawing & drawing, const SPoint ditOrigin, const OurTile & tile) ;
+
+    void PaintTileHistoryInfo(Drawing & drawing, const SPoint ditOrigin, const OurTile & tile) ;
+
+    void OutlineEventWindowInTile(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile, SPoint site, u32 color) ;
 
     bool IsDrawGrid() const
     {

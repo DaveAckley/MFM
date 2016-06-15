@@ -29,8 +29,9 @@
 #ifndef ULAMELEMENT_H
 #define ULAMELEMENT_H
 
+#include "Element.h"
 #include "UlamClass.h"
-#include "UlamRef.h"
+#include "BitStorage.h"
 
 // Unsigned(32)
 #ifndef Ud_Ui_Ut_102321u
@@ -84,6 +85,7 @@ namespace MFM
 {
   template <class EC> class UlamElement; // FORWARD
   template <class EC> class UlamContext; // FORWARD
+  template <class EC> class UlamRef; // FORWARD
 
   template <class EC>
   struct UlamElementInfo
@@ -101,6 +103,7 @@ namespace MFM
     virtual bool GetPlaceable() const = 0;
     virtual const u32 GetVersion() const = 0;
     virtual const u32 GetElementColor() const = 0;
+    virtual const u32 GetEventWindowBoundary() const = 0;
     virtual const u32 GetSymmetry(const UlamContext<EC>& uc) const = 0;
 
     virtual const u32 GetPercentDiffusability() const
@@ -125,7 +128,7 @@ namespace MFM {
    * A UlamElement is a concrete element primarily for use by culam.
    */
   template <class EC>
-  class UlamElement : public Element<EC>, public UlamClass<EC>
+  class UlamElement : public UlamClass<EC>, public Element<EC>
   {
     typedef Element<EC> Super;
     typedef typename EC::ATOM_CONFIG AC;
@@ -154,7 +157,7 @@ namespace MFM {
        various details as specified by flags.
        \sa PrintFlags
      */
-    void Print(const UlamClassRegistry<EC> & ucr, ByteSink & bs, const T & atom, u32 flags, u32 basestatepos = 0) const ;
+    void Print(const UlamClassRegistry<EC> & ucr, ByteSink & bs, const T & atom, u32 flags, u32 basestatepos) const ;
 
     void SetInfo(const UlamElementInfo<EC> * info) {
       m_info = info;
@@ -164,31 +167,7 @@ namespace MFM {
 
     virtual void Behavior(EventWindow<EC>& window) const ;
 
-#if 0
-    /**
-       Ulam elements defining 'Unsigned getColor(Unsigned selector)'
-       will override this method, and it will be called during
-       graphics rendering!
-
-       Note the Uv_4self in this method IS A COPY of the atom being
-       rendered -- any changes made to Uv_4self during this method
-       will vanish when it returns.
-
-       Note also that THERE IS NO EVENT IN PROGRESS when this method
-       is called!  Any attempt to access event services during this
-       method will fail!  That includes event window accesses AND
-       random numbers!
-
-       This base class implementation, if not overridden, yields the
-       element color for all atoms and selectors.
-     */
-    virtual Ui_Ut_14181u<EC> Uf_8getColor(const UlamContext<EC>& uc,
-					  UlamRef<EC>& ur,
-					  Ui_Ut_102321u<EC> Uv_8selector) const
-    {
-      return Ui_Ut_14181u<EC>(this->GetElementColor());
-    }
-#endif
+    virtual u32 GetEventWindowBoundary() const ;
 
     virtual bool GetPlaceable() const
     {
@@ -219,30 +198,9 @@ namespace MFM {
       return 0xffffffff;
     }
 
-    virtual u32 GetAtomColor(const T& atom, u32 selector) const
-    {
-      if (selector == 0)
-        return GetElementColor();
+    virtual u32 GetAtomColor(const T& atom, u32 selector) const ;
 
-      const UlamContext<EC> uc;
-      T temp(atom);
-      Ui_Ut_102321u<EC> sel(selector);
-      AtomBitStorage<EC> atbs(temp);
-      UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this);
-
-      // how to do an ulam virtual function call in c++
-      typedef Ui_Ut_14181u<EC> (* Uf_8getColor11102321u) (const UlamContext<EC>&, UlamRef<EC>&, Ui_Ut_102321u<EC> );
-      Ui_Ut_14181u<EC> dynColor = ((Uf_8getColor11102321u) this->getVTableEntry(GETCOLOR_VTABLE_INDEX)) (uc, ur, sel);
-
-      return dynColor.read();
-    }
-
-    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const
-    {
-      if (nowAt == maybeAt || !m_info) return COMPLETE_DIFFUSABILITY;
-      return
-        COMPLETE_DIFFUSABILITY * m_info->GetPercentDiffusability() / 100;
-    }
+    virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const ;
   };
 
 } // MFM

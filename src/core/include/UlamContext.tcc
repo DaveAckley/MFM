@@ -6,10 +6,11 @@
 #include "Base.h"
 #include "Site.h"
 //#include "UlamClass.h"
-#include "Element.h"
+//#include "UlamElement.h"
 
 namespace MFM {
 
+  template <class EC> class UlamElement; //forward
   template <class EC> class UlamClass; //forward
 
   template <class EC>

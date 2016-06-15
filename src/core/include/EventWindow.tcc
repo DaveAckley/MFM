@@ -5,6 +5,8 @@
 #include "Tile.h"
 #include "ChannelEnd.h"
 #include "PacketIO.h"
+#include "EventHistoryBuffer.h"
+#include "CacheProcessor.h"
 
 namespace MFM {
 
@@ -123,7 +125,7 @@ namespace MFM {
       {
         LOG.Debug("%s FE(INSANE)",buff.GetZString());
       }
-      else
+      else if (failMsg)
       {
         LOG.Message("%s behave() failed at %s:%d: %s (site type 0x%04x)",
                     buff.GetZString(),
@@ -132,12 +134,21 @@ namespace MFM {
                     failMsg,
                     GetCenterAtomDirect().GetType());
       }
+      else
+      {
+        LOG.Message("%s behave() failed at %s:%d: fail(%d) (site type 0x%04x)",
+                    buff.GetZString(),
+                    failFile,
+                    lineno,
+                    MFMThrownFailCode,
+                    GetCenterAtomDirect().GetType());
+      }
 
       SetCenterAtomDirect(t.GetEmptyAtom());
     },
     {
       MFM_LOG_DBG6(("ET::Execute"));
-      t.GetElementTable().Execute(*this);
+      m_element->Behavior(*this);
     });
   }
 
@@ -181,7 +192,45 @@ namespace MFM {
 
     MFM_API_ASSERT_STATE(IsFree());  // Don't be callin' when I'm not free
 
-    if (!AcquireAllLocks(center))
+    Tile<EC> & tile = GetTile();
+
+    // We need to access the element early to determine its boundary
+    T atom = *tile.GetAtom(center);
+    if (!atom.IsSane())
+    {
+      OString256 buff;
+      PrintEventSite(buff);
+      buff.Printf(": INSANE ATOM ");
+      bool fixed = atom.HasBeenRepaired();
+
+      if (fixed)
+      {
+        buff.Printf("REPAIRED");
+        tile.PlaceAtom(atom, center);
+      }
+      else
+      {
+        buff.Printf("ERASED");
+        tile.PlaceAtom(tile.GetEmptyAtom(), center);
+      }
+
+      LOG.Debug("%s",buff.GetZString());
+      if (!fixed) 
+        return false;
+    }
+
+    u32 type = atom.GetType();
+    m_element  = tile.GetElementTable().Lookup(type);
+    if (m_element == 0) return false; // XXX what to do here?
+
+    m_eventWindowBoundary = m_element->GetEventWindowBoundary();
+    if (m_eventWindowBoundary > R + 1)
+      m_eventWindowBoundary = R + 1;
+
+    const MDist<R> & md = MDist<R>::get();
+    m_boundedSiteCount = md.GetFirstIndex(m_eventWindowBoundary);
+
+    if (!AcquireAllLocks(center, m_eventWindowBoundary))
     {
       MFM_LOG_DBG6(("EW::InitForEvent - abandoned"));
       return false;
@@ -236,7 +285,7 @@ namespace MFM {
     MFM_LOG_DBG6(("EW::AcquireRegionLocks"));
     // We cannot still have any cacheprocessors in use
     for (u32 i = 0; i < MAX_CACHES_TO_UPDATE; ++i)
-    {
+    { 
       MFM_API_ASSERT_STATE(m_cacheProcessorsLocked[i] == 0);
     }
 
@@ -326,16 +375,19 @@ namespace MFM {
   }
 
   template <class EC>
-  bool EventWindow<EC>::AcquireAllLocks(const SPoint& tileCenter)
+  bool EventWindow<EC>::AcquireAllLocks(const SPoint& tileCenter, const u32 eventWindowBoundary)
   {
     Tile<EC> & t = GetTile();
-    m_lockRegion = t.GetLockDirection(tileCenter);
+    m_lockRegion = t.GetLockDirection(tileCenter, eventWindowBoundary);
     return AcquireRegionLocks();
   }
 
   template <class EC>
   EventWindow<EC>::EventWindow(Tile<EC> & tile)
     : m_tile(tile)
+    , m_eventWindowBoundary(0)
+    , m_boundedSiteCount(0)
+    , m_element(0)
     , m_eventWindowsAttempted(0)
     , m_eventWindowsExecuted(0)
     , m_center(0,0)
@@ -375,19 +427,18 @@ namespace MFM {
   {
     const MDist<R> & md = MDist<R>::get();
     s32 index = md.FromPoint(loc,R);
-    MFM_API_ASSERT_ARG(index >= 0);
+    MFM_API_ASSERT_ARG(index >= 0 && index < m_boundedSiteCount);
     return (u32) index;
   }
 
   template <class EC>
   void EventWindow<EC>::LoadFromTile()
   {
-    const MDist<R> & md = MDist<R>::get();
     Tile<EC> & tile = GetTile();
 
     m_centerBase = tile.GetSite(m_center).GetBase();
-
-    for (u32 i = 0; i < SITE_COUNT; ++i)
+    const MDist<R> & md = MDist<R>::get();
+    for (u32 i = 0; i < m_boundedSiteCount; ++i)
     {
       const SPoint & pt = md.GetPoint(i) + m_center;
       m_atomBuffer[i] = tile.GetAtomForEventWindow(pt);
@@ -398,6 +449,8 @@ namespace MFM {
   template <class EC>
   void EventWindow<EC>::StoreToTile()
   {
+    const MDist<R> & md = MDist<R>::get();
+
     Random & random = GetRandom();
 
     MFM_LOG_DBG6(("EW::StoreToTile"));
@@ -414,13 +467,16 @@ namespace MFM {
     }
 
     // Now write back changes and notify the cps
-    const MDist<R> & md = MDist<R>::get();
     Tile<EC> & tile = GetTile();
+
+    // Record the event in the tile history
+    EventHistoryBuffer<EC> & ehb = tile.GetEventHistoryBuffer();
+    ehb.AddEventWindow(*this);
 
     // Write back base changes if any
     tile.GetSite(m_center).GetBase() = m_centerBase;
 
-    for (u32 i = 0; i < SITE_COUNT; ++i)
+    for (u32 i = 0; i < m_boundedSiteCount; ++i)
     {
       const SPoint & pt = md.GetPoint(i) + m_center;
       bool dirty = false;
@@ -460,6 +516,8 @@ namespace MFM {
   bool EventWindow<EC>::SetRelativeAtomSym(const SPoint& offset, const T & atom)
   {
     u32 idx = MapToIndexSymValid(offset);
+    MFM_API_ASSERT_ARG(idx < m_boundedSiteCount);
+
     if (m_isLiveSite[idx])
     {
       m_atomBuffer[idx] = atom;
@@ -472,6 +530,7 @@ namespace MFM {
   bool EventWindow<EC>::SetRelativeAtomDirect(const SPoint& offset, const T & atom)
   {
     u32 idx = MapToIndexDirectValid(offset);
+
     if (m_isLiveSite[idx])
     {
       m_atomBuffer[idx] = atom;
@@ -483,13 +542,16 @@ namespace MFM {
   template <class EC>
   const typename EC::ATOM_CONFIG::ATOM_TYPE& EventWindow<EC>::GetRelativeAtomSym(const SPoint& offset) const
   {
-    return m_atomBuffer[MapToIndexSymValid(offset)];
+    u32 idx = MapToIndexSymValid(offset);
+    MFM_API_ASSERT_ARG(idx < m_boundedSiteCount);
+    return m_atomBuffer[idx];
   }
 
   template <class EC>
   const typename EC::ATOM_CONFIG::ATOM_TYPE& EventWindow<EC>::GetRelativeAtomDirect(const SPoint& offset) const
   {
-    return m_atomBuffer[MapToIndexDirectValid(offset)];
+    u32 idx = MapToIndexDirectValid(offset);
+    return m_atomBuffer[idx];
   }
 
   template <class EC>
@@ -513,15 +575,15 @@ namespace MFM {
   {
     u32 idxa = MapIndexToIndexSymValid(syma);
     u32 idxb = MapIndexToIndexSymValid(symb);
-
-    T tmp = m_atomBuffer[idxa];
-    m_atomBuffer[idxa] = m_atomBuffer[idxb];
-    m_atomBuffer[idxb] = tmp;
+    SwapAtomsDirect(idxa, idxb);
   }
 
   template <class EC>
   void EventWindow<EC>::SwapAtomsDirect(const u32 idxa, const u32 idxb)
   {
+    MFM_API_ASSERT_ARG(idxa < m_boundedSiteCount);
+    MFM_API_ASSERT_ARG(idxb < m_boundedSiteCount);
+
     T tmp = m_atomBuffer[idxa];
     m_atomBuffer[idxa] = m_atomBuffer[idxb];
     m_atomBuffer[idxb] = tmp;
@@ -532,10 +594,7 @@ namespace MFM {
   {
     u32 idxa = MapToIndexSymValid(locA);
     u32 idxb = MapToIndexSymValid(locB);
-
-    T tmp = m_atomBuffer[idxa];
-    m_atomBuffer[idxa] = m_atomBuffer[idxb];
-    m_atomBuffer[idxb] = tmp;
+    SwapAtomsDirect(idxa, idxb);
   }
 
   template <class EC>
@@ -543,10 +602,7 @@ namespace MFM {
   {
     u32 idxa = MapToIndexDirectValid(locA);
     u32 idxb = MapToIndexDirectValid(locB);
-
-    T tmp = m_atomBuffer[idxa];
-    m_atomBuffer[idxa] = m_atomBuffer[idxb];
-    m_atomBuffer[idxb] = tmp;
+    SwapAtomsDirect(idxa, idxb);
   }
 
 } /* namespace MFM */

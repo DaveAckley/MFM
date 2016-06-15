@@ -30,7 +30,6 @@
 
 #include "Point.h"
 #include "itype.h"
-#include "CacheProcessor.h"
 #include "MDist.h"  /* for EVENT_WINDOW_SITES */
 #include "PSym.h"   /* For PointSymmetry, Map */
 #include "Site.h"
@@ -41,6 +40,7 @@ namespace MFM
 {
 
   template <class EC> class Tile; // FORWARD
+  template <class EC> class CacheProcessor; // FORWARD
 
   /**
      An EventWindow provides access for an Element to a selected
@@ -98,6 +98,10 @@ namespace MFM
 
     Tile<EC> & m_tile;
 
+    u32 m_eventWindowBoundary;
+    u32 m_boundedSiteCount;
+    const Element<EC> * m_element;
+
     u64 m_eventWindowsAttempted;
     u64 m_eventWindowsExecuted;
 
@@ -124,7 +128,7 @@ namespace MFM
 
     PointSymmetry m_sym;
 
-    bool AcquireAllLocks(const SPoint& centerSite) ;
+    bool AcquireAllLocks(const SPoint& centerSite, const u32 eventWindowBoundary) ;
 
     bool AcquireRegionLocks() ;
 
@@ -294,7 +298,17 @@ namespace MFM
     bool InWindow(const SPoint & offset) const
     {
       // Ignores m_sym since point symmetries can't change this answer
-      return offset.GetManhattanLength() <= R;
+      return offset.GetManhattanLength() < m_eventWindowBoundary;
+    }
+
+    u32 GetBoundary() const
+    {
+      return m_eventWindowBoundary;
+    }
+
+    u32 GetBoundedSiteCount() const
+    {
+      return m_boundedSiteCount;
     }
 
     /**

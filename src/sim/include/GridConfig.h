@@ -21,7 +21,7 @@
 /**
   \file GridConfig.h Support for modularized compile-time grid parameters
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014, 2016 All rights reserved.
   \lgpl
  */
 #ifndef GRIDCONFIG_H
@@ -37,7 +37,8 @@ namespace MFM {
    * at the Tile-to-Grid level.
    */
   template <class EC,      // EventConfig
-            u32 SIDE>
+            u32 SIDE,
+            u32 HISTORYSIZE>
   struct GridConfig {
 
     /**
@@ -45,25 +46,17 @@ namespace MFM {
      */
     typedef EC EVENT_CONFIG;
 
-#if 0
-    /**
-     * GRID_WIDTH is the number of columns of tiles in this Grid
-     * Configuration.
-     */
-    enum { GRID_WIDTH = W };
-
-    /**
-     * GRID_HEIGHT is the number of rows of tiles in this Grid
-     * Config.
-     */
-    enum { GRID_HEIGHT = H };
-#endif
-
     /**
      * TILE_SIDE is the number of sites wide (and high) for a tile in
      * this GridConfig
      */
     enum { TILE_SIDE = SIDE };
+
+    /**
+     * EVENT_HISTORY_SIZE is the number of EventHistoryItems that a
+     * tile remembers in this GridConfig
+     */
+    enum { EVENT_HISTORY_SIZE = HISTORYSIZE };
 
     /**
      * OWNED_SIDE is the number of sites wide (and high) for a tile in

@@ -95,6 +95,11 @@ namespace MFM
       return Super::LoadDetails(key, source);
     }
 
+    virtual bool Handle(KeyboardEvent& event)
+    {
+      return Super::Handle(event);
+    }
+
     virtual bool Handle(MouseButtonEvent& event)
     {
       if(event.m_event.type == SDL_MOUSEBUTTONDOWN)
@@ -160,14 +165,15 @@ namespace MFM
       PostDragOnMouseExit();
     }
 
+    // By default, eat all other click and motions inside a movable panel
     virtual bool PostDragHandle(MouseButtonEvent& event)
     {
-      return false;
+      return true;
     }
 
     virtual bool PostDragHandle(MouseMotionEvent& event)
     {
-      return false;
+      return true;
     }
 
     virtual void PostDragOnMouseExit()

@@ -35,6 +35,7 @@ namespace MFM {
     Test_bitVectorSetAndClearBits();
     Test_bitVectorStoreBits();
     Test_bitVectorReadWriteBV();
+    Test_bitVectorPopulationCount();
   }
 
   static BitVector<256> bits(vals);
@@ -395,6 +396,111 @@ namespace MFM {
     assert(bits->ReadLong(192, 64) == 0x0L);
     bits->WriteLong(192,64,(u64) -1L);
     assert(bits->ReadLong(192, 64) == (u64) -1L);
+  }
+
+  void BitVector_Test::Test_bitVectorPopulationCount()
+  {
+    {
+      const u32 SIZE =  0;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(i);
+        assert(bits.PopulationCount() == i + 1);
+      }
+    }
+    {
+      const u32 SIZE =  1;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(i);
+        assert(bits.PopulationCount() == i + 1);
+      }
+    }
+    {
+      const u32 SIZE =  31;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(i);
+        assert(bits.PopulationCount() == i + 1);
+      }
+    }
+    {
+      const u32 SIZE =  32;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(i);
+        assert(bits.PopulationCount() == i + 1);
+      }
+    }
+    {
+      const u32 SIZE =  35;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(i);
+        assert(bits.PopulationCount() == i + 1);
+      }
+
+    }
+    {
+      const u32 SIZE =  67;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(i);
+        assert(bits.PopulationCount() == i + 1);
+      }
+
+      // all combinations of start and len..
+      BitVector<SIZE> zbits;
+
+      for (u32 start = 0; start < SIZE; ++start) 
+      {
+        for (u32 end = start; end < SIZE; ++end) 
+        {
+          u32 len = end - start + 1;
+          assert(bits.PopulationCount(start, len) == len);
+          assert(zbits.PopulationCount(start, len) == 0);
+        }
+      }
+
+    }
+
+    {
+      const u32 SIZE =  258;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(SIZE - i - 1);
+        assert(bits.PopulationCount() == i + 1);
+      }
+
+      assert(bits.PopulationCount() == SIZE);
+
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.ClearBit(i);
+        assert(bits.PopulationCount() == SIZE - (i + 1));
+      }
+    }
+
+    {
+      BitVector<256>* bits = setup();
+      assert(bits->PopulationCount() == 115);
+      assert(bits->PopulationCount(64,96) == 51); 
+      assert(bits->PopulationCount(5,250) == 113);
+    }
   }
 
 } /* namespace MFM */

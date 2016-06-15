@@ -56,6 +56,11 @@ namespace MFM
       Element<EC>::SetName("Empty");
     }
 
+    virtual u32 GetEventWindowBoundary() const
+    {
+      return 0;
+    }
+
     virtual u32 PercentMovable(const T& you,
                                const T& me, const SPoint& offset) const
     {

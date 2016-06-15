@@ -1,6 +1,7 @@
 /* -*- C++ -*- */
 #include "Fail.h"
 #include "BitVector.h"
+#include "UlamElement.h"
 
 namespace MFM {
 
@@ -24,6 +25,27 @@ namespace MFM {
     MFM_API_ASSERT_ARG(newpos >= 0); //non-negative
     m_pos = (u32) newpos; //save as unsigned
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
+  }
+
+  template <class EC>
+  u32 UlamRef<EC>::GetType() const
+  {
+    MFM_API_ASSERT_ARG(m_effSelf);
+    const UlamElement<EC> * eltptr = GetEffectiveSelf()->AsUlamElement();
+    if(!eltptr) return T::ATOM_UNDEFINED_TYPE; //quark
+    return eltptr->GetType();
+  } //GetType
+
+  template <class EC>
+  typename EC::ATOM_CONFIG::ATOM_TYPE UlamRef<EC>::CreateAtom() const
+  {
+    MFM_API_ASSERT_ARG(m_effSelf);
+    const UlamElement<EC> * eltptr = GetEffectiveSelf()->AsUlamElement();
+    if(!eltptr) FAIL(ILLEGAL_ARGUMENT);
+    u32 len = eltptr->GetClassLength();
+    AtomBitStorage<EC> atmp(eltptr->GetDefaultAtom());
+    atmp.WriteBig(0u + T::ATOM_FIRST_STATE_BIT, len, m_stg.ReadBig(GetPos(), len));
+    return atmp.ReadAtom();
   }
 
   template <class EC>
