@@ -31,10 +31,10 @@
 
 extern "C" {
   /**
-     Convert a failure code into a null-terminated string for printing.
-     If \a failCode is negative or greater than the number of known
-     failure codes, returns "[failCode out of range]", otherwise returns
-     the failure code symbol itself as a string.
+     Convert a failure code into a null-terminated string for
+     printing, if possible.  Returns null if \a failCode is negative
+     or greater than the number of known failure codes, otherwise
+     returns the failure code symbol itself as a string.
   */
   const char * MFMFailCodeReason(int failCode) ;
 }
