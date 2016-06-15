@@ -310,7 +310,8 @@ namespace MFM {
     void SetSeed(u32 seed);
 
     Grid(ElementRegistry<EC>& elts, u32 width, u32 height)
-      : m_seed(0)
+      : m_random()
+      , m_seed(0)
       , m_width(width)
       , m_height(height)
       , m_tiles(new GridTile[m_width * m_height])
