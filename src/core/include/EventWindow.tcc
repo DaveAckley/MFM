@@ -136,10 +136,11 @@ namespace MFM {
       }
       else
       {
-        LOG.Message("%s behave() failed at %s:%d: fail(%d) (site type 0x%04x)",
+        LOG.Message("%s behave() failed at %s:%d: fail(%d/0x%08x) (site type 0x%04x)",
                     buff.GetZString(),
                     failFile,
                     lineno,
+                    MFMThrownFailCode,
                     MFMThrownFailCode,
                     GetCenterAtomDirect().GetType());
       }
@@ -385,7 +386,7 @@ namespace MFM {
   template <class EC>
   EventWindow<EC>::EventWindow(Tile<EC> & tile)
     : m_tile(tile)
-    , m_eventWindowBoundary(0)
+    , m_eventWindowBoundary(R + 1)
     , m_boundedSiteCount(0)
     , m_element(0)
     , m_eventWindowsAttempted(0)
