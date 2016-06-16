@@ -387,7 +387,7 @@ namespace MFM {
   EventWindow<EC>::EventWindow(Tile<EC> & tile)
     : m_tile(tile)
     , m_eventWindowBoundary(R + 1)
-    , m_boundedSiteCount(0)
+    , m_boundedSiteCount(SITE_COUNT)
     , m_element(0)
     , m_eventWindowsAttempted(0)
     , m_eventWindowsExecuted(0)
