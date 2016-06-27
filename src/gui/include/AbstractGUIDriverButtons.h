@@ -267,10 +267,10 @@ namespace MFM
   struct GridRunCheckbox : public AbstractGridCheckbox<GC>
   {
     GridRunCheckbox()
-      : AbstractGridCheckbox<GC>("Pause")
+      : AbstractGridCheckbox<GC>("Run")
     {
       AbstractButton::SetName("GridRunButton");
-      Panel::SetDoc("Pause/run the grid");
+      Panel::SetDoc("Run/pause the grid");
       Panel::SetFont(FONT_ASSET_BUTTON_BIG);
     }
     virtual s32 GetSection() { return HELP_SECTION_RUNNING; }
@@ -283,11 +283,11 @@ namespace MFM
 
     virtual bool IsChecked() const
     {
-      return this->GetDriver().IsKeyboardPaused();
+      return !this->GetDriver().IsKeyboardPaused();
     }
     virtual void SetChecked(bool checked)
     {
-      this->GetDriver().SetKeyboardPaused(checked);
+      this->GetDriver().SetKeyboardPaused(!checked);
     }
 
   };
