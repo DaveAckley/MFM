@@ -30,8 +30,9 @@ namespace MFM {
   template <class EC>
   u32 UlamRef<EC>::GetType() const
   {
-    MFM_API_ASSERT_ARG(m_effSelf);
-    const UlamElement<EC> * eltptr = GetEffectiveSelf()->AsUlamElement();
+    const UlamClass<EC> * effSelf = GetEffectiveSelf();
+    MFM_API_ASSERT_ARG(effSelf);
+    const UlamElement<EC> * eltptr = effSelf->AsUlamElement();
     if(!eltptr) return T::ATOM_UNDEFINED_TYPE; //quark
     return eltptr->GetType();
   } //GetType
@@ -39,8 +40,9 @@ namespace MFM {
   template <class EC>
   typename EC::ATOM_CONFIG::ATOM_TYPE UlamRef<EC>::CreateAtom() const
   {
-    MFM_API_ASSERT_ARG(m_effSelf);
-    const UlamElement<EC> * eltptr = GetEffectiveSelf()->AsUlamElement();
+    const UlamClass<EC> * effSelf = GetEffectiveSelf();
+    MFM_API_ASSERT_ARG(effSelf);
+    const UlamElement<EC> * eltptr = effSelf->AsUlamElement();
     if(!eltptr) FAIL(ILLEGAL_ARGUMENT);
     u32 len = eltptr->GetClassLength();
     AtomBitStorage<EC> atmp(eltptr->GetDefaultAtom());
@@ -51,14 +53,14 @@ namespace MFM {
   template <class EC>
   void UlamRef<EC>::Print(const UlamClassRegistry<EC>&uc, ByteSink& bs, u32 printFlags) const
   {
-    if (!m_effSelf) 
+    if (!m_effSelf)
     {
       bs.Printf("UlamRef[pos=%d,len=%d,NULL]", m_pos, m_len);
       return;
     }
 
     const UlamElement<EC> * ue = m_effSelf->AsUlamElement();
-    if (ue) 
+    if (ue)
     {
       const T atom = this->ReadAtom();
       ue->Print(uc, bs, atom, printFlags, m_pos);
