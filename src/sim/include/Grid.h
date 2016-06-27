@@ -700,6 +700,8 @@ namespace MFM {
 
     u64 GetTotalEventsExecuted() const;
 
+    u64 GetTotalSitesAccessed() const;
+
     void WriteEPSImage(ByteSink & outstrm) const;
 
     void WriteEPSAverageImage(ByteSink & outstrm) const;

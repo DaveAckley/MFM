@@ -245,13 +245,13 @@ namespace MFM
       u32 thisPeriodMS = m_ticksLastStopped - startMS;
       m_msSpentRunning += thisPeriodMS;
 
-      u64 totalEvents = grid.GetTotalEventsExecuted();
+      u64 totalAccesses = grid.GetTotalSitesAccessed();
       u32 totalSites = grid.GetTotalSites();
-      m_AEPS = totalEvents / ((double) totalSites);
+      m_AEPS = totalAccesses / ((double) totalSites);
       m_AER = 1000 * (m_AEPS / m_msSpentRunning);
 
-      u64 newEvents = totalEvents - m_lastTotalEvents;
-      m_lastTotalEvents = totalEvents;
+      u64 newEvents = totalAccesses - m_lastTotalEvents;
+      m_lastTotalEvents = totalAccesses;
 
       if (thisPeriodMS == 0) {
         LOG.Warning("Zero ms in sample");

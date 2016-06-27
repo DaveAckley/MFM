@@ -199,7 +199,7 @@ namespace MFM
         FAIL(INCOMPLETE_CODE); // what to do?
       T atom(*catom); // Get a non-const atom so serializer can use it sigh.
 
-      OString256 buff;
+      OString512 buff;
       AtomSerializer<AC> serializer(atom);
 
       const u32 ATOM_X_START = 20;

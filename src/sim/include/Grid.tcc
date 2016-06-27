@@ -185,9 +185,6 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::SetGridRunning(bool running)
   {
-    //    /* Notify the transceivers */
-    //    m_gtDriver.SetState(running ? GTDriver::ADVANCING : GTDriver::PAUSED);
-
     /* Notify the Tiles */
     for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
@@ -619,6 +616,16 @@ namespace MFM {
     u64 total = 0;
     for (const_iterator_type i = begin(); i != end(); ++i)
       total += i->GetEventsExecuted();
+
+    return total;
+  }
+
+  template <class GC>
+  u64 Grid<GC>::GetTotalSitesAccessed() const
+  {
+    u64 total = 0;
+    for (const_iterator_type i = begin(); i != end(); ++i)
+      total += i->GetSitesAccessed();
 
     return total;
   }
