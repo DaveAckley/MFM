@@ -40,20 +40,22 @@ namespace MFM
   template <class EC>
   class UlamRef
   {
+  public:
+    enum UsageType { 
+      PRIMITIVE,  //< Used as primitive, type cannot change at runtime, derived URs cannot change usage type, no effself
+      ARRAY,      //< Used as array, type cannot change at runtime, derived URs can change usage type, no effself
+      ATOMIC,     //< Used as atom-based stg, type may change at runtime, derived URs can change usage type, has effself
+      CLASSIC     //< Used as class-based non-atom stg, type cannot change at runtime, derived URs can change usage type, has effself
+    };
+
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
-
-    const UlamClass<EC> * m_effSelf;
-    BitStorage<EC> & m_stg;
-    u32 m_pos;
-    u32 m_len;
-
-  public:
 
     /**
        Construct an UlamRef 'from scratch'
      */
-    UlamRef(u32 pos, u32 len, BitStorage<EC>& stg, const UlamClass<EC> * effself) ;
+    UlamRef(u32 pos, u32 len, BitStorage<EC>& stg, const UlamClass<EC> * effself, 
+            const UsageType usage, const UlamContext<EC> & uc) ;
 
     /**
        Construct an UlamRef that's relative to an existing UlamRef.
@@ -61,7 +63,7 @@ namespace MFM
        pos, and this pos + len must fit within the len supplied to the
        existing UlamRef.
      */
-    UlamRef(const UlamRef<EC> & existing, s32 pos, u32 len, const UlamClass<EC> * effself) ;
+    UlamRef(const UlamRef<EC> & existing, s32 pos, u32 len, const UlamClass<EC> * effself, const UsageType usage) ;
 
     u32 Read() const { return m_stg.Read(m_pos, m_len); }
 
@@ -73,13 +75,13 @@ namespace MFM
 
     T ReadAtom() const { return m_stg.ReadAtom(m_pos); }
 
-    void WriteAtom(const T& val) { m_stg.WriteAtom(m_pos, val); }
+    void WriteAtom(const T& val) { m_stg.WriteAtom(m_pos, val); UpdateEffectiveSelf(); }
 
     u32 GetPos() const { return m_pos; }
 
     u32 GetLen() const { return m_len; }
 
-    const UlamClass<EC> * GetEffectiveSelf() const { return m_effSelf; }
+    const UlamClass<EC> * GetEffectiveSelf() const { CheckEffectiveSelf(); return m_effSelf; }
 
     BitStorage<EC> & GetStorage() { return m_stg; }
 
@@ -93,6 +95,19 @@ namespace MFM
     // Declare away copy ctor
     UlamRef(const UlamRef<EC> & existing) ;
 
+    void UpdateEffectiveSelf() ;
+
+    void CheckEffectiveSelf() const ;
+
+    const UlamClass<EC>* LookupElementTypeFromAtom() const ;
+
+    // DATA MEMBERS
+    const UlamContext<EC> & m_uc;
+    const UlamClass<EC> * m_effSelf;
+    BitStorage<EC> & m_stg;
+    u32 m_pos;
+    u32 m_len;
+    UsageType m_usage;
 
   }; //UlamRef
 

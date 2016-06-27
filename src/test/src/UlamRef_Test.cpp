@@ -5,6 +5,7 @@
 namespace MFM {
 
   typedef UlamRef<TestEventConfig> TestUlamRef;
+  typedef UlamContext<TestEventConfig> TestUlamContext;
 
   const u32 vals[3] =
     {
@@ -45,11 +46,12 @@ namespace MFM {
 
   void UlamRef_Test::Test_UlamRefRead()
   {
+    TestUlamContext tuc;
     {
       AtomBitStorage<TestEventConfig> t(setup());
       for (u32 i = 0; i < 96/32; ++i) {
         u32 len = 32;
-        TestUlamRef ur(i*32, len, t, 0);
+        TestUlamRef ur(i*32, len, t, 0, TestUlamRef::PRIMITIVE, tuc);
 
         assert(ur.GetPos() == i*32);
         assert(ur.GetLen() == len);
@@ -61,23 +63,23 @@ namespace MFM {
     {
       AtomBitStorage<TestEventConfig> t(setup());
       {
-        TestUlamRef ur(16, 24, t, 0);
+        TestUlamRef ur(16, 24, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.Read() == 0x432144);
       }
       {
-        TestUlamRef ur(4, 32, t, 0);
+        TestUlamRef ur(4, 32, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.Read() == 0x76543214);
       }
       {
-        TestUlamRef ur(32+16, 20, t, 0);
+        TestUlamRef ur(32+16, 20, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.Read() == 0x2211f);
       }
       {
-        TestUlamRef ur(28, 4, t, 0);
+        TestUlamRef ur(28, 4, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.Read() == 0x1);
       }
       {
-        TestUlamRef ur(32*2 - 8, 8, t, 0);
+        TestUlamRef ur(32*2 - 8, 8, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.Read() == 0x11);
       }
     }
@@ -85,11 +87,12 @@ namespace MFM {
 
   void UlamRef_Test::Test_UlamRefReadLong()
   {
+    TestUlamContext tuc;
     {
       AtomBitStorage<TestEventConfig> t(setup());
       for (u32 i = 0; i < 96/32; ++i) {
         u32 len = 32;
-        TestUlamRef ur(i*32, len, t, 0);
+        TestUlamRef ur(i*32, len, t, 0, TestUlamRef::PRIMITIVE, tuc);
 
         assert(ur.GetPos() == i*32);
         assert(ur.GetLen() == len);
@@ -101,35 +104,35 @@ namespace MFM {
     {
       AtomBitStorage<TestEventConfig> t(setup());
       {
-        TestUlamRef ur(0, 64, t, 0);
+        TestUlamRef ur(0, 64, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.ReadLong() == HexU64(0x87654321,0x44332211));
       }
       {
-        TestUlamRef ur(4, 64, t, 0);
+        TestUlamRef ur(4, 64, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.ReadLong() == HexU64(0x76543214,0x4332211F));
       }
       {
-        TestUlamRef ur(28, 40, t, 0);
+        TestUlamRef ur(28, 40, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.ReadLong() == HexU64(0x14,0x4332211F));
       }
       {
-        TestUlamRef ur(0, 36, t, 0);
+        TestUlamRef ur(0, 36, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.ReadLong() == HexU64(0x8,0x76543214));
       }
       {
-        TestUlamRef ur(32, 36, t, 0);
+        TestUlamRef ur(32, 36, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.ReadLong() == HexU64(0x4,0x4332211F));
       }
       {
-        TestUlamRef ur(16, 52, t, 0);
+        TestUlamRef ur(16, 52, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.ReadLong() == HexU64(0x43214,0x4332211f));
       }
       {
-        TestUlamRef ur(31, 2, t, 0);
+        TestUlamRef ur(31, 2, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.ReadLong() == 0x2);
       }
       {
-        TestUlamRef ur(32, 36, t, 0);
+        TestUlamRef ur(32, 36, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.ReadLong() == HexU64(0x4,0x4332211f));
       }
     }
@@ -137,12 +140,14 @@ namespace MFM {
 
   void UlamRef_Test::Test_UlamRefWrite()
   {
+    TestUlamContext tuc;
+
     {
       AtomBitStorage<TestEventConfig> t(setup());
 
       for (u32 i = 0; i < 96/32; ++i) {
         u32 len = 32;
-        TestUlamRef ur(i*32, len, t, 0);
+        TestUlamRef ur(i*32, len, t, 0, TestUlamRef::PRIMITIVE, tuc);
 
         assert(ur.GetPos() == i*32);
         assert(ur.GetLen() == len);
@@ -156,7 +161,7 @@ namespace MFM {
       AtomBitStorage<TestEventConfig> t(setup());
 
       for (u32 i = 0; i < 71/8; ++i) {
-        TestUlamRef ur(i*8, 8, t, 0);
+        TestUlamRef ur(i*8, 8, t, 0, TestUlamRef::PRIMITIVE, tuc);
 
         assert(ur.GetPos() == i*8);
         assert(ur.GetLen() == 8);
@@ -164,7 +169,7 @@ namespace MFM {
         ur.Write(27*i); // will start overflowing
       }
       for (u32 i = 0; i < 71/8; ++i) {
-        TestUlamRef ur(i*8, 8, t, 0);
+        TestUlamRef ur(i*8, 8, t, 0, TestUlamRef::PRIMITIVE, tuc);
 
         assert(ur.GetPos() == i*8);
         assert(ur.GetLen() == 8);
@@ -176,26 +181,26 @@ namespace MFM {
     {
       AtomBitStorage<TestEventConfig> t(setup());
       {
-        TestUlamRef ur(16, 24, t, 0);
+        TestUlamRef ur(16, 24, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur.Read() == 0x432144);
 
-        TestUlamRef ur2(24, 8, t, 0);
+        TestUlamRef ur2(24, 8, t, 0, TestUlamRef::PRIMITIVE, tuc);
         ur2.Write(0xcd);
 
         assert(ur.Read() == 0x43cd44);
 
-        TestUlamRef ur2b(8, 32, t, 0);
+        TestUlamRef ur2b(8, 32, t, 0, TestUlamRef::PRIMITIVE, tuc);
         ur2b.Write(0xfeedface);
 
         assert(ur.Read() == 0xedface);
 
-        TestUlamRef ur3(0, 32, t, 0);
+        TestUlamRef ur3(0, 32, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur3.Read() == 0x87feedfa);
 
-        TestUlamRef ur4(32, 32, t, 0);
+        TestUlamRef ur4(32, 32, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur4.Read() == 0xce332211);
 
-        TestUlamRef ur5(64, 7, t, 0);
+        TestUlamRef ur5(64, 7, t, 0, TestUlamRef::PRIMITIVE, tuc);
         assert(ur5.Read() == 0xfe>>1);
       }
     }
@@ -203,11 +208,13 @@ namespace MFM {
 
   void UlamRef_Test::Test_UlamRefWriteLong()
   {
+    TestUlamContext tuc;
+
     {
       AtomBitStorage<TestEventConfig> t(setup());
       for (u32 i = 0; i < 96/32; ++i) {
         u32 len = 32;
-        TestUlamRef ur(i*32, len, t, 0);
+        TestUlamRef ur(i*32, len, t, 0, TestUlamRef::PRIMITIVE, tuc);
 
         assert(ur.GetPos() == i*32);
         assert(ur.GetLen() == len);
@@ -220,14 +227,14 @@ namespace MFM {
     {
       AtomBitStorage<TestEventConfig> t(setup());
 
-      TestUlamRef ur(8, 60, t, 0);
+      TestUlamRef ur(8, 60, t, 0, TestUlamRef::PRIMITIVE, tuc);
 
       ur.WriteLong(HexU64(0xdeadbee,0xfd00df00));
       assert(ur.ReadLong() == HexU64(0xdeadbee,0xfd00df00));
 
-      TestUlamRef ur0(0, 8, t, 0);
-      TestUlamRef ur1(8, 36, t, 0);
-      TestUlamRef ur2(44, 60-36, t, 0);
+      TestUlamRef ur0(0, 8, t, 0, TestUlamRef::PRIMITIVE, tuc);
+      TestUlamRef ur1(8, 36, t, 0, TestUlamRef::PRIMITIVE, tuc);
+      TestUlamRef ur2(44, 60-36, t, 0, TestUlamRef::PRIMITIVE, tuc);
 
       assert(ur0.Read() == 0x87);
       assert(ur0.ReadLong() == HexU64(0x0,0x87));
@@ -241,13 +248,13 @@ namespace MFM {
     {
       AtomBitStorage<TestEventConfig> t(setup());
 
-      TestUlamRef ur(31, 34, t, 0);
+      TestUlamRef ur(31, 34, t, 0, TestUlamRef::PRIMITIVE, tuc);
 
       ur.WriteLong(-1L);
 
-      TestUlamRef ur0(0, 32, t, 0);
-      TestUlamRef ur1(32, 32, t, 0);
-      TestUlamRef ur2(64, 4, t, 0);
+      TestUlamRef ur0(0, 32, t, 0, TestUlamRef::PRIMITIVE, tuc);
+      TestUlamRef ur1(32, 32, t, 0, TestUlamRef::PRIMITIVE, tuc);
+      TestUlamRef ur2(64, 4, t, 0, TestUlamRef::PRIMITIVE, tuc);
 
       assert(ur0.Read() == 0x87654321);
       assert(ur1.Read() == 0xffffffff);
@@ -262,12 +269,12 @@ namespace MFM {
     {
       AtomBitStorage<TestEventConfig> t(setup());
 
-      TestUlamRef ur01(0, 64, t, 0);
-      TestUlamRef ur12(32, 68-32, t, 0);
+      TestUlamRef ur01(0, 64, t, 0, TestUlamRef::PRIMITIVE, tuc);
+      TestUlamRef ur12(32, 68-32, t, 0, TestUlamRef::PRIMITIVE, tuc);
 
-      TestUlamRef ur0(0, 32, t, 0);
-      TestUlamRef ur1(32, 32, t, 0);
-      TestUlamRef ur2(64, 71-64, t, 0);
+      TestUlamRef ur0(0, 32, t, 0, TestUlamRef::PRIMITIVE, tuc);
+      TestUlamRef ur1(32, 32, t, 0, TestUlamRef::PRIMITIVE, tuc);
+      TestUlamRef ur2(64, 71-64, t, 0, TestUlamRef::PRIMITIVE, tuc);
 
       assert(ur0.Read() == 0x87654321);
       assert(ur1.Read() == 0x44332211);
@@ -289,18 +296,19 @@ namespace MFM {
 
   void UlamRef_Test::Test_UlamRefCtors()
   {
+    TestUlamContext tuc;
     {
       AtomBitStorage<TestEventConfig> t(setup());
 
-      TestUlamRef ur(0, 10, t, 0);
+      TestUlamRef ur(0, 10, t, 0, TestUlamRef::PRIMITIVE, tuc);
       assert(ur.GetPos() == 0);
       assert(ur.GetLen() == 10);
 
-      TestUlamRef ur2(ur, 4, 6, 0);
+      TestUlamRef ur2(ur, 4, 6, 0, TestUlamRef::PRIMITIVE);
       assert(ur2.GetPos() == 4);
       assert(ur2.GetLen() == 6);
 
-      TestUlamRef ur3(ur2, 2, 1, 0);
+      TestUlamRef ur3(ur2, 2, 1, 0, TestUlamRef::PRIMITIVE);
       assert(ur3.GetPos() == 6);
       assert(ur3.GetLen() == 1);
     }
@@ -308,15 +316,15 @@ namespace MFM {
     {
       AtomBitStorage<TestEventConfig> t(setup());
 
-      TestUlamRef ur(0, 71, t, 0);
+      TestUlamRef ur(0, 71, t, 0, TestUlamRef::PRIMITIVE, tuc);
       assert(ur.GetPos() == 0);
       assert(ur.GetLen() == 71);
 
-      TestUlamRef ur2(ur, 55, 16, 0);
+      TestUlamRef ur2(ur, 55, 16, 0, TestUlamRef::PRIMITIVE);
       assert(ur2.GetPos() == 55);
       assert(ur2.GetLen() == 16);
 
-      TestUlamRef ur3(ur2, 10, 6, 0);
+      TestUlamRef ur3(ur2, 10, 6, 0, TestUlamRef::PRIMITIVE);
       assert(ur3.GetPos() == 65);
       assert(ur3.GetLen() == 6);
     }
@@ -324,9 +332,10 @@ namespace MFM {
 
   void UlamRef_Test::Test_UlamRefEffSelf()
   {
+    TestUlamContext tuc;
     {
       AtomBitStorage<TestEventConfig> t(setup());
-      TestUlamRef ur(0, 71, t, 0);
+      TestUlamRef ur(0, 71, t, 0, TestUlamRef::PRIMITIVE, tuc);
       assert(ur.GetEffectiveSelf() == 0);
     }
   }

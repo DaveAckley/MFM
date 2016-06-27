@@ -695,14 +695,25 @@ namespace MFM
 
     /**
      * Gets the number of events executed within this Tile since
-     * initialization.
+     * initialization.  Note that due to varying event window
+     * boundaries this raw number of events will be much higher when a
+     * tile is empty vs when occupied with high-radius elements.  By
+     * contrast, GetEffectiveEventsExecuted() normalizes for occupancy
+     * and radius.
      *
      * @returns The number of events executed within this Tile since
      *          initialization.
+     *
+     * @sa GetEffectiveEventsExecuted
      */
     u64 GetEventsExecuted() const
     {
       return m_window.GetEventWindowsExecuted();
+    }
+
+    u64 GetSitesAccessed() const
+    {
+      return m_window.GetSitesAccessed();
     }
 
     EventWindow<EC> & GetEventWindow()

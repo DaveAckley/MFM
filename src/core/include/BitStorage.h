@@ -84,7 +84,7 @@ namespace MFM {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
-    BitStorage() { } //missing?
+    BitStorage() { } 
 
     virtual ~BitStorage() { }
 

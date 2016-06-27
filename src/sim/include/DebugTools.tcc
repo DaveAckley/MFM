@@ -1,3 +1,4 @@
+/* -*- C++ -*- */
 #include "UlamClass.h"
 #include "UlamClassRegistry.h"
 
@@ -33,11 +34,14 @@ namespace MFM {
       const UlamElement<EC>* ue = elt->AsUlamElement();
       if (ue) 
       {
+        UlamContext<EC> uc;
         AtomBitStorage<EC> abs(atom);
         UlamRef<EC> ur(EC::ATOM_CONFIG::ATOM_TYPE::ATOM_FIRST_STATE_BIT,
                        ue->GetClassLength(),
                        abs,
-                       ue);
+                       ue,
+                       UlamRef<EC>::ATOMIC,
+                       uc);
         DebugPrint(tile, ur, out);
         return;
       } 
