@@ -6,25 +6,66 @@
 namespace MFM {
 
   template <class EC>
-  UlamRef<EC>::UlamRef(u32 pos, u32 len, BitStorage<EC>& stg, const UlamClass<EC> * effself)
-    : m_effSelf(effself)
+  UlamRef<EC>::UlamRef(u32 pos, u32 len, BitStorage<EC>& stg, const UlamClass<EC> * effself, 
+                       const UsageType usage, const UlamContext<EC> & uc)
+    : m_uc(uc)
+    , m_effSelf(effself)
     , m_stg(stg)
     , m_pos(pos)
     , m_len(len)
+    , m_usage(usage)
   {
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
+    MFM_API_ASSERT_ARG(m_usage != PRIMITIVE || m_effSelf == 0);  // Primitive usage has no effself
+    MFM_API_ASSERT_ARG(m_usage != CLASSIC || m_effSelf != 0);    // Classic usage has effself
+    if (m_usage == ATOMIC && !m_effSelf) 
+    {
+      UpdateEffectiveSelf();
+    }
+
   }
 
   template <class EC>
-  UlamRef<EC>::UlamRef(const UlamRef & existing, s32 pos, u32 len, const UlamClass<EC> * effself)
-    : m_effSelf(effself)
+  void UlamRef<EC>::UpdateEffectiveSelf()
+  {
+    m_effSelf = LookupElementTypeFromAtom();
+  }
+
+  template <class EC>
+  void UlamRef<EC>::CheckEffectiveSelf() const
+  {
+    if (m_usage == ATOMIC) 
+    {
+      const UlamClass<EC> * eltptr = LookupElementTypeFromAtom();
+      MFM_API_ASSERT(eltptr->internalCMethodImplementingIs(m_effSelf), STALE_ATOM_REF);
+    }
+  }
+
+  template <class EC>
+  const UlamClass<EC>* UlamRef<EC>::LookupElementTypeFromAtom() const 
+  {
+    MFM_API_ASSERT_STATE(m_usage == ATOMIC);
+    T a = ReadAtom();
+    u32 etype = a.GetType();
+    const UlamClass<EC> * eltptr = m_uc.LookupElementTypeFromContext(etype);
+    MFM_API_ASSERT_STATE(eltptr);
+    return eltptr;
+  }
+
+
+  template <class EC>
+  UlamRef<EC>::UlamRef(const UlamRef & existing, s32 pos, u32 len, const UlamClass<EC> * effself, const UsageType usage)
+    : m_uc(existing.m_uc)
+    , m_effSelf(effself)
     , m_stg(existing.m_stg)
     , m_len(len)
+    , m_usage(usage)
   {
     s32 newpos = pos + (s32) existing.GetPos(); //e.g. pos -25 to start of atom of element ref
     MFM_API_ASSERT_ARG(newpos >= 0); //non-negative
     m_pos = (u32) newpos; //save as unsigned
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
+    MFM_API_ASSERT_ARG(m_usage != PRIMITIVE || m_usage == existing.m_usage);  // derived from PRIMITIVE can't change usage type
   }
 
   template <class EC>
