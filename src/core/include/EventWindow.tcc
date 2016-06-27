@@ -187,6 +187,16 @@ namespace MFM {
   }
 
   template <class EC>
+  void EventWindow<EC>::SetBoundary(u32 boundary) 
+  {
+    if (boundary > R + 1) boundary = R + 1;
+
+    m_eventWindowBoundary = boundary;
+    const MDist<R> & md = MDist<R>::get();
+    m_boundedSiteCount = md.GetFirstIndex(m_eventWindowBoundary);
+  }
+
+  template <class EC>
   bool EventWindow<EC>::InitForEvent(const SPoint & center)
   {
     MFM_LOG_DBG6(("EW::InitForEvent(%d,%d)",center.GetX(),center.GetY()));
@@ -224,12 +234,7 @@ namespace MFM {
     m_element  = tile.GetElementTable().Lookup(type);
     if (m_element == 0) return false; // XXX what to do here?
 
-    m_eventWindowBoundary = m_element->GetEventWindowBoundary();
-    if (m_eventWindowBoundary > R + 1)
-      m_eventWindowBoundary = R + 1;
-
-    const MDist<R> & md = MDist<R>::get();
-    m_boundedSiteCount = md.GetFirstIndex(m_eventWindowBoundary);
+    SetBoundary(m_element->GetEventWindowBoundary());
 
     if (!AcquireAllLocks(center, m_eventWindowBoundary))
     {
@@ -237,6 +242,7 @@ namespace MFM {
       return false;
     }
 
+    m_eventWindowSitesAccessed += m_boundedSiteCount;
     m_center = center;
     m_ewState = COMPUTE;
     m_sym = PSYM_NORMAL;
@@ -391,6 +397,7 @@ namespace MFM {
     , m_element(0)
     , m_eventWindowsAttempted(0)
     , m_eventWindowsExecuted(0)
+    , m_eventWindowSitesAccessed(0)
     , m_center(0,0)
     , m_lockRegion(-1)
     , m_sym(PSYM_NORMAL)

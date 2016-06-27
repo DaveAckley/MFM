@@ -104,6 +104,7 @@ namespace MFM
 
     u64 m_eventWindowsAttempted;
     u64 m_eventWindowsExecuted;
+    u64 m_eventWindowSitesAccessed; // Sum of within-boundary sites
 
     void RecordEventAtTileCoord(const SPoint tcoord) ;
 
@@ -267,6 +268,11 @@ namespace MFM
       return m_eventWindowsExecuted;
     }
 
+    u64 GetSitesAccessed() const
+    {
+      return m_eventWindowSitesAccessed;
+    }
+
     void SetEventWindowsAttempted(u64 attempts)
     {
       m_eventWindowsAttempted = attempts;
@@ -310,6 +316,8 @@ namespace MFM
     {
       return m_boundedSiteCount;
     }
+
+    void SetBoundary(u32 boundary) ;
 
     /**
        Does any I/O that's appropriate to the situation and possible.
