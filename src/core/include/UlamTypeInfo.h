@@ -128,7 +128,7 @@ namespace MFM {
     UlamTypeInfoClass m_utic;
     UlamTypeInfoPrimitive m_utip;
 
-    enum Category { PRIM, ELEMENT, QUARK, UNKNOWN } m_category;
+    enum Category { PRIM, ELEMENT, QUARK, TRANSIENT, UNKNOWN } m_category;
 
     UlamTypeInfo() : m_category(UNKNOWN) { }
 
@@ -150,6 +150,7 @@ namespace MFM {
       case PRIM: return m_utip.m_bitSize;
       case ELEMENT:
       case QUARK:
+      case TRANSIENT:
         return m_utic.m_bitSize;
       default:
         FAIL(ILLEGAL_STATE);
@@ -162,6 +163,7 @@ namespace MFM {
       {
       case PRIM: return m_utip.GetArrayLength();
       case QUARK:
+      case TRANSIENT:
         return m_utic.m_arrayLength;
       case ELEMENT:
       default:

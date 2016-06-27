@@ -13,6 +13,7 @@ namespace MFM
     if (code=='e') cat = ELEMENT;
     else if (code=='q') cat = QUARK;
     else if (code=='t') cat = PRIM;
+    else if (code=='n') cat = TRANSIENT;
     else return false;
 
     if (cat == PRIM)

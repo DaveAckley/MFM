@@ -132,12 +132,11 @@ namespace MFM {
             u32 offset = 0;  // barf.  barf barf barf
 #endif
 
-            u64 val = stg.ReadLong(baseStatePos + dmi.m_bitPosition
-                                   + offset
-                                   + idx * bitsize,
-                                   bitsize);
+            u32 startPos = 
+              baseStatePos + dmi.m_bitPosition
+              + offset + idx * bitsize;
 
-            if (utin.m_category == UlamTypeInfo::QUARK)
+            if (utin.m_category == UlamTypeInfo::QUARK || utin.m_category == UlamTypeInfo::TRANSIENT)
             {
               if (flags & PRINT_RECURSE_QUARKS)
               {
@@ -149,12 +148,31 @@ namespace MFM {
                   continue;
                 }
               }
-              bs.Printf("0x%x", val); // Just do hex if no recursion or unknown class
+
+              if (bitsize > 64) 
+              {
+                // Just do hex, aligned from the right
+                bs.Printf("%d: 0x", bitsize); 
+
+                u32 start = bitsize%4;
+                if (start) bs.Printf("%x", stg.Read(startPos, start));
+
+                for (u32 i = start; i < bitsize; i += 4) 
+                  bs.Printf("%x", stg.Read(startPos + i, 4));
+
+              } 
+              else
+              {
+                u64 val = stg.ReadLong(startPos, bitsize);
+                bs.Printf("0x%x", val); // Just do hex if no recursion or unknown class
+              }
               continue;
             }
 
+
             if (utin.m_category != UlamTypeInfo::PRIM) FAIL(ILLEGAL_STATE); // Can't happen now right?
 
+            u64 val = stg.ReadLong(startPos, bitsize);
             switch (utin.m_utip.GetPrimType())
             {
             case UlamTypeInfoPrimitive::INT:
