@@ -1,7 +1,6 @@
 /* -*- C++ -*- */
 #include "MDist.h"
 #include "Element.h"
-#include "Element_Empty.h"
 #include "Tile.h"
 #include "ChannelEnd.h"
 #include "PacketIO.h"
