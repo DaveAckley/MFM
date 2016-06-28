@@ -3,7 +3,6 @@
 #include "Dirs.h"
 #include "MDist.h"
 #include "Element.h"
-#include "Element_Empty.h"
 
 namespace MFM {
 
@@ -52,36 +51,30 @@ namespace MFM {
   }
 
   template <class EC>
+  Element<EC> * ElementTable<EC>::ReplaceEmptyElement(const Element<EC> & newEmptyElement) 
+  {
+    enum { ATOM_EMPTY_TYPE = EC::ATOM_CONFIG::ATOM_EMPTY_TYPE };
+
+    MFM_ASSERT_API_ARG(newEmptyElement.GetType() == ATOM_EMPTY_TYPE); // New guy must think it's the empty element
+
+    u32 eslot = SlotFor(ATOM_EMPTY_TYPE);
+    Element<EC> * old = m_hash[eslot].m_element;
+
+    MFM_ASSERT_API_STATE(old && old->GetType() == ATOM_EMPTY_TYPE);   // Must have old guy that also thinks it's the empty element
+
+    //    MFM_ASSERT_API_STATE(old != &newEmptyElement);   // Must not be the same guy (can we require this?  loses idempotency)
+
+    m_hash[eslot].m_element = &newEmptyElement; // And so the deed is done; have mercy on our souls.
+
+    return old;
+  }
+
+
+  template <class EC>
   const Element<EC> * ElementTable<EC>::Lookup(u32 elementType) const
   {
     return m_hash[SlotFor(elementType)].m_element;
   }
-
-#if 0
-  template <class EC>
-  void ElementTable<EC>::Execute(EventWindow<EC>& window)
-  {
-    T atom = window.GetCenterAtomDirect();
-    if (!atom.IsSane())
-    {
-      if (atom.HasBeenRepaired())
-      {
-        window.SetCenterAtomDirect(atom);
-      }
-      else
-      {
-        FAIL(INCONSISTENT_ATOM);
-      }
-    }
-    u32 type = atom.GetType();
-    if(type != Element_Empty<EC>::THE_INSTANCE.GetType())
-    {
-      const Element<EC> * elt = Lookup(type);
-      if (elt == 0) FAIL(UNKNOWN_ELEMENT);
-      elt->Behavior(window);
-    }
-  }
-#endif
 
   template <class EC>
   bool ElementTable<EC>::RegisterElement(const Element<EC>& e)
