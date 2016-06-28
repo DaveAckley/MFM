@@ -12,7 +12,7 @@ namespace MFM
     template <class EC>
     bool FillAvailableVNNeighbor(EventWindow<EC>& window, SPoint& pt)
     {
-      return FillPointWithType(window, pt, VNNeighbors, 4, Dirs::SOUTHEAST, Element_Empty<EC>::GetType());
+      return FillPointWithType(window, pt, VNNeighbors, 4, Dirs::SOUTHEAST, EC::ATOM_CONFIG::ATOM_EMPTY_TYPE);
     }
 
     /* Master search method for finding atoms in regions in a window. If regions are

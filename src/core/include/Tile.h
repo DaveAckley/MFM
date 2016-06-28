@@ -804,6 +804,8 @@ namespace MFM
       return m_elementTable;
     }
 
+    const Element<EC> * ReplaceEmptyElement(const Element<EC>& newEmptyElement) ;
+
     /**
      * Returns an empty atom instance according to this Tile's ElementTable.
      */

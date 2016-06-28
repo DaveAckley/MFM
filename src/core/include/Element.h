@@ -267,6 +267,12 @@ namespace MFM
       LOG.Debug("Constructed %@ at %p", &m_UUID, this);
     }
 
+    void AllocateTypeForTesting(ElementTypeNumberMap<EC>& etnm)
+    {
+      m_hasType = false;
+      AllocateType(etnm);
+    }
+
     /**
      * Assigns the type of this Element using the supplied
      * ElementTypeNumberMap . This type is only assigned if it has not

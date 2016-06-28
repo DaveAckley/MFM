@@ -26,7 +26,7 @@ namespace MFM {
   {
     TestTile tile;
     ElementTypeNumberMap<TestEventConfig> etnm;
-    Element_Wall<TestEventConfig>::THE_INSTANCE.AllocateType(etnm); // Need something non-diffusing..
+    Element_Wall<TestEventConfig>::THE_INSTANCE.AllocateTypeForTesting(etnm); // Need something non-diffusing..
     tile.RegisterElement(Element_Wall<TestEventConfig>::THE_INSTANCE);
 
     SPoint center(15, 20);  // Hitting no caches, for starters
@@ -56,17 +56,20 @@ namespace MFM {
   {
     TestTile tile;
     ElementTypeNumberMap<TestEventConfig> etnm;
-    Element_Dreg<TestEventConfig>::THE_INSTANCE.AllocateType(etnm);
-    Element_Res<TestEventConfig>::THE_INSTANCE.AllocateType(etnm);
+    Element_Dreg<TestEventConfig>::THE_INSTANCE.AllocateTypeForTesting(etnm);
+    Element_Res<TestEventConfig>::THE_INSTANCE.AllocateTypeForTesting(etnm);
+    Element_Wall<TestEventConfig>::THE_INSTANCE.AllocateTypeForTesting(etnm);
     tile.RegisterElement(Element_Dreg<TestEventConfig>::THE_INSTANCE);
     tile.RegisterElement(Element_Res<TestEventConfig>::THE_INSTANCE);
+    tile.RegisterElement(Element_Wall<TestEventConfig>::THE_INSTANCE);
 
     // We must ensure neither center nor 'absolute' ends up hitting the
     // cache!  Our TestTile has no connections, so Tile::PlaceAtom
     // ignores all cache write attempts to it!
     SPoint center(8, 8);
-    SPoint absolute(-2, 0);
+    SPoint absolute(-1, 0);
     SPoint zero(0, 0);
+    const u32 WALL_TYPE = Element_Wall<TestEventConfig>::THE_INSTANCE.GetType();
     const u32 DREG_TYPE = Element_Dreg<TestEventConfig>::THE_INSTANCE.GetType();
     const u32 RES_TYPE = Element_Res<TestEventConfig>::THE_INSTANCE.GetType();
 
@@ -74,12 +77,14 @@ namespace MFM {
 
     absolute.Add(center);
 
-    const TestAtom * erased1 = tile.GetAtom(center);
-    const TestAtom * erased2 = tile.GetAtom(absolute);
+    *(tile.GetWritableAtom(center)) = TestAtom(WALL_TYPE,0,0,0);
+
+    const TestAtom * erased1 = tile.GetAtom(center);   // a Wall
+    const TestAtom * erased2 = tile.GetAtom(absolute); // a Empty
 
     absolute.Subtract(center);
 
-    assert(erased1->GetType() == EMPTY_TYPE);
+    assert(erased1->GetType() == WALL_TYPE);
     assert(erased2->GetType() == EMPTY_TYPE);
 
     TestEventWindow & ew = tile.GetEventWindow();
@@ -92,14 +97,13 @@ namespace MFM {
     ew.SetRelativeAtomDirect(zero, TestAtom(DREG_TYPE,0,0,0));
     ew.SetRelativeAtomDirect(absolute, TestAtom(RES_TYPE,0,0,0));
 
-    assert(erased1->GetType() == EMPTY_TYPE);
+    assert(erased1->GetType() == WALL_TYPE);
     assert(erased2->GetType() == EMPTY_TYPE);
 
     ew.StoreToTile();
 
-    // XXXX CURRENTLY BUSTED Mon Jun 27 14:26:41 2016 
-    // XXXX assert(erased1->GetType() == DREG_TYPE);
-    // XXXX assert(erased2->GetType() == RES_TYPE);
+    assert(erased1->GetType() == DREG_TYPE);
+    assert(erased2->GetType() == RES_TYPE);
 
   }
 

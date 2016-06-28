@@ -102,6 +102,12 @@ namespace MFM
   }
 
   template <class EC>
+  const Element<EC> * Tile<EC>::ReplaceEmptyElement(const Element<EC>& newEmptyElement) 
+  {
+    return m_elementTable.ReplaceEmptyElement(newEmptyElement);
+  }
+
+  template <class EC>
   typename EC::ATOM_CONFIG::ATOM_TYPE Tile<EC>::GetEmptyAtom() const
   {
     return Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom();
