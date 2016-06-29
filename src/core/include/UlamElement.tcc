@@ -11,7 +11,7 @@
 namespace MFM {
 
   template <class EC>
-  u32 UlamElement<EC>::GetEventWindowBoundary() const 
+  u32 UlamElement<EC>::GetEventWindowBoundary() const
   {
     if (!m_info) return Super::GetEventWindowBoundary();
     return m_info->GetEventWindowBoundary();
@@ -28,7 +28,7 @@ namespace MFM {
     window.SetSymmetry((PointSymmetry) sym);
 
     AtomRefBitStorage<EC> atbs(window.GetCenterAtomSym());
-    UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this);
+    UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this, UlamRef<EC>::ATOMIC, uc);
 
     // how to do an ulam virtual function call in c++
     typedef void (* Uf_6behave) (const UlamContext<EC>&, UlamRef<EC>& );
@@ -45,12 +45,12 @@ namespace MFM {
     T temp(atom);
     Ui_Ut_102321u<EC> sel(selector);
     AtomBitStorage<EC> atbs(temp);
-    UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this);
+    UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this, UlamRef<EC>::ATOMIC, uc);
 
     // how to do an ulam virtual function call in c++
     typedef Ui_Ut_14181u<EC> (* Uf_8getColor11102321u) (const UlamContext<EC>&, UlamRef<EC>&, Ui_Ut_102321u<EC>& );
     Ui_Ut_14181u<EC> dynColor = ((Uf_8getColor11102321u) this->getVTableEntry(GETCOLOR_VTABLE_INDEX)) (uc, ur, sel);
-    
+
     return dynColor.read();
   }
 

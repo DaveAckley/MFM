@@ -51,16 +51,16 @@ namespace MFM {
   }
 
   template <class EC>
-  Element<EC> * ElementTable<EC>::ReplaceEmptyElement(const Element<EC> & newEmptyElement) 
+  const Element<EC> * ElementTable<EC>::ReplaceEmptyElement(const Element<EC> & newEmptyElement)
   {
     enum { ATOM_EMPTY_TYPE = EC::ATOM_CONFIG::ATOM_EMPTY_TYPE };
 
-    MFM_ASSERT_API_ARG(newEmptyElement.GetType() == ATOM_EMPTY_TYPE); // New guy must think it's the empty element
+    MFM_API_ASSERT_ARG(newEmptyElement.GetType() == ATOM_EMPTY_TYPE); // New guy must think it's the empty element
 
     u32 eslot = SlotFor(ATOM_EMPTY_TYPE);
-    Element<EC> * old = m_hash[eslot].m_element;
+    const Element<EC> * old = m_hash[eslot].m_element;
 
-    MFM_ASSERT_API_STATE(old && old->GetType() == ATOM_EMPTY_TYPE);   // Must have old guy that also thinks it's the empty element
+    MFM_API_ASSERT_STATE(old && old->GetType() == ATOM_EMPTY_TYPE);   // Must have old guy that also thinks it's the empty element
 
     //    MFM_ASSERT_API_STATE(old != &newEmptyElement);   // Must not be the same guy (can we require this?  loses idempotency)
 

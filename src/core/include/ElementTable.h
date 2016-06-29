@@ -88,7 +88,7 @@ namespace MFM
      * expected location, or if the element located there is not type
      * ATOM_EMPTY_TYPE
      */
-    Element<EC> * ReplaceEmptyElement(const Element<EC> & newEmptyElement) ;
+    const Element<EC> * ReplaceEmptyElement(const Element<EC> & newEmptyElement) ;
 
     /**
      * Gets the capacity of this ElementTable, in Elements that may be

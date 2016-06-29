@@ -118,9 +118,6 @@ namespace MFM
     typedef typename AC::ATOM_TYPE T;
 
     //omit BitStorage constructor since doesn't support transients
-    //UlamRefFixed(BitStorage<EC>& stg, u32 origin, const UlamClass<EC> * effself)
-    //  : UlamRef<EC>(POS, LEN, origin, stg, effself)
-
     UlamRefFixed(const UlamRef<EC>& parent, const UlamClass<EC> * effself)
       : UlamRef<EC>(parent, POS, LEN, effself)
     { }
