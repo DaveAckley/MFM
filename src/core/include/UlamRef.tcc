@@ -20,7 +20,7 @@ namespace MFM {
     MFM_API_ASSERT_ARG(m_usage != ARRAY || m_effSelf == 0); // Array usage has no effself
     MFM_API_ASSERT_ARG(m_usage != CLASSIC || m_effSelf != 0); // Classic usage has effself
 
-    if (m_usage == ATOMIC && !m_effSelf)
+    if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
     {
       UpdateEffectiveSelf();
     }
@@ -43,7 +43,7 @@ namespace MFM {
     MFM_API_ASSERT_ARG(m_usage != ARRAY || m_effSelf == 0); // Array usage has no effself
     MFM_API_ASSERT_ARG(m_usage != CLASSIC || m_effSelf != 0); // Classic usage has effself
 
-    if (m_usage == ATOMIC && !m_effSelf)
+    if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
     {
       UpdateEffectiveSelf();
     }
@@ -58,7 +58,7 @@ namespace MFM {
   template <class EC>
   void UlamRef<EC>::CheckEffectiveSelf() const
   {
-    if (m_usage == ATOMIC)
+    if (m_usage == ATOMIC || m_usage == ELEMENTAL)
     {
       const UlamClass<EC> * eltptr = LookupElementTypeFromAtom();
       MFM_API_ASSERT(eltptr->internalCMethodImplementingIs(m_effSelf), STALE_ATOM_REF);
@@ -68,7 +68,7 @@ namespace MFM {
   template <class EC>
   const UlamClass<EC>* UlamRef<EC>::LookupElementTypeFromAtom() const
   {
-    MFM_API_ASSERT_STATE(m_usage == ATOMIC);
+    MFM_API_ASSERT_STATE(m_usage == ATOMIC || m_usage == ELEMENTAL);
     T a = ReadAtom();
     u32 etype = a.GetType();
     const UlamClass<EC> * eltptr = m_uc.LookupElementTypeFromContext(etype);

@@ -42,10 +42,11 @@ namespace MFM
   {
   public:
     enum UsageType { 
-      PRIMITIVE,  //< Used as primitive, type cannot change at runtime, derived URs cannot change usage type, no effself
-      ARRAY,      //< Used as array, type cannot change at runtime, derived URs can change usage type, no effself
-      ATOMIC,     //< Used as atom-based stg, type may change at runtime, derived URs can change usage type, has effself
-      CLASSIC     //< Used as class-based non-atom stg, type cannot change at runtime, derived URs can change usage type, has effself
+      PRIMITIVE,  //< Bits used as primitive, type cannot change at runtime, derived URs cannot change usage type, no effself
+      ARRAY,      //< Bits used as array, type cannot change at runtime, derived URs can change usage type, no effself
+      ATOMIC,     //< Bits used as atom, type may change at runtime, derived URs can change usage type, has effself
+      ELEMENTAL,  //< Bits used as element (inside atom), type cannot (?) change at runtime, derived URs can change usage type, has effself
+      CLASSIC     //< Bits used as class-based non-atom stg, type cannot change at runtime, derived URs can change usage type, has effself
     };
 
     typedef typename EC::ATOM_CONFIG AC;
@@ -73,9 +74,27 @@ namespace MFM
 
     void WriteLong(u64 val) { m_stg.WriteLong(m_pos, m_len, val); }
 
-    T ReadAtom() const { return m_stg.ReadAtom(m_pos); }
+    T ReadAtom() const 
+    { 
+      if (m_usage == ATOMIC) return m_stg.ReadAtom(m_pos); 
+      if (m_usage == ELEMENTAL) return m_stg.ReadAtom(m_pos - T::ATOM_FIRST_STATE_BIT); 
+      FAIL(ILLEGAL_STATE);
+    }
 
-    void WriteAtom(const T& val) { m_stg.WriteAtom(m_pos, val); UpdateEffectiveSelf(); }
+    void WriteAtom(const T& val) 
+    { 
+      if (m_usage == ATOMIC) 
+      { 
+        m_stg.WriteAtom(m_pos, val); 
+        UpdateEffectiveSelf(); 
+      }
+      else if (m_usage == ELEMENTAL) 
+      {
+        m_stg.WriteAtom(m_pos - T::ATOM_FIRST_STATE_BIT, val); 
+        CheckEffectiveSelf();
+      }
+      else FAIL(ILLEGAL_STATE);
+    }
 
     u32 GetPos() const { return m_pos; }
 
