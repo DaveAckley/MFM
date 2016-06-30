@@ -126,7 +126,7 @@ namespace MFM
 
     void CheckEffectiveSelf() const ;
 
-    const UlamClass<EC>* LookupElementTypeFromAtom() const ;
+    const UlamClass<EC>* LookupUlamElementTypeFromAtom() const ;
 
     // DATA MEMBERS
     const UlamContext<EC> & m_uc;

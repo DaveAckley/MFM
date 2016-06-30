@@ -69,7 +69,7 @@ namespace MFM {
   template <class EC>
   void UlamRef<EC>::UpdateEffectiveSelf()
   {
-    m_effSelf = LookupElementTypeFromAtom();
+    m_effSelf = LookupUlamElementTypeFromAtom();
   }
 
   template <class EC>
@@ -77,19 +77,19 @@ namespace MFM {
   {
     if (m_usage == ATOMIC || m_usage == ELEMENTAL)
     {
-      const UlamClass<EC> * eltptr = LookupElementTypeFromAtom();
+      const UlamClass<EC> * eltptr = LookupUlamElementTypeFromAtom();
       MFM_API_ASSERT(eltptr->internalCMethodImplementingIs(m_effSelf), STALE_ATOM_REF);
     }
   }
 
   template <class EC>
-  const UlamClass<EC>* UlamRef<EC>::LookupElementTypeFromAtom() const
+  const UlamClass<EC>* UlamRef<EC>::LookupUlamElementTypeFromAtom() const
   {
     MFM_API_ASSERT_STATE(m_usage == ATOMIC || m_usage == ELEMENTAL);
     T a = ReadAtom();
     MFM_API_ASSERT(a.IsSane(),INCONSISTENT_ATOM);
     u32 etype = a.GetType();
-    const UlamClass<EC> * eltptr = m_uc.LookupElementTypeFromContext(etype);
+    const UlamClass<EC> * eltptr = m_uc.LookupUlamElementTypeFromContext(etype);
     MFM_API_ASSERT_STATE(eltptr);
     return eltptr;
   }

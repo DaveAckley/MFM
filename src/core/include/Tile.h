@@ -754,6 +754,16 @@ namespace MFM
       CopyTileParameters(heroTile);
       SetWarpFactor(heroTile.GetWarpFactor());
       m_ucr = heroTile.m_ucr;
+
+      const UlamClass<EC> * uempty = m_ucr.GetUlamElementEmpty();
+      if (uempty) 
+      {
+        const UlamElement<EC> * uelt = uempty->AsUlamElement();
+        if (uelt)
+        {
+          m_elementTable.ReplaceEmptyElement(*uelt);
+        }
+      }
     }
 
     /**

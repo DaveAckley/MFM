@@ -273,6 +273,11 @@ namespace MFM {
 
   public:
 
+    const ElementTable<EC> & GetHeroElementTable() const
+    {
+      return m_heroTile.GetElementTable();
+    }
+
     UlamClassRegistry<EC> & GetUlamClassRegistry()
     {
       return m_heroTile.GetUlamClassRegistry();

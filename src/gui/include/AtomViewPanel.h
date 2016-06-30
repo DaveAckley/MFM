@@ -242,10 +242,11 @@ namespace MFM
 
       u32 curX = baseX + ATOM_DRAW_SIZE;
       const u32 DCOLOR_SIZE = ATOM_DRAW_SIZE - 8;
+      const ElementTable<EC>& et = grid.GetHeroElementTable();
       u32 dcolor[3];
       dcolor[0] = staticColor;
-      dcolor[1] = element->GetDynamicColor(atom, 1);
-      dcolor[2] = element->GetDynamicColor(atom, 2);
+      dcolor[1] = element->GetDynamicColor(et, atom, 1);
+      dcolor[2] = element->GetDynamicColor(et, atom, 2);
       bool show1 = false, show2 = false, bothsame = false;
       if (dcolor[1] != dcolor[0]) show1 = true;
       if (dcolor[2] != dcolor[0]) show2 = true;

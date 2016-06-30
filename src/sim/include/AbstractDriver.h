@@ -1352,7 +1352,8 @@ namespace MFM
 
       m_grid.InitThreads();
 
-      NeedElement(&Element_Empty<EC>::THE_INSTANCE);
+      // No longer needed?  Only needed in cpp-elt situations??  We shall see
+      //      NeedElement(&Element_Empty<EC>::THE_INSTANCE);
 
       ReinitPhysics();
 

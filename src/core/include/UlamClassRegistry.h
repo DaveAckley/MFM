@@ -42,9 +42,19 @@ namespace MFM {
       TABLE_SIZE = 100
     };
 
-    UlamClassRegistry() : m_registeredUlamClassCount(0) { }
+    UlamClassRegistry() 
+      : m_registeredUlamClassCount(0) 
+      , m_ulamElementEmpty(0)
+    { }
 
     bool RegisterUlamClass(UlamClass<EC>& uc) ;
+
+    /**
+       @returns >0 if empty element now registers, ==0 if ue is not an
+       Ue_10105Empty10, or <0 if empty element already registered and
+       so this one was ignored
+     */
+    s32 RegisterUlamElementEmpty(UlamClass<EC>& uc) ;
 
     s32 GetUlamClassIndex(const char *) const;
 
@@ -54,8 +64,12 @@ namespace MFM {
 
     const UlamClass<EC> * GetUlamClassByIndex(u32 index) const;
 
+    const UlamClass<EC> * GetUlamElementEmpty() const { return m_ulamElementEmpty; }
+
     UlamClass<EC> * m_registeredUlamClasses[TABLE_SIZE];
     u32 m_registeredUlamClassCount;
+
+    UlamClass<EC> * m_ulamElementEmpty;
   };
 
 } //MFM

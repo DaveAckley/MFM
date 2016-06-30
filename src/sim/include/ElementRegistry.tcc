@@ -182,7 +182,8 @@ namespace MFM
 
       UlamElement<EC> * uelt = elt->AsUlamElement();
       if (uelt) {
-        if (!ucr.RegisterUlamClass(*uelt))
+        s32 eret = ucr.RegisterUlamElementEmpty(*uelt);
+        if (eret < 0 || (eret == 0 && !ucr.RegisterUlamClass(*uelt)))
           LOG.Warning("Ulam Class '%s' already registered", uelt->GetMangledClassName());
       }
     }

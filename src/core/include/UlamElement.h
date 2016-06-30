@@ -29,9 +29,10 @@
 #ifndef ULAMELEMENT_H
 #define ULAMELEMENT_H
 
-#include "Element.h"
+#include "ElementTable.h"
 #include "UlamClass.h"
 #include "BitStorage.h"
+#include "SizedTile.h"
 
 // Unsigned(32)
 #ifndef Ud_Ui_Ut_102321u
@@ -198,7 +199,7 @@ namespace MFM {
       return 0xffffffff;
     }
 
-    virtual u32 GetAtomColor(const T& atom, u32 selector) const ;
+    virtual u32 GetAtomColor(const ElementTable<EC> & et, const T& atom, u32 selector) const ;
 
     virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const ;
   };

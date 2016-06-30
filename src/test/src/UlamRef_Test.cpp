@@ -5,6 +5,7 @@
 namespace MFM {
 
   typedef UlamRef<TestEventConfig> TestUlamRef;
+  typedef ElementTable<TestEventConfig> TestElementTable;
   typedef UlamContext<TestEventConfig> TestUlamContext;
 
   const u32 vals[3] =
@@ -46,7 +47,8 @@ namespace MFM {
 
   void UlamRef_Test::Test_UlamRefRead()
   {
-    TestUlamContext tuc;
+    TestElementTable tet;
+    TestUlamContext tuc(tet);
     {
       AtomBitStorage<TestEventConfig> t(setup());
       for (u32 i = 0; i < 96/32; ++i) {
@@ -87,7 +89,8 @@ namespace MFM {
 
   void UlamRef_Test::Test_UlamRefReadLong()
   {
-    TestUlamContext tuc;
+    TestElementTable tet;
+    TestUlamContext tuc(tet);
     {
       AtomBitStorage<TestEventConfig> t(setup());
       for (u32 i = 0; i < 96/32; ++i) {
@@ -140,7 +143,8 @@ namespace MFM {
 
   void UlamRef_Test::Test_UlamRefWrite()
   {
-    TestUlamContext tuc;
+    TestElementTable tet;
+    TestUlamContext tuc(tet);
 
     {
       AtomBitStorage<TestEventConfig> t(setup());
@@ -208,7 +212,8 @@ namespace MFM {
 
   void UlamRef_Test::Test_UlamRefWriteLong()
   {
-    TestUlamContext tuc;
+    TestElementTable tet;
+    TestUlamContext tuc(tet);
 
     {
       AtomBitStorage<TestEventConfig> t(setup());
@@ -296,7 +301,8 @@ namespace MFM {
 
   void UlamRef_Test::Test_UlamRefCtors()
   {
-    TestUlamContext tuc;
+    TestElementTable tet;
+    TestUlamContext tuc(tet);
     {
       AtomBitStorage<TestEventConfig> t(setup());
 
@@ -332,7 +338,8 @@ namespace MFM {
 
   void UlamRef_Test::Test_UlamRefEffSelf()
   {
-    TestUlamContext tuc;
+    TestElementTable tet;
+    TestUlamContext tuc(tet);
     {
       AtomBitStorage<TestEventConfig> t(setup());
       TestUlamRef ur(0, 71, t, 0, TestUlamRef::PRIMITIVE, tuc);

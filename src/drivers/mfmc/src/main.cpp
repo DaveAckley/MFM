@@ -371,8 +371,7 @@ void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc,
 void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
         const MFM::AtomBitStorage<MFM::OurEventConfigAll>& abs)
 {
-  const MFM::Tile<MFM::OurEventConfigAll>& rtile = ruc.GetTile();
-  MFM::DebugPrint<MFM::OurEventConfigAll>(rtile, abs, MFM::STDERR);  
+  MFM::DebugPrint<MFM::OurEventConfigAll>(ruc, abs, MFM::STDERR);  
   MFM::STDERR.Printf("\n");
 }
 
@@ -380,8 +379,7 @@ void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc,
 void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
         const MFM::UlamRef<MFM::OurEventConfigAll>& rur)
 {
-  const MFM::Tile<MFM::OurEventConfigAll>& rtile = ruc.GetTile();
-  MFM::DebugPrint<MFM::OurEventConfigAll>(rtile, rur, MFM::STDERR);  
+  MFM::DebugPrint<MFM::OurEventConfigAll>(ruc, rur, MFM::STDERR);  
   MFM::STDERR.Printf("\n");
 }
 

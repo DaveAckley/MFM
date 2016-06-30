@@ -254,7 +254,7 @@ namespace MFM
     }
     else
     {
-      drawColor = elt->GetDynamicColor(atom, selector);
+      drawColor = elt->GetDynamicColor(inTile.GetElementTable(), atom, selector);
     }
     PaintShapeForSite(drawing, shape, ditOrigin, drawColor);
 

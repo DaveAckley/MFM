@@ -70,7 +70,7 @@ namespace MFM {
        Return negative on dl error, otherwise non-negative number of
        elements and quarks loaded
      */
-s32 LoadLibrary(UlamClassRegistry<EC> & ucr, LibraryPathString & librarypath) ;
+    s32 LoadLibrary(UlamClassRegistry<EC> & ucr, LibraryPathString & librarypath) ;
 
   public:
 
@@ -78,7 +78,7 @@ s32 LoadLibrary(UlamClassRegistry<EC> & ucr, LibraryPathString & librarypath) ;
 
     ~ElementRegistry() { }
 
-void Init(UlamClassRegistry<EC> & ucr);
+    void Init(UlamClassRegistry<EC> & ucr);
 
     u32 GetRegisteredElementCount() const;
 

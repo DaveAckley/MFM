@@ -42,6 +42,7 @@ namespace MFM
 {
 
   template <class EC> class EventWindow; // FORWARD
+  template <class EC> class ElementTable; // FORWARD
   template <class EC> class UlamElement; // FORWARD
 
   /**
@@ -500,7 +501,7 @@ namespace MFM
      *
      * @returns The 32-bit ARGB color of which to render \c atom with.
      */
-    virtual u32 GetAtomColor(const T& atom, u32 selector) const
+    virtual u32 GetAtomColor(const ElementTable<EC> & et, const T& atom, u32 selector) const
     {
       return GetElementColor();
     }
@@ -511,9 +512,9 @@ namespace MFM
      * modified by user-requested lowlighting etc.
      *
      */
-    u32 GetDynamicColor(const T& atom, u32 selector) const
+    u32 GetDynamicColor(const ElementTable<EC> & et, const T& atom, u32 selector) const
     {
-      u32 baseColor = this->GetAtomColor(atom, selector);
+      u32 baseColor = this->GetAtomColor(et, atom, selector);
 
       if(m_renderLowlight)
       {

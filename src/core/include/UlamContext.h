@@ -31,14 +31,17 @@
 #define ULAMCONTEXT_H
 
 #include "itype.h"
+#include "Fail.h"
+#include "Element.h"
 
 namespace MFM
 {
   template <class AC> class Base; // FORWARD
   template <class AC> class Site; // FORWARD
-  template <class EC> class Tile; // FORWARD
   template <class EC> class EventWindow; // FORWARD
   template <class EC> class UlamClass; //FORWARD
+  template <class EC> class UlamClassRegistry; //FORWARD
+  template <class EC> class ElementTable; //FORWARD
 
   class Random; // FORWARD
 
@@ -47,33 +50,35 @@ namespace MFM
 
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename EC::SITE S;
-
-    mutable Tile<EC> * m_tile;
-    void AssertTile() const;
+    const ElementTable<EC>& m_elementTable;
 
   public:
 
-    UlamContext();
-    //    UlamContext(const UlamContext<EC>& cxref , const UlamClass<EC> * ucp);
+    UlamContext(const ElementTable<EC>& et)
+      : m_elementTable(et)
+    { }
+
     UlamContext(const UlamContext<EC>& cxref);
 
-    void SetTile(Tile<EC> & t) ;
+    virtual ~UlamContext() { }
 
-    Tile<EC> & GetTile() ;
+    virtual bool HasRandom() const { return false; }
+    virtual Random & GetRandom() { FAIL(UNSUPPORTED_OPERATION); }
 
-    const Tile<EC> & GetTile() const ;
+    virtual bool HasEventWindow() const { return false; }
+    virtual EventWindow<EC> & GetEventWindow() { FAIL(UNSUPPORTED_OPERATION); }
 
-    Random & GetRandom() ;
+    virtual const EventWindow<EC> & GetEventWindow() const { FAIL(UNSUPPORTED_OPERATION); }
 
-    EventWindow<EC> & GetEventWindow() ;
+    virtual bool HasUlamClassRegistry() const { return false; }
+    virtual const UlamClassRegistry<EC> & GetUlamClassRegistry() const { FAIL(UNSUPPORTED_OPERATION); }
 
-    const EventWindow<EC> & GetEventWindow() const ;
+    virtual const Element<EC> * LookupElementTypeFromContext(u32 etype) const ;
 
-    Base<AC> & GetBase() ;
+    virtual const char * GetContextLabel() const { return "Generic UlamContext"; }
 
-    const Site<AC> & GetSite() const ;
+    const UlamClass<EC> * LookupUlamElementTypeFromContext(u32 etype) const ;
 
-    const UlamClass<EC> * LookupElementTypeFromContext(u32 etype) const ;
   };
 
 } //MFM

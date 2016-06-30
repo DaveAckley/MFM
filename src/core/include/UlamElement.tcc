@@ -7,6 +7,7 @@
 #include "UlamRef.h"
 #include "UlamClass.h"
 #include "UlamClassRegistry.h"
+#include "UlamContextEvent.h"
 
 namespace MFM {
 
@@ -21,7 +22,8 @@ namespace MFM {
   void UlamElement<EC>::Behavior(EventWindow<EC>& window) const
   {
     Tile<EC> & tile = window.GetTile();
-    UlamContext<EC> uc;
+    const ElementTable<EC> & et = tile.GetElementTable();
+    UlamContextEvent<EC> uc(et);
     uc.SetTile(tile);
 
     u32 sym = m_info ? m_info->GetSymmetry(uc) : PSYM_DEG000L;
@@ -36,12 +38,12 @@ namespace MFM {
   }
 
   template <class EC>
-  u32 UlamElement<EC>::GetAtomColor(const T& atom, u32 selector) const
+  u32 UlamElement<EC>::GetAtomColor(const ElementTable<EC> & et, const T& atom, u32 selector) const
   {
     if (selector == 0)
       return GetElementColor();
 
-    const UlamContext<EC> uc;
+    UlamContext<EC> uc(et);
     T temp(atom);
     Ui_Ut_102321u<EC> sel(selector);
     AtomBitStorage<EC> atbs(temp);

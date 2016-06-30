@@ -33,6 +33,19 @@ namespace MFM {
   }
 
   template <class EC>
+  s32 UlamClassRegistry<EC>::RegisterUlamElementEmpty(UlamClass<EC>& ue)
+  {
+    if (strcmp(ue.GetMangledClassName(), "Ue_10105Empty10"))
+      return 0;
+    if (!m_ulamElementEmpty)
+    {
+      m_ulamElementEmpty = &ue;
+      return 1;
+    }
+    return -1;
+  }
+
+  template <class EC>
   bool UlamClassRegistry<EC>::IsRegisteredUlamClass(const char *mangledName) const
   {
     return GetUlamClassIndex(mangledName) >= 0;

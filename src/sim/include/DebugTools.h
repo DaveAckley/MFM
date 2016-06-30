@@ -27,29 +27,29 @@
 #ifndef DEBUGTOOLS_H
 #define DEBUGTOOLS_H
 
-#include "Tile.h"
+#include "UlamContext.h"
 #include "UlamRef.h"
 #include "FileByteSink.h"
 
 namespace MFM {
 
   template<class EC> 
-  void DebugPrint(const Tile<EC>& tile, const UlamRef<EC>& ur, ByteSink& out) ;
+  void DebugPrint(const UlamContext<EC>& uc, const UlamRef<EC>& ur, ByteSink& out) ;
 
   template<class EC>
-  void DebugPrint(const Tile<EC>& tile, const UlamRef<EC>& ur) 
+  void DebugPrint(const UlamContext<EC>& uc, const UlamRef<EC>& ur) 
   {
-    DebugPrint(tile, ur, STDERR);
+    DebugPrint(uc, ur, STDERR);
   }
 
   template<class EC> 
-  void DebugPrint(const Tile<EC>& tile, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom, ByteSink& out) ;
+  void DebugPrint(const UlamContext<EC>& uc, const typename EC::ATOM_CONFIG::ATOM_TYPE& atom, ByteSink& out) ;
 
   template<class EC> 
-  void DebugPrint(const Tile<EC>& tile, const AtomBitStorage<EC>& abs, ByteSink& out)
+  void DebugPrint(const UlamContext<EC>& uc, const AtomBitStorage<EC>& abs, ByteSink& out)
   {
     const typename EC::ATOM_CONFIG::ATOM_TYPE atom = abs.ReadAtom();
-    DebugPrint(tile, atom, out);
+    DebugPrint(uc, atom, out);
   }
 
   template<class EC>
