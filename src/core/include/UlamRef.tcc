@@ -87,6 +87,7 @@ namespace MFM {
   {
     MFM_API_ASSERT_STATE(m_usage == ATOMIC || m_usage == ELEMENTAL);
     T a = ReadAtom();
+    MFM_API_ASSERT(a.IsSane(),INCONSISTENT_ATOM);
     u32 etype = a.GetType();
     const UlamClass<EC> * eltptr = m_uc.LookupElementTypeFromContext(etype);
     MFM_API_ASSERT_STATE(eltptr);
