@@ -41,7 +41,7 @@ namespace MFM
   class UlamRef
   {
   public:
-    enum UsageType { 
+    enum UsageType {
       PRIMITIVE,  //< Bits used as primitive, type cannot change at runtime, derived URs cannot change usage type, no effself
       ARRAY,      //< Bits used as array, type cannot change at runtime, derived URs can change usage type, no effself
       ATOMIC,     //< Bits used as atom, type may change at runtime, derived URs can change usage type, has effself
@@ -55,7 +55,7 @@ namespace MFM
     /**
        Construct an UlamRef 'from scratch'
      */
-    UlamRef(u32 pos, u32 len, BitStorage<EC>& stg, const UlamClass<EC> * effself, 
+    UlamRef(u32 pos, u32 len, BitStorage<EC>& stg, const UlamClass<EC> * effself,
             const UsageType usage, const UlamContext<EC> & uc) ;
 
     /**
@@ -66,6 +66,14 @@ namespace MFM
      */
     UlamRef(const UlamRef<EC> & existing, s32 pos, u32 len, const UlamClass<EC> * effself, const UsageType usage) ;
 
+    /**
+       Construct an UlamRef that's related (not data member) to an existing UlamRef.
+       Same 'pos', effective self, and usage; len may change;
+       and pos + len must fit within the len supplied to the
+       existing UlamRef.
+     */
+    UlamRef(const UlamRef<EC> & existing, u32 len) ;
+
     u32 Read() const { return m_stg.Read(m_pos, m_len); }
 
     void Write(u32 val) { m_stg.Write(m_pos, m_len, val); }
@@ -74,23 +82,23 @@ namespace MFM
 
     void WriteLong(u64 val) { m_stg.WriteLong(m_pos, m_len, val); }
 
-    T ReadAtom() const 
-    { 
-      if (m_usage == ATOMIC) return m_stg.ReadAtom(m_pos); 
-      if (m_usage == ELEMENTAL) return m_stg.ReadAtom(m_pos - T::ATOM_FIRST_STATE_BIT); 
+    T ReadAtom() const
+    {
+      if (m_usage == ATOMIC) return m_stg.ReadAtom(m_pos);
+      if (m_usage == ELEMENTAL) return m_stg.ReadAtom(m_pos - T::ATOM_FIRST_STATE_BIT);
       FAIL(ILLEGAL_STATE);
     }
 
-    void WriteAtom(const T& val) 
-    { 
-      if (m_usage == ATOMIC) 
-      { 
-        m_stg.WriteAtom(m_pos, val); 
-        UpdateEffectiveSelf(); 
-      }
-      else if (m_usage == ELEMENTAL) 
+    void WriteAtom(const T& val)
+    {
+      if (m_usage == ATOMIC)
       {
-        m_stg.WriteAtom(m_pos - T::ATOM_FIRST_STATE_BIT, val); 
+        m_stg.WriteAtom(m_pos, val);
+        UpdateEffectiveSelf();
+      }
+      else if (m_usage == ELEMENTAL)
+      {
+        m_stg.WriteAtom(m_pos - T::ATOM_FIRST_STATE_BIT, val);
         CheckEffectiveSelf();
       }
       else FAIL(ILLEGAL_STATE);

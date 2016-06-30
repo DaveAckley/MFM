@@ -50,6 +50,23 @@ namespace MFM {
   }
 
   template <class EC>
+  UlamRef<EC>::UlamRef(const UlamRef & existing, u32 len)
+    : m_uc(existing.m_uc)
+    , m_effSelf(existing.m_effSelf)
+    , m_stg(existing.m_stg)
+    , m_pos(existing.m_pos)
+    , m_len(len)
+    , m_usage(existing.m_usage)
+  {
+    MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
+    if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
+    {
+      UpdateEffectiveSelf();
+    }
+  }
+
+
+  template <class EC>
   void UlamRef<EC>::UpdateEffectiveSelf()
   {
     m_effSelf = LookupElementTypeFromAtom();
