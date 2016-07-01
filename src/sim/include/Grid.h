@@ -273,11 +273,6 @@ namespace MFM {
 
   public:
 
-    const ElementTable<EC> & GetHeroElementTable() const
-    {
-      return m_heroTile.GetElementTable();
-    }
-
     UlamClassRegistry<EC> & GetUlamClassRegistry()
     {
       return m_heroTile.GetUlamClassRegistry();
@@ -355,9 +350,13 @@ namespace MFM {
      */
     void SetGridRunning(bool running) ;
 
+    const ElementTable<EC> & Get00ElementTable() const {
+      return _getTile(0,0).GetElementTable();
+    }
+
     const Element<EC> * LookupElement(u32 elementType) const
     {
-      return _getTile(0,0).GetElementTable().Lookup(elementType);
+      return Get00ElementTable().Lookup(elementType);
     }
 
     ElementRegistry<EC>& GetElementRegistry()
