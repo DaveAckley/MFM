@@ -231,7 +231,11 @@ namespace MFM {
 
     u32 type = atom.GetType();
     m_element  = tile.GetElementTable().Lookup(type);
-    if (m_element == 0) return false; // XXX what to do here?
+    if (m_element == 0) // If no element of that type
+    {
+      tile.PlaceAtom(tile.GetEmptyAtom(), center);  // You must die
+      return false; 
+    }
 
     SetBoundary(m_element->GetEventWindowBoundary());
 
