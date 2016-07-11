@@ -41,35 +41,6 @@ namespace MFM
 {
   enum ImageAsset
   {
-    IMAGE_ASSET_SELECTOR_ICON = 0,
-    IMAGE_ASSET_ATOM_SELECTOR_ICON,
-    IMAGE_ASSET_PENCIL_ICON,
-    IMAGE_ASSET_ERASER_ICON,
-    IMAGE_ASSET_BRUSH_ICON,
-    IMAGE_ASSET_BUCKET_ICON,
-    IMAGE_ASSET_EVENT_ICON,
-    IMAGE_ASSET_XRAY_ICON,
-    IMAGE_ASSET_CLONE_ICON,
-    IMAGE_ASSET_AIRBRUSH_ICON,
-    IMAGE_ASSET_CHECKBOX_ICON_ON,
-    IMAGE_ASSET_CHECKBOX_ICON_OFF,
-    IMAGE_ASSET_SLIDER_HANDLE,
-    IMAGE_ASSET_SLIDER_HANDLE_ACTIVE,
-    IMAGE_ASSET_SELECTOR_ICON_BIG,
-    IMAGE_ASSET_ATOM_SELECTOR_ICON_BIG,
-    IMAGE_ASSET_PENCIL_ICON_BIG,
-    IMAGE_ASSET_ERASER_ICON_BIG,
-    IMAGE_ASSET_BRUSH_ICON_BIG,
-    IMAGE_ASSET_BUCKET_ICON_BIG,
-    IMAGE_ASSET_EVENT_ICON_BIG,
-    IMAGE_ASSET_XRAY_ICON_BIG,
-    IMAGE_ASSET_CLONE_ICON_BIG,
-    IMAGE_ASSET_AIRBRUSH_ICON_BIG,
-    IMAGE_ASSET_CLOSE_WINDOW_ICON,
-    IMAGE_ASSET_BAD_ATOM_TILE,
-    IMAGE_ASSET_ROUND_SHAPE_ICON,
-    IMAGE_ASSET_DIAMOND_SHAPE_ICON,
-    IMAGE_ASSET_SQUARE_SHAPE_ICON,
     IMAGE_ASSET_MASTER_ICON_ZSHEET,
 
     // MUST REMAIN LAST
@@ -171,6 +142,7 @@ namespace MFM
     ZSLOT_GRIDTOOL_SPARK,
     ZSLOT_GRIDTOOL_ATOM_SELECT,
     ZSLOT_GRIDTOOL_TILE_SELECT,
+    ZSLOT_SLIDER_HANDLE,
 
     ZSLOT_NONE = U32_MAX
   };
@@ -325,37 +297,6 @@ namespace MFM
     {
       if(!initialized)
       {
-        surfaces[IMAGE_ASSET_SELECTOR_ICON] = LoadImage("images/selector_icon.png");
-        surfaces[IMAGE_ASSET_ATOM_SELECTOR_ICON] = LoadImage("images/atom_selector_icon.png");
-        surfaces[IMAGE_ASSET_PENCIL_ICON] = LoadImage("images/pencil_icon.png");
-        surfaces[IMAGE_ASSET_ERASER_ICON] = LoadImage("images/eraser_icon.png");
-        surfaces[IMAGE_ASSET_BRUSH_ICON] = LoadImage("images/brush_icon.png");
-        surfaces[IMAGE_ASSET_BUCKET_ICON] = LoadImage("images/bucket2_icon.png");
-        surfaces[IMAGE_ASSET_EVENT_ICON] = LoadImage("images/spark_icon.png");
-        surfaces[IMAGE_ASSET_XRAY_ICON] = LoadImage("images/xray_icon.png");
-        surfaces[IMAGE_ASSET_CLONE_ICON] = LoadImage("images/clone_icon.png");
-        surfaces[IMAGE_ASSET_AIRBRUSH_ICON] = LoadImage("images/airbrush_icon.png");
-        surfaces[IMAGE_ASSET_CHECKBOX_ICON_ON] = LoadImage("images/checkbox_on.png");
-        surfaces[IMAGE_ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
-        surfaces[IMAGE_ASSET_SLIDER_HANDLE] = LoadImage("images/slider_handle.png");
-        surfaces[IMAGE_ASSET_SLIDER_HANDLE_ACTIVE] = LoadImage("images/slider_handle_active.png");
-        surfaces[IMAGE_ASSET_SELECTOR_ICON_BIG] = LoadImage("images/selector_icon_big.png");
-        surfaces[IMAGE_ASSET_ATOM_SELECTOR_ICON_BIG] = LoadImage("images/atom_selector_icon_big.png");
-        surfaces[IMAGE_ASSET_PENCIL_ICON_BIG] = LoadImage("images/pencil_icon_big.png");
-        surfaces[IMAGE_ASSET_ERASER_ICON_BIG] = LoadImage("images/eraser_icon_big.png");
-        surfaces[IMAGE_ASSET_BRUSH_ICON_BIG] = LoadImage("images/brush_icon_big.png");
-        surfaces[IMAGE_ASSET_BUCKET_ICON_BIG] = LoadImage("images/bucket2_icon_big.png");
-        surfaces[IMAGE_ASSET_EVENT_ICON_BIG] = LoadImage("images/spark_icon_big.png");
-        surfaces[IMAGE_ASSET_XRAY_ICON_BIG] = LoadImage("images/xray_icon_big.png");
-        surfaces[IMAGE_ASSET_CLONE_ICON_BIG] = LoadImage("images/clone_icon_big.png");
-        surfaces[IMAGE_ASSET_AIRBRUSH_ICON_BIG] = LoadImage("images/airbrush_icon_big.png");
-        surfaces[IMAGE_ASSET_CLOSE_WINDOW_ICON] = LoadImage("images/close_window_icon.png");
-        surfaces[IMAGE_ASSET_BAD_ATOM_TILE] = LoadImage("images/bad_atom_tile.png");
-
-        surfaces[IMAGE_ASSET_ROUND_SHAPE_ICON] = LoadImage("images/round_shape_icon_222.png");
-        surfaces[IMAGE_ASSET_DIAMOND_SHAPE_ICON] = LoadImage("images/diamond_shape_icon_222.png");
-        surfaces[IMAGE_ASSET_SQUARE_SHAPE_ICON] = LoadImage("images/square_shape_icon_222.png");
-
         surfaces[IMAGE_ASSET_MASTER_ICON_ZSHEET] = LoadImage("images/mfms-icons-ZSHEET.png");
 
         const char * FIX_FONT = "fonts/Inconsolata.ttf";
