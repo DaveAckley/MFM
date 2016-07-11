@@ -311,7 +311,9 @@ namespace MFM
   void TileRenderer<EC>::PaintBadAtomAtDit(Drawing & drawing, const SPoint ditOrigin)
   {
     Rect r(Drawing::MapDitToPix(ditOrigin), Drawing::MapDitToPix(UPoint(m_atomSizeDit, m_atomSizeDit)));
-    drawing.BlitImageAssetTiled(IMAGE_ASSET_BAD_ATOM_TILE, r);
+    IconAsset ia;
+    ia.SetIconSlot(ZSLOT_ICON_ERROR);
+    drawing.BlitIconAsset(ia, r.GetHeight(), r.GetPosition());
   }
 
   template <class EC>

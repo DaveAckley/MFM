@@ -808,34 +808,6 @@ namespace MFM
       Panel * p;
       while ((p = this->GetTop())) this->Remove(p);
 
-      /*
-      ImageAsset assets[MAX_GRIDTOOL_BUTTONS];
-      if(m_bigText)
-      {
-        assets[0] = IMAGE_ASSET_SELECTOR_ICON_BIG;
-        assets[1] = IMAGE_ASSET_ATOM_SELECTOR_ICON_BIG;
-        assets[2] = IMAGE_ASSET_PENCIL_ICON_BIG;
-        assets[3] = IMAGE_ASSET_BUCKET_ICON_BIG;
-        assets[4] = IMAGE_ASSET_ERASER_ICON_BIG;
-        assets[5] = IMAGE_ASSET_BRUSH_ICON_BIG;
-        assets[6] = IMAGE_ASSET_XRAY_ICON_BIG;
-        assets[7] = IMAGE_ASSET_CLONE_ICON_BIG;
-        assets[8] = IMAGE_ASSET_AIRBRUSH_ICON_BIG;
-      }
-      else
-      {
-        assets[0] = IMAGE_ASSET_SELECTOR_ICON;
-        assets[1] = IMAGE_ASSET_ATOM_SELECTOR_ICON;
-        assets[2] = IMAGE_ASSET_PENCIL_ICON;
-        assets[3] = IMAGE_ASSET_BUCKET_ICON;
-        assets[4] = IMAGE_ASSET_ERASER_ICON;
-        assets[5] = IMAGE_ASSET_BRUSH_ICON;
-        assets[6] = IMAGE_ASSET_XRAY_ICON;
-        assets[7] = IMAGE_ASSET_CLONE_ICON;
-        assets[8] = IMAGE_ASSET_AIRBRUSH_ICON;
-      }
-      */
-
       for(u32 i = 0; i < m_toolButtonsInUse; i++)
       {
         OString16 name;
