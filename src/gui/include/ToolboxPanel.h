@@ -337,12 +337,28 @@ namespace MFM
 
       virtual bool PostDragHandle(MouseMotionEvent& event)
       {
-        if (m_parent && m_element) 
-        {
+        CheckHover(event);
+        return AbstractButton::PostDragHandle(event);
+      }
+
+      virtual bool Handle(MouseMotionEvent& mme)
+      {
+        CheckHover(mme);
+        return AbstractButton::Handle(mme);
+      }
+
+      bool CheckHover(MouseMotionEvent& event)
+      {
+        if (m_parent)
+        { 
           SPoint onParent = event.GetAt();
           onParent -= m_parent->GetAbsoluteLocation();
-          m_parent->SetElementLabel(m_element->GetName(), onParent);
-          return true;
+          if (m_element) 
+          {
+            m_parent->SetElementLabel(m_element->GetName(), onParent);
+            return true;
+          }
+          m_parent->SetElementLabel(0, onParent);
         }
         return false;
       }

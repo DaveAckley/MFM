@@ -919,6 +919,10 @@ namespace MFM
           this->RegisterToolboxElement(elt);
       }
       RegisterKeyboardFunctions();
+
+      // Need to re-add after RegisterToolboxElement to get tooltips
+      m_toolboxPanel.AddButtons();
+
     }
 
     virtual void HandleResize()
