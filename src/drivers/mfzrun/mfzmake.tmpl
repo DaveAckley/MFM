@@ -66,6 +66,28 @@ $0 default HANDLE
     Make HANDLE (which must already exist) be the default handle for
     this user.  If HANDLE is '-', remove any existing default handle.
 
+$0 cansign HANDLE
+
+    Exit successfully if HANDLE can be used for signing (meaning both
+    public and private portions of it are accessible), otherwise exit
+    status 6
+
+$0 canvalidate HANDLE
+
+    Exit successfully if HANDLE can be used for validation (meaning at
+    least the public portionn of it is accessible), otherwise exit
+    status 7.
+
+$0 keydel HANDLE
+
+    Delete the public and private portions of HANDLE.
+
+$0 burn HANDLE
+
+    Delete only the private portion of HANDLE.  HANDLE will no longer
+    be usable for signing .mfz files, but will still be available to
+    validate previously-signed .mfz files.
+
 EOH
     exit(0);
 }
@@ -81,6 +103,10 @@ UDie("Unknown switch '$verb'") if $verb =~ /^-/;
 
 DoMake() if $verb eq "make";
 DoKeygen() if $verb eq "keygen";
+DoKeydel() if $verb eq "keydel";
+DoCanSign() if $verb eq "cansign";
+DoCanValidate() if $verb eq "canvalidate";
+DoBurn() if $verb eq "burn";
 DoDefaultHandle() if $verb eq "default";
 DoVerify() if $verb eq "verify";
 UDie("Unknown command '$verb'");
@@ -151,7 +177,9 @@ sub DoKeygen {
         if ($errors > 1) {
             $desc = "those files";
         }
-        print STDERR "ERROR: To generate a new key pair for '$handle', first remove $desc\n";
+        print STDERR "ERROR: Generally you shouldn't reuse handle names with different keys!\n";
+        print STDERR "ERROR: But if you really want new keys for '$handle', perhaps first try\n";
+        print STDERR "ERROR: '$0 keydel $handle' to remove $desc\n";
         exit 4;
     }
 
@@ -171,6 +199,125 @@ sub DoKeygen {
     print "Generated private key for '$handle' into $privkeyfile\n";
     print "Generated public key for '$handle' into $pubkeyfile\n";
     print "Handle: $handle ($fingerprint)\n";
+    exit 0;
+}
+
+sub DoKeydel {
+    my $handle = NextArg();
+    UntaintHandleIfLegal(\$handle)
+        or UDie("Bad handle '$handle'");
+
+    my $privkeyfile = GetPrivateKeyFile($handle);
+    $privkeyfile = WritableFileOrDie("private key file", $privkeyfile);
+
+    my $pubkeyfile =  GetPublicKeyFile($handle);
+    $pubkeyfile = WritableFileOrDie("public key file", $pubkeyfile);
+
+    my $havepriv = -e $privkeyfile;
+    my $havepub = -e $pubkeyfile;
+
+    if (!$havepriv && !$havepub) {
+        print STDERR "ERROR: No private or public key file for '$handle' found\n";
+        exit 5;
+    }
+    
+    my $errors = 0;
+    if ($havepriv && !unlink $privkeyfile) {
+        ++$errors;
+        print STDERR "ERROR: Couldn't remove private key file '$privkeyfile' for '$handle': $!\n";
+    }
+    if ($havepub && !unlink $pubkeyfile) {
+        ++$errors;
+        print STDERR "ERROR: Couldn't remove public key file '$pubkeyfile' for '$handle': $!\n";
+    }
+    if ($errors > 0) {
+        my $s = "", $n = "s";
+        if ($errors > 1) {
+            $s = "s";
+            $n = "";
+        }
+        print STDERR "ERROR: $errors file$s remain$n undeleted for '$handle'\n";
+        exit 5;
+    }
+    exit 0;
+}
+
+sub DoCanSign {
+    my $handle = NextArg();
+    CheckFilesInternal($handle,1,1,6);
+    exit(0);
+}
+
+sub DoCanValidate {
+    my $handle = NextArg();
+    CheckFilesInternal($handle,0,1,7);
+    exit(0);
+}
+
+sub CheckFilesInternal {
+    my ($handle,$needpriv,$needpub,$badexit) = @_;
+
+    UntaintHandleIfLegal(\$handle)
+        or UDie("Bad handle '$handle'");
+
+    my $privkeyfile = GetPrivateKeyFile($handle);
+    $privkeyfile = WritableFileOrDie("private key file", $privkeyfile);
+
+    my $pubkeyfile =  GetPublicKeyFile($handle);
+    $pubkeyfile = WritableFileOrDie("public key file", $pubkeyfile);
+
+    my $havepriv = -r $privkeyfile;
+    my $havepub = -r $pubkeyfile;
+
+    my $errors = 0;
+    if ($needpriv && !$havepriv) {
+        print STDERR "ERROR: Missing or unreadable private key file for '$handle' ($privkeyfile)\n";
+        ++$errors;
+    }
+    if ($needpub && !$havepub) {
+        print STDERR "ERROR: Missing or unreadable public key file for '$handle' ($pubkeyfile)\n";
+        ++$errors;
+    }
+    
+    if ($errors > 0) {
+        my $s = "", $n = "s";
+        if ($errors > 1) {
+            $s = "s";
+            $n = "";
+        }
+        print STDERR "ERROR: $errors file$s inaccessible for '$handle'\n";
+        exit $badexit;
+    }
+}
+
+sub DoBurn {
+    my $handle = NextArg();
+    UntaintHandleIfLegal(\$handle)
+        or UDie("Bad handle '$handle'");
+
+    my $privkeyfile = GetPrivateKeyFile($handle);
+    $privkeyfile = WritableFileOrDie("private key file", $privkeyfile);
+
+    my $pubkeyfile =  GetPublicKeyFile($handle);
+    $pubkeyfile = WritableFileOrDie("public key file", $pubkeyfile);
+
+    my $havepriv = -e $privkeyfile;
+    my $havepub = -e $pubkeyfile;
+
+    if (!$havepub) {
+        print STDERR "WARNING: No public key for '$handle' found ($pubkeyfile)\n";
+        exit 6;
+    }
+    
+    if (!$havepriv) {
+        print STDERR "('$handle' has public key, but no private key found, OK)\n";
+        exit 0;
+    }
+
+    if (!unlink $privkeyfile) {
+        print STDERR "ERROR: Couldn't remove private key file '$privkeyfile' for '$handle': $!\n";
+        exit 7;
+    }
     exit 0;
 }
 

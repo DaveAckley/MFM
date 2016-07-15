@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamClass.h An abstract base class for ULAM quarks and elements
-  Copyright (C) 2015 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2016 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2016 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,282 +22,231 @@
 /**
   \file UlamClass.h An abstract base class for ULAM quarks and elements
   \author David H. Ackley.
-  \date (C) 2015 All rights reserved.
+  \author Elenas S. Ackley.
+  \date (C) 2015-2016 All rights reserved.
   \lgpl
  */
+
 #ifndef ULAMCLASS_H
 #define ULAMCLASS_H
 
-#include "Element.h"
+#include "itype.h"
+#include "BitStorage.h"
 
 namespace MFM
 {
-  struct UlamClass; // FORWARD
 
-  struct UlamTypeInfoPrimitive {
-    enum PrimType { VOID, INT, UNSIGNED, BOOL, UNARY, BITS };
+  template <class EC> class Element; // FORWARD
+  template <class EC> class UlamElement; // FORWARD
+  template <class EC> struct UlamContext; // FORWARD
+  template <class EC> struct UlamClassRegistry; // FORWARD
+  template <class EC> struct UlamQuark; // FORWARD
+  template <class EC> struct UlamTransient; // FORWARD
 
-    static bool PrimTypeFromChar(const u8 ch, PrimType & result) ;
+  struct UlamClassDataMemberInfo; //forward
 
-    static u8 CharFromPrimType(const PrimType type) ;
-
-    static const char * NameFromPrimType(const PrimType type) ;
-
-    static u32 DefaultSizeFromPrimType(const PrimType type) ;
-
-    u8 m_primType;
-    u8 m_bitSize;
-    u16 m_arrayLength;
-
-    PrimType GetPrimType() const
-    {
-      return (PrimType) m_primType;
-    }
-
-    bool InitFrom(const char * mangledName)
-    {
-      CharBufferByteSource cbs(mangledName,strlen(mangledName));
-      return InitFrom(cbs);
-    }
-
-    bool InitFrom(ByteSource & bs) ;
-
-    void PrintMangled(ByteSink & bs) const ;
-    void PrintPretty(ByteSink & bs) const ;
-
-    u32 GetBitSize() const { return m_bitSize; }
-    u32 GetArrayLength() const { return m_arrayLength; }
-    bool IsScalar() const { return GetArrayLength() == 0; }
-    void AssertScalar() const { if (!IsScalar()) FAIL(ILLEGAL_STATE); }
-
-    u64 GetMaxOfScalarType() const
-    {
-      return GetExtremeOfScalarType(true);
-    }
-
-    s64 GetMinOfScalarType() const
-    {
-      return (s64) GetExtremeOfScalarType(false);
-    }
-
-    u64 GetExtremeOfScalarType(bool wantMax) const ;
-
-  };
-
-  const u32 MAX_CLASS_NAME_LENGTH = 64;
-  const u32 MAX_CLASS_PARAMETERS = 16;
-  typedef OverflowableCharBufferByteSink<MAX_CLASS_NAME_LENGTH> OStringClassName;
-
-  struct UlamTypeInfoParameter {
-    UlamTypeInfoPrimitive m_parameterType;
-    u32 m_value;  // overloaded depending on type
-  };
-
-  template <class EC>
-  struct UlamTypeInfoModelParameterS32 : ElementParameterS32<EC> {
-    const char * GetUnits() const { return m_parameterUnits; }
-
-    UlamTypeInfoModelParameterS32(
-                                  UlamElement<EC> & theElement,
-                                  const char * mangledType,
-                                  const char * ulamName,
-                                  const char * briefDescription,
-                                  const char * details,
-                                  s32 * minOrNull,
-                                  s32 * defaultOrNull,
-                                  s32 * maxOrNull,
-                                  const char * units) ;
-    const char * m_parameterUnits;
-  };
-
-  template <class EC>
-  struct UlamTypeInfoModelParameterU32 : ElementParameterU32<EC> {
-    const char * GetUnits() const { return m_parameterUnits; }
-
-    UlamTypeInfoModelParameterU32(
-                                  UlamElement<EC> & theElement,
-                                  const char * mangledType,
-                                  const char * ulamName,
-                                  const char * briefDescription,
-                                  const char * details,
-                                  u32 * minOrNull,
-                                  u32 * defaultOrNull,
-                                  u32 * maxOrNull,
-                                  const char * units) ;
-    const char * m_parameterUnits;
-  };
-
-  template <class EC>
-  struct UlamTypeInfoModelParameterUnary : ElementParameterUnary<EC> {
-    const char * GetUnits() const { return m_parameterUnits; }
-
-    UlamTypeInfoModelParameterUnary(
-                                  UlamElement<EC> & theElement,
-                                  const char * mangledType,
-                                  const char * ulamName,
-                                  const char * briefDescription,
-                                  const char * details,
-                                  u32 * minOrNull,
-                                  u32 * defaultOrNull,
-                                  u32 * maxOrNull,
-                                  const char * units) ;
-    const char * m_parameterUnits;
-  };
-
-  template <class EC>
-  struct UlamTypeInfoModelParameterBool : ElementParameterBool<EC> {
-
-    UlamTypeInfoModelParameterBool(
-                                  UlamElement<EC> & theElement,
-                                  const char * mangledType,
-                                  const char * ulamName,
-                                  const char * briefDescription,
-                                  const char * details,
-                                  bool defvalue) ;
-  };
-
-  typedef UlamTypeInfoParameter UlamTypeInfoClassParameterArray[MAX_CLASS_PARAMETERS];
-
-  struct UlamTypeInfoClass {
-
-    OStringClassName m_name;
-    u32 m_arrayLength;
-    u32 m_bitSize;
-    u32 m_classParameterCount;
-    u32 m_modelParameterCount;
-    UlamTypeInfoClassParameterArray m_classParameters;
-
-    bool InitFrom(const char * mangledName)
-    {
-      CharBufferByteSource cbs(mangledName,strlen(mangledName));
-      return InitFrom(cbs);
-    }
-
-    bool InitFrom(ByteSource & cbs) ;
-
-    void PrintMangled(ByteSink & bs) const ;
-    void PrintPretty(ByteSink & bs) const ;
-  };
-
-  struct UlamTypeInfo {
-    UlamTypeInfoClass m_utic;
-    UlamTypeInfoPrimitive m_utip;
-
-    enum Category { PRIM, ELEMENT, QUARK, UNKNOWN } m_category;
-
-    UlamTypeInfo() : m_category(UNKNOWN) { }
-
-    bool InitFrom(const char * mangledName)
-    {
-      CharBufferByteSource cbs(mangledName,strlen(mangledName));
-      return InitFrom(cbs);
-    }
-
-    bool InitFrom(ByteSource & cbs) ;
-
-    void PrintMangled(ByteSink & bs) const ;
-    void PrintPretty(ByteSink & bs) const ;
-
-    u32 GetBitSize() const
-    {
-      switch (m_category)
-      {
-      case PRIM: return m_utip.m_bitSize;
-      case ELEMENT:
-      case QUARK:
-        return m_utic.m_bitSize;
-      default:
-        FAIL(ILLEGAL_STATE);
-      }
-    }
-
-    u32 GetArrayLength() const
-    {
-      switch (m_category)
-      {
-      case PRIM: return m_utip.GetArrayLength();
-      case QUARK:
-        return m_utic.m_arrayLength;
-      case ELEMENT:
-      default:
-        FAIL(ILLEGAL_STATE);
-      }
-    }
-
-  };
-
-  template <class P>
-  static P GetMinOfAs(const char * mangledType)
-  {
-    UlamTypeInfo uti;
-    if (!uti.InitFrom(mangledType) || uti.m_category != UlamTypeInfo::PRIM)
-      FAIL(ILLEGAL_ARGUMENT);
-    uti.m_utip.AssertScalar();
-    return (P) uti.m_utip.GetMinOfScalarType();
-  }
-
-  template <class P>
-  static P GetMaxOfAs(const char * mangledType)
-  {
-    UlamTypeInfo uti;
-    if (!uti.InitFrom(mangledType) || uti.m_category != UlamTypeInfo::PRIM)
-      FAIL(ILLEGAL_ARGUMENT);
-    uti.m_utip.AssertScalar();
-    return (P) uti.m_utip.GetMaxOfScalarType();
-  }
-
-  template <class S>
-  static s32 GetDefaulted(S * ptr, S defval)
-  {
-    if (!ptr) return defval;
-    return *ptr;
-  }
-
-  struct UlamClassDataMemberInfo {
-    const char * m_mangledType;
-    const char * m_dataMemberName;
-    u32 m_bitPosition;
-
-    UlamClassDataMemberInfo(const char * mangled, const char *name, u32 pos)
-      : m_mangledType(mangled)
-      , m_dataMemberName(name)
-      , m_bitPosition(pos)
-    { }
-  };
-
-  struct UlamClassRegistry {
+  /**
+     Wrapper class to provide the UlamClass::PrintClassMember flags
+     outside of a template without polluting the MFM namespace
+     directly.
+  */
+  struct UlamClassPrintFlags {
+    /**
+       Flag values determining what Print(Atom,u32) prints
+       \sa Print(ByteSink&, const T&, u32)
+    */
     enum {
-      TABLE_SIZE = 100
+      PRINT_SYMBOL =          0x00000001, //< Include element symbol
+      PRINT_FULL_NAME =       0x00000002, //< Include element name
+      PRINT_ATOM_BODY =       0x00000004, //< Include entire atom in hex
+      PRINT_MEMBER_VALUES =   0x00000008, //< Include data member values
+      PRINT_MEMBER_BITVALS =  0x00000010, //< Include data member values as bits in hex
+      PRINT_MEMBER_NAMES =    0x00000020, //< Include data member names
+      PRINT_MEMBER_TYPES =    0x00000040, //< Include data member types
+      PRINT_SIZE0_MEMBERS =   0x00000080, //< Include size 0 data members
+      PRINT_MEMBER_ARRAYS =   0x00000100, //< Print array values individually
+      PRINT_RECURSE_QUARKS =  0x00000200, //< Print quarks recursively
+      PRINT_INDENTED_LINES =  0x00000400, //< Add newlines and indents
+
+      /** (Composite value) Print element symbol and entire atom in hex */
+      PRINT_HEX_ATOM = PRINT_SYMBOL|PRINT_ATOM_BODY,
+
+      /** (Composite value) Print element symbol and its data member values in declaration order */
+      PRINT_TOP_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_VALUES,
+
+      /** (Composite value) Print element symbol and its data member names and values in declaration order */
+      PRINT_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_NAMES|PRINT_MEMBER_VALUES,
+
+      /** (Composite value) Print element symbol and data member values, expanding quarks */
+      PRINT_QUARK_MEMBERS = PRINT_MEMBERS|PRINT_RECURSE_QUARKS,
+
+      /** (Composite value) Print element symbol and data member values, expanding quarks and arrays */
+      PRINT_ALL_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_VALUES|PRINT_RECURSE_QUARKS|PRINT_MEMBER_ARRAYS,
+
+      /** (Composite value) Print far too much */
+      PRINT_EVERYTHING = -1
     };
-
-    bool RegisterUlamClass(UlamClass& uc) ;
-
-    s32 GetUlamClassIndex(const char *) const;
-
-    bool IsRegisteredUlamClass(const char *mangledName) const
-    {
-      return GetUlamClassIndex(mangledName) >= 0;
-    }
-
-    const UlamClass* GetUlamClassByMangledName(const char *mangledName) const
-    {
-      s32 idx = GetUlamClassIndex(mangledName);
-      if (idx < 0) return 0;
-      return GetUlamClassByIndex((u32) idx);
-    }
-
-    const UlamClass* GetUlamClassByIndex(u32 index) const
-    {
-      if (index >= m_registeredUlamClassCount) FAIL(ILLEGAL_ARGUMENT);
-      return m_registeredUlamClasses[index];
-    }
-
-    UlamClass * m_registeredUlamClasses[TABLE_SIZE];
-    u32 m_registeredUlamClassCount;
-
   };
 
-  struct UlamClass {
+
+  template <class EC>
+  struct UlamClass : UlamClassPrintFlags
+  {
+    virtual u32 GetClassLength() const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    /**
+       Downcast an UlamClass* to an UlamQuark* if possible.  Returns
+       null if this is not an UlamQuark.
+     */
+    virtual const UlamQuark<EC>* AsUlamQuark() const
+    {
+      return 0;
+    }
+
+    virtual UlamQuark<EC>* AsUlamQuark()
+    {
+      return 0;
+    }
+
+    /**
+       Downcast an UlamClass* to an UlamElement* if possible.  Returns
+       null if this is not an UlamElement.
+     */
+    virtual const UlamElement<EC>* AsUlamElement() const
+    {
+      return 0;
+    }
+
+    virtual UlamElement<EC>* AsUlamElement()
+    {
+      return 0;
+    }
+
+    /**
+       Downcast a const UlamClass* to a const UlamTransient* if possible.
+       Returns null if this is not an UlamTransient.
+     */
+    virtual bool IsUlamTransient() const
+    {
+      return false;
+    }
+
+    /**
+       Find the first position of a data member in this element by the
+       name of its type, if any exist.
+
+       \return The smallest bit position of an occurrence of the type
+       \c dataMemberTypeName in this element, if any, or -1 to
+               indicate the given type is not used as a data member in
+               this UlamElement.  A return value of 0 corresponds to
+               the ATOM_FIRST_STATE_BIT of the atom.
+
+       \sa T::ATOM_FIRST_STATE_BIT
+     */
+    virtual s32 PositionOfDataMemberType(const char * dataMemberTypeName) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+    }
+
+    /**
+       Find the first position of a data member, specified by its \c
+       dataMemberTypeName, in an UlamElement specified by its \c type
+       number, if such as UlamElement exists and has such a data
+       member.
+
+       \param type an element type number, hopefully of an UlamElement
+
+       \param dataMemberTypeName the name of the type to search for in
+              the data members of the found UlamElement.
+
+       \return The smallest bit position of an occurrence of the type
+               \c dataMemberTypeName in this element, if any.  Note
+               that a return value of 0 corresponds to the
+               ATOM_FIRST_STATE_BIT of the atom.
+
+               A return value of -1 indicates the given \c type is not
+               associated with any known type of element.
+
+               A return value of -2 indicates the given \c type is
+               associated with an Element that is not an UlamElement,
+               so its data members cannot be searched.
+
+               A return value of -3 indicates the given \c type is
+               associated with an UlamElement, which did not contain a
+               data member of the named type.
+
+       \sa T::ATOM_FIRST_STATE_BIT
+       \sa PositionOfDataMemberType
+     */
+    static s32 PositionOfDataMember(const UlamContext<EC>& uc, u32 type, const char * dataMemberTypeName) ;
+
+    /**
+       Find the ancestor of quark in this element's family tree by comparing the
+       address of its static THE_INSTANCE type, if any exist.
+
+       \return true if they are related;
+
+       \sa T::ATOM_FIRST_STATE_BIT
+     */
+    virtual bool internalCMethodImplementingIs(const UlamClass<EC> * cptrarg) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+    }
+
+
+    /**
+       Compare type of this element to atom
+
+       \return true if they are related;
+
+       \sa T::ATOM_FIRST_STATE_BIT
+     */
+    bool internalCMethodImplementingIs(const typename EC::ATOM_CONFIG::ATOM_TYPE& targ) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+    }
+
+    /**
+       Discover if quark Type, specified by its \c
+       INSTANCE address, in an UlamElement specified by its \c type
+       number, if such as UlamElement exists and inherits from such a quark.
+
+       \param type an element type number, hopefully of an UlamElement
+
+       \param quarkTypeName the name of the type to search for in
+              the ancestors of the found UlamElement.
+
+       \return A return value of true indicates the given \c type is
+               related to type of quark.
+
+       \sa T::ATOM_FIRST_STATE_BIT
+       \sa internalCMethodImplementingIs
+     */
+    static bool IsMethod(const UlamContext<EC>& uc, u32 type, const UlamClass<EC> * classPtr);
+
+
+    typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
+
+    /**
+       Return vtable of this element, or NULL if there isn't one.
+
+       \return ptr to function pointers
+     */
+    virtual VfuncPtr getVTableEntry(u32 idx) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+      return (VfuncPtr) NULL;
+    }
+
+    static VfuncPtr GetVTableEntry(const UlamContext<EC>& uc, u32 atype, u32 idx);
+
+    static void PureVirtualFunctionCalled()
+    {
+      FAIL(PURE_VIRTUAL_CALLED);
+    }
 
     /**
        Specify the mangled name of this class.  To be
@@ -306,8 +256,7 @@ namespace MFM
        Never returns NULL.
 
      */
-    virtual const char * GetMangledClassName() const
-    = 0;
+    virtual const char * GetMangledClassName() const = 0;
 
     /**
        Specify the number of data members in this class.  To be
@@ -333,51 +282,21 @@ namespace MFM
       FAIL(ILLEGAL_STATE);
     }
 
-    /**
-       Flag values determining what Print(Atom,u32) prints
-       \sa Print(ByteSink&, const T&, u32)
-     */
-    enum PrintFlags {
-      PRINT_SYMBOL =          0x00000001, //< Include element symbol
-      PRINT_FULL_NAME =       0x00000002, //< Include element name
-      PRINT_ATOM_BODY =       0x00000004, //< Include entire atom in hex
-      PRINT_MEMBER_VALUES =   0x00000008, //< Include data member values
-      PRINT_MEMBER_BITVALS =  0x00000010, //< Include data member values as bits in hex
-      PRINT_MEMBER_NAMES =    0x00000020, //< Include data member names
-      PRINT_MEMBER_TYPES =    0x00000040, //< Include data member types
-      PRINT_SIZE0_MEMBERS =   0x00000080, //< Include size 0 data members
-      PRINT_MEMBER_ARRAYS =   0x00000100, //< Print array values individually
-      PRINT_RECURSE_QUARKS =  0x00000200, //< Print quarks recursively
+    void PrintClassMembers(const UlamClassRegistry<EC> & ucr,
+			   ByteSink & bs,
+			   const BitStorage<EC>& stg,
+			   u32 flags,
+			   u32 baseStatePos,
+                           u32 indent = 0) const ;
 
-      /** (Composite value) Print element symbol and entire atom in hex */
-      PRINT_HEX_ATOM = PRINT_SYMBOL|PRINT_ATOM_BODY,
-
-      /** (Composite value) Print element symbol and its data member values in declaration order */
-      PRINT_TOP_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_VALUES,
-
-      /** (Composite value) Print element symbol and its data member names and values in declaration order */
-      PRINT_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_NAMES|PRINT_MEMBER_VALUES,
-
-      /** (Composite value) Print element symbol and data member values, expanding quarks */
-      PRINT_QUARK_MEMBERS = PRINT_MEMBERS|PRINT_RECURSE_QUARKS,
-
-      /** (Composite value) Print element symbol and data member values, expanding quarks and arrays */
-      PRINT_ALL_MEMBERS = PRINT_SYMBOL|PRINT_MEMBER_VALUES|PRINT_RECURSE_QUARKS|PRINT_MEMBER_ARRAYS,
-
-      /** (Composite value) Print far too much */
-      PRINT_EVERYTHING = -1
-
-    };
-
-    template <class EC>
-    void PrintClassMembers(const UlamClassRegistry & ucr,
-                           ByteSink & bs,
-                           const typename EC::ATOM_CONFIG::ATOM_TYPE& atom,
-                           u32 flags,
-                           u32 baseStatePos) const ;
+    void PrintClassMembers(const UlamClassRegistry<EC> & ucr,
+			   ByteSink & bs,
+			   const typename EC::ATOM_CONFIG::ATOM_TYPE& atom,
+			   u32 flags,
+			   u32 baseStatePos,
+                           u32 indent = 0) const ;
 
     static void addHex(ByteSink & bs, u64 val) ;
-
   };
 
 } // MFM

@@ -37,7 +37,7 @@ namespace MFM
      storage, and offering a default constructor so that arrays of
      SizedTiles can be formed.
    */
-  template <class EC, u32 SIDE>
+  template <class EC, u32 SIDE, u32 EVENTHISTORYSIZE>
   class SizedTile : public Tile<EC>
   {
   public:
@@ -46,10 +46,11 @@ namespace MFM
     enum { TILE_SIDE = SIDE };
     enum { TILE_SITES = TILE_SIDE * TILE_SIDE };
 
-    SizedTile() : Tile<EC>(TILE_SIDE, m_sites) { }
+    SizedTile() : Tile<EC>(TILE_SIDE, m_sites, EVENTHISTORYSIZE, m_items) { }
 
   private:
     SITE m_sites[TILE_SITES];
+    EventHistoryItem m_items[EVENTHISTORYSIZE];
   };
 } /* namespace MFM */
 

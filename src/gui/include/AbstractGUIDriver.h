@@ -132,6 +132,7 @@ namespace MFM
     LoadDriverSectionButton<GC> m_loadDriverSectionButton;
     LoadGridSectionButton<GC> m_loadGridSectionButton;
     LoadGUISectionButton<GC> m_loadGUISectionButton;
+    EventHistoryStrategyButton<GC> m_eventHistoryStrategyButton;
 
     SPoint m_grendMove;
     Keyboard m_keyboardMap;
@@ -141,6 +142,8 @@ namespace MFM
     TileRenderer<EC> m_tileRenderer;
 
     GridPanel<GC> m_gridPanel;
+    ReplayPanel<GC> m_replayPanel;
+
     ToolboxPanel<GC> m_toolboxPanel;
 
     GridToolAtomView<GC> m_gridToolAtomView;
@@ -152,6 +155,7 @@ namespace MFM
     GridToolXRay<GC> m_gridToolXRay;
     GridToolBucket<GC> m_gridToolBucket;
     GridToolClone<GC> m_gridToolClone;
+    GridToolEvent<GC> m_gridToolEvent;
 
     StatisticsPanel<GC> m_statisticsPanel;
     DisplayAER<GC> m_displayAER;
@@ -162,6 +166,9 @@ namespace MFM
 
     const Panel & GetRootPanel() const { return m_rootPanel; }
     Panel & GetRootPanel() { return m_rootPanel; }
+
+    const GridPanel<GC> & GetGridPanel() const { return m_gridPanel; }
+    GridPanel<GC> & GetGridPanel() { return m_gridPanel; }
 
     void RequestReinit()
     {
@@ -184,15 +191,17 @@ namespace MFM
 
     void OnceOnlyTools()
     {
-      m_gridPanel.GetAtomViewPanel().SetGrid(Super::GetGrid());
-      m_gridToolAtomView.SetAtomViewPanel(m_gridPanel.GetAtomViewPanel());
+      m_gridPanel.InitAtomViewPanels(Super::GetGrid(), &m_gridToolAtomView);
+      //      m_gridToolAtomView.SetAtomViewPanel(m_gridPanel.GetAtomViewPanel(0));
       InsertAndRegisterGridTool(m_gridToolPencil);
       InsertAndRegisterGridTool(m_gridToolEraser);
-      InsertAndRegisterGridTool(m_gridToolBrush);
+      // XXX Consider killing the brush to make room for the spark
+      //      InsertAndRegisterGridTool(m_gridToolBrush);
       InsertAndRegisterGridTool(m_gridToolAirBrush);
       InsertAndRegisterGridTool(m_gridToolXRay);
       InsertAndRegisterGridTool(m_gridToolBucket);
       InsertAndRegisterGridTool(m_gridToolClone);
+      InsertAndRegisterGridTool(m_gridToolEvent);
       InsertAndRegisterGridTool(m_gridToolAtomView);
       InsertAndRegisterGridTool(m_gridToolTileSelect);
     }
@@ -216,6 +225,7 @@ namespace MFM
       InsertAndRegisterButton(m_loadDriverSectionButton);
       InsertAndRegisterButton(m_loadGridSectionButton);
       InsertAndRegisterButton(m_loadGUISectionButton);
+      InsertAndRegisterButton(m_eventHistoryStrategyButton);
 
       InsertAndRegisterButton(m_gridStepButton);
       InsertAndRegisterButton(m_fgViewButton);
@@ -235,6 +245,7 @@ namespace MFM
       m_screenshotButton.SetScreen(m_screen);
       m_screenshotButton.SetCamera(&m_camera);
 
+      m_buttonPanel.Insert(&m_replayPanel,0);
     }
 
     void Update(OurGrid& grid)
@@ -341,10 +352,15 @@ namespace MFM
       m_keyboardMap.Register(m_decreaseAEPSPerFrame);
     }
 
-    void KeyboardUpdate(SDL_KeyboardEvent & key, OurGrid& grid)
+    void KeyboardUpdate(SDL_KeyboardEvent & key, OurGrid& grid, const SPoint where)
     {
-      // XXX We should let the panel tree take a crack at the event
-      // XXX first, then fallback to these global accelerators
+      {
+        KeyboardEvent kbe(key, where);
+        if (m_rootPanel.Dispatch(kbe,
+                                 Rect(SPoint(),
+                                      UPoint(m_screenWidth,m_screenHeight))))
+          return;
+      }
       m_keyboardMap.HandleEvent(key);
 
 #if 0
@@ -839,11 +855,13 @@ namespace MFM
       , m_loadDriverSectionButton()
       , m_loadGridSectionButton()
       , m_loadGUISectionButton()
+      , m_eventHistoryStrategyButton()
       , m_grendMove()
       , m_keyboardMap()
       , m_helpPanel(m_keyboardMap)
       , m_tileRenderer()
       , m_gridPanel()
+      , m_replayPanel(m_gridPanel)
       , m_toolboxPanel()
       , m_gridToolAtomView(m_gridPanel, m_toolboxPanel)
       , m_gridToolTileSelect(m_gridPanel, m_toolboxPanel)
@@ -854,6 +872,7 @@ namespace MFM
       , m_gridToolXRay(m_gridPanel, m_toolboxPanel)
       , m_gridToolBucket(m_gridPanel, m_toolboxPanel)
       , m_gridToolClone(m_gridPanel, m_toolboxPanel)
+      , m_gridToolEvent(m_gridPanel, m_toolboxPanel)
       , m_statisticsPanel(*this)
       , m_displayAER(m_statisticsPanel)
       , m_increaseAEPSPerFrame(*this)
@@ -900,6 +919,10 @@ namespace MFM
           this->RegisterToolboxElement(elt);
       }
       RegisterKeyboardFunctions();
+
+      // Need to re-add after RegisterToolboxElement to get tooltips
+      m_toolboxPanel.AddButtons();
+
     }
 
     virtual void HandleResize()
@@ -1149,7 +1172,7 @@ namespace MFM
 
     } m_buttonPanel;
 
-    TextPanel<200,100> m_logPanel;  // 200 for big timestamps and such..
+    TextPanel<256,100> m_logPanel;  // 256 for big timestamps and FAIL paths..
     TeeByteSink m_logSplitter;
 
     void ResetScreenSize()
@@ -1225,6 +1248,7 @@ namespace MFM
       u32 mouseButtonsDown = 0;
       u32 keyboardModifiers = 0;
       ButtonPositionArray dragStartPositions;
+      SPoint lastKnownMousePosition;
 
       while(running)
       {
@@ -1245,11 +1269,13 @@ namespace MFM
             break;
 
           case SDL_MOUSEBUTTONUP:
+            lastKnownMousePosition.Set(event.button.x, event.button.y);
             mouseButtonsDown &= ~(1<<(event.button.button));
             dragStartPositions[event.button.button].Set(-1,-1);
             goto mousebuttondispatch;
 
           case SDL_MOUSEBUTTONDOWN:
+            lastKnownMousePosition.Set(event.button.x, event.button.y);
             mouseButtonsDown |= 1<<(event.button.button);
             dragStartPositions[event.button.button].Set(event.button.x,event.button.y);
             // FALL THROUGH
@@ -1265,6 +1291,7 @@ namespace MFM
 
           case SDL_MOUSEMOTION:
           {
+            lastKnownMousePosition.Set(event.motion.x, event.motion.y);
             MouseMotionEvent mme(keyboardModifiers, event,
                                  mouseButtonsDown, dragStartPositions);
             m_rootPanel.Dispatch(mme,
@@ -1291,7 +1318,7 @@ namespace MFM
                   keyboardModifiers &= ~mod;
                 break;
               default:
-                KeyboardUpdate(event.key, this->GetGrid());
+                KeyboardUpdate(event.key, this->GetGrid(), lastKnownMousePosition);
                 break;
               }
             }

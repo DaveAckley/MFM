@@ -66,10 +66,16 @@ namespace MFM
     OString64 m_text;
 
     /**
-     * An optional icon. If not NULL, will render instead of the default
-     * rendering scheme.
+     * An optional icon. If not IMAGE_ASSET_NONE, will render along
+     * with the text (if any).
      */
     ImageAsset m_iconAsset;
+
+    /**
+     * A zoomable icon asset. If its image is not IMAGE_ASSET_NONE,
+     * will render instead of the m_iconAsset with the text (if any).
+     */
+    IconAsset m_zIconAsset;
 
     /**
      * Where to render the icon, if present.  Default (0,0)
@@ -127,6 +133,14 @@ namespace MFM
 
 
     /**
+     * Get access to the zoomable IconAsset of this label, to configure it.  
+     */
+    IconAsset & GetIconAsset() 
+    {
+      return m_zIconAsset;
+    }
+
+    /**
      * Sets the location of this Label, relative to the Panel
      * which it is located inside of, at which to render this
      * Label and process mouse hits.
@@ -146,9 +160,21 @@ namespace MFM
      * @param icon The ImageAsset to use as this Label's image, or
      *             IMAGE_ASSET_NONE to disable icon rendering.
      */
-    void SetIconAsset(ImageAsset a)
+    void SetIconAssetDEPRECATED(ImageAsset a)
     {
       m_iconAsset = a;
+    }
+
+    /**
+     * Sets the icon of this Label which will render in its place upon
+     * rendering, specified by a loaded Asset.
+     *
+     * @param icon The ImageAsset to use as this Label's image, or
+     *             IMAGE_ASSET_NONE to disable icon rendering.
+     */
+    void SetIconSlot(MasterIconZSheetSlot a)
+    {
+      m_zIconAsset.SetIconSlot(a);
     }
 
     /**

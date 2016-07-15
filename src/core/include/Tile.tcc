@@ -3,12 +3,14 @@
 #include "Element_Empty.h"
 #include "Logger.h"
 #include "AtomSerializer.h"
+#include "EventHistoryBuffer.h"
+  
 #include "Util.h"
 
 namespace MFM
 {
   template <class EC>
-  Tile<EC>::Tile(const u32 tileSide, S * sites)
+  Tile<EC>::Tile(const u32 tileSide, S * sites, const u32 eventbuffersize, EventHistoryItem * items) 
     : TILE_SIDE(tileSide)
     , OWNED_SIDE(TILE_SIDE - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
     , m_sites(sites)
@@ -19,8 +21,10 @@ namespace MFM
     , m_state(OFF)
     , m_enabled(true)
     , m_backgroundRadiationEnabled(false)
+    , m_foregroundRadiationEnabled(false)
     , m_requestedState(OFF)
     , m_warpFactor(3)
+    , m_eventHistoryBuffer(*this, eventbuffersize, items)
   {
     // TILE_SIDE can't be too small, and we must apparently have sites..
     MFM_API_ASSERT_ARG(TILE_SIDE >= 3*EVENT_WINDOW_RADIUS && m_sites != 0);
@@ -95,6 +99,12 @@ namespace MFM
 
     m_dirIterator.Shuffle(m_random);
 
+  }
+
+  template <class EC>
+  const Element<EC> * Tile<EC>::ReplaceEmptyElement(const Element<EC>& newEmptyElement) 
+  {
+    return m_elementTable.ReplaceEmptyElement(newEmptyElement);
   }
 
   template <class EC>
@@ -263,6 +273,12 @@ namespace MFM
   template <class EC>
   template <u32 REACH>
   Dir Tile<EC>::RegionAt(const SPoint& sp) const
+  {
+    return RegionAtReach(sp, REACH);
+  }
+
+  template <class EC>
+  Dir Tile<EC>::RegionAtReach(const SPoint& sp, const u32 REACH) const
   {
     UPoint pt = MakeUnsigned(sp);
 

@@ -75,6 +75,7 @@ namespace MFM
       SetRenderPoint(SPoint(100000, 0));
       SetForeground(Drawing::WHITE);
       SetBackground(Drawing::DARK_PURPLE);
+      SetFont(FONT_ASSET_ELEMENT);
     }
 
     bool LoadDetails(const char * key, LineCountingByteSource & source)

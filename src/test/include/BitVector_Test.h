@@ -31,6 +31,10 @@ namespace MFM {
 
     static void Test_bitVectorLong();
 
+    static void Test_bitVectorReadWriteBV();
+
+    static void Test_bitVectorPopulationCount();
+
   };
 } /* namespace MFM */
 #endif /*BITVECTOR_TEST_H*/

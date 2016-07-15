@@ -285,6 +285,7 @@ namespace MFM
     }
   };
 
+  /** Helper class for writing and reading Rect structs */
   class RectSerializer : public ByteSerializable
   {
   private:

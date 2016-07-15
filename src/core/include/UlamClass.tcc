@@ -1,89 +1,83 @@
 /* -*- C++ -*- */
 
+#include "Fail.h"
+//#include "Tile.h"
+#include "Random.h"
+//#include "EventWindow.h"
+#include "Base.h"
+#include "UlamTypeInfo.h"
+#include "UlamClassRegistry.h"
+#include "UlamContext.h"
+
 #include "CastOps.h" /* For _Int32ToInt32, etc */
 
 namespace MFM {
-  template <class EC>
-  UlamTypeInfoModelParameterS32<EC>::UlamTypeInfoModelParameterS32(
-                  UlamElement<EC> & theElement,
-                  const char * mangledType,
-                  const char * ulamName,
-                  const char * briefDescription,
-                  const char * details,
-                  s32 * minOrNull,
-                  s32 * defaultOrNull,
-                  s32 * maxOrNull,
-                  const char * units)
-  : ElementParameterS32<EC>(&theElement, ulamName, briefDescription, details,
-                            GetDefaulted(minOrNull, GetMinOfAs<s32>(mangledType)),
-                            GetDefaulted(defaultOrNull, 0),
-                            GetDefaulted(maxOrNull, GetMaxOfAs<s32>(mangledType)))
-    , m_parameterUnits(units)
-  { }
 
   template <class EC>
-  UlamTypeInfoModelParameterU32<EC>::UlamTypeInfoModelParameterU32(
-                  UlamElement<EC> & theElement,
-                  const char * mangledType,
-                  const char * ulamName,
-                  const char * briefDescription,
-                  const char * details,
-                  u32 * minOrNull,
-                  u32 * defaultOrNull,
-                  u32 * maxOrNull,
-                  const char * units)
-  : ElementParameterU32<EC>(&theElement, ulamName, briefDescription, details,
-                            GetDefaulted(minOrNull, GetMinOfAs<u32>(mangledType)),
-                            GetDefaulted(defaultOrNull, 0u),
-                            GetDefaulted(maxOrNull, GetMaxOfAs<u32>(mangledType)))
-    , m_parameterUnits(units)
-  { }
-
-
-  template <class EC>
-  UlamTypeInfoModelParameterUnary<EC>::UlamTypeInfoModelParameterUnary(
-                  UlamElement<EC> & theElement,
-                  const char * mangledType,
-                  const char * ulamName,
-                  const char * briefDescription,
-                  const char * details,
-                  u32 * minOrNull,
-                  u32 * defaultOrNull,
-                  u32 * maxOrNull,
-                  const char * units)
-  : ElementParameterUnary<EC>(&theElement, ulamName, briefDescription, details,
-                              GetDefaulted(minOrNull, GetMinOfAs<u32>(mangledType)),
-                              GetDefaulted(defaultOrNull, 0u),
-                              GetDefaulted(maxOrNull, GetMaxOfAs<u32>(mangledType)))
-    , m_parameterUnits(units)
-  { }
-
-  template <class EC>
-  UlamTypeInfoModelParameterBool<EC>::UlamTypeInfoModelParameterBool(
-                  UlamElement<EC> & theElement,
-                  const char * mangledType,
-                  const char * ulamName,
-                  const char * briefDescription,
-                  const char * details,
-                  bool defvalue)
-    : ElementParameterBool<EC>(&theElement, ulamName, briefDescription, details, defvalue)
-  { }
-
-  template <class EC>
-  void UlamClass::PrintClassMembers(const UlamClassRegistry & ucr,
-                                    ByteSink & bs,
-                                    const typename EC::ATOM_CONFIG::ATOM_TYPE& atom,
-                                    u32 flags,
-                                    u32 baseStatePos) const
+  s32 UlamClass<EC>::PositionOfDataMember(const UlamContext<EC>& uc, u32 type, const char * dataMemberTypeName)
   {
-    typedef typename EC::ATOM_CONFIG::ATOM_TYPE T;
+    const UlamElement<EC> * ueltptr = (UlamElement<EC> *) uc.LookupElementTypeFromContext(type);
+    if (!ueltptr) return -2;
+    s32 ret = ueltptr->PositionOfDataMemberType(dataMemberTypeName);
+    if (ret < 0) return -3;
+    return ret;
+  } //PositionOfDataMember (static)
+
+  template <class EC>
+  bool UlamClass<EC>::IsMethod(const UlamContext<EC>& uc, u32 type, const UlamClass<EC> * classPtr)
+  {
+    const UlamElement<EC> * ueltptr = (UlamElement<EC> *) uc.LookupElementTypeFromContext(type);
+    if (!ueltptr) return false;
+    return ueltptr->internalCMethodImplementingIs(classPtr);
+  } //IsMethod (static)
+
+  typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
+  template <class EC>
+  VfuncPtr UlamClass<EC>::GetVTableEntry(const UlamContext<EC>& uc, u32 atype, u32 idx)
+  {
+    if( atype == EC::ATOM_CONFIG::ATOM_TYPE::ATOM_UNDEFINED_TYPE )
+      FAIL(ILLEGAL_STATE);  // needs 'quark type' vtable support
+    const UlamElement<EC> * ueltptr = (UlamElement<EC> *) uc.LookupElementTypeFromContext(atype);
+    if (!ueltptr) return NULL;
+    return ueltptr->getVTableEntry(idx);
+  } //GetVTableEntry (static)
+
+  template <class EC>
+  void UlamClass<EC>::PrintClassMembers(const UlamClassRegistry<EC> & ucr,
+                                        ByteSink & bs,
+                                        const typename EC::ATOM_CONFIG::ATOM_TYPE& atom,
+                                        u32 flags,
+                                        u32 baseStatePos,
+                                        u32 indent) const
+  {
+    AtomBitStorage<EC> abs(atom);
+    PrintClassMembers(ucr, bs, abs, flags, baseStatePos, indent);
+  }
+
+  inline static void doNL(ByteSink & bs, u32 flags, u32 indent) {
+    if (flags & UlamClassPrintFlags::PRINT_INDENTED_LINES) 
+    {
+      bs.Printf("\n");
+      for (u32 i = 0; i < indent; ++i) bs.Printf(" ");
+    }
+  }
+
+  template <class EC>
+  void UlamClass<EC>::PrintClassMembers(const UlamClassRegistry<EC> & ucr,
+                                        ByteSink & bs,
+                                        const BitStorage<EC>& stg,
+                                        u32 flags,
+                                        u32 baseStatePos,
+                                        u32 indent) const
+  {
+    //    typedef typename EC::ATOM_CONFIG::ATOM_TYPE T;
     if (flags & (PRINT_MEMBER_VALUES|PRINT_MEMBER_NAMES|PRINT_MEMBER_TYPES))
     {
       bool opened = false;
       for (s32 i = 0; i < GetDataMemberCount(); ++i)
       {
         const UlamClassDataMemberInfo & dmi = GetDataMemberInfo((u32) i);
-        UlamTypeInfo utin;
+	UlamTypeInfo utin;
         if (!utin.InitFrom(dmi.m_mangledType))
           FAIL(ILLEGAL_STATE);
 
@@ -94,10 +88,13 @@ namespace MFM {
         {
           opened = true;
           bs.Printf("(");
+          ++indent;
+          doNL(bs,flags,indent);
         }
         else
         {
           bs.Printf(",");
+          doNL(bs,flags,indent);
         }
         if (flags & PRINT_MEMBER_TYPES)
         {
@@ -126,12 +123,20 @@ namespace MFM {
               bs.Printf(", [%d]=",idx);
             }
 
-            u64 val = atom.GetBits().ReadLong(baseStatePos + dmi.m_bitPosition 
-                                              + T::ATOM_FIRST_STATE_BIT 
-                                              + idx * bitsize, 
-                                              bitsize);
+#if 0 
+            u32 offset = T::ATOM_FIRST_STATE_BIT;
 
-            if (utin.m_category == UlamTypeInfo::QUARK)
+            if (this->IsUlamTransient()) 
+              offset = 0;
+#else
+            u32 offset = 0;  // barf.  barf barf barf
+#endif
+
+            u32 startPos = 
+              baseStatePos + dmi.m_bitPosition
+              + offset + idx * bitsize;
+
+            if (utin.m_category == UlamTypeInfo::QUARK || utin.m_category == UlamTypeInfo::TRANSIENT)
             {
               if (flags & PRINT_RECURSE_QUARKS)
               {
@@ -139,16 +144,35 @@ namespace MFM {
                 const UlamClass * memberClass = ucr.GetUlamClassByMangledName(mangledName);
                 if (memberClass)
                 {
-                  memberClass->PrintClassMembers<EC>(ucr, bs, atom, flags, baseStatePos + dmi.m_bitPosition);
+                  memberClass->PrintClassMembers(ucr, bs, stg, flags, baseStatePos + dmi.m_bitPosition, indent + 1);
                   continue;
                 }
               }
-              bs.Printf("0x%x", val); // Just do hex if no recursion or unknown class
+
+              if (bitsize > 64) 
+              {
+                // Just do hex, aligned from the right
+                bs.Printf("%d: 0x", bitsize); 
+
+                u32 start = bitsize%4;
+                if (start) bs.Printf("%x", stg.Read(startPos, start));
+
+                for (u32 i = start; i < bitsize; i += 4) 
+                  bs.Printf("%x", stg.Read(startPos + i, 4));
+
+              } 
+              else
+              {
+                u64 val = stg.ReadLong(startPos, bitsize);
+                bs.Printf("0x%x", val); // Just do hex if no recursion or unknown class
+              }
               continue;
             }
 
+
             if (utin.m_category != UlamTypeInfo::PRIM) FAIL(ILLEGAL_STATE); // Can't happen now right?
 
+            u64 val = stg.ReadLong(startPos, bitsize);
             switch (utin.m_utip.GetPrimType())
             {
             case UlamTypeInfoPrimitive::INT:
@@ -205,8 +229,17 @@ namespace MFM {
           }
         }
       }
-      if (opened)
-        bs.Printf(")");
+      if (opened) --indent;
+      doNL(bs,flags,indent);
+      if (opened) bs.Printf(")");
     }
+  } //PrintClassMembers
+
+  template <class EC>
+  void UlamClass<EC>::addHex(ByteSink & bs, u64 val)
+  {
+    bs.Printf("/0x");
+    bs.Print(val, Format::HEX);
   }
-}
+
+} //MFM

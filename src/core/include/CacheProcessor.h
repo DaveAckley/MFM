@@ -248,6 +248,16 @@ namespace MFM {
     SPoint m_farSideOrigin;
 
     /**
+       The incoming atoms received so far, placed by their sitenumber
+       relative to m_eventCenter.  We delay shipping them to the tile
+       so we can do that atomically once they are all in.
+     */
+    T m_receivedSiteBuffer[SITE_COUNT];
+    u8 m_receivedSiteNumbers[SITE_COUNT];
+    bool m_receivedSiteDifferents[SITE_COUNT];
+    u32 m_receivedSiteCount;
+
+    /**
        Where to send and receive packets.
      */
     ChannelEnd m_channelEnd;
@@ -370,6 +380,11 @@ namespace MFM {
        to end the set of atoms it sent.
      */
     void ReceiveUpdateEnd() ;
+
+    /**
+       Apply the entire cache update to the tile, when update end is received.
+     */
+    void ApplyCacheUpdate() ;
 
     /**
        Handle the ACK that our neighbor cache processor sent us

@@ -66,9 +66,16 @@ namespace MFM
     virtual void PaintBorder(Drawing& d)
     { /* Don't want to paint a border*/ }
 
-    virtual void PaintComponent(Drawing& d)
+    virtual void UpdateEnabling() 
     {
       this->SetColorsFromEnabling();
+      this->SetIconSlot(this->GetIconSlot());
+    }
+
+    /*
+
+    virtual void PaintComponent(Drawing& d)
+    {
 
       d.SetForeground(Panel::GetForeground());
       d.SetBackground(Panel::GetBackground());
@@ -94,6 +101,7 @@ namespace MFM
         d.BlitText(text, renderAt, GetDimensions());
       }
     }
+    */
 
     virtual s32 GetSection() { return HELP_SECTION_MISC; } // If not overridden
     virtual const char * GetDoc() { return this->Panel::GetDoc(); } // If not overridden
@@ -132,15 +140,15 @@ namespace MFM
   private:
 
     /**
-     * Gets the Asset which should be drawn depending on IsChecked()
+     * Gets the icon slot which should be drawn depending on IsChecked()
      *
-     * @returns The ImageAsset which should be drawn
+     * @returns The MasterIconZSheetSlot of the icon to draw
      */
-    inline ImageAsset GetImageAsset()
+    inline MasterIconZSheetSlot GetIconSlot()
     {
       return IsChecked() ?
-        IMAGE_ASSET_CHECKBOX_ICON_ON :
-        IMAGE_ASSET_CHECKBOX_ICON_OFF ;
+        ZSLOT_ICON_CHECKBOX_ON :
+        ZSLOT_ICON_CHECKBOX_OFF ;
     }
 
     /**

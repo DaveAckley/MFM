@@ -52,7 +52,7 @@ namespace MFM
      * default coloring scheme.
      */
     CloseWindowButton(Panel* parentPanel) :
-      AbstractButton(IMAGE_ASSET_CLOSE_WINDOW_ICON),
+      AbstractButton(IMAGE_ASSET_NONE),
       m_parentPanel(parentPanel)
     {
       SetName("CloseWindow");

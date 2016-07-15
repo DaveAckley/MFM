@@ -5,12 +5,21 @@
 namespace MFM {
 
   // Do the double dispatching
+  bool KeyboardEvent::Handle(Panel & panel) {
+    return panel.Handle(*this);
+  }
+
   bool MouseButtonEvent::Handle(Panel & panel) {
     return panel.Handle(*this);
   }
 
   bool MouseMotionEvent::Handle(Panel & panel) {
     return panel.Handle(*this);
+  }
+
+  bool Panel::Handle(KeyboardEvent & event)
+  {
+    return false;
   }
 
   bool Panel::Handle(MouseButtonEvent & event)
@@ -31,7 +40,7 @@ namespace MFM {
     m_forward = m_backward = 0;
     m_parent = m_top = 0;
 
-    m_fontAsset = FONT_ASSET_NONE;
+    m_fontAsset = FONT_ASSET_DEFAULT_FIXED;
     SetName(0);
 
     m_bgColor = Drawing::BLACK;
@@ -60,9 +69,9 @@ namespace MFM {
     for (u32 i = 0; i < count; ++i)
       sink.WriteByte(' ');
   }
-  void Panel::Print(ByteSink & sink, u32 indent) const
+  void Panel::Print(ByteSink & sink, u32 depth, u32 indent) const
   {
-    Indent(sink,indent);
+    Indent(sink, indent);
     sink.Printf("[");
     if (GetName()) sink.Printf("%s:", GetName());
     sink.Printf("%p",(void*) this);
@@ -75,16 +84,27 @@ namespace MFM {
             m_bdColor,
             m_fgColor);
     if (m_top) {
-      Panel * p = m_top;
-      sink.Printf("\n");
-      do {
-        p = p->m_forward;
-        p->Print(sink, indent+2);
-      } while (p != m_top);
-      Indent(sink,indent);
+      if (depth == 0)
+      {
+        sink.Printf(" ... ");
+      } 
+      else
+      {
+        Panel * p = m_top;
+        sink.Printf("\n");
+        do {
+          p = p->m_forward;
+          p->Print(sink, depth - 1, indent + 2);
+        } while (p != m_top);
+        Indent(sink,indent);
+      }
     }
     sink.Printf("]\n");
   }
+
+  void Panel::Print() const { Print(STDERR); }
+
+  void Panel::Print1() const { Print(STDERR, 1); }
 
   u32 Panel::GetChildCount() const
   {
@@ -245,6 +265,18 @@ namespace MFM {
     return true;
   }
 
+  void Panel::LowerToBottom(Panel * child) 
+  {
+    Remove(child);
+    Insert(child, m_top);
+  }
+
+  void Panel::RaiseToTop(Panel * child) 
+  {
+    LowerToBottom(child);
+    m_top = m_top->m_forward;
+  }
+
   void Panel::Insert(Panel * child, Panel * after)
   {
     if (!child) FAIL(NULL_POINTER);
@@ -293,7 +325,7 @@ namespace MFM {
       m_top = 0;
     else {
       if (m_top == child)
-        m_top = child->m_forward;
+        m_top = child->m_backward;
       child->m_forward->m_backward = child->m_backward;
       child->m_backward->m_forward = child->m_forward;
     }
@@ -388,6 +420,9 @@ namespace MFM {
       drawing.SetWindow(cur);
       PaintChildren(drawing);
 
+      drawing.SetWindow(cur);
+      PaintFloat(drawing);
+
       drawing.SetWindow(old);
 
       if (oldFont)
@@ -396,6 +431,11 @@ namespace MFM {
       drawing.SetForeground(oldfg);
       drawing.SetBackground(oldbg);
     }
+  }
+
+  void Panel::PaintFloat(Drawing & drawing)
+  {
+    /* Overridable, empty by default */
   }
 
   void Panel::PaintChildren(Drawing & drawing)
@@ -488,7 +528,7 @@ namespace MFM {
 
   }
 
-  bool Panel::Dispatch(MouseEvent & event, const Rect & existing)
+  bool Panel::Dispatch(DispatchableEvent & event, const Rect & existing)
   {
 
     // Can't take events if we're not here.

@@ -90,7 +90,7 @@ namespace MFM {
     u32 m_elementCount;
     ElementLibraryStub<EC> ** m_elementStubPtrArray;
     u32 m_otherUlamClassCount;
-    UlamClass ** m_otherUlamClassPtrArray;
+    UlamClass<EC> ** m_otherUlamClassPtrArray;
   };
 
   enum { ELEMENT_LIBRARY_MAGIC = 0xfea57000 };
