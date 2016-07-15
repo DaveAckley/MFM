@@ -245,19 +245,39 @@ namespace MFM
       u32 thisPeriodMS = m_ticksLastStopped - startMS;
       m_msSpentRunning += thisPeriodMS;
 
-      u64 totalAccesses = grid.GetTotalSitesAccessed();
-      u32 totalSites = grid.GetTotalSites();
-      m_AEPS = totalAccesses / ((double) totalSites);
-      m_AER = 1000 * (m_AEPS / m_msSpentRunning);
-
-      u64 newEvents = totalAccesses - m_lastTotalEvents;
-      m_lastTotalEvents = totalAccesses;
-
       if (thisPeriodMS == 0) {
         LOG.Warning("Zero ms in sample");
         thisPeriodMS = 1;
       }
-      double thisAERsample = 1000.0 * newEvents / totalSites / thisPeriodMS;
+
+      double thisAERsample;
+
+#if 0 /* site based stats not ready for prime time */
+      {
+        // Trying for site-based statistics, rather that event-based
+        // statistics, because of the variable ew boundary sizes.
+        u64 totalAccesses = grid.GetTotalSitesAccessed();
+        u32 totalSites = grid.GetTotalSites();
+        m_AEPS = totalAccesses / ((double) totalSites);
+        m_AER = 1000 * (m_AEPS / m_msSpentRunning);
+
+        u64 newEvents = totalAccesses - m_lastTotalEvents;
+        m_lastTotalEvents = totalAccesses;
+        thisAERsample = 1000.0 * newEvents / totalSites / thisPeriodMS;
+      }
+#endif
+      {
+        // Traditional event-based statistics, whether that event hit
+        // one site or forty-one.
+        u64 totalEvents = grid.GetTotalEventsExecuted();
+        u32 totalSites = grid.GetTotalSites();
+        m_AEPS = totalEvents / ((double) totalSites);
+        m_AER = 1000 * (m_AEPS / m_msSpentRunning);
+
+        u64 newEvents = totalEvents - m_lastTotalEvents;
+        m_lastTotalEvents = totalEvents;
+        thisAERsample = 1000.0 * newEvents / totalSites / thisPeriodMS;
+      }
 
       const double BACKWARDS_AVERAGE_RATE = 0.99;
       m_recentAER = BACKWARDS_AVERAGE_RATE * m_recentAER +
