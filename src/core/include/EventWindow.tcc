@@ -438,7 +438,7 @@ namespace MFM {
   {
     const MDist<R> & md = MDist<R>::get();
     s32 index = md.FromPoint(loc,R);
-    MFM_API_ASSERT_ARG(index >= 0 && index < m_boundedSiteCount);
+    MFM_API_ASSERT_ARG(index >= 0 && ((u32) index) < m_boundedSiteCount);
     return (u32) index;
   }
 

@@ -321,7 +321,7 @@ namespace MFM
     u32 GetWrappedIndex(s32 index) const
     {
       while (index < 0) index += m_bufferSize;
-      while (index >= m_bufferSize) index -= m_bufferSize;
+      while (((u32) index) >= m_bufferSize) index -= m_bufferSize;
       return (u32) index;
     }
     u32 Increment(u32 index) const
