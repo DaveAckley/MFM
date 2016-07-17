@@ -155,7 +155,7 @@ namespace MFM
       }
       else if (m_historyBuffer[m_cursor].IsStart())
       {
-        if (m_cursor == m_oldestEventStart) 
+        if ((u32) m_cursor == m_oldestEventStart) 
           return false;
         s32 prevend = GetWrappedIndex(m_cursor - 1);
         MFM_API_ASSERT_STATE(m_historyBuffer[prevend].IsEnd());
@@ -182,7 +182,7 @@ namespace MFM
       }
       else if (m_historyBuffer[m_cursor].IsEnd())
       {
-        if (m_cursor == m_newestEventEnd) 
+        if ((u32) m_cursor == m_newestEventEnd) 
           return false;
         s32 nextstart = Increment(m_cursor);
         MFM_API_ASSERT_STATE(m_historyBuffer[nextstart].IsStart());
