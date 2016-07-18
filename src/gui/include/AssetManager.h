@@ -199,6 +199,14 @@ namespace MFM
       m_iconSlot = slot;
     }
 
+    bool HasImageAsset() const { 
+      return GetImageAsset() != IMAGE_ASSET_NONE;
+    }
+
+    bool HasIcon() const {
+      return HasImageAsset() && GetIconSlot() != ZSLOT_NONE;
+    }
+
     u32 GetIconSlot() const
     {
       return m_iconSlot;

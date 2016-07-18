@@ -243,14 +243,12 @@ namespace MFM
 
   void Drawing::BlitIconAsset(const IconAsset & iconasset, u32 atSize, SPoint destLoc) const
   {
-    u32 slot = iconasset.GetIconSlot();
-    if (slot == ZSLOT_NONE) return;
-
+    if (!iconasset.HasIcon()) return;
     ImageAsset ia = iconasset.GetImageAsset();
-    if (ia == IMAGE_ASSET_NONE) return;
 
     SDL_Surface* s= AssetManager::GetReal(ia);
 
+    u32 slot = iconasset.GetIconSlot();
     u32 idx = IconAsset::FindZSheetRowIndex(atSize);
     u32 height = ZSHEET_HEIGHTS[idx];
     SPoint pos;

@@ -52,11 +52,15 @@ namespace MFM
 
     SPoint dims = MakeSigned(Panel::GetDimensions());
 
-    if (m_zIconAsset.GetImageAsset() != IMAGE_ASSET_NONE)
+    s32 textX = -1;
+    
+    if (m_zIconAsset.HasIcon())
     {
       u32 height = dims.GetY();  // Draw at (up to) 100% of label height, centered on icon position
-      SPoint renderAt = max((m_iconPosition-SPoint(height/2,height/2)), SPoint(0,0));
       drawing.BlitIconAsset(m_zIconAsset, height, m_iconPosition);
+
+      // Start text next to icon with constant plus proportional padding
+      textX = m_iconPosition.GetX() + height + 1 + height/25;
     }
     else 
     {
@@ -69,7 +73,8 @@ namespace MFM
       const char * zstr = m_text.GetZString();
       SPoint textSize = Panel::GetTextSize(drawing.GetFont(), zstr);
       SPoint renderAt = max((dims-textSize)/2, SPoint(0,0));
-
+      if (textX >= 0)
+        renderAt.SetX(textX);
       drawing.BlitText(zstr, renderAt, GetDimensions());
     }
   }
