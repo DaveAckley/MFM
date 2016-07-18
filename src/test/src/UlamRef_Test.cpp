@@ -383,15 +383,15 @@ namespace MFM {
       assert(b32.Read(0,32) == 0x02030405);
 
       t.ReadBV(0, b64);
-      assert(b64.ReadLong(0,64) == 0x0102030405060708L);
+      assert(b64.ReadLong(0,64) == HexU64(0x01020304, 0x05060708));
       t.ReadBV(8, b64);
-      assert(b64.ReadLong(0,64) == 0x0203040506070809L);
+      assert(b64.ReadLong(0,64) == HexU64(0x02030405, 0x06070809));
 
       t.ReadBV(0, b80);
-      assert(b80.ReadLong(0,64) ==  0x0102030405060708L);
+      assert(b80.ReadLong(0,64) ==  HexU64(0x01020304, 0x05060708));
       assert(b80.Read(64,16) ==     0x090a);
       t.ReadBV(24, b80);
-      assert(b80.ReadLong(0,64) ==  0x0405060708090a0bL);
+      assert(b80.ReadLong(0,64) ==  HexU64(0x04050607, 0x08090a0b));
       assert(b80.Read(64,16) ==     0x0c0d);
 
     }
@@ -458,12 +458,12 @@ namespace MFM {
       t.WriteBV(8, b16);
       assert(t.Read(0,32) == 0xababcd3f);
       t.WriteBV(24, b16);
-      assert(t.ReadLong(0,64) == 0xababcdabcd060708L);
+      assert(t.ReadLong(0,64) == HexU64(0xababcdab, 0xcd060708));
 
       t.WriteBV(0, b32);
-      assert(t.ReadLong(0,64) == 0x12345678cd060708L);
+      assert(t.ReadLong(0,64) == HexU64(0x12345678, 0xcd060708));
       t.WriteBV(8, b32);
-      assert(t.ReadLong(0,64) == 0x1212345678060708L);
+      assert(t.ReadLong(0,64) == HexU64(0x12123456, 0x78060708));
 
     }
 
