@@ -446,7 +446,10 @@ namespace MFM
         return;
       }
       if (!this->LoadMFS(m_startFile.GetZString()))
+      {
         LOG.Error("Start file (%s) loading failed", m_startFile.GetZString());
+        exit(-3);
+      }
     }
 
     virtual void OnceOnly(VArguments& args)
@@ -474,36 +477,44 @@ namespace MFM
         else
         {
 
-#define STR(X) #X
-#define XSTR(X) STR(X)
-          const char * defaultStartFile =
-            "mfs/start-"
-            XSTR(MFM_VERSION_MAJOR) "."
-            XSTR(MFM_VERSION_MINOR) "."
-            XSTR(MFM_VERSION_REV) ".mfs";
-#undef STR
-#undef XSTR
-
-          if (!Utils::GetReadableResourceFile(defaultStartFile, m_startFile))
+          // Accept prior rev start file if needed
+          OString128 buff;
+          s32 revFound = -1;
+          for (s32 rev = MFM_VERSION_REV; rev >= 0; --rev)
           {
-            LOG.Warning("Default start file (%s) not found; things may be weird",
-                        defaultStartFile);
-            m_startFile.Reset();
+            buff.Reset();
+            buff.Printf("mfs/start-%d.%d.%d.mfs", 
+                        MFM_VERSION_MAJOR,
+                        MFM_VERSION_MINOR,
+                        rev);
+            if (Utils::GetReadableResourceFile(buff.GetZString(), m_startFile))
+            {
+              revFound = rev;
+              break;
+            }
+          }
+
+          if (revFound != MFM_VERSION_REV)
+          {
+            if (revFound < 0)
+            {
+              LOG.Error("No v%d.%d.%d-compatible start file found (maybe supply --start-file ?)",
+                        MFM_VERSION_MAJOR, MFM_VERSION_MINOR, MFM_VERSION_REV);
+              exit(-2);
+            }
+            else
+            {
+              LOG.Warning("Using prior revision start file (%d.%d.%d, we are %d.%d.%d)",
+                          MFM_VERSION_MAJOR, MFM_VERSION_MINOR, revFound,
+                          MFM_VERSION_MAJOR, MFM_VERSION_MINOR, MFM_VERSION_REV);
+            }
           }
           else
           {
-
+            LOG.Message("Found start file %s", m_startFile.GetZString());
           }
         }
       }
-
-      /*
-      if (m_countOfScreenshotsPerRate > 0) {
-        m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
-        m_recordScreenshotPerAEPS = 1;
-        m_countOfScreenshotsAtThisAEPS = 0;
-      }
-      */
 
       if (!getenv("SDL_VIDEO_ALLOW_SCREENSAVER"))          // If user isn't already messing with this
         putenv((char *) "SDL_VIDEO_ALLOW_SCREENSAVER=1");  // Old school sdl 1.2 mechanism
