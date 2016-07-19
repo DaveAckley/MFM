@@ -200,7 +200,7 @@ namespace MFM
   {
     if (maxval<=1)
     {
-      MFM_API_ASSERT_ARG(maxval==1);
+      MFM_API_ASSERT_ARG(maxval==1);    // maxval==0 -> fail ILLEGAL_ARGUMENT
       return 0;
     }
     u32 nbits = _getLogBase2(maxval)+1; // +1: log2(2) == 1 -> need 2 bits

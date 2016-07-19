@@ -107,6 +107,7 @@ namespace MFM {
 
   u32 Keyboard::MergeMods(u32 mods)
   {
+    // If either left or right mod, set both such mods
     if (mods & KMOD_CTRL) mods |= KMOD_CTRL;
     if (mods & KMOD_SHIFT) mods |= KMOD_SHIFT;
     if (mods & KMOD_ALT) mods |= KMOD_ALT;

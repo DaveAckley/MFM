@@ -34,7 +34,9 @@ extern "C" {
   }
 
   void MFMPrintError(FILE * stream, const char * file, const int line, const int code) {
-    fprintf(stream,"%s:%d: FAILED: %s\n", file, line, MFMFailCodeReason(code));
+    const char * msg = MFMFailCodeReason(code);
+    if (msg) fprintf(stream,"%s:%d: FAILED: %s\n", file, line, msg);
+    else fprintf(stream,"%s:%d: FAILED: fail(%d/0x%08x)\n", file, line, code, code);
   }
   void MFMFailHere(const char * file, const int line, int code) {
     MFMPrintError(stderr, file, line, code);

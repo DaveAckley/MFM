@@ -56,6 +56,10 @@ namespace MFM
      *
      * @param file The FILE* wihch all bytes written to this
      *             FileByteSink are written to.
+     *
+     * @param buffered If true, automatically flush this FileByteSink
+     *             after each '\n' is printed. (Optional second
+     *             argument, default false.)
      */
     FileByteSink(FILE * file, bool buffered = false)
       : m_file(file)
@@ -66,6 +70,19 @@ namespace MFM
         FAIL(NULL_POINTER);
       }
     }
+
+    /** Determines if this FileByteSink is currently 'line buffered',
+     *  meaning it will automatically flush after each '\n' is
+     *  printed.
+     */
+    bool IsLineBuffered() const { return m_lineBuffered; }
+
+    /** Set the line buffering on this FileByteSink.
+     *
+     * @param doLineBuffering true if this FileByteSink should now be
+     *        line buffering
+     */
+    void SetLineBuffered(bool doLineBuffering) { m_lineBuffered = doLineBuffering; }
 
     virtual void WriteBytes(const u8 * data, const u32 len)
     {

@@ -36,6 +36,14 @@
 
 namespace MFM {
 
+  template <class EC> class BitRef; // FORWARD
+
+  template <u32 B> class BitVector; // FORWARD
+
+  typedef BitVector<96> BV96;
+
+  typedef BitVector<8192> BV8K;
+
   /**
    * A bit vector with reasonably fast operations
    *
@@ -70,6 +78,7 @@ namespace MFM {
     static const u32 ARRAY_LENGTH = (BITS + BITS_PER_UNIT - 1) / BITS_PER_UNIT;
 
   private:
+    template <typename EC> friend class BitRef;
     BitUnitType m_bits[ARRAY_LENGTH];
 
     /**
@@ -107,16 +116,24 @@ namespace MFM {
      *
      * @param bit The value to set the bit at \c idx to.
      */
-    void WriteBit(u32 idx, bool bit);
+    void WriteBit(u32 idx, bool bit)
+    {
+      MFM_API_ASSERT_ARG(idx < B);
+      WriteBitUnsafe(idx, bit);
+    }
 
     /**
-     * Reads a specified value from a particular bit in this BitVector.
+     * Reads a single bit at a specified index from this BitVector.
      *
-     * @param idx The bit to read, where the MSB is index 0.
+     * @param idx The index of the bit to read.
      *
-     * @returns The value of the bit at \c idx index.
+     * @returns \c true if this bit is set, else \c false .
      */
-    bool ReadBit(u32 idx);
+    bool ReadBit(const u32 idx) const 
+    {
+      MFM_API_ASSERT_ARG(idx < B);
+      return ReadBitUnsafe(idx);
+    }
 
     /**
      * Constructs a new BitVector. Set parameters of this BitVector
@@ -124,7 +141,8 @@ namespace MFM {
      */
     BitVector();
 
-#if 0 // Fri Mar 13 16:04:59 2015 XXX TESTING GCC CODE GEN IMPACTS
+#if 1 // Mon Jan 11 20:33:04 2016 Need this for Ui_Ut copy ctors?
+//#if 0 // Fri Mar 13 16:04:59 2015 XXX TESTING GCC CODE GEN IMPACTS
     /**
      * Copy-constructor for a BitVector. Creates an identical copy of
      * the specified BitVector.
@@ -137,10 +155,15 @@ namespace MFM {
     /**
      * Constructs a BitVector with specified initial value.
      *
-     * @param values A pointer to a big-endian array of values to
-     *               initialize this BitVector to. This array must
-     *               contain at least as many bits as this BitVector
-     *               can hold (specified as a template parameter).
+     * @param values A pointer to an array of 'appropriate-endian'
+     *               data -- meaning the byte order of the data must
+     *               match that of the machine running this code -- to
+     *               initialize this BitVector.  (For example,
+     *               executing (values[0]>>31) on this machine must
+     *               obtain the value to be returned by GetBit(0)).
+     *               The values array must contain at least as many
+     *               bits as this BitVector can hold (specified as a
+     *               template parameter).
      */
     BitVector(const u32 * const values);
 
@@ -163,7 +186,7 @@ namespace MFM {
      *               BitVector. This should be in the range \c [1,32] .
      *
      * @returns The bits read from the particular section of this
-     *          BitVector.
+     *          BitVector, right-justified.
      */
     inline u32 Read(const u32 startIdx, const u32 length) const;
 
@@ -191,7 +214,7 @@ namespace MFM {
      *               BitVector. This should be in the range \c [0,64] .
      *
      * @returns The bits read from the particular section of this
-     *          BitVector.
+     *          BitVector, right-justified.
      */
     inline u64 ReadLong(const u32 startIdx, const u32 length) const;
 
@@ -210,13 +233,138 @@ namespace MFM {
     void WriteLong(const u32 startIdx, const u32 length, const u64 value);
 
     /**
+     * Copy an arbitrary subsection of this BitVector to a different
+     * BitVector \c dstbv.  Template parameter \c BITS is the size \c
+     * dstbv.
+     *
+     * @param srcStartIdx The index of the first bit to read inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param dstStartIdx The index of the first bit to write inside
+     *                 \c dstbv, where the MSB is indexed at \c 0 .
+     *
+     * @param length The number of bits to copy.
+     *
+     * @param dstbv The destination BitVector<BITS> that is written
+     *              in positions [dstStartIdx, dstStartIdx + length - 1].
+     *
+     * @fails ILLEGAL_ARGUMENT if dstbv is the same object as this, or
+     *                         srcStartIdx + length is greater than
+     *                         the number of bits in this, or
+     *                         dstStartIdx + length is greater than
+     *                         the number of bits in dstbv
+     *
+     * @sa ReadBV, WriteBV
+     *
+     */
+    template <u32 BITS>
+    inline void CopyBV(const u32 srcStartIdx, const u32 dstStartIdx, const u32 length, BitVector<BITS> & dstbv) const
+    {
+      MFM_API_ASSERT_ARG(((void*) this) != ((void*) &dstbv)); // Ensure distinct ptrs; can't move within yourself
+      u32 amt = BITS_PER_UNIT;
+      for (u32 i = 0; i < length; i += amt)
+      {
+        if (i + amt > length) amt = length - i;
+        dstbv.Write(dstStartIdx + i, amt, this->Read(srcStartIdx + i, amt));
+      }
+    }
+
+    /**
+     * Reads an arbitrary subsection of this BitVector into all of \c
+     * rtnbv.  Template parameter \c BITS determines the number of
+     * bits read.
+     *
+     * @param startIdx The index of the first bit to read inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param rtnbv The BitVector<BITS> modified to hold the read bits .
+     *
+     * @sa WriteBV, CopyBV
+     *
+     */
+    template <u32 BITS>
+    inline void ReadBV(const u32 startIdx, BitVector<BITS> & rtnbv) const
+    {
+      this->CopyBV(startIdx, 0, BITS, rtnbv);
+    }
+
+    /**
+     * Writes all of an arbitrary BitVector starting a specified
+     * position in this BitVector.  Template parameter \c BITS
+     * determines the number of bits written.
+     *
+     * @param startIdx The index of the first bit to write inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param val The bits in \c [0, BITS - 1] of val are written to
+     *              the specified section of this BitVector.
+     *
+     * @sa ReadBV, CopyBV
+     *
+     */
+    template<u32 BITS>
+    void WriteBV(const u32 startIdx, const BitVector<BITS>& val)
+    {
+      val.CopyBV(0, startIdx, BITS, *this);
+    }
+
+    /**
+     * Reads up to 96 bits of a particular section of this BitVector.
+     *
+     * @param startIdx The index of the first bit to read inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param length The number of bits to read from this
+     *               BitVector. This should be in the range \c [0,96] .
+     *
+     * @returns The bits read from the particular section of this
+     *          BitVector, left-justified in the BV96.
+     */
+    inline BV96 ReadBig(const u32 startIdx, const u32 length) const
+    {
+      BV96 val;
+      this->CopyBV(startIdx, 0, length, val);
+      return val;
+    }
+
+    /**
+     * Writes up to 96 bits of a specified BV96 to a section of this BitVector.
+     *
+     * @param startIdx The index of the first bit to write inside this
+     *                 BitVector, where the MSB is indexed at \c 0 .
+     *
+     * @param length The number of bits to write to this
+     *               BitVector. This should be in the range \c [0,96] .
+     *
+     * @param value The bits \c [0, length - 1] of value are written
+     *              to the specified section of this BitVector.
+     */
+    void WriteBig(const u32 startIdx, const u32 length, const BV96 value)
+    {
+      value.CopyBV(0, startIdx, length, *this);
+    }
+
+    /**
+     * Gets the bit at a specified index in this BitVector.  (Same as
+     * \c ReadBit).
+     *
+     * @param idx The index of the bit to access, where the MSB is
+     *        indexed at \c 0 .
+     */
+    bool GetBit(u32 idx) const
+    {
+      return ReadBit(idx);
+    }
+
+    /**
      * Sets the bit at a specified index in this BitVector.
      *
      * @param idx The index of the bit to set, where the MSB is
      *        indexed at \c 0 .
      */
     void SetBit(const u32 idx) {
-      Write(idx, 1, 1);
+      MFM_API_ASSERT_ARG(idx < B);
+      WriteBitUnsafe(idx, true);
     }
 
     /**
@@ -226,7 +374,8 @@ namespace MFM {
      *        indexed at \c 0 .
      */
     void ClearBit(const u32 idx) {
-      Write(idx, 1, 0);
+      MFM_API_ASSERT_ARG(idx < B);
+      WriteBitUnsafe(idx, false);
     }
 
     /**
@@ -236,19 +385,13 @@ namespace MFM {
      *        indexed at \c 0 .
      */
     void StoreBit(const u32 idx, bool bit) {
-      Write(idx, 1, bit ? 1 : 0);
+      MFM_API_ASSERT_ARG(idx < B);
+      WriteBitUnsafe(idx, bit);
     }
 
-    /**
-     * Reads a single bit at a specified index from this BitVector.
-     *
-     * @param idx The index of the bit to read.
-     *
-     * @returns \c 1 if this bit is set, else \c 0 .
-     */
-    bool ReadBit(const u32 idx) const {
-      return Read(idx, 1) != 0;
-    }
+    void WriteBitUnsafe(const u32 idx, const bool bit) ;
+
+    bool ReadBitUnsafe(const u32 idx) const ;
 
     /**
      * Flips the bit at a specified index in this BitVector.
@@ -257,7 +400,13 @@ namespace MFM {
      * @param idx The index of the bit to toggle, where the MSB is
      *        indexed at \c 0 .
      */
-    bool ToggleBit(const u32 idx);
+    bool ToggleBit(const u32 idx)
+    {
+      MFM_API_ASSERT_ARG(idx < B);
+      return ToggleBitUnsafe(idx);
+    }
+
+    bool ToggleBitUnsafe(const u32 idx) ;
 
     /**
      * Set a contiguous range of bits, so they all have value 1.
@@ -390,7 +539,23 @@ namespace MFM {
 
     void FromArray(const u32 array[ARRAY_LENGTH]);
 
+    /**
+     * Compute the number of 1 (set) bits in this BitVector, starting
+     * from index \c startIdx (default: 0) and counting the next \c
+     * length bits (default: All of the bits from startIdx to the
+     * end).
+     *
+     * @param startIdx First bit to include in the population count
+     *
+     * @param length The maximum number of bits to include in the
+     * population count
+     *
+     * @returns The number of 1 bits counted.
+     */
+    u32 PopulationCount(const u32 startIdx = 0, const u32 length = B) const;
+
   };
+
 } /* namespace MFM */
 
 #include "BitVector.tcc"

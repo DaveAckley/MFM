@@ -31,14 +31,14 @@
 #include "BitVector.h"
 #include "Dirs.h"
 #include "itype.h"
-#include "Element.h"
-#include "Element_Empty.h"
 
 namespace MFM
 {
 
   template <class EC> class Element; // FORWARD
   template <class EC> class EventWindow; // FORWARD
+
+  typedef u32 ElementType;
 
   template <class EC>
   class ElementTable
@@ -66,6 +66,29 @@ namespace MFM
      * @param theElement The Element to insert into this ElementTable .
      */
     void Insert(const Element<EC> & theElement) ;
+
+    /**
+     * Replace an existing Element that represents empty space with an
+     * alternate Element that performs the same function.  The table
+     * must have an old element with ATOM_EMPTY_TYPE already in it.
+     * The new element must also already have been given type
+     * ATOM_EMPTY_TYPE.  This method is meant for use by compiled ulam
+     * setup code to replace Element_Empty (an archaic Element<EC>),
+     * with Ue_10105Empty10 (a shiny modern UlamElement<EC>).
+     *
+     * @param newEmptyType The replacement Element to use as the empty
+     * element in this ElementTable .
+     *
+     * @return the old, now replaced, empty element
+     *
+     * @fails ILLEGAL_ARGUMENT if the new element is not already
+     * assigned ATOM_EMPTY_TYPE
+     *
+     * @fails ILLEGAL_STATE if there is no existing element in the
+     * expected location, or if the element located there is not type
+     * ATOM_EMPTY_TYPE
+     */
+    const Element<EC> * ReplaceEmptyElement(const Element<EC> & newEmptyElement) ;
 
     /**
      * Gets the capacity of this ElementTable, in Elements that may be
@@ -118,6 +141,7 @@ namespace MFM
      */
     const Element<EC> * Lookup(u32 elementType) const;
 
+#if 0 /* Now handled in eventwindow */
     /**
      * Executes the behavior method of the Element in the center of a
      * specified EventWindow. This method finds the central Element by
@@ -126,6 +150,7 @@ namespace MFM
      * @param window The EventWindow to execute an event upon.
      */
     void Execute(EventWindow<EC>& window) ;
+#endif
 
     /**
      * Inserts an Element into this ElementTable.

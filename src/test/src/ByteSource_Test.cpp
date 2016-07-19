@@ -329,18 +329,18 @@ namespace MFM {
     tester.Reset("\n\n\tFoo( 12, bar, Hi-11122348201405166191339)\n");
     CharBufferByteSink<100> funcName;
 
-    assert(4 == tester.Scanf("%#[\t\n ]%[A-Za-z0-9]%#[\t\n ](",&funcName));
+    assert(4 == tester.Scanf("%#[\t\n ]%[A-Za-z0-9]%#0[\t\n ](",&funcName));
     assert(funcName.Equals("Foo"));
 
     u32 num;
-    assert(4 == tester.Scanf("%#[\t\n ]%d%#[\t\n ],",&num));
+    assert(4 == tester.Scanf("%#[\t\n ]%d%0#[\t\n ],",&num));
 
     CharBufferByteSink<100> arg2;
-    assert(4 == tester.Scanf("%#[\t\n ]%[^,)\t\n ]%#[\t\n ],",&arg2));
+    assert(4 == tester.Scanf("%#[\t\n ]%[^,)\t\n ]%#0[\t\n ],",&arg2));
     assert(arg2.Equals("bar"));
 
     UUID arg3;
-    assert(4 == tester.Scanf("%#[\t\n ]%@%#[\t\n ])",&arg3));
+    assert(4 == tester.Scanf("%#[\t\n ]%@%#0[\t\n ])",&arg3));
     assert(!strcmp(arg3.GetLabel(),"Hi"));
     //                             "(%[\t\n ]%[^,\t\n ]%[^\t\n ],
   }

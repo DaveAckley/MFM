@@ -2,6 +2,7 @@
 
 #include "PacketIO.h"
 #include "CharBufferByteSource.h"
+#include "EventHistoryBuffer.h"
 
 namespace MFM
 {
@@ -148,7 +149,8 @@ namespace MFM
 
     SetStateInternal(PASSIVE);
     m_eventCenter = onCenter;
-    m_consistentAtomCount = 0;  // Ready for my update..
+    m_receivedSiteCount = 0;      // Nothing stashed so far
+    m_consistentAtomCount = 0;
   }
 
   static u8 csgn(s32 n)
@@ -164,56 +166,82 @@ namespace MFM
     MFM_API_ASSERT_STATE(m_cpState == PASSIVE && m_tile != 0);
     MFM_API_ASSERT_ARG(siteNumber >= 0 && siteNumber < SITE_COUNT);
     MFM_API_ASSERT_ARG(IsSiteNumberVisible((u16) siteNumber));
+    MFM_API_ASSERT_STATE(m_receivedSiteCount < SITE_COUNT);
+
+    m_receivedSiteNumbers[m_receivedSiteCount] = siteNumber;
+    m_receivedSiteBuffer[m_receivedSiteCount] = inboundAtom;
+    m_receivedSiteDifferents[m_receivedSiteCount] = isDifferent;
+    ++m_receivedSiteCount;
+  }
+
+  template <class EC>
+  void CacheProcessor<EC>::ApplyCacheUpdate()
+  {
+    EventHistoryBuffer<EC> & ehb = m_tile->GetEventHistoryBuffer();
+    ehb.AddEventStart(m_eventCenter);
 
     const MDist<R> & md = MDist<R>::get();
-    const SPoint soffset = md.GetPoint(siteNumber);
-    SPoint loc = soffset + m_eventCenter;
-
-    // Get old for debug output
-    T oldAtom = *m_tile->GetAtom(loc);
-
-    bool consistent =
-      m_tile->ApplyCacheUpdate(isDifferent, inboundAtom, loc);
-
-    if (consistent)
+    for (u32 i = 0; i < m_receivedSiteCount; ++i)
     {
-      ++m_consistentAtomCount;
-    }
-    else
-    {
-      if (LOG.IfLog(Logger::WARNING))
+      u32 siteNumber = m_receivedSiteNumbers[i];
+      T& inboundAtom = m_receivedSiteBuffer[i];
+      bool isDifferent = m_receivedSiteDifferents[i];
+
+      const SPoint soffset = md.GetPoint(siteNumber);
+      SPoint loc = soffset + m_eventCenter;
+
+      if (isDifferent)
       {
-        T a(inboundAtom); // Get a non-const atom..
-        AtomSerializer<AC> as(a);
-        AtomSerializer<AC> oldas(oldAtom);
+        const T& oldAtom = *m_tile->GetAtom(loc);
+        ehb.AddEventAtom(siteNumber, oldAtom, inboundAtom);
+      }
 
-        // Develop a secret grid-global address! shh don't tell ackley!
-        s32 tilex = -1, tiley = -1;
-        const char * tlb = GetTile().GetLabel();
-        CharBufferByteSource cbs(tlb,strlen(tlb));
-        cbs.Scanf("[%d,%d]",&tilex,&tiley);
-        SPoint gloc = SPoint(tilex,tiley) * GetTile().OWNED_SIDE + loc;
+      bool consistent =
+        m_tile->ApplyCacheUpdate(isDifferent, inboundAtom, loc);
 
-        LOG.Warning("NC%s %s%c%c {%03d,%03d} #%2d(%2d,%2d)+(%2d,%2d)==(%2d,%2d) [%04x/%@] [%04x/%@]",
-                    isDifferent? "U" : "C",
-                    tlb,
-                    csgn(m_farSideOrigin.GetX()),
-                    csgn(m_farSideOrigin.GetY()),
-                    gloc.GetX(),
-                    gloc.GetY(),
-                    siteNumber,
-                    soffset.GetX(),
-                    soffset.GetY(),
-                    m_eventCenter.GetX(),
-                    m_eventCenter.GetY(),
-                    loc.GetX(),
-                    loc.GetY(),
-                    inboundAtom.GetType(),
-                    &as,
-                    oldAtom.GetType(),
-                    &oldas);
+      if (consistent)
+      {
+        ++m_consistentAtomCount;
+      }
+      else
+      {
+        if (LOG.IfLog(Logger::WARNING))
+        {
+          // Get old for debug output
+          T oldAtom = *m_tile->GetAtom(loc);
+
+          AtomSerializer<AC> as(inboundAtom);
+          AtomSerializer<AC> oldas(oldAtom);
+
+          // Develop a secret grid-global address! shh don't tell ackley!
+          s32 tilex = -1, tiley = -1;
+          const char * tlb = GetTile().GetLabel();
+          CharBufferByteSource cbs(tlb,strlen(tlb));
+          cbs.Scanf("[%d,%d]",&tilex,&tiley);
+          SPoint gloc = SPoint(tilex,tiley) * GetTile().OWNED_SIDE + loc;
+
+          LOG.Warning("NC%s %s%c%c {%03d,%03d} #%2d(%2d,%2d)+(%2d,%2d)==(%2d,%2d) [%04x/%@] [%04x/%@]",
+                      isDifferent? "U" : "C",
+                      tlb,
+                      csgn(m_farSideOrigin.GetX()),
+                      csgn(m_farSideOrigin.GetY()),
+                      gloc.GetX(),
+                      gloc.GetY(),
+                      siteNumber,
+                      soffset.GetX(),
+                      soffset.GetY(),
+                      m_eventCenter.GetX(),
+                      m_eventCenter.GetY(),
+                      loc.GetX(),
+                      loc.GetY(),
+                      inboundAtom.GetType(),
+                      &as,
+                      oldAtom.GetType(),
+                      &oldas);
+        }
       }
     }
+    ehb.AddEventEnd();
   }
 
   template <class EC>
@@ -222,6 +250,7 @@ namespace MFM
     MFM_API_ASSERT_STATE(m_cpState == PASSIVE);
     MFM_LOG_DBG7(("Replying to UE, %d consistent",
                   m_consistentAtomCount));
+    ApplyCacheUpdate();
     PacketIO pbuffer;
     pbuffer.SendReply(m_consistentAtomCount, *this);
     SetIdle();

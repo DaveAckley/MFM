@@ -44,6 +44,12 @@ namespace MFM {
     SiteTouchType m_touchType;
     u64 m_lastTouchEventCount;
 
+    void Clear() 
+    {
+      m_touchType = TOUCH_TYPE_NONE;
+      m_lastTouchEventCount = 0;
+    }
+
     void Touch(SiteTouchType type, u64 eventCount)
     {
       m_touchType = type;
@@ -87,6 +93,11 @@ namespace MFM {
 
   struct SiteSensors {
     SiteTouchSensor m_touchSensor;
+
+    void Clear() 
+    {
+      m_touchSensor.Clear();
+    }
 
     void Touch(SiteTouchType type, u64 eventCount)
     {

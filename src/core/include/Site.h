@@ -178,6 +178,7 @@ namespace MFM
       m_atom.SetEmpty();
       m_eventCount = 0;
       m_lastChangedEventCount = 0;
+      m_base.GetSensory().Clear();
     }
 
     u64 GetEventCount() const {

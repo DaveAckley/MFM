@@ -30,16 +30,17 @@
 
 #include "Point.h"
 #include "itype.h"
-#include "CacheProcessor.h"
 #include "MDist.h"  /* for EVENT_WINDOW_SITES */
 #include "PSym.h"   /* For PointSymmetry, Map */
 #include "Site.h"
 #include "Base.h"
+#include "ByteSink.h"
 
 namespace MFM
 {
 
   template <class EC> class Tile; // FORWARD
+  template <class EC> class CacheProcessor; // FORWARD
 
   /**
      An EventWindow provides access for an Element to a selected
@@ -97,8 +98,13 @@ namespace MFM
 
     Tile<EC> & m_tile;
 
+    u32 m_eventWindowBoundary;
+    u32 m_boundedSiteCount;
+    const Element<EC> * m_element;
+
     u64 m_eventWindowsAttempted;
     u64 m_eventWindowsExecuted;
+    u64 m_eventWindowSitesAccessed; // Sum of within-boundary sites
 
     void RecordEventAtTileCoord(const SPoint tcoord) ;
 
@@ -123,7 +129,7 @@ namespace MFM
 
     PointSymmetry m_sym;
 
-    bool AcquireAllLocks(const SPoint& centerSite) ;
+    bool AcquireAllLocks(const SPoint& centerSite, const u32 eventWindowBoundary) ;
 
     bool AcquireRegionLocks() ;
 
@@ -179,6 +185,8 @@ namespace MFM
 
     void ExecuteEvent() ;
 
+    void PrintEventSite(ByteSink & bs) ;
+
     void ExecuteBehavior() ;
 
     void InitiateCommunications() ;
@@ -221,6 +229,8 @@ namespace MFM
 
 
   public:
+    bool TryForceEventAt(const SPoint & center) ;
+
     bool TryEventAtForTesting(const SPoint & center)
     {
       return TryEventAt(center);
@@ -258,6 +268,11 @@ namespace MFM
       return m_eventWindowsExecuted;
     }
 
+    u64 GetSitesAccessed() const
+    {
+      return m_eventWindowSitesAccessed;
+    }
+
     void SetEventWindowsAttempted(u64 attempts)
     {
       m_eventWindowsAttempted = attempts;
@@ -289,8 +304,20 @@ namespace MFM
     bool InWindow(const SPoint & offset) const
     {
       // Ignores m_sym since point symmetries can't change this answer
-      return offset.GetManhattanLength() <= R;
+      return offset.GetManhattanLength() < m_eventWindowBoundary;
     }
+
+    u32 GetBoundary() const
+    {
+      return m_eventWindowBoundary;
+    }
+
+    u32 GetBoundedSiteCount() const
+    {
+      return m_boundedSiteCount;
+    }
+
+    void SetBoundary(u32 boundary) ;
 
     /**
        Does any I/O that's appropriate to the situation and possible.
@@ -498,8 +525,23 @@ namespace MFM
     }
 
     /**
+     * Gets a modifiable reference to the Atom at the center of this
+     * EventWindow.  Same function as GetCenterAtomSym (since
+     * symmetries don't affect the center atom).
+     *
+     * @returns A reference to the Atom at the center of this
+     * EventWindow.
+     *
+     */
+    T& GetCenterAtomDirect() 
+    {
+      return m_atomBuffer[0];
+    }
+
+    /**
      * Gets the immutable Atom which resides in the center of this
-     * EventWindow.  Same function as GetCenterAtomDirect .
+     * EventWindow.  Same function as GetCenterAtomDirect  (since
+     * symmetries don't affect the center atom).
      *
      * @returns The immutable Atom which resides in the center of this
      * EventWindow.
@@ -509,6 +551,15 @@ namespace MFM
       return m_atomBuffer[0];
     }
 
+    /**
+     * Gets a modifiable reference to the Atom at the center of this
+     * EventWindow.  Same function as GetCenterAtomDirect (since
+     * symmetries don't affect the center atom).
+     *
+     * @returns A reference to the Atom at the center of this
+     * EventWindow.
+     *
+     */
     T& GetCenterAtomSym()
     {
       return m_atomBuffer[0];

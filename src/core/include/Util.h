@@ -231,6 +231,14 @@ namespace MFM {
   }
 
   template <class T>
+  inline void SWAP(T& v1, T& v2)
+  {
+    T t = v1;
+    v1 = v2;
+    v2 = t;
+  }
+
+  template <class T>
   inline T ABS(T val)
   {
     return val > 0 ? val : (-val);

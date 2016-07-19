@@ -78,6 +78,7 @@ namespace MFM
     bool m_bigText;
     u32 m_thisEpochAEPS;
     bool m_captureScreenshots;
+    bool m_pastFirstUpdate;
     u32 m_saveStateIndex;
     u32 m_epochSaveStateIndex;
 
@@ -131,6 +132,7 @@ namespace MFM
     LoadDriverSectionButton<GC> m_loadDriverSectionButton;
     LoadGridSectionButton<GC> m_loadGridSectionButton;
     LoadGUISectionButton<GC> m_loadGUISectionButton;
+    EventHistoryStrategyButton<GC> m_eventHistoryStrategyButton;
 
     SPoint m_grendMove;
     Keyboard m_keyboardMap;
@@ -140,6 +142,8 @@ namespace MFM
     TileRenderer<EC> m_tileRenderer;
 
     GridPanel<GC> m_gridPanel;
+    ReplayPanel<GC> m_replayPanel;
+
     ToolboxPanel<GC> m_toolboxPanel;
 
     GridToolAtomView<GC> m_gridToolAtomView;
@@ -151,6 +155,7 @@ namespace MFM
     GridToolXRay<GC> m_gridToolXRay;
     GridToolBucket<GC> m_gridToolBucket;
     GridToolClone<GC> m_gridToolClone;
+    GridToolEvent<GC> m_gridToolEvent;
 
     StatisticsPanel<GC> m_statisticsPanel;
     DisplayAER<GC> m_displayAER;
@@ -161,6 +166,9 @@ namespace MFM
 
     const Panel & GetRootPanel() const { return m_rootPanel; }
     Panel & GetRootPanel() { return m_rootPanel; }
+
+    const GridPanel<GC> & GetGridPanel() const { return m_gridPanel; }
+    GridPanel<GC> & GetGridPanel() { return m_gridPanel; }
 
     void RequestReinit()
     {
@@ -183,15 +191,17 @@ namespace MFM
 
     void OnceOnlyTools()
     {
-      m_gridPanel.GetAtomViewPanel().SetGrid(Super::GetGrid());
-      m_gridToolAtomView.SetAtomViewPanel(m_gridPanel.GetAtomViewPanel());
+      m_gridPanel.InitAtomViewPanels(Super::GetGrid(), &m_gridToolAtomView);
+      //      m_gridToolAtomView.SetAtomViewPanel(m_gridPanel.GetAtomViewPanel(0));
       InsertAndRegisterGridTool(m_gridToolPencil);
       InsertAndRegisterGridTool(m_gridToolEraser);
-      InsertAndRegisterGridTool(m_gridToolBrush);
+      // XXX Consider killing the brush to make room for the spark
+      //      InsertAndRegisterGridTool(m_gridToolBrush);
       InsertAndRegisterGridTool(m_gridToolAirBrush);
       InsertAndRegisterGridTool(m_gridToolXRay);
       InsertAndRegisterGridTool(m_gridToolBucket);
       InsertAndRegisterGridTool(m_gridToolClone);
+      InsertAndRegisterGridTool(m_gridToolEvent);
       InsertAndRegisterGridTool(m_gridToolAtomView);
       InsertAndRegisterGridTool(m_gridToolTileSelect);
     }
@@ -215,6 +225,7 @@ namespace MFM
       InsertAndRegisterButton(m_loadDriverSectionButton);
       InsertAndRegisterButton(m_loadGridSectionButton);
       InsertAndRegisterButton(m_loadGUISectionButton);
+      InsertAndRegisterButton(m_eventHistoryStrategyButton);
 
       InsertAndRegisterButton(m_gridStepButton);
       InsertAndRegisterButton(m_fgViewButton);
@@ -234,6 +245,7 @@ namespace MFM
       m_screenshotButton.SetScreen(m_screen);
       m_screenshotButton.SetCamera(&m_camera);
 
+      m_buttonPanel.Insert(&m_replayPanel,0);
     }
 
     void Update(OurGrid& grid)
@@ -340,10 +352,15 @@ namespace MFM
       m_keyboardMap.Register(m_decreaseAEPSPerFrame);
     }
 
-    void KeyboardUpdate(SDL_KeyboardEvent & key, OurGrid& grid)
+    void KeyboardUpdate(SDL_KeyboardEvent & key, OurGrid& grid, const SPoint where)
     {
-      // XXX We should let the panel tree take a crack at the event
-      // XXX first, then fallback to these global accelerators
+      {
+        KeyboardEvent kbe(key, where);
+        if (m_rootPanel.Dispatch(kbe,
+                                 Rect(SPoint(),
+                                      UPoint(m_screenWidth,m_screenHeight))))
+          return;
+      }
       m_keyboardMap.HandleEvent(key);
 
 #if 0
@@ -429,7 +446,10 @@ namespace MFM
         return;
       }
       if (!this->LoadMFS(m_startFile.GetZString()))
+      {
         LOG.Error("Start file (%s) loading failed", m_startFile.GetZString());
+        exit(-3);
+      }
     }
 
     virtual void OnceOnly(VArguments& args)
@@ -457,36 +477,44 @@ namespace MFM
         else
         {
 
-#define STR(X) #X
-#define XSTR(X) STR(X)
-          const char * defaultStartFile =
-            "mfs/start-"
-            XSTR(MFM_VERSION_MAJOR) "."
-            XSTR(MFM_VERSION_MINOR) "."
-            XSTR(MFM_VERSION_REV) ".mfs";
-#undef STR
-#undef XSTR
-
-          if (!Utils::GetReadableResourceFile(defaultStartFile, m_startFile))
+          // Accept prior rev start file if needed
+          OString128 buff;
+          s32 revFound = -1;
+          for (s32 rev = MFM_VERSION_REV; rev >= 0; --rev)
           {
-            LOG.Warning("Default start file (%s) not found; things may be weird",
-                        defaultStartFile);
-            m_startFile.Reset();
+            buff.Reset();
+            buff.Printf("mfs/start-%d.%d.%d.mfs", 
+                        MFM_VERSION_MAJOR,
+                        MFM_VERSION_MINOR,
+                        rev);
+            if (Utils::GetReadableResourceFile(buff.GetZString(), m_startFile))
+            {
+              revFound = rev;
+              break;
+            }
+          }
+
+          if (revFound != MFM_VERSION_REV)
+          {
+            if (revFound < 0)
+            {
+              LOG.Error("No v%d.%d.%d-compatible start file found (maybe supply --start-file ?)",
+                        MFM_VERSION_MAJOR, MFM_VERSION_MINOR, MFM_VERSION_REV);
+              exit(-2);
+            }
+            else
+            {
+              LOG.Warning("Using prior revision start file (%d.%d.%d, we are %d.%d.%d)",
+                          MFM_VERSION_MAJOR, MFM_VERSION_MINOR, revFound,
+                          MFM_VERSION_MAJOR, MFM_VERSION_MINOR, MFM_VERSION_REV);
+            }
           }
           else
           {
-
+            LOG.Message("Found start file %s", m_startFile.GetZString());
           }
         }
       }
-
-      /*
-      if (m_countOfScreenshotsPerRate > 0) {
-        m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
-        m_recordScreenshotPerAEPS = 1;
-        m_countOfScreenshotsAtThisAEPS = 0;
-      }
-      */
 
       if (!getenv("SDL_VIDEO_ALLOW_SCREENSAVER"))          // If user isn't already messing with this
         putenv((char *) "SDL_VIDEO_ALLOW_SCREENSAVER=1");  // Old school sdl 1.2 mechanism
@@ -795,6 +823,7 @@ namespace MFM
       , m_bigText(false)
       , m_thisEpochAEPS(0)
       , m_captureScreenshots(false)
+      , m_pastFirstUpdate(false)
       , m_saveStateIndex(0)
       , m_epochSaveStateIndex(0)
       , m_keyboardPaused(false)
@@ -837,11 +866,13 @@ namespace MFM
       , m_loadDriverSectionButton()
       , m_loadGridSectionButton()
       , m_loadGUISectionButton()
+      , m_eventHistoryStrategyButton()
       , m_grendMove()
       , m_keyboardMap()
       , m_helpPanel(m_keyboardMap)
       , m_tileRenderer()
       , m_gridPanel()
+      , m_replayPanel(m_gridPanel)
       , m_toolboxPanel()
       , m_gridToolAtomView(m_gridPanel, m_toolboxPanel)
       , m_gridToolTileSelect(m_gridPanel, m_toolboxPanel)
@@ -852,6 +883,7 @@ namespace MFM
       , m_gridToolXRay(m_gridPanel, m_toolboxPanel)
       , m_gridToolBucket(m_gridPanel, m_toolboxPanel)
       , m_gridToolClone(m_gridPanel, m_toolboxPanel)
+      , m_gridToolEvent(m_gridPanel, m_toolboxPanel)
       , m_statisticsPanel(*this)
       , m_displayAER(m_statisticsPanel)
       , m_increaseAEPSPerFrame(*this)
@@ -898,6 +930,10 @@ namespace MFM
           this->RegisterToolboxElement(elt);
       }
       RegisterKeyboardFunctions();
+
+      // Need to re-add after RegisterToolboxElement to get tooltips
+      m_toolboxPanel.AddButtons();
+
     }
 
     virtual void HandleResize()
@@ -1147,7 +1183,7 @@ namespace MFM
 
     } m_buttonPanel;
 
-    TextPanel<200,100> m_logPanel;  // 200 for big timestamps and such..
+    TextPanel<256,100> m_logPanel;  // 256 for big timestamps and FAIL paths..
     TeeByteSink m_logSplitter;
 
     void ResetScreenSize()
@@ -1223,6 +1259,7 @@ namespace MFM
       u32 mouseButtonsDown = 0;
       u32 keyboardModifiers = 0;
       ButtonPositionArray dragStartPositions;
+      SPoint lastKnownMousePosition;
 
       while(running)
       {
@@ -1243,11 +1280,13 @@ namespace MFM
             break;
 
           case SDL_MOUSEBUTTONUP:
+            lastKnownMousePosition.Set(event.button.x, event.button.y);
             mouseButtonsDown &= ~(1<<(event.button.button));
             dragStartPositions[event.button.button].Set(-1,-1);
             goto mousebuttondispatch;
 
           case SDL_MOUSEBUTTONDOWN:
+            lastKnownMousePosition.Set(event.button.x, event.button.y);
             mouseButtonsDown |= 1<<(event.button.button);
             dragStartPositions[event.button.button].Set(event.button.x,event.button.y);
             // FALL THROUGH
@@ -1263,6 +1302,7 @@ namespace MFM
 
           case SDL_MOUSEMOTION:
           {
+            lastKnownMousePosition.Set(event.motion.x, event.motion.y);
             MouseMotionEvent mme(keyboardModifiers, event,
                                  mouseButtonsDown, dragStartPositions);
             m_rootPanel.Dispatch(mme,
@@ -1289,7 +1329,7 @@ namespace MFM
                   keyboardModifiers &= ~mod;
                 break;
               default:
-                KeyboardUpdate(event.key, this->GetGrid());
+                KeyboardUpdate(event.key, this->GetGrid(), lastKnownMousePosition);
                 break;
               }
             }
@@ -1312,7 +1352,18 @@ namespace MFM
 
         m_thisUpdateIsEpoch = false;  // Assume it's not
 
+        if (m_captureScreenshots && !m_pastFirstUpdate)
+        {
+          m_rootDrawing.Clear();
+          m_rootPanel.Paint(m_rootDrawing);
+          const char * path = Super::GetSimDirPathTemporary("screenshot/%D-%D.png",
+                                                            m_thisEpochAEPS,
+                                                            0);
+          m_camera.DrawSurface(m_screen,path);
+        }
         Update(Super::GetGrid());
+
+        m_pastFirstUpdate = true;
 
         m_rootDrawing.Clear();
 

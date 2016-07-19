@@ -130,6 +130,40 @@ namespace MFM
   }
 
   template <class EC>
+  void TileRenderer<EC>::OutlineEventWindowInTile(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile, SPoint site, u32 color)
+  {
+    if (!m_drawCacheSites) site -= SPoint(EWR, EWR);
+    const MDist<EWR> & md = MDist<EWR>::get();
+    for (u32 s = md.GetFirstIndex(EWR); s <= md.GetLastIndex(EWR); ++s)
+    {
+      SPoint rel = md.GetPoint(s);
+      SPoint abs = site + rel;
+      SPoint ulDit = ditOrigin + abs * m_atomSizeDit;
+      if (rel.GetX() <= 0) 
+        drawing.DrawVLineDit(ulDit.GetX(),ulDit.GetY(), ulDit.GetY() + m_atomSizeDit, color);
+      if (rel.GetX() >= 0) 
+        drawing.DrawVLineDit(ulDit.GetX() + m_atomSizeDit, ulDit.GetY(), ulDit.GetY() + m_atomSizeDit, color);
+      if (rel.GetY() <= 0) 
+        drawing.DrawHLineDit(ulDit.GetY(), ulDit.GetX(), ulDit.GetX() + m_atomSizeDit, color);
+      if (rel.GetY() >= 0) 
+        drawing.DrawHLineDit(ulDit.GetY() + m_atomSizeDit, ulDit.GetX(), ulDit.GetX() + m_atomSizeDit, color);
+    }
+  }
+
+  template <class EC>
+  void TileRenderer<EC>::PaintTileHistoryInfo(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile) 
+  {
+    const EventHistoryBuffer<EC> & ehb = tile.GetEventHistoryBuffer();
+    if (!ehb.IsHistoryActive()) return;
+    bool atEnd = ehb.IsCursorAtAnEventEnd();
+    bool atStart = ehb.IsCursorAtAnEventStart();
+    if (!atEnd && !atStart) return;
+    SPoint ctr;
+    if (!ehb.SiteOfCursor(ctr)) return;
+    OutlineEventWindowInTile(drawing, ditOrigin, tile, ctr, atEnd ? Drawing::RED : Drawing::GREEN);
+  }
+
+  template <class EC>
   void TileRenderer<EC>::PaintSiteAtDit(Drawing & drawing,
                                         const DrawSiteType drawType,
                                         const DrawSiteShape shape,
@@ -220,7 +254,7 @@ namespace MFM
     }
     else
     {
-      drawColor = elt->GetDynamicColor(atom, selector);
+      drawColor = elt->GetDynamicColor(inTile.GetElementTable(), atom, selector);
     }
     PaintShapeForSite(drawing, shape, ditOrigin, drawColor);
 
@@ -277,7 +311,9 @@ namespace MFM
   void TileRenderer<EC>::PaintBadAtomAtDit(Drawing & drawing, const SPoint ditOrigin)
   {
     Rect r(Drawing::MapDitToPix(ditOrigin), Drawing::MapDitToPix(UPoint(m_atomSizeDit, m_atomSizeDit)));
-    drawing.BlitImageAssetTiled(IMAGE_ASSET_BAD_ATOM_TILE, r);
+    IconAsset ia;
+    ia.SetIconSlot(ZSLOT_ICON_ERROR);
+    drawing.BlitIconAsset(ia, r.GetHeight(), r.GetPosition());
   }
 
   template <class EC>

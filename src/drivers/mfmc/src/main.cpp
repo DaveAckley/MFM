@@ -111,10 +111,12 @@ namespace MFM
   typedef Site<P3AtomConfig> OurSiteAll;
   typedef EventConfig<OurSiteAll,4> OurEventConfigAll;
 
+  enum { EVENT_HISTORY_SIZE = 100000 };
+
   /////
   // Tile types
 #define XX(A,B) \
-  typedef GridConfig<OurEventConfigAll, B> OurGridConfigTile##A;
+  typedef GridConfig<OurEventConfigAll, B, EVENT_HISTORY_SIZE> OurGridConfigTile##A;
 #include "TileSizes.inc"
 #undef XX
   /*
@@ -359,6 +361,26 @@ namespace MFM
 
     return SimRunConfig(gcc, argc, argv);
   }
+}
+
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+        const MFM::UlamRef<MFM::OurEventConfigAll>& rur) __attribute__ ((used)) ;
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+        const MFM::AtomBitStorage<MFM::OurEventConfigAll>& abs) __attribute__ ((used)) ;
+
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+        const MFM::AtomBitStorage<MFM::OurEventConfigAll>& abs)
+{
+  MFM::DebugPrint<MFM::OurEventConfigAll>(ruc, abs, MFM::STDERR);  
+  MFM::STDERR.Printf("\n");
+}
+
+
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+        const MFM::UlamRef<MFM::OurEventConfigAll>& rur)
+{
+  MFM::DebugPrint<MFM::OurEventConfigAll>(ruc, rur, MFM::STDERR);  
+  MFM::STDERR.Printf("\n");
 }
 
 int main(int argc, const char** argv)

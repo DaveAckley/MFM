@@ -58,9 +58,10 @@ namespace MFM {
 
     enum { R = EC::EVENT_WINDOW_RADIUS};
     enum { TILE_SIDE = GC::TILE_SIDE};
+    enum { EVENT_HISTORY_SIZE = GC::EVENT_HISTORY_SIZE};
     enum { OWNED_SIDE = TILE_SIDE - 2 * R }; // Duplicating the OWNED_SIDE computation in Tile.tcc!
 
-    typedef SizedTile<EC,TILE_SIDE> GridTile;
+    typedef SizedTile<EC,TILE_SIDE,EVENT_HISTORY_SIZE> GridTile;
 
   private:
     Random m_random;
@@ -272,12 +273,12 @@ namespace MFM {
 
   public:
 
-    UlamClassRegistry & GetUlamClassRegistry()
+    UlamClassRegistry<EC> & GetUlamClassRegistry()
     {
       return m_heroTile.GetUlamClassRegistry();
     }
 
-    const UlamClassRegistry & GetUlamClassRegistry() const
+    const UlamClassRegistry<EC> & GetUlamClassRegistry() const
     {
       return m_heroTile.GetUlamClassRegistry();
     }
@@ -309,7 +310,8 @@ namespace MFM {
     void SetSeed(u32 seed);
 
     Grid(ElementRegistry<EC>& elts, u32 width, u32 height)
-      : m_seed(0)
+      : m_random()
+      , m_seed(0)
       , m_width(width)
       , m_height(height)
       , m_tiles(new GridTile[m_width * m_height])
@@ -348,9 +350,13 @@ namespace MFM {
      */
     void SetGridRunning(bool running) ;
 
+    const ElementTable<EC> & Get00ElementTable() const {
+      return _getTile(0,0).GetElementTable();
+    }
+
     const Element<EC> * LookupElement(u32 elementType) const
     {
-      return _getTile(0,0).GetElementTable().Lookup(elementType);
+      return Get00ElementTable().Lookup(elementType);
     }
 
     ElementRegistry<EC>& GetElementRegistry()
@@ -512,6 +518,13 @@ namespace MFM {
      * PlaceAtom(T, siteInGrid) will FAIL.
      */
     bool IsGridCoord(const SPoint & siteInGrid) const;
+
+    /**
+     * Run an event at siteInGrid if the grid is paused and siteInGrid
+     * is legal, and return true.  Return false if siteInGrid is
+     * illegal or the grid is not paused.
+     */
+    bool RunEventIfPausedAt(const SPoint & siteInGrid);
 
     /**
      * Find the grid coordinate of the 'owning tile' (i.e., ignoring
@@ -690,6 +703,8 @@ namespace MFM {
     { return GetWidthSites() * GetHeightSites(); }
 
     u64 GetTotalEventsExecuted() const;
+
+    u64 GetTotalSitesAccessed() const;
 
     void WriteEPSImage(ByteSink & outstrm) const;
 

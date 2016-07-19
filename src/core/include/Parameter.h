@@ -565,6 +565,8 @@ namespace MFM
     }
   };
 
+  /** An element parameter (known as a 'model parameter' in ULAM) for
+      an unsigned quantity */
   template <class EC>
   class ElementParameterU32 : public ElementParameter<EC>
   {
@@ -899,6 +901,7 @@ namespace MFM
 
   };
 
+  /** Deprecated? */
   template <class EC>
   class AtomicParameter : public Parameter<EC>
   {

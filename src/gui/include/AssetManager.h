@@ -34,39 +34,14 @@
 #include "Logger.h"
 #include "Utils.h"
 #include "Point.h"
+#include "Rect.h"
 #include "OverflowableCharBufferByteSink.h"
 
 namespace MFM
 {
   enum ImageAsset
   {
-    IMAGE_ASSET_SELECTOR_ICON = 0,
-    IMAGE_ASSET_ATOM_SELECTOR_ICON,
-    IMAGE_ASSET_PENCIL_ICON,
-    IMAGE_ASSET_ERASER_ICON,
-    IMAGE_ASSET_BRUSH_ICON,
-    IMAGE_ASSET_BUCKET_ICON,
-    IMAGE_ASSET_XRAY_ICON,
-    IMAGE_ASSET_CLONE_ICON,
-    IMAGE_ASSET_AIRBRUSH_ICON,
-    IMAGE_ASSET_CHECKBOX_ICON_ON,
-    IMAGE_ASSET_CHECKBOX_ICON_OFF,
-    IMAGE_ASSET_SLIDER_HANDLE,
-    IMAGE_ASSET_SLIDER_HANDLE_ACTIVE,
-    IMAGE_ASSET_SELECTOR_ICON_BIG,
-    IMAGE_ASSET_ATOM_SELECTOR_ICON_BIG,
-    IMAGE_ASSET_PENCIL_ICON_BIG,
-    IMAGE_ASSET_ERASER_ICON_BIG,
-    IMAGE_ASSET_BRUSH_ICON_BIG,
-    IMAGE_ASSET_BUCKET_ICON_BIG,
-    IMAGE_ASSET_XRAY_ICON_BIG,
-    IMAGE_ASSET_CLONE_ICON_BIG,
-    IMAGE_ASSET_AIRBRUSH_ICON_BIG,
-    IMAGE_ASSET_CLOSE_WINDOW_ICON,
-    IMAGE_ASSET_BAD_ATOM_TILE,
-    IMAGE_ASSET_ROUND_SHAPE_ICON,
-    IMAGE_ASSET_DIAMOND_SHAPE_ICON,
-    IMAGE_ASSET_SQUARE_SHAPE_ICON,
+    IMAGE_ASSET_MASTER_ICON_ZSHEET,
 
     // MUST REMAIN LAST
     IMAGE_ASSET_NONE,
@@ -86,11 +61,163 @@ namespace MFM
     FONT_ASSET_BUTTON_MEDIUM,
     FONT_ASSET_BUTTON = FONT_ASSET_BUTTON_MEDIUM,
     FONT_ASSET_BUTTON_BIG,
+    FONT_ASSET_DEFAULT_FIXED,
+    FONT_ASSET_DEFAULT_PROPORTIONAL,
 
     // MUST REMAIN LAST
     FONT_ASSET_NONE,
     FONT_ASSET_COUNT=FONT_ASSET_NONE
   };
+
+  const u32 ZSHEET_IMAGE_HEIGHT = 2200;
+
+  const u32 ZSHEET_HEIGHTS[] = {
+    200, 180, 162, 145, 130, 117, 105, 94, 84, 75, 67, 60,
+    54, 48, 43, 38, 34, 30, 27, 24, 21, 19, 17, 15, 
+    13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+  };
+
+  enum { ZSHEET_HEIGHT_COUNT = sizeof(ZSHEET_HEIGHTS) / sizeof (ZSHEET_HEIGHTS[0]) };
+
+  const u32 ZSHEET_START_ROWS[ZSHEET_HEIGHT_COUNT] = {
+    0,
+    0+200, 
+    0+200+180, 
+    0+200+180+162,
+    0+200+180+162+145,
+    0+200+180+162+145+130,
+    0+200+180+162+145+130+117,
+    0+200+180+162+145+130+117+105,
+    0+200+180+162+145+130+117+105+94,
+    0+200+180+162+145+130+117+105+94+84,
+    0+200+180+162+145+130+117+105+94+84+75,
+    0+200+180+162+145+130+117+105+94+84+75+67,
+    0+200+180+162+145+130+117+105+94+84+75+67+60,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19+17,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19+17+15,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19+17+15+13,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19+17+15+13+11,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19+17+15+13+11+10,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19+17+15+13+11+10+9,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19+17+15+13+11+10+9+8,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19+17+15+13+11+10+9+8+7,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19+17+15+13+11+10+9+8+7+6,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19+17+15+13+11+10+9+8+7+6+5,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19+17+15+13+11+10+9+8+7+6+5+4,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19+17+15+13+11+10+9+8+7+6+5+4+3,
+    0+200+180+162+145+130+117+105+94+84+75+67+60+54+48+43+38+34+30+27+24+21+19+17+15+13+11+10+9+8+7+6+5+4+3+2
+  };
+
+  enum MasterIconZSheetSlot
+  {
+    ZSLOT_TRANSPORT_OLDEST = 0,
+    ZSLOT_TRANSPORT_REWIND,
+    ZSLOT_TRANSPORT_BACK,
+    ZSLOT_TRANSPORT_STOP,
+    ZSLOT_TRANSPORT_STEP,
+    ZSLOT_TRANSPORT_FF,
+    ZSLOT_TRANSPORT_NEWEST,
+    ZSLOT_GRIDTOOL_PENCIL,
+    ZSLOT_GRIDTOOL_ERASER,
+    ZSLOT_GRIDTOOL_AIRBRUSH,
+    ZSLOT_GRIDTOOL_XRAY,
+    ZSLOT_GRIDTOOL_BUCKET,
+    ZSLOT_GRIDTOOL_CLONE,
+    ZSLOT_ICON_ERROR,
+    ZSLOT_ICON_CHECKBOX_OFF,
+    ZSLOT_ICON_CHECKBOX_ON,
+    ZSLOT_TOOLSHAPE_ROUND,
+    ZSLOT_TOOLSHAPE_SQUARE,
+    ZSLOT_TOOLSHAPE_DIAMOND,
+    ZSLOT_GRIDTOOL_SPARK,
+    ZSLOT_GRIDTOOL_ATOM_SELECT,
+    ZSLOT_GRIDTOOL_TILE_SELECT,
+    ZSLOT_SLIDER_HANDLE,
+
+    ZSLOT_NONE = U32_MAX
+  };
+
+  struct IconAsset
+  {
+    static u32 FindZSheetRowIndex(s32 forSize)
+    {
+      s32 loidx = 0;
+      s32 hiidx = ZSHEET_HEIGHT_COUNT-1;
+      //      if (forSize >= ZSHEET_HEIGHTS[0]) return 0; // That's all we've got
+      do {
+        s32 halfidx = (hiidx - loidx) / 2 + loidx;
+        s32 midsize = ZSHEET_HEIGHTS[halfidx];
+        if (forSize == midsize) return (u32) halfidx;
+        if (forSize > midsize) 
+          hiidx = halfidx - 1;                 
+        else
+          loidx = halfidx + 1;
+      } while (hiidx >= loidx);
+      // loidx passed hiidx, into a _smaller_ size
+      // which is what we want
+      return (u32) loidx;
+    }
+
+    IconAsset(ImageAsset ia = IMAGE_ASSET_MASTER_ICON_ZSHEET, u32 iconSlot = ZSLOT_NONE)
+      : m_imageAsset(ia)
+      , m_iconSlot(iconSlot)
+      , m_enabled(true)
+    { }
+
+    void SetImageAsset(ImageAsset ia)
+    {
+      m_imageAsset = ia;
+    }
+
+    ImageAsset GetImageAsset() const
+    {
+      return m_imageAsset;
+    }
+
+    void SetEnabled(bool isEnabled)
+    {
+      m_enabled = isEnabled;
+    }
+
+    bool IsEnabled() const
+    {
+      return m_enabled;
+    }
+
+    void SetIconSlot(u32 slot)
+    {
+      m_iconSlot = slot;
+    }
+
+    bool HasImageAsset() const { 
+      return GetImageAsset() != IMAGE_ASSET_NONE;
+    }
+
+    bool HasIcon() const {
+      return HasImageAsset() && GetIconSlot() != ZSLOT_NONE;
+    }
+
+    u32 GetIconSlot() const
+    {
+      return m_iconSlot;
+    }
+
+    ImageAsset m_imageAsset;
+    u32 m_iconSlot;
+    bool m_enabled;
+  };
+
+
 
   class AssetManager
   {
@@ -178,34 +305,7 @@ namespace MFM
     {
       if(!initialized)
       {
-        surfaces[IMAGE_ASSET_SELECTOR_ICON] = LoadImage("images/selector_icon.png");
-        surfaces[IMAGE_ASSET_ATOM_SELECTOR_ICON] = LoadImage("images/atom_selector_icon.png");
-        surfaces[IMAGE_ASSET_PENCIL_ICON] = LoadImage("images/pencil_icon.png");
-        surfaces[IMAGE_ASSET_ERASER_ICON] = LoadImage("images/eraser_icon.png");
-        surfaces[IMAGE_ASSET_BRUSH_ICON] = LoadImage("images/brush_icon.png");
-        surfaces[IMAGE_ASSET_BUCKET_ICON] = LoadImage("images/bucket2_icon.png");
-        surfaces[IMAGE_ASSET_XRAY_ICON] = LoadImage("images/xray_icon.png");
-        surfaces[IMAGE_ASSET_CLONE_ICON] = LoadImage("images/clone_icon.png");
-        surfaces[IMAGE_ASSET_AIRBRUSH_ICON] = LoadImage("images/airbrush_icon.png");
-        surfaces[IMAGE_ASSET_CHECKBOX_ICON_ON] = LoadImage("images/checkbox_on.png");
-        surfaces[IMAGE_ASSET_CHECKBOX_ICON_OFF] = LoadImage("images/checkbox_off.png");
-        surfaces[IMAGE_ASSET_SLIDER_HANDLE] = LoadImage("images/slider_handle.png");
-        surfaces[IMAGE_ASSET_SLIDER_HANDLE_ACTIVE] = LoadImage("images/slider_handle_active.png");
-        surfaces[IMAGE_ASSET_SELECTOR_ICON_BIG] = LoadImage("images/selector_icon_big.png");
-        surfaces[IMAGE_ASSET_ATOM_SELECTOR_ICON_BIG] = LoadImage("images/atom_selector_icon_big.png");
-        surfaces[IMAGE_ASSET_PENCIL_ICON_BIG] = LoadImage("images/pencil_icon_big.png");
-        surfaces[IMAGE_ASSET_ERASER_ICON_BIG] = LoadImage("images/eraser_icon_big.png");
-        surfaces[IMAGE_ASSET_BRUSH_ICON_BIG] = LoadImage("images/brush_icon_big.png");
-        surfaces[IMAGE_ASSET_BUCKET_ICON_BIG] = LoadImage("images/bucket2_icon_big.png");
-        surfaces[IMAGE_ASSET_XRAY_ICON_BIG] = LoadImage("images/xray_icon_big.png");
-        surfaces[IMAGE_ASSET_CLONE_ICON_BIG] = LoadImage("images/clone_icon_big.png");
-        surfaces[IMAGE_ASSET_AIRBRUSH_ICON_BIG] = LoadImage("images/airbrush_icon_big.png");
-        surfaces[IMAGE_ASSET_CLOSE_WINDOW_ICON] = LoadImage("images/close_window_icon.png");
-        surfaces[IMAGE_ASSET_BAD_ATOM_TILE] = LoadImage("images/bad_atom_tile.png");
-
-        surfaces[IMAGE_ASSET_ROUND_SHAPE_ICON] = LoadImage("images/round_shape_icon_222.png");
-        surfaces[IMAGE_ASSET_DIAMOND_SHAPE_ICON] = LoadImage("images/diamond_shape_icon_222.png");
-        surfaces[IMAGE_ASSET_SQUARE_SHAPE_ICON] = LoadImage("images/square_shape_icon_222.png");
+        surfaces[IMAGE_ASSET_MASTER_ICON_ZSHEET] = LoadImage("images/mfms-icons-ZSHEET.png");
 
         const char * FIX_FONT = "fonts/Inconsolata.ttf";
         //        const char * PRO_FONT = "fonts/Mate-Regular.ttf";
@@ -221,6 +321,9 @@ namespace MFM
         fonts[FONT_ASSET_BUTTON_SMALL] = LoadFont(PSC_FONT, 16);
         fonts[FONT_ASSET_BUTTON_MEDIUM] = LoadFont(PSC_FONT, 20);
         fonts[FONT_ASSET_BUTTON_BIG] = LoadFont(PSC_FONT, 24);
+
+        fonts[FONT_ASSET_DEFAULT_FIXED] = LoadFont(FIX_FONT, 24);
+        fonts[FONT_ASSET_DEFAULT_PROPORTIONAL] = LoadFont(PSC_FONT, 24);
 
         initialized = true;
       }

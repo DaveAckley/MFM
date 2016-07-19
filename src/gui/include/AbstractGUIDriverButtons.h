@@ -267,10 +267,10 @@ namespace MFM
   struct GridRunCheckbox : public AbstractGridCheckbox<GC>
   {
     GridRunCheckbox()
-      : AbstractGridCheckbox<GC>("Pause")
+      : AbstractGridCheckbox<GC>("Run")
     {
       AbstractButton::SetName("GridRunButton");
-      Panel::SetDoc("Pause/run the grid");
+      Panel::SetDoc("Run/pause the grid");
       Panel::SetFont(FONT_ASSET_BUTTON_BIG);
     }
     virtual s32 GetSection() { return HELP_SECTION_RUNNING; }
@@ -283,11 +283,11 @@ namespace MFM
 
     virtual bool IsChecked() const
     {
-      return this->GetDriver().IsKeyboardPaused();
+      return !this->GetDriver().IsKeyboardPaused();
     }
     virtual void SetChecked(bool checked)
     {
-      this->GetDriver().SetKeyboardPaused(checked);
+      this->GetDriver().SetKeyboardPaused(!checked);
     }
 
   };
@@ -557,6 +557,40 @@ namespace MFM
       this->GetDriver().SetSingleStep(true);
       this->GetDriver().SetKeyboardPaused(false);
     }
+  };
+
+  template<class GC>
+  struct EventHistoryStrategyButton : public AbstractGridButton<GC>
+  {
+    EventHistoryStrategyButton()
+      : AbstractGridButton<GC>("Event history: Tile")
+    {
+      AbstractButton::SetName("EventHistoryStrategyButton");
+      Panel::SetDoc("Change event recording strategy");
+      Panel::SetFont(FONT_ASSET_BUTTON_SMALL);
+    }
+    virtual s32 GetSection() { return HELP_SECTION_RUNNING; }
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_h;
+      mod = KMOD_SHIFT;
+      return true;
+    }
+
+    virtual void OnClick(u8 button)
+    {
+      this->GetDriver().GetGridPanel().NextEventHistoryStrategy();
+      UpdateLabel();
+    }
+
+    void UpdateLabel()
+    {
+      OString32 text;
+      text.Printf("Event history: %s",
+                  this->GetDriver().GetGridPanel().GetEventHistoryStrategyName());
+      AbstractButton::SetText(text.GetZString());
+    }
+
   };
 
   template<class GC>

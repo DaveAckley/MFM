@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   FailCodes.h Listing of failure codes
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2015 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2015 Ackleyshack,LLC. All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +22,8 @@
 /**
   \file FailCodes.h Listing of failure codes
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014-2015 All rights reserved.
   \lgpl
  */
 XX(INCOMPLETE_CODE)
@@ -49,3 +51,8 @@ XX(OUT_OF_BOUNDS)
 XX(BAD_CAST)
 XX(ZERO)
 XX(BAD_NAME)
+XX(PURE_VIRTUAL_CALLED)
+XX(UNSPECIFIED_EXPLICIT_FAIL)
+XX(NOT_AN_ELEMENT)
+XX(NON_NULL_POINTER)
+XX(STALE_ATOM_REF)

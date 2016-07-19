@@ -19,7 +19,7 @@
 */
 
 /**
-  \file (STUB) TreeViewPanel.h Panel displaying un/foldable tree structure
+  \file TreeViewPanel.h Panel displaying un/foldable tree structure (STUB)
   \author David H. Ackley.
   \date (C) 2015 All rights reserved.
   \lgpl

@@ -41,6 +41,7 @@
 namespace MFM
 {
 
+  /** Sorter element from the Demon Horde Sort (C++ implementation) */
   template <class EC>
   class Element_Sorter : public Element<EC>
   {

@@ -21,7 +21,8 @@
 /**
   \file ToolboxPanel.h A Panel for selecting editing tools
   \author Trent R. Small
-  \date (C) 2014 All rights reserved.
+  \author Dave Ackley
+  \date (C) 2014, 2016 All rights reserved.
   \lgpl
 */
 #ifndef TOOLBOXPANEL_H
@@ -60,6 +61,9 @@ namespace MFM
       R = EC::EVENT_WINDOW_RADIUS,
       SITES = EVENT_WINDOW_SITES(R)
     };
+
+    const char * m_hoverElementLabel;
+    SPoint m_hoverElementLabelAt;
 
     bool m_bigText;
 
@@ -169,7 +173,7 @@ namespace MFM
       void SetGridTool(GridToolShapeUpdater<GC>& gridTool)
       {
         m_gridTool = &gridTool;
-        SetIconAsset(GetGridTool().GetImageAsset());
+        SetIconSlot(GetGridTool().GetIconSlot());
       }
 
       void SetKeysym(s32 key, u32 mods)
@@ -260,13 +264,15 @@ namespace MFM
       /**
        * Construct a new ShapeButton
        */
-      ShapeButton(ToolboxPanel & tbp, u32 shape, ImageAsset icon, const char * name, const char * doc)
-        : AbstractButton(icon)
+      ShapeButton(ToolboxPanel & tbp, u32 shape, MasterIconZSheetSlot slot, const char * name, const char * doc)
+        : AbstractButton()
         , m_toolbox(tbp)
         , m_shape((ToolShape) shape)
       {
         if (shape >= SHAPE_COUNT)
           FAIL(ILLEGAL_ARGUMENT);
+
+        this->SetIconSlot(slot);
 
         MFM_API_ASSERT_NONNULL(name);
         MFM_API_ASSERT_NONNULL(doc);
@@ -328,6 +334,34 @@ namespace MFM
       virtual const char * GetDoc() { return "Click left/right: select element as primary/secondary"; }
       virtual bool GetKey(u32& keysym, u32& mods) { return false; }
       virtual bool ExecuteFunction(u32 keysym, u32 mods) { return false; }
+
+      virtual bool PostDragHandle(MouseMotionEvent& event)
+      {
+        CheckHover(event);
+        return AbstractButton::PostDragHandle(event);
+      }
+
+      virtual bool Handle(MouseMotionEvent& mme)
+      {
+        CheckHover(mme);
+        return AbstractButton::Handle(mme);
+      }
+
+      bool CheckHover(MouseMotionEvent& event)
+      {
+        if (m_parent)
+        { 
+          SPoint onParent = event.GetAt();
+          onParent -= m_parent->GetAbsoluteLocation();
+          if (m_element) 
+          {
+            m_parent->SetElementLabel(m_element->GetName(), onParent);
+            return true;
+          }
+          m_parent->SetElementLabel(0, onParent);
+        }
+        return false;
+      }
 
       ElementButton() :
         AbstractButton()
@@ -423,7 +457,6 @@ namespace MFM
     };
 
     ToolButton * m_selectedToolButton;
-    u32 m_activatedButtonIndex;
 
     void SelectToolButton(ToolButton & newToolButton)
     {
@@ -608,15 +641,23 @@ namespace MFM
       return tb;
     }
 
+    void SetElementLabel(const char * label, const SPoint at) 
+    {
+      m_hoverElementLabel = label;
+      m_hoverElementLabelAt = at;
+    }
+
     ToolboxPanel()
-      : m_bigText(false)
+      : m_hoverElementLabel(0)
+      , m_bigText(false)
       , m_siteEdit(false)
       , m_selectedToolButton(0)
+      , m_selectedShapeButton(0)
       , m_toolButtonsInUse(0)
       , m_siteEditCheckbox(*this)
-      , m_roundShapeButton(*this, ROUND_SHAPE, IMAGE_ASSET_ROUND_SHAPE_ICON, "Round", "Use a round-shaped brush")
-      , m_diamondShapeButton(*this, DIAMOND_SHAPE, IMAGE_ASSET_DIAMOND_SHAPE_ICON, "Diamond", "Use a diamond-shaped brush")
-      , m_squareShapeButton(*this, SQUARE_SHAPE, IMAGE_ASSET_SQUARE_SHAPE_ICON, "Square", "Use a square-shaped brush")
+      , m_roundShapeButton(*this, ROUND_SHAPE, ZSLOT_TOOLSHAPE_ROUND, "Round", "Use a round-shaped brush")
+      , m_diamondShapeButton(*this, DIAMOND_SHAPE, ZSLOT_TOOLSHAPE_DIAMOND, "Diamond", "Use a diamond-shaped brush")
+      , m_squareShapeButton(*this, SQUARE_SHAPE, ZSLOT_TOOLSHAPE_SQUARE, "Square", "Use a square-shaped brush")
       , m_primaryElement(&Element_Empty<EC>::THE_INSTANCE)
       , m_secondaryElement(&Element_Empty<EC>::THE_INSTANCE)
       , m_heldElementCount(0)
@@ -767,34 +808,6 @@ namespace MFM
       Panel * p;
       while ((p = this->GetTop())) this->Remove(p);
 
-      /*
-      ImageAsset assets[MAX_GRIDTOOL_BUTTONS];
-      if(m_bigText)
-      {
-        assets[0] = IMAGE_ASSET_SELECTOR_ICON_BIG;
-        assets[1] = IMAGE_ASSET_ATOM_SELECTOR_ICON_BIG;
-        assets[2] = IMAGE_ASSET_PENCIL_ICON_BIG;
-        assets[3] = IMAGE_ASSET_BUCKET_ICON_BIG;
-        assets[4] = IMAGE_ASSET_ERASER_ICON_BIG;
-        assets[5] = IMAGE_ASSET_BRUSH_ICON_BIG;
-        assets[6] = IMAGE_ASSET_XRAY_ICON_BIG;
-        assets[7] = IMAGE_ASSET_CLONE_ICON_BIG;
-        assets[8] = IMAGE_ASSET_AIRBRUSH_ICON_BIG;
-      }
-      else
-      {
-        assets[0] = IMAGE_ASSET_SELECTOR_ICON;
-        assets[1] = IMAGE_ASSET_ATOM_SELECTOR_ICON;
-        assets[2] = IMAGE_ASSET_PENCIL_ICON;
-        assets[3] = IMAGE_ASSET_BUCKET_ICON;
-        assets[4] = IMAGE_ASSET_ERASER_ICON;
-        assets[5] = IMAGE_ASSET_BRUSH_ICON;
-        assets[6] = IMAGE_ASSET_XRAY_ICON;
-        assets[7] = IMAGE_ASSET_CLONE_ICON;
-        assets[8] = IMAGE_ASSET_AIRBRUSH_ICON;
-      }
-      */
-
       for(u32 i = 0; i < m_toolButtonsInUse; i++)
       {
         OString16 name;
@@ -932,6 +945,9 @@ namespace MFM
 
     virtual bool PostDragHandle(MouseMotionEvent& mme)
     {
+      SPoint s;
+      SetElementLabel(0, s);
+
       /* Try to keep the grid from taking this event too */
       return true;
     }
@@ -991,6 +1007,42 @@ namespace MFM
           SPoint pos(brushPos.GetX() + GetElementRenderSize(), brushPos.GetY());
           d.BlitBackedText(brushSizeArray, pos, UPoint(128, 128));
         }
+      }
+    }
+
+    virtual void PaintFloat(Drawing& d)
+    {
+
+      if (m_hoverElementLabel)
+      {
+        d.SetFont(FONT_ASSET_BUTTON_BIG);
+
+        UPoint tsize = MakeUnsigned(d.GetTextSize(m_hoverElementLabel)); // praying for no font failures urgh
+        UPoint offset(8,16);
+        UPoint border(4,4);
+
+        s32 xpos, ypos;
+        u32 wid, hei;
+        xpos = m_hoverElementLabelAt.GetX() - border.GetX()/2 + offset.GetX();
+        ypos = m_hoverElementLabelAt.GetY() - border.GetY()/2 + offset.GetY();
+        wid = tsize.GetX() + border.GetX();
+        hei = tsize.GetY() + border.GetY();
+
+        // Get as much as possible in the window (favoring a prefix if
+        // need be)
+
+        Rect wdw;
+        d.GetWindow(wdw);
+
+        if (xpos < 0 || wid > wdw.GetWidth()) xpos = 0;
+        else if (xpos + wid > wdw.GetWidth()) xpos = wdw.GetWidth() - wid;
+
+        if (ypos < 0 || hei > wdw.GetHeight()) ypos = 0;
+        else if (ypos + hei > wdw.GetHeight()) ypos = wdw.GetHeight() - hei;
+
+        d.FillRect(xpos, ypos, wid, hei, Drawing::YELLOW);
+        d.SetForeground(Drawing::BLACK);
+        d.BlitText(m_hoverElementLabel, SPoint(xpos, ypos), tsize);
       }
 
     }
