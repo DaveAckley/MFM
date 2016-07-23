@@ -53,6 +53,8 @@ namespace MFM {
       return strerror(errno);
     }
 
+#define XSTR(A) #A
+
     bool GetReadableResourceFile(const char * relativePath, ByteSink& result)
     {
       OString512 buffer;
@@ -60,7 +62,7 @@ namespace MFM {
       const char * (paths[]) = {
         "~/.mfm",                // Possible per-user customizations first
         SHARED_DIR,              // Source tree root
-        "/usr/lib/ulam/MFM",     // Debian install location of ulam w/mfm
+        "/usr/lib/" XSTR_MACRO(DEBIAN_PACKAGE_NAME) "/MFM", // Debian install location of mfm
         "/usr/share/mfm",        // Debian install location of mfm (old)
         "."                      // Last desperate hope
       };
