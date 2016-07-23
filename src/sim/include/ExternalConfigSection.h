@@ -58,6 +58,11 @@ namespace MFM
     virtual bool ContinueOnErrors() const = 0;
 
     /**
+       Clear out section-specific info.  Called once per .mfs load.
+     */
+    virtual void Reset() = 0;
+
+    /**
        Method called before section reading begins.  Return false to
        abort the read.
      */

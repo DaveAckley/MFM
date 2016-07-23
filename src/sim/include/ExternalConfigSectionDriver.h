@@ -85,6 +85,8 @@ namespace MFM
       return true;
     }
 
+    virtual void Reset() ;
+
     virtual bool ReadInit() ;
 
     virtual bool ReadFinalize() ;
