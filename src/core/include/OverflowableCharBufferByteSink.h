@@ -28,6 +28,7 @@
 #define OVERFLOWABLECHARBUFFERBYTESINK_H
 
 #include "ByteSink.h"
+#include "CharBufferByteSource.h"
 #include <string.h>        /* For memcpy */
 
 namespace MFM {
@@ -62,6 +63,17 @@ namespace MFM {
       MFM_API_ASSERT_NONNULL(zstr);
       Reset();
       WriteBytes((const u8 *) zstr, strlen(zstr));
+    }
+
+    /**
+     * Return a CharBufferByteSource that can be used to read the
+     * contents of this OverflowableCharBufferByteSink, which should
+     * not be changed during the lifetime of the returned
+     * CharBufferByteSource.
+     */
+    CharBufferByteSource AsByteSource() const 
+    {
+      return CharBufferByteSource(GetBuffer(), GetLength());
     }
 
     /**
