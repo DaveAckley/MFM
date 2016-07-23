@@ -374,15 +374,15 @@ XXX UPDATE
      (which includes #DEC, #HEX, #OCT, #BIN, and #B36).
 
      \usage
-     XXX UPDATE
      \code
      ...
+     ByteSink & bs = ...;
      int signedNum = -1;
      u32 unsignedNum = signedNum;
-     facePrint(WEST,signedNum,DEC);               // Prints "-1": Signed num with code DEC
-     facePrint(WEST,unsignedNum,DEC);             // Prints "4294967295": Unsigned num with code DEC
-     facePrint(WEST,signedNum,HEX);               // Prints "FFFFFFFF": Non-DEC codes are always
-     facePrint(WEST,unsignedNum,HEX);             // Prints "FFFFFFFF": printed as unsigned
+     bs.Print(signedNum,DEC);               // Prints "-1": Signed num with code DEC
+     bs.Print(unsignedNum,DEC);             // Prints "4294967295": Unsigned num with code DEC
+     bs.Print(signedNum,HEX);               // Prints "FFFFFFFF": Non-DEC codes are always
+     bs.Print(unsignedNum,HEX);             // Prints "FFFFFFFF": printed as unsigned
      ...
      \endcode
   */
@@ -503,7 +503,8 @@ XXX UPDATE
       Print(va_arg(ap,u32),type, fieldWidth, padChar);
       break;
 
-    case 'f': {
+    case 'f': 
+    {
       FAIL(INCOMPLETE_CODE);
       /*
       double v =  va_arg(ap,double);
@@ -511,6 +512,19 @@ XXX UPDATE
       break;
       */
     }
+
+    /* %Z: Print a null-terminated string INCLUDING a trailing NULL */
+    case 'Z': 
+    {
+      const char * s = va_arg(ap,const char *);
+      if (!s) Print("(null)", fieldWidth, padChar);
+      else Print(s, fieldWidth, padChar);
+    }
+    /* FALL THROUGH */
+    /* %z: Print a null byte.  Consumes no args */
+    case 'z': 
+      WriteByte('\0');
+      break;
 
     case 's': {
       const char * s = va_arg(ap,const char *);
