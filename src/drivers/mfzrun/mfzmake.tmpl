@@ -153,7 +153,8 @@ sub DoVerify {
 }
 
 sub DoKeygen {
-    my $handle = NextArg();
+    my $handle = LastArg();
+
     UntaintHandleIfLegal(\$handle)
         or UDie("Bad handle '$handle'");
 
@@ -196,14 +197,12 @@ sub DoKeygen {
     # calculate digest from string/buffer
     my $fingerprint = ComputeFingerprintFromFullPublicKey($fullpubkey);
 
-    print "Generated private key for '$handle' into $privkeyfile\n";
-    print "Generated public key for '$handle' into $pubkeyfile\n";
-    print "Handle: $handle ($fingerprint)\n";
+    print "Handle: \"$handle\" ($fingerprint) @ $pubkeyfile\n";
     exit 0;
 }
 
 sub DoKeydel {
-    my $handle = NextArg();
+    my $handle = LastArg();
     UntaintHandleIfLegal(\$handle)
         or UDie("Bad handle '$handle'");
 
@@ -243,13 +242,13 @@ sub DoKeydel {
 }
 
 sub DoCanSign {
-    my $handle = NextArg();
+    my $handle = LastArg();
     CheckFilesInternal($handle,1,1,6);
     exit(0);
 }
 
 sub DoCanValidate {
-    my $handle = NextArg();
+    my $handle = LastArg();
     CheckFilesInternal($handle,0,1,7);
     exit(0);
 }
@@ -291,7 +290,7 @@ sub CheckFilesInternal {
 }
 
 sub DoBurn {
-    my $handle = NextArg();
+    my $handle = LastArg();
     UntaintHandleIfLegal(\$handle)
         or UDie("Bad handle '$handle'");
 
@@ -322,7 +321,7 @@ sub DoBurn {
 }
 
 sub DoDefaultHandle {
-    my $handle = NextArg();
+    my $handle = LastArg();
     if ($handle eq "-") {
         my $defaulthandlefile = GetDefaultHandleFile();
         if (!-e $defaulthandlefile) {
@@ -392,7 +391,6 @@ sub ConfigureZipOptions {
     }
 #    print "$zipVer/@zipOtherOptions\n";
 }
-
 
 sub MakeInnerZip {
     my ($pubkeydata,@files) = @_;

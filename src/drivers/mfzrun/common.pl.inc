@@ -175,6 +175,14 @@ sub NextArg {
     return $arg;
 }
 
+sub LastArg {
+    my $arg = NextArg();
+    my @more = RestOfArgs();
+    UDie("Too many arguments: ".join(" ",@more))
+        if scalar(@more);
+    return $arg;
+}
+
 sub RestOfArgs {
     my @args = @ARGV;
     @ARGV = ();
