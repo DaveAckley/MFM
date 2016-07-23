@@ -275,6 +275,15 @@ namespace MFM
         m_AER = 1000 * (m_AEPS / m_msSpentRunning);
 
         u64 newEvents = totalEvents - m_lastTotalEvents;
+
+        // Fri Jul 22 04:25:11 2016 .mfs files currently don't store
+        // m_lastTotalEvents, leading to ridiculous AER spikes that
+        // take a _long_ time to average out.  Let's hackety-whack try
+        // to reset here if we seem offkilter.
+        if (m_lastTotalEvents > totalEvents ||
+            totalEvents > m_lastTotalEvents + 1000 * totalSites)
+          newEvents = 0;
+
         m_lastTotalEvents = totalEvents;
         thisAERsample = 1000.0 * newEvents / totalSites / thisPeriodMS;
       }
@@ -538,6 +547,87 @@ namespace MFM
       VArguments& args = *((VArguments*)vargs);
       args.Usage();
     }
+
+    static void SelectDemoFromArg(const char* demo, void* driverptr)
+    {
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
+      bool wantList = (strcmp("list", demo) == 0);
+      bool wantAll = (strcmp("all", demo) == 0);
+
+      // Look for demos-list file
+      OString512 buf;
+      const char * demoListFile = "elements/demos.dat";
+      if (!Utils::GetReadableResourceFile(demoListFile, buf))
+      {
+        args.Die("Cannot find '%s'", demoListFile);
+      }
+      else
+      {
+        FileByteSource fs(buf.GetZString());
+        if (!fs.IsOpen())
+        {
+          args.Die("Can't open '%s'",buf.GetZString());
+        }
+
+        u32 lastMatches;
+        u32 count = 0;
+
+        while (true)
+        {
+          OString64 name;
+          OString256 mfz, libue, classes, info;
+
+          lastMatches = 
+            fs.Scanf("%Z%Z%Z%Z%Z\n", &name, &mfz, &libue, &classes, &info);
+
+          if (lastMatches != 6)
+            break;
+
+          if (wantList)
+          {
+            const char * zname = name.GetZString();
+            printf("\nDEMO: %s\n", zname);
+            printf(" To run the demo standalone: mfzrun %s demo\n", zname);
+            printf(" To load the demo's classes: mfms --demo %s\n", zname);
+            printf("   includes classes: %s\n", 
+                   classes.GetZString());
+            ++count;
+          }
+          else if (wantAll || !strcmp(demo,name.GetZString()))
+          {
+            printf("Including %s from %s\n", 
+                   classes.GetZString(),
+                   name.GetZString());
+
+            // fake up an appropriate -ep call
+            RegisterElementLibraryPath(libue.GetZString(), driverptr);
+            ++count;
+          }
+
+        }
+
+        fs.Close();
+
+        if (lastMatches != 0) 
+        {
+          LOG.Warning("Incomplete or corrupt %s", buf.GetZString());
+        }
+
+        if ((wantList || wantAll) && count == 0) 
+          args.Die("No demos found");
+
+        if (wantList)
+        {
+          exit(0);
+        }
+
+        if (!wantList && !wantAll && count == 0)
+          args.Die("Demo '%s' not found, try '--demo list' for a list", demo);
+      }
+    }
+
 
     static void PrintVersion(const char* not_needed, void* nullForShort)
     {
@@ -1018,7 +1108,7 @@ namespace MFM
       } 
       /* else buf filled with resource path */
 
-      LOG.Debug("Loading configuration from %s...", buf.GetZString());
+      LOG.Message("Loading configuration '%s'", buf.GetZString());
 
       FileByteSource fs(buf.GetZString());
       if (fs.IsOpen())
@@ -1215,6 +1305,9 @@ namespace MFM
 
       RegisterArgument("Display this help message, then exit.",
                        "-h|--help", &PrintArgUsage, (void*)(&m_varguments), false);
+
+      RegisterArgument("Show built-in demos (--demo list), or load one (--demo NAME) or all (--demo all)",
+                       "--demo", &SelectDemoFromArg, this, true);
 
       RegisterArgument("Amount of logging output is ARG (0 -> none, 8 -> max)",
                        "-l|--log", &SetLoggingLevel, NULL, true);
