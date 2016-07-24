@@ -413,7 +413,7 @@ EOM
 # Find and parse the demos.dat file
 sub ListDemosDat {
     my $path;
-    -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/res/elements/demos.dat") or
+    -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/elements/demos.dat") or
     -r ($path = "./res/elements/demos.dat") or
     return 0;
     my $count = 0;
@@ -453,7 +453,7 @@ sub FindDemoOrDie {
     }
     $demoname .= ".mfz";
     my $path;
-    return $path if -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/res/elements/demos/$demoname");
+    return $path if -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/elements/demos/$demoname");
     return $path if -r ($path = "~/.mfm/demos/$demoname");
     return $path if -r ($path = "./res/elements/demos/$demoname");
 
