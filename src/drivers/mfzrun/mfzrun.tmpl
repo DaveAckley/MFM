@@ -447,13 +447,11 @@ sub ListDemosDat {
 # Search for demos in a variety of locations
 sub FindDemoOrDie {
     my $demoname = shift;
-    # check/default extension
-    if ($demoname =~ /[.]([^.]*)$/) {
-        UDie("Unrecognized extension '$1'")
-            unless $1 eq "mfz";
-    } else {
-        $demoname .= ".mfz";
+    # be tight about demo names, they turn into file names
+    if ($demoname =~ /[^-A-Za-z0-9]/) {
+        UDie("Illegal character '$&' in demo name");
     }
+    $demoname .= ".mfz";
     my $path;
     return $path if -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/res/elements/demos/$demoname");
     return $path if -r ($path = "~/.mfm/demos/$demoname");

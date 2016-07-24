@@ -53,8 +53,6 @@ namespace MFM {
       return strerror(errno);
     }
 
-#define XSTR(A) #A
-
     bool GetReadableResourceFile(const char * relativePath, ByteSink& result)
     {
       OString512 buffer;
