@@ -360,6 +360,20 @@ sub CheckForPubKey {
     return ($path);
 }
 
+sub TryToPromoteInstalledPubKey {
+    my $handle = shift;
+    my $ehandle = EscapeHandle($handle);
+    my $dir = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/public_keys/";
+    my $pub = "$dir/$ehandle.pub";
+    if (-r $pub) {
+        my $localpub = GetPublicKeyFile($handle);
+        IDie("Inconsistent") if -r $localpub; # shouldn't have gotten here
+        WriteWholeFile($localpub, ReadWholeFile($pub));
+        print "Copying public key for '$handle' from $pub\n";
+    }
+    return CheckForPubKey($handle);
+}
+
 sub SavePubKey {
     my ($handle, $pubkey) = @_;
     my $pubkeypath = GetPublicKeyFile($handle);
@@ -370,6 +384,9 @@ sub SavePubKey {
 sub ValidatePubKey {
     my ($handle, $pubstring) = @_;
     my ($path, $knownpub) = CheckForPubKey($handle);
+    if (!defined($knownpub)) {
+        ($path, $knownpub) = TryToPromoteInstalledPubKey($handle);
+    }
     if (defined($knownpub)) {
         if ($pubstring ne $knownpub) {
             print "\nERROR: '$handle' is known (found in '$path') but supplied public key doesn't match!($knownpub:$pubstring)\n";
