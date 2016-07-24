@@ -456,7 +456,6 @@ sub FindDemoOrDie {
     return $path if -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/res/elements/demos/$demoname");
     return $path if -r ($path = "~/.mfm/demos/$demoname");
     return $path if -r ($path = "./res/elements/demos/$demoname");
-    return $path if -r ($path = "./$demoname");
 
     UDie("No '$demoname' found");
 }
