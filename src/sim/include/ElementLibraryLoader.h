@@ -8,9 +8,6 @@
 #include "ElementLibrary.h"
 #include "OverflowableCharBufferByteSink.h"
 
-#define xstr(s) str(s)
-#define str(s) #s
-
 #define MFM_ELEMENT_LIBRARY_LOADER_SYMBOL mfm_get_static_element_library_pointer
 
 namespace MFM {
@@ -44,7 +41,7 @@ namespace MFM {
       dlerror();
 
       LOG.Debug("Calling dlsym");
-      void * symptr = dlsym(m_dlHandle, xstr(MFM_ELEMENT_LIBRARY_LOADER_SYMBOL));
+      void * symptr = dlsym(m_dlHandle, XSTR_MACRO(MFM_ELEMENT_LIBRARY_LOADER_SYMBOL));
       LOG.Debug("Back from dlsym");
 
       const char* dlsym_error = dlerror();

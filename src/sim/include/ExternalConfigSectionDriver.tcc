@@ -32,6 +32,12 @@ namespace MFM
   { }
 
   template<class GC>
+  void ExternalConfigSectionDriver<GC>::Reset()
+  {
+    /* no section-level state */
+  }
+
+  template<class GC>
   bool ExternalConfigSectionDriver<GC>::ReadInit()
   {
     return true;

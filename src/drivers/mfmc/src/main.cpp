@@ -99,7 +99,7 @@ namespace MFM
       SetGridWidth(w);
       SetGridHeight(h);
       SetTileType((GridConfigCode::TileType)
-                  ((ch - GridConfigCode::GetMinTypeCode()) + GridConfigCode::TileA));
+                  ((ch - GridConfigCode::GetMinTypeCode()) + GridConfigCode::TileUNSPEC + 1));
       return true;
     }
   };
@@ -138,9 +138,11 @@ namespace MFM
   static const GridConfigCode gccModelAlt(GridConfigCode::TileE, 3, 2);     // Alternate model (flatter space)
   static const GridConfigCode gccModelTiny(GridConfigCode::TileB, 2, 2);    // Tiny model
   static const GridConfigCode gccModelBig(GridConfigCode::TileD, 8, 5);     // Larger model
-  static const GridConfigCode gccModelBig1(GridConfigCode::TileH, 1, 1);    // BigTile model
   static const GridConfigCode gccModelMedium1(GridConfigCode::TileF, 1, 1); // MediumTile model
   static const GridConfigCode gccModelSmall1(GridConfigCode::TileE, 1, 1);  // SmallerTile model
+#ifdef EXTRA_TILE_SIZES
+  static const GridConfigCode gccModelBig1(GridConfigCode::TileH, 1, 1);    // BigTile model
+#endif
 
   template <class GC>
   struct MFMCDriver : public AbstractDualDriver<GC>

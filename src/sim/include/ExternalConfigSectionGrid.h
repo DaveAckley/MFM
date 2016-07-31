@@ -138,6 +138,8 @@ namespace MFM
      */
     ExternalConfigSectionGrid(ExternalConfig<GC>& ec, Grid<GC>& grid);
 
+    virtual void Reset() ;
+
     virtual void WriteSection(ByteSink & byteSink);
 
     virtual bool ContinueOnErrors() const

@@ -41,7 +41,7 @@
 #include "AtomViewPanel.h"
 #include "StatisticsPanel.h"
 #include "Tile.h"
-//#include "GridRenderer.h"
+#include "DriverButtonPanel.h"
 #include "GridPanel.h"
 #include "TextPanel.h"
 #include "ToolboxPanel.h"
@@ -111,7 +111,7 @@ namespace MFM
     NukeButton<GC> m_nukeButton;
     XRayButton<GC> m_xrayButton;
     ThinButton<GC> m_thinButton;
-    GridRunCheckbox<GC> m_gridRunButton;
+    GridRunCheckbox<GC> m_gridRunButton, m_gridRunMiniButton;
     GridRenderButton<GC> m_gridRenderButton;
     CacheRenderButton<GC> m_cacheRenderButton;
     GridStepCheckbox<GC> m_gridStepButton;
@@ -120,13 +120,13 @@ namespace MFM
     BgViewButton<GC> m_bgViewButton;
     SaveButton<GC> m_saveButton;
     ScreenshotButton<GC> m_screenshotButton;
-    QuitButton<GC> m_quitButton;
-    ReloadButton<GC> m_reloadButton;
+    QuitButton<GC> m_quitButton, m_quitMiniButton;
+    ReloadButton<GC> m_reloadButton, m_reloadMiniButton;
     PauseTileButton<GC> m_pauseTileButton;
     BGRButton<GC> m_bgrButton;
     FGRButton<GC> m_fgrButton;
     LogButton<GC> m_logButton;
-    ShowHelpButton<GC> m_showHelpButton;
+    ShowHelpButton<GC> m_showHelpButton, m_showHelpMiniButton;
     ShowToolboxButton<GC> m_showToolboxButton;
     ShowInfoBoxButton<GC> m_showInfoBoxButton;
     LoadDriverSectionButton<GC> m_loadDriverSectionButton;
@@ -183,6 +183,14 @@ namespace MFM
       hd.SetDriver(*this);
     }
 
+    void InsertAndRegisterMiniButton(HasGUIDriver<GC> & hd)
+    {
+      AbstractButton & b = hd.GetAbstractButton();
+      m_miniButtonPanel.InsertAndPlace(b);
+      //      RegisterButtonAccelerator(b);
+      hd.SetDriver(*this);
+    }
+
     void InsertAndRegisterGridTool(GridToolShapeUpdater<GC> & gt)
     {
       AbstractButton & ab = m_toolboxPanel.RegisterGridTool(gt);
@@ -210,7 +218,18 @@ namespace MFM
     {
       m_statisticsPanel.SetAnchor(ANCHOR_EAST);
 
+      m_miniButtonPanel.SetOtherDriverButtonPanel(m_buttonPanel);
+      m_miniButtonPanel.SetAnchor(ANCHOR_EAST);
+      m_miniButtonPanel.SetVisible(true);
+
+      InsertAndRegisterMiniButton(m_showHelpMiniButton);
+      InsertAndRegisterMiniButton(m_quitMiniButton);
+      InsertAndRegisterMiniButton(m_gridRunMiniButton);
+      InsertAndRegisterMiniButton(m_reloadMiniButton);
+
+      m_buttonPanel.SetOtherDriverButtonPanel(m_miniButtonPanel);
       m_buttonPanel.SetAnchor(ANCHOR_EAST);
+      m_miniButtonPanel.SetVisible(false);
 
       InsertAndRegisterButton(m_gridRenderButton);
       InsertAndRegisterButton(m_cacheRenderButton);
@@ -327,12 +346,14 @@ namespace MFM
       m_gridPanel.ClearSelectedTiles();
     }
 
+    /*
     static bool KeyHandlerToggleButtons(u32, u32, void* arg, bool)
     {
       AbstractGUIDriver & d = *(AbstractGUIDriver*) arg;
       d.m_buttonPanel.SetVisible(!d.m_buttonPanel.IsVisible());
       return true;
     }
+    */
 
     static bool KeyHandlerQuit(u32, u32, void*)
     {
@@ -611,7 +632,7 @@ namespace MFM
       m_toolboxPanel.RebuildControllers();
 
       m_gridPanel.Insert(&m_buttonPanel, NULL);
-      m_buttonPanel.SetVisible(true);
+      m_gridPanel.Insert(&m_miniButtonPanel, NULL);
 
       m_gridPanel.Insert(&m_logPanel, NULL);
       m_logPanel.SetName("LogPanel");
@@ -856,6 +877,7 @@ namespace MFM
       , m_screenshotButton()
       , m_quitButton()
       , m_reloadButton()
+      , m_reloadMiniButton()
       , m_pauseTileButton()
       , m_bgrButton()
       , m_fgrButton()
@@ -888,7 +910,8 @@ namespace MFM
       , m_displayAER(m_statisticsPanel)
       , m_increaseAEPSPerFrame(*this)
       , m_decreaseAEPSPerFrame(*this)
-      , m_buttonPanel()
+      , m_buttonPanel("ButtonPanel",false)
+      , m_miniButtonPanel("miniButtonPanel",true)
       , m_externalConfigSectionGUI(AbstractDriver<GC>::GetExternalConfig(),*this)
     {
       m_startFile.Reset();
@@ -1129,59 +1152,7 @@ namespace MFM
 
     }
 
-    struct ButtonPanel : public MovablePanel, public KeyboardCommandFunction
-    {
-      virtual s32 GetSection() { return HELP_SECTION_WINDOWS; }
-
-      virtual const char * GetDoc() { return "Toggle showing the button window"; }
-
-      virtual bool GetKey(u32& keysym, u32& mods)
-      {
-        keysym = SDLK_b;
-        mods = KMOD_CTRL;
-        return true;
-      }
-
-      virtual bool ExecuteFunction(u32 keysym, u32 mods)
-      {
-        this->SetVisible(!this->IsVisible());
-        return true;
-      }
-
-      static const u32 INITIAL_WIDTH = STATS_START_WINDOW_WIDTH;
-      static const u32 MAX_BUTTONS = 16;
-      static const u32 CHECKBOX_SPACING_HEIGHT = 32;
-      static const u32 BUTTON_SPACING_HEIGHT = 34;
-      static const u32 BUTTON_HEIGHT = 30;
-      static const u32 BUTTON_WIDTH = STATS_START_WINDOW_WIDTH;
-
-      virtual void PaintBorder(Drawing & config)
-      { /* No border please */ }
-
-      ButtonPanel()
-      {
-        SetName("ButtonPanel");
-        SetDimensions(STATS_START_WINDOW_WIDTH,
-                      SCREEN_INITIAL_HEIGHT / 2);
-        SetDesiredSize(STATS_START_WINDOW_WIDTH, SCREEN_INITIAL_HEIGHT / 2);
-        SetAnchor(ANCHOR_SOUTH);
-        SetAnchor(ANCHOR_EAST);
-        SetForeground(Drawing::WHITE);
-        SetBackground(Drawing::LIGHTER_DARK_PURPLE);
-        SetFont(FONT_ASSET_ELEMENT);
-      }
-
-      void InsertAndPlace(Panel & b)
-      {
-        u32 kids = GetChildCount(); // quadratic!
-        b.SetRenderPoint(SPoint(2, 2 + kids * BUTTON_SPACING_HEIGHT));
-        b.Panel::SetDimensions(STATS_WINDOW_WIDTH, BUTTON_SPACING_HEIGHT);
-        Panel::Insert(&b, 0);
-      }
-
-    private:
-
-    } m_buttonPanel;
+    DriverButtonPanel m_buttonPanel, m_miniButtonPanel;
 
     TextPanel<256,100> m_logPanel;  // 256 for big timestamps and FAIL paths..
     TeeByteSink m_logSplitter;

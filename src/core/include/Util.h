@@ -31,6 +31,9 @@
 #include "itype.h"
 #include "math.h"
 
+#define XSTR_MACRO(s) STR_MACRO(s)
+#define STR_MACRO(s) #s
+
 namespace MFM {
 
 #define MARK_USED(X) ((void)(&(X)))
