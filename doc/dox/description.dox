@@ -1,13 +1,14 @@
 /**
-   \page description Overview
+   \page description Overview: Best-effort computing
 
-   This codebase implements a simulator&mdash;and, hopefully soon,
-   board support for actual hardware&mdash;for a computer architecture
-   known as the "Movable Feast Machine" (MFM).  The MFM is designed to
-   offer <em>indefinite scalability</em> emphasize <em>robust-first
-   computing</em>, in response to two fundamental limitations of
-   traditional CPU+RAM computer architecture: limited scalability and
-   inherent insecurity.
+   This codebase implements a simulator&mdash;and, hopefully one day
+   soon, board support for actual hardware&mdash;for a computer
+   architecture known as the "Movable Feast Machine" (MFM).  The MFM
+   is an <em>indefinitely scalable</em> computer architecture, meaning
+   that the underlying hardware is organized as a <b>tile</b> that can
+   be duplicated and plugged together to form an arbitrarily large
+   machine, without ever running into any <em>a priori</em> design
+   limit such as running out of addresses.
 
    Only a very brief overview is provided here; for more information,
    see the links in \ref bibliography.
@@ -22,10 +23,6 @@
 
    Traditional computing in a nutshell: Hardware provides \em
    reliability while software provides \em desirability.
-
-   \subsection rant-problems Traditional computer architecture is unscalable and insecure
-
-   The
 
 */
 

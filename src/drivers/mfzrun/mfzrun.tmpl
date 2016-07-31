@@ -43,6 +43,7 @@ $0 $progname verify
 
 $0 $progname list
     Check the file signature and list contents but do not run it
+    (use LIST to print full paths)
 
 $0 $progname unpack [DESTINATION_DIRECTORY]
     Verify and unpack the file but do not run it
@@ -52,7 +53,12 @@ $0 $progname run [ARG ARG..]
     Run the file if it is signed by a recognized handle, possibly
     with additional arguments passed to the simulator.
 
+$0 DEMO demo [ARG ARG..]
+    Search in prespecified locations for a built-in demo named DEMO,
+    and run it if found, possibly with additional arguments as in run
+
 EOH
+    ListDemosDat();
     exit 0;
 }
 
@@ -60,6 +66,7 @@ my %verbs = (
     "" => 1,
     "verify" => 1,
     "run" => 1,
+    "demo" => 1,
     "unpack" => 1,
     "list" => 1,
     "" => 1,
@@ -68,8 +75,13 @@ my %verbs = (
 UDie("Unknown command '$optverb'")
     unless defined $verbs{$verb};
 
+if ($verb eq "demo") {
+    $progname = FindDemoOrDie($progname);
+    $verb = "run";
+}
+
 if ($verb ne "run") {
-    my $fx = NextArg();
+    my $fx = $ARGV[0];
     UDie("Unrecognized extra arguments (beginning with '$fx')")
         if defined $fx;
 }
@@ -123,10 +135,16 @@ if ($verb eq "unpack") {
 
 if (!defined $destdir) {
     my $template = "mfzXXXXXXXX";
+    my $cleanup = 1;
+
+    # Save 'temporary' dir if unpacking..
+    $cleanup = 0 
+        if $verb eq "unpack";
+
     $destdir =
         tempdir( $template,
                  TMPDIR => 1,
-                 CLEANUP => ($verb ne "unpack")
+                 CLEANUP => $cleanup
         );
 }
 
@@ -167,6 +185,9 @@ if ($verb eq "list") {
         $maxtime = length($time) if length($time) > $maxtime;
         $maxsize = length($size) if length($size) > $maxsize;
     }
+    my $maxlen = 40;
+    $maxlen = 1000000 if ($optverb eq "LIST");
+    $maxpath = $maxlen if $maxpath > $maxlen;
     printf("FILES:\n%*s  %*s  %*s  %*s\n",
            -$maxpath, ($maxpath > 4)?"Path":"",
            -$maxname, "Name",
@@ -176,6 +197,12 @@ if ($verb eq "list") {
     for my $prec (@innerpaths) {
         my ($path, $name, $time, $size) = @{$prec};
         $path =~ s!^$destdir/!!;
+        my $ellipsis = "[...]";
+        my $clip = length($path) - ($maxpath - length($ellipsis));
+        if ($clip > 0) {
+            # /4 since ends of paths seem more informative
+            substr($path, ($maxpath-length($ellipsis))/4, $clip) = $ellipsis;
+        }
         $time = localtime($time);
         printf("%*s  %*s  %*s  %*s\n",
                -$maxpath, $path,
@@ -189,11 +216,47 @@ if ($verb eq "list") {
 
 my @mfmargs;
 
+my ($ulams,$goodSOs, $badSOs) = (0,0,0);
+my $platform = `/bin/uname -i`;
+chomp $platform;
+my $platformsize;
+if ($platform eq 'x86_64') {
+    $platformsize = 64;
+} elsif ($platform eq 'i386' || $platform eq 'i686') {
+    $platformsize = 32;
+} else {
+    UDie("This hardware platform, '$platform', is unrecognized");
+}
 for my $prec (@innerpaths) {
     my ($path, $name, $time) = @{$prec};
     my $fullpath = "$path$name";
     if ($name eq "libcue.so") {
-        push @mfmargs, "-ep", $fullpath;
+        my $oinfo;
+        {
+            local $/ = undef;
+            open my $fh, '-|', '/usr/bin/objdump', "-r", $fullpath or IDie("Can't open pipe: $!");
+            $oinfo = <$fh>;  # or read in a loop, which is more likely what you want
+            close $fh or IDie("Can't close pipe: $!");
+        }
+        $oinfo =~ /$fullpath:\s+file format\s+([^\n]+)\n/
+            or IDie("Can't parse objdump output");
+        my $sotype = $1;
+        my $sosize;
+        if ($sotype eq "elf64-x86-64") {
+            $sosize = 64;
+        } elsif ($sotype eq "elf32-i386") {
+            $sosize = 32;
+        } else {
+            ++$badSOs;
+            print("Unrecognized .so file format")
+        }
+        if ($sosize != $platformsize) {
+            print("Skipping $sosize bit .so file; we need $platformsize bits\n");
+            ++$badSOs;
+        } else {
+            ++$goodSOs;
+            push @mfmargs, "-ep", $fullpath;
+        }
     } elsif ($name =~ /[.]mfs$/) {
         push @mfmargs, "-cp", $fullpath;
     } elsif ($name eq "args.txt") {
@@ -208,10 +271,23 @@ for my $prec (@innerpaths) {
     } elsif ($name eq MFZ_PUBKEY_NAME) {
         # Don't need a complaint about this one
     } elsif ($name =~ /[.]ulam$/) {
+        ++$ulams;
         print STDERR "Skipping ulam source: $name\n";
     } else {
         print STDERR "Unrecognized file type, ignored: $name\n";
     }
+}
+
+if ($goodSOs == 0) {
+    print STDERR "CANNOT RUN .mfz file: No usable .so files found\n";
+    if ($badSOs > 0) {
+        print STDERR "  The $badSOs .so file(s) in this .mfz are incompatible with this $platformsize-bit platform\n";
+        if ($ulams > 0) {
+            print STDERR "  However, $ulams .ulam file(s) are present\n";
+            print STDERR "  You may be able to rebuild it for this platform\n\n";
+        }
+    }
+    exit 4;
 }
 
 if ($verb eq "run" && scalar(@ARGV) > 0) { # any remaining args are for mfms
@@ -284,6 +360,20 @@ sub CheckForPubKey {
     return ($path);
 }
 
+sub TryToPromoteInstalledPubKey {
+    my $handle = shift;
+    my $ehandle = EscapeHandle($handle);
+    my $dir = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/public_keys/";
+    my $pub = "$dir/$ehandle.pub";
+    if (-r $pub) {
+        my $localpub = GetPublicKeyFile($handle);
+        IDie("Inconsistent") if -r $localpub; # shouldn't have gotten here
+        WriteWholeFile($localpub, ReadWholeFile($pub));
+        print "Copying public key for '$handle' from $pub\n";
+    }
+    return CheckForPubKey($handle);
+}
+
 sub SavePubKey {
     my ($handle, $pubkey) = @_;
     my $pubkeypath = GetPublicKeyFile($handle);
@@ -294,6 +384,9 @@ sub SavePubKey {
 sub ValidatePubKey {
     my ($handle, $pubstring) = @_;
     my ($path, $knownpub) = CheckForPubKey($handle);
+    if (!defined($knownpub)) {
+        ($path, $knownpub) = TryToPromoteInstalledPubKey($handle);
+    }
     if (defined($knownpub)) {
         if ($pubstring ne $knownpub) {
             print "\nERROR: '$handle' is known (found in '$path') but supplied public key doesn't match!($knownpub:$pubstring)\n";
@@ -332,4 +425,54 @@ EOM
             }
         }
     }
+}
+
+# Find and parse the demos.dat file
+sub ListDemosDat {
+    my $path;
+    -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/elements/demos.dat") or
+    -r ($path = "./res/elements/demos.dat") or
+    return 0;
+    my $count = 0;
+    print "  Built-in demos:\n";
+    open(DDAT,"<$path") or die "Can't read '$path': $!";
+    {
+        LOOP:
+        while (1) {
+            my ($name, $mfz, $so, $classes, $reserved);
+            {
+                local $/ = "\0";
+                $name = <DDAT>; 
+                last LOOP unless defined $name;
+                chomp $name; 
+                $mfz = <DDAT>; $so = <DDAT>; $classes = <DDAT>; $reserved = <DDAT>;
+                chomp $mfz; chomp $so; chomp $classes; chomp $reserved;
+            }
+            my $unused = <DDAT>; # \n delimited
+            print "   $0 $name demo\n";
+            ++$count;
+        }
+    }
+    close DDAT or die $!;
+    if ($count == 0) {
+        print "  --No demos found--\n";
+    } else {
+    }
+    return $count;
+}
+
+# Search for demos in a variety of locations
+sub FindDemoOrDie {
+    my $demoname = shift;
+    # be tight about demo names, they turn into file names
+    if ($demoname =~ /[^-A-Za-z0-9]/) {
+        UDie("Illegal character '$&' in demo name");
+    }
+    $demoname .= ".mfz";
+    my $path;
+    return $path if -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/elements/demos/$demoname");
+    return $path if -r ($path = "~/.mfm/demos/$demoname");
+    return $path if -r ($path = "./res/elements/demos/$demoname");
+
+    UDie("No '$demoname' found");
 }

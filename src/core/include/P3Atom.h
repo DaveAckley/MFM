@@ -36,6 +36,7 @@
 #include "AtomConfig.h"
 #include "Util.h"      /* For COMPILATION_REQUIREMENT */
 #include "Parity2D_4x4.h"
+#include "UlamClassRegistry.h"
 
 namespace MFM {
 
@@ -46,6 +47,7 @@ namespace MFM {
     enum { ATOM_CATEGORY = 3 };
     enum { BITS_PER_ATOM = 96 };
     enum { ATOM_TYPE_BITS = 16 };
+    enum { ATOM_UNDEFINED_TYPE = 0x0000 };
     enum { ATOM_EMPTY_TYPE = 0xffff };
     enum { ATOM_FIRST_STATE_BIT = 25 };
     enum { ATOM_LAST_STATE_BIT = BITS_PER_ATOM - 1 };
@@ -56,7 +58,8 @@ namespace MFM {
     typedef P3AtomConfig AC;
 
   public:
-    enum { ATOM_EMPTY_TYPE = 0xffff };
+    enum { ATOM_EMPTY_TYPE = AC::ATOM_EMPTY_TYPE };
+    enum { ATOM_UNDEFINED_TYPE = AC::ATOM_UNDEFINED_TYPE };
 
     enum {
       BITS = AC::BITS_PER_ATOM,
@@ -106,7 +109,7 @@ namespace MFM {
 
   public:
 
-    P3Atom(u32 type = ATOM_EMPTY_TYPE, u32 z1 = 0, u32 z2 = 0, u32 stateBits = 0)
+    explicit P3Atom(u32 type = ATOM_EMPTY_TYPE, u32 z1 = 0, u32 z2 = 0, u32 stateBits = 0)
     {
       COMPILATION_REQUIREMENT< 32 <= BITS-1 >();
 
@@ -129,6 +132,11 @@ namespace MFM {
     void SetEmptyImpl()
     {
       SetType(ATOM_EMPTY_TYPE);
+    }
+
+    void SetUndefinedImpl()
+    {
+      SetType(ATOM_UNDEFINED_TYPE);
     }
 
     bool HasBeenRepairedImpl()

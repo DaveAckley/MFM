@@ -1,5 +1,6 @@
 #include "Utils.h"
 #include "Fail.h"
+#include "Logger.h" /* for LOG */
 #include <stdlib.h>
 #include <unistd.h> /* for open(), close() */
 #include <fcntl.h>  /* for O_RDONLY */
@@ -59,7 +60,7 @@ namespace MFM {
       const char * (paths[]) = {
         "~/.mfm",                // Possible per-user customizations first
         SHARED_DIR,              // Source tree root
-        "/usr/lib/ulam/MFM",     // Debian install location of ulam w/mfm
+        "/usr/lib/" XSTR_MACRO(DEBIAN_PACKAGE_NAME) "/MFM", // Debian install location of mfm
         "/usr/share/mfm",        // Debian install location of mfm (old)
         "."                      // Last desperate hope
       };
@@ -73,11 +74,13 @@ namespace MFM {
           buffer.Printf("%s%s/res/%s",home,dir+1,relativePath);
         else
           buffer.Printf("%s/res/%s",dir,relativePath);
-        FILE * f = fopen(buffer.GetZString(),"r");
-        if (f) {
-          fclose(f);
+        const char * errmsg = ReadablePath(buffer.GetZString());
+        if (!errmsg) {
+          LOG.Debug("Found resource file '%s'", buffer.GetZString());
           result.Printf("%s",buffer.GetZString());
           return true;
+        } else {
+          LOG.Debug("Resource file candidate '%s' not readable: %s", buffer.GetZString(), errmsg);
         }
       }
       return false;

@@ -108,7 +108,7 @@ namespace MFM
     const Element<EC> * pelt = this->LookupElement(nick);
     if (!pelt)
     {
-      in.Msg(Logger::ERROR, "'%@' isn't a registered element nickname", &nick);
+      in.Msg(Logger::ERROR, "'%s' isn't a registered element nickname", nick.GetZString());
       return 0;
     }
 
@@ -281,6 +281,12 @@ namespace MFM
   { }
 
   template<class GC>
+  void ExternalConfigSectionGrid<GC>::Reset()
+  {
+    m_registeredElementCount = 0;
+  }
+
+  template<class GC>
   bool ExternalConfigSectionGrid<GC>::ReadInit()
   {
     m_grid.Clear();
@@ -396,26 +402,6 @@ namespace MFM
       }
     }
     byteSink.WriteNewline();
-
-#if 0 // Tile config inbound off the port bow!
-    // XXX Every tile always shows up as disabled?
-    // XXX and we should have a TileConfig instead of this anyway
-    /* Set Tile geometry */
-    for(u32 y = 0; y < m_grid.GetHeight(); y++)
-    {
-      for(u32 x = 0; x < m_grid.GetWidth(); x++)
-      {
-        SPoint currentPt(x, y);
-        Tile<EC> & tile = m_grid.GetTile(currentPt);
-
-        if(tile.GetCurrentState() != Tile<EC>::ACTIVE)
-        {
-          byteSink.Printf("DisableTile(%d,%d)", x, y);
-          byteSink.WriteNewline();
-        }
-      }
-    }
-#endif
   }
 
   template<class GC>
@@ -425,14 +411,13 @@ namespace MFM
     Element<EC> * elt = m_elementRegistry.Lookup(uuid);
     const UUID * puuid = 0;
     if (!elt) {
-      lcbs.Msg(Logger::WARNING, "Unknown element '%@', searching for compatible alternatives", &uuid);
 
       elt =  m_elementRegistry.LookupCompatible(uuid);
       if (!elt)
         return lcbs.Msg(Logger::WARNING, "No alternatives found for unknown/unregistered element '%@'", &uuid);
 
       puuid = &elt->GetUUID();
-      lcbs.Msg(Logger::WARNING, "Substituting '%@' for '%@'", puuid, &uuid);
+      lcbs.Msg(Logger::WARNING, "Using more recent '%@' for '%@'", puuid, &uuid);
     }
     else
     {

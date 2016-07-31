@@ -252,9 +252,10 @@ namespace MFM
                        UPoint(tsize.GetX(), TEXT_HEIGHT));
 
       Rect sliderRect = GetSliderRect();
-      d.BlitImageAsset(m_hitIn ? IMAGE_ASSET_SLIDER_HANDLE_ACTIVE : IMAGE_ASSET_SLIDER_HANDLE,
-                       sliderRect.GetPosition(),
-                       sliderRect.GetSize());
+      IconAsset ia;
+      ia.SetIconSlot(ZSLOT_SLIDER_HANDLE);
+      ia.SetEnabled(m_hitIn);
+      d.BlitIconAsset(ia, sliderRect.GetHeight(), sliderRect.GetPosition());
 
       if (!IsAtDefault())
         d.SetForeground(Drawing::YELLOW);

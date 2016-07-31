@@ -4,6 +4,8 @@
 /* Get some types for us to test */
 #include "Test_Common.h"
 
+#include "UlamRef_Test.h"
+#include "BitRef_Test.h"
 #include "UlamElement_Test.h"
 #include "GridTransceiver_Test.h"
 #include "ElementRegistry_Test.h"

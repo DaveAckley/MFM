@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamContext.h Access to the environment surrounding executing ulam code
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2016 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,18 +23,26 @@
   \file UlamContext.h Access to the environment surrounding executing ulam code
   \author David H. Ackley
   \author Elena S. Ackley
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014-2016 All rights reserved.
   \lgpl
  */
+
 #ifndef ULAMCONTEXT_H
 #define ULAMCONTEXT_H
+
+#include "itype.h"
+#include "Fail.h"
+#include "Element.h"
 
 namespace MFM
 {
   template <class AC> class Base; // FORWARD
   template <class AC> class Site; // FORWARD
-  template <class EC> class Tile; // FORWARD
   template <class EC> class EventWindow; // FORWARD
+  template <class EC> class UlamClass; //FORWARD
+  template <class EC> class UlamClassRegistry; //FORWARD
+  template <class EC> class ElementTable; //FORWARD
+
   class Random; // FORWARD
 
   template <class EC>
@@ -41,32 +50,38 @@ namespace MFM
 
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename EC::SITE S;
-
-    Tile<EC> * m_tile;
-    void AssertTile() const;
+    const ElementTable<EC>& m_elementTable;
 
   public:
 
-    UlamContext() ;
+    UlamContext(const ElementTable<EC>& et)
+      : m_elementTable(et)
+    { }
 
-    void SetTile(Tile<EC> & t) ;
+    UlamContext(const UlamContext<EC>& cxref);
 
-    Tile<EC> & GetTile() ;
+    virtual ~UlamContext() { }
 
-    const Tile<EC> & GetTile() const ;
+    virtual bool HasRandom() const { return false; }
+    virtual Random & GetRandom() { FAIL(UNSUPPORTED_OPERATION); }
 
-    Random & GetRandom() ;
+    virtual bool HasEventWindow() const { return false; }
+    virtual EventWindow<EC> & GetEventWindow() { FAIL(UNSUPPORTED_OPERATION); }
 
-    EventWindow<EC> & GetEventWindow() ;
+    virtual const EventWindow<EC> & GetEventWindow() const { FAIL(UNSUPPORTED_OPERATION); }
 
-    const EventWindow<EC> & GetEventWindow() const ;
+    virtual bool HasUlamClassRegistry() const { return false; }
+    virtual const UlamClassRegistry<EC> & GetUlamClassRegistry() const { FAIL(UNSUPPORTED_OPERATION); }
 
-    Base<AC> & GetBase() ;
+    virtual const Element<EC> * LookupElementTypeFromContext(u32 etype) const ;
 
-    const Site<AC> & GetSite() const ;
+    virtual const char * GetContextLabel() const { return "Generic UlamContext"; }
+
+    const UlamClass<EC> * LookupUlamElementTypeFromContext(u32 etype) const ;
 
   };
-}
+
+} //MFM
 
 #include "UlamContext.tcc"
 

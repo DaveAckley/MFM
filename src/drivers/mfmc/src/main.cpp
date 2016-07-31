@@ -99,7 +99,7 @@ namespace MFM
       SetGridWidth(w);
       SetGridHeight(h);
       SetTileType((GridConfigCode::TileType)
-                  ((ch - GridConfigCode::GetMinTypeCode()) + GridConfigCode::TileA));
+                  ((ch - GridConfigCode::GetMinTypeCode()) + GridConfigCode::TileUNSPEC + 1));
       return true;
     }
   };
@@ -111,10 +111,12 @@ namespace MFM
   typedef Site<P3AtomConfig> OurSiteAll;
   typedef EventConfig<OurSiteAll,4> OurEventConfigAll;
 
+  enum { EVENT_HISTORY_SIZE = 100000 };
+
   /////
   // Tile types
 #define XX(A,B) \
-  typedef GridConfig<OurEventConfigAll, B> OurGridConfigTile##A;
+  typedef GridConfig<OurEventConfigAll, B, EVENT_HISTORY_SIZE> OurGridConfigTile##A;
 #include "TileSizes.inc"
 #undef XX
   /*
@@ -136,9 +138,11 @@ namespace MFM
   static const GridConfigCode gccModelAlt(GridConfigCode::TileE, 3, 2);     // Alternate model (flatter space)
   static const GridConfigCode gccModelTiny(GridConfigCode::TileB, 2, 2);    // Tiny model
   static const GridConfigCode gccModelBig(GridConfigCode::TileD, 8, 5);     // Larger model
-  static const GridConfigCode gccModelBig1(GridConfigCode::TileH, 1, 1);    // BigTile model
   static const GridConfigCode gccModelMedium1(GridConfigCode::TileF, 1, 1); // MediumTile model
   static const GridConfigCode gccModelSmall1(GridConfigCode::TileE, 1, 1);  // SmallerTile model
+#ifdef EXTRA_TILE_SIZES
+  static const GridConfigCode gccModelBig1(GridConfigCode::TileH, 1, 1);    // BigTile model
+#endif
 
   template <class GC>
   struct MFMCDriver : public AbstractDualDriver<GC>
@@ -359,6 +363,26 @@ namespace MFM
 
     return SimRunConfig(gcc, argc, argv);
   }
+}
+
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+        const MFM::UlamRef<MFM::OurEventConfigAll>& rur) __attribute__ ((used)) ;
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+        const MFM::AtomBitStorage<MFM::OurEventConfigAll>& abs) __attribute__ ((used)) ;
+
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+        const MFM::AtomBitStorage<MFM::OurEventConfigAll>& abs)
+{
+  MFM::DebugPrint<MFM::OurEventConfigAll>(ruc, abs, MFM::STDERR);  
+  MFM::STDERR.Printf("\n");
+}
+
+
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+        const MFM::UlamRef<MFM::OurEventConfigAll>& rur)
+{
+  MFM::DebugPrint<MFM::OurEventConfigAll>(ruc, rur, MFM::STDERR);  
+  MFM::STDERR.Printf("\n");
 }
 
 int main(int argc, const char** argv)

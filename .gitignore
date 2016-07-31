@@ -38,6 +38,9 @@ spikes/
 src/elements/include/StdElements.inc
 src/elements/include/StdElementsHeaders.inc
 
+# Other generated files
+res/elements/demos.dat
+
 # Using Google's lint but don't want to commit it.
 tools/cpplint.py
 
@@ -45,4 +48,5 @@ tools/cpplint.py
 *-hold
 
 # Ignore the version file made for non-git builds
-TREEVERSION.mk
+*TREEVERSION.mk
+

@@ -48,6 +48,7 @@
 #include "StdElements.h"
 #include "ElementRegistry.h"
 #include "Version.h"
+#include "DebugTools.h"
 
 
 #define MAX_PATH_LENGTH 1000
@@ -244,19 +245,48 @@ namespace MFM
       u32 thisPeriodMS = m_ticksLastStopped - startMS;
       m_msSpentRunning += thisPeriodMS;
 
-      u64 totalEvents = grid.GetTotalEventsExecuted();
-      u32 totalSites = grid.GetTotalSites();
-      m_AEPS = totalEvents / ((double) totalSites);
-      m_AER = 1000 * (m_AEPS / m_msSpentRunning);
-
-      u64 newEvents = totalEvents - m_lastTotalEvents;
-      m_lastTotalEvents = totalEvents;
-
       if (thisPeriodMS == 0) {
         LOG.Warning("Zero ms in sample");
         thisPeriodMS = 1;
       }
-      double thisAERsample = 1000.0 * newEvents / totalSites / thisPeriodMS;
+
+      double thisAERsample;
+
+#if 0 /* site based stats not ready for prime time */
+      {
+        // Trying for site-based statistics, rather that event-based
+        // statistics, because of the variable ew boundary sizes.
+        u64 totalAccesses = grid.GetTotalSitesAccessed();
+        u32 totalSites = grid.GetTotalSites();
+        m_AEPS = totalAccesses / ((double) totalSites);
+        m_AER = 1000 * (m_AEPS / m_msSpentRunning);
+
+        u64 newEvents = totalAccesses - m_lastTotalEvents;
+        m_lastTotalEvents = totalAccesses;
+        thisAERsample = 1000.0 * newEvents / totalSites / thisPeriodMS;
+      }
+#endif
+      {
+        // Traditional event-based statistics, whether that event hit
+        // one site or forty-one.
+        u64 totalEvents = grid.GetTotalEventsExecuted();
+        u32 totalSites = grid.GetTotalSites();
+        m_AEPS = totalEvents / ((double) totalSites);
+        m_AER = 1000 * (m_AEPS / m_msSpentRunning);
+
+        u64 newEvents = totalEvents - m_lastTotalEvents;
+
+        // Fri Jul 22 04:25:11 2016 .mfs files currently don't store
+        // m_lastTotalEvents, leading to ridiculous AER spikes that
+        // take a _long_ time to average out.  Let's hackety-whack try
+        // to reset here if we seem offkilter.
+        if (m_lastTotalEvents > totalEvents ||
+            totalEvents > m_lastTotalEvents + 1000 * totalSites)
+          newEvents = 0;
+
+        m_lastTotalEvents = totalEvents;
+        thisAERsample = 1000.0 * newEvents / totalSites / thisPeriodMS;
+      }
 
       const double BACKWARDS_AVERAGE_RATE = 0.99;
       m_recentAER = BACKWARDS_AVERAGE_RATE * m_recentAER +
@@ -517,6 +547,87 @@ namespace MFM
       VArguments& args = *((VArguments*)vargs);
       args.Usage();
     }
+
+    static void SelectDemoFromArg(const char* demo, void* driverptr)
+    {
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
+      bool wantList = (strcmp("list", demo) == 0);
+      bool wantAll = (strcmp("all", demo) == 0);
+
+      // Look for demos-list file
+      OString512 buf;
+      const char * demoListFile = "elements/demos.dat";
+      if (!Utils::GetReadableResourceFile(demoListFile, buf))
+      {
+        args.Die("Cannot find '%s'", demoListFile);
+      }
+      else
+      {
+        FileByteSource fs(buf.GetZString());
+        if (!fs.IsOpen())
+        {
+          args.Die("Can't open '%s'",buf.GetZString());
+        }
+
+        u32 lastMatches;
+        u32 count = 0;
+
+        while (true)
+        {
+          OString64 name;
+          OString256 mfz, libue, classes, info;
+
+          lastMatches = 
+            fs.Scanf("%Z%Z%Z%Z%Z\n", &name, &mfz, &libue, &classes, &info);
+
+          if (lastMatches != 6)
+            break;
+
+          if (wantList)
+          {
+            const char * zname = name.GetZString();
+            printf("\nDEMO: %s\n", zname);
+            printf(" To run the demo standalone: mfzrun %s demo\n", zname);
+            printf(" To load the demo's classes: mfms --demo %s\n", zname);
+            printf("   includes classes: %s\n", 
+                   classes.GetZString());
+            ++count;
+          }
+          else if (wantAll || !strcmp(demo,name.GetZString()))
+          {
+            printf("Including %s from %s\n", 
+                   classes.GetZString(),
+                   name.GetZString());
+
+            // fake up an appropriate -ep call
+            RegisterElementLibraryPath(libue.GetZString(), driverptr);
+            ++count;
+          }
+
+        }
+
+        fs.Close();
+
+        if (lastMatches != 0) 
+        {
+          LOG.Warning("Incomplete or corrupt %s", buf.GetZString());
+        }
+
+        if ((wantList || wantAll) && count == 0) 
+          args.Die("No demos found");
+
+        if (wantList)
+        {
+          exit(0);
+        }
+
+        if (!wantList && !wantAll && count == 0)
+          args.Die("Demo '%s' not found, try '--demo list' for a list", demo);
+      }
+    }
+
 
     static void PrintVersion(const char* not_needed, void* nullForShort)
     {
@@ -990,17 +1101,14 @@ namespace MFM
     bool LoadMFS(const char * path)
     {
       OString512 buf;
-      if (path[0] == '/')
+      // Accept absolute paths and check resource dirs for relative paths
+      if (path[0] == '/' || !Utils::GetReadableResourceFile(path, buf))
       {
-        buf.Printf("%s",path); // absolute path
-      }
-      else if (!Utils::GetReadableResourceFile(path, buf))
-      {
-        LOG.Error("Can't find configuration file '%s'", path);
-        return false;
-      }
+        buf.Printf("%s",path); // absolute path or not resource relative
+      } 
+      /* else buf filled with resource path */
 
-      LOG.Debug("Loading configuration from %s...", buf.GetZString());
+      LOG.Message("Loading configuration '%s'", buf.GetZString());
 
       FileByteSource fs(buf.GetZString());
       if (fs.IsOpen())
@@ -1198,6 +1306,9 @@ namespace MFM
       RegisterArgument("Display this help message, then exit.",
                        "-h|--help", &PrintArgUsage, (void*)(&m_varguments), false);
 
+      RegisterArgument("Show built-in demos (--demo list), or load one (--demo NAME) or all (--demo all)",
+                       "--demo", &SelectDemoFromArg, this, true);
+
       RegisterArgument("Amount of logging output is ARG (0 -> none, 8 -> max)",
                        "-l|--log", &SetLoggingLevel, NULL, true);
 
@@ -1354,7 +1465,8 @@ namespace MFM
 
       m_grid.InitThreads();
 
-      NeedElement(&Element_Empty<EC>::THE_INSTANCE);
+      // No longer needed?  Only needed in cpp-elt situations??  We shall see
+      //      NeedElement(&Element_Empty<EC>::THE_INSTANCE);
 
       ReinitPhysics();
 

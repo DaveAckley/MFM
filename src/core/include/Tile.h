@@ -1,7 +1,7 @@
 /* -*- mode:C++ -*- */
 /**
   Tile.h An independent hardware unit capable of tiling space
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file Tile.h An independent hardware unit capable of tiling space
   \author Trent R. Small.
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014-2016 All rights reserved.
   \lgpl
  */
 #ifndef TILE_H
@@ -37,9 +37,10 @@
 #include "Element.h"
 #include "Site.h"
 #include "EventWindow.h"
+#include "EventHistoryItem.h"
 #include "ElementTable.h"
 #include "CacheProcessor.h"
-#include "UlamClass.h"
+#include "UlamClassRegistry.h"
 #include "LonglivedLock.h"
 #include "OverflowableCharBufferByteSink.h"  /* for OString16 */
 #include "LineCountingByteSource.h"
@@ -47,6 +48,8 @@
 namespace MFM
 {
 #define IS_OWNED_CONNECTION(X) ((X) - Dirs::EAST >= 0 && (X) - Dirs::EAST < 4)
+
+  template <class EC> class EventHistoryBuffer; // FORWARD
 
   /**
      The representation of a single indefinitely scalable hardware
@@ -110,11 +113,47 @@ namespace MFM
       REGION_COUNT
     };
 
-    Tile(const u32 tileSide, S * sites) ;
+    Tile(const u32 tileSide, S * sites, const u32 eventbuffersize, EventHistoryItem * items) ;
 
     void SaveTile(ByteSink & to) const ;
 
     bool LoadTile(LineCountingByteSource & from) ;
+
+    bool IsHistoryActive() const { return GetEventHistoryBuffer().IsHistoryActive(); }
+
+    void SetHistoryActive(bool active) { return GetEventHistoryBuffer().SetHistoryActive(active); }
+
+    const EventHistoryBuffer<EC> & GetEventHistoryBuffer() const { return m_eventHistoryBuffer; }
+
+    EventHistoryBuffer<EC> & GetEventHistoryBuffer() { return m_eventHistoryBuffer; }
+
+    /**
+       Get the site-in-tile number of a given position \c index of the
+       tile, \e including the caches, so index ranges from
+       0..TILE_SIDE-1 in both x and y.  Return value is in
+       0..(TILE_SIDE * TILE_SIDE - 1).  Fails if index x or y is
+       greater than or equal to the tile side, or negative.
+     */
+    u32 GetSiteInTileNumber(const SPoint index) const
+    {
+      UPoint uidx = MakeUnsigned(index);
+      MFM_API_ASSERT_ARG(uidx.GetX() < TILE_SIDE && uidx.GetY() < TILE_SIDE);
+      return uidx.GetY()*TILE_SIDE + uidx.GetX();
+    }
+
+    /**
+       Get the coordinate of a given \c siteInTileNumber in the tile,
+       \e including the caches, so return value ranges from
+       0..TILE_SIDE-1 in both x and y.  Return value is in 0..  1).
+       Fails if siteInTileNumber is greater than or equal to TILE_SIDE
+       * TILE_SIDE.  Returns SPoint (even though both x and y will be
+       non-negative) to invert GetSiteInTileNumber()
+     */
+    SPoint GetCoordOfSiteInTileNumber(u32 siteInTileNumber) const
+    {
+      MFM_API_ASSERT_ARG(siteInTileNumber < TILE_SIDE*TILE_SIDE);
+      return SPoint(siteInTileNumber % TILE_SIDE, siteInTileNumber / TILE_SIDE);
+    }
 
     /**
        Get a const reference to the Site at position \c index of the
@@ -123,9 +162,7 @@ namespace MFM
      */
     const S & GetSite(const SPoint index) const
     {
-      UPoint uidx = MakeUnsigned(index);
-      MFM_API_ASSERT_ARG(uidx.GetX() < TILE_SIDE && uidx.GetY() < TILE_SIDE);
-      return m_sites[uidx.GetY()*TILE_SIDE + uidx.GetX()];
+      return m_sites[GetSiteInTileNumber(index)];
     }
 
     /**
@@ -206,7 +243,6 @@ namespace MFM
       m_warpFactor = MIN(10u, warp);
     }
 
-
   private:
 
     S * const m_sites;
@@ -227,7 +263,7 @@ namespace MFM
     /** The PRNG used for generating all random numbers in this Tile. */
     Random m_random;
 
-    UlamClassRegistry m_ucr;
+    UlamClassRegistry<EC> m_ucr;
 
     s32 m_keyValues[MAX_TILE_PARAMETERS];
 
@@ -276,9 +312,9 @@ namespace MFM
      */
     Region RegionIn(const SPoint& pt);
 
-    UlamClassRegistry & GetUlamClassRegistry() { return m_ucr; }
+    UlamClassRegistry<EC> & GetUlamClassRegistry() { return m_ucr; }
 
-    const UlamClassRegistry & GetUlamClassRegistry() const { return m_ucr; }
+    const UlamClassRegistry<EC> & GetUlamClassRegistry() const { return m_ucr; }
 
     /**
      * A minimal iterator over the Sites of a tile.  Access via Tile::begin().
@@ -507,6 +543,11 @@ namespace MFM
     u32 m_warpFactor;
 
     /**
+       Record of recent past events for debugging and such
+     */
+    EventHistoryBuffer<EC> m_eventHistoryBuffer;
+
+    /**
      * Compute the coordinates of \c atomLoc in a neighboring tile.
      * (There may or may not actually be a Tile in the given \c
      * neighbor direction; this method doesn't check or care.)
@@ -654,14 +695,25 @@ namespace MFM
 
     /**
      * Gets the number of events executed within this Tile since
-     * initialization.
+     * initialization.  Note that due to varying event window
+     * boundaries this raw number of events will be much higher when a
+     * tile is empty vs when occupied with high-radius elements.  By
+     * contrast, GetEffectiveEventsExecuted() normalizes for occupancy
+     * and radius.
      *
      * @returns The number of events executed within this Tile since
      *          initialization.
+     *
+     * @sa GetEffectiveEventsExecuted
      */
     u64 GetEventsExecuted() const
     {
       return m_window.GetEventWindowsExecuted();
+    }
+
+    u64 GetSitesAccessed() const
+    {
+      return m_window.GetSitesAccessed();
     }
 
     EventWindow<EC> & GetEventWindow()
@@ -678,7 +730,7 @@ namespace MFM
      * Returns this Tile's label, if any.  May return an empty string,
      * never returns null.
      */
-    const char * GetLabel()
+    const char * GetLabel() const
     {
       return m_label.GetZString();
     }
@@ -702,6 +754,16 @@ namespace MFM
       CopyTileParameters(heroTile);
       SetWarpFactor(heroTile.GetWarpFactor());
       m_ucr = heroTile.m_ucr;
+
+      const UlamClass<EC> * uempty = m_ucr.GetUlamElementEmpty();
+      if (uempty) 
+      {
+        const UlamElement<EC> * uelt = uempty->AsUlamElement();
+        if (uelt)
+        {
+          m_elementTable.ReplaceEmptyElement(*uelt);
+        }
+      }
     }
 
     /**
@@ -751,6 +813,8 @@ namespace MFM
     {
       return m_elementTable;
     }
+
+    const Element<EC> * ReplaceEmptyElement(const Element<EC>& newEmptyElement) ;
 
     /**
      * Returns an empty atom instance according to this Tile's ElementTable.
@@ -964,16 +1028,19 @@ namespace MFM
     template <u32 REACH>
     Dir RegionAt(const SPoint& pt) const;
 
+    Dir RegionAtReach(const SPoint& sp, const u32 reach) const ;
+
     /**
       Return ((Dir) -1) if no locks are needed to perform an event at
-      pt.  Otherwise return the 'center direction' in which locks are
-      needed, and return true.  When GetLockDirection returns other
-      than -1, if dir is an edge, only that lock is needed, and if dir
-      is a corner, it and the two adjacent edges are all needed.
+      pt, given an event window radius bounded by bound.  Otherwise
+      return the 'center direction' in which locks are needed, and
+      return true.  When GetLockDirection returns other than -1, if
+      dir is an edge, only that lock is needed, and if dir is a
+      corner, it and the two adjacent edges are all needed.
      */
-    Dir GetLockDirection(const SPoint& pt) const
+    Dir GetLockDirection(const SPoint& pt, const u32 boundary) const
     {
-      return VisibleAt(pt);
+      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1);
     }
 
     /**

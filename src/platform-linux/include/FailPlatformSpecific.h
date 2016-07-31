@@ -107,6 +107,10 @@ do {									      \
   if (__builtin_expect(unwindProtect_errorEnvironment.thrown,0)) {            \
     int MFMThrownFailCode __attribute__ ((unused)) =                          \
       unwindProtect_errorEnvironment.thrown;                                  \
+    const char * MFMThrownFromFile __attribute__ ((unused)) =                 \
+      (const char *) unwindProtect_errorEnvironment.file;                     \
+    unsigned MFMThrownFromLineNo __attribute__ ((unused)) =                   \
+      unwindProtect_errorEnvironment.lineno;                                  \
     {cleanup}	                                                              \
   }                                                                           \
 } while (0)

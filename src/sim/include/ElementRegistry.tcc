@@ -11,7 +11,7 @@ namespace MFM
 {
 
   template <class EC>
-  void ElementRegistry<EC>::Init(UlamClassRegistry & ucr)
+  void ElementRegistry<EC>::Init(UlamClassRegistry<EC> & ucr)
   {
     LOG.Debug("Loading ElementLibraries from %d file(s)...", m_libraryPathsCount);
     s32 elements = LoadLibraries(ucr);
@@ -134,7 +134,7 @@ namespace MFM
   }
 
   template <class EC>
-  s32 ElementRegistry<EC>::LoadLibraries(UlamClassRegistry & ucr)
+  s32 ElementRegistry<EC>::LoadLibraries(UlamClassRegistry<EC> & ucr)
   {
     u32 elementCount = 0;
     for (u32 i = 0; i < m_libraryPathsCount; ++i) {
@@ -146,7 +146,7 @@ namespace MFM
   }
 
   template <class EC>
-  s32 ElementRegistry<EC>::LoadLibrary(UlamClassRegistry & ucr, OString256 & libraryPath)
+  s32 ElementRegistry<EC>::LoadLibrary(UlamClassRegistry<EC> & ucr, OString256 & libraryPath)
   {
     ElementLibraryLoader<EC> ell;
 
@@ -182,14 +182,17 @@ namespace MFM
 
       UlamElement<EC> * uelt = elt->AsUlamElement();
       if (uelt) {
-        if (!ucr.RegisterUlamClass(*uelt))
+        s32 eret = ucr.RegisterUlamElementEmpty(*uelt);
+        if (eret > 0)
+          uelt->AllocateEmptyType();
+        if (eret < 0 || (eret == 0 && !ucr.RegisterUlamClass(*uelt)))
           LOG.Warning("Ulam Class '%s' already registered", uelt->GetMangledClassName());
       }
     }
 
     u32 ocount = el->m_otherUlamClassCount;
     for (u32 i = 0; i < ocount; ++i) {
-      UlamClass *ucp = el->m_otherUlamClassPtrArray[i];
+      UlamClass<EC> *ucp = el->m_otherUlamClassPtrArray[i];
       if (!ucp)
         FAIL(ILLEGAL_STATE);
       if (!ucr.RegisterUlamClass(*ucp))

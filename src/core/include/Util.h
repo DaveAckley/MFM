@@ -31,6 +31,9 @@
 #include "itype.h"
 #include "math.h"
 
+#define XSTR_MACRO(s) STR_MACRO(s)
+#define STR_MACRO(s) #s
+
 namespace MFM {
 
 #define MARK_USED(X) ((void)(&(X)))
@@ -228,6 +231,14 @@ namespace MFM {
   inline T CLAMP(T min, T max, T val)
   {
     return val < min ? min : (val > max ? max : val);
+  }
+
+  template <class T>
+  inline void SWAP(T& v1, T& v2)
+  {
+    T t = v1;
+    v1 = v2;
+    v2 = t;
   }
 
   template <class T>

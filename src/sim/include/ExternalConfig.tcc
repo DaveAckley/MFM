@@ -30,6 +30,12 @@ namespace MFM
   template<class GC>
   bool ExternalConfig<GC>::Read()
   {
+    // Reset each section
+    for (u32 i = 0; i < m_registeredSectionCount; ++i) {
+      ExternalConfigSection<GC> * ecs = m_registeredSections[i];
+      ecs->Reset();
+    }
+
     /* Only thing not in a section (and before all sections) is
        the mfs version. */
 

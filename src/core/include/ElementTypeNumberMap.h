@@ -62,6 +62,7 @@ namespace MFM
     u32 m_counter;
 
     enum { ELEMENT_EMPTY_TYPE = EC::ATOM_CONFIG::ATOM_EMPTY_TYPE };
+    enum { ELEMENT_UNDEFINED_TYPE = EC::ATOM_CONFIG::ATOM_UNDEFINED_TYPE };
 
     enum { BITS = EC::ELEMENT_TYPE_BITS };
     enum { SLOTS = 1<<BITS };

@@ -403,6 +403,36 @@ namespace MFM {
         }
         break;
 
+        // %Z to find a zero-terminated string on the input, and store
+        // it, minus the terminating null, in the ByteSink* arg.
+        // Counts as one match regardless of its length, unless EOF is
+        // encountered before a null is found, in which case no match
+        // is counted, but any non-null bytes encountered will have
+        // been written to arg.  %#Z is the same but does not consume
+        // an argument, and discards bytes rather than writing them.
+      case 'Z': 
+        {
+          ByteSink * bs;
+          if (alt)
+            bs = &DevNullByteSink;
+          else
+            bs = va_arg(ap,ByteSink*);
+          
+          while (true)
+          {
+            result = Read();
+            if (result <= 0) {
+              if (result == 0) ++matches;
+              break;
+            }
+            bs->WriteByte(result);
+          }
+
+          if (result < 0) 
+            return -matches;
+        }
+        break;
+
       case 'b': type = Format::BIN; goto store;
       case 'o': type = Format::OCT; goto store;
       case 'd': type = Format::DEC; goto store;
@@ -446,7 +476,9 @@ namespace MFM {
             bs = va_arg(ap,ByteSink*);
           if (!bs) bs = &DevNullByteSink;
           s32 res = ScanSetFormat(*bs, format); // Advances format to ']' or FAILs
-          if (res <= 0)
+          if (res < 0)
+            return -matches;
+          if (res == 0 && fieldWidth != 0) // Special case: Allow %0[set] to match nothing
             return -matches;
           ++matches;
         }

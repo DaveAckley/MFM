@@ -3,7 +3,6 @@
 #include "itype.h"
 
 namespace MFM {
-
   const u32 vals[8] =
     {
       0x24681357, // 0   0
@@ -35,9 +34,11 @@ namespace MFM {
     Test_bitVectorSplitWrites();
     Test_bitVectorSetAndClearBits();
     Test_bitVectorStoreBits();
+    Test_bitVectorReadWriteBV();
+    Test_bitVectorPopulationCount();
   }
 
-  static BitVector<256> bits;
+  static BitVector<256> bits(vals);
 
   BitVector<256>* BitVector_Test::setup()
   {
@@ -66,6 +67,38 @@ namespace MFM {
       BitVector<64> foo;
       assert(foo.Read(64-31, 31)==0);
     }
+
+
+    {
+      BV96 foo;
+
+      foo = bits->ReadBig(0,96);
+      assert(foo.Read(0, 32) == 0x24681357);
+      assert(foo.Read(32, 32) == 0x11121314);
+      assert(foo.Read(64, 32) == 0x12345678);
+
+      foo = bits->ReadBig(160,96);
+      assert(foo.Read(0, 32) == 0x87654321);
+      assert(foo.Read(32, 32) == 0x44332211);
+      assert(foo.Read(64, 32) == 0xfedbca09);
+
+    }
+
+    {
+      BV96 foo;
+
+      foo = bits->ReadBig(0,32);
+      assert(foo.Read(0, 32) == 0x24681357);
+      assert(foo.Read(32, 32) == 0);
+      assert(foo.Read(64, 32) == 0);
+
+      foo = bits->ReadBig(160,64);
+      assert(foo.Read(0, 32) == 0x87654321);
+      assert(foo.Read(32, 32) == 0x44332211);
+      assert(foo.Read(64, 32) == 0);
+
+    }
+
   }
 
   void BitVector_Test::Test_bitVectorSize()
@@ -86,6 +119,34 @@ namespace MFM {
     assert(bits->Read(0, 32) == 0x2468a0a0);
     assert(bits->Read(32, 32) == 0xb0b01314);
     assert(bits->Read(224, 32) == 0xfedbca09);
+
+    // WriteBig
+    {
+      BitVector<256>* bb = setup();
+      u32 fooBits[] = {0xabc123ee,0x55667788,0x01020304};
+      BV96 foo(fooBits);
+
+      bb->WriteBig(0,32,foo);
+      assert(bits->Read(0, 32) == 0xabc123ee);
+      assert(bits->Read(32, 32) == 0x11121314);
+      assert(bits->Read(64, 32) == 0x12345678);
+
+      bb->WriteBig(64,64,foo);
+      assert(bits->Read(0, 32) == 0xabc123ee);
+      assert(bits->Read(32, 32) == 0x11121314);
+      assert(bits->Read(64, 32) == 0xabc123ee);
+      assert(bits->Read(96, 32) == 0x55667788);
+      assert(bits->Read(128, 32) == 0x0fedcba9);
+
+      bb->WriteBig(32,96,foo);
+      assert(bits->Read(0, 32) == 0xabc123ee);
+      assert(bits->Read(32, 32) == 0xabc123ee);
+      assert(bits->Read(64, 32) == 0x55667788);
+      assert(bits->Read(96, 32) == 0x01020304);
+      assert(bits->Read(128, 32) == 0x0fedcba9);
+
+    }
+
   }
 
   void BitVector_Test::Test_bitVectorSplitWrites()
@@ -248,6 +309,44 @@ namespace MFM {
     assertUnchanged(4,7);
   }
 
+  void BitVector_Test::Test_bitVectorReadWriteBV()
+  {
+    BitVector<256> bits; // 0 init
+
+    BitVector<4> dig;
+    BitVector<32> dug;
+
+    for (u32 i = 0; i <16; ++i)
+    {
+      dig.Write(0,4,i);
+      bits.WriteBV(i*4, dig);
+    }
+
+    bits.ReadBV(0, dug);
+    assert(dug.Read(  0,32) == 0x01234567);
+
+    bits.ReadBV(32, dug);
+    assert(dug.Read( 0,32) == 0x89abcdef);
+
+    bits.ReadBV(48, dug);
+    assert(dug.Read( 0,32) == 0xcdef0000);
+
+    BitVector<100> big;
+    bits.ReadBV(0, big);
+    big.Write(100 - 4, 4, 0xe);
+    bits.WriteBV(4,big);
+    bits.WriteBV(128,big);
+
+    assert(bits.Read(  0,32) == 0x00123456);
+    assert(bits.Read( 32,32) == 0x789abcde);
+    assert(bits.Read( 64,32) == 0xf0000000);
+    assert(bits.Read( 96,32) == 0x0e000000);
+    assert(bits.Read(128,32) == 0x01234567);
+    assert(bits.Read(160,32) == 0x89abcdef);
+    assert(bits.Read(192,32) == 0x00000000);
+    assert(bits.Read(224,32) == 0xe0000000);
+  }
+
   void BitVector_Test::Test_bitVectorCtors()
   {
     {
@@ -297,6 +396,111 @@ namespace MFM {
     assert(bits->ReadLong(192, 64) == 0x0L);
     bits->WriteLong(192,64,(u64) -1L);
     assert(bits->ReadLong(192, 64) == (u64) -1L);
+  }
+
+  void BitVector_Test::Test_bitVectorPopulationCount()
+  {
+    {
+      const u32 SIZE =  0;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(i);
+        assert(bits.PopulationCount() == i + 1);
+      }
+    }
+    {
+      const u32 SIZE =  1;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(i);
+        assert(bits.PopulationCount() == i + 1);
+      }
+    }
+    {
+      const u32 SIZE =  31;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(i);
+        assert(bits.PopulationCount() == i + 1);
+      }
+    }
+    {
+      const u32 SIZE =  32;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(i);
+        assert(bits.PopulationCount() == i + 1);
+      }
+    }
+    {
+      const u32 SIZE =  35;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(i);
+        assert(bits.PopulationCount() == i + 1);
+      }
+
+    }
+    {
+      const u32 SIZE =  67;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(i);
+        assert(bits.PopulationCount() == i + 1);
+      }
+
+      // all combinations of start and len..
+      BitVector<SIZE> zbits;
+
+      for (u32 start = 0; start < SIZE; ++start) 
+      {
+        for (u32 end = start; end < SIZE; ++end) 
+        {
+          u32 len = end - start + 1;
+          assert(bits.PopulationCount(start, len) == len);
+          assert(zbits.PopulationCount(start, len) == 0);
+        }
+      }
+
+    }
+
+    {
+      const u32 SIZE =  258;
+      BitVector<SIZE> bits;
+      assert(bits.PopulationCount() == 0);
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.SetBit(SIZE - i - 1);
+        assert(bits.PopulationCount() == i + 1);
+      }
+
+      assert(bits.PopulationCount() == SIZE);
+
+      for (u32 i = 0; i < SIZE; ++i) 
+      {
+        bits.ClearBit(i);
+        assert(bits.PopulationCount() == SIZE - (i + 1));
+      }
+    }
+
+    {
+      BitVector<256>* bits = setup();
+      assert(bits->PopulationCount() == 115);
+      assert(bits->PopulationCount(64,96) == 51); 
+      assert(bits->PopulationCount(5,250) == 113);
+    }
   }
 
 } /* namespace MFM */

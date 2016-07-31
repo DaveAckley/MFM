@@ -24,7 +24,7 @@ namespace MFM {
         }
       }
       LOG.Debug("trying 0x%04x",type);
-    } while (type == ELEMENT_EMPTY_TYPE || m_uuids[type] != 0);
+    } while (type == ELEMENT_EMPTY_TYPE || type == ELEMENT_UNDEFINED_TYPE || m_uuids[type] != 0);
     LOG.Debug("taking 0x%04x",type);
     return type;
   }

@@ -50,18 +50,22 @@ namespace MFM
     // Clear any prior config
     ec.SetLastPanelConfig(0);
 
-    in.SkipWhitespace();
+    OString512 buf;
+
+    if (4 != in.Scanf("%w%[^)])%w", &buf)) // as regex: \s*[^)]*\s*)
+    {
+      in.Msg(Logger::ERROR, "Malformed PanelConfig");
+      return false;
+    }
+    
     Panel & root = ad.GetRootPanel();
-    Panel * target = root.DereferenceFullName(in);
+    CharBufferByteSource cbuf = buf.AsByteSource();
+    Panel * target = root.DereferenceFullName(cbuf);
     if (!target)
+    {
+      in.Msg(Logger::ERROR, "'%s' not found", buf.GetZString());
       return false;
-#if 0
-    if (!target->Load(in))
-      return false;
-#endif
-    in.SkipWhitespace();
-    if (in.Read() != ')')
-      return false;
+    }
 
     // OK, this one was usable
     ec.SetLastPanelConfig(target);
@@ -85,8 +89,6 @@ namespace MFM
     LineCountingByteSource & in = ec.GetByteSource();
 
     Panel * p = ec.GetLastPanelConfig();
-    if (!p)
-      return in.Msg(Logger::ERROR, "No (successful) PanelConfig before PP");
 
     OString16 key;
     if (!in.ScanIdentifier(key))
@@ -97,9 +99,11 @@ namespace MFM
       return in.Msg(Logger::ERROR, "Expected '=' after identifier");
 
     in.SkipWhitespace();
-    if (!p->LoadDetails(key.GetZString(), in))
-      return in.Msg(Logger::ERROR, "Key '%s' unrecognized or bad value", key.GetZString());
 
+    if (!p) in.SkipSet("[^)]"); // Flush up to )
+    else if (!p->LoadDetails(key.GetZString(), in))
+      return in.Msg(Logger::ERROR, "Key '%s' unrecognized or bad value", key.GetZString());
+    
     in.SkipWhitespace();
     if (1 != in.Scanf(")"))
       return in.Msg(Logger::ERROR, "Missing ')'");
@@ -119,6 +123,11 @@ namespace MFM
     , m_fcScreenConfig(*this)
   { }
 
+  template<class GC>
+  void ExternalConfigSectionGUI<GC>::Reset()
+  {
+    // Nothing needed?
+  }
 
   template<class GC>
   bool ExternalConfigSectionGUI<GC>::ReadInit()

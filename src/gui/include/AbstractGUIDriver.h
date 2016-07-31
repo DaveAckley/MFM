@@ -41,7 +41,7 @@
 #include "AtomViewPanel.h"
 #include "StatisticsPanel.h"
 #include "Tile.h"
-//#include "GridRenderer.h"
+#include "DriverButtonPanel.h"
 #include "GridPanel.h"
 #include "TextPanel.h"
 #include "ToolboxPanel.h"
@@ -78,6 +78,7 @@ namespace MFM
     bool m_bigText;
     u32 m_thisEpochAEPS;
     bool m_captureScreenshots;
+    bool m_pastFirstUpdate;
     u32 m_saveStateIndex;
     u32 m_epochSaveStateIndex;
 
@@ -110,7 +111,7 @@ namespace MFM
     NukeButton<GC> m_nukeButton;
     XRayButton<GC> m_xrayButton;
     ThinButton<GC> m_thinButton;
-    GridRunCheckbox<GC> m_gridRunButton;
+    GridRunCheckbox<GC> m_gridRunButton, m_gridRunMiniButton;
     GridRenderButton<GC> m_gridRenderButton;
     CacheRenderButton<GC> m_cacheRenderButton;
     GridStepCheckbox<GC> m_gridStepButton;
@@ -119,18 +120,19 @@ namespace MFM
     BgViewButton<GC> m_bgViewButton;
     SaveButton<GC> m_saveButton;
     ScreenshotButton<GC> m_screenshotButton;
-    QuitButton<GC> m_quitButton;
-    ReloadButton<GC> m_reloadButton;
+    QuitButton<GC> m_quitButton, m_quitMiniButton;
+    ReloadButton<GC> m_reloadButton, m_reloadMiniButton;
     PauseTileButton<GC> m_pauseTileButton;
     BGRButton<GC> m_bgrButton;
     FGRButton<GC> m_fgrButton;
     LogButton<GC> m_logButton;
-    ShowHelpButton<GC> m_showHelpButton;
+    ShowHelpButton<GC> m_showHelpButton, m_showHelpMiniButton;
     ShowToolboxButton<GC> m_showToolboxButton;
     ShowInfoBoxButton<GC> m_showInfoBoxButton;
     LoadDriverSectionButton<GC> m_loadDriverSectionButton;
     LoadGridSectionButton<GC> m_loadGridSectionButton;
     LoadGUISectionButton<GC> m_loadGUISectionButton;
+    EventHistoryStrategyButton<GC> m_eventHistoryStrategyButton;
 
     SPoint m_grendMove;
     Keyboard m_keyboardMap;
@@ -140,6 +142,8 @@ namespace MFM
     TileRenderer<EC> m_tileRenderer;
 
     GridPanel<GC> m_gridPanel;
+    ReplayPanel<GC> m_replayPanel;
+
     ToolboxPanel<GC> m_toolboxPanel;
 
     GridToolAtomView<GC> m_gridToolAtomView;
@@ -151,6 +155,7 @@ namespace MFM
     GridToolXRay<GC> m_gridToolXRay;
     GridToolBucket<GC> m_gridToolBucket;
     GridToolClone<GC> m_gridToolClone;
+    GridToolEvent<GC> m_gridToolEvent;
 
     StatisticsPanel<GC> m_statisticsPanel;
     DisplayAER<GC> m_displayAER;
@@ -161,6 +166,9 @@ namespace MFM
 
     const Panel & GetRootPanel() const { return m_rootPanel; }
     Panel & GetRootPanel() { return m_rootPanel; }
+
+    const GridPanel<GC> & GetGridPanel() const { return m_gridPanel; }
+    GridPanel<GC> & GetGridPanel() { return m_gridPanel; }
 
     void RequestReinit()
     {
@@ -175,6 +183,14 @@ namespace MFM
       hd.SetDriver(*this);
     }
 
+    void InsertAndRegisterMiniButton(HasGUIDriver<GC> & hd)
+    {
+      AbstractButton & b = hd.GetAbstractButton();
+      m_miniButtonPanel.InsertAndPlace(b);
+      //      RegisterButtonAccelerator(b);
+      hd.SetDriver(*this);
+    }
+
     void InsertAndRegisterGridTool(GridToolShapeUpdater<GC> & gt)
     {
       AbstractButton & ab = m_toolboxPanel.RegisterGridTool(gt);
@@ -183,15 +199,17 @@ namespace MFM
 
     void OnceOnlyTools()
     {
-      m_gridPanel.GetAtomViewPanel().SetGrid(Super::GetGrid());
-      m_gridToolAtomView.SetAtomViewPanel(m_gridPanel.GetAtomViewPanel());
+      m_gridPanel.InitAtomViewPanels(Super::GetGrid(), &m_gridToolAtomView);
+      //      m_gridToolAtomView.SetAtomViewPanel(m_gridPanel.GetAtomViewPanel(0));
       InsertAndRegisterGridTool(m_gridToolPencil);
       InsertAndRegisterGridTool(m_gridToolEraser);
-      InsertAndRegisterGridTool(m_gridToolBrush);
+      // XXX Consider killing the brush to make room for the spark
+      //      InsertAndRegisterGridTool(m_gridToolBrush);
       InsertAndRegisterGridTool(m_gridToolAirBrush);
       InsertAndRegisterGridTool(m_gridToolXRay);
       InsertAndRegisterGridTool(m_gridToolBucket);
       InsertAndRegisterGridTool(m_gridToolClone);
+      InsertAndRegisterGridTool(m_gridToolEvent);
       InsertAndRegisterGridTool(m_gridToolAtomView);
       InsertAndRegisterGridTool(m_gridToolTileSelect);
     }
@@ -200,7 +218,18 @@ namespace MFM
     {
       m_statisticsPanel.SetAnchor(ANCHOR_EAST);
 
+      m_miniButtonPanel.SetOtherDriverButtonPanel(m_buttonPanel);
+      m_miniButtonPanel.SetAnchor(ANCHOR_EAST);
+      m_miniButtonPanel.SetVisible(true);
+
+      InsertAndRegisterMiniButton(m_showHelpMiniButton);
+      InsertAndRegisterMiniButton(m_quitMiniButton);
+      InsertAndRegisterMiniButton(m_gridRunMiniButton);
+      InsertAndRegisterMiniButton(m_reloadMiniButton);
+
+      m_buttonPanel.SetOtherDriverButtonPanel(m_miniButtonPanel);
       m_buttonPanel.SetAnchor(ANCHOR_EAST);
+      m_miniButtonPanel.SetVisible(false);
 
       InsertAndRegisterButton(m_gridRenderButton);
       InsertAndRegisterButton(m_cacheRenderButton);
@@ -215,6 +244,7 @@ namespace MFM
       InsertAndRegisterButton(m_loadDriverSectionButton);
       InsertAndRegisterButton(m_loadGridSectionButton);
       InsertAndRegisterButton(m_loadGUISectionButton);
+      InsertAndRegisterButton(m_eventHistoryStrategyButton);
 
       InsertAndRegisterButton(m_gridStepButton);
       InsertAndRegisterButton(m_fgViewButton);
@@ -234,6 +264,7 @@ namespace MFM
       m_screenshotButton.SetScreen(m_screen);
       m_screenshotButton.SetCamera(&m_camera);
 
+      m_buttonPanel.Insert(&m_replayPanel,0);
     }
 
     void Update(OurGrid& grid)
@@ -315,12 +346,14 @@ namespace MFM
       m_gridPanel.ClearSelectedTiles();
     }
 
+    /*
     static bool KeyHandlerToggleButtons(u32, u32, void* arg, bool)
     {
       AbstractGUIDriver & d = *(AbstractGUIDriver*) arg;
       d.m_buttonPanel.SetVisible(!d.m_buttonPanel.IsVisible());
       return true;
     }
+    */
 
     static bool KeyHandlerQuit(u32, u32, void*)
     {
@@ -340,10 +373,15 @@ namespace MFM
       m_keyboardMap.Register(m_decreaseAEPSPerFrame);
     }
 
-    void KeyboardUpdate(SDL_KeyboardEvent & key, OurGrid& grid)
+    void KeyboardUpdate(SDL_KeyboardEvent & key, OurGrid& grid, const SPoint where)
     {
-      // XXX We should let the panel tree take a crack at the event
-      // XXX first, then fallback to these global accelerators
+      {
+        KeyboardEvent kbe(key, where);
+        if (m_rootPanel.Dispatch(kbe,
+                                 Rect(SPoint(),
+                                      UPoint(m_screenWidth,m_screenHeight))))
+          return;
+      }
       m_keyboardMap.HandleEvent(key);
 
 #if 0
@@ -429,7 +467,10 @@ namespace MFM
         return;
       }
       if (!this->LoadMFS(m_startFile.GetZString()))
+      {
         LOG.Error("Start file (%s) loading failed", m_startFile.GetZString());
+        exit(-3);
+      }
     }
 
     virtual void OnceOnly(VArguments& args)
@@ -457,36 +498,44 @@ namespace MFM
         else
         {
 
-#define STR(X) #X
-#define XSTR(X) STR(X)
-          const char * defaultStartFile =
-            "mfs/start-"
-            XSTR(MFM_VERSION_MAJOR) "."
-            XSTR(MFM_VERSION_MINOR) "."
-            XSTR(MFM_VERSION_REV) ".mfs";
-#undef STR
-#undef XSTR
-
-          if (!Utils::GetReadableResourceFile(defaultStartFile, m_startFile))
+          // Accept prior rev start file if needed
+          OString128 buff;
+          s32 revFound = -1;
+          for (s32 rev = MFM_VERSION_REV; rev >= 0; --rev)
           {
-            LOG.Warning("Default start file (%s) not found; things may be weird",
-                        defaultStartFile);
-            m_startFile.Reset();
+            buff.Reset();
+            buff.Printf("mfs/start-%d.%d.%d.mfs", 
+                        MFM_VERSION_MAJOR,
+                        MFM_VERSION_MINOR,
+                        rev);
+            if (Utils::GetReadableResourceFile(buff.GetZString(), m_startFile))
+            {
+              revFound = rev;
+              break;
+            }
+          }
+
+          if (revFound != MFM_VERSION_REV)
+          {
+            if (revFound < 0)
+            {
+              LOG.Error("No v%d.%d.%d-compatible start file found (maybe supply --start-file ?)",
+                        MFM_VERSION_MAJOR, MFM_VERSION_MINOR, MFM_VERSION_REV);
+              exit(-2);
+            }
+            else
+            {
+              LOG.Warning("Using prior revision start file (%d.%d.%d, we are %d.%d.%d)",
+                          MFM_VERSION_MAJOR, MFM_VERSION_MINOR, revFound,
+                          MFM_VERSION_MAJOR, MFM_VERSION_MINOR, MFM_VERSION_REV);
+            }
           }
           else
           {
-
+            LOG.Message("Found start file %s", m_startFile.GetZString());
           }
         }
       }
-
-      /*
-      if (m_countOfScreenshotsPerRate > 0) {
-        m_maxRecordScreenshotPerAEPS = m_recordScreenshotPerAEPS;
-        m_recordScreenshotPerAEPS = 1;
-        m_countOfScreenshotsAtThisAEPS = 0;
-      }
-      */
 
       if (!getenv("SDL_VIDEO_ALLOW_SCREENSAVER"))          // If user isn't already messing with this
         putenv((char *) "SDL_VIDEO_ALLOW_SCREENSAVER=1");  // Old school sdl 1.2 mechanism
@@ -583,7 +632,7 @@ namespace MFM
       m_toolboxPanel.RebuildControllers();
 
       m_gridPanel.Insert(&m_buttonPanel, NULL);
-      m_buttonPanel.SetVisible(true);
+      m_gridPanel.Insert(&m_miniButtonPanel, NULL);
 
       m_gridPanel.Insert(&m_logPanel, NULL);
       m_logPanel.SetName("LogPanel");
@@ -795,6 +844,7 @@ namespace MFM
       , m_bigText(false)
       , m_thisEpochAEPS(0)
       , m_captureScreenshots(false)
+      , m_pastFirstUpdate(false)
       , m_saveStateIndex(0)
       , m_epochSaveStateIndex(0)
       , m_keyboardPaused(false)
@@ -827,6 +877,7 @@ namespace MFM
       , m_screenshotButton()
       , m_quitButton()
       , m_reloadButton()
+      , m_reloadMiniButton()
       , m_pauseTileButton()
       , m_bgrButton()
       , m_fgrButton()
@@ -837,11 +888,13 @@ namespace MFM
       , m_loadDriverSectionButton()
       , m_loadGridSectionButton()
       , m_loadGUISectionButton()
+      , m_eventHistoryStrategyButton()
       , m_grendMove()
       , m_keyboardMap()
       , m_helpPanel(m_keyboardMap)
       , m_tileRenderer()
       , m_gridPanel()
+      , m_replayPanel(m_gridPanel)
       , m_toolboxPanel()
       , m_gridToolAtomView(m_gridPanel, m_toolboxPanel)
       , m_gridToolTileSelect(m_gridPanel, m_toolboxPanel)
@@ -852,11 +905,13 @@ namespace MFM
       , m_gridToolXRay(m_gridPanel, m_toolboxPanel)
       , m_gridToolBucket(m_gridPanel, m_toolboxPanel)
       , m_gridToolClone(m_gridPanel, m_toolboxPanel)
+      , m_gridToolEvent(m_gridPanel, m_toolboxPanel)
       , m_statisticsPanel(*this)
       , m_displayAER(m_statisticsPanel)
       , m_increaseAEPSPerFrame(*this)
       , m_decreaseAEPSPerFrame(*this)
-      , m_buttonPanel()
+      , m_buttonPanel("ButtonPanel",false)
+      , m_miniButtonPanel("miniButtonPanel",true)
       , m_externalConfigSectionGUI(AbstractDriver<GC>::GetExternalConfig(),*this)
     {
       m_startFile.Reset();
@@ -898,6 +953,10 @@ namespace MFM
           this->RegisterToolboxElement(elt);
       }
       RegisterKeyboardFunctions();
+
+      // Need to re-add after RegisterToolboxElement to get tooltips
+      m_toolboxPanel.AddButtons();
+
     }
 
     virtual void HandleResize()
@@ -1093,61 +1152,9 @@ namespace MFM
 
     }
 
-    struct ButtonPanel : public MovablePanel, public KeyboardCommandFunction
-    {
-      virtual s32 GetSection() { return HELP_SECTION_WINDOWS; }
+    DriverButtonPanel m_buttonPanel, m_miniButtonPanel;
 
-      virtual const char * GetDoc() { return "Toggle showing the button window"; }
-
-      virtual bool GetKey(u32& keysym, u32& mods)
-      {
-        keysym = SDLK_b;
-        mods = KMOD_CTRL;
-        return true;
-      }
-
-      virtual bool ExecuteFunction(u32 keysym, u32 mods)
-      {
-        this->SetVisible(!this->IsVisible());
-        return true;
-      }
-
-      static const u32 INITIAL_WIDTH = STATS_START_WINDOW_WIDTH;
-      static const u32 MAX_BUTTONS = 16;
-      static const u32 CHECKBOX_SPACING_HEIGHT = 32;
-      static const u32 BUTTON_SPACING_HEIGHT = 34;
-      static const u32 BUTTON_HEIGHT = 30;
-      static const u32 BUTTON_WIDTH = STATS_START_WINDOW_WIDTH;
-
-      virtual void PaintBorder(Drawing & config)
-      { /* No border please */ }
-
-      ButtonPanel()
-      {
-        SetName("ButtonPanel");
-        SetDimensions(STATS_START_WINDOW_WIDTH,
-                      SCREEN_INITIAL_HEIGHT / 2);
-        SetDesiredSize(STATS_START_WINDOW_WIDTH, SCREEN_INITIAL_HEIGHT / 2);
-        SetAnchor(ANCHOR_SOUTH);
-        SetAnchor(ANCHOR_EAST);
-        SetForeground(Drawing::WHITE);
-        SetBackground(Drawing::LIGHTER_DARK_PURPLE);
-        SetFont(FONT_ASSET_ELEMENT);
-      }
-
-      void InsertAndPlace(Panel & b)
-      {
-        u32 kids = GetChildCount(); // quadratic!
-        b.SetRenderPoint(SPoint(2, 2 + kids * BUTTON_SPACING_HEIGHT));
-        b.Panel::SetDimensions(STATS_WINDOW_WIDTH, BUTTON_SPACING_HEIGHT);
-        Panel::Insert(&b, 0);
-      }
-
-    private:
-
-    } m_buttonPanel;
-
-    TextPanel<200,100> m_logPanel;  // 200 for big timestamps and such..
+    TextPanel<256,100> m_logPanel;  // 256 for big timestamps and FAIL paths..
     TeeByteSink m_logSplitter;
 
     void ResetScreenSize()
@@ -1223,6 +1230,7 @@ namespace MFM
       u32 mouseButtonsDown = 0;
       u32 keyboardModifiers = 0;
       ButtonPositionArray dragStartPositions;
+      SPoint lastKnownMousePosition;
 
       while(running)
       {
@@ -1243,11 +1251,13 @@ namespace MFM
             break;
 
           case SDL_MOUSEBUTTONUP:
+            lastKnownMousePosition.Set(event.button.x, event.button.y);
             mouseButtonsDown &= ~(1<<(event.button.button));
             dragStartPositions[event.button.button].Set(-1,-1);
             goto mousebuttondispatch;
 
           case SDL_MOUSEBUTTONDOWN:
+            lastKnownMousePosition.Set(event.button.x, event.button.y);
             mouseButtonsDown |= 1<<(event.button.button);
             dragStartPositions[event.button.button].Set(event.button.x,event.button.y);
             // FALL THROUGH
@@ -1263,6 +1273,7 @@ namespace MFM
 
           case SDL_MOUSEMOTION:
           {
+            lastKnownMousePosition.Set(event.motion.x, event.motion.y);
             MouseMotionEvent mme(keyboardModifiers, event,
                                  mouseButtonsDown, dragStartPositions);
             m_rootPanel.Dispatch(mme,
@@ -1289,7 +1300,7 @@ namespace MFM
                   keyboardModifiers &= ~mod;
                 break;
               default:
-                KeyboardUpdate(event.key, this->GetGrid());
+                KeyboardUpdate(event.key, this->GetGrid(), lastKnownMousePosition);
                 break;
               }
             }
@@ -1312,7 +1323,18 @@ namespace MFM
 
         m_thisUpdateIsEpoch = false;  // Assume it's not
 
+        if (m_captureScreenshots && !m_pastFirstUpdate)
+        {
+          m_rootDrawing.Clear();
+          m_rootPanel.Paint(m_rootDrawing);
+          const char * path = Super::GetSimDirPathTemporary("screenshot/%D-%D.png",
+                                                            m_thisEpochAEPS,
+                                                            0);
+          m_camera.DrawSurface(m_screen,path);
+        }
         Update(Super::GetGrid());
+
+        m_pastFirstUpdate = true;
 
         m_rootDrawing.Clear();
 

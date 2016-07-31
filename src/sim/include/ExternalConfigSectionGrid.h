@@ -34,6 +34,7 @@ namespace MFM
 {
   template <class GC> class ExternalConfigSectionGrid; // FORWARD
 
+  /** Base class for grid-related configuration function calls used in .MFS files */
   template<class GC>
   class ConfigFunctionCallGrid : public ConfigFunctionCall<GC>
   {
@@ -136,6 +137,8 @@ namespace MFM
      * @param grid The grid to read from or write to.
      */
     ExternalConfigSectionGrid(ExternalConfig<GC>& ec, Grid<GC>& grid);
+
+    virtual void Reset() ;
 
     virtual void WriteSection(ByteSink & byteSink);
 

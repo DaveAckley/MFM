@@ -74,7 +74,7 @@ namespace MFM
 
     GridToolPencil(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("pencil", gp, tbp,
-              IMAGE_ASSET_PENCIL_ICON,
+              ZSLOT_GRIDTOOL_PENCIL,
               "Use pencil tool (draw atoms)")
     {
       Super::SetToolShape(DIAMOND_SHAPE);
@@ -102,7 +102,7 @@ namespace MFM
 
     GridToolEraser(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("eraser", gp, tbp,
-              IMAGE_ASSET_ERASER_ICON,
+              ZSLOT_GRIDTOOL_ERASER,
               "Use eraser tool (set sites empty)")
     {
       Super::SetToolShape(DIAMOND_SHAPE);
@@ -128,7 +128,7 @@ namespace MFM
 
     GridToolBrush(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("brush", gp, tbp,
-              IMAGE_ASSET_BRUSH_ICON,
+              ZSLOT_TRANSPORT_STOP, // XXX Deprecated, so what icon?
               "Use brush tool (draw atoms)")
     {
       Super::SetToolShape(ROUND_SHAPE);
@@ -156,7 +156,7 @@ namespace MFM
 
     GridToolAirBrush(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("air", gp, tbp,
-              IMAGE_ASSET_AIRBRUSH_ICON,
+              ZSLOT_GRIDTOOL_AIRBRUSH,
               "Use airbrush tool (draw atoms in random sites)")
     {
       Super::SetToolShape(ROUND_SHAPE);
@@ -176,6 +176,34 @@ namespace MFM
   };
 
   template<class GC>
+  class GridToolEvent : public GridToolShapeUpdater<GC>
+  {
+  public:
+    typedef GridToolShapeUpdater<GC> Super;
+
+    typedef typename GC::EVENT_CONFIG EC;
+    typedef typename EC::ATOM_CONFIG AC;
+    typedef typename AC::ATOM_TYPE T;
+
+    GridToolEvent(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
+      : Super("event", gp, tbp,
+              ZSLOT_GRIDTOOL_SPARK,
+              "Use spark tool (deliver events)")
+    {
+      Super::SetToolShape(DIAMOND_SHAPE);
+    }
+
+    virtual void UpdateGridCoord(UPoint gridCoord)
+    {
+      const Element<EC> * elt = this->GetSelectedElement();
+      MFM_API_ASSERT_NONNULL(elt);
+
+      Grid<GC> & grid = this->GetGrid();
+      grid.RunEventIfPausedAt(MakeSigned(gridCoord));
+    }
+  };
+
+  template<class GC>
   class GridToolXRay : public GridToolShapeUpdater<GC>
   {
   public:
@@ -187,7 +215,7 @@ namespace MFM
 
     GridToolXRay(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("xray", gp, tbp,
-              IMAGE_ASSET_XRAY_ICON,
+              ZSLOT_GRIDTOOL_XRAY,
               "Use xray tool (flip bits in random sites)")
     {
       Super::SetToolShape(ROUND_SHAPE);
@@ -339,7 +367,7 @@ namespace MFM
 
     GridToolBucket(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("bucket", gp, tbp,
-              IMAGE_ASSET_BUCKET_ICON,
+              ZSLOT_GRIDTOOL_BUCKET,
               "Use bucket tool (flood fill atoms)")
     { }
 
@@ -400,7 +428,7 @@ namespace MFM
 
     GridToolAtomView(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("atomview", gp, tbp,
-              IMAGE_ASSET_ATOM_SELECTOR_ICON,
+              ZSLOT_GRIDTOOL_ATOM_SELECT,
               "Use atom select tool (examine atom internals)")
     { }
 
@@ -411,7 +439,17 @@ namespace MFM
 
     virtual void UpdateGridAround(UPoint point)
     {
-      SetAtomCoord(MakeSigned(point));
+      GridPanel<GC> & gp = this->GetGridPanel();
+      if (!this->IsMainFunction() && !gp.GetAtomViewPanelLookingAtPointIfAny(point))
+      {
+        AtomViewPanel<GC> * pavp = gp.GetInvisibleAtomViewPanelIfAny();
+        if (pavp)
+        {
+          gp.SelectAtomViewPanel(*pavp);
+        }
+      }
+
+      SetAtomCoord(MakeSigned(point)); // in new or prior
     }
 
     virtual void UpdateGridCoord(UPoint point)
@@ -420,28 +458,6 @@ namespace MFM
       // get here
       FAIL(ILLEGAL_STATE);
     }
-
-#if 0
-
-    void BoxEdge(Drawing & drawing, const SPoint gridCoord, u32 color)
-    {
-      if (!this->GetGrid().IsGridCoord(gridCoord)) return;
-      UPoint boxCoord = MakeUnsigned(gridCoord);
-      Rect screenRectDit;
-      GridPanel<GC> & gp = this->GetGridPanel();
-      if (!gp.GetScreenRectDitOfGridCoord(boxCoord, screenRectDit))
-        return;  // WTH?
-      drawing.SetForeground(color);
-      drawing.DrawRectDit(screenRectDit);
-    }
-
-
-    virtual void PaintOverlay(Drawing & drawing)
-    {
-      if (!HasAtomCoord()) return;
-      BoxEdge(drawing, m_atomCoord, (Utils::GetDateTimeNow()&1) ? Drawing::WHITE : Drawing::BLACK);
-    }
-#endif
 
   };
 
@@ -461,7 +477,7 @@ namespace MFM
 
     GridToolTileSelect(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("tileselect", gp, tbp,
-              IMAGE_ASSET_SELECTOR_ICON,
+              ZSLOT_GRIDTOOL_TILE_SELECT,
               "Use tile select tool (select/deselect tiles)")
     { }
 
@@ -545,7 +561,8 @@ namespace MFM
     {
       // Here we expect to have a src coord, dest coord, and gridCoord
       if (!this->HasSrcCoord() || !this->HasDestCoord())
-        FAIL(ILLEGAL_STATE);
+        return;  // But just fail silently if luser forgot to pick an anchor
+
       SPoint mouseDelta = gridCoord - GetDestCoord();
 
       u32 uradius = this->GetRadius();
@@ -580,7 +597,7 @@ namespace MFM
 
     GridToolClone(GridPanel<GC>& gp, ToolboxPanel<GC>& tbp)
       : Super("clone", gp, tbp,
-              IMAGE_ASSET_CLONE_ICON,
+              ZSLOT_GRIDTOOL_CLONE,
               "Use clone tool (copy regions)")
       , m_srcCoord(-1,-1)
       , m_destCoord(-1,-1)

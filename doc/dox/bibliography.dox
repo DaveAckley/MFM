@@ -5,18 +5,29 @@
 
    \section bibPapers Papers
 
-   paper1, paper2
+   [Five-page intro from 2011](http://www.cs.unm.edu/~ackley/papers/hotos-11.pdf)
+
+   [Longer 2013 paper](http://comjnl.oxfordjournals.org/content/56/12/1450.full.pdf+html)
+   (winner of [2014 Wilkes Award](http://www.oxfordjournals.org/our_journals/computer_journal/previouswinners.html))
 
    \section bibVideos Videos
 
-   video1, video2
+   Demos built using (various versions of) the MFM simulator:
+
+   [Distributed city generation](https://www.youtube.com/watch?v=XkSXERxucPc)
+
+   [Abstract plant-herbivore coevolutionary model](https://www.youtube.com/watch?v=jQaXtbrVNaU)
+
+   [Eight particles random walking](https://www.youtube.com/watch?v=mhNuB_U-VTs)
 
    \section bibTuts Tutorials
 
-   tutorial1
+   [ULAM programming language tutorial](https://github.com/elenasa/ULAM/wiki/Ulam-Programming-Language)
 
+   \cond
    \section bibMisc Miscellaneous
 
    misc1, misc2
+   \endcond
 */
 

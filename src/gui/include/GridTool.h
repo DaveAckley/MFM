@@ -51,11 +51,11 @@ namespace MFM
 
     GridPanel<GC> & m_gridPanel;
     ToolboxPanel<GC> & m_toolboxPanel;
-    const ImageAsset m_iconNumber;
+    const MasterIconZSheetSlot m_iconNumber;
 
   public:
 
-    GridTool(GridPanel<GC> & gp, ToolboxPanel<GC> & tbp, ImageAsset iconNumber)
+    GridTool(GridPanel<GC> & gp, ToolboxPanel<GC> & tbp, MasterIconZSheetSlot iconNumber)
       : m_gridPanel(gp)
       , m_toolboxPanel(tbp)
       , m_iconNumber(iconNumber)
@@ -63,7 +63,9 @@ namespace MFM
 
     virtual ~GridTool() { }
 
-    ImageAsset GetImageAsset() const { return m_iconNumber; }
+    //    ImageAsset GetImageAsset() const { return m_iconNumber; }
+
+    MasterIconZSheetSlot GetIconSlot() const { return m_iconNumber; }
 
     GridPanel<GC> & GetGridPanel() { return m_gridPanel; }
     const GridPanel<GC> & GetGridPanel() const { return m_gridPanel; }
@@ -165,7 +167,7 @@ namespace MFM
       return m_doc.GetZString();
     }
 
-    GridToolShapeUpdater(const char * tag, GridPanel<GC> & gp, ToolboxPanel<GC> & tbp, ImageAsset iconNumber, const char * doc)
+    GridToolShapeUpdater(const char * tag, GridPanel<GC> & gp, ToolboxPanel<GC> & tbp, MasterIconZSheetSlot iconNumber, const char * doc)
       : Super(gp, tbp, iconNumber)
       , m_tag(tag)
       , m_toolRadius(-1)
