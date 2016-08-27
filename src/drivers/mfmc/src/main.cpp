@@ -17,7 +17,7 @@ namespace MFM
   struct GridConfigCode {
 
     enum TileType { TileUNSPEC
-#define XX(A,B) , Tile##A
+#define XX(A,W,H) , Tile##A
 #include "TileSizes.inc"
 #undef XX
       , TileUPPER_BOUND
@@ -27,7 +27,7 @@ namespace MFM
     {
       switch (t)
       {
-#define XX(A,B) case Tile##A: return *#A;
+#define XX(A,W,H) case Tile##A: return *#A;
 #include "TileSizes.inc"
 #undef XX
       default: FAIL(ILLEGAL_ARGUMENT);
@@ -115,8 +115,8 @@ namespace MFM
 
   /////
   // Tile types
-#define XX(A,B) \
-  typedef GridConfig<OurEventConfigAll, B, EVENT_HISTORY_SIZE> OurGridConfigTile##A;
+#define XX(A,W,H)                                                      \
+  typedef GridConfig<OurEventConfigAll, W, H, EVENT_HISTORY_SIZE> OurGridConfigTile##A;
 #include "TileSizes.inc"
 #undef XX
   /*
@@ -220,8 +220,8 @@ namespace MFM
     {
       fprintf(stderr, "Supported tile types\n");
 
-#define XX(A,B) \
-    fprintf(stderr, "  Type '%s': %d non-cache sites (%d x %d site storage)\n", #A, (B-8)*(B-8), B, B);
+#define XX(A,W,H)                                                        \
+    fprintf(stderr, "  Type '%s': %d non-cache sites (%d x %d site storage)\n", #A, (W-8)*(H-8), W, H);
 #include "TileSizes.inc"
 #undef XX
 
@@ -316,7 +316,7 @@ namespace MFM
     u32 h = gcc.gridHeight;
     switch (gcc.tileType)
     {
-#define XX(A,B) case GridConfigCode::Tile##A: return SimCheckAndRun<OurGridConfigTile##A>(argc, argv, w, h);
+#define XX(A,W,H) case GridConfigCode::Tile##A: return SimCheckAndRun<OurGridConfigTile##A>(argc, argv, w, h);
 #include "TileSizes.inc"
 #undef XX
     default:

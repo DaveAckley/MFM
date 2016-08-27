@@ -411,6 +411,65 @@ namespace MFM
     }
 
     /**
+     * Multiply the coordinates of Point \c lhs by the corresponding
+     * coordinate values in \c rhs.  If \c lhs is (x,y) and \c rhs is
+     * (p,q), the result is (x*p, y*q).  If \c rhs = (p,p), this
+     * operation is equivalent to operator*(p), otherwise it performs
+     * a non-uniform scaling
+     *
+     * @param lhs One Point to be multiplied coordinate-wise by another Point
+     *
+     * @param rhs The other Point to use
+     *
+     * @returns A Point containing the results of multiplying the
+     * individual coordinates of \c lhs with the corresponding
+     * coordinates of \c rhs.
+     */
+    friend Point<T> MultiplyCoords(const Point<T> & lhs,const Point<T> & rhs)
+    {
+      return Point<T>(lhs.GetX() * rhs.GetX(), lhs.GetY() * rhs.GetY());
+    }
+
+    /**
+     * Divide the coordinates of Point \c lhs by the corresponding
+     * coordinate values in \c rhs.  If \c lhs is (x,y) and \c rhs is
+     * (p,q), the result is (x/p, y/q).  If \c rhs = (p,p), this
+     * operation is equivalent to operator/(p), otherwise it performs
+     * a non-uniform scaling
+     *
+     * @param lhs One Point to be divided coordinate-wise by another Point
+     *
+     * @param rhs The other Point to use
+     *
+     * @returns A Point containing the results of dividing the
+     * individual coordinates of \c lhs with the corresponding
+     * coordinates of \c rhs.
+     */
+    friend Point<T> DivideCoords(const Point<T> & lhs,const Point<T> & rhs)
+    {
+      return Point<T>(lhs.GetX() / rhs.GetX(), lhs.GetY() / rhs.GetY());
+    }
+
+    /**
+     * Mod the coordinates of Point \c lhs by the corresponding
+     * coordinate values in \c rhs.  If \c lhs is (x,y) and \c rhs is
+     * (p,q), the result is (x%p, y%q).  If \c rhs = (p,p), this
+     * operation is equivalent to operator%(p).
+     *
+     * @param lhs One Point to be 'modulus-ed' coordinate-wise by another Point
+     *
+     * @param rhs The other Point to use
+     *
+     * @returns A Point containing the results of taking the mod of
+     * the individual coordinates of \c lhs with the corresponding
+     * coordinates of \c rhs.
+     */
+    friend Point<T> ModCoords(const Point<T> & lhs,const Point<T> & rhs)
+    {
+      return Point<T>(lhs.GetX() % rhs.GetX(), lhs.GetY() % rhs.GetY());
+    }
+
+    /**
      * Divides the coordinates of this Point by a specified
      * integral scalar.
      *

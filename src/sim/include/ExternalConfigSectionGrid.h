@@ -119,7 +119,8 @@ namespace MFM
     typedef typename AC::ATOM_TYPE T;
 
     enum { BPA = AC::BITS_PER_ATOM };
-    enum { TILE_SIDE = GC::TILE_SIDE };
+    enum { TILE_WIDTH = GC::TILE_WIDTH };
+    enum { TILE_HEIGHT = GC::TILE_HEIGHT };
     enum { EVENT_WINDOW_RADIUS = EC::EVENT_WINDOW_RADIUS };
 
   public:

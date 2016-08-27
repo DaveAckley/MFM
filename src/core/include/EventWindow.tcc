@@ -12,7 +12,8 @@ namespace MFM {
   template <class EC>
   bool EventWindow<EC>::TryForceEventAt(const SPoint & tcenter)
   {
-    MFM_LOG_DBG6(("EW::TryForceEventAt(%d,%d)",
+    MFM_LOG_DBG7(("EW%s::TryForceEventAt(%d,%d)",
+                  GetTile().GetLabel(),
                   tcenter.GetX(),
                   tcenter.GetY()));
     ++m_eventWindowsAttempted;
@@ -32,7 +33,8 @@ namespace MFM {
   template <class EC>
   bool EventWindow<EC>::TryEventAt(const SPoint & tcenter)
   {
-    MFM_LOG_DBG6(("EW::TryEventAt(%d,%d)",
+    MFM_LOG_DBG7(("EW%s::TryEventAt(%d,%d)",
+                  GetTile().GetLabel(),
                   tcenter.GetX(),
                   tcenter.GetY()));
     ++m_eventWindowsAttempted;
@@ -77,7 +79,7 @@ namespace MFM {
   template <class EC>
   void EventWindow<EC>::ExecuteEvent()
   {
-    MFM_LOG_DBG6(("EW::ExecuteEvent"));
+    MFM_LOG_DBG7(("EW%s::ExecuteEvent", GetTile().GetLabel()));
     MFM_API_ASSERT_STATE(m_ewState == COMPUTE);
 
     ExecuteBehavior();
@@ -88,7 +90,7 @@ namespace MFM {
   template <class EC>
   void EventWindow<EC>::InitiateCommunications()
   {
-    MFM_LOG_DBG6(("EW::InitiateCommunications"));
+    MFM_LOG_DBG6(("EW%s::InitiateCommunications", GetTile().GetLabel()));
     MFM_API_ASSERT_STATE(m_ewState == COMPUTE);
 
     // Step 1: Write back the event window and set up the CacheProcessors
@@ -109,7 +111,7 @@ namespace MFM {
   template <class EC>
   void EventWindow<EC>::ExecuteBehavior()
   {
-    MFM_LOG_DBG6(("EW::ExecuteBehavior"));
+    MFM_LOG_DBG7(("EW%s::ExecuteBehavior",GetTile().GetLabel()));
     Tile<EC> & t = GetTile();
     unwind_protect(
     {
@@ -147,7 +149,7 @@ namespace MFM {
       SetCenterAtomDirect(t.GetEmptyAtom());
     },
     {
-      MFM_LOG_DBG6(("ET::Execute"));
+      MFM_LOG_DBG7(("ET::Execute"));
       m_element->Behavior(*this);
     });
   }
@@ -198,7 +200,9 @@ namespace MFM {
   template <class EC>
   bool EventWindow<EC>::InitForEvent(const SPoint & center)
   {
-    MFM_LOG_DBG6(("EW::InitForEvent(%d,%d)",center.GetX(),center.GetY()));
+    MFM_LOG_DBG7(("EW%s::InitForEvent(%d,%d)",
+                  GetTile().GetLabel(),
+                  center.GetX(),center.GetY()));
 
     MFM_API_ASSERT_STATE(IsFree());  // Don't be callin' when I'm not free
 
@@ -241,7 +245,7 @@ namespace MFM {
 
     if (!AcquireAllLocks(center, m_eventWindowBoundary))
     {
-      MFM_LOG_DBG6(("EW::InitForEvent - abandoned"));
+      MFM_LOG_DBG7(("EW%s::InitForEvent - abandoned",GetTile().GetLabel()));
       return false;
     }
 
@@ -263,14 +267,16 @@ namespace MFM {
     {
       // Whups, didn't really need that one.  Leave it null, since
       // the other loops check all MAX_CACHES_TO_UPDATE slots anyway
-      MFM_LOG_DBG6(("EW::AcquireRegionLocks - skip: %s unconnected",
+      MFM_LOG_DBG7(("EW%s::AcquireRegionLocks - skip: %s unconnected",
+                    GetTile().GetLabel(),
                     Dirs::GetName(dir)));
       return LOCK_UNNEEDED;
     }
 
     if (!cp.IsIdle())
     {
-      MFM_LOG_DBG6(("EW::AcquireRegionLocks - fail: %s cp not idle",
+      MFM_LOG_DBG7(("EW%s::AcquireRegionLocks - fail: %s cp busy",
+                    GetTile().GetLabel(),
                     Dirs::GetName(dir)));
       return LOCK_UNAVAILABLE;
     }
@@ -278,11 +284,13 @@ namespace MFM {
     bool locked = cp.TryLock(m_lockRegion);
     if (!locked)
     {
-      MFM_LOG_DBG6(("EW::AcquireRegionLocks - fail: didn't get %s lock",
+      MFM_LOG_DBG7(("EW%s::AcquireRegionLocks - fail: didn't get %s lock",
+                    GetTile().GetLabel(),
                     Dirs::GetName(dir)));
       return LOCK_UNAVAILABLE;
     }
-    MFM_LOG_DBG6(("EW::AcquireRegionLocks, %s locked",
+    MFM_LOG_DBG7(("%sEW::AcquireRegionLocks, %s locked",
+                  GetTile().GetLabel(),
                   Dirs::GetName(dir)));
     return LOCK_ACQUIRED;
   }
@@ -292,7 +300,7 @@ namespace MFM {
   {
     Random & random = GetRandom();
 
-    MFM_LOG_DBG6(("EW::AcquireRegionLocks"));
+    MFM_LOG_DBG7(("EW%s::AcquireRegionLocks",GetTile().GetLabel()));
     // We cannot still have any cacheprocessors in use
     for (u32 i = 0; i < MAX_CACHES_TO_UPDATE; ++i)
     { 
@@ -301,7 +309,7 @@ namespace MFM {
 
     if (((s32) m_lockRegion) == -1)
     {
-      MFM_LOG_DBG6(("EW::AcquireRegionLocks - none needed"));
+      MFM_LOG_DBG7(("EW%s::AcquireRegionLocks - none needed",GetTile().GetLabel()));
       return true;  // Nobody is needed
     }
 
@@ -320,7 +328,7 @@ namespace MFM {
       Shuffle<Dir,3>(GetRandom(),lockDirs);
     }
 
-    MFM_LOG_DBG6(("EW::AcquireRegionLocks - checking %d", needed));
+    MFM_LOG_DBG7(("EW%s::AcquireRegionLocks - checking %d", GetTile().GetLabel(), needed));
 
     u32 got = 0;
     for (s32 i = needed; --i >= 0; )
@@ -350,7 +358,9 @@ namespace MFM {
 
     if (got < needed)
     {
-      MFM_LOG_DBG6(("EW::AcquireRegionLocks - got %d but needed %d", got, needed));
+      MFM_LOG_DBG7(("EW%s::AcquireRegionLocks - got %d but needed %d", 
+                    GetTile().GetLabel(),
+                    got, needed));
       // Opps, didn't get all, free any we got
 
       for (m_cpli.ShuffleOrReset(random); m_cpli.HasNext(); )
@@ -361,7 +371,9 @@ namespace MFM {
         {
           CacheProcessor<EC> & cp = *m_cacheProcessorsLocked[i];
           cp.Unlock();
-          MFM_LOG_DBG6(("EW::AcquireRegionLocks #%d freed", i));
+          MFM_LOG_DBG7(("EW%s::AcquireRegionLocks #%d freed",
+                        GetTile().GetLabel(),
+                        i));
           m_cacheProcessorsLocked[i] = 0;
         }
       }
@@ -376,7 +388,9 @@ namespace MFM {
 
       if (m_cacheProcessorsLocked[i])
       {
-        MFM_LOG_DBG6(("EW::AcquireRegionLocks activate #%d", i));
+        MFM_LOG_DBG7(("EW%s::AcquireRegionLocks activate #%d",
+                      GetTile().GetLabel(),
+                      i));
         m_cacheProcessorsLocked[i]->Activate();
       }
     }
@@ -464,7 +478,7 @@ namespace MFM {
 
     Random & random = GetRandom();
 
-    MFM_LOG_DBG6(("EW::StoreToTile"));
+    MFM_LOG_DBG7(("EW%s::StoreToTile",GetTile().GetLabel()));
 
     // First initialize the cache processors
     for (m_cpli.ShuffleOrReset(random); m_cpli.HasNext(); )
@@ -510,7 +524,7 @@ namespace MFM {
       }
     }
 
-    MFM_LOG_DBG6(("EW::StoreToTile releasing"));
+    MFM_LOG_DBG7(("EW%s::StoreToTile releasing",GetTile().GetLabel()));
     // Finally, release the cache processors to take it from here
     for (m_cpli.ShuffleOrReset(random); m_cpli.HasNext(); )
     {

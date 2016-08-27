@@ -48,14 +48,8 @@ namespace MFM
     // Map full untransformed local tile coord into the remote space
     SPoint remote = LocalToRemote(local);
 
-    // Get its distance from the remote tile center
-    u32 dist = tile.GetSquareDistanceFromCenter(remote);
-
-    // Distances up to a tile radius are visible
-    bool visible = dist <= tile.TILE_SIDE / 2;
-
-    // Which is what you asked
-    return visible;
+    // If the result is in that tile, it's 'visible' (for this purpose)
+    return tile.IsInTile(remote);
   }
 
   template <class EC>
@@ -107,22 +101,33 @@ namespace MFM
     // Time to pack this puppy up for travel
     MFM_API_ASSERT_STATE(m_toSendCount < SITE_COUNT);  // You say ship a whole window or more?
 
-    MFM_LOG_DBG7(("CP %s %s [%s] (%d,%d) send #%d (%d,%d)",
-                  m_tile->GetLabel(),
-                  Dirs::GetName(m_cacheDir),
-                  Dirs::GetName(m_centerRegion),
-                  m_farSideOrigin.GetX(),
-                  m_farSideOrigin.GetY(),
-                  siteNumber,
-                  99,
-                  99));
-
     // Allocate next struct
     CachePacketInfo & cpi = m_toSend[m_toSendCount++];
 
     cpi.m_atom = atom;
     cpi.m_siteNumber = siteNumber;
     cpi.m_type = changed ? PacketType::UPDATE : PacketType::CHECK;
+
+    if (LOG.IfLog((Logger::Level) 6)) 
+    {
+      const MDist<R> & md = MDist<R>::get();
+      AtomSerializer<AC> as(cpi.m_atom);
+      SPoint ctr = m_eventCenter;
+      SPoint site = ctr + md.GetPoint(siteNumber);
+      SPoint remote = site - m_farSideOrigin;
+      LOG.Debug("CPFROM%s %s [%s] @%d fo(%d,%d) ls#%d(%d,%d)->rs(%d,%d) send%c :%@",
+                m_tile->GetLabel(),
+                Dirs::GetName(m_cacheDir),
+                Dirs::GetName(m_centerRegion),
+                m_toSendCount-1,
+                m_farSideOrigin.GetX(),
+                m_farSideOrigin.GetY(),
+                siteNumber,
+                site.GetX(), site.GetY(),
+                remote.GetX(), remote.GetY(),
+                changed?'u':'c',
+                &as);
+    }
   }
 
   template <class EC>
@@ -190,6 +195,24 @@ namespace MFM
       const SPoint soffset = md.GetPoint(siteNumber);
       SPoint loc = soffset + m_eventCenter;
 
+      if (LOG.IfLog((Logger::Level) 6)) 
+      {
+        AtomSerializer<AC> as(inboundAtom);
+        SPoint remote = loc - m_farSideOrigin;
+        LOG.Debug("CPTO%s %s [%s] @%d fo(%d,%d) ls#%d(%d,%d)->rs(%d,%d) recv%c :%@",
+                  m_tile->GetLabel(),
+                  Dirs::GetName(m_cacheDir),
+                  Dirs::GetName(m_centerRegion),
+                  i,
+                  m_farSideOrigin.GetX(),
+                  m_farSideOrigin.GetY(),
+                  siteNumber,
+                  loc.GetX(), loc.GetY(),
+                  remote.GetX(), remote.GetY(),
+                  isDifferent?'u':'c',
+                  &as);
+      }
+
       if (isDifferent)
       {
         const T& oldAtom = *m_tile->GetAtom(loc);
@@ -218,7 +241,7 @@ namespace MFM
           const char * tlb = GetTile().GetLabel();
           CharBufferByteSource cbs(tlb,strlen(tlb));
           cbs.Scanf("[%d,%d]",&tilex,&tiley);
-          SPoint gloc = SPoint(tilex,tiley) * GetTile().OWNED_SIDE + loc;
+          SPoint gloc = MultiplyCoords(SPoint(tilex,tiley), GetTile().GetOwnedSize()) + loc;
 
           LOG.Warning("NC%s %s%c%c {%03d,%03d} #%2d(%2d,%2d)+(%2d,%2d)==(%2d,%2d) [%04x/%@] [%04x/%@]",
                       isDifferent? "U" : "C",
@@ -248,11 +271,14 @@ namespace MFM
   void CacheProcessor<EC>::ReceiveUpdateEnd()
   {
     MFM_API_ASSERT_STATE(m_cpState == PASSIVE);
-    MFM_LOG_DBG7(("Replying to UE, %d consistent",
-                  m_consistentAtomCount));
+    MFM_LOG_DBG6(("CP %s Received update end",
+                  GetTile().GetLabel()));
     ApplyCacheUpdate();
     PacketIO pbuffer;
     pbuffer.SendReply(m_consistentAtomCount, *this);
+    MFM_LOG_DBG6(("CP %s Applied update end, %d consistent",
+                  GetTile().GetLabel(),
+                  m_consistentAtomCount));
     SetIdle();
   }
 
@@ -269,7 +295,7 @@ namespace MFM
     {
       ReportCleanUpdate(m_toSendCount);
     }
-    MFM_LOG_DBG7(("CP %s %s [%s] reply %d<->%d : %d",
+    MFM_LOG_DBG6(("CP %s %s [%s] reply %d<->%d : %d",
                   GetTile().GetLabel(),
                   Dirs::GetName(m_cacheDir),
                   Dirs::GetName(m_centerRegion),
@@ -290,7 +316,7 @@ namespace MFM
 
     if (m_cpState != IDLE)
     {
-      MFM_LOG_DBG7(("CP %s %s Advance in state %s",
+      MFM_LOG_DBG6(("CP %s %s Advance in state %s",
                     GetTile().GetLabel(),
                     Dirs::GetName(m_cacheDir),
                     GetStateName(m_cpState)));
@@ -325,7 +351,7 @@ namespace MFM
   template <class EC>
   bool CacheProcessor<EC>::AdvanceShipping()
   {
-    MFM_LOG_DBG7(("CP %s %s (%d,%d): Advance shipping",
+    MFM_LOG_DBG6(("CP %s %s (%d,%d): Advance shipping",
                   GetTile().GetLabel(),
                   Dirs::GetName(m_cacheDir),
                   m_farSideOrigin.GetX(),
@@ -343,7 +369,7 @@ namespace MFM
       }
       didWork = true;
       ++m_sentCount;
-      MFM_LOG_DBG7(("CP %s %s: Ship %d (site #%d)",
+      MFM_LOG_DBG6(("CP %s %s: Ship %d (site #%d)",
                     GetTile().GetLabel(),
                     Dirs::GetName(m_cacheDir),
                     m_sentCount,

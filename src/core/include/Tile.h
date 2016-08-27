@@ -90,15 +90,36 @@ namespace MFM
     enum { ELEMENT_TABLE_SIZE = 1u<<AC::ATOM_TYPE_BITS };
 
     /**
-     * The length of a side of this (necessarily square) Tile in sites.
+     * The width of this (not necessarily square) Tile in sites.
      */
-    const u32 TILE_SIDE;
+    const u32 TILE_WIDTH;
 
     /**
-     * The edge length of the portion of a Tile that is 'owned' by the
+     * The height of this (not necessarily square) Tile in sites.
+     */
+    const u32 TILE_HEIGHT;
+
+    /**
+     * The width of the portion of a Tile that is 'owned' by the
      * Tile itself -- i.e., excluding the cache boundary.
      */
-    const u32 OWNED_SIDE;
+    const u32 OWNED_WIDTH;
+
+    /**
+     * The height of the portion of a Tile that is 'owned' by the
+     * Tile itself -- i.e., excluding the cache boundary.
+     */
+    const u32 OWNED_HEIGHT;
+
+    SPoint GetOwnedSize() const 
+    {
+      return SPoint(OWNED_WIDTH, OWNED_HEIGHT);
+    }
+
+    SPoint GetTileSize() const 
+    {
+      return SPoint(TILE_WIDTH, TILE_HEIGHT);
+    }
 
     /**
      * An enumeration of the kinds of memory regions which may exist in
@@ -113,7 +134,7 @@ namespace MFM
       REGION_COUNT
     };
 
-    Tile(const u32 tileSide, S * sites, const u32 eventbuffersize, EventHistoryItem * items) ;
+    Tile(const u32 tileWidth, const u32 tileHeight, S * sites, const u32 eventbuffersize, EventHistoryItem * items) ;
 
     void SaveTile(ByteSink & to) const ;
 
@@ -137,8 +158,8 @@ namespace MFM
     u32 GetSiteInTileNumber(const SPoint index) const
     {
       UPoint uidx = MakeUnsigned(index);
-      MFM_API_ASSERT_ARG(uidx.GetX() < TILE_SIDE && uidx.GetY() < TILE_SIDE);
-      return uidx.GetY()*TILE_SIDE + uidx.GetX();
+      MFM_API_ASSERT_ARG(uidx.GetX() < TILE_WIDTH && uidx.GetY() < TILE_HEIGHT);
+      return uidx.GetY()*TILE_WIDTH + uidx.GetX();
     }
 
     /**
@@ -151,8 +172,8 @@ namespace MFM
      */
     SPoint GetCoordOfSiteInTileNumber(u32 siteInTileNumber) const
     {
-      MFM_API_ASSERT_ARG(siteInTileNumber < TILE_SIDE*TILE_SIDE);
-      return SPoint(siteInTileNumber % TILE_SIDE, siteInTileNumber / TILE_SIDE);
+      MFM_API_ASSERT_ARG(siteInTileNumber < TILE_WIDTH*TILE_HEIGHT);
+      return SPoint(siteInTileNumber % TILE_WIDTH, siteInTileNumber / TILE_WIDTH);
     }
 
     /**
@@ -202,7 +223,8 @@ namespace MFM
      */
     SPoint GetRandomOwnedCoord()
     {
-      return OwnedCoordToTile(SPoint(GetRandom(), OWNED_SIDE, OWNED_SIDE));
+      Random & r = GetRandom();
+      return OwnedCoordToTile(SPoint(r.Create(OWNED_WIDTH), r.Create(OWNED_HEIGHT)));
     }
 
     u32 GetAtomCount(ElementType atomType) const
@@ -340,10 +362,10 @@ namespace MFM
 
       void operator++()
       {
-        if (j < (s32) (t.TILE_SIDE - INDENT))
+        if (j < (s32) (t.TILE_HEIGHT - INDENT))
         {
           i++;
-          if (i >= (s32) (t.TILE_SIDE - INDENT))
+          if (i >= (s32) (t.TILE_WIDTH - INDENT))
           {
             i = INDENT;
             j++;
@@ -393,10 +415,10 @@ namespace MFM
     }
 
     iterator_type endAll() {
-      return iterator_type(*this, 0, 0, TILE_SIDE);
+      return iterator_type(*this, 0, 0, TILE_HEIGHT);
     }
     const_iterator_type endAll() const {
-      return const_iterator_type(*this, 0, 0, TILE_SIDE);
+      return const_iterator_type(*this, 0, 0, TILE_HEIGHT);
     }
 
     iterator_type beginOwned() {
@@ -407,10 +429,10 @@ namespace MFM
     }
 
     iterator_type endOwned() {
-      return iterator_type(*this, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS, TILE_SIDE - EVENT_WINDOW_RADIUS);
+      return iterator_type(*this, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS, TILE_HEIGHT - EVENT_WINDOW_RADIUS);
     }
     const_iterator_type endOwned() const {
-      return const_iterator_type(*this, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS, TILE_SIDE - EVENT_WINDOW_RADIUS);
+      return const_iterator_type(*this, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS, TILE_HEIGHT - EVENT_WINDOW_RADIUS);
     }
 
     iterator_type begin(bool all) {
@@ -561,6 +583,7 @@ namespace MFM
      */
     SPoint GetNeighborLoc(Dir neighbor, const SPoint& atomLoc) const;
 
+#if 0
     /**
      * Gets the Region that a specified index, from the center of
      * the edge of a Tile, reaches to.
@@ -570,6 +593,7 @@ namespace MFM
      * @returns The Region which index will reach.
      */
     Region RegionFromIndex(const u32 index);
+#endif
 
     /**
      * Performs a single Event on the generated EventWindow .
@@ -787,15 +811,23 @@ namespace MFM
      */
     u32 GetSites() const
     {
-      return OWNED_SIDE*OWNED_SIDE;
+      return OWNED_WIDTH*OWNED_HEIGHT;
     }
 
     /**
      * Gets the width of this Tile in sites, including caches.
      */
-    u32 GetTileSide()
+    u32 GetTileWidth()
     {
-      return TILE_SIDE;
+      return TILE_WIDTH;
+    }
+
+    /**
+     * Gets the height of this Tile in sites, including caches.
+     */
+    u32 GetTileHeight()
+    {
+      return TILE_HEIGHT;
     }
 
     /**
@@ -856,6 +888,25 @@ namespace MFM
     bool HasAnyConnections(Dir regionDir) const;
 
     /**
+     * Finds the maximum ('square') distance from the nearest edge of
+     * this Tile to this point, which for correct results must be
+     * inside the tile boundaries.  This computation returns 0 for all
+     * edge sites; values of 0..EVENT_WINDOW_RADIUS-1 are cache sites.
+     *
+     * @param point The Point whose distance should be computed
+     *
+     * @returns The square distance from the Tile edges to the given
+     * site, greater than or equal to 0
+     */
+    u32 GetSquareDistanceFromEdge(const SPoint& point) const
+    {
+      s32 minx = MIN(point.GetX(),(s32) (TILE_WIDTH - 1) - point.GetX());
+      s32 miny = MIN(point.GetY(),(s32) (TILE_HEIGHT - 1) - point.GetY());
+      return (u32) MIN(minx, miny);
+    }
+
+#if 0
+    /**
      * Finds the maximum ('square') distance from the center of the
      * Tile to this point.  This computation assumes the TILE_SIDE is
      * even (see ctor), and returns 1 for all of the four 'centermost'
@@ -869,11 +920,12 @@ namespace MFM
     u32 GetSquareDistanceFromCenter(const SPoint& point) const
     {
       // Do everything at double scale to get the rounding right
-      const SPoint doubleResCenter(TILE_SIDE - 1, TILE_SIDE - 1);
+      const SPoint doubleResCenter(TILE_WIDTH - 1, TILE_HEIGHT - 1);
       const SPoint doubleResPoint = point * 2;
       u32 doubleResDistance = (doubleResPoint - doubleResCenter).GetMaximumLength();
       return (doubleResDistance + 1) / 2;
     }
+#endif
 
     /**
      * Checks to see if a specified local point is contained within a
@@ -886,8 +938,7 @@ namespace MFM
      */
     bool IsInCache(const SPoint& point) const
     {
-      u32 sqdist = GetSquareDistanceFromCenter(point);
-      return sqdist <= TILE_SIDE / 2 && sqdist > TILE_SIDE / 2 - EVENT_WINDOW_RADIUS;
+      return IsInTile(point) && GetSquareDistanceFromEdge(point) < EVENT_WINDOW_RADIUS;
     }
 
     /**
@@ -902,8 +953,7 @@ namespace MFM
      */
     bool IsInShared(const SPoint& point) const
     {
-      u32 sqdist = GetSquareDistanceFromCenter(point);
-      return sqdist <= TILE_SIDE / 2 && sqdist > TILE_SIDE / 2 - 2 * EVENT_WINDOW_RADIUS;
+      return IsInTile(point) && GetSquareDistanceFromEdge(point) < 2 * EVENT_WINDOW_RADIUS;
     }
 
     /**
@@ -924,7 +974,7 @@ namespace MFM
      */
     bool IsInHidden(const SPoint& point) const
     {
-      return GetSquareDistanceFromCenter(point) <= TILE_SIDE / 2 - 3 * EVENT_WINDOW_RADIUS;
+      return IsInTile(point) && GetSquareDistanceFromEdge(point) >= 3 * EVENT_WINDOW_RADIUS;
     }
 
     /**
@@ -938,7 +988,7 @@ namespace MFM
      */
     bool IsOwnedSite(const SPoint & point) const
     {
-      return GetSquareDistanceFromCenter(point) <= TILE_SIDE / 2 - 1 * EVENT_WINDOW_RADIUS;
+      return IsInTile(point) && GetSquareDistanceFromEdge(point) >= EVENT_WINDOW_RADIUS;
     }
 
     /**
@@ -957,7 +1007,7 @@ namespace MFM
     inline bool IsInTile(const SPoint& pt) const
     {
       // Unsigned so possible negative coords wrap around to big positives
-      return ((u32) pt.GetX()) < TILE_SIDE && ((u32) pt.GetY() < TILE_SIDE);
+      return ((u32) pt.GetX()) < TILE_WIDTH && ((u32) pt.GetY() < TILE_HEIGHT);
     }
 
     /**
@@ -994,6 +1044,7 @@ namespace MFM
      */
     bool IsLiveSite(const SPoint & location) const;
 
+#if 0 /* XXX UNUSED? */
     /**
      * Checks to see if a specified local point is a site that
      * currently might receive cache protocol updates in this
@@ -1009,6 +1060,7 @@ namespace MFM
      * updates, given current connectivity.
      */
     bool IsReachableViaCacheProtocol(const SPoint & location) const;
+#endif
 
     /**
      * Checks to see if a specified SPoint is in a given region of this

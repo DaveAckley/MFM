@@ -56,12 +56,14 @@ namespace MFM {
 
     enum { MAX_TILES_SUPPORTED = 500 };  // Yeah right.  Used for sizing m_rgi
 
-    enum { R = EC::EVENT_WINDOW_RADIUS};
-    enum { TILE_SIDE = GC::TILE_SIDE};
+    enum { R = EC::EVENT_WINDOW_RADIUS };
+    enum { TILE_WIDTH = GC::TILE_WIDTH,
+           TILE_HEIGHT = GC::TILE_HEIGHT,
+           OWNED_WIDTH = TILE_WIDTH - 2 * R,
+           OWNED_HEIGHT = TILE_HEIGHT - 2 * R }; // Duplicating the OWNED_SIDE computation in Tile.tcc!
     enum { EVENT_HISTORY_SIZE = GC::EVENT_HISTORY_SIZE};
-    enum { OWNED_SIDE = TILE_SIDE - 2 * R }; // Duplicating the OWNED_SIDE computation in Tile.tcc!
 
-    typedef SizedTile<EC,TILE_SIDE,EVENT_HISTORY_SIZE> GridTile;
+    typedef SizedTile<EC,TILE_WIDTH,TILE_HEIGHT,EVENT_HISTORY_SIZE> GridTile;
 
   private:
     Random m_random;
@@ -559,12 +561,22 @@ namespace MFM {
      */
     u32 GetWidth() const { return m_width; }
 
+    SPoint GetTileOwnedSize() const
+    {
+      return SPoint(OWNED_WIDTH, OWNED_HEIGHT);
+    }
+
+    SPoint GetTileIndexOfGridCoord(const SPoint & siteInGrid) const 
+    {
+      return DivideCoords(siteInGrid, GetTileOwnedSize());
+    }
+
     /**
      * Return the Grid height in (non-cache) sites
      */
     u32 GetHeightSites() const
     {
-      return GetHeight() * OWNED_SIDE;
+      return GetHeight() * OWNED_HEIGHT;
     }
 
     /**
@@ -572,7 +584,7 @@ namespace MFM {
      */
     u32 GetWidthSites() const
     {
-      return GetWidth() * OWNED_SIDE;
+      return GetWidth() * OWNED_WIDTH;
     }
 
     /**

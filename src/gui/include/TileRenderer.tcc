@@ -25,9 +25,10 @@ namespace MFM
   template <class EC>
   SPoint TileRenderer<EC>::ComputeDrawSizeDit(const Tile<EC> & tile, u32 tileRegion) const
   {
-    const u32 drawDiameterSites = tile.TILE_SIDE - 2 * EWR * tileRegion;
-    const u32 drawSideDit = drawDiameterSites * m_atomSizeDit;
-    return SPoint(drawSideDit, drawSideDit);
+    const s32 sitesInset = 2 * EWR * tileRegion;
+    const SPoint drawDiameterSites = tile.GetTileSize() - SPoint(sitesInset, sitesInset);
+    const SPoint drawSizeDit = drawDiameterSites * m_atomSizeDit;
+    return drawSizeDit;
   }
 
   template <class EC>

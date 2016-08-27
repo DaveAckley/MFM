@@ -430,7 +430,7 @@ namespace MFM {
       m_cacheDir = toCache;
 
       // Map their full untransformed origin to our full untransformed frame
-      SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir) * m_tile->OWNED_SIDE;
+      SPoint remoteOrigin = MultiplyCoords(Dirs::GetOffset(m_cacheDir), m_tile->GetOwnedSize());
       m_farSideOrigin = remoteOrigin;
 
       bool onSideA = (m_cacheDir >= Dirs::NORTHEAST && m_cacheDir <= Dirs::SOUTH);

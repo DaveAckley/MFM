@@ -37,7 +37,8 @@ namespace MFM {
    * at the Tile-to-Grid level.
    */
   template <class EC,      // EventConfig
-            u32 SIDE,
+            u32 WIDTH,
+            u32 HEIGHT,
             u32 HISTORYSIZE>
   struct GridConfig {
 
@@ -47,22 +48,22 @@ namespace MFM {
     typedef EC EVENT_CONFIG;
 
     /**
-     * TILE_SIDE is the number of sites wide (and high) for a tile in
+     * TILE_WIDTH is the number of sites wide for a tile in this
+     * GridConfig
+     */
+    enum { TILE_WIDTH = WIDTH };
+
+    /**
+     * TILE_HEIGHT is the number of sites wide (and high) for a tile in
      * this GridConfig
      */
-    enum { TILE_SIDE = SIDE };
+    enum { TILE_HEIGHT = HEIGHT };
 
     /**
      * EVENT_HISTORY_SIZE is the number of EventHistoryItems that a
      * tile remembers in this GridConfig
      */
     enum { EVENT_HISTORY_SIZE = HISTORYSIZE };
-
-    /**
-     * OWNED_SIDE is the number of sites wide (and high) for a tile in
-     * this GridConfig, excluding the caches
-     */
-    enum { OWNED_SIDE = TILE_SIDE - 2 * EC::EVENT_WINDOW_RADIUS };
 
   };
 

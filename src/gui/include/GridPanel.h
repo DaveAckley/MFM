@@ -467,19 +467,20 @@ namespace MFM
     {
       u32 atomDit = GetAtomDit();
       bool caches = GetTileRenderer().IsDrawCaches();
-      u32 sizeDit;
-      u32 spacingDit;
+      SPoint sizeDit;
+      SPoint spacingDit;
       if (caches)
       {
-        sizeDit = tile.TILE_SIDE * atomDit;
-        spacingDit = sizeDit + atomDit / 2;
+        sizeDit = tile.GetTileSize() * atomDit;
+        spacingDit = sizeDit + SPoint(atomDit/2, atomDit/2);
       }
       else
       {
-        sizeDit = tile.OWNED_SIDE * atomDit;
+        sizeDit = tile.GetOwnedSize() * atomDit;
         spacingDit = sizeDit;
       }
-      return Rect(tileCoord * spacingDit + m_gridOriginDit, UPoint(sizeDit,sizeDit));
+      return Rect(MultiplyCoords(tileCoord, spacingDit) + m_gridOriginDit, 
+                  MakeUnsigned(sizeDit));
 
     }
 
@@ -546,17 +547,17 @@ namespace MFM
                 return false;
 
               // Hmm, is it this mysterious code again?  (Grid.tcc:404)
-              SPoint siteInOtherTile = siteInTileCoord - offset*tile.OWNED_SIDE;
-              siteInGridCoord = otherTileCoord * tile.OWNED_SIDE + OurTile::TileCoordToOwned(siteInOtherTile);
+              SPoint siteInOtherTile = siteInTileCoord - MultiplyCoords(offset, tile.GetOwnedSize());
+              siteInGridCoord = MultiplyCoords(otherTileCoord, tile.GetOwnedSize()) + OurTile::TileCoordToOwned(siteInOtherTile);
             }
             else
             {
-              siteInGridCoord = tileCoord * tile.OWNED_SIDE + OurTile::TileCoordToOwned(siteInTileCoord);
+              siteInGridCoord = MultiplyCoords(tileCoord, tile.GetOwnedSize()) + OurTile::TileCoordToOwned(siteInTileCoord);
             }
           }
           else
           {
-            siteInGridCoord = tileCoord * tile.OWNED_SIDE + siteInTileCoord;
+            siteInGridCoord = MultiplyCoords(tileCoord, tile.GetOwnedSize()) + siteInTileCoord;
           }
           gridCoord = MakeUnsigned(siteInGridCoord);
           return true;

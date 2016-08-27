@@ -433,8 +433,10 @@ XXX UPDATE
     padChar = ' ';
   again:
     switch (p = *format++) {
+      // %# - Prefix: Use (conversion-dependent) alternate printing style, if any
     case '#': alt = true; goto again;
 
+      // %0 - Prefix: Pad fieldwidth with 0's
     case '0':
       if (fieldWidth < 0) {
         padChar = '0';
@@ -442,12 +444,14 @@ XXX UPDATE
       } else fieldWidth *= 10;
       goto again;
 
+      // %1,%2,%3,%4,%5,%6,%7,%8,%9 - Prefix: Specify fieldwidth digits
     case '1': case '2': case '3': case '4': case '5':
     case '6': case '7': case '8': case '9':
       if (fieldWidth < 0) fieldWidth = 0;
       fieldWidth = fieldWidth * 10 + (p - '0');
       goto again;
 
+      // %c - Conversion: Print arg byte as-is.  ALTERNATE: Print 'unprintable' bytes in hex like [%ff]
     case 'c':
       {
         u32 ch = va_arg(ap,int);
@@ -462,6 +466,8 @@ XXX UPDATE
       }
       break;
 
+      // %@ - Conversion: Print arbitrary arg ByteSerializable*.  
+      //      ALTERNATE: Take two args, first is additional int argument for ByteSerializable::PrintTo
     case '@':
       {
         s32 argument = 0;

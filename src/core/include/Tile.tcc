@@ -10,9 +10,11 @@
 namespace MFM
 {
   template <class EC>
-  Tile<EC>::Tile(const u32 tileSide, S * sites, const u32 eventbuffersize, EventHistoryItem * items) 
-    : TILE_SIDE(tileSide)
-    , OWNED_SIDE(TILE_SIDE - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
+  Tile<EC>::Tile(const u32 tileWidth, const u32 tileHeight, S * sites, const u32 eventbuffersize, EventHistoryItem * items) 
+    : TILE_WIDTH(tileWidth)
+    , TILE_HEIGHT(tileHeight)
+    , OWNED_WIDTH(TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
+    , OWNED_HEIGHT(TILE_HEIGHT - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
     , m_sites(sites)
     , m_cdata(*this)
     , m_lockAttempts(0)
@@ -26,13 +28,10 @@ namespace MFM
     , m_warpFactor(3)
     , m_eventHistoryBuffer(*this, eventbuffersize, items)
   {
-    // TILE_SIDE can't be too small, and we must apparently have sites..
-    MFM_API_ASSERT_ARG(TILE_SIDE >= 3*EVENT_WINDOW_RADIUS && m_sites != 0);
-
-    // Require even TILE_SIDE.  (The 'GetSquareDistanceFromCenter'
-    // computation would be cheaper if TILE_SIDE was guaranteed odd,
-    // but that violates a MFM tradition that is now cast in stone.)
-    MFM_API_ASSERT_ARG(2 * TILE_SIDE / 2 == TILE_SIDE);
+    // Tile can't be too small, and we must apparently have sites..
+    MFM_API_ASSERT_ARG(TILE_WIDTH >= 3*EVENT_WINDOW_RADIUS);
+    MFM_API_ASSERT_ARG(TILE_HEIGHT >= 3*EVENT_WINDOW_RADIUS);
+    MFM_API_ASSERT_ARG(m_sites != 0);
 
     Init();
   }
@@ -285,13 +284,13 @@ namespace MFM
     if(pt.GetX() < REACH) {
 
       if(pt.GetY() < REACH) return Dirs::NORTHWEST;
-      if(pt.GetY() >= TILE_SIDE - REACH) return Dirs::SOUTHWEST;
+      if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTHWEST;
       return Dirs::WEST;
 
-    } else if(pt.GetX() >= TILE_SIDE - REACH) {
+    } else if(pt.GetX() >= TILE_WIDTH - REACH) {
 
       if(pt.GetY() < REACH) return Dirs::NORTHEAST;
-      if(pt.GetY() >= TILE_SIDE - REACH) return Dirs::SOUTHEAST;
+      if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTHEAST;
       return Dirs::EAST;
 
     }
@@ -299,7 +298,7 @@ namespace MFM
     // X in neither east nor west reach
 
     if(pt.GetY() < REACH) return Dirs::NORTH;
-    if(pt.GetY() >= TILE_SIDE - REACH) return Dirs::SOUTH;
+    if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTH;
     return (Dir)-1;
   }
 
@@ -348,8 +347,13 @@ namespace MFM
     {
       if (atom.GetType() != Element_Empty<EC>::THE_INSTANCE.GetType())
       {
-        LOG.Debug("Not placing type %04x at (%2d,%2d) of %s",
-                  atom.GetType(), pt.GetX(), pt.GetY(), this->GetLabel());
+        T a = atom;
+        AtomSerializer<AC> as(a);
+        LOG.Warning("TL%s::Not placing %@ [0x%04x] at (%2d,%2d) - site not live",
+                    this->GetLabel(),
+                    &as, 
+                    atom.GetType(), 
+                    pt.GetX(), pt.GetY());
       }
       return;
     }
@@ -390,6 +394,7 @@ namespace MFM
     return cxn.IsConnected();
   }
 
+#if 0 /* XXX UNUSED? */
   template <class EC>
   bool Tile<EC>::IsReachableViaCacheProtocol(const SPoint & location) const
   {
@@ -417,6 +422,7 @@ namespace MFM
     }
     return false;
   }
+#endif
 
   template <class EC>
   bool Tile<EC>::IsCacheSitePossibleEventCenter(const SPoint & location) const
@@ -445,7 +451,7 @@ namespace MFM
   template <class EC>
   bool Tile<EC>::IsInUncachedTile(const SPoint& pt) const
   {
-    return ((u32) pt.GetX()) < OWNED_SIDE && ((u32) pt.GetY() < OWNED_SIDE);
+    return ((u32) pt.GetX()) < OWNED_WIDTH && ((u32) pt.GetY() < OWNED_HEIGHT);
   }
 
   template <class EC>
@@ -473,12 +479,13 @@ namespace MFM
     }
   }
 
+#if 0
   template <class EC>
   typename Tile<EC>::Region Tile<EC>::RegionFromIndex(const u32 index)
   {
     enum { R = EVENT_WINDOW_RADIUS };
 
-    if(index >= TILE_SIDE)
+    if(index >= TILE_WIDTH * TILE_HEIGHT)
     {
       FAIL(ARRAY_INDEX_OUT_OF_BOUNDS); /* Index out of Tile bounds */
     }
@@ -499,12 +506,12 @@ namespace MFM
       return REGION_HIDDEN;
     }
   }
+#endif
 
   template <class EC>
   typename Tile<EC>::Region Tile<EC>::RegionIn(const SPoint& pt)
   {
-    return MIN(RegionFromIndex((u32)pt.GetX()),
-               RegionFromIndex((u32)pt.GetY()));
+    return (Region) MIN(REGION_HIDDEN, (Region) (GetSquareDistanceFromEdge(pt) / EVENT_WINDOW_RADIUS));
   }
 
   template <class EC>
@@ -528,7 +535,7 @@ namespace MFM
       break;
     case ACTIVE:
       didWork |= AdvanceComputation();
-      MFM_LOG_DBG6(("Tile %s: AdvanceComputation->%d",
+      MFM_LOG_DBG7(("Tile %s: AdvanceComputation->%d",
                     this->GetLabel(),
                     didWork));
       // FALL THROUGH
@@ -551,7 +558,7 @@ namespace MFM
         return false;
       }
     }
-    MFM_LOG_DBG6(("Tile %s All CPs idle",
+    MFM_LOG_DBG7(("Tile %s All CPs idle",
                   this->GetLabel()));
     return true;
   }

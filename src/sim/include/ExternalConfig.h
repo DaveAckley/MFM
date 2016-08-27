@@ -50,14 +50,16 @@ namespace MFM
     typedef typename AC::ATOM_TYPE T;
 
     enum { BPA = AC::BITS_PER_ATOM };
-    enum { TILE_SIDE = GC::TILE_SIDE };
+    enum { TILE_WIDTH = GC::TILE_WIDTH };
+    enum { TILE_HEIGHT = GC::TILE_HEIGHT };
     enum { EVENT_WINDOW_RADIUS = EC::EVENT_WINDOW_RADIUS };
 
   public:
     // MFS_VERSION = 1 Original minimal version
     // MFS_VERSION = 2 (2014/2015) Add grid size info
     // MFS_VERSION = 3 (2015) Add sections
-    enum { MFS_VERSION = 3 };
+    // MFS_VERSION = 4 (2016) Non-square tiles
+    enum { MFS_VERSION = 4 };
 
     /*
      * Construct a new ExternalConfig associated with a specific driver

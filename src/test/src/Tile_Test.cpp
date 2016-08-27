@@ -14,30 +14,27 @@ namespace MFM {
   void Tile_Test::Test_tileSquareDistances()
   {
     TestTile tile;
-    u32 W = tile.TILE_SIDE;
+    u32 W = tile.TILE_WIDTH;
+    u32 H = tile.TILE_HEIGHT;
     u32 dist;
 
-    dist = tile.GetSquareDistanceFromCenter(SPoint(W / 2, W / 2));
+    dist = tile.GetSquareDistanceFromEdge(SPoint(W / 2, H / 2));
+    assert(dist==20);
+
+    dist = tile.GetSquareDistanceFromEdge(SPoint(0, 0));
+    assert(dist==0);
+
+    dist = tile.GetSquareDistanceFromEdge(SPoint(0, H / 2));
+    assert(dist==H/2);
+
+    dist = tile.GetSquareDistanceFromEdge(SPoint(W / 2, 0));
+    assert(dist==W/2);
+
+    dist = tile.GetSquareDistanceFromEdge(SPoint(W -1  , H - 1));
     assert(dist==1);
 
-    dist = tile.GetSquareDistanceFromCenter(SPoint(0, 0));
-    assert(dist==20);
-
-    dist = tile.GetSquareDistanceFromCenter(SPoint(0, W / 2));
-    assert(dist==20);
-
-    dist = tile.GetSquareDistanceFromCenter(SPoint(W / 2, 0));
-    assert(dist==20);
-
-    dist = tile.GetSquareDistanceFromCenter(SPoint(W -1  , W - 1));
-    assert(dist==20);
-
-    dist = tile.GetSquareDistanceFromCenter(SPoint(W, W));
-    assert(dist==21);
-
-    dist = tile.GetSquareDistanceFromCenter(SPoint(-100, 50));
-    assert(dist==120);
-
+    dist = tile.GetSquareDistanceFromEdge(SPoint(1, 1));
+    assert(dist==1);
   }
 
   void Tile_Test::Test_tilePlaceAtom()
