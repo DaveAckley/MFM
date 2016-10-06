@@ -108,7 +108,7 @@ namespace MFM
     const Element<EC> * pelt = this->LookupElement(nick);
     if (!pelt)
     {
-      in.Msg(Logger::ERROR, "'%@' isn't a registered element nickname", &nick);
+      in.Msg(Logger::ERROR, "'%s' isn't a registered element nickname", nick.GetZString());
       return 0;
     }
 

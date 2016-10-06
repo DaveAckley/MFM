@@ -63,7 +63,8 @@ namespace MFM
 
   /**
    * A singleton class consisting of many utilities used for
-   * calculating Manhattan Distances.
+   * calculating Many-kinds-of Distances, including Manhattan distance
+   * and euclidean squared distance.
    */
   template <u32 R>
   class MDist
@@ -123,17 +124,48 @@ namespace MFM
      *
      * \param radius The radius to find the highest index of.
      * \sa GetFirstIndex
-     * \sa GetPointIndex
      */
     u32 GetLastIndex(const u32 radius) const
     {
       return GetFirstIndex(radius+1)-1;
     }
 
+    /**
+     * Get the lowest index that is no less than a Euclidean Squared
+     * Length distance of \c eslRadius.  For starting an ESL-based
+     * event window iteration at a given distance
+     *
+     * \param eslRadius The ESL radius to find the lowest index of.
+     * \sa GetLastESLIndex
+     * \sa GetPoint
+     */
+    u32 GetFirstESLIndex(const u32 eslRadius) const
+    {
+      for (u32 i = 0; i < sizeof(m_firstESLValue)/sizeof(m_firstESLValue[0]); ++i)
+      {
+        if (m_firstESLValue[i] >= eslRadius) 
+          return m_firstESLIndex[i];
+      }
+      FAIL(UNREACHABLE_CODE);
+    }
+
+    /**
+     * Get the highest index corresponding to a Euclidean Squared
+     * Length distance of no more than \c eslRadius.  Useful for
+     * ending an event window iteration at a given distance
+     *
+     * \param eslRadius The esl radius to find the highest index of.
+     * \sa GetFirstESLIndex
+     */
+    u32 GetLastESLIndex(const u32 eslRadius) const
+    {
+      return GetFirstESLIndex(eslRadius+1)-1;
+    }
+
     u32 GetSiteCount() const { return ARRAY_LENGTH; }
 
     /**
-       Get the relative coordinates of a given \c siteNumber, which
+       Get the relative coordinates of a given \c siteNumber, with
        siteNumber 0 representing the center at (0,0).  For legal
        siteNumbers, this method is inverted by GetSiteNumber()
 
@@ -164,6 +196,28 @@ namespace MFM
     }
 
     /**
+     * Convert a raster scan index to the corresponding site number,
+     * if possible.  Returns -1 if the given index does not correspond
+     * to a sitenum
+     */
+    s32 GetSiteNumberFromRasterIndex(const u32 index) const
+    {
+      if (index >= ARRAY_LENGTH) return -1;
+      return m_rasterToSiteNum[index];
+    }
+
+    /**
+     * Convert a site number to its corresponding raster index, if
+     * possible.  Returns -1 if the given site number index does not
+     * correspond to a raster index
+     */
+    s32 GetRasterIndexFromSiteNumber(const u32 sitenum) const
+    {
+      if (sitenum >= ARRAY_LENGTH) return -1;
+      return m_siteNumToRaster[sitenum];
+    }
+
+    /**
      * Return the coding of offset as a bond if possible.  Returns -1 if
      * the given offset cannot be expressed as a max length radius bond.
      */
@@ -184,6 +238,16 @@ namespace MFM
     {
       return EVENT_WINDOW_SITES(maxDistance);
     }
+
+    void InitRasterTables();
+    u8 m_rasterToSiteNum[ARRAY_LENGTH];
+    u8 m_siteNumToRaster[ARRAY_LENGTH];
+
+    void InitESLTables();
+    u8 m_siteNumToESLNum[ARRAY_LENGTH];
+    u8 m_eSLNumToSiteNum[ARRAY_LENGTH];
+    u8 m_firstESLValue[2*R+2];  // cutoff distances for ESL rings
+    u8 m_firstESLIndex[2*R+2];
 
     Point<s32> m_indexToPoint[ARRAY_LENGTH];
     s32 m_pointToIndex[EVENT_WINDOW_DIAMETER][EVENT_WINDOW_DIAMETER];

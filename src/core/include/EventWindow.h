@@ -566,23 +566,45 @@ namespace MFM
     }
 
     /**
-     * Get a copy of an atom by site number, without mapping
-     * siteNumber through the current symmetry
+     * Get a modifiable reference of an atom by site number, without
+     * mapping siteNumber through the current symmetry
      */
-    T GetAtomDirect(u32 siteNumber) const
+    T& GetAtomDirect(u32 siteNumber) 
     {
       MFM_API_ASSERT_ARG(siteNumber < SITE_COUNT);
       return m_atomBuffer[siteNumber];
     }
 
     /**
-     * Get a copy of an atom by site number, after mapping siteNumber
-     * through the current symmetry
+     * Get a modifiable reference to an atom by site number, after mapping
+     * siteNumber through the current symmetry
      */
-    T GetAtomSym(u32 siteNumber) const
+    T& GetAtomSym(u32 siteNumber) 
     {
       return m_atomBuffer[MapIndexToIndexSymValid(siteNumber)];
     }
+
+
+    /**
+     * Get a const reference of an atom by site number, without
+     * mapping siteNumber through the current symmetry
+     */
+    const T& GetAtomDirect(u32 siteNumber) const
+    {
+      MFM_API_ASSERT_ARG(siteNumber < SITE_COUNT);
+      return m_atomBuffer[siteNumber];
+    }
+
+    /**
+     * Get a const reference to an atom by site number, after mapping
+     * siteNumber through the current symmetry
+     */
+    const T& GetAtomSym(u32 siteNumber) const
+    {
+      return m_atomBuffer[MapIndexToIndexSymValid(siteNumber)];
+    }
+
+
 
     /**
      * Write an atom to a given site number, without mapping

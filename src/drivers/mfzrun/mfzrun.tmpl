@@ -222,7 +222,7 @@ chomp $platform;
 my $platformsize;
 if ($platform eq 'x86_64') {
     $platformsize = 64;
-} elsif ($platform eq 'i386') {
+} elsif ($platform eq 'i386' || $platform eq 'i686') {
     $platformsize = 32;
 } else {
     UDie("This hardware platform, '$platform', is unrecognized");
