@@ -244,9 +244,9 @@ namespace MFM
       if (this->GetType()==VD::U32)
       {
         this->m_vDesc.SetValueU32(atom, val);
-        return true;
+        return;
       }
-      return false;
+      return;
     }
 
     /////////
@@ -267,9 +267,9 @@ namespace MFM
       if (this->GetType()==VD::S32)
       {
         this->m_vDesc.SetValueS32(atom, val);
-        return true;
+        return;
       }
-      return false;
+      return;
     }
 
     /////////
@@ -290,9 +290,9 @@ namespace MFM
       if (this->GetType()==VD::BOOL)
       {
         this->m_vDesc.SetValueBool(atom, val);
-        return true;
+        return;
       }
-      return false;
+      return;
     }
 
     /////////
@@ -313,9 +313,9 @@ namespace MFM
       if (this->GetType()==VD::UNARY)
       {
         this->m_vDesc.SetValueUnary(atom, val);
-        return true;
+        return;
       }
-      return false;
+      return;
     }
 
     /**
