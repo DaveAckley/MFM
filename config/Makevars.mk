@@ -60,7 +60,7 @@ endif
 # Also: We need pthread!
 COMMON_CFLAGS+=-Wall -pedantic -Wundef -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
 # not reliable enough: COMMON_CPPFLAGS+=-Wmissing-noreturn -ansi -pedantic -Wall -Werror -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
-COMMON_CPPFLAGS+=-ansi -std=gnu++11 -pedantic -Wall -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
+COMMON_CPPFLAGS+=-ansi -pedantic -Wall -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
 COMMON_LDFLAGS+=-Wl,--fatal-warnings -pthread
 
 # Ubuntu 12.04 needs this for clock_gettime
