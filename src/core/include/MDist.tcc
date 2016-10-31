@@ -114,7 +114,7 @@ namespace MFM {
        obvious we can make this.
     */
     u32 eslIndex = 0;
-    s32 currentESL = -1;
+    u32 currentESL = -1;
     u32 firstESLIdx = 0;
     const s32 SR = (s32) R;
     for (u32 esl = 0; esl <= 2*R*R; ++esl) 

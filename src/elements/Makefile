@@ -17,8 +17,8 @@ ELEMENTS:=$(wildcard src/Element_*.cpp)
 ELEMENT_HEADER_INCLUDES:=$(patsubst src/%.cpp,\#include "%.h"\n,$(ELEMENTS))
 #${warning EHI $(ELEMENT_HEADER_INCLUDES) iha}
 ELEMENT_MACRO_INVOKES:=$(patsubst src/%.cpp,XX(%);,$(ELEMENTS))
-UNUSED1:=${shell echo '$(ELEMENT_HEADER_INCLUDES)' > include/StdElementsHeaders.inc}
-UNUSED2:=${shell echo "$(ELEMENT_MACRO_INVOKES)" > include/StdElements.inc}
+UNUSED1:=${shell printf '$(ELEMENT_HEADER_INCLUDES)' > include/StdElementsHeaders.inc}
+UNUSED2:=${shell printf "$(ELEMENT_MACRO_INVOKES)" > include/StdElements.inc}
 
 # Do the library thing
 include $(BASEDIR)/config/Makelib.mk
