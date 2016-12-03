@@ -220,9 +220,9 @@ my ($ulams,$goodSOs, $badSOs) = (0,0,0);
 my $platform = `/bin/uname -i`;
 chomp $platform;
 my $platformsize;
-if ($platform eq 'x86_64') {
+if ($platform eq 'x86_64' || $platform =~ /^armv8.*/) {
     $platformsize = 64;
-} elsif ($platform eq 'i386' || $platform eq 'i686') {
+} elsif ($platform eq 'i386' || $platform eq 'i686' || $platform =~ /^armv7.*/) {
     $platformsize = 32;
 } else {
     UDie("This hardware platform, '$platform', is unrecognized");
@@ -244,11 +244,11 @@ for my $prec (@innerpaths) {
         my $sosize;
         if ($sotype eq "elf64-x86-64") {
             $sosize = 64;
-        } elsif ($sotype eq "elf32-i386") {
+        } elsif ($sotype eq "elf32-i386" || $sotype eq "elf32-littlearm") {
             $sosize = 32;
         } else {
             ++$badSOs;
-            print("Unrecognized .so file format")
+            print("Unrecognized .so file format '$sotype'\n");
         }
         if ($sosize != $platformsize) {
             print("Skipping $sosize bit .so file; we need $platformsize bits\n");
