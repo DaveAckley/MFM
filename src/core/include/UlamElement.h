@@ -53,7 +53,6 @@ namespace MFM{
     Ui_Ut_102321u() { }
     Ui_Ut_102321u(const u32 d) { write(d); }
     Ui_Ut_102321u(const Ui_Ut_102321u& other) { this->write(other.read()); }
-    ~Ui_Ut_102321u() {}
   };
 } //MFM
 #endif /*Ud_Ui_Ut_102321u */
@@ -76,8 +75,8 @@ namespace MFM{
     void write(const u32 v) { BVS::Write(0u, 32u, v); } //writes entire array
     Ui_Ut_14181u() { }
     Ui_Ut_14181u(const u32 d) { write(d); }
+    Ui_Ut_14181u(const u32 d[1]) : BVS(d) { } //gcnl:UlamTypePrimitive.cpp:487
     Ui_Ut_14181u(const Ui_Ut_14181u& other) { this->write(other.read()); }
-    ~Ui_Ut_14181u() {}
   };
 } //MFM
 #endif /*Ud_Ui_Ut_14181u */
