@@ -121,7 +121,7 @@ namespace MFM
 
     bool IsHistoryActive() const { return GetEventHistoryBuffer().IsHistoryActive(); }
 
-    void SetHistoryActive(bool active) { return GetEventHistoryBuffer().SetHistoryActive(active); }
+    void* SetHistoryActive(bool active) { return GetEventHistoryBuffer().SetHistoryActive(active); }
 
     const EventHistoryBuffer<EC> & GetEventHistoryBuffer() const { return m_eventHistoryBuffer; }
 
@@ -271,6 +271,7 @@ namespace MFM
     {
       for (u32 i = 0; i < MAX_TILE_PARAMETERS; ++i)
       {
+    	// TODO S32_MIN could not be resolved
         m_keyValues[i] = S32_MIN;
       }
     }

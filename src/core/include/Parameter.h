@@ -570,7 +570,7 @@ namespace MFM
     {
       return this->GetValueU32();
     }
-    void SetValue(u32 val)
+    void* SetValue(u32 val)
     {
       return this->SetValueU32(val);
     }
@@ -605,7 +605,7 @@ namespace MFM
     {
       return this->GetValueUnary();
     }
-    void SetValue(u32 val)
+    void* SetValue(u32 val)
     {
       return this->SetValueUnary(val);
     }
@@ -640,7 +640,7 @@ namespace MFM
     {
       return this->GetValueS32();
     }
-    void SetValue(s32 val)
+    void* SetValue(s32 val)
     {
       return this->SetValueS32(val);
     }
@@ -675,7 +675,7 @@ namespace MFM
     {
       return this->GetValueBool();
     }
-    void SetValue(bool val)
+    void* SetValue(bool val)
     {
       return this->SetValueBool(val);
     }
