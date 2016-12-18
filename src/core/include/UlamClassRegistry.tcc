@@ -28,6 +28,7 @@ namespace MFM {
       return false;
     if (m_registeredUlamClassCount >= TABLE_SIZE)
       FAIL(OUT_OF_ROOM);
+    uc.DefineRegistrationNumber(m_registeredUlamClassCount);
     m_registeredUlamClasses[m_registeredUlamClassCount++] = &uc;
     return true;
   }

@@ -242,4 +242,25 @@ namespace MFM {
     bs.Print(val, Format::HEX);
   }
 
+  template <class EC>
+  void UlamClass<EC>::DefineRegistrationNumber(u32 num)
+  {
+    if (num == UNINITTED_REGISTRY_NUMBER)
+      FAIL(ILLEGAL_ARGUMENT);
+
+    if (m_ulamClassRegistryNumber != UNINITTED_REGISTRY_NUMBER)
+      FAIL(DUPLICATE_ENTRY);
+
+    m_ulamClassRegistryNumber = num;
+  }
+
+  template <class EC>
+  u32 UlamClass<EC>::GetRegistrationNumber() const
+  {
+    if (m_ulamClassRegistryNumber == UNINITTED_REGISTRY_NUMBER)
+      FAIL(ILLEGAL_STATE);
+
+    return m_ulamClassRegistryNumber;
+  }
+
 } //MFM
