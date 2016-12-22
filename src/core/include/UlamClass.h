@@ -101,6 +101,11 @@ namespace MFM
       FAIL(ILLEGAL_STATE);
     }
 
+    virtual u32 GetStringLength(u32 index) const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
     virtual u32 GetClassLength() const
     {
       FAIL(ILLEGAL_STATE);
@@ -312,7 +317,7 @@ namespace MFM
     u32 GetRegistrationNumber() const ;
 
     enum { UNINITTED_REGISTRY_NUMBER = U32_MAX } ;
-    UlamClass() 
+    UlamClass()
       : m_ulamClassRegistryNumber(UNINITTED_REGISTRY_NUMBER)
     { }
 
