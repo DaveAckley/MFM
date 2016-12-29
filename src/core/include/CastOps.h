@@ -846,6 +846,12 @@ namespace MFM {
 
   inline u32 _BinOpMultiplyCs32WithBoundsCheck(s32 cvala, s32 cvalb)
   {
+    // there may be need to check for -1 for two's complement machines
+    if ((cvala == -1) && (cvalb == S32_MIN)) /* `a * b` can overflow */
+      return S32_MAX;
+    if ((cvala == S32_MIN) && (cvalb == -1)) /* `a * b` (or `a / b`) can overflow */
+      return S32_MAX;
+
     if(cvalb > 0)
       {
 	if(cvala > (S32_MAX / cvalb)) /* `a * b` would overflow */
@@ -857,20 +863,21 @@ namespace MFM {
       {
 	if(cvala < (S32_MAX / cvalb)) /* `a * b` would overflow */
 	  return S32_MAX;
-	if(cvala > (S32_MIN / cvalb)) /* `a * b` would underflow */
+	if((cvalb < -1) && (cvala > (S32_MIN / cvalb))) /* `a * b` would underflow */
 	  return S32_MIN;
       }
     //else
-    // there may be need to check for -1 for two's complement machines
-    if ((cvala == -1) && (cvalb == S32_MIN)) /* `a * b` can overflow */
-      return S32_MAX;
-    if ((cvalb == -1) && (cvala == S32_MIN)) /* `a * b` (or `a / b`) can overflow */
-      return S32_MAX;
     return _Cs32ToInt32((cvala * cvalb), 32);
   }
 
   inline u64 _BinOpMultiplyCs64WithBoundsCheck(s64 cvala, s64 cvalb)
   {
+    // there may be need to check for -1 for two's complement machines
+    if ((cvala == -1) && (cvalb == S64_MIN)) /* `a * b` can overflow */
+      return S64_MAX;
+    if ((cvala == S64_MIN) && (cvalb == -1)) /* `a * b` (or `a / b`) can overflow */
+      return S64_MAX;
+
     if(cvalb > 0)
       {
 	if(cvala > (S64_MAX / cvalb)) /* `a * b` would overflow */
@@ -882,15 +889,10 @@ namespace MFM {
       {
 	if(cvala < (S64_MAX / cvalb)) /* `a * b` would overflow */
 	  return S64_MAX;
-	if(cvala > (S64_MIN / cvalb)) /* `a * b` would underflow */
+	if((cvalb < -1) && (cvala > (S64_MIN / cvalb))) /* `a * b` would underflow */
 	  return S64_MIN;
       }
     //else
-    // there may be need to check for -1 for two's complement machines
-    if ((cvala == -1) && (cvalb == S64_MIN)) /* `a * b` can overflow */
-      return S64_MAX;
-    if ((cvalb == -1) && (cvala == S64_MIN)) /* `a * b` (or `a / b`) can overflow */
-      return S64_MAX;
     return _Cs64ToInt64((cvala * cvalb), 64);
   }
 
