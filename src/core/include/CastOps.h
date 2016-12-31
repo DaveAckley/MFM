@@ -846,29 +846,53 @@ namespace MFM {
 
   inline u32 _BinOpMultiplyCs32WithBoundsCheck(s32 cvala, s32 cvalb)
   {
-    if (cvala > (S32_MAX / cvalb)) /* `a * b` would overflow */
-      return S32_MAX;
-    if (cvala < (S32_MIN / cvalb)) /* `a * b` would underflow */
-      return S32_MIN;
     // there may be need to check for -1 for two's complement machines
     if ((cvala == -1) && (cvalb == S32_MIN)) /* `a * b` can overflow */
       return S32_MAX;
-    if ((cvalb == -1) && (cvala == S32_MIN)) /* `a * b` (or `a / b`) can overflow */
+    if ((cvala == S32_MIN) && (cvalb == -1)) /* `a * b` (or `a / b`) can overflow */
       return S32_MAX;
+
+    if(cvalb > 0)
+      {
+	if(cvala > (S32_MAX / cvalb)) /* `a * b` would overflow */
+	  return S32_MAX;
+	if(cvala < (S32_MIN / cvalb)) /* `a * b` would underflow */
+	  return S32_MIN;
+      }
+    else if(cvalb < 0)
+      {
+	if(cvala < (S32_MAX / cvalb)) /* `a * b` would overflow */
+	  return S32_MAX;
+	if((cvalb < -1) && (cvala > (S32_MIN / cvalb))) /* `a * b` would underflow */
+	  return S32_MIN;
+      }
+    //else
     return _Cs32ToInt32((cvala * cvalb), 32);
   }
 
   inline u64 _BinOpMultiplyCs64WithBoundsCheck(s64 cvala, s64 cvalb)
   {
-    if (cvala > (S64_MAX / cvalb)) /* `a * b` would overflow */
-      return S64_MAX;
-    if (cvala < (S64_MIN / cvalb)) /* `a * b` would underflow */
-      return S64_MIN;
     // there may be need to check for -1 for two's complement machines
     if ((cvala == -1) && (cvalb == S64_MIN)) /* `a * b` can overflow */
       return S64_MAX;
-    if ((cvalb == -1) && (cvala == S64_MIN)) /* `a * b` (or `a / b`) can overflow */
+    if ((cvala == S64_MIN) && (cvalb == -1)) /* `a * b` (or `a / b`) can overflow */
       return S64_MAX;
+
+    if(cvalb > 0)
+      {
+	if(cvala > (S64_MAX / cvalb)) /* `a * b` would overflow */
+	  return S64_MAX;
+	if(cvala < (S64_MIN / cvalb)) /* `a * b` would underflow */
+	  return S64_MIN;
+      }
+    else if(cvalb < 0)
+      {
+	if(cvala < (S64_MAX / cvalb)) /* `a * b` would overflow */
+	  return S64_MAX;
+	if((cvalb < -1) && (cvala > (S64_MIN / cvalb))) /* `a * b` would underflow */
+	  return S64_MIN;
+      }
+    //else
     return _Cs64ToInt64((cvala * cvalb), 64);
   }
 
@@ -904,14 +928,14 @@ namespace MFM {
 
   inline u32 _BinOpMultiplyCu32WithBoundsCheck(u32 cvala, u32 cvalb)
   {
-    if (cvala > (U32_MAX / cvalb)) /* `a * b` would overflow */
+    if((cvalb > 0) && (cvala > (U32_MAX / cvalb))) /* `a * b` would overflow */
       return U32_MAX;
     return _Cu32ToUnsigned32((cvala * cvalb), 32);
   }
 
   inline u64 _BinOpMultiplyCu64WithBoundsCheck(u64 cvala, u64 cvalb)
   {
-    if (cvala > (U64_MAX / cvalb)) /* `a * b` would overflow */
+    if((cvalb > 0) && (cvala > (U64_MAX / cvalb))) /* `a * b` would overflow */
       return U64_MAX;
     return _Cu64ToUnsigned64((cvala * cvalb), 64);
   }
