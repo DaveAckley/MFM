@@ -132,6 +132,8 @@ namespace MFM
 
     BitStorage<EC> & GetStorage() { return m_stg; }
 
+    const UlamContext<EC> & GetContext() { return m_uc; }
+
     u32 GetType() const ;
 
     T CreateAtom() const ;

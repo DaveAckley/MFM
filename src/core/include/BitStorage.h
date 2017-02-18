@@ -84,7 +84,7 @@ namespace MFM {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
-    BitStorage() { } 
+    BitStorage() { }
 
     virtual ~BitStorage() { }
 
@@ -228,7 +228,11 @@ namespace MFM {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
-    AtomRefBitStorage(T & toModify) : m_stg(toModify) { }
+    explicit AtomRefBitStorage(T & toModify) : m_stg(toModify) { }
+
+  private:
+    AtomRefBitStorage(const AtomRefBitStorage<EC> & toCopy) ;  // Declare away
+  public:
 
     T& m_stg;
 
