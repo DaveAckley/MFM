@@ -99,7 +99,7 @@ namespace MFM {
   }
 
   template <class EC>
-  void EventWindow<EC>::PrintEventSite(ByteSink & bs) 
+  void EventWindow<EC>::PrintEventSite(ByteSink & bs)
   {
     Tile<EC> & t = GetTile();
     SPointSerializer ssp(m_center);
@@ -186,7 +186,7 @@ namespace MFM {
   }
 
   template <class EC>
-  void EventWindow<EC>::SetBoundary(u32 boundary) 
+  void EventWindow<EC>::SetBoundary(u32 boundary)
   {
     if (boundary > R + 1) boundary = R + 1;
 
@@ -225,7 +225,7 @@ namespace MFM {
       }
 
       LOG.Debug("%s",buff.GetZString());
-      if (!fixed) 
+      if (!fixed)
         return false;
     }
 
@@ -234,7 +234,7 @@ namespace MFM {
     if (m_element == 0) // If no element of that type
     {
       tile.PlaceAtom(tile.GetEmptyAtom(), center);  // You must die
-      return false; 
+      return false;
     }
 
     SetBoundary(m_element->GetEventWindowBoundary());
@@ -295,7 +295,7 @@ namespace MFM {
     MFM_LOG_DBG6(("EW::AcquireRegionLocks"));
     // We cannot still have any cacheprocessors in use
     for (u32 i = 0; i < MAX_CACHES_TO_UPDATE; ++i)
-    { 
+    {
       MFM_API_ASSERT_STATE(m_cacheProcessorsLocked[i] == 0);
     }
 
@@ -452,7 +452,8 @@ namespace MFM {
     for (u32 i = 0; i < m_boundedSiteCount; ++i)
     {
       const SPoint & pt = md.GetPoint(i) + m_center;
-      m_atomBuffer[i] = tile.GetAtomForEventWindow(pt);
+      //m_atomBuffer[i] = tile.GetAtomForEventWindow(pt);
+      m_atomBuffer[i].WriteAtom(tile.GetAtomForEventWindow(pt));
       m_isLiveSite[i] = tile.IsLiveSite(pt);
     }
   }
@@ -493,9 +494,10 @@ namespace MFM {
       bool dirty = false;
       if (m_isLiveSite[i])
       {
-        if (m_atomBuffer[i] != *tile.GetAtom(pt))
+        //if (m_atomBuffer[i] != *tile.GetAtom(pt))
+	if (m_atomBuffer[i].GetAtom() != *tile.GetAtom(pt))
         {
-          tile.PlaceAtom(m_atomBuffer[i], pt);
+          tile.PlaceAtom(m_atomBuffer[i].GetAtom(), pt);
           dirty = true;
         }
 
@@ -531,7 +533,8 @@ namespace MFM {
 
     if (m_isLiveSite[idx])
     {
-      m_atomBuffer[idx] = atom;
+      //m_atomBuffer[idx] = atom;
+      m_atomBuffer[idx].WriteAtom(atom); //a copy
       return true;
     }
     return false;
@@ -544,7 +547,8 @@ namespace MFM {
 
     if (m_isLiveSite[idx])
     {
-      m_atomBuffer[idx] = atom;
+      //m_atomBuffer[idx] = atom;
+      m_atomBuffer[idx].WriteAtom(atom);
       return true;
     }
     return false;
@@ -555,14 +559,16 @@ namespace MFM {
   {
     u32 idx = MapToIndexSymValid(offset);
     MFM_API_ASSERT_ARG(idx < m_boundedSiteCount);
-    return m_atomBuffer[idx];
+    //return m_atomBuffer[idx];
+    return m_atomBuffer[idx].GetAtom();
   }
 
   template <class EC>
   const typename EC::ATOM_CONFIG::ATOM_TYPE& EventWindow<EC>::GetRelativeAtomDirect(const SPoint& offset) const
   {
     u32 idx = MapToIndexDirectValid(offset);
-    return m_atomBuffer[idx];
+    //return m_atomBuffer[idx];
+    return m_atomBuffer[idx].GetAtom();
   }
 
   template <class EC>
@@ -595,9 +601,11 @@ namespace MFM {
     MFM_API_ASSERT_ARG(idxa < m_boundedSiteCount);
     MFM_API_ASSERT_ARG(idxb < m_boundedSiteCount);
 
-    T tmp = m_atomBuffer[idxa];
-    m_atomBuffer[idxa] = m_atomBuffer[idxb];
-    m_atomBuffer[idxb] = tmp;
+    T tmp = m_atomBuffer[idxa].GetAtom();
+    //m_atomBuffer[idxa] = m_atomBuffer[idxb];
+    //m_atomBuffer[idxb] = tmp;
+    m_atomBuffer[idxa].WriteAtom(m_atomBuffer[idxb].GetAtom());
+    m_atomBuffer[idxb].WriteAtom(tmp);
   }
 
   template <class EC>

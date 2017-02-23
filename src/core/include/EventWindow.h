@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
   EventWindow.h Main MFM event component
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2017 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,8 @@
   \file EventWindow.h Main MFM event component
   \author Trent R. Small.
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014-2017 All rights reserved.
   \lgpl
  */
 #ifndef EVENTWINDOW_H
@@ -35,12 +36,14 @@
 #include "Site.h"
 #include "Base.h"
 #include "ByteSink.h"
+#include "BitStorage.h"
 
 namespace MFM
 {
 
   template <class EC> class Tile; // FORWARD
   template <class EC> class CacheProcessor; // FORWARD
+  template <class EC> class AtomBitStorage; // FORWARD
 
   /**
      An EventWindow provides access for an Element to a selected
@@ -94,6 +97,7 @@ namespace MFM
     enum { R = EC::EVENT_WINDOW_RADIUS };
   public:
     enum { SITE_COUNT = EVENT_WINDOW_SITES(R) };
+
   private:
 
     Tile<EC> & m_tile;
@@ -114,7 +118,8 @@ namespace MFM
      * Elements, the current symmetry must be applied to coordinates
      * before accessing the buffer.
      */
-    T m_atomBuffer[SITE_COUNT];
+    //T m_atomBuffer[SITE_COUNT];
+    AtomBitStorage<EC>  m_atomBuffer[SITE_COUNT];
     bool m_isLiveSite[SITE_COUNT];
 
     Base<AC> m_centerBase;
@@ -512,6 +517,15 @@ namespace MFM
     }
 
     /**
+     * Get a modifiable reference to an atom bit storage by site
+     * number, after mapping siteNumber through the current symmetry
+     */
+    AtomBitStorage<EC>& GetAtomBitStorage(u32 siteNumber)
+    {
+      return m_atomBuffer[MapIndexToIndexSymValid(siteNumber)];
+    }
+
+    /**
      * Gets the immutable Atom which resides in the center of this
      * EventWindow.  Same function as GetCenterAtomSym .
      *
@@ -521,7 +535,8 @@ namespace MFM
      */
     const T& GetCenterAtomDirect() const
     {
-      return m_atomBuffer[0];
+      //return m_atomBuffer[0];
+      return m_atomBuffer[0].GetAtom();
     }
 
     /**
@@ -533,9 +548,10 @@ namespace MFM
      * EventWindow.
      *
      */
-    T& GetCenterAtomDirect() 
+    T& GetCenterAtomDirect()
     {
-      return m_atomBuffer[0];
+      //return m_atomBuffer[0];
+      return m_atomBuffer[0].GetAtom();
     }
 
     /**
@@ -548,7 +564,8 @@ namespace MFM
      */
     const T& GetCenterAtomSym() const
     {
-      return m_atomBuffer[0];
+      //return m_atomBuffer[0];
+      return m_atomBuffer[0].GetAtom();
     }
 
     /**
@@ -562,26 +579,29 @@ namespace MFM
      */
     T& GetCenterAtomSym()
     {
-      return m_atomBuffer[0];
+      //return m_atomBuffer[0];
+      return m_atomBuffer[0].GetAtom();
     }
 
     /**
      * Get a modifiable reference of an atom by site number, without
      * mapping siteNumber through the current symmetry
      */
-    T& GetAtomDirect(u32 siteNumber) 
+    T& GetAtomDirect(u32 siteNumber)
     {
       MFM_API_ASSERT_ARG(siteNumber < SITE_COUNT);
-      return m_atomBuffer[siteNumber];
+      //return m_atomBuffer[siteNumber];
+      return m_atomBuffer[siteNumber].GetAtom();
     }
 
     /**
      * Get a modifiable reference to an atom by site number, after mapping
      * siteNumber through the current symmetry
      */
-    T& GetAtomSym(u32 siteNumber) 
+    T& GetAtomSym(u32 siteNumber)
     {
-      return m_atomBuffer[MapIndexToIndexSymValid(siteNumber)];
+      //return m_atomBuffer[MapIndexToIndexSymValid(siteNumber)];
+      return m_atomBuffer[MapIndexToIndexSymValid(siteNumber)].GetAtom();
     }
 
 
@@ -592,7 +612,8 @@ namespace MFM
     const T& GetAtomDirect(u32 siteNumber) const
     {
       MFM_API_ASSERT_ARG(siteNumber < SITE_COUNT);
-      return m_atomBuffer[siteNumber];
+      //return m_atomBuffer[siteNumber];
+      return m_atomBuffer[siteNumber].GetAtom();
     }
 
     /**
@@ -601,10 +622,9 @@ namespace MFM
      */
     const T& GetAtomSym(u32 siteNumber) const
     {
-      return m_atomBuffer[MapIndexToIndexSymValid(siteNumber)];
+      //return m_atomBuffer[MapIndexToIndexSymValid(siteNumber)];
+      return m_atomBuffer[MapIndexToIndexSymValid(siteNumber)].GetAtom();
     }
-
-
 
     /**
      * Write an atom to a given site number, without mapping
@@ -613,7 +633,8 @@ namespace MFM
     void SetAtomDirect(u32 siteNumber, const T & newAtom)
     {
       MFM_API_ASSERT_ARG(siteNumber < SITE_COUNT);
-      m_atomBuffer[siteNumber] = newAtom;
+      //m_atomBuffer[siteNumber] = newAtom;
+      m_atomBuffer[siteNumber].WriteAtom(newAtom);
     }
 
     /**
@@ -622,7 +643,8 @@ namespace MFM
      */
     void SetAtomSym(u32 siteNumber, const T & newAtom)
     {
-      m_atomBuffer[MapIndexToIndexSymValid(siteNumber)] = newAtom;
+      //m_atomBuffer[MapIndexToIndexSymValid(siteNumber)] = newAtom;
+      m_atomBuffer[MapIndexToIndexSymValid(siteNumber)].WriteAtom(newAtom);
     }
 
     /**
@@ -634,7 +656,8 @@ namespace MFM
      */
     void SetCenterAtomDirect(const T& atom)
     {
-      m_atomBuffer[0] = atom;
+      //m_atomBuffer[0] = atom;
+      m_atomBuffer[0].WriteAtom(atom);
     }
 
     /**
@@ -647,7 +670,8 @@ namespace MFM
      */
     void SetCenterAtomSym(const T& atom)
     {
-      m_atomBuffer[0] = atom;
+      //m_atomBuffer[0] = atom;
+      m_atomBuffer[0].WriteAtom(atom);
     }
 
     /**
