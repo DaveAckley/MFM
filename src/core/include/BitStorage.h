@@ -232,6 +232,7 @@ namespace MFM {
 
   private:
     AtomRefBitStorage(const AtomRefBitStorage<EC> & toCopy) ;  // Declare away
+
   public:
 
     T& m_stg;
@@ -304,11 +305,10 @@ namespace MFM {
 
     T m_atom;
 
-    T& GetAtom() { return m_atom; }
     const T& GetAtom() const { return m_atom; }
 
   private:
-    AtomBitStorage(const AtomBitStorage<EC> & toCopyABS) : AtomRefBitStorage<EC>(toCopyABS.m_atom), m_atom(toCopyABS.m_atom) { }
+    AtomBitStorage(const AtomBitStorage<EC> & toCopyABS); //declare away
 
   }; //AtomBitStorage
 

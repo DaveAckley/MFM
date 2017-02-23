@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamElement.h A concrete base class for ULAM elements
-  Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015-2016 Ackleyshack, LLC.
+  Copyright (C) 2014-2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2017 Ackleyshack, LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file UlamElement.h A concrete base class for ULAM elements
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2014-2016 All rights reserved.
+  \date (C) 2014-2017 All rights reserved.
   \lgpl
  */
 #ifndef ULAMELEMENT_H
