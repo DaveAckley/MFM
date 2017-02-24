@@ -232,6 +232,7 @@ namespace MFM {
 
   private:
     AtomRefBitStorage(const AtomRefBitStorage<EC> & toCopy) ;  // Declare away
+
   public:
 
     T& m_stg;
@@ -298,11 +299,17 @@ namespace MFM {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
-    AtomBitStorage(const T & toCopy) : AtomRefBitStorage<EC>(m_copy), m_copy(toCopy) { }
+    AtomBitStorage(const T & toCopy) : AtomRefBitStorage<EC>(m_atom), m_atom(toCopy) { }
 
-    AtomBitStorage() : AtomRefBitStorage<EC>(m_copy) { }
+    AtomBitStorage() : AtomRefBitStorage<EC>(m_atom) { }
 
-    T m_copy;
+    T m_atom;
+
+    const T& GetAtom() const { return m_atom; }
+
+  private:
+    AtomBitStorage(const AtomBitStorage<EC> & toCopyABS); //declare away
+
   }; //AtomBitStorage
 
 } // MFM
