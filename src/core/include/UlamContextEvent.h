@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  UlamContextEvent.h Access to the environment surrounding executing ulam code
+  UlamContextEvent.h Access to the environment surrounding ulam code executing during an event
   Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
   Copyright (C) 2015-2016 Ackleyshack LLC.
 
@@ -20,7 +20,7 @@
 */
 
 /**
-  \file UlamContextEvent.h Access to the environment surrounding executing ulam code
+  \file UlamContextEvent.h Access to the environment surrounding ulam code executing during an event
   \author David H. Ackley
   \author Elena S. Ackley
   \date (C) 2014-2016 All rights reserved.

@@ -198,7 +198,7 @@ namespace MFM {
       return 0xffffffff;
     }
 
-    virtual u32 GetAtomColor(const ElementTable<EC> & et, const T& atom, u32 selector) const ;
+    virtual u32 GetAtomColor(const ElementTable<EC> & et, const UlamClassRegistry<EC> & ucr, const T& atom, u32 selector) const ;
 
     virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const ;
   };

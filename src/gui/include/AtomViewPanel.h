@@ -242,11 +242,13 @@ namespace MFM
 
       u32 curX = baseX + ATOM_DRAW_SIZE;
       const u32 DCOLOR_SIZE = ATOM_DRAW_SIZE - 8;
-      const ElementTable<EC>& et = grid.Get00ElementTable();
+      const Tile<EC>& tile = grid.Get00Tile();
+      const ElementTable<EC>& et = tile.GetElementTable();
+      const UlamClassRegistry<EC>& ucr = tile.GetUlamClassRegistry();
       u32 dcolor[3];
       dcolor[0] = staticColor;
-      dcolor[1] = element->GetDynamicColor(et, atom, 1);
-      dcolor[2] = element->GetDynamicColor(et, atom, 2);
+      dcolor[1] = element->GetDynamicColor(et, ucr, atom, 1);
+      dcolor[2] = element->GetDynamicColor(et, ucr, atom, 2);
       bool show1 = false, show2 = false, bothsame = false;
       if (dcolor[1] != dcolor[0]) show1 = true;
       if (dcolor[2] != dcolor[0]) show2 = true;
@@ -297,8 +299,6 @@ namespace MFM
         PaintDisplayAtomicControllers(d, atom, element);
         return;
       }
-
-      const UlamClassRegistry<EC> & ucr = m_grid->GetUlamClassRegistry();
 
       const u32 printFlags =
         UlamClassPrintFlags::PRINT_MEMBER_NAMES |

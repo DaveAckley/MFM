@@ -131,8 +131,8 @@ namespace MFM
     const UlamClass<EC> * GetEffectiveSelf() const { CheckEffectiveSelf(); return m_effSelf; }
 
     BitStorage<EC> & GetStorage() { return m_stg; }
-
-    const UlamContext<EC> & GetContext() { return m_uc; }
+    //XXX
+    //XXX    const UlamContext<EC> & GetContext() { return m_uc; }
 
     u32 GetType() const ;
 

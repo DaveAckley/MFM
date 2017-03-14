@@ -350,13 +350,13 @@ namespace MFM {
      */
     void SetGridRunning(bool running) ;
 
-    const ElementTable<EC> & Get00ElementTable() const {
-      return _getTile(0,0).GetElementTable();
+    const Tile<EC> & Get00Tile() const {
+      return _getTile(0,0);
     }
 
     const Element<EC> * LookupElement(u32 elementType) const
     {
-      return Get00ElementTable().Lookup(elementType);
+      return Get00Tile().GetElementTable().Lookup(elementType);
     }
 
     ElementRegistry<EC>& GetElementRegistry()
