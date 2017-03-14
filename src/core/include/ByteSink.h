@@ -163,6 +163,13 @@ namespace MFM {
 
     void PrintDoubleQuotedString(const char * zstring) ;
 
+    /**
+       Print a string in which the length (<=255) of the string is
+       stored at nstring[-1], using C-style escaping for non-printing
+       chars and " and \
+     */
+    void PrintDoubleQuotedCStringWithLength(const char * nstring) ;
+
   private:
     template <class UNSIGNED_TYPE>
     static u32 CountDigits(UNSIGNED_TYPE num, u32 base) {
