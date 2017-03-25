@@ -507,6 +507,8 @@ namespace MFM
 
     void SetAEPSPerEpoch(u32 aeps)
     {
+      if (m_maxEpochLength > 0 && aeps > m_maxEpochLength)
+        aeps =  m_maxEpochLength;
       m_AEPSPerEpoch = aeps;
     }
 
@@ -747,6 +749,21 @@ namespace MFM
       }
     }
 
+    static void SetMaxEpochLengthFromArgs(const char* aeps, void* driverptr)
+    {
+      AbstractDriver& driver = *(AbstractDriver*)driverptr;
+      VArguments& args = driver.m_varguments;
+
+      s32 out;
+      const char * errmsg = AbstractDriver<GC>::GetNumberFromString(aeps, out, 0, S32_MAX);
+      if (errmsg)
+      {
+        args.Die("Bad max epoch length '%s': %s", aeps, errmsg);
+      }
+
+      driver.m_maxEpochLength = out;
+    }
+
     static void SetHaltOnEmpty(const char* not_needed, void* driver)
     {
       ((AbstractDriver*)driver)->m_haltOnEmpty = 1;
@@ -949,6 +966,7 @@ namespace MFM
       sink.Print(m_accelerateAfterEpochs, Format::LXX32);
       sink.Print(m_acceleration, Format::LXX32);
       sink.Print(m_surgeAfterEpochs, Format::LXX32);
+      sink.Print(m_maxEpochLength, Format::LXX32);
       sink.Printf(",");
 
       sink.Print(m_gridImages, Format::LXX32);
@@ -988,12 +1006,14 @@ namespace MFM
       u32 tmp_m_accelerateAfterEpochs;
       u32 tmp_m_acceleration;
       u32 tmp_m_surgeAfterEpochs;
+      u32 tmp_m_maxEpochLength;
 
       if (!source.Scan(tmp_m_AEPSPerEpoch, Format::LXX32)) return false;
       if (!source.Scan(tmp_m_autosavePerEpochs, Format::LXX32)) return false;
       if (!source.Scan(tmp_m_accelerateAfterEpochs, Format::LXX32)) return false;
       if (!source.Scan(tmp_m_acceleration, Format::LXX32)) return false;
       if (!source.Scan(tmp_m_surgeAfterEpochs, Format::LXX32)) return false;
+      if (!source.Scan(tmp_m_maxEpochLength, Format::LXX32)) return false;
       if (1 != source.Scanf(",")) return false;
 
       u32 tmp_m_gridImages;
@@ -1035,6 +1055,7 @@ namespace MFM
       m_accelerateAfterEpochs = tmp_m_accelerateAfterEpochs;
       m_acceleration = tmp_m_acceleration;
       m_surgeAfterEpochs = tmp_m_surgeAfterEpochs;
+      m_maxEpochLength = tmp_m_maxEpochLength;
 
       m_gridImages = tmp_m_gridImages;
       m_tileImages = tmp_m_tileImages;
@@ -1200,6 +1221,7 @@ namespace MFM
       , m_accelerateAfterEpochs(0)
       , m_acceleration(1)
       , m_surgeAfterEpochs(0)
+      , m_maxEpochLength(0)
       , m_gridImages(false)
       , m_tileImages(false)
       , m_AEPS(0.0)
@@ -1334,6 +1356,10 @@ namespace MFM
       RegisterArgument("Increase the epoch length acceleration every ARG epochs",
                              "--surge",
                              &SetSurgePerEpochFromArgs, this, true);
+
+      RegisterArgument("Set the max epoch length ARG (caps --accelerate and --surge)",
+                             "--maxepochlength",
+                             &SetMaxEpochLengthFromArgs, this, true);
 
       RegisterArgument("Each epoch, write grid AEPS image to per-sim eps/ directory",
                        "--gridImages", &SetGridImages, this, false);
@@ -1526,6 +1552,7 @@ namespace MFM
     u32 m_accelerateAfterEpochs;
     u32 m_acceleration;
     u32 m_surgeAfterEpochs;
+    u32 m_maxEpochLength;
 
     bool m_gridImages;
     bool m_tileImages;
