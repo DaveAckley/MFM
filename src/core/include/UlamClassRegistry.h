@@ -39,7 +39,7 @@ namespace MFM {
   template <class EC>
   struct UlamClassRegistry {
     enum {
-      TABLE_SIZE = 100
+      TABLE_SIZE = 1000
     };
 
     UlamClassRegistry() 
