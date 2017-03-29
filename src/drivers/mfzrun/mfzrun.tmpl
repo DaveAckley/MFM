@@ -216,7 +216,7 @@ if ($verb eq "list") {
 
 my @mfmargs;
 
-my ($ulams,$goodSOs, $badSOs) = (0,0,0);
+my ($ulams,$splats,$goodSOs, $badSOs) = (0,0,0,0);
 my $platform = `/bin/uname -i`;
 chomp $platform;
 my $platformsize;
@@ -273,6 +273,9 @@ for my $prec (@innerpaths) {
     } elsif ($name =~ /[.]ulam$/) {
         ++$ulams;
         print STDERR "Skipping ulam source: $name\n";
+    } elsif ($name =~ /[.]splat$/) {
+        ++$splats;
+        print STDERR "Skipping splat source: $name\n";
     } else {
         print STDERR "Unrecognized file type, ignored: $name\n";
     }
@@ -285,7 +288,7 @@ if ($goodSOs == 0) {
         if ($ulams > 0) {
             print STDERR "  However, $ulams .ulam file(s) are present\n";
             print STDERR "  You may be able to rebuild it for this platform\n\n";
-        }
+        } # For not we're not mentioning SPLAT files
     }
     exit 4;
 }

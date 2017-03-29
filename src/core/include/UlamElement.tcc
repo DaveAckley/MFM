@@ -8,6 +8,7 @@
 #include "UlamClass.h"
 #include "UlamClassRegistry.h"
 #include "UlamContextEvent.h"
+#include "UlamContextRestricted.h"
 
 namespace MFM {
 
@@ -37,12 +38,12 @@ namespace MFM {
   }
 
   template <class EC>
-  u32 UlamElement<EC>::GetAtomColor(const ElementTable<EC> & et, const T& atom, u32 selector) const
+  u32 UlamElement<EC>::GetAtomColor(const ElementTable<EC> & et, const UlamClassRegistry<EC> & ucr, const T& atom, u32 selector) const
   {
     if (selector == 0)
       return GetElementColor();
 
-    UlamContext<EC> uc(et);
+    UlamContextRestricted<EC> uc(et,ucr);
     T temp(atom);
     Ui_Ut_102321u<EC> sel(selector);
     AtomBitStorage<EC> atbs(temp);
