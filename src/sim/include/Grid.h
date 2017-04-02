@@ -359,6 +359,11 @@ namespace MFM {
       return Get00Tile().GetElementTable().Lookup(elementType);
     }
 
+    const Element<EC> * LookupElementFromSymbol(const u8 * symbol) const
+    {
+      return Get00Tile().GetElementTable().Lookup(symbol);
+    }
+
     ElementRegistry<EC>& GetElementRegistry()
     {
       return m_er;
@@ -713,6 +718,8 @@ namespace MFM {
     void ResetEPSCounts();
 
     u32 GetAtomCount(ElementType atomType) const;
+
+    s32 GetAtomCountFromSymbol(const u8 * elementSymbol) const;
 
     /**
      * Counts the number of sites which are occupied in this Grid and
