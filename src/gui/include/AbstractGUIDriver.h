@@ -542,34 +542,19 @@ namespace MFM
 
       if (m_batchMode)
       {
-        /* Special disgusting hacks to run SDL in ncurses, but then
-           suppress the ncurses output, so that we can run what looks
-           like a 'GUI' to SDL with no actual display anywhere.  Is
-           there not some less-disgusting SDL1.2 way to do this??
+        /* Is there not some less-disgusting SDL1.2 way to do this??
         */
 
-        // Step 1: Hack environmental variables to pick driver
-        if (!getenv("CACA_DRIVER") && !getenv("SDL_VIDEODRIVER"))
+        if (!getenv("SDL_VIDEODRIVER"))
         {
-          putenv((char *) "CACA_DRIVER=ncurses");
-          putenv((char *) "SDL_VIDEODRIVER=caca");
+          putenv((char *) "SDL_VIDEODRIVER=dummy");
         }
         else
         {
-          fprintf(stderr,"CACA_DRIVER and/or SDL_VIDEODRIVER set in env; could not set batchmode\n");
+          fprintf(stderr,"SDL_VIDEODRIVER set in env; could not set batchmode\n");
           exit(-1);
         }
 
-        // Step 2: Temporarily dump stdout
-
-        s32 newdesc;
-        fflush(stdout);
-        m_backupStdout = dup(1);
-        newdesc = open("/dev/null", O_WRONLY);
-        dup2(newdesc, 1);
-        close(newdesc);
-
-        // Step 3: Initialize SDL
         if ( SDL_Init(0) == -1)
         {
           fprintf(stderr,"Could not initialize SDL: %s.\n", SDL_GetError());
@@ -658,21 +643,6 @@ namespace MFM
 
       // Again to 'set' stuff?
       SetScreenSize(m_screenWidth, m_screenHeight);
-
-      if (m_batchMode)
-      {
-        /* Unhook our secret wires, since hopefully the ncurses
-           initialization is done by now, and we won't actually draw
-           anything on it later anyway?
-        */
-        if (m_backupStdout >= 0)
-        {
-          fflush(stdout);
-          dup2(m_backupStdout, 1);
-          close(m_backupStdout);
-          m_backupStdout = -1;
-        }
-      }
 
     }
 
