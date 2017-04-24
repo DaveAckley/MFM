@@ -202,7 +202,7 @@ namespace MFM {
      * @param bitnum The number of the bit to set.
      *
      */
-    static void SetBit(BV & bv, u32 bitnum)
+    static void* SetBit(BV & bv, u32 bitnum)
     {
       return bv.SetBit(START+bitnum);
     }
@@ -222,7 +222,7 @@ namespace MFM {
      * @param bitnum The number of the bit to clear.
      *
      */
-    static void ClearBit(BV & bv, u32 bitnum)
+    static void* ClearBit(BV & bv, u32 bitnum)
     {
       return bv.ClearBit(START+bitnum);
     }
@@ -242,7 +242,7 @@ namespace MFM {
      * @param bitnum The number of the bit to toggle.
      *
      */
-    static void ToggleBit(BV & bv, u32 bitnum)
+    static void* ToggleBit(BV & bv, u32 bitnum)
     {
       return bv.ToggleBit(START+bitnum);
     }

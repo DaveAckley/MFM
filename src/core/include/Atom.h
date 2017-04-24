@@ -198,7 +198,7 @@ namespace MFM
      *
      * @remarks This delegates to SetEmptyImpl in the subclass of Atom.
      */
-    void SetEmpty()
+    void* SetEmpty()
     {
       return static_cast<T*>(this)->SetEmptyImpl();
     }
