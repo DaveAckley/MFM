@@ -436,15 +436,6 @@ namespace MFM
 
     virtual void PostUpdate()
     {
-#if 0 // stats panel now renders the live data.
-      /* Update the stats renderer */
-      m_statisticsPanel.SetAEPS(Super::GetAEPS());
-      m_statisticsPanel.SetAER(Super::GetRecentAER());  // Use backwards averaged value
-      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
-      m_statisticsPanel.SetCurrentAEPSPerEpoch(this->GetAEPSPerEpoch());
-      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
-      //      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
-#endif
     }
 
     u32 GetThisEpochAEPS() const
@@ -568,7 +559,15 @@ namespace MFM
       }
       else
       {
-        SDL_Init(SDL_INIT_EVERYTHING);
+	u32 flags =SDL_INIT_TIMER|SDL_INIT_VIDEO;
+        int ret = SDL_Init(flags);
+	if (ret)
+	{
+	  LOG.Error("SDL_Init(0x%x) failed: %s",
+		    flags,
+		    SDL_GetError());
+	  FAIL(ILLEGAL_STATE);
+	}
       }
 
       TTF_Init();
@@ -1140,6 +1139,15 @@ namespace MFM
       if (m_screenResizable) flags |= SDL_RESIZABLE;
       m_screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32, flags);
 
+      if (m_screen == 0)
+      {
+        LOG.Error("SDL_SetVideoMode(%d,%d,32,0x%x) failed: %s",
+		  m_screenWidth, m_screenHeight, flags,
+		  SDL_GetError());
+        FAIL(ILLEGAL_STATE);
+      }
+
+
       u32 gotWidth = SDL_GetVideoSurface()->w;
       u32 gotHeight = SDL_GetVideoSurface()->h;
       if (gotWidth != m_screenWidth || gotHeight != m_screenHeight)
@@ -1148,11 +1156,6 @@ namespace MFM
                     m_screenWidth, m_screenHeight);
 
       AssetManager::Initialize();
-
-      if (m_screen == 0)
-      {
-        FAIL(ILLEGAL_STATE);
-      }
 
       UPoint newDimensions(width, height);
 
