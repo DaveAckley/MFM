@@ -4,8 +4,9 @@ export MAGIC_DEBIAN_PACKAGE_VERSION:=
 endif
 $(info Building MFM for Debian package name: $(DEBIAN_PACKAGE_NAME))
 
-# For now (heh), we'll assume we're building on linux only
-PLATFORMS=linux
+# Find our PLATFORM
+include config/Makeplatform.mk
+PLATFORMS:=$(PLATFORM)
 
 ####
 # Variables exported to submakes

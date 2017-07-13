@@ -15,7 +15,11 @@
 #   ulam_program    (ULAM_CPP_FILE is NAMEOFPROGRAM.cpp)
 
 COMPONENTNAME:=ulam
-MFM_TARGET:=linux
+
+# Find our PLATFORM
+include config/Makeplatform.mk
+MFM_TARGET:=$(PLATFORM)
+
 #COMMANDS:=1
 #DEBUG:=1
 
