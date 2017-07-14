@@ -141,6 +141,20 @@ namespace MFM
      */
     const Element<EC> * Lookup(u32 elementType) const;
 
+    /**
+     * Gets a pointer to an immutable Element which is stored in this
+     * ElementTable by providing its atomic symbol
+     *
+     * @param symbol the atomic symbol of this Element which will be found
+     *                    in this Table.
+     *
+     * @returns A pointer to an immutable Element which is stored in
+     *          this table. If an Element with this atomic is not
+     *          found -- OR IF MULTIPLE Elements WITH THIS SYMBOL ARE
+     *          FOUND -- in this ElementTable, will return NULL .
+     */
+    const Element<EC> * Lookup(const u8 * symbol) const;
+
 #if 0 /* Now handled in eventwindow */
     /**
      * Executes the behavior method of the Element in the center of a

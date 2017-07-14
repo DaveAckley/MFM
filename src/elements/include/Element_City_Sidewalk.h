@@ -223,7 +223,7 @@ namespace MFM
       return 0xff808080;
     }
 
-    virtual u32 GetAtomColor(const T& atom, u32 selector) const
+    virtual u32 GetAtomColor(const ElementTable<EC> & et, const UlamClassRegistry<EC> & ucr, const T& atom, u32 selector) const
     {
       if(IsReadyToBuild(atom))
       {

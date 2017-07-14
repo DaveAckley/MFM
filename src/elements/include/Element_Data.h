@@ -125,7 +125,7 @@ namespace MFM
              "at random when created by an emitter atom.";
     }
 
-    virtual u32 GetAtomColor(const T& atom, u32 selector) const
+    virtual u32 GetAtomColor(const ElementTable<EC> & et, const UlamClassRegistry<EC> & ucr, const T& atom, u32 selector) const
     {
       switch (selector)
       {

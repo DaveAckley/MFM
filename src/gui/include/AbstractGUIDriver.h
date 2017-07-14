@@ -436,15 +436,6 @@ namespace MFM
 
     virtual void PostUpdate()
     {
-#if 0 // stats panel now renders the live data.
-      /* Update the stats renderer */
-      m_statisticsPanel.SetAEPS(Super::GetAEPS());
-      m_statisticsPanel.SetAER(Super::GetRecentAER());  // Use backwards averaged value
-      m_statisticsPanel.SetAEPSPerFrame(Super::GetAEPSPerFrame());
-      m_statisticsPanel.SetCurrentAEPSPerEpoch(this->GetAEPSPerEpoch());
-      m_statisticsPanel.SetOverheadPercent(Super::GetOverheadPercent());
-      //      m_statisticsPanel.SetOverheadPercent(Super::GetGrid().GetAverageCacheRedundancy());
-#endif
     }
 
     u32 GetThisEpochAEPS() const
@@ -542,34 +533,19 @@ namespace MFM
 
       if (m_batchMode)
       {
-        /* Special disgusting hacks to run SDL in ncurses, but then
-           suppress the ncurses output, so that we can run what looks
-           like a 'GUI' to SDL with no actual display anywhere.  Is
-           there not some less-disgusting SDL1.2 way to do this??
+        /* Is there not some less-disgusting SDL1.2 way to do this??
         */
 
-        // Step 1: Hack environmental variables to pick driver
-        if (!getenv("CACA_DRIVER") && !getenv("SDL_VIDEODRIVER"))
+        if (!getenv("SDL_VIDEODRIVER"))
         {
-          putenv((char *) "CACA_DRIVER=ncurses");
-          putenv((char *) "SDL_VIDEODRIVER=caca");
+          putenv((char *) "SDL_VIDEODRIVER=dummy");
         }
         else
         {
-          fprintf(stderr,"CACA_DRIVER and/or SDL_VIDEODRIVER set in env; could not set batchmode\n");
+          fprintf(stderr,"SDL_VIDEODRIVER set in env; could not set batchmode\n");
           exit(-1);
         }
 
-        // Step 2: Temporarily dump stdout
-
-        s32 newdesc;
-        fflush(stdout);
-        m_backupStdout = dup(1);
-        newdesc = open("/dev/null", O_WRONLY);
-        dup2(newdesc, 1);
-        close(newdesc);
-
-        // Step 3: Initialize SDL
         if ( SDL_Init(0) == -1)
         {
           fprintf(stderr,"Could not initialize SDL: %s.\n", SDL_GetError());
@@ -583,7 +559,15 @@ namespace MFM
       }
       else
       {
-        SDL_Init(SDL_INIT_EVERYTHING);
+	u32 flags =SDL_INIT_TIMER|SDL_INIT_VIDEO;
+        int ret = SDL_Init(flags);
+	if (ret)
+	{
+	  LOG.Error("SDL_Init(0x%x) failed: %s",
+		    flags,
+		    SDL_GetError());
+	  FAIL(ILLEGAL_STATE);
+	}
       }
 
       TTF_Init();
@@ -658,21 +642,6 @@ namespace MFM
 
       // Again to 'set' stuff?
       SetScreenSize(m_screenWidth, m_screenHeight);
-
-      if (m_batchMode)
-      {
-        /* Unhook our secret wires, since hopefully the ncurses
-           initialization is done by now, and we won't actually draw
-           anything on it later anyway?
-        */
-        if (m_backupStdout >= 0)
-        {
-          fflush(stdout);
-          dup2(m_backupStdout, 1);
-          close(m_backupStdout);
-          m_backupStdout = -1;
-        }
-      }
 
     }
 
@@ -1170,6 +1139,15 @@ namespace MFM
       if (m_screenResizable) flags |= SDL_RESIZABLE;
       m_screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32, flags);
 
+      if (m_screen == 0)
+      {
+        LOG.Error("SDL_SetVideoMode(%d,%d,32,0x%x) failed: %s",
+		  m_screenWidth, m_screenHeight, flags,
+		  SDL_GetError());
+        FAIL(ILLEGAL_STATE);
+      }
+
+
       u32 gotWidth = SDL_GetVideoSurface()->w;
       u32 gotHeight = SDL_GetVideoSurface()->h;
       if (gotWidth != m_screenWidth || gotHeight != m_screenHeight)
@@ -1178,11 +1156,6 @@ namespace MFM
                     m_screenWidth, m_screenHeight);
 
       AssetManager::Initialize();
-
-      if (m_screen == 0)
-      {
-        FAIL(ILLEGAL_STATE);
-      }
 
       UPoint newDimensions(width, height);
 
