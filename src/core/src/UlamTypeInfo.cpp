@@ -75,6 +75,7 @@ namespace MFM
     case 'u': type = UNSIGNED; break;
     case 'v': type = VOID; break;
     case 'y': type = UNARY; break;
+    case 's': type = STRING; break;
     default: return false;
     }
     result = type;
@@ -90,6 +91,7 @@ namespace MFM
     case UNSIGNED: return 'u';
     case VOID: return 'v';
     case UNARY: return 'y';
+    case STRING: return 's';
     }
     FAIL(ILLEGAL_ARGUMENT);
   }
@@ -103,6 +105,7 @@ namespace MFM
     case UNSIGNED: return "Unsigned";
     case VOID: return "Void";
     case UNARY: return "Unary";
+    case STRING: return "String";
     }
     FAIL(ILLEGAL_ARGUMENT);
   }
@@ -116,6 +119,7 @@ namespace MFM
     case UNSIGNED: return 32;
     case VOID: return 0;
     case UNARY: return 32;
+    case STRING: return 32;
     }
     FAIL(ILLEGAL_ARGUMENT);
   }

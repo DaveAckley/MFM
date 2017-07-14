@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
   BitStorage.h An interface for accessing bits stored in arbitrary-sized groups
-  Copyright (C) 2016 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2016-2017 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 /**
   \file BitStorage.h An interface for accessing bits stored in arbitrary-sized groups
   \author David H. Ackley.
-  \date (C) 2016 All rights reserved.
+  \date (C) 2016-2017 All rights reserved.
   \lgpl
  */
 #ifndef BITSTORAGE_H
@@ -152,6 +152,8 @@ namespace MFM {
     virtual void WriteAtom(u32 pos, const T& val) = 0;
 
     virtual u32 GetBitSize() const = 0;
+
+    virtual const char * GetUlamTypeMangledName() const = 0;
   }; //BitStorage (pure)
 
   /**
@@ -217,6 +219,13 @@ namespace MFM {
     {
       return BV::BITS;
     }
+
+    virtual const char * GetUlamTypeMangledName() const
+    {
+      FAIL(ILLEGAL_STATE);
+      return NULL;
+    }
+
   }; //BitVectorBitStorage
 
   /**
@@ -287,6 +296,12 @@ namespace MFM {
     T ReadAtom() const { return m_stg; } //a copy
 
     void WriteAtom(const T& tval) { m_stg = tval; }
+
+    virtual const char * GetUlamTypeMangledName() const
+    {
+      FAIL(ILLEGAL_STATE);
+      return NULL;
+    }
 
   }; //AtomRefBitStorage
 
