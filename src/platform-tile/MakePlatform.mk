@@ -2,4 +2,8 @@
 # not just us
 
 override INCLUDES += -I $(BASEDIR)/src/platform-tile/include
-override LIBS +=
+
+# Gah, relink core after ourselves -- we need to get MFMFailCodeReason
+# from libcore, and usually nobody but us uses that.
+
+override LIBS += -L $(BASEDIR)/build/platform-tile -l mfmplatform-tile -l mfmcore
