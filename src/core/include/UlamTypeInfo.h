@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamTypeInfo.h An abstract base class for ULAM info
-  Copyright (C) 2015 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015 Ackleyshack LLC.
+  Copyright (C) 2015-2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2017 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file UlamTypeInfo.h An abstract base class for ULAM info
   \author David H. Ackley.
   \author Elenas S. Ackley.
-  \date (C) 2015 All rights reserved.
+  \date (C) 2015-2017 All rights reserved.
   \lgpl
  */
 #ifndef ULAMTYPEINFO_H
@@ -36,7 +36,7 @@ namespace MFM
 {
 
   struct UlamTypeInfoPrimitive {
-    enum PrimType { VOID, INT, UNSIGNED, BOOL, UNARY, BITS };
+    enum PrimType { VOID, INT, UNSIGNED, BOOL, UNARY, BITS, STRING };
 
     u8 m_primType;
     u8 m_bitSize;

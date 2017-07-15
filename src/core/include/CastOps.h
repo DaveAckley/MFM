@@ -94,7 +94,7 @@ namespace MFM {
   inline s64 _Unsigned64ToCs64(u64 val, const u32 srcbitwidth)
   {
     u64 maxdestval = _GetNOnes64(64 - 1);
-    return (s64) MIN<u32>(val, maxdestval);
+    return (s64) MIN<u64>(val, maxdestval);
   }
 
   inline u32 _Cs32ToUnsigned32(s32 val, const u32 destbitwidth)
@@ -363,7 +363,7 @@ namespace MFM {
 
   inline u64 _Bits64ToBool64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    return (val & _GetNOnes64(MIN<u32>(srcbitwidth, destbitwidth))); //no change to Bit data
+    return (val & _GetNOnes64(MIN<u64>(srcbitwidth, destbitwidth))); //no change to Bit data
   }
 
 
@@ -555,7 +555,7 @@ namespace MFM {
 
   inline u64 _Bits64ToUnary64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    return (val & _GetNOnes64(MIN<u32>(srcbitwidth, destbitwidth)));
+    return (val & _GetNOnes64(MIN<u64>(srcbitwidth, destbitwidth)));
   }
 
   //'ALU' ops
@@ -639,7 +639,7 @@ namespace MFM {
   {
     u64 cvala = _Unary64ToCu64(vala, bitwidth);
     u64 cvalb = _Unary64ToCu64(valb, bitwidth);
-    return _GetNOnes64(MAX<u32>(cvala, cvalb) - MIN<u32>(cvala, cvalb)); //right-justified ^
+    return _GetNOnes64(MAX<u64>(cvala, cvalb) - MIN<u64>(cvala, cvalb)); //right-justified ^
   }
 
   inline u32 _BitwiseOrBits32(u32 vala, u32 valb, u32 bitwidth)
