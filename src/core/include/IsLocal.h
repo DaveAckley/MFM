@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  islocal.h Support for meaningful runtime deaths when necessary
+  IsLocal.h See if an address is in the local vars of the current stack frame
   Copyright (C) 2017 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 */
 
 /**
-  \file Islocal.h Support for meaningful runtime deaths when necessary
+  \file IsLocal.h See if an address is in the local vars of the current stack frame
   \author David H. Ackley.
   \date (C) 2017 All rights reserved.
   \lgpl
@@ -27,13 +27,6 @@
 #ifndef ISLOCAL_H
 #define ISLOCAL_H
 
-#include "IsLocalPlatformSpecific.h"  /* For ISLOCAL and unwind_protect */
-
-//extern "C" {
-
-//inline bool _IsLocal(void * address) __attribute__ ((always_inline));
-
-//}
-
+#include "IsLocalPlatformSpecific.h"  /* For _IsLocal */
 
 #endif  /* ISLOCAL_H */

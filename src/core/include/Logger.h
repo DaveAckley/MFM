@@ -292,6 +292,35 @@ namespace MFM
     }
 
     /**
+     * Logs the contents of a ByteSource at a specified logging Level .
+     *
+     * @param level The logging Level to log this message at.
+     *
+     * @param bs The ByteSource to read in its entirety for the
+     *               message to log 
+     *
+     * @returns \c true .
+     */
+    bool Log(Level level, ByteSource & bs )
+    {
+      if (IfLog(level))
+      {
+        Mutex::ScopeLock lock(m_mutex); // Hold lock for this block
+        unwind_protect(
+        {
+          abort(); // Logger is not prepared to handle failures during printing!
+        },
+        {
+          m_sink->Printf("%@%s: ",m_timeStamper, StrLevel(level));
+          m_sink->Copy(bs);
+          m_sink->Println();
+        });
+      }
+      return true;
+    }
+
+
+    /**
      * Logs a formatted message at a specified logging level .
      *
      * @param level The logging Level to log this message at.
