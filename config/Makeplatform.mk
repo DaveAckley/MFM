@@ -13,6 +13,6 @@ ifeq ($(MACHINE_TYPE), armv7l)
 PLATFORM:=tile
 endif
 
-ifeq ($(PLATFORM), "")
+ifeq ($(PLATFORM),)
 $(error unrecognized platform '$(MACHINE_TYPE)')
 endif
