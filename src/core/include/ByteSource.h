@@ -125,7 +125,7 @@ namespace MFM
      *
      * @returns the next 32-bit character from this ByteSource .
      */
-    virtual int ReadByte() = 0;
+    virtual s32 ReadByte() = 0;
 
     /**
      * Deconstructs this ByteSource. Default implementation does nothing.
