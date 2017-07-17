@@ -59,7 +59,7 @@ namespace MFM
        is unspecified except that 0 should be interpreted as a request
        for default, 'no modification', interpretation. \returns
        UNSUPPORTED if this object doesn't support reading itself, or
-       SUCCESS if the reading was successful and FAIL if there was any
+       SUCCESS if the reading was successful, or FAILURE if there was any
        problem.
      */
     virtual Result ReadFrom(ByteSource & byteSource, s32 argument = 0) = 0;
@@ -75,8 +75,8 @@ namespace MFM
        The meaning of \a argument is unspecified except that 0 should
        be interpreted as a request for default, 'no modification',
        formatting. \returns UNSUPPORTED if this object doesn't support
-       printing itself, or SUCCESS if the printing was successful and
-       FAIL if there was any problem.
+       printing itself, or SUCCESS if the printing was successful, or
+       FAILURE if there was any problem.
      */
     virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0) = 0;
     /*
