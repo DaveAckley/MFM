@@ -311,9 +311,7 @@ namespace MFM
           abort(); // Logger is not prepared to handle failures during printing!
         },
         {
-          m_sink->Printf("%@%s: ",m_timeStamper, StrLevel(level));
-          m_sink->Copy(bs);
-          m_sink->Println();
+          m_sink->Printf("%@%s: %<\n",m_timeStamper, StrLevel(level), &bs);
         });
       }
       return true;
