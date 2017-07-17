@@ -480,6 +480,14 @@ XXX UPDATE
       }
       break;
 
+    case '<':  // Print the rest of a given &ByteSource
+      {
+        ByteSource * bs = va_arg(ap,ByteSource*);
+        if (!bs) Print("(null)");
+        else Copy(*bs);
+      }
+      break;
+
     case '@':
       {
         s32 argument = 0;
