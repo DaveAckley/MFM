@@ -132,6 +132,18 @@ namespace MFM {
 
     UlamTypeInfo() : m_category(UNKNOWN) { }
 
+    const UlamTypeInfoPrimitive * AsPrimitive() const 
+    {
+      if (!IsPrimitive()) return 0;
+      return & m_utip;
+    }
+
+    bool IsPrimitive() const { return m_category == PRIM; }
+    bool IsElement() const { return m_category == ELEMENT; }
+    bool IsQuark() const { return m_category == QUARK; }
+    bool IsTransient() const { return m_category == TRANSIENT; }
+    bool IsClass() const { return IsElement() || IsQuark() || IsTransient(); }
+
     bool InitFrom(const char * mangledName)
     {
       CharBufferByteSource cbs(mangledName,strlen(mangledName));
