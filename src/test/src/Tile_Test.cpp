@@ -13,7 +13,7 @@ namespace MFM {
 
   void Tile_Test::Test_tileSquareDistances()
   {
-    TestTile tile;
+    TestTile tile(TILE_STAGGER_NONE);
     u32 W = tile.TILE_WIDTH;
     u32 H = tile.TILE_HEIGHT;
     u32 dist;
@@ -39,7 +39,7 @@ namespace MFM {
 
   void Tile_Test::Test_tilePlaceAtom()
   {
-    TestTile tile;
+    TestTile tile(TILE_STAGGER_NONE);
     ElementTypeNumberMap<TestEventConfig> etnm;
     Element_Res<TestEventConfig>::THE_INSTANCE.AllocateType(etnm);
     tile.RegisterElement(Element_Res<TestEventConfig>::THE_INSTANCE);

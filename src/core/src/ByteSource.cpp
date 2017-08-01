@@ -304,9 +304,9 @@ namespace MFM {
       if (p != '%') {
         result = Read();
         if (result < 0)
-          return matches;
+          return -matches; // Unexpected EOF
         if ((u8) result != p)
-          return matches;
+          return -matches;  // Literal mismatch
         ++matches;
         continue;
       }

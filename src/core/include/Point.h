@@ -110,6 +110,16 @@ namespace MFM
     T GetY() const;
 
     /**
+     * Gets the area of the rectangle running from (0,0) to this Point .
+     *
+     * @returns the non-negative area
+     */
+    u32 GetArea() const 
+    {
+      return ABS(GetX() * GetY());
+    }
+
+    /**
      * Gets the Manhattan Distance from the origin to the ends of the
      * vector represented by this Point .
      *

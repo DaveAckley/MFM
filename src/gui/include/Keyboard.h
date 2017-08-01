@@ -189,16 +189,16 @@ namespace MFM {
       }
     };
 
-    typedef KeyboardAcceleratorIterator<Keyboard, KeyEntry> iterator_type;
-    typedef KeyboardAcceleratorIterator<const Keyboard,const KeyEntry> const_iterator_type;
+    typedef KeyboardAcceleratorIterator<Keyboard, KeyEntry> KeyEntryInKeyboardIterator;
+    typedef KeyboardAcceleratorIterator<const Keyboard,const KeyEntry> ConstKeyEntryInKeyboardIterator;
 
-    iterator_type begin() { return iterator_type(*this); }
+    KeyEntryInKeyboardIterator begin() { return KeyEntryInKeyboardIterator(*this); }
 
-    const_iterator_type begin() const { return const_iterator_type(*this); }
+    ConstKeyEntryInKeyboardIterator begin() const { return ConstKeyEntryInKeyboardIterator(*this); }
 
-    iterator_type end() { return iterator_type(*this, MAX_BINDINGS); }
+    KeyEntryInKeyboardIterator end() { return KeyEntryInKeyboardIterator(*this, MAX_BINDINGS); }
 
-    const_iterator_type end() const { return const_iterator_type(*this, MAX_BINDINGS); }
+    ConstKeyEntryInKeyboardIterator end() const { return ConstKeyEntryInKeyboardIterator(*this, MAX_BINDINGS); }
 
   };
 } /* namespace MFM */

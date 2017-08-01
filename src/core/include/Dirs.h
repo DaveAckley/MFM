@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
   Dirs.h Euclidean direction system
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014, 2016-2017 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@
   \file Dirs.h Euclidean direction system
   \author Trent R. Small.
   \author David H. Ackley
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014, 2016-2017 All rights reserved.
   \lgpl
  */
 #ifndef DIRS_H
@@ -35,6 +35,7 @@ namespace MFM
 {
 
   typedef u32 Dir;
+  typedef u32 PrimaryDirIndex;
 
   class Dirs
   {
@@ -232,6 +233,143 @@ namespace MFM
 
   typedef RandomIterator<Dirs::DIR_COUNT,4> RandomDirIterator;
 
+  /**
+     The relative positioning of adjacent tiles in a larger grid,
+     determining which directions are legal at the intertile level,
+     which and how many locks are needed for visible events, and
+     remote tile origins relative to a given tile.
+  */
+  enum TileStagger {
+    TILE_STAGGER_NONE,    //< Tile neighbors are N, NE, E, SE, S, SW, W, NW
+    TILE_STAGGER_ROWS,    //< Tile neighbors are NW, NE, E, SE, SW, W
+    TILE_STAGGER_COLUMNS, //< Tile neighbors are N, NE, SE, S, SW, NW
+    MAX_TILE_STAGGERS
+  };
+
+  /**
+     The number of direction pairs, worst-case.
+   */
+  static const u32 PRIMARY_DIR_INDEX_COUNT = 4;
+
+  /**
+     A minimal iterator over the 'directions' of a tile, visiting
+     either all dirs or the 'primary' half of them.  Access via
+     DirInTileIterator::BeginAll(TileStagger),
+     DirInTileIterator::BeginPrimary(TileStagger),
+     Tile::BeginAllDirs(), Tile::BeginPrimaryDirs()
+  */
+  class DirInTileIterator
+  {
+    const TileStagger ts;
+    const bool all; // vs 'primary only'
+    Dir dir;
+    u32 count;
+  public:
+    static DirInTileIterator BeginAll(TileStagger ts) { return DirInTileIterator(ts, true, true); }
+    static DirInTileIterator EndAll(TileStagger ts) { return DirInTileIterator(ts, true, false); }
+    static DirInTileIterator BeginPrimary(TileStagger ts) { return DirInTileIterator(ts, false, true); }
+    static DirInTileIterator EndPrimary(TileStagger ts) { return DirInTileIterator(ts, false, false); }
+
+    DirInTileIterator(TileStagger stagger, bool allNotMaster, bool firstNotLast)
+      : ts(stagger)
+      , all(allNotMaster)
+      , dir(firstNotLast ? GetFirstDir() : GetLastDir())
+      , count(firstNotLast ? GetFirstCount() : GetLastCount())
+    { }
+
+    Dir GetFirstDir() const
+    {
+      switch (ts) {
+      case TILE_STAGGER_NONE: return all ? Dirs::NORTH : Dirs::NORTHEAST;
+      case TILE_STAGGER_ROWS: return Dirs::NORTHEAST;
+      case TILE_STAGGER_COLUMNS:  return Dirs::NORTHEAST;
+      default: FAIL(UNREACHABLE_CODE);
+      }
+    }
+
+    Dir GetLastDir() const
+    {
+      switch (ts) {
+      case TILE_STAGGER_NONE: return all ? Dirs::NORTHWEST : Dirs::SOUTH;
+      case TILE_STAGGER_ROWS: return all ? Dirs::NORTHWEST : Dirs::SOUTHEAST;
+      case TILE_STAGGER_COLUMNS:  return all ? Dirs::NORTH : Dirs::SOUTH;
+      default: FAIL(UNREACHABLE_CODE);
+      }
+    }
+
+    u32 GetFirstCount() const 
+    {
+      return 0;
+    }
+
+    u32 GetLastCount() const
+    {
+      switch (ts) {
+      case TILE_STAGGER_NONE: return all ? Dirs::DIR_COUNT : Dirs::DIR_COUNT / 2;
+      case TILE_STAGGER_ROWS:     // Fall through
+      case TILE_STAGGER_COLUMNS:  return all ? 6 : 6 / 2;
+      default: FAIL(UNREACHABLE_CODE);
+      }
+    }
+
+    Dir GetNextDir(Dir cur) 
+    {
+      ++count;
+      ++cur;
+      switch (ts) {
+      case TILE_STAGGER_NONE: break;
+      case TILE_STAGGER_ROWS: if (cur == Dirs::NORTH || cur == Dirs::SOUTH) ++cur; break;
+      case TILE_STAGGER_COLUMNS: if (cur == Dirs::EAST || cur == Dirs::WEST) ++cur; break;
+      default: FAIL(UNREACHABLE_CODE);
+      }
+      return cur;
+    }
+
+    PrimaryDirIndex GetPrimaryDirIndex() const
+    {
+      MFM_API_ASSERT_STATE(!all);
+      return count;
+    }
+
+    SPoint GetOffset(Dir cur) const
+    {
+      SPoint offset = Dirs::GetOffset(cur);
+      SPoint ret = offset * 2; // switch to external doubled coords
+      switch (ts) {
+      case TILE_STAGGER_NONE: break;  // done
+      case TILE_STAGGER_ROWS: if (cur&1) ret.SetX(offset.GetX()); break; // x not doubled on diagonals
+      case TILE_STAGGER_COLUMNS: if (cur&1) ret.SetY(offset.GetY()); break; // y not doubled on diagonals
+      default: FAIL(UNREACHABLE_CODE);
+      }
+      return ret;
+    }
+
+    bool operator!=(const DirInTileIterator &m) const
+    {
+      return dir != m.dir || ts != m.ts || all != m.all;
+    }
+
+    void operator++()
+    {
+      if (dir != GetLastDir()) 
+        dir = GetNextDir(dir);
+    }
+
+    Dir operator*() const
+    {
+      return dir;
+    }
+    
+    SPoint GetOffset() const
+    {
+      return GetOffset(dir);
+    }
+
+    u32 GetCount() const
+    {
+      return count;
+    }
+  };
 } /* namespace MFM */
 
 #endif /*DIRS_H*/

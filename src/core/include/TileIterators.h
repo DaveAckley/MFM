@@ -1,6 +1,6 @@
 /* -*- mode:C++ -*- */
 /**
-  Tile.h An independent hardware unit capable of tiling space
+  TileIterators.h Various ways of visiting various Tile properties
   Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@
 */
 
 /**
-  \file Tile.h An independent hardware unit capable of tiling space
+  \file TileIterators.h Various ways of visiting various Tile properties
   \author Trent R. Small.
   \author David H. Ackley.
   \date (C) 2014-2016 All rights reserved.
@@ -41,7 +41,7 @@
 #include "ElementTable.h"
 #include "CacheProcessor.h"
 #include "UlamClassRegistry.h"
-#include "AbstractLockSet.h"
+#include "LonglivedLock.h"
 #include "OverflowableCharBufferByteSink.h"  /* for OString16 */
 #include "LineCountingByteSource.h"
 
@@ -50,6 +50,18 @@ namespace MFM
 #define IS_OWNED_CONNECTION(X) ((X) - Dirs::EAST >= 0 && (X) - Dirs::EAST < 4)
 
   template <class EC> class EventHistoryBuffer; // FORWARD
+
+  /**
+     The positioning of adjacent tiles, determining which and how
+     many locks are needed for visible events, and the remote tile
+     origins relative to ourselves.
+  */
+  enum TileStagger {
+    TILE_STAGGER_NONE,    //< Tile neighbors are N, NE, E, SE, S, SW, W, NW
+    TILE_STAGGER_ROWS,    //< Tile neighbors are NW, NE, E, SE, SW, W
+    TILE_STAGGER_COLUMNS, //< Tile neighbors are N, NE, SE, S, SW, NW
+    MAX_TILE_STAGGERS
+  };
 
   /**
      The representation of a single indefinitely scalable hardware
@@ -71,16 +83,10 @@ namespace MFM
      initiated by others).
 
    */
-  template <class EC>  // EventConfig
-  class Tile 
+  template <class EC>  // An EventConfig
+  class Tile
   {
   public:
-
-    /**
-       The subclass of this Tile that will be used during compilation.
-    */
-    typedef typename EC::TILE_TYPE TILE;
-
     // Extract short names for parameter types
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
@@ -143,7 +149,6 @@ namespace MFM
     }
 
     Tile(TileStagger stagger, 
-         AbstractLockSet & als,
          const u32 tileWidth, const u32 tileHeight, 
          S * sites, 
          const u32 eventbuffersize, EventHistoryItem * items) ;
@@ -278,8 +283,6 @@ namespace MFM
     }
 
   private:
-
-    AbstractLockSet & m_lockSet;
 
     S * const m_sites;
 
@@ -461,21 +464,6 @@ namespace MFM
     }
     ConstSiteInTileIterator end(bool all) const {
       if (all) return endAll(); return endOwned();
-    }
-
-    // Access to directional iterators for this tile
-
-    DirInTileIterator BeginAllDirs() const { return DirInTileIterator::BeginAll(TILE_STAGGER); }
-    DirInTileIterator EndAllDirs() const { return DirInTileIterator::EndAll(TILE_STAGGER); }
-    DirInTileIterator BeginPrimaryDirs() const {return DirInTileIterator::BeginPrimary(TILE_STAGGER); }
-    DirInTileIterator EndPrimaryDirs() const { return DirInTileIterator::EndPrimary(TILE_STAGGER); }
-
-    DirInTileIterator BeginDirs(bool all) const {
-      if (all) return BeginAllDirs(); return BeginPrimaryDirs();
-    }
-
-    DirInTileIterator EndDirs(bool all) const {
-      if (all) return EndAllDirs(); return EndPrimaryDirs();
     }
 
   private:

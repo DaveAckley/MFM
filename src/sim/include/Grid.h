@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
   Grid.h Encapsulator for all MFM logic
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@
   \file Grid.h Encapsulator for all MFM logic
   \author Trent R. Small
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014-2016 All rights reserved.
   \lgpl
  */
 #ifndef GRID_H
@@ -63,37 +63,7 @@ namespace MFM {
            OWNED_HEIGHT = TILE_HEIGHT - 2 * R }; // Duplicating the OWNED_SIDE computation in Tile.tcc!
     enum { EVENT_HISTORY_SIZE = GC::EVENT_HISTORY_SIZE};
 
-    typedef SizedTile<EC,TILE_WIDTH,TILE_HEIGHT,EVENT_HISTORY_SIZE> GridTile;
-
-  private:
-    Random m_random;
-
-    u32 m_seed;
-
-    void InitSeed();
-
-    const u32 m_width, m_height;
-
-    SPoint m_lastEventTile;
-
-    ElementTypeNumberMap<EC> m_elementTypeNumberMap;
-
-    GridTile * const m_tiles;
-    GridTile & _getTile(u32 x, u32 y) { return m_tiles[x*m_height + y]; }
-    const GridTile & _getTile(u32 x, u32 y) const { return m_tiles[x*m_height + y]; }
-
-    LonglivedLock * const m_intertileLocks;
-    LonglivedLock & _getIntertileLock(u32 x, u32 y, u32 i) {
-      return m_intertileLocks[(x*m_height + y) * 3 + i];
-    }
-
-    GridTile m_heroTile;    // Model for the actual m_tiles
-
-    /**
-       Get the long-lived lock controlling cache activity going in
-       direction dir from the Tile at (xtile,ytile) in the Grid.
-     */
-    LonglivedLock & GetIntertileLock(u32 xtile, u32 ytile, Dir dir) ;
+    typedef SizedTile<EC,TILE_WIDTH,TILE_HEIGHT,EVENT_HISTORY_SIZE> OurSizedTile;
 
     struct TileDriver {
       enum State { PAUSED, ADVANCING, EXIT_REQUEST };
@@ -128,10 +98,93 @@ namespace MFM {
 
     };
 
-    TileDriver * const m_tileDrivers;
-    TileDriver & _getTileDriver(u32 x, u32 y) {
-      return m_tileDrivers[x*m_height + y];
+    struct GridLockSet : AbstractLockSet {
+      LonglivedLock m_locks[AbstractLockSet::LOCK_COUNT];
+      virtual AbstractLock & GetLock(LockNumber ln) {
+        MFM_API_ASSERT_ARG(ln < LOCK_COUNT);
+        return m_locks[ln];
+      }
+    };
+    struct TileInGrid {
+      OurSizedTile m_tile;
+      GridLockSet m_lockSet;
+      TileDriver m_tileDriver;
+      SPoint m_tileCoord; //< In doubled, staggered, per-tile units
+
+      TileInGrid(TileStagger ts)
+        : m_tile(ts, m_lockSet)
+      { }
+    };
+
+    OurSizedTile & GetTile(u32 x, u32 y) { 
+      TileInGrid & gt = _getTileInGridInternal(x/2,y/2);
+      return gt.m_tile;
     }
+
+    const OurSizedTile & GetTile(u32 x, u32 y) const { 
+      const TileInGrid & gt = _getTileInGridInternal(x/2,y/2);
+      return gt.m_tile;
+    }
+
+  private:
+
+    void ConnectTilesAllWays() ;
+
+    const TileStagger m_tileStagger;
+
+    Random m_random;
+
+    u32 m_seed;
+
+    void InitSeed();
+
+    const u32 m_width, m_height;
+
+    SPoint m_lastEventTile;
+
+    ElementTypeNumberMap<EC> m_elementTypeNumberMap;
+
+    TileInGrid * const m_tiles;
+
+    bool HasTile(u32 x, u32 y) const {
+      // If out of bounds, no tile
+      if (!HasTileInternal(x/2, y/2)) return false;
+
+      // If matches what tile thinks, yes tile
+      return _getTileInGridInternal(x,y).m_tileCoord == SPoint(x,y);
+    }
+
+    bool HasTileInternal(u32 x, u32 y) const {
+      return x < m_width && y < m_height;
+    }
+
+    TileInGrid & _getTileInGridInternal(u32 x, u32 y) { 
+      MFM_API_ASSERT_ARG(HasTileInternal(x,y));
+      return m_tiles[x * m_height + y];
+    }
+
+    const TileInGrid & _getTileInGridInternal(u32 x, u32 y) const { 
+      MFM_API_ASSERT_ARG(HasTileInternal(x,y));
+      return m_tiles[x * m_height + y]; 
+    }
+
+    LonglivedLock & _getIntertileLockInternal(u32 x, u32 y, PrimaryDirIndex i) {
+      return _getTileInGridInternal(x,y).m_intertileLocks[i];
+    }
+
+    TileDriver & _getTileDriverInternal(u32 x, u32 y) {
+      TileInGrid & gt = _getTileInGridInternal(x,y);
+      return gt.m_tileDriver;
+    }
+
+    OurSizedTile m_heroTile;    // Model for the actual m_tiles
+
+    /**
+       Get the long-lived lock controlling cache activity associated
+       with primary dir index index from the Tile at (xtile,ytile) in
+       the Grid.
+     */
+    LonglivedLock & GetIntertileLock(u32 xtile, u32 ytile, PrimaryDirIndex index) ;
 
     bool m_threadsInitted;
     static void * TileDriverRunner(void *) ;
@@ -311,14 +364,55 @@ namespace MFM {
 
     void SetSeed(u32 seed);
 
-    Grid(ElementRegistry<EC>& elts, u32 width, u32 height)
-      : m_random()
+    // Grr, isolate the crazy placement-new-crap-to-build-array of
+    // objects with a non-default ctor, a la Meyers/MEC Item #4
+    static TileInGrid * AllocateTiles(TileStagger ts, u32 count)
+    {
+      void * mem = operator new[] (count * sizeof(TileInGrid));
+      MFM_API_ASSERT_NONNULL(mem);
+      TileInGrid * ptr = static_cast<TileInGrid*>(mem);
+      for (u32 i = 0; i < count; ++i ) new (&ptr[i]) TileInGrid(ts);
+      return ptr;
+    }
+
+    static void DeallocateTiles(TileInGrid * tig, u32 count)
+    {
+      for( s32 i = count; --i >= 0; ) tig[i].~TileInGrid();
+      operator delete[]( (void*) tig );
+    }
+
+    SPoint GetTileCoordFromInternalCoord(SPoint intc)
+    {
+      SPoint result = intc * 2; // Start by doubling
+      switch (m_tileStagger) {
+      case TILE_STAGGER_NONE: break; // done
+
+      case TILE_STAGGER_ROWS:
+        if ((intc.GetY()&1) != 0) result.SetX(result.GetX() + 1);
+        break;
+
+      case TILE_STAGGER_COLUMNS:
+        if ((intc.GetX()&1) != 0) result.SetY(result.GetY() + 1);
+        break;
+
+      default: FAIL(UNREACHABLE_CODE);
+      }
+      return result;
+    }
+
+    SPoint GetInternalCoordFromTileCoord(SPoint tilec)
+    {
+      return tilec/2;
+    }
+
+    Grid(ElementRegistry<EC>& elts, TileStagger stagger, u32 width, u32 height)
+      : m_tileStagger(stagger)
+      , m_random()
       , m_seed(0)
       , m_width(width)
       , m_height(height)
-      , m_tiles(new GridTile[m_width * m_height])
-      , m_intertileLocks(new LonglivedLock[m_width * m_height * 3])
-      , m_tileDrivers(new TileDriver[m_width * m_height * 3])
+      , m_tiles(AllocateTiles(stagger, m_width * m_height))
+      , m_heroTile(stagger)
       , m_threadsInitted(false)
       , m_backgroundRadiationEnabled(false)
       , m_foregroundRadiationEnabled(false)
@@ -326,9 +420,17 @@ namespace MFM {
       , m_xraySiteOdds(100)
       , m_rgi(m_width * m_height)
     {
+      for (u32 x = 0; x < m_width; ++x) 
+      {
+        for (u32 y = 0; y < m_height; ++y) 
+        {
+          SPoint ic(x,y); //internal index coord
+          SPoint effc = GetTileCoordFromInternalCoord(ic); //double-res coord considering stagger
+          _getTileInGridInternal(x,y).m_tileCoord = effc;
+        }
+      }
 
-
-      for (iterator_type i = begin(); i != end(); ++i)
+      for (TileInGridIterator i = begin(); i != end(); ++i)
         LOG.Debug("Tile[%d][%d] @ %p", i.GetX(), i.GetY(), &(*i));
     }
 
@@ -353,7 +455,7 @@ namespace MFM {
     void SetGridRunning(bool running) ;
 
     const ElementTable<EC> & Get00ElementTable() const {
-      return _getTile(0,0).GetElementTable();
+      return _getTileInGridInternal(0,0).m_tile.GetElementTable();
     }
 
     const Element<EC> * LookupElement(u32 elementType) const
@@ -371,7 +473,7 @@ namespace MFM {
       anElement.AllocateType(m_elementTypeNumberMap);         // Force a type now
       m_er.RegisterElement(anElement);  // Make sure we're in here (How could we not?)
 
-      for (iterator_type i = begin(); i != end(); ++i)
+      for (TileInGridIterator i = begin(); i != end(); ++i)
         i->RegisterElement(anElement);
 
       LOG.Message("Assigned type 0x%04x for %@",anElement.GetType(),&anElement.GetUUID());
@@ -390,7 +492,8 @@ namespace MFM {
     }
 
     /**
-     * A minimal iterator over the Tiles of a grid.  Access via Grid::begin().
+     * A minimal iterator over the Tiles of a grid.  Access via
+     * Grid::begin().  Uses internal coordinates internally..
      */
     template <typename ItemType, typename GridType> class MyIterator
     {
@@ -422,36 +525,39 @@ namespace MFM {
 
       ItemType & operator*() const
       {
-        return g._getTile(i,j);
+        return g._getTileInGridInternal(i,j).m_tile;
       }
 
       ItemType * operator->() const
       {
-        return &g._getTile(i,j);
+        return &g._getTileInGridInternal(i,j).m_tile;
       }
 
-      SPoint At() const { return SPoint(i,j); }
-      u32 GetX() const { return (u32) i; }
-      u32 GetY() const { return (u32) j; }
+      TileInGrid & GetTileInGrid() const
+      {
+        return g._getTileInGridInternal(i,j);
+      }
+
+      SPoint At() const { return GetTileInGrid().m_tileCoord; }
+      u32 GetX() const { return At().GetX(); }
+      u32 GetY() const { return At().GetY(); }
 
     };
 
-    typedef MyIterator< Tile<EC>, Grid<GC> > iterator_type;
-    typedef MyIterator< const Tile<EC>, const Grid<GC> > const_iterator_type;
+    typedef MyIterator< Tile<EC>, Grid<GC> > TileInGridIterator;
+    typedef MyIterator< const Tile<EC>, const Grid<GC> > ConstTileInGridIterator;
 
-    iterator_type begin() { return iterator_type(*this); }
+    TileInGridIterator begin() { return TileInGridIterator(*this); }
 
-    const_iterator_type begin() const { return const_iterator_type(*this); }
+    ConstTileInGridIterator begin() const { return ConstTileInGridIterator(*this); }
 
-    iterator_type end() { return iterator_type(*this,0,m_height); }
+    TileInGridIterator end() { return TileInGridIterator(*this,0,m_height); }
 
-    const_iterator_type end() const { return const_iterator_type(*this, 0,m_height); }
+    ConstTileInGridIterator end() const { return ConstTileInGridIterator(*this, 0,m_height); }
 
     ~Grid()
     {
-      delete [] m_tiles;
-      delete [] m_intertileLocks;
-      delete [] m_tileDrivers;
+      DeallocateTiles(m_tiles, m_width * m_height);
     }
 
     /**
@@ -593,7 +699,7 @@ namespace MFM {
     void ShutdownTileThreads()
     {
       LOG.Message("Sending exit requests to the tiles");
-      for (iterator_type i = begin(); i != end(); ++i)
+      for (TileInGridIterator i = begin(); i != end(); ++i)
       {
         TileDriver & td = _getTileDriver(i.GetX(),i.GetY());
         td.SetState(TileDriver::EXIT_REQUEST);
@@ -703,12 +809,6 @@ namespace MFM {
       }
       return GetTile(pt.GetX(), pt.GetY());
     }
-
-    inline Tile<EC> & GetTile(u32 x, u32 y)
-    { return _getTile(x,y); }
-
-    inline const Tile<EC> & GetTile(u32 x, u32 y) const
-    { return _getTile(x,y); }
 
     /* Don't count caches! */
     inline const u32 GetTotalSites()

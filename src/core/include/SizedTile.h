@@ -47,7 +47,7 @@ namespace MFM
     enum { TILE_HEIGHT = HEIGHT };
     enum { TILE_SITES = TILE_WIDTH * TILE_HEIGHT };
 
-    SizedTile() : Tile<EC>(TILE_WIDTH, TILE_HEIGHT, m_sites, EVENTHISTORYSIZE, m_items) { }
+    SizedTile(TileStagger stagger, AbstractLockSet & als) : Tile<EC>(stagger, als, TILE_WIDTH, TILE_HEIGHT, m_sites, EVENTHISTORYSIZE, m_items) { }
 
   private:
     SITE m_sites[TILE_SITES];

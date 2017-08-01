@@ -45,18 +45,20 @@ namespace MFM
     }
 
     TileType tileType;
+    TileStagger tileStagger;
     u32 gridWidth;
     u32 gridHeight;
 
-    GridConfigCode(TileType t = TileUNSPEC, u32 width = 0, u32 height = 0)
+    GridConfigCode(TileType t = TileUNSPEC, TileStagger ts = MAX_TILE_STAGGERS, u32 width = 0, u32 height = 0)
       : tileType(t)
+      , tileStagger(ts)
       , gridWidth(width)
       , gridHeight(height)
     { }
 
-    bool Set(TileType t, u32 width, u32 height)
+    bool Set(TileType t, TileStagger ts, u32 width, u32 height)
     {
-      return SetTileType(t) && SetGridWidth(width) && SetGridHeight(height);
+      return SetTileType(t) && SetTileStagger(ts) && SetGridWidth(width) && SetGridHeight(height);
     }
 
     bool SetTileType(TileType t)
@@ -64,6 +66,14 @@ namespace MFM
       if (tileType != TileUNSPEC || t == TileUNSPEC)
         return false;
       tileType = t;
+      return true;
+    }
+
+    bool SetTileStagger(TileStagger ts)
+    {
+      if (tileStagger != MAX_TILE_STAGGERS || ts == MAX_TILE_STAGGERS)
+        return false;
+      tileStagger = ts;
       return true;
     }
 
@@ -81,23 +91,49 @@ namespace MFM
       return true;
     }
 
+    void die(const char * msg)
+    {
+      fprintf(stderr, "Bad grid geometry spec: %s\n", msg);
+      exit(9);
+    }
+
     bool Read(ByteSource & bs)
     {
       u32 w, h;
       u8 ch;
 
-      if (bs.Scanf("{%d%c%d}", &w, &ch, &h) != 5)
-        return false;
+      // If we don't see '{' we return false.  If we do, and something
+      // else goes wrong, we give an error and die.
+      
+      switch (bs.Scanf("{%d%c%d}", &w, &ch, &h)) {
+      case 0: return false;
+      case -1: die("Bad column count");
+      case -2: die("Missing tile type");
+      case -3: die("Bad row count");
+      case -4: die("Missing '}'");
+      case 5: break;
+      default: FAIL(UNREACHABLE_CODE);
+      }
 
       if (ch < GridConfigCode::GetMinTypeCode() ||
           ch > GridConfigCode::GetMaxTypeCode())
-        return false;
+        die("Unrecognized tile type");
 
-      if (bs.Read() >= 0)  // need EOF here
-        return false;
+      TileStagger ts = TILE_STAGGER_NONE;
+      s32 c = bs.Read();
+      if (c >= 0) 
+      {
+        if (tolower(c) == 'r') ts = TILE_STAGGER_ROWS;
+        else if (tolower(c) == 'c') ts = TILE_STAGGER_COLUMNS;
+        else if (tolower(c) != 'n') // r, c, n, or eof only legal choices
+          die("Illegal stagger");
+        if (bs.Read() >= 0)
+          die("Extra character(s) after geometry spec");
+      }
 
       SetGridWidth(w);
       SetGridHeight(h);
+      SetTileStagger(ts);
       SetTileType((GridConfigCode::TileType)
                   ((ch - GridConfigCode::GetMinTypeCode()) + GridConfigCode::TileUNSPEC + 1));
       return true;
@@ -134,14 +170,14 @@ namespace MFM
 
   /////
   // Standard models
-  static const GridConfigCode gccModelStd(GridConfigCode::TileC, 5, 3);     // Default
-  static const GridConfigCode gccModelAlt(GridConfigCode::TileE, 3, 2);     // Alternate model (flatter space)
-  static const GridConfigCode gccModelTiny(GridConfigCode::TileB, 2, 2);    // Tiny model
-  static const GridConfigCode gccModelBig(GridConfigCode::TileD, 8, 5);     // Larger model
-  static const GridConfigCode gccModelMedium1(GridConfigCode::TileF, 1, 1); // MediumTile model
-  static const GridConfigCode gccModelSmall1(GridConfigCode::TileE, 1, 1);  // SmallerTile model
+  static const GridConfigCode gccModelStd(GridConfigCode::TileC, TILE_STAGGER_NONE, 5, 3);     // Default
+  static const GridConfigCode gccModelAlt(GridConfigCode::TileE, TILE_STAGGER_NONE, 3, 2);     // Alternate model (flatter space)
+  static const GridConfigCode gccModelTiny(GridConfigCode::TileB, TILE_STAGGER_NONE, 2, 2);    // Tiny model
+  static const GridConfigCode gccModelBig(GridConfigCode::TileD, TILE_STAGGER_NONE, 8, 5);     // Larger model
+  static const GridConfigCode gccModelMedium1(GridConfigCode::TileF, TILE_STAGGER_NONE, 1, 1); // MediumTile model
+  static const GridConfigCode gccModelSmall1(GridConfigCode::TileE, TILE_STAGGER_NONE, 1, 1);  // SmallerTile model
 #ifdef EXTRA_TILE_SIZES
-  static const GridConfigCode gccModelBig1(GridConfigCode::TileH, 1, 1);    // BigTile model
+  static const GridConfigCode gccModelBig1(GridConfigCode::TileH, TILE_STAGGER_NONE, 1, 1);    // BigTile model
 #endif
 
   template <class GC>
@@ -231,8 +267,8 @@ namespace MFM
 
   public:
 
-    MFMCDriver(u32 gridWidth, u32 gridHeight)
-      : Super(gridWidth, gridHeight)
+    MFMCDriver(TileStagger ts, u32 gridWidth, u32 gridHeight)
+      : Super(ts, gridWidth, gridHeight)
       , m_stamper(*this)
     {
       MFM::LOG.SetTimeStamper(&m_stamper);
@@ -267,9 +303,9 @@ namespace MFM
   };
 
   template <class CONFIG>
-  int SimRunner(int argc, const char** argv,u32 gridWidth,u32 gridHeight)
+  int SimRunner(int argc, const char** argv,TileStagger ts, u32 gridWidth,u32 gridHeight)
   {
-    MFMCDriver<CONFIG> sim(gridWidth,gridHeight);
+    MFMCDriver<CONFIG> sim(ts, gridWidth, gridHeight);
     sim.ProcessArguments(argc, argv);
     sim.AddInternalLogging();
     sim.Init();
@@ -282,7 +318,7 @@ namespace MFM
      grid sizing (since we're not in core/ here).  But it shouldn't
      hurt anything so for now anyway we're leaving it in. */
   template <class CONFIG>
-  int SimCheckAndRun(int argc, const char** argv, u32 gridWidth, u32 gridHeight)
+  int SimCheckAndRun(int argc, const char** argv, TileStagger ts, u32 gridWidth, u32 gridHeight)
   {
     struct rlimit lim;
     if (getrlimit(RLIMIT_STACK, &lim))
@@ -307,16 +343,17 @@ namespace MFM
         }
       }
     }
-    return SimRunner<CONFIG>(argc,argv,gridWidth,gridHeight);
+    return SimRunner<CONFIG>(argc,argv,ts,gridWidth,gridHeight);
   }
 
   int SimRunConfig(const GridConfigCode & gcc, int argc, const char** argv)
   {
     u32 w = gcc.gridWidth;
     u32 h = gcc.gridHeight;
+    TileStagger ts = gcc.tileStagger;
     switch (gcc.tileType)
     {
-#define XX(A,W,H) case GridConfigCode::Tile##A: return SimCheckAndRun<OurGridConfigTile##A>(argc, argv, w, h);
+#define XX(A,W,H) case GridConfigCode::Tile##A: return SimCheckAndRun<OurGridConfigTile##A>(argc, argv, ts, w, h);
 #include "TileSizes.inc"
 #undef XX
     default:

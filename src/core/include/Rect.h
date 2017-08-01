@@ -194,6 +194,16 @@ namespace MFM
     }
 
     /**
+     * Gets the area of this Rect .
+     *
+     * @returns the non-negative area of this Rect .
+     */
+    u32 GetArea() const
+    {
+      return GetSize().GetArea();
+    }
+
+    /**
      * Gets the current size of this Rect .
      *
      * @returns The current size of this Rect .

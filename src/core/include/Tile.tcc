@@ -10,11 +10,17 @@
 namespace MFM
 {
   template <class EC>
-  Tile<EC>::Tile(const u32 tileWidth, const u32 tileHeight, S * sites, const u32 eventbuffersize, EventHistoryItem * items) 
-    : TILE_WIDTH(tileWidth)
+  Tile<EC>::Tile(TileStagger stagger,
+                 AbstractLockSet & als,
+                 const u32 tileWidth, const u32 tileHeight, 
+                 S * sites, 
+                 const u32 eventbuffersize, EventHistoryItem * items) 
+    : TILE_STAGGER(stagger)
+    , TILE_WIDTH(tileWidth)
     , TILE_HEIGHT(tileHeight)
     , OWNED_WIDTH(TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
     , OWNED_HEIGHT(TILE_HEIGHT - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
+    , m_lockSet(als)
     , m_sites(sites)
     , m_cdata(*this)
     , m_lockAttempts(0)
@@ -123,7 +129,7 @@ namespace MFM
   void Tile<EC>::XRay(u32 siteOdds, u32 bitOdds)
   {
     Random & random = GetRandom();
-    for(iterator_type i = beginAll(); i != endAll(); ++i) { // hitting caches too
+    for(SiteInTileIterator i = beginAll(); i != endAll(); ++i) { // hitting caches too
       if (random.OneIn(siteOdds))
         i->GetAtom().XRay(random, bitOdds);
     }
@@ -133,7 +139,7 @@ namespace MFM
   void Tile<EC>::Thin(u32 siteOdds)
   {
     Random & random = GetRandom();
-    for(iterator_type i = beginOwned(); i != endOwned(); ++i) {
+    for(SiteInTileIterator i = beginOwned(); i != endOwned(); ++i) {
       if (random.OneIn(siteOdds))
         i->Clear();
     }
@@ -142,7 +148,7 @@ namespace MFM
   template <class EC>
   void Tile<EC>::ClearAtoms()
   {
-    for(iterator_type i = beginAll(); i != endAll(); ++i) {
+    for(SiteInTileIterator i = beginAll(); i != endAll(); ++i) {
       i->Clear();
     }
     NeedAtomRecount();
@@ -196,7 +202,7 @@ namespace MFM
 
     m_illegalAtomCount = 0;
 
-    for(const_iterator_type i = m_tile.beginOwned(); i != m_tile.endOwned(); ++i) {
+    for(ConstSiteInTileIterator i = m_tile.beginOwned(); i != m_tile.endOwned(); ++i) {
 
       u32 atype = i->GetAtom().GetType();
       s32 idx = m_tile.m_elementTable.GetIndex(atype);

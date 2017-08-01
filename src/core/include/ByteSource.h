@@ -424,6 +424,10 @@ namespace MFM
       return SkipSet(WHITESPACE_SET);
     }
 
+    /**
+       @returns the number of matches, if overall successful,
+       otherwise returns the negative of matches found
+     */
     s32 Scanf(const char * format, ...) ;
     s32 Vscanf(const char * format, va_list & ap) ;
 

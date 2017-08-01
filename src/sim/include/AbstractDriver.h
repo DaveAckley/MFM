@@ -1172,14 +1172,13 @@ namespace MFM
         ++m_acceleration;
       }
 
-
     }
 
-    AbstractDriver(u32 gridWidth, u32 gridHeight)
+    AbstractDriver(TileStagger ts, u32 gridWidth, u32 gridHeight)
       : GRID_WIDTH(gridWidth)
       , GRID_HEIGHT(gridHeight)
       , m_neededElementCount(0)
-      , m_grid(m_elementRegistry, GRID_WIDTH, GRID_HEIGHT)
+      , m_grid(m_elementRegistry, ts, GRID_WIDTH, GRID_HEIGHT)
       , m_ticksLastStopped(0)
       , m_totalPriorTicks(0)
       , m_currentTickBasis(0)

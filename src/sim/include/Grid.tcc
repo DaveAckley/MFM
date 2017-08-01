@@ -9,12 +9,15 @@
 namespace MFM {
 
   template <class GC>
-  LonglivedLock & Grid<GC>::GetIntertileLock(u32 x, u32 y, Dir dir)
+  LonglivedLock & Grid<GC>::GetIntertileLock(u32 x, u32 y, Dir index)
   {
     switch (dir)
     {
     case Dirs::NORTH:
       MFM_API_ASSERT_ARG(y > 0);
+      // XXX MFM_API_ASSERT_STATE(m_tileStagger != TILE_STAGGER_ROWS);
+      // XXX these x and y's are external coordinates, right?  so how
+      // XXX do we map across staggered tiles here?
       --y;
       dir = Dirs::SOUTH;
       break;
@@ -83,28 +86,86 @@ namespace MFM {
       ctile.CopyHero(m_heroTile);
     }
 
-    // Connect them up
-    for(u32 x = 0; x < m_width; x++)
+    if (m_tileStagger == TILE_STAGGER_NONE)
+      ConnectTilesEightWays();
+    else
+      ConnectTilesSixWays(m_tileStagger == TILE_STAGGER_ROWS);
+  }
+
+  template <class GC>
+  void Grid<GC>::ConnectTilesSixWays(bool shiftRows)
+  {
+    /*   shiftRows == true
+
+          0   1   2   3              Dir -> offset
+
+       0  .   .   .   .             0 N  -> x
+              NW  NE                1 NE -> ( 1,-1)
+               \ /                  2 E  -> ( 1, 0)
+       1    .W--o--E.   .           3 SE -> ( 1, 1)
+               / \                  4 S  -> x
+              SW  SE                5 SW -> ( 0, 1)
+       2  .   .   .   .             6 W  -> (-1, 0)
+                                    7 NW -> ( 0,-1)
+
+       3    .   .   .   .
+
+
+
+          shiftRows == false
+
+         0   1   2   3              Dir -> offset
+
+      0  .       .                 0 N  -> ( 0,-1)
+                                   1 NE -> ( 1, 0)
+             .       .             2 E  -> x
+             N                     3 SE -> ( 1, 1)
+      1  .NW | NE.                 4 S  -> ( 0, =)
+            \|/                    5 SW -> (-1, 1)
+             o       .             6 W  -> x
+            /|\                    7 NW -> ( 0,-1)
+      2  .SW | SE.
+             S
+             .       .
+
+     *3  .       .
+
+             .       .
+
+    */
+
+
+
+    FAIL(INCOMPLETE_CODE);
+  }
+
+  template <class GC>
+  void Grid<GC>::ConnectTilesAllWays()
+  {
+    for (TileInGridIterator t = begin(); t != end(); ++t)
     {
-      for(u32 y = 0; y < m_height; y++)
+      Tile<EC>& ctile = *t;
+      SPoint extc = t.At(); // external coords
+
+      for (DirInTileIterator i = ctile.BeginPrimaryDirs(); i != ctile.EndPrimaryDirs(); ++i)
       {
-        for (Dir d = Dirs::NORTHEAST; d <= Dirs::SOUTH; ++d)
+        SPoint npt = extc + i.GetOffset(); // external coords
+
+        if (!HasTile(npt))
         {
-          SPoint tpt(x,y);
-          Tile<EC>& ctile = GetTile(tpt);
+          continue;
+        }
 
-          SPoint npt = tpt + Dirs::GetOffset(d);
+        TileInGrid & tig = t.GetTileInGrid();
 
-          if (!IsLegalTileIndex(npt))
-          {
-            continue;
-          }
+        TileDriver & td = tig.m_tileDriver;
+        Dir dir = *i;
+        LonglivedLock & ctl = GetIntertileLock(x,y,dir);
 
-          TileDriver & td = _getTileDriver(x,y);
-          GridTransceiver & gt = td.m_channels[d - Dirs::NORTHEAST];
-          LonglivedLock & ctl = GetIntertileLock(x,y,d);
+        PrimaryDirIndex index = i.GetPrimaryDirIndex();
+        GridTransceiver & gt = td.m_channels[index];
 
-          Tile<EC>& otile = GetTile(npt);
+        Tile<EC>& otile = GetTile(npt);
           Dir odir = Dirs::OppositeDir(d);
           LonglivedLock & otl = GetIntertileLock(npt.GetX(),npt.GetY(),odir);
 
@@ -114,7 +175,6 @@ namespace MFM {
           gt.SetEnabled(true);
           gt.SetDataRate(100000000);
           gt.SetMaxInFlight(0);
-        }
       }
     }
   }
@@ -271,7 +331,7 @@ namespace MFM {
     }
 
     m_random.SetSeed(m_seed);
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (TileInGridIterator i = begin(); i != end(); ++i)
       i->GetRandom().SetSeed(m_random.Create());
   }
 
@@ -297,7 +357,7 @@ namespace MFM {
   }
 
   template <class GC>
-  bool Grid<GC>::IsLegalTileIndex(const SPoint & tileInGrid) const
+  bool Grid<GC>::IsLegalTileIndexInternal(const SPoint & tileInGrid) const
   {
     if (tileInGrid.GetX() < 0 || tileInGrid.GetY() < 0)
       return false;
@@ -406,7 +466,7 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::RecountAtoms()
   {
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (TileInGridIterator i = begin(); i != end(); ++i)
       i->NeedAtomRecount();
   }
 
@@ -497,7 +557,7 @@ namespace MFM {
     LOG.Log(level," Background radiation: %s", m_backgroundRadiationEnabled?"true":"false");
     LOG.Log(level," Xray odds: %d", m_xraySiteOdds);
 
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (TileInGridIterator i = begin(); i != end(); ++i)
     {
       Tile<EC> & tile = *i;
       LOG.Log(level,"--Grid(%d,%d)=Tile %s (%p)--",
@@ -613,7 +673,7 @@ namespace MFM {
   u64 Grid<GC>::GetTotalEventsExecuted() const
   {
     u64 total = 0;
-    for (const_iterator_type i = begin(); i != end(); ++i)
+    for (ConstTileInGridIterator i = begin(); i != end(); ++i)
       total += i->GetEventsExecuted();
 
     return total;
@@ -623,7 +683,7 @@ namespace MFM {
   u64 Grid<GC>::GetTotalSitesAccessed() const
   {
     u64 total = 0;
-    for (const_iterator_type i = begin(); i != end(); ++i)
+    for (ConstTileInGridIterator i = begin(); i != end(); ++i)
       total += i->GetSitesAccessed();
 
     return total;
@@ -703,7 +763,7 @@ namespace MFM {
   u32 Grid<GC>::GetAtomCount(ElementType atomType) const
   {
     u32 total = 0;
-    for (const_iterator_type i = begin(); i != end(); ++i)
+    for (ConstTileInGridIterator i = begin(); i != end(); ++i)
       total += i->GetAtomCount(atomType);
 
     return total;
@@ -740,14 +800,14 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::Clear()
   {
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (TileInGridIterator i = begin(); i != end(); ++i)
       EmptyTile(i.At());
   }
 
   template <class GC>
   void Grid<GC>::CheckCaches()
   {
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (TileInGridIterator i = begin(); i != end(); ++i)
     {
       const SPoint usp = i.At();
       const Tile<EC> & tile = GetTile(usp);
@@ -776,7 +836,7 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::SetBackgroundRadiationEnabled(bool value)
   {
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (TileInGridIterator i = begin(); i != end(); ++i)
       i->SetBackgroundRadiationEnabled(value);
 
     m_backgroundRadiationEnabled = value;
@@ -785,7 +845,7 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::SetForegroundRadiationEnabled(bool value)
   {
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (TileInGridIterator i = begin(); i != end(); ++i)
       i->SetForegroundRadiationEnabled(value);
 
     m_foregroundRadiationEnabled = value;
@@ -794,14 +854,14 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::XRay()
   {
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (TileInGridIterator i = begin(); i != end(); ++i)
       i->XRay(m_xraySiteOdds, XRAY_BIT_ODDS);
   }
 
   template <class GC>
   void Grid<GC>::Thin()
   {
-    for (iterator_type i = begin(); i != end(); ++i)
+    for (TileInGridIterator i = begin(); i != end(); ++i)
       i->Thin(m_xraySiteOdds);
   }
 
@@ -811,7 +871,7 @@ namespace MFM {
     u32 acc   = 0,
         sides = GetTile(0,0).GetSites();
 
-    for (const_iterator_type i = begin(); i != end(); ++i)
+    for (ConstTileInGridIterator i = begin(); i != end(); ++i)
       //      acc += i->IsOff() ? 0 : sides;
       acc +=  sides;
 

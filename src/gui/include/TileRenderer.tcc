@@ -70,8 +70,8 @@ namespace MFM
     }
 
     // Here we need to iterate over the sites
-    typename OurTile::const_iterator_type end = tile.end(m_drawCacheSites);
-    for (typename OurTile::const_iterator_type i = tile.begin(m_drawCacheSites); i != end; ++i)
+    typename OurTile::ConstSiteInTileIterator end = tile.end(m_drawCacheSites);
+    for (typename OurTile::ConstSiteInTileIterator i = tile.begin(m_drawCacheSites); i != end; ++i)
     {
       SPoint siteInTileCoord = i.At();
       SPoint screenDitForSite = ditOrigin + siteInTileCoord * m_atomSizeDit;

@@ -254,6 +254,8 @@ namespace MFM
       }
       virtual double GetValue(bool endOfEpoch) const
       {
+        FAIL(INCOMPLETE_CODE); // XXX Mon Aug 29 02:37:21 2016 All rotted and not in use, yes?
+#if 0
         if (!m_grid)
         {
           return -1;
@@ -264,7 +266,7 @@ namespace MFM
         }
 
         u64 sum = 0;
-        for (typename Grid<GC>::iterator_type i = m_grid->begin(); i != m_grid->end(); ++i)
+        for (typename Grid<GC>::TileInGridIterator i = m_grid->begin(); i != m_grid->end(); ++i)
         {
           u64 * eds = 0;
 
@@ -280,6 +282,7 @@ namespace MFM
         }
 
         return (double) sum;
+#endif
       }
     };
 
@@ -302,12 +305,6 @@ namespace MFM
 
     s32 m_screenshotTargetFPS;
 
-#if 0 // Mon Jun 29 12:11:56 2015  WTF?  Prehistory?
-    static const u32 MAX_BUTTONS = 16;
-    AbstractButton* m_buttons[MAX_BUTTONS];
-    u32 m_registeredButtons;
-#endif
-
     UPoint m_drawPoint;
 
   public:
@@ -316,42 +313,6 @@ namespace MFM
       LINE_HEIGHT_PIXELS = 32,
       DETAIL_LINE_HEIGHT_PIXELS = 32
     };
-
-#if 0
-    void ClearButtons()
-    {
-      m_registeredButtons = 0;
-    }
-
-    enum {
-      BUTTON_HEIGHT_PIXELS = 20,
-      LINE_HEIGHT_PIXELS = 32,
-      DETAIL_LINE_HEIGHT_PIXELS = 32
-    };
-    void ReassignButtonLocations()
-    {
-      SPoint loc(4, m_reportersInUse * BUTTON_HEIGHT_PIXELS);
-      loc.SetY(loc.GetY() + m_displayAER*LINE_HEIGHT_PIXELS);
-      for(u32 i = 0; i < m_registeredButtons; i++)
-      {
-        m_buttons[i]->SetLocation(loc);
-        loc.SetY(loc.GetY() + BUTTON_HEIGHT_PIXELS);
-      }
-    }
-
-    void AddButton(AbstractButton* b)
-    {
-      if (m_registeredButtons >= MAX_BUTTONS)
-        FAIL(OUT_OF_ROOM);
-
-      SPoint dimensions(268, BUTTON_HEIGHT_PIXELS - 2);
-      SPoint location(4, (m_reportersInUse + m_registeredButtons) * BUTTON_HEIGHT_PIXELS);
-      b->SetDimensions(dimensions);
-      b->SetLocation(location);
-
-      m_buttons[m_registeredButtons++] = b;
-    }
-#endif
 
     u32 GetDisplayAER() const
     {

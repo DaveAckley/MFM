@@ -21,7 +21,7 @@ namespace MFM {
 
   typedef GridConfig<TestEventConfig,40,40,1000> TestGridConfig;
   typedef Grid<TestGridConfig> TestGrid;
-  typedef TestGrid::GridTile TestTile;
+  typedef TestGrid::OurSizedTile TestTile;
 
   typedef ElementTable<TestEventConfig> TestElementTable;
   typedef EventWindow<TestEventConfig> TestEventWindow;

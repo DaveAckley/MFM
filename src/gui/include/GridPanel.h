@@ -484,38 +484,6 @@ namespace MFM
 
     }
 
-#if 0
-    OurSite * GetSiteAtScreenDit(const SPoint screenDit, bool includeCaches)
-    {
-      bool cachesDrawn = GetTileRenderer().IsDrawCaches();
-      u32 atomDit = GetAtomDit();
-      for (typename Grid<GC>::iterator_type i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
-      {
-        OurTile & tile = *i;
-        SPoint tileCoord = i.At();
-        const Rect screenRectForTileDit = MapTileInGridToScreenDit(tile, tileCoord);
-        if (screenRectForTileDit.Contains(screenDit))
-        {
-          SPoint siteCoord = (screenDit - screenRectForTileDit.GetPosition()) / atomDit;
-          if (cachesDrawn)
-          {
-            if (!includeCaches && tile.RegionIn(siteCoord) == OurTile::REGION_CACHE)
-              return 0;
-            return &tile.GetSite(siteCoord);
-          }
-          else
-          {
-            if (tile.IsInUncachedTile(siteCoord))
-              return &tile.GetUncachedSite(siteCoord);
-            return 0;
-          }
-        }
-      }
-
-      return 0;
-    }
-#endif
-
     OurSite * GetSiteAtGridCoord(const UPoint gridCoord)
     {
       FAIL(INCOMPLETE_CODE);
@@ -525,7 +493,7 @@ namespace MFM
     {
       bool cachesDrawn = GetTileRenderer().IsDrawCaches();
       u32 atomDit = GetAtomDit();
-      for (typename Grid<GC>::iterator_type i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
+      for (typename Grid<GC>::TileInGridIterator i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
       {
         OurTile & tile = *i;
         SPoint tileCoord = i.At();
@@ -589,7 +557,7 @@ namespace MFM
     void PaintTiles(Drawing & drawing)
     {
       GetTileRenderer().SetDrawBases(m_currentGridTool && m_currentGridTool->IsSiteEdit());
-      for (typename Grid<GC>::iterator_type i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
+      for (typename Grid<GC>::TileInGridIterator i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
       {
         SPoint tileCoord = i.At();
         Rect screenDitForTile = MapTileInGridToScreenDit(*i,tileCoord);

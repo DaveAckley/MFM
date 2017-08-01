@@ -837,8 +837,8 @@ namespace MFM
       return true;
     }
 
-    AbstractGUIDriver(u32 gridWidth, u32 gridHeight)
-      : Super(gridWidth, gridHeight)
+    AbstractGUIDriver(TileStagger ts, u32 gridWidth, u32 gridHeight)
+      : Super(ts, gridWidth, gridHeight)
       , m_startPaused(true)
       , m_thisUpdateIsEpoch(false)
       , m_bigText(false)

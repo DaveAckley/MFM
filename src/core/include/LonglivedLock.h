@@ -32,6 +32,7 @@
 #include "Fail.h"
 #include "Mutex.h"
 #include "Logger.h"
+#include "AbstractLock.h"
 
 namespace MFM
 {
@@ -39,7 +40,7 @@ namespace MFM
    * An LonglivedLock mediates long-duration locking between a set of
    * possible owners
    */
-  class LonglivedLock
+  class LonglivedLock : public AbstractLock
   {
   private:
     Mutex m_shortLivedLock;
@@ -109,11 +110,7 @@ namespace MFM
     { }
 
     /**
-     * Get the current lock owner if any.  The result is only advisory
-     * (i.e., it may have changed by the time caller looks at it)
-     * unless the caller owns the channel.
-     *
-     * \returns 0 if the lock was free, or non-zero for owner index
+       \copydoc AbstractLock::GetOwnerIndex
      */
     void * GetOwnerIndex()
     {
@@ -122,11 +119,7 @@ namespace MFM
     }
 
     /**
-     * Atomically attempt to capture the lock on behalf of ownerIndex.
-     * If the lock is available, change its ownder to ownerIndex and
-     * return true.  If the lock is currently held by who, FAILS with
-     * LOCK_FAILURE to discourage stupidity.  If the lock held by some
-     * other owner index, change nothing and return false.
+       \copydoc AbstractLock::TryLock
      */
     bool TryLock(void * who)
     {
@@ -136,10 +129,7 @@ namespace MFM
     }
 
     /**
-     * Atomically check and possibly update the long-lived lock as
-     * follows: If the lock is currently held by ownerIndex, unlock
-     * the long-lived lock and return true.  Otherwise do not change
-     * the channel state and return false.
+       \copydoc AbstractLock::Unlock
      */
     bool Unlock(void * who)
     {

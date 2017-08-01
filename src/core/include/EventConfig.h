@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
   EventConfig.h The compile-time parameters at the event level
-  Copyright (C) 2014, 2015 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2017 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 /**
   \file EventConfig.h The compile-time parameters at the event level
   \author David H. Ackley.
-  \date (C) 2014, 2015 All rights reserved.
+  \date (C) 2014, 2015, 2016 All rights reserved.
   \lgpl
  */
 #ifndef EVENTCONFIG_H
@@ -36,14 +36,19 @@ namespace MFM {
    * A template class used to hold compile-time parameters relevant to
    * a single event for an MFM Element.
    */
-  template <class S,    // A Site
+  template <class T,    // A Tile
             u32 R       // An event window radius
             >
   struct EventConfig {
     /**
+     * TILE is the type of Tile used in this EventConfig.
+     */
+    typedef T TILE;
+
+    /**
      * SITE is the type of Site used in this EventConfig.
      */
-    typedef S SITE;
+    typedef typename TILE::SITE SITE;
 
     /**
      * ATOM_CONFIG is the AtomConfig used in the Site in this EventConfig.

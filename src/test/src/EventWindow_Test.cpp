@@ -18,13 +18,13 @@ namespace MFM {
 
   void EventWindow_Test::Test_EventWindowConstruction()
   {
-    TestTile tile;
+    TestTile tile(TILE_STAGGER_NONE);
     TestEventWindow ew(tile);
   }
 
   void EventWindow_Test::Test_EventWindowNoLockOpen()
   {
-    TestTile tile;
+    TestTile tile(TILE_STAGGER_NONE);
     ElementTypeNumberMap<TestEventConfig> etnm;
     Element_Wall<TestEventConfig>::THE_INSTANCE.AllocateTypeForTesting(etnm); // Need something non-diffusing..
     tile.RegisterElement(Element_Wall<TestEventConfig>::THE_INSTANCE);
@@ -54,7 +54,7 @@ namespace MFM {
 
   void EventWindow_Test::Test_EventWindowWrite()
   {
-    TestTile tile;
+    TestTile tile(TILE_STAGGER_NONE);
     ElementTypeNumberMap<TestEventConfig> etnm;
     Element_Dreg<TestEventConfig>::THE_INSTANCE.AllocateTypeForTesting(etnm);
     Element_Res<TestEventConfig>::THE_INSTANCE.AllocateTypeForTesting(etnm);
