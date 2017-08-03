@@ -104,6 +104,26 @@ namespace MFM
       else FAIL(ILLEGAL_STATE);
     }
 
+    /**
+       Copy \c LEN bits from positions \c pos through \c pos + LEN - 1
+       of \c this to positions 0 through LEN - 1 of \c rtnbv
+    */
+    template<u32 LEN>
+    void ReadBV(u32 pos, BitVector<LEN>& rtnbv) const
+    {
+      m_stg.ReadBV<LEN>(pos + m_pos, rtnbv);
+    }
+
+    /**
+       Copy \c LEN bits from positions 0 through LEN - 1 of \c val
+       to positions \c pos through \c pos + LEN - 1 of \c this.
+    */
+    template<u32 LEN>
+    void WriteBV(u32 pos, const BitVector<LEN>& val)
+    {
+      m_stg.WriteBV<LEN>(pos + m_pos, val);
+    }
+
     u32 GetPos() const { return m_pos; }
 
     u32 GetLen() const { return m_len; }
@@ -111,6 +131,8 @@ namespace MFM
     const UlamClass<EC> * GetEffectiveSelf() const { CheckEffectiveSelf(); return m_effSelf; }
 
     BitStorage<EC> & GetStorage() { return m_stg; }
+    //XXX
+    //XXX    const UlamContext<EC> & GetContext() { return m_uc; }
 
     u32 GetType() const ;
 

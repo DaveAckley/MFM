@@ -8,6 +8,7 @@
 #include "UlamClass.h"
 #include "UlamClassRegistry.h"
 #include "UlamContextEvent.h"
+#include "UlamContextRestricted.h"
 
 namespace MFM {
 
@@ -29,8 +30,7 @@ namespace MFM {
     u32 sym = m_info ? m_info->GetSymmetry(uc) : PSYM_DEG000L;
     window.SetSymmetry((PointSymmetry) sym);
 
-    AtomRefBitStorage<EC> atbs(window.GetCenterAtomSym());
-    UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this, UlamRef<EC>::ELEMENTAL, uc);
+    UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), window.GetCenterAtomBitStorage(), this, UlamRef<EC>::ELEMENTAL, uc);
 
     // how to do an ulam virtual function call in c++
     typedef void (* Uf_6behave) (const UlamContext<EC>&, UlamRef<EC>& );
@@ -38,12 +38,12 @@ namespace MFM {
   }
 
   template <class EC>
-  u32 UlamElement<EC>::GetAtomColor(const ElementTable<EC> & et, const T& atom, u32 selector) const
+  u32 UlamElement<EC>::GetAtomColor(const ElementTable<EC> & et, const UlamClassRegistry<EC> & ucr, const T& atom, u32 selector) const
   {
     if (selector == 0)
       return GetElementColor();
 
-    UlamContext<EC> uc(et);
+    UlamContextRestricted<EC> uc(et,ucr);
     T temp(atom);
     Ui_Ut_102321u<EC> sel(selector);
     AtomBitStorage<EC> atbs(temp);

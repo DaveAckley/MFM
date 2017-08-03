@@ -350,13 +350,18 @@ namespace MFM {
      */
     void SetGridRunning(bool running) ;
 
-    const ElementTable<EC> & Get00ElementTable() const {
-      return _getTile(0,0).GetElementTable();
+    const Tile<EC> & Get00Tile() const {
+      return _getTile(0,0);
     }
 
     const Element<EC> * LookupElement(u32 elementType) const
     {
-      return Get00ElementTable().Lookup(elementType);
+      return Get00Tile().GetElementTable().Lookup(elementType);
+    }
+
+    const Element<EC> * LookupElementFromSymbol(const u8 * symbol) const
+    {
+      return Get00Tile().GetElementTable().Lookup(symbol);
     }
 
     ElementRegistry<EC>& GetElementRegistry()
@@ -713,6 +718,8 @@ namespace MFM {
     void ResetEPSCounts();
 
     u32 GetAtomCount(ElementType atomType) const;
+
+    s32 GetAtomCountFromSymbol(const u8 * elementSymbol) const;
 
     /**
      * Counts the number of sites which are occupied in this Grid and

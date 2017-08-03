@@ -22,6 +22,24 @@ namespace MFM {
     WriteByte('"');
   }
 
+  void ByteSink::PrintDoubleQuotedCStringWithLength(const char * nstring)
+  {
+    u8 len = nstring[-1];
+    WriteByte('"');
+    u8 ch;
+    for (u8 i = 0; i < len; ++i) 
+    {
+      ch = nstring[i];
+      if (ch == '\\')
+        Printf("\\\\");
+      else if (!isprint(ch) || ch == '"')
+        Printf("\\%03o",ch);
+      else
+        WriteByte(ch);
+    }
+    WriteByte('"');
+  }
+
   void ByteSink::Copy(ByteSource & restOfThis)
   {
     s32 ch;
@@ -462,6 +480,14 @@ XXX UPDATE
       }
       break;
 
+    case '<':  // Print the rest of a given &ByteSource
+      {
+        ByteSource * bs = va_arg(ap,ByteSource*);
+        if (!bs) Print("(null)");
+        else Copy(*bs);
+      }
+      break;
+
     case '@':
       {
         s32 argument = 0;
@@ -530,6 +556,13 @@ XXX UPDATE
       const char * s = va_arg(ap,const char *);
       if (!s) Print("(null)", fieldWidth, padChar);
       else Print(s, fieldWidth, padChar);
+      break;
+    }
+
+    case 'S': {
+      const char * s = va_arg(ap,const char *);
+      if (!s) Print("(null)", fieldWidth, padChar);
+      else PrintDoubleQuotedCStringWithLength(s);
       break;
     }
 

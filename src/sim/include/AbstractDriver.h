@@ -487,10 +487,17 @@ namespace MFM
       double full = m_grid.GetFullSitePercentage();
       if((m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
          || (m_haltOnEmpty && full == 0.0)
-         || (m_haltOnFull && full == 1.0))
+         || (m_haltOnFull && full == 1.0)
+         || (m_AEPS > 0 && m_haltOnExtinctionOf && 
+             m_grid.GetAtomCountFromSymbol(m_extinctionSymbol)==0)
+         )
       {
         // Free final save if halting on --halt*.  Hope for good-looking corpse.
-        SaveGridWithConstantFilename("save/final.mfs");
+        {
+          const char* filename =
+            GetSimDirPathTemporary("save/final-%D-%D.mfs", m_epochCount, (u32) m_AEPS);
+          SaveGrid(filename);
+        }
         WriteTimeBasedData();
         m_grid.ShutdownTileThreads();
         return false;
@@ -507,6 +514,8 @@ namespace MFM
 
     void SetAEPSPerEpoch(u32 aeps)
     {
+      if (m_maxEpochLength > 0 && aeps > m_maxEpochLength)
+        aeps =  m_maxEpochLength;
       m_AEPSPerEpoch = aeps;
     }
 
@@ -747,6 +756,21 @@ namespace MFM
       }
     }
 
+    static void SetMaxEpochLengthFromArgs(const char* aeps, void* driverptr)
+    {
+      AbstractDriver& driver = *(AbstractDriver*)driverptr;
+      VArguments& args = driver.m_varguments;
+
+      s32 out;
+      const char * errmsg = AbstractDriver<GC>::GetNumberFromString(aeps, out, 0, S32_MAX);
+      if (errmsg)
+      {
+        args.Die("Bad max epoch length '%s': %s", aeps, errmsg);
+      }
+
+      driver.m_maxEpochLength = out;
+    }
+
     static void SetHaltOnEmpty(const char* not_needed, void* driver)
     {
       ((AbstractDriver*)driver)->m_haltOnEmpty = 1;
@@ -862,6 +886,20 @@ namespace MFM
       driver.m_haltAfterAEPS = (u32) out;
     }
 
+    static void SetHaltOnExtinctionOfFromArgs(const char* symbol, void* driverptr)
+    {
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
+      if (strlen(symbol) > 2)
+        args.Die("Bad atomic symbol '%s'", symbol);
+
+      driver.m_extinctionSymbol[0] = symbol[0];
+      driver.m_extinctionSymbol[1] = symbol[1];
+      driver.m_extinctionSymbol[2] = symbol[2];
+      driver.m_haltOnExtinctionOf = true;
+    }
+
     static void SetWarpFactorFromArgs(const char* wfs, void* driverptr)
     {
       AbstractDriver& driver = *((AbstractDriver*)driverptr);
@@ -949,6 +987,7 @@ namespace MFM
       sink.Print(m_accelerateAfterEpochs, Format::LXX32);
       sink.Print(m_acceleration, Format::LXX32);
       sink.Print(m_surgeAfterEpochs, Format::LXX32);
+      sink.Print(m_maxEpochLength, Format::LXX32);
       sink.Printf(",");
 
       sink.Print(m_gridImages, Format::LXX32);
@@ -988,12 +1027,14 @@ namespace MFM
       u32 tmp_m_accelerateAfterEpochs;
       u32 tmp_m_acceleration;
       u32 tmp_m_surgeAfterEpochs;
+      u32 tmp_m_maxEpochLength;
 
       if (!source.Scan(tmp_m_AEPSPerEpoch, Format::LXX32)) return false;
       if (!source.Scan(tmp_m_autosavePerEpochs, Format::LXX32)) return false;
       if (!source.Scan(tmp_m_accelerateAfterEpochs, Format::LXX32)) return false;
       if (!source.Scan(tmp_m_acceleration, Format::LXX32)) return false;
       if (!source.Scan(tmp_m_surgeAfterEpochs, Format::LXX32)) return false;
+      if (!source.Scan(tmp_m_maxEpochLength, Format::LXX32)) return false;
       if (1 != source.Scanf(",")) return false;
 
       u32 tmp_m_gridImages;
@@ -1035,6 +1076,7 @@ namespace MFM
       m_accelerateAfterEpochs = tmp_m_accelerateAfterEpochs;
       m_acceleration = tmp_m_acceleration;
       m_surgeAfterEpochs = tmp_m_surgeAfterEpochs;
+      m_maxEpochLength = tmp_m_maxEpochLength;
 
       m_gridImages = tmp_m_gridImages;
       m_tileImages = tmp_m_tileImages;
@@ -1184,6 +1226,7 @@ namespace MFM
       , m_totalPriorTicks(0)
       , m_currentTickBasis(0)
       , m_haltAfterAEPS(0)
+      , m_haltOnExtinctionOf(false) // if true, m_extinctionSymbol has (unvalidated) content
       , m_haltOnEmpty(false)
       , m_haltOnFull(false)
       , m_suppressStdElements(false)
@@ -1200,6 +1243,7 @@ namespace MFM
       , m_accelerateAfterEpochs(0)
       , m_acceleration(1)
       , m_surgeAfterEpochs(0)
+      , m_maxEpochLength(0)
       , m_gridImages(false)
       , m_tileImages(false)
       , m_AEPS(0.0)
@@ -1335,6 +1379,10 @@ namespace MFM
                              "--surge",
                              &SetSurgePerEpochFromArgs, this, true);
 
+      RegisterArgument("Set the max epoch length ARG (caps --accelerate and --surge)",
+                             "--maxepochlength",
+                             &SetMaxEpochLengthFromArgs, this, true);
+
       RegisterArgument("Each epoch, write grid AEPS image to per-sim eps/ directory",
                        "--gridImages", &SetGridImages, this, false);
 
@@ -1343,6 +1391,9 @@ namespace MFM
 
       RegisterArgument("If ARG > 0, Halts after ARG elapsed aeps.",
                        "--haltafteraeps", &SetHaltAfterAEPSFromArgs, this, true);
+
+      RegisterArgument("Halts after element symbol ARG is absent from the grid.",
+                       "--haltifextinct", &SetHaltOnExtinctionOfFromArgs, this, true);
 
       RegisterArgument("Halts if grid is empty.",
                        "--haltonempty", &SetHaltOnEmpty, this, false);
@@ -1386,6 +1437,14 @@ namespace MFM
     u32 GetHaltAfterAEPS()
     {
       return m_haltAfterAEPS;
+    }
+
+    const char * GetHaltAfterExinctionOfSymbol()
+    {
+      if (!m_haltOnExtinctionOf)
+        FAIL(ILLEGAL_STATE);
+      
+      return m_extinctionSymbol;
     }
 
     double GetAEPS()
@@ -1508,6 +1567,8 @@ namespace MFM
     u64 m_totalPriorTicks;
     u64 m_currentTickBasis;
     u32 m_haltAfterAEPS;
+    bool m_haltOnExtinctionOf;
+    u8 m_extinctionSymbol[3];
     bool m_haltOnEmpty;
     bool m_haltOnFull;
     bool m_suppressStdElements;
@@ -1526,6 +1587,7 @@ namespace MFM
     u32 m_accelerateAfterEpochs;
     u32 m_acceleration;
     u32 m_surgeAfterEpochs;
+    u32 m_maxEpochLength;
 
     bool m_gridImages;
     bool m_tileImages;

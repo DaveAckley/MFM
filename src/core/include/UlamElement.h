@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamElement.h A concrete base class for ULAM elements
-  Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015-2016 Ackleyshack, LLC.
+  Copyright (C) 2014-2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2017 Ackleyshack, LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file UlamElement.h A concrete base class for ULAM elements
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2014-2016 All rights reserved.
+  \date (C) 2014-2017 All rights reserved.
   \lgpl
  */
 #ifndef ULAMELEMENT_H
@@ -53,7 +53,7 @@ namespace MFM{
     Ui_Ut_102321u() { }
     Ui_Ut_102321u(const u32 d) { write(d); }
     Ui_Ut_102321u(const Ui_Ut_102321u& other) { this->write(other.read()); }
-    ~Ui_Ut_102321u() {}
+    virtual const char * GetUlamTypeMangledName() const { return "Ut_102321u"; } //gcnl:UlamType.cpp:885
   };
 } //MFM
 #endif /*Ud_Ui_Ut_102321u */
@@ -76,8 +76,9 @@ namespace MFM{
     void write(const u32 v) { BVS::Write(0u, 32u, v); } //writes entire array
     Ui_Ut_14181u() { }
     Ui_Ut_14181u(const u32 d) { write(d); }
+    Ui_Ut_14181u(const u32 d[1]) : BVS(d) { } //gcnl:UlamTypePrimitive.cpp:487
     Ui_Ut_14181u(const Ui_Ut_14181u& other) { this->write(other.read()); }
-    ~Ui_Ut_14181u() {}
+    virtual const char * GetUlamTypeMangledName() const { return "Ut_14181u"; } //gcnl:UlamType.cpp:885
   };
 } //MFM
 #endif /*Ud_Ui_Ut_14181u */
@@ -199,7 +200,7 @@ namespace MFM {
       return 0xffffffff;
     }
 
-    virtual u32 GetAtomColor(const ElementTable<EC> & et, const T& atom, u32 selector) const ;
+    virtual u32 GetAtomColor(const ElementTable<EC> & et, const UlamClassRegistry<EC> & ucr, const T& atom, u32 selector) const ;
 
     virtual u32 Diffusability(EventWindow<EC> & ew, SPoint nowAt, SPoint maybeAt) const ;
   };

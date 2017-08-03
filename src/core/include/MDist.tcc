@@ -62,6 +62,110 @@ namespace MFM {
 
     InitEscapesByDirTable();
     InitHorizonsByDirTable();
+    InitRasterTables();
+    InitESLTables();
+  }
+
+  template<u32 R>
+  void MDist<R>::InitRasterTables()
+  {
+    /* Yet more once-only and eventually to be pre-compiled into
+       const, so for here and now let's see how unbelievably slow and
+       obvious we can make this.
+    */
+    const s32 SR = (s32) R;
+    u32 rasterIndex = 0;
+    for (s32 y = -SR; y <= SR; ++y) 
+    {
+      for (s32 x = -SR; x <= SR; ++x) 
+      {
+        const SPoint s(x,y);
+        s32 sn = GetSiteNumber(s);
+        if (sn >= 0)
+        {
+          m_rasterToSiteNum[rasterIndex] = sn;
+          ++rasterIndex;
+        }
+      }
+    }
+
+    MFM_API_ASSERT_STATE(rasterIndex == ARRAY_LENGTH);
+
+    for (u32 i = 0; i < ARRAY_LENGTH; ++i) 
+    {
+      m_siteNumToRaster[i] = ARRAY_LENGTH;
+    }
+    for (u32 i = 0; i < ARRAY_LENGTH; ++i) 
+    {
+      m_siteNumToRaster[m_rasterToSiteNum[i]] = i;
+    }
+    for (u32 i = 0; i < ARRAY_LENGTH; ++i) 
+    {
+      MFM_API_ASSERT_STATE(m_siteNumToRaster[i] < ARRAY_LENGTH);
+    }
+
+  }
+
+  template<u32 R>
+  void MDist<R>::InitESLTables()
+  {
+    /* Yet more once-only and eventually to be pre-compiled into
+       const, so for here and now let's see how unbelievably slow and
+       obvious we can make this.
+    */
+    u32 eslIndex = 0;
+    u32 currentESL = U32_MAX;  // flag
+    u32 firstESLIdx = 0;
+    const s32 SR = (s32) R;
+    for (u32 esl = 0; esl <= 2*R*R; ++esl) 
+    {
+      // go left-to-right slowest and top-to-bottom fastest to follow
+      // manhattan length scan order where possible
+      for (s32 x = -SR; x <= SR; ++x) 
+      {
+        for (s32 y = -SR; y <= SR; ++y) 
+        {
+          const SPoint s(x,y);
+          s32 sn = GetSiteNumber(s);
+          if (sn < 0) continue; // Not in window
+
+          u32 thisESL = x*x + y*y;
+          if (thisESL != esl) continue; // Not length we want
+
+          // We have a site at this esl.  New length?
+          if (currentESL != thisESL)
+          {
+            m_firstESLIndex[firstESLIdx] = eslIndex;
+            m_firstESLValue[firstESLIdx] = thisESL;
+            currentESL = thisESL;
+            ++firstESLIdx;
+          }
+
+          m_eSLNumToSiteNum[eslIndex] = sn;
+          ++eslIndex;
+        }
+      }
+    }
+
+    MFM_API_ASSERT_STATE(eslIndex == ARRAY_LENGTH);
+    MFM_API_ASSERT_STATE(firstESLIdx == 2*R+1);
+
+    m_firstESLIndex[firstESLIdx] = ARRAY_LENGTH;
+    m_firstESLValue[firstESLIdx] = U8_MAX;
+
+    for (u32 i = 0; i < ARRAY_LENGTH; ++i) 
+    {
+      m_siteNumToESLNum[i] = ARRAY_LENGTH;
+    }
+    for (u32 i = 0; i < ARRAY_LENGTH; ++i) 
+    {
+      m_siteNumToESLNum[m_eSLNumToSiteNum[i]] = i;
+    }
+    for (u32 i = 0; i < ARRAY_LENGTH; ++i) 
+    {
+      MFM_API_ASSERT_STATE(m_siteNumToESLNum[i] < ARRAY_LENGTH);
+    }
+
   }
 
   template<u32 R>

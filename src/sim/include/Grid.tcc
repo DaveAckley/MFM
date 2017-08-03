@@ -711,6 +711,14 @@ namespace MFM {
   }
 
   template <class GC>
+  s32 Grid<GC>::GetAtomCountFromSymbol(const u8 * symbol) const
+  {
+    const Element<EC> * elt = this->LookupElementFromSymbol(symbol);
+    if (!elt) return -1;
+    return (s32) this->GetAtomCount(elt->GetType());
+  }
+
+  template <class GC>
   void Grid<GC>::RandomNuke()
   {
     Random& rand = m_random;

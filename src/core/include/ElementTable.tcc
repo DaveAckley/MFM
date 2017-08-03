@@ -77,6 +77,25 @@ namespace MFM {
   }
 
   template <class EC>
+  const Element<EC> * ElementTable<EC>::Lookup(const u8 * symbol) const
+  {
+    MFM_API_ASSERT_NONNULL(symbol);
+
+    const Element<EC> * found = 0;
+    for (u32 i = 0; i < SIZE; ++i) 
+    {
+      if (m_hash[i].m_element == 0) continue;
+      if (!strcmp(m_hash[i].m_element->GetAtomicSymbol(),(const char *) symbol)) 
+      {
+        if (found) return 0;  // multiple hits
+        found = m_hash[i].m_element;
+      }
+    }
+
+    return found;
+  }
+
+  template <class EC>
   bool ElementTable<EC>::RegisterElement(const Element<EC>& e)
   {
     Insert(e);

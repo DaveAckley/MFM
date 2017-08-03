@@ -92,6 +92,20 @@ namespace MFM
   template <class EC>
   struct UlamClass : UlamClassPrintFlags
   {
+    /**
+       Stub for the class-specific ulam string lookup function.
+       \c index the string index into the class user string pool.
+     */
+    virtual const u8 * GetString(u32 index) const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    virtual u32 GetStringLength(u32 index) const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
     virtual u32 GetClassLength() const
     {
       FAIL(ILLEGAL_STATE);
@@ -297,6 +311,18 @@ namespace MFM
                            u32 indent = 0) const ;
 
     static void addHex(ByteSink & bs, u64 val) ;
+
+    void DefineRegistrationNumber(u32 num) ;
+
+    u32 GetRegistrationNumber() const ;
+
+    enum { UNINITTED_REGISTRY_NUMBER = U32_MAX } ;
+    UlamClass()
+      : m_ulamClassRegistryNumber(UNINITTED_REGISTRY_NUMBER)
+    { }
+
+  private:
+    u32 m_ulamClassRegistryNumber;
   };
 
 } // MFM

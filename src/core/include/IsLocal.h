@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
-  UlamDefs.h A roll-up of files and definitions for ULAM compiled output
-  Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
+  IsLocal.h See if an address is in the local vars of the current stack frame
+  Copyright (C) 2017 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -19,35 +19,14 @@
 */
 
 /**
-  \file UlamDefs.h A roll-up of files and definitions for ULAM compiled output
-  \author David H. Ackley
-  \author Elena S. Ackley
-  \date (C) 2014-2016 All rights reserved.
+  \file IsLocal.h See if an address is in the local vars of the current stack frame
+  \author David H. Ackley.
+  \date (C) 2017 All rights reserved.
   \lgpl
  */
-#ifndef ULAMDEFS_H
-#define ULAMDEFS_H
+#ifndef ISLOCAL_H
+#define ISLOCAL_H
 
-#include "Fail.h"
-#include "itype.h"
-#include "Util.h"
-#include "VD.h"
-#include "BitField.h"
-#include "CastOps.h"
-#include "Parameter.h"
-#include "Element.h"
-#include "IsLocal.h"
-#include "P3Atom.h"
-#include "UlamContext.h"
-#include "UlamElement.h"
-#include "UlamQuark.h"
-#include "UlamTransient.h"
-#include "UlamClass.h"
-#include "UlamClassRegistry.h"
-#include "UlamTypeInfo.h"
+#include "IsLocalPlatformSpecific.h"  /* For _IsLocal */
 
-namespace MFM
-{
-}
-
-#endif /* ULAMDEFS_H */
+#endif  /* ISLOCAL_H */

@@ -414,17 +414,25 @@ namespace MFM
     }
 
     iterator_type begin(bool all) {
-      if (all) return beginAll(); return beginOwned();
+      if (all)
+          return beginAll();
+      return beginOwned();
     }
     const_iterator_type begin(bool all) const {
-      if (all) return beginAll(); return beginOwned();
+      if (all)
+          return beginAll();
+      return beginOwned();
     }
 
     iterator_type end(bool all) {
-      if (all) return endAll(); return endOwned();
+      if (all)
+          return endAll();
+      return endOwned();
     }
     const_iterator_type end(bool all) const {
-      if (all) return endAll(); return endOwned();
+      if (all)
+          return endAll();
+      return endOwned();
     }
 
   private:
@@ -756,7 +764,7 @@ namespace MFM
       m_ucr = heroTile.m_ucr;
 
       const UlamClass<EC> * uempty = m_ucr.GetUlamElementEmpty();
-      if (uempty) 
+      if (uempty)
       {
         const UlamElement<EC> * uelt = uempty->AsUlamElement();
         if (uelt)

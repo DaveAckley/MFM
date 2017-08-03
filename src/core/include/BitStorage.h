@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
   BitStorage.h An interface for accessing bits stored in arbitrary-sized groups
-  Copyright (C) 2016 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2016-2017 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 /**
   \file BitStorage.h An interface for accessing bits stored in arbitrary-sized groups
   \author David H. Ackley.
-  \date (C) 2016 All rights reserved.
+  \date (C) 2016-2017 All rights reserved.
   \lgpl
  */
 #ifndef BITSTORAGE_H
@@ -84,7 +84,7 @@ namespace MFM {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
-    BitStorage() { } 
+    BitStorage() { }
 
     virtual ~BitStorage() { }
 
@@ -152,6 +152,8 @@ namespace MFM {
     virtual void WriteAtom(u32 pos, const T& val) = 0;
 
     virtual u32 GetBitSize() const = 0;
+
+    virtual const char * GetUlamTypeMangledName() const = 0;
   }; //BitStorage (pure)
 
   /**
@@ -217,6 +219,13 @@ namespace MFM {
     {
       return BV::BITS;
     }
+
+    virtual const char * GetUlamTypeMangledName() const
+    {
+      FAIL(ILLEGAL_STATE);
+      return NULL;
+    }
+
   }; //BitVectorBitStorage
 
   /**
@@ -228,7 +237,12 @@ namespace MFM {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
-    AtomRefBitStorage(T & toModify) : m_stg(toModify) { }
+    explicit AtomRefBitStorage(T & toModify) : m_stg(toModify) { }
+
+  private:
+    AtomRefBitStorage(const AtomRefBitStorage<EC> & toCopy) ;  // Declare away
+
+  public:
 
     T& m_stg;
 
@@ -283,6 +297,12 @@ namespace MFM {
 
     void WriteAtom(const T& tval) { m_stg = tval; }
 
+    virtual const char * GetUlamTypeMangledName() const
+    {
+      FAIL(ILLEGAL_STATE);
+      return NULL;
+    }
+
   }; //AtomRefBitStorage
 
   /**
@@ -294,11 +314,17 @@ namespace MFM {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
-    AtomBitStorage(const T & toCopy) : AtomRefBitStorage<EC>(m_copy), m_copy(toCopy) { }
+    AtomBitStorage(const T & toCopy) : AtomRefBitStorage<EC>(m_atom), m_atom(toCopy) { }
 
-    AtomBitStorage() : AtomRefBitStorage<EC>(m_copy) { }
+    AtomBitStorage() : AtomRefBitStorage<EC>(m_atom) { }
 
-    T m_copy;
+    T m_atom;
+
+    const T& GetAtom() const { return m_atom; }
+
+  private:
+    AtomBitStorage(const AtomBitStorage<EC> & toCopyABS); //declare away
+
   }; //AtomBitStorage
 
 } // MFM

@@ -122,7 +122,7 @@ namespace MFM {
   }
 
   inline u64 _ShiftFromBitNumber64(u64 value, u32 bitpos) {
-    return value>>bitpos;
+    return (u64) (value>>bitpos);
   }
 
   inline u32 _GetMask32(u32 bitpos, u32 bitwidth) {

@@ -94,7 +94,7 @@ namespace MFM {
   inline s64 _Unsigned64ToCs64(u64 val, const u32 srcbitwidth)
   {
     u64 maxdestval = _GetNOnes64(64 - 1);
-    return (s64) MIN<u32>(val, maxdestval);
+    return (s64) MIN<u64>(val, maxdestval);
   }
 
   inline u32 _Cs32ToUnsigned32(s32 val, const u32 destbitwidth)
@@ -363,7 +363,7 @@ namespace MFM {
 
   inline u64 _Bits64ToBool64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    return (val & _GetNOnes64(MIN<u32>(srcbitwidth, destbitwidth))); //no change to Bit data
+    return (val & _GetNOnes64(MIN<u64>(srcbitwidth, destbitwidth))); //no change to Bit data
   }
 
 
@@ -555,7 +555,7 @@ namespace MFM {
 
   inline u64 _Bits64ToUnary64(u64 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
-    return (val & _GetNOnes64(MIN<u32>(srcbitwidth, destbitwidth)));
+    return (val & _GetNOnes64(MIN<u64>(srcbitwidth, destbitwidth)));
   }
 
   //'ALU' ops
@@ -639,7 +639,7 @@ namespace MFM {
   {
     u64 cvala = _Unary64ToCu64(vala, bitwidth);
     u64 cvalb = _Unary64ToCu64(valb, bitwidth);
-    return _GetNOnes64(MAX<u32>(cvala, cvalb) - MIN<u32>(cvala, cvalb)); //right-justified ^
+    return _GetNOnes64(MAX<u64>(cvala, cvalb) - MIN<u64>(cvala, cvalb)); //right-justified ^
   }
 
   inline u32 _BitwiseOrBits32(u32 vala, u32 valb, u32 bitwidth)
@@ -805,11 +805,152 @@ namespace MFM {
     return _Bits64ToBool64(binvala ^ binvalb, bitwidth, bitwidth);
   }
 
+  //Bounds checks for INT (32,64 bitwidths) arith:
+  // based on http://stackoverflow.com/questions/199333/how-to-detect-integer-overflow-in-c-c
+
+  inline u32 _BinOpAddCs32WithBoundsCheck(s32 cvala, s32 cvalb)
+  {
+    if ((cvalb > 0) && (cvala > S32_MAX - cvalb)) /* `a + b` would overflow */
+      return S32_MAX;
+    if ((cvalb < 0) && (cvala < S32_MIN - cvalb)) /* `a + b` would underflow */
+      return S32_MIN;
+    return _Cs32ToInt32((cvala + cvalb), 32);
+  }
+
+  inline u64 _BinOpAddCs64WithBoundsCheck(s64 cvala, s64 cvalb)
+  {
+    if ((cvalb > 0) && (cvala > S64_MAX - cvalb)) /* `a + b` would overflow */
+      return S64_MAX;
+    if ((cvalb < 0) && (cvala < S64_MIN - cvalb)) /* `a + b` would underflow */
+      return S64_MIN;
+    return _Cs64ToInt64((cvala + cvalb), 64);
+  }
+
+  inline u32 _BinOpSubtractCs32WithBoundsCheck(s32 cvala, s32 cvalb)
+  {
+    if ((cvalb < 0) && (cvala > S32_MAX + cvalb)) /* `a - b` would overflow */
+      return S32_MAX;
+    if ((cvalb > 0) && (cvala < S32_MIN + cvalb)) /* `a - b` would underflow */
+      return S32_MIN;
+    return _Cs32ToInt32((cvala - cvalb), 32);
+  }
+
+  inline u64 _BinOpSubtractCs64WithBoundsCheck(s64 cvala, s64 cvalb)
+  {
+    if ((cvalb < 0) && (cvala > S64_MAX + cvalb)) /* `a - b` would overflow */
+      return S64_MAX;
+    if ((cvalb > 0) && (cvala < S64_MIN + cvalb)) /* `a - b` would underflow */
+      return S64_MIN;
+    return _Cs64ToInt64((cvala - cvalb), 64);
+  }
+
+  inline u32 _BinOpMultiplyCs32WithBoundsCheck(s32 cvala, s32 cvalb)
+  {
+    // there may be need to check for -1 for two's complement machines
+    if ((cvala == -1) && (cvalb == S32_MIN)) /* `a * b` can overflow */
+      return S32_MAX;
+    if ((cvala == S32_MIN) && (cvalb == -1)) /* `a * b` (or `a / b`) can overflow */
+      return S32_MAX;
+
+    if(cvalb > 0)
+      {
+	if(cvala > (S32_MAX / cvalb)) /* `a * b` would overflow */
+	  return S32_MAX;
+	if(cvala < (S32_MIN / cvalb)) /* `a * b` would underflow */
+	  return S32_MIN;
+      }
+    else if(cvalb < 0)
+      {
+	if(cvala < (S32_MAX / cvalb)) /* `a * b` would overflow */
+	  return S32_MAX;
+	if((cvalb < -1) && (cvala > (S32_MIN / cvalb))) /* `a * b` would underflow */
+	  return S32_MIN;
+      }
+    //else
+    return _Cs32ToInt32((cvala * cvalb), 32);
+  }
+
+  inline u64 _BinOpMultiplyCs64WithBoundsCheck(s64 cvala, s64 cvalb)
+  {
+    // there may be need to check for -1 for two's complement machines
+    if ((cvala == -1) && (cvalb == S64_MIN)) /* `a * b` can overflow */
+      return S64_MAX;
+    if ((cvala == S64_MIN) && (cvalb == -1)) /* `a * b` (or `a / b`) can overflow */
+      return S64_MAX;
+
+    if(cvalb > 0)
+      {
+	if(cvala > (S64_MAX / cvalb)) /* `a * b` would overflow */
+	  return S64_MAX;
+	if(cvala < (S64_MIN / cvalb)) /* `a * b` would underflow */
+	  return S64_MIN;
+      }
+    else if(cvalb < 0)
+      {
+	if(cvala < (S64_MAX / cvalb)) /* `a * b` would overflow */
+	  return S64_MAX;
+	if((cvalb < -1) && (cvala > (S64_MIN / cvalb))) /* `a * b` would underflow */
+	  return S64_MIN;
+      }
+    //else
+    return _Cs64ToInt64((cvala * cvalb), 64);
+  }
+
+  inline u32 _BinOpDivideCs32WithBoundsCheck(s32 cvala, s32 cvalb)
+  {
+    if ((cvalb == -1) && (cvala == S32_MIN)) /* `a * b` (or `a / b`) can overflow */
+      return S32_MAX;
+    return _Cs32ToInt32((cvala / cvalb), 32);
+  }
+
+  inline u64 _BinOpDivideCs64WithBoundsCheck(s64 cvala, s64 cvalb)
+  {
+    if ((cvalb == -1) && (cvala == S64_MIN)) /* `a * b` (or `a / b`) can overflow */
+      return S64_MAX;
+    return _Cs64ToInt64((cvala / cvalb), 64);
+  }
+
+  //Bounds checks for UNSIGNED (32,64 bitwidths) arith (add, multiply only):
+  // based on http://stackoverflow.com/questions/199333/how-to-detect-integer-overflow-in-c-c
+  inline u32 _BinOpAddCu32WithBoundsCheck(u32 cvala, u32 cvalb)
+  {
+    if (cvala > (U32_MAX - cvalb)) /* `a + b` would overflow */
+      return U32_MAX;
+    return _Cu32ToUnsigned32((cvala + cvalb), 32);
+  }
+
+  inline u64 _BinOpAddCu64WithBoundsCheck(u64 cvala, u64 cvalb)
+  {
+    if (cvala > (U64_MAX - cvalb)) /* `a + b` would overflow */
+      return U64_MAX;
+    return _Cu64ToUnsigned64((cvala + cvalb), 64);
+  }
+
+  inline u32 _BinOpMultiplyCu32WithBoundsCheck(u32 cvala, u32 cvalb)
+  {
+    if((cvalb > 0) && (cvala > (U32_MAX / cvalb))) /* `a * b` would overflow */
+      return U32_MAX;
+    return _Cu32ToUnsigned32((cvala * cvalb), 32);
+  }
+
+  inline u64 _BinOpMultiplyCu64WithBoundsCheck(u64 cvala, u64 cvalb)
+  {
+    if((cvalb > 0) && (cvala > (U64_MAX / cvalb))) /* `a * b` would overflow */
+      return U64_MAX;
+    return _Cu64ToUnsigned64((cvala * cvalb), 64);
+  }
+
   // Ariths On INT:
+
   inline u32 _BinOpAddInt32(u32 vala, u32 valb, u32 bitwidth)
   {
     s32 cvala = _Int32ToCs32(vala, bitwidth);
     s32	cvalb = _Int32ToCs32(valb, bitwidth);
+    if(bitwidth == 32)
+      {
+	//TODO: replace with machine-specific overflow-bit check
+	return _BinOpAddCs32WithBoundsCheck(cvala, cvalb);
+      }
     return _Cs32ToInt32((cvala + cvalb), bitwidth);
   }
 
@@ -817,6 +958,11 @@ namespace MFM {
   {
     s64 cvala = _Int64ToCs64(vala, bitwidth);
     s64	cvalb = _Int64ToCs64(valb, bitwidth);
+    if(bitwidth == 64)
+      {
+	//TODO: replace with machine-specific overflow-bit check
+	return _BinOpAddCs64WithBoundsCheck(cvala, cvalb);
+      }
     return _Cs64ToInt64((cvala + cvalb), bitwidth);
   }
 
@@ -824,6 +970,11 @@ namespace MFM {
   {
     s32 cvala = _Int32ToCs32(vala, bitwidth);
     s32	cvalb = _Int32ToCs32(valb, bitwidth);
+    if(bitwidth == 32)
+      {
+	//TODO: replace with machine-specific overflow-bit check
+	return _BinOpSubtractCs32WithBoundsCheck(cvala, cvalb);
+      }
     return _Cs32ToInt32((cvala - cvalb), bitwidth);
   }
 
@@ -831,6 +982,11 @@ namespace MFM {
   {
     s64 cvala = _Int64ToCs64(vala, bitwidth);
     s64	cvalb = _Int64ToCs64(valb, bitwidth);
+    if(bitwidth == 64)
+      {
+	//TODO: replace with machine-specific overflow-bit check
+	return _BinOpSubtractCs64WithBoundsCheck(cvala, cvalb);
+      }
     return _Cs64ToInt64((cvala - cvalb), bitwidth);
   }
 
@@ -838,6 +994,11 @@ namespace MFM {
   {
     s32 cvala = _Int32ToCs32(vala, bitwidth);
     s32	cvalb = _Int32ToCs32(valb, bitwidth);
+    if(bitwidth == 32)
+      {
+	//TODO: replace with machine-specific overflow-bit check
+	return _BinOpMultiplyCs32WithBoundsCheck(cvala, cvalb);
+      }
     return _Cs32ToInt32((cvala * cvalb), bitwidth);
   }
 
@@ -845,6 +1006,11 @@ namespace MFM {
   {
     s64 cvala = _Int64ToCs64(vala, bitwidth);
     s64	cvalb = _Int64ToCs64(valb, bitwidth);
+    if(bitwidth == 64)
+      {
+	//TODO: replace with machine-specific overflow-bit check
+	return _BinOpMultiplyCs64WithBoundsCheck(cvala, cvalb);
+      }
     return _Cs64ToInt64((cvala * cvalb), bitwidth);
   }
 
@@ -853,6 +1019,11 @@ namespace MFM {
     MFM_API_ASSERT_NONZERO(valb);
     s32 cvala = _Int32ToCs32(vala, bitwidth);
     s32	cvalb = _Int32ToCs32(valb, bitwidth);
+    if(bitwidth == 32)
+      {
+	//TODO: replace with machine-specific overflow-bit check
+	return _BinOpDivideCs32WithBoundsCheck(cvala, cvalb);
+      }
     return _Cs32ToInt32((cvala / cvalb), bitwidth);
   }
 
@@ -861,6 +1032,11 @@ namespace MFM {
     MFM_API_ASSERT_NONZERO(valb);
     s64 cvala = _Int64ToCs64(vala, bitwidth);
     s64	cvalb = _Int64ToCs64(valb, bitwidth);
+    if(bitwidth == 64)
+      {
+	//TODO: replace with machine-specific overflow-bit check
+	return _BinOpDivideCs64WithBoundsCheck(cvala, cvalb);
+      }
     return _Cs64ToInt64((cvala / cvalb), bitwidth);
   }
 
@@ -885,6 +1061,11 @@ namespace MFM {
   {
     u32 cvala = _Unsigned32ToCu32(vala, bitwidth);
     u32 cvalb = _Unsigned32ToCu32(valb, bitwidth);
+    if(bitwidth == 32)
+      {
+	//TODO: replace with machine-specific overflow-bit check
+	return _BinOpAddCu32WithBoundsCheck(cvala, cvalb);
+      }
     return _Cu32ToUnsigned32((cvala + cvalb), bitwidth);
   }
 
@@ -892,6 +1073,11 @@ namespace MFM {
   {
     u64 cvala = _Unsigned64ToCu64(vala, bitwidth);
     u64 cvalb = _Unsigned64ToCu64(valb, bitwidth);
+    if(bitwidth == 64)
+      {
+	//TODO: replace with machine-specific overflow-bit check
+	return _BinOpAddCu64WithBoundsCheck(cvala, cvalb);
+      }
     return _Cu64ToUnsigned64((cvala + cvalb), bitwidth);
   }
 
@@ -899,6 +1085,7 @@ namespace MFM {
   {
     u32 cvala = _Unsigned32ToCu32(vala, bitwidth);
     u32 cvalb = _Unsigned32ToCu32(valb, bitwidth);
+    //no special bounds checking needed for Unsigned subtraction
     if (cvala <= cvalb) return 0;
     return _Cu32ToUnsigned32((cvala - cvalb), bitwidth);
   }
@@ -907,6 +1094,7 @@ namespace MFM {
   {
     u64 cvala = _Unsigned64ToCu64(vala, bitwidth);
     u64 cvalb = _Unsigned64ToCu64(valb, bitwidth);
+    //no special bounds checking needed for Unsigned subtraction
     if (cvala <= cvalb) return 0;
     return _Cu64ToUnsigned64((cvala - cvalb), bitwidth);
   }
@@ -915,6 +1103,11 @@ namespace MFM {
   {
     u32 cvala = _Unsigned32ToCu32(vala, bitwidth);
     u32 cvalb = _Unsigned32ToCu32(valb, bitwidth);
+    if(bitwidth == 32)
+      {
+	//TODO: replace with machine-specific overflow-bit check
+	return _BinOpMultiplyCu32WithBoundsCheck(cvala, cvalb);
+      }
     return _Cu32ToUnsigned32((cvala * cvalb), bitwidth);
   }
 
@@ -922,6 +1115,11 @@ namespace MFM {
   {
     u64 cvala = _Unsigned64ToCu64(vala, bitwidth);
     u64 cvalb = _Unsigned64ToCu64(valb, bitwidth);
+    if(bitwidth == 64)
+      {
+	//TODO: replace with machine-specific overflow-bit check
+	return _BinOpMultiplyCu64WithBoundsCheck(cvala, cvalb);
+      }
     return _Cu64ToUnsigned64((cvala * cvalb), bitwidth);
   }
 
@@ -930,6 +1128,7 @@ namespace MFM {
     MFM_API_ASSERT_NONZERO(valb);
     u32 cvala = _Unsigned32ToCu32(vala, bitwidth);
     u32 cvalb = _Unsigned32ToCu32(valb, bitwidth);
+    //no special bounds checking needed for Unsigned division
     return _Cu32ToUnsigned32((cvala / cvalb), bitwidth);
   }
 
@@ -938,6 +1137,7 @@ namespace MFM {
     MFM_API_ASSERT_NONZERO(valb);
     u64 cvala = _Unsigned64ToCu64(vala, bitwidth);
     u64 cvalb = _Unsigned64ToCu64(valb, bitwidth);
+    //no special bounds checking needed for Unsigned division
     return _Cu64ToUnsigned64((cvala / cvalb), bitwidth);
   }
 
@@ -959,6 +1159,7 @@ namespace MFM {
 
   //Bin Op Arith on Unary (e.g. op equals)
   //convert to binary before the operation; then convert back to unary
+  //no special bounds checking needed for Unary arithmetic
   inline u32 _BinOpAddUnary32(u32 vala, u32 valb, u32 bitwidth)
   {
     u32 binvala = _Unary32ToCu32(vala, bitwidth);

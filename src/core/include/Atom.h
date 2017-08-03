@@ -204,6 +204,16 @@ namespace MFM
     }
 
     /**
+     * Sets this Atom to be an undefined atom, which will fail if its type is examined.
+     *
+     * @remarks This delegates to SetUndefinedImpl in the subclass of Atom.
+     */
+    void SetUndefined()
+    {
+      return static_cast<T*>(this)->SetUndefinedImpl();
+    }
+
+    /**
      * Prints this Atom in a semi-readable way to a ByteSink.
      *
      * @remarks This delegates to PrintImpl in the subclass of Atom.
