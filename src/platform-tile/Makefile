@@ -7,5 +7,8 @@ BASEDIR:=../..
 # What we need from outside
 override INCLUDES +=
 
+# Special dispensation for IsLocalPlatformSpecific..
+CPPFLAGS += -Wno-error=return-local-addr
+
 # Do the library thing
 include $(BASEDIR)/config/Makelib.mk

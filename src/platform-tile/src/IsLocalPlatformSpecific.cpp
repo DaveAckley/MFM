@@ -1,16 +1,17 @@
 #include "IsLocalPlatformSpecific.h"
 
-#include <stdint.h> /* for intptr_t, grrr */
+/* At least with gcc-5_5.4.0 on ubuntu xenial, gcc sees through the
+   'void * ret = &local; return ret;' code with a return-local-addr
+   warning, which we promote to an error, which then kills the build.
+
+   So ../Makefile is now compiling the files in this directory with
+   '-Wno-error=return-local-addr'..
+*/
 
 void * __attribute__ ((noinline)) getStackBound()
 {
-  /* gcc-5_5.4.0 sees through the 'void * ret = &local; return ret;'
-     code that was previously here.  Grrr.  So we're trying a
-     roundtrip through intptr_t, despite its problems.  (Discovered on
-     ubuntu xenial.)
-  */
   char local;
-  intptr_t obscure = (intptr_t) &local;
+  void * ret = &local;
   asm(""); // try to block compiler optimizations
-  return (void *) obscure;
+  return ret;
 }
