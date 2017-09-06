@@ -391,6 +391,8 @@ sub ValidatePubKey {
         ($path, $knownpub) = TryToPromoteInstalledPubKey($handle);
     }
     if (defined($knownpub)) {
+        chomp($knownpub);  # Try to normalize last line
+        $knownpub .= "\n"; # ending to what we think we expect
         if ($pubstring ne $knownpub) {
             print "\nERROR: '$handle' is known (found in '$path') but supplied public key doesn't match!($knownpub:$pubstring)\n";
             exit 3;
@@ -409,7 +411,8 @@ WARNING: S - Save this handle as trusted and run the program now (caution!)
 WARNING!
 EOM
             print "What do you want to do? [Qrs] ";
-            my $answer;
+            my $answer = <>;
+            $answer = "" unless defined $answer;  # Don't warn on eof
             chomp($answer = <>);
             $answer = 'q' if ($answer eq "");
             $answer = lc($answer);
