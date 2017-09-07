@@ -38,16 +38,21 @@ sub UDie {
     exit(1);
 }
 
-my $userHomeDir = glob "~/.mfm";
+sub NoVerb {
+    UDie("Missing command");
+}
+
+my $KeyDir;
+
 sub InitMFMSubDir {
     my $sub = shift;
     IDie "No sub?" unless defined $sub;
-    my $dir = "$userHomeDir/$sub";
-    $dir =~ /^(.+)$/ or IDie("WTF?");
-    $dir = $1;  # Great.  Just great.
+    IDie "No KD?" unless defined $KeyDir;
+
+    my $dir = "$KeyDir/$sub"; # $KeyDir should be clean and $sub should be internal
 
     if (!-d $dir) {
-        make_path($dir)
+        make_path($dir)       # So we shouldn't need untainting to do this
             or die "Couldn't mkdir $dir: $!";
     }
     return $dir;
@@ -93,9 +98,9 @@ sub ReadPublicKeyFile {
     my $file = GetPublicKeyFile($handle);
     my $data = ReadWholeFile($file);
     my ($pubhandle, $key) = SplitHandleFromKey($data);
-    UDie("Bad format in public key file for '$handle'")
+    UDie("Bad format in public key file '$file' for '$handle'")
         unless defined $pubhandle;
-    UDie("Non-matching handle in public key file ('$handle' vs '$pubhandle')")
+    UDie("Non-matching handle in public key file '$file' ('$handle' vs '$pubhandle')")
         unless $pubhandle eq $handle;
     return ($key, ComputeFingerprintFromFullPublicKey($data));
 }
@@ -168,6 +173,33 @@ sub VersionExit {
     $pname = "" unless defined $pname;
     print "$pname-".VERSION."\n";
     exit(0);
+}
+
+sub KDGetVerb {
+    my $mustExist = shift;
+    my $verb = NextArg();
+    NoVerb() if $mustExist && !defined $verb;
+    my $kdir;
+    if (defined($verb) && $verb eq "-kd") {
+        $kdir = NextArg();
+        UDie("Missing argument to '-kd' switch") 
+            unless defined $kdir;
+        $verb = NextArg();
+        NoVerb() if $mustExist && !defined $verb;
+    } else {
+        $kdir = glob "~/.mfm";
+    }
+
+    # Let's avoid accidentally creating keydir 'help' or whatever..
+    UDie("-kd argument ('$kdir') must begin with '/', './', or '../'")
+        unless $kdir =~ m!^([.]{0,2}/.*)$!;
+    $KeyDir = $1;
+
+    if (-e $KeyDir) {
+        UDie("'$KeyDir' exists but is not a directory")
+            if ! -d $KeyDir;
+    }
+    return $verb;
 }
 
 sub NextArg {

@@ -17,7 +17,7 @@ use Crypt::OpenSSL::RSA;
 my (undef, $binDir, $scriptName) = File::Spec ->splitpath($0);
 $binDir =~ s!/$!!;
 
-my $progname = NextArg();
+my $progname = KDGetVerb(0);
 my $optverb = NextArg() || "";
 if (!defined($progname)) {
     $progname = "YOURMFZFILE.mfz";
@@ -31,7 +31,9 @@ if ($verb eq "help" || $verb eq "-h") {
     print <<EOH;
 MFZ format simulation runner version $v
 
-SYNOPSIS: $0 FILE.mfz [COMMAND]
+SYNOPSIS: $0 [-kd KEY_DIRECTORY] FILE.mfz [COMMAND]
+
+  KEY_DIRECTORY defaults to ~/.mfm/ if -kd is omitted
 
 $0
 $0 $progname help
@@ -380,7 +382,8 @@ sub TryToPromoteInstalledPubKey {
 sub SavePubKey {
     my ($handle, $pubkey) = @_;
     my $pubkeypath = GetPublicKeyFile($handle);
-    WriteWholeFile($pubkeypath, $pubkey);
+    my $data = JoinHandleToKey($handle,$pubkey);
+    WriteWholeFile($pubkeypath, $data);
     return $pubkeypath;
 }
 
@@ -413,7 +416,7 @@ EOM
             print "What do you want to do? [Qrs] ";
             my $answer = <>;
             $answer = "" unless defined $answer;  # Don't warn on eof
-            chomp($answer = <>);
+            chomp($answer);
             $answer = 'q' if ($answer eq "");
             $answer = lc($answer);
             if ($answer eq 'q') {
