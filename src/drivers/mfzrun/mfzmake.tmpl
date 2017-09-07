@@ -18,17 +18,15 @@ use IO::Compress::Zip qw(zip $ZipError);
 
 use Cwd 'abs_path';
 
-sub NoVerb {
-    UDie("Missing command");
-}
-
 sub Help {
     my $v = VERSION;
     print <<EOH;
 
 MFZ format file packer version $v
 
-SYNOPSIS: $0 COMMAND FILES..
+SYNOPSIS: $0 [-kd KEY_DIRECTORY] COMMAND FILES..
+
+  KEY_DIRECTORY defaults to ~/.mfm/ if -kd is omitted
 
 COMMAND FORMS:
 
@@ -95,8 +93,8 @@ EOH
 my @zipOtherOptions;
 ConfigureZipOptions();  # Ubuntu 12.04's zip module doesn't know CanonicalName! :(
 
-my $verb = NextArg();
-NoVerb() unless defined $verb;
+my $verb = KDGetVerb(1);
+
 Help() if $verb eq "help" or $verb eq "-h" or $verb eq "--help";
 VersionExit("mfzmake") if $verb eq "version" or $verb eq "-v";
 UDie("Unknown switch '$verb'") if $verb =~ /^-/;
