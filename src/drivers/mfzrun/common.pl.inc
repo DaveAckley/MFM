@@ -175,6 +175,11 @@ sub VersionExit {
     exit(0);
 }
 
+sub GetKeyDir {
+    IDie("No key dir?") unless defined $KeyDir;
+    return $KeyDir;
+}
+
 sub KDGetVerb {
     my $mustExist = shift;
     my $verb = NextArg();
