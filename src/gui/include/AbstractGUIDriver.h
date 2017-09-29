@@ -60,10 +60,10 @@
 #include "AbstractGUIDriverTools.h"
 #include "GUIConstants.h"
 #include "Keyboard.h"
+#include <signal.h>   /* for signal, SIGTERM */
 
 namespace MFM
 {
-
   template<class GC>
   class AbstractGUIDriver : public AbstractDriver<GC>
   {
@@ -1323,7 +1323,8 @@ namespace MFM
           }
         }
 
-        running = this->RunHelperExiter();
+        bool wantOut = this->RunHelperExiter();
+        running &= wantOut;  // Don't reset running if it was already false
         SDL_Flip(m_screen);
       }
 
