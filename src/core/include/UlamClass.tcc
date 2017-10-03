@@ -119,8 +119,8 @@ namespace MFM {
           {
             if (arraysize > 0)
             {
-              if (idx==0) bs.Printf("[%d]",arraysize);
-              bs.Printf(", [%d]=",idx);
+              if (idx>0) bs.Printf(",");
+              bs.Printf("[%d]=",idx);
             }
 
 #if 0 
@@ -144,7 +144,10 @@ namespace MFM {
                 const UlamClass * memberClass = ucr.GetUlamClassByMangledName(mangledName);
                 if (memberClass)
                 {
-                  memberClass->PrintClassMembers(ucr, bs, stg, flags, baseStatePos + dmi.m_bitPosition, indent + 1);
+                  u32 flatFlags = flags;  
+                  // Only go down one more level?
+                  //flatFlags &= ~UlamClassPrintFlags::PRINT_RECURSE_QUARKS;
+                  memberClass->PrintClassMembers(ucr, bs, stg, flatFlags, startPos, indent + 1);
                   continue;
                 }
               }
@@ -223,6 +226,13 @@ namespace MFM {
                 bs.Printf("void"); // should be impossible?
                 break;
               }
+
+            case UlamTypeInfoPrimitive::STRING:
+              {
+                bs.Printf("<string>"); // XXX NYI
+                break;
+              }
+
             default:
               FAIL(ILLEGAL_STATE);
             }

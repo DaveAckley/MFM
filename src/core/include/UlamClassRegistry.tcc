@@ -9,6 +9,20 @@ namespace MFM {
   {
     if (!mangledName) FAIL(NULL_POINTER);
 
+    // HACK: If mangledName is an array type, we need to get the
+    // mangled name representing the underlying scalar type, for
+    // lookup purposes.
+    UlamTypeInfo uti;
+    OString512 scalarName;
+    uti.InitFrom(mangledName);
+
+    if (uti.GetArrayLength() > 0) {
+
+      uti.MakeScalar();                // Stomp out the array length
+      uti.PrintMangled(scalarName);    // Convert back to mangled name
+      mangledName = scalarName.GetZString(); // Update pointer
+    }
+
     for (u32 i = 0; i < m_registeredUlamClassCount; ++i)
     {
       UlamClass<EC> * uc = m_registeredUlamClasses[i];

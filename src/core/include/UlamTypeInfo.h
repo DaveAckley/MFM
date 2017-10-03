@@ -68,6 +68,7 @@ namespace MFM
 
     u32 GetBitSize() const { return m_bitSize; }
     u32 GetArrayLength() const { return m_arrayLength; }
+    void MakeScalar() { m_arrayLength = 0; }
     bool IsScalar() const { return GetArrayLength() == 0; }
     void AssertScalar() const { if (!IsScalar()) FAIL(ILLEGAL_STATE); }
 
@@ -119,6 +120,9 @@ namespace MFM {
 
     void PrintMangled(ByteSink & bs) const ;
     void PrintPretty(ByteSink & bs) const ;
+
+    void MakeScalar() { m_arrayLength = 0; }
+
   };
 } //MFM
 
@@ -169,6 +173,19 @@ namespace MFM {
       }
     }
 
+    void MakeScalar() {
+      switch (m_category)
+      {
+      case PRIM: return m_utip.MakeScalar();
+      case QUARK:
+      case TRANSIENT:
+      case ELEMENT:
+        return m_utic.MakeScalar();
+      default:
+        FAIL(ILLEGAL_STATE);
+      }
+    }
+
     u32 GetArrayLength() const
     {
       switch (m_category)
@@ -176,8 +193,8 @@ namespace MFM {
       case PRIM: return m_utip.GetArrayLength();
       case QUARK:
       case TRANSIENT:
-        return m_utic.m_arrayLength;
       case ELEMENT:
+        return m_utic.m_arrayLength;
       default:
         FAIL(ILLEGAL_STATE);
       }
