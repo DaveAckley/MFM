@@ -4,11 +4,12 @@
 
 namespace MFM
 {
+
   template <class EC>
   Parameter<EC>::Parameter(const VD& vd, const char* tag,
                            const char* name, const char* description)
     : m_vDesc(vd),
-      m_tag(tag),
+      m_tag(StripThroughHexSpaceIfExists(tag)),
       m_name(name),
       m_description(description)
   {
