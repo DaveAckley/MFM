@@ -482,6 +482,13 @@ namespace MFM {
     return InterpolateColors(0xffffffff, color, percentToBrighten);
   }
 
+  /**
+     Return a pointer to the first byte of str following the first
+     occurrence of the string "%20" inside str, if it exists.  If str
+     is NULL, or "%20" is not found inside str, return str.
+  */
+  const char * StripThroughHexSpaceIfExists(const char * str) ;
+
 }
 
 #endif /* UTIL_H */
