@@ -38,7 +38,12 @@ namespace MFM {
   : ElementParameterU32<EC>(&theElement, ulamName, briefDescription, details,
                             GetDefaulted(minOrNull, GetMinOfAs<u32>(mangledType)),
                             GetDefaulted(defaultOrNull, 0u),
-                            GetDefaulted(maxOrNull, GetMaxOfAs<u32>(mangledType)))
+                            // Even unsigned model parameters are
+                            // handled as signed internally, so limit
+                            // Unsigned(32) max to Int(32) max.
+                            (strcmp(mangledType,"Ut_102321u") 
+                             ? GetDefaulted(maxOrNull, GetMaxOfAs<u32>(mangledType))
+                             : GetDefaulted(maxOrNull, (u32) GetMaxOfAs<s32>("Ut_102321i"))))
     , m_parameterUnits(units)
   { }
 
