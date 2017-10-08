@@ -73,5 +73,15 @@ namespace MFM
     return res;
   }
 
+ const char * StripThroughHexSpaceIfExists(const char * str) 
+  {
+    if (str) {
+      const char * p = str;
+      char ch;
+      while ((ch = *p++) != '%' && ch) { }
+      if (ch && *p++ == '2' && *p++ == '0') return p;
+    }
+    return str;
+  }
 
 }
