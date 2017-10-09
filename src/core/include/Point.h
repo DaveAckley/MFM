@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   Point.h Two-dimensional integral vector
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,8 @@
   \file Point.h Two-dimensional integral vector
   \author Trent R. Small.
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014,2017 All rights reserved.
   \lgpl
  */
 #ifndef POINT_H
@@ -202,6 +204,24 @@ namespace MFM
     void Multiply(T scalar);
 
     /**
+     * Multiplies pairwise this Point by another Point, storing the result in
+     * this Point .
+     *
+     * @param p The Point to multiply this Point by.
+     */
+    void Multiply(const Point<T>& p);
+
+    /**
+     * Multiplies pairwise a pair of given coordinates to the coordinates in this
+     * Point .
+     *
+     * @param x The x coordinate to multiply by this Point's x.
+     *
+     * @param y The y coordinate to multiply by this Point's y .
+     */
+    void Multiply(T x, T y);
+
+    /**
      * Divides the held coordinates of this Point by a specified
      * scalar value.
      *
@@ -211,6 +231,15 @@ namespace MFM
     void Divide(T scalar);
 
     /**
+     * Divides pairwise the held coordinates of this Point by a specified
+     * point.
+     *
+     * @param p The point coordinates used to divide pairwise the coordinates
+     *               in this Point .
+     */
+    void Divide(const Point<T>& p);
+
+    /**
      * Performs the modulus operation on the coordinates of this Point
      * by a specified scalar value .
      *
@@ -218,6 +247,15 @@ namespace MFM
      *               this Point .
      */
     void Mod(T scalar);
+
+    /**
+     * Performs the pairwise modulus operation on the coordinates of this Point
+     * by a specified another point .
+     *
+     * @param p The Point coordinates used to pairwise mod the coordinates of
+     *               this Point .
+     */
+    void Mod(const Point<T>& p);
 
     /**
      * Sets the x value of this Point to a specified value .
@@ -517,6 +555,26 @@ namespace MFM
 
     /**
      * Constructs a new Point consisting of the coordinates of one
+     * Point multiplied by an integral scalar.
+     *
+     * @param lhs The multiplicand Point used to construct the new
+     *            Point .
+     *
+     * @param rhs The multiplier scalar used to construc the new Point
+     * .
+     *
+     * @returns The Point which is the product of the coordinates of
+     *          \c lhs and the scalar \c rhs .
+     */
+    friend Point<T> operator*(const Point<T> & lhs, const Point<T> & rhs)
+    {
+      Point<T> ret(lhs);
+      ret.Multiply(rhs);
+      return ret;
+    }
+
+    /**
+     * Constructs a new Point consisting of the coordinates of one
      * Point divided by an integral scalar.
      *
      * @param lhs The dividend Point used to construct the new Point .
@@ -527,6 +585,24 @@ namespace MFM
      *          \c lhs and the scalar \c rhs .
      */
     friend Point<T> operator/(const Point<T> & lhs,const s32 rhs)
+    {
+      Point<T> ret(lhs);
+      ret.Divide(rhs);
+      return ret;
+    }
+
+    /**
+     * Constructs a new Point consisting of the coordinates of one
+     * Point divided pairwise by another Point.
+     *
+     * @param lhs The dividend Point used to construct the new Point .
+     *
+     * @param rhs The divisor Point used to construct the new Point .
+     *
+     * @returns The Point which is the pairwise quotient of the coordinates of
+     *          \c lhs and \c rhs .
+     */
+    friend Point<T> operator/(const Point<T> & lhs, const Point<T> & rhs)
     {
       Point<T> ret(lhs);
       ret.Divide(rhs);
@@ -546,6 +622,25 @@ namespace MFM
      *          rhs .
      */
     friend Point<T> operator%(const Point<T> & lhs,const s32 rhs)
+    {
+      Point<T> ret(lhs);
+      ret.Mod(rhs);
+      return ret;
+    }
+
+    /**
+     * Constructs a new Point consisting of the pairwise remainder of the
+     * division between coordinates of one Point and another.
+     *
+     * @param lhs The dividend Point used to construct the new Point .
+     *
+     * @param rhs The divisor Point used to construct the new Point .
+     *
+     * @returns The Point which is the pairwise remainder of the division
+     *          between the coordinates of \c lhs and the coordinates of \c
+     *          rhs .
+     */
+    friend Point<T> operator%(const Point<T> & lhs,const Point<T> & rhs)
     {
       Point<T> ret(lhs);
       ret.Mod(rhs);

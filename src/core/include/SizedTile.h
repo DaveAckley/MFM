@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   SizedTile.h A Tile with size and storage
-  Copyright (C) 2015 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015,2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack, LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +22,8 @@
 /**
   \file SizedTile.h A Tile with size and storage
   \author David H. Ackley.
-  \date (C) 2015 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2015,2017 All rights reserved.
   \lgpl
  */
 #ifndef SIZEDTILE_H
@@ -37,16 +39,17 @@ namespace MFM
      storage, and offering a default constructor so that arrays of
      SizedTiles can be formed.
    */
-  template <class EC, u32 SIDE, u32 EVENTHISTORYSIZE>
+  template <class EC, u32 WIDTH, u32 HEIGHT, u32 EVENTHISTORYSIZE>
   class SizedTile : public Tile<EC>
   {
   public:
     typedef typename EC::SITE SITE;
 
-    enum { TILE_SIDE = SIDE };
-    enum { TILE_SITES = TILE_SIDE * TILE_SIDE };
+    enum { TILE_WIDTH = WIDTH };
+    enum { TILE_HEIGHT = HEIGHT };
+    enum { TILE_SITES = TILE_WIDTH * TILE_HEIGHT };
 
-    SizedTile() : Tile<EC>(TILE_SIDE, m_sites, EVENTHISTORYSIZE, m_items) { }
+    SizedTile() : Tile<EC>(TILE_WIDTH, TILE_HEIGHT, m_sites, EVENTHISTORYSIZE, m_items) { }
 
   private:
     SITE m_sites[TILE_SITES];

@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   GridPanel.h Panel for rendering a Grid
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +22,8 @@
 /**
   \file GridPanel.h Panel for rendering a Grid
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014,2017 All rights reserved.
   \lgpl
  */
 #ifndef GRIDPANEL_H
@@ -226,7 +228,7 @@ namespace MFM
         {
           SPoint tc(tx,ty);
           Tile<EC> & tile = grid.GetTile(tc);
-          bool active = 
+          bool active =
             (m_eventHistoryStrategy == EVENT_HISTORY_STRATEGY_ALL) ||
             ((m_eventHistoryStrategy == EVENT_HISTORY_STRATEGY_SELECTED) &&
              IsTileSelected(MakeUnsigned(tc)));
@@ -328,7 +330,7 @@ namespace MFM
       return 0;
     }
 
-    bool IsSelectedAtomViewPanel(OurAtomViewPanel & avp) 
+    bool IsSelectedAtomViewPanel(OurAtomViewPanel & avp)
     {
       return IsAnyAtomViewPanelSelected() && &m_avps[m_selectedAvp] == &avp;
     }
@@ -339,8 +341,8 @@ namespace MFM
       for (u32 i = 0; i < MAX_AVPS; ++i)
       {
         OurAtomViewPanel & avp = m_avps[i];
-        if (avp.IsVisible() 
-            && avp.HasGridCoord() 
+        if (avp.IsVisible()
+            && avp.HasGridCoord()
             && sp.Equals(avp.GetGridCoord()))
         {
           return &avp;
@@ -351,7 +353,7 @@ namespace MFM
 
     bool IsAnyAtomViewPanelSelected() const { return m_selectedAvp >= 0; }
 
-    void UnselectAtomViewPanel(OurAtomViewPanel & avp) 
+    void UnselectAtomViewPanel(OurAtomViewPanel & avp)
     {
       if (IsSelectedAtomViewPanel(avp))
       {
@@ -359,7 +361,7 @@ namespace MFM
       }
     }
 
-    void SelectAtomViewPanel(OurAtomViewPanel & avp) 
+    void SelectAtomViewPanel(OurAtomViewPanel & avp)
     {
       for (u32 i = 0; i < MAX_AVPS; ++i)
       {
@@ -375,7 +377,7 @@ namespace MFM
       FAIL(ILLEGAL_STATE);
     }
 
-    void InitAtomViewPanels(Grid<GC>& grid, GridToolAtomView<GC>* atomviewtool) 
+    void InitAtomViewPanels(Grid<GC>& grid, GridToolAtomView<GC>* atomviewtool)
     {
       MFM_API_ASSERT_NONNULL(atomviewtool);
       MFM_API_ASSERT_NULL(m_atomViewTool);
@@ -419,7 +421,7 @@ namespace MFM
       SetForeground(Drawing::BLACK);
       SetBackground(Drawing::BLACK);
       //      SetBackground(Drawing::ORANGE);
-      for (u32 i = 0; i < MAX_AVPS; ++i) 
+      for (u32 i = 0; i < MAX_AVPS; ++i)
       {
         OString32 name;
         name.Printf("AtomViewPanel%D",i);
@@ -467,20 +469,21 @@ namespace MFM
     {
       u32 atomDit = GetAtomDit();
       bool caches = GetTileRenderer().IsDrawCaches();
-      u32 sizeDit;
-      u32 spacingDit;
+      u32 wDit, hDit;
+      SPoint spacingDit;
       if (caches)
       {
-        sizeDit = tile.TILE_SIDE * atomDit;
-        spacingDit = sizeDit + atomDit / 2;
+	wDit = tile.TILE_WIDTH * atomDit;
+	hDit = tile.TILE_HEIGHT * atomDit;
+        spacingDit.Set(wDit + atomDit/2, hDit + atomDit/2); //little extra so caches don't touch
       }
       else
       {
-        sizeDit = tile.OWNED_SIDE * atomDit;
-        spacingDit = sizeDit;
+	wDit = tile.OWNED_WIDTH * atomDit;
+	hDit = tile.OWNED_HEIGHT * atomDit;
+        spacingDit.Set(wDit, hDit);
       }
-      return Rect(tileCoord * spacingDit + m_gridOriginDit, UPoint(sizeDit,sizeDit));
-
+      return Rect(tileCoord * spacingDit + m_gridOriginDit, UPoint(wDit,hDit));
     }
 
 #if 0
@@ -524,15 +527,19 @@ namespace MFM
     {
       bool cachesDrawn = GetTileRenderer().IsDrawCaches();
       u32 atomDit = GetAtomDit();
+
       for (typename Grid<GC>::iterator_type i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
       {
         OurTile & tile = *i;
         SPoint tileCoord = i.At();
         const Rect screenRectForTileDit = MapTileInGridToScreenDit(tile, tileCoord);
+	const SPoint ownedp(tile.OWNED_WIDTH, tile.OWNED_HEIGHT);
+
         if (screenRectForTileDit.Contains(screenDit))
         {
           const SPoint siteInTileCoord = (screenDit - screenRectForTileDit.GetPosition()) / atomDit;
           SPoint siteInGridCoord;
+
           if (cachesDrawn)
           {
             if (tile.RegionIn(siteInTileCoord) == OurTile::REGION_CACHE)
@@ -546,17 +553,17 @@ namespace MFM
                 return false;
 
               // Hmm, is it this mysterious code again?  (Grid.tcc:404)
-              SPoint siteInOtherTile = siteInTileCoord - offset*tile.OWNED_SIDE;
-              siteInGridCoord = otherTileCoord * tile.OWNED_SIDE + OurTile::TileCoordToOwned(siteInOtherTile);
+              SPoint siteInOtherTile = siteInTileCoord - offset * ownedp;
+              siteInGridCoord = otherTileCoord * ownedp + OurTile::TileCoordToOwned(siteInOtherTile);
             }
             else
             {
-              siteInGridCoord = tileCoord * tile.OWNED_SIDE + OurTile::TileCoordToOwned(siteInTileCoord);
+              siteInGridCoord = tileCoord * ownedp + OurTile::TileCoordToOwned(siteInTileCoord);
             }
           }
           else
           {
-            siteInGridCoord = tileCoord * tile.OWNED_SIDE + siteInTileCoord;
+            siteInGridCoord = tileCoord * ownedp + siteInTileCoord;
           }
           gridCoord = MakeUnsigned(siteInGridCoord);
           return true;
@@ -596,13 +603,13 @@ namespace MFM
       }
     }
 
-    void PaintAtomViewCallouts(Drawing & d, OurAtomViewPanel & avp) 
+    void PaintAtomViewCallouts(Drawing & d, OurAtomViewPanel & avp)
     {
       if (!avp.IsVisible() || !avp.HasGridCoord()) return;
 
       Rect gridCoordScreenDit;
-      if (!GetScreenRectDitOfGridCoord(MakeUnsigned(avp.GetGridCoord()), 
-                                       gridCoordScreenDit)) 
+      if (!GetScreenRectDitOfGridCoord(MakeUnsigned(avp.GetGridCoord()),
+                                       gridCoordScreenDit))
         return;
 
       u32 oldFg = d.GetForeground();

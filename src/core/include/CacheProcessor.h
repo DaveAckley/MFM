@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   CacheProcessor.h Handler for cache-protocol packets
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2017 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +22,8 @@
 /**
   \file CacheProcessor.h Handler for cache-protocol packets
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014,2017 All rights reserved.
   \lgpl
  */
 #ifndef CACHEPROCESSOR_H
@@ -240,9 +242,9 @@ namespace MFM {
 
     /**
       The position of the far side's origin, in our full untransformed
-      coordinate system.  This value is (+- Tile::OWNED_SIDE, +-
-      Tile::OWNED_SIDE) depending on the direction to the far side.
-      (It's OWNED_SIDE and not TILE_SIDE, even though we're talking
+      coordinate system.  This value is (+- Tile::OWNED_WIDTH, +-
+      Tile::OWNED_HEIGHT) depending on the direction to the far side.
+      (It's OWNED side lengths and not TILE side lengths, even though we're talking
       full Tile coordinates, because of the cache overlaps.)
      */
     SPoint m_farSideOrigin;
@@ -430,8 +432,10 @@ namespace MFM {
       m_cacheDir = toCache;
 
       // Map their full untransformed origin to our full untransformed frame
-      SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir) * m_tile->OWNED_SIDE;
-      m_farSideOrigin = remoteOrigin;
+      SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir);
+      const SPoint ownedp(m_tile->OWNED_WIDTH, m_tile->OWNED_HEIGHT);
+
+      m_farSideOrigin = remoteOrigin * ownedp;
 
       bool onSideA = (m_cacheDir >= Dirs::NORTHEAST && m_cacheDir <= Dirs::SOUTH);
       m_channelEnd.ClaimChannelEnd(channel, onSideA);

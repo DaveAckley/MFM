@@ -49,13 +49,13 @@ namespace MFM
     SPoint remote = LocalToRemote(local);
 
     // Get its distance from the remote tile center
-    u32 dist = tile.GetSquareDistanceFromCenter(remote);
-
+    //u32 dist = tile.GetSquareDistanceFromCenter(remote);
     // Distances up to a tile radius are visible
-    bool visible = dist <= tile.TILE_SIDE / 2;
-
+    //bool visible = dist <= tile.TILE_SIDE / 2;
     // Which is what you asked
-    return visible;
+    //return visible;
+
+    return tile.IsInTile(remote);
   }
 
   template <class EC>
@@ -218,7 +218,10 @@ namespace MFM
           const char * tlb = GetTile().GetLabel();
           CharBufferByteSource cbs(tlb,strlen(tlb));
           cbs.Scanf("[%d,%d]",&tilex,&tiley);
-          SPoint gloc = SPoint(tilex,tiley) * GetTile().OWNED_SIDE + loc;
+
+	  const SPoint ownedp(GetTile().OWNED_WIDTH, GetTile().OWNED_HEIGHT);
+	  u32 maxside = ownedp.GetMaximumLength();
+          SPoint gloc = SPoint(tilex,tiley) * maxside + loc;
 
           LOG.Warning("NC%s %s%c%c {%03d,%03d} #%2d(%2d,%2d)+(%2d,%2d)==(%2d,%2d) [%04x/%@] [%04x/%@]",
                       isDifferent? "U" : "C",

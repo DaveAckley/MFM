@@ -103,6 +103,20 @@ namespace MFM
   }
 
   template <class T>
+  void Point<T>::Multiply(const Point<T>& p)
+  {
+    m_x *= p.m_x;
+    m_y *= p.m_y;
+  }
+
+  template <class T>
+  void Point<T>::Multiply(T x, T y)
+  {
+    m_x *= x;
+    m_y *= y;
+  }
+
+  template <class T>
   void Point<T>::Divide(T scalar)
   {
     m_x /= scalar;
@@ -110,10 +124,24 @@ namespace MFM
   }
 
   template <class T>
+  void Point<T>::Divide(const Point<T>& p)
+  {
+    m_x /= p.m_x;
+    m_y /= p.m_y;
+  }
+
+  template <class T>
   void Point<T>::Mod(T scalar)
   {
     m_x %= scalar;
     m_y %= scalar;
+  }
+
+  template <class T>
+  void Point<T>::Mod(const Point<T>& p)
+  {
+    m_x %= p.m_x;
+    m_y %= p.m_y;
   }
 
   template <class T>

@@ -4,15 +4,17 @@
 #include "Logger.h"
 #include "AtomSerializer.h"
 #include "EventHistoryBuffer.h"
-  
+
 #include "Util.h"
 
 namespace MFM
 {
   template <class EC>
-  Tile<EC>::Tile(const u32 tileSide, S * sites, const u32 eventbuffersize, EventHistoryItem * items) 
-    : TILE_SIDE(tileSide)
-    , OWNED_SIDE(TILE_SIDE - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
+  Tile<EC>::Tile(const u32 tileWidth, const u32 tileHeight, S * sites, const u32 eventbuffersize, EventHistoryItem * items)
+    : TILE_WIDTH(tileWidth)
+    , TILE_HEIGHT(tileHeight)
+    , OWNED_WIDTH(TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
+    , OWNED_HEIGHT(TILE_HEIGHT - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
     , m_sites(sites)
     , m_cdata(*this)
     , m_lockAttempts(0)
@@ -26,13 +28,13 @@ namespace MFM
     , m_warpFactor(3)
     , m_eventHistoryBuffer(*this, eventbuffersize, items)
   {
-    // TILE_SIDE can't be too small, and we must apparently have sites..
-    MFM_API_ASSERT_ARG(TILE_SIDE >= 3*EVENT_WINDOW_RADIUS && m_sites != 0);
+    // TILE sides can't be too small, and we must apparently have sites, but not necessarily hidden ones.
+    // Effort to avoid simultaneous locks in opposite directions (e.g. East and West);
+    MFM_API_ASSERT_ARG(TILE_WIDTH >= 6*EVENT_WINDOW_RADIUS && TILE_HEIGHT >= 6*EVENT_WINDOW_RADIUS && m_sites != 0);
 
-    // Require even TILE_SIDE.  (The 'GetSquareDistanceFromCenter'
-    // computation would be cheaper if TILE_SIDE was guaranteed odd,
-    // but that violates a MFM tradition that is now cast in stone.)
-    MFM_API_ASSERT_ARG(2 * TILE_SIDE / 2 == TILE_SIDE);
+    // Require even TILE side dimensions.
+    MFM_API_ASSERT_ARG(2 * TILE_WIDTH / 2 == TILE_WIDTH);
+    MFM_API_ASSERT_ARG(2 * TILE_HEIGHT / 2 == TILE_HEIGHT);
 
     Init();
   }
@@ -102,7 +104,7 @@ namespace MFM
   }
 
   template <class EC>
-  const Element<EC> * Tile<EC>::ReplaceEmptyElement(const Element<EC>& newEmptyElement) 
+  const Element<EC> * Tile<EC>::ReplaceEmptyElement(const Element<EC>& newEmptyElement)
   {
     return m_elementTable.ReplaceEmptyElement(newEmptyElement);
   }
@@ -282,24 +284,24 @@ namespace MFM
   {
     UPoint pt = MakeUnsigned(sp);
 
+    //checkerboard configuration
     if(pt.GetX() < REACH) {
 
       if(pt.GetY() < REACH) return Dirs::NORTHWEST;
-      if(pt.GetY() >= TILE_SIDE - REACH) return Dirs::SOUTHWEST;
+      if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTHWEST;
       return Dirs::WEST;
 
-    } else if(pt.GetX() >= TILE_SIDE - REACH) {
+    } else if(pt.GetX() >= TILE_WIDTH - REACH) {
 
       if(pt.GetY() < REACH) return Dirs::NORTHEAST;
-      if(pt.GetY() >= TILE_SIDE - REACH) return Dirs::SOUTHEAST;
+      if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTHEAST;
       return Dirs::EAST;
 
     }
 
     // X in neither east nor west reach
-
     if(pt.GetY() < REACH) return Dirs::NORTH;
-    if(pt.GetY() >= TILE_SIDE - REACH) return Dirs::SOUTH;
+    if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTH;
     return (Dir)-1;
   }
 
@@ -445,7 +447,7 @@ namespace MFM
   template <class EC>
   bool Tile<EC>::IsInUncachedTile(const SPoint& pt) const
   {
-    return ((u32) pt.GetX()) < OWNED_SIDE && ((u32) pt.GetY() < OWNED_SIDE);
+    return ((u32) pt.GetX()) < OWNED_WIDTH && ((u32) pt.GetY() < OWNED_HEIGHT);
   }
 
   template <class EC>
@@ -474,25 +476,24 @@ namespace MFM
   }
 
   template <class EC>
-  typename Tile<EC>::Region Tile<EC>::RegionFromIndex(const u32 index)
+  typename Tile<EC>::Region Tile<EC>::RegionFromIndex(const u32 index, const u32 tileSide)
   {
     enum { R = EVENT_WINDOW_RADIUS };
 
-    if(index >= TILE_SIDE)
+    if(index >= tileSide)
     {
       FAIL(ARRAY_INDEX_OUT_OF_BOUNDS); /* Index out of Tile bounds */
     }
 
-    const u32 hiddenWidth = TILE_SIDE - R * 6;
+    const u32 hiddenDim = tileSide - R * 6;
 
     if(index < R * REGION_HIDDEN)
     {
       return (Region)(index / R);
     }
-    else if(index >= R * REGION_HIDDEN + hiddenWidth)
+    else if(index >= R * REGION_HIDDEN + hiddenDim)
     {
-      //XXX WTGDFingJCFingFFFingF?      return (Region)((index - (R * REGION_HIDDEN) - hiddenWidth) / R);
-      return (Region)((TILE_SIDE - index - 1) / R);
+      return (Region)((tileSide - index - 1) / R);
     }
     else
     {
@@ -500,11 +501,12 @@ namespace MFM
     }
   }
 
+
   template <class EC>
   typename Tile<EC>::Region Tile<EC>::RegionIn(const SPoint& pt)
   {
-    return MIN(RegionFromIndex((u32)pt.GetX()),
-               RegionFromIndex((u32)pt.GetY()));
+    return MIN(RegionFromIndex((u32)pt.GetX(), TILE_WIDTH),
+               RegionFromIndex((u32)pt.GetY(), TILE_HEIGHT));
   }
 
   template <class EC>

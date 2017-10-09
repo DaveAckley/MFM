@@ -383,7 +383,8 @@ namespace MFM {
     if (siteInGrid.GetX() < 0 || siteInGrid.GetY() < 0)
       return false;
 
-    return IsLegalTileIndex(siteInGrid/OWNED_SIDE);
+    const SPoint ownedp(OWNED_WIDTH, OWNED_HEIGHT);
+    return IsLegalTileIndex(siteInGrid/ownedp);
   }
 
   template <class GC>
@@ -392,7 +393,8 @@ namespace MFM {
     if (siteInGrid.GetX() < 0 || siteInGrid.GetY() < 0)
       return false;
 
-    SPoint t = siteInGrid/OWNED_SIDE;
+    const SPoint ownedp(OWNED_WIDTH, OWNED_HEIGHT);
+    SPoint t = siteInGrid/ownedp;
 
     if (!IsLegalTileIndex(t))
       return false;
@@ -400,7 +402,7 @@ namespace MFM {
     // Set up return values
     tileInGrid = t;
     siteInTile =
-      siteInGrid % OWNED_SIDE;  // get index into just 'owned' sites
+      siteInGrid % ownedp;  // get index into just 'owned' sites
     return true;
   }
 
@@ -457,7 +459,8 @@ namespace MFM {
       // (excluding caches) maps into including-cache coords on their
       // side.  Hmm.
 
-      SPoint otherIndex = siteInTile - tileOffset * OWNED_SIDE;
+      const SPoint ownedp(OWNED_WIDTH, OWNED_HEIGHT);
+      SPoint otherIndex = siteInTile - tileOffset * ownedp;
 
       other.PlaceAtomInSite(placeInBase, atom, otherIndex);
     }
@@ -659,8 +662,8 @@ namespace MFM {
   void Grid<GC>::WriteEPSAverageImage(ByteSink & outstrm) const
   {
     u64 max = 0;
-    const u32 swidth = OWNED_SIDE;
-    const u32 sheight = OWNED_SIDE;
+    const u32 swidth = OWNED_WIDTH;
+    const u32 sheight = OWNED_HEIGHT;
     const u32 tileCt = GetHeight() * GetWidth();
 
     for(u32 pass = 0; pass < 2; pass++)
@@ -723,10 +726,10 @@ namespace MFM {
   {
     Random& rand = m_random;
 
-    SPoint center(rand.Create(m_width * TILE_SIDE),
-		  rand.Create(m_height * TILE_SIDE));
+    SPoint center(rand.Create(m_width * TILE_WIDTH),
+		  rand.Create(m_height * TILE_HEIGHT));
 
-    u32 radius = rand.Between(5, TILE_SIDE);
+    u32 radius = rand.Between(5, (TILE_WIDTH + TILE_HEIGHT)/2); //was btn 5 and tile_side
     T atom(Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
 
     SPoint siteInGrid, tileInGrid, siteInTile;
