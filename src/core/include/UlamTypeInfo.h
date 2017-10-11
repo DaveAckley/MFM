@@ -91,10 +91,12 @@ namespace MFM {
   const u32 MAX_CLASS_NAME_LENGTH = 64;
   const u32 MAX_CLASS_PARAMETERS = 16;
   typedef OverflowableCharBufferByteSink<MAX_CLASS_NAME_LENGTH> OStringClassName;
+  typedef OverflowableCharBufferByteSink<258> OStringStringParameterValue;
 
   struct UlamTypeInfoParameter {
     UlamTypeInfoPrimitive m_parameterType;
     u32 m_value;  // overloaded depending on type
+    OStringStringParameterValue m_stringValue;  // stored with length at m_stringValue[0]
   };
 } //MFM
 
