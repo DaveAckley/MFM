@@ -35,6 +35,11 @@
 namespace MFM {
 
   /**
+   * Grid layout for tiles. MFM namespace.
+   */
+  enum GridLayoutPattern { GRID_LAYOUT_CHECKERBOARD, GRID_LAYOUT_STAGGERED };
+
+  /**
    * A template class used to hold compile-time parameters for an MFM
    * at the Tile-to-Grid level.
    */
@@ -78,6 +83,7 @@ namespace MFM {
      * this GridConfig, excluding the caches
      */
     enum { OWNED_HEIGHT = TILE_HEIGHT - 2 * EC::EVENT_WINDOW_RADIUS };
+
 
   };
 

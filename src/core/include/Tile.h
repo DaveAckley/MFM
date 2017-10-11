@@ -92,16 +92,10 @@ namespace MFM
     enum { ELEMENT_TABLE_SIZE = 1u<<AC::ATOM_TYPE_BITS };
 
     /**
-     * The length of a side of this (necessarily square) Tile in sites.
-     */
-    //const u32 TILE_SIDE;
-
-    /**
      * The length of a side of this Tile in sites.
      */
     const u32 TILE_WIDTH;
     const u32 TILE_HEIGHT;
-
 
     /**
      * The edge length of the portion of a Tile that is 'owned' by the
@@ -882,29 +876,6 @@ namespace MFM
     inline bool IsConnected(Dir dir) const;
 
     bool HasAnyConnections(Dir regionDir) const;
-
-#if 0
-    /**
-     * Finds the maximum ('square') distance from the center of the
-     * Tile to this point.  This computation assumes the TILE side is
-     * even (see ctor), and returns 1 for all of the four 'centermost'
-     * sites.
-     *
-     * @param point The Point whose distance should be computed
-     *
-     * @returns The square distance from the Tile center to the given
-     * site, greater than or equal to 1
-     */
-    u32 GetSquareDistanceFromCenter(const SPoint& point) const
-    {
-      // Do everything at double scale to get the rounding right
-      const SPoint doubleResCenter(TILE_WIDTH - 1, TILE_HEIGHT - 1);
-      const SPoint doubleResPoint = point * 2;
-      u32 doubleResDistance = (doubleResPoint - doubleResCenter).GetMaximumLength();
-      return (doubleResDistance + 1) / 2;
-    }
-#endif
-
     /**
      * Checks to see if a specified local point is contained within a
      * Tile's caches.

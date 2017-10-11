@@ -478,12 +478,9 @@ namespace MFM
   template <class EC>
   typename Tile<EC>::Region Tile<EC>::RegionFromIndex(const u32 index, const u32 tileSide)
   {
-    enum { R = EVENT_WINDOW_RADIUS };
+    MFM_API_ASSERT_ARG(index < tileSide);
 
-    if(index >= tileSide)
-    {
-      FAIL(ARRAY_INDEX_OUT_OF_BOUNDS); /* Index out of Tile bounds */
-    }
+    enum { R = EVENT_WINDOW_RADIUS };
 
     const u32 hiddenDim = tileSide - R * 6;
 

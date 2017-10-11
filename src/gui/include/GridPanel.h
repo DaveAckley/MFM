@@ -471,19 +471,26 @@ namespace MFM
       bool caches = GetTileRenderer().IsDrawCaches();
       u32 wDit, hDit;
       SPoint spacingDit;
+      bool isStaggeredRow = GetGrid().IsGridLayoutStaggered() && (tileCoord.GetY()%2 > 0);
+      SPoint staggeredDit;
       if (caches)
       {
 	wDit = tile.TILE_WIDTH * atomDit;
 	hDit = tile.TILE_HEIGHT * atomDit;
         spacingDit.Set(wDit + atomDit/2, hDit + atomDit/2); //little extra so caches don't touch
+	if(isStaggeredRow)
+	  staggeredDit.Set(tile.TILE_WIDTH/2 * atomDit,0);
       }
       else
       {
 	wDit = tile.OWNED_WIDTH * atomDit;
 	hDit = tile.OWNED_HEIGHT * atomDit;
         spacingDit.Set(wDit, hDit);
+	if(isStaggeredRow)
+	  staggeredDit.Set(tile.OWNED_WIDTH/2 * atomDit, 0);
       }
-      return Rect(tileCoord * spacingDit + m_gridOriginDit, UPoint(wDit,hDit));
+
+      return Rect(tileCoord * spacingDit + m_gridOriginDit + staggeredDit, UPoint(wDit + staggeredDit.GetX(),hDit));
     }
 
 #if 0

@@ -5,8 +5,9 @@
    that is included implies another huge pile of templates for g++ to
    instantiate, slowing the MFM build time.
    Width,Height values may be different (H-J);
-   Usage: ./bin/mfms {ctr}
-   where c is number of columns, t is Tile code, r is number of rows
+   Usage: ./bin/mfms {ctr}|{{ctr}}
+   where c is number of columns, t is Tile code, r is number of rows,
+   	 and double braces is for a staggered grid layout
  */
 
 #ifdef EXTRA_TILE_SIZES

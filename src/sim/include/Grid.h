@@ -76,6 +76,8 @@ namespace MFM {
 
     const u32 m_width, m_height;
 
+    const GridLayoutPattern m_layout;
+
     SPoint m_lastEventTile;
 
     ElementTypeNumberMap<EC> m_elementTypeNumberMap;
@@ -313,11 +315,12 @@ namespace MFM {
 
     void SetSeed(u32 seed);
 
-    Grid(ElementRegistry<EC>& elts, u32 width, u32 height)
+    Grid(ElementRegistry<EC>& elts, u32 width, u32 height, GridLayoutPattern layout)
       : m_random()
       , m_seed(0)
       , m_width(width)
       , m_height(height)
+      , m_layout(layout)
       , m_tiles(new GridTile[m_width * m_height])
       , m_intertileLocks(new LonglivedLock[m_width * m_height * 3])
       , m_tileDrivers(new TileDriver[m_width * m_height * 3])
@@ -328,8 +331,6 @@ namespace MFM {
       , m_xraySiteOdds(100)
       , m_rgi(m_width * m_height)
     {
-
-
       for (iterator_type i = begin(); i != end(); ++i)
         LOG.Debug("Tile[%d][%d] @ %p", i.GetX(), i.GetY(), &(*i));
     }
@@ -582,6 +583,22 @@ namespace MFM {
     u32 GetWidthSites() const
     {
       return GetWidth() * OWNED_WIDTH;
+    }
+
+    /**
+     * Return the Grid layout
+     */
+    GridLayoutPattern GetGridLayout() const
+    {
+      return m_layout;
+    }
+
+    /**
+     * Return true when the Grid layout is staggered
+     */
+    bool IsGridLayoutStaggered() const
+    {
+      return (m_layout == GRID_LAYOUT_STAGGERED);
     }
 
     /**
