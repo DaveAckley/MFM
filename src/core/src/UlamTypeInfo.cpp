@@ -9,12 +9,8 @@ namespace MFM
     u8 code;
     if (cbs.Scanf("U%c_",&code) != 3) return false;
 
-    Category cat;
-    if (code=='e') cat = ELEMENT;
-    else if (code=='q') cat = QUARK;
-    else if (code=='t') cat = PRIM;
-    else if (code=='n') cat = TRANSIENT;
-    else return false;
+    Category cat = GetCategoryFromUCode(code);
+    if (cat == UNKNOWN) return false;
 
     if (cat == PRIM)
     {
@@ -30,39 +26,24 @@ namespace MFM
 
   void UlamTypeInfo::PrintMangled(ByteSink & bs) const
   {
-    switch (m_category)
-    {
-    case PRIM:
-      bs.Printf("Ut_");
-      m_utip.PrintMangled(bs);
-      break;
-    case ELEMENT:
-    case QUARK:
-      bs.Printf("U%c_",m_category==ELEMENT?'e':'q');
-      m_utic.PrintMangled(bs);
-      break;
-    case UNKNOWN:
-    default:
+    if (IsUnknown())
       FAIL(ILLEGAL_STATE);
-    }
+
+    bs.Printf("U%c_",GetUCodeFromCategory());
+
+    if (IsPrimitive()) 
+      m_utip.PrintMangled(bs);
+    else 
+      m_utic.PrintMangled(bs);
   }
 
   void UlamTypeInfo::PrintPretty(ByteSink & bs) const
   {
-    switch (m_category)
-    {
-    case PRIM:
-      m_utip.PrintPretty(bs);
-      break;
-    case ELEMENT:
-    case QUARK:
-      bs.Printf("%s ",m_category==ELEMENT?"element":"quark");
-      m_utic.PrintPretty(bs);
-      break;
-    case UNKNOWN:
-    default:
-      FAIL(ILLEGAL_STATE);
-    }
+    bs.Printf("%s",GetPrettyPrefixFromCategory(m_category));
+
+    if (IsPrimitive()) m_utip.PrintPretty(bs);
+    else if (IsClass()) m_utic.PrintPretty(bs);
+    else FAIL(ILLEGAL_STATE);
   }
 
   bool UlamTypeInfoPrimitive::PrimTypeFromChar(const u8 ch, PrimType & result)
