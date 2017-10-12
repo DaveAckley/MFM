@@ -9,12 +9,8 @@ namespace MFM
     u8 code;
     if (cbs.Scanf("U%c_",&code) != 3) return false;
 
-    Category cat;
-    if (code=='e') cat = ELEMENT;
-    else if (code=='q') cat = QUARK;
-    else if (code=='t') cat = PRIM;
-    else if (code=='n') cat = TRANSIENT;
-    else return false;
+    Category cat = GetCategoryFromUCode(code);
+    if (cat == UNKNOWN) return false;
 
     if (cat == PRIM)
     {
@@ -30,39 +26,24 @@ namespace MFM
 
   void UlamTypeInfo::PrintMangled(ByteSink & bs) const
   {
-    switch (m_category)
-    {
-    case PRIM:
-      bs.Printf("Ut_");
-      m_utip.PrintMangled(bs);
-      break;
-    case ELEMENT:
-    case QUARK:
-      bs.Printf("U%c_",m_category==ELEMENT?'e':'q');
-      m_utic.PrintMangled(bs);
-      break;
-    case UNKNOWN:
-    default:
+    if (IsUnknown())
       FAIL(ILLEGAL_STATE);
-    }
+
+    bs.Printf("U%c_",GetUCodeFromCategory());
+
+    if (IsPrimitive()) 
+      m_utip.PrintMangled(bs);
+    else 
+      m_utic.PrintMangled(bs);
   }
 
   void UlamTypeInfo::PrintPretty(ByteSink & bs) const
   {
-    switch (m_category)
-    {
-    case PRIM:
-      m_utip.PrintPretty(bs);
-      break;
-    case ELEMENT:
-    case QUARK:
-      bs.Printf("%s ",m_category==ELEMENT?"element":"quark");
-      m_utic.PrintPretty(bs);
-      break;
-    case UNKNOWN:
-    default:
-      FAIL(ILLEGAL_STATE);
-    }
+    bs.Printf("%s",GetPrettyPrefixFromCategory(m_category));
+
+    if (IsPrimitive()) m_utip.PrintPretty(bs);
+    else if (IsClass()) m_utic.PrintPretty(bs);
+    else FAIL(ILLEGAL_STATE);
   }
 
   bool UlamTypeInfoPrimitive::PrimTypeFromChar(const u8 ch, PrimType & result)
@@ -187,12 +168,25 @@ namespace MFM
       if (ch < 0) return false;
       if (ch != 'n') cbs.Unread();
 
-      if (!cbs.Scan(uticp.m_value, Format::LEX32, 0)) return false;
-      if (ch == 'n') {
-        if (uticp.m_value == 0)
-          uticp.m_value = (u32) S32_MIN;
-        else
-          uticp.m_value = (u32) -uticp.m_value;
+      if (uticp.m_parameterType.m_primType == UlamTypeInfoPrimitive::STRING)
+      {
+        u32 strlen;
+        if (cbs.Scanf("%02x",&strlen) != 1) return false;
+        uticp.m_stringValue.Reset();
+        uticp.m_stringValue.WriteByte((u8) strlen); // length into [0]
+        for (u32 i = 0; i < strlen; ++i) {
+          u32 chr;
+          if (cbs.Scanf("%02x",&chr) != 1) return false;
+          uticp.m_stringValue.WriteByte((u8) chr);
+        }
+      } else {
+        if (!cbs.Scan(uticp.m_value, Format::LEX32, 0)) return false;
+        if (ch == 'n') {
+          if (uticp.m_value == 0)
+            uticp.m_value = (u32) S32_MIN;
+          else
+            uticp.m_value = (u32) -uticp.m_value;
+        }
       }
 
       if (i < MAX_CLASS_PARAMETERS)
@@ -226,7 +220,14 @@ namespace MFM
       if (i < MAX_CLASS_PARAMETERS)
       {
         m_classParameters[i].m_parameterType.PrintMangled(bs);
-        if (m_classParameters[i].m_parameterType.GetPrimType() == UlamTypeInfoPrimitive::INT
+        if (m_classParameters[i].m_parameterType.GetPrimType() == UlamTypeInfoPrimitive::STRING)
+        {
+          const char * s = m_classParameters[i].m_stringValue.GetBuffer();
+          u32 len = *s++;
+          bs.Printf("%02x",len);
+          for (u32 j = 0; j < len; ++j)
+            bs.Printf("%02x",s[j]);
+        } else if (m_classParameters[i].m_parameterType.GetPrimType() == UlamTypeInfoPrimitive::INT
             && ((s32) m_classParameters[i].m_value) < 0)
         {
           if (((s32) m_classParameters[i].m_value) == S32_MIN)
@@ -263,6 +264,10 @@ namespace MFM
           break;
         case UlamTypeInfoPrimitive::BITS:
           bs.Printf("=0x%x",m_classParameters[i].m_value);
+          break;
+        case UlamTypeInfoPrimitive::STRING:
+          bs.Printf("=");
+          bs.PrintDoubleQuotedCStringWithLength(m_classParameters[i].m_stringValue.GetBuffer());
           break;
         default:
           bs.Printf("=%uu",m_classParameters[i].m_value);

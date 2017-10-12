@@ -1,6 +1,6 @@
 /* -*- C++ -*- */
 #ifndef EXTERNALCONFIG_TEST_H
-#define EXTERNALCONFIG_TEXT_H
+#define EXTERNALCONFIG_TEST_H
 
 #include "ExternalConfig.h"
 #include "Grid.h"
