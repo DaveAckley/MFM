@@ -90,12 +90,13 @@ namespace MFM
 namespace MFM {
   const u32 MAX_CLASS_NAME_LENGTH = 64;
   const u32 MAX_CLASS_PARAMETERS = 16;
+  const u32 MAX_CLASS_PARAMETER_ARRAY_LENGTH = 16;
   typedef OverflowableCharBufferByteSink<MAX_CLASS_NAME_LENGTH> OStringClassName;
   typedef OverflowableCharBufferByteSink<258> OStringStringParameterValue;
 
   struct UlamTypeInfoParameter {
     UlamTypeInfoPrimitive m_parameterType;
-    u32 m_value;  // overloaded depending on type
+    u32 m_value[MAX_CLASS_PARAMETER_ARRAY_LENGTH];  // overloaded depending on type
     OStringStringParameterValue m_stringValue;  // stored with length at m_stringValue[0]
   };
 } //MFM
@@ -140,14 +141,14 @@ namespace MFM {
     XX('e',ELEMENT,"element ")     \
     XX('q',QUARK,"quark " )        \
     XX('l',LOCALS,"<LFS>")         \
-    XX('n',TRANSIENT,"transient ")    
+    XX('n',TRANSIENT,"transient ")
 #define XX(ch,cat,pref) cat=ch,
     enum Category { YY() UNKNOWN=0 } m_category;
 #undef XX
 
     static Category GetCategoryFromUCode(u8 code) {
       switch (code) {
-#define XX(ch,cat,pref) case ch: 
+#define XX(ch,cat,pref) case ch:
         YY()
 #undef XX
         return (Category) code;
@@ -171,7 +172,7 @@ namespace MFM {
 
     UlamTypeInfo() : m_category(UNKNOWN) { }
 
-    const UlamTypeInfoPrimitive * AsPrimitive() const 
+    const UlamTypeInfoPrimitive * AsPrimitive() const
     {
       if (!IsPrimitive()) return 0;
       return & m_utip;
