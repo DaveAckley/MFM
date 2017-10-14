@@ -218,7 +218,7 @@ if ($verb eq "list") {
 
 my @mfmargs;
 
-my ($ulams,$splats,$goodSOs, $badSOs) = (0,0,0,0);
+my ($ulams,$splats,$incs,$goodSOs, $badSOs) = (0,0,0,0,0);
 my $platform = `/bin/uname -i`;
 chomp $platform;
 my $platformsize;
@@ -278,6 +278,9 @@ for my $prec (@innerpaths) {
     } elsif ($name =~ /[.]splat$/) {
         ++$splats;
         print STDERR "Skipping splat source: $name\n";
+    } elsif ($name =~ /[.]inc$/) {
+        ++$incs;
+        print STDERR "Skipping include source: $name\n";
     } else {
         print STDERR "Unrecognized file type, ignored: $name\n";
     }

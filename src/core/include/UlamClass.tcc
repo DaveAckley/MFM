@@ -117,6 +117,8 @@ namespace MFM {
 
           for (u32 idx = 0; idx < MAX(arraysize,1u); ++idx)
           {
+            if (utin.IsLocals()) break; // locals have no data members (and cannot be in arrays..)
+
             if (arraysize > 0)
             {
               if (idx>0) bs.Printf(",");
@@ -136,7 +138,7 @@ namespace MFM {
               baseStatePos + dmi.m_bitPosition
               + offset + idx * bitsize;
 
-            if (utin.m_category == UlamTypeInfo::QUARK || utin.m_category == UlamTypeInfo::TRANSIENT)
+            if (utin.IsQuark() || utin.IsTransient())
             {
               if (flags & PRINT_RECURSE_QUARKS)
               {
@@ -172,8 +174,7 @@ namespace MFM {
               continue;
             }
 
-
-            if (utin.m_category != UlamTypeInfo::PRIM) FAIL(ILLEGAL_STATE); // Can't happen now right?
+            if (!utin.IsPrimitive()) FAIL(ILLEGAL_STATE); // Can't happen now right?
 
             u64 val = stg.ReadLong(startPos, bitsize);
             switch (utin.m_utip.GetPrimType())

@@ -14,7 +14,8 @@ namespace MFM {
     // lookup purposes.
     UlamTypeInfo uti;
     OString512 scalarName;
-    uti.InitFrom(mangledName);
+    if (!uti.InitFrom(mangledName))
+      FAIL(ILLEGAL_ARGUMENT);
 
     if (uti.GetArrayLength() > 0) {
 
