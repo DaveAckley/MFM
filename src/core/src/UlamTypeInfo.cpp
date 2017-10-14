@@ -164,10 +164,6 @@ namespace MFM
       UlamTypeInfoParameter uticp;
       if (!uticp.m_parameterType.InitFrom(cbs)) return false;
 
-      s32 ch = cbs.Read();
-      if (ch < 0) return false;
-      if (ch != 'n') cbs.Unread();
-
       if (uticp.m_parameterType.m_primType == UlamTypeInfoPrimitive::STRING)
 	{
 	  u32 strlen;
@@ -184,17 +180,14 @@ namespace MFM
 	{
 	  u32 arrayloop = uticp.m_parameterType.m_arrayLength;
 	  if(arrayloop > MAX_CLASS_PARAMETER_ARRAY_LENGTH) return false;
-	  if(arrayloop == 0)
-	    arrayloop = 1; //scalar
-	  else
-	    {
-	      u32 arraysize; //bypass lexed arraysize again
-	      if (!cbs.Scan(arraysize, Format::LEX32, 0)) return false;
-	      if(arraysize != arrayloop) return false; //sanity
-	    }
+	  arrayloop = ((arrayloop == 0) ? 1 : arrayloop);
 
 	  for(u32 j = 0; j < arrayloop; j++)
 	    {
+	      s32 ch = cbs.Read();
+	      if (ch < 0) return false;
+	      if (ch != 'n') cbs.Unread();
+
 	      if (!cbs.Scan(uticp.m_value[j], Format::LEX32, 0)) return false;
 	      if (ch == 'n') {
 		if (uticp.m_value[j] == 0)
@@ -248,10 +241,7 @@ namespace MFM
 	    {
 	      u32 arrayloop = m_classParameters[i].m_parameterType.m_arrayLength;
 	      if(arrayloop > MAX_CLASS_PARAMETER_ARRAY_LENGTH) FAIL(ILLEGAL_STATE);
-	      if(arrayloop == 0)
-		arrayloop = 1;
-	      else
-		bs.Printf("%D", arrayloop); //lexed array size before values
+	      arrayloop = ((arrayloop == 0) ? 1 : arrayloop);
 
 	      for(u32 j = 0; j < arrayloop; j++)
 		{
@@ -261,7 +251,7 @@ namespace MFM
 		      if (((s32) m_classParameters[i].m_value[j]) == S32_MIN)
 			bs.Printf("n%D",0);
 		      else
-			bs.Printf("n%D",-m_classParameters[i].m_value[j]);
+			bs.Printf("n%D", - (s32) m_classParameters[i].m_value[j]);
 		    }
 		  else
 		    bs.Printf("%D",m_classParameters[i].m_value[j]);
