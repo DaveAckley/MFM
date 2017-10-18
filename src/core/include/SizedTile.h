@@ -49,12 +49,24 @@ namespace MFM
     enum { TILE_HEIGHT = HEIGHT };
     enum { TILE_SITES = TILE_WIDTH * TILE_HEIGHT };
 
-    SizedTile() : Tile<EC>(TILE_WIDTH, TILE_HEIGHT, m_sites, EVENTHISTORYSIZE, m_items) { }
+    static void SetGridLayoutPattern(GridLayoutPattern layout){ m_ctorLayoutPattern = layout; }
+
+    static GridLayoutPattern GetGridLayoutPattern(){ return m_ctorLayoutPattern; }
+
+    SizedTile(): Tile<EC>(TILE_WIDTH, TILE_HEIGHT, m_ctorLayoutPattern, m_sites, EVENTHISTORYSIZE, m_items) { }
+
 
   private:
     SITE m_sites[TILE_SITES];
     EventHistoryItem m_items[EVENTHISTORYSIZE];
+    static GridLayoutPattern m_ctorLayoutPattern;
+
   };
+
+  //define static member for template instances here
+  template <class EC, u32 WIDTH, u32 HEIGHT, u32 EVENTHISTORYSIZE>
+  GridLayoutPattern SizedTile<EC, WIDTH, HEIGHT, EVENTHISTORYSIZE>::m_ctorLayoutPattern;
+
 } /* namespace MFM */
 
 #endif /*SIZEDTILE_H*/

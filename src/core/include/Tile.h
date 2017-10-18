@@ -53,6 +53,13 @@ namespace MFM
 
   template <class EC> class EventHistoryBuffer; // FORWARD
 
+
+  /**
+   * Grid layout for tiles. MFM namespace.
+   */
+  enum GridLayoutPattern { GRID_LAYOUT_CHECKERBOARD, GRID_LAYOUT_STAGGERED };
+
+
   /**
      The representation of a single indefinitely scalable hardware
      tile (currently simulated; hopefully soon also running natively).
@@ -105,6 +112,11 @@ namespace MFM
     const u32 OWNED_HEIGHT;
 
     /**
+     * The layout of the grid containing this tile
+     */
+    const GridLayoutPattern GRID_LAYOUT;
+
+    /**
      * An enumeration of the kinds of memory regions which may exist in
      * a Tile.
      */
@@ -117,7 +129,7 @@ namespace MFM
       REGION_COUNT
     };
 
-    Tile(const u32 tileWidth, const u32 tileHeight, S * sites, const u32 eventbuffersize, EventHistoryItem * items) ;
+    Tile(const u32 tileWidth, const u32 tileHeight, const GridLayoutPattern gridlayout, S * sites, const u32 eventbuffersize, EventHistoryItem * items) ;
 
     void SaveTile(ByteSink & to) const ;
 

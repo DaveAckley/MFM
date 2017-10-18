@@ -10,11 +10,12 @@
 namespace MFM
 {
   template <class EC>
-  Tile<EC>::Tile(const u32 tileWidth, const u32 tileHeight, S * sites, const u32 eventbuffersize, EventHistoryItem * items)
+  Tile<EC>::Tile(const u32 tileWidth, const u32 tileHeight, const GridLayoutPattern gridlayout, S * sites, const u32 eventbuffersize, EventHistoryItem * items)
     : TILE_WIDTH(tileWidth)
     , TILE_HEIGHT(tileHeight)
     , OWNED_WIDTH(TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
     , OWNED_HEIGHT(TILE_HEIGHT - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
+    , GRID_LAYOUT(gridlayout)
     , m_sites(sites)
     , m_cdata(*this)
     , m_lockAttempts(0)
@@ -478,7 +479,14 @@ namespace MFM
   template <class EC>
   typename Tile<EC>::Region Tile<EC>::RegionFromIndex(const u32 index, const u32 tileSide)
   {
-    MFM_API_ASSERT_ARG(index < tileSide);
+    if(index >= tileSide)
+      {
+	LOG.Log((Logger::Level) 1, "   == FAILED < TILE RegionFromIndex (%d, %d)==",
+		index,
+		tileSide);
+
+	MFM_API_ASSERT_ARG(index < tileSide);
+      }
 
     enum { R = EVENT_WINDOW_RADIUS };
 

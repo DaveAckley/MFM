@@ -321,7 +321,7 @@ namespace MFM {
       , m_width(width)
       , m_height(height)
       , m_layout(layout)
-      , m_tiles(new GridTile[m_width * m_height])
+      , m_tiles(new GridTile[m_width * m_height] )
       , m_intertileLocks(new LonglivedLock[m_width * m_height * 3])
       , m_tileDrivers(new TileDriver[m_width * m_height * 3])
       , m_threadsInitted(false)

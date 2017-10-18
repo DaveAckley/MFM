@@ -31,13 +31,9 @@
 
 #include "itype.h"
 #include "EventConfig.h"
+#include "Tile.h"   /* for GridLayoutPattern */
 
 namespace MFM {
-
-  /**
-   * Grid layout for tiles. MFM namespace.
-   */
-  enum GridLayoutPattern { GRID_LAYOUT_CHECKERBOARD, GRID_LAYOUT_STAGGERED };
 
   /**
    * A template class used to hold compile-time parameters for an MFM

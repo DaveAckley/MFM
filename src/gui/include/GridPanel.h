@@ -490,7 +490,8 @@ namespace MFM
 	  staggeredDit.Set(tile.OWNED_WIDTH/2 * atomDit, 0);
       }
 
-      return Rect(tileCoord * spacingDit + m_gridOriginDit + staggeredDit, UPoint(wDit + staggeredDit.GetX(),hDit));
+      //      return Rect(tileCoord * spacingDit + m_gridOriginDit + staggeredDit, UPoint(wDit + staggeredDit.GetX(),hDit));
+      return Rect(tileCoord * spacingDit + m_gridOriginDit + staggeredDit, UPoint(wDit,hDit));
     }
 
 #if 0
@@ -541,14 +542,25 @@ namespace MFM
         SPoint tileCoord = i.At();
         const Rect screenRectForTileDit = MapTileInGridToScreenDit(tile, tileCoord);
 	const SPoint ownedp(tile.OWNED_WIDTH, tile.OWNED_HEIGHT);
+	bool isStaggeredRow = GetGrid().IsGridLayoutStaggered() && (tileCoord.GetY()%2 > 0);
 
         if (screenRectForTileDit.Contains(screenDit))
         {
-          const SPoint siteInTileCoord = (screenDit - screenRectForTileDit.GetPosition()) / atomDit;
+	  SPoint siteInTileCoord = (screenDit - screenRectForTileDit.GetPosition()) / atomDit;
           SPoint siteInGridCoord;
 
           if (cachesDrawn)
           {
+	    if(isStaggeredRow)
+	      {
+		const SPoint staggeredtilep(tile.TILE_WIDTH/2, 0);
+		siteInTileCoord -= staggeredtilep;
+		if(siteInTileCoord.GetX() < 0)
+		  {
+		    siteInTileCoord.SetX(0); //min non-negative
+		  }
+	      }
+
             if (tile.RegionIn(siteInTileCoord) == OurTile::REGION_CACHE)
             {
               Dir dir = tile.CacheAt(siteInTileCoord);
@@ -570,6 +582,15 @@ namespace MFM
           }
           else
           {
+	    if(isStaggeredRow)
+	      {
+		const SPoint staggeredtilep(tile.OWNED_WIDTH/2, 0);
+		siteInTileCoord -= staggeredtilep;
+		if(siteInTileCoord.GetX() < 0)
+		  {
+		    siteInTileCoord.SetX(0); //min non-negative
+		  }
+	      }
             siteInGridCoord = tileCoord * ownedp + siteInTileCoord;
           }
           gridCoord = MakeUnsigned(siteInGridCoord);
