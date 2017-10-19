@@ -47,7 +47,9 @@ namespace MFM
     SPoint heading;
     T newMe;
     WindowScanner<EC> scanner(window);
-    Dirs::FillDir(heading, GetDirection(window.GetCenterAtomDirect()));
+    bool isStaggered = scanner.IsScannerGridLayoutStaggered();
+
+    Dirs::FillDir(heading, GetDirection(window.GetCenterAtomDirect()), isStaggered);
 
     newMe = window.GetCenterAtomDirect();
 
@@ -75,9 +77,9 @@ namespace MFM
     {
       SPoint buildings[2];
       Dirs::FillDir(buildings[0],
-                    Dirs::CWDir(Dirs::CWDir(GetDirection(window.GetCenterAtomDirect()))));
+                    Dirs::CWDir(Dirs::CWDir(GetDirection(window.GetCenterAtomDirect()))), isStaggered);
       Dirs::FillDir(buildings[1],
-                    Dirs::CCWDir(Dirs::CCWDir(GetDirection(window.GetCenterAtomDirect()))));
+                    Dirs::CCWDir(Dirs::CCWDir(GetDirection(window.GetCenterAtomDirect()))), isStaggered);
 
       for(u32 i = 0; i < 2; i++)
       {

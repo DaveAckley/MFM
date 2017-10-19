@@ -287,6 +287,7 @@ namespace MFM
   int SimRunner(int argc, const char** argv,u32 gridWidth,u32 gridHeight, GridLayoutPattern gridLayout)
   {
     SizedTile<typename CONFIG::EVENT_CONFIG, CONFIG::TILE_WIDTH, CONFIG::TILE_HEIGHT, CONFIG::EVENT_HISTORY_SIZE>::SetGridLayoutPattern(gridLayout); //static before sim (next line)
+
     MFMCDriver<CONFIG> sim(gridWidth,gridHeight,gridLayout);
     sim.ProcessArguments(argc, argv);
     sim.AddInternalLogging();

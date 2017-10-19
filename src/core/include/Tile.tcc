@@ -481,10 +481,10 @@ namespace MFM
   {
     if(index >= tileSide)
       {
+	//debug code, delete logging tbd.
 	LOG.Log((Logger::Level) 1, "   == FAILED < TILE RegionFromIndex (%d, %d)==",
 		index,
 		tileSide);
-
 	MFM_API_ASSERT_ARG(index < tileSide);
       }
 

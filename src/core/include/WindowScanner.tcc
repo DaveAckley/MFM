@@ -242,6 +242,7 @@ namespace MFM
   {
     SPoint searchPt;
     u32 ptsFound = 0;
+
     for(u32 i = 0; i < dirCount; i++)
     {
       Dirs::FillDir(searchPt, dirs[i]);

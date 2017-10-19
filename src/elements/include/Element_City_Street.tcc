@@ -39,8 +39,9 @@ namespace MFM
   {
     SPoint offset;
     Random& rand = window.GetRandom();
+    bool isStaggered = window.GetTile().IsTileGridLayoutStaggered();
 
-    Dirs::FillDir(offset, d);
+    Dirs::FillDir(offset, d, isStaggered);
     if((window.GetRelativeAtomDirect(offset).GetType() ==
         Element_Empty<EC>::THE_INSTANCE.GetType()) &&
        rand.OneIn(m_intersectionOdds.GetValue()))
@@ -59,16 +60,16 @@ namespace MFM
     if(!MooreBorder(window, IntersectionType()))
     {
 
-      Dirs::FillDir(offset, Dirs::CCWDir(Dirs::CCWDir(d)));
+      Dirs::FillDir(offset, Dirs::CCWDir(Dirs::CCWDir(d)), isStaggered);
       FillIfNotType(window, offset, SidewalkType(), GetSidewalk());
 
-      Dirs::FillDir(offset, Dirs::CWDir(Dirs::CWDir(d)));
+      Dirs::FillDir(offset, Dirs::CWDir(Dirs::CWDir(d)), isStaggered);
       FillIfNotType(window, offset, SidewalkType(), GetSidewalk());
     }
 
     /* Extra intersection creation */
 
-    Dirs::FillDir(offset, d);
+    Dirs::FillDir(offset, d, isStaggered);
     if(window.GetRelativeAtomDirect(offset).GetType() == SidewalkType())
     {
       if(window.GetRelativeAtomDirect(offset * 2).GetType() == IntersectionType())

@@ -145,7 +145,7 @@ namespace MFM
 
     /**
      * Given a Dir , will fill a SPoint with unit offsets representing
-     * the direction of this Dir . For instance:
+     * the direction of this Dir FOR A SITE (checkerboard only!). For instance:
      *
      * \code{.cpp}
 
@@ -159,12 +159,15 @@ namespace MFM
      * @param dir The Dir specifying the units to fill \c pt with.
      */
     static void FillDir(SPoint& pt, Dir dir);
+    //static void FillDir(SPoint& pt, Dir dir, bool isStaggered, const SPoint ft);
 
-    static SPoint GetOffset(Dir dir) {
+#if 0
+    static SPoint GetOffset(Dir dir, bool isStaggered) {
       SPoint tmp;
-      FillDir(tmp, dir);
+      FillDir(tmp, dir, isStaggered);
       return tmp;
     }
+#endif
 
     /**
      * Translates the coordinates in a SPoint to a Dir . The
@@ -228,6 +231,17 @@ namespace MFM
      *          which is also changed.
      */
     static SPoint FlipSEPointToCorner(const SPoint& pt, const Dir corner);
+
+
+  private:
+
+    /**
+     * private helpers for FillDir
+     *
+     */
+    //    static void FillDirCheckerboard(SPoint& pt, u32 dir);
+    // static void FillDirStaggered(SPoint& pt, u32 dir);
+
   };
 
   typedef RandomIterator<Dirs::DIR_COUNT,4> RandomDirIterator;

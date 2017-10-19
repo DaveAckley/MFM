@@ -69,6 +69,8 @@ namespace MFM {
 
     /* Init the tiles */
 
+    bool isStaggered = IsGridLayoutStaggered();
+
     for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
       SPoint tpt = IteratorIndexToCoord(m_rgi.Next());
@@ -93,7 +95,8 @@ namespace MFM {
           SPoint tpt(x,y);
           Tile<EC>& ctile = GetTile(tpt);
 
-          SPoint npt = tpt + Dirs::GetOffset(d);
+          //SPoint npt = tpt + Dirs::GetOffset(d, isStaggered);
+	  SPoint npt = tpt + GridFillDir(npt, d, isStaggered, tpt);
 
           if (!IsLegalTileIndex(npt))
           {
@@ -444,8 +447,10 @@ namespace MFM {
       stopDir = Dirs::CWDir(stopDir);
     }
 
+    //    bool isStaggered = IsGridLayoutStaggered();
     for (Dir dir = startDir; dir != stopDir; dir = Dirs::CWDir(dir)) {
       SPoint tileOffset;
+      //Dirs::FillDir(tileOffset,dir,isStaggered);
       Dirs::FillDir(tileOffset,dir);
 
       SPoint otherTileIndex = tileInGrid+tileOffset;
@@ -828,6 +833,73 @@ namespace MFM {
       acc +=  sides;
 
     return acc;
+  }
+
+  template <class GC>
+  void Grid<GC>::GridFillDir(SPoint& pt, u32 dir, bool isStaggered, const SPoint& ft)
+  {
+    if(isStaggered)
+      return FillDirStaggered(pt, dir, ft);
+    return FillDirCheckerboard(pt, dir);
+  }
+
+  template <class GC>
+  void Grid<GC>::GridFillDirCheckerboard(SPoint& pt, u32 dir)
+  {
+    switch(dir)
+    {
+    case NORTH:     pt.Set(0, -1); break;
+    case NORTHEAST: pt.Set(1,  -1); break;
+    case EAST:      pt.Set(1,  0); break;
+    case SOUTHEAST: pt.Set(1,   1); break;
+    case SOUTH:     pt.Set(0,  1); break;
+    case SOUTHWEST: pt.Set(-1,  1); break;
+    case WEST:      pt.Set(-1, 0); break;
+    case NORTHWEST: pt.Set(-1, -1); break;
+    default:
+      FAIL(ILLEGAL_ARGUMENT);
+    }
+  }
+
+  template <class GC>
+  void Grid<GC>::GridFillDirStaggered(SPoint& pt, u32 dir, const SPoint& ft)
+  {
+    if(ft.GetY() %2 > 0) //odd staggered row
+      {
+	switch(dir)
+	  {
+	  case NORTHEAST: pt.Set(1, -1); break;
+	  case EAST:      pt.Set(1, 0); break;
+	  case SOUTHEAST: pt.Set(1, 1); break;
+	  case SOUTHWEST: pt.Set(0, 1); break;
+	  case WEST:      pt.Set(-1, 0); break;
+	  case NORTHWEST: pt.Set(0, -1); break;
+	  case NORTH:
+	  case SOUTH:
+	    pt.Set(-(ft.GetX()+1), -(ft.GetY()+1)); //illegal
+	    break;
+	  default:
+	    FAIL(ILLEGAL_ARGUMENT);
+	  }
+      }
+    else
+      {
+	switch(dir)
+	  {
+	  case NORTHEAST: pt.Set(0, -1); break;
+	  case EAST:      pt.Set(1, 0); break;
+	  case SOUTHEAST: pt.Set(0, 1); break;
+	  case SOUTHWEST: pt.Set(-1, 1); break;
+	  case WEST:      pt.Set(-1, 0); break;
+	  case NORTHWEST: pt.Set(-1, -1); break;
+	  case NORTH:
+	  case SOUTH:
+	    pt.Set(-(ft.GetX()+1), -(ft.GetY()+1)); //illegal
+	    break;
+	  default:
+	    FAIL(ILLEGAL_ARGUMENT);
+	  }
+      }
   }
 
 } /* namespace MFM */

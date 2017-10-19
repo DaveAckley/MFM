@@ -99,6 +99,14 @@ namespace MFM {
      */
     LonglivedLock & GetIntertileLock(u32 xtile, u32 ytile, Dir dir) ;
 
+    /**
+     * private helpers for GridFillDir
+     *
+     */
+    static void GridFillDirCheckerboard(SPoint& pt, u32 dir);
+    static void GridFillDirStaggered(SPoint& pt, u32 dir, const SPoint& ft);
+
+
     struct TileDriver {
       enum State { PAUSED, ADVANCING, EXIT_REQUEST };
       Mutex m_stateLock;
@@ -600,6 +608,24 @@ namespace MFM {
     {
       return (m_layout == GRID_LAYOUT_STAGGERED);
     }
+
+    /**
+     * Given a Dir , will fill a SPoint with unit offsets representing
+     * the direction of this Dir FOR A SITE (checkerboard only!). For instance:
+     *
+     * \code{.cpp}
+
+       FillDir(pt, NORTH) // pt == (0, -1)
+       FillDir(pt, SOUTHEAST) // pt == (1, 1)
+
+     * \endcode
+     *
+     * @param pt The SPoint to fill with the offsets of a direction.
+     *
+     * @param dir The Dir specifying the units to fill \c pt with.
+     */
+    static void GridFillDir(SPoint& pt, Dir dir, bool isStaggered, const SPoint& ft);
+
 
     /**
      * Shut down all tile threads

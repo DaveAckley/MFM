@@ -432,7 +432,9 @@ namespace MFM {
       m_cacheDir = toCache;
 
       // Map their full untransformed origin to our full untransformed frame
-      SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir);
+      //SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir, m_tile->IsTileGridLayoutStaggered());
+      SPoint remoteOrigin;
+      Grid<GC>::GridFillDir(remoteOrigin, m_cacheDir, m_tile->IsTileGridLayoutStaggered());
       const SPoint ownedp(m_tile->OWNED_WIDTH, m_tile->OWNED_HEIGHT);
 
       m_farSideOrigin = remoteOrigin * ownedp;

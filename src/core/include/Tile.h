@@ -259,6 +259,11 @@ namespace MFM
       m_warpFactor = MIN(10u, warp);
     }
 
+    bool IsTileGridLayoutStaggered()
+    {
+      return (GRID_LAYOUT == GRID_LAYOUT_STAGGERED);
+    }
+
   private:
 
     S * const m_sites;

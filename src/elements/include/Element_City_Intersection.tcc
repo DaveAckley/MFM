@@ -29,7 +29,8 @@ namespace MFM
                                                          Dir d) const
   {
     SPoint dp;
-    Dirs::FillDir(dp, d);
+    bool isStaggered = window.GetTile().IsTileGridLayoutStaggered();
+    Dirs::FillDir(dp, d, isStaggered);
     const T& atom = window.GetRelativeAtom(dp);
 
     return atom.GetType() == GetCarType() || atom.GetType() == GetStreetType();
@@ -41,7 +42,8 @@ namespace MFM
   {
     Dir canal = GetCanalDir(window.GetCenterAtom(), destType);
     SPoint canalPt;
-    Dirs::FillDir(canalPt, canal);
+    bool isStaggered = window.GetTile().IsTileGridLayoutStaggered();
+    Dirs::FillDir(canalPt, canal, isStaggered);
     return window.GetRelativeAtom(canalPt).GetType() == GetStreetType();
   }
 
@@ -57,6 +59,7 @@ namespace MFM
                                                         Dir comingFrom) const
   {
     Dir canal = GetCanalDir(window.GetCenterAtom(), destinationType);
+    bool isStaggered = window.GetTile().IsTileGridLayoutStaggered();
 
     /* First, see if the canal will help get him in the right
      * direction.  If the canal points in a direction that he isn't
@@ -84,7 +87,7 @@ namespace MFM
       if(d != Dirs::OppositeDir(comingFrom))
       {
         dirs[i] = d;
-        Dirs::FillDir(roads[i], dirs[i]);
+        Dirs::FillDir(roads[i], dirs[i], isStaggered);
         i++;
       }
     }
@@ -105,11 +108,11 @@ namespace MFM
             SPoint edgeSidewalk;
             if(j == 0)
             {
-              Dirs::FillDir(edgeSidewalk, Dirs::CWDir(Dirs::CWDir(dirs[i])));
+              Dirs::FillDir(edgeSidewalk, Dirs::CWDir(Dirs::CWDir(dirs[i])), isStaggered);
             }
             else
             {
-              Dirs::FillDir(edgeSidewalk, Dirs::CCWDir(Dirs::CCWDir(dirs[i])));
+              Dirs::FillDir(edgeSidewalk, Dirs::CCWDir(Dirs::CCWDir(dirs[i])), isStaggered);
             }
 
             edgeSidewalk = edgeSidewalk + roads[i];
@@ -173,12 +176,13 @@ namespace MFM
     SPoint roads[3];
     Dir dirs[3]; /* The non-canal directions */
     u32 i = 0;
+    bool isStaggered = window.GetTile().IsTileGridLayoutStaggered();
     for (Dir d = Dirs::NORTH; d < Dirs::DIR_COUNT; d += 2)
     {
       if(d != Dirs::OppositeDir(comingFrom))
       {
         dirs[i] = d;
-        Dirs::FillDir(roads[i], dirs[i]);
+        Dirs::FillDir(roads[i], dirs[i], isStaggered);
         i++;
       }
     }
@@ -199,11 +203,11 @@ namespace MFM
             SPoint edgeSidewalk;
             if(j == 0)
             {
-              Dirs::FillDir(edgeSidewalk, Dirs::CWDir(Dirs::CWDir(dirs[i])));
+              Dirs::FillDir(edgeSidewalk, Dirs::CWDir(Dirs::CWDir(dirs[i])), isStaggered);
             }
             else
             {
-              Dirs::FillDir(edgeSidewalk, Dirs::CCWDir(Dirs::CCWDir(dirs[i])));
+              Dirs::FillDir(edgeSidewalk, Dirs::CCWDir(Dirs::CCWDir(dirs[i])), isStaggered);
             }
 
             edgeSidewalk = edgeSidewalk + roads[i];
@@ -271,6 +275,7 @@ namespace MFM
     WindowScanner<EC> scanner(window);
     SPoint carToMove;
     u32 streetsAndCars;
+    bool isStaggered = window.GetTile().IsTileGridLayoutStaggered();
 
     if(scanner.FindRandomInVonNeumann(GetCarType(), carToMove) > 0)
     {
@@ -307,7 +312,7 @@ namespace MFM
         for(u32 i = 0; i < 3; i++)
         {
           start = Dirs::CWDir(Dirs::CWDir(start));
-          Dirs::FillDir(pt, start);
+          Dirs::FillDir(pt, start, isStaggered);
           if ((window.GetRelativeAtomDirect(pt).GetType() == GetCarType()) ||
               (window.GetRelativeAtomDirect(pt).GetType() == GetStreetType()))
           {
@@ -364,7 +369,7 @@ namespace MFM
 #endif
 
       }
-      Dirs::FillDir(bestDirPt, bestRoute);
+      Dirs::FillDir(bestDirPt, bestRoute, isStaggered);
 
       if(window.GetRelativeAtomDirect(bestDirPt).GetType() == GetCarType())
       {
@@ -410,7 +415,8 @@ namespace MFM
   void Element_City_Intersection<EC>::CreateStreetFromEmpty(EventWindow<EC>& window, Dir d) const
   {
     SPoint pt;
-    Dirs::FillDir(pt, d);
+    bool isStaggered = window.GetTile().IsTileGridLayoutStaggered();
+    Dirs::FillDir(pt, d, isStaggered);
     if(window.GetRelativeAtomDirect(pt).GetType() ==
        Element_Empty<EC>::THE_INSTANCE.GetType())
     {
@@ -425,7 +431,8 @@ namespace MFM
   void Element_City_Intersection<EC>::CreateSidewalkFromEmpty(EventWindow<EC>& window, Dir d) const
   {
     SPoint pt;
-    Dirs::FillDir(pt, d);
+    bool isStaggered = window.GetTile().IsTileGridLayoutStaggered();
+    Dirs::FillDir(pt, d, isStaggered);
     if(window.GetRelativeAtomDirect(pt).GetType() ==
        Element_Empty<EC>::THE_INSTANCE.GetType())
     {

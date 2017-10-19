@@ -19,22 +19,90 @@ namespace MFM {
   }
 
 
+#if 1
   void Dirs::FillDir(SPoint& pt, u32 dir)
   {
     switch(dir)
     {
     case NORTH:     pt.Set(0, -1); break;
+    case NORTHEAST: pt.Set(1,  -1); break;
     case EAST:      pt.Set(1,  0); break;
+    case SOUTHEAST: pt.Set(1,   1); break;
     case SOUTH:     pt.Set(0,  1); break;
+    case SOUTHWEST: pt.Set(-1,  1); break;
     case WEST:      pt.Set(-1, 0); break;
     case NORTHWEST: pt.Set(-1, -1); break;
-    case NORTHEAST: pt.Set(1,  -1); break;
-    case SOUTHEAST: pt.Set(1,   1); break;
-    case SOUTHWEST: pt.Set(-1,  1); break;
     default:
       FAIL(ILLEGAL_ARGUMENT);
     }
   }
+#else
+  void Dirs::GridFillDir(SPoint& pt, u32 dir, bool isStaggered, const SPoint ft)
+  {
+    if(isStaggered)
+      return FillDirStaggered(pt, dir, ft);
+    return FillDirCheckerboard(pt, dir);
+  }
+
+
+  void Dirs::FillDirCheckerboard(SPoint& pt, u32 dir)
+  {
+    switch(dir)
+    {
+    case NORTH:     pt.Set(0, -1); break;
+    case NORTHEAST: pt.Set(1,  -1); break;
+    case EAST:      pt.Set(1,  0); break;
+    case SOUTHEAST: pt.Set(1,   1); break;
+    case SOUTH:     pt.Set(0,  1); break;
+    case SOUTHWEST: pt.Set(-1,  1); break;
+    case WEST:      pt.Set(-1, 0); break;
+    case NORTHWEST: pt.Set(-1, -1); break;
+    default:
+      FAIL(ILLEGAL_ARGUMENT);
+    }
+  }
+
+  void Dirs::FillDirStaggered(SPoint& pt, u32 dir, const SPoint ft)
+  {
+    if(ft.GetY() %2 > 0) //odd staggered row
+      {
+	switch(dir)
+	  {
+	  case NORTHEAST: pt.Set(1, -1); break;
+	  case EAST:      pt.Set(1, 0); break;
+	  case SOUTHEAST: pt.Set(1, 1); break;
+	  case SOUTHWEST: pt.Set(0, 1); break;
+	  case WEST:      pt.Set(-1, 0); break;
+	  case NORTHWEST: pt.Set(0, -1); break;
+	  case NORTH:
+	  case SOUTH:
+	    pt.Set(-(ft.GetX()+1), -(ft.GetY()+1));
+	    break;
+	  default:
+	    FAIL(ILLEGAL_ARGUMENT);
+	  }
+      }
+    else
+      {
+	switch(dir)
+	  {
+	  case NORTHEAST: pt.Set(0, -1); break;
+	  case EAST:      pt.Set(1, 0); break;
+	  case SOUTHEAST: pt.Set(0, 1); break;
+	  case SOUTHWEST: pt.Set(-1, 1); break;
+	  case WEST:      pt.Set(-1, 0); break;
+	  case NORTHWEST: pt.Set(-1, -1); break;
+	  case NORTH:
+	  case SOUTH:
+	    pt.Set(-(ft.GetX()+1), -(ft.GetY()+1));
+	    break;
+	  default:
+	    FAIL(ILLEGAL_ARGUMENT);
+	  }
+      }
+  }
+#endif
+
 
   u32 Dirs::FromOffset(SPoint& pt)
   {

@@ -53,6 +53,8 @@ namespace MFM
 
     static GridLayoutPattern GetGridLayoutPattern(){ return m_ctorLayoutPattern; }
 
+    static bool IsGridLayoutPatternStaggered() { return (m_ctorLayoutPattern == GRID_LAYOUT_STAGGERED); }
+
     SizedTile(): Tile<EC>(TILE_WIDTH, TILE_HEIGHT, m_ctorLayoutPattern, m_sites, EVENTHISTORYSIZE, m_items) { }
 
 

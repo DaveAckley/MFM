@@ -38,14 +38,15 @@ namespace MFM
     SPoint sidewalk;
     WindowScanner<EC> scanner(window);
     u32 sidewalkCount = scanner.FindRandomInVonNeumann(GetSidewalkType(), sidewalk);
+    bool isStaggered = window.GetTile().IsTileGridLayoutStaggered();
 
     if(sidewalkCount == 1)
     {
       Dir swDir = Dirs::FromOffset(sidewalk);
 
       SPoint adjs[2];
-      Dirs::FillDir(adjs[0], Dirs::CWDir(Dirs::CWDir(swDir)));
-      Dirs::FillDir(adjs[1], Dirs::CCWDir(Dirs::CCWDir(swDir)));
+      Dirs::FillDir(adjs[0], Dirs::CWDir(Dirs::CWDir(swDir)), isStaggered);
+      Dirs::FillDir(adjs[1], Dirs::CCWDir(Dirs::CCWDir(swDir)), isStaggered);
 
       for(u32 i = 0; i < 2; i++)
       {
@@ -89,6 +90,7 @@ namespace MFM
     SPoint swPoint;
     WindowScanner<EC> scanner(window);
     u32 sidewalkCount = scanner.FindRandomInVonNeumann(GetSidewalkType(), swPoint);
+    bool isStaggered = window.GetTile().IsTileGridLayoutStaggered();
 
     if(window.GetRandom().OneIn(10))
     {
@@ -96,7 +98,7 @@ namespace MFM
       {
         SPoint oppositePt;
         Dir swDir = Dirs::FromOffset(swPoint);
-        Dirs::FillDir(oppositePt, Dirs::OppositeDir(swDir));
+        Dirs::FillDir(oppositePt, Dirs::OppositeDir(swDir), isStaggered);
 
         if(window.GetRelativeAtomDirect(oppositePt).GetType() ==
            Element_Empty<EC>::THE_INSTANCE.GetType())

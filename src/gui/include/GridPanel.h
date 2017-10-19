@@ -489,9 +489,7 @@ namespace MFM
 	if(isStaggeredRow)
 	  staggeredDit.Set(tile.OWNED_WIDTH/2 * atomDit, 0);
       }
-
-      //      return Rect(tileCoord * spacingDit + m_gridOriginDit + staggeredDit, UPoint(wDit + staggeredDit.GetX(),hDit));
-      return Rect(tileCoord * spacingDit + m_gridOriginDit + staggeredDit, UPoint(wDit,hDit));
+      return Rect(tileCoord * spacingDit + m_gridOriginDit + staggeredDit, UPoint(wDit,hDit)); //pos, size
     }
 
 #if 0
@@ -535,6 +533,7 @@ namespace MFM
     {
       bool cachesDrawn = GetTileRenderer().IsDrawCaches();
       u32 atomDit = GetAtomDit();
+      bool isStaggeredGrid = GetGrid().IsGridLayoutStaggered();
 
       for (typename Grid<GC>::iterator_type i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
       {
@@ -542,7 +541,7 @@ namespace MFM
         SPoint tileCoord = i.At();
         const Rect screenRectForTileDit = MapTileInGridToScreenDit(tile, tileCoord);
 	const SPoint ownedp(tile.OWNED_WIDTH, tile.OWNED_HEIGHT);
-	bool isStaggeredRow = GetGrid().IsGridLayoutStaggered() && (tileCoord.GetY()%2 > 0);
+	bool isStaggeredRow =  isStaggeredGrid && (tileCoord.GetY()%2 > 0);
 
         if (screenRectForTileDit.Contains(screenDit))
         {
@@ -553,11 +552,20 @@ namespace MFM
           {
 	    if(isStaggeredRow)
 	      {
-		const SPoint staggeredtilep(tile.TILE_WIDTH/2, 0);
-		siteInTileCoord -= staggeredtilep;
-		if(siteInTileCoord.GetX() < 0)
+		//const SPoint staggeredtilep(tile.TILE_WIDTH/2, 0);
+		//siteInTileCoord -= staggeredtilep;
+		//if(siteInTileCoord.GetX() < 0)
+		//  {
+		//    return false; //siteInTileCoord.SetX(0); //min non-negative?
+		//  }
+		if(siteInTileCoord.GetX() >= tile.TILE_WIDTH)
 		  {
-		    siteInTileCoord.SetX(0); //min non-negative
+		    LOG.Log((Logger::Level) 1, "   == CACHED TILE WIDTH FAILED < TILE (%d, %d)==",
+			    siteInTileCoord.GetX(),
+			    tile.TILE_WIDTH);
+
+		    MFM_API_ASSERT_ARG(siteInTileCoord.GetX() < tile.TILE_WIDTH);
+		    return false;
 		  }
 	      }
 
@@ -566,7 +574,9 @@ namespace MFM
               Dir dir = tile.CacheAt(siteInTileCoord);
               if (dir < 0) FAIL(ILLEGAL_STATE);
               SPoint offset;
-              Dirs::FillDir(offset, dir);
+              //Dirs::FillDir(offset, dir, isStaggeredGrid);
+	      Grid<GC>::GridFillDir(offset, dir, isStaggeredGrid, tileCoord);
+
               SPoint otherTileCoord = tileCoord + offset;
               if (!m_mainGrid->IsLegalTileIndex(otherTileCoord))
                 return false;
@@ -579,24 +589,33 @@ namespace MFM
             {
               siteInGridCoord = tileCoord * ownedp + OurTile::TileCoordToOwned(siteInTileCoord);
             }
-          }
+          } //caches drawn
           else
           {
 	    if(isStaggeredRow)
 	      {
-		const SPoint staggeredtilep(tile.OWNED_WIDTH/2, 0);
-		siteInTileCoord -= staggeredtilep;
-		if(siteInTileCoord.GetX() < 0)
+		//const SPoint staggeredtilep(tile.OWNED_WIDTH/2, 0);
+		//siteInTileCoord -= staggeredtilep;
+		//if(siteInTileCoord.GetX() < 0)
+		// {
+		//  return false; //siteInTileCoord.SetX(0); //min non-negative ?
+		//  }
+		if(siteInTileCoord.GetX() >= tile.OWNED_WIDTH)
 		  {
-		    siteInTileCoord.SetX(0); //min non-negative
+		    LOG.Log((Logger::Level) 1, "   == UNCACHED OWNED WIDTH FAILED < TILE (%d, %d)==",
+			    siteInTileCoord.GetX(),
+			    tile.OWNED_WIDTH);
+
+		    MFM_API_ASSERT_ARG(siteInTileCoord.GetX() < tile.OWNED_WIDTH);
+		    return false;
 		  }
 	      }
             siteInGridCoord = tileCoord * ownedp + siteInTileCoord;
-          }
+          } //caches not drawn
           gridCoord = MakeUnsigned(siteInGridCoord);
           return true;
-        }
-      }
+        } //tile rect contains screenDit
+      } //end for loop, next tile
 
       return false;
     }
