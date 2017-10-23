@@ -19,7 +19,7 @@ namespace MFM {
   }
 
 
-#if 1
+#if 0
   void Dirs::FillDir(SPoint& pt, u32 dir)
   {
     switch(dir)
@@ -37,10 +37,10 @@ namespace MFM {
     }
   }
 #else
-  void Dirs::GridFillDir(SPoint& pt, u32 dir, bool isStaggered, const SPoint ft)
+  void Dirs::FillDir(SPoint& pt, u32 dir, bool isStaggered)
   {
     if(isStaggered)
-      return FillDirStaggered(pt, dir, ft);
+      return FillDirStaggered(pt, dir);
     return FillDirCheckerboard(pt, dir);
   }
 
@@ -62,43 +62,23 @@ namespace MFM {
     }
   }
 
-  void Dirs::FillDirStaggered(SPoint& pt, u32 dir, const SPoint ft)
+  void Dirs::FillDirStaggered(SPoint& pt, u32 dir)
   {
-    if(ft.GetY() %2 > 0) //odd staggered row
+    //assumes grid width + 1,
+    //even rows don't use last spot in row,
+    //odd rows don't use first spot in row
+    switch(dir)
       {
-	switch(dir)
-	  {
-	  case NORTHEAST: pt.Set(1, -1); break;
-	  case EAST:      pt.Set(1, 0); break;
-	  case SOUTHEAST: pt.Set(1, 1); break;
-	  case SOUTHWEST: pt.Set(0, 1); break;
-	  case WEST:      pt.Set(-1, 0); break;
-	  case NORTHWEST: pt.Set(0, -1); break;
-	  case NORTH:
-	  case SOUTH:
-	    pt.Set(-(ft.GetX()+1), -(ft.GetY()+1));
-	    break;
-	  default:
-	    FAIL(ILLEGAL_ARGUMENT);
-	  }
-      }
-    else
-      {
-	switch(dir)
-	  {
-	  case NORTHEAST: pt.Set(0, -1); break;
-	  case EAST:      pt.Set(1, 0); break;
-	  case SOUTHEAST: pt.Set(0, 1); break;
-	  case SOUTHWEST: pt.Set(-1, 1); break;
-	  case WEST:      pt.Set(-1, 0); break;
-	  case NORTHWEST: pt.Set(-1, -1); break;
-	  case NORTH:
-	  case SOUTH:
-	    pt.Set(-(ft.GetX()+1), -(ft.GetY()+1));
-	    break;
-	  default:
-	    FAIL(ILLEGAL_ARGUMENT);
-	  }
+      case NORTHEAST: pt.Set(1, -1); break; //was 0,-1
+      case EAST:      pt.Set(1, 0); break;
+      case SOUTHEAST: pt.Set(1, 1); break; //was 0,1
+      case SOUTHWEST: pt.Set(-1, 1); break;
+      case WEST:      pt.Set(-1, 0); break;
+      case NORTHWEST: pt.Set(-1, -1); break;
+      case NORTH:
+      case SOUTH:
+      default:
+	FAIL(ILLEGAL_ARGUMENT);
       }
   }
 #endif

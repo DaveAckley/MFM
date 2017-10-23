@@ -41,6 +41,8 @@ namespace MFM {
 
   template <class EC> class Tile; // FORWARD
 
+  typedef Dir THREEDIR[3]; //copy of Tile.h
+
   /**
     CacheProcessors mediate both sides of the intertile cache update
     protocol, interfacing below with the ChannelEnd for raw packet
@@ -432,10 +434,14 @@ namespace MFM {
       m_cacheDir = toCache;
 
       // Map their full untransformed origin to our full untransformed frame
-      //SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir, m_tile->IsTileGridLayoutStaggered());
-      SPoint remoteOrigin;
-      Grid<GC>::GridFillDir(remoteOrigin, m_cacheDir, m_tile->IsTileGridLayoutStaggered());
-      const SPoint ownedp(m_tile->OWNED_WIDTH, m_tile->OWNED_HEIGHT);
+      bool isStaggered = m_tile->IsTileGridLayoutStaggered();
+      SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir, isStaggered);
+
+      SPoint ownedp;
+      if(isStaggered && remoteOrigin.GetY() != 0)
+	ownedp.Set(m_tile->OWNED_WIDTH/2, m_tile->OWNED_HEIGHT); //NE,SE,SW,NW (not E or W)
+      else
+	ownedp.Set(m_tile->OWNED_WIDTH, m_tile->OWNED_HEIGHT);
 
       m_farSideOrigin = remoteOrigin * ownedp;
 

@@ -98,6 +98,7 @@ namespace MFM
 
     void SetCanalDir(T& us, u32 destType, Dir dir) const
     {
+      //assumes checkerboard???
       if(Dirs::IsCorner(dir))
       {
         FAIL(ILLEGAL_ARGUMENT);

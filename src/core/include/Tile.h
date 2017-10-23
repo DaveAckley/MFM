@@ -53,6 +53,9 @@ namespace MFM
 
   template <class EC> class EventHistoryBuffer; // FORWARD
 
+  typedef Dir THREEDIR[3];
+
+  enum CHKCONNECT { NOCHKCONNECT, YESCHKCONNECT };
 
   /**
    * Grid layout for tiles. MFM namespace.
@@ -115,6 +118,13 @@ namespace MFM
      * The layout of the grid containing this tile
      */
     const GridLayoutPattern GRID_LAYOUT;
+
+
+    /**
+     * Dummy tile is true if it doesn't really exist in the grid (e.g. in staggered layout)
+     */
+    bool DUMMY_TILE;
+
 
     /**
      * An enumeration of the kinds of memory regions which may exist in
@@ -259,9 +269,19 @@ namespace MFM
       m_warpFactor = MIN(10u, warp);
     }
 
-    bool IsTileGridLayoutStaggered()
+    bool IsTileGridLayoutStaggered() const
     {
       return (GRID_LAYOUT == GRID_LAYOUT_STAGGERED);
+    }
+
+    bool IsDummyTile() const
+    {
+      return DUMMY_TILE;
+    }
+
+    void SetDummyTile()
+    {
+      DUMMY_TILE = true; //not dummy, false by default
     }
 
   private:
@@ -303,6 +323,8 @@ namespace MFM
         m_keyValues[i] = hero.m_keyValues[i];
       }
     }
+
+    void TryToAddRegionAtReach(Dir d, u32& rtncount, THREEDIR & rtndirs, bool onlyConnected) const;
 
     friend class EventWindow<EC>;
     friend class CacheProcessor<EC>;
@@ -892,7 +914,8 @@ namespace MFM
      */
     inline bool IsConnected(Dir dir) const;
 
-    bool HasAnyConnections(Dir regionDir) const;
+    //bool HasAnyConnections(Dir regionDir) const; unused
+
     /**
      * Checks to see if a specified local point is contained within a
      * Tile's caches.
@@ -1046,7 +1069,13 @@ namespace MFM
     template <u32 REACH>
     Dir RegionAt(const SPoint& pt) const;
 
-    Dir RegionAtReach(const SPoint& sp, const u32 reach) const ;
+    /**
+     *
+     * @returns The number of direction of the cache pointed at by pt,
+     *           and the directions in rtndirs;
+     */
+    //Dir RegionAtReach(const SPoint& sp, const u32 reach) const ;
+    u32 RegionAtReach(const SPoint& sp, const u32 REACH, THREEDIR & rtndirs, bool onlyConnected) const;
 
     /**
       Return ((Dir) -1) if no locks are needed to perform an event at
@@ -1056,9 +1085,17 @@ namespace MFM
       dir is an edge, only that lock is needed, and if dir is a
       corner, it and the two adjacent edges are all needed.
      */
-    Dir GetLockDirection(const SPoint& pt, const u32 boundary) const
+#if 0
+    void GetLockDirection(const SPoint& pt, const u32 boundary) const
     {
       return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1);
+    }
+#endif
+
+
+    u32 GetLockDirections(const SPoint& pt, const u32 boundary, THREEDIR & rtndirs) const
+    {
+      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, (bool) YESCHKCONNECT); //only connected dirs
     }
 
     /**
@@ -1069,7 +1106,8 @@ namespace MFM
      * @returns The direction of the cache specified by pt, or
      *          (Dir)-1 if there is no such cache.
      */
-    Dir CacheAt(const SPoint& pt) const;
+    //Dir CacheAt(const SPoint& pt) const;
+    u32 CacheAt(const SPoint& pt, THREEDIR & rtndirs, const bool onlyConnected) const;
 
     /**
      * Finds the region of cache or shared memory in this Tile which
@@ -1082,7 +1120,8 @@ namespace MFM
      *          by pt, or (Dir)-1 if pt is not in cache or shared
      *          memory.
      */
-    Dir SharedAt(const SPoint& pt) const;
+    //Dir SharedAt(const SPoint& pt) const;
+    u32 SharedAt(const SPoint& pt, THREEDIR & rtndirs, const bool onlyConnected) const;
 
     /**
      * Finds the region of cache, shared, or visible memory in this
@@ -1095,7 +1134,8 @@ namespace MFM
      *          specified by pt, or (Dir)-1 if pt is not in cache,
      *          shared, or visible memory.
      */
-    Dir VisibleAt(const SPoint& pt) const;
+    //Dir VisibleAt(const SPoint& pt) const;
+    u32 VisibleAt(const SPoint& pt, THREEDIR & rtndirs, const bool onlyConnected) const;
 
     /**
      * Gets an Atom from a specified point in this Tile.

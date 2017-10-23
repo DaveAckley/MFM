@@ -74,6 +74,8 @@ namespace MFM {
 
     void InitSeed();
 
+    void InitDummyTiles();
+
     const u32 m_width, m_height;
 
     const GridLayoutPattern m_layout;
@@ -98,14 +100,6 @@ namespace MFM {
        direction dir from the Tile at (xtile,ytile) in the Grid.
      */
     LonglivedLock & GetIntertileLock(u32 xtile, u32 ytile, Dir dir) ;
-
-    /**
-     * private helpers for GridFillDir
-     *
-     */
-    static void GridFillDirCheckerboard(SPoint& pt, u32 dir);
-    static void GridFillDirStaggered(SPoint& pt, u32 dir, const SPoint& ft);
-
 
     struct TileDriver {
       enum State { PAUSED, ADVANCING, EXIT_REQUEST };
@@ -337,10 +331,12 @@ namespace MFM {
       , m_foregroundRadiationEnabled(false)
       , m_er(elts)
       , m_xraySiteOdds(100)
+      //, m_rgi(layout == GRID_LAYOUT_STAGGERED ? ((m_width - 1) * m_height) : (m_width * m_height))
       , m_rgi(m_width * m_height)
     {
-      for (iterator_type i = begin(); i != end(); ++i)
-        LOG.Debug("Tile[%d][%d] @ %p", i.GetX(), i.GetY(), &(*i));
+      //dummy tiles not set for iterator use!!! avoid illegal tile coord.
+      //for (iterator_type i = begin(); i != end(); ++i)
+      //	  LOG.Debug("Tile[%d][%d] @ %p", i.GetX(), i.GetY(), &(*i));
     }
 
     s32* GetXraySiteOddsPtr()
@@ -408,41 +404,60 @@ namespace MFM {
     /**
      * A minimal iterator over the Tiles of a grid.  Access via Grid::begin().
      */
-    template <typename ItemType, typename GridType> class MyIterator
+    template <typename ItemType, typename GridType>
+    class MyIterator
     {
       GridType & g;
       s32 i;
       s32 j;
+      s32 incnt;
     public:
-      MyIterator(GridType & g, int i = 0, int j = 0) : g(g), i(i), j(j) { }
+      MyIterator(GridType & g, int i = 0, int j = 0) : g(g), i(i), j(j), incnt(0) { }
 
       bool operator!=(const MyIterator &m) const { return i != m.i || j != m.j; }
       void operator++()
       {
-        if (j < (s32) g.m_height)
-        {
-          i++;
-          if (i >= (s32) g.m_width)
-          {
-            i = 0;
-            j++;
-          }
-        }
+	incnt++;
+	bool failed = false;
+	do{
+	  if (j < (s32) g.m_height)
+	    {
+	      i++;
+	      if (i >= (s32) g.m_width)
+		{
+		  i = 0;
+		  j++;
+		}
+	    }
+	  else
+	    failed = true;
+	} //while(!g.IsLegalTileIndex(SPoint(i,j)) && !failed);
+	//while(g._getTile(i,j).IsDummyTile() && !failed);
+	while((!g.IsLegalTileIndex(SPoint(i,j)) || g._getTile(i,j).IsDummyTile()) && !failed);
+	//MFM_API_ASSERT_STATE(g.IsLegalTileIndex(SPoint(i,j)));
       }
+
       int operator-(const MyIterator &m) const
       {
-        s32 rows = j-m.j;
-        s32 cols = i-m.i;
-        return rows*g.m_width + cols;
+	if(!g.IsGridLayoutScatttered)
+	  {
+	    //old way for checkerboard layout
+	    s32 rows = j-m.j;
+	    s32 cols = i-m.i;
+	    MFM_API_ASSERT_STATE( (rows*g.m_width + cols) == (incnt - m.incnt)); //sanity
+	  }
+        return incnt - m.incnt;
       }
 
       ItemType & operator*() const
       {
+	MFM_API_ASSERT_ARG(g.IsLegalTileIndex(SPoint(i,j)));
         return g._getTile(i,j);
       }
 
       ItemType * operator->() const
       {
+	MFM_API_ASSERT_ARG(g.IsLegalTileIndex(SPoint(i,j)));
         return &g._getTile(i,j);
       }
 
@@ -531,6 +546,19 @@ namespace MFM {
     bool IsLegalTileIndex(const SPoint & tileInGrid) const;
 
     /**
+     * Return true iff grid layout is staggered, and either tileInGridY
+     * is the last column of an even row (X), or the first column of an odd row.
+     * If this returns true, GetTile(tileInGrid) is unsafe.
+     */
+    bool IsDummyTileCoord(s32 tileingridX, s32 tileingridY) const;
+
+    /**
+     * Reinitialize m_rgi for a staggered layout grid, s.t.
+     * it holds the non-sequential dummy tile grid indexes; m_limit changes.
+     */
+    void ReinitGridRandomIterator();
+
+    /**
      * Return true iff siteInGrid is a legal site coordinate in this
      * grid.  If this returns false, GetAtom(siteInGrid) and
      * PlaceAtom(T, siteInGrid) will FAIL.
@@ -588,8 +616,10 @@ namespace MFM {
     /**
      * Return the Grid width in (non-cache) sites
      */
-    u32 GetWidthSites() const
+    u32 GetWidthSites(bool isStaggered = false) const
     {
+      if(isStaggered)
+	return (GetWidth() - 1) * OWNED_WIDTH;
       return GetWidth() * OWNED_WIDTH;
     }
 
@@ -608,24 +638,6 @@ namespace MFM {
     {
       return (m_layout == GRID_LAYOUT_STAGGERED);
     }
-
-    /**
-     * Given a Dir , will fill a SPoint with unit offsets representing
-     * the direction of this Dir FOR A SITE (checkerboard only!). For instance:
-     *
-     * \code{.cpp}
-
-       FillDir(pt, NORTH) // pt == (0, -1)
-       FillDir(pt, SOUTHEAST) // pt == (1, 1)
-
-     * \endcode
-     *
-     * @param pt The SPoint to fill with the offsets of a direction.
-     *
-     * @param dir The Dir specifying the units to fill \c pt with.
-     */
-    static void GridFillDir(SPoint& pt, Dir dir, bool isStaggered, const SPoint& ft);
-
 
     /**
      * Shut down all tile threads
@@ -730,6 +742,8 @@ namespace MFM {
     {
       if (!IsLegalTileIndex(pt))
       {
+        LOG.Error("Can't get tile at (%d,%d); illegal tile index.",
+                  pt.GetX(), pt.GetY());
         FAIL(ILLEGAL_ARGUMENT);
       }
       return GetTile(pt.GetX(), pt.GetY());
@@ -739,6 +753,8 @@ namespace MFM {
     {
       if (!IsLegalTileIndex(pt))
       {
+        LOG.Error("Can't get const tile at (%d,%d); illegal tile index.",
+                  pt.GetX(), pt.GetY());
         FAIL(ILLEGAL_ARGUMENT);
       }
       return GetTile(pt.GetX(), pt.GetY());
@@ -751,8 +767,9 @@ namespace MFM {
     { return _getTile(x,y); }
 
     /* Don't count caches! */
+    /* Don't count staggered dummies! */
     inline const u32 GetTotalSites()
-    { return GetWidthSites() * GetHeightSites(); }
+    { return GetWidthSites(IsGridLayoutStaggered()) * GetHeightSites(); }
 
     u64 GetTotalEventsExecuted() const;
 
@@ -778,7 +795,7 @@ namespace MFM {
     double GetFullSitePercentage() const
     {
       return 1.0 - ((double)GetAtomCount(Element_Empty<EC>::THE_INSTANCE.GetType()) /
-                    (double)(GetHeightSites() * GetWidthSites()));
+                    (double)(GetHeightSites() * GetWidthSites(IsGridLayoutStaggered())));
     }
 
     //    void SurroundRectangleWithWall(s32 x, s32 y, s32 w, s32 h, s32 thickness);

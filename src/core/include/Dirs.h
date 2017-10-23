@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   Dirs.h Euclidean direction system
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014, 2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack, LLC.   All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,8 @@
   \file Dirs.h Euclidean direction system
   \author Trent R. Small.
   \author David H. Ackley
-  \date (C) 2014 All rights reserved.
+  \author Elena S. Ackley
+  \date (C) 2014,2017 All rights reserved.
   \lgpl
  */
 #ifndef DIRS_H
@@ -58,6 +60,16 @@ namespace MFM
     }
 
     /**
+       check if a dir is valid for layout
+    */
+    static bool IsValidDir(Dir dir, bool isStaggered)
+    {
+      if(!IsLegalDir((s32) dir))
+	return false;
+      return !isStaggered || ((dir != NORTH) && (dir != SOUTH));
+    }
+
+    /**
      * map a dir to a readable string
      */
     static const char * GetName(Dir dir)
@@ -82,16 +94,38 @@ namespace MFM
      */
     static bool IsCorner(Dir dir) { return dir&1; }
 
+#if 0
     /**
      * true iff dir is a face direction.
      */
     static bool IsFace(Dir dir) { return !IsCorner(dir); }
+#endif
+
 
     /**
-     * The next dir clockwise from dir.  Note that for all dir,
+     * The next dir clockwise from dir.
+     * Note that in CHECKERBOARD layout, for all dir,
      * IsCorner(dir)==IsFace(CWDir(dir)), and dir==CWDir(CCWDir(dir))
      */
     static Dir CWDir(Dir dir) { return (dir+1)%DIR_COUNT; }
+
+#if 0
+    /**
+     * The next dir clockwise from dir.
+     * Note In STAGGERE layout, NORTH & SOUTH are invalid.
+     * so, CWDir for NW is NE;
+     */
+    static Dir CWDir(Dir dir, bool isStaggered)
+    {
+      if(!isStaggered)
+	return CWDir(dir);
+
+      Dir rtndir = Dirs::CWDIR(dir);
+      if(!IsValidDir(rtndir, true))
+	rtndir = Dirs::CWDIR(rtndir);
+      return rtndir;
+    }
+#endif
 
     /**
      * Gets the direction opposite the one specified.
@@ -101,11 +135,32 @@ namespace MFM
     static Dir OppositeDir(Dir dir)
     { return (dir + (DIR_COUNT / 2)) % DIR_COUNT; }
 
+
     /**
-     * The next dir counter-clockwise from dir.  Note that for all dir,
+     * The next dir counter-clockwise from dir.
+     * Note In CHECKERBOARD layout, for all dir,
      * IsCorner(dir)==IsFace(CCWDir(dir)), and dir==CCWDir(CWDir(dir))
      */
     static Dir CCWDir(Dir dir) { return (dir+DIR_COUNT-1)%DIR_COUNT; }
+
+#if 0
+    /**
+     * The next dir counter-clockwise from dir.
+     * Note In STAGGERE layout, NORTH & SOUTH are invalid.
+     * so, CCWDir for SW is SE;
+     */
+    static Dir CCWDir(Dir dir, bool isStaggered)
+    {
+
+      if(!isStaggered)
+	return CCWDir(dir);
+
+      Dir rtndir = Dirs::CCWDIR(dir);
+      if(!IsValidDir(rtndir, true))
+	rtndir = Dirs::CCWDIR(rtndir);
+      return rtndir;
+    }
+#endif
 
     /**
      * Adds a Dir to a Dir mask.
@@ -145,7 +200,7 @@ namespace MFM
 
     /**
      * Given a Dir , will fill a SPoint with unit offsets representing
-     * the direction of this Dir FOR A SITE (checkerboard only!). For instance:
+     * the direction of this Dir. For instance:
      *
      * \code{.cpp}
 
@@ -154,20 +209,21 @@ namespace MFM
 
      * \endcode
      *
+     * default bool is checkerboard, FOR A SITE.
+     *
      * @param pt The SPoint to fill with the offsets of a direction.
      *
      * @param dir The Dir specifying the units to fill \c pt with.
      */
-    static void FillDir(SPoint& pt, Dir dir);
+    //static void FillDir(SPoint& pt, Dir dir);
     //static void FillDir(SPoint& pt, Dir dir, bool isStaggered, const SPoint ft);
+    static void FillDir(SPoint& pt, Dir dir, bool isStaggered = false);
 
-#if 0
     static SPoint GetOffset(Dir dir, bool isStaggered) {
       SPoint tmp;
       FillDir(tmp, dir, isStaggered);
       return tmp;
     }
-#endif
 
     /**
      * Translates the coordinates in a SPoint to a Dir . The
@@ -239,8 +295,8 @@ namespace MFM
      * private helpers for FillDir
      *
      */
-    //    static void FillDirCheckerboard(SPoint& pt, u32 dir);
-    // static void FillDirStaggered(SPoint& pt, u32 dir);
+    static void FillDirCheckerboard(SPoint& pt, u32 dir);
+     static void FillDirStaggered(SPoint& pt, u32 dir);
 
   };
 

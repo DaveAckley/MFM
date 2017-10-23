@@ -37,6 +37,8 @@ namespace MFM
 
     // Get site address in full untransformed tile coordinates
     SPoint local = md.GetPoint(siteNumber) + m_eventCenter;
+    SPoint mdtmp = md.GetPoint(siteNumber);
+    //LOG.Message("site# %d, point(%d, %d), local(%d, %d)", siteNumber, mdtmp.GetX(), mdtmp.GetY(), local.GetX(), local.GetY());
     return IsCoordVisibleToPeer(local);
   }
 
@@ -48,13 +50,17 @@ namespace MFM
     // Map full untransformed local tile coord into the remote space
     SPoint remote = LocalToRemote(local);
 
+    //LOG.Message("peer remote(%d, %d), local(%d, %d), -farside(%d,%d)", remote.GetX(), remote.GetY(), local.GetX(), local.GetY(),m_farSideOrigin.GetX(),m_farSideOrigin.GetY());
+
     // Get its distance from the remote tile center
     //u32 dist = tile.GetSquareDistanceFromCenter(remote);
     // Distances up to a tile radius are visible
     //bool visible = dist <= tile.TILE_SIDE / 2;
     // Which is what you asked
     //return visible;
-
+    //return tile.IsInShared(remote); //?
+    //return tile.IsOwnedSite(remote);
+    //return tile.IsOwnedSite(remote) && !tile.IsInHidden(remote);
     return tile.IsInTile(remote);
   }
 
@@ -165,6 +171,8 @@ namespace MFM
   {
     MFM_API_ASSERT_STATE(m_cpState == PASSIVE && m_tile != 0);
     MFM_API_ASSERT_ARG(siteNumber >= 0 && siteNumber < SITE_COUNT);
+    if(!IsSiteNumberVisible((u16) siteNumber))
+      ReportCacheProcessorStatus((Logger::Level)1);  //debug for elena
     MFM_API_ASSERT_ARG(IsSiteNumberVisible((u16) siteNumber));
     MFM_API_ASSERT_STATE(m_receivedSiteCount < SITE_COUNT);
 
@@ -410,6 +418,7 @@ namespace MFM
     return m_tile->GetCacheProcessor(forDirection);
   }
 
+#if 0
   template <class EC>
   bool CacheProcessor<EC>::AdvanceBlocking()
   {
@@ -448,6 +457,48 @@ namespace MFM
         cp.Unblock();
       }
     }
+
+    return true;
+  }
+#endif
+
+
+  template <class EC>
+  bool CacheProcessor<EC>::AdvanceBlocking()
+  {
+    Tile<EC> & tile = GetTile();
+    SPoint lasteventcoord = tile.OwnedCoordToTile(tile.m_lastEventCenterOwned);
+
+    THREEDIR rtndirs;
+    u32 needed = tile.SharedAt(lasteventcoord, rtndirs, true); //only connected
+
+    // Check if every-relevant-body is blocking
+    s32 got = 0;
+    for (u32 d = 0; got < needed; ++got, d++)
+    {
+      CacheProcessor<EC> & cp = GetSibling(rtndirs[d]);
+      MFM_API_ASSERT_STATE(cp.IsConnected());
+      if(!cp.IsBlocking())
+	{
+	  break;
+	}
+    }
+
+    if (got < needed)
+    {
+      return false;  // Somebody still working
+    }
+
+    // All are done, unblock all, including ourselves
+    got = 0;
+    for (u32 d = 0; got < needed; ++got, d++)
+      {
+	CacheProcessor<EC> & cp = GetSibling(rtndirs[d]);
+	if (cp.IsConnected())
+	  {
+	    cp.Unblock();
+	  }
+      }
 
     return true;
   }

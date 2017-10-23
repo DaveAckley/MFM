@@ -59,11 +59,10 @@ namespace MFM
 
     if(!MooreBorder(window, IntersectionType()))
     {
-
-      Dirs::FillDir(offset, Dirs::CCWDir(Dirs::CCWDir(d)), isStaggered);
+      Dirs::FillDir(offset, Dirs::CCWDir(Dirs::CCWDir(d)));
       FillIfNotType(window, offset, SidewalkType(), GetSidewalk());
 
-      Dirs::FillDir(offset, Dirs::CWDir(Dirs::CWDir(d)), isStaggered);
+      Dirs::FillDir(offset, Dirs::CWDir(Dirs::CWDir(d)));
       FillIfNotType(window, offset, SidewalkType(), GetSidewalk());
     }
 

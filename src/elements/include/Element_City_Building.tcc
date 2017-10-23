@@ -38,15 +38,14 @@ namespace MFM
     SPoint sidewalk;
     WindowScanner<EC> scanner(window);
     u32 sidewalkCount = scanner.FindRandomInVonNeumann(GetSidewalkType(), sidewalk);
-    bool isStaggered = window.GetTile().IsTileGridLayoutStaggered();
 
     if(sidewalkCount == 1)
     {
       Dir swDir = Dirs::FromOffset(sidewalk);
 
       SPoint adjs[2];
-      Dirs::FillDir(adjs[0], Dirs::CWDir(Dirs::CWDir(swDir)), isStaggered);
-      Dirs::FillDir(adjs[1], Dirs::CCWDir(Dirs::CCWDir(swDir)), isStaggered);
+      Dirs::FillDir(adjs[0], Dirs::CWDir(Dirs::CWDir(swDir)));
+      Dirs::FillDir(adjs[1], Dirs::CCWDir(Dirs::CCWDir(swDir)));
 
       for(u32 i = 0; i < 2; i++)
       {

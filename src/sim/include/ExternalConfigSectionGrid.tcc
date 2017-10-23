@@ -306,7 +306,7 @@ namespace MFM
   {
     /* Zeroth, identify grid size in sites and tiles. */
     byteSink.Printf("DefineGridSize(%u,%u,%u,%u)\n",
-                    m_grid.GetWidthSites(),
+                    m_grid.GetWidthSites(m_grid.IsGridLayoutStaggered()),
                     m_grid.GetHeightSites(),
                     m_grid.GetWidth(),
                     m_grid.GetHeight());
@@ -345,62 +345,72 @@ namespace MFM
     byteSink.WriteNewline();
 
     /* Then write the tile config */
-    for(u32 y = 0; y < m_grid.GetHeight(); y++)
-    {
-      for(u32 x = 0; x < m_grid.GetWidth(); x++)
+    // use iterator to avoid illegal tile positions when staggered.
+    for (typename Grid<GC>::iterator_type i = m_grid.begin(); i != m_grid.end(); ++i)
       {
-        byteSink.Printf("Tile(%d,%d",x,y);
-        m_grid.GetTile(SPoint(x,y)).SaveTile(byteSink);
-        byteSink.Printf(")\n");
+	Tile<EC> & gtile = *i;
+	SPoint tpt = i.At();
+	byteSink.Printf("Tile(%d,%d", tpt.GetX(), tpt.GetY());
+	gtile.SaveTile(byteSink);
+	byteSink.Printf(")\n");
       }
-    }
 
     /* Then, write ALL the damn sites, */
     /* and GA all live atoms. */
 
     /* The grid size in sites excluding caches */
+    /* The grid size in sites including staggered dummy tiles */
     const u32 gridWidth = m_grid.GetWidthSites();
     const u32 gridHeight = m_grid.GetHeightSites();
 
     for(u32 y = 0; y < gridHeight; y++)
-    {
-      for(u32 x = 0; x < gridWidth; x++)
       {
-        SPoint currentPt(x, y);
+	for(u32 x = 0; x < gridWidth; x++)
+	  {
+	    SPoint currentPt(x, y);
+	    if(!m_grid.IsLegalTileIndex(currentPt))
+	      continue;
 
-        byteSink.Printf("Site(%d,%d",x,y);
-        m_grid.SaveSite(currentPt,byteSink,*this);
-        byteSink.Printf(")\n");
+	    Tile<EC>& stile = m_grid.GetTile(currentPt);
+
+	    if (stile.IsDummyTile())
+	      {
+		continue;
+	      }
+
+	    byteSink.Printf("Site(%d,%d",x,y);
+	    m_grid.SaveSite(currentPt,byteSink,*this);
+	    byteSink.Printf(")\n");
 
 #if 0 // Site(..) includes the event layer atoms
 
-        /* No need to write empties since they are the default */
-        if(!Atom<AC>::IsType(*m_grid.GetAtom(currentPt),
-                             Element_Empty<EC>::THE_INSTANCE.GetType()))
-        {
-          byteSink.Printf("GA(");
+	    /* No need to write empties since they are the default */
+	    if(!Atom<AC>::IsType(*m_grid.GetAtom(currentPt),
+				 Element_Empty<EC>::THE_INSTANCE.GetType()))
+	      {
+		byteSink.Printf("GA(");
 
-          /* This wil be a little slow, but meh. Makes me miss hash
-           * tables. */
-          for(u32 i = 0; i < elems; i++)
-          {
-            if(Atom<AC>::IsType(*m_grid.GetAtom(currentPt),
-                                m_elementRegistry.GetEntryElement(i)->GetType()))
-            {
-              IntAlphaEncode(i, alphaOutput);
-              byteSink.Printf("%s", alphaOutput);
-              break;
-            }
-          }
+		/* This wil be a little slow, but meh. Makes me miss hash
+		 * tables. */
+		for(u32 i = 0; i < elems; i++)
+		  {
+		    if(Atom<AC>::IsType(*m_grid.GetAtom(currentPt),
+					m_elementRegistry.GetEntryElement(i)->GetType()))
+		      {
+			IntAlphaEncode(i, alphaOutput);
+			byteSink.Printf("%s", alphaOutput);
+			break;
+		      }
+		  }
 
-          T temp = *m_grid.GetAtom(currentPt);
-          AtomSerializer<AC> as(temp);
-          byteSink.Printf(",%d,%d,%@)\n", x, y, &as);
-        }
+		T temp = *m_grid.GetAtom(currentPt);
+		AtomSerializer<AC> as(temp);
+		byteSink.Printf(",%d,%d,%@)\n", x, y, &as);
+	      }
 #endif
 
+	  }
       }
-    }
     byteSink.WriteNewline();
   }
 

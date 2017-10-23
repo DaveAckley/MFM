@@ -111,6 +111,8 @@ namespace MFM {
   {
     MFM_LOG_DBG6(("EW::ExecuteBehavior"));
     Tile<EC> & t = GetTile();
+    MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
+
     unwind_protect(
     {
       OString256 buff;
@@ -158,6 +160,9 @@ namespace MFM {
     EventWindow & window = *this;
     Random & random = window.GetRandom();
     Tile<EC>& tile = window.GetTile();
+
+    MFM_API_ASSERT_STATE(!tile.IsDummyTile()); //sanity
+
     const MDist<R> & md = MDist<R>::get();
 
     SPoint sp;
@@ -203,6 +208,8 @@ namespace MFM {
     MFM_API_ASSERT_STATE(IsFree());  // Don't be callin' when I'm not free
 
     Tile<EC> & tile = GetTile();
+
+    MFM_API_ASSERT_STATE(!tile.IsDummyTile()); //sanity
 
     // We need to access the element early to determine its boundary
     T atom = *tile.GetAtom(center);
@@ -257,7 +264,12 @@ namespace MFM {
   template <class EC>
   typename EventWindow<EC>::LockStatus EventWindow<EC>::AcquireDirLock(Dir dir)
   {
-    CacheProcessor<EC> & cp = GetTile().GetCacheProcessor(dir);
+    Tile<EC> & ewtile = GetTile();
+
+    MFM_API_ASSERT_STATE(!ewtile.IsDummyTile()); //sanity
+    MFM_API_ASSERT_ARG(Dirs::IsValidDir(dir, ewtile.IsTileGridLayoutStaggered())); //sanity
+
+    CacheProcessor<EC> & cp = ewtile.GetCacheProcessor(dir);
 
     if (!cp.IsConnected())
     {
@@ -275,7 +287,7 @@ namespace MFM {
       return LOCK_UNAVAILABLE;
     }
 
-    bool locked = cp.TryLock(m_lockRegion);
+    bool locked = cp.TryLock(dir); //m_lockRegion);
     if (!locked)
     {
       MFM_LOG_DBG6(("EW::AcquireRegionLocks - fail: didn't get %s lock",
@@ -299,26 +311,36 @@ namespace MFM {
       MFM_API_ASSERT_STATE(m_cacheProcessorsLocked[i] == 0);
     }
 
-    if (((s32) m_lockRegion) == -1)
+    //if (((s32) m_lockRegions[0]) == -1)
+    if (m_locksNeeded == 0)
     {
       MFM_LOG_DBG6(("EW::AcquireRegionLocks - none needed"));
       return true;  // Nobody is needed
     }
 
-    // At least one lock may be needed
+    // At least one lock may be needed, to be shuffled
+    u32 needed = m_locksNeeded;  //as flag
+    Dir lockDirs[MAX_LOCK_DIRS]; //to shuffle
+    for(u32 i = 0; i < needed; i++)
+      lockDirs[i] = m_lockRegions[i];
 
-    Dir lockDirs[3];
-    u32 needed = 1;
+    //Dir lockDirs[3];
+    //u32 needed = 1;
     Tile<EC> & tile = GetTile();
-    lockDirs[0] = m_lockRegion;
+    //lockDirs[0] = m_lockRegion;
 
-    if (Dirs::IsCorner(m_lockRegion))
-    {
-      lockDirs[1] = Dirs::CCWDir(m_lockRegion);
-      lockDirs[2] = Dirs::CWDir(m_lockRegion);
-      needed = 3;
+    //    if (Dirs::IsCorner(m_lockRegion))
+    // {
+    //lockDirs[1] = Dirs::CCWDir(m_lockRegion);
+    //lockDirs[2] = Dirs::CWDir(m_lockRegion);
+    //needed = 3;
+    //Shuffle<Dir,3>(GetRandom(),lockDirs);
+    //}
+
+    if(needed==3)
       Shuffle<Dir,3>(GetRandom(),lockDirs);
-    }
+    else if (needed==2)
+      Shuffle<Dir,2>(GetRandom(),lockDirs);
 
     MFM_LOG_DBG6(("EW::AcquireRegionLocks - checking %d", needed));
 
@@ -332,7 +354,7 @@ namespace MFM {
       {
         // Whups, didn't really need that one.  Leave it null, since
         // the other loops check all MAX_CACHES_TO_UPDATE slots anyway
-        --needed;
+        --needed;// NO LONGER CORRESPONDS TO THE ARRAY ITEMS!!!
         continue;
       }
 
@@ -382,13 +404,13 @@ namespace MFM {
     }
 
     return true;
-  }
+  } //AcquireRegionLocks
 
   template <class EC>
   bool EventWindow<EC>::AcquireAllLocks(const SPoint& tileCenter, const u32 eventWindowBoundary)
   {
     Tile<EC> & t = GetTile();
-    m_lockRegion = t.GetLockDirection(tileCenter, eventWindowBoundary);
+    m_locksNeeded = t.GetLockDirections(tileCenter, eventWindowBoundary, m_lockRegions);
     return AcquireRegionLocks();
   }
 
@@ -402,10 +424,13 @@ namespace MFM {
     , m_eventWindowsExecuted(0)
     , m_eventWindowSitesAccessed(0)
     , m_center(0,0)
-    , m_lockRegion(-1)
+    , m_locksNeeded(0)
     , m_sym(PSYM_NORMAL)
     , m_ewState(FREE)
   {
+    for (u32 i = 0; i < MAX_LOCK_DIRS; ++i)
+      m_lockRegions[i] = -1;
+
     m_cpli.Shuffle(GetRandom());
 
     for (u32 i = 0; i < SITE_COUNT; ++i)

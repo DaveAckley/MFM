@@ -97,6 +97,7 @@ namespace MFM
     enum { R = EC::EVENT_WINDOW_RADIUS };
   public:
     enum { SITE_COUNT = EVENT_WINDOW_SITES(R) };
+    enum {MAX_LOCK_DIRS = 3 };
 
   private:
 
@@ -125,7 +126,8 @@ namespace MFM
 
     SPoint m_center;
 
-    Dir m_lockRegion;
+    Dir m_lockRegions[MAX_LOCK_DIRS];
+    u32 m_locksNeeded;
 
     enum { MAX_CACHES_TO_UPDATE = 3 };
     CacheProcessor<EC> * m_cacheProcessorsLocked[MAX_CACHES_TO_UPDATE];

@@ -65,6 +65,7 @@ namespace MFM
 
       Dirs::FillDir(wanderPt, d);
 
+      //assumes checkerboard ???
       wanderPt *= Dirs::IsCorner(d) ? (GetWanderDistance() / 2) : GetWanderDistance();
 
       if(window.IsLiveSiteSym(wanderPt))

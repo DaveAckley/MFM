@@ -16,11 +16,14 @@ namespace MFM
     , OWNED_WIDTH(TILE_WIDTH - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
     , OWNED_HEIGHT(TILE_HEIGHT - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
     , GRID_LAYOUT(gridlayout)
+    , DUMMY_TILE(false)
     , m_sites(sites)
     , m_cdata(*this)
     , m_lockAttempts(0)
     , m_lockAttemptsSucceeded(0)
     , m_window(*this)
+      //    , m_dirIterator(gridlayout == GRID_LAYOUT_STAGGERED ? (Dirs::DIR_COUNT - 2) : Dirs::DIR_COUNT)
+    , m_dirIterator(Dirs::DIR_COUNT)
     , m_state(OFF)
     , m_enabled(true)
     , m_backgroundRadiationEnabled(false)
@@ -36,6 +39,24 @@ namespace MFM
     // Require even TILE side dimensions.
     MFM_API_ASSERT_ARG(2 * TILE_WIDTH / 2 == TILE_WIDTH);
     MFM_API_ASSERT_ARG(2 * TILE_HEIGHT / 2 == TILE_HEIGHT);
+
+    //staggered grid layout ignores NORTH & SOUTH directions
+    if(IsTileGridLayoutStaggered())
+      {
+	static u32 staggeredindexes[Dirs::DIR_COUNT];
+	u32 counter = 0;
+	for(u32 d=0; d < Dirs::DIR_COUNT; d++)
+	  {
+	    if(Dirs::IsValidDir(d, true))
+	      {
+		staggeredindexes[counter] = d;
+		counter++;
+	      }
+	    //else skip this direction.
+	  }
+	m_dirIterator.Reinit(counter, staggeredindexes);
+	MFM_API_ASSERT_STATE(counter == m_dirIterator.GetLimit());
+      }
 
     Init();
   }
@@ -273,6 +294,7 @@ namespace MFM
   }
 #endif
 
+#if 0
   template <class EC>
   template <u32 REACH>
   Dir Tile<EC>::RegionAt(const SPoint& sp) const
@@ -285,7 +307,6 @@ namespace MFM
   {
     UPoint pt = MakeUnsigned(sp);
 
-    //checkerboard configuration
     if(pt.GetX() < REACH) {
 
       if(pt.GetY() < REACH) return Dirs::NORTHWEST;
@@ -297,15 +318,160 @@ namespace MFM
       if(pt.GetY() < REACH) return Dirs::NORTHEAST;
       if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTHEAST;
       return Dirs::EAST;
-
     }
 
-    // X in neither east nor west reach
-    if(pt.GetY() < REACH) return Dirs::NORTH;
-    if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTH;
-    return (Dir)-1;
+    //if(IsTileGridLayoutStaggered())
+    if(GRID_LAYOUT == GRID_LAYOUT_STAGGERED)
+      {
+	if(pt.GetX() < TILE_WIDTH/2)
+	  {
+	    if(pt.GetY() < REACH) return Dirs::NORTHWEST;
+	    if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTHWEST;
+	  }
+	else //if(pt.GetX() >=TILE_WIDTH/2)
+	  {
+	    if(pt.GetY() < REACH) return Dirs::NORTHEAST;
+	    if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTHEAST;
+	  }
+      }
+    else
+      {
+	//checkerboard configuration
+	// X in neither east nor west reach
+	if(pt.GetY() < REACH) return Dirs::NORTH;
+	if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTH;
+      }
+    return (Dir)-1; //not at reach
+  }
+#endif
+
+  template <class EC>
+  template <u32 REACH>
+  Dir Tile<EC>::RegionAt(const SPoint& sp) const
+  {
+    THREEDIR tmpdirs;
+    u32 count = RegionAtReach(sp, REACH, tmpdirs);
+    MFM_API_ASSERT_STATE(count <= 3);
+    return tmpdirs[0]; //return the first only (deprecated)
   }
 
+  template <class EC>
+  u32 Tile<EC>::RegionAtReach(const SPoint& sp, const u32 REACH, THREEDIR& rtndirs, bool onlyConnected) const
+  {
+    u32 rtncount = 0;
+    bool isStaggered = IsTileGridLayoutStaggered();
+
+    UPoint pt = MakeUnsigned(sp);
+
+    if(pt.GetX() < REACH) {
+      if(pt.GetY() < REACH)
+	{
+	  //NW corner
+	  TryToAddRegionAtReach(Dirs::NORTHWEST, rtncount, rtndirs, onlyConnected);
+
+	  TryToAddRegionAtReach(Dirs::WEST, rtncount, rtndirs, onlyConnected);
+
+	  if(!isStaggered)
+	    TryToAddRegionAtReach(Dirs::NORTH, rtncount, rtndirs, onlyConnected);
+	}
+      else if(pt.GetY() >= TILE_HEIGHT - REACH)
+	{
+	  //SW corner
+	  TryToAddRegionAtReach(Dirs::SOUTHWEST, rtncount, rtndirs, onlyConnected);
+
+	  TryToAddRegionAtReach(Dirs::WEST, rtncount, rtndirs, onlyConnected);
+
+	  if(!isStaggered)
+	    TryToAddRegionAtReach(Dirs::SOUTH, rtncount, rtndirs, onlyConnected);
+	}
+      else
+	{
+	  TryToAddRegionAtReach(Dirs::WEST, rtncount, rtndirs, onlyConnected);
+	}
+
+    } else if(pt.GetX() >= TILE_WIDTH - REACH) {
+
+      if(pt.GetY() < REACH)
+	{
+	  //NE corner
+	  TryToAddRegionAtReach(Dirs::NORTHEAST, rtncount, rtndirs, onlyConnected);
+
+	  TryToAddRegionAtReach(Dirs::EAST, rtncount, rtndirs, onlyConnected);
+
+	  if(!isStaggered)
+	    TryToAddRegionAtReach(Dirs::NORTH, rtncount, rtndirs, onlyConnected);
+	}
+      else if(pt.GetY() >= TILE_HEIGHT - REACH)
+	{
+	  //SE corner
+	  TryToAddRegionAtReach(Dirs::SOUTHEAST, rtncount, rtndirs, onlyConnected);
+
+	  TryToAddRegionAtReach(Dirs::EAST, rtncount, rtndirs, onlyConnected);
+
+	  if(!isStaggered)
+	    TryToAddRegionAtReach(Dirs::SOUTH, rtncount, rtndirs, onlyConnected);
+	}
+      else
+	{
+	  TryToAddRegionAtReach(Dirs::EAST, rtncount, rtndirs, onlyConnected);
+	}
+    }
+    else
+      {
+	if(isStaggered)
+	  {
+	    if(pt.GetX() < TILE_WIDTH/2)
+	      {
+		if(pt.GetY() < REACH)
+		  {
+		    TryToAddRegionAtReach(Dirs::NORTHWEST, rtncount, rtndirs, onlyConnected);
+		  }
+		else if(pt.GetY() >= TILE_HEIGHT - REACH)
+		  {
+		    TryToAddRegionAtReach(Dirs::SOUTHWEST, rtncount, rtndirs, onlyConnected);
+		  }
+	      }
+	    else
+	      {
+		MFM_API_ASSERT_STATE(pt.GetX() >=TILE_WIDTH/2); //sanity
+		if(pt.GetY() < REACH)
+		  {
+		    TryToAddRegionAtReach(Dirs::NORTHEAST, rtncount, rtndirs, onlyConnected);
+		  }
+		else if(pt.GetY() >= TILE_HEIGHT - REACH)
+		  {
+		    TryToAddRegionAtReach(Dirs::SOUTHEAST, rtncount, rtndirs, onlyConnected);
+		  }
+	      }
+	  }
+	else
+	  {
+	    //checkerboard configuration
+	    // X in neither east nor west reach
+	    if(pt.GetY() < REACH)
+	      {
+		TryToAddRegionAtReach(Dirs::NORTH, rtncount, rtndirs, onlyConnected);
+	      }
+	    else if(pt.GetY() >= TILE_HEIGHT - REACH)
+	      {
+		TryToAddRegionAtReach(Dirs::SOUTH, rtncount, rtndirs, onlyConnected);
+	      }
+	  }
+      }
+    return rtncount; //not at reach
+  }
+
+  template <class EC>
+  void Tile<EC>::TryToAddRegionAtReach(Dir d, u32& rtncount, THREEDIR & rtndirs, bool onlyConnected) const
+  {
+    if(!onlyConnected || IsConnected(d))
+      {
+	rtndirs[rtncount] = d;
+	rtncount++;
+      }
+  }
+
+#if 0
   template <class EC>
   Dir Tile<EC>::CacheAt(const SPoint& pt) const
   {
@@ -322,6 +488,25 @@ namespace MFM
   Dir Tile<EC>::VisibleAt(const SPoint& pt) const
   {
     return RegionAt<EVENT_WINDOW_RADIUS * 3>(pt);
+  }
+#endif
+
+  template <class EC>
+  u32 Tile<EC>::CacheAt(const SPoint& pt, THREEDIR & rtndirs, const bool onlyConnected) const
+  {
+    return RegionAtReach(pt, EVENT_WINDOW_RADIUS, rtndirs, onlyConnected);
+  }
+
+  template <class EC>
+  u32 Tile<EC>::SharedAt(const SPoint& pt, THREEDIR & rtndirs, const bool onlyConnected) const
+  {
+    return RegionAtReach(pt, EVENT_WINDOW_RADIUS * 2, rtndirs, onlyConnected);
+  }
+
+  template <class EC>
+  u32 Tile<EC>::VisibleAt(const SPoint& pt, THREEDIR & rtndirs, const bool onlyConnected) const
+  {
+    return RegionAtReach(pt, EVENT_WINDOW_RADIUS * 3, rtndirs, onlyConnected);
   }
 
   template <class EC>
@@ -401,6 +586,7 @@ namespace MFM
       return false;
     }
 
+#if 0
     Dir dir = SharedAt(location);
     if (IsConnected(dir))
     {
@@ -409,15 +595,29 @@ namespace MFM
 
     if (Dirs::IsCorner(dir))
     {
-      if (IsConnected(Dirs::CCWDir(dir)))
+      bool isStaggered = IsTileGridLayoutStaggered();
+      if (IsConnected(Dirs::CCWDir(dir, isStaggered)))
       {
         return true;
       }
-      if (IsConnected(Dirs::CWDir(dir)))
+      if (IsConnected(Dirs::CWDir(dir, isStaggered)))
       {
         return true;
       }
     }
+    return false;
+#endif
+
+    THREEDIR shareddirs;
+    u32 sharedcnt = SharedAt(location, shareddirs, (bool) NOCHKCONNECT);
+
+    if(sharedcnt > 1)
+      {
+	//then must be a corner
+	THREEDIR connecteddirs;
+	u32 connectedcnt = SharedAt(location, connecteddirs, (bool) YESCHKCONNECT);
+	return (sharedcnt == connectedcnt);
+      }
     return false;
   }
 
@@ -425,7 +625,10 @@ namespace MFM
   bool Tile<EC>::IsCacheSitePossibleEventCenter(const SPoint & location) const
   {
     MFM_API_ASSERT_ARG(IsInCache(location));
-    return IsConnected(CacheAt(location));
+    THREEDIR rtndirs;
+    u32 count = CacheAt(location, rtndirs, YESCHKCONNECT);
+    //return IsConnected(CacheAt(location));
+    return (count > 0);
   }
 
   template <class EC>
@@ -451,30 +654,36 @@ namespace MFM
     return ((u32) pt.GetX()) < OWNED_WIDTH && ((u32) pt.GetY() < OWNED_HEIGHT);
   }
 
+#if 0
   template <class EC>
   bool Tile<EC>::HasAnyConnections(Dir regionDir) const
   {
+    //trying not to use CCWDir anymore!o
     switch(regionDir)
-    {
-    case Dirs::NORTH:
-    case Dirs::EAST:
-    case Dirs::SOUTH:
-    case Dirs::WEST:
-      return IsConnected(regionDir);
+      {
+      case Dirs::EAST:
+      case Dirs::WEST:
+	return IsConnected(regionDir);
 
-    case Dirs::NORTHWEST:
-    case Dirs::NORTHEAST:
-    case Dirs::SOUTHEAST:
-    case Dirs::SOUTHWEST:
-      if (IsConnected(regionDir)) return true;
-      if (IsConnected(Dirs::CCWDir(regionDir))) return true;
-      if (IsConnected(Dirs::CWDir(regionDir))) return true;
-      return false;
+      case Dirs::NORTHWEST:
+      case Dirs::NORTHEAST:
+      case Dirs::SOUTHEAST:
+      case Dirs::SOUTHWEST:
+	if (IsConnected(regionDir)) return true;
+	if (IsConnected(Dirs::CCWDir(regionDir, isStaggered))) return true;
+	if (IsConnected(Dirs::CWDir(regionDir, isStaggered))) return true;
+	return false;
 
-    default:
-      FAIL(ILLEGAL_ARGUMENT);
-    }
+      case Dirs::NORTH:
+      case Dirs::SOUTH:
+	if(!isStaggered) return IsConnected(regionDir);
+	//else fall thru
+      default:
+	FAIL(ILLEGAL_ARGUMENT);
+      } ;
+    return false;
   }
+#endif
 
   template <class EC>
   typename Tile<EC>::Region Tile<EC>::RegionFromIndex(const u32 index, const u32 tileSide)
@@ -646,7 +855,7 @@ namespace MFM
     }
 
     //INITIATE_EVENT,
-    SPoint pt = GetRandomOwnedCoord();
+    SPoint pt = GetRandomOwnedCoord(); //adjusted to range (0..Tile_Width, 0...Tile_Height)
     if (RegionIn(pt) == REGION_CACHE)
       FAIL(ILLEGAL_STATE);
 
