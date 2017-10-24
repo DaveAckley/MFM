@@ -869,6 +869,7 @@ namespace MFM
     for (m_dirIterator.ShuffleOrReset(m_random); m_dirIterator.HasNext(); )
     {
       u32 i = m_dirIterator.Next();
+      MFM_API_ASSERT_STATE(Dirs::IsValidDir(i, IsTileGridLayoutStaggered()));
       CacheProcessor<EC> & cp = m_cacheProcessors[i];
       didWork |= cp.Advance();
     }

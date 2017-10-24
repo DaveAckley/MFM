@@ -109,7 +109,7 @@ namespace MFM {
 
 	    if(!IsLegalTileIndex(npt))
 	      {
-		LOG.Message("Grid::Init tile at tpt(%d, %d), npt(%d, %d) direction %d", tpt.GetX(), tpt.GetY(), npt.GetX(), npt.GetY(), d);
+		LOG.Message("Grid::Skip Init tile at illegal npt(%d, %d), tpt(%d, %d), direction %d", npt.GetX(), npt.GetY(), tpt.GetX(), tpt.GetY(), d);
 		continue;
 	      }
 
@@ -117,6 +117,7 @@ namespace MFM {
 
 	    if(otile.IsDummyTile())
 	      {
+		LOG.Message("Grid::Skip Init DUMMY tile at npt(%d, %d), tpt(%d, %d), direction %d", npt.GetX(), npt.GetY(), tpt.GetX(), tpt.GetY(), d);
 		continue;
 	      }
 
@@ -147,7 +148,14 @@ namespace MFM {
     {
       for(u32 y = 0; y < m_height; y++)
       {
+	if(!IsLegalTileIndex(x,y))
+	  continue;
+
         const Tile<EC> & tile = GetTile(x,y);
+
+	if(tile.IsDummyTile())
+	  continue;
+
         double red = tile.GetAverageCacheRedundancy();
         if (red >= 0)
         {
@@ -170,7 +178,14 @@ namespace MFM {
     {
       for(u32 y = 0; y < m_height; y++)
       {
-        Tile<EC> & tile = GetTile(x,y);
+	if(!IsLegalTileIndex(x,y))
+	  continue;
+
+        const Tile<EC> & tile = GetTile(x,y);
+
+	if(tile.IsDummyTile())
+	  continue;
+
         tile.SetCacheRedundancy(redundancyOddsType);
       }
     }
@@ -191,9 +206,11 @@ namespace MFM {
       MFM_API_ASSERT_STATE(IsLegalTileIndex(tpt));
 
       TileDriver & td = _getTileDriver(tpt.GetX(),tpt.GetY());
-      td.m_loc = tpt;
+      td.m_loc = tpt; //init m_loc before a GetTile call
       td.m_gridPtr = this;
       td.SetState(TileDriver::PAUSED);
+      MFM_API_ASSERT_STATE(!td.GetTile().IsDummyTile());
+
       if (pthread_create(&td.m_threadId, NULL, TileDriverRunner, &td))
       {
         FAIL(ILLEGAL_STATE);
@@ -213,6 +230,8 @@ namespace MFM {
       MFM_API_ASSERT_STATE(IsLegalTileIndex(tpt));
 
       TileDriver & td = _getTileDriver(tpt.GetX(),tpt.GetY());
+      MFM_API_ASSERT_STATE(!td.GetTile().IsDummyTile());
+
       td.SetState(running? TileDriver::ADVANCING : TileDriver::PAUSED);
     }
   }
@@ -221,6 +240,8 @@ namespace MFM {
   void* Grid<GC>::TileDriverRunner(void * arg)
   {
     TileDriver * td = (TileDriver*) arg;
+    MFM_API_ASSERT_STATE(td->m_gridPtr->IsLegalTileIndex(td->m_loc));
+
     Tile<EC> & ctile = td->GetTile();
 
     MFM_API_ASSERT_ARG(!ctile.IsDummyTile()); //sanity
@@ -310,9 +331,10 @@ namespace MFM {
       {
 	for(u32 i=0; i < m_width; i++)
 	  {
-	    //LOG.Debug("Tile[%d][%d]", i, j));
 	    if(IsDummyTileCoord(i, j))
 	      {
+		LOG.Message("Tile[%d][%d] setting to DUMMY", i, j);
+
 		Tile<EC> & tile = GetTile(SPoint(i,j));
 		tile.SetDummyTile();
 	      }
@@ -328,15 +350,21 @@ namespace MFM {
 
     static u32 staggeredindexes[MAX_TILES_SUPPORTED];
     MFM_API_ASSERT_STATE(m_height * m_width <= MAX_TILES_SUPPORTED);
+
     u32 counter = 0;
     for(u32 j=0; j < m_height; j++)
       {
 	for(u32 i=0; i < m_width; i++)
 	  {
-	    Tile<EC> & ntile = GetTile(SPoint(i,j));
+	    SPoint tpt(i,j);
+	    if(!IsLegalTileIndex(tpt))
+	      continue;
+
+	    Tile<EC> & ntile = GetTile(tpt);
 	    if(! ntile.IsDummyTile())
 	      {
 		staggeredindexes[counter] = j*m_width + i;
+		LOG.Message("Tile[%d][%d] in random iterator at counter %d, index %d", i, j, counter, staggeredindexes[counter]);
 		counter++;
 	      }
 	    //else skip this tile.
@@ -350,22 +378,36 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::SetTileEnabled(const SPoint& tileLoc, bool isEnabled)
   {
+    if(!IsLegalTileIndex(tileLoc))
+      return;
+
     Tile<EC> & tile = GetTile(tileLoc);
+    if(tile.IsDummyTile())
+      {
+	tile.SetDisabled(); //?
+	return;
+      }
+
     if (isEnabled)
-    {
-      tile.SetEnabled();
-    }
+      {
+	tile.SetEnabled();
+      }
     else
-    {
-      tile.SetDisabled();
-    }
+      {
+	tile.SetDisabled();
+      }
 
   }
 
   template <class GC>
   bool Grid<GC>::IsTileEnabled(const SPoint& tileLoc)
   {
-    return GetTile(tileLoc).IsEnabled();
+    MFM_API_ASSERT_ARG(!IsLegalTileIndex(tileLoc));
+
+
+    Tile<EC> & tile = GetTile(tileLoc);
+    MFM_API_ASSERT_ARG(!tile.IsDummyTile());
+    return tile.IsEnabled();
   }
 
   template <class GC>
@@ -451,6 +493,8 @@ namespace MFM {
 
     Tile<EC> & owner = GetTile(tileInGrid);
 
+    MFM_API_ASSERT_ARG(!owner.IsDummyTile());
+
     if (owner.IsActive()) return false;  // Not paused?  Is this how we check?
 
     if (owner.RegionIn(siteInTile) != owner.REGION_HIDDEN)
@@ -468,6 +512,9 @@ namespace MFM {
   {
     SPoint myTile, mySite;
     if (!MapGridToUncachedTile(siteInGrid, myTile, mySite)) return false;
+
+    MFM_API_ASSERT_ARG(!GetTile(myTile).IsDummyTile());
+
     tileInGrid = myTile;
     siteInTile = mySite+SPoint(R,R);      // adjust to full Tile indexing
     return true;
@@ -530,6 +577,8 @@ namespace MFM {
     }
 
     Tile<EC> & owner = GetTile(tileInGrid);
+    MFM_API_ASSERT_ARG(!owner.IsDummyTile());
+
     owner.PlaceAtomInSite(placeInBase, atom, siteInTile);
 
 #if 0
@@ -633,6 +682,8 @@ namespace MFM {
       u32 x = i.GetX();
       u32 y = i.GetY();
       TileDriver & td = _getTileDriver(x,y);
+      MFM_API_ASSERT_STATE(!td.GetTile().IsDummyTile());
+
       if (!tc.CheckPrecondition(td))
       {
         LOG.Error("%s control precondition failed at (%d,%d)=Tile %s (%p)--",
@@ -651,6 +702,7 @@ namespace MFM {
       u32 x = i.GetX();
       u32 y = i.GetY();
       TileDriver & td = _getTileDriver(x,y);
+      MFM_API_ASSERT_STATE(!td.GetTile().IsDummyTile());
       tc.MakeRequest(td);
     }
 
@@ -691,6 +743,8 @@ namespace MFM {
         u32 x = i.GetX();
         u32 y = i.GetY();
         TileDriver & td = _getTileDriver(x,y);
+	MFM_API_ASSERT_STATE(!td.GetTile().IsDummyTile());
+
         if (!tc.CheckIfReady(td))
         {
           ++notReady;
@@ -715,6 +769,7 @@ namespace MFM {
       u32 x = i.GetX();
       u32 y = i.GetY();
       TileDriver & td = _getTileDriver(x,y);
+      MFM_API_ASSERT_STATE(!td.GetTile().IsDummyTile());
       tc.Execute(td);
     }
 
@@ -894,11 +949,14 @@ namespace MFM {
     {
       for(u32 x = 0; x < gridWidth; x++)
       {
-	if(this->GetTile(SPoint(x,y)).IsDummyTile())
+        SPoint currentPt(x, y);
+
+	if(!IsLegalTileIndex(currentPt))
+	  continue;
+	if(this->GetTile(currentPt).IsDummyTile())
 	  //if(IsDummyTileCoord(x,y)) not generalizable
 	  continue;
 
-        SPoint currentPt(x, y);
         T atom = *this->GetAtom(currentPt);
         this->PlaceAtom(atom, currentPt);  // This updates caches
       }

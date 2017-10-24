@@ -230,11 +230,14 @@ namespace MFM
 	  if(grid.IsLegalTileIndex(tc))
 	    {
 	      Tile<EC> & tile = grid.GetTile(tc);
-	      bool active =
-		(m_eventHistoryStrategy == EVENT_HISTORY_STRATEGY_ALL) ||
-		((m_eventHistoryStrategy == EVENT_HISTORY_STRATEGY_SELECTED) &&
-		 IsTileSelected(MakeUnsigned(tc)));
-	      tile.SetHistoryActive(active);
+	      if(!tile.IsDummyTile())
+		{
+		  bool active =
+		    (m_eventHistoryStrategy == EVENT_HISTORY_STRATEGY_ALL) ||
+		    ((m_eventHistoryStrategy == EVENT_HISTORY_STRATEGY_SELECTED) &&
+		     IsTileSelected(MakeUnsigned(tc)));
+		  tile.SetHistoryActive(active);
+		}
 	    }
 	}
       }
@@ -592,6 +595,11 @@ namespace MFM
 
 		  // Hmm, is it this mysterious code again?  (Grid.tcc:404)
 		  SPoint siteInOtherTile = siteInTileCoord - offset * ownedp;
+
+		  if(m_mainGrid->GetTile(otherTileCoord).IsDummyTile()){
+		    return false;
+		  }
+
 		  siteInGridCoord = otherTileCoord * ownedp + OurTile::TileCoordToOwned(siteInOtherTile);
 		}
             }

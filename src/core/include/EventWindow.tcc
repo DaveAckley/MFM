@@ -58,6 +58,8 @@ namespace MFM {
   {
     ++m_eventWindowsExecuted;
     Tile<EC> & t = GetTile();
+    MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
+
     SPoint owned = Tile<EC>::TileCoordToOwned(tcoord);
     t.m_lastEventCenterOwned = owned;
     //t.GetSite(owned).SetLastEventEventNumber(m_eventWindowsExecuted);
@@ -68,6 +70,7 @@ namespace MFM {
   bool EventWindow<EC>::RejectOnRecency(const SPoint tcoord)
   {
     Tile<EC> & t = GetTile();
+    MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
     const u32 warpFactor = t.GetWarpFactor();
     SPoint owned = Tile<EC>::TileCoordToOwned(tcoord);
     u32 eventAge = t.GetUncachedEventAge32(owned);  // max age at one billion
@@ -311,7 +314,6 @@ namespace MFM {
       MFM_API_ASSERT_STATE(m_cacheProcessorsLocked[i] == 0);
     }
 
-    //if (((s32) m_lockRegions[0]) == -1)
     if (m_locksNeeded == 0)
     {
       MFM_LOG_DBG6(("EW::AcquireRegionLocks - none needed"));
@@ -324,18 +326,7 @@ namespace MFM {
     for(u32 i = 0; i < needed; i++)
       lockDirs[i] = m_lockRegions[i];
 
-    //Dir lockDirs[3];
-    //u32 needed = 1;
     Tile<EC> & tile = GetTile();
-    //lockDirs[0] = m_lockRegion;
-
-    //    if (Dirs::IsCorner(m_lockRegion))
-    // {
-    //lockDirs[1] = Dirs::CCWDir(m_lockRegion);
-    //lockDirs[2] = Dirs::CWDir(m_lockRegion);
-    //needed = 3;
-    //Shuffle<Dir,3>(GetRandom(),lockDirs);
-    //}
 
     if(needed==3)
       Shuffle<Dir,3>(GetRandom(),lockDirs);
@@ -345,7 +336,7 @@ namespace MFM {
     MFM_LOG_DBG6(("EW::AcquireRegionLocks - checking %d", needed));
 
     u32 got = 0;
-    for (s32 i = needed; --i >= 0; )
+    for (s32 i = needed - 1; --i >= 0; )
     {
       Dir dir = lockDirs[i];
       LockStatus ls = AcquireDirLock(dir);
@@ -410,6 +401,7 @@ namespace MFM {
   bool EventWindow<EC>::AcquireAllLocks(const SPoint& tileCenter, const u32 eventWindowBoundary)
   {
     Tile<EC> & t = GetTile();
+    MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
     m_locksNeeded = t.GetLockDirections(tileCenter, eventWindowBoundary, m_lockRegions);
     return AcquireRegionLocks();
   }
@@ -505,6 +497,7 @@ namespace MFM {
 
     // Now write back changes and notify the cps
     Tile<EC> & tile = GetTile();
+    MFM_API_ASSERT_STATE(!tile.IsDummyTile()); //sanity
 
     // Record the event in the tile history
     EventHistoryBuffer<EC> & ehb = tile.GetEventHistoryBuffer();
