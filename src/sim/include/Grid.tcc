@@ -84,12 +84,16 @@ namespace MFM {
 
   template <class GC>
   void Grid<GC>::Init() {
+
     bool isStaggered = IsGridLayoutStaggered();
+#if 0
+
     if(isStaggered)
       {
 	InitDummyTiles();
 	ReinitGridRandomIterator();
       }
+#endif
 
     /* Reseed grid PRNG and push seeds to the tile PRNGs */
     InitSeed();

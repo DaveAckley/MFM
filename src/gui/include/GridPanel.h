@@ -497,7 +497,7 @@ namespace MFM
 	if(isStaggeredRow)
 	  staggeredDit.Set(tile.OWNED_WIDTH/2 * atomDit, 0);
       }
-      return Rect(tileCoord * spacingDit + m_gridOriginDit - staggeredDit, UPoint(wDit,hDit)); //pos, size
+      return Rect(tileCoord * spacingDit + m_gridOriginDit + staggeredDit, UPoint(wDit,hDit)); //pos, size
     }
 
 #if 0

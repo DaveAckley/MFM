@@ -19,24 +19,6 @@ namespace MFM {
   }
 
 
-#if 0
-  void Dirs::FillDir(SPoint& pt, u32 dir)
-  {
-    switch(dir)
-    {
-    case NORTH:     pt.Set(0, -1); break;
-    case NORTHEAST: pt.Set(1,  -1); break;
-    case EAST:      pt.Set(1,  0); break;
-    case SOUTHEAST: pt.Set(1,   1); break;
-    case SOUTH:     pt.Set(0,  1); break;
-    case SOUTHWEST: pt.Set(-1,  1); break;
-    case WEST:      pt.Set(-1, 0); break;
-    case NORTHWEST: pt.Set(-1, -1); break;
-    default:
-      FAIL(ILLEGAL_ARGUMENT);
-    }
-  }
-#else
   void Dirs::FillDir(SPoint& pt, u32 dir, bool isStaggered)
   {
     if(isStaggered)
@@ -64,9 +46,6 @@ namespace MFM {
 
   void Dirs::FillDirStaggered(SPoint& pt, u32 dir)
   {
-    //assumes grid width + 1,
-    //even rows don't use last spot in row,
-    //odd rows don't use first spot in row
     switch(dir)
       {
       case NORTHEAST: pt.Set(1, -2); break;
@@ -81,8 +60,6 @@ namespace MFM {
 	FAIL(ILLEGAL_ARGUMENT);
       }
   }
-#endif
-
 
   u32 Dirs::FromOffset(SPoint& pt)
   {
@@ -132,12 +109,12 @@ namespace MFM {
       {
 	switch(dir)
 	  {
-	  case NORTHEAST: pt.Set(0, -1); break;
+	  case NORTHEAST: pt.Set(1, -1); break; //0, -1
 	  case EAST:      pt.Set(1, 0); break;
-	  case SOUTHEAST: pt.Set(0, 1); break;
-	  case SOUTHWEST: pt.Set(-1, 1); break;
+	  case SOUTHEAST: pt.Set(1, 1); break; //0,1
+	  case SOUTHWEST: pt.Set(0, 1); break; //-1, 1
 	  case WEST:      pt.Set(-1, 0); break;
-	  case NORTHWEST: pt.Set(-1, -1); break;
+	  case NORTHWEST: pt.Set(0, -1); break; //-1,-1
 	  case NORTH:
 	  case SOUTH:
 	  default:
@@ -148,12 +125,12 @@ namespace MFM {
       {
 	switch(dir)
 	  {
-	  case NORTHEAST: pt.Set(1, -1); break;
+	  case NORTHEAST: pt.Set(0, -1); break; //1, -1
 	  case EAST:      pt.Set(1, 0); break;
-	  case SOUTHEAST: pt.Set(1, 1); break;
-	  case SOUTHWEST: pt.Set(0, 1); break;
+	  case SOUTHEAST: pt.Set(0, 1); break; //1,1
+	  case SOUTHWEST: pt.Set(-1, 1); break; //0,1
 	  case WEST:      pt.Set(-1, 0); break;
-	  case NORTHWEST: pt.Set(0, -1); break;
+	  case NORTHWEST: pt.Set(-1, -1); break; //0, -1
 	  case NORTH:
 	  case SOUTH:
 	  default:
