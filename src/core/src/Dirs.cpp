@@ -69,9 +69,9 @@ namespace MFM {
     //odd rows don't use first spot in row
     switch(dir)
       {
-      case NORTHEAST: pt.Set(1, -2); break; //not 1,-1, was 0,-1
+      case NORTHEAST: pt.Set(1, -2); break;
       case EAST:      pt.Set(2, 0); break;
-      case SOUTHEAST: pt.Set(1, 2); break; //not 1,1, was 0,1
+      case SOUTHEAST: pt.Set(1, 2); break;
       case SOUTHWEST: pt.Set(-1, 2); break;
       case WEST:      pt.Set(-2, 0); break;
       case NORTHWEST: pt.Set(-1, -2); break;
@@ -117,30 +117,48 @@ namespace MFM {
   }
 
 
-  void Dirs::ToNeighborTileInGrid(SPoint & pt, u32 dir, bool isStaggered)
+  void Dirs::ToNeighborTileInGrid(SPoint & pt, u32 dir, bool isStaggered, const SPoint& fpt)
   {
     if(isStaggered)
-      return ToStaggeredTileInGridNeighbor(pt, dir);
+      return ToStaggeredTileInGridNeighbor(pt, dir, fpt);
     return ToCheckerboardTileInGridNeighbor(pt, dir);
   }
 
-  void Dirs::ToStaggeredTileInGridNeighbor(SPoint& pt, u32 dir)
+  void Dirs::ToStaggeredTileInGridNeighbor(SPoint& pt, u32 dir, const SPoint& fpt)
   {
-    //assumes grid width + 1,
-    //even rows don't use last spot in row,
-    //odd rows don't use first spot in row
-    switch(dir)
+    bool isStaggeredRow = ((fpt.GetY() % 2) > 0); //from
+
+    if(isStaggeredRow)
       {
-      case NORTHEAST: pt.Set(0, -1); break;
-      case EAST:      pt.Set(1, 0); break;
-      case SOUTHEAST: pt.Set(0, 1); break;
-      case SOUTHWEST: pt.Set(-1, 1); break;
-      case WEST:      pt.Set(-1, 0); break;
-      case NORTHWEST: pt.Set(-1, -1); break;
-      case NORTH:
-      case SOUTH:
-      default:
-	FAIL(ILLEGAL_ARGUMENT);
+	switch(dir)
+	  {
+	  case NORTHEAST: pt.Set(0, -1); break;
+	  case EAST:      pt.Set(1, 0); break;
+	  case SOUTHEAST: pt.Set(0, 1); break;
+	  case SOUTHWEST: pt.Set(-1, 1); break;
+	  case WEST:      pt.Set(-1, 0); break;
+	  case NORTHWEST: pt.Set(-1, -1); break;
+	  case NORTH:
+	  case SOUTH:
+	  default:
+	    FAIL(ILLEGAL_ARGUMENT);
+	  }
+      }
+    else
+      {
+	switch(dir)
+	  {
+	  case NORTHEAST: pt.Set(1, -1); break;
+	  case EAST:      pt.Set(1, 0); break;
+	  case SOUTHEAST: pt.Set(1, 1); break;
+	  case SOUTHWEST: pt.Set(0, 1); break;
+	  case WEST:      pt.Set(-1, 0); break;
+	  case NORTHWEST: pt.Set(0, -1); break;
+	  case NORTH:
+	  case SOUTH:
+	  default:
+	    FAIL(ILLEGAL_ARGUMENT);
+	  }
       }
   }
 

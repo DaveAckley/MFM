@@ -64,6 +64,7 @@ namespace MFM {
     enum { EVENT_HISTORY_SIZE = GC::EVENT_HISTORY_SIZE};
     enum { OWNED_WIDTH = TILE_WIDTH - 2 * R }; // Duplicating the OWNED_SIDE computation in Tile.tcc!
     enum { OWNED_HEIGHT = TILE_HEIGHT - 2 * R }; // Duplicating the OWNED_SIDE computation in Tile.tcc!
+    enum { MAX_LOCKS_OWNED_PER_TILE = 3}; //checkboard: E,SE,S  staggered: NE,E,SE
 
     typedef SizedTile<EC,TILE_WIDTH,TILE_HEIGHT,EVENT_HISTORY_SIZE> GridTile;
 
@@ -90,8 +91,12 @@ namespace MFM {
 
     LonglivedLock * const m_intertileLocks;
     LonglivedLock & _getIntertileLock(u32 x, u32 y, u32 i) {
-      return m_intertileLocks[(x*m_height + y) * 3 + i];
+      return m_intertileLocks[(x*m_height + y) * MAX_LOCKS_OWNED_PER_TILE + i];
     }
+
+    LonglivedLock & GetIntertileLockStaggered(u32 xtile, u32 ytile, Dir dir);
+    LonglivedLock & GetIntertileLockCheckerboard(u32 xtile, u32 ytile, Dir dir);
+
 
     GridTile m_heroTile;    // Model for the actual m_tiles
 
@@ -99,7 +104,7 @@ namespace MFM {
        Get the long-lived lock controlling cache activity going in
        direction dir from the Tile at (xtile,ytile) in the Grid.
      */
-    LonglivedLock & GetIntertileLock(u32 xtile, u32 ytile, Dir dir) ;
+    LonglivedLock & GetIntertileLock(u32 xtile, u32 ytile, Dir dir, bool isStaggered) ;
 
     struct TileDriver {
       enum State { PAUSED, ADVANCING, EXIT_REQUEST };
@@ -324,8 +329,8 @@ namespace MFM {
       , m_height(height)
       , m_layout(layout)
       , m_tiles(new GridTile[m_width * m_height] )
-      , m_intertileLocks(new LonglivedLock[m_width * m_height * 3])
-      , m_tileDrivers(new TileDriver[m_width * m_height * 3])
+      , m_intertileLocks(new LonglivedLock[m_width * m_height * MAX_LOCKS_OWNED_PER_TILE])
+      , m_tileDrivers(new TileDriver[m_width * m_height * MAX_LOCKS_OWNED_PER_TILE])
       , m_threadsInitted(false)
       , m_backgroundRadiationEnabled(false)
       , m_foregroundRadiationEnabled(false)

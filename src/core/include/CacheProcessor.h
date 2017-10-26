@@ -435,7 +435,9 @@ namespace MFM {
 
       // Map their full untransformed origin to our full untransformed frame
       bool isStaggered = m_tile->IsTileGridLayoutStaggered();
-      SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir, isStaggered);
+      //SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir, isStaggered);
+      SPoint remoteOrigin;
+      Dirs::FillDir(remoteOrigin, m_cacheDir, isStaggered);
 
       SPoint ownedph(m_tile->OWNED_WIDTH/2, m_tile->OWNED_HEIGHT/2);
 

@@ -183,6 +183,8 @@ namespace MFM
           {
             SPoint tc(tx,ty); // sigh
             OurTile & tile = grid.GetTile(tc);
+	    MFM_API_ASSERT_STATE(!tile.IsDummyTile()); //sanity
+
             Rect rdit = MapTileInGridToScreenDit(tile, tc);
             drawing.DrawRectDit(rdit);
             GetTileRenderer().PaintTileHistoryInfo(drawing, rdit.GetPosition(), tile);
@@ -548,10 +550,10 @@ namespace MFM
       for (typename Grid<GC>::iterator_type i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
       {
         OurTile & tile = *i;
-	MFM_API_ASSERT_STATE(!tile.IsDummyTile());
+	MFM_API_ASSERT_STATE(!tile.IsDummyTile()); //sanity
 
         SPoint tileCoord = i.At();
-	MFM_API_ASSERT_STATE(GetGrid().IsLegalTileIndex(tileCoord));
+	MFM_API_ASSERT_STATE(GetGrid().IsLegalTileIndex(tileCoord)); //sanity
 
 	const Rect screenRectForTileDit = MapTileInGridToScreenDit(tile, tileCoord);
 	LOG.Message("Tile at [%d,%d] returns rectangle x%d,y%d,w%d,h%d",tileCoord.GetX(), tileCoord.GetY(), screenRectForTileDit.GetX(), screenRectForTileDit.GetY(), screenRectForTileDit.GetWidth(), screenRectForTileDit.GetHeight());
@@ -593,7 +595,7 @@ namespace MFM
 		    Dir dir = rtndirs[0]; //just the first one, corner if so
 		    SPoint offset;
 		    //Dirs::FillDir(offset, dir, isStaggeredGrid);
-		    Dirs::ToNeighborTileInGrid(offset, dir, isStaggeredGrid);
+		    Dirs::ToNeighborTileInGrid(offset, dir, isStaggeredGrid, tileCoord);
 
 		    SPoint otherTileCoord = tileCoord + offset;
 		    if (!m_mainGrid->IsLegalTileIndex(otherTileCoord))
@@ -662,7 +664,10 @@ namespace MFM
       for (typename Grid<GC>::iterator_type i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
       {
         SPoint tileCoord = i.At();
-        Rect screenDitForTile = MapTileInGridToScreenDit(*i,tileCoord);
+	Tile<EC>& tile = *i;
+	MFM_API_ASSERT_STATE(!tile.IsDummyTile()); //sanity
+
+        Rect screenDitForTile = MapTileInGridToScreenDit(tile,tileCoord);
 #if 0
 	//SPAM ME!
 	if(tileCoord.GetX() == 1 && tileCoord.GetY() == 1)

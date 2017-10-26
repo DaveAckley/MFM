@@ -217,11 +217,13 @@ namespace MFM
      */
     static void FillDir(SPoint& pt, Dir dir, bool isStaggered);
 
+#if 0
     static SPoint GetOffset(Dir dir, bool isStaggered) {
       SPoint tmp;
       FillDir(tmp, dir, isStaggered);
       return tmp;
     }
+#endif
 
     /**
      * Given a Dir , will fill a SPoint with unit offsets representing
@@ -238,7 +240,7 @@ namespace MFM
      *
      * @param dir The Dir specifying the units to fill \c pt with.
      */
-    static void ToNeighborTileInGrid(SPoint & pt, u32 dir, bool isStaggered);
+    static void ToNeighborTileInGrid(SPoint & pt, u32 dir, bool isStaggered, const SPoint& fpt);
 
     /**
      * Translates the coordinates in a SPoint to a Dir . The
@@ -318,7 +320,7 @@ namespace MFM
      *
      */
     static void ToCheckerboardTileInGridNeighbor(SPoint& pt, u32 dir);
-    static void ToStaggeredTileInGridNeighbor(SPoint& pt, u32 dir);
+    static void ToStaggeredTileInGridNeighbor(SPoint& pt, u32 dir, const SPoint& fpt);
 
   };
 

@@ -9,7 +9,17 @@
 namespace MFM {
 
   template <class GC>
-  LonglivedLock & Grid<GC>::GetIntertileLock(u32 x, u32 y, Dir dir)
+  LonglivedLock & Grid<GC>::GetIntertileLock(u32 x, u32 y, Dir dir, bool isStaggered)
+  {
+    if(isStaggered)
+      return GetIntertileLockStaggered(x,y, dir);
+    return GetIntertileLockCheckerboard(x,y, dir);
+  }
+
+
+
+  template <class GC>
+  LonglivedLock & Grid<GC>::GetIntertileLockCheckerboard(u32 x, u32 y, Dir dir)
   {
     switch (dir)
     {
@@ -54,6 +64,22 @@ namespace MFM {
       FAIL(ILLEGAL_STATE);
     }
     return _getIntertileLock(x,y,dir - Dirs::EAST);
+  }
+
+  template <class GC>
+  LonglivedLock & Grid<GC>::GetIntertileLockStaggered(u32 x, u32 y, Dir dir)
+  {
+    switch (dir)
+      {
+      case Dirs::NORTHEAST:
+      case Dirs::EAST:
+      case Dirs::SOUTHEAST:
+	// Ready to rock
+	break;
+      default:
+	FAIL(ILLEGAL_STATE);
+      }
+    return _getIntertileLock(x,y,dir - Dirs::NORTHEAST);
   }
 
   template <class GC>
@@ -105,7 +131,10 @@ namespace MFM {
 	    if(! Dirs::IsValidDir(d, isStaggered))
 	      continue; //staggered skips South/North
 
-	    SPoint npt = tpt + Dirs::GetOffset(d, isStaggered);
+	    //SPoint npt = tpt + Dirs::GetOffset(d, isStaggered);
+	    SPoint gridoffset;
+	    Dirs::ToNeighborTileInGrid(gridoffset, d, isStaggered, tpt);
+	    SPoint npt = tpt + gridoffset;
 
 	    if(!IsLegalTileIndex(npt))
 	      {
@@ -123,11 +152,13 @@ namespace MFM {
 
 	    TileDriver & td = _getTileDriver(tpt.GetX(),tpt.GetY());
 	    GridTransceiver & gt = td.m_channels[d - Dirs::NORTHEAST];
-	    LonglivedLock & ctl = GetIntertileLock(tpt.GetX(),tpt.GetY(),d);
+	    LonglivedLock & ctl = GetIntertileLock(tpt.GetX(),tpt.GetY(),d, isStaggered);
 
 	    Dir odir = Dirs::OppositeDir(d);
 	    MFM_API_ASSERT_STATE(Dirs::IsValidDir(odir, isStaggered));
-	    LonglivedLock & otl = GetIntertileLock(npt.GetX(),npt.GetY(),odir);
+	    LonglivedLock & otl = ctl; //simpler for staggered, done.
+	    if(!isStaggered)
+	      otl = GetIntertileLock(npt.GetX(),npt.GetY(),odir, false);
 
 	    ctile.Connect(gt, ctl, d);
 	    otile.Connect(gt, otl, odir);
@@ -595,7 +626,7 @@ namespace MFM {
     }
 #endif
     THREEDIR connectedDirs;
-    u32 dircount = owner.SharedAt(siteInTile, connectedDirs, false); //ESA: WHY NONE CONNECTED???? chg to true when you figure it out!!!!
+    u32 dircount = owner.SharedAt(siteInTile, connectedDirs, true); //ESA: WHY NONE CONNECTED???? chg to true when you figure it out!!!!
 
     bool isStaggered = IsGridLayoutStaggered();
     //for (Dir dir = startDir; dir != stopDir; dir = Dirs::CWDir(dir)) {
@@ -604,7 +635,7 @@ namespace MFM {
       Dir dir = connectedDirs[d];
 
       //Dirs::FillDir(tileOffset,dir, isStaggered);
-      Dirs::ToNeighborTileInGrid(tileOffset,dir, isStaggered);
+      Dirs::ToNeighborTileInGrid(tileOffset,dir, isStaggered, tileInGrid);
 
       SPoint otherTileIndex = tileInGrid+tileOffset;
       MFM_API_ASSERT_ARG(IsLegalTileIndex(otherTileIndex));

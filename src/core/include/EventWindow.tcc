@@ -336,7 +336,7 @@ namespace MFM {
     MFM_LOG_DBG6(("EW::AcquireRegionLocks - checking %d", needed));
 
     u32 got = 0;
-    for (s32 i = needed - 1; --i >= 0; )
+    for (s32 i = needed; --i >= 0; )
     {
       Dir dir = lockDirs[i];
       LockStatus ls = AcquireDirLock(dir);
@@ -420,20 +420,13 @@ namespace MFM {
     , m_sym(PSYM_NORMAL)
     , m_ewState(FREE)
   {
-    for (u32 i = 0; i < MAX_LOCK_DIRS; ++i)
-      m_lockRegions[i] = -1;
+    for (u32 i = 0; i < MAX_LOCK_DIRS; m_lockRegions[i++] = -1);
 
     m_cpli.Shuffle(GetRandom());
 
-    for (u32 i = 0; i < SITE_COUNT; ++i)
-    {
-      m_isLiveSite[i] = false;
-    }
+    for (u32 i = 0; i < SITE_COUNT; m_isLiveSite[i++] = false);
 
-    for (u32 i = 0; i < MAX_CACHES_TO_UPDATE; ++i)
-    {
-      m_cacheProcessorsLocked[i] = 0;
-    }
+    for (u32 i = 0; i < MAX_CACHES_TO_UPDATE; m_cacheProcessorsLocked[i++] = 0);
 
   }
 

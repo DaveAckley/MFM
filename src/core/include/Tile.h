@@ -1095,7 +1095,8 @@ namespace MFM
 
     u32 GetLockDirections(const SPoint& pt, const u32 boundary, THREEDIR & rtndirs) const
     {
-      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, (bool) YESCHKCONNECT); //only connected dirs
+      //return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, (bool) YESCHKCONNECT); //only connected dirs
+      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, (bool) NOCHKCONNECT);
     }
 
     /**
