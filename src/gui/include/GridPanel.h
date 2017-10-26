@@ -535,11 +535,15 @@ namespace MFM
       FAIL(INCOMPLETE_CODE);
     }
 
-    bool GetGridCoordAtScreenDit(const SPoint screenDit, UPoint & gridCoord)
+    bool GetGridCoordAtScreenDit(const SPoint screenDitArg, UPoint & gridCoord)
     {
       bool cachesDrawn = GetTileRenderer().IsDrawCaches();
       u32 atomDit = GetAtomDit();
       bool isStaggeredGrid = GetGrid().IsGridLayoutStaggered();
+      SPoint screenDit = screenDitArg; //non-const
+      //screenDit -= m_gridOriginDit;
+
+      LOG.Message("GetGridCoordAtScreenDit: %d,%d, gridCoord %d,%d", screenDitArg.GetX(), screenDitArg.GetY(), gridCoord.GetX(), gridCoord.GetY());
 
       for (typename Grid<GC>::iterator_type i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
       {
@@ -550,83 +554,84 @@ namespace MFM
 	MFM_API_ASSERT_STATE(GetGrid().IsLegalTileIndex(tileCoord));
 
 	const Rect screenRectForTileDit = MapTileInGridToScreenDit(tile, tileCoord);
-	const SPoint ownedp(tile.OWNED_WIDTH, tile.OWNED_HEIGHT);
-	bool isStaggeredRow =  isStaggeredGrid && (tileCoord.GetY()%2 > 0);
+	LOG.Message("Tile at [%d,%d] returns rectangle x%d,y%d,w%d,h%d",tileCoord.GetX(), tileCoord.GetY(), screenRectForTileDit.GetX(), screenRectForTileDit.GetY(), screenRectForTileDit.GetWidth(), screenRectForTileDit.GetHeight());
+#if 0
+	bool isStaggeredRow =  isStaggeredGrid && (tileCoord.GetY()%2 > 0); //debug purposes now
+	if(isStaggeredRow)
+	  {
+	    SPoint staggeredDit;
+	    if(cachesDrawn)
+	      staggeredDit.Set(tile.TILE_WIDTH/2 * GetAtomDit(), 0);
+	    else
+	      staggeredDit.Set(tile.OWNED_WIDTH/2 * GetAtomDit(), 0);
+	    screenDit -= staggeredDit;
+	  }
+#endif
 
         if (screenRectForTileDit.Contains(screenDit))
-        {
-	  SPoint siteInTileCoord = (screenDit - screenRectForTileDit.GetPosition()) / atomDit;
-          SPoint siteInGridCoord;
+	  {
+	    const SPoint ownedp(tile.OWNED_WIDTH, tile.OWNED_HEIGHT);
 
-          if (cachesDrawn)
-          {
-	    if(isStaggeredRow)
+
+	    SPoint siteInTileCoord = (screenDit - screenRectForTileDit.GetPosition()) / atomDit;
+	    SPoint siteInGridCoord;
+
+	    if (cachesDrawn)
 	      {
-		if(siteInTileCoord.GetX() >= tile.TILE_WIDTH)
+		//if(isStaggeredRow)
+		//  siteInTileCoord -= SPoint(tile.TILE_WIDTH/2, 0); //still in site coords, not tile?
+
+		//if (tile.RegionIn(siteInTileCoord) == OurTile::REGION_CACHE)
+		if (tile.IsInTile(siteInTileCoord) && tile.IsInCache(siteInTileCoord))
 		  {
-		    LOG.Log((Logger::Level) 1, "   == CACHED TILE WIDTH FAILED < TILE (%d, %d)==",
-			    siteInTileCoord.GetX(),
-			    tile.TILE_WIDTH); //debug only
+		    //Dir dir = tile.CacheAt(siteInTileCoord); //!!TODO support multiple dirs
+		    //if (dir < 0) FAIL(ILLEGAL_STATE);
+		    Dir rtndirs[3];
+		    u32 dcount = tile.CacheAt(siteInTileCoord, rtndirs, false); //include unconnected dirs
+		    if (dcount == 0) FAIL(ILLEGAL_STATE);
 
-		    MFM_API_ASSERT_ARG(siteInTileCoord.GetX() < tile.TILE_WIDTH);
-		    return false;
+		    Dir dir = rtndirs[0]; //just the first one, corner if so
+		    SPoint offset;
+		    //Dirs::FillDir(offset, dir, isStaggeredGrid);
+		    Dirs::ToNeighborTileInGrid(offset, dir, isStaggeredGrid);
+
+		    SPoint otherTileCoord = tileCoord + offset;
+		    if (!m_mainGrid->IsLegalTileIndex(otherTileCoord))
+		      return false;
+
+		    if(m_mainGrid->GetTile(otherTileCoord).IsDummyTile())
+		      return false;
+
+		    // Hmm, is it this mysterious code again?  (Grid.tcc:404)
+		    // like LocalToRemote in CacheProcessor, with offset*ownedp == m_farSideOrigin
+		    SPoint remoteOffset;
+		    Dirs::FillDir(remoteOffset, dir, isStaggeredGrid);
+		    //SPoint ownedph(tile.OWNED_WIDTH/2, tile.OWNED_HEIGHT/2);
+		    //SPoint remoteOrigin = remoteOffset * ownedph;
+		    SPoint tileph(tile.TILE_WIDTH/2, tile.TILE_HEIGHT/2);
+		    SPoint remoteOrigin = remoteOffset * tileph;
+		    SPoint siteInOtherTile = siteInTileCoord - remoteOrigin; //local to remote
+
+		    siteInGridCoord = otherTileCoord * ownedp + OurTile::TileCoordToOwned(siteInOtherTile);
 		  }
-	      }
-
-            if (tile.RegionIn(siteInTileCoord) == OurTile::REGION_CACHE)
-            {
-              //Dir dir = tile.CacheAt(siteInTileCoord); //!!TODO support multiple dirs
-              //if (dir < 0) FAIL(ILLEGAL_STATE);
-	      Dir rtndirs[3];
-	      u32 dcount = tile.CacheAt(siteInTileCoord, rtndirs, false); //include unconnected dirs
-              if (dcount == 0) FAIL(ILLEGAL_STATE);
-
-	      //for(u32 d = 0; d < dcount; d++)
-	      u32 ONEDIR = 1; //not sure what to do with many dirs???
-	      for(u32 d = 0; d < ONEDIR; d++)
-		{
-		  Dir dir = rtndirs[d];
-		  SPoint offset;
-		  Dirs::FillDir(offset, dir, isStaggeredGrid);
-
-		  SPoint otherTileCoord = tileCoord + offset;
-		  if (!m_mainGrid->IsLegalTileIndex(otherTileCoord))
-		    return false;
-
-		  // Hmm, is it this mysterious code again?  (Grid.tcc:404)
-		  SPoint siteInOtherTile = siteInTileCoord - offset * ownedp;
-
-		  if(m_mainGrid->GetTile(otherTileCoord).IsDummyTile()){
-		    return false;
+		else
+		  {
+		    siteInGridCoord = tileCoord * ownedp + OurTile::TileCoordToOwned(siteInTileCoord);
 		  }
-
-		  siteInGridCoord = otherTileCoord * ownedp + OurTile::TileCoordToOwned(siteInOtherTile);
-		}
-            }
-            else
-            {
-              siteInGridCoord = tileCoord * ownedp + OurTile::TileCoordToOwned(siteInTileCoord);
-            }
-          } //caches drawn
-          else
-          {
-	    if(isStaggeredRow)
+	      } //caches drawn
+	    else
 	      {
-		if(siteInTileCoord.GetX() >= tile.OWNED_WIDTH)
-		  {
-		    LOG.Log((Logger::Level) 1, "   == UNCACHED OWNED WIDTH FAILED < TILE (%d, %d)==",
-			    siteInTileCoord.GetX(),
-			    tile.OWNED_WIDTH); //debug only
+		MFM_API_ASSERT_ARG(siteInTileCoord.GetX() < tile.OWNED_WIDTH);
 
-		    MFM_API_ASSERT_ARG(siteInTileCoord.GetX() < tile.OWNED_WIDTH);
-		    return false;
-		  }
-	      }
-            siteInGridCoord = tileCoord * ownedp + siteInTileCoord;
-          } //caches not drawn
-          gridCoord = MakeUnsigned(siteInGridCoord);
-          return true;
-        } //tile rect contains screenDit
+		//if(isStaggeredRow)
+		//  siteInTileCoord -= SPoint(tile.OWNED_WIDTH/2, 0);
+
+		siteInGridCoord = tileCoord * ownedp + siteInTileCoord;
+	      } //caches not drawn
+
+	    gridCoord = MakeUnsigned(siteInGridCoord);
+	    return true;
+	  } //tile rect contains screenDit
       } //end for loop, next tile
 
       return false;
@@ -658,6 +663,11 @@ namespace MFM
       {
         SPoint tileCoord = i.At();
         Rect screenDitForTile = MapTileInGridToScreenDit(*i,tileCoord);
+#if 0
+	//SPAM ME!
+	if(tileCoord.GetX() == 1 && tileCoord.GetY() == 1)
+	  LOG.Message("PaintTiles: %d,%d at rectangle x%d,y%d,w%d,h%d", tileCoord.GetX(), tileCoord.GetY(), screenDitForTile.GetX(), screenDitForTile.GetY(), screenDitForTile.GetWidth(), screenDitForTile.GetHeight());
+#endif
         GetTileRenderer().PaintTileAtDit(drawing, screenDitForTile.GetPosition(), *i);
       }
     }

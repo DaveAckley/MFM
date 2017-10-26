@@ -437,13 +437,9 @@ namespace MFM {
       bool isStaggered = m_tile->IsTileGridLayoutStaggered();
       SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir, isStaggered);
 
-      SPoint ownedp;
-      if(isStaggered && remoteOrigin.GetY() != 0)
-	ownedp.Set(m_tile->OWNED_WIDTH/2, m_tile->OWNED_HEIGHT); //NE,SE,SW,NW (not E or W)
-      else
-	ownedp.Set(m_tile->OWNED_WIDTH, m_tile->OWNED_HEIGHT);
+      SPoint ownedph(m_tile->OWNED_WIDTH/2, m_tile->OWNED_HEIGHT/2);
 
-      m_farSideOrigin = remoteOrigin * ownedp;
+      m_farSideOrigin = remoteOrigin * ownedph;
 
       bool onSideA = (m_cacheDir >= Dirs::NORTHEAST && m_cacheDir <= Dirs::SOUTH);
       m_channelEnd.ClaimChannelEnd(channel, onSideA);

@@ -44,8 +44,8 @@ namespace MFM
       Dir swDir = Dirs::FromOffset(sidewalk);
 
       SPoint adjs[2];
-      Dirs::FillDir(adjs[0], Dirs::CWDir(Dirs::CWDir(swDir)));
-      Dirs::FillDir(adjs[1], Dirs::CCWDir(Dirs::CCWDir(swDir)));
+      Dirs::FillDir(adjs[0], Dirs::CWDir(Dirs::CWDir(swDir)), false);
+      Dirs::FillDir(adjs[1], Dirs::CCWDir(Dirs::CCWDir(swDir)), false);
 
       for(u32 i = 0; i < 2; i++)
       {

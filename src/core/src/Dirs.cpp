@@ -49,14 +49,14 @@ namespace MFM {
   {
     switch(dir)
     {
-    case NORTH:     pt.Set(0, -1); break;
-    case NORTHEAST: pt.Set(1,  -1); break;
-    case EAST:      pt.Set(1,  0); break;
-    case SOUTHEAST: pt.Set(1,   1); break;
-    case SOUTH:     pt.Set(0,  1); break;
-    case SOUTHWEST: pt.Set(-1,  1); break;
-    case WEST:      pt.Set(-1, 0); break;
-    case NORTHWEST: pt.Set(-1, -1); break;
+    case NORTH:     pt.Set(0, -2); break;
+    case NORTHEAST: pt.Set(2,  -2); break;
+    case EAST:      pt.Set(2,  0); break;
+    case SOUTHEAST: pt.Set(2,   2); break;
+    case SOUTH:     pt.Set(0,  2); break;
+    case SOUTHWEST: pt.Set(-2,  2); break;
+    case WEST:      pt.Set(-2, 0); break;
+    case NORTHWEST: pt.Set(-2, -2); break;
     default:
       FAIL(ILLEGAL_ARGUMENT);
     }
@@ -69,12 +69,12 @@ namespace MFM {
     //odd rows don't use first spot in row
     switch(dir)
       {
-      case NORTHEAST: pt.Set(1, -1); break; //was 0,-1
-      case EAST:      pt.Set(1, 0); break;
-      case SOUTHEAST: pt.Set(1, 1); break; //was 0,1
-      case SOUTHWEST: pt.Set(-1, 1); break;
-      case WEST:      pt.Set(-1, 0); break;
-      case NORTHWEST: pt.Set(-1, -1); break;
+      case NORTHEAST: pt.Set(1, -2); break; //not 1,-1, was 0,-1
+      case EAST:      pt.Set(2, 0); break;
+      case SOUTHEAST: pt.Set(1, 2); break; //not 1,1, was 0,1
+      case SOUTHWEST: pt.Set(-1, 2); break;
+      case WEST:      pt.Set(-2, 0); break;
+      case NORTHWEST: pt.Set(-1, -2); break;
       case NORTH:
       case SOUTH:
       default:
@@ -114,5 +114,51 @@ namespace MFM {
     }
 
     FAIL(ILLEGAL_ARGUMENT);
+  }
+
+
+  void Dirs::ToNeighborTileInGrid(SPoint & pt, u32 dir, bool isStaggered)
+  {
+    if(isStaggered)
+      return ToStaggeredTileInGridNeighbor(pt, dir);
+    return ToCheckerboardTileInGridNeighbor(pt, dir);
+  }
+
+  void Dirs::ToStaggeredTileInGridNeighbor(SPoint& pt, u32 dir)
+  {
+    //assumes grid width + 1,
+    //even rows don't use last spot in row,
+    //odd rows don't use first spot in row
+    switch(dir)
+      {
+      case NORTHEAST: pt.Set(0, -1); break;
+      case EAST:      pt.Set(1, 0); break;
+      case SOUTHEAST: pt.Set(0, 1); break;
+      case SOUTHWEST: pt.Set(-1, 1); break;
+      case WEST:      pt.Set(-1, 0); break;
+      case NORTHWEST: pt.Set(-1, -1); break;
+      case NORTH:
+      case SOUTH:
+      default:
+	FAIL(ILLEGAL_ARGUMENT);
+      }
+  }
+
+
+  void Dirs::ToCheckerboardTileInGridNeighbor(SPoint& pt, u32 dir)
+  {
+    switch(dir)
+      {
+      case NORTHEAST: pt.Set(1, -1); break;
+      case EAST:      pt.Set(1, 0); break;
+      case SOUTHEAST: pt.Set(1, 1); break;
+      case SOUTHWEST: pt.Set(-1, 1); break;
+      case WEST:      pt.Set(-1, 0); break;
+      case NORTHWEST: pt.Set(-1, -1); break;
+      case NORTH:  pt.Set(0, -1); break;
+      case SOUTH:  pt.Set(0, 1); break;
+      default:
+	FAIL(ILLEGAL_ARGUMENT);
+      }
   }
 } /* namespace MFM */

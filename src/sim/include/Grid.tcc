@@ -595,7 +595,7 @@ namespace MFM {
     }
 #endif
     THREEDIR connectedDirs;
-    u32 dircount = owner.SharedAt(siteInTile, connectedDirs, true);
+    u32 dircount = owner.SharedAt(siteInTile, connectedDirs, false); //ESA: WHY NONE CONNECTED???? chg to true when you figure it out!!!!
 
     bool isStaggered = IsGridLayoutStaggered();
     //for (Dir dir = startDir; dir != stopDir; dir = Dirs::CWDir(dir)) {
@@ -603,9 +603,11 @@ namespace MFM {
       SPoint tileOffset;
       Dir dir = connectedDirs[d];
 
-      Dirs::FillDir(tileOffset,dir, isStaggered);
+      //Dirs::FillDir(tileOffset,dir, isStaggered);
+      Dirs::ToNeighborTileInGrid(tileOffset,dir, isStaggered);
 
       SPoint otherTileIndex = tileInGrid+tileOffset;
+      MFM_API_ASSERT_ARG(IsLegalTileIndex(otherTileIndex));
 
       Tile<EC> & other = GetTile(otherTileIndex);
 
@@ -615,9 +617,10 @@ namespace MFM {
       // including-cache coords.  Offsetting by the owned size
       // (excluding caches) maps into including-cache coords on their
       // side.  Hmm.
-
-      const SPoint ownedp(OWNED_WIDTH, OWNED_HEIGHT);
-      SPoint otherIndex = siteInTile - tileOffset * ownedp;
+      SPoint siteOffset;
+      Dirs::FillDir(siteOffset,dir, isStaggered);
+      const SPoint ownedph(OWNED_WIDTH/2, OWNED_HEIGHT/2);
+      SPoint otherIndex = siteInTile - siteOffset * ownedph;
 
       other.PlaceAtomInSite(placeInBase, atom, otherIndex);
     }

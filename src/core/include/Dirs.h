@@ -199,8 +199,10 @@ namespace MFM
     { return mask & (1 << dir); }
 
     /**
-     * Given a Dir , will fill a SPoint with unit offsets representing
-     * the direction of this Dir. For instance:
+     * Given a Dir, will fill a SPoint with double unit offsets representing
+     * this Dir for site coordinates (not grid rows and columns).
+     * Multiplied by two, for subsequent multiply by (OWNED_WIDTH/2, OWNED_HEIGHT/2).
+     *  For instance:
      *
      * \code{.cpp}
 
@@ -209,21 +211,34 @@ namespace MFM
 
      * \endcode
      *
-     * default bool is checkerboard, FOR A SITE.
-     *
      * @param pt The SPoint to fill with the offsets of a direction.
      *
      * @param dir The Dir specifying the units to fill \c pt with.
      */
-    //static void FillDir(SPoint& pt, Dir dir);
-    //static void FillDir(SPoint& pt, Dir dir, bool isStaggered, const SPoint ft);
-    static void FillDir(SPoint& pt, Dir dir, bool isStaggered = false);
+    static void FillDir(SPoint& pt, Dir dir, bool isStaggered);
 
     static SPoint GetOffset(Dir dir, bool isStaggered) {
       SPoint tmp;
       FillDir(tmp, dir, isStaggered);
       return tmp;
     }
+
+    /**
+     * Given a Dir , will fill a SPoint with unit offsets representing
+     * the direction of this Dir in Grid Coordinates. For instance:
+     *
+     * \code{.cpp}
+
+       ToTileGridIndex(pt, NORTH) // pt == (0, -1)
+       ToTileGridIndex(pt, SOUTHEAST) // pt == (1, 1)
+
+     * \endcode
+     *
+     * @param pt The SPoint to fill with the offsets of a direction.
+     *
+     * @param dir The Dir specifying the units to fill \c pt with.
+     */
+    static void ToNeighborTileInGrid(SPoint & pt, u32 dir, bool isStaggered);
 
     /**
      * Translates the coordinates in a SPoint to a Dir . The
@@ -296,7 +311,14 @@ namespace MFM
      *
      */
     static void FillDirCheckerboard(SPoint& pt, u32 dir);
-     static void FillDirStaggered(SPoint& pt, u32 dir);
+    static void FillDirStaggered(SPoint& pt, u32 dir);
+
+    /**
+     * private helpers for ToTileGridIndex
+     *
+     */
+    static void ToCheckerboardTileInGridNeighbor(SPoint& pt, u32 dir);
+    static void ToStaggeredTileInGridNeighbor(SPoint& pt, u32 dir);
 
   };
 

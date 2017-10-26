@@ -593,7 +593,7 @@ namespace MFM {
   const typename EC::ATOM_CONFIG::ATOM_TYPE& EventWindow<EC>::GetRelativeAtomSym(const Dir mooreOffset) const
   {
     SPoint pt;
-    Dirs::FillDir(pt, mooreOffset);
+    Dirs::FillDir(pt, mooreOffset, false);
     return GetRelativeAtomSym(pt);
   }
 
@@ -601,7 +601,7 @@ namespace MFM {
   const typename EC::ATOM_CONFIG::ATOM_TYPE& EventWindow<EC>::GetRelativeAtomDirect(const Dir mooreOffset) const
   {
     SPoint pt;
-    Dirs::FillDir(pt, mooreOffset);
+    Dirs::FillDir(pt, mooreOffset, false);
     return GetRelativeAtomDirect(pt);
   }
 
