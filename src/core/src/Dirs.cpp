@@ -109,12 +109,12 @@ namespace MFM {
       {
 	switch(dir)
 	  {
-	  case NORTHEAST: pt.Set(1, -1); break; //0, -1
+	  case NORTHEAST: pt.Set(1, -1); break;
 	  case EAST:      pt.Set(1, 0); break;
-	  case SOUTHEAST: pt.Set(1, 1); break; //0,1
-	  case SOUTHWEST: pt.Set(0, 1); break; //-1, 1
+	  case SOUTHEAST: pt.Set(1, 1); break;
+	  case SOUTHWEST: pt.Set(0, 1); break;
 	  case WEST:      pt.Set(-1, 0); break;
-	  case NORTHWEST: pt.Set(0, -1); break; //-1,-1
+	  case NORTHWEST: pt.Set(0, -1); break;
 	  case NORTH:
 	  case SOUTH:
 	  default:
@@ -125,12 +125,12 @@ namespace MFM {
       {
 	switch(dir)
 	  {
-	  case NORTHEAST: pt.Set(0, -1); break; //1, -1
+	  case NORTHEAST: pt.Set(0, -1); break;
 	  case EAST:      pt.Set(1, 0); break;
-	  case SOUTHEAST: pt.Set(0, 1); break; //1,1
-	  case SOUTHWEST: pt.Set(-1, 1); break; //0,1
+	  case SOUTHEAST: pt.Set(0, 1); break;
+	  case SOUTHWEST: pt.Set(-1, 1); break;
 	  case WEST:      pt.Set(-1, 0); break;
-	  case NORTHWEST: pt.Set(-1, -1); break; //0, -1
+	  case NORTHWEST: pt.Set(-1, -1); break;
 	  case NORTH:
 	  case SOUTH:
 	  default:

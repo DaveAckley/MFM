@@ -94,38 +94,11 @@ namespace MFM
      */
     static bool IsCorner(Dir dir) { return dir&1; }
 
-#if 0
-    /**
-     * true iff dir is a face direction.
-     */
-    static bool IsFace(Dir dir) { return !IsCorner(dir); }
-#endif
-
-
     /**
      * The next dir clockwise from dir.
      * Note that in CHECKERBOARD layout, for all dir,
-     * IsCorner(dir)==IsFace(CWDir(dir)), and dir==CWDir(CCWDir(dir))
      */
     static Dir CWDir(Dir dir) { return (dir+1)%DIR_COUNT; }
-
-#if 0
-    /**
-     * The next dir clockwise from dir.
-     * Note In STAGGERE layout, NORTH & SOUTH are invalid.
-     * so, CWDir for NW is NE;
-     */
-    static Dir CWDir(Dir dir, bool isStaggered)
-    {
-      if(!isStaggered)
-	return CWDir(dir);
-
-      Dir rtndir = Dirs::CWDIR(dir);
-      if(!IsValidDir(rtndir, true))
-	rtndir = Dirs::CWDIR(rtndir);
-      return rtndir;
-    }
-#endif
 
     /**
      * Gets the direction opposite the one specified.
@@ -135,32 +108,11 @@ namespace MFM
     static Dir OppositeDir(Dir dir)
     { return (dir + (DIR_COUNT / 2)) % DIR_COUNT; }
 
-
     /**
      * The next dir counter-clockwise from dir.
      * Note In CHECKERBOARD layout, for all dir,
-     * IsCorner(dir)==IsFace(CCWDir(dir)), and dir==CCWDir(CWDir(dir))
      */
     static Dir CCWDir(Dir dir) { return (dir+DIR_COUNT-1)%DIR_COUNT; }
-
-#if 0
-    /**
-     * The next dir counter-clockwise from dir.
-     * Note In STAGGERE layout, NORTH & SOUTH are invalid.
-     * so, CCWDir for SW is SE;
-     */
-    static Dir CCWDir(Dir dir, bool isStaggered)
-    {
-
-      if(!isStaggered)
-	return CCWDir(dir);
-
-      Dir rtndir = Dirs::CCWDIR(dir);
-      if(!IsValidDir(rtndir, true))
-	rtndir = Dirs::CCWDIR(rtndir);
-      return rtndir;
-    }
-#endif
 
     /**
      * Adds a Dir to a Dir mask.
@@ -214,16 +166,10 @@ namespace MFM
      * @param pt The SPoint to fill with the offsets of a direction.
      *
      * @param dir The Dir specifying the units to fill \c pt with.
+     *
+     * @param isStaggered True when grid layout is staggered, false for checkerboard.
      */
     static void FillDir(SPoint& pt, Dir dir, bool isStaggered);
-
-#if 0
-    static SPoint GetOffset(Dir dir, bool isStaggered) {
-      SPoint tmp;
-      FillDir(tmp, dir, isStaggered);
-      return tmp;
-    }
-#endif
 
     /**
      * Given a Dir , will fill a SPoint with unit offsets representing
@@ -239,6 +185,10 @@ namespace MFM
      * @param pt The SPoint to fill with the offsets of a direction.
      *
      * @param dir The Dir specifying the units to fill \c pt with.
+     *
+     * @param isStaggered True when grid layout is staggered, false for checkerboard.
+     *
+     * @param fpt The from gridtilecoord as reference for staggered grids.
      */
     static void ToNeighborTileInGrid(SPoint & pt, u32 dir, bool isStaggered, const SPoint& fpt);
 
@@ -316,7 +266,7 @@ namespace MFM
     static void FillDirStaggered(SPoint& pt, u32 dir);
 
     /**
-     * private helpers for ToTileGridIndex
+     * private helpers for ToNeighborTileInGrid
      *
      */
     static void ToCheckerboardTileInGridNeighbor(SPoint& pt, u32 dir);

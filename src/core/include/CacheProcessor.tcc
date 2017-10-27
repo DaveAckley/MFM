@@ -51,16 +51,6 @@ namespace MFM
     SPoint remote = LocalToRemote(local);
 
     //LOG.Message("peer remote(%d, %d), local(%d, %d), -farside(%d,%d)", remote.GetX(), remote.GetY(), local.GetX(), local.GetY(),m_farSideOrigin.GetX(),m_farSideOrigin.GetY());
-
-    // Get its distance from the remote tile center
-    //u32 dist = tile.GetSquareDistanceFromCenter(remote);
-    // Distances up to a tile radius are visible
-    //bool visible = dist <= tile.TILE_SIDE / 2;
-    // Which is what you asked
-    //return visible;
-    //return tile.IsInShared(remote); //?
-    //return tile.IsOwnedSite(remote);
-    //return tile.IsOwnedSite(remote) && !tile.IsInHidden(remote);
     return tile.IsInTile(remote);
   }
 
@@ -116,7 +106,6 @@ namespace MFM
     MFM_LOG_DBG7(("CP %s %s [%s] (%d,%d) send #%d (%d,%d)",
                   m_tile->GetLabel(),
                   Dirs::GetName(m_cacheDir),
-                  //Dirs::GetName(m_centerRegion),
 		  Dirs::GetName(m_lockRegions[0]),
                   m_farSideOrigin.GetX(),
                   m_farSideOrigin.GetY(),
@@ -284,7 +273,6 @@ namespace MFM
     MFM_LOG_DBG7(("CP %s %s [%s] reply %d<->%d : %d",
                   GetTile().GetLabel(),
                   Dirs::GetName(m_cacheDir),
-                  //Dirs::GetName(m_centerRegion),
 		  Dirs::GetName(m_lockRegions[0]),
                   consistentCount,
                   m_toSendCount,
@@ -408,7 +396,6 @@ namespace MFM
     MFM_API_ASSERT_STATE(m_cpState == BLOCKING);
 
     SetIdle();
-    //m_centerRegion = (Dir) -1;
     m_locksNeeded = 0;
     m_lockRegions[0] = -1;
     Unlock();  // FINALLY
@@ -422,59 +409,10 @@ namespace MFM
     return m_tile->GetCacheProcessor(forDirection);
   }
 
-#if 0
-  template <class EC>
-  bool CacheProcessor<EC>::AdvanceBlocking()
-  {
-    s32 needed = 1;
-    Dir baseDir = m_centerRegion;
-
-    if (Dirs::IsCorner(baseDir))
-    {
-      needed = 3;
-      baseDir = Dirs::CCWDir(baseDir);
-    }
-
-    // Check if every-relevant-body is blocking
-    s32 got = 0;
-    for (Dir dir = baseDir; got < needed; ++got, dir = Dirs::CWDir(dir))
-    {
-      CacheProcessor<EC> & cp = GetSibling(dir);
-      if (cp.IsConnected() && !cp.IsBlocking())
-      {
-        break;
-      }
-    }
-
-    if (got < needed)
-    {
-      return false;  // Somebody still working
-    }
-
-    // All are done, unblock all, including ourselves
-    got = 0;
-    for (Dir dir = baseDir; got < needed; ++got, dir = Dirs::CWDir(dir))
-    {
-      CacheProcessor<EC> & cp = GetSibling(dir);
-      if (cp.IsConnected())
-      {
-        cp.Unblock();
-      }
-    }
-
-    return true;
-  }
-#endif
-
 
   template <class EC>
   bool CacheProcessor<EC>::AdvanceBlocking()
   {
-    //Tile<EC> & tile = GetTile();
-    //SPoint lasteventcoord = tile.OwnedCoordToTile(tile.m_lastEventCenterOwned);
-    //THREEDIR rtndirs;
-    //u32 needed = tile.SharedAt(lasteventcoord, rtndirs, true); //only connected
-
     // Check if every-relevant-body is blocking
     s32 got = 0;
     for (u32 d = 0; got < m_locksNeeded; ++got, d++)

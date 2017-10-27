@@ -290,8 +290,7 @@ namespace MFM {
       return LOCK_UNAVAILABLE;
     }
 
-    //    bool locked = cp.TryLock(dir, m_eventLocksNeeded, m_eventLockRegions); //m_lockRegion);
-    bool locked = cp.TryLock(neededLocks, lockRegions); //m_lockRegion);
+    bool locked = cp.TryLock(neededLocks, lockRegions);
     if (!locked)
     {
       MFM_LOG_DBG6(("EW::AcquireRegionLocks - fail: didn't get %s lock",
@@ -418,12 +417,9 @@ namespace MFM {
     , m_eventWindowsExecuted(0)
     , m_eventWindowSitesAccessed(0)
     , m_center(0,0)
-      //, m_eventLocksNeeded(0)
     , m_sym(PSYM_NORMAL)
     , m_ewState(FREE)
   {
-    //for (u32 i = 0; i < MAX_LOCK_DIRS; m_eventLockRegions[i++] = -1);
-
     m_cpli.Shuffle(GetRandom());
 
     for (u32 i = 0; i < SITE_COUNT; m_isLiveSite[i++] = false);

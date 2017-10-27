@@ -1078,21 +1078,13 @@ namespace MFM
     u32 RegionAtReach(const SPoint& sp, const u32 REACH, THREEDIR & rtndirs, bool onlyConnected) const;
 
     /**
-      Return ((Dir) -1) if no locks are needed to perform an event at
-      pt, given an event window radius bounded by bound.  Otherwise
-      return the 'center direction' in which locks are needed, and
-      return true.  When GetLockDirection returns other than -1, if
-      dir is an edge, only that lock is needed, and if dir is a
-      corner, it and the two adjacent edges are all needed.
+      Return the number of locks needed to perform an event at pt,
+      given an event window radius bounded by boundary. The lock
+      directions are returned in rtndirs: At most 3 directions for
+      corners in checkerboard grids; At most 2 directions for corners
+      in staggered grids; and, a corner as a single in staggered
+      grids; There is no check for connections.
      */
-#if 0
-    void GetLockDirection(const SPoint& pt, const u32 boundary) const
-    {
-      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1);
-    }
-#endif
-
-
     u32 GetAllLockDirections(const SPoint& pt, const u32 boundary, THREEDIR & rtndirs) const
     {
       return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, (bool) NOCHKCONNECT);
@@ -1103,38 +1095,49 @@ namespace MFM
      *
      * @param pt The Point which should specify the location of a cache.
      *
-     * @returns The direction of the cache specified by pt, or
-     *          (Dir)-1 if there is no such cache.
+     * @param rtndirs The directions Dir of the cache specified by pt
+     *
+    * @param onlyConnected when true will return only connected directions
+     *
+     * @returns The number of directions of the cache specified by pt
+     *          and the directions in rtndirs, or 0 if there is no
+     *          such cache.
      */
-    //Dir CacheAt(const SPoint& pt) const;
     u32 CacheAt(const SPoint& pt, THREEDIR & rtndirs, const bool onlyConnected) const;
 
     /**
-     * Finds the region of cache or shared memory in this Tile which
-     * contains a specified SPoint.
+     * Finds the regions of cache or shared memory in this Tile which
+     * contain a specified SPoint.
      *
      * @param pt The SPoint which should specify a location within
      *           cache or shared memory.
      *
-     * @returns The direction of the cache or shared memory specified
-     *          by pt, or (Dir)-1 if pt is not in cache or shared
-     *          memory.
+     * @param rtndirs The directions Dir of cache or shared specified by pt
+     *
+    * @param onlyConnected when true will return only connected directions
+     *
+     * @returns The number of directions of the cache or shared memory
+     *          specified by pt and the directions in rtndirs, or 0 if
+     *          there are none.
      */
-    //Dir SharedAt(const SPoint& pt) const;
     u32 SharedAt(const SPoint& pt, THREEDIR & rtndirs, const bool onlyConnected) const;
 
     /**
-     * Finds the region of cache, shared, or visible memory in this
-     * Tile which contains a specified SPoint.
+     * Finds the regions of cache, shared, or visible memory in this
+     * Tile which contain a specified SPoint.
      *
      * @param pt The SPoint which should specify a location within
      *           cache, shared, or visible memory.
      *
-     * @returns The direction of the cache, shared, or visible memory
-     *          specified by pt, or (Dir)-1 if pt is not in cache,
-     *          shared, or visible memory.
+     * @param rtndirs The directions Dir of the cache, shared, or
+     *          visible memory specified by pt
+     *
+    * @param onlyConnected when true will return only connected directions
+     *
+     * @returns The number of directions of the cache, shared or visible memory
+     *          specified by pt and the directions in rtndirs, or 0 if
+     *          there is no such cache.
      */
-    //Dir VisibleAt(const SPoint& pt) const;
     u32 VisibleAt(const SPoint& pt, THREEDIR & rtndirs, const bool onlyConnected) const;
 
     /**

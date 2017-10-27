@@ -22,7 +22,6 @@ namespace MFM
     , m_lockAttempts(0)
     , m_lockAttemptsSucceeded(0)
     , m_window(*this)
-      //    , m_dirIterator(gridlayout == GRID_LAYOUT_STAGGERED ? (Dirs::DIR_COUNT - 2) : Dirs::DIR_COUNT)
     , m_dirIterator(Dirs::DIR_COUNT)
     , m_state(OFF)
     , m_enabled(true)
@@ -294,57 +293,6 @@ namespace MFM
   }
 #endif
 
-#if 0
-  template <class EC>
-  template <u32 REACH>
-  Dir Tile<EC>::RegionAt(const SPoint& sp) const
-  {
-    return RegionAtReach(sp, REACH);
-  }
-
-  template <class EC>
-  Dir Tile<EC>::RegionAtReach(const SPoint& sp, const u32 REACH) const
-  {
-    UPoint pt = MakeUnsigned(sp);
-
-    if(pt.GetX() < REACH) {
-
-      if(pt.GetY() < REACH) return Dirs::NORTHWEST;
-      if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTHWEST;
-      return Dirs::WEST;
-
-    } else if(pt.GetX() >= TILE_WIDTH - REACH) {
-
-      if(pt.GetY() < REACH) return Dirs::NORTHEAST;
-      if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTHEAST;
-      return Dirs::EAST;
-    }
-
-    //if(IsTileGridLayoutStaggered())
-    if(GRID_LAYOUT == GRID_LAYOUT_STAGGERED)
-      {
-	if(pt.GetX() < TILE_WIDTH/2)
-	  {
-	    if(pt.GetY() < REACH) return Dirs::NORTHWEST;
-	    if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTHWEST;
-	  }
-	else //if(pt.GetX() >=TILE_WIDTH/2)
-	  {
-	    if(pt.GetY() < REACH) return Dirs::NORTHEAST;
-	    if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTHEAST;
-	  }
-      }
-    else
-      {
-	//checkerboard configuration
-	// X in neither east nor west reach
-	if(pt.GetY() < REACH) return Dirs::NORTH;
-	if(pt.GetY() >= TILE_HEIGHT - REACH) return Dirs::SOUTH;
-      }
-    return (Dir)-1; //not at reach
-  }
-#endif
-
   template <class EC>
   template <u32 REACH>
   Dir Tile<EC>::RegionAt(const SPoint& sp) const
@@ -469,27 +417,7 @@ namespace MFM
 	rtndirs[rtncount] = d;
 	rtncount++;
       }
-  }
-
-#if 0
-  template <class EC>
-  Dir Tile<EC>::CacheAt(const SPoint& pt) const
-  {
-    return RegionAt<EVENT_WINDOW_RADIUS>(pt);
-  }
-
-  template <class EC>
-  Dir Tile<EC>::SharedAt(const SPoint& pt) const
-  {
-    return RegionAt<EVENT_WINDOW_RADIUS * 2>(pt);
-  }
-
-  template <class EC>
-  Dir Tile<EC>::VisibleAt(const SPoint& pt) const
-  {
-    return RegionAt<EVENT_WINDOW_RADIUS * 3>(pt);
-  }
-#endif
+  } //private helper
 
   template <class EC>
   u32 Tile<EC>::CacheAt(const SPoint& pt, THREEDIR & rtndirs, const bool onlyConnected) const
@@ -586,28 +514,6 @@ namespace MFM
       return false;
     }
 
-#if 0
-    Dir dir = SharedAt(location);
-    if (IsConnected(dir))
-    {
-      return true;
-    }
-
-    if (Dirs::IsCorner(dir))
-    {
-      bool isStaggered = IsTileGridLayoutStaggered();
-      if (IsConnected(Dirs::CCWDir(dir, isStaggered)))
-      {
-        return true;
-      }
-      if (IsConnected(Dirs::CWDir(dir, isStaggered)))
-      {
-        return true;
-      }
-    }
-    return false;
-#endif
-
     THREEDIR shareddirs;
     u32 sharedcnt = SharedAt(location, shareddirs, (bool) NOCHKCONNECT);
 
@@ -627,7 +533,6 @@ namespace MFM
     MFM_API_ASSERT_ARG(IsInCache(location));
     THREEDIR rtndirs;
     u32 count = CacheAt(location, rtndirs, YESCHKCONNECT);
-    //return IsConnected(CacheAt(location));
     return (count > 0);
   }
 
@@ -644,7 +549,6 @@ namespace MFM
     }
 
     // In-tile + not-owned => in-cache
-
     return IsCacheSitePossibleEventCenter(location);
   }
 
@@ -654,48 +558,10 @@ namespace MFM
     return ((u32) pt.GetX()) < OWNED_WIDTH && ((u32) pt.GetY() < OWNED_HEIGHT);
   }
 
-#if 0
-  template <class EC>
-  bool Tile<EC>::HasAnyConnections(Dir regionDir) const
-  {
-    //trying not to use CCWDir anymore!o
-    switch(regionDir)
-      {
-      case Dirs::EAST:
-      case Dirs::WEST:
-	return IsConnected(regionDir);
-
-      case Dirs::NORTHWEST:
-      case Dirs::NORTHEAST:
-      case Dirs::SOUTHEAST:
-      case Dirs::SOUTHWEST:
-	if (IsConnected(regionDir)) return true;
-	if (IsConnected(Dirs::CCWDir(regionDir, isStaggered))) return true;
-	if (IsConnected(Dirs::CWDir(regionDir, isStaggered))) return true;
-	return false;
-
-      case Dirs::NORTH:
-      case Dirs::SOUTH:
-	if(!isStaggered) return IsConnected(regionDir);
-	//else fall thru
-      default:
-	FAIL(ILLEGAL_ARGUMENT);
-      } ;
-    return false;
-  }
-#endif
-
   template <class EC>
   typename Tile<EC>::Region Tile<EC>::RegionFromIndex(const u32 index, const u32 tileSide)
   {
-    if(index >= tileSide)
-      {
-	//debug code, delete logging tbd.
-	LOG.Log((Logger::Level) 1, "   == FAILED < TILE RegionFromIndex (%d, %d)==",
-		index,
-		tileSide);
-	MFM_API_ASSERT_ARG(index < tileSide);
-      }
+    MFM_API_ASSERT_ARG(index < tileSide);
 
     enum { R = EVENT_WINDOW_RADIUS };
 

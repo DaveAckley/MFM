@@ -336,14 +336,6 @@ namespace MFM
     u32 h = gcc.gridHeight;
     GridLayoutPattern l = gcc.gridLayout;
 
-#if 0
-    //staggered uses grid width + 1,
-    //even rows don't use last spot in row,
-    //odd rows don't use first spot in row
-    if(l == GRID_LAYOUT_STAGGERED)
-      w+=1;
-#endif
-
     switch (gcc.tileType)
     {
 #define XX(A,B,C) case GridConfigCode::Tile##A: return SimCheckAndRun<OurGridConfigTile##A>(argc, argv, w, h, l);

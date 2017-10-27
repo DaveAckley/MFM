@@ -87,6 +87,8 @@ namespace MFM {
 
     bool isStaggered = IsGridLayoutStaggered();
 #if 0
+    //no longer using dummy tile concept, maybe repurpose later
+    // for irregular grids.
     if(isStaggered)
       {
 	InitDummyTiles();
@@ -101,7 +103,6 @@ namespace MFM {
     m_rgi.Shuffle(m_random);
 
     m_backgroundRadiationEnabled = false;
-
 
     /* Init the (non-dummy) tiles */
     for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
@@ -616,29 +617,14 @@ namespace MFM {
 
     owner.PlaceAtomInSite(placeInBase, atom, siteInTile);
 
-#if 0
-    Dir startDir = owner.SharedAt(siteInTile);
-
-    if ((s32) startDir < 0)       // Doesn't hit cache, we're done
-      return;
-
-    Dir stopDir = Dirs::CWDir(startDir); //assumes checkerboard
-
-    if (Dirs::IsCorner(startDir)) {
-      startDir = Dirs::CCWDir(startDir);
-      stopDir = Dirs::CWDir(stopDir);
-    }
-#endif
     THREEDIR connectedDirs;
     u32 dircount = owner.SharedAt(siteInTile, connectedDirs, true); //ESA: WHY NONE CONNECTED???? chg to true when you figure it out!!!!
 
     bool isStaggered = IsGridLayoutStaggered();
-    //for (Dir dir = startDir; dir != stopDir; dir = Dirs::CWDir(dir)) {
     for (u32 d = 0; d < dircount; d++) {
       SPoint tileOffset;
       Dir dir = connectedDirs[d];
 
-      //Dirs::FillDir(tileOffset,dir, isStaggered);
       Dirs::ToNeighborTileInGrid(tileOffset,dir, isStaggered, tileInGrid);
 
       SPoint otherTileIndex = tileInGrid+tileOffset;

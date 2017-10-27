@@ -336,7 +336,6 @@ namespace MFM {
       , m_foregroundRadiationEnabled(false)
       , m_er(elts)
       , m_xraySiteOdds(100)
-      //, m_rgi(layout == GRID_LAYOUT_STAGGERED ? ((m_width - 1) * m_height) : (m_width * m_height))
       , m_rgi(m_width * m_height)
     {
       //dummy tiles not set for iterator use!!! avoid illegal tile coord.
@@ -436,10 +435,8 @@ namespace MFM {
 	    }
 	  else
 	    failed = true;
-	} //while(!g.IsLegalTileIndex(SPoint(i,j)) && !failed);
-	//while(g._getTile(i,j).IsDummyTile() && !failed);
-	while((!g.IsLegalTileIndex(SPoint(i,j)) || g._getTile(i,j).IsDummyTile()) && !failed);
-	//MFM_API_ASSERT_STATE(g.IsLegalTileIndex(SPoint(i,j)));
+	} while((!g.IsLegalTileIndex(SPoint(i,j)) || g._getTile(i,j).IsDummyTile()) && !failed);
+	//MFM_API_ASSERT_STATE(g.IsLegalTileIndex(SPoint(i,j))); except for 'end'
       }
 
       int operator-(const MyIterator &m) const

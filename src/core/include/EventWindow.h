@@ -127,8 +127,6 @@ namespace MFM
 
     SPoint m_center;
 
-    //Dir m_eventLockRegions[MAX_LOCK_DIRS];
-    //u32 m_eventLocksNeeded;
     enum { MAX_CACHES_TO_UPDATE = 3 };
     CacheProcessor<EC> * m_cacheProcessorsLocked[MAX_CACHES_TO_UPDATE];
     RandomIterator<MAX_CACHES_TO_UPDATE> m_cpli;
