@@ -116,7 +116,8 @@ namespace MFM
     MFM_LOG_DBG7(("CP %s %s [%s] (%d,%d) send #%d (%d,%d)",
                   m_tile->GetLabel(),
                   Dirs::GetName(m_cacheDir),
-                  Dirs::GetName(m_centerRegion),
+                  //Dirs::GetName(m_centerRegion),
+		  Dirs::GetName(m_lockRegions[0]),
                   m_farSideOrigin.GetX(),
                   m_farSideOrigin.GetY(),
                   siteNumber,
@@ -283,7 +284,8 @@ namespace MFM
     MFM_LOG_DBG7(("CP %s %s [%s] reply %d<->%d : %d",
                   GetTile().GetLabel(),
                   Dirs::GetName(m_cacheDir),
-                  Dirs::GetName(m_centerRegion),
+                  //Dirs::GetName(m_centerRegion),
+		  Dirs::GetName(m_lockRegions[0]),
                   consistentCount,
                   m_toSendCount,
                   m_checkOdds));
@@ -406,7 +408,9 @@ namespace MFM
     MFM_API_ASSERT_STATE(m_cpState == BLOCKING);
 
     SetIdle();
-    m_centerRegion = (Dir) -1;
+    //m_centerRegion = (Dir) -1;
+    m_locksNeeded = 0;
+    m_lockRegions[0] = -1;
     Unlock();  // FINALLY
   }
 
@@ -466,34 +470,32 @@ namespace MFM
   template <class EC>
   bool CacheProcessor<EC>::AdvanceBlocking()
   {
-    Tile<EC> & tile = GetTile();
-    SPoint lasteventcoord = tile.OwnedCoordToTile(tile.m_lastEventCenterOwned);
-
-    THREEDIR rtndirs;
-    u32 needed = tile.SharedAt(lasteventcoord, rtndirs, true); //only connected
+    //Tile<EC> & tile = GetTile();
+    //SPoint lasteventcoord = tile.OwnedCoordToTile(tile.m_lastEventCenterOwned);
+    //THREEDIR rtndirs;
+    //u32 needed = tile.SharedAt(lasteventcoord, rtndirs, true); //only connected
 
     // Check if every-relevant-body is blocking
     s32 got = 0;
-    for (u32 d = 0; got < needed; ++got, d++)
+    for (u32 d = 0; got < m_locksNeeded; ++got, d++)
     {
-      CacheProcessor<EC> & cp = GetSibling(rtndirs[d]);
-      MFM_API_ASSERT_STATE(cp.IsConnected());
-      if(!cp.IsBlocking())
+      CacheProcessor<EC> & cp = GetSibling(m_lockRegions[d]);
+      if(cp.IsConnected() && !cp.IsBlocking())
 	{
 	  break;
 	}
     }
 
-    if (got < needed)
+    if (got < m_locksNeeded)
     {
       return false;  // Somebody still working
     }
 
     // All are done, unblock all, including ourselves
     got = 0;
-    for (u32 d = 0; got < needed; ++got, d++)
+    for (u32 d = 0; got < m_locksNeeded; ++got, d++)
       {
-	CacheProcessor<EC> & cp = GetSibling(rtndirs[d]);
+	CacheProcessor<EC> & cp = GetSibling(m_lockRegions[d]);
 	if (cp.IsConnected())
 	  {
 	    cp.Unblock();

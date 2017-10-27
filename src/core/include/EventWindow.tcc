@@ -265,7 +265,7 @@ namespace MFM {
   }
 
   template <class EC>
-  typename EventWindow<EC>::LockStatus EventWindow<EC>::AcquireDirLock(Dir dir)
+  typename EventWindow<EC>::LockStatus EventWindow<EC>::AcquireDirLock(Dir dir, const u32 neededLocks, const THREEDIR& lockRegions)
   {
     Tile<EC> & ewtile = GetTile();
 
@@ -290,7 +290,8 @@ namespace MFM {
       return LOCK_UNAVAILABLE;
     }
 
-    bool locked = cp.TryLock(dir); //m_lockRegion);
+    //    bool locked = cp.TryLock(dir, m_eventLocksNeeded, m_eventLockRegions); //m_lockRegion);
+    bool locked = cp.TryLock(neededLocks, lockRegions); //m_lockRegion);
     if (!locked)
     {
       MFM_LOG_DBG6(("EW::AcquireRegionLocks - fail: didn't get %s lock",
@@ -303,7 +304,7 @@ namespace MFM {
   }
 
   template <class EC>
-  bool EventWindow<EC>::AcquireRegionLocks()
+  bool EventWindow<EC>::AcquireRegionLocks(const u32 neededArg, const THREEDIR& lockRegionsArg)
   {
     Random & random = GetRandom();
 
@@ -314,17 +315,17 @@ namespace MFM {
       MFM_API_ASSERT_STATE(m_cacheProcessorsLocked[i] == 0);
     }
 
-    if (m_locksNeeded == 0)
+    if (neededArg == 0)
     {
       MFM_LOG_DBG6(("EW::AcquireRegionLocks - none needed"));
       return true;  // Nobody is needed
     }
 
     // At least one lock may be needed, to be shuffled
-    u32 needed = m_locksNeeded;  //as flag
+    u32 needed = neededArg;  //as flag
     Dir lockDirs[MAX_LOCK_DIRS]; //to shuffle
     for(u32 i = 0; i < needed; i++)
-      lockDirs[i] = m_lockRegions[i];
+      lockDirs[i] = lockRegionsArg[i];
 
     Tile<EC> & tile = GetTile();
 
@@ -339,7 +340,7 @@ namespace MFM {
     for (s32 i = needed; --i >= 0; )
     {
       Dir dir = lockDirs[i];
-      LockStatus ls = AcquireDirLock(dir);
+      LockStatus ls = AcquireDirLock(dir, neededArg, lockRegionsArg);
 
       if (ls == LOCK_UNNEEDED)
       {
@@ -402,8 +403,9 @@ namespace MFM {
   {
     Tile<EC> & t = GetTile();
     MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
-    m_locksNeeded = t.GetLockDirections(tileCenter, eventWindowBoundary, m_lockRegions);
-    return AcquireRegionLocks();
+    THREEDIR eventLockRegions;
+    u32 eventLocksNeeded = t.GetAllLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
+    return AcquireRegionLocks(eventLocksNeeded, eventLockRegions);
   }
 
   template <class EC>
@@ -416,11 +418,11 @@ namespace MFM {
     , m_eventWindowsExecuted(0)
     , m_eventWindowSitesAccessed(0)
     , m_center(0,0)
-    , m_locksNeeded(0)
+      //, m_eventLocksNeeded(0)
     , m_sym(PSYM_NORMAL)
     , m_ewState(FREE)
   {
-    for (u32 i = 0; i < MAX_LOCK_DIRS; m_lockRegions[i++] = -1);
+    //for (u32 i = 0; i < MAX_LOCK_DIRS; m_eventLockRegions[i++] = -1);
 
     m_cpli.Shuffle(GetRandom());
 

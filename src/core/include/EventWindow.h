@@ -98,6 +98,7 @@ namespace MFM
   public:
     enum { SITE_COUNT = EVENT_WINDOW_SITES(R) };
     enum {MAX_LOCK_DIRS = 3 };
+    typedef Dir THREEDIR[3]; //copy of Tile.h
 
   private:
 
@@ -126,9 +127,8 @@ namespace MFM
 
     SPoint m_center;
 
-    Dir m_lockRegions[MAX_LOCK_DIRS];
-    u32 m_locksNeeded;
-
+    //Dir m_eventLockRegions[MAX_LOCK_DIRS];
+    //u32 m_eventLocksNeeded;
     enum { MAX_CACHES_TO_UPDATE = 3 };
     CacheProcessor<EC> * m_cacheProcessorsLocked[MAX_CACHES_TO_UPDATE];
     RandomIterator<MAX_CACHES_TO_UPDATE> m_cpli;
@@ -137,7 +137,7 @@ namespace MFM
 
     bool AcquireAllLocks(const SPoint& centerSite, const u32 eventWindowBoundary) ;
 
-    bool AcquireRegionLocks() ;
+    bool AcquireRegionLocks(const u32 neededArg, const THREEDIR& lockRegionsArg);
 
     enum LockStatus {
       LOCK_UNNEEDED,
@@ -145,7 +145,7 @@ namespace MFM
       LOCK_ACQUIRED
     };
 
-    LockStatus AcquireDirLock(Dir dir) ;
+    LockStatus AcquireDirLock(Dir dir, const u32 neededLocks, const THREEDIR& lockRegions) ;
 
     /**
        EventWindow states

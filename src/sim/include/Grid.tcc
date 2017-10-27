@@ -87,7 +87,6 @@ namespace MFM {
 
     bool isStaggered = IsGridLayoutStaggered();
 #if 0
-
     if(isStaggered)
       {
 	InitDummyTiles();
@@ -135,7 +134,6 @@ namespace MFM {
 	    if(! Dirs::IsValidDir(d, isStaggered))
 	      continue; //staggered skips South/North
 
-	    //SPoint npt = tpt + Dirs::GetOffset(d, isStaggered);
 	    SPoint gridoffset;
 	    Dirs::ToNeighborTileInGrid(gridoffset, d, isStaggered, tpt);
 	    SPoint npt = tpt + gridoffset;
@@ -361,7 +359,7 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::InitDummyTiles()
   {
-    //for (iterator_type i = begin(); i != end(); ++i)
+    FAIL(INCOMPLETE_CODE);
     for(u32 j=0; j < m_height; j++)
       {
 	for(u32 i=0; i < m_width; i++)
@@ -380,6 +378,8 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::ReinitGridRandomIterator()
   {
+    FAIL(INCOMPLETE_CODE);
+
     if(!IsGridLayoutStaggered())
       return;
 

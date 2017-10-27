@@ -90,7 +90,15 @@ namespace MFM {
        done, and then while BLOCKING, we check if both our neighbors
        are also BLOCKING.  When they are, we unlock all three of us.
      */
-    Dir m_centerRegion;
+    //Dir m_centerRegion;
+
+    /**
+	Analog to EventWindow data members, CacheProcessor can check
+	if anyother locks, associated with corner events, are also
+	BLOCKING. Replaces m_centerRegion.
+    */
+    THREEDIR m_lockRegions;
+    u32 m_locksNeeded;
 
     enum {
       /**
@@ -271,7 +279,8 @@ namespace MFM {
       MFM_LOG_DBG6(("CP %s %s [%s] (%d,%d): %s->%s",
                     m_tile->GetLabel(),
                     Dirs::GetName(m_cacheDir),
-                    Dirs::GetName(m_centerRegion),
+                    //Dirs::GetName(m_centerRegion),
+		    Dirs::GetName(m_lockRegions[0]),
                     m_farSideOrigin.GetX(),
                     m_farSideOrigin.GetY(),
                     GetStateName(m_cpState),
@@ -403,12 +412,18 @@ namespace MFM {
 
     bool ShipBufferAsPacket(PacketBuffer & pb) ;
 
-    bool TryLock(Dir centerRegion)
+    //    bool TryLock(Dir centerRegion)
+    bool TryLock(const u32 needed, const THREEDIR& eventlocks)
     {
+      MFM_API_ASSERT_STATE(m_locksNeeded == 0);
+
       bool ret = GetLonglivedLock().TryLock(this);
       if (ret)
       {
-        m_centerRegion = centerRegion;
+        //m_centerRegion = centerRegion;
+	m_locksNeeded = needed;
+	for(u32 i = 0; i < needed; i++)
+	  m_lockRegions[i] = eventlocks[i];
       }
       return ret;
     }
@@ -417,7 +432,9 @@ namespace MFM {
     {
       bool ret = GetLonglivedLock().Unlock(this);
       MFM_API_ASSERT(ret, LOCK_FAILURE);
-      m_centerRegion = (Dir) -1;
+      //m_centerRegion = (Dir) -1;
+      m_locksNeeded = 0;
+      m_lockRegions[0] = (Dir) -1;
     }
 
     bool IsConnected() const
@@ -503,14 +520,17 @@ namespace MFM {
       : m_tile(0)
       , m_longlivedLock(0)
       , m_cacheDir(0)
-      , m_centerRegion((Dir) -1)
+	//, m_centerRegion((Dir) -1)
+      , m_locksNeeded(0)
       , m_checkOdds(INITIAL_CHECK_ODDS)
       , m_remoteConsistentAtomCount(0)
       , m_useAdaptiveRedundancy(true)
       , m_cpState(IDLE)
       , m_eventCenter(0,0)
       , m_farSideOrigin(0,0)
-    { }
+    {
+      m_lockRegions[0] = (Dir) -1;
+    }
 
   };
 } /* namespace MFM */
