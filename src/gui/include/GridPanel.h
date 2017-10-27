@@ -583,8 +583,8 @@ namespace MFM
 		//if(isStaggeredRow)
 		//  siteInTileCoord -= SPoint(tile.TILE_WIDTH/2, 0); //still in site coords, not tile?
 
-		//if (tile.RegionIn(siteInTileCoord) == OurTile::REGION_CACHE)
-		if (tile.IsInTile(siteInTileCoord) && tile.IsInCache(siteInTileCoord))
+		if (tile.RegionIn(siteInTileCoord) == OurTile::REGION_CACHE)
+		  //if (tile.IsInTile(siteInTileCoord) && tile.IsInCache(siteInTileCoord))
 		  {
 		    //Dir dir = tile.CacheAt(siteInTileCoord); //!!TODO support multiple dirs
 		    //if (dir < 0) FAIL(ILLEGAL_STATE);
@@ -608,10 +608,11 @@ namespace MFM
 		    // like LocalToRemote in CacheProcessor, with offset*ownedp == m_farSideOrigin
 		    SPoint remoteOffset;
 		    Dirs::FillDir(remoteOffset, dir, isStaggeredGrid);
-		    //SPoint ownedph(tile.OWNED_WIDTH/2, tile.OWNED_HEIGHT/2);
 		    //SPoint remoteOrigin = remoteOffset * ownedph;
-		    SPoint tileph(tile.TILE_WIDTH/2, tile.TILE_HEIGHT/2);
-		    SPoint remoteOrigin = remoteOffset * tileph;
+		    //SPoint tileph(tile.TILE_WIDTH/2, tile.TILE_HEIGHT/2);
+		    //SPoint remoteOrigin = remoteOffset * tileph;
+		    SPoint ownedph(tile.OWNED_WIDTH/2, tile.OWNED_HEIGHT/2);
+		    SPoint remoteOrigin = remoteOffset * ownedph; //cache->shared
 		    SPoint siteInOtherTile = siteInTileCoord - remoteOrigin; //local to remote
 
 		    siteInGridCoord = otherTileCoord * ownedp + OurTile::TileCoordToOwned(siteInOtherTile);
