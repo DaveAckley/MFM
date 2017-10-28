@@ -368,7 +368,22 @@ namespace MFM
       {
 	if(isStaggered)
 	  {
-	    if(pt.GetX() < TILE_WIDTH/2)
+	    if((pt.GetX() >= TILE_WIDTH/2 - REACH) && (pt.GetX() < TILE_WIDTH/2 + REACH))
+	      {
+		//in the middle +/- REACH
+		if(pt.GetY() < REACH)
+		  {
+		    TryToAddRegionAtReach(Dirs::NORTHWEST, rtncount, rtndirs, onlyConnected);
+		    TryToAddRegionAtReach(Dirs::NORTHEAST, rtncount, rtndirs, onlyConnected);
+		  }
+		else if(pt.GetY() >= TILE_HEIGHT - REACH)
+		  {
+		    TryToAddRegionAtReach(Dirs::SOUTHWEST, rtncount, rtndirs, onlyConnected);
+		    TryToAddRegionAtReach(Dirs::SOUTHEAST, rtncount, rtndirs, onlyConnected);
+		  }
+		//else
+	      }
+	    else if(pt.GetX() < TILE_WIDTH/2)
 	      {
 		if(pt.GetY() < REACH)
 		  {
