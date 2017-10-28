@@ -143,7 +143,7 @@ namespace MFM
     {
       for (u32 i = 0; i < sizeof(m_firstESLValue)/sizeof(m_firstESLValue[0]); ++i)
       {
-        if (m_firstESLValue[i] >= eslRadius) 
+        if (m_firstESLValue[i] >= eslRadius)
           return m_firstESLIndex[i];
       }
       FAIL(UNREACHABLE_CODE);

@@ -17,7 +17,7 @@ namespace MFM
   struct GridConfigCode {
 
     enum TileType { TileUNSPEC
-#define XX(A,B) , Tile##A
+#define XX(A,B,C) , Tile##A
 #include "TileSizes.inc"
 #undef XX
       , TileUPPER_BOUND
@@ -27,7 +27,7 @@ namespace MFM
     {
       switch (t)
       {
-#define XX(A,B) case Tile##A: return *#A;
+#define XX(A,B,C) case Tile##A: return *#A;
 #include "TileSizes.inc"
 #undef XX
       default: FAIL(ILLEGAL_ARGUMENT);
@@ -47,16 +47,18 @@ namespace MFM
     TileType tileType;
     u32 gridWidth;
     u32 gridHeight;
+    GridLayoutPattern gridLayout;
 
-    GridConfigCode(TileType t = TileUNSPEC, u32 width = 0, u32 height = 0)
+    GridConfigCode(TileType t = TileUNSPEC, u32 width = 0, u32 height = 0, GridLayoutPattern layout = GRID_LAYOUT_CHECKERBOARD)
       : tileType(t)
       , gridWidth(width)
       , gridHeight(height)
+      , gridLayout(layout)
     { }
 
-    bool Set(TileType t, u32 width, u32 height)
+    bool Set(TileType t, u32 width, u32 height, GridLayoutPattern layout)
     {
-      return SetTileType(t) && SetGridWidth(width) && SetGridHeight(height);
+      return SetTileType(t) && SetGridWidth(width) && SetGridHeight(height) && SetGridLayout(layout);
     }
 
     bool SetTileType(TileType t)
@@ -81,13 +83,26 @@ namespace MFM
       return true;
     }
 
+    bool SetGridLayout(GridLayoutPattern layout) {
+      gridLayout = layout;
+      return true;
+    }
+
     bool Read(ByteSource & bs)
     {
       u32 w, h;
       u8 ch;
+      bool doublebrace = false;
 
-      if (bs.Scanf("{%d%c%d}", &w, &ch, &h) != 5)
+      if (bs.Scanf("{") != 1) return false;
+      if (bs.Scanf("{") == 1)
+	doublebrace = true;
+      else
+	bs.Unread();
+
+      if (bs.Scanf("%d%c%d}", &w, &ch, &h) != 4)
         return false;
+      if (doublebrace && bs.Scanf("}") != 1) return false;
 
       if (ch < GridConfigCode::GetMinTypeCode() ||
           ch > GridConfigCode::GetMaxTypeCode())
@@ -98,10 +113,12 @@ namespace MFM
 
       SetGridWidth(w);
       SetGridHeight(h);
+      SetGridLayout(doublebrace ? GRID_LAYOUT_STAGGERED : GRID_LAYOUT_CHECKERBOARD);
       SetTileType((GridConfigCode::TileType)
                   ((ch - GridConfigCode::GetMinTypeCode()) + GridConfigCode::TileUNSPEC + 1));
       return true;
     }
+
   };
 
   /////
@@ -115,8 +132,8 @@ namespace MFM
 
   /////
   // Tile types
-#define XX(A,B) \
-  typedef GridConfig<OurEventConfigAll, B, EVENT_HISTORY_SIZE> OurGridConfigTile##A;
+#define XX(A,B,C)							\
+  typedef GridConfig<OurEventConfigAll, B, C, EVENT_HISTORY_SIZE> OurGridConfigTile##A;
 #include "TileSizes.inc"
 #undef XX
   /*
@@ -220,8 +237,8 @@ namespace MFM
     {
       fprintf(stderr, "Supported tile types\n");
 
-#define XX(A,B) \
-    fprintf(stderr, "  Type '%s': %d non-cache sites (%d x %d site storage)\n", #A, (B-8)*(B-8), B, B);
+#define XX(A,B,C)							\
+    fprintf(stderr, "  Type '%s': %d non-cache sites (%d x %d site storage)\n", #A, (B-8)*(C-8), B, C);
 #include "TileSizes.inc"
 #undef XX
 
@@ -231,8 +248,8 @@ namespace MFM
 
   public:
 
-    MFMCDriver(u32 gridWidth, u32 gridHeight)
-      : Super(gridWidth, gridHeight)
+    MFMCDriver(u32 gridWidth, u32 gridHeight, GridLayoutPattern gridLayout)
+      : Super(gridWidth, gridHeight, gridLayout)
       , m_stamper(*this)
     {
       MFM::LOG.SetTimeStamper(&m_stamper);
@@ -267,9 +284,11 @@ namespace MFM
   };
 
   template <class CONFIG>
-  int SimRunner(int argc, const char** argv,u32 gridWidth,u32 gridHeight)
+  int SimRunner(int argc, const char** argv,u32 gridWidth,u32 gridHeight, GridLayoutPattern gridLayout)
   {
-    MFMCDriver<CONFIG> sim(gridWidth,gridHeight);
+    SizedTile<typename CONFIG::EVENT_CONFIG, CONFIG::TILE_WIDTH, CONFIG::TILE_HEIGHT, CONFIG::EVENT_HISTORY_SIZE>::SetGridLayoutPattern(gridLayout); //static before sim (next line)
+
+    MFMCDriver<CONFIG> sim(gridWidth,gridHeight,gridLayout);
     sim.ProcessArguments(argc, argv);
     sim.AddInternalLogging();
     sim.Init();
@@ -282,7 +301,7 @@ namespace MFM
      grid sizing (since we're not in core/ here).  But it shouldn't
      hurt anything so for now anyway we're leaving it in. */
   template <class CONFIG>
-  int SimCheckAndRun(int argc, const char** argv, u32 gridWidth, u32 gridHeight)
+  int SimCheckAndRun(int argc, const char** argv, u32 gridWidth, u32 gridHeight, GridLayoutPattern gridLayout)
   {
     struct rlimit lim;
     if (getrlimit(RLIMIT_STACK, &lim))
@@ -307,16 +326,19 @@ namespace MFM
         }
       }
     }
-    return SimRunner<CONFIG>(argc,argv,gridWidth,gridHeight);
+
+    return SimRunner<CONFIG>(argc,argv,gridWidth,gridHeight,gridLayout);
   }
 
   int SimRunConfig(const GridConfigCode & gcc, int argc, const char** argv)
   {
     u32 w = gcc.gridWidth;
     u32 h = gcc.gridHeight;
+    GridLayoutPattern l = gcc.gridLayout;
+
     switch (gcc.tileType)
     {
-#define XX(A,B) case GridConfigCode::Tile##A: return SimCheckAndRun<OurGridConfigTile##A>(argc, argv, w, h);
+#define XX(A,B,C) case GridConfigCode::Tile##A: return SimCheckAndRun<OurGridConfigTile##A>(argc, argv, w, h, l);
 #include "TileSizes.inc"
 #undef XX
     default:
@@ -365,23 +387,23 @@ namespace MFM
   }
 }
 
-void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc,
         const MFM::UlamRef<MFM::OurEventConfigAll>& rur) __attribute__ ((used)) ;
-void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc,
         const MFM::AtomBitStorage<MFM::OurEventConfigAll>& abs) __attribute__ ((used)) ;
 
-void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc,
         const MFM::AtomBitStorage<MFM::OurEventConfigAll>& abs)
 {
-  MFM::DebugPrint<MFM::OurEventConfigAll>(ruc, abs, MFM::STDERR);  
+  MFM::DebugPrint<MFM::OurEventConfigAll>(ruc, abs, MFM::STDERR);
   MFM::STDERR.Printf("\n");
 }
 
 
-void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc, 
+void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc,
         const MFM::UlamRef<MFM::OurEventConfigAll>& rur)
 {
-  MFM::DebugPrint<MFM::OurEventConfigAll>(ruc, rur, MFM::STDERR);  
+  MFM::DebugPrint<MFM::OurEventConfigAll>(ruc, rur, MFM::STDERR);
   MFM::STDERR.Printf("\n");
 }
 

@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   ExternalConfigSectionGrid.h Support for persisting grid configuration information
-  Copyright (C) 2015 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015,2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,8 @@
   \file ExternalConfigSectionGrid.h Support for persisting grid configuration information
   \author Trent R. Small.
   \author David H. Ackley.
-  \date (C) 2014-2015 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014-2015,2017 All rights reserved.
   \lgpl
  */
 #ifndef EXTERNALCONFIGSECTIONGRID_H
@@ -119,7 +121,8 @@ namespace MFM
     typedef typename AC::ATOM_TYPE T;
 
     enum { BPA = AC::BITS_PER_ATOM };
-    enum { TILE_SIDE = GC::TILE_SIDE };
+    enum { TILE_WIDTH = GC::TILE_WIDTH };
+    enum { TILE_HEIGHT = GC::TILE_HEIGHT };
     enum { EVENT_WINDOW_RADIUS = EC::EVENT_WINDOW_RADIUS };
 
   public:

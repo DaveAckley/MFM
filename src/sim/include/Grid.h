@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   Grid.h Encapsulator for all MFM logic
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,8 @@
   \file Grid.h Encapsulator for all MFM logic
   \author Trent R. Small
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014,2017 All rights reserved.
   \lgpl
  */
 #ifndef GRID_H
@@ -57,11 +59,14 @@ namespace MFM {
     enum { MAX_TILES_SUPPORTED = 500 };  // Yeah right.  Used for sizing m_rgi
 
     enum { R = EC::EVENT_WINDOW_RADIUS};
-    enum { TILE_SIDE = GC::TILE_SIDE};
+    enum { TILE_WIDTH = GC::TILE_WIDTH};
+    enum { TILE_HEIGHT = GC::TILE_HEIGHT};
     enum { EVENT_HISTORY_SIZE = GC::EVENT_HISTORY_SIZE};
-    enum { OWNED_SIDE = TILE_SIDE - 2 * R }; // Duplicating the OWNED_SIDE computation in Tile.tcc!
+    enum { OWNED_WIDTH = TILE_WIDTH - 2 * R }; // Duplicating the OWNED_SIDE computation in Tile.tcc!
+    enum { OWNED_HEIGHT = TILE_HEIGHT - 2 * R }; // Duplicating the OWNED_SIDE computation in Tile.tcc!
+    enum { MAX_LOCKS_OWNED_PER_TILE = 3}; //checkboard: E,SE,S  staggered: NE,E,SE
 
-    typedef SizedTile<EC,TILE_SIDE,EVENT_HISTORY_SIZE> GridTile;
+    typedef SizedTile<EC,TILE_WIDTH,TILE_HEIGHT,EVENT_HISTORY_SIZE> GridTile;
 
   private:
     Random m_random;
@@ -70,7 +75,11 @@ namespace MFM {
 
     void InitSeed();
 
+    void InitDummyTiles();
+
     const u32 m_width, m_height;
+
+    const GridLayoutPattern m_layout;
 
     SPoint m_lastEventTile;
 
@@ -82,8 +91,12 @@ namespace MFM {
 
     LonglivedLock * const m_intertileLocks;
     LonglivedLock & _getIntertileLock(u32 x, u32 y, u32 i) {
-      return m_intertileLocks[(x*m_height + y) * 3 + i];
+      return m_intertileLocks[(x*m_height + y) * MAX_LOCKS_OWNED_PER_TILE + i];
     }
+
+    LonglivedLock & GetIntertileLockStaggered(u32 xtile, u32 ytile, Dir dir);
+    LonglivedLock & GetIntertileLockCheckerboard(u32 xtile, u32 ytile, Dir dir);
+
 
     GridTile m_heroTile;    // Model for the actual m_tiles
 
@@ -91,7 +104,7 @@ namespace MFM {
        Get the long-lived lock controlling cache activity going in
        direction dir from the Tile at (xtile,ytile) in the Grid.
      */
-    LonglivedLock & GetIntertileLock(u32 xtile, u32 ytile, Dir dir) ;
+    LonglivedLock & GetIntertileLock(u32 xtile, u32 ytile, Dir dir, bool isStaggered) ;
 
     struct TileDriver {
       enum State { PAUSED, ADVANCING, EXIT_REQUEST };
@@ -309,14 +322,15 @@ namespace MFM {
 
     void SetSeed(u32 seed);
 
-    Grid(ElementRegistry<EC>& elts, u32 width, u32 height)
+    Grid(ElementRegistry<EC>& elts, u32 width, u32 height, GridLayoutPattern layout)
       : m_random()
       , m_seed(0)
       , m_width(width)
       , m_height(height)
-      , m_tiles(new GridTile[m_width * m_height])
-      , m_intertileLocks(new LonglivedLock[m_width * m_height * 3])
-      , m_tileDrivers(new TileDriver[m_width * m_height * 3])
+      , m_layout(layout)
+      , m_tiles(new GridTile[m_width * m_height] )
+      , m_intertileLocks(new LonglivedLock[m_width * m_height * MAX_LOCKS_OWNED_PER_TILE])
+      , m_tileDrivers(new TileDriver[m_width * m_height * MAX_LOCKS_OWNED_PER_TILE])
       , m_threadsInitted(false)
       , m_backgroundRadiationEnabled(false)
       , m_foregroundRadiationEnabled(false)
@@ -324,10 +338,9 @@ namespace MFM {
       , m_xraySiteOdds(100)
       , m_rgi(m_width * m_height)
     {
-
-
-      for (iterator_type i = begin(); i != end(); ++i)
-        LOG.Debug("Tile[%d][%d] @ %p", i.GetX(), i.GetY(), &(*i));
+      //dummy tiles not set for iterator use!!! avoid illegal tile coord.
+      //for (iterator_type i = begin(); i != end(); ++i)
+      //	  LOG.Debug("Tile[%d][%d] @ %p", i.GetX(), i.GetY(), &(*i));
     }
 
     s32* GetXraySiteOddsPtr()
@@ -395,41 +408,58 @@ namespace MFM {
     /**
      * A minimal iterator over the Tiles of a grid.  Access via Grid::begin().
      */
-    template <typename ItemType, typename GridType> class MyIterator
+    template <typename ItemType, typename GridType>
+    class MyIterator
     {
       GridType & g;
       s32 i;
       s32 j;
+      s32 incnt;
     public:
-      MyIterator(GridType & g, int i = 0, int j = 0) : g(g), i(i), j(j) { }
+      MyIterator(GridType & g, int i = 0, int j = 0) : g(g), i(i), j(j), incnt(0) { }
 
       bool operator!=(const MyIterator &m) const { return i != m.i || j != m.j; }
       void operator++()
       {
-        if (j < (s32) g.m_height)
-        {
-          i++;
-          if (i >= (s32) g.m_width)
-          {
-            i = 0;
-            j++;
-          }
-        }
+	incnt++;
+	bool failed = false;
+	do{
+	  if (j < (s32) g.m_height)
+	    {
+	      i++;
+	      if (i >= (s32) g.m_width)
+		{
+		  i = 0;
+		  j++;
+		}
+	    }
+	  else
+	    failed = true;
+	} while((!g.IsLegalTileIndex(SPoint(i,j)) || g._getTile(i,j).IsDummyTile()) && !failed);
+	//MFM_API_ASSERT_STATE(g.IsLegalTileIndex(SPoint(i,j))); except for 'end'
       }
+
       int operator-(const MyIterator &m) const
       {
-        s32 rows = j-m.j;
-        s32 cols = i-m.i;
-        return rows*g.m_width + cols;
+	if(!g.IsGridLayoutScatttered)
+	  {
+	    //old way for checkerboard layout
+	    s32 rows = j-m.j;
+	    s32 cols = i-m.i;
+	    MFM_API_ASSERT_STATE( (rows*g.m_width + cols) == (incnt - m.incnt)); //sanity
+	  }
+        return incnt - m.incnt;
       }
 
       ItemType & operator*() const
       {
+	MFM_API_ASSERT_ARG(g.IsLegalTileIndex(SPoint(i,j)));
         return g._getTile(i,j);
       }
 
       ItemType * operator->() const
       {
+	MFM_API_ASSERT_ARG(g.IsLegalTileIndex(SPoint(i,j)));
         return &g._getTile(i,j);
       }
 
@@ -518,6 +548,19 @@ namespace MFM {
     bool IsLegalTileIndex(const SPoint & tileInGrid) const;
 
     /**
+     * Return true iff grid layout is staggered, and either tileInGridY
+     * is the last column of an even row (X), or the first column of an odd row.
+     * If this returns true, GetTile(tileInGrid) is unsafe.
+     */
+    bool IsDummyTileCoord(s32 tileingridX, s32 tileingridY) const;
+
+    /**
+     * Reinitialize m_rgi for a staggered layout grid, s.t.
+     * it holds the non-sequential dummy tile grid indexes; m_limit changes.
+     */
+    void ReinitGridRandomIterator();
+
+    /**
      * Return true iff siteInGrid is a legal site coordinate in this
      * grid.  If this returns false, GetAtom(siteInGrid) and
      * PlaceAtom(T, siteInGrid) will FAIL.
@@ -569,15 +612,33 @@ namespace MFM {
      */
     u32 GetHeightSites() const
     {
-      return GetHeight() * OWNED_SIDE;
+      return GetHeight() * OWNED_HEIGHT;
     }
 
     /**
      * Return the Grid width in (non-cache) sites
      */
-    u32 GetWidthSites() const
+    u32 GetWidthSites(bool isStaggered = false) const
     {
-      return GetWidth() * OWNED_SIDE;
+      if(isStaggered)
+	return (GetWidth() - 1) * OWNED_WIDTH;
+      return GetWidth() * OWNED_WIDTH;
+    }
+
+    /**
+     * Return the Grid layout
+     */
+    GridLayoutPattern GetGridLayout() const
+    {
+      return m_layout;
+    }
+
+    /**
+     * Return true when the Grid layout is staggered
+     */
+    bool IsGridLayoutStaggered() const
+    {
+      return (m_layout == GRID_LAYOUT_STAGGERED);
     }
 
     /**
@@ -683,6 +744,8 @@ namespace MFM {
     {
       if (!IsLegalTileIndex(pt))
       {
+        LOG.Error("Can't get tile at (%d,%d); illegal tile index.",
+                  pt.GetX(), pt.GetY());
         FAIL(ILLEGAL_ARGUMENT);
       }
       return GetTile(pt.GetX(), pt.GetY());
@@ -692,6 +755,8 @@ namespace MFM {
     {
       if (!IsLegalTileIndex(pt))
       {
+        LOG.Error("Can't get const tile at (%d,%d); illegal tile index.",
+                  pt.GetX(), pt.GetY());
         FAIL(ILLEGAL_ARGUMENT);
       }
       return GetTile(pt.GetX(), pt.GetY());
@@ -704,8 +769,9 @@ namespace MFM {
     { return _getTile(x,y); }
 
     /* Don't count caches! */
+    /* Don't count staggered dummies! */
     inline const u32 GetTotalSites()
-    { return GetWidthSites() * GetHeightSites(); }
+    { return GetWidthSites(IsGridLayoutStaggered()) * GetHeightSites(); }
 
     u64 GetTotalEventsExecuted() const;
 
@@ -731,7 +797,7 @@ namespace MFM {
     double GetFullSitePercentage() const
     {
       return 1.0 - ((double)GetAtomCount(Element_Empty<EC>::THE_INSTANCE.GetType()) /
-                    (double)(GetHeightSites() * GetWidthSites()));
+                    (double)(GetHeightSites() * GetWidthSites(IsGridLayoutStaggered())));
     }
 
     //    void SurroundRectangleWithWall(s32 x, s32 y, s32 w, s32 h, s32 thickness);

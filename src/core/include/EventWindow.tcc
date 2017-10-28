@@ -58,6 +58,8 @@ namespace MFM {
   {
     ++m_eventWindowsExecuted;
     Tile<EC> & t = GetTile();
+    MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
+
     SPoint owned = Tile<EC>::TileCoordToOwned(tcoord);
     t.m_lastEventCenterOwned = owned;
     //t.GetSite(owned).SetLastEventEventNumber(m_eventWindowsExecuted);
@@ -68,6 +70,7 @@ namespace MFM {
   bool EventWindow<EC>::RejectOnRecency(const SPoint tcoord)
   {
     Tile<EC> & t = GetTile();
+    MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
     const u32 warpFactor = t.GetWarpFactor();
     SPoint owned = Tile<EC>::TileCoordToOwned(tcoord);
     u32 eventAge = t.GetUncachedEventAge32(owned);  // max age at one billion
@@ -111,6 +114,8 @@ namespace MFM {
   {
     MFM_LOG_DBG6(("EW::ExecuteBehavior"));
     Tile<EC> & t = GetTile();
+    MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
+
     unwind_protect(
     {
       OString256 buff;
@@ -158,6 +163,9 @@ namespace MFM {
     EventWindow & window = *this;
     Random & random = window.GetRandom();
     Tile<EC>& tile = window.GetTile();
+
+    MFM_API_ASSERT_STATE(!tile.IsDummyTile()); //sanity
+
     const MDist<R> & md = MDist<R>::get();
 
     SPoint sp;
@@ -203,6 +211,8 @@ namespace MFM {
     MFM_API_ASSERT_STATE(IsFree());  // Don't be callin' when I'm not free
 
     Tile<EC> & tile = GetTile();
+
+    MFM_API_ASSERT_STATE(!tile.IsDummyTile()); //sanity
 
     // We need to access the element early to determine its boundary
     T atom = *tile.GetAtom(center);
@@ -255,9 +265,14 @@ namespace MFM {
   }
 
   template <class EC>
-  typename EventWindow<EC>::LockStatus EventWindow<EC>::AcquireDirLock(Dir dir)
+  typename EventWindow<EC>::LockStatus EventWindow<EC>::AcquireDirLock(Dir dir, const u32 neededLocks, const THREEDIR& lockRegions)
   {
-    CacheProcessor<EC> & cp = GetTile().GetCacheProcessor(dir);
+    Tile<EC> & ewtile = GetTile();
+
+    MFM_API_ASSERT_STATE(!ewtile.IsDummyTile()); //sanity
+    MFM_API_ASSERT_ARG(Dirs::IsValidDir(dir, ewtile.IsTileGridLayoutStaggered())); //sanity
+
+    CacheProcessor<EC> & cp = ewtile.GetCacheProcessor(dir);
 
     if (!cp.IsConnected())
     {
@@ -275,7 +290,7 @@ namespace MFM {
       return LOCK_UNAVAILABLE;
     }
 
-    bool locked = cp.TryLock(m_lockRegion);
+    bool locked = cp.TryLock(neededLocks, lockRegions);
     if (!locked)
     {
       MFM_LOG_DBG6(("EW::AcquireRegionLocks - fail: didn't get %s lock",
@@ -288,7 +303,7 @@ namespace MFM {
   }
 
   template <class EC>
-  bool EventWindow<EC>::AcquireRegionLocks()
+  bool EventWindow<EC>::AcquireRegionLocks(const u32 neededArg, const THREEDIR& lockRegionsArg)
   {
     Random & random = GetRandom();
 
@@ -299,26 +314,24 @@ namespace MFM {
       MFM_API_ASSERT_STATE(m_cacheProcessorsLocked[i] == 0);
     }
 
-    if (((s32) m_lockRegion) == -1)
+    if (neededArg == 0)
     {
       MFM_LOG_DBG6(("EW::AcquireRegionLocks - none needed"));
       return true;  // Nobody is needed
     }
 
-    // At least one lock may be needed
+    // At least one lock may be needed, to be shuffled
+    u32 needed = neededArg;  //as flag
+    Dir lockDirs[MAX_LOCK_DIRS]; //to shuffle
+    for(u32 i = 0; i < needed; i++)
+      lockDirs[i] = lockRegionsArg[i];
 
-    Dir lockDirs[3];
-    u32 needed = 1;
     Tile<EC> & tile = GetTile();
-    lockDirs[0] = m_lockRegion;
 
-    if (Dirs::IsCorner(m_lockRegion))
-    {
-      lockDirs[1] = Dirs::CCWDir(m_lockRegion);
-      lockDirs[2] = Dirs::CWDir(m_lockRegion);
-      needed = 3;
+    if(needed==3)
       Shuffle<Dir,3>(GetRandom(),lockDirs);
-    }
+    else if (needed==2)
+      Shuffle<Dir,2>(GetRandom(),lockDirs);
 
     MFM_LOG_DBG6(("EW::AcquireRegionLocks - checking %d", needed));
 
@@ -326,13 +339,13 @@ namespace MFM {
     for (s32 i = needed; --i >= 0; )
     {
       Dir dir = lockDirs[i];
-      LockStatus ls = AcquireDirLock(dir);
+      LockStatus ls = AcquireDirLock(dir, neededArg, lockRegionsArg);
 
       if (ls == LOCK_UNNEEDED)
       {
         // Whups, didn't really need that one.  Leave it null, since
         // the other loops check all MAX_CACHES_TO_UPDATE slots anyway
-        --needed;
+        --needed;// NO LONGER CORRESPONDS TO THE ARRAY ITEMS!!!
         continue;
       }
 
@@ -382,14 +395,16 @@ namespace MFM {
     }
 
     return true;
-  }
+  } //AcquireRegionLocks
 
   template <class EC>
   bool EventWindow<EC>::AcquireAllLocks(const SPoint& tileCenter, const u32 eventWindowBoundary)
   {
     Tile<EC> & t = GetTile();
-    m_lockRegion = t.GetLockDirection(tileCenter, eventWindowBoundary);
-    return AcquireRegionLocks();
+    MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
+    THREEDIR eventLockRegions;
+    u32 eventLocksNeeded = t.GetAllLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
+    return AcquireRegionLocks(eventLocksNeeded, eventLockRegions);
   }
 
   template <class EC>
@@ -402,21 +417,14 @@ namespace MFM {
     , m_eventWindowsExecuted(0)
     , m_eventWindowSitesAccessed(0)
     , m_center(0,0)
-    , m_lockRegion(-1)
     , m_sym(PSYM_NORMAL)
     , m_ewState(FREE)
   {
     m_cpli.Shuffle(GetRandom());
 
-    for (u32 i = 0; i < SITE_COUNT; ++i)
-    {
-      m_isLiveSite[i] = false;
-    }
+    for (u32 i = 0; i < SITE_COUNT; m_isLiveSite[i++] = false);
 
-    for (u32 i = 0; i < MAX_CACHES_TO_UPDATE; ++i)
-    {
-      m_cacheProcessorsLocked[i] = 0;
-    }
+    for (u32 i = 0; i < MAX_CACHES_TO_UPDATE; m_cacheProcessorsLocked[i++] = 0);
 
   }
 
@@ -480,6 +488,7 @@ namespace MFM {
 
     // Now write back changes and notify the cps
     Tile<EC> & tile = GetTile();
+    MFM_API_ASSERT_STATE(!tile.IsDummyTile()); //sanity
 
     // Record the event in the tile history
     EventHistoryBuffer<EC> & ehb = tile.GetEventHistoryBuffer();
@@ -575,7 +584,7 @@ namespace MFM {
   const typename EC::ATOM_CONFIG::ATOM_TYPE& EventWindow<EC>::GetRelativeAtomSym(const Dir mooreOffset) const
   {
     SPoint pt;
-    Dirs::FillDir(pt, mooreOffset);
+    Dirs::FillDir(pt, mooreOffset, false);
     return GetRelativeAtomSym(pt);
   }
 
@@ -583,7 +592,7 @@ namespace MFM {
   const typename EC::ATOM_CONFIG::ATOM_TYPE& EventWindow<EC>::GetRelativeAtomDirect(const Dir mooreOffset) const
   {
     SPoint pt;
-    Dirs::FillDir(pt, mooreOffset);
+    Dirs::FillDir(pt, mooreOffset, false);
     return GetRelativeAtomDirect(pt);
   }
 

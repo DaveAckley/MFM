@@ -37,6 +37,8 @@ namespace MFM
 
     // Get site address in full untransformed tile coordinates
     SPoint local = md.GetPoint(siteNumber) + m_eventCenter;
+    SPoint mdtmp = md.GetPoint(siteNumber);
+    //LOG.Message("site# %d, point(%d, %d), local(%d, %d)", siteNumber, mdtmp.GetX(), mdtmp.GetY(), local.GetX(), local.GetY());
     return IsCoordVisibleToPeer(local);
   }
 
@@ -48,14 +50,8 @@ namespace MFM
     // Map full untransformed local tile coord into the remote space
     SPoint remote = LocalToRemote(local);
 
-    // Get its distance from the remote tile center
-    u32 dist = tile.GetSquareDistanceFromCenter(remote);
-
-    // Distances up to a tile radius are visible
-    bool visible = dist <= tile.TILE_SIDE / 2;
-
-    // Which is what you asked
-    return visible;
+    //LOG.Message("peer remote(%d, %d), local(%d, %d), -farside(%d,%d)", remote.GetX(), remote.GetY(), local.GetX(), local.GetY(),m_farSideOrigin.GetX(),m_farSideOrigin.GetY());
+    return tile.IsInTile(remote);
   }
 
   template <class EC>
@@ -110,7 +106,7 @@ namespace MFM
     MFM_LOG_DBG7(("CP %s %s [%s] (%d,%d) send #%d (%d,%d)",
                   m_tile->GetLabel(),
                   Dirs::GetName(m_cacheDir),
-                  Dirs::GetName(m_centerRegion),
+		  Dirs::GetName(m_lockRegions[0]),
                   m_farSideOrigin.GetX(),
                   m_farSideOrigin.GetY(),
                   siteNumber,
@@ -165,6 +161,8 @@ namespace MFM
   {
     MFM_API_ASSERT_STATE(m_cpState == PASSIVE && m_tile != 0);
     MFM_API_ASSERT_ARG(siteNumber >= 0 && siteNumber < SITE_COUNT);
+    if(!IsSiteNumberVisible((u16) siteNumber))
+      ReportCacheProcessorStatus((Logger::Level)1);  //debug for elena
     MFM_API_ASSERT_ARG(IsSiteNumberVisible((u16) siteNumber));
     MFM_API_ASSERT_STATE(m_receivedSiteCount < SITE_COUNT);
 
@@ -218,7 +216,10 @@ namespace MFM
           const char * tlb = GetTile().GetLabel();
           CharBufferByteSource cbs(tlb,strlen(tlb));
           cbs.Scanf("[%d,%d]",&tilex,&tiley);
-          SPoint gloc = SPoint(tilex,tiley) * GetTile().OWNED_SIDE + loc;
+
+	  const SPoint ownedp(GetTile().OWNED_WIDTH, GetTile().OWNED_HEIGHT);
+	  u32 maxside = ownedp.GetMaximumLength();
+          SPoint gloc = SPoint(tilex,tiley) * maxside + loc;
 
           LOG.Warning("NC%s %s%c%c {%03d,%03d} #%2d(%2d,%2d)+(%2d,%2d)==(%2d,%2d) [%04x/%@] [%04x/%@]",
                       isDifferent? "U" : "C",
@@ -272,7 +273,7 @@ namespace MFM
     MFM_LOG_DBG7(("CP %s %s [%s] reply %d<->%d : %d",
                   GetTile().GetLabel(),
                   Dirs::GetName(m_cacheDir),
-                  Dirs::GetName(m_centerRegion),
+		  Dirs::GetName(m_lockRegions[0]),
                   consistentCount,
                   m_toSendCount,
                   m_checkOdds));
@@ -395,7 +396,8 @@ namespace MFM
     MFM_API_ASSERT_STATE(m_cpState == BLOCKING);
 
     SetIdle();
-    m_centerRegion = (Dir) -1;
+    m_locksNeeded = 0;
+    m_lockRegions[0] = -1;
     Unlock();  // FINALLY
   }
 
@@ -407,44 +409,36 @@ namespace MFM
     return m_tile->GetCacheProcessor(forDirection);
   }
 
+
   template <class EC>
   bool CacheProcessor<EC>::AdvanceBlocking()
   {
-    s32 needed = 1;
-    Dir baseDir = m_centerRegion;
-
-    if (Dirs::IsCorner(baseDir))
-    {
-      needed = 3;
-      baseDir = Dirs::CCWDir(baseDir);
-    }
-
     // Check if every-relevant-body is blocking
     s32 got = 0;
-    for (Dir dir = baseDir; got < needed; ++got, dir = Dirs::CWDir(dir))
+    for (u32 d = 0; got < m_locksNeeded; ++got, d++)
     {
-      CacheProcessor<EC> & cp = GetSibling(dir);
-      if (cp.IsConnected() && !cp.IsBlocking())
-      {
-        break;
-      }
+      CacheProcessor<EC> & cp = GetSibling(m_lockRegions[d]);
+      if(cp.IsConnected() && !cp.IsBlocking())
+	{
+	  break;
+	}
     }
 
-    if (got < needed)
+    if (got < m_locksNeeded)
     {
       return false;  // Somebody still working
     }
 
     // All are done, unblock all, including ourselves
     got = 0;
-    for (Dir dir = baseDir; got < needed; ++got, dir = Dirs::CWDir(dir))
-    {
-      CacheProcessor<EC> & cp = GetSibling(dir);
-      if (cp.IsConnected())
+    for (u32 d = 0; got < m_locksNeeded; ++got, d++)
       {
-        cp.Unblock();
+	CacheProcessor<EC> & cp = GetSibling(m_lockRegions[d]);
+	if (cp.IsConnected())
+	  {
+	    cp.Unblock();
+	  }
       }
-    }
 
     return true;
   }

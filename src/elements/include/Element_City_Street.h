@@ -142,7 +142,7 @@ namespace MFM
       SPoint pt;
       for(u32 i = 0; i < Dirs::DIR_COUNT; i++)
       {
-        Dirs::FillDir(pt, (Dir)i);
+        Dirs::FillDir(pt, (Dir)i, false);
         if(window.GetRelativeAtomDirect(pt).GetType() == type)
         {
           return true;
