@@ -53,8 +53,6 @@ namespace MFM
 
   template <class EC> class EventHistoryBuffer; // FORWARD
 
-  typedef Dir THREEDIR[3];
-
   enum CHKCONNECT { NOCHKCONNECT, YESCHKCONNECT };
 
   /**
@@ -1374,9 +1372,9 @@ namespace MFM
      * @returns true for a consistent update, false for inconsistent
      * update
      *
-     * @fails ILLEGAL_ARGUMENT if site is not a cache location
+     * @fails ILLEGAL_ARGUMENT if site is not a cache or shared location
      */
-    bool ApplyCacheUpdate(bool isDifferent, const T& atom, const SPoint& site);
+    bool ApplyCacheUpdate(const bool isDifferent, const T& oldAtomArg, const T& atom, const SPoint& site);
 
 
     /**

@@ -187,15 +187,15 @@ namespace MFM
 
       const SPoint soffset = md.GetPoint(siteNumber);
       SPoint loc = soffset + m_eventCenter;
+      const T& oldAtom = *m_tile->GetAtom(loc);
 
       if (isDifferent)
       {
-        const T& oldAtom = *m_tile->GetAtom(loc);
         ehb.AddEventAtom(siteNumber, oldAtom, inboundAtom);
       }
 
       bool consistent =
-        m_tile->ApplyCacheUpdate(isDifferent, inboundAtom, loc);
+        m_tile->ApplyCacheUpdate(isDifferent, oldAtom, inboundAtom, loc);
 
       if (consistent)
       {
@@ -206,10 +206,10 @@ namespace MFM
         if (LOG.IfLog(Logger::WARNING))
         {
           // Get old for debug output
-          T oldAtom = *m_tile->GetAtom(loc);
+          T oldAtomx = oldAtom; //*m_tile->GetAtom(loc);
 
+          AtomSerializer<AC> oldas(oldAtomx);
           AtomSerializer<AC> as(inboundAtom);
-          AtomSerializer<AC> oldas(oldAtom);
 
           // Develop a secret grid-global address! shh don't tell ackley!
           s32 tilex = -1, tiley = -1;
@@ -218,8 +218,7 @@ namespace MFM
           cbs.Scanf("[%d,%d]",&tilex,&tiley);
 
 	  const SPoint ownedp(GetTile().OWNED_WIDTH, GetTile().OWNED_HEIGHT);
-	  u32 maxside = ownedp.GetMaximumLength();
-          SPoint gloc = SPoint(tilex,tiley) * maxside + loc;
+	  SPoint gloc = SPoint(tilex,tiley) * ownedp + loc;
 
           LOG.Warning("NC%s %s%c%c {%03d,%03d} #%2d(%2d,%2d)+(%2d,%2d)==(%2d,%2d) [%04x/%@] [%04x/%@]",
                       isDifferent? "U" : "C",
@@ -277,6 +276,7 @@ namespace MFM
                   consistentCount,
                   m_toSendCount,
                   m_checkOdds));
+
     SetStateInternal(BLOCKING);
   }
 
@@ -396,8 +396,6 @@ namespace MFM
     MFM_API_ASSERT_STATE(m_cpState == BLOCKING);
 
     SetIdle();
-    m_locksNeeded = 0;
-    m_lockRegions[0] = -1;
     Unlock();  // FINALLY
   }
 
@@ -415,6 +413,7 @@ namespace MFM
   {
     // Check if every-relevant-body is blocking
     s32 got = 0;
+#if 0
     for (u32 d = 0; got < m_locksNeeded; ++got, d++)
     {
       CacheProcessor<EC> & cp = GetSibling(m_lockRegions[d]);
@@ -422,11 +421,26 @@ namespace MFM
 	{
 	  break;
 	}
+      //else incr got
+    }
+#endif
+
+    u32 needed = m_locksNeeded;
+    for (u32 d = 0; d < m_locksNeeded; d++)
+    {
+      CacheProcessor<EC> & cp = GetSibling(m_lockRegions[d]);
+      if(cp.IsConnected())
+	{
+	  if(cp.IsBlocking())
+	    got++;
+	}
+      else
+	needed--;
     }
 
-    if (got < m_locksNeeded)
+    if (got < needed)
     {
-      return false;  // Somebody still working
+      return false;  // Somebody else is still working
     }
 
     // All are done, unblock all, including ourselves

@@ -41,7 +41,8 @@ namespace MFM {
 
   template <class EC> class Tile; // FORWARD
 
-  typedef Dir THREEDIR[3]; //copy of Tile.h
+  enum {MAX_LOCKS_NEEDED = 3};
+  typedef Dir THREEDIR[MAX_LOCKS_NEEDED];
 
   /**
     CacheProcessors mediate both sides of the intertile cache update
@@ -213,6 +214,7 @@ namespace MFM {
       RECEIVING,    // Locked by us, waiting for ack/nak from peer
       BLOCKING,     // Locked by us, waiting for other linked CP's
       PASSIVE,      // Locked by them, Received BeginUpdate from peer
+      UNCLAIMED,  // Never Claimed
       STATE_COUNT
     };
 
@@ -372,6 +374,11 @@ namespace MFM {
       return m_cpState == BLOCKING;
     }
 
+    bool IsUnclaimed()
+    {
+      return m_cpState == UNCLAIMED;
+    }
+
     CacheProcessor & GetSibling(Dir inDirection) ;
 
     /**
@@ -383,7 +390,7 @@ namespace MFM {
     /**
        Handle an inbound atom that our neighbor cache processor
        decided to MaybeSendAtom to us.
-     */
+    */
     void ReceiveAtom(bool isDifferent, s32 siteNumber, const T & inboundAtom) ;
 
     /**
@@ -429,7 +436,7 @@ namespace MFM {
       bool ret = GetLonglivedLock().Unlock(this);
       MFM_API_ASSERT(ret, LOCK_FAILURE);
       m_locksNeeded = 0;
-      m_lockRegions[0] = (Dir) -1;
+      for(u32 i=0; i< MAX_LOCKS_NEEDED; m_lockRegions[i++] = (Dir) -1);
     }
 
     bool IsConnected() const
@@ -444,6 +451,7 @@ namespace MFM {
       m_tile = &tile;
       m_longlivedLock = &lock;
       m_cacheDir = toCache;
+      m_cpState = IDLE;
 
       // Map their full untransformed origin to our full untransformed frame
       bool isStaggered = m_tile->IsTileGridLayoutStaggered();
@@ -513,12 +521,12 @@ namespace MFM {
     CacheProcessor()
       : m_tile(0)
       , m_longlivedLock(0)
-      , m_cacheDir(0)
+      , m_cacheDir((Dir)-1)
       , m_locksNeeded(0)
       , m_checkOdds(INITIAL_CHECK_ODDS)
       , m_remoteConsistentAtomCount(0)
       , m_useAdaptiveRedundancy(true)
-      , m_cpState(IDLE)
+      , m_cpState(UNCLAIMED)
       , m_eventCenter(0,0)
       , m_farSideOrigin(0,0)
     {

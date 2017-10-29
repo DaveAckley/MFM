@@ -618,10 +618,8 @@ namespace MFM {
     /**
      * Return the Grid width in (non-cache) sites
      */
-    u32 GetWidthSites(bool isStaggered = false) const
+    u32 GetWidthSites() const
     {
-      if(isStaggered)
-	return (GetWidth() - 1) * OWNED_WIDTH;
       return GetWidth() * OWNED_WIDTH;
     }
 
@@ -769,9 +767,8 @@ namespace MFM {
     { return _getTile(x,y); }
 
     /* Don't count caches! */
-    /* Don't count staggered dummies! */
     inline const u32 GetTotalSites()
-    { return GetWidthSites(IsGridLayoutStaggered()) * GetHeightSites(); }
+    { return GetWidthSites() * GetHeightSites(); }
 
     u64 GetTotalEventsExecuted() const;
 
@@ -797,7 +794,7 @@ namespace MFM {
     double GetFullSitePercentage() const
     {
       return 1.0 - ((double)GetAtomCount(Element_Empty<EC>::THE_INSTANCE.GetType()) /
-                    (double)(GetHeightSites() * GetWidthSites(IsGridLayoutStaggered())));
+                    (double)(GetHeightSites() * GetWidthSites()));
     }
 
     //    void SurroundRectangleWithWall(s32 x, s32 y, s32 w, s32 h, s32 thickness);

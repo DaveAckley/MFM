@@ -285,6 +285,7 @@ namespace MFM {
 
     if (!cp.IsIdle())
     {
+      MFM_API_ASSERT_STATE(!cp.IsUnclaimed()); //since it's connected
       MFM_LOG_DBG6(("EW::AcquireRegionLocks - fail: %s cp not idle",
                     Dirs::GetName(dir)));
       return LOCK_UNAVAILABLE;
@@ -366,23 +367,36 @@ namespace MFM {
       MFM_LOG_DBG6(("EW::AcquireRegionLocks - got %d but needed %d", got, needed));
       // Opps, didn't get all, free any we got
 
-      for (m_cpli.ShuffleOrReset(random); m_cpli.HasNext(); )
-      {
-        u32 i = m_cpli.Next();
+      if(got > 0)
+	{
+	  for (m_cpli.ShuffleOrReset(random); m_cpli.HasNext(); )
+	    {
+	      u32 i = m_cpli.Next();
 
-        if (m_cacheProcessorsLocked[i])
-        {
-          CacheProcessor<EC> & cp = *m_cacheProcessorsLocked[i];
-          cp.Unlock();
-          MFM_LOG_DBG6(("EW::AcquireRegionLocks #%d freed", i));
-          m_cacheProcessorsLocked[i] = 0;
-        }
-      }
+	      if (m_cacheProcessorsLocked[i])
+		{
+		  CacheProcessor<EC> & cp = *m_cacheProcessorsLocked[i];
+		  cp.Unlock();
+		  MFM_LOG_DBG6(("EW::AcquireRegionLocks #%d freed", i));
+		  m_cacheProcessorsLocked[i] = 0;
+		}
+	    }
+	} //else no locks to unlock
 
       return false;
-    }
+    } //failed to get all needed locks, so none.
 
-    // Activate everything we got
+    // Only got 1, so do it..
+    if(got == 1)
+      {
+	MFM_API_ASSERT_STATE(m_cacheProcessorsLocked[0]);
+        MFM_LOG_DBG6(("EW::AcquireRegionLocks activate #0"));
+        m_cacheProcessorsLocked[0]->Activate();
+
+	return true;
+      }
+
+    // Activate everything we got, randomly
     for (m_cpli.ShuffleOrReset(random); m_cpli.HasNext(); )
     {
       u32 i = m_cpli.Next();
@@ -404,6 +418,7 @@ namespace MFM {
     MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
     THREEDIR eventLockRegions;
     u32 eventLocksNeeded = t.GetAllLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
+
     return AcquireRegionLocks(eventLocksNeeded, eventLockRegions);
   }
 

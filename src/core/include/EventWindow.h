@@ -98,7 +98,7 @@ namespace MFM
   public:
     enum { SITE_COUNT = EVENT_WINDOW_SITES(R) };
     enum {MAX_LOCK_DIRS = 3 };
-    typedef Dir THREEDIR[3]; //copy of Tile.h
+    typedef Dir THREEDIR[MAX_LOCK_DIRS]; //copy of CacheProcessor.h
 
   private:
 
