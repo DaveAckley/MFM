@@ -277,10 +277,13 @@ namespace MFM {
 
     void SetStateInternal(State state)
     {
-      MFM_LOG_DBG6(("CP %s %s [%s] (%d,%d): %s->%s",
+      MFM_LOG_DBG6(("CP %s %s %d[%s %s %s] (%d,%d): %s->%s",
                     m_tile->GetLabel(),
                     Dirs::GetName(m_cacheDir),
+		    m_locksNeeded,
 		    Dirs::GetName(m_lockRegions[0]),
+		    m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		    m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
                     m_farSideOrigin.GetX(),
                     m_farSideOrigin.GetY(),
                     GetStateName(m_cpState),
@@ -296,6 +299,11 @@ namespace MFM {
       INITIAL,
       ADAPTIVE
     };
+
+    Dir GetCacheDir()
+    {
+      return m_cacheDir;
+    }
 
     u32 GetCurrentCacheRedundancy() const
     {

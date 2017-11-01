@@ -1089,6 +1089,16 @@ namespace MFM
     }
 
     /**
+       Same as GetAllLockDirections, except only connected directions are returned
+      *
+     */
+    u32 GetLockDirections(const SPoint& pt, const u32 boundary, THREEDIR & rtndirs) const
+    {
+      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, (bool) YESCHKCONNECT);
+    }
+
+
+    /**
      * Finds the cache in this Tile which contains a specified SPoint.
      *
      * @param pt The Point which should specify the location of a cache.
@@ -1374,7 +1384,7 @@ namespace MFM
      *
      * @fails ILLEGAL_ARGUMENT if site is not a cache or shared location
      */
-    bool ApplyCacheUpdate(const bool isDifferent, const T& oldAtomArg, const T& atom, const SPoint& site);
+    bool ApplyCacheUpdate(const bool isDifferent, const T& atom, const SPoint& site);
 
 
     /**

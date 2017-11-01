@@ -454,7 +454,7 @@ namespace MFM
   }
 
   template <class EC>
-  bool Tile<EC>::ApplyCacheUpdate(const bool isDifferent, const T& oldAtomArg, const T& atom, const SPoint& site)
+  bool Tile<EC>::ApplyCacheUpdate(const bool isDifferent, const T& atom, const SPoint& site)
   {
     MFM_API_ASSERT_ARG(!IsInHidden(site));  // That would make no sense
 
@@ -463,9 +463,6 @@ namespace MFM
 
     bool consistent;
     const T& oldAtom = *GetAtom(site);
-
-    if(oldAtom != oldAtomArg)
-      FAIL(ILLEGAL_ARGUMENT);
 
     if (atom != oldAtom)
     {
@@ -483,12 +480,21 @@ namespace MFM
   template <class EC>
   void Tile<EC>::PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt)
   {
+    MFM_LOG_DBG6(("Tile %s: Place AtomInSite type %04x at (%2d,%2d)",
+		  this->GetLabel(),
+		  atom.GetType(),
+		  pt.GetX(), pt.GetY()));
+
     if (!IsLiveSite(pt))
     {
       if (atom.GetType() != Element_Empty<EC>::THE_INSTANCE.GetType())
       {
         LOG.Debug("Not placing type %04x at (%2d,%2d) of %s",
                   atom.GetType(), pt.GetX(), pt.GetY(), this->GetLabel());
+	MFM_LOG_DBG6(("Tile %s: NOT placing AtomInSite type %04x at (%2d,%2d)",
+		      this->GetLabel(),
+		      atom.GetType(),
+		      pt.GetX(), pt.GetY()));
       }
       return;
     }
@@ -501,6 +507,10 @@ namespace MFM
       oldAtom.SetEmpty();
       LOG.Warning("Failure during PlaceAtom, erased (%2d,%2d) of %s",
                   pt.GetX(), pt.GetY(), this->GetLabel());
+      MFM_LOG_DBG6(("Tile %s: failure during place AtomInSite type %04x at (%2d,%2d) erased",
+		    this->GetLabel(),
+		    atom.GetType(),
+		    pt.GetX(), pt.GetY()));
     },
     {
       if(m_backgroundRadiationEnabled &&
@@ -656,8 +666,7 @@ namespace MFM
         return false;
       }
     }
-    MFM_LOG_DBG6(("Tile %s All CPs idle",
-                  this->GetLabel()));
+    MFM_LOG_DBG6(("Tile %s All CPs idle", this->GetLabel()));
     return true;
   }
 
