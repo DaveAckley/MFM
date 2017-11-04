@@ -1366,7 +1366,8 @@ namespace MFM
       PlaceAtomInSite(false, atom, pt);
     }
 
-    void PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt);
+    void PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt, bool doIdenticalCheck=false);
+
 
     /**
      * Store and/or consistency check an atom against the current

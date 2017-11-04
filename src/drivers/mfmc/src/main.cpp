@@ -6,6 +6,8 @@
 #include "UlamCustomElements.h"
 #endif
 
+void * XXXDRIVER = 0;
+
 namespace MFM
 {
   template <class GC, u32 W, u32 H>
@@ -289,6 +291,7 @@ namespace MFM
     SizedTile<typename CONFIG::EVENT_CONFIG, CONFIG::TILE_WIDTH, CONFIG::TILE_HEIGHT, CONFIG::EVENT_HISTORY_SIZE>::SetGridLayoutPattern(gridLayout); //static before sim (next line)
 
     MFMCDriver<CONFIG> sim(gridWidth,gridHeight,gridLayout);
+    XXXDRIVER = &sim;
     sim.ProcessArguments(argc, argv);
     sim.AddInternalLogging();
     sim.Init();
@@ -386,6 +389,16 @@ namespace MFM
     return SimRunConfig(gcc, argc, argv);
   }
 }
+
+#define XX(A,B,C) \
+void XXXCC##A()  __attribute__ ((used)) ;  \
+void XXXCC##A() { \
+  if (!XXXDRIVER) abort(); \
+  ((MFM::AbstractDriver<MFM::OurGridConfigTile##A>*) XXXDRIVER)->XXXCHECKCACHES(); \
+}
+#include "TileSizes.inc"
+#undef XX
+
 
 void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc,
         const MFM::UlamRef<MFM::OurEventConfigAll>& rur) __attribute__ ((used)) ;

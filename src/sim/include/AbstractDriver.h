@@ -225,6 +225,8 @@ namespace MFM
       fclose(fp);
     }
 
+    void XXXCHECKCACHES() { m_grid.CheckCaches(); }
+
     /**
      * Runs the held Grid and all its associated threads for a brief
      * amount of time, letting about \c m_aepsPerFrame AEPS occur
@@ -248,6 +250,8 @@ namespace MFM
       m_ticksLastStopped = GetTicks(); // and before pausing
 
       grid.Pause();
+
+      //grid.CheckCaches(); //debug only!!! XXXCCH (before ReceiveUpdateEnd)
 
       u32 thisPeriodMS = m_ticksLastStopped - startMS;
       m_msSpentRunning += thisPeriodMS;

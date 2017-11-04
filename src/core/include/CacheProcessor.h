@@ -372,17 +372,17 @@ namespace MFM {
 
     void Unblock() ;
 
-    bool IsIdle()
+    bool IsIdle() const
     {
       return m_cpState == IDLE;
     }
 
-    bool IsBlocking()
+    bool IsBlocking() const
     {
       return m_cpState == BLOCKING;
     }
 
-    bool IsUnclaimed()
+    bool IsUnclaimed() const
     {
       return m_cpState == UNCLAIMED;
     }

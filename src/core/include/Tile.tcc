@@ -369,7 +369,7 @@ namespace MFM
       {
 	if(isStaggered)
 	  {
-	    if((pt.GetX() > TILE_WIDTH/2 - REACH) && (pt.GetX() <= TILE_WIDTH/2 + REACH))
+	    if((pt.GetX() >= TILE_WIDTH/2 - REACH) && (pt.GetX() < TILE_WIDTH/2 + REACH))
 	      {
 		//in the middle +/- REACH
 		if(pt.GetY() < REACH)
@@ -467,6 +467,12 @@ namespace MFM
     if (atom != oldAtom)
     {
       PlaceAtom(atom, site);
+
+      //Let's check that it happened..
+      const T& newAtom = *GetAtom(site);
+      if(atom != newAtom)
+	FAIL(ILLEGAL_STATE);
+
       consistent = isDifferent;
     }
     else
@@ -478,12 +484,13 @@ namespace MFM
   }
 
   template <class EC>
-  void Tile<EC>::PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt)
+  void Tile<EC>::PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt, bool doIdenticalCheck)
   {
-    MFM_LOG_DBG6(("Tile %s: Place AtomInSite type %04x at (%2d,%2d)",
-		  this->GetLabel(),
-		  atom.GetType(),
-		  pt.GetX(), pt.GetY()));
+    if(!doIdenticalCheck)
+      MFM_LOG_DBG6(("Tile %s: Place AtomInSite type %04x at (%2d,%2d)",
+		    this->GetLabel(),
+		    atom.GetType(),
+		    pt.GetX(), pt.GetY()));
 
     if (!IsLiveSite(pt))
     {
@@ -522,13 +529,29 @@ namespace MFM
 
       bool owned = IsOwnedSite(pt);
 
-      if (oldAtom != newAtom) {
-        NeedAtomRecount();
-        if (owned)
-          site.MarkChanged();
+      if (oldAtom != newAtom)
+	{
+	  if(doIdenticalCheck)
+	    {
+	      AtomSerializer<AC> oldas(oldAtom);
+	      AtomSerializer<AC> as(newAtom);
 
-        oldAtom = newAtom;
-      }
+	      LOG.Warning("Tile %s: doIdenticalCheck failure during place AtomInSite type [%04x/%@] was [%04x/%@] at (%2d,%2d)",
+			  this->GetLabel(),
+			  newAtom.GetType(), &as,
+			  oldAtom.GetType(), &oldas,
+			  pt.GetX(), pt.GetY());
+	      //FAIL(ILLEGAL_STATE);
+	    }
+	  else
+	    {
+	      NeedAtomRecount();
+	      if (owned)
+		site.MarkChanged();
+
+	      oldAtom = newAtom;
+	    }
+	}
     });
   }
 
@@ -536,7 +559,8 @@ namespace MFM
   bool Tile<EC>::IsConnected(Dir dir) const
   {
     const CacheProcessor<EC> & cxn = GetCacheProcessor(dir);
-    return cxn.IsConnected();
+    //return cxn.IsConnected();
+    return !cxn.IsUnclaimed() && cxn.IsConnected();
   }
 
   template <class EC>
@@ -564,9 +588,19 @@ namespace MFM
   bool Tile<EC>::IsCacheSitePossibleEventCenter(const SPoint & location) const
   {
     MFM_API_ASSERT_ARG(IsInCache(location));
-    THREEDIR rtndirs;
-    u32 count = CacheAt(location, rtndirs, YESCHKCONNECT);
-    return (count > 0);
+    THREEDIR cnCacheDirs;
+    u32 count = CacheAt(location, cnCacheDirs, YESCHKCONNECT);
+    bool isInANeighborsShared = false;
+    for(u32 i = 0; i < count; i++)
+      {
+	Dir dir = cnCacheDirs[i];
+	const CacheProcessor<EC>& cp = this->GetCacheProcessor(dir);
+	SPoint remoteloc = cp.LocalToRemote(location);
+	isInANeighborsShared |= ! IsInCache(remoteloc); //all tiles same size
+      }
+
+    //return (count > 0);
+    return isInANeighborsShared;
   }
 
   template <class EC>

@@ -7,6 +7,7 @@
 #include "EventHistoryBuffer.h"
 #include "CacheProcessor.h"
 
+extern void XXXCCH();
 namespace MFM {
 
   template <class EC>
@@ -47,6 +48,8 @@ namespace MFM {
       return false;
     }
 
+    //XXXCCH();
+
     if (!InitForEvent(tcenter))
     {
       return false;
@@ -54,6 +57,8 @@ namespace MFM {
 
     RecordEventAtTileCoord(tcenter);
     ExecuteEvent();
+
+    //    XXXCCH();
 
     return true;
   }
@@ -285,7 +290,8 @@ namespace MFM {
 
     CacheProcessor<EC> & cp = ewtile.GetCacheProcessor(dir);
 
-    if (!cp.IsConnected())
+    //if (!cp.IsConnected())
+    if (cp.IsUnclaimed() || !cp.IsConnected())
     {
       // Whups, didn't really need that one.  Leave it null, since
       // the other loops check all MAX_CACHES_TO_UPDATE slots anyway
@@ -380,6 +386,13 @@ namespace MFM {
       ++got;
     }
 
+    if(needed == 0)
+      {
+        MFM_LOG_DBG6(("EW::AcquireRegionLocks %s NONE needed",
+		      tile.GetLabel()));
+	return true;
+      }
+
     if (got < needed)
     {
       MFM_LOG_DBG6(("EW::AcquireRegionLocks %s - got %d but needed %d",
@@ -444,7 +457,8 @@ namespace MFM {
     Tile<EC> & t = GetTile();
     MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
     THREEDIR eventLockRegions;
-    u32 eventLocksNeeded = t.GetLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
+    //    u32 eventLocksNeeded = t.GetLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
+    u32 eventLocksNeeded = t.GetAllLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
 
     MFM_LOG_DBG7(("EW:: AcquireAllLocks %s %d[%s %s %s] for tilecenter(%2d,%2d)",
                   t.GetLabel(),

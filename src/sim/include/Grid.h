@@ -677,9 +677,11 @@ namespace MFM {
      */
     void RecountAtoms();
 
+    void CheckAtom(const T& atom, const SPoint& location);
+
     void PlaceAtom(const T& atom, const SPoint& location);
 
-    void PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& location);
+    void PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& location, bool checkOnly=false);
 
     void XRayAtom(const SPoint& location);
 
@@ -714,13 +716,13 @@ namespace MFM {
       return GetAtomInSite(false, loc);
     }
 
-    const T* GetAtomInSite(bool getFromBase, SPoint& loc)
+    const T* GetAtomInSite(bool getFromBase, SPoint& siteInGrid)
     {
       SPoint tileInGrid, siteInTile;
-      if (!MapGridToTile(loc, tileInGrid, siteInTile))
+      if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
       {
         LOG.Error("Can't get atom at site (%d,%d): Does not map to grid.",
-                  loc.GetX(), loc.GetY());
+                  siteInGrid.GetX(), siteInGrid.GetY());
         FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
       }
       return GetTile(tileInGrid).GetAtomInSite(getFromBase, siteInTile);
