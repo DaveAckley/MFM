@@ -627,7 +627,7 @@ namespace MFM {
     owner.PlaceAtomInSite(placeInBase, atom, siteInTile, checkOnly);
 
     THREEDIR connectedDirs;
-    u32 dircount = owner.SharedAt(siteInTile, connectedDirs, true);
+    u32 dircount = owner.SharedAt(siteInTile, connectedDirs, YESCHKCONNECT);
 
     bool isStaggered = IsGridLayoutStaggered();
     for (u32 d = 0; d < dircount; d++) {

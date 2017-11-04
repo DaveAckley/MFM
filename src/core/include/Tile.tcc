@@ -468,11 +468,6 @@ namespace MFM
     {
       PlaceAtom(atom, site);
 
-      //Let's check that it happened..
-      const T& newAtom = *GetAtom(site);
-      if(atom != newAtom)
-	FAIL(ILLEGAL_STATE);
-
       consistent = isDifferent;
     }
     else
@@ -572,13 +567,13 @@ namespace MFM
     }
 
     THREEDIR shareddirs;
-    u32 sharedcnt = SharedAt(location, shareddirs, (bool) NOCHKCONNECT);
+    u32 sharedcnt = SharedAt(location, shareddirs, NOCHKCONNECT);
 
     if(sharedcnt > 1)
       {
 	//then must be a corner
 	THREEDIR connecteddirs;
-	u32 connectedcnt = SharedAt(location, connecteddirs, (bool) YESCHKCONNECT);
+	u32 connectedcnt = SharedAt(location, connecteddirs, YESCHKCONNECT);
 	return (sharedcnt == connectedcnt);
       }
     return false;
@@ -598,8 +593,6 @@ namespace MFM
 	SPoint remoteloc = cp.LocalToRemote(location);
 	isInANeighborsShared |= ! IsInCache(remoteloc); //all tiles same size
       }
-
-    //return (count > 0);
     return isInANeighborsShared;
   }
 

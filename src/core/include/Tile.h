@@ -53,7 +53,7 @@ namespace MFM
 
   template <class EC> class EventHistoryBuffer; // FORWARD
 
-  enum CHKCONNECT { NOCHKCONNECT, YESCHKCONNECT };
+  enum { NOCHKCONNECT, YESCHKCONNECT };
 
   /**
    * Grid layout for tiles. MFM namespace.
@@ -1085,7 +1085,7 @@ namespace MFM
      */
     u32 GetAllLockDirections(const SPoint& pt, const u32 boundary, THREEDIR & rtndirs) const
     {
-      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, (bool) NOCHKCONNECT);
+      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, NOCHKCONNECT);
     }
 
     /**
@@ -1094,7 +1094,7 @@ namespace MFM
      */
     u32 GetLockDirections(const SPoint& pt, const u32 boundary, THREEDIR & rtndirs) const
     {
-      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, (bool) YESCHKCONNECT);
+      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, YESCHKCONNECT);
     }
 
 

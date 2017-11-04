@@ -251,8 +251,6 @@ namespace MFM
 
       grid.Pause();
 
-      //grid.CheckCaches(); //debug only!!! XXXCCH (before ReceiveUpdateEnd)
-
       u32 thisPeriodMS = m_ticksLastStopped - startMS;
       m_msSpentRunning += thisPeriodMS;
 

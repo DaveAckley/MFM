@@ -48,8 +48,6 @@ namespace MFM {
       return false;
     }
 
-    //XXXCCH();
-
     if (!InitForEvent(tcenter))
     {
       return false;
@@ -57,8 +55,6 @@ namespace MFM {
 
     RecordEventAtTileCoord(tcenter);
     ExecuteEvent();
-
-    //    XXXCCH();
 
     return true;
   }
