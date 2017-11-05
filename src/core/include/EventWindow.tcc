@@ -7,6 +7,7 @@
 #include "EventHistoryBuffer.h"
 #include "CacheProcessor.h"
 
+extern void XXXCCH();
 namespace MFM {
 
   template <class EC>
@@ -32,9 +33,14 @@ namespace MFM {
   template <class EC>
   bool EventWindow<EC>::TryEventAt(const SPoint & tcenter)
   {
-    MFM_LOG_DBG6(("EW::TryEventAt(%d,%d)",
-                  tcenter.GetX(),
-                  tcenter.GetY()));
+    Tile<EC> & t = GetTile();
+    MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
+
+    MFM_LOG_DBG6(("EW::TryEventAt(%d,%d) %s",
+		  tcenter.GetX(),
+                  tcenter.GetY(),
+		  t.GetLabel()));
+
     ++m_eventWindowsAttempted;
 
     if (RejectOnRecency(tcenter))
@@ -56,9 +62,10 @@ namespace MFM {
   template <class EC>
   void EventWindow<EC>::RecordEventAtTileCoord(const SPoint tcoord)
   {
-    ++m_eventWindowsExecuted;
     Tile<EC> & t = GetTile();
     MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
+
+    ++m_eventWindowsExecuted;
 
     SPoint owned = Tile<EC>::TileCoordToOwned(tcoord);
     t.m_lastEventCenterOwned = owned;
@@ -80,7 +87,8 @@ namespace MFM {
   template <class EC>
   void EventWindow<EC>::ExecuteEvent()
   {
-    MFM_LOG_DBG6(("EW::ExecuteEvent"));
+
+    MFM_LOG_DBG6(("EW::ExecuteEvent %s", GetTile().GetLabel()));
     MFM_API_ASSERT_STATE(m_ewState == COMPUTE);
 
     ExecuteBehavior();
@@ -91,7 +99,7 @@ namespace MFM {
   template <class EC>
   void EventWindow<EC>::InitiateCommunications()
   {
-    MFM_LOG_DBG6(("EW::InitiateCommunications"));
+    MFM_LOG_DBG6(("EW::InitiateCommunications %s",GetTile().GetLabel()));
     MFM_API_ASSERT_STATE(m_ewState == COMPUTE);
 
     // Step 1: Write back the event window and set up the CacheProcessors
@@ -112,9 +120,10 @@ namespace MFM {
   template <class EC>
   void EventWindow<EC>::ExecuteBehavior()
   {
-    MFM_LOG_DBG6(("EW::ExecuteBehavior"));
     Tile<EC> & t = GetTile();
     MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
+
+    MFM_LOG_DBG6(("EW::ExecuteBehavior %s",t.GetLabel()));
 
     unwind_protect(
     {
@@ -152,7 +161,7 @@ namespace MFM {
       SetCenterAtomDirect(t.GetEmptyAtom());
     },
     {
-      MFM_LOG_DBG6(("ET::Execute"));
+      MFM_LOG_DBG6(("ET::Execute %s",t.GetLabel()));
       m_element->Behavior(*this);
     });
   }
@@ -206,13 +215,14 @@ namespace MFM {
   template <class EC>
   bool EventWindow<EC>::InitForEvent(const SPoint & center)
   {
-    MFM_LOG_DBG6(("EW::InitForEvent(%d,%d)",center.GetX(),center.GetY()));
+    Tile<EC> & tile = GetTile();
+    MFM_API_ASSERT_STATE(!tile.IsDummyTile()); //sanity
+
+    MFM_LOG_DBG6(("EW::InitForEvent(%d,%d) %s",
+		  center.GetX(),center.GetY(),
+		  tile.GetLabel()));
 
     MFM_API_ASSERT_STATE(IsFree());  // Don't be callin' when I'm not free
-
-    Tile<EC> & tile = GetTile();
-
-    MFM_API_ASSERT_STATE(!tile.IsDummyTile()); //sanity
 
     // We need to access the element early to determine its boundary
     T atom = *tile.GetAtom(center);
@@ -251,7 +261,9 @@ namespace MFM {
 
     if (!AcquireAllLocks(center, m_eventWindowBoundary))
     {
-      MFM_LOG_DBG6(("EW::InitForEvent - abandoned"));
+      MFM_LOG_DBG6(("EW::InitForEvent (%d,%d) %s - abandoned",
+		    center.GetX(),center.GetY(),
+		    tile.GetLabel()));
       return false;
     }
 
@@ -274,18 +286,22 @@ namespace MFM {
 
     CacheProcessor<EC> & cp = ewtile.GetCacheProcessor(dir);
 
-    if (!cp.IsConnected())
+    //if (!cp.IsConnected())
+    if (cp.IsUnclaimed() || !cp.IsConnected())
     {
       // Whups, didn't really need that one.  Leave it null, since
       // the other loops check all MAX_CACHES_TO_UPDATE slots anyway
-      MFM_LOG_DBG6(("EW::AcquireRegionLocks - skip: %s unconnected",
+      MFM_LOG_DBG6(("EW::AcquireRegionLocks %s - skip: %s unconnected",
+		    ewtile.GetLabel(),
                     Dirs::GetName(dir)));
       return LOCK_UNNEEDED;
     }
 
     if (!cp.IsIdle())
     {
-      MFM_LOG_DBG6(("EW::AcquireRegionLocks - fail: %s cp not idle",
+      MFM_API_ASSERT_STATE(!cp.IsUnclaimed()); //since it's connected
+      MFM_LOG_DBG6(("EW::AcquireRegionLocks %s - fail: %s cp not idle",
+		    ewtile.GetLabel(),
                     Dirs::GetName(dir)));
       return LOCK_UNAVAILABLE;
     }
@@ -293,21 +309,25 @@ namespace MFM {
     bool locked = cp.TryLock(neededLocks, lockRegions);
     if (!locked)
     {
-      MFM_LOG_DBG6(("EW::AcquireRegionLocks - fail: didn't get %s lock",
+      MFM_LOG_DBG6(("EW::AcquireRegionLocks %s - fail: didn't get %s lock",
+		    ewtile.GetLabel(),
                     Dirs::GetName(dir)));
       return LOCK_UNAVAILABLE;
     }
-    MFM_LOG_DBG6(("EW::AcquireRegionLocks, %s locked",
-                  Dirs::GetName(dir)));
+    MFM_LOG_DBG6(("EW::AcquireRegionLocks %s, %s got lock"
+		  , ewtile.GetLabel()
+                  , Dirs::GetName(dir)));
     return LOCK_ACQUIRED;
   }
 
   template <class EC>
   bool EventWindow<EC>::AcquireRegionLocks(const u32 neededArg, const THREEDIR& lockRegionsArg)
   {
+    Tile<EC> & tile = GetTile();
+
     Random & random = GetRandom();
 
-    MFM_LOG_DBG6(("EW::AcquireRegionLocks"));
+    MFM_LOG_DBG6(("EW::AcquireRegionLocks %s",tile.GetLabel()));
     // We cannot still have any cacheprocessors in use
     for (u32 i = 0; i < MAX_CACHES_TO_UPDATE; ++i)
     {
@@ -316,7 +336,8 @@ namespace MFM {
 
     if (neededArg == 0)
     {
-      MFM_LOG_DBG6(("EW::AcquireRegionLocks - none needed"));
+      MFM_LOG_DBG6(("EW::AcquireRegionLocks %s - none needed",
+		    tile.GetLabel()));
       return true;  // Nobody is needed
     }
 
@@ -326,14 +347,14 @@ namespace MFM {
     for(u32 i = 0; i < needed; i++)
       lockDirs[i] = lockRegionsArg[i];
 
-    Tile<EC> & tile = GetTile();
-
     if(needed==3)
       Shuffle<Dir,3>(GetRandom(),lockDirs);
     else if (needed==2)
       Shuffle<Dir,2>(GetRandom(),lockDirs);
 
-    MFM_LOG_DBG6(("EW::AcquireRegionLocks - checking %d", needed));
+    MFM_LOG_DBG6(("EW::AcquireRegionLocks %s - checking %d",
+		  tile.GetLabel(),
+		  needed));
 
     u32 got = 0;
     for (s32 i = needed; --i >= 0; )
@@ -361,36 +382,65 @@ namespace MFM {
       ++got;
     }
 
-    if (got < needed)
-    {
-      MFM_LOG_DBG6(("EW::AcquireRegionLocks - got %d but needed %d", got, needed));
-      // Opps, didn't get all, free any we got
-
-      for (m_cpli.ShuffleOrReset(random); m_cpli.HasNext(); )
+    if(needed == 0)
       {
-        u32 i = m_cpli.Next();
-
-        if (m_cacheProcessorsLocked[i])
-        {
-          CacheProcessor<EC> & cp = *m_cacheProcessorsLocked[i];
-          cp.Unlock();
-          MFM_LOG_DBG6(("EW::AcquireRegionLocks #%d freed", i));
-          m_cacheProcessorsLocked[i] = 0;
-        }
+        MFM_LOG_DBG6(("EW::AcquireRegionLocks %s NONE needed",
+		      tile.GetLabel()));
+	return true;
       }
 
-      return false;
-    }
+    if (got < needed)
+    {
+      MFM_LOG_DBG6(("EW::AcquireRegionLocks %s - got %d but needed %d",
+		    tile.GetLabel(), got, needed));
+      // Opps, didn't get all, free any we got
 
-    // Activate everything we got
+      if(got > 0)
+	{
+	  for (m_cpli.ShuffleOrReset(random); m_cpli.HasNext(); )
+	    {
+	      u32 i = m_cpli.Next();
+
+	      if (m_cacheProcessorsLocked[i])
+		{
+		  CacheProcessor<EC> & cp = *m_cacheProcessorsLocked[i];
+		  cp.Unlock();
+		  MFM_LOG_DBG6(("EW::AcquireRegionLocks %s [%s] #%d freed",
+				tile.GetLabel(),
+				Dirs::GetName(cp.GetCacheDir()), i));
+		  m_cacheProcessorsLocked[i] = 0;
+		}
+	    }
+	} //else no locks to unlock
+
+      return false;
+    } //failed to get all needed locks, so none.
+
+    // Only got 1, so do it..
+    if(got == 1)
+      {
+	MFM_API_ASSERT_STATE(m_cacheProcessorsLocked[0]);
+	CacheProcessor<EC> & cp = *m_cacheProcessorsLocked[0];
+        MFM_LOG_DBG6(("EW::AcquireRegionLocks %s activate ONE #0 [%s]",
+		      tile.GetLabel(),
+		      Dirs::GetName(cp.GetCacheDir())));
+	cp.Activate();
+
+	return true;
+      }
+
+    // Activate everything we got, randomly
     for (m_cpli.ShuffleOrReset(random); m_cpli.HasNext(); )
     {
       u32 i = m_cpli.Next();
-
       if (m_cacheProcessorsLocked[i])
       {
-        MFM_LOG_DBG6(("EW::AcquireRegionLocks activate #%d", i));
-        m_cacheProcessorsLocked[i]->Activate();
+	CacheProcessor<EC> & cp = *m_cacheProcessorsLocked[i];
+
+	MFM_LOG_DBG6(("EW::AcquireRegionLocks %s activate #%d",
+		      tile.GetLabel(), i,
+		      Dirs::GetName(cp.GetCacheDir())));
+	cp.Activate();
       }
     }
 
@@ -403,7 +453,17 @@ namespace MFM {
     Tile<EC> & t = GetTile();
     MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
     THREEDIR eventLockRegions;
+    //    u32 eventLocksNeeded = t.GetLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
     u32 eventLocksNeeded = t.GetAllLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
+
+    MFM_LOG_DBG7(("EW:: AcquireAllLocks %s %d[%s %s %s] for tilecenter(%2d,%2d)",
+                  t.GetLabel(),
+		  eventLocksNeeded,
+		  Dirs::GetName(eventLockRegions[0]),
+		  eventLocksNeeded > 1? Dirs::GetName(eventLockRegions[1]) : "-",
+		  eventLocksNeeded > 2? Dirs::GetName(eventLockRegions[2]) : "-",
+		  tileCenter.GetX(), tileCenter.GetY()));
+
     return AcquireRegionLocks(eventLocksNeeded, eventLockRegions);
   }
 
@@ -469,11 +529,15 @@ namespace MFM {
   template <class EC>
   void EventWindow<EC>::StoreToTile()
   {
+    // Now write back changes and notify the cps
+    Tile<EC> & tile = GetTile();
+    MFM_API_ASSERT_STATE(!tile.IsDummyTile()); //sanity
+
     const MDist<R> & md = MDist<R>::get();
 
     Random & random = GetRandom();
 
-    MFM_LOG_DBG6(("EW::StoreToTile"));
+    MFM_LOG_DBG6(("EW::StoreToTile %s",tile.GetLabel()));
 
     // First initialize the cache processors
     for (m_cpli.ShuffleOrReset(random); m_cpli.HasNext(); )
@@ -485,10 +549,6 @@ namespace MFM {
         m_cacheProcessorsLocked[i]->StartLoading(m_center);
       }
     }
-
-    // Now write back changes and notify the cps
-    Tile<EC> & tile = GetTile();
-    MFM_API_ASSERT_STATE(!tile.IsDummyTile()); //sanity
 
     // Record the event in the tile history
     EventHistoryBuffer<EC> & ehb = tile.GetEventHistoryBuffer();
@@ -521,7 +581,7 @@ namespace MFM {
       }
     }
 
-    MFM_LOG_DBG6(("EW::StoreToTile releasing"));
+    MFM_LOG_DBG6(("EW::StoreToTile releasing %s",tile.GetLabel()));
     // Finally, release the cache processors to take it from here
     for (m_cpli.ShuffleOrReset(random); m_cpli.HasNext(); )
     {
@@ -592,7 +652,7 @@ namespace MFM {
   const typename EC::ATOM_CONFIG::ATOM_TYPE& EventWindow<EC>::GetRelativeAtomDirect(const Dir mooreOffset) const
   {
     SPoint pt;
-    Dirs::FillDir(pt, mooreOffset, false);
+    Dirs::FillDir(pt, mooreOffset, false); //?
     return GetRelativeAtomDirect(pt);
   }
 

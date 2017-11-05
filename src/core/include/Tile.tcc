@@ -299,7 +299,7 @@ namespace MFM
   {
     THREEDIR tmpdirs;
     u32 count = RegionAtReach(sp, REACH, tmpdirs);
-    MFM_API_ASSERT_STATE(count <= 3);
+    MFM_API_ASSERT_STATE(count <= MAX_LOCKS_NEEDED);
     return tmpdirs[0]; //return the first only (deprecated)
   }
 
@@ -311,64 +311,80 @@ namespace MFM
 
     UPoint pt = MakeUnsigned(sp);
 
-    if(pt.GetX() < REACH) {
-      if(pt.GetY() < REACH)
-	{
-	  //NW corner
-	  TryToAddRegionAtReach(Dirs::NORTHWEST, rtncount, rtndirs, onlyConnected);
+    if(pt.GetX() < REACH)
+      {
+	if(pt.GetY() < REACH)
+	  {
+	    //NW corner
+	    TryToAddRegionAtReach(Dirs::NORTHWEST, rtncount, rtndirs, onlyConnected);
 
-	  TryToAddRegionAtReach(Dirs::WEST, rtncount, rtndirs, onlyConnected);
+	    TryToAddRegionAtReach(Dirs::WEST, rtncount, rtndirs, onlyConnected);
 
-	  if(!isStaggered)
-	    TryToAddRegionAtReach(Dirs::NORTH, rtncount, rtndirs, onlyConnected);
-	}
-      else if(pt.GetY() >= TILE_HEIGHT - REACH)
-	{
-	  //SW corner
-	  TryToAddRegionAtReach(Dirs::SOUTHWEST, rtncount, rtndirs, onlyConnected);
+	    if(!isStaggered)
+	      TryToAddRegionAtReach(Dirs::NORTH, rtncount, rtndirs, onlyConnected);
+	  }
+	else if(pt.GetY() >= TILE_HEIGHT - REACH)
+	  {
+	    //SW corner
+	    TryToAddRegionAtReach(Dirs::SOUTHWEST, rtncount, rtndirs, onlyConnected);
 
-	  TryToAddRegionAtReach(Dirs::WEST, rtncount, rtndirs, onlyConnected);
+	    TryToAddRegionAtReach(Dirs::WEST, rtncount, rtndirs, onlyConnected);
 
-	  if(!isStaggered)
-	    TryToAddRegionAtReach(Dirs::SOUTH, rtncount, rtndirs, onlyConnected);
-	}
-      else
-	{
-	  TryToAddRegionAtReach(Dirs::WEST, rtncount, rtndirs, onlyConnected);
-	}
+	    if(!isStaggered)
+	      TryToAddRegionAtReach(Dirs::SOUTH, rtncount, rtndirs, onlyConnected);
+	  }
+	else
+	  {
+	    TryToAddRegionAtReach(Dirs::WEST, rtncount, rtndirs, onlyConnected);
+	  }
+      }
+    else if(pt.GetX() >= TILE_WIDTH - REACH)
+      {
+	if(pt.GetY() < REACH)
+	  {
+	    //NE corner
+	    TryToAddRegionAtReach(Dirs::NORTHEAST, rtncount, rtndirs, onlyConnected);
 
-    } else if(pt.GetX() >= TILE_WIDTH - REACH) {
+	    TryToAddRegionAtReach(Dirs::EAST, rtncount, rtndirs, onlyConnected);
 
-      if(pt.GetY() < REACH)
-	{
-	  //NE corner
-	  TryToAddRegionAtReach(Dirs::NORTHEAST, rtncount, rtndirs, onlyConnected);
+	    if(!isStaggered)
+	      TryToAddRegionAtReach(Dirs::NORTH, rtncount, rtndirs, onlyConnected);
+	  }
+	else if(pt.GetY() >= TILE_HEIGHT - REACH)
+	  {
+	    //SE corner
+	    TryToAddRegionAtReach(Dirs::SOUTHEAST, rtncount, rtndirs, onlyConnected);
 
-	  TryToAddRegionAtReach(Dirs::EAST, rtncount, rtndirs, onlyConnected);
+	    TryToAddRegionAtReach(Dirs::EAST, rtncount, rtndirs, onlyConnected);
 
-	  if(!isStaggered)
-	    TryToAddRegionAtReach(Dirs::NORTH, rtncount, rtndirs, onlyConnected);
-	}
-      else if(pt.GetY() >= TILE_HEIGHT - REACH)
-	{
-	  //SE corner
-	  TryToAddRegionAtReach(Dirs::SOUTHEAST, rtncount, rtndirs, onlyConnected);
-
-	  TryToAddRegionAtReach(Dirs::EAST, rtncount, rtndirs, onlyConnected);
-
-	  if(!isStaggered)
-	    TryToAddRegionAtReach(Dirs::SOUTH, rtncount, rtndirs, onlyConnected);
-	}
-      else
-	{
-	  TryToAddRegionAtReach(Dirs::EAST, rtncount, rtndirs, onlyConnected);
-	}
-    }
+	    if(!isStaggered)
+	      TryToAddRegionAtReach(Dirs::SOUTH, rtncount, rtndirs, onlyConnected);
+	  }
+	else
+	  {
+	    TryToAddRegionAtReach(Dirs::EAST, rtncount, rtndirs, onlyConnected);
+	  }
+      }
     else
       {
 	if(isStaggered)
 	  {
-	    if(pt.GetX() < TILE_WIDTH/2)
+	    if((pt.GetX() >= TILE_WIDTH/2 - REACH) && (pt.GetX() < TILE_WIDTH/2 + REACH))
+	      {
+		//in the middle +/- REACH
+		if(pt.GetY() < REACH)
+		  {
+		    TryToAddRegionAtReach(Dirs::NORTHWEST, rtncount, rtndirs, onlyConnected);
+		    TryToAddRegionAtReach(Dirs::NORTHEAST, rtncount, rtndirs, onlyConnected);
+		  }
+		else if(pt.GetY() >= TILE_HEIGHT - REACH)
+		  {
+		    TryToAddRegionAtReach(Dirs::SOUTHWEST, rtncount, rtndirs, onlyConnected);
+		    TryToAddRegionAtReach(Dirs::SOUTHEAST, rtncount, rtndirs, onlyConnected);
+		  }
+		//else
+	      }
+	    else if(pt.GetX() < TILE_WIDTH/2)
 	      {
 		if(pt.GetY() < REACH)
 		  {
@@ -406,8 +422,8 @@ namespace MFM
 	      }
 	  }
       }
-    return rtncount; //not at reach
-  }
+    return rtncount;
+  } //RegionAtReach
 
   template <class EC>
   void Tile<EC>::TryToAddRegionAtReach(Dir d, u32& rtncount, THREEDIR & rtndirs, bool onlyConnected) const
@@ -438,15 +454,20 @@ namespace MFM
   }
 
   template <class EC>
-  bool Tile<EC>::ApplyCacheUpdate(bool isDifferent, const T& atom, const SPoint& site)
+  bool Tile<EC>::ApplyCacheUpdate(const bool isDifferent, const T& atom, const SPoint& site)
   {
     MFM_API_ASSERT_ARG(!IsInHidden(site));  // That would make no sense
 
+    if(!IsInShared(site))
+      FAIL(ILLEGAL_ARGUMENT); //per description in Tile.h
+
     bool consistent;
     const T& oldAtom = *GetAtom(site);
+
     if (atom != oldAtom)
     {
       PlaceAtom(atom, site);
+
       consistent = isDifferent;
     }
     else
@@ -458,14 +479,24 @@ namespace MFM
   }
 
   template <class EC>
-  void Tile<EC>::PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt)
+  void Tile<EC>::PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt, bool doIdenticalCheck)
   {
+    if(!doIdenticalCheck)
+      MFM_LOG_DBG6(("Tile %s: Place AtomInSite type %04x at (%2d,%2d)",
+		    this->GetLabel(),
+		    atom.GetType(),
+		    pt.GetX(), pt.GetY()));
+
     if (!IsLiveSite(pt))
     {
       if (atom.GetType() != Element_Empty<EC>::THE_INSTANCE.GetType())
       {
         LOG.Debug("Not placing type %04x at (%2d,%2d) of %s",
                   atom.GetType(), pt.GetX(), pt.GetY(), this->GetLabel());
+	MFM_LOG_DBG6(("Tile %s: NOT placing AtomInSite type %04x at (%2d,%2d)",
+		      this->GetLabel(),
+		      atom.GetType(),
+		      pt.GetX(), pt.GetY()));
       }
       return;
     }
@@ -478,6 +509,10 @@ namespace MFM
       oldAtom.SetEmpty();
       LOG.Warning("Failure during PlaceAtom, erased (%2d,%2d) of %s",
                   pt.GetX(), pt.GetY(), this->GetLabel());
+      MFM_LOG_DBG6(("Tile %s: failure during place AtomInSite type %04x at (%2d,%2d) erased",
+		    this->GetLabel(),
+		    atom.GetType(),
+		    pt.GetX(), pt.GetY()));
     },
     {
       if(m_backgroundRadiationEnabled &&
@@ -489,13 +524,29 @@ namespace MFM
 
       bool owned = IsOwnedSite(pt);
 
-      if (oldAtom != newAtom) {
-        NeedAtomRecount();
-        if (owned)
-          site.MarkChanged();
+      if (oldAtom != newAtom)
+	{
+	  if(doIdenticalCheck)
+	    {
+	      AtomSerializer<AC> oldas(oldAtom);
+	      AtomSerializer<AC> as(newAtom);
 
-        oldAtom = newAtom;
-      }
+	      LOG.Warning("Tile %s: doIdenticalCheck failure during place AtomInSite type [%04x/%@] was [%04x/%@] at (%2d,%2d)",
+			  this->GetLabel(),
+			  newAtom.GetType(), &as,
+			  oldAtom.GetType(), &oldas,
+			  pt.GetX(), pt.GetY());
+	      //FAIL(ILLEGAL_STATE);
+	    }
+	  else
+	    {
+	      NeedAtomRecount();
+	      if (owned)
+		site.MarkChanged();
+
+	      oldAtom = newAtom;
+	    }
+	}
     });
   }
 
@@ -503,7 +554,8 @@ namespace MFM
   bool Tile<EC>::IsConnected(Dir dir) const
   {
     const CacheProcessor<EC> & cxn = GetCacheProcessor(dir);
-    return cxn.IsConnected();
+    //return cxn.IsConnected();
+    return !cxn.IsUnclaimed() && cxn.IsConnected();
   }
 
   template <class EC>
@@ -515,13 +567,13 @@ namespace MFM
     }
 
     THREEDIR shareddirs;
-    u32 sharedcnt = SharedAt(location, shareddirs, (bool) NOCHKCONNECT);
+    u32 sharedcnt = SharedAt(location, shareddirs, NOCHKCONNECT);
 
     if(sharedcnt > 1)
       {
 	//then must be a corner
 	THREEDIR connecteddirs;
-	u32 connectedcnt = SharedAt(location, connecteddirs, (bool) YESCHKCONNECT);
+	u32 connectedcnt = SharedAt(location, connecteddirs, YESCHKCONNECT);
 	return (sharedcnt == connectedcnt);
       }
     return false;
@@ -531,9 +583,17 @@ namespace MFM
   bool Tile<EC>::IsCacheSitePossibleEventCenter(const SPoint & location) const
   {
     MFM_API_ASSERT_ARG(IsInCache(location));
-    THREEDIR rtndirs;
-    u32 count = CacheAt(location, rtndirs, YESCHKCONNECT);
-    return (count > 0);
+    THREEDIR cnCacheDirs;
+    u32 count = CacheAt(location, cnCacheDirs, YESCHKCONNECT);
+    bool isInANeighborsShared = false;
+    for(u32 i = 0; i < count; i++)
+      {
+	Dir dir = cnCacheDirs[i];
+	const CacheProcessor<EC>& cp = this->GetCacheProcessor(dir);
+	SPoint remoteloc = cp.LocalToRemote(location);
+	isInANeighborsShared |= ! IsInCache(remoteloc); //all tiles same size
+      }
+    return isInANeighborsShared;
   }
 
   template <class EC>
@@ -628,13 +688,12 @@ namespace MFM
   {
     for (u32 i = 0; i < Dirs::DIR_COUNT; ++i)  // Can doing this in order create bias??
     {
-      if (!m_cacheProcessors[i].IsIdle())
+      if (!m_cacheProcessors[i].IsIdle() || !m_cacheProcessors[i].IsUnclaimed())
       {
         return false;
       }
     }
-    MFM_LOG_DBG6(("Tile %s All CPs idle",
-                  this->GetLabel()));
+    MFM_LOG_DBG6(("Tile %s All CPs idle", this->GetLabel()));
     return true;
   }
 
@@ -737,7 +796,8 @@ namespace MFM
       u32 i = m_dirIterator.Next();
       MFM_API_ASSERT_STATE(Dirs::IsValidDir(i, IsTileGridLayoutStaggered()));
       CacheProcessor<EC> & cp = m_cacheProcessors[i];
-      didWork |= cp.Advance();
+      if(cp.IsConnected())
+	didWork |= cp.Advance();
     }
     return didWork;
   }

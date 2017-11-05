@@ -53,9 +53,7 @@ namespace MFM
 
   template <class EC> class EventHistoryBuffer; // FORWARD
 
-  typedef Dir THREEDIR[3];
-
-  enum CHKCONNECT { NOCHKCONNECT, YESCHKCONNECT };
+  enum { NOCHKCONNECT, YESCHKCONNECT };
 
   /**
    * Grid layout for tiles. MFM namespace.
@@ -1087,8 +1085,18 @@ namespace MFM
      */
     u32 GetAllLockDirections(const SPoint& pt, const u32 boundary, THREEDIR & rtndirs) const
     {
-      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, (bool) NOCHKCONNECT);
+      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, NOCHKCONNECT);
     }
+
+    /**
+       Same as GetAllLockDirections, except only connected directions are returned
+      *
+     */
+    u32 GetLockDirections(const SPoint& pt, const u32 boundary, THREEDIR & rtndirs) const
+    {
+      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, YESCHKCONNECT);
+    }
+
 
     /**
      * Finds the cache in this Tile which contains a specified SPoint.
@@ -1358,7 +1366,8 @@ namespace MFM
       PlaceAtomInSite(false, atom, pt);
     }
 
-    void PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt);
+    void PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt, bool doIdenticalCheck=false);
+
 
     /**
      * Store and/or consistency check an atom against the current
@@ -1374,9 +1383,9 @@ namespace MFM
      * @returns true for a consistent update, false for inconsistent
      * update
      *
-     * @fails ILLEGAL_ARGUMENT if site is not a cache location
+     * @fails ILLEGAL_ARGUMENT if site is not a cache or shared location
      */
-    bool ApplyCacheUpdate(bool isDifferent, const T& atom, const SPoint& site);
+    bool ApplyCacheUpdate(const bool isDifferent, const T& atom, const SPoint& site);
 
 
     /**

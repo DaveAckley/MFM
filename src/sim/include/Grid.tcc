@@ -159,9 +159,12 @@ namespace MFM {
 
 	    Dir odir = Dirs::OppositeDir(d);
 	    MFM_API_ASSERT_STATE(Dirs::IsValidDir(odir, isStaggered));
+
 	    LonglivedLock & otl = ctl; //simpler for staggered, done.
 	    if(!isStaggered)
-	      otl = GetIntertileLock(npt.GetX(),npt.GetY(),odir, false);
+	      {
+		otl = GetIntertileLock(npt.GetX(),npt.GetY(),odir, false);
+	      }
 
 	    ctile.Connect(gt, ctl, d);
 	    otile.Connect(gt, otl, odir);
@@ -597,13 +600,19 @@ namespace MFM {
   }
 
   template <class GC>
+  void Grid<GC>:: CheckAtom(const T& atom, const SPoint& siteInGrid)
+  {
+    this->PlaceAtomInSite(false, atom, siteInGrid, true);
+  }
+
+  template <class GC>
   void Grid<GC>:: PlaceAtom(const T& atom, const SPoint& siteInGrid)
   {
     this->PlaceAtomInSite(false, atom, siteInGrid);
   }
 
   template <class GC>
-  void Grid<GC>:: PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& siteInGrid)
+  void Grid<GC>:: PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& siteInGrid, bool checkOnly)
   {
     SPoint tileInGrid, siteInTile;
     if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
@@ -615,10 +624,10 @@ namespace MFM {
     Tile<EC> & owner = GetTile(tileInGrid);
     MFM_API_ASSERT_ARG(!owner.IsDummyTile());
 
-    owner.PlaceAtomInSite(placeInBase, atom, siteInTile);
+    owner.PlaceAtomInSite(placeInBase, atom, siteInTile, checkOnly);
 
     THREEDIR connectedDirs;
-    u32 dircount = owner.SharedAt(siteInTile, connectedDirs, true); //ESA: WHY NONE CONNECTED???? chg to true when you figure it out!!!!
+    u32 dircount = owner.SharedAt(siteInTile, connectedDirs, YESCHKCONNECT);
 
     bool isStaggered = IsGridLayoutStaggered();
     for (u32 d = 0; d < dircount; d++) {
@@ -643,7 +652,7 @@ namespace MFM {
       const SPoint ownedph(OWNED_WIDTH/2, OWNED_HEIGHT/2);
       SPoint otherIndex = siteInTile - siteOffset * ownedph;
 
-      other.PlaceAtomInSite(placeInBase, atom, otherIndex);
+      other.PlaceAtomInSite(placeInBase, atom, otherIndex, checkOnly);
     }
   }
 
@@ -954,14 +963,20 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::CheckCaches()
   {
-    for (iterator_type i = begin(); i != end(); ++i)
-    {
-      const SPoint usp = i.At();
-      const Tile<EC> & tile = GetTile(usp);
+    const u32 gridWidth = this->GetWidthSites(); //includes dummy tiles in scattered grid
+    const u32 gridHeight = this->GetHeightSites();
 
-      FAIL(INCOMPLETE_CODE);
+    for(u32 y = 0; y < gridHeight; y++)
+    {
+      for(u32 x = 0; x < gridWidth; x++)
+      {
+        SPoint siteInGrid(x, y);
+
+        T atom = *this->GetAtom(siteInGrid);
+        this->CheckAtom(atom, siteInGrid);  // This checks caches
+      }
     }
-  }
+  } //CheckCaches
 
   template <class GC>
   void Grid<GC>::RefreshAllCaches()
@@ -973,16 +988,10 @@ namespace MFM {
     {
       for(u32 x = 0; x < gridWidth; x++)
       {
-        SPoint currentPt(x, y);
+        SPoint siteInGrid(x, y);
 
-	if(!IsLegalTileIndex(currentPt))
-	  continue;
-	if(this->GetTile(currentPt).IsDummyTile())
-	  //if(IsDummyTileCoord(x,y)) not generalizable
-	  continue;
-
-        T atom = *this->GetAtom(currentPt);
-        this->PlaceAtom(atom, currentPt);  // This updates caches
+        T atom = *this->GetAtom(siteInGrid);
+        this->PlaceAtom(atom, siteInGrid);  // This updates caches
       }
     }
   }

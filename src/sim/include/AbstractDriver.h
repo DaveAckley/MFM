@@ -225,6 +225,8 @@ namespace MFM
       fclose(fp);
     }
 
+    void XXXCHECKCACHES() { m_grid.CheckCaches(); }
+
     /**
      * Runs the held Grid and all its associated threads for a brief
      * amount of time, letting about \c m_aepsPerFrame AEPS occur

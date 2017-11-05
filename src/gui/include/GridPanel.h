@@ -500,38 +500,6 @@ namespace MFM
       return Rect(tileCoord * spacingDit + m_gridOriginDit + staggeredDit, UPoint(wDit,hDit)); //pos, size
     }
 
-#if 0
-    OurSite * GetSiteAtScreenDit(const SPoint screenDit, bool includeCaches)
-    {
-      bool cachesDrawn = GetTileRenderer().IsDrawCaches();
-      u32 atomDit = GetAtomDit();
-      for (typename Grid<GC>::iterator_type i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
-      {
-        OurTile & tile = *i;
-        SPoint tileCoord = i.At();
-        const Rect screenRectForTileDit = MapTileInGridToScreenDit(tile, tileCoord);
-        if (screenRectForTileDit.Contains(screenDit))
-        {
-          SPoint siteCoord = (screenDit - screenRectForTileDit.GetPosition()) / atomDit;
-          if (cachesDrawn)
-          {
-            if (!includeCaches && tile.RegionIn(siteCoord) == OurTile::REGION_CACHE)
-              return 0;
-            return &tile.GetSite(siteCoord);
-          }
-          else
-          {
-            if (tile.IsInUncachedTile(siteCoord))
-              return &tile.GetUncachedSite(siteCoord);
-            return 0;
-          }
-        }
-      }
-
-      return 0;
-    }
-#endif
-
     OurSite * GetSiteAtGridCoord(const UPoint gridCoord)
     {
       FAIL(INCOMPLETE_CODE);
@@ -567,10 +535,9 @@ namespace MFM
 	    if (cachesDrawn)
 	      {
 		if (tile.RegionIn(siteInTileCoord) == OurTile::REGION_CACHE)
-		  //if (tile.IsInTile(siteInTileCoord) && tile.IsInCache(siteInTileCoord))
 		  {
 		    Dir rtndirs[3];
-		    u32 dcount = tile.CacheAt(siteInTileCoord, rtndirs, false); //include unconnected dirs
+		    u32 dcount = tile.CacheAt(siteInTileCoord, rtndirs, NOCHKCONNECT); //include unconnected dirs
 		    if (dcount == 0) FAIL(ILLEGAL_STATE);
 
 		    Dir dir = rtndirs[0]; //just the first one, corner if so

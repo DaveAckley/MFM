@@ -103,10 +103,13 @@ namespace MFM
     // Time to pack this puppy up for travel
     MFM_API_ASSERT_STATE(m_toSendCount < SITE_COUNT);  // You say ship a whole window or more?
 
-    MFM_LOG_DBG7(("CP %s %s [%s] (%d,%d) send #%d (%d,%d)",
+    MFM_LOG_DBG7(("CP %s %s %d[%s %s %s] (%d,%d) send #%d (%d,%d)",
                   m_tile->GetLabel(),
                   Dirs::GetName(m_cacheDir),
+		  m_locksNeeded,
 		  Dirs::GetName(m_lockRegions[0]),
+		  m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		  m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
                   m_farSideOrigin.GetX(),
                   m_farSideOrigin.GetY(),
                   siteNumber,
@@ -187,10 +190,10 @@ namespace MFM
 
       const SPoint soffset = md.GetPoint(siteNumber);
       SPoint loc = soffset + m_eventCenter;
+      const T& oldAtom = *m_tile->GetAtom(loc);
 
       if (isDifferent)
       {
-        const T& oldAtom = *m_tile->GetAtom(loc);
         ehb.AddEventAtom(siteNumber, oldAtom, inboundAtom);
       }
 
@@ -206,10 +209,10 @@ namespace MFM
         if (LOG.IfLog(Logger::WARNING))
         {
           // Get old for debug output
-          T oldAtom = *m_tile->GetAtom(loc);
+          T oldAtomx = oldAtom; //*m_tile->GetAtom(loc);
 
+          AtomSerializer<AC> oldas(oldAtomx);
           AtomSerializer<AC> as(inboundAtom);
-          AtomSerializer<AC> oldas(oldAtom);
 
           // Develop a secret grid-global address! shh don't tell ackley!
           s32 tilex = -1, tiley = -1;
@@ -218,8 +221,7 @@ namespace MFM
           cbs.Scanf("[%d,%d]",&tilex,&tiley);
 
 	  const SPoint ownedp(GetTile().OWNED_WIDTH, GetTile().OWNED_HEIGHT);
-	  u32 maxside = ownedp.GetMaximumLength();
-          SPoint gloc = SPoint(tilex,tiley) * maxside + loc;
+	  SPoint gloc = SPoint(tilex,tiley) * ownedp + loc;
 
           LOG.Warning("NC%s %s%c%c {%03d,%03d} #%2d(%2d,%2d)+(%2d,%2d)==(%2d,%2d) [%04x/%@] [%04x/%@]",
                       isDifferent? "U" : "C",
@@ -249,8 +251,7 @@ namespace MFM
   void CacheProcessor<EC>::ReceiveUpdateEnd()
   {
     MFM_API_ASSERT_STATE(m_cpState == PASSIVE);
-    MFM_LOG_DBG7(("Replying to UE, %d consistent",
-                  m_consistentAtomCount));
+    MFM_LOG_DBG7(("Replying to UE, %d consistent",m_consistentAtomCount));
     ApplyCacheUpdate();
     PacketIO pbuffer;
     pbuffer.SendReply(m_consistentAtomCount, *this);
@@ -270,13 +271,17 @@ namespace MFM
     {
       ReportCleanUpdate(m_toSendCount);
     }
-    MFM_LOG_DBG7(("CP %s %s [%s] reply %d<->%d : %d",
+    MFM_LOG_DBG7(("CP %s %s %d[%s %s %s] reply %d<->%d : %d",
                   GetTile().GetLabel(),
                   Dirs::GetName(m_cacheDir),
+		  m_locksNeeded,
 		  Dirs::GetName(m_lockRegions[0]),
+		  m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		  m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
                   consistentCount,
                   m_toSendCount,
                   m_checkOdds));
+
     SetStateInternal(BLOCKING);
   }
 
@@ -291,9 +296,13 @@ namespace MFM
 
     if (m_cpState != IDLE)
     {
-      MFM_LOG_DBG7(("CP %s %s Advance in state %s",
+      MFM_LOG_DBG7(("CP %s %s %d[%s %s %s] Advance in state %s",
                     GetTile().GetLabel(),
                     Dirs::GetName(m_cacheDir),
+		    m_locksNeeded,
+		    Dirs::GetName(m_lockRegions[0]),
+		    m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		    m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
                     GetStateName(m_cpState)));
     }
 
@@ -326,9 +335,13 @@ namespace MFM
   template <class EC>
   bool CacheProcessor<EC>::AdvanceShipping()
   {
-    MFM_LOG_DBG7(("CP %s %s (%d,%d): Advance shipping",
+    MFM_LOG_DBG7(("CP %s %s %d[%s %s %s] (%d,%d): Advance shipping",
                   GetTile().GetLabel(),
                   Dirs::GetName(m_cacheDir),
+		  m_locksNeeded,
+		  Dirs::GetName(m_lockRegions[0]),
+		  m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		  m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
                   m_farSideOrigin.GetX(),
                   m_farSideOrigin.GetY()));
     bool didWork = false;
@@ -344,9 +357,13 @@ namespace MFM
       }
       didWork = true;
       ++m_sentCount;
-      MFM_LOG_DBG7(("CP %s %s: Ship %d (site #%d)",
+      MFM_LOG_DBG7(("CP %s %s %d[%s %s %s]: Ship %d (site #%d)",
                     GetTile().GetLabel(),
                     Dirs::GetName(m_cacheDir),
+		    m_locksNeeded,
+		    Dirs::GetName(m_lockRegions[0]),
+		    m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		    m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
                     m_sentCount,
                     cpi.m_siteNumber));
     }
@@ -394,10 +411,17 @@ namespace MFM
   void CacheProcessor<EC>::Unblock()
   {
     MFM_API_ASSERT_STATE(m_cpState == BLOCKING);
-
+    MFM_LOG_DBG7(("CP::Unblock %s %s %d[%s %s %s] (%d,%d)",
+                  m_tile->GetLabel(),
+                  Dirs::GetName(m_cacheDir),
+		  m_locksNeeded,
+		  Dirs::GetName(m_lockRegions[0]),
+		  m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		  m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
+                  m_farSideOrigin.GetX(),
+                  m_farSideOrigin.GetY())
+		 );
     SetIdle();
-    m_locksNeeded = 0;
-    m_lockRegions[0] = -1;
     Unlock();  // FINALLY
   }
 
@@ -413,27 +437,33 @@ namespace MFM
   template <class EC>
   bool CacheProcessor<EC>::AdvanceBlocking()
   {
+    u32 needed = m_locksNeeded;
+
+    THREEDIR copylockdirs; //copy before m_lockRegions cleared by Unblock
+    for (u32 d = 0; d < MAX_LOCKS_NEEDED; d++)  copylockdirs[d] = m_lockRegions[d];
+
     // Check if every-relevant-body is blocking
     s32 got = 0;
-    for (u32 d = 0; got < m_locksNeeded; ++got, d++)
+    for (u32 d = 0; got < needed; ++got, d++)
     {
-      CacheProcessor<EC> & cp = GetSibling(m_lockRegions[d]);
+      CacheProcessor<EC> & cp = GetSibling(copylockdirs[d]);
       if(cp.IsConnected() && !cp.IsBlocking())
 	{
 	  break;
 	}
+      //else incr got
     }
 
-    if (got < m_locksNeeded)
+    if (got < needed)
     {
-      return false;  // Somebody still working
+      return false;  // Somebody else is still working
     }
 
     // All are done, unblock all, including ourselves
     got = 0;
-    for (u32 d = 0; got < m_locksNeeded; ++got, d++)
+    for (u32 d = 0; got < needed; ++got, d++)
       {
-	CacheProcessor<EC> & cp = GetSibling(m_lockRegions[d]);
+	CacheProcessor<EC> & cp = GetSibling(copylockdirs[d]);
 	if (cp.IsConnected())
 	  {
 	    cp.Unblock();

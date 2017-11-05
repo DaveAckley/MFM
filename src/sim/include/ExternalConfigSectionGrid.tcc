@@ -306,7 +306,7 @@ namespace MFM
   {
     /* Zeroth, identify grid size in sites and tiles. */
     byteSink.Printf("DefineGridSize(%u,%u,%u,%u)\n",
-                    m_grid.GetWidthSites(m_grid.IsGridLayoutStaggered()),
+                    m_grid.GetWidthSites(),
                     m_grid.GetHeightSites(),
                     m_grid.GetWidth(),
                     m_grid.GetHeight());

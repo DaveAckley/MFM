@@ -618,10 +618,8 @@ namespace MFM {
     /**
      * Return the Grid width in (non-cache) sites
      */
-    u32 GetWidthSites(bool isStaggered = false) const
+    u32 GetWidthSites() const
     {
-      if(isStaggered)
-	return (GetWidth() - 1) * OWNED_WIDTH;
       return GetWidth() * OWNED_WIDTH;
     }
 
@@ -679,9 +677,11 @@ namespace MFM {
      */
     void RecountAtoms();
 
+    void CheckAtom(const T& atom, const SPoint& location);
+
     void PlaceAtom(const T& atom, const SPoint& location);
 
-    void PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& location);
+    void PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& location, bool checkOnly=false);
 
     void XRayAtom(const SPoint& location);
 
@@ -716,13 +716,13 @@ namespace MFM {
       return GetAtomInSite(false, loc);
     }
 
-    const T* GetAtomInSite(bool getFromBase, SPoint& loc)
+    const T* GetAtomInSite(bool getFromBase, SPoint& siteInGrid)
     {
       SPoint tileInGrid, siteInTile;
-      if (!MapGridToTile(loc, tileInGrid, siteInTile))
+      if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
       {
         LOG.Error("Can't get atom at site (%d,%d): Does not map to grid.",
-                  loc.GetX(), loc.GetY());
+                  siteInGrid.GetX(), siteInGrid.GetY());
         FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
       }
       return GetTile(tileInGrid).GetAtomInSite(getFromBase, siteInTile);
@@ -769,9 +769,8 @@ namespace MFM {
     { return _getTile(x,y); }
 
     /* Don't count caches! */
-    /* Don't count staggered dummies! */
     inline const u32 GetTotalSites()
-    { return GetWidthSites(IsGridLayoutStaggered()) * GetHeightSites(); }
+    { return GetWidthSites() * GetHeightSites(); }
 
     u64 GetTotalEventsExecuted() const;
 
@@ -797,7 +796,7 @@ namespace MFM {
     double GetFullSitePercentage() const
     {
       return 1.0 - ((double)GetAtomCount(Element_Empty<EC>::THE_INSTANCE.GetType()) /
-                    (double)(GetHeightSites() * GetWidthSites(IsGridLayoutStaggered())));
+                    (double)(GetHeightSites() * GetWidthSites()));
     }
 
     //    void SurroundRectangleWithWall(s32 x, s32 y, s32 w, s32 h, s32 thickness);
