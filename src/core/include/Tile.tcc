@@ -491,9 +491,7 @@ namespace MFM
     {
       if (atom.GetType() != Element_Empty<EC>::THE_INSTANCE.GetType())
       {
-        LOG.Debug("Not placing type %04x at (%2d,%2d) of %s",
-                  atom.GetType(), pt.GetX(), pt.GetY(), this->GetLabel());
-	MFM_LOG_DBG6(("Tile %s: NOT placing AtomInSite type %04x at (%2d,%2d)",
+	MFM_LOG_DBG4(("Tile %s: NOT placing AtomInSite type %04x at (%2d,%2d)",
 		      this->GetLabel(),
 		      atom.GetType(),
 		      pt.GetX(), pt.GetY()));
@@ -507,12 +505,10 @@ namespace MFM
     unwind_protect(
     {
       oldAtom.SetEmpty();
-      LOG.Warning("Failure during PlaceAtom, erased (%2d,%2d) of %s",
-                  pt.GetX(), pt.GetY(), this->GetLabel());
-      MFM_LOG_DBG6(("Tile %s: failure during place AtomInSite type %04x at (%2d,%2d) erased",
-		    this->GetLabel(),
-		    atom.GetType(),
-		    pt.GetX(), pt.GetY()));
+      LOG.Warning("Tile %s: failure during place AtomInSite type %04x at (%2d,%2d) erased",
+		  this->GetLabel(),
+		  atom.GetType(),
+		  pt.GetX(), pt.GetY());
     },
     {
       if(m_backgroundRadiationEnabled &&
@@ -536,7 +532,6 @@ namespace MFM
 			  newAtom.GetType(), &as,
 			  oldAtom.GetType(), &oldas,
 			  pt.GetX(), pt.GetY());
-	      //FAIL(ILLEGAL_STATE);
 	    }
 	  else
 	    {
@@ -713,10 +708,10 @@ namespace MFM
   void Tile<EC>::SetRequestedState(State state)
   {
     Mutex::ScopeLock lock(m_stateAccess);
-    LOG.Debug1("Requesting state %s for Tile %s (current: %s)",
-              GetStateName(state),
-              this->GetLabel(),
-              GetStateName(m_state));
+    MFM_LOG_DBG4(("Requesting state %s for Tile %s (current: %s)",
+		  GetStateName(state),
+		  this->GetLabel(),
+		  GetStateName(m_state)));
     m_requestedState = state;
   }
 

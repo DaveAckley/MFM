@@ -38,7 +38,7 @@ namespace MFM
     // Get site address in full untransformed tile coordinates
     SPoint local = md.GetPoint(siteNumber) + m_eventCenter;
     SPoint mdtmp = md.GetPoint(siteNumber);
-    //LOG.Message("site# %d, point(%d, %d), local(%d, %d)", siteNumber, mdtmp.GetX(), mdtmp.GetY(), local.GetX(), local.GetY());
+    MFM_LOG_DBG7(("site# %d, point(%d, %d), local(%d, %d)", siteNumber, mdtmp.GetX(), mdtmp.GetY(), local.GetX(), local.GetY()));
     return IsCoordVisibleToPeer(local);
   }
 
@@ -50,7 +50,7 @@ namespace MFM
     // Map full untransformed local tile coord into the remote space
     SPoint remote = LocalToRemote(local);
 
-    //LOG.Message("peer remote(%d, %d), local(%d, %d), -farside(%d,%d)", remote.GetX(), remote.GetY(), local.GetX(), local.GetY(),m_farSideOrigin.GetX(),m_farSideOrigin.GetY());
+    MFM_LOG_DBG7(("peer remote(%d, %d), local(%d, %d), -farside(%d,%d)", remote.GetX(), remote.GetY(), local.GetX(), local.GetY(),m_farSideOrigin.GetX(),m_farSideOrigin.GetY()));
     return tile.IsInTile(remote);
   }
 

@@ -124,7 +124,7 @@ namespace MFM {
     // Connect up (non-dummy) tiles
     for (iterator_type i = begin(); i != end(); ++i)
       {
-	LOG.Debug("Tile[%d][%d] @ %p", i.GetX(), i.GetY(), &(*i));
+	MFM_LOG_DBG4(("Tile[%d][%d] @ %p", i.GetX(), i.GetY(), &(*i)));
 	Tile<EC> & ctile = *i;
 	SPoint tpt = i.At();
 
@@ -141,7 +141,7 @@ namespace MFM {
 
 	    if(!IsLegalTileIndex(npt))
 	      {
-		LOG.Message("Grid::Skip Init tile at illegal npt(%d, %d), tpt(%d, %d), direction %d", npt.GetX(), npt.GetY(), tpt.GetX(), tpt.GetY(), d);
+		MFM_LOG_DBG4(("Grid::Skip Init tile at illegal npt(%d, %d), tpt(%d, %d), direction %d", npt.GetX(), npt.GetY(), tpt.GetX(), tpt.GetY(), d));
 		continue;
 	      }
 
@@ -149,7 +149,7 @@ namespace MFM {
 
 	    if(otile.IsDummyTile())
 	      {
-		LOG.Message("Grid::Skip Init DUMMY tile at npt(%d, %d), tpt(%d, %d), direction %d", npt.GetX(), npt.GetY(), tpt.GetX(), tpt.GetY(), d);
+		MFM_LOG_DBG4(("Grid::Skip Init DUMMY tile at npt(%d, %d), tpt(%d, %d), direction %d", npt.GetX(), npt.GetY(), tpt.GetX(), tpt.GetY(), d));
 		continue;
 	      }
 
@@ -286,11 +286,11 @@ namespace MFM {
     // Init error stack pointer (for this thread only)
     MFMPtrToErrEnvStackPtr = ctile.GetErrorEnvironmentStackTop();
 
-    LOG.Debug("TileDriver %p init: (%d,%d) == %s",
-              (void*) td,
-              td->m_loc.GetX(),
-              td->m_loc.GetY(),
-              ctile.GetLabel());
+    MFM_LOG_DBG4(("TileDriver %p init: (%d,%d) == %s",
+		  (void*) td,
+		  td->m_loc.GetX(),
+		  td->m_loc.GetY(),
+		  ctile.GetLabel()));
 
     ctile.RequestStatePassive();
 
@@ -336,7 +336,7 @@ namespace MFM {
         FAIL(ILLEGAL_STATE);
       }
     }
-    LOG.Debug("Tile %s thread exiting", ctile.GetLabel());
+    MFM_LOG_DBG4(("Tile %s thread exiting", ctile.GetLabel()));
     return NULL;
   }
 
@@ -370,7 +370,7 @@ namespace MFM {
 	  {
 	    if(IsDummyTileCoord(i, j))
 	      {
-		LOG.Message("Tile[%d][%d] setting to DUMMY", i, j);
+		MFM_LOG_DBG3(("Tile[%d][%d] setting to DUMMY", i, j));
 
 		Tile<EC> & tile = GetTile(SPoint(i,j));
 		tile.SetDummyTile();
@@ -403,7 +403,7 @@ namespace MFM {
 	    if(! ntile.IsDummyTile())
 	      {
 		staggeredindexes[counter] = j*m_width + i;
-		LOG.Message("Tile[%d][%d] in random iterator at counter %d, index %d", i, j, counter, staggeredindexes[counter]);
+		MFM_LOG_DBG3(("Tile[%d][%d] in random iterator at counter %d, index %d", i, j, counter, staggeredindexes[counter]));
 		counter++;
 	      }
 	    //else skip this tile.

@@ -7,7 +7,6 @@
 #include "EventHistoryBuffer.h"
 #include "CacheProcessor.h"
 
-extern void XXXCCH();
 namespace MFM {
 
   template <class EC>
@@ -136,26 +135,26 @@ namespace MFM {
       const char * failMsg = MFMFailCodeReason(MFMThrownFailCode);
       if(!GetCenterAtomDirect().IsSane())
       {
-        LOG.Debug("%s FE(INSANE)",buff.GetZString());
+        MFM_LOG_DBG4(("%s FE(INSANE)",buff.GetZString()));
       }
       else if (failMsg)
       {
-        LOG.Message("%s behave() failed at %s:%d: %s (site type 0x%04x)",
-                    buff.GetZString(),
-                    failFile,
-                    lineno,
-                    failMsg,
-                    GetCenterAtomDirect().GetType());
+        MFM_LOG_DBG3(("%s behave() failed at %s:%d: %s (site type 0x%04x)",
+		      buff.GetZString(),
+		      failFile,
+		      lineno,
+		      failMsg,
+		      GetCenterAtomDirect().GetType()));
       }
       else
       {
-        LOG.Message("%s behave() failed at %s:%d: fail(%d/0x%08x) (site type 0x%04x)",
-                    buff.GetZString(),
-                    failFile,
-                    lineno,
-                    MFMThrownFailCode,
-                    MFMThrownFailCode,
-                    GetCenterAtomDirect().GetType());
+        MFM_LOG_DBG3(("%s behave() failed at %s:%d: fail(%d/0x%08x) (site type 0x%04x)",
+		      buff.GetZString(),
+		      failFile,
+		      lineno,
+		      MFMThrownFailCode,
+		      MFMThrownFailCode,
+		      GetCenterAtomDirect().GetType()));
       }
 
       SetCenterAtomDirect(t.GetEmptyAtom());
@@ -244,7 +243,7 @@ namespace MFM {
         tile.PlaceAtom(tile.GetEmptyAtom(), center);
       }
 
-      LOG.Debug("%s",buff.GetZString());
+      MFM_LOG_DBG4(("%s",buff.GetZString()));
       if (!fixed)
         return false;
     }
@@ -453,8 +452,9 @@ namespace MFM {
     Tile<EC> & t = GetTile();
     MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
     THREEDIR eventLockRegions;
-    //    u32 eventLocksNeeded = t.GetLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
-    u32 eventLocksNeeded = t.GetAllLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
+    //try starting with only connected directions
+    u32 eventLocksNeeded = t.GetLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
+    //u32 eventLocksNeeded = t.GetAllLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
 
     MFM_LOG_DBG7(("EW:: AcquireAllLocks %s %d[%s %s %s] for tilecenter(%2d,%2d)",
                   t.GetLabel(),

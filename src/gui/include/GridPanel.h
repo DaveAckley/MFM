@@ -512,7 +512,7 @@ namespace MFM
       bool isStaggeredGrid = GetGrid().IsGridLayoutStaggered();
       SPoint screenDit = screenDitArg; //non-const
 
-      //LOG.Message("GetGridCoordAtScreenDit: %d,%d, gridCoord %d,%d", screenDitArg.GetX(), screenDitArg.GetY(), gridCoord.GetX(), gridCoord.GetY());
+      MFM_LOG_DBG7(("GetGridCoordAtScreenDit: %d,%d, gridCoord %d,%d", screenDitArg.GetX(), screenDitArg.GetY(), gridCoord.GetX(), gridCoord.GetY()));
 
       for (typename Grid<GC>::iterator_type i = m_mainGrid->begin(); i != m_mainGrid->end(); ++i)
       {
@@ -523,7 +523,7 @@ namespace MFM
 	MFM_API_ASSERT_STATE(GetGrid().IsLegalTileIndex(tileCoord)); //sanity
 
 	const Rect screenRectForTileDit = MapTileInGridToScreenDit(tile, tileCoord);
-	//LOG.Message("Tile at [%d,%d] returns rectangle x%d,y%d,w%d,h%d",tileCoord.GetX(), tileCoord.GetY(), screenRectForTileDit.GetX(), screenRectForTileDit.GetY(), screenRectForTileDit.GetWidth(), screenRectForTileDit.GetHeight());
+	MFM_LOG_DBG7(("Tile at [%d,%d] returns rectangle x%d,y%d,w%d,h%d",tileCoord.GetX(), tileCoord.GetY(), screenRectForTileDit.GetX(), screenRectForTileDit.GetY(), screenRectForTileDit.GetWidth(), screenRectForTileDit.GetHeight()));
 
         if (screenRectForTileDit.Contains(screenDit))
 	  {
@@ -612,7 +612,7 @@ namespace MFM
 #if 0
 	//SPAM ME!
 	if(tileCoord.GetX() == 1 && tileCoord.GetY() == 1)
-	  LOG.Message("PaintTiles: %d,%d at rectangle x%d,y%d,w%d,h%d", tileCoord.GetX(), tileCoord.GetY(), screenDitForTile.GetX(), screenDitForTile.GetY(), screenDitForTile.GetWidth(), screenDitForTile.GetHeight());
+	  MFM_LOG_DBG7(("PaintTiles: %d,%d at rectangle x%d,y%d,w%d,h%d", tileCoord.GetX(), tileCoord.GetY(), screenDitForTile.GetX(), screenDitForTile.GetY(), screenDitForTile.GetWidth(), screenDitForTile.GetHeight()));
 #endif
         GetTileRenderer().PaintTileAtDit(drawing, screenDitForTile.GetPosition(), *i);
       }
