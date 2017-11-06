@@ -453,8 +453,8 @@ namespace MFM {
     MFM_API_ASSERT_STATE(!t.IsDummyTile()); //sanity
     THREEDIR eventLockRegions;
     //try starting with only connected directions
-    u32 eventLocksNeeded = t.GetLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
-    //u32 eventLocksNeeded = t.GetAllLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
+    //u32 eventLocksNeeded = t.GetLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
+    u32 eventLocksNeeded = t.GetAllLockDirections(tileCenter, eventWindowBoundary, eventLockRegions);
 
     MFM_LOG_DBG7(("EW:: AcquireAllLocks %s %d[%s %s %s] for tilecenter(%2d,%2d)",
                   t.GetLabel(),

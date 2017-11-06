@@ -367,25 +367,15 @@ namespace MFM
       {
 	for(u32 x = 0; x < gridWidth; x++)
 	  {
-	    SPoint currentPt(x, y);
-	    if(!m_grid.IsLegalTileIndex(currentPt))
-	      continue;
-
-	    Tile<EC>& stile = m_grid.GetTile(currentPt);
-
-	    if (stile.IsDummyTile())
-	      {
-		continue;
-	      }
-
+	    SPoint siteInGrid(x,y);
 	    byteSink.Printf("Site(%d,%d",x,y);
-	    m_grid.SaveSite(currentPt,byteSink,*this);
+	    m_grid.SaveSite(siteInGrid,byteSink,*this);
 	    byteSink.Printf(")\n");
 
 #if 0 // Site(..) includes the event layer atoms
 
 	    /* No need to write empties since they are the default */
-	    if(!Atom<AC>::IsType(*m_grid.GetAtom(currentPt),
+	    if(!Atom<AC>::IsType(*m_grid.GetAtom(siteInGrid),
 				 Element_Empty<EC>::THE_INSTANCE.GetType()))
 	      {
 		byteSink.Printf("GA(");
@@ -394,7 +384,7 @@ namespace MFM
 		 * tables. */
 		for(u32 i = 0; i < elems; i++)
 		  {
-		    if(Atom<AC>::IsType(*m_grid.GetAtom(currentPt),
+		    if(Atom<AC>::IsType(*m_grid.GetAtom(siteInGrid),
 					m_elementRegistry.GetEntryElement(i)->GetType()))
 		      {
 			IntAlphaEncode(i, alphaOutput);
@@ -403,7 +393,7 @@ namespace MFM
 		      }
 		  }
 
-		T temp = *m_grid.GetAtom(currentPt);
+		T temp = *m_grid.GetAtom(siteInGrid);
 		AtomSerializer<AC> as(temp);
 		byteSink.Printf(",%d,%d,%@)\n", x, y, &as);
 	      }
