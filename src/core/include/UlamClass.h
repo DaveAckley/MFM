@@ -67,6 +67,7 @@ namespace MFM
       PRINT_MEMBER_ARRAYS =   0x00000100, //< Print array values individually
       PRINT_RECURSE_QUARKS =  0x00000200, //< Print quarks recursively
       PRINT_INDENTED_LINES =  0x00000400, //< Add newlines and indents
+      PRINT_MEMBER_ASCII =    0x00000800, //< Add ASCII data member values if printable
 
       /** (Composite value) Print element symbol and entire atom in hex */
       PRINT_HEX_ATOM = PRINT_SYMBOL|PRINT_ATOM_BODY,
@@ -311,6 +312,7 @@ namespace MFM
                            u32 indent = 0) const ;
 
     static void addHex(ByteSink & bs, u64 val) ;
+    static void addASCII(ByteSink & bs, u64 val) ;
 
     void DefineRegistrationNumber(u32 num) ;
 
