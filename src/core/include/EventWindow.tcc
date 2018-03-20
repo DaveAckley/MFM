@@ -6,6 +6,7 @@
 #include "PacketIO.h"
 #include "EventHistoryBuffer.h"
 #include "CacheProcessor.h"
+#include <execinfo.h> /* for backtrace_symbols */
 
 namespace MFM {
 
@@ -142,6 +143,16 @@ namespace MFM {
                     MFMThrownFailCode,
                     MFMThrownFailCode,
                     GetCenterAtomDirect().GetType());
+      }
+      {
+        OverflowableCharBufferByteSink<4096 + 2> bt;
+        char ** strings = backtrace_symbols (MFMThrownBacktraceArray, MFMThrownBacktraceSize);
+
+        for (u32 i = 0; i < MFMThrownBacktraceSize; i++)
+          bt.Printf("%s\n", strings[i]);
+        free (strings);
+
+        LOG.Message("BACKTRACE %s",bt.GetZString());
       }
 
       SetCenterAtomDirect(t.GetEmptyAtom());
