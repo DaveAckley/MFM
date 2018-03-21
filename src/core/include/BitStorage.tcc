@@ -4,6 +4,15 @@
 namespace MFM {
 
   template <class EC>
+  void BitStorage<EC>::PrintHex(ByteSink & bs, u32 startPos, u32 len) const {
+    MFM_API_ASSERT_ARG(startPos+len <= GetBitSize());
+    u32 prefix = len%4;
+    if (prefix) bs.Printf("%x", Read(startPos, prefix));
+    for (u32 i = prefix; i < len; i += 4) 
+      bs.Printf("%x", Read(startPos + i, 4));
+  }
+
+  template <class EC>
   BitRef<EC>::BitRef(u32 p, u32 l) {
     const u32 BITS_PER_UNIT = BitVector<1>::BITS_PER_UNIT;
     MFM_API_ASSERT_ARG(p + l <= BITS_PER_ATOM);

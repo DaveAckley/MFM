@@ -158,13 +158,7 @@ namespace MFM {
               {
                 // Just do hex, aligned from the right
                 bs.Printf("%d: 0x", bitsize); 
-
-                u32 start = bitsize%4;
-                if (start) bs.Printf("%x", stg.Read(startPos, start));
-
-                for (u32 i = start; i < bitsize; i += 4) 
-                  bs.Printf("%x", stg.Read(startPos + i, 4));
-
+                stg.PrintHex(bs, startPos, bitsize);
               } 
               else
               {
@@ -176,6 +170,13 @@ namespace MFM {
 
             if (!utin.IsPrimitive()) FAIL(ILLEGAL_STATE); // Can't happen now right?
 
+            if (utin.m_utip.GetPrimType() == UlamTypeInfoPrimitive::ATOM) {
+              // Just hex atoms for now
+              bs.Printf("0x"); 
+              stg.PrintHex(bs, startPos, bitsize);
+              continue;
+            }
+            
             u64 val = stg.ReadLong(startPos, bitsize);
             switch (utin.m_utip.GetPrimType())
             {
@@ -191,6 +192,7 @@ namespace MFM {
               {
                 bs.Print(val);
                 if (flags & PRINT_MEMBER_BITVALS) addHex(bs,val);
+                if (flags & PRINT_MEMBER_ASCII) addASCII(bs,val);
                 break;
               }
 
@@ -249,8 +251,15 @@ namespace MFM {
   template <class EC>
   void UlamClass<EC>::addHex(ByteSink & bs, u64 val)
   {
+    if (val < 2) return;
     bs.Printf("/0x");
     bs.Print(val, Format::HEX);
+  }
+
+  template <class EC>
+  void UlamClass<EC>::addASCII(ByteSink & bs, u64 val)
+  {
+    if (val < 0x100 && isprint((u32) val)) bs.Printf("/'%c'", (u32) val);
   }
 
   template <class EC>

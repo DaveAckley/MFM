@@ -154,6 +154,9 @@ namespace MFM {
     virtual u32 GetBitSize() const = 0;
 
     virtual const char * GetUlamTypeMangledName() const = 0;
+
+    void PrintHex(ByteSink & bs, u32 startPos = 0, u32 len = GetBitSize()) const ;
+
   }; //BitStorage (pure)
 
   /**

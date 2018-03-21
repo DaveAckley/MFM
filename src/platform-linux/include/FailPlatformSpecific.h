@@ -4,14 +4,18 @@
 #include <setjmp.h>   /* For jmp_buf, setjmp, longjmp */
 #include <stdio.h>    /* For FILE */
 #include <pthread.h>  /* For __thread */
+#include <execinfo.h> /* For backtrace */
 
 typedef struct MFMErrorEnvironment * volatile MFMErrorEnvironmentPointer_t;
 
+#define MAX_BACKTRACE_LEVELS 25
 struct MFMErrorEnvironment {
   jmp_buf buffer;               /* the system state as of the unwind_protect entry */
   volatile const char * file;   /* the file name of the original failure */
   volatile int lineno;          /* the line number of the original failure */
   volatile int thrown;          /* Return value(s) from setjmp call */
+  void * backtraceArray[MAX_BACKTRACE_LEVELS]; /* Where we were when we threw */
+  unsigned backtraceSize;       /* Number of entries used in backtraceArray */
   MFMErrorEnvironmentPointer_t prev; /* Back link to previous error environment */
 } ;
 
@@ -37,6 +41,9 @@ extern "C" const char * MFMFailCodeReason(int failCode) ;
   ((MFMPtrToErrEnvStackPtr && *MFMPtrToErrEnvStackPtr)?            \
    ((*MFMPtrToErrEnvStackPtr)->file = __FILE__,                    \
     (*MFMPtrToErrEnvStackPtr)->lineno = __LINE__,                  \
+    (*MFMPtrToErrEnvStackPtr)->backtraceSize =                     \
+      backtrace((*MFMPtrToErrEnvStackPtr)->backtraceArray,         \
+                MAX_BACKTRACE_LEVELS),                             \
     MFMLongJmpHere((*MFMPtrToErrEnvStackPtr)->buffer,              \
                    number),0) :                                    \
    (MFMFailHere(__FILE__,__LINE__,                                 \
@@ -111,6 +118,10 @@ do {									      \
       (const char *) unwindProtect_errorEnvironment.file;                     \
     unsigned MFMThrownFromLineNo __attribute__ ((unused)) =                   \
       unwindProtect_errorEnvironment.lineno;                                  \
+    void * const * MFMThrownBacktraceArray __attribute__ ((unused)) =         \
+      unwindProtect_errorEnvironment.backtraceArray;                          \
+    unsigned MFMThrownBacktraceSize __attribute__ ((unused)) =                \
+      unwindProtect_errorEnvironment.backtraceSize;                           \
     {cleanup}	                                                              \
   }                                                                           \
 } while (0)
