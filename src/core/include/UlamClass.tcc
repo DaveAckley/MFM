@@ -55,7 +55,7 @@ namespace MFM {
   }
 
   inline static void doNL(ByteSink & bs, u32 flags, u32 indent) {
-    if (flags & UlamClassPrintFlags::PRINT_INDENTED_LINES) 
+    if (flags & UlamClassPrintFlags::PRINT_INDENTED_LINES)
     {
       bs.Printf("\n");
       for (u32 i = 0; i < indent; ++i) bs.Printf(" ");
@@ -125,16 +125,16 @@ namespace MFM {
               bs.Printf("[%d]=",idx);
             }
 
-#if 0 
+#if 0
             u32 offset = T::ATOM_FIRST_STATE_BIT;
 
-            if (this->IsUlamTransient()) 
+            if (this->IsUlamTransient())
               offset = 0;
 #else
             u32 offset = 0;  // barf.  barf barf barf
 #endif
 
-            u32 startPos = 
+            u32 startPos =
               baseStatePos + dmi.m_bitPosition
               + offset + idx * bitsize;
 
@@ -146,7 +146,7 @@ namespace MFM {
                 const UlamClass * memberClass = ucr.GetUlamClassByMangledName(mangledName);
                 if (memberClass)
                 {
-                  u32 flatFlags = flags;  
+                  u32 flatFlags = flags;
                   // Only go down one more level?
                   //flatFlags &= ~UlamClassPrintFlags::PRINT_RECURSE_QUARKS;
                   memberClass->PrintClassMembers(ucr, bs, stg, flatFlags, startPos, indent + 1);
@@ -154,12 +154,12 @@ namespace MFM {
                 }
               }
 
-              if (bitsize > 64) 
+              if (bitsize > 64)
               {
                 // Just do hex, aligned from the right
-                bs.Printf("%d: 0x", bitsize); 
+                bs.Printf("%d: 0x", bitsize);
                 stg.PrintHex(bs, startPos, bitsize);
-              } 
+              }
               else
               {
                 u64 val = stg.ReadLong(startPos, bitsize);
@@ -172,11 +172,11 @@ namespace MFM {
 
             if (utin.m_utip.GetPrimType() == UlamTypeInfoPrimitive::ATOM) {
               // Just hex atoms for now
-              bs.Printf("0x"); 
+              bs.Printf("0x");
               stg.PrintHex(bs, startPos, bitsize);
               continue;
             }
-            
+
             u64 val = stg.ReadLong(startPos, bitsize);
             switch (utin.m_utip.GetPrimType())
             {
@@ -262,6 +262,7 @@ namespace MFM {
     if (val < 0x100 && isprint((u32) val)) bs.Printf("/'%c'", (u32) val);
   }
 
+#if 0
   template <class EC>
   void UlamClass<EC>::DefineRegistrationNumber(u32 num)
   {
@@ -273,7 +274,10 @@ namespace MFM {
 
     m_ulamClassRegistryNumber = num;
   }
+#endif
 
+#if 0
+  //pure virtual
   template <class EC>
   u32 UlamClass<EC>::GetRegistrationNumber() const
   {
@@ -282,5 +286,6 @@ namespace MFM {
 
     return m_ulamClassRegistryNumber;
   }
+#endif
 
 } //MFM

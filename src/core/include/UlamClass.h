@@ -314,17 +314,17 @@ namespace MFM
     static void addHex(ByteSink & bs, u64 val) ;
     static void addASCII(ByteSink & bs, u64 val) ;
 
-    void DefineRegistrationNumber(u32 num) ;
+    //void DefineRegistrationNumber(u32 num) ; moved to culam (ulam-4)
 
-    u32 GetRegistrationNumber() const ;
+    virtual u32 GetRegistrationNumber() const = 0;
 
-    enum { UNINITTED_REGISTRY_NUMBER = U32_MAX } ;
+    //enum { UNINITTED_REGISTRY_NUMBER = U32_MAX } ;
     UlamClass()
-      : m_ulamClassRegistryNumber(UNINITTED_REGISTRY_NUMBER)
+    //: m_ulamClassRegistryNumber(UNINITTED_REGISTRY_NUMBER)
     { }
 
   private:
-    u32 m_ulamClassRegistryNumber;
+    //u32 m_ulamClassRegistryNumber;
   };
 
 } // MFM
