@@ -89,7 +89,9 @@ namespace MFM {
   template <class EC>
   const UlamClass<EC>* UlamClassRegistry<EC>::GetUlamClassByIndex(u32 index) const
   {
-    if (index >= m_registeredUlamClassCount) FAIL(ILLEGAL_ARGUMENT);
+    //if (index >= m_registeredUlamClassCount) FAIL(ILLEGAL_ARGUMENT);
+    if (index >= TABLE_SIZE) FAIL(ILLEGAL_ARGUMENT);
+    if(!m_registeredUlamClasses[index]) FAIL(ILLEGAL_STATE);
     return m_registeredUlamClasses[index];
   }
 

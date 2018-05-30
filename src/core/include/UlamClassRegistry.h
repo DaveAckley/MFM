@@ -42,10 +42,12 @@ namespace MFM {
       TABLE_SIZE = 1000
     };
 
-    UlamClassRegistry() 
-      : m_registeredUlamClassCount(0) 
+    UlamClassRegistry()
+      : m_registeredUlamClassCount(0)
       , m_ulamElementEmpty(0)
-    { }
+    {
+      for(u32 i = 0; i < TABLE_SIZE; i++) m_registeredUlamClasses[i] = 0;
+    }
 
     bool RegisterUlamClass(UlamClass<EC>& uc) ;
 
