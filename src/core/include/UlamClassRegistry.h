@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamClassRegistry.h A class for the registration of ULAM quarks and elements
-  Copyright (C) 2015 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015 Ackleyshack LLC.
+  Copyright (C) 2015-2018 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2018 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file UlamClassRegistry.h A class for the registration of ULAM quarks and elements
   \author David H. Ackley.
   \author Elenas S. Ackley.
-  \date (C) 2015 All rights reserved.
+  \date (C) 2015-2018 All rights reserved.
   \lgpl
  */
 

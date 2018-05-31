@@ -1,9 +1,7 @@
 /* -*- C++ -*- */
 
 #include "Fail.h"
-//#include "Tile.h"
 #include "Random.h"
-//#include "EventWindow.h"
 #include "Base.h"
 #include "UlamTypeInfo.h"
 #include "UlamClassRegistry.h"
@@ -261,31 +259,5 @@ namespace MFM {
   {
     if (val < 0x100 && isprint((u32) val)) bs.Printf("/'%c'", (u32) val);
   }
-
-#if 0
-  template <class EC>
-  void UlamClass<EC>::DefineRegistrationNumber(u32 num)
-  {
-    if (num == UNINITTED_REGISTRY_NUMBER)
-      FAIL(ILLEGAL_ARGUMENT);
-
-    if (m_ulamClassRegistryNumber != UNINITTED_REGISTRY_NUMBER)
-      FAIL(DUPLICATE_ENTRY);
-
-    m_ulamClassRegistryNumber = num;
-  }
-#endif
-
-#if 0
-  //pure virtual
-  template <class EC>
-  u32 UlamClass<EC>::GetRegistrationNumber() const
-  {
-    if (m_ulamClassRegistryNumber == UNINITTED_REGISTRY_NUMBER)
-      FAIL(ILLEGAL_STATE);
-
-    return m_ulamClassRegistryNumber;
-  }
-#endif
 
 } //MFM

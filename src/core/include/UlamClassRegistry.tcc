@@ -27,7 +27,7 @@ namespace MFM {
     for (u32 i = 0; i < m_registeredUlamClassCount; ++i)
     {
       UlamClass<EC> * uc = m_registeredUlamClasses[i];
-      if (!uc) continue; //FAIL(ILLEGAL_STATE);
+      if (!uc) continue;
 
       const char * mang = uc->GetMangledClassName();
       if (!strcmp(mang, mangledName))
@@ -52,10 +52,6 @@ namespace MFM {
     m_registeredUlamClasses[myregnum] = &uc;
     m_registeredUlamClassCount++; //still maintain count
 
-    //if (m_registeredUlamClassCount >= TABLE_SIZE)
-    //  FAIL(OUT_OF_ROOM);
-    //uc.DefineRegistrationNumber(m_registeredUlamClassCount);
-    //m_registeredUlamClasses[m_registeredUlamClassCount++] = &uc;
     return true;
   }
 
@@ -89,7 +85,6 @@ namespace MFM {
   template <class EC>
   const UlamClass<EC>* UlamClassRegistry<EC>::GetUlamClassByIndex(u32 index) const
   {
-    //if (index >= m_registeredUlamClassCount) FAIL(ILLEGAL_ARGUMENT);
     if (index >= TABLE_SIZE) FAIL(ILLEGAL_ARGUMENT);
     if(!m_registeredUlamClasses[index]) FAIL(ILLEGAL_STATE);
     return m_registeredUlamClasses[index];
