@@ -29,6 +29,19 @@ namespace MFM {
     return true;
   }
 
+  template <class EC>
+  bool EventWindow<EC>::TryEventAtForProfiling(const SPoint & tcenter)
+  {
+    if (!InitForEvent(tcenter))
+    {
+      return false;
+    }
+
+    ExecuteBehavior();
+
+    m_ewState = FREE;
+    return true;
+  }
 
   template <class EC>
   bool EventWindow<EC>::TryEventAt(const SPoint & tcenter)
