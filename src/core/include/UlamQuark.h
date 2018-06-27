@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamQuark.h A concrete base class for ULAM quarks
-  Copyright (C) 2015-2016 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015-2016 Ackleyshack LLC.
+  Copyright (C) 2015-2018 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2018 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file UlamQuark.h A concrete base class for ULAM quark
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2015-2016 All rights reserved.
+  \date (C) 2015-2018 All rights reserved.
   \lgpl
  */
 #ifndef ULAMQUARK_H
@@ -43,8 +43,7 @@ namespace MFM {
     typedef typename AC::ATOM_TYPE T;
 
   public:
-
-    UlamQuark(const UUID & uuid) : UlamClass<EC>() { }
+    UlamQuark() : UlamClass<EC>() { }
 
     virtual ~UlamQuark() { }
 
