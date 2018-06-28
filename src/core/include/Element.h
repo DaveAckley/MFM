@@ -289,7 +289,7 @@ namespace MFM
       {
         //m_type = etnm.AllocateType(m_UUID);
         m_hasType = true;
-	m_type = this->GetType(); //ulam-4 ElementTypeNumberMap defunct
+	m_type = this->GetTypeFromThisElement(); //ulam-4 ElementTypeNumberMap defunct
         m_defaultAtom = BuildDefaultAtom();
       }
     }
@@ -316,10 +316,15 @@ namespace MFM
      *
      * @returns The unique type of this Element .
      */
-    virtual u32 GetType() const
+    u32 GetType() const
     {
       MFM_API_ASSERT_STATE(m_hasType);
       return m_type;
+    }
+
+    virtual u32 GetTypeFromThisElement() const
+    {
+      FAIL(UNSUPPORTED_OPERATION);
     }
 
     void MakeAlternateNameForTestingInternal(const Element & asThis)
