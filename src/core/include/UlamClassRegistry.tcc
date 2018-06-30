@@ -39,8 +39,8 @@ namespace MFM {
   template <class EC>
   bool UlamClassRegistry<EC>::RegisterUlamClass(UlamClass<EC>& uc)
   {
-    if (IsRegisteredUlamClass(uc.GetMangledClassName()))
-      return false;
+    //if (IsRegisteredUlamClass(uc.GetMangledClassName()))
+    //  return false;
 
     //culam assigns the UlamClass Registry Number to each class
     //(after c&l, before gencode) (ulam-4)
@@ -48,7 +48,12 @@ namespace MFM {
     if (myregnum >= TABLE_SIZE)
       FAIL(OUT_OF_ROOM);
     if(m_registeredUlamClasses[myregnum] != NULL)
-      FAIL(DUPLICATE_ENTRY);
+      {
+	if(m_registeredUlamClasses[myregnum] == &uc)
+	  return false; //is already registered, return false
+	else
+	  FAIL(DUPLICATE_ENTRY);
+      }
 
     m_registeredUlamClasses[myregnum] = &uc;
     if(myregnum >= m_registeredUlamClassCount)
