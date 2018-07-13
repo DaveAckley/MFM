@@ -585,7 +585,7 @@ namespace MFM {
 
   inline u64 _UnaryMinusInt64(u64 val, u32 bitwidth)
   {
-    s32 cval = _Int64ToCs64(val, bitwidth);
+    s64 cval = _Int64ToCs64(val, bitwidth);
     if(cval == S64_MIN)
       return S64_MAX; //saturating, closest answer
     return _Cs64ToInt64(-cval, bitwidth);
