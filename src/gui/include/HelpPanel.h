@@ -68,6 +68,8 @@ namespace MFM
       Panel::SetForeground(Drawing::WHITE);
     }
 
+    virtual ~HelpPanel() { } //avoid inline error
+
     virtual void SaveDetails(ByteSink& sink) const
     {
       Super::SaveDetails(sink);

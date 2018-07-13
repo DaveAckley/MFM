@@ -107,6 +107,8 @@ namespace MFM {
         , m_gridPtr(0)
       { }
 
+      ~TileDriver() {} //avoid inline error
+
       State GetState()
       {
         Mutex::ScopeLock lock(m_stateLock);

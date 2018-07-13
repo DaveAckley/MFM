@@ -495,7 +495,7 @@ namespace MFM
           for (s32 rev = MFM_VERSION_REV; rev >= 0; --rev)
           {
             buff.Reset();
-            buff.Printf("mfs/start-%d.%d.%d.mfs", 
+            buff.Printf("mfs/start-%d.%d.%d.mfs",
                         MFM_VERSION_MAJOR,
                         MFM_VERSION_MINOR,
                         rev);
@@ -886,8 +886,7 @@ namespace MFM
       m_startFile.Reset();
     }
 
-    ~AbstractGUIDriver()
-    { }
+    virtual ~AbstractGUIDriver() { }
 
     virtual void ReinitUs()
     {

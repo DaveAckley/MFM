@@ -4,13 +4,13 @@
 #include "Logger.h"
 #include "AtomSerializer.h"
 #include "EventHistoryBuffer.h"
-  
+
 #include "Util.h"
 
 namespace MFM
 {
   template <class EC>
-  Tile<EC>::Tile(const u32 tileSide, S * sites, const u32 eventbuffersize, EventHistoryItem * items) 
+  Tile<EC>::Tile(const u32 tileSide, S * sites, const u32 eventbuffersize, EventHistoryItem * items)
     : TILE_SIDE(tileSide)
     , OWNED_SIDE(TILE_SIDE - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
     , m_sites(sites)
@@ -36,6 +36,9 @@ namespace MFM
 
     Init();
   }
+
+  template <class EC>
+  Tile<EC>::~Tile() {/* defined to avoid inline error */}
 
   template <class EC>
   void Tile<EC>::SaveTile(ByteSink & to) const
@@ -102,7 +105,7 @@ namespace MFM
   }
 
   template <class EC>
-  const Element<EC> * Tile<EC>::ReplaceEmptyElement(const Element<EC>& newEmptyElement) 
+  const Element<EC> * Tile<EC>::ReplaceEmptyElement(const Element<EC>& newEmptyElement)
   {
     return m_elementTable.ReplaceEmptyElement(newEmptyElement);
   }

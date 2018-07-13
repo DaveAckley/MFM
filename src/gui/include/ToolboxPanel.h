@@ -350,10 +350,10 @@ namespace MFM
       bool CheckHover(MouseMotionEvent& event)
       {
         if (m_parent)
-        { 
+        {
           SPoint onParent = event.GetAt();
           onParent -= m_parent->GetAbsoluteLocation();
-          if (m_element) 
+          if (m_element)
           {
             m_parent->SetElementLabel(m_element->GetName(), onParent);
             return true;
@@ -641,7 +641,7 @@ namespace MFM
       return tb;
     }
 
-    void SetElementLabel(const char * label, const SPoint at) 
+    void SetElementLabel(const char * label, const SPoint at)
     {
       m_hoverElementLabel = label;
       m_hoverElementLabelAt = at;
@@ -702,9 +702,9 @@ namespace MFM
         str.Printf("Neighborhood%D",i);
         m_neighborhoods[i].SetName(str.GetZString());
       }
-
-
     }
+
+    virtual ~ToolboxPanel() { } //avoid inline error
 
     /**
      * Sets whether or not this ToolboxPanel should render its
