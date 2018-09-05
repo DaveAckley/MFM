@@ -70,6 +70,8 @@ namespace MFM {
       m_bottomLineShown = 0;
     }
 
+    virtual ~TextPanel() { } //avoid inline error
+
     TextPanelByteSink & GetByteSink() {
       return m_text;
     }

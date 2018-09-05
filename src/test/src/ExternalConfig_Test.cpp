@@ -13,6 +13,7 @@ namespace MFM
   struct TestDriver : public AbstractDriver<TestGridConfig>
   {
     TestDriver() : AbstractDriver(1,1) { }
+    ~TestDriver() {} //avoid inline error
     void ReinitEden() { FAIL(ILLEGAL_STATE); }
     void DefineNeededElements() { FAIL(ILLEGAL_STATE); }
   };

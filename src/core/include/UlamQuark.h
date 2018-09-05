@@ -43,6 +43,7 @@ namespace MFM {
     typedef typename AC::ATOM_TYPE T;
 
   public:
+
     UlamQuark() : UlamClass<EC>() { }
 
     virtual ~UlamQuark() { }

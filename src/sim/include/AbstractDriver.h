@@ -488,7 +488,7 @@ namespace MFM
       if((m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
          || (m_haltOnEmpty && full == 0.0)
          || (m_haltOnFull && full == 1.0)
-         || (m_AEPS > 0 && m_haltOnExtinctionOf && 
+         || (m_AEPS > 0 && m_haltOnExtinctionOf &&
              m_grid.GetAtomCountFromSymbol(m_extinctionSymbol)==0)
          )
       {
@@ -588,7 +588,7 @@ namespace MFM
           OString64 name;
           OString256 mfz, libue, classes, info;
 
-          lastMatches = 
+          lastMatches =
             fs.Scanf("%Z%Z%Z%Z%Z\n", &name, &mfz, &libue, &classes, &info);
 
           if (lastMatches != 6)
@@ -600,13 +600,13 @@ namespace MFM
             printf("\nDEMO: %s\n", zname);
             printf(" To run the demo standalone: mfzrun %s demo\n", zname);
             printf(" To load the demo's classes: mfms --demo %s\n", zname);
-            printf("   includes classes: %s\n", 
+            printf("   includes classes: %s\n",
                    classes.GetZString());
             ++count;
           }
           else if (wantAll || !strcmp(demo,name.GetZString()))
           {
-            printf("Including %s from %s\n", 
+            printf("Including %s from %s\n",
                    classes.GetZString(),
                    name.GetZString());
 
@@ -619,12 +619,12 @@ namespace MFM
 
         fs.Close();
 
-        if (lastMatches != 0) 
+        if (lastMatches != 0)
         {
           LOG.Warning("Incomplete or corrupt %s", buf.GetZString());
         }
 
-        if ((wantList || wantAll) && count == 0) 
+        if ((wantList || wantAll) && count == 0)
           args.Die("No demos found");
 
         if (wantList)
@@ -1147,7 +1147,7 @@ namespace MFM
       if (path[0] == '/' || !Utils::GetReadableResourceFile(path, buf))
       {
         buf.Printf("%s",path); // absolute path or not resource relative
-      } 
+      }
       /* else buf filled with resource path */
 
       LOG.Message("Loading configuration '%s'", buf.GetZString());
@@ -1261,6 +1261,8 @@ namespace MFM
     {
       InitTicks(0); // Overwritten later on -cp load
     }
+
+    virtual ~AbstractDriver() {} //avoid inline error
 
     virtual void RegisterExternalConfigSections()
     {
@@ -1443,7 +1445,7 @@ namespace MFM
     {
       if (!m_haltOnExtinctionOf)
         FAIL(ILLEGAL_STATE);
-      
+
       return m_extinctionSymbol;
     }
 

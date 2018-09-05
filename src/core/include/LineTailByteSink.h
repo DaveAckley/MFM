@@ -54,6 +54,8 @@ namespace MFM
       Reset();
     }
 
+    ~LineTailByteSink() { } //avoid inline error
+
     /**
      * Writes a series of bytes to this LineTailByteSink, keeping
      * track of the lines encountered and discarding bytes encountered

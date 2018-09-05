@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
   Random.h PRNG interface for the Mersenne Twister
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2018 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@
   \file Random.h PRNG interface for the Mersenne Twister
   \author David H. Ackley.
   \author Trent R. Small.
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014,2018 All rights reserved.
   \lgpl
  */
 #ifndef _RANDOM_H_
@@ -70,7 +70,10 @@ namespace MFM
      *
      * @returns a 32-bit word containing pseudo-random bits.
      */
-    u32 Create() ;
+    inline u32 Create()
+    {
+      return _generator.randomMT();
+    }
 
     /**
      * Gets a uniform pseudo-random number from 0..2**nbits-1.  FAILs
@@ -80,7 +83,24 @@ namespace MFM
      *
      * @returns A pseudo-random number in the range [0, 2**nbits) .
      */
-    u32 CreateBits(u32 nbits) ;
+    inline u32 CreateBits(u32 nbits)
+    {
+      if (nbits >= 32)
+	{
+	  MFM_API_ASSERT_ARG(nbits==32);
+	  return Create();
+	}
+
+      // nbits <= 31
+      if ((_bitsRemaining -= nbits) < 0)
+	{
+	  _bitBuffer = Create();
+	  _bitsRemaining = 32-nbits;
+	}
+      u32 ret = _bitBuffer;
+      _bitBuffer >>= nbits;
+      return ret & _GetNOnes31(nbits);
+    }
 
     /**
      * Gets a uniform pseudo-random number from 0..max-1.  FAILs
@@ -90,7 +110,22 @@ namespace MFM
      *
      * @returns A pseudo-random number in the range [0, max) .
      */
-    u32 Create(u32 max) ;
+    inline u32 Create(u32 maxval)
+    {
+      if (maxval<=1)
+	{
+	  MFM_API_ASSERT_ARG(maxval==1);    // maxval==0 -> fail ILLEGAL_ARGUMENT
+	  return 0;
+	}
+      u32 nbits = _getLogBase2(maxval)+1; // +1: log2(2) == 1 -> need 2 bits
+      u32 ret;
+      do
+	{  // loop executes less than two times on average
+	  ret = CreateBits(nbits);
+	} while (ret >= maxval);
+
+      return ret;
+    }
 
     /**
      * Generates a pseudo-random boolean value.
@@ -116,7 +151,10 @@ namespace MFM
      * outOfThisMany, always returns true.  FAILs ILLEGAL_ARGUMENT if
      * outOfThisMany is 0.
      */
-    bool OddsOf(u32 thisMany, u32 outOfThisMany) ;
+    inline bool OddsOf(u32 thisMany, u32 outOfThisMany)
+    {
+      return Create(outOfThisMany) < thisMany;
+    }
 
     /**
      * Return true pseudo-randomly, with fixed point bounds.  E.g.,
@@ -137,7 +175,6 @@ namespace MFM
       {
 	return true;
       }
-
       return OddsOf(thisMany.intValue, outOfThisMany.intValue);
     }
 
@@ -147,7 +184,12 @@ namespace MFM
      * returns -1, 0, and 1 equally often.  FAILs with
      * ILLEGAL_ARGUMENT if max<min.
      */
-    s32 Between(s32 min, s32 max) ;
+    inline s32 Between(s32 min, s32 max)
+    {
+      MFM_API_ASSERT_ARG(max>=min);
+      u32 range = (u32) (max-min+1);
+      return ((s32) Create(range)) + min;
+    }
 
     /**
      * Resets the seed for the PRNG to a given seed.
@@ -170,61 +212,6 @@ namespace MFM
   /******************************************************************************
    **                         PUBLIC INLINE FUNCTIONS                          **
    ******************************************************************************/
-
-  inline u32 Random::Create()
-  {
-    return _generator.randomMT();
-  }
-
-  inline u32 Random::CreateBits(const u32 nbits)
-  {
-    if (nbits >= 32)
-    {
-      MFM_API_ASSERT_ARG(nbits==32);
-      return Create();
-    }
-
-    // nbits <= 31
-    if ((_bitsRemaining -= nbits) < 0)
-    {
-      _bitBuffer = Create();
-      _bitsRemaining = 32-nbits;
-    }
-    u32 ret = _bitBuffer;
-    _bitBuffer >>= nbits;
-    return ret & _GetNOnes31(nbits);
-  }
-
-  // Avoid modulus artifacts by sampling from round powers of 2 and rejecting
-  inline u32 Random::Create(const u32 maxval)
-  {
-    if (maxval<=1)
-    {
-      MFM_API_ASSERT_ARG(maxval==1);    // maxval==0 -> fail ILLEGAL_ARGUMENT
-      return 0;
-    }
-    u32 nbits = _getLogBase2(maxval)+1; // +1: log2(2) == 1 -> need 2 bits
-    u32 ret;
-    do
-    {  // loop executes less than two times on average
-      ret = CreateBits(nbits);
-    } while (ret >= maxval);
-
-    return ret;
-  }
-
-  inline bool Random::OddsOf(u32 thisMany, u32 outOfThisMany)
-  {
-    return Create(outOfThisMany) < thisMany;
-  }
-
-  inline s32 Random::Between(s32 min, s32 max)
-  {
-    MFM_API_ASSERT_ARG(max>=min);
-    u32 range = (u32) (max-min+1);
-    return ((s32) Create(range)) + min;
-  }
-
   template <class ITEM_TYPE, u32 SIZE>
   void Shuffle(Random & random, ITEM_TYPE array[SIZE])
   {

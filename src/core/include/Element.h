@@ -142,7 +142,7 @@ namespace MFM
      *
      * @returns The smallest event window radius this Element will
      * never access.  Return values larger than R + 1 are treated as R
-     * + 1.  
+     * + 1.
      */
     virtual u32 GetEventWindowBoundary() const
     {
@@ -287,8 +287,9 @@ namespace MFM
     {
       if (!m_hasType)
       {
-        m_type = etnm.AllocateType(m_UUID);
+        //m_type = etnm.AllocateType(m_UUID);
         m_hasType = true;
+	m_type = this->GetTypeFromThisElement(); //ulam-4 ElementTypeNumberMap defunct
         m_defaultAtom = BuildDefaultAtom();
       }
     }
@@ -319,6 +320,11 @@ namespace MFM
     {
       MFM_API_ASSERT_STATE(m_hasType);
       return m_type;
+    }
+
+    virtual u32 GetTypeFromThisElement() const
+    {
+      FAIL(UNSUPPORTED_OPERATION);
     }
 
     void MakeAlternateNameForTestingInternal(const Element & asThis)

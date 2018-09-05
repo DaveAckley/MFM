@@ -44,6 +44,7 @@ namespace MFM {
     typedef typename AC::ATOM_TYPE T;
 
   public:
+
     UlamTransient() : UlamClass<EC>() { }
 
     virtual ~UlamTransient() { }

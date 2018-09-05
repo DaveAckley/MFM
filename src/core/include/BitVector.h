@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
   BitVector.h Extended integral type
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014, 2018 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 /**
   \file BitVector.h Extended integral type
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014,2018 All rights reserved.
   \lgpl
  */
 #ifndef BITVECTOR_H
@@ -129,7 +129,7 @@ namespace MFM {
      *
      * @returns \c true if this bit is set, else \c false .
      */
-    bool ReadBit(const u32 idx) const 
+    bool ReadBit(const u32 idx) const
     {
       MFM_API_ASSERT_ARG(idx < B);
       return ReadBitUnsafe(idx);
@@ -188,7 +188,34 @@ namespace MFM {
      * @returns The bits read from the particular section of this
      *          BitVector, right-justified.
      */
-    inline u32 Read(const u32 startIdx, const u32 length) const;
+    inline u32 Read(const u32 startIdx, const u32 length) const
+    {
+      if (length == 0)
+	return 0;
+
+      MFM_API_ASSERT_ARG(startIdx + length <= B);
+      MFM_API_ASSERT_ARG(length <= sizeof(BitUnitType) * CHAR_BIT);
+
+      /* See Write(u32,u32,u32) for theory, such as it is */
+
+      const u32 firstUnitIdx = startIdx / BITS_PER_UNIT;
+      const u32 firstUnitFirstBit = startIdx % BITS_PER_UNIT;
+      const bool hasSecondUnit = (firstUnitFirstBit + length) > BITS_PER_UNIT;
+      const u32 firstUnitLength = hasSecondUnit ? BITS_PER_UNIT-firstUnitFirstBit : length;
+
+      u32 ret = ReadFromUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength);
+
+      // NOTE: The ARRAY_LENGTH > 1 clause of the following 'if' is
+      // strictly unnecessary, since it is implied by hasSecondUnit --
+      // but without it, gcc's optimizer (at least in some versions)
+      // mistakenly declares an array bounds warning (which we treat as
+      // an error) when inlining the code involving firstUnitIdx + 1
+      if (ARRAY_LENGTH > 1 && hasSecondUnit) {
+	const u32 secondUnitLength = length - firstUnitLength;
+	ret = (ret << secondUnitLength) | ReadFromUnit(firstUnitIdx + 1, 0, secondUnitLength);
+      }
+      return ret;
+    } //Read
 
     /**
      * Writes up to 32 bits of a specified u32 to a section of this BitVector.
@@ -202,7 +229,34 @@ namespace MFM {
      * @param value The bits to write to the specified section of this
      *              BitVector.
      */
-    void Write(const u32 startIdx, const u32 length, const u32 value);
+    inline void Write(const u32 startIdx, const u32 length, const u32 value)
+    {
+
+      if (length == 0) return;
+
+      MFM_API_ASSERT_ARG(startIdx + length <= B);
+      MFM_API_ASSERT_ARG(length <= sizeof(BitUnitType) * CHAR_BIT);
+
+      /* Since we're writing no more than 32 bits into an array of 32 bit
+	 words, we can't need to touch more than two of them.  So unroll
+	 the loop.
+      */
+
+      const u32 firstUnitIdx = startIdx / BITS_PER_UNIT;
+      const u32 firstUnitFirstBit = startIdx % BITS_PER_UNIT;
+      const bool hasSecondUnit = (firstUnitFirstBit + length) > BITS_PER_UNIT;
+      const u32 firstUnitLength = hasSecondUnit ? BITS_PER_UNIT - firstUnitFirstBit : length;
+
+      WriteToUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength, value >> (length - firstUnitLength));
+
+      // NOTE: The ARRAY_LENGTH > 1 clause of the following 'if' is
+      // strictly unnecessary, since it is implied by hasSecondUnit --
+      // but without it, gcc's optimizer (at least in some versions)
+      // mistakenly declares an array bounds warning (which we treat as
+      // an error) when inlining the code involving firstUnitIdx + 1
+      if (ARRAY_LENGTH > 1 && hasSecondUnit)
+	WriteToUnit(firstUnitIdx + 1, 0, length - firstUnitLength, value);
+    } //Write
 
     /**
      * Reads up to 64 bits of a particular section of this BitVector.
@@ -216,7 +270,17 @@ namespace MFM {
      * @returns The bits read from the particular section of this
      *          BitVector, right-justified.
      */
-    inline u64 ReadLong(const u32 startIdx, const u32 length) const;
+    inline u64 ReadLong(const u32 startIdx, const u32 length) const
+    {
+      const u32 firstLen = MIN((const u32) 32,length);
+      const u32 secondLen = length - firstLen;
+      u64 ret = Read(startIdx + secondLen, firstLen);
+      if (secondLen > 0)
+	{
+	  ret |= ((u64) Read(startIdx, secondLen)) << firstLen;
+	}
+      return ret;
+    }
 
     /**
      * Writes up to 64 bits of a specified u64 to a section of this BitVector.
@@ -230,7 +294,17 @@ namespace MFM {
      * @param value The bits to write to the specified section of this
      *              BitVector.
      */
-    void WriteLong(const u32 startIdx, const u32 length, const u64 value);
+    // void WriteLong(const u32 startIdx, const u32 length, const u64 value);
+    inline void WriteLong(const u32 startIdx, const u32 length, const u64 value)
+    {
+      const u32 firstLen = MIN((const u32) 32,length);
+      const u32 secondLen = length - firstLen;
+      Write(startIdx + secondLen, firstLen, (u32) value);
+      if (secondLen > 0)
+	{
+	  Write(startIdx, secondLen, ((u32) (value >> firstLen)));
+	}
+    }
 
     /**
      * Copy an arbitrary subsection of this BitVector to a different
@@ -263,10 +337,10 @@ namespace MFM {
       MFM_API_ASSERT_ARG(((void*) this) != ((void*) &dstbv)); // Ensure distinct ptrs; can't move within yourself
       u32 amt = BITS_PER_UNIT;
       for (u32 i = 0; i < length; i += amt)
-      {
-        if (i + amt > length) amt = length - i;
-        dstbv.Write(dstStartIdx + i, amt, this->Read(srcStartIdx + i, amt));
-      }
+	{
+	  if (i + amt > length) amt = length - i;
+	  dstbv.Write(dstStartIdx + i, amt, this->Read(srcStartIdx + i, amt));
+	}
     }
 
     /**
