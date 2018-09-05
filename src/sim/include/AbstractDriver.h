@@ -1270,6 +1270,8 @@ namespace MFM
       InitTicks(0); // Overwritten later on -cp load
     }
 
+    virtual ~AbstractDriver() {} //avoid inline error
+
     virtual void RegisterExternalConfigSections()
     {
       m_externalConfig.RegisterSection(m_externalConfigSectionDriver);

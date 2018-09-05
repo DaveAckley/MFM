@@ -229,19 +229,19 @@ namespace MFM
         for (u32 ty = 0; ty < grid.GetHeight(); ++ty)
         {
           SPoint tc(tx,ty);
-	  if(grid.IsLegalTileIndex(tc))
-	    {
-	      Tile<EC> & tile = grid.GetTile(tc);
-	      if(!tile.IsDummyTile())
-		{
-		  bool active =
-		    (m_eventHistoryStrategy == EVENT_HISTORY_STRATEGY_ALL) ||
-		    ((m_eventHistoryStrategy == EVENT_HISTORY_STRATEGY_SELECTED) &&
-		     IsTileSelected(MakeUnsigned(tc)));
-		  tile.SetHistoryActive(active);
-		}
-	    }
-	}
+	        if(grid.IsLegalTileIndex(tc))
+	        {
+	            Tile<EC> & tile = grid.GetTile(tc);
+	            if(!tile.IsDummyTile())
+		          {
+		              bool active =
+		              (m_eventHistoryStrategy == EVENT_HISTORY_STRATEGY_ALL) ||
+                  ((m_eventHistoryStrategy == EVENT_HISTORY_STRATEGY_SELECTED) &&
+		              IsTileSelected(MakeUnsigned(tc)));
+		              tile.SetHistoryActive(active);
+		          }
+	         }
+	      }
       }
     }
 
@@ -442,9 +442,9 @@ namespace MFM
       }
     }
 
-    void Init()
-    {
-    }
+    virtual ~GridPanel() { } //avoid inline error
+
+    void Init() { }
 
     void SetGrid(OurGrid* mainGrid)
     {

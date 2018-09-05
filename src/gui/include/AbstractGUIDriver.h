@@ -888,8 +888,7 @@ namespace MFM
       m_startFile.Reset();
     }
 
-    ~AbstractGUIDriver()
-    { }
+    virtual ~AbstractGUIDriver() { }
 
     virtual void ReinitUs()
     {

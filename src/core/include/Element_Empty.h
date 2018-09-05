@@ -79,6 +79,12 @@ namespace MFM
 
     virtual void Behavior(EventWindow<EC>& window) const
     { }
+
+    virtual u32 GetTypeFromThisElement() const
+    {
+      return EC::ATOM_CONFIG::ATOM_TYPE::ATOM_EMPTY_TYPE;
+    }
+
   };
 
   template <class EC>

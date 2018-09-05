@@ -6,6 +6,7 @@
 #include "PacketIO.h"
 #include "EventHistoryBuffer.h"
 #include "CacheProcessor.h"
+#include <execinfo.h> /* for backtrace_symbols */
 
 namespace MFM {
 
@@ -28,6 +29,19 @@ namespace MFM {
     return true;
   }
 
+  template <class EC>
+  bool EventWindow<EC>::TryEventAtForProfiling(const SPoint & tcenter)
+  {
+    if (!InitForEvent(tcenter))
+    {
+      return false;
+    }
+
+    ExecuteBehavior();
+
+    m_ewState = FREE;
+    return true;
+  }
 
   template <class EC>
   bool EventWindow<EC>::TryEventAt(const SPoint & tcenter)
@@ -155,6 +169,16 @@ namespace MFM {
 		      MFMThrownFailCode,
 		      MFMThrownFailCode,
 		      GetCenterAtomDirect().GetType()));
+      }
+      {
+        OverflowableCharBufferByteSink<4096 + 2> bt;
+        char ** strings = backtrace_symbols (MFMThrownBacktraceArray, MFMThrownBacktraceSize);
+
+        for (u32 i = 0; i < MFMThrownBacktraceSize; i++)
+          bt.Printf("%s\n", strings[i]);
+        free (strings);
+
+        LOG.Message("BACKTRACE %s",bt.GetZString());
       }
 
       SetCenterAtomDirect(t.GetEmptyAtom());

@@ -241,6 +241,12 @@ namespace MFM
     }
 
     /**
+     * Stripped down event execution for performance testing
+     *
+     */
+    bool TryEventAtForProfiling(const SPoint & tcenter);
+
+    /**
      * Set up for an event at center, which represented in full,
      * untransformed Tile coordinates.  Public primarily for ulam
      * element testing.

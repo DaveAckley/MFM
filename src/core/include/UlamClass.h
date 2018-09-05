@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamClass.h An abstract base class for ULAM quarks and elements
-  Copyright (C) 2015-2016 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015-2016 Ackleyshack LLC.
+  Copyright (C) 2015-2018 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2018 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file UlamClass.h An abstract base class for ULAM quarks and elements
   \author David H. Ackley.
   \author Elenas S. Ackley.
-  \date (C) 2015-2016 All rights reserved.
+  \date (C) 2015-2018 All rights reserved.
   \lgpl
  */
 
@@ -67,6 +67,7 @@ namespace MFM
       PRINT_MEMBER_ARRAYS =   0x00000100, //< Print array values individually
       PRINT_RECURSE_QUARKS =  0x00000200, //< Print quarks recursively
       PRINT_INDENTED_LINES =  0x00000400, //< Add newlines and indents
+      PRINT_MEMBER_ASCII =    0x00000800, //< Add ASCII data member values if printable
 
       /** (Composite value) Print element symbol and entire atom in hex */
       PRINT_HEX_ATOM = PRINT_SYMBOL|PRINT_ATOM_BODY,
@@ -311,18 +312,13 @@ namespace MFM
                            u32 indent = 0) const ;
 
     static void addHex(ByteSink & bs, u64 val) ;
+    static void addASCII(ByteSink & bs, u64 val) ;
 
-    void DefineRegistrationNumber(u32 num) ;
+    virtual u32 GetRegistrationNumber() const = 0;
 
-    u32 GetRegistrationNumber() const ;
-
-    enum { UNINITTED_REGISTRY_NUMBER = U32_MAX } ;
-    UlamClass()
-      : m_ulamClassRegistryNumber(UNINITTED_REGISTRY_NUMBER)
-    { }
+    UlamClass() { }
 
   private:
-    u32 m_ulamClassRegistryNumber;
   };
 
 } // MFM

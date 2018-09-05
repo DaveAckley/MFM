@@ -57,6 +57,8 @@ namespace MFM
     case 'v': type = VOID; break;
     case 'y': type = UNARY; break;
     case 's': type = STRING; break;
+    case 'a': type = ATOM; break;
+    case 'c': type = CONST_CLASS; break;
     default: return false;
     }
     result = type;
@@ -73,6 +75,8 @@ namespace MFM
     case VOID: return 'v';
     case UNARY: return 'y';
     case STRING: return 's';
+    case ATOM: return 'a';
+    case CONST_CLASS: return 'c';
     }
     FAIL(ILLEGAL_ARGUMENT);
   }
@@ -87,6 +91,8 @@ namespace MFM
     case VOID: return "Void";
     case UNARY: return "Unary";
     case STRING: return "String";
+    case ATOM: return "Atom";
+    case CONST_CLASS: FAIL(INCOMPLETE_CODE); //XXX or..???
     }
     FAIL(ILLEGAL_ARGUMENT);
   }
@@ -101,6 +107,8 @@ namespace MFM
     case VOID: return 0;
     case UNARY: return 32;
     case STRING: return 32;
+    case ATOM: return 96;
+    case CONST_CLASS: FAIL(INCOMPLETE_CODE); //XXX or..???
     }
     FAIL(ILLEGAL_ARGUMENT);
   }
@@ -176,6 +184,17 @@ namespace MFM
 	    uticp.m_stringValue.WriteByte((u8) chr);
 	  }
 	}
+      else if (uticp.m_parameterType.m_primType == UlamTypeInfoPrimitive::CONST_CLASS)
+        {
+	  u32 hexlen;
+	  if (!cbs.Scan(hexlen, Format::LEXHD, 0)) return false;
+
+	  for(u32 j = 0; j < hexlen; j++)
+	    {
+	      s32 ch = cbs.Read(); //throw away for now..
+	      if (ch < 0) return false;
+	    }
+        }
       else
 	{
 	  u32 arrayloop = uticp.m_parameterType.m_arrayLength;

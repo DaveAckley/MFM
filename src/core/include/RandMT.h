@@ -47,7 +47,7 @@
 // however I've not profiled the class to compare it with the straight
 // C code.
 //
-// Use of a class removes many C nasties and also allows you to easily 
+// Use of a class removes many C nasties and also allows you to easily
 // create multiple generators.
 // To compile on GNU a simple line is:
 // g++ -O3 RandMT.cc -o RandMT
@@ -66,29 +66,29 @@ class RandMT {
   static const int M =          397;                // a period parameter
   static const uint32 K =       0x9908B0DFU;        // a magic constant
 
-  // If you want a single generator, consider using a singleton class 
+  // If you want a single generator, consider using a singleton class
   // instead of trying to make these static.
   uint32   state[N+1];  // state vector + 1 extra to not violate ANSI C
   uint32   *next;       // next random value is computed from here
   uint32   initseed;    //
   int      left;        // can *next++ this many times before reloading
 
-  inline uint32 hiBit(uint32 u) { 
+  inline uint32 hiBit(uint32 u) {
     return u & 0x80000000U;    // mask all but highest   bit of u
   }
 
-  inline uint32 loBit(uint32 u) { 
+  inline uint32 loBit(uint32 u) {
     return u & 0x00000001U;    // mask all but lowest    bit of u
   }
 
-  inline uint32 loBits(uint32 u) { 
+  inline uint32 loBits(uint32 u) {
     return u & 0x7FFFFFFFU;   // mask     the highest   bit of u
   }
 
   inline uint32 mixBits(uint32 u, uint32 v) {
     return hiBit(u)|loBits(v);  // move hi bit of u to hi bit of v
   }
-  
+
   uint32 reloadMT(void) ;
 
   // MUST NOT PASS SEQUENTIAL SEEDS TO THIS VERSION
@@ -97,28 +97,26 @@ class RandMT {
 public:
   RandMT() ;
   RandMT(uint32 seed) ;
-  inline uint32 randomMT(void) ; 
+
+  inline uint32 randomMT(void)
+  {
+    uint32 y;
+
+    if(--left < 0)
+      return(reloadMT());
+
+    y  = *next++;
+    y ^= (y >> 11);
+    y ^= (y <<  7) & 0x9D2C5680U;
+    y ^= (y << 15) & 0xEFC60000U;
+    return(y ^ (y >> 18));
+  }
 
   // ACKLEYHAX: This seeding function hacked for MFM
   void seedMT_MFM(uint32 s) ;
 
 };
 
-inline uint32 RandMT::randomMT(void) {
-  uint32 y;
-
-  if(--left < 0)
-    return(reloadMT());
-
-  y  = *next++;
-  y ^= (y >> 11);
-  y ^= (y <<  7) & 0x9D2C5680U;
-  y ^= (y << 15) & 0xEFC60000U;
-  return(y ^ (y >> 18));
-}
 } /* namespace MFM */
 
 #endif // _RANDMT_H_
-
-
-

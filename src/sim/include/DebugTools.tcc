@@ -13,6 +13,8 @@ namespace MFM {
       UlamClassPrintFlags::PRINT_ATOM_BODY |
       UlamClassPrintFlags::PRINT_MEMBER_NAMES |
       UlamClassPrintFlags::PRINT_MEMBER_VALUES |
+      UlamClassPrintFlags::PRINT_MEMBER_BITVALS |
+      UlamClassPrintFlags::PRINT_MEMBER_ASCII |
       UlamClassPrintFlags::PRINT_INDENTED_LINES |
       UlamClassPrintFlags::PRINT_RECURSE_QUARKS;
 

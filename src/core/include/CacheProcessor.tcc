@@ -152,7 +152,7 @@ namespace MFM
     m_consistentAtomCount = 0;
   }
 
-  static u8 csgn(s32 n)
+  inline static u8 csgn(s32 n)
   {
     if (n < 0) return '-';
     if (n > 0) return '+';

@@ -61,6 +61,9 @@ namespace MFM
   }
 
   template <class EC>
+  Tile<EC>::~Tile() {/* defined to avoid inline error */}
+
+  template <class EC>
   void Tile<EC>::SaveTile(ByteSink & to) const
   {
     to.Printf(",");

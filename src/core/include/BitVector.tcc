@@ -92,7 +92,7 @@ namespace MFM {
   }
 
   template <u32 B>
-  bool BitVector<B>::ReadBitUnsafe(const u32 idx) const 
+  bool BitVector<B>::ReadBitUnsafe(const u32 idx) const
   {
     u32 arrIdx = idx / BITS_PER_UNIT;
     u32 intIdx = idx % BITS_PER_UNIT;
@@ -109,96 +109,6 @@ namespace MFM {
     m_bits[arrIdx] ^= newWord;
     return m_bits[arrIdx] & newWord;
   }
-
-  template <u32 B>
-  u64 BitVector<B>::ReadLong(const u32 startIdx, const u32 length) const
-  {
-    const u32 firstLen = MIN((const u32) 32,length);
-    const u32 secondLen = length - firstLen;
-    u64 ret = Read(startIdx + secondLen, firstLen);
-    if (secondLen > 0)
-    {
-      ret |= ((u64) Read(startIdx, secondLen)) << firstLen;
-    }
-    return ret;
-  }
-
-  template <u32 B>
-  void BitVector<B>::WriteLong(const u32 startIdx, const u32 length, const u64 value)
-  {
-    const u32 firstLen = MIN((const u32) 32,length);
-    const u32 secondLen = length - firstLen;
-    Write(startIdx + secondLen, firstLen, (u32) value);
-    if (secondLen > 0)
-    {
-      Write(startIdx, secondLen, ((u32) (value >> firstLen)));
-    }
-  }
-
-  template <u32 B>
-  void BitVector<B>::Write(u32 startIdx,
-                              u32 length,
-                              u32 value)
-  {
-    if (length == 0)
-      return;
-
-    MFM_API_ASSERT_ARG(startIdx + length <= B);
-    MFM_API_ASSERT_ARG(length <= sizeof(BitUnitType) * CHAR_BIT);
-
-    /* Since we're writing no more than 32 bits into an array of 32 bit
-       words, we can't need to touch more than two of them.  So unroll
-       the loop.
-    */
-
-    const u32 firstUnitIdx = startIdx / BITS_PER_UNIT;
-    const u32 firstUnitFirstBit = startIdx % BITS_PER_UNIT;
-    const bool hasSecondUnit = (firstUnitFirstBit + length) > BITS_PER_UNIT;
-    const u32 firstUnitLength = hasSecondUnit ? BITS_PER_UNIT - firstUnitFirstBit : length;
-
-    WriteToUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength, value >> (length - firstUnitLength));
-
-    // NOTE: The ARRAY_LENGTH > 1 clause of the following 'if' is
-    // strictly unnecessary, since it is implied by hasSecondUnit --
-    // but without it, gcc's optimizer (at least in some versions)
-    // mistakenly declares an array bounds warning (which we treat as
-    // an error) when inlining the code involving firstUnitIdx + 1
-    if (ARRAY_LENGTH > 1 && hasSecondUnit) 
-      WriteToUnit(firstUnitIdx + 1, 0, length - firstUnitLength, value); 
-  }
-
-  template <u32 B>
-  u32 BitVector<B>::Read(const u32 startIdx, const u32 length) const
-  {
-    if (length == 0)
-      return 0;
-
-    MFM_API_ASSERT_ARG(startIdx + length <= B);
-    MFM_API_ASSERT_ARG(length <= sizeof(BitUnitType) * CHAR_BIT);
-
-    /* See Write(u32,u32,u32) for theory, such as it is */
-
-    const u32 firstUnitIdx = startIdx / BITS_PER_UNIT;
-    const u32 firstUnitFirstBit = startIdx % BITS_PER_UNIT;
-    const bool hasSecondUnit = (firstUnitFirstBit + length) > BITS_PER_UNIT;
-    const u32 firstUnitLength = hasSecondUnit ? BITS_PER_UNIT-firstUnitFirstBit : length;
-
-    u32 ret = ReadFromUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength);
-
-    // NOTE: The ARRAY_LENGTH > 1 clause of the following 'if' is
-    // strictly unnecessary, since it is implied by hasSecondUnit --
-    // but without it, gcc's optimizer (at least in some versions)
-    // mistakenly declares an array bounds warning (which we treat as
-    // an error) when inlining the code involving firstUnitIdx + 1
-    if (ARRAY_LENGTH > 1 && hasSecondUnit) { 
-      const u32 secondUnitLength = length - firstUnitLength;
-      ret = (ret << secondUnitLength) | ReadFromUnit(firstUnitIdx + 1, 0, secondUnitLength);
-    }
-
-    return ret;
-  }
-
-
 
   template <u32 B>
   void BitVector<B>::StoreBits(const u32 bits, const u32 startIdx, const u32 length)
