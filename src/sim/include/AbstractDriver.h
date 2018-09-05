@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   AbstractDriver.h Base class for all MFM drivers
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,8 @@
   \file AbstractDriver.h Base class for all MFM drivers
   \author Trent R. Small.
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014,2017 All rights reserved.
   \lgpl
  */
 #ifndef ABSTRACTDRIVER_H
@@ -128,6 +130,11 @@ namespace MFM
      */
     const u32 GRID_HEIGHT;
 
+    /**
+     * The grid layout used by this simulation
+     */
+    const GridLayoutPattern GRID_LAYOUT;
+
     void NeedElement(Element<EC>* element)
     {
       for (u32 i = 0; i < m_neededElementCount; ++i)
@@ -217,6 +224,8 @@ namespace MFM
       WriteTimeBasedData(fbs, exists);
       fclose(fp);
     }
+
+    void XXXCHECKCACHES() { m_grid.CheckCaches(); }
 
     /**
      * Runs the held Grid and all its associated threads for a brief
@@ -1213,15 +1222,14 @@ namespace MFM
       {
         ++m_acceleration;
       }
-
-
     }
 
-    AbstractDriver(u32 gridWidth, u32 gridHeight)
+    AbstractDriver(u32 gridWidth, u32 gridHeight, GridLayoutPattern gridLayout)
       : GRID_WIDTH(gridWidth)
       , GRID_HEIGHT(gridHeight)
+      , GRID_LAYOUT(gridLayout)
       , m_neededElementCount(0)
-      , m_grid(m_elementRegistry, GRID_WIDTH, GRID_HEIGHT)
+      , m_grid(m_elementRegistry, GRID_WIDTH, GRID_HEIGHT, GRID_LAYOUT)
       , m_ticksLastStopped(0)
       , m_totalPriorTicks(0)
       , m_currentTickBasis(0)

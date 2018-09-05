@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   AbstractGUIDriver.h Base class for all GUI-based MFM drivers
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,8 @@
   \file AbstractGUIDriver.h Base class for all GUI-based MFM drivers
   \author Trent R. Small.
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014,2017 All rights reserved.
   \lgpl
  */
 #ifndef ABSTRACTGUIDRIVER_H
@@ -806,8 +808,8 @@ namespace MFM
       return true;
     }
 
-    AbstractGUIDriver(u32 gridWidth, u32 gridHeight)
-      : Super(gridWidth, gridHeight)
+    AbstractGUIDriver(u32 gridWidth, u32 gridHeight, GridLayoutPattern gridLayout)
+      : Super(gridWidth, gridHeight, gridLayout)
       , m_startPaused(true)
       , m_thisUpdateIsEpoch(false)
       , m_bigText(false)
@@ -1017,6 +1019,9 @@ namespace MFM
       VArguments& args = driver->m_varguments;
 
       s32 out;
+      if(*str == '{')
+	str++;  //ELENA?
+
       const char * errmsg = AbstractDriver<GC>::GetNumberFromString(str, out, 0, 10000);
       if (errmsg)
       {

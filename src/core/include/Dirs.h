@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   Dirs.h Euclidean direction system
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014, 2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack, LLC.   All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,8 @@
   \file Dirs.h Euclidean direction system
   \author Trent R. Small.
   \author David H. Ackley
-  \date (C) 2014 All rights reserved.
+  \author Elena S. Ackley
+  \date (C) 2014,2017 All rights reserved.
   \lgpl
  */
 #ifndef DIRS_H
@@ -58,6 +60,16 @@ namespace MFM
     }
 
     /**
+       check if a dir is valid for layout
+    */
+    static bool IsValidDir(Dir dir, bool isStaggered)
+    {
+      if(!IsLegalDir((s32) dir))
+	return false;
+      return !isStaggered || ((dir != NORTH) && (dir != SOUTH));
+    }
+
+    /**
      * map a dir to a readable string
      */
     static const char * GetName(Dir dir)
@@ -83,13 +95,8 @@ namespace MFM
     static bool IsCorner(Dir dir) { return dir&1; }
 
     /**
-     * true iff dir is a face direction.
-     */
-    static bool IsFace(Dir dir) { return !IsCorner(dir); }
-
-    /**
-     * The next dir clockwise from dir.  Note that for all dir,
-     * IsCorner(dir)==IsFace(CWDir(dir)), and dir==CWDir(CCWDir(dir))
+     * The next dir clockwise from dir.
+     * Note that in CHECKERBOARD layout, for all dir,
      */
     static Dir CWDir(Dir dir) { return (dir+1)%DIR_COUNT; }
 
@@ -102,8 +109,8 @@ namespace MFM
     { return (dir + (DIR_COUNT / 2)) % DIR_COUNT; }
 
     /**
-     * The next dir counter-clockwise from dir.  Note that for all dir,
-     * IsCorner(dir)==IsFace(CCWDir(dir)), and dir==CCWDir(CWDir(dir))
+     * The next dir counter-clockwise from dir.
+     * Note In CHECKERBOARD layout, for all dir,
      */
     static Dir CCWDir(Dir dir) { return (dir+DIR_COUNT-1)%DIR_COUNT; }
 
@@ -144,8 +151,10 @@ namespace MFM
     { return mask & (1 << dir); }
 
     /**
-     * Given a Dir , will fill a SPoint with unit offsets representing
-     * the direction of this Dir . For instance:
+     * Given a Dir, will fill a SPoint with double unit offsets representing
+     * this Dir for site coordinates (not grid rows and columns).
+     * Multiplied by two, for subsequent multiply by (OWNED_WIDTH/2, OWNED_HEIGHT/2).
+     *  For instance:
      *
      * \code{.cpp}
 
@@ -157,14 +166,31 @@ namespace MFM
      * @param pt The SPoint to fill with the offsets of a direction.
      *
      * @param dir The Dir specifying the units to fill \c pt with.
+     *
+     * @param isStaggered True when grid layout is staggered, false for checkerboard.
      */
-    static void FillDir(SPoint& pt, Dir dir);
+    static void FillDir(SPoint& pt, Dir dir, bool isStaggered);
 
-    static SPoint GetOffset(Dir dir) {
-      SPoint tmp;
-      FillDir(tmp, dir);
-      return tmp;
-    }
+    /**
+     * Given a Dir , will fill a SPoint with unit offsets representing
+     * the direction of this Dir in Grid Coordinates. For instance:
+     *
+     * \code{.cpp}
+
+       ToTileGridIndex(pt, NORTH) // pt == (0, -1)
+       ToTileGridIndex(pt, SOUTHEAST) // pt == (1, 1)
+
+     * \endcode
+     *
+     * @param pt The SPoint to fill with the offsets of a direction.
+     *
+     * @param dir The Dir specifying the units to fill \c pt with.
+     *
+     * @param isStaggered True when grid layout is staggered, false for checkerboard.
+     *
+     * @param fpt The from gridtilecoord as reference for staggered grids.
+     */
+    static void ToNeighborTileInGrid(SPoint & pt, u32 dir, bool isStaggered, const SPoint& fpt);
 
     /**
      * Translates the coordinates in a SPoint to a Dir . The
@@ -228,6 +254,24 @@ namespace MFM
      *          which is also changed.
      */
     static SPoint FlipSEPointToCorner(const SPoint& pt, const Dir corner);
+
+
+  private:
+
+    /**
+     * private helpers for FillDir
+     *
+     */
+    static void FillDirCheckerboard(SPoint& pt, u32 dir);
+    static void FillDirStaggered(SPoint& pt, u32 dir);
+
+    /**
+     * private helpers for ToNeighborTileInGrid
+     *
+     */
+    static void ToCheckerboardTileInGridNeighbor(SPoint& pt, u32 dir);
+    static void ToStaggeredTileInGridNeighbor(SPoint& pt, u32 dir, const SPoint& fpt);
+
   };
 
   typedef RandomIterator<Dirs::DIR_COUNT,4> RandomDirIterator;

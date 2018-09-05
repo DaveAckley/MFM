@@ -229,10 +229,10 @@ namespace MFM
    * A shuffling iterator from 0..MAX-1, to reduce
    * order-of-consideration bias.
    */
-  template <u32 MAX,u32 BIT_ODDS=5>
+  template <u32 MAX, u32 BIT_ODDS=5>
   class RandomIterator
   {
-    const u32 m_limit;
+    u32 m_limit;
     u32 m_index;
     typedef typename UForNumber<MAX-1>::type U; // Smallest size that holds 0..MAX-1
     U m_indices[MAX];
@@ -283,6 +283,19 @@ namespace MFM
       return m_index < m_limit;
     }
 
+    void Reinit(u32 len, u32 * indices)
+    {
+      //non-sequential indices capable.
+      for (u32 i = 0; i < len; ++i) m_indices[i] = (U) indices[i];
+      m_limit = len;
+
+      Reset();
+    }
+
+    u32 GetLimit()
+    {
+      return m_limit;
+    }
   };
 
 } /* namespace MFM */

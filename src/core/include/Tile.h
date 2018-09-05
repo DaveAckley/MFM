@@ -1,7 +1,8 @@
 /* -*- mode:C++ -*- */
 /**
   Tile.h An independent hardware unit capable of tiling space
-  Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack, LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +24,8 @@
   \file Tile.h An independent hardware unit capable of tiling space
   \author Trent R. Small.
   \author David H. Ackley.
-  \date (C) 2014-2016 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014-2017 All rights reserved.
   \lgpl
  */
 #ifndef TILE_H
@@ -50,6 +52,14 @@ namespace MFM
 #define IS_OWNED_CONNECTION(X) ((X) - Dirs::EAST >= 0 && (X) - Dirs::EAST < 4)
 
   template <class EC> class EventHistoryBuffer; // FORWARD
+
+  enum { NOCHKCONNECT, YESCHKCONNECT };
+
+  /**
+   * Grid layout for tiles. MFM namespace.
+   */
+  enum GridLayoutPattern { GRID_LAYOUT_CHECKERBOARD, GRID_LAYOUT_STAGGERED };
+
 
   /**
      The representation of a single indefinitely scalable hardware
@@ -90,15 +100,29 @@ namespace MFM
     enum { ELEMENT_TABLE_SIZE = 1u<<AC::ATOM_TYPE_BITS };
 
     /**
-     * The length of a side of this (necessarily square) Tile in sites.
+     * The length of a side of this Tile in sites.
      */
-    const u32 TILE_SIDE;
+    const u32 TILE_WIDTH;
+    const u32 TILE_HEIGHT;
 
     /**
      * The edge length of the portion of a Tile that is 'owned' by the
      * Tile itself -- i.e., excluding the cache boundary.
      */
-    const u32 OWNED_SIDE;
+    const u32 OWNED_WIDTH;
+    const u32 OWNED_HEIGHT;
+
+    /**
+     * The layout of the grid containing this tile
+     */
+    const GridLayoutPattern GRID_LAYOUT;
+
+
+    /**
+     * Dummy tile is true if it doesn't really exist in the grid (e.g. in staggered layout)
+     */
+    bool DUMMY_TILE;
+
 
     /**
      * An enumeration of the kinds of memory regions which may exist in
@@ -113,8 +137,7 @@ namespace MFM
       REGION_COUNT
     };
 
-    Tile(const u32 tileSide, S * sites, const u32 eventbuffersize, EventHistoryItem * items) ;
-    ~Tile();
+    Tile(const u32 tileWidth, const u32 tileHeight, const GridLayoutPattern gridlayout, S * sites, const u32 eventbuffersize, EventHistoryItem * items) ;
 
     void SaveTile(ByteSink & to) const ;
 
@@ -131,35 +154,35 @@ namespace MFM
     /**
        Get the site-in-tile number of a given position \c index of the
        tile, \e including the caches, so index ranges from
-       0..TILE_SIDE-1 in both x and y.  Return value is in
-       0..(TILE_SIDE * TILE_SIDE - 1).  Fails if index x or y is
-       greater than or equal to the tile side, or negative.
+       0..TILE_WIDTH-1 in x, and 0..TILE_HEIGHT-1 in y.  Return value is in
+       0..(TILE_WIDTH * TILE_HEIGHT - 1).  Fails if index x or y is
+       greater than or equal to the tile width or height, respectively, or negative.
      */
     u32 GetSiteInTileNumber(const SPoint index) const
     {
       UPoint uidx = MakeUnsigned(index);
-      MFM_API_ASSERT_ARG(uidx.GetX() < TILE_SIDE && uidx.GetY() < TILE_SIDE);
-      return uidx.GetY()*TILE_SIDE + uidx.GetX();
+      MFM_API_ASSERT_ARG(uidx.GetX() < TILE_WIDTH && uidx.GetY() < TILE_HEIGHT);
+      return uidx.GetY()*TILE_WIDTH + uidx.GetX();
     }
 
     /**
        Get the coordinate of a given \c siteInTileNumber in the tile,
        \e including the caches, so return value ranges from
-       0..TILE_SIDE-1 in both x and y.  Return value is in 0..  1).
-       Fails if siteInTileNumber is greater than or equal to TILE_SIDE
-       * TILE_SIDE.  Returns SPoint (even though both x and y will be
+       0..TILE_WIDTH-1 in x, and 0..TILE_HEIGHT-1 in y.  Return value is in 0..  1).
+       Fails if siteInTileNumber is greater than or equal to TILE_WIDTH
+       * TILE_HEIGHT.  Returns SPoint (even though both x and y will be
        non-negative) to invert GetSiteInTileNumber()
      */
     SPoint GetCoordOfSiteInTileNumber(u32 siteInTileNumber) const
     {
-      MFM_API_ASSERT_ARG(siteInTileNumber < TILE_SIDE*TILE_SIDE);
-      return SPoint(siteInTileNumber % TILE_SIDE, siteInTileNumber / TILE_SIDE);
+      MFM_API_ASSERT_ARG(siteInTileNumber < TILE_WIDTH*TILE_HEIGHT);
+      return SPoint(siteInTileNumber % TILE_WIDTH, siteInTileNumber / TILE_WIDTH);
     }
 
     /**
        Get a const reference to the Site at position \c index of the
        tile, \e including the caches, so index ranges from
-       0..TILE_SIDE-1 in both x and y.
+       0..TILE_WIDTH-1 in x, and 0..TILE_HEIGHT-1 in y
      */
     const S & GetSite(const SPoint index) const
     {
@@ -169,7 +192,7 @@ namespace MFM
     /**
        Get a mutable reference to the Site at position \c index of the
        tile, \e including the caches, so index ranges from
-       0..TILE_SIDE-1 in both x and y.
+       0..TILE_WIDTH-1 in x, and 0..TILE_HEIGHT-1 in y
      */
     S & GetSite(const SPoint index)
     {
@@ -179,7 +202,7 @@ namespace MFM
     /**
        Get a const reference to the Site at position \c index of the
        tile, \e excluding the caches, so index ranges from
-       0..OWNED_SIDE-1 in both x and y.
+       0..OWNED_WIDTH-1 in x, and 0..OWNED_HEIGHT-1 in y
      */
     const S & GetUncachedSite(const SPoint index) const
     {
@@ -189,7 +212,7 @@ namespace MFM
     /**
        Get a mutable reference to the Site at position \c index of the
        tile, \e excluding the caches, so index ranges from
-       0..OWNED_SIDE-1 in both x and y.
+       0..OWNED_WIDTH-1 in x, and 0..OWNED_HEIGHT-1 in y
      */
     S & GetUncachedSite(const SPoint index)
     {
@@ -203,7 +226,7 @@ namespace MFM
      */
     SPoint GetRandomOwnedCoord()
     {
-      return OwnedCoordToTile(SPoint(GetRandom(), OWNED_SIDE, OWNED_SIDE));
+      return OwnedCoordToTile(SPoint(GetRandom(), OWNED_WIDTH, OWNED_HEIGHT));
     }
 
     u32 GetAtomCount(ElementType atomType) const
@@ -242,6 +265,21 @@ namespace MFM
     void SetWarpFactor(u32 warp)
     {
       m_warpFactor = MIN(10u, warp);
+    }
+
+    bool IsTileGridLayoutStaggered() const
+    {
+      return (GRID_LAYOUT == GRID_LAYOUT_STAGGERED);
+    }
+
+    bool IsDummyTile() const
+    {
+      return DUMMY_TILE;
+    }
+
+    void SetDummyTile()
+    {
+      DUMMY_TILE = true; //not dummy, false by default
     }
 
   private:
@@ -284,6 +322,8 @@ namespace MFM
       }
     }
 
+    void TryToAddRegionAtReach(Dir d, u32& rtncount, THREEDIR & rtndirs, bool onlyConnected) const;
+
     friend class EventWindow<EC>;
     friend class CacheProcessor<EC>;
 
@@ -320,7 +360,8 @@ namespace MFM
     /**
      * A minimal iterator over the Sites of a tile.  Access via Tile::begin().
      */
-    template <class SITETYPE, class TILETYPE> class TileIterator
+    template <class SITETYPE, class TILETYPE>
+    class TileIterator
     {
       TILETYPE & t;
       const u32 INDENT;
@@ -341,10 +382,10 @@ namespace MFM
 
       void operator++()
       {
-        if (j < (s32) (t.TILE_SIDE - INDENT))
+        if (j < (s32) (t.TILE_HEIGHT - INDENT))
         {
           i++;
-          if (i >= (s32) (t.TILE_SIDE - INDENT))
+          if (i >= (s32) (t.TILE_WIDTH - INDENT))
           {
             i = INDENT;
             j++;
@@ -357,7 +398,7 @@ namespace MFM
       {
         s32 rows = j-m.j;
         s32 cols = i-m.i;
-        return rows*(t.TILE_SIDE - 2*INDENT) + cols;
+        return rows*(t.TILE_WIDTH - 2*INDENT) + cols;
       }
       */
 
@@ -394,10 +435,10 @@ namespace MFM
     }
 
     iterator_type endAll() {
-      return iterator_type(*this, 0, 0, TILE_SIDE);
+      return iterator_type(*this, 0, 0, TILE_HEIGHT);
     }
     const_iterator_type endAll() const {
-      return const_iterator_type(*this, 0, 0, TILE_SIDE);
+      return const_iterator_type(*this, 0, 0, TILE_HEIGHT);
     }
 
     iterator_type beginOwned() {
@@ -408,10 +449,10 @@ namespace MFM
     }
 
     iterator_type endOwned() {
-      return iterator_type(*this, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS, TILE_SIDE - EVENT_WINDOW_RADIUS);
+      return iterator_type(*this, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS, TILE_HEIGHT - EVENT_WINDOW_RADIUS);
     }
     const_iterator_type endOwned() const {
-      return const_iterator_type(*this, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS, TILE_SIDE - EVENT_WINDOW_RADIUS);
+      return const_iterator_type(*this, EVENT_WINDOW_RADIUS, EVENT_WINDOW_RADIUS, TILE_HEIGHT - EVENT_WINDOW_RADIUS);
     }
 
     iterator_type begin(bool all) {
@@ -419,6 +460,7 @@ namespace MFM
           return beginAll();
       return beginOwned();
     }
+
     const_iterator_type begin(bool all) const {
       if (all)
           return beginAll();
@@ -571,14 +613,14 @@ namespace MFM
     SPoint GetNeighborLoc(Dir neighbor, const SPoint& atomLoc) const;
 
     /**
-     * Gets the Region that a specified index, from the center of
-     * the edge of a Tile, reaches to.
+     * Gets the Region that a specified index, from the center to
+     * the edge of a Tile, reaches to (i.e. cache, shared, visible, hidden)
      *
      * @param index The index to check region membership of.
      *
      * @returns The Region which index will reach.
      */
-    Region RegionFromIndex(const u32 index);
+    Region RegionFromIndex(const u32 index, const u32 tileSide);
 
     /**
      * Performs a single Event on the generated EventWindow .
@@ -796,15 +838,23 @@ namespace MFM
      */
     u32 GetSites() const
     {
-      return OWNED_SIDE*OWNED_SIDE;
+      return OWNED_WIDTH*OWNED_HEIGHT;
     }
 
     /**
      * Gets the width of this Tile in sites, including caches.
      */
-    u32 GetTileSide()
+    u32 GetTileWidth()
     {
-      return TILE_SIDE;
+      return TILE_WIDTH;
+    }
+
+    /**
+     * Gets the height of this Tile in sites, including caches.
+     */
+    u32 GetTileHeight()
+    {
+      return TILE_HEIGHT;
     }
 
     /**
@@ -862,27 +912,7 @@ namespace MFM
      */
     inline bool IsConnected(Dir dir) const;
 
-    bool HasAnyConnections(Dir regionDir) const;
-
-    /**
-     * Finds the maximum ('square') distance from the center of the
-     * Tile to this point.  This computation assumes the TILE_SIDE is
-     * even (see ctor), and returns 1 for all of the four 'centermost'
-     * sites.
-     *
-     * @param point The Point whose distance should be computed
-     *
-     * @returns The square distance from the Tile center to the given
-     * site, greater than or equal to 1
-     */
-    u32 GetSquareDistanceFromCenter(const SPoint& point) const
-    {
-      // Do everything at double scale to get the rounding right
-      const SPoint doubleResCenter(TILE_SIDE - 1, TILE_SIDE - 1);
-      const SPoint doubleResPoint = point * 2;
-      u32 doubleResDistance = (doubleResPoint - doubleResCenter).GetMaximumLength();
-      return (doubleResDistance + 1) / 2;
-    }
+    //bool HasAnyConnections(Dir regionDir) const; unused
 
     /**
      * Checks to see if a specified local point is contained within a
@@ -895,8 +925,7 @@ namespace MFM
      */
     bool IsInCache(const SPoint& point) const
     {
-      u32 sqdist = GetSquareDistanceFromCenter(point);
-      return sqdist <= TILE_SIDE / 2 && sqdist > TILE_SIDE / 2 - EVENT_WINDOW_RADIUS;
+      return (point.GetX() < EVENT_WINDOW_RADIUS) || (point.GetX() >= TILE_WIDTH - EVENT_WINDOW_RADIUS) || (point.GetY() < EVENT_WINDOW_RADIUS) || (point.GetY() >= TILE_HEIGHT - EVENT_WINDOW_RADIUS);
     }
 
     /**
@@ -911,8 +940,8 @@ namespace MFM
      */
     bool IsInShared(const SPoint& point) const
     {
-      u32 sqdist = GetSquareDistanceFromCenter(point);
-      return sqdist <= TILE_SIDE / 2 && sqdist > TILE_SIDE / 2 - 2 * EVENT_WINDOW_RADIUS;
+      const u32 dblEWR = EVENT_WINDOW_RADIUS * 2;
+      return (point.GetX() < dblEWR) || (point.GetX() >= TILE_WIDTH - dblEWR) || (point.GetY() < dblEWR) || (point.GetY() >= TILE_HEIGHT - dblEWR);
     }
 
     /**
@@ -933,7 +962,8 @@ namespace MFM
      */
     bool IsInHidden(const SPoint& point) const
     {
-      return GetSquareDistanceFromCenter(point) <= TILE_SIDE / 2 - 3 * EVENT_WINDOW_RADIUS;
+      const u32 tplEWR = EVENT_WINDOW_RADIUS * 3;
+      return (((point.GetX() >= tplEWR) && (point.GetX() < TILE_WIDTH - tplEWR)) && ((point.GetY() >= tplEWR) && (point.GetY() < TILE_HEIGHT - tplEWR)));
     }
 
     /**
@@ -947,7 +977,7 @@ namespace MFM
      */
     bool IsOwnedSite(const SPoint & point) const
     {
-      return GetSquareDistanceFromCenter(point) <= TILE_SIDE / 2 - 1 * EVENT_WINDOW_RADIUS;
+      return !IsInCache(point);
     }
 
     /**
@@ -966,14 +996,14 @@ namespace MFM
     inline bool IsInTile(const SPoint& pt) const
     {
       // Unsigned so possible negative coords wrap around to big positives
-      return ((u32) pt.GetX()) < TILE_SIDE && ((u32) pt.GetY() < TILE_SIDE);
+      return ((u32) pt.GetX()) < TILE_WIDTH && ((u32) pt.GetY() < TILE_HEIGHT);
     }
 
     /**
      * Checks to see if a specified coordinate is contained within a
      * Tile's sites excluding the caches.  Indexing ignores the cache
      * boundary, so possible range is (0,0) to
-     * (OWNED_SIDE-1,OWNED_SIDE-1).  If this method returns true, then
+     * (OWNED_WIDTH-1,OWNED_HEIGHT-1).  If this method returns true, then
      * the 'Uncached' methods, applied to this location, will not FAIL.
      *
      * @param pt The coordinate which is in question of being a legal
@@ -1037,56 +1067,86 @@ namespace MFM
     template <u32 REACH>
     Dir RegionAt(const SPoint& pt) const;
 
-    Dir RegionAtReach(const SPoint& sp, const u32 reach) const ;
+    /**
+     *
+     * @returns The number of direction of the cache pointed at by pt,
+     *           and the directions in rtndirs;
+     */
+    //Dir RegionAtReach(const SPoint& sp, const u32 reach) const ;
+    u32 RegionAtReach(const SPoint& sp, const u32 REACH, THREEDIR & rtndirs, bool onlyConnected) const;
 
     /**
-      Return ((Dir) -1) if no locks are needed to perform an event at
-      pt, given an event window radius bounded by bound.  Otherwise
-      return the 'center direction' in which locks are needed, and
-      return true.  When GetLockDirection returns other than -1, if
-      dir is an edge, only that lock is needed, and if dir is a
-      corner, it and the two adjacent edges are all needed.
+      Return the number of locks needed to perform an event at pt,
+      given an event window radius bounded by boundary. The lock
+      directions are returned in rtndirs: At most 3 directions for
+      corners in checkerboard grids; At most 2 directions for corners
+      in staggered grids; and, a corner as a single in staggered
+      grids; There is no check for connections.
      */
-    Dir GetLockDirection(const SPoint& pt, const u32 boundary) const
+    u32 GetAllLockDirections(const SPoint& pt, const u32 boundary, THREEDIR & rtndirs) const
     {
-      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1);
+      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, NOCHKCONNECT);
     }
+
+    /**
+       Same as GetAllLockDirections, except only connected directions are returned
+      *
+     */
+    u32 GetLockDirections(const SPoint& pt, const u32 boundary, THREEDIR & rtndirs) const
+    {
+      return RegionAtReach(pt,EVENT_WINDOW_RADIUS * 2 + boundary - 1, rtndirs, YESCHKCONNECT);
+    }
+
 
     /**
      * Finds the cache in this Tile which contains a specified SPoint.
      *
      * @param pt The Point which should specify the location of a cache.
      *
-     * @returns The direction of the cache specified by pt, or
-     *          (Dir)-1 if there is no such cache.
+     * @param rtndirs The directions Dir of the cache specified by pt
+     *
+    * @param onlyConnected when true will return only connected directions
+     *
+     * @returns The number of directions of the cache specified by pt
+     *          and the directions in rtndirs, or 0 if there is no
+     *          such cache.
      */
-    Dir CacheAt(const SPoint& pt) const;
+    u32 CacheAt(const SPoint& pt, THREEDIR & rtndirs, const bool onlyConnected) const;
 
     /**
-     * Finds the region of cache or shared memory in this Tile which
-     * contains a specified SPoint.
+     * Finds the regions of cache or shared memory in this Tile which
+     * contain a specified SPoint.
      *
      * @param pt The SPoint which should specify a location within
      *           cache or shared memory.
      *
-     * @returns The direction of the cache or shared memory specified
-     *          by pt, or (Dir)-1 if pt is not in cache or shared
-     *          memory.
+     * @param rtndirs The directions Dir of cache or shared specified by pt
+     *
+    * @param onlyConnected when true will return only connected directions
+     *
+     * @returns The number of directions of the cache or shared memory
+     *          specified by pt and the directions in rtndirs, or 0 if
+     *          there are none.
      */
-    Dir SharedAt(const SPoint& pt) const;
+    u32 SharedAt(const SPoint& pt, THREEDIR & rtndirs, const bool onlyConnected) const;
 
     /**
-     * Finds the region of cache, shared, or visible memory in this
-     * Tile which contains a specified SPoint.
+     * Finds the regions of cache, shared, or visible memory in this
+     * Tile which contain a specified SPoint.
      *
      * @param pt The SPoint which should specify a location within
      *           cache, shared, or visible memory.
      *
-     * @returns The direction of the cache, shared, or visible memory
-     *          specified by pt, or (Dir)-1 if pt is not in cache,
-     *          shared, or visible memory.
+     * @param rtndirs The directions Dir of the cache, shared, or
+     *          visible memory specified by pt
+     *
+    * @param onlyConnected when true will return only connected directions
+     *
+     * @returns The number of directions of the cache, shared or visible memory
+     *          specified by pt and the directions in rtndirs, or 0 if
+     *          there is no such cache.
      */
-    Dir VisibleAt(const SPoint& pt) const;
+    u32 VisibleAt(const SPoint& pt, THREEDIR & rtndirs, const bool onlyConnected) const;
 
     /**
      * Gets an Atom from a specified point in this Tile.
@@ -1154,7 +1214,7 @@ namespace MFM
     /**
      * Gets an Atom from a specified point in this Tile.  Indexing
      * ignores the cache boundary, so possible range is (0,0) to
-     * (OWNED_SIDE-1,OWNED_SIDE-1).
+     * (OWNED_WIDTH-1,OWNED_HEIGHT-1).
      *
      * @param pt The location of the Atom to retrieve.
      *
@@ -1168,7 +1228,7 @@ namespace MFM
     /**
      * Gets an Atom from a specified point in this Tile.  Indexing
      * ignores the cache boundary, so possible range is (0,0) to
-     * (OWNED_SIDE-1,OWNED_SIDE-1).
+     * (OWNED_WIDTH-1,OWNED_HEIGHT-1).
      *
      * @param x The x coordinate of the location of the Atom to
      *          retrieve.
@@ -1197,7 +1257,7 @@ namespace MFM
     /**
      * Gets the site event count for a specified point in this Tile.
      * Indexing ignores the cache boundary, so possible range is (0,0)
-     * to (OWNED_SIDE-1,OWNED_SIDE-1).
+     * to (OWNED_WIDTH-1,OWNED_HEIGHT-1).
      *
      * @param site The coordinates of the location of the site whose
      *          event count should be retrieved.
@@ -1212,7 +1272,7 @@ namespace MFM
     /**
      * Gets the 'write age' of a specified point in this Tile, up to
      * one billion.  Indexing ignores the cache boundary, so possible
-     * range is (0,0) to (OWNED_SIDE-1,OWNED_SIDE-1).  The write age
+     * range is (0,0) to (OWNED_WIDTH-1,OWNED_HEIGHT-1).  The write age
      * is the number of events on this tile since the contents of the
      * specified point changed.  To obtain AEPS, divide this value by
      * Tile::GetSites().
@@ -1231,7 +1291,7 @@ namespace MFM
     /**
      * Gets the 'write age' of a specified point in this Tile.
      * Indexing ignores the cache boundary, so possible range is (0,0)
-     * to (OWNED_SIDE-1,OWNED_SIDE-1).  The write age is the number of
+     * to (OWNED_WIDTH-1,OWNED_HEIGHT-1).  The write age is the number of
      * events on this tile since the contents of the specified point
      * changed.  To obtain AEPS, divide this value by
      * Tile::GetSites().
@@ -1249,7 +1309,7 @@ namespace MFM
     /**
      * Gets the 'event age' of a specified point in this Tile, up to
      * one billion.  Indexing ignores the cache boundary, so possible
-     * range is (0,0) to (OWNED_SIDE-1,OWNED_SIDE-1).  The event age
+     * range is (0,0) to (OWNED_WIDTH-1,OWNED_HEIGHT-1).  The event age
      * is the number of events on this tile since the last event at
      * the specified point changed.  To obtain AEPS, divide this value
      * by Tile::GetSites().
@@ -1267,7 +1327,7 @@ namespace MFM
     /**
      * Gets the 'event age' of a specified point in this Tile.
      * Indexing ignores the cache boundary, so possible range is (0,0)
-     * to (OWNED_SIDE-1,OWNED_SIDE-1).  The event age is the number of
+     * to (OWNED_WIDTH-1,OWNED_HEIGHT-1).  The event age is the number of
      * events on this tile since the last event at the specified point
      * changed.  To obtain AEPS, divide this value by
      * Tile::GetSites().
@@ -1306,7 +1366,8 @@ namespace MFM
       PlaceAtomInSite(false, atom, pt);
     }
 
-    void PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt);
+    void PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt, bool doIdenticalCheck=false);
+
 
     /**
      * Store and/or consistency check an atom against the current
@@ -1322,9 +1383,9 @@ namespace MFM
      * @returns true for a consistent update, false for inconsistent
      * update
      *
-     * @fails ILLEGAL_ARGUMENT if site is not a cache location
+     * @fails ILLEGAL_ARGUMENT if site is not a cache or shared location
      */
-    bool ApplyCacheUpdate(bool isDifferent, const T& atom, const SPoint& site);
+    bool ApplyCacheUpdate(const bool isDifferent, const T& atom, const SPoint& site);
 
 
     /**

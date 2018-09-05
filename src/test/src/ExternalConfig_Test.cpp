@@ -12,8 +12,7 @@ namespace MFM
 {
   struct TestDriver : public AbstractDriver<TestGridConfig>
   {
-    TestDriver() : AbstractDriver(1,1) { }
-    ~TestDriver() {} //avoid inline error
+    TestDriver() : AbstractDriver<TestGridConfig>(1,1,GRID_LAYOUT_CHECKERBOARD) { }
     void ReinitEden() { FAIL(ILLEGAL_STATE); }
     void DefineNeededElements() { FAIL(ILLEGAL_STATE); }
   };
@@ -24,7 +23,7 @@ namespace MFM
     ElementRegistry<TestEventConfig> ereg;
     ereg.RegisterElement(Element_Dreg<TestEventConfig>::THE_INSTANCE);
 
-    Grid<TestGridConfig> grid(ereg,4,3);
+    Grid<TestGridConfig> grid(ereg,4,3,GRID_LAYOUT_CHECKERBOARD); //default layout
     grid.SetSeed(1);
     grid.Init();
 

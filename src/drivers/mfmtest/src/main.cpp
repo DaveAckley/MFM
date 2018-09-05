@@ -1,5 +1,7 @@
 #include "main.h"
 
+void XXXCCH() { }
+
 using namespace MFM;
 
 #define TEST(className)                             \

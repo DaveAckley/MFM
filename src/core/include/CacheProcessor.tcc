@@ -37,6 +37,8 @@ namespace MFM
 
     // Get site address in full untransformed tile coordinates
     SPoint local = md.GetPoint(siteNumber) + m_eventCenter;
+    SPoint mdtmp = md.GetPoint(siteNumber);
+    MFM_LOG_DBG7(("site# %d, point(%d, %d), local(%d, %d)", siteNumber, mdtmp.GetX(), mdtmp.GetY(), local.GetX(), local.GetY()));
     return IsCoordVisibleToPeer(local);
   }
 
@@ -48,14 +50,8 @@ namespace MFM
     // Map full untransformed local tile coord into the remote space
     SPoint remote = LocalToRemote(local);
 
-    // Get its distance from the remote tile center
-    u32 dist = tile.GetSquareDistanceFromCenter(remote);
-
-    // Distances up to a tile radius are visible
-    bool visible = dist <= tile.TILE_SIDE / 2;
-
-    // Which is what you asked
-    return visible;
+    MFM_LOG_DBG7(("peer remote(%d, %d), local(%d, %d), -farside(%d,%d)", remote.GetX(), remote.GetY(), local.GetX(), local.GetY(),m_farSideOrigin.GetX(),m_farSideOrigin.GetY()));
+    return tile.IsInTile(remote);
   }
 
   template <class EC>
@@ -107,10 +103,13 @@ namespace MFM
     // Time to pack this puppy up for travel
     MFM_API_ASSERT_STATE(m_toSendCount < SITE_COUNT);  // You say ship a whole window or more?
 
-    MFM_LOG_DBG7(("CP %s %s [%s] (%d,%d) send #%d (%d,%d)",
+    MFM_LOG_DBG7(("CP %s %s %d[%s %s %s] (%d,%d) send #%d (%d,%d)",
                   m_tile->GetLabel(),
                   Dirs::GetName(m_cacheDir),
-                  Dirs::GetName(m_centerRegion),
+		  m_locksNeeded,
+		  Dirs::GetName(m_lockRegions[0]),
+		  m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		  m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
                   m_farSideOrigin.GetX(),
                   m_farSideOrigin.GetY(),
                   siteNumber,
@@ -165,6 +164,8 @@ namespace MFM
   {
     MFM_API_ASSERT_STATE(m_cpState == PASSIVE && m_tile != 0);
     MFM_API_ASSERT_ARG(siteNumber >= 0 && siteNumber < SITE_COUNT);
+    if(!IsSiteNumberVisible((u16) siteNumber))
+      ReportCacheProcessorStatus((Logger::Level)1);  //debug for elena
     MFM_API_ASSERT_ARG(IsSiteNumberVisible((u16) siteNumber));
     MFM_API_ASSERT_STATE(m_receivedSiteCount < SITE_COUNT);
 
@@ -189,10 +190,10 @@ namespace MFM
 
       const SPoint soffset = md.GetPoint(siteNumber);
       SPoint loc = soffset + m_eventCenter;
+      const T& oldAtom = *m_tile->GetAtom(loc);
 
       if (isDifferent)
       {
-        const T& oldAtom = *m_tile->GetAtom(loc);
         ehb.AddEventAtom(siteNumber, oldAtom, inboundAtom);
       }
 
@@ -208,17 +209,19 @@ namespace MFM
         if (LOG.IfLog(Logger::WARNING))
         {
           // Get old for debug output
-          T oldAtom = *m_tile->GetAtom(loc);
+          T oldAtomx = oldAtom; //*m_tile->GetAtom(loc);
 
+          AtomSerializer<AC> oldas(oldAtomx);
           AtomSerializer<AC> as(inboundAtom);
-          AtomSerializer<AC> oldas(oldAtom);
 
           // Develop a secret grid-global address! shh don't tell ackley!
           s32 tilex = -1, tiley = -1;
           const char * tlb = GetTile().GetLabel();
           CharBufferByteSource cbs(tlb,strlen(tlb));
           cbs.Scanf("[%d,%d]",&tilex,&tiley);
-          SPoint gloc = SPoint(tilex,tiley) * GetTile().OWNED_SIDE + loc;
+
+	  const SPoint ownedp(GetTile().OWNED_WIDTH, GetTile().OWNED_HEIGHT);
+	  SPoint gloc = SPoint(tilex,tiley) * ownedp + loc;
 
           LOG.Warning("NC%s %s%c%c {%03d,%03d} #%2d(%2d,%2d)+(%2d,%2d)==(%2d,%2d) [%04x/%@] [%04x/%@]",
                       isDifferent? "U" : "C",
@@ -248,8 +251,7 @@ namespace MFM
   void CacheProcessor<EC>::ReceiveUpdateEnd()
   {
     MFM_API_ASSERT_STATE(m_cpState == PASSIVE);
-    MFM_LOG_DBG7(("Replying to UE, %d consistent",
-                  m_consistentAtomCount));
+    MFM_LOG_DBG7(("Replying to UE, %d consistent",m_consistentAtomCount));
     ApplyCacheUpdate();
     PacketIO pbuffer;
     pbuffer.SendReply(m_consistentAtomCount, *this);
@@ -269,13 +271,17 @@ namespace MFM
     {
       ReportCleanUpdate(m_toSendCount);
     }
-    MFM_LOG_DBG7(("CP %s %s [%s] reply %d<->%d : %d",
+    MFM_LOG_DBG7(("CP %s %s %d[%s %s %s] reply %d<->%d : %d",
                   GetTile().GetLabel(),
                   Dirs::GetName(m_cacheDir),
-                  Dirs::GetName(m_centerRegion),
+		  m_locksNeeded,
+		  Dirs::GetName(m_lockRegions[0]),
+		  m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		  m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
                   consistentCount,
                   m_toSendCount,
                   m_checkOdds));
+
     SetStateInternal(BLOCKING);
   }
 
@@ -290,9 +296,13 @@ namespace MFM
 
     if (m_cpState != IDLE)
     {
-      MFM_LOG_DBG7(("CP %s %s Advance in state %s",
+      MFM_LOG_DBG7(("CP %s %s %d[%s %s %s] Advance in state %s",
                     GetTile().GetLabel(),
                     Dirs::GetName(m_cacheDir),
+		    m_locksNeeded,
+		    Dirs::GetName(m_lockRegions[0]),
+		    m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		    m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
                     GetStateName(m_cpState)));
     }
 
@@ -325,9 +335,13 @@ namespace MFM
   template <class EC>
   bool CacheProcessor<EC>::AdvanceShipping()
   {
-    MFM_LOG_DBG7(("CP %s %s (%d,%d): Advance shipping",
+    MFM_LOG_DBG7(("CP %s %s %d[%s %s %s] (%d,%d): Advance shipping",
                   GetTile().GetLabel(),
                   Dirs::GetName(m_cacheDir),
+		  m_locksNeeded,
+		  Dirs::GetName(m_lockRegions[0]),
+		  m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		  m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
                   m_farSideOrigin.GetX(),
                   m_farSideOrigin.GetY()));
     bool didWork = false;
@@ -343,9 +357,13 @@ namespace MFM
       }
       didWork = true;
       ++m_sentCount;
-      MFM_LOG_DBG7(("CP %s %s: Ship %d (site #%d)",
+      MFM_LOG_DBG7(("CP %s %s %d[%s %s %s]: Ship %d (site #%d)",
                     GetTile().GetLabel(),
                     Dirs::GetName(m_cacheDir),
+		    m_locksNeeded,
+		    Dirs::GetName(m_lockRegions[0]),
+		    m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		    m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
                     m_sentCount,
                     cpi.m_siteNumber));
     }
@@ -393,9 +411,17 @@ namespace MFM
   void CacheProcessor<EC>::Unblock()
   {
     MFM_API_ASSERT_STATE(m_cpState == BLOCKING);
-
+    MFM_LOG_DBG7(("CP::Unblock %s %s %d[%s %s %s] (%d,%d)",
+                  m_tile->GetLabel(),
+                  Dirs::GetName(m_cacheDir),
+		  m_locksNeeded,
+		  Dirs::GetName(m_lockRegions[0]),
+		  m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		  m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
+                  m_farSideOrigin.GetX(),
+                  m_farSideOrigin.GetY())
+		 );
     SetIdle();
-    m_centerRegion = (Dir) -1;
     Unlock();  // FINALLY
   }
 
@@ -407,44 +433,42 @@ namespace MFM
     return m_tile->GetCacheProcessor(forDirection);
   }
 
+
   template <class EC>
   bool CacheProcessor<EC>::AdvanceBlocking()
   {
-    s32 needed = 1;
-    Dir baseDir = m_centerRegion;
+    u32 needed = m_locksNeeded;
 
-    if (Dirs::IsCorner(baseDir))
-    {
-      needed = 3;
-      baseDir = Dirs::CCWDir(baseDir);
-    }
+    THREEDIR copylockdirs; //copy before m_lockRegions cleared by Unblock
+    for (u32 d = 0; d < MAX_LOCKS_NEEDED; d++)  copylockdirs[d] = m_lockRegions[d];
 
     // Check if every-relevant-body is blocking
     s32 got = 0;
-    for (Dir dir = baseDir; got < needed; ++got, dir = Dirs::CWDir(dir))
+    for (u32 d = 0; got < needed; ++got, d++)
     {
-      CacheProcessor<EC> & cp = GetSibling(dir);
-      if (cp.IsConnected() && !cp.IsBlocking())
-      {
-        break;
-      }
+      CacheProcessor<EC> & cp = GetSibling(copylockdirs[d]);
+      if(cp.IsConnected() && !cp.IsBlocking())
+	{
+	  break;
+	}
+      //else incr got
     }
 
     if (got < needed)
     {
-      return false;  // Somebody still working
+      return false;  // Somebody else is still working
     }
 
     // All are done, unblock all, including ourselves
     got = 0;
-    for (Dir dir = baseDir; got < needed; ++got, dir = Dirs::CWDir(dir))
-    {
-      CacheProcessor<EC> & cp = GetSibling(dir);
-      if (cp.IsConnected())
+    for (u32 d = 0; got < needed; ++got, d++)
       {
-        cp.Unblock();
+	CacheProcessor<EC> & cp = GetSibling(copylockdirs[d]);
+	if (cp.IsConnected())
+	  {
+	    cp.Unblock();
+	  }
       }
-    }
 
     return true;
   }

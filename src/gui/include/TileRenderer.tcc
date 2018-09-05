@@ -25,9 +25,11 @@ namespace MFM
   template <class EC>
   SPoint TileRenderer<EC>::ComputeDrawSizeDit(const Tile<EC> & tile, u32 tileRegion) const
   {
-    const u32 drawDiameterSites = tile.TILE_SIDE - 2 * EWR * tileRegion;
-    const u32 drawSideDit = drawDiameterSites * m_atomSizeDit;
-    return SPoint(drawSideDit, drawSideDit);
+    const u32 drawDiameterSitesWidth = tile.TILE_WIDTH - 2 * EWR * tileRegion;
+    const u32 drawWidthDit = drawDiameterSitesWidth * m_atomSizeDit;
+    const u32 drawDiameterSitesHeight = tile.TILE_HEIGHT - 2 * EWR * tileRegion;
+    const u32 drawHeightDit = drawDiameterSitesHeight * m_atomSizeDit;
+    return SPoint(drawWidthDit, drawHeightDit);
   }
 
   template <class EC>
@@ -94,13 +96,17 @@ namespace MFM
       u32 outerRegion = m_drawCacheSites ? OurTile::REGION_CACHE : OurTile::REGION_SHARED;
       SPoint tileSizeDit = ComputeDrawSizeDit(tile, outerRegion);
 
-      for (s32 ditOff = 0; ditOff <= tileSizeDit.GetX(); ditOff += m_atomSizeDit)
+      for (s32 vditOff = 0; vditOff <= tileSizeDit.GetX(); vditOff += m_atomSizeDit)
       {
-        drawing.DrawHLineDit(ditOrigin.GetY() + ditOff,
-                             ditOrigin.GetX(), ditOrigin.GetX() + tileSizeDit.GetX(),
-                             m_gridLineColor);
-        drawing.DrawVLineDit(ditOrigin.GetX() + ditOff,
+        drawing.DrawVLineDit(ditOrigin.GetX() + vditOff,
                              ditOrigin.GetY(), ditOrigin.GetY() + tileSizeDit.GetY(),
+                             m_gridLineColor);
+      }
+
+      for (s32 hditOff = 0; hditOff <= tileSizeDit.GetY(); hditOff += m_atomSizeDit)
+      {
+        drawing.DrawHLineDit(ditOrigin.GetY() + hditOff,
+                             ditOrigin.GetX(), ditOrigin.GetX() + tileSizeDit.GetX(),
                              m_gridLineColor);
       }
     }
@@ -139,19 +145,19 @@ namespace MFM
       SPoint rel = md.GetPoint(s);
       SPoint abs = site + rel;
       SPoint ulDit = ditOrigin + abs * m_atomSizeDit;
-      if (rel.GetX() <= 0) 
+      if (rel.GetX() <= 0)
         drawing.DrawVLineDit(ulDit.GetX(),ulDit.GetY(), ulDit.GetY() + m_atomSizeDit, color);
-      if (rel.GetX() >= 0) 
+      if (rel.GetX() >= 0)
         drawing.DrawVLineDit(ulDit.GetX() + m_atomSizeDit, ulDit.GetY(), ulDit.GetY() + m_atomSizeDit, color);
-      if (rel.GetY() <= 0) 
+      if (rel.GetY() <= 0)
         drawing.DrawHLineDit(ulDit.GetY(), ulDit.GetX(), ulDit.GetX() + m_atomSizeDit, color);
-      if (rel.GetY() >= 0) 
+      if (rel.GetY() >= 0)
         drawing.DrawHLineDit(ulDit.GetY() + m_atomSizeDit, ulDit.GetX(), ulDit.GetX() + m_atomSizeDit, color);
     }
   }
 
   template <class EC>
-  void TileRenderer<EC>::PaintTileHistoryInfo(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile) 
+  void TileRenderer<EC>::PaintTileHistoryInfo(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile)
   {
     const EventHistoryBuffer<EC> & ehb = tile.GetEventHistoryBuffer();
     if (!ehb.IsHistoryActive()) return;
