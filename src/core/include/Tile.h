@@ -925,7 +925,11 @@ namespace MFM
      */
     bool IsInCache(const SPoint& point) const
     {
-      return (point.GetX() < EVENT_WINDOW_RADIUS) || (point.GetX() >= TILE_WIDTH - EVENT_WINDOW_RADIUS) || (point.GetY() < EVENT_WINDOW_RADIUS) || (point.GetY() >= TILE_HEIGHT - EVENT_WINDOW_RADIUS);
+      return
+        (point.GetX() < EVENT_WINDOW_RADIUS) ||
+        (point.GetX() >= (s32) (TILE_WIDTH - EVENT_WINDOW_RADIUS)) ||
+        (point.GetY() < EVENT_WINDOW_RADIUS) ||
+        (point.GetY() >= (s32) (TILE_HEIGHT - EVENT_WINDOW_RADIUS));
     }
 
     /**
@@ -940,8 +944,10 @@ namespace MFM
      */
     bool IsInShared(const SPoint& point) const
     {
-      const u32 dblEWR = EVENT_WINDOW_RADIUS * 2;
-      return (point.GetX() < dblEWR) || (point.GetX() >= TILE_WIDTH - dblEWR) || (point.GetY() < dblEWR) || (point.GetY() >= TILE_HEIGHT - dblEWR);
+      const s32 dblEWR = EVENT_WINDOW_RADIUS * 2;
+      return
+        (point.GetX() < dblEWR) || (point.GetX() >= (s32) (TILE_WIDTH - dblEWR)) ||
+        (point.GetY() < dblEWR) || (point.GetY() >= (s32) (TILE_HEIGHT - dblEWR));
     }
 
     /**
@@ -962,8 +968,10 @@ namespace MFM
      */
     bool IsInHidden(const SPoint& point) const
     {
-      const u32 tplEWR = EVENT_WINDOW_RADIUS * 3;
-      return (((point.GetX() >= tplEWR) && (point.GetX() < TILE_WIDTH - tplEWR)) && ((point.GetY() >= tplEWR) && (point.GetY() < TILE_HEIGHT - tplEWR)));
+      const s32 tplEWR = EVENT_WINDOW_RADIUS * 3;
+      return
+        ((point.GetX() >= tplEWR) && (point.GetX() < (s32) (TILE_WIDTH - tplEWR))) &&
+        ((point.GetY() >= tplEWR) && (point.GetY() < (s32) (TILE_HEIGHT - tplEWR)));
     }
 
     /**

@@ -443,7 +443,7 @@ namespace MFM
     for (u32 d = 0; d < MAX_LOCKS_NEEDED; d++)  copylockdirs[d] = m_lockRegions[d];
 
     // Check if every-relevant-body is blocking
-    s32 got = 0;
+    u32 got = 0;
     for (u32 d = 0; got < needed; ++got, d++)
     {
       CacheProcessor<EC> & cp = GetSibling(copylockdirs[d]);

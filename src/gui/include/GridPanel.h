@@ -568,7 +568,7 @@ namespace MFM
 	      } //caches drawn
 	    else
 	      {
-		MFM_API_ASSERT_ARG(siteInTileCoord.GetX() < tile.OWNED_WIDTH);
+		MFM_API_ASSERT_ARG(siteInTileCoord.GetX() < (s32) tile.OWNED_WIDTH);
 		siteInGridCoord = tileCoord * ownedp + siteInTileCoord;
 	      } //caches not drawn
 
