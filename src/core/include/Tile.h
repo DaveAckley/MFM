@@ -139,6 +139,8 @@ namespace MFM
 
     Tile(const u32 tileWidth, const u32 tileHeight, const GridLayoutPattern gridlayout, S * sites, const u32 eventbuffersize, EventHistoryItem * items) ;
 
+    ~Tile() ;
+
     void SaveTile(ByteSink & to) const ;
 
     bool LoadTile(LineCountingByteSource & from) ;
