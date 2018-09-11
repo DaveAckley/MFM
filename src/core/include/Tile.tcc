@@ -312,6 +312,8 @@ namespace MFM
     u32 rtncount = 0;
     bool isStaggered = IsTileGridLayoutStaggered();
 
+    if(isStaggered && !CanMakeUnsigned(sp)) return 0;  //Tue Sep 11 09:05:54 2018 esa
+
     UPoint pt = MakeUnsigned(sp);
 
     if(pt.GetX() < REACH)
@@ -613,7 +615,8 @@ namespace MFM
   template <class EC>
   bool Tile<EC>::IsInUncachedTile(const SPoint& pt) const
   {
-    return ((u32) pt.GetX()) < OWNED_WIDTH && ((u32) pt.GetY() < OWNED_HEIGHT);
+    //return ((u32) pt.GetX()) < OWNED_WIDTH && ((u32) pt.GetY() < OWNED_HEIGHT);
+    return (pt.GetX() < (s32) OWNED_WIDTH) && (pt.GetY() < (s32) OWNED_HEIGHT);
   }
 
   template <class EC>
@@ -643,8 +646,10 @@ namespace MFM
   template <class EC>
   typename Tile<EC>::Region Tile<EC>::RegionIn(const SPoint& pt)
   {
-    return MIN(RegionFromIndex((u32)pt.GetX(), TILE_WIDTH),
-               RegionFromIndex((u32)pt.GetY(), TILE_HEIGHT));
+    //return MIN(RegionFromIndex((u32)pt.GetX(), TILE_WIDTH),
+    //           RegionFromIndex((u32)pt.GetY(), TILE_HEIGHT));
+    return MIN(RegionFromIndex(pt.GetX(), (s32) TILE_WIDTH),
+               RegionFromIndex(pt.GetY(), (s32) TILE_HEIGHT));
   }
 
   template <class EC>

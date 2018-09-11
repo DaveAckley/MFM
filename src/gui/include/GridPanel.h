@@ -521,6 +521,7 @@ namespace MFM
 
         SPoint tileCoord = i.At();
 	MFM_API_ASSERT_STATE(GetGrid().IsLegalTileIndex(tileCoord)); //sanity
+	bool isStaggeredRow = isStaggeredGrid && (tileCoord.GetY()%2 > 0);
 
 	const Rect screenRectForTileDit = MapTileInGridToScreenDit(tile, tileCoord);
 	MFM_LOG_DBG7(("Tile at [%d,%d] returns rectangle x%d,y%d,w%d,h%d",tileCoord.GetX(), tileCoord.GetY(), screenRectForTileDit.GetX(), screenRectForTileDit.GetY(), screenRectForTileDit.GetWidth(), screenRectForTileDit.GetHeight()));
@@ -545,6 +546,7 @@ namespace MFM
 		    Dirs::ToNeighborTileInGrid(offset, dir, isStaggeredGrid, tileCoord);
 
 		    SPoint otherTileCoord = tileCoord + offset;
+
 		    if (!m_mainGrid->IsLegalTileIndex(otherTileCoord))
 		      return false;
 
@@ -560,6 +562,7 @@ namespace MFM
 		    SPoint siteInOtherTile = siteInTileCoord - remoteOrigin; //local to remote
 
 		    siteInGridCoord = otherTileCoord * ownedp + OurTile::TileCoordToOwned(siteInOtherTile);
+		    isStaggeredRow = isStaggeredGrid && (otherTileCoord.GetY()%2 > 0); //replace with otherTileCoord's row
 		  }
 		else
 		  {
@@ -572,11 +575,15 @@ namespace MFM
 		siteInGridCoord = tileCoord * ownedp + siteInTileCoord;
 	      } //caches not drawn
 
+	    if(isStaggeredRow)
+	      siteInGridCoord.Add(tile.OWNED_WIDTH/2,0); //Mon Sep 10 16:54:07 2018 esa
+
+	    if(!CanMakeUnsigned(siteInGridCoord)) FAIL(ILLEGAL_ARGUMENT); //XXX or, return false
+
 	    gridCoord = MakeUnsigned(siteInGridCoord);
 	    return true;
 	  } //tile rect contains screenDit
       } //end for loop, next tile
-
       return false;
     }
 
@@ -597,7 +604,6 @@ namespace MFM
              UPoint(atomDit, atomDit));
       return true;
     }
-
 
     void PaintTiles(Drawing & drawing)
     {

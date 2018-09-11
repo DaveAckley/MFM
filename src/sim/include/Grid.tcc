@@ -575,8 +575,11 @@ namespace MFM {
     if (siteInGrid.GetX() < 0 || siteInGrid.GetY() < 0)
       return false;
 
+    SPoint offset;
+    bool isStaggeredRow = IsGridLayoutStaggered() && ((siteInGrid.GetY()/OWNED_HEIGHT)%2 > 0);
+    if(isStaggeredRow) offset.Set(-OWNED_WIDTH/2,0);
     const SPoint ownedp(OWNED_WIDTH, OWNED_HEIGHT);
-    SPoint t = siteInGrid/ownedp;
+    SPoint t = (siteInGrid + offset)/ownedp;
 
     if(!IsLegalTileIndex(t))
       return false;
@@ -585,10 +588,13 @@ namespace MFM {
     if(tile.IsDummyTile())
       return false;
 
+    const SPoint s = (siteInGrid + offset) % ownedp;
+    if(!CanMakeUnsigned(s))
+      return false;
+
     // Set up return values
     tileInGrid = t;
-    siteInTile =
-      siteInGrid % ownedp;  // get index into just 'owned' sites
+    siteInTile = s;  // get index into just 'owned' sites
     return true;
   }
 
@@ -617,8 +623,9 @@ namespace MFM {
     SPoint tileInGrid, siteInTile;
     if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
     {
-      printf("Can't place at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
-      FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+      //printf("Can't place at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
+      //FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+      return; //Mon Sep 10 15:45:17 2018 esa
     }
 
     Tile<EC> & owner = GetTile(tileInGrid);
@@ -671,8 +678,9 @@ namespace MFM {
     SPoint tileInGrid, siteInTile;
     if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
     {
-      printf("Can't xray at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
-      FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+      //printf("Can't xray at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
+      //FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+      return; //Mon Sep 10 16:26:20 2018 esa
     }
 
     Tile<EC> & owner = GetTile(tileInGrid);
