@@ -160,11 +160,7 @@ namespace MFM {
 	    Dir odir = Dirs::OppositeDir(d);
 	    MFM_API_ASSERT_STATE(Dirs::IsValidDir(odir, isStaggered));
 
-	    LonglivedLock & otl = ctl; //simpler for staggered, done.
-	    if(!isStaggered)
-	      {
-		otl = GetIntertileLock(npt.GetX(),npt.GetY(),odir, false);
-	      }
+	    LonglivedLock & otl = isStaggered ? ctl : GetIntertileLock(npt.GetX(),npt.GetY(),odir, false); //simpler for staggered; ref unchangeable.
 
 	    ctile.Connect(gt, ctl, d);
 	    otile.Connect(gt, otl, odir);

@@ -1007,8 +1007,8 @@ namespace MFM
     inline bool IsInTile(const SPoint& pt) const
     {
       // Unsigned so possible negative coords wrap around to big positives
-      //      return ((u32) pt.GetX()) < TILE_WIDTH && ((u32) pt.GetY() < TILE_HEIGHT);
-      return (pt.GetX() < (s32) TILE_WIDTH) && (pt.GetY() < (s32) TILE_HEIGHT);
+      return ((u32) pt.GetX()) < TILE_WIDTH && ((u32) pt.GetY() < TILE_HEIGHT);
+      //return (pt.GetX() < (s32) TILE_WIDTH) && (pt.GetY() < (s32) TILE_HEIGHT);
     }
 
     /**
