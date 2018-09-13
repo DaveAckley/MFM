@@ -288,7 +288,7 @@ namespace MFM
   template <class CC>
   void Tile<CC>::InternalPutAtom(const T & atom, s32 x, s32 y)
   {
-    if (((u32) x) >= TILE_WIDTH || ((u32) y) >= TILE_WIDTH)
+    if (((u32) x) >= TILE_WIDTH || ((u32) y) >= TILE_HEIGHT)
     {
       FAIL(ARRAY_INDEX_OUT_OF_BOUNDS);
     }
@@ -311,8 +311,9 @@ namespace MFM
   {
     u32 rtncount = 0;
     bool isStaggered = IsTileGridLayoutStaggered();
+    //if(isStaggered && !CanMakeUnsigned(sp)) return 0;  //Tue Sep 11 09:05:54 2018 esa
 
-    if(isStaggered && !CanMakeUnsigned(sp)) return 0;  //Tue Sep 11 09:05:54 2018 esa
+    MFM_API_ASSERT_ARG(IsInTile(sp));
 
     UPoint pt = MakeUnsigned(sp);
 
@@ -615,8 +616,8 @@ namespace MFM
   template <class EC>
   bool Tile<EC>::IsInUncachedTile(const SPoint& pt) const
   {
-    //return ((u32) pt.GetX()) < OWNED_WIDTH && ((u32) pt.GetY() < OWNED_HEIGHT);
-    return (pt.GetX() < (s32) OWNED_WIDTH) && (pt.GetY() < (s32) OWNED_HEIGHT);
+    // Unsigned so possible negative coords wrap around to big positives;
+    return (((u32) pt.GetX()) < OWNED_WIDTH) && (((u32) pt.GetY()) < OWNED_HEIGHT);
   }
 
   template <class EC>
@@ -646,10 +647,8 @@ namespace MFM
   template <class EC>
   typename Tile<EC>::Region Tile<EC>::RegionIn(const SPoint& pt)
   {
-    //return MIN(RegionFromIndex((u32)pt.GetX(), TILE_WIDTH),
-    //           RegionFromIndex((u32)pt.GetY(), TILE_HEIGHT));
-    return MIN(RegionFromIndex(pt.GetX(), (s32) TILE_WIDTH),
-               RegionFromIndex(pt.GetY(), (s32) TILE_HEIGHT));
+    return MIN(RegionFromIndex((u32)pt.GetX(), TILE_WIDTH),
+               RegionFromIndex((u32)pt.GetY(), TILE_HEIGHT));
   }
 
   template <class EC>

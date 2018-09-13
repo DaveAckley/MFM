@@ -160,11 +160,7 @@ namespace MFM {
 	    Dir odir = Dirs::OppositeDir(d);
 	    MFM_API_ASSERT_STATE(Dirs::IsValidDir(odir, isStaggered));
 
-	    LonglivedLock & otl = ctl; //simpler for staggered, done.
-	    if(!isStaggered)
-	      {
-		otl = GetIntertileLock(npt.GetX(),npt.GetY(),odir, false);
-	      }
+	    LonglivedLock & otl = isStaggered ? ctl : GetIntertileLock(npt.GetX(),npt.GetY(),odir, false); //simpler for staggered, refs not changed
 
 	    ctile.Connect(gt, ctl, d);
 	    otile.Connect(gt, otl, odir);
@@ -565,36 +561,38 @@ namespace MFM {
     if (siteInGrid.GetX() < 0 || siteInGrid.GetY() < 0)
       return false;
 
+    SPoint offset;
+    if(IsGridRowStaggered(siteInGrid)) offset.Set(-OWNED_WIDTH/2,0);
     const SPoint ownedp(OWNED_WIDTH, OWNED_HEIGHT);
-    return IsLegalTileIndex(siteInGrid/ownedp);
+
+    const SPoint t = siteInGrid + offset;
+    if(t.GetX() < 0 || t.GetX() > (OWNED_WIDTH * GetWidth()))
+      return false;
+
+    SPoint tileCoord = t / ownedp;
+    if(!IsLegalTileIndex(tileCoord))
+      return false;
+
+    const Tile<EC>& tile = GetTile(tileCoord);
+    if(tile.IsDummyTile())
+      return false;
+    return true;
   }
 
   template <class GC>
   bool Grid<GC>::MapGridToUncachedTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const
   {
-    if (siteInGrid.GetX() < 0 || siteInGrid.GetY() < 0)
+    if(!IsGridCoord(siteInGrid))
       return false;
 
     SPoint offset;
-    bool isStaggeredRow = IsGridLayoutStaggered() && ((siteInGrid.GetY()/OWNED_HEIGHT)%2 > 0);
-    if(isStaggeredRow) offset.Set(-OWNED_WIDTH/2,0);
+    if(IsGridRowStaggered(siteInGrid))
+      offset.Set(-OWNED_WIDTH/2,0);
     const SPoint ownedp(OWNED_WIDTH, OWNED_HEIGHT);
-    SPoint t = (siteInGrid + offset)/ownedp;
-
-    if(!IsLegalTileIndex(t))
-      return false;
-
-    const Tile<EC>& tile = GetTile(t);
-    if(tile.IsDummyTile())
-      return false;
-
-    const SPoint s = (siteInGrid + offset) % ownedp;
-    if(!CanMakeUnsigned(s))
-      return false;
 
     // Set up return values
-    tileInGrid = t;
-    siteInTile = s;  // get index into just 'owned' sites
+    tileInGrid = (siteInGrid + offset)/ownedp;;
+    siteInTile = (siteInGrid + offset) % ownedp;  // get index into just 'owned' sites
     return true;
   }
 
@@ -623,8 +621,11 @@ namespace MFM {
     SPoint tileInGrid, siteInTile;
     if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
     {
-      //printf("Can't place at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
-      //FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+      if(!IsGridLayoutStaggered())
+	{
+	  printf("Can't place at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
+	  FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+	}
       return; //Mon Sep 10 15:45:17 2018 esa
     }
 
@@ -678,8 +679,11 @@ namespace MFM {
     SPoint tileInGrid, siteInTile;
     if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
     {
-      //printf("Can't xray at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
-      //FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+      if(!IsGridLayoutStaggered())
+	{
+	  printf("Can't xray at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
+	  FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+	}
       return; //Mon Sep 10 16:26:20 2018 esa
     }
 
@@ -848,7 +852,7 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::WriteEPSImage(ByteSink & outstrm) const
   {
-    u64 max = 0;
+    u64 max = 1; //avoid division by 0
     const u32 swidth = GetWidthSites();
     const u32 sheight = GetHeightSites();
 
@@ -858,9 +862,9 @@ namespace MFM {
       for(u32 y = 0; y < sheight; y++) {
 	for(u32 x = 0; x < swidth; x++) {
           SPoint siteInGrid(x,y), tileInGrid, siteInTile;
-          if (!MapGridToUncachedTile(siteInGrid, tileInGrid, siteInTile))
-            continue; //FAIL(ILLEGAL_STATE); possible dummy tile in staggered grid.
-          u64 events = GetTile(tileInGrid).GetUncachedSiteEvents(siteInTile);
+          bool inGrid = MapGridToUncachedTile(siteInGrid, tileInGrid, siteInTile); //false when undef in staggered grid
+	  //continue; //FAIL(ILLEGAL_STATE); possible dummy tile in staggered grid.
+          u64 events = inGrid ? GetTile(tileInGrid).GetUncachedSiteEvents(siteInTile) : 0;
           if (pass==0)
             max = MAX(max, events);
           else
@@ -873,7 +877,7 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::WriteEPSAverageImage(ByteSink & outstrm) const
   {
-    u64 max = 0;
+    u64 max = 1; //avoid division by zero
     const u32 swidth = OWNED_WIDTH;
     const u32 sheight = OWNED_HEIGHT;
     const u32 tileCt = GetHeight() * GetWidth();
@@ -979,9 +983,11 @@ namespace MFM {
       for(u32 x = 0; x < gridWidth; x++)
       {
         SPoint siteInGrid(x, y);
-
-        T atom = *this->GetAtom(siteInGrid);
-        this->CheckAtom(atom, siteInGrid);  // This checks caches
+	if(this->IsGridCoord(siteInGrid))
+	  {
+	    T atom = *this->GetAtom(siteInGrid);
+	    this->CheckAtom(atom, siteInGrid);  // This checks caches
+	  }
       }
     }
   } //CheckCaches
@@ -997,9 +1003,11 @@ namespace MFM {
       for(u32 x = 0; x < gridWidth; x++)
       {
         SPoint siteInGrid(x, y);
-
-        T atom = *this->GetAtom(siteInGrid);
-        this->PlaceAtom(atom, siteInGrid);  // This updates caches
+	if(this->IsGridCoord(siteInGrid))
+	  {
+	    T atom = *this->GetAtom(siteInGrid);
+	    this->PlaceAtom(atom, siteInGrid);  // This updates caches
+	  }
       }
     }
   }

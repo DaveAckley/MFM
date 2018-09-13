@@ -362,12 +362,15 @@ namespace MFM
     /* The grid size in sites including staggered dummy tiles */
     const u32 gridWidth = m_grid.GetWidthSites();
     const u32 gridHeight = m_grid.GetHeightSites();
+    const bool isStaggeredGrid = m_grid.IsGridLayoutStaggered();
 
     for(u32 y = 0; y < gridHeight; y++)
       {
 	for(u32 x = 0; x < gridWidth; x++)
 	  {
 	    SPoint siteInGrid(x,y);
+	    if(isStaggeredGrid && !m_grid.IsGridCoord(siteInGrid)) continue; //staggered
+
 	    byteSink.Printf("Site(%d,%d",x,y);
 	    m_grid.SaveSite(siteInGrid,byteSink,*this);
 	    byteSink.Printf(")\n");

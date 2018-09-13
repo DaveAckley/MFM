@@ -479,7 +479,7 @@ namespace MFM
       bool caches = GetTileRenderer().IsDrawCaches();
       u32 wDit, hDit;
       SPoint spacingDit;
-      bool isStaggeredRow = GetGrid().IsGridLayoutStaggered() && (tileCoord.GetY()%2 > 0);
+      bool isStaggeredRow = tile.IsTileRowStaggered(tileCoord);
       SPoint staggeredDit;
       if (caches)
       {
@@ -521,7 +521,7 @@ namespace MFM
 
         SPoint tileCoord = i.At();
 	MFM_API_ASSERT_STATE(GetGrid().IsLegalTileIndex(tileCoord)); //sanity
-	bool isStaggeredRow = isStaggeredGrid && (tileCoord.GetY()%2 > 0);
+	bool isStaggeredRow = tile.IsTileRowStaggered(tileCoord);
 
 	const Rect screenRectForTileDit = MapTileInGridToScreenDit(tile, tileCoord);
 	MFM_LOG_DBG7(("Tile at [%d,%d] returns rectangle x%d,y%d,w%d,h%d",tileCoord.GetX(), tileCoord.GetY(), screenRectForTileDit.GetX(), screenRectForTileDit.GetY(), screenRectForTileDit.GetWidth(), screenRectForTileDit.GetHeight()));
@@ -550,7 +550,8 @@ namespace MFM
 		    if (!m_mainGrid->IsLegalTileIndex(otherTileCoord))
 		      return false;
 
-		    if(m_mainGrid->GetTile(otherTileCoord).IsDummyTile())
+		    const OurTile & otherTile = m_mainGrid->GetTile(otherTileCoord);
+		    if(otherTile.IsDummyTile())
 		      return false;
 
 		    // Hmm, is it this mysterious code again?  (Grid.tcc:404)
@@ -562,7 +563,7 @@ namespace MFM
 		    SPoint siteInOtherTile = siteInTileCoord - remoteOrigin; //local to remote
 
 		    siteInGridCoord = otherTileCoord * ownedp + OurTile::TileCoordToOwned(siteInOtherTile);
-		    isStaggeredRow = isStaggeredGrid && (otherTileCoord.GetY()%2 > 0); //replace with otherTileCoord's row
+		    isStaggeredRow = otherTile.IsTileRowStaggered(otherTileCoord); //update for othertile
 		  }
 		else
 		  {
@@ -571,7 +572,7 @@ namespace MFM
 	      } //caches drawn
 	    else
 	      {
-		MFM_API_ASSERT_ARG(siteInTileCoord.GetX() < (s32) tile.OWNED_WIDTH);
+		MFM_API_ASSERT_ARG((u32) siteInTileCoord.GetX() < tile.OWNED_WIDTH);
 		siteInGridCoord = tileCoord * ownedp + siteInTileCoord;
 	      } //caches not drawn
 
