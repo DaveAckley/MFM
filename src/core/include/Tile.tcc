@@ -311,7 +311,6 @@ namespace MFM
   {
     u32 rtncount = 0;
     bool isStaggered = IsTileGridLayoutStaggered();
-    //if(isStaggered && !CanMakeUnsigned(sp)) return 0;  //Tue Sep 11 09:05:54 2018 esa
 
     MFM_API_ASSERT_ARG(IsInTile(sp));
 

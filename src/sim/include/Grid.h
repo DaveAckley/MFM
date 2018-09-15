@@ -567,7 +567,7 @@ namespace MFM {
      * grid.  If this returns false, GetAtom(siteInGrid) and
      * PlaceAtom(T, siteInGrid) will FAIL.
      */
-    bool IsGridCoord(const SPoint & siteInGrid) const;
+    bool IsUncachedGridCoord(const SPoint & siteInGrid) const;
 
     /**
      * Run an event at siteInGrid if the grid is paused and siteInGrid
@@ -702,7 +702,7 @@ namespace MFM {
 
     void SaveSite(const SPoint& loc, ByteSink& bs, AtomTypeFormatter<AC> & atf) const
     {
-      if(!IsGridCoord(loc)) return;
+      if(!IsUncachedGridCoord(loc)) return;
 
       SPoint tileInGrid, siteInTile;
       if (!MapGridToTile(loc, tileInGrid, siteInTile))
@@ -716,7 +716,7 @@ namespace MFM {
 
     bool LoadSite(const SPoint& loc, LineCountingByteSource& bs, AtomTypeFormatter<AC> & atf)
     {
-      if(!IsGridCoord(loc)) return false;
+      if(!IsUncachedGridCoord(loc)) return false;
       SPoint tileInGrid, siteInTile;
       if (!MapGridToTile(loc, tileInGrid, siteInTile))
       {

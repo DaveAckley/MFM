@@ -556,7 +556,7 @@ namespace MFM {
   }
 
   template <class GC>
-  bool Grid<GC>::IsGridCoord(const SPoint & siteInGrid) const
+  bool Grid<GC>::IsUncachedGridCoord(const SPoint & siteInGrid) const
   {
     if (siteInGrid.GetX() < 0 || siteInGrid.GetY() < 0)
       return false;
@@ -582,7 +582,7 @@ namespace MFM {
   template <class GC>
   bool Grid<GC>::MapGridToUncachedTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const
   {
-    if(!IsGridCoord(siteInGrid))
+    if(!IsUncachedGridCoord(siteInGrid))
       return false;
 
     SPoint offset;
@@ -626,7 +626,7 @@ namespace MFM {
 	  printf("Can't place at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
 	  FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
 	}
-      return; //Mon Sep 10 15:45:17 2018 esa
+      return;
     }
 
     Tile<EC> & owner = GetTile(tileInGrid);
@@ -684,7 +684,7 @@ namespace MFM {
 	  printf("Can't xray at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
 	  FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
 	}
-      return; //Mon Sep 10 16:26:20 2018 esa
+      return;
     }
 
     Tile<EC> & owner = GetTile(tileInGrid);
@@ -983,7 +983,7 @@ namespace MFM {
       for(u32 x = 0; x < gridWidth; x++)
       {
         SPoint siteInGrid(x, y);
-	if(this->IsGridCoord(siteInGrid))
+	if(this->IsUncachedGridCoord(siteInGrid))
 	  {
 	    T atom = *this->GetAtom(siteInGrid);
 	    this->CheckAtom(atom, siteInGrid);  // This checks caches
@@ -1003,7 +1003,7 @@ namespace MFM {
       for(u32 x = 0; x < gridWidth; x++)
       {
         SPoint siteInGrid(x, y);
-	if(this->IsGridCoord(siteInGrid))
+	if(this->IsUncachedGridCoord(siteInGrid))
 	  {
 	    T atom = *this->GetAtom(siteInGrid);
 	    this->PlaceAtom(atom, siteInGrid);  // This updates caches

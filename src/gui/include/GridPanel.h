@@ -577,7 +577,7 @@ namespace MFM
 	      } //caches not drawn
 
 	    if(isStaggeredRow)
-	      siteInGridCoord.Add(tile.OWNED_WIDTH/2,0); //Mon Sep 10 16:54:07 2018 esa
+	      siteInGridCoord.Add(tile.OWNED_WIDTH/2,0); //compensate for undef ends
 
 	    if(!CanMakeUnsigned(siteInGridCoord)) FAIL(ILLEGAL_ARGUMENT); //XXX or, return false
 

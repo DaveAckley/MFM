@@ -369,7 +369,7 @@ namespace MFM
 	for(u32 x = 0; x < gridWidth; x++)
 	  {
 	    SPoint siteInGrid(x,y);
-	    if(isStaggeredGrid && !m_grid.IsGridCoord(siteInGrid)) continue; //staggered
+	    if(isStaggeredGrid && !m_grid.IsUncachedGridCoord(siteInGrid)) continue;
 
 	    byteSink.Printf("Site(%d,%d",x,y);
 	    m_grid.SaveSite(siteInGrid,byteSink,*this);
