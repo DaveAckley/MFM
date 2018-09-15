@@ -443,7 +443,7 @@ namespace MFM {
 
       int operator-(const MyIterator &m) const
       {
-	if(!g.IsGridLayoutScatttered)
+	if(!g.IsGridLayoutStaggered())
 	  {
 	    //old way for checkerboard layout
 	    s32 rows = j-m.j;
@@ -567,7 +567,7 @@ namespace MFM {
      * grid.  If this returns false, GetAtom(siteInGrid) and
      * PlaceAtom(T, siteInGrid) will FAIL.
      */
-    bool IsGridCoord(const SPoint & siteInGrid) const;
+    bool IsUncachedGridCoord(const SPoint & siteInGrid) const;
 
     /**
      * Run an event at siteInGrid if the grid is paused and siteInGrid
@@ -618,10 +618,13 @@ namespace MFM {
     }
 
     /**
-     * Return the Grid width in (non-cache) sites
+     * Return the Grid width in (non-cache) sites;
+     *        compensated by half owned_width per row for staggered grid layout
      */
     u32 GetWidthSites() const
     {
+      if(IsGridLayoutStaggered())
+	return GetWidth() * OWNED_WIDTH + OWNED_WIDTH/2;
       return GetWidth() * OWNED_WIDTH;
     }
 
@@ -639,6 +642,14 @@ namespace MFM {
     bool IsGridLayoutStaggered() const
     {
       return (m_layout == GRID_LAYOUT_STAGGERED);
+    }
+
+    /**
+     * Return true when the Grid layout is staggered, and tile row of site is odd
+     */
+    bool IsGridRowStaggered(const SPoint & siteInGrid) const
+    {
+      return IsGridLayoutStaggered() && ((siteInGrid.GetY()/OWNED_HEIGHT)%2 > 0);
     }
 
     /**
@@ -691,10 +702,12 @@ namespace MFM {
 
     void SaveSite(const SPoint& loc, ByteSink& bs, AtomTypeFormatter<AC> & atf) const
     {
+      if(!IsUncachedGridCoord(loc)) return;
+
       SPoint tileInGrid, siteInTile;
       if (!MapGridToTile(loc, tileInGrid, siteInTile))
       {
-        LOG.Error("Site (%d,%d) does not map to grid.",
+        LOG.Error("Site (%d,%d) does not map to grid. Site not saved.",
                   loc.GetX(), loc.GetY());
         FAIL(ILLEGAL_ARGUMENT);
       }
@@ -703,10 +716,11 @@ namespace MFM {
 
     bool LoadSite(const SPoint& loc, LineCountingByteSource& bs, AtomTypeFormatter<AC> & atf)
     {
+      if(!IsUncachedGridCoord(loc)) return false;
       SPoint tileInGrid, siteInTile;
       if (!MapGridToTile(loc, tileInGrid, siteInTile))
       {
-        LOG.Error("Site (%d,%d) does not map to grid.",
+        LOG.Error("Site (%d,%d) does not map to grid. Site not loaded.",
                   loc.GetX(), loc.GetY());
         FAIL(ILLEGAL_ARGUMENT);
       }
@@ -770,9 +784,9 @@ namespace MFM {
     inline const Tile<EC> & GetTile(u32 x, u32 y) const
     { return _getTile(x,y); }
 
-    /* Don't count caches! */
+    /* Don't count caches! Don't count staggered undef ends!! */
     inline const u32 GetTotalSites()
-    { return GetWidthSites() * GetHeightSites(); }
+    { return GetWidth() * OWNED_WIDTH * GetHeightSites(); }
 
     u64 GetTotalEventsExecuted() const;
 

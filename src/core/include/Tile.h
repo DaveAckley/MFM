@@ -275,6 +275,11 @@ namespace MFM
       return (GRID_LAYOUT == GRID_LAYOUT_STAGGERED);
     }
 
+    bool IsTileRowStaggered(const SPoint& tilecoord) const
+    {
+      return IsTileGridLayoutStaggered() && (tilecoord.GetY()%2 > 0);
+    }
+
     bool IsDummyTile() const
     {
       return DUMMY_TILE;
@@ -928,6 +933,7 @@ namespace MFM
      */
     bool IsInCache(const SPoint& point) const
     {
+      MFM_API_ASSERT_ARG(IsInTile(point));
       return
         (point.GetX() < EVENT_WINDOW_RADIUS) ||
         (point.GetX() >= (s32) (TILE_WIDTH - EVENT_WINDOW_RADIUS)) ||
@@ -947,6 +953,7 @@ namespace MFM
      */
     bool IsInShared(const SPoint& point) const
     {
+      MFM_API_ASSERT_ARG(IsInTile(point));
       const s32 dblEWR = EVENT_WINDOW_RADIUS * 2;
       return
         (point.GetX() < dblEWR) || (point.GetX() >= (s32) (TILE_WIDTH - dblEWR)) ||
@@ -971,6 +978,7 @@ namespace MFM
      */
     bool IsInHidden(const SPoint& point) const
     {
+      MFM_API_ASSERT_ARG(IsInTile(point));
       const s32 tplEWR = EVENT_WINDOW_RADIUS * 3;
       return
         ((point.GetX() >= tplEWR) && (point.GetX() < (s32) (TILE_WIDTH - tplEWR))) &&
@@ -1008,7 +1016,6 @@ namespace MFM
     {
       // Unsigned so possible negative coords wrap around to big positives
       return ((u32) pt.GetX()) < TILE_WIDTH && ((u32) pt.GetY() < TILE_HEIGHT);
-      //return (pt.GetX() < (s32) TILE_WIDTH) && (pt.GetY() < (s32) TILE_HEIGHT);
     }
 
     /**

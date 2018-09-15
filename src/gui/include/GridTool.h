@@ -313,7 +313,7 @@ namespace MFM
           if (IsInShape(offset))
           {
             SPoint absolute = lastGridCoord + offset;
-            if (this->GetGrid().IsGridCoord(absolute))
+            if (this->GetGrid().IsUncachedGridCoord(absolute))
               HighlightGridCoord(drawing, MakeUnsigned(absolute));
           }
         }
@@ -332,7 +332,7 @@ namespace MFM
           if (IsInShape(offset))
           {
             SPoint absolute = MakeSigned(gridCoord) + offset;
-            if (this->GetGrid().IsGridCoord(absolute))
+            if (this->GetGrid().IsUncachedGridCoord(absolute))
               UpdateGridCoord(MakeUnsigned(absolute));
           }
         }

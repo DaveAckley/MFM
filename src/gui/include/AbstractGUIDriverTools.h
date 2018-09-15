@@ -329,7 +329,7 @@ namespace MFM
     const T* GetSaneAtom(SPoint gridCoord)
     {
       Grid<GC> & grid = this->GetGrid();
-      if (!grid.IsGridCoord(gridCoord)) return 0;
+      if (!grid.IsUncachedGridCoord(gridCoord)) return 0;
 
       const T* atomp = grid.GetAtomInSite(this->IsSiteEdit(), gridCoord);
       MFM_API_ASSERT_NONNULL(atomp);
@@ -579,7 +579,7 @@ namespace MFM
           {
             SPoint asrc = m_srcCoord + mouseDelta + offset;
             SPoint adest = m_destCoord + mouseDelta + offset;
-            if (grid.IsGridCoord(asrc) && grid.IsGridCoord(adest))
+            if (grid.IsUncachedGridCoord(asrc) && grid.IsUncachedGridCoord(adest))
             {
               const T* from = grid.GetAtom(asrc);
               MFM_API_ASSERT_NONNULL(from);
@@ -616,7 +616,7 @@ namespace MFM
           if (this->IsInShape(offset))
           {
             SPoint absolute = gridCoord + offset;
-            if (this->GetGrid().IsGridCoord(absolute))
+            if (this->GetGrid().IsUncachedGridCoord(absolute))
               DotGridCoord(drawing, MakeUnsigned(absolute), color);
           }
         }
