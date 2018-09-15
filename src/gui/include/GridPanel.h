@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   GridPanel.h Panel for rendering a Grid
-  Copyright (C) 2014,2017 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2017 Ackleyshack,LLC.  All rights reserved.
+  Copyright (C) 2014,2017-2018 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017-2018 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file GridPanel.h Panel for rendering a Grid
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2014,2017 All rights reserved.
+  \date (C) 2014,2017-2018 All rights reserved.
   \lgpl
  */
 #ifndef GRIDPANEL_H

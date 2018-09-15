@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   Grid.h Encapsulator for all MFM logic
-  Copyright (C) 2014,2017 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2017 Ackleyshack,LLC.  All rights reserved.
+  Copyright (C) 2014,2017-2018 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017-2018 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@
   \author Trent R. Small
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2014,2017 All rights reserved.
+  \date (C) 2014,2017-2018 All rights reserved.
   \lgpl
  */
 #ifndef GRID_H
@@ -553,6 +553,9 @@ namespace MFM {
      * Return true iff grid layout is staggered, and either tileInGridY
      * is the last column of an even row (X), or the first column of an odd row.
      * If this returns true, GetTile(tileInGrid) is unsafe.
+     *
+     * Called once (if at all!), only to init the tiles in the grid;
+     * hence forth use Tile<EC>::IsDummyTile() for generality.
      */
     bool IsDummyTileCoord(s32 tileingridX, s32 tileingridY) const;
 
@@ -564,10 +567,11 @@ namespace MFM {
 
     /**
      * Return true iff siteInGrid is a legal site coordinate in this
-     * grid.  If this returns false, GetAtom(siteInGrid) and
-     * PlaceAtom(T, siteInGrid) will FAIL.
+     * grid (not including the cache, like gridpanel).  If this
+     * returns false, GetAtom(siteInGrid) and PlaceAtom(T, siteInGrid)
+     * will FAIL.
      */
-    bool IsUncachedGridCoord(const SPoint & siteInGrid) const;
+    bool IsGridCoord(const SPoint & siteInGrid) const;
 
     /**
      * Run an event at siteInGrid if the grid is paused and siteInGrid
@@ -702,7 +706,7 @@ namespace MFM {
 
     void SaveSite(const SPoint& loc, ByteSink& bs, AtomTypeFormatter<AC> & atf) const
     {
-      if(!IsUncachedGridCoord(loc)) return;
+      if(!IsGridCoord(loc)) return;
 
       SPoint tileInGrid, siteInTile;
       if (!MapGridToTile(loc, tileInGrid, siteInTile))
@@ -716,7 +720,7 @@ namespace MFM {
 
     bool LoadSite(const SPoint& loc, LineCountingByteSource& bs, AtomTypeFormatter<AC> & atf)
     {
-      if(!IsUncachedGridCoord(loc)) return false;
+      if(!IsGridCoord(loc)) return false;
       SPoint tileInGrid, siteInTile;
       if (!MapGridToTile(loc, tileInGrid, siteInTile))
       {

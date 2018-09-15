@@ -1,8 +1,8 @@
 /* -*- mode:C++ -*- */
 /**
   Tile.h An independent hardware unit capable of tiling space
-  Copyright (C) 2014-2017 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2017 Ackleyshack, LLC.  All rights reserved.
+  Copyright (C) 2014-2018 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017-2018 Ackleyshack, LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,7 @@
   \author Trent R. Small.
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2014-2017 All rights reserved.
+  \date (C) 2014-2018 All rights reserved.
   \lgpl
  */
 #ifndef TILE_H

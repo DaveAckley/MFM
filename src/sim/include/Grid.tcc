@@ -556,13 +556,16 @@ namespace MFM {
   }
 
   template <class GC>
-  bool Grid<GC>::IsUncachedGridCoord(const SPoint & siteInGrid) const
+  bool Grid<GC>::IsGridCoord(const SPoint & siteInGrid) const
   {
+    //Cache coords are not distinct in terms of the grid (only known by
+    //gridpanel); OWNED_ is used here, instead of TILE_ dimensions;
     if (siteInGrid.GetX() < 0 || siteInGrid.GetY() < 0)
       return false;
 
     SPoint offset;
-    if(IsGridRowStaggered(siteInGrid)) offset.Set(-OWNED_WIDTH/2,0);
+    if(IsGridRowStaggered(siteInGrid))
+      offset.Set(-OWNED_WIDTH/2,0);
     const SPoint ownedp(OWNED_WIDTH, OWNED_HEIGHT);
 
     const SPoint t = siteInGrid + offset;
@@ -582,7 +585,7 @@ namespace MFM {
   template <class GC>
   bool Grid<GC>::MapGridToUncachedTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const
   {
-    if(!IsUncachedGridCoord(siteInGrid))
+    if(!IsGridCoord(siteInGrid))
       return false;
 
     SPoint offset;
@@ -983,7 +986,7 @@ namespace MFM {
       for(u32 x = 0; x < gridWidth; x++)
       {
         SPoint siteInGrid(x, y);
-	if(this->IsUncachedGridCoord(siteInGrid))
+	if(this->IsGridCoord(siteInGrid))
 	  {
 	    T atom = *this->GetAtom(siteInGrid);
 	    this->CheckAtom(atom, siteInGrid);  // This checks caches
@@ -1003,7 +1006,7 @@ namespace MFM {
       for(u32 x = 0; x < gridWidth; x++)
       {
         SPoint siteInGrid(x, y);
-	if(this->IsUncachedGridCoord(siteInGrid))
+	if(this->IsGridCoord(siteInGrid))
 	  {
 	    T atom = *this->GetAtom(siteInGrid);
 	    this->PlaceAtom(atom, siteInGrid);  // This updates caches
