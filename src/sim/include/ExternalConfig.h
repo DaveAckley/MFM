@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   ExternalConfig.h Support for grid configurations on the drive
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,8 @@
   \file ExternalConfig.h Support for grid configurations on the drive
   \author Trent R. Small.
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014,2017 All rights reserved.
   \lgpl
  */
 #ifndef EXTERNALCONFIG_H
@@ -50,7 +52,8 @@ namespace MFM
     typedef typename AC::ATOM_TYPE T;
 
     enum { BPA = AC::BITS_PER_ATOM };
-    enum { TILE_SIDE = GC::TILE_SIDE };
+    enum { TILE_WIDTH = GC::TILE_WIDTH };
+    enum { TILE_HEIGHT = GC::TILE_HEIGHT };
     enum { EVENT_WINDOW_RADIUS = EC::EVENT_WINDOW_RADIUS };
 
   public:

@@ -129,6 +129,7 @@ namespace MFM
     /* Then each section goes, in registration order */
     for (u32 i = 0; i < m_registeredSectionCount; ++i) {
       ExternalConfigSection<GC> * ecs = m_registeredSections[i];
+      MFM_API_ASSERT_NONNULL(ecs);
       byteSink.Printf("\n[%s]\n",ecs->GetSectionName());
       ecs->WriteSection(byteSink);
       byteSink.Printf("[/%s]\n",ecs->GetSectionName());

@@ -12,6 +12,7 @@ namespace MFM
   public:
 
     static void Test_RunTests();
+
   };
 }
 

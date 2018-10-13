@@ -297,7 +297,7 @@ namespace MFM
      * @param level The logging Level to log this message at.
      *
      * @param bs The ByteSource to read in its entirety for the
-     *               message to log 
+     *               message to log
      *
      * @returns \c true .
      */

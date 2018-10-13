@@ -186,7 +186,14 @@ namespace MFM
 	}
       else if (uticp.m_parameterType.m_primType == UlamTypeInfoPrimitive::CONST_CLASS)
         {
-          abort(); // XXX WRITEME: READ
+	  u32 hexlen;
+	  if (!cbs.Scan(hexlen, Format::LEXHD, 0)) return false;
+
+	  for(u32 j = 0; j < hexlen; j++)
+	    {
+	      s32 ch = cbs.Read(); //throw away for now..
+	      if (ch < 0) return false;
+	    }
         }
       else
 	{

@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamClass.h An abstract base class for ULAM quarks and elements
-  Copyright (C) 2015-2016 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015-2016 Ackleyshack LLC.
+  Copyright (C) 2015-2018 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2018 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file UlamClass.h An abstract base class for ULAM quarks and elements
   \author David H. Ackley.
   \author Elenas S. Ackley.
-  \date (C) 2015-2016 All rights reserved.
+  \date (C) 2015-2018 All rights reserved.
   \lgpl
  */
 
@@ -314,17 +314,11 @@ namespace MFM
     static void addHex(ByteSink & bs, u64 val) ;
     static void addASCII(ByteSink & bs, u64 val) ;
 
-    void DefineRegistrationNumber(u32 num) ;
+    virtual u32 GetRegistrationNumber() const = 0;
 
-    u32 GetRegistrationNumber() const ;
-
-    enum { UNINITTED_REGISTRY_NUMBER = U32_MAX } ;
-    UlamClass()
-      : m_ulamClassRegistryNumber(UNINITTED_REGISTRY_NUMBER)
-    { }
+    UlamClass() { }
 
   private:
-    u32 m_ulamClassRegistryNumber;
   };
 
 } // MFM

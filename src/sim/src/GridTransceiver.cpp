@@ -16,6 +16,8 @@ namespace MFM
 
   bool GridTransceiver::AdvanceToTime(const timespec & now)
   {
+    FailUnlessEnabled();
+
     const u32 ONE_BILLION = 1000*1000*1000;
 
     // We keep max time lapse under 2 secs

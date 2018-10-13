@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   GridConfig.h Support for modularized compile-time grid parameters
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +22,8 @@
 /**
   \file GridConfig.h Support for modularized compile-time grid parameters
   \author David H. Ackley.
-  \date (C) 2014, 2016 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014, 2016, 2017 All rights reserved.
   \lgpl
  */
 #ifndef GRIDCONFIG_H
@@ -29,6 +31,7 @@
 
 #include "itype.h"
 #include "EventConfig.h"
+#include "Tile.h"   /* for GridLayoutPattern */
 
 namespace MFM {
 
@@ -37,7 +40,8 @@ namespace MFM {
    * at the Tile-to-Grid level.
    */
   template <class EC,      // EventConfig
-            u32 SIDE,
+            u32 WIDTH,
+	    u32 HEIGHT,
             u32 HISTORYSIZE>
   struct GridConfig {
 
@@ -47,10 +51,16 @@ namespace MFM {
     typedef EC EVENT_CONFIG;
 
     /**
-     * TILE_SIDE is the number of sites wide (and high) for a tile in
+     * TILE_WIDTH is the number of sites wide for a tile in
      * this GridConfig
      */
-    enum { TILE_SIDE = SIDE };
+    enum { TILE_WIDTH = WIDTH };
+
+    /**
+     * TILE_HEIGHT is the number of sites high for a tile in
+     * this GridConfig
+     */
+    enum { TILE_HEIGHT = HEIGHT };
 
     /**
      * EVENT_HISTORY_SIZE is the number of EventHistoryItems that a
@@ -59,10 +69,17 @@ namespace MFM {
     enum { EVENT_HISTORY_SIZE = HISTORYSIZE };
 
     /**
-     * OWNED_SIDE is the number of sites wide (and high) for a tile in
+     * OWNED_WIDTH is the number of sites wide for a tile in
      * this GridConfig, excluding the caches
      */
-    enum { OWNED_SIDE = TILE_SIDE - 2 * EC::EVENT_WINDOW_RADIUS };
+    enum { OWNED_WIDTH = TILE_WIDTH - 2 * EC::EVENT_WINDOW_RADIUS };
+
+    /**
+     * OWNED_HEIGHT is the number of sites high for a tile in
+     * this GridConfig, excluding the caches
+     */
+    enum { OWNED_HEIGHT = TILE_HEIGHT - 2 * EC::EVENT_WINDOW_RADIUS };
+
 
   };
 

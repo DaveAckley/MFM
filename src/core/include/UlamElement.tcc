@@ -27,7 +27,7 @@ namespace MFM {
     UlamContextEvent<EC> uc(et);
     uc.SetTile(tile);
 
-    u32 sym = m_info ? m_info->GetSymmetry(uc) : PSYM_DEG000L;
+    u32 sym = m_info ? m_info->GetSymmetry(uc) : (u32) PSYM_DEG000L;
     window.SetSymmetry((PointSymmetry) sym);
 
     UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), window.GetCenterAtomBitStorage(), this, UlamRef<EC>::ELEMENTAL, uc);

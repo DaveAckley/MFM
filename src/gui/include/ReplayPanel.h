@@ -71,7 +71,7 @@ namespace MFM
       s32 m_delta;
 
     public:
-      TransportButton(const char * name, 
+      TransportButton(const char * name,
                       const char * doc,
                       s32 keysym,
                       u32 mods,
@@ -139,7 +139,7 @@ namespace MFM
       const bool m_direction;
 
     public:
-      TransportButtonWoahBack(const char * name, 
+      TransportButtonWoahBack(const char * name,
                               const char * doc,
                               s32 keysym,
                               u32 mods,
@@ -280,36 +280,36 @@ namespace MFM
       : m_gridPanel(gp)
       , m_transportHome("Begin",
                         "Go to oldest event in selected tile(s)",
-                        SDLK_HOME, 0, 
+                        SDLK_HOME, 0,
                         ZSLOT_TRANSPORT_OLDEST, S32_MIN,
                         *this)
       , m_transportRew("Rewind",
                        "Go back more and more events in selected tile(s)",
-                       SDLK_LEFT, KMOD_SHIFT, 
+                       SDLK_LEFT, KMOD_SHIFT,
                        ZSLOT_TRANSPORT_REWIND, false,
                        *this)
       , m_transportBack("Back",
                        "Go back one event in selected tile(s)",
-                       SDLK_LEFT, 0, 
+                       SDLK_LEFT, 0,
                         ZSLOT_TRANSPORT_BACK, -1,
                        *this)
       , m_transportStep("Step",
                        "Go forward one event in selected tile(s)",
-                       SDLK_RIGHT, 0, 
+                       SDLK_RIGHT, 0,
                        ZSLOT_TRANSPORT_STEP, 1,
                        *this)
       , m_transportFF("Fast forward",
                       "Go forward more and more events in selected tile(s)",
-                      SDLK_RIGHT, KMOD_SHIFT, 
+                      SDLK_RIGHT, KMOD_SHIFT,
                       ZSLOT_TRANSPORT_FF, true,
                       *this)
       , m_transportEnd("End",
                        "Go forward to newest event in selected tile(s)",
-                       SDLK_END, 0, 
+                       SDLK_END, 0,
                        ZSLOT_TRANSPORT_NEWEST, S32_MAX,
                        *this)
       , m_lastTransportDelta(0)
-      
+
     {
       this->SetDimensions(130, 25);
       this->SetDesiredSize(130, 25);
@@ -317,6 +317,8 @@ namespace MFM
       this->SetName("ReplayPanel");
 
     }
+
+    virtual ~ReplayPanel() { } //avoid inline error
 
     // Is this how we say no border?
     virtual void PaintBorder(Drawing& d)
