@@ -569,7 +569,7 @@ namespace MFM {
     const SPoint ownedp(OWNED_WIDTH, OWNED_HEIGHT);
 
     const SPoint t = siteInGrid + offset;
-    if(t.GetX() < 0 || t.GetX() > (OWNED_WIDTH * GetWidth()))
+    if(t.GetX() < 0 || t.GetX() > (OWNED_WIDTH * (s32) GetWidth()))
       return false;
 
     SPoint tileCoord = t / ownedp;
