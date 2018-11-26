@@ -383,7 +383,8 @@ namespace MFM
     if (!CheckForConfigCode(gcc,argc,argv))
     {
       // Default anything still unset
-      gcc.SetTileType(GridConfigCode::TileD);
+      gcc.SetTileType(GridConfigCode::TileH);
+      gcc.SetGridLayout(GRID_LAYOUT_STAGGERED);
       gcc.SetGridWidth(2);
       gcc.SetGridHeight(2);
     }
