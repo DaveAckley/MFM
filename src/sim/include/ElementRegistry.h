@@ -57,7 +57,7 @@ namespace MFM {
 
     enum {
       TABLE_SIZE = 100,
-      MAX_PATHS = 20
+      MAX_PATHS = 1
     };
 
   private:
@@ -74,6 +74,7 @@ namespace MFM {
 
   public:
 
+  
     ElementRegistry();
 
     ~ElementRegistry() { }
@@ -81,6 +82,8 @@ namespace MFM {
     void Init(UlamClassRegistry<EC> & ucr);
 
     u32 GetRegisteredElementCount() const;
+
+    u32 GetLibraryPathsCount() const;
 
     Element<EC> * GetRegisteredElement(u32 index) ;
 
