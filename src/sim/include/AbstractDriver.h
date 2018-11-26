@@ -1438,7 +1438,7 @@ namespace MFM
       RegisterArgument("(DEPRECATED) Include some Ulam demo elements",
                        "--ue-demos", &SetUEDemosFromArgs, this, false);
 
-      RegisterArgument("(DEPRECATED) Include (older) C++ demo elements (City, etc)",
+      RegisterArgument("Run the old C++ demo elements (City, etc)",
                        "--cpp-demos", &SetCppDemosFromArgs, this, false);
 
       RegisterArgument("Add ARG as the path to the element library (.so)",
