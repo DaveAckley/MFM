@@ -44,6 +44,11 @@ namespace MFM
   template <class EC>
   class Element_Indexed : public Element<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE0e;
+    }
+    
     // Extract short names for parameter types
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;

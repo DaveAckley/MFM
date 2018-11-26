@@ -39,6 +39,11 @@ namespace MFM
   template <class EC>
   class Element_Xtal_R12 : public Element_Xtal_L12<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE13;
+    }
+    
     enum {  ELT_VERSION = 2 };
 
     // Extract short names for parameter types

@@ -42,6 +42,11 @@ namespace MFM
   template <class EC>
   class Element_Shark : public AbstractElement_WaPat<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE10;
+    }
+    
     // Short names for params
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;

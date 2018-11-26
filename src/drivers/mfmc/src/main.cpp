@@ -196,40 +196,40 @@ namespace MFM
 
       if (this->m_includeCPPDemos)
       {
-        this->NeedElement(&Element_Wall<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Res<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Dreg<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Sorter<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Data<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Emitter<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Consumer<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Block<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_ForkBomb1<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_ForkBomb2<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_ForkBomb3<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_AntiForkBomb<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_MQBar<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Mover<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Indexed<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Fish<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Shark<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Xtal_Sq1<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Xtal_L12<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Xtal_R12<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Xtal_General<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Creg<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Dmover<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_CheckerForkBlue<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_CheckerForkRed<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Wanderer_Cyan<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_Wanderer_Magenta<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_Wall<EC>::THE_INSTANCE);//0xCE00
+        this->NeedElement(&Element_Res<EC>::THE_INSTANCE);//0xCE01
+        this->NeedElement(&Element_Dreg<EC>::THE_INSTANCE);//0xCE02
+        this->NeedElement(&Element_Sorter<EC>::THE_INSTANCE);//0xCE03
+        this->NeedElement(&Element_Data<EC>::THE_INSTANCE);//0xCE04
+        this->NeedElement(&Element_Emitter<EC>::THE_INSTANCE);//0xCE05
+        this->NeedElement(&Element_Consumer<EC>::THE_INSTANCE);//0xCE06
+        this->NeedElement(&Element_Block<EC>::THE_INSTANCE);//0xCE07
+        this->NeedElement(&Element_ForkBomb1<EC>::THE_INSTANCE);//0xCE08
+        this->NeedElement(&Element_ForkBomb2<EC>::THE_INSTANCE);//0xCE09
+        this->NeedElement(&Element_ForkBomb3<EC>::THE_INSTANCE);//0xCE0a
+        this->NeedElement(&Element_AntiForkBomb<EC>::THE_INSTANCE);//0xCE0b
+        this->NeedElement(&Element_MQBar<EC>::THE_INSTANCE);//0xCE0c
+        this->NeedElement(&Element_Mover<EC>::THE_INSTANCE);//0xCE0d
+        this->NeedElement(&Element_Indexed<EC>::THE_INSTANCE);//0xCE0e
+        this->NeedElement(&Element_Fish<EC>::THE_INSTANCE);//0xCE0f
+        this->NeedElement(&Element_Shark<EC>::THE_INSTANCE);//0xCE10
+        this->NeedElement(&Element_Xtal_Sq1<EC>::THE_INSTANCE);//0xCE11
+        this->NeedElement(&Element_Xtal_L12<EC>::THE_INSTANCE);//0xCE12
+        this->NeedElement(&Element_Xtal_R12<EC>::THE_INSTANCE);//0xCE13
+        this->NeedElement(&Element_Xtal_General<EC>::THE_INSTANCE);//0xCE14
+        this->NeedElement(&Element_Creg<EC>::THE_INSTANCE);//0xCE15
+        this->NeedElement(&Element_Dmover<EC>::THE_INSTANCE);//0xCE16
+        this->NeedElement(&Element_CheckerForkBlue<EC>::THE_INSTANCE);//0xCE17
+        this->NeedElement(&Element_CheckerForkRed<EC>::THE_INSTANCE);//0xCE18
+        this->NeedElement(&Element_Wanderer_Cyan<EC>::THE_INSTANCE);//0xCE19
+        this->NeedElement(&Element_Wanderer_Magenta<EC>::THE_INSTANCE);//0xCE1a
 
-        this->NeedElement(&Element_City_Building<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_City_Car<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_City_Intersection<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_City_Park<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_City_Sidewalk<EC>::THE_INSTANCE);
-        this->NeedElement(&Element_City_Street<EC>::THE_INSTANCE);
+        this->NeedElement(&Element_City_Building<EC>::THE_INSTANCE);//0xCE1b
+        this->NeedElement(&Element_City_Car<EC>::THE_INSTANCE);//0xCE1c
+        this->NeedElement(&Element_City_Intersection<EC>::THE_INSTANCE);//0xCE1d
+        this->NeedElement(&Element_City_Park<EC>::THE_INSTANCE);//0xCE1e
+        this->NeedElement(&Element_City_Sidewalk<EC>::THE_INSTANCE);//0xCE1f
+        this->NeedElement(&Element_City_Street<EC>::THE_INSTANCE);//0xCE20
       }
     }
 
@@ -279,6 +279,8 @@ namespace MFM
     virtual void OnceOnly(VArguments& args)
     {
       Super::OnceOnly(args);
+      if (this->m_includeCPPDemos && this->m_elementRegistry.GetLibraryPathsCount() > 0)
+        args.Die("Cannot include ulam elements when using --cpp-demos");
     }
 
     virtual void ReinitEden()

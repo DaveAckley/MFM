@@ -38,6 +38,11 @@ namespace MFM
   template <class EC>
   class Element_Creg : public Element<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE15;
+    }
+    
     enum {  CREG_VERSION = 2 };
 
     // Extract short names for parameter types
