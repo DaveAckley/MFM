@@ -6,9 +6,9 @@
 # git tag -a -m "Tagging v3.0.5" v3.0.5
 # git push origin v3.0.5
 
-MFM_VERSION_MAJOR:=4
+MFM_VERSION_MAJOR:=5
 MFM_VERSION_MINOR:=0
-MFM_VERSION_REV:=12
+MFM_VERSION_REV:=0
 
 ################## NOTHING BELOW HERE SHOULD NEED TO CHANGE ##################
 
