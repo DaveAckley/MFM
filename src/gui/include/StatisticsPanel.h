@@ -71,6 +71,8 @@ namespace MFM
       SetFont(FONT_ASSET_ELEMENT);
     }
 
+    virtual ~StatisticsPanel() { } //avoid inline error
+
     bool LoadDetails(const char * key, LineCountingByteSource & source)
     {
       if (Super::LoadDetails(key, source)) return true;

@@ -14,7 +14,9 @@ ifndef DEBUG
   ifndef QUIET
     COMMANDS := 1
   endif
-  OPTFLAGS += -O99
+  OPTFLAGS += -O99 --param inline-unit-growth=1000 --param large-function-growth=50000
+#  OPTFLAGS += -Winline
+
 # Can't just plop in whizzo sse instruction set flags given we're
 # going to be building cross-platform on launchpad..
 #  OPTFLAGS += -O99 -msse4.2
@@ -59,6 +61,7 @@ endif
 # Common flags: All about errors -- let's help them help us
 # Also: We need pthread!
 COMMON_CFLAGS+=-Wall -pedantic -Werror -Wundef -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
+COMMON_FLAGS+= -Wextra -Wno-unused-parameter -Wno-ignored-qualifiers
 # not reliable enough: COMMON_CPPFLAGS+=-Wmissing-noreturn -ansi -pedantic -Wall -Werror -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
 COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
 COMMON_LDFLAGS+=-Wl,--fatal-warnings -pthread

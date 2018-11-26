@@ -548,6 +548,7 @@ namespace MFM
    private:
 
     void FindRandomAtoms(const u32 radius, const u32 count, va_list& list) const;
+
   };
 
   const Dir MooreNeighborhood[8] =

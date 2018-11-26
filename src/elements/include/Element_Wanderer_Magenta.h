@@ -39,6 +39,11 @@ namespace MFM
   template <class EC>
   class Element_Wanderer_Magenta : public AbstractElement_Wanderer<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE1a;
+    }
+    
     enum {  WANDERER_VERSION = 2 };
 
     // Extract short names for parameter types

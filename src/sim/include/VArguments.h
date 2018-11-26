@@ -150,7 +150,7 @@ namespace MFM
      *               instance, "-h|--help" matches both "-h" and
      *               "--help".
      *
-     * @param func The function called upon encounterin this command
+     * @param func The function called upon encountering this command
      *             line argument when given by the user. This is called
      *             on the value gotten by the user, unless otherwise
      *             specified.

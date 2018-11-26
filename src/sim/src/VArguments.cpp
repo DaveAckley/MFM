@@ -74,16 +74,25 @@ namespace MFM
 	return false;
       }
 
+      // Bump filterp past our match
       filterp = ptr + arglen;
-      if(*filterp == '|' || *filterp == 0)
+
+      // Ensure we matched from the beginning of an arg, so that
+      // str=='-std' WON't match filter=='--no-std'
+      if (ptr==filter || ptr[-1] == '|')
       {
-	return true;
-      }
+
+        // Ensure we matched a whole filter alternative
+        if(*filterp == '|' || *filterp == 0)
+          {
+            return true;
+          }
+      } // else bad match, check for other alternatives 
 
       filterp = strchr(filterp, '|');
       if(!filterp)
       {
-	return false;
+        return false;
       }
     }
   }
@@ -183,7 +192,8 @@ namespace MFM
             "\n"
             " GEOMETRY is a 'tile type' placed between a grid width and a grid height,\n"
             " and surrounded by '{}'s.  For example, geometry '{5C3}' denotes a grid\n"
-            " 5 wide by 3 high of tiles of type 'C' (1K sites/tile).\n",
+            " 5 wide by 3 high of tiles of type 'C' (1K sites/tile), checkerboard layout;\n"
+	    " A staggered layout has double braces, like {{5C3}}\n.",
             MFM_VERSION_STRING_SHORT,
             m_programName?m_programName:""
             );

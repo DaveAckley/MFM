@@ -128,19 +128,20 @@ namespace MFM {
 
       OurAtom aDReg(Element_Dreg<OurEventConfig>::THE_INSTANCE.GetDefaultAtom());
 
-      u32 realWidth = Tile<OurEventConfig>::OWNED_SIDE;
+      u32 realWidth = Tile<OurEventConfig>::OWNED_WIDTH;
+      u32 realHeight = Tile<OurEventConfig>::OWNED_HEIGHT;
 
       // printf("atom size %ld\n",8*sizeof(MFM::Atom<OurEventConfig>));
 
       SPoint aloc(20, 30);
       SPoint sloc(20, 10);
       SPoint e1loc(20+2,20+2);
-      SPoint e2loc(GRID_WIDTH*realWidth-2-20, GRID_HEIGHT*realWidth-2-20);
-      SPoint cloc(GRID_WIDTH*realWidth, GRID_HEIGHT*realWidth/2);
+      SPoint e2loc(GRID_WIDTH*realWidth-2-20, GRID_HEIGHT*realHeight-2-20);
+      SPoint cloc(GRID_WIDTH*realWidth, GRID_HEIGHT*realHeight/2);
       SPoint seedAtomPlace(3*GRID_WIDTH*realWidth/4,QBAR_SIZE.GetY()/4*3/2+15);
 
       u32 wid = mainGrid.GetWidth()*realWidth;
-      u32 hei = mainGrid.GetHeight()*realWidth;
+      u32 hei = mainGrid.GetHeight()*realHeight;
       bool once = true;
       for(u32 x = 0; x < wid; x+=3)
       {
@@ -269,18 +270,19 @@ namespace MFM {
 
       OurAtom aDReg(Element_Dreg<OurEventConfig>::THE_INSTANCE.GetDefaultAtom());
 
-      u32 realWidth = OurGrid::OWNED_SIDE;
+      u32 realWidth = OurGrid::OWNED_WIDTH;
+      u32 realHeight = OurGrid::OWNED_HEIGHT;
 
       // printf("atom size %ld\n",8*sizeof(MFM::Atom<OurEventConfig>));
 
       SPoint aloc(20, 30);
       SPoint sloc(20, 10);
       SPoint e1loc(20+2,20+2);
-      SPoint e2loc(GRID_WIDTH*realWidth-2-20, GRID_HEIGHT*realWidth-2-20);
-      SPoint cloc(GRID_WIDTH*realWidth/2, GRID_HEIGHT*realWidth/2);
+      SPoint e2loc(GRID_WIDTH*realWidth-2-20, GRID_HEIGHT*realHeight-2-20);
+      SPoint cloc(GRID_WIDTH*realWidth/2, GRID_HEIGHT*realHeight/2);
 
       u32 wid = mainGrid.GetWidth()*realWidth;
-      u32 hei = mainGrid.GetHeight()*realWidth;
+      u32 hei = mainGrid.GetHeight()*realHeight;
       bool once = true;
       for(u32 x = 0; x < wid; x+=5)
       {

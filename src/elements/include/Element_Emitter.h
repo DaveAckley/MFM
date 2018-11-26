@@ -44,6 +44,11 @@ namespace MFM
   template <class EC>
   class Element_Emitter : public AbstractElement_Reprovert<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE05;
+    }
+    
     enum { EMITTER_VERSION = 2 };
 
     // Extract short names for parameter types

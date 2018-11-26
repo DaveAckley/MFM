@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   CacheProcessor.h Handler for cache-protocol packets
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2017 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +22,8 @@
 /**
   \file CacheProcessor.h Handler for cache-protocol packets
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014,2017 All rights reserved.
   \lgpl
  */
 #ifndef CACHEPROCESSOR_H
@@ -38,6 +40,9 @@
 namespace MFM {
 
   template <class EC> class Tile; // FORWARD
+
+  enum {MAX_LOCKS_NEEDED = 3};
+  typedef Dir THREEDIR[MAX_LOCKS_NEEDED];
 
   /**
     CacheProcessors mediate both sides of the intertile cache update
@@ -86,7 +91,14 @@ namespace MFM {
        done, and then while BLOCKING, we check if both our neighbors
        are also BLOCKING.  When they are, we unlock all three of us.
      */
-    Dir m_centerRegion;
+    //Dir m_centerRegion;
+
+    /**
+	CacheProcessor checks if anyother locks, associated with
+	corner events, are also BLOCKING. Replaces m_centerRegion.
+    */
+    THREEDIR m_lockRegions;
+    u32 m_locksNeeded;
 
     enum {
       /**
@@ -202,6 +214,7 @@ namespace MFM {
       RECEIVING,    // Locked by us, waiting for ack/nak from peer
       BLOCKING,     // Locked by us, waiting for other linked CP's
       PASSIVE,      // Locked by them, Received BeginUpdate from peer
+      UNCLAIMED,  // Never Claimed
       STATE_COUNT
     };
 
@@ -240,9 +253,9 @@ namespace MFM {
 
     /**
       The position of the far side's origin, in our full untransformed
-      coordinate system.  This value is (+- Tile::OWNED_SIDE, +-
-      Tile::OWNED_SIDE) depending on the direction to the far side.
-      (It's OWNED_SIDE and not TILE_SIDE, even though we're talking
+      coordinate system.  This value is (+- Tile::OWNED_WIDTH, +-
+      Tile::OWNED_HEIGHT) depending on the direction to the far side.
+      (It's OWNED side lengths and not TILE side lengths, even though we're talking
       full Tile coordinates, because of the cache overlaps.)
      */
     SPoint m_farSideOrigin;
@@ -264,10 +277,13 @@ namespace MFM {
 
     void SetStateInternal(State state)
     {
-      MFM_LOG_DBG6(("CP %s %s [%s] (%d,%d): %s->%s",
+      MFM_LOG_DBG6(("CP %s %s %d[%s %s %s] (%d,%d): %s->%s",
                     m_tile->GetLabel(),
                     Dirs::GetName(m_cacheDir),
-                    Dirs::GetName(m_centerRegion),
+		    m_locksNeeded,
+		    Dirs::GetName(m_lockRegions[0]),
+		    m_locksNeeded > 1? Dirs::GetName(m_lockRegions[1]) : "-",
+		    m_locksNeeded > 2? Dirs::GetName(m_lockRegions[2]) : "-",
                     m_farSideOrigin.GetX(),
                     m_farSideOrigin.GetY(),
                     GetStateName(m_cpState),
@@ -283,6 +299,11 @@ namespace MFM {
       INITIAL,
       ADAPTIVE
     };
+
+    Dir GetCacheDir()
+    {
+      return m_cacheDir;
+    }
 
     u32 GetCurrentCacheRedundancy() const
     {
@@ -351,14 +372,19 @@ namespace MFM {
 
     void Unblock() ;
 
-    bool IsIdle()
+    bool IsIdle() const
     {
       return m_cpState == IDLE;
     }
 
-    bool IsBlocking()
+    bool IsBlocking() const
     {
       return m_cpState == BLOCKING;
+    }
+
+    bool IsUnclaimed() const
+    {
+      return m_cpState == UNCLAIMED;
     }
 
     CacheProcessor & GetSibling(Dir inDirection) ;
@@ -372,7 +398,7 @@ namespace MFM {
     /**
        Handle an inbound atom that our neighbor cache processor
        decided to MaybeSendAtom to us.
-     */
+    */
     void ReceiveAtom(bool isDifferent, s32 siteNumber, const T & inboundAtom) ;
 
     /**
@@ -399,12 +425,16 @@ namespace MFM {
 
     bool ShipBufferAsPacket(PacketBuffer & pb) ;
 
-    bool TryLock(Dir centerRegion)
+    bool TryLock(const u32 needed, const THREEDIR& eventlocks)
     {
+      MFM_API_ASSERT_STATE(m_locksNeeded == 0);
+
       bool ret = GetLonglivedLock().TryLock(this);
       if (ret)
       {
-        m_centerRegion = centerRegion;
+	m_locksNeeded = needed;
+	for(u32 i = 0; i < needed; i++)
+	  m_lockRegions[i] = eventlocks[i];
       }
       return ret;
     }
@@ -413,7 +443,8 @@ namespace MFM {
     {
       bool ret = GetLonglivedLock().Unlock(this);
       MFM_API_ASSERT(ret, LOCK_FAILURE);
-      m_centerRegion = (Dir) -1;
+      m_locksNeeded = 0;
+      for(u32 i=0; i< MAX_LOCKS_NEEDED; m_lockRegions[i++] = (Dir) -1);
     }
 
     bool IsConnected() const
@@ -428,10 +459,16 @@ namespace MFM {
       m_tile = &tile;
       m_longlivedLock = &lock;
       m_cacheDir = toCache;
+      m_cpState = IDLE;
 
       // Map their full untransformed origin to our full untransformed frame
-      SPoint remoteOrigin = Dirs::GetOffset(m_cacheDir) * m_tile->OWNED_SIDE;
-      m_farSideOrigin = remoteOrigin;
+      bool isStaggered = m_tile->IsTileGridLayoutStaggered();
+      SPoint remoteOrigin;
+      Dirs::FillDir(remoteOrigin, m_cacheDir, isStaggered);
+
+      SPoint ownedph(m_tile->OWNED_WIDTH/2, m_tile->OWNED_HEIGHT/2);
+
+      m_farSideOrigin = remoteOrigin * ownedph;
 
       bool onSideA = (m_cacheDir >= Dirs::NORTHEAST && m_cacheDir <= Dirs::SOUTH);
       m_channelEnd.ClaimChannelEnd(channel, onSideA);
@@ -492,15 +529,17 @@ namespace MFM {
     CacheProcessor()
       : m_tile(0)
       , m_longlivedLock(0)
-      , m_cacheDir(0)
-      , m_centerRegion((Dir) -1)
+      , m_cacheDir((Dir)-1)
+      , m_locksNeeded(0)
       , m_checkOdds(INITIAL_CHECK_ODDS)
       , m_remoteConsistentAtomCount(0)
       , m_useAdaptiveRedundancy(true)
-      , m_cpState(IDLE)
+      , m_cpState(UNCLAIMED)
       , m_eventCenter(0,0)
       , m_farSideOrigin(0,0)
-    { }
+    {
+      m_lockRegions[0] = (Dir) -1;
+    }
 
   };
 } /* namespace MFM */

@@ -75,9 +75,9 @@ namespace MFM {
     */
     const s32 SR = (s32) R;
     u32 rasterIndex = 0;
-    for (s32 y = -SR; y <= SR; ++y) 
+    for (s32 y = -SR; y <= SR; ++y)
     {
-      for (s32 x = -SR; x <= SR; ++x) 
+      for (s32 x = -SR; x <= SR; ++x)
       {
         const SPoint s(x,y);
         s32 sn = GetSiteNumber(s);
@@ -91,15 +91,15 @@ namespace MFM {
 
     MFM_API_ASSERT_STATE(rasterIndex == ARRAY_LENGTH);
 
-    for (u32 i = 0; i < ARRAY_LENGTH; ++i) 
+    for (u32 i = 0; i < ARRAY_LENGTH; ++i)
     {
       m_siteNumToRaster[i] = ARRAY_LENGTH;
     }
-    for (u32 i = 0; i < ARRAY_LENGTH; ++i) 
+    for (u32 i = 0; i < ARRAY_LENGTH; ++i)
     {
       m_siteNumToRaster[m_rasterToSiteNum[i]] = i;
     }
-    for (u32 i = 0; i < ARRAY_LENGTH; ++i) 
+    for (u32 i = 0; i < ARRAY_LENGTH; ++i)
     {
       MFM_API_ASSERT_STATE(m_siteNumToRaster[i] < ARRAY_LENGTH);
     }
@@ -117,13 +117,13 @@ namespace MFM {
     u32 currentESL = U32_MAX;  // flag
     u32 firstESLIdx = 0;
     const s32 SR = (s32) R;
-    for (u32 esl = 0; esl <= 2*R*R; ++esl) 
+    for (u32 esl = 0; esl <= 2*R*R; ++esl)
     {
       // go left-to-right slowest and top-to-bottom fastest to follow
       // manhattan length scan order where possible
-      for (s32 x = -SR; x <= SR; ++x) 
+      for (s32 x = -SR; x <= SR; ++x)
       {
-        for (s32 y = -SR; y <= SR; ++y) 
+        for (s32 y = -SR; y <= SR; ++y)
         {
           const SPoint s(x,y);
           s32 sn = GetSiteNumber(s);
@@ -153,15 +153,15 @@ namespace MFM {
     m_firstESLIndex[firstESLIdx] = ARRAY_LENGTH;
     m_firstESLValue[firstESLIdx] = U8_MAX;
 
-    for (u32 i = 0; i < ARRAY_LENGTH; ++i) 
+    for (u32 i = 0; i < ARRAY_LENGTH; ++i)
     {
       m_siteNumToESLNum[i] = ARRAY_LENGTH;
     }
-    for (u32 i = 0; i < ARRAY_LENGTH; ++i) 
+    for (u32 i = 0; i < ARRAY_LENGTH; ++i)
     {
       m_siteNumToESLNum[m_eSLNumToSiteNum[i]] = i;
     }
-    for (u32 i = 0; i < ARRAY_LENGTH; ++i) 
+    for (u32 i = 0; i < ARRAY_LENGTH; ++i)
     {
       MFM_API_ASSERT_STATE(m_siteNumToESLNum[i] < ARRAY_LENGTH);
     }
@@ -180,7 +180,8 @@ namespace MFM {
     {
       // Get the delta to head in the given direction
       SPoint dirDelta;
-      Dirs::FillDir(dirDelta, d); // Something in (-1 ,-1) to (1, 1)
+      Dirs::FillDir(dirDelta, d, false); // Something in (-1 ,-1) to (1, 1)
+      dirDelta /= 2;
 
       u32 countInDir = 0;       // Counts how many points we've stored for dir
       u32 deltasToEscape = 0;   // While gradually increasing this
@@ -232,7 +233,8 @@ namespace MFM {
     {
       // Get the delta to head in the given direction
       SPoint dirDelta;
-      Dirs::FillDir(dirDelta, d); // Something in (-1 ,-1) to (1, 1)
+      Dirs::FillDir(dirDelta, d, false); // Something in (-1 ,-1) to (1, 1)
+      dirDelta /= 2;
 
       u32 countInDir = 0;       // Counts how many points we've stored for dir
       u32 deltasToHorizon = 0;  // While gradually increasing this

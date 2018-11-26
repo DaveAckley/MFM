@@ -38,6 +38,12 @@ namespace MFM
   template <class EC>
   class Element_Wall : public Element<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const
+    {
+      return 0xCE00;
+    }
+
     enum {  WALL_VERSION = 2 };
 
     // Short names for params

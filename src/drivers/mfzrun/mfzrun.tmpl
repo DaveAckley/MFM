@@ -347,7 +347,7 @@ sub purifyArgs {
     for (my $i = 0; $i < scalar(@args); ++$i) {
         my $arg = $args[$i];
         if ($i == 0) {
-            if ($arg =~ /^({\d+[a-zA-Z]\d+})$/) {
+            if ($arg =~ /^({+\d+[a-zA-Z]\d+}+)$/) {
                 $args[0] = $1;
                 next;
             }

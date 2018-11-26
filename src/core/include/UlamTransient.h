@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamTransient.h A concrete base class for ULAM transients
-  Copyright (C) 2016 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2016 Ackleyshack LLC.
+  Copyright (C) 2016-2018 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2016-2018 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file UlamTransient.h A concrete base class for ULAM transient
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2016 All rights reserved.
+  \date (C) 2016-2018 All rights reserved.
   \lgpl
 */
 #ifndef ULAMTRANSIENT_H
@@ -45,7 +45,7 @@ namespace MFM {
 
   public:
 
-    UlamTransient(const UUID & uuid) : UlamClass<EC>() { }
+    UlamTransient() : UlamClass<EC>() { }
 
     virtual ~UlamTransient() { }
 

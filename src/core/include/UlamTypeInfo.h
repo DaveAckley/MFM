@@ -36,7 +36,7 @@ namespace MFM
 {
 
   struct UlamTypeInfoPrimitive {
-    enum PrimType { VOID, INT, UNSIGNED, BOOL, UNARY, BITS, STRING };
+    enum PrimType { VOID, INT, UNSIGNED, BOOL, UNARY, BITS, STRING, ATOM, CONST_CLASS };
 
     u8 m_primType;
     u8 m_bitSize;

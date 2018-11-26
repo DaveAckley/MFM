@@ -9,7 +9,17 @@
 namespace MFM {
 
   template <class GC>
-  LonglivedLock & Grid<GC>::GetIntertileLock(u32 x, u32 y, Dir dir)
+  LonglivedLock & Grid<GC>::GetIntertileLock(u32 x, u32 y, Dir dir, bool isStaggered)
+  {
+    if(isStaggered)
+      return GetIntertileLockStaggered(x,y, dir);
+    return GetIntertileLockCheckerboard(x,y, dir);
+  }
+
+
+
+  template <class GC>
+  LonglivedLock & Grid<GC>::GetIntertileLockCheckerboard(u32 x, u32 y, Dir dir)
   {
     switch (dir)
     {
@@ -57,7 +67,34 @@ namespace MFM {
   }
 
   template <class GC>
+  LonglivedLock & Grid<GC>::GetIntertileLockStaggered(u32 x, u32 y, Dir dir)
+  {
+    switch (dir)
+      {
+      case Dirs::NORTHEAST:
+      case Dirs::EAST:
+      case Dirs::SOUTHEAST:
+	// Ready to rock
+	break;
+      default:
+	FAIL(ILLEGAL_STATE);
+      }
+    return _getIntertileLock(x,y,dir - Dirs::NORTHEAST);
+  }
+
+  template <class GC>
   void Grid<GC>::Init() {
+
+    bool isStaggered = IsGridLayoutStaggered();
+#if 0
+    //no longer using dummy tile concept, maybe repurpose later
+    // for irregular grids.
+    if(isStaggered)
+      {
+	InitDummyTiles();
+	ReinitGridRandomIterator();
+      }
+#endif
 
     /* Reseed grid PRNG and push seeds to the tile PRNGs */
     InitSeed();
@@ -67,57 +104,73 @@ namespace MFM {
 
     m_backgroundRadiationEnabled = false;
 
-    /* Init the tiles */
-
+    /* Init the (non-dummy) tiles */
     for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
       SPoint tpt = IteratorIndexToCoord(m_rgi.Next());
       Tile<EC> & ctile = GetTile(tpt);
 
-      ctile.Init();
+      MFM_API_ASSERT_ARG(!ctile.IsDummyTile());
+      ctile.Init(); //again
 
       OString16 tbs;
       tbs.Printf("[%d,%d]", tpt.GetX(), tpt.GetY());
+      LOG.Message("[%d,%d]", tpt.GetX(), tpt.GetY());
       ctile.SetLabel(tbs.GetZString());
 
-      ctile.CopyHero(m_heroTile);
+      ctile.CopyHero(m_heroTile); //copies hero to ctile
     }
 
-    // Connect them up
-    for(u32 x = 0; x < m_width; x++)
-    {
-      for(u32 y = 0; y < m_height; y++)
+    // Connect up (non-dummy) tiles
+    for (iterator_type i = begin(); i != end(); ++i)
       {
+	MFM_LOG_DBG4(("Tile[%d][%d] @ %p", i.GetX(), i.GetY(), &(*i)));
+	Tile<EC> & ctile = *i;
+	SPoint tpt = i.At();
+
+	MFM_API_ASSERT_STATE(!ctile.IsDummyTile());
+
         for (Dir d = Dirs::NORTHEAST; d <= Dirs::SOUTH; ++d)
-        {
-          SPoint tpt(x,y);
-          Tile<EC>& ctile = GetTile(tpt);
+	  {
+	    if(! Dirs::IsValidDir(d, isStaggered))
+	      continue; //staggered skips South/North
 
-          SPoint npt = tpt + Dirs::GetOffset(d);
+	    SPoint gridoffset;
+	    Dirs::ToNeighborTileInGrid(gridoffset, d, isStaggered, tpt);
+	    SPoint npt = tpt + gridoffset;
 
-          if (!IsLegalTileIndex(npt))
-          {
-            continue;
-          }
+	    if(!IsLegalTileIndex(npt))
+	      {
+		MFM_LOG_DBG4(("Grid::Skip Init tile at illegal npt(%d, %d), tpt(%d, %d), direction %d", npt.GetX(), npt.GetY(), tpt.GetX(), tpt.GetY(), d));
+		continue;
+	      }
 
-          TileDriver & td = _getTileDriver(x,y);
-          GridTransceiver & gt = td.m_channels[d - Dirs::NORTHEAST];
-          LonglivedLock & ctl = GetIntertileLock(x,y,d);
+	    Tile<EC>& otile = GetTile(npt);
 
-          Tile<EC>& otile = GetTile(npt);
-          Dir odir = Dirs::OppositeDir(d);
-          LonglivedLock & otl = GetIntertileLock(npt.GetX(),npt.GetY(),odir);
+	    if(otile.IsDummyTile())
+	      {
+		MFM_LOG_DBG4(("Grid::Skip Init DUMMY tile at npt(%d, %d), tpt(%d, %d), direction %d", npt.GetX(), npt.GetY(), tpt.GetX(), tpt.GetY(), d));
+		continue;
+	      }
 
-          ctile.Connect(gt, ctl, d);
-          otile.Connect(gt, otl, odir);
+	    TileDriver & td = _getTileDriver(tpt.GetX(),tpt.GetY());
+	    GridTransceiver & gt = td.m_channels[d - Dirs::NORTHEAST];
+	    LonglivedLock & ctl = GetIntertileLock(tpt.GetX(),tpt.GetY(),d, isStaggered);
 
-          gt.SetEnabled(true);
-          gt.SetDataRate(100000000);
-          gt.SetMaxInFlight(0);
-        }
-      }
-    }
-  }
+	    Dir odir = Dirs::OppositeDir(d);
+	    MFM_API_ASSERT_STATE(Dirs::IsValidDir(odir, isStaggered));
+
+	    LonglivedLock & otl = isStaggered ? ctl : GetIntertileLock(npt.GetX(),npt.GetY(),odir, false); //simpler for staggered, refs not changed
+
+	    ctile.Connect(gt, ctl, d);
+	    otile.Connect(gt, otl, odir);
+
+	    gt.SetEnabled(true);
+	    gt.SetDataRate(100000000);
+	    gt.SetMaxInFlight(0);
+	  } //direction loop
+      } //tile loop
+  } //Init
 
   template <class GC>
   double Grid<GC>::GetAverageCacheRedundancy() const
@@ -128,7 +181,14 @@ namespace MFM {
     {
       for(u32 y = 0; y < m_height; y++)
       {
+	if(!IsLegalTileIndex(x,y))
+	  continue;
+
         const Tile<EC> & tile = GetTile(x,y);
+
+	if(tile.IsDummyTile())
+	  continue;
+
         double red = tile.GetAverageCacheRedundancy();
         if (red >= 0)
         {
@@ -151,7 +211,14 @@ namespace MFM {
     {
       for(u32 y = 0; y < m_height; y++)
       {
-        Tile<EC> & tile = GetTile(x,y);
+	if(!IsLegalTileIndex(x,y))
+	  continue;
+
+        const Tile<EC> & tile = GetTile(x,y);
+
+	if(tile.IsDummyTile())
+	  continue;
+
         tile.SetCacheRedundancy(redundancyOddsType);
       }
     }
@@ -169,10 +236,14 @@ namespace MFM {
     for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
       SPoint tpt = IteratorIndexToCoord(m_rgi.Next());
+      MFM_API_ASSERT_STATE(IsLegalTileIndex(tpt));
+
       TileDriver & td = _getTileDriver(tpt.GetX(),tpt.GetY());
-      td.m_loc = tpt;
+      td.m_loc = tpt; //init m_loc before a GetTile call
       td.m_gridPtr = this;
       td.SetState(TileDriver::PAUSED);
+      MFM_API_ASSERT_STATE(!td.GetTile().IsDummyTile());
+
       if (pthread_create(&td.m_threadId, NULL, TileDriverRunner, &td))
       {
         FAIL(ILLEGAL_STATE);
@@ -189,7 +260,11 @@ namespace MFM {
     for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
       SPoint tpt = IteratorIndexToCoord(m_rgi.Next());
+      MFM_API_ASSERT_STATE(IsLegalTileIndex(tpt));
+
       TileDriver & td = _getTileDriver(tpt.GetX(),tpt.GetY());
+      MFM_API_ASSERT_STATE(!td.GetTile().IsDummyTile());
+
       td.SetState(running? TileDriver::ADVANCING : TileDriver::PAUSED);
     }
   }
@@ -198,16 +273,20 @@ namespace MFM {
   void* Grid<GC>::TileDriverRunner(void * arg)
   {
     TileDriver * td = (TileDriver*) arg;
+    MFM_API_ASSERT_STATE(td->m_gridPtr->IsLegalTileIndex(td->m_loc));
+
     Tile<EC> & ctile = td->GetTile();
+
+    MFM_API_ASSERT_ARG(!ctile.IsDummyTile()); //sanity
 
     // Init error stack pointer (for this thread only)
     MFMPtrToErrEnvStackPtr = ctile.GetErrorEnvironmentStackTop();
 
-    LOG.Debug("TileDriver %p init: (%d,%d) == %s",
-              (void*) td,
-              td->m_loc.GetX(),
-              td->m_loc.GetY(),
-              ctile.GetLabel());
+    MFM_LOG_DBG4(("TileDriver %p init: (%d,%d) == %s",
+		  (void*) td,
+		  td->m_loc.GetX(),
+		  td->m_loc.GetY(),
+		  ctile.GetLabel()));
 
     ctile.RequestStatePassive();
 
@@ -228,7 +307,8 @@ namespace MFM {
         clock_gettime(CLOCK_MONOTONIC, &now);
         for (u32 c = 0; c < 4; ++c)
         {
-          td->m_channels[c].AdvanceToTime(now);
+	  if(td->m_channels[c].IsEnabled()) //esa
+	    td->m_channels[c].AdvanceToTime(now);
         }
 
         // Drive the tile itself
@@ -252,7 +332,7 @@ namespace MFM {
         FAIL(ILLEGAL_STATE);
       }
     }
-    LOG.Debug("Tile %s thread exiting", ctile.GetLabel());
+    MFM_LOG_DBG4(("Tile %s thread exiting", ctile.GetLabel()));
     return NULL;
   }
 
@@ -275,25 +355,94 @@ namespace MFM {
       i->GetRandom().SetSeed(m_random.Create());
   }
 
+
+  template <class GC>
+  void Grid<GC>::InitDummyTiles()
+  {
+    FAIL(INCOMPLETE_CODE);
+    for(u32 j=0; j < m_height; j++)
+      {
+	for(u32 i=0; i < m_width; i++)
+	  {
+	    if(IsDummyTileCoord(i, j))
+	      {
+		MFM_LOG_DBG3(("Tile[%d][%d] setting to DUMMY", i, j));
+
+		Tile<EC> & tile = GetTile(SPoint(i,j));
+		tile.SetDummyTile();
+	      }
+	  }
+      }
+  }
+
+  template <class GC>
+  void Grid<GC>::ReinitGridRandomIterator()
+  {
+    FAIL(INCOMPLETE_CODE);
+
+    if(!IsGridLayoutStaggered())
+      return;
+
+    static u32 staggeredindexes[MAX_TILES_SUPPORTED];
+    MFM_API_ASSERT_STATE(m_height * m_width <= MAX_TILES_SUPPORTED);
+
+    u32 counter = 0;
+    for(u32 j=0; j < m_height; j++)
+      {
+	for(u32 i=0; i < m_width; i++)
+	  {
+	    SPoint tpt(i,j);
+	    if(!IsLegalTileIndex(tpt))
+	      continue;
+
+	    Tile<EC> & ntile = GetTile(tpt);
+	    if(! ntile.IsDummyTile())
+	      {
+		staggeredindexes[counter] = j*m_width + i;
+		MFM_LOG_DBG3(("Tile[%d][%d] in random iterator at counter %d, index %d", i, j, counter, staggeredindexes[counter]));
+		counter++;
+	      }
+	    //else skip this tile.
+	  }
+      }
+    m_rgi.Reinit(counter, staggeredindexes);
+    MFM_API_ASSERT_STATE(m_rgi.GetLimit() == counter);
+  }
+
+
   template <class GC>
   void Grid<GC>::SetTileEnabled(const SPoint& tileLoc, bool isEnabled)
   {
+    if(!IsLegalTileIndex(tileLoc))
+      return;
+
     Tile<EC> & tile = GetTile(tileLoc);
+    if(tile.IsDummyTile())
+      {
+	tile.SetDisabled(); //?
+	return;
+      }
+
     if (isEnabled)
-    {
-      tile.SetEnabled();
-    }
+      {
+	tile.SetEnabled();
+      }
     else
-    {
-      tile.SetDisabled();
-    }
+      {
+	tile.SetDisabled();
+      }
 
   }
 
   template <class GC>
   bool Grid<GC>::IsTileEnabled(const SPoint& tileLoc)
   {
-    return GetTile(tileLoc).IsEnabled();
+    MFM_API_ASSERT_ARG(!IsLegalTileIndex(tileLoc));
+
+
+    Tile<EC> & tile = GetTile(tileLoc);
+    MFM_API_ASSERT_ARG(!tile.IsDummyTile());
+    return tile.IsEnabled();
   }
 
   template <class GC>
@@ -304,6 +453,30 @@ namespace MFM {
     if (tileInGrid.GetX() >= (s32) m_width || tileInGrid.GetY() >= (s32) m_height)
       return false;
     return true;
+  }
+
+  template <class GC>
+  bool Grid<GC>::IsDummyTileCoord(s32 tileingridX, s32 tileingridY) const
+  {
+    //called once, only to init the tiles in the grid;
+    //hence forth use Tile<EC>::IsDummyTile() for generality.
+    if(IsGridLayoutStaggered())
+      {
+	//staggered grid width + 1,
+	//even rows don't use last spot in row,
+	//odd rows don't use first spot in row
+	if(tileingridY % 2 == 0)
+	  {
+	    if(tileingridX >= ((s32) m_width - 1))
+	      return true;
+	  }
+	else
+	  {
+	    if(tileingridX == 0)
+	      return true;
+	  }
+      }
+    return false;
   }
 
   template <class GC>
@@ -355,6 +528,8 @@ namespace MFM {
 
     Tile<EC> & owner = GetTile(tileInGrid);
 
+    MFM_API_ASSERT_ARG(!owner.IsDummyTile());
+
     if (owner.IsActive()) return false;  // Not paused?  Is this how we check?
 
     if (owner.RegionIn(siteInTile) != owner.REGION_HIDDEN)
@@ -372,6 +547,9 @@ namespace MFM {
   {
     SPoint myTile, mySite;
     if (!MapGridToUncachedTile(siteInGrid, myTile, mySite)) return false;
+
+    MFM_API_ASSERT_ARG(!GetTile(myTile).IsDummyTile());
+
     tileInGrid = myTile;
     siteInTile = mySite+SPoint(R,R);      // adjust to full Tile indexing
     return true;
@@ -380,27 +558,44 @@ namespace MFM {
   template <class GC>
   bool Grid<GC>::IsGridCoord(const SPoint & siteInGrid) const
   {
+    //Cache coords are not distinct in terms of the grid (only known by
+    //gridpanel); OWNED_ is used here, instead of TILE_ dimensions;
     if (siteInGrid.GetX() < 0 || siteInGrid.GetY() < 0)
       return false;
 
-    return IsLegalTileIndex(siteInGrid/OWNED_SIDE);
+    SPoint offset;
+    if(IsGridRowStaggered(siteInGrid))
+      offset.Set(-OWNED_WIDTH/2,0);
+    const SPoint ownedp(OWNED_WIDTH, OWNED_HEIGHT);
+
+    const SPoint t = siteInGrid + offset;
+    if(t.GetX() < 0 || t.GetX() > (OWNED_WIDTH * (s32) GetWidth()))
+      return false;
+
+    SPoint tileCoord = t / ownedp;
+    if(!IsLegalTileIndex(tileCoord))
+      return false;
+
+    const Tile<EC>& tile = GetTile(tileCoord);
+    if(tile.IsDummyTile())
+      return false;
+    return true;
   }
 
   template <class GC>
   bool Grid<GC>::MapGridToUncachedTile(const SPoint & siteInGrid, SPoint & tileInGrid, SPoint & siteInTile) const
   {
-    if (siteInGrid.GetX() < 0 || siteInGrid.GetY() < 0)
+    if(!IsGridCoord(siteInGrid))
       return false;
 
-    SPoint t = siteInGrid/OWNED_SIDE;
-
-    if (!IsLegalTileIndex(t))
-      return false;
+    SPoint offset;
+    if(IsGridRowStaggered(siteInGrid))
+      offset.Set(-OWNED_WIDTH/2,0);
+    const SPoint ownedp(OWNED_WIDTH, OWNED_HEIGHT);
 
     // Set up return values
-    tileInGrid = t;
-    siteInTile =
-      siteInGrid % OWNED_SIDE;  // get index into just 'owned' sites
+    tileInGrid = (siteInGrid + offset)/ownedp;;
+    siteInTile = (siteInGrid + offset) % ownedp;  // get index into just 'owned' sites
     return true;
   }
 
@@ -412,54 +607,63 @@ namespace MFM {
   }
 
   template <class GC>
+  void Grid<GC>:: CheckAtom(const T& atom, const SPoint& siteInGrid)
+  {
+    this->PlaceAtomInSite(false, atom, siteInGrid, true);
+  }
+
+  template <class GC>
   void Grid<GC>:: PlaceAtom(const T& atom, const SPoint& siteInGrid)
   {
     this->PlaceAtomInSite(false, atom, siteInGrid);
   }
 
   template <class GC>
-  void Grid<GC>:: PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& siteInGrid)
+  void Grid<GC>:: PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& siteInGrid, bool checkOnly)
   {
     SPoint tileInGrid, siteInTile;
     if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
     {
-      printf("Can't place at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
-      FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+      if(!IsGridLayoutStaggered())
+	{
+	  printf("Can't place at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
+	  FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+	}
+      return;
     }
 
     Tile<EC> & owner = GetTile(tileInGrid);
-    owner.PlaceAtomInSite(placeInBase, atom, siteInTile);
+    MFM_API_ASSERT_ARG(!owner.IsDummyTile());
 
-    Dir startDir = owner.SharedAt(siteInTile);
+    owner.PlaceAtomInSite(placeInBase, atom, siteInTile, checkOnly);
 
-    if ((s32) startDir < 0)       // Doesn't hit cache, we're done
-      return;
+    THREEDIR connectedDirs;
+    u32 dircount = owner.SharedAt(siteInTile, connectedDirs, YESCHKCONNECT);
 
-    Dir stopDir = Dirs::CWDir(startDir);
-
-    if (Dirs::IsCorner(startDir)) {
-      startDir = Dirs::CCWDir(startDir);
-      stopDir = Dirs::CWDir(stopDir);
-    }
-
-    for (Dir dir = startDir; dir != stopDir; dir = Dirs::CWDir(dir)) {
+    bool isStaggered = IsGridLayoutStaggered();
+    for (u32 d = 0; d < dircount; d++) {
       SPoint tileOffset;
-      Dirs::FillDir(tileOffset,dir);
+      Dir dir = connectedDirs[d];
+
+      Dirs::ToNeighborTileInGrid(tileOffset,dir, isStaggered, tileInGrid);
 
       SPoint otherTileIndex = tileInGrid+tileOffset;
-
-      if (!IsLegalTileIndex(otherTileIndex)) continue;  // edge of grid
+      MFM_API_ASSERT_ARG(IsLegalTileIndex(otherTileIndex));
 
       Tile<EC> & other = GetTile(otherTileIndex);
+
+      if (other.IsDummyTile()) continue;  // edge of grid
 
       // siteInTile is in tileInGrid's shared region, indexed with
       // including-cache coords.  Offsetting by the owned size
       // (excluding caches) maps into including-cache coords on their
       // side.  Hmm.
+      SPoint siteOffset;
+      Dirs::FillDir(siteOffset,dir, isStaggered);
+      const SPoint ownedph(OWNED_WIDTH/2, OWNED_HEIGHT/2);
+      SPoint otherIndex = siteInTile - siteOffset * ownedph;
 
-      SPoint otherIndex = siteInTile - tileOffset * OWNED_SIDE;
-
-      other.PlaceAtomInSite(placeInBase, atom, otherIndex);
+      other.PlaceAtomInSite(placeInBase, atom, otherIndex, checkOnly);
     }
   }
 
@@ -478,8 +682,12 @@ namespace MFM {
     SPoint tileInGrid, siteInTile;
     if (!MapGridToTile(siteInGrid, tileInGrid, siteInTile))
     {
-      printf("Can't xray at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
-      FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+      if(!IsGridLayoutStaggered())
+	{
+	  printf("Can't xray at (%d,%d)\n", siteInGrid.GetX(), siteInGrid.GetY());
+	  FAIL(ILLEGAL_ARGUMENT);  // XXX Change to return bool?
+	}
+      return;
     }
 
     Tile<EC> & owner = GetTile(tileInGrid);
@@ -517,9 +725,13 @@ namespace MFM {
     for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
       SPoint i = IteratorIndexToCoord(m_rgi.Next());
+      MFM_API_ASSERT_STATE(IsLegalTileIndex(i));
+
       u32 x = i.GetX();
       u32 y = i.GetY();
       TileDriver & td = _getTileDriver(x,y);
+      MFM_API_ASSERT_STATE(!td.GetTile().IsDummyTile());
+
       if (!tc.CheckPrecondition(td))
       {
         LOG.Error("%s control precondition failed at (%d,%d)=Tile %s (%p)--",
@@ -533,9 +745,12 @@ namespace MFM {
     for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
       SPoint i = IteratorIndexToCoord(m_rgi.Next());
+      MFM_API_ASSERT_STATE(IsLegalTileIndex(i));
+
       u32 x = i.GetX();
       u32 y = i.GetY();
       TileDriver & td = _getTileDriver(x,y);
+      MFM_API_ASSERT_STATE(!td.GetTile().IsDummyTile());
       tc.MakeRequest(td);
     }
 
@@ -571,9 +786,13 @@ namespace MFM {
       for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
       {
         SPoint i = IteratorIndexToCoord(m_rgi.Next());
+	MFM_API_ASSERT_STATE(IsLegalTileIndex(i));
+
         u32 x = i.GetX();
         u32 y = i.GetY();
         TileDriver & td = _getTileDriver(x,y);
+	MFM_API_ASSERT_STATE(!td.GetTile().IsDummyTile());
+
         if (!tc.CheckIfReady(td))
         {
           ++notReady;
@@ -593,9 +812,12 @@ namespace MFM {
     for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
     {
       SPoint i = IteratorIndexToCoord(m_rgi.Next());
+      MFM_API_ASSERT_STATE(IsLegalTileIndex(i));
+
       u32 x = i.GetX();
       u32 y = i.GetY();
       TileDriver & td = _getTileDriver(x,y);
+      MFM_API_ASSERT_STATE(!td.GetTile().IsDummyTile());
       tc.Execute(td);
     }
 
@@ -633,7 +855,7 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::WriteEPSImage(ByteSink & outstrm) const
   {
-    u64 max = 0;
+    u64 max = 1; //avoid division by 0
     const u32 swidth = GetWidthSites();
     const u32 sheight = GetHeightSites();
 
@@ -643,9 +865,9 @@ namespace MFM {
       for(u32 y = 0; y < sheight; y++) {
 	for(u32 x = 0; x < swidth; x++) {
           SPoint siteInGrid(x,y), tileInGrid, siteInTile;
-          if (!MapGridToUncachedTile(siteInGrid, tileInGrid, siteInTile))
-            FAIL(ILLEGAL_STATE);
-          u64 events = GetTile(tileInGrid).GetUncachedSiteEvents(siteInTile);
+          bool inGrid = MapGridToUncachedTile(siteInGrid, tileInGrid, siteInTile); //false when undef in staggered grid
+	  //continue; //FAIL(ILLEGAL_STATE); possible dummy tile in staggered grid.
+          u64 events = inGrid ? GetTile(tileInGrid).GetUncachedSiteEvents(siteInTile) : 0;
           if (pass==0)
             max = MAX(max, events);
           else
@@ -658,9 +880,9 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::WriteEPSAverageImage(ByteSink & outstrm) const
   {
-    u64 max = 0;
-    const u32 swidth = OWNED_SIDE;
-    const u32 sheight = OWNED_SIDE;
+    u64 max = 1; //avoid division by zero
+    const u32 swidth = OWNED_WIDTH;
+    const u32 sheight = OWNED_HEIGHT;
     const u32 tileCt = GetHeight() * GetWidth();
 
     for(u32 pass = 0; pass < 2; pass++)
@@ -723,10 +945,10 @@ namespace MFM {
   {
     Random& rand = m_random;
 
-    SPoint center(rand.Create(m_width * TILE_SIDE),
-		  rand.Create(m_height * TILE_SIDE));
+    SPoint center(rand.Create(m_width * TILE_WIDTH),
+		  rand.Create(m_height * TILE_HEIGHT));
 
-    u32 radius = rand.Between(5, TILE_SIDE);
+    u32 radius = rand.Between(5, (TILE_WIDTH + TILE_HEIGHT)/2); //was btn 5 and tile_side
     T atom(Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
 
     SPoint siteInGrid, tileInGrid, siteInTile;
@@ -756,28 +978,39 @@ namespace MFM {
   template <class GC>
   void Grid<GC>::CheckCaches()
   {
-    for (iterator_type i = begin(); i != end(); ++i)
-    {
-      const SPoint usp = i.At();
-      const Tile<EC> & tile = GetTile(usp);
-
-      FAIL(INCOMPLETE_CODE);
-    }
-  }
-
-  template <class GC>
-  void Grid<GC>::RefreshAllCaches()
-  {
-    const u32 gridWidth = this->GetWidthSites();
+    const u32 gridWidth = this->GetWidthSites(); //includes dummy tiles in scattered grid
     const u32 gridHeight = this->GetHeightSites();
 
     for(u32 y = 0; y < gridHeight; y++)
     {
       for(u32 x = 0; x < gridWidth; x++)
       {
-        SPoint currentPt(x, y);
-        T atom = *this->GetAtom(currentPt);
-        this->PlaceAtom(atom, currentPt);  // This updates caches
+        SPoint siteInGrid(x, y);
+	if(this->IsGridCoord(siteInGrid))
+	  {
+	    T atom = *this->GetAtom(siteInGrid);
+	    this->CheckAtom(atom, siteInGrid);  // This checks caches
+	  }
+      }
+    }
+  } //CheckCaches
+
+  template <class GC>
+  void Grid<GC>::RefreshAllCaches()
+  {
+    const u32 gridWidth = this->GetWidthSites(); //includes dummy tiles in scattered grid
+    const u32 gridHeight = this->GetHeightSites();
+
+    for(u32 y = 0; y < gridHeight; y++)
+    {
+      for(u32 x = 0; x < gridWidth; x++)
+      {
+        SPoint siteInGrid(x, y);
+	if(this->IsGridCoord(siteInGrid))
+	  {
+	    T atom = *this->GetAtom(siteInGrid);
+	    this->PlaceAtom(atom, siteInGrid);  // This updates caches
+	  }
       }
     }
   }

@@ -52,20 +52,20 @@ namespace MFM
 
     DriverButtonPanel* m_otherDriverButtonPanel;
 
-    struct OtherButtonPanelButton : AbstractButton 
+    struct OtherButtonPanelButton : AbstractButton
     {
       DriverButtonPanel & m_parent;
 
       OtherButtonPanelButton(const char * panelName,
-                             const char * text, 
+                             const char * text,
                              DriverButtonPanel & parent)
         : AbstractButton(text)
         , m_parent(parent)
-      { 
+      {
         SetName(panelName);
       }
 
-      virtual void OnClick(u8 button) 
+      virtual void OnClick(u8 button)
       {
         m_parent.ShowOtherDriverButtonPanel();
       }
@@ -77,7 +77,7 @@ namespace MFM
 
     } m_otherDriverButtonPanelButton;
 
-    void SetOtherDriverButtonPanel(DriverButtonPanel & other) 
+    void SetOtherDriverButtonPanel(DriverButtonPanel & other)
     {
       m_otherDriverButtonPanel = &other;
     }
@@ -124,6 +124,8 @@ namespace MFM
       m_otherDriverButtonPanelButton.Panel::SetDimensions(100, 30);
       Panel::Insert(&m_otherDriverButtonPanelButton, 0);
     }
+
+    virtual ~DriverButtonPanel() {} //avoid inline error
 
     void InsertAndPlace(Panel & b)
     {

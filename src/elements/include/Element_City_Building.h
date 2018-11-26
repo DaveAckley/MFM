@@ -43,6 +43,11 @@ namespace MFM
   template<class EC>
   class Element_City_Building : public Element<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE1b;
+    }
+    
     // Extract short names for parameter types
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;

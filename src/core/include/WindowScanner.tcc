@@ -106,7 +106,9 @@ namespace MFM
     SPoint searchPt;
     for(u32 i = 0; i < dirCount; i++)
     {
-      Dirs::FillDir(searchPt, neighborhood[i]);
+      Dirs::FillDir(searchPt, neighborhood[i], false);
+      searchPt /= 2; // Need undoubled coords for scanning
+
       if(m_win.IsLiveSiteDirect(searchPt))
       {
         if(m_win.GetRelativeAtomDirect(searchPt).GetType() == type)
@@ -143,7 +145,8 @@ namespace MFM
     u32 atomCount = 0;
     for(u32 i = 0; i < dirCount; i++)
     {
-      Dirs::FillDir(searchPt, neighborhood[i]);
+      Dirs::FillDir(searchPt, neighborhood[i], false);
+      searchPt /= 2; // Need undoubled coords for scanning
 
       if(m_win.IsLiveSiteDirect(searchPt))
       {
@@ -242,9 +245,11 @@ namespace MFM
   {
     SPoint searchPt;
     u32 ptsFound = 0;
+
     for(u32 i = 0; i < dirCount; i++)
     {
-      Dirs::FillDir(searchPt, dirs[i]);
+      Dirs::FillDir(searchPt, dirs[i], false);
+      searchPt /= 2; // Need undoubled coords for scanning
 
       if(m_win.IsLiveSiteSym(searchPt))
       {
@@ -253,7 +258,8 @@ namespace MFM
           ptsFound++;
           if(m_rand.OneIn(ptsFound))
           {
-            Dirs::FillDir(outPoint, dirs[i]);
+            Dirs::FillDir(outPoint, dirs[i], false);
+            outPoint /= 2; // Need undoubled coords for scanning
           }
         }
       }

@@ -42,6 +42,11 @@ namespace MFM
   template<class EC>
   class Element_City_Intersection : public Element<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE1d;
+    }
+    
     // Extract short names for parameter types
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
@@ -98,6 +103,7 @@ namespace MFM
 
     void SetCanalDir(T& us, u32 destType, Dir dir) const
     {
+      //assumes checkerboard???
       if(Dirs::IsCorner(dir))
       {
         FAIL(ILLEGAL_ARGUMENT);

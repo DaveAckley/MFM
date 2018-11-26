@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   AbstractDriver.h Base class for all MFM drivers
-  Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014,2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,8 @@
   \file AbstractDriver.h Base class for all MFM drivers
   \author Trent R. Small.
   \author David H. Ackley.
-  \date (C) 2014 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2014,2017 All rights reserved.
   \lgpl
  */
 #ifndef ABSTRACTDRIVER_H
@@ -128,6 +130,11 @@ namespace MFM
      */
     const u32 GRID_HEIGHT;
 
+    /**
+     * The grid layout used by this simulation
+     */
+    const GridLayoutPattern GRID_LAYOUT;
+
     void NeedElement(Element<EC>* element)
     {
       for (u32 i = 0; i < m_neededElementCount; ++i)
@@ -217,6 +224,8 @@ namespace MFM
       WriteTimeBasedData(fbs, exists);
       fclose(fp);
     }
+
+    void XXXCHECKCACHES() { m_grid.CheckCaches(); }
 
     /**
      * Runs the held Grid and all its associated threads for a brief
@@ -428,6 +437,7 @@ namespace MFM
         }
       }
 
+#if 0 // DEAD: --ue-demos deprecated
       if (this->m_includeUEDemos)
       {
         const char * LIBUEDEMOS_PATH = "elements/libuedemos.so";
@@ -441,7 +451,8 @@ namespace MFM
           m_elementRegistry.AddLibraryPath(buffer.GetZString());
         }
       }
-
+#endif
+      
       const char* (subs[]) =
       {
         "", "vid", "eps", "tbd", "teps", "save", "screenshot", "autosave", "log"
@@ -488,7 +499,7 @@ namespace MFM
       if((m_haltAfterAEPS > 0 && m_AEPS > m_haltAfterAEPS)
          || (m_haltOnEmpty && full == 0.0)
          || (m_haltOnFull && full == 1.0)
-         || (m_AEPS > 0 && m_haltOnExtinctionOf && 
+         || (m_AEPS > 0 && m_haltOnExtinctionOf &&
              m_grid.GetAtomCountFromSymbol(m_extinctionSymbol)==0)
          )
       {
@@ -563,7 +574,7 @@ namespace MFM
       VArguments& args = driver.m_varguments;
 
       bool wantList = (strcmp("list", demo) == 0);
-      bool wantAll = (strcmp("all", demo) == 0);
+      bool wantAll = false;
 
       // Look for demos-list file
       OString512 buf;
@@ -588,7 +599,7 @@ namespace MFM
           OString64 name;
           OString256 mfz, libue, classes, info;
 
-          lastMatches = 
+          lastMatches =
             fs.Scanf("%Z%Z%Z%Z%Z\n", &name, &mfz, &libue, &classes, &info);
 
           if (lastMatches != 6)
@@ -600,31 +611,37 @@ namespace MFM
             printf("\nDEMO: %s\n", zname);
             printf(" To run the demo standalone: mfzrun %s demo\n", zname);
             printf(" To load the demo's classes: mfms --demo %s\n", zname);
-            printf("   includes classes: %s\n", 
+            printf("   includes classes: %s\n",
                    classes.GetZString());
             ++count;
           }
           else if (wantAll || !strcmp(demo,name.GetZString()))
           {
-            printf("Including %s from %s\n", 
+            printf("Including %s from %s\n",
                    classes.GetZString(),
                    name.GetZString());
 
             // fake up an appropriate -ep call
-            RegisterElementLibraryPath(libue.GetZString(), driverptr);
-            ++count;
+            {
+              OString512 resfile;
+              if (!Utils::GetReadableResourceFile(libue.GetZString(), resfile))
+                args.Die("Internal inconsistency: Can't find '%s'",resfile.GetZString());
+                      
+              RegisterElementLibraryPath(resfile.GetZString(), driverptr);
+              ++count;
+            }
           }
 
         }
 
         fs.Close();
 
-        if (lastMatches != 0) 
+        if (lastMatches != 0)
         {
           LOG.Warning("Incomplete or corrupt %s", buf.GetZString());
         }
 
-        if ((wantList || wantAll) && count == 0) 
+        if ((wantList || wantAll) && count == 0)
           args.Die("No demos found");
 
         if (wantList)
@@ -783,17 +800,27 @@ namespace MFM
 
     static void SetNoStdFromArgs(const char* not_needed, void* driver)
     {
+      LOG.Message("--no-std is now the only option, so does not need to appear on the command line");
       ((AbstractDriver*)driver)->m_suppressStdElements = 1;
     }
 
-    static void SetUEDemosFromArgs(const char* not_needed, void* driver)
+    static void SetUEDemosFromArgs(const char* not_needed, void* driverptr)
     {
-      ((AbstractDriver*)driver)->m_includeUEDemos = 1;
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
+      args.Die("No longer supported: '--ue-demos'");
+
+      // ((AbstractDriver*)driver)->m_includeUEDemos = 1;
     }
 
-    static void SetCppDemosFromArgs(const char* not_needed, void* driver)
+    static void SetCppDemosFromArgs(const char* not_needed, void* driverptr)
     {
-      ((AbstractDriver*)driver)->m_includeCPPDemos = 1;
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      //VArguments& args = driver.m_varguments;
+
+      //args.Die("No longer supported: '--cpp-demos'");
+      driver.m_includeCPPDemos = 1;
     }
 
     static void SetGridImages(const char* not_needed, void* driver)
@@ -1147,7 +1174,7 @@ namespace MFM
       if (path[0] == '/' || !Utils::GetReadableResourceFile(path, buf))
       {
         buf.Printf("%s",path); // absolute path or not resource relative
-      } 
+      }
       /* else buf filled with resource path */
 
       LOG.Message("Loading configuration '%s'", buf.GetZString());
@@ -1213,15 +1240,14 @@ namespace MFM
       {
         ++m_acceleration;
       }
-
-
     }
 
-    AbstractDriver(u32 gridWidth, u32 gridHeight)
+    AbstractDriver(u32 gridWidth, u32 gridHeight, GridLayoutPattern gridLayout)
       : GRID_WIDTH(gridWidth)
       , GRID_HEIGHT(gridHeight)
+      , GRID_LAYOUT(gridLayout)
       , m_neededElementCount(0)
-      , m_grid(m_elementRegistry, GRID_WIDTH, GRID_HEIGHT)
+      , m_grid(m_elementRegistry, GRID_WIDTH, GRID_HEIGHT, GRID_LAYOUT)
       , m_ticksLastStopped(0)
       , m_totalPriorTicks(0)
       , m_currentTickBasis(0)
@@ -1229,7 +1255,7 @@ namespace MFM
       , m_haltOnExtinctionOf(false) // if true, m_extinctionSymbol has (unvalidated) content
       , m_haltOnEmpty(false)
       , m_haltOnFull(false)
-      , m_suppressStdElements(false)
+      , m_suppressStdElements(true)
       , m_includeUEDemos(false)
       , m_includeCPPDemos(false)
       , m_msSpentRunning(0)
@@ -1261,6 +1287,8 @@ namespace MFM
     {
       InitTicks(0); // Overwritten later on -cp load
     }
+
+    virtual ~AbstractDriver() {} //avoid inline error
 
     virtual void RegisterExternalConfigSections()
     {
@@ -1350,7 +1378,7 @@ namespace MFM
       RegisterArgument("Display this help message, then exit.",
                        "-h|--help", &PrintArgUsage, (void*)(&m_varguments), false);
 
-      RegisterArgument("Show built-in demos (--demo list), or load one (--demo NAME) or all (--demo all)",
+      RegisterArgument("Show built-in demos (--demo list), or load one (--demo NAME)",
                        "--demo", &SelectDemoFromArg, this, true);
 
       RegisterArgument("Amount of logging output is ARG (0 -> none, 8 -> max)",
@@ -1407,13 +1435,13 @@ namespace MFM
       RegisterArgument("Suppress loading core ulam elements (DReg, etc)",
                        "--no-std", &SetNoStdFromArgs, this, false);
 
-      RegisterArgument("Include some Ulam demo elements",
+      RegisterArgument("(DEPRECATED) Include some Ulam demo elements",
                        "--ue-demos", &SetUEDemosFromArgs, this, false);
 
-      RegisterArgument("Include (older) C++ demo elements (City, etc)",
+      RegisterArgument("Run the old C++ demo elements (City, etc)",
                        "--cpp-demos", &SetCppDemosFromArgs, this, false);
 
-      RegisterArgument("Add ARG as the path to an element library (.so)",
+      RegisterArgument("Add ARG as the path to the element library (.so)",
                        "-ep|--elementpath", &RegisterElementLibraryPath, this, true);
 
       RegisterArgument("Load initial configuration from file at path ARG (string)",
@@ -1443,7 +1471,7 @@ namespace MFM
     {
       if (!m_haltOnExtinctionOf)
         FAIL(ILLEGAL_STATE);
-      
+
       return m_extinctionSymbol;
     }
 

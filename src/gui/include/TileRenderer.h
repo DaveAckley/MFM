@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   TileRenderer.h Code and configuration for rendering tiles
-  Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2017 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2017 Ackleyshack,LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,8 @@
   \file TileRenderer.h Code and configuration for rendering tiles
   \author Dave Ackley
   \author Trent R. Small.
-  \date (C) 2014-2016 All rights reserved.
+  \author Elena S. Ackley
+  \date (C) 2014-2017 All rights reserved.
   \lgpl
  */
 #ifndef TILERENDERER_H

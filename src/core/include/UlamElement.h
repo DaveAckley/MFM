@@ -52,7 +52,7 @@ namespace MFM{
     void write(const u32 v) { BVS::Write(0u, 32u, v); }
     Ui_Ut_102321u() { }
     Ui_Ut_102321u(const u32 d) { write(d); }
-    Ui_Ut_102321u(const Ui_Ut_102321u& other) { this->write(other.read()); }
+    Ui_Ut_102321u(const Ui_Ut_102321u& other) : BVS() { this->write(other.read()); }
     virtual const char * GetUlamTypeMangledName() const { return "Ut_102321u"; } //gcnl:UlamType.cpp:885
   };
 } //MFM
@@ -77,7 +77,7 @@ namespace MFM{
     Ui_Ut_14181u() { }
     Ui_Ut_14181u(const u32 d) { write(d); }
     Ui_Ut_14181u(const u32 d[1]) : BVS(d) { } //gcnl:UlamTypePrimitive.cpp:487
-    Ui_Ut_14181u(const Ui_Ut_14181u& other) { this->write(other.read()); }
+    Ui_Ut_14181u(const Ui_Ut_14181u& other) : BVS() { this->write(other.read()); }
     virtual const char * GetUlamTypeMangledName() const { return "Ut_14181u"; } //gcnl:UlamType.cpp:885
   };
 } //MFM

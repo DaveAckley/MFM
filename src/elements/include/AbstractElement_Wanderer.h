@@ -63,8 +63,10 @@ namespace MFM
       Random& rand = window.GetRandom();
       Dir d = (Dir)rand.Create(Dirs::DIR_COUNT);
 
-      Dirs::FillDir(wanderPt, d);
+      Dirs::FillDir(wanderPt, d, false);
+      wanderPt /= 2;
 
+      //assumes checkerboard ???
       wanderPt *= Dirs::IsCorner(d) ? (GetWanderDistance() / 2) : GetWanderDistance();
 
       if(window.IsLiveSiteSym(wanderPt))
