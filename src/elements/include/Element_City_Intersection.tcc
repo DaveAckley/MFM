@@ -30,6 +30,7 @@ namespace MFM
   {
     SPoint dp;
     Dirs::FillDir(dp, d, false);
+    dp /= 2;
      const T& atom = window.GetRelativeAtom(dp);
 
      return atom.GetType() == GetCarType() || atom.GetType() == GetStreetType();
@@ -42,6 +43,7 @@ namespace MFM
      Dir canal = GetCanalDir(window.GetCenterAtom(), destType);
      SPoint canalPt;
      Dirs::FillDir(canalPt, canal, false);
+     canalPt /= 2;
      return window.GetRelativeAtom(canalPt).GetType() == GetStreetType();
    }
 
@@ -85,6 +87,7 @@ namespace MFM
        {
 	 dirs[i] = d;
 	 Dirs::FillDir(roads[i], dirs[i], false);
+         roads[i] /= 2;
 	 i++;
        }
      }
@@ -106,10 +109,12 @@ namespace MFM
 	     if(j == 0)
 	     {
 	       Dirs::FillDir(edgeSidewalk, Dirs::CWDir(Dirs::CWDir(dirs[i])), false);
+               edgeSidewalk /= 2;
 	     }
 	     else
 	     {
 	       Dirs::FillDir(edgeSidewalk, Dirs::CCWDir(Dirs::CCWDir(dirs[i])), false);
+               edgeSidewalk /= 2;
 	     }
 
 	     edgeSidewalk = edgeSidewalk + roads[i];
@@ -180,6 +185,8 @@ namespace MFM
        {
 	 dirs[i] = d;
 	 Dirs::FillDir(roads[i], dirs[i], false);
+         roads[i] /= 2;
+
 	 i++;
        }
      }
@@ -201,10 +208,12 @@ namespace MFM
 	     if(j == 0)
 	     {
 	       Dirs::FillDir(edgeSidewalk, Dirs::CWDir(Dirs::CWDir(dirs[i])), false);
+               edgeSidewalk /= 2;
 	     }
 	     else
 	     {
 	       Dirs::FillDir(edgeSidewalk, Dirs::CCWDir(Dirs::CCWDir(dirs[i])), false);
+               edgeSidewalk /= 2;
 	     }
 
 	     edgeSidewalk = edgeSidewalk + roads[i];
@@ -309,6 +318,7 @@ namespace MFM
 	 {
 	   start = Dirs::CWDir(Dirs::CWDir(start));
 	   Dirs::FillDir(pt, start, false);
+           pt /= 2;
           if ((window.GetRelativeAtomDirect(pt).GetType() == GetCarType()) ||
               (window.GetRelativeAtomDirect(pt).GetType() == GetStreetType()))
           {
@@ -366,6 +376,7 @@ namespace MFM
 
       }
        Dirs::FillDir(bestDirPt, bestRoute, false);
+       bestDirPt /= 2;
 
       if(window.GetRelativeAtomDirect(bestDirPt).GetType() == GetCarType())
       {
@@ -412,6 +423,7 @@ namespace MFM
   {
     SPoint pt;
     Dirs::FillDir(pt, d, false);
+    pt /= 2;
     if(window.GetRelativeAtomDirect(pt).GetType() ==
        Element_Empty<EC>::THE_INSTANCE.GetType())
     {
@@ -427,6 +439,7 @@ namespace MFM
   {
     SPoint pt;
     Dirs::FillDir(pt, d, false);
+    pt /= 2;
     if(window.GetRelativeAtomDirect(pt).GetType() ==
        Element_Empty<EC>::THE_INSTANCE.GetType())
     {

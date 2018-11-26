@@ -42,6 +42,11 @@ namespace MFM
   template<class EC>
   class Element_City_Street : public Element<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE20;
+    }
+    
     // Extract short names for parameter types
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
@@ -143,6 +148,7 @@ namespace MFM
       for(u32 i = 0; i < Dirs::DIR_COUNT; i++)
       {
         Dirs::FillDir(pt, (Dir)i, false);
+        pt /= 2;
         if(window.GetRelativeAtomDirect(pt).GetType() == type)
         {
           return true;

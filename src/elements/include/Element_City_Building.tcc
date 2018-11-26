@@ -45,7 +45,9 @@ namespace MFM
 
       SPoint adjs[2];
       Dirs::FillDir(adjs[0], Dirs::CWDir(Dirs::CWDir(swDir)), false);
+      adjs[0] /= 2;
       Dirs::FillDir(adjs[1], Dirs::CCWDir(Dirs::CCWDir(swDir)), false);
+      adjs[1] /= 2;
 
       for(u32 i = 0; i < 2; i++)
       {
@@ -89,7 +91,7 @@ namespace MFM
     SPoint swPoint;
     WindowScanner<EC> scanner(window);
     u32 sidewalkCount = scanner.FindRandomInVonNeumann(GetSidewalkType(), swPoint);
-    bool isStaggered = window.GetTile().IsTileGridLayoutStaggered();
+    bool isStaggered = false; // Tile geometry is irrelevant to site directions!
 
     if(window.GetRandom().OneIn(10))
     {
@@ -98,6 +100,7 @@ namespace MFM
         SPoint oppositePt;
         Dir swDir = Dirs::FromOffset(swPoint);
         Dirs::FillDir(oppositePt, Dirs::OppositeDir(swDir), isStaggered);
+        oppositePt /= 2;
 
         if(window.GetRelativeAtomDirect(oppositePt).GetType() ==
            Element_Empty<EC>::THE_INSTANCE.GetType())
