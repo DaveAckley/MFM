@@ -111,6 +111,10 @@ do {									      \
       (const char *) unwindProtect_errorEnvironment.file;                     \
     unsigned MFMThrownFromLineNo __attribute__ ((unused)) =                   \
       unwindProtect_errorEnvironment.lineno;                                  \
+    void * const * MFMThrownBacktraceArray __attribute__ ((unused)) =         \
+      unwindProtect_errorEnvironment.backtraceArray;                          \
+    unsigned MFMThrownBacktraceSize __attribute__ ((unused)) =                \
+      unwindProtect_errorEnvironment.backtraceSize;                           \
     {cleanup}	                                                              \
   }                                                                           \
 } while (0)
