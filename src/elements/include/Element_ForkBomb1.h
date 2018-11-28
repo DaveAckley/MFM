@@ -39,6 +39,11 @@ namespace MFM
   template <class EC>
   class Element_ForkBomb1 : public AbstractElement_ForkBomb<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE08;
+    }
+    
     enum {  FORKBOMB1_VERSION = 2 };
 
     // Extract short names for parameter types

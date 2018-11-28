@@ -181,6 +181,7 @@ namespace MFM {
       // Get the delta to head in the given direction
       SPoint dirDelta;
       Dirs::FillDir(dirDelta, d, false); // Something in (-1 ,-1) to (1, 1)
+      dirDelta /= 2;
 
       u32 countInDir = 0;       // Counts how many points we've stored for dir
       u32 deltasToEscape = 0;   // While gradually increasing this
@@ -233,6 +234,7 @@ namespace MFM {
       // Get the delta to head in the given direction
       SPoint dirDelta;
       Dirs::FillDir(dirDelta, d, false); // Something in (-1 ,-1) to (1, 1)
+      dirDelta /= 2;
 
       u32 countInDir = 0;       // Counts how many points we've stored for dir
       u32 deltasToHorizon = 0;  // While gradually increasing this

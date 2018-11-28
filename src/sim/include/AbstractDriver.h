@@ -437,6 +437,7 @@ namespace MFM
         }
       }
 
+#if 0 // DEAD: --ue-demos deprecated
       if (this->m_includeUEDemos)
       {
         const char * LIBUEDEMOS_PATH = "elements/libuedemos.so";
@@ -450,7 +451,8 @@ namespace MFM
           m_elementRegistry.AddLibraryPath(buffer.GetZString());
         }
       }
-
+#endif
+      
       const char* (subs[]) =
       {
         "", "vid", "eps", "tbd", "teps", "save", "screenshot", "autosave", "log"
@@ -572,7 +574,7 @@ namespace MFM
       VArguments& args = driver.m_varguments;
 
       bool wantList = (strcmp("list", demo) == 0);
-      bool wantAll = (strcmp("all", demo) == 0);
+      bool wantAll = false;
 
       // Look for demos-list file
       OString512 buf;
@@ -620,8 +622,14 @@ namespace MFM
                    name.GetZString());
 
             // fake up an appropriate -ep call
-            RegisterElementLibraryPath(libue.GetZString(), driverptr);
-            ++count;
+            {
+              OString512 resfile;
+              if (!Utils::GetReadableResourceFile(libue.GetZString(), resfile))
+                args.Die("Internal inconsistency: Can't find '%s'",resfile.GetZString());
+                      
+              RegisterElementLibraryPath(resfile.GetZString(), driverptr);
+              ++count;
+            }
           }
 
         }
@@ -792,17 +800,27 @@ namespace MFM
 
     static void SetNoStdFromArgs(const char* not_needed, void* driver)
     {
+      LOG.Message("--no-std is now the only option, so does not need to appear on the command line");
       ((AbstractDriver*)driver)->m_suppressStdElements = 1;
     }
 
-    static void SetUEDemosFromArgs(const char* not_needed, void* driver)
+    static void SetUEDemosFromArgs(const char* not_needed, void* driverptr)
     {
-      ((AbstractDriver*)driver)->m_includeUEDemos = 1;
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
+      args.Die("No longer supported: '--ue-demos'");
+
+      // ((AbstractDriver*)driver)->m_includeUEDemos = 1;
     }
 
-    static void SetCppDemosFromArgs(const char* not_needed, void* driver)
+    static void SetCppDemosFromArgs(const char* not_needed, void* driverptr)
     {
-      ((AbstractDriver*)driver)->m_includeCPPDemos = 1;
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      //VArguments& args = driver.m_varguments;
+
+      //args.Die("No longer supported: '--cpp-demos'");
+      driver.m_includeCPPDemos = 1;
     }
 
     static void SetGridImages(const char* not_needed, void* driver)
@@ -1237,7 +1255,7 @@ namespace MFM
       , m_haltOnExtinctionOf(false) // if true, m_extinctionSymbol has (unvalidated) content
       , m_haltOnEmpty(false)
       , m_haltOnFull(false)
-      , m_suppressStdElements(false)
+      , m_suppressStdElements(true)
       , m_includeUEDemos(false)
       , m_includeCPPDemos(false)
       , m_msSpentRunning(0)
@@ -1360,7 +1378,7 @@ namespace MFM
       RegisterArgument("Display this help message, then exit.",
                        "-h|--help", &PrintArgUsage, (void*)(&m_varguments), false);
 
-      RegisterArgument("Show built-in demos (--demo list), or load one (--demo NAME) or all (--demo all)",
+      RegisterArgument("Show built-in demos (--demo list), or load one (--demo NAME)",
                        "--demo", &SelectDemoFromArg, this, true);
 
       RegisterArgument("Amount of logging output is ARG (0 -> none, 8 -> max)",
@@ -1417,13 +1435,13 @@ namespace MFM
       RegisterArgument("Suppress loading core ulam elements (DReg, etc)",
                        "--no-std", &SetNoStdFromArgs, this, false);
 
-      RegisterArgument("Include some Ulam demo elements",
+      RegisterArgument("(DEPRECATED) Include some Ulam demo elements",
                        "--ue-demos", &SetUEDemosFromArgs, this, false);
 
-      RegisterArgument("Include (older) C++ demo elements (City, etc)",
+      RegisterArgument("Run the old C++ demo elements (City, etc)",
                        "--cpp-demos", &SetCppDemosFromArgs, this, false);
 
-      RegisterArgument("Add ARG as the path to an element library (.so)",
+      RegisterArgument("Add ARG as the path to the element library (.so)",
                        "-ep|--elementpath", &RegisterElementLibraryPath, this, true);
 
       RegisterArgument("Load initial configuration from file at path ARG (string)",

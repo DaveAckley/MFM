@@ -40,6 +40,11 @@ namespace MFM
   template <class EC>
   class Element_AntiForkBomb : public Element<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE0b;
+    }
+    
     enum {  ANTIFORKBOMB_VERSION = 1 };
 
     // Extract short names for parameter types

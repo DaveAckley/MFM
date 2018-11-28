@@ -49,6 +49,7 @@ namespace MFM
     WindowScanner<EC> scanner(window);
 
     Dirs::FillDir(heading, GetDirection(window.GetCenterAtomDirect()), false);
+    heading /= 2;
 
     newMe = window.GetCenterAtomDirect();
 
@@ -77,8 +78,11 @@ namespace MFM
       SPoint buildings[2];
       Dirs::FillDir(buildings[0],
                     Dirs::CWDir(Dirs::CWDir(GetDirection(window.GetCenterAtomDirect()))), false);
+      buildings[0] /= 2;
+
       Dirs::FillDir(buildings[1],
                     Dirs::CCWDir(Dirs::CCWDir(GetDirection(window.GetCenterAtomDirect()))), false);
+      buildings[1] /= 2;
 
       for(u32 i = 0; i < 2; i++)
       {

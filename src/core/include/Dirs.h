@@ -158,8 +158,8 @@ namespace MFM
      *
      * \code{.cpp}
 
-       FillDir(pt, NORTH) // pt == (0, -1)
-       FillDir(pt, SOUTHEAST) // pt == (1, 1)
+       FillDir(pt, NORTH) // pt == (0, -2)
+       FillDir(pt, SOUTHEAST) // pt == (2, 2)
 
      * \endcode
      *

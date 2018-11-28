@@ -38,6 +38,11 @@ namespace MFM
   template <class EC>
   class Element_CheckerForkRed : public Element<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE18;
+    }
+    
     enum { CHECKERFORK_VERSION = 2 };
 
     // Extract short names for parameter types

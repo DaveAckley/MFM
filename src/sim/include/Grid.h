@@ -815,8 +815,9 @@ namespace MFM {
      */
     double GetFullSitePercentage() const
     {
+      // Avoid using GetWidthSites, because it includes missing sites if the grid is staggered.
       return 1.0 - ((double)GetAtomCount(Element_Empty<EC>::THE_INSTANCE.GetType()) /
-                    (double)(GetHeightSites() * GetWidthSites()));
+                    (double)(GetHeight() * OWNED_HEIGHT * GetWidth() * OWNED_WIDTH));
     }
 
     //    void SurroundRectangleWithWall(s32 x, s32 y, s32 w, s32 h, s32 thickness);

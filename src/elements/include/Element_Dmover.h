@@ -41,6 +41,11 @@ namespace MFM
   template <class EC>
   class Element_Dmover : public Element<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE16;
+    }
+    
     // Extract short names for parameter types
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;

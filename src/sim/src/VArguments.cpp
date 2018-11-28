@@ -74,16 +74,25 @@ namespace MFM
 	return false;
       }
 
+      // Bump filterp past our match
       filterp = ptr + arglen;
-      if(*filterp == '|' || *filterp == 0)
+
+      // Ensure we matched from the beginning of an arg, so that
+      // str=='-std' WON't match filter=='--no-std'
+      if (ptr==filter || ptr[-1] == '|')
       {
-	return true;
-      }
+
+        // Ensure we matched a whole filter alternative
+        if(*filterp == '|' || *filterp == 0)
+          {
+            return true;
+          }
+      } // else bad match, check for other alternatives 
 
       filterp = strchr(filterp, '|');
       if(!filterp)
       {
-	return false;
+        return false;
       }
     }
   }

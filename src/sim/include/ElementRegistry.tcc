@@ -29,6 +29,12 @@ namespace MFM
   }
 
   template <class EC>
+  u32 ElementRegistry<EC>::GetLibraryPathsCount() const
+  {
+    return m_libraryPathsCount;
+  }
+
+  template <class EC>
   Element<EC> * ElementRegistry<EC>::GetRegisteredElement(u32 index)
   {
     if (index >= m_registeredElementsCount)

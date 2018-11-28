@@ -26,6 +26,11 @@ namespace MFM
   template <class EC>
   class Element_Mover : public Element<EC>
   {
+  public:
+    virtual u32 GetTypeFromThisElement() const {
+      return 0xCE0d;
+    }
+    
     enum { MOVER_VERSION = 2 };
 
     // Extract short names for parameter types
