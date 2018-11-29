@@ -1,6 +1,11 @@
 # This needs to be reworked, but for now (heh), we're saying that
 # the x86's are platform 'linux' and armv7l is platform 'tile'
+
+ifdef FORCE_MACHINE_TYPE
+MACHINE_TYPE:=$(FORCE_MACHINE_TYPE)
+else
 MACHINE_TYPE:=$(shell uname -m)
+endif
 
 PLATFORM:=
 ifeq ($(MACHINE_TYPE), x86_64)
