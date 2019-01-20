@@ -93,6 +93,14 @@ sub ComputeFingerprintFromFullPublicKey {
     return $fingerprint;
 }
 
+sub ComputeChecksumOfString {
+    my $string = shift;
+    my $fingerprint = lc(sha512_hex($string));
+    $fingerprint =~ s/^(......)(..).+(..)(......)$/$1-$2$3-$4/
+        or IDie("give me some milk or else go home");
+    return $fingerprint;
+}
+
 sub ReadPublicKeyFile {
     my $handle = shift;
     my $file = GetPublicKeyFile($handle);
