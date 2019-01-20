@@ -42,6 +42,7 @@ $0 $progname -h
 
 $0 $progname verify
     Check the file signature but do not run it
+    (use VERIFY for to report more details)
 
 $0 $progname list
     Check the file signature and list contents but do not run it
@@ -151,7 +152,7 @@ if (!defined $destdir) {
 }
 
 my @innerpaths = UnzipStream($u2, $destdir);
-my ($pubkeypath,$pubkeyname) = FindName(\@innerpaths,MFZ_PUBKEY_NAME,undef);
+my ($pubkeypath,$pubkeyname,$pubkeytime) = FindName(\@innerpaths,MFZ_PUBKEY_NAME,undef);
 die "Incorrect .mfz packing - missing pubkey" unless defined($pubkeyname);
 my $fullpubkeypath = "$pubkeypath/$pubkeyname";
 
@@ -169,7 +170,17 @@ die "Invalid signature '$sigdata'/'$sig'" unless $rsapub->verify($zipdata, $sig)
 ValidatePubKey($pubhandle,$pubkey);
 my $fingerprint = ComputeFingerprintFromFullPublicKey($fullpubstring);
 
-print "SIGNED BY RECOGNIZED HANDLE: $pubhandle ($fingerprint)\n";
+if ($optverb eq "VERIFY") {
+    my $checksum = ComputeChecksumOfString($zipdata);
+    print "SIGNATURE_CHECK [OK]\n";
+    print "INNER_CHECKSUM [$checksum]\n";
+    print "INNER_TIMESTAMP [$pubkeytime]\n";
+    print "SIGNING_HANDLE [$pubhandle]\n";
+    print "HANDLE_FINGERPRINT [$fingerprint]\n";
+    print "HANDLE_PUBKEY [$pubkey]\n";
+} else {
+    print "SIGNED BY RECOGNIZED HANDLE: $pubhandle ($fingerprint)\n";
+}
 if ($verb eq "verify") {
     exit 0;
 }
@@ -188,8 +199,11 @@ if ($verb eq "list") {
         $maxsize = length($size) if length($size) > $maxsize;
     }
     my $maxlen = 40;
-    $maxlen = 1000000 if ($optverb eq "LIST");
-    $maxpath = $maxlen if $maxpath > $maxlen;
+    if ($optverb eq "LIST") {
+        $maxlen = $maxpath;
+    } else { 
+        $maxpath = $maxlen if $maxpath > $maxlen;
+    }
     printf("FILES:\n%*s  %*s  %*s  %*s\n",
            -$maxpath, ($maxpath > 4)?"Path":"",
            -$maxname, "Name",
