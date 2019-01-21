@@ -241,7 +241,8 @@ if ($platform eq 'x86_64' || $platform =~ /^armv8.*/) {
 } elsif ($platform eq 'i386' || $platform eq 'i686' || $platform =~ /^armv7.*/) {
     $platformsize = 32;
 } else {
-    UDie("This hardware platform, '$platform', is unrecognized");
+    print STDERR "WARNING: Unrecognized hardware platform '$platform'!  Assuming it's a 32 bit architecture\n";
+    $platformsize = 32;
 }
 for my $prec (@innerpaths) {
     my ($path, $name, $time) = @{$prec};
