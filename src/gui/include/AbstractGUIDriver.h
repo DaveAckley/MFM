@@ -1112,7 +1112,7 @@ namespace MFM
                              "--run", &SetStartPausedFromArgs, this, false);
 
       this->RegisterArgument("Help panel is not shown upon startup.",
-                             "-n| --nohelp", &DontShowHelpPanelOnStart, this, false);
+                             "-n|--nohelp", &DontShowHelpPanelOnStart, this, false);
 
       this->RegisterArgument("Increase button and text size.",
                              "--bigtext", &SetIncreaseTextSizeFlag, this, false);
