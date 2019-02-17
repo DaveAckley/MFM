@@ -126,6 +126,9 @@ sub DoMake {
     my $mfzfile = NextArg();
     $mfzfile = WritableFileOrDie("MFZ file", $mfzfile);
     $mfzfile =~ /[.]mfz$/ or UDie("Supplied MFZ filename '$mfzfile' doesn't end in '.mfz'");
+    ((!-e $mfzfile) || (-f $mfzfile && -w $mfzfile)) or UDie("MFZ filename '$mfzfile' is not writable");
+
+    my (undef,undef,$mfzfilename) =  File::Spec->splitpath($mfzfile);
 
     my @files = RestOfArgs();
     scalar(@files) or UDie("No files to pack?");
@@ -133,7 +136,7 @@ sub DoMake {
     for my $file (@files) {
         ReadableFileOrDie("file to pack", $file);
     }
-    my $inner = MakeInnerZip($pubkeydata, @files);
+    my $inner = MakeInnerZip($pubkeydata,$mfzfilename, @files);
 
     my $signed = SignString($privkeyfile, $inner);
 #    WriteWholeFile($mfzfile,MFZRUN_HEADER.$signed.$inner,0644);
@@ -391,7 +394,7 @@ sub ConfigureZipOptions {
 }
 
 sub MakeInnerZip {
-    my ($pubkeydata,@files) = @_;
+    my ($pubkeydata,$mfzfilename,@files) = @_;
     my $compressedoutput;
     my $z = new IO::Compress::Zip
         \$compressedoutput,
@@ -401,10 +404,20 @@ sub MakeInnerZip {
         or IDie("Zip init failed for inner: $ZipError");
     $z->print ($pubkeydata);
 
+    $z->newStream(
+        Name          => MFZ_FILE_NAME,
+        @zipOtherOptions,
+        BinModeIn     => 1)
+        or die "Zip reinit failed on ".MFZ_FILE_NAME.": $ZipError\n";
+    $z->print ($mfzfilename);
+
     for my $file (@files) {
-        UDie("'$file' is handled automatically, cannot pack it explicitly")
-            if $file eq MFZ_PUBKEY_NAME;
+        my $origFile = $file;
         $file = abs_path($file);
+        # Check top-level special files after path normalization
+        UDie("'$origFile' is handled automatically, cannot pack it explicitly")
+            if $file eq "/".MFZ_PUBKEY_NAME
+            or $file eq "/".MFZ_FILE_NAME;
 
         open (my $fh, "<", $file) or UDie("Can't read '$file': $!");
         my $modtime = (stat($fh))[9];

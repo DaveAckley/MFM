@@ -215,7 +215,7 @@ if ($verb eq "list") {
         $path =~ s!^$destdir/!!;
         my $ellipsis = "[...]";
         my $clip = length($path) - ($maxpath - length($ellipsis));
-        if ($clip > 0) {
+        if ($maxpath > length($ellipsis) && $clip > 0) {
             # /4 since ends of paths seem more informative
             substr($path, ($maxpath-length($ellipsis))/4, $clip) = $ellipsis;
         }
