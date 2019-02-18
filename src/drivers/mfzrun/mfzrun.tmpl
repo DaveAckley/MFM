@@ -287,6 +287,8 @@ for my $prec (@innerpaths) {
         }
     } elsif ($name eq MFZ_PUBKEY_NAME) {
         # Don't need a complaint about this one
+    } elsif ($name eq MFZ_FILE_NAME) {
+        # Or this one
     } elsif ($name =~ /[.]ulam$/) {
         ++$ulams;
         print STDERR "Skipping ulam source: $name\n";
@@ -301,14 +303,14 @@ for my $prec (@innerpaths) {
     }
 }
 
-if ($goodSOs == 0) {
+if ($goodSOs == 0 && $verb eq 'run') {
     print STDERR "CANNOT RUN .mfz file: No usable .so files found\n";
     if ($badSOs > 0) {
         print STDERR "  The $badSOs .so file(s) in this .mfz are incompatible with this $platformsize-bit platform\n";
         if ($ulams > 0) {
             print STDERR "  However, $ulams .ulam file(s) are present\n";
             print STDERR "  You may be able to rebuild it for this platform\n\n";
-        } # For not we're not mentioning SPLAT files
+        } # For now we're not mentioning SPLAT files
     }
     exit 4;
 }
