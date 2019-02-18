@@ -83,7 +83,7 @@ if ($verb eq "demo") {
     $verb = "run";
 }
 
-if ($verb ne "run") {
+if ($verb ne "run" && $verb ne "unpack") {
     my $fx = $ARGV[0];
     UDie("Unrecognized extra arguments (beginning with '$fx')")
         if defined $fx;
