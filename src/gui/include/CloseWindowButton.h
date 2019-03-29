@@ -52,13 +52,14 @@ namespace MFM
      * default coloring scheme.
      */
     CloseWindowButton(Panel* parentPanel) :
-      AbstractButton(IMAGE_ASSET_NONE),
+      AbstractButton(IMAGE_ASSET_MASTER_ICON_ZSHEET),
       m_parentPanel(parentPanel)
     {
       SetName("CloseWindow");
       m_parentPanel->Panel::Insert(this, NULL);
       this->SetRenderPoint(SPoint(2, 2));
       this->SetDimensions(SPoint(16, 16));
+      this->SetIconSlot(ZSLOT_WINDOW_CLOSE);
     }
 
     // KeyboardCommandFunction interface
