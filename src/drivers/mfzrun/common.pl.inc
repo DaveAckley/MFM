@@ -11,6 +11,7 @@ use Digest::SHA qw(sha512_hex);
 sub VERSION { "1.0" }
 sub MFZRUN_HEADER { "MFZ(".VERSION.")\n" }
 sub MFZ_PUBKEY_NAME { "MFZPUBKEY.DAT" }
+sub MFZ_FILE_NAME { "MFZNAME.DAT" }
 sub MFZ_SIG_NAME { "MFZSIG.DAT" }
 sub MFZ_ZIP_NAME { "MFZ.ZIP" }
 

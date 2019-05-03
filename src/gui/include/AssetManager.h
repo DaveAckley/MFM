@@ -37,6 +37,10 @@
 #include "Rect.h"
 #include "OverflowableCharBufferByteSink.h"
 
+#define ASSETMANAGER_FIX_FONT "fonts/Inconsolata.ttf"
+#define ASSETMANAGER_PSC_FONT "fonts/MateSC-Regular.ttf"
+
+
 namespace MFM
 {
   enum ImageAsset
@@ -67,6 +71,25 @@ namespace MFM
     // MUST REMAIN LAST
     FONT_ASSET_NONE,
     FONT_ASSET_COUNT=FONT_ASSET_NONE
+  };
+
+  static const struct FontAssetInfo {
+    u32 zfontSecondIndex;
+    u32 fontSize;
+  } FontToZFontMap[] = {
+    {0, 26}, // FONT_ASSET_ELEMENT
+    {0, 40}, // FONT_ASSET_ELEMENT_BIG
+    {0, 22}, // FONT_ASSET_ELEMENT_SMALL
+    {0, 26}, // FONT_ASSET_HELPPANEL_BIG
+    {0, 20}, // FONT_ASSET_HELPPANEL_SMALL
+    {0, 14}, // FONT_ASSET_LOGGER
+    {1, 20}, // FONT_ASSET_LABEL
+    {1, 16}, // FONT_ASSET_BUTTON_SMALL
+    {1, 20}, // FONT_ASSET_BUTTON_MEDIUM
+    {1, 24}, // FONT_ASSET_BUTTON_BIG
+
+    {0, 24}, // FONT_ASSET_DEFAULT_FIXED
+    {1, 24}, // FONT_ASSET_DEFAULT_PROPORTIONAL
   };
 
   const u32 ZSHEET_IMAGE_HEIGHT = 2200;
@@ -143,9 +166,32 @@ namespace MFM
     ZSLOT_GRIDTOOL_ATOM_SELECT,
     ZSLOT_GRIDTOOL_TILE_SELECT,
     ZSLOT_SLIDER_HANDLE,
+    ZSLOT_WINDOW_CLOSE,
 
     ZSLOT_NONE = U32_MAX
   };
+
+  const u32 ZFONT_HEIGHTS[] = { 243, 162, 108, 72, 48, 32, 28, 24, 20, 16, 12, 8, 4, 1 };
+
+  enum { ZFONT_HEIGHT_COUNT = sizeof(ZFONT_HEIGHTS) / sizeof (ZFONT_HEIGHTS[0]) };
+
+  static u32 FindZFontIndex(s32 forSize)
+  {
+    s32 loidx = 0;
+    s32 hiidx = ZFONT_HEIGHT_COUNT-1;
+    do {
+      s32 halfidx = (hiidx - loidx) / 2 + loidx;
+      s32 midsize = ZFONT_HEIGHTS[halfidx];
+      if (forSize == midsize) return (u32) halfidx;
+      if (forSize > midsize) 
+        hiidx = halfidx - 1;                 
+      else
+        loidx = halfidx + 1;
+    } while (hiidx >= loidx);
+    // loidx passed hiidx, into a _smaller_ size
+    // which is what we want
+    return (u32) loidx;
+  }
 
   struct IconAsset
   {
@@ -227,6 +273,8 @@ namespace MFM
 
     static TTF_Font* fonts[FONT_ASSET_COUNT];
 
+    static TTF_Font* zfonts[ZFONT_HEIGHT_COUNT][2]; // 0:fixed width, 1:proportional small caps
+
     static bool initialized;
 
     static SDL_Surface* LoadImage(const char* relativeFilename)
@@ -297,6 +345,17 @@ namespace MFM
       return initialized;
     }
 
+    static void InitZFonts()
+    {
+
+      for (u32 i = 0; i < ZFONT_HEIGHT_COUNT; ++i)
+      {
+        u32 fontSize = ZFONT_HEIGHTS[i];
+        zfonts[i][0] = LoadFont(ASSETMANAGER_FIX_FONT,fontSize);
+        zfonts[i][1] = LoadFont(ASSETMANAGER_PSC_FONT,fontSize);
+      }
+    }
+    
     /**
      * Initializes all held Assets. This should only be called once a
      * screen has been created by SDL_SetVideoMode .
@@ -307,24 +366,21 @@ namespace MFM
       {
         surfaces[IMAGE_ASSET_MASTER_ICON_ZSHEET] = LoadImage("images/mfms-icons-ZSHEET.png");
 
-        const char * FIX_FONT = "fonts/Inconsolata.ttf";
-        //        const char * PRO_FONT = "fonts/Mate-Regular.ttf";
-        const char * PSC_FONT = "fonts/MateSC-Regular.ttf";
+        fonts[FONT_ASSET_ELEMENT] = LoadFont(ASSETMANAGER_FIX_FONT, 26);
+        fonts[FONT_ASSET_ELEMENT_BIG] = LoadFont(ASSETMANAGER_FIX_FONT, 40);
+        fonts[FONT_ASSET_ELEMENT_SMALL] = LoadFont(ASSETMANAGER_FIX_FONT, 22);
+        fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont(ASSETMANAGER_FIX_FONT, 26);
+        fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont(ASSETMANAGER_FIX_FONT, 20);
+        fonts[FONT_ASSET_LOGGER] = LoadFont(ASSETMANAGER_FIX_FONT, 14);
+        fonts[FONT_ASSET_LABEL] = LoadFont(ASSETMANAGER_PSC_FONT, 20);
+        fonts[FONT_ASSET_BUTTON_SMALL] = LoadFont(ASSETMANAGER_PSC_FONT, 16);
+        fonts[FONT_ASSET_BUTTON_MEDIUM] = LoadFont(ASSETMANAGER_PSC_FONT, 20);
+        fonts[FONT_ASSET_BUTTON_BIG] = LoadFont(ASSETMANAGER_PSC_FONT, 24);
 
-        fonts[FONT_ASSET_ELEMENT] = LoadFont(FIX_FONT, 26);
-        fonts[FONT_ASSET_ELEMENT_BIG] = LoadFont(FIX_FONT, 40);
-        fonts[FONT_ASSET_ELEMENT_SMALL] = LoadFont(FIX_FONT, 22);
-        fonts[FONT_ASSET_HELPPANEL_BIG] = LoadFont(FIX_FONT, 26);
-        fonts[FONT_ASSET_HELPPANEL_SMALL] = LoadFont(FIX_FONT, 20);
-        fonts[FONT_ASSET_LOGGER] = LoadFont(FIX_FONT, 14);
-        fonts[FONT_ASSET_LABEL] = LoadFont(PSC_FONT, 20);
-        fonts[FONT_ASSET_BUTTON_SMALL] = LoadFont(PSC_FONT, 16);
-        fonts[FONT_ASSET_BUTTON_MEDIUM] = LoadFont(PSC_FONT, 20);
-        fonts[FONT_ASSET_BUTTON_BIG] = LoadFont(PSC_FONT, 24);
+        fonts[FONT_ASSET_DEFAULT_FIXED] = LoadFont(ASSETMANAGER_FIX_FONT, 24);
+        fonts[FONT_ASSET_DEFAULT_PROPORTIONAL] = LoadFont(ASSETMANAGER_PSC_FONT, 24);
 
-        fonts[FONT_ASSET_DEFAULT_FIXED] = LoadFont(FIX_FONT, 24);
-        fonts[FONT_ASSET_DEFAULT_PROPORTIONAL] = LoadFont(PSC_FONT, 24);
-
+        InitZFonts();
         initialized = true;
       }
     }
@@ -346,6 +402,12 @@ namespace MFM
         {
           TTF_CloseFont(fonts[i]);
           fonts[i] = NULL;
+        }
+        
+        for (u32 i = 0; i < ZFONT_HEIGHT_COUNT; ++i)
+        {
+          TTF_CloseFont(zfonts[i][0]);
+          TTF_CloseFont(zfonts[i][1]);
         }
 
         initialized = false;
@@ -377,6 +439,29 @@ namespace MFM
       if (!initialized) FAIL(ILLEGAL_STATE);
       if (a >= FONT_ASSET_NONE) return 0;
       return fonts[a];
+    }
+
+    static TTF_Font* GetZFont(u32 psc, u32 size)
+    {
+      if (psc > 1) FAIL(ILLEGAL_ARGUMENT);
+      if (size == 0) size = 1;
+      else if (size > ZFONT_HEIGHTS[0]) size = ZFONT_HEIGHTS[0];
+      u32 idx = FindZFontIndex(size);
+      return zfonts[idx][psc];
+    }
+
+    static u32 GetZFontPSC(FontAsset a)
+    {
+      if (!initialized) FAIL(ILLEGAL_STATE);
+      if (a >= FONT_ASSET_NONE) return 0;
+      return FontToZFontMap[a].zfontSecondIndex;
+    }
+
+    static u32 GetZFontSize(FontAsset a)
+    {
+      if (!initialized) FAIL(ILLEGAL_STATE);
+      if (a >= FONT_ASSET_NONE) return 0;
+      return FontToZFontMap[a].fontSize;
     }
 
     static TTF_Font* GetReal(FontAsset a)
