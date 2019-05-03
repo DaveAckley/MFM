@@ -62,7 +62,7 @@
 #include "AbstractGUIDriverTools.h"
 #include "GUIConstants.h"
 #include "Keyboard.h"
-#include <signal.h>   /* for signal, SIGTERM */
+#include <signal.h>   /* for signal, SIGTERM, SIGTSTP, SIGCONT */
 
 namespace MFM
 {
@@ -107,6 +107,17 @@ namespace MFM
     s32 m_desiredScreenHeight;
 
     bool m_screenResizable;
+    bool m_screenUpdateDisabled;
+
+    static AbstractGUIDriver * m_staticSelf;
+    static void handleUSR1(int sig)
+    {
+      SetScreenUpdateDisabled(true,m_staticSelf);
+    }
+    static void handleUSR2(int sig)
+    {
+      SetScreenUpdateDisabled(false,m_staticSelf);
+    }
 
     ClearButton<GC> m_clearButton;
     ClearGridButton<GC> m_clearGridButton;
@@ -165,7 +176,8 @@ namespace MFM
     DecreaseAEPSPerFrame<GC> m_decreaseAEPSPerFrame;
 
   public:
-
+    static AbstractGUIDriver * getSelf() { return m_staticSelf; }
+    
     const Panel & GetRootPanel() const { return m_rootPanel; }
     Panel & GetRootPanel() { return m_rootPanel; }
 
@@ -832,6 +844,7 @@ namespace MFM
       , m_desiredScreenWidth(-1)
       , m_desiredScreenHeight(-1)
       , m_screenResizable(true)
+      , m_screenUpdateDisabled(false)
       , m_clearButton()
       , m_clearGridButton()
       , m_nukeButton()
@@ -886,6 +899,9 @@ namespace MFM
       , m_externalConfigSectionGUI(AbstractDriver<GC>::GetExternalConfig(),*this)
     {
       m_startFile.Reset();
+      m_staticSelf = this;
+      signal(SIGUSR1, AbstractGUIDriver::handleUSR1);
+      signal(SIGUSR2, AbstractGUIDriver::handleUSR2);
     }
 
     virtual ~AbstractGUIDriver() { }
@@ -1057,6 +1073,13 @@ namespace MFM
       AbstractGUIDriver& driver = *((AbstractGUIDriver*)driverptr);
 
       driver.m_startPaused = false;
+    }
+
+    static void SetScreenUpdateDisabled(const bool value, void* driverptr)
+    {
+      AbstractGUIDriver& driver = *((AbstractGUIDriver*)driverptr);
+
+      driver.m_screenUpdateDisabled = value;
     }
 
     static void DontShowHelpPanelOnStart(const char* not_used, void* driverptr)
@@ -1314,7 +1337,6 @@ namespace MFM
         m_pastFirstUpdate = true;
 
         m_rootDrawing.Clear();
-
         m_rootPanel.Paint(m_rootDrawing);
 
         if (m_thisUpdateIsEpoch)
@@ -1329,7 +1351,10 @@ namespace MFM
 
         bool wantOut = this->RunHelperExiter();
         running &= wantOut;  // Don't reset running if it was already false
-        SDL_Flip(m_screen);
+        if (!m_screenUpdateDisabled)
+        {
+          SDL_Flip(m_screen);
+        }
       }
 
       AssetManager::Destroy();
@@ -1345,6 +1370,10 @@ namespace MFM
     void SetLoadGUISection(bool val) { m_externalConfigSectionGUI.SetEnabled(val); }
 
   };
+
+  template<class GC>
+  AbstractGUIDriver<GC> * AbstractGUIDriver<GC>::m_staticSelf = 0;
+
 } /* namespace MFM */
 
 #endif /* ABSTRACTGUIDRIVER_H */
