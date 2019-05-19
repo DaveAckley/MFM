@@ -258,6 +258,12 @@ namespace MFM
 
     static VfuncPtr GetVTableEntry(const UlamContext<EC>& uc, u32 atype, u32 idx);
 
+    virtual u32 GetVTStartOffsetForClassByRegNum(u32 rn) const
+    {
+      FAIL(ILLEGAL_STATE); // culam should always have overridden this method
+      return 0;
+    }
+
     static void PureVirtualFunctionCalled()
     {
       FAIL(PURE_VIRTUAL_CALLED);
