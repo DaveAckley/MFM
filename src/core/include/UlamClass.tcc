@@ -26,8 +26,16 @@ namespace MFM {
   {
     const UlamElement<EC> * ueltptr = (UlamElement<EC> *) uc.LookupElementTypeFromContext(type);
     if (!ueltptr) return false;
-    return ueltptr->internalCMethodImplementingIs(classPtr);
+    return (ueltptr->internalCMethodImplementingIs(classPtr));
   } //IsMethod (static)
+
+  template <class EC>
+  s32 UlamClass<EC>::GetRelativePositionOfBaseClass(const UlamContext<EC>& uc, u32 type, const UlamClass<EC> * baseclassPtr)
+  {
+    const UlamElement<EC> * ueltptr = (UlamElement<EC> *) uc.LookupElementTypeFromContext(type);
+    if (!ueltptr) return -1;
+    return ueltptr->internalCMethodImplementingGetRelativePositionOfBaseClass(baseclassPtr);
+  } //GetRelativePositionOfBaseClass (static)
 
   typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
   template <class EC>

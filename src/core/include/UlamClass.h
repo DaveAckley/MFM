@@ -32,6 +32,7 @@
 
 #include "itype.h"
 #include "BitStorage.h"
+#include "UlamVTableEntry.h"
 
 namespace MFM
 {
@@ -242,8 +243,34 @@ namespace MFM
      */
     static bool IsMethod(const UlamContext<EC>& uc, u32 type, const UlamClass<EC> * classPtr);
 
+    /**
+       Discover if base class Type, specified by its \c
+       INSTANCE address, in an UlamElement specified by its \c type
+       number, if such as UlamElement exists and inherits from such a base class,
+       return its relative starting position.
 
-    typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
+       \param type an element type number, hopefully of an UlamElement
+
+       \param quarkTypeName the name of the type to search for in
+              the ancestors of the found UlamElement.
+
+       \return A return value of positive start position indicates the given \c type is
+               related to type of base class. A negative value means they are not related.
+
+       \sa T::ATOM_FIRST_STATE_BIT
+       \sa internalCMethodImplementingIs
+     */
+    static s32 GetRelativePositionOfBaseClass(const UlamContext<EC>& uc, u32 type, const UlamClass<EC> * baseclassPtr);
+
+
+    virtual s32 internalCMethodImplementingGetRelativePositionOfBaseClass(const UlamClass<EC> * cptrarg) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+    }
+
+    //typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
+
+    //    typedef struct VTentry { VfuncPtr vfptr; u16 oclassrelpos; u16 oclasslen; } VTentry;
 
     /**
        Return vtable of this element, or NULL if there isn't one.
@@ -254,6 +281,28 @@ namespace MFM
     {
       FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
       return (VfuncPtr) NULL;
+    }
+
+    /**
+       Return vtable of this class
+
+       \return relative position of override class in this class
+     */
+    virtual u16 getVTableEntryClassRelPos(u32 idx) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+      return 0;
+    }
+
+    /**
+       Return vtable of this class
+
+       \return bit length of override class in this class
+     */
+    virtual u16 getVTableEntryClassLen(u32 idx) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+      return 0;
     }
 
     static VfuncPtr GetVTableEntry(const UlamContext<EC>& uc, u32 atype, u32 idx);

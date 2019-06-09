@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamRef.h A base for ulam references
-  Copyright (C) 2016 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2016,2019 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2019 ackleyshack LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +22,8 @@
 /**
   \file UlamRef.h A base class for ulam references
   \author David H. Ackley.
-  \date (C) 2016 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2016,2019 All rights reserved.
   \lgpl
  */
 #ifndef ULAMREF_H
@@ -73,6 +75,14 @@ namespace MFM
        existing UlamRef.
      */
     UlamRef(const UlamRef<EC> & existing, u32 len) ;
+
+    /**
+       Construct an UlamRef that's related (not data member) to an existing UlamRef.
+       Same effective self, and usage; pos and len may change;
+       and pos + len must fit within the len supplied to the
+       existing UlamRef.
+     */
+    UlamRef(const UlamRef<EC> & existing, s32 pos, u32 len) ;
 
     u32 Read() const { return m_stg.Read(m_pos, m_len); }
 
@@ -128,6 +138,8 @@ namespace MFM
 
     u32 GetLen() const { return m_len; }
 
+    u32 GetDelta() const { return m_delta; }
+
     const UlamClass<EC> * GetEffectiveSelf() const { CheckEffectiveSelf(); return m_effSelf; }
 
     BitStorage<EC> & GetStorage() { return m_stg; }
@@ -159,6 +171,7 @@ namespace MFM
     u32 m_pos;
     u32 m_len;
     UsageType m_usage;
+    u32 m_delta;
 
   }; //UlamRef
 
