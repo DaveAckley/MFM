@@ -82,7 +82,7 @@ namespace MFM
        and pos + len must fit within the len supplied to the
        existing UlamRef.
      */
-    UlamRef(const UlamRef<EC> & existing, s32 pos, u32 len) ;
+    UlamRef(const UlamRef<EC> & existing, s32 pos, u32 len, bool applydelta) ;
 
     u32 Read() const { return m_stg.Read(m_pos, m_len); }
 

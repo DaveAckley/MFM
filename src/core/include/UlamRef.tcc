@@ -85,7 +85,7 @@ namespace MFM {
   }
 
   template <class EC>
-  UlamRef<EC>::UlamRef(const UlamRef & existing, s32 pos, u32 len)
+  UlamRef<EC>::UlamRef(const UlamRef & existing, s32 pos, u32 len, bool applydelta)
     : m_uc(existing.m_uc)
     , m_effSelf(existing.m_effSelf)
     , m_stg(existing.m_stg)
@@ -97,7 +97,7 @@ namespace MFM {
     m_pos = (u32) newpos; //save as unsigned
 
     MFM_API_ASSERT_ARG(pos >= 0); //non-negative
-    if(len > existing.m_len) //override class is a subclass of existing caller
+    if(applydelta) //override class is a subclass of existing caller
       m_delta = existing.m_delta + (u32) pos; //subtract from newpos for old pos
     else
       m_delta = 0; //override class is a base class of existing caller, no delta.

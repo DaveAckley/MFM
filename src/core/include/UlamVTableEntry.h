@@ -30,14 +30,19 @@
 
 #include "itype.h"
 
+template <class EC> class UlamClass; //FORWARD
+
 namespace MFM
 {
   typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
 
+  template<class EC>
   struct VTentry {
     VfuncPtr vfptr;
-    u16 oclassrelpos;
-    u16 oclasslen;
+    //u16 oclassrelpos;
+    //u16 oclasslen;
+    //u32 oclassregnum;
+    UlamClass<EC> * oclassptr;
   };
 
 } //MFM

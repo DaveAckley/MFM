@@ -220,7 +220,19 @@ namespace MFM
 
        \sa T::ATOM_FIRST_STATE_BIT
      */
-    bool internalCMethodImplementingIs(const typename EC::ATOM_CONFIG::ATOM_TYPE& targ) const
+    virtual bool internalCMethodImplementingIs(const typename EC::ATOM_CONFIG::ATOM_TYPE& targ) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+    }
+
+    /**
+       Compare this class registration number to table of relative reg nums
+
+       \return true if they are related;
+
+       \sa T::ATOM_FIRST_STATE_BIT
+     */
+    virtual bool internalCMethodImplementingIs(const u32 regid) const
     {
       FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
     }
@@ -268,9 +280,6 @@ namespace MFM
       FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
     }
 
-    //typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
-
-    //    typedef struct VTentry { VfuncPtr vfptr; u16 oclassrelpos; u16 oclasslen; } VTentry;
 
     /**
        Return vtable of this element, or NULL if there isn't one.
@@ -283,6 +292,7 @@ namespace MFM
       return (VfuncPtr) NULL;
     }
 
+#if 0
     /**
        Return vtable of this class
 
@@ -304,6 +314,31 @@ namespace MFM
       FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
       return 0;
     }
+
+
+    /**
+       Return vtable of this class
+
+       \return registry id of override class in this class
+     */
+    virtual u16 getVTableEntryClassRegistrationNum(u32 idx) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+      return 0;
+    }
+#endif
+
+    /**
+       Return vtable of this class
+
+       \return UlamClass pointer of override class in this class
+     */
+    virtual const UlamClass<EC> * getVTableEntryUlamClassPtr(u32 idx) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+      return 0;
+    }
+
 
     static VfuncPtr GetVTableEntry(const UlamContext<EC>& uc, u32 atype, u32 idx);
 
