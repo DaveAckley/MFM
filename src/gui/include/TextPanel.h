@@ -46,6 +46,7 @@ namespace MFM {
       , m_dragStartElevatorBottom(0)
       , m_panelHeight(100)
       , m_fontHeight(10)
+      , m_fontHeightAdjust(0)
       , m_neededHeight(10)
       , m_linesInPanel(10)
       , m_textLines(1)
@@ -111,6 +112,18 @@ namespace MFM {
 
     virtual ResettableByteSink & GetByteSink() {
       return m_text;
+    }
+
+    s32 SetFontHeightAdjust(s32 newadjust) {
+      s32 old = m_fontHeightAdjust;
+      m_fontHeightAdjust = newadjust;
+      return old;
+    }
+
+    u32 SetElevatorWidth(u32 newelevatorwidth) {
+      u32 old = m_elevatorWidth;
+      m_elevatorWidth = newelevatorwidth;
+      return old;
     }
 
   protected:
@@ -224,9 +237,26 @@ namespace MFM {
     }
 
   private:
+    static const u32 ELEVATOR_WIDTH_DEFAULT = 18;
     static const u32 ELEVATOR_COLOR = 0xff007f00;
 
     TextPanelByteSink m_text;
+    u32 m_bottomLineShown;
+    u32 m_lastBytesWritten;
+
+    SPoint m_leftButtonDragStart;
+    u32 m_dragStartElevatorBottom;
+
+    u32 m_panelHeight;
+    u32 m_fontHeight;
+    s32 m_fontHeightAdjust;
+    u32 m_neededHeight;
+    u32 m_linesInPanel;
+    u32 m_textLines;
+    u32 m_elevatorRange;
+    u32 m_elevatorBottom;
+    u32 m_elevatorHeight;
+    u32 m_elevatorWidth;
 
     // If we move elevatorBottom this many pixels, how many bottom lines
     // is that, based on the most-recent prior render?
@@ -249,7 +279,9 @@ namespace MFM {
       if (!font) return;  // WTF?
 
       m_fontHeight = TTF_FontLineSkip(font);
-      if (m_fontHeight == 0)
+      m_fontHeight += m_fontHeightAdjust;
+      
+      if (m_fontHeight <= 0)
         m_fontHeight = 1;   // WTF!
 
       m_textLines = m_text.GetLines();
@@ -278,7 +310,8 @@ namespace MFM {
 
       m_elevatorBottom = m_elevatorRange * (m_textLines - m_bottomLineShown) / m_textLines;
 
-      drawing.FillRect(1, m_elevatorBottom, m_elevatorWidth-2, m_elevatorHeight, ELEVATOR_COLOR);
+      if (m_elevatorWidth > 2)
+        drawing.FillRect(1, m_elevatorBottom, m_elevatorWidth-2, m_elevatorHeight, ELEVATOR_COLOR);
 
       s32 y = m_panelHeight;
       for (s32 line = m_textLines - m_bottomLineShown - 1; line >= 0; --line) {
