@@ -216,6 +216,25 @@ namespace MFM
     virtual void DoEpochEvents(Grid<GC>& grid, u32 epochs, u32 epochAEPS)
     {
       /* Write custom epoch code here */
+      static u64 lastticks = 0;
+      static double lastAEPS = 0;
+      u64 curticks = this->GetTicksSinceEpoch(); // in ms
+      const u32 SECS_PER_STATUS = 5;
+      if (lastticks + SECS_PER_STATUS*1000 <= curticks) {
+        double thisAEPS = this->GetAEPS();
+        if (lastAEPS > 0) {
+          FILE * fd = fopen("/tmp/MFM-STATUS.dat","w");
+          if (fd) {
+            double deltaaeps = thisAEPS - lastAEPS;
+            fprintf(fd,"%f %f\n",
+                    deltaaeps/SECS_PER_STATUS,
+                    thisAEPS);
+            fclose(fd);
+          }
+        }
+        lastAEPS = thisAEPS;
+        lastticks = curticks;
+      }
 
       /* Leave this line here so the Superclass can run as well. */
       Super::DoEpochEvents(grid, epochs, epochAEPS);
