@@ -165,6 +165,11 @@ namespace MFM
     FillRect(x, y, w, h, m_fgColor);
   }
 
+  void Drawing::ClearRect(int x, int y, int w, int h) const
+  {
+    FillRect(x, y, w, h, m_bgColor);
+  }
+
   void Drawing::FillRect(int x, int y, int w, int h, u32 color) const
   {
     SDL_Rect rect;

@@ -317,6 +317,11 @@ namespace MFM {
     void FillRect(int x, int y, int w, int h) const;
 
     /**
+       Clear the given rectangle by filling with the current background color
+     */
+    void ClearRect(int x, int y, int w, int h) const;
+
+    /**
        Fill the given rectangle with the given color, without changing
        the foreground color
      */
