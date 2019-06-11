@@ -244,6 +244,20 @@ namespace MFM {
     }
 
     /**
+     * If the OverflowableCharBufferByteSink is neither empty nor
+     * overflowed, and the last byte of it is a newline, remove that
+     * last byte, shortening the content by one byte
+     */
+    bool Chomp()
+    {
+      bool chomp = m_written > 0 && !m_overflowed && m_buf[m_written - 1] == '\n';
+      if (chomp) m_buf[--m_written] = '\0';
+      return chomp;
+    }
+
+    bool CanChomp() { return true; }
+
+    /**
      * Checks to see whether or not this
      * OverflowableCharBufferByteSink has overflowed, i.e. had more
      * bytes written to it than it can hold.

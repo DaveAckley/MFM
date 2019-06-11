@@ -98,7 +98,7 @@ namespace MFM
     }
 
     /**
-     * Retreives the underlying buffer of this CharBufferByteSink,
+     * Retrieves the underlying buffer of this CharBufferByteSink,
      * usable as a \c const \c char* . The returned \c char* is
      * guaranteed to be null terminated.
      *
