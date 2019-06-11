@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamClass.h An abstract base class for ULAM quarks and elements
-  Copyright (C) 2015-2018 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015-2018 Ackleyshack LLC.
+  Copyright (C) 2015-2019 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2019 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file UlamClass.h An abstract base class for ULAM quarks and elements
   \author David H. Ackley.
   \author Elenas S. Ackley.
-  \date (C) 2015-2018 All rights reserved.
+  \date (C) 2015-2019 All rights reserved.
   \lgpl
  */
 
@@ -291,42 +291,6 @@ namespace MFM
       FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
       return (VfuncPtr) NULL;
     }
-
-#if 0
-    /**
-       Return vtable of this class
-
-       \return relative position of override class in this class
-     */
-    virtual u16 getVTableEntryClassRelPos(u32 idx) const
-    {
-      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
-      return 0;
-    }
-
-    /**
-       Return vtable of this class
-
-       \return bit length of override class in this class
-     */
-    virtual u16 getVTableEntryClassLen(u32 idx) const
-    {
-      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
-      return 0;
-    }
-
-
-    /**
-       Return vtable of this class
-
-       \return registry id of override class in this class
-     */
-    virtual u16 getVTableEntryClassRegistrationNum(u32 idx) const
-    {
-      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
-      return 0;
-    }
-#endif
 
     /**
        Return vtable of this class

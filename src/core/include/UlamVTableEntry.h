@@ -39,9 +39,6 @@ namespace MFM
   template<class EC>
   struct VTentry {
     VfuncPtr vfptr;
-    //u16 oclassrelpos;
-    //u16 oclasslen;
-    //u32 oclassregnum;
     UlamClass<EC> * oclassptr;
   };
 

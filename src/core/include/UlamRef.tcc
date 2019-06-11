@@ -102,7 +102,7 @@ namespace MFM {
     else
       m_delta = 0; //override class is a base class of existing caller, no delta.
 
-    MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
+    MFM_API_ASSERT_ARG((m_pos + m_len - m_delta) <= m_stg.GetBitSize());
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
     {
       UpdateEffectiveSelf();
