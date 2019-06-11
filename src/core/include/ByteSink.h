@@ -94,6 +94,31 @@ namespace MFM {
     }
 
     /**
+     * [OPTIONAL OPERATION] If the last byte currently in this
+     * ByteSink is a newline, remove that last byte, shortening the
+     * content by one byte.  Returns \c true iff the content was
+     * shortened.
+     *
+     * \fails UNSUPPORTED_OPERATION if this ByteSink does not
+     * implement it.
+     *
+     * \sa CanChomp
+     */
+    virtual bool Chomp()
+    {
+      FAIL(UNSUPPORTED_OPERATION);
+    }
+
+    /**
+     * Return \c true iff this ByteSink implements the \c Chomp
+     * operation.
+     */
+    virtual bool CanChomp()
+    {
+      return false;
+    }
+
+    /**
        Base class destructor does nothing virtually
      */
     virtual ~ByteSink() { }
@@ -103,6 +128,7 @@ namespace MFM {
        leaving restOfThis at EOF.
      */
     void Copy(ByteSource & restOfThis) ;
+
 
     void Print(const char * str, s32 fieldWidth = -1, u8 padChar = ' ');
     void Print(const u8 * str, u32 len, s32 fieldWidth = -1, u8 padChar = ' ');
