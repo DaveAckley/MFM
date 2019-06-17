@@ -66,7 +66,7 @@ namespace MFM
        pos, and this pos + len must fit within the len supplied to the
        existing UlamRef.
      */
-    UlamRef(const UlamRef<EC> & existing, s32 pos, u32 len, const UlamClass<EC> * effself, const UsageType usage) ;
+    UlamRef(const UlamRef<EC> & existing, s32 posincr, u32 len, const UlamClass<EC> * effself, const UsageType usage) ;
 
     /**
        Construct an UlamRef that's related (not data member) to an existing UlamRef.
@@ -82,7 +82,7 @@ namespace MFM
        and pos + len must fit within the len supplied to the
        existing UlamRef.
      */
-    UlamRef(const UlamRef<EC> & existing, s32 pos, u32 len, bool applydelta) ;
+    UlamRef(const UlamRef<EC> & existing, s32 effselfoffset, u32 len, bool applydelta) ;
 
     u32 Read() const { return m_stg.Read(m_pos, m_len); }
 
@@ -138,7 +138,10 @@ namespace MFM
 
     u32 GetLen() const { return m_len; }
 
-    u32 GetDelta() const { return m_delta; }
+    //return beginning of element state bits;
+    s32 GetEffectiveSelfPos() const { return (m_pos - m_posToEff); }
+
+    //    u32 GetDelta() const { return m_delta; }
 
     const UlamClass<EC> * GetEffectiveSelf() const { CheckEffectiveSelf(); return m_effSelf; }
 
@@ -171,7 +174,7 @@ namespace MFM
     u32 m_pos;
     u32 m_len;
     UsageType m_usage;
-    u32 m_delta;
+    u32 m_posToEff;
 
   }; //UlamRef
 

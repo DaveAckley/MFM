@@ -14,7 +14,7 @@ namespace MFM {
     , m_pos(pos)
     , m_len(len)
     , m_usage(usage)
-    , m_delta(pos)
+    , m_posToEff(pos)
   {
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
     MFM_API_ASSERT_ARG(m_usage != PRIMITIVE || m_effSelf == 0); // Primitive usage has no effself
@@ -24,7 +24,7 @@ namespace MFM {
     if(m_usage == ELEMENTAL)
       {
 	MFM_API_ASSERT_ARG(pos >= T::ATOM_FIRST_STATE_BIT); //non-negative
-	m_delta = (u32) (pos - T::ATOM_FIRST_STATE_BIT);
+	m_posToEff = (u32) (pos - T::ATOM_FIRST_STATE_BIT);
       }
 
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
@@ -34,25 +34,15 @@ namespace MFM {
   }
 
   template <class EC>
-  UlamRef<EC>::UlamRef(const UlamRef & existing, s32 pos, u32 len, const UlamClass<EC> * effself, const UsageType usage)
+  UlamRef<EC>::UlamRef(const UlamRef & existing, s32 posincr, u32 len, const UlamClass<EC> * effself, const UsageType usage)
     : m_uc(existing.m_uc)
     , m_effSelf(effself)
     , m_stg(existing.m_stg)
     , m_len(len)
   {
-    s32 newpos = pos + (s32) existing.GetPos(); //e.g. pos -25 to start of atom of element ref
+    s32 newpos = posincr + (s32) existing.GetPos(); //e.g. pos -25 to start of atom of element ref
     MFM_API_ASSERT_ARG(newpos >= 0); //non-negative
     m_pos = (u32) newpos; //save as unsigned
-
-    if((usage == ATOMIC) && (existing.m_usage == ELEMENTAL))
-      m_delta = 0u; //== pos + t::atom_first_state_bit
-    else if((usage == ATOMIC) && (existing.m_usage == CLASSIC))
-      m_delta = pos + T::ATOM_FIRST_STATE_BIT; //test please, base class
-    else
-      {
-	MFM_API_ASSERT_ARG(pos >= 0); //non-negative
-	m_delta = (u32) pos; //subtract from newpos for old pos
-      }
 
     m_usage = usage; //save
 
@@ -65,6 +55,18 @@ namespace MFM {
     {
       UpdateEffectiveSelf();
     }
+
+    if((usage == ATOMIC) && (existing.m_usage == ELEMENTAL))
+      m_posToEff = 0u; //== pos + t::atom_first_state_bit
+    else if((usage == ATOMIC) && (existing.m_usage == CLASSIC))
+      m_posToEff = posincr + T::ATOM_FIRST_STATE_BIT; //test please, base class
+    else if(m_effSelf && (m_effSelf != existing.m_effSelf))
+      m_posToEff = 0u; //data member, new effSelf
+    else //base class, same eff self
+      {
+	MFM_API_ASSERT_ARG(posincr >= 0); //non-negative
+	m_posToEff = existing.m_posToEff + posincr; //subtract from newpos for eff self pos
+      }
   }
 
   template <class EC>
@@ -75,7 +77,7 @@ namespace MFM {
     , m_pos(existing.m_pos)
     , m_len(len)
     , m_usage(existing.m_usage)
-    , m_delta(existing.m_delta)
+    , m_posToEff(existing.m_posToEff)
   {
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
@@ -85,24 +87,31 @@ namespace MFM {
   }
 
   template <class EC>
-  UlamRef<EC>::UlamRef(const UlamRef & existing, s32 pos, u32 len, bool applydelta)
+  UlamRef<EC>::UlamRef(const UlamRef & existing, s32 effselfoffset, u32 len, bool applydelta)
     : m_uc(existing.m_uc)
     , m_effSelf(existing.m_effSelf)
     , m_stg(existing.m_stg)
     , m_len(len)
     , m_usage(existing.m_usage)
   {
-    s32 newpos = pos + (s32) existing.GetPos(); //e.g. pos -25 to start of atom of element ref
-    MFM_API_ASSERT_ARG(newpos >= 0); //non-negative
-    m_pos = (u32) newpos; //save as unsigned
-
-    MFM_API_ASSERT_ARG(pos >= 0); //non-negative
-    if(applydelta) //override class is a subclass of existing caller
-      m_delta = existing.m_delta + (u32) pos; //subtract from newpos for old pos
+    MFM_API_ASSERT_ARG(effselfoffset >= 0); //non-negative
+    if(applydelta) //virtual func override class ref, from existing calling ref
+      {
+	s32 newpos = effselfoffset + (s32) existing.GetEffectiveSelfPos();
+	MFM_API_ASSERT_ARG(newpos >= 0); //non-negative
+	m_pos = (u32) newpos; //save as unsigned
+	m_posToEff = (u32) effselfoffset; //subtract from newpos for pos of effself
+      }
     else
-      m_delta = 0; //override class is a base class of existing caller, no delta.
+      {
+	MFM_API_ASSERT_ARG(applydelta);
+	s32 newpos = effselfoffset + (s32) existing.GetPos(); //e.g. pos -25 to start of atom of element ref
+	MFM_API_ASSERT_ARG(newpos >= 0); //non-negative
+	m_pos = (u32) newpos; //save as unsigned
+	m_posToEff = 0; //non-virtual
+      }
 
-    MFM_API_ASSERT_ARG((m_pos + m_len - m_delta) <= m_stg.GetBitSize());
+    MFM_API_ASSERT_ARG((m_pos + m_len - m_posToEff) <= m_stg.GetBitSize());
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
     {
       UpdateEffectiveSelf();
