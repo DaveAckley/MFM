@@ -8,8 +8,12 @@
 
 void * XXXDRIVER = 0;
 
+
 namespace MFM
 {
+  template <class GC> struct T2MenuButton; // FORWARD
+  template <class GC> struct MFMT2Driver;  // FORWARD
+
   template <class GC, u32 W, u32 H>
   struct Model {
     typedef GC GRID_CONFIG;
@@ -130,8 +134,6 @@ namespace MFM
   typedef Site<P3AtomConfig> OurSiteAll;
   typedef EventConfig<OurSiteAll,4> OurEventConfigAll;
 
-  enum { EVENT_HISTORY_SIZE = 100000 };
-
   /////
   // Tile types
 #define XX(A,B,C)							\
@@ -154,11 +156,160 @@ namespace MFM
   /////
   // Standard models
   static const GridConfigCode gccModelStd(GridConfigCode::TileH, 1, 1);     // Default
-  static const GridConfigCode gccModelBig(GridConfigCode::TileI, 1, 1);     // LargerTile
-  static const GridConfigCode gccModelSmall(GridConfigCode::TileG, 1, 1);  // SmallerTile
+  //  static const GridConfigCode gccModelBig(GridConfigCode::TileI, 1, 1);     // LargerTile
+  //  static const GridConfigCode gccModelSmall(GridConfigCode::TileG, 1, 1);  // SmallerTile
+
+  static const char MFM_DEV_PATH[] = "/dev/itc/mfm";
+
+  struct FlashTraffic {
+    FlashTraffic(u8 pkthdr, u8 cmd, u8 index, u8 ttl) 
+      : mPktHdr(pkthdr)
+      , mCommand(cmd)
+      , mIndex(index)
+      , mTimeToLive(ttl)
+      , mChecksum(computeChecksum())
+    { }
+    
+    u8 computeChecksum() {
+      u32 num = 0;
+      num = (num << 5) ^ mCommand;
+      num = (num << 5) ^ mIndex;
+      num = (num << 5) ^ mTimeToLive;
+      return (u8) (num ^ (num>>7) ^ (num>>14));
+    }
+    void updateChecksum() {
+      mChecksum = computeChecksum();
+    }
+    bool checksumValid() {
+      return mChecksum == computeChecksum();
+    }
+    bool executable(s32 & lastCommandIndex) {
+      if (lastCommandIndex >= 0) {
+        u8 advance = mIndex - (u8) lastCommandIndex;
+        if (advance == 0 || advance >= U8_MAX/3) return false;
+      }
+      lastCommandIndex = mIndex;
+      return true;
+    }
+
+    u8 mPktHdr;
+    u8 mCommand;
+    u8 mIndex;
+    u8 mTimeToLive;
+    u8 mChecksum;
+  };
 
   template <class GC>
-  struct MFMCDriver : public AbstractDualDriver<GC>
+  struct MFMIO {
+    MFMT2Driver<GC> &mDriver;
+    s32 mMfmPacketFD;
+    s32 mLastCommandIndex;
+    bool mFlushAvailable;
+    MFMIO(MFMT2Driver<GC> & driver)
+      : mDriver(driver)
+      , mMfmPacketFD(-1)
+      , mLastCommandIndex(-1)
+      , mFlushAvailable(true)
+    { }
+
+    bool open() {
+      if (mMfmPacketFD >= 0) abort();
+      mMfmPacketFD = ::open(MFM_DEV_PATH, O_RDWR | O_NONBLOCK);
+      if (mMfmPacketFD < 0) {
+        fprintf(stderr,"Can't open %s: %s\n", MFM_DEV_PATH, strerror(errno));
+        return false;
+      }
+      return true;
+    }
+
+    bool close() {
+      if (mMfmPacketFD < 0) return false;
+      if (::close(mMfmPacketFD) < 0) {
+        fprintf(stderr,"Can't close %s: %s\n", MFM_DEV_PATH, strerror(errno));
+        return false;
+      }
+
+      mMfmPacketFD = -1;
+      return true;
+    }
+
+    bool trySendPacket(unsigned char * buf, unsigned len) {
+      ssize_t amt = write(mMfmPacketFD, buf, len);
+      if (amt < 0) {
+        if (errno == EHOSTUNREACH || errno == EAGAIN || errno == EWOULDBLOCK)
+          return false;
+        abort();
+      }
+      return true;
+    }
+
+    void processPacket(unsigned char * buf, unsigned len) {
+      if (len < sizeof(FlashTraffic)) {
+        fprintf(stderr,"Packet length %d too small '%*s'\n", len, len, buf);
+        return;
+      }
+      FlashTraffic *ft = (FlashTraffic*) buf;
+      if (ft->mCommand < CANCEL_OP || ft->mCommand >= DRIVER_OP_COUNT) {
+        fprintf(stderr,"MFM packet type '%c' unrecognized\n", ft->mCommand);
+        return;
+      }
+      if (!ft->checksumValid()) {
+        fprintf(stderr,"Invalid flash traffic checksum %02x in '%5s', expected %02x\n",
+                ft->mChecksum,
+                (char*) ft,
+                ft->computeChecksum());
+        return;
+      }
+      if (ft->executable(mLastCommandIndex)) {
+        fprintf(stderr,"EXECUTING #%d:%c\n", mLastCommandIndex, ft->mCommand);
+        mDriver.DoDriverOpLocally((DriverOp) ft->mCommand);  // BAM
+      } else {
+        fprintf(stderr,"OBSOLETE #%d:%02x\n", mLastCommandIndex, ft->mCommand);
+      }
+      if (ft->mTimeToLive > 0) {
+        u8 fromDir = ft->mPktHdr&7;
+        ft->mTimeToLive--;
+        for (unsigned i = 0; i < 8; ++i) {
+          if ((i&3) == 0 || i == fromDir) continue; // Skip 0, 4, and fromDir
+          ft->mPktHdr = (ft->mPktHdr&~7) | i;
+          ft->updateChecksum();
+          trySendPacket(buf, len);
+        }
+      }
+    }
+  
+    bool update() {
+      if (mMfmPacketFD < 0) abort();
+
+      do {
+        unsigned char buf[256];
+        ssize_t amt = read(mMfmPacketFD, buf, sizeof(buf));
+
+        if (amt == 0) {
+          fprintf(stderr,"EOF on %d\n", mMfmPacketFD);
+          exit(5);
+        }
+
+        if (amt < 0) {
+          if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            mFlushAvailable = false;
+            mLastCommandIndex = -1; 
+            return false; /* nothing to read or flush finished */
+          } else {
+            abort();
+          }
+        }
+
+        if (!mFlushAvailable)
+          processPacket(buf,amt);
+      } while(mFlushAvailable);
+
+      return true;
+    }
+  };
+
+  template <class GC>
+  struct MFMT2Driver : public AbstractDualDriver<GC>
   {
   private:
 
@@ -170,8 +321,8 @@ namespace MFM
     struct ThreadStamper : public DateTimeStamp
     {
       typedef DateTimeStamp Super;
-      MFMCDriver &driver;
-      ThreadStamper(MFMCDriver &driver) : driver(driver) { }
+      MFMT2Driver &driver;
+      ThreadStamper(MFMT2Driver &driver) : driver(driver) { }
       virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0)
       {
         Super::PrintTo(byteSink, argument);
@@ -182,14 +333,20 @@ namespace MFM
       }
     };
 
+  public:
     virtual void DefineNeededElements()
     {
 #ifdef ULAM_CUSTOM_ELEMENTS
       DefineNeededUlamCustomElements(this);
 #endif
     }
-    
+
+  private:
     ThreadStamper m_stamper;
+    MFMIO<GC> m_mfmio;
+
+  public:
+    MFMIO<GC> GetMFMIO() { return m_mfmio; }
 
     static void PrintTileTypes(const char* not_needed, void* nullForShort)
     {
@@ -203,12 +360,109 @@ namespace MFM
       exit(0);
     }
 
+    bool m_keepRunning;
 
   public:
+    virtual bool RunHelperExiter() {
+      if (!Super::RunHelperExiter() || !m_keepRunning)
+        return false;
+      return true;
+    }
 
-    MFMCDriver(u32 gridWidth, u32 gridHeight, GridLayoutPattern gridLayout)
+  private:
+    u32 m_opCountdownTimer;
+    DriverOp m_localOp;
+    bool m_opGlobal; /*next op applies to whole grid*/
+
+  public:
+    bool GetGlobalOpFlag() const { return m_opGlobal; }
+
+    void ToggleGlobalOpFlag() {
+      m_opGlobal = !m_opGlobal;
+      u32 bgColor = m_opGlobal ? 0xffff3333 : 0xff888888;
+      m_t2MenuQuitButton.SetBackground(bgColor);
+      m_t2MenuRebootButton.SetBackground(bgColor);
+      m_t2MenuResetButton.SetBackground(bgColor);
+      m_t2MenuShutdownButton.SetBackground(bgColor);
+    }
+
+    void DoDriverOpLocally(DriverOp op) {
+      fprintf(stderr,"DoDriverOpLocally(%d)\n",op);
+      switch (op) {
+      case CANCEL_OP:
+        this->LowerMenuIfNeeded();
+        break;
+      case RESET_OP:
+        this->ReloadCurrentConfigurationPath();
+        this->SetKeyboardPaused(false);
+        break;
+      case QUIT_OP:
+        m_keepRunning = false;
+        break;
+      case REBOOT_OP:
+        system("reboot");
+        break;
+      case SHUTDOWN_OP:
+        system("poweroff");
+        break;
+      case GLOBAL_OP:
+        fprintf(stderr,"poof\n");
+        break;
+      default:
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+      this->SetDelayedDriverOp(DRIVER_OP_COUNT,-1); // Clear
+    }
+    
+  public:
+
+    /** Override AbstractGUIDriver method
+     */
+    virtual void DoPerUpdateSpecialTasks()
+    {
+      this->m_mfmio.update();
+      if (m_opCountdownTimer > 0) {
+        fprintf(stderr,"oct %d\n",m_opCountdownTimer);
+        if (--m_opCountdownTimer == 0) {
+          this->DoDriverOpLocally(m_localOp);
+          
+        }
+      }
+    }
+
+    void SetDelayedDriverOp(DriverOp op, s32 delayUpdates) {
+      if (delayUpdates <= 0) {
+        m_localOp = DRIVER_OP_COUNT;
+        m_opCountdownTimer = 0;
+      } else {
+        m_localOp = op;
+        m_opCountdownTimer = (u32) delayUpdates;
+      }
+    }
+
+    virtual bool DoSpecialEventHandling(SDL_Event & event) {
+      if (event.type == SDL_MOUSEBUTTONUP) {
+        if (RaiseMenuIfNeeded()) return true;
+        fprintf(stderr,"Mouse up @ (%d,%d)\n",
+                event.button.x, event.button.y);
+      }
+      return Super::DoSpecialEventHandling(event);
+    }
+
+    MFMT2Driver(u32 gridWidth, u32 gridHeight, GridLayoutPattern gridLayout)
       : Super(gridWidth, gridHeight, gridLayout)
       , m_stamper(*this)
+      , m_mfmio(*this)
+      , m_keepRunning(true)
+      , m_opCountdownTimer(0)
+      , m_localOp(DRIVER_OP_COUNT)
+      , m_opGlobal(false)
+      , m_t2MenuCancelButton("Cancel",CANCEL_OP,       0*MENU_WIDTH/2, 0*MENU_HEIGHT/4, *this)
+      , m_t2MenuQuitButton("Quit",QUIT_OP,             0*MENU_WIDTH/2, 3*MENU_HEIGHT/4, *this)
+      , m_t2MenuGridButton("Grid",GLOBAL_OP,           1*MENU_WIDTH/2, 3*MENU_HEIGHT/4, *this)
+      , m_t2MenuRebootButton("Reboot",REBOOT_OP,       1*MENU_WIDTH/2, 1*MENU_HEIGHT/4, *this)
+      , m_t2MenuResetButton("Reset",RESET_OP,          0*MENU_WIDTH/2, 1*MENU_HEIGHT/4, *this)
+      , m_t2MenuShutdownButton("Shutdown",SHUTDOWN_OP, 1*MENU_WIDTH/2, 2*MENU_HEIGHT/4, *this)
     {
       MFM::LOG.SetTimeStamper(&m_stamper);
     }
@@ -219,7 +473,6 @@ namespace MFM
       static u64 lastticks = 0;
       static double lastAEPS = 0;
       u64 curticks = this->GetTicksSinceEpoch(); // in ms
-      const u32 SECS_PER_STATUS = 5;
       if (lastticks + SECS_PER_STATUS*1000 <= curticks) {
         double thisAEPS = this->GetAEPS();
         if (lastAEPS > 0) {
@@ -251,15 +504,78 @@ namespace MFM
 
     }
 
+    virtual void ReinitEden()
+    { }
+
+    virtual void PostUpdate()
+    {
+      Super::PostUpdate();
+    }
+
     virtual void OnceOnly(VArguments& args)
     {
       Super::OnceOnly(args);
+
       if (this->m_includeCPPDemos && this->m_elementRegistry.GetLibraryPathsCount() > 0)
         args.Die("Cannot include ulam elements when using --cpp-demos");
+
+      // Add our extra panels and such
+      OnceOnlyGraphics();
+
+      // Set up intertile packet spike
+      if (!m_mfmio.open()) {
+        abort();
+      }
     }
 
-    virtual void ReinitEden()
-    { }
+    Panel m_t2MenuPanel;
+    T2MenuButton<GC> m_t2MenuCancelButton;
+    T2MenuButton<GC> m_t2MenuQuitButton;
+    T2MenuButton<GC> m_t2MenuGridButton;
+    T2MenuButton<GC> m_t2MenuRebootButton;
+    T2MenuButton<GC> m_t2MenuResetButton;
+    T2MenuButton<GC> m_t2MenuShutdownButton;
+
+    bool RaiseMenuIfNeeded() {
+      if (m_t2MenuPanel.IsVisible()) return false;
+      m_t2MenuPanel.SetVisible(true);
+      return true;
+    }
+
+    bool LowerMenuIfNeeded() {
+      if (!m_t2MenuPanel.IsVisible()) return false;
+      m_t2MenuPanel.SetVisible(false);
+      return true;
+    }
+
+    void OnceOnlyGraphics() {
+      m_t2MenuPanel.SetName("T2Menu");
+      m_t2MenuPanel.SetVisible(false);
+      m_t2MenuPanel.SetFont(FONT_ASSET_ELEMENT);
+      m_t2MenuPanel.SetBackground(Drawing::BLACK);
+      m_t2MenuPanel.SetAnchor(ANCHOR_WEST);
+      m_t2MenuPanel.SetAnchor(ANCHOR_NORTH);
+
+      m_t2MenuPanel.SetDimensions(MENU_WIDTH,MENU_HEIGHT);
+      m_t2MenuPanel.SetDesiredSize(MENU_WIDTH,MENU_HEIGHT);
+      const SPoint pos(0,0);
+      m_t2MenuPanel.SetRenderPoint(pos);
+
+      //this->InitButtons(&m_t2MenuPanel);
+      
+      this->GetRootPanel().Insert(&m_t2MenuPanel, NULL);
+      this->GetRootPanel().RaiseToTop(&m_t2MenuPanel);
+
+      m_t2MenuPanel.Insert(&m_t2MenuCancelButton, NULL);
+      m_t2MenuPanel.Insert(&m_t2MenuQuitButton, NULL);
+      m_t2MenuPanel.Insert(&m_t2MenuGridButton, NULL);
+      m_t2MenuPanel.Insert(&m_t2MenuResetButton, NULL);
+      m_t2MenuPanel.Insert(&m_t2MenuRebootButton, NULL);
+      m_t2MenuPanel.Insert(&m_t2MenuShutdownButton, NULL);
+
+      this->HandleResize(); //Repack
+    }
+
   };
 
   template <class CONFIG>
@@ -267,7 +583,7 @@ namespace MFM
   {
     SizedTile<typename CONFIG::EVENT_CONFIG, CONFIG::TILE_WIDTH, CONFIG::TILE_HEIGHT, CONFIG::EVENT_HISTORY_SIZE>::SetGridLayoutPattern(gridLayout); //static before sim (next line)
 
-    MFMCDriver<CONFIG> sim(gridWidth,gridHeight,gridLayout);
+    MFMT2Driver<CONFIG> sim(gridWidth,gridHeight,gridLayout);
     XXXDRIVER = &sim;
     sim.ProcessArguments(argc, argv);
     sim.AddInternalLogging();
@@ -288,7 +604,7 @@ namespace MFM
       fprintf(stderr,"WARNING: Unable to check stack size (may segfault): %s\n",
               strerror(errno));
     else {
-      const rlim_t needed = 110*sizeof(MFMCDriver<CONFIG>) / 100;  // Ready to give 110% sir
+      const rlim_t needed = 110*sizeof(MFMT2Driver<CONFIG>) / 100;  // Ready to give 110% sir
       const rlim_t have = lim.rlim_cur;
       if (have < needed) {
         if (lim.rlim_max < needed)
@@ -366,7 +682,62 @@ namespace MFM
 
     return SimRunConfig(gcc, argc, argv);
   }
-}
+
+  template<class GC>
+  struct T2MenuButton : public AbstractButton {
+    MFMT2Driver<GC> & m_driver;
+    const DriverOp m_driverOp;
+    T2MenuButton(const char * label, DriverOp op, int x, int y, MFMT2Driver<GC> & driver)
+      : AbstractButton(label)
+      , m_driver(driver)
+      , m_driverOp(op)
+    {
+      this->SetName(label);
+      this->SetVisible(true);
+      this->SetFont(FONT_ASSET_ELEMENT);
+      this->SetBackground(Drawing::GREEN);
+      this->SetForeground(Drawing::BLACK);
+
+      const u32 INDENT = 2;
+      SPoint size(MENU_WIDTH/2-2*INDENT,MENU_HEIGHT/4-2*INDENT);
+      this->SetDimensions(size);
+      this->SetDesiredSize(size.GetX(),size.GetY());
+
+      const SPoint pos(x+INDENT/2,y+INDENT/2);
+      this->SetRenderPoint(pos);
+    }
+
+    virtual s32 GetSection() { FAIL(UNSUPPORTED_OPERATION); return -1;  }
+    virtual const char * GetDoc() { return "T2 main menu button"; }
+    virtual bool GetKey(u32& keysym, u32& mods) { return false; }
+    virtual bool ExecuteFunction(u32 keysym, u32 mods) {
+      fprintf(stderr, "EXECUTE %s %d %d\n", this->GetText(), keysym, mods);
+      return true;
+    }
+
+    virtual void OnClick(u8 button) {
+      if (m_driverOp == GLOBAL_OP) {
+        m_driver.ToggleGlobalOpFlag();
+      } else {
+        if (m_driver.GetGlobalOpFlag()) {
+          m_driver.ToggleGlobalOpFlag();
+
+          for (u32 dir = 0; dir < 8; ++dir) {
+            if (!(dir&3)) continue;
+            u8 pkthdr = '\xa0' + dir;
+            u8 index = m_driver.GetMFMIO().mLastCommandIndex + 1u;
+            FlashTraffic ft(pkthdr,m_driverOp,index,FLASH_TRAFFIC_TTL);
+            m_driver.GetMFMIO().trySendPacket((unsigned char*) &ft,sizeof(ft));
+          }
+        }
+        m_driver.SetDelayedDriverOp(m_driverOp, DRIVER_OP_DELAY);
+        m_driver.LowerMenuIfNeeded();
+      }
+    }
+  };
+
+} // namespace MFM
+
 
 #define XX(A,B,C) \
 void XXXCC##A()  __attribute__ ((used)) ;  \

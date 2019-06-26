@@ -7,5 +7,7 @@
 #include "P3Atom.h"
 #include "GridConfig.h"
 #include "DateTimeStamp.h"
+#include "MFMT2Constants.h"
+
 
 #endif /* MAIN_H */
