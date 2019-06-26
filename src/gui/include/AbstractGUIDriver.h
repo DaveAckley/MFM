@@ -1217,6 +1217,20 @@ namespace MFM
       HandleResize();
     }
 
+    /** Run arbitrary special code once per grid update.  By default
+        do nothing
+     */
+    virtual void DoPerUpdateSpecialTasks() { /* empty */ }
+
+    /** Hook to access SDL_Events before AbstractGUIDriver considers
+        them.  Return true to indicate the event has now been handled
+        and should be ignored by AbstractGUIDriver.  Return false for
+        normal event handling.  By default, method returns false.
+     */
+    virtual bool DoSpecialEventHandling(SDL_Event & event) {
+      return false;
+    }
+
     void RunHelper()
     {
       m_keyboardPaused = m_startPaused;
@@ -1234,8 +1248,12 @@ namespace MFM
 
       while(running)
       {
+        DoPerUpdateSpecialTasks();
+
         while(SDL_PollEvent(&event))
         {
+          if (DoSpecialEventHandling(event)) continue;
+
           switch(event.type)
           {
           default:
