@@ -1,0 +1,1672 @@
+root@beaglebone:/home/t2/tmp# git clone https://github.com/libts/tslib.git
+Cloning into 'tslib'...
+remote: Enumerating objects: 5980, done.        
+remote: Total 5980 (delta 0), reused 0 (delta 0), pack-reused 5980        
+Receiving objects: 100% (5980/5980), 2.62 MiB | 557.00 KiB/s, done.
+Resolving deltas: 100% (4154/4154), done.
+Checking connectivity... done.
+root@beaglebone:/home/t2/tmp# cd tslib/
+root@beaglebone:/home/t2/tmp/tslib# ls
+acinclude.m4  AUTHORS		autogen.sh  cmake	    configure.ac     COPYING  etc  Makefile.am	plugins  README.md   src    THANKS  tslib.pc.in
+Android.mk    autogen-clean.sh	ChangeLog   CMakeLists.txt  CONTRIBUTING.md  doc      m4   NEWS		README	 release.sh  tests  tools   website
+root@beaglebone:/home/t2/tmp/tslib# aclocal
+root@beaglebone:/home/t2/tmp/tslib# autoconf
+root@beaglebone:/home/t2/tmp/tslib# ./configure 
+configure: error: cannot find install-sh, install.sh, or shtool in "." "./.." "./../.."
+root@beaglebone:/home/t2/tmp/tslib# automake --add-missing
+configure.ac:58: installing './compile'
+configure.ac:24: installing './config.guess'
+configure.ac:24: installing './config.sub'
+configure.ac:7: installing './install-sh'
+configure.ac:67: error: required file './ltmain.sh' not found
+configure.ac:7: installing './missing'
+Makefile.am: installing './INSTALL'
+configure.ac:10: error: required file 'config.h.in' not found
+plugins/Makefile.am: installing './depcomp'
+root@beaglebone:/home/t2/tmp/tslib# ./configure 
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for a thread-safe mkdir -p... /bin/mkdir -p
+checking for gawk... no
+checking for mawk... mawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking whether make supports nested variables... (cached) yes
+checking build system type... armv7l-unknown-linux-gnueabihf
+checking host system type... armv7l-unknown-linux-gnueabihf
+checking for gcc... gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to accept ISO C89... none needed
+checking whether gcc understands -c and -o together... yes
+checking for style of include used by make... GNU
+checking dependency style of gcc... none
+checking how to run the C preprocessor... gcc -E
+checking whether the C compiler supports -fvisibility=hidden... yes
+checking whether to use -fvisibility=hidden... yes
+checking whether ln -s works... yes
+checking whether make sets $(MAKE)... (cached) yes
+checking how to print strings... printf
+checking for a sed that does not truncate output... /bin/sed
+checking for grep that handles long lines and -e... /bin/grep
+checking for egrep... /bin/grep -E
+checking for fgrep... /bin/grep -F
+checking for ld used by gcc... /usr/bin/ld
+checking if the linker (/usr/bin/ld) is GNU ld... yes
+checking for BSD- or MS-compatible name lister (nm)... /usr/bin/nm -B
+checking the name lister (/usr/bin/nm -B) interface... BSD nm
+checking the maximum length of command line arguments... 1572864
+checking whether the shell understands some XSI constructs... yes
+checking whether the shell understands "+="... yes
+checking how to convert armv7l-unknown-linux-gnueabihf file names to armv7l-unknown-linux-gnueabihf format... func_convert_file_noop
+checking how to convert armv7l-unknown-linux-gnueabihf file names to toolchain format... func_convert_file_noop
+checking for /usr/bin/ld option to reload object files... -r
+checking for objdump... objdump
+checking how to recognize dependent libraries... pass_all
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for ar... ar
+checking for archiver @FILE support... @
+checking for strip... strip
+checking for ranlib... ranlib
+checking command to parse /usr/bin/nm -B output from gcc object... ok
+checking for sysroot... no
+checking for mt... mt
+checking if mt is a manifest tool... no
+checking for ANSI C header files... yes
+checking for sys/types.h... yes
+checking for sys/stat.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for memory.h... yes
+checking for strings.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for unistd.h... yes
+checking for dlfcn.h... yes
+checking for objdir... .libs
+checking if gcc supports -fno-rtti -fno-exceptions... no
+checking for gcc option to produce PIC... -fPIC -DPIC
+checking if gcc PIC flag -fPIC -DPIC works... yes
+checking if gcc static flag -static works... yes
+checking if gcc supports -c -o file.o... yes
+checking if gcc supports -c -o file.o... (cached) yes
+checking whether the gcc linker (/usr/bin/ld) supports shared libraries... yes
+checking whether -lc should be explicitly linked in... no
+checking dynamic linker characteristics... GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking for shl_load... no
+checking for shl_load in -ldld... no
+checking for dlopen... no
+checking for dlopen in -ldl... yes
+checking whether a program can dlopen itself... yes
+checking whether a statically linked program can dlopen itself... no
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... yes
+checking whether to build static libraries... no
+checking for dlopen in -ldl... (cached) yes
+checking for size_t... yes
+checking for working alloca.h... yes
+checking for alloca... yes
+checking for ANSI C header files... (cached) yes
+checking fcntl.h usability... yes
+checking fcntl.h presence... yes
+checking for fcntl.h... yes
+checking limits.h usability... yes
+checking limits.h presence... yes
+checking for limits.h... yes
+checking for stdlib.h... (cached) yes
+checking for string.h... (cached) yes
+checking sys/ioctl.h usability... yes
+checking sys/ioctl.h presence... yes
+checking for sys/ioctl.h... yes
+checking sys/time.h usability... yes
+checking sys/time.h presence... yes
+checking for sys/time.h... yes
+checking for unistd.h... (cached) yes
+checking for stdint.h... (cached) yes
+checking for sys/types.h... (cached) yes
+checking errno.h usability... yes
+checking errno.h presence... yes
+checking for errno.h... yes
+checking dirent.h usability... yes
+checking dirent.h presence... yes
+checking for dirent.h... yes
+checking linux/spi/cy8mrln.h usability... no
+checking linux/spi/cy8mrln.h presence... no
+checking for linux/spi/cy8mrln.h... no
+checking for an ANSI C-conforming const... yes
+checking for inline... inline
+checking for size_t... (cached) yes
+checking for uint16_t... yes
+checking for uint8_t... yes
+checking whether time.h and sys/time.h may both be included... yes
+checking whether gcc needs -traditional... no
+checking for stdlib.h... (cached) yes
+checking for unistd.h... (cached) yes
+checking for sys/param.h... yes
+checking for getpagesize... yes
+checking for working mmap... yes
+checking sys/select.h usability... yes
+checking sys/select.h presence... yes
+checking for sys/select.h... yes
+checking sys/socket.h usability... yes
+checking sys/socket.h presence... yes
+checking for sys/socket.h... yes
+checking types of arguments for select... int,fd_set *,struct timeval *
+checking return type of signal handlers... void
+checking whether lstat correctly handles trailing slash... yes
+checking whether stat accepts an empty string... no
+checking for vprintf... yes
+checking for _doprnt... no
+checking for gettimeofday... yes
+checking for memmove... yes
+checking for memset... yes
+checking for munmap... yes
+checking for select... yes
+checking for strcasecmp... yes
+checking for strchr... yes
+checking for strdup... yes
+checking for strtoul... yes
+checking for strtol... yes
+checking for strsep... yes
+checking for pkg-config... /usr/bin/pkg-config
+checking pkg-config is at least version 0.9.0... yes
+checking whether debounce module is requested... yes
+checking whether dejitter module is requested... yes
+checking whether iir module is requested... yes
+checking whether linear module is requested... yes
+checking whether median module is requested... yes
+checking whether pthres module is requested... yes
+checking whether skip module is requested... yes
+checking whether lowpass module is requested... yes
+checking whether invert module is requested... yes
+checking whether variance module is requested... yes
+checking whether input module is requested... yes
+checking whether touchkit module is requested... yes
+checking whether waveshare module is requested... yes
+checking whether input-evdev module is requested... no
+checking whether tatung module is requested... no
+checking whether ucb1x00 module is requested... no
+checking whether mk712 module is requested... no
+checking whether h3600 module is requested... no
+checking whether dmc module is requested... no
+checking whether linear-h2200 module is requested... no
+checking whether corgi module is requested... no
+checking whether collie module is requested... no
+checking whether arctic2 module is requested... no
+checking whether dmc_dus3000 module is requested... no
+checking whether cy8mrln-palmpre module is requested... no
+checking whether galax module is requested... no
+checking whether one-wire-ts-input module is requested... no
+checking where to place modules... ${libdir}/ts
+checking whether to enable debugging... no
+checking whether to enable tools... yes
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: error: cannot find input file: `Makefile.in'
+root@beaglebone:/home/t2/tmp/tslib# automake --add-missing
+configure.ac:67: error: required file './ltmain.sh' not found
+configure.ac:10: error: required file 'config.h.in' not found
+root@beaglebone:/home/t2/tmp/tslib# cd ..
+root@beaglebone:/home/t2/tmp# rm -rf
+root@beaglebone:/home/t2/tmp# ls
+tslib
+root@beaglebone:/home/t2/tmp# rm -rf tslib/
+root@beaglebone:/home/t2/tmp# git clone https://github.com/libts/tslib.git
+Cloning into 'tslib'...
+remote: Enumerating objects: 5980, done.        
+remote: Total 5980 (delta 0), reused 0 (delta 0), pack-reused 5980        
+Receiving objects: 100% (5980/5980), 2.62 MiB | 945.00 KiB/s, done.
+Resolving deltas: 100% (4154/4154), done.
+Checking connectivity... done.
+root@beaglebone:/home/t2/tmp# mkdir build && cd build
+root@beaglebone:/home/t2/tmp/build# cmake ../
+bash: cmake: command not found
+root@beaglebone:/home/t2/tmp/build# cmake
+bash: cmake: command not found
+root@beaglebone:/home/t2/tmp/build# cd ..
+root@beaglebone:/home/t2/tmp# cd tmp/
+bash: cd: tmp/: No such file or directory
+root@beaglebone:/home/t2/tmp# cd tslib/
+root@beaglebone:/home/t2/tmp/tslib# mkdir build && cd build
+root@beaglebone:/home/t2/tmp/tslib/build# cmake ../
+bash: cmake: command not found
+root@beaglebone:/home/t2/tmp/tslib/build# cd .
+root@beaglebone:/home/t2/tmp/tslib/build# rmdir build/
+rmdir: failed to remove ‘build/’: No such file or directory
+root@beaglebone:/home/t2/tmp/tslib/build# cd ..
+root@beaglebone:/home/t2/tmp/tslib# rmdir build/
+root@beaglebone:/home/t2/tmp/tslib# ls
+acinclude.m4  AUTHORS		autogen.sh  cmake	    configure.ac     COPYING  etc  Makefile.am	plugins  README.md   src    THANKS  tslib.pc.in
+Android.mk    autogen-clean.sh	ChangeLog   CMakeLists.txt  CONTRIBUTING.md  doc      m4   NEWS		README	 release.sh  tests  tools   website
+root@beaglebone:/home/t2/tmp/tslib# cd
+root@beaglebone:~# cd /home/t2/tmp/tslib/
+root@beaglebone:/home/t2/tmp/tslib# apt install cmake
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+The following package was automatically installed and is no longer required:
+  rlwrap
+Use 'apt-get autoremove' to remove it.
+The following extra packages will be installed:
+  cmake-data libarchive13 libjsoncpp0
+Suggested packages:
+  codeblocks eclipse ninja-build lrzip
+The following NEW packages will be installed:
+  cmake cmake-data libarchive13 libjsoncpp0
+0 upgraded, 4 newly installed, 0 to remove and 2 not upgraded.
+Need to get 3,957 kB of archives.
+After this operation, 15.7 MB of additional disk space will be used.
+Do you want to continue? [Y/n] y
+Get:1 http://repos.rcn-ee.com/debian/ jessie/main cmake-data all 3.5.2-2 [1,142 kB]
+Get:2 http://security.debian.org/ jessie/updates/main libarchive13 armhf 3.1.2-11+deb8u7 [240 kB]
+Get:3 http://repos.rcn-ee.com/debian/ jessie/main cmake armhf 3.5.2-2 [2,513 kB]
+Get:4 http://httpredir.debian.org/debian/ jessie/main libjsoncpp0 armhf 0.6.0~rc2-3.1 [62.6 kB]
+Fetched 3,957 kB in 2s (1,694 kB/s)
+debconf: unable to initialize frontend: Dialog
+debconf: (Dialog frontend will not work on a dumb terminal, an emacs shell buffer, or without a controlling terminal.)
+debconf: falling back to frontend: Readline
+Selecting previously unselected package cmake-data.
+(Reading database ... 72627 files and directories currently installed.)
+Preparing to unpack .../cmake-data_3.5.2-2_all.deb ...
+Unpacking cmake-data (3.5.2-2) ...
+Selecting previously unselected package libarchive13:armhf.
+Preparing to unpack .../libarchive13_3.1.2-11+deb8u7_armhf.deb ...
+Unpacking libarchive13:armhf (3.1.2-11+deb8u7) ...
+Selecting previously unselected package libjsoncpp0.
+Preparing to unpack .../libjsoncpp0_0.6.0~rc2-3.1_armhf.deb ...
+Unpacking libjsoncpp0 (0.6.0~rc2-3.1) ...
+Selecting previously unselected package cmake.
+Preparing to unpack .../cmake_3.5.2-2_armhf.deb ...
+Unpacking cmake (3.5.2-2) ...
+Processing triggers for man-db (2.7.0.2-5) ...
+Setting up cmake-data (3.5.2-2) ...
+Install cmake-data for emacs24
+install/cmake-data: Byte-compiling for emacs24
+Wrote /usr/share/emacs24/site-lisp/cmake-data/cmake-mode.elc
+Setting up libarchive13:armhf (3.1.2-11+deb8u7) ...
+Setting up libjsoncpp0 (0.6.0~rc2-3.1) ...
+Setting up cmake (3.5.2-2) ...
+Processing triggers for libc-bin (2.19-18+deb8u10) ...
+root@beaglebone:/home/t2/tmp/tslib# ls
+acinclude.m4  AUTHORS		autogen.sh  cmake	    configure.ac     COPYING  etc  Makefile.am	plugins  README.md   src    THANKS  tslib.pc.in
+Android.mk    autogen-clean.sh	ChangeLog   CMakeLists.txt  CONTRIBUTING.md  doc      m4   NEWS		README	 release.sh  tests  tools   website
+root@beaglebone:/home/t2/tmp/tslib# mkdir build
+root@beaglebone:/home/t2/tmp/tslib# cd build/
+root@beaglebone:/home/t2/tmp/tslib/build# cmake ..
+-- The C compiler identification is GNU 4.9.2
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Looking for unistd.h
+-- Looking for unistd.h - found
+-- Looking for strsep
+-- Looking for strsep - found
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/t2/tmp/tslib/build
+root@beaglebone:/home/t2/tmp/tslib/build# ls
+CMakeCache.txt	CMakeFiles  cmake_install.cmake  doc  etc  Makefile  plugins  src  tests  tools  tslibConfig.cmake  tslibConfigVersion.cmake
+root@beaglebone:/home/t2/tmp/tslib/build# make
+Scanning dependencies of target tslib
+[  1%] Building C object src/CMakeFiles/tslib.dir/ts_attach.c.o
+[  2%] Building C object src/CMakeFiles/tslib.dir/ts_close.c.o
+[  3%] Building C object src/CMakeFiles/tslib.dir/ts_config.c.o
+[  5%] Building C object src/CMakeFiles/tslib.dir/ts_error.c.o
+[  6%] Building C object src/CMakeFiles/tslib.dir/ts_fd.c.o
+[  7%] Building C object src/CMakeFiles/tslib.dir/ts_get_eventpath.c.o
+[  9%] Building C object src/CMakeFiles/tslib.dir/ts_load_module.c.o
+[ 10%] Building C object src/CMakeFiles/tslib.dir/ts_open.c.o
+[ 11%] Building C object src/CMakeFiles/tslib.dir/ts_option.c.o
+[ 12%] Building C object src/CMakeFiles/tslib.dir/ts_parse_vars.c.o
+[ 14%] Building C object src/CMakeFiles/tslib.dir/ts_read.c.o
+[ 15%] Building C object src/CMakeFiles/tslib.dir/ts_read_raw.c.o
+[ 16%] Building C object src/CMakeFiles/tslib.dir/ts_setup.c.o
+[ 18%] Building C object src/CMakeFiles/tslib.dir/ts_strsep.c.o
+[ 19%] Building C object src/CMakeFiles/tslib.dir/ts_version.c.o
+[ 20%] Linking C shared library libts.so
+[ 20%] Built target tslib
+Scanning dependencies of target input
+[ 22%] Building C object plugins/CMakeFiles/input.dir/input-raw.c.o
+[ 23%] Linking C shared module input.so
+[ 23%] Built target input
+Scanning dependencies of target waveshare
+[ 24%] Building C object plugins/CMakeFiles/waveshare.dir/waveshare-raw.c.o
+[ 25%] Linking C shared module waveshare.so
+[ 25%] Built target waveshare
+Scanning dependencies of target debounce
+[ 27%] Building C object plugins/CMakeFiles/debounce.dir/debounce.c.o
+[ 28%] Linking C shared module debounce.so
+[ 28%] Built target debounce
+Scanning dependencies of target touchkit
+[ 29%] Building C object plugins/CMakeFiles/touchkit.dir/touchkit-raw.c.o
+[ 31%] Linking C shared module touchkit.so
+[ 31%] Built target touchkit
+Scanning dependencies of target variance
+[ 32%] Building C object plugins/CMakeFiles/variance.dir/variance.c.o
+[ 33%] Linking C shared module variance.so
+[ 33%] Built target variance
+Scanning dependencies of target iir
+[ 35%] Building C object plugins/CMakeFiles/iir.dir/iir.c.o
+[ 36%] Linking C shared module iir.so
+[ 36%] Built target iir
+Scanning dependencies of target skip
+[ 37%] Building C object plugins/CMakeFiles/skip.dir/skip.c.o
+[ 38%] Linking C shared module skip.so
+[ 38%] Built target skip
+Scanning dependencies of target dejitter
+[ 40%] Building C object plugins/CMakeFiles/dejitter.dir/dejitter.c.o
+[ 41%] Linking C shared module dejitter.so
+[ 41%] Built target dejitter
+Scanning dependencies of target linear
+[ 42%] Building C object plugins/CMakeFiles/linear.dir/linear.c.o
+[ 44%] Linking C shared module linear.so
+[ 44%] Built target linear
+Scanning dependencies of target lowpass
+[ 45%] Building C object plugins/CMakeFiles/lowpass.dir/lowpass.c.o
+[ 46%] Linking C shared module lowpass.so
+[ 46%] Built target lowpass
+Scanning dependencies of target invert
+[ 48%] Building C object plugins/CMakeFiles/invert.dir/invert.c.o
+[ 49%] Linking C shared module invert.so
+[ 49%] Built target invert
+Scanning dependencies of target pthres
+[ 50%] Building C object plugins/CMakeFiles/pthres.dir/pthres.c.o
+[ 51%] Linking C shared module pthres.so
+[ 51%] Built target pthres
+Scanning dependencies of target median
+[ 53%] Building C object plugins/CMakeFiles/median.dir/median.c.o
+[ 54%] Linking C shared module median.so
+[ 54%] Built target median
+Scanning dependencies of target ts_print
+[ 55%] Building C object tests/CMakeFiles/ts_print.dir/ts_print.c.o
+[ 57%] Linking C executable ts_print
+[ 57%] Built target ts_print
+Scanning dependencies of target ts_test
+[ 58%] Building C object tests/CMakeFiles/ts_test.dir/ts_test.c.o
+[ 59%] Building C object tests/CMakeFiles/ts_test.dir/testutils.c.o
+[ 61%] Building C object tests/CMakeFiles/ts_test.dir/font_8x8.c.o
+[ 62%] Building C object tests/CMakeFiles/ts_test.dir/font_8x16.c.o
+[ 63%] Building C object tests/CMakeFiles/ts_test.dir/fbutils-linux.c.o
+[ 64%] Linking C executable ts_test
+[ 64%] Built target ts_test
+Scanning dependencies of target ts_print_raw
+[ 66%] Building C object tests/CMakeFiles/ts_print_raw.dir/ts_print_raw.c.o
+[ 67%] Linking C executable ts_print_raw
+[ 67%] Built target ts_print_raw
+Scanning dependencies of target ts_print_mt
+[ 68%] Building C object tests/CMakeFiles/ts_print_mt.dir/ts_print_mt.c.o
+[ 70%] Linking C executable ts_print_mt
+[ 70%] Built target ts_print_mt
+Scanning dependencies of target ts_test_mt
+[ 71%] Building C object tests/CMakeFiles/ts_test_mt.dir/ts_test_mt.c.o
+[ 72%] Building C object tests/CMakeFiles/ts_test_mt.dir/testutils.c.o
+[ 74%] Building C object tests/CMakeFiles/ts_test_mt.dir/font_8x8.c.o
+[ 75%] Building C object tests/CMakeFiles/ts_test_mt.dir/font_8x16.c.o
+[ 76%] Building C object tests/CMakeFiles/ts_test_mt.dir/fbutils-linux.c.o
+[ 77%] Linking C executable ts_test_mt
+[ 77%] Built target ts_test_mt
+Scanning dependencies of target ts_finddev
+[ 79%] Building C object tests/CMakeFiles/ts_finddev.dir/ts_finddev.c.o
+[ 80%] Linking C executable ts_finddev
+[ 80%] Built target ts_finddev
+Scanning dependencies of target ts_calibrate
+[ 81%] Building C object tests/CMakeFiles/ts_calibrate.dir/ts_calibrate.c.o
+[ 83%] Building C object tests/CMakeFiles/ts_calibrate.dir/ts_calibrate_common.c.o
+[ 84%] Building C object tests/CMakeFiles/ts_calibrate.dir/testutils.c.o
+[ 85%] Building C object tests/CMakeFiles/ts_calibrate.dir/font_8x8.c.o
+[ 87%] Building C object tests/CMakeFiles/ts_calibrate.dir/font_8x16.c.o
+[ 88%] Building C object tests/CMakeFiles/ts_calibrate.dir/fbutils-linux.c.o
+[ 89%] Linking C executable ts_calibrate
+[ 89%] Built target ts_calibrate
+Scanning dependencies of target ts_harvest
+[ 90%] Building C object tests/CMakeFiles/ts_harvest.dir/ts_harvest.c.o
+[ 92%] Building C object tests/CMakeFiles/ts_harvest.dir/testutils.c.o
+[ 93%] Building C object tests/CMakeFiles/ts_harvest.dir/font_8x8.c.o
+[ 94%] Building C object tests/CMakeFiles/ts_harvest.dir/font_8x16.c.o
+[ 96%] Building C object tests/CMakeFiles/ts_harvest.dir/fbutils-linux.c.o
+[ 97%] Linking C executable ts_harvest
+[ 97%] Built target ts_harvest
+Scanning dependencies of target ts_verify
+[ 98%] Building C object tests/CMakeFiles/ts_verify.dir/ts_verify.c.o
+[100%] Linking C executable ts_verify
+[100%] Built target ts_verify
+root@beaglebone:/home/t2/tmp/tslib/build# ls
+CMakeCache.txt	CMakeFiles  cmake_install.cmake  doc  etc  Makefile  plugins  src  tests  tools  tslibConfig.cmake  tslibConfigVersion.cmake
+root@beaglebone:/home/t2/tmp/tslib/build# ls ..
+acinclude.m4  AUTHORS		autogen.sh  ChangeLog  CMakeLists.txt  CONTRIBUTING.md	doc  m4		  NEWS	   README     release.sh  tests   tools        website
+Android.mk    autogen-clean.sh	build	    cmake      configure.ac    COPYING		etc  Makefile.am  plugins  README.md  src	  THANKS  tslib.pc.in
+root@beaglebone:/home/t2/tmp/tslib/build# find .. -name "*ts_calib*"
+../build/tests/CMakeFiles/ts_calibrate.dir
+../build/tests/CMakeFiles/ts_calibrate.dir/ts_calibrate.c.o
+../build/tests/CMakeFiles/ts_calibrate.dir/ts_calibrate_common.c.o
+../build/tests/ts_calibrate
+../tests/ts_calibrate.c
+../tests/ts_calibrate.h
+../tests/ts_calibrate_common.c
+../tests/ts_calibrate_sdl.c
+../doc/ts_calibrate.1
+../doc/screenshots/ts_calibrate.png
+root@beaglebone:/home/t2/tmp/tslib/build# ./tests/ts_calibrate 
+ts_setup: No such file or directory
+root@beaglebone:/home/t2/tmp/tslib/build# make install
+[ 20%] Built target tslib
+[ 23%] Built target input
+[ 25%] Built target waveshare
+[ 28%] Built target debounce
+[ 31%] Built target touchkit
+[ 33%] Built target variance
+[ 36%] Built target iir
+[ 38%] Built target skip
+[ 41%] Built target dejitter
+[ 44%] Built target linear
+[ 46%] Built target lowpass
+[ 49%] Built target invert
+[ 51%] Built target pthres
+[ 54%] Built target median
+[ 57%] Built target ts_print
+[ 64%] Built target ts_test
+[ 67%] Built target ts_print_raw
+[ 70%] Built target ts_print_mt
+[ 77%] Built target ts_test_mt
+[ 80%] Built target ts_finddev
+[ 89%] Built target ts_calibrate
+[ 97%] Built target ts_harvest
+[100%] Built target ts_verify
+Install the project...
+-- Install configuration: ""
+-- Installing: /usr/local/lib/cmake/tslib/tslibTargets.cmake
+-- Installing: /usr/local/lib/cmake/tslib/tslibTargets-noconfig.cmake
+-- Installing: /usr/local/lib/cmake/tslib/tslibConfig.cmake
+-- Installing: /usr/local/lib/cmake/tslib/tslibConfigVersion.cmake
+-- Installing: /usr/local/lib/libts.so.0.10.2
+-- Installing: /usr/local/lib/libts.so.0
+-- Installing: /usr/local/lib/libts.so
+-- Installing: /usr/local/include/tslib.h
+-- Installing: /usr/local/lib/ts/debounce.so
+-- Set runtime path of "/usr/local/lib/ts/debounce.so" to ""
+-- Installing: /usr/local/lib/ts/dejitter.so
+-- Set runtime path of "/usr/local/lib/ts/dejitter.so" to ""
+-- Installing: /usr/local/lib/ts/iir.so
+-- Set runtime path of "/usr/local/lib/ts/iir.so" to ""
+-- Installing: /usr/local/lib/ts/invert.so
+-- Set runtime path of "/usr/local/lib/ts/invert.so" to ""
+-- Installing: /usr/local/lib/ts/linear.so
+-- Set runtime path of "/usr/local/lib/ts/linear.so" to ""
+-- Installing: /usr/local/lib/ts/lowpass.so
+-- Set runtime path of "/usr/local/lib/ts/lowpass.so" to ""
+-- Installing: /usr/local/lib/ts/median.so
+-- Set runtime path of "/usr/local/lib/ts/median.so" to ""
+-- Installing: /usr/local/lib/ts/pthres.so
+-- Set runtime path of "/usr/local/lib/ts/pthres.so" to ""
+-- Installing: /usr/local/lib/ts/skip.so
+-- Set runtime path of "/usr/local/lib/ts/skip.so" to ""
+-- Installing: /usr/local/lib/ts/variance.so
+-- Set runtime path of "/usr/local/lib/ts/variance.so" to ""
+-- Installing: /usr/local/lib/ts/input.so
+-- Set runtime path of "/usr/local/lib/ts/input.so" to ""
+-- Installing: /usr/local/lib/ts/touchkit.so
+-- Set runtime path of "/usr/local/lib/ts/touchkit.so" to ""
+-- Installing: /usr/local/lib/ts/waveshare.so
+-- Set runtime path of "/usr/local/lib/ts/waveshare.so" to ""
+-- Installing: /usr/local/bin/ts_print
+-- Set runtime path of "/usr/local/bin/ts_print" to ""
+-- Installing: /usr/local/bin/ts_print_raw
+-- Set runtime path of "/usr/local/bin/ts_print_raw" to ""
+-- Installing: /usr/local/bin/ts_print_mt
+-- Set runtime path of "/usr/local/bin/ts_print_mt" to ""
+-- Installing: /usr/local/bin/ts_harvest
+-- Set runtime path of "/usr/local/bin/ts_harvest" to ""
+-- Installing: /usr/local/bin/ts_finddev
+-- Set runtime path of "/usr/local/bin/ts_finddev" to ""
+-- Installing: /usr/local/bin/ts_test_mt
+-- Set runtime path of "/usr/local/bin/ts_test_mt" to ""
+-- Installing: /usr/local/bin/ts_calibrate
+-- Set runtime path of "/usr/local/bin/ts_calibrate" to ""
+-- Installing: /usr/local/bin/ts_test
+-- Set runtime path of "/usr/local/bin/ts_test" to ""
+-- Installing: /usr/local/bin/ts_verify
+-- Set runtime path of "/usr/local/bin/ts_verify" to ""
+-- Installing: /usr/local/etc/ts.conf
+-- Installing: /usr/local/share/man/man1/ts_test.1
+-- Installing: /usr/local/share/man/man1/ts_test_mt.1
+-- Installing: /usr/local/share/man/man1/ts_calibrate.1
+-- Installing: /usr/local/share/man/man1/ts_uinput.1
+-- Installing: /usr/local/share/man/man1/ts_print.1
+-- Installing: /usr/local/share/man/man1/ts_print_raw.1
+-- Installing: /usr/local/share/man/man1/ts_print_mt.1
+-- Installing: /usr/local/share/man/man1/ts_finddev.1
+-- Installing: /usr/local/share/man/man1/ts_harvest.1
+-- Installing: /usr/local/share/man/man1/ts_verify.1
+-- Installing: /usr/local/share/man/man3/ts_read.3
+-- Installing: /usr/local/share/man/man3/ts_read_mt.3
+-- Installing: /usr/local/share/man/man3/ts_read_raw.3
+-- Installing: /usr/local/share/man/man3/ts_read_raw_mt.3
+-- Installing: /usr/local/share/man/man3/ts_open.3
+-- Installing: /usr/local/share/man/man3/ts_close.3
+-- Installing: /usr/local/share/man/man3/ts_config.3
+-- Installing: /usr/local/share/man/man3/ts_setup.3
+-- Installing: /usr/local/share/man/man3/ts_libversion.3
+-- Installing: /usr/local/share/man/man3/ts_fd.3
+-- Installing: /usr/local/share/man/man3/ts_error_fn.3
+-- Installing: /usr/local/share/man/man3/ts_open_restricted.3
+-- Installing: /usr/local/share/man/man3/ts_close_restricted.3
+-- Installing: /usr/local/share/man/man3/ts_get_eventpath.3
+-- Installing: /usr/local/share/man/man5/ts.conf.5
+root@beaglebone:/home/t2/tmp/tslib/build# which ts_calibrate
+
+root@beaglebone:/home/t2/tmp/tslib/build# /usr/local/bin/ts_calibrate
+ts_setup: No such file or directory
+root@beaglebone:/home/t2/tmp/tslib/build# ls /dev/input/
+by-path  event0  event1  mice  mouse0
+root@beaglebone:/home/t2/tmp/tslib/build# export TSLIB_TSDEVICE=/dev/input/event0; ts_calibrate 
+xres = 480, yres = 320
+tslib: Selected device is not a touchscreen (must support ABS event type)
+ts_read_raw: No such file or directory
+root@beaglebone:/home/t2/tmp/tslib/build# export TSLIB_TSDEVICE=/dev/input/event1; ts_calibrate 
+xres = 480, yres = 320
+Took 16 samples...
+Top left : X =  634 Y = 3319
+Took 13 samples...
+Top right : X = 3563 Y = 3290
+Took 14 samples...
+Bot right : X = 3544 Y =  737
+Took 6 samples...
+Bot left : X =  641 Y =  753
+Took 16 samples...
+Center : X = 2106 Y = 1999
+-32.732300 0.130309 -0.000299
+334.972687 -0.000666 -0.085945
+Calibration constants: -2145144 8539 -19 21952770 -43 -5632 65536 
+root@beaglebone:/home/t2/tmp/tslib/build# ts_test_mt 
+.  C-c C-csignal 2 caught
+root@beaglebone:/home/t2/tmp/tslib/build# ts_calibrate 
+xres = 480, yres = 320
+Took 33 samples...
+Top left : X =  635 Y = 3338
+Took 30 samples...
+Top right : X = 3557 Y = 3311
+Took 41 samples...
+Bot right : X = 3545 Y =  754
+Took 27 samples...
+Bot left : X =  648 Y =  771
+Took 26 samples...
+Center : X = 2131 Y = 1988
+-34.773010 0.130590 0.000057
+335.857147 -0.000665 -0.085838
+Calibration constants: -2278884 8558 3 22010734 -43 -5625 65536 
+root@beaglebone:/home/t2/tmp/tslib/build# ts_test_mt 
+  C-c C-csignal 2 caught
+root@beaglebone:/home/t2/tmp/tslib/build# ts_calibrate -h
+ts_calibrate: symbol lookup error: ts_calibrate: undefined symbol: ts_print_ascii_logo
+root@beaglebone:/home/t2/tmp/tslib/build# ts_calibrate --help
+ts_calibrate: symbol lookup error: ts_calibrate: undefined symbol: ts_print_ascii_logo
+root@beaglebone:/home/t2/tmp/tslib/build# echo $TSLIB_CALIBFILE
+
+root@beaglebone:/home/t2/tmp/tslib/build# printenv
+SDL_FBDEV=/dev/fb0
+SHELL=/bin/bash
+TERM=dumb
+OLDPWD=/home/t2/tmp/tslib
+USER=root
+SDL_VIDEODRIVER=fbcon
+EMACS=t
+LS_COLORS=rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.axa=00;36:*.oga=00;36:*.spx=00;36:*.xspf=00;36:
+SUDO_USER=debian
+SUDO_UID=1000
+TERMCAP=
+USERNAME=root
+PRU_C_DIR=/usr/share/ti/cgt-pru/include;/usr/share/ti/cgt-pru/lib
+COLUMNS=178
+MAIL=/var/mail/root
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PWD=/home/t2/tmp/tslib/build
+LANG=en_US.UTF-8
+NODE_PATH=/usr/local/lib/node_modules
+SHLVL=2
+SUDO_COMMAND=/bin/bash
+HOME=/root
+LOGNAME=root
+TSLIB_TSDEVICE=/dev/input/event1
+SUDO_GID=1000
+INSIDE_EMACS=24.4.1,comint
+_=/usr/bin/printenv
+root@beaglebone:/home/t2/tmp/tslib/build# export TS_LIB_CALIBFILE=./mycalib
+root@beaglebone:/home/t2/tmp/tslib/build# ts_calibrate 
+xres = 480, yres = 320
+Took 18 samples...
+Top left : X =  629 Y = 3327
+Took 26 samples...
+Top right : X = 3563 Y = 3300
+Took 21 samples...
+Bot right : X = 3544 Y =  740
+Took 46 samples...
+Bot left : X = 3407 Y = 3134
+Took 2 samples...
+Center : X = 2119 Y = 2002
+216.415649 0.071030 -0.065911
+192.216919 0.033218 -0.048119
+Calibration constants: 14183016 4655 -4319 12597128 2176 -3153 65536 
+root@beaglebone:/home/t2/tmp/tslib/build# ls
+CMakeCache.txt	CMakeFiles  cmake_install.cmake  doc  etc  install_manifest.txt  Makefile  plugins  src  tests	tools  tslibConfig.cmake  tslibConfigVersion.cmake
+root@beaglebone:/home/t2/tmp/tslib/build# ls et
+ls: cannot access et: No such file or directory
+root@beaglebone:/home/t2/tmp/tslib/build# ls etc
+CMakeFiles  cmake_install.cmake  Makefile
+root@beaglebone:/home/t2/tmp/tslib/build# export TSLIB_CALIBFILE=./mycalib
+root@beaglebone:/home/t2/tmp/tslib/build# ts_calibrate 
+xres = 480, yres = 320
+Took 28 samples...
+Top left : X =  634 Y = 3334
+Took 8 samples...
+Top right : X = 3570 Y = 3279
+Took 16 samples...
+Bot right : X = 3550 Y =  725
+Took 8 samples...
+Bot left : X =  634 Y =  741
+Took 7 samples...
+Center : X = 2116 Y = 2036
+-31.783142 0.129858 -0.000506
+335.093567 -0.001037 -0.085475
+Calibration constants: -2082940 8510 -33 21960692 -67 -5601 65536 
+root@beaglebone:/home/t2/tmp/tslib/build# ls
+CMakeCache.txt	CMakeFiles  cmake_install.cmake  doc  etc  install_manifest.txt  Makefile  mycalib  plugins  src  tests  tools	tslibConfig.cmake  tslibConfigVersion.cmake
+root@beaglebone:/home/t2/tmp/tslib/build# cat myclib
+cat: myclib: No such file or directory
+root@beaglebone:/home/t2/tmp/tslib/build# cat mycalib
+8510 -33 -2082940 -67 -5601 21960692 65536 480 320 0root@beaglebone:/home/t2/tmp/tslib/build# 
+root@beaglebone:/home/t2/tmp/tslib/build# cd /home/t2/tmp/tslib/build/
+root@beaglebone:/home/t2/tmp/tslib/build# mv mycalib /etc/pointercal
+root@beaglebone:/home/t2/tmp/tslib/build# ts_test_mt 
+  C-c C-csignal 2 caught
+root@beaglebone:/home/t2/tmp/tslib/build# export TSLIB_CALIBFILE=/etc/pointercal
+root@beaglebone:/home/t2/tmp/tslib/build# ts_test_mt 
+root@beaglebone:/home/t2/tmp/tslib/build# echo $TSLIB_DEVICE
+
+root@beaglebone:/home/t2/tmp/tslib/build# echo $TSLIB_TSDEVICE
+
+root@beaglebone:/home/t2/tmp/tslib/build# /home/t2/GITHUB/MFM/bin/mfmt2 {1H1} --sw 480 --sh 320 --sf --start-file /home/t2/T2-12/apps/mfm/11.mfs -ep /home/t2/MFMTMP/.gen/bin/libcue.so --run -a 0 -n
+20190624033448-10: 0AEPS [B60400]MSG: Writing to simulation directory '/tmp/20190624033448/'
+20190624033448-11: 0AEPS [B60400]MSG: Loaded Ue10103Res10-1110434608201901216174510 at 0xB5EA0924 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624033448-12: 0AEPS [B60400]MSG: Loaded Ue10104DReg10-1110434608201901216174510 at 0xB5EA07C0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624033448-13: 0AEPS [B60400]MSG: Loaded Ue10104Wall10-1110434608201901216174510 at 0xB5EA066C from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624033448-14: 0AEPS [B60400]MSG: Loaded Ue10105Empty10-1110434608201901216174510 at 0xB5EA0518 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624033448-15: 0AEPS [B60400]MSG: Loaded Ue10113Foo10-1110434608201901216174510 at 0xB5EA03C4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624033448-16: 0AEPS [B60400]MSG: Loaded Ulam Class Uq_10104Fail10 at 0xB5EA03BC from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624033448-17: 0AEPS [B60400]MSG: Loaded Ulam Class Uq_10105MDist10 at 0xB5EA03B8 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624033448-18: 0AEPS [B60400]MSG: Loaded Ulam Class Uq_10106Random10 at 0xB5EA03B4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624033448-19: 0AEPS [B60400]MSG: Loaded Ulam Class Uq_10106UrSelf10 at 0xB5EA03B0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624033448-210: 0AEPS [B60400]MSG: Loaded Ulam Class Uq_1010919AtomUtils10 at 0xB5EA03AC from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624033448-211: 0AEPS [B60400]MSG: Loaded Ulam Class Uq_10109210ByteStream10 at 0xB5EA03A8 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624033448-212: 0AEPS [B60400]MSG: Loaded Ulam Class Uq_10109211EventWindow10 at 0xB5EA03A4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624033448-213: 0AEPS [B60400]MSG: Loaded Ulam Class Uq_102323C2D10 at 0xB5EA03A0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624033448-214: 0AEPS [B60400]MSG: Loaded Ulam Class Un_102649216ByteStreamString10 at 0xB5EA039C from /home/t2/MFMTMP/.gen/bin/libcue.so
+Screen resize: 480 x 320
+Screen resize: 480 x 320
+20190624033451-215: 0AEPS [B60400]MSG: Logging to: /tmp/20190624033448/log/log.txt
+20190624033451-216: 0AEPS [B60400]MSG: Added log target: /tmp/20190624033448/log/log.txt
+20190624033451-217: 0AEPS [B60400]MSG: Command line: /home/t2/GITHUB/MFM/bin/mfmt2 {1H1} --sw 480 --sh 320 --sf --start-file /home/t2/T2-12/apps/mfm/11.mfs -ep /home/t2/MFMTMP/.gen/bin/libcue.so --run -a 0 -n
+20190624033451-218: 0AEPS [B60400]MSG: [0,0]
+20190624033451-219: 0AEPS [B60400]MSG: Assigned type 0x001F for Ue10103Res10-1110434608201901216174510
+20190624033451-220: 0AEPS [B60400]MSG: Assigned type 0x03E0 for Ue10104DReg10-1110434608201901216174510
+20190624033451-221: 0AEPS [B60400]MSG: Assigned type 0xFF00 for Ue10104Wall10-1110434608201901216174510
+20190624033451-222: 0AEPS [B60400]MSG: Assigned type 0xFFFF for Ue10105Empty10-1110434608201901216174510
+20190624033451-223: 0AEPS [B60400]MSG: Assigned type 0x00FF for Ue10113Foo10-1110434608201901216174510
+20190624033451-224: 0AEPS [B60400]MSG: Loading configuration '/home/t2/T2-12/apps/mfm/11.mfs'
+/home/t2/T2-12/apps/mfm/11.mfs:5:61: warning: Using more recent 'Ue10103Res10-1110434608201901216174510' for 'Ue10103Res10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:5:61: message: Registration 1: Nickname 'TFF00' -> UUID 'Ue10103Res10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:6:62: warning: Using more recent 'Ue10104DReg10-1110434608201901216174510' for 'Ue10104DReg10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:6:62: message: Registration 2: Nickname 'T001F' -> UUID 'Ue10104DReg10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:11:62: warning: Using more recent 'Ue10104Wall10-1110434608201901216174510' for 'Ue10104Wall10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:11:62: message: Registration 3: Nickname 'T03E0' -> UUID 'Ue10104Wall10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:12:63: warning: Using more recent 'Ue10105Empty10-1110434608201901216174510' for 'Ue10105Empty10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:12:63: message: Registration 4: Nickname 'TFFFF' -> UUID 'Ue10105Empty10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:13:61: warning: Using more recent 'Ue10113Foo10-1110434608201901216174510' for 'Ue10113Foo10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:13:61: message: Registration 5: Nickname 'T00FF' -> UUID 'Ue10113Foo10-1110434608201901216174510'
+Screen resize: 480 x 320
+20190624033451-225: 0AEPS [B60400]MSG: Loaded configuration '/home/t2/T2-12/apps/mfm/11.mfs'
+Mouse up @ (61,189)
+Mouse up @ (228,199)
+  C-c C-c20190624033501-226: 93AEPS [B60400]MSG: Simulation driver exiting
+Segmentation fault
+root@beaglebone:/home/t2/tmp/tslib/build# cat /proc/bus/input/devices | grep Name
+N: Name="tps65217_pwr_but"
+N: Name="ADS7846 Touchscreen"
+root@beaglebone:/home/t2/tmp/tslib/build# ts_uinput
+bash: ts_uinput: command not found
+root@beaglebone:/home/t2/tmp/tslib/build# /usr/local/bin/ts_print
+  C-c C-c
+root@beaglebone:/home/t2/tmp/tslib/build# /usr/local/bin/ts_print
+1561369120.244172:    326    160    144
+1561369120.251974:    326    151    141
+1561369120.260036:    326    147    140
+1561369120.268036:    326    145    143
+1561369120.276134:    326    144    143
+1561369120.284006:    327    142    144
+1561369120.292043:    328    140    144
+1561369120.300283:    329    140    141
+1561369120.307798:    332    140      0
+1561369121.940125:     70    121    148
+1561369121.947968:     70    119    146
+1561369121.956060:     69    118    149
+1561369121.964130:     70    118    150
+1561369121.972127:     70    117    150
+1561369121.980125:     71    117    150
+1561369121.988112:     73    117    147
+1561369121.996126:     75    116    146
+1561369122.004117:     77    116    147
+1561369122.012160:     80    116    150
+1561369122.019998:     83    116    153
+1561369122.027978:     86    117    154
+1561369122.036090:     89    118    154
+1561369122.044114:     92    119    153
+1561369122.052135:     97    120    149
+1561369122.060147:    101    121    148
+1561369122.068138:    105    122    149
+1561369122.076127:    109    123    150
+1561369122.084125:    112    124    153
+1561369122.092114:    114    126    154
+1561369122.100237:    117    127    154
+1561369122.108034:    120    128    154
+1561369122.116051:    122    130    152
+1561369122.124113:    125    132    149
+1561369122.132125:    128    134    149
+1561369122.140124:    131    135    149
+1561369122.148159:    135    137    142
+1561369122.156127:    138    138    142
+1561369122.164126:    141    140    143
+1561369122.172005:    145    141    142
+1561369122.179978:    148    143    143
+1561369122.188070:    152    144    143
+1561369122.196202:    155    146    142
+1561369122.204126:    158    147    139
+1561369122.212124:    161    149    137
+1561369122.220122:    165    150    136
+1561369122.228127:    168    152    134
+1561369122.236146:    171    154    130
+1561369122.244125:    174    155    130
+1561369122.252010:    178    157    130
+1561369122.259967:    181    160    129
+1561369122.268092:    185    162    130
+1561369122.276057:    189    164    130
+1561369122.284113:    193    166    130
+1561369122.292126:    197    167    129
+1561369122.300763:    201    169    129
+1561369122.308126:    205    171    129
+1561369122.316126:    209    172    127
+1561369122.324156:    212    173    127
+1561369122.332005:    215    175    128
+1561369122.339979:    218    176    129
+1561369122.348084:    222    178    130
+1561369122.356132:    225    180    131
+1561369122.363958:    229    183    132
+1561369122.372173:    233    185    133
+1561369122.380124:    237    188    134
+1561369122.388135:    240    190    135
+1561369122.396125:    244    193    137
+1561369122.404006:    248    195    138
+1561369122.411966:    252    197    137
+1561369122.420077:    255    198    134
+1561369122.428290:    258    199    134
+1561369122.436121:    260    201    137
+1561369122.444133:    261    201    139
+1561369122.452164:    263    202    141
+1561369122.460121:    264    202    143
+1561369122.468133:    264    202    143
+1561369122.476134:    265    202    143
+1561369122.484006:    265    202    143
+1561369122.492011:    265    202    144
+1561369122.500252:    265    202    144
+1561369122.508179:    265    201    144
+1561369122.516133:    265    199    144
+1561369122.524158:    264    197    143
+1561369122.532134:    263    195    142
+1561369122.540126:    262    192    142
+1561369122.548131:    261    191    141
+1561369122.556136:    259    189    139
+1561369122.564025:    257    188    138
+1561369122.571989:    254    186    137
+1561369122.580109:    251    185    135
+1561369122.587998:    248    184    135
+1561369122.596126:    245    182    135
+1561369122.604156:    242    181    134
+1561369122.612112:    239    179    134
+1561369122.620138:    236    177    132
+1561369122.628126:    234    175    129
+1561369122.636113:    231    174    128
+1561369122.644017:    230    172    128
+1561369122.651975:    228    170    126
+1561369122.660169:    227    169    125
+1561369122.668114:    227    168    124
+1561369122.676138:    226    168    122
+1561369122.684126:    226    167    118
+1561369122.691852:    226    167      0
+1561369123.464125:    252    177    128
+1561369123.471997:    252    177    128
+1561369123.480070:    252    178    128
+1561369123.488016:    252    178    128
+1561369123.496144:    252    178    128
+1561369123.503824:    252    178      0
+1561369123.772132:    244    187    137
+1561369123.779975:    243    185    132
+1561369123.787783:    242    184      0
+1561369123.980118:    247    190    135
+1561369123.987969:    246    189    136
+1561369123.996067:    246    189    136
+1561369124.003788:    246    189      0
+1561369124.172113:    262    182    135
+1561369124.179969:    261    181    133
+1561369124.188112:    260    180    128
+1561369124.195763:    260    180      0
+1561369124.352167:    268    182    137
+1561369124.359940:    267    182    138
+1561369124.368041:    266    181    136
+1561369124.376080:    265    182    129
+1561369124.383838:    264    182      0
+1561369124.564132:    272    180    131
+1561369124.571972:    271    180    131
+1561369124.580073:    271    180    129
+1561369124.587769:    271    180      0
+1561369124.760134:    275    180    130
+1561369124.767971:    275    179    125
+1561369124.775780:    274    178      0
+  C-c C-c
+root@beaglebone:/home/t2/tmp/tslib/build# printenv
+SDL_FBDEV=/dev/fb0
+SHELL=/bin/bash
+TERM=dumb
+OLDPWD=/home/t2/tmp/tslib/build
+TSLIB_CALIBFILE=/etc/pointercal
+USER=root
+SDL_VIDEODRIVER=fbcon
+EMACS=t
+LS_COLORS=rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.axa=00;36:*.oga=00;36:*.spx=00;36:*.xspf=00;36:
+SUDO_USER=debian
+SUDO_UID=1000
+TERMCAP=
+USERNAME=root
+PRU_C_DIR=/usr/share/ti/cgt-pru/include;/usr/share/ti/cgt-pru/lib
+COLUMNS=178
+MAIL=/var/mail/root
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PWD=/home/t2/tmp/tslib/build
+LANG=en_US.UTF-8
+NODE_PATH=/usr/local/lib/node_modules
+TS_LIB_CALIBFILE=./mycalib
+SHLVL=2
+SUDO_COMMAND=/bin/bash
+HOME=/root
+LOGNAME=root
+TSLIB_TSDEVICE=/dev/input/event1
+SUDO_GID=1000
+INSIDE_EMACS=24.4.1,comint
+_=/usr/bin/printenv
+root@beaglebone:/home/t2/tmp/tslib/build# export SDL_MOUSEDRIVER=TSLIB
+root@beaglebone:/home/t2/tmp/tslib/build# /home/t2/GITHUB/MFM/bin/mfmt2 {1H1} --sw 480 --sh 320 --sf --start-file /home/t2/T2-12/apps/mfm/11.mfs -ep /home/t2/MFMTMP/.gen/bin/libcue.so --run -a 0 -n
+20190624034122-10: 0AEPS [B60450]MSG: Writing to simulation directory '/tmp/20190624034122/'
+20190624034122-11: 0AEPS [B60450]MSG: Loaded Ue10103Res10-1110434608201901216174510 at 0xB5EA5924 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034122-12: 0AEPS [B60450]MSG: Loaded Ue10104DReg10-1110434608201901216174510 at 0xB5EA57C0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034122-13: 0AEPS [B60450]MSG: Loaded Ue10104Wall10-1110434608201901216174510 at 0xB5EA566C from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034122-14: 0AEPS [B60450]MSG: Loaded Ue10105Empty10-1110434608201901216174510 at 0xB5EA5518 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034122-15: 0AEPS [B60450]MSG: Loaded Ue10113Foo10-1110434608201901216174510 at 0xB5EA53C4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034122-16: 0AEPS [B60450]MSG: Loaded Ulam Class Uq_10104Fail10 at 0xB5EA53BC from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034122-17: 0AEPS [B60450]MSG: Loaded Ulam Class Uq_10105MDist10 at 0xB5EA53B8 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034122-18: 0AEPS [B60450]MSG: Loaded Ulam Class Uq_10106Random10 at 0xB5EA53B4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034122-19: 0AEPS [B60450]MSG: Loaded Ulam Class Uq_10106UrSelf10 at 0xB5EA53B0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034122-210: 0AEPS [B60450]MSG: Loaded Ulam Class Uq_1010919AtomUtils10 at 0xB5EA53AC from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034122-211: 0AEPS [B60450]MSG: Loaded Ulam Class Uq_10109210ByteStream10 at 0xB5EA53A8 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034122-212: 0AEPS [B60450]MSG: Loaded Ulam Class Uq_10109211EventWindow10 at 0xB5EA53A4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034122-213: 0AEPS [B60450]MSG: Loaded Ulam Class Uq_102323C2D10 at 0xB5EA53A0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034122-214: 0AEPS [B60450]MSG: Loaded Ulam Class Un_102649216ByteStreamString10 at 0xB5EA539C from /home/t2/MFMTMP/.gen/bin/libcue.so
+Screen resize: 480 x 320
+Screen resize: 480 x 320
+20190624034125-215: 0AEPS [B60450]MSG: Logging to: /tmp/20190624034122/log/log.txt
+20190624034125-216: 0AEPS [B60450]MSG: Added log target: /tmp/20190624034122/log/log.txt
+20190624034125-217: 0AEPS [B60450]MSG: Command line: /home/t2/GITHUB/MFM/bin/mfmt2 {1H1} --sw 480 --sh 320 --sf --start-file /home/t2/T2-12/apps/mfm/11.mfs -ep /home/t2/MFMTMP/.gen/bin/libcue.so --run -a 0 -n
+20190624034125-218: 0AEPS [B60450]MSG: [0,0]
+20190624034125-219: 0AEPS [B60450]MSG: Assigned type 0x001F for Ue10103Res10-1110434608201901216174510
+20190624034125-220: 0AEPS [B60450]MSG: Assigned type 0x03E0 for Ue10104DReg10-1110434608201901216174510
+20190624034125-221: 0AEPS [B60450]MSG: Assigned type 0xFF00 for Ue10104Wall10-1110434608201901216174510
+20190624034125-222: 0AEPS [B60450]MSG: Assigned type 0xFFFF for Ue10105Empty10-1110434608201901216174510
+20190624034125-223: 0AEPS [B60450]MSG: Assigned type 0x00FF for Ue10113Foo10-1110434608201901216174510
+20190624034125-224: 0AEPS [B60450]MSG: Loading configuration '/home/t2/T2-12/apps/mfm/11.mfs'
+/home/t2/T2-12/apps/mfm/11.mfs:5:61: warning: Using more recent 'Ue10103Res10-1110434608201901216174510' for 'Ue10103Res10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:5:61: message: Registration 1: Nickname 'TFF00' -> UUID 'Ue10103Res10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:6:62: warning: Using more recent 'Ue10104DReg10-1110434608201901216174510' for 'Ue10104DReg10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:6:62: message: Registration 2: Nickname 'T001F' -> UUID 'Ue10104DReg10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:11:62: warning: Using more recent 'Ue10104Wall10-1110434608201901216174510' for 'Ue10104Wall10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:11:62: message: Registration 3: Nickname 'T03E0' -> UUID 'Ue10104Wall10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:12:63: warning: Using more recent 'Ue10105Empty10-1110434608201901216174510' for 'Ue10105Empty10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:12:63: message: Registration 4: Nickname 'TFFFF' -> UUID 'Ue10105Empty10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:13:61: warning: Using more recent 'Ue10113Foo10-1110434608201901216174510' for 'Ue10113Foo10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:13:61: message: Registration 5: Nickname 'T00FF' -> UUID 'Ue10113Foo10-1110434608201901216174510'
+Screen resize: 480 x 320
+20190624034125-225: 0AEPS [B60450]MSG: Loaded configuration '/home/t2/T2-12/apps/mfm/11.mfs'
+Mouse up @ (101,129)
+Mouse up @ (69,206)
+Mouse up @ (279,2)
+  C-c C-c20190624034136-226: 117AEPS [B60450]MSG: Simulation driver exiting
+Segmentation fault
+root@beaglebone:/home/t2/tmp/tslib/build# printenv
+SDL_FBDEV=/dev/fb0
+SHELL=/bin/bash
+TERM=dumb
+OLDPWD=/home/t2/tmp/tslib/build
+TSLIB_CALIBFILE=/etc/pointercal
+USER=root
+SDL_VIDEODRIVER=fbcon
+EMACS=t
+LS_COLORS=rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.axa=00;36:*.oga=00;36:*.spx=00;36:*.xspf=00;36:
+SUDO_USER=debian
+SUDO_UID=1000
+TERMCAP=
+USERNAME=root
+PRU_C_DIR=/usr/share/ti/cgt-pru/include;/usr/share/ti/cgt-pru/lib
+COLUMNS=178
+MAIL=/var/mail/root
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PWD=/home/t2/tmp/tslib/build
+LANG=en_US.UTF-8
+NODE_PATH=/usr/local/lib/node_modules
+SDL_MOUSEDRIVER=TSLIB
+
+SHLVL=2
+SUDO_COMMAND=/bin/bash
+HOME=/root
+LOGNAME=root
+TSLIB_TSDEVICE=/dev/input/event1
+SUDO_GID=1000
+INSIDE_EMACS=24.4.1,comint
+_=/usr/bin/printenv
+root@beaglebone:/home/t2/tmp/tslib/build# export TS_LIB_CALIBFILE=/etc/pointercal
+root@beaglebone:/home/t2/tmp/tslib/build# /home/t2/GITHUB/MFM/bin/mfmt2 {1H1} --sw 480 --sh 320 --sf --start-file /home/t2/T2-12/apps/mfm/11.mfs -ep /home/t2/MFMTMP/.gen/bin/libcue.so --run -a 0 -n
+20190624034208-10: 0AEPS [B60D30]MSG: Writing to simulation directory '/tmp/20190624034208/'
+20190624034208-11: 0AEPS [B60D30]MSG: Loaded Ue10103Res10-1110434608201901216174510 at 0xB5F33924 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034208-12: 0AEPS [B60D30]MSG: Loaded Ue10104DReg10-1110434608201901216174510 at 0xB5F337C0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034208-13: 0AEPS [B60D30]MSG: Loaded Ue10104Wall10-1110434608201901216174510 at 0xB5F3366C from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034208-14: 0AEPS [B60D30]MSG: Loaded Ue10105Empty10-1110434608201901216174510 at 0xB5F33518 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034208-15: 0AEPS [B60D30]MSG: Loaded Ue10113Foo10-1110434608201901216174510 at 0xB5F333C4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034208-16: 0AEPS [B60D30]MSG: Loaded Ulam Class Uq_10104Fail10 at 0xB5F333BC from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034208-17: 0AEPS [B60D30]MSG: Loaded Ulam Class Uq_10105MDist10 at 0xB5F333B8 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034208-18: 0AEPS [B60D30]MSG: Loaded Ulam Class Uq_10106Random10 at 0xB5F333B4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034208-19: 0AEPS [B60D30]MSG: Loaded Ulam Class Uq_10106UrSelf10 at 0xB5F333B0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034208-210: 0AEPS [B60D30]MSG: Loaded Ulam Class Uq_1010919AtomUtils10 at 0xB5F333AC from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034208-211: 0AEPS [B60D30]MSG: Loaded Ulam Class Uq_10109210ByteStream10 at 0xB5F333A8 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034208-212: 0AEPS [B60D30]MSG: Loaded Ulam Class Uq_10109211EventWindow10 at 0xB5F333A4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034208-213: 0AEPS [B60D30]MSG: Loaded Ulam Class Uq_102323C2D10 at 0xB5F333A0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034208-214: 0AEPS [B60D30]MSG: Loaded Ulam Class Un_102649216ByteStreamString10 at 0xB5F3339C from /home/t2/MFMTMP/.gen/bin/libcue.so
+Screen resize: 480 x 320
+Screen resize: 480 x 320
+20190624034211-215: 0AEPS [B60D30]MSG: Logging to: /tmp/20190624034208/log/log.txt
+20190624034211-216: 0AEPS [B60D30]MSG: Added log target: /tmp/20190624034208/log/log.txt
+20190624034211-217: 0AEPS [B60D30]MSG: Command line: /home/t2/GITHUB/MFM/bin/mfmt2 {1H1} --sw 480 --sh 320 --sf --start-file /home/t2/T2-12/apps/mfm/11.mfs -ep /home/t2/MFMTMP/.gen/bin/libcue.so --run -a 0 -n
+20190624034211-218: 0AEPS [B60D30]MSG: [0,0]
+20190624034211-219: 0AEPS [B60D30]MSG: Assigned type 0x001F for Ue10103Res10-1110434608201901216174510
+20190624034211-220: 0AEPS [B60D30]MSG: Assigned type 0x03E0 for Ue10104DReg10-1110434608201901216174510
+20190624034211-221: 0AEPS [B60D30]MSG: Assigned type 0xFF00 for Ue10104Wall10-1110434608201901216174510
+20190624034211-222: 0AEPS [B60D30]MSG: Assigned type 0xFFFF for Ue10105Empty10-1110434608201901216174510
+20190624034211-223: 0AEPS [B60D30]MSG: Assigned type 0x00FF for Ue10113Foo10-1110434608201901216174510
+20190624034211-224: 0AEPS [B60D30]MSG: Loading configuration '/home/t2/T2-12/apps/mfm/11.mfs'
+/home/t2/T2-12/apps/mfm/11.mfs:5:61: warning: Using more recent 'Ue10103Res10-1110434608201901216174510' for 'Ue10103Res10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:5:61: message: Registration 1: Nickname 'TFF00' -> UUID 'Ue10103Res10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:6:62: warning: Using more recent 'Ue10104DReg10-1110434608201901216174510' for 'Ue10104DReg10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:6:62: message: Registration 2: Nickname 'T001F' -> UUID 'Ue10104DReg10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:11:62: warning: Using more recent 'Ue10104Wall10-1110434608201901216174510' for 'Ue10104Wall10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:11:62: message: Registration 3: Nickname 'T03E0' -> UUID 'Ue10104Wall10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:12:63: warning: Using more recent 'Ue10105Empty10-1110434608201901216174510' for 'Ue10105Empty10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:12:63: message: Registration 4: Nickname 'TFFFF' -> UUID 'Ue10105Empty10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:13:61: warning: Using more recent 'Ue10113Foo10-1110434608201901216174510' for 'Ue10113Foo10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:13:61: message: Registration 5: Nickname 'T00FF' -> UUID 'Ue10113Foo10-1110434608201901216174510'
+Screen resize: 480 x 320
+20190624034211-225: 0AEPS [B60D30]MSG: Loaded configuration '/home/t2/T2-12/apps/mfm/11.mfs'
+Mouse up @ (287,161)
+  C-c C-c20190624034217-226: 30AEPS [B60D30]MSG: Simulation driver exiting
+Segmentation fault
+root@beaglebone:/home/t2/tmp/tslib/build# export SDL_MOUSEDEV=/dev/input/event1 
+root@beaglebone:/home/t2/tmp/tslib/build# /home/t2/GITHUB/MFM/bin/mfmt2 {1H1} --sw 480 --sh 320 --sf --start-file /home/t2/T2-12/apps/mfm/11.mfs -ep /home/t2/MFMTMP/.gen/bin/libcue.so --run -a 0 -n
+20190624034242-10: 0AEPS [B60590]MSG: Writing to simulation directory '/tmp/20190624034242/'
+20190624034242-11: 0AEPS [B60590]MSG: Loaded Ue10103Res10-1110434608201901216174510 at 0xB5EB9924 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034242-12: 0AEPS [B60590]MSG: Loaded Ue10104DReg10-1110434608201901216174510 at 0xB5EB97C0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034242-13: 0AEPS [B60590]MSG: Loaded Ue10104Wall10-1110434608201901216174510 at 0xB5EB966C from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034242-14: 0AEPS [B60590]MSG: Loaded Ue10105Empty10-1110434608201901216174510 at 0xB5EB9518 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034242-15: 0AEPS [B60590]MSG: Loaded Ue10113Foo10-1110434608201901216174510 at 0xB5EB93C4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034242-16: 0AEPS [B60590]MSG: Loaded Ulam Class Uq_10104Fail10 at 0xB5EB93BC from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034242-17: 0AEPS [B60590]MSG: Loaded Ulam Class Uq_10105MDist10 at 0xB5EB93B8 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034242-18: 0AEPS [B60590]MSG: Loaded Ulam Class Uq_10106Random10 at 0xB5EB93B4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034242-19: 0AEPS [B60590]MSG: Loaded Ulam Class Uq_10106UrSelf10 at 0xB5EB93B0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034242-210: 0AEPS [B60590]MSG: Loaded Ulam Class Uq_1010919AtomUtils10 at 0xB5EB93AC from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034242-211: 0AEPS [B60590]MSG: Loaded Ulam Class Uq_10109210ByteStream10 at 0xB5EB93A8 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034242-212: 0AEPS [B60590]MSG: Loaded Ulam Class Uq_10109211EventWindow10 at 0xB5EB93A4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034242-213: 0AEPS [B60590]MSG: Loaded Ulam Class Uq_102323C2D10 at 0xB5EB93A0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034242-214: 0AEPS [B60590]MSG: Loaded Ulam Class Un_102649216ByteStreamString10 at 0xB5EB939C from /home/t2/MFMTMP/.gen/bin/libcue.so
+Screen resize: 480 x 320
+Screen resize: 480 x 320
+20190624034245-215: 0AEPS [B60590]MSG: Logging to: /tmp/20190624034242/log/log.txt
+20190624034245-216: 0AEPS [B60590]MSG: Added log target: /tmp/20190624034242/log/log.txt
+20190624034245-217: 0AEPS [B60590]MSG: Command line: /home/t2/GITHUB/MFM/bin/mfmt2 {1H1} --sw 480 --sh 320 --sf --start-file /home/t2/T2-12/apps/mfm/11.mfs -ep /home/t2/MFMTMP/.gen/bin/libcue.so --run -a 0 -n
+20190624034245-218: 0AEPS [B60590]MSG: [0,0]
+20190624034245-219: 0AEPS [B60590]MSG: Assigned type 0x001F for Ue10103Res10-1110434608201901216174510
+20190624034245-220: 0AEPS [B60590]MSG: Assigned type 0x03E0 for Ue10104DReg10-1110434608201901216174510
+20190624034245-221: 0AEPS [B60590]MSG: Assigned type 0xFF00 for Ue10104Wall10-1110434608201901216174510
+20190624034245-222: 0AEPS [B60590]MSG: Assigned type 0xFFFF for Ue10105Empty10-1110434608201901216174510
+20190624034245-223: 0AEPS [B60590]MSG: Assigned type 0x00FF for Ue10113Foo10-1110434608201901216174510
+20190624034245-224: 0AEPS [B60590]MSG: Loading configuration '/home/t2/T2-12/apps/mfm/11.mfs'
+/home/t2/T2-12/apps/mfm/11.mfs:5:61: warning: Using more recent 'Ue10103Res10-1110434608201901216174510' for 'Ue10103Res10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:5:61: message: Registration 1: Nickname 'TFF00' -> UUID 'Ue10103Res10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:6:62: warning: Using more recent 'Ue10104DReg10-1110434608201901216174510' for 'Ue10104DReg10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:6:62: message: Registration 2: Nickname 'T001F' -> UUID 'Ue10104DReg10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:11:62: warning: Using more recent 'Ue10104Wall10-1110434608201901216174510' for 'Ue10104Wall10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:11:62: message: Registration 3: Nickname 'T03E0' -> UUID 'Ue10104Wall10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:12:63: warning: Using more recent 'Ue10105Empty10-1110434608201901216174510' for 'Ue10105Empty10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:12:63: message: Registration 4: Nickname 'TFFFF' -> UUID 'Ue10105Empty10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:13:61: warning: Using more recent 'Ue10113Foo10-1110434608201901216174510' for 'Ue10113Foo10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:13:61: message: Registration 5: Nickname 'T00FF' -> UUID 'Ue10113Foo10-1110434608201901216174510'
+Screen resize: 480 x 320
+20190624034245-225: 0AEPS [B60590]MSG: Loaded configuration '/home/t2/T2-12/apps/mfm/11.mfs'
+Mouse up @ (0,0)
+Mouse up @ (276,36)
+Mouse up @ (479,0)
+20190624034247-226: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (424,0)
+Mouse up @ (479,0)
+20190624034247-227: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,64)
+Mouse up @ (479,30)
+20190624034247-228: 4AEPS [B60590]MSG: MBE 479,30 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034247-229: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,64)
+Mouse up @ (479,29)
+20190624034247-230: 4AEPS [B60590]MSG: MBE 479,29 + 0
+Mouse up @ (479,85)
+Mouse up @ (479,81)
+20190624034247-231: 4AEPS [B60590]MSG: MBE 479,81 + 0
+Mouse up @ (479,71)
+Mouse up @ (479,34)
+20190624034247-232: 4AEPS [B60590]MSG: MBE 479,34 + 0
+Mouse up @ (360,64)
+Mouse up @ (442,13)
+20190624034247-233: 4AEPS [B60590]MSG: MBE 442,13 + 0
+Mouse up @ (479,64)
+Mouse up @ (479,19)
+20190624034247-234: 4AEPS [B60590]MSG: MBE 479,19 + 0
+Mouse up @ (479,64)
+Mouse up @ (479,24)
+20190624034247-235: 4AEPS [B60590]MSG: MBE 479,24 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034247-236: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (456,0)
+Mouse up @ (425,0)
+20190624034247-237: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+20190624034247-238: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+20190624034247-239: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (425,0)
+20190624034247-240: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+20190624034247-241: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (360,64)
+Mouse up @ (424,21)
+20190624034247-242: 4AEPS [B60590]MSG: MBE 424,21 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034247-243: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (432,0)
+Mouse up @ (361,0)
+Mouse up @ (446,0)
+20190624034247-244: 4AEPS [B60590]MSG: MBE 446,0 + 0
+Mouse up @ (479,64)
+Mouse up @ (479,17)
+20190624034247-245: 4AEPS [B60590]MSG: MBE 479,17 + 0
+Mouse up @ (361,0)
+Mouse up @ (432,0)
+20190624034247-246: 4AEPS [B60590]MSG: MBE 432,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034247-247: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (425,0)
+Mouse up @ (479,0)
+20190624034247-248: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,64)
+Mouse up @ (479,49)
+20190624034247-249: 4AEPS [B60590]MSG: MBE 479,49 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034247-250: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (458,0)
+Mouse up @ (361,0)
+Mouse up @ (465,0)
+20190624034247-251: 4AEPS [B60590]MSG: MBE 465,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (425,0)
+Mouse up @ (479,0)
+20190624034247-252: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034247-253: 4AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034248-254: 5AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (447,0)
+Mouse up @ (328,0)
+Mouse up @ (414,0)
+20190624034248-255: 5AEPS [B60590]MSG: MBE 414,0 + 0
+Mouse up @ (479,0)
+20190624034248-256: 5AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (454,0)
+Mouse up @ (479,0)
+20190624034248-257: 5AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (362,0)
+Mouse up @ (465,0)
+20190624034248-258: 5AEPS [B60590]MSG: MBE 465,0 + 0
+Mouse up @ (479,12)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034248-259: 5AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (455,0)
+Mouse up @ (359,0)
+Mouse up @ (459,0)
+20190624034248-260: 5AEPS [B60590]MSG: MBE 459,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034248-261: 5AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (359,0)
+20190624034248-262: 5AEPS [B60590]MSG: MBE 463,0 + 0
+Mouse up @ (479,0)
+20190624034248-263: 5AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,64)
+Mouse up @ (479,16)
+20190624034248-264: 5AEPS [B60590]MSG: MBE 479,16 + 0
+Mouse up @ (479,64)
+Mouse up @ (479,27)
+20190624034248-265: 5AEPS [B60590]MSG: MBE 479,27 + 0
+Mouse up @ (422,27)
+20190624034248-266: 5AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (426,64)
+Mouse up @ (479,31)
+20190624034248-267: 5AEPS [B60590]MSG: MBE 479,31 + 0
+Mouse up @ (426,0)
+Mouse up @ (479,0)
+20190624034248-268: 5AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034248-269: 5AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,54)
+Mouse up @ (441,0)
+Mouse up @ (452,0)
+Mouse up @ (479,19)
+Mouse up @ (479,51)
+Mouse up @ (479,0)
+Mouse up @ (458,0)
+Mouse up @ (422,0)
+Mouse up @ (479,0)
+20190624034248-270: 5AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (358,64)
+Mouse up @ (442,21)
+20190624034248-271: 5AEPS [B60590]MSG: MBE 442,21 + 0
+Mouse up @ (422,0)
+Mouse up @ (479,0)
+20190624034248-272: 5AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (358,0)
+Mouse up @ (466,0)
+20190624034248-273: 5AEPS [B60590]MSG: MBE 466,0 + 0
+Mouse up @ (422,0)
+Mouse up @ (479,0)
+20190624034248-274: 6AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (358,0)
+Mouse up @ (479,0)
+20190624034248-275: 6AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (358,0)
+Mouse up @ (445,0)
+20190624034248-276: 6AEPS [B60590]MSG: MBE 445,0 + 0
+Mouse up @ (474,0)
+Mouse up @ (479,0)
+Mouse up @ (426,0)
+Mouse up @ (479,0)
+20190624034248-277: 6AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,31)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034248-278: 6AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (362,0)
+20190624034248-279: 6AEPS [B60590]MSG: MBE 463,0 + 0
+Mouse up @ (426,0)
+20190624034248-280: 6AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (422,64)
+Mouse up @ (479,26)
+20190624034248-281: 6AEPS [B60590]MSG: MBE 479,26 + 0
+Mouse up @ (422,0)
+Mouse up @ (479,0)
+20190624034248-282: 6AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (478,24)
+Mouse up @ (479,0)
+Mouse up @ (361,64)
+Mouse up @ (435,43)
+20190624034248-283: 6AEPS [B60590]MSG: MBE 435,43 + 0
+Mouse up @ (464,0)
+Mouse up @ (479,0)
+20190624034248-284: 6AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,64)
+Mouse up @ (479,59)
+20190624034248-285: 6AEPS [B60590]MSG: MBE 479,59 + 0
+Mouse up @ (479,0)
+Mouse up @ (425,0)
+Mouse up @ (479,0)
+20190624034248-286: 6AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (359,0)
+20190624034248-287: 6AEPS [B60590]MSG: MBE 443,0 + 0
+Mouse up @ (479,0)
+20190624034248-288: 6AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (447,15)
+Mouse up @ (479,0)
+20190624034248-289: 6AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (360,0)
+Mouse up @ (431,0)
+20190624034248-290: 6AEPS [B60590]MSG: MBE 431,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,36)
+Mouse up @ (424,0)
+Mouse up @ (479,0)
+20190624034248-291: 6AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034249-292: 6AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (360,0)
+20190624034249-293: 6AEPS [B60590]MSG: MBE 426,0 + 0
+Mouse up @ (479,64)
+20190624034249-294: 7AEPS [B60590]MSG: MBE 479,31 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034249-295: 7AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+20190624034249-296: 7AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (453,0)
+Mouse up @ (479,0)
+Mouse up @ (424,64)
+Mouse up @ (479,51)
+20190624034249-297: 7AEPS [B60590]MSG: MBE 479,51 + 0
+Mouse up @ (479,115)
+20190624034249-298: 7AEPS [B60590]MSG: MBE 479,102 + 0
+Mouse up @ (352,0)
+20190624034249-299: 7AEPS [B60590]MSG: MBE 421,0 + 0
+Mouse up @ (352,0)
+20190624034250-3100: 13AEPS [B60590]MSG: MBE 422,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034250-3101: 13AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,20)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (352,0)
+20190624034250-3102: 13AEPS [B60590]MSG: MBE 447,0 + 0
+Mouse up @ (352,0)
+20190624034250-3103: 13AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,39)
+Mouse up @ (479,53)
+Mouse up @ (479,15)
+Mouse up @ (479,0)
+20190624034250-3104: 13AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (466,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (415,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (351,64)
+Mouse up @ (460,1)
+20190624034250-3105: 13AEPS [B60590]MSG: MBE 460,1 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,64)
+Mouse up @ (479,3)
+20190624034250-3106: 14AEPS [B60590]MSG: MBE 479,3 + 0
+Mouse up @ (358,0)
+20190624034250-3107: 14AEPS [B60590]MSG: MBE 427,0 + 0
+Mouse up @ (422,64)
+Mouse up @ (479,18)
+20190624034250-3108: 14AEPS [B60590]MSG: MBE 479,18 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (422,64)
+20190624034250-3109: 14AEPS [B60590]MSG: MBE 479,44 + 0
+Mouse up @ (361,0)
+20190624034250-3110: 14AEPS [B60590]MSG: MBE 432,0 + 0
+Mouse up @ (358,0)
+20190624034250-3111: 14AEPS [B60590]MSG: MBE 477,0 + 0
+Mouse up @ (479,0)
+20190624034250-3112: 14AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (422,64)
+20190624034250-3113: 14AEPS [B60590]MSG: MBE 479,61 + 0
+Mouse up @ (479,125)
+Mouse up @ (479,122)
+20190624034250-3114: 14AEPS [B60590]MSG: MBE 479,122 + 0
+Mouse up @ (479,147)
+20190624034250-3115: 14AEPS [B60590]MSG: MBE 479,111 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034250-3116: 14AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (423,0)
+Mouse up @ (479,0)
+20190624034250-3117: 14AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,64)
+20190624034250-3118: 14AEPS [B60590]MSG: MBE 479,56 + 0
+Mouse up @ (427,0)
+Mouse up @ (479,64)
+Mouse up @ (479,62)
+20190624034250-3119: 14AEPS [B60590]MSG: MBE 479,62 + 0
+Mouse up @ (479,0)
+Mouse up @ (358,0)
+20190624034250-3120: 14AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (473,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,64)
+20190624034250-3121: 14AEPS [B60590]MSG: MBE 479,20 + 0
+Mouse up @ (479,0)
+Mouse up @ (422,0)
+Mouse up @ (479,0)
+20190624034250-3122: 14AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,55)
+Mouse up @ (479,14)
+20190624034250-3123: 14AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (360,0)
+20190624034250-3124: 15AEPS [B60590]MSG: MBE 450,0 + 0
+Mouse up @ (360,64)
+Mouse up @ (454,51)
+20190624034250-3125: 15AEPS [B60590]MSG: MBE 454,51 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (361,0)
+20190624034250-3126: 15AEPS [B60590]MSG: MBE 432,0 + 0
+Mouse up @ (479,14)
+Mouse up @ (425,0)
+Mouse up @ (479,0)
+20190624034250-3127: 15AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,64)
+20190624034250-3128: 15AEPS [B60590]MSG: MBE 479,44 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034250-3129: 15AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (358,0)
+Mouse up @ (452,0)
+20190624034251-3130: 16AEPS [B60590]MSG: MBE 452,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,64)
+Mouse up @ (479,48)
+20190624034251-3131: 16AEPS [B60590]MSG: MBE 479,48 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034251-3132: 16AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+20190624034251-3133: 16AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,79)
+20190624034251-3134: 16AEPS [B60590]MSG: MBE 479,30 + 0
+Mouse up @ (479,0)
+20190624034251-3135: 16AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (360,0)
+20190624034251-3136: 16AEPS [B60590]MSG: MBE 438,0 + 0
+Mouse up @ (444,0)
+Mouse up @ (479,66)
+Mouse up @ (479,0)
+Mouse up @ (424,0)
+Mouse up @ (479,0)
+20190624034251-3137: 17AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (358,0)
+Mouse up @ (437,0)
+20190624034251-3138: 17AEPS [B60590]MSG: MBE 437,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034251-3139: 17AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (448,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034251-3140: 17AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (425,64)
+Mouse up @ (479,29)
+20190624034251-3141: 17AEPS [B60590]MSG: MBE 479,29 + 0
+Mouse up @ (361,0)
+Mouse up @ (473,0)
+20190624034251-3142: 18AEPS [B60590]MSG: MBE 473,0 + 0
+Mouse up @ (479,0)
+20190624034251-3143: 18AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (455,0)
+Mouse up @ (424,0)
+Mouse up @ (479,0)
+20190624034251-3144: 18AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (424,0)
+20190624034251-3145: 18AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (361,0)
+20190624034251-3146: 18AEPS [B60590]MSG: MBE 444,0 + 0
+Mouse up @ (425,0)
+20190624034251-3147: 18AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034251-3148: 18AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (479,8)
+Mouse up @ (424,0)
+Mouse up @ (479,0)
+20190624034251-3149: 19AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (424,0)
+Mouse up @ (479,0)
+20190624034251-3150: 19AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (359,0)
+20190624034251-3151: 19AEPS [B60590]MSG: MBE 441,0 + 0
+Mouse up @ (352,0)
+20190624034251-3152: 19AEPS [B60590]MSG: MBE 422,0 + 0
+Mouse up @ (352,0)
+20190624034252-3153: 23AEPS [B60590]MSG: MBE 448,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (362,0)
+Mouse up @ (455,0)
+20190624034252-3154: 23AEPS [B60590]MSG: MBE 455,0 + 0
+Mouse up @ (400,64)
+Mouse up @ (479,5)
+20190624034252-3155: 23AEPS [B60590]MSG: MBE 479,5 + 0
+Mouse up @ (352,0)
+20190624034252-3156: 23AEPS [B60590]MSG: MBE 460,0 + 0
+Mouse up @ (352,0)
+20190624034252-3157: 24AEPS [B60590]MSG: MBE 478,0 + 0
+Mouse up @ (479,0)
+20190624034252-3158: 24AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (352,0)
+20190624034252-3159: 24AEPS [B60590]MSG: MBE 423,0 + 0
+Mouse up @ (352,0)
+20190624034252-3160: 26AEPS [B60590]MSG: MBE 419,0 + 0
+Mouse up @ (362,0)
+Mouse up @ (467,0)
+20190624034252-3161: 26AEPS [B60590]MSG: MBE 467,0 + 0
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+20190624034252-3162: 26AEPS [B60590]MSG: MBE 479,0 + 0
+Mouse up @ (352,0)
+20190624034252-3163: 26AEPS [B60590]MSG: MBE 446,0 + 0
+Mouse up @ (352,0)
+20190624034258-3164: 134AEPS [B60590]MSG: MBE 457,0 + 0
+Mouse up @ (456,60)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (479,0)
+Mouse up @ (352,0)
+20190624034258-3165: 134AEPS [B60590]MSG: MBE 467,0 + 0
+  C-c C-c20190624034304-3166: 260AEPS [B60590]MSG: Simulation driver exiting
+Segmentation fault
+root@beaglebone:/home/t2/tmp/tslib/build# printenv
+SDL_FBDEV=/dev/fb0
+SHELL=/bin/bash
+TERM=dumb
+OLDPWD=/home/t2/tmp/tslib/build
+TSLIB_CALIBFILE=/etc/pointercal
+USER=root
+SDL_VIDEODRIVER=fbcon
+EMACS=t
+LS_COLORS=rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.axa=00;36:*.oga=00;36:*.spx=00;36:*.xspf=00;36:
+SUDO_USER=debian
+SUDO_UID=1000
+TERMCAP=
+USERNAME=root
+PRU_C_DIR=/usr/share/ti/cgt-pru/include;/usr/share/ti/cgt-pru/lib
+COLUMNS=178
+MAIL=/var/mail/root
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+SDL_MOUSEDEV=/dev/input/event1
+PWD=/home/t2/tmp/tslib/build
+LANG=en_US.UTF-8
+NODE_PATH=/usr/local/lib/node_modules
+SDL_MOUSEDRIVER=TSLIB
+TS_LIB_CALIBFILE=/etc/pointercal
+SHLVL=2
+SUDO_COMMAND=/bin/bash
+HOME=/root
+LOGNAME=root
+TSLIB_TSDEVICE=/dev/input/event1
+SUDO_GID=1000
+INSIDE_EMACS=24.4.1,comint
+_=/usr/bin/printenv
+root@beaglebone:/home/t2/tmp/tslib/build# unsetenv TS_LIB_CALIBFILE
+bash: unsetenv: command not found
+root@beaglebone:/home/t2/tmp/tslib/build# unset TS_LIB_CALIBFILE
+root@beaglebone:/home/t2/tmp/tslib/build# printenv
+SDL_FBDEV=/dev/fb0
+SHELL=/bin/bash
+TERM=dumb
+OLDPWD=/home/t2/tmp/tslib/build
+TSLIB_CALIBFILE=/etc/pointercal
+USER=root
+SDL_VIDEODRIVER=fbcon
+EMACS=t
+LS_COLORS=rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.axa=00;36:*.oga=00;36:*.spx=00;36:*.xspf=00;36:
+SUDO_USER=debian
+SUDO_UID=1000
+TERMCAP=
+USERNAME=root
+PRU_C_DIR=/usr/share/ti/cgt-pru/include;/usr/share/ti/cgt-pru/lib
+COLUMNS=178
+MAIL=/var/mail/root
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+SDL_MOUSEDEV=/dev/input/event1
+PWD=/home/t2/tmp/tslib/build
+LANG=en_US.UTF-8
+NODE_PATH=/usr/local/lib/node_modules
+SDL_MOUSEDRIVER=TSLIB
+SHLVL=2
+SUDO_COMMAND=/bin/bash
+HOME=/root
+LOGNAME=root
+TSLIB_TSDEVICE=/dev/input/event1
+SUDO_GID=1000
+INSIDE_EMACS=24.4.1,comint
+_=/usr/bin/printenv
+root@beaglebone:/home/t2/tmp/tslib/build# ts_test_mt 
+root@beaglebone:/home/t2/tmp/tslib/build# export SDL_MOUSEDRV=TSLIB
+root@beaglebone:/home/t2/tmp/tslib/build# /home/t2/GITHUB/MFM/bin/mfmt2 {1H1} --sw 480 --sh 320 --sf --start-file /home/t2/T2-12/apps/mfm/11.mfs -ep /home/t2/MFMTMP/.gen/bin/libcue.so --run -a 0 -n
+20190624034603-10: 0AEPS [B605C0]MSG: Writing to simulation directory '/tmp/20190624034603/'
+20190624034603-11: 0AEPS [B605C0]MSG: Loaded Ue10103Res10-1110434608201901216174510 at 0xB5EBC924 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034603-12: 0AEPS [B605C0]MSG: Loaded Ue10104DReg10-1110434608201901216174510 at 0xB5EBC7C0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034603-13: 0AEPS [B605C0]MSG: Loaded Ue10104Wall10-1110434608201901216174510 at 0xB5EBC66C from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034603-14: 0AEPS [B605C0]MSG: Loaded Ue10105Empty10-1110434608201901216174510 at 0xB5EBC518 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034603-15: 0AEPS [B605C0]MSG: Loaded Ue10113Foo10-1110434608201901216174510 at 0xB5EBC3C4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034603-16: 0AEPS [B605C0]MSG: Loaded Ulam Class Uq_10104Fail10 at 0xB5EBC3BC from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034603-17: 0AEPS [B605C0]MSG: Loaded Ulam Class Uq_10105MDist10 at 0xB5EBC3B8 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034603-18: 0AEPS [B605C0]MSG: Loaded Ulam Class Uq_10106Random10 at 0xB5EBC3B4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034603-19: 0AEPS [B605C0]MSG: Loaded Ulam Class Uq_10106UrSelf10 at 0xB5EBC3B0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034603-210: 0AEPS [B605C0]MSG: Loaded Ulam Class Uq_1010919AtomUtils10 at 0xB5EBC3AC from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034603-211: 0AEPS [B605C0]MSG: Loaded Ulam Class Uq_10109210ByteStream10 at 0xB5EBC3A8 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034603-212: 0AEPS [B605C0]MSG: Loaded Ulam Class Uq_10109211EventWindow10 at 0xB5EBC3A4 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034603-213: 0AEPS [B605C0]MSG: Loaded Ulam Class Uq_102323C2D10 at 0xB5EBC3A0 from /home/t2/MFMTMP/.gen/bin/libcue.so
+20190624034603-214: 0AEPS [B605C0]MSG: Loaded Ulam Class Un_102649216ByteStreamString10 at 0xB5EBC39C from /home/t2/MFMTMP/.gen/bin/libcue.so
+Screen resize: 480 x 320
+Screen resize: 480 x 320
+20190624034606-215: 0AEPS [B605C0]MSG: Logging to: /tmp/20190624034603/log/log.txt
+20190624034606-216: 0AEPS [B605C0]MSG: Added log target: /tmp/20190624034603/log/log.txt
+20190624034606-217: 0AEPS [B605C0]MSG: Command line: /home/t2/GITHUB/MFM/bin/mfmt2 {1H1} --sw 480 --sh 320 --sf --start-file /home/t2/T2-12/apps/mfm/11.mfs -ep /home/t2/MFMTMP/.gen/bin/libcue.so --run -a 0 -n
+20190624034606-218: 0AEPS [B605C0]MSG: [0,0]
+20190624034606-219: 0AEPS [B605C0]MSG: Assigned type 0x001F for Ue10103Res10-1110434608201901216174510
+20190624034606-220: 0AEPS [B605C0]MSG: Assigned type 0x03E0 for Ue10104DReg10-1110434608201901216174510
+20190624034606-221: 0AEPS [B605C0]MSG: Assigned type 0xFF00 for Ue10104Wall10-1110434608201901216174510
+20190624034606-222: 0AEPS [B605C0]MSG: Assigned type 0xFFFF for Ue10105Empty10-1110434608201901216174510
+20190624034606-223: 0AEPS [B605C0]MSG: Assigned type 0x00FF for Ue10113Foo10-1110434608201901216174510
+20190624034606-224: 0AEPS [B605C0]MSG: Loading configuration '/home/t2/T2-12/apps/mfm/11.mfs'
+/home/t2/T2-12/apps/mfm/11.mfs:5:61: warning: Using more recent 'Ue10103Res10-1110434608201901216174510' for 'Ue10103Res10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:5:61: message: Registration 1: Nickname 'TFF00' -> UUID 'Ue10103Res10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:6:62: warning: Using more recent 'Ue10104DReg10-1110434608201901216174510' for 'Ue10104DReg10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:6:62: message: Registration 2: Nickname 'T001F' -> UUID 'Ue10104DReg10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:11:62: warning: Using more recent 'Ue10104Wall10-1110434608201901216174510' for 'Ue10104Wall10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:11:62: message: Registration 3: Nickname 'T03E0' -> UUID 'Ue10104Wall10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:12:63: warning: Using more recent 'Ue10105Empty10-1110434608201901216174510' for 'Ue10105Empty10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:12:63: message: Registration 4: Nickname 'TFFFF' -> UUID 'Ue10105Empty10-1110434608201901216174510'
+/home/t2/T2-12/apps/mfm/11.mfs:13:61: warning: Using more recent 'Ue10113Foo10-1110434608201901216174510' for 'Ue10113Foo10-1110434608201901206214753'
+/home/t2/T2-12/apps/mfm/11.mfs:13:61: message: Registration 5: Nickname 'T00FF' -> UUID 'Ue10113Foo10-1110434608201901216174510'
+Screen resize: 480 x 320
+20190624034606-225: 0AEPS [B605C0]MSG: Loaded configuration '/home/t2/T2-12/apps/mfm/11.mfs'
+Mouse up @ (293,150)
+Mouse up @ (213,154)
+Mouse up @ (289,80)
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Mouse up @ (189,147)
+Mouse up @ (37,31)
+Mouse up @ (428,292)
+Mouse up @ (412,260)
+Mouse up @ (412,259)
+Mouse up @ (442,41)
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Primed pump
+Mouse up @ (354,98)
+Primed pump
+Primed pump
+TSLIB_CALIBFILE=/etc/pointercal  C-c C-c20190624041102-226: 24604AEPS [B605C0]MSG: Simulation driver exiting
+Segmentation fault
+root@beaglebone:/home/t2/tmp/tslib/build# 
