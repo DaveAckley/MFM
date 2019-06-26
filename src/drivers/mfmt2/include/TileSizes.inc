@@ -10,6 +10,6 @@
    	 and double braces is for a staggered grid layout
  */
 
-XX(G,48,32)
+/*XX(G,48,32)*/
 XX(H,60,40)
-XX(I,75,50)
+/*XX(I,75,50)*/
