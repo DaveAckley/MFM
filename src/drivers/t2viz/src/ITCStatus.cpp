@@ -89,8 +89,10 @@ namespace MFM {
     
   void ITCStatus::formatDeltasLine(ByteSink & bs) {
     bs.Printf("%s",getAbbr());
-    if (mDeltas[BYTES_SENT_IDX] > 0) bs.Printf(" %d>%d",mDeltas[BYTES_SENT_IDX],mDeltas[PACKETS_SENT_IDX]);
-    if (mDeltas[BYTES_RCVD_IDX] > 0) bs.Printf(" %d<%d",mDeltas[BYTES_RCVD_IDX],mDeltas[PACKETS_RCVD_IDX]);
+    if (mDeltas[PRIO_BYTES_SENT_IDX] > 0) bs.Printf(" %d>%d",mDeltas[PRIO_BYTES_SENT_IDX],mDeltas[PRIO_PACKETS_SENT_IDX]);
+    if (mDeltas[PRIO_BYTES_RCVD_IDX] > 0) bs.Printf(" %d<%d",mDeltas[PRIO_BYTES_RCVD_IDX],mDeltas[PRIO_PACKETS_RCVD_IDX]);
+    if (mDeltas[BULK_BYTES_SENT_IDX] > 0) bs.Printf(" %d}%d",mDeltas[BULK_BYTES_SENT_IDX],mDeltas[BULK_PACKETS_SENT_IDX]);
+    if (mDeltas[BULK_BYTES_RCVD_IDX] > 0) bs.Printf(" %d{%d",mDeltas[BULK_BYTES_RCVD_IDX],mDeltas[BULK_PACKETS_RCVD_IDX]);
     if (mDeltas[SYNC_FAILS_IDX] > 0) bs.Printf(" -sn");
     if (mDeltas[PACKET_SYNCS_IDX] > 0) bs.Printf(" +sn");
     if (mDeltas[TIMEOUTS_IDX] > 0) bs.Printf(" tm");
@@ -104,19 +106,23 @@ namespace MFM {
     u32 func2Idx = ITCIcons::ICON_FUNC_EMPTY_IDX;
     if (mDeltas[SYNC_FAILS_IDX] > 0 || mDeltas[TIMEOUTS_IDX] > 0) {
       func1Idx = func2Idx = ITCIcons::ICON_FUNC_ERROR_IDX;
-    } else if (mDeltas[BYTES_SENT_IDX] > 0 || mDeltas[BYTES_RCVD_IDX] > 0) {
-      if (mDeltas[BYTES_SENT_IDX] > 0) {
-        func1Idx = ITCIcons::ICON_FUNC_SEND_IDX;
-        size1Idx = mapBytesToSizeIdx(mDeltas[BYTES_SENT_IDX]);
-      } 
-      if (mDeltas[BYTES_RCVD_IDX] > 0) {
-        func2Idx = ITCIcons::ICON_FUNC_RECV_IDX;
-        size2Idx = mapBytesToSizeIdx(mDeltas[BYTES_RCVD_IDX]);
-      }
     } else if (!mIsOpen) {
       func1Idx = func2Idx = ITCIcons::ICON_FUNC_CLOSED_IDX;
-    }
-
+    } else {
+      u32 bytesSent = mDeltas[BULK_BYTES_SENT_IDX] + mDeltas[PRIO_BYTES_SENT_IDX];
+      u32 bytesRcvd = mDeltas[BULK_BYTES_RCVD_IDX] + mDeltas[PRIO_BYTES_RCVD_IDX];
+      if (bytesSent > 0 || bytesRcvd > 0) {
+        if (bytesSent > 0) {
+          func1Idx = ITCIcons::ICON_FUNC_SEND_IDX;
+          size1Idx = mapBytesToSizeIdx(bytesSent);
+        } 
+        if (bytesRcvd > 0) {
+          func2Idx = ITCIcons::ICON_FUNC_RECV_IDX;
+          size2Idx = mapBytesToSizeIdx(bytesRcvd);
+        }
+      }
+    } 
+    
     drawIconAt(draw, icons, side1Pos[mDirIdx], func1Idx, size1Idx);
     drawIconAt(draw, icons, side2Pos[mDirIdx], func2Idx, size2Idx);
   }

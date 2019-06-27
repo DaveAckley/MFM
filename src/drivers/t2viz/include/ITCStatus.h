@@ -23,13 +23,17 @@ namespace MFM {
     const char * getAbbr() const ;
 
     enum {
-      BYTES_SENT_IDX = 0,
-      BYTES_RCVD_IDX,
-      PACKETS_SENT_IDX,
-      PACKETS_RCVD_IDX,
-      PACKET_SYNCS_IDX,
+      PACKET_SYNCS_IDX = 0,
       SYNC_FAILS_IDX,
       TIMEOUTS_IDX,
+      BULK_BYTES_SENT_IDX,
+      BULK_BYTES_RCVD_IDX,
+      BULK_PACKETS_SENT_IDX,
+      BULK_PACKETS_RCVD_IDX,
+      PRIO_BYTES_SENT_IDX,
+      PRIO_BYTES_RCVD_IDX,
+      PRIO_PACKETS_SENT_IDX,
+      PRIO_PACKETS_RCVD_IDX,
       ITC_STAT_COUNT
     };
     u32 mDirIdx; // 0..5
