@@ -56,6 +56,9 @@ namespace MFM {
     ITCStatus mITCs[ITC_COUNT];
     ITCStatusPanel mITCPanels[ITC_COUNT];
 
+    double mLastCDMTime;
+    u32 mLastCDMChangeCount;
+
     T2Viz(SDL_Surface *) ;
     virtual void input(SDLI&,Event&) ;
     virtual void update(SDLI&) ;

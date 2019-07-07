@@ -10,6 +10,8 @@ namespace MFM {
     , mLastAER(-1)
     , mLastAEPS(-1)
     , mLastAEPSChangeCount(0)
+    , mLastCDMTime(-1)
+    , mLastCDMChangeCount(0)
   {
     //// Init icons
     mITCIcons.init(screen);
@@ -132,7 +134,7 @@ namespace MFM {
     // The static data goes into the root window
     {
       mStaticPanel.SetName("StaticPanel");
-      mStaticPanel.SetForeground(T2_COLOR_MEDIUM_RED);
+      mStaticPanel.SetForeground(T2_COLOR_LIGHT_GREY);
       mStaticPanel.SetBackground(T2_COLOR_BKGD_RED);
       mStaticPanel.SetBorder(T2_COLOR_BKGD_RED);
       mStaticPanel.SetVisible(true);
@@ -189,6 +191,23 @@ namespace MFM {
 
     //// Refresh cache values
 
+    do { // Package tags
+      StaticPanel::TextPanelByteSink & tagbs = mStaticPanel.GetByteSink();
+      tagbs.Reset();
+
+      s32 tmp;
+      {
+        const char * PATH = "/home/t2/cdmd-T2-12.mfz-cdm-install-tag.dat";
+        if (!readOneDecimalNumberFile(PATH,tmp)) tagbs.Printf("T2-12: no tag\n");
+        else tagbs.Printf("T2-12: %d\n",tmp);
+      }
+      {
+        const char * PATH = "/home/t2/GITHUB/cdmd-MFM.mfz-cdm-install-tag.dat";
+        if (!readOneDecimalNumberFile(PATH,tmp)) tagbs.Printf("MFMT2: no tag\n");
+        else tagbs.Printf("MFMT2: %d\n",tmp);
+      }
+    } while(0);
+
     do { // CPU freq
       const char * PATH = "/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq";
       s32 tmp;
@@ -228,17 +247,38 @@ namespace MFM {
           LOG.Error("Can't read '%s'",PATH);
     } while(0);
 
+    do { // CDM liveness
+      const char * PATH = "/run/cdm/status.dat";
+      double a[9];
+      // Assume all dead
+      for (u32 i = 0; i < ITC_COUNT; ++i) mITCs[i].setIsAlive(false);
+      if (readFloatsFromFile(PATH, a, sizeof(a)/sizeof(a[0]))) {
+        if (a[8] != mLastCDMTime) {
+          mLastCDMChangeCount = mUpdateCount;
+          mLastCDMTime = a[8];
+        }
+        if (mLastCDMChangeCount + 50 <= mUpdateCount) mLastCDMTime = -1;
+        else {
+          u32 itc = 0;
+          for (u32 i = 0; i < ROSE_DIR_COUNT; ++i) {
+            if (i%4 == 0) continue;
+            mITCs[itc++].setIsAlive(a[i] != 0);
+          }
+        }
+      } else mLastCDMTime = -1; // Can't read file
+    } while(0);
+
     do { // AER & AEPS
-      const char * PATH = "/tmp/MFM-STATUS.dat";
+      const char * PATH = "/run/mfmt2/status.dat";
       double a[2];
       if (readFloatsFromFile(PATH, a, sizeof(a)/sizeof(a[0]))) {
         if (a[1] != mLastAEPS) {
-          if (mLastAEPS >= 0) mLastAEPSChangeCount = mUpdateCount;
+          mLastAEPSChangeCount = mUpdateCount;
           mLastAEPS = a[1];
         }
         if (mLastAEPSChangeCount + 20 > mUpdateCount) mLastAER = a[0];
         else mLastAER = -1;
-      }
+      } else mLastAER = -1; // Can't read file
     } while(0);
 
     do { // ITCStatus

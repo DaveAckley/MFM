@@ -38,6 +38,7 @@ namespace MFM {
     };
     u32 mDirIdx; // 0..5
     bool mIsOpen;
+    bool mIsAlive;
     u32 mStats[ITC_STAT_COUNT];
     u32 mDeltas[ITC_STAT_COUNT];
 
@@ -58,6 +59,9 @@ namespace MFM {
 
     bool isOpen() { return mIsOpen; }
     void setIsOpen(bool newopen) { mIsOpen = newopen; }
+
+    bool isAlive() { return mIsAlive; }
+    void setIsAlive(bool newalive) { mIsAlive = newalive; }
 
     void updateStatsFromLine(ByteSource & bs) ;
 

@@ -13,6 +13,9 @@ namespace MFM {
 #define makeColor(R,G,B) ((0xff<<24)|(((R)&0xff)<<16)|(((G)&0xff)<<8)|(((B)&0xff)<<0))
   enum T2_COLOR {
     T2_COLOR_BLACK = makeColor(1,3,1),
+    T2_COLOR_DARK_GREY = makeColor(63,63,63),
+    T2_COLOR_MEDIUM_GREY = makeColor(127,127,127),
+    T2_COLOR_LIGHT_GREY = makeColor(190,190,190),
     T2_COLOR_RED = makeColor(255,4,4),
     T2_COLOR_MEDIUM_RED = makeColor(200,4,4),
     T2_COLOR_DARK_RED = makeColor(127,4,4),

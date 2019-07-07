@@ -62,6 +62,7 @@ namespace MFM {
   ITCStatus::ITCStatus()
     : mDirIdx(U32_MAX)
     , mIsOpen(false)
+    , mIsAlive(false)
   {
     for (u32 i = 0; i < ITC_STAT_COUNT; ++i) {
       mStats[i] = 0;
@@ -104,7 +105,7 @@ namespace MFM {
     u32 size2Idx = ITCIcons::ICON_SIZE_IDX_COUNT; // Assume full size
     u32 func1Idx = ITCIcons::ICON_FUNC_EMPTY_IDX;
     u32 func2Idx = ITCIcons::ICON_FUNC_EMPTY_IDX;
-    if (mDeltas[SYNC_FAILS_IDX] > 0 || mDeltas[TIMEOUTS_IDX] > 0) {
+    if (mDeltas[SYNC_FAILS_IDX] > 0 || mDeltas[TIMEOUTS_IDX] > 0 || (mIsOpen && !mIsAlive)) {
       func1Idx = func2Idx = ITCIcons::ICON_FUNC_ERROR_IDX;
     } else if (!mIsOpen) {
       func1Idx = func2Idx = ITCIcons::ICON_FUNC_CLOSED_IDX;
