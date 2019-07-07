@@ -47,7 +47,7 @@
 #include "Grid.h"
 #include "ElementTable.h"
 #include "VArguments.h"
-#include "StdElements.h"
+/* No longer used, and causes trouble building from fresh: #include "StdElements.h" */
 #include "ElementRegistry.h"
 #include "Version.h"
 #include "DebugTools.h"
@@ -96,11 +96,13 @@ namespace MFM
      */
     typedef ElementRegistry<EC> OurElementRegistry;
 
+#if 0 /* NO LONGER USER */
     /**
      * Template shortcut for an instance of StdElements with the
      * correct template parameters.
      */
     typedef StdElements<EC> OurStdElements;
+#endif
 
     /**
      * Template shortcut for a Grid with the correct template
@@ -423,6 +425,7 @@ namespace MFM
       }
       LOG.Message("Writing to simulation directory '%s'", GetSimDirPathTemporary(""));
 
+#if 0 // DEAD: StdElements deprecated
       if (!this->m_suppressStdElements)
       {
         const char * LIBUECORE_PATH = "elements/libuecore.so";
@@ -436,6 +439,7 @@ namespace MFM
           m_elementRegistry.AddLibraryPath(buffer.GetZString());
         }
       }
+#endif
 
 #if 0 // DEAD: --ue-demos deprecated
       if (this->m_includeUEDemos)
@@ -1588,7 +1592,7 @@ namespace MFM
     Element<EC>* m_neededElements[MAX_NEEDED_ELEMENTS];
     u32 m_neededElementCount;
 
-    OurStdElements m_se;
+    //DEAD    OurStdElements m_se;
     OurGrid m_grid;
 
     u64 m_ticksLastStopped;
