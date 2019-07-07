@@ -474,9 +474,15 @@ namespace MFM
       static double lastAEPS = 0;
       u64 curticks = this->GetTicksSinceEpoch(); // in ms
       if (lastticks + SECS_PER_STATUS*1000 <= curticks) {
+#define XXDIR "/run/mfmt2"
+#define XXFILE "status.dat"
         double thisAEPS = this->GetAEPS();
         if (lastAEPS > 0) {
-          FILE * fd = fopen("/tmp/MFM-STATUS.dat","w");
+          int ret = mkdir(XXDIR,0x644);
+          if (ret == 0) {
+            LOG.Message("Created " XXDIR);
+          }
+          FILE * fd = fopen(XXDIR "/" XXFILE,"w");
           if (fd) {
             double deltaaeps = thisAEPS - lastAEPS;
             fprintf(fd,"%f %f\n",
@@ -487,6 +493,8 @@ namespace MFM
         }
         lastAEPS = thisAEPS;
         lastticks = curticks;
+#undef XXDIR
+#undef XXFILE        
       }
 
       /* Leave this line here so the Superclass can run as well. */
