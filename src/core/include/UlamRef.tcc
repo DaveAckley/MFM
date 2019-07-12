@@ -64,7 +64,8 @@ namespace MFM {
       m_posToEff = 0u; //data member, new effSelf
     else //base class, same eff self
       {
-	MFM_API_ASSERT_ARG(posincr >= 0); //non-negative
+	//negative when the new base is a subclass of old base (t41325)
+	//MFM_API_ASSERT_ARG(posincr >= 0); //non-negative
 	m_posToEff = existing.m_posToEff + posincr; //subtract from newpos for eff self pos
       }
   }

@@ -141,7 +141,8 @@ namespace MFM
     //return beginning of element state bits;
     s32 GetEffectiveSelfPos() const { return (m_pos - m_posToEff); }
 
-    //    u32 GetDelta() const { return m_delta; }
+    //return the delta from existing pos to beginning of element state bits;
+    s32 GetPosToEffectiveSelf() const { return m_posToEff; }
 
     const UlamClass<EC> * GetEffectiveSelf() const { CheckEffectiveSelf(); return m_effSelf; }
 
