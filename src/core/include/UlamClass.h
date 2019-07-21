@@ -280,6 +280,11 @@ namespace MFM
       FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
     }
 
+    virtual s32 internalCMethodImplementingGetRelativePositionOfBaseClass(const u32 regid) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+    }
+
 
     /**
        Return vtable of this element, or NULL if there isn't one.
