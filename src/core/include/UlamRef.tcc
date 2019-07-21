@@ -132,7 +132,7 @@ namespace MFM {
     if (m_usage == ATOMIC || m_usage == ELEMENTAL)
     {
       const UlamClass<EC> * eltptr = LookupUlamElementTypeFromAtom();
-      MFM_API_ASSERT((eltptr->internalCMethodImplementingIs(m_effSelf)>= 0), STALE_ATOM_REF);
+      MFM_API_ASSERT((eltptr->internalCMethodImplementingIs(m_effSelf)), STALE_ATOM_REF);
     }
   }
 
