@@ -14,6 +14,7 @@
 #include "ITCStatus.h"
 #include "ITCStatusPanel.h"
 #include "LogPanel.h"
+#include "RootPanel.h"
 #include "ITCIcons.h"
 #include "T2VizConstants.h"
 
@@ -22,7 +23,7 @@ namespace MFM {
 
   struct T2Viz : public Model {
 
-    Panel mRootPanel;
+    RootPanel mRootPanel;
     Panel mContentPanel; // Everything but the ITCs
     typedef TextPanel<50,9> DeltasPanel;
     DeltasPanel mDeltasPanel;  

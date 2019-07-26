@@ -86,7 +86,8 @@ namespace MFM {
       mDeltasPanel.SetVisible(true);
       mDeltasPanel.SetDimensions(DELTAS_WINDOW_WIDTH, DELTAS_WINDOW_HEIGHT);
       mDeltasPanel.SetDesiredSize(DELTAS_WINDOW_WIDTH, DELTAS_WINDOW_HEIGHT);
-      mDeltasPanel.SetAnchor(ANCHOR_EAST);
+      const SPoint pos(DELTAS_WINDOW_XPOS,DELTAS_WINDOW_YPOS);
+      mDeltasPanel.SetRenderPoint(pos);
       mDeltasPanel.SetFont(FONT_ASSET_ELEMENT);
       mDeltasPanel.SetFontHeightAdjust(-10);
       mDeltasPanel.SetElevatorWidth(0);
