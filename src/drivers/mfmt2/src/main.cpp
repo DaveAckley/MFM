@@ -162,14 +162,14 @@ namespace MFM
   static const char MFM_DEV_PATH[] = "/dev/itc/mfm";
 
   struct FlashTraffic {
-    FlashTraffic(u8 pkthdr, u8 cmd, u8 index, u8 ttl) 
+    FlashTraffic(u8 pkthdr, u8 cmd, u8 index, u8 ttl)
       : mPktHdr(pkthdr)
       , mCommand(cmd)
       , mIndex(index)
       , mTimeToLive(ttl)
       , mChecksum(computeChecksum())
     { }
-    
+
     u8 computeChecksum() {
       u32 num = 0;
       num = (num << 5) ^ mCommand;
@@ -260,13 +260,15 @@ namespace MFM
                 ft->computeChecksum());
         return;
       }
+      bool maybeForward = true;
       if (ft->executable(mLastCommandIndex)) {
         fprintf(stderr,"EXECUTING #%d:%c\n", mLastCommandIndex, ft->mCommand);
         mDriver.DoDriverOpLocally((DriverOp) ft->mCommand);  // BAM
       } else {
         fprintf(stderr,"OBSOLETE #%d:%02x\n", mLastCommandIndex, ft->mCommand);
+        maybeForward = false;
       }
-      if (ft->mTimeToLive > 0) {
+      if (maybeForward && ft->mTimeToLive > 0) {
         u8 fromDir = ft->mPktHdr&7;
         ft->mTimeToLive--;
         for (unsigned i = 0; i < 8; ++i) {
@@ -277,8 +279,9 @@ namespace MFM
         }
       }
     }
-  
+
     bool update() {
+      u32 packetsHandled = 0;
       if (mMfmPacketFD < 0) abort();
 
       do {
@@ -292,16 +295,22 @@ namespace MFM
 
         if (amt < 0) {
           if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            mFlushAvailable = false;
-            mLastCommandIndex = -1; 
+            if (mFlushAvailable) {
+              mFlushAvailable = false;
+              LOG.Message("Flushed %d stale packet(s)", packetsHandled);
+            }
+            mLastCommandIndex = -1;
             return false; /* nothing to read or flush finished */
           } else {
             abort();
           }
         }
 
+        ++packetsHandled;
+
         if (!mFlushAvailable)
           processPacket(buf,amt);
+
       } while(mFlushAvailable);
 
       return true;
@@ -386,11 +395,24 @@ namespace MFM
       m_t2MenuShutdownButton.SetBackground(bgColor);
     }
 
+    void setSpeedMHz(u32 mhz) {
+      char buff[100];
+      snprintf(buff,100,"cpufreq-set -f %dMHz",mhz);
+      system(buff);
+    }
+
+    void turnOnT2Viz() {
+      fprintf(stderr,"turnOnT2Viz UNIMPLEMENTIO\n");
+    }
+
     void DoDriverOpLocally(DriverOp op) {
       fprintf(stderr,"DoDriverOpLocally(%d)\n",op);
       switch (op) {
       case CANCEL_OP:
         this->LowerMenuIfNeeded();
+        break;
+      case CLEAR_OP:
+        this->SetTileEmpty();
         break;
       case RESET_OP:
         this->ReloadCurrentConfigurationPath();
@@ -405,6 +427,16 @@ namespace MFM
       case SHUTDOWN_OP:
         system("poweroff");
         break;
+      case T2VIZ_OP:
+        turnOnT2Viz();
+        break;
+
+      case MHZ300_OP: setSpeedMHz(300); break;
+      case MHZ600_OP: setSpeedMHz(600); break;
+      case MHZ720_OP: setSpeedMHz(720); break;
+      case MHZ800_OP: setSpeedMHz(800); break;
+      case MHZ1000_OP: setSpeedMHz(1000); break;
+
       case GLOBAL_OP:
         fprintf(stderr,"poof\n");
         break;
@@ -413,7 +445,7 @@ namespace MFM
       }
       this->SetDelayedDriverOp(DRIVER_OP_COUNT,-1); // Clear
     }
-    
+
   public:
 
     /** Override AbstractGUIDriver method
@@ -425,7 +457,7 @@ namespace MFM
         fprintf(stderr,"oct %d\n",m_opCountdownTimer);
         if (--m_opCountdownTimer == 0) {
           this->DoDriverOpLocally(m_localOp);
-          
+
         }
       }
     }
@@ -457,12 +489,23 @@ namespace MFM
       , m_opCountdownTimer(0)
       , m_localOp(DRIVER_OP_COUNT)
       , m_opGlobal(false)
-      , m_t2MenuCancelButton("Cancel",CANCEL_OP,       0*MENU_WIDTH/2, 0*MENU_HEIGHT/4, *this)
-      , m_t2MenuQuitButton("Quit",QUIT_OP,             0*MENU_WIDTH/2, 3*MENU_HEIGHT/4, *this)
-      , m_t2MenuGridButton("Grid",GLOBAL_OP,           1*MENU_WIDTH/2, 3*MENU_HEIGHT/4, *this)
-      , m_t2MenuRebootButton("Reboot",REBOOT_OP,       1*MENU_WIDTH/2, 1*MENU_HEIGHT/4, *this)
-      , m_t2MenuResetButton("Reset",RESET_OP,          0*MENU_WIDTH/2, 1*MENU_HEIGHT/4, *this)
-      , m_t2MenuShutdownButton("Shutdown",SHUTDOWN_OP, 1*MENU_WIDTH/2, 2*MENU_HEIGHT/4, *this)
+        /* Going for:
+                         Cancel   ..      Quit
+                         Reset   Clear    ..
+                         300MHz  720MHz   1HGz
+                         Reboot  Shutdown GRID
+         */
+      , m_t2MenuCancelButton("Cancel",CANCEL_OP,       0*MENU_WIDTH/3, 0*MENU_HEIGHT/4, *this)
+      , m_t2MenuClearButton("Clear",CLEAR_OP,          1*MENU_WIDTH/3, 1*MENU_HEIGHT/4, *this)
+      , m_t2MenuGridButton("Grid",GLOBAL_OP,           2*MENU_WIDTH/3, 3*MENU_HEIGHT/4, *this)
+      , m_t2MenuMHz0300Button("300MHz",MHZ300_OP,      0*MENU_WIDTH/3, 2*MENU_HEIGHT/4, *this)
+      , m_t2MenuMHz0720Button("720MHz",MHZ720_OP,      1*MENU_WIDTH/3, 2*MENU_HEIGHT/4, *this)
+      , m_t2MenuMHz1000Button("1GHz",MHZ1000_OP,       2*MENU_WIDTH/3, 2*MENU_HEIGHT/4, *this)
+
+      , m_t2MenuQuitButton("Quit",QUIT_OP,             2*MENU_WIDTH/3, 0*MENU_HEIGHT/4, *this)
+      , m_t2MenuRebootButton("Reboot",REBOOT_OP,       0*MENU_WIDTH/3, 3*MENU_HEIGHT/4, *this)
+      , m_t2MenuResetButton("Reset",RESET_OP,          0*MENU_WIDTH/3, 1*MENU_HEIGHT/4, *this)
+      , m_t2MenuShutdownButton("Shutdown",SHUTDOWN_OP, 1*MENU_WIDTH/3, 3*MENU_HEIGHT/4, *this)
     {
       MFM::LOG.SetTimeStamper(&m_stamper);
     }
@@ -494,7 +537,7 @@ namespace MFM
         lastAEPS = thisAEPS;
         lastticks = curticks;
 #undef XXDIR
-#undef XXFILE        
+#undef XXFILE
       }
 
       /* Leave this line here so the Superclass can run as well. */
@@ -538,8 +581,12 @@ namespace MFM
 
     Panel m_t2MenuPanel;
     T2MenuButton<GC> m_t2MenuCancelButton;
-    T2MenuButton<GC> m_t2MenuQuitButton;
+    T2MenuButton<GC> m_t2MenuClearButton;
     T2MenuButton<GC> m_t2MenuGridButton;
+    T2MenuButton<GC> m_t2MenuMHz0300Button;
+    T2MenuButton<GC> m_t2MenuMHz0720Button;
+    T2MenuButton<GC> m_t2MenuMHz1000Button;
+    T2MenuButton<GC> m_t2MenuQuitButton;
     T2MenuButton<GC> m_t2MenuRebootButton;
     T2MenuButton<GC> m_t2MenuResetButton;
     T2MenuButton<GC> m_t2MenuShutdownButton;
@@ -553,6 +600,12 @@ namespace MFM
     bool LowerMenuIfNeeded() {
       if (!m_t2MenuPanel.IsVisible()) return false;
       m_t2MenuPanel.SetVisible(false);
+      return true;
+    }
+
+    bool SetTileEmpty() {
+      SPoint origin(0,0);
+      this->GetGrid().EmptyTile(origin);
       return true;
     }
 
@@ -570,17 +623,22 @@ namespace MFM
       m_t2MenuPanel.SetRenderPoint(pos);
 
       //this->InitButtons(&m_t2MenuPanel);
-      
+
       this->GetRootPanel().Insert(&m_t2MenuPanel, NULL);
       this->GetRootPanel().RaiseToTop(&m_t2MenuPanel);
 
       m_t2MenuPanel.Insert(&m_t2MenuCancelButton, NULL);
-      m_t2MenuPanel.Insert(&m_t2MenuQuitButton, NULL);
+      m_t2MenuPanel.Insert(&m_t2MenuClearButton, NULL);
       m_t2MenuPanel.Insert(&m_t2MenuGridButton, NULL);
-      m_t2MenuPanel.Insert(&m_t2MenuResetButton, NULL);
+      m_t2MenuPanel.Insert(&m_t2MenuMHz0300Button, NULL);
+      m_t2MenuPanel.Insert(&m_t2MenuMHz0720Button, NULL);
+      m_t2MenuPanel.Insert(&m_t2MenuMHz1000Button, NULL);
+      m_t2MenuPanel.Insert(&m_t2MenuQuitButton, NULL);
       m_t2MenuPanel.Insert(&m_t2MenuRebootButton, NULL);
+      m_t2MenuPanel.Insert(&m_t2MenuResetButton, NULL);
       m_t2MenuPanel.Insert(&m_t2MenuShutdownButton, NULL);
 
+  
       this->HandleResize(); //Repack
     }
 
@@ -700,14 +758,16 @@ namespace MFM
       , m_driver(driver)
       , m_driverOp(op)
     {
-      this->SetName(label);
+      char windowLabel[100];
+      snprintf(windowLabel,100-1,"P_%s", label);
+      this->SetName(windowLabel);
       this->SetVisible(true);
       this->SetFont(FONT_ASSET_ELEMENT);
       this->SetBackground(Drawing::GREEN);
       this->SetForeground(Drawing::BLACK);
 
       const u32 INDENT = 2;
-      SPoint size(MENU_WIDTH/2-2*INDENT,MENU_HEIGHT/4-2*INDENT);
+      SPoint size(MENU_WIDTH/3-2*INDENT,MENU_HEIGHT/4-2*INDENT);
       this->SetDimensions(size);
       this->SetDesiredSize(size.GetX(),size.GetY());
 
