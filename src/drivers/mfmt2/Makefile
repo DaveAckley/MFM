@@ -1,6 +1,9 @@
 # Who we are
 COMPONENTNAME:=mfmt2
 
+# We only run on tile
+MFM_TARGET:=tile
+
 # Our aliases
 #COMPONENTALIASES:= $(COMPONENTNAME)_s  $(COMPONENTNAME)_m $(COMPONENTNAME)_l
 
