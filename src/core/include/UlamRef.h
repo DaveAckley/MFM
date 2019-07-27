@@ -61,6 +61,12 @@ namespace MFM
             const UsageType usage, const UlamContext<EC> & uc) ;
 
     /**
+       Construct an UlamRef 'from scratch', when pos isnt effSelf (i.e. base class of effSelf)
+     */
+    UlamRef(u32 pos, u32 len, u32 postoeff, BitStorage<EC>& stg, const UlamClass<EC> * effself,
+            const UsageType usage, const UlamContext<EC> & uc) ;
+
+    /**
        Construct an UlamRef that's relative to an existing UlamRef.
        The 'pos' supplied here will be relative to the the existing
        pos, and this pos + len must fit within the len supplied to the
@@ -95,7 +101,7 @@ namespace MFM
     T ReadAtom() const
     {
       if (m_usage == ATOMIC) return m_stg.ReadAtom(m_pos);
-      if (m_usage == ELEMENTAL) return m_stg.ReadAtom(m_pos - T::ATOM_FIRST_STATE_BIT);
+      if (m_usage == ELEMENTAL) return m_stg.ReadAtom(GetEffectiveSelfPos() - T::ATOM_FIRST_STATE_BIT);
       FAIL(ILLEGAL_STATE);
     }
 
@@ -108,7 +114,7 @@ namespace MFM
       }
       else if (m_usage == ELEMENTAL)
       {
-        m_stg.WriteAtom(m_pos - T::ATOM_FIRST_STATE_BIT, val);
+        m_stg.WriteAtom(GetEffectiveSelfPos() - T::ATOM_FIRST_STATE_BIT, val);
         CheckEffectiveSelf();
       }
       else FAIL(ILLEGAL_STATE);

@@ -34,6 +34,28 @@ namespace MFM {
   }
 
   template <class EC>
+  UlamRef<EC>::UlamRef(u32 pos, u32 len, u32 postoeff, BitStorage<EC>& stg, const UlamClass<EC> * effself,
+            const UsageType usage, const UlamContext<EC> & uc)
+    : m_uc(uc)
+    , m_effSelf(effself)
+    , m_stg(stg)
+    , m_pos(pos)
+    , m_len(len)
+    , m_usage(usage)
+    , m_posToEff(postoeff)
+  {
+    MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
+    MFM_API_ASSERT_ARG(m_usage != PRIMITIVE || m_effSelf == 0); // Primitive usage has no effself
+    MFM_API_ASSERT_ARG(m_usage != ARRAY || m_effSelf == 0); // Array usage has no effself
+    MFM_API_ASSERT_ARG(m_usage != CLASSIC || m_effSelf != 0); // Classic usage has effself
+
+    if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
+      {
+	UpdateEffectiveSelf();
+      }
+  }
+
+  template <class EC>
   UlamRef<EC>::UlamRef(const UlamRef & existing, s32 posincr, u32 len, const UlamClass<EC> * effself, const UsageType usage)
     : m_uc(existing.m_uc)
     , m_effSelf(effself)
