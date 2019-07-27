@@ -26,6 +26,10 @@ namespace MFM {
 	MFM_API_ASSERT_ARG(pos >= T::ATOM_FIRST_STATE_BIT); //non-negative
 	m_posToEff = (u32) (pos - T::ATOM_FIRST_STATE_BIT);
       }
+    else if(m_usage == PRIMITIVE)
+      {
+	m_posToEff = 0u; //no eff self
+      }
 
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
       {
@@ -80,8 +84,12 @@ namespace MFM {
 
     if((usage == ATOMIC) && (existing.m_usage == ELEMENTAL))
       m_posToEff = 0u; //== pos + t::atom_first_state_bit
-    else if((usage == ATOMIC) && (existing.m_usage == CLASSIC))
-      m_posToEff = posincr + T::ATOM_FIRST_STATE_BIT; //test please, base class
+    else if((usage == ELEMENTAL) && (existing.m_usage == ATOMIC))
+      m_posToEff = 0u; //== pos + t::atom_first_state_bit
+    //else if((usage == ATOMIC) && (existing.m_usage == CLASSIC))
+    //  m_posToEff = 0u; //test please, base class
+    //else if((usage == ELEMENTAL) && (existing.m_usage == CLASSIC))
+    //  m_posToEff = 0u; //test please, base class
     else if(m_effSelf && (m_effSelf != existing.m_effSelf))
       m_posToEff = 0u; //data member, new effSelf
     else //base class, same eff self
