@@ -86,12 +86,10 @@ namespace MFM {
       m_posToEff = 0u; //== pos + t::atom_first_state_bit
     else if((usage == ELEMENTAL) && (existing.m_usage == ATOMIC))
       m_posToEff = 0u; //== pos + t::atom_first_state_bit
-    //else if((usage == ATOMIC) && (existing.m_usage == CLASSIC))
-    //  m_posToEff = 0u; //test please, base class
-    //else if((usage == ELEMENTAL) && (existing.m_usage == CLASSIC))
-    //  m_posToEff = 0u; //test please, base class
     else if(m_effSelf && (m_effSelf != existing.m_effSelf))
       m_posToEff = 0u; //data member, new effSelf
+    else if(usage == PRIMITIVE)
+      m_posToEff = 0u;
     else //base class, same eff self
       {
 	//negative when the new base is a subclass of old base (t41325)
