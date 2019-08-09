@@ -353,9 +353,11 @@ namespace MFM
   private:
     ThreadStamper m_stamper;
     MFMIO<GC> m_mfmio;
+    ITCLocks m_itcLocks;
 
   public:
-    MFMIO<GC> GetMFMIO() { return m_mfmio; }
+    MFMIO<GC>& GetMFMIO() { return m_mfmio; }
+    ITCLocks& GetITCLocks() { return m_itcLocks; }
 
     static void PrintTileTypes(const char* not_needed, void* nullForShort)
     {
@@ -452,6 +454,7 @@ namespace MFM
      */
     virtual void DoPerUpdateSpecialTasks()
     {
+      this->m_itcLocks.fakeEvent();
       this->m_mfmio.update();
       if (m_opCountdownTimer > 0) {
         fprintf(stderr,"oct %d\n",m_opCountdownTimer);
@@ -508,6 +511,9 @@ namespace MFM
       , m_t2MenuShutdownButton("Shutdown",SHUTDOWN_OP, 1*MENU_WIDTH/3, 3*MENU_HEIGHT/4, *this)
     {
       MFM::LOG.SetTimeStamper(&m_stamper);
+      if (!m_itcLocks.open()) {
+        MFM::LOG.Message("Can't open ITCLocks");
+      }
     }
 
     virtual void DoEpochEvents(Grid<GC>& grid, u32 epochs, u32 epochAEPS)

@@ -8,6 +8,7 @@
 #include "GridConfig.h"
 #include "DateTimeStamp.h"
 #include "MFMT2Constants.h"
+#include "ITCLocks.h"
 
 
 #endif /* MAIN_H */
