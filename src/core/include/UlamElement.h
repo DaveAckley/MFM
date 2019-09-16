@@ -150,8 +150,8 @@ namespace MFM {
   public:
 
     enum SpecialVirtualVTableIndices {
-      BEHAVE_VTABLE_INDEX = 0,
-      GETCOLOR_VTABLE_INDEX = 1
+      BEHAVE_VOWNED_INDEX = 0,  /* ==Uq_10106UrSelf10<EC>::VOWNED_IDX_Uf_6behave10 */
+      GETCOLOR_VOWNED_INDEX = 1 /* ==Uq_10106UrSelf10<EC>::VOWNED_IDX_Uf_8getColor11102321u */
     };
 
     UlamElement(const UUID & uuid) : Element<EC>(uuid) { }
