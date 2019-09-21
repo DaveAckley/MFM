@@ -169,7 +169,7 @@ namespace MFM {
      * because it would explicitly null-terminate the buffer before
      * returning it.  That null termination and non-constness was how
      * GetZString differed from GetBuffer, which didn't null terminate
-     * and was const.  However, doing the null terminatation in
+     * and was const.  However, doing the null termination in
      * GetZString caused possible data races between threads, and --
      * although those races may ultimately have been provably harmless
      * -- in the end OverflowableCharBufferByteSink was modified so
