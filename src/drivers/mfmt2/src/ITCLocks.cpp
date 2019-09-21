@@ -10,20 +10,6 @@
 #include "Random.h" /* for Random */
 
 namespace MFM {
-  static inline u8 mapDir8ToDir6(u8 dir8) {
-    switch (dir8) {
-    case Dirs::NORTH: 
-    case Dirs::SOUTH: 
-    default: return DIR_COUNT;
-      
-    case Dirs::NORTHEAST: return DIR_NE;
-    case Dirs::EAST:      return DIR_ET;
-    case Dirs::SOUTHEAST: return DIR_SE;
-    case Dirs::SOUTHWEST: return DIR_SW;
-    case Dirs::WEST:      return DIR_WT;
-    case Dirs::NORTHWEST: return DIR_NW;
-    }
-  }
 
   const char * ITCLocks::LOCK_DEVICE_PATH = "/dev/itc/locks";
   const char * ITCLocks::LOCK_STATUS_PATH = "/sys/class/itc/status";
@@ -46,8 +32,10 @@ namespace MFM {
     const u32 TILE_HEIGHT = 40u;
     const u32 TILE_WIDTH = 60u;
     const UPoint tileSize(TILE_WIDTH, TILE_HEIGHT);
+    u8 locksTaken;
     UPoint site(random, TILE_WIDTH, TILE_HEIGHT);
-    if (tryLocksFor(4u, site, tileSize, 4u)) {
+    LOG.Message("FAKEVENT");
+    if (tryLocksFor(4u, site, tileSize, 4u, locksTaken)) {
       ++hits;
       for (volatile s32 i = 1000*random.Create(1000); i >= 0; --i) { }
       freeLocks();
@@ -148,13 +136,13 @@ namespace MFM {
     return count > 0;
   }
 
-  u8 ITCLocks::connected() {
+  u8 ITCLocks::connected(bool allowRefresh) {
     time_t now = time(NULL);
-    if (now > mConnectedLocksetRefreshTime && mITCStatusFD >= 0) {
+    if (allowRefresh && now > mConnectedLocksetRefreshTime && mITCStatusFD >= 0) {
       ::lseek(mITCStatusFD, 0, SEEK_SET);
       u8 connected = 0x3f; /*assume all connected*/
       for (s32 i = 7; i >= 0; --i) {
-        u8 dir6 = mapDir8ToDir6(i);
+        u8 dir6 = mapDir8ToDir6(i); // Returns DIR_COUNT on N/S
         u8 ch;
         if (read(mITCStatusFD,&ch,1) != 1) abort();
         if (ch=='0') connected &= ~(1<<dir6);
@@ -169,7 +157,7 @@ namespace MFM {
     if (mLockDeviceFD < 0) return false;
     if (mLocksetAttempts > 2*1000*1000*1000) 
       resetCounters();
-    if (0 == (mLocksetAttempts % 1000) && mLocksetAttempts > 0)  {
+    if (0 == (mLocksetAttempts % 50000) && mLocksetAttempts > 0)  {
       LOG.Message("LSX atm %d, acq %d/%3f%%, unr %d/%3f%%, cns %d/%3f%%, tmo %d/%3f%%, oth %d/%3f%%"
                   ,mLocksetAttempts
                   ,mLocksetAcquisitions, 100.0*mLocksetAcquisitions/mLocksetAttempts
@@ -195,12 +183,14 @@ namespace MFM {
     return false;
   }
 
-  bool ITCLocks::tryLocksFor(const u32 EVENT_WINDOW_RADIUS, UPoint pt, UPoint tileSize, u32 ewRadius) {
+  bool ITCLocks::tryLocksFor(const u32 EVENT_WINDOW_RADIUS, UPoint pt, UPoint tileSize, u32 ewRadius, u8 & locksetTaken) {
     const u8 maxLockset = maxLocksetFor(EVENT_WINDOW_RADIUS, pt, tileSize, ewRadius);
-    const u8 connectedLockset = connected();
+    const u8 connectedLockset = connected(true);
     const u8 neededLockset = maxLockset & connectedLockset;
-    if (!neededLockset) return true;
-    if (tryLock(neededLockset)) return true;
+    if (neededLockset == 0 || tryLock(neededLockset)) {
+      locksetTaken = neededLockset;
+      return true;
+    }
     freeLocks();
     return false;
   }
@@ -245,8 +235,6 @@ namespace MFM {
 
     return lockset;
   }    
-
-
 
   bool ITCLocks::freeLocks() { return tryLock(0); }
 

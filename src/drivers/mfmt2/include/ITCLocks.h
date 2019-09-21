@@ -74,9 +74,9 @@ namespace MFM
 
     /**
        Access the set of currently connected ITCs.  Updated once per
-       second.
+       second, on calls where allowRefresh is true
      */
-    u8 connected() ;
+    u8 connected(bool allowRefresh) ;
 
     /**
        return all possible locks that could be needed to have an event
@@ -85,7 +85,7 @@ namespace MFM
      */
     u8 maxLocksetFor(const u32 EVENT_WINDOW_RADIUS, UPoint site, UPoint tileSize, u32 ewRadius) ;
 
-    bool tryLocksFor(const u32 EVENT_WINDOW_RADIUS, UPoint site, UPoint tileSize, u32 ewRadius) ;
+    bool tryLocksFor(const u32 EVENT_WINDOW_RADIUS, UPoint site, UPoint tileSize, u32 ewRadius, u8 & locksetTaken) ;
 
     bool freeLocks() ;
 
@@ -102,6 +102,22 @@ namespace MFM
     }
 
   };
+
+  inline u8 mapDir8ToDir6(u8 dir8) {
+    switch (dir8) {
+    case Dirs::NORTH: 
+    case Dirs::SOUTH: 
+    default: return DIR_COUNT;
+      
+    case Dirs::NORTHEAST: return DIR_NE;
+    case Dirs::EAST:      return DIR_ET;
+    case Dirs::SOUTHEAST: return DIR_SE;
+    case Dirs::SOUTHWEST: return DIR_SW;
+    case Dirs::WEST:      return DIR_WT;
+    case Dirs::NORTHWEST: return DIR_NW;
+    }
+  }
+
 }
 
 #endif /* ITCLOCKS_H */
