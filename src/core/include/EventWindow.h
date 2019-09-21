@@ -37,6 +37,7 @@
 #include "Base.h"
 #include "ByteSink.h"
 #include "BitStorage.h"
+#include "ITCDelegate.h"
 
 namespace MFM
 {
@@ -103,6 +104,7 @@ namespace MFM
   private:
 
     Tile<EC> & m_tile;
+    ITCDelegate<EC> * m_itcDelegate;
 
     u32 m_eventWindowBoundary;
     u32 m_boundedSiteCount;
@@ -193,8 +195,6 @@ namespace MFM
 
     void ExecuteBehavior() ;
 
-    void InitiateCommunications() ;
-
     void LoadFromTile() ;
 
     void StoreToTile() ;
@@ -233,6 +233,10 @@ namespace MFM
 
 
   public:
+    void SetITCDelegate(ITCDelegate<EC> * ptr) ;
+    
+    void InitiateCommunications() ;
+
     bool TryForceEventAt(const SPoint & center) ;
 
     bool TryEventAtForTesting(const SPoint & center)

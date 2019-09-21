@@ -89,13 +89,13 @@ namespace MFM {
     GridTile & _getTile(u32 x, u32 y) { return m_tiles[x*m_height + y]; }
     const GridTile & _getTile(u32 x, u32 y) const { return m_tiles[x*m_height + y]; }
 
-    LonglivedLock * const m_intertileLocks;
-    LonglivedLock & _getIntertileLock(u32 x, u32 y, u32 i) {
+    LonglivedLock<EC> * const m_intertileLocks;
+    LonglivedLock<EC> & _getIntertileLock(u32 x, u32 y, u32 i) {
       return m_intertileLocks[(x*m_height + y) * MAX_LOCKS_OWNED_PER_TILE + i];
     }
 
-    LonglivedLock & GetIntertileLockStaggered(u32 xtile, u32 ytile, Dir dir);
-    LonglivedLock & GetIntertileLockCheckerboard(u32 xtile, u32 ytile, Dir dir);
+    LonglivedLock<EC> & GetIntertileLockStaggered(u32 xtile, u32 ytile, Dir dir);
+    LonglivedLock<EC> & GetIntertileLockCheckerboard(u32 xtile, u32 ytile, Dir dir);
 
 
     GridTile m_heroTile;    // Model for the actual m_tiles
@@ -104,7 +104,7 @@ namespace MFM {
        Get the long-lived lock controlling cache activity going in
        direction dir from the Tile at (xtile,ytile) in the Grid.
      */
-    LonglivedLock & GetIntertileLock(u32 xtile, u32 ytile, Dir dir, bool isStaggered) ;
+    LonglivedLock<EC> & GetIntertileLock(u32 xtile, u32 ytile, Dir dir, bool isStaggered) ;
 
     struct TileDriver {
       enum State { PAUSED, ADVANCING, EXIT_REQUEST };
@@ -139,7 +139,14 @@ namespace MFM {
         return m_gridPtr->GetTile(m_loc);
       }
 
+
+      void SoftReset()
+      {
+        GetTile().SoftReset();
+      }
     };
+
+    
 
     TileDriver * const m_tileDrivers;
     TileDriver & _getTileDriver(u32 x, u32 y) {
@@ -331,7 +338,7 @@ namespace MFM {
       , m_height(height)
       , m_layout(layout)
       , m_tiles(new GridTile[m_width * m_height] )
-      , m_intertileLocks(new LonglivedLock[m_width * m_height * MAX_LOCKS_OWNED_PER_TILE])
+      , m_intertileLocks(new LonglivedLock<EC>[m_width * m_height * MAX_LOCKS_OWNED_PER_TILE])
       , m_tileDrivers(new TileDriver[m_width * m_height * MAX_LOCKS_OWNED_PER_TILE])
       , m_threadsInitted(false)
       , m_backgroundRadiationEnabled(false)

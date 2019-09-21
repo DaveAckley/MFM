@@ -32,19 +32,24 @@
 #include "Fail.h"
 #include "Mutex.h"
 #include "Logger.h"
+#include "ITCDelegate.h"
 
 namespace MFM
 {
+  template <class EC> class CacheProcessor; // FORWARD
+
   /**
    * An LonglivedLock mediates long-duration locking between a set of
    * possible owners
    */
+  template <class EC>
   class LonglivedLock
   {
   private:
     Mutex m_shortLivedLock;
-    void * m_longlivedLockOwner;
-    void * m_lastLonglivedLockOwner;
+    CacheProcessor<EC> * m_longlivedLockOwner;
+    CacheProcessor<EC> * m_lastLonglivedLockOwner;
+    ITCDelegate<EC> * m_itcDelegate;
 
     enum ThreeWayResult { RESULT_TRUE, RESULT_FALSE, RESULT_FAIL };
 
@@ -61,7 +66,7 @@ namespace MFM
       }
     }
 
-    ThreeWayResult TryLockInternal(void * arg)
+    ThreeWayResult TryLockInternal(CacheProcessor<EC> * arg)
     {
       Mutex::ScopeLock scopeLock(m_shortLivedLock);
 
@@ -80,7 +85,7 @@ namespace MFM
       return RESULT_FALSE;
     }
 
-    ThreeWayResult UnlockInternal(void * arg)
+    ThreeWayResult UnlockInternal(CacheProcessor<EC> * arg)
     {
       Mutex::ScopeLock scopeLock(m_shortLivedLock);
 
@@ -100,7 +105,15 @@ namespace MFM
      */
     LonglivedLock()
       : m_longlivedLockOwner(0)
+      , m_lastLonglivedLockOwner(0)
+      , m_itcDelegate(0)
     { }
+
+    void SetITCDelegate(ITCDelegate<EC> * itcd) {
+      MFM_API_ASSERT_NONNULL(itcd);
+      MFM_API_ASSERT_NULL(m_itcDelegate);
+      m_itcDelegate = itcd;
+    }
 
     /**
      * Destroys this LonglivedLock.
@@ -128,8 +141,14 @@ namespace MFM
      * LOCK_FAILURE to discourage stupidity.  If the lock held by some
      * other owner index, change nothing and return false.
      */
-    bool TryLock(void * who)
+    bool TryLock(CacheProcessor<EC> * who)
     {
+      MFM_API_ASSERT_NONNULL(who);
+      MFM_API_ASSERT_NONNULL(m_itcDelegate);
+      return m_itcDelegate->TryLock(*this, *who);
+    }
+
+    bool TryLockMFMS(CacheProcessor<EC> * who) {
       MFM_API_ASSERT_NONNULL(who);
       MFM_API_ASSERT(who != (void*) (intptr_t) -1,ILLEGAL_ARGUMENT);
       return DecodeResult(TryLockInternal(who));
@@ -141,9 +160,14 @@ namespace MFM
      * the long-lived lock and return true.  Otherwise do not change
      * the channel state and return false.
      */
-    bool Unlock(void * who)
+    bool Unlock(CacheProcessor<EC> * who)
     {
       MFM_API_ASSERT_NONNULL(who);
+      MFM_API_ASSERT_NONNULL(m_itcDelegate);
+      return m_itcDelegate->Unlock(*this, *who);
+    }
+
+    bool UnlockMFMS(CacheProcessor<EC> * who) {
       MFM_API_ASSERT(who != (void*) (intptr_t) -1,ILLEGAL_ARGUMENT);
       return DecodeResult(UnlockInternal(who));
     }

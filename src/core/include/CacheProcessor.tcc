@@ -7,16 +7,27 @@
 namespace MFM
 {
   template <class EC>
+  void CacheProcessor<EC>::SoftReset()
+  {
+    m_cpState = UNCLAIMED;
+    m_consistentAtomCount = 0;
+    m_receivedSiteCount = 0;
+    ReportCheckFailure();
+  }
+
+  template <class EC>
   void CacheProcessor<EC>::ReportCacheProcessorStatus(Logger::Level level)
   {
     if (!m_tile)
     {
-      LOG.Log(level,"   ==CP Global NO TILE (%d, %d)==",
+      LOG.Log(level,"   ==CP Global [%s:%d] NO TILE (%d, %d)==",
+              Dirs::GetName(m_cacheDir), m_cacheDir,
               m_farSideOrigin.GetX(),
               m_farSideOrigin.GetY());
       return;
     }
-    LOG.Log(level,"   ==CP Global %s (%d, %d)==",
+    LOG.Log(level,"   ==CP Global [%s:%d] %s (%d, %d)==",
+            Dirs::GetName(m_cacheDir), m_cacheDir,
             m_tile->GetLabel(),
             m_farSideOrigin.GetX(),
             m_farSideOrigin.GetY());
@@ -128,6 +139,14 @@ namespace MFM
   bool CacheProcessor<EC>::ShipBufferAsPacket(PacketBuffer & pb)
   {
     MFM_API_ASSERT(!pb.HasOverflowed(), OUT_OF_ROOM);
+    MFM_API_ASSERT_NONNULL(m_itcDelegate);
+    return m_itcDelegate->ShipBufferAsPacket(*this, pb);
+  }
+
+  template <class EC>
+  bool CacheProcessor<EC>::ShipBufferAsPacketMFMS(PacketBuffer & pb)
+  {
+    MFM_API_ASSERT(!pb.HasOverflowed(), OUT_OF_ROOM);
 
     u32 plen = pb.GetLength();
     if (m_channelEnd.CanWrite() <= plen) // Total write will be plen+1
@@ -144,7 +163,13 @@ namespace MFM
   template <class EC>
   void CacheProcessor<EC>::BeginUpdate(SPoint onCenter)
   {
-    MFM_API_ASSERT_STATE(m_cpState == IDLE);
+    if (m_cpState != IDLE) {
+      LOG.Error("CP %s in state %s: Ignoring update on (%d,%d)",
+                Dirs::GetName(m_cacheDir),
+                GetStateName(m_cpState),
+                onCenter.GetX(), onCenter.GetY());
+      return;
+    }
 
     SetStateInternal(PASSIVE);
     m_eventCenter = onCenter;
@@ -162,7 +187,16 @@ namespace MFM
   template <class EC>
   void CacheProcessor<EC>::ReceiveAtom(bool isDifferent, s32 siteNumber, const T & inboundAtom)
   {
-    MFM_API_ASSERT_STATE(m_cpState == PASSIVE && m_tile != 0);
+    if (m_cpState != PASSIVE) {
+      LOG.Error("CP %s in state %s: Ignoring %s atom on sn %d",
+                Dirs::GetName(m_cacheDir),
+                GetStateName(m_cpState),
+                isDifferent ? "update" : "check",
+                siteNumber);
+      return;
+    }
+
+    MFM_API_ASSERT_STATE(m_tile != 0);
     MFM_API_ASSERT_ARG(siteNumber >= 0 && siteNumber < SITE_COUNT);
     if(!IsSiteNumberVisible((u16) siteNumber))
       ReportCacheProcessorStatus((Logger::Level)1);  //debug for elena
@@ -250,10 +284,18 @@ namespace MFM
   template <class EC>
   void CacheProcessor<EC>::ReceiveUpdateEnd()
   {
+    PacketIO pbuffer;
+    if (m_cpState != PASSIVE) {
+      LOG.Error("CP %s in state %s: Faking update end ack",
+                Dirs::GetName(m_cacheDir),
+                GetStateName(m_cpState));
+      pbuffer.SendReply(0, *this);
+      return;
+    }
+
     MFM_API_ASSERT_STATE(m_cpState == PASSIVE);
     MFM_LOG_DBG7(("Replying to UE, %d consistent",m_consistentAtomCount));
     ApplyCacheUpdate();
-    PacketIO pbuffer;
     pbuffer.SendReply(m_consistentAtomCount, *this);
     SetIdle();
   }
@@ -261,9 +303,7 @@ namespace MFM
   template <class EC>
   void CacheProcessor<EC>::ReceiveReply(u32 consistentCount)
   {
-    MFM_API_ASSERT_STATE(m_cpState == RECEIVING);
-
-    if (consistentCount != m_toSendCount)
+    if (consistentCount != m_toSendCount || m_cpState != RECEIVING)
     {
       ReportCheckFailure();
     }
@@ -313,6 +353,13 @@ namespace MFM
     case PASSIVE: // During passive we receive
     case RECEIVING: return AdvanceReceiving();
     case BLOCKING: return AdvanceBlocking();
+    case UNCLAIMED:
+      LOG.Error("CP %s %s: %s advance, reclaiming",
+                GetTile().GetLabel(),
+                Dirs::GetName(m_cacheDir),
+                GetStateName(m_cpState));
+      ReclaimConnected();
+      return true;
     default:
       FAIL(ILLEGAL_STATE);
     }
@@ -386,15 +433,15 @@ namespace MFM
   bool CacheProcessor<EC>::AdvanceReceiving()
   {
     bool didWork = false;
-    if (!IsConnected())
+    if (DisclaimUnconnected()) 
     {
-      return didWork;
+      return true;
     }
 
     PacketIO pio;
     while (true)
     {
-      PacketBuffer * pb = m_channelEnd.ReceivePacket();
+      PacketBuffer * pb = ReceivePacket();
       if (!pb || pb->GetLength() == 0)
       {
         return didWork;
@@ -405,6 +452,22 @@ namespace MFM
         FAIL(INCOMPLETE_CODE);
       }
     }
+  }
+
+  template <class EC>
+  PacketBuffer * CacheProcessor<EC>::ReceivePacket()
+  {
+    static PacketBuffer staticpb;
+    MFM_API_ASSERT_NONNULL(m_itcDelegate);
+    if (m_itcDelegate->ReceivePacket(*this,staticpb))
+      return &staticpb;
+    return 0;
+  }
+  
+  template <class EC>
+  PacketBuffer * CacheProcessor<EC>::ReceivePacketMFMS()
+  {
+    return m_channelEnd.ReceivePacket();
   }
 
   template <class EC>
@@ -435,12 +498,44 @@ namespace MFM
 
 
   template <class EC>
+  bool CacheProcessor<EC>::DisclaimUnconnected()
+  {
+    // We might be dealing with a lost partner here.
+
+    if (!IsConnected() && m_cpState != UNCLAIMED) {
+      LOG.Error("Unclaiming %s connection, was %s",Dirs::GetName(m_cacheDir),GetStateName(m_cpState));
+
+      this->GetLonglivedLock().Unlock(this);
+
+      m_cpState = UNCLAIMED;
+      return true;
+    }
+    return false;
+  }
+
+  template <class EC>
+  bool CacheProcessor<EC>::ReclaimConnected()
+  {
+    // We might be dealing with a new partner here.
+
+    if (IsConnected() && m_cpState == UNCLAIMED) {
+      LOG.Error("Reclaiming %s connection, was %s",Dirs::GetName(m_cacheDir),GetStateName(m_cpState));
+
+      m_cpState = IDLE;
+      return true;
+    }
+    return false;
+  }
+
+  template <class EC>
   bool CacheProcessor<EC>::AdvanceBlocking()
   {
     u32 needed = m_locksNeeded;
 
     THREEDIR copylockdirs; //copy before m_lockRegions cleared by Unblock
     for (u32 d = 0; d < MAX_LOCKS_NEEDED; d++)  copylockdirs[d] = m_lockRegions[d];
+
+    DisclaimUnconnected();
 
     // Check if every-relevant-body is blocking
     u32 got = 0;

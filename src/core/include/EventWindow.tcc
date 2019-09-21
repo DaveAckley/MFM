@@ -112,6 +112,7 @@ namespace MFM {
   template <class EC>
   void EventWindow<EC>::InitiateCommunications()
   {
+    //    LOG.Message("EW::InitiateCommunications %s",GetTile().GetLabel());
     MFM_LOG_DBG6(("EW::InitiateCommunications %s",GetTile().GetLabel()));
     MFM_API_ASSERT_STATE(m_ewState == COMPUTE);
 
@@ -281,6 +282,13 @@ namespace MFM {
     }
 
     SetBoundary(m_element->GetEventWindowBoundary());
+    m_center = center;
+
+    MFM_API_ASSERT_NONNULL(m_itcDelegate);
+    if (!m_itcDelegate->ConsiderEventWindow(*this))
+    {
+      return false;
+    }
 
     if (!AcquireAllLocks(center, m_eventWindowBoundary))
     {
@@ -291,7 +299,6 @@ namespace MFM {
     }
 
     m_eventWindowSitesAccessed += m_boundedSiteCount;
-    m_center = center;
     m_ewState = COMPUTE;
     m_sym = PSYM_NORMAL;
 
@@ -308,6 +315,9 @@ namespace MFM {
     MFM_API_ASSERT_ARG(Dirs::IsValidDir(dir, ewtile.IsTileGridLayoutStaggered())); //sanity
 
     CacheProcessor<EC> & cp = ewtile.GetCacheProcessor(dir);
+
+    // Check for reclaiming previously disclaimed CP
+    cp.ReclaimConnected();
 
     //if (!cp.IsConnected())
     if (cp.IsUnclaimed() || !cp.IsConnected())
@@ -494,6 +504,7 @@ namespace MFM {
   template <class EC>
   EventWindow<EC>::EventWindow(Tile<EC> & tile)
     : m_tile(tile)
+    , m_itcDelegate(0)
     , m_eventWindowBoundary(R + 1)
     , m_boundedSiteCount(SITE_COUNT)
     , m_element(0)
@@ -510,6 +521,13 @@ namespace MFM {
 
     for (u32 i = 0; i < MAX_CACHES_TO_UPDATE; m_cacheProcessorsLocked[i++] = 0);
 
+  }
+
+  template <class EC>
+  void EventWindow<EC>::SetITCDelegate(ITCDelegate<EC> * ptr) {
+    MFM_API_ASSERT_NONNULL(ptr);
+    MFM_API_ASSERT_NULL(m_itcDelegate);
+    m_itcDelegate = ptr;
   }
 
   template <class EC>
@@ -605,6 +623,7 @@ namespace MFM {
       }
     }
 
+    //    LOG.Message("EW::StoreToTile releasing %s",tile.GetLabel());
     MFM_LOG_DBG6(("EW::StoreToTile releasing %s",tile.GetLabel()));
     // Finally, release the cache processors to take it from here
     for (m_cpli.ShuffleOrReset(random); m_cpli.HasNext(); )

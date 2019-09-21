@@ -46,6 +46,7 @@
 #include "LonglivedLock.h"
 #include "OverflowableCharBufferByteSink.h"  /* for OString16 */
 #include "LineCountingByteSource.h"
+#include "ITCDelegate.h"
 
 namespace MFM
 {
@@ -290,7 +291,19 @@ namespace MFM
       DUMMY_TILE = true; //not dummy, false by default
     }
 
+    void SetITCDelegate(ITCDelegate<EC> * itcd) {
+      MFM_API_ASSERT_NONNULL(itcd);
+      MFM_API_ASSERT_NULL(m_itcDelegate);
+      m_itcDelegate = itcd;
+      m_window.SetITCDelegate(itcd);
+      for (u32 i = 0; i < Dirs::DIR_COUNT; ++i) {
+        m_cacheProcessors[i].SetITCDelegate(itcd);
+      }
+      itcd->InitializeTile(*this);
+    }
+
   private:
+    ITCDelegate<EC> * m_itcDelegate;
 
     S * const m_sites;
 
@@ -549,6 +562,7 @@ namespace MFM
     EventWindow<EC> m_window;
 
     CacheProcessor<EC> m_cacheProcessors[Dirs::DIR_COUNT];
+
     RandomDirIterator m_dirIterator;
 
     bool AllCacheProcessorsIdle();
@@ -644,7 +658,15 @@ namespace MFM
      */
     bool ConsiderStateChange() ;
 
+    /**
+       Set the state to PASSIVE regardless of m_requestedState, and
+       return true if the state had previously been something else.
+     */
+    bool ForcePassive() ;
+
     bool AdvanceComputation() ;
+
+   public:
 
     /**
        Advance the passive packet processing state machine in the
@@ -652,7 +674,6 @@ namespace MFM
      */
     bool AdvanceCommunication() ;
 
-   public:
     void SetBackgroundRadiationEnabled(bool value);
 
     void SetForegroundRadiationEnabled(bool value);
@@ -786,6 +807,11 @@ namespace MFM
     }
 
     /**
+       Try to unjam things after unexpected events like an ITC disconnect. 
+     */
+    void SoftReset() ;
+
+    /**
      * Returns this Tile's label, if any.  May return an empty string,
      * never returns null.
      */
@@ -839,7 +865,7 @@ namespace MFM
      *
      * @param toCache The cache to share with other.
      */
-    void Connect(AbstractChannel& channel, LonglivedLock & lock, Dir toCache) ;
+    void Connect(AbstractChannel& channel, LonglivedLock<EC> & lock, Dir toCache) ;
 
     /**
      * Gets the number of sites in this Tile in sites, excluding caches.

@@ -17,6 +17,7 @@ namespace MFM
     , OWNED_HEIGHT(TILE_HEIGHT - 2 * EVENT_WINDOW_RADIUS)  // This OWNED_SIDE computation is duplicated in Grid.h!
     , GRID_LAYOUT(gridlayout)
     , DUMMY_TILE(false)
+    , m_itcDelegate(0)
     , m_sites(sites)
     , m_cdata(*this)
     , m_lockAttempts(0)
@@ -176,7 +177,7 @@ namespace MFM
   }
 
   template <class EC>
-  void Tile<EC>::Connect(AbstractChannel& channel, LonglivedLock & lock, Dir toCache)
+  void Tile<EC>::Connect(AbstractChannel& channel, LonglivedLock<EC> & lock, Dir toCache)
   {
     CacheProcessor<EC> & cxn = GetCacheProcessor(toCache);
 
@@ -484,6 +485,18 @@ namespace MFM
   }
 
   template <class EC>
+  void Tile<EC>::SoftReset()
+  {
+    for (u32 i = 0; i < Dirs::DIR_COUNT; ++i)  // Can doing this in order create bias??
+    {
+      if (!m_cacheProcessors[i].IsIdle() && !m_cacheProcessors[i].IsUnclaimed())
+      {
+        m_cacheProcessors[i].SoftReset(); 
+      }
+    }
+  }
+
+  template <class EC>
   void Tile<EC>::PlaceAtomInSite(bool placeInBase, const T& atom, const SPoint& pt, bool doIdenticalCheck)
   {
     if(!doIdenticalCheck)
@@ -654,7 +667,8 @@ namespace MFM
   {
     if (!ConsiderStateChange())
     {
-      return false;
+      //XXXLOG.Message("Advance continuing after failed ConsiderStateChange");
+      // FALL THROUGH.  WAS: return false;
     }
 
     bool didWork = false;
@@ -673,6 +687,8 @@ namespace MFM
       MFM_LOG_DBG6(("Tile %s: AdvanceComputation->%d",
                     this->GetLabel(),
                     didWork));
+      ForcePassive();
+      
       // FALL THROUGH
     case PASSIVE:
       didWork |= AdvanceCommunication();
@@ -688,7 +704,7 @@ namespace MFM
   {
     for (u32 i = 0; i < Dirs::DIR_COUNT; ++i)  // Can doing this in order create bias??
     {
-      if (!m_cacheProcessors[i].IsIdle() || !m_cacheProcessors[i].IsUnclaimed())
+      if (!m_cacheProcessors[i].IsIdle() && !m_cacheProcessors[i].IsUnclaimed())
       {
         return false;
       }
@@ -716,8 +732,22 @@ namespace MFM
     MFM_LOG_DBG4(("Requesting state %s for Tile %s (current: %s)",
 		  GetStateName(state),
 		  this->GetLabel(),
-		  GetStateName(m_state)));
+                  GetStateName(m_state)));
     m_requestedState = state;
+  }
+
+  template <class EC>
+  bool Tile<EC>::ForcePassive()
+  {
+    Mutex::ScopeLock lock(m_stateAccess);
+
+    if (m_state == PASSIVE)
+    {
+      return false;
+    }
+    //LOG.Message("Force passive, windows %d",(u32) GetEventsExecuted());
+    m_state = PASSIVE;
+    return true;
   }
 
   template <class EC>
@@ -740,20 +770,16 @@ namespace MFM
     switch (m_requestedState)
     {
     case ACTIVE:
-      if (m_state == OFF || m_state == PASSIVE)
+      if ((m_state == OFF || m_state == PASSIVE) && AllCacheProcessorsIdle())
       {
-        m_state = m_requestedState;
-        return true;
-      }
-
-      if (AllCacheProcessorsIdle())
-      {
+        //XXXLOG.Message("Tile %s: %d->%d (ACTIVE)",this->GetLabel(), m_state, m_requestedState);
         m_state = m_requestedState;
         return true;
       }
       return false;
 
     case PASSIVE:
+      //XXXLOG.Message("Tile %s: %d->%d (PASSIVE)",this->GetLabel(), m_state, m_requestedState);
       m_state = m_requestedState;
       return true;
 
@@ -779,12 +805,21 @@ namespace MFM
       return false;
     }
 
+    MFM_API_ASSERT_NONNULL(m_itcDelegate);
+    if (!m_itcDelegate->AdvanceCommunicationPredicate(*this))
+    {
+      return false;
+    }
+
     //INITIATE_EVENT,
     SPoint pt = GetRandomOwnedCoord(); //adjusted to range (0..Tile_Width, 0...Tile_Height)
     if (RegionIn(pt) == REGION_CACHE)
       FAIL(ILLEGAL_STATE);
 
-    return m_window.TryEventAt(pt);
+    //XXXLOG.Message("BEGIN TryEventAt(%d,%d)",pt.GetX(),pt.GetY());
+    bool ret = m_window.TryEventAt(pt);
+    //XXXLOG.Message("END TryEventAt(%d,%d) -> %s",pt.GetX(),pt.GetY(), ret ? "true" : "false");
+    return ret;
   }
 
   template <class EC>

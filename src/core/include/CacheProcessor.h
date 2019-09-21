@@ -36,6 +36,8 @@
 #include "ChannelEnd.h"
 #include "MDist.h"  /* for EVENT_WINDOW_SITES */
 #include "Logger.h"
+#include "ITCDelegate.h"
+#include "LonglivedLock.h"
 
 namespace MFM {
 
@@ -66,12 +68,17 @@ namespace MFM {
     Tile<EC> * m_tile;
 
     /**
+       Delegate to handle packet and lock details.
+     */
+    ITCDelegate<EC> * m_itcDelegate;
+
+    /**
        The lock controlling who can be the active side of a
        transaction involving this cache processor.  Long-lived locks
        on edges are shared by up to two cache processors; those on
        corners, by up to four.
      */
-    LonglivedLock * m_longlivedLock;
+    LonglivedLock<EC> * m_longlivedLock;
 
     /**
        Our cache direction, used as an owner index for the long lived
@@ -127,7 +134,7 @@ namespace MFM {
          \sa MAX_CHECK_ODDS
          \sa m_checkOdds
        */
-      INITIAL_CHECK_ODDS = 1
+      INITIAL_CHECK_ODDS = 10
     };
 
     /**
@@ -205,6 +212,8 @@ namespace MFM {
     u32 m_toSendCount;    // Used length of m_toSend
     u32 m_sentCount;      // Next index to send in m_toSend
 
+  public:
+
     enum State
     {
       IDLE,         // Unlocked, not in use
@@ -217,6 +226,8 @@ namespace MFM {
       UNCLAIMED,  // Never Claimed
       STATE_COUNT
     };
+
+    State GetState() const { return m_cpState; }
 
     static const char * GetStateName(const State s)
     {
@@ -232,6 +243,8 @@ namespace MFM {
       default: return "illegal state";
       }
     }
+
+  private:
 
     State m_cpState;
 
@@ -293,6 +306,12 @@ namespace MFM {
 
   public:
 
+    void SetITCDelegate(ITCDelegate<EC> * itcd) {
+      MFM_API_ASSERT_NONNULL(itcd);
+      MFM_API_ASSERT_NULL(m_itcDelegate);
+      m_itcDelegate = itcd;
+    }
+
     enum RedundancyOdds {
       MAX,
       MIN,
@@ -300,7 +319,7 @@ namespace MFM {
       ADAPTIVE
     };
 
-    Dir GetCacheDir()
+    Dir GetCacheDir() const
     {
       return m_cacheDir;
     }
@@ -395,6 +414,16 @@ namespace MFM {
      */
     void MaybeSendAtom(const T & atom, bool changed, u16 siteNumber) ;
 
+
+    /**
+       Delegate to receive a packet for this cache processor, if any
+       are available.  Returns null or a pointer to statically
+       allocation PacketBuffer.
+     */
+    PacketBuffer * ReceivePacket() ;
+
+    PacketBuffer * ReceivePacketMFMS() ;
+
     /**
        Handle an inbound atom that our neighbor cache processor
        decided to MaybeSendAtom to us.
@@ -423,11 +452,19 @@ namespace MFM {
      */
     void BeginUpdate(SPoint onCenter) ;
 
+    /**
+       Generic delegating interface
+     */
     bool ShipBufferAsPacket(PacketBuffer & pb) ;
+
+    bool ShipBufferAsPacketMFMS(PacketBuffer & pb) ;
 
     bool TryLock(const u32 needed, const THREEDIR& eventlocks)
     {
-      MFM_API_ASSERT_STATE(m_locksNeeded == 0);
+      if (m_locksNeeded != 0) {
+        LOG.Error("TryLock with m_locksNeeded=%d",m_locksNeeded);
+        m_locksNeeded = 0;
+      }
 
       bool ret = GetLonglivedLock().TryLock(this);
       if (ret)
@@ -442,17 +479,36 @@ namespace MFM {
     void Unlock()
     {
       bool ret = GetLonglivedLock().Unlock(this);
-      MFM_API_ASSERT(ret, LOCK_FAILURE);
+      if (!ret) LOG.Error("Unlocking failure %s", Dirs::GetName(m_cacheDir));
       m_locksNeeded = 0;
       for(u32 i=0; i< MAX_LOCKS_NEEDED; m_lockRegions[i++] = (Dir) -1);
     }
 
+    /** NOTE: In T2 land we are taking IsConnected() as meaning "There
+        is another recently live tile in this CP's direction" -- so
+        going for a lock that way makes sense and should be attempted
+        -- but the MFMS sense seems to be something weaker, just about
+        initialization.  Since disappearing and reappearing tiles were
+        never that plausibly handled in MFMS anyway, we're not sure if
+        how or where this distinction will come burn us.
+     */
     bool IsConnected() const
     {
+      MFM_API_ASSERT_NONNULL(m_itcDelegate);
+      return m_itcDelegate->IsConnected(*this);
+    }
+
+    bool IsConnectedMFMS() const {
       return m_channelEnd.IsConnected();
     }
 
-    void ClaimCacheProcessor(Tile<EC>& tile, AbstractChannel& channel, LonglivedLock & lock, Dir toCache)
+    bool DisclaimUnconnected() ;
+
+    bool ReclaimConnected() ;
+
+    void SoftReset() ;
+
+    void ClaimCacheProcessor(Tile<EC>& tile, AbstractChannel& channel, LonglivedLock<EC> & lock, Dir toCache)
     {
       MFM_API_ASSERT_STATE(!m_tile && !m_longlivedLock);
 
@@ -474,7 +530,27 @@ namespace MFM {
       m_channelEnd.ClaimChannelEnd(channel, onSideA);
     }
 
-    void AssertConnected() const
+    void ClaimCacheProcessorForT2(Tile<EC>& tile, Dir toCache, LonglivedLock<EC> & lll)
+    {
+      MFM_API_ASSERT_STATE(!m_tile && !m_longlivedLock);
+
+      m_tile = &tile;
+      m_longlivedLock = &lll;
+      m_cacheDir = toCache;
+      m_cpState = IDLE;
+
+      // Map their full untransformed origin to our full untransformed frame
+      bool isStaggered = m_tile->IsTileGridLayoutStaggered();
+      SPoint remoteOrigin;
+      Dirs::FillDir(remoteOrigin, m_cacheDir, isStaggered);
+
+      SPoint ownedph(m_tile->OWNED_WIDTH/2, m_tile->OWNED_HEIGHT/2);
+
+      m_farSideOrigin = remoteOrigin * ownedph;
+
+    }
+
+    void AssertClaimed() const
     {
       MFM_API_ASSERT_STATE(m_tile && m_longlivedLock);
     }
@@ -486,7 +562,7 @@ namespace MFM {
      */
     Tile<EC>& GetTile()
     {
-      AssertConnected();
+      AssertClaimed();
       return *m_tile;
     }
 
@@ -496,9 +572,9 @@ namespace MFM {
      *
      * @returns The LonglivedLock associated with this cache processor
      */
-    LonglivedLock& GetLonglivedLock()
+    LonglivedLock<EC>& GetLonglivedLock()
     {
-      AssertConnected();
+      AssertClaimed();
       return *m_longlivedLock;
     }
 
@@ -510,7 +586,7 @@ namespace MFM {
      */
     SPoint LocalToRemote(const SPoint & local) const
     {
-      AssertConnected();
+      AssertClaimed();
       return local - m_farSideOrigin;
     }
 
@@ -522,12 +598,13 @@ namespace MFM {
      */
     SPoint RemoteToLocal(const SPoint & remote) const
     {
-      AssertConnected();
+      AssertClaimed();
       return remote + m_farSideOrigin;
     }
 
     CacheProcessor()
       : m_tile(0)
+      , m_itcDelegate(0)
       , m_longlivedLock(0)
       , m_cacheDir((Dir)-1)
       , m_locksNeeded(0)

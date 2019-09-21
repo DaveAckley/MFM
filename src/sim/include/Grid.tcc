@@ -9,7 +9,7 @@
 namespace MFM {
 
   template <class GC>
-  LonglivedLock & Grid<GC>::GetIntertileLock(u32 x, u32 y, Dir dir, bool isStaggered)
+  LonglivedLock<typename GC::EVENT_CONFIG> & Grid<GC>::GetIntertileLock(u32 x, u32 y, Dir dir, bool isStaggered)
   {
     if(isStaggered)
       return GetIntertileLockStaggered(x,y, dir);
@@ -19,7 +19,7 @@ namespace MFM {
 
 
   template <class GC>
-  LonglivedLock & Grid<GC>::GetIntertileLockCheckerboard(u32 x, u32 y, Dir dir)
+  LonglivedLock<typename GC::EVENT_CONFIG> & Grid<GC>::GetIntertileLockCheckerboard(u32 x, u32 y, Dir dir)
   {
     switch (dir)
     {
@@ -67,7 +67,7 @@ namespace MFM {
   }
 
   template <class GC>
-  LonglivedLock & Grid<GC>::GetIntertileLockStaggered(u32 x, u32 y, Dir dir)
+  LonglivedLock<typename GC::EVENT_CONFIG> & Grid<GC>::GetIntertileLockStaggered(u32 x, u32 y, Dir dir)
   {
     switch (dir)
       {
@@ -155,12 +155,12 @@ namespace MFM {
 
 	    TileDriver & td = _getTileDriver(tpt.GetX(),tpt.GetY());
 	    GridTransceiver & gt = td.m_channels[d - Dirs::NORTHEAST];
-	    LonglivedLock & ctl = GetIntertileLock(tpt.GetX(),tpt.GetY(),d, isStaggered);
+	    LonglivedLock<EC> & ctl = GetIntertileLock(tpt.GetX(),tpt.GetY(),d, isStaggered);
 
 	    Dir odir = Dirs::OppositeDir(d);
 	    MFM_API_ASSERT_STATE(Dirs::IsValidDir(odir, isStaggered));
 
-	    LonglivedLock & otl = isStaggered ? ctl : GetIntertileLock(npt.GetX(),npt.GetY(),odir, false); //simpler for staggered, refs not changed
+	    LonglivedLock<EC> & otl = isStaggered ? ctl : GetIntertileLock(npt.GetX(),npt.GetY(),odir, false); //simpler for staggered, refs not changed
 
 	    ctile.Connect(gt, ctl, d);
 	    otile.Connect(gt, otl, odir);
@@ -315,7 +315,8 @@ namespace MFM {
         if (!ctile.Advance())
         {
           // We accomplished nothing.  Let somebody else try
-          pthread_yield();
+          //XXX          pthread_yield();
+          //Sleep(0,10000); // Sleep ~10usec
         }
         pauseUsec = 0;
         break;
@@ -766,8 +767,20 @@ namespace MFM {
                   tc.GetName(), loops, notReady);
         ReportGridStatus(Logger::ERROR);
         LOG.Error("%s control: Sleeping", tc.GetName());
-        SleepUsec(60*1000000);  // 1 minute
+        SleepUsec(10*1000000);  // 10 seconds
         LOG.Error("%s control: Resetting", tc.GetName());
+
+        // Issue request to all
+        for (m_rgi.ShuffleOrReset(m_random); m_rgi.HasNext(); )
+        {
+          SPoint i = IteratorIndexToCoord(m_rgi.Next());
+          MFM_API_ASSERT_STATE(IsLegalTileIndex(i));
+
+          u32 x = i.GetX();
+          u32 y = i.GetY();
+          TileDriver & td = _getTileDriver(x,y);
+          td.SoftReset();
+        }
         loops = 0;
       }
 
