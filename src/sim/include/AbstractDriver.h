@@ -310,7 +310,7 @@ namespace MFM
 
       // Correct up to 10% of current each frame
       m_microsSleepPerFrame = (100+2*err)*m_microsSleepPerFrame/100;
-      m_microsSleepPerFrame = MIN(100000000, MAX(1000, m_microsSleepPerFrame));
+      m_microsSleepPerFrame = MIN(5000000, MAX(1000, m_microsSleepPerFrame));
 
       LOG.Debug("diff=%d err100=%d usleep=%d",
                 (s32) diff,
@@ -690,6 +690,23 @@ namespace MFM
         return NULL;
       }
       return "Non-numeric in argument";
+    }
+
+    static void SetStartSymbolFromArgs(const char* symbol, void* driverptr)
+    {
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
+      if (driver.m_haveStartSymbol)
+        args.Die("Multiple start symbols specified ('%s', '%s)", symbol, driver.m_startSymbol);
+
+      if (strlen(symbol) > 2)
+        args.Die("Bad atomic symbol '%s'", symbol);
+
+      driver.m_startSymbol[0] = symbol[0];
+      driver.m_startSymbol[1] = symbol[1];
+      driver.m_startSymbol[2] = symbol[2];
+      driver.m_haveStartSymbol = true;
     }
 
     static void SetSeedFromArgs(const char* seedstr, void* driverptr)
@@ -1155,12 +1172,14 @@ namespace MFM
         {
           m_currentConfigurationPath = 0;
         }
-        ReloadCurrentConfigurationPath();
       }
+      ReloadCurrentConfigurationPath();
     }
 
     void ReloadCurrentConfigurationPath()
     {
+      ReinitEden();
+
       if(m_configurationPathCount == 0)
       {
         return;
@@ -1256,6 +1275,7 @@ namespace MFM
       , m_totalPriorTicks(0)
       , m_currentTickBasis(0)
       , m_haltAfterAEPS(0)
+      , m_haveStartSymbol(false) // if true, m_startymbol has (unvalidated) content
       , m_haltOnExtinctionOf(false) // if true, m_extinctionSymbol has (unvalidated) content
       , m_haltOnEmpty(false)
       , m_haltOnFull(false)
@@ -1424,6 +1444,9 @@ namespace MFM
       RegisterArgument("If ARG > 0, Halts after ARG elapsed aeps.",
                        "--haltafteraeps", &SetHaltAfterAEPSFromArgs, this, true);
 
+      RegisterArgument("Start with empty grid except one of this element.",
+                       "--startsymbol", &SetStartSymbolFromArgs, this, true);
+
       RegisterArgument("Halts after element symbol ARG is absent from the grid.",
                        "--haltifextinct", &SetHaltOnExtinctionOfFromArgs, this, true);
 
@@ -1561,8 +1584,6 @@ namespace MFM
 
       ReinitPhysics();
 
-      ReinitEden();
-
       PostReinit(m_varguments);
 
       LoadFromConfigurationPath();
@@ -1599,6 +1620,8 @@ namespace MFM
     u64 m_totalPriorTicks;
     u64 m_currentTickBasis;
     u32 m_haltAfterAEPS;
+    bool m_haveStartSymbol;
+    u8 m_startSymbol[3];
     bool m_haltOnExtinctionOf;
     u8 m_extinctionSymbol[3];
     bool m_haltOnEmpty;
