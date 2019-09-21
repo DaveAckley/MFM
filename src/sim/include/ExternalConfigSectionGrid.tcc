@@ -298,7 +298,7 @@ namespace MFM
   template<class GC>
   bool ExternalConfigSectionGrid<GC>::ReadFinalize()
   {
-    m_grid.RefreshAllCaches();
+    //XXXXX NEED TO REPLACE    m_grid.RefreshAllCaches();
     m_grid.RecountAtoms();
     return true;
   }
