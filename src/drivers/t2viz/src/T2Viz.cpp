@@ -277,7 +277,7 @@ namespace MFM {
           mLastAEPSChangeCount = mUpdateCount;
           mLastAEPS = a[1];
         }
-        if (mLastAEPSChangeCount + 20 > mUpdateCount) mLastAER = a[0];
+        if (mLastAEPSChangeCount + 100 > mUpdateCount) mLastAER = a[0];
         else mLastAER = -1;
       } else mLastAER = -1; // Can't read file
     } while(0);
