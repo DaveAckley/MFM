@@ -32,6 +32,7 @@
 #include "UlamClass.h"
 #include "BitStorage.h"
 #include "ByteSink.h"
+#include "UlamVTableEntry.h"
 
 namespace MFM
 {
@@ -76,19 +77,39 @@ namespace MFM
 
     /**
        Construct an UlamRef that's related (not data member) to an existing UlamRef.
-       Same 'pos', effective self, and usage; len may change;
+       Same effective self, and usage; pos (ulam-5), and len may change;
        and pos + len must fit within the len supplied to the
        existing UlamRef.
      */
-    UlamRef(const UlamRef<EC> & existing, u32 len) ;
+    UlamRef(const UlamRef<EC> & existing, s32 posincr, u32 len) ;
 
     /**
        Construct an UlamRef that's related (not data member) to an existing UlamRef.
        Same effective self, and usage; pos and len may change;
        and pos + len must fit within the len supplied to the
        existing UlamRef.
+       (note: 'applydelta' is a de-ambiguity arg).
      */
     UlamRef(const UlamRef<EC> & existing, s32 effselfoffset, u32 len, bool applydelta) ;
+
+    /**
+	Construct an UlamRef for a virtual function call, based on the
+	existing EffectiveSelf;
+	Returns the VfuncPtr, as well as the UlamRef to use in the vf call;
+	Cast the void* VfuncPtr to the vfunc's typedef (see origclass' .h);
+
+	Invarient: the new 'ur' has pos to the Override class found in
+	EffectiveSelf's VTtable for this vfunc's VOWNED_IDX +
+	originating class start offset;
+    */
+    UlamRef(const UlamRef<EC> & existing, u32 vownedfuncidx, const UlamClass<EC> & origclass, VfuncPtr & vfuncref) ;
+
+    /**
+       Construct an UlamRef for a virtual function call, overloaded to
+       take RegistryNumber instead of UlamClass of originating class;
+       (note: 'applydelta' is a de-ambiguity arg)
+    */
+    UlamRef(const UlamRef<EC> & existing, u32 vownedfuncidx, u32 origclassregnum, bool applydelta, VfuncPtr & vfuncref) ;
 
     u32 Read() const { return m_stg.Read(m_pos, m_len); }
 
@@ -173,6 +194,19 @@ namespace MFM
     void CheckEffectiveSelf() const ;
 
     const UlamClass<EC>* LookupUlamElementTypeFromAtom() const ;
+
+    /** helper, creates EffectiveSelf-based UlamRef for virtual func call;
+	Invarient: 'ur' of a virtual func points to the override class;
+	EffectiveSelf can be a different class, i.e. override is a baseclass;
+    */
+    void InitUlamRefForVirtualFuncCall(const UlamRef<EC> & ur, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref);
+
+    /** helper, uses existing effselfpos and new effselfoffset to set our
+	new m_pos and m_posToEff; m_len is also set;
+	m_pos + m_len - m_posToEff must fit in m_stg.
+    */
+    void ApplyDelta(s32 existingeffselfpos, s32 effselfoffset, u32 len);
+
 
     // DATA MEMBERS
     const UlamContext<EC> & m_uc;

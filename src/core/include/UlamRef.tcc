@@ -6,8 +6,10 @@
 namespace MFM {
 
   template <class EC>
-  UlamRef<EC>::UlamRef(u32 pos, u32 len, BitStorage<EC>& stg, const UlamClass<EC> * effself,
-                       const UsageType usage, const UlamContext<EC> & uc)
+  UlamRef<EC>::UlamRef(u32 pos, u32 len, BitStorage<EC>& stg,
+		       const UlamClass<EC> * effself,
+                       const UsageType usage,
+		       const UlamContext<EC> & uc)
     : m_uc(uc)
     , m_effSelf(effself)
     , m_stg(stg)
@@ -60,7 +62,7 @@ namespace MFM {
   }
 
   template <class EC>
-  UlamRef<EC>::UlamRef(const UlamRef & existing, s32 posincr, u32 len, const UlamClass<EC> * effself, const UsageType usage)
+  UlamRef<EC>::UlamRef(const UlamRef<EC> & existing, s32 posincr, u32 len, const UlamClass<EC> * effself, const UsageType usage)
     : m_uc(existing.m_uc)
     , m_effSelf(effself)
     , m_stg(existing.m_stg)
@@ -99,15 +101,18 @@ namespace MFM {
   }
 
   template <class EC>
-  UlamRef<EC>::UlamRef(const UlamRef & existing, u32 len)
+  UlamRef<EC>::UlamRef(const UlamRef<EC> & existing, s32 posincr, u32 len)
     : m_uc(existing.m_uc)
     , m_effSelf(existing.m_effSelf)
     , m_stg(existing.m_stg)
-    , m_pos(existing.m_pos)
     , m_len(len)
     , m_usage(existing.m_usage)
-    , m_posToEff(existing.m_posToEff)
+    , m_posToEff(existing.m_posToEff + posincr)
   {
+    s32 newpos = posincr + (s32) existing.GetPos(); //e.g. pos -25 to start of atom of element ref
+    MFM_API_ASSERT_ARG(newpos >= 0); //non-negative
+    m_pos = (u32) newpos; //save as unsigned
+
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
     {
@@ -116,7 +121,7 @@ namespace MFM {
   }
 
   template <class EC>
-  UlamRef<EC>::UlamRef(const UlamRef & existing, s32 effselfoffset, u32 len, bool applydelta)
+  UlamRef<EC>::UlamRef(const UlamRef<EC> & existing, s32 effselfoffset, u32 len, bool applydelta)
     : m_uc(existing.m_uc)
     , m_effSelf(existing.m_effSelf)
     , m_stg(existing.m_stg)
@@ -124,29 +129,81 @@ namespace MFM {
     , m_usage(existing.m_usage)
   {
     MFM_API_ASSERT_ARG(effselfoffset >= 0); //non-negative
-    if(applydelta) //virtual func override class ref, from existing calling ref
-      {
-	s32 newpos = effselfoffset + (s32) existing.GetEffectiveSelfPos();
-	MFM_API_ASSERT_ARG(newpos >= 0); //non-negative
-	m_pos = (u32) newpos; //save as unsigned
-	m_posToEff = (u32) effselfoffset; //subtract from newpos for pos of effself
-      }
-    else
-      {
-	MFM_API_ASSERT_ARG(applydelta);
-	s32 newpos = effselfoffset + (s32) existing.GetPos(); //e.g. pos -25 to start of atom of element ref
-	MFM_API_ASSERT_ARG(newpos >= 0); //non-negative
-	m_pos = (u32) newpos; //save as unsigned
-	m_posToEff = 0; //non-virtual
-      }
+    MFM_API_ASSERT_ARG(applydelta); //always true, de-ambiguity arg
 
-    MFM_API_ASSERT_ARG((m_pos + m_len - m_posToEff) <= m_stg.GetBitSize());
+    //virtual func override class ref, from existing calling ref
+    ApplyDelta(existing.GetEffectiveSelfPos(), effselfoffset, len);
+
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
     {
       UpdateEffectiveSelf();
     }
   }
 
+  template <class EC>
+  UlamRef<EC>::UlamRef(const UlamRef<EC> & existing, u32 vownedfuncidx, const UlamClass<EC> & origclass, VfuncPtr & vfuncref)
+    : m_uc(existing.m_uc)
+    , m_effSelf(existing.m_effSelf)
+    , m_stg(existing.m_stg)
+    , m_len(existing.m_len)
+    , m_usage(existing.m_usage)
+  {
+    InitUlamRefForVirtualFuncCall(existing, vownedfuncidx, origclass.GetRegistrationNumber(), vfuncref);
+
+    if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
+    {
+      UpdateEffectiveSelf();
+    }
+  }
+
+  template <class EC>
+  UlamRef<EC>::UlamRef(const UlamRef<EC> & existing, u32 vownedfuncidx, u32 origclassregnum, bool applydelta, VfuncPtr & vfuncref)
+    : m_uc(existing.m_uc)
+    , m_effSelf(existing.m_effSelf)
+    , m_stg(existing.m_stg)
+    , m_len(existing.m_len)
+    , m_usage(existing.m_usage)
+  {
+    //applydelta is de-ambiguity arg
+    InitUlamRefForVirtualFuncCall(existing, vownedfuncidx, origclassregnum, vfuncref);
+    if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
+    {
+      UpdateEffectiveSelf();
+    }
+  }
+
+  template <class EC>
+  void UlamRef<EC>::InitUlamRefForVirtualFuncCall(const UlamRef<EC> & ur, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref)
+  {
+    const UlamClass<EC> * effSelf = ur.GetEffectiveSelf();
+    MFM_API_ASSERT_NONNULL(effSelf);
+
+    const u32 origclassvtstart = effSelf->GetVTStartOffsetForClassByRegNum(origclassregnum);
+
+    vfuncref = effSelf->getVTableEntry(vownedfuncidx + origclassvtstart); //return ref to virtual function ptr
+
+    const UlamClass<EC> * ovclassptr = effSelf->getVTableEntryUlamClassPtr(vownedfuncidx + origclassvtstart);
+    MFM_API_ASSERT_NONNULL(ovclassptr);
+
+    const u32 ovclassrelpos = effSelf->internalCMethodImplementingGetRelativePositionOfBaseClass(ovclassptr);
+    MFM_API_ASSERT(ovclassrelpos >= 0, PURE_VIRTUAL_CALLED);
+
+    ApplyDelta(ur.GetEffectiveSelfPos(), ovclassrelpos, ovclassptr->GetClassLength());
+  } //InitUlamRefForVirtualFuncCall
+
+  template <class EC>
+  void UlamRef<EC>::ApplyDelta(s32 existingeffselfpos, s32 effselfoffset, u32 len)
+  {
+    MFM_API_ASSERT_ARG(effselfoffset >= 0); //non-negative
+
+    //virtual func override class ref, from existing calling ref
+    s32 newpos = effselfoffset + existingeffselfpos;
+    MFM_API_ASSERT_ARG(newpos >= 0); //non-negative
+    m_pos = (u32) newpos; //save as unsigned
+    m_posToEff = (u32) effselfoffset; //subtract from newpos for pos of effself
+    m_len = len;
+    MFM_API_ASSERT_ARG((m_pos + m_len - m_posToEff) <= m_stg.GetBitSize());
+  }
 
   template <class EC>
   void UlamRef<EC>::UpdateEffectiveSelf()
@@ -218,7 +275,7 @@ namespace MFM {
 
     // If this isn't an ulam element, MFM doesn't have name info for
     // its type, but we can still print its class members
-    m_effSelf->PrintClassMembers(uc, bs, m_stg, printFlags, m_pos);
+    m_effSelf->PrintClassMembers(uc, bs, m_stg, printFlags, GetEffectiveSelfPos());
   }
 
 } //MFM

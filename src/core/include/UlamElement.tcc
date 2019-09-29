@@ -33,17 +33,10 @@ namespace MFM {
     UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), window.GetCenterAtomBitStorage(), this, UlamRef<EC>::ELEMENTAL, uc);
 
     // how to do an ulam virtual function call in c++
-    const u32 Uh_5tlreg239 = ur.GetEffectiveSelf()->GetVTStartOffsetForClassByRegNum(0); // UrSelf regnum=0 //gcnl:NodeFunctionCall.cpp:1364
-    VfuncPtr Uf_tvfp238 = ur.GetEffectiveSelf()->getVTableEntry(BEHAVE_VOWNED_INDEX + Uh_5tlreg239); //gcnl:NodeFunctionCall.cpp:1384
-    const UlamClass<EC> * Uh_7tuclass240 = ur.GetEffectiveSelf()->getVTableEntryUlamClassPtr(BEHAVE_VOWNED_INDEX + Uh_5tlreg239); //override class //gcnl:NodeFunctionCall.cpp:1397
-    const s32 Uh_5tlreg241 = ur.GetEffectiveSelf()->internalCMethodImplementingGetRelativePositionOfBaseClass(Uh_7tuclass240); //relpos of override class in effself //gcnl:NodeFunctionCall.cpp:1414
-    MFM_API_ASSERT(Uh_5tlreg241 >= 0, PURE_VIRTUAL_CALLED); //gcnl:NodeFunctionCall.cpp:1418
-    const u32 Uh_5tlreg242 = Uh_7tuclass240->GetClassLength(); //len of override class //gcnl:NodeFunctionCall.cpp:1428
-    UlamRef<EC> Uh_3tur243(ur, Uh_5tlreg241, Uh_5tlreg242, true); //gcnl:NodeFunctionCall.cpp:1446
-
+    VfuncPtr vfuncptr;
+    UlamRef<EC> vfur(ur, BEHAVE_VOWNED_INDEX, 0u, true, vfuncptr);
     typedef void (* Uf_6behave) (const UlamContext<EC>&, UlamRef<EC>& );
-    //((Uf_6behave) this->getVTableEntry(BEHAVE_VTABLE_INDEX)) (uc, ur);
-    ((Uf_6behave) Uf_tvfp238) (uc, Uh_3tur243);
+    ((Uf_6behave) vfuncptr) (uc, vfur);
   }
 
   template <class EC>
@@ -59,17 +52,11 @@ namespace MFM {
     UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this, UlamRef<EC>::ELEMENTAL, uc);
 
     // how to do an ulam virtual function call in c++
-    const u32 Uh_5tlreg239 = ur.GetEffectiveSelf()->GetVTStartOffsetForClassByRegNum(0); // UrSelf regnum=0 //gcnl:NodeFunctionCall.cpp:1364
-    VfuncPtr Uf_tvfp238 = ur.GetEffectiveSelf()->getVTableEntry(GETCOLOR_VOWNED_INDEX + Uh_5tlreg239); //gcnl:NodeFunctionCall.cpp:1384
-    const UlamClass<EC> * Uh_7tuclass240 = ur.GetEffectiveSelf()->getVTableEntryUlamClassPtr(GETCOLOR_VOWNED_INDEX + Uh_5tlreg239); //override class //gcnl:NodeFunctionCall.cpp:1397
-    const s32 Uh_5tlreg241 = ur.GetEffectiveSelf()->internalCMethodImplementingGetRelativePositionOfBaseClass(Uh_7tuclass240); //relpos of override class in effself //gcnl:NodeFunctionCall.cpp:1414
-    MFM_API_ASSERT(Uh_5tlreg241 >= 0, PURE_VIRTUAL_CALLED); //gcnl:NodeFunctionCall.cpp:1418
-    const u32 Uh_5tlreg242 = Uh_7tuclass240->GetClassLength(); //len of override class //gcnl:NodeFunctionCall.cpp:1428
-    UlamRef<EC> Uh_3tur243(ur, Uh_5tlreg241, Uh_5tlreg242, true); //gcnl:NodeFunctionCall.cpp:1446
+    VfuncPtr vfuncptr;
+    UlamRef<EC> vfur(ur, GETCOLOR_VOWNED_INDEX, 0u, true, vfuncptr);
 
     typedef Ui_Ut_14181u<EC> (* Uf_8getColor11102321u) (const UlamContext<EC>&, UlamRef<EC>&, Ui_Ut_102321u<EC>& );
-    //Ui_Ut_14181u<EC> dynColor = ((Uf_8getColor11102321u) this->getVTableEntry(GETCOLOR_VTABLE_INDEX)) (uc, ur, sel);
-    Ui_Ut_14181u<EC> dynColor = ((Uf_8getColor11102321u) Uf_tvfp238) (uc, Uh_3tur243, sel);
+    Ui_Ut_14181u<EC> dynColor = ((Uf_8getColor11102321u) vfuncptr) (uc, vfur, sel);
 
     return dynColor.read();
   }
