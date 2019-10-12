@@ -30,7 +30,8 @@
 #ifndef ULAMBYTEWRAPPERS_H
 #define ULAMBYTEWRAPPERS_H
 
-#include "Uq_10109210ByteStream10.h"
+namespace MFM { template <class EC> struct Uq_10109216ByteStreamWriter10; }  //FORWARD
+namespace MFM { template <class EC> struct Uq_10109216ByteStreamReader10; }  //FORWARD
 
 #ifndef Ud_Ui_Ut_r10181u
 #define Ud_Ui_Ut_r10181u
@@ -211,8 +212,8 @@ namespace MFM{
   struct _UlamByteSinkWrapper : public ByteSink {
     const UlamContext<EC>& mUC;
     UlamRef<EC>& mUR;
-    typename Uq_10109210ByteStream10<EC>::Uf_919writeByte1110181u mWriteByteFunc;
-    _UlamByteSinkWrapper(const UlamContext<EC>& uc, UlamRef<EC>& ur, typename Uq_10109210ByteStream10<EC>::Uf_919writeByte1110181u func)
+    typename Uq_10109216ByteStreamWriter10<EC>::Uf_919writeByte1110181u mWriteByteFunc;
+    _UlamByteSinkWrapper(const UlamContext<EC>& uc, UlamRef<EC>& ur, typename Uq_10109216ByteStreamWriter10<EC>::Uf_919writeByte1110181u func)
       : mUC(uc)
       , mUR(ur)
       , mWriteByteFunc(func)
@@ -238,8 +239,8 @@ namespace MFM{
   struct _UlamByteSourceWrapper : public ByteSource {
     const UlamContext<EC>& mUC;
     UlamRef<EC>& mUR;
-    typename Uq_10109210ByteStream10<EC>::Uf_8readByte10 mReadByteFunc;
-    _UlamByteSourceWrapper(const UlamContext<EC>& uc, UlamRef<EC>& ur, typename Uq_10109210ByteStream10<EC>::Uf_8readByte10 func)
+    typename Uq_10109216ByteStreamReader10<EC>::Uf_8readByte10 mReadByteFunc;
+    _UlamByteSourceWrapper(const UlamContext<EC>& uc, UlamRef<EC>& ur, typename Uq_10109216ByteStreamReader10<EC>::Uf_8readByte10 func)
       : mUC(uc)
       , mUR(ur)
       , mReadByteFunc(func)
