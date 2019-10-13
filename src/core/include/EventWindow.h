@@ -369,11 +369,21 @@ namespace MFM
     }
 
     /**
-     * Map a relative coordinate through the psymmetry and into an
-     * index into the atomBuffer.  FAIL(ILLEGAL_ARGUMENT) if offset is
-     * not in the event window
+     * Map a relative coordinate through the current psymmetry and
+     * into an index into the atomBuffer.  FAIL(ILLEGAL_ARGUMENT) if
+     * offset is not in the event window
      */
-    u32 MapToIndexSymValid(const SPoint & loc) const ;
+    u32 MapToIndexSymValid(const SPoint & loc) const
+    {
+      return MapToIndexSymValid(loc, m_sym);
+    }
+
+    /**
+     * Map a relative coordinate through the supplied psymmetry and
+     * into an index into the atomBuffer.  FAIL(ILLEGAL_ARGUMENT) if
+     * offset is not in the event window
+     */
+    u32 MapToIndexSymValid(const SPoint & loc, PointSymmetry sym) const ;
 
     /**
      * Map a relative coordinate into a site number.  Note this method

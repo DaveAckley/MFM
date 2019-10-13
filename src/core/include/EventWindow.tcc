@@ -520,9 +520,9 @@ namespace MFM {
   }
 
   template <class EC>
-  u32 EventWindow<EC>::MapToIndexSymValid(const SPoint & loc) const
+  u32 EventWindow<EC>::MapToIndexSymValid(const SPoint & loc, PointSymmetry sym) const
   {
-    return MapToIndexDirectValid(SymMap(loc, m_sym, SPoint(2*R, 2*R)));
+    return MapToIndexDirectValid(SymMap(loc, sym, SPoint(2*R, 2*R)));
   }
 
   template <class EC>
