@@ -718,6 +718,42 @@ namespace MFM
     bool SetRelativeAtomSym(const SPoint& offset, const T & atom);
 
     /**
+     * Gets the event window sitenumber, ignoring the current
+     * symmetry, where \c atom is stored, if it is indeed stored
+     * anywhere in the accessible event window.
+     *
+     * @param atom A reference to the atom to be found in the event
+     *             window
+     *
+     * @returns -1 if \c atom is not stored in the accessible event
+     *          window, or >= 0 if \c atom is at that site number
+     *
+     * \sa GetSiteNumIfAnySym
+     */
+    s32 GetSiteNumIfAnyDirect(const BitStorage<EC> & atom) const;
+
+    /**
+     * Gets the event window sitenumber, under the current symmetry,
+     * where \c atom is stored, if it is indeed stored anywhere in the
+     * accessible event window.
+     *
+     * @param atom A reference to the atom to be found in the event
+     *             window
+     *
+     * @returns -1 if \c atom is not stored in the accessible event
+     *          window, or >= 0 if \c atom is at that site number
+     *
+     * \sa GetSiteNumIfAnyDirect
+     */
+    s32 GetSiteNumIfAnySym(const BitStorage<EC> & atom) const {
+      s32 ret = GetSiteNumIfAnyDirect(atom);
+      if (ret < 0) return ret;
+      const MDist<R> & md = MDist<R>::get();
+      SPoint raw = md.GetPoint((u32) ret);
+      return MapToIndexSymValid(raw,InverseSym(GetSymmetry()));
+    }
+    
+    /**
      * Sets an Atom residing at a specified location, without mapping
      * through the current symmetry, to a specified Atom .
      *
