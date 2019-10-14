@@ -110,7 +110,7 @@ namespace MFM {
   /**
      Get the symmetry that inverts a given symmetry, such that SymMap(SymMap(in,psym),InverseSym(psym)) == in
    */
-  inline const PointSymmetry InverseSym(const PointSymmetry psym) {
+  inline const PointSymmetry SymInverse(const PointSymmetry psym) {
 
     // All the symmetries invert themselves, except for 90L and 270L,
     // which invert each other, because only those two symmetries both

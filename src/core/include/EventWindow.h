@@ -750,7 +750,7 @@ namespace MFM
       if (ret < 0) return ret;
       const MDist<R> & md = MDist<R>::get();
       SPoint raw = md.GetPoint((u32) ret);
-      return MapToIndexSymValid(raw,InverseSym(GetSymmetry()));
+      return MapToIndexSymValid(raw,SymInverse(GetSymmetry()));
     }
     
     /**
