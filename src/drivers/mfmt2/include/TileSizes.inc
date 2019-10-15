@@ -10,23 +10,6 @@
    	 and double braces is for a staggered grid layout
  */
 
-#ifdef EXTRA_TILE_SIZES
-XX(A,24,24)
-#endif /*EXTRA_TILE_SIZES*/
-
-XX(B,32,32)
-XX(C,40,40)
-XX(D,54,54)
-XX(E,72,72)
-XX(F,98,98)
-XX(G,136,136)
+XX(G,48,32)
 XX(H,60,40)
-XX(I,80,40)
-XX(J,128,76)
-
-
-#ifdef EXTRA_TILE_SIZES
-XX(K,188,188)
-XX(L,264,264)
-XX(M,370,370)
-#endif /*EXTRA_TILE_SIZES*/
+XX(I,75,50)

@@ -210,9 +210,11 @@ namespace MFM
     if (3 != in.Scanf("%d,%d",&tmp_x,&tmp_y))
       return false;
 
-    if (!ec.GetGrid().LoadSite(SPoint(tmp_x,tmp_y), in, ec))
-      return false;
-
+    if (!ec.GetGrid().LoadSite(SPoint(tmp_x,tmp_y), in, ec)) {
+      in.Msg(Logger::WARNING, "Loading site (%d,%d) failed, trying to continue", tmp_x, tmp_y);
+      in.SkipSet("[^)]");
+    }
+    
     return in.Scanf(")") == 1;
   }
 

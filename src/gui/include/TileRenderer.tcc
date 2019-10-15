@@ -248,7 +248,7 @@ namespace MFM
       return;
     }
 
-    const u32 LABEL_ATOM_SIZE_DIT = Drawing::MapPixToDit(50);
+    const u32 LABEL_ATOM_SIZE_DIT = Drawing::MapPixToDit(25);
     if (m_atomSizeDit >= LABEL_ATOM_SIZE_DIT)
     {
       elementLabel = elt->GetAtomicSymbol();
@@ -273,10 +273,13 @@ namespace MFM
     {
       drawing.SetFont(FONT_ASSET_ELEMENT);
       const SPoint size = drawing.GetTextSize(elementLabel);
+      u32 ditSize = 5u*m_atomSizeDit/Drawing::MapPixToDit(1u);
+      u32 old = drawing.SetZoomDits(ditSize);
 
       drawing.SetBackground(Drawing::BLACK);
       drawing.SetForeground(Drawing::WHITE);
       drawing.BlitBackedTextCentered(elementLabel, pixOrigin, pixSize);
+      drawing.SetZoomDits(old);
     }
 
   }

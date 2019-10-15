@@ -12,12 +12,18 @@ namespace MFM {
   void StatisticsPanel<GC>::StatsRendererSaveDetails(ByteSink & sink) const
   {
     sink.Printf(" PP(daer=%d)\n",m_displayAER);
+    sink.Printf(" PP(dvnl=%d)\n",m_displayVersionLine);
+    sink.Printf(" PP(dtsl=%d)\n",m_displayTimestampLine);
+    sink.Printf(" PP(daep=%d)\n",m_displayAEPS);
   }
 
   template <class GC>
   bool StatisticsPanel<GC>::StatsRendererLoadDetails(const char * key, LineCountingByteSource & source)
   {
     if (!strcmp("daer",key)) return 1 == source.Scanf("%?d", sizeof m_displayAER, &m_displayAER);
+    if (!strcmp("dvnl",key)) return 1 == source.Scanf("%?d", sizeof m_displayVersionLine, &m_displayVersionLine);
+    if (!strcmp("dtsl",key)) return 1 == source.Scanf("%?d", sizeof m_displayTimestampLine, &m_displayTimestampLine);
+    if (!strcmp("daep",key)) return 1 == source.Scanf("%?d", sizeof m_displayAEPS, &m_displayAEPS);
     return false;
   }
 
@@ -63,34 +69,42 @@ namespace MFM {
       SPoint size = drawing.GetTextSize(runLabel);
       SPoint loc(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
 
-      drawing.BlitText(runLabel,
-                       loc,
-                       UPoint(dims.GetX(), ROW_HEIGHT));
-      baseY += DETAIL_ROW_HEIGHT;
-
+      if (m_displayVersionLine)
+      {
+        drawing.BlitText(runLabel,
+                         loc,
+                         UPoint(dims.GetX(), ROW_HEIGHT));
+        baseY += DETAIL_ROW_HEIGHT;
+      }
+      
       if (m_displayAER < 2)
       {
         break;
       }
 
-      u64 now = Utils::GetDateTimeNow();
-      snprintf(strBuffer,BUFSIZE,"%d %06d",
-               Utils::GetDateFromDateTime(now),
-               Utils::GetTimeFromDateTime(now)
-               );
-      size = drawing.GetTextSize(strBuffer);
-      loc = SPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
-      drawing.BlitText(strBuffer,
-                       loc,
-                       UPoint(dims.GetX(), ROW_HEIGHT));
-      baseY += DETAIL_ROW_HEIGHT;
+      if (m_displayTimestampLine)
+      {
 
+        u64 now = Utils::GetDateTimeNow();
+        snprintf(strBuffer,BUFSIZE,"%d %06d",
+                  Utils::GetDateFromDateTime(now),
+                  Utils::GetTimeFromDateTime(now)
+                  );
+        size = drawing.GetTextSize(strBuffer);
+        loc = SPoint(MAX(0, ((s32) dims.GetX())-size.GetX())/2, baseY);
+        drawing.BlitText(strBuffer,
+                         loc,
+                         UPoint(dims.GetX(), ROW_HEIGHT));
+        baseY += DETAIL_ROW_HEIGHT;
+      }
+      
       if (m_displayAER < 3)
       {
         break;
       }
 
       OString128 ob;
+
       if (m_screenshotTargetFPS < 0)
       {
         sprintf(strBuffer, "%0.3f AER", aer);
@@ -148,20 +162,24 @@ namespace MFM {
 
     if (m_displayAER > 0)
     {
-      baseY += ROW_HEIGHT/2;
+      baseY += ROW_HEIGHT/3;
     }
 
     drawing.SetForeground(Drawing::WHITE);
 
-    sprintf(strBuffer, "%8.3f kAEPS", aeps/1000.0);
+    if (m_displayAEPS)
+    {
 
-    drawing.SetForeground(Drawing::WHITE);
-    drawing.BlitText(strBuffer,
-                     SPoint(m_drawPoint.GetX(), baseY),
-                     UPoint(dims.GetX(), ROW_HEIGHT));
+      sprintf(strBuffer, "%8.3f kAEPS", aeps/1000.0);
 
-    baseY += ROW_HEIGHT;
-    baseY += ROW_HEIGHT;
+      drawing.SetForeground(Drawing::WHITE);
+      drawing.BlitText(strBuffer,
+                       SPoint(m_drawPoint.GetX(), baseY),
+                       UPoint(dims.GetX(), ROW_HEIGHT));
+      
+      baseY += ROW_HEIGHT;
+      baseY += ROW_HEIGHT;
+    }
 
     sprintf(strBuffer, "%8.3f %%full", grid.GetFullSitePercentage() * 100);
     drawing.BlitText(strBuffer,

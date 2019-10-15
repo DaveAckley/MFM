@@ -352,9 +352,20 @@ namespace MFM
      */
     SPoint MapToPointSymValid(const u32 siteNumber) const
     {
+      return MapToPointSymValid(siteNumber, GetSymmetry());
+    }
+
+    /**
+     * Map a site number into a point, and then map that point through
+     * the given symmetry.  Fails on illegal siteNumbers
+     *
+     * \sa MapToPointSymValid
+     */
+    SPoint MapToPointSymValid(const u32 siteNumber, PointSymmetry psym) const
+    {
       const MDist<R> & md = MDist<R>::get();
       SPoint direct = md.GetPoint(siteNumber);
-      return SymMap(direct,m_sym,direct);
+      return SymMap(direct,psym,direct);
     }
 
     /**
@@ -364,7 +375,17 @@ namespace MFM
      */
     u32 MapIndexToIndexSymValid(const u32 siteNumber) const
     {
-      SPoint sym = MapToPointSymValid(siteNumber);
+      return MapIndexToIndexSymValid(siteNumber, GetSymmetry());
+    }
+
+    /**
+     * Map a site number into a point, and then map that point through
+     * the given symmetry, then map that point back to a site number.
+     * Fails on illegal siteNumbers
+     */
+    u32 MapIndexToIndexSymValid(const u32 siteNumber, PointSymmetry psym) const
+    {
+      SPoint sym = MapToPointSymValid(siteNumber, psym);
       return MapToIndexDirectValid(sym);
     }
 
@@ -536,6 +557,15 @@ namespace MFM
      * number, after mapping siteNumber through the current symmetry
      */
     AtomBitStorage<EC>& GetAtomBitStorage(u32 siteNumber)
+    {
+      return m_atomBuffer[MapIndexToIndexSymValid(siteNumber)];
+    }
+
+    /**
+     * Get an unmodifiable reference to an atom bit storage by site
+     * number, after mapping siteNumber through the current symmetry
+     */
+    const AtomBitStorage<EC>& GetAtomBitStorage(u32 siteNumber) const
     {
       return m_atomBuffer[MapIndexToIndexSymValid(siteNumber)];
     }
