@@ -108,11 +108,17 @@ namespace MFM {
   }
 
   /**
-     Obtain the inverse of psym -- the symmetry that will return
-     points mapped by psym to their original coordinates
+     Get the symmetry that inverts a given symmetry, such that SymMap(SymMap(in,psym),InverseSym(psym)) == in
    */
   inline const PointSymmetry SymInverse(const PointSymmetry psym) {
-    return (const PointSymmetry) (psym ^ ((psym & 1) << 1)); // PSYM_DEG090{L,R} <-> PSYM_DEG270{L,R}
+
+    // All the symmetries invert themselves, except for 90L and 270L,
+    // which invert each other, because only those two symmetries both
+    // (1) swap x and y, and (2) negate just one of them.  
+
+    if (psym == PSYM_DEG090L) return PSYM_DEG270L;
+    if (psym == PSYM_DEG270L) return PSYM_DEG090L;
+    return psym;
   }
 
 } /* namespace MFM */

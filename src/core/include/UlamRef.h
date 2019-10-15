@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamRef.h A base for ulam references
-  Copyright (C) 2016 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2016,2019 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2019 ackleyshack LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +22,8 @@
 /**
   \file UlamRef.h A base class for ulam references
   \author David H. Ackley.
-  \date (C) 2016 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2016,2019 All rights reserved.
   \lgpl
  */
 #ifndef ULAMREF_H
@@ -30,6 +32,7 @@
 #include "UlamClass.h"
 #include "BitStorage.h"
 #include "ByteSink.h"
+#include "UlamVTableEntry.h"
 
 namespace MFM
 {
@@ -59,20 +62,54 @@ namespace MFM
             const UsageType usage, const UlamContext<EC> & uc) ;
 
     /**
+       Construct an UlamRef 'from scratch', when pos isnt effSelf (i.e. base class of effSelf)
+     */
+    UlamRef(u32 pos, u32 len, u32 postoeff, BitStorage<EC>& stg, const UlamClass<EC> * effself,
+            const UsageType usage, const UlamContext<EC> & uc) ;
+
+    /**
        Construct an UlamRef that's relative to an existing UlamRef.
        The 'pos' supplied here will be relative to the the existing
        pos, and this pos + len must fit within the len supplied to the
        existing UlamRef.
      */
-    UlamRef(const UlamRef<EC> & existing, s32 pos, u32 len, const UlamClass<EC> * effself, const UsageType usage) ;
+    UlamRef(const UlamRef<EC> & existing, s32 posincr, u32 len, const UlamClass<EC> * effself, const UsageType usage) ;
 
     /**
        Construct an UlamRef that's related (not data member) to an existing UlamRef.
-       Same 'pos', effective self, and usage; len may change;
+       Same effective self, and usage; pos (ulam-5), and len may change;
        and pos + len must fit within the len supplied to the
        existing UlamRef.
      */
-    UlamRef(const UlamRef<EC> & existing, u32 len) ;
+    UlamRef(const UlamRef<EC> & existing, s32 posincr, u32 len) ;
+
+    /**
+       Construct an UlamRef that's related (not data member) to an existing UlamRef.
+       Same effective self, and usage; pos and len may change;
+       and pos + len must fit within the len supplied to the
+       existing UlamRef.
+       (note: 'applydelta' is a de-ambiguity arg).
+     */
+    UlamRef(const UlamRef<EC> & existing, s32 effselfoffset, u32 len, bool applydelta) ;
+
+    /**
+	Construct an UlamRef for a virtual function call, based on the
+	existing EffectiveSelf;
+	Returns the VfuncPtr, as well as the UlamRef to use in the vf call;
+	Cast the void* VfuncPtr to the vfunc's typedef (see origclass' .h);
+
+	Invarient: the new 'ur' has pos to the Override class found in
+	EffectiveSelf's VTtable for this vfunc's VOWNED_IDX +
+	originating class start offset;
+    */
+    UlamRef(const UlamRef<EC> & existing, u32 vownedfuncidx, const UlamClass<EC> & origclass, VfuncPtr & vfuncref) ;
+
+    /**
+       Construct an UlamRef for a virtual function call, overloaded to
+       take RegistryNumber instead of UlamClass of originating class;
+       (note: 'applydelta' is a de-ambiguity arg)
+    */
+    UlamRef(const UlamRef<EC> & existing, u32 vownedfuncidx, u32 origclassregnum, bool applydelta, VfuncPtr & vfuncref) ;
 
     u32 Read() const { return m_stg.Read(m_pos, m_len); }
 
@@ -85,7 +122,7 @@ namespace MFM
     T ReadAtom() const
     {
       if (m_usage == ATOMIC) return m_stg.ReadAtom(m_pos);
-      if (m_usage == ELEMENTAL) return m_stg.ReadAtom(m_pos - T::ATOM_FIRST_STATE_BIT);
+      if (m_usage == ELEMENTAL) return m_stg.ReadAtom(GetEffectiveSelfPos() - T::ATOM_FIRST_STATE_BIT);
       FAIL(ILLEGAL_STATE);
     }
 
@@ -98,7 +135,7 @@ namespace MFM
       }
       else if (m_usage == ELEMENTAL)
       {
-        m_stg.WriteAtom(m_pos - T::ATOM_FIRST_STATE_BIT, val);
+        m_stg.WriteAtom(GetEffectiveSelfPos() - T::ATOM_FIRST_STATE_BIT, val);
         CheckEffectiveSelf();
       }
       else FAIL(ILLEGAL_STATE);
@@ -128,6 +165,12 @@ namespace MFM
 
     u32 GetLen() const { return m_len; }
 
+    //return beginning of element state bits;
+    s32 GetEffectiveSelfPos() const { return (m_pos - m_posToEff); }
+
+    //return the delta from existing pos to beginning of element state bits;
+    s32 GetPosToEffectiveSelf() const { return m_posToEff; }
+
     const UlamClass<EC> * GetEffectiveSelf() const { CheckEffectiveSelf(); return m_effSelf; }
 
     BitStorage<EC> & GetStorage() { return m_stg; }
@@ -152,6 +195,19 @@ namespace MFM
 
     const UlamClass<EC>* LookupUlamElementTypeFromAtom() const ;
 
+    /** helper, creates EffectiveSelf-based UlamRef for virtual func call;
+	Invarient: 'ur' of a virtual func points to the override class;
+	EffectiveSelf can be a different class, i.e. override is a baseclass;
+    */
+    void InitUlamRefForVirtualFuncCall(const UlamRef<EC> & ur, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref);
+
+    /** helper, uses existing effselfpos and new effselfoffset to set our
+	new m_pos and m_posToEff; m_len is also set;
+	m_pos + m_len - m_posToEff must fit in m_stg.
+    */
+    void ApplyDelta(s32 existingeffselfpos, s32 effselfoffset, u32 len);
+
+
     // DATA MEMBERS
     const UlamContext<EC> & m_uc;
     const UlamClass<EC> * m_effSelf;
@@ -159,6 +215,7 @@ namespace MFM
     u32 m_pos;
     u32 m_len;
     UsageType m_usage;
+    u32 m_posToEff;
 
   }; //UlamRef
 

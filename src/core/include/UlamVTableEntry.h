@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
-  UlamDefs.h A roll-up of files and definitions for ULAM compiled output
-  Copyright (C) 2014-2019 The Regents of the University of New Mexico.  All rights reserved.
+  UlamVTableEntry.h An abstract base class for ULAM vtable entry
+  Copyright (C) 2019 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2019 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -19,36 +20,28 @@
 */
 
 /**
-  \file UlamDefs.h A roll-up of files and definitions for ULAM compiled output
-  \author David H. Ackley
-  \author Elena S. Ackley
-  \date (C) 2014-2019 All rights reserved.
+  \file UlamVTableEntry.h An abstract base class for ULAM vtable entry
+  \author Elenas S. Ackley.
+  \date (C) 2019 All rights reserved.
   \lgpl
  */
-#ifndef ULAMDEFS_H
-#define ULAMDEFS_H
+#ifndef ULAMVTABLEENTRY_H
+#define ULAMVTABLEENTRY_H
 
-#include "Fail.h"
 #include "itype.h"
-#include "Util.h"
-#include "VD.h"
-#include "BitField.h"
-#include "CastOps.h"
-#include "Parameter.h"
-#include "Element.h"
-#include "IsLocal.h"
-#include "P3Atom.h"
-#include "UlamContext.h"
-#include "UlamElement.h"
-#include "UlamQuark.h"
-#include "UlamTransient.h"
-#include "UlamClass.h"
-#include "UlamClassRegistry.h"
-#include "UlamTypeInfo.h"
-#include "UlamVTableEntry.h"
+
+template <class EC> class UlamClass; //FORWARD
 
 namespace MFM
 {
-}
+  typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
 
-#endif /* ULAMDEFS_H */
+  template<class EC>
+  struct VTentry {
+    VfuncPtr vfptr;
+    UlamClass<EC> * oclassptr;
+  };
+
+} //MFM
+
+#endif /* ULAMVTABLEENTRY_H */

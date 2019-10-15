@@ -259,11 +259,13 @@ namespace MFM {
   struct UlamClassDataMemberInfo {
     const char * m_mangledType;
     const char * m_dataMemberName;
+    const char * m_dataMemberClassName;
     u32 m_bitPosition;
 
-    UlamClassDataMemberInfo(const char * mangled, const char *name, u32 pos)
+    UlamClassDataMemberInfo(const char * mangled, const char *name, const char *classname, u32 pos)
       : m_mangledType(mangled)
       , m_dataMemberName(name)
+      , m_dataMemberClassName(classname)
       , m_bitPosition(pos)
     { }
   };

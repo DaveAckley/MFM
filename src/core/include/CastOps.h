@@ -1609,7 +1609,7 @@ namespace MFM {
   {
     if(shft >= 64) return 0; //instead of self
     s64 cvala = _Int64ToCs64(vala, bitwidth);
-    return _Cs64ToInt64((cvala >> shft), bitwidth);
+    return _Cs64ToInt64((cvala << shft), bitwidth); //Sat Jul 20 14:45:23 2019  was >>
   }
 
   //Shift UNSIGNED:
