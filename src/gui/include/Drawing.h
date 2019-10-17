@@ -68,6 +68,11 @@ namespace MFM {
      */
     FontAsset m_fontAsset;
 
+    /**
+       Scale factor to apply to (currently only font) drawing operations.
+     */
+    u32 m_drawScaleDits;
+    
     static void SetSDLColor(SDL_Color & set, const u32 from) ;
     static void GetSDLColor(const SDL_Color & from, u32 & to) ;
 
@@ -135,6 +140,19 @@ namespace MFM {
        Set the current drawing window.
      */
     void SetWindow(const Rect & rect) ;
+
+    /**
+       Set the scale factor (currently affects only fonts) of the
+       drawing window.  dits == MapPixToDit(1u) is no scaling, larger
+       to scale up, smaller to scale down.  Returns old scale factor
+     */
+    u32 SetZoomDits(u32 dits) ;
+
+    /**
+       Get the scale factor (currently affects only fonts) of the drawing window. 
+       \sa SetZoomDits
+     */
+    u32 GetZoomDits() const ;
 
     /**
        Reset Drawing based on surface and given font

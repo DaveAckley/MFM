@@ -11,6 +11,7 @@ use Digest::SHA qw(sha512_hex);
 sub VERSION { "1.0" }
 sub MFZRUN_HEADER { "MFZ(".VERSION.")\n" }
 sub MFZ_PUBKEY_NAME { "MFZPUBKEY.DAT" }
+sub MFZ_FILE_NAME { "MFZNAME.DAT" }
 sub MFZ_SIG_NAME { "MFZSIG.DAT" }
 sub MFZ_ZIP_NAME { "MFZ.ZIP" }
 
@@ -90,6 +91,14 @@ sub ComputeFingerprintFromFullPublicKey {
     my $fingerprint = lc(sha512_hex($fullpubkey));
     $fingerprint =~ s/^(....)(...)(....).+$/$1-$2-$3/
         or IDie("you're a cow");
+    return $fingerprint;
+}
+
+sub ComputeChecksumOfString {
+    my $string = shift;
+    my $fingerprint = lc(sha512_hex($string));
+    $fingerprint =~ s/^(......)(..).+(..)(......)$/$1-$2$3-$4/
+        or IDie("give me some milk or else go home");
     return $fingerprint;
 }
 

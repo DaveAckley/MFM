@@ -38,6 +38,18 @@ namespace MFM
     rect = m_rect;
   }
 
+  u32 Drawing::SetZoomDits(u32 dits) 
+  {
+    u32 old = m_drawScaleDits;
+    m_drawScaleDits = dits;
+    return old;
+  }
+
+  u32 Drawing::GetZoomDits() const
+  {
+    return m_drawScaleDits;
+  }
+
   void Drawing::SetSDLColor(SDL_Color & set, const u32 from)
   {
     set.r = (from >> 16) & 0xff;
@@ -69,6 +81,7 @@ namespace MFM
     m_bgColor = BLACK;
 
     m_fontAsset = font;
+    m_drawScaleDits = MapPixToDit(1u);
   }
 
   void Drawing::Clear()
@@ -331,7 +344,9 @@ namespace MFM
 
   void Drawing::BlitText(const char* message, SPoint loc, UPoint size) const
   {
-    TTF_Font * ttfont = AssetManager::GetReal(m_fontAsset);
+    u32 baseFontSize = AssetManager::GetZFontSize(m_fontAsset); // in pix
+    u32 scaledSize = MapDitToPix(m_drawScaleDits*baseFontSize); // in pix
+    TTF_Font * ttfont = AssetManager::GetZFont(AssetManager::GetZFontPSC(m_fontAsset),scaledSize);
 
     SDL_Color sdl_color;
     SetSDLColor(sdl_color,m_fgColor);
@@ -365,7 +380,9 @@ namespace MFM
 
   SPoint Drawing::GetTextSizeInFont(const char* message, FontAsset font)
   {
-    TTF_Font * ttfont = AssetManager::Get(font);
+    u32 baseFontSize = AssetManager::GetZFontSize(font); // in pix
+    u32 scaledSize = MapDitToPix(m_drawScaleDits*baseFontSize); // in pix
+    TTF_Font * ttfont = AssetManager::GetZFont(AssetManager::GetZFontPSC(m_fontAsset),scaledSize);
 
     s32 w = -1;
     s32 h = -1;
