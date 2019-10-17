@@ -37,6 +37,8 @@
 namespace MFM
 {
 
+  template <class EC> class UlamRefMutable; // FORWARD
+
   /**
    * A UlamRef is a base class for ulam reference variables
    */
@@ -111,6 +113,21 @@ namespace MFM
     */
     UlamRef(const UlamRef<EC> & existing, u32 vownedfuncidx, u32 origclassregnum, bool applydelta, VfuncPtr & vfuncref) ;
 
+
+    /** Construct an UlamRef from a UlamRefMutable (e.g. ?: expression)
+     */
+    UlamRef(const UlamRefMutable<EC> & muter);
+
+    static BitStorage<EC> * checknonnullstg(BitStorage<EC> * stgptr) {
+      MFM_API_ASSERT_NONNULL(stgptr);
+      return stgptr;
+    }
+
+    static UlamContext<EC> * checknonnulluc(UlamContext<EC> * ucptr) {
+      MFM_API_ASSERT_NONNULL(ucptr);
+      return ucptr;
+    }
+
     u32 Read() const { return m_stg.Read(m_pos, m_len); }
 
     void Write(u32 val) { m_stg.Write(m_pos, m_len, val); }
@@ -165,6 +182,9 @@ namespace MFM
 
     u32 GetLen() const { return m_len; }
 
+    UsageType GetUsage() const { return m_usage; } //for UlamRefMutable
+
+
     //return beginning of element state bits;
     s32 GetEffectiveSelfPos() const { return (m_pos - m_posToEff); }
 
@@ -173,11 +193,13 @@ namespace MFM
 
     const UlamClass<EC> * GetEffectiveSelf() const { CheckEffectiveSelf(); return m_effSelf; }
 
+    UlamClass<EC> * GetEffectiveSelfPointer() const { return const_cast<UlamClass<EC> *> (m_effSelf); } //for UlamRefMutable
+
     BitStorage<EC> & GetStorage() { return m_stg; }
 
     BitStorage<EC> & GetStorage() const { return m_stg; }
-    //XXX
-    //XXX    const UlamContext<EC> & GetContext() { return m_uc; }
+
+    UlamContext<EC> * GetContextAsPointer() const { return const_cast<UlamContext<EC> *> (&m_uc); } //for UlamRefMutable
 
     u32 GetType() const ;
 
