@@ -2,6 +2,7 @@
 #include "Fail.h"
 #include "BitVector.h"
 #include "UlamElement.h"
+#include "UlamRefMutable.h"
 
 namespace MFM {
 
@@ -171,6 +172,18 @@ namespace MFM {
       UpdateEffectiveSelf();
     }
   }
+
+  template <class EC>
+  UlamRef<EC>::UlamRef(const UlamRefMutable<EC> & muter)
+    : m_uc(*checknonnulluc(muter.GetContextPtr()))
+    , m_effSelf(muter.GetEffectiveSelfPtr())
+    , m_stg(*checknonnullstg(muter.GetBitStoragePtr()))
+    , m_pos(muter.GetPos())
+    , m_len(muter.GetLen())
+    , m_usage(muter.GetUsageType())
+    , m_posToEff(muter.GetPosToEffectiveSelf())
+  { }
+
 
   template <class EC>
   void UlamRef<EC>::InitUlamRefForVirtualFuncCall(const UlamRef<EC> & ur, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref)
