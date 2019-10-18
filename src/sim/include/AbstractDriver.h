@@ -476,6 +476,11 @@ namespace MFM
       }
 
       DefineNeededElements();
+      SaveElementMeta();
+      if (this->m_saveElementMeta)
+      {
+	SaveElementMeta();
+      }
     }
 
     /**
@@ -823,6 +828,11 @@ namespace MFM
       driver.m_includeCPPDemos = 1;
     }
 
+    static void SetSaveElementMeta(const char* not_needed, void* driver)
+    {
+      ((AbstractDriver*)driver)->m_saveElementMeta = 1;
+    }
+
     static void SetGridImages(const char* not_needed, void* driver)
     {
       ((AbstractDriver*)driver)->m_gridImages = 1;
@@ -1126,6 +1136,26 @@ namespace MFM
       SaveGrid(filename);
     }
 
+    void SaveElementMeta()
+    {
+      const char* filename =
+        GetSimDirPathTemporary("element.meta");
+      LOG.Message("Saving element meta to: %s", filename);
+      FILE* fp = fopen(filename, "w");
+      FileByteSink fs(fp);
+      fs.Printf("test bytesink");
+      
+      u32 dlcount = m_elementRegistry.GetRegisteredElementCount();
+      for (u32 i = 0; i < dlcount; ++i)
+      {
+        Element<EC> * e = m_elementRegistry.GetRegisteredElement(i);
+	fs.Printf(e->GetName());
+	fs.Printf(e->GetAtomicSymbol());
+      }
+
+      fs.Close();
+    }
+
     ExternalConfig<GC> & GetExternalConfig()
     {
       return m_externalConfig;
@@ -1258,6 +1288,7 @@ namespace MFM
       , m_suppressStdElements(true)
       , m_includeUEDemos(false)
       , m_includeCPPDemos(false)
+      , m_saveElementMeta(false)
       , m_msSpentRunning(0)
       , m_msSpentOverhead(0)
       , m_microsSleepPerFrame(1000)
@@ -1455,6 +1486,10 @@ namespace MFM
 
       RegisterArgument("Command line comment, logged but otherwise ignored (string)",
                        "-#|--comment", &IgnoreComment, this, true);
+      
+      RegisterArgument("Output element data member names and bit positions for parsing mfs save data.",
+                       "-sm|--save-meta", &SetSaveElementMeta, this, false);
+      
 
     }
 
@@ -1602,6 +1637,7 @@ namespace MFM
     bool m_suppressStdElements;
     bool m_includeUEDemos;
     bool m_includeCPPDemos;
+    bool m_saveElementMeta;
 
     u64 m_msSpentRunning;
     u64 m_msSpentOverhead;
