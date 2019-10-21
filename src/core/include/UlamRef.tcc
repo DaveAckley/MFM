@@ -89,6 +89,8 @@ namespace MFM {
       m_posToEff = 0u; //== pos + t::atom_first_state_bit
     else if((usage == ELEMENTAL) && (existing.m_usage == ATOMIC))
       m_posToEff = 0u; //== pos + t::atom_first_state_bit
+    else if((usage == CLASSIC) && (existing.m_usage == ATOMIC))
+      m_posToEff = m_pos - T::ATOM_FIRST_STATE_BIT; //== pos - t::atom_first_state_bit (t41360)
     else if(m_effSelf && (m_effSelf != existing.m_effSelf))
       m_posToEff = 0u; //data member, new effSelf
     else if(usage == PRIMITIVE)
