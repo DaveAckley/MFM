@@ -476,11 +476,6 @@ namespace MFM
       }
 
       DefineNeededElements();
-      SaveElementMeta();
-      if (this->m_saveElementMeta)
-      {
-	SaveElementMeta();
-      }
     }
 
     /**
@@ -1143,14 +1138,46 @@ namespace MFM
       LOG.Message("Saving element meta to: %s", filename);
       FILE* fp = fopen(filename, "w");
       FileByteSink fs(fp);
-      fs.Printf("test bytesink");
-      
+
       u32 dlcount = m_elementRegistry.GetRegisteredElementCount();
       for (u32 i = 0; i < dlcount; ++i)
       {
         Element<EC> * e = m_elementRegistry.GetRegisteredElement(i);
-	fs.Printf(e->GetName());
 	fs.Printf(e->GetAtomicSymbol());
+	fs.Printf(": ");
+	fs.Printf(e->GetName());
+	fs.Printf("\n");
+      /* pretty sure it isn't parameters I'm looking for..      
+        const AtomicParameters<EC> & parms = e->GetAtomicParameters();
+        const AtomicParameter<EC> * p;
+        for (p = parms.GetFirstParameter(); p; p = p->GetNextParameter())
+	{
+	  fs.Printf("  ");
+	  fs.Printf(p->GetName());
+	  fs.Printf(": ");
+	  fs.Printf(p->GetTag());
+	  fs.Printf("\n");
+	}
+      */
+        OString512 buff;
+        const UlamElement<EC> * uelt = e->AsUlamElement();
+        if (!uelt)
+        {
+          continue;
+        }
+  
+        const u32 printFlags =
+          UlamClassPrintFlags::PRINT_MEMBER_NAMES |
+          UlamClassPrintFlags::PRINT_MEMBER_VALUES |
+          UlamClassPrintFlags::PRINT_RECURSE_QUARKS;
+  
+        buff.Reset();
+	T atom = e->BuildDefaultAtom();
+	UlamClassRegistry<EC> ucr = m_grid.GetUlamClassRegistry();
+        uelt->Print(ucr, buff, atom, printFlags, T::ATOM_FIRST_STATE_BIT);
+	fs.Printf("  ");
+        fs.Printf(buff.GetZString());
+	fs.Printf("\n");
       }
 
       fs.Close();
@@ -1591,6 +1618,15 @@ namespace MFM
       //      NeedElement(&Element_Empty<EC>::THE_INSTANCE);
 
       ReinitPhysics();
+
+      //todo: undefault the option.
+      //note: elements don't m_hasType until reinitphysics..
+      SaveElementMeta();
+      if (this->m_saveElementMeta)
+      {
+	SaveElementMeta();
+      }
+
 
       ReinitEden();
 
