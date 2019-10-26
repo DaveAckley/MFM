@@ -204,6 +204,9 @@ namespace MFM {
     MFM_API_ASSERT(ovclassrelpos >= 0, PURE_VIRTUAL_CALLED);
 
     ApplyDelta(ur.GetEffectiveSelfPos(), ovclassrelpos, ovclassptr->GetClassLength());
+
+    m_usage = ovclassptr->AsUlamElement() ? ELEMENTAL : CLASSIC;
+
   } //InitUlamRefForVirtualFuncCall
 
   template <class EC>
