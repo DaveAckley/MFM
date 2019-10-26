@@ -80,6 +80,7 @@ namespace MFM {
     if (flags & (PRINT_MEMBER_VALUES|PRINT_MEMBER_NAMES|PRINT_MEMBER_TYPES))
     {
       bool opened = false;
+      OString128 lastBaseClassName;
       for (s32 i = 0; i < GetDataMemberCount(); ++i)
       {
         const UlamClassDataMemberInfo & dmi = GetDataMemberInfo((u32) i);
@@ -104,8 +105,27 @@ namespace MFM {
         }
         if (flags & PRINT_MEMBER_TYPES)
         {
-          utin.PrintPretty(bs);
+          utin.PrintPretty(bs,false);
           bs.Printf(" ");
+        }
+
+        if (true/*flags & PRINT_BASE_CLASS_NAMES*/)
+        {
+          OString128 className;
+          UlamTypeInfo utin2;
+          if (!utin2.InitFrom(dmi.m_dataMemberClassName))
+            FAIL(ILLEGAL_STATE);
+          utin2.PrintPretty(className,true);
+          if (!className.Equals(lastBaseClassName))
+          {
+            if (lastBaseClassName.GetLength() > 0)
+            {
+              bs.Printf(")");
+            }
+            bs.Printf("%s(",className.GetZString());
+            doNL(bs,flags,indent);
+            lastBaseClassName = className;
+          }
         }
 
         if (flags & PRINT_MEMBER_NAMES)
