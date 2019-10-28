@@ -203,7 +203,9 @@ namespace MFM {
     const u32 ovclassrelpos = effSelf->internalCMethodImplementingGetRelativePositionOfBaseClass(ovclassptr);
     MFM_API_ASSERT(ovclassrelpos >= 0, PURE_VIRTUAL_CALLED);
 
-    ApplyDelta(ur.GetEffectiveSelfPos(), ovclassrelpos, ovclassptr->GetClassLength());
+    const u32 ovclasslen = (ovclassptr == effSelf) ? ovclassptr->GetClassLength() : ovclassptr->GetClassDataMembersSize(); //use baseclass size when incomplete obj, not element.
+
+    ApplyDelta(ur.GetEffectiveSelfPos(), ovclassrelpos, ovclasslen);
 
     m_usage = ovclassptr->AsUlamElement() ? ELEMENTAL : CLASSIC;
 

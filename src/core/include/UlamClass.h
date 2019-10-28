@@ -108,7 +108,21 @@ namespace MFM
       FAIL(ILLEGAL_STATE);
     }
 
+    /**
+	Returns the bit size of this class as a complete object,
+	including all baseclasses.
+    */
     virtual u32 GetClassLength() const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    /**
+	Returns the bit size of this class' data members,
+	excluding baseclasses; this is its baseclass
+	size, shared; Elements cannot be shared, or bases.
+    */
+    virtual u32 GetClassDataMembersSize() const
     {
       FAIL(ILLEGAL_STATE);
     }
