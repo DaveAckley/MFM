@@ -124,12 +124,12 @@ namespace MFM {
   }
 
   template <class EC>
-  UlamRef<EC>::UlamRef(const UlamRef<EC> & existing, s32 effselfoffset, u32 len, bool applydelta)
+  UlamRef<EC>::UlamRef(const UlamRef<EC> & existing, s32 effselfoffset, u32 len, const UsageType usage, bool applydelta)
     : m_uc(existing.m_uc)
     , m_effSelf(existing.m_effSelf)
     , m_stg(existing.m_stg)
     , m_len(len)
-    , m_usage(existing.m_usage)
+    , m_usage(usage)
   {
     MFM_API_ASSERT_ARG(effselfoffset >= 0); //non-negative
     MFM_API_ASSERT_ARG(applydelta); //always true, de-ambiguity arg

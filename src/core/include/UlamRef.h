@@ -78,21 +78,20 @@ namespace MFM
     UlamRef(const UlamRef<EC> & existing, s32 posincr, u32 len, const UlamClass<EC> * effself, const UsageType usage) ;
 
     /**
-       Construct an UlamRef that's related (not data member) to an existing UlamRef.
-       Same effective self, and usage; pos (ulam-5), and len may change;
-       and pos + len must fit within the len supplied to the
-       existing UlamRef.
+       Construct an UlamRef that's related (not data member) to an
+       existing UlamRef.  Same effective self, and usage; pos
+       (ulam-5), and len may change; and pos + len must fit within the
+       len supplied to the existing UlamRef.
      */
     UlamRef(const UlamRef<EC> & existing, s32 posincr, u32 len) ;
 
     /**
-       Construct an UlamRef that's related (not data member) to an existing UlamRef.
-       Same effective self, and usage; pos and len may change;
-       and pos + len must fit within the len supplied to the
-       existing UlamRef.
-       (note: 'applydelta' is a de-ambiguity arg).
+       Construct an UlamRef that's related (not data member) to an
+       existing UlamRef.  Same effective self; usage, pos and len may
+       change; and pos + len must fit within the len supplied to the
+       existing UlamRef.  (note: 'applydelta' is a de-ambiguity arg).
      */
-    UlamRef(const UlamRef<EC> & existing, s32 effselfoffset, u32 len, bool applydelta) ;
+    UlamRef(const UlamRef<EC> & existing, s32 effselfoffset, u32 len, const UsageType usage, bool applydelta) ;
 
     /**
 	Construct an UlamRef for a virtual function call, based on the
