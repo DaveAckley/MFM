@@ -128,6 +128,26 @@ namespace MFM
     }
 
     /**
+	Returns the number of base classes + self, two minimum: one
+	for UrSelf, one for self; all bases are shared. Implemented by
+	every UlamClass.
+    */
+    virtual u32 GetBaseClassCount() const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    /**
+	Returns the THE_INSTANCE of ith baseclass, where self is zero,
+	followed by direct bases in the order listed, then by
+	inherited bases; Implemented by every UlamClass.
+    */
+    virtual UlamClass<EC> * GetOrderedBaseClassAsUlamClass(u32 ith) const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    /**
        Downcast an UlamClass* to an UlamQuark* if possible.  Returns
        null if this is not an UlamQuark.
      */
