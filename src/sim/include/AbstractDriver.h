@@ -827,6 +827,16 @@ namespace MFM
     {
       ((AbstractDriver*)driver)->m_saveElementMeta = 1;
     }
+    
+    static void SetSaveGridDetail(const char* not_needed, void* driver)
+    {
+      ((AbstractDriver*)driver)->m_saveGridDetail = 1;
+    }
+
+    static void SetSaveBaseDetail(const char* not_needed, void* driver)
+    {
+      ((AbstractDriver*)driver)->m_saveBaseDetail = 1;
+    }
 
     static void SetGridImages(const char* not_needed, void* driver)
     {
@@ -1130,6 +1140,23 @@ namespace MFM
         GetSimDirPathTemporary("autosave/%D-%D.mfs", epochs, (u32) m_AEPS);
       SaveGrid(filename);
     }
+    
+    void AutosaveDetail(OurGrid& grid, u32 epochs, bool saveBase)
+    {
+      if (saveBase)
+      {
+        const char* filename =
+          GetSimDirPathTemporary("base-%D-%D.save", epochs, (u32) m_AEPS);
+        this->SaveGridDetail(grid, filename, true);
+      }
+      else
+      {
+        const char* filename =
+          GetSimDirPathTemporary("grid-%D-%D.save", epochs, (u32) m_AEPS);
+        this->SaveGridDetail(grid, filename, true);
+      }
+    }
+    
 
     void SaveElementMeta()
     {
@@ -1198,6 +1225,58 @@ namespace MFM
       m_externalConfig.Write(fs);
       fs.Close();
     }
+    
+    void SaveGridDetail(OurGrid& grid, const char* filename, bool saveBaseState)
+    {
+
+      LOG.Message("Saving detail to: %s", filename);
+      FILE* fp = fopen(filename, "w");
+      FileByteSink fs(fp);
+      
+      const u32 gridWidth = grid.GetWidthSites();
+      const u32 gridHeight = grid.GetHeightSites();
+      const bool isStaggeredGrid = grid.IsGridLayoutStaggered();
+
+      for(s32 y = 0; y < (s32)gridHeight; y++)
+        {
+	  for(s32 x = 0; x < (s32)gridWidth; x++)
+  	  {
+	    SPoint siteInGrid;
+	    siteInGrid.SetX(x);
+	    siteInGrid.SetY(y);
+  	    if(isStaggeredGrid && !grid.IsGridCoord(siteInGrid)) continue;
+
+            const u32 printFlags =
+              UlamClassPrintFlags::PRINT_MEMBER_NAMES |
+              UlamClassPrintFlags::PRINT_MEMBER_VALUES |
+              UlamClassPrintFlags::PRINT_RECURSE_QUARKS;
+	    
+            OString512 buff;
+            buff.Reset();
+
+	    //for some reason, grid.GetAtomInSite doesn't work. Maybe because it's constant? Optimizing happening?
+            T* atom = grid.GetWritableAtom(siteInGrid);
+
+            UlamClassRegistry<EC> ucr = grid.GetUlamClassRegistry();
+
+	    const u32 t = atom->GetType();
+	    const Element<EC> * e = grid.LookupElement(t);
+            const UlamElement<EC> * uelt = e->AsUlamElement();
+	    
+            uelt->Print(ucr, buff, *atom, printFlags, T::ATOM_FIRST_STATE_BIT);
+
+  	    fs.Printf("Site(%d,%d,%s,%s,%s)\n"
+		      ,siteInGrid.GetX()
+		      ,siteInGrid.GetY()
+		      ,e->GetAtomicSymbol()
+		      ,e->GetName()
+		      ,buff.GetZString());
+  	  }
+        }
+
+      fs.Close();
+    }
+    
 
     void LoadFromConfigurationPath()
     {
@@ -1286,6 +1365,16 @@ namespace MFM
         this->AutosaveGrid(epochs);
       }
 
+      if (m_saveGridDetail > 0 && (epochs % m_autosavePerEpochs) == 0)
+      {
+	this->AutosaveDetail(grid, epochs, false);
+      }
+
+      if (m_saveBaseDetail > 0 && (epochs % m_autosavePerEpochs) == 0)
+      {
+	this->AutosaveDetail(grid, epochs, true);
+      }
+
       if (m_accelerateAfterEpochs > 0 && (epochs % m_accelerateAfterEpochs) == 0)
       {
         this->SetAEPSPerEpoch(MAX(1u, this->GetAEPSPerEpoch() + m_acceleration));
@@ -1316,6 +1405,8 @@ namespace MFM
       , m_includeUEDemos(false)
       , m_includeCPPDemos(false)
       , m_saveElementMeta(false)
+      , m_saveGridDetail(false)
+      , m_saveBaseDetail(false)
       , m_msSpentRunning(0)
       , m_msSpentOverhead(0)
       , m_microsSleepPerFrame(1000)
@@ -1516,7 +1607,12 @@ namespace MFM
       
       RegisterArgument("Output element data member names and bit positions for parsing mfs save data.",
                        "-sm|--save-meta", &SetSaveElementMeta, this, false);
-      
+
+      RegisterArgument("Output detailed grid state information, including data member names for each site on the grid.",
+                       "-gd|--grid-detail", &SetSaveGridDetail, this, false);
+
+      RegisterArgument("Output detailed information like grid-detail, but for the base layer.",
+                       "-bd|--base-detail", &SetSaveBaseDetail, this, false);
 
     }
 
@@ -1621,7 +1717,6 @@ namespace MFM
 
       //todo: undefault the option.
       //note: elements don't m_hasType until reinitphysics..
-      SaveElementMeta();
       if (this->m_saveElementMeta)
       {
 	SaveElementMeta();
@@ -1674,6 +1769,8 @@ namespace MFM
     bool m_includeUEDemos;
     bool m_includeCPPDemos;
     bool m_saveElementMeta;
+    bool m_saveGridDetail;
+    bool m_saveBaseDetail;
 
     u64 m_msSpentRunning;
     u64 m_msSpentOverhead;
@@ -1738,3 +1835,4 @@ namespace MFM
 }
 
 #endif /* ABSTRACTDRIVER_H */
+
