@@ -1215,9 +1215,12 @@ namespace MFM
     void SaveGridDetail(const char* filename)
     {
       OurGrid& grid = this->GetGrid();
+      ElementTable<EC> et = grid.Get00Tile().GetElementTable();
+
       LOG.Message("Saving detail to: %s", filename);
       FILE* fp = fopen(filename, "w");
       FileByteSink fs(fp);
+      fs.Printf("[\n");
       
       const u32 gridWidth = grid.GetWidthSites();
       const u32 gridHeight = grid.GetHeightSites();
@@ -1240,7 +1243,9 @@ namespace MFM
             OString512 buff;
             buff.Reset();
 
-	    //for some reason, grid.GetAtomInSite doesn't work. Maybe because it's constant? Optimizing happening?
+	    //for some reason, grid.GetAtomInSite doesn't do what we need. Maybe because it's constant? Optimizing happening?
+	    //todo: figure out why that doesn't work. GetAtomInSite has an option to get the base layer, which would
+	    //be nice to have. 
             T* atom = grid.GetWritableAtom(siteInGrid);
 
             UlamClassRegistry<EC> ucr = grid.GetUlamClassRegistry();
@@ -1248,18 +1253,24 @@ namespace MFM
 	    const u32 t = atom->GetType();
 	    const Element<EC> * e = grid.LookupElement(t);
             const UlamElement<EC> * uelt = e->AsUlamElement();
-	    
+
             uelt->Print(ucr, buff, *atom, printFlags, T::ATOM_FIRST_STATE_BIT);
 
-  	    fs.Printf("Site(%d,%d,%s,%s,%s)\n"
+  	    fs.Printf("{\"x\":%d, " 
+		      "\"y\":%d, "
+		      "\"symbol\":\"%s\", "
+		      "\"name\":\"%s\", "
+		      "\"argb\":%d, "
+		      "\"data_string\":\"%s\"},\n"
 		      ,siteInGrid.GetX()
 		      ,siteInGrid.GetY()
 		      ,e->GetAtomicSymbol()
 		      ,e->GetName()
+		      ,e->GetDynamicColor(et, ucr, *atom, 0)
 		      ,buff.GetZString());
   	  }
         }
-
+      fs.Printf("]");
       fs.Close();
     }
     
