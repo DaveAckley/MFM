@@ -833,11 +833,6 @@ namespace MFM
       ((AbstractDriver*)driver)->m_saveGridDetail = 1;
     }
 
-    static void SetSaveBaseDetail(const char* not_needed, void* driver)
-    {
-      ((AbstractDriver*)driver)->m_saveBaseDetail = 1;
-    }
-
     static void SetGridImages(const char* not_needed, void* driver)
     {
       ((AbstractDriver*)driver)->m_gridImages = 1;
@@ -1141,20 +1136,11 @@ namespace MFM
       SaveGrid(filename);
     }
     
-    void AutosaveDetail(OurGrid& grid, u32 epochs, bool saveBase)
+    void AutosaveDetail(u32 epochs)
     {
-      if (saveBase)
-      {
-        const char* filename =
-          GetSimDirPathTemporary("base-%D-%D.save", epochs, (u32) m_AEPS);
-        this->SaveGridDetail(grid, filename, true);
-      }
-      else
-      {
-        const char* filename =
-          GetSimDirPathTemporary("grid-%D-%D.save", epochs, (u32) m_AEPS);
-        this->SaveGridDetail(grid, filename, true);
-      }
+      const char* filename =
+        GetSimDirPathTemporary("grid-%D-%D.save", epochs, (u32) m_AEPS);
+      this->SaveGridDetail(filename);
     }
     
 
@@ -1226,9 +1212,9 @@ namespace MFM
       fs.Close();
     }
     
-    void SaveGridDetail(OurGrid& grid, const char* filename, bool saveBaseState)
+    void SaveGridDetail(const char* filename)
     {
-
+      OurGrid& grid = this->GetGrid();
       LOG.Message("Saving detail to: %s", filename);
       FILE* fp = fopen(filename, "w");
       FileByteSink fs(fp);
@@ -1367,12 +1353,7 @@ namespace MFM
 
       if (m_saveGridDetail > 0 && (epochs % m_autosavePerEpochs) == 0)
       {
-	this->AutosaveDetail(grid, epochs, false);
-      }
-
-      if (m_saveBaseDetail > 0 && (epochs % m_autosavePerEpochs) == 0)
-      {
-	this->AutosaveDetail(grid, epochs, true);
+	this->AutosaveDetail(epochs);
       }
 
       if (m_accelerateAfterEpochs > 0 && (epochs % m_accelerateAfterEpochs) == 0)
@@ -1406,7 +1387,6 @@ namespace MFM
       , m_includeCPPDemos(false)
       , m_saveElementMeta(false)
       , m_saveGridDetail(false)
-      , m_saveBaseDetail(false)
       , m_msSpentRunning(0)
       , m_msSpentOverhead(0)
       , m_microsSleepPerFrame(1000)
@@ -1610,10 +1590,6 @@ namespace MFM
 
       RegisterArgument("Output detailed grid state information, including data member names for each site on the grid.",
                        "-gd|--grid-detail", &SetSaveGridDetail, this, false);
-
-      RegisterArgument("Output detailed information like grid-detail, but for the base layer.",
-                       "-bd|--base-detail", &SetSaveBaseDetail, this, false);
-
     }
 
 
@@ -1770,7 +1746,6 @@ namespace MFM
     bool m_includeCPPDemos;
     bool m_saveElementMeta;
     bool m_saveGridDetail;
-    bool m_saveBaseDetail;
 
     u64 m_msSpentRunning;
     u64 m_msSpentOverhead;
