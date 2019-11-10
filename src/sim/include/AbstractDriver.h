@@ -1225,7 +1225,7 @@ namespace MFM
       const u32 gridWidth = grid.GetWidthSites();
       const u32 gridHeight = grid.GetHeightSites();
       const bool isStaggeredGrid = grid.IsGridLayoutStaggered();
-
+      bool first = true;
       for(s32 y = 0; y < (s32)gridHeight; y++)
         {
 	  for(s32 x = 0; x < (s32)gridWidth; x++)
@@ -1255,13 +1255,23 @@ namespace MFM
             const UlamElement<EC> * uelt = e->AsUlamElement();
 
             uelt->Print(ucr, buff, *atom, printFlags, T::ATOM_FIRST_STATE_BIT);
+	    
+	    // ensure there isn't a trailing comma.
+	    if(!first)
+	    {
+	      fs.Printf(",\n");
+	    }
+	    else
+	    {
+              first = false;
+	    }
 
   	    fs.Printf("{\"x\":%d, " 
 		      "\"y\":%d, "
 		      "\"symbol\":\"%s\", "
 		      "\"name\":\"%s\", "
 		      "\"argb\":%d, "
-		      "\"data_string\":\"%s\"},\n"
+		      "\"data_string\":\"%s\"}"
 		      ,siteInGrid.GetX()
 		      ,siteInGrid.GetY()
 		      ,e->GetAtomicSymbol()
@@ -1270,7 +1280,7 @@ namespace MFM
 		      ,buff.GetZString());
   	  }
         }
-      fs.Printf("]");
+      fs.Printf("\n]");
       fs.Close();
     }
     
