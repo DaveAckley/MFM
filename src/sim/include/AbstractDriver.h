@@ -108,6 +108,12 @@ namespace MFM
      */
     typedef Grid<GC> OurGrid;
 
+    
+    /**
+     * Template shortcut for a Tile with the correct template
+     * parameters.
+     */
+    typedef typename OurGrid::GridTile OurTile;
     /**
      * Template shortcut for an ElementTable with the correct template
      * parameters.
@@ -1215,16 +1221,43 @@ namespace MFM
     void SaveGridDetail(const char* filename)
     {
       OurGrid& grid = this->GetGrid();
-      ElementTable<EC> et = grid.Get00Tile().GetElementTable();
+      //todo: does OurTile have the correct element table?
+      //      const Tile<EC>& herotile = grid.Get00Tile();
+      OurTile tile;
+      //      tile.CopyHero(herotile);
+      ElementTable<EC> et = tile.GetElementTable();
+
 
       LOG.Message("Saving detail to: %s", filename);
       FILE* fp = fopen(filename, "w");
       FileByteSink fs(fp);
-      fs.Printf("[\n");
-      
+
       const u32 gridWidth = grid.GetWidthSites();
       const u32 gridHeight = grid.GetHeightSites();
       const bool isStaggeredGrid = grid.IsGridLayoutStaggered();
+
+      fs.Printf("{");
+      fs.Printf("\"grid_configuration\":{"
+		"\"grid_is_staggered\":%s, "
+                "\"grid_height\":%d, "
+		"\"grid_width\":%d},\n"
+                ,isStaggeredGrid ? "true" : "false"
+                ,gridHeight
+		,gridWidth);
+      
+      fs.Printf("\"tile_configuration\":{"
+                "\"event_window_radius\":%d, "
+                "\"tile_height\":%d, "
+		"\"tile_width\":%d, "
+                "\"owned_height\":%d, "
+		"\"owned_width\":%d},\n"
+		,tile.EVENT_WINDOW_RADIUS
+		,tile.GetTileHeight()
+		,tile.GetTileWidth()
+		,tile.OWNED_HEIGHT
+		,tile.OWNED_WIDTH);
+      
+      fs.Printf("\"non_empty_site_list\":[\n");
       bool first = true;
       for(s32 y = 0; y < (s32)gridHeight; y++)
         {
@@ -1247,25 +1280,24 @@ namespace MFM
 	    //todo: figure out why that doesn't work. GetAtomInSite has an option to get the base layer, which would
 	    //be nice to have. 
             T* atom = grid.GetWritableAtom(siteInGrid);
+	    const T empty = tile.GetEmptyAtom();
+	    const u32 t = atom->GetType();
+	    if(atom->IsType(empty, t)) continue;
 
             UlamClassRegistry<EC> ucr = grid.GetUlamClassRegistry();
 
-	    const u32 t = atom->GetType();
 	    const Element<EC> * e = grid.LookupElement(t);
             const UlamElement<EC> * uelt = e->AsUlamElement();
 
             uelt->Print(ucr, buff, *atom, printFlags, T::ATOM_FIRST_STATE_BIT);
-	    
-	    // ensure there isn't a trailing comma.
-	    if(!first)
+	    if(first)
 	    {
-	      fs.Printf(",\n");
+	      first = false;
 	    }
 	    else
 	    {
-              first = false;
+	      fs.Printf(",\n");
 	    }
-
   	    fs.Printf("{\"x\":%d, " 
 		      "\"y\":%d, "
 		      "\"symbol\":\"%s\", "
@@ -1280,7 +1312,7 @@ namespace MFM
 		      ,buff.GetZString());
   	  }
         }
-      fs.Printf("\n]");
+      fs.Printf("\n]}");
       fs.Close();
     }
     
