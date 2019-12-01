@@ -64,7 +64,7 @@ namespace MFM
     bool InitFrom(ByteSource & bs) ;
 
     void PrintMangled(ByteSink & bs) const ;
-    void PrintPretty(ByteSink & bs) const ;
+    void PrintPretty(ByteSink & bs, bool minpunct) const ;
 
     u32 GetBitSize() const { return m_bitSize; }
     u32 GetArrayLength() const { return m_arrayLength; }
@@ -122,7 +122,7 @@ namespace MFM {
     bool InitFrom(ByteSource & cbs) ;
 
     void PrintMangled(ByteSink & bs) const ;
-    void PrintPretty(ByteSink & bs) const ;
+    void PrintPretty(ByteSink & bs, bool minpunct) const ;
 
     u32 GetArrayLength() const { return m_arrayLength; }
     void MakeScalar() { m_arrayLength = 0; }
@@ -195,7 +195,7 @@ namespace MFM {
     bool InitFrom(ByteSource & cbs) ;
 
     void PrintMangled(ByteSink & bs) const ;
-    void PrintPretty(ByteSink & bs) const ;
+    void PrintPretty(ByteSink & bs, bool minpunct) const ;
 
     u32 GetBitSize() const
     {

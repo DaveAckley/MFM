@@ -108,7 +108,41 @@ namespace MFM
       FAIL(ILLEGAL_STATE);
     }
 
+    /**
+	Returns the bit size of this class as a complete object,
+	including all baseclasses.
+    */
     virtual u32 GetClassLength() const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    /**
+	Returns the bit size of this class' data members,
+	excluding baseclasses; this is its baseclass
+	size, shared; Elements cannot be shared, or bases.
+    */
+    virtual u32 GetClassDataMembersSize() const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    /**
+	Returns the number of base classes + self, two minimum: one
+	for UrSelf, one for self; all bases are shared. Implemented by
+	every UlamClass.
+    */
+    virtual u32 GetBaseClassCount() const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    /**
+	Returns the THE_INSTANCE of ith baseclass, where self is zero,
+	followed by direct bases in the order listed, then by
+	inherited bases; Implemented by every UlamClass.
+    */
+    virtual UlamClass<EC> * GetOrderedBaseClassAsUlamClass(u32 ith) const
     {
       FAIL(ILLEGAL_STATE);
     }

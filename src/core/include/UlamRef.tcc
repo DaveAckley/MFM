@@ -89,6 +89,8 @@ namespace MFM {
       m_posToEff = 0u; //== pos + t::atom_first_state_bit
     else if((usage == ELEMENTAL) && (existing.m_usage == ATOMIC))
       m_posToEff = 0u; //== pos + t::atom_first_state_bit
+    else if((usage == CLASSIC) && (existing.m_usage == ATOMIC))
+      m_posToEff = m_pos - T::ATOM_FIRST_STATE_BIT; //== pos - t::atom_first_state_bit (t41360)
     else if(m_effSelf && (m_effSelf != existing.m_effSelf))
       m_posToEff = 0u; //data member, new effSelf
     else if(usage == PRIMITIVE)
@@ -122,12 +124,12 @@ namespace MFM {
   }
 
   template <class EC>
-  UlamRef<EC>::UlamRef(const UlamRef<EC> & existing, s32 effselfoffset, u32 len, bool applydelta)
+  UlamRef<EC>::UlamRef(const UlamRef<EC> & existing, s32 effselfoffset, u32 len, const UsageType usage, bool applydelta)
     : m_uc(existing.m_uc)
     , m_effSelf(existing.m_effSelf)
     , m_stg(existing.m_stg)
     , m_len(len)
-    , m_usage(existing.m_usage)
+    , m_usage(usage)
   {
     MFM_API_ASSERT_ARG(effselfoffset >= 0); //non-negative
     MFM_API_ASSERT_ARG(applydelta); //always true, de-ambiguity arg
@@ -201,7 +203,12 @@ namespace MFM {
     const u32 ovclassrelpos = effSelf->internalCMethodImplementingGetRelativePositionOfBaseClass(ovclassptr);
     MFM_API_ASSERT(ovclassrelpos >= 0, PURE_VIRTUAL_CALLED);
 
-    ApplyDelta(ur.GetEffectiveSelfPos(), ovclassrelpos, ovclassptr->GetClassLength());
+    const u32 ovclasslen = (ovclassptr == effSelf) ? ovclassptr->GetClassLength() : ovclassptr->GetClassDataMembersSize(); //use baseclass size when incomplete obj, not element.
+
+    ApplyDelta(ur.GetEffectiveSelfPos(), ovclassrelpos, ovclasslen);
+
+    m_usage = ovclassptr->AsUlamElement() ? ELEMENTAL : CLASSIC;
+
   } //InitUlamRefForVirtualFuncCall
 
   template <class EC>

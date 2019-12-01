@@ -49,7 +49,7 @@ namespace MFM {
       assert(!strcmp(allCases[i].mangled,os.GetZString()));
 
       os.Reset();
-      utin.PrintPretty(os);
+      utin.PrintPretty(os,false);
       assert(!strcmp(allCases[i].pretty,os.GetZString()));
     }
   }
