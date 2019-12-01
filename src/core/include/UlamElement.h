@@ -39,21 +39,25 @@
 #define Ud_Ui_Ut_102321u
 namespace MFM{
 
+  template<class EC> class Ui_Ut_r102321u; //forward //gcnl:UlamTypePrimitive.cpp:445
+
   template<class EC>
   struct Ui_Ut_102321u : public BitVectorBitStorage<EC, BitVector<32u> >
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
-    typedef BitVector<32> BV;
-    typedef BitVectorBitStorage<EC, BV> BVS;
 
-    u32 read() const { return BVS::Read(0u, 32u); }
-    void write(const u32 v) { BVS::Write(0u, 32u, v); }
-    Ui_Ut_102321u() { }
-    Ui_Ut_102321u(const u32 d) { write(d); }
-    Ui_Ut_102321u(const Ui_Ut_102321u& other) : BVS() { this->write(other.read()); }
-    virtual const char * GetUlamTypeMangledName() const { return "Ut_102321u"; } //gcnl:UlamType.cpp:885
+    typedef BitVector<32> BV; //gcnl:UlamTypePrimitive.cpp:471
+    typedef BitVectorBitStorage<EC, BV> BVS; //gcnl:UlamTypePrimitive.cpp:474
+
+    const u32 read() const { return BVS::Read(0u, 32u); } //gcnl:UlamTypePrimitive.cpp:563
+    void write(const u32& v) { BVS::Write(0u, 32u, v); } //gcnl:UlamTypePrimitive.cpp:613
+    Ui_Ut_102321u() { } //gcnl:UlamTypePrimitive.cpp:487
+    Ui_Ut_102321u(const u32 d) { write(d); } //gcnl:UlamTypePrimitive.cpp:495
+    Ui_Ut_102321u(const Ui_Ut_102321u& other) : BVS() { this->write(other.read()); } //gcnl:UlamTypePrimitive.cpp:518
+    Ui_Ut_102321u(const Ui_Ut_r102321u<EC>& d) { this->write(d.read()); } //gcnl:UlamTypePrimitive.cpp:527
+    virtual const char * GetUlamTypeMangledName() const { return "Ut_102321u"; } //gcnl:UlamType.cpp:918
   };
 } //MFM
 #endif /*Ud_Ui_Ut_102321u */
@@ -63,22 +67,28 @@ namespace MFM{
 #define Ud_Ui_Ut_14181u
 namespace MFM{
 
+  template<class EC> class Ui_Ut_r14181u; //forward //gcnl:UlamTypePrimitive.cpp:445
+
   template<class EC>
   struct Ui_Ut_14181u : public BitVectorBitStorage<EC, BitVector<32u> >
   {
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
     enum { BPA = AC::BITS_PER_ATOM };
-    typedef BitVector<32> BV;
-    typedef BitVectorBitStorage<EC, BV> BVS;
 
-    u32 read() const { return BVS::Read(0u, 32u); } //reads entire array
-    void write(const u32 v) { BVS::Write(0u, 32u, v); } //writes entire array
-    Ui_Ut_14181u() { }
-    Ui_Ut_14181u(const u32 d) { write(d); }
-    Ui_Ut_14181u(const u32 d[1]) : BVS(d) { } //gcnl:UlamTypePrimitive.cpp:487
-    Ui_Ut_14181u(const Ui_Ut_14181u& other) : BVS() { this->write(other.read()); }
-    virtual const char * GetUlamTypeMangledName() const { return "Ut_14181u"; } //gcnl:UlamType.cpp:885
+    typedef BitVector<32> BV; //gcnl:UlamTypePrimitive.cpp:471
+    typedef BitVectorBitStorage<EC, BV> BVS; //gcnl:UlamTypePrimitive.cpp:474
+
+    const u32 read() const { return BVS::Read(0u, 32u); } //reads entire array //gcnl:UlamTypePrimitive.cpp:567
+    u32 readArrayItem(const u32 index, const u32 itemlen) const { return this->BVS::Read(index * itemlen, itemlen); } //reads BV array item //gcnl:UlamTypePrimitive.cpp:594
+    void write(const u32& v) { BVS::Write(0u, 32u, v); } //writes entire array //gcnl:UlamTypePrimitive.cpp:617
+    void writeArrayItem(const u32& v, const u32 index, const u32 itemlen) {this->BVS::Write(index * itemlen, itemlen, v); } //writes BV array item //gcnl:UlamTypePrimitive.cpp:642
+    Ui_Ut_14181u() { } //gcnl:UlamTypePrimitive.cpp:487
+    Ui_Ut_14181u(const u32 d) { write(d); } //gcnl:UlamTypePrimitive.cpp:495
+    Ui_Ut_14181u(const u32 d[1]) : BVS(d) { } //gcnl:UlamTypePrimitive.cpp:506
+    Ui_Ut_14181u(const Ui_Ut_14181u& other) : BVS() { this->write(other.read()); } //gcnl:UlamTypePrimitive.cpp:518
+    Ui_Ut_14181u(const Ui_Ut_r14181u<EC>& d) { this->write(d.read()); } //gcnl:UlamTypePrimitive.cpp:527
+    virtual const char * GetUlamTypeMangledName() const { return "Ut_14181u"; } //gcnl:UlamType.cpp:918
   };
 } //MFM
 #endif /*Ud_Ui_Ut_14181u */
