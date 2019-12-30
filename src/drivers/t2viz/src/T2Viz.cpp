@@ -163,7 +163,7 @@ namespace MFM {
     ByteSink & staticbs = mStaticPanel.GetByteSink();
 
     { // Serial number
-      const char * PATH = "/sys/devices/platform/bone_capemgr/baseboard/serial-number";
+      const char * PATH = "/sys/firmware/devicetree/base/serial-number";
       if (!readOneLinerFile(PATH,mSecretSerialNumber)) LOG.Error("Can't read '%s'", PATH);
       else staticbs.Printf("[%s]\n",mSecretSerialNumber.GetZString());
     }
