@@ -7,7 +7,7 @@ namespace MFM {
   { }
 
   void ITCIcons::init(SDL_Surface * screen) {
-    const char * ZSHEET_PATH = "/home/t2/GITHUB/MFM/res/images/t2viz-icons-ZSHEET.png";
+    const char * ZSHEET_PATH = "/home/t2/MFM/res/images/t2viz-icons-ZSHEET.png";
     const char * filename = ZSHEET_PATH;
     SDL_Surface* loaded = NULL;
     SDL_Surface* opped = NULL;

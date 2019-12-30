@@ -203,7 +203,7 @@ namespace MFM {
         else tagbs.Printf("T2-12: %d\n",tmp);
       }
       {
-        const char * PATH = "/home/t2/GITHUB/cdmd-MFM.mfz-cdm-install-tag.dat";
+        const char * PATH = "/home/t2/cdmd-MFM.mfz-cdm-install-tag.dat";
         if (!readOneDecimalNumberFile(PATH,tmp)) tagbs.Printf("MFMT2: no tag\n");
         else tagbs.Printf("MFMT2: %d\n",tmp);
       }
