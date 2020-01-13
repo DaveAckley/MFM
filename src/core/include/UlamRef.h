@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamRef.h A base for ulam references
-  Copyright (C) 2016,2019 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2019 ackleyshack LLC.  All rights reserved.
+  Copyright (C) 2016,2019-2020 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2019-2020 ackleyshack LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file UlamRef.h A base class for ulam references
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2016,2019 All rights reserved.
+  \date (C) 2016,2019-2020 All rights reserved.
   \lgpl
  */
 #ifndef ULAMREF_H
@@ -105,13 +105,27 @@ namespace MFM
     */
     UlamRef(const UlamRef<EC> & existing, u32 vownedfuncidx, const UlamClass<EC> & origclass, VfuncPtr & vfuncref) ;
 
+
     /**
-       Construct an UlamRef for a virtual function call, overloaded to
-       take RegistryNumber instead of UlamClass of originating class;
+       Construct an UlamRef for a virtual function call, based on the
+       existing EffectiveSelf VTable, overloaded to take
+       RegistryNumber instead of UlamClass of originating class;
        (note: 'applydelta' is a de-ambiguity arg)
     */
     UlamRef(const UlamRef<EC> & existing, u32 vownedfuncidx, u32 origclassregnum, bool applydelta, VfuncPtr & vfuncref) ;
 
+
+    /**
+	Construct an UlamRef for a virtual function call, based on the
+	user 'specified' baseclass VTable;
+	Returns the VfuncPtr, as well as the UlamRef to use in the vf call;
+	Cast the void* VfuncPtr to the vfunc's typedef (see origclass' .h);
+
+	Invarient: the new 'ur' has pos to the Override class found in
+	this VTtable for this vfunc's VOWNED_IDX +
+	originating class start offset; pos is relative to existing effectiveSelf.
+    */
+    UlamRef(const UlamRef<EC> & existing, const UlamClass<EC> * vtclassptr, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref) ;
 
     /** Construct an UlamRef from a UlamRefMutable (e.g. ?: expression)
      */
@@ -216,11 +230,12 @@ namespace MFM
 
     const UlamClass<EC>* LookupUlamElementTypeFromAtom() const ;
 
-    /** helper, creates EffectiveSelf-based UlamRef for virtual func call;
-	Invarient: 'ur' of a virtual func points to the override class;
-	EffectiveSelf can be a different class, i.e. override is a baseclass;
+    /** helper, creates UlamRef for virtual func call;
+	2nd arg points to class vtable: the effSelf of 1st arg, unless user 'specific' base;
+	Invarient: 'ur' of a virtual func points to the override class fm vtable;
+	EffectiveSelf may not be same as the override class, i.e. override is a baseclass;
     */
-    void InitUlamRefForVirtualFuncCall(const UlamRef<EC> & ur, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref);
+    void InitUlamRefForVirtualFuncCall(const UlamRef<EC> & ur, const UlamClass<EC> * vtclassptr, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref);
 
     /** helper, uses existing effselfpos and new effselfoffset to set our
 	new m_pos and m_posToEff; m_len is also set;

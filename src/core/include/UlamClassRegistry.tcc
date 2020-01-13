@@ -97,4 +97,11 @@ namespace MFM {
     return m_registeredUlamClasses[index];
   }
 
+  template <class EC>
+  const UlamClass<EC>* UlamClassRegistry<EC>::GetUlamClassOrNullByIndex(u32 index) const
+  {
+    if (index >= m_registeredUlamClassCount) return 0;
+    return m_registeredUlamClasses[index];
+  }
+
 } //MFM

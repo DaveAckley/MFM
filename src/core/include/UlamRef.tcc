@@ -151,7 +151,7 @@ namespace MFM {
     , m_len(existing.m_len)
     , m_usage(existing.m_usage)
   {
-    InitUlamRefForVirtualFuncCall(existing, vownedfuncidx, origclass.GetRegistrationNumber(), vfuncref);
+    InitUlamRefForVirtualFuncCall(existing, existing.GetEffectiveSelf(), vownedfuncidx, origclass.GetRegistrationNumber(), vfuncref);
 
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
     {
@@ -168,7 +168,24 @@ namespace MFM {
     , m_usage(existing.m_usage)
   {
     //applydelta is de-ambiguity arg
-    InitUlamRefForVirtualFuncCall(existing, vownedfuncidx, origclassregnum, vfuncref);
+    InitUlamRefForVirtualFuncCall(existing, existing.GetEffectiveSelf(), vownedfuncidx, origclassregnum, vfuncref);
+
+    if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
+    {
+      UpdateEffectiveSelf();
+    }
+  }
+
+  template <class EC>
+  UlamRef<EC>::UlamRef(const UlamRef<EC> & existing, const UlamClass<EC> * vtclassptr, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref)
+    : m_uc(existing.m_uc)
+    , m_effSelf(existing.m_effSelf)
+    , m_stg(existing.m_stg)
+    , m_len(existing.m_len)
+    , m_usage(existing.m_usage)
+  {
+    InitUlamRefForVirtualFuncCall(existing, vtclassptr, vownedfuncidx, origclassregnum, vfuncref);
+
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
     {
       UpdateEffectiveSelf();
@@ -188,27 +205,33 @@ namespace MFM {
 
 
   template <class EC>
-  void UlamRef<EC>::InitUlamRefForVirtualFuncCall(const UlamRef<EC> & ur, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref)
+  void UlamRef<EC>::InitUlamRefForVirtualFuncCall(const UlamRef<EC> & ur, const UlamClass<EC> * vtclassptr, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref)
   {
+    MFM_API_ASSERT_NONNULL(vtclassptr); //could be same as effSelf
+
+    //check VTable class is/related to origclass
+    if(!vtclassptr->internalCMethodImplementingIs(origclassregnum)) FAIL(BAD_VIRTUAL_CALL);
+
     const UlamClass<EC> * effSelf = ur.GetEffectiveSelf();
     MFM_API_ASSERT_NONNULL(effSelf);
 
-    const u32 origclassvtstart = effSelf->GetVTStartOffsetForClassByRegNum(origclassregnum);
+    //check effSelf is/related to VTable class
+    if(!effSelf->internalCMethodImplementingIs(vtclassptr)) FAIL(BAD_VIRTUAL_CALL);
 
-    vfuncref = effSelf->getVTableEntry(vownedfuncidx + origclassvtstart); //return ref to virtual function ptr
-
-    const UlamClass<EC> * ovclassptr = effSelf->getVTableEntryUlamClassPtr(vownedfuncidx + origclassvtstart);
+    //3 VTable accesses for: originating class' start, vfunc entry, and its override class
+    const u32 origclassvtstart = vtclassptr->GetVTStartOffsetForClassByRegNum(origclassregnum);
+    vfuncref = vtclassptr->getVTableEntry(vownedfuncidx + origclassvtstart); //return ref to virtual function ptr
+    const UlamClass<EC> * ovclassptr = vtclassptr->getVTableEntryUlamClassPtr(vownedfuncidx + origclassvtstart);
     MFM_API_ASSERT_NONNULL(ovclassptr);
 
+    //relative to effSelf
     const u32 ovclassrelpos = effSelf->internalCMethodImplementingGetRelativePositionOfBaseClass(ovclassptr);
     MFM_API_ASSERT(ovclassrelpos >= 0, PURE_VIRTUAL_CALLED);
 
     const u32 ovclasslen = (ovclassptr == effSelf) ? ovclassptr->GetClassLength() : ovclassptr->GetClassDataMembersSize(); //use baseclass size when incomplete obj, not element.
-
     ApplyDelta(ur.GetEffectiveSelfPos(), ovclassrelpos, ovclasslen);
 
     m_usage = ovclassptr->AsUlamElement() ? ELEMENTAL : CLASSIC;
-
   } //InitUlamRefForVirtualFuncCall
 
   template <class EC>

@@ -22,7 +22,7 @@
 /**
   \file UlamClass.h An abstract base class for ULAM quarks and elements
   \author David H. Ackley.
-  \author Elenas S. Ackley.
+  \author Elena S. Ackley.
   \date (C) 2015-2019 All rights reserved.
   \lgpl
  */
