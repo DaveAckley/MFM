@@ -21,7 +21,7 @@
 
 /**
   \file UlamVTableEntry.h An abstract base class for ULAM vtable entry
-  \author Elenas S. Ackley.
+  \author Elena S. Ackley.
   \date (C) 2019 All rights reserved.
   \lgpl
  */
