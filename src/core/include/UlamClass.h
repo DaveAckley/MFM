@@ -385,29 +385,13 @@ namespace MFM
     virtual u32 GetMangledClassNameAsStringIndex() const = 0;
 
     /**
-       String of the signature of this class.  To be overridden by
-       subclasses of UlamClass. Class Argument Type and Name.
+       String of the name of this class.  To be overridden by
+       subclasses of UlamClass.  Four variations for template instances
+       depending on argument values.
 
        \return an index to a statically-allocated ulam String.
      */
-    virtual u32 GetUlamClassSignatureAsStringIndex() const = 0;
-
-    /**
-       String of the human-readable full name of this class.  To be
-       overridden by subclasses of UlamClass. Argument Type, Name,
-       and Value.
-
-       \return an index to a statically-allocated ulam String.
-     */
-    virtual u32 GetUlamClassPrettyNameAsStringIndex() const = 0;
-
-    /**
-       String of the human-readable simple name of this class.  To be
-       overridden by subclasses of UlamClass. Argument Values only.
-
-       \return an index to a statically-allocated ulam String.
-     */
-    virtual u32 GetUlamClassSimpleNameAsStringIndex() const = 0;
+    virtual u32 GetUlamClassNameAsStringIndex(bool templateParameters, bool templateValues) const = 0;
 
     /**
        Specify the number of data members in this class.  To be
