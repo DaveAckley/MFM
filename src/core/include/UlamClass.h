@@ -138,6 +138,16 @@ namespace MFM
     }
 
     /**
+	Returns the number of direct base classes + self, two minimum: one
+	for UrSelf, one for self; Implemented by
+	every UlamClass.
+    */
+    virtual u32 GetDirectBaseClassCount() const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    /**
 	Returns the THE_INSTANCE of ith baseclass, where self is zero,
 	followed by direct bases in the order listed, then by
 	inherited bases; Implemented by every UlamClass.
