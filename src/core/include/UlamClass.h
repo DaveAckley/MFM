@@ -157,6 +157,17 @@ namespace MFM
       FAIL(ILLEGAL_STATE);
     }
 
+
+    /**
+	Returns true if the argument is a "direct" baseclass (explicit
+	in class definition), or unspecified superclass (UrSelf) of
+	ourself; o.w. false if self, or "shared" base (ancestor of a
+	direct base); ILLEGAL ARGUMENT if not found. Implemented by
+	every UlamClass.
+    */
+    virtual bool IsDirectBaseClass(const u32 regid) const = 0;
+
+
     /**
        Downcast an UlamClass* to an UlamQuark* if possible.  Returns
        null if this is not an UlamQuark.
