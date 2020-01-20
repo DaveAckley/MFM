@@ -138,9 +138,8 @@ namespace MFM
     }
 
     /**
-	Returns the number of direct base classes + self, two minimum: one
-	for UrSelf, one for self; Implemented by
-	every UlamClass.
+	Returns the number of direct base classes + self, two minimum:
+	one for Self, one for Super.  Implemented by every UlamClass.
     */
     virtual u32 GetDirectBaseClassCount() const
     {

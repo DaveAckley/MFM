@@ -27,7 +27,7 @@ namespace MFM {
     for (u32 i = 0; i < m_registeredUlamClassCount; ++i)
     {
       UlamClass<EC> * uc = m_registeredUlamClasses[i];
-      if (!uc) continue; //continguous after all classes register
+      if (!uc) continue; //contiguous after all classes register
 
       const char * mang = uc->GetMangledClassName();
       if (!strcmp(mang, mangledName))
