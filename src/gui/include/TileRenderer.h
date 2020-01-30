@@ -139,6 +139,9 @@ namespace MFM
                     const DrawSiteType drawType, const DrawSiteShape shape,
                     const SPoint ditOrigin, const OurTile & tile) ;
 
+    void PaintCustom(Drawing & drawing,
+                     const SPoint ditOrigin, const OurTile & tile) ;
+
     void PaintSiteAtDit(Drawing & drawing,
                         const DrawSiteType drawType, const DrawSiteShape shape,
                         const SPoint ditOrigin, const OurSite & site, const OurTile & inTile) ;
