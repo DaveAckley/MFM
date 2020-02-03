@@ -34,6 +34,7 @@
 #include "Fail.h"
 #include "MFMIO.h"
 #include "TileModel.h"
+#include <stdarg.h>
 
 namespace MFM
 {
@@ -50,6 +51,11 @@ namespace MFM
     u8 mLevel;
     u8 mStage;
     u32 mUpdateTimeout;
+    bool mKnownIncompatible;
+    u32 mBackoffInterval;
+    u32 mTileGeneration;
+    
+    static const u32 STARTING_BACKOFF_INTERVAL = 100;
 
     inline Random & getRandom() {
       MFM_API_ASSERT_NONNULL(mRandom);
@@ -95,9 +101,23 @@ namespace MFM
 
     bool sendLevelPacket() ;
 
+    void configureLevel(u32 newLevel) ;
+
     void incrementLevel(s32 amt) ;
 
     void incrementStageAndAnnounce(u32 amt) ;
+
+    void resetBackoff() ;
+
+    void bumpBackoff() ;
+
+    void message(const char * format, ... ) ;
+
+    void warn(const char * format, ... ) ;
+
+    void error(const char * format, ... ) ;
+
+    void vreport(u32 msglevel, const char * format, va_list & ap) ;
 
   };
 

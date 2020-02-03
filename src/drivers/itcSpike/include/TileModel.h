@@ -44,6 +44,7 @@ namespace MFM
   private:
     Random& mRandom;
     u32 mLevel;
+    u32 mGeneration;
     OString128 mMFZVersionString;
     
   public:
@@ -55,6 +56,8 @@ namespace MFM
     void update() ;
 
     u32 getLevel() const ;
+
+    u32 getGeneration() const ;
 
     const char * getMFZVersionString() const ;
 

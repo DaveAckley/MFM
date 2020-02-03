@@ -5,6 +5,10 @@ namespace MFM {
     return mLevel;
   }
 
+  u32 TileModel::getGeneration() const {
+    return mGeneration;
+  }
+
   const char * TileModel::getMFZVersionString() const { // result meaningless if getLevel()==0
     return mMFZVersionString.GetZString();
   }
@@ -27,6 +31,7 @@ namespace MFM {
         break;
       case 2:
         if (mRandom.OneIn(20)) {
+          ++mGeneration;
           mLevel = 0;
           LOG.Message("Tile Level %d: Quitting", mLevel);
         }

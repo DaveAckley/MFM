@@ -1,4 +1,5 @@
 #include "ITC.h"
+#include "Logger.h"
 
 namespace MFM {
   ITC::ITC()
@@ -8,6 +9,9 @@ namespace MFM {
     , mLevel(0)
     , mStage(0)
     , mUpdateTimeout(0)
+    , mKnownIncompatible(false)
+    , mBackoffInterval(STARTING_BACKOFF_INTERVAL)
+    , mTileGeneration(U32_MAX)
   { }
 
   void ITC::setRandom(Random& random) {
@@ -33,7 +37,7 @@ namespace MFM {
 
   void ITC::handleLevelPacket(u8 theirLevel, u8 theirStage, const char * args, u32 arglen) {
     if (theirLevel > 3 || theirStage > 2) {
-      LOG.Warning("ITC bad level packet lvl%d stage%d",theirLevel,theirStage);
+      warn("Bad level packet lvl%d stage%d",theirLevel,theirStage);
       return;
     }
     if (0) { /* COND */ }
@@ -49,13 +53,23 @@ namespace MFM {
       //// (S2) I'm ready for next level when you are
       else if (mStage == 2 && theirStage == 2) {
         if (mLevel == 0) {
-          LOG.Message("FORFGDS AT %d%d", mLevel, mStage);
           // We need compatible MFZs to advance
           TileModel & tm = getTileModel();
           if (tm.getLevel() > 0) {
-            const char * mfzv = tm.getMFZVersionString();
-            LOG.Message("XXX SEND %s", mfzv);
-            FAIL(INCOMPLETE_CODE);
+            const char * usmfzv = tm.getMFZVersionString();
+            u32 ourlen = strlen(usmfzv);
+            if (ourlen == arglen && strncmp(usmfzv,args,arglen)==0) {
+              message("COMPATIBLE! %s",usmfzv);
+              sendLevelPacket(); // Make sure they hear the good news
+              incrementLevel(1);
+            } else {
+              if (mKnownIncompatible) 
+                bumpBackoff();
+              else {
+                mKnownIncompatible = true;
+                message("INCOMPATIBLE %s", usmfzv);
+              }
+            }
           }
         }
       }
@@ -71,8 +85,8 @@ namespace MFM {
     //// NOW, ALL OTHER DOWN CASES
     else if (theirLevel < mLevel) {
       // Bummer.  We have to crash back to their level.
-      LOG.Message("ITC: Crashing from L%d%d to L%d0",
-                  mLevel,mStage,theirLevel);
+      message("Crashing from L%d%d to L%d0",
+              mLevel,mStage,theirLevel);
       while (theirLevel < mLevel) {
         incrementLevel(-1);
       }
@@ -80,7 +94,7 @@ namespace MFM {
     }
 
     //// NOW, ALL OTHER UP CASES
-    else if (theirLevel < mLevel) {
+    else if (theirLevel > mLevel) {
       sendLevelPacket(); // Reannounce our current level
     }
 
@@ -98,7 +112,7 @@ namespace MFM {
     }
     mStage = newStage;
     sendLevelPacket();
-    LOG.Message("ITC: To stage L%d%d", mLevel, mStage);
+    message("To stage L%d%d", mLevel, mStage);
   }
 
   void ITC::incrementLevel(s32 amt) {
@@ -107,9 +121,16 @@ namespace MFM {
     if (newLevel < 0 || newLevel > 2) { // XXXX LEVEL NUMBER COUNT
       return;
     }
-    mLevel = (u32) newLevel;
+    configureLevel(newLevel);
+    message("%s to L%d0", amt > 0 ? "Up" : "Down", newLevel);
+  }
+
+  void ITC::configureLevel(u32 newLevel) {
+    mLevel = newLevel;
     mStage = 0;
-    LOG.Message("ITC: %s to L%d0", amt > 0 ? "Up" : "Down", newLevel);
+    mKnownIncompatible = false;
+    mBackoffInterval = STARTING_BACKOFF_INTERVAL;
+    mUpdateTimeout = 0;
   }
 
   void ITC::handleInboundPacket(PacketBuffer & pb) {
@@ -127,16 +148,33 @@ namespace MFM {
       handleLevelPacket(z[1]-'0',z[2]-'0',&z[3],len-3);
       return;
     }
-    LOG.Warning("ITC: UNRECOGNIZED Packet len=%d s='%s'",
-                pb.GetLength(),z);
+    warn("UNRECOGNIZED Packet len=%d s='%s'", pb.GetLength(),z);
   }
 
+  void ITC::bumpBackoff() {
+    if (mBackoffInterval < 1000000) {
+      mBackoffInterval = getRandom().Between(mBackoffInterval,3*mBackoffInterval);
+      message("Backoff interval = %d", mBackoffInterval);
+    }
+  }
+
+  void ITC::resetBackoff() {
+    mBackoffInterval = getRandom().Between(STARTING_BACKOFF_INTERVAL,2*STARTING_BACKOFF_INTERVAL);
+    mUpdateTimeout = 0;
+  }
+  
   void ITC::update() {
+    TileModel & tm = getTileModel();
+    if (tm.getGeneration() != mTileGeneration) {
+      message("Noticed tile gen %d",tm.getGeneration());
+      handleTileChange();
+      return;
+    }
     if (mUpdateTimeout == 0) {
-      if (sendLevelPacket()) 
-        mUpdateTimeout = getRandom().Between(1000,10000);
-      else
-        mUpdateTimeout = getRandom().Between(0,100);
+      if (!sendLevelPacket()) {
+        bumpBackoff();
+      }
+      mUpdateTimeout = getRandom().Between(mBackoffInterval,2*mBackoffInterval);
     } else {
       --mUpdateTimeout;
       PacketBuffer pb;
@@ -154,19 +192,43 @@ namespace MFM {
   void ITC::handleTileChange() {
     TileModel & tm = getTileModel();
     u32 tlevel = tm.getLevel();
+    u32 tgen = tm.getGeneration();
 
+    if (mTileGeneration != tgen) {
+      if (mLevel != 0 || mStage != 0) {
+        configureLevel(0);
+      }
+      mTileGeneration = tgen;
+    }
+    
     if (0) { /* COND */ }
 
-    //// FIRST, WAITING FOR TILE MFMR 
+    //// FIRST, WAITING FOR TILE MFMR AND NGBR LIVENESS
     else if (mLevel == 0 && mStage == 1 && tlevel > 0) {
       // Tile has an MFZ running.
       incrementStageAndAnnounce(1); // Up to stage 2
     }
 
+    else if (mLevel == 0 && mStage != 1 && tlevel > 0) {
+      // L00: Init startup
+      // L02: Waiting to hear from neighbor
+      // either way just wait
+    }
+
+    else if (mLevel == 1 && mStage == 0 && tlevel > 0) {
+      // L10: Waiting for nghbr to get to 1
+    }
+
+    else if (mLevel == 1 && mStage == 1 && tlevel > 0) {
+      // L11: All good here
+    }
+
     //// SECOND, WATCHING FOR TILE BAILOUT
-    else if (mLevel == 1 && tlevel == 0) {
-      incrementLevel(-1);
-      sendLevelPacket();
+    else if (mLevel > 0 && tlevel == 0) {
+      while (mLevel > 0) {
+        incrementLevel(-1);
+        sendLevelPacket();
+      }
     }
 
     //// THIRD, TILE LEVEL 0 IS BORING
@@ -175,7 +237,8 @@ namespace MFM {
     }
 
     else if (1) {
-      LOG.Message("Uncovered handleTileChange %d",tm.getLevel());
+      message("Uncovered handleTileChange tile=L%d ITC=L%d%d",
+              tlevel, mLevel, mStage);
     }
     
   }
@@ -184,13 +247,51 @@ namespace MFM {
     MFM_API_ASSERT(mLevel <= 3, ILLEGAL_STATE);
     MFM_API_ASSERT(mStage <= 3, ILLEGAL_STATE);
     u8 dir8 = mapDir6ToDir8(mDir6);
-    unsigned char buf[4];
+    u32 len = 4; // default
+    unsigned char buf[256];
     buf[0] = 0xa0|(dir8&0x7); // 0xa==ROUTED MFM packet
     buf[1] = 'l';             // 'MFM::PacketType::LEVEL'
     buf[2] = '0'+mLevel;
     buf[3] = '0'+mStage;
+    // L02 gets mfz name
+    if (mLevel == 0 && mStage == 2) {
+      TileModel & tm = getTileModel();
+      const char * mfzv = tm.getMFZVersionString();
+      for (; *mfzv && len < 256; buf[len++] = *mfzv++) { }
+    }
+    
     //LOG.Message("SLP L%d%d to %d",mLevel,mStage,dir8);
-    return getMFMIO().trySendPacket(buf,4);
+    return getMFMIO().trySendPacket(buf,len);
+  }
+
+  void ITC::message(const char * format, ... ) {
+    va_list ap;
+    va_start(ap, format);
+    vreport(Logger::MESSAGE, format, ap);
+    va_end(ap);
+  }
+
+
+  void ITC::warn(const char * format, ... ) {
+    va_list ap;
+    va_start(ap, format);
+    vreport(Logger::MESSAGE, format, ap);
+    va_end(ap);
+  }
+
+  void ITC::error(const char * format, ... ) {
+    va_list ap;
+    va_start(ap, format);
+    vreport(Logger::MESSAGE, format, ap);
+    va_end(ap);
+  }
+
+  void ITC::vreport(u32 msglevel, const char * format, va_list & ap) {
+    OString256 buf;
+    u8 dir8 = mapDir6ToDir8(mDir6);
+    buf.Printf("ITC/%s%d%d: ", Dirs::GetCode(dir8), mLevel, mStage);
+    buf.Vprintf(format, ap);
+    LOG.Log((Logger::Level) msglevel, "%s", buf.GetZString());
   }
 
   ITC::~ITC() { }
