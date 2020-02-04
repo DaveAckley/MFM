@@ -140,6 +140,7 @@ namespace MFM {
     {
       TileStatusPanel::TextPanelByteSink & bs = mTileStatusPanel.GetByteSink();
       bs.Reset();
+      bs.Printf("%d ",mLoopsPerDisplay);
       mTileModel.output(bs);
     }
     mRootDrawing.Reset(mSDLI.getScreen(), FONT_ASSET_ELEMENT);
@@ -177,7 +178,7 @@ namespace MFM {
 
   void ITCSpikeDriver::update()
   {
-    const u32 NS_SHIFT_BITS = 29; // 1e9/(1<<27) == ~7.5Hz
+    const u32 NS_SHIFT_BITS = 28; // 1e9/(1<<27) == ~7.5Hz
     while (true) {
       if (mLoopsRemaining) --mLoopsRemaining;
       else {
@@ -187,8 +188,10 @@ namespace MFM {
         u32 tick = now.tv_nsec>>NS_SHIFT_BITS;
         if (tick == mLastDisplayTick)
           ++mLoopsPerDisplay;    // Too soon
+        else if (tick == mLastDisplayTick+1 && mLoopsPerDisplay > 0)
+          --mLoopsPerDisplay;    // On target or a little late
         else if (tick > mLastDisplayTick+1 && mLoopsPerDisplay > 0)
-          --mLoopsPerDisplay;    // Too late
+          mLoopsPerDisplay = 2*mLoopsPerDisplay/3 + 1;    // Way late
         mLastDisplayTick = tick;
         mLoopsRemaining = mLoopsPerDisplay;
         break;
