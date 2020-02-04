@@ -29,7 +29,7 @@ namespace MFM {
       case 0:
         ++mLevel;
         {
-          u32 mfzversion = mRandom.Between(0,2);
+          u32 mfzversion = mRandom.Between(0,3);
           mMFZVersionString.Reset();
           mMFZVersionString.Printf("MFZ%d",mfzversion);
           LOG.Message("Tile Level %d: Starting %s", mLevel, getMFZVersionString());
@@ -40,7 +40,7 @@ namespace MFM {
         LOG.Message("Tile Level %d: Accepting events", mLevel);
         break;
       case 2:
-        if (mRandom.OneIn(20)) {
+        if (mRandom.OneIn(32)) {
           ++mGeneration;
           mLevel = 0;
           LOG.Message("Tile Level %d: Quitting", mLevel);
