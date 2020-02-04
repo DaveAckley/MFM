@@ -68,16 +68,24 @@ namespace MFM
     u32 mLoopsPerDisplay;
     u32 mLoopsRemaining;
 
-    struct ThreadStamper : public DateTimeStamp
+    struct ThreadStamper : public ByteSerializable
     {
+      u32 m_sequence;
+
       typedef DateTimeStamp Super;
       ITCSpikeDriver &driver;
       ThreadStamper(ITCSpikeDriver &driver) : driver(driver) { }
       virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0)
       {
-        Super::PrintTo(byteSink, argument);
-        byteSink.Printf("ITCSPIKE: ");
+        byteSink.Printf("ITCSPIKE-");
+        byteSink.Print(m_sequence++, Format::LEX32);
+        byteSink.Print(": ");
         return SUCCESS;
+      }
+
+      virtual Result ReadFrom(ByteSource & byteSource, s32 argument = 0)
+      {
+        return UNSUPPORTED;
       }
     };
 

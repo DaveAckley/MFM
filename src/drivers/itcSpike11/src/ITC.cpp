@@ -14,13 +14,22 @@ namespace MFM {
     , mTileGeneration(U32_MAX)
     , mPacketsSent(0)
     , mPacketsDropped(0)
+    , mEnabled(false)
   { }
 
   void ITC::setRandom(Random& random) {
     MFM_API_ASSERT_NULL(mRandom);
     mRandom = &random;
   }
-  
+
+  void ITC::setEnabled(bool enabled) {
+    mEnabled = enabled;
+  }
+
+  bool ITC::getEnabled() const {
+    return mEnabled;
+  }
+
   void ITC::setMFMIO(MFMIO& mfmio) {
     MFM_API_ASSERT_NULL(mMFMIO);
     mMFMIO = &mfmio;

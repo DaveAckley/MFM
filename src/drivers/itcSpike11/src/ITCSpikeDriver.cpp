@@ -1,4 +1,5 @@
 #include "ITCSpikeDriver.h"
+#include "T2Utils.h"
 
 namespace MFM {
   bool ITCSpikeDriver::getGlobalOpFlag() const { return mOpGlobal; }
@@ -122,7 +123,7 @@ namespace MFM {
       mLogPanel.SetElevatorWidth(0);
 
       mLogPanel.setPathToTrack("/var/log/syslog");
-      mLogPanel.setBytesToSkipPerLine(27+8);
+      mLogPanel.setBytesToSkipPerLine(27+14);
 
       mRootPanel.Insert(&mLogPanel, NULL);
     }
@@ -135,6 +136,16 @@ namespace MFM {
 
 
   void ITCSpikeDriver::doDisplay() {
+    s32 enables;
+    if (readOneBinaryNumberFile("/sys/class/itc_pkt/status",enables)) {
+      for (u32 dir8 = 0; dir8 < 8; ++dir8) {
+        u8 dir6 = mapDir8ToDir6(dir8);
+        if (dir6 == DIR_COUNT) continue;
+        bool enabled = enables&(1<<dir8);
+        mITC[dir6].setEnabled(enabled);
+      }
+    }
+      
     //    MFM::LOG.Message("BUEHLER?");
     mLogPanel.update();
     {

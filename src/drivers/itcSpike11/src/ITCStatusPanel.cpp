@@ -82,8 +82,10 @@ namespace MFM {
     u32 level = itc.getLevel();
     u32 color = Drawing::MAGENTA;
     if (level == 0) {
-      if (itc.getStage() == 0) 
-        color = Drawing::GREY10;
+      if (itc.getStage() == 0) {
+        if (itc.getEnabled()) color = Drawing::YELLOW;
+        else color = Drawing::GREY10;
+      }
       else
         color = Drawing::BLUE;
     } else if (level == 1) {

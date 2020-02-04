@@ -56,6 +56,7 @@ namespace MFM
     u32 mTileGeneration;
     u32 mPacketsSent;
     u32 mPacketsDropped;
+    bool mEnabled;
     
     static const u32 STARTING_BACKOFF_INTERVAL = 100;
 
@@ -84,6 +85,10 @@ namespace MFM
     ITC() ;
 
     ~ITC() ;
+
+    void setEnabled(bool enabled) ;
+
+    bool getEnabled() const ;
 
     void setRandom(Random& random) ;
 

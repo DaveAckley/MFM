@@ -18,8 +18,6 @@ namespace MFM {
     static const SPoint (side1Pos[ITC_COUNT]);
     static const SPoint (side2Pos[ITC_COUNT]);
 
-
-
     void init(ITC & itc, ITCIcons & icons) ;
     ITC * mITC;
     ITCIcons * mIcons;
