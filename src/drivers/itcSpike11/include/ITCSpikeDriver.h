@@ -76,8 +76,7 @@ namespace MFM
       virtual Result PrintTo(ByteSink & byteSink, s32 argument = 0)
       {
         Super::PrintTo(byteSink, argument);
-        byteSink.Printf("SPIKE [%x]",
-                        (u32) (((u64) pthread_self())>>8));
+        byteSink.Printf("ITCSPIKE: ");
         return SUCCESS;
       }
     };
