@@ -9,7 +9,7 @@ namespace MFM {
         //         if (mFilePtr != 0) fseek(mFilePtr, 0, SEEK_END);
     }
 
-    bool worked = false;
+    //bool worked = false;
     if (!ferror(mFilePtr)) {
       u64 pos; 
 
@@ -34,12 +34,12 @@ namespace MFM {
             if (ch == '\n') mBytesInLine = 0; else ++mBytesInLine;
           }
 
-          worked = true;
+          //          worked = true;
         } 
       }
     }
 
-    if (!worked) {
+    if (true/*!worked*/) {  // open every time, we're seeking
       fclose(mFilePtr);
       mFilePtr = 0;
       mBytesInLine = 0;
