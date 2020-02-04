@@ -1,0 +1,126 @@
+{12}  -*- text -*-
+[0:
+[3:
+[4:
+
+Sun Feb  2 01:29:46 2020 And here we are.
+
+:4]
+Sun Feb  2 01:28:16 2020 MOVING THIS TO
+/home/t2/MFM/src/drivers/itcSpike/ where we've been working for a
+while now..
+
+:3]
+
+
+Sat Feb  1 04:15:53 2020 So, starting in to a spike to get more real
+about ITC state machines for the levels and so forth.
+
+First question: Are we going to redo the itc_pkt to break out the
+packet channels?  Right now, MFM/src/drivers/mfmt2/include/MFMIO.h is
+opening MFM_DEV_PATH == /dev/itc/mfm and that's that.[1:
+
+Sat Feb  1 04:48:19 2020 And we're already doing a loop, in
+mfmt2/src/main.cpp, to ship flash traffic, since we have to customize
+the packet headers.  With separate devices I suppose we could even
+have the LKM slug the src/dst info into the pkt hdr.
+
+Well I think it's pretty clear we're thinking of making
+/dev/itc/mfm/{ET..NE} devices, so why don't we get on down to
+~/T2-12/pru/itcio/module/ and see what that might involve.  One think
+to think about is that packet writes will still need to be merged into
+the outbound queue for the appropriate pru, so the locking on that
+could start actually getting stressed, since there will be six (well,
+three) separate devices that might be trying to a given outbound kfifo
+at once.
+
+But nap first.[2:
+
+Sat Feb  1 10:00:37 2020 OK, let's have some
+
+TODO
+
+[5: Sun Feb  2 01:30:16 2020
+DONE :5] - Make a tiny little stub that we'll grow into the itc level
+   sequencer.
+
+ - Change boot sequence to start the stub INSTEAD of mfm, so the
+   former can grab /dev/itc/mfm
+
+ - Maybe let's make a little abstraction that wraps /dev/itc/mfm and
+   turns it into a like pollable pseudo-device?  So we could start our
+   level sequencing code without immediately doing the LKM stuff?
+
+ - Rough up some packet formats for the levels
+
+ - Demo first-cut on-tile level sequencer talking on loop-back then
+   between tiles, with results visible ONLY in the log file -- NO
+   DISPLAY HACKING ALLOWED :)
+
+:2]
+
+:1]
+
+:0]
+[6:
+
+Sun Feb  2 05:01:08 2020 OK we're at ITC::sendLevelPacket() so we need
+a packet format.  What do cache updates currently use?  Let's just get
+OoB wrt that?[7:
+
+Sun Feb  2 05:04:16 2020 In src/core/include/Packet.h, we have like
+PacketType::UPDATE_BEGIN == 'b'.[8:
+
+Sun Feb  2 05:25:31 2020 But that's the second byte.  The packet
+actually starts with
+
+      u8 cmd = 0xa0|dir8; // STD MFM pkt hdr
+      packet.Printf("%c",cmd);
+
+according to src/drivers/mfmt2/src/main.cpp:262
+
+So let's just keep going with the second byte scheme, I guess.  The
+cache processing code appears to be using second byte types [ucea].
+We notice they're all 7 bit ASCII.  If we take the high bit for our
+level scheme we can pack the level and stage all into the second byte,
+with room leftover..
+
+     0   1   2   3   4   5   6   7
+   +---+---+---+---+---+---+---+---+
+   | 1 | L1| L0| S1| S0|RV0|RV1|RV2|
+   +---+---+---+---+---+---+---+---+
+
+Three bits left over, if we say no more than three levels.
+[9:
+
+Sun Feb  2 05:41:39 2020 Well let's do that.  We can always change it
+if pressing needs come up.[10:
+
+Sun Feb  2 05:45:26 2020 Uhhhhm except flash traffic is already using
+the top bit of byte 1.
+
+      if (amt > 1 && (buf[1] & 0x80)) // byte 1 MSB set is MFM SPECIAL, clear is
+
+So we'll need to rethink.  Probably just draft 'l' or 'L' for Level
+packet, and take another byte and not worry about it.
+
+But first nap.
+
+
+:10]
+
+:9]
+:8]
+
+:7]
+
+:6]
+[11:
+
+Sun Feb  2 12:21:36 2020 OK, so we're sending 'l' packets to ourselves
+via loopback cable, and handling them a little, and are getting quite
+close to the frontier of chnlSim.pl's implemented behavior.  But it's
+time to move the flag, so we've got to get this stuff actually into
+the tree for safety..
+
+:11]
