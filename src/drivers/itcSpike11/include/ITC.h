@@ -58,7 +58,7 @@ namespace MFM
     u32 mPacketsDropped;
     bool mEnabled;
     
-    static const u32 STARTING_BACKOFF_INTERVAL = 100;
+    static const u32 STARTING_BACKOFF_INTERVAL = 1000;
 
   public:
 

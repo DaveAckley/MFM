@@ -40,7 +40,7 @@ namespace MFM {
         LOG.Message("Tile Level %d: Accepting events", mLevel);
         break;
       case 2:
-        if (mRandom.OneIn(32)) {
+        if (mRandom.OneIn(50)) {
           ++mGeneration;
           mLevel = 0;
           LOG.Message("Tile Level %d: Quitting", mLevel);

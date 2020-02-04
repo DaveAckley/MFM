@@ -202,7 +202,7 @@ namespace MFM {
         else if (tick == mLastDisplayTick+1 && mLoopsPerDisplay > 1)
           --mLoopsPerDisplay;    // On target or a little late
         else if (tick > mLastDisplayTick+1 && mLoopsPerDisplay > 0)
-          mLoopsPerDisplay = 2*mLoopsPerDisplay/3 + 1;    // Way late
+          mLoopsPerDisplay = 9*mLoopsPerDisplay/10 + 1;    // Way late
         mLastDisplayTick = tick;
         mLoopsRemaining = mLoopsPerDisplay;
         break;

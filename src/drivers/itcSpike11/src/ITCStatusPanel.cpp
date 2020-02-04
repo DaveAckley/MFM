@@ -83,7 +83,7 @@ namespace MFM {
     u32 color = Drawing::MAGENTA;
     if (level == 0) {
       if (itc.getStage() == 0) {
-        if (itc.getEnabled()) color = Drawing::YELLOW;
+        if (itc.getEnabled()) color = Drawing::RED;
         else color = Drawing::GREY10;
       }
       else

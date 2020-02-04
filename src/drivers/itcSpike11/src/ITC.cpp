@@ -169,7 +169,7 @@ namespace MFM {
   }
 
   void ITC::bumpBackoff() {
-    if (mBackoffInterval < 1000000) {
+    if (mBackoffInterval < 500000) {
       mBackoffInterval = getRandom().Between(mBackoffInterval,3*mBackoffInterval);
       message("Backoff interval = %d", mBackoffInterval);
     }
@@ -202,12 +202,14 @@ namespace MFM {
       PacketBuffer pb;
       u8 dir6 = getDir6();
       u8 dir8 = mapDir6ToDir8(dir6);
+      const u32 MAX_PACKETS_PER_UPDATE = 10;
+      u32 handled = MAX_PACKETS_PER_UPDATE;
       //    LOG.Message("UPDATE UPDAT dir6=%d, dir8=%d",dir6,dir8);
-      if (getMFMIO().tryReceivePacket(dir8,pb)) {
+      while (getMFMIO().tryReceivePacket(dir8,pb) && --handled > 0) {
         handleInboundPacket(pb);
-      } else {
-        handleTileChange();
       }
+      if (handled) // Check tile too if didn't burn whole allotment
+        handleTileChange();
     }
   }
 
