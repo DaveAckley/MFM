@@ -188,7 +188,7 @@ namespace MFM {
         u32 tick = now.tv_nsec>>NS_SHIFT_BITS;
         if (tick == mLastDisplayTick)
           ++mLoopsPerDisplay;    // Too soon
-        else if (tick == mLastDisplayTick+1 && mLoopsPerDisplay > 0)
+        else if (tick == mLastDisplayTick+1 && mLoopsPerDisplay > 1)
           --mLoopsPerDisplay;    // On target or a little late
         else if (tick > mLastDisplayTick+1 && mLoopsPerDisplay > 0)
           mLoopsPerDisplay = 2*mLoopsPerDisplay/3 + 1;    // Way late

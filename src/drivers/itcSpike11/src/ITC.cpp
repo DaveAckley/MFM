@@ -174,10 +174,12 @@ namespace MFM {
   void ITC::update() {
     TileModel & tm = getTileModel();
     if (tm.getGeneration() != mTileGeneration) {
+      /*
       message("Noticed tile gen %d (%d/%d)",
               tm.getGeneration(),
               mPacketsSent,
               mPacketsDropped);
+      */
       handleTileChange();
       return;
     }
