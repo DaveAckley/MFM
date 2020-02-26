@@ -829,11 +829,6 @@ namespace MFM
       driver.m_includeCPPDemos = 1;
     }
 
-    static void SetSaveElementMeta(const char* not_needed, void* driver)
-    {
-      ((AbstractDriver*)driver)->m_saveElementMeta = 1;
-    }
-    
     static void SetSaveGridDetail(const char* not_needed, void* driver)
     {
       ((AbstractDriver*)driver)->m_saveGridDetail = 1;
@@ -1150,58 +1145,6 @@ namespace MFM
     }
     
 
-    void SaveElementMeta()
-    {
-      const char* filename =
-        GetSimDirPathTemporary("element.meta");
-      LOG.Message("Saving element meta to: %s", filename);
-      FILE* fp = fopen(filename, "w");
-      FileByteSink fs(fp);
-
-      u32 dlcount = m_elementRegistry.GetRegisteredElementCount();
-      for (u32 i = 0; i < dlcount; ++i)
-      {
-        Element<EC> * e = m_elementRegistry.GetRegisteredElement(i);
-	fs.Printf(e->GetAtomicSymbol());
-	fs.Printf(": ");
-	fs.Printf(e->GetName());
-	fs.Printf("\n");
-      /* pretty sure it isn't parameters I'm looking for..      
-        const AtomicParameters<EC> & parms = e->GetAtomicParameters();
-        const AtomicParameter<EC> * p;
-        for (p = parms.GetFirstParameter(); p; p = p->GetNextParameter())
-	{
-	  fs.Printf("  ");
-	  fs.Printf(p->GetName());
-	  fs.Printf(": ");
-	  fs.Printf(p->GetTag());
-	  fs.Printf("\n");
-	}
-      */
-        OString512 buff;
-        const UlamElement<EC> * uelt = e->AsUlamElement();
-        if (!uelt)
-        {
-          continue;
-        }
-  
-        const u32 printFlags =
-          UlamClassPrintFlags::PRINT_MEMBER_NAMES |
-          UlamClassPrintFlags::PRINT_MEMBER_VALUES |
-          UlamClassPrintFlags::PRINT_RECURSE_QUARKS;
-  
-        buff.Reset();
-	T atom = e->BuildDefaultAtom();
-	UlamClassRegistry<EC> ucr = m_grid.GetUlamClassRegistry();
-        uelt->Print(ucr, buff, atom, printFlags, T::ATOM_FIRST_STATE_BIT);
-	fs.Printf("  ");
-        fs.Printf(buff.GetZString());
-	fs.Printf("\n");
-      }
-
-      fs.Close();
-    }
-
     ExternalConfig<GC> & GetExternalConfig()
     {
       return m_externalConfig;
@@ -1221,10 +1164,7 @@ namespace MFM
     void SaveGridDetail(const char* filename)
     {
       OurGrid& grid = this->GetGrid();
-      //todo: does OurTile have the correct element table?
-      //      const Tile<EC>& herotile = grid.Get00Tile();
       OurTile tile;
-      //      tile.CopyHero(herotile);
       ElementTable<EC> et = tile.GetElementTable();
 
 
@@ -1289,6 +1229,7 @@ namespace MFM
 	    const Element<EC> * e = grid.LookupElement(t);
             const UlamElement<EC> * uelt = e->AsUlamElement();
 
+	    //todo: are there any alternatives to the string un this buffer that contain the names of the data members and their value at current epoch?
             uelt->Print(ucr, buff, *atom, printFlags, T::ATOM_FIRST_STATE_BIT);
 	    if(first)
 	    {
@@ -1438,7 +1379,6 @@ namespace MFM
       , m_suppressStdElements(true)
       , m_includeUEDemos(false)
       , m_includeCPPDemos(false)
-      , m_saveElementMeta(false)
       , m_saveGridDetail(false)
       , m_msSpentRunning(0)
       , m_msSpentOverhead(0)
@@ -1638,10 +1578,7 @@ namespace MFM
       RegisterArgument("Command line comment, logged but otherwise ignored (string)",
                        "-#|--comment", &IgnoreComment, this, true);
       
-      RegisterArgument("Output element data member names and bit positions for parsing mfs save data.",
-                       "-sm|--save-meta", &SetSaveElementMeta, this, false);
-
-      RegisterArgument("Output detailed grid state information, including data member names for each site on the grid.",
+      RegisterArgument("Output detailed grid state information in JSON format.",
                        "-gd|--grid-detail", &SetSaveGridDetail, this, false);
     }
 
@@ -1744,14 +1681,6 @@ namespace MFM
 
       ReinitPhysics();
 
-      //todo: undefault the option.
-      //note: elements don't m_hasType until reinitphysics..
-      if (this->m_saveElementMeta)
-      {
-	SaveElementMeta();
-      }
-
-
       ReinitEden();
 
       PostReinit(m_varguments);
@@ -1797,7 +1726,6 @@ namespace MFM
     bool m_suppressStdElements;
     bool m_includeUEDemos;
     bool m_includeCPPDemos;
-    bool m_saveElementMeta;
     bool m_saveGridDetail;
 
     u64 m_msSpentRunning;
