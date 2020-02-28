@@ -91,7 +91,7 @@ namespace MFM {
           bs.Printf(",");
           doNL(bs,flags,indent);
         }
-        bs.Printf("\"%s\": ", dmi.m_dataMemberName);
+        bs.Printf("\"%s\":", dmi.m_dataMemberName);
         
         // For starters just dig out the bits and print them
         u32 bitsize = utin.GetBitSize();
