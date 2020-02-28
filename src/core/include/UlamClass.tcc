@@ -109,7 +109,7 @@ namespace MFM {
 	    {
 	      bs.Printf("[");
 	    }
-	    else if (idx>0 && idx<arraysize-1)
+	    else if (idx>0 && idx<arraysize)
 	    {
 	      bs.Printf(",");
 	    }
