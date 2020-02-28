@@ -193,9 +193,9 @@ namespace MFM {
           default:
             FAIL(ILLEGAL_STATE);
           }
+          if (arraysize > 0 && idx == arraysize)
+            bs.Printf("]");
         }
-        if (arraysize > 0 && idx == arraysize)
-	  bs.Printf("]");
       }
       if (opened) indent -= 2;
       doNL(bs,flags,indent);
