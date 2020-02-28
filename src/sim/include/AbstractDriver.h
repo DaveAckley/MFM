@@ -1210,7 +1210,7 @@ namespace MFM
 
             const u32 printFlags =
               UlamClassPrintFlags::PRINT_INDENTED_LINES |
-              UlamClassPrintFlags::PRINT_FORMAT_JSON |
+              UlamClassPrintFlags::PRINT_FORMAT_JSON;
 	    
             OString2048 buff;
             buff.Reset();
