@@ -79,6 +79,7 @@ namespace MFM {
         if (!utin.InitFrom(dmi.m_mangledType))
           FAIL(ILLEGAL_STATE);
 
+        if (utin.GetBitSize() == 0) continue;
         if (!opened)
         {
           opened = true;
