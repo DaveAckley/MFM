@@ -1209,9 +1209,8 @@ namespace MFM
   	    if(isStaggeredGrid && !grid.IsGridCoord(siteInGrid)) continue;
 
             const u32 printFlags =
-              UlamClassPrintFlags::PRINT_MEMBER_NAMES |
-              UlamClassPrintFlags::PRINT_MEMBER_VALUES |
-              UlamClassPrintFlags::PRINT_RECURSE_QUARKS;
+              UlamClassPrintFlags::PRINT_INDENTED_LINES |
+              UlamClassPrintFlags::PRINT_FORMAT_JSON |
 	    
             OString512 buff;
             buff.Reset();
