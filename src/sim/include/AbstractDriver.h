@@ -1140,7 +1140,7 @@ namespace MFM
     void AutosaveDetail(u32 epochs)
     {
       const char* filename =
-        GetSimDirPathTemporary("grid-%D-%D.save", epochs, (u32) m_AEPS);
+        GetSimDirPathTemporary("grid-%D-%D.json", epochs, (u32) m_AEPS);
       this->SaveGridDetail(filename);
     }
     
@@ -1578,7 +1578,7 @@ namespace MFM
                        "-#|--comment", &IgnoreComment, this, true);
       
       RegisterArgument("Output detailed grid state information in JSON format.",
-                       "-gd|--grid-detail", &SetSaveGridDetail, this, false);
+                       "-gj|--grid-json", &SetSaveGridDetail, this, false);
     }
 
 
