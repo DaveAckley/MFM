@@ -1212,7 +1212,7 @@ namespace MFM
               UlamClassPrintFlags::PRINT_INDENTED_LINES |
               UlamClassPrintFlags::PRINT_FORMAT_JSON |
 	    
-            OString512 buff;
+            OString2048 buff;
             buff.Reset();
 
 	    //for some reason, grid.GetAtomInSite doesn't do what we need. Maybe because it's constant? Optimizing happening?
