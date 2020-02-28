@@ -80,6 +80,7 @@ namespace MFM {
           FAIL(ILLEGAL_STATE);
 
         if (utin.GetBitSize() == 0) continue;
+        
         if (!opened)
         {
           opened = true;
@@ -108,7 +109,7 @@ namespace MFM {
 	    {
 	      bs.Printf("[");
 	    }
-	    else if (idx>0 && idx<arraysize)
+	    else if (idx>0 && idx<arraysize-1)
 	    {
 	      bs.Printf(",");
 	    }
@@ -194,7 +195,7 @@ namespace MFM {
           default:
             FAIL(ILLEGAL_STATE);
           }
-          if (arraysize > 0 && idx == arraysize)
+          if (arraysize > 0 && idx == arraysize-1)
             bs.Printf("]");
         }
       }
