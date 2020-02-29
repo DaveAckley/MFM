@@ -1243,7 +1243,8 @@ namespace MFM
 		      "\"symbol\":\"%s\", "
 		      "\"name\":\"%s\", "
 		      "\"argb\":%d, "
-		      "\"data_members\":%s}"
+		      "\"data_members\":{%s}"
+		      "}"
 		      ,siteInGrid.GetX()
 		      ,siteInGrid.GetY()
 		      ,e->GetAtomicSymbol()

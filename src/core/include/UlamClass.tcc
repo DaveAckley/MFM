@@ -71,7 +71,7 @@ namespace MFM {
     //    typedef typename EC::ATOM_CONFIG::ATOM_TYPE T;
     if (flags & PRINT_FORMAT_JSON)
     {
-      bool opened = false;
+      bool first = false;
       for (s32 i = 0; i < GetDataMemberCount(); ++i)
       {
         const UlamClassDataMemberInfo & dmi = GetDataMemberInfo((u32) i);
@@ -81,12 +81,9 @@ namespace MFM {
 
         if (utin.GetBitSize() == 0) continue;
         
-        if (!opened)
+        if (!first)
         {
-          opened = true;
-          bs.Printf("{");
-          indent += 2;
-          doNL(bs,flags,indent);
+          first = true;
         }
         else
         {
@@ -126,7 +123,15 @@ namespace MFM {
             const UlamClass * memberClass = ucr.GetUlamClassByMangledName(mangledName);
             if (memberClass)
             {
+              bs.Printf("{");
+              indent += 2;
+              doNL(bs,flags,indent);
+    
               memberClass->PrintClassMembers(ucr, bs, stg, flags, startPos, indent + 2);
+	      
+              bs.Printf("}");
+              doNL(bs,flags,indent);    
+              indent -= 2;
               continue;
             }
           }
@@ -199,9 +204,6 @@ namespace MFM {
             bs.Printf("]");
         }
       }
-      if (opened) indent -= 2;
-      doNL(bs,flags,indent);
-      if (opened) bs.Printf("}");
     }
     else if (flags & (PRINT_MEMBER_VALUES|PRINT_MEMBER_NAMES|PRINT_MEMBER_TYPES))
     {
