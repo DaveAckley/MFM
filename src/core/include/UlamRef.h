@@ -208,6 +208,10 @@ namespace MFM
 
     UlamClass<EC> * GetEffectiveSelfPointer() const { return const_cast<UlamClass<EC> *> (m_effSelf); } //for UlamRefMutable
 
+    u32 GetVTableClassId() const { return m_vtableclassid; }
+
+    const UlamRef<EC> * GetPreviousUlamRefPtr() const { return m_prevur; }
+
     BitStorage<EC> & GetStorage() { return m_stg; }
 
     BitStorage<EC> & GetStorage() const { return m_stg; }
@@ -244,6 +248,11 @@ namespace MFM
     void ApplyDelta(s32 existingeffselfpos, s32 effselfoffset, u32 len);
 
 
+    /** helper, recursive search for nearest non-dominated classid for vtable lookup;
+	returns bool when found; third arg holds classid of vtable class;
+    */
+    bool findMostSpecificNonDominatedVTClassIdInCallstack(const UlamRef<EC> & existing, const u32 vownedfuncidx, const u32 origclassregnum, s32& candidateid) const;
+
     // DATA MEMBERS
     const UlamContext<EC> & m_uc;
     const UlamClass<EC> * m_effSelf;
@@ -252,7 +261,8 @@ namespace MFM
     u32 m_len;
     UsageType m_usage;
     u32 m_posToEff;
-
+    u32 m_vtableclassid;
+    const UlamRef<EC> * m_prevur;
   }; //UlamRef
 
   template <class EC, u32 POS, u32 LEN>

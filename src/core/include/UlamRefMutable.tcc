@@ -11,6 +11,8 @@ namespace MFM {
     , m_len(0)
     , m_usage(UlamRef<EC>::PRIMITIVE)
     , m_posToEff(0)
+    , m_vtableclassid(0)
+    , m_prevur(NULL)
   { }
 
   template <class EC>
@@ -23,6 +25,8 @@ namespace MFM {
       m_len = rhs.GetLen();
       m_usage = rhs.GetUsage();
       m_posToEff = rhs.GetPosToEffectiveSelf();
+      m_vtableclassid = rhs.GetVTableClassId();
+      m_prevur = rhs.GetPreviousUlamRefPtr();
       return *this;
     }
 

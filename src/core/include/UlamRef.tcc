@@ -18,6 +18,8 @@ namespace MFM {
     , m_len(len)
     , m_usage(usage)
     , m_posToEff(pos)
+    , m_vtableclassid(0)
+    , m_prevur(NULL)
   {
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
     MFM_API_ASSERT_ARG(m_usage != PRIMITIVE || m_effSelf == 0); // Primitive usage has no effself
@@ -38,6 +40,11 @@ namespace MFM {
       {
 	UpdateEffectiveSelf();
       }
+
+    if(m_effSelf != NULL)
+      {
+	m_vtableclassid = m_effSelf->GetRegistrationNumber(); //init
+      }
   }
 
   template <class EC>
@@ -50,6 +57,8 @@ namespace MFM {
     , m_len(len)
     , m_usage(usage)
     , m_posToEff(postoeff)
+    , m_vtableclassid(0)
+    , m_prevur(NULL)
   {
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
     MFM_API_ASSERT_ARG(m_usage != PRIMITIVE || m_effSelf == 0); // Primitive usage has no effself
@@ -60,6 +69,11 @@ namespace MFM {
       {
 	UpdateEffectiveSelf();
       }
+
+    if(m_effSelf != NULL)
+      {
+	m_vtableclassid = m_effSelf->GetRegistrationNumber(); //init
+      }
   }
 
   template <class EC>
@@ -68,6 +82,8 @@ namespace MFM {
     , m_effSelf(effself)
     , m_stg(existing.m_stg)
     , m_len(len)
+    , m_vtableclassid(0)
+    , m_prevur(NULL)
   {
     s32 newpos = posincr + (s32) existing.GetPos(); //e.g. pos -25 to start of atom of element ref
     MFM_API_ASSERT_ARG(newpos >= 0); //non-negative
@@ -101,6 +117,11 @@ namespace MFM {
 	//MFM_API_ASSERT_ARG(posincr >= 0); //non-negative
 	m_posToEff = existing.m_posToEff + posincr; //subtract from newpos for eff self pos
       }
+
+    if(m_effSelf != NULL)
+      {
+	m_vtableclassid = m_effSelf->GetRegistrationNumber(); //init
+      }
   }
 
   template <class EC>
@@ -111,6 +132,8 @@ namespace MFM {
     , m_len(len)
     , m_usage(existing.m_usage)
     , m_posToEff(existing.m_posToEff + posincr)
+    , m_vtableclassid(0)
+    , m_prevur(NULL)
   {
     s32 newpos = posincr + (s32) existing.GetPos(); //e.g. pos -25 to start of atom of element ref
     MFM_API_ASSERT_ARG(newpos >= 0); //non-negative
@@ -121,6 +144,11 @@ namespace MFM {
     {
       UpdateEffectiveSelf();
     }
+
+    if(m_effSelf != NULL)
+      {
+	m_vtableclassid = m_effSelf->GetRegistrationNumber(); //init
+      }
   }
 
   template <class EC>
@@ -130,17 +158,24 @@ namespace MFM {
     , m_stg(existing.m_stg)
     , m_len(len)
     , m_usage(usage)
+    , m_vtableclassid(0)
+    , m_prevur(NULL)
   {
     MFM_API_ASSERT_ARG(effselfoffset >= 0); //non-negative
     MFM_API_ASSERT_ARG(applydelta); //always true, de-ambiguity arg
-
-    //virtual func override class ref, from existing calling ref
-    ApplyDelta(existing.GetEffectiveSelfPos(), effselfoffset, len);
 
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
     {
       UpdateEffectiveSelf();
     }
+
+    if(m_effSelf != NULL)
+      {
+	m_vtableclassid = m_effSelf->GetRegistrationNumber(); //init
+      }
+
+    //virtual func override class ref, from existing calling ref
+    ApplyDelta(existing.GetEffectiveSelfPos(), effselfoffset, len);
   }
 
   template <class EC>
@@ -150,13 +185,23 @@ namespace MFM {
     , m_stg(existing.m_stg)
     , m_len(existing.m_len)
     , m_usage(existing.m_usage)
+    , m_vtableclassid(existing.m_vtableclassid)
+    , m_prevur(& existing)
   {
-    InitUlamRefForVirtualFuncCall(existing, existing.GetEffectiveSelf(), vownedfuncidx, origclass.GetRegistrationNumber(), vfuncref);
-
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
     {
       UpdateEffectiveSelf();
     }
+
+    const u32 origclassid = origclass.GetRegistrationNumber();
+    s32 candidate = -1;
+    bool foundvt = findMostSpecificNonDominatedVTClassIdInCallstack(existing, vownedfuncidx, origclassid, candidate);
+    MFM_API_ASSERT(foundvt, NOT_FOUND);
+
+    const UlamClassRegistry<EC> & ucr = existing.m_uc.GetUlamClassRegistry();
+    const UlamClass<EC> * vtableclassptr = ucr.GetUlamClassOrNullByIndex(candidate);
+
+    InitUlamRefForVirtualFuncCall(existing, vtableclassptr, vownedfuncidx, origclassid, vfuncref);
   }
 
   template <class EC>
@@ -166,14 +211,24 @@ namespace MFM {
     , m_stg(existing.m_stg)
     , m_len(existing.m_len)
     , m_usage(existing.m_usage)
+    , m_vtableclassid(existing.m_vtableclassid)
+    , m_prevur(& existing)
   {
-    //applydelta is de-ambiguity arg
-    InitUlamRefForVirtualFuncCall(existing, existing.GetEffectiveSelf(), vownedfuncidx, origclassregnum, vfuncref);
-
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
     {
       UpdateEffectiveSelf();
+      m_prevur = NULL;
+      m_vtableclassid = m_effSelf->GetRegistrationNumber();
     }
+
+    s32 candidate = -1;
+    bool foundvt = findMostSpecificNonDominatedVTClassIdInCallstack(existing, vownedfuncidx, origclassregnum, candidate);
+    MFM_API_ASSERT(foundvt, NOT_FOUND);
+
+    const UlamClassRegistry<EC> & ucr = existing.m_uc.GetUlamClassRegistry();
+    const UlamClass<EC> * vtableclassptr = ucr.GetUlamClassOrNullByIndex(candidate);
+    //applydelta is de-ambiguity arg
+    InitUlamRefForVirtualFuncCall(existing, vtableclassptr, vownedfuncidx, origclassregnum, vfuncref);
   }
 
   template <class EC>
@@ -183,13 +238,16 @@ namespace MFM {
     , m_stg(existing.m_stg)
     , m_len(existing.m_len)
     , m_usage(existing.m_usage)
+    , m_prevur(& existing)
   {
-    InitUlamRefForVirtualFuncCall(existing, vtclassptr, vownedfuncidx, origclassregnum, vfuncref);
-
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
     {
       UpdateEffectiveSelf();
+      m_prevur = NULL;
     }
+
+    InitUlamRefForVirtualFuncCall(existing, vtclassptr, vownedfuncidx, origclassregnum, vfuncref);
+    m_vtableclassid = vtclassptr->GetRegistrationNumber(); //save!! newly specified vtable classid
   }
 
   template <class EC>
@@ -201,6 +259,8 @@ namespace MFM {
     , m_len(muter.GetLen())
     , m_usage(muter.GetUsageType())
     , m_posToEff(muter.GetPosToEffectiveSelf())
+    , m_vtableclassid(muter.GetVTableClassId())
+    , m_prevur(muter.GetPreviousUlamRefPtr())
   { }
 
 
@@ -247,6 +307,46 @@ namespace MFM {
     m_len = len;
     MFM_API_ASSERT_ARG((m_pos + m_len - m_posToEff) <= m_stg.GetBitSize());
   }
+
+  template <class EC>
+  bool UlamRef<EC>::findMostSpecificNonDominatedVTClassIdInCallstack(const UlamRef<EC> & existing, const u32 vownedfuncidx, const u32 origclassregnum, s32& candidateid) const
+  {
+    bool gotit = false;
+    //start with first call, m_prevur is NULL, look into vtable of effSelf
+    if(m_prevur != NULL)
+      gotit = m_prevur->findMostSpecificNonDominatedVTClassIdInCallstack(existing, vownedfuncidx, origclassregnum, candidateid);
+
+    if(!gotit)
+      {
+	const UlamClassRegistry<EC> & ucr = m_uc.GetUlamClassRegistry();
+	const UlamClass<EC> * vtableclassptr = ucr.GetUlamClassOrNullByIndex(m_vtableclassid);
+	MFM_API_ASSERT_NONNULL(vtableclassptr); //first one checked is effSelf
+
+	//3 VTable accesses for: originating class' start, vfunc entry, and its override class
+	const u32 origclassvtstart = vtableclassptr->GetVTStartOffsetForClassByRegNum(origclassregnum);
+	const UlamClass<EC> * ovclassptr = vtableclassptr->getVTableEntryUlamClassPtr(vownedfuncidx + origclassvtstart);
+	MFM_API_ASSERT_NONNULL(ovclassptr);
+
+	if(candidateid < 0)
+	  candidateid = ovclassptr->GetRegistrationNumber();
+	else
+	  {
+	    //candidateid is a subclass of ovclassptr or ovclassptr, t.f. candidateid is "more specific"
+	    if(!ovclassptr->internalCMethodImplementingIs(candidateid))
+	      {
+		//ovclassptr is NOT a subclass of candidateid, then NOT "more specifc"
+		candidateid = ovclassptr->GetRegistrationNumber();
+	      }
+	    // else no change to candidateid
+	  }
+
+	gotit = (m_vtableclassid == candidateid) || (this == &existing); //forsure gotit, when implemented here, or done looking
+      }
+    //else gotit short-circuit, candidateid is set
+
+    MFM_API_ASSERT(candidateid >= 0, UNINITIALIZED_VALUE);
+    return gotit;
+  } //findMostSpecificNonDominatedVTClassIdInCallstack
 
   template <class EC>
   void UlamRef<EC>::UpdateEffectiveSelf()
