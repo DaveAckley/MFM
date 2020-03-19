@@ -178,7 +178,7 @@ namespace MFM
     template<u32 LEN>
     void ReadBV(u32 pos, BitVector<LEN>& rtnbv) const
     {
-      m_stg.ReadBV<LEN>(pos + m_pos, rtnbv);
+      m_stg.ReadBV(pos + m_pos, rtnbv); //(see WriteBV below)
     }
 
     /**
@@ -188,7 +188,8 @@ namespace MFM
     template<u32 LEN>
     void WriteBV(u32 pos, const BitVector<LEN>& val)
     {
-      m_stg.WriteBV<LEN>(pos + m_pos, val);
+      //Ubuntu 18.04, smarter about LEN: t3715,t3739,t41269,t41271,2,t41355,t41358,t41359
+      m_stg.WriteBV(pos + m_pos, val); //LEN not explicitly used in call
     }
 
     u32 GetPos() const { return m_pos; }
