@@ -340,7 +340,7 @@ namespace MFM {
 	    // else no change to candidateid
 	  }
 
-	gotit = (m_vtableclassid == candidateid) || (this == &existing); //forsure gotit, when implemented here, or done looking
+	gotit = ((s32) m_vtableclassid == candidateid) || (this == &existing); //forsure gotit, when implemented here, or done looking
       }
     //else gotit short-circuit, candidateid is set
 
