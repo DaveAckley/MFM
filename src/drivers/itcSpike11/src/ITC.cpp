@@ -1,10 +1,12 @@
 #include "ITC.h"
+#include "T2Utils.h"
 #include "Logger.h"
 
 namespace MFM {
   ITC::ITC()
     : mRandom(0)
-    , mMFMIO(0)
+    , mTileModel(0)
+    , mMfmPacketFD(-1)
     , mDir6(U8_MAX)
     , mLevel(0)
     , mStage(0)
@@ -14,6 +16,7 @@ namespace MFM {
     , mTileGeneration(U32_MAX)
     , mPacketsSent(0)
     , mPacketsDropped(0)
+    , mPacketsReceived(0)
     , mEnabled(false)
   { }
 
@@ -30,9 +33,28 @@ namespace MFM {
     return mEnabled;
   }
 
-  void ITC::setMFMIO(MFMIO& mfmio) {
-    MFM_API_ASSERT_NULL(mMFMIO);
-    mMFMIO = &mfmio;
+  bool ITC::open() {
+    const char * dirn = getDir6Name(mDir6);
+    char buf[32];
+    snprintf(buf,32,"/dev/itc/mfm/%s", dirn);
+    if (mMfmPacketFD >= 0) abort();
+    mMfmPacketFD = ::open(buf, O_RDWR | O_NONBLOCK);
+    if (mMfmPacketFD < 0) {
+      fprintf(stderr,"Can't open %s: %s\n", dirn, strerror(errno));
+      return false;
+    }
+    return true;
+  }
+
+  bool ITC::close() {
+    if (mMfmPacketFD < 0) return false;
+    if (::close(mMfmPacketFD) < 0) {
+      fprintf(stderr,"Can't close %s: %s\n", getDir6Name(mDir6), strerror(errno));
+      return false;
+    }
+
+    mMfmPacketFD = -1;
+    return true;
   }
   
   void ITC::setTileModel(TileModel& tileModel) {
@@ -200,12 +222,11 @@ namespace MFM {
     } else {
       --mUpdateTimeout;
       PacketBuffer pb;
-      u8 dir6 = getDir6();
-      u8 dir8 = mapDir6ToDir8(dir6);
       const u32 MAX_PACKETS_PER_UPDATE = 10;
       u32 handled = MAX_PACKETS_PER_UPDATE;
       //    LOG.Message("UPDATE UPDAT dir6=%d, dir8=%d",dir6,dir8);
-      while (getMFMIO().tryReceivePacket(dir8,pb) && --handled > 0) {
+      while (--handled > 0 && tryReceivePacket(pb)) {
+        ++mPacketsReceived;
         handleInboundPacket(pb);
       }
       if (handled) // Check tile too if didn't burn whole allotment
@@ -267,16 +288,16 @@ namespace MFM {
     
   }
 
+  //// XXX level packets should be generated and handled by itcmfm.c
+  //// in the itc_pkt LKM, so this is just for testing now.
   bool ITC::sendLevelPacket() {
     MFM_API_ASSERT(mLevel <= 3, ILLEGAL_STATE);
     MFM_API_ASSERT(mStage <= 3, ILLEGAL_STATE);
     u8 dir8 = mapDir6ToDir8(mDir6);
-    u32 len = 4; // default
+    u32 len = 2; // default
     unsigned char buf[256];
-    buf[0] = 0xa0|(dir8&0x7); // 0xa==ROUTED MFM packet
-    buf[1] = 'l';             // 'MFM::PacketType::LEVEL'
-    buf[2] = '0'+mLevel;
-    buf[3] = '0'+mStage;
+    buf[0] = 0x80|0x20|(dir8&0x7); // ROUTED|URGENT|(dir) packet
+    buf[1] = 0x80|0x40|((mLevel&0x7)<<2)|(mStage&0x3);  // MFM|ITC|(lvl)|(stg) (=='level' packet)
     // L02 gets mfz name
     if (mLevel == 0 && mStage == 2) {
       TileModel & tm = getTileModel();
@@ -284,10 +305,71 @@ namespace MFM {
       for (; *mfzv && len < 256; buf[len++] = *mfzv++) { }
     }
     
-    bool ret = getMFMIO().trySendPacket(buf,len);
+    bool ret = trySendPacket(buf,len);
     if (ret) ++mPacketsSent;
     else ++mPacketsDropped;
     return ret;
+  }
+
+  bool ITC::flushPendingPackets() {
+    static unsigned char buf[256];
+
+    u32 packetsHandled = 0;
+    MFM_API_ASSERT_STATE(mMfmPacketFD >= 0);
+
+    while (true) {
+      ssize_t amt = read(mMfmPacketFD, buf, sizeof(buf));
+      if (amt == 0) {
+        fprintf(stderr,"EOF on %d\n", mMfmPacketFD);
+        exit(5);
+      }
+
+      if (amt < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          LOG.Message("Flushed %d stale packet(s)", packetsHandled);
+          break;
+        } else {
+          abort();
+        }
+      }
+
+      ++packetsHandled;
+    }
+    return packetsHandled>0; /* nothing to read or flush finished */
+  }
+
+  bool ITC::tryReceivePacket(PacketBuffer & dest) {
+    MFM_API_ASSERT_STATE(mMfmPacketFD >= 0);
+
+    dest.Reset();
+    ssize_t amt = dest.Read(mMfmPacketFD, MAX_PACKET_SIZE);
+    if (amt == 0) {
+      fprintf(stderr,"EOF on %d\n", mMfmPacketFD);
+      exit(5);
+    }
+
+    if (amt < 0) {
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        return false; /* nothing to read or flush finished */
+      } else {
+        abort();
+      }
+    }
+
+    return true;
+  }
+
+  bool ITC::trySendPacket(const unsigned char * buf, unsigned len) {
+    ssize_t amt = write(mMfmPacketFD, buf, len);
+    if (amt < 0) {
+      if (errno == EHOSTUNREACH || errno == EAGAIN || errno == EWOULDBLOCK)
+        return false;
+      abort();
+    } else if (amt < (ssize_t) len) {
+      fprintf(stderr,"Partial write on %d, %d vs %d\n", mMfmPacketFD, amt, len);
+      exit(5);
+    }
+    return true;
   }
 
   void ITC::message(const char * format, ... ) {

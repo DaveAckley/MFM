@@ -1,6 +1,13 @@
-{12}  -*- text -*-
+{36}  -*- text -*-
 [0:
 [3:
+[35:
+
+Thu Feb  6 14:19:30 2020 MOVING THIS TO
+/home/t2/T2-12/pru/itcio/notes/ since we're now about LKM hacking
+again. 
+
+:35]
 [4:
 
 Sun Feb  2 01:29:46 2020 And here we are.
@@ -44,16 +51,20 @@ TODO
 DONE :5] - Make a tiny little stub that we'll grow into the itc level
    sequencer.
 
- - Change boot sequence to start the stub INSTEAD of mfm, so the
+[12: Wed Feb  5 04:34:28 2020
+DONE :12] - Change boot sequence to start the stub INSTEAD of mfm, so the
    former can grab /dev/itc/mfm
 
- - Maybe let's make a little abstraction that wraps /dev/itc/mfm and
+[13: MFMIO.h/cpp was already that, so
+DONE :13] - Maybe let's make a little abstraction that wraps /dev/itc/mfm and
    turns it into a like pollable pseudo-device?  So we could start our
    level sequencing code without immediately doing the LKM stuff?
 
- - Rough up some packet formats for the levels
+[14:
+DONE:14] - Rough up some packet formats for the levels
 
- - Demo first-cut on-tile level sequencer talking on loop-back then
+[15:
+DONE :15] - Demo first-cut on-tile level sequencer talking on loop-back then
    between tiles, with results visible ONLY in the log file -- NO
    DISPLAY HACKING ALLOWED :)
 
@@ -124,3 +135,296 @@ time to move the flag, so we've got to get this stuff actually into
 the tree for safety..
 
 :11]
+[16:
+
+Wed Feb  5 04:35:19 2020 OK so we're post-t2sup#269 and want to get
+some thoughts down while they still don't seem to suck.
+
+A LEVEL has
+
+ - SUPPORTS.  These are things that must be true to remain in or at
+   the LEVEL.  The level code should check all these things every time
+   it runs, and if any are untrue the level crashes.
+
+ - PROPERTIES.  These are things that can be accessed, and can affect
+   processing both within level code and by other entities
+
+ - Triggers? Advancers? Exiters?  These are the conditions that allow
+   advancing from one level to another.
+
+[17:
+
+Wed Feb  5 04:58:46 2020 So the problem with levels is that you can't
+fork states, because you have this one dimensional notion of altitude,
+of progress, of sequence.  So you have to fold all cases at a given
+level into the properties of that level -- like COMPATIBLE vs
+INCOMPATIBLE physics.
+
+The good thing about levels is you can do altitude comparisons.  You
+can say 'if (foo.level >= ACTIVE)' or whatever, and have that be a
+meaningful thing.
+
+[18:
+
+Wed Feb  5 05:07:06 2020 There's also the interlock implied by the
+stages, reflecting the distributed aspect of the state machine.  In
+principle we could be looking to stage-interlock not just ITC<->ITC
+but also the ITC<->TileModel.
+
+Could there be a cross-entity global notion of levels?  And things
+might but at different levels on that scale, but they'd still be
+commensurate.
+
+MFMT2 can be:
+
+  CLOSED - not running, or starting up or loading or ..
+  OPEN - running events under whatever circumstances prevail
+
+ITCs can be
+
+  CLOSED - not connected, or negotiating physics, or incompatible physics
+  OPEN - handling locks and cache updates between compatible MFMT2s
+
+[19:
+
+Wed Feb  5 06:29:54 2020 In addition, entities might be stable or
+unstable within a level.  Entering/stable/leaving?  What is the
+purpose(s) of stability?
+
+ - Coordination with remote entities
+ - Non-atomic processing internal to level
+
+Externally we say something isn't really AT a level until they are at
+least STABLE in that level.
+
+:19]
+
+:18]
+
+:17]
+:16]
+[20:
+
+Wed Feb  5 06:51:12 2020
+
+TILE
+  Coordination tasks:
+  (1) Host PRUs
+  (2) Host ..
+  Computation tasks
+
+ITC
+  Coordination tasks:
+   (1) Host Tile
+   (2) Peer ITC
+   (3) Host MFM
+  Computation tasks:
+   (1) Compatibility check
+
+MFM
+  Coordination tasks:
+   (1) Local ITCs (limited)
+   
+
+
+                          TIMEOUT       RCVE
+ ITC::CLOSED::ENTER       reannounce    ITC::CLOSED::ENTER -> ITC::CLOSED::STABLE
+                          + remain
+
+ ITC::FAILED::
+
+:20]
+[21:
+
+Wed Feb  5 07:28:34 2020 What if we move the compatibility negotiation
+into the kernel???  That would certainly establish the decoupling of
+the ITCs from MFMT2.
+
+How might it work?
+
+Open /dev/mfmctl for read/write.  It's single user so that's how mfmt2
+locks out any other userspace competitors.  Write MFZ fingerprint to
+it?  Poll to read it for events?  Do we even believe in events?  Vs
+states?  Perhaps advisory events just to speed things up, but the
+event just triggers reading states, rather than trusting the advice.
+Everything should still work, just slower, even if all events (other
+than timeouts) are ignored. 
+[22:
+
+Wed Feb  5 08:54:16 2020 So an event is really just like a wake-up,
+rather than a real event.  Even a timeout is really just a wake-up,
+and the entity checks its own internal clock to see if it's a 'real'
+timeout.
+
+I do think we're going to go to actual time-based intervals for
+timeouts and such, though, rather than the count-based stuff from this
+weekend.  After all, that's counting wake-ups, which we JUST SAID
+weren't supposed to matter if they happened or not.
+
+But we only want intervals, not absolute times, and only at say
+millisecond res.
+
+[23:
+
+Wed Feb  5 09:26:12 2020 When we accumulate state, like advancing a
+level, we associate a rate at which we expect that state to be
+refreshed.  And indeed, maybe we do not think in terms of a single
+timeout for an entity, but in terms of a timeout for refreshing each
+bit of state it is maintaining.
+
+But first nap.
+
+:23]
+
+:22]
+
+
+:21]
+[24:
+
+Wed Feb  5 12:48:58 2020 Suppose we try to rough out an LKM approach
+to mfm configuration and cache updates.  Goals:
+
+ - Userspace informs LKM of its ability to run events of some given
+   MFZ and no other.  After that returns successfully, all KITC fds
+   have been put into an error state, and userspace must close and
+   reopen those connections before they can be used.
+
+ - User space sees 'only' cache updates (and flash traffic?) via the
+   new device.  And KITC status, OPEN/CLOSED, with open implying
+   'ready for events'.   'And like everything,' we should somehow get
+   a wake-up when a KITC changes, or we can interrogate it at our own
+   rate. 
+
+When mfm considers an event window it tries for locks on the ITCs it
+believes to be OPEN, and goes from there.
+
+[25:
+
+Wed Feb  5 15:58:17 2020 Are we saying we'd just expand itc_pkt for
+this, or would there be a separate LKM?  I guess we're saying expand
+itc_pkt.  We don't want to figure out how to call between LKMs for
+example.
+
+So,
+
+TODO
+[29: Thu Feb  6 11:13:11 2020
+
+DONE :29] - Review itc_pkt.[ch] to remember what we're dealing with.
+
+ - Make an expanded struct for each direction, and
+
+ - Make a struct for mfm info like the mfzversion.
+
+ - Review packet formats to see where we could fit it the inter-itc
+   negotiation stuff (aka 'level packets').
+
+ - Also review for expanding to per-ITC packet-IO devices to
+   userspace.  Like /dev/itc/mfm/ET../dev/itc/mfm/NE or whatever.
+
+:25]
+   
+:24]
+[26:
+
+Thu Feb  6 01:15:57 2020 So for starters, we're talking about a bunch
+of new minors, right?  For the record, here's what we're using now:
+
+    t2@beaglebone:~/T2-12/pru/itcio/module$ ls -l /dev/itc/* | sort -k 1.1,1.2 -k 5n -k 6n
+    crw------- 1 root root 237, 0 Feb  5 01:23 /dev/itc/pru0
+    crw------- 1 root root 237, 1 Feb  5 01:23 /dev/itc/pru1
+    crw------- 1 root root 237, 2 Feb  5 01:23 /dev/itc/packets
+    crw------- 1 root root 237, 3 Feb  5 01:23 /dev/itc/mfm
+    crw------- 1 root root 237, 4 Feb  5 01:23 /dev/itc/pktevents
+    crw------- 1 root root 238, 0 Feb  5 01:23 /dev/itc/locks
+    crw------- 1 root root 238, 1 Feb  5 01:23 /dev/itc/lockevents
+    t2@beaglebone:~/T2-12/pru/itcio/module$ 
+
+so we'd be talking SIX more minors under /dev/itc?  And does this mean
+they ALL need/want to be DIRECTLY under /dev/itc?  Well, maybe not.
+The makeITCCharDeviceState code like at itc_pkt.c:2129 does:
+
+  switch (minor_obtained) {
+  case PKT_MINOR_ITC: snprintf(devname,BUFSZ,"itc!packets"); break;
+  case PKT_MINOR_MFM: snprintf(devname,BUFSZ,"itc!mfm"); break;
+  case PKT_MINOR_EVT: snprintf(devname,BUFSZ,"itc!pktevents"); break;
+
+so perhaps we could 'just' do "itc!mfm!ET" ?  Except that would imply
+/dev/itc/mem is a directory not a device.  But maybe "itc!bydir!ET" or
+whatever.  Or maybe device /dev/itc/mfm does become a directory -- do
+we still need it as a device if we're exploding the itcs by direction?
+Bulk traffic still goes by /dev/itc/packets; flash traffic will appear
+in the by-direction queues (?), along with the 'mfm' traffic.  So
+
+Assuming we really can go more than one '!' deep in that naming
+scheme.
+[27:
+
+Thu Feb  6 02:54:13 2020 So anyway.  I think itc_pkt.[ch] isn't in
+terrible shape for adding another chunk of minors.  For now, let's
+preserve /dev/itc/mfm and try going with /dev/itc/bydir/ET..[28:
+
+Thu Feb  6 11:00:15 2020 Post coffee with Melanie and Chris Thachuk.
+
+[30:
+
+Thu Feb  6 11:13:32 2020 So let's go for more minors.  This part of
+the hack is basically about demuxing the inbound mfm packets on a 
+per-direction basis, and we can do that separately from moving
+additional protocol negotiation into the kernel.[31:
+
+Thu Feb  6 14:00:25 2020 OK so we theoretically have six more minors
+being built and torn down, all untested.  Wait, where did we actually
+name their paths?[32:
+
+Thu Feb  6 14:05:21 2020 And their paths have been named.  All, as
+previously mentioned, untested.
+
+We have a new script on the workstation,
+CDM-TGZS-BACKUP/scripts/PullT2HomeDir, that just rsyncs /home/t2, with
+no versioning or extra redundancy on the workstation side.  But trying
+that now because I think we're facing
+
+BITS OFF
+
+:32]
+
+:31]
+
+:30]
+
+:28]
+
+:27]
+:26]
+[33:
+
+Thu Feb  6 14:17:05 2020 OK well we seem to have survived
+install+reboot okay so far.  No logoops that I can see.  And we see
+this:
+
+    root@beaglebone:~# ls /dev/itc
+    bydir  lockevents  locks  mfm  packets	pktevents  pru0  pru1
+    root@beaglebone:~# ls /dev/itc/bydir
+    ET  NE	NW  SE	SW  WT
+    root@beaglebone:~# ls -l /dev/itc/bydir
+    total 0
+    crw------- 1 root root 237,  5 Feb  6 14:10 ET
+    crw------- 1 root root 237, 10 Feb  6 14:10 NE
+    crw------- 1 root root 237,  9 Feb  6 14:10 NW
+    crw------- 1 root root 237,  6 Feb  6 14:10 SE
+    crw------- 1 root root 237,  7 Feb  6 14:10 SW
+    crw------- 1 root root 237,  8 Feb  6 14:10 WT
+    root@beaglebone:~# 
+
+which all seems plausible.
+
+[34:
+
+Thu Feb  6 14:18:43 2020 But, this file is currently in ~/MFM, which
+seems wrong since we're now into LKM stuff over in ~/T2-12/pru.  
+
+:34]
+:33]
+

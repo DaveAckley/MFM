@@ -30,8 +30,9 @@
 
 #include "Dirs.h"
 #include "DateTimeStamp.h"
-#include "MFMIO.h"
+#include "MFMT2Constants.h"
 #include "ITC.h"
+#include "ITCLocks.h"
 #include "ITCIcons.h"
 #include "ITCStatusPanel.h"
 #include "TileModel.h"
@@ -91,13 +92,12 @@ namespace MFM
 
     VArguments mArgs;
     ThreadStamper mStamper;
-    MFMIO mMFMIO;
+    //CHANGE TO FLASH TRAFFIC    MFMIO mMFMIO;
     ITCLocks mITCLocks;
 
   public:
     TileModel& GetTileModel() { return mTileModel; }
 
-    MFMIO& GetMFMIO() { return mMFMIO; }
     ITCLocks& GetITCLocks() { return mITCLocks; }
 
     u32 mOpCountdownTimer;

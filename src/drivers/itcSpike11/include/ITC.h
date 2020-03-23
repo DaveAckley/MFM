@@ -29,11 +29,17 @@
 #define ITC_H
 
 #include <time.h>   /* for time_t */
+#include <sys/types.h>  /* For open */
+#include <unistd.h>     /* For read */
+#include <fcntl.h>      /* For O_RDWR */
+#include <stdio.h>      /* For stderr */
+#include <errno.h>      /* For errno */
+#include <string.h>     /* For strerror */
 #include "itype.h"
 #include "Dirs.h"
 #include "Fail.h"
-#include "MFMIO.h"
 #include "TileModel.h"
+#include "PacketFIFO.h"
 #include <stdarg.h>
 
 namespace MFM
@@ -45,8 +51,8 @@ namespace MFM
   {
   private:
     Random * mRandom;
-    MFMIO * mMFMIO;
     TileModel * mTileModel;
+    s32 mMfmPacketFD;
     u8 mDir6;
     u8 mLevel;
     u8 mStage;
@@ -56,20 +62,25 @@ namespace MFM
     u32 mTileGeneration;
     u32 mPacketsSent;
     u32 mPacketsDropped;
+    u32 mPacketsReceived;
     bool mEnabled;
     
     static const u32 STARTING_BACKOFF_INTERVAL = 1000;
 
   public:
+    bool open() ;
+
+    bool close() ;
+
+    bool flushPendingPackets() ;
+
+    bool tryReceivePacket(PacketBuffer & dest) ;
+
+    bool trySendPacket(const unsigned char * buf, unsigned len) ;
 
     inline Random & getRandom() {
       MFM_API_ASSERT_NONNULL(mRandom);
       return *mRandom;
-    }
-
-    inline MFMIO & getMFMIO() {
-      MFM_API_ASSERT_NONNULL(mMFMIO);
-      return *mMFMIO;
     }
 
     inline TileModel & getTileModel() {
@@ -91,8 +102,6 @@ namespace MFM
     bool getEnabled() const ;
 
     void setRandom(Random& random) ;
-
-    void setMFMIO(MFMIO& mfmio) ;
 
     void setTileModel(TileModel& tileModel) ;
 

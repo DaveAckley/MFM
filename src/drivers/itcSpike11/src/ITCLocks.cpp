@@ -6,7 +6,7 @@
 #include <unistd.h> /* for close */
 #include <errno.h>  /* for errno */
 #include <string.h> /* for strerror */
-
+#include "T2Utils.h"
 #include "Random.h" /* for Random */
 
 namespace MFM {

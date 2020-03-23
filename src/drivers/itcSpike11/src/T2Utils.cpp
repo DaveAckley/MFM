@@ -1,6 +1,18 @@
 #include "T2Utils.h"
+#include "dirdatamacro.h"
 
 namespace MFM {
+  const char * getDir6Name(u32 dir6) {
+    switch (dir6) {
+    case DIR_ET: return "ET";
+    case DIR_SE: return "SE";
+    case DIR_SW: return "SW";
+    case DIR_WT: return "WT";
+    case DIR_NW: return "NW";
+    case DIR_NE: return "NE";
+    default: return "??";
+    }
+  }
 
   bool readWholeFile(const char* path, ByteSink& to) {
     FileByteSource fbs(path);

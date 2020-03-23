@@ -4,6 +4,7 @@
 
 #include "Panel.h"
 #include "ITC.h"
+#include "dirdatamacro.h"
 
 namespace MFM {
   class ITCIcons; // FORWARD

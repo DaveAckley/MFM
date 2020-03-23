@@ -1,7 +1,7 @@
 #ifndef MFMT2CONSTANTS_H
 #define MFMT2CONSTANTS_H
 
-#define MFM_DEV_PATH "/dev/itc/mfm"
+#define MFM_DEV_PATH "/dev/itc/flash"
 
 namespace MFM
 {

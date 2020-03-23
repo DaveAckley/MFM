@@ -30,7 +30,6 @@ namespace MFM {
     , mLoopsPerDisplay(100000)
     , mLoopsRemaining(0)
     , mStamper(*this)
-    , mMFMIO(*this)
     , mOpCountdownTimer(0)
     , mLocalOp(DRIVER_NO_OP)
     , mOpGlobal(false)
@@ -48,9 +47,10 @@ namespace MFM {
     MFM::LOG.Message("Initting ITCs");
     for (u8 i = 0; i < DIR_COUNT; ++i) {
       mITC[i].setRandom(mRandom);
-      mITC[i].setMFMIO(mMFMIO);
       mITC[i].setTileModel(mTileModel);
       mITC[i].setDir6(i);
+      if (!mITC[i].open())
+        MFM::LOG.Message("Can't open ITC dir6=%d",i);
     }
 
     MFM::LOG.Message("Freeing all locks");
@@ -60,13 +60,9 @@ namespace MFM {
 
   void ITCSpikeDriver::onceOnly()
   {
-    // Set up intertile packet spike
-    if (!mMFMIO.open()) {
-      abort();
+    for (u8 i = 0; i < DIR_COUNT; ++i) {
+      mITC[i].flushPendingPackets();
     }
-    
-    // Flush any existing packets
-    mMFMIO.flushPendingPackets();
 
     // Init display
     initDisplay();
@@ -177,7 +173,7 @@ namespace MFM {
 
   void ITCSpikeDriver::step()
   {
-    mMFMIO.packetIO(); // simulating distributed packet io
+    //    mMFMIO.packetIO(); // simulating distributed packet io
     advanceITCStateMachines(); // sequence the levels
     doTileProcessing();    // simulating tile activity
   }
