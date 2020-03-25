@@ -1,6 +1,6 @@
 /* -*- C++ -*- */
-#ifndef ITC_H
-#define ITC_H
+#ifndef T2ITC_H
+#define T2ITC_H
 
 #include "itype.h"
 #include "Dirs.h"
@@ -15,9 +15,9 @@ typedef __u32 Dir8;
 typedef __u32 Dir6;
 
 namespace MFM {
-  struct Tile; // FORWARD
-  struct ITC {
-  ITC(Tile& tile, Dir6 dir6, const char * name)
+  struct T2Tile; // FORWARD
+  struct T2ITC {
+  T2ITC(T2Tile& tile, Dir6 dir6, const char * name)
       : mTile(tile)
       , mDir6(dir6)
       , mDir8(mapDir6ToDir8(dir6))
@@ -25,7 +25,7 @@ namespace MFM {
       , mFD(-1)
     { }
     
-    Tile & mTile;
+    T2Tile & mTile;
     const Dir6 mDir6;
     const Dir8 mDir8;
     const char * mName;
@@ -37,4 +37,4 @@ namespace MFM {
     int getFD() const { return mFD; }
   };
 }
-#endif /* ITC_H */
+#endif /* T2ITC_H */

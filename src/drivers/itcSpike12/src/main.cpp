@@ -23,7 +23,7 @@ namespace MFM {
 
   int MainDispatch(int argc, const char** argv)
   {
-    Tile tile(60,40);
+    T2Tile tile(60,40);
     if (argc != 2) {
       tile.error("Usage:\n%s MFZID\n", argv[0]);
       exit(2);
@@ -34,10 +34,12 @@ namespace MFM {
       tile.error("Open failed");
       exit(4);
     }
-    EventWindow * ew = tile.allocEW();
+    T2EventWindow * ew = tile.allocEW();
     assert(ew!=0);
     printf("hewo12 ew#%d\n", ew->slotNum());
     tile.setPassive(ew);
+    ew->unlink();       // Free myself
+    tile.setActive(ew); // Should succeed
     return 0;
   }
 }

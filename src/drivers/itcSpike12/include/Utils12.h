@@ -10,7 +10,7 @@
 #include "itcpktevent.h"
 
 // Spike files
-#include "EventWindow12.h"
-#include "Tile12.h"
+#include "T2EventWindow.h"
+#include "T2Tile.h"
 
 #endif /* UTILS_H */

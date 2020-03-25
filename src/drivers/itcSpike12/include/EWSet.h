@@ -9,8 +9,8 @@
 
 namespace MFM {
 
-  struct EventWindow; // FORWARD
-  struct Tile; // FORWARD
+  struct T2EventWindow; // FORWARD
+  struct T2Tile; // FORWARD
 
   struct EWLinks { 
     EWLinks * mNext;
@@ -18,7 +18,7 @@ namespace MFM {
 
     bool isLinked() const { return mNext != this; }
 
-    virtual EventWindow * asEventWindow() { return 0; }
+    virtual T2EventWindow * asEventWindow() { return 0; }
 
     EWLinks()
       : mNext(this)
@@ -54,14 +54,14 @@ namespace MFM {
   };
 
   struct EWSet : public EWLinks {
-    Tile & mTile;
+    T2Tile & mTile;
 
     bool isEmpty() const ;
-    void push(EventWindow* ew) ;
-    void pushBack(EventWindow* ew) ;
-    EventWindow * pop() ;
+    void push(T2EventWindow* ew) ;
+    void pushBack(T2EventWindow* ew) ;
+    T2EventWindow * pop() ;
 
-    EWSet(Tile& tile)
+    EWSet(T2Tile& tile)
       : mTile(tile)
     { }
 

@@ -9,12 +9,12 @@
 #include <assert.h>
 
 // Spike files
-#include "Tile12.h"
-#include "EWSet12.h"
+#include "T2Tile.h"
+#include "EWSet.h"
 
 namespace MFM {
 
-  enum EventWindowStatus {
+  enum T2EventWindowStatus {
      UNKNOWN,
      FREE,
      ACTIVE,
@@ -23,26 +23,26 @@ namespace MFM {
 
   typedef u8 EWSlotNum;
   
-  struct EventWindow : public EWLinks {
+  struct T2EventWindow : public EWLinks {
 
-    virtual EventWindow * asEventWindow() { return this; }
+    virtual T2EventWindow * asEventWindow() { return this; }
 
-    EventWindow(Tile& tile, EWSlotNum ewsn)
+    T2EventWindow(T2Tile& tile, EWSlotNum ewsn)
       : mTile(tile)
       , mSlotNum(ewsn)
       , mStatus(UNKNOWN)
     { }
 
-    virtual ~EventWindow() { }
+    virtual ~T2EventWindow() { }
 
-    Tile & mTile;
+    T2Tile & mTile;
     const EWSlotNum mSlotNum;
 
-    EventWindowStatus status() const { return mStatus; }
+    T2EventWindowStatus status() const { return mStatus; }
     EWSlotNum slotNum() const { return mSlotNum; }
   private:
-    EventWindowStatus mStatus;
-    void setStatus(EventWindowStatus ews) { mStatus = ews; }
+    T2EventWindowStatus mStatus;
+    void setStatus(T2EventWindowStatus ews) { mStatus = ews; }
     friend class EWSet;
   };
 }
