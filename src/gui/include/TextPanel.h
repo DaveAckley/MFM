@@ -32,22 +32,14 @@
 #include "LineTailByteSink.h"
 
 namespace MFM {
-  /**
-   * A template class for a panel capable of holding a given number of
-   * lines of text each no longer than a given number of columns.
-   */
-  template <u32 COLUMNS, u32 LINES>
-  class TextPanel : public MovablePanel
+  class GenericTextPanel : public MovablePanel
   {
   private:
     typedef MovablePanel Super;
 
   public:
-    typedef LineTailByteSink<LINES,COLUMNS> TextPanelByteSink;
-
-    TextPanel()
+    GenericTextPanel()
       : Super()
-      , m_text()
       , m_bottomLineShown(0)
       , m_lastBytesWritten(0)
       , m_leftButtonDragStart(-1,-1)
@@ -70,9 +62,51 @@ namespace MFM {
       m_bottomLineShown = 0;
     }
 
+    virtual ResettableByteSink & GetByteSink() = 0;
+
+  protected:
+    static const u32 ELEVATOR_WIDTH_DEFAULT = 18;
+    u32 m_bottomLineShown;
+    u32 m_lastBytesWritten;
+
+    SPoint m_leftButtonDragStart;
+    u32 m_dragStartElevatorBottom;
+
+    u32 m_panelHeight;
+    u32 m_fontHeight;
+    s32 m_fontHeightAdjust;
+    u32 m_neededHeight;
+    u32 m_linesInPanel;
+    u32 m_textLines;
+    u32 m_elevatorRange;
+    u32 m_elevatorBottom;
+    u32 m_elevatorHeight;
+    u32 m_elevatorWidth;
+
+  };
+
+  /**
+   * A template class for a panel capable of holding a given number of
+   * lines of text each no longer than a given number of columns.
+   */
+  template <u32 COLUMNS, u32 LINES>
+  class TextPanel : public GenericTextPanel
+  {
+  private:
+    typedef GenericTextPanel Super;
+
+  public:
+    typedef LineTailByteSink<LINES,COLUMNS> TextPanelByteSink;
+
+    TextPanel()
+      : Super()
+      , m_text()
+    {
+    }
+
     virtual ~TextPanel() { } //avoid inline error
 
-    TextPanelByteSink & GetByteSink() {
+    virtual ResettableByteSink & GetByteSink() {
       return m_text;
     }
 
@@ -187,24 +221,9 @@ namespace MFM {
     }
 
   private:
-    static const u32 ELEVATOR_WIDTH = 18;
     static const u32 ELEVATOR_COLOR = 0xff007f00;
 
     TextPanelByteSink m_text;
-    u32 m_bottomLineShown;
-    u32 m_lastBytesWritten;
-
-    SPoint m_leftButtonDragStart;
-    u32 m_dragStartElevatorBottom;
-
-    u32 m_panelHeight;
-    u32 m_fontHeight;
-    u32 m_neededHeight;
-    u32 m_linesInPanel;
-    u32 m_textLines;
-    u32 m_elevatorRange;
-    u32 m_elevatorBottom;
-    u32 m_elevatorHeight;
 
     // If we move elevatorBottom this many pixels, how many bottom lines
     // is that, based on the most-recent prior render?

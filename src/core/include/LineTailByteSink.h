@@ -42,7 +42,7 @@ namespace MFM
    * discarded to make room.
    */
   template <u32 LINES, u32 BYTES_PER_LINE>
-  class LineTailByteSink : public ByteSink
+  class LineTailByteSink : public ResettableByteSink
   {
   public:
 

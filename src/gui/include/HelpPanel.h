@@ -49,7 +49,7 @@ namespace MFM
 
     void GenerateHelpText()
     {
-      Super::TextPanelByteSink & bs = Super::GetByteSink();
+      ResettableByteSink & bs = Super::GetByteSink();
       bs.Reset();
       m_keyboard.PrintHelp(bs);
       m_isGenerated = true;
