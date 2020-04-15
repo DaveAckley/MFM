@@ -245,6 +245,17 @@ namespace MFM
     }
 
     /**
+     * Returns the ByteSink that this Logger is currently writing to.
+     *
+     * @returns A pointer to the ByteSink that this Logger is writing
+     *          to 
+     */
+    ByteSink * GetByteSink() const
+    {
+      return m_sink;
+    }
+
+    /**
      * Constructs a new Logger which writes to a specified ByteSink
      * and logs at a particular logging Level .
      *
