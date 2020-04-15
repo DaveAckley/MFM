@@ -10,8 +10,16 @@ MFM_TARGET:=tile
 # Where's the top
 BASEDIR:=../../..
 
+# T2 EXTERNAL FILES
+LKM_INCLUDE_DIR:=/home/t2/T2-12/lkms/include
+LKM_ITC_INCLUDE_DIR:=/home/t2/T2-12/lkms/itc
+ITC_PKT_INCLUDE_DIR:=/home/t2/T2-12/pru/itcio/module
+
 # What we need to build
 override INCLUDES += -I $(BASEDIR)/src/core/include -I $(BASEDIR)/src/sim/include -I $(BASEDIR)/src/gui/include
+override INCLUDES += -I $(LKM_INCLUDE_DIR)
+override INCLUDES += -I $(LKM_ITC_INCLUDE_DIR)
+override INCLUDES += -I $(ITC_PKT_INCLUDE_DIR)
 override INCLUDES += $(shell sdl-config --cflags)
 override DEFINES += -D MFM_GUI_DRIVER
 
