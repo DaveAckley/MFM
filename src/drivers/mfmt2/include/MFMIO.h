@@ -53,7 +53,7 @@ namespace MFM {
     s32 mMfmPacketFD;
     s32 mLastCommandIndex;
 
-    PacketFIFO mInboundPackets[DIR_COUNT];
+    PacketFIFO mInboundPackets[DIR6_COUNT];
     PacketFIFO mFlashTrafficPackets;
 
     MFMIO(MFMT2Driver<GC> & driver)
@@ -117,7 +117,7 @@ namespace MFM {
 
       u32 packetsHandled = 0;
       u32 forDir6 = mapDir8ToDir6(dir8);
-      MFM_API_ASSERT_ARG(forDir6 < DIR_COUNT);
+      MFM_API_ASSERT_ARG(forDir6 < DIR6_COUNT);
       MFM_API_ASSERT_STATE(mMfmPacketFD >= 0);
 
       PacketFIFO & pf = mInboundPackets[forDir6];

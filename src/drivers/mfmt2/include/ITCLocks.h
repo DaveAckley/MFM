@@ -107,14 +107,14 @@ namespace MFM
     switch (dir8) {
     case Dirs::NORTH: 
     case Dirs::SOUTH: 
-    default: return DIR_COUNT;
+    default: return DIR6_COUNT;
       
-    case Dirs::NORTHEAST: return DIR_NE;
-    case Dirs::EAST:      return DIR_ET;
-    case Dirs::SOUTHEAST: return DIR_SE;
-    case Dirs::SOUTHWEST: return DIR_SW;
-    case Dirs::WEST:      return DIR_WT;
-    case Dirs::NORTHWEST: return DIR_NW;
+    case Dirs::NORTHEAST: return DIR6_NE;
+    case Dirs::EAST:      return DIR6_ET;
+    case Dirs::SOUTHEAST: return DIR6_SE;
+    case Dirs::SOUTHWEST: return DIR6_SW;
+    case Dirs::WEST:      return DIR6_WT;
+    case Dirs::NORTHWEST: return DIR6_NW;
     }
   }
 

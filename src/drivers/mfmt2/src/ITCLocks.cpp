@@ -202,34 +202,34 @@ namespace MFM {
     u8 lockset = 0;
 
     if (pt.GetX() < REACH) {  //WT edge
-      lockset |= 1<<DIR_WT;
+      lockset |= 1<<DIR6_WT;
 
-      if (pt.GetY() < REACH)                     lockset |= 1<<DIR_NW; 
-      else if (pt.GetY() >= TILE_HEIGHT - REACH) lockset |= 1<<DIR_SW;      
+      if (pt.GetY() < REACH)                     lockset |= 1<<DIR6_NW; 
+      else if (pt.GetY() >= TILE_HEIGHT - REACH) lockset |= 1<<DIR6_SW;      
 
     } else if (pt.GetX() >= TILE_WIDTH - REACH) { //ET edge
-        lockset |= 1<<DIR_ET;      
+        lockset |= 1<<DIR6_ET;      
 
-	if (pt.GetY() < REACH)                     lockset |= 1<<DIR_NE;      
-	else if (pt.GetY() >= TILE_HEIGHT - REACH) lockset |= 1<<DIR_SE;      
+	if (pt.GetY() < REACH)                     lockset |= 1<<DIR6_NE;      
+	else if (pt.GetY() >= TILE_HEIGHT - REACH) lockset |= 1<<DIR6_SE;      
     } else { // Neither ET nor WT edge
 
       if ((pt.GetX() >= TILE_WIDTH/2 - REACH) && (pt.GetX() < TILE_WIDTH/2 + REACH)) { //in the middle +/- REACH
 
-        if (pt.GetY() < REACH)                     lockset |= (1<<DIR_NE)|(1<<DIR_NW);      
-        else if (pt.GetY() >= TILE_HEIGHT - REACH) lockset |= (1<<DIR_SE)|(1<<DIR_SW);      
+        if (pt.GetY() < REACH)                     lockset |= (1<<DIR6_NE)|(1<<DIR6_NW);      
+        else if (pt.GetY() >= TILE_HEIGHT - REACH) lockset |= (1<<DIR6_SE)|(1<<DIR6_SW);      
 
       } else if(pt.GetX() < TILE_WIDTH/2) { // Westside
 
-        if (pt.GetY() < REACH)                     lockset |= 1<<DIR_NW;      
-        else if (pt.GetY() >= TILE_HEIGHT - REACH) lockset |= 1<<DIR_SW;      
+        if (pt.GetY() < REACH)                     lockset |= 1<<DIR6_NW;      
+        else if (pt.GetY() >= TILE_HEIGHT - REACH) lockset |= 1<<DIR6_SW;      
 
       } else { // Eastside
 
         MFM_API_ASSERT_STATE(pt.GetX() >=TILE_WIDTH/2); //sanity
 
-        if (pt.GetY() < REACH)                     lockset |= 1<<DIR_NE;      
-        else if (pt.GetY() >= TILE_HEIGHT - REACH) lockset |= 1<<DIR_SE;      
+        if (pt.GetY() < REACH)                     lockset |= 1<<DIR6_NE;      
+        else if (pt.GetY() >= TILE_HEIGHT - REACH) lockset |= 1<<DIR6_SE;      
       }
     }
 
