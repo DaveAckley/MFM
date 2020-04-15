@@ -90,10 +90,10 @@ namespace MFM
 
     /**
      * Checks to see if this FileByteSource is backed by a valid file
-     * descriptor and is therefore ready to write to.
+     * descriptor and is therefore ready to read from.
      *
-     * @returns \c true if this FileByteSource is ready to be written
-     *          to, else \c false .
+     * @returns \c true if this FileByteSource is ready to be read
+     *          from, else \c false .
      */
     bool IsOpen()
     {
@@ -101,7 +101,7 @@ namespace MFM
     }
 
     /**
-     * Closes this FileByteSource, disallowing writing. One must call
+     * Closes this FileByteSource, disallowing reading. One must call
      * \c Open() to use this FileByteSource after closing it.
      */
     void Close()
