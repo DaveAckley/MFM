@@ -5,67 +5,64 @@
 #include "itype.h"
 #include "Dirs.h"
 
+#include <vector>
 #include <assert.h>
 
 namespace MFM {
 
   struct T2EventWindow; // FORWARD
   struct T2Tile; // FORWARD
+  struct EWSet;
 
   struct EWLinks { 
-    EWLinks * mNext;
-    EWLinks * mPrev;
 
-    bool isLinked() const { return mNext != this; }
+    bool isInSet() const { return mInSet != 0; }
 
+    EWSet * inSet() const { return mInSet; }
+
+    u32 getIndexInSet() const {
+      assert(isInSet());
+      return mIdxInSet;
+    }
+    
     virtual T2EventWindow * asEventWindow() { return 0; }
 
     EWLinks()
-      : mNext(this)
-      , mPrev(this)
+      : mInSet(0)
+      , mIdxInSet(U32_MAX)
     { }
 
-    bool unlink() {
-      assert(mNext != 0 && mPrev != 0);
-      if (mNext == this) {
-        assert(mNext == mPrev);
-        return false;
-      } 
-      mPrev->mNext = mNext;
-      mNext->mPrev = mPrev;
-      mNext = mPrev = this;
-      return true;
+    virtual ~EWLinks() {
+      if (isInSet()) remove();
     }
 
-    void linkAfter(EWLinks * afterThis) {
-      assert(afterThis != 0);
-      assert(mNext == mPrev && mNext == this);
+    void insert(EWSet * ews) ;
 
-      this->mNext = afterThis->mNext;
-      this->mPrev = afterThis;
-      afterThis->mNext->mPrev = this;
-      afterThis->mNext = this;
-    }
+    bool remove() ;
 
-    void linkBefore(EWLinks * beforeThis) {
-      assert(beforeThis != 0);
-      linkAfter(beforeThis->mPrev);
-    }
+  private:
+    friend EWSet;
+    EWSet * mInSet;
+    u32 mIdxInSet;
   };
 
-  struct EWSet : public EWLinks {
+  struct EWSet {
     T2Tile & mTile;
+    std::vector<EWLinks*> mMembers;
+    u32 mInUse;
 
     bool isEmpty() const ;
-    void push(T2EventWindow* ew) ;
-    void pushBack(T2EventWindow* ew) ;
-    T2EventWindow * pop() ;
+    void rawInsert(EWLinks * l) ;
+    void rawRemove(EWLinks * l) ;
+
+    EWLinks * removeRandom() ;
 
     EWSet(T2Tile& tile)
       : mTile(tile)
+      , mInUse(0)
     { }
 
-    ~EWSet() ;  // EWSet owns its EWs, must clean them up
+    ~EWSet() ;  // EWSet DOES NOT own its EWs
 
   };
 }

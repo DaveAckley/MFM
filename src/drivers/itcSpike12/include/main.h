@@ -5,6 +5,8 @@
 #include "itype.h"
 #include "Dirs.h"
 #include "DateTimeStamp.h"
+#include "Logger.h"
+#include "FileByteSink.h"
 
 // Spike files
 #include "T2EventWindow.h"
