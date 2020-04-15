@@ -216,12 +216,26 @@ namespace MFM {
   };
 
   /**
+     A class for a ByteSink that can be 'Reset' (so it can be written again).
+   */
+  class ResettableByteSink : public ByteSink
+  {
+  public:
+    /** 
+      A method that 'resets' this ByteSink in some sensible fashion,
+      depending on its specifics, so that it can be written to 'as if
+      new'
+    */
+    virtual void Reset() = 0;
+  };
+
+  /**
      A ByteSink that can be converted to a ZString, and reset to
      empty, in some sensible way.  Note that this interface does \e
      not promise any strong functional constraints among Reset, Printf
      (say, or any other writing method), and GetZString.
    */
-  class ZStringableByteSink : public ByteSink
+  class ZStringableByteSink : public ResettableByteSink
   {
   public:
 

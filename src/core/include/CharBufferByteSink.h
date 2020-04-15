@@ -41,7 +41,7 @@ namespace MFM
    * OverflowableCharBufferByteSink.
    */
   template <int BUFSIZE>
-  class CharBufferByteSink : public ByteSink
+  class CharBufferByteSink : public ResettableByteSink
   {
   public:
 

@@ -193,7 +193,7 @@ namespace MFM {
     //// Refresh cache values
 
     do { // Package tags
-      StaticPanel::TextPanelByteSink & tagbs = mStaticPanel.GetByteSink();
+      ResettableByteSink & tagbs = mStaticPanel.GetByteSink();
       tagbs.Reset();
 
       s32 tmp;
@@ -348,7 +348,7 @@ namespace MFM {
     }
 
     { // Deltas panel
-      DeltasPanel::TextPanelByteSink & tbs = mDeltasPanel.GetByteSink();
+      ResettableByteSink & tbs = mDeltasPanel.GetByteSink();
       tbs.Reset();
       for (u32 i = 0; i < ITC_COUNT; ++i) {
         if (i == ITC_COUNT/2) tbs.Print("\n");
