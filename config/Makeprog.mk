@@ -24,8 +24,9 @@ ARCHIVES := $(wildcard $(BASEDIR)/build/*/*.a)
 ARCHIVES += $(ARCHIVEPATH)
 
 $(BUILDDIR)/$(COMPONENTNAME).o:	src/main.cpp $(ALLDEP) $(BUILDDIR)/%.d
-	$(GPP) $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+	@$(GPP) $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
 
 $(BINDIR)/$(COMPONENTNAME):	$(BUILDDIR)/$(COMPONENTNAME).o $(ALLDEP) $(ARCHIVES)
-	mkdir -p $(BINDIR)
-	$(GPP) $(LDFLAGS) $(BUILDDIR)/$(COMPONENTNAME).o $(LIBS) -o $@
+	@mkdir -p $(BINDIR)
+	@$(GPP) $(LDFLAGS) $(BUILDDIR)/$(COMPONENTNAME).o $(LIBS) -o $@
+	@echo Made $@
