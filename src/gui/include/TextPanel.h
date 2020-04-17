@@ -118,6 +118,8 @@ namespace MFM {
     {
     }
 
+    void setKeepNewest(bool newest) { m_text.SetSaveNewest(newest); }
+
     virtual ~TextPanel() { } //avoid inline error
 
     virtual ResettableByteSink & GetByteSink() {
