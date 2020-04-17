@@ -63,7 +63,7 @@ namespace MFM {
       else if (i==((binsec+3)&3)) color = Drawing::BLACK;
       else if (i==((binsec+2)&3)) color = Drawing::RED;
       else if (i==((binsec+1)&3)) color = Drawing::GREEN;
-      else if (i==((binsec+0)&3)) color = Drawing::BLUE;
+      else /*if (i==((binsec+0)&3))*/ color = Drawing::BLUE;
       mCornerLights[i]->SetForeground(color);
       mCornerLights[i]->SetBorder(color);
       mCornerLights[i]->SetBackground(color);

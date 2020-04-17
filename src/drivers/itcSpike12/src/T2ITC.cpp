@@ -10,6 +10,32 @@
 #include <errno.h>     // For errno
 
 namespace MFM {
+  void T2ITC::onTimeout(TimeQueue& srcTq) {
+    pollPackets();
+    insert(srcTq, 30, 3);
+  }
+
+  const char * T2ITC::getName() const {
+    static char buf[30];
+    snprintf(buf,30,"ITC/%s",mName);
+    return buf;
+  }
+
+  void T2ITC::pollPackets() {
+    while (tryHandlePacket()) { }
+  }
+
+  bool T2ITC::tryHandlePacket() {
+    const u32 MAX_PACKET_SIZE = 256;
+    u8 packet[MAX_PACKET_SIZE+1];
+    int len = ::read(mFD, packet, MAX_PACKET_SIZE);
+    if (len < 0) {
+      if (errno == EAGAIN) return false;
+      if (errno == ERESTART) return true; // try me again
+    }
+    LOG.Warning("%s XXX HANDLE %d byte packet", len, getName());
+    return true;
+  }
 
   T2ITC::T2ITC(T2Tile& tile, Dir6 dir6, const char * name)
     : mTile(tile)

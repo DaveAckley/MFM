@@ -10,11 +10,12 @@
 // Spike files
 #include "T2Types.h"
 #include "EWSet.h"
+#include "TimeoutAble.h"
 
 /**** EVENTWINDOW STATE MACHINE: EARLY STATES HACKERY ****/
 
 #define ALL_EW_STATES_MACRO()                           \
-  /*   name         custo cusrc desc) */                \
+  /*   name     custo cusrc   desc */                   \
   XX(IDLE,        0,    0,    "idle active or passive") \
   XX(AINIT,       1,    0,    "initial active state")   \
   XX(AWLOCKS,     1,    1,    "wait for locks")         \
@@ -47,7 +48,11 @@ namespace MFM {
                             PASSIVE
   };
   
-  struct T2EventWindow : public EWLinks {
+  struct T2EventWindow : public EWLinks, public TimeoutAble {
+    // TimeoutAble methods
+    virtual void onTimeout(TimeQueue& srcTq) ;
+
+    virtual const char * getName() const ;
 
     virtual T2EventWindow * asEventWindow() { return this; }
 
@@ -94,7 +99,7 @@ namespace MFM {
       mRadius = 0;
     }
 
-    void update() ;
+    /*    void update() ; */
     
   private:
     EWStateNumber mStateNum;

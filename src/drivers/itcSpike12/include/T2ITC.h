@@ -11,6 +11,7 @@
 
 // Spike files
 #include "T2Types.h"
+#include "TimeoutAble.h"
 
 #define CIRCUIT_BITS 4   /* each for active and passive */
 #define CIRCUIT_COUNT (1<<CIRCUIT_BITS)
@@ -25,13 +26,20 @@ namespace MFM {
     u8 mEW;     // 1..MAX_EWSLOTS
   };
 
-  struct T2ITC {
+  struct T2ITC : public TimeoutAble {
+    virtual void onTimeout(TimeQueue& srcTq) ;
+    virtual const char * getName() const ;
+
     T2ITC(T2Tile& tile, Dir6 dir6, const char * name) ;
 
     CircuitNum tryAllocateActiveCircuit() ;
 
     void freeActiveCircuit(CircuitNum cn) ;
-    
+
+    void pollPackets() ;
+
+    bool tryHandlePacket() ;
+
     T2Tile & mTile;
     const Dir6 mDir6;
     const Dir8 mDir8;

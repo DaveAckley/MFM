@@ -75,7 +75,9 @@ namespace MFM {
     void onePass() ;
 #endif
     void maybeInitiateEW() ;
+#if 0
     void updateActiveEWs() ;
+#endif
     void advanceITCs() ;
     void maybeDisplay() ;
     void shutdownEverything() ;
@@ -123,9 +125,6 @@ namespace MFM {
     void freeEW(T2EventWindow * ew) ;
 
     EWSet mFree;
-    EWSet mActive[2];
-    u32 mActiveBuffer;
-    EWSet mPassive;
     TimeQueue mTimeQueue;
     void initTimeQueueDrivers() ;
 

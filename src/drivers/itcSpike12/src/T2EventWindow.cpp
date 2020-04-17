@@ -3,6 +3,12 @@
 
 namespace MFM {
 
+  void T2EventWindow::onTimeout(TimeQueue& srcTq) {
+    Random & r = mTile.getRandom();
+    if (r.OneIn(10)) mTile.releaseEW(this);
+    else insert(srcTq, r.Between(3,10));
+  }
+
   T2EventWindow::T2EventWindow(T2Tile& tile, EWSlotNum ewsn)
     : mTile(tile)
     , mSlotNum(ewsn)
@@ -40,6 +46,14 @@ namespace MFM {
     return ewStateDesc[sn];
   }
 
+  const char * T2EventWindow::getName() const {
+    static char buf[100];
+    snprintf(buf,100,"EW%02d/%s",
+             mSlotNum,
+             getEWStateName(mStateNum));
+    return buf;
+  }
+  /*
   void T2EventWindow::update() {
     debug("update: %p %s: %s\n",
           this,
@@ -47,4 +61,5 @@ namespace MFM {
           getEWStateDescription(mStateNum));
     DIE_UNIMPLEMENTED();
   }
+  */
 }

@@ -15,6 +15,8 @@ namespace MFM {
 
   u32 findPidOfProgram(const char * progname) ;
 
+  void printComma(u32 num, ByteSink & to) ;
+
 }
 
 #endif /* T2UTILS_H */

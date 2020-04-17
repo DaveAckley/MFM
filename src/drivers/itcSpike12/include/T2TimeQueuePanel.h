@@ -11,13 +11,15 @@
 
 namespace MFM {
 
-  typedef TextPanel<48,16> TimeQueueText;
+  typedef TextPanel<48,23> TimeQueueText;
 
   struct T2TimeQueuePanel : public TimeQueueText, public TimeoutAble, public SDLIConfigurable {
     typedef TimeQueueText Super;
 
     T2TimeQueuePanel()
-    { }
+    {
+      this->setKeepNewest(false);
+    }
     void configure(SDLI & sdli) ;
 
     virtual void onTimeout(TimeQueue& srcTQ) ;

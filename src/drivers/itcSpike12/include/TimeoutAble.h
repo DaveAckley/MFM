@@ -22,7 +22,12 @@ namespace MFM {
 
   struct TimeoutAble {
 
+    //// TimeoutAble API METHODS:
+    virtual void onTimeout(TimeQueue& srcTq) = 0;
+    virtual const char * getName() const = 0;
+
     TimeoutAble() ;
+
     virtual ~TimeoutAble() ;
     void insert(TimeQueue& onTQ, u32 thisFarInFutureMs, s32 fuzzbits=-1);
     void remove() ;
@@ -50,10 +55,6 @@ namespace MFM {
     void sleepOn(TimeQueue & onTQ) {
       insert(onTQ, LONG_SLEEP_MS);
     }
-
-    virtual void onTimeout(TimeQueue& srcTq) = 0;
-
-    virtual const char * getName() const = 0;
 
     u32 mTimeMS;
     u32 mNonce;

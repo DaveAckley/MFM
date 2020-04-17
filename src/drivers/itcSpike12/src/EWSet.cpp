@@ -4,13 +4,13 @@
 #include "T2EventWindow.h"
 
 namespace MFM {
-  void EWLinks::insert(EWSet * ews) {
+  void EWLinks::insertInEWSet(EWSet * ews) {
     assert(ews != 0);
     assert(mInSet == 0);
     ews->rawInsert(this);
   }
 
-  bool EWLinks::remove() {
+  bool EWLinks::removeFromEWSet() {
     if (mInSet == 0) {
       assert(mIdxInSet == U32_MAX);
       return false;
@@ -50,7 +50,7 @@ namespace MFM {
     if (mInUse == 0) return 0;
     Random & r = mTile.getRandom();
     EWLinks * ret = mMembers[r.Between(0,mInUse-1)];
-    ret->remove();
+    ret->removeFromEWSet();
     return ret;
   }
 

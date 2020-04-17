@@ -33,12 +33,12 @@ namespace MFM {
     { }
 
     virtual ~EWLinks() {
-      if (isInSet()) remove();
+      if (isInSet()) removeFromEWSet();
     }
 
-    void insert(EWSet * ews) ;
+    void insertInEWSet(EWSet * ews) ;
 
-    bool remove() ;
+    bool removeFromEWSet() ;
 
   private:
     friend EWSet;

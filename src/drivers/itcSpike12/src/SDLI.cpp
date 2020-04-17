@@ -168,7 +168,7 @@ namespace MFM
 
   void sleeperSignalThread() {
     signal(HACK_SIGNAL_NUM, hackSignalHandler);
-    sleep(1);
+    usleep(300*1000); // 0.3sec
     kill(getpid(), HACK_SIGNAL_NUM);
   }
 

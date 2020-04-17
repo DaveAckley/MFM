@@ -41,9 +41,6 @@ namespace MFM {
 #undef ZZ
       }
     , mFree(*this)
-    , mActive{*this,*this}
-    , mActiveBuffer(0)
-    , mPassive(*this)
     , mTimeQueue(this->getRandom())
     , mSDLI(*this,"SDLI")
     , mADCCtl(*this)
@@ -61,7 +58,7 @@ namespace MFM {
       if (i==0) mEWs[i] = 0;
       else {
         mEWs[i] = new T2EventWindow(*this, i);
-        mEWs[i]->insert(&mFree);
+        mEWs[i]->insertInEWSet(&mFree);
       }
     }
 
@@ -84,6 +81,7 @@ namespace MFM {
   XX(help,h,N,,"Print this help")                               \
   XX(log,l,O,LEVEL,"Set or increase logging")                   \
   XX(mfzid,z,R,MFZID,"Specify MFZ file to run")                 \
+  XX(paused,p,N,,"Start up paused")                             \
   XX(version,v,N,,"Print version and exit")                     \
   XX(wincfg,w,R,PATH,"Specify window configuration file")       \
 
@@ -146,6 +144,7 @@ static const char * CMD_HELP_STRING =
     int option_index;
     int fails = 0;
     int loglevel = -1;
+    int wantpaused = 0;
     while ((c = getopt_long(mArgc,mArgv,
                             CMD_LINE_SHORT_OPTIONS,
                             CMD_LINE_LONG_OPTIONS,
@@ -153,6 +152,10 @@ static const char * CMD_HELP_STRING =
       switch (c) {
       case 'z':
         setMFZId(optarg);
+        break;
+
+      case 'p':
+        wantpaused = 1;
         break;
 
       case 'w':
@@ -207,6 +210,8 @@ static const char * CMD_HELP_STRING =
     if (loglevel >= 0) {
       LOG.SetLevel(loglevel);
     }
+    if (wantpaused >= 0) 
+      this->setLiving(wantpaused == 0);
   }
 
 #define MFZID_DEV "/sys/class/itc_pkt/mfzid"
@@ -253,6 +258,7 @@ static const char * CMD_HELP_STRING =
               itc.path(),
               strerror(-err));
       else debug("opened %s",itc.path());
+      insertOnMasterTimeQueue(itc,100);
     }
     return failed == 0;
   }
@@ -273,20 +279,8 @@ static const char * CMD_HELP_STRING =
 
   void T2Tile::freeEW(T2EventWindow * ew) {
     assert(ew!=0);
-    if (ew->isInSet()) ew->remove();
-    ew->insert(&mFree);
-  }
-
-  void T2Tile::setActive(T2EventWindow * ew) {
-    assert(ew!=0);
-    if (ew->isInSet()) ew->remove();
-    ew->insert(&mActive[mActiveBuffer]);
-  }
-  
-  void T2Tile::setPassive(T2EventWindow * ew) {
-    assert(ew!=0);
-    if (ew->isInSet()) ew->remove();
-    ew->insert(&mPassive);
+    if (ew->isInSet()) ew->removeFromEWSet();
+    ew->insertInEWSet(&mFree);
   }
 
   T2EventWindow * T2Tile::tryAcquireEW(const UPoint center, u32 radius) {
@@ -366,22 +360,7 @@ static const char * CMD_HELP_STRING =
     T2EventWindow * ew = tryAcquireEW(ctr,phonyRadius);
     if (!ew) return; 
     debug("INITIATING ew %p at (%d,%d)+%d\n",ew,ctr.GetX(), ctr.GetY(), phonyRadius);
-    setActive(ew);
-  }
-
-  void T2Tile::updateActiveEWs() {
-    
-    EWSet & oldActive = mActive[mActiveBuffer];
-    mActiveBuffer = 1-mActiveBuffer;
-    EWLinks * cur;
-
-    while ((cur = oldActive.removeRandom()) != 0) {
-      T2EventWindow * ew = cur->asEventWindow();
-      if (ew) {
-        setActive(ew); // Into new active
-        ew->update();
-      }
-    }
+    insertOnMasterTimeQueue(*ew,0);
   }
 
   void T2Tile::advanceITCs() { DIE_UNIMPLEMENTED(); }

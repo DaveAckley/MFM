@@ -1,5 +1,6 @@
 #include "TimeQueue.h"
 #include "FileByteSink.h"
+#include "T2Utils.h"
 
 namespace MFM {
   void TimeQueue::dumpQueue() {
@@ -7,7 +8,8 @@ namespace MFM {
   }
 
   void TimeQueue::dumpQueue(ByteSink& bs) {
-    bs.Printf("%u\n",getExpiredCount());
+    printComma(getExpiredCount(), bs);
+    bs.Printf("\n");
     for (auto itr = mPQ.begin(); itr != mPQ.end(); ++itr) {
       TimeoutAble * ta = *itr;
       ta->printTimeout(bs);

@@ -67,9 +67,9 @@ my $wconfig = <<__EOF__;
     doc="Internal engine log"
 [TQ TQPanel Root $TW $TH $VIZINDENT $VIZINDENT]
     visible=1
-    bgcolor=#cccccc
-    fgcolor=#333333
-    font=2
+    fgcolor=#ffffff
+    bgcolor=#111111
+    font=7
     fontheightadjust=-6
     elevatorwidth=4
     doc="Current time queue dump"
@@ -88,6 +88,8 @@ my $wconfig = <<__EOF__;
     font=1
     text="X"
     action="GO GlobalMenu"
+[TQ_Checkbox_Living T2TileLiveCheckbox TQ `bfs6x6(5,0,5,0)`]
+    font=2
 [GlobalMenu_Button_Sites MenuItem GlobalMenu `bfs6x6(0,0,1,1)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
