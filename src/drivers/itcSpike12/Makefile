@@ -3,7 +3,7 @@ MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(notdir $(patsubst %/,%,$(dir $(MKFILE_PATH))))
 COMPONENTNAME:=$(CURRENT_DIR)
 
-DEBUG:=1
+#DEBUG:=1
 
 # We only run on tile
 MFM_TARGET:=tile
