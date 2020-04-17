@@ -19,10 +19,10 @@
 */
 
 /**
-  \file LineTailByteSink.h ByteSink that remembers most recent lines
+  \file LineTailByteSink.h ByteSink that remembers newest or oldest lines
   \author David H. Ackley.
   \author Trent R. Small.
-  \date (C) 2014 All rights reserved.
+  \date (C) 2014, 2020 All rights reserved.
   \lgpl
  */
 #ifndef LINETAILBYTESINK_H
@@ -37,9 +37,10 @@ namespace MFM
   /**
    * A ByteSink that holds up to LINES lines each of up to
    * BYTES_PER_LINE bytes.  Excess bytes written to any given line are
-   * discarded as by OverflowableCharBufferByteSink.  Once more than
-   * LINES lines have been written, the oldest lines are silently
-   * discarded to make room.
+   * discarded as by OverflowableCharBufferByteSink.  If SaveNewest()
+   * is true, once more than LINES lines have been written, the oldest
+   * lines are silently discarded to make room; otherwise the new
+   * lines are discarded without being added.
    */
   template <u32 LINES, u32 BYTES_PER_LINE>
   class LineTailByteSink : public ResettableByteSink
@@ -49,7 +50,9 @@ namespace MFM
     /**
      * Constructs a new LineTailByteSink and calls \c Reset() on it.
      */
-    LineTailByteSink() : m_bytesWritten(0)
+    LineTailByteSink()
+      : m_bytesWritten(0)
+      , m_saveNewest(true)
     {
       Reset();
     }
@@ -79,16 +82,19 @@ namespace MFM
 
       while ((lineEnd = (const u8 *) memchr(lineStart, '\n', effLen)))
       {
-
         u32 thisLen = (u32) (lineEnd - lineStart);
-        m_lines[m_nextLine].WriteBytes((const u8 *) lineStart, thisLen);
-        newline();
+
+        if (m_saveNewest || this->GetLines() < (LINES-1)) {
+          m_lines[m_nextLine].WriteBytes((const u8 *) lineStart, thisLen);
+          newline();
+        }
 
         lineStart += thisLen + 1;
         effLen -= thisLen + 1;
       }
 
-      m_lines[m_nextLine].WriteBytes(lineStart, effLen);
+      if (m_saveNewest || this->GetLines() < (LINES-1)) 
+        m_lines[m_nextLine].WriteBytes(lineStart, effLen);
     }
 
     /**
@@ -196,6 +202,25 @@ namespace MFM
       m_bytesWritten = 0;
     }
 
+    /**
+     * Return \c true if this LineTailByteSink is currently configured
+     * to save new lines and discard old (which is the default
+     */
+    bool IsSaveNewest() const {
+      return m_saveNewest;
+    }
+
+    /**
+     * Configure this LineTailByteSink to retain the most recent lines
+     * (\c saveNewest \c true), or the oldest lines (\c saveNewest \c
+     * talse).  Note that unless this LineTailByteSink is \c Reset
+     * when its configuration is changed, it may end up containing a
+     * mix of oldest and newest lines.
+     */
+    void SetSaveNewest(bool saveNewest) {
+      m_saveNewest = saveNewest;
+    }
+
   private:
     void newline()
     {
@@ -212,6 +237,7 @@ namespace MFM
     u32 m_bytesWritten;
     u32 m_firstLine;
     u32 m_nextLine;
+    bool m_saveNewest;
   };
 }
 
