@@ -283,7 +283,7 @@ static const char * CMD_HELP_STRING =
     ew->insertInEWSet(&mFree);
   }
 
-  T2EventWindow * T2Tile::tryAcquireEW(const UPoint center, u32 radius) {
+  T2EventWindow * T2Tile::tryAcquireEW(const UPoint center, u32 radius, bool forActive) {
     T2EventWindow * ew = allocEW();  // See if any EWs left to acquire
     if (!ew) return ew;  // Nope
 
@@ -311,7 +311,7 @@ static const char * CMD_HELP_STRING =
       mSiteOwners[site.GetX()][site.GetY()] = ew;
     }
 
-    ew->assignCenter(center, radius);
+    ew->assignCenter(center, radius, forActive);
     return ew;
   }
 
@@ -357,7 +357,7 @@ static const char * CMD_HELP_STRING =
   void T2Tile::maybeInitiateEW() {
     UPoint ctr = UPoint(getRandom(), T2TILE_OWNED_WIDTH, T2TILE_OWNED_HEIGHT) + UPoint(CACHE_LINES,CACHE_LINES);
     u32 phonyRadius = getRandom().Between(1,4);
-    T2EventWindow * ew = tryAcquireEW(ctr,phonyRadius);
+    T2EventWindow * ew = tryAcquireEW(ctr,phonyRadius,true); // true -> it will be an active EW if we get it
     if (!ew) return; 
     debug("INITIATING ew %p at (%d,%d)+%d\n",ew,ctr.GetX(), ctr.GetY(), phonyRadius);
     insertOnMasterTimeQueue(*ew,0);

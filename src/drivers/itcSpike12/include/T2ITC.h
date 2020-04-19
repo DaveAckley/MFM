@@ -36,6 +36,8 @@ namespace MFM {
 
     void freeActiveCircuit(CircuitNum cn) ;
 
+    void resetAllCircuits() ;
+
     void pollPackets() ;
 
     bool tryHandlePacket() ;
@@ -50,6 +52,7 @@ namespace MFM {
     CircuitNum mActiveFree[CIRCUIT_COUNT];
 
     int mFD;
+    int mCompatibilityStatus; // 0 unknown, + compat, - incompat
     const char * path() const;
     int open() ;
     int close() ;

@@ -107,7 +107,7 @@ namespace MFM {
     void setActive(T2EventWindow * ew) ;
     void setPassive(T2EventWindow * ew) ;
 
-    T2EventWindow * tryAcquireEW(const UPoint at, u32 radius) ;
+    T2EventWindow * tryAcquireEW(const UPoint at, u32 radius, bool forActive) ;
 
     void resourceAlert(ResourceType type, ResourceLevel level) ;
 
