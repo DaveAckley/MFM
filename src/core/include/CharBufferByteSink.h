@@ -51,7 +51,7 @@ namespace MFM
 
     /**
      * Writes a series of bytes to this CharBufferByteSink. This will
-     * FAIL with OUT_OF_ROOM if therre is not enough room for the
+     * FAIL with OUT_OF_ROOM if there is not enough room for the
      * bytes to be written. One can check the number of bytes which
      * may be written through the \c CanWrite() function.
      *
