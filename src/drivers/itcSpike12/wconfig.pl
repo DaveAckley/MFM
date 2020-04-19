@@ -193,6 +193,12 @@ my $wconfig = <<__EOF__;
 [T2Viz_Checkbox_Living T2TileLiveCheckbox T2Viz `bfs6x6(3,3,4,3)`]
     font=2
     text="Run"
+[T2Viz_Checkbox_X MenuItem T2Viz `bfs6x6(2,4,2,4)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="X"
+    action="GO GlobalMenu"
 [PhysicsCtl_Checkbox_Living T2TileLiveCheckbox PhysicsCtl `bfs6x6(0,2,2,3)`]
     font=1
     text="Run"
