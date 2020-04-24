@@ -33,6 +33,7 @@
 #include "Tile.h"
 #include "Site.h"
 #include "Drawing.h"
+#include "UlamContextRestricted.h"
 
 namespace MFM
 {
@@ -215,6 +216,12 @@ namespace MFM
     }
 
   private:
+
+    void CallRenderGraphics(UlamContextRestricted<EC> & ucrs,
+                            const UlamElement<EC> & uelt,
+                            AtomBitStorage<EC> & abs) ;
+
+
     static bool IsDrawBase(DrawSiteType t)
     {
       return t >= DRAW_SITE_BASE && t <= DRAW_SITE_BASE_2;

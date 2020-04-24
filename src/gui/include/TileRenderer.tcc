@@ -115,6 +115,19 @@ namespace MFM
   }
 
   template <class EC>
+  void TileRenderer<EC>::CallRenderGraphics(UlamContextRestricted<EC> & ucrs,
+                                            const UlamElement<EC> & uelt,
+                                            AtomBitStorage<EC> & abs)
+  {
+    UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, uelt.GetClassLength(), abs, &uelt, UlamRef<EC>::ELEMENTAL, ucrs);
+    // how to do an ulam virtual function call in c++
+    VfuncPtr vfuncptr;
+    UlamRef<EC> vfur(ur, UlamElement<EC>::RENDERGRAPHICS_VOWNED_INDEX, 0u, true, vfuncptr);
+    typedef void (* Uf_9214renderGraphics)(const UlamContext<EC>& uc, UlamRef<EC>& ur);
+    ((Uf_9214renderGraphics) vfuncptr) (ucrs, vfur);
+  }
+  
+  template <class EC>
   void TileRenderer<EC>::PaintCustom(Drawing & drawing,
                                      const SPoint tileDitOrigin,
                                      const Tile<EC> & tile)
@@ -169,13 +182,7 @@ namespace MFM
         LOG.Message("%s",buff.GetZString());
       },
       {
-        UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, uelt->GetClassLength(), abs, uelt, UlamRef<EC>::ELEMENTAL, ucrs);
-
-        // how to do an ulam virtual function call in c++
-        VfuncPtr vfuncptr;
-        UlamRef<EC> vfur(ur, UlamElement<EC>::RENDERGRAPHICS_VOWNED_INDEX, 0u, true, vfuncptr);
-        typedef void (* Uf_9214renderGraphics)(const UlamContext<EC>& uc, UlamRef<EC>& ur);
-        ((Uf_9214renderGraphics) vfuncptr) (ucrs, vfur);
+        CallRenderGraphics(ucrs,*uelt,abs);
       });
     }
   }
