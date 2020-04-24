@@ -240,7 +240,15 @@ namespace MFM {
      */
     void DrawMaskedLineDitColor(int startX, int startY, int endX, int endY, u32 color, u32 mask) const
     {
-      DrawScaledMaskedLineDitColor(startX, startY, endX, endY, color, color, mask, 1u);
+      DrawScaledMaskedLineDitColor(startX, startY, endX, endY, color, color, mask, 1u, 1u);
+    }
+
+    /**
+       Draw a solid or dashed width pixel line in the given color
+     */
+    void DrawMaskedLineDitColor(int startX, int startY, int endX, int endY, u32 color, u32 mask, u32 maskWidth, u32 width) const
+    {
+      DrawScaledMaskedLineDitColor(startX, startY, endX, endY, color, color, mask, maskWidth, width);
     }
 
     /**
@@ -258,7 +266,7 @@ namespace MFM {
          - Yellow/black pixels:on==0xffffff00, off==0xff000000, mask==0x55555555
          
      */
-    void DrawScaledMaskedLineDitColor(int startX, int startY, int endX, int endY, u32 onColor, u32 offColor, u32 mask, u32 maskDits) const;
+    void DrawScaledMaskedLineDitColor(int startX, int startY, int endX, int endY, u32 onColor, u32 offColor, u32 mask, u32 maskDits, u32 widthDits) const;
 
 
     /**

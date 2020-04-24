@@ -47,7 +47,7 @@ namespace MFM
     FillRect(x, startY, 1, endY-startY, color);
   }
 
-  void Drawable::DrawScaledMaskedLineDitColor(int x1, int y1, int x2, int y2, u32 onColor, u32 offColor, u32 mask, u32 maskDit) const
+  void Drawable::DrawScaledMaskedLineDitColor(int x1, int y1, int x2, int y2, u32 onColor, u32 offColor, u32 mask, u32 maskDit, u32 widthDits) const
   {
     bool hasOffColor = onColor != offColor;
 
@@ -80,14 +80,14 @@ namespace MFM
     {
       if ((maskDitsLeft -= INCR_DITS) <= 0) {
         mask = (mask<<1) | (mask>>31);
-        maskDitsLeft = maskDit;
+        maskDitsLeft += maskDit;
       }
 
       bool thisOn = mask & (1<<31);
       if (hasOffColor || thisOn) {
         const u32 thisColor = thisOn ? onColor : offColor;
-        if(steep) FillRectDit(y, x, 2*INCR_DITS, INCR_DITS, thisColor);
-        else      FillRectDit(x, y, INCR_DITS, 2*INCR_DITS, thisColor);
+        if(steep) FillRectDit(y, x, widthDits, INCR_DITS, thisColor);
+        else      FillRectDit(x, y, INCR_DITS, widthDits, thisColor);
       }
 
       error -= dy;
