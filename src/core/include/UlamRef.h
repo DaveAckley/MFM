@@ -178,7 +178,7 @@ namespace MFM
     template<u32 LEN>
     void ReadBV(u32 pos, BitVector<LEN>& rtnbv) const
     {
-      m_stg.ReadBV<LEN>(pos + m_pos, rtnbv);
+      m_stg.ReadBV(pos + m_pos, rtnbv); //(see WriteBV below)
     }
 
     /**
@@ -188,7 +188,8 @@ namespace MFM
     template<u32 LEN>
     void WriteBV(u32 pos, const BitVector<LEN>& val)
     {
-      m_stg.WriteBV<LEN>(pos + m_pos, val);
+      //Ubuntu 18.04, smarter about LEN: t3715,t3739,t41269,t41271,2,t41355,t41358,t41359
+      m_stg.WriteBV(pos + m_pos, val); //LEN not explicitly used in call
     }
 
     u32 GetPos() const { return m_pos; }
@@ -207,6 +208,10 @@ namespace MFM
     const UlamClass<EC> * GetEffectiveSelf() const { CheckEffectiveSelf(); return m_effSelf; }
 
     UlamClass<EC> * GetEffectiveSelfPointer() const { return const_cast<UlamClass<EC> *> (m_effSelf); } //for UlamRefMutable
+
+    u32 GetVTableClassId() const { return m_vtableclassid; }
+
+    const UlamRef<EC> * GetPreviousUlamRefPtr() const { return m_prevur; }
 
     BitStorage<EC> & GetStorage() { return m_stg; }
 
@@ -244,6 +249,11 @@ namespace MFM
     void ApplyDelta(s32 existingeffselfpos, s32 effselfoffset, u32 len);
 
 
+    /** helper, recursive search for nearest non-dominated classid for vtable lookup;
+	returns bool when found; third arg holds classid of vtable class;
+    */
+    bool findMostSpecificNonDominatedVTClassIdInCallstack(const UlamRef<EC> & existing, const u32 vownedfuncidx, const u32 origclassregnum, s32& candidateid) const;
+
     // DATA MEMBERS
     const UlamContext<EC> & m_uc;
     const UlamClass<EC> * m_effSelf;
@@ -252,7 +262,8 @@ namespace MFM
     u32 m_len;
     UsageType m_usage;
     u32 m_posToEff;
-
+    u32 m_vtableclassid;
+    const UlamRef<EC> * m_prevur;
   }; //UlamRef
 
   template <class EC, u32 POS, u32 LEN>
