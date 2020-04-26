@@ -448,6 +448,8 @@ namespace MFM
 
     virtual u32 GetRegistrationNumber() const = 0;
 
+    virtual bool IsTheEmptyClass() const { return false; }
+
     UlamClass() { }
 
   private:

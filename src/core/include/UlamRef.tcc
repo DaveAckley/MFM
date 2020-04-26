@@ -195,8 +195,8 @@ namespace MFM {
 
     const u32 origclassid = origclass.GetRegistrationNumber();
     s32 candidate = -1;
-    bool foundvt = findMostSpecificNonDominatedVTClassIdInCallstack(existing, vownedfuncidx, origclassid, candidate);
-    MFM_API_ASSERT(foundvt, NOT_FOUND);
+    findMostSpecificNonDominatedVTClassIdInCallstack(existing, vownedfuncidx, origclassid, candidate);
+    MFM_API_ASSERT(candidate>=0, NOT_FOUND);
 
     const UlamClassRegistry<EC> & ucr = existing.m_uc.GetUlamClassRegistry();
     const UlamClass<EC> * vtableclassptr = ucr.GetUlamClassOrNullByIndex(candidate);
@@ -222,8 +222,8 @@ namespace MFM {
     }
 
     s32 candidate = -1;
-    bool foundvt = findMostSpecificNonDominatedVTClassIdInCallstack(existing, vownedfuncidx, origclassregnum, candidate);
-    MFM_API_ASSERT(foundvt, NOT_FOUND);
+    findMostSpecificNonDominatedVTClassIdInCallstack(existing, vownedfuncidx, origclassregnum, candidate);
+    MFM_API_ASSERT(candidate>=0, NOT_FOUND);
 
     const UlamClassRegistry<EC> & ucr = existing.m_uc.GetUlamClassRegistry();
     const UlamClass<EC> * vtableclassptr = ucr.GetUlamClassOrNullByIndex(candidate);
@@ -270,13 +270,15 @@ namespace MFM {
     MFM_API_ASSERT_NONNULL(vtclassptr); //could be same as effSelf
 
     //check VTable class is/related to origclass
-    if(!vtclassptr->internalCMethodImplementingIs(origclassregnum)) FAIL(BAD_VIRTUAL_CALL);
+    if(!vtclassptr->internalCMethodImplementingIs(origclassregnum))
+      FAIL(BAD_VIRTUAL_CALL);
 
     const UlamClass<EC> * effSelf = ur.GetEffectiveSelf();
     MFM_API_ASSERT_NONNULL(effSelf);
 
     //check effSelf is/related to VTable class
-    if(!effSelf->internalCMethodImplementingIs(vtclassptr)) FAIL(BAD_VIRTUAL_CALL);
+    if(!effSelf->internalCMethodImplementingIs(vtclassptr))
+      FAIL(BAD_VIRTUAL_CALL);
 
     //3 VTable accesses for: originating class' start, vfunc entry, and its override class
     const u32 origclassvtstart = vtclassptr->GetVTStartOffsetForClassByRegNum(origclassregnum);
@@ -335,7 +337,9 @@ namespace MFM {
 	    if(!ovclassptr->internalCMethodImplementingIs(candidateid))
 	      {
 		//ovclassptr is NOT a subclass of candidateid, then NOT "more specifc"
-		candidateid = ovclassptr->GetRegistrationNumber();
+		if(!ovclassptr->IsTheEmptyClass()) //i.e. not Empty
+		  candidateid = ovclassptr->GetRegistrationNumber(); // and not "pure" t41397
+		//else no change to candidateid when pure
 	      }
 	    // else no change to candidateid
 	  }
