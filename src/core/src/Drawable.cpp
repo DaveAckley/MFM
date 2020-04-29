@@ -50,6 +50,7 @@ namespace MFM
   void Drawable::DrawScaledMaskedLineDitColor(int x1, int y1, int x2, int y2, u32 onColor, u32 offColor, u32 mask, u32 maskDit, u32 widthDits) const
   {
     bool hasOffColor = onColor != offColor;
+    u32 halfWidthDits = widthDits/2;
 
     // Bresenham's line algorithm, via stackoverflow and Rosetta code, ditified and dashified
     const bool steep = (ABS(y2 - y1) > ABS(x2 - x1));
@@ -86,8 +87,8 @@ namespace MFM
       bool thisOn = mask & (1<<31);
       if (hasOffColor || thisOn) {
         const u32 thisColor = thisOn ? onColor : offColor;
-        if(steep) FillRectDit(y, x, widthDits, INCR_DITS, thisColor);
-        else      FillRectDit(x, y, INCR_DITS, widthDits, thisColor);
+        if(steep) FillRectDit(y-halfWidthDits, x, widthDits, INCR_DITS, thisColor);
+        else      FillRectDit(x, y-halfWidthDits, INCR_DITS, widthDits, thisColor);
       }
 
       error -= dy;
