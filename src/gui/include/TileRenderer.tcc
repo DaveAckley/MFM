@@ -15,6 +15,8 @@ namespace MFM
     , m_drawGridLines(true)
     , m_drawCacheSites(true)
     , m_drawBases(false)
+    , m_drawCustom(true)
+    , m_drawLabels(-1)
     , m_atomSizeDit(DEFAULT_ATOM_SIZE_DIT)
     , m_gridLineColor(Drawing::GREY30)
   {
@@ -81,7 +83,6 @@ namespace MFM
       PaintSiteAtDit(drawing, drawType, shape, screenDitForSite, *i, tile);
     }
   }
-
 
   template <class EC>
   void TileRenderer<EC>::PaintUnderlays(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile)
@@ -207,7 +208,8 @@ namespace MFM
 
     PaintSites(drawing, m_drawForegroundType, DRAW_SHAPE_CDOT, ditOrigin, tile);
 
-    PaintCustom(drawing, ditOrigin, tile); // IMPLEMENT ME XXXX
+    if (m_drawCustom)
+      PaintCustom(drawing, ditOrigin, tile);
 
     PaintOverlays(drawing, ditOrigin, tile);   // E.g., a tool footprint
   }
@@ -326,7 +328,7 @@ namespace MFM
     }
 
     const u32 LABEL_ATOM_SIZE_DIT = Drawing::MapPixToDit(25);
-    if (m_atomSizeDit >= LABEL_ATOM_SIZE_DIT)
+    if (m_drawLabels > 0 || (m_drawLabels < 0 && m_atomSizeDit >= LABEL_ATOM_SIZE_DIT))
     {
       elementLabel = elt->GetAtomicSymbol();
     }
@@ -358,7 +360,6 @@ namespace MFM
       drawing.BlitBackedTextCentered(elementLabel, pixOrigin, pixSize);
       drawing.SetZoomDits(old);
     }
-
   }
 
   template <class EC>
@@ -434,7 +435,10 @@ namespace MFM
     sink.Printf(" PP(trmt=%d)\n", m_drawMidgroundType);
     sink.Printf(" PP(trft=%d)\n", m_drawForegroundType);
     sink.Printf(" PP(trgc=%d)\n", m_gridLineColor);
-  }
+
+    sink.Printf(" PP(trrc=%d)\n", m_drawCustom);  // Pre v5 mfs loading will complain about these
+    sink.Printf(" PP(trdl=%d)\n", m_drawLabels);  // but continue loading
+}
 
   template <class EC>
   bool TileRenderer<EC>::TileRendererLoadDetails(const char * key, LineCountingByteSource & source)
@@ -447,6 +451,9 @@ namespace MFM
     if (!strcmp("trmt",key)) return 1 == source.Scanf("%?d", sizeof m_drawMidgroundType, &m_drawMidgroundType);
     if (!strcmp("trft",key)) return 1 == source.Scanf("%?d", sizeof m_drawForegroundType, &m_drawForegroundType);
     if (!strcmp("trgc",key)) return 1 == source.Scanf("%?d", sizeof m_gridLineColor, &m_gridLineColor);
+
+    if (!strcmp("trrc",key)) return 1 == source.Scanf("%?d", sizeof m_drawCustom, &m_drawCustom);
+    if (!strcmp("trdl",key)) return 1 == source.Scanf("%?d", sizeof m_drawLabels, &m_drawLabels);
 
     return false;
   }

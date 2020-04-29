@@ -189,6 +189,26 @@ namespace MFM
       m_drawBases = value;
     }
 
+    bool IsDrawCustom() const
+    {
+      return m_drawCustom;
+    }
+
+    void SetDrawCustom(bool value)
+    {
+      m_drawCustom = value;
+    }
+
+    bool IsSuppressLabels() const
+    {
+      return m_drawLabels == 0;
+    }
+
+    void SetSuppressLabels(bool value)
+    {
+      m_drawLabels = value ? 0 : -1;
+    }
+
     u32 NextDrawBackgroundType()
     {
       return m_drawBackgroundType = (DrawSiteType) ((m_drawBackgroundType + 1) % DRAW_SITE_TYPE_COUNT);
@@ -246,6 +266,10 @@ namespace MFM
     bool m_drawCacheSites;
 
     bool m_drawBases;
+
+    bool m_drawCustom;
+
+    s32 m_drawLabels; //<0 auto, ==0 no, >0 yes
 
     u32 m_atomSizeDit;
 
