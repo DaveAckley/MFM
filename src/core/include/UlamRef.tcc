@@ -333,18 +333,29 @@ namespace MFM {
 	  candidateid = ovclassptr->GetRegistrationNumber();
 	else
 	  {
-	    //candidateid is a subclass of ovclassptr or ovclassptr, t.f. candidateid is "more specific"
-	    if(!ovclassptr->internalCMethodImplementingIs(candidateid))
+	    if(!ovclassptr->IsTheEmptyClass()) //i.e. not Empty -> "pure" (t41397)
 	      {
-		//ovclassptr is NOT a subclass of candidateid, then NOT "more specifc"
-		if(!ovclassptr->IsTheEmptyClass()) //i.e. not Empty
-		  candidateid = ovclassptr->GetRegistrationNumber(); // and not "pure" t41397
-		//else no change to candidateid when pure
-	      }
-	    // else no change to candidateid
+		const u32 ovid = ovclassptr->GetRegistrationNumber();
+		if(!ovclassptr->internalCMethodImplementingIs(candidateid))
+		  {
+		    //here, ovclass not subclass of candidate, but may be a baseclass of candidate..
+		    const UlamClass<EC> * candidateclassptr = ucr.GetUlamClassOrNullByIndex(candidateid);
+		    MFM_API_ASSERT_NONNULL(candidateclassptr);
+		    if(!candidateclassptr->internalCMethodImplementingIs(ovid)) //&&
+		      {
+			//here, candidate ALSO not subclass of override,
+			//t.f. candidate was not more specific (t41403)
+			candidateid = ovid; // non-dominated
+		      }
+		    // else no change to candidateid because candidate is already the more-specific
+		  }
+		else //ovclass is a subclass of candidate, hence more-specific
+		  {
+		    candidateid = ovid; // non-dominated
+		  }
+	      } //Empty override neither dominating nor more-specific.
 	  }
-
-	gotit = ((s32) m_vtableclassid == candidateid) || (this == &existing); //forsure gotit, when implemented here, or done looking
+	gotit = ((s32) m_vtableclassid == candidateid); //forsure gotit, when implemented here
       }
     //else gotit short-circuit, candidateid is set
 
