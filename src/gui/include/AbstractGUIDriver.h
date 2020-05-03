@@ -142,6 +142,8 @@ namespace MFM
     ShowHelpButton<GC> m_showHelpButton, m_showHelpMiniButton;
     ShowToolboxButton<GC> m_showToolboxButton;
     ShowInfoBoxButton<GC> m_showInfoBoxButton;
+    SuppressLabelsButton<GC> m_suppressLabelsButton;
+    DrawCustomButton<GC> m_drawCustomButton;
     LoadDriverSectionButton<GC> m_loadDriverSectionButton;
     LoadGridSectionButton<GC> m_loadGridSectionButton;
     LoadGUISectionButton<GC> m_loadGUISectionButton;
@@ -254,6 +256,9 @@ namespace MFM
       InsertAndRegisterButton(m_showHelpButton);
       InsertAndRegisterButton(m_showToolboxButton);
       InsertAndRegisterButton(m_showInfoBoxButton);
+
+      InsertAndRegisterButton(m_suppressLabelsButton);
+      InsertAndRegisterButton(m_drawCustomButton);
 
       InsertAndRegisterButton(m_loadDriverSectionButton);
       InsertAndRegisterButton(m_loadGridSectionButton);
