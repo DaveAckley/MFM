@@ -202,6 +202,9 @@ my $wconfig = <<__EOF__;
 [PhysicsCtl_Checkbox_Living T2TileLiveCheckbox PhysicsCtl `bfs6x6(0,2,2,3)`]
     font=1
     text="Run"
+[PhysicsCtl_Checkbox_Listening T2TileListenCheckbox PhysicsCtl `bfs6x6(3,2,5,3)`]
+    font=2
+    text="I/O"
 [PhysicsCtl_Button_Clear MenuItem PhysicsCtl `bfs3x3(0,0)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG

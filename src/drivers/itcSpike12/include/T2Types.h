@@ -4,6 +4,7 @@
 
 #include "itype.h"
 #include "P3Atom.h"
+#include "AtomSerializer.h"
 
 namespace MFM {
 
@@ -17,6 +18,12 @@ namespace MFM {
   typedef P3Atom OurT2Atom;
 
   typedef Site<P3AtomConfig> OurT2Site;
+
+  typedef AtomSerializer<P3AtomConfig> OurT2AtomSerializer;
+
+  typedef BitVector<P3AtomConfig::BITS_PER_ATOM> OurT2AtomBitVector;
+
+  
 }
 
 

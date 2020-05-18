@@ -12,6 +12,12 @@ namespace MFM {
     virtual void SetChecked(bool checked) ;
   };
 
+  struct T2TileListenCheckbox : public AbstractCheckbox {
+    virtual void OnCheck(bool value) ;
+    virtual bool IsChecked() const ;
+    virtual void SetChecked(bool checked) ;
+  };
+
 }
 
 

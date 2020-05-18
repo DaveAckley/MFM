@@ -16,4 +16,16 @@ namespace MFM {
     T2Tile::get().setLiving(checked);
   }
 
+  void T2TileListenCheckbox::OnCheck(bool value) {
+    this->SetChecked(value);
+  }
+
+  bool T2TileListenCheckbox::IsChecked() const {
+    return T2Tile::get().isListening();
+  }
+
+  void T2TileListenCheckbox::SetChecked(bool checked) {
+    T2Tile::get().setListening(checked);
+  }
+
 }

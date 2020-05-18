@@ -14,8 +14,8 @@ namespace MFM {
 
     virtual void PaintComponent(Drawing & config) ;
 
-    void paintSite(OurT2Site & s, u32 atx, u32 aty) ;
-    void paintInsane(u32 atx, u32 aty) ;
+    void paintSite(Drawing & config, OurT2Site & s, u32 atx, u32 aty) ;
+    void paintInsane(Drawing & config, u32 atx, u32 aty) ;
   };
 }
 #endif /* T2GRIDPANEL_H */

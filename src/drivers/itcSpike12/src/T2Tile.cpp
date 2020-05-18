@@ -14,17 +14,59 @@
 namespace MFM {
   void EWInitiator::onTimeout(TimeQueue& srctq) {
     T2Tile& tile = T2Tile::get();
-    if (tile.isLiving()) {
-      //GENERATE EVENT LOAD      for (u32 i = 0; i < 1000000; ++i) tile.getRandom().Create();
-      schedule(srctq);
-      tile.maybeInitiateEW();
-    }
+    if (!tile.isLiving()) schedule(srctq,1000);  // Not running EWs
+    else if (tile.maybeInitiateEW()) schedule(srctq,0);  // EW started
+    else schedule(srctq,5); // No EWs?  Short wait
   }
 
+  void KITCPoller::onTimeout(TimeQueue& srctq) {
+    u8 buf[8];
+    ::lseek(mKITCStatusFD, 0, SEEK_SET);
+    if (read(mKITCStatusFD,buf,8) != 8) abort();
+    for (ITCIterator itr = mITCIteration.begin(); itr.hasNext(); ) {
+      Dir6 dir6 = itr.next();
+      Dir8 dir8 = mapDir6ToDir8(dir6);
+      u8 ch = buf[(DIR8_COUNT-1)-dir8];
+      if (ch >= '0' && ch <= '9') ch = ch-'0';
+      else if (ch >= 'a' && ch <= 'f') ch = ch-'a'+10;
+      else if (ch >= 'A' && ch <= 'F') ch = ch-'A'+10;
+      else abort();
+      if (getKITCEnabledStatus(dir8) != ch) {
+        setKITCEnabledStatus(dir8, ch);
+        mTile.getITC(dir6).bump(); // Something's changed
+      }        
+    }
+    schedule(srctq,100);
+  }
 
+  KITCPoller::KITCPoller(T2Tile& tile)
+    : mTile(tile)
+    , mITCIteration(mTile.getRandom(), 1000)
+    , mKITCStatusFD(-1)
+    , mKITCEnabledStatus(0)
+  {
+    const char * STATUS_PATH = "/sys/class/itc_pkt/status";
+    int ret = ::open(STATUS_PATH, O_RDONLY);
+    if (ret < 0) {
+      LOG.Error("Can't open %s: %s",STATUS_PATH,strerror(errno));
+      FAIL(ILLEGAL_STATE);
+    }
+    mKITCStatusFD = ret;
+    schedule(mTile.getTQ(),0);
+  }
+
+  u32 KITCPoller::updateKITCEnabledStatusFromStatus(u32 status, Dir8 dir8, u32 val) {
+    const u32 shift = (dir8<<2);
+    const u32 mask = 0xf<<shift;
+    const u32 posval = val<<shift;
+    const u32 newstatus = (status&~mask)|(posval&mask);
+    return newstatus;
+  }
 
   T2Tile::T2Tile()
-    : mArgc(0)
+    : mRandom()                      // Earliest service!
+    , mTimeQueue(this->getRandom())  // Next earliest!
+    , mArgc(0)
     , mArgv(0)
     , mMFZId(0)
     , mWindowConfigPath(0)
@@ -40,16 +82,47 @@ namespace MFM {
 #undef YY
 #undef ZZ
       }
+    , mITCVisible{
+#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,CACHE_LINES)
+#define YY ,
+#define ZZ
+        ALL_DIR6_MACRO()
+#undef XX
+#undef YY
+#undef ZZ
+      }
+    , mITCCache{
+#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,0u)
+#define YY ,
+#define ZZ
+        ALL_DIR6_MACRO()
+#undef XX
+#undef YY
+#undef ZZ
+      }
+    , mITCVisibleAndCache{
+#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(2*CACHE_LINES,0u)
+#define YY ,
+#define ZZ
+        ALL_DIR6_MACRO()
+#undef XX
+#undef YY
+#undef ZZ
+      }
+    , mEWs{ 0 }
     , mFree(*this)
-    , mTimeQueue(this->getRandom())
     , mSDLI(*this,"SDLI")
     , mADCCtl(*this)
-    , mSites() 
+    , mSites()    // Initted (for now) in earlyInit
     , mSiteOwners() // Initted in earlyInit
+    , mEWInitiator()
+    , mKITCPoller(*this)
     , mLiving(false)
+    , mPacketPoller(*this)
+    , mListening(false)
     , mMDist()
-  {
-  }
+    , mTotalEventsCompleted(0)
+  { }
 
   void T2Tile::earlyInit() {
     processArgs();
@@ -66,6 +139,16 @@ namespace MFM {
       for (u32 y = 0; y < T2TILE_HEIGHT; ++y) 
         mSiteOwners[x][y] = 0;
 
+    /////XXXXX MAKE A PHONYDREG
+    OurT2Atom phonyDReg(T2_PHONY_DREG_TYPE);
+    //UPoint ctr(3*CACHE_LINES/2,3*CACHE_LINES/2); // upper left + half EWR
+    //UPoint ctr(CACHE_LINES,CACHE_LINES); // should be upper left
+    UPoint ctr(T2TILE_WIDTH/2,T2TILE_HEIGHT/2); // dead center (so no itcs)
+    //UPoint ctr(T2TILE_WIDTH-CACHE_LINES-1,T2TILE_HEIGHT-CACHE_LINES-1); // lower right
+    OurT2Site & sr =  mSites.get(ctr);
+    OurT2Atom & ar =  sr.GetAtom();
+    ar = phonyDReg;
+    
     initTimeQueueDrivers();
   }
 
@@ -210,8 +293,10 @@ static const char * CMD_HELP_STRING =
     if (loglevel >= 0) {
       LOG.SetLevel(loglevel);
     }
-    if (wantpaused >= 0) 
+    if (wantpaused >= 0) {
       this->setLiving(wantpaused == 0);
+      this->setListening(wantpaused == 0);
+    }
   }
 
 #define MFZID_DEV "/sys/class/itc_pkt/mfzid"
@@ -247,20 +332,9 @@ static const char * CMD_HELP_STRING =
     }
   }
 
-  bool T2Tile::openITCs() {
-    int failed = 0;
-    for (int i = 0; i < DIR6_COUNT; ++i) {
-      T2ITC & itc = mITCs[i];
-      int err = itc.open();
-      if (err < 0) 
-        warn("openITC error %d: Could not open %s: %s",
-              ++failed,
-              itc.path(),
-              strerror(-err));
-      else debug("opened %s",itc.path());
-      insertOnMasterTimeQueue(itc,100);
-    }
-    return failed == 0;
+  void T2Tile::resetITCs() {
+    for (int i = 0; i < DIR6_COUNT; ++i) 
+      mITCs[i].reset();
   }
 
   void T2Tile::closeITCs() {
@@ -283,36 +357,12 @@ static const char * CMD_HELP_STRING =
     ew->insertInEWSet(&mFree);
   }
 
-  T2EventWindow * T2Tile::tryAcquireEW(const UPoint center, u32 radius, bool forActive) {
+  bool T2Tile::tryAcquireEW(const UPoint center, u32 radius, bool forActive) {
     T2EventWindow * ew = allocEW();  // See if any EWs left to acquire
-    if (!ew) return ew;  // Nope
-
-    const SPoint origin(0,0);
-    const SPoint maxSite(T2TILE_WIDTH-1,T2TILE_HEIGHT-1);
-    const u32 first = mMDist.GetLastIndex(0);
-    const u32 last = mMDist.GetLastIndex(radius);
-
-    // First check if region is all available
-    for (u32 sn = first; sn <= last; ++sn) {
-      SPoint offset = mMDist.GetPoint(sn);
-      SPoint site = MakeSigned(center) + offset;
-      if (!site.BoundedBy(origin,maxSite)) continue;
-      if (mSiteOwners[site.GetX()][site.GetY()] != 0) {
-        freeEW(ew); // Toss unused
-        return 0;  // It's not
-      }
-    }
-
-    // OK we're going for it.  Hog the region
-    for (u32 sn = first; sn <= last; ++sn) {
-      SPoint offset = mMDist.GetPoint(sn);
-      SPoint site = MakeSigned(center) + offset;
-      if (!site.BoundedBy(origin,maxSite)) continue;
-      mSiteOwners[site.GetX()][site.GetY()] = ew;
-    }
-
-    ew->assignCenter(center, radius, forActive);
-    return ew;
+    if (!ew) return false;  // Nope
+    if (ew->tryInitiateActiveEvent(center,radius)) return true; // ew in use
+    freeEW(ew);
+    return false;
   }
 
   void T2Tile::resourceAlert(ResourceType type, ResourceLevel level) {
@@ -345,23 +395,64 @@ static const char * CMD_HELP_STRING =
     freeEW(ew);
   }
 
+
   void T2Tile::initEverything(int argc, char **argv) {
     mArgc = argc;
     mArgv = argv;
     earlyInit();
     mSDLI.init();
     insertOnMasterTimeQueue(mSDLI, 0); // Live for display and input
-    if (!openITCs()) fatal("Open failed\n");
+    resetITCs();
   }
 
-  void T2Tile::maybeInitiateEW() {
-    UPoint ctr = UPoint(getRandom(), T2TILE_OWNED_WIDTH, T2TILE_OWNED_HEIGHT) + UPoint(CACHE_LINES,CACHE_LINES);
+  u32 T2Tile::getRadius(const OurT2Atom & atom) {
+    if (atom.GetType() == OurT2Atom::ATOM_EMPTY_TYPE) return 0u;
+    return 4u;
+  }
+
+  void T2Tile::recordCompletedEvent(OurT2Site & site) {
+    site.RecordEventAtSite(++mTotalEventsCompleted);
+  }
+
+  u32 T2Tile::considerSiteForEW(UPoint idx) {
+    const SPoint origin(0,0);
+    const SPoint maxSite(T2TILE_WIDTH-1,T2TILE_HEIGHT-1);
+    MFM_API_ASSERT_ARG(MakeSigned(idx).BoundedBy(origin,maxSite));
+    if (mSiteOwners[idx.GetX()][idx.GetY()] != 0) return 0u;
+    OurT2Site & site = mSites.get(idx);
+    const OurT2Atom & atom = site.GetAtom();
+    u32 radius = getRadius(atom);
+    if (radius == 0u) 
+      recordCompletedEvent(site);  // That was easy
+    return radius;
+  }
+
+  bool T2Tile::maybeInitiateEW() {
+    const u32 MAX_TRIES = 100; // Empty events drain here; they're cheap
+    u32 radius = 0;
+    UPoint ctr;
+    for (u32 i = 0; i < MAX_TRIES; ++i) {
+      ctr =
+        UPoint(getRandom(), T2TILE_OWNED_WIDTH, T2TILE_OWNED_HEIGHT)
+        + UPoint(CACHE_LINES,CACHE_LINES);
+      radius = considerSiteForEW(ctr);
+      if (radius > 0) break;
+    }
+    if (radius == 0) return false;
+    return tryAcquireEW(ctr, radius, true);
+  }
+
+
+#if 0
+  bool T2Tile::tryAcquireEW(UPoint center, u32 radius) {
     u32 phonyRadius = getRandom().Between(1,4);
     T2EventWindow * ew = tryAcquireEW(ctr,phonyRadius,true); // true -> it will be an active EW if we get it
-    if (!ew) return; 
+    if (!ew) return false; 
     debug("INITIATING ew %p at (%d,%d)+%d\n",ew,ctr.GetX(), ctr.GetY(), phonyRadius);
     insertOnMasterTimeQueue(*ew,0);
+    return true;
   }
+#endif
 
   void T2Tile::advanceITCs() { DIE_UNIMPLEMENTED(); }
 
@@ -376,7 +467,10 @@ static const char * CMD_HELP_STRING =
       TimeoutAble * ta = mTimeQueue.getEarliestExpired();
       if (!ta)
         usleep(1000); // Or ??
-      else ta->onTimeout(mTimeQueue);
+      else {
+        //        LOG.Message("TO %s",ta->getName());
+        ta->onTimeout(mTimeQueue);
+      }
     }
     shutdownEverything();
   }

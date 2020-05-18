@@ -28,7 +28,7 @@ namespace MFM {
     mKeyToPress = mai.mKey;
     mTargetPanel = panel;
     mPanelRequired = mai.mTargetPanelRequired;
-    LOG.Message("MenuAction o%03o '%c' to panel '%s'", mKeyToPress, mKeyToPress, mTargetPanel.GetZString());
+    //LOG.Message("MenuAction o%03o '%c' to panel '%s'", mKeyToPress, mKeyToPress, mTargetPanel.GetZString());
     return true;
   }
 

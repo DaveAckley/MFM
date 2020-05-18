@@ -274,6 +274,7 @@ namespace MFM
     if (type.Equals("T2GridPanel")) return new T2GridPanel(); 
     if (type.Equals("TQPanel")) return new T2TimeQueuePanel(); 
     if (type.Equals("T2TileLiveCheckbox")) return new T2TileLiveCheckbox(); 
+    if (type.Equals("T2TileListenCheckbox")) return new T2TileListenCheckbox(); 
     return 0;
   }
 
@@ -545,7 +546,7 @@ namespace MFM
   }
 
   Panel* SDLI::configureWindows() {
-    const char * path = mTile.mWindowConfigPath;
+    const char * path = mTile.getWindowConfigPath();
     if (path == 0) {
       LOG.Warning("No window configuration path");
       mPanels["Root"] = new Label("No window configuration");

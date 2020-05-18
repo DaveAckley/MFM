@@ -5,11 +5,13 @@
 #include "Dirs.h"
 #include "DateTimeStamp.h"
 #include "Packet.h"
+#include "Rect.h"
 
 #include <assert.h>
 #include <vector>
 
 // Spike files
+#include "T2ITC.h"
 #include "T2Types.h"
 #include "EWSet.h"
 #include "TimeoutAble.h"
@@ -25,8 +27,8 @@ namespace MFM {
     static T2EWStateArray mStateOpsArray;
 
     void resetEW(T2EventWindow *ew) ;
-    virtual void timeout(T2EventWindow & ew, PacketBuffer &pb) ;
-    virtual void receive(T2EventWindow & ew, PacketBuffer &pb) ;
+    virtual void timeout(T2EventWindow & ew, T2PacketBuffer &pb, TimeQueue& tq) ;
+    virtual void receive(T2EventWindow & ew, T2PacketBuffer &pb, TimeQueue& tq) ;
     virtual const char * getStateName() const = 0;
     virtual const char * getStateDescription() const = 0;
     virtual ~T2EWStateOps() { }
@@ -61,7 +63,7 @@ namespace MFM {
 
   /*** DECLARE PER-STATE SUBCLASSES ***/
 #define YY0(FUNC) 
-#define YY1(FUNC) virtual void FUNC(T2EventWindow & ew, PacketBuffer & pb) ;
+#define YY1(FUNC) virtual void FUNC(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) ;
 #define XX(NAME,CUSTO,CUSRC,STUB,DESC)                                \
   struct T2EWStateOps_##NAME : public T2EWStateOps {                  \
     YY##CUSTO(timeout)                                                \
@@ -97,6 +99,12 @@ namespace MFM {
 
     virtual ~T2EventWindow() { }
 
+    void schedule(TimeQueue& tq, u32 now = 0) { // Schedule for now (or then)
+      if (isOnTQ()) remove();
+      insert(tq,now);
+    }
+
+    T2Tile & getTile() { return mTile; }
     T2Tile & mTile;
     const EWSlotNum mSlotNum;
 
@@ -139,12 +147,34 @@ namespace MFM {
     }
 
     /*    void update() ; */
-    
+    bool tryInitiateActiveEvent(UPoint center,u32 radius) ;
+    bool checkSiteAvailability() ;
+    bool checkCircuitAvailability() ;
+    void takeOwnershipOfRegion() ;
+    bool registerWithITCs() ;
+
   private:
+    struct CircuitInfo {
+      T2ITC * mITC;
+      CircuitNum mCircuitNum;
+    };
+
+    CircuitInfo mCircuits[MAX_CIRCUITS_PER_EW];
+
+    void initializeEW() ;
+    void finalizeEW() ;
+
+    void initCircuitInfo() ;
+
+    void addITCIfNeeded(T2ITC * itc) ;
+    
     EWStateNumber mStateNum;
     /*    T2EventWindowStatus mStatus; */
     UPoint mCenter;
     u32 mRadius;
+    OurT2Site mSites[EVENT_WINDOW_SITES(MAX_EVENT_WINDOW_RADIUS)];
+    bool mSitesLive[EVENT_WINDOW_SITES(MAX_EVENT_WINDOW_RADIUS)];
+
     /*    void setStatus(T2EventWindowStatus ews) { mStatus = ews; } */
     friend class EWSet;
   };

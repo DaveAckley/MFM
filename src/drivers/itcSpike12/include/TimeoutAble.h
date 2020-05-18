@@ -32,14 +32,18 @@ namespace MFM {
     void insert(TimeQueue& onTQ, u32 thisFarInFutureMs, s32 fuzzbits=-1);
     void remove() ;
 
+    void schedule(TimeQueue& tq, u32 now = 0, s32 fuzzbits=-1) { // Schedule for now (or then)
+      if (isOnTQ()) remove();
+      insert(tq,now,fuzzbits);
+    }
+
     u32 getTimeout() const { return mTimeMS; }
     void printTimeout(ByteSink & bs) const ;
 
     bool isOnTQ() const { return mOnTQ != 0; }
 
     /** Reschedule this under the assumption that external
-        circumstances relevant to this may have changed.  May be
-        called as a courtesy by the environment.
+        circumstances relevant to this may have changed.  
 
         By default, bump() reschedules this to wake up immediately, if
         it is currently waiting on a TQ, or else does nothing.

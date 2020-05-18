@@ -5,10 +5,12 @@
 #define MAX_EWSLOT 32
 
 /** Tile width in sites (including cache) */
-#define T2TILE_WIDTH 60
+/*#define T2TILE_WIDTH 68*/
+#define T2TILE_WIDTH (48+8)
 
 /** Tile height in sites (including cache) */
-#define T2TILE_HEIGHT 40
+/*#define T2TILE_HEIGHT 48*/
+#define T2TILE_HEIGHT (32+8)
 
 #define MAX_EVENT_WINDOW_RADIUS 4
 
@@ -20,9 +22,44 @@
 /** Tile height in sites (excluding caches) */
 #define T2TILE_OWNED_HEIGHT (T2TILE_HEIGHT - 2 * CACHE_LINES)
 
+/* values for 68x48
+#define T2_SITE_TO_DIT_X 1971
+#define T2_SITE_TO_DIT_Y 1971
+#define T2_SITE_TO_DIT_W (8*256)
+#define T2_SITE_TO_DIT_H (8*256)
+*/
+#define T2_DISPLAY_RAW_PIXEL_WIDTH 480
+#define T2_DISPLAY_RAW_PIXEL_HEIGHT 320
+#define T2_DISPLAY_PIXEL_WIDTH 462  /* FROM wconfig.pl/txt */
+#define T2_DISPLAY_PIXEL_HEIGHT 308  /* FROM wconfig.pl/txt */
+#define T2_DISPLAY_DIT_PER_PIX 256   /* FROM Drawing.h */
+
+#define T2_SITE_TO_DIT_X ((T2_DISPLAY_PIXEL_WIDTH*T2_DISPLAY_DIT_PER_PIX)/T2TILE_OWNED_WIDTH)
+#define T2_SITE_TO_DIT_Y ((T2_DISPLAY_PIXEL_HEIGHT*T2_DISPLAY_DIT_PER_PIX)/T2TILE_OWNED_HEIGHT)
+#define T2_SITE_DRAW_WIDTH_PIXELS (T2_DISPLAY_RAW_PIXEL_WIDTH/T2TILE_OWNED_WIDTH)
+#define T2_SITE_DRAW_HEIGHT_PIXELS (T2_DISPLAY_RAW_PIXEL_HEIGHT/T2TILE_OWNED_HEIGHT)
+#define T2_SITE_TO_DIT_W (T2_SITE_DRAW_WIDTH_PIXELS*T2_DISPLAY_DIT_PER_PIX)
+#define T2_SITE_TO_DIT_H (T2_SITE_DRAW_HEIGHT_PIXELS*T2_DISPLAY_DIT_PER_PIX)
+
+#define T2_SITE_IS_CACHE(u32x,u32y)    \
+  (((u32x)<CACHE_LINES)                   \
+   || ((u32y)<CACHE_LINES)                \
+   || ((u32x)>T2TILE_WIDTH-CACHE_LINES)   \
+   || ((u32y)>T2TILE_HEIGHT-CACHE_LINES))
+
+#define T2_SITE_IS_VISIBLE_OR_CACHE(u32x,u32y)    \
+  (((u32x)<2*CACHE_LINES)                         \
+   || ((u32y)<2*CACHE_LINES)                      \
+   || ((u32x)>T2TILE_WIDTH-2*CACHE_LINES)         \
+   || ((u32y)>T2TILE_HEIGHT-2*CACHE_LINES))
+
 /////////FAKE PHYSICS
-#define T2_PHONY_DREG_TYPE 0xdddd
-#define T2_PHONY_RES_TYPE  0xeeee
+#define T2_PHONY_DREG_TYPE 1
+#define T2_PHONY_RES_TYPE  2
+
+//////MISC DEFINES
+#define MAX_CIRCUITS_PER_EW 2
+
 
 //////////////////////////ALSO MACROS///////////////////////
 
