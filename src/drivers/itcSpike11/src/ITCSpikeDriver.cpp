@@ -133,11 +133,13 @@ namespace MFM {
 
   void ITCSpikeDriver::doDisplay() {
     s32 enables;
-    if (readOneBinaryNumberFile("/sys/class/itc_pkt/status",enables)) {
+    if (readOneDecimalNumberFile("/sys/class/itc_pkt/status",enables)) {
       for (u32 dir8 = 0; dir8 < 8; ++dir8) {
         u8 dir6 = mapDir8ToDir6(dir8);
+        u32 dir8Val = enables%10;
+        enables /= 10;
         if (dir6 == DIR_COUNT) continue;
-        bool enabled = enables&(1<<dir8);
+        bool enabled = dir8Val > 0; // XXX DO WE WANT > 1 HERE to say 'compatible'
         mITC[dir6].setEnabled(enabled);
       }
     }

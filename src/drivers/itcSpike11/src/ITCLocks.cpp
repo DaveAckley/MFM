@@ -145,7 +145,7 @@ namespace MFM {
         u8 dir6 = mapDir8ToDir6(i); // Returns DIR_COUNT on N/S
         u8 ch;
         if (read(mITCStatusFD,&ch,1) != 1) abort();
-        if (ch=='0') connected &= ~(1<<dir6);
+        if (ch=='0') connected &= ~(1<<dir6); // '1' or '2' both count as connected?
       }
       mConnectedLockset = connected;
       mConnectedLocksetRefreshTime = now;

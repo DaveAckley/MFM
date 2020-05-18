@@ -295,7 +295,7 @@ namespace MFM {
         u32 itc = 0;
         for (u32 i = 0; i < ROSE_DIR_COUNT; ++i) {
           if (i%4 == 0) continue;
-          mITCs[itc++].setIsOpen(p[ROSE_DIR_COUNT - 1 - i] == '1');
+          mITCs[itc++].setIsOpen(p[ROSE_DIR_COUNT - 1 - i] > '0');
         }
       }
     } while(0);
