@@ -41,17 +41,22 @@
 #define T2_SITE_TO_DIT_W (T2_SITE_DRAW_WIDTH_PIXELS*T2_DISPLAY_DIT_PER_PIX)
 #define T2_SITE_TO_DIT_H (T2_SITE_DRAW_HEIGHT_PIXELS*T2_DISPLAY_DIT_PER_PIX)
 
-#define T2_SITE_IS_CACHE(u32x,u32y)    \
-  (((u32x)<CACHE_LINES)                   \
-   || ((u32y)<CACHE_LINES)                \
-   || ((u32x)>T2TILE_WIDTH-CACHE_LINES)   \
-   || ((u32y)>T2TILE_HEIGHT-CACHE_LINES))
+#define T2_SITE_IS_CACHE(u32x,u32y)             \
+  (((u32x)<CACHE_LINES)                         \
+   || ((u32y)<CACHE_LINES)                      \
+   || ((u32x)>T2TILE_WIDTH-CACHE_LINES)         \
+   || ((u32y)>T2TILE_HEIGHT-CACHE_LINES))       \
 
-#define T2_SITE_IS_VISIBLE_OR_CACHE(u32x,u32y)    \
-  (((u32x)<2*CACHE_LINES)                         \
-   || ((u32y)<2*CACHE_LINES)                      \
-   || ((u32x)>T2TILE_WIDTH-2*CACHE_LINES)         \
-   || ((u32y)>T2TILE_HEIGHT-2*CACHE_LINES))
+#define T2_SITE_IS_VISIBLE_OR_CACHE(u32x,u32y)  \
+  (((u32x)<2*CACHE_LINES)                       \
+   || ((u32y)<2*CACHE_LINES)                    \
+   || ((u32x)>T2TILE_WIDTH-2*CACHE_LINES)       \
+   || ((u32y)>T2TILE_HEIGHT-2*CACHE_LINES))     \
+
+#define T2_SITE_IS_VISIBLE(u32x,u32y)           \
+  (T2_SITE_IS_VISIBLE_OR_CACHE(u32x,u32y) &&    \
+   !T2_SITE_IS_CACHE(u32x,u32y))                \
+  
 
 /////////FAKE PHYSICS
 #define T2_PHONY_DREG_TYPE 1
