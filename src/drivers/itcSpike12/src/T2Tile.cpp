@@ -142,8 +142,8 @@ namespace MFM {
     /////XXXXX MAKE A PHONYDREG
     OurT2Atom phonyDReg(T2_PHONY_DREG_TYPE);
     //UPoint ctr(3*CACHE_LINES/2,3*CACHE_LINES/2); // upper left + half EWR
-    //UPoint ctr(CACHE_LINES,CACHE_LINES); // should be upper left
-    UPoint ctr(T2TILE_WIDTH/2,T2TILE_HEIGHT/2); // dead center (so no itcs)
+    UPoint ctr(CACHE_LINES,CACHE_LINES); // should be upper left
+    //UPoint ctr(T2TILE_WIDTH/2,T2TILE_HEIGHT/2); // dead center (so no itcs)
     //UPoint ctr(T2TILE_WIDTH-CACHE_LINES-1,T2TILE_HEIGHT-CACHE_LINES-1); // lower right
     OurT2Site & sr =  mSites.get(ctr);
     OurT2Atom & ar =  sr.GetAtom();
@@ -360,7 +360,9 @@ static const char * CMD_HELP_STRING =
   bool T2Tile::tryAcquireEW(const UPoint center, u32 radius, bool forActive) {
     T2EventWindow * ew = allocEW();  // See if any EWs left to acquire
     if (!ew) return false;  // Nope
+    ew->initializeEW(); // clear gunk
     if (ew->tryInitiateActiveEvent(center,radius)) return true; // ew in use
+    ew->finalizeEW();
     freeEW(ew);
     return false;
   }

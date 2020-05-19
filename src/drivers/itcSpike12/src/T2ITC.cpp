@@ -1,5 +1,6 @@
 #include "T2ITC.h"
 #include "T2Tile.h"
+#include "T2EventWindow.h"
 
 #include <sys/types.h> 
 #include <sys/stat.h>
@@ -171,15 +172,17 @@ namespace MFM {
 
   void T2ITC::reset() {
     if (mFD >= 0) close();
-    resetAllCircuits();
-    setITCSN(ITCSN_INIT);
-    schedule(mTile.getTQ(),500); // Delay in case reset-looping
+    initializeFD();
+    abortAllEWs();
+    mCacheReceiveComplete = false;
+    setITCSN(ITCSN_SHUT);
+    scheduleWait(WC_RANDOM_SHORT); // Delay in case reset-looping
   }
 
-  bool T2ITC::initialize() {
+  bool T2ITC::initializeFD() {
     int ret = open();
     if (ret < 0) {
-      LOG.Error("%s open failed: %s", getName(), strerror(ret));
+      LOG.Error("%s open failed: %s", getName(), strerror(-ret));
       return false;
     }
     pollPackets(false); // First flush packets
@@ -193,7 +196,19 @@ namespace MFM {
     */
   }
 
-  void T2ITC::resetAllCircuits() {
+  void T2ITC::abortAllEWs() {
+    for (u32 i = 1; i <= MAX_EWSLOT; ++i) {
+      if (mRegisteredEWs[i] != 0)
+        mRegisteredEWs[i]->abortEW();
+      MFM_API_ASSERT_NULL(mRegisteredEWs[i]);
+    }
+  }
+
+  u32 T2ITC::registeredEWCount() const {
+    return mRegisteredEWCount;
+  }
+
+  void T2ITC::initAllCircuits() {
     for (u8 i = 0; i < CIRCUIT_COUNT; ++i) {
       mActiveFree[i] = i;
       for (u8 act = 0; act <= 1; ++act) {
@@ -208,11 +223,15 @@ namespace MFM {
     , mDir6(dir6)
     , mDir8(mapDir6ToDir8(dir6))
     , mName(name)
-    , mStateNumber(ITCSN_INIT)
+    , mStateNumber(ITCSN_SHUT)
     , mActiveFreeCount(CIRCUIT_COUNT)
     , mFD(-1)
+    , mRegisteredEWs{ }
+    , mRegisteredEWCount(0)
+    , mVisibleAtomsToSend()
+    , mCacheReceiveComplete(false)
   {
-    reset();
+    initAllCircuits();
   }
 
   /**** LATE ITC STATES HACKERY ****/
@@ -311,6 +330,16 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
     return *ops;
   }
 
+  bool T2ITC::allocateActiveCircuitIfNeeded(EWSlotNum ewsn, CircuitNum & circuitnum) {
+    if (getITCSN() == ITCSN_SHUT) return true;  // No circuit needed
+    MFM_API_ASSERT_STATE(getITCSN() == ITCSN_OPEN);
+    CircuitNum ret = tryAllocateActiveCircuit();
+    if (ret == ALL_CIRCUITS_BUSY) return false; // Sorry no can do
+    mCircuits[1][ret].mEW = ewsn; // NOW ALLOCATED as active EW
+    circuitnum = ret;             // NOW ALLOCATED as EW's circuit 
+    return true;
+  }
+
   CircuitNum T2ITC::tryAllocateActiveCircuit() {
     if (mActiveFreeCount==0) return ALL_CIRCUITS_BUSY;
     Random & r = mTile.getRandom();
@@ -323,6 +352,7 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
   u32 T2ITC::activeCircuitsInUse() const {
    return CIRCUIT_COUNT - mActiveFreeCount;
   }
+
   void T2ITC::freeActiveCircuit(CircuitNum cn) {
     assert(cn < CIRCUIT_COUNT);
     assert(mActiveFreeCount < CIRCUIT_COUNT);
@@ -332,6 +362,26 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
     if (activeCircuitsInUse()==0 && getITCSN() == ITCSN_FOLLOW)
       bump();
     */
+  }
+
+  void T2ITC::registerEWRaw(T2EventWindow & ew) {
+    EWSlotNum sn = ew.slotNum();
+    MFM_API_ASSERT_STATE(sn < MAX_EWSLOT+1);
+    MFM_API_ASSERT_NULL(mRegisteredEWs[sn]);
+    MFM_API_ASSERT_STATE(isVisibleUsable());
+    mRegisteredEWs[sn] = &ew;
+    ++mRegisteredEWCount;
+  }
+
+  void T2ITC::unregisterEWRaw(T2EventWindow & ew) {
+    EWSlotNum sn = ew.slotNum();
+    MFM_API_ASSERT_STATE(sn < MAX_EWSLOT+1);
+    MFM_API_ASSERT_NONNULL(mRegisteredEWs[sn]);
+    MFM_API_ASSERT_STATE(mRegisteredEWCount > 0);
+    mRegisteredEWs[sn] = 0;
+    --mRegisteredEWCount;
+    if (mRegisteredEWCount == 0 && getITCSN() == ITCSN_DRAIN)
+      scheduleWait(WC_NOW); // bump
   }
 
   const char * T2ITC::path() const {
@@ -354,80 +404,13 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
     return ret;
   }
 
-  /////////////////// CUSTOM T2ITCStateOps HANDLERS
-
-  void T2ITCStateOps_INIT::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    LOG.Message("%s: Initializing",itc.getName());
-    if (itc.initialize()) {
-      itc.setITCSN(ITCSN_WAITCOMP);
-      itc.scheduleWait(WC_NOW);
-    } else itc.reset();
-  }
-
-  void T2ITCStateOps_WAITCOMP::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    if (itc.getCompatibilityStatus() >= 2) {
-      // Go for control of this negotiation
-      Random & random = itc.mTile.getRandom();
-      itc.setITCSN(random.CreateBool() ? ITCSN_LEAD0 : ITCSN_LEAD1); // Yoink!
-      itc.scheduleWait(WC_NOW);
-    } else {
-      itc.schedule(tq,1000);
-    }
-  }
-
-  s32 T2ITC::resolveLeader(ITCStateNumber theirsn) {
-    MFM_API_ASSERT_ARG(theirsn == ITCSN_WLEAD0 || theirsn == ITCSN_WLEAD1);
-    ITCStateNumber usn = getITCSN();
-    if (usn <= ITCSN_WAITCOMP) return -1; // They yoinked us
-    if (usn >= ITCSN_FOLLOW) return 0;    // Illegal state need reset
-    if (usn == ITCSN_LEAD0) usn = ITCSN_WLEAD0; // Impute later states if they
-    else if (usn == ITCSN_LEAD1) usn = ITCSN_WLEAD1; // caught us right out of waitcomp
-    bool evens = (usn == theirsn);
-    bool ginger = isGinger();
-    return (ginger == evens) ? 1 : -1;    // ginger wins on evens
-  }
-
-  void T2ITC::leadFollowOrReset(ITCStateNumber theirimputedsn) {
-    s32 raceresult = resolveLeader(theirimputedsn);
-    if (raceresult < 0) {              // They yoinked us or we raced and they won
-      setITCSN(ITCSN_FOLLOW);          // either way, we follow
-      scheduleWait(WC_HALF);
-    } else if (raceresult > 0) {
-      setITCSN(ITCSN_WFOLLOW);  // it was a race and we won
-      scheduleWait(WC_FULL);
-    } else
-      reset();                  // Something messed up
-  }
-
-  void T2ITCStateOps_LEAD0::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    if (itc.trySendPacket(pb)) {
-      itc.setITCSN(ITCSN_WLEAD0);
-      itc.scheduleWait(WC_FULL);
-    } else itc.scheduleWait(WC_RANDOM_SHORT);
-  }
-
-  void T2ITCStateOps_LEAD0::receive(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    itc.leadFollowOrReset(ITCSN_WLEAD0);  // End up in FOLLOW or WFOLLOW
-  }
-
-  void T2ITCStateOps_LEAD1::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    if (itc.trySendPacket(pb)) {
-      itc.setITCSN(ITCSN_WLEAD1);
-      itc.scheduleWait(WC_FULL);
-    } else itc.scheduleWait(WC_RANDOM_SHORT);
-  }
-
-  void T2ITCStateOps_LEAD1::receive(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    itc.leadFollowOrReset(ITCSN_WLEAD1);// End up in FOLLOW or WFOLLOW
-  }
-
-  void T2ITC::startCacheSync(bool asLeader) {
+  void T2ITC::startCacheSync() {
     mVisibleAtomsToSend.begin(getVisibleRect());
-    setITCSN(asLeader ? ITCSN_CACHEXG : ITCSN_WCACHEXG);
+    setITCSN(ITCSN_CACHEXG);
     scheduleWait(WC_NOW);
   }
 
-  bool T2ITC::sendCacheAtoms(T2PacketBuffer & pb) {
+  bool T2ITC::sendVisibleAtoms(T2PacketBuffer & pb) { // Which presto-change-o arrive via recvCacheAtoms..
     const u32 BYTES_PER_ATOM = OurT2Atom::BPA/8; // Bits Per Atom/Bits Per Byte
     const u32 BYTES_PER_DIM = 1; // Sending u8 dimensions inside visibleRect
     const u32 BYTES_PER_COORD = 2*BYTES_PER_DIM;
@@ -506,58 +489,45 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
     return count == 0; // CACHEXG w/no atoms means end
   }
 
-  // Follower times out early, ships FOLLOW
-  void T2ITCStateOps_FOLLOW::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    if (itc.activeCircuitsInUse() > 0) // Shouldn't be, by now
-      itc.reset();
-    else if (itc.sendCacheAtoms(pb)) {  // True when all atoms shipped
-      itc.setITCSN(ITCSN_WCACHEXG);  // Else wait until we've sent all ours
-      itc.scheduleWait(WC_RANDOM_SHORT);
-    } else itc.scheduleWait(WC_RANDOM_SHORT);
-#if 0
-    if (itc.activeCircuitsInUse() == 0 && itc.trySendPacket(pb)) {
-      itc.startCacheSync(true);
-    } else 
-      itc.reset();
-#endif
+  /////////////////// CUSTOM T2ITCStateOps HANDLERS
+
+  void T2ITCStateOps_SHUT::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
+    if (itc.getCompatibilityStatus() >= 2) {
+      if (itc.trySendPacket(pb)) {
+        itc.setITCSN(ITCSN_DRAIN);
+        itc.scheduleWait(WC_FULL);
+      } else itc.scheduleWait(WC_RANDOM_SHORT);
+    } else itc.scheduleWait(WC_RANDOM);
   }
 
-  // Leader receives FOLLOW, starts sending cache, goes to CACHEXG
-  void T2ITCStateOps_FOLLOW::receive(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    if (itc.getITCSN() != ITCSN_WFOLLOW || itc.activeCircuitsInUse() > 0) itc.reset();
-    else {
-      itc.startCacheSync(true);
-    }
+  void T2ITCStateOps_SHUT::receive(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
+    if (itc.getITCSN() > ITCSN_DRAIN) itc.reset();
   }
 
-  void T2ITCStateOps_WFOLLOW::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    FAIL(INCOMPLETE_CODE);
+  void T2ITCStateOps_DRAIN::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
+    if (itc.registeredEWCount() > 0) itc.reset();
+    else itc.startCacheSync();
   }
 
-  // Leader remains in CACHEXG unless all atoms sent, then goes to ??
   void T2ITCStateOps_CACHEXG::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    if (itc.sendCacheAtoms(pb)) {  // True when all atoms shipped
-      itc.setITCSN(ITCSN_WCACHEXG);  // Else wait until we've sent all ours
-    }
-    itc.scheduleWait(WC_RANDOM_SHORT);
+    bool sendDone = itc.sendVisibleAtoms(pb);  // True when all atoms shipped
+    bool recvDone = itc.isCacheReceiveComplete(); 
+    if (sendDone && recvDone) itc.setITCSN(ITCSN_OPEN);
+    itc.scheduleWait(WC_RANDOM_SHORT); // For either state
   }
 
   void T2ITCStateOps_CACHEXG::receive(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    ITCStateNumber sn = itc.getITCSN();
-    if (sn < ITCSN_FOLLOW || sn > ITCSN_WCACHEXG) { itc.reset(); return; }
-    if (itc.recvCacheAtoms(pb)) { // True when all atoms arrived, or an error reset
-      if (itc.getITCSN() == ITCSN_INIT) return; // just bail if something went wrong
-      itc.setITCSN(ITCSN_WCACHEXG);  // Else wait until we've sent all ours
-      itc.scheduleWait(WC_RANDOM_SHORT);
-    }
+    if (itc.getITCSN() < ITCSN_DRAIN) itc.reset();
+    if (itc.recvCacheAtoms(pb)) itc.setCacheReceiveComplete();
   }
-      
-  void T2ITCStateOps_WCACHEXG::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    if (itc.activeCircuitsInUse() > 0) // Shouldn't be, by now
-      itc.reset();
-    else if (itc.sendCacheAtoms(pb)) {  // True when all atoms shipped
-      FAIL(INCOMPLETE_CODE);
-    } else itc.scheduleWait(WC_RANDOM_SHORT);
+
+  void T2ITCStateOps_OPEN::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
+    itc.trySendPacket(pb); // Hi neighbor
+    itc.scheduleWait(WC_LONG);
+  }
+
+  void T2ITCStateOps_OPEN::receive(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
+    if (itc.getITCSN() < ITCSN_CACHEXG) itc.reset();
   }
 }
 

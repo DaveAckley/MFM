@@ -40,7 +40,7 @@ namespace MFM {
   /*   name  custo cusrc stub desc */                   \
   XX(IDLE,     0,    0,   0,  "idle active or passive") \
   XX(AINIT,    1,    0,   0,  "initial active state")   \
-  XX(AWLOCKS,  1,    1,   1,  "wait for locks")         \
+  XX(AWLOCKS,  1,    1,   0,  "wait for locks")         \
   XX(ABEHAVE,  0,    0,   1,  "execute behavior")       \
   XX(ASCACHE,  1,    1,   1,  "send cache updates")     \
   XX(AWACKS,   0,    0,   1,  "wait cache upd acks")    \
@@ -151,9 +151,17 @@ namespace MFM {
     bool checkSiteAvailability() ;
     bool checkCircuitAvailability() ;
     void takeOwnershipOfRegion() ;
-    bool registerWithITCs() ;
+    void registerWithITCIfNeeded(T2ITC & itc) ;
+    bool isRegisteredWithAnyITCs() ;
+
+    void initializeEW() ;
+    void finalizeEW() ;
+    void abortEW() ;
 
   private:
+
+#define UNALLOCATED_CIRCUIT_NUM 0xff
+
     struct CircuitInfo {
       T2ITC * mITC;
       CircuitNum mCircuitNum;
@@ -161,13 +169,10 @@ namespace MFM {
 
     CircuitInfo mCircuits[MAX_CIRCUITS_PER_EW];
 
-    void initializeEW() ;
-    void finalizeEW() ;
-
     void initCircuitInfo() ;
 
-    void addITCIfNeeded(T2ITC * itc) ;
-    
+
+
     EWStateNumber mStateNum;
     /*    T2EventWindowStatus mStatus; */
     UPoint mCenter;

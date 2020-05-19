@@ -185,10 +185,15 @@ namespace MFM {
     bool mExitRequest;
 
     T2ITC mITCs[DIR6_COUNT];
+
+  
   public:  // Hey it's const
     const Rect mITCVisible[DIR6_COUNT];
     const Rect mITCCache[DIR6_COUNT];
     const Rect mITCVisibleAndCache[DIR6_COUNT];
+
+    void freeEW(T2EventWindow * ew) ; //Public for T2EventWindow to call on abort?
+
   private:
     T2EventWindow * mEWs[MAX_EWSLOT+1]; // mEWs[0] set to 0
 
@@ -197,8 +202,6 @@ namespace MFM {
     void recordCompletedEvent(OurT2Site & site) ;
 
     T2EventWindow * allocEW() ;
-
-    void freeEW(T2EventWindow * ew) ;
 
     EWSet mFree;
     void initTimeQueueDrivers() ;

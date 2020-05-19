@@ -50,17 +50,10 @@ namespace MFM {
 
 #define ALL_ITC_STATES_MACRO()                                   \
   /*   name   vz,ch,mc,to,rc,sb,desc */                          \
-  XX(INIT,     0, 0, 0, 1, 0, 0, "initialized state")            \
-  XX(WAITCOMP, 1, 0, 0, 1, 0, 0, "wait for compatible physics")  \
-  XX(LEAD0,    0, 0, 2, 1, 1, 0, "claim I am leader, nonce 0")   \
-  XX(LEAD1,    0, 0, 2, 1, 1, 0, "claim I am leader, nonce 1")   \
-  XX(WLEAD0,   0, 0, 2, 0, 0, 0, "await leader ack, nonce 0")    \
-  XX(WLEAD1,   0, 0, 2, 0, 0, 0, "await leader ack, nonce 1")    \
-  XX(FOLLOW,   0, 0, 2, 1, 1, 0, "declare I am follower")        \
-  XX(WFOLLOW,  0, 0, 2, 1, 0, 0, "await follower ack")           \
-  XX(CACHEXG,  0, 0, 2, 1, 1, 0, "synchronizing caches")         \
-  XX(WCACHEXG, 0, 0, 2, 1, 0, 0, "wait for cache sync")          \
-  XX(SYNCED,   1, 1, 2, 0, 0, 1, "intertile events active")      \
+  XX(SHUT,     1, 0, 0, 1, 1, 0, "EWs running locally")          \
+  XX(DRAIN,    0, 0, 0, 1, 0, 0, "drain EWs to settle cache")    \
+  XX(CACHEXG,  0, 0, 2, 1, 1, 0, "exchange cache atoms")         \
+  XX(OPEN,     1, 1, 2, 1, 1, 0, "intertile EWs active")         \
 
   /*** DECLARE STATE NUMBERS **/
   typedef enum itcstatenumber {
@@ -155,6 +148,8 @@ namespace MFM {
 
     bool isCacheUsable() ;    // false unless ITC has reached cache sync
 
+    u32 registeredEWCount() const ;
+
     static Rect getRectForTileInit(Dir6 dir6, u32 widthIn, u32 skipIn) ;
 
     Rect getRectForTileInit(u32 widthIn, u32 skipIn) { return getRectForTileInit(mDir6,widthIn,skipIn); }
@@ -163,6 +158,7 @@ namespace MFM {
     const Rect & getCacheRect() const ;
     const Rect & getVisibleAndCacheRect() const ;
 
+    bool allocateActiveCircuitIfNeeded(EWSlotNum ewsn, CircuitNum & circuitnum) ;
     CircuitNum tryAllocateActiveCircuit() ;
 
     u32 activeCircuitsInUse() const ;
@@ -171,9 +167,11 @@ namespace MFM {
 
     void reset() ;             // Perform reset actions and enter ITCSN_INIT
 
-    bool initialize() ;
+    bool initializeFD() ;
 
-    void resetAllCircuits() ;
+    void initAllCircuits() ;
+
+    void abortAllEWs() ;
 
     void pollPackets(bool dispatch) ;
 
@@ -198,14 +196,23 @@ namespace MFM {
 
     int mFD;
 
+    T2EventWindow *(mRegisteredEWs[MAX_EWSLOT+1]);
+    u32 mRegisteredEWCount;
+
+    void registerEWRaw(T2EventWindow & ew) ;
+    void unregisterEWRaw(T2EventWindow & ew) ;
+    
     RectIterator mVisibleAtomsToSend;
+    bool mCacheReceiveComplete;
+    bool isCacheReceiveComplete() const { return mCacheReceiveComplete; }
+    void setCacheReceiveComplete() { mCacheReceiveComplete = true; }
 
     //// HELPERs
     u32 getCompatibilityStatus() ; // 0 closed 1 unknown compat 2 known compat
     s32 resolveLeader(ITCStateNumber theirimputedsn) ;
     void leadFollowOrReset(ITCStateNumber theirimputedsn) ;
-    void startCacheSync(bool asLeader) ;
-    bool sendCacheAtoms(T2PacketBuffer & pb) ;
+    void startCacheSync() ;
+    bool sendVisibleAtoms(T2PacketBuffer & pb) ;
     bool recvCacheAtoms(T2PacketBuffer & pb) ;
     bool tryReadAtom(ByteSource & in, UPoint & where, OurT2AtomBitVector & bv) ;
 
