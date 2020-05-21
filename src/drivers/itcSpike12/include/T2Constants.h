@@ -1,7 +1,7 @@
 #ifndef T2CONSTANTS_H
 #define T2CONSTANTS_H
 
-/** Maximum number of event windows in flight */
+/** Maximum number of active event windows in flight */
 #define MAX_EWSLOT 32
 
 /** Tile width in sites (including cache) */
@@ -58,12 +58,14 @@
    !T2_SITE_IS_CACHE(u32x,u32y))                \
   
 
+//////MISC DEFINES
+#define MAX_CIRCUITS_PER_EW 2
+#define MAX_CIRCUITS_PER_ITC 16
+
+
 /////////FAKE PHYSICS
 #define T2_PHONY_DREG_TYPE 1
 #define T2_PHONY_RES_TYPE  2
-
-//////MISC DEFINES
-#define MAX_CIRCUITS_PER_EW 2
 
 
 //////////////////////////ALSO MACROS///////////////////////

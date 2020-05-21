@@ -30,6 +30,7 @@
 namespace MFM {
 
   struct EWInitiator : public TimeoutAble {
+    EWInitiator() ;
     virtual void onTimeout(TimeQueue& srctq) ;
     virtual const char* getName() const { return "EWInitiator"; }
   };
@@ -55,8 +56,18 @@ namespace MFM {
   struct T2Tile {
 
     static inline T2Tile & get() {
-      static T2Tile THE_INSTANCE;
-      return THE_INSTANCE;
+      static bool underConstruction;
+      if (underConstruction) {
+        // Go bare lib: LOG etc may not be available yet
+        fprintf(stderr,"%s Reentry during construction\n",__PRETTY_FUNCTION__);
+        FAIL(ILLEGAL_STATE);
+      }
+      underConstruction = true;
+      {
+        static T2Tile THE_INSTANCE;
+        underConstruction = false;
+        return THE_INSTANCE;
+      }
     }
 
     T2Tile() ;

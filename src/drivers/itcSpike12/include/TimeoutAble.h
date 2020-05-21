@@ -20,6 +20,36 @@
 namespace MFM {
   struct TimeQueue; // FORWARD
 
+  typedef enum waitcode {
+    WC_NOW,                     
+    WC_HALF,   
+    WC_FULL,   
+    WC_LONG,   
+    WC_RANDOM, 
+    WC_RANDOM_SHORT, 
+    MAX_WAIT_CODE
+  } WaitCode;
+
+  typedef enum waitms {
+    WC_HALF_MS = 150,
+    WC_FULL_MS = 300,
+
+    WC_LONG_MIN_MS = 10000,
+    WC_LONG_MAX_MS = 15000,
+    WC_LONG_WIDTH = WC_LONG_MAX_MS - WC_LONG_MIN_MS+1,
+
+    WC_RANDOM_MIN_MS = 30,
+    WC_RANDOM_MAX_MS = 1500,
+
+    WC_RANDOM_WIDTH = WC_RANDOM_MAX_MS - WC_RANDOM_MIN_MS+1,
+
+    WC_RANDOM_SHORT_MIN_MS = 1,
+    WC_RANDOM_SHORT_MAX_MS = 10,
+
+    WC_RANDOM_SHORT_WIDTH = WC_RANDOM_SHORT_MAX_MS - WC_RANDOM_SHORT_MIN_MS+1
+
+  } WaitMs;
+
   struct TimeoutAble {
 
     //// TimeoutAble API METHODS:
@@ -36,6 +66,8 @@ namespace MFM {
       if (isOnTQ()) remove();
       insert(tq,now,fuzzbits);
     }
+
+    void scheduleWait(WaitCode wc) ;
 
     u32 getTimeout() const { return mTimeMS; }
     void printTimeout(ByteSink & bs) const ;

@@ -1,5 +1,6 @@
 #include "TimeoutAble.h"
 
+#include "T2Tile.h"
 #include "TimeQueue.h"
 
 namespace MFM {
@@ -59,6 +60,24 @@ namespace MFM {
     assert(mOnTQ);
     mOnTQ->removeRaw(*this);
     mOnTQ = 0;
+  }
+
+  void TimeoutAble::scheduleWait(WaitCode wc) {
+    u32 ms;
+    T2Tile & tile = T2Tile::get();
+    TimeQueue & tq = tile.getTQ();
+    Random & random = tile.getRandom();
+    switch (wc) {
+    case WC_NOW:    ms = 0u; break;
+    case WC_HALF:   ms = WC_HALF_MS; break;
+    case WC_FULL:   ms = WC_FULL_MS; break;
+    case WC_LONG:   ms = random.Between(WC_LONG_MIN_MS,WC_LONG_MAX_MS); break;
+    case WC_RANDOM: ms = random.Between(WC_RANDOM_MIN_MS,WC_RANDOM_MAX_MS); break;
+    case WC_RANDOM_SHORT:
+                    ms = random.Between(WC_RANDOM_SHORT_MIN_MS,WC_RANDOM_SHORT_MAX_MS); break;
+    default: FAIL(ILLEGAL_ARGUMENT);
+    }
+    schedule(tq,ms,0);
   }
 
   void TimeoutAble::printTimeout(ByteSink & bs) const {

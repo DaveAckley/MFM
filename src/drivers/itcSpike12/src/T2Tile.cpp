@@ -12,11 +12,15 @@
 #define ALL_DIR6_MACRO() XX(ET)YY XX(SE)YY XX(SW)YY XX(WT)YY XX(NW)YY XX(NE)ZZ
 
 namespace MFM {
+  EWInitiator::EWInitiator() {
+    LOG.Message("%s",__PRETTY_FUNCTION__);
+  }
+
   void EWInitiator::onTimeout(TimeQueue& srctq) {
     T2Tile& tile = T2Tile::get();
-    if (!tile.isLiving()) schedule(srctq,1000);  // Not running EWs
-    else if (tile.maybeInitiateEW()) schedule(srctq,0);  // EW started
-    else schedule(srctq,5); // No EWs?  Short wait
+    if (!tile.isLiving()) scheduleWait(WC_LONG);  // Not running EWs
+    else if (tile.maybeInitiateEW()) scheduleWait(WC_NOW);  // EW started
+    else scheduleWait(WC_RANDOM_SHORT); // No EWs?  Short wait
   }
 
   void KITCPoller::onTimeout(TimeQueue& srctq) {
@@ -36,7 +40,7 @@ namespace MFM {
         mTile.getITC(dir6).bump(); // Something's changed
       }        
     }
-    schedule(srctq,100);
+    scheduleWait(WC_FULL);
   }
 
   KITCPoller::KITCPoller(T2Tile& tile)
@@ -52,7 +56,7 @@ namespace MFM {
       FAIL(ILLEGAL_STATE);
     }
     mKITCStatusFD = ret;
-    schedule(mTile.getTQ(),0);
+    schedule(mTile.getTQ(),0);  // Not scheduleWait here: T2Tile ctor is running
   }
 
   u32 KITCPoller::updateKITCEnabledStatusFromStatus(u32 status, Dir8 dir8, u32 val) {
@@ -130,7 +134,7 @@ namespace MFM {
     for (u32 i = 0; i <= MAX_EWSLOT; ++i) {
       if (i==0) mEWs[i] = 0;
       else {
-        mEWs[i] = new T2EventWindow(*this, i);
+        mEWs[i] = new T2EventWindow(*this, i, "");
         mEWs[i]->insertInEWSet(&mFree);
       }
     }
@@ -377,7 +381,7 @@ static const char * CMD_HELP_STRING =
   void T2Tile::releaseEW(T2EventWindow * ew) {
     assert(ew != 0);
     assert(ew->isAssigned());
-    UPoint center = ew->getCenter();
+    SPoint center = ew->getCenter();
     u32 radius = ew->getRadius();
     const SPoint origin(0,0);
     const SPoint maxSite(T2TILE_WIDTH-1,T2TILE_HEIGHT-1);
@@ -387,7 +391,7 @@ static const char * CMD_HELP_STRING =
     // OK, unhog the region
     for (u32 sn = first; sn <= last; ++sn) {
       SPoint offset = mMDist.GetPoint(sn);
-      SPoint site = MakeSigned(center) + offset;
+      SPoint site = center + offset;
       if (!site.BoundedBy(origin,maxSite)) continue;
       assert(mSiteOwners[site.GetX()][site.GetY()] == ew);
       mSiteOwners[site.GetX()][site.GetY()] = 0;

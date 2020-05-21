@@ -14,6 +14,7 @@
 
 // Spike files
 #include "T2Types.h"
+#include "T2EventWindow.h"
 #include "T2PacketBuffer.h"
 #include "TimeoutAble.h"
 #include "ITCIterator.h"
@@ -27,7 +28,6 @@ namespace MFM {
 
   struct T2Tile; // FORWARD
   struct T2ITC; // FORWARD
-  struct T2EventWindow; // FORWARD
 
   struct T2ITCPacketPoller : public TimeoutAble {
     // TimeoutAble API
@@ -43,7 +43,8 @@ namespace MFM {
 
   struct Circuit {
     CircuitNum mNumber; // 0..CIRCUIT_COUNT-1
-    u8 mEW;     // 1..MAX_EWSLOTS
+    u8 mEW;             // 1..MAX_EWSLOTS
+    s8 mYoinkVal;       // -1,0,1
   };
 
   /**** ITC STATE MACHINE: EARLY STATES HACKERY ****/
@@ -101,35 +102,6 @@ namespace MFM {
 #undef YY1
 #undef YY0
   
-  typedef enum waitcode {
-    WC_NOW,                     
-    WC_HALF,   
-    WC_FULL,   
-    WC_LONG,   
-    WC_RANDOM, 
-    WC_RANDOM_SHORT, 
-    MAX_WAIT_CODE
-  } WaitCode;
-
-  typedef enum waitms {
-    WC_HALF_MS = 150,
-    WC_FULL_MS = 300,
-
-    WC_LONG_MIN_MS = 10000,
-    WC_LONG_MAX_MS = 15000,
-    WC_LONG_WIDTH = WC_LONG_MAX_MS - WC_LONG_MIN_MS+1,
-
-    WC_RANDOM_MIN_MS = 30,
-    WC_RANDOM_MAX_MS = 1500,
-
-    WC_RANDOM_WIDTH = WC_RANDOM_MAX_MS - WC_RANDOM_MIN_MS+1,
-
-    WC_RANDOM_SHORT_MIN_MS = 1,
-    WC_RANDOM_SHORT_MAX_MS = 10,
-
-    WC_RANDOM_SHORT_WIDTH = WC_RANDOM_SHORT_MAX_MS - WC_RANDOM_SHORT_MIN_MS+1
-
-  } WaitMs;
 
   struct T2ITC : public TimeoutAble {
     virtual void onTimeout(TimeQueue& srcTq) ;
@@ -137,12 +109,12 @@ namespace MFM {
 
     T2ITC(T2Tile& tile, Dir6 dir6, const char * name) ;
 
+    virtual ~T2ITC() ;
+
     static bool isGingerDir6(Dir6 dir6) ;
     static bool isFredDir6(Dir6 dir6) { return !isGingerDir6(dir6); }
     bool isFred() const { return !isGinger(); }
     bool isGinger() const { return isGingerDir6(mDir6); }
-
-    void scheduleWait(WaitCode wc) ;
 
     bool isVisibleUsable() ;  // true unless draining EWs before sync
 
@@ -154,6 +126,8 @@ namespace MFM {
 
     Rect getRectForTileInit(u32 widthIn, u32 skipIn) { return getRectForTileInit(mDir6,widthIn,skipIn); }
 
+    const SPoint getITCOrigin() const ; // EW centers xmit relative to this
+    const SPoint getMateITCOrigin() const ; 
     const Rect & getVisibleRect() const ;
     const Rect & getCacheRect() const ;
     const Rect & getVisibleAndCacheRect() const ;
@@ -162,6 +136,8 @@ namespace MFM {
     CircuitNum tryAllocateActiveCircuit() ;
 
     u32 activeCircuitsInUse() const ;
+
+    s8 getYoinkVal(CircuitNum cn, bool forActive) const ;
 
     void freeActiveCircuit(CircuitNum cn) ;
 
@@ -177,12 +153,21 @@ namespace MFM {
 
     bool tryHandlePacket(bool dispatch) ;
 
+    void handleCircuitPacket(T2PacketBuffer &pb) ;
+
+    void handleRingPacket(T2PacketBuffer & pb) ;
+
+    void handleAnswerPacket(T2PacketBuffer & pb) ;
+
+    bool trySendAckPacket(CircuitNum cn) ;
+
     bool trySendPacket(T2PacketBuffer &pb) ;
 
     T2Tile & mTile;
     const Dir6 mDir6;
     const Dir8 mDir8;
     const char * mName;
+    u32 mPacketsShipped;
     ITCStateNumber mStateNumber;
     T2ITCStateOps & getT2ITCStateOps() ;
 
@@ -199,6 +184,8 @@ namespace MFM {
     T2EventWindow *(mRegisteredEWs[MAX_EWSLOT+1]);
     u32 mRegisteredEWCount;
 
+    T2EventWindow * mPassiveEWs[CIRCUIT_COUNT];
+
     void registerEWRaw(T2EventWindow & ew) ;
     void unregisterEWRaw(T2EventWindow & ew) ;
     
@@ -208,6 +195,7 @@ namespace MFM {
     void setCacheReceiveComplete() { mCacheReceiveComplete = true; }
 
     //// HELPERs
+    u32 getPacketsShipped() const { return mPacketsShipped; }
     u32 getCompatibilityStatus() ; // 0 closed 1 unknown compat 2 known compat
     s32 resolveLeader(ITCStateNumber theirimputedsn) ;
     void leadFollowOrReset(ITCStateNumber theirimputedsn) ;

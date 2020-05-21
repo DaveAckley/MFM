@@ -18,7 +18,8 @@ namespace MFM {
       u32 atype = a.GetType();
       u32 color;
       switch (atype) {
-      case T2_PHONY_DREG_TYPE: color = 0xff444444; break;
+        //      case T2_PHONY_DREG_TYPE: color = 0xff444444; break;
+      case T2_PHONY_DREG_TYPE: color = 0xffccdd44; break; // GO YELLOW FOR VIZ
       case T2_PHONY_RES_TYPE: color = 0xff999944; break;
       default: color = 0xffffffff; break;
       }

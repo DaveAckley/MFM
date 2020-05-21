@@ -26,7 +26,7 @@ namespace MFM {
       itc.pollPackets(true);
     }
 
-    schedule(srcTq,10);
+    scheduleWait(WC_RANDOM_SHORT);
   }
 
   bool T2ITC::isGingerDir6(Dir6 dir6) {
@@ -39,23 +39,6 @@ namespace MFM {
     }
   }
 
-  void T2ITC::scheduleWait(WaitCode wc) {
-    u32 ms;
-    TimeQueue & tq = mTile.getTQ();
-    Random & random = mTile.getRandom();
-    switch (wc) {
-    case WC_NOW:    ms = 0u; break;
-    case WC_HALF:   ms = WC_HALF_MS; break;
-    case WC_FULL:   ms = WC_FULL_MS; break;
-    case WC_LONG:   ms = random.Between(WC_LONG_MIN_MS,WC_LONG_MAX_MS); break;
-    case WC_RANDOM: ms = random.Between(WC_RANDOM_MIN_MS,WC_RANDOM_MAX_MS); break;
-    case WC_RANDOM_SHORT:
-                    ms = random.Between(WC_RANDOM_SHORT_MIN_MS,WC_RANDOM_SHORT_MAX_MS); break;
-    default: FAIL(ILLEGAL_ARGUMENT);
-    }
-    schedule(tq,ms,0);
-  }
-
   bool T2ITC::isVisibleUsable() {
     T2ITCStateOps & ops = getT2ITCStateOps();
     return ops.isVisibleUsable();
@@ -66,6 +49,8 @@ namespace MFM {
     return ops.isCacheUsable();
   }
 
+  const SPoint T2ITC::getITCOrigin() const { return getVisibleRect().GetPosition(); }
+  const SPoint T2ITC::getMateITCOrigin() const { return getCacheRect().GetPosition(); }
   const Rect & T2ITC::getVisibleRect() const { return mTile.getVisibleRect(mDir6); }
   const Rect & T2ITC::getCacheRect() const { return mTile.getCacheRect(mDir6); }
   const Rect & T2ITC::getVisibleAndCacheRect() const { return mTile.getVisibleAndCacheRect(mDir6); }
@@ -121,6 +106,99 @@ namespace MFM {
     return mTile.getKITCPoller().getKITCEnabledStatus(mDir8);
   }
 
+  void T2ITC::handleCircuitPacket(T2PacketBuffer & pb) {
+    LOG.Debug("%s: Enter HCP", getName());
+    u32 len = pb.GetLength();
+    if (len < 2) {
+      LOG.Warning("%s: %d byte circuit packet, ignored", getName(), len);
+      return;
+    }
+    const char * pkt = pb.GetBuffer();
+    u8 xitc = (pkt[1]>>4)&0x7;
+    switch (xitc) {
+    default:
+      LOG.Warning("%s: XITC type %d circuit packet, ignored", getName(), xitc);
+      return;
+    case 1: // RING: Request lock
+      handleRingPacket(pb);
+      break;
+    case 2: // ANSWER: Grant lock
+      handleAnswerPacket(pb);
+      break;
+      /*
+    case 3: // BUSY: Reject lock
+      handleBusyPacket(pb);
+      break;
+      */
+    }
+  }
+
+  void T2ITC::handleRingPacket(T2PacketBuffer & pb) {
+    LOG.Debug("%s: Enter HRP", getName());
+    u32 len = pb.GetLength();
+    if (len < 5) {
+      LOG.Warning("%s: Ring packet len==%d, ignored", getName(), len);
+      return;
+    }
+    const char * pkt = pb.GetBuffer();
+    u8 cn = pkt[1]&0xf;
+    s8 sx = (s8) pkt[2];
+    s8 sy = (s8) pkt[3];
+    SPoint theirCtr(sx,sy);
+    SPoint theirOrigin = getMateITCOrigin();
+    SPoint ourCtr = theirCtr + theirOrigin;
+    bool ayoink = ((pkt[4]>>7)&0x1) != 0;
+    u32 radius = pkt[4]&0x7;
+    if (radius > 4) {
+      LOG.Warning("%s: Ring packet (%d,%d) radius==%d, ignored", getName(), sx, sy, radius);
+      return;
+    }
+
+    T2EventWindow & passiveEW = *mPassiveEWs[cn];
+    MFM_API_ASSERT_STATE(mCircuits[0][cn].mEW == 0);
+    MFM_API_ASSERT_STATE(mCircuits[0][cn].mYoinkVal < 0);
+    mCircuits[0][cn].mEW = passiveEW.slotNum();
+    mCircuits[0][cn].mYoinkVal = ayoink ? 1 : 0;
+    passiveEW.initPassive(ourCtr, radius);
+    if (!passiveEW.checkSiteAvailabilityForPassive()) {
+      FAIL(INCOMPLETE_CODE);
+    }
+    if (!trySendAckPacket(cn)) {
+      FAIL(INCOMPLETE_CODE);
+    }
+  }
+
+  bool T2ITC::trySendAckPacket(CircuitNum cn) {
+    T2PacketBuffer pb;
+    pb.Printf("%c%c", 0xa0|mDir8, 0xa0|cn);  // XITC==2
+    return trySendPacket(pb);
+  }
+
+  void T2ITC::handleAnswerPacket(T2PacketBuffer & pb) {
+    LOG.Debug("%s: Enter HAP", getName());
+    u32 len = pb.GetLength();
+    if (len < 2) {
+      LOG.Warning("%s: Answer packet len==%d, ignored", getName(), len);
+      return;
+    }
+    const char * pkt = pb.GetBuffer();
+    u8 cn = pkt[1]&0xf;
+    Circuit & circuit = mCircuits[1][cn]; // Pick up active side
+    u32 slotnum = circuit.mEW;
+    if (slotnum == 0) { // ???
+      FAIL(INCOMPLETE_CODE); // VATDOOVEEDOO
+    }
+    T2Tile & tile = T2Tile::get();
+    T2EventWindow * ew = tile.getEW(slotnum);
+    MFM_API_ASSERT_NONNULL(ew);
+    T2EventWindow & activeEW = *ew;
+
+    LOG.Message("%s %s HAP", getName(), activeEW.getName());
+    if (activeEW.getEWSN() != EWSN_AWLOCKS) 
+      FAIL(INCOMPLETE_CODE); // DITTOO
+    else activeEW.handleACK(*this);
+  }
+
   bool T2ITC::tryHandlePacket(bool dispatch) {
     T2PacketBuffer pb;
     const u32 MAX_PACKET_SIZE = 255;
@@ -134,6 +212,7 @@ namespace MFM {
       return false;
     }
     if (!dispatch) return true;
+    LOG.Debug("%s: Recv %d/0x%02x", getName(), len, packet[0]);
     if (len < 2) LOG.Warning("%s one byte 0x%02x packet, ignored", getName(), packet[0]);
     else {
       u32 xitc = (packet[1]>>4)&0x7;
@@ -143,7 +222,7 @@ namespace MFM {
         MFM_API_ASSERT_NONNULL(ops);
         ops->receive(*this, pb, mTile.getTQ());
       } else if (xitc <= 4) {
-        LOG.Warning("%s xitc circuit %d packet, ignored", getName(), xitc);
+        handleCircuitPacket(pb);
       } else {
         LOG.Warning("%s xitc reserved %d packet, ignored", getName(), xitc);
       }
@@ -161,6 +240,7 @@ namespace MFM {
       if (errno == ERESTART) return false; // Interrupted, try again
     }
     if (len != packetlen) return false;  // itcpkt LKM doesn't actually support partial write
+    ++mPacketsShipped;                   // another day, 
     return true;                         // 'the bird is away'
   }
 
@@ -214,6 +294,7 @@ namespace MFM {
       for (u8 act = 0; act <= 1; ++act) {
         mCircuits[act][i].mNumber = i;
         mCircuits[act][i].mEW = 0;  // Unassigned
+        mCircuits[act][i].mYoinkVal = -1;  // Not in use
       }
     }
   }
@@ -223,15 +304,27 @@ namespace MFM {
     , mDir6(dir6)
     , mDir8(mapDir6ToDir8(dir6))
     , mName(name)
+    , mPacketsShipped(0u)
     , mStateNumber(ITCSN_SHUT)
     , mActiveFreeCount(CIRCUIT_COUNT)
     , mFD(-1)
-    , mRegisteredEWs{ }
+    , mRegisteredEWs{ 0 }
     , mRegisteredEWCount(0)
+    , mPassiveEWs{ 0 }
     , mVisibleAtomsToSend()
     , mCacheReceiveComplete(false)
-  {
-    initAllCircuits();
+    {
+      for (u32 i = 0; i < CIRCUIT_COUNT; ++i)
+        mPassiveEWs[i] = new T2EventWindow(mTile, i, mName);
+        
+      initAllCircuits();
+    }
+
+  T2ITC::~T2ITC() {
+    for (u32 i = 0; i < CIRCUIT_COUNT; ++i) {
+      delete mPassiveEWs[i];
+      mPassiveEWs[i] = 0;
+    }
   }
 
   /**** LATE ITC STATES HACKERY ****/
@@ -336,6 +429,7 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
     CircuitNum ret = tryAllocateActiveCircuit();
     if (ret == ALL_CIRCUITS_BUSY) return false; // Sorry no can do
     mCircuits[1][ret].mEW = ewsn; // NOW ALLOCATED as active EW
+    mCircuits[1][ret].mYoinkVal = mTile.getRandom().Between(0,1); 
     circuitnum = ret;             // NOW ALLOCATED as EW's circuit 
     return true;
   }
@@ -353,9 +447,14 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
    return CIRCUIT_COUNT - mActiveFreeCount;
   }
 
+  s8 T2ITC::getYoinkVal(CircuitNum cn, bool forActive) const {
+    MFM_API_ASSERT_ARG(cn < CIRCUIT_COUNT);
+    return mCircuits[forActive ? 1 : 0][cn].mYoinkVal;
+  }
+
   void T2ITC::freeActiveCircuit(CircuitNum cn) {
-    assert(cn < CIRCUIT_COUNT);
-    assert(mActiveFreeCount < CIRCUIT_COUNT);
+    MFM_API_ASSERT_ARG(cn < CIRCUIT_COUNT);
+    MFM_API_ASSERT_STATE(mActiveFreeCount < CIRCUIT_COUNT);
     mActiveFree[mActiveFreeCount++] = cn;
     mCircuits[1][cn].mEW = 0;
     /* let it go to timeout, they're doing ping-pong

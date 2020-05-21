@@ -11,14 +11,16 @@
 #include <vector>
 
 // Spike files
-#include "T2ITC.h"
+#include "dirdatamacro.h"
 #include "T2Types.h"
+#include "T2PacketBuffer.h"
 #include "EWSet.h"
 #include "TimeoutAble.h"
 
 namespace MFM {
 
   struct T2Tile; // FORWARD
+  struct T2ITC; // FORWARD
   struct T2EventWindow; // FORWARD
 
   ////BASE CLASS OF ALL T2EW STATE MACHINE HANDLER CLASSES
@@ -39,9 +41,9 @@ namespace MFM {
 #define ALL_EW_STATES_MACRO()                           \
   /*   name  custo cusrc stub desc */                   \
   XX(IDLE,     0,    0,   0,  "idle active or passive") \
-  XX(AINIT,    1,    0,   0,  "initial active state")   \
+  XX(AINIT,    1,    1,   0,  "initial active state")   \
   XX(AWLOCKS,  1,    1,   0,  "wait for locks")         \
-  XX(ABEHAVE,  0,    0,   1,  "execute behavior")       \
+  XX(ABEHAVE,  1,    0,   0,  "execute behavior")       \
   XX(ASCACHE,  1,    1,   1,  "send cache updates")     \
   XX(AWACKS,   0,    0,   1,  "wait cache upd acks")    \
   XX(ACOMMIT,  1,    1,   1,  "apply local updates")    \
@@ -78,15 +80,6 @@ namespace MFM {
 #undef YY1
 #undef YY0
 
-#if 0
-  enum T2EventWindowStatus {
-                            UNKNOWN,
-                            FREE,
-                            ACTIVE,
-                            PASSIVE
-  };
-#endif  
-
   struct T2EventWindow : public EWLinks, public TimeoutAble {
     // TimeoutAble methods
     virtual void onTimeout(TimeQueue& srcTq) ;
@@ -95,9 +88,14 @@ namespace MFM {
 
     virtual T2EventWindow * asEventWindow() { return this; }
 
-    T2EventWindow(T2Tile& tile, EWSlotNum ewsn) ;
+    T2EventWindow(T2Tile& tile, EWSlotNum ewsn, const char * category) ;
 
     virtual ~T2EventWindow() { }
+
+    void loadSites() ; // Tile sites -> ew sites
+    void saveSites() ; // EW sites -> tile sites
+    
+    bool executeEvent() ; // This is what we're here for.  true to commit results
 
     void schedule(TimeQueue& tq, u32 now = 0) { // Schedule for now (or then)
       if (isOnTQ()) remove();
@@ -108,6 +106,8 @@ namespace MFM {
     T2Tile & mTile;
     const EWSlotNum mSlotNum;
 
+    const char * getCategory() const { return mCategory; }
+
     EWStateNumber getEWSN() const { return mStateNum; }
     void setEWSN(EWStateNumber ewsn) {
       assert(ewsn >= 0 && ewsn < MAX_EW_STATE_NUMBER);
@@ -117,7 +117,7 @@ namespace MFM {
     /*    T2EventWindowStatus status() const { return mStatus; } */
     EWSlotNum slotNum() const { return mSlotNum; }
 
-    void assignCenter(UPoint tileSite, u32 radius, bool activeNotPassive) {
+    void assignCenter(SPoint tileSite, u32 radius, bool activeNotPassive) {
       assert(mRadius == 0);
       assert(radius != 0);
       mCenter = tileSite;
@@ -129,7 +129,7 @@ namespace MFM {
       return mRadius != 0;
     }
 
-    UPoint getCenter() const {
+    SPoint getCenter() const {
       assert(isAssigned());
       return mCenter;
     }
@@ -141,18 +141,23 @@ namespace MFM {
 
     void releaseCenter() {
       assert(mRadius != 0);
-      mCenter = UPoint(0,0);
+      mCenter = SPoint(0,0);
       mRadius = 0;
       setEWSN(EWSN_IDLE);
     }
 
     /*    void update() ; */
     bool tryInitiateActiveEvent(UPoint center,u32 radius) ;
+    void initPassive(SPoint ctr, u32 radius) ;
+    bool trySendLockRequests() ;
     bool checkSiteAvailability() ;
+    bool checkSiteAvailabilityForPassive() ;
     bool checkCircuitAvailability() ;
     void takeOwnershipOfRegion() ;
     void registerWithITCIfNeeded(T2ITC & itc) ;
     bool isRegisteredWithAnyITCs() ;
+    void handleACK(T2ITC & itc) ;
+    bool hasAllNeededLocks() ;
 
     void initializeEW() ;
     void finalizeEW() ;
@@ -165,20 +170,25 @@ namespace MFM {
     struct CircuitInfo {
       T2ITC * mITC;
       CircuitNum mCircuitNum;
+      bool mLockAcquired;
     };
 
     CircuitInfo mCircuits[MAX_CIRCUITS_PER_EW];
 
     void initCircuitInfo() ;
+    void captureLockSequenceNumber(T2ITC& itc) ;
+    void clearLockSequenceNumbers() ;
+    u32 getLockSequenceNumber(Dir6 dir6) ;
 
-
-
+    u32 mLockSequenceNumber[DIR6_COUNT];
     EWStateNumber mStateNum;
     /*    T2EventWindowStatus mStatus; */
-    UPoint mCenter;
+    SPoint mCenter;
     u32 mRadius;
     OurT2Site mSites[EVENT_WINDOW_SITES(MAX_EVENT_WINDOW_RADIUS)];
     bool mSitesLive[EVENT_WINDOW_SITES(MAX_EVENT_WINDOW_RADIUS)];
+
+    const char * mCategory;
 
     /*    void setStatus(T2EventWindowStatus ews) { mStatus = ews; } */
     friend class EWSet;
