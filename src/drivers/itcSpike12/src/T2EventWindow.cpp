@@ -137,7 +137,7 @@ namespace MFM {
   }
 
   void T2EventWindow::handleACK(T2ITC & itc) {
-    LOG.Message("%s hACK %s", getName(), itc.getName());
+    LOG.Debug("%s hACK %s", getName(), itc.getName());
 
     MFM_API_ASSERT_STATE(getEWSN() == EWSN_AWLOCKS);
     
@@ -148,7 +148,7 @@ namespace MFM {
   }
 
   void T2EventWindow::handleHangUp(T2ITC & itc) {
-    LOG.Message("%s hHU %s", getName(), itc.getName());
+    LOG.Debug("%s hHU %s", getName(), itc.getName());
 
     MFM_API_ASSERT_STATE(getEWSN() == EWSN_AWACKS);
 
@@ -482,12 +482,12 @@ namespace MFM {
     
     if (count == 0) { // Recv final update packet
       commitPassiveEWAndHangUp(itc); 
-      LOG.Message("%s PASSIVE DONE",getName());
+      LOG.Debug("%s PASSIVE DONE",getName());
     }
   }
 
   void T2EventWindow::commitPassiveEWAndHangUp(T2ITC & itc) {
-    LOG.Message("%s (%s) cPEWAHU",getName(),itc.getName());
+    LOG.Debug("%s (%s) cPEWAHU",getName(),itc.getName());
     MFM_API_ASSERT_STATE(getEWSN()==EWSN_PWCACHE);
 
     // Find circuitnumber
@@ -602,7 +602,7 @@ namespace MFM {
     , mCategory(category)
   {
     initializeEW();
-    LOG.Message("T2EW ctor %d/%s",ewsn,category);
+    LOG.Debug("T2EW ctor %d/%s",ewsn,category);
   }
 
   /**** LATE EVENTWINDOW STATES HACKERY ****/

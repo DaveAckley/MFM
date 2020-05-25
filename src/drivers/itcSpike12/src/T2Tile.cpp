@@ -13,7 +13,7 @@
 
 namespace MFM {
   EWInitiator::EWInitiator() {
-    LOG.Message("%s",__PRETTY_FUNCTION__);
+    LOG.Debug("%s",__PRETTY_FUNCTION__);
   }
 
   void EWInitiator::onTimeout(TimeQueue& srctq) {

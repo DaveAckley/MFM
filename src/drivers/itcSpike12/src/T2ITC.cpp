@@ -255,7 +255,7 @@ namespace MFM {
     MFM_API_ASSERT_NONNULL(ew);
     T2EventWindow & activeEW = *ew;
 
-    LOG.Message("%s %s HAP", getName(), activeEW.getName());
+    LOG.Debug("%s %s HAP", getName(), activeEW.getName());
     if (activeEW.getEWSN() != EWSN_AWLOCKS) 
       FAIL(INCOMPLETE_CODE); // DITTOO
     else activeEW.handleACK(*this);
@@ -325,7 +325,7 @@ namespace MFM {
   void T2ITC::setITCSN(ITCStateNumber itcsn) {
     MFM_API_ASSERT_ARG(itcsn >= 0 && itcsn < MAX_ITC_STATE_NUMBER);
     mStateNumber = itcsn;
-    LOG.Message("->%s",getName());
+    LOG.Debug("->%s",getName());
   }
 
   void T2ITC::reset() {

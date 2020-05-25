@@ -19,7 +19,7 @@ namespace MFM {
 
       SDL_FreeSurface(loaded);
 
-      LOG.Message("Surface %s loaded: %p, opped: %p", filename, loaded, opped);
+      LOG.Debug("Surface %s loaded: %p, opped: %p", filename, loaded, opped);
     } else {
       LOG.Error("Image %s not loaded : %s",
                 filename,

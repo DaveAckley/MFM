@@ -78,7 +78,7 @@ namespace MFM {
     double val = getChannelValue();
     bool pressed = getChannelValue() > 0;
     if (pressed != mIsDown) {
-      LOG.Message("Pushing fake isDown %d pressed %d val %f",mIsDown, pressed, val);
+      LOG.Debug("Pushing fake isDown %d pressed %d val %f",mIsDown, pressed, val);
       mIsDown = pressed;
       SDL_Event fake;
       memset(&fake,0,sizeof(fake));
