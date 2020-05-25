@@ -28,4 +28,12 @@ namespace MFM {
     T2Tile::get().setListening(checked);
   }
 
+  void T2SeedPhysicsButton::onClick() {
+    T2Tile::get().seedPhysics();
+  }
+
+  void T2ClearTileButton::onClick() {
+    T2Tile::get().clearPrivateSites();
+  }
+
 }

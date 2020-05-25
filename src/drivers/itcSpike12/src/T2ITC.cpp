@@ -91,7 +91,7 @@ namespace MFM {
       T2PacketBuffer pb;
       pb.Printf("%c%c",
                 0xa0|mDir8,   /*standard+urgent to dir8*/
-                0xf0|mStateNumber /* mfm+XITC==ITCcmd + sn*/
+                xitcByte1(XITC_ITC_CMD,mStateNumber)
                 );
       ops.timeout(*this, pb, srcTq);
     }
@@ -107,7 +107,7 @@ namespace MFM {
   }
 
   void T2ITC::handleCircuitPacket(T2PacketBuffer & pb) {
-    LOG.Debug("%s: Enter HCP", getName());
+    //LOG.Debug("%s: Enter HCP", getName());
     u32 len = pb.GetLength();
     if (len < 2) {
       LOG.Warning("%s: %d byte circuit packet, ignored", getName(), len);
@@ -117,19 +117,26 @@ namespace MFM {
     u8 xitc = (pkt[1]>>4)&0x7;
     switch (xitc) {
     default:
-      LOG.Warning("%s: XITC type %d circuit packet, ignored", getName(), xitc);
+      FAIL(UNREACHABLE_CODE);   
       return;
-    case 1: // RING: Request lock
+    case XITC_CS_RING:          // Request lock (by caller)
       handleRingPacket(pb);
       break;
-    case 2: // ANSWER: Grant lock
+    case XITC_CS_ANSWER:        // Grant lock (by callee)
       handleAnswerPacket(pb);
       break;
-      /*
-    case 3: // BUSY: Reject lock
-      handleBusyPacket(pb);
+    case XITC_CS_BUSY:          // Reject lock (by callee)
+      FAIL(INCOMPLETE_CODE);
       break;
-      */
+    case XITC_CS_TALK:          // Cache updates (by caller)
+      handleCacheUpdatesPacket(pb);
+      break;
+    case XITC_CS_HANGUP:        // Release lock (by callee)
+      handleHangUpPacket(pb);
+      break;
+    case XITC_CS_FLASH:         // Discard lock (by caller)
+      FAIL(INCOMPLETE_CODE);
+      break;
     }
   }
 
@@ -159,7 +166,7 @@ namespace MFM {
     MFM_API_ASSERT_STATE(mCircuits[0][cn].mYoinkVal < 0);
     mCircuits[0][cn].mEW = passiveEW.slotNum();
     mCircuits[0][cn].mYoinkVal = ayoink ? 1 : 0;
-    passiveEW.initPassive(ourCtr, radius);
+    passiveEW.initPassive(ourCtr, radius, cn, *this);
     if (!passiveEW.checkSiteAvailabilityForPassive()) {
       FAIL(INCOMPLETE_CODE);
     }
@@ -170,17 +177,72 @@ namespace MFM {
 
   bool T2ITC::trySendAckPacket(CircuitNum cn) {
     T2PacketBuffer pb;
-    pb.Printf("%c%c", 0xa0|mDir8, 0xa0|cn);  // XITC==2
+    pb.Printf("%c%c",
+              0xa0|mDir8,
+              xitcByte1(XITC_CS_ANSWER,cn)
+              );
     return trySendPacket(pb);
   }
 
+  void T2ITC::handleHangUpPacket(T2PacketBuffer & pb) {
+    LOG.Debug("%s: Enter HUP", getName());
+    u32 len = pb.GetLength();
+    MFM_API_ASSERT_ARG(len >= 2);
+    const char * pkt = pb.GetBuffer();
+    u8 cn = pkt[1]&0xf;
+    Circuit & circuit = mCircuits[1][cn]; // Pick up active side
+    u32 slotnum = circuit.mEW;
+    if (slotnum == 0) { // ???
+      FAIL(INCOMPLETE_CODE); // VATDOOVEEDOO
+    }
+    T2Tile & tile = T2Tile::get();
+    T2EventWindow * ew = tile.getEW(slotnum);
+    MFM_API_ASSERT_NONNULL(ew);
+    T2EventWindow & activeEW = *ew;
+
+    freeActiveCircuit(cn); // We had one in this case and we're done with it
+    unregisterEWRaw(activeEW); // Whether we had a circuit or not
+
+    if (activeEW.getEWSN() != EWSN_AWACKS) 
+      FAIL(INCOMPLETE_CODE); // DITTOO
+    else activeEW.handleHangUp(*this);
+  }
+
+  void T2ITC::handleCacheUpdatesPacket(T2PacketBuffer & pb) {
+    LOG.Debug("%s: Enter HCUP", getName());
+    u32 len = pb.GetLength();
+    MFM_API_ASSERT_ARG(len >= 2);
+    const char * pkt = pb.GetBuffer();
+    u8 cn = pkt[1]&0xf;
+    T2EventWindow & passiveEW = *mPassiveEWs[cn];
+    MFM_API_ASSERT_STATE(passiveEW.getEWSN() == EWSN_PWCACHE);
+    passiveEW.applyCacheUpdatesPacket(pb, *this);
+  }
+
+  void T2ITC::hangUpPassiveEW(T2EventWindow & passiveEW, CircuitNum cn) {
+    MFM_API_ASSERT_ARG(passiveEW.getEWSN() == EWSN_PWCACHE);
+    MFM_API_ASSERT_ARG(cn < CIRCUIT_COUNT);
+    // SEND HANG UP
+    T2PacketBuffer pb;
+    pb.Printf("%c%c",
+              0xa0|mDir8,   /*standard+urgent to dir8*/
+              xitcByte1(XITC_CS_HANGUP,cn)
+              );
+    if (!trySendPacket(pb)) {
+      FAIL(INCOMPLETE_CODE); // DO WE HAVE TO BLOCK OR BLOW UP SOMETHING NOW?
+    }
+
+    // Free passive side circuit
+    MFM_API_ASSERT_STATE(mCircuits[0][cn].mEW == passiveEW.slotNum());
+    MFM_API_ASSERT_STATE(mCircuits[0][cn].mYoinkVal >= 0);
+    mCircuits[0][cn].mEW = 0; // XXX really?  really really?  not max sumtin?
+    mCircuits[0][cn].mYoinkVal = -1;
+  }
+  
   void T2ITC::handleAnswerPacket(T2PacketBuffer & pb) {
     LOG.Debug("%s: Enter HAP", getName());
     u32 len = pb.GetLength();
-    if (len < 2) {
-      LOG.Warning("%s: Answer packet len==%d, ignored", getName(), len);
-      return;
-    }
+    MFM_API_ASSERT_ARG(len >= 2);
     const char * pkt = pb.GetBuffer();
     u8 cn = pkt[1]&0xf;
     Circuit & circuit = mCircuits[1][cn]; // Pick up active side
@@ -212,19 +274,23 @@ namespace MFM {
       return false;
     }
     if (!dispatch) return true;
-    LOG.Debug("%s: Recv %d/0x%02x", getName(), len, packet[0]);
+    if (len == 1)
+      LOG.Debug("%s: Recv %d/0x%02x", getName(), len, packet[0]);
+    else
+      LOG.Debug("%s: Recv %d/0x%02x 0x%02x%s", getName(), len,
+                packet[0], packet[1], len > 2? " ..." : "");
     if (len < 2) LOG.Warning("%s one byte 0x%02x packet, ignored", getName(), packet[0]);
     else {
       u32 xitc = (packet[1]>>4)&0x7;
-      if (xitc == 7) { // ITC state command
+      if (xitc == XITC_ITC_CMD) { // ITC state command
         ITCStateNumber psn = (ITCStateNumber) (packet[1]&0xf);
         T2ITCStateOps * ops = T2ITCStateOps::getOpsOrNull(psn);
         MFM_API_ASSERT_NONNULL(ops);
         ops->receive(*this, pb, mTile.getTQ());
-      } else if (xitc <= 4) {
+      } else if (xitc >= XITC_CS_MIN_VAL && xitc <= XITC_CS_MAX_VAL) {
         handleCircuitPacket(pb);
       } else {
-        LOG.Warning("%s xitc reserved %d packet, ignored", getName(), xitc);
+        LOG.Warning("%s xitc type %d packet, ignored", getName(), xitc);
       }
     }
     return true;
@@ -234,7 +300,19 @@ namespace MFM {
     s32 packetlen = pb.GetLength();
     const char * bytes = pb.GetBuffer();
     s32 len = ::write(mFD, bytes, packetlen);
-    LOG.Message("  %s wrote %d == %d",getName(),packetlen,len);
+    if (packetlen == 1)
+      LOG.Debug("  %s wrote %d/0x%02x == %d",
+                getName(),
+                packetlen,
+                bytes[0],
+                len);
+    else
+      LOG.Debug("  %s wrote %d/0x%02x 0x%02x%s== %d",
+                getName(),
+                packetlen,
+                bytes[0],bytes[1],
+                packetlen > 2 ? " ..." : "",
+                len);
     if (len < 0) {
       if (errno == EAGAIN) return false; // No room, try again
       if (errno == ERESTART) return false; // Interrupted, try again
@@ -552,7 +630,7 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
     u8 byte0=0, byte1=0;
     if ((cbs.Scanf("%c%c",&byte0,&byte1) != 2) ||
         ((byte0 & 0xf0) != 0xa0) ||
-        (byte1 != (0xf0|ITCSN_CACHEXG))) {
+        (byte1 != xitcByte1(XITC_ITC_CMD,ITCSN_CACHEXG))) {
       LOG.Error("%s: Bad CACHEXG hdr 0x%02x 0x%02x",
                 getName(), byte0, byte1);
       reset();

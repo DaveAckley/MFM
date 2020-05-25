@@ -275,6 +275,8 @@ namespace MFM
     if (type.Equals("TQPanel")) return new T2TimeQueuePanel(); 
     if (type.Equals("T2TileLiveCheckbox")) return new T2TileLiveCheckbox(); 
     if (type.Equals("T2TileListenCheckbox")) return new T2TileListenCheckbox(); 
+    if (type.Equals("T2SeedPhysicsButton")) return new T2SeedPhysicsButton(); 
+    if (type.Equals("T2ClearTileButton")) return new T2ClearTileButton(); 
     return 0;
   }
 

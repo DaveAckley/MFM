@@ -89,6 +89,11 @@ namespace MFM {
       else if (mPacketPoller.isOnTQ()) mPacketPoller.remove();
     }
 
+    // GENERAL SERVICE METHODS
+    void seedPhysics() ;
+    void clearPrivateSites() ;
+
+    ///
     void setMFZId(const char * mfzid) ;
     const char * getMFZId() const ;
 
@@ -141,7 +146,11 @@ namespace MFM {
 
     void resourceAlert(ResourceType type, ResourceLevel level) ;
 
+    void releaseActiveEW(T2EventWindow & ew) ;
+
+#if 0 // UNUSED
     void releaseEW(T2EventWindow * ew) ;
+#endif
 
     void insertOnMasterTimeQueue(TimeoutAble & ta, u32 fromNow, s32 fuzzbits=-1) ;
 
@@ -165,6 +174,10 @@ namespace MFM {
       MFM_API_ASSERT_ARG((mSiteOwners[idx.GetX()][idx.GetY()] == 0) !=
                          (owner == 0));
       mSiteOwners[idx.GetX()][idx.GetY()] = owner;
+    }
+
+    const Rect & getHiddenRect() const {
+      return mHiddenRect;
     }
 
     const Rect & getVisibleRect(Dir6 dir6) {
@@ -199,11 +212,12 @@ namespace MFM {
 
   
   public:  // Hey it's const
+    const Rect mHiddenRect;
     const Rect mITCVisible[DIR6_COUNT];
     const Rect mITCCache[DIR6_COUNT];
     const Rect mITCVisibleAndCache[DIR6_COUNT];
 
-    void freeEW(T2EventWindow * ew) ; //Public for T2EventWindow to call on abort?
+    void freeEW(T2EventWindow & ew) ; //Public for T2EventWindow to call on abort?
 
   private:
     T2EventWindow * mEWs[MAX_EWSLOT+1]; // mEWs[0] set to 0

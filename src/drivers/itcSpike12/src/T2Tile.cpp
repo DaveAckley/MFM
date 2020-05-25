@@ -67,6 +67,42 @@ namespace MFM {
     return newstatus;
   }
 
+  void T2Tile::seedPhysics() {
+    // Pick a random hidden site and init it
+    SPoint at(getHiddenRect().PickRandom(getRandom()));
+    Sites & sites = getSites();
+    OurT2Site & site = sites.get(MakeUnsigned(at));
+    OurT2Atom & ar =  site.GetAtom();
+    ////XXXX
+    OurT2Atom phonyDReg(T2_PHONY_DREG_TYPE);
+    ar = phonyDReg;
+  }
+
+  void T2Tile::clearPrivateSites() {
+    // Clear all sites that are definitely not cached offtile
+    Sites & sites = getSites();
+    for (u32 x = 0; x < T2TILE_WIDTH; ++x) {
+      for (u32 y = 0; y < T2TILE_HEIGHT; ++y) {
+        UPoint u(x,y);
+        SPoint s(MakeSigned(u));
+        bool clearable = true;
+        for (Dir6 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
+          if (getVisibleAndCacheRect(dir6).Contains(s)) {
+            T2ITC & itc = getITC(dir6);
+            if (itc.isCacheUsable()) {
+              clearable = false;
+              break;
+            }
+          }
+        }
+        if (!clearable) continue;
+        OurT2Site & site = sites.get(u);
+        OurT2Atom & atom = site.GetAtom();
+        atom.SetEmpty();
+      }
+    }
+  }
+
   T2Tile::T2Tile()
     : mRandom()                      // Earliest service!
     , mTimeQueue(this->getRandom())  // Next earliest!
@@ -86,6 +122,9 @@ namespace MFM {
 #undef YY
 #undef ZZ
       }
+    , mHiddenRect(SPoint(CACHE_LINES,CACHE_LINES),
+                  UPoint(T2TILE_WIDTH-2*CACHE_LINES,
+                         T2TILE_HEIGHT-2*CACHE_LINES))
     , mITCVisible{
 #define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,CACHE_LINES)
 #define YY ,
@@ -134,7 +173,7 @@ namespace MFM {
     for (u32 i = 0; i <= MAX_EWSLOT; ++i) {
       if (i==0) mEWs[i] = 0;
       else {
-        mEWs[i] = new T2EventWindow(*this, i, "");
+        mEWs[i] = new T2EventWindow(*this, i, "AC");
         mEWs[i]->insertInEWSet(&mFree);
       }
     }
@@ -143,6 +182,7 @@ namespace MFM {
       for (u32 y = 0; y < T2TILE_HEIGHT; ++y) 
         mSiteOwners[x][y] = 0;
 
+#if 0  // LEAVE INITIAL WORLD EMPTY   
     /////XXXXX MAKE A PHONYDREG
     OurT2Atom phonyDReg(T2_PHONY_DREG_TYPE);
     //UPoint ctr(3*CACHE_LINES/2,3*CACHE_LINES/2); // upper left + half EWR
@@ -152,6 +192,7 @@ namespace MFM {
     OurT2Site & sr =  mSites.get(ctr);
     OurT2Atom & ar =  sr.GetAtom();
     ar = phonyDReg;
+#endif
     
     initTimeQueueDrivers();
   }
@@ -355,10 +396,9 @@ static const char * CMD_HELP_STRING =
     return el->asEventWindow();
   }
 
-  void T2Tile::freeEW(T2EventWindow * ew) {
-    assert(ew!=0);
-    if (ew->isInSet()) ew->removeFromEWSet();
-    ew->insertInEWSet(&mFree);
+  void T2Tile::freeEW(T2EventWindow & ew) {
+    if (ew.isInSet()) ew.removeFromEWSet();
+    ew.insertInEWSet(&mFree);
   }
 
   bool T2Tile::tryAcquireEW(const UPoint center, u32 radius, bool forActive) {
@@ -367,8 +407,18 @@ static const char * CMD_HELP_STRING =
     ew->initializeEW(); // clear gunk
     if (ew->tryInitiateActiveEvent(center,radius)) return true; // ew in use
     ew->finalizeEW();
-    freeEW(ew);
+    freeEW(*ew);
     return false;
+  }
+
+  void T2Tile::releaseActiveEW(T2EventWindow & ew) {
+    Sites & sites = getSites(); // GET CENTER SITE FOR STATS!
+    UPoint uctr(MakeUnsigned(ew.getCenter()));
+    OurT2Site & ctrSite = sites.get(uctr); 
+    recordCompletedEvent(ctrSite);  // That Was NOT Easy!
+
+    ew.finalizeEW();
+    freeEW(ew);
   }
 
   void T2Tile::resourceAlert(ResourceType type, ResourceLevel level) {
@@ -378,6 +428,7 @@ static const char * CMD_HELP_STRING =
                 resourceLevelName(level));
   }
 
+#if 0 // ARE WE USING THIS?
   void T2Tile::releaseEW(T2EventWindow * ew) {
     assert(ew != 0);
     assert(ew->isAssigned());
@@ -398,9 +449,9 @@ static const char * CMD_HELP_STRING =
     }
 
     ew->releaseCenter();
-    freeEW(ew);
+    freeEW(*ew);
   }
-
+#endif
 
   void T2Tile::initEverything(int argc, char **argv) {
     mArgc = argc;
