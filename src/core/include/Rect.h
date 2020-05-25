@@ -253,6 +253,22 @@ namespace MFM
       m_size.SetY(newHeight);
     }
 
+    /**
+     * Return a randomly-chosen coordinate within this Rect.
+     *
+     * Fails if GetWidth() or GetHeight() == 0
+     *
+     * @param PRNG source of randomness
+     */
+    SPoint PickRandom(Random& random) const
+    {
+      u32 w = GetWidth();
+      u32 h = GetHeight();
+      MFM_API_ASSERT(w>0 && h>0,ARRAY_INDEX_OUT_OF_BOUNDS);
+      SPoint inside(random.Between(0,w-1), random.Between(0,h-1));
+      return GetPosition()+inside;
+    }
+
     ////// Operator overloads
 
     /**
