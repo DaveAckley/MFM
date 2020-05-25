@@ -450,7 +450,7 @@ namespace MFM {
   }
 
   bool T2EventWindow::tryReadEWAtom(ByteSource & in, u32 & sn, OurT2AtomBitVector & bv) {
-    u32 tmpsn;
+    u8 tmpsn;
     if (in.Scanf("%c",&tmpsn) != 1) return false;
     if (tmpsn > mLastSN) return false;
     OurT2AtomBitVector tmpbv;
