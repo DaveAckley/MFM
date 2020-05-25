@@ -104,8 +104,9 @@ namespace MFM {
 int main(int argc, char** argv)
 {
   unwind_protect({
-    fprintf(stderr,"Failed out of top level\n");
-    exit(99);
+      MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
+      fprintf(stderr,"Failed out of top level\n");
+      exit(99);
   },{
     return MFM::MainDispatch(argc,argv);
   });
