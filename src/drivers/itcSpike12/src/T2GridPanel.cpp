@@ -1,7 +1,30 @@
 #include "T2GridPanel.h"
+#include "ChooserPanel.h"
+#include "SDLI.h"
 #include "Point.h"
 
 namespace MFM {
+
+  // Handle mouse button action inside our walls
+  bool T2GridPanel::Handle(MouseButtonEvent & event)
+  {
+    // Take default behavior if any keyboard modifiers
+    if (event.m_keyboardModifiers) return Super::Handle(event);
+
+    if (event.m_event.type == SDL_MOUSEBUTTONUP)      // Click on up
+    {
+      const char * name = "GlobalMenu"; 
+      T2Tile & tile = T2Tile::get();
+      SDLI & sdli = tile.getSDLI();
+      ChooserPanel * cp = dynamic_cast<ChooserPanel*>(sdli.lookForPanel(name));
+      if (!cp) LOG.Error("Can't find %s",name);
+      else{
+        cp->toggleGlobalPosting();
+        return true;
+      }
+    }
+    return false;
+  }
 
   T2GridPanel::T2GridPanel()
   {

@@ -25,11 +25,17 @@ namespace MFM {
   }
 
   void T2TileListenCheckbox::SetChecked(bool checked) {
-    T2Tile::get().setListening(checked);
+      T2Tile::get().setListening(checked);
   }
 
   void T2SeedPhysicsButton::onClick() {
-    T2Tile::get().seedPhysics();
+    T2Tile & tile = T2Tile::get();
+    tile.seedPhysics();
+    SDLI & sdli = tile.getSDLI();
+    const char * panelName = "GlobalMenu_Button_Sites";
+    AbstractButton * sites = dynamic_cast<AbstractButton*>(sdli.lookForPanel(panelName));
+    if (!sites) LOG.Error("Couldn't find '%s'",panelName);
+    else sites->OnClick(1);
   }
 
   void T2ClearTileButton::onClick() {

@@ -8,7 +8,11 @@
 
 namespace MFM {
   struct T2GridPanel : public Panel {
-    
+    typedef Panel Super;
+
+    // Handle mouse button action inside our walls
+    virtual bool Handle(MouseButtonEvent & event) ;
+
     T2GridPanel() ;
     virtual ~T2GridPanel() { }
 
