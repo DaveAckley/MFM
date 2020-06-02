@@ -77,6 +77,18 @@ namespace MFM
      */
     bool IsLineBuffered() const { return m_lineBuffered; }
 
+    /** Flush the underlying FILE* now.
+     *
+     * Fail NULL_POINTER if closed
+     */
+    void Flush() {
+      if(!m_file)
+      {
+	FAIL(NULL_POINTER);
+      }
+      fflush(m_file);
+    }
+
     /** Set the line buffering on this FileByteSink.
      *
      * @param doLineBuffering true if this FileByteSink should now be
