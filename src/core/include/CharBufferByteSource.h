@@ -103,6 +103,17 @@ namespace MFM
       m_read = 0;
     }
 
+    /**
+     * Gets the length of the char buffer represented by this
+     * CharBufferByteSource, in bytes .
+     *
+     * @returns The char buffer length in bytes .
+     */
+    u32 GetLength() const
+    {
+      return m_length;
+    }
+
   private:
 
     /**
