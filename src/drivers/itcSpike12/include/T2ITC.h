@@ -109,7 +109,7 @@ namespace MFM {
     XITC_CS_RING=2,
     XITC_CS_ANSWER=3,
     XITC_CS_BUSY=4,
-    XITC_CS_FLASH=5,
+    XITC_CS_DROP=5,
     XITC_CS_TALK=6,
     XITC_CS_HANGUP=7,
     XITC_CS_MAX_VAL=7,
@@ -231,5 +231,8 @@ namespace MFM {
     int close() ;
     int getFD() const { return mFD; }
   };
+
+  const char * getITCStateName(ITCStateNumber sn) ;
+
 }
 #endif /* T2ITC_H */

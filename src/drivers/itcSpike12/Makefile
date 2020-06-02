@@ -37,14 +37,20 @@ override LIBS += -lmfm$(COMPONENTNAME) -lt2adc -lmfmgui -lmfmsim -Wl,--whole-arc
 # Grr although including Makevars now leads to duplicated flags
 
 include $(BASEDIR)/config/Makevars.mk
-COMMON_CPPFLAGS+=-std=c++11
+COMMON_CPPFLAGS+=-std=c++11 
+COMMON_CPPFLAGS+=-Wno-psabi
 override COMMON_CPPFLAGS:=$(filter-out -pedantic,$(COMMON_CPPFLAGS))
 
 # Add dependencies to make window config
 WDWCFG_BIN:=wconfig.txt
 WDWCFG_SRC:=./wconfig.pl
 
-all:	$(WDWCFG_BIN)
+# Also build the trace file weaver
+WEAVER_NAME:=Weaver
+WEAVER_SRC:=src/$(WEAVER_NAME).cpp
+WEAVER_BIN:=$(BASEDIR)/bin/$(WEAVER_NAME)
+
+all:	$(WDWCFG_BIN)  $(WEAVER_BIN)
 
 $(WDWCFG_BIN):	$(WDWCFG_SRC)
 	@echo REBUILDING $@
@@ -52,3 +58,11 @@ $(WDWCFG_BIN):	$(WDWCFG_SRC)
 
 # Do the program thing
 include $(BASEDIR)/config/Makeprog.mk
+
+$(BUILDDIR)/$(WEAVER_NAME).o:	$(WEAVER_SRC) $(ALLDEP) $(BUILDDIR)/%.d
+	$(GPP) $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+
+$(WEAVER_BIN):	program $(BUILDDIR)/$(WEAVER_NAME).o $(ALLDEP) $(ARCHIVES)
+	@mkdir -p $(BINDIR)
+	@$(GPP) $(LDFLAGS) $(BUILDDIR)/$(WEAVER_NAME).o $(LIBS) -o $@
+	@echo Made $@

@@ -11,6 +11,7 @@
 #include <errno.h>     // For errno
 
 #include "dirdatamacro.h" 
+#include "TraceTypes.h" 
 
 namespace MFM {
 
@@ -134,14 +135,13 @@ namespace MFM {
     case XITC_CS_HANGUP:        // Release lock (by callee)
       handleHangUpPacket(pb);
       break;
-    case XITC_CS_FLASH:         // Discard lock (by caller)
+    case XITC_CS_DROP:         // Discard lock (by caller)
       FAIL(INCOMPLETE_CODE);
       break;
     }
   }
 
   void T2ITC::handleRingPacket(T2PacketBuffer & pb) {
-    LOG.Debug("%s: Enter HRP", getName());
     u32 len = pb.GetLength();
     if (len < 5) {
       LOG.Warning("%s: Ring packet len==%d, ignored", getName(), len);
@@ -156,6 +156,12 @@ namespace MFM {
     SPoint ourCtr = theirCtr + theirOrigin;
     bool ayoink = ((pkt[4]>>7)&0x1) != 0;
     u32 radius = pkt[4]&0x7;
+    LOG.Debug("%s: HRP abs(%d,%d) themrel(%d,%d) yoink=%d",
+              getName(),
+              ourCtr.GetX(), ourCtr.GetY(),
+              theirCtr.GetX(), theirCtr.GetY(),
+              ayoink
+              );
     if (radius > 4) {
       LOG.Warning("%s: Ring packet (%d,%d) radius==%d, ignored", getName(), sx, sy, radius);
       return;
@@ -279,6 +285,11 @@ namespace MFM {
     else
       LOG.Debug("%s: Recv %d/0x%02x 0x%02x%s", getName(), len,
                 packet[0], packet[1], len > 2? " ..." : "");
+    if (true/*TRACEACTIVE*/) {
+      Trace evt(*this, TTC_ITC_PacketIn);
+      evt.payloadWrite().WriteBytes((const u8*) packet, len);
+      mTile.trace(evt);
+    }
     if (len < 2) LOG.Warning("%s one byte 0x%02x packet, ignored", getName(), packet[0]);
     else {
       u32 xitc = (packet[1]>>4)&0x7;
@@ -318,6 +329,11 @@ namespace MFM {
       if (errno == ERESTART) return false; // Interrupted, try again
     }
     if (len != packetlen) return false;  // itcpkt LKM doesn't actually support partial write
+    if (true /*XXX TRACE ACTIVE*/) {
+      Trace evt(*this, TTC_ITC_PacketOut);
+      evt.payloadWrite().WriteBytes((const u8*) bytes,len);
+      mTile.trace(evt);
+    }
     ++mPacketsShipped;                   // another day, 
     return true;                         // 'the bird is away'
   }
@@ -535,10 +551,7 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
     MFM_API_ASSERT_STATE(mActiveFreeCount < CIRCUIT_COUNT);
     mActiveFree[mActiveFreeCount++] = cn;
     mCircuits[1][cn].mEW = 0;
-    /* let it go to timeout, they're doing ping-pong
-    if (activeCircuitsInUse()==0 && getITCSN() == ITCSN_FOLLOW)
-      bump();
-    */
+    mCircuits[1][cn].mYoinkVal = -1;
   }
 
   void T2ITC::registerEWRaw(T2EventWindow & ew) {
@@ -670,6 +683,7 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
 
   void T2ITCStateOps_SHUT::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
     if (itc.getCompatibilityStatus() >= 2) {
+      itc.mTile.addRandomSyncTag(pb);
       if (itc.trySendPacket(pb)) {
         itc.setITCSN(ITCSN_DRAIN);
         itc.scheduleWait(WC_FULL);
@@ -699,6 +713,7 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
   }
 
   void T2ITCStateOps_OPEN::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
+    itc.mTile.addRandomSyncTag(pb);
     itc.trySendPacket(pb); // Hi neighbor
     itc.scheduleWait(WC_LONG);
   }

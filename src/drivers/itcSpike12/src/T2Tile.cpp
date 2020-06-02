@@ -8,10 +8,25 @@
 // Spike files
 #include "T2Types.h"
 #include "T2EventWindow.h"
+#include "TraceTypes.h"
 
 #define ALL_DIR6_MACRO() XX(ET)YY XX(SE)YY XX(SW)YY XX(WT)YY XX(NW)YY XX(NE)ZZ
 
 namespace MFM {
+
+  const char * getDir6Name(Dir6 dir6) {
+    switch (dir6) {
+    default: return "illegal";
+#define XX(dir6) case DIR6_##dir6: return #dir6;
+#define YY 
+#define ZZ
+      ALL_DIR6_MACRO()
+#undef XX
+#undef YY
+#undef ZZ
+     }
+  }
+
   EWInitiator::EWInitiator() {
     LOG.Debug("%s",__PRETTY_FUNCTION__);
   }
@@ -106,6 +121,7 @@ namespace MFM {
   T2Tile::T2Tile()
     : mRandom()                      // Earliest service!
     , mTimeQueue(this->getRandom())  // Next earliest!
+    , mTraceLoggerPtr(0)
     , mArgc(0)
     , mArgv(0)
     , mMFZId(0)
@@ -210,6 +226,7 @@ namespace MFM {
   XX(log,l,O,LEVEL,"Set or increase logging")                   \
   XX(mfzid,z,R,MFZID,"Specify MFZ file to run")                 \
   XX(paused,p,N,,"Start up paused")                             \
+  XX(trace,t,R,PATH,"Trace output to file")                     \
   XX(version,v,N,,"Print version and exit")                     \
   XX(wincfg,w,R,PATH,"Specify window configuration file")       \
 
@@ -288,6 +305,10 @@ static const char * CMD_HELP_STRING =
 
       case 'w':
         setWindowConfigPath(optarg);
+        break;
+
+      case 't':
+        startTracing(optarg);
         break;
 
       case 'l':
@@ -370,6 +391,7 @@ static const char * CMD_HELP_STRING =
   }
 
   T2Tile::~T2Tile() {
+    stopTracing();
     closeITCs();
     for (u32 i = 0; i <= MAX_EWSLOT; ++i) {
       if (i) delete mEWs[i];
@@ -485,7 +507,9 @@ static const char * CMD_HELP_STRING =
   }
 
   bool T2Tile::maybeInitiateEW() {
-    const u32 MAX_TRIES = 100; // Empty events drain here; they're cheap
+    // Empty events drain here; they're cheap
+    //    const u32 MAX_TRIES = T2TILE_OWNED_WIDTH*T2TILE_OWNED_HEIGHT; 
+    const u32 MAX_TRIES = 250;
     u32 radius = 0;
     UPoint ctr;
     for (u32 i = 0; i < MAX_TRIES; ++i) {
@@ -530,6 +554,33 @@ static const char * CMD_HELP_STRING =
       }
     }
     shutdownEverything();
+  }
+
+  void T2Tile::addRandomSyncTag(ByteSink & bs) {
+    bs.Printf("%l",mRandom.Create());
+  }
+
+  bool T2Tile::tryReadRandomSyncTag(ByteSource & bs, s32 & tagFound) {
+    s32 tag;
+    if (1!=bs.Scanf("%l",&tag)) return false;
+    tagFound = tag;
+    return true;
+  }
+
+  void T2Tile::startTracing(const char * path) {
+    if (mTraceLoggerPtr != 0) stopTracing();
+    mTraceLoggerPtr = new TraceLogger(path);
+    Trace evt(*this,TTC_Tile_Start);
+    trace(evt);
+  }
+
+  void T2Tile::stopTracing() {
+    if (mTraceLoggerPtr != 0) {
+      Trace evt(*this,TTC_Tile_Stop);
+      trace(evt);
+      delete mTraceLoggerPtr;
+      mTraceLoggerPtr = 0;
+    }
   }
 
 #if 0

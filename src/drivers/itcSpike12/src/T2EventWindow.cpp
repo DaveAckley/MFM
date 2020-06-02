@@ -197,7 +197,7 @@ namespace MFM {
               mCenter.GetX(), mCenter.GetY(),
               mRadius);
     
-    releaseOwnershipOfRegion(); // RELEASE CONTROL OF THE SITES!
+    unhogEWSites(); // RELEASE CONTROL OF THE SITES!
     if (isOnTQ()) remove();
 
     mTile.releaseActiveEW(*this);
@@ -250,8 +250,101 @@ namespace MFM {
     FAIL(ILLEGAL_STATE);  // can't need more that MAX_CIRCUITS_PER_EW!
   }
 
-  bool T2EventWindow::resolveRacesFromPassive(std::set<T2EventWindow*> actives) {
-    // OK.  Our question here is: Do we, as a new-still-being-created
+  const CircuitInfo& T2EventWindow::getPassiveCircuitInfo() const
+  {
+    MFM_API_ASSERT_ARG(!this->isInActiveState()); // Be passive
+    const CircuitInfo & ci = mCircuits[0]; // Passive CircuitInfo always in [0]
+    MFM_API_ASSERT_NONNULL(ci.mITC);       // Have an itc
+    return ci;
+  }
+
+  bool T2EventWindow::trySendNAK() {
+    MFM_API_ASSERT_ARG(!this->isInActiveState()); // We are passive
+    const CircuitInfo & ci = mCircuits[0]; // Passive CircuitInfo always in [0]
+    MFM_API_ASSERT_NONNULL(ci.mITC); 
+    T2ITC & itc = *ci.mITC;
+    CircuitNum passiveCN = ci.mCircuitNum;
+    T2PacketBuffer pb;
+    pb.Printf("%c%c",
+              0xa0|itc.mDir8,
+              xitcByte1(XITC_CS_DROP,passiveCN)
+              );
+    return itc.trySendPacket(pb);
+  }
+
+
+  bool T2EventWindow::passiveWinsYoinkRace(const T2EventWindow & ew) const {
+    MFM_API_ASSERT_ARG(ew.isInActiveState());     // ew is our side active initiation
+    MFM_API_ASSERT_ARG(!this->isInActiveState()); // *this is passive ew for them
+    const CircuitInfo & ci = mCircuits[0]; // Passive CircuitInfo always in [0]
+    MFM_API_ASSERT_NONNULL(ci.mITC); 
+    T2ITC & itc = *ci.mITC;
+    CircuitNum passiveCN = ci.mCircuitNum;
+    s32 themVal = itc.getYoinkVal(passiveCN,false);
+    MFM_API_ASSERT_STATE(themVal >= 0);
+    // our ew must also have itc in its info, but we have to search for it
+    s32 usVal;
+    for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
+      const CircuitInfo & ci = ew.mCircuits[i];
+      if (ci.mITC == &itc) {
+        CircuitNum activeCN = ci.mCircuitNum;
+        usVal = itc.getYoinkVal(activeCN,true);
+        MFM_API_ASSERT_STATE(usVal >= 0);
+        break;
+      }
+    }
+    bool theyAreFred = itc.isFred(); // They came in via itc, so they're fred if it is
+    bool theyWin = (theyAreFred == (usVal != themVal)); // Fred always takes odds
+    LOG.Debug("u %s (%d,%d); t %s (%d,%d): YOINK %s(%s) us%d them%d -> %s",
+              ew.getName(),
+              ew.mCenter.GetX(),ew.mCenter.GetY(),
+              getName(),
+              mCenter.GetX(),mCenter.GetY(),
+              itc.getName(),
+              theyAreFred ? "Fred" : "Ginger",
+              usVal,
+              themVal,
+              theyWin ? "they win" : "we win"
+              );
+    return theyWin;
+  }
+
+  bool T2EventWindow::resolveRacesFromPassive(EWPtrSet conflicts) {
+    // Question 1: Are any conflicts passive?
+    for (EWPtrSet::iterator itr = conflicts.begin(); itr != conflicts.end(); ++itr) {
+      T2EventWindow * ew = *itr;
+      MFM_API_ASSERT_NONNULL(ew);
+      if (!ew->isInActiveState()) {
+        FAIL(INCOMPLETE_CODE);  // Have to send a NAK once we know how
+      }
+    }
+    // OK: All conflicts are active.  Now we need to sort them oldest
+    // to newest according to some age info we captured.
+
+    typedef std::vector<T2EventWindow *> EWPtrVector;
+    EWPtrVector sortable(conflicts.begin(), conflicts.end());
+
+    // But hrm if we just have one conflict we can try to sort out the
+    // codes and the concepts without actually doing the sort..
+    if (sortable.size() > 1) FAIL(INCOMPLETE_CODE);
+
+    // Presto: 'sortable' is sorted.  Now do P4
+    for (EWPtrVector::iterator itr = sortable.begin(); itr != sortable.end(); ++itr) {
+      T2EventWindow * ew = *itr;
+      MFM_API_ASSERT_NONNULL(ew);
+      // Do yoink protocol between *this (passive for them) and ew (active by us)
+      bool passiveWins = passiveWinsYoinkRace(*ew);
+      if (passiveWins) {
+        ew->dropActiveEW();
+        continue;
+      }
+      if (!trySendNAK())  // :787: P6
+        FAIL(INCOMPLETE_CODE);
+      return false;
+    }
+
+    return true; // :787: P7
+
     // passive EW, win against ALL of the active EWs in actives?
     //
     // Each active EW is considered in turn, strictly from oldest to
@@ -265,8 +358,17 @@ namespace MFM {
     // analogous conclusions about who won.
     //
     // But if the answer is true
-    FAIL(INCOMPLETE_CODE);
-    return false;
+  }
+
+  void T2EventWindow::dropActiveEW() {
+    MFM_API_ASSERT_STATE(isInActiveState());
+    if (getEWSN() != EWSN_ADROP) {
+      unhogEWSites();
+      setEWSN(EWSN_ADROP);
+      scheduleWait(WC_FULL);
+    } else {
+      LOG.Warning("%s already dropped", getName());
+    }
   }
 
   bool T2EventWindow::checkSiteAvailabilityForPassive() {
@@ -296,11 +398,10 @@ namespace MFM {
     }
     
     if (conflicts.size() > 0) {
-      FAIL(INCOMPLETE_CODE); // Resolve races        
-      return false;
+      return resolveRacesFromPassive(conflicts); // Resolve races        
     }
     // THEY WIN.  WE HOG THE REGION ON THEIR BEHALF
-    takeOwnershipOfRegion();
+    hogEWSites();
     setEWSN(EWSN_PWCACHE);
 
     return true;
@@ -353,15 +454,15 @@ namespace MFM {
     return true;
   }
 
-  void T2EventWindow::takeOwnershipOfRegion() {
-    setOwnershipOfRegion(this);
+  void T2EventWindow::hogEWSites() {
+    hogOrUnhogEWSites(this);
   }
 
-  void T2EventWindow::releaseOwnershipOfRegion() {
-    setOwnershipOfRegion(0);
+  void T2EventWindow::unhogEWSites() {
+    hogOrUnhogEWSites(0);
   }
 
-  void T2EventWindow::setOwnershipOfRegion(T2EventWindow* ewOrNull) {
+  void T2EventWindow::hogOrUnhogEWSites(T2EventWindow* ewOrNull) {
     T2Tile & tile = getTile();
     OurMDist & md = tile.getMDist();
     const SPoint origin(0,0);
@@ -376,6 +477,7 @@ namespace MFM {
       UPoint usite = MakeUnsigned(site);
       tile.setSiteOwner(usite,ewOrNull);
     }
+    mIsHoggingSites = ewOrNull != 0;
   }
 
   void T2EventWindow::assignCenter(SPoint tileSite, u32 radius, bool activeNotPassive) {
@@ -503,7 +605,7 @@ namespace MFM {
     itc.hangUpPassiveEW(*this,cn); // XXX handle failure
 
     saveSites();
-    releaseOwnershipOfRegion();
+    unhogEWSites();
     initializeEW(); // Clear gunk for next renter
     setEWSN(EWSN_PINIT);
     // XXX Need more?  Really actually done on passive side, here??
@@ -554,6 +656,11 @@ namespace MFM {
                 (s8)relEWctr.GetY());
       u8 yoinkRad = ((yoinkVal&0x1)<<7)|mRadius;
       pb.Printf("%c",yoinkRad);
+      LOG.Debug("%s RING abs(%d,%d) usrel(%d,%d) yoink=%d",
+                getName(),
+                mCenter.GetX(), mCenter.GetY(),
+                relEWctr.GetX(),relEWctr.GetY(),
+                yoinkVal);
       if (!itc.trySendPacket(pb)) return false; // doh.
     }
     return true;
@@ -567,7 +674,7 @@ namespace MFM {
               getName(),
               center.GetX(), center.GetY(),
               radius);
-    takeOwnershipOfRegion();
+    hogEWSites();
     if (needsAnyLocks()) {
       if (!trySendLockRequests()) return false; // WTF?
       setEWSN(EWSN_AWLOCKS);
@@ -577,6 +684,12 @@ namespace MFM {
       scheduleWait(WC_NOW);
     }
     return true;
+  }
+
+  bool T2EventWindow::isInActiveState() const {
+    T2EWStateOps * ops = T2EWStateOps::mStateOpsArray[mStateNum];
+    MFM_API_ASSERT_NONNULL(ops);
+    return ops->isActive();
   }
 
   void T2EventWindow::onTimeout(TimeQueue& srcTq) {
@@ -592,6 +705,7 @@ namespace MFM {
   T2EventWindow::T2EventWindow(T2Tile& tile, EWSlotNum ewsn, const char * category)
     : mTile(tile)
     , mSlotNum(ewsn)
+    , mNameBuf32(new char [32])
     , mLockSequenceNumber{ 0 }
     , mStateNum(EWSN_IDLE)
     , mCenter(0,0)
@@ -599,22 +713,28 @@ namespace MFM {
     , mLastSN(0)
     , mSites() // Default ctor for the sites
     , mSitesLive()
+    , mIsHoggingSites()
     , mCategory(category)
   {
     initializeEW();
     LOG.Debug("T2EW ctor %d/%s",ewsn,category);
   }
 
+  T2EventWindow::~T2EventWindow() {
+    delete mNameBuf32;
+    mNameBuf32 = 0;
+  }
+
   /**** LATE EVENTWINDOW STATES HACKERY ****/
 
   /*** DEFINE STATEOPS SINGLETONS **/
-#define XX(NAME,CUSTO,CUSRC,STUB,DESC) static T2EWStateOps_##NAME singletonT2EWStateOps_##NAME;
+#define XX(NAME,ACT,CUSTO,CUSRC,STUB,DESC) static T2EWStateOps_##NAME singletonT2EWStateOps_##NAME;
   ALL_EW_STATES_MACRO()
 #undef XX
 
   /*** DEFINE EWSTATENUMBER -> STATEOPS MAPPING **/
   T2EWStateOps::T2EWStateArray T2EWStateOps::mStateOpsArray = {
-#define XX(NAME,CUSTO,CUSRC,STUB,DESC) &singletonT2EWStateOps_##NAME,
+#define XX(NAME,ACT,CUSTO,CUSRC,STUB,DESC) &singletonT2EWStateOps_##NAME,
   ALL_EW_STATES_MACRO()
 #undef XX
     0
@@ -633,9 +753,9 @@ namespace MFM {
     DIE_UNIMPLEMENTED();                                  \
   }                                                       \
 
-#define XX(NAME,CUSTO,CUSRC,STUB,DESC) \
-  YY##CUSTO##STUB(NAME,timeout)        \
-  YY##CUSRC##STUB(NAME,receive)        \
+#define XX(NAME,ACT,CUSTO,CUSRC,STUB,DESC) \
+    YY##CUSTO##STUB(NAME,timeout)          \
+    YY##CUSRC##STUB(NAME,receive)          \
   
   ALL_EW_STATES_MACRO()
 #undef XX
@@ -646,7 +766,7 @@ namespace MFM {
 
   /*** STATE NAMES AS STRING **/
   const char * ewStateName[] = {
-#define XX(NAME,CUSTO,CUSRC,STUB,DESC) #NAME,
+#define XX(NAME,ACT,CUSTO,CUSRC,STUB,DESC) #NAME,
   ALL_EW_STATES_MACRO()
 #undef XX
   "?ILLEGAL"
@@ -659,7 +779,7 @@ namespace MFM {
 
   /*** STATE DESCRIPTIONS AS STRING **/
   const char * ewStateDesc[] = {
-#define XX(NAME,CUSTO,CUSRC,STUB,DESC) DESC,
+#define XX(NAME,ACT,CUSTO,CUSRC,STUB,DESC) DESC,
   ALL_EW_STATES_MACRO()
 #undef XX
   "?ILLEGAL"
@@ -671,12 +791,11 @@ namespace MFM {
   }
 
   const char * T2EventWindow::getName() const {
-    static char buf[100];
-    snprintf(buf,100,"EW%02d-%s/%s",
+    snprintf(mNameBuf32,32,"EW%02d-%s/%s",
              mSlotNum,
              getCategory(),
              getEWStateName(mStateNum));
-    return buf;
+    return mNameBuf32;
   }
   /*
   void T2EventWindow::update() {
@@ -724,6 +843,14 @@ namespace MFM {
 
   void T2EWStateOps_AWLOCKS::receive(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
     FAIL(INCOMPLETE_CODE); // What would go here is in handleACK and its callers
+  }
+
+  void T2EWStateOps_ADROP::timeout(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+    FAIL(INCOMPLETE_CODE);
+  }
+
+  void T2EWStateOps_ADROP::receive(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+    FAIL(INCOMPLETE_CODE); 
   }
 
   void T2EWStateOps_ABEHAVE::timeout(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {

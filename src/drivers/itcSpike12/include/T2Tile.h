@@ -26,8 +26,11 @@
 #include "SDLI.h"
 #include "ADCCtl.h"
 #include "Sites.h"
+#include "Trace.h"
 
 namespace MFM {
+
+  const char * getDir6Name(Dir6 dir6) ;  ///// THIS SO DOES NOT BELONG HERE
 
   struct EWInitiator : public TimeoutAble {
     EWInitiator() ;
@@ -102,6 +105,18 @@ namespace MFM {
     SDLI & getSDLI() { return mSDLI; }
 
     ADCCtl & getADCCtl() { return mADCCtl; }
+
+    void addRandomSyncTag(ByteSink & bs) ;
+    bool tryReadRandomSyncTag(ByteSource& bs, s32 & got) ;
+
+    bool trace(const Trace & tb) {
+      if (!mTraceLoggerPtr) return false; // If anybody cares
+      mTraceLoggerPtr->log(tb);
+      return true;
+    }
+
+    void startTracing(const char * path) ;
+    void stopTracing() ;
 
     // HIGH LEVEL SEQUENCING
     void main() ;
@@ -200,6 +215,7 @@ namespace MFM {
   private:
     Random mRandom;
     TimeQueue mTimeQueue;
+    TraceLogger* mTraceLoggerPtr;
 
     int mArgc;
     char ** mArgv;
