@@ -557,7 +557,9 @@ static const char * CMD_HELP_STRING =
   }
 
   void T2Tile::addRandomSyncTag(ByteSink & bs) {
-    bs.Printf("%l",mRandom.Create());
+    s32 pos;
+    do { pos = mRandom.Create()&0x7fffffff; } while (pos == 0);
+    bs.Printf("%l",pos);
   }
 
   bool T2Tile::tryReadRandomSyncTag(ByteSource & bs, s32 & tagFound) {
@@ -571,6 +573,7 @@ static const char * CMD_HELP_STRING =
     if (mTraceLoggerPtr != 0) stopTracing();
     mTraceLoggerPtr = new TraceLogger(path);
     Trace evt(*this,TTC_Tile_Start);
+    evt.payloadWrite().Printf("%c", TRACE_REC_FORMAT_VERSION);
     trace(evt);
   }
 

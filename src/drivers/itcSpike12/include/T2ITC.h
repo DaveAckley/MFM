@@ -102,19 +102,6 @@ namespace MFM {
 #undef YY1
 #undef YY0
   
-  typedef enum xitccode {
-    XITC_KITC_CMD=0,
-    XITC_ITC_CMD=1,
-    XITC_CS_MIN_VAL=2,
-    XITC_CS_RING=2,
-    XITC_CS_ANSWER=3,
-    XITC_CS_BUSY=4,
-    XITC_CS_DROP=5,
-    XITC_CS_TALK=6,
-    XITC_CS_HANGUP=7,
-    XITC_CS_MAX_VAL=7,
-  } XITCCode;
-
   inline u8 xitcByte1(XITCCode xitc, u8 arg) {
     return (u8) (0x80|((xitc&0x7)<<4)|(arg&0xf)); /* MFM + XITC + SN or CN*/
   }

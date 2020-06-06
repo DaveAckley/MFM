@@ -30,6 +30,9 @@ namespace MFM {
     TRACE_REC_MODE_ITCDIR6 = 0x2,
     TRACE_REC_MODE_EWACTIV = 0x3,
     TRACE_REC_MODE_EWPASIV = 0x4,
+
+    TRACE_REC_FORMAT_VERSION = 0x02
+
   };
 
   struct TraceAddress {
@@ -55,7 +58,10 @@ namespace MFM {
     const UniqueTime mLocalTimestamp;
     const u8 mTraceType;
 
-    s32 reportSyncIfAny() const ;
+    struct timespec getTimespec() const {
+      return mLocalTimestamp.getTimespec();
+    }
+    bool reportSyncIfAny(s32 & store) const ;
 
     Trace(const T2Tile & tile, u8 traceType)
       : mLocalTimestamp()
@@ -91,7 +97,7 @@ namespace MFM {
 
     ~Trace() { }
 
-    void printPretty(ByteSink& bs) const ;
+    void printPretty(ByteSink& bs, bool includeTime) const ;
 
     ByteSink & payloadWrite() { return mData; }
     CharBufferByteSource payloadRead() const { return mData.AsByteSource(); }
@@ -153,7 +159,7 @@ namespace MFM {
       : mBS(bs)
       , mHaveFirst(false)
     { }
-    Trace * read() ;
+    Trace * read(struct timespec timeOffset) ;
     struct timespec getFirstTimespec() const { return mFirstTimespec; }
   private:
     FileByteSource & mBS;

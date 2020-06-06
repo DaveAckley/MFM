@@ -45,10 +45,10 @@ namespace MFM {
     switch (mAddrMode) {
     default:
     case TRACE_REC_MODE_ILLEGAL: return "illegal";
-    case TRACE_REC_MODE_T2TILE : return "Tile";
-    case TRACE_REC_MODE_ITCDIR6: return "ITC";
-    case TRACE_REC_MODE_EWACTIV: return "aEW";
-    case TRACE_REC_MODE_EWPASIV: return "pEW";
+    case TRACE_REC_MODE_T2TILE : return "t";
+    case TRACE_REC_MODE_ITCDIR6: return "i";
+    case TRACE_REC_MODE_EWACTIV: return "a";
+    case TRACE_REC_MODE_EWPASIV: return "p";
     }
   }
 
@@ -59,7 +59,7 @@ namespace MFM {
     case TRACE_REC_MODE_ILLEGAL: break;
     case TRACE_REC_MODE_T2TILE : break;
     case TRACE_REC_MODE_ITCDIR6:
-      bs.Printf("/%s",getDir6Name(mArg1));
+      bs.Printf("%s",getDir6Name(mArg1));
       bs.Printf(":%s",getITCStateName((ITCStateNumber) mArg2));
       break;
     case TRACE_REC_MODE_EWACTIV:
@@ -67,31 +67,43 @@ namespace MFM {
       bs.Printf("-%s",getEWStateName((EWStateNumber) mArg2));
       break;
     case TRACE_REC_MODE_EWPASIV:
-      bs.Printf("/%s",getDir6Name(mArg1));
+      bs.Printf("%s",getDir6Name(mArg1));
       bs.Printf("#%x",mArg2);
       break;
     }
   }
 
-  void Trace::printPretty(ByteSink & bs) const {
-    mLocalTimestamp.printPretty(bs);
-    bs.Printf(" ");
-    bs.Printf("%s ",getTraceTypeBrief((TraceTypeCode) mTraceType));
+  void Trace::printPretty(ByteSink & bs, bool includeTime) const {
+    if (includeTime) {
+      mLocalTimestamp.printPretty(bs);
+      bs.Printf(" ");
+    }
+    //    bs.Printf("%s ",getTraceTypeBrief((TraceTypeCode) mTraceType));
     getTraceAddress().printPretty(bs);
     bs.Printf(" ");
+    /*
     s32 tag = getTag();
     if (tag != 0) {
       bs.Printf("%c%08x",
                 tag > 0 ? 'S' : 'R',
                 tag > 0 ? tag : -tag);
     }
+    */
+    if (false) { }
+    else if (mTraceType == TTC_ITC_PacketIn) bs.Printf("<");
+    else if (mTraceType == TTC_ITC_PacketOut) bs.Printf(">");
+    else bs.Printf(" ");
+      
+    T2Packet::reportPacketAnalysis(mData,bs);
     CharBufferByteSource cbbs = payloadRead();
     u32 plen = cbbs.GetLength();
-    bs.Printf("+%d",plen);
+    bs.Printf(" +%d",plen);
+    /*
     for (u32 i = 0; i < plen; ++i) {
       if (i%8 == 0) bs.Printf(" ");
       bs.Printf("%02x",cbbs.Read());
     }
+    */
     bs.Printf("\n");
   }
 
@@ -103,21 +115,17 @@ namespace MFM {
                 );
     evt.mLocalTimestamp.Print(mFBS);
     evt.getTraceAddress().print(mFBS);
-    s32 tag = evt.getTag();
-    u32 utag = tag < 0 ? -tag : tag;
     CharBufferByteSource cbbs = evt.payloadRead();
     u32 plen = cbbs.GetLength();
     MFM_API_ASSERT_STATE(plen < 256);
-    mFBS.Printf("%D%c%D%c%<",
+    mFBS.Printf("%c%c%<",
                 evt.mTraceType,
-                tag > 0 ? 'S' : 'R',
-                utag,
                 plen,
                 &cbbs
                 );
   }
 
-  Trace * TraceLogReader::read() {
+  Trace * TraceLogReader::read(struct timespec timeOffset) {
     u8 byte1, byte2;
     if (2 != mBS.Scanf("%c%c",
                        &byte1, &byte2))
@@ -141,14 +149,14 @@ namespace MFM {
     }
     
     u32 traceType;
-    u8 tagSrc;
-    u32 utag;
+    //    u8 tagSrc;
+    //    u32 utag;
     u8 plen;
 
     if (4 != mBS.Scanf("%D%c%D%c",
                        &traceType,
-                       &tagSrc,
-                       &utag,
+                       0, // XXXX NOT USING EXTRACTED TAG// &tagSrc,
+                       0, // XXXX NOT USING EXTRACTED TAG// &utag,
                        &plen))
       return 0;
     OString256 tmpData;
@@ -162,17 +170,25 @@ namespace MFM {
       mFirstTimespec = tmpTime.getTimespec();
       mHaveFirst = true;
     }
-    UniqueTime reltime(tmpTime - UniqueTime(mFirstTimespec,0));
+    UniqueTime reltime(tmpTime
+                       - UniqueTime(mFirstTimespec,0)
+                       + UniqueTime(timeOffset,0));
     Trace * ret = new Trace(traceType, reltime);
     ret->setTraceAddress(tmpAddr);
-    ret->setTag(tagSrc == 'S' ? (s32) utag : -(s32) utag);
+    // XXXX NOT USING 'PRE-EXTRACTED' TAG INFO FROM TRACES
+    // ret->setTag(tagSrc == 'S' ? (s32) utag : -(s32) utag);
     CharBufferByteSource cbbs = tmpData.AsByteSource();
     ret->payloadWrite().Copy(cbbs);
+
+    s32 tag;
+    if (ret->reportSyncIfAny(tag)) {
+      ret->setTag(tag);
+    }
 
     return ret;
   }
 
-  s32 Trace::reportSyncIfAny() const {
+  bool Trace::reportSyncIfAny(s32 & store) const {
     // CURRENTLY THERE'S SYNC IN THE FOLLOWING PLACES:
     // POU T2ITC SHUT
     // PIN T2ITC DRAIN
@@ -180,7 +196,7 @@ namespace MFM {
     // PIN T2ITC OPEN
 
     TraceAddress addr = getTraceAddress();
-    if (addr.getMode() != TRACE_REC_MODE_ITCDIR6) return 0;
+    if (addr.getMode() != TRACE_REC_MODE_ITCDIR6) return false;
     u8 tt = mTraceType;
     u8 itcState = addr.getITCState();
     bool stdSync = false;
@@ -189,11 +205,13 @@ namespace MFM {
     else if (tt == TTC_ITC_PacketIn   && itcState == ITCSN_DRAIN) stdSync = true;
     else if (tt == TTC_ITC_PacketOut  && itcState == ITCSN_OPEN) stdSync = true;
     else if (tt == TTC_ITC_PacketIn   && itcState == ITCSN_OPEN) stdSync = true;
-    if (!stdSync) return 0;
+    if (!stdSync) return false;
     CharBufferByteSource cbbs = mData.AsByteSource();
     s32 tag;
-    if (3 != cbbs.Scanf("%c%c%l", 0, 0, &tag)) return 0;
-    return tag;
+    if (3 != cbbs.Scanf("%c%c%l", 0, 0, &tag)) return false;
+    if (tag <= 0) return false; //??
+    store = (tt == TTC_ITC_PacketOut) ? tag : -tag;
+    return true;
   }
 
   u8 TraceAddress::getITCDir6() const {

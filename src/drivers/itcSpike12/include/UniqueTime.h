@@ -3,6 +3,7 @@
 #define UNIQUETIME_H
 
 #include <time.h>
+#include <math.h> /*for modf*/
 
 #include "itype.h"
 #include "ByteSink.h"
@@ -11,6 +12,39 @@
 namespace MFM {
 
   struct UniqueTime {
+    static struct timespec sum(const struct timespec t1, const struct timespec t2) {
+      struct timespec ret;
+      ret.tv_sec = t1.tv_sec + t2.tv_sec;
+      ret.tv_nsec = t1.tv_nsec + t2.tv_nsec;
+      const s32 ONE_BILLION = 1000000000;
+      if (ret.tv_nsec > ONE_BILLION) {
+        ++ret.tv_sec;
+        ret.tv_nsec -= ONE_BILLION;
+      }
+      return ret;
+    }
+    static double getIntervalSeconds(const struct timespec later, const struct timespec earlier) {
+      double delta =
+        (later.tv_sec - earlier.tv_sec) +
+        (later.tv_nsec - earlier.tv_nsec)/1000000000.0;
+      return delta;
+    }
+    static double doubleFromTimespec(const struct timespec ts) {
+      double delta = ts.tv_sec + ts.tv_nsec/1000000000.0;
+      return delta;
+    }
+    static struct timespec timespecFromDouble(double seconds) {
+      MFM_API_ASSERT_ARG((u32) seconds <= U32_MAX);
+      struct timespec ret;
+      double intpart, fracpart;
+      fracpart = modf(seconds, &intpart);
+      if (fracpart < 0) {
+        --intpart; ++fracpart;
+      }
+      ret.tv_sec = (s32) intpart;
+      ret.tv_nsec = (u32) (fracpart*1000000000.0);
+      return ret;
+    }
     static void printPretty(u32 sec, u32 nsec, ByteSink & bs) ;
     void printPretty(ByteSink& bs) const ;
     void printRelativePretty(ByteSink& bs, const UniqueTime & relativeto) const ;
@@ -67,6 +101,22 @@ namespace MFM {
       : mLocalTimestamp(ts)
       , mUniquer(uniquer)
     { }
+
+    UniqueTime operator+(const UniqueTime& rhs) const {
+      const u32 ONE_BILLION = 1000000000;
+      u32 netsec = mLocalTimestamp.tv_sec + rhs.mLocalTimestamp.tv_sec;
+      s32 netnanos = mLocalTimestamp.tv_nsec + rhs.mLocalTimestamp.tv_nsec;
+      while (netnanos >= (s32) ONE_BILLION) {
+        ++netsec;
+        netnanos -= ONE_BILLION;
+      }
+      s32 netuniquer = mUniquer;
+      if (rhs.mUniquer > netuniquer) netuniquer = rhs.mUniquer;
+      struct timespec tmp;
+      tmp.tv_sec = netsec;
+      tmp.tv_nsec = netnanos;
+      return UniqueTime(tmp,(u8) netuniquer);
+    }
 
     UniqueTime operator-(const UniqueTime& rhs) const {
       MFM_API_ASSERT_ARG(*this >= rhs);
