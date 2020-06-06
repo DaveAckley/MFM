@@ -277,6 +277,7 @@ namespace MFM
     if (type.Equals("T2TileListenCheckbox")) return new T2TileListenCheckbox(); 
     if (type.Equals("T2SeedPhysicsButton")) return new T2SeedPhysicsButton(); 
     if (type.Equals("T2ClearTileButton")) return new T2ClearTileButton(); 
+    if (type.Equals("QuitButton")) return new T2QuitButton(); 
     return 0;
   }
 
@@ -621,44 +622,10 @@ namespace MFM
     DIE_UNIMPLEMENTED();
   }
 
-#if 0
-  void SDLI::mainLoop(Engine & engine) {
-    Event event;
-    u32 lastFrame = SDL_GetTicks();
-
-    while (mRunning) {
-      SDL_ShowCursor(mShowCursor ? SDL_ENABLE : SDL_DISABLE);
-
-      while (SDL_PollEvent(&event.m_sdlEvent)) {
-
-        switch (event.m_sdlEvent.type) {
-        default:
-          engine.input(*this, event);
-          break;
-
-        case SDL_QUIT:
-          mRunning = false;
-          break;
-        }
-      }
-        
-      engine.update(*this);
-
-      engine.output(*this);
-
-      SDL_Flip(mScreen);
-
-      /* Limit framerate */
-      const s32 MS_PER_FRAME = 1000;
-      u32 thisFrame = SDL_GetTicks();
-      lastFrame += MS_PER_FRAME;
-      s32 extraMS = (s32) (lastFrame - thisFrame);
-      if (extraMS > 0) SDL_Delay(extraMS);
-    }
-  }
-#endif
-
   void SDLI::stop() {
-    SDL_Quit();
+    SDL_Event fake;
+    memset(&fake,0,sizeof(fake));
+    fake.type = SDL_QUIT;
+    SDL_PushEvent(&fake);
   }
 }

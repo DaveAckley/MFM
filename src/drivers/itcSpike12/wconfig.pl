@@ -145,6 +145,11 @@ my $wconfig = <<__EOF__;
     font=2
     elevatorwidth=0
     fontheightadjust=-4
+[T2Info_Quit_Button QuitButton T2Viz `bfs3x3(2,2)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="Quit"
 [Sub1 Label T2Viz 120 50 220 40]
     bgcolor=#00ff00
     fgcolor=#ff0000

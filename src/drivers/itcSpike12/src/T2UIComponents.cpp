@@ -1,6 +1,7 @@
 #include "T2UIComponents.h"
 
 #include "T2Tile.h"
+#include "TraceTypes.h"
 
 namespace MFM {
 
@@ -40,6 +41,11 @@ namespace MFM {
 
   void T2ClearTileButton::onClick() {
     T2Tile::get().clearPrivateSites();
+  }
+
+  void T2QuitButton::onClick() {
+    TLOG(MSG,"Quit button clicked");
+    T2Tile::get().getSDLI().stop();
   }
 
 }
