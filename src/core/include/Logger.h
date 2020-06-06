@@ -70,6 +70,11 @@ namespace MFM
       DEBUG3,
       ALL,
 
+      ERR=ERROR, // Reify the TLCs familiar from the log files
+      WRN=WARNING,
+      MSG=MESSAGE,
+      DBG=DEBUG,
+
       MIN_LEVEL = NONE,
       MAX_LEVEL = ALL
     };
