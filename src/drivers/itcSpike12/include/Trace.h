@@ -17,10 +17,28 @@
 #include "UniqueTime.h"
 
 namespace MFM {
+
+#define ALL_TRACE_TYPES_MACRO()                 \
+  XX(,ILL,Illegal)                              \
+  XX(Tile,STR,Start)                            \
+  XX(Tile,STP,Stop)                             \
+  XX(ITC,PIN,PacketIn)                          \
+  XX(ITC,POU,PacketOut)                         \
+  XX(Log,LOG,LogTrace)                          \
+
+
+  enum TraceTypeCode {
+#define XX(TYPE,BRIEF,NAME) TTC_##TYPE##_##NAME,
+   ALL_TRACE_TYPES_MACRO()
+#undef XX
+   TTC_COUNT
+
+  };
+
   struct T2Tile; // FORWARD
   struct T2ITC; // FORWARD
   struct T2EventWindow; // FORWARD
-  
+
   enum TraceRecConstants {
     TRACE_REC_START_BYTE1 = 0xfa,
     TRACE_REC_START_BYTE2 = 0xde,
@@ -30,13 +48,15 @@ namespace MFM {
     TRACE_REC_MODE_ITCDIR6 = 0x2,
     TRACE_REC_MODE_EWACTIV = 0x3,
     TRACE_REC_MODE_EWPASIV = 0x4,
+    TRACE_REC_MODE_LOG     = 0x5,
 
-    TRACE_REC_FORMAT_VERSION = 0x02
+    TRACE_REC_FORMAT_VERSION = 0x03
 
   };
 
   struct TraceAddress {
     TraceAddress() ;
+    TraceAddress(const TraceTypeCode ttc, const Logger::Level level) ;
     TraceAddress(const TraceAddress & oth) ;
     TraceAddress(const T2Tile & tile) ;
     TraceAddress(const T2ITC & itc) ;
@@ -81,6 +101,16 @@ namespace MFM {
       , mAddress(ew)
       , mSyncTag(0)
     { }
+    Trace(const TraceTypeCode ttc, Logger::Level level)
+      : mLocalTimestamp()
+      , mTraceType(ttc)
+      , mAddress(ttc,level)
+      , mSyncTag(0)
+    {
+      if (ttc != TTC_Log_LogTrace) {
+        FAIL(ILLEGAL_ARGUMENT);
+      }
+    }
 
 
     Trace(u8 traceType) // De novo, time is now
@@ -98,6 +128,7 @@ namespace MFM {
     ~Trace() { }
 
     void printPretty(ByteSink& bs, bool includeTime) const ;
+    Trace & printf(const char * format, ...) ;
 
     ByteSink & payloadWrite() { return mData; }
     CharBufferByteSource payloadRead() const { return mData.AsByteSource(); }

@@ -109,6 +109,10 @@ namespace MFM {
     void addRandomSyncTag(ByteSink & bs) ;
     bool tryReadRandomSyncTag(ByteSource& bs, s32 & got) ;
 
+    bool isTracingActive() const {
+      return mTraceLoggerPtr != 0;
+    }
+
     bool trace(const Trace & tb) {
       if (!mTraceLoggerPtr) return false; // If anybody cares
       mTraceLoggerPtr->log(tb);

@@ -10,6 +10,8 @@ namespace MFM {
   ////// TraceAddress
   TraceAddress::TraceAddress()
     : mAddrMode(TRACE_REC_MODE_ILLEGAL) , mArg1(0) , mArg2(0) { }
+  TraceAddress::TraceAddress(const TraceTypeCode ttc, const Logger::Level level)
+    : mAddrMode(TRACE_REC_MODE_LOG) , mArg1(ttc) , mArg2(level) { }
   TraceAddress::TraceAddress(const TraceAddress & oth)
     : mAddrMode(oth.mAddrMode) , mArg1(oth.mArg1) , mArg2(oth.mArg2) { }
   TraceAddress::TraceAddress(const T2Tile & tile)
@@ -49,6 +51,7 @@ namespace MFM {
     case TRACE_REC_MODE_ITCDIR6: return "i";
     case TRACE_REC_MODE_EWACTIV: return "a";
     case TRACE_REC_MODE_EWPASIV: return "p";
+    case TRACE_REC_MODE_LOG:     return "l";
     }
   }
 
@@ -70,7 +73,20 @@ namespace MFM {
       bs.Printf("%s",getDir6Name(mArg1));
       bs.Printf("#%x",mArg2);
       break;
+    case TRACE_REC_MODE_LOG:
+      if (mArg1 != TTC_Log_LogTrace)
+        bs.Printf("%d?",mArg1);
+      bs.Printf("%s",Logger::StrLevel((Logger::Level) mArg2));
+      break;
     }
+  }
+
+  Trace& Trace::printf(const char * format, ...) {
+    va_list ap;
+    va_start(ap, format);
+    payloadWrite().Vprintf(format, ap);
+    va_end(ap);
+    return *this;
   }
 
   void Trace::printPretty(ByteSink & bs, bool includeTime) const {
@@ -78,17 +94,23 @@ namespace MFM {
       mLocalTimestamp.printPretty(bs);
       bs.Printf(" ");
     }
-    //    bs.Printf("%s ",getTraceTypeBrief((TraceTypeCode) mTraceType));
     getTraceAddress().printPretty(bs);
     bs.Printf(" ");
-    /*
-    s32 tag = getTag();
-    if (tag != 0) {
-      bs.Printf("%c%08x",
-                tag > 0 ? 'S' : 'R',
-                tag > 0 ? tag : -tag);
-    }
-    */
+
+    if (mTraceType == TTC_Tile_Start) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+      s32 version = -1;
+      cbbs.Scanf("%D",&version);
+      bs.Printf(" Trace Format Version %d\n",version);
+      return;
+    } 
+
+    if (mTraceType == TTC_Log_LogTrace) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+      bs.Printf("%<\n",&cbbs);
+      return;
+    } 
+
     if (false) { }
     else if (mTraceType == TTC_ITC_PacketIn) bs.Printf("<");
     else if (mTraceType == TTC_ITC_PacketOut) bs.Printf(">");
@@ -98,12 +120,6 @@ namespace MFM {
     CharBufferByteSource cbbs = payloadRead();
     u32 plen = cbbs.GetLength();
     bs.Printf(" +%d",plen);
-    /*
-    for (u32 i = 0; i < plen; ++i) {
-      if (i%8 == 0) bs.Printf(" ");
-      bs.Printf("%02x",cbbs.Read());
-    }
-    */
     bs.Printf("\n");
   }
 
@@ -149,14 +165,10 @@ namespace MFM {
     }
     
     u32 traceType;
-    //    u8 tagSrc;
-    //    u32 utag;
     u8 plen;
 
-    if (4 != mBS.Scanf("%D%c%D%c",
+    if (2 != mBS.Scanf("%c%c",
                        &traceType,
-                       0, // XXXX NOT USING EXTRACTED TAG// &tagSrc,
-                       0, // XXXX NOT USING EXTRACTED TAG// &utag,
                        &plen))
       return 0;
     OString256 tmpData;
@@ -175,8 +187,7 @@ namespace MFM {
                        + UniqueTime(timeOffset,0));
     Trace * ret = new Trace(traceType, reltime);
     ret->setTraceAddress(tmpAddr);
-    // XXXX NOT USING 'PRE-EXTRACTED' TAG INFO FROM TRACES
-    // ret->setTag(tagSrc == 'S' ? (s32) utag : -(s32) utag);
+
     CharBufferByteSource cbbs = tmpData.AsByteSource();
     ret->payloadWrite().Copy(cbbs);
 

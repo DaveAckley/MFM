@@ -226,7 +226,7 @@ namespace MFM {
   XX(log,l,O,LEVEL,"Set or increase logging")                   \
   XX(mfzid,z,R,MFZID,"Specify MFZ file to run")                 \
   XX(paused,p,N,,"Start up paused")                             \
-  XX(trace,t,R,PATH,"Trace output to file")                     \
+  XX(trace,t,O,PATH,"Trace output to PATH or default")          \
   XX(version,v,N,,"Print version and exit")                     \
   XX(wincfg,w,R,PATH,"Specify window configuration file")       \
 
@@ -308,7 +308,34 @@ static const char * CMD_HELP_STRING =
         break;
 
       case 't':
-        startTracing(optarg);
+        if (optarg) {
+          startTracing(optarg);
+        } else {
+          u32 gen = 0;
+          const char * zpath = 0;
+          do {
+            OString128 path;
+            path.Printf("/tmp/t2trace%D.dat",gen++);
+            const char * zmaybe = path.GetZString();
+            FILE * file = fopen(zmaybe,"r");
+            if (file != 0) {  // File already exists
+              fclose(file);
+              continue;
+            }
+            file = fopen(zmaybe,"w");
+            if (file == 0) 
+              fatal("Can't write '%s': %s", zmaybe, strerror(errno));
+            else {
+              fclose(file);
+              zpath = zmaybe;
+              break;
+            }
+          } while (gen < 1000);
+          if (!zpath) 
+            fatal("Filename autogen failed for -t");
+          STDOUT.Printf("TRACING TO: %s\n",zpath);
+          startTracing(zpath);
+        }
         break;
 
       case 'l':
@@ -324,6 +351,9 @@ static const char * CMD_HELP_STRING =
             loglevel = (Logger::Level) level;
           }
         } else ++loglevel;
+        if (loglevel > 0) {
+          LOG.SetLevel(loglevel);
+        }
         break;
 
       case 'h':
@@ -408,7 +438,7 @@ static const char * CMD_HELP_STRING =
     for (int i = 0; i < DIR6_COUNT; ++i) {
       T2ITC & itc = mITCs[i];
       itc.close();
-      debug("closed %s\n",itc.path());
+      debug("closed %s",itc.path());
     }
   }
 
@@ -573,8 +603,9 @@ static const char * CMD_HELP_STRING =
     if (mTraceLoggerPtr != 0) stopTracing();
     mTraceLoggerPtr = new TraceLogger(path);
     Trace evt(*this,TTC_Tile_Start);
-    evt.payloadWrite().Printf("%c", TRACE_REC_FORMAT_VERSION);
+    evt.payloadWrite().Printf("%D", TRACE_REC_FORMAT_VERSION);
     trace(evt);
+    TLOG(DBG,"HEWO to %s",path);
   }
 
   void T2Tile::stopTracing() {

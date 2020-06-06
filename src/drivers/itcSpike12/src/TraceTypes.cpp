@@ -37,7 +37,6 @@ namespace MFM {
     return traceTypeNames[ttc];
   }
 
-
 #if 0
   TraceTile::TraceTile(u8 traceTypeCode) 
     : Trace(traceTypeCode)
@@ -107,5 +106,20 @@ namespace MFM {
   }
 
 #endif
+
+  bool TRACEPrintf(Logger::Level level, const char * format, ...) {
+    T2Tile & tile = T2Tile::get();
+    if (tile.isTracingActive()) {
+      Trace evt(TTC_Log_LogTrace, level);
+      va_list ap;
+      va_start(ap, format);
+      evt.payloadWrite().Vprintf(format, ap);
+      va_end(ap);
+      tile.trace(evt);
+      return true;
+    }
+    return false;
+  }
+
   
 }

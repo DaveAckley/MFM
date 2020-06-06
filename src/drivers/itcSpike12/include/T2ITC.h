@@ -198,8 +198,12 @@ namespace MFM {
     void registerEWRaw(T2EventWindow & ew) ;
     void unregisterEWRaw(T2EventWindow & ew) ;
     
+    u32 mCacheAtomsSent;
     RectIterator mVisibleAtomsToSend;
+    u32 mCacheAtomsReceived;
     bool mCacheReceiveComplete;
+    bool isCacheSendStarted() const { return mCacheAtomsSent > 0; }
+    bool isCacheReceiveStarted() const { return mCacheAtomsReceived > 0; }
     bool isCacheReceiveComplete() const { return mCacheReceiveComplete; }
     void setCacheReceiveComplete() { mCacheReceiveComplete = true; }
 

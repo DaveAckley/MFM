@@ -108,7 +108,6 @@ namespace MFM {
   }
 
   void T2ITC::handleCircuitPacket(T2PacketBuffer & pb) {
-    //LOG.Debug("%s: Enter HCP", getName());
     u32 len = pb.GetLength();
     if (len < 2) {
       LOG.Warning("%s: %d byte circuit packet, ignored", getName(), len);
@@ -156,7 +155,7 @@ namespace MFM {
     SPoint ourCtr = theirCtr + theirOrigin;
     bool ayoink = ((pkt[4]>>7)&0x1) != 0;
     u32 radius = pkt[4]&0x7;
-    LOG.Debug("%s: HRP abs(%d,%d) themrel(%d,%d) yoink=%d",
+    TLOG(DBG,"%s: HRP abs(%d,%d) themrel(%d,%d) yoink=%d",
               getName(),
               ourCtr.GetX(), ourCtr.GetY(),
               theirCtr.GetX(), theirCtr.GetY(),
@@ -191,7 +190,7 @@ namespace MFM {
   }
 
   void T2ITC::handleHangUpPacket(T2PacketBuffer & pb) {
-    LOG.Debug("%s: Enter HUP", getName());
+    TLOG(DBG,"%s: Enter HUP", getName());
     u32 len = pb.GetLength();
     MFM_API_ASSERT_ARG(len >= 2);
     const char * pkt = pb.GetBuffer();
@@ -215,7 +214,7 @@ namespace MFM {
   }
 
   void T2ITC::handleCacheUpdatesPacket(T2PacketBuffer & pb) {
-    LOG.Debug("%s: Enter HCUP", getName());
+    TLOG(DBG,"%s: Enter HCUP", getName());
     u32 len = pb.GetLength();
     MFM_API_ASSERT_ARG(len >= 2);
     const char * pkt = pb.GetBuffer();
@@ -246,7 +245,7 @@ namespace MFM {
   }
   
   void T2ITC::handleAnswerPacket(T2PacketBuffer & pb) {
-    LOG.Debug("%s: Enter HAP", getName());
+    TLOG(DBG,"%s: Enter HAP", getName());
     u32 len = pb.GetLength();
     MFM_API_ASSERT_ARG(len >= 2);
     const char * pkt = pb.GetBuffer();
@@ -261,7 +260,7 @@ namespace MFM {
     MFM_API_ASSERT_NONNULL(ew);
     T2EventWindow & activeEW = *ew;
 
-    LOG.Debug("%s %s HAP", getName(), activeEW.getName());
+    TLOG(DBG,"%s %s HAP", getName(), activeEW.getName());
     if (activeEW.getEWSN() != EWSN_AWLOCKS) 
       FAIL(INCOMPLETE_CODE); // DITTOO
     else activeEW.handleACK(*this);
@@ -341,7 +340,7 @@ namespace MFM {
   void T2ITC::setITCSN(ITCStateNumber itcsn) {
     MFM_API_ASSERT_ARG(itcsn >= 0 && itcsn < MAX_ITC_STATE_NUMBER);
     mStateNumber = itcsn;
-    LOG.Debug("->%s",getName());
+    TLOG(DBG,"->%s",getName());
   }
 
   void T2ITC::reset() {
@@ -596,6 +595,8 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
 
   void T2ITC::startCacheSync() {
     mVisibleAtomsToSend.begin(getVisibleRect());
+    mCacheAtomsSent = 0;
+    mCacheAtomsReceived = 0;
     setITCSN(ITCSN_CACHEXG);
     scheduleWait(WC_NOW);
   }
@@ -609,6 +610,7 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
     UPoint pos = MakeUnsigned(mVisibleAtomsToSend.getRect().GetPosition());
     RectIterator hold = mVisibleAtomsToSend;
     bool alreadyDone = !mVisibleAtomsToSend.hasNext();
+    u32 pending = 0;
     while (mVisibleAtomsToSend.hasNext()) {
       if (pb.CanWrite() < (s32) BYTES_PER_SITE) break;
       SPoint coord = mVisibleAtomsToSend.next();
@@ -620,8 +622,12 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
       OurT2Atom & atom = site.GetAtom();
       const OurT2AtomBitVector & bv = atom.GetBits();
       bv.PrintBytes(pb);
+      ++pending;
     }
-    if (trySendPacket(pb)) return alreadyDone; // true when we just sent an empty CACHEXG
+    if (trySendPacket(pb)) {
+      mCacheAtomsSent += pending;
+      return alreadyDone; // true when we just sent an empty CACHEXG
+    }
     // Grrr
     mVisibleAtomsToSend = hold; // All that work.
     return false;
@@ -674,6 +680,7 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
       OurT2Site & site = sites.get(MakeUnsigned(dest));
       OurT2Atom & atom = site.GetAtom();
       atom = tmpatom;  // BAM
+      ++mCacheAtomsReceived;
       ++count;
     }
     return count == 0; // CACHEXG w/no atoms means end
@@ -701,15 +708,21 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
   }
 
   void T2ITCStateOps_CACHEXG::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
+    bool sendStarted = itc.isCacheSendStarted(); // Check before trying to ship..
     bool sendDone = itc.sendVisibleAtoms(pb);  // True when all atoms shipped
+    bool recvStarted = itc.isCacheReceiveStarted(); 
     bool recvDone = itc.isCacheReceiveComplete(); 
     if (sendDone && recvDone) itc.setITCSN(ITCSN_OPEN);
-    itc.scheduleWait(WC_RANDOM_SHORT); // For either state
+    if (sendStarted && !recvStarted) // Their Engine Might Be Dead
+      itc.scheduleWait(WC_LONG); 
+    else
+      itc.scheduleWait(WC_RANDOM_SHORT); // For either state
   }
 
   void T2ITCStateOps_CACHEXG::receive(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
     if (itc.getITCSN() < ITCSN_DRAIN) itc.reset();
     if (itc.recvCacheAtoms(pb)) itc.setCacheReceiveComplete();
+    itc.scheduleWait(WC_NOW); // Got something; take a look
   }
 
   void T2ITCStateOps_OPEN::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {

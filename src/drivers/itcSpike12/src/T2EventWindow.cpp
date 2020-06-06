@@ -3,6 +3,7 @@
 #include "T2ITC.h"
 #include "Packet.h"
 #include "Logger.h"
+#include "TraceTypes.h"
 
 namespace MFM {
 
@@ -137,7 +138,7 @@ namespace MFM {
   }
 
   void T2EventWindow::handleACK(T2ITC & itc) {
-    LOG.Debug("%s hACK %s", getName(), itc.getName());
+    TLOG(DBG,"%s hACK %s", getName(), itc.getName());
 
     MFM_API_ASSERT_STATE(getEWSN() == EWSN_AWLOCKS);
     
@@ -148,7 +149,7 @@ namespace MFM {
   }
 
   void T2EventWindow::handleHangUp(T2ITC & itc) {
-    LOG.Debug("%s hHU %s", getName(), itc.getName());
+    TLOG(DBG,"%s hHU %s", getName(), itc.getName());
 
     MFM_API_ASSERT_STATE(getEWSN() == EWSN_AWACKS);
 
@@ -192,10 +193,10 @@ namespace MFM {
 
   void T2EventWindow::commitAndReleaseActive() {
     saveSites();                // COMMIT ACTIVE SIDE EW!
-    LOG.Debug("%s FREEING (%d,%d)+%d",
-              getName(),
-              mCenter.GetX(), mCenter.GetY(),
-              mRadius);
+    TLOG(DBG,"%s FREEING (%d,%d)+%d",
+         getName(),
+         mCenter.GetX(), mCenter.GetY(),
+         mRadius);
     
     unhogEWSites(); // RELEASE CONTROL OF THE SITES!
     if (isOnTQ()) remove();
@@ -283,19 +284,20 @@ namespace MFM {
     s32 themVal = itc.getYoinkVal(passiveCN,false);
     MFM_API_ASSERT_STATE(themVal >= 0);
     // our ew must also have itc in its info, but we have to search for it
-    s32 usVal;
+    s32 usVal = -1;
     for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
       const CircuitInfo & ci = ew.mCircuits[i];
       if (ci.mITC == &itc) {
         CircuitNum activeCN = ci.mCircuitNum;
         usVal = itc.getYoinkVal(activeCN,true);
-        MFM_API_ASSERT_STATE(usVal >= 0);
         break;
       }
     }
+    MFM_API_ASSERT_STATE(usVal >= 0);
+    
     bool theyAreFred = itc.isFred(); // They came in via itc, so they're fred if it is
     bool theyWin = (theyAreFred == (usVal != themVal)); // Fred always takes odds
-    LOG.Debug("u %s (%d,%d); t %s (%d,%d): YOINK %s(%s) us%d them%d -> %s",
+    TLOG(DBG,"u %s (%d,%d); t %s (%d,%d): YOINK %s(%s) us%d them%d -> %s",
               ew.getName(),
               ew.mCenter.GetX(),ew.mCenter.GetY(),
               getName(),
@@ -584,12 +586,12 @@ namespace MFM {
     
     if (count == 0) { // Recv final update packet
       commitPassiveEWAndHangUp(itc); 
-      LOG.Debug("%s PASSIVE DONE",getName());
+      TLOG(DBG,"%s PASSIVE DONE",getName());
     }
   }
 
   void T2EventWindow::commitPassiveEWAndHangUp(T2ITC & itc) {
-    LOG.Debug("%s (%s) cPEWAHU",getName(),itc.getName());
+    TLOG(DBG,"%s (%s) cPEWAHU",getName(),itc.getName());
     MFM_API_ASSERT_STATE(getEWSN()==EWSN_PWCACHE);
 
     // Find circuitnumber
@@ -656,7 +658,7 @@ namespace MFM {
                 (s8)relEWctr.GetY());
       u8 yoinkRad = ((yoinkVal&0x1)<<7)|mRadius;
       pb.Printf("%c",yoinkRad);
-      LOG.Debug("%s RING abs(%d,%d) usrel(%d,%d) yoink=%d",
+      TLOG(DBG,"%s RING abs(%d,%d) usrel(%d,%d) yoink=%d",
                 getName(),
                 mCenter.GetX(), mCenter.GetY(),
                 relEWctr.GetX(),relEWctr.GetY(),
@@ -670,7 +672,7 @@ namespace MFM {
     assignCenter(MakeSigned(center), radius, true); 
     if (!checkSiteAvailability()) return false;
     if (!checkCircuitAvailability()) return false;
-    LOG.Debug("%s OWNING (%d,%d)+%d",
+    TLOG(DBG,"%s OWNING (%d,%d)+%d",
               getName(),
               center.GetX(), center.GetY(),
               radius);
@@ -717,7 +719,7 @@ namespace MFM {
     , mCategory(category)
   {
     initializeEW();
-    LOG.Debug("T2EW ctor %d/%s",ewsn,category);
+    TLOG(DBG,"T2EW ctor %d/%s",ewsn,category);
   }
 
   T2EventWindow::~T2EventWindow() {
