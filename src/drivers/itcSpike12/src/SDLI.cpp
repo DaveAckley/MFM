@@ -308,12 +308,13 @@ namespace MFM
     if (!Panel::IsLegalPanelName(name.GetZString()))
       fatal(bs,"'%s' is an illegal panel name", name.GetZString());
     
+    /*
     debug(bs,"Name:%s, Type:%s, Parent:%s, %dx%d@(%d,%d)",
           name.GetZString(),
           type.GetZString(),
           parent.GetZString(),
           w,h,x,y);
-
+    */
     std::string sname(name.GetZString());
     std::string sparent(parent.GetZString());
     if (mPanels[sname] != 0) {

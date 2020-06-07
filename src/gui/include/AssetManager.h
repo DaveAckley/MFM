@@ -294,7 +294,7 @@ namespace MFM
 
           SDL_FreeSurface(loaded);
 
-          LOG.Debug("Surface %s loaded: %p, opped: %p", filename, loaded, opped);
+          LOG.Debug2("Surface %s loaded: %p, opped: %p", filename, loaded, opped);
         }
         else
         {
@@ -328,7 +328,7 @@ namespace MFM
                     TTF_GetError());
         }
 
-        LOG.Debug("Font %s loaded: %p", relativePath, font);
+        LOG.Debug2("Font %s loaded: %p", relativePath, font);
       }
       else
       {

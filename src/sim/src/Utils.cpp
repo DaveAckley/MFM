@@ -76,11 +76,11 @@ namespace MFM {
           buffer.Printf("%s/res/%s",dir,relativePath);
         const char * errmsg = ReadablePath(buffer.GetZString());
         if (!errmsg) {
-          LOG.Debug("Found resource file '%s'", buffer.GetZString());
+          LOG.Debug2("Found resource file '%s'", buffer.GetZString());
           result.Printf("%s",buffer.GetZString());
           return true;
         } else {
-          LOG.Debug("Resource file candidate '%s' not readable: %s", buffer.GetZString(), errmsg);
+          LOG.Debug2("Resource file candidate '%s' not readable: %s", buffer.GetZString(), errmsg);
         }
       }
       return false;
