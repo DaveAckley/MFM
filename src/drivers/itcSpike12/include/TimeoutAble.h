@@ -24,6 +24,7 @@ namespace MFM {
     WC_NOW,                     
     WC_HALF,   
     WC_FULL,   
+    WC_MEDIUM,   
     WC_LONG,   
     WC_RANDOM, 
     WC_RANDOM_SHORT, 
@@ -33,6 +34,10 @@ namespace MFM {
   typedef enum waitms {
     WC_HALF_MS = 150,
     WC_FULL_MS = 300,
+
+    WC_MEDIUM_MIN_MS = 1000,
+    WC_MEDIUM_MAX_MS = 5000,
+    WC_MEDIUM_WIDTH = WC_MEDIUM_MAX_MS - WC_MEDIUM_MIN_MS+1,
 
     WC_LONG_MIN_MS = 15000,
     WC_LONG_MAX_MS = 30000,

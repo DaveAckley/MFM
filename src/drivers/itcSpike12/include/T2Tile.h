@@ -118,6 +118,21 @@ namespace MFM {
       mTraceLoggerPtr->log(tb);
       return true;
     }
+    
+    template <class C>
+    bool trace(const C & cthing, u8 traceType, const char * format, ...) 
+    {
+      Trace evt(cthing, traceType);
+      va_list ap;
+      va_start(ap, format);
+      evt.payloadWrite().Vprintf(format, ap);
+      va_end(ap);
+      trace(evt);
+      return true;
+    }
+
+    // Draw a kill screen before dying.
+    void showFail(const char * file, int line, const char * msg) ;
 
     void startTracing(const char * path) ;
     void stopTracing() ;

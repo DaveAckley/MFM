@@ -575,6 +575,49 @@ namespace MFM
     return rootp;
   }
   
+  void SDLI::showFail(const char * file, int line, const char * msg) {
+    Drawing draw;
+    draw.Reset(mScreen, FONT_ASSET_ELEMENT_MEDIUM);
+    draw.Clear();
+
+    for (u32 y = 0; y < 320; ++y) {
+      for (u32 x = 0; x < 480; ++x) {
+        u32 sum = y + x;
+        u32 color = ((sum>>5)&1) ? Drawing::YELLOW : Drawing::BLACK;
+        draw.FillRect(x, y, 1, 1, color);
+      }
+    }
+    const char * postslash;
+    for (postslash = file; *postslash != 0; ++postslash) {
+      if (*postslash == '/') {
+        ++postslash;
+        break;
+      }
+    }
+    if (*postslash != 0) file = postslash;
+    OString128 buf1, buf2;
+    buf1.Printf("%s:%d:", file, line);
+    buf2.Printf("%s", msg ? msg : "UNKNOWN ERROR");
+    FontAsset font1 = FONT_ASSET_ELEMENT_MEDIUM;
+    SPoint siz1 = draw.GetTextSizeInFont(buf1.GetZString(), font1);
+    siz1 += SPoint(10,10);
+    FontAsset font2 = FONT_ASSET_ELEMENT_MEDIUM;
+    SPoint siz2 = draw.GetTextSizeInFont(buf2.GetZString(), font2);
+    siz2 += SPoint(20,20);
+    SPoint size(siz1.GetX() > siz2.GetX() ? siz1.GetX() : siz2.GetX(), siz1.GetY() + siz2.GetY());
+    SPoint at = (SPoint(480,320)-size)/2;
+    draw.FillRect(at.GetX(),at.GetY(),size.GetX(),size.GetY(), Drawing::RED);
+    draw.SetForeground(Drawing::WHITE);
+    draw.SetBackground(Drawing::GREY50);
+
+    draw.SetFont(font1);
+    draw.BlitBackedTextCentered(buf1.GetZString(), at, UPoint(size.GetX(), siz1.GetY()));
+    draw.SetFont(font2);
+    draw.BlitBackedTextCentered(buf2.GetZString(), at+SPoint(0,siz1.GetY()), UPoint(size.GetX(), siz2.GetY()));
+    SDL_Flip(mScreen);
+    sleep(2);
+  }
+
   void SDLI::redisplay() {
     Drawing draw;
     draw.Reset(mScreen, FONT_ASSET_ELEMENT);

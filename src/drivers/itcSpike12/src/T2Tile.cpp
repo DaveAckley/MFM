@@ -610,19 +610,13 @@ static const char * CMD_HELP_STRING =
 
   void T2Tile::stopTracing() {
     if (mTraceLoggerPtr != 0) {
-      Trace evt(*this,TTC_Tile_Stop);
-      trace(evt);
+      trace(*this, TTC_Tile_Stop, "%q", mTotalEventsCompleted);
       delete mTraceLoggerPtr;
       mTraceLoggerPtr = 0;
     }
   }
 
-#if 0
-  void T2Tile::onePass() {
-    maybeInitiateEW();
-    updateActiveEWs();
-    advanceITCs();
-    maybeDisplay();
+  void T2Tile::showFail(const char * file, int line, const char * msg) {
+    mSDLI.showFail(file, line, msg);
   }
-#endif
 }

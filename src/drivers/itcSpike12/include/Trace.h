@@ -5,6 +5,7 @@
 #include <time.h>
 #include <string.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #include <map>
 
@@ -21,7 +22,9 @@ namespace MFM {
 #define ALL_TRACE_TYPES_MACRO()                 \
   XX(,ILL,Illegal)                              \
   XX(Tile,STR,Start)                            \
+  XX(Tile,TLF,TopLevelFailure)                  \
   XX(Tile,STP,Stop)                             \
+  XX(ITC,SCH,StateChange)                       \
   XX(ITC,PIN,PacketIn)                          \
   XX(ITC,POU,PacketOut)                         \
   XX(Log,LOG,LogTrace)                          \
@@ -89,18 +92,21 @@ namespace MFM {
       , mAddress(tile)
       , mSyncTag(0)
     { }
+
     Trace(const T2ITC & itc, u8 traceType)
       : mLocalTimestamp()
       , mTraceType(traceType)
       , mAddress(itc)
       , mSyncTag(0)
     { }
+
     Trace(const T2EventWindow & ew, u8 traceType)
       : mLocalTimestamp()
       , mTraceType(traceType)
       , mAddress(ew)
       , mSyncTag(0)
     { }
+
     Trace(const TraceTypeCode ttc, Logger::Level level)
       : mLocalTimestamp()
       , mTraceType(ttc)
@@ -111,7 +117,6 @@ namespace MFM {
         FAIL(ILLEGAL_ARGUMENT);
       }
     }
-
 
     Trace(u8 traceType) // De novo, time is now
       : mLocalTimestamp()
@@ -200,7 +205,5 @@ namespace MFM {
   };
 
 }
-
-
 
 #endif /* TRACE_H */

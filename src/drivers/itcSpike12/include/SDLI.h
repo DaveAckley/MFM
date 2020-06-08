@@ -75,6 +75,9 @@ namespace MFM {
 
     void stop() ;
 
+    // Draw a kill screen before dying.
+    void showFail(const char * file, int line, const char * msg) ;
+
     Panel * lookForPanel(const char * named) ;
     MenuManager & getMenuManager() { return mMenuManager; }
   private:

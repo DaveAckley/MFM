@@ -81,6 +81,9 @@ namespace MFM {
     }
   }
 
+  ///// 'DRIVE BY' CTORS
+  
+
   Trace& Trace::printf(const char * format, ...) {
     va_list ap;
     va_start(ap, format);
@@ -102,6 +105,30 @@ namespace MFM {
       s32 version = -1;
       cbbs.Scanf("%D",&version);
       bs.Printf(" Trace Format Version %d\n",version);
+      return;
+    } 
+
+    if (mTraceType == TTC_Tile_TopLevelFailure) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+      bs.Printf(" Failed to top: %<\n",&cbbs);
+      return;
+    }
+
+    if (mTraceType == TTC_Tile_Stop) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+      u64 totalevents;
+      cbbs.Scanf("%q",&totalevents);
+      bs.Printf(" Total events completed = ");
+      bs.Print(totalevents);
+      bs.Printf("\n");
+      return;
+    } 
+
+    if (mTraceType == TTC_ITC_StateChange) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+      u8 newstate;
+      if (1 == cbbs.Scanf("%c",&newstate)) bs.Printf("-> %s\n", getITCStateName((ITCStateNumber) newstate));
+      else bs.Printf("???");
       return;
     } 
 

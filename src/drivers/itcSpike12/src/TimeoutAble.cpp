@@ -71,6 +71,7 @@ namespace MFM {
     case WC_NOW:    ms = 0u; break;
     case WC_HALF:   ms = WC_HALF_MS; break;
     case WC_FULL:   ms = WC_FULL_MS; break;
+    case WC_MEDIUM: ms = random.Between(WC_MEDIUM_MIN_MS,WC_MEDIUM_MAX_MS); break;
     case WC_LONG:   ms = random.Between(WC_LONG_MIN_MS,WC_LONG_MAX_MS); break;
     case WC_RANDOM: ms = random.Between(WC_RANDOM_MIN_MS,WC_RANDOM_MAX_MS); break;
     case WC_RANDOM_SHORT:

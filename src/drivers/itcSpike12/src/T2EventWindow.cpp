@@ -547,16 +547,22 @@ namespace MFM {
         ++atomsShipped;
       }
     }
+    if (sn < 0 && pb.CanWrite() > 0) {
+      pb.Printf("%c",0xff); // Flag end of cache update
+      atomsShipped = 0; // Fake out done logic ugh
+    }
     if (!itc.trySendPacket(pb)) return -1; // Grr try again
     ci.mMaxUnshippedSN = sn;
     return atomsShipped == 0 ? 1 : 0;
-
   }
 
   bool T2EventWindow::tryReadEWAtom(ByteSource & in, u32 & sn, OurT2AtomBitVector & bv) {
     u8 tmpsn;
     if (in.Scanf("%c",&tmpsn) != 1) return false;
-    if (tmpsn > mLastSN) return false;
+    if (tmpsn > mLastSN) {
+      if (tmpsn == 0xff) sn = tmpsn;  // Store 0xff EOC flag
+      return false;
+    }
     OurT2AtomBitVector tmpbv;
     if (!tmpbv.ReadBytes(in)) return false;
     sn = tmpsn;
@@ -584,7 +590,7 @@ namespace MFM {
       ++count;
     }
     
-    if (count == 0) { // Recv final update packet
+    if (sn == 0xff) { // Recvd final update packet
       commitPassiveEWAndHangUp(itc); 
       TLOG(DBG,"%s PASSIVE DONE",getName());
     }

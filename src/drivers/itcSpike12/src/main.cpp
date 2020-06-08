@@ -75,27 +75,27 @@ namespace MFM {
     T2Tile & tile = T2Tile::get();
     tile.initEverything(argc,argv);
 
-    /*
-    SDLI sdli(tile,"SDLI"); // SDL1.2 initializes here
-    ADCCtl adcs(tile);
-    */
+    unwind_protect({
+        MFMErrorEnvironmentPointer_t errenv = &unwindProtect_errorEnvironment;
+        volatile const char * file = errenv->file;
+        int line = errenv->lineno;
+        int code = errenv->thrown;
+        const char * msg = MFMFailCodeReason(code);
 
-    // tqtest(tile.getRandom());
+        if (!file) {
+          file = "unknown";
+          line = 0;
+        }
 
-    //demo(tile, sdli);
-    tile.main();
-    /*
-    if (!tile.openITCs()) {
-      tile.fatal("Open failed");
-    }
-    T2EventWindow * ew = tile.tryAcquireEW(UPoint(20,10),4);
-    assert(ew!=0);
-    printf("hewo12 ew#%d\n", ew->slotNum());
-    tile.setPassive(ew);
-    ew->unlink();       // Free myself
-    tile.setActive(ew); // Should succeed
-    tile.releaseEW(ew);
-    */
+        fprintf(stderr,"Failed out of top-level\n");
+        tile.trace(tile,TTC_Tile_TopLevelFailure,"%s:%d: %s [%d]",
+                   file, line, msg ? msg : "", code);
+        tile.showFail((const char *) file, line, msg);
+        exit(99);
+      },{
+        tile.main();
+      });
+
     return 0;
   }
 }
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 {
   unwind_protect({
       MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
-      fprintf(stderr,"Failed out of top level\n");
+      fprintf(stderr,"Failed out of main\n");
       exit(99);
   },{
     return MFM::MainDispatch(argc,argv);

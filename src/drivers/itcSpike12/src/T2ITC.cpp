@@ -339,8 +339,8 @@ namespace MFM {
 
   void T2ITC::setITCSN(ITCStateNumber itcsn) {
     MFM_API_ASSERT_ARG(itcsn >= 0 && itcsn < MAX_ITC_STATE_NUMBER);
+    mTile.trace(*this, TTC_ITC_StateChange,"%c",(u8) itcsn);
     mStateNumber = itcsn;
-    TLOG(DBG,"->%s",getName());
   }
 
   void T2ITC::reset() {
@@ -691,15 +691,15 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
   void T2ITCStateOps_SHUT::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
     if (itc.getCompatibilityStatus() >= 2) {
       itc.mTile.addRandomSyncTag(pb);
-      if (itc.trySendPacket(pb)) {
-        itc.setITCSN(ITCSN_DRAIN);
-        itc.scheduleWait(WC_FULL);
-      } else itc.scheduleWait(WC_RANDOM_SHORT);
-    } else itc.scheduleWait(WC_RANDOM);
+      itc.trySendPacket(pb);
+    }
+    itc.scheduleWait(WC_MEDIUM);
   }
 
   void T2ITCStateOps_SHUT::receive(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    if (itc.getITCSN() > ITCSN_DRAIN) itc.reset();
+    if (itc.getITCSN() > ITCSN_SHUT) itc.reset();
+    itc.setITCSN(ITCSN_DRAIN);
+    itc.scheduleWait(WC_RANDOM_SHORT);
   }
 
   void T2ITCStateOps_DRAIN::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
@@ -713,8 +713,8 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
     bool recvStarted = itc.isCacheReceiveStarted(); 
     bool recvDone = itc.isCacheReceiveComplete(); 
     if (sendDone && recvDone) itc.setITCSN(ITCSN_OPEN);
-    if (sendStarted && !recvStarted) // Their Engine Might Be Dead
-      itc.scheduleWait(WC_LONG); 
+    if (sendStarted && sendDone && !recvStarted) // We Guess Their Engine Is Dead
+      itc.reset();
     else
       itc.scheduleWait(WC_RANDOM_SHORT); // For either state
   }
