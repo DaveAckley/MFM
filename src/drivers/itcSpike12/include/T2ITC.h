@@ -166,6 +166,8 @@ namespace MFM {
 
     void handleHangUpPacket(T2PacketBuffer & pb) ;
 
+    void handleDropPacket(T2PacketBuffer & pb) ;
+
     bool trySendAckPacket(CircuitNum cn) ;
 
     bool trySendPacket(T2PacketBuffer &pb) ;

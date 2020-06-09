@@ -42,7 +42,7 @@ namespace MFM {
 
 #define ALL_EW_STATES_MACRO()                               \
   /*   name  act custo cusrc stub desc */                   \
-  XX(IDLE,    0,  0,    0,   0,  "idle active or passive")  \
+  XX(IDLE,    1,  0,    0,   0,  "idle active or passive")  \
   XX(AINIT,   1,  1,    1,   0,  "initial active state")    \
   XX(AWLOCKS, 1,  1,    1,   0,  "wait for locks")          \
   XX(ADROP,   1,  1,    1,   0,  "finish NAKed event")      \
@@ -101,6 +101,7 @@ namespace MFM {
 
     bool isInActiveState() const ;
 
+    const CircuitInfo* getPassiveCircuitInfoIfAny() const ;
     const CircuitInfo& getPassiveCircuitInfo() const ;
 
     T2EventWindow(T2Tile& tile, EWSlotNum ewsn, const char * category) ;
@@ -128,10 +129,7 @@ namespace MFM {
     const char * getCategory() const { return mCategory; }
 
     EWStateNumber getEWSN() const { return mStateNum; }
-    void setEWSN(EWStateNumber ewsn) {
-      assert(ewsn >= 0 && ewsn < MAX_EW_STATE_NUMBER);
-      mStateNum = ewsn;
-    }
+    void setEWSN(EWStateNumber ewsn) ;
 
     /*    T2EventWindowStatus status() const { return mStatus; } */
     EWSlotNum slotNum() const { return mSlotNum; }
@@ -188,7 +186,7 @@ namespace MFM {
     bool tryReadEWAtom(ByteSource & in, u32 & sn, OurT2AtomBitVector & bv) ;
     void commitPassiveEWAndHangUp(T2ITC & itc) ;
     void commitAndReleaseActive() ;
-    void dropActiveEW() ;
+    void dropActiveEW(bool dueToNAK) ;
 
     void initializeEW() ;
     void finalizeEW() ;

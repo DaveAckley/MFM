@@ -7,6 +7,12 @@
 
 namespace MFM {
 
+  void T2EventWindow::setEWSN(EWStateNumber ewsn) {
+    assert(ewsn >= 0 && ewsn < MAX_EW_STATE_NUMBER);
+    mTile.trace(*this, TTC_EW_StateChange,"%c",ewsn);
+    mStateNum = ewsn;
+  }
+
   void T2EventWindow::loadSites() {
     T2Tile & tile = getTile();
     OurMDist & md = tile.getMDist();
@@ -100,6 +106,10 @@ namespace MFM {
         mCircuits[i].mITC = 0;
       }
     }
+    mRadius = 0;
+    mLastSN = 0;
+    mCenter = SPoint(S32_MAX,S32_MAX);
+    setEWSN(EWSN_IDLE);
   }
 
   void T2EventWindow::abortEW() {
@@ -253,10 +263,17 @@ namespace MFM {
 
   const CircuitInfo& T2EventWindow::getPassiveCircuitInfo() const
   {
+    const CircuitInfo* ci = getPassiveCircuitInfoIfAny();
+    MFM_API_ASSERT_NONNULL(ci);       // Have it
+    return *ci;
+  }
+
+  const CircuitInfo* T2EventWindow::getPassiveCircuitInfoIfAny() const
+  {
     MFM_API_ASSERT_ARG(!this->isInActiveState()); // Be passive
     const CircuitInfo & ci = mCircuits[0]; // Passive CircuitInfo always in [0]
-    MFM_API_ASSERT_NONNULL(ci.mITC);       // Have an itc
-    return ci;
+    if (ci.mITC) return &ci;
+    return ci.mITC ? &ci : 0;
   }
 
   bool T2EventWindow::trySendNAK() {
@@ -330,14 +347,14 @@ namespace MFM {
     // codes and the concepts without actually doing the sort..
     if (sortable.size() > 1) FAIL(INCOMPLETE_CODE);
 
-    // Presto: 'sortable' is sorted.  Now do P4
+    // Presto: 'sortable' is sorted.  Now do P4 (202002010352-notes.txt:788:)
     for (EWPtrVector::iterator itr = sortable.begin(); itr != sortable.end(); ++itr) {
       T2EventWindow * ew = *itr;
       MFM_API_ASSERT_NONNULL(ew);
       // Do yoink protocol between *this (passive for them) and ew (active by us)
       bool passiveWins = passiveWinsYoinkRace(*ew);
       if (passiveWins) {
-        ew->dropActiveEW();
+        ew->dropActiveEW(false);
         continue;
       }
       if (!trySendNAK())  // :787: P6
@@ -362,7 +379,7 @@ namespace MFM {
     // But if the answer is true
   }
 
-  void T2EventWindow::dropActiveEW() {
+  void T2EventWindow::dropActiveEW(bool dueToNAK) {
     MFM_API_ASSERT_STATE(isInActiveState());
     if (getEWSN() != EWSN_ADROP) {
       unhogEWSites();
@@ -491,6 +508,11 @@ namespace MFM {
     mRadius = radius;
     mLastSN = md.GetLastIndex(mRadius);
     setEWSN(activeNotPassive ? EWSN_AINIT : EWSN_PINIT);
+    tile.trace(*this,TTC_EW_AssignCenter,"%c%c%c%c",
+               tileSite.GetX(),
+               tileSite.GetY(),
+               mRadius,
+               activeNotPassive?1:0);
   }
 
   void T2EventWindow::initPassive(SPoint ctr, u32 radius, CircuitNum cn, T2ITC & itc) {

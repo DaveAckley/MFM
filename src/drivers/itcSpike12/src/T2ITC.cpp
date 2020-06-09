@@ -135,9 +135,32 @@ namespace MFM {
       handleHangUpPacket(pb);
       break;
     case XITC_CS_DROP:         // Discard lock (by caller)
-      FAIL(INCOMPLETE_CODE);
+      handleDropPacket(pb);
       break;
     }
+  }
+
+  void T2ITC::handleDropPacket(T2PacketBuffer & pb) {
+    TLOG(DBG,"%s: Enter hDP", getName());
+
+    u32 len = pb.GetLength();
+    MFM_API_ASSERT_ARG(len >= 2);
+    const char * pkt = pb.GetBuffer();
+    u8 cn = pkt[1]&0xf;
+    Circuit & circuit = mCircuits[1][cn]; // Pick up active side
+    u32 slotnum = circuit.mEW;
+    if (slotnum == 0) { // ???
+      FAIL(INCOMPLETE_CODE); // VATDOOVEEDOO
+    }
+    T2Tile & tile = T2Tile::get();
+    T2EventWindow * ew = tile.getEW(slotnum);
+    MFM_API_ASSERT_NONNULL(ew);
+    T2EventWindow & activeEW = *ew;
+
+    freeActiveCircuit(cn); // We had one in this case and we're done with it
+    unregisterEWRaw(activeEW); // Whether we had a circuit or not
+
+    activeEW.dropActiveEW(true);
   }
 
   void T2ITC::handleRingPacket(T2PacketBuffer & pb) {
@@ -172,9 +195,18 @@ namespace MFM {
     mCircuits[0][cn].mEW = passiveEW.slotNum();
     mCircuits[0][cn].mYoinkVal = ayoink ? 1 : 0;
     passiveEW.initPassive(ourCtr, radius, cn, *this);
-    if (!passiveEW.checkSiteAvailabilityForPassive()) {
-      FAIL(INCOMPLETE_CODE);
+
+    if (!passiveEW.checkSiteAvailabilityForPassive()) { // false -> passive lost, nak sent
+      // Now what?  Just clean up passive?
+      MFM_API_ASSERT_STATE(mCircuits[0][cn].mEW == passiveEW.slotNum());
+      MFM_API_ASSERT_STATE(mCircuits[0][cn].mYoinkVal >= 0);
+      mCircuits[0][cn].mEW = 0; // XXX really?  really really?  not max sumtin?
+      mCircuits[0][cn].mYoinkVal = -1;
+      passiveEW.finalizeEW();
+      TLOG(DBG,"Passive cn %d released",cn);
+      return;
     }
+
     if (!trySendAckPacket(cn)) {
       FAIL(INCOMPLETE_CODE);
     }

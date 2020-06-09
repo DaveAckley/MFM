@@ -25,9 +25,9 @@ namespace MFM {
       mArg2 = ew.getEWSN();
     } else {
       mAddrMode = TRACE_REC_MODE_EWPASIV;
-      const CircuitInfo & ci = ew.getPassiveCircuitInfo();
-      mArg1 = ci.mITC->mDir6;
-      mArg2 = ci.mCircuitNum;
+      const CircuitInfo * ci = ew.getPassiveCircuitInfoIfAny();
+      mArg1 = ci ? ci->mITC->mDir6 : 0xff;
+      mArg2 = ew.getEWSN();
     }
   }
 
@@ -70,8 +70,8 @@ namespace MFM {
       bs.Printf("-%s",getEWStateName((EWStateNumber) mArg2));
       break;
     case TRACE_REC_MODE_EWPASIV:
-      bs.Printf("%s",getDir6Name(mArg1));
-      bs.Printf("#%x",mArg2);
+      bs.Printf("%s",mArg1 == 0xff ? "_" : getDir6Name(mArg1));
+      bs.Printf("-%s",getEWStateName((EWStateNumber) mArg2));
       break;
     case TRACE_REC_MODE_LOG:
       if (mArg1 != TTC_Log_LogTrace)
@@ -128,6 +128,27 @@ namespace MFM {
       CharBufferByteSource cbbs = mData.AsByteSource();
       u8 newstate;
       if (1 == cbbs.Scanf("%c",&newstate)) bs.Printf("-> %s\n", getITCStateName((ITCStateNumber) newstate));
+      else bs.Printf("???");
+      return;
+    } 
+
+    if (mTraceType == TTC_EW_StateChange) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+      u8 newstate;
+      if (1 == cbbs.Scanf("%c",&newstate)) bs.Printf("-> %s\n", getEWStateName((EWStateNumber) newstate));
+      else bs.Printf("???");
+      return;
+    } 
+
+    if (mTraceType == TTC_EW_AssignCenter) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+      s8 cx,cy;
+      u8 radius, active;
+      if (4 == cbbs.Scanf("%c%c%c%c",&cx,&cy,&radius,&active))
+        bs.Printf("%c@(%d,%d)+%d\n",
+                  active?'a':'p',
+                  (s32) cx, (s32) cy,
+                  radius);
       else bs.Printf("???");
       return;
     } 

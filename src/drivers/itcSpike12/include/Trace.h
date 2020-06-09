@@ -28,6 +28,8 @@ namespace MFM {
   XX(ITC,PIN,PacketIn)                          \
   XX(ITC,POU,PacketOut)                         \
   XX(Log,LOG,LogTrace)                          \
+  XX(EW,SCH,StateChange)                        \
+  XX(EW,CTR,AssignCenter)                       \
 
 
   enum TraceTypeCode {
@@ -53,7 +55,7 @@ namespace MFM {
     TRACE_REC_MODE_EWPASIV = 0x4,
     TRACE_REC_MODE_LOG     = 0x5,
 
-    TRACE_REC_FORMAT_VERSION = 0x03
+    TRACE_REC_FORMAT_VERSION = 0x04
 
   };
 

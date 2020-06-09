@@ -553,18 +553,6 @@ static const char * CMD_HELP_STRING =
     return tryAcquireEW(ctr, radius, true);
   }
 
-
-#if 0
-  bool T2Tile::tryAcquireEW(UPoint center, u32 radius) {
-    u32 phonyRadius = getRandom().Between(1,4);
-    T2EventWindow * ew = tryAcquireEW(ctr,phonyRadius,true); // true -> it will be an active EW if we get it
-    if (!ew) return false; 
-    debug("INITIATING ew %p at (%d,%d)+%d\n",ew,ctr.GetX(), ctr.GetY(), phonyRadius);
-    insertOnMasterTimeQueue(*ew,0);
-    return true;
-  }
-#endif
-
   void T2Tile::advanceITCs() { DIE_UNIMPLEMENTED(); }
 
   void T2Tile::maybeDisplay() { DIE_UNIMPLEMENTED(); }
