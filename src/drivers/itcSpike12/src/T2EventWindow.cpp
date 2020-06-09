@@ -69,15 +69,32 @@ namespace MFM {
     if (type != T2_PHONY_DREG_TYPE)
       return false;
     // XXX DOUBLE PHONY: IT'S NOT EVEN DREG
-    // JUST GO WEST IF LIVE YOUNG BEIN
-    if (mSitesLive[1]) {
-      OurT2Site & west = mSites[1];
+    // JUST GO N/E/S/W IF LIVE YOUNG BEIN
+    u8 ngb = atom.GetStateField(0,3)+1;
+    if (mSitesLive[ngb]) {
+      OurT2Site & west = mSites[ngb];
       OurT2Atom & westa = west.GetAtom();
-      OurT2Atom tmp = atom;
-      atom = westa;
-      westa = tmp;
+      OurT2Atom tmp = westa;
+      westa = atom;
+      atom = tmp;
+    } else {
+      u8 oth = mTile.getRandom().Between(1,8);
+      atom.SetStateField(0,3,oth-1);
     }
 
+#if 0
+    const char * PHONY_DIRS = "\002\004\003\001";
+    for (const char * dir = PHONY_DIRS; *dir != 0; ++dir) {
+      u8 sn=*dir;
+      if (mSitesLive[sn]) {
+        OurT2Site & west = mSites[sn];
+        OurT2Atom & westa = west.GetAtom();
+        OurT2Atom tmp = atom;
+        atom = westa;
+        westa = tmp;
+      }
+    }
+#endif
     return true;
   }
 
@@ -699,6 +716,7 @@ namespace MFM {
   bool T2EventWindow::tryInitiateActiveEvent(UPoint center,u32 radius) {
     assignCenter(MakeSigned(center), radius, true); 
     if (!checkSiteAvailability()) return false;
+    TLOG(DBG,"%s sites available", getName());
     if (!checkCircuitAvailability()) return false;
     TLOG(DBG,"%s OWNING (%d,%d)+%d",
               getName(),
