@@ -3,7 +3,7 @@
 #include <signal.h> // For kill, SIG_TSTP
 #include <stdlib.h> // For putenv
 #include <thread> // For std::thread
-#include <unistd.h> // For sleep
+#include <unistd.h> // For sleep, execl
 
 #include "Logger.h"
 #include "AssetManager.h"
@@ -76,6 +76,11 @@ namespace MFM
 
         case SDL_QUIT:
           LOG.Warning("Quitting on SDL request");
+          execl("/home/t2/T2-12/apps/mfm/RUN_SDL",
+                "/home/t2/T2-12/apps/mfm/RUN_SDL",
+                "/opt/scripts/t2/sdlsplash",
+                "/opt/scripts/t2/t2-splash.png",
+                (char *) 0);
           exit(0);
           break;
 
