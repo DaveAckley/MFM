@@ -597,10 +597,11 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
   void T2ITC::unregisterEWRaw(T2EventWindow & ew) {
     EWSlotNum sn = ew.slotNum();
     MFM_API_ASSERT_STATE(sn < MAX_EWSLOT+1);
-    MFM_API_ASSERT_NONNULL(mRegisteredEWs[sn]);
-    MFM_API_ASSERT_STATE(mRegisteredEWCount > 0);
-    mRegisteredEWs[sn] = 0;
-    --mRegisteredEWCount;
+    if (mRegisteredEWs[sn] != 0) {
+      MFM_API_ASSERT_STATE(mRegisteredEWCount > 0);
+      mRegisteredEWs[sn] = 0;
+      --mRegisteredEWCount;
+    }
     if (mRegisteredEWCount == 0 && getITCSN() == ITCSN_DRAIN)
       scheduleWait(WC_NOW); // bump
   }
