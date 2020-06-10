@@ -40,6 +40,7 @@ src/elements/include/StdElementsHeaders.inc
 
 # Other generated files
 res/elements/demos.dat
+res/mfmt2/wconfig.txt
 
 # Using Google's lint but don't want to commit it.
 tools/cpplint.py
