@@ -42,7 +42,7 @@ COMMON_CPPFLAGS+=-Wno-psabi
 override COMMON_CPPFLAGS:=$(filter-out -pedantic,$(COMMON_CPPFLAGS))
 
 # Add dependencies to make window config
-WDWCFG_BIN:=wconfig.txt
+WDWCFG_BIN:=$(BASEDIR)/res/mfmt2/wconfig.txt
 WDWCFG_SRC:=./wconfig.pl
 
 # Also build the trace file weaver
