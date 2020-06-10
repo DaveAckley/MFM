@@ -1,0 +1,1672 @@
+{112}  -*- text -*- 
+[0:
+
+Mon Aug 12 17:46:36 2019 Well it's absurd how long it has taken to get
+here, but we're facing writing the code that will take a formetted
+cache update protocol and ship it to a neighboring tile.  The packet
+we're looking at right now is a 'b'egin packet.  And the packet is all
+formatted up in a buffer, but it's not a routable MFM packet according
+to the T2 packet rules, so we either need to stick another byte on the
+front to make it so, or else change what we're sticking on the front
+of packets.  So what is the actual MFM routable packet format, again,
+exactly? [1:
+
+Mon Aug 12 18:58:32 2019 OK, so the discussion at and around
+T2-12/pru/itcio/notes/201901191229-intertile-model-notes.txt:132: is
+partcularly relevant here:
+
+    Wed Jun 12 22:24:23 2019 So, the CacheProcessor already buffers up a
+    whole bunch of 'packets', in the form of CachePacketInfo structs,
+    inside its m_toSend array.  But when it gets to AdvanceShipping, it
+    breaks that back down to individual PacketIO::SendAtom chunks.
+
+which means ShipBufferAsPacket is getting tiny little one-atom-scale
+things.  But here and now we agree with :133:
+
+    Wed Jun 12 23:21:06 2019 But in any event it seems we should leave the
+    cache protocol semantics alone until we have things working that way.
+    So we'll have little packets with a lot of overhead.
+
+so we're just going to copy each of those little suckers into a buffer
+so we can stick on the MFM routing header info.  [2:
+
+Mon Aug 12 19:03:18 2019 And that header info is.. well not completely
+clear.  At 201901191229-intertile-model-notes.txt:201: we see:
+
+      BYTE 0                                   BYTE 1                       BYTE 2            BYTE 3
+      STND LOCL MFMT                            SPEC
+     +----------------------------------------++---------------------------++----------------++--
+     |  1 |  0 | 1  |OVRN||EROR|DIR2|DIR1|DIR0||  0 | MFM CACHE PKT LENGTH || CACHE PKT TYPE ||
+     +----------------------------------------++---------------------------++----------------++--
+     +----------------------------------------++---------------------------++----------------++--
+     |  1 |  0 | 1  |OVRN||EROR|DIR2|DIR1|DIR0||  1 | MFM SPECIAL TYPE     || MFM SPEC TYPE ARGS..
+     +----------------------------------------++---------------------------++----------------++-- 
+                                                                                                  
+but that doesn't appear to be actually implemented.  In particular,                               
+the FlashTraffic 'DriveOp's defined in MFMT2Constants.h appear to go                              
+straight into byte 1 unmodified, and they are values from 0..12                                   
+(currently).  We could redefine those up to 0x80..0x8c without much                               
+trouble though..  But we don't think we're going to do the 'MFM CACHE                             
+PKT LENGTH' anyway.  We think the cache update format will be like:                               
+                                                                                                  
+                                                                                                  
+      BYTE 0                                   BYTE 1                       BYTE 2            BYTE 3
+      STND LOCL MFMT                            SPEC                                              
+     +----------------------------------------++---------------------------++----------------++-- 
+     |  1 |  0 | 1  |OVRN||EROR|DIR2|DIR1|DIR0||  0 | MFM CACHE PKT TYPE   || CACHE TYPE ARGS..
+     +----------------------------------------++---------------------------++----------------++--
+
+[3:
+
+Tue Aug 13 00:33:27 2019 And that's what in fact we have gone with so
+far -- it's the one byte T2 packet header plus the existing
+(broken-down, tiny) cache update packet.
+
+Aaand, there's nobody yet there to receive it, and there's a ton of
+related code that has yet to exist let alone work, but.. We Have
+Successfully Shipped A Cache Update Packet.
+
+So, for just that much, yay.
+
+:3]
+:2]
+
+:1]
+
+:0]
+[4:
+
+Wed Aug 14 06:51:52 2019 OK so among the more immediate things I can
+think of:
+
+ - We don't have any end-of-event intervention
+
+ - So cacheprocessor states stay SHIPPING when they need to get back
+   to IDLE
+
+ - We need to centralize reading inbound mfm packets, if for no other
+   reason than we need to de-interleave flash traffic from cache
+   updates.  Now, maybe we should just break down flash traffic as we
+   see it -- even if we only respond later -- rather than try to
+   buffer the actual packets..  but if that means responding to the
+   flash traffic, during a cache update, we probably do not want to be
+   doing that..  So maybe yes buffer the flash traffic as packets..
+
+The currently-existing 'relatively central' packet reading happens (or
+would naturally) CacheProcessor<EC>::Advance -> AdvanceReceiving
+(->AdvanceReceivingMFMS), where we poll for a packet on a single
+channel.  If we're going to preserve that structure we need something
+to divert packets for other channel ends..  But could we come in a
+little higher, and feed packets down to the CPs rather than call each
+to poll for its own?  Who calls CP::Advance?[5:
+
+Wed Aug 14 07:08:21 2019 pthread() -> Grid<GC>::TileDriverRunner() ->
+Tile<EC>::Advance() -> Tile<EC>::AdvanceCommunication() ->
+CacheProcessor<EC>::Advance().  Where do we want to delegate in there?
+At AdvanceCommunications?  Which can then can just sit on the end of
+the /dev/itc/mfm pulling packets until all the cache processors are
+happy?  While diverting flash traffic to some alternate fifo to be
+handled later?  
+
+We do need not to overrun the cache update since I presume
+there could be beginning-of-other-update packets in there..
+Actually wait, by the time we get to Tile::AdvanceCommunications we
+are agnostic about what event(s) are actually in progress.  We should
+basically be draining the pipe, within or across multiple
+AdvanceCommunications calls.
+
+The difference is what I was saying before: For T2 we want to poll at
+the Tile::AdvanceCommunication() level, and have some interface to
+pass a packet down to the CP -- instead of having an AdvanceReceiving
+delegate. [6:
+
+Wed Aug 14 08:24:36 2019 So how can we proceed on that?
+[7: Wed Aug 14 09:39:25 2019 OK..
+
+DONE :7] - Make a delegation for Tile::AdvanceCommunication()
+
+[8: DONE  :8] - (Remove the delegation for CacheProcessor::AdvanceReceiving())
+
+[9: DONE  :9] - Make some bool CP::ReceivePacket(PacketBuffer & pb) or something.
+
+[10: DONE, for a lame do-nothing implementation  :10] - Implement that.
+
+[11: Wed Aug 14 09:40:41 2019
+DONE :11] - Try that.
+
+:6]
+
+:5]
+
+:4]
+[12:
+
+Wed Aug 14 09:40:49 2019 So we now need a real implementation of
+advancecommunications. 
+[13:
+
+Wed Aug 14 11:04:56 2019 Back.. And that implementation is supposed to
+work how?  I guess the simplest thing is just go for one (non-flash)
+packet.  That lets all the state machines and whatever react to it
+before going on to the next packet.  OK.  So we need a flash traffic
+diversion buffer..
+
+:13]
+:12]
+[14:
+
+Wed Aug 14 14:30:38 2019 Make PacketFIFO.[hc].  Pattern matched to
+Buffers.[ch] in pru/itcio/firmware.  Totally untested at this point.
+
+So the standing AdvanceCommunications gives one chance to each
+connected CacheProcessor.  That's different than just doing one
+packet.  Let's keep a bitmask and do up to one packet per CP, just to
+try to match that behavior?
+[15:
+
+Wed Aug 14 14:46:26 2019 Urgh that's not so easy -- by the time we
+know which cache processor a packet is meant for, we've already read
+the packet.  So let's just read one damn non-flash packet, period, and
+see where we're at.
+
+:15]
+:14]
+[16:
+
+Thu Aug 15 04:04:53 2019 OK, so we've made a cut at an
+AdvanceCommunication delegate.  Still need:
+
+ - To handle flash packets coming off the fifo in update()
+
+ - To set the CPs back to idle at the correct time..
+
+ - To deal with at least obvious error cases like timing out when
+   there's no response to cache update stuff.  Although given that the
+   lock grab succeeded, there's reason to think remote tile death
+   should not be super common.
+
+[17:
+
+Thu Aug 15 04:26:35 2019 And what is the correct time to set the CPs
+idle?  Shouldn't that happen automatically now that we're supposedly
+actually handling packets?  I guess we really need to put the
+keymaster on loopback cables for a while here..
+
+Let's do that.  After
+
+BITS OFF
+
+:17]
+:16]
+[18:
+
+Thu Aug 15 05:05:32 2019 OK so we've got the keymaster on full
+loopback.  We _almost_ managed to extract it from the grid without
+rebooting either it or the grid, too.  But at the last minute, after
+the keymaster was fully detached but it and the grid were still
+running fine, I must have set it down funny or something, because the
+power supply glitched and everybody rebooted.
+
+Anyway.  With this setup, we ought to be able to get all the way to a
+split-torus-universe with this setup.  A single ew.swap(0,1) atom
+should go around and around the keymaster.
+
+:18]
+[19:
+
+Thu Aug 15 05:20:44 2019 So now again, why aren't the CPs resetting
+and where should we make that happen?[20:
+
+Thu Aug 15 11:51:19 2019 CPs are supposed to become idle this way:
+
+ Tile::Advance -> AdvanceCommunication(*) -> CacheProcessor::Advance ->
+ AdvanceReceiving -> PacketIO::HandlePacket -> ReceiveUpdateEnd ->
+ CacheProcessor::ReceiveUpdateEnd -> SetIdle
+
+where the AdvanceReceiving call gets an UPDATE_END packet from its
+channel end.  (And the AdvanceCommunication call at (*) is what's now
+called AdvanceCommunicationMFMS.)
+
+So what are we doing now?[21:
+
+Thu Aug 15 11:58:42 2019 Well, I guess we think we're doing:
+
+ Tile::Advance -> AdvanceCommunication ->
+ MFMT2Driver::AdvanceCommunication ->
+ PacketIO::HandlePacket -> ..as above.. 
+
+so I guess we need to follow along and see where we are failing to do
+what we think we're doing.  Calculating the wrong CP from the packet
+dir?  Let's see.[22:
+
+Thu Aug 15 12:06:05 2019 (John Mclaughlin voice)
+
+ - ISSUE 1: Is an UPDATE_END being received and handled?  GDB![23:
+
+   Thu Aug 15 12:12:06 2019 Well, we're blowing up after only one
+   cache update packet -- a 'b' -- is seen by HandlePacket.
+
+ - ISSUE 2: Is an UPDATE_END being sent?  In fact, is anything after
+   the _BEGIN being sent?[24:
+
+Thu Aug 15 12:20:30 2019 OK, so now with the loopback, we do see the
+'b'egin being received and getting to HandlePacket.  Now, the CP that
+it's being received on is in state idle -- does that make sense?
+Well, it might -- theoretically the far side (itc of the keymaster, in
+this case) acknowledged the lock, but we don't think that actually did
+anything to the matching CP state, right?   Let's keep going: We
+should now see ReceiveUpdateBegin -> CP::BeginUpdate. [25:
+
+Thu Aug 15 12:26:53 2019 Which we did, OK -- and in fact that's where
+the CP state changes to _PASSIVE.  But we're still not sure it's the
+right CP that's changing..[26:
+
+Thu Aug 15 12:28:15 2019 And MFMT2Driver is about to return true from
+AdvanceCommunication.  (We now appear to have cp[1] in state shipping
+and cp[5] in state passive, and all the rest idle.  Does that make any
+possible sense?  [27: Well, kinda:
+
+    static const Dir NORTHEAST = 1;
+
+    static const Dir SOUTHWEST = 5;
+
+because (we believe) we're in DIR8 land, so opposite dirs are 4%8
+apart..  So that's some credibility on the CP-from-T2-srcdir mapping
+front. :27])
+
+
+:26]
+
+:25]
+
+:24]
+
+:23]
+
+:22]
+
+:21]
+
+:20]
+
+:19]
+[28:
+
+Thu Aug 15 12:45:28 2019 Well, so we continued after receiving the 'b'
+packet at SW, but no more of our breakpoints hit and we got to a new
+lockset being taken and a 'b'egin shipping, which is way too far:
+
+    (gdb) c
+    Continuing.
+    20190815124502-232: 0AEPS [B55F93]MSG: AC
+    20190815124502-233: 0AEPS [B55F93]MSG: AC
+    20190815124502-234: 0AEPS [B55F93]MSG: ITCDelegateT2 running, lockset 00
+    20190815124502-235: 0AEPS [B55F93]MSG: AC
+    20190815124502-236: 0AEPS [B55F93]MSG: ITCDelegateT2 running, lockset 00
+    20190815124502-237: 0AEPS [B55F93]MSG: AC
+    20190815124502-238: 0AEPS [B55F93]MSG: AC
+    20190815124503-239: 0AEPS [B55F93]MSG: ITCDelegateT2 running, lockset 03
+
+    Breakpoint 3, MFM::MFMT2Driver<MFM::GridConfig<MFM::EventConfig<MFM::Site<MFM::P3AtomConfig>, 4u>, 60u, 40u, 100000u> >::ShipBufferAsPacket (this=0xbedea048, cp=..., pb=...)
+    (gdb) 
+[29:
+
+Thu Aug 15 12:48:44 2019 Grr.  Going again with more breakpoints.
+[30:
+
+Thu Aug 15 12:50:59 2019 OK, seeing the 'b' ship.  Looks like we're
+again outbound with srcdir NORTHEAST..[31:
+
+Thu Aug 15 12:52:47 2019 And now we're in MFMT2::AdvanceCommunication
+with the 'b'egin inbound to dstdir SOUTHWEST[32:
+
+Thu Aug 15 12:59:30 2019 And we got all the way through
+CP::BeginUpdate and now cp[5] is state passive.[33:
+
+Thu Aug 15 13:00:49 2019 Aaaaaand then we continued and it blew right
+up again, in EventWindow::InitForEvent -> MFMT2::AcquireAllLocks ->
+CP::Activate -> assert IDLE.
+
+So now we're at
+
+ - ISSUE 3: Why did some upper management -- EventWindow?  Tile?  --
+   think the event was over when it had lots to do?
+
+Presumably our delegate is failing to set up something that matters to
+keeping the event going..  Let's find out..[34:
+
+Thu Aug 15 13:06:21 2019 Well it seems like EventWindow is mostly out
+of it by this point: After the event we have:
+EW::InitiateCommunications -> StoreToTile -> CP::StartLoading (which
+among other things, sets cpstate to LOADING) then later some (more
+than zero, hopefully) ->CP::MaybeSendAtom calls to fill the outbound
+CP packet buffers, for later shipping by the state machine at the Tile
+level.
+
+Let's confirm some atom(s) being queued up to go.[35:
+
+Thu Aug 15 13:13:46 2019 Well if my breakpointing was right it appears
+we did not actually attempt to ship any atoms.  Guess we need to watch
+CP::IsSiteNumberVisible.. and I'm beginning to feel like this is
+recently familiar..
+
+:35]
+
+:34]
+
+:33]
+
+:32]
+
+:31]
+
+:30]
+:29]
+:28]
+[36:
+
+Thu Aug 15 13:26:24 2019 Um, just a possible note for the future:
+EventWindow::StoreToTile appears to be perfectly happy to include the
+same sitenumber & atom more than once in the same cache update, first
+as an 'u'pdate, and then again as a 'c'heck.  Seems like maybe we need
+an 'else' in here:
+
+        //if (m_atomBuffer[i] != *tile.GetAtom(pt))
+	if (m_atomBuffer[i].GetAtom() != *tile.GetAtom(pt))
+        {
+          tile.PlaceAtom(m_atomBuffer[i].GetAtom(), pt);
+          dirty = true;
+        }
+
+..like, right about here..?
+
+        // Let the CPs see even some unchanged atoms, for spot checks
+        for (u32 j = 0; j < MAX_CACHES_TO_UPDATE; ++j)
+        {
+          if (m_cacheProcessorsLocked[j] != 0)
+          {
+            m_cacheProcessorsLocked[j]->MaybeSendAtom( *tile.GetAtom(pt), dirty, i);
+          }
+        }
+
+
+:36]
+[37:
+
+Thu Aug 15 14:04:31 2019 Well, so here's a nice little how-do-you-do.
+Take a look at this snippet from /home/t2/T2-12/apps/mfm/mfm.sh:
+  ..
+        echo Launching mfmt2
+        /home/t2/T2-12/apps/mfm/RUN_SDL /home/t2/GITHUB/MFM/bin/mfmt2 {1H1} --sw 480 --sh 320 --sf --start-file /home/t2/T2-12/apps/mfm/12.mfs -cp /home/t2/T2-12/apps/mfm/12.mfs -ep /home/t2/T2-12/apps/mfm/libcue11.so --run -a 0 -n
+  ..
+
+Anything wrong with that?  It selects a 1x1 grid of 'H' tiles (for a
+total of one tile duh), and supplies a bunch of other arguments to set
+the screen dimensions and files to load and so forth.  
+
+What's the problem?  The problem is '{1H1}' specifies CHECKERBOARD
+layout for the grid.  But who cares, you say?  There's only one tile!
+Yeah.  Until intertile happens.  Doh.
+
+:37]
+[38:
+
+Thu Aug 15 14:10:26 2019 And when we change that to {{1H1}} to specify
+a staggered grid, we blow up much quicker -- in
+MFMT2Driver::InitializeTile -> CP::ClaimCacheProcessor ->
+Dirs::FillDir -> FillDirStaggered -> FAIL -- because InitializeTile is
+iterating over the full dir8:
+
+    349	      // Set all cacheprocessors idle.  We will activate them per event.
+    350	      for (u32 dir8 = 0; dir8 < Dirs::DIR_COUNT; ++dir8) {
+    351	        CacheProcessor<EC> & cp = tile.GetCacheProcessor(dir8);
+    352	        cp.ClaimCacheProcessorForT2(tile, dir8);
+    353	      }
+
+even though NORTH and SOUTH now don't exists..
+
+:38]
+[39:
+
+Thu Aug 15 16:34:59 2019 OK, catching up here.  We finally managed to
+get not just 'b'egin packets but actual 'c'heck packets containing
+atoms to be sent and to be received.  Currently we are dying during
+CP::ReceiveAtom, because it's going to our isConnected(CP&), which is
+checking the cp.m_cacheDir against our current m_locksetTaken and not
+finding it there.  And in fact m_locksetTaken seems to be 0 by that
+point.  So we suspect m_locksetTaken is being cleared too early, but
+we also suspect that this isConnected(CP&) definition won't be
+sufficient because on the passive side we really need to be checking
+for locks given.
+[40:
+
+Fri Aug 16 13:42:34 2019 Well, so I changed isConnected(CP&) to use
+ITCLocks::connected(), which seems a lot more right.  That doesn't
+address the possible early lockset clearing, though.[41:
+
+Fri Aug 16 13:52:28 2019 Which we now seem to be back to.  Dying in
+ITCLocks::AcquireAllLocks because CP is PASSIVE when we need it to be
+back to IDLE.
+
+Let's retrace through how an event is supposed to end.
+[42:
+
+Fri Aug 16 14:04:19 2019 Well, we have Tile::Advance ->
+ConsiderStateChange -> AllCacheProcessorsIdle -> CP::IsIdle,
+CP::IsUnclaimed
+
+..umm what does this even mean:
+
+   ..
+      if (!m_cacheProcessors[i].IsIdle() || !m_cacheProcessors[i].IsUnclaimed())
+   ..
+
+can that ever be false?  Unpacking the funcs gives like:
+
+      if (!(cp[i].m_cpState == IDLE) || !(cp[i].m_cpState == UNCLAIMED))
+
+which is like
+
+      if ((cp[i].m_cpState != IDLE) || (cp[i].m_cpState != UNCLAIMED))
+
+and since m_cpState can't be both IDLE and UNCLAIMED at the same time,
+that's a tautology?[43:
+
+Fri Aug 16 14:49:49 2019 Well that's clearly a bug but I don't think
+it's our current bug, which I suspect is about the tile state rather
+than the CP's.[44:
+
+Fri Aug 16 15:07:10 2019 Geez, Tile::ConsiderStateChange seems messed
+up too, if the names are at all to be trusted..  It's doing 'if
+(AllCacheProcessorsIdle())' before allowing the tile to become ACTIVE.
+It really seems like it should do that before allowing the tile to
+become PASSIVE.
+
+Buuut since AllCacheProcessorsIdle() had a bug making it always return
+false, it couldn't be called anywhere a true return was actually
+needed..
+
+Moving the (hopefully now fixed) AllCacheProcessorsIdle() predicate to
+govern the ACTIVE->PASSIVE tile state transition.  Going again.
+
+:44]
+
+:43]
+
+:42]
+:41]
+
+:40]
+:39]
+[45:
+
+Fri Aug 16 16:05:45 2019 Well, got a bit farther -- many packets
+were exchanged:
+
+    Aug 16 16:04:50 beaglebone kernel: [126350.144700] ITC: itc!locks open #25, flags=02, NB=0/4000
+    Aug 16 16:04:59 beaglebone kernel: [126359.045551] PKTRC: (itc!mfm) Remove 0xa7/6 at UserIB of mfm3
+
+That corresponds to this log message: 20190816160459-228: 0AEPS [B60D70]MSG: Flushed 1 stale packet(s)
+
+    Aug 16 16:05:12 beaglebone kernel: [126371.658348] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126371.688266] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126371.702290] PKTRC: (itc!pru0) Remove 0xa2/6 at PrioOB of pru0
+
+That's a 'b'egin heading EAST (the 2 in 0xa2) getting shipped to the PRUs for tranmission.
+
+    Aug 16 16:05:12 beaglebone kernel: [126371.708342] PKTRC: (itc!mfm) Insert 0xa6/6 at UserIB of mfm3
+
+And that's the same packet arriving from the WEST (the 6 in 0xa6) after transiting the loopback.
+
+    Aug 16 16:05:12 beaglebone kernel: [126371.722307] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126371.728433] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+
+15 byte packets are atom cache updates, in this context.
+
+    Aug 16 16:05:12 beaglebone kernel: [126371.760197] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126371.782258] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126371.788370] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:12 beaglebone kernel: [126371.809326] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126371.842266] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126371.848405] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:12 beaglebone kernel: [126371.863730] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126371.897867] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126371.904006] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126371.910149] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:12 beaglebone kernel: [126371.923495] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126371.929699] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:12 beaglebone kernel: [126371.964960] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126371.982288] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126371.988437] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:12 beaglebone kernel: [126372.015388] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126372.042194] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126372.048329] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:12 beaglebone kernel: [126372.064939] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126372.100281] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126372.106436] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126372.112605] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:12 beaglebone kernel: [126372.127188] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126372.133357] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:12 beaglebone kernel: [126372.167883] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126372.186230] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126372.192384] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:12 beaglebone kernel: [126372.218348] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126372.246281] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:12 beaglebone kernel: [126372.252406] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:12 beaglebone kernel: [126372.286834] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.306340] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.312462] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:13 beaglebone kernel: [126372.365157] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.371362] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.377504] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:13 beaglebone kernel: [126372.435815] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.486204] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.492349] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:13 beaglebone kernel: [126372.502733] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.543819] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.550413] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.556523] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:13 beaglebone kernel: [126372.567750] PKTRC: (itc!pru0) Remove 0xa2/15 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.574009] PKTRC: (itc!mfm) Insert 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:13 beaglebone kernel: [126372.609780] PKTRC: (itc!pru0) Insert 0xa2/1 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.626255] PKTRC: (itc!pru0) Remove 0xa2/2 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.632315] PKTRC: (itc!mfm) Insert 0xa6/2 at UserIB of mfm3
+
+Note that all those packets are EAST 2 or WEST 6
+
+    Aug 16 16:05:13 beaglebone kernel: [126372.679554] PKTRC: (itc!pru0) Insert 0xa3/1 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.687369] PKTRC: (itc!pru0) Remove 0xa3/6 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.693461] PKTRC: (itc!mfm) Insert 0xa7/6 at UserIB of mfm3
+
+But now we see SOUTHEAST 3 and NORTHWEST 7.
+
+    Aug 16 16:05:13 beaglebone kernel: [126372.729971] PKTRC: (itc!pru0) Insert 0xa5/1 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.746263] PKTRC: (itc!pru0) Remove 0xa5/6 at PrioOB of pru0
+    Aug 16 16:05:13 beaglebone kernel: [126372.752341] PKTRC: (itc!mfm) Insert 0xa1/6 at UserIB of mfm3
+
+And SOUTHWEST 5 and NORTHEAST 1.  It looks like a whole nother event
+has started.
+
+    Aug 16 16:05:13 beaglebone kernel: [126372.777970] PKTRC: (itc!mfm) Remove 0xa6/6 at UserIB of mfm3
+    Aug 16 16:05:13 beaglebone kernel: [126372.815659] PKTRC: (itc!mfm) Remove 0xa6/15 at UserIB of mfm3
+
+Buut there's still some WEST 6 getting drained.  That's worrisome indeed.
+
+    Aug 16 16:05:13 beaglebone kernel: [126372.868137] PKTRC: (itc!pru1) Insert 0xa1/1 at PrioOB of pru1
+    Aug 16 16:05:13 beaglebone kernel: [126372.902045] PKTRC: (itc!pru1) Insert 0xa7/1 at PrioOB of pru1
+    Aug 16 16:05:13 beaglebone kernel: [126372.918323] PKTRC: (itc!pru1) Remove 0xa1/6 at PrioOB of pru1
+    Aug 16 16:05:13 beaglebone kernel: [126372.924352] PKTRC: (itc!mfm) Insert 0xa5/6 at UserIB of mfm3
+    Aug 16 16:05:13 beaglebone kernel: [126372.936143] PKTRC: (itc!pru1) Remove 0xa7/6 at PrioOB of pru1
+    Aug 16 16:05:13 beaglebone kernel: [126372.942217] PKTRC: (itc!mfm) Insert 0xa3/6 at UserIB of mfm3
+    Aug 16 16:05:13 beaglebone kernel: [126372.968766] PKTRC: (itc!mfm) Remove 0xa6/15 at UserIB of mfm3
+    Aug 16 16:05:13 beaglebone kernel: [126373.014022] PKTRC: (itc!mfm) Remove 0xa6/15 at UserIB of mfm3
+
+[46:
+
+Fri Aug 16 16:19:37 2019 And here's the mfmt2 log entries, which
+aren't in syslog because we're debugging heah:
+
+    20190816160459-227: 0AEPS [B60D70]MSG: Loaded configuration '/home/t2/T2-12/apps/mfm/12.mfs'
+    20190816160459-228: 0AEPS [B60D70]MSG: Flushed 1 stale packet(s)
+
+..as seen above..
+
+    20190816160500-229: 0AEPS [B55F93]MSG: CFP
+    20190816160502-230: 0AEPS [B55F93]MSG: CFP
+    20190816160503-231: 0AEPS [B55F93]MSG: CFP
+    20190816160504-232: 0AEPS [B55F93]MSG: CFP
+    20190816160505-233: 0AEPS [B55F93]MSG: CFP
+    20190816160506-234: 0AEPS [B55F93]MSG: CFP
+    20190816160507-235: 0AEPS [B55F93]MSG: CFP
+    20190816160507-236: 0AEPS [B55F93]MSG: CFP
+    20190816160508-237: 0AEPS [B55F93]MSG: CFP
+    20190816160508-238: 0AEPS [B55F93]MSG: CFP
+    20190816160509-239: 0AEPS [B55F93]MSG: CFP
+    20190816160510-240: 0AEPS [B55F93]MSG: CFP
+    20190816160511-241: 0AEPS [B55F93]MSG: CFP
+    20190816160512-242: 0AEPS [B55F93]MSG: CFP
+    20190816160512-243: 0AEPS [B55F93]MSG: CFP
+    20190816160512-244: 0AEPS [B55F93]MSG: ITCDelegateT2 running, lockset 00
+
+A hidden event begins, no locks needed.
+
+    20190816160512-245: 0AEPS [B55F93]MSG: CFP
+    20190816160512-246: 0AEPS [B55F93]MSG: CFP
+    20190816160512-247: 0AEPS [B55F93]MSG: CFP
+    20190816160512-248: 0AEPS [B55F93]MSG: ITCDelegateT2 running, lockset 01
+
+A lockset is grabbed with bit 0 == ET in state TAKEN.  We believe at
+this point that, due to the loopback, bit 3 == WT is now in lock state
+GIVEN, but that's not reported here.
+
+    20190816160512-249: 0AEPS [B55F93]MSG: SBAP 6
+
+Shipping the 'b'egin.
+
+    20190816160512-250: 0AEPS [B55F93]MSG: CFP
+    20190816160512-251: 0AEPS [B55F93]MSG: SBAP 15
+
+Shipping an atom.
+
+    20190816160512-252: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160512-253: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160512-254: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160512-255: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160512-256: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160512-257: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160512-258: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160512-259: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160512-260: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160512-261: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160512-262: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160513-263: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160513-264: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160513-265: 0AEPS [B55F93]MSG: SBAP 15
+    20190816160513-266: 0AEPS [B55F93]MSG: SBAP 15
+
+And a bunch more atoms.
+
+    20190816160513-267: 0AEPS [B55F93]MSG: SBAP 2
+
+And the 'e'nd packet is only two bytes!  The T2 header + 'e'!  It shipped!
+
+    20190816160513-268: 0AEPS [B55F93]MSG: ITCDelegateT2 running, lockset 06
+
+Now we grab lockset 06, which takens bits 1 (SE) and 2 (SW)
+
+    20190816160513-269: 0AEPS [B55F93]MSG: SBAP 6
+    20190816160513-270: 0AEPS [B55F93]MSG: SBAP 6
+
+We send a couple 'b'egins.
+
+    20190816160513-271: 0AEPS [B55F93]MSG: CFP
+    20190816160513-272: 0AEPS [B55F93]MSG: CFP
+
+But apparently (1) we send no atoms, and (2) we send no 'e'nd
+packet. That's bad.
+
+    20190816160513-273: 0AEPS [B55F93]MSG: ITCDelegateT2 running, lockset 30
+
+And, worse, we march right on to considering another event, now
+grabbing NW and NE
+
+    20190816160513-274: 0AEPS [B55F93]MSG: SBAP 6
+    20190816160513-275: 0AEPS [B55F93]MSG: SBAP 6
+    20190816160513-276: 0AEPS [B55F93]MSG: CFP
+
+And no atoms or 'e'nd there either.
+
+    20190816160513-277: 0AEPS [B55F93]MSG: ITCDelegateT2 running, lockset 00
+    20190816160513-278: 0AEPS [B55F93]MSG: CFP
+    ../../../src/core/include/CacheProcessor.tcc:332: FAILED: ILLEGAL_STATE
+
+And not surprisingly we finally die.
+
+    UNCAUGHT FAILURE, ABORTING
+
+
+    Program received signal SIGABRT, Aborted.
+    0xb6c6e8e6 in ?? () from /lib/arm-linux-gnueabihf/libc.so.6
+    (gdb) up
+    #1  0xb6c7cee6 in raise () from /lib/arm-linux-gnueabihf/libc.so.6
+    (gdb) 
+    #2  0xb6c7dbee in abort () from /lib/arm-linux-gnueabihf/libc.so.6
+    (gdb) 
+    #3  0x000e5994 in MFMFailHere (file=0xea1e0 "../../../src/core/include/CacheProcessor.tcc", line=332, code=4) at src/FailPlatformSpecific.cpp:44
+    44	    abort();
+    (gdb) 
+    #4  0x000ba294 in MFM::CacheProcessor<MFM::EventConfig<MFM::Site<MFM::P3AtomConfig>, 4u> >::Activate (this=0xb5f7ac64) at ../../../src/core/include/CacheProcessor.tcc:332
+    332	    MFM_API_ASSERT_STATE(m_cpState == IDLE);
+    (gdb) p m_cpState
+    $331 = MFM::CacheProcessor<MFM::EventConfig<MFM::Site<MFM::P3AtomConfig>, 4u> >::SHIPPING
+    (gdb) 
+
+Because we're trying to activate a cp that still thinks is should be
+sending atoms..
+
+:46]
+
+
+:45]
+[47:
+
+Fri Aug 16 16:37:02 2019 So have to break for dinner out soon but
+where are we.  Well,
+
+(1) When do we send 'e'nd?  If there's a bug in counting atoms to
+    send, does that impact sending 'e'nd?
+
+[48:
+
+Fri Aug 16 16:55:27 2019 We Tile::Advance -> AdvanceComputation ->
+EventWindow::TryEventAt for a whole event.  ..and whether or not an
+event even happened, Tile::Advance falls into AdvanceCommunications --
+and does so without even checking if the current state is now PASSIVE.
+
+[49:
+
+Fri Aug 16 17:02:06 2019 Now, about the last thing EventWindow does is
+StoreToTile(), which does all kinds of shenanigans with
+m_cacheProcessorsLocked culminating in StartShipping, but it does
+nothing with the tile state at all, that I can see.  Meaning it will
+still be in state ACTIVE, when it falls through into case PASSIVE back
+in Tile::Advance.[50:
+
+Fri Aug 16 17:06:07 2019 We do have to be careful because we might be
+a remote tile in state PASSIVE and doing AdvanceCommunication, or we
+might be the ACTIVE tile just discussed..  But by the time
+AdvanceComputation is done, shouldn't we all be in the same boat?
+Cranking along until the cache processors are done?[51:
+
+Fri Aug 16 17:09:35 2019 We're trying saying that BOTH active and
+passive states should do the AllCacheProcessorsIdle check before
+allowing the transition.  On the theory we might be active (if we
+originated the event) or passive (if we're responding to the event)
+but we still need to wait for the CPs to finish.
+
+:51]
+
+:50]
+
+:49]
+
+  :48]
+:47]
+[52:
+
+Sat Aug 17 05:57:54 2019 Based on a DBG7 trace including the below, it
+appears when CP is receiving that doesn't seem to be blocking trying
+another event..:
+
+    20190817050616-41674: 0AEPS [B55F93]DBG: EW::StoreToTile releasing [0,0]
+    20190817050616-41675: 0AEPS [B55F93]DBG: CP [0,0] Southeast 0[No direction - -] (26,32): LOADING->SHIPPING
+    20190817050616-41676: 0AEPS [B55F93]MSG: SBAP 6
+    20190817050616-41677: 0AEPS [B55F93]DBG: Tile [0,0]: AdvanceComputation->1
+    20190817050616-41678: 0AEPS [B55F93]MSG: CFP
+    20190817050616-41679: 0AEPS [B55F93]DBG: CP [0,0] Southeast 0[No direction - -] (26,32): Advance shipping
+    20190817050616-41680: 0AEPS [B55F93]MSG: SBAP 15
+    20190817050616-41681: 0AEPS [B55F93]DBG: CP [0,0] Southeast 0[No direction - -]: Ship 1 (site #39)
+    20190817050616-41682: 0AEPS [B55F93]MSG: SBAP 2
+    20190817050616-41683: 0AEPS [B55F93]DBG: CP [0,0] Southeast 0[No direction - -] (26,32): SHIPPING->RECEIVING
+    20190817050616-41684: 0AEPS [B55F93]DBG: EW::TryEventAt(36,27) [0,0]
+    20190817050616-41685: 0AEPS [B55F93]DBG: EW::InitForEvent(36,27) [0,0]
+
+[53:
+
+Sat Aug 17 06:22:06 2019 Postwalk.  Actually, given this idea that we
+leave the tile ACTIVE durring communications if it's the one that
+originated the event, what is supposed to stop another event from
+being initiated?  [54:
+
+Sat Aug 17 06:24:17 2019 Is it that I changed ConsiderStateChange to
+not block when we're ACTIVE?  But we need to poll for packets.  And
+this process was always single threaded per tile.
+
+It really seems like even the originating tile should go to passive
+while communications are running.  But how does that interact with the
+display thread trying to pause and unpause the tiles for display?
+Doesn't pausing just mean requesting passive state?  [55:
+
+Sat Aug 17 06:34:11 2019 No, there's another level -- the TileDriver.
+It's the TileDriver that switches between ADVANCING and PAUSED -- and
+in fact the ADVANCING case has a step where it advances the channels,
+which is the model of actual data transmission, and maybe really is
+where we could intervene to move our T2 packets, if we wanted to come
+in at the lowest possible level and preserve as much of the existing
+structure as we could.  We'd still need to intervene at locking as
+well, but the idea would be to push packets into the existing
+low-level channels, and just ship as much as possible in like a 'cache
+protocol fragment' packet when we get to the channel transceiver
+step.  Do the channel transceivers expect to move full packets?  I
+think they just move bytes, right?[56:
+
+Sat Aug 17 08:25:10 2019 So given that the packets are still
+interleaved I think we'd make a separate layer to call at
+gridtransceiver time.  It would ship any outbound stuff it could,
+batching up into cache data frag packets I guess, and it would pull
+packets as available, deinterleave them, and deliver them to the
+channel buffers (and the flash traffic fifo), as appropriate.
+
+We'd also need ininitialization stuff for CPs (and down into the
+channel ends) so that everybody thinks they're connected even though
+they're kind of not.[57:
+
+Sat Aug 17 08:56:17 2019 Have to go shop but for thinking about where
+we're at is: Do we or don't we try to keep using the ByteChannel
+abstraction currently in GridTransceiver?  Is it possible to actually
+take stuff out of it for transmission without having that stuff become
+available for reading?  Do we want to switch to the single-direction
+fifo that we just build for flash traffic?
+
+:57]
+
+:56]
+
+:55]
+
+:54]
+
+:53]
+:52]
+[58:
+
+Sun Aug 18 02:40:52 2019 OK, so we really think we want to try
+delegating just the locking and the actual byte transfers, while
+keeping everything else intact.  But that means we have to roll back a
+fair ways here, without really proper git support due to the bits off
+workflow.  So what's the way to proceed here?
+
+:58][59:
+
+Sun Aug 18 11:41:31 2019 Well, we saved that entire MFM tree off to
+MFM-20190818 (currently existing ONLY on the keymaster), and rolled
+GITHUB/MFM back to cb907b2f43c from like Aug 9.  Currently still
+rebuilding ulam for that mfm.[60:
+
+Sun Aug 18 12:15:09 2019 OK done.  Hopefully will not have to redo
+that completely immediately..
+
+:60]
+
+:59]
+[61:
+
+Sun Aug 18 14:55:03 2019 OK, we're gradually recreating
+ITCDelegate.[hc] in the rolled-back MFM.  So far we've added it to
+Tile.[hc] and CacheProcessor.[hc].  Have removed most pure virts from
+the definition though, since they all need to be reconsidered.
+
+Still need to look at, at least, mfmt2/main.[hc]
+[62:
+
+Sun Aug 18 16:27:56 2019 OK, that builds and all.[63:
+
+Sun Aug 18 17:12:31 2019 So, we're thinking the delegate interventions
+should be where?  I had this thought that maybe we could preserve the
+existing locking code all the way down to
+CacheProcessor::m_longLivedLock, with an intervention higher up to
+actually capture the needed locks.  If we could do that, then the
+ongoing delegations would be
+
+(1) at the LonglivedLock level, and
+(2) at GridTransceiver level, and
+
+That Is All.  Plus perhaps some one time delegations to set things
+up. 
+
+:63]
+
+:62]
+:61]
+[64:
+
+Mon Aug 19 12:24:40 2019 Final foggen try this week anyway.
+
+So, relevant flows:
+
+LOCK ACQUIRE:
+
+  Tile::AdvanceComputation -> EventWindow::TryEventAt -> InitForEvent
+  -> AcquireAllLocks -> AcquireRegionLocks -> AcquireDirLock ->
+  CP::IsConnected + CP::TryLock -> LonglivedLock::TryLock
+
+  ADAPTATION STRATEGY: Delegate LongLivedLock::TryLock to MFMT2Driver.
+  NOTES: LonglivedLock::TryLock formally takes a void*, but in use
+  it's actually a CP*.  From a CP* we can get m_cacheDir which tells
+  us which lock is requested.  We add that to the needed lockset and
+  try to acquire it.  If we succeed we add it to the current lockset.
+  In any case we succeed or fail out of TryLock appropriately.
+  **ALSO: Delegate CP::IsConnected
+
+PACKET OUTBOUND:
+
+  Tile::AdvanceCommunication -> CP::Advance -> AdvanceShipping ->
+  PacketIO::SendAtom -> CP::ShipBufferAsPacket -> ChannelEnd::Write ->
+  GridTransceiver(AbstractChannel)::Write -> ByteChannel::Write
+
+  ADAPTATION STRATEGY: Delegate CP::ShipBufferAsPacket to MFMT2Driver,
+  which sets up the header and writes the packet to /dev/itc/mfm
+
+PACKET INBOUND:
+
+  Tile::AdvanceCommunication -> CP::Advance -> AdvanceReceiving ->
+  ChannelEnd::ReceivePacket -> ReadByte -> Read ->
+  GridTransceiver(AbstractChannel)::Read -> ByteChannel::Read
+
+  ADAPTATION STRATEGY: Create CP::ReceivePacket, delegate that to
+  MFMT2Driver, and have CP::AdvanceReceiving call it.  MFMT2Driver
+  maintains packet buffers to deinterleave the packets coming from
+  /dev/itc/mfm, so it can return the next appropriately-directed
+  packet, if any.
+
+LOCK RELEASE:
+
+  Tile::AdvanceCommunication -> CP::Advance -> AdvanceBlocking ->
+  Unblock -> Unlock -> LongLivedLock::Unlock
+
+  ADAPTATION STRATEGY: Delegate LongLivedLock::UnLock.  NOTES:
+  LonglivedLock::Unlock formally takes a void*, but in use it's
+  actually a CP*.  From a CP* we can get m_cacheDir which tells us
+  which lock is requested.  We remove that from the current lockset
+  and try to acquire it, succeeding or failing appropriately.
+
+:64]
+[65:
+
+Mon Aug 19 14:38:02 2019 OK, so have done this so far:
+
+- Updated ITCDelegate for TryLock, Unlock, ReceivePacket,
+  ShipBufferAsPacket, and IsConnected.
+
+- Renamed CP::AssertConnected to AssertClaimed to better reflect what
+  it means and separate it from IsConnected, which (we now claim)
+  means there's a live neighbor tile for this CP to talk to.
+
+- Installed the delegation hooks in TryLock and Unlock in
+  LonglivedLock.h
+
+- Checked that EventWindow::AcquireDirLock uses (in part)
+  CP::IsConnected to decide if a lock is (currently) needed, which is
+  what we think pretty hard we want.
+
+Currently building for typoes.  Among things to be looked at next:
+
+ - MFMT2Driver catching the new delegations.[69: Kind of done  :69]
+
+ - Do we already have a class that should be the one holding the
+   inbound deinterleaved packet buffers?  What's it called?[70: It's
+   called MFMIO.  It's got the mfmPacketFD and is already trying to
+   distinguish cache updates from flashtraffic.  :70]
+
+ - Implement the packet reception infrastructure a la PACKET INBOUND
+   in :64:
+
+:65]
+[66:
+
+Mon Aug 19 14:57:08 2019 OK, rehooking-up the MFMT2Driver delegation
+stuff -- was surprised when previous build finished clean, but that
+was because we weren't using any of the stuff yet..  Ah now
+errors.[67:
+
+Mon Aug 19 15:06:16 2019 OK, updated the delegations with stub code.
+Going again.[68:
+
+Mon Aug 19 15:13:02 2019 Re-updated EventWindow for ITCDelegation.  
+
+:68]
+
+:67]  :66]
+[71: 
+
+Mon Aug 19 15:25:22 2019 Well, built.  Watch it blow up, I guess.[72:
+
+Mon Aug 19 15:27:13 2019 OK first stop is the IsConnected delegation.
+
+:72]
+
+:71]
+[73:
+
+Mon Aug 19 15:46:45 2019 Current issue is: During .mfs loading,
+Tile::PlaceAtom eventually gets to CP::IsConnected, which is returning
+true, causing PlaceAtom to look for a neighboring tile -- to
+place the atom in the neighbor's cache, too -- but of course there is
+no neighboring tile in T2.  How do we fix this?  [74:
+
+Mon Aug 19 15:59:15 2019 Well, not sure what would be least-gross, but
+for a test, I'm just commenting the 'm_grid.RefreshAllCaches()' call
+out of ExternalConfigSectionGrid.tcc:301.
+
+:74]
+
+:73]
+[75:
+
+Mon Aug 19 16:20:14 2019 OK, we've gotten as far as MFMT2Driver's
+ReceivePacket getting called and dying for lack of implementation.  Go
+go go.
+
+Let's break MFMIO out of main.cpp.[76:
+
+Mon Aug 19 16:26:18 2019 Well, in doing that it looks like maybe MFMIO
+is kind of low level to be doing all packet manipulation?[77:
+
+Mon Aug 19 16:51:09 2019 Geez look how many #include's it took to get
+'low level' MFMIO to build:
+
+    #include <stdlib.h>     /* For abort */
+    #include <sys/types.h>  /* For open */
+    #include <unistd.h>     /* For read */
+    #include <fcntl.h>      /* For O_RDWR */
+    #include <stdio.h>      /* For stderr */
+    #include <errno.h>      /* For errno */
+    #include <string.h>     /* For strerror */
+    #include "MFMT2Constants.h"
+    #include "Logger.h"
+    #include "FlashTraffic.h"
+[78:
+
+Mon Aug 19 16:52:12 2019 OK we're back at ReceivePacket.  Now what.
+MFMIO Or No?  ..Yes.  Let's do it GO GO GO.[79:
+
+Mon Aug 19 17:29:47 2019 OK have a cut at PacketBuffer *
+tryReceivePacket in MFMIO.h.  But it's got a ton of copying in it.
+Why don't we pass a PacketBuffer& in and get a bool out     ?
+[80:
+
+Mon Aug 19 18:03:56 2019 OK redid that.  Also got rid of the fakeEvent
+stuff in main.cpp since wheeze dune reel wons now.
+
+:80]
+:79]
+
+:78]
+
+:77]
+
+:76]
+
+:75]
+[81:
+
+Mon Aug 19 18:42:18 2019 OK got as far as not half LonglivedLocks
+because of how we claimed the cache processors; going again.[82:
+
+Mon Aug 19 18:43:08 2019 OK, taking a brief brief evening break.  Pick
+up at needing to give our new llls their itcDelegate..[83:
+
+Mon Aug 19 19:48:45 2019 OK, rebuilding after break; lll should now
+get their itcd.
+
+:83]
+
+:82]
+
+:81]
+[84:
+
+Mon Aug 19 19:58:44 2019 OK, now we're at the TryLock delegate stub.
+Time for a bit more implementation.  We're going to go full-on
+mongo-slow-bongo here, trying to grab one lock at a time.[85:
+
+Mon Aug 19 20:33:15 2019 Got pretty far:
+
+    20190819202409-227: 0AEPS [B60D70]MSG: Loaded configuration '/home/t2/T2-12/apps/mfm/12.mfs'
+    20190819202409-228: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202409-229: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202409-230: 0AEPS [B55F93]MSG: ReceivePacket running for 1259560
+    20190819202409-231: 0AEPS [B55F93]MSG: Flushed 0 stale packet(s)
+    20190819202409-232: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202409-233: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202409-234: 0AEPS [B55F93]MSG: ReceivePacket running for 1259560
+    20190819202409-235: 0AEPS [B55F93]MSG: IsConnected = 1
+ ..100 lines clipped..
+    20190819202410-3135: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202410-3136: 0AEPS [B55F93]MSG: ReceivePacket running for 1259560
+    20190819202410-3137: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202410-3138: 0AEPS [B55F93]MSG: TryLock running for dir8=7/dir6=4, lockset=00
+    20190819202410-3139: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202410-3140: 0AEPS [B55F93]MSG: TryLock running for dir8=1/dir6=5, lockset=10
+    20190819202410-3141: 0AEPS [B55F93]MSG: IsConnected = 1
+ ..
+    20190819202410-3155: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202410-3156: 0AEPS [B55F93]MSG: SBAP 6
+    20190819202410-3157: 0AEPS [B55F93]MSG: SBAP 6
+    20190819202410-3158: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202410-3159: 0AEPS [B55F93]MSG: SBAP 15
+    20190819202410-3160: 0AEPS [B55F93]MSG: SBAP 15
+ ..
+    20190819202412-3196: 0AEPS [B55F93]MSG: SBAP 2
+    20190819202412-3197: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202412-3198: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202412-3199: 0AEPS [B55F93]MSG: ReceivePacket running for 1259560
+    20190819202413-3200: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202413-3201: 0AEPS [B55F93]MSG: SBAP 15
+ ..
+    20190819202414-3222: 0AEPS [B55F93]MSG: SBAP 15
+    20190819202414-3223: 0AEPS [B55F93]MSG: SBAP 2
+    20190819202414-3224: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202414-3225: 0AEPS [B55F93]MSG: IsConnected = 1
+    20190819202414-3226: 0AEPS [B55F93]MSG: ReceivePacket running for 1259560
+    20190819202414-3227: 0AEPS [B55F93]MSG: IsConnected = 1
+ ..
+    20190819202414-3243: 0AEPS [B55F93]MSG: IsConnected = 1
+    Cache update illegal here! 62+5
+
+Where that last exclamation is a packet mistakenly delivered to the
+flash traffic handler.  Why that happened remains to be seen.
+
+:85]
+
+:84]
+[86:
+
+Mon Aug 19 21:16:25 2019 Well it's not working but it's kind of
+running, which is kind of a giant advance over anywhere we've gotten
+before.  It currently appears that we're failing to clear some locks
+in some circumstances, so further attempts to grab the locks start
+failing and the 'contested' fraction rises and the 'acquired' fraction
+falls:
+
+    20190819211556-229: 0AEPS [B55F93]MSG: LSX atm 1000, acq 161/16.100000%, unr 0/0.000000%, cns 839/83.900000%, tmo 0/0.000000%, oth 0/0.000000%
+    20190819211558-230: 1AEPS [B55F93]MSG: LSX atm 2000, acq 235/11.750000%, unr 0/0.000000%, cns 1765/88.250000%, tmo 0/0.000000%, oth 0/0.000000%
+    20190819211559-231: 1AEPS [B55F93]MSG: LSX atm 3000, acq 289/9.633333%, unr 0/0.000000%, cns 2711/90.366667%, tmo 0/0.000000%, oth 0/0.000000%
+ ..
+    20190819211611-252: 13AEPS [B55F93]MSG: LSX atm 24000, acq 1167/4.862500%, unr 0/0.000000%, cns 22833/95.137500%, tmo 0/0.000000%, oth 0/0.000000%
+    20190819211612-253: 15AEPS [B55F93]MSG: LSX atm 25000, acq 1205/4.820000%, unr 0/0.000000%, cns 23795/95.180000%, tmo 0/0.000000%, oth 0/0.000000%
+
+It's binary and so hard to read, but here:
+
+    root@beaglebone:/home/t2/T2-12/apps/mfm# head -c 8 /dev/itc/locks
+    Aug 19 21:12:55 beaglebone kernel: [404030.933313] ITC: itc!locks open #61, flags=0400000, NB=0/4000
+    Aug 19 21:12:55 beaglebone kernel: [404030.950437] ITC: itc!locks successfully closed
+     1     root@beaglebone:/home/t2/T2-12/apps/mfm#
+       \
+        \-- The ^N there is 0x0e, and shows that three locks are taken,
+            which, umm, should of course never happen.
+
+For the record, and based on /home/t2/T2-12/lkms/itc/RULES.h, reading
+/dev/itc/locks gets these bytes, in order, the itcs that are in state:
+
+0 sRESET
+1 sTAKEN
+2 sGIVEN
+3 sIDLE
+4 sTAKE
+5 sRELEASE
+6 sSYNC01
+7 sWAIT
+8 sRACE
+9 sFAILED
+
+When I freed the locks by hand:
+
+    root@beaglebone:/home/t2/T2-12/apps/mfm# echo -e -n '\000' >/dev/itc/locks
+    Aug 19 21:14:52 beaglebone kernel: [404147.342778] ITC: itc!locks open #62, flags=0401101, NB=0/4000
+    Aug 19 21:14:52 beaglebone kernel: [404147.358802] ITC: itc!locks successfully closed
+    root@beaglebone:/home/t2/T2-12/apps/mfm# head -c 8 /dev/itc/locks
+    Aug 19 21:15:03 beaglebone kernel: [404158.755278] ITC: itc!locks open #63, flags=0400000, NB=0/4000
+    Aug 19 21:15:03 beaglebone kernel: [404158.770706] ITC: itc!locks successfully closed
+       ?    root@beaglebone:/home/t2/T2-12/apps/mfm#
+           \
+            \--- '?' is 0x3f, in position 3 -> all six locks are sIDLE
+
+and I saw the acquistion stats go up a little bit before falling back
+down again.
+
+:86]
+[87:
+
+Mon Aug 19 21:30:51 2019 Just tried again and noticing the same '^N1'
+wedged lock pattern:
+
+    root@beaglebone:/home/t2/T2-12/apps/mfm# head -c 10 /dev/itc/locks
+    Aug 19 21:30:27 beaglebone kernel: [405082.932955] ITC: itc!locks open #68, flags=0400000, NB=0/4000
+    Aug 19 21:30:27 beaglebone kernel: [405082.949888] ITC: itc!locks successfully closed
+     1       root@beaglebone:/home/t2/T2-12/apps/mfm# 
+         \
+          \--- '1' is 0x31
+
+which,  we _think_ means:
+
+SE,SW,WT is sTAKEN, and
+NW,NE,ET is sGIVEN
+
+which is of course fogged.
+
+How can we localize this?[88:
+
+Mon Aug 19 21:45:57 2019 Going again logging just trylock and unlock results..
+
+:88]
+
+
+:87]
+[89:
+
+Mon Aug 19 21:48:07 2019 OK, well.. right out of the box we appear to
+have gone for (and gotten) three locks:
+
+    20190819214627-227: 0AEPS [B60D70]MSG: Loaded configuration '/home/t2/T2-12/apps/mfm/12.mfs'
+    20190819214627-228: 0AEPS [B55F93]MSG: Flushed 17 stale packet(s)
+    20190819214627-229: 0AEPS [B55F93]MSG: TryLock dir8=5/dir6=2, lockset=00+04 -> 1
+    20190819214627-230: 0AEPS [B55F93]MSG: TryLock dir8=3/dir6=1, lockset=04+06 -> 1
+    20190819214627-231: 0AEPS [B55F93]MSG: TryLock dir8=6/dir6=3, lockset=06+0E -> 1
+    20190819214627-232: 0AEPS [B55F93]MSG: TryLock dir8=7/dir6=4, lockset=0E+1E -> 0
+    20190819214627-233: 0AEPS [B55F93]MSG: TryLock dir8=1/dir6=5, lockset=0E+2E -> 0
+    20190819214627-234: 0AEPS [B55F93]MSG: TryLock dir8=1/dir6=5, lockset=0E+2E -> 0
+    20190819214628-235: 0AEPS [B55F93]MSG: Unlock dir8=5/dir6=2, lockset=0E+0A -> 1
+    20190819214628-236: 0AEPS [B55F93]MSG: Unlock dir8=3/dir6=1, lockset=0A+08 -> 1
+    20190819214628-237: 0AEPS [B55F93]MSG: TryLock dir8=5/dir6=2, lockset=08+0C -> 1
+    20190819214628-238: 0AEPS [B55F93]MSG: Unlock dir8=5/dir6=2, lockset=0C+08 -> 1
+    20190819214628-239: 0AEPS [B55F93]MSG: Unlock dir8=6/dir6=3, lockset=08+00 -> 1
+
+
+:89]
+[90:
+
+Mon Aug 19 22:53:07 2019 OK did a bunch of stuff:
+
+- Release all locks on startup
+
+- Discard any pending mfm packets earlier during startup, before an
+  event may have started
+
+I'd been tracing through a whole event and had gotten pretty deep into
+it, without seeing anything bad, when gdb decided to have an internal
+error..  so we'll see
+
+:90]
+[91:
+
+Tue Aug 20 07:48:17 2019 Well we are so close but so out of time for
+this week.  We are WAY LATE to shoot the update!  So, it's another
+cliffhanger.
+
+Software Guy Lost In Software Land.
+
+:91]
+[92:
+
+Wed Aug 21 03:50:32 2019 OK so let's keep moving here.  Now that we
+have a little time again, the first thing I'd like to do is pull the
+Tile-controls-event notion apart from the sim-controls-Tile notion.
+Right now they are both using tile state ACTIVE vs PASSIVE, and that's
+at least very confusing, and quite possibly a source of the bug(s) we
+last ended on.
+
+Right now Tile's m_state is kind of overloaded in Tile operations:
+
+ - m_state == ACTIVE:
+
+   = Internally, it means the tile can start a new event, which
+     involves attempting to grab locks and initiate a cache update,
+     while also responding to other tiles' lock grabs and cache update
+     messages. 
+
+   = Externally, it means the sim is telling the tile to free run,
+     doing all its operations.
+
+ - m_state == PASSIVE
+
+   = Internally, it means the tile is waiting for the cache
+     consequences of an event it previously initiated to play out.  In
+     state PASSIVE, at least one cache processor should be a state
+     other than ACTIVE/LOADING/SHIPPING/RECEIVING/BLOCKING, and once
+     all CPs are either IDLE or UNCLAIMED, the tile can change state
+     back to ACTIVE.
+
+   = Externally, it means the sim is telling the tile to stop, so that
+     it can display state or collect statistics or whatever.
+
+[93:
+
+Wed Aug 21 04:18:34 2019 Right now, as far as I can tell, all the
+tiles could be in state PASSIVE, so the sim would think all tile state
+was stable, but in fact some underlying cache processors might still
+be handling packets and making state changes.
+
+And I guess the fact that both Tile and CacheProcessor has states
+named ACTIVE and PASSIVE -- but they don't necessarily happen at the
+same times -- is at least a trap for the unwary, if not pure evil to
+be banished.
+
+[94:
+
+Wed Aug 21 06:23:57 2019 Is it that the sim requests PASSIVE on all
+the tiles and then waits for them all to be IDLE?[95:
+
+Wed Aug 21 06:25:01 2019 When the TileDriver is PAUSED, it doesn't
+call Tile::Advance, so the tiles do nothing.  Grid::SetGridRunning
+switches the TileDriver states.[96:
+
+Wed Aug 21 06:30:40 2019 OK so the relevant code is in struct
+PauseControl in Grid.h:
+
+      virtual void MakeRequest(TileDriver & td)
+      {
+        Tile<EC> & tile = td.GetTile();
+        tile.RequestStatePassive();
+      }
+
+ask the tile to go passive.
+
+      virtual bool CheckIfReady(TileDriver & td)
+      {
+        Tile<EC> & tile = td.GetTile();
+        return tile.IsPassive();
+      }
+
+wait until it is passive.
+
+      virtual void Execute(TileDriver & td)
+      {
+        Tile<EC> & tile = td.GetTile();
+        tile.Pause();
+      }
+
+Here's the kicker.  Tile::Pause doesn't do anything, it just throws
+FAIL(ILLEGAL_STATE) if the tile isn't PASSIVE.  So that's a little
+misleading.[97:
+
+Wed Aug 21 08:47:26 2019 Well, lots of distractions.. so where are we
+here?  I wanted to add a separate variable for sim<->Tile
+coordination, instead of overloading ACTIVE/PASSIVE.  How would that
+go?  What should that variable be called?  There still seems to be a
+requested/granted kind of aspect to it?  TileDriver says please stop
+doing events?  Eventually Tile says okay I'm done doing events --
+meaning all my CPs are UNCLAIMED or IDLE, and I'm IDLE too.
+
+Now what happens if a neighboring tile requests a lock and an event,
+while I'm in that state?  Wouldn't I-the-Tile have to leave that
+state?  How in fact does having truly independent other Tiles interact
+with the imperious requests of the Grid to the TileDrivers?  That
+seems like the real issue, hunh?
+
+Right now, the itc LKM is going to negotiate lock claims whether mfmt2
+is even running.  A neighbor tile might be doing everything right
+trying to have an event, and the first it will know that there's a
+problem is after it never gets an UPDATE_ACK from the neighbor.
+
+[98:
+
+Wed Aug 21 10:02:27 2019 So one question is do we have to let Grid
+continue to have such control over a Tile on a T2?  We've been
+thinking for ages about letting display race against events and take
+the risk of atoms going bad out from underneath us.  It seems like
+'pausing' a simulation on a T2 shouldn't really be any different than
+closing the connections to the neighbors.  Right?  They can't wait for
+you to get unpaused -- or at least, they can't wait indefinitely.
+
+So really, for the T2, tile 'pausing' should be more like tile
+'isolating'.  Maybe when a tile is isolated, it doesn't (or at least
+shouldn't) take any locks, and it autonomically returns TILE_ISOLATED
+(code 'i') to any cache traffic...  Or maybe it only replies to
+UPDATE_ENDs, and does so with an UPDATE_ACK containing 0 consistent
+atoms?  Buut it won't even receive any packets unless the tile is
+advanced enough to get into AdvanceCommunications.  So that's not a
+great solution.  Maybe receiving a TILE_ISOLATED causes the associated
+CP to go UNCLAIMED?  And receiving a TILE_CONNECTED packet makes it go
+back to IDLE -- and it might also contain like the checksum id of the
+mfz file that it's currently running.
+
+[99:
+
+Wed Aug 21 13:07:08 2019 What if we're supposed to send a little
+packet when one of our locks is taken?  To show we're alive at the
+mfmt2 level?[100:
+
+Thu Aug 22 03:42:44 2019 OK how to we get to something implementable
+here?  Let's state the seemingly-all-bad possibilities knocking around
+in my head:
+
+ - Try to debug the existing scheme some more.  Why aren't locks
+   getting unlocked reliably at end-of-event?
+
+ - Try to separate grid pause/advance from tile active/passive.
+   Asynchronous passivation/activation is still the leading suspect in
+   the lost locking.
+
+ - Try a first go at the 'racino approach', where the sim thread does
+   stats gathering and displaying without stopping the tile thread(s,
+   in mfms land).
+
+I guess the first option is still the only non-terrifying one.  Let's
+at least try to understand the existing scheme failure a little more.
+In particular, let's try to see the tile becoming active when locks
+are already being held.[101:
+
+Thu Aug 22 04:34:26 2019 OK, with a new delegation
+'AdvanceCommunicationsPredicate', we soon saw this:
+
+    20190822043251-3391: 0AEPS [B55F93]MSG: Unlock dir8=6/dir6=3, lockset=08+00 -> 1
+
+Previous event ends clean with the lockset going from 08 to 00..
+
+    20190822043251-3392: 0AEPS [B55F93]MSG: Tile [0,0]: 1->2 (ACTIVE)
+
+Tile goes active for another event. 
+
+    20190822043251-3393: 0AEPS [B55F93]MSG: BEGIN TryEventAt(12,32)
+
+Starting an event at (12,32) -- smallish x (out of 48/60), large y
+(out of 32/40).
+
+    20190822043251-3394: 0AEPS [B55F93]MSG: TryLock dir8=5/dir6=2, lockset=00+04 -> 1
+
+dir8=5/dir6=2 is SW, the land of smallish x and largish y.
+
+    20190822043251-3395: 0AEPS [B55F93]MSG: EW::InitiateCommunications [0,0]
+    20190822043251-3396: 0AEPS [B55F93]MSG: EW::StoreToTile releasing [0,0]
+    20190822043251-3397: 0AEPS [B55F93]MSG: END TryEventAt(12,32) -> true
+
+After END TryEventAt, we expected the tile to go PASSIVE, but here it
+did not.
+
+    [Switching to Thread 0xb55f9330 (LWP 11136)]
+    Breakpoint 12, MFM::MFMT2Driver<MFM::GridConfig<MFM::EventConfig<MFM::Site<MFM::P3AtomConfig>, 4u>, 60u, 40u, 100000u> >::AdvanceCommunicationPredicate
+        (this=0xbede3e20, tile=...) at src/main.cpp:201
+    201	        LOG.Message("Trying to advance with nonzero lockset=%02x",m_locksetTaken);
+
+And so our predicate triggering is unsurprising.  But why didn't the
+tile go passive?
+
+    (gdb) 
+
+[104:
+
+Thu Aug 22 05:35:29 2019 Well I guess we should review exactly how the
+going-passive process is supposed to work.  Where does that really
+happen (and why isn't it more closely welded to the end of the
+AdvanceComputation phase)?[105: Thu Aug 22 05:39:22 2019
+
+PLACES A TILE MAY GO PASSIVE:
+
+ - In Tile::ConsiderStateChange, if m_requestedState is PASSIVE.  But
+   is m_requestedState only used by the surrounding sim, and not by
+   Tile-internal processing?
+
+That seems to be all, at least directly affecting Tile::m_state.
+
+
+
+:105]
+
+:104]
+:101]
+
+:100]
+
+:99]
+
+:98]
+
+:97]
+
+:96]
+
+:95]
+
+:94]
+
+:93]
+
+:92]
+[102:
+
+Thu Aug 22 04:50:58 2019 So, looking at previous instances of 'END
+TryEventAt', we see cases where the tile both does and doesn't go
+passive afterward:
+
+    20190822043224-233: 0AEPS [B55F93]MSG: BEGIN TryEventAt(27,20)
+    20190822043224-234: 0AEPS [B55F93]MSG: END TryEventAt(27,20) -> false
+    20190822043224-235: 0AEPS [B60D70]MSG: Requesting state PASSIVE for Tile [0,0] (current: ACTIVE)
+    20190822043224-236: 0AEPS [B55F93]MSG: Tile [0,0]: 2->1 (PASSIVE)
+  ..
+Here the tile does go passive -- but at the request of a different
+thread (B60D70 vs B55F93), which can only be the sim thread.
+
+    20190822043224-239: 0AEPS [B55F93]MSG: BEGIN TryEventAt(10,11)
+    20190822043224-240: 0AEPS [B55F93]MSG: END TryEventAt(10,11) -> false
+    20190822043224-241: 0AEPS [B60D70]MSG: Requesting state PASSIVE for Tile [0,0] (current: ACTIVE)
+    20190822043224-242: 0AEPS [B55F93]MSG: Tile [0,0]: 2->1 (PASSIVE)
+  ..
+Same thing here.
+
+    20190822043224-245: 0AEPS [B55F93]MSG: BEGIN TryEventAt(38,17)
+    20190822043224-246: 0AEPS [B55F93]MSG: END TryEventAt(38,17) -> false
+    20190822043224-247: 0AEPS [B55F93]MSG: BEGIN TryEventAt(6,8)
+  ..
+Here we go straight to another BEGIN.  But the 'false' in 'END
+TryEventAt(38,17) -> false' means that no event actually happened at
+(38,17), so why not just try again?
+
+    20190822043224-259: 0AEPS [B55F93]MSG: END TryEventAt(51,32) -> true
+
+Here we finally actually did an event ('-> true').
+
+    20190822043224-260: 0AEPS [B55F93]MSG: Tile [0,0]: 2->1 (PASSIVE)
+
+And the tile immediately goes passive -- with no request from another
+thread -- as we want.
+
+    20190822043224-261: 0AEPS [B60D70]MSG: Requesting state ACTIVE for Tile [0,0] (current: PASSIVE)
+
+The sim thread requests we go back to work..
+
+    20190822043224-262: 0AEPS [B55F93]MSG: Advance continuing after failed ConsiderStateChange
+
+And we consider that state change, but reject it because we still have
+prior event consequences goingon..
+
+    20190822043224-263: 0AEPS [B55F93]MSG: Advance continuing after failed ConsiderStateChange
+  ..
+We do that several times..
+
+    20190822043224-267: 0AEPS [B55F93]MSG: Advance continuing after failed ConsiderStateChange
+    20190822043224-268: 0AEPS [B55F93]MSG: Unlock dir8=3/dir6=1, lockset=03+01 -> 1
+    20190822043224-269: 0AEPS [B55F93]MSG: Unlock dir8=2/dir6=0, lockset=01+00 -> 1
+    20190822043224-270: 0AEPS [B55F93]MSG: Tile [0,0]: 1->2 (ACTIVE)
+
+..and ultimately go active only after the lockset has been cleared.
+That looks like a textbook intertile event.
+
+[103:
+
+Thu Aug 22 04:57:20 2019 Now, 'END TryEventAt -> false' means that no
+event actually happened, which might be for several different reasons:
+
+ - Have had a too-recent event on this center and EventWindow decided
+   to say no for distribution.  (RejectOnRecency)
+
+ - The atom at the event center is corrupted and an atomic repair
+   attempt failed (InitForEvent)
+
+ - The type of the atom at the event center was unrecognized and the
+   site was erased (InitForEvent)
+
+ - The attempt to acquire the needed lock(s) failed (InitForEvent)
+
+:103]
+:102]
+[106:
+
+Thu Aug 22 06:19:10 2019 OK, stepping through post-END TryEvent code,
+and so far I'm STILL not finding where the tile is reliably supposed
+to go passive.  So as a test I'm forcing it, after AdvanceComputation:
+
+        case ACTIVE:
+          didWork |= AdvanceComputation();
+          MFM_LOG_DBG6(("Tile %s: AdvanceComputation->%d",
+                        this->GetLabel(),
+                        didWork));
+          LOG.Message("Tile %s FORCING PASSIVE: %d (%d)",this->GetLabel(), m_state, m_requestedState);
+          m_state = PASSIVE;
+
+Urgh.  And note we're supposed to take a lock before even examining
+m_state.  Yippee-ki-yay for sure.
+
+          // FALL THROUGH
+        case PASSIVE:
+
+:106][107:
+
+Thu Aug 22 08:26:49 2019 Well, it might be working and it's
+fantastically abysmally pitifully hopelessly slow.  It's probably been
+going most of an hour now and the DReg is still pretty near the center
+of the tile, and has generated no Res.  We're talking something like
+0.04AER -- with unmeasured, but I'm sure huge, variance across sites.
+
+"0.04 AER is achieved."  Even that's not true yet: We're on loopback.
+
+I was starting to implement a '--seed SY' command line arg to specify
+starting with an empty tile plus one instance of element SY, then I
+started wondering if it might be better to make it automatic.  Like if
+there is an element named exactly 'Seed', with the symbol 'Se', and
+there's no .mfs on the command line, then go ahead and place one Se in
+the middle of the tile, rather than leaving it empty.
+
+But now again, saying it aloud makes me think that's a mistake.
+Unless we're going to start EVERY TILE with a seed, and not just one
+for the whole grid, we have to break symmetry among the tiles.  And
+having a --seed command line argument on just one of the tiles would
+be one way to do that.
+
+So let's go ahead and implement it.[108:
+
+Thu Aug 22 09:37:27 2019 OK, so we have '--startsymbol' on the command
+line, but at the moment it appears 'ReinitEden' gets called BEFORE the
+start-file is loaded, which appears to nuke whatever ReinitEden
+did..?[109:
+
+Thu Aug 22 12:47:33 2019 Actually the problem was our start-file had a
+Grid section in it, that wasn't supposed to be there, that overwrote
+the garden of eden state.
+
+So if intertile events are really going to make things anything like
+this slow, maybe we should think of increasing the number of sites.
+Perimeter sites go up linearly, but hidden sites go up quadratically,
+so a smaller fraction of events are intertile, and maybe more total
+events get done.  What's the next stop up?  I guess the 'I' tile at
+75x50.
+
+:109]
+
+:108]
+
+:107]
+[110:
+
+Thu Aug 22 16:13:26 2019 Well, we still don't know if this is working,
+in the sense that we could send an atom out the west and have it
+arrive from the east on the loopback.  Let's set up a little time
+lapse watching the keymaster and let it run for a few hours.  Let's
+see, if we believe 0.04 AER, how long would Watson take to circle the
+keymaster?   Well, active width is 52 sites with tile 'H'?  So
+
+(52 AEPS)/(0.04 AEPS/sec) == 1300 sec?
+
+~22 minutes?  We don't believe that at all.  That 0.04 AER must be
+excluding a tremendous amount of overhead.  I think even 0.01 AER is a
+overestimate, and that would be "only" 1.5hr to go loop the tile.
+
+I'm betting it will take at least 12 hrs+ to make it around, if it
+makes it at all.  Probably we're talking like 0.001 AER.  Geez.
+
+Well I did say even epsilon is greater than 0.
+
+And 0.001 is definitely greater than epsilon.
+
+Step by step.
+
+:110]
+[111:
+
+Fri Aug 23 01:25:16 2019 So we're getting ready to try pushing this
+stuff to the grid, ahead of the world's first actual intertile
+events, and it's time for all trees to go
+
+BITS OFF
+
+:111]

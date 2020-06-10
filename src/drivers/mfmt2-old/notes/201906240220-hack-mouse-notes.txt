@@ -1,0 +1,70 @@
+{5}  -*- text -*- 
+[0:
+
+Mon Jun 24 02:21:02 2019 So, we still haven't fixed the axis mapping
+for the damn touch screen, but it seems we could hack it ourselves
+at the mfmt2 level.  [1:
+
+Mon Jun 24 02:25:20 2019 So let's find the corners.
+
+As close to case as we can detect:
+
+NE corner: (454,319)
+    Mouse up @ (453,317)
+    Mouse up @ (454,319)
+    Mouse up @ (452,310)
+
+SE corner: (449,0) (case edge not square to display!)
+    Mouse up @ (447,2)
+    Mouse up @ (447,5)
+    Mouse up @ (449,1)
+    Mouse up @ (449,0)
+    Mouse up @ (449,0)
+    Mouse up @ (448,0)
+    Mouse up @ (447,2)
+    Mouse up @ (449,0)
+
+SW corner: (0,0)
+    Mouse up @ (0,6)
+    Mouse up @ (3,3)
+    Mouse up @ (0,0)
+    Mouse up @ (0,5)
+    Mouse up @ (4,17)
+
+NW corner: (17,313)
+    Mouse up @ (24,313)
+    Mouse up @ (17,313)
+    Mouse up @ (19,310)
+    Mouse up @ (19,309)
+
+[2:
+
+Mon Jun 24 02:32:46 2019 So basically we need to flip the y axis and
+then small adjustments.  Before we go full gross can we quick recheck
+SDL hasn't got something for this?
+
+:2]
+
+:1]
+
+:0]
+[3:
+
+Mon Jun 24 04:45:08 2019 Well, probably not even two years later we
+have the damn touchscreen working -- slowly and lame-i-ly, but -- 
+reasonably accurately in SDL.  We're using a fresh tslib 1.20 from
+github and whatever the hopelessness last time we seem to not have
+encountered this time.
+
+Bits off!
+
+:3][4:
+
+Mon Jun 24 10:03:24 2019 Well, still a long way to go to a demo for
+tonight -- in particular, we're not sending meaningful flash traffic
+yet -- but getting to the point of wanting to try the 'Reboot' and
+'Shutdown' buttons I've just made, so we better get
+
+BITS OFF!
+
+:4]
