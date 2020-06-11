@@ -43,7 +43,7 @@ namespace MFM {
     else if (degf < 40.0) level = RL_VERY_LOW;
     else if (degf < 60.0) level = RL_LOW;
     else if (degf >112.0) level = RL_VERY_HIGH;
-    else if (degf >102.0) level = RL_HIGH;
+    else if (degf >103.0) level = RL_HIGH;
     if (level != mLevel) {
       mLevel = level;
       mTile.resourceAlert(RT_CORE_TEMPERATURE, mLevel);
