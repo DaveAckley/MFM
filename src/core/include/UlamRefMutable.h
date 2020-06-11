@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamRefMutable.h  Temporary holder for ulam reference data
-  Copyright (C) 2019 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2019 ackleyshack LLC.  All rights reserved.
+  Copyright (C) 2019-2020 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2019-2020 ackleyshack LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
   \file UlamRefMutable.h  Temporary holder for ulam reference data
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2019 All rights reserved.
+  \date (C) 2019-2020 All rights reserved.
   \lgpl
  */
 #ifndef ULAMREFMUTABLE_H
@@ -70,7 +70,8 @@ namespace MFM
     u32 GetLen() const { return m_len; }
     UsageT GetUsageType() const { return m_usage; }
     u32 GetPosToEffectiveSelf() const { return m_posToEff; }
-
+    u32 GetVTableClassId() const { return m_vtableclassid; }
+    const UlamRef<EC> * GetPreviousUlamRefPtr() const { return m_prevur; }
 
     UlamRefMutable<EC>& operator=(const UlamRef<EC>& rhs);
 
@@ -84,6 +85,8 @@ namespace MFM
     u32 m_len;
     UsageT m_usage;
     u32 m_posToEff;
+    u32 m_vtableclassid;
+    const UlamRef<EC> * m_prevur;
 
   }; //UlamRefMutable
 

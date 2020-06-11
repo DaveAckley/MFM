@@ -151,7 +151,8 @@ namespace MFM {
 
     enum SpecialVirtualVTableIndices {
       BEHAVE_VOWNED_INDEX = 0,  /* ==Uq_10106UrSelf10<EC>::VOWNED_IDX_Uf_6behave10 */
-      GETCOLOR_VOWNED_INDEX = 1 /* ==Uq_10106UrSelf10<EC>::VOWNED_IDX_Uf_8getColor11102321u */
+      GETCOLOR_VOWNED_INDEX = 1, /* ==Uq_10106UrSelf10<EC>::VOWNED_IDX_Uf_8getColor11102321u */
+      RENDERGRAPHICS_VOWNED_INDEX = 2 /* ==Uq_10106UrSelf10<EC>::VOWNED_IDX_Uf_9214renderGraphics10 */
     };
 
     UlamElement(const UUID & uuid) : Element<EC>(uuid) { }

@@ -22,7 +22,7 @@
 
 /**
   \file CastOps.h Primitive casting and ALU operations
-  \author Elenas S. Ackley.
+  \author Elena S. Ackley.
   \author David H. Ackley.
   \date (C) 2014-2015,2018 All rights reserved.
   \lgpl
