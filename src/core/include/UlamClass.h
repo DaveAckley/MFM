@@ -22,7 +22,7 @@
 /**
   \file UlamClass.h An abstract base class for ULAM quarks and elements
   \author David H. Ackley.
-  \author Elenas S. Ackley.
+  \author Elena S. Ackley.
   \date (C) 2015-2019 All rights reserved.
   \lgpl
  */
@@ -138,6 +138,15 @@ namespace MFM
     }
 
     /**
+	Returns the number of direct base classes + self, two minimum:
+	one for Self, one for Super.  Implemented by every UlamClass.
+    */
+    virtual u32 GetDirectBaseClassCount() const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    /**
 	Returns the THE_INSTANCE of ith baseclass, where self is zero,
 	followed by direct bases in the order listed, then by
 	inherited bases; Implemented by every UlamClass.
@@ -145,6 +154,19 @@ namespace MFM
     virtual UlamClass<EC> * GetOrderedBaseClassAsUlamClass(u32 ith) const
     {
       FAIL(ILLEGAL_STATE);
+    }
+
+
+    /**
+	Returns true if the argument is a "direct" baseclass (explicit
+	in class definition), or unspecified superclass (UrSelf) of
+	ourself; o.w. false if self, or "shared" base (ancestor of a
+	direct base), or unrelated. Implemented by every UlamClass,
+	except localfilescopes.
+    */
+    virtual bool IsDirectBaseClass(const u32 regid) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
     }
 
     /**
@@ -367,6 +389,23 @@ namespace MFM
     virtual const char * GetMangledClassName() const = 0;
 
     /**
+       String of the mangled name of this class.  To be
+       overridden by subclasses of UlamClass.
+
+       \return an index to a statically-allocated ulam String.
+     */
+    virtual u32 GetMangledClassNameAsStringIndex() const = 0;
+
+    /**
+       String of the name of this class.  To be overridden by
+       subclasses of UlamClass.  Four variations for template instances
+       depending on argument values.
+
+       \return an index to a statically-allocated ulam String.
+     */
+    virtual u32 GetUlamClassNameAsStringIndex(bool templateParameters, bool templateValues) const = 0;
+
+    /**
        Specify the number of data members in this class.  To be
        overridden by subclasses of UlamClass.
 
@@ -408,6 +447,8 @@ namespace MFM
     static void addASCII(ByteSink & bs, u64 val) ;
 
     virtual u32 GetRegistrationNumber() const = 0;
+
+    virtual bool IsTheEmptyClass() const { return false; }
 
     UlamClass() { }
 

@@ -22,7 +22,7 @@
 /**
   \file UlamTypeInfo.h An abstract base class for ULAM info
   \author David H. Ackley.
-  \author Elenas S. Ackley.
+  \author Elena S. Ackley.
   \date (C) 2015-2017 All rights reserved.
   \lgpl
  */
