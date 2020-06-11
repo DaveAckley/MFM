@@ -66,6 +66,18 @@ namespace MFM {
 
     virtual ResettableByteSink & GetByteSink() = 0;
 
+    s32 SetFontHeightAdjust(s32 newadjust) {
+      s32 old = m_fontHeightAdjust;
+      m_fontHeightAdjust = newadjust;
+      return old;
+    }
+
+    u32 SetElevatorWidth(u32 newelevatorwidth) {
+      u32 old = m_elevatorWidth;
+      m_elevatorWidth = newelevatorwidth;
+      return old;
+    }
+
   protected:
     static const u32 ELEVATOR_WIDTH_DEFAULT = 18;
     u32 m_bottomLineShown;
@@ -112,18 +124,6 @@ namespace MFM {
 
     virtual ResettableByteSink & GetByteSink() {
       return m_text;
-    }
-
-    s32 SetFontHeightAdjust(s32 newadjust) {
-      s32 old = m_fontHeightAdjust;
-      m_fontHeightAdjust = newadjust;
-      return old;
-    }
-
-    u32 SetElevatorWidth(u32 newelevatorwidth) {
-      u32 old = m_elevatorWidth;
-      m_elevatorWidth = newelevatorwidth;
-      return old;
     }
 
   protected:
@@ -237,26 +237,9 @@ namespace MFM {
     }
 
   private:
-    static const u32 ELEVATOR_WIDTH_DEFAULT = 18;
     static const u32 ELEVATOR_COLOR = 0xff007f00;
 
     TextPanelByteSink m_text;
-    u32 m_bottomLineShown;
-    u32 m_lastBytesWritten;
-
-    SPoint m_leftButtonDragStart;
-    u32 m_dragStartElevatorBottom;
-
-    u32 m_panelHeight;
-    u32 m_fontHeight;
-    s32 m_fontHeightAdjust;
-    u32 m_neededHeight;
-    u32 m_linesInPanel;
-    u32 m_textLines;
-    u32 m_elevatorRange;
-    u32 m_elevatorBottom;
-    u32 m_elevatorHeight;
-    u32 m_elevatorWidth;
 
     // If we move elevatorBottom this many pixels, how many bottom lines
     // is that, based on the most-recent prior render?
