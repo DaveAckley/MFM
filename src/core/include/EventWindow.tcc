@@ -520,9 +520,9 @@ namespace MFM {
   }
 
   template <class EC>
-  u32 EventWindow<EC>::MapToIndexSymValid(const SPoint & loc) const
+  u32 EventWindow<EC>::MapToIndexSymValid(const SPoint & loc, PointSymmetry sym) const
   {
-    return MapToIndexDirectValid(SymMap(loc, m_sym, SPoint(2*R, 2*R)));
+    return MapToIndexDirectValid(SymMap(loc, sym, SPoint(2*R, 2*R)));
   }
 
   template <class EC>
@@ -716,5 +716,17 @@ namespace MFM {
     u32 idxb = MapToIndexDirectValid(locB);
     SwapAtomsDirect(idxa, idxb);
   }
+
+  template <class EC>
+  s32 EventWindow<EC>::GetSiteNumIfAnyDirect(const BitStorage<EC> & atom) const
+  {
+    const BitStorage<EC> * at = &atom;
+    const AtomBitStorage<EC> * first = &m_atomBuffer[0];
+    const AtomBitStorage<EC> * last = &m_atomBuffer[m_boundedSiteCount-1];
+    if (at < first || at > last) return -1;
+    u32 absIdx = ((u32) (((char*) at) - ((char*) first))) / sizeof(*first);
+    return (s32) absIdx;
+  }
+
 
 } /* namespace MFM */
