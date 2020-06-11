@@ -52,6 +52,7 @@ namespace MFM {
       , m_elevatorRange(1)
       , m_elevatorBottom(0)
       , m_elevatorHeight(10)
+      , m_elevatorWidth(ELEVATOR_WIDTH_DEFAULT)
     {
       SetName("TextPanel");
       SetRenderPoint(SPoint(0, 0));
@@ -182,7 +183,7 @@ namespace MFM {
         switch (event.button) {
 
         case SDL_BUTTON_LEFT:
-          if (pt.GetX() < (s32) ELEVATOR_WIDTH) {
+          if (pt.GetX() < (s32) m_elevatorWidth) {
             m_leftButtonDragStart = SPoint(event.x,event.y);//pt;
             m_dragStartElevatorBottom = m_elevatorBottom;
           }
@@ -209,7 +210,7 @@ namespace MFM {
       pt.Set(event.x - pt.GetX(),
              event.y - pt.GetY());
 
-      if ((pt.GetX() < (s32) ELEVATOR_WIDTH) &&
+      if ((pt.GetX() < (s32) m_elevatorWidth) &&
           (mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT)) !=0) {
         SPoint nowAt(event.x, event.y);
         s32 deltay = nowAt.GetY() - m_leftButtonDragStart.GetY();
@@ -275,7 +276,7 @@ namespace MFM {
 
       m_elevatorBottom = m_elevatorRange * (m_textLines - m_bottomLineShown) / m_textLines;
 
-      drawing.FillRect(1, m_elevatorBottom, ELEVATOR_WIDTH-2, m_elevatorHeight, ELEVATOR_COLOR);
+      drawing.FillRect(1, m_elevatorBottom, m_elevatorWidth-2, m_elevatorHeight, ELEVATOR_COLOR);
 
       s32 y = m_panelHeight;
       for (s32 line = m_textLines - m_bottomLineShown - 1; line >= 0; --line) {
@@ -285,7 +286,7 @@ namespace MFM {
           break;
         }
         drawing.BlitText(zline,
-                         SPoint(ELEVATOR_WIDTH, y),
+                         SPoint(m_elevatorWidth, y),
                          UPoint(GetWidth(), m_fontHeight));
         y -= m_fontHeight;
         if (y < 0) break;
