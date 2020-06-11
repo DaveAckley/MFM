@@ -76,6 +76,9 @@ namespace MFM
 
         case SDL_QUIT:
           LOG.Warning("Quitting on SDL request");
+          // Clean up a few FDs since ~T2Tile etc is not going to run
+          mTile.stopTracing();
+          mTile.closeITCs();
           execl("/home/t2/T2-12/apps/mfm/RUN_SDL",
                 "/home/t2/T2-12/apps/mfm/RUN_SDL",
                 "/opt/scripts/t2/sdlsplash",
