@@ -14,7 +14,7 @@
 #define TLOG(LVL,FORMAT,...)                                        \
   do {                                                              \
     if (LOG.IfLog(Logger::LVL))                                     \
-      TRACEPrintf(Logger::LVL, FORMAT __VA_OPT__(,) __VA_ARGS__ );  \
+      TRACEPrintf(Logger::LVL, FORMAT , ## __VA_ARGS__ );           \
   } while (0)                                                       \
 
 
