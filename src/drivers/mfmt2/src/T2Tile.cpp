@@ -27,6 +27,29 @@ namespace MFM {
      }
   }
 
+  CoreTempChecker::CoreTempChecker() {
+    LOG.Debug("%s",__PRETTY_FUNCTION__);
+  }
+
+  void CoreTempChecker::onTimeout(TimeQueue& srctq) {
+    T2Tile& tile = T2Tile::get();
+    CoreTemperatureWatcher & ctw = tile.getADCCtl().mCoreTemperature;
+    ResourceLevel ctmp = ctw.mLevel;
+    CPUFreq & cf = tile.getCPUFreq();
+    CPUSpeed last = cf.getLastSetSpeed();
+    
+    if (ctmp <= RL_ACCEPTABLE) {
+      if (last < CPUSpeed_Fastest) 
+        cf.setSpeed(cf.getFaster(last));
+    } else if (ctmp <= RL_HIGH) {
+      if (last > CPUSpeed_Slowest) {
+        cf.setSpeed(cf.getSlower(last));
+      }
+    }
+    scheduleWait(WC_LONG);
+  }
+
+
   EWInitiator::EWInitiator() {
     LOG.Debug("%s",__PRETTY_FUNCTION__);
   }
@@ -181,7 +204,11 @@ namespace MFM {
     , mListening(false)
     , mMDist()
     , mTotalEventsCompleted(0)
-  { }
+    , mCPUFreq(CPUSpeed_Slow)
+    , mCoreTempChecker()
+  {
+    mCoreTempChecker.schedule(getTQ(),0);
+  }
 
   void T2Tile::earlyInit() {
     processArgs();

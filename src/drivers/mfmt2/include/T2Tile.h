@@ -27,6 +27,7 @@
 #include "ADCCtl.h"
 #include "Sites.h"
 #include "Trace.h"
+#include "CPUFreq.h"
 
 namespace MFM {
 
@@ -36,6 +37,12 @@ namespace MFM {
     EWInitiator() ;
     virtual void onTimeout(TimeQueue& srctq) ;
     virtual const char* getName() const { return "EWInitiator"; }
+  };
+
+  struct CoreTempChecker : public TimeoutAble {
+    CoreTempChecker() ;
+    virtual void onTimeout(TimeQueue& srctq) ;
+    virtual const char* getName() const { return "CoreTempChk"; }
   };
 
   struct KITCPoller : public TimeoutAble {
@@ -231,6 +238,8 @@ namespace MFM {
 
     const char * getWindowConfigPath() { return mWindowConfigPath; }
 
+    CPUFreq & getCPUFreq() { return mCPUFreq; }
+
   private:
     Random mRandom;
     TimeQueue mTimeQueue;
@@ -286,6 +295,9 @@ namespace MFM {
     //// STATS
     u64 mTotalEventsCompleted;
 
+    //// HW CONTROL & MISC
+    CPUFreq mCPUFreq;
+    CoreTempChecker mCoreTempChecker;    
   };
 }
 #endif /* T2TILE_H */
