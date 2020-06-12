@@ -1,0 +1,42 @@
+{6}  -*- text -*- 
+[0:
+
+Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
+the mfmt2 branch, onto develop.  And that's now seeming to settle
+down, although I expect a few lingering explosions or overlooked bits
+will turn up occasionally.
+
+In any case, for ages we have been doing notes for itcSpike12 in the
+T2-12 tree, which really does seem just wrong for all this MFM tree
+development, so I'm starting up this notes file here in honor of
+merging to develop.
+
+:0]
+[1:
+
+Fri Jun 12 01:19:47 2020 To get us started, some quick
+
+TODO:
+
+ - Rework the Tile menu to pull in the old CPU freq changing stuff[2:
+   Fri Jun 12 03:06:32 2020 Which turned out to be nothing more than a
+   system() call.. :2]
+
+[5: Fri Jun 12 03:59:13 2020
+DONE :5] - Pull in the CPU freq changing stuff sufficient to start slowing the
+   clock when the core temperature goes high.[3: Making another
+   TimeoutAble to watch the core temp and control the CPU..  :3]
+
+   = core temp ACCEPTABLE -> 1000MHz
+   = core temp HIGH -> 720MHz
+   = core temp 
+[4: Fri Jun 12 03:07:27 2020
+
+ - Consider ditching the circuit abstraction.  With each ITC having a
+   rack of passive EWs, aren't 16 active EWs really enough?  We could
+   ensure we reserve one for hidden events if we wanted, right?  So if
+   there's only one active EW left, we reject any centers that would
+   require locks?
+
+:4]
+:1]
