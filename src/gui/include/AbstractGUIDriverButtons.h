@@ -927,6 +927,66 @@ namespace MFM
   };
 
   template<class GC>
+  struct SuppressLabelsButton : public AbstractGridCheckbox<GC>
+  {
+    SuppressLabelsButton()
+      : AbstractGridCheckbox<GC>("No labels")
+    {
+      AbstractButton::SetName("SuppressLabelsButton");
+      Panel::SetDoc("Toggle suppressing labels on atoms");
+      Panel::SetFont(FONT_ASSET_BUTTON_BIG);
+    }
+    virtual s32 GetSection() { return HELP_SECTION_DISPLAY; }
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_l;
+      mod = KMOD_SHIFT;
+      return true;
+    }
+
+    virtual bool IsChecked() const
+    {
+      return  this->GetTileRenderer().IsSuppressLabels();
+    }
+
+   virtual void SetChecked(bool value)
+    {
+      this->GetTileRenderer().SetSuppressLabels(value);
+    }
+
+  };
+
+  template<class GC>
+  struct DrawCustomButton : public AbstractGridCheckbox<GC>
+  {
+    DrawCustomButton()
+      : AbstractGridCheckbox<GC>("Custom graphics")
+    {
+      AbstractButton::SetName("DrawCustomButton");
+      Panel::SetDoc("Toggle rendering atom-specific custom graphics");
+      Panel::SetFont(FONT_ASSET_BUTTON_BIG);
+    }
+    virtual s32 GetSection() { return HELP_SECTION_DISPLAY; }
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_g;
+      mod = KMOD_SHIFT;
+      return true;
+    }
+
+    virtual bool IsChecked() const
+    {
+      return  this->GetTileRenderer().IsDrawCustom();
+    }
+
+   virtual void SetChecked(bool value)
+    {
+      this->GetTileRenderer().SetDrawCustom(value);
+    }
+
+  };
+
+  template<class GC>
   struct DisplayAER : public KeyboardCommandFunction
   {
     typedef KeyboardCommandFunction Super;

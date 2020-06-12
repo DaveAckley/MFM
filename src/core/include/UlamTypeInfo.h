@@ -22,7 +22,7 @@
 /**
   \file UlamTypeInfo.h An abstract base class for ULAM info
   \author David H. Ackley.
-  \author Elenas S. Ackley.
+  \author Elena S. Ackley.
   \date (C) 2015-2017 All rights reserved.
   \lgpl
  */
@@ -64,7 +64,7 @@ namespace MFM
     bool InitFrom(ByteSource & bs) ;
 
     void PrintMangled(ByteSink & bs) const ;
-    void PrintPretty(ByteSink & bs) const ;
+    void PrintPretty(ByteSink & bs, bool minpunct) const ;
 
     u32 GetBitSize() const { return m_bitSize; }
     u32 GetArrayLength() const { return m_arrayLength; }
@@ -122,7 +122,7 @@ namespace MFM {
     bool InitFrom(ByteSource & cbs) ;
 
     void PrintMangled(ByteSink & bs) const ;
-    void PrintPretty(ByteSink & bs) const ;
+    void PrintPretty(ByteSink & bs, bool minpunct) const ;
 
     u32 GetArrayLength() const { return m_arrayLength; }
     void MakeScalar() { m_arrayLength = 0; }
@@ -195,7 +195,7 @@ namespace MFM {
     bool InitFrom(ByteSource & cbs) ;
 
     void PrintMangled(ByteSink & bs) const ;
-    void PrintPretty(ByteSink & bs) const ;
+    void PrintPretty(ByteSink & bs, bool minpunct) const ;
 
     u32 GetBitSize() const
     {
@@ -259,11 +259,13 @@ namespace MFM {
   struct UlamClassDataMemberInfo {
     const char * m_mangledType;
     const char * m_dataMemberName;
+    const char * m_dataMemberClassName;
     u32 m_bitPosition;
 
-    UlamClassDataMemberInfo(const char * mangled, const char *name, u32 pos)
+    UlamClassDataMemberInfo(const char * mangled, const char *name, const char *classname, u32 pos)
       : m_mangledType(mangled)
       , m_dataMemberName(name)
+      , m_dataMemberClassName(classname)
       , m_bitPosition(pos)
     { }
   };

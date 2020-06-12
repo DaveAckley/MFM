@@ -7,5 +7,7 @@ namespace MFM
 
   TTF_Font* AssetManager::fonts[FONT_ASSET_COUNT] = { NULL };
 
+  TTF_Font* AssetManager::zfonts[ZFONT_HEIGHT_COUNT][2] = { NULL };
+
   bool AssetManager::initialized = false;
 }

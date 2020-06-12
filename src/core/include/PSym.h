@@ -58,14 +58,14 @@ namespace MFM {
 
    */
   enum PointSymmetry {
-    PSYM_DEG000L,      // x -> x, y -> y
-    PSYM_DEG090L,      // x -> y, y ->-x
-    PSYM_DEG180L,      // x ->-x, y ->-y
-    PSYM_DEG270L,      // x ->-y, y -> x
-    PSYM_DEG000R,      // x -> x, y ->-y
-    PSYM_DEG090R,      // x -> y, y -> x
-    PSYM_DEG180R,      // x ->-x, y -> y
-    PSYM_DEG270R,      // x ->-y, y ->-x
+    PSYM_DEG000L = 0x0,      // x -> x, y -> y
+    PSYM_DEG090L = 0x1,      // x -> y, y ->-x
+    PSYM_DEG180L = 0x2,      // x ->-x, y ->-y
+    PSYM_DEG270L = 0x3,      // x ->-y, y -> x
+    PSYM_DEG000R = 0x4,      // x -> x, y ->-y
+    PSYM_DEG090R = 0x5,      // x -> y, y -> x
+    PSYM_DEG180R = 0x6,      // x ->-x, y -> y
+    PSYM_DEG270R = 0x7,      // x ->-y, y ->-x
     PSYM_SYMMETRY_COUNT,
     PSYM_NORMAL=PSYM_DEG000L,
     PSYM_FLIPX=PSYM_DEG180R,
@@ -105,6 +105,20 @@ namespace MFM {
     case PSYM_DEG270R: return SymMap<PSYM_DEG270R>(in);
     default: return ifNone;
     }
+  }
+
+  /**
+     Get the symmetry that inverts a given symmetry, such that SymMap(SymMap(in,psym),InverseSym(psym)) == in
+   */
+  inline const PointSymmetry SymInverse(const PointSymmetry psym) {
+
+    // All the symmetries invert themselves, except for 90L and 270L,
+    // which invert each other, because only those two symmetries both
+    // (1) swap x and y, and (2) negate just one of them.  
+
+    if (psym == PSYM_DEG090L) return PSYM_DEG270L;
+    if (psym == PSYM_DEG270L) return PSYM_DEG090L;
+    return psym;
   }
 
 } /* namespace MFM */

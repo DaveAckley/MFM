@@ -1,6 +1,7 @@
 #include "ByteSink.h"
 #include "ByteSource.h"
 #include "ByteSerializable.h"
+#include "OverflowableCharBufferByteSink.h"
 #include <string.h>   /* For strlen */
 #include <ctype.h>    /* For isprint */
 
@@ -529,14 +530,18 @@ XXX UPDATE
       Print(va_arg(ap,u32),type, fieldWidth, padChar);
       break;
 
-    case 'f': 
-    {
-      FAIL(INCOMPLETE_CODE);
-      /*
-      double v =  va_arg(ap,double);
-      ByteSink::Print(face,v);
+    case 'f': {
+      double v = va_arg(ap,double);
+      OString32 fmt;
+      fmt.Print("%");
+      if (padChar != ' ') fmt.WriteByte(padChar);
+      if (fieldWidth > 0) fmt.Print(fieldWidth);
+      fmt.Print("f");
+      const u32 MAX_SIZE = 128;
+      char buf[MAX_SIZE];
+      snprintf(buf, MAX_SIZE, fmt.GetZString(), v);
+      Print(buf);
       break;
-      */
     }
 
     /* %Z: Print a null-terminated string INCLUDING a trailing NULL */

@@ -32,34 +32,28 @@
 #include "LineTailByteSink.h"
 
 namespace MFM {
-  /**
-   * A template class for a panel capable of holding a given number of
-   * lines of text each no longer than a given number of columns.
-   */
-  template <u32 COLUMNS, u32 LINES>
-  class TextPanel : public MovablePanel
+  class GenericTextPanel : public MovablePanel
   {
   private:
     typedef MovablePanel Super;
 
   public:
-    typedef LineTailByteSink<LINES,COLUMNS> TextPanelByteSink;
-
-    TextPanel()
+    GenericTextPanel()
       : Super()
-      , m_text()
       , m_bottomLineShown(0)
       , m_lastBytesWritten(0)
       , m_leftButtonDragStart(-1,-1)
       , m_dragStartElevatorBottom(0)
       , m_panelHeight(100)
       , m_fontHeight(10)
+      , m_fontHeightAdjust(0)
       , m_neededHeight(10)
       , m_linesInPanel(10)
       , m_textLines(1)
       , m_elevatorRange(1)
       , m_elevatorBottom(0)
       , m_elevatorHeight(10)
+      , m_elevatorWidth(ELEVATOR_WIDTH_DEFAULT)
     {
       SetName("TextPanel");
       SetRenderPoint(SPoint(0, 0));
@@ -70,9 +64,65 @@ namespace MFM {
       m_bottomLineShown = 0;
     }
 
+    virtual ResettableByteSink & GetByteSink() = 0;
+
+    s32 SetFontHeightAdjust(s32 newadjust) {
+      s32 old = m_fontHeightAdjust;
+      m_fontHeightAdjust = newadjust;
+      return old;
+    }
+
+    u32 SetElevatorWidth(u32 newelevatorwidth) {
+      u32 old = m_elevatorWidth;
+      m_elevatorWidth = newelevatorwidth;
+      return old;
+    }
+
+  protected:
+    static const u32 ELEVATOR_WIDTH_DEFAULT = 18;
+    u32 m_bottomLineShown;
+    u32 m_lastBytesWritten;
+
+    SPoint m_leftButtonDragStart;
+    u32 m_dragStartElevatorBottom;
+
+    u32 m_panelHeight;
+    u32 m_fontHeight;
+    s32 m_fontHeightAdjust;
+    u32 m_neededHeight;
+    u32 m_linesInPanel;
+    u32 m_textLines;
+    u32 m_elevatorRange;
+    u32 m_elevatorBottom;
+    u32 m_elevatorHeight;
+    u32 m_elevatorWidth;
+
+  };
+
+  /**
+   * A template class for a panel capable of holding a given number of
+   * lines of text each no longer than a given number of columns.
+   */
+  template <u32 COLUMNS, u32 LINES>
+  class TextPanel : public GenericTextPanel
+  {
+  private:
+    typedef GenericTextPanel Super;
+
+  public:
+    typedef LineTailByteSink<LINES,COLUMNS> TextPanelByteSink;
+
+    TextPanel()
+      : Super()
+      , m_text()
+    {
+    }
+
+    void setKeepNewest(bool newest) { m_text.SetSaveNewest(newest); }
+
     virtual ~TextPanel() { } //avoid inline error
 
-    TextPanelByteSink & GetByteSink() {
+    virtual ResettableByteSink & GetByteSink() {
       return m_text;
     }
 
@@ -148,7 +198,7 @@ namespace MFM {
         switch (event.button) {
 
         case SDL_BUTTON_LEFT:
-          if (pt.GetX() < (s32) ELEVATOR_WIDTH) {
+          if (pt.GetX() < (s32) m_elevatorWidth) {
             m_leftButtonDragStart = SPoint(event.x,event.y);//pt;
             m_dragStartElevatorBottom = m_elevatorBottom;
           }
@@ -175,7 +225,7 @@ namespace MFM {
       pt.Set(event.x - pt.GetX(),
              event.y - pt.GetY());
 
-      if ((pt.GetX() < (s32) ELEVATOR_WIDTH) &&
+      if ((pt.GetX() < (s32) m_elevatorWidth) &&
           (mbe.m_buttonMask & (1 << SDL_BUTTON_LEFT)) !=0) {
         SPoint nowAt(event.x, event.y);
         s32 deltay = nowAt.GetY() - m_leftButtonDragStart.GetY();
@@ -187,24 +237,9 @@ namespace MFM {
     }
 
   private:
-    static const u32 ELEVATOR_WIDTH = 18;
     static const u32 ELEVATOR_COLOR = 0xff007f00;
 
     TextPanelByteSink m_text;
-    u32 m_bottomLineShown;
-    u32 m_lastBytesWritten;
-
-    SPoint m_leftButtonDragStart;
-    u32 m_dragStartElevatorBottom;
-
-    u32 m_panelHeight;
-    u32 m_fontHeight;
-    u32 m_neededHeight;
-    u32 m_linesInPanel;
-    u32 m_textLines;
-    u32 m_elevatorRange;
-    u32 m_elevatorBottom;
-    u32 m_elevatorHeight;
 
     // If we move elevatorBottom this many pixels, how many bottom lines
     // is that, based on the most-recent prior render?
@@ -227,7 +262,9 @@ namespace MFM {
       if (!font) return;  // WTF?
 
       m_fontHeight = TTF_FontLineSkip(font);
-      if (m_fontHeight == 0)
+      m_fontHeight += m_fontHeightAdjust;
+      
+      if (m_fontHeight <= 0)
         m_fontHeight = 1;   // WTF!
 
       m_textLines = m_text.GetLines();
@@ -256,7 +293,8 @@ namespace MFM {
 
       m_elevatorBottom = m_elevatorRange * (m_textLines - m_bottomLineShown) / m_textLines;
 
-      drawing.FillRect(1, m_elevatorBottom, ELEVATOR_WIDTH-2, m_elevatorHeight, ELEVATOR_COLOR);
+      if (m_elevatorWidth > 2)
+        drawing.FillRect(1, m_elevatorBottom, m_elevatorWidth-2, m_elevatorHeight, ELEVATOR_COLOR);
 
       s32 y = m_panelHeight;
       for (s32 line = m_textLines - m_bottomLineShown - 1; line >= 0; --line) {
@@ -266,7 +304,7 @@ namespace MFM {
           break;
         }
         drawing.BlitText(zline,
-                         SPoint(ELEVATOR_WIDTH, y),
+                         SPoint(m_elevatorWidth, y),
                          UPoint(GetWidth(), m_fontHeight));
         y -= m_fontHeight;
         if (y < 0) break;

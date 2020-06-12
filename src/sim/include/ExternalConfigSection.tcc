@@ -107,11 +107,15 @@ namespace MFM
   template<class GC>
   void ExternalConfigSection<GC>::Write(ByteSink& byteSink)
   {
-    byteSink.Printf("\n[%s]\n", GetSectionName());
+    if (this->IsEnabled())
+    {
+      
+      byteSink.Printf("\n[%s]\n", GetSectionName());
 
-    this->WriteSection(byteSink);
+      this->WriteSection(byteSink);
 
-    byteSink.Printf("[/%s]\n", GetSectionName());
+      byteSink.Printf("[/%s]\n", GetSectionName());
+    }
   }
 
   template<class GC>

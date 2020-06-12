@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamRef.h A base for ulam references
-  Copyright (C) 2016 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2016,2019-2020 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2019-2020 ackleyshack LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +22,8 @@
 /**
   \file UlamRef.h A base class for ulam references
   \author David H. Ackley.
-  \date (C) 2016 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2016,2019-2020 All rights reserved.
   \lgpl
  */
 #ifndef ULAMREF_H
@@ -30,9 +32,12 @@
 #include "UlamClass.h"
 #include "BitStorage.h"
 #include "ByteSink.h"
+#include "UlamVTableEntry.h"
 
 namespace MFM
 {
+
+  template <class EC> class UlamRefMutable; // FORWARD
 
   /**
    * A UlamRef is a base class for ulam reference variables
@@ -59,20 +64,82 @@ namespace MFM
             const UsageType usage, const UlamContext<EC> & uc) ;
 
     /**
+       Construct an UlamRef 'from scratch', when pos isnt effSelf (i.e. base class of effSelf)
+     */
+    UlamRef(u32 pos, u32 len, u32 postoeff, BitStorage<EC>& stg, const UlamClass<EC> * effself,
+            const UsageType usage, const UlamContext<EC> & uc) ;
+
+    /**
        Construct an UlamRef that's relative to an existing UlamRef.
        The 'pos' supplied here will be relative to the the existing
        pos, and this pos + len must fit within the len supplied to the
        existing UlamRef.
      */
-    UlamRef(const UlamRef<EC> & existing, s32 pos, u32 len, const UlamClass<EC> * effself, const UsageType usage) ;
+    UlamRef(const UlamRef<EC> & existing, s32 posincr, u32 len, const UlamClass<EC> * effself, const UsageType usage) ;
 
     /**
-       Construct an UlamRef that's related (not data member) to an existing UlamRef.
-       Same 'pos', effective self, and usage; len may change;
-       and pos + len must fit within the len supplied to the
-       existing UlamRef.
+       Construct an UlamRef that's related (not data member) to an
+       existing UlamRef.  Same effective self, and usage; pos
+       (ulam-5), and len may change; and pos + len must fit within the
+       len supplied to the existing UlamRef.
      */
-    UlamRef(const UlamRef<EC> & existing, u32 len) ;
+    UlamRef(const UlamRef<EC> & existing, s32 posincr, u32 len) ;
+
+    /**
+       Construct an UlamRef that's related (not data member) to an
+       existing UlamRef.  Same effective self; usage, pos and len may
+       change; and pos + len must fit within the len supplied to the
+       existing UlamRef.  (note: 'applydelta' is a de-ambiguity arg).
+     */
+    UlamRef(const UlamRef<EC> & existing, s32 effselfoffset, u32 len, const UsageType usage, bool applydelta) ;
+
+    /**
+	Construct an UlamRef for a virtual function call, based on the
+	existing EffectiveSelf;
+	Returns the VfuncPtr, as well as the UlamRef to use in the vf call;
+	Cast the void* VfuncPtr to the vfunc's typedef (see origclass' .h);
+
+	Invarient: the new 'ur' has pos to the Override class found in
+	EffectiveSelf's VTtable for this vfunc's VOWNED_IDX +
+	originating class start offset;
+    */
+    UlamRef(const UlamRef<EC> & existing, u32 vownedfuncidx, const UlamClass<EC> & origclass, VfuncPtr & vfuncref) ;
+
+
+    /**
+       Construct an UlamRef for a virtual function call, based on the
+       existing EffectiveSelf VTable, overloaded to take
+       RegistryNumber instead of UlamClass of originating class;
+       (note: 'applydelta' is a de-ambiguity arg)
+    */
+    UlamRef(const UlamRef<EC> & existing, u32 vownedfuncidx, u32 origclassregnum, bool applydelta, VfuncPtr & vfuncref) ;
+
+
+    /**
+	Construct an UlamRef for a virtual function call, based on the
+	user 'specified' baseclass VTable;
+	Returns the VfuncPtr, as well as the UlamRef to use in the vf call;
+	Cast the void* VfuncPtr to the vfunc's typedef (see origclass' .h);
+
+	Invarient: the new 'ur' has pos to the Override class found in
+	this VTtable for this vfunc's VOWNED_IDX +
+	originating class start offset; pos is relative to existing effectiveSelf.
+    */
+    UlamRef(const UlamRef<EC> & existing, const UlamClass<EC> * vtclassptr, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref) ;
+
+    /** Construct an UlamRef from a UlamRefMutable (e.g. ?: expression)
+     */
+    UlamRef(const UlamRefMutable<EC> & muter);
+
+    static BitStorage<EC> * checknonnullstg(BitStorage<EC> * stgptr) {
+      MFM_API_ASSERT_NONNULL(stgptr);
+      return stgptr;
+    }
+
+    static UlamContext<EC> * checknonnulluc(UlamContext<EC> * ucptr) {
+      MFM_API_ASSERT_NONNULL(ucptr);
+      return ucptr;
+    }
 
     u32 Read() const { return m_stg.Read(m_pos, m_len); }
 
@@ -85,7 +152,7 @@ namespace MFM
     T ReadAtom() const
     {
       if (m_usage == ATOMIC) return m_stg.ReadAtom(m_pos);
-      if (m_usage == ELEMENTAL) return m_stg.ReadAtom(m_pos - T::ATOM_FIRST_STATE_BIT);
+      if (m_usage == ELEMENTAL) return m_stg.ReadAtom(GetEffectiveSelfPos() - T::ATOM_FIRST_STATE_BIT);
       FAIL(ILLEGAL_STATE);
     }
 
@@ -98,7 +165,7 @@ namespace MFM
       }
       else if (m_usage == ELEMENTAL)
       {
-        m_stg.WriteAtom(m_pos - T::ATOM_FIRST_STATE_BIT, val);
+        m_stg.WriteAtom(GetEffectiveSelfPos() - T::ATOM_FIRST_STATE_BIT, val);
         CheckEffectiveSelf();
       }
       else FAIL(ILLEGAL_STATE);
@@ -111,7 +178,7 @@ namespace MFM
     template<u32 LEN>
     void ReadBV(u32 pos, BitVector<LEN>& rtnbv) const
     {
-      m_stg.ReadBV<LEN>(pos + m_pos, rtnbv);
+      m_stg.ReadBV(pos + m_pos, rtnbv); //(see WriteBV below)
     }
 
     /**
@@ -121,20 +188,36 @@ namespace MFM
     template<u32 LEN>
     void WriteBV(u32 pos, const BitVector<LEN>& val)
     {
-      m_stg.WriteBV<LEN>(pos + m_pos, val);
+      //Ubuntu 18.04, smarter about LEN: t3715,t3739,t41269,t41271,2,t41355,t41358,t41359
+      m_stg.WriteBV(pos + m_pos, val); //LEN not explicitly used in call
     }
 
     u32 GetPos() const { return m_pos; }
 
     u32 GetLen() const { return m_len; }
 
+    UsageType GetUsage() const { return m_usage; } //for UlamRefMutable
+
+
+    //return beginning of element state bits;
+    s32 GetEffectiveSelfPos() const { return (m_pos - m_posToEff); }
+
+    //return the delta from existing pos to beginning of element state bits;
+    s32 GetPosToEffectiveSelf() const { return m_posToEff; }
+
     const UlamClass<EC> * GetEffectiveSelf() const { CheckEffectiveSelf(); return m_effSelf; }
+
+    UlamClass<EC> * GetEffectiveSelfPointer() const { return const_cast<UlamClass<EC> *> (m_effSelf); } //for UlamRefMutable
+
+    u32 GetVTableClassId() const { return m_vtableclassid; }
+
+    const UlamRef<EC> * GetPreviousUlamRefPtr() const { return m_prevur; }
 
     BitStorage<EC> & GetStorage() { return m_stg; }
 
     BitStorage<EC> & GetStorage() const { return m_stg; }
-    //XXX
-    //XXX    const UlamContext<EC> & GetContext() { return m_uc; }
+
+    UlamContext<EC> * GetContextAsPointer() const { return const_cast<UlamContext<EC> *> (&m_uc); } //for UlamRefMutable
 
     u32 GetType() const ;
 
@@ -152,6 +235,25 @@ namespace MFM
 
     const UlamClass<EC>* LookupUlamElementTypeFromAtom() const ;
 
+    /** helper, creates UlamRef for virtual func call;
+	2nd arg points to class vtable: the effSelf of 1st arg, unless user 'specific' base;
+	Invarient: 'ur' of a virtual func points to the override class fm vtable;
+	EffectiveSelf may not be same as the override class, i.e. override is a baseclass;
+    */
+    void InitUlamRefForVirtualFuncCall(const UlamRef<EC> & ur, const UlamClass<EC> * vtclassptr, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref);
+
+    /** helper, uses existing effselfpos and new effselfoffset to set our
+	new m_pos and m_posToEff; m_len is also set;
+	m_pos + m_len - m_posToEff must fit in m_stg.
+    */
+    void ApplyDelta(s32 existingeffselfpos, s32 effselfoffset, u32 len);
+
+
+    /** helper, recursive search for nearest non-dominated classid for vtable lookup;
+	returns bool when found; third arg holds classid of vtable class;
+    */
+    bool findMostSpecificNonDominatedVTClassIdInCallstack(const UlamRef<EC> & existing, const u32 vownedfuncidx, const u32 origclassregnum, s32& candidateid) const;
+
     // DATA MEMBERS
     const UlamContext<EC> & m_uc;
     const UlamClass<EC> * m_effSelf;
@@ -159,7 +261,9 @@ namespace MFM
     u32 m_pos;
     u32 m_len;
     UsageType m_usage;
-
+    u32 m_posToEff;
+    u32 m_vtableclassid;
+    const UlamRef<EC> * m_prevur;
   }; //UlamRef
 
   template <class EC, u32 POS, u32 LEN>

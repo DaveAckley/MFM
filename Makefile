@@ -1,3 +1,4 @@
+SHELL = /bin/bash
 ifndef DEBIAN_PACKAGE_NAME
 export DEBIAN_PACKAGE_NAME:=ulam
 export MAGIC_DEBIAN_PACKAGE_VERSION:=
@@ -12,6 +13,8 @@ PLATFORMS:=$(PLATFORM)
 # Variables exported to submakes
 
 export ULAM_CUSTOM_ELEMENTS
+
+export PLATFORM
 
 export BASEDIR=$(CURDIR)
 
@@ -34,10 +37,19 @@ realclean:  $(PLATFORMS)
 	rm -rf doc/ref
 
 include config/Makeversion.mk
-TAR_EXCLUDES+=--exclude=tools --exclude=*~ --exclude=.git --exclude=doc/internal --exclude=spikes --exclude-backups
+TAR_SWITCHES+=--exclude=tools --exclude=*~ --exclude=.git --exclude=doc/internal --exclude=spikes --exclude-backups
+TAR_SWITCHES+=--mtime="2008-01-02 12:34:56"
+TAR_SWITCHES+=--owner=0 --group=0 --numeric-owner 
+
 tar:	FORCE
 	make realclean
-	PWD=`pwd`;BASE=`basename $$PWD`;cd ..;tar cvzf mfm-$(MFM_VERSION_NUMBER).tgz $(TAR_EXCLUDES) $$BASE
+	PWD=`pwd`;BASE=`basename $$PWD`;cd ..;tar cvzf mfm-$(MFM_VERSION_NUMBER).tgz $(TAR_SWITCHES) $$BASE
+
+ifeq ($(PLATFORM),tile)
+cdmd:	FORCE
+	echo make
+	MPWD=`pwd`;BASE=`basename $$MPWD`;echo $$MPWD for $$BASE;pushd ..;tar cvzf $$BASE-built.tgz $(TAR_SWITCHES) $$BASE;cp -f $$BASE-built.tgz /home/debian/CDM-TGZS/;$$MPWD/bin/mfzmake make - cdmd-$$BASE.mfz $$BASE-built.tgz;popd
+endif
 
 identify:	FORCE
 	@echo "MFMsim $(MFM_VERSION_NUMBER)"

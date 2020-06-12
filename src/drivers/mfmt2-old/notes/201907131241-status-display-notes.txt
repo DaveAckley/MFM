@@ -1,0 +1,106 @@
+{7}  -*- text -*- 
+[0:
+
+Sat Jul 13 12:41:53 2019 OK so we need to start busting harder into
+mfmt2 so we can start using the T2 hardware.  I figure the easier
+thing -- to try anyway -- is the locks.  So how about we make some
+spike-within-mfmt2 code that just tries to demo lock grabbing and
+negotiation?  And I want to be able to display the lock status on the
+main display, with like a green bar meaning I hold the lock, and a red
+bar meaning they hold the lock, and a black bar (yellow for debugging)
+meaning nobody holds the lock.  I want to see lock bars blinking!
+
+So in true bogon 'start with the display' fashion, how are we going to
+do the display?  I guess the official approach would be to resize the
+gridpanel to buy us a few pixels all the way around, and then just
+pack 'itcstatus' panels around the edge, just like t2viz is already
+doing. Although eventually it would be nice to be able to turn the
+itcstatus display on and off and reclaim that space for the grid when
+they're off.  Suppose we just pack the itcstatus guys as siblings to
+the gridpanel, or kids I suppose if that stacks right, and we can turn
+them on and off and when they're on they overlay the gridpanel
+edges?[1:
+
+Sat Jul 13 17:09:20 2019 Well, so that's how the menu panel works, so
+let's just do that, for now.  Probably can lift some structure from
+t2viz, for that matter.[2:
+
+Sat Jul 13 17:13:38 2019 Now, what exactly are we going to display?
+If we only display after stopping the grid, in the real system, how
+would be holding any locks at that point?  It seems really all we
+could have are counters..  We probably already do have lock attempt
+and acquired counters, right?
+
+:2]
+
+:1]
+
+:0]
+[3:
+
+Sat Jul 13 17:33:25 2019 It seems that LongLivedLock in core/ is the
+functionality that we want to 'hardwarify'.  Can we do that?  Make a
+method-compatible T2LongLivedLock or something, that we could typedef
+in or macro in or whatever?  We wouldn't want to go virtual on such an
+innermost loop thing, I'd think.  CRTP though?  [4: Sat Jul 13
+18:01:58 2019 CRTP maybe after we believe something.. but we're not
+going to thread another template arg through this whole thing, are
+we?[5:
+
+Sat Jul 13 18:03:18 2019 But if we added a TARGET_MACHINE to.. say
+GridConfig.h(?).. and fed it through to EventConfig?  Like
+
+      template <class S,    // A Site
+                u32 R       // An event window radius
+                >
+      struct EventConfig {
+        /**
+         * SITE is the type of Site used in this EventConfig.
+         */
+        typedef S SITE;
+
+change to
+
+      template <class S,    // A Site
+                class L,    // A Lock
+                u32 R       // An event window radius
+                >
+      struct EventConfig {
+        /**
+         * SITE is the type of Site used in this EventConfig.
+         */
+        typedef S SITE;
+
+        /**
+         * LOCK is the type of LongLivedLock used in this EventConfig.
+         */
+        typedef L LOCK;
+
+But I can already tell we'd want the parameter to be more general than
+a LongLivedLock type.  Surely we're going to need to alter the
+ChannelEnd at least and perhaps even the CacheProcessor, once we get
+to it.  MachineConfig.h?  It'd probably slow down compilation yet a
+ton more, but it would buy flexibility -- and be a decisive act of
+breaking-into-the-code for the T2..[6:
+
+Sat Jul 13 18:24:50 2019 I wonder if it might not increase the
+compilation time all that much, since it wouldn't actually increase
+the number of instantiations of things.. just the number of
+substitutions within the same number of instantiations..
+
+Now, though, we already have -DPLATFORM=tile to work with.  We could
+just do that..  But then there's nothing keeping the tile-side and
+'linux'-side APIs in sync.  That's like the unfortunate
+AbstractDualDriver, in which only the 'graphics' side of the 'duality' 
+actually ever gets built.
+
+But it gets us working a lot faster..
+
+:6]
+
+:5]
+:4]
+
+Let's try it, anyway.
+
+:3]

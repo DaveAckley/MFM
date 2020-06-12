@@ -5,7 +5,12 @@
 # (Note that images/ is not built automatically.  We're going to
 # commit the results in res/images instead, since the image build
 # stuff is rickety and depends on more tools.)
+
+ifeq ($(PLATFORM),tile)
+SUBDIRS=platform-$(MFM_TARGET) core elements sim gui drivers
+else
 SUBDIRS=platform-$(MFM_TARGET) core elements sim gui test drivers
+endif
 
 .PHONY:	$(SUBDIRS) all clean realclean
 

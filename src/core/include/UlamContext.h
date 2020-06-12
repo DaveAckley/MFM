@@ -33,6 +33,7 @@
 #include "itype.h"
 #include "Fail.h"
 #include "Element.h"
+#include "EventWindowRenderer.h"
 
 namespace MFM
 {
@@ -42,6 +43,7 @@ namespace MFM
   template <class EC> class UlamClass; //FORWARD
   template <class EC> class UlamClassRegistry; //FORWARD
   template <class EC> class ElementTable; //FORWARD
+  template <class EC> class EventWindowRenderer; //FORWARD
 
   class Random; // FORWARD
 
@@ -72,6 +74,9 @@ namespace MFM
 
     virtual bool HasUlamClassRegistry() const { return false; }
     virtual const UlamClassRegistry<EC> & GetUlamClassRegistry() const { FAIL(UNSUPPORTED_OPERATION); }
+
+    virtual bool HasEventWindowRenderer() const { return false; }
+    virtual const EventWindowRenderer<EC> & GetEventWindowRenderer() const { FAIL(UNSUPPORTED_OPERATION); }
 
     virtual const Element<EC> * LookupElementTypeFromContext(u32 etype) const ;
 

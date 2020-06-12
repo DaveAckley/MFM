@@ -60,6 +60,9 @@ namespace MFM
     virtual bool HasUlamClassRegistry() const { return true; }
     virtual const UlamClassRegistry<EC> & GetUlamClassRegistry() const { return m_ucr; }
 
+    virtual bool HasEventWindowRenderer() const { return false; }
+    virtual const EventWindowRenderer<EC> & GetEventWindowRenderer() const { FAIL(UNSUPPORTED_OPERATION); }
+
     virtual const char * GetContextLabel() const { return "UlamContextRestricted without Tile"; }
   };
 

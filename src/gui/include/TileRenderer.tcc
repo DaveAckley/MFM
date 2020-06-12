@@ -1,6 +1,8 @@
 /* -*- C++ -*- */
 #include "Util.h"            /* for MIN and MAX */
 #include "ColorMap.h"        /* for CubeHelix */
+#include "DrawableSDL.h"     /* for DrawableSDL, EventWindowRendererSDL, UlamContextRestrictedSDL */
+#include "UlamRef.h"         /* for UlamRef */
 
 namespace MFM
 {
@@ -13,6 +15,8 @@ namespace MFM
     , m_drawGridLines(true)
     , m_drawCacheSites(true)
     , m_drawBases(false)
+    , m_drawCustom(true)
+    , m_drawLabels(-1)
     , m_atomSizeDit(DEFAULT_ATOM_SIZE_DIT)
     , m_gridLineColor(Drawing::GREY30)
   {
@@ -80,7 +84,6 @@ namespace MFM
     }
   }
 
-
   template <class EC>
   void TileRenderer<EC>::PaintUnderlays(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile)
   {
@@ -113,6 +116,79 @@ namespace MFM
   }
 
   template <class EC>
+  void TileRenderer<EC>::CallRenderGraphics(UlamContextRestricted<EC> & ucrs,
+                                            const UlamElement<EC> & uelt,
+                                            AtomBitStorage<EC> & abs)
+  {
+    UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, uelt.GetClassLength(), abs, &uelt, UlamRef<EC>::ELEMENTAL, ucrs);
+    // how to do an ulam virtual function call in c++
+    VfuncPtr vfuncptr;
+    UlamRef<EC> vfur(ur, UlamElement<EC>::RENDERGRAPHICS_VOWNED_INDEX, 0u, true, vfuncptr);
+    typedef void (* Uf_9214renderGraphics)(const UlamContext<EC>& uc, UlamRef<EC>& ur);
+    ((Uf_9214renderGraphics) vfuncptr) (ucrs, vfur);
+  }
+  
+  template <class EC>
+  void TileRenderer<EC>::PaintCustom(Drawing & drawing,
+                                     const SPoint tileDitOrigin,
+                                     const Tile<EC> & tile)
+  {
+    DrawableSDL drawable(drawing);
+    EventWindowRendererSDL<EC> ewrs(drawable);
+    UlamContextRestrictedSDL<EC> ucrs(ewrs, tile);
+
+    // Here we need to iterate over the sites
+    typename OurTile::const_iterator_type end = tile.end(m_drawCacheSites);
+    for (typename OurTile::const_iterator_type i = tile.begin(m_drawCacheSites); i != end; ++i)
+    {
+      SPoint siteInTileCoord = i.At();
+      SPoint siteOriginDit = tileDitOrigin + siteInTileCoord * m_atomSizeDit + SPoint(m_atomSizeDit/2,m_atomSizeDit/2); // Center of site
+
+      AtomBitStorage<EC> abs(i->GetAtom());
+      const T& atom = abs.GetAtom();
+      if (!atom.IsSane()) continue;
+
+      u32 type = atom.GetType();
+      if (type == T::ATOM_EMPTY_TYPE) continue;
+
+      const Element<EC> * elt = tile.GetElementTable().Lookup(type);
+      if (!elt) continue; // ???
+
+      const UlamElement<EC> * uelt = elt->AsUlamElement();
+      if (!uelt) continue; // Custom is only for uelts
+
+      drawable.Reset();
+      drawable.SetDitOrigin(siteOriginDit);
+      drawable.SetDitsPerSite(m_atomSizeDit);
+
+      // We have to defend ourselves here.  Even though we know atom
+      // IsSane as far as the parity of the atomic header, anything
+      // might be wrong down in the user bits, and arbitrary rendering
+      // code, even with no eventwindow and thus limited to just this
+      // atom, can easily blow up.
+
+      unwind_protect(
+      {
+        const char * failFile = MFMThrownFromFile;
+        const unsigned lineno = MFMThrownFromLineNo;
+        const char * failMsg = MFMFailCodeReason(MFMThrownFailCode);
+        OString256 buff;
+        SPointSerializer ssp(siteInTileCoord);
+        buff.Printf("T%s@S%@: Render failed: %s (%s:%d)",
+                    tile.GetLabel(),
+                    &ssp,
+                    failMsg,
+                    failFile,
+                    lineno);
+        LOG.Message("%s",buff.GetZString());
+      },
+      {
+        CallRenderGraphics(ucrs,*uelt,abs);
+      });
+    }
+  }
+
+  template <class EC>
   void TileRenderer<EC>::PaintTileAtDit(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile)
   {
     if (!tile.IsEnabled())
@@ -131,6 +207,9 @@ namespace MFM
     PaintSites(drawing, m_drawMidgroundType, DRAW_SHAPE_CIRCLE, ditOrigin, tile);
 
     PaintSites(drawing, m_drawForegroundType, DRAW_SHAPE_CDOT, ditOrigin, tile);
+
+    if (m_drawCustom)
+      PaintCustom(drawing, ditOrigin, tile);
 
     PaintOverlays(drawing, ditOrigin, tile);   // E.g., a tool footprint
   }
@@ -248,8 +327,8 @@ namespace MFM
       return;
     }
 
-    const u32 LABEL_ATOM_SIZE_DIT = Drawing::MapPixToDit(50);
-    if (m_atomSizeDit >= LABEL_ATOM_SIZE_DIT)
+    const u32 LABEL_ATOM_SIZE_DIT = Drawing::MapPixToDit(25);
+    if (m_drawLabels > 0 || (m_drawLabels < 0 && m_atomSizeDit >= LABEL_ATOM_SIZE_DIT))
     {
       elementLabel = elt->GetAtomicSymbol();
     }
@@ -273,12 +352,14 @@ namespace MFM
     {
       drawing.SetFont(FONT_ASSET_ELEMENT);
       const SPoint size = drawing.GetTextSize(elementLabel);
+      u32 ditSize = 5u*m_atomSizeDit/Drawing::MapPixToDit(1u);
+      u32 old = drawing.SetZoomDits(ditSize);
 
       drawing.SetBackground(Drawing::BLACK);
       drawing.SetForeground(Drawing::WHITE);
       drawing.BlitBackedTextCentered(elementLabel, pixOrigin, pixSize);
+      drawing.SetZoomDits(old);
     }
-
   }
 
   template <class EC>
@@ -354,7 +435,10 @@ namespace MFM
     sink.Printf(" PP(trmt=%d)\n", m_drawMidgroundType);
     sink.Printf(" PP(trft=%d)\n", m_drawForegroundType);
     sink.Printf(" PP(trgc=%d)\n", m_gridLineColor);
-  }
+
+    sink.Printf(" PP(trrc=%d)\n", m_drawCustom);  // Pre v5 mfs loading will complain about these
+    sink.Printf(" PP(trdl=%d)\n", m_drawLabels);  // but continue loading
+}
 
   template <class EC>
   bool TileRenderer<EC>::TileRendererLoadDetails(const char * key, LineCountingByteSource & source)
@@ -367,6 +451,9 @@ namespace MFM
     if (!strcmp("trmt",key)) return 1 == source.Scanf("%?d", sizeof m_drawMidgroundType, &m_drawMidgroundType);
     if (!strcmp("trft",key)) return 1 == source.Scanf("%?d", sizeof m_drawForegroundType, &m_drawForegroundType);
     if (!strcmp("trgc",key)) return 1 == source.Scanf("%?d", sizeof m_gridLineColor, &m_gridLineColor);
+
+    if (!strcmp("trrc",key)) return 1 == source.Scanf("%?d", sizeof m_drawCustom, &m_drawCustom);
+    if (!strcmp("trdl",key)) return 1 == source.Scanf("%?d", sizeof m_drawLabels, &m_drawLabels);
 
     return false;
   }

@@ -42,6 +42,7 @@ $0 $progname -h
 
 $0 $progname verify
     Check the file signature but do not run it
+    (use VERIFY for to report more details)
 
 $0 $progname list
     Check the file signature and list contents but do not run it
@@ -82,7 +83,7 @@ if ($verb eq "demo") {
     $verb = "run";
 }
 
-if ($verb ne "run") {
+if ($verb ne "run" && $verb ne "unpack") {
     my $fx = $ARGV[0];
     UDie("Unrecognized extra arguments (beginning with '$fx')")
         if defined $fx;
@@ -151,7 +152,7 @@ if (!defined $destdir) {
 }
 
 my @innerpaths = UnzipStream($u2, $destdir);
-my ($pubkeypath,$pubkeyname) = FindName(\@innerpaths,MFZ_PUBKEY_NAME,undef);
+my ($pubkeypath,$pubkeyname,$pubkeytime) = FindName(\@innerpaths,MFZ_PUBKEY_NAME,undef);
 die "Incorrect .mfz packing - missing pubkey" unless defined($pubkeyname);
 my $fullpubkeypath = "$pubkeypath/$pubkeyname";
 
@@ -169,7 +170,17 @@ die "Invalid signature '$sigdata'/'$sig'" unless $rsapub->verify($zipdata, $sig)
 ValidatePubKey($pubhandle,$pubkey);
 my $fingerprint = ComputeFingerprintFromFullPublicKey($fullpubstring);
 
-print "SIGNED BY RECOGNIZED HANDLE: $pubhandle ($fingerprint)\n";
+if ($optverb eq "VERIFY") {
+    my $checksum = ComputeChecksumOfString($zipdata);
+    print "SIGNATURE_CHECK [OK]\n";
+    print "INNER_CHECKSUM [$checksum]\n";
+    print "INNER_TIMESTAMP [$pubkeytime]\n";
+    print "SIGNING_HANDLE [$pubhandle]\n";
+    print "HANDLE_FINGERPRINT [$fingerprint]\n";
+    print "HANDLE_PUBKEY [$pubkey]\n";
+} else {
+    print "SIGNED BY RECOGNIZED HANDLE: $pubhandle ($fingerprint)\n";
+}
 if ($verb eq "verify") {
     exit 0;
 }
@@ -188,8 +199,11 @@ if ($verb eq "list") {
         $maxsize = length($size) if length($size) > $maxsize;
     }
     my $maxlen = 40;
-    $maxlen = 1000000 if ($optverb eq "LIST");
-    $maxpath = $maxlen if $maxpath > $maxlen;
+    if ($optverb eq "LIST") {
+        $maxlen = $maxpath;
+    } else { 
+        $maxpath = $maxlen if $maxpath > $maxlen;
+    }
     printf("FILES:\n%*s  %*s  %*s  %*s\n",
            -$maxpath, ($maxpath > 4)?"Path":"",
            -$maxname, "Name",
@@ -201,7 +215,7 @@ if ($verb eq "list") {
         $path =~ s!^$destdir/!!;
         my $ellipsis = "[...]";
         my $clip = length($path) - ($maxpath - length($ellipsis));
-        if ($clip > 0) {
+        if ($maxpath > length($ellipsis) && $clip > 0) {
             # /4 since ends of paths seem more informative
             substr($path, ($maxpath-length($ellipsis))/4, $clip) = $ellipsis;
         }
@@ -216,6 +230,12 @@ if ($verb eq "list") {
     exit 0;
 }
 
+if ($verb eq "unpack") {
+    print "UNPACKED INTO: $destdir\n";
+    exit 0;
+}
+
+
 my @mfmargs;
 
 my ($ulams,$splats,$incs,$goodSOs, $badSOs) = (0,0,0,0,0);
@@ -227,7 +247,8 @@ if ($platform eq 'x86_64' || $platform =~ /^armv8.*/) {
 } elsif ($platform eq 'i386' || $platform eq 'i686' || $platform =~ /^armv7.*/) {
     $platformsize = 32;
 } else {
-    UDie("This hardware platform, '$platform', is unrecognized");
+    print STDERR "WARNING: Unrecognized hardware platform '$platform'!  Assuming it's a 32 bit architecture\n";
+    $platformsize = 32;
 }
 for my $prec (@innerpaths) {
     my ($path, $name, $time) = @{$prec};
@@ -272,6 +293,8 @@ for my $prec (@innerpaths) {
         }
     } elsif ($name eq MFZ_PUBKEY_NAME) {
         # Don't need a complaint about this one
+    } elsif ($name eq MFZ_FILE_NAME) {
+        # Or this one
     } elsif ($name =~ /[.]ulam$/) {
         ++$ulams;
         print STDERR "Skipping ulam source: $name\n";
@@ -286,14 +309,14 @@ for my $prec (@innerpaths) {
     }
 }
 
-if ($goodSOs == 0) {
+if ($goodSOs == 0 && $verb eq 'run') {
     print STDERR "CANNOT RUN .mfz file: No usable .so files found\n";
     if ($badSOs > 0) {
         print STDERR "  The $badSOs .so file(s) in this .mfz are incompatible with this $platformsize-bit platform\n";
         if ($ulams > 0) {
             print STDERR "  However, $ulams .ulam file(s) are present\n";
             print STDERR "  You may be able to rebuild it for this platform\n\n";
-        } # For not we're not mentioning SPLAT files
+        } # For now we're not mentioning SPLAT files
     }
     exit 4;
 }
@@ -323,11 +346,6 @@ unshift @mfmargs, $cmd;
 
 print "@mfmargs\n";
 
-if ($verb eq "unpack") {
-    print "UNPACKED INTO: $destdir\n";
-    exit 0;
-}
-
 my $result = system $cmd @mfmargs;
 sleep 0.25;
 exit $result;
@@ -347,7 +365,7 @@ sub purifyArgs {
     for (my $i = 0; $i < scalar(@args); ++$i) {
         my $arg = $args[$i];
         if ($i == 0) {
-            if ($arg =~ /^({+\d+[a-zA-Z]\d+}+)$/) {
+            if ($arg =~ /^(\{+\d+[a-zA-Z]\d+\}+)$/) {
                 $args[0] = $1;
                 next;
             }

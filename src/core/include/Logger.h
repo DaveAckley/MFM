@@ -70,6 +70,11 @@ namespace MFM
       DEBUG3,
       ALL,
 
+      ERR=ERROR, // Reify the TLCs familiar from the log files
+      WRN=WARNING,
+      MSG=MESSAGE,
+      DBG=DEBUG,
+
       MIN_LEVEL = NONE,
       MAX_LEVEL = ALL
     };
@@ -237,6 +242,17 @@ namespace MFM
       ByteSink * old = m_sink;
       m_sink = &byteSink;
       return old;
+    }
+
+    /**
+     * Returns the ByteSink that this Logger is currently writing to.
+     *
+     * @returns A pointer to the ByteSink that this Logger is writing
+     *          to 
+     */
+    ByteSink * GetByteSink() const
+    {
+      return m_sink;
     }
 
     /**
