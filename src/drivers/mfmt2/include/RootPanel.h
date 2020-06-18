@@ -79,31 +79,6 @@ namespace MFM
       /* RootPanels don't resize automatically? */
     }
 
-#if 0
-    /* Trying to handle mouse events in t2viz doesn't make sense --
-       mfmt2 is (in general) still running, and it (races and) takes
-       them.
-    */
-    bool Handle(MouseButtonEvent& mbe) 
-    {
-      SDL_Quit(); /* die on mouse click? */
-
-      /*
-      SDL_MouseButtonEvent & event = mbe.m_event.button;
-      bool isLeft = event.button == SDL_BUTTON_LEFT;
-      bool isRight = event.button == SDL_BUTTON_RIGHT;
-      if ((mbe.m_keyboardModifiers == 0) && (isLeft || isRight))
-      {
-        if(event.type == SDL_MOUSEBUTTONDOWN)
-          GetGridPanel().SelectAtomViewPanel(*this); 
-        return true;  // Eat all no-mod mouse L and R actions inside us
-      }
-
-      */
-      return Super::Handle(mbe);
-    }
-#endif
-
   };
 }
 

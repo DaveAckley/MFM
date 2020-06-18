@@ -7,7 +7,9 @@ my ($TRIMW,$TRIMH) = (12,6);
 my ($SW,$SH) = ($NATIVEW-$TRIMW,$NATIVEH-$TRIMH);
 my ($ITCW,$ITCH) = (100,32);
 my ($VIZINDENT) = (3);
+my ($GRIDINDENT) = (1);
 my ($TW,$TH) = ($SW-2*$VIZINDENT,$SH-2*$VIZINDENT);
+my ($GW,$GH) = ($SW-2*$GRIDINDENT,$SH-2*$GRIDINDENT);
 my ($CORNERW,$CORNERH) = (6,6);
 my ($STATICW,$STATICH) = ($TW-2*$ITCW,28);
 
@@ -82,7 +84,7 @@ $AUTOGEN_STAMP
     fontheightadjust=-6
     elevatorwidth=4
     doc="Current time queue dump"
-[Sites T2GridPanel Root $TW $TH $VIZINDENT $VIZINDENT]
+[Sites T2GridPanel Root $GW $GH $GRIDINDENT $GRIDINDENT]
     bgcolor=#222222
 # GRANDCHILDREN AND BEYOND    
 [Log_Button_X MenuItem Log `bfs6x6(5,0)`]
@@ -159,6 +161,11 @@ $AUTOGEN_STAMP
     enabledfg=$MENUITEMFG
     font=1
     text="Quit"
+[T2Info_Crash_Button CrashButton T2Viz `bfs3x3(1,2)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="Crash"
 [Sub1 Label T2Viz 120 50 220 40]
     bgcolor=#00ff00
     fgcolor=#ff0000
@@ -229,7 +236,12 @@ $AUTOGEN_STAMP
     enabledfg=$MENUITEMFG
     font=1
     text="Seed DReg"
-[PhysicsCtl_Button_X MenuItem PhysicsCtl `bfs6x6(1,4,4,5)`]
+[PhysicsCtl_Button_Debug T2DebugSetupButton PhysicsCtl `bfs6x6(0,4,2,5)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="Init Debug"
+[PhysicsCtl_Button_X MenuItem PhysicsCtl `bfs6x6(2,4,4,5)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
     font=1
