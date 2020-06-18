@@ -1,4 +1,4 @@
-{125}  -*- text -*-
+{128}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -1674,3 +1674,51 @@ Committing.
 
 :121]
 :117]
+[125:
+
+Thu Jun 18 12:23:50 2020 Well it's time to move the flag again.
+
+FUN NEW APPARENT FACT: It looks like a single bein can get into a
+yoink race with itself.
+
+BACKGROUND: I left a single bein running across three otherwise empty
+tiles when I went for second sleep.  When I got back it was gone.
+Upon inspection I found evidence pointing to native engine restarts
+due to failures at T2EventWindow.cpp:235.  Which is:
+
+      bool T2EventWindow::passiveWinsYoinkRace(const T2EventWindow & ew) const {
+        MFM_API_ASSERT_ARG(ew.isActiveEW());     // ew is our side active initiation
+        MFM_API_ASSERT_ARG(!this->isActiveEW()); // *this is passive ew for them
+235->   FAIL(INCOMPLETE_CODE);
+        return false;
+   ..
+
+[126:
+
+Thu Jun 18 12:28:03 2020 So I'm guessing what might have happened is
+that:
+
+(1) The bein did an event that crossed tiles
+(2) The passive side -- necessarily the bein's 'arrival' side --
+    finished the event first, as it does.  It sent the hangup and then
+    released the pEW.
+(3) The active side received that hangup and cleaned up that circuit,
+    BUT, it could not tear down the whole event because it was waiting
+    for a hangup from its SECOND ITC.
+(4) The previously-passive side starts an event on the bein and
+    requests a lock from the previously-and-not-quite-down active
+    side. 
+(5) Race -> incomplete code -> fail out top-level -> engine restart
+
+[127:
+
+Thu Jun 18 12:35:15 2020 So if this story is true, a key part of it is
+an active ew that's holding two locks.  Otherwise, the aEW would get
+torn down as soon as the (only) hangup was received, and the lock
+request right behind it would find nothing to race against.  (Since by
+assumption there's only one bein in the entire universe.)
+
+:127]
+:126]
+
+:125]
