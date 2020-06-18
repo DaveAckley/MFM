@@ -44,14 +44,14 @@
 #define T2_SITE_IS_CACHE(u32x,u32y)             \
   (((u32x)<CACHE_LINES)                         \
    || ((u32y)<CACHE_LINES)                      \
-   || ((u32x)>T2TILE_WIDTH-CACHE_LINES)         \
-   || ((u32y)>T2TILE_HEIGHT-CACHE_LINES))       \
+   || ((u32x)>=T2TILE_WIDTH-CACHE_LINES)        \
+   || ((u32y)>=T2TILE_HEIGHT-CACHE_LINES))      \
 
 #define T2_SITE_IS_VISIBLE_OR_CACHE(u32x,u32y)  \
   (((u32x)<2*CACHE_LINES)                       \
    || ((u32y)<2*CACHE_LINES)                    \
-   || ((u32x)>T2TILE_WIDTH-2*CACHE_LINES)       \
-   || ((u32y)>T2TILE_HEIGHT-2*CACHE_LINES))     \
+   || ((u32x)>=T2TILE_WIDTH-2*CACHE_LINES)      \
+   || ((u32y)>=T2TILE_HEIGHT-2*CACHE_LINES))    \
 
 #define T2_SITE_IS_VISIBLE(u32x,u32y)           \
   (T2_SITE_IS_VISIBLE_OR_CACHE(u32x,u32y) &&    \
@@ -59,8 +59,7 @@
   
 
 //////MISC DEFINES
-#define MAX_CIRCUITS_PER_EW 2
-#define MAX_CIRCUITS_PER_ITC 16
+#define CIRCUITS_PER_ACTIVE_EW 2
 
 
 /////////FAKE PHYSICS
