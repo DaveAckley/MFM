@@ -60,69 +60,30 @@ namespace MFM {
     }
   }
 
-  bool T2EventWindow::executeEvent() {
-    loadSites();
-    OurT2Site & us = mSites[0];
-    OurT2Atom & atom = us.GetAtom();
-    u32 type = atom.GetType();
-    // XXX PHONY DREG HACK
-    if (type != T2_PHONY_DREG_TYPE)
-      return false;
-    // XXX DOUBLE PHONY: IT'S NOT EVEN DREG
-    // JUST GO N/E/S/W IF LIVE YOUNG BEIN
-    u8 ngb = atom.GetStateField(0,3)+1;
-    if (mSitesLive[ngb]) {
-      OurT2Site & west = mSites[ngb];
-      OurT2Atom & westa = west.GetAtom();
-      OurT2Atom tmp = westa;
-      westa = atom;
-      atom = tmp;
-    } else {
-      u8 oth = mTile.getRandom().Between(1,8);
-      atom.SetStateField(0,3,oth-1);
-    }
-
-#if 0
-    const char * PHONY_DIRS = "\002\004\003\001";
-    for (const char * dir = PHONY_DIRS; *dir != 0; ++dir) {
-      u8 sn=*dir;
-      if (mSitesLive[sn]) {
-        OurT2Site & west = mSites[sn];
-        OurT2Atom & westa = west.GetAtom();
-        OurT2Atom tmp = atom;
-        atom = westa;
-        westa = tmp;
-      }
-    }
-#endif
-    return true;
-  }
-
   void T2EventWindow::initializeEW() {
     mRadius = 0;
     mLastSN = 0;
     mCenter = SPoint(S32_MAX,S32_MAX);
-    initAllCircuitInfo();
     for (u32 i = 0; i < EVENT_WINDOW_SITES(MAX_EVENT_WINDOW_RADIUS); ++i)
       mSitesLive[i] = false;
   }
 
-  void T2EventWindow::finalizeEW() {
-    for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      if (mCircuits[i].mITC != 0) {
-        {
-          T2ITC & itc = *mCircuits[i].mITC;
-          if (mCircuits[i].mCircuitNum != UNALLOCATED_CIRCUIT_NUM) {
-            itc.freeActiveCircuit(mCircuits[i].mCircuitNum); // XXX Need to finalize passive stuff too eventually..
-            mCircuits[i].mCircuitNum = UNALLOCATED_CIRCUIT_NUM;
-            mCircuits[i].mLockAcquired = false;
-            mCircuits[i].mMaxUnshippedSN = -1;
-          }
-          itc.unregisterEWRaw(*this);
-        }
-        mCircuits[i].mITC = 0;
-      }
+  void T2ActiveEventWindow::unbindCircuitsAsNeeded() {
+    for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
+      Circuit & ci = mActiveCircuits[i];
+      if (ci.isBound()) 
+        ci.unbindCircuit();
     }
+  }
+
+  void T2PassiveEventWindow::unbindCircuitsAsNeeded() {
+    if (mPassiveCircuit.isBound()) 
+      mPassiveCircuit.unbindCircuit();
+  }
+
+  void T2EventWindow::finalizeEW() {
+    unbindCircuitsAsNeeded();
+
     mRadius = 0;
     mLastSN = 0;
     mCenter = SPoint(S32_MAX,S32_MAX);
@@ -136,19 +97,14 @@ namespace MFM {
     mTile.freeEW(*this);
   }
 
-  void T2EventWindow::initAllCircuitInfo() {
+#if 0
+  void T2EventWindow::freeAllCircuits() {
     for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      CircuitInfo & ci = mCircuits[i];
-      initCircuitInfo(ci);
+      Circuit & ci = mCircuits[i];
+      if (ci.isAllocated()) ci.free();
     }
   }
-
-  void T2EventWindow::initCircuitInfo(CircuitInfo & ci) {
-    ci.mITC = 0;              // !=0 for occupancy check
-    ci.mCircuitNum = UNALLOCATED_CIRCUIT_NUM;  // != UNALL_CN for lock needed
-    ci.mLockAcquired = false;  // ==true for lock acquired
-    ci.mMaxUnshippedSN = S8_MAX;      // <0 when all shipped
-  }
+#endif
 
   void T2EventWindow::captureLockSequenceNumber(T2ITC& itc) {
     Dir6 dir6 = itc.mDir6;
@@ -164,61 +120,41 @@ namespace MFM {
     return mLockSequenceNumber[dir6];
   }
 
-  void T2EventWindow::handleACK(T2ITC & itc) {
+  void T2ActiveEventWindow::handleACK(T2ITC & itc) {
     TLOG(DBG,"%s hACK %s", getName(), itc.getName());
 
     MFM_API_ASSERT_STATE(getEWSN() == EWSN_AWLOCKS);
     
-    for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      if (mCircuits[i].mITC == &itc) mCircuits[i].mLockAcquired = true;
-    }
-    if (hasAllNeededLocks()) scheduleWait(WC_NOW);
+    if (hasAllNeededLocks())
+      scheduleWait(WC_NOW); // Bump
   }
 
-  void T2EventWindow::handleHangUp(T2ITC & itc) {
+  void T2ActiveEventWindow::handleHangUp(T2ITC & itc) {
     TLOG(DBG,"%s hHU %s", getName(), itc.getName());
 
     MFM_API_ASSERT_STATE(getEWSN() == EWSN_AWACKS);
 
     bool haveMoreReal = false;
-    for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      CircuitInfo & ci = mCircuits[i];
-      if (ci.mITC == &itc) 
-        initCircuitInfo(ci);
-      else if (ci.mITC != 0 && ci.mCircuitNum != UNALLOCATED_CIRCUIT_NUM)
-        haveMoreReal = true;
+    for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
+      Circuit & ci = mActiveCircuits[i];
+      if (ci.isLockHeld()) 
+        haveMoreReal = true; // Not done yet
     }
     
     if (!haveMoreReal) {
       // Ugh, now scan to release the 'registration only' pseudo-circuits
-      for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-        CircuitInfo & ci = mCircuits[i];
-        if (ci.mITC != 0 && ci.mCircuitNum == UNALLOCATED_CIRCUIT_NUM) {
-          ci.mITC->unregisterEWRaw(*this);
-          initCircuitInfo(ci);
-        }
+      for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
+        Circuit & ci = mActiveCircuits[i];
+        if (ci.isBound())
+          ci.unbindCircuit();
       }
-    }
-
-    // We should just ensure everybody scans all MAX_CIRCUITS_PER_EW,
-    // and then not assume the occupied ones are pressed forward, but
-    MFM_API_ASSERT(MAX_CIRCUITS_PER_EW==2, UNSUPPORTED_OPERATION);
-    if (mCircuits[0].mITC == 0 && mCircuits[1].mITC != 0) {
-      // Swap down remaining non-zero
-      CircuitInfo tmp = mCircuits[0];
-      mCircuits[0] = mCircuits[1];
-      mCircuits[1] = tmp;
-    }
-
-    // Now if [0].mITC == 0, We Are Done
-    if (mCircuits[0].mITC == 0) {
 
       commitAndReleaseActive();
       /////// EVENT DONE
     }
   }
 
-  void T2EventWindow::commitAndReleaseActive() {
+  void T2ActiveEventWindow::commitAndReleaseActive() {
     saveSites();                // COMMIT ACTIVE SIDE EW!
     TLOG(DBG,"%s FREEING (%d,%d)+%d",
          getName(),
@@ -231,96 +167,83 @@ namespace MFM {
     mTile.releaseActiveEW(*this);
   }
 
-  bool T2EventWindow::hasAllNeededLocks() {
-    for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      if (mCircuits[i].mITC == 0) continue; // Not registered 
-      if (mCircuits[i].mCircuitNum == UNALLOCATED_CIRCUIT_NUM) continue; // No lock needed
-      if (!mCircuits[i].mLockAcquired) return false; // Opps: needed, not yet acquired
+  bool T2ActiveEventWindow::hasAllNeededLocks() {
+    for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
+      if (!mActiveCircuits[i].isLockNeeded()) continue; // OK
+      if (!mActiveCircuits[i].isLockHeld()) return false; // Opps notyet
     }
     return true; // Ready to rock
   }
    
-  bool T2EventWindow::needsAnyLocks() {
-    for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      if (mCircuits[i].mITC == 0) continue; // Not registered 
-      if (mCircuits[i].mCircuitNum != UNALLOCATED_CIRCUIT_NUM) return true; // lock needed
-    }
+  bool T2ActiveEventWindow::needsAnyLocks() {
+    for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) 
+      if (mActiveCircuits[i].isLockNeeded()) return true;
     return false; // no locks needed
   }
 
-  bool T2EventWindow::hasAnyLocks() {
-    for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      if (mCircuits[i].mITC == 0) continue; // Not registered 
-      if (mCircuits[i].mCircuitNum == UNALLOCATED_CIRCUIT_NUM) continue; // No lock needed
-      if (mCircuits[i].mLockAcquired) return true; // Yes we have any locks
+  bool T2ActiveEventWindow::hasAnyLocks() {
+    for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
+      if (mActiveCircuits[i].isLockHeld()) return true;
     }
-    return false; // We have no any locks
+    return false; // We do not have no any locks
   }
    
+#if 0
   bool T2EventWindow::isRegisteredWithAnyITCs() {
+    FAIL(INCOMPLETE_CODE);
     for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      if (mCircuits[i].mITC != 0) return true;
+      if (mActiveCircuits[i].mITC != 0) return true;
     }
     return false;
   }
+#endif
 
-  void T2EventWindow::registerWithITCIfNeeded(T2ITC & itc) {
-    for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      CircuitInfo & ci = mCircuits[i];
-      if (ci.mITC == &itc) return; // already got it
-      if (ci.mITC == 0) {
-        ci.mITC = &itc;
-        itc.registerEWRaw(*this);
-        ci.mMaxUnshippedSN = mLastSN;
+  void T2ActiveEventWindow::registerWithITCIfNeeded(T2ITC & itc) {
+    for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
+      Circuit & ci = mActiveCircuits[i];
+      if (ci.getITCIfAny() == &itc) return; // already got it
+      if (!ci.isBound()) {
+        ci.bindCircuit(itc);
+        ci.setMaxUnshippedSN(mLastSN);
         return;  // got it now
       }
     }
     FAIL(ILLEGAL_STATE);  // can't need more that MAX_CIRCUITS_PER_EW!
   }
 
-  const CircuitInfo& T2EventWindow::getPassiveCircuitInfo() const
-  {
-    const CircuitInfo* ci = getPassiveCircuitInfoIfAny();
-    MFM_API_ASSERT_NONNULL(ci);       // Have it
-    return *ci;
-  }
-
-  const CircuitInfo* T2EventWindow::getPassiveCircuitInfoIfAny() const
-  {
-    MFM_API_ASSERT_ARG(!this->isInActiveState()); // Be passive
-    const CircuitInfo & ci = mCircuits[0]; // Passive CircuitInfo always in [0]
-    if (ci.mITC) return &ci;
-    return ci.mITC ? &ci : 0;
-  }
-
   bool T2EventWindow::trySendNAK() {
+    FAIL(INCOMPLETE_CODE);
+    return false;
+#if 0    
     MFM_API_ASSERT_ARG(!this->isInActiveState()); // We are passive
-    const CircuitInfo & ci = mCircuits[0]; // Passive CircuitInfo always in [0]
-    MFM_API_ASSERT_NONNULL(ci.mITC); 
-    T2ITC & itc = *ci.mITC;
+    Circuit & ci = mActiveCircuits[0]; // Passive CircuitInfo always in [0]
+    T2ITC & itc = ci.getITC();
     CircuitNum passiveCN = ci.mCircuitNum;
     T2PacketBuffer pb;
     pb.Printf("%c%c",
-              0xa0|itc.mDir8,
+              PKT_HDR_BITMASK_STANDARD_MFM | itc.mDir8,
               xitcByte1(XITC_CS_DROP,passiveCN)
               );
     return itc.trySendPacket(pb);
+#endif
   }
 
 
   bool T2EventWindow::passiveWinsYoinkRace(const T2EventWindow & ew) const {
-    MFM_API_ASSERT_ARG(ew.isInActiveState());     // ew is our side active initiation
-    MFM_API_ASSERT_ARG(!this->isInActiveState()); // *this is passive ew for them
-    const CircuitInfo & ci = mCircuits[0]; // Passive CircuitInfo always in [0]
-    MFM_API_ASSERT_NONNULL(ci.mITC); 
-    T2ITC & itc = *ci.mITC;
+    MFM_API_ASSERT_ARG(ew.isActiveEW());     // ew is our side active initiation
+    MFM_API_ASSERT_ARG(!this->isActiveEW()); // *this is passive ew for them
+    FAIL(INCOMPLETE_CODE);
+    return false;
+#if 0    
+    Circuit & ci = mCircuits[0]; // Passive CircuitInfo always in [0]
+    T2ITC & itc = ci.getITC();
     CircuitNum passiveCN = ci.mCircuitNum;
     s32 themVal = itc.getYoinkVal(passiveCN,false);
     MFM_API_ASSERT_STATE(themVal >= 0);
     // our ew must also have itc in its info, but we have to search for it
     s32 usVal = -1;
     for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      const CircuitInfo & ci = ew.mCircuits[i];
+      const Circuit & ci = ew.mCircuits[i];
       if (ci.mITC == &itc) {
         CircuitNum activeCN = ci.mCircuitNum;
         usVal = itc.getYoinkVal(activeCN,true);
@@ -343,6 +266,7 @@ namespace MFM {
               theyWin ? "they win" : "we win"
               );
     return theyWin;
+#endif
   }
 
   bool T2EventWindow::resolveRacesFromPassive(EWPtrSet conflicts) {
@@ -350,7 +274,7 @@ namespace MFM {
     for (EWPtrSet::iterator itr = conflicts.begin(); itr != conflicts.end(); ++itr) {
       T2EventWindow * ew = *itr;
       MFM_API_ASSERT_NONNULL(ew);
-      if (!ew->isInActiveState()) {
+      if (!ew->isActiveEW()) {
         FAIL(INCOMPLETE_CODE);  // Have to send a NAK once we know how
       }
     }
@@ -371,7 +295,9 @@ namespace MFM {
       // Do yoink protocol between *this (passive for them) and ew (active by us)
       bool passiveWins = passiveWinsYoinkRace(*ew);
       if (passiveWins) {
-        ew->dropActiveEW(false);
+        T2ActiveEventWindow * aew = ew->asActiveEW();
+        MFM_API_ASSERT_NONNULL(aew);
+        aew->dropActiveEW(false);
         continue;
       }
       if (!trySendNAK())  // :787: P6
@@ -396,8 +322,7 @@ namespace MFM {
     // But if the answer is true
   }
 
-  void T2EventWindow::dropActiveEW(bool dueToNAK) {
-    MFM_API_ASSERT_STATE(isInActiveState());
+  void T2ActiveEventWindow::dropActiveEW(bool dueToNAK) {
     if (getEWSN() != EWSN_ADROP) {
       unhogEWSites();
       setEWSN(EWSN_ADROP);
@@ -407,7 +332,7 @@ namespace MFM {
     }
   }
 
-  bool T2EventWindow::checkSiteAvailabilityForPassive() {
+  bool T2PassiveEventWindow::checkSiteAvailabilityForPassive() {
     T2Tile & tile = getTile();
     OurMDist & md = tile.getMDist();
     const SPoint origin(0,0);
@@ -438,12 +363,13 @@ namespace MFM {
     }
     // THEY WIN.  WE HOG THE REGION ON THEIR BEHALF
     hogEWSites();
+    loadSites(); // AND WE LOAD SITES SO THAT SAVING BACK AFTERWARDS IS SANE
     setEWSN(EWSN_PWCACHE);
 
     return true;
   }
 
-  bool T2EventWindow::checkSiteAvailability() {
+  bool T2ActiveEventWindow::checkSiteAvailabilityForActive() {
     T2Tile & tile = getTile();
     OurMDist & md = tile.getMDist();
     const SPoint origin(0,0);
@@ -463,7 +389,11 @@ namespace MFM {
         mSitesLive[sn] = true; // Hidden sites are good to go
         continue;
       }
-      // For cache and visible, also assess and accumulate ITC involvements
+      // For cache and visible, also assess and accumulate ITC
+      // involvements.  NOTE that 'ITC registration' does NOT
+      // necessarily imply 'lock needed': We register even with
+      // ITCSN_SHUT, so they know about us in case they start to open.
+      
       bool isLive = true;
       for (u32 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
         if (tile.getVisibleAndCacheRect(dir6).Contains(site)) {
@@ -475,17 +405,6 @@ namespace MFM {
         }
       }
       if (isLive) mSitesLive[sn] = true;
-    }
-    return true;
-  }
-
-  bool T2EventWindow::checkCircuitAvailability() {
-    for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      if (mCircuits[i].mITC != 0) { // Then maybe need a circuit
-        T2ITC & itc = *mCircuits[i].mITC;
-        if (!itc.allocateActiveCircuitIfNeeded(mSlotNum,mCircuits[i].mCircuitNum))
-          return false;   // circuit needed but none available
-      }
     }
     return true;
   }
@@ -532,22 +451,20 @@ namespace MFM {
                activeNotPassive?1:0);
   }
 
-  void T2EventWindow::initPassive(SPoint ctr, u32 radius, CircuitNum cn, T2ITC & itc) {
+  void T2PassiveEventWindow::initPassive(SPoint ctr, u32 radius, bool yoink) {
     assignCenter(ctr, radius, false);
-    // Passive ews only ever have one cn in use.  Let it be [0]
-    CircuitInfo & ci = mCircuits[0];
-    MFM_API_ASSERT_STATE(ci.mITC == 0);
-    MFM_API_ASSERT_STATE(ci.mCircuitNum == U8_MAX);
-    
-    ci.mITC = &itc;
-    ci.mCircuitNum = cn;
-    ci.mLockAcquired = false;
-    ci.mMaxUnshippedSN = -1;
+
+    Circuit & ci = mPassiveCircuit;
+    MFM_API_ASSERT_STATE(ci.getCS() == CS_BOUND); // Nothing more
+    ci.setCS(CS_RUNG);                            // Now it's more
+    ci.setYoink(yoink ? 1 : 0);
+    ci.setMaxUnshippedSN(-1);
   }
   
   // Send one cache update packet if possible.
   // ret > 0 end-of-update sent; ret==0 sent non-final packet; ret < 0 no buffers try again later
-  s32 T2EventWindow::trySendCacheUpdatePacket(CircuitInfo & ci) { 
+  s32 T2ActiveEventWindow::trySendCacheUpdatePacket(Circuit & ci) { 
+
     const u32 BYTES_PER_ATOM = OurT2Atom::BPA/8; // Bits Per Atom/Bits Per Byte
     const u32 BYTES_PER_SN = 1; // SiteNumber
     const u32 BYTES_PER_SITE = BYTES_PER_SN + BYTES_PER_ATOM;
@@ -559,17 +476,16 @@ namespace MFM {
     const SPoint maxSite(T2TILE_WIDTH-1,T2TILE_HEIGHT-1);
     u32 atomsShipped = 0;
 
-    MFM_API_ASSERT_NONNULL(ci.mITC);
-    T2ITC & itc = *ci.mITC;
-    CircuitNum cn = ci.mCircuitNum;
+    T2ITC & itc = ci.getITC();
+    u8 cn = getSlotNum();
 
     T2PacketBuffer pb;
     pb.Printf("%c%c",
-              0xa0|itc.mDir8,
+              PKT_HDR_BITMASK_STANDARD_MFM | itc.mDir8,
               xitcByte1(XITC_CS_TALK,cn)
               ); 
     s32 sn;
-    for (sn = ci.mMaxUnshippedSN; sn >= 0 ; --sn) {
+    for (sn = ci.getMaxUnshippedSN(); sn >= 0 ; --sn) {
       SPoint offset = md.GetPoint(sn);
       SPoint site = mCenter + offset;
       MFM_API_ASSERT_STATE(site.BoundedBy(origin,maxSite)); // Right? Active EW can't get offtile
@@ -580,6 +496,11 @@ namespace MFM {
         //Need to ship it
         if (pb.CanWrite() < (s32) BYTES_PER_SITE) break; //this packet is full
         pb.Printf("%c",sn); // Here comes sitenumber sn!
+        TLOG(DBG,"SHIP#%d sn%d (%d,%d) tt 0x%04x wt 0x%04x",
+             atomsShipped,
+             sn, usite.GetX(), usite.GetY(),
+             onTile.GetAtom().GetType(),
+             inEW.GetAtom().GetType());
         const OurT2Atom & atom = inEW.GetAtom();
         const OurT2AtomBitVector & bv = atom.GetBits();
         bv.PrintBytes(pb);
@@ -591,13 +512,14 @@ namespace MFM {
       atomsShipped = 0; // Fake out done logic ugh
     }
     if (!itc.trySendPacket(pb)) return -1; // Grr try again
-    ci.mMaxUnshippedSN = sn;
+    ci.setMaxUnshippedSN(sn);
     return atomsShipped == 0 ? 1 : 0;
   }
 
   bool T2EventWindow::tryReadEWAtom(ByteSource & in, u32 & sn, OurT2AtomBitVector & bv) {
     u8 tmpsn;
     if (in.Scanf("%c",&tmpsn) != 1) return false;
+    TLOG(DBG,"%s CUPSN#%d mLastSN %d", getName(), tmpsn, mLastSN);
     if (tmpsn > mLastSN) {
       if (tmpsn == 0xff) sn = tmpsn;  // Store 0xff EOC flag
       return false;
@@ -609,7 +531,7 @@ namespace MFM {
     return true;
   }
 
-  void T2EventWindow::applyCacheUpdatesPacket(T2PacketBuffer & pb, T2ITC & itc) {
+  void T2PassiveEventWindow::applyCacheUpdatesPacket(T2PacketBuffer & pb, T2ITC & itc) {
     CharBufferByteSource cbs = pb.AsByteSource();
     u8 byte0=0, byte1=0;
     if (cbs.Scanf("%c%c",&byte0,&byte1) != 2) {
@@ -621,52 +543,65 @@ namespace MFM {
     OurT2Atom tmpatom;
     OurT2AtomBitVector & tmpbv = tmpatom.GetBits();
     u32 count = 0;
+    OurMDist & md = mTile.getMDist();
+    const Rect & cacheAndViz = itc.getVisibleAndCacheRect();
     while (tryReadEWAtom(cbs, sn, tmpbv)) {
+      SPoint offset = md.GetPoint(sn);
+      SPoint tileSite = mCenter + offset;
+      if (!cacheAndViz.Contains(tileSite)) {
+        TLOG(WRN,"%s sn%d/(%d,%d) not accessible by %s; ignored",
+             getName(),
+             sn,
+             tileSite.GetX(), tileSite.GetY(),
+             itc.getName()
+             );
+        continue;
+      }
       OurT2Site & site = mSites[sn];
       OurT2Atom & atom = site.GetAtom();
+      
+      TLOG(DBG,"RECV#%d sn%d (%d,%d) tt 0x%04x wt 0x%04x",
+           count,
+           sn, tileSite.GetX(), tileSite.GetY(),
+           atom.GetType(),  // Atom sitting in mSites
+           tmpatom.GetType()); // Inbound atom
+
       OurT2AtomBitVector & bv = atom.GetBits();
       bv = tmpbv;
       ++count;
     }
     
     if (sn == 0xff) { // Recvd final update packet
-      commitPassiveEWAndHangUp(itc); 
+      commitPassiveEWAndHangUp(); 
       TLOG(DBG,"%s PASSIVE DONE",getName());
     }
   }
 
-  void T2EventWindow::commitPassiveEWAndHangUp(T2ITC & itc) {
-    TLOG(DBG,"%s (%s) cPEWAHU",getName(),itc.getName());
+  void T2PassiveEventWindow::commitPassiveEWAndHangUp() {
+    Circuit & ci = getPassiveCircuit();
+    TLOG(DBG,"%s (%s) cPEWAHU",getName(),ci.getName());
+
     MFM_API_ASSERT_STATE(getEWSN()==EWSN_PWCACHE);
 
-    // Find circuitnumber
-    CircuitNum cn = U8_MAX;
-    for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      CircuitInfo & ci = mCircuits[i];
-      if (ci.mITC == &itc) {
-        cn = ci.mCircuitNum;
-        break;
-      }
-    }
-    MFM_API_ASSERT_STATE(cn != U8_MAX);
+    CircuitNum cn = getSlotNum();
+
+    T2ITC & itc = ci.getITC();
     itc.hangUpPassiveEW(*this,cn); // XXX handle failure
 
     saveSites();
     unhogEWSites();
     initializeEW(); // Clear gunk for next renter
     setEWSN(EWSN_PINIT);
-    // XXX Need more?  Really actually done on passive side, here??
+    ci.resetCircuitForPassive();
   }
 
   // Send all or as much as buffers will take; false if someone blocked, true iff all all done
-  bool T2EventWindow::trySendCacheUpdates() {
+  bool T2ActiveEventWindow::trySendCacheUpdates() {
     bool allDone = true;
-    for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      CircuitInfo & ci = mCircuits[i];
-      if (ci.mITC == 0) continue;
-      CircuitNum cn = ci.mCircuitNum;
-      if (cn == U8_MAX) continue; // ITC is SHUT, no circuit or lock needed.
-      if (ci.mMaxUnshippedSN < 0) continue; // All shipped and done on this circuit
+    for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
+      Circuit & ci = mActiveCircuits[i];
+      if (!ci.isLockHeld()) continue;
+      if (ci.getMaxUnshippedSN() < 0) continue; // All shipped and done on this circuit
       while (true) {
         s32 ret = trySendCacheUpdatePacket(ci);
         if (ret == 0) continue;  // Sent non-final -> Go again
@@ -677,19 +612,16 @@ namespace MFM {
     return allDone;
   }
 
-  bool T2EventWindow::trySendLockRequests() {
-    for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      if (mCircuits[i].mITC == 0) continue;
-      T2ITC & itc = *mCircuits[i].mITC;
-      CircuitNum cn = mCircuits[i].mCircuitNum;
-      if (cn == U8_MAX) continue; // ITC is SHUT, no circuit or lock needed.
-      s8 yoinkVal = itc.getYoinkVal(cn, true);
-      MFM_API_ASSERT_STATE(yoinkVal >= 0); // Must be set up by now
-      MFM_API_ASSERT_STATE(!mCircuits[i].mLockAcquired); // and this must be initted
-      MFM_API_ASSERT_STATE(mCircuits[i].mMaxUnshippedSN!=S8_MAX); // and this must be initted
+  bool T2ActiveEventWindow::trySendLockRequests() {
+    for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
+      Circuit & ci = mActiveCircuits[i];
+      if (!ci.isLockNeeded()) continue;
+      T2ITC & itc = ci.getITC();
+      u8 yoinkBit = mTile.getRandom().CreateBits(1);
+      CircuitNum cn = getSlotNum();
       T2PacketBuffer pb;
       pb.Printf("%c%c",
-                0xa0|itc.mDir8,
+                PKT_HDR_BITMASK_STANDARD_MFM | itc.mDir8,
                 xitcByte1(XITC_CS_RING,cn)
                 );
       SPoint origin = itc.getITCOrigin();
@@ -701,23 +633,24 @@ namespace MFM {
       pb.Printf("%c%c",
                 (s8)relEWctr.GetX(),
                 (s8)relEWctr.GetY());
-      u8 yoinkRad = ((yoinkVal&0x1)<<7)|mRadius;
-      pb.Printf("%c",yoinkRad);
-      TLOG(DBG,"%s RING abs(%d,%d) usrel(%d,%d) yoink=%d",
-                getName(),
-                mCenter.GetX(), mCenter.GetY(),
-                relEWctr.GetX(),relEWctr.GetY(),
-                yoinkVal);
+      pb.Printf("%c", ringByte4(yoinkBit, mRadius));
+      TLOG(DBG,"%s RING %s abs(%d,%d) usrel(%d,%d) yoink=%d",
+           getName(),
+           getDir6Name(itc.mDir6),
+           mCenter.GetX(), mCenter.GetY(),
+           relEWctr.GetX(),relEWctr.GetY(),
+           yoinkBit);
       if (!itc.trySendPacket(pb)) return false; // doh.
+      ci.setYoink(yoinkBit);  // After we apparently succeeded
+      ci.setCS(CS_RUNG);
     }
     return true;
   }
 
-  bool T2EventWindow::tryInitiateActiveEvent(UPoint center,u32 radius) {
+  bool T2ActiveEventWindow::tryInitiateActiveEvent(UPoint center,u32 radius) {
     assignCenter(MakeSigned(center), radius, true); 
-    if (!checkSiteAvailability()) return false;
+    if (!checkSiteAvailabilityForActive()) return false;
     TLOG(DBG,"%s sites available", getName());
-    if (!checkCircuitAvailability()) return false;
     TLOG(DBG,"%s OWNING (%d,%d)+%d",
               getName(),
               center.GetX(), center.GetY(),
@@ -734,12 +667,6 @@ namespace MFM {
     return true;
   }
 
-  bool T2EventWindow::isInActiveState() const {
-    T2EWStateOps * ops = T2EWStateOps::mStateOpsArray[mStateNum];
-    MFM_API_ASSERT_NONNULL(ops);
-    return ops->isActive();
-  }
-
   void T2EventWindow::onTimeout(TimeQueue& srcTq) {
     if (mStateNum >= T2EWStateOps::mStateOpsArray.size())
       FAIL(ILLEGAL_STATE);
@@ -747,7 +674,11 @@ namespace MFM {
     if (!ops)
       FAIL(ILLEGAL_STATE);
     T2PacketBuffer pb;
-    ops->timeout(*this, pb, srcTq);
+    if (asActiveEW())
+      ops->timeout(*asActiveEW(), pb, srcTq);
+    else if (asPassiveEW())
+      ops->timeout(*asPassiveEW(), pb, srcTq);
+    else FAIL(UNREACHABLE_CODE);
   }
 
   T2EventWindow::T2EventWindow(T2Tile& tile, EWSlotNum ewsn, const char * category)
@@ -789,11 +720,13 @@ namespace MFM {
   };
 
   /*** DEFINE STUBBED-OUT STATE METHODS **/
-#define YY00(NAME,FUNC) 
-#define YY01(NAME,FUNC) 
-#define YY10(NAME,FUNC) 
-#define YY11(NAME,FUNC)                                   \
-  void T2EWStateOps_##NAME::FUNC(T2EventWindow & ew,      \
+#define ZZ0() T2PassiveEventWindow
+#define ZZ1() T2ActiveEventWindow
+#define YY00(NAME,FUNC,ACT) 
+#define YY01(NAME,FUNC,ACT) 
+#define YY10(NAME,FUNC,ACT) 
+#define YY11(NAME,FUNC,ACT)                               \
+  void T2EWStateOps_##NAME::FUNC(ZZ##ACT() & ew,          \
                                  T2PacketBuffer & pb,     \
                                  TimeQueue& tq) {         \
     LOG.Error("%s: called stub " xstr(FUNC) " handler",   \
@@ -801,9 +734,9 @@ namespace MFM {
     DIE_UNIMPLEMENTED();                                  \
   }                                                       \
 
-#define XX(NAME,ACT,CUSTO,CUSRC,STUB,DESC) \
-    YY##CUSTO##STUB(NAME,timeout)          \
-    YY##CUSRC##STUB(NAME,receive)          \
+#define XX(NAME,ACT,CUSTO,CUSRC,STUB,DESC)       \
+  YY##CUSTO##STUB(NAME,timeout,ACT)              \
+  YY##CUSRC##STUB(NAME,receive,ACT)              \
   
   ALL_EW_STATES_MACRO()
 #undef XX
@@ -811,6 +744,8 @@ namespace MFM {
 #undef YY10
 #undef YY01
 #undef YY00
+#undef ZZ1
+#undef ZZ0
 
   /*** STATE NAMES AS STRING **/
   const char * ewStateName[] = {
@@ -839,9 +774,10 @@ namespace MFM {
   }
 
   const char * T2EventWindow::getName() const {
-    snprintf(mNameBuf32,32,"EW%02d-%s/%s",
+    snprintf(mNameBuf32,32,"%s%02d%s/%s",
+             asActiveEW() ? "a" : (asPassiveEW() ? "p" : "EW"),
              mSlotNum,
-             getCategory(),
+             asActiveEW() ? "" : getCategory(),
              getEWStateName(mStateNum));
     return mNameBuf32;
   }
@@ -857,30 +793,42 @@ namespace MFM {
 
   
   //// DEFAULT HANDLERS FOR T2EWStateOps
-  void T2EWStateOps::timeout(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+  void T2EWStateOps::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
     LOG.Error("%s on %s: no timeout handler", getStateName(), ew.getName());
     DIE_UNIMPLEMENTED();
   }
 
-  void T2EWStateOps::receive(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+  void T2EWStateOps::timeout(T2PassiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+    LOG.Error("%s on %s: no timeout handler", getStateName(), ew.getName());
+    DIE_UNIMPLEMENTED();
+  }
+
+  void T2EWStateOps::receive(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+    LOG.Error("%s on %s: no receive handler", getStateName(), ew.getName());
+    DIE_UNIMPLEMENTED();
+  }
+
+  void T2EWStateOps::receive(T2PassiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
     LOG.Error("%s on %s: no receive handler", getStateName(), ew.getName());
     DIE_UNIMPLEMENTED();
   }
 
   //// AINIT: CUSTOM STATE HANDLERS
-  void T2EWStateOps_AINIT::timeout(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+  void T2EWStateOps_AINIT::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
     // Here we have 
     ew.setEWSN(EWSN_AWLOCKS);
     ew.scheduleWait(WC_LONG);  // debug
   }
 
-  void T2EWStateOps_AINIT::receive(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+  void T2EWStateOps_AINIT::receive(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
     LOG.Error("%s on %s: no receive handler", getStateName(), ew.getName());
     DIE_UNIMPLEMENTED();
   }
 
-  void T2EWStateOps_AWLOCKS::timeout(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
-    if (ew.hasAllNeededLocks()) {
+  void T2EWStateOps_AWLOCKS::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+    T2ActiveEventWindow * aew = ew.asActiveEW();
+    MFM_API_ASSERT_NONNULL(aew);
+    if (aew->hasAllNeededLocks()) {
       ew.setEWSN(EWSN_ABEHAVE);  // YOU GO DO THIS DAMN THING!
       ew.scheduleWait(WC_NOW); 
     } else {
@@ -889,36 +837,40 @@ namespace MFM {
     }
   }
 
-  void T2EWStateOps_AWLOCKS::receive(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+  void T2EWStateOps_AWLOCKS::receive(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
     FAIL(INCOMPLETE_CODE); // What would go here is in handleACK and its callers
   }
 
-  void T2EWStateOps_ADROP::timeout(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+  void T2EWStateOps_ADROP::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
     FAIL(INCOMPLETE_CODE);
   }
 
-  void T2EWStateOps_ADROP::receive(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+  void T2EWStateOps_ADROP::receive(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
     FAIL(INCOMPLETE_CODE); 
   }
 
-  void T2EWStateOps_ABEHAVE::timeout(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
-    if (!ew.hasAllNeededLocks()) {
+  void T2EWStateOps_ABEHAVE::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+    T2ActiveEventWindow * aew = ew.asActiveEW();
+    MFM_API_ASSERT_NONNULL(aew);
+    if (!aew->hasAllNeededLocks()) {
       LOG.Error("%s on %s: TO AWLOCKS with pending locks", getStateName(), ew.getName());
       FAIL(INCOMPLETE_CODE);
       return;
     }
-    if (ew.executeEvent()) {
-      if (ew.hasAnyLocks()) {
+    if (aew->executeEvent()) {
+      if (aew->hasAnyLocks()) {
         ew.setEWSN(EWSN_ASCACHE);
         ew.scheduleWait(WC_NOW);
       } else
-        ew.commitAndReleaseActive();
+        aew->commitAndReleaseActive();
     } else
       FAIL(INCOMPLETE_CODE);
   }
 
-  void T2EWStateOps_ASCACHE::timeout(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
-    if (ew.trySendCacheUpdates()) { // True when all have been shipped to all
+  void T2EWStateOps_ASCACHE::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+    T2ActiveEventWindow * aew = ew.asActiveEW();
+    MFM_API_ASSERT_NONNULL(aew);
+    if (aew->trySendCacheUpdates()) { // True when all have been shipped to all
       ew.setEWSN(EWSN_AWACKS);
       ew.scheduleWait(WC_FULL);
     } else {
@@ -926,12 +878,77 @@ namespace MFM {
     }
   }
 
-  void T2EWStateOps_ASCACHE::receive(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+  void T2EWStateOps_ASCACHE::receive(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
     FAIL(INCOMPLETE_CODE); // Dealt with in handleCacheUpdates or something.
   }
 
-  void T2EWStateOps_AWACKS::timeout(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+  void T2EWStateOps_AWACKS::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
     FAIL(INCOMPLETE_CODE);
   }
+
+  /////////////////////T2ActiveEventWindow
+  T2ActiveEventWindow::T2ActiveEventWindow(T2Tile& tile, EWSlotNum ewsn, const char * category)
+    : T2EventWindow(tile, ewsn, category)
+    , mActiveCircuits{ *this, *this }
+  { }
+
+  bool T2ActiveEventWindow::executeEvent() {
+    loadSites();
+    OurT2Site & us = mSites[0];
+    OurT2Atom & atom = us.GetAtom();
+    u32 type = atom.GetType();
+    // XXX PHONY DREG HACK
+    if (type != T2_PHONY_DREG_TYPE)
+      return false;
+    // XXX DOUBLE PHONY: IT'S NOT EVEN DREG
+    // JUST GO N/E/S/W IF LIVE YOUNG BEIN
+    u8 ngb = atom.GetStateField(0,3)+1;
+    TLOG(DBG,"%s (%d,%d)BEIN ngb %d live %d",
+         getName(),
+         mCenter.GetX(),mCenter.GetY(),
+         ngb,
+         mSitesLive[ngb]);
+
+    if (mSitesLive[ngb]) {
+      OurT2Site & west = mSites[ngb];
+      OurT2Atom & westa = west.GetAtom();
+      OurT2Atom tmp = westa;
+      westa = atom;
+      atom = tmp;
+    } else {
+      u8 oth = mTile.getRandom().Between(1,8);
+      atom.SetStateField(0,3,oth-1);
+      TLOG(DBG,"%s (%d,%d)BEIN oth %d (othlive %d)",
+           getName(),
+           mCenter.GetX(),mCenter.GetY(),
+           oth,
+           mSitesLive[oth]);
+    }
+
+#if 0
+    const char * PHONY_DIRS = "\002\004\003\001";
+    for (const char * dir = PHONY_DIRS; *dir != 0; ++dir) {
+      u8 sn=*dir;
+      if (mSitesLive[sn]) {
+        OurT2Site & west = mSites[sn];
+        OurT2Atom & westa = west.GetAtom();
+        OurT2Atom tmp = atom;
+        atom = westa;
+        westa = tmp;
+      }
+    }
+#endif
+    return true;
+  }
+
+  /////////////////////T2PassiveEventWindow
+  T2PassiveEventWindow::T2PassiveEventWindow(T2Tile& tile, EWSlotNum ewsn, const char * category, T2ITC& itc)
+    : T2EventWindow(tile, ewsn, category)
+    , mPassiveCircuit(*this)
+  {
+    _setEWSNRaw(EWSN_PINIT);
+    mPassiveCircuit.bindCircuitForPassive(itc);
+  }
+  
 
 }

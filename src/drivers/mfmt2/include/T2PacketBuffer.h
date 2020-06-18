@@ -4,6 +4,9 @@
 
 #include "OverflowableCharBufferByteSink.h"
 
+/*LKM files*/
+#include "itcpktevent.h"
+
 namespace MFM {
   typedef OString256 T2PacketBuffer;
 
@@ -20,7 +23,20 @@ namespace MFM {
     XITC_CS_MAX_VAL=7,
   } XITCCode;
 
-  namespace T2Packet {
+  typedef enum ringbyte4code {
+    RING_BYTE4_BITMASK_YOINK = 0x80,                              
+    RING_BYTE4_YOINK_POS     = __builtin_ctz(RING_BYTE4_BITMASK_YOINK),
+    RING_BYTE4_BITMASK_RDC   = 0x60,                              
+    RING_BYTE4_RDC_POS       = __builtin_ctz(RING_BYTE4_BITMASK_RDC)
+  } RINGByte4Code;
+
+  inline u8 ringByte4(u8 yoinkBit, u8 radius) {
+    return
+      (u8) (((yoinkBit<<RING_BYTE4_YOINK_POS) & RING_BYTE4_BITMASK_YOINK) |
+            ((radius-1)<<RING_BYTE4_RDC_POS) & RING_BYTE4_BITMASK_RDC);
+  }
+
+  //  namespace T2Packet {
     inline const char * getXITCName(XITCCode xitc) {
       switch (xitc) {
       default: return "illegal xitc";
@@ -36,7 +52,9 @@ namespace MFM {
     }
 
     inline bool isStandard(const T2PacketBuffer & pb) {
-      return pb.GetLength() > 0 && (pb.GetBuffer()[0]&0x80) != 0;
+      return
+        pb.GetLength() > 0 &&
+        (pb.GetBuffer()[0] & PKT_HDR_BITMASK_STANDARD) != 0;
     }
     inline bool asNonstandard(const T2PacketBuffer & pb, u8 * ascii7) {
       if (isStandard(pb)) return false;
@@ -44,54 +62,75 @@ namespace MFM {
       return true;
     }
     inline bool asStandardLocal(const T2PacketBuffer & pb, u8 * type) {
-      if (pb.GetLength() > 0 && (pb.GetBuffer()[0]&0xc0) == 0xc0) {
-        if (type) *type = (pb.GetBuffer()[0]&0x1f);
+      if (pb.GetLength() > 0 &&
+          ((pb.GetBuffer()[0] & PKT_HDR_BITMASK_STANDARD_LOCAL) ==
+           PKT_HDR_BITMASK_STANDARD_LOCAL)) {
+        if (type) *type = (pb.GetBuffer()[0] & PKT_HDR_BITMASK_LOCAL_TYPE);
         return true;
       }
       return false;
     }
     inline bool isStandardRouted(const T2PacketBuffer & pb) {
-      return pb.GetLength() > 0 && (pb.GetBuffer()[0]&0xc0) == 0x80;
+      return
+        pb.GetLength() > 0 &&
+        ((pb.GetBuffer()[0] & PKT_HDR_BITMASK_STANDARD_LOCAL) ==
+         PKT_HDR_BITMASK_STANDARD);
     }
     inline bool asStandardRouted(const T2PacketBuffer & pb, u8 * dir8) {
       if (isStandardRouted(pb)) {
-        if (dir8) *dir8 = pb.GetBuffer()[0]&0x07;
+        if (dir8) *dir8 = pb.GetBuffer()[0] & PKT_HDR_BITMASK_DIR;
         return true;
       }
       return false;
     }
-    inline bool isStandardBulk(const T2PacketBuffer & pb) {
-      return isStandardRouted(pb) && (pb.GetBuffer()[0]&0xe0)==0x80;
-    }
-    inline bool isStandardUrgent(const T2PacketBuffer & pb) {
-      return isStandardRouted(pb) && (pb.GetBuffer()[0]&0xe0)==0xa0;
-    }
-    inline bool isStandardFlash(const T2PacketBuffer & pb) {
-      return pb.GetLength() > 1 && isStandardUrgent(pb) && (pb.GetBuffer()[1]&0x80)==0x00;
+    inline bool isStandardService(const T2PacketBuffer & pb) {
+      return
+        isStandardRouted(pb) &&
+        ((pb.GetBuffer()[0] & PKT_HDR_BITMASK_MFM) == 0);
     }
     inline bool isStandardMFM(const T2PacketBuffer & pb) {
-      return pb.GetLength() > 1 && isStandardUrgent(pb) && (pb.GetBuffer()[1]&0x80)==0x80;
+      return
+        pb.GetLength() > 1 &&
+        isStandardRouted(pb) &&
+        (pb.GetBuffer()[0] & PKT_HDR_BITMASK_MFM);
+    }
+    inline bool isStandardFlash(const T2PacketBuffer & pb) {
+      return
+        pb.GetLength() > 1 && 
+        isStandardService(pb) &&
+        ((pb.GetBuffer()[1] & PKT_HDR_BYTE1_BITMASK_BULK) == 0);
+    }
+    inline bool isStandardBulk(const T2PacketBuffer & pb) {
+      return
+        pb.GetLength() > 1 &&
+        isStandardService(pb) &&
+        (pb.GetBuffer()[1] & PKT_HDR_BYTE1_BITMASK_BULK);
     }
     inline bool asXITC(const T2PacketBuffer & pb, u8 * xitc) {
       if (isStandardMFM(pb)) {
-        if (xitc) *xitc = ((pb.GetBuffer()[1]>>4)&0x7);
+        if (xitc)
+          *xitc =
+            ((pb.GetBuffer()[1] >> PKT_HDR_BYTE1_XITC_POS) &
+             (PKT_HDR_BYTE1_BITMASK_XITC >> PKT_HDR_BYTE1_XITC_POS));
         return true;
       }
       return false;
     }
     inline bool asITC(const T2PacketBuffer & pb, u8 * sn) {
       u8 xitc; 
-      if (asXITC(pb,&xitc) && xitc == 1) {
-        if (sn) *sn = (pb.GetBuffer()[1]&0xf);
+      if (asXITC(pb,&xitc) && xitc == XITC_ITC_CMD) {
+        if (sn) *sn = (pb.GetBuffer()[1] & PKT_HDR_BYTE1_BITMASK_XITC_SN);
         return true;
       }
       return false;
     }
     inline bool asCircuitSignal(const T2PacketBuffer & pb, u8 *cs, u8 *cn) {
       u8 xitc;
-      if (asXITC(pb,&xitc) && xitc >= 2) {
+      if (asXITC(pb,&xitc) &&
+          xitc >= XITC_CS_MIN_VAL &&
+          xitc <= XITC_CS_MAX_VAL) {
         if (cs) *cs = xitc;
-        if (cn) *cn = (pb.GetBuffer()[1]&0xf);
+        if (cn) *cn = (pb.GetBuffer()[1] & PKT_HDR_BYTE1_BITMASK_XITC_SN);
         return true;
       }
       return false;
@@ -111,8 +150,11 @@ namespace MFM {
       if (pcn) *pcn = tcn;
       if (cx) *cx = (s8) pb.GetBuffer()[2];
       if (cy) *cy = (s8) pb.GetBuffer()[3];
-      if (yoink) *yoink = (((pb.GetBuffer()[4]>>7)&1)!=0);
-      if (radius) *radius = (pb.GetBuffer()[4]&0x7);
+      if (yoink)
+        *yoink = (((pb.GetBuffer()[4]>>RING_BYTE4_YOINK_POS) & 0x1) != 0);
+      if (radius)
+        *radius = ((pb.GetBuffer()[4]>>RING_BYTE4_RDC_POS) &
+                   (RING_BYTE4_BITMASK_RDC >> RING_BYTE4_RDC_POS)) + 1;
       return true;
     }
     inline bool asCSAnswer(const T2PacketBuffer &pb, u8 *pcn) { return asCSType<XITC_CS_ANSWER>(pb, pcn); }
@@ -124,6 +166,6 @@ namespace MFM {
     bool asTagSync(const T2PacketBuffer & pb, s32 * ptag) ;
     
     void reportPacketAnalysis(const T2PacketBuffer & pb, ByteSink & bs) ;
-  }
+  //  }
 }
 #endif /* T2PACKETBUFFER_H */

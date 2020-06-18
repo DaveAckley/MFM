@@ -3,7 +3,7 @@
 
 
 namespace MFM {
-  namespace T2Packet {
+  //  namespace T2Packet {
     bool asTagSync(const T2PacketBuffer & pb, s32 * ptag) {
       u8 sn;
       if (asITC(pb,&sn) && (sn == ITCSN_SHUT || sn == ITCSN_OPEN)) {
@@ -56,5 +56,5 @@ namespace MFM {
 
     
     
-  }
+  //  }
 }

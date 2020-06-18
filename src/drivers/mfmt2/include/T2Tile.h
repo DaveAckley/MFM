@@ -49,7 +49,9 @@ namespace MFM {
     virtual void onTimeout(TimeQueue& srctq) ;
     virtual const char* getName() const { return "KITCPoller"; }
     KITCPoller(T2Tile& tile) ;
-    static u32 getKITCEnabledStatusFromStatus(u32 status, Dir8 dir8) { return (status>>(dir8<<2))&0xf; }
+    static u32 getKITCEnabledStatusFromStatus(u32 status, Dir8 dir8) {
+      return (status>>(dir8<<2))&0xf;
+    }
     static u32 updateKITCEnabledStatusFromStatus(u32 status, Dir8 dir8, u32 val) ;
     u32 getKITCEnabledStatus(Dir8 dir8) { return getKITCEnabledStatusFromStatus(mKITCEnabledStatus, dir8); }
     void setKITCEnabledStatus(Dir8 dir8, u32 val) {
@@ -100,8 +102,10 @@ namespace MFM {
     }
 
     // GENERAL SERVICE METHODS
+    void debugSetup() ; // Whatever we're currently working on
     void seedPhysics() ;
     void clearPrivateSites() ;
+    void traceSite(const UPoint at, const char * msg = "", Logger::Level level = Logger::DBG) const ;
 
     ///
     void setMFZId(const char * mfzid) ;
@@ -169,9 +173,9 @@ namespace MFM {
 
     void setWindowConfigPath(const char * path) ;
 
-    T2EventWindow * getEW(u32 idx) {
-      if (idx <= MAX_EWSLOT) return mEWs[idx];
-      return 0;
+    T2EventWindow & getActiveEW(u32 idx) {
+      MFM_API_ASSERT_ARG(idx<MAX_EWSLOT);
+      return *mEWs[idx];
     }
 
     T2ITC & getITC(u32 dir6) {
@@ -217,19 +221,19 @@ namespace MFM {
       mSiteOwners[idx.GetX()][idx.GetY()] = owner;
     }
 
-    const Rect & getHiddenRect() const {
-      return mHiddenRect;
+    const Rect & getOwnedRect() const {
+      return mOwnedRect;
     }
 
-    const Rect & getVisibleRect(Dir6 dir6) {
+    const Rect & getVisibleRect(Dir6 dir6) const {
       MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
       return mITCVisible[dir6];
     }
-    const Rect & getCacheRect(Dir6 dir6) {
+    const Rect & getCacheRect(Dir6 dir6) const {
       MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
       return mITCCache[dir6];
     }
-    const Rect & getVisibleAndCacheRect(Dir6 dir6) {
+    const Rect & getVisibleAndCacheRect(Dir6 dir6) const {
       MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
       return mITCVisibleAndCache[dir6];
     }
@@ -254,9 +258,8 @@ namespace MFM {
 
     T2ITC mITCs[DIR6_COUNT];
 
-  
   public:  // Hey it's const
-    const Rect mHiddenRect;
+    const Rect mOwnedRect;
     const Rect mITCVisible[DIR6_COUNT];
     const Rect mITCCache[DIR6_COUNT];
     const Rect mITCVisibleAndCache[DIR6_COUNT];
@@ -264,13 +267,17 @@ namespace MFM {
     void freeEW(T2EventWindow & ew) ; //Public for T2EventWindow to call on abort?
 
   private:
-    T2EventWindow * mEWs[MAX_EWSLOT+1]; // mEWs[0] set to 0
+    T2ActiveEventWindow * mEWs[MAX_EWSLOT];
 
     u32 considerSiteForEW(UPoint idx) ;
     u32 getRadius(const OurT2Atom & atom) ; // STUB UNTIL UCR EXISTS
     void recordCompletedEvent(OurT2Site & site) ;
 
-    T2EventWindow * allocEW() ;
+    const char * coordMap(u32 x, u32 y) const ;
+    void dumpTileMap(ByteSink& bs, bool csv) const ;
+    void dumpITCRects(ByteSink& bs) const ;
+
+    T2ActiveEventWindow * allocEW() ;
 
     EWSet mFree;
     void initTimeQueueDrivers() ;
@@ -298,6 +305,7 @@ namespace MFM {
     //// HW CONTROL & MISC
     CPUFreq mCPUFreq;
     CoreTempChecker mCoreTempChecker;    
+
   };
 }
 #endif /* T2TILE_H */

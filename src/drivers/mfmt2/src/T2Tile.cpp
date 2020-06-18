@@ -107,7 +107,7 @@ namespace MFM {
 
   void T2Tile::seedPhysics() {
     // Pick a random hidden site and init it
-    SPoint at(getHiddenRect().PickRandom(getRandom()));
+    SPoint at(getOwnedRect().PickRandom(getRandom()));
     Sites & sites = getSites();
     OurT2Site & site = sites.get(MakeUnsigned(at));
     OurT2Atom & ar =  site.GetAtom();
@@ -161,9 +161,9 @@ namespace MFM {
 #undef YY
 #undef ZZ
       }
-    , mHiddenRect(SPoint(CACHE_LINES,CACHE_LINES),
-                  UPoint(T2TILE_WIDTH-2*CACHE_LINES,
-                         T2TILE_HEIGHT-2*CACHE_LINES))
+    , mOwnedRect(SPoint(CACHE_LINES,CACHE_LINES),
+                 UPoint(T2TILE_WIDTH-2*CACHE_LINES,
+                        T2TILE_HEIGHT-2*CACHE_LINES))
     , mITCVisible{
 #define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,CACHE_LINES)
 #define YY ,
@@ -213,12 +213,9 @@ namespace MFM {
   void T2Tile::earlyInit() {
     processArgs();
 
-    for (u32 i = 0; i <= MAX_EWSLOT; ++i) {
-      if (i==0) mEWs[i] = 0;
-      else {
-        mEWs[i] = new T2EventWindow(*this, i, "AC");
-        mEWs[i]->insertInEWSet(&mFree);
-      }
+    for (u32 i = 0; i < MAX_EWSLOT; ++i) {
+      mEWs[i] = new T2ActiveEventWindow(*this, i, "AC");
+      mEWs[i]->insertInEWSet(&mFree);
     }
 
     for (u32 x = 0; x < T2TILE_WIDTH; ++x)
@@ -251,6 +248,7 @@ namespace MFM {
 #define ALL_CMD_ARGS()                                          \
   XX(help,h,N,,"Print this help")                               \
   XX(log,l,O,LEVEL,"Set or increase logging")                   \
+  XX(map,m,O,CSV,"Print tile map [in CSV] and exit")            \
   XX(mfzid,z,R,MFZID,"Specify MFZ file to run")                 \
   XX(paused,p,N,,"Start up paused")                             \
   XX(trace,t,O,PATH,"Trace output to PATH or default")          \
@@ -387,6 +385,20 @@ static const char * CMD_HELP_STRING =
         printf("%s",CMD_HELP_STRING);
         exit(0);
 
+      case 'm':
+        {
+          const char * oa = optarg;
+          if (!oa) oa = "csv";
+          if (!strcmp(oa,"csv") || !strcmp(oa,"all"))
+            dumpTileMap(STDOUT,true);
+          if (!strcmp(oa,"map") || !strcmp(oa,"all"))
+            dumpTileMap(STDOUT,false);
+          if (!strcmp(oa,"itc") || !strcmp(oa,"all"))
+            dumpITCRects(STDOUT);
+
+        }
+        exit(0);
+
       case 'v':
         printf("For MFM%d.%d.%d (%s)\nBuilt on %08x at %06x by %s\n",
                MFM_VERSION_MAJOR, MFM_VERSION_MINOR, MFM_VERSION_REV,
@@ -450,7 +462,7 @@ static const char * CMD_HELP_STRING =
   T2Tile::~T2Tile() {
     stopTracing();
     closeITCs();
-    for (u32 i = 0; i <= MAX_EWSLOT; ++i) {
+    for (u32 i = 0; i < MAX_EWSLOT; ++i) {
       if (i) delete mEWs[i];
       mEWs[i] = 0;
     }
@@ -469,10 +481,14 @@ static const char * CMD_HELP_STRING =
     }
   }
 
-  T2EventWindow * T2Tile::allocEW() {
+  T2ActiveEventWindow * T2Tile::allocEW() {
     EWLinks * el = mFree.removeRandom();
     if (!el) return 0;
-    return el->asEventWindow();
+    T2EventWindow * ew = el->asEventWindow();
+    T2ActiveEventWindow * aew = ew->as<T2ActiveEventWindow>();
+    MFM_API_ASSERT_STATE(aew != 0);
+    return aew;
+    
   }
 
   void T2Tile::freeEW(T2EventWindow & ew) {
@@ -481,7 +497,7 @@ static const char * CMD_HELP_STRING =
   }
 
   bool T2Tile::tryAcquireEW(const UPoint center, u32 radius, bool forActive) {
-    T2EventWindow * ew = allocEW();  // See if any EWs left to acquire
+    T2ActiveEventWindow * ew = allocEW();  // See if any EWs left to acquire
     if (!ew) return false;  // Nope
     ew->initializeEW(); // clear gunk
     if (ew->tryInitiateActiveEvent(center,radius)) return true; // ew in use
@@ -634,4 +650,112 @@ static const char * CMD_HELP_STRING =
   void T2Tile::showFail(const char * file, int line, const char * msg) {
     mSDLI.showFail(file, line, msg);
   }
+
+  const char * T2Tile::coordMap(u32 x, u32 y) const {
+    SPoint sp(x,y);
+    const u32 BUF_SIZE = 10;
+    static char buf[BUF_SIZE];
+    u32 i;
+    for (i = 0; i < BUF_SIZE; ++i) buf[i] = '\0';
+    i = 0;
+    if (getOwnedRect().Contains(sp)) buf[i++] = 'o';
+    else buf[i++] = 'c';
+    for (Dir6 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
+      if (getVisibleAndCacheRect(dir6).Contains(sp)) buf[i++] = '0'+dir6;
+      //      if (getVisibleRect(dir6).Contains(sp)) buf[i++] = 'a'+dir6;
+      //      if (getCacheRect(dir6).Contains(sp)) buf[i++] = 'A'+dir6;
+    }
+    return buf;
+  }
+
+  void T2Tile::dumpTileMap(ByteSink& bs, bool csv) const {
+    bs.Printf("   ");
+    for (u32 x = 0; x < T2TILE_WIDTH; ++x) {
+      if (csv) bs.Printf(",");
+      bs.Printf(" %2d", x);
+    }
+    bs.Printf("\n");
+
+    for (u32 y = 0; y < T2TILE_HEIGHT; ++y) {
+      bs.Printf("%2d ",y);
+      for (u32 x = 0; x < T2TILE_WIDTH; ++x) {
+        if (csv) bs.Printf(",");
+        bs.Printf(csv ? "%s": "%3s",coordMap(x,y));
+      }
+      if (!csv) bs.Printf(" %2d",y);
+      bs.Printf("\n");
+    }
+    if (!csv) {
+      bs.Printf("   ");
+      for (u32 x = 0; x < T2TILE_WIDTH; ++x) bs.Printf(" %2d", x);
+      bs.Printf("\n");
+    }
+  }
+
+  void T2Tile::dumpITCRects(ByteSink& bs) const {
+    const char names[][10] = { "VIZ", "CCH", "ALL" };
+    bs.Printf("      ");
+    for (u32 type = 0; type < 3; ++type) {
+      bs.Printf("%s                    ",names[type]);
+    }
+    bs.Printf("\n");
+    for (Dir6 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
+      bs.Printf("%s %d: ",
+                getDir6Name(dir6), dir6);
+      for (u32 type = 0; type < 3; ++type) {
+        Rect rect;
+        switch (type) {
+        case 0: rect = getVisibleRect(dir6); break;
+        case 1: rect = getCacheRect(dir6); break;
+        case 2: rect = getVisibleAndCacheRect(dir6); break;
+        default: FAIL(UNREACHABLE_CODE);
+        }
+        SPoint from = rect.GetPosition();
+        UPoint size = rect.GetSize();
+        SPoint to   = from + MakeSigned(size) + SPoint(-1,-1);
+        bs.Printf("(%2d,%2d)-(%2d,%2d) %2dx%2d  ",
+                  from.GetX(),from.GetY(),
+                  to.GetX(),to.GetY(),
+                  size.GetX(),size.GetY());
+      }
+      bs.Printf("\n");
+    }
+  }
+
+  void T2Tile::traceSite(const UPoint at, const char * msg, Logger::Level level) const {
+    const Sites & sites = getSites();
+    const OurT2Site & site = sites.get(at);
+    OurT2Atom copy = site.GetAtom();
+    OurT2AtomSerializer as(copy);
+    TLOGLEV(level,"%s/Site(%d,%d)%s [%04x/%@]",
+            msg,
+            at.GetX(), at.GetY(),
+            coordMap(at.GetX(), at.GetY()),
+            copy.GetType(),
+            &as);
+  }
+
+  void T2Tile::debugSetup() {
+    clearPrivateSites();
+    ////BUG 10 SETUP
+    //    SPoint at(26,28);
+    //    u8 ngb = 8;
+    ////BUG 11 SETUP
+    //    SPoint at(51,5);
+    //    u8 ngb = 2;
+    ////BUG 12 SETUP
+    SPoint at(32,4);
+    u8 ngb = 4;
+
+    Sites & sites = getSites();
+    OurT2Site & site = sites.get(MakeUnsigned(at));
+    OurT2Atom & ar =  site.GetAtom();
+
+    OurT2Atom atom(T2_PHONY_DREG_TYPE);
+    atom.SetStateField(0,3,ngb-1);
+
+    ar = atom;
+    traceSite(MakeUnsigned(at));
+  }
+
 }

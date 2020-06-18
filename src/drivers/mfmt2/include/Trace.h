@@ -17,6 +17,8 @@
 #include "Logger.h"
 #include "UniqueTime.h"
 
+#include "dirdatamacro.h"
+
 namespace MFM {
 
 #define ALL_TRACE_TYPES_MACRO()                 \
@@ -30,6 +32,7 @@ namespace MFM {
   XX(Log,LOG,LogTrace)                          \
   XX(EW,SCH,StateChange)                        \
   XX(EW,CTR,AssignCenter)                       \
+  XX(EW,CSC,CircuitStateChange)                 \
 
 
   enum TraceTypeCode {
@@ -49,13 +52,20 @@ namespace MFM {
     TRACE_REC_START_BYTE2 = 0xde,
 
     TRACE_REC_MODE_ILLEGAL = 0x0,
-    TRACE_REC_MODE_T2TILE  = 0x1,
-    TRACE_REC_MODE_ITCDIR6 = 0x2,
-    TRACE_REC_MODE_EWACTIV = 0x3,
-    TRACE_REC_MODE_EWPASIV = 0x4,
-    TRACE_REC_MODE_LOG     = 0x5,
+    TRACE_REC_MODE_LOG     = 0x1,
+    TRACE_REC_MODE_T2TILE  = 0x2,
+    TRACE_REC_MODE_ITCDIR6 = 0x3,
+    TRACE_REC_MODE_EWACTIV = 0x4,
+    TRACE_REC_MODE_EWPASIV_BASE = 0x5,
+    TRACE_REC_MODE_EWPASIV_ET = TRACE_REC_MODE_EWPASIV_BASE + DIR6_ET,
+    TRACE_REC_MODE_EWPASIV_SE = TRACE_REC_MODE_EWPASIV_BASE + DIR6_SE,
+    TRACE_REC_MODE_EWPASIV_SW = TRACE_REC_MODE_EWPASIV_BASE + DIR6_SW,
+    TRACE_REC_MODE_EWPASIV_WT = TRACE_REC_MODE_EWPASIV_BASE + DIR6_WT,
+    TRACE_REC_MODE_EWPASIV_NW = TRACE_REC_MODE_EWPASIV_BASE + DIR6_NW,
+    TRACE_REC_MODE_EWPASIV_NE = TRACE_REC_MODE_EWPASIV_BASE + DIR6_NE,
+    TRACE_REC_MODE_EWPASIV_XX = TRACE_REC_MODE_EWPASIV_BASE + DIR6_COUNT,
 
-    TRACE_REC_FORMAT_VERSION = 0x04
+    TRACE_REC_FORMAT_VERSION = 0x05
 
   };
 

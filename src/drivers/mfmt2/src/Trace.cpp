@@ -3,6 +3,7 @@
 #include "T2Tile.h"
 #include "T2ITC.h"
 #include "T2EventWindow.h"
+#include "Circuit.h"
                
 namespace MFM {
   ///// STATIC MEMBER DEFINITIONS
@@ -19,14 +20,17 @@ namespace MFM {
   TraceAddress::TraceAddress(const T2ITC & itc)
     : mAddrMode(TRACE_REC_MODE_ITCDIR6) , mArg1(itc.mDir6) , mArg2(itc.getITCSN()) { }
   TraceAddress::TraceAddress(const T2EventWindow & ew) {
-    if (ew.isInActiveState()) {
+    if (ew.isActiveEW()) {
       mAddrMode = TRACE_REC_MODE_EWACTIV;
-      mArg1 = ew.slotNum();
+      mArg1 = ew.getSlotNum();
       mArg2 = ew.getEWSN();
     } else {
-      mAddrMode = TRACE_REC_MODE_EWPASIV;
-      const CircuitInfo * ci = ew.getPassiveCircuitInfoIfAny();
-      mArg1 = ci ? ci->mITC->mDir6 : 0xff;
+      const T2PassiveEventWindow * pew = ew.asPassiveEW();
+      mAddrMode = pew ?
+        (TRACE_REC_MODE_EWPASIV_BASE +
+         pew->getPassiveCircuit().getITC().mDir6) :
+        TRACE_REC_MODE_EWPASIV_XX;
+      mArg1 = pew ? pew->getSlotNum() : 0xff;
       mArg2 = ew.getEWSN();
     }
   }
@@ -46,12 +50,18 @@ namespace MFM {
   const char * TraceAddress::getModeName() const {
     switch (mAddrMode) {
     default:
-    case TRACE_REC_MODE_ILLEGAL: return "illegal";
-    case TRACE_REC_MODE_T2TILE : return "t";
-    case TRACE_REC_MODE_ITCDIR6: return "i";
-    case TRACE_REC_MODE_EWACTIV: return "a";
-    case TRACE_REC_MODE_EWPASIV: return "p";
-    case TRACE_REC_MODE_LOG:     return "l";
+    case TRACE_REC_MODE_ILLEGAL:    return "illegal";
+    case TRACE_REC_MODE_T2TILE :    return "t";
+    case TRACE_REC_MODE_ITCDIR6:    return "i";
+    case TRACE_REC_MODE_EWACTIV:    return "a";
+    case TRACE_REC_MODE_EWPASIV_ET: return "pET";
+    case TRACE_REC_MODE_EWPASIV_SE: return "pSE";
+    case TRACE_REC_MODE_EWPASIV_SW: return "pSW";
+    case TRACE_REC_MODE_EWPASIV_WT: return "pWT";
+    case TRACE_REC_MODE_EWPASIV_NW: return "pNW";
+    case TRACE_REC_MODE_EWPASIV_NE: return "pNE";
+    case TRACE_REC_MODE_EWPASIV_XX: return "pXX";
+    case TRACE_REC_MODE_LOG:        return "l";
     }
   }
 
@@ -66,11 +76,14 @@ namespace MFM {
       bs.Printf(":%s",getITCStateName((ITCStateNumber) mArg2));
       break;
     case TRACE_REC_MODE_EWACTIV:
+    case TRACE_REC_MODE_EWPASIV_ET:
+    case TRACE_REC_MODE_EWPASIV_SE:
+    case TRACE_REC_MODE_EWPASIV_SW:
+    case TRACE_REC_MODE_EWPASIV_WT:
+    case TRACE_REC_MODE_EWPASIV_NW:
+    case TRACE_REC_MODE_EWPASIV_NE:
+    case TRACE_REC_MODE_EWPASIV_XX:
       bs.Printf("%02d",mArg1);
-      bs.Printf("-%s",getEWStateName((EWStateNumber) mArg2));
-      break;
-    case TRACE_REC_MODE_EWPASIV:
-      bs.Printf("%s",mArg1 == 0xff ? "_" : getDir6Name(mArg1));
       bs.Printf("-%s",getEWStateName((EWStateNumber) mArg2));
       break;
     case TRACE_REC_MODE_LOG:
@@ -153,6 +166,20 @@ namespace MFM {
       return;
     } 
 
+    if (mTraceType == TTC_EW_CircuitStateChange) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+
+      u8 itcdir6, oldcs, newcs;
+      if (3 == cbbs.Scanf("%c%c%c",&itcdir6,&oldcs,&newcs))
+        bs.Printf("%s CS_%s -> CS_%s\n",
+                  itcdir6 == 0xff ? "--" : getDir6Name(itcdir6),
+                  getCircuitStateName((CircuitState) oldcs),
+                  getCircuitStateName((CircuitState) newcs)
+                  );
+      else bs.Printf("???");
+      return;
+    } 
+    
     if (mTraceType == TTC_Log_LogTrace) {
       CharBufferByteSource cbbs = mData.AsByteSource();
       bs.Printf("%<\n",&cbbs);
@@ -164,7 +191,7 @@ namespace MFM {
     else if (mTraceType == TTC_ITC_PacketOut) bs.Printf(">");
     else bs.Printf(" ");
       
-    T2Packet::reportPacketAnalysis(mData,bs);
+    reportPacketAnalysis(mData,bs);
     CharBufferByteSource cbbs = payloadRead();
     u32 plen = cbbs.GetLength();
     bs.Printf(" +%d",plen);

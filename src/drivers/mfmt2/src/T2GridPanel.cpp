@@ -99,7 +99,7 @@ namespace MFM {
       T2ITC & itc = tile.getITC(dir6);
       u32 kitcEnabled = kitc.getKITCEnabledStatus(mapDir6ToDir8(dir6));
       ITCStateNumber sn = itc.getITCSN();
-      u32 color;
+      u32 color = Drawing::WHITE;
       if (kitcEnabled == 0) color= Drawing::RED;
       else if (kitcEnabled == 1) color = Drawing::ORANGE;
       else if (sn==ITCSN_SHUT) color = Drawing::YELLOW;
