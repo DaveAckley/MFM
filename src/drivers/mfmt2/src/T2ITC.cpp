@@ -81,6 +81,13 @@ namespace MFM {
     FAIL(ILLEGAL_STATE);
   }
 
+  void T2ITC::initStatePacket(T2PacketBuffer & pb) const {
+    pb.Printf("%c%c",
+              PKT_HDR_BITMASK_STANDARD_MFM | mDir8,
+              xitcByte1(XITC_ITC_CMD,mStateNumber)
+              );
+  }
+
   void T2ITC::onTimeout(TimeQueue& srcTq) {
     T2ITCStateOps & ops = getT2ITCStateOps();
     const u32 curenable = mTile.getKITCPoller().getKITCEnabledStatus(mDir8);
@@ -91,10 +98,7 @@ namespace MFM {
       reset();
     } else {
       T2PacketBuffer pb;
-      pb.Printf("%c%c",
-                PKT_HDR_BITMASK_STANDARD_MFM | mDir8,
-                xitcByte1(XITC_ITC_CMD,mStateNumber)
-                );
+      initStatePacket(pb);
       ops.timeout(*this, pb, srcTq);
     }
   }
@@ -719,14 +723,33 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
   }
 
   void T2ITCStateOps_SHUT::receive(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
-    if (itc.getITCSN() > ITCSN_SHUT) itc.reset();
-    itc.setITCSN(ITCSN_DRAIN);
-    itc.scheduleWait(WC_RANDOM_SHORT);
+    /* see notes/202006120116-notes.txt :131: */
+    if (itc.getITCSN() > ITCSN_DRAIN) { itc.reset(); return; }
+    if (itc.getITCSN() == ITCSN_SHUT) itc.setITCSN(ITCSN_DRAIN);
+
+    T2PacketBuffer opb;
+    itc.initStatePacket(opb); //Set up a DRAIN packet
+    if (itc.trySendPacket(opb))
+      itc.scheduleWait(WC_RANDOM_SHORT);
+    // else keep existing TO
   }
 
   void T2ITCStateOps_DRAIN::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
     if (itc.activeCircuitsInUse() > 0) itc.reset();
     else itc.startCacheSync();
+  }
+
+  void T2ITCStateOps_DRAIN::receive(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {
+    /* see notes/202006120116-notes.txt :131: */
+    if (itc.getITCSN() == ITCSN_SHUT) {
+      itc.setITCSN(ITCSN_DRAIN);
+      T2PacketBuffer pb;
+      itc.initStatePacket(pb); //Set up a DRAIN packet
+      if (itc.trySendPacket(pb))
+        itc.scheduleWait(WC_RANDOM_SHORT);
+    } else if (itc.getITCSN() != ITCSN_DRAIN) {
+      itc.reset();
+    } /*else ignore*/
   }
 
   void T2ITCStateOps_CACHEXG::timeout(T2ITC & itc, T2PacketBuffer & pb, TimeQueue& tq) {

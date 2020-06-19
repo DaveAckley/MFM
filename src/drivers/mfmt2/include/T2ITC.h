@@ -44,7 +44,7 @@ namespace MFM {
 #define ALL_ITC_STATES_MACRO()                                   \
   /*   name   vz,ch,mc,to,rc,sb,desc */                          \
   XX(SHUT,     1, 0, 0, 1, 1, 0, "EWs running locally")          \
-  XX(DRAIN,    0, 0, 0, 1, 0, 0, "drain EWs to settle cache")    \
+  XX(DRAIN,    0, 0, 0, 1, 1, 0, "drain EWs to settle cache")    \
   XX(CACHEXG,  0, 0, 2, 1, 1, 0, "exchange cache atoms")         \
   XX(OPEN,     1, 1, 2, 1, 1, 0, "intertile EWs active")         \
 
@@ -185,6 +185,7 @@ namespace MFM {
     bool sendVisibleAtoms(T2PacketBuffer & pb) ;
     bool recvCacheAtoms(T2PacketBuffer & pb) ;
     bool tryReadAtom(ByteSource & in, UPoint & where, OurT2AtomBitVector & bv) ;
+    void initStatePacket(T2PacketBuffer & pb) const ;
 
     const char * path() const;
     int open() ;
@@ -192,6 +193,7 @@ namespace MFM {
     int getFD() const { return mFD; }
 
   private:
+
     u32 mPacketsShipped;
     ITCStateNumber mStateNumber;
     T2ITCStateOps & getT2ITCStateOps() {
