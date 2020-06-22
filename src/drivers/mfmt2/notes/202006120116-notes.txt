@@ -1,4 +1,4 @@
-{155}  -*- text -*-
+{167}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -2702,3 +2702,150 @@ And blows up.
     t2@beaglebone:~/MFM/src/drivers/mfmt2$ 
 
 :154]
+[155:
+
+Mon Jun 22 06:32:26 2020 So, wow!  We had three of these beins going
+at once across three tiles, for a fair amount of time before anything
+blew up.  And it blew up just because trySendNAK is currently
+de-implemented.  Can we work on that a little bit?  [156:
+
+Mon Jun 22 07:03:27 2020 Well, re-implementing it doesn't seem too
+hard, but do we have any clue how to handle it when it arrives?[157:
+
+Mon Jun 22 07:04:37 2020 T2ITC::handleDropPacket is also
+de-implemented.  Let's go there.
+
+:157]
+
+:156]
+
+:155]
+[158:
+
+Mon Jun 22 07:39:03 2020 So now in T2ActiveEventWIndow::handleBusy.
+The idea is we'll iterate over the circuits and decide what to do with
+each one?  I guess we'll unbind each one, but first we check if it's
+state CS_ANSWERED, and if it is, we'll send a DROP first?
+
+I guess we put the matching circuit into CS_DECLINED.  For the other
+circuit, if there is one:
+
+ CS <= CS_BOUND, do nothing
+ CS <= CS_ANSWERED, send DROP and go to CS_DROPPED
+  
+[159:
+
+Mon Jun 22 13:50:19 2020 Well, apparently needed some sleep.
+
+So, thinking a key to this may be having aEW go into some
+as-yet-unnamed state where it just soaks up packets aimed at it, and
+waits for a timeout, at which point it frees itself.
+
+It's like, once again, the phone company, which (at least previously)
+used to let phone numbers lay fallow for a while after customers gave
+them up, to help minimize calls to new customers from people looking
+for the old customer.
+
+So if a blown-up aEW goes into state AFALLOW (or whatever) for a
+while, then we can worry less about prior ANSWERs or BUSYs arriving
+late and getting misinterpreted by a fresh-start use of this aEW now.
+
+That would help justify us sending a DROP on the active side even if a
+circuit is just RUNG rather than answered.  If aEW is going AFALLOW
+after sending the DROP anyway, any subsequent ANSWER or BUSY arriving
+from passive side(s) while 'fall on deaf ears' anyway.
+
+So the idea is:
+
+ - To abort an active EW, due to a BUSY, and possibly other
+   conditions, we'll see:
+
+ - First, send a DROP on all bound circuits, except for cases where we
+   can be pretty sure it's unnecessary -- like when we're aborting
+   BECAUSE of a BUSY on a particular bound circuit.
+
+ - Then, unhog the sites, mark the aEW as not having sites (however we
+   do that).
+
+ - Then go to state AFALLOW, with a timeout of perhaps 100ms or so.
+   This ties up the aEW and prevents it from being reallocated.
+
+ - During AFALLOW, any ANSWER, BUSY, or HANGUP packets to it are
+   silently ignored.
+
+ - Upon timeout AFALLOW, the aEW is just returned to the free pool.
+   Since it didn't have any sites anyway, nothing else need be done.
+[160:
+
+Mon Jun 22 14:24:05 2020 Instead of AFALLOW, would it be too too
+stupid to call it AWHILE ??[161:
+
+Mon Jun 22 14:25:47 2020 Actually, why can't we use the existing ADROP
+for this?  The ADROP description is "finish NAKed event", which seems
+pretty close.  Are we actually going into ADROP anywhere, so far?[162:
+
+Mon Jun 22 14:31:04 2020 T2ActiveEventWindow::dropActiveEW puts us
+into ADROP, after (deterministically) unhogging sites.  Timeout and
+receive ADROP are both INCOMPLETE_CODE.
+
+So that code seems to be implying that being in state ADROP *means*
+we're an active window that has given up its sites...
+
+[163:
+
+Mon Jun 22 14:34:56 2020 Note we also have T2EventWindow::abortEW(),
+which calls finalizeEW() and then puts it back on the tile's EW free
+list.  And finalizeEW() just resets EW data members internally, as far
+as I can tell.  In particular, it doesn't unhog sites.  If we were
+REALLY REALLY sure than an in-use aEW would ALWAYS HAVE SITES except
+when it was in ADROP, we could have finalizeEW unhog on non-ADROP
+states?
+
+Who is currently calling unhog?[164: Mon Jun 22 14:45:45 2020 
+
+ - T2ActiveEventWindow::commitAndReleaseActive calls unhog, before
+   calling mTile.releaseActiveEW which, among other things, calls
+   finalizeEW.
+
+ - T2ActiveEventWindow::dropActiveEW calls unhog, before setting the
+   state to ADROP.
+
+ - T2PassiveEventWindow::commitPassiveEWAndHangUp calls unhog, before
+   calling initializeEW and going to state PINIT.
+
+So that's like (1) unhog on active success, (2) unhog on active
+failure, and (3) unhog on passive success.
+
+And obviously the missing case is unhog on passive failure, which
+would happen, at least, when a DROP packet arrives.  A difference is
+we don't think we need or want a passive fallow period, so there's no
+need for the pEW to block after giving up its sites.
+
+But I guess it would be sensible to have a dropPassiveEW() to call.
+
+:164]
+
+  :163]
+
+:162]
+
+:161]
+
+:160]
+
+:159]
+:158]
+[165:
+
+Mon Jun 22 16:00:00 2020 Well, tearing out ALL the T2EW::receive
+handlers, because we're really not using them and they are just
+confusing me.  So now the 'CUSRC' XX arg is always 0 for
+ALL_EW_STATES_MACRO.  Rebuilding to see where we are.
+
+:165]
+[166:
+
+Mon Jun 22 16:37:00 2020 OK commiting some flails towards sending and
+handling BUSY and DROP.
+
+:166]
