@@ -133,7 +133,8 @@ namespace MFM {
     TLOG(DBG,"%s hBUSY %s", getName(), itc.getName());
 
     if (getEWSN() != EWSN_AWLOCKS) {
-      TLOG(DBG,"%s Not AWLOCKS, ignoring BUSY");
+      // Could probably be silent if EWSN_ADROP, but for now.
+      TLOG(DBG,"%s Not AWLOCKS, ignoring BUSY",getName());
       return;
     }
 
