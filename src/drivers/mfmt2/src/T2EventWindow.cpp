@@ -288,12 +288,17 @@ namespace MFM {
       T2ActiveEventWindow * aew = ew->asActiveEW();
       MFM_API_ASSERT_NONNULL(aew);
 
-      // Do yoink protocol between *this (passive for them) and ew (active by us)
-      bool passiveWins = passiveWinsYoinkRace(*aew);
-      if (passiveWins) {
-        aew->dropActiveEW(false);
-        continue;
-      }
+      if (aew->getEWSN() == EWSN_AWLOCKS) {
+
+        // Do yoink protocol between *this (passive for them) and ew (active by us)
+        bool passiveWins = passiveWinsYoinkRace(*aew);
+        if (passiveWins) {
+          aew->dropActiveEW(false);
+          continue;
+        }
+      } 
+
+      TLOG(DBG,"%s NAKed by %s",getName(), aew->getName());
       if (!trySendNAK())  // :787: P6
         FAIL(INCOMPLETE_CODE);
       return false;
