@@ -130,7 +130,6 @@ namespace MFM {
     bool passiveWinsYoinkRace(const T2EventWindow & ew) const ;
 
     typedef std::set<T2EventWindow*> EWPtrSet;
-    bool resolveRacesFromPassive(EWPtrSet conflicts) ;
 
     void schedule(TimeQueue& tq, u32 now = 0) { // Schedule for now (or then)
       if (isOnTQ()) remove();
@@ -248,6 +247,7 @@ namespace MFM {
     s32 trySendCacheUpdatePacket(Circuit & ci) ;
     bool trySendLockRequests() ;
 
+    const Circuit * getActiveCircuitForITCIfAny(const T2ITC & itc) const ;
 
     Circuit mActiveCircuits[CIRCUITS_PER_ACTIVE_EW];
   };
@@ -271,6 +271,10 @@ namespace MFM {
     Circuit& getPassiveCircuit() { return mPassiveCircuit; }
 
     Circuit mPassiveCircuit;
+
+    bool resolveRacesFromPassive(EWPtrSet conflicts) ;
+
+    bool passiveWinsYoinkRace(const T2ActiveEventWindow & ew) const ;
   };
 
   const char * getEWStateName(EWStateNumber sn) ;

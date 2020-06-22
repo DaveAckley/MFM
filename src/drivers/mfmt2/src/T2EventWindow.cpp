@@ -229,47 +229,39 @@ namespace MFM {
   }
 
 
-  bool T2EventWindow::passiveWinsYoinkRace(const T2EventWindow & ew) const {
+  bool T2PassiveEventWindow::passiveWinsYoinkRace(const T2ActiveEventWindow & ew) const {
     MFM_API_ASSERT_ARG(ew.isActiveEW());     // ew is our side active initiation
     MFM_API_ASSERT_ARG(!this->isActiveEW()); // *this is passive ew for them
-    FAIL(INCOMPLETE_CODE);
-    return false;
-#if 0    
-    Circuit & ci = mCircuits[0]; // Passive CircuitInfo always in [0]
-    T2ITC & itc = ci.getITC();
-    CircuitNum passiveCN = ci.mCircuitNum;
-    s32 themVal = itc.getYoinkVal(passiveCN,false);
+
+    const Circuit & ci = mPassiveCircuit; 
+    const T2ITC & itc = ci.getITC();
+    s32 themVal = ci.getYoink(); // Inbound passive yoink val
     MFM_API_ASSERT_STATE(themVal >= 0);
+
     // our ew must also have itc in its info, but we have to search for it
-    s32 usVal = -1;
-    for (u32 i = 0; i < MAX_CIRCUITS_PER_EW; ++i) {
-      const Circuit & ci = ew.mCircuits[i];
-      if (ci.mITC == &itc) {
-        CircuitNum activeCN = ci.mCircuitNum;
-        usVal = itc.getYoinkVal(activeCN,true);
-        break;
-      }
-    }
-    MFM_API_ASSERT_STATE(usVal >= 0);
+    const Circuit *aci = ew.getActiveCircuitForITCIfAny(itc);
+    MFM_API_ASSERT_NONNULL(aci);
+    s32 usVal = aci->getYoink();
+    MFM_API_ASSERT_STATE(usVal >= 0); // Existing active yoink val
     
     bool theyAreFred = itc.isFred(); // They came in via itc, so they're fred if it is
     bool theyWin = (theyAreFred == (usVal != themVal)); // Fred always takes odds
+
     TLOG(DBG,"u %s (%d,%d); t %s (%d,%d): YOINK %s(%s) us%d them%d -> %s",
-              ew.getName(),
-              ew.mCenter.GetX(),ew.mCenter.GetY(),
-              getName(),
-              mCenter.GetX(),mCenter.GetY(),
-              itc.getName(),
-              theyAreFred ? "Fred" : "Ginger",
-              usVal,
-              themVal,
-              theyWin ? "they win" : "we win"
-              );
+         ew.getName(),
+         ew.getCenter().GetX(),ew.getCenter().GetY(),
+         getName(),
+         getCenter().GetX(),getCenter().GetY(),
+         itc.getName(),
+         theyAreFred ? "Fred" : "Ginger",
+         usVal,
+         themVal,
+         theyWin ? "they win" : "we win"
+         );
     return theyWin;
-#endif
   }
 
-  bool T2EventWindow::resolveRacesFromPassive(EWPtrSet conflicts) {
+  bool T2PassiveEventWindow::resolveRacesFromPassive(EWPtrSet conflicts) {
     // Question 1: Are any conflicts passive?
     for (EWPtrSet::iterator itr = conflicts.begin(); itr != conflicts.end(); ++itr) {
       T2EventWindow * ew = *itr;
@@ -292,11 +284,13 @@ namespace MFM {
     for (EWPtrVector::iterator itr = sortable.begin(); itr != sortable.end(); ++itr) {
       T2EventWindow * ew = *itr;
       MFM_API_ASSERT_NONNULL(ew);
+
+      T2ActiveEventWindow * aew = ew->asActiveEW();
+      MFM_API_ASSERT_NONNULL(aew);
+
       // Do yoink protocol between *this (passive for them) and ew (active by us)
-      bool passiveWins = passiveWinsYoinkRace(*ew);
+      bool passiveWins = passiveWinsYoinkRace(*aew);
       if (passiveWins) {
-        T2ActiveEventWindow * aew = ew->asActiveEW();
-        MFM_API_ASSERT_NONNULL(aew);
         aew->dropActiveEW(false);
         continue;
       }
@@ -892,6 +886,14 @@ namespace MFM {
     , mActiveCircuits{ *this, *this }
   { }
 
+  const Circuit * T2ActiveEventWindow::getActiveCircuitForITCIfAny(const T2ITC & itc) const {
+    for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
+      const Circuit & ci = mActiveCircuits[i];
+      if (ci.getITCIfAny() == &itc) return &ci;
+    }
+    return 0;
+  }
+    
   bool T2ActiveEventWindow::executeEvent() {
     loadSites();
     OurT2Site & us = mSites[0];
