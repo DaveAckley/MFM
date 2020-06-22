@@ -147,13 +147,15 @@ namespace MFM {
 
     void handleAnswerPacket(T2PacketBuffer & pb) ;
 
+    void handleBusyPacket(T2PacketBuffer & pb) ;
+
     void handleCacheUpdatesPacket(T2PacketBuffer & pb) ;
 
     void handleHangUpPacket(T2PacketBuffer & pb) ;
 
     void handleDropPacket(T2PacketBuffer & pb) ;
 
-    bool trySendAckPacket(CircuitNum cn) ;
+    bool trySendAnswerPacket(CircuitNum cn) ;
 
     bool trySendPacket(T2PacketBuffer &pb) ;
 

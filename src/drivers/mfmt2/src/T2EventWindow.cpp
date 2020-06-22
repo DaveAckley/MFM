@@ -120,13 +120,44 @@ namespace MFM {
     return mLockSequenceNumber[dir6];
   }
 
-  void T2ActiveEventWindow::handleACK(T2ITC & itc) {
-    TLOG(DBG,"%s hACK %s", getName(), itc.getName());
+  void T2ActiveEventWindow::handleAnswer(T2ITC & itc) {
+    TLOG(DBG,"%s hANSWER %s", getName(), itc.getName());
 
     MFM_API_ASSERT_STATE(getEWSN() == EWSN_AWLOCKS);
     
     if (hasAllNeededLocks())
       scheduleWait(WC_NOW); // Bump
+  }
+
+  void T2ActiveEventWindow::handleBusy(T2ITC & itc) {
+    TLOG(DBG,"%s hBUSY %s", getName(), itc.getName());
+
+    if (getEWSN() != EWSN_AWLOCKS) {
+      TLOG(DBG,"%s Not AWLOCKS, ignoring BUSY");
+      return;
+    }
+
+    for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
+      Circuit & ci = mActiveCircuits[i];
+      if (ci.isLockHeld()) {
+        T2ITC & thisITC = ci.getITC();
+        if (&thisITC != &itc) 
+          trySendDropVia(itc);
+        ci.setCS(CS_DROPPED);
+      }
+    }
+
+    dropActiveEW(true);
+  }
+
+  bool T2ActiveEventWindow::trySendDropVia(T2ITC & itc) {
+    T2PacketBuffer pb;
+    u8 sn = getSlotNum();
+    pb.Printf("%c%c",
+              PKT_HDR_BITMASK_STANDARD_MFM | itc.mDir8,
+              xitcByte1(XITC_CS_DROP,sn)
+              );
+    return itc.trySendPacket(pb);
   }
 
   void T2ActiveEventWindow::handleHangUp(T2ITC & itc) {
@@ -162,9 +193,8 @@ namespace MFM {
          mRadius);
     
     unhogEWSites(); // RELEASE CONTROL OF THE SITES!
-    if (isOnTQ()) remove();
 
-    mTile.releaseActiveEW(*this);
+    mTile.releaseActiveEW(*this, true);
   }
 
   bool T2ActiveEventWindow::hasAllNeededLocks() {
@@ -211,21 +241,16 @@ namespace MFM {
     FAIL(ILLEGAL_STATE);  // can't need more that MAX_CIRCUITS_PER_EW!
   }
 
-  bool T2EventWindow::trySendNAK() {
-    FAIL(INCOMPLETE_CODE);
-    return false;
-#if 0    
-    MFM_API_ASSERT_ARG(!this->isInActiveState()); // We are passive
-    Circuit & ci = mActiveCircuits[0]; // Passive CircuitInfo always in [0]
+  bool T2PassiveEventWindow::trySendBusy() {
+    Circuit & ci = mPassiveCircuit;
     T2ITC & itc = ci.getITC();
-    CircuitNum passiveCN = ci.mCircuitNum;
+    CircuitNum passiveCN = getSlotNum();
     T2PacketBuffer pb;
     pb.Printf("%c%c",
               PKT_HDR_BITMASK_STANDARD_MFM | itc.mDir8,
-              xitcByte1(XITC_CS_DROP,passiveCN)
+              xitcByte1(XITC_CS_BUSY,passiveCN)
               );
     return itc.trySendPacket(pb);
-#endif
   }
 
 
@@ -266,8 +291,11 @@ namespace MFM {
     for (EWPtrSet::iterator itr = conflicts.begin(); itr != conflicts.end(); ++itr) {
       T2EventWindow * ew = *itr;
       MFM_API_ASSERT_NONNULL(ew);
-      if (!ew->isActiveEW()) {
-        FAIL(INCOMPLETE_CODE);  // Have to send a NAK once we know how
+      if (ew->isPassiveEW()) { // With passive window conflicts we cannot deal
+        TLOG(DBG,"%s BUSYed by %s",getName(), ew->getName());
+        if (!trySendBusy()) 
+          FAIL(INCOMPLETE_CODE);
+        return false;
       }
     }
     // OK: All conflicts are active.  Now we need to sort them oldest
@@ -298,8 +326,8 @@ namespace MFM {
         }
       } 
 
-      TLOG(DBG,"%s NAKed by %s",getName(), aew->getName());
-      if (!trySendNAK())  // :787: P6
+      TLOG(DBG,"%s BUSYed by %s",getName(), aew->getName());
+      if (!trySendBusy())  // :787: P6
         FAIL(INCOMPLETE_CODE);
       return false;
     }
@@ -325,7 +353,7 @@ namespace MFM {
     if (getEWSN() != EWSN_ADROP) {
       unhogEWSites();
       setEWSN(EWSN_ADROP);
-      scheduleWait(WC_FULL);
+      scheduleWait(WC_HALF);
     } else {
       LOG.Warning("%s already dropped", getName());
     }
@@ -819,11 +847,6 @@ namespace MFM {
     ew.scheduleWait(WC_LONG);  // debug
   }
 
-  void T2EWStateOps_AINIT::receive(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
-    LOG.Error("%s on %s: no receive handler", getStateName(), ew.getName());
-    DIE_UNIMPLEMENTED();
-  }
-
   void T2EWStateOps_AWLOCKS::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
     T2ActiveEventWindow * aew = ew.asActiveEW();
     MFM_API_ASSERT_NONNULL(aew);
@@ -836,16 +859,12 @@ namespace MFM {
     }
   }
 
-  void T2EWStateOps_AWLOCKS::receive(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
-    FAIL(INCOMPLETE_CODE); // What would go here is in handleACK and its callers
-  }
-
   void T2EWStateOps_ADROP::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
-    FAIL(INCOMPLETE_CODE);
-  }
-
-  void T2EWStateOps_ADROP::receive(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
-    FAIL(INCOMPLETE_CODE); 
+    // Timeout in ADROP means: We've already unhogged our sites, and
+    // we've waited a while to keep our slotnum from being reused too
+    // soon, so it's time just to free ourselves up for reuse.
+    TLOG(DBG,"%s fallow period ended, freeing", ew.getName());
+    ew.getTile().releaseActiveEW(ew, false);
   }
 
   void T2EWStateOps_ABEHAVE::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
@@ -877,11 +896,17 @@ namespace MFM {
     }
   }
 
+#if 0 // NOT USING RECEIVE HANDLERS FOR EWs AT ALL!
   void T2EWStateOps_ASCACHE::receive(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
     FAIL(INCOMPLETE_CODE); // Dealt with in handleCacheUpdates or something.
   }
+#endif
 
   void T2EWStateOps_AWACKS::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
+    /* XXX THIS CODE EVENTUALLY NEEDS TO EXIST and needs to perhaps
+       reset the ITC or something, because we're definitely talking
+       likely corruption here, if we got as far as shipping cache
+       updates and our counterparties didn't respond */
     FAIL(INCOMPLETE_CODE);
   }
 

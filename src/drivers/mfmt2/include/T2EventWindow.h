@@ -48,13 +48,13 @@ namespace MFM {
 #define ALL_EW_STATES_MACRO()                               \
   /*   name  act custo cusrc stub desc */                   \
   XX(IDLE,    1,  0,    0,   0,  "idle active or passive")  \
-  XX(AINIT,   1,  1,    1,   0,  "initial active state")    \
-  XX(AWLOCKS, 1,  1,    1,   0,  "wait for locks")          \
-  XX(ADROP,   1,  1,    1,   0,  "finish NAKed event")      \
+  XX(AINIT,   1,  1,    0,   0,  "initial active state")    \
+  XX(AWLOCKS, 1,  1,    0,   0,  "wait for locks")          \
+  XX(ADROP,   1,  1,    0,   0,  "finish NAKed event")      \
   XX(ABEHAVE, 1,  1,    0,   0,  "execute behavior")        \
-  XX(ASCACHE, 1,  1,    1,   0,  "send cache updates")      \
+  XX(ASCACHE, 1,  1,    0,   0,  "send cache updates")      \
   XX(AWACKS,  1,  1,    0,   0,  "wait cache upd acks")     \
-  XX(ACOMMIT, 1,  1,    1,   1,  "apply local updates")     \
+  XX(ACOMMIT, 1,  1,    0,   1,  "apply local updates")     \
   XX(PINIT,   0,  0,    0,   1,  "initial passive state")   \
   XX(PRESOLVE,0,  0,    0,   1,  "handling a RING")         \
   XX(PWCACHE, 0,  1,    1,   1,  "wait for cache updates")  \
@@ -112,6 +112,7 @@ namespace MFM {
       return const_cast<T2PassiveEventWindow*>(asPassiveEW());
     }
     bool isActiveEW() const { return asActiveEW() != 0; }
+    bool isPassiveEW() const { return asPassiveEW() != 0; }
 
     // TimeoutAble methods
     virtual void onTimeout(TimeQueue& srcTq) ;
@@ -182,7 +183,6 @@ namespace MFM {
     void unhogEWSites() ;
     void hogOrUnhogEWSites(T2EventWindow * ewOrNull) ;
     bool isHoggingSites() const { return mIsHoggingSites; }
-    bool trySendNAK() ; // From passiveEW
     
     bool tryReadEWAtom(ByteSource & in, u32 & sn, OurT2AtomBitVector & bv) ;
 
@@ -236,8 +236,9 @@ namespace MFM {
     void commitAndReleaseActive() ;
     void dropActiveEW(bool dueToNAK) ;
 
-    void handleACK(T2ITC & itc) ;
+    void handleAnswer(T2ITC & itc) ;
     void handleHangUp(T2ITC & itc) ;
+    void handleBusy(T2ITC & itc) ;
     bool hasAllNeededLocks() ;
     bool needsAnyLocks() ;
     bool hasAnyLocks() ;
@@ -246,6 +247,8 @@ namespace MFM {
     bool trySendCacheUpdates() ;
     s32 trySendCacheUpdatePacket(Circuit & ci) ;
     bool trySendLockRequests() ;
+
+    bool trySendDropVia(T2ITC & itc) ;
 
     const Circuit * getActiveCircuitForITCIfAny(const T2ITC & itc) const ;
 
@@ -275,6 +278,9 @@ namespace MFM {
     bool resolveRacesFromPassive(EWPtrSet conflicts) ;
 
     bool passiveWinsYoinkRace(const T2ActiveEventWindow & ew) const ;
+
+    bool trySendBusy() ;
+
   };
 
   const char * getEWStateName(EWStateNumber sn) ;

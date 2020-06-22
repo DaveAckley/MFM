@@ -173,7 +173,7 @@ namespace MFM {
 
     void setWindowConfigPath(const char * path) ;
 
-    T2EventWindow & getActiveEW(u32 idx) {
+    T2ActiveEventWindow & getActiveEW(u32 idx) {
       MFM_API_ASSERT_ARG(idx<MAX_EWSLOT);
       return *mEWs[idx];
     }
@@ -191,7 +191,7 @@ namespace MFM {
 
     void resourceAlert(ResourceType type, ResourceLevel level) ;
 
-    void releaseActiveEW(T2EventWindow & ew) ;
+    void releaseActiveEW(T2EventWindow & ew, bool countInStats) ;
 
 #if 0 // UNUSED
     void releaseEW(T2EventWindow * ew) ;

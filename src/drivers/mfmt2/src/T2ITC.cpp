@@ -131,7 +131,7 @@ namespace MFM {
       handleAnswerPacket(pb);
       break;
     case XITC_CS_BUSY:          // Reject lock (by callee)
-      FAIL(INCOMPLETE_CODE);
+      handleBusyPacket(pb);
       break;
     case XITC_CS_TALK:          // Cache updates (by caller)
       handleCacheUpdatesPacket(pb);
@@ -145,9 +145,24 @@ namespace MFM {
     }
   }
 
+  // A passive side is telling us we can't have their lock..
+  void T2ITC::handleBusyPacket(T2PacketBuffer & pb) {
+    TLOG(DBG,"%s: Enter hBP", getName());
+    u8 slotnum;
+    if (!asCSBusy(pb, &slotnum))
+      FAIL(ILLEGAL_STATE);
+    T2Tile & tile = T2Tile::get();
+    T2ActiveEventWindow & aew = tile.getActiveEW(slotnum);
+    aew.handleBusy(*this);
+  }
+
+
   void T2ITC::handleDropPacket(T2PacketBuffer & pb) {
     TLOG(DBG,"%s: Enter hDP", getName());
     // XXX THIS NEEDS REWRIT BECAUSE DROP IS RECVD BY PASSIVE SIDE
+    u8 slotnum;
+    if (!asCSDrop(pb, &slotnum))
+      FAIL(ILLEGAL_STATE);
     FAIL(INCOMPLETE_CODE);
 #if 0    
     u32 len = pb.GetLength();
@@ -215,7 +230,7 @@ namespace MFM {
       return;
     }
 
-    if (!trySendAckPacket(cn)) {
+    if (!trySendAnswerPacket(cn)) {
       FAIL(INCOMPLETE_CODE);
     }
 
@@ -223,7 +238,7 @@ namespace MFM {
     ci.setCS(CS_ANSWERED); // We have answered the call
   }
 
-  bool T2ITC::trySendAckPacket(CircuitNum cn) {
+  bool T2ITC::trySendAnswerPacket(CircuitNum cn) {
     T2PacketBuffer pb;
     pb.Printf("%c%c",
               PKT_HDR_BITMASK_STANDARD_MFM | mDir8,
@@ -330,7 +345,7 @@ namespace MFM {
       aew.abortEW(); // XXX ??
       return;
     }
-    else aew.handleACK(*this);
+    else aew.handleAnswer(*this);
   }
 
   bool T2ITC::tryHandlePacket(bool dispatch) {

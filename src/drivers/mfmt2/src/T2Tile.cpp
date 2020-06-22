@@ -492,6 +492,7 @@ static const char * CMD_HELP_STRING =
   }
 
   void T2Tile::freeEW(T2EventWindow & ew) {
+    if (ew.isOnTQ()) ew.remove();
     if (ew.isInSet()) ew.removeFromEWSet();
     ew.insertInEWSet(&mFree);
   }
@@ -506,11 +507,13 @@ static const char * CMD_HELP_STRING =
     return false;
   }
 
-  void T2Tile::releaseActiveEW(T2EventWindow & ew) {
-    Sites & sites = getSites(); // GET CENTER SITE FOR STATS!
-    UPoint uctr(MakeUnsigned(ew.getCenter()));
-    OurT2Site & ctrSite = sites.get(uctr); 
-    recordCompletedEvent(ctrSite);  // That Was NOT Easy!
+  void T2Tile::releaseActiveEW(T2EventWindow & ew, bool countInStats) {
+    if (countInStats) {
+      Sites & sites = getSites(); // GET CENTER SITE FOR STATS!
+      UPoint uctr(MakeUnsigned(ew.getCenter()));
+      OurT2Site & ctrSite = sites.get(uctr); 
+      recordCompletedEvent(ctrSite);  // That Was NOT Easy!
+    }
 
     ew.finalizeEW();
     freeEW(ew);
