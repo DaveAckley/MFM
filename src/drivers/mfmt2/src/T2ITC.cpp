@@ -216,17 +216,9 @@ namespace MFM {
     pEW.initPassive(ourCtr, radius, ayoink);
     pEW.setEWSN(EWSN_PRESOLVE);
 
-    if (!pEW.checkSiteAvailabilityForPassive()) { // false -> passive lost, nak sent
-      FAIL(INCOMPLETE_CODE);
-#if 0
-      // Now what?  Just clean up passive?
-      MFM_API_ASSERT_STATE(mCircuits[0][cn].mEW == passiveEW.slotNum());
-      MFM_API_ASSERT_STATE(mCircuits[0][cn].mYoinkVal >= 0);
-      mCircuits[0][cn].mEW = 0; // XXX really?  really really?  not max sumtin?
-      mCircuits[0][cn].mYoinkVal = -1;
-      passiveEW.finalizeEW();
+    if (!pEW.checkSiteAvailabilityForPassive()) { // false -> passive lost, busy sent
+      pEW.finalizeEW();
       TLOG(DBG,"Passive cn %d released",cn);
-#endif
       return;
     }
 
