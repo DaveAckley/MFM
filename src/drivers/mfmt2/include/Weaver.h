@@ -56,6 +56,9 @@ namespace MFM {
   };
 
   struct Alignment {
+    bool mPrintSyncMap;
+    void setPrintSyncMap(bool b) { mPrintSyncMap = b; }
+
     typedef std::map<u32,s32> WLFNumToUsecMap;
     WLFNumToUsecMap mWLFTweakMap;
     bool parseTweak(const char * arg) ;
@@ -82,8 +85,6 @@ namespace MFM {
     typedef std::map<FileNumberPair,InterFileData> DisparityMap;
     DisparityMap mDisparityMap;
 
-    // XXX NOT USED, UNINITTED    struct timespec mEarliestStartTime;
-
     void addSyncPoint(s32 sync, WeaverLogFile * file, Trace * evt) ; // TAKES OWNERSHIP OF evt BUT NOT file
     void printSyncMap(ByteSink& bs) const ;
     bool addLogFile(const char * path) ;
@@ -101,6 +102,7 @@ namespace MFM {
     void alignLogs() ;
     void reportLogs() ;
     void processLogs() ;
+    Alignment() ;
     ~Alignment() ;
   };
 

@@ -71,6 +71,10 @@ namespace MFM {
     v.push_back(pair);
   }
 
+  Alignment::Alignment()
+    : mPrintSyncMap(false)
+  { }
+
   Alignment::~Alignment() {
     while (mWeaverLogFiles.size() > 0) {
       WLFandTracePtrsPair & pp = mWeaverLogFiles.back();
@@ -164,6 +168,8 @@ namespace MFM {
 
   void Alignment::processLogs() {
     analyzeLogSync();
+    if (mPrintSyncMap)
+      printSyncMap(STDOUT);
     if (reportOutliers()) 
       FAIL(INCOMPLETE_CODE);
     
@@ -434,6 +440,7 @@ namespace MFM {
 
 #define ALL_CMD_ARGS()                                          \
   XX(help,h,N,,"Print this help")                               \
+  XX(map,m,N,,"Print the sync map")                             \
   XX(tweak,t,O,TWEAK,"Tweak file timing")                       \
   XX(version,v,N,,"Print version and exit")                     \
 
@@ -509,6 +516,7 @@ static const char * CMD_HELP_STRING =
       int fails = 0;
       int loglevel = -1;
       int wantpaused = 0;
+      int wantmap = 0;
       while ((c = getopt_long(argc,argv,
                               CMD_LINE_SHORT_OPTIONS,
                               CMD_LINE_LONG_OPTIONS,
@@ -520,6 +528,10 @@ static const char * CMD_HELP_STRING =
 
         case 'p':
           wantpaused = 1;
+          break;
+
+        case 'm':
+          wantmap = 1;
           break;
 
         case 'w':
@@ -591,6 +603,8 @@ static const char * CMD_HELP_STRING =
       if (wantpaused >= 0) {
         LOG.Message("WP %d", wantpaused);
       }
+      mAlignment.setPrintSyncMap(wantmap > 0);
+      LOG.Message("WM %d", wantmap);
       mAlignment.processLogs();
     }
 
