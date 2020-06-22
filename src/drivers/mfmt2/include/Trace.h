@@ -16,6 +16,7 @@
 #include "OverflowableCharBufferByteSink.h"
 #include "Logger.h"
 #include "UniqueTime.h"
+#include "T2PacketBuffer.h"
 
 #include "dirdatamacro.h"
 
@@ -163,7 +164,7 @@ namespace MFM {
   private:
     TraceAddress mAddress;
     s32 mSyncTag;
-    OString256 mData;
+    T2PacketBuffer mData;
   };
 
   struct TraceLogger {

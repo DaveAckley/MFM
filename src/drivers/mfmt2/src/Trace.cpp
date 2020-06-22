@@ -276,22 +276,17 @@ namespace MFM {
 
   bool Trace::reportSyncIfAny(s32 & store) const {
     // CURRENTLY THERE'S SYNC IN THE FOLLOWING PLACES:
-    // POU T2ITC SHUT
-    // PIN T2ITC DRAIN
-    // POU T2ITC OPEN
-    // PIN T2ITC OPEN
+    // POU/PIN T2ITC if byte1 is xitcByte1(XITC_ITC_CMD,SNUM)
+    // with SNUM == ITCSN_SHUT or ITCSN_OPEN
 
     TraceAddress addr = getTraceAddress();
     if (addr.getMode() != TRACE_REC_MODE_ITCDIR6) return false;
     u8 tt = mTraceType;
-    u8 itcState = addr.getITCState();
-    bool stdSync = false;
-    if (false) { }
-    else if (tt == TTC_ITC_PacketOut  && itcState == ITCSN_SHUT) stdSync = true;
-    else if (tt == TTC_ITC_PacketIn   && itcState == ITCSN_DRAIN) stdSync = true;
-    else if (tt == TTC_ITC_PacketOut  && itcState == ITCSN_OPEN) stdSync = true;
-    else if (tt == TTC_ITC_PacketIn   && itcState == ITCSN_OPEN) stdSync = true;
-    if (!stdSync) return false;
+    if (tt != TTC_ITC_PacketOut && tt != TTC_ITC_PacketIn) return false;
+    u8 sn;
+    if (!asITC(mData,&sn)) return false;
+    if (sn != ITCSN_SHUT && sn != ITCSN_OPEN) return false;
+
     CharBufferByteSource cbbs = mData.AsByteSource();
     s32 tag;
     if (3 != cbbs.Scanf("%c%c%l", 0, 0, &tag)) return false;
