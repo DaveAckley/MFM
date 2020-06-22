@@ -1,4 +1,4 @@
-{148}  -*- text -*-
+{155}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -1981,7 +1981,7 @@ the cache updates stage.
 
 Two sites are targeted in the cache update: (28,36) stops being empty
 (type 0xFFFF) to becomes a 'bein' (type 0x0001), and (28,35) does the
-reverse. 
+reverse.
 
     173.861 0/iSE:OPEN >SE:TALK#12 +29
 
@@ -1991,7 +1991,7 @@ And that 'TALK' -- cache update -- gets shipped out 0/iSE.
     173.861 0/lDBG SHIP#1 sn0 (28,35) tt 0x0001 wt 0xFFFF
     173.863 0/iSW:OPEN >SW:TALK#12 +29
 
-An analogous TALK goes out 0/iSW.  
+An analogous TALK goes out 0/iSW.
 
     173.863 0/a12-ASCACHE -> AWACKS
 
@@ -2006,7 +2006,7 @@ its circuit state updates to note the TALK arrival.
 
     173.989         1/lDBG p12NW/PWCACHE CUPSN#3 mLastSN 40
 
-1/pNW12 starts processing the cache update.  
+1/pNW12 starts processing the cache update.
 
     173.989         1/lDBG RECV#0 sn3 (4,4) tt 0xFFFF wt 0x0001
 
@@ -2118,7 +2118,7 @@ the 0/iSW buffers waiting to be picked up.
 
     174.075 0/iSE:OPEN <SE:RING#17(4,0)+4o +5
 
-But for now, tile 0/ continues checking for packets from 0/iSE!  
+But for now, tile 0/ continues checking for packets from 0/iSE!
 
     174.075 0/lDBG ITC/SE:OPEN: HRP abs(28,36) themrel(4,0) yoink=1
 
@@ -2377,7 +2377,328 @@ Mon Jun 22 03:11:56 2020 OK we have a reinstated passiveWinsYoinkRace
 that I guess we want to commit, because it's not obviously stupid and
 that's the easiest way to get the code to the next-door tiles doh.
 
+[148:
+
+Mon Jun 22 03:55:58 2020 OK here's an issue coming up that we kind of
+wondered if it would.  This code:
+
+    // our ew must also have itc in its info, but we have to search for it
+    const Circuit *aci = ew.getActiveCircuitForITCIfAny(itc);
+    MFM_API_ASSERT_NONNULL(aci);
+
+is blowing up because 'itc' is pointing at iNE, but ew's circuits
+never mention that, because:
+
+    (gdb) p ew.mActiveCircuits[0].mITC
+    $15 = (MFM::T2ITC *) 0x0
+    (gdb) p ew.mActiveCircuits[1].mITC
+    $16 = (MFM::T2ITC *) 0x4dd0a0 <MFM::T2Tile::get()::THE_INSTANCE+3976>
+    (gdb) p ew.mActiveCircuits[1].mITC->mName
+    $17 = 0x4966a8 "NW"
+    (gdb)
+
+ew only mentions iNW.  Why?  Well for one thing, active-side ew and
+passive-side *this have different event centers:
+
+    (gdb) p ew.mCenter
+    $18 = {m_x = 35, m_y = 4}
+    (gdb) p this->mCenter
+    $19 = {m_x = 36, m_y = 3}
+    (gdb)
+
+
+For (35,4), well y==4 is the top row of owned sites, and with x==35,
+radius 4 just barely reaches (31,4), which is in the iNW visible
+rectangle.  So it makes sense that ew has bound a circuit through
+iNW.
+
+What doesn't make sense to me at the moment is: Why isn't iNE in ew's
+circuits as well??  (35,4) is totally in the visible rectangle of iNE!
+
+And iNE is definitely open for business:
+
+    (gdb) p itc.mName
+    $22 = 0x4966ac "NE"
+    (gdb) p itc.mStateNumber
+    $23 = MFM::ITCSN_OPEN
+    (gdb)
+
+So what's the deal???
+[149:
+
+Mon Jun 22 04:13:26 2020 So hey look at this, from the (still-open)
+trace file for this run:
+
+    49.315 0/a17-IDLE -> AINIT
+    49.315 0/a17-AINIT a@(35,4)+4
+    49.316 0/a17-AINIT NE CS_UNUSED -> CS_BOUND
+    49.316 0/a17-AINIT NW CS_UNUSED -> CS_BOUND
+    49.316 0/lDBG a17/AINIT sites available
+    49.316 0/lDBG a17/AINIT OWNING (35,4)+4
+    t2@beaglebone:~/MFM/src/drivers/mfmt2$
+
+(There's probably more events that haven't been flushed to disk yet,
+but anyway.)  So that sure makes it look like both iNW and iNE were
+bound for this event.
+
+[150:
+
+Mon Jun 22 04:29:33 2020 So hey, I think this might be yet another
+thinko on my part.  In particular, recall our current physical setup:
+
+         ........ribbon.cable..
+        .                      .
+        .  +-----------+       .
+        .  |           |       .
+        .  |   'BLUE'  |       .
+        .  |SW       SE|       .
+        .  +||-------||+       .
+        .   .       +||-------||+
+         ...        |NW       NE|
+                    |   'RED'   |
+                    |           |
+                    +-----------+
+
+
+Note I'm going to be showing traces from UNALIGNED files, here -- so
+they have different timebases and they both think they're '0/'.  The
+above trace, with the active EW, we'll say is from the RED tile, and
+the trace below, with the passive EWs, we'll say is from the BLUE
+tile.
+
+    91.200 0/iSW:OPEN <SW:RING#17(11,0)+4e +5
+
+BLUE's iSW recvs RED's active ring#17 via NE (and the ribbon cable).
+
+    91.200 0/lDBG ITC/SW:OPEN: HRP abs(11,36) themrel(11,0) yoink=0
+
+(11,0) relative to the NE visible rect is indeed (35,4) in RED coords.
+
+    91.200 0/pSW17-PINIT -> PINIT
+    91.200 0/pSW17-PINIT p@(11,36)+4
+    91.200 0/pSW17-PINIT SW CS_BOUND -> CS_RUNG
+    91.200 0/pSW17-PINIT -> PRESOLVE
+    91.200 0/pSW17-PRESOLVE -> PWCACHE
+
+pSW17 sees no conflict.
+
+    91.202 0/iSW:OPEN >SW:ANSWER#17 +2
+    91.202 0/pSW17-PWCACHE SW CS_RUNG -> CS_ANSWERED
+
+And so it grants the lock, answering back on SW.
+
+    91.203 0/iSE:OPEN <SE:RING#17(35,0)+4o +5
+    91.203 0/lDBG ITC/SE:OPEN: HRP abs(59,36) themrel(35,0) yoink=1
+
+Now here comes a RING#17 on SE.  It's at (35,0) relative to the NW
+visible rectangle -- it isn't even _in_ the NE viz rectangle, but the
+radius of four just stretches from (35,0) down to (31,0), which is in
+the NW viz rect.
+
+    91.203 0/pSE17-PINIT -> PINIT
+    91.203 0/pSE17-PINIT p@(59,36)+4
+
+In BLUE terms, this center is way off in the SE at (59,36)
+
+    91.203 0/pSE17-PINIT SE CS_BOUND -> CS_RUNG
+    91.203 0/pSE17-PINIT -> PRESOLVE
+
+Which also appears available.
+
+    91.204 0/pSE17-PRESOLVE -> PWCACHE
+    91.205 0/iSE:OPEN >SE:ANSWER#17 +2
+    91.205 0/pSE17-PWCACHE SE CS_RUNG -> CS_ANSWERED
+
+So BLUE grants that lock as well.
+
+At this point, from BLUE's point of view, RED's a17 is hogging a total
+of 82 BLUE sites at two different locations!
+
+    91.320 0/iSW:OPEN <SW:TALK#17 +29
+
+Here comes an a17 cache update in on SW.
+
+    91.320 0/lDBG ITC/SW:OPEN: Enter HCUP
+    91.320 0/pSW17-PWCACHE SW CS_ANSWERED -> CS_TALKED
+    91.320 0/lDBG p17SW/PWCACHE CUPSN#7 mLastSN 40
+    91.320 0/lDBG RECV#0 sn7 (12,35) tt 0xFFFF wt 0x0001
+    91.320 0/lDBG p17SW/PWCACHE CUPSN#0 mLastSN 40
+    91.320 0/lDBG RECV#1 sn0 (11,36) tt 0x0001 wt 0xFFFF
+
+pSW17 processes it.
+
+    91.320 0/lDBG p17SW/PWCACHE CUPSN#255 mLastSN 40
+    91.320 0/lDBG p17SW/PWCACHE (C_TALKED(p17SW/PWCACHExITC/SW:OPEN)) cPEWAHU
+    91.322 0/iSW:OPEN >SW:HANGUP#17 +2
+    91.322 0/pSW17-PWCACHE -> PINIT
+    91.322 0/lDBG p17SW/PINIT PASSIVE DONE
+
+and p17SW commits, hangs up, and is done.
+
+    91.329 0/iSE:OPEN <SE:TALK#17 +29
+
+Here comes the (analogous) cache update on SE.
+
+    91.329 0/lDBG ITC/SE:OPEN: Enter HCUP
+    91.329 0/pSE17-PWCACHE SE CS_ANSWERED -> CS_TALKED
+
+And pSE17 is on the case.
+
+    91.329 0/lDBG p17SE/PWCACHE CUPSN#7 mLastSN 40
+    91.329 0/lWRN p17SE/PWCACHE sn7/(60,35) not accessible by ITC/SE:OPEN; ignored
+    91.329 0/lDBG p17SE/PWCACHE CUPSN#0 mLastSN 40
+    91.329 0/lWRN p17SE/PWCACHE sn0/(59,36) not accessible by ITC/SE:OPEN; ignored
+
+It actually rejects both updates, because the resolved site numbers
+aren't actually accessible from the SE.  And, really, RED a17
+shouldn't have sent them to us, because it knows they're invalid on
+this circuit -- but for the moment I'm leaving that active-side bug in
+there to test the passive side rejection.
+
+    91.329 0/lDBG p17SE/PWCACHE CUPSN#255 mLastSN 40
+    91.329 0/lDBG p17SE/PWCACHE (C_TALKED(p17SE/PWCACHExITC/SE:OPEN)) cPEWAHU
+    91.331 0/iSE:OPEN >SE:HANGUP#17 +2
+    91.331 0/pSE17-PWCACHE -> PINIT
+
+And that hangs up too.
+
+    t2@beaglebone:~/MFM/src/drivers/mfmt2$
+
+And that's all we've got so far.
+
+[151:
+
+Mon Jun 22 04:56:28 2020 Hmm, so well the thinko I thought I might
+have didn't actually pan out.  I was worried the cross-couple
+NE/SW+NW/SE would lead to a single event trying to take two locks on
+the same remote sites -- but as we saw, that's not what happens: The
+remote sites are far apart, and both get taken.
+
+Well, so do we need to let these guys fail and die, so we can get our
+trace buffers flushed and see the ends of the stories?
+
+We still don't have an explanation for how a17 ended up with no NE
+circuit.  Oh -- would that be just because a17 already processed the
+BLUE iSW HANGUP, and so a17 tore down that circuit?  That seems
+plausible.
+
+[152:
+
+Mon Jun 22 05:04:39 2020 So that leads us back to a (different)
+thinko: Why should we expect -- or even care -- about whether a
+passive/active race is involving the same itc?
+
+Well, we thought it had to be the same itc because we thought the only
+way this issue comes up is if two aEW's, both in AWLOCKS, collide with
+each other.  And we wanted to resolve that using the yoink values from
+the associated RING packets.  And the RING packets are on a per-ITC
+basis.  So if we can't match up the ITC, we can't find the matching
+yoink val, and we can run the yoink protocol.
+
+But a17 is not in AWLOCKS:
+
+    (gdb) p ew.mStateNum
+    $24 = MFM::EWSN_AWACKS
+    (gdb) 
+
+It already got its locks, had its event, and shipped cache updates.
+That means it can have retired circuits, and here we are.
+
+So really, T2PassiveEventWindow::passiveWinsYoinkRace needs to respect
+that case.  Instead of blowing up if its ITC can't be found, it really
+needs to be checking if aew is in AWLOCKS _first_.  If not, then
+there's really no yoink race to be had, and, I guess, the passive
+start has to just lose to the existing active.
+
+Now, where is passiveWinsYoinkRace actually called?  Do we maybe want
+to get involved a little earlier?[153:
+
+Mon Jun 22 05:13:38 2020 Yeah, maybe caller should check for AWLOCKS
+and not even go to passiveWinsYoinkRace otherwise.
+
+:153]
+
+:152]
+
+:151]
+
+:150]
+
+
+:149]
+
+:148]
 :147]
 :146]
 
 :145]
+[154:
+
+Mon Jun 22 05:56:43 2020 So, it's what we inferred -- but for the
+record, here's the rest of the RED trace, picking up from :149: above:
+
+ ..
+    49.316 0/lDBG a17/AINIT OWNING (35,4)+4
+    49.316 0/lDBG a17/AINIT RING NE abs(35,4) usrel(11,0) yoink=0
+    49.318 0/iNE:OPEN >NE:RING#17(11,0)+4e +5
+    49.318 0/a17-AINIT NE CS_BOUND -> CS_RUNG
+    49.319 0/lDBG a17/AINIT RING NW abs(35,4) usrel(35,0) yoink=1
+    49.325 0/iNW:OPEN >NW:RING#17(35,0)+4o +5
+    49.325 0/a17-AINIT NW CS_BOUND -> CS_RUNG
+    49.325 0/a17-AINIT -> AWLOCKS
+
+a17 RINGs NE and NW
+
+    49.326 0/iNE:OPEN <NE:ANSWER#17 +2
+    49.326 0/lDBG ITC/NE:OPEN: Enter HAP
+    49.326 0/a17-AWLOCKS NE CS_RUNG -> CS_ANSWERED
+    49.326 0/lDBG ITC/NE:OPEN a17/AWLOCKS HAP
+    49.326 0/lDBG a17/AWLOCKS hACK ITC/NE:OPEN
+    49.328 0/iNW:OPEN <NW:ANSWER#17 +2
+    49.328 0/lDBG ITC/NW:OPEN: Enter HAP
+    49.328 0/a17-AWLOCKS NW CS_RUNG -> CS_ANSWERED
+    49.328 0/lDBG ITC/NW:OPEN a17/AWLOCKS HAP
+    49.328 0/lDBG a17/AWLOCKS hACK ITC/NW:OPEN
+    49.329 0/a17-AWLOCKS -> ABEHAVE
+
+gets both locks and goes to behave
+
+    49.329 0/lDBG a17/ABEHAVE (35,4)BEIN ngb 7 live 1
+    49.329 0/a17-ABEHAVE -> ASCACHE
+    49.329 0/lDBG SHIP#0 sn7 (36,3) tt 0xFFFF wt 0x0001
+    49.329 0/lDBG SHIP#1 sn0 (35,4) tt 0x0001 wt 0xFFFF
+    49.338 0/iNE:OPEN >NE:TALK#17 +29
+    49.338 0/lDBG SHIP#0 sn7 (36,3) tt 0xFFFF wt 0x0001
+    49.339 0/lDBG SHIP#1 sn0 (35,4) tt 0x0001 wt 0xFFFF
+    49.341 0/iNW:OPEN >NW:TALK#17 +29
+
+ships two cache updates
+
+    49.341 0/a17-ASCACHE -> AWACKS
+    49.460 0/iNE:OPEN <NE:HANGUP#17 +2
+    49.461 0/lDBG ITC/NE:OPEN: Enter HUP
+    49.461 0/a17-AWACKS NE CS_ANSWERED -> CS_UNUSED
+    49.461 0/lDBG a17/AWACKS hHU ITC/NE:OPEN
+
+gets the first HANGUP and tears down the NE circuit
+
+    49.462 0/iNE:OPEN <NE:RING#10(12,3)+4o +5
+    49.462 0/lDBG ITC/NE:OPEN: HRP abs(36,3) themrel(12,3) yoink=1
+
+gets the ensuing RING from NE
+
+    49.462 0/pNE10-PINIT -> PINIT
+    49.462 0/pNE10-PINIT p@(36,3)+4
+    49.462 0/pNE10-PINIT NE CS_BOUND -> CS_RUNG
+    49.462 0/pNE10-PINIT -> PRESOLVE
+
+gets to passiveWinsYoinkRace
+
+    7340.636 0/t  Failed to top: src/T2EventWindow.cpp:243: NULL_POINTER [3]
+
+And blows up.
+
+    7342.789 0/t  Total events completed = 589553
+    t2@beaglebone:~/MFM/src/drivers/mfmt2$ 
+
+:154]
