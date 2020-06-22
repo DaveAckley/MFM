@@ -198,6 +198,12 @@ namespace MFM {
     }
     
     void log(const Trace & evt) ;
+
+    s32 flush() {
+      if (mFile) return fflush(mFile);
+      return -EBADF;
+    }
+
   private:
     FILE * mFile;
     FileByteSink mFBS;
