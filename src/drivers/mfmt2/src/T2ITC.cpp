@@ -217,8 +217,9 @@ namespace MFM {
     pEW.setEWSN(EWSN_PRESOLVE);
 
     if (!pEW.checkSiteAvailabilityForPassive()) { // false -> passive lost, busy sent
-      pEW.finalizeEW();
+      pEW.finalizeEW();              // Clean up
       TLOG(DBG,"Passive cn %d released",cn);
+      pEW.setEWSN(EWSN_PINIT);       // Reset as passive
       return;
     }
 
