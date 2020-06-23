@@ -286,6 +286,7 @@ namespace MFM {
     return theyWin;
   }
 
+  // RETURN TRUE IF PASSIVE CONTINUES, FALSE IF WE BUSYED-OUT ON IT
   bool T2PassiveEventWindow::resolveRacesFromPassive(EWPtrSet conflicts) {
     // Question 1: Are any conflicts passive?
     for (EWPtrSet::iterator itr = conflicts.begin(); itr != conflicts.end(); ++itr) {
@@ -385,10 +386,10 @@ namespace MFM {
       }
     }
     
-    if (conflicts.size() > 0) {
-      return resolveRacesFromPassive(conflicts); // Resolve races        
-    }
-    // THEY WIN.  WE HOG THE REGION ON THEIR BEHALF
+    if (conflicts.size() > 0 && !resolveRacesFromPassive(conflicts)) // Resolve races        
+        return false; // passive lost the race, done
+
+    // Passive won the race.  We hog the region on behalf of the remote active
     hogEWSites();
     loadSites(); // AND WE LOAD SITES SO THAT SAVING BACK AFTERWARDS IS SANE
     setEWSN(EWSN_PWCACHE);
