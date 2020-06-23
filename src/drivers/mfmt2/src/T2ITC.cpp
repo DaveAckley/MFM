@@ -159,28 +159,12 @@ namespace MFM {
 
   void T2ITC::handleDropPacket(T2PacketBuffer & pb) {
     TLOG(DBG,"%s: Enter hDP", getName());
-    // XXX THIS NEEDS REWRIT BECAUSE DROP IS RECVD BY PASSIVE SIDE
     u8 slotnum;
     if (!asCSDrop(pb, &slotnum))
       FAIL(ILLEGAL_STATE);
-    FAIL(INCOMPLETE_CODE);
-#if 0    
-    u32 len = pb.GetLength();
-    MFM_API_ASSERT_ARG(len >= 2);
-    const char * pkt = pb.GetBuffer();
-    u8 slotnum = pkt[1]&0xf;
-    T2Tile & tile = T2Tile::get();
-    T2EventWindow & ew = tile.getEWOrDie(slotnum);
-    if (!ew.isActive()) {
-      FAIL(INCOMPLETE_CODE); // VATDOOVEEDOO
-    }
-    MFM_API_ASSERT_NONNULL(ew);
-    T2EventWindow & activeEW = *ew;
 
-    unregisterEWRaw(activeEW); // Whether we had a circuit or not
-
-    activeEW.dropActiveEW(true);
-#endif
+    T2PassiveEventWindow & pEW = *mPassiveEWs[slotnum]; // slotnum OK via asCSDrop
+    pEW.handleDrop(*this);
   }
 
   void T2ITC::handleRingPacket(T2PacketBuffer & pb) {

@@ -286,6 +286,15 @@ namespace MFM {
     return theyWin;
   }
 
+  void T2PassiveEventWindow::handleDrop(T2ITC & itc) {
+    TLOG(DBG,"%s: handleDrop", getName());
+    if (getEWSN() <= EWSN_PINIT) { // What is best predicate here??
+      FAIL(ILLEGAL_STATE);
+    }
+    unhogEWSites();
+    resetPassiveEW(); // Clear gunk for next renter
+  }
+
   // RETURN TRUE IF PASSIVE CONTINUES, FALSE IF WE BUSYED-OUT ON IT
   bool T2PassiveEventWindow::resolveRacesFromPassive(EWPtrSet conflicts) {
     // Question 1: Are any conflicts passive?
@@ -458,6 +467,14 @@ namespace MFM {
       SPoint site = mCenter + offset;
       if (!site.BoundedBy(origin,maxSite)) continue;
       UPoint usite = MakeUnsigned(site);
+      T2EventWindow * curew = tile.getSiteOwner(usite);
+      if (!curew == !ewOrNull) {
+        TLOG(ERR,"%s: Bad hog cur %s vs arg %s",
+             getName(),
+             curew ? curew->getName() : "0",
+             ewOrNull ? ewOrNull->getName() : "0");
+        FAIL(ILLEGAL_STATE);
+      }
       tile.setSiteOwner(usite,ewOrNull);
     }
     mIsHoggingSites = ewOrNull != 0;

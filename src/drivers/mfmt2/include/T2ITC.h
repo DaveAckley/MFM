@@ -209,7 +209,7 @@ namespace MFM {
 
     Circuit *(mActiveEWCircuits[MAX_EWSLOT]); // Links to in-use active EWs
     u32 mActiveEWCircuitCount;                // # of non-zero
-
+    
     T2PassiveEventWindow * mPassiveEWs[MAX_EWSLOT]; // All our passive EWs
 
     u32 mCacheAtomsSent;

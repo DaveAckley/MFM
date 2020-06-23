@@ -272,6 +272,8 @@ namespace MFM {
     void commitPassiveEWAndHangUp() ;
     void applyCacheUpdatesPacket(T2PacketBuffer & pb, T2ITC & itc) ;
 
+    void handleDrop(T2ITC& itc) ;
+
     const Circuit& getPassiveCircuit() const { return mPassiveCircuit; }
     Circuit& getPassiveCircuit() { return mPassiveCircuit; }
 
