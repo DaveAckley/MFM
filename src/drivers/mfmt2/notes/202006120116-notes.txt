@@ -1,4 +1,4 @@
-{167}  -*- text -*-
+{169}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -2849,3 +2849,173 @@ Mon Jun 22 16:37:00 2020 OK commiting some flails towards sending and
 handling BUSY and DROP.
 
 :166]
+[167:
+
+Mon Jun 22 20:08:21 2020 Making progress but really running out of
+time here.  We have our first full-on genuine yoink race here, leading
+to revealing another bug (which we think we just fixed).
+
+Thinly annotated --
+
+    73.568 0/a27-IDLE -> AINIT
+    73.568 0/a27-AINIT a@(51,5)+4
+    73.568 0/a27-AINIT ET CS_UNUSED -> CS_BOUND
+    73.568 0/a27-AINIT NE CS_UNUSED -> CS_BOUND
+    73.569 0/lDBG a27/AINIT sites available
+    73.569 0/lDBG a27/AINIT OWNING (51,5)+4
+
+0/a27 starts up in the NE corner, binding both ET and NE. 
+
+    73.569 0/lDBG a27/AINIT RING NE abs(51,5) usrel(27,1) yoink=0
+    73.571 0/iNE:OPEN >NE:RING#27(27,1)+4e +5
+    73.571 0/a27-AINIT NE CS_BOUND -> CS_RUNG
+    73.571 0/a27-AINIT -> AWLOCKS
+
+0/a27 rings NE and starts to wait.
+
+    73.657         1/lDBG a02/ABEHAVE (23,24)BEIN ngb 7 live 1
+    73.657         1/lDBG a02/ABEHAVE FREEING (23,24)+4
+    73.657         1/a02-ABEHAVE -> IDLE
+    73.657         1/a20-IDLE -> AINIT
+    73.657         1/a20-AINIT a@(27,35)+4
+
+A moment later, 1/a02 starts up an event way down in the south of 1/
+
+    73.657         1/a20-AINIT SE CS_UNUSED -> CS_BOUND
+    73.657         1/a20-AINIT SW CS_UNUSED -> CS_BOUND
+
+Involving SE and SW
+
+    73.658         1/lDBG a20/AINIT sites available
+    73.658         1/lDBG a20/AINIT OWNING (27,35)+4
+    73.658         1/lDBG a20/AINIT RING SW abs(27,35) usrel(27,3) yoink=0
+    73.666         1/iSW:OPEN >SW:RING#20(27,3)+4e +5
+    73.666         1/a20-AINIT SW CS_BOUND -> CS_RUNG
+    73.666         1/a20-AINIT -> AWLOCKS
+
+1/a02 rings SW and starts to wait.
+
+    73.669 0/iNE:OPEN <NE:RING#20(27,3)+4e +5
+
+0/iNE picks up the ring from 1/a20!
+
+    73.669 0/lDBG ITC/NE:OPEN: HRP abs(51,3) themrel(27,3) yoink=0
+    73.669 0/pNE20-PINIT -> PINIT
+    73.669 0/pNE20-PINIT p@(51,3)+4
+    73.669 0/pNE20-PINIT NE CS_BOUND -> CS_RUNG
+    73.669 0/pNE20-PINIT -> PRESOLVE
+
+It inits 0/pNE20 and goes to resolve races
+
+    73.669 0/lDBG u a27/AWLOCKS (51,5); t p20NE/PRESOLVE (51,3): YOINK ITC/NE:OPEN(Fred) us0 them0 -> we win
+
+A Race is Detected!
+
+It's our 0/a27 vs their 1/a20 (represented by 0/pNE20)!
+
+The Yoink Protocol is Activated!  Our 0/a27 wins!
+
+    73.669 0/lDBG p20NE/PRESOLVE BUSYed by a27/AWLOCKS
+    73.671         1/iSE:SHUT >iSE:SHUT?6686D6B3  +6
+    73.671 0/iNE:OPEN >NE:BUSY#20 +2
+
+So a BUSY (lock rejected) packet is sent back toward 1/a20
+
+    73.671 0/pNE20-PRESOLVE -> IDLE
+    73.671 0/lDBG Passive cn 20 released
+
+And 0/pNE20 is freed.
+
+    73.673 0/iNW:SHUT <iNW:SHUT?6686D6B3  +6
+    73.673 0/iNW:SHUT -> DRAIN
+    73.675 0/iNW:DRAIN >iNW:DRAIN +2
+    73.680         1/iSE:SHUT <iSE:DRAIN +2
+    73.680         1/iSE:SHUT -> DRAIN
+    73.682         1/iSE:DRAIN >iSE:DRAIN +2
+    73.685         1/iSW:OPEN <SW:RING#27(27,1)+4e +5
+    73.685         1/lDBG ITC/SW:OPEN: HRP abs(27,37) themrel(27,1) yoink=0
+    73.685         1/pSW27-PINIT -> PINIT
+
+Meanwhile, 1/iSW picks up the ring from 0/a27, initting 1/pSW27 to
+handle it locally.
+
+    73.685         1/pSW27-PINIT p@(27,37)+4
+    73.685         1/pSW27-PINIT SW CS_BOUND -> CS_RUNG
+    73.685         1/pSW27-PINIT -> PRESOLVE
+    73.685         1/lDBG u a20/AWLOCKS (27,35); t p27SW/PRESOLVE (27,37): YOINK ITC/SW:OPEN(Ginger) us0 them0 -> they win
+
+And it detects the race too!
+
+Now it's our 1/a20 vs their 0/a27 (our 1/pSW27)!
+
+And the Yoink Protocol says that they win!
+
+    73.685         1/a20-AWLOCKS -> ADROP
+
+So we start to drop our own 1/a20
+
+    73.688         1/iSW:OPEN >SW:ANSWER#27 +2
+    73.688         1/pSW27-PRESOLVE SW CS_RUNG -> CS_ANSWERED
+
+And we ANSWER to grant the lock to 0/a27
+
+    73.690         1/iSW:OPEN <SW:BUSY#20 +2
+
+Then the BUSY from 0/iNE arrives at 1/iSW for 1/a20
+
+    73.690         1/lDBG ITC/SW:OPEN: Enter hBP
+    73.690         1/lDBG a20/ADROP hBUSY ITC/SW:OPEN
+    73.690         1/lDBG a20/ADROP Not AWLOCKS, ignoring BUSY
+
+But 1/a20 is already yoinked to ADROP, so the BUSY is not news.
+
+    73.770 0/iNW:DRAIN -> CACHEXG
+    73.777 0/iNE:OPEN <NE:ANSWER#27 +2
+
+And then the ANSWER arrives at 0/iNE for 0/a27
+
+    73.777 0/lDBG ITC/NE:OPEN: Enter HAP
+    73.777 0/a27-AWLOCKS NE CS_RUNG -> CS_ANSWERED
+    73.778 0/lDBG ITC/NE:OPEN a27/AWLOCKS HAP
+    73.778 0/lDBG a27/AWLOCKS hANSWER ITC/NE:OPEN
+    73.779 0/iNW:CACHEXG <iNW:DRAIN +2
+    73.779 0/iNW:CACHEXG -> SHUT
+    73.781 0/a27-AWLOCKS -> ABEHAVE
+    73.781 0/lDBG a27/ABEHAVE (51,5)BEIN ngb 2 live 1
+
+And 0/a27 moves on to behave.
+
+    73.781 0/a27-ABEHAVE -> ASCACHE
+    73.781 0/lDBG SHIP#0 sn2 (51,4) tt 0xFFFF wt 0x0001
+    73.781 0/lDBG SHIP#1 sn0 (51,5) tt 0x0001 wt 0xFFFF
+    73.788 0/iNE:OPEN >NE:TALK#27 +29
+    73.788 0/a27-ASCACHE -> AWACKS
+
+Ships the update, and settles down to wait for acks
+
+    73.790 0/iNW:SHUT >iNW:SHUT?274D8A08  +6
+    73.869         1/iSE:DRAIN -> SHUT
+    73.878         1/iSW:OPEN <SW:TALK#27 +29
+    73.878         1/lDBG ITC/SW:OPEN: Enter HCUP
+
+And 1/pSW27 goes to handle it.  But that died because we forgot to
+change 1/pSW27's state to EWSN_PCACHE when we shipped the answer.
+
+    #0  MFMLongJmpHere (buffer=0xbefff6b0, toThrow=4) at src/FailPlatformSpecific.cpp:48
+    48          longjmp(buffer,toThrow);
+    (gdb) up
+    #1  0x00463a28 in MFM::T2ITC::handleCacheUpdatesPacket (this=0x4dcde8 <MFM::T2Tile::get()::THE_INSTANCE+3280>,
+        pb=...) at src/T2ITC.cpp:279
+    279         MFM_API_ASSERT_STATE(passiveEW.getEWSN() == EWSN_PWCACHE);
+    (gdb) p passiveEW.getEWSN()
+    $12 = MFM::EWSN_PRESOLVE
+    (gdb) 
+
+[168:
+
+Mon Jun 22 20:53:33 2020 But we've now made a fix for that.
+Committing and going again.
+
+:168]
+
+:167]
