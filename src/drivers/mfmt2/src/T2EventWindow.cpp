@@ -146,7 +146,7 @@ namespace MFM {
         if (&thisITC != &itc) {
           TLOG(DBG,"%s sending drop thisITC %p vs itc %p",
                getName(), &thisITC, &itc);
-          trySendDropVia(itc);
+          trySendDropVia(thisITC);
         }
         ci.setCS(CS_DROPPED);
       }
