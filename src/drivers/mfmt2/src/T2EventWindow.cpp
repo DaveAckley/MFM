@@ -141,8 +141,13 @@ namespace MFM {
       Circuit & ci = mActiveCircuits[i];
       if (ci.isLockHeld()) {
         T2ITC & thisITC = ci.getITC();
-        if (&thisITC != &itc) 
+        TLOG(DBG,"%s ac[%d] %s, thisitc %s",
+             getName(), i, ci.getName(), thisITC.getName());
+        if (&thisITC != &itc) {
+          TLOG(DBG,"%s sending drop thisITC %p vs itc %p",
+               getName(), &thisITC, &itc);
           trySendDropVia(itc);
+        }
         ci.setCS(CS_DROPPED);
       }
     }
