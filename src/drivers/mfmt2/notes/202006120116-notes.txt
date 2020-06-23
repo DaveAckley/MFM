@@ -1,4 +1,4 @@
-{169}  -*- text -*-
+{170}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -3019,3 +3019,47 @@ Committing and going again.
 :168]
 
 :167]
+[169:
+
+Tue Jun 23 03:15:23 2020 (Took a break to update the web site for our
+501(c)(3) status.)  So now we're dying here:
+
+    (gdb) up
+    #1  0x004746c0 in MFM::T2PassiveEventWindow::handleDrop (this=0x5b06f8, itc=...) at src/T2EventWindow.cpp:292
+    292	      FAIL(ILLEGAL_STATE);
+    (gdb) l
+    287	  }
+    288	
+    289	  void T2PassiveEventWindow::handleDrop(T2ITC & itc) {
+    290	    TLOG(DBG,"%s: handleDrop", getName());
+    291	    if (getEWSN() <= EWSN_PINIT) { // What is best predicate here??
+    292	      FAIL(ILLEGAL_STATE);
+    293	    }
+
+with the trace ending up like
+
+    379.328 0/iNE:OPEN <NE:DROP#1 +2
+    379.328 0/lDBG ITC/NE:OPEN: Enter hDP
+    379.328 0/lDBG pNE01-PINIT: handleDrop
+    t2@beaglebone:~/MFM/src/drivers/mfmt2$ 
+
+and looking at the neighboring tile's trace:
+
+    106.857 0/iSW:OPEN <SW:BUSY#1 +2
+
+BUSY from SW
+
+    106.857 0/lDBG ITC/SW:OPEN: Enter hBP
+    106.857 0/lDBG a01-AWLOCKS hBUSY ITC/SW:OPEN
+    106.859 0/iSW:OPEN >SW:DROP#1 +2
+
+DROP back to SW??
+
+    106.859 0/a01-AWLOCKS SE CS_ANSWERED -> CS_DROPPED
+    106.859 0/a01-AWLOCKS -> ADROP
+
+I suspect what happened is this second guy sent a DROP back in
+response to the source of a BUSY, and it shouldn't do that, because
+the passive guy reinits after it sends the BUSY..
+
+:169]
