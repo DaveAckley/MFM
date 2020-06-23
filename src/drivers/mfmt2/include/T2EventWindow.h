@@ -222,6 +222,7 @@ namespace MFM {
     virtual const T2ActiveEventWindow * asActiveEW() const { return this; }
     virtual T2ActiveEventWindow * asActiveEW() { return this; }
     virtual void unbindCircuitsAsNeeded() ;
+    virtual const char * getName() const ;
 
     T2ActiveEventWindow(T2Tile& tile, EWSlotNum ewsn, const char * category) ;
 
@@ -259,6 +260,7 @@ namespace MFM {
     virtual const T2PassiveEventWindow * asPassiveEW() const { return this; }
     virtual T2PassiveEventWindow * asPassiveEW() { return this; }
     virtual void unbindCircuitsAsNeeded() ;
+    virtual const char * getName() const ;
 
     T2PassiveEventWindow(T2Tile& tile,
                          EWSlotNum ewsn,

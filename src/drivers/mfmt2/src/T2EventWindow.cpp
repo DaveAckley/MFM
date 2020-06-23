@@ -801,24 +801,27 @@ namespace MFM {
   }
 
   const char * T2EventWindow::getName() const {
-    snprintf(mNameBuf32,32,"%s%02d%s/%s",
-             asActiveEW() ? "a" : (asPassiveEW() ? "p" : "EW"),
+    snprintf(mNameBuf32,32,"EW%02d-%s",
              mSlotNum,
-             asActiveEW() ? "" : getCategory(),
              getEWStateName(mStateNum));
     return mNameBuf32;
   }
-  /*
-  void T2EventWindow::update() {
-    debug("update: %p %s: %s\n",
-          this,
-          getEWStateName(mStateNum),
-          getEWStateDescription(mStateNum));
-    DIE_UNIMPLEMENTED();
-  }
-  */
 
-  
+  const char * T2ActiveEventWindow::getName() const {
+    snprintf(mNameBuf32,32,"a%02d-%s",
+             mSlotNum,
+             getEWStateName(mStateNum));
+    return mNameBuf32;
+  }
+
+  const char * T2PassiveEventWindow::getName() const {
+    snprintf(mNameBuf32,32,"p%s%02d-%s",
+             getCategory(),
+             mSlotNum,
+             getEWStateName(mStateNum));
+    return mNameBuf32;
+  }
+
   //// DEFAULT HANDLERS FOR T2EWStateOps
   void T2EWStateOps::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
     LOG.Error("%s on %s: no timeout handler", getStateName(), ew.getName());
