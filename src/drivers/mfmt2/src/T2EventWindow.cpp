@@ -618,9 +618,13 @@ namespace MFM {
 
     saveSites();
     unhogEWSites();
+    resetPassiveEW(); // Clear gunk for next renter
+  }
+
+  void T2PassiveEventWindow::resetPassiveEW() {
     initializeEW(); // Clear gunk for next renter
     setEWSN(EWSN_PINIT);
-    ci.resetCircuitForPassive();
+    getPassiveCircuit().resetCircuitForPassive();
   }
 
   // Send all or as much as buffers will take; false if someone blocked, true iff all all done

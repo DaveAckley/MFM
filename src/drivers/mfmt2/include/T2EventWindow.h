@@ -283,6 +283,7 @@ namespace MFM {
 
     bool trySendBusy() ;
 
+    void resetPassiveEW() ;
   };
 
   const char * getEWStateName(EWStateNumber sn) ;
