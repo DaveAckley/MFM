@@ -77,8 +77,7 @@ namespace MFM {
   }
 
   void T2PassiveEventWindow::unbindCircuitsAsNeeded() {
-    if (mPassiveCircuit.isBound()) 
-      mPassiveCircuit.unbindCircuit();
+    /* passive circuit is never unbound */
   }
 
   void T2EventWindow::finalizeEW() {
