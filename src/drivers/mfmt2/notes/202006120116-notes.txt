@@ -1,4 +1,4 @@
-{170}  -*- text -*-
+{171}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -3060,6 +3060,27 @@ DROP back to SW??
 
 I suspect what happened is this second guy sent a DROP back in
 response to the source of a BUSY, and it shouldn't do that, because
-the passive guy reinits after it sends the BUSY..
+the passive guy reinits after it sends the BUSY..[170:
+
+Tue Jun 23 03:51:38 2020 And yes that was my stupidity of course as
+well:
+
+    --- a/src/drivers/mfmt2/src/T2EventWindow.cpp
+    +++ b/src/drivers/mfmt2/src/T2EventWindow.cpp
+    @@ -146,7 +146,7 @@ namespace MFM {
+             if (&thisITC != &itc) {
+               TLOG(DBG,"%s sending drop thisITC %p vs itc %p",
+                    getName(), &thisITC, &itc);
+    -          trySendDropVia(itc);
+    +          trySendDropVia(thisITC);
+             }
+             ci.setCS(CS_DROPPED);
+           }
+
+I VERY CAREFULLY CHECKED that itc I was considering (thisITC) was
+different than the one the BUSY came in on.. and then I sent the DROP
+to the one the BUSY came in on..  Smoove Dave smoove.
+
+:170]
 
 :169]
