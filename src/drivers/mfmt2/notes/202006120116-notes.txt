@@ -1,4 +1,4 @@
-{171}  -*- text -*-
+{174}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -3084,3 +3084,24 @@ to the one the BUSY came in on..  Smoove Dave smoove.
 :170]
 
 :169]
+[171:
+
+Wed Jun 24 04:06:14 2020 OK, so T2sday update #279 is out.
+
+Aaand where were we, here?
+
+[172:
+
+Wed Jun 24 04:07:48 2020 Well, we blew up in T2ITC::handleRingPacket,
+because the targeted passiveEW was in state PWCACHE instead of PINIT.
+
+And we had not yet figured out how that happened.[173:
+
+Wed Jun 24 11:22:14 2020 Let's try to capture another instance, just
+on two tiles to keep things simpler..
+
+:173]
+
+:172]
+
+:171]
