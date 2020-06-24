@@ -307,7 +307,7 @@ namespace MFM {
       T2EventWindow * ew = *itr;
       MFM_API_ASSERT_NONNULL(ew);
       if (ew->isPassiveEW()) { // With passive window conflicts we cannot deal
-        TLOG(DBG,"%s BUSYed by %s",getName(), ew->getName());
+        TLOG(DBG,"RRFP-1 %s BUSYed by %s",getName(), ew->getName());
         if (!trySendBusy()) 
           FAIL(INCOMPLETE_CODE);
         return false;
@@ -341,7 +341,7 @@ namespace MFM {
         }
       } 
 
-      TLOG(DBG,"%s BUSYed by %s",getName(), aew->getName());
+      TLOG(DBG,"RRFP-2 %s BUSYed by %s",getName(), aew->getName());
       if (!trySendBusy())  // :787: P6
         FAIL(INCOMPLETE_CODE);
       return false;
