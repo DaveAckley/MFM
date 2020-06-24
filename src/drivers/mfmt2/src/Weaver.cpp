@@ -1,6 +1,7 @@
 #include "Weaver.h"
 
 #include <getopt.h>
+#include <time.h>
 
 #include "FileByteSink.h"  // For STDERR
 #include "Logger.h"
@@ -260,6 +261,7 @@ namespace MFM {
          itr != mWeaverLogFiles.end(); ++itr) {
       WeaverLogFile* ptr = itr->first;
       ptr->findITCSyncs(*this);
+     
     }
     for (SyncUseMap::iterator itr = mSyncUseMap.begin();
          itr != mSyncUseMap.end(); ++itr) {
@@ -299,7 +301,8 @@ namespace MFM {
          it1 != mWeaverLogFiles.end(); ++it1) {
       WeaverLogFile & w1 = *(it1->first);
         u32 n1 = w1.getFileNum();
-        STDOUT.Printf("%d/ %s\n", n1, w1.getFilePath());
+        time_t sec = w1.getFirstTimespec().tv_sec;
+        STDOUT.Printf("%d/ %s: %s", n1, w1.getFilePath(), ctime(&sec));
     }
     for (WeaverLogFilePtrVector::iterator it1 = mWeaverLogFiles.begin();
          it1 != mWeaverLogFiles.end(); ++it1) {
