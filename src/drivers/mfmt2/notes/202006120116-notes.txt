@@ -1,4 +1,4 @@
-{174}  -*- text -*-
+{184}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -2599,7 +2599,7 @@ But a17 is not in AWLOCKS:
 
     (gdb) p ew.mStateNum
     $24 = MFM::EWSN_AWACKS
-    (gdb) 
+    (gdb)
 
 It already got its locks, had its event, and shipped cache updates.
 That means it can have retired circuits, and here we are.
@@ -2699,7 +2699,7 @@ gets to passiveWinsYoinkRace
 And blows up.
 
     7342.789 0/t  Total events completed = 589553
-    t2@beaglebone:~/MFM/src/drivers/mfmt2$ 
+    t2@beaglebone:~/MFM/src/drivers/mfmt2$
 
 :154]
 [155:
@@ -2732,7 +2732,7 @@ circuit, if there is one:
 
  CS <= CS_BOUND, do nothing
  CS <= CS_ANSWERED, send DROP and go to CS_DROPPED
-  
+
 [159:
 
 Mon Jun 22 13:50:19 2020 Well, apparently needed some sleep.
@@ -2801,7 +2801,7 @@ REALLY REALLY sure than an in-use aEW would ALWAYS HAVE SITES except
 when it was in ADROP, we could have finalizeEW unhog on non-ADROP
 states?
 
-Who is currently calling unhog?[164: Mon Jun 22 14:45:45 2020 
+Who is currently calling unhog?[164: Mon Jun 22 14:45:45 2020
 
  - T2ActiveEventWindow::commitAndReleaseActive calls unhog, before
    calling mTile.releaseActiveEW which, among other things, calls
@@ -2864,7 +2864,7 @@ Thinly annotated --
     73.569 0/lDBG a27/AINIT sites available
     73.569 0/lDBG a27/AINIT OWNING (51,5)+4
 
-0/a27 starts up in the NE corner, binding both ET and NE. 
+0/a27 starts up in the NE corner, binding both ET and NE.
 
     73.569 0/lDBG a27/AINIT RING NE abs(51,5) usrel(27,1) yoink=0
     73.571 0/iNE:OPEN >NE:RING#27(27,1)+4e +5
@@ -3009,7 +3009,7 @@ change 1/pSW27's state to EWSN_PCACHE when we shipped the answer.
     279         MFM_API_ASSERT_STATE(passiveEW.getEWSN() == EWSN_PWCACHE);
     (gdb) p passiveEW.getEWSN()
     $12 = MFM::EWSN_PRESOLVE
-    (gdb) 
+    (gdb)
 
 [168:
 
@@ -3029,7 +3029,7 @@ Tue Jun 23 03:15:23 2020 (Took a break to update the web site for our
     292	      FAIL(ILLEGAL_STATE);
     (gdb) l
     287	  }
-    288	
+    288
     289	  void T2PassiveEventWindow::handleDrop(T2ITC & itc) {
     290	    TLOG(DBG,"%s: handleDrop", getName());
     291	    if (getEWSN() <= EWSN_PINIT) { // What is best predicate here??
@@ -3041,7 +3041,7 @@ with the trace ending up like
     379.328 0/iNE:OPEN <NE:DROP#1 +2
     379.328 0/lDBG ITC/NE:OPEN: Enter hDP
     379.328 0/lDBG pNE01-PINIT: handleDrop
-    t2@beaglebone:~/MFM/src/drivers/mfmt2$ 
+    t2@beaglebone:~/MFM/src/drivers/mfmt2$
 
 and looking at the neighboring tile's trace:
 
@@ -3098,10 +3098,938 @@ because the targeted passiveEW was in state PWCACHE instead of PINIT.
 And we had not yet figured out how that happened.[173:
 
 Wed Jun 24 11:22:14 2020 Let's try to capture another instance, just
-on two tiles to keep things simpler..
+on two tiles to keep things simpler..[174:
+
+Wed Jun 24 11:29:09 2020 Didn't take long once started..
+
+:174]
 
 :173]
 
 :172]
 
 :171]
+[175:
+
+Wed Jun 24 22:10:50 2020 Well so after the evening break.
+
+Here, I merged this files for this failure, which is another case
+where an inbound ring packet goes a pEW -- in this case, 0/pNW30 --
+that's in state EWSN_PWCACHE instead of EWSN_PINIT.  Question is: Why
+is 0/pNW30 in that state?
+
+So, this is using the same connectivity as the last few cases:
+
+         ........ribbon.cable..
+        .                      .
+        .  +-----------+       .
+        .  |     1/    |       .
+        .  |   'BLUE'  |       .
+        .  |SW       SE|       .
+        .  +||-------||+       .
+        .   .       +||-------||+
+         ...        |NW       NE|
+                    |   'RED'   |
+                    |    0/     |
+                    +-----------+
+
+
+    t2@beaglebone:~/MFM/src/drivers/mfmt2$ ../../../bin/Weaver ~/FILEDIR/202006242212-RED-t2trace221.dat ~/FILEDIR/202006242212-BLUE-t2trace221.dat
+    11: MSG: WP 0
+    12: MSG: WM 0
+    0/ /home/t2/FILEDIR/202006242212-RED-t2trace221.dat: Wed Jun 24 11:28:08 2020
+    1/ /home/t2/FILEDIR/202006242212-BLUE-t2trace221.dat: Wed Jun 24 11:28:13 2020
+    0/ -> 1/ n=44, s=-214.904093, ss=1049.631116, avg=-4.884184, var=23.855253
+    1/ -> 0/ n=44, s=214.904093, ss=1049.631116, avg=4.884184, var=23.855253
+    Anchor file is 0/
+    TWEAKING n1 0.000000
+    0/ 0ms
+    1/ 4s 884ms
+    0.000 0/t  Trace Format Version 5
+ ..
+    30.484         1/a31-IDLE -> AINIT
+
+Well, I'm not sure if this is really where the whole megillah
+'begins' (I've extended backwards from the scene of the failure a
+couple of times now, trying to annotate this trace).  But let's find
+out.
+
+So 1/a31 starts up at (27,34), deep in SE+SW territory.  Note also
+that ANOTHER player in our story -- 1/a30 -- is ALSO going to start up
+at THE EXACT SAME SITE, (27,34), SOON!
+
+    30.484         1/a31-AINIT a@(27,34)+4
+    30.484         1/a31-AINIT SE CS_UNUSED -> CS_BOUND
+    30.484         1/a31-AINIT SW CS_UNUSED -> CS_BOUND
+    30.484         1/lDBG a31-AINIT sites available
+    30.484         1/lDBG a31-AINIT OWNING (27,34)+4
+    30.484         1/lDBG a31-AINIT RING SE abs(27,34) usrel(3,2) yoink=1
+
+1/a31 gets ready to send a RING on SE.
+
+    30.490 0/a18-IDLE -> AINIT
+    30.491 0/a18-AINIT a@(31,12)+4
+    30.491 0/lDBG a18-AINIT sites available
+    30.491 0/lDBG a18-AINIT OWNING (31,12)+4
+    30.491 0/a18-AINIT -> ABEHAVE
+    30.492 0/a19-IDLE -> AINIT
+
+0/a18 starts up, has a hidden event, and finishes, just like that.
+
+    30.492 0/a19-AINIT a@(4,4)+4
+    30.492 0/a19-AINIT WT CS_UNUSED -> CS_BOUND
+    30.492 0/a19-AINIT NW CS_UNUSED -> CS_BOUND
+
+0/a19 starts up in the absolute extreme far NE+NW.  Not sure if this
+will be significant in the story or not.
+
+    30.492         1/iSE:OPEN >SE:RING#31(3,2)+4o +5
+
+The 1/a31 RING to SE actually ships.
+
+    30.492         1/a31-AINIT SE CS_BOUND -> CS_RUNG
+    30.492         1/lDBG a31-AINIT RING SW abs(27,34) usrel(27,2) yoink=0
+    30.493 0/lDBG a19-AINIT sites available
+    30.493 0/lDBG a19-AINIT OWNING (4,4)+4
+    30.493 0/lDBG a19-AINIT RING NW abs(4,4) usrel(4,0) yoink=0
+
+0/a19
+
+    30.499         1/iSW:OPEN >SW:RING#31(27,2)+4e +5
+    30.499         1/a31-AINIT SW CS_BOUND -> CS_RUNG
+    30.499         1/a31-AINIT -> AWLOCKS
+    30.501         1/iSE:OPEN <SE:RING#19(4,0)+4e +5
+    30.501         1/lDBG ITC/SE:OPEN: HRP abs(28,36) themrel(4,0) yoink=0
+    30.501         1/pSE19-PINIT -> PINIT
+    30.501         1/pSE19-PINIT p@(28,36)+4
+    30.501         1/pSE19-PINIT SE CS_BOUND -> CS_RUNG
+    30.501         1/pSE19-PINIT -> PRESOLVE
+    30.501         1/lDBG u a31-AWLOCKS (27,34); t pSE19-PRESOLVE (28,36): YOINK ITC/SE:OPEN(Fred) us1 them0 -> they win
+    30.502         1/a31-AWLOCKS -> ADROP
+    30.502         1/pSE19-PRESOLVE -> PWCACHE
+    30.503 0/iNW:OPEN >NW:RING#19(4,0)+4e +5
+    30.503 0/a19-AINIT NW CS_BOUND -> CS_RUNG
+    30.503 0/a19-AINIT -> AWLOCKS
+    30.504 0/lDBG a18-ABEHAVE (31,12)BEIN ngb 1 live 1
+    30.504 0/lDBG a18-ABEHAVE FREEING (31,12)+4
+    30.504 0/a18-ABEHAVE -> IDLE
+    30.506 0/iNE:OPEN <NE:RING#31(27,2)+4e +5
+    30.506 0/lDBG ITC/NE:OPEN: HRP abs(51,2) themrel(27,2) yoink=0
+    30.507 0/pNE31-PINIT -> PINIT
+    30.507 0/pNE31-PINIT p@(51,2)+4
+    30.507 0/pNE31-PINIT NE CS_BOUND -> CS_RUNG
+    30.507 0/pNE31-PINIT -> PRESOLVE
+    30.507 0/pNE31-PRESOLVE -> PWCACHE
+    30.508         1/iSE:OPEN >SE:ANSWER#19 +2
+    30.508         1/pSE19-PWCACHE SE CS_RUNG -> CS_ANSWERED
+    30.511         1/iSW:OPEN <SW:ANSWER#31 +2
+    30.511         1/lDBG ITC/SW:OPEN: Enter HAP
+    30.511         1/a31-ADROP SW CS_RUNG -> CS_ANSWERED
+    30.511         1/lDBG ITC/SW:OPEN a31-ADROP HAP
+    30.511         1/lWRN ITC/SW:OPEN HAP bad aew state a31-ADROP for cn 31
+    30.512         1/a31-ADROP SE CS_RUNG -> CS_UNUSED
+    30.512         1/a31-ADROP SW CS_ANSWERED -> CS_UNUSED
+    30.512         1/a31-ADROP -> IDLE
+    30.513         1/a31-IDLE -> AINIT
+    30.513         1/a31-AINIT a@(51,25)+4
+    30.513         1/a31-AINIT ET CS_UNUSED -> CS_BOUND
+    30.515 0/iNE:OPEN >NE:ANSWER#31 +2
+    30.515 0/pNE31-PWCACHE NE CS_RUNG -> CS_ANSWERED
+    30.517         1/lDBG a31-AINIT sites available
+    30.517         1/lDBG a31-AINIT OWNING (51,25)+4
+    30.517         1/a31-AINIT -> ABEHAVE
+    30.517 0/iNW:OPEN <NW:RING#31(3,2)+4o +5
+    30.517 0/lDBG ITC/NW:OPEN: HRP abs(3,2) themrel(3,2) yoink=1
+    30.517 0/pNW31-PINIT -> PINIT
+    30.517 0/pNW31-PINIT p@(3,2)+4
+    30.517 0/pNW31-PINIT NW CS_BOUND -> CS_RUNG
+    30.517 0/pNW31-PINIT -> PRESOLVE
+    30.518 0/lDBG u a19-AWLOCKS (4,4); t pNW31-PRESOLVE (3,2): YOINK ITC/NW:OPEN(Ginger) us0 them1 -> we win
+    30.518 0/lDBG RRFP-2 pNW31-PRESOLVE BUSYed by a19-AWLOCKS
+    30.520         1/iSE:OPEN <SE:BUSY#31 +2
+    30.520         1/lDBG ITC/SE:OPEN: Enter hBP
+    30.520 0/iNW:OPEN >NW:BUSY#31 +2
+    30.520         1/lDBG a31-ABEHAVE hBUSY ITC/SE:OPEN
+    30.520 0/pNW31-PRESOLVE -> PINIT
+    30.520         1/lDBG a31-ABEHAVE Not AWLOCKS, ignoring BUSY
+    30.520 0/lDBG Passive cn 31 released
+    30.521         1/lDBG a31-ABEHAVE (51,25)BEIN ngb 4 live 0
+    30.521         1/lDBG a31-ABEHAVE (51,25)BEIN oth 8 (othlive 0)
+    30.521         1/lDBG a31-ABEHAVE FREEING (51,25)+4
+    30.521         1/a31-ABEHAVE ET CS_BOUND -> CS_UNUSED
+    30.521         1/a31-ABEHAVE -> IDLE
+    30.522         1/a30-IDLE -> AINIT
+    30.522         1/a30-AINIT a@(13,34)+4
+    30.522         1/a30-AINIT SW CS_UNUSED -> CS_BOUND
+    30.522         1/lDBG a30-AINIT sites available
+    30.522         1/lDBG a30-AINIT OWNING (13,34)+4
+    30.522         1/lDBG a30-AINIT RING SW abs(13,34) usrel(13,2) yoink=0
+    30.525         1/iSW:OPEN >SW:RING#30(13,2)+4e +5
+    30.525         1/a30-AINIT SW CS_BOUND -> CS_RUNG
+    30.525         1/a30-AINIT -> AWLOCKS
+    30.525 0/iNW:OPEN <NW:ANSWER#19 +2
+    30.525 0/lDBG ITC/NW:OPEN: Enter HAP
+    30.525 0/a19-AWLOCKS NW CS_RUNG -> CS_ANSWERED
+    30.525 0/lDBG ITC/NW:OPEN a19-AWLOCKS HAP
+    30.525 0/lDBG a19-AWLOCKS hANSWER ITC/NW:OPEN
+    30.532 0/a19-AWLOCKS -> ABEHAVE
+    30.534 0/iNE:OPEN <NE:RING#30(13,2)+4e +5
+    30.534 0/lDBG ITC/NE:OPEN: HRP abs(37,2) themrel(13,2) yoink=0
+    30.534 0/pNE30-PINIT -> PINIT
+    30.534 0/pNE30-PINIT p@(37,2)+4
+    30.534 0/pNE30-PINIT NE CS_BOUND -> CS_RUNG
+    30.534 0/pNE30-PINIT -> PRESOLVE
+    30.535 0/pNE30-PRESOLVE -> PWCACHE
+    30.538 0/iNE:OPEN >NE:ANSWER#30 +2
+    30.538 0/pNE30-PWCACHE NE CS_RUNG -> CS_ANSWERED
+    30.538 0/lDBG a19-ABEHAVE (4,4)BEIN ngb 2 live 1
+    30.538 0/a19-ABEHAVE -> ASCACHE
+    30.687         1/iSW:OPEN <SW:ANSWER#30 +2
+    30.687         1/lDBG ITC/SW:OPEN: Enter HAP
+    30.687         1/a30-AWLOCKS SW CS_RUNG -> CS_ANSWERED
+    30.687         1/lDBG ITC/SW:OPEN a30-AWLOCKS HAP
+    30.687         1/lDBG a30-AWLOCKS hANSWER ITC/SW:OPEN
+    30.687         1/a11-IDLE -> AINIT
+    30.687         1/a11-AINIT a@(28,25)+4
+    30.688         1/lDBG a11-AINIT sites available
+    30.688         1/lDBG a11-AINIT OWNING (28,25)+4
+    30.688         1/a11-AINIT -> ABEHAVE
+    30.688         1/a30-AWLOCKS -> ABEHAVE
+    30.688         1/lDBG a30-ABEHAVE (13,34)BEIN ngb 7 live 1
+    30.688         1/a30-ABEHAVE -> ASCACHE
+    30.691 0/lDBG SHIP#0 sn2 (4,3) tt 0xFFFF wt 0x0001
+    30.691 0/lDBG SHIP#1 sn0 (4,4) tt 0x0001 wt 0xFFFF
+    30.692         1/lDBG a11-ABEHAVE (28,25)BEIN ngb 2 live 1
+    30.692         1/lDBG a11-ABEHAVE FREEING (28,25)+4
+    30.692         1/a11-ABEHAVE -> IDLE
+    30.692         1/lDBG SHIP#0 sn7 (14,33) tt 0xFFFF wt 0x0001
+    30.692         1/lDBG SHIP#1 sn0 (13,34) tt 0x0001 wt 0xFFFF
+    30.699         1/iSW:OPEN >SW:TALK#30 +29
+    30.699         1/a30-ASCACHE -> AWACKS
+    30.701 0/iNW:OPEN >NW:TALK#19 +29
+    30.701 0/a19-ASCACHE -> AWACKS
+    30.702         1/iSE:OPEN <SE:TALK#19 +29
+    30.702         1/lDBG ITC/SE:OPEN: Enter HCUP
+    30.702         1/pSE19-PWCACHE SE CS_ANSWERED -> CS_TALKED
+    30.702         1/lDBG pSE19-PWCACHE CUPSN#2 mLastSN 40
+    30.702         1/lDBG RECV#0 sn2 (28,35) tt 0xFFFF wt 0x0001
+    30.702         1/lDBG pSE19-PWCACHE CUPSN#0 mLastSN 40
+    30.702         1/lDBG RECV#1 sn0 (28,36) tt 0x0001 wt 0xFFFF
+    30.702         1/lDBG pSE19-PWCACHE CUPSN#255 mLastSN 40
+    30.702         1/lDBG pSE19-PWCACHE (C_TALKED(pSE19-PWCACHExITC/SE:OPEN)) cPEWAHU
+    30.709         1/iSE:OPEN >SE:HANGUP#19 +2
+    30.709         1/pSE19-PWCACHE -> PINIT
+    30.709         1/lDBG pSE19-PINIT PASSIVE DONE
+    30.715 0/iNE:OPEN <NE:TALK#30 +29
+    30.715 0/lDBG ITC/NE:OPEN: Enter HCUP
+    30.715 0/pNE30-PWCACHE NE CS_ANSWERED -> CS_TALKED
+    30.715 0/lDBG pNE30-PWCACHE CUPSN#7 mLastSN 40
+    30.715 0/lDBG RECV#0 sn7 (38,1) tt 0xFFFF wt 0x0001
+    30.715 0/lDBG pNE30-PWCACHE CUPSN#0 mLastSN 40
+    30.715 0/lDBG RECV#1 sn0 (37,2) tt 0x0001 wt 0xFFFF
+    30.715 0/lDBG pNE30-PWCACHE CUPSN#255 mLastSN 40
+    30.715 0/lDBG pNE30-PWCACHE (C_TALKED(pNE30-PWCACHExITC/NE:OPEN)) cPEWAHU
+    30.721 0/iNE:OPEN >NE:HANGUP#30 +2
+    30.722 0/pNE30-PWCACHE -> PINIT
+    30.722 0/lDBG pNE30-PINIT PASSIVE DONE
+    30.724 0/iNW:OPEN <NW:HANGUP#19 +2
+    30.724 0/lDBG ITC/NW:OPEN: Enter HUP
+    30.724 0/a19-AWACKS NW CS_ANSWERED -> CS_UNUSED
+    30.724 0/lDBG a19-AWACKS hHU ITC/NW:OPEN
+    30.724 0/a19-AWACKS WT CS_BOUND -> CS_UNUSED
+    30.724 0/lDBG a19-AWACKS FREEING (4,4)+4
+    30.724 0/a19-AWACKS -> IDLE
+    30.886         1/a08-IDLE -> AINIT
+    30.886         1/a08-AINIT a@(28,24)+4
+    30.886         1/lDBG a08-AINIT sites available
+    30.886         1/lDBG a08-AINIT OWNING (28,24)+4
+    30.887         1/a08-AINIT -> ABEHAVE
+    30.894         1/iSW:OPEN <SW:HANGUP#30 +2
+    30.895         1/lDBG ITC/SW:OPEN: Enter HUP
+    30.895         1/a30-AWACKS SW CS_ANSWERED -> CS_UNUSED
+    30.895         1/lDBG a30-AWACKS hHU ITC/SW:OPEN
+    30.895         1/lDBG a30-AWACKS FREEING (13,34)+4
+    30.895         1/a30-AWACKS -> IDLE
+    30.899 0/a10-IDLE -> AINIT
+    30.899 0/a10-AINIT a@(30,12)+4
+    30.899 0/lDBG a10-AINIT sites available
+    30.899 0/lDBG a10-AINIT OWNING (30,12)+4
+    30.900 0/a10-AINIT -> ABEHAVE
+    30.910 0/lDBG a10-ABEHAVE (30,12)BEIN ngb 1 live 1
+    30.910 0/lDBG a10-ABEHAVE FREEING (30,12)+4
+    30.910 0/a10-ABEHAVE -> IDLE
+
+    30.921 0/a15-IDLE -> AINIT
+    30.921 0/a15-AINIT a@(4,5)+4
+
+0/a15 starts up off in the NW+WT hinterlands.  WT is SHUT, but NW is
+OPEN.
+
+    30.921 0/a15-AINIT WT CS_UNUSED -> CS_BOUND
+    30.921 0/a15-AINIT NW CS_UNUSED -> CS_BOUND
+    30.922 0/lDBG a15-AINIT sites available
+    30.922 0/lDBG a15-AINIT OWNING (4,5)+4
+    30.922 0/lDBG a15-AINIT RING NW abs(4,5) usrel(4,1) yoink=1
+    30.931 0/iNW:OPEN >NW:RING#15(4,1)+4o +5
+
+0/a15 sends a RING on NW
+
+    30.931 0/a15-AINIT NW CS_BOUND -> CS_RUNG
+    30.931 0/a15-AINIT -> AWLOCKS
+
+and awaits developments.
+
+    30.940 0/a29-IDLE -> AINIT
+    30.940 0/a29-AINIT a@(33,9)+4
+
+0/a29 also starts up, in the central NE/NW region.  Needs two locks.
+
+    30.940 0/a29-AINIT NE CS_UNUSED -> CS_BOUND
+    30.940 0/a29-AINIT NW CS_UNUSED -> CS_BOUND
+    30.940 0/lDBG a29-AINIT sites available
+    30.940 0/lDBG a29-AINIT OWNING (33,9)+4
+    30.940 0/lDBG a29-AINIT RING NE abs(33,9) usrel(9,5) yoink=0
+    30.943 0/iNE:OPEN >NE:RING#29(9,5)+4e +5
+
+0/a29 rings on NE
+
+    30.943 0/a29-AINIT NE CS_BOUND -> CS_RUNG
+    30.943 0/lDBG a29-AINIT RING NW abs(33,9) usrel(33,5) yoink=0
+    30.951 0/iNW:OPEN >NW:RING#29(33,5)+4e +5
+
+0/a29 rings on NW
+
+    30.951 0/a29-AINIT NW CS_BOUND -> CS_RUNG
+    30.951 0/a29-AINIT -> AWLOCKS
+
+0/a29 sets down to wait
+
+    30.951 0/a07-IDLE -> AINIT
+    30.951 0/a07-AINIT a@(29,12)+4
+    30.952 0/a07-AINIT -> IDLE
+
+A few event attempts..
+
+    30.984 0/a08-IDLE -> AINIT
+    30.984 0/a08-AINIT a@(34,5)+4
+    30.984 0/a08-AINIT NE CS_UNUSED -> CS_BOUND
+    30.984 0/a08-AINIT NE CS_BOUND -> CS_UNUSED
+    30.984 0/a08-AINIT -> IDLE
+
+..fail to acquire..
+
+    31.004 0/a00-IDLE -> AINIT
+    31.004 0/a00-AINIT a@(29,12)+4
+    31.004 0/a00-AINIT -> IDLE
+
+..the sites they need..
+
+    31.060 0/a11-IDLE -> AINIT
+    31.060 0/a11-AINIT a@(29,12)+4
+    31.061 0/a11-AINIT -> IDLE
+
+..and end quickly.
+
+    31.093         1/lDBG a08-ABEHAVE (28,24)BEIN ngb 2 live 1
+    31.093         1/lDBG a08-ABEHAVE FREEING (28,24)+4
+    31.094         1/a08-ABEHAVE -> IDLE
+
+Over in 1/a08, a hidden event (that started way back at 30.886, in
+part of the trace I clipped), finally gets a chance to finish up.
+
+    31.094         1/a30-IDLE -> AINIT
+    31.094         1/a30-AINIT a@(27,34)+4
+
+1/a30 starts up deep in SW+SE territory
+
+    31.094         1/a30-AINIT SE CS_UNUSED -> CS_BOUND
+    31.094         1/a30-AINIT SW CS_UNUSED -> CS_BOUND
+    31.095         1/lDBG a30-AINIT sites available
+    31.095         1/lDBG a30-AINIT OWNING (27,34)+4
+    31.095         1/lDBG a30-AINIT RING SE abs(27,34) usrel(3,2) yoink=1
+    31.103         1/iSE:OPEN >SE:RING#30(3,2)+4o +5
+
+1/a30 sends a RING on SE
+
+    31.103         1/a30-AINIT SE CS_BOUND -> CS_RUNG
+    31.103         1/lDBG a30-AINIT RING SW abs(27,34) usrel(27,2) yoink=0
+    31.109         1/iSW:OPEN >SW:RING#30(27,2)+4e +5
+
+and also on SW
+
+    31.109         1/a30-AINIT SW CS_BOUND -> CS_RUNG
+    31.109         1/a30-AINIT -> AWLOCKS
+
+and then settles down to wait for developments.
+
+    31.112         1/iSE:OPEN <SE:RING#15(4,1)+4o +5
+
+Now, that ring from 0/a15, sent way back at 30.931, arrives at 1/iSE.
+
+    31.112         1/lDBG ITC/SE:OPEN: HRP abs(28,37) themrel(4,1) yoink=1
+    31.112         1/pSE15-PINIT -> PINIT
+    31.112         1/pSE15-PINIT p@(28,37)+4
+
+1/pSE15 sets up to handle it.
+
+    31.112         1/pSE15-PINIT SE CS_BOUND -> CS_RUNG
+    31.112         1/pSE15-PINIT -> PRESOLVE
+    31.112         1/lDBG u a30-AWLOCKS (27,34); t pSE15-PRESOLVE (28,37): YOINK ITC/SE:OPEN(Fred) us1 them1 -> we win
+    31.112         1/lDBG RRFP-2 pSE15-PRESOLVE BUSYed by a30-AWLOCKS
+
+Ono a collision!  1/pSE15 at (28,37)+4 overlaps 1/a30 at (27,34)+4 !
+And our active 1/a30 wins the yoink!  1/pSE15 is going to need to send
+back a BUSY to 0/a15!  (But that hasn't happened yet.)
+
+    31.115 0/iNE:OPEN <NE:RING#30(27,2)+4e +5
+    31.115 0/lDBG ITC/NE:OPEN: HRP abs(51,2) themrel(27,2) yoink=0
+
+Meanwhile, back on 0/iNE, the ring from 1/a30 has arrived
+
+    31.115 0/pNE30-PINIT -> PINIT
+    31.115 0/pNE30-PINIT p@(51,2)+4
+    31.115 0/pNE30-PINIT NE CS_BOUND -> CS_RUNG
+
+0/pNE30 sets up for it.
+
+    31.115 0/pNE30-PINIT -> PRESOLVE
+    31.116 0/lDBG RRFP-1 pNE30-PRESOLVE BUSYed by pNE31-PWCACHE
+
+
+
+    31.116         1/iSE:OPEN >SE:BUSY#15 +2
+    31.116         1/pSE15-PRESOLVE -> PINIT
+    31.116         1/lDBG Passive cn 15 released
+    31.122         1/iSE:OPEN <SE:RING#29(33,5)+4e +5
+    31.122         1/lDBG ITC/SE:OPEN: HRP abs(57,41) themrel(33,5) yoink=0
+    31.122         1/pSE29-PINIT -> PINIT
+    31.122         1/pSE29-PINIT p@(57,41)+4
+    31.122         1/pSE29-PINIT SE CS_BOUND -> CS_RUNG
+    31.122         1/pSE29-PINIT -> PRESOLVE
+    31.122         1/pSE29-PRESOLVE -> PWCACHE
+    31.124         1/iSE:OPEN >SE:ANSWER#29 +2
+    31.124         1/pSE29-PWCACHE SE CS_RUNG -> CS_ANSWERED
+    31.125 0/iNE:OPEN >NE:BUSY#30 +2
+    31.125 0/pNE30-PRESOLVE -> PINIT
+    31.125 0/lDBG Passive cn 30 released
+    31.127 0/iNW:OPEN <NW:RING#30(3,2)+4o +5
+    31.127 0/lDBG ITC/NW:OPEN: HRP abs(3,2) themrel(3,2) yoink=1
+    31.127 0/pNW30-PINIT -> PINIT
+    31.127 0/pNW30-PINIT p@(3,2)+4
+    31.127 0/pNW30-PINIT NW CS_BOUND -> CS_RUNG
+    31.127 0/pNW30-PINIT -> PRESOLVE
+    31.128 0/lDBG u a15-AWLOCKS (4,5); t pNW30-PRESOLVE (3,2): YOINK ITC/NW:OPEN(Ginger) us1 them1 -> they win
+    31.128 0/a15-AWLOCKS -> ADROP
+    31.128 0/pNW30-PRESOLVE -> PWCACHE
+    31.129         1/iSW:OPEN <SW:RING#29(9,5)+4e +5
+    31.129         1/lDBG ITC/SW:OPEN: HRP abs(9,41) themrel(9,5) yoink=0
+    31.129         1/pSW29-PINIT -> PINIT
+    31.129         1/pSW29-PINIT p@(9,41)+4
+    31.129         1/pSW29-PINIT SW CS_BOUND -> CS_RUNG
+    31.129         1/pSW29-PINIT -> PRESOLVE
+    31.129         1/pSW29-PRESOLVE -> PWCACHE
+    31.131 0/iNW:OPEN >NW:ANSWER#30 +2
+    31.131 0/pNW30-PWCACHE NW CS_RUNG -> CS_ANSWERED
+    31.132         1/iSW:OPEN >SW:ANSWER#29 +2
+    31.132         1/pSW29-PWCACHE SW CS_RUNG -> CS_ANSWERED
+    31.135         1/iSW:OPEN <SW:BUSY#30 +2
+    31.135         1/lDBG ITC/SW:OPEN: Enter hBP
+    31.135         1/lDBG a30-AWLOCKS hBUSY ITC/SW:OPEN
+    31.135         1/a30-AWLOCKS -> ADROP
+    31.138 0/iNW:OPEN <NW:BUSY#15 +2
+    31.138 0/lDBG ITC/NW:OPEN: Enter hBP
+    31.138 0/lDBG a15-ADROP hBUSY ITC/NW:OPEN
+    31.138 0/lDBG a15-ADROP Not AWLOCKS, ignoring BUSY
+    31.140 0/iNW:OPEN <NW:ANSWER#29 +2
+    31.140 0/lDBG ITC/NW:OPEN: Enter HAP
+    31.140 0/a29-AWLOCKS NW CS_RUNG -> CS_ANSWERED
+    31.140 0/lDBG ITC/NW:OPEN a29-AWLOCKS HAP
+    31.141 0/lDBG a29-AWLOCKS hANSWER ITC/NW:OPEN
+    31.151 0/iNE:OPEN <NE:ANSWER#29 +2
+    31.151 0/lDBG ITC/NE:OPEN: Enter HAP
+    31.151 0/a29-AWLOCKS NE CS_RUNG -> CS_ANSWERED
+    31.151 0/lDBG ITC/NE:OPEN a29-AWLOCKS HAP
+    31.151 0/lDBG a29-AWLOCKS hANSWER ITC/NE:OPEN
+    31.151 0/a29-AWLOCKS -> ABEHAVE
+    31.153 0/lDBG a29-ABEHAVE (33,9)BEIN ngb 1 live 1
+    31.153 0/a29-ABEHAVE -> ASCACHE
+    31.153 0/lDBG SHIP#0 sn1 (32,9) tt 0xFFFF wt 0x0001
+    31.153 0/lDBG SHIP#1 sn0 (33,9) tt 0x0001 wt 0xFFFF
+    31.156 0/iNE:OPEN >NE:TALK#29 +29
+    31.156 0/lDBG SHIP#0 sn1 (32,9) tt 0xFFFF wt 0x0001
+    31.156 0/lDBG SHIP#1 sn0 (33,9) tt 0x0001 wt 0xFFFF
+    31.159 0/iNW:OPEN >NW:TALK#29 +29
+    31.159 0/a29-ASCACHE -> AWACKS
+    31.159 0/a10-IDLE -> AINIT
+    31.159 0/a10-AINIT a@(29,12)+4
+    31.160 0/a10-AINIT -> IDLE
+    31.169 0/a05-IDLE -> AINIT
+    31.169 0/a05-AINIT a@(34,5)+4
+    31.169 0/a05-AINIT NE CS_UNUSED -> CS_BOUND
+    31.169 0/a05-AINIT NE CS_BOUND -> CS_UNUSED
+    31.169 0/a05-AINIT -> IDLE
+    31.175 0/a10-IDLE -> AINIT
+    31.176 0/a10-AINIT a@(34,5)+4
+    31.176 0/a10-AINIT NE CS_UNUSED -> CS_BOUND
+    31.176 0/a10-AINIT NE CS_BOUND -> CS_UNUSED
+    31.176 0/a10-AINIT -> IDLE
+    31.209 0/a21-IDLE -> AINIT
+    31.209 0/a21-AINIT a@(34,5)+4
+    31.209 0/a21-AINIT NE CS_UNUSED -> CS_BOUND
+    31.209 0/a21-AINIT NE CS_BOUND -> CS_UNUSED
+    31.210 0/a21-AINIT -> IDLE
+    31.233 0/a11-IDLE -> AINIT
+    31.233 0/a11-AINIT a@(29,12)+4
+    31.233 0/a11-AINIT -> IDLE
+    31.311         1/iSE:OPEN <SE:ANSWER#30 +2
+    31.311         1/lDBG ITC/SE:OPEN: Enter HAP
+    31.311         1/a30-ADROP SE CS_RUNG -> CS_ANSWERED
+    31.311         1/lDBG ITC/SE:OPEN a30-ADROP HAP
+    31.311         1/lWRN ITC/SE:OPEN HAP bad aew state a30-ADROP for cn 30
+    31.314         1/a30-ADROP SE CS_ANSWERED -> CS_UNUSED
+    31.314         1/a30-ADROP SW CS_RUNG -> CS_UNUSED
+    31.314         1/a30-ADROP -> IDLE
+    31.320 0/lDBG a15-ADROP fallow period ended, freeing
+    31.320 0/a15-ADROP WT CS_BOUND -> CS_UNUSED
+    31.320 0/a15-ADROP NW CS_RUNG -> CS_UNUSED
+    31.320 0/a15-ADROP -> IDLE
+    31.322         1/iSE:OPEN <SE:TALK#29 +29
+    31.322         1/lDBG ITC/SE:OPEN: Enter HCUP
+    31.322         1/pSE29-PWCACHE SE CS_ANSWERED -> CS_TALKED
+    31.322         1/lDBG pSE29-PWCACHE CUPSN#1 mLastSN 40
+    31.322         1/lWRN pSE29-PWCACHE sn1/(56,41) not accessible by ITC/SE:OPEN; ignored
+    31.322         1/lDBG pSE29-PWCACHE CUPSN#0 mLastSN 40
+    31.322         1/lWRN pSE29-PWCACHE sn0/(57,41) not accessible by ITC/SE:OPEN; ignored
+    31.322         1/lDBG pSE29-PWCACHE CUPSN#255 mLastSN 40
+    31.322         1/lDBG pSE29-PWCACHE (C_TALKED(pSE29-PWCACHExITC/SE:OPEN)) cPEWAHU
+    31.325         1/iSE:OPEN >SE:HANGUP#29 +2
+    31.325         1/pSE29-PWCACHE -> PINIT
+    31.325         1/lDBG pSE29-PINIT PASSIVE DONE
+    31.327         1/iSW:OPEN <SW:TALK#29 +29
+    31.327         1/lDBG ITC/SW:OPEN: Enter HCUP
+    31.327         1/pSW29-PWCACHE SW CS_ANSWERED -> CS_TALKED
+    31.327         1/lDBG pSW29-PWCACHE CUPSN#1 mLastSN 40
+    31.327         1/lWRN pSW29-PWCACHE sn1/(8,41) not accessible by ITC/SW:OPEN; ignored
+    31.327         1/lDBG pSW29-PWCACHE CUPSN#0 mLastSN 40
+    31.327         1/lWRN pSW29-PWCACHE sn0/(9,41) not accessible by ITC/SW:OPEN; ignored
+    31.327         1/lDBG pSW29-PWCACHE CUPSN#255 mLastSN 40
+    31.327         1/lDBG pSW29-PWCACHE (C_TALKED(pSW29-PWCACHExITC/SW:OPEN)) cPEWAHU
+    31.331 0/iNW:OPEN <NW:HANGUP#29 +2
+    31.331 0/lDBG ITC/NW:OPEN: Enter HUP
+    31.331 0/a29-AWACKS NW CS_ANSWERED -> CS_UNUSED
+    31.331 0/lDBG a29-AWACKS hHU ITC/NW:OPEN
+    31.333         1/iSW:OPEN >SW:HANGUP#29 +2
+    31.333         1/pSW29-PWCACHE -> PINIT
+    31.333         1/lDBG pSW29-PINIT PASSIVE DONE
+    31.339 0/iNE:OPEN <NE:HANGUP#29 +2
+    31.339 0/lDBG ITC/NE:OPEN: Enter HUP
+    31.339 0/a29-AWACKS NE CS_ANSWERED -> CS_UNUSED
+    31.339 0/lDBG a29-AWACKS hHU ITC/NE:OPEN
+    31.339 0/lDBG a29-AWACKS FREEING (33,9)+4
+    31.340 0/a29-AWACKS -> IDLE
+    31.353 0/a21-IDLE -> AINIT
+    31.353 0/a21-AINIT a@(29,12)+4
+    31.353 0/lDBG a21-AINIT sites available
+    31.353 0/lDBG a21-AINIT OWNING (29,12)+4
+    31.353 0/a21-AINIT -> ABEHAVE
+    31.353 0/lDBG a21-ABEHAVE (29,12)BEIN ngb 1 live 1
+    31.354 0/lDBG a21-ABEHAVE FREEING (29,12)+4
+    31.354 0/a21-ABEHAVE -> IDLE
+    31.373 0/a25-IDLE -> AINIT
+    31.373 0/a25-AINIT a@(28,12)+4
+    31.373 0/lDBG a25-AINIT sites available
+    31.373 0/lDBG a25-AINIT OWNING (28,12)+4
+    31.373 0/a25-AINIT -> ABEHAVE
+    31.375 0/lDBG a25-ABEHAVE (28,12)BEIN ngb 1 live 1
+    31.375 0/lDBG a25-ABEHAVE FREEING (28,12)+4
+    31.375 0/a25-ABEHAVE -> IDLE
+    31.384 0/a05-IDLE -> AINIT
+    31.384 0/a05-AINIT a@(34,5)+4
+    31.384 0/a05-AINIT NE CS_UNUSED -> CS_BOUND
+    31.384 0/a05-AINIT NW CS_UNUSED -> CS_BOUND
+    31.384 0/lDBG a05-AINIT sites available
+    31.384 0/lDBG a05-AINIT OWNING (34,5)+4
+    31.385 0/lDBG a05-AINIT RING NE abs(34,5) usrel(10,1) yoink=1
+    31.387 0/iNE:OPEN >NE:RING#5(10,1)+4o +5
+    31.387 0/a05-AINIT NE CS_BOUND -> CS_RUNG
+    31.387 0/lDBG a05-AINIT RING NW abs(34,5) usrel(34,1) yoink=0
+    31.390 0/iNW:OPEN >NW:RING#5(34,1)+4e +5
+    31.390 0/a05-AINIT NW CS_BOUND -> CS_RUNG
+    31.390 0/a05-AINIT -> AWLOCKS
+    31.400 0/a23-IDLE -> AINIT
+    31.400 0/a23-AINIT a@(27,12)+4
+    31.401 0/lDBG a23-AINIT sites available
+    31.401 0/lDBG a23-AINIT OWNING (27,12)+4
+    31.401 0/a23-AINIT -> ABEHAVE
+    31.401 0/lDBG a23-ABEHAVE (27,12)BEIN ngb 1 live 1
+    31.401 0/lDBG a23-ABEHAVE FREEING (27,12)+4
+    31.401 0/a23-ABEHAVE -> IDLE
+    31.510         1/a16-IDLE -> AINIT
+    31.511         1/a16-AINIT a@(27,34)+4
+    31.511         1/a16-AINIT SE CS_UNUSED -> CS_BOUND
+    31.511         1/a16-AINIT SW CS_UNUSED -> CS_BOUND
+    31.511         1/lDBG a16-AINIT sites available
+    31.511         1/lDBG a16-AINIT OWNING (27,34)+4
+    31.511         1/lDBG a16-AINIT RING SE abs(27,34) usrel(3,2) yoink=1
+    31.519         1/iSE:OPEN >SE:RING#16(3,2)+4o +5
+    31.519         1/a16-AINIT SE CS_BOUND -> CS_RUNG
+    31.519         1/lDBG a16-AINIT RING SW abs(27,34) usrel(27,2) yoink=1
+    31.529         1/iSW:OPEN >SW:RING#16(27,2)+4o +5
+    31.529         1/a16-AINIT SW CS_BOUND -> CS_RUNG
+    31.529         1/a16-AINIT -> AWLOCKS
+    31.532         1/iSE:OPEN <SE:RING#5(34,1)+4e +5
+    31.532         1/lDBG ITC/SE:OPEN: HRP abs(58,37) themrel(34,1) yoink=0
+    31.532         1/pSE05-PINIT -> PINIT
+    31.532         1/pSE05-PINIT p@(58,37)+4
+    31.532         1/pSE05-PINIT SE CS_BOUND -> CS_RUNG
+    31.532         1/pSE05-PINIT -> PRESOLVE
+    31.532         1/pSE05-PRESOLVE -> PWCACHE
+    31.535         1/iSE:OPEN >SE:ANSWER#5 +2
+    31.535         1/pSE05-PWCACHE SE CS_RUNG -> CS_ANSWERED
+    31.535 0/iNE:OPEN <NE:RING#16(27,2)+4o +5
+    31.535 0/lDBG ITC/NE:OPEN: HRP abs(51,2) themrel(27,2) yoink=1
+    31.535 0/pNE16-PINIT -> PINIT
+    31.535 0/pNE16-PINIT p@(51,2)+4
+    31.535 0/pNE16-PINIT NE CS_BOUND -> CS_RUNG
+    31.535 0/pNE16-PINIT -> PRESOLVE
+    31.536 0/lDBG RRFP-1 pNE16-PRESOLVE BUSYed by pNE31-PWCACHE
+    31.537         1/iSW:OPEN <SW:RING#5(10,1)+4o +5
+    31.537         1/lDBG ITC/SW:OPEN: HRP abs(10,37) themrel(10,1) yoink=1
+    31.537         1/pSW05-PINIT -> PINIT
+    31.537         1/pSW05-PINIT p@(10,37)+4
+    31.537         1/pSW05-PINIT SW CS_BOUND -> CS_RUNG
+    31.537         1/pSW05-PINIT -> PRESOLVE
+    31.537         1/pSW05-PRESOLVE -> PWCACHE
+    31.542         1/iSW:OPEN >SW:ANSWER#5 +2
+    31.542         1/pSW05-PWCACHE SW CS_RUNG -> CS_ANSWERED
+    31.544         1/iSW:OPEN <SW:BUSY#16 +2
+    31.545         1/lDBG ITC/SW:OPEN: Enter hBP
+    31.545         1/lDBG a16-AWLOCKS hBUSY ITC/SW:OPEN
+    31.545         1/a16-AWLOCKS -> ADROP
+    31.545 0/iNE:OPEN >NE:BUSY#16 +2
+    31.545 0/pNE16-PRESOLVE -> PINIT
+    31.545 0/lDBG Passive cn 16 released
+    31.547 0/iNE:OPEN <NE:ANSWER#5 +2
+    31.547 0/lDBG ITC/NE:OPEN: Enter HAP
+    31.547 0/a05-AWLOCKS NE CS_RUNG -> CS_ANSWERED
+    31.547 0/lDBG ITC/NE:OPEN a05-AWLOCKS HAP
+    31.547 0/lDBG a05-AWLOCKS hANSWER ITC/NE:OPEN
+    31.549 0/iNW:OPEN <NW:RING#16(3,2)+4o +5
+    31.549 0/lDBG ITC/NW:OPEN: HRP abs(3,2) themrel(3,2) yoink=1
+    31.550 0/pNW16-PINIT -> PINIT
+    31.550 0/pNW16-PINIT p@(3,2)+4
+    31.550 0/pNW16-PINIT NW CS_BOUND -> CS_RUNG
+    31.550 0/pNW16-PINIT -> PRESOLVE
+    31.550 0/lDBG RRFP-1 pNW16-PRESOLVE BUSYed by pNW30-PWCACHE
+    31.557 0/iNW:OPEN >NW:BUSY#16 +2
+    31.557 0/pNW16-PRESOLVE -> PINIT
+    31.557 0/lDBG Passive cn 16 released
+    31.559 0/iNW:OPEN <NW:ANSWER#5 +2
+    31.559 0/lDBG ITC/NW:OPEN: Enter HAP
+    31.559 0/a05-AWLOCKS NW CS_RUNG -> CS_ANSWERED
+    31.559 0/lDBG ITC/NW:OPEN a05-AWLOCKS HAP
+    31.560 0/lDBG a05-AWLOCKS hANSWER ITC/NW:OPEN
+    31.562 0/a05-AWLOCKS -> ABEHAVE
+    31.562 0/lDBG a05-ABEHAVE (34,5)BEIN ngb 7 live 1
+    31.562 0/a05-ABEHAVE -> ASCACHE
+    31.562 0/lDBG SHIP#0 sn7 (35,4) tt 0xFFFF wt 0x0001
+    31.562 0/lDBG SHIP#1 sn0 (34,5) tt 0x0001 wt 0xFFFF
+    31.568 0/iNE:OPEN >NE:TALK#5 +29
+    31.568 0/lDBG SHIP#0 sn7 (35,4) tt 0xFFFF wt 0x0001
+    31.568 0/lDBG SHIP#1 sn0 (34,5) tt 0x0001 wt 0xFFFF
+    31.574 0/iNW:OPEN >NW:TALK#5 +29
+    31.574 0/a05-ASCACHE -> AWACKS
+    31.731         1/iSE:OPEN <SE:BUSY#16 +2
+    31.731         1/lDBG ITC/SE:OPEN: Enter hBP
+    31.731         1/lDBG a16-ADROP hBUSY ITC/SE:OPEN
+    31.731         1/lDBG a16-ADROP Not AWLOCKS, ignoring BUSY
+    31.735 0/a09-IDLE -> AINIT
+    31.735 0/a09-AINIT a@(32,9)+4
+    31.735 0/a09-AINIT -> IDLE
+    31.737         1/iSE:OPEN <SE:TALK#5 +29
+    31.737         1/lDBG ITC/SE:OPEN: Enter HCUP
+    31.737         1/pSE05-PWCACHE SE CS_ANSWERED -> CS_TALKED
+    31.737         1/lDBG pSE05-PWCACHE CUPSN#7 mLastSN 40
+    31.737         1/lWRN pSE05-PWCACHE sn7/(59,36) not accessible by ITC/SE:OPEN; ignored
+    31.737         1/lDBG pSE05-PWCACHE CUPSN#0 mLastSN 40
+    31.737         1/lWRN pSE05-PWCACHE sn0/(58,37) not accessible by ITC/SE:OPEN; ignored
+    31.738         1/lDBG pSE05-PWCACHE CUPSN#255 mLastSN 40
+    31.738         1/lDBG pSE05-PWCACHE (C_TALKED(pSE05-PWCACHExITC/SE:OPEN)) cPEWAHU
+    31.740         1/iSE:OPEN >SE:HANGUP#5 +2
+    31.741         1/pSE05-PWCACHE -> PINIT
+    31.741         1/lDBG pSE05-PINIT PASSIVE DONE
+    31.749         1/iSW:OPEN <SW:TALK#5 +29
+    31.749         1/lDBG ITC/SW:OPEN: Enter HCUP
+    31.749         1/pSW05-PWCACHE SW CS_ANSWERED -> CS_TALKED
+    31.749         1/lDBG pSW05-PWCACHE CUPSN#7 mLastSN 40
+    31.749         1/lDBG RECV#0 sn7 (11,36) tt 0xFFFF wt 0x0001
+    31.749         1/lDBG pSW05-PWCACHE CUPSN#0 mLastSN 40
+    31.749         1/lDBG RECV#1 sn0 (10,37) tt 0x0001 wt 0xFFFF
+    31.749         1/lDBG pSW05-PWCACHE CUPSN#255 mLastSN 40
+    31.749         1/lDBG pSW05-PWCACHE (C_TALKED(pSW05-PWCACHExITC/SW:OPEN)) cPEWAHU
+    31.751         1/iSW:OPEN >SW:HANGUP#5 +2
+    31.752         1/pSW05-PWCACHE -> PINIT
+    31.752         1/lDBG pSW05-PINIT PASSIVE DONE
+    31.752         1/lDBG a16-ADROP fallow period ended, freeing
+    31.752         1/a16-ADROP SE CS_RUNG -> CS_UNUSED
+    31.752         1/a16-ADROP SW CS_RUNG -> CS_UNUSED
+    31.752         1/a16-ADROP -> IDLE
+    31.759 0/iNW:OPEN <NW:HANGUP#5 +2
+    31.759 0/lDBG ITC/NW:OPEN: Enter HUP
+    31.759 0/a05-AWACKS NW CS_ANSWERED -> CS_UNUSED
+    31.759 0/lDBG a05-AWACKS hHU ITC/NW:OPEN
+    31.766 0/iNE:OPEN <NE:HANGUP#5 +2
+    31.766 0/lDBG ITC/NE:OPEN: Enter HUP
+    31.766 0/a05-AWACKS NE CS_ANSWERED -> CS_UNUSED
+    31.766 0/lDBG a05-AWACKS hHU ITC/NE:OPEN
+    31.766 0/lDBG a05-AWACKS FREEING (34,5)+4
+    31.767 0/a05-AWACKS -> IDLE
+    31.768 0/a14-IDLE -> AINIT
+    31.768 0/a14-AINIT a@(32,9)+4
+    31.768 0/a14-AINIT NE CS_UNUSED -> CS_BOUND
+    31.768 0/a14-AINIT NW CS_UNUSED -> CS_BOUND
+    31.769 0/lDBG a14-AINIT sites available
+    31.769 0/lDBG a14-AINIT OWNING (32,9)+4
+    31.769 0/lDBG a14-AINIT RING NE abs(32,9) usrel(8,5) yoink=1
+    31.774 0/iNE:OPEN >NE:RING#14(8,5)+4o +5
+    31.774 0/a14-AINIT NE CS_BOUND -> CS_RUNG
+    31.774 0/lDBG a14-AINIT RING NW abs(32,9) usrel(32,5) yoink=1
+    31.782 0/iNW:OPEN >NW:RING#14(32,5)+4o +5
+    31.782 0/a14-AINIT NW CS_BOUND -> CS_RUNG
+    31.782 0/a14-AINIT -> AWLOCKS
+    31.791 0/a11-IDLE -> AINIT
+    31.791 0/a11-AINIT a@(26,12)+4
+    31.791 0/lDBG a11-AINIT sites available
+    31.791 0/lDBG a11-AINIT OWNING (26,12)+4
+    31.791 0/a11-AINIT -> ABEHAVE
+    31.793 0/lDBG a11-ABEHAVE (26,12)BEIN ngb 1 live 1
+    31.793 0/lDBG a11-ABEHAVE FREEING (26,12)+4
+    31.793 0/a11-ABEHAVE -> IDLE
+    31.807 0/a07-IDLE -> AINIT
+    31.807 0/a07-AINIT a@(35,4)+4
+    31.807 0/a07-AINIT NE CS_UNUSED -> CS_BOUND
+    31.807 0/a07-AINIT NE CS_BOUND -> CS_UNUSED
+    31.807 0/a07-AINIT -> IDLE
+    31.900 0/a01-IDLE -> AINIT
+    31.901 0/a01-AINIT a@(35,4)+4
+    31.901 0/a01-AINIT NE CS_UNUSED -> CS_BOUND
+    31.901 0/a01-AINIT NE CS_BOUND -> CS_UNUSED
+    31.901 0/a01-AINIT -> IDLE
+    31.903 0/a08-IDLE -> AINIT
+    31.903 0/a08-AINIT a@(35,4)+4
+    31.903 0/a08-AINIT NE CS_UNUSED -> CS_BOUND
+    31.903 0/a08-AINIT NE CS_BOUND -> CS_UNUSED
+    31.903 0/a08-AINIT -> IDLE
+    31.927         1/a30-IDLE -> AINIT
+    31.927         1/a30-AINIT a@(28,35)+4
+    31.927         1/a30-AINIT SE CS_UNUSED -> CS_BOUND
+    31.927         1/a30-AINIT SW CS_UNUSED -> CS_BOUND
+    31.927         1/lDBG a30-AINIT sites available
+    31.927         1/lDBG a30-AINIT OWNING (28,35)+4
+    31.927         1/lDBG a30-AINIT RING SE abs(28,35) usrel(4,3) yoink=0
+    31.935         1/iSE:OPEN >SE:RING#30(4,3)+4e +5
+    31.935         1/a30-AINIT SE CS_BOUND -> CS_RUNG
+    31.935         1/lDBG a30-AINIT RING SW abs(28,35) usrel(28,3) yoink=0
+    31.945         1/iSW:OPEN >SW:RING#30(28,3)+4e +5
+    31.945         1/a30-AINIT SW CS_BOUND -> CS_RUNG
+    31.945         1/a30-AINIT -> AWLOCKS
+    31.947         1/iSE:OPEN <SE:RING#14(32,5)+4o +5
+    31.947         1/lDBG ITC/SE:OPEN: HRP abs(56,41) themrel(32,5) yoink=1
+    31.947         1/pSE14-PINIT -> PINIT
+    31.947         1/pSE14-PINIT p@(56,41)+4
+    31.947         1/pSE14-PINIT SE CS_BOUND -> CS_RUNG
+    31.947         1/pSE14-PINIT -> PRESOLVE
+    31.947         1/pSE14-PRESOLVE -> PWCACHE
+    31.950         1/iSE:OPEN >SE:ANSWER#14 +2
+    31.950         1/pSE14-PWCACHE SE CS_RUNG -> CS_ANSWERED
+    31.952         1/iSW:OPEN <SW:RING#14(8,5)+4o +5
+    31.952         1/lDBG ITC/SW:OPEN: HRP abs(8,41) themrel(8,5) yoink=1
+    31.952         1/pSW14-PINIT -> PINIT
+    31.952         1/pSW14-PINIT p@(8,41)+4
+    31.952         1/pSW14-PINIT SW CS_BOUND -> CS_RUNG
+    31.952         1/pSW14-PINIT -> PRESOLVE
+    31.952         1/pSW14-PRESOLVE -> PWCACHE
+    31.954 0/iNE:OPEN <NE:RING#30(28,3)+4e +5
+    31.955 0/lDBG ITC/NE:OPEN: HRP abs(52,3) themrel(28,3) yoink=0
+    31.955 0/pNE30-PINIT -> PINIT
+    31.955 0/pNE30-PINIT p@(52,3)+4
+    31.955 0/pNE30-PINIT NE CS_BOUND -> CS_RUNG
+    31.955 0/pNE30-PINIT -> PRESOLVE
+    31.955 0/lDBG RRFP-1 pNE30-PRESOLVE BUSYed by pNE31-PWCACHE
+    31.958         1/iSW:OPEN >SW:ANSWER#14 +2
+    31.958         1/pSW14-PWCACHE SW CS_RUNG -> CS_ANSWERED
+    31.960         1/iSW:OPEN <SW:BUSY#30 +2
+    31.960         1/lDBG ITC/SW:OPEN: Enter hBP
+    31.960         1/lDBG a30-AWLOCKS hBUSY ITC/SW:OPEN
+    31.960         1/a30-AWLOCKS -> ADROP
+    31.961 0/iNE:OPEN >NE:BUSY#30 +2
+    31.961 0/pNE30-PRESOLVE -> PINIT
+    31.961 0/lDBG Passive cn 30 released
+    31.963 0/iNE:OPEN <NE:ANSWER#14 +2
+    31.963 0/lDBG ITC/NE:OPEN: Enter HAP
+    31.963 0/a14-AWLOCKS NE CS_RUNG -> CS_ANSWERED
+    31.963 0/lDBG ITC/NE:OPEN a14-AWLOCKS HAP
+    31.963 0/lDBG a14-AWLOCKS hANSWER ITC/NE:OPEN
+    31.973 0/iNW:OPEN <NW:RING#30(4,3)+4e +5
+    31.973 0/lDBG ITC/NW:OPEN: HRP abs(4,3) themrel(4,3) yoink=0
+    32.143         1/iNE:SHUT >iNE:SHUT?2EEE4739  +6
+    32.143         1/lDBG a30-ADROP fallow period ended, freeing
+    32.144         1/a30-ADROP SE CS_RUNG -> CS_UNUSED
+    32.144         1/a30-ADROP SW CS_RUNG -> CS_UNUSED
+    32.144         1/a30-ADROP -> IDLE
+    32.343         1/a08-IDLE -> AINIT
+    32.343         1/a08-AINIT a@(28,23)+4
+    32.343         1/lDBG a08-AINIT sites available
+    32.343         1/lDBG a08-AINIT OWNING (28,23)+4
+    32.343         1/a08-AINIT -> ABEHAVE
+    32.375         1/lDBG a08-ABEHAVE (28,23)BEIN ngb 2 live 1
+    32.375         1/lDBG a08-ABEHAVE FREEING (28,23)+4
+    32.375         1/a08-ABEHAVE -> IDLE
+    32.387         1/a21-IDLE -> AINIT
+    32.387         1/a21-AINIT a@(28,22)+4
+    32.388         1/lDBG a21-AINIT sites available
+    32.388         1/lDBG a21-AINIT OWNING (28,22)+4
+    32.388         1/a21-AINIT -> ABEHAVE
+    32.395         1/iSE:OPEN >iSE:OPEN?759BAB81  +6
+    32.395         1/a25-IDLE -> AINIT
+    32.395         1/a25-AINIT a@(14,33)+4
+    32.395         1/a25-AINIT SW CS_UNUSED -> CS_BOUND
+    32.395         1/lDBG a25-AINIT sites available
+    32.395         1/lDBG a25-AINIT OWNING (14,33)+4
+    32.396         1/lDBG a25-AINIT RING SW abs(14,33) usrel(14,1) yoink=1
+    32.401         1/iSW:OPEN >SW:RING#25(14,1)+4o +5
+    32.401         1/a25-AINIT SW CS_BOUND -> CS_RUNG
+    32.401         1/a25-AINIT -> AWLOCKS
+ ..
+
+:175]
+[176:
+
+Thu Jun 25 00:27:45 2020 You know, working through this -- and I'm
+still not done -- I realize that what I'd REALLY like is to have
+Weaver NOT JUST interleave the traces BUT ALSO track the current
+status of each referenced EW.  I guess it would probably have to be a
+curses program or something, so you could step forward and backward
+through the merged traces, and on the other side of the screen you'd
+have a dump of all the active windows that Weaver knows about as of
+that trace record.
+
+Because it seems an awful lot of what I'm doing here, as I struggle to
+annotate the traces, is figure out what EWs are alive and what state
+they're all in.  And Weaver could absolutely track that.
+
+HMMMMMMM.
+
+:176]
+[177:
+
+Thu Jun 25 06:11:22 2020 So I guess maybe the idea would be that when
+we load the trace files, we could implicitly or explicitly number all
+the trace record in their merged order...  and maybe build a vector
+from those numbers to filenum+filepos for where to find that record?
+
+I'm trying to think of a way to allow a curses based file viewer to
+scroll back and forward, showing a segment of the merged record plus
+a event window status map (and maybe circuit and/or itc status as
+well), that's always in sync with the cursor position in the trace
+window.
+
+Let's try building that merged map.[178:
+
+Thu Jun 25 09:06:20 2020 OK so we now have FileTrace, which wraps a
+regular trace plus a WLFNumAndFilePos, which is a pair holding a file
+number and ftell()-ish file position.
+
+Now let's build a merged vector of WLFNumAndFilePos for every trace in
+every file.. [179:
+
+Thu Jun 25 09:27:05 2020 OK, I think we have that.  Now I think we
+need a data structure to represent all our various ews, recording for
+each:
+
+ - Tile number
+
+ - Active or passive mdir6
+
+ - slotnum
+
+as their fixed data, plus
+
+ - statenum
+
+ - center
+
+ - radius
+
+as their modifiable data.
+
+I'm thinking we just immediately centralize all these inside the
+Alignment, in a map or something, rather than trying to burst them out
+to the WLF's or something.  How are we going to want to iterate them,
+though?  Let's pretend just by filenum, then actives, then passives by
+..  Actually maybe we want to align filenum on column and slotnum on
+the row, then like active vs passive on left-right in column or
+something?  It would be helpful to see passive EWs spatially connected
+to their active counterparts somehow.
+
+           +-----------------------------------------------------------+
+           |   0/            1/            2/        ^0/tracerec       |
+           | a00-AWLOCKS                             |0/tracerec       |
+           |               pNE00-PWCACHE             |  1/tracerec     |
+           |                                         |  1/tracerec     |
+           |                                         |0/tracerec       |
+           |                                         |    2/tracerec   |
+           |               a10-AWACKS                |    2/tracerec   |
+           | pSW10-PWCACHE                           >  1/tracerec     |
+           |                                         |0/tracerec       |
+           |                                         |0/tracerec       |
+           |                                         |  1/tracerec     |
+           |                                         |  1/tracerec     |
+           |                                         |0/tracerec       |
+           |                                         |    2/tracerec   |
+           |                                         v    2/tracerec   |
+           +-----------------------------------------------------------+
+
+or something like that.  Maybe collapse out rows where nobody has EWs
+going.
+
+[180:
+
+Thu Jun 25 10:03:26 2020 So what's the data structure?
+
+slotnum -> wlfnum -> <p0..p5,a>
+
+and the point is it's going to be completed built out at all times,
+and we'll scan it to decide what needs to be displayed
+
+:180]
+
+:179]
+
+:178]
+
+:177]
+[181:
+
+Thu Jun 25 11:06:39 2020 OK, well we have a cut at 'EWSlotMap', and
+Alignment is allocating and deallocating one based on the number of
+files, but we're not doing anything else with it.
+
+I think the next stop is to start getting a curses framework set up
+for Weaver, to be activated if we see the '-c' arg on the command line
+or something, so we'll have a place to start displaying the info that
+we'll get the EWSlotMap to contain.  We're heading for a bidirectional
+iterator over the mTraceLoc..[182:
+
+Thu Jun 25 14:46:15 2020 Had to break for a meeting and then a nap,
+and now another meeting coming up, and then it's time to move the
+flag!  So continuing probably in the overnight.
+
+:182]
+
+:181]
+[183:
+
+Thu Jun 25 17:21:32 2020 WIP commit.
+
+:183]
