@@ -131,6 +131,16 @@ namespace MFM
       return fseek(m_fp,offset,whence) == 0;
     }
 
+    /**
+     * Get the current file position of this FileByteSource
+     * \return the current file offset
+     *
+     * \sa Seek
+     */
+    long Tell() const {
+      MFM_API_ASSERT_STATE(m_fp);
+      return ftell(m_fp);
+    }
   };
 }
 
