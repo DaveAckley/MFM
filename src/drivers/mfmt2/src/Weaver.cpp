@@ -8,6 +8,36 @@
 
 namespace MFM {
 
+  EWFileSlot::EWFileSlot(u32 slotnum, u32 filenum) {
+    for (u32 i = 0; i < 7; ++i) {
+      mEWModelVector.push_back(EWModel(slotnum, filenum, i));
+    }
+  }
+
+  EWSlot::EWSlot(u32 slotnum, u32 filecount) {
+    for (u32 i = 0; i < filecount; ++i) {
+      mEWFileSlotVector.push_back(EWFileSlot(slotnum,i));
+    }
+  }
+
+  EWSlotMap::EWSlotMap(u32 filecount) {
+    for (u32 i = 0; i < 32; ++i) {
+      mEWSlotVector.push_back(EWSlot(i, filecount));
+    }
+  }
+
+  FileTrace::FileTrace(Trace* toOwn, WLFNumAndFilePos fp)
+    : mOwnedTrace(toOwn)
+    , mFPos(fp)
+  {
+    MFM_API_ASSERT_ARG(toOwn);
+  }
+
+  FileTrace::~FileTrace() {
+    delete mOwnedTrace;
+    mOwnedTrace = 0;
+  }
+
   struct timespec WeaverLogFile::getTraceEffectiveTime(Trace & trace) const {
     MFM_API_ASSERT_STATE(hasEffectiveOffset());
     UniqueTime eo(getEffectiveOffset(),0);
@@ -16,12 +46,15 @@ namespace MFM {
     return diff.getTimespec();
   }
 
-  Trace * WeaverLogFile::read(bool useOffset) {
+  FileTrace * WeaverLogFile::read(bool useOffset) {
     struct timespec zero;
     zero.tv_sec = 0;
     zero.tv_nsec = 0;
     if (useOffset) MFM_API_ASSERT_STATE(hasEffectiveOffset());
-    return mTraceLogReader.read(useOffset ? getEffectiveOffset() : zero);
+    WLFNumAndFilePos fpos(getFileNum(), getFilePos());
+    Trace * trace = mTraceLogReader.read(useOffset ? getEffectiveOffset() : zero);
+    if (!trace) return 0;
+    return new FileTrace(trace, fpos);
   }
 
   void WeaverLogFile::reread() {
@@ -32,11 +65,12 @@ namespace MFM {
 
   void WeaverLogFile::findITCSyncs(Alignment & a) {
     reread();
-    Trace * ptr;
+    FileTrace * ptr;
     while ((ptr = read(false)) != 0) {
       //      ptr->printPretty(STDOUT);
       s32 tag;
-      if (ptr->reportSyncIfAny(tag)) a.addSyncPoint(tag < 0 ? -tag : tag, this, ptr);
+      if (ptr->getTrace().reportSyncIfAny(tag))
+        a.addSyncPoint(tag < 0 ? -tag : tag, this, ptr);
       else delete ptr;
     }
   }
@@ -52,6 +86,10 @@ namespace MFM {
     , mEffectiveOffset()
   { }
     
+  WeaverLogFile::~WeaverLogFile() {
+    mFileByteSource.Close();
+  }
+
   bool Alignment::parseTweak(const char * arg) {
     CharBufferByteSource cbbs(arg,strlen(arg));
     u32 filenum;
@@ -64,7 +102,7 @@ namespace MFM {
     return false;
   }
 
-  void Alignment::addSyncPoint(s32 sync, WeaverLogFile * file, Trace * evt) {
+  void Alignment::addSyncPoint(s32 sync, WeaverLogFile * file, FileTrace * evt) {
     MFM_API_ASSERT_NONNULL(file);
     MFM_API_ASSERT_NONNULL(evt);
     FileTracePtrPair pair(file,evt);
@@ -74,13 +112,16 @@ namespace MFM {
 
   Alignment::Alignment()
     : mPrintSyncMap(false)
+    , mEWSlotMapPtr(0)
   { }
 
   Alignment::~Alignment() {
+    delete mEWSlotMapPtr;
+    mEWSlotMapPtr = 0;
     while (mWeaverLogFiles.size() > 0) {
       WLFandTracePtrsPair & pp = mWeaverLogFiles.back();
       WeaverLogFile* wptr = pp.first;
-      Trace* tptr = pp.second;
+      FileTrace* tptr = pp.second;
       delete wptr;
       delete tptr;
       mWeaverLogFiles.pop_back();
@@ -168,6 +209,7 @@ namespace MFM {
   }
 
   void Alignment::processLogs() {
+    mEWSlotMapPtr = new EWSlotMap(mWeaverLogFiles.size());
     analyzeLogSync();
     if (mPrintSyncMap)
       printSyncMap(STDOUT);
@@ -188,9 +230,9 @@ namespace MFM {
         for (FileTracePtrPairVector::const_iterator it2 = v.begin();
              it2 != v.end(); ++it2) {
           const WeaverLogFile * wlf = it2->first;
-          const Trace* trace = it2->second;
+          const Trace& trace = it2->second->getTrace();
           bs.Printf("  %d/",wlf->getFileNum());
-          trace->getTraceAddress().printPretty(bs);
+          trace.getTraceAddress().printPretty(bs);
           bs.Printf("\n");
         }
       }
@@ -278,8 +320,8 @@ namespace MFM {
           u32 n1 = w1.getFileNum();
           u32 n2 = w2.getFileNum();
           
-          Trace& trace1 = *it1->second;
-          Trace& trace2 = *it2->second;
+          Trace& trace1 = it1->second->getTrace();
+          Trace& trace2 = it2->second->getTrace();
           struct timespec tt1 = trace1.mLocalTimestamp.getTimespec();
           struct timespec tt2 = trace2.mLocalTimestamp.getTimespec();
 
@@ -362,14 +404,14 @@ namespace MFM {
           }
         } else {
           if (advanceToNextTraceIfNeededAndPossible(*pftpp)) {
-            Trace * existingt = pftpp->second;
+            FileTrace * existingt = pftpp->second;
             MFM_API_ASSERT_NONNULL(existingt);
-            struct timespec existing = existingt->getTimespec();
+            struct timespec existing = existingt->getTrace().getTimespec();
 
             if (advanceToNextTraceIfNeededAndPossible(ftpp)) {
-              Trace * newt = ftpp.second;
+              FileTrace * newt = ftpp.second;
               MFM_API_ASSERT_NONNULL(newt);
-              struct timespec challenget = newt->getTimespec();
+              struct timespec challenget = newt->getTrace().getTimespec();
               if (UniqueTime(challenget,0) < UniqueTime(existing,0)) {
                 pftpp = &ftpp;
                 somebodyLive = true;
@@ -380,17 +422,21 @@ namespace MFM {
       }
       if (somebodyLive) {
         WeaverLogFile & wlf = *(pftpp->first);
-        Trace * reportt = extractNextEarliestTrace(*pftpp);
-        struct timespec thisTime = reportt->getTimespec();
+        FileTrace * reportt = extractNextEarliestTrace(*pftpp);
+        u32 mergedRecNum = mTraceLocs.size();
+        mTraceLocs.push_back(reportt->getWLFNumAndFilePos());
+        struct timespec thisTime = reportt->getTrace().getTimespec();
         //double seconds = UniqueTime::getIntervalSeconds(thisTime,lastTime);
         lastTime = thisTime;
-        printf("%0.3f ", UniqueTime::doubleFromTimespec(thisTime));
+        printf("%d %0.3f ",
+               mergedRecNum,
+               UniqueTime::doubleFromTimespec(thisTime));
         //        STDOUT.Printf("%d ",(u32) );
         //STDOUT.Printf("%4d ",(u32) (1000*seconds));
         for (u32 i = 0; i < wlf.getFileNum(); ++i) 
           STDOUT.Printf("        ");
         STDOUT.Printf("%d/",wlf.getFileNum());
-        reportt->printPretty(STDOUT,false);
+        reportt->getTrace().printPretty(STDOUT,false);
         delete reportt;
       }
     }
@@ -398,7 +444,7 @@ namespace MFM {
 
   bool Alignment::advanceToNextTraceIfNeededAndPossible(FileTracePtrPair & ftpp) {
     if (ftpp.second == 0) {
-      Trace * raw = ftpp.first->read(true);
+      FileTrace * raw = ftpp.first->read(true);
       if (raw) {
         ftpp.second = raw;        
       }
@@ -412,13 +458,13 @@ namespace MFM {
       ret.tv_sec = S32_MAX;
       ret.tv_nsec = 0;
     } else {
-      ret = ftpp.second->getTimespec();
+      ret = ftpp.second->getTrace().getTimespec();
     }
     return ret;
   }
 
-  Trace * Alignment::extractNextEarliestTrace(FileTracePtrPair & ftpp) {
-    Trace * ret;
+  FileTrace * Alignment::extractNextEarliestTrace(FileTracePtrPair & ftpp) {
+    FileTrace * ret;
     if (!advanceToNextTraceIfNeededAndPossible(ftpp)) {
       FAIL(ILLEGAL_STATE);
     }
