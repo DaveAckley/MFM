@@ -93,6 +93,7 @@ namespace MFM {
   struct Trace {
     const UniqueTime mLocalTimestamp;
     const u8 mTraceType;
+    u8 getTraceType() const { return mTraceType; }
 
     struct timespec getTimespec() const {
       return mLocalTimestamp.getTimespec();
