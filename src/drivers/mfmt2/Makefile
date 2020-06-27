@@ -68,5 +68,5 @@ $(BUILDDIR)/$(WEAVER_NAME).o:	$(WEAVER_SRC) $(ALLDEP) $(BUILDDIR)/%.d
 
 $(WEAVER_BIN):	program $(BUILDDIR)/$(WEAVER_NAME).o $(ALLDEP) $(ARCHIVES)
 	@mkdir -p $(BINDIR)
-	@$(GPP) $(LDFLAGS) $(BUILDDIR)/$(WEAVER_NAME).o $(LIBS) -o $@
+	@$(GPP) $(LDFLAGS) $(BUILDDIR)/$(WEAVER_NAME).o $(LIBS) -lpanel -lncurses -o $@
 	@echo Made $@
