@@ -285,7 +285,7 @@ namespace MFM {
       }
 
       if (mTopRecord < 0) mTopRecord = 0;
-      else if (mTopRecord >= max - 5) mTopRecord = max - 5;
+      else if (mTopRecord >= max - 1) mTopRecord = max - 1;
       mEWSlotMap.slewTo(mTopRecord);
       return handled;
     }
