@@ -1,4 +1,4 @@
-{206}  -*- text -*-
+{217}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -4319,3 +4319,119 @@ by 13337.
 
 :205]
 :204]
+[206:
+
+Sat Jun 27 14:28:52 2020 OK, let's redo the EWMap layout one more time
+here, and then try to declare victory and pop the stack on Weaver for
+a while.
+
+Let's go for this:
+[208:
+DONE :208] - Increase column width to w/2*filecount
+
+[215: Sun Jun 28 04:30:18 2020 
+DONE :215] - Do file active, file passive, on adjacent columns?
+
+[209:
+DONE :209] - Track TTC_EW_AssignCenter records too?
+
+ - Track TTC_EW_CircuitStateChange records too?
+
+ - Assign persistent row numbers, on 3s for active and 2s for passive?
+
+[207:
+
+Sun Jun 28 01:55:15 2020 OK so how are we going to do some of this and
+move on to actual debugging?[210:
+
+Sun Jun 28 01:56:01 2020 In particular, we organized the code around
+'orders' as a single linear ordering.  How hard would it be to go 2D
+there?  (And the whole idea of associating slotnums spatially, that's
+getting tossed too?)[211:
+
+Sun Jun 28 02:05:14 2020 Well it's a gross hack but we could go
+through the orders several times and filter out the ones we want each
+time -- 0/a's, 0/p's, 1/a's, ..  But then we lose position
+persistence.
+
+How about we do a+p per file in separate columns, and just list each
+column oldest first?  So the flitting hidden a's will almost always be
+at the bottom, and the long intertile ews will have pretty stable
+row positions.  And informative ones at that.
+
+So we can tag each EWModel by the trace loc of its current assign
+center, say?  And set that to U32_MAX (youngest possible) when the
+thing is first allocated?[212:
+
+Sun Jun 28 02:21:13 2020 Buuuut how do we back into a lost EWModel,
+grr.  We leave its last assign-center traceloc in there?  I guess we
+have to..[213:
+
+Sun Jun 28 02:27:38 2020 Sure it's just like the center info itself --
+we back back into that..  OK let's go for this.  For now the strategy
+is just init the time to U32_MAX, capture the assignCenter time when
+we see it, bypass the order stuff completely for the moment, and sort
+the columns at drawPanel time.
+
+:213]
+
+:212]
+
+:211]
+
+:210]
+
+:207]
+
+:206]
+[214:
+
+Sun Jun 28 04:29:01 2020 OK, laying the EWMs out in columns looks
+better (on a big wide terminal anyway) --
+
+┌EWMap────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│0/a30-ADROP......(28,35)+4    0/pSE29-PWCACHE..(57,41)+4    1/a15-ADROP........(4,5)+4    1/pNE31-PWCACHE...(51,2)+4     │
+│                              0/pSW29-PWCACHE...(9,41)+4    1/a29-AWLOCKS.....(33,9)+4    1/pNW30-PWCACHE....(3,2)+4     │
+│                                                                                                                         │
+│                                                                                                                         │
+│                                                                                                                         │
+│                                                                                                                         │
+│                                                                                                                         │
+│                                                                                                                         │
+│                                                                                                                         │
+│                                                                                                                         │
+│                                                                                                                         │
+│                                                                                                                         │
+│                                                                                                                         │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Log────────────────────────────────────────────┐┌Trace──────────────────────────────────────────────────────────────13246┐
+│                                               ││31.131    1/pNW30-PWCACHE NW CS_RUNG -> CS_ANSWERED                     │
+│11: MSG: WP 0                                  ││31.132 0/iSW:OPEN >SW:ANSWER#29 +2                                      │
+│12: MSG: WM 0                                  ││31.132 0/pSW29-PWCACHE SW CS_RUNG -> CS_ANSWERED                        │
+│13: MSG: 0/->/home/t2/FILEDIR/202006242212-BLUE││31.135 0/iSW:OPEN <SW:BUSY#30 +2                                        │
+│14: MSG: 0/ @Wed Jun 24 11:28:13 2020          ││31.135 0/lDBG ITC/SW:OPEN: Enter hBP                                    │
+│15: MSG: 1/->/home/t2/FILEDIR/202006242212-RED-││31.135 0/lDBG a30-AWLOCKS hBUSY ITC/SW:OPEN                             │
+│16: MSG: 1/ @Wed Jun 24 11:28:08 2020          ││31.135 0/a30-AWLOCKS -> ADROP                                           │
+│17: MSG: 0/ -> 1/ n=44, s=214.904093, ss=1049.6│>31.138    1/iNW:OPEN <NW:BUSY#15 +2                                     │
+│18: MSG: 1/ -> 0/ n=44, s=-214.904093, ss=1049.││31.138    1/lDBG ITC/NW:OPEN: Enter hBP                                 │
+│19: MSG: Anchor file is 1/                     ││31.138    1/lDBG a15-ADROP hBUSY ITC/NW:OPEN                            │
+│210: MSG: TWEAKING n0 0.000000                 ││31.138    1/lDBG a15-ADROP Not AWLOCKS, ignoring BUSY                   │
+│211: MSG: 0/ 4s 884ms                          ││31.140    1/iNW:OPEN <NW:ANSWER#29 +2                                   │
+│212: MSG: 1/ 0ms                               ││31.140    1/lDBG ITC/NW:OPEN: Enter HAP                                 │
+│213: MSG: can_change_color=1                   ││31.140    1/a29-AWLOCKS NW CS_RUNG -> CS_ANSWERED                       │
+└───────────────────────────────────────────────┘└────────────────────────────────────────────────────────────────────────┘
+
+:214]
+[216:
+
+Sun Jun 28 13:32:34 2020 OK, Weaver -i is good enough.  At this point
+I WANT to start changing the mfmt2 code based on issues surfaced by
+Weaver:
+
+ - pEWs return to IDLE when done, not just PINIT
+
+Hmm I guess that's really the main one at the moment.  Let's commit
+this Weaver stuff, then address the PINIT issue, then see if we can
+catch some new bugs to inspect in our Weaver inspection jar.
+
+:216]
