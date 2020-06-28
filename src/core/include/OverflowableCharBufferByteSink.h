@@ -269,12 +269,17 @@ namespace MFM {
 
     /**
      * If the OverflowableCharBufferByteSink is neither empty nor
-     * overflowed, and the last byte of it is a newline, remove that
-     * last byte, shortening the content by one byte
+     * overflowed, and the last byte of it is equal to toChomp
+     * (default value '\n'), remove that last byte, shortening the
+     * content by one byte.  As an added feature, if toChomp is
+     * negative, chomp any final existing non-overflowed byte.
      */
-    bool Chomp()
+    bool Chomp(s32 toChomp = '\n')
     {
-      bool chomp = m_written > 0 && !m_overflowed && m_buf[m_written - 1] == '\n';
+      bool chomp =
+        m_written > 0 &&
+        !m_overflowed &&
+        (toChomp < 0 || (m_buf[m_written - 1] == (u8) toChomp));
       if (chomp) m_buf[--m_written] = '\0';
       return chomp;
     }
