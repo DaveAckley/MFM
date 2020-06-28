@@ -35,13 +35,9 @@ namespace MFM {
   }
 
   bool EWModel::isDisplayable() const {
-    //// DISGUSTING HACK BECAUSE pEWs DON'T RETURN TO EWSN_IDLE grrr
-    if (mStateNum == EWSN_PINIT && mRadius != 0)
-      return true;
     bool boring =
       (mStateNum == U32_MAX ||
-       mStateNum == EWSN_IDLE ||
-       mStateNum == EWSN_PINIT);
+       mStateNum == EWSN_IDLE);
     return !boring;
   }
 
