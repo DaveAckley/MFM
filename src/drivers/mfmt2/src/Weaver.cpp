@@ -9,7 +9,35 @@
 #include "T2Tile.h" /*for getDir6Name grr */
 
 namespace MFM {
+  void EWModel::setCS(Dir6 dir6, CircuitState state) {
+    for (u32 cn = 0 ; cn < 2 ; ++cn) {
+      if (mCircuitDirs[cn] == dir6) {
+        mCircuitState[cn] = state;
+        return;
+      }
+    }
+    for (u32 cn = 0 ; cn < 2 ; ++cn) {
+      if (mCircuitDirs[cn] == 0xff) {
+        mCircuitDirs[cn] = dir6;
+        mCircuitState[cn] = state;
+        return;
+      }
+    }
+    FAIL(UNREACHABLE_CODE);
+  }
+
+  CircuitState EWModel::getCS(Dir6 dir6) {
+    for (u32 cn = 0; cn < 2; ++cn) {
+      if (mCircuitDirs[cn] == dir6)
+        return  mCircuitState[cn];
+    }
+    return (CircuitState) U32_MAX;
+  }
+
   bool EWModel::isDisplayable() const {
+    //// DISGUSTING HACK BECAUSE pEWs DON'T RETURN TO EWSN_IDLE grrr
+    if (mStateNum == EWSN_PINIT && mRadius != 0)
+      return true;
     bool boring =
       (mStateNum == U32_MAX ||
        mStateNum == EWSN_IDLE ||
@@ -18,16 +46,20 @@ namespace MFM {
   }
 
   void EWModel::printPretty(ByteSink & bs, u32 minWidth) {
-    OString32 temp;
-
+    OString64 temp;
+    OString32 temp2;
+    temp2.Printf("(%d,%d)+%d",
+                 mCenter.GetX(),mCenter.GetY(),
+                 mRadius);
     temp.Printf("%d/%s%s%02d-%s",
                 mFileNum,
                 mEWIdx==6 ? "a" : "p",
                 mEWIdx==6 ? "" : getDir6Name(mEWIdx),
                 mSlotNum,
                 getEWStateName(mStateNum));
-    while (temp.GetLength() < minWidth)
-      temp.Printf(" ");
+    while (temp.GetLength() < minWidth-temp2.GetLength())
+      temp.Printf(".");
+    temp.Printf("%s",temp2.GetZString());
     bs.Printf("%s",temp.GetZString());
   }
 
@@ -118,7 +150,10 @@ namespace MFM {
   
   void EWSlotMap::updateForRaw(const FileTrace & ft, bool forward) {
     const Trace & trace = ft.getTrace();
-    if (trace.getTraceType() != TTC_EW_StateChange)
+    bool isEWStateChange = trace.getTraceType() == TTC_EW_StateChange;
+    bool isEWAssignCenter = trace.getTraceType() == TTC_EW_AssignCenter;
+    bool isEWCSChange = trace.getTraceType() == TTC_EW_CircuitStateChange;
+    if (!isEWStateChange && !isEWAssignCenter && !isEWCSChange)
       return;
     FileNumber fn = ft.getWLFNumAndFilePos().first;
     const TraceAddress & addr = trace.getTraceAddress();
@@ -134,28 +169,66 @@ namespace MFM {
 
     if (!bad) {
       u8 slotnum = addr.mArg1;
-      EWStateNumber curState = (EWStateNumber) addr.mArg2;
-      u8 nextStateByte;
       EWModel * ewmp = findEWModel(slotnum, fn, ewindex);
       if (!ewmp) bad = "ewm not found";
-      else if (1 != trace.payloadRead().Scanf("%c",&nextStateByte))
-        bad = "bad length";
-      else {
-        EWStateNumber nextState = (EWStateNumber) nextStateByte;
-        EWModel & ewm = *ewmp;
-        if (forward) { 
-          if (ewm.mStateNum == curState || ewm.mStateNum == U32_MAX)
-            ewm.mStateNum = nextState;
-          else bad = "unmatched curstate";
-        } else /*backward*/ {
-          if (ewm.mStateNum != nextState) bad = "unmatched nextstate";
-          else ewm.mStateNum = curState;
+      else if (isEWStateChange) {
+        EWStateNumber curState = (EWStateNumber) addr.mArg2;
+        u8 nextStateByte;
+        if (1 != trace.payloadRead().Scanf("%c",&nextStateByte))
+          bad = "bad length";
+        else {
+          EWStateNumber nextState = (EWStateNumber) nextStateByte;
+          EWModel & ewm = *ewmp;
+          if (forward) { 
+            if (ewm.mStateNum == curState || ewm.mStateNum == U32_MAX)
+              ewm.mStateNum = nextState;
+            else bad = "unmatched curstate";
+          } else /*backward*/ {
+            if (ewm.mStateNum != nextState) bad = "unmatched nextstate";
+            else ewm.mStateNum = curState;
+          }
+          if (ewm.isDisplayable())
+            insertEWModel(ewm);
+          else
+            removeEWModel(ewm);
         }
-        if (ewm.isDisplayable())
-          insertEWModel(ewm);
-        else
-          removeEWModel(ewm);
-      }
+      } else if (isEWAssignCenter) {
+        s8 cx,cy;
+        u8 radius,active;
+        if (4 != trace.payloadRead().Scanf("%c%c%c%c",&cx,&cy,&radius,&active))
+          bad = "bad assign center match";
+        else {
+          EWModel & ewm = *ewmp;
+          if (forward) {
+            ewm.mCenter = SPoint((s32) cx, (s32) cy);
+            ewm.mRadius = radius;
+            ewm.mTraceLoc = ft.getTraceLoc();
+          } else /* backward */ {
+            ewm.mCenter = SPoint(0,0);
+            ewm.mRadius = 0;
+          }
+          ewm.resetCircuits();
+        }
+      } else if (isEWCSChange) {
+        u8 itcdir6, oldcs, newcs;
+        if (3 != trace.payloadRead().Scanf("%c%c%c",&itcdir6,&oldcs,&newcs))
+          bad = "bad CS change";
+        else {
+          EWModel & ewm = *ewmp;
+          CircuitState cur = ewm.getCS(itcdir6);
+          if (forward) {
+            if (cur != U32_MAX && cur != oldcs) 
+              LOG.Warning("cs fwd mismatch %d %d %d", cur, oldcs, newcs);
+            else
+              ewm.setCS(itcdir6, (CircuitState) newcs);
+          } else /*backward*/ {
+            if (cur != U32_MAX && cur != newcs) 
+              LOG.Warning("cs bkd mismatch %d %d", cur, oldcs, newcs);
+            else
+              ewm.setCS(itcdir6, (CircuitState) oldcs);
+          }
+        }
+      } else bad = "????";
     }
 
     if (bad) {
@@ -165,7 +238,6 @@ namespace MFM {
       FAIL(ILLEGAL_STATE);
     }
   }
-
 
   void EWSlotMap::insertEWModel(EWModel& ewm) {
     EWModel * ewmp = &ewm;
@@ -204,8 +276,9 @@ namespace MFM {
       mFreeOrders.insert(order);
   }
 
-  FileTrace::FileTrace(Trace* toOwn, WLFNumAndFilePos fp)
+  FileTrace::FileTrace(Trace* toOwn, u32 useLoc, WLFNumAndFilePos fp)
     : mOwnedTrace(toOwn)
+    , mTraceLoc(useLoc)
     , mFPos(fp)
   {
     MFM_API_ASSERT_ARG(toOwn);
@@ -237,7 +310,7 @@ namespace MFM {
     return diff.getTimespec();
   }
 
-  FileTrace * WeaverLogFile::read(bool useOffset) {
+  FileTrace * WeaverLogFile::read(u32 useLoc, bool useOffset) {
     struct timespec zero;
     zero.tv_sec = 0;
     zero.tv_nsec = 0;
@@ -245,7 +318,7 @@ namespace MFM {
     WLFNumAndFilePos fpos(getFileNum(), getFilePos());
     Trace * trace = mTraceLogReader.read(useOffset ? getEffectiveOffset() : zero);
     if (!trace) return 0;
-    return new FileTrace(trace, fpos);
+    return new FileTrace(trace, useLoc, fpos);
   }
 
   void WeaverLogFile::seek(u32 filepos) {
@@ -259,8 +332,7 @@ namespace MFM {
   void WeaverLogFile::findITCSyncs(Alignment & a) {
     reread();
     FileTrace * ptr;
-    while ((ptr = read(false)) != 0) {
-      //      ptr->printPretty(STDOUT);
+    while ((ptr = read(U32_MAX, false)) != 0) { // TraceLoc not used here..
       s32 tag;
       if (ptr->getTrace().reportSyncIfAny(tag))
         a.addSyncPoint(tag < 0 ? -tag : tag, this, ptr);
@@ -294,7 +366,7 @@ namespace MFM {
     s32 usec;
     if (3 == cbbs.Scanf("%d/%d",&filenum, &usec)) {
       mWLFTweakMap[filenum] += usec;
-      STDOUT.Printf("%d/ tweak = %dus\n",filenum, mWLFTweakMap[filenum]);
+      LOG.Message("%d/ tweak = %dus",filenum, mWLFTweakMap[filenum]);
       return true;
     }
     return false;
@@ -355,7 +427,7 @@ namespace MFM {
 
       struct timespec eff1 = w1.getEffectiveOffset();
       double avgOffset = 1.0*ifd.mSumOfDisparities/ifd.mDisparityCount;
-      STDOUT.Printf("TWEAKING n%d %f\n",n2,mWLFTweakMap[n2]/1000000.0);
+      LOG.Message("TWEAKING n%d %f",n2,mWLFTweakMap[n2]/1000000.0);
       avgOffset += mWLFTweakMap[n2]/1000000.0; // ADJUST OFFSET BY TWEAK
       struct timespec avgOff = UniqueTime::timespecFromDouble(avgOffset);
       struct timespec sum = UniqueTime::sum(eff1,avgOff);
@@ -391,14 +463,14 @@ namespace MFM {
       }
     }
     if (noneEarlier.size() != 1) {
-      STDERR.Printf("%d anchor files detected\n", noneEarlier.size());
+      LOG.Message("%d anchor files detected", noneEarlier.size());
       FAIL(INCOMPLETE_CODE);
     } else { // One
       struct timespec zero;
       zero.tv_sec = 0;
       zero.tv_nsec = 0;
       FileNumber fn = *noneEarlier.begin();
-      STDOUT.Printf("Anchor file is %d/\n",fn);
+      LOG.Message("Anchor file is %d/",fn);
       WeaverLogFile & anchor = *(mWeaverLogFiles[fn].first);
       anchor.setEffectiveOffset(zero); // Oldest anchor starts consolidated relative time
       assignEffectiveOffsetsLaterThan(fn);
@@ -455,11 +527,11 @@ namespace MFM {
     double err = delta12 - avg;
     if (err < 0) err = -err;
     if (err > 0.010) {
-      STDOUT.Printf("WARNING: SYNC ALIAS? %08x (#%d->#%d) avg=%f, var=%f, outlier=%f, err=%f\n",
-                    syncVal,
-                    fn1,fn2,
-                    avg,var,
-                    delta12, err);
+      LOG.Warning("WARNING: SYNC ALIAS? %08x (#%d->#%d) avg=%f, var=%f, outlier=%f, err=%f",
+                  syncVal,
+                  fn1,fn2,
+                  avg,var,
+                  delta12, err);
       return true;
     }
     return false;
@@ -542,7 +614,11 @@ namespace MFM {
       WeaverLogFile & w1 = *(it1->first);
         u32 n1 = w1.getFileNum();
         time_t sec = w1.getFirstTimespec().tv_sec;
-        STDOUT.Printf("%d/ %s: %s", n1, w1.getFilePath(), ctime(&sec));
+        OString32 temp;
+        temp.Printf("%s", ctime(&sec));
+        temp.Chomp();
+        LOG.Message("%d/->%s", n1, w1.getFilePath());
+        LOG.Message("%d/ @%s", n1, temp.GetZString());
     }
     for (WeaverLogFilePtrVector::iterator it1 = mWeaverLogFiles.begin();
          it1 != mWeaverLogFiles.end(); ++it1) {
@@ -558,12 +634,12 @@ namespace MFM {
         const InterFileData & ifd = mDisparityMap[fnp];
         double avg = ifd.mSumOfDisparities / ifd.mDisparityCount;
         double var = ifd.mSumSquareOfDisparities / ifd.mDisparityCount;
-        STDOUT.Printf("%d/ -> %d/ n=%d, s=%f, ss=%f, avg=%f, var=%f\n",
-                      n1, n2,
-                      ifd.mDisparityCount,
-                      ifd.mSumOfDisparities,
-                      ifd.mSumSquareOfDisparities,
-                      avg,var);
+        LOG.Message("%d/ -> %d/ n=%d, s=%f, ss=%f, avg=%f, var=%f",
+                    n1, n2,
+                    ifd.mDisparityCount,
+                    ifd.mSumOfDisparities,
+                    ifd.mSumSquareOfDisparities,
+                    avg,var);
       }
     }
   }
@@ -573,10 +649,10 @@ namespace MFM {
          it1 != mWeaverLogFiles.end(); ++it1) {
       WeaverLogFile & w1 = *(it1->first);
       u32 n1 = w1.getFileNum();
-      STDOUT.Printf("%d/ ",n1);
+      OString32 temp;
       UniqueTime eo(w1.getEffectiveOffset(),0);
-      eo.printPretty(STDOUT);
-      STDOUT.Printf("\n");
+      eo.printPretty(temp);
+      LOG.Message("%d/ %s",n1,temp.GetZString());
       w1.reread(); // Set up to reread for dumping
       if (it1->second != 0) {
         delete it1->second; // Clean up leftover traces?  
@@ -648,12 +724,12 @@ namespace MFM {
     u32 pos = wap.second;
     WeaverLogFile* wlf = mWeaverLogFiles[wlfn].first;
     wlf->seek(pos);
-    return wlf->read(true);
+    return wlf->read(traceloc, true);
   }
 
   bool Alignment::advanceToNextTraceIfNeededAndPossible(FileTracePtrPair & ftpp) {
     if (ftpp.second == 0) {
-      FileTrace * raw = ftpp.first->read(true);
+      FileTrace * raw = ftpp.first->read(U32_MAX,true);
       if (raw) {
         ftpp.second = raw;        
       }
@@ -858,6 +934,7 @@ static const char * CMD_HELP_STRING =
   }
 
   int Weaver::main(int argc, char ** argv) {
+    LOG.SetByteSink(mLogBuffer);
     processArgs(argc,argv);
     if (mInteractive) {
       IWeave iw(*this);

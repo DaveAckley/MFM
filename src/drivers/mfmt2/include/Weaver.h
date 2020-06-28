@@ -12,6 +12,7 @@
 #include "dirdatamacro.h"
 
 #include "Point.h"
+#include "LineTailByteSink.h"
 
 #include "T2Constants.h"
 #include "FileByteSource.h"
@@ -27,13 +28,15 @@ namespace MFM {
   typedef std::pair<FileNumber,long> WLFNumAndFilePos;
 
   struct FileTrace {
-    FileTrace(Trace* toOwn, WLFNumAndFilePos fp) ;
+    FileTrace(Trace* toOwn, u32 useLoc, WLFNumAndFilePos fp) ;
     Trace & getTrace() { return * mOwnedTrace; }
     const Trace & getTrace() const { return * mOwnedTrace; }
+    u32 getTraceLoc() const { return mTraceLoc; }
     WLFNumAndFilePos getWLFNumAndFilePos() const { return mFPos; }
     ~FileTrace() ;
 
     Trace * mOwnedTrace;
+    u32 mTraceLoc;
     WLFNumAndFilePos mFPos;
     void printPretty(ByteSink& bs) ;
   };
@@ -59,7 +62,7 @@ namespace MFM {
     s32 checkForSync(Trace & evt) ;
 
     struct timespec getFirstTimespec() const { return mTraceLogReader.getFirstTimespec(); }
-    FileTrace * read(bool useOffset) ;
+    FileTrace * read(u32 useLoc, bool useOffset) ;
     void reread() ;
 
     long getFilePos() const { return mFileByteSource.Tell(); }
@@ -82,8 +85,11 @@ namespace MFM {
     const u32 mFileNum;
     const u8 mEWIdx; // 0..5 == pET..PNE, 6==a
     u8 mRadius;
-    EWStateNumber mStateNum; // U32_MAX for unknwon
+    EWStateNumber mStateNum; // U32_MAX for unknown
     SPoint mCenter;
+    u32 mTraceLoc; // U32_MAX for unset
+    Dir6 mCircuitDirs[2]; // 0xff for unknown/unused
+    CircuitState mCircuitState[2]; // U32_MAX for unknown/unused
     EWModel(u32 sn, u32 fn, u8 idx)
       : mSlotNum(sn)
       , mFileNum(fn)
@@ -94,7 +100,27 @@ namespace MFM {
       mRadius = 0;
       mStateNum = (EWStateNumber) U32_MAX;
       mCenter = SPoint(0,0);
+      mTraceLoc = U32_MAX;
+      resetCircuits();
     }
+
+    void resetCircuits() {
+      for (u32 cn = 0 ; cn < 2; ++cn) {
+        mCircuitDirs[cn] = 0xff;
+        mCircuitState[cn] = (CircuitState) U32_MAX;
+      }
+    }
+
+    bool getCircuitInfo(u32 idx, Dir6 & dir6, CircuitState & cs) {
+      if (idx >= 2) return false;
+      if (mCircuitDirs[idx] == 0xff) return false;
+      dir6 = mCircuitDirs[idx];
+      cs = mCircuitState[idx];
+      return true;
+    }
+
+    void setCS(Dir6 dir, CircuitState state) ;
+    CircuitState getCS(Dir6 dir) ;
 
     void printPretty(ByteSink & bs, u32 minWidth) ;
 
@@ -209,6 +235,7 @@ namespace MFM {
     ~Alignment() ;
   };
 
+  typedef LineTailByteSink<100,80> OurLogBuffer;
   struct Weaver {
     Weaver()
       : mAlignment()
@@ -217,6 +244,7 @@ namespace MFM {
     
     Alignment mAlignment;
     bool mInteractive;
+    OurLogBuffer mLogBuffer;
     
     void processArgs(int argc, char ** argv) ;
     
