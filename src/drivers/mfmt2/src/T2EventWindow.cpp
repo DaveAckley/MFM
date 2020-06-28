@@ -645,7 +645,7 @@ namespace MFM {
 
   void T2PassiveEventWindow::resetPassiveEW() {
     initializeEW(); // Clear gunk for next renter
-    setEWSN(EWSN_PINIT);
+    setEWSN(EWSN_IDLE);
     getPassiveCircuit().resetCircuitForPassive();
   }
 
@@ -1008,7 +1008,7 @@ namespace MFM {
     : T2EventWindow(tile, ewsn, category)
     , mPassiveCircuit(*this)
   {
-    _setEWSNRaw(EWSN_PINIT);
+    _setEWSNRaw(EWSN_IDLE);
     mPassiveCircuit.bindCircuitForPassive(itc);
   }
   

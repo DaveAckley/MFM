@@ -195,7 +195,7 @@ namespace MFM {
     }
 
     T2PassiveEventWindow & pEW = *mPassiveEWs[cn]; // cn OK via asCSRing
-    MFM_API_ASSERT_STATE(pEW.getEWSN() == EWSN_PINIT);
+    MFM_API_ASSERT_STATE(pEW.getEWSN() == EWSN_IDLE);
 
     pEW.initPassive(ourCtr, radius, ayoink);
     pEW.setEWSN(EWSN_PRESOLVE);
