@@ -131,7 +131,7 @@ namespace MFM {
   void T2ActiveEventWindow::sendDropsExceptTo(T2ITC * notThisOne) {
     for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
       Circuit & ci = mActiveCircuits[i];
-      if (ci.isLockHeld()) {
+      if (ci.isDropNeeded()) {
         T2ITC & thisITC = ci.getITC();
         TLOG(DBG,"%s ac[%d] %s, thisitc %s",
              getName(), i, ci.getName(), thisITC.getName());

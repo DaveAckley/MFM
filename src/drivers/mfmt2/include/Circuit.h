@@ -32,6 +32,7 @@ namespace MFM {
   const char * getCircuitStateDescription(CircuitState cs) ;
   bool isITCBoundInCircuitState(CircuitState cs) ;
   bool isLockHeldInCircuitState(CircuitState cs) ;
+  bool isDropNeededInCircuitState(CircuitState cs) ;
 
   struct Circuit {
 
@@ -43,6 +44,7 @@ namespace MFM {
     bool isLockNeeded() const ;
     bool isLockRequested() const ;
     bool isLockHeld() const ;
+    bool isDropNeeded() const ;
 
     void setCS(CircuitState cs) ;
     CircuitState getCS() const { return mState; }

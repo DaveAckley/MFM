@@ -33,6 +33,9 @@ namespace MFM {
     }
   }
 
+  bool isDropNeededInCircuitState(CircuitState cs) {
+    return cs >= CS_RUNG && cs <= CS_TALKED;
+  }
   bool isLockHeldInCircuitState(CircuitState cs) {
     switch (cs) {
     default: FAIL(ILLEGAL_ARGUMENT);
@@ -72,6 +75,10 @@ namespace MFM {
 
   bool Circuit::isLockHeld() const {
     return isLockHeldInCircuitState(mState);
+  }
+
+  bool Circuit::isDropNeeded() const {
+    return isDropNeededInCircuitState(mState);
   }
 
   void Circuit::setCS(CircuitState cs) {
