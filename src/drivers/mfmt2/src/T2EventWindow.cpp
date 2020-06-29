@@ -128,6 +128,23 @@ namespace MFM {
       scheduleWait(WC_NOW); // Bump
   }
 
+  void T2ActiveEventWindow::sendDropsExceptTo(T2ITC * notThisOne) {
+    for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
+      Circuit & ci = mActiveCircuits[i];
+      if (ci.isLockHeld()) {
+        T2ITC & thisITC = ci.getITC();
+        TLOG(DBG,"%s ac[%d] %s, thisitc %s",
+             getName(), i, ci.getName(), thisITC.getName());
+        if (&thisITC != notThisOne) {
+          TLOG(DBG,"%s sending drop thisITC %p vs itc %p",
+               getName(), &thisITC, notThisOne);
+          trySendDropVia(thisITC);
+        }
+        ci.setCS(CS_DROPPED);
+      }
+    }
+  }
+
   void T2ActiveEventWindow::handleBusy(T2ITC & itc) {
     TLOG(DBG,"%s hBUSY %s", getName(), itc.getName());
 
@@ -137,21 +154,7 @@ namespace MFM {
       return;
     }
 
-    for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
-      Circuit & ci = mActiveCircuits[i];
-      if (ci.isLockHeld()) {
-        T2ITC & thisITC = ci.getITC();
-        TLOG(DBG,"%s ac[%d] %s, thisitc %s",
-             getName(), i, ci.getName(), thisITC.getName());
-        if (&thisITC != &itc) {
-          TLOG(DBG,"%s sending drop thisITC %p vs itc %p",
-               getName(), &thisITC, &itc);
-          trySendDropVia(thisITC);
-        }
-        ci.setCS(CS_DROPPED);
-      }
-    }
-
+    sendDropsExceptTo(&itc);
     dropActiveEW(true);
   }
 
@@ -277,15 +280,17 @@ namespace MFM {
     bool theyAreFred = itc.isFred(); // They came in via itc, so they're fred if it is
     bool theyWin = (theyAreFred == (usVal != themVal)); // Fred always takes odds
 
-    TLOG(DBG,"u %s (%d,%d); t %s (%d,%d): YOINK %s(%s) us%d them%d -> %s",
+    TLOG(DBG,"us %s (%d,%d); yoink=%d",
          ew.getName(),
          ew.getCenter().GetX(),ew.getCenter().GetY(),
+         usVal);
+    TLOG(DBG,"them %s (%d,%d); yoink=%d",
          getName(),
          getCenter().GetX(),getCenter().GetY(),
+         themVal);
+    TLOG(DBG,"YOINK %s(%s) -> %s",
          itc.getName(),
-         theyAreFred ? "Fred" : "Ginger",
-         usVal,
-         themVal,
+         theyAreFred ? "Fred/odds" : "Ginger/evens",
          theyWin ? "they win" : "we win"
          );
     return theyWin;
@@ -336,6 +341,7 @@ namespace MFM {
         // Do yoink protocol between *this (passive for them) and ew (active by us)
         bool passiveWins = passiveWinsYoinkRace(*aew);
         if (passiveWins) {
+          aew->sendDropsExceptTo(0); // Send drops to all in this case?
           aew->dropActiveEW(false);
           continue;
         }

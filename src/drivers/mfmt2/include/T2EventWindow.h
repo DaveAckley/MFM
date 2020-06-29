@@ -245,6 +245,7 @@ namespace MFM {
     bool hasAnyLocks() ;
     void registerWithITCIfNeeded(T2ITC & itc) ;
 
+    void sendDropsExceptTo(T2ITC * notThisOne) ;
     bool trySendCacheUpdates() ;
     s32 trySendCacheUpdatePacket(Circuit & ci) ;
     bool trySendLockRequests() ;
