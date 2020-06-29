@@ -298,10 +298,9 @@ namespace MFM {
 
   void T2PassiveEventWindow::handleDrop(T2ITC & itc) {
     TLOG(DBG,"%s: handleDrop", getName());
-    if (getEWSN() <= EWSN_PINIT) { // What is best predicate here??
-      FAIL(ILLEGAL_STATE);
-    }
-    unhogEWSites();
+    if (getEWSN() == EWSN_IDLE) return;
+    if (getEWSN() >= EWSN_PRESOLVE && getEWSN() <= EWSN_PWCACHE)
+      unhogEWSites();
     resetPassiveEW(); // Clear gunk for next renter
   }
 
