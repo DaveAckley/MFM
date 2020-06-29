@@ -1,4 +1,4 @@
-{217}  -*- text -*-
+{246}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -4131,7 +4131,7 @@ DONE :193] - Respond to arrow, page, and home/end keys to scroll the Trace
 
  - Nail the active row to the middle of the trace window?  Need to
    handle negative rows then..  One of mTopRecord/mActiveRow becomes
-   redundant. 
+   redundant.
 
 :190]
 :188]
@@ -4165,7 +4165,7 @@ one, so they won't jump around horizontally on state changes, although
 the whole thing with re-layout when a short-lived hidden event pops in
 or out.  Hmm and option not to display hidden events could be quite
 useful for stabilizing that display, but sometimes you're going to
-want them.. 
+want them..
 
 [196:
 
@@ -4329,7 +4329,7 @@ Let's go for this:
 [208:
 DONE :208] - Increase column width to w/2*filecount
 
-[215: Sun Jun 28 04:30:18 2020 
+[215: Sun Jun 28 04:30:18 2020
 DONE :215] - Do file active, file passive, on adjacent columns?
 
 [209:
@@ -4435,3 +4435,472 @@ this Weaver stuff, then address the PINIT issue, then see if we can
 catch some new bugs to inspect in our Weaver inspection jar.
 
 :216]
+[217:
+
+Sun Jun 28 23:54:32 2020 OK, so before dinner, I hacked at getting the
+pEWs to return to IDLE, and that seemed to be working okay, and I
+changed Weaver to expect that.  And just now I've generated new trace
+files
+
+    202006282348-WHITE-t2trace12.dat
+    202006282348-RED-t2trace12.dat
+
+that manifests the 'leftover pEWs' problem using the new code.
+
+[218:
+
+Mon Jun 29 00:11:21 2020 So here we go.  Let's try to diagnosis the
+problem -- which we are pretty sure involves incomplete clean-up
+sometime after an ADROP -- using these log files and Weaver -i
+
+:218]
+
+:217]
+[219:
+
+Mon Jun 29 00:14:11 2020 DEBUGGING PROCESS.
+
+ - OK, so by jumping to the end, we see 0/pNE17 appears to be an
+   'orphaned pEW'.
+
+ - Let's focus on that one.
+
+ - Searching backwards from the end for '1/a17', we first find:
+    >92.408    1/a17-AINIT -> AWLOCKS
+
+ - Search back further with up-arrow, we get to
+    >92.407    1/a17-IDLE -> AINIT
+   without any lock involvement.  That's a quick hidden event and not
+   the one we're looking for.
+
+ - One more up-arrow leads to the more promising:
+     >91.189    1/a17-ADROP -> IDLE
+   which in fact is the end of an interesting 1/a sequence:
+
+    │91.183    1/iSE:OPEN <SE:ANSWER#17 +2
+    │91.183    1/a17-ADROP SE CS_RUNG -> CS_ANSWERED
+    │91.183    1/lWRN ITC/SE:OPEN HAP bad aew state a17-ADROP for cn 17
+    │91.189    1/a17-ADROP SW CS_RUNG -> CS_UNUSED
+    │91.189    1/a17-ADROP SE CS_ANSWERED -> CS_UNUSED
+    >91.189    1/a17-ADROP -> IDLE
+
+   where the warning (and subsequent traces) are coming from
+   T2ITC.cpp:318:
+
+    if (aew.getEWSN() != EWSN_AWLOCKS) {
+      TLOG(WRN,"%s HAP bad aew state %s for cn %d",
+           getName(), aew.getName(), cn);
+      aew.abortEW(); // XXX ??
+      return;
+    }
+
+[220: Mon Jun 29 00:28:43 2020
+
+ - So that's perhaps the smoking gun, but it doesn't pinpoint any
+   actual bug.  Some possibilities and diagnostic questions:
+   = Are we just racing?  Has 1/a17 previously sent a DROP to 0/pNW17,
+     who just happened to ANSWER before seeing it?
+   = If so, should we be accepting aEW in ADROP there?
+
+ - Let's find out if 1/a17 sent a DROP to 0/pNW17.[221:
+
+ - Hmm, we see
+     >91.176    1/a17-AWLOCKS -> ADROP
+   perhaps due to losing a yoink race?  The surrounding context isn't
+   clear:
+
+    │91.176    1/iSW:OPEN <SW:RING#6(19,0)+4e +5
+    │91.176    1/pSW06-IDLE -> PINIT
+    │91.176    1/pSW06-PINIT p@(19,36)+4
+    │91.176    1/pSW06-PINIT SW CS_BOUND -> CS_RUNG
+    │91.176    1/pSW06-PINIT -> PRESOLVE
+    >91.176    1/a17-AWLOCKS -> ADROP
+    │91.176    1/pSW06-PRESOLVE -> PWCACHE
+    │91.176    1/iSW:OPEN >SW:ANSWER#6 +2
+
+[222:
+
+Mon Jun 29 00:41:12 2020 Argh, I didn't run these traces with '-l4'!
+It's not include DBG messages!  I bet that's why we don't see explicit
+notice of the yoink race.
+
+Darn.  Let's go again.  For the record, gdb set-up is like:
+
+/home/t2/MFM/src/drivers/mfmt2# gdb ../../../bin/mfmt2
+(gdb) r -w /home/t2/MFM/res/mfmt2/wconfig.txt -z MFMT2-FAKE-MFZID -l4 -t
+
+:222]
+
+:221]
+
+:220]
+:219]
+[223:
+
+Mon Jun 29 01:02:22 2020 OK got another one.  This time it's dying on
+a RING packet rather than an ANSWER packet, but the issue is upstream
+either way, I think..  Tagging these traces with 202006290103
+
+:223]
+[224:
+
+Mon Jun 29 01:06:40 2020 OK, starting again, on ~/FILEDIR/
+
+  -rw-r--r-- 1 t2 t2 231899 Jun 29 01:01 202006290103-RED.dat
+  -rw-r--r-- 1 t2 t2 317651 Jun 29 01:05 202006290103-WHITE.dat
+
+[225:
+
+Mon Jun 29 01:07:43 2020
+
+ - Jump to end..  Hmm, don't see any obviously orphaned pEWs.
+
+|108.496    1/t  Failed to top: src/T2EventWindow.cpp:888: INCOMPLETE_COD│
+│110.450 0/t  Failed to top: src/T2ITC.cpp:198: ILLEGAL_STATE [4]        │
+│110.599    1/t  Total events completed = 407904                         │
+>112.634 0/t  Total events completed = 632106                            │
+
+ - The 1/t T2EventWindow.cpp:888 is failing due to timeout in AWLOCKS;
+   a consequence of 0/t hitting a breakpoint after T2ITC.cpp:198:
+
+    MFM_API_ASSERT_STATE(pEW.getEWSN() == EWSN_IDLE);
+
+ - From the final EWMap, the suspected instigator is 1/a19:
+
+    ───────────────────────────────────────────────────────────
+     0/pNE19-PWCACHE..(52,-1)+4    1/a19-AWLOCKS....(28,31)+4
+      NE ANSWERED                   SE ANSWERED
+     0/pNW19-PWCACHE...(4,-1)+4     SW RUNG
+      NW ANSWERED                  1/a15-AWLOCKS....(51,30)+4
+                                    ET BOUND
+                                    SE RUNG
+
+[226:
+
+Mon Jun 29 01:16:36 2020 Uh-oh, it's worse than I thought.  Stepping
+backwards over this:
+
+    >45.152    1/a19-IDLE -> AINIT 
+
+causes the 1/a19-AWLOCKS....(28,31)+4 to vanish, but the 0/ps remain
+-- are they a vestige of an earlier 1/a19?  Searching back farther.
+
+[227:
+
+Mon Jun 29 01:19:39 2020 Ah so the next stop back is implicated:
+
+│45.118    1/lWRN ITC/SW:OPEN HAP bad aew state a19-ADROP for cn 19      │
+>45.119    1/a19-ADROP SE CS_RUNG -> CS_UNUSED                           │
+│45.119    1/a19-ADROP SW CS_ANSWERED -> CS_UNUSED                       │
+│45.119    1/a19-ADROP -> IDLE                                           │
+
+and that 'bad aew' warning is the same one we saw in :219: above.
+
+But, 1/a19 is already -ADROP at that time.  So let's push back to
+where that arises.[228:
+
+Mon Jun 29 01:23:22 2020 OK, back at tracerec 14212 we find
+
+>45.099    1/a19-AWLOCKS -> ADROP
+
+but we're a little screwed because the Trace window is cutting off
+part of the previous debug message:
+
+│45.099    1/lDBG u a19-AWLOCKS (28,31); t pSE21-PRESOLVE (30,36): YOINK │
+>45.099    1/a19-AWLOCKS -> ADROP                                        │
+
+which is indeed the YOINK RACE debug message.  For the future, let's
+break that down to three DBG messages: active side, passive side,
+results.
+[229:
+
+Mon Jun 29 01:28:31 2020 In the meantime, though, we note that a quick
+check-in with our still-fully-functional non-interactive Weaver gets
+us the full debug message:
+
+    t2@beaglebone:~/MFM/src/drivers/mfmt2$ ../../../bin/Weaver ~/FILEDIR/202006290103-*.dat | grep 45.099
+    14210 45.099         1/pSE21-PINIT -> PRESOLVE
+    14211 45.099         1/lDBG u a19-AWLOCKS (28,31); t pSE21-PRESOLVE (30,36): YOINK ITC/SE:OPEN(Fred) us1 them0 -> they win
+    14212 45.099         1/a19-AWLOCKS -> ADROP
+    14213 45.099         1/pSE21-PRESOLVE -> PWCACHE
+    t2@beaglebone:~/MFM/src/drivers/mfmt2$ 
+
+So it's a yoink from the SE, and SE is a Fred, and Fred takes the
+odds, and odds is what we got, so Fred:SW:them:1/pSE21:0/a21 wins, and
+our 1/a19 goes to ADROP.  But how did we NOT send a message to 0/pNE19
+before that happened?[230:
+
+Mon Jun 29 01:47:45 2020 So that debug message was part of
+T2pEW::passiveWinsYoinkRace, and its caller says:
+
+        bool passiveWins = passiveWinsYoinkRace(*aew);
+        if (passiveWins) {
+          aew->dropActiveEW(false);
+          continue;
+        }
+
+leading to:
+
+  void T2ActiveEventWindow::dropActiveEW(bool dueToNAK) {
+    if (getEWSN() != EWSN_ADROP) {
+      unhogEWSites();
+      setEWSN(EWSN_ADROP);
+      scheduleWait(WC_HALF);
+    } else {
+      LOG.Warning("%s already dropped", getName());
+    }
+  }
+
+which shows no sign of notifying anybody about the change.
+
+Is..  That..  Not..  Wrong?
+
+[231:
+
+Mon Jun 29 01:50:48 2020 I guess the counterclaim is that the far side
+is supposed to detect the race itself.. no nono that's not this
+situation is it?  Here the other side of the yoink race -- 1/pSE21 aka
+0/a21 -- is WINNING, and the issue is we're dropping 1/a19 -- aka
+0/pNW15 and 0/pNE19.
+
+Do we have any discussion of the intended logic here that we can put
+our hands on now?[232:
+
+Mon Jun 29 01:54:22 2020 So back in :161: we talk about _changing_ the
+(previously basically non-existent) semantics of ADROP.[233:
+
+Mon Jun 29 01:58:49 2020 And we have :167: tracing through stuff that
+does send a BUSY, but that's what happens when we win.  Here we're
+dealing with the case where they win, and somebody else needs to get
+killed. [234:
+
+Mon Jun 29 02:01:38 2020 And :169: shows a DROP going on the wire.
+That particular case turned out to be a bug (shown in :170:) but the
+overall approach is still in the code:
+
+  void T2ActiveEventWindow::handleBusy(T2ITC & itc) {
+ ..
+    for (u32 i = 0; i < CIRCUITS_PER_ACTIVE_EW; ++i) {
+      Circuit & ci = mActiveCircuits[i];
+      if (ci.isLockHeld()) {
+ ..
+        if (&thisITC != &itc) {
+ ..
+          trySendDropVia(thisITC);
+        }
+        ci.setCS(CS_DROPPED);
+      }
+    }
+    dropActiveEW(true);
+  }
+
+and the thought is we need something similar to it .. where exactly?  
+[235:
+
+Mon Jun 29 02:14:15 2020 Well in this case we're in
+
+T2ITC::handleRingPacket ->
+T2PassiveEventWindow::checkSiteAvailabilityForPassive ->
+T2PassiveEventWindow::resolveRacesFromPassive
+
+and we're just back from
+
+T2PassiveEventWindow::passiveWinsYoinkRace
+
+with a return value of true.
+
+So the claim is we need to do stuff leading to that trySendDropVia
+call, right there.  I guess we should factor it out of handleBusy? 
+
+:235]
+
+
+:234]
+
+:233]
+
+:232]
+
+:231]
+
+:230]
+
+:229]
+
+
+:228]
+
+:227]
+
+:226]
+:225]
+
+:224]
+[236:
+
+Mon Jun 29 02:31:23 2020 Well okay, made
+
+void sendDropsExceptTo(T2ITC * notThisOne) ;
+ 
+and currently saying that when we drop from the passive side, we
+should send DROP to everyone, so passing 0 for notThisOne.
+
+Let's commit this WIP and spread it to WHITE and go again.
+
+[237:
+
+Mon Jun 29 02:45:18 2020 OK, seem to've caught a another/similar issue
+-- being pSE19-PWCACHE in handleRingPacket -- so let's see if this
+looks appreciably different.  Assigning 202006290246[238:
+
+Mon Jun 29 02:48:17 2020 OK, here we go:
+
+ - Jump to end, find a busy EWMap:
+
+┌EWMap────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│0/a11-AWACKS.......(5,6)+4    0/pNE25-PWCACHE...(52,1)+4    1/a25-ADROP......(28,33)+4    1/pSE19-PWCACHE..(54,36)+4     │
+│ WT BOUND                      NE ANSWERED                   SE RUNG                       SE ANSWERED                   │
+│ NW ANSWERED                                                 SW RUNG                      1/pSW01-PWCACHE...(6,36)+4     │
+│0/a27-AWLOCKS.....(30,4)+4                                                                 SW ANSWERED                   │
+│ NW RUNG                                                                                  1/pSE11-PWCACHE..(29,38)+4     │
+│ NE RUNG                                                                                   SE ANSWERED                   │
+
+
+ - Just prior in the trace we see 0/a19 getting freed:
+│29.448 0/lDBG a19-ADROP fallow period ended, freeing                    │
+│29.448 0/a19-ADROP NW CS_RUNG -> CS_UNUSED                              │
+│29.449 0/a19-ADROP NE CS_RUNG -> CS_UNUSED                              │
+│29.449 0/a19-ADROP -> IDLE                                              │
+
+ - And we don't have great visibility into the actual failure here, we
+   ought to be able to see more..
+
+ - But anyway, let's look back to find 0/a19 sending DROPs, which
+   1/pSE19 should have reacted to..[239:
+
+
+Mon Jun 29 02:55:27 2020 Grrrr, so I find:
+
+│26.709 0/lDBG us a19-AWLOCKS (30,4); yoink=0                            │
+│26.709 0/lDBG them pNE31-PRESOLVE (36,2); yoink=1                       │
+│26.709 0/lDBG YOINK ITC/NE:OPEN(Fred/odds) -> they win                  │
+>26.709 0/a19-AWLOCKS -> ADROP                                           │
+
+(which does show our new broken-down triple-dbg yoink message, but)
+which still SHOWS NO SIGNS that drop messages are getting sent.[240:
+
+Mon Jun 29 03:00:00 2020 Well, so 'sendDropsExceptTo' does say this:
+  ..
+      Circuit & ci = mActiveCircuits[i];
+      if (ci.isLockHeld()) {
+  ..
+
+and in the case at hand, we're calling it on
+
+│0/a19-AWLOCKS......(0,0)+0
+│ NE RUNG
+│ NW RUNG
+
+which, as we ALL can PLAINLY see, is holding NO locks at all.  Both
+its circuits are in state RUNG, while the only lock-holding circuit
+states are ANSWERED and TALKED.
+
+So no DROPs are sent.
+
+:240]
+
+:239]
+
+:238]
+
+:237]
+
+:236]
+[241:
+
+Mon Jun 29 04:19:45 2020 Gah lost an hour to the damn 'social media'.
+But I was also playing with Andrew's CellBrane on mfm.rocks and making
+a little video of it, so that's something.
+
+:241]
+[242:
+
+Mon Jun 29 04:20:15 2020 But what the fog do we wand sendDropsExceptTo
+to do?  Send to every circuit that's in use at all?  CS_RUNG or
+greater?  Maybe so.  Do we want to be a coward and pass a flag so
+we'll only change behavior when caller says?
+
+Let's try CS_RUNG..CS_TALKED inclusive, for all users of
+sendDropsExceptTo, and see what happens.
+
+:242]
+[243:
+
+Mon Jun 29 04:53:25 2020 OK, now DROPs are flying and the first new
+blow up is line 302, reacting to that:
+
+    299       void T2PassiveEventWindow::handleDrop(T2ITC & itc) {
+    300         TLOG(DBG,"%s: handleDrop", getName());
+    301         if (getEWSN() <= EWSN_PINIT) { // What is best predicate here??
+    302           FAIL(ILLEGAL_STATE);
+
+with
+
+    (gdb) p getEWSN()
+    $3 = MFM::EWSN_IDLE
+    (gdb) 
+
+No idea if it's a 'reasonable' DROP or not.  I guess let's fire up the
+Weaver and just take a quick peek.  Code 202006290455 [244:
+
+Mon Jun 29 05:01:33 2020 Well, it might be 'reasonable'.  What
+happened was:
+
+0/a18-AINIT.......(4,10)+4  started up..
+
+>24.052 0/iNW:OPEN >NW:RING#18(4,6)+4o +5
+│24.052 0/a18-AINIT NW CS_BOUND -> CS_RUNG 
+│24.052 0/a18-AINIT -> AWLOCKS
+
+..rang NW and started waiting..
+
+>24.202    1/iSE:OPEN <SE:RING#18(4,6)+4o +5                             │
+│24.202    1/lDBG ITC/SE:OPEN: HRP abs(28,42) themrel(4,6) yoink=1       │
+│24.202    1/pSE18-IDLE -> PINIT                                         │
+│24.202    1/pSE18-PINIT p@(28,42)+4                                     │
+│24.202    1/pSE18-PINIT SE CS_BOUND -> CS_RUNG                          │
+
+..The ring came in 1/iSE and 1/pSE18 started up..
+
+│24.202    1/pSE18-PINIT -> PRESOLVE                                     │
+│24.202    1/lDBG us a25-AWLOCKS (29,35); yoink=1                        │
+│24.202    1/lDBG them pSE18-PRESOLVE (28,42); yoink=1                   │
+│24.202    1/lDBG YOINK ITC/SE:OPEN(Fred/odds) -> we win                 │
+│24.202    1/lDBG RRFP-2 pSE18-PRESOLVE BUSYed by a25-AWLOCKS            │
+│24.204    1/iSE:OPEN >SE:BUSY#18 +2                                     │
+>24.204    1/pSE18-PRESOLVE -> IDLE                                      │
+│24.204    1/lDBG Passive cn 18 released                                 │
+
+..a race was detected and 0/a25 won the yoink, so 1/iSE reported BUSY,
+and 1/pSE18 went back to idle.
+
+And Is That Not Pretty Reasonable?
+
+So I guess we're saying inbound DROP is advisory, at least in certain
+cases? 
+
+[245:
+
+Mon Jun 29 05:18:37 2020 So pEWs hogSites in
+checkSiteAvailabilityForPassive, at it appears they will be in state
+PRESOLVE at that time.
+
+pEWs unhog sites in commitPassiveEWAndHangUp (successful event path)
+at which point it's in PWCACHE, and handleDrop (not).  So I guess in
+handleDrop we unhog for EWSN_PRESOLVE..EWSN_PWCACHE and not otherwise? 
+
+:245]
+
+:244]
+
+:243]
