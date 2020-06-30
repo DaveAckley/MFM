@@ -551,7 +551,9 @@ namespace MFM {
         //Need to ship it
         if (pb.CanWrite() < (s32) BYTES_PER_SITE) break; //this packet is full
         pb.Printf("%c",sn); // Here comes sitenumber sn!
-        TLOG(DBG,"SHIP#%d sn%d (%d,%d) tt 0x%04x wt 0x%04x",
+        TLOG(DBG,"%s>>%s#%d@%d(%d,%d) 0x%04x->0x%04x",
+             getName(),
+             getDir6Name(itc.mDir6),
              atomsShipped,
              sn, usite.GetX(), usite.GetY(),
              onTile.GetAtom().GetType(),
@@ -604,7 +606,7 @@ namespace MFM {
       SPoint offset = md.GetPoint(sn);
       SPoint tileSite = mCenter + offset;
       if (!cacheAndViz.Contains(tileSite)) {
-        TLOG(WRN,"%s sn%d/(%d,%d) not accessible by %s; ignored",
+        TLOG(WRN,"%s sn%d(%d,%d) not accessible by %s; ignored",
              getName(),
              sn,
              tileSite.GetX(), tileSite.GetY(),
