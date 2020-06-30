@@ -387,6 +387,8 @@ namespace MFM {
     typedef std::pair<WINDOW*,PANEL*> WindowAndPanelPtrs;
     typedef std::vector<WindowAndPanelPtrs> WAPPtrVector;
     WAPPtrVector mWAPPtrVector;
+    u32 mAutoModeSpeed;
+    s32 mAutoRepeatKey;
 
     void makePanel(IWPanelData * toOwn) {
       IWPanelData * data = toOwn;
@@ -404,6 +406,8 @@ namespace MFM {
 
     IWeavePrivate(Weaver& weaver)
       : mWAPPtrVector()
+      , mAutoModeSpeed(0)
+      , mAutoRepeatKey(ERR)
     {
       initCurse();
       u32 w = COLS;
@@ -469,19 +473,70 @@ namespace MFM {
       }
     }
 
+    void autoStop() {
+      mAutoModeSpeed = 0;
+      setHalfDelay();
+    }
+
+    void autoFaster() {
+      if (mAutoModeSpeed == 0) mAutoModeSpeed = 10;
+      else --mAutoModeSpeed;
+      if (mAutoModeSpeed < 1) mAutoModeSpeed = 1;
+      setHalfDelay();
+    }
+
+    void autoSlower() {
+      ++mAutoModeSpeed;
+      if (mAutoModeSpeed > 20) mAutoModeSpeed = 20;
+      setHalfDelay();
+    }
+
+    void setHalfDelay() {
+      if (mAutoModeSpeed == 0)
+        cbreak();
+      else
+        halfdelay(mAutoModeSpeed);
+    }
+
+    s32 getch_auto() {
+      s32 key = getch();
+      switch (key) {
+      case KEY_F(1):
+      case KEY_F(2):
+      case KEY_F(3):
+        return key;
+      case ERR:
+        break;
+      default:
+        mAutoRepeatKey = key;
+        mAutoModeSpeed = 0;
+      }
+      return mAutoRepeatKey;
+    }
+
     bool doCommand() {
       redraw_panels();
       update_panels();
       refresh();
       ///GDBISH?
-      cbreak();
+      setHalfDelay();
       keypad(stdscr,TRUE);
       noecho();
       ///
-      s32 ch = getch();
+      s32 ch = getch_auto();
       PANEL * top = panel_below(0);
       IWPanelData * ipd = (IWPanelData*) panel_userptr(top);
       switch (ch) {
+      case KEY_F(1):
+        autoStop();
+        break;
+      case KEY_F(2):
+        autoFaster();
+        break;
+      case KEY_F(3):
+        autoSlower();
+        break;
+
       case KEY_F(9):
         return false;
       case '\f':
