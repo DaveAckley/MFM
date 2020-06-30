@@ -203,7 +203,12 @@ namespace MFM {
     , mPacketPoller(*this)
     , mListening(false)
     , mMDist()
-    , mTotalEventsCompleted(0)
+    , mTotalActiveEventsConsidered(0)
+    , mTotalActiveEmptyEventsConsidered(0)
+    , mTotalActiveEventsPerformed(0)
+    , mTotalNonemptyActiveEventsPerformed(0)
+    , mTotalActiveEventsCompleted(0)
+    , mTotalNonemptyActiveEventsCompleted(0)
     , mCPUFreq(CPUSpeed_Slow)
     , mCoreTempChecker()
   {
@@ -566,7 +571,7 @@ static const char * CMD_HELP_STRING =
   }
 
   void T2Tile::recordCompletedEvent(OurT2Site & site) {
-    site.RecordEventAtSite(++mTotalEventsCompleted);
+    site.RecordEventAtSite(++mTotalActiveEventsCompleted);
   }
 
   u32 T2Tile::considerSiteForEW(UPoint idx) {
@@ -589,11 +594,13 @@ static const char * CMD_HELP_STRING =
     u32 radius = 0;
     UPoint ctr;
     for (u32 i = 0; i < MAX_TRIES; ++i) {
+      ++mTotalActiveEventsConsidered;
       ctr =
         UPoint(getRandom(), T2TILE_OWNED_WIDTH, T2TILE_OWNED_HEIGHT)
         + UPoint(CACHE_LINES,CACHE_LINES);
       radius = considerSiteForEW(ctr);
       if (radius > 0) break;
+      ++mTotalActiveEmptyEventsConsidered;
     }
     if (radius == 0) return false;
     return tryAcquireEW(ctr, radius, true);
@@ -644,7 +651,14 @@ static const char * CMD_HELP_STRING =
 
   void T2Tile::stopTracing() {
     if (mTraceLoggerPtr != 0) {
-      trace(*this, TTC_Tile_Stop, "%q", mTotalEventsCompleted);
+      trace(*this, TTC_Tile_Stop, "%q%q%q%q%q%q",
+            mTotalActiveEventsConsidered,
+            mTotalActiveEmptyEventsConsidered,
+            mTotalActiveEventsPerformed,
+            mTotalNonemptyActiveEventsPerformed,
+            mTotalActiveEventsCompleted,
+            mTotalNonemptyActiveEventsCompleted
+            );
       delete mTraceLoggerPtr;
       mTraceLoggerPtr = 0;
     }

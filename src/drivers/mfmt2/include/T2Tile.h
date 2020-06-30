@@ -266,6 +266,43 @@ namespace MFM {
 
     void freeEW(T2EventWindow & ew) ; //Public for T2EventWindow to call on abort?
 
+    u64 getTotalActiveEventsConsidered() const {
+      return  mTotalActiveEventsConsidered;
+    }
+    u64 getTotalActiveEmptyEventsConsidered() const {
+      return  mTotalActiveEmptyEventsConsidered;
+    }
+    u64 getTotalActiveEventsPerformed() const {
+      return  mTotalActiveEventsPerformed;
+    }
+    u64 getTotalNonemptyActiveEventsPerformed() const {
+      return  mTotalNonemptyActiveEventsPerformed;
+    }
+    u64 getTotalActiveEventsCompleted() const {
+      return  mTotalActiveEventsCompleted;
+    }
+    u64 getTotalNonemptyActiveEventsCompleted() const {
+      return  mTotalNonemptyActiveEventsCompleted;
+    }
+
+    void incrTotalActiveEventsConsidered() {
+      ++mTotalActiveEventsConsidered;
+    }
+    void incrTotalActiveEmptyEventsConsidered() {
+      ++mTotalActiveEmptyEventsConsidered;
+    }
+    void incrTotalActiveEventsPerformed() {
+      ++mTotalActiveEventsPerformed;
+    }
+    void incrTotalNonemptyActiveEventsPerformed() {
+      ++mTotalNonemptyActiveEventsPerformed;
+    }
+    void incrTotalActiveEventsCompleted() {
+      ++mTotalActiveEventsCompleted;
+    }
+    void incrTotalNonemptyActiveEventsCompleted() {
+      ++mTotalNonemptyActiveEventsCompleted;
+    }
   private:
     T2ActiveEventWindow * mEWs[MAX_EWSLOT];
 
@@ -300,7 +337,12 @@ namespace MFM {
     s32 mKITCEnabledFD;
 
     //// STATS
-    u64 mTotalEventsCompleted;
+    u64 mTotalActiveEventsConsidered; // Whether or not a transition occurred
+    u64 mTotalActiveEmptyEventsConsidered; 
+    u64 mTotalActiveEventsPerformed; // When a (maybe empty) transition did occur
+    u64 mTotalNonemptyActiveEventsPerformed; // Non-empty transitions
+    u64 mTotalActiveEventsCompleted;
+    u64 mTotalNonemptyActiveEventsCompleted;
 
     //// HW CONTROL & MISC
     CPUFreq mCPUFreq;
