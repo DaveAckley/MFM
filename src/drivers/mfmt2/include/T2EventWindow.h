@@ -255,6 +255,7 @@ namespace MFM {
     const Circuit * getActiveCircuitForITCIfAny(const T2ITC & itc) const ;
 
     Circuit mActiveCircuits[CIRCUITS_PER_ACTIVE_EW];
+    u64 mActiveEventCountForAge;
   };
 
   struct T2PassiveEventWindow : public T2EventWindow {

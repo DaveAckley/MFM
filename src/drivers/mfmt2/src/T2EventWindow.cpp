@@ -5,6 +5,8 @@
 #include "Logger.h"
 #include "TraceTypes.h"
 
+#include <algorithm>
+
 namespace MFM {
 
   void T2EventWindow::setEWSN(EWStateNumber ewsn) {
@@ -304,8 +306,16 @@ namespace MFM {
     resetPassiveEW(); // Clear gunk for next renter
   }
 
+  static bool aEWOlder(T2ActiveEventWindow * aew1, T2ActiveEventWindow * aew2) {
+    MFM_API_ASSERT_ARG(aew1 && aew2);
+    return aew1->mActiveEventCountForAge < aew2->mActiveEventCountForAge;
+  }
+
   // RETURN TRUE IF PASSIVE CONTINUES, FALSE IF WE BUSYED-OUT ON IT
   bool T2PassiveEventWindow::resolveRacesFromPassive(EWPtrSet conflicts) {
+    typedef std::vector<T2ActiveEventWindow *> AEWPtrVector;
+    AEWPtrVector sortable;
+
     // Question 1: Are any conflicts passive?
     for (EWPtrSet::iterator itr = conflicts.begin(); itr != conflicts.end(); ++itr) {
       T2EventWindow * ew = *itr;
@@ -316,19 +326,17 @@ namespace MFM {
           FAIL(INCOMPLETE_CODE);
         return false;
       }
+      T2ActiveEventWindow * aew = ew->asActiveEW();
+      MFM_API_ASSERT_NONNULL(aew);
+      sortable.push_back(aew);
     }
+
     // OK: All conflicts are active.  Now we need to sort them oldest
     // to newest according to some age info we captured.
+    std::sort(sortable.begin(), sortable.end(), aEWOlder);
 
-    typedef std::vector<T2EventWindow *> EWPtrVector;
-    EWPtrVector sortable(conflicts.begin(), conflicts.end());
-
-    // But hrm if we just have one conflict we can try to sort out the
-    // codes and the concepts without actually doing the sort..
-    if (sortable.size() > 1) FAIL(INCOMPLETE_CODE);
-
-    // Presto: 'sortable' is sorted.  Now do P4 (202002010352-notes.txt:788:)
-    for (EWPtrVector::iterator itr = sortable.begin(); itr != sortable.end(); ++itr) {
+    // 'sortable' is now sorted by age.  Now do P4 (202002010352-notes.txt:788:)
+    for (AEWPtrVector::iterator itr = sortable.begin(); itr != sortable.end(); ++itr) {
       T2EventWindow * ew = *itr;
       MFM_API_ASSERT_NONNULL(ew);
 
@@ -709,6 +717,7 @@ namespace MFM {
   }
 
   bool T2ActiveEventWindow::tryInitiateActiveEvent(UPoint center,u32 radius) {
+    mActiveEventCountForAge = mTile.getTotalActiveEventsConsidered();
     assignCenter(MakeSigned(center), radius, true); 
     if (!checkSiteAvailabilityForActive()) return false;
     TLOG(DBG,"%s sites available", getName());
@@ -963,6 +972,9 @@ namespace MFM {
     
   bool T2ActiveEventWindow::executeEvent() {
     loadSites();
+
+    mTile.incrTotalNonemptyActiveEventsPerformed(); // score now (in case blows up)
+
     OurT2Site & us = mSites[0];
     OurT2Atom & atom = us.GetAtom();
     u32 type = atom.GetType();
