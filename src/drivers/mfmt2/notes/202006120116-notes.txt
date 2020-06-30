@@ -1,4 +1,4 @@
-{258}  -*- text -*-
+{262}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -5031,3 +5031,58 @@ the trace records?  Smoove Dave Smoove.
 Mon Jun 29 16:19:44 2020 Code 202006291620 
 
 :257]
+[258:
+
+Tue Jun 30 05:28:32 2020 OK, so we need to take a cut at multiway
+races.  We thought we'd seen stuff suggesting an additional 'pEW
+leakage' problem in the long traces, but now they're not coming up so
+let's go for the problem we know and let the rest resurface as it
+wishes.
+[259:
+
+Tue Jun 30 05:30:15 2020 So now we need to give up on our absolute
+favorite approach to sorting since the demon horde sort:
+
+ ..
+    if (sortable.size() > 1) FAIL(INCOMPLETE_CODE);
+
+    // Presto: 'sortable' is sorted.  Now do P4 (202002010352-notes.txt:788:)
+ ..
+
+Sigh.
+
+And what do we claim we're going to sort by?  (You know, at this
+point, I have to say (again) that I'm not convinced the sorting is
+anything more than an optimization, to avoid blowing up more EWs than
+'necessary'.  But we'll see, perhaps anyway.)
+[260:
+
+Tue Jun 30 05:40:15 2020 'P4 (202002010352-notes.txt:788:)' says:
+
+    (P4) If all of the conflict windows are active, consider them in
+         oldest-first order. For each, first apply the yoink protocol and
+         determine if the local active or the incoming active wins.
+
+So how is 'oldest' operationalized in the current code?  Are we
+capturing an 'event stamp' or something when we start an aEW?[261:
+
+Tue Jun 30 08:05:14 2020 Well so we added a bunch more counters to
+T2Tile and captured the mTotalActiveEventsConsidered into each aEW and
+sorted for oldest based on that.
+
+And now we had a bunch (dozen+) of beins bopping around between two
+tiles for a bunch of minutes anyway -- 27MB of WHITE and 30MB of RED
+trace files worth -- until I shut them down deliberately.
+
+Let's try without tracing, even though we KNOW SOMETHING WILL DIE AND
+WE WON'T BE ABLE TO DIAGNOSE IT.
+
+Just to see it happen.
+
+:261]
+
+:260]
+
+:259]
+
+:258]
