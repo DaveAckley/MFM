@@ -773,7 +773,7 @@ namespace MFM {
   XX(help,h,N,,"Print this help")                               \
   XX(interactive,i,N,,"Run interactively using curses")         \
   XX(map,m,N,,"Print the sync map")                             \
-  XX(tweak,t,O,TWEAK,"Tweak file timing")                       \
+  XX(tweak,t,O,FN/USEC,"Tweak file number FN timing by USEC")   \
   XX(version,v,N,,"Print version and exit")                     \
 
 #if 0
