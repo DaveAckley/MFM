@@ -44,9 +44,10 @@ namespace MFM {
   void EWModel::printPretty(ByteSink & bs, u32 minWidth) {
     OString64 temp;
     OString32 temp2;
-    temp2.Printf("(%d,%d)+%d",
-                 mCenter.GetX(),mCenter.GetY(),
-                 mRadius);
+    if (mRadius > 0)
+      temp2.Printf("(%d,%d)+%d",
+                   mCenter.GetX(),mCenter.GetY(),
+                   mRadius);
     temp.Printf("%d/%s%s%02d-%s",
                 mFileNum,
                 mEWIdx==6 ? "a" : "p",
