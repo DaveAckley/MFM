@@ -1,4 +1,4 @@
-{246}  -*- text -*-
+{258}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -4904,3 +4904,130 @@ handleDrop we unhog for EWSN_PRESOLVE..EWSN_PWCACHE and not otherwise?
 :244]
 
 :243]
+[246:
+
+Mon Jun 29 05:49:49 2020 Well, RED and WHITE have been going for a
+fair while now, with 8 beins between them, and so far nothing untoward
+has popped up..
+
+  /tmp:
+  total used in directory 8172 available 70396
+  -rw-r--r--  1 root root 3735552 Jun 29 05:50 t2trace18.dat
+
+ /tmp:
+  total used in directory 4236 available 693108
+  -rw-r--r--  1 root root 3751936 Jun 29 05:51 t2trace15.dat
+
+though the trace files are getting pretty hefty hefty hefty.
+[247:
+
+Mon Jun 29 05:56:58 2020 Still.  Maybe push to 6am and stop it there
+if nothing?  Or at least start packing in lots more beins..
+
+  /tmp:
+  total used in directory 13580 available 64988
+  -rw-r--r--  1 root root 9269248 Jun 29 05:57 t2trace18.dat
+
+  /tmp:
+  total used in directory 9764 available 687580
+  -rw-r--r--  1 root root 9412608 Jun 29 05:57 t2trace15.dat
+
+[248:
+
+Mon Jun 29 06:05:20 2020 Well, it's still going..  I shot some phone
+video of it, and added a bunch more beins while doing that..  and
+still it lives.  I can't really tell if the count is absolutely solid
+especially since I just added a bunch, but it doesn't seem obviously
+off.
+
+Need to stop this, don't want to stop this.
+
+  /tmp:
+  total used in directory 29384 available 49180
+  -rw-r--r--  1 root root 25452544 Jun 29 06:09 t2trace18.dat
+
+  /tmp:
+  total used in directory 25216 available 672128
+  -rw-r--r--  1 root root 25235456 Jun 29 06:09 t2trace15.dat
+
+[249:
+
+Mon Jun 29 06:11:29 2020 Woah, hit a FAIL!  What's it going to be??
+
+Ah hahaha look:
+
+    (gdb) up
+    #1  0x00471c8a in MFM::T2PassiveEventWindow::resolveRacesFromPassive (this=0x566458,
+        conflicts=...) at src/T2EventWindow.cpp:328
+    328         if (sortable.size() > 1) FAIL(INCOMPLETE_CODE);
+    (gdb) 
+
+It's our first multiway race!  N > 1, with N being the number of
+active windows that are conflicting with an inbound passive window.
+
+[250:
+
+Mon Jun 29 06:16:18 2020 So, good news and bad news.
+
+GOOD NEWS: The two-tile system survived for something like fifteen
+           minutes with more than a dozen atoms going in parallel.
+
+BAD NEWS:  It took something like fifteen minutes to trigger a failure
+           (INCOMPLETE_CODE).  Enjoy the debugging!
+
+[251:
+
+Mon Jun 29 06:20:26 2020 Let's get these log files together and see
+how hopeless Weaver -i navigation is.  Code 202006290622
+
+:251]
+
+
+:250]
+
+:249]
+:248]
+
+:247]
+:246]
+[252:
+
+Mon Jun 29 06:24:14 2020 Yow, Weaver taking forever to start up.
+It still hasn't booted curses yet..[253:
+
+Mon Jun 29 06:25:03 2020 Curses just popped.[254:
+
+Mon Jun 29 06:26:29 2020 Ugh! And it appears the sync is off?
+
+│13.884 0/iNW:OPEN <NW:ANSWER#23 +2                                      │
+│13.884 0/lDBG ITC/NW:OPEN: Enter HAP                                    │
+>13.884 0/a23-AWLOCKS NW CS_RUNG -> CS_ANSWERED                          │
+
+So 0/a23 says it got a NW ANSWER at 13.884.
+
+>13.900    1/iSE:OPEN >SE:ANSWER#23 +2                                   │
+│13.900    1/pSE23-PWCACHE SE CS_RUNG -> CS_ANSWERED                     │
+
+Buuuuut 1/iSE says it didn't even send the ANSWER packet until 13.900.
+
+Grrr.
+[255:
+
+Mon Jun 29 10:48:18 2020 So Weaver -i is really really slow..[256:
+
+Mon Jun 29 11:00:32 2020 But then it appears isearch was leaking all
+the trace records?  Smoove Dave Smoove.
+
+:256]
+
+:255]
+:254]
+
+:253]
+
+:252]
+[257:
+
+Mon Jun 29 16:19:44 2020 Code 202006291620 
+
+:257]
