@@ -227,6 +227,7 @@ namespace MFM {
         }
         buf.Reset();
         ft->printPretty(buf);
+        delete ft;
         if (strstr(buf.GetZString(), mSearchString.GetZString())) {
           if (mSearchDir > 0 && (u32) rec == mTopRecord) continue;
           mTopRecord = rec;
