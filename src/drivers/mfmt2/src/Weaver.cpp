@@ -180,8 +180,13 @@ namespace MFM {
           EWStateNumber nextState = (EWStateNumber) nextStateByte;
           EWModel & ewm = *ewmp;
           if (forward) { 
-            if (ewm.mStateNum == curState || ewm.mStateNum == U32_MAX)
+            if (ewm.mStateNum == curState || ewm.mStateNum == U32_MAX) {
+              if (nextState == EWSN_AINIT || nextState == EWSN_PINIT) {
+                ewm.mTraceLoc = U32_MAX; // Go at end until we know otherwise
+                ewm.resetCircuits();
+              }
               ewm.mStateNum = nextState;
+            }
             else bad = "unmatched curstate";
           } else /*backward*/ {
             if (ewm.mStateNum != nextState) bad = "unmatched nextstate";
@@ -293,7 +298,7 @@ namespace MFM {
     Trace & trace = getTrace();
     struct timespec thisTime = trace.getTimespec();
     char buf[100];
-    snprintf(buf,100,"%0.3f ",UniqueTime::doubleFromTimespec(thisTime));
+    snprintf(buf,100,"%0.6f ",UniqueTime::doubleFromTimespec(thisTime));
     bs.Printf("%s",buf);
     u32 fn = mFPos.first;
     for (u32 i = 0; i < fn; ++i) 
