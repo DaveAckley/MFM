@@ -88,8 +88,8 @@ namespace MFM {
         }
 
         fprintf(stderr,"Failed out of top-level\n");
-        tile.trace(tile,TTC_Tile_TopLevelFailure,"%s:%d: %s [%d]",
-                   file, line, msg ? msg : "", code);
+        tile.tlog(Trace(tile,TTC_Tile_TopLevelFailure,"%s:%d: %s [%d]",
+                        file, line, msg ? msg : "", code));
         tile.showFail((const char *) file, line, msg);
         exit(99);
       },{

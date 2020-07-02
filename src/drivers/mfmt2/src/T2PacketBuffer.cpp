@@ -5,6 +5,8 @@
 namespace MFM {
   //  namespace T2Packet {
     bool asTagSync(const T2PacketBuffer & pb, s32 * ptag) {
+      // NOTE: asTagSync recognizes only IN-PACKET ITC sync 
+      // COMPARE WITH: Trace::reportSyncIfAny
       u8 sn;
       if (asITC(pb,&sn) && (sn == ITCSN_SHUT || sn == ITCSN_OPEN)) {
         if (ptag) {

@@ -115,7 +115,7 @@ namespace MFM {
       va_start(ap, format);
       evt.payloadWrite().Vprintf(format, ap);
       va_end(ap);
-      tile.trace(evt);
+      tile.tlog(evt);
       return true;
     }
     return false;

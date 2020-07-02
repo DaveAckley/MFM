@@ -4,6 +4,7 @@
 #include "T2ITC.h"
 #include "T2EventWindow.h"
 #include "Circuit.h"
+#include "T2Utils.h" /* for printComma */
                
 namespace MFM {
   ///// STATIC MEMBER DEFINITIONS
@@ -127,13 +128,33 @@ namespace MFM {
       return;
     }
 
+    if (mTraceType == TTC_Tile_TraceFileMarker) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+      s32 syncTag = 0;
+      cbbs.Scanf("%l",&syncTag);
+      if (syncTag < 0)
+        bs.Printf(" File sync mark -?%08x\n", -syncTag);
+      else
+        bs.Printf(" File sync mark +?%08x\n", syncTag);
+      return;
+    }
+    
     if (mTraceType == TTC_Tile_Stop) {
       CharBufferByteSource cbbs = mData.AsByteSource();
-      u64 totalevents;
-      cbbs.Scanf("%q",&totalevents);
-      bs.Printf(" Total events completed = ");
-      bs.Print(totalevents);
+      T2TileStats stats;
+      if (!stats.loadRaw(cbbs)) bs.Printf("??stats load failed");
+      else {
+        bs.Printf(" Total = ");
+        printComma(stats.getEventsConsidered(),bs);
+        //        bs.Printf("; empty = ");
+        //        printComma(stats.getEmptyEventsConsidered(),bs);
+        bs.Printf("; aInit = ");
+        printComma(stats.getNonemptyTransitionsStarted(),bs);
+        bs.Printf("; aDone = ");
+        printComma(stats.getNonemptyEventsCommitted(),bs);
+      }
       bs.Printf("\n");
+      
       return;
     } 
 
@@ -216,10 +237,12 @@ namespace MFM {
                 );
   }
 
-  Trace * TraceLogReader::read(struct timespec timeOffset) {
+  Trace * TraceLogReader::read(ByteSource& bs,
+                               struct timespec basetime,
+                               struct timespec timeoffset) {
     u8 byte1, byte2;
-    if (2 != mBS.Scanf("%c%c",
-                       &byte1, &byte2))
+    if (2 != bs.Scanf("%c%c",
+                      &byte1, &byte2))
       return 0;
 
     if (byte1 != TRACE_REC_START_BYTE1 ||
@@ -231,35 +254,32 @@ namespace MFM {
     }
 
     UniqueTime tmpTime;
-    if (!tmpTime.Scan(mBS)) {
+    if (!tmpTime.Scan(bs)) {
       return 0;
     }
     TraceAddress tmpAddr;
-    if (!tmpAddr.read(mBS)) {
+    if (!tmpAddr.read(bs)) {
       return 0;
     }
     
     u32 traceType;
     u8 plen;
 
-    if (2 != mBS.Scanf("%c%c",
-                       &traceType,
-                       &plen))
+    if (2 != bs.Scanf("%c%c",
+                      &traceType,
+                      &plen))
       return 0;
     OString256 tmpData;
     for (u32 i = 0; i < plen; ++i) {
-      s32 ch = mBS.Read();
+      s32 ch = bs.Read();
       if (ch < 0) return 0;
       tmpData.WriteByte((u8) ch);
     }
 
-    if (!mHaveFirst) {
-      mFirstTimespec = tmpTime.getTimespec();
-      mHaveFirst = true;
-    }
     UniqueTime reltime(tmpTime
-                       - UniqueTime(mFirstTimespec,0)
-                       + UniqueTime(timeOffset,0));
+                       - UniqueTime(basetime,0)
+                       + UniqueTime(timeoffset, 0));
+                       
     Trace * ret = new Trace(traceType, reltime);
     ret->setTraceAddress(tmpAddr);
 
@@ -276,12 +296,23 @@ namespace MFM {
 
   bool Trace::reportSyncIfAny(s32 & store) const {
     // CURRENTLY THERE'S SYNC IN THE FOLLOWING PLACES:
-    // POU/PIN T2ITC if byte1 is xitcByte1(XITC_ITC_CMD,SNUM)
-    // with SNUM == ITCSN_SHUT or ITCSN_OPEN
-
+    // - All TFM traces
+    // - POU/PIN T2ITC if byte1 is xitcByte1(XITC_ITC_CMD,SNUM)
+    //   with SNUM == ITCSN_SHUT or ITCSN_OPEN
+    //   FOR WHICH SEE ALSO T2PacketBuffer.cpp: asTagSync
     TraceAddress addr = getTraceAddress();
-    if (addr.getMode() != TRACE_REC_MODE_ITCDIR6) return false;
     u8 tt = mTraceType;
+    if (addr.getMode() == TRACE_REC_MODE_T2TILE &&
+        tt == TTC_Tile_TraceFileMarker) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+      s32 tag;
+      if (1 != cbbs.Scanf("%l", &tag)) return false;
+      if (tag == 0) return false; //??
+      store = tag; // tag is already signed in mData
+      return true;
+    }
+
+    if (addr.getMode() != TRACE_REC_MODE_ITCDIR6) return false;
     if (tt != TTC_ITC_PacketOut && tt != TTC_ITC_PacketIn) return false;
     u8 sn;
     if (!asITC(mData,&sn)) return false;

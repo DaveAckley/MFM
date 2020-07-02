@@ -1,4 +1,7 @@
 #include <getopt.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include "T2Tile.h"
 
@@ -203,15 +206,13 @@ namespace MFM {
     , mPacketPoller(*this)
     , mListening(false)
     , mMDist()
-    , mTotalActiveEventsConsidered(0)
-    , mTotalActiveEmptyEventsConsidered(0)
-    , mTotalActiveEventsPerformed(0)
-    , mTotalNonemptyActiveEventsPerformed(0)
-    , mTotalActiveEventsCompleted(0)
-    , mTotalNonemptyActiveEventsCompleted(0)
     , mCPUFreq(CPUSpeed_Slow)
     , mCoreTempChecker()
+    , mRollingTraceDir()
+    , mRollingTraceTargetKB(0)
+    , mRollingTraceSpinner(0)
   {
+    mT2TileStats.reset();
     mCoreTempChecker.schedule(getTQ(),0);
   }
 
@@ -257,6 +258,7 @@ namespace MFM {
   XX(mfzid,z,R,MFZID,"Specify MFZ file to run")                 \
   XX(paused,p,N,,"Start up paused")                             \
   XX(trace,t,O,PATH,"Trace output to PATH or default")          \
+  XX(roll,r,O,MB,"Keep rolling trace files up to size MB")      \
   XX(version,v,N,,"Print version and exit")                     \
   XX(wincfg,w,R,PATH,"Specify window configuration file")       \
 
@@ -320,6 +322,7 @@ static const char * CMD_HELP_STRING =
     int fails = 0;
     int loglevel = -1;
     int wantpaused = 0;
+    int traceSet = 0;
     while ((c = getopt_long(mArgc,mArgv,
                             CMD_LINE_SHORT_OPTIONS,
                             CMD_LINE_LONG_OPTIONS,
@@ -337,7 +340,25 @@ static const char * CMD_HELP_STRING =
         setWindowConfigPath(optarg);
         break;
 
-      case 't':
+      case 'r': {
+        if (traceSet) {
+          fatal("Only one -t or -r allowed");
+        } else traceSet = 1;
+        u32 mb = 8;
+        if (optarg) {
+          CharBufferByteSource cbbs(optarg,strlen(optarg));
+          if (1 != cbbs.Scanf("%d",&mb) || mb <= 0) {
+            fatal("'%s' not legal as megabytes", optarg);
+          }
+        }
+        initRollingTraceDir(mb);
+        break;
+      }
+
+      case 't': {
+        if (traceSet) {
+          fatal("Only one -t or -r allowed");
+        } else traceSet = 1;
         if (optarg) {
           startTracing(optarg);
         } else {
@@ -367,6 +388,7 @@ static const char * CMD_HELP_STRING =
           startTracing(zpath);
         }
         break;
+      }
 
       case 'l':
         if (optarg) {
@@ -571,7 +593,7 @@ static const char * CMD_HELP_STRING =
   }
 
   void T2Tile::recordCompletedEvent(OurT2Site & site) {
-    site.RecordEventAtSite(++mTotalActiveEventsCompleted);
+    site.RecordEventAtSite(getStats().getNonemptyEventsCommitted());
   }
 
   u32 T2Tile::considerSiteForEW(UPoint idx) {
@@ -594,13 +616,13 @@ static const char * CMD_HELP_STRING =
     u32 radius = 0;
     UPoint ctr;
     for (u32 i = 0; i < MAX_TRIES; ++i) {
-      ++mTotalActiveEventsConsidered;
+      getStats().incrEventsConsidered();
       ctr =
         UPoint(getRandom(), T2TILE_OWNED_WIDTH, T2TILE_OWNED_HEIGHT)
         + UPoint(CACHE_LINES,CACHE_LINES);
       radius = considerSiteForEW(ctr);
       if (radius > 0) break;
-      ++mTotalActiveEmptyEventsConsidered;
+      getStats().incrEmptyEventsCommitted();
     }
     if (radius == 0) return false;
     return tryAcquireEW(ctr, radius, true);
@@ -640,25 +662,45 @@ static const char * CMD_HELP_STRING =
     return true;
   }
 
-  void T2Tile::startTracing(const char * path) {
-    if (mTraceLoggerPtr != 0) stopTracing();
+  bool T2Tile::tlog(const Trace & tb) {
+    if (!mTraceLoggerPtr) return false; // If anybody cares
+    mTraceLoggerPtr->log(tb);
+    if (mRollingTraceTargetKB > 0) {
+      if (mTraceLoggerPtr->ftell() / 1024 > (s32) mRollingTraceTargetKB)
+        rollTracing();
+    }
+    return true;
+  }
+
+  s32 T2Tile::makeTag() {
+    s32 tag;
+    do {
+      tag = (s32) T2Tile::get().getRandom().CreateBits(31);
+    } while (tag == 0);           //sure
+    return tag;
+  }
+
+  void T2Tile::startTracing(const char * path, s32 syncTag) {
+    MFM_API_ASSERT_ARG(syncTag >= 0);
+    if (mTraceLoggerPtr != 0) stopTracing(-syncTag);
     mTraceLoggerPtr = new TraceLogger(path);
-    Trace evt(*this,TTC_Tile_Start);
-    evt.payloadWrite().Printf("%D", TRACE_REC_FORMAT_VERSION);
-    trace(evt);
+    tlog(Trace(*this, TTC_Tile_Start, "%D", TRACE_REC_FORMAT_VERSION));
+    tlog(Trace(*this, TTC_Tile_TraceFileMarker, "%l", syncTag));
     TLOG(DBG,"HEWO to %s",path);
   }
 
-  void T2Tile::stopTracing() {
+  void T2Tile::stopTracing(s32 syncTag) {
+    MFM_API_ASSERT_ARG(syncTag <= 0);
     if (mTraceLoggerPtr != 0) {
-      trace(*this, TTC_Tile_Stop, "%q%q%q%q%q%q",
-            mTotalActiveEventsConsidered,
-            mTotalActiveEmptyEventsConsidered,
-            mTotalActiveEventsPerformed,
-            mTotalNonemptyActiveEventsPerformed,
-            mTotalActiveEventsCompleted,
-            mTotalNonemptyActiveEventsCompleted
-            );
+      // We might be rolling, so we need to avoid the T2Tile::trace
+      // interface so these final traces don't roll recursively
+      mTraceLoggerPtr->
+        log(Trace(*this, TTC_Tile_TraceFileMarker, "%l", syncTag));
+      OString128 buf;
+      getStats().saveRaw(buf);
+      CharBufferByteSource cbbs = buf.AsByteSource();
+      mTraceLoggerPtr->
+        log(Trace(*this, TTC_Tile_Stop, "%<", &cbbs));
       delete mTraceLoggerPtr;
       mTraceLoggerPtr = 0;
     }
@@ -774,5 +816,56 @@ static const char * CMD_HELP_STRING =
     ar = atom;
     traceSite(MakeUnsigned(at));
   }
+
+  void T2Tile::initRollingTraceDir(u32 targetMB) {
+    MFM_API_ASSERT_NONZERO(targetMB);
+    u32 gen = 0;
+    const u32 cMAX = 100;
+    const char * prefix = "/tmp/t2trace";
+    do {
+      mRollingTraceDir.Reset();
+      mRollingTraceDir.Printf("%s%D",prefix,gen++);
+      const char * zmaybe = mRollingTraceDir.GetZString();
+      DIR * dir = opendir(zmaybe);
+      if (dir != 0) {  // Dir already exists
+        closedir(dir);
+        continue;
+      } else if (errno != ENOENT) {
+        fatal("Can't check for dir '%s': %s", zmaybe, strerror(errno));
+      } else {
+        if (mkdir(zmaybe, 0755) != 0)
+          fatal("Can't make dir '%s': %s", zmaybe, strerror(errno));
+      }
+      break;
+    } while (gen < cMAX);
+    if (gen >= cMAX)
+      fatal("Too many existing '%s' dirs!", prefix);
+    mRollingTraceTargetKB = targetMB * 1024 / 4; // Rolling four files
+    rollTracing();
+  }
+
+  void T2Tile::rollTracing() {
+    MFM_API_ASSERT_STATE(mRollingTraceDir.GetLength() > 0);
+    OString128 buf;
+    u32 cur = mRollingTraceSpinner++;
+    buf.Printf("%s/%D.dat",
+               mRollingTraceDir.GetZString(),
+               cur);
+    startTracing(buf.GetZString());
+    if (cur >= 4) {
+      buf.Reset();
+      buf.Printf("%s/%D.dat",
+                 mRollingTraceDir.GetZString(),
+                 cur-4);
+      if (unlink(buf.GetZString()) != 0) {
+        if (errno != ENOENT) {
+          TLOG(WRN,"Couldn't unlink '%s': %s",
+               buf.GetZString(),
+               strerror(errno));
+        }
+      }
+    }
+  }
+
 
 }

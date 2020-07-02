@@ -87,10 +87,10 @@ namespace MFM {
     T2EventWindow & ew = getEW();
     T2Tile & tile = ew.getTile();
     T2ITC * pitc = getITCIfAny();
-    tile.trace(ew,TTC_EW_CircuitStateChange,"%c%c%c",
-               pitc ? pitc->mDir6 : 0xff,
-               mState,
-               cs);
+    tile.tlog(Trace(ew,TTC_EW_CircuitStateChange,"%c%c%c",
+                    pitc ? pitc->mDir6 : 0xff,
+                    mState,
+                    cs));
     mState = cs;
   }
 

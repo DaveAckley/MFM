@@ -28,6 +28,7 @@
 #include "Sites.h"
 #include "Trace.h"
 #include "CPUFreq.h"
+#include "T2TileStats.h"
 
 namespace MFM {
 
@@ -124,29 +125,14 @@ namespace MFM {
       return mTraceLoggerPtr != 0;
     }
 
-    bool trace(const Trace & tb) {
-      if (!mTraceLoggerPtr) return false; // If anybody cares
-      mTraceLoggerPtr->log(tb);
-      return true;
-    }
+    bool tlog(const Trace & tb) ;
     
-    template <class C>
-    bool trace(const C & cthing, u8 traceType, const char * format, ...) 
-    {
-      Trace evt(cthing, traceType);
-      va_list ap;
-      va_start(ap, format);
-      evt.payloadWrite().Vprintf(format, ap);
-      va_end(ap);
-      trace(evt);
-      return true;
-    }
-
     // Draw a kill screen before dying.
     void showFail(const char * file, int line, const char * msg) ;
 
-    void startTracing(const char * path) ;
-    void stopTracing() ;
+    static s32 makeTag() ;
+    void startTracing(const char * path, s32 synctag = makeTag()) ;
+    void stopTracing(s32 synctag = -makeTag()) ;
 
     // HIGH LEVEL SEQUENCING
     void main() ;
@@ -266,8 +252,11 @@ namespace MFM {
 
     void freeEW(T2EventWindow & ew) ; //Public for T2EventWindow to call on abort?
 
-    u64 getTotalActiveEventsConsidered() const {
-      return  mTotalActiveEventsConsidered;
+#if 0
+    void resetTotalStats() ;
+
+    u64 getTotalActiveEventsInitiated() const {
+      return  mTotalActiveEventsInitiated;
     }
     u64 getTotalActiveEmptyEventsConsidered() const {
       return  mTotalActiveEmptyEventsConsidered;
@@ -285,8 +274,8 @@ namespace MFM {
       return  mTotalNonemptyActiveEventsCompleted;
     }
 
-    void incrTotalActiveEventsConsidered() {
-      ++mTotalActiveEventsConsidered;
+    void incrTotalActiveEventsInitiated() {
+      ++mTotalActiveEventsInitiated;
     }
     void incrTotalActiveEmptyEventsConsidered() {
       ++mTotalActiveEmptyEventsConsidered;
@@ -303,6 +292,11 @@ namespace MFM {
     void incrTotalNonemptyActiveEventsCompleted() {
       ++mTotalNonemptyActiveEventsCompleted;
     }
+#endif
+
+    const T2TileStats & getStats() const { return mT2TileStats; }
+    T2TileStats & getStats() { return mT2TileStats; }
+
   private:
     T2ActiveEventWindow * mEWs[MAX_EWSLOT];
 
@@ -337,17 +331,18 @@ namespace MFM {
     s32 mKITCEnabledFD;
 
     //// STATS
-    u64 mTotalActiveEventsConsidered; // Whether or not a transition occurred
-    u64 mTotalActiveEmptyEventsConsidered; 
-    u64 mTotalActiveEventsPerformed; // When a (maybe empty) transition did occur
-    u64 mTotalNonemptyActiveEventsPerformed; // Non-empty transitions
-    u64 mTotalActiveEventsCompleted;
-    u64 mTotalNonemptyActiveEventsCompleted;
+    T2TileStats mT2TileStats;
 
     //// HW CONTROL & MISC
     CPUFreq mCPUFreq;
     CoreTempChecker mCoreTempChecker;    
 
+    void initRollingTraceDir(u32 targetMB) ;
+    void rollTracing() ;
+
+    OString128 mRollingTraceDir;
+    u32 mRollingTraceTargetKB;
+    u32 mRollingTraceSpinner;
   };
 }
 #endif /* T2TILE_H */

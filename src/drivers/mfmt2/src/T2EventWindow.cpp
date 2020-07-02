@@ -11,7 +11,7 @@ namespace MFM {
 
   void T2EventWindow::setEWSN(EWStateNumber ewsn) {
     assert(ewsn >= 0 && ewsn < MAX_EW_STATE_NUMBER);
-    mTile.trace(*this, TTC_EW_StateChange,"%c",ewsn);
+    mTile.tlog(Trace(*this, TTC_EW_StateChange,"%c",ewsn));
     mStateNum = ewsn;
   }
 
@@ -196,6 +196,7 @@ namespace MFM {
   }
 
   void T2ActiveEventWindow::commitAndReleaseActive() {
+    mTile.getStats().incrNonemptyEventsCommitted();
     saveSites();                // COMMIT ACTIVE SIDE EW!
     TLOG(DBG,"%s FREEING (%d,%d)+%d",
          getName(),
@@ -507,11 +508,11 @@ namespace MFM {
     mRadius = radius;
     mLastSN = md.GetLastIndex(mRadius);
     setEWSN(activeNotPassive ? EWSN_AINIT : EWSN_PINIT);
-    tile.trace(*this,TTC_EW_AssignCenter,"%c%c%c%c",
-               tileSite.GetX(),
-               tileSite.GetY(),
-               mRadius,
-               activeNotPassive?1:0);
+    tile.tlog(Trace(*this,TTC_EW_AssignCenter,"%c%c%c%c",
+                    tileSite.GetX(),
+                    tileSite.GetY(),
+                    mRadius,
+                    activeNotPassive?1:0));
   }
 
   void T2PassiveEventWindow::initPassive(SPoint ctr, u32 radius, bool yoink) {
@@ -717,9 +718,10 @@ namespace MFM {
   }
 
   bool T2ActiveEventWindow::tryInitiateActiveEvent(UPoint center,u32 radius) {
-    mActiveEventCountForAge = mTile.getTotalActiveEventsConsidered();
     assignCenter(MakeSigned(center), radius, true); 
     if (!checkSiteAvailabilityForActive()) return false;
+    mActiveEventCountForAge = mTile.getStats().getNonemptyEventsStarted();
+    mTile.getStats().incrNonemptyEventsStarted();
     TLOG(DBG,"%s sites available", getName());
     TLOG(DBG,"%s OWNING (%d,%d)+%d",
               getName(),
@@ -973,7 +975,7 @@ namespace MFM {
   bool T2ActiveEventWindow::executeEvent() {
     loadSites();
 
-    mTile.incrTotalNonemptyActiveEventsPerformed(); // score now (in case blows up)
+    mTile.getStats().incrNonemptyTransitionsStarted(); // score now (in case blows up)
 
     OurT2Site & us = mSites[0];
     OurT2Atom & atom = us.GetAtom();

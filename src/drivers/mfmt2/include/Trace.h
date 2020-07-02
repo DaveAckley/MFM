@@ -26,6 +26,7 @@ namespace MFM {
   XX(,ILL,Illegal)                              \
   XX(Tile,STR,Start)                            \
   XX(Tile,TLF,TopLevelFailure)                  \
+  XX(Tile,TFM,TraceFileMarker)                  \
   XX(Tile,STP,Stop)                             \
   XX(ITC,SCH,StateChange)                       \
   XX(ITC,PIN,PacketIn)                          \
@@ -66,7 +67,7 @@ namespace MFM {
     TRACE_REC_MODE_EWPASIV_NE = TRACE_REC_MODE_EWPASIV_BASE + DIR6_NE,
     TRACE_REC_MODE_EWPASIV_XX = TRACE_REC_MODE_EWPASIV_BASE + DIR6_COUNT,
 
-    TRACE_REC_FORMAT_VERSION = 0x05
+    TRACE_REC_FORMAT_VERSION = 0x06
 
   };
 
@@ -91,6 +92,17 @@ namespace MFM {
   };
 
   struct Trace {
+
+    template <class C>
+    Trace(const C & cthing, u8 traceType, const char * format, ...)
+      : Trace(cthing, traceType)
+    {
+      va_list ap;
+      va_start(ap, format);
+      payloadWrite().Vprintf(format, ap);
+      va_end(ap);
+    }
+
     const UniqueTime mLocalTimestamp;
     const u8 mTraceType;
     u8 getTraceType() const { return mTraceType; }
@@ -205,23 +217,20 @@ namespace MFM {
       return -EBADF;
     }
 
+    s32 ftell() {
+      if (mFile) return ::ftell(mFile);
+      return -EBADF;
+    }
+
   private:
     FILE * mFile;
     FileByteSink mFBS;
   };
 
   struct TraceLogReader {
-    TraceLogReader(FileByteSource& bs)
-      : mBS(bs)
-      , mHaveFirst(false)
-    { }
-    Trace * read(struct timespec timeOffset) ;
-    struct timespec getFirstTimespec() const { return mFirstTimespec; }
-  private:
-    FileByteSource & mBS;
-    bool mHaveFirst;
-    struct timespec mFirstTimespec;
-    struct timespec mPrevTimespec;
+    static Trace * read(ByteSource & bs,
+                        struct timespec basetime,     // Subtracts this
+                        struct timespec timeoffset) ; // then adds this
   };
 
 }

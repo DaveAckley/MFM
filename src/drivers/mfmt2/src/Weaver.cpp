@@ -3,6 +3,9 @@
 
 #include <getopt.h>
 #include <time.h>
+#include <dirent.h>
+
+#include <algorithm>
 
 #include "FileByteSink.h"  // For STDERR
 #include "Logger.h"
@@ -307,21 +310,73 @@ namespace MFM {
     return diff.getTimespec();
   }
 
-  FileTrace * WeaverLogFile::read(u32 useLoc, bool useOffset) {
+  static u32 getCurrentFilePos(SourceAndNetFilePos & snf) {
+    return snf.first->Tell() + snf.second;
+  }
+
+  Trace * WeaverLogFile::readSequential(u32 useLoc, bool useOffset) {
     struct timespec zero;
     zero.tv_sec = 0;
     zero.tv_nsec = 0;
     if (useOffset) MFM_API_ASSERT_STATE(hasEffectiveOffset());
+    SourceAndNetFilePos & snf = getSourceAndNetAtFilePos(getFilePos());
+    Trace * trace =
+      TraceLogReader::read(*snf.first,
+                           mFirstTimespec,
+                           useOffset
+                           ? getEffectiveOffset()
+                           : zero);
+    mCurrentFilePos = getCurrentFilePos(snf);
+    if (!trace) {
+      if (snf.first->Read() < 0) { /*hit EOF*/
+        return 0;
+      }
+      FAIL(INCOMPLETE_CODE);
+    }
+    return trace;
+  }
+
+  FileTrace * WeaverLogFile::read(u32 useLoc, bool useOffset) {
     WLFNumAndFilePos fpos(getFileNum(), getFilePos());
-    Trace * trace = mTraceLogReader.read(useOffset ? getEffectiveOffset() : zero);
+    Trace * trace = readSequential(useLoc,useOffset);
     if (!trace) return 0;
+    if (!mHasFirstTimespec) {
+      mFirstTimespec = trace->getTimespec();
+      mHasFirstTimespec = true;
+    }
     return new FileTrace(trace, useLoc, fpos);
   }
 
-  void WeaverLogFile::seek(u32 filepos) {
-    if (!mFileByteSource.Seek(filepos, SEEK_SET)) {
+  FilePos WeaverLogFile::getFilePos() const 
+  {
+    return mCurrentFilePos;
+  }
+
+  u32 WeaverLogFile::filePosToFileIndex(u32 filepos) {
+    CutMap::iterator itr = mRollingCutPoints.lower_bound(filepos);
+    MFM_API_ASSERT_STATE(itr != mRollingCutPoints.end());
+    return itr->second;
+  }
+
+  SourceAndNetFilePos & WeaverLogFile::getSourceAndNetAtFilePos(u32 filepos) {
+    u32 index = filePosToFileIndex(filepos);
+    SourceAndNetFilePos & sfp = mFileByteInfoVector[index];
+    MFM_API_ASSERT_ARG(filepos >= sfp.second);
+    if (!sfp.first->Seek(filepos-sfp.second, SEEK_SET)) {
       FAIL(ILLEGAL_STATE);
     }
+    return sfp;
+  }
+
+  ByteSource & WeaverLogFile::getByteSourceAtFilePos(u32 filepos) {
+    SourceAndNetFilePos & sfp = getSourceAndNetAtFilePos(filepos);
+    MFM_API_ASSERT_NONNULL(sfp.first);
+    return *sfp.first;
+  }
+
+  void WeaverLogFile::seek(u32 filepos) {
+    mCurrentFilePos = filepos;
+    getByteSourceAtFilePos(filepos);
   }
 
   void WeaverLogFile::reread() { seek(0u); }
@@ -337,19 +392,87 @@ namespace MFM {
     }
   }
 
+  bool ends_with(std::string const & value, std::string const & ending) {
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+  }
+
+  void WeaverLogFile::initDirectory() {
+    DIR * dir = opendir(mFilePath);
+    if (dir == 0) {
+      LOG.Error("Can't open dir '%s': %s",
+                mFilePath, strerror(errno));
+      FAIL(ILLEGAL_STATE);
+    }
+    typedef std::vector<std::string> StringVector;
+    StringVector files;
+    struct dirent * entp;
+    while ((entp = readdir(dir)) != 0) {
+      if (entp->d_name[0] == '.') continue;
+      files.push_back(std::string(entp->d_name));
+    }
+    closedir(dir);
+    std::sort(files.begin(),files.end());
+    u32 netFilePos = 0;
+    for (StringVector::iterator i = files.begin(); i != files.end(); ++i) {
+      std::string path = std::string(mFilePath)+"/"+*i;
+      const char * cpath = path.c_str();
+      FileByteSource * fbsp = new FileByteSource(cpath);
+      SourceAndNetFilePos sfp(fbsp,netFilePos);
+      FBIVecIndex index = mFileByteInfoVector.size();
+      mFileByteInfoVector.push_back(sfp);
+      mRollingCutPoints[netFilePos] = index;
+      struct stat statbuf;
+      if (stat(cpath,&statbuf) != 0) {
+        LOG.Error("Can't stat '%s': %s", cpath, strerror(errno));
+        FAIL(ILLEGAL_STATE);
+      }
+      netFilePos += statbuf.st_size;
+    }
+    mIsRollingDirectory = true;
+  }
+
+  void WeaverLogFile::initFileOrDirectory() {
+    struct stat statbuf;
+    if (stat(mFilePath,&statbuf) != 0) {
+      LOG.Error("Can't stat '%s': %s", mFilePath, strerror(errno));
+      FAIL(ILLEGAL_STATE);
+    }
+    if (statbuf.st_mode&S_IFDIR) initDirectory();
+    else if (!(statbuf.st_mode&S_IFREG)) {
+      LOG.Error("Not dir or regular '%s'", mFilePath);
+      FAIL(ILLEGAL_STATE);
+    } else {
+      mIsRollingDirectory = false;
+      u32 filepos = 0;
+      mRollingCutPoints[filepos] = 0;
+      mFileByteInfoVector.push_back(SourceAndNetFilePos(new FileByteSource(mFilePath),filepos));
+      mLatestIndex = 0;
+    }
+  }
+  
   WeaverLogFile::WeaverLogFile(const char * filePath, u32 num)
     : mFilePath(filePath)
     , mFileNumber(num)
-    , mFileByteSource(mFilePath)
-    , mTraceLogReader(mFileByteSource)
+    , mFileByteInfoVector()
     , mAverageOffset(0)
     , mOutlierDistance(10e100)
     , mHasEffectiveOffset(false)
     , mEffectiveOffset()
-  { }
+    , mIsRollingDirectory(false)
+    , mRollingCutPoints()
+    , mLatestIndex(0)
+  {
+    initFileOrDirectory();
+  }
     
   WeaverLogFile::~WeaverLogFile() {
-    mFileByteSource.Close();
+    while (mFileByteInfoVector.size() > 0) {
+      SourceAndNetFilePos sfp = mFileByteInfoVector.back();
+      mFileByteInfoVector.pop_back();
+      sfp.first->Close();
+      delete sfp.first;
+    }
   }
 
   EWSlotMap & Alignment::getEWSlotMap() {

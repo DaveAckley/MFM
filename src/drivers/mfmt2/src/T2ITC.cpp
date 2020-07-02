@@ -345,7 +345,7 @@ namespace MFM {
     if (true/*TRACEACTIVE*/) {
       Trace evt(*this, TTC_ITC_PacketIn);
       evt.payloadWrite().WriteBytes((const u8*) packet, len);
-      mTile.trace(evt);
+      mTile.tlog(evt);
     }
     if (len < 2) LOG.Warning("%s one byte 0x%02x packet, ignored", getName(), packet[0]);
     else {
@@ -391,7 +391,7 @@ namespace MFM {
     if (true /*XXX TRACE ACTIVE*/) {
       Trace evt(*this, TTC_ITC_PacketOut);
       evt.payloadWrite().WriteBytes((const u8*) bytes,len);
-      mTile.trace(evt);
+      mTile.tlog(evt);
     }
     ++mPacketsShipped;                   // another day, 
     return true;                         // 'the bird is away'
@@ -399,7 +399,7 @@ namespace MFM {
 
   void T2ITC::setITCSN(ITCStateNumber itcsn) {
     MFM_API_ASSERT_ARG(itcsn >= 0 && itcsn < MAX_ITC_STATE_NUMBER);
-    mTile.trace(*this, TTC_ITC_StateChange,"%c",(u8) itcsn);
+    mTile.tlog(Trace(*this, TTC_ITC_StateChange,"%c",(u8) itcsn));
     mStateNumber = itcsn;
   }
 

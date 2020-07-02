@@ -25,7 +25,11 @@ namespace MFM {
   struct Alignment; // FORWARD
   typedef u32 FileNumber;
 
-  typedef std::pair<FileNumber,long> WLFNumAndFilePos;
+  typedef long FilePos;
+  typedef std::pair<FileNumber,FilePos> WLFNumAndFilePos;
+
+  typedef std::pair<FileByteSource*,u32> SourceAndNetFilePos;
+  typedef std::vector<SourceAndNetFilePos> SANFPVector;
 
   struct FileTrace {
     FileTrace(Trace* toOwn, u32 useLoc, WLFNumAndFilePos fp) ;
@@ -44,6 +48,8 @@ namespace MFM {
   struct WeaverLogFile {
     WeaverLogFile(const char * filePath, u32 num) ;
     ~WeaverLogFile() ;
+
+    ByteSource & getByteSourceAtFilePos(u32 filepos) ;
     void seek(u32 filepos) ;
 
     FileNumber getFileNum() const { return mFileNumber; }
@@ -61,23 +67,41 @@ namespace MFM {
     void findITCSyncs(Alignment &) ;
     s32 checkForSync(Trace & evt) ;
 
-    struct timespec getFirstTimespec() const { return mTraceLogReader.getFirstTimespec(); }
+    struct timespec getFirstTimespec() const {
+      MFM_API_ASSERT_STATE(mHasFirstTimespec);
+      return mFirstTimespec;
+    }
+    Trace * readSequential(u32 useLoc, bool useOffset) ;
     FileTrace * read(u32 useLoc, bool useOffset) ;
     void reread() ;
 
-    long getFilePos() const { return mFileByteSource.Tell(); }
+    FilePos getFilePos() const ;
+    u32 filePosToFileIndex(u32 filepos) ;
+
+    SourceAndNetFilePos & getSourceAndNetAtFilePos(u32 filepos) ;
 
     typedef std::vector<UniqueTime> TimeVector;
     TimeVector mITCSyncs[DIR6_COUNT];
 
+    void initDirectory() ;
+    void initFileOrDirectory() ;
+    
     const char * mFilePath;
     const FileNumber mFileNumber;
-    FileByteSource mFileByteSource;
-    TraceLogReader mTraceLogReader;
+
+    SANFPVector mFileByteInfoVector;
     double mAverageOffset;
     double mOutlierDistance;
+    bool mHasFirstTimespec;
+    struct timespec mFirstTimespec;
     bool mHasEffectiveOffset;
     struct timespec mEffectiveOffset;
+    bool mIsRollingDirectory;
+    typedef u32 FBIVecIndex;
+    typedef std::map<FilePos,FBIVecIndex,std::greater<u32>> CutMap;
+    CutMap mRollingCutPoints;
+    u32 mLatestIndex;
+    u32 mCurrentFilePos; // Aggregate across all indexes
   };
 
   struct EWModel {

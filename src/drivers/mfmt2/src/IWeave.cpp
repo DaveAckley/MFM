@@ -3,6 +3,7 @@
 #include "TeeByteSink.h"
 #include "LineTailByteSink.h"
 #include "T2Tile.h" /* for getDir6Name grrr */
+#include "T2Utils.h" /* for printComma */
 
 #include <stdlib.h>
 
@@ -298,7 +299,7 @@ namespace MFM {
       getmaxyx(win, h, w);
 
       OString128 buf;
-      buf.Printf("%d", mTopRecord);
+      printComma(mTopRecord,buf);
       u32 size = buf.GetLength();
       mvwprintw(win, 0, w-size-1, "%s", buf.GetZString());
 
