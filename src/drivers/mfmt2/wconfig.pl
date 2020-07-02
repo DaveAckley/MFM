@@ -214,7 +214,7 @@ $AUTOGEN_STAMP
 [T2Viz_Checkbox_Living T2TileLiveCheckbox T2Viz `bfs6x6(3,3,4,3)`]
     font=2
     text="Run"
-[T2Viz_Checkbox_X MenuItem T2Viz `bfs6x6(2,4,2,4)`]
+[T2Viz_Checkbox_X MenuItem T2Viz `bfs6x6(4,0,5,1)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
     font=1
