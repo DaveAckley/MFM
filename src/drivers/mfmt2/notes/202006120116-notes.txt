@@ -1,4 +1,4 @@
-{262}  -*- text -*-
+{291}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -5086,3 +5086,287 @@ Just to see it happen.
 :259]
 
 :258]
+[262:
+
+Tue Jun 30 08:25:47 2020 So, started up a two-tile no-tracing run at
+8:22, and added a bunch of beins -- like two dozen+ I'd say.  [263:
+
+Tue Jun 30 08:27:16 2020 And it's still going at this point.  And it's
+really not that foggen slow![264:
+
+Tue Jun 30 09:37:51 2020 OK, so after going off for breakfast I come
+back and the party is gummed up: While I was gone we hit another pEW
+state inconsistency:
+
+    Thread 1 "mfmt2" hit Breakpoint 1, MFMLongJmpHere (buffer=0xbefff6c0, toThrow=4) at src/FailPlatformSpecific.cpp:48
+    48          longjmp(buffer,toThrow);
+    (gdb) up
+    #1  0x0046114a in MFM::T2ITC::handleRingPacket (this=0x4d5cac <MFM::T2Tile::get()::THE_INSTANCE+2932>, pb=...) at src/T2ITC.cpp:198
+    198         MFM_API_ASSERT_STATE(pEW.getEWSN() == EWSN_IDLE);
+    (gdb) p pEW.getEWSN()
+    $5 = MFM::EWSN_PWCACHE
+    (gdb) bt
+    #0  MFMLongJmpHere (buffer=0xbefff6c0, toThrow=4) at src/FailPlatformSpecific.cpp:48
+    #1  0x0046114a in MFM::T2ITC::handleRingPacket (this=0x4d5cac <MFM::T2Tile::get()::THE_INSTANCE+2932>, pb=...) at src/T2ITC.cpp:198
+    #2  0x00460b84 in MFM::T2ITC::handleCircuitPacket (this=0x4d5cac <MFM::T2Tile::get()::THE_INSTANCE+2932>, pb=...) at src/T2ITC.cpp:128
+    #3  0x0046266e in MFM::T2ITC::tryHandlePacket (this=0x4d5cac <MFM::T2Tile::get()::THE_INSTANCE+2932>, dispatch=true) at src/T2ITC.cpp:361
+    #4  0x00460986 in MFM::T2ITC::pollPackets (this=0x4d5cac <MFM::T2Tile::get()::THE_INSTANCE+2932>, dispatch=true) at src/T2ITC.cpp:108
+    #5  0x0046045a in MFM::T2ITCPacketPoller::onTimeout (this=0x508c30 <MFM::T2Tile::get()::THE_INSTANCE+211704>, srcTq=...) at src/T2ITC.cpp:28
+    #6  0x00468c32 in MFM::T2Tile::main (this=0x4d5138 <MFM::T2Tile::get()::THE_INSTANCE>) at src/T2Tile.cpp:624
+    #7  0x0044c57a in MFM::MainDispatch (argc=5, argv=0xbefffc84) at src/main.cpp:78
+    #8  0x0044c75c in main (argc=5, argv=0xbefffc84) at src/main.cpp:106
+    (gdb) p mTile
+    $6 = (MFM::T2Tile &) <error reading variable>
+    (gdb) p mTile.mTotalActiveEventsConsidered
+    $7 = 100825165
+    (gdb) p mTile.mTotalActiveEventsCompleted
+    $8 = 95530093
+    (gdb) 
+
+So between you and me, that's nearly 100 MILLION events completed
+before the inconsistency was detected.  And, of course, as stated at
+the outset, tracing was off, so we have nothing to look at.
+
+So, What We REALLY Need (TM), is a rolling trace buffer on disk.  Like
+make a dir on startup, and have up to N MB of trace data in there,
+where we start a new file after the current one grows to say N/5 MB,
+and we automatically unlink the oldest one after the total goes over N
+MB.  And we make a new kind of trace sync point that we dump at the
+end of the old file and the beginning of the new one.
+
+And then we leave that fogger running as long as it takes to catch a
+bug.  We have to acknowledge that Weaver will be picking up in the
+middle of things, so we'll need to understand what that looks like,
+and hope to have plenty of data to wash all the fractions out before
+getting to whatever the issue turns out to be.
+
+:264]
+
+:263]
+
+:262]
+[265:
+
+Wed Jul  1 01:06:18 2020 OK, have been working since right around
+midnight.  We now have '-r MB' to specify rolling log files totalling
+up to MB, and we create a /tmp/t2trace%D directory for them, and we
+reuse 10.dat .. 13.dat within that dir.
+[266:
+
+Wed Jul  1 01:21:35 2020 Now trying to figure out why Weaver is
+blowing a UniqueTime-related assertion grrrr.[267:
+
+Wed Jul  1 02:12:56 2020 Weaver was right..  It was because I delayed
+dumping a built trace until after the trace files rolled, so there the
+built trace had a backwards time relative to the initiation of the new
+file.  Doh.
+
+So, the current status is
+
+(1) we are rolling 10.dat .. 13.dat files apparently plausibly
+(2) Given /tmp/t2trace%D/*.dat Weaver does apparently sequence them
+    correctly and find the correct anchor file, based on the new sync
+    tags we put in just for that purpose..
+(3) But using Weaver that way is problematic because successive trace
+    rolls get successive file numbers, so they don't map to the same
+    locations EWMap.
+
+So I think some quick
+
+TODO
+[270:
+DONE :270] - Don't roll the numbers.  Just let the file numbers count up, but
+   when rolling, try to unlink num-4.
+
+ - Extend the WeaverLogFile concept to support directory-as-file,
+   where directory implies implicitly concatenating all the (.dat?)
+   files within it, and treating that as one big file.
+
+ - Have WLF maintain a set of 'cut points' determining which file to
+   go to for a given 'effective file pos'.
+[268: Wed Jul  1 02:23:13 2020
+
+ - GO GO GO
+
+:268]
+
+:267]
+
+:266]
+
+:265]
+[269:
+
+Wed Jul  1 02:59:26 2020 OK got one.  [271:
+
+Wed Jul  1 03:00:04 2020 Now WLF.
+
+:271]
+
+:269]
+[272:
+
+Wed Jul  1 05:14:02 2020 OK WLF hack is hitting a lot of code..  Time
+to gork off for second sleep.  Current loose ends:
+
+ - TraceLogReader should not require an FBS& in ctor.  (Of course.)
+   Give it at init(FileByteSource&bs) and let it hold a non-owned ptr
+
+ - TLR currently has a mPrevTimespec it's not using.  Ditch it.
+
+ - It's unclear whether TLR should have mFirstTimeSpec either, vs
+   lifting that up to the WLF level
+
+ - Ton of stuff hacked and untried in WLF
+
+Sleep now.
+
+:272]
+[273:
+
+Wed Jul  1 15:25:11 2020 OK, have a meeting now, but got stuff all
+hacked up and just now re-buildable, with INCOMPLETE_CODE all over the
+place.  Will have to return to it in the overnight.[274:
+
+Wed Jul  1 23:18:09 2020 OK let's debug.[275:
+
+Thu Jul  2 06:07:00 2020 Did a couple hours and then slept more; now
+we're on it again for a bit.
+
+Currently trying to get the time offsets settled again.  Restate
+fundamentals:
+
+ - We have mFirstTimespec, the timespec of the first trace in each
+   WeaverLogFile.  But note if we're in 'directory' mode,
+   mFirstTimespec is the first trace of the first physical file
+   within the directory.
+
+ - We have mEffectiveOffset (with mHasEffectiveOffset), which is the
+   time difference between the beginning of the anchor file, and the
+   beginning of the WLF.  Again, even in directory mode, there is only
+   one mEffectiveOffset for the whole directory.  (Because we're
+   saying non-zero mEffectiveOffsets arise from data being gathered on
+   different tiles, but all the files in one WLF directory are
+   perforce taken as from one tile.)
+
+ - We have a per-trace timespec 'tmpTime', which TraceLogReader::reads
+   from whatever ByteSource (physical file) it is given.
+
+ - And we have the netTimeOffset, which TraceLogReader (currently)
+   subtracts from the tmpTime, to get the imputed aligned time of the
+   given trace
+
+[276:
+
+Thu Jul  2 06:39:58 2020 So, given all that, I guess the question is:
+How should netTimeOffset be computed so the imputed aligned times are
+all 'harmonious'?  (OK, 'consistent'.)
+
+I guess it's:
+
+ netTimeOffset = mFirstTimespec - mEffectiveOffset
+
+so we get
+
+  tmpTime - netTimeOffset
+  tmpTime - (mFirstTimespec - mEffectiveOffset)
+  tmpTime - mFirstTimespec + mEffectiveOffset
+
+so we take out the first timespec of this WLF dir (say), which gives
+us the trace time relative to that, and then add the effective offset,
+which gives us 'global harmonious time'.
+
+[277:
+
+Thu Jul  2 06:47:06 2020 So where in the code is netTimeOffset being
+computed? [278:
+
+Thu Jul  2 06:47:55 2020 In WLF::readSequential, at least.  Right now
+it's just the effective offset.  We have to subtract the first
+timespec.[279:
+
+Thu Jul  2 06:50:06 2020 But at the moment we only know how to
+subtract UniqueTimes, not struct timespecs.  But UniqueTime doesn't
+allow negative results, right?[280:
+
+Thu Jul  2 06:51:59 2020 Yeah, UniqueTime::operator-(rhs) asserts that
+*this >= rhs..  And it does the seconds arithmetic in u32.[281:
+
+Thu Jul  2 06:55:18 2020 And it looks like struct timespec.tv_sec is
+declared a time_t, which can, apparently be either signed or unsigned.
+A highly-rated answer on SO says unix uses signed, but 'some systems
+correctly handle negative time values, while others do not'.
+[282:
+
+Thu Jul  2 06:58:56 2020 So what do we do?  Pass a double, ick?  Pass
+two timespecs?  Maybe.  Just pass mfirstTimespec, and have caller
+apply the mEffectiveOffset?  Defensible.  Yeah maybe let's try
+that.[283:
+
+Thu Jul  2 07:07:52 2020 Ah whoops.  Just one small issue:
+Trace::mLocalTimestamp is const.
+
+OK screw it pass in two timespecs.[284:
+
+Thu Jul  2 07:12:35 2020 But can't we be sure that netTimeOffset is
+never negative?  It's supposed to be the ..  Ah, no, we absolutely
+can't: If the tile A clock happened to be set to like 1/1/1970, but
+after alignment, the tile B trace data extended farther into the
+relative past, then (mFirstTime - mEffectiveOffset), without the
+actual trace time added in, could definitely be negative.
+
+OK two timespecs.[285:
+
+Thu Jul  2 07:33:16 2020 OK, two timespecs sorted out the individual
+file case.  Let's try out the directory case now..[286:
+
+Thu Jul  2 07:38:27 2020 Well, the single directory case looks okay.
+I guess I could try the single directory twice as a test..[287:
+
+Thu Jul  2 07:39:36 2020 Actually I can't, because it detects multiple
+anchor files -- as it should -- and horks.  Good Weaver, good!
+
+:287]
+
+:286]
+
+:285]
+
+:284]
+
+:283]
+
+:282]
+:281]
+
+:280]
+
+:279]
+
+:278]
+
+:277]
+
+:276]
+
+:275]
+
+:274]
+
+:273]
+[288:
+
+Thu Jul  2 07:45:25 2020 So, I guess we should think about committing
+all this, and getting towards letting a rolling tracer run until it
+does bomb out, and then see if we can learn something![289:
+
+Thu Jul  2 07:48:26 2020 Oh we should probably recheck the trace
+unparsing stuff first; there's something off there.[290:
+
+Thu Jul  2 07:59:16 2020 Just a bad printf format mostly.
+
+:290]
+
+:289]
+
+:288]
