@@ -155,7 +155,7 @@ namespace MFM {
               CircuitState cs;
               if (ewm.getCircuitInfo(idx,dir6,cs)) {
                 if (row < (u32) (h-1))
-                  mvwprintw(win, row++, col+2, "%s %s",
+                  mvwprintw(win, row++, col+3, "%s %s",
                             getDir6Name(dir6),
                             getCircuitStateName(cs));
               }
@@ -413,7 +413,7 @@ namespace MFM {
       initCurse();
       u32 w = COLS;
       u32 h = LINES;
-      u32 hs = h/2;
+      u32 hs = 3*h/5;
       u32 ws = 2*w/5;
       LOG.Message("COLS=%d, LINES=%d", w, h);
       LOG.Message("env COLUMNS=%s, LINES=%s",
