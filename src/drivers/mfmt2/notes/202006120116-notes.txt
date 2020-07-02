@@ -1,4 +1,4 @@
-{291}  -*- text -*-
+{294}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -5370,3 +5370,47 @@ Thu Jul  2 07:59:16 2020 Just a bad printf format mostly.
 :289]
 
 :288]
+[291:
+
+Thu Jul  2 13:50:13 2020 Well, flag moved, and we did a long two-tile
+run with the new rolling trace buffers, which finally hit FAILs.
+
+Now, the normal pattern is that one tile blows up with some kind of
+inconsistency, and then, because it's at a breakpoint and not
+responding, the other tile blows up with a timeout soon after, usually
+in AWACKS.
+
+So what happened this time?  They.. BOTH.. blew up with timeouts in
+AWACKS..
+
+[292:
+
+Thu Jul  2 13:55:33 2020 So I guess we're guessing either
+
+(1) The timeout is too short, and one blew up 'naturally', which took
+    the other down afterwards, or
+
+(2) There's some kind of resource starvation -- leaking aEWs or
+    something perhaps -- that's slowing things down so much that the
+    perfectly reasonable timeout finally hit.
+
+Well, let's get the rolling trace buffers together and see what we can
+see..  Code 202007021359 
+
+:292]
+
+
+
+:291]
+[293:
+
+Thu Jul  2 17:19:28 2020 Well, pretty aggravating -- I think I have a
+pretty clear case that there's no possible consistent alignment
+between two trace files.
+
+But made a bunch of tweaks while running a lot of Weaver, and have now
+upped the timeouts a little in case that was the problem.
+
+Committing, to go again.
+
+:293]
