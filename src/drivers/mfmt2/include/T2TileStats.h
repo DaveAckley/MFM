@@ -16,6 +16,7 @@ namespace MFM {
     void saveRaw(ByteSink& bs) ;
     bool loadRaw(ByteSource& bs) ;
     void reset() ;
+    u32 getSeconds() const { return mResetTime.tv_sec; }
 
     struct timespec mResetTime; // When stats were last reset
 #define XX(NM,CM)                         \

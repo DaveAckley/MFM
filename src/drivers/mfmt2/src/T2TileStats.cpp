@@ -11,9 +11,8 @@ namespace MFM {
   }
 
   void T2TileStats::saveRaw(ByteSink & bs) {
-    bs.Printf("%l%l",
-              mResetTime.tv_sec,
-              mResetTime.tv_nsec);
+    struct timespec now = UniqueTime::now();
+    bs.Printf("%l", now.tv_sec - mResetTime.tv_sec);
 #define XX(NM,CM) bs.Printf("%q", get##NM());
 
     ALL_TILE_STAT_U64S()
@@ -22,10 +21,10 @@ namespace MFM {
 
   bool T2TileStats::loadRaw(ByteSource & bs) {
     T2TileStats tmp;
-    if (2 != bs.Scanf("%l%l",
-                      &tmp.mResetTime.tv_sec,
-                      &tmp.mResetTime.tv_nsec))
+    if (1 != bs.Scanf("%l",
+                      &tmp.mResetTime.tv_sec))
       return false;
+    tmp.mResetTime.tv_nsec = 0;
 #define XX(NM,CM) if (1 != bs.Scanf("%q",&tmp.m##NM)) return false;
 
     ALL_TILE_STAT_U64S()

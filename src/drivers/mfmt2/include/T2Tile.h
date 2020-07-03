@@ -133,6 +133,7 @@ namespace MFM {
     static s32 makeTag() ;
     void startTracing(const char * path, s32 synctag = makeTag()) ;
     void stopTracing(s32 synctag = -makeTag()) ;
+    void traceEventStats() ;
 
     // HIGH LEVEL SEQUENCING
     void main() ;

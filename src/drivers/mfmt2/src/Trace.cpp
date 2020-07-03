@@ -139,20 +139,33 @@ namespace MFM {
       return;
     }
     
-    if (mTraceType == TTC_Tile_Stop) {
+    if (mTraceType == TTC_Tile_EventStatsSnapshot) {
       CharBufferByteSource cbbs = mData.AsByteSource();
       T2TileStats stats;
       if (!stats.loadRaw(cbbs)) bs.Printf("??stats load failed");
       else {
-        bs.Printf(" Total = ");
+        u32 secs = stats.getSeconds();
+        bs.Printf(" sec=");
+        printComma(secs,bs);
+        bs.Printf("; tot=");
         printComma(stats.getEventsConsidered(),bs);
-        //        bs.Printf("; empty = ");
-        //        printComma(stats.getEmptyEventsConsidered(),bs);
-        bs.Printf("; aInit = ");
-        printComma(stats.getNonemptyTransitionsStarted(),bs);
-        bs.Printf("; aDone = ");
+        bs.Printf("; emp=");
+        printComma(stats.getEmptyEventsCommitted(),bs);
+        bs.Printf("; occ=");
         printComma(stats.getNonemptyEventsCommitted(),bs);
+        if (secs==0) secs = 1;
+        double estAER =
+          ((double) (stats.getEmptyEventsCommitted() +
+                     stats.getNonemptyEventsCommitted())) / secs / (T2TILE_OWNED_WIDTH * T2TILE_OWNED_HEIGHT);
+        bs.Printf("; estAER=%f", estAER);
       }
+      bs.Printf("\n");
+      return;
+    } 
+
+    if (mTraceType == TTC_Tile_Stop) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+      bs.Printf(" TRACE STOP ");
       bs.Printf("\n");
       
       return;

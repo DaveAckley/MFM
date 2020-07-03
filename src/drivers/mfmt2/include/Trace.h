@@ -27,6 +27,7 @@ namespace MFM {
   XX(Tile,STR,Start)                            \
   XX(Tile,TLF,TopLevelFailure)                  \
   XX(Tile,TFM,TraceFileMarker)                  \
+  XX(Tile,ESS,EventStatsSnapshot)               \
   XX(Tile,STP,Stop)                             \
   XX(ITC,SCH,StateChange)                       \
   XX(ITC,PIN,PacketIn)                          \
@@ -67,7 +68,7 @@ namespace MFM {
     TRACE_REC_MODE_EWPASIV_NE = TRACE_REC_MODE_EWPASIV_BASE + DIR6_NE,
     TRACE_REC_MODE_EWPASIV_XX = TRACE_REC_MODE_EWPASIV_BASE + DIR6_COUNT,
 
-    TRACE_REC_FORMAT_VERSION = 0x06
+    TRACE_REC_FORMAT_VERSION = 0x07
 
   };
 

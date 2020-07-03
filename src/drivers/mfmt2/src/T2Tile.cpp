@@ -686,21 +686,30 @@ static const char * CMD_HELP_STRING =
     mTraceLoggerPtr = new TraceLogger(path);
     tlog(Trace(*this, TTC_Tile_Start, "%D", TRACE_REC_FORMAT_VERSION));
     tlog(Trace(*this, TTC_Tile_TraceFileMarker, "%l", syncTag));
+    traceEventStats();
     TLOG(DBG,"HEWO to %s",path);
   }
 
+  void T2Tile::traceEventStats() {
+    if (mTraceLoggerPtr != 0) {
+      // We might be rolling, so we need to avoid the T2Tile::trace
+      OString128 buf;
+      getStats().saveRaw(buf);
+      CharBufferByteSource cbbs = buf.AsByteSource();
+      mTraceLoggerPtr->
+        log(Trace(*this, TTC_Tile_EventStatsSnapshot, "%<", &cbbs));
+    }
+  }
   void T2Tile::stopTracing(s32 syncTag) {
     MFM_API_ASSERT_ARG(syncTag <= 0);
     if (mTraceLoggerPtr != 0) {
       // We might be rolling, so we need to avoid the T2Tile::trace
       // interface so these final traces don't roll recursively
+      traceEventStats();
       mTraceLoggerPtr->
         log(Trace(*this, TTC_Tile_TraceFileMarker, "%l", syncTag));
-      OString128 buf;
-      getStats().saveRaw(buf);
-      CharBufferByteSource cbbs = buf.AsByteSource();
       mTraceLoggerPtr->
-        log(Trace(*this, TTC_Tile_Stop, "%<", &cbbs));
+        log(Trace(*this, TTC_Tile_Stop, ""));
       delete mTraceLoggerPtr;
       mTraceLoggerPtr = 0;
     }

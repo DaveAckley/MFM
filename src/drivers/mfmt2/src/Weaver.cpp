@@ -828,7 +828,7 @@ namespace MFM {
         //double seconds = UniqueTime::getIntervalSeconds(thisTime,lastTime);
         lastTime = thisTime;
         if (print) {
-          printf("%d %0.3f ",
+          printf("%d %0.5f ",
                  mergedRecNum,
                  UniqueTime::doubleFromTimespec(thisTime));
           //        STDOUT.Printf("%d ",(u32) );
