@@ -1,4 +1,4 @@
-{297}  -*- text -*-
+{308}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -5452,3 +5452,157 @@ EventStatsSnapshot trace record.
 I'm going to call this run a success!
 
 :296]
+[297:
+
+Fri Jul  3 09:31:29 2020 We also need to start refreshing an inventory
+of atomic types, and get a stats window going.
+
+I think we should build an atomic histogram during redisplay, since we
+hit all the atoms at that point anyway.  We will not try to
+incrementally update the counts as we go; we'll just recount from
+scratch on every redisplay, and display the latest result when we need
+it.
+
+Hmm, do we actually avoid the site iteration when the Sites panel is
+not visible?  I suspect we don't.. right?
+
+:297]
+[298:
+
+Sat Jul  4 08:08:29 2020 OK, so we're working our way through getting
+the ITC status plausibly showing on the T2InfoPanel, and we've gotten
+as far as needing to 'XXXFIXMEXXX' the kernel stats showing up in
+/sys/class/itc_pkt/statistics.
+
+That stuff got messed up with the recent T2-PHF redo, and now we need
+to figure out what we want and can have the stats to say.
+
+The previous header said something like
+
+dir psan sfan toan blkbsent blkbrcvd blkpsent blkprcvd urgbsent urgbrcvd urgpsent urgprcvd
+
+0 direction
+1 packet sync announcements
+2 sync failure announcements
+3 timeout announcements
+4 bulk bytes sent
+5 bulk byts received
+6 bulk packets sent
+7 bulk packets received
+8 urgent bytes sent
+9 urgent bytes received
+10 urgent packets sent
+11 urgent packets received
+
+[299:
+
+Sat Jul  4 09:52:38 2020 But now instead of bulk/urgent the high-order
+bit is MFM/non-MFM, and both cdm and flash traffic are considered
+'bulk'.  (So much for flash traffic.)  And the LKM is counting
+MFM/non-MFM, or no?[300:
+
+Sat Jul  4 09:59:14 2020 On outbound anyway, the distinction is based
+on the KIFO being marked 'mPriority' or not, with the resulting stats
+being marked TRAFFIC_MFM if so and TRAFFIC_SERVICE if not.[301:
+
+Sat Jul  4 10:01:31 2020 Same for inbound, no surprise.  But to be
+explicit, on inbound we are indeed checking PKT_HDR_BITMASK_MFM to
+make that distinction.[302:
+
+Sat Jul  4 10:03:02 2020 So we should just change the
+/sys/class/itc_pkt/statistics labels to 'm' for mfm and 's' for
+service, and then go looking downstream for the users of that
+file. [303:
+
+Sat Jul  4 10:11:31 2020 Which appears primarily to be the enum at
+ITCStatus.h:25..
+
+:303]
+
+:302]
+
+:301]
+
+:300]
+
+:299]
+:298]
+[304:
+
+Sun Jul  5 04:00:30 2020 OK got a pWEsn==CACHE instead of IDLE failure
+while logs were rolling -- but only on one tile, rats -- so let's take
+a look at that.  Code 202007050401 
+
+:304]
+[305:
+
+Sun Jul  5 04:16:18 2020 OK, so at 346.335361 secs (relative to the
+rolling buffer start), a RING#17 packet arrived on 0/iNW, targetting
+(11,3)+4.
+
+0/pNW17 was launched to handle it, and an ANSWER#17 reply resulted:
+
+│346.335361 0/iNW:OPEN <NW:RING#17(11,3)+4e +5                                             │
+│346.335438 0/lDBG ITC/NW:OPEN: HRP abs(11,3) themrel(11,3) yoink=0                        │
+│346.335493 0/pNW17-IDLE -> PINIT                                                          │
+>346.635338 0/pNW17-PINIT p@(11,3)+4                                                       │
+│346.635375 0/pNW17-PINIT NW CS_BOUND -> CS_RUNG                                           │
+│346.635394 0/pNW17-PINIT -> PRESOLVE                                                      │
+│346.635564 0/pNW17-PRESOLVE -> PWCACHE                                                    │
+│346.645799 0/iNW:OPEN >NW:ANSWER#17 +2                                                    │
+│346.645935 0/pNW17-PWCACHE NW CS_RUNG -> CS_ANSWERED  
+
+Then at 346.721227 seconds, a(n associated) RING#17 arrived on 0/iNE,
+targetting (34,3)+4, and it too was ANSWER#17ed:
+
+│346.721227 0/iNE:OPEN <NE:RING#17(35,3)+4e +5                                             │
+│346.721372 0/lDBG ITC/NE:OPEN: HRP abs(59,3) themrel(35,3) yoink=0                        │
+│346.721492 0/pNE17-IDLE -> PINIT                                                          │
+│346.721515 0/pNE17-PINIT p@(59,3)+4                                                       │
+│346.721535 0/pNE17-PINIT NE CS_BOUND -> CS_RUNG                                           │
+|346.721552 0/pNE17-PINIT -> PRESOLVE                                                      │
+│346.721632 0/pNE17-PRESOLVE -> PWCACHE                                                    │
+>346.727945 0/iNE:OPEN >NE:ANSWER#17 +2                                                    │
+│346.727994 0/pNE17-PWCACHE NE CS_RUNG -> CS_ANSWERED                                      │
+
+And then for vast stretches of time -- tens of seconds -- nothing
+happens to either 0/pNE17 or 0/pNW17, except that occasionally their
+existence blocks some other event, such as (some unseen) 1/a22:
+
+│368.385577 0/iNW:OPEN <NW:RING#22(18,3)+4o +5                                             │
+│368.385650 0/lDBG ITC/NW:OPEN: HRP abs(18,3) themrel(18,3) yoink=1                        │
+│368.385705 0/pNW22-IDLE -> PINIT                                                          │
+│368.385725 0/pNW22-PINIT p@(18,3)+4                                                       │
+│368.385744 0/pNW22-PINIT NW CS_BOUND -> CS_RUNG                                           │
+│368.385761 0/pNW22-PINIT -> PRESOLVE                                                      │
+>368.385861 0/lDBG RRFP-1 pNW22-PRESOLVE BUSYed by pNW17-PWCACHE                           │
+│368.390407 0/iNW:OPEN >NW:BUSY#22 +2                                                      │
+│368.390469 0/pNW22-PRESOLVE -> IDLE                                                       │
+
+It seems clear that the (inferred but uncaptured grr) 1/a17 on the far
+side is long long gone, but it either somehow failed to notify 0/pNE17
+and 0/pNW17, or it did but, I guess conceivably, BOTH those packets
+were somehow lost.[306:
+
+Sun Jul  5 04:44:45 2020 And, finally, another RING#17 arrived, and
+the inconsistency was detected:
+
+>369.088971 0/iNW:OPEN <NW:RING#17(18,3)+4e +5                                             │
+│369.089142 0/lDBG ITC/NW:OPEN: HRP abs(18,3) themrel(18,3) yoink=0                        │
+│16688.902212 0/t  Failed to top: src/T2ITC.cpp:198: ILLEGAL_STATE [4]                     │
+│16690.994965 0/t  sec=38,621; tot=75,097,419; emp=74,349,143; occ=628,695; estAER=1.263916│
+│16690.995023 0/t  File sync mark -?499DEAF7                                               │
+│16690.995035 0/t  TRACE STOP                                                              │
+
+[307:
+
+Sun Jul  5 06:19:36 2020 And that tells us very very little about what
+was going on on the active side that lead to this outcome.  :(
+
+But nonetheless, big progress and time to commit again.
+
+:307]
+
+:306]
+
+:305]
