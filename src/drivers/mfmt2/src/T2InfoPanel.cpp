@@ -1,21 +1,48 @@
 #include "T2InfoPanel.h"
+#include <algorithm>
 
 #include "TimeQueue.h"
 #include "T2Utils.h"
 #include "SimLogPanel.h"
 #include "T2Tile.h"
 
+#include "itcpktevent.h"
+
 namespace MFM {
+  T2InfoPanel::T2InfoPanel() 
+    : mCornerLights{0}
+    , mITCPanels{0}
+    , mLogPanel(0)
+    , mStatusPanel(0)
+    , mHistoPanel(0)
+    , mStaticPanel(0)
+  {
+    for (Dir6 dir6 = DIR6_MIN; dir6 <= DIR6_MAX; ++dir6) {
+      mITCStatuses[dir6].setDir6Idx(dir6);
+    }
+  }
+
   void T2InfoPanel::configure(SDLI & sdli) {
+    mITCIcons.init(sdli.getScreen());
+
     OString128 buf;
-    const char * dirs[] = {"NW","NE","SE","SW"};
+    Dir6 dirs[] = {DIR6_NW, DIR6_NE, DIR6_SE, DIR6_SW};
     for (u32 i = 0; i < 4; ++i) {
       buf.Reset();
-      buf.Printf("Corner_%s",dirs[i]);
+      buf.Printf("Corner_%s",getDir6Name(dirs[i]));
       const char * pname = buf.GetZString();
       Panel * p = sdli.lookForPanel(pname);
       if (!p) fatal("Couldn't find panel '%s'",pname);
       mCornerLights[i] = p;
+    }
+    for (Dir6 dir6 = DIR6_MIN; dir6 <= DIR6_MAX; ++dir6) {
+      buf.Reset();
+      buf.Printf("ITC_%s",getDir6Name(dir6));
+      const char * pname = buf.GetZString();
+      ITCStatusPanel * p = dynamic_cast<ITCStatusPanel*>(sdli.lookForPanel(pname));
+      if (!p) fatal("Couldn't find ITCStatusPanel '%s'",pname);
+      mITCPanels[dir6] = p;
+      p->init(mITCStatuses[dir6], mITCIcons);
     }
     {
       const char * pname = "SimLog";
@@ -35,12 +62,20 @@ namespace MFM {
       if (!p) fatal("Couldn't find StatusPanel '%s'",pname);
       mStatusPanel = p;
     }
+    {
+      const char * pname = "TypeHistogram";
+      HistoPanel * p = dynamic_cast<HistoPanel*>(sdli.lookForPanel(pname));
+      if (!p) fatal("Couldn't find HistoPanel '%s'",pname);
+      mHistoPanel = p;
+    }
   }
 
   void T2InfoPanel::PaintComponent(Drawing & config) {
+#if 0
     static u32 bg = 0;
     bg += 0x010307;
     this->SetBackground(bg);
+#endif
     Super::PaintComponent(config);
   }
 
@@ -123,28 +158,6 @@ namespace MFM {
           LOG.Error("Can't read '%s'",PATH);
     } while(0);
 
-    do { // CDM liveness
-      const char * PATH = "/run/cdm/status.dat";
-      double a[9];
-      u32 mUpdateCount = srcTQ.now();
-      // Assume all dead
-      for (u32 i = 0; i < ITC_COUNT; ++i) mITCs[i].setIsAlive(false);
-      if (readFloatsFromFile(PATH, a, sizeof(a)/sizeof(a[0]))) {
-        if (a[8] != mLastCDMTime) {
-          mLastCDMChangeCount = mUpdateCount;
-          mLastCDMTime = a[8];
-        }
-        if (mLastCDMChangeCount + 50 <= mUpdateCount) mLastCDMTime = -1;
-        else {
-          u32 itc = 0;
-          for (u32 i = 0; i < ROSE_DIR_COUNT; ++i) {
-            if (i%4 == 0) continue;
-            mITCs[itc++].setIsAlive(a[i] != 0);
-          }
-        }
-      } else mLastCDMTime = -1; // Can't read file
-    } while(0);
-
 #if 0
     do { // AER & AEPS
       const char * PATH = "/run/mfmt2/status.dat";
@@ -161,20 +174,12 @@ namespace MFM {
 #endif
 
     do { // ITCStatus
-      const char * PATH = "/sys/class/itc_pkt/status";
-      OString16 status;
-      if (!readOneLinerFile(PATH, status)) {
-        LOG.Error("Can't read '%s'",PATH);
-        break;
-      }
-      const char * p = status.GetZString();
-      if (strlen(p) != ROSE_DIR_COUNT) LOG.Error("Bad status '%s'",p);
-      else {
-        u32 itc = 0;
-        for (u32 i = 0; i < ROSE_DIR_COUNT; ++i) {
-          if (i%4 == 0) continue;
-          mITCs[itc++].setIsOpen(p[ROSE_DIR_COUNT - 1 - i] > '0'); 
-        }
+      T2Tile & tile = T2Tile::get();
+      for (u32 dir6 = DIR6_MIN; dir6 <= DIR6_MAX; ++dir6) {
+        T2ITC & itc = tile.getITC(dir6);
+        ITCStateNumber itcsn = itc.getITCSN();
+        mITCStatuses[dir6].setIsOpen(itcsn > ITCSN_SHUT);
+        mITCStatuses[dir6].setIsAlive(itcsn >= ITCSN_OPEN);
       }
     } while(0);
 
@@ -187,15 +192,17 @@ namespace MFM {
       }
 
       fbs.Scanf("%[^\n]\n",0);  // Toss first line
-      u32 itc = 0;
-      for (u32 i = 0; i < ROSE_DIR_COUNT; ++i) {
-        if (i%4 == 0) fbs.Scanf("%[^\n]\n",0);  // Don't care about this line either
-        else mITCs[itc++].updateStatsFromLine(fbs);
+      for (Dir6 dir8 = 0; dir8 < DIR8_COUNT; ++dir8) {
+        Dir6 dir6 = mapDir8ToDir6(dir8);
+        if (dir6 == DIR6_COUNT) 
+          fbs.Scanf("%[^\n]\n",0);  // Don't care about this line either
+        else mITCStatuses[dir6].updateStatsFromLine(fbs);
       }
       fbs.Close();
     } while(0);
 
     refreshStatusPanel();
+    refreshHistoPanel();
   }
 
   void T2InfoPanel::refreshStatusPanel() {
@@ -232,6 +239,47 @@ namespace MFM {
     {
       snprintf(buf,SIZE,"%6.1fH\n",mUptime[0]/(60*60));
       bs.Print(buf);
+    }
+  }
+
+  typedef std::pair<u32,u32> TypeAndCount;
+  struct secondGtr {
+    bool operator()(const TypeAndCount & left, const TypeAndCount & right) {
+      return left.second > right.second;
+    }
+  };
+
+  void T2InfoPanel::refreshHistoPanel() {
+    MFM_API_ASSERT_NONNULL(mHistoPanel);
+    ResettableByteSink & bs = mHistoPanel->GetByteSink();
+    bs.Reset();
+
+    T2Tile& tile = T2Tile::get();
+    Sites & sites = tile.getSites();
+    AtomTypeCountMap histo;
+    for (u32 i = CACHE_LINES; i < T2TILE_WIDTH-CACHE_LINES; ++i) {
+      for (u32 j = CACHE_LINES; j < T2TILE_HEIGHT-CACHE_LINES; ++j) {
+        OurT2Site & site = sites.get(UPoint(i,j));
+        const OurT2Atom & atom = site.GetAtom();
+        histo[atom.GetType()]++;
+      }
+    }
+
+    typedef std::vector<TypeAndCount> AtomTypeCountVector;
+    AtomTypeCountVector vec(histo.begin(), histo.end());
+    std::sort(vec.begin(), vec.end(), secondGtr());
+
+    const u32 cSITES = T2TILE_OWNED_WIDTH * T2TILE_OWNED_HEIGHT;
+    const u32 SIZE=32;
+    char buf[SIZE+1];
+    for (AtomTypeCountVector::iterator itr = vec.begin(); itr != vec.end(); ++itr) {
+      u32 type = itr->first;
+      u32 count = itr->second;
+      double pct = 100.0 * count / cSITES;
+      if (pct >= 10) snprintf(buf,SIZE,"%3d",(u32) pct);
+      else if (pct >= 1) snprintf(buf,SIZE,"%3.1f",pct);
+      else snprintf(buf,SIZE,".%02d",(u32) (100*pct));
+      bs.Printf("%s%% %4d #%04x\n", buf, count, type);
     }
   }
 }

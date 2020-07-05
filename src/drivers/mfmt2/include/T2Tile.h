@@ -66,6 +66,8 @@ namespace MFM {
 
   typedef MDist<4> OurMDist;
 
+  typedef std::map<u32,u32> AtomTypeCountMap;
+  
   struct T2Tile {
 
     static inline T2Tile & get() {
@@ -344,6 +346,7 @@ namespace MFM {
     OString128 mRollingTraceDir;
     u32 mRollingTraceTargetKB;
     u32 mRollingTraceSpinner;
+
   };
 }
 #endif /* T2TILE_H */

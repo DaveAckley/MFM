@@ -62,9 +62,9 @@ namespace MFM {
     DELTAS_WINDOW_WIDTH = CONTENT_WINDOW_WIDTH - STATUS_WINDOW_WIDTH,
     DELTAS_WINDOW_HEIGHT = CONTENT_WINDOW_HEIGHT,
     DELTAS_WINDOW_XPOS = STATUS_WINDOW_WIDTH + 1,
-    DELTAS_WINDOW_YPOS = 1,
-    ITC_COUNT = 6,
-    ROSE_DIR_COUNT = 8  // Including (T2 non-existent) NT and ST
+    DELTAS_WINDOW_YPOS = 1
+    // ITC_COUNT = 6, deprecated, use DIR6_COUNT
+    // ROSE_DIR_COUNT = 8 deprecated, use DIR8_COUNT  // Including (T2 non-existent) NT and ST
   };
 }
 

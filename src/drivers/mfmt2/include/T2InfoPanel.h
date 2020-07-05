@@ -6,8 +6,11 @@
 #include "TimeoutAble.h"
 #include "SDLI.h"
 #include "ITCStatus.h"
+#include "ITCStatusPanel.h"
+#include "ITCIcons.h"
 #include "T2ADCs.h"
 #include "Menu.h"
+#include "dirdatamacro.h"  // For DIR6*
 
 namespace MFM {
 
@@ -15,16 +18,14 @@ namespace MFM {
 
   typedef TextPanel<32,3> StaticPanel;
 
+  typedef TextPanel<17,7> HistoPanel;
+
   struct T2InfoPanel : public MenuMakerPanel, public TimeoutAble, public SDLIConfigurable {
     typedef MenuMakerPanel Super;
     virtual void PaintComponent(Drawing & config) ;
 
-    T2InfoPanel()
-      : mCornerLights{0}
-      , mLogPanel(0)
-      , mStatusPanel(0)
-      , mStaticPanel(0)
-    { }
+    T2InfoPanel() ;
+
     void configure(SDLI & sdli) ;
 
     virtual void onTimeout(TimeQueue& srcTQ) ;
@@ -37,10 +38,14 @@ namespace MFM {
     }
 
     void refreshStatusPanel() ;
+
+    void refreshHistoPanel() ;
   private:
     Panel * mCornerLights[4];
+    Panel * mITCPanels[DIR6_COUNT];
     Panel * mLogPanel;
     StatusPanel * mStatusPanel;
+    HistoPanel * mHistoPanel;
     StaticPanel * mStaticPanel;
 
     u32 mCPUMHz;
@@ -50,7 +55,8 @@ namespace MFM {
     double mLastAER;
     double mLastAEPS;
     u32 mLastAEPSChangeCount;
-    ITCStatus mITCs[ITC_COUNT];
+    ITCStatus mITCStatuses[DIR6_COUNT];
+    ITCIcons mITCIcons;
 
     double mLastCDMTime;
     u32 mLastCDMChangeCount;
