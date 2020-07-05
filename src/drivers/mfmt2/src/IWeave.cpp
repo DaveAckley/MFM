@@ -136,7 +136,7 @@ namespace MFM {
       if (w-2 < (s32) cEWM_WIDTH) return; //??
 
       EWModelPtrVector vec;
-      OString64 buf;
+      OString128 buf;
       for (u32 fn = 0; fn < fnc; ++fn) {
         for (u32 passive = 0; passive < 2; ++passive) {
           selectAndSort(fn, !passive, vec);

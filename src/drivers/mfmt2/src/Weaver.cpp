@@ -45,8 +45,8 @@ namespace MFM {
   }
 
   void EWModel::printPretty(ByteSink & bs, u32 minWidth) {
-    OString64 temp;
-    OString32 temp2;
+    OString128 temp;
+    OString128 temp2;
     if (mRadius > 0)
       temp2.Printf("(%d,%d)+%d",
                    mCenter.GetX(),mCenter.GetY(),
@@ -237,7 +237,7 @@ namespace MFM {
     }
 
     if (bad) {
-      OString32 tmp; addr.printPretty(tmp);
+      OString128 tmp; addr.printPretty(tmp);
       LOG.Error("%d/%s %s",
                 fn, tmp.GetZString(), bad);
       FAIL(ILLEGAL_STATE);
