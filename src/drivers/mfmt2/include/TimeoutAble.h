@@ -32,8 +32,8 @@ namespace MFM {
   } WaitCode;
 
   typedef enum waitms {
-    WC_HALF_MS = 200,
-    WC_FULL_MS = 400,
+    WC_HALF_MS = 250,
+    WC_FULL_MS = 500,
 
     WC_MEDIUM_MIN_MS = 1000,
     WC_MEDIUM_MAX_MS = 5000,
@@ -73,6 +73,8 @@ namespace MFM {
     }
 
     void scheduleWait(WaitCode wc) ;
+
+    s32 msTilTimeout() const ;
 
     u32 getTimeout() const { return mTimeMS; }
     void printTimeout(ByteSink & bs) const ;

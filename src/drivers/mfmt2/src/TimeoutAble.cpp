@@ -81,6 +81,12 @@ namespace MFM {
     schedule(tq,ms,0);
   }
 
+  s32 TimeoutAble::msTilTimeout() const {
+    // Don't rely on mOnTQ since we want an answer even if unscheduled
+    u32 now = T2Tile::get().now();
+    return (s32) (mTimeMS - now);
+  }
+
   void TimeoutAble::printTimeout(ByteSink & bs) const {
     if (mOnTQ == 0) bs.Printf("unsched");
     else {
