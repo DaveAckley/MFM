@@ -120,10 +120,12 @@ namespace MFM {
       LOG.Warning("Paint failed at (%d,%d); grid render incomplete", i, j);
     },{
       for (u32 i = CACHE_LINES; i < T2TILE_WIDTH-CACHE_LINES; ++i)
-        for (u32 j = CACHE_LINES; j < T2TILE_HEIGHT-CACHE_LINES; ++j) 
-          paintSite(config,sites.get(UPoint(i,j)),
+        for (u32 j = CACHE_LINES; j < T2TILE_HEIGHT-CACHE_LINES; ++j) {
+          OurT2Site & site = sites.get(UPoint(i,j));
+          paintSite(config,site,
                     i-CACHE_LINES,
                     j-CACHE_LINES);
+        }
     });
   }
 }

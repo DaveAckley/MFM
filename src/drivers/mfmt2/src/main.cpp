@@ -44,7 +44,7 @@ namespace MFM {
     const char * mName;
     
     virtual void onTimeout(TimeQueue& src) {
-      LOG.Message("Redisplongo\n");
+      //    LOG.Message("Redisplongo\n");
       mSDLI.redisplay();
       insert(src,200,6);
     }

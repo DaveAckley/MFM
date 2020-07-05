@@ -903,6 +903,7 @@ namespace MFM {
       ew.scheduleWait(WC_NOW); 
     } else {
       LOG.Error("%s on %s: TO AWLOCKS with pending locks", getStateName(), ew.getName());
+      TLOG(ERR,"%s timeout @ %d msec", ew.getName(), ew.msTilTimeout()); 
       FAIL(INCOMPLETE_CODE);
     }
   }
@@ -955,6 +956,7 @@ namespace MFM {
        reset the ITC or something, because we're definitely talking
        likely corruption here, if we got as far as shipping cache
        updates and our counterparties didn't respond */
+    TLOG(ERR,"%s timeout @ %d msec", ew.getName(), ew.msTilTimeout()); 
     FAIL(INCOMPLETE_CODE);
   }
 
