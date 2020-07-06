@@ -162,15 +162,15 @@ $AUTOGEN_STAMP
     font=2
     elevatorwidth=0
     fontheightadjust=-4
-[T2Info_Quit_Button QuitButton T2Viz `bfs6x6(3,5,4,5)`]
+[T2Info_Quit_Button QuitButton T2Viz `bfs6x6(3,0,3,0)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
-    font=1
+    font=4
     text="Quit"
-[T2Info_Crash_Button CrashButton T2Viz `bfs6x6(1,5,2,5)`]
+[T2Info_Crash_Button CrashButton T2Viz `bfs6x6(2,0,2,0)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
-    font=1
+    font=4
     text="Crash"
 #[Sub1 Label T2Viz 120 50 220 40]
 #    bgcolor=#00ff00
@@ -220,10 +220,10 @@ $AUTOGEN_STAMP
 #[T2Viz_Checkbox_Living T2TileLiveCheckbox T2Viz `bfs6x6(3,3,4,3)`]
 #    font=2
 #    text="Run"
-[T2Viz_Checkbox_X MenuItem T2Viz `bfs6x6(4,1,4,2)`]
+[T2Viz_Checkbox_X MenuItem T2Viz `bfs6x6(5,1,5,1)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
-    font=1
+    font=4
     text="X"
     action="GO GlobalMenu"
 [PhysicsCtl_Checkbox_Living T2TileLiveCheckbox PhysicsCtl `bfs6x6(0,2,2,3)`]
