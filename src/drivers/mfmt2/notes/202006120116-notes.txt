@@ -1,4 +1,4 @@
-{308}  -*- text -*-
+{322}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -4580,7 +4580,7 @@ Mon Jun 29 01:07:43 2020
 Mon Jun 29 01:16:36 2020 Uh-oh, it's worse than I thought.  Stepping
 backwards over this:
 
-    >45.152    1/a19-IDLE -> AINIT 
+    >45.152    1/a19-IDLE -> AINIT
 
 causes the 1/a19-AWLOCKS....(28,31)+4 to vanish, but the 0/ps remain
 -- are they a vestige of an earlier 1/a19?  Searching back farther.
@@ -4623,7 +4623,7 @@ us the full debug message:
     14211 45.099         1/lDBG u a19-AWLOCKS (28,31); t pSE21-PRESOLVE (30,36): YOINK ITC/SE:OPEN(Fred) us1 them0 -> they win
     14212 45.099         1/a19-AWLOCKS -> ADROP
     14213 45.099         1/pSE21-PRESOLVE -> PWCACHE
-    t2@beaglebone:~/MFM/src/drivers/mfmt2$ 
+    t2@beaglebone:~/MFM/src/drivers/mfmt2$
 
 So it's a yoink from the SE, and SE is a Fred, and Fred takes the
 odds, and odds is what we got, so Fred:SW:them:1/pSE21:0/a21 wins, and
@@ -4694,7 +4694,7 @@ overall approach is still in the code:
     dropActiveEW(true);
   }
 
-and the thought is we need something similar to it .. where exactly?  
+and the thought is we need something similar to it .. where exactly?
 [235:
 
 Mon Jun 29 02:14:15 2020 Well in this case we're in
@@ -4710,7 +4710,7 @@ T2PassiveEventWindow::passiveWinsYoinkRace
 with a return value of true.
 
 So the claim is we need to do stuff leading to that trySendDropVia
-call, right there.  I guess we should factor it out of handleBusy? 
+call, right there.  I guess we should factor it out of handleBusy?
 
 :235]
 
@@ -4741,7 +4741,7 @@ call, right there.  I guess we should factor it out of handleBusy?
 Mon Jun 29 02:31:23 2020 Well okay, made
 
 void sendDropsExceptTo(T2ITC * notThisOne) ;
- 
+
 and currently saying that when we drop from the passive side, we
 should send DROP to everyone, so passing 0 for notThisOne.
 
@@ -4848,7 +4848,7 @@ with
 
     (gdb) p getEWSN()
     $3 = MFM::EWSN_IDLE
-    (gdb) 
+    (gdb)
 
 No idea if it's a 'reasonable' DROP or not.  I guess let's fire up the
 Weaver and just take a quick peek.  Code 202006290455 [244:
@@ -4859,7 +4859,7 @@ happened was:
 0/a18-AINIT.......(4,10)+4  started up..
 
 >24.052 0/iNW:OPEN >NW:RING#18(4,6)+4o +5
-│24.052 0/a18-AINIT NW CS_BOUND -> CS_RUNG 
+│24.052 0/a18-AINIT NW CS_BOUND -> CS_RUNG
 │24.052 0/a18-AINIT -> AWLOCKS
 
 ..rang NW and started waiting..
@@ -4887,7 +4887,7 @@ and 1/pSE18 went back to idle.
 And Is That Not Pretty Reasonable?
 
 So I guess we're saying inbound DROP is advisory, at least in certain
-cases? 
+cases?
 
 [245:
 
@@ -4897,7 +4897,7 @@ PRESOLVE at that time.
 
 pEWs unhog sites in commitPassiveEWAndHangUp (successful event path)
 at which point it's in PWCACHE, and handleDrop (not).  So I guess in
-handleDrop we unhog for EWSN_PRESOLVE..EWSN_PWCACHE and not otherwise? 
+handleDrop we unhog for EWSN_PRESOLVE..EWSN_PWCACHE and not otherwise?
 
 :245]
 
@@ -4960,7 +4960,7 @@ Ah hahaha look:
     #1  0x00471c8a in MFM::T2PassiveEventWindow::resolveRacesFromPassive (this=0x566458,
         conflicts=...) at src/T2EventWindow.cpp:328
     328         if (sortable.size() > 1) FAIL(INCOMPLETE_CODE);
-    (gdb) 
+    (gdb)
 
 It's our first multiway race!  N > 1, with N being the number of
 active windows that are conflicting with an inbound passive window.
@@ -5028,7 +5028,7 @@ the trace records?  Smoove Dave Smoove.
 :252]
 [257:
 
-Mon Jun 29 16:19:44 2020 Code 202006291620 
+Mon Jun 29 16:19:44 2020 Code 202006291620
 
 :257]
 [258:
@@ -5121,7 +5121,7 @@ state inconsistency:
     $7 = 100825165
     (gdb) p mTile.mTotalActiveEventsCompleted
     $8 = 95530093
-    (gdb) 
+    (gdb)
 
 So between you and me, that's nearly 100 MILLION events completed
 before the inconsistency was detected.  And, of course, as stated at
@@ -5395,7 +5395,7 @@ Thu Jul  2 13:55:33 2020 So I guess we're guessing either
     perfectly reasonable timeout finally hit.
 
 Well, let's get the rolling trace buffers together and see what we can
-see..  Code 202007021359 
+see..  Code 202007021359
 
 :292]
 
@@ -5531,7 +5531,7 @@ ITCStatus.h:25..
 
 Sun Jul  5 04:00:30 2020 OK got a pWEsn==CACHE instead of IDLE failure
 while logs were rolling -- but only on one tile, rats -- so let's take
-a look at that.  Code 202007050401 
+a look at that.  Code 202007050401
 
 :304]
 [305:
@@ -5550,7 +5550,7 @@ rolling buffer start), a RING#17 packet arrived on 0/iNW, targetting
 │346.635394 0/pNW17-PINIT -> PRESOLVE                                                      │
 │346.635564 0/pNW17-PRESOLVE -> PWCACHE                                                    │
 │346.645799 0/iNW:OPEN >NW:ANSWER#17 +2                                                    │
-│346.645935 0/pNW17-PWCACHE NW CS_RUNG -> CS_ANSWERED  
+│346.645935 0/pNW17-PWCACHE NW CS_RUNG -> CS_ANSWERED
 
 Then at 346.721227 seconds, a(n associated) RING#17 arrived on 0/iNE,
 targetting (34,3)+4, and it too was ANSWER#17ed:
@@ -5606,3 +5606,259 @@ But nonetheless, big progress and time to commit again.
 :306]
 
 :305]
+[308:
+
+Sun Jul  5 11:49:15 2020 OK I think I have an idea about the
+"irreversibility of vertical bouncing" that I've observed with the
+current turn-at-edge-of-universe bein I've been using.
+
+It goes like this:
+
+               +-----------------+              +-----------------+
+               |.   happy south- |              |                 |
+               |.   going bein   |              |                 |
+(1)            |v                |     (2)      |.                |
+               |                 |              |.                |
+               +-----------------+              +-----------------+
+     +-----------------+              +-----------------+
+     |                 |              | goes     .      |
+     |                 |              | inter-   .      |
+     |                 |              | tile no  v      |
+     |                 |              | problem         |
+     +-----------------+              +-----------------+
+
+
+               +-----------------+              +-----------------+
+               |                 |              |                 |
+               |                 |              |                 |
+(3)            |                 |     (4)      |                 |
+               |                 |              |                 |
+               +-----------------+              +-----------------+
+     +-----------------+              +-----------------+
+     | reaches         |              | & happens       |
+     | edge of         |              | to head         |
+     | universe        |              | back up  ^      |
+     |          v      |              | north    .      |
+     +-----------------+              +-----------------+
+
+
+
+               +-----------------+              +-----------------+
+               |                 |              |                 |
+               |                 |              |                 |
+(5)            |                 |     (6)      |                 |
+               |                 |              |                 |
+               +-----------------+              +-----------------+
+     +-----------------+              +-----------------+
+     | back at  ^      |              | but it   . . >  |
+     | the site .      |              | turns           |
+     | it came  .      |              | instead of      |
+     | in at           |              | going on through|
+     +-----------------+              +-----------------+
+
+
+And the question has always been: Why does it turn in (6)?
+
+And the answer has always been: It must see the site to its north as
+not live -- but why?
+
+And now we say it's somehow got to be because the lower tile's NW ITC
+is closed.  That has to be interfering with the liveness determination
+somehow, right?  That's what wouldn't be seen -- at least not in any
+way directly, by the upper tile's SW ITC.
+
+[309:
+
+Sun Jul  5 12:03:21 2020 Have to go finish and ship this month's
+Computing Up, but look at this afterwards, or whenever time opens up.
+
+[310:
+
+Sun Jul  5 12:09:00 2020 (Peeking now while files move.)
+
+tryInitiateActiveEvent
+ -> checkSiteAvailabilityForActive
+ -> iterate over affected sites
+ -> this code:
+
+      // For cache and visible, also assess and accumulate ITC
+      // involvements.  NOTE that 'ITC registration' does NOT
+      // necessarily imply 'lock needed': We register even with
+      // ITCSN_SHUT, so they know about us in case they start to open.
+      
+      bool isLive = true;
+      for (u32 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
+        if (tile.getVisibleAndCacheRect(dir6).Contains(site)) {
+          T2ITC & itc = tile.getITC(dir6);
+          if (!itc.isVisibleUsable()) return false; // Sorry folks, this exhibit is closed
+          registerWithITCIfNeeded(itc);
+          if (itc.getCacheRect().Contains(site) && !itc.isCacheUsable())
+            isLive = false; // Exhibit's working but that site is currently dead
+        }
+      }
+
+so, we're thinking tile.getVisibleAndCacheRect(dir6).Contains(site)
+will be returning true for both dir6==DIR6_NE and DIR6_NW, and
+suspecting that for DIR6_NW, itc.isVisibleUsable() must be returning
+true, but
+
+ itc.getCacheRect().Contains(site) && !itc.isCacheUsable()
+
+must be returning true for the site directly north of the bein, and
+thus causing that site to be marked as not live.
+[311:
+
+Sun Jul  5 12:18:57 2020 (Files still moving grrr.)  So to be
+completely specific to the case at hand, the south-going bein in the
+upper tile would have been travelling down column 4 in upper tile
+coordinates.
+
+When it went intertile it would have arrived at (28,4) -- I believe --
+in lower tile coordinates.
+
+When it was heading back north after bouncing, it would arrive once
+again at (28,4), and it would ask about the status of (28,3).
+
+And (28,3) will be reported as in both NW cache and NE cache.
+
+And NW cache will report it is unusable, because NW is closed.
+
+But NE will or would have reported it available, because NE is open.
+
+That's the problem for sure.  We need a logical-OR, not the current
+(implicit) logical-AND, on the isLive computation.
+
+A cache site is live if AT LEAST ONE involved ITC is OPEN, and no
+involved ITC is unsettled.
+[312:
+
+Sun Jul  5 12:31:54 2020 (Jeez files STILL moving.)
+
+In other words, perhaps something more like this code:
+
+      bool isLive = false;
+      for (u32 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
+        if (tile.getVisibleAndCacheRect(dir6).Contains(site)) {
+          T2ITC & itc = tile.getITC(dir6);
+          if (!itc.isVisibleUsable()) return false; // Sorry folks, this exhibit is closed
+          registerWithITCIfNeeded(itc);
+          if (itc.getVisibleRect().Contains(site) || itc.isCacheUsable())
+            isLive = true; // That site is visible, or is accessible via this cache
+        }
+      }
+[313:
+
+Sun Jul  5 12:38:42 2020 Nope, that's not QUITE it :)... That allows
+one open ITC to declare a closed neigbor's visible sites as
+accessible, and the bein marches off into the void.  What we want is
+to say if it's in any itc's cache and THAT itc says isCacheUsable,
+then yes.
+
+If it's not in anybody's cache, then it's also live if it's visible,
+unless it's in any itc's visible and THAT itc says !isVisible usable.
+
+So we're going to compute isVisible and isInUsableCache separately,
+and then say (isVisible || isInUsableCache) afterwards?
+[314:
+
+Sun Jul  5 12:51:20 2020 So the confusing part of this is the code is
+saying itc.isVisibleUsable() and itc.getVisibleRect().Contains(site),
+but what we really want to know is if the site is in the neighboring
+ITC's visible, not if it's in our ITC's cache.  Because our ITC's
+cache covers visible sites of MULTIPLE neighbors, only some of which
+might be open.[315:
+
+Sun Jul  5 12:56:16 2020 Should we just make an additional rectangle
+-- say, getNeighborVisibleRect()?  It's not quite equivalent to
+anything we already have?[317:
+
+Sun Jul  5 19:41:02 2020 So, one question is: Why do the existing
+'visible' rectangles include obviously cached sites?
+
+          VIZ                    CCH                    ALL                    
+    ET 0: (48, 0)-(51,39)  4x40  (52, 0)-(55,39)  4x40  (48, 0)-(55,39)  8x40  
+
+For example, Y==0..39 includes the cache rows 0..3 and 36..39 -- why?
+
+..Dunno.  But I'm afraid to change it now.[318:
+
+Sun Jul  5 20:12:13 2020 Seems like it should be
+
+          VIZ                    CCH                    ALL                    
+    ET 0: (48, 4)-(51,35)  4x32  (52, 0)-(55,39)  4x40  N/A
+
+and so forth.  And the 'getNeighborVisibleRect()', if we needed it,
+would be the direct shift of the 4x32 viz:
+
+          (52,4)-(55,35)
+
+:318]
+
+    SE 1: (24,32)-(55,35) 32x 4  (24,36)-(55,39) 32x 4  (24,32)-(55,39) 32x 8  
+    SW 2: ( 0,32)-(31,35) 32x 4  ( 0,36)-(31,39) 32x 4  ( 0,32)-(31,39) 32x 8  
+    WT 3: ( 4, 0)-( 7,39)  4x40  ( 0, 0)-( 3,39)  4x40  ( 0, 0)-( 7,39)  8x40  
+    NW 4: ( 0, 4)-(31, 7) 32x 4  ( 0, 0)-(31, 3) 32x 4  ( 0, 0)-(31, 7) 32x 8  
+    NE 5: (24, 4)-(55, 7) 32x 4  (24, 0)-(55, 3) 32x 4  (24, 0)-(55, 7) 32x 8  
+
+
+:317]
+[316:
+
+Sun Jul  5 13:13:33 2020 (Files FINALLY moved SHEESH.)
+
+:316]
+:315]
+
+:314]
+:313]
+:312]
+:311]
+
+:310]
+
+:309]
+
+:308]
+[319:
+
+Mon Jul  6 06:37:31 2020 OK, so getNeighborOwnedRect() is seeming
+pretty plausible.  It even almost seems sensible that it's different
+than either visible or cache rects.  We even have our command line
+switch -mitc updated for it:
+
+      VIZ                    CCH                    ALL                    NGB                    
+ET 0: (48, 0)-(51,39)  4x40  (52, 0)-(55,39)  4x40  (48, 0)-(55,39)  8x40  (52, 4)-(55,35)  4x32  
+SE 1: (24,32)-(55,35) 32x 4  (24,36)-(55,39) 32x 4  (24,32)-(55,39) 32x 8  (28,36)-(55,39) 28x 4  
+SW 2: ( 0,32)-(31,35) 32x 4  ( 0,36)-(31,39) 32x 4  ( 0,32)-(31,39) 32x 8  ( 0,36)-(27,39) 28x 4  
+WT 3: ( 4, 0)-( 7,39)  4x40  ( 0, 0)-( 3,39)  4x40  ( 0, 0)-( 7,39)  8x40  ( 0, 4)-( 3,35)  4x32  
+NW 4: ( 0, 4)-(31, 7) 32x 4  ( 0, 0)-(31, 3) 32x 4  ( 0, 0)-(31, 7) 32x 8  ( 0, 0)-(27, 3) 28x 4  
+NE 5: (24, 4)-(55, 7) 32x 4  (24, 0)-(55, 3) 32x 4  (24, 0)-(55, 7) 32x 8  (28, 0)-(55, 3) 28x 4  
+
+Time to commit, stop hacking, and move on to the day and to t2sup
+prep.
+
+Actually, can we hack our test bein so that it might reproduce a
+little?  Make a slightly more fun demo?[320:
+
+Mon Jul  6 07:10:01 2020 OK now our bein starts taking reproduction
+shots after some small count of edge-of-universe interactions.  And
+we're up to like 77 beins on the one tile that's running that code.
+
+Can we advance the estAER-in-the-Tile-window story before we commit?
+Didn't we start that?[321:
+
+Mon Jul  6 10:37:36 2020 Well that took a while but OK we have some
+kind of middle-speed AER estimate in the Tile window.  Not at all
+confident in it yet but we'll see.
+
+Committing.
+
+(We're up to 73% beins 26% empty in our working tile, with just the
+reverse -- 26% beins 73% empty, weird -- in the neighboring tile, and
+we haven't yet locked up or crashed..  Just sayin.)
+
+:321]
+
+:320]
+
+:319]
