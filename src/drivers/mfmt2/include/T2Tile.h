@@ -218,6 +218,12 @@ namespace MFM {
       MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
       return mITCVisible[dir6];
     }
+
+    const Rect & getNeighborOwnedRect(Dir6 dir6) const {
+      MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
+      return mITCNeighborOwned[dir6];
+    }
+
     const Rect & getCacheRect(Dir6 dir6) const {
       MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
       return mITCCache[dir6];
@@ -252,6 +258,7 @@ namespace MFM {
     const Rect mITCVisible[DIR6_COUNT];
     const Rect mITCCache[DIR6_COUNT];
     const Rect mITCVisibleAndCache[DIR6_COUNT];
+    const Rect mITCNeighborOwned[DIR6_COUNT];
 
     void freeEW(T2EventWindow & ew) ; //Public for T2EventWindow to call on abort?
 

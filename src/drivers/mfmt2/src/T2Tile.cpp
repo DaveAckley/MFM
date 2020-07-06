@@ -168,7 +168,7 @@ namespace MFM {
                  UPoint(T2TILE_WIDTH-2*CACHE_LINES,
                         T2TILE_HEIGHT-2*CACHE_LINES))
     , mITCVisible{
-#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,CACHE_LINES)
+#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,CACHE_LINES,0u)
 #define YY ,
 #define ZZ
         ALL_DIR6_MACRO()
@@ -177,7 +177,7 @@ namespace MFM {
 #undef ZZ
       }
     , mITCCache{
-#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,0u)
+#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,0u,0u)
 #define YY ,
 #define ZZ
         ALL_DIR6_MACRO()
@@ -186,7 +186,16 @@ namespace MFM {
 #undef ZZ
       }
     , mITCVisibleAndCache{
-#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(2*CACHE_LINES,0u)
+#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(2*CACHE_LINES,0u,0u)
+#define YY ,
+#define ZZ
+        ALL_DIR6_MACRO()
+#undef XX
+#undef YY
+#undef ZZ
+      }
+    , mITCNeighborOwned{
+#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,0u,CACHE_LINES)
 #define YY ,
 #define ZZ
         ALL_DIR6_MACRO()
@@ -761,21 +770,23 @@ static const char * CMD_HELP_STRING =
   }
 
   void T2Tile::dumpITCRects(ByteSink& bs) const {
-    const char names[][10] = { "VIZ", "CCH", "ALL" };
+    const u32 cCOLUMNS = 4;
+    const char names[cCOLUMNS][10] = { "VIZ", "CCH", "ALL", "NGB" };
     bs.Printf("      ");
-    for (u32 type = 0; type < 3; ++type) {
+    for (u32 type = 0; type < cCOLUMNS; ++type) {
       bs.Printf("%s                    ",names[type]);
     }
     bs.Printf("\n");
     for (Dir6 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
       bs.Printf("%s %d: ",
                 getDir6Name(dir6), dir6);
-      for (u32 type = 0; type < 3; ++type) {
+      for (u32 type = 0; type < cCOLUMNS; ++type) {
         Rect rect;
         switch (type) {
         case 0: rect = getVisibleRect(dir6); break;
         case 1: rect = getCacheRect(dir6); break;
         case 2: rect = getVisibleAndCacheRect(dir6); break;
+        case 3: rect = getNeighborOwnedRect(dir6); break;
         default: FAIL(UNREACHABLE_CODE);
         }
         SPoint from = rect.GetPosition();

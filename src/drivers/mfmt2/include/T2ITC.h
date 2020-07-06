@@ -117,15 +117,18 @@ namespace MFM {
 
     bool isCacheUsable() const;    // false unless ITC has reached cache sync
 
-    static Rect getRectForTileInit(Dir6 dir6, u32 widthIn, u32 skipIn) ;
+    static Rect getRectForTileInit(Dir6 dir6, u32 widthIn, u32 skipIn, u32 endIn) ;
 
-    Rect getRectForTileInit(u32 widthIn, u32 skipIn) { return getRectForTileInit(mDir6,widthIn,skipIn); }
+    Rect getRectForTileInit(u32 widthIn, u32 skipIn, u32 endIn) {
+      return getRectForTileInit(mDir6,widthIn,skipIn,endIn);
+    }
 
     const SPoint getITCOrigin() const ; // EW centers xmit relative to this
     const SPoint getMateITCOrigin() const ; 
     const Rect & getVisibleRect() const ;
     const Rect & getCacheRect() const ;
     const Rect & getVisibleAndCacheRect() const ;
+    const Rect & getNeighborOwnedRect() const ;
 
     u32 activeCircuitsInUse() const { return mActiveEWCircuitCount; }
 

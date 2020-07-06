@@ -56,27 +56,28 @@ namespace MFM {
   const Rect & T2ITC::getVisibleRect() const { return mTile.getVisibleRect(mDir6); }
   const Rect & T2ITC::getCacheRect() const { return mTile.getCacheRect(mDir6); }
   const Rect & T2ITC::getVisibleAndCacheRect() const { return mTile.getVisibleAndCacheRect(mDir6); }
+  const Rect & T2ITC::getNeighborOwnedRect() const { return mTile.getNeighborOwnedRect(mDir6); }
 
-  Rect T2ITC::getRectForTileInit(Dir6 dir6, u32 widthIn, u32 skipIn) {
+  Rect T2ITC::getRectForTileInit(Dir6 dir6, u32 widthIn, u32 skipIn, u32 endIn) {
     switch (dir6) {
     case DIR6_ET:
-      return Rect(T2TILE_WIDTH-(widthIn+skipIn),0,
-                  widthIn,T2TILE_HEIGHT);
+      return Rect(T2TILE_WIDTH-(widthIn+skipIn),endIn,
+                  widthIn,T2TILE_HEIGHT-2*endIn);
     case DIR6_SE:
-      return Rect(T2TILE_WIDTH/2-CACHE_LINES,T2TILE_HEIGHT-(widthIn+skipIn),
-                  T2TILE_WIDTH/2+CACHE_LINES, widthIn);
+      return Rect(T2TILE_WIDTH/2-CACHE_LINES+endIn,T2TILE_HEIGHT-(widthIn+skipIn),
+                  T2TILE_WIDTH/2+CACHE_LINES-endIn, widthIn);
     case DIR6_SW:
       return Rect(0,T2TILE_HEIGHT-(widthIn+skipIn),
-                  T2TILE_WIDTH/2+CACHE_LINES, widthIn);
+                  T2TILE_WIDTH/2+CACHE_LINES-endIn, widthIn);
     case DIR6_WT:
-      return Rect(skipIn,0,
-                  widthIn,T2TILE_HEIGHT);
+      return Rect(skipIn,endIn,
+                  widthIn,T2TILE_HEIGHT-2*endIn);
     case DIR6_NW:
       return Rect(0,skipIn,
-                  T2TILE_WIDTH/2+CACHE_LINES, widthIn);
+                  T2TILE_WIDTH/2+CACHE_LINES-endIn, widthIn);
     case DIR6_NE:
-      return Rect(T2TILE_WIDTH/2-CACHE_LINES, skipIn,
-                  T2TILE_WIDTH/2+CACHE_LINES, widthIn);
+      return Rect(T2TILE_WIDTH/2-CACHE_LINES+endIn, skipIn,
+                  T2TILE_WIDTH/2+CACHE_LINES-endIn, widthIn);
     }
     FAIL(ILLEGAL_STATE);
   }

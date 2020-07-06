@@ -450,14 +450,15 @@ namespace MFM {
       // necessarily imply 'lock needed': We register even with
       // ITCSN_SHUT, so they know about us in case they start to open.
       
-      bool isLive = true;
+      bool isLive = false;
       for (u32 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
         if (tile.getVisibleAndCacheRect(dir6).Contains(site)) {
           T2ITC & itc = tile.getITC(dir6);
           if (!itc.isVisibleUsable()) return false; // Sorry folks, this exhibit is closed
           registerWithITCIfNeeded(itc);
-          if (itc.getCacheRect().Contains(site) && !itc.isCacheUsable())
-            isLive = false; // Exhibit's working but that site is currently dead
+          if (tile.getOwnedRect().Contains(site) || // If we own it, or..
+              (itc.getNeighborOwnedRect().Contains(site) && itc.isCacheUsable()))
+            isLive = true;      // ..if our usable neighbor owns it, it's live
         }
       }
       if (isLive) mSitesLive[sn] = true;
