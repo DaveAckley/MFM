@@ -158,20 +158,25 @@ namespace MFM {
           LOG.Error("Can't read '%s'",PATH);
     } while(0);
 
-#if 0
-    do { // AER & AEPS
-      const char * PATH = "/run/mfmt2/status.dat";
-      double a[2];
-      if (readFloatsFromFile(PATH, a, sizeof(a)/sizeof(a[0]))) {
-        if (a[1] != mLastAEPS) {
-          mLastAEPSChangeCount = mUpdateCount;
-          mLastAEPS = a[1];
-        }
-        if (mLastAEPSChangeCount + 100 > mUpdateCount) mLastAER = a[0];
-        else mLastAER = -1;
-      } else mLastAER = -1; // Can't read file
+    do { // AER
+      T2Tile & tile = T2Tile::get();
+      T2TileStats & cur = tile.getStats();
+      u32 curage = cur.getAgeSeconds();
+      if (mLastT2StatsAge == 0) {
+        mLastT2Stats = cur;
+        mLastT2StatsAge = curage;
+      }
+      if (curage - mLastT2StatsAge >= 5) {
+        u32 secs = curage - mLastT2StatsAge;
+        mLastT2StatsAge = curage;
+        T2TileStats samp = cur - mLastT2Stats;
+        mLastT2Stats = cur;
+        double sampAER = samp.getEstAER(secs);
+        const double cBACKAVG_FRAC = 0.95;
+        if (mLastAER == 0) mLastAER = sampAER;
+        else mLastAER = cBACKAVG_FRAC*mLastAER + (1-cBACKAVG_FRAC)*sampAER;
+      }
     } while(0);
-#endif
 
     do { // ITCStatus
       T2Tile & tile = T2Tile::get();
@@ -238,6 +243,10 @@ namespace MFM {
     }
     {
       snprintf(buf,SIZE,"%6.1fH\n",mUptime[0]/(60*60));
+      bs.Print(buf);
+    }
+    {
+      snprintf(buf,SIZE,"%6.2fA\n",mLastAER);
       bs.Print(buf);
     }
   }

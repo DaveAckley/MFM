@@ -144,7 +144,7 @@ namespace MFM {
       T2TileStats stats;
       if (!stats.loadRaw(cbbs)) bs.Printf("??stats load failed");
       else {
-        u32 secs = stats.getSeconds();
+        u32 secs = stats.getAgeSeconds();
         bs.Printf(" sec=");
         printComma(secs,bs);
         bs.Printf("; tot=");
@@ -153,11 +153,7 @@ namespace MFM {
         printComma(stats.getEmptyEventsCommitted(),bs);
         bs.Printf("; occ=");
         printComma(stats.getNonemptyEventsCommitted(),bs);
-        if (secs==0) secs = 1;
-        double estAER =
-          ((double) (stats.getEmptyEventsCommitted() +
-                     stats.getNonemptyEventsCommitted())) / secs / (T2TILE_OWNED_WIDTH * T2TILE_OWNED_HEIGHT);
-        bs.Printf("; estAER=%f", estAER);
+        bs.Printf("; estAER=%f", stats.getEstAER());
       }
       bs.Printf("\n");
       return;

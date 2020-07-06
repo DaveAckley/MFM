@@ -983,7 +983,7 @@ namespace MFM {
     OurT2Site & us = mSites[0];
     OurT2Atom & atom = us.GetAtom();
     u32 type = atom.GetType();
-    // XXX PHONY DREG HACK
+    // XXX BOGUS PHONY DREG HACK
     if (type != T2_PHONY_DREG_TYPE)
       return false;
     // XXX DOUBLE PHONY: IT'S NOT EVEN DREG
@@ -1002,6 +1002,21 @@ namespace MFM {
       westa = atom;
       atom = tmp;
     } else {
+      u8 count = atom.GetStateField(3,3);
+      if (count > 0) atom.SetStateField(3,3,count-1); // Count down
+      else { // Take repro shot
+        u8 ngb = mTile.getRandom().Between(1,8);  
+        OurT2Site & nsite = mSites[ngb];
+        OurT2Atom & natom = nsite.GetAtom();
+        u32 ntype = natom.GetType();
+        if (ntype == OurT2Atom::ATOM_EMPTY_TYPE) {
+          OurT2Atom copy = atom;
+          copy.SetStateField(0,3,mTile.getRandom().Between(1,8)-1);
+          copy.SetStateField(3,3,mTile.getRandom().Between(3,7));
+          natom = copy;
+          atom.SetStateField(3,3,7); // Success! Max our repro count.
+        }
+      }
       u8 oth = mTile.getRandom().Between(1,8);
       atom.SetStateField(0,3,oth-1);
       TLOG(DBG,"%s (%d,%d)BEIN oth %d (othlive %d)",

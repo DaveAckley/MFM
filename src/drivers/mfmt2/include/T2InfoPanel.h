@@ -55,6 +55,8 @@ namespace MFM {
     double mLastAER;
     double mLastAEPS;
     u32 mLastAEPSChangeCount;
+    u32 mLastT2StatsAge;
+    T2TileStats mLastT2Stats;
     ITCStatus mITCStatuses[DIR6_COUNT];
     ITCIcons mITCIcons;
 

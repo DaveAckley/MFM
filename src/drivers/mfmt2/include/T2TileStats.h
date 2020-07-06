@@ -16,9 +16,12 @@ namespace MFM {
     void saveRaw(ByteSink& bs) ;
     bool loadRaw(ByteSource& bs) ;
     void reset() ;
-    u32 getSeconds() const { return mResetTime.tv_sec; }
+    u32 getResetSeconds() const { return mResetSeconds; }
+    u32 getAgeSeconds() const ;
+    double getEstAER(u32 duration=0) const ;
+    T2TileStats operator-(const T2TileStats & rhs) ;
 
-    struct timespec mResetTime; // When stats were last reset
+    u32 mResetSeconds; // When stats were last reset
 #define XX(NM,CM)                         \
     u64 m##NM; /* CM */                   \
     u64 get##NM() const { return m##NM; } \
