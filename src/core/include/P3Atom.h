@@ -119,6 +119,11 @@ namespace MFM {
       SetType(type);
     }
 
+    P3Atom(const P3Atom& p3atomref)
+    {
+      this->m_bits = p3atomref.m_bits; // explicitly for c++11, since op= is explicit.
+    }
+
     u32 GetTypeImpl() const {
       return AFTypeBits::Read(this->m_bits);
     }
