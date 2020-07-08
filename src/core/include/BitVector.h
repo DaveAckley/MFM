@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   BitVector.h Extended integral type
-  Copyright (C) 2014, 2018 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014, 2018, 2020 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2020 ackleyshack LLC.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +22,7 @@
 /**
   \file BitVector.h Extended integral type
   \author David H. Ackley.
-  \date (C) 2014,2018 All rights reserved.
+  \date (C) 2014,2018,2020 All rights reserved.
   \lgpl
  */
 #ifndef BITVECTOR_H
@@ -150,6 +151,9 @@ namespace MFM {
      * @param other The BitVector to copy properties of.
      */
     BitVector(const BitVector & other);
+
+    BitVector& operator=(const BitVector & rhs); //explicit for c++11
+
 #endif // Fri Mar 13 16:04:59 2015 XXX TESTING GCC CODE GEN IMPACTS
 
     /**
