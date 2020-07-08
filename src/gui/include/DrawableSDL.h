@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   DrawableSDL.h Wrapper to expose SDL rect filling
   Copyright (C) 2020 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2020 The Living Computation Foundation.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -39,7 +40,7 @@ namespace MFM {
    */
   class DrawableSDL : public Drawable
   {
-    
+
     Drawing & m_drawing;
     SPoint m_ditOrigin;
 

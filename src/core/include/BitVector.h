@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   BitVector.h Extended integral type
   Copyright (C) 2014, 2018, 2020 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2020 ackleyshack LLC.  All rights reserved.
+  Copyright (C) 2020 The Living Computation Foundation. All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
