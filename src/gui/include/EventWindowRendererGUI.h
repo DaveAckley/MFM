@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   EventWindowRendererGUI.h Event window graphics functionality
   Copyright (C) 2020 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2020 The Living Computation Foundation.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -33,7 +34,7 @@ namespace MFM
 {
   /**
      An EventWindowRendererGUI potentially provides access to a graphics
-     drawing mechanism available to UlamClasses.  
+     drawing mechanism available to UlamClasses.
    */
   template <class EC>
   class EventWindowRendererGUI : public EventWindowRenderer<EC>

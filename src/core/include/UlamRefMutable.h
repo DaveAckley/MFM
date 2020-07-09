@@ -2,6 +2,7 @@
   UlamRefMutable.h  Temporary holder for ulam reference data
   Copyright (C) 2019-2020 The Regents of the University of New Mexico.  All rights reserved.
   Copyright (C) 2019-2020 ackleyshack LLC.  All rights reserved.
+  Copyright (C) 2020 The Living Computation Foundation.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public

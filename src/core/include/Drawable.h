@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   Drawable.h Abstract drawing routines
   Copyright (C) 2014, 2020 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2020 The Living Computation Foundation.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -264,7 +265,7 @@ namespace MFM {
          - Black/blue dashes:  on==0xff000000, off==0xff0000ff, mask==0xffff0000
          - Tiny B/W dashes:    on==0xff000000, off==0xffffffff, mask==0x33333333
          - Yellow/black pixels:on==0xffffff00, off==0xff000000, mask==0x55555555
-         
+
      */
     void DrawScaledMaskedLineDitColor(int startX, int startY, int endX, int endY, u32 onColor, u32 offColor, u32 mask, u32 maskDits, u32 widthDits) const;
 

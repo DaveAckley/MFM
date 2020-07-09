@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   EventWindowRenderer.h Core stub for event window graphics functionality
   Copyright (C) 2020 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2020 The Living Computation Foundation.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
