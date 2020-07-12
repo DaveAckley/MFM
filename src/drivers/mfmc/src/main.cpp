@@ -173,6 +173,8 @@ namespace MFM
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
+    typedef Grid<GC> OurGrid;
+    
     struct ThreadStamper : public DateTimeStamp
     {
       typedef DateTimeStamp Super;
@@ -284,7 +286,18 @@ namespace MFM
     }
 
     virtual void ReinitEden()
-    { }
+    {
+      const u8 * edenSeedSymbol = this->GetEdenSeedSymbol();
+      if (edenSeedSymbol != 0) {
+        OurGrid & mainGrid = this->GetGrid();
+        const Element<EC> * elt = mainGrid.LookupElementFromSymbol(edenSeedSymbol);
+        if (!elt)
+          FAIL(UNKNOWN_ELEMENT);
+        // Halfway across and a third down, maybe land in hidden
+        SPoint aloc(mainGrid.GetWidthSites()/2,mainGrid.GetHeightSites()/3);
+        mainGrid.PlaceAtom(elt->GetDefaultAtom(), aloc);
+      }
+    }
   };
 
   template <class CONFIG>
