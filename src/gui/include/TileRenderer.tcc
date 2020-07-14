@@ -257,6 +257,8 @@ namespace MFM
                                         const Tile<EC> & inTile)
   {
     u32 selector = 0;
+    u32 drawColor;
+    bool specifiedDrawColor = false;
     bool fromBase = false;
     switch (drawType)
     {
@@ -292,6 +294,8 @@ namespace MFM
       }
       return;
 
+    case DRAW_SITE_BLACK:  drawColor = 0xff000000; specifiedDrawColor = true; break;
+    case DRAW_SITE_WHITE:  drawColor = 0xffffffff; specifiedDrawColor = true; break;
     case DRAW_SITE_ELEMENT: break;
     case DRAW_SITE_ATOM_1: selector = 1; break;
     case DRAW_SITE_ATOM_2: selector = 2; break;
@@ -302,9 +306,13 @@ namespace MFM
 
     }
 
+    if (specifiedDrawColor) {
+      PaintShapeForSite(drawing, shape, ditOrigin, drawColor);
+      return;
+    }
+
     // Here if we need to do atom-specific painting
 
-    u32 drawColor;
     const char * elementLabel  = 0;
 
     const T & atom = fromBase ? site.GetBase().GetBaseAtom() : site.GetAtom();
@@ -410,6 +418,8 @@ namespace MFM
     {
     default:
       FAIL(ILLEGAL_ARGUMENT);
+    case DRAW_SITE_BLACK:         return "Black";
+    case DRAW_SITE_WHITE:         return "White";
     case DRAW_SITE_ELEMENT:       return "Element";
     case DRAW_SITE_ATOM_1:        return "Atom #1";
     case DRAW_SITE_ATOM_2:        return "Atom #2";
