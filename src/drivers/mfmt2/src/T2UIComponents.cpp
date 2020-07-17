@@ -4,6 +4,11 @@
 #include "TraceTypes.h"
 
 namespace MFM {
+  bool T2UIButton::ExecuteFunction(u32 keysym, u32 mods) {
+    TLOG(DBG,"%s",__PRETTY_FUNCTION__);
+    OnClick(SDL_BUTTON_LEFT);
+    return true;
+  }
 
   void T2TileLiveCheckbox::OnCheck(bool value) {
     this->SetChecked(value);
@@ -39,6 +44,16 @@ namespace MFM {
     else sites->OnClick(1);
   }
 
+  void T2DebugSetupButton::onClick() {
+    T2Tile & tile = T2Tile::get();
+    tile.debugSetup();
+    SDLI & sdli = tile.getSDLI();
+    const char * panelName = "GlobalMenu_Button_Sites";
+    AbstractButton * sites = dynamic_cast<AbstractButton*>(sdli.lookForPanel(panelName));
+    if (!sites) LOG.Error("Couldn't find '%s'",panelName);
+    else sites->OnClick(1);
+  }
+
   void T2ClearTileButton::onClick() {
     T2Tile::get().clearPrivateSites();
   }
@@ -46,6 +61,12 @@ namespace MFM {
   void T2QuitButton::onClick() {
     TLOG(MSG,"Quit button clicked");
     T2Tile::get().getSDLI().stop();
+  }
+
+  void T2CrashButton::onClick() {
+    TLOG(MSG,"Crash button clicked");
+    T2Tile::get().stopTracing();
+    exit(1); /* 'crash' */
   }
 
 }

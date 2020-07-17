@@ -7,7 +7,9 @@ my ($TRIMW,$TRIMH) = (12,6);
 my ($SW,$SH) = ($NATIVEW-$TRIMW,$NATIVEH-$TRIMH);
 my ($ITCW,$ITCH) = (100,32);
 my ($VIZINDENT) = (3);
+my ($GRIDINDENT) = (1);
 my ($TW,$TH) = ($SW-2*$VIZINDENT,$SH-2*$VIZINDENT);
+my ($GW,$GH) = ($SW-2*$GRIDINDENT,$SH-2*$GRIDINDENT);
 my ($CORNERW,$CORNERH) = (6,6);
 my ($STATICW,$STATICH) = ($TW-2*$ITCW,28);
 
@@ -82,7 +84,7 @@ $AUTOGEN_STAMP
     fontheightadjust=-6
     elevatorwidth=4
     doc="Current time queue dump"
-[Sites T2GridPanel Root $TW $TH $VIZINDENT $VIZINDENT]
+[Sites T2GridPanel Root $GW $GH $GRIDINDENT $GRIDINDENT]
     bgcolor=#222222
 # GRANDCHILDREN AND BEYOND    
 [Log_Button_X MenuItem Log `bfs6x6(5,0)`]
@@ -154,21 +156,32 @@ $AUTOGEN_STAMP
     font=2
     elevatorwidth=0
     fontheightadjust=-4
-[T2Info_Quit_Button QuitButton T2Viz `bfs3x3(2,2)`]
+[TypeHistogram HistoPanel T2Viz 200 200 150 40]
+    bgcolor=#441199
+    fgcolor=#ffffff
+    font=2
+    elevatorwidth=0
+    fontheightadjust=-4
+[T2Info_Quit_Button QuitButton T2Viz `bfs6x6(3,0,3,0)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
-    font=1
+    font=4
     text="Quit"
-[Sub1 Label T2Viz 120 50 220 40]
-    bgcolor=#00ff00
-    fgcolor=#ff0000
-    iconslot=10
-    visible=1
-    text=X-ray
-[Sub2 Label T2Viz 200 30 200 100]
-    bgcolor=#0000ff
-    iconslot=15
-    text="Check box on"
+[T2Info_Crash_Button CrashButton T2Viz `bfs6x6(2,0,2,0)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=4
+    text="Crash"
+#[Sub1 Label T2Viz 120 50 220 40]
+#    bgcolor=#00ff00
+#    fgcolor=#ff0000
+#    iconslot=10
+#    visible=1
+#    text=X-ray
+#[Sub2 Label T2Viz 200 30 200 100]
+#    bgcolor=#0000ff
+#    iconslot=15
+#    text="Check box on"
 [SimLog SimLog T2Viz 260 220 145 40]
     bgcolor=#cccccc
     fgcolor=#333333
@@ -178,20 +191,20 @@ $AUTOGEN_STAMP
     visible=0
 #[ITC_NE ITC T2Viz $ITCW $ITCH `($TW/2+($TW/2-$ITCW)/2)` 0]
 [ITC_NE ITC T2Viz $ITCW $ITCH `($TW-$ITCW)` 0]
-    text=NE
+#    text=NE
 [ITC_ET ITC T2Viz $ITCH $ITCW `($TW-$ITCH)` `(($TH-$ITCW)/2)`]
-    text=ET
+#    text=ET
 #[ITC_SE ITC T2Viz $ITCW $ITCH `($TW/2+($TW/2-$ITCW)/2)` `($TH-$ITCH)`]
 [ITC_SE ITC T2Viz $ITCW $ITCH `($TW-$ITCW)` `($TH-$ITCH)`]
-    text=SE
+#    text=SE
 #[ITC_SW ITC T2Viz $ITCW $ITCH `(($TW/2-$ITCW)/2)` `($TH-$ITCH)`]
 [ITC_SW ITC T2Viz $ITCW $ITCH 0 `($TH-$ITCH)`]
-    text=SW
+#    text=SW
 [ITC_WT ITC T2Viz $ITCH $ITCW 0 `(($TH-$ITCW)/2)`]
-    text=WT
+#    text=WT
 #[ITC_NW ITC T2Viz $ITCW $ITCH `(($TW/2-$ITCW)/2)` 0]
 [ITC_NW ITC T2Viz $ITCW $ITCH 0 0]
-    text=NW
+#    text=NW
 [Corner_NW Panel T2Viz $CORNERW $CORNERH 0 0]
     bgcolor=#000000
     fgcolor=#0000ff
@@ -204,13 +217,13 @@ $AUTOGEN_STAMP
 [Corner_SW Panel T2Viz $CORNERW $CORNERH 0 `($TH-$CORNERH)`]
     bgcolor=#000000
     fgcolor=#0000ff
-[T2Viz_Checkbox_Living T2TileLiveCheckbox T2Viz `bfs6x6(3,3,4,3)`]
-    font=2
-    text="Run"
-[T2Viz_Checkbox_X MenuItem T2Viz `bfs6x6(2,4,2,4)`]
+#[T2Viz_Checkbox_Living T2TileLiveCheckbox T2Viz `bfs6x6(3,3,4,3)`]
+#    font=2
+#    text="Run"
+[T2Viz_Checkbox_X MenuItem T2Viz `bfs6x6(5,1,5,1)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
-    font=1
+    font=4
     text="X"
     action="GO GlobalMenu"
 [PhysicsCtl_Checkbox_Living T2TileLiveCheckbox PhysicsCtl `bfs6x6(0,2,2,3)`]
@@ -229,7 +242,12 @@ $AUTOGEN_STAMP
     enabledfg=$MENUITEMFG
     font=1
     text="Seed DReg"
-[PhysicsCtl_Button_X MenuItem PhysicsCtl `bfs6x6(1,4,4,5)`]
+[PhysicsCtl_Button_Debug T2DebugSetupButton PhysicsCtl `bfs6x6(0,4,2,5)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="Init Debug"
+[PhysicsCtl_Button_X MenuItem PhysicsCtl `bfs6x6(2,4,4,5)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
     font=1

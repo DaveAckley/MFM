@@ -16,6 +16,7 @@ namespace MFM {
   u32 findPidOfProgram(const char * progname) ;
 
   void printComma(u32 num, ByteSink & to) ;
+  void printComma(u64 num, ByteSink & to) ;
 
 }
 

@@ -11,10 +11,13 @@
 #include "Trace.h"
 #include "Logger.h"
 
-#define TLOG(LVL,FORMAT,...)                                        \
+#define TLOG(LOGLVL,FORMAT,...)                         \
+  TLOGLEV(Logger::LOGLVL,FORMAT , ## __VA_ARGS__)
+
+#define TLOGLEV(LVL,FORMAT, ...)                                    \
   do {                                                              \
-    if (LOG.IfLog(Logger::LVL))                                     \
-      TRACEPrintf(Logger::LVL, FORMAT , ## __VA_ARGS__ );           \
+    if (LOG.IfLog(LVL))                                             \
+      TRACEPrintf(LVL, FORMAT , ## __VA_ARGS__ );                   \
   } while (0)                                                       \
 
 

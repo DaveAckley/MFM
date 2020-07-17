@@ -1,4 +1,7 @@
 #include <getopt.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include "T2Tile.h"
 
@@ -107,7 +110,7 @@ namespace MFM {
 
   void T2Tile::seedPhysics() {
     // Pick a random hidden site and init it
-    SPoint at(getHiddenRect().PickRandom(getRandom()));
+    SPoint at(getOwnedRect().PickRandom(getRandom()));
     Sites & sites = getSites();
     OurT2Site & site = sites.get(MakeUnsigned(at));
     OurT2Atom & ar =  site.GetAtom();
@@ -161,11 +164,11 @@ namespace MFM {
 #undef YY
 #undef ZZ
       }
-    , mHiddenRect(SPoint(CACHE_LINES,CACHE_LINES),
-                  UPoint(T2TILE_WIDTH-2*CACHE_LINES,
-                         T2TILE_HEIGHT-2*CACHE_LINES))
+    , mOwnedRect(SPoint(CACHE_LINES,CACHE_LINES),
+                 UPoint(T2TILE_WIDTH-2*CACHE_LINES,
+                        T2TILE_HEIGHT-2*CACHE_LINES))
     , mITCVisible{
-#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,CACHE_LINES)
+#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,CACHE_LINES,0u)
 #define YY ,
 #define ZZ
         ALL_DIR6_MACRO()
@@ -174,7 +177,7 @@ namespace MFM {
 #undef ZZ
       }
     , mITCCache{
-#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,0u)
+#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,0u,0u)
 #define YY ,
 #define ZZ
         ALL_DIR6_MACRO()
@@ -183,7 +186,16 @@ namespace MFM {
 #undef ZZ
       }
     , mITCVisibleAndCache{
-#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(2*CACHE_LINES,0u)
+#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(2*CACHE_LINES,0u,0u)
+#define YY ,
+#define ZZ
+        ALL_DIR6_MACRO()
+#undef XX
+#undef YY
+#undef ZZ
+      }
+    , mITCNeighborOwned{
+#define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,0u,CACHE_LINES)
 #define YY ,
 #define ZZ
         ALL_DIR6_MACRO()
@@ -203,22 +215,22 @@ namespace MFM {
     , mPacketPoller(*this)
     , mListening(false)
     , mMDist()
-    , mTotalEventsCompleted(0)
     , mCPUFreq(CPUSpeed_Slow)
     , mCoreTempChecker()
+    , mRollingTraceDir()
+    , mRollingTraceTargetKB(0)
+    , mRollingTraceSpinner(0)
   {
+    mT2TileStats.reset();
     mCoreTempChecker.schedule(getTQ(),0);
   }
 
   void T2Tile::earlyInit() {
     processArgs();
 
-    for (u32 i = 0; i <= MAX_EWSLOT; ++i) {
-      if (i==0) mEWs[i] = 0;
-      else {
-        mEWs[i] = new T2EventWindow(*this, i, "AC");
-        mEWs[i]->insertInEWSet(&mFree);
-      }
+    for (u32 i = 0; i < MAX_EWSLOT; ++i) {
+      mEWs[i] = new T2ActiveEventWindow(*this, i, "AC");
+      mEWs[i]->insertInEWSet(&mFree);
     }
 
     for (u32 x = 0; x < T2TILE_WIDTH; ++x)
@@ -251,9 +263,11 @@ namespace MFM {
 #define ALL_CMD_ARGS()                                          \
   XX(help,h,N,,"Print this help")                               \
   XX(log,l,O,LEVEL,"Set or increase logging")                   \
+  XX(map,m,O,CSV,"Print tile map [in CSV] and exit")            \
   XX(mfzid,z,R,MFZID,"Specify MFZ file to run")                 \
   XX(paused,p,N,,"Start up paused")                             \
   XX(trace,t,O,PATH,"Trace output to PATH or default")          \
+  XX(roll,r,O,MB,"Keep rolling trace files up to size MB")      \
   XX(version,v,N,,"Print version and exit")                     \
   XX(wincfg,w,R,PATH,"Specify window configuration file")       \
 
@@ -317,6 +331,7 @@ static const char * CMD_HELP_STRING =
     int fails = 0;
     int loglevel = -1;
     int wantpaused = 0;
+    int traceSet = 0;
     while ((c = getopt_long(mArgc,mArgv,
                             CMD_LINE_SHORT_OPTIONS,
                             CMD_LINE_LONG_OPTIONS,
@@ -334,7 +349,25 @@ static const char * CMD_HELP_STRING =
         setWindowConfigPath(optarg);
         break;
 
-      case 't':
+      case 'r': {
+        if (traceSet) {
+          fatal("Only one -t or -r allowed");
+        } else traceSet = 1;
+        u32 mb = 8;
+        if (optarg) {
+          CharBufferByteSource cbbs(optarg,strlen(optarg));
+          if (1 != cbbs.Scanf("%d",&mb) || mb <= 0) {
+            fatal("'%s' not legal as megabytes", optarg);
+          }
+        }
+        initRollingTraceDir(mb);
+        break;
+      }
+
+      case 't': {
+        if (traceSet) {
+          fatal("Only one -t or -r allowed");
+        } else traceSet = 1;
         if (optarg) {
           startTracing(optarg);
         } else {
@@ -364,6 +397,7 @@ static const char * CMD_HELP_STRING =
           startTracing(zpath);
         }
         break;
+      }
 
       case 'l':
         if (optarg) {
@@ -385,6 +419,20 @@ static const char * CMD_HELP_STRING =
 
       case 'h':
         printf("%s",CMD_HELP_STRING);
+        exit(0);
+
+      case 'm':
+        {
+          const char * oa = optarg;
+          if (!oa) oa = "csv";
+          if (!strcmp(oa,"csv") || !strcmp(oa,"all"))
+            dumpTileMap(STDOUT,true);
+          if (!strcmp(oa,"map") || !strcmp(oa,"all"))
+            dumpTileMap(STDOUT,false);
+          if (!strcmp(oa,"itc") || !strcmp(oa,"all"))
+            dumpITCRects(STDOUT);
+
+        }
         exit(0);
 
       case 'v':
@@ -450,7 +498,7 @@ static const char * CMD_HELP_STRING =
   T2Tile::~T2Tile() {
     stopTracing();
     closeITCs();
-    for (u32 i = 0; i <= MAX_EWSLOT; ++i) {
+    for (u32 i = 0; i < MAX_EWSLOT; ++i) {
       if (i) delete mEWs[i];
       mEWs[i] = 0;
     }
@@ -469,19 +517,24 @@ static const char * CMD_HELP_STRING =
     }
   }
 
-  T2EventWindow * T2Tile::allocEW() {
+  T2ActiveEventWindow * T2Tile::allocEW() {
     EWLinks * el = mFree.removeRandom();
     if (!el) return 0;
-    return el->asEventWindow();
+    T2EventWindow * ew = el->asEventWindow();
+    T2ActiveEventWindow * aew = ew->as<T2ActiveEventWindow>();
+    MFM_API_ASSERT_STATE(aew != 0);
+    return aew;
+    
   }
 
   void T2Tile::freeEW(T2EventWindow & ew) {
+    if (ew.isOnTQ()) ew.remove();
     if (ew.isInSet()) ew.removeFromEWSet();
     ew.insertInEWSet(&mFree);
   }
 
   bool T2Tile::tryAcquireEW(const UPoint center, u32 radius, bool forActive) {
-    T2EventWindow * ew = allocEW();  // See if any EWs left to acquire
+    T2ActiveEventWindow * ew = allocEW();  // See if any EWs left to acquire
     if (!ew) return false;  // Nope
     ew->initializeEW(); // clear gunk
     if (ew->tryInitiateActiveEvent(center,radius)) return true; // ew in use
@@ -490,11 +543,13 @@ static const char * CMD_HELP_STRING =
     return false;
   }
 
-  void T2Tile::releaseActiveEW(T2EventWindow & ew) {
-    Sites & sites = getSites(); // GET CENTER SITE FOR STATS!
-    UPoint uctr(MakeUnsigned(ew.getCenter()));
-    OurT2Site & ctrSite = sites.get(uctr); 
-    recordCompletedEvent(ctrSite);  // That Was NOT Easy!
+  void T2Tile::releaseActiveEW(T2EventWindow & ew, bool countInStats) {
+    if (countInStats) {
+      Sites & sites = getSites(); // GET CENTER SITE FOR STATS!
+      UPoint uctr(MakeUnsigned(ew.getCenter()));
+      OurT2Site & ctrSite = sites.get(uctr); 
+      recordCompletedEvent(ctrSite);  // That Was NOT Easy!
+    }
 
     ew.finalizeEW();
     freeEW(ew);
@@ -547,7 +602,7 @@ static const char * CMD_HELP_STRING =
   }
 
   void T2Tile::recordCompletedEvent(OurT2Site & site) {
-    site.RecordEventAtSite(++mTotalEventsCompleted);
+    site.RecordEventAtSite(getStats().getNonemptyEventsCommitted());
   }
 
   u32 T2Tile::considerSiteForEW(UPoint idx) {
@@ -570,11 +625,13 @@ static const char * CMD_HELP_STRING =
     u32 radius = 0;
     UPoint ctr;
     for (u32 i = 0; i < MAX_TRIES; ++i) {
+      getStats().incrEventsConsidered();
       ctr =
         UPoint(getRandom(), T2TILE_OWNED_WIDTH, T2TILE_OWNED_HEIGHT)
         + UPoint(CACHE_LINES,CACHE_LINES);
       radius = considerSiteForEW(ctr);
       if (radius > 0) break;
+      getStats().incrEmptyEventsCommitted();
     }
     if (radius == 0) return false;
     return tryAcquireEW(ctr, radius, true);
@@ -614,18 +671,54 @@ static const char * CMD_HELP_STRING =
     return true;
   }
 
-  void T2Tile::startTracing(const char * path) {
-    if (mTraceLoggerPtr != 0) stopTracing();
+  bool T2Tile::tlog(const Trace & tb) {
+    if (!mTraceLoggerPtr) return false; // If anybody cares
+    mTraceLoggerPtr->log(tb);
+    if (mRollingTraceTargetKB > 0) {
+      if (mTraceLoggerPtr->ftell() / 1024 > (s32) mRollingTraceTargetKB)
+        rollTracing();
+    }
+    return true;
+  }
+
+  s32 T2Tile::makeTag() {
+    s32 tag;
+    do {
+      tag = (s32) T2Tile::get().getRandom().CreateBits(31);
+    } while (tag == 0);           //sure
+    return tag;
+  }
+
+  void T2Tile::startTracing(const char * path, s32 syncTag) {
+    MFM_API_ASSERT_ARG(syncTag >= 0);
+    if (mTraceLoggerPtr != 0) stopTracing(-syncTag);
     mTraceLoggerPtr = new TraceLogger(path);
-    Trace evt(*this,TTC_Tile_Start);
-    evt.payloadWrite().Printf("%D", TRACE_REC_FORMAT_VERSION);
-    trace(evt);
+    tlog(Trace(*this, TTC_Tile_Start, "%D", TRACE_REC_FORMAT_VERSION));
+    tlog(Trace(*this, TTC_Tile_TraceFileMarker, "%l", syncTag));
+    traceEventStats();
     TLOG(DBG,"HEWO to %s",path);
   }
 
-  void T2Tile::stopTracing() {
+  void T2Tile::traceEventStats() {
     if (mTraceLoggerPtr != 0) {
-      trace(*this, TTC_Tile_Stop, "%q", mTotalEventsCompleted);
+      // We might be rolling, so we need to avoid the T2Tile::trace
+      OString128 buf;
+      getStats().saveRaw(buf);
+      CharBufferByteSource cbbs = buf.AsByteSource();
+      mTraceLoggerPtr->
+        log(Trace(*this, TTC_Tile_EventStatsSnapshot, "%<", &cbbs));
+    }
+  }
+  void T2Tile::stopTracing(s32 syncTag) {
+    MFM_API_ASSERT_ARG(syncTag <= 0);
+    if (mTraceLoggerPtr != 0) {
+      // We might be rolling, so we need to avoid the T2Tile::trace
+      // interface so these final traces don't roll recursively
+      traceEventStats();
+      mTraceLoggerPtr->
+        log(Trace(*this, TTC_Tile_TraceFileMarker, "%l", syncTag));
+      mTraceLoggerPtr->
+        log(Trace(*this, TTC_Tile_Stop, ""));
       delete mTraceLoggerPtr;
       mTraceLoggerPtr = 0;
     }
@@ -634,4 +727,165 @@ static const char * CMD_HELP_STRING =
   void T2Tile::showFail(const char * file, int line, const char * msg) {
     mSDLI.showFail(file, line, msg);
   }
+
+  const char * T2Tile::coordMap(u32 x, u32 y) const {
+    SPoint sp(x,y);
+    const u32 BUF_SIZE = 10;
+    static char buf[BUF_SIZE];
+    u32 i;
+    for (i = 0; i < BUF_SIZE; ++i) buf[i] = '\0';
+    i = 0;
+    if (getOwnedRect().Contains(sp)) buf[i++] = 'o';
+    else buf[i++] = 'c';
+    for (Dir6 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
+      if (getVisibleAndCacheRect(dir6).Contains(sp)) buf[i++] = '0'+dir6;
+      //      if (getVisibleRect(dir6).Contains(sp)) buf[i++] = 'a'+dir6;
+      //      if (getCacheRect(dir6).Contains(sp)) buf[i++] = 'A'+dir6;
+    }
+    return buf;
+  }
+
+  void T2Tile::dumpTileMap(ByteSink& bs, bool csv) const {
+    bs.Printf("   ");
+    for (u32 x = 0; x < T2TILE_WIDTH; ++x) {
+      if (csv) bs.Printf(",");
+      bs.Printf(" %2d", x);
+    }
+    bs.Printf("\n");
+
+    for (u32 y = 0; y < T2TILE_HEIGHT; ++y) {
+      bs.Printf("%2d ",y);
+      for (u32 x = 0; x < T2TILE_WIDTH; ++x) {
+        if (csv) bs.Printf(",");
+        bs.Printf(csv ? "%s": "%3s",coordMap(x,y));
+      }
+      if (!csv) bs.Printf(" %2d",y);
+      bs.Printf("\n");
+    }
+    if (!csv) {
+      bs.Printf("   ");
+      for (u32 x = 0; x < T2TILE_WIDTH; ++x) bs.Printf(" %2d", x);
+      bs.Printf("\n");
+    }
+  }
+
+  void T2Tile::dumpITCRects(ByteSink& bs) const {
+    const u32 cCOLUMNS = 4;
+    const char names[cCOLUMNS][10] = { "VIZ", "CCH", "ALL", "NGB" };
+    bs.Printf("      ");
+    for (u32 type = 0; type < cCOLUMNS; ++type) {
+      bs.Printf("%s                    ",names[type]);
+    }
+    bs.Printf("\n");
+    for (Dir6 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
+      bs.Printf("%s %d: ",
+                getDir6Name(dir6), dir6);
+      for (u32 type = 0; type < cCOLUMNS; ++type) {
+        Rect rect;
+        switch (type) {
+        case 0: rect = getVisibleRect(dir6); break;
+        case 1: rect = getCacheRect(dir6); break;
+        case 2: rect = getVisibleAndCacheRect(dir6); break;
+        case 3: rect = getNeighborOwnedRect(dir6); break;
+        default: FAIL(UNREACHABLE_CODE);
+        }
+        SPoint from = rect.GetPosition();
+        UPoint size = rect.GetSize();
+        SPoint to   = from + MakeSigned(size) + SPoint(-1,-1);
+        bs.Printf("(%2d,%2d)-(%2d,%2d) %2dx%2d  ",
+                  from.GetX(),from.GetY(),
+                  to.GetX(),to.GetY(),
+                  size.GetX(),size.GetY());
+      }
+      bs.Printf("\n");
+    }
+  }
+
+  void T2Tile::traceSite(const UPoint at, const char * msg, Logger::Level level) const {
+    const Sites & sites = getSites();
+    const OurT2Site & site = sites.get(at);
+    OurT2Atom copy = site.GetAtom();
+    OurT2AtomSerializer as(copy);
+    TLOGLEV(level,"%s/Site(%d,%d)%s [%04x/%@]",
+            msg,
+            at.GetX(), at.GetY(),
+            coordMap(at.GetX(), at.GetY()),
+            copy.GetType(),
+            &as);
+  }
+
+  void T2Tile::debugSetup() {
+    clearPrivateSites();
+    ////BUG 10 SETUP
+    //    SPoint at(26,28);
+    //    u8 ngb = 8;
+    ////BUG 11 SETUP
+    //    SPoint at(51,5);
+    //    u8 ngb = 2;
+    ////BUG 12 SETUP
+    SPoint at(32,4);
+    u8 ngb = 4;
+
+    Sites & sites = getSites();
+    OurT2Site & site = sites.get(MakeUnsigned(at));
+    OurT2Atom & ar =  site.GetAtom();
+
+    OurT2Atom atom(T2_PHONY_DREG_TYPE);
+    atom.SetStateField(0,3,ngb-1);
+
+    ar = atom;
+    traceSite(MakeUnsigned(at));
+  }
+
+  void T2Tile::initRollingTraceDir(u32 targetMB) {
+    MFM_API_ASSERT_NONZERO(targetMB);
+    u32 gen = 0;
+    const u32 cMAX = 100;
+    const char * prefix = "/tmp/t2trace";
+    do {
+      mRollingTraceDir.Reset();
+      mRollingTraceDir.Printf("%s%D",prefix,gen++);
+      const char * zmaybe = mRollingTraceDir.GetZString();
+      DIR * dir = opendir(zmaybe);
+      if (dir != 0) {  // Dir already exists
+        closedir(dir);
+        continue;
+      } else if (errno != ENOENT) {
+        fatal("Can't check for dir '%s': %s", zmaybe, strerror(errno));
+      } else {
+        if (mkdir(zmaybe, 0755) != 0)
+          fatal("Can't make dir '%s': %s", zmaybe, strerror(errno));
+      }
+      break;
+    } while (gen < cMAX);
+    if (gen >= cMAX)
+      fatal("Too many existing '%s' dirs!", prefix);
+    mRollingTraceTargetKB = targetMB * 1024 / 4; // Rolling four files
+    rollTracing();
+  }
+
+  void T2Tile::rollTracing() {
+    MFM_API_ASSERT_STATE(mRollingTraceDir.GetLength() > 0);
+    OString128 buf;
+    u32 cur = mRollingTraceSpinner++;
+    buf.Printf("%s/%D.dat",
+               mRollingTraceDir.GetZString(),
+               cur);
+    startTracing(buf.GetZString());
+    if (cur >= 4) {
+      buf.Reset();
+      buf.Printf("%s/%D.dat",
+                 mRollingTraceDir.GetZString(),
+                 cur-4);
+      if (unlink(buf.GetZString()) != 0) {
+        if (errno != ENOENT) {
+          TLOG(WRN,"Couldn't unlink '%s': %s",
+               buf.GetZString(),
+               strerror(errno));
+        }
+      }
+    }
+  }
+
+
 }

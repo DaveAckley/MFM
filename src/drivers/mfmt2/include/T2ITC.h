@@ -20,8 +20,6 @@
 #include "ITCIterator.h"
 #include "RectIterator.h"
 
-#define CIRCUIT_BITS 4   /* each for active and passive */
-#define CIRCUIT_COUNT (1<<CIRCUIT_BITS)
 #define ALL_CIRCUITS_BUSY 0xff
 
 namespace MFM {
@@ -41,18 +39,12 @@ namespace MFM {
     ITCIteration mIteration;
   };
 
-  struct Circuit {
-    CircuitNum mNumber; // 0..CIRCUIT_COUNT-1
-    u8 mEW;             // 1..MAX_EWSLOTS
-    s8 mYoinkVal;       // -1,0,1
-  };
-
   /**** ITC STATE MACHINE: EARLY STATES HACKERY ****/
 
 #define ALL_ITC_STATES_MACRO()                                   \
   /*   name   vz,ch,mc,to,rc,sb,desc */                          \
   XX(SHUT,     1, 0, 0, 1, 1, 0, "EWs running locally")          \
-  XX(DRAIN,    0, 0, 0, 1, 0, 0, "drain EWs to settle cache")    \
+  XX(DRAIN,    0, 0, 0, 1, 1, 0, "drain EWs to settle cache")    \
   XX(CACHEXG,  0, 0, 2, 1, 1, 0, "exchange cache atoms")         \
   XX(OPEN,     1, 1, 2, 1, 1, 0, "intertile EWs active")         \
 
@@ -103,7 +95,9 @@ namespace MFM {
 #undef YY0
   
   inline u8 xitcByte1(XITCCode xitc, u8 arg) {
-    return (u8) (0x80|((xitc&0x7)<<4)|(arg&0xf)); /* MFM + XITC + SN or CN*/
+    return
+      (u8) (((xitc<<PKT_HDR_BYTE1_XITC_POS) & PKT_HDR_BYTE1_BITMASK_XITC) |
+            (arg & PKT_HDR_BYTE1_BITMASK_XITC_SN));
   }
 
   struct T2ITC : public TimeoutAble {
@@ -119,38 +113,32 @@ namespace MFM {
     bool isFred() const { return !isGinger(); }
     bool isGinger() const { return isGingerDir6(mDir6); }
 
-    bool isVisibleUsable() ;  // true unless draining EWs before sync
+    bool isVisibleUsable() const;  // true unless draining EWs before sync
 
-    bool isCacheUsable() ;    // false unless ITC has reached cache sync
+    bool isCacheUsable() const;    // false unless ITC has reached cache sync
 
-    u32 registeredEWCount() const ;
+    static Rect getRectForTileInit(Dir6 dir6, u32 widthIn, u32 skipIn, u32 endIn) ;
 
-    static Rect getRectForTileInit(Dir6 dir6, u32 widthIn, u32 skipIn) ;
-
-    Rect getRectForTileInit(u32 widthIn, u32 skipIn) { return getRectForTileInit(mDir6,widthIn,skipIn); }
+    Rect getRectForTileInit(u32 widthIn, u32 skipIn, u32 endIn) {
+      return getRectForTileInit(mDir6,widthIn,skipIn,endIn);
+    }
 
     const SPoint getITCOrigin() const ; // EW centers xmit relative to this
     const SPoint getMateITCOrigin() const ; 
     const Rect & getVisibleRect() const ;
     const Rect & getCacheRect() const ;
     const Rect & getVisibleAndCacheRect() const ;
+    const Rect & getNeighborOwnedRect() const ;
 
-    bool allocateActiveCircuitIfNeeded(EWSlotNum ewsn, CircuitNum & circuitnum) ;
-    CircuitNum tryAllocateActiveCircuit() ;
-
-    u32 activeCircuitsInUse() const ;
+    u32 activeCircuitsInUse() const { return mActiveEWCircuitCount; }
 
     s8 getYoinkVal(CircuitNum cn, bool forActive) const ;
-
-    void freeActiveCircuit(CircuitNum cn) ;
 
     void reset() ;             // Perform reset actions and enter ITCSN_INIT
 
     bool initializeFD() ;
 
-    void initAllCircuits() ;
-
-    void abortAllEWs() ;
+    void abortAllActiveCircuits() ;
 
     void pollPackets(bool dispatch) ;
 
@@ -162,48 +150,32 @@ namespace MFM {
 
     void handleAnswerPacket(T2PacketBuffer & pb) ;
 
+    void handleBusyPacket(T2PacketBuffer & pb) ;
+
     void handleCacheUpdatesPacket(T2PacketBuffer & pb) ;
 
     void handleHangUpPacket(T2PacketBuffer & pb) ;
 
     void handleDropPacket(T2PacketBuffer & pb) ;
 
-    bool trySendAckPacket(CircuitNum cn) ;
+    bool trySendAnswerPacket(CircuitNum cn) ;
 
     bool trySendPacket(T2PacketBuffer &pb) ;
 
     void hangUpPassiveEW(T2EventWindow & ew, CircuitNum cn) ;
 
+
     T2Tile & mTile;
     const Dir6 mDir6;
     const Dir8 mDir8;
     const char * mName;
-    u32 mPacketsShipped;
-    ITCStateNumber mStateNumber;
-    T2ITCStateOps & getT2ITCStateOps() ;
 
     ITCStateNumber getITCSN() const { return mStateNumber; }
     void setITCSN(ITCStateNumber itcsn) ;
 
-    Circuit mCircuits[2][CIRCUIT_COUNT]; // [0][] passive, [1][] active
-
-    u8 mActiveFreeCount;
-    CircuitNum mActiveFree[CIRCUIT_COUNT];
-
-    int mFD;
-
-    T2EventWindow *(mRegisteredEWs[MAX_EWSLOT+1]);
-    u32 mRegisteredEWCount;
-
-    T2EventWindow * mPassiveEWs[CIRCUIT_COUNT];
-
-    void registerEWRaw(T2EventWindow & ew) ;
-    void unregisterEWRaw(T2EventWindow & ew) ;
+    void registerActiveCircuitRaw(Circuit & ct) ;
+    void unregisterActiveCircuitRaw(Circuit & ct) ;
     
-    u32 mCacheAtomsSent;
-    RectIterator mVisibleAtomsToSend;
-    u32 mCacheAtomsReceived;
-    bool mCacheReceiveComplete;
     bool isCacheSendStarted() const { return mCacheAtomsSent > 0; }
     bool isCacheReceiveStarted() const { return mCacheAtomsReceived > 0; }
     bool isCacheReceiveComplete() const { return mCacheReceiveComplete; }
@@ -218,11 +190,36 @@ namespace MFM {
     bool sendVisibleAtoms(T2PacketBuffer & pb) ;
     bool recvCacheAtoms(T2PacketBuffer & pb) ;
     bool tryReadAtom(ByteSource & in, UPoint & where, OurT2AtomBitVector & bv) ;
+    void initStatePacket(T2PacketBuffer & pb) const ;
 
     const char * path() const;
     int open() ;
     int close() ;
     int getFD() const { return mFD; }
+
+  private:
+
+    u32 mPacketsShipped;
+    ITCStateNumber mStateNumber;
+    T2ITCStateOps & getT2ITCStateOps() {
+      return
+        const_cast <T2ITCStateOps &>
+        (static_cast<const T2ITC*>(this)->getT2ITCStateOps());
+    }
+    const T2ITCStateOps & getT2ITCStateOps() const;
+
+    int mFD;
+
+    Circuit *(mActiveEWCircuits[MAX_EWSLOT]); // Links to in-use active EWs
+    u32 mActiveEWCircuitCount;                // # of non-zero
+    
+    T2PassiveEventWindow * mPassiveEWs[MAX_EWSLOT]; // All our passive EWs
+
+    u32 mCacheAtomsSent;
+    RectIterator mVisibleAtomsToSend;
+    u32 mCacheAtomsReceived;
+    bool mCacheReceiveComplete;
+
   };
 
   const char * getITCStateName(ITCStateNumber sn) ;

@@ -16,6 +16,9 @@
 #include "OverflowableCharBufferByteSink.h"
 #include "Logger.h"
 #include "UniqueTime.h"
+#include "T2PacketBuffer.h"
+
+#include "dirdatamacro.h"
 
 namespace MFM {
 
@@ -23,6 +26,8 @@ namespace MFM {
   XX(,ILL,Illegal)                              \
   XX(Tile,STR,Start)                            \
   XX(Tile,TLF,TopLevelFailure)                  \
+  XX(Tile,TFM,TraceFileMarker)                  \
+  XX(Tile,ESS,EventStatsSnapshot)               \
   XX(Tile,STP,Stop)                             \
   XX(ITC,SCH,StateChange)                       \
   XX(ITC,PIN,PacketIn)                          \
@@ -30,6 +35,7 @@ namespace MFM {
   XX(Log,LOG,LogTrace)                          \
   XX(EW,SCH,StateChange)                        \
   XX(EW,CTR,AssignCenter)                       \
+  XX(EW,CSC,CircuitStateChange)                 \
 
 
   enum TraceTypeCode {
@@ -49,13 +55,20 @@ namespace MFM {
     TRACE_REC_START_BYTE2 = 0xde,
 
     TRACE_REC_MODE_ILLEGAL = 0x0,
-    TRACE_REC_MODE_T2TILE  = 0x1,
-    TRACE_REC_MODE_ITCDIR6 = 0x2,
-    TRACE_REC_MODE_EWACTIV = 0x3,
-    TRACE_REC_MODE_EWPASIV = 0x4,
-    TRACE_REC_MODE_LOG     = 0x5,
+    TRACE_REC_MODE_LOG     = 0x1,
+    TRACE_REC_MODE_T2TILE  = 0x2,
+    TRACE_REC_MODE_ITCDIR6 = 0x3,
+    TRACE_REC_MODE_EWACTIV = 0x4,
+    TRACE_REC_MODE_EWPASIV_BASE = 0x5,
+    TRACE_REC_MODE_EWPASIV_ET = TRACE_REC_MODE_EWPASIV_BASE + DIR6_ET,
+    TRACE_REC_MODE_EWPASIV_SE = TRACE_REC_MODE_EWPASIV_BASE + DIR6_SE,
+    TRACE_REC_MODE_EWPASIV_SW = TRACE_REC_MODE_EWPASIV_BASE + DIR6_SW,
+    TRACE_REC_MODE_EWPASIV_WT = TRACE_REC_MODE_EWPASIV_BASE + DIR6_WT,
+    TRACE_REC_MODE_EWPASIV_NW = TRACE_REC_MODE_EWPASIV_BASE + DIR6_NW,
+    TRACE_REC_MODE_EWPASIV_NE = TRACE_REC_MODE_EWPASIV_BASE + DIR6_NE,
+    TRACE_REC_MODE_EWPASIV_XX = TRACE_REC_MODE_EWPASIV_BASE + DIR6_COUNT,
 
-    TRACE_REC_FORMAT_VERSION = 0x04
+    TRACE_REC_FORMAT_VERSION = 0x07
 
   };
 
@@ -80,8 +93,20 @@ namespace MFM {
   };
 
   struct Trace {
+
+    template <class C>
+    Trace(const C & cthing, u8 traceType, const char * format, ...)
+      : Trace(cthing, traceType)
+    {
+      va_list ap;
+      va_start(ap, format);
+      payloadWrite().Vprintf(format, ap);
+      va_end(ap);
+    }
+
     const UniqueTime mLocalTimestamp;
     const u8 mTraceType;
+    u8 getTraceType() const { return mTraceType; }
 
     struct timespec getTimespec() const {
       return mLocalTimestamp.getTimespec();
@@ -153,7 +178,7 @@ namespace MFM {
   private:
     TraceAddress mAddress;
     s32 mSyncTag;
-    OString256 mData;
+    T2PacketBuffer mData;
   };
 
   struct TraceLogger {
@@ -187,23 +212,26 @@ namespace MFM {
     }
     
     void log(const Trace & evt) ;
+
+    s32 flush() {
+      if (mFile) return fflush(mFile);
+      return -EBADF;
+    }
+
+    s32 ftell() {
+      if (mFile) return ::ftell(mFile);
+      return -EBADF;
+    }
+
   private:
     FILE * mFile;
     FileByteSink mFBS;
   };
 
   struct TraceLogReader {
-    TraceLogReader(FileByteSource& bs)
-      : mBS(bs)
-      , mHaveFirst(false)
-    { }
-    Trace * read(struct timespec timeOffset) ;
-    struct timespec getFirstTimespec() const { return mFirstTimespec; }
-  private:
-    FileByteSource & mBS;
-    bool mHaveFirst;
-    struct timespec mFirstTimespec;
-    struct timespec mPrevTimespec;
+    static Trace * read(ByteSource & bs,
+                        struct timespec basetime,     // Subtracts this
+                        struct timespec timeoffset) ; // then adds this
   };
 
 }

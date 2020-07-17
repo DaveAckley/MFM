@@ -27,6 +27,9 @@ namespace MFM {
     
     virtual T2EventWindow * asEventWindow() { return 0; }
 
+    template <class EW>
+    EW * as() { return dynamic_cast<EW*>(this); }
+
     EWLinks()
       : mInSet(0)
       , mIdxInSet(U32_MAX)

@@ -9,7 +9,7 @@ namespace MFM {
   void ITCStatusPanel::init(ITCStatus & status, ITCIcons & icons) {
     mStatus = &status;
     mIcons = &icons;
-    SetName(status.getDirName());
+    SetName(status.getAbbr());
     SetVisible(true);
     s32 w = getWidth(), h = getHeight();
     SetDimensions(w,h);

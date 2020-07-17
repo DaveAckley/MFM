@@ -28,6 +28,7 @@
 #include "Sites.h"
 #include "Trace.h"
 #include "CPUFreq.h"
+#include "T2TileStats.h"
 
 namespace MFM {
 
@@ -49,7 +50,9 @@ namespace MFM {
     virtual void onTimeout(TimeQueue& srctq) ;
     virtual const char* getName() const { return "KITCPoller"; }
     KITCPoller(T2Tile& tile) ;
-    static u32 getKITCEnabledStatusFromStatus(u32 status, Dir8 dir8) { return (status>>(dir8<<2))&0xf; }
+    static u32 getKITCEnabledStatusFromStatus(u32 status, Dir8 dir8) {
+      return (status>>(dir8<<2))&0xf;
+    }
     static u32 updateKITCEnabledStatusFromStatus(u32 status, Dir8 dir8, u32 val) ;
     u32 getKITCEnabledStatus(Dir8 dir8) { return getKITCEnabledStatusFromStatus(mKITCEnabledStatus, dir8); }
     void setKITCEnabledStatus(Dir8 dir8, u32 val) {
@@ -63,6 +66,8 @@ namespace MFM {
 
   typedef MDist<4> OurMDist;
 
+  typedef std::map<u32,u32> AtomTypeCountMap;
+  
   struct T2Tile {
 
     static inline T2Tile & get() {
@@ -100,8 +105,10 @@ namespace MFM {
     }
 
     // GENERAL SERVICE METHODS
+    void debugSetup() ; // Whatever we're currently working on
     void seedPhysics() ;
     void clearPrivateSites() ;
+    void traceSite(const UPoint at, const char * msg = "", Logger::Level level = Logger::DBG) const ;
 
     ///
     void setMFZId(const char * mfzid) ;
@@ -120,29 +127,15 @@ namespace MFM {
       return mTraceLoggerPtr != 0;
     }
 
-    bool trace(const Trace & tb) {
-      if (!mTraceLoggerPtr) return false; // If anybody cares
-      mTraceLoggerPtr->log(tb);
-      return true;
-    }
+    bool tlog(const Trace & tb) ;
     
-    template <class C>
-    bool trace(const C & cthing, u8 traceType, const char * format, ...) 
-    {
-      Trace evt(cthing, traceType);
-      va_list ap;
-      va_start(ap, format);
-      evt.payloadWrite().Vprintf(format, ap);
-      va_end(ap);
-      trace(evt);
-      return true;
-    }
-
     // Draw a kill screen before dying.
     void showFail(const char * file, int line, const char * msg) ;
 
-    void startTracing(const char * path) ;
-    void stopTracing() ;
+    static s32 makeTag() ;
+    void startTracing(const char * path, s32 synctag = makeTag()) ;
+    void stopTracing(s32 synctag = -makeTag()) ;
+    void traceEventStats() ;
 
     // HIGH LEVEL SEQUENCING
     void main() ;
@@ -169,9 +162,9 @@ namespace MFM {
 
     void setWindowConfigPath(const char * path) ;
 
-    T2EventWindow * getEW(u32 idx) {
-      if (idx <= MAX_EWSLOT) return mEWs[idx];
-      return 0;
+    T2ActiveEventWindow & getActiveEW(u32 idx) {
+      MFM_API_ASSERT_ARG(idx<MAX_EWSLOT);
+      return *mEWs[idx];
     }
 
     T2ITC & getITC(u32 dir6) {
@@ -187,7 +180,7 @@ namespace MFM {
 
     void resourceAlert(ResourceType type, ResourceLevel level) ;
 
-    void releaseActiveEW(T2EventWindow & ew) ;
+    void releaseActiveEW(T2EventWindow & ew, bool countInStats) ;
 
 #if 0 // UNUSED
     void releaseEW(T2EventWindow * ew) ;
@@ -217,19 +210,25 @@ namespace MFM {
       mSiteOwners[idx.GetX()][idx.GetY()] = owner;
     }
 
-    const Rect & getHiddenRect() const {
-      return mHiddenRect;
+    const Rect & getOwnedRect() const {
+      return mOwnedRect;
     }
 
-    const Rect & getVisibleRect(Dir6 dir6) {
+    const Rect & getVisibleRect(Dir6 dir6) const {
       MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
       return mITCVisible[dir6];
     }
-    const Rect & getCacheRect(Dir6 dir6) {
+
+    const Rect & getNeighborOwnedRect(Dir6 dir6) const {
+      MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
+      return mITCNeighborOwned[dir6];
+    }
+
+    const Rect & getCacheRect(Dir6 dir6) const {
       MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
       return mITCCache[dir6];
     }
-    const Rect & getVisibleAndCacheRect(Dir6 dir6) {
+    const Rect & getVisibleAndCacheRect(Dir6 dir6) const {
       MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
       return mITCVisibleAndCache[dir6];
     }
@@ -254,23 +253,72 @@ namespace MFM {
 
     T2ITC mITCs[DIR6_COUNT];
 
-  
   public:  // Hey it's const
-    const Rect mHiddenRect;
+    const Rect mOwnedRect;
     const Rect mITCVisible[DIR6_COUNT];
     const Rect mITCCache[DIR6_COUNT];
     const Rect mITCVisibleAndCache[DIR6_COUNT];
+    const Rect mITCNeighborOwned[DIR6_COUNT];
 
     void freeEW(T2EventWindow & ew) ; //Public for T2EventWindow to call on abort?
 
+#if 0
+    void resetTotalStats() ;
+
+    u64 getTotalActiveEventsInitiated() const {
+      return  mTotalActiveEventsInitiated;
+    }
+    u64 getTotalActiveEmptyEventsConsidered() const {
+      return  mTotalActiveEmptyEventsConsidered;
+    }
+    u64 getTotalActiveEventsPerformed() const {
+      return  mTotalActiveEventsPerformed;
+    }
+    u64 getTotalNonemptyActiveEventsPerformed() const {
+      return  mTotalNonemptyActiveEventsPerformed;
+    }
+    u64 getTotalActiveEventsCompleted() const {
+      return  mTotalActiveEventsCompleted;
+    }
+    u64 getTotalNonemptyActiveEventsCompleted() const {
+      return  mTotalNonemptyActiveEventsCompleted;
+    }
+
+    void incrTotalActiveEventsInitiated() {
+      ++mTotalActiveEventsInitiated;
+    }
+    void incrTotalActiveEmptyEventsConsidered() {
+      ++mTotalActiveEmptyEventsConsidered;
+    }
+    void incrTotalActiveEventsPerformed() {
+      ++mTotalActiveEventsPerformed;
+    }
+    void incrTotalNonemptyActiveEventsPerformed() {
+      ++mTotalNonemptyActiveEventsPerformed;
+    }
+    void incrTotalActiveEventsCompleted() {
+      ++mTotalActiveEventsCompleted;
+    }
+    void incrTotalNonemptyActiveEventsCompleted() {
+      ++mTotalNonemptyActiveEventsCompleted;
+    }
+#endif
+
+    const T2TileStats & getStats() const { return mT2TileStats; }
+    T2TileStats & getStats() { return mT2TileStats; }
+
   private:
-    T2EventWindow * mEWs[MAX_EWSLOT+1]; // mEWs[0] set to 0
+    T2ActiveEventWindow * mEWs[MAX_EWSLOT];
 
     u32 considerSiteForEW(UPoint idx) ;
     u32 getRadius(const OurT2Atom & atom) ; // STUB UNTIL UCR EXISTS
     void recordCompletedEvent(OurT2Site & site) ;
 
-    T2EventWindow * allocEW() ;
+    const char * coordMap(u32 x, u32 y) const ;
+    void dumpTileMap(ByteSink& bs, bool csv) const ;
+    void dumpITCRects(ByteSink& bs) const ;
+
+    T2ActiveEventWindow * allocEW() ;
 
     EWSet mFree;
     void initTimeQueueDrivers() ;
@@ -293,11 +341,19 @@ namespace MFM {
     s32 mKITCEnabledFD;
 
     //// STATS
-    u64 mTotalEventsCompleted;
+    T2TileStats mT2TileStats;
 
     //// HW CONTROL & MISC
     CPUFreq mCPUFreq;
     CoreTempChecker mCoreTempChecker;    
+
+    void initRollingTraceDir(u32 targetMB) ;
+    void rollTracing() ;
+
+    OString128 mRollingTraceDir;
+    u32 mRollingTraceTargetKB;
+    u32 mRollingTraceSpinner;
+
   };
 }
 #endif /* T2TILE_H */

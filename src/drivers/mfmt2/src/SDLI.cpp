@@ -15,6 +15,7 @@
 #include "T2Tile.h"
 #include "SimLogPanel.h"
 #include "T2InfoPanel.h"
+#include "ITCStatusPanel.h"
 #include "ChooserPanel.h"
 #include "T2GridPanel.h"
 #include "T2TimeQueuePanel.h"
@@ -271,8 +272,9 @@ namespace MFM
     //    if (type.Equals("Grid")) return new GridPanel();
     if (type.Equals("Panel")) return new Panel();
     if (type.Equals("Label")) return new Label();
-    if (type.Equals("ITC")) return new Label(); // XXX FIX ME ITCPanel
+    if (type.Equals("ITC")) return new ITCStatusPanel(); // XXX FIX ME ITCPanel
     if (type.Equals("Text")) return new TextPanel<80,40>(); 
+    if (type.Equals("HistoPanel")) return new HistoPanel(); 
     if (type.Equals("StatusPanel")) return new StatusPanel(); 
     if (type.Equals("StaticPanel")) return new StaticPanel(); 
     if (type.Equals("SimLog")) return new SimLogPanel(); 
@@ -284,8 +286,10 @@ namespace MFM
     if (type.Equals("T2TileLiveCheckbox")) return new T2TileLiveCheckbox(); 
     if (type.Equals("T2TileListenCheckbox")) return new T2TileListenCheckbox(); 
     if (type.Equals("T2SeedPhysicsButton")) return new T2SeedPhysicsButton(); 
+    if (type.Equals("T2DebugSetupButton")) return new T2DebugSetupButton(); 
     if (type.Equals("T2ClearTileButton")) return new T2ClearTileButton(); 
     if (type.Equals("QuitButton")) return new T2QuitButton(); 
+    if (type.Equals("CrashButton")) return new T2CrashButton(); 
     return 0;
   }
 

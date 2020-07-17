@@ -104,7 +104,7 @@ namespace MFM {
      *
      * \sa CanChomp
      */
-    virtual bool Chomp()
+    virtual bool Chomp(s32 toChomp = '\n')
     {
       FAIL(UNSUPPORTED_OPERATION);
     }

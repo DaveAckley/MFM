@@ -3,11 +3,19 @@
 namespace MFM {
 
   void printComma(u32 num, ByteSink & to) {
-    if (num > 1000) {
+    if (num >= 1000) {
       printComma(num/1000, to);
       to.Printf(",%03d", num%1000);
     } else
       to.Printf("%d", num);
+  }
+
+  void printComma(u64 num, ByteSink & to) {
+    if (num >= 1000) {
+      printComma(num/1000, to);
+      to.Printf(",%03d", (u32) (num%1000));
+    } else
+      to.Printf("%d", (u32) num);
   }
 
   bool readWholeFile(const char* path, ByteSink& to) {

@@ -17,12 +17,15 @@
 #include "T2PacketBuffer.h"
 #include "EWSet.h"
 #include "TimeoutAble.h"
+#include "Circuit.h"
 
 namespace MFM {
 
   struct T2Tile; // FORWARD
   struct T2ITC; // FORWARD
   struct T2EventWindow; // FORWARD
+  struct T2ActiveEventWindow; // FORWARD
+  struct T2PassiveEventWindow; // FORWARD
 
   ////BASE CLASS OF ALL T2EW STATE MACHINE HANDLER CLASSES
   struct T2EWStateOps {
@@ -30,8 +33,10 @@ namespace MFM {
     static T2EWStateArray mStateOpsArray;
 
     void resetEW(T2EventWindow *ew) ;
-    virtual void timeout(T2EventWindow & ew, T2PacketBuffer &pb, TimeQueue& tq) ;
-    virtual void receive(T2EventWindow & ew, T2PacketBuffer &pb, TimeQueue& tq) ;
+    virtual void timeout(T2ActiveEventWindow & ew, T2PacketBuffer &pb, TimeQueue& tq) ;
+    virtual void receive(T2ActiveEventWindow & ew, T2PacketBuffer &pb, TimeQueue& tq) ;
+    virtual void timeout(T2PassiveEventWindow & ew, T2PacketBuffer &pb, TimeQueue& tq) ;
+    virtual void receive(T2PassiveEventWindow & ew, T2PacketBuffer &pb, TimeQueue& tq) ;
     virtual const char * getStateName() const = 0;
     virtual const char * getStateDescription() const = 0;
     virtual bool isActive() const = 0;
@@ -43,14 +48,15 @@ namespace MFM {
 #define ALL_EW_STATES_MACRO()                               \
   /*   name  act custo cusrc stub desc */                   \
   XX(IDLE,    1,  0,    0,   0,  "idle active or passive")  \
-  XX(AINIT,   1,  1,    1,   0,  "initial active state")    \
-  XX(AWLOCKS, 1,  1,    1,   0,  "wait for locks")          \
-  XX(ADROP,   1,  1,    1,   0,  "finish NAKed event")      \
+  XX(AINIT,   1,  1,    0,   0,  "initial active state")    \
+  XX(AWLOCKS, 1,  1,    0,   0,  "wait for locks")          \
+  XX(ADROP,   1,  1,    0,   0,  "finish NAKed event")      \
   XX(ABEHAVE, 1,  1,    0,   0,  "execute behavior")        \
-  XX(ASCACHE, 1,  1,    1,   0,  "send cache updates")      \
+  XX(ASCACHE, 1,  1,    0,   0,  "send cache updates")      \
   XX(AWACKS,  1,  1,    0,   0,  "wait cache upd acks")     \
-  XX(ACOMMIT, 1,  1,    1,   1,  "apply local updates")     \
+  XX(ACOMMIT, 1,  1,    0,   1,  "apply local updates")     \
   XX(PINIT,   0,  0,    0,   1,  "initial passive state")   \
+  XX(PRESOLVE,0,  0,    0,   1,  "handling a RING")         \
   XX(PWCACHE, 0,  1,    1,   1,  "wait for cache updates")  \
   XX(PCOMMIT, 0,  1,    1,   1,  "apply remote updates")    \
 
@@ -67,12 +73,19 @@ namespace MFM {
 
 
   /*** DECLARE PER-STATE SUBCLASSES ***/
-#define YY0(FUNC) 
-#define YY1(FUNC) virtual void FUNC(T2EventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) ;
+  /*Doing YY CUS ACT expansion:
+   YY00 default passive, YY01 default active
+   YY10 custom  passive, YY11 custom active
+  */
+
+#define ZZ0() T2PassiveEventWindow
+#define ZZ1() T2ActiveEventWindow
+#define YY0(FUNC,ACT) 
+#define YY1(FUNC,ACT) virtual void FUNC(ZZ##ACT() & ew, T2PacketBuffer & pb, TimeQueue& tq) ;
 #define XX(NAME,ACT,CUSTO,CUSRC,STUB,DESC)                            \
   struct T2EWStateOps_##NAME : public T2EWStateOps {                  \
-    YY##CUSTO(timeout)                                                \
-    YY##CUSRC(receive)                                                \
+    YY##CUSTO(timeout,ACT)                                            \
+    YY##CUSRC(receive,ACT)                                            \
     virtual const char * getStateName() const { return #NAME; }       \
     virtual const char * getStateDescription() const { return DESC; } \
     virtual bool isActive() const { return ACT != 0; }                \
@@ -83,26 +96,30 @@ namespace MFM {
 #undef XX
 #undef YY1
 #undef YY0
-
-  struct CircuitInfo {
-    T2ITC * mITC;
-    CircuitNum mCircuitNum;
-    bool mLockAcquired;
-    s8 mMaxUnshippedSN;
-  };
+#undef ZZ1
+#undef ZZ0
 
   struct T2EventWindow : public EWLinks, public TimeoutAble {
+    virtual const T2ActiveEventWindow * asActiveEW() const { return 0; }
+    virtual const T2PassiveEventWindow * asPassiveEW() const { return 0; }
+
+    virtual void unbindCircuitsAsNeeded() = 0;
+
+    virtual T2ActiveEventWindow * asActiveEW() {
+      return const_cast<T2ActiveEventWindow*>(asActiveEW());
+    }
+    virtual T2PassiveEventWindow * asPassiveEW() { 
+      return const_cast<T2PassiveEventWindow*>(asPassiveEW());
+    }
+    bool isActiveEW() const { return asActiveEW() != 0; }
+    bool isPassiveEW() const { return asPassiveEW() != 0; }
+
     // TimeoutAble methods
     virtual void onTimeout(TimeQueue& srcTq) ;
 
     virtual const char * getName() const ;
 
     virtual T2EventWindow * asEventWindow() { return this; }
-
-    bool isInActiveState() const ;
-
-    const CircuitInfo* getPassiveCircuitInfoIfAny() const ;
-    const CircuitInfo& getPassiveCircuitInfo() const ;
 
     T2EventWindow(T2Tile& tile, EWSlotNum ewsn, const char * category) ;
 
@@ -113,9 +130,7 @@ namespace MFM {
 
     bool passiveWinsYoinkRace(const T2EventWindow & ew) const ;
 
-    bool executeEvent() ; // This is what we're here for.  true to commit results
     typedef std::set<T2EventWindow*> EWPtrSet;
-    bool resolveRacesFromPassive(EWPtrSet conflicts) ;
 
     void schedule(TimeQueue& tq, u32 now = 0) { // Schedule for now (or then)
       if (isOnTQ()) remove();
@@ -125,6 +140,7 @@ namespace MFM {
     T2Tile & getTile() { return mTile; }
     T2Tile & mTile;
     const EWSlotNum mSlotNum;
+    EWSlotNum getSlotNum() const { return mSlotNum; }
 
     const char * getCategory() const { return mCategory; }
 
@@ -132,7 +148,7 @@ namespace MFM {
     void setEWSN(EWStateNumber ewsn) ;
 
     /*    T2EventWindowStatus status() const { return mStatus; } */
-    EWSlotNum slotNum() const { return mSlotNum; }
+    /*use getSlotNum doh    EWSlotNum slotNum() const { return mSlotNum; } */
 
     void assignCenter(SPoint tileSite, u32 radius, bool activeNotPassive) ;
 
@@ -161,45 +177,27 @@ namespace MFM {
 #endif
     
     /*    void update() ; */
-    bool tryInitiateActiveEvent(UPoint center,u32 radius) ;
-    void initPassive(SPoint ctr, u32 radius, CircuitNum cn, T2ITC& itc) ;
-    bool trySendLockRequests() ;
-    bool checkSiteAvailability() ;
-    bool checkSiteAvailabilityForPassive() ;
-    bool checkCircuitAvailability() ;
+
+
     void hogEWSites() ;
     void unhogEWSites() ;
     void hogOrUnhogEWSites(T2EventWindow * ewOrNull) ;
     bool isHoggingSites() const { return mIsHoggingSites; }
-    bool trySendNAK() ; // From passiveEW
     
-    void registerWithITCIfNeeded(T2ITC & itc) ;
-    bool isRegisteredWithAnyITCs() ;
-    void handleACK(T2ITC & itc) ;
-    void handleHangUp(T2ITC & itc) ;
-    bool needsAnyLocks() ;
-    bool hasAnyLocks() ;
-    bool hasAllNeededLocks() ;
-    bool trySendCacheUpdates() ;
-    s32 trySendCacheUpdatePacket(CircuitInfo & ci) ;
-    void applyCacheUpdatesPacket(T2PacketBuffer & pb, T2ITC & itc) ;
     bool tryReadEWAtom(ByteSource & in, u32 & sn, OurT2AtomBitVector & bv) ;
-    void commitPassiveEWAndHangUp(T2ITC & itc) ;
-    void commitAndReleaseActive() ;
-    void dropActiveEW(bool dueToNAK) ;
 
     void initializeEW() ;
     void finalizeEW() ;
     void abortEW() ;
 
-  private:
-    char * mNameBuf32; //allocated so this can be const
-
-#define UNALLOCATED_CIRCUIT_NUM 0xff
-    CircuitInfo mCircuits[MAX_CIRCUITS_PER_EW];
-
-    void initAllCircuitInfo() ;
-    void initCircuitInfo(CircuitInfo & ci) ;
+  protected:
+    char * mNameBuf32; //allocated so getname() can be const
+    void _setEWSNRaw(EWStateNumber ewsn) {
+      mStateNum = ewsn;
+    }
+#if 0
+    void freeAllCircuits() ;
+#endif
     void captureLockSequenceNumber(T2ITC& itc) ;
     void clearLockSequenceNumbers() ;
     u32 getLockSequenceNumber(Dir6 dir6) ;
@@ -218,6 +216,78 @@ namespace MFM {
 
     /*    void setStatus(T2EventWindowStatus ews) { mStatus = ews; } */
     friend class EWSet;
+  };
+
+  struct T2ActiveEventWindow : public T2EventWindow {
+    virtual const T2ActiveEventWindow * asActiveEW() const { return this; }
+    virtual T2ActiveEventWindow * asActiveEW() { return this; }
+    virtual void unbindCircuitsAsNeeded() ;
+    virtual const char * getName() const ;
+
+    T2ActiveEventWindow(T2Tile& tile, EWSlotNum ewsn, const char * category) ;
+
+    const Circuit* getActiveCircuitIfAny(T2ITC& toITC) const ;
+
+    bool tryInitiateActiveEvent(UPoint center,u32 radius) ;
+
+    bool executeEvent() ; // This is what we're here for.  true to commit results
+
+    bool checkSiteAvailabilityForActive() ;
+
+    void commitAndReleaseActive() ;
+    void dropActiveEW(bool dueToNAK) ;
+
+    void handleAnswer(T2ITC & itc) ;
+    void handleHangUp(T2ITC & itc) ;
+    void handleBusy(T2ITC & itc) ;
+    bool hasAllNeededLocks() ;
+    bool needsAnyLocks() ;
+    bool hasAnyLocks() ;
+    void registerWithITCIfNeeded(T2ITC & itc) ;
+
+    void sendDropsExceptTo(T2ITC * notThisOne) ;
+    bool trySendCacheUpdates() ;
+    s32 trySendCacheUpdatePacket(Circuit & ci) ;
+    bool trySendLockRequests() ;
+
+    bool trySendDropVia(T2ITC & itc) ;
+
+    const Circuit * getActiveCircuitForITCIfAny(const T2ITC & itc) const ;
+
+    Circuit mActiveCircuits[CIRCUITS_PER_ACTIVE_EW];
+    u64 mActiveEventCountForAge;
+  };
+
+  struct T2PassiveEventWindow : public T2EventWindow {
+    virtual const T2PassiveEventWindow * asPassiveEW() const { return this; }
+    virtual T2PassiveEventWindow * asPassiveEW() { return this; }
+    virtual void unbindCircuitsAsNeeded() ;
+    virtual const char * getName() const ;
+
+    T2PassiveEventWindow(T2Tile& tile,
+                         EWSlotNum ewsn,
+                         const char * category,
+                         T2ITC & itc) ;
+
+    void initPassive(SPoint ctr, u32 radius, bool yoink) ;
+    bool checkSiteAvailabilityForPassive() ;
+    void commitPassiveEWAndHangUp() ;
+    void applyCacheUpdatesPacket(T2PacketBuffer & pb, T2ITC & itc) ;
+
+    void handleDrop(T2ITC& itc) ;
+
+    const Circuit& getPassiveCircuit() const { return mPassiveCircuit; }
+    Circuit& getPassiveCircuit() { return mPassiveCircuit; }
+
+    Circuit mPassiveCircuit;
+
+    bool resolveRacesFromPassive(EWPtrSet conflicts) ;
+
+    bool passiveWinsYoinkRace(const T2ActiveEventWindow & ew) const ;
+
+    bool trySendBusy() ;
+
+    void resetPassiveEW() ;
   };
 
   const char * getEWStateName(EWStateNumber sn) ;

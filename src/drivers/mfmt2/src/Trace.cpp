@@ -3,6 +3,8 @@
 #include "T2Tile.h"
 #include "T2ITC.h"
 #include "T2EventWindow.h"
+#include "Circuit.h"
+#include "T2Utils.h" /* for printComma */
                
 namespace MFM {
   ///// STATIC MEMBER DEFINITIONS
@@ -19,14 +21,17 @@ namespace MFM {
   TraceAddress::TraceAddress(const T2ITC & itc)
     : mAddrMode(TRACE_REC_MODE_ITCDIR6) , mArg1(itc.mDir6) , mArg2(itc.getITCSN()) { }
   TraceAddress::TraceAddress(const T2EventWindow & ew) {
-    if (ew.isInActiveState()) {
+    if (ew.isActiveEW()) {
       mAddrMode = TRACE_REC_MODE_EWACTIV;
-      mArg1 = ew.slotNum();
+      mArg1 = ew.getSlotNum();
       mArg2 = ew.getEWSN();
     } else {
-      mAddrMode = TRACE_REC_MODE_EWPASIV;
-      const CircuitInfo * ci = ew.getPassiveCircuitInfoIfAny();
-      mArg1 = ci ? ci->mITC->mDir6 : 0xff;
+      const T2PassiveEventWindow * pew = ew.asPassiveEW();
+      mAddrMode = pew ?
+        (TRACE_REC_MODE_EWPASIV_BASE +
+         pew->getPassiveCircuit().getITC().mDir6) :
+        TRACE_REC_MODE_EWPASIV_XX;
+      mArg1 = pew ? pew->getSlotNum() : 0xff;
       mArg2 = ew.getEWSN();
     }
   }
@@ -46,12 +51,18 @@ namespace MFM {
   const char * TraceAddress::getModeName() const {
     switch (mAddrMode) {
     default:
-    case TRACE_REC_MODE_ILLEGAL: return "illegal";
-    case TRACE_REC_MODE_T2TILE : return "t";
-    case TRACE_REC_MODE_ITCDIR6: return "i";
-    case TRACE_REC_MODE_EWACTIV: return "a";
-    case TRACE_REC_MODE_EWPASIV: return "p";
-    case TRACE_REC_MODE_LOG:     return "l";
+    case TRACE_REC_MODE_ILLEGAL:    return "illegal";
+    case TRACE_REC_MODE_T2TILE :    return "t";
+    case TRACE_REC_MODE_ITCDIR6:    return "i";
+    case TRACE_REC_MODE_EWACTIV:    return "a";
+    case TRACE_REC_MODE_EWPASIV_ET: return "pET";
+    case TRACE_REC_MODE_EWPASIV_SE: return "pSE";
+    case TRACE_REC_MODE_EWPASIV_SW: return "pSW";
+    case TRACE_REC_MODE_EWPASIV_WT: return "pWT";
+    case TRACE_REC_MODE_EWPASIV_NW: return "pNW";
+    case TRACE_REC_MODE_EWPASIV_NE: return "pNE";
+    case TRACE_REC_MODE_EWPASIV_XX: return "pXX";
+    case TRACE_REC_MODE_LOG:        return "l";
     }
   }
 
@@ -66,11 +77,14 @@ namespace MFM {
       bs.Printf(":%s",getITCStateName((ITCStateNumber) mArg2));
       break;
     case TRACE_REC_MODE_EWACTIV:
+    case TRACE_REC_MODE_EWPASIV_ET:
+    case TRACE_REC_MODE_EWPASIV_SE:
+    case TRACE_REC_MODE_EWPASIV_SW:
+    case TRACE_REC_MODE_EWPASIV_WT:
+    case TRACE_REC_MODE_EWPASIV_NW:
+    case TRACE_REC_MODE_EWPASIV_NE:
+    case TRACE_REC_MODE_EWPASIV_XX:
       bs.Printf("%02d",mArg1);
-      bs.Printf("-%s",getEWStateName((EWStateNumber) mArg2));
-      break;
-    case TRACE_REC_MODE_EWPASIV:
-      bs.Printf("%s",mArg1 == 0xff ? "_" : getDir6Name(mArg1));
       bs.Printf("-%s",getEWStateName((EWStateNumber) mArg2));
       break;
     case TRACE_REC_MODE_LOG:
@@ -114,13 +128,42 @@ namespace MFM {
       return;
     }
 
+    if (mTraceType == TTC_Tile_TraceFileMarker) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+      s32 syncTag = 0;
+      cbbs.Scanf("%l",&syncTag);
+      if (syncTag < 0)
+        bs.Printf(" File sync mark -?%08x\n", -syncTag);
+      else
+        bs.Printf(" File sync mark +?%08x\n", syncTag);
+      return;
+    }
+    
+    if (mTraceType == TTC_Tile_EventStatsSnapshot) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+      T2TileStats stats;
+      if (!stats.loadRaw(cbbs)) bs.Printf("??stats load failed");
+      else {
+        u32 secs = stats.getAgeSeconds();
+        bs.Printf(" sec=");
+        printComma(secs,bs);
+        bs.Printf("; tot=");
+        printComma(stats.getEventsConsidered(),bs);
+        bs.Printf("; emp=");
+        printComma(stats.getEmptyEventsCommitted(),bs);
+        bs.Printf("; occ=");
+        printComma(stats.getNonemptyEventsCommitted(),bs);
+        bs.Printf("; estAER=%f", stats.getEstAER());
+      }
+      bs.Printf("\n");
+      return;
+    } 
+
     if (mTraceType == TTC_Tile_Stop) {
       CharBufferByteSource cbbs = mData.AsByteSource();
-      u64 totalevents;
-      cbbs.Scanf("%q",&totalevents);
-      bs.Printf(" Total events completed = ");
-      bs.Print(totalevents);
+      bs.Printf(" TRACE STOP ");
       bs.Printf("\n");
+      
       return;
     } 
 
@@ -153,6 +196,20 @@ namespace MFM {
       return;
     } 
 
+    if (mTraceType == TTC_EW_CircuitStateChange) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+
+      u8 itcdir6, oldcs, newcs;
+      if (3 == cbbs.Scanf("%c%c%c",&itcdir6,&oldcs,&newcs))
+        bs.Printf("%s CS_%s -> CS_%s\n",
+                  itcdir6 == 0xff ? "--" : getDir6Name(itcdir6),
+                  getCircuitStateName((CircuitState) oldcs),
+                  getCircuitStateName((CircuitState) newcs)
+                  );
+      else bs.Printf("???");
+      return;
+    } 
+    
     if (mTraceType == TTC_Log_LogTrace) {
       CharBufferByteSource cbbs = mData.AsByteSource();
       bs.Printf("%<\n",&cbbs);
@@ -164,7 +221,7 @@ namespace MFM {
     else if (mTraceType == TTC_ITC_PacketOut) bs.Printf(">");
     else bs.Printf(" ");
       
-    T2Packet::reportPacketAnalysis(mData,bs);
+    reportPacketAnalysis(mData,bs);
     CharBufferByteSource cbbs = payloadRead();
     u32 plen = cbbs.GetLength();
     bs.Printf(" +%d",plen);
@@ -189,10 +246,12 @@ namespace MFM {
                 );
   }
 
-  Trace * TraceLogReader::read(struct timespec timeOffset) {
+  Trace * TraceLogReader::read(ByteSource& bs,
+                               struct timespec basetime,
+                               struct timespec timeoffset) {
     u8 byte1, byte2;
-    if (2 != mBS.Scanf("%c%c",
-                       &byte1, &byte2))
+    if (2 != bs.Scanf("%c%c",
+                      &byte1, &byte2))
       return 0;
 
     if (byte1 != TRACE_REC_START_BYTE1 ||
@@ -204,35 +263,32 @@ namespace MFM {
     }
 
     UniqueTime tmpTime;
-    if (!tmpTime.Scan(mBS)) {
+    if (!tmpTime.Scan(bs)) {
       return 0;
     }
     TraceAddress tmpAddr;
-    if (!tmpAddr.read(mBS)) {
+    if (!tmpAddr.read(bs)) {
       return 0;
     }
     
     u32 traceType;
     u8 plen;
 
-    if (2 != mBS.Scanf("%c%c",
-                       &traceType,
-                       &plen))
+    if (2 != bs.Scanf("%c%c",
+                      &traceType,
+                      &plen))
       return 0;
     OString256 tmpData;
     for (u32 i = 0; i < plen; ++i) {
-      s32 ch = mBS.Read();
+      s32 ch = bs.Read();
       if (ch < 0) return 0;
       tmpData.WriteByte((u8) ch);
     }
 
-    if (!mHaveFirst) {
-      mFirstTimespec = tmpTime.getTimespec();
-      mHaveFirst = true;
-    }
     UniqueTime reltime(tmpTime
-                       - UniqueTime(mFirstTimespec,0)
-                       + UniqueTime(timeOffset,0));
+                       - UniqueTime(basetime,0)
+                       + UniqueTime(timeoffset, 0));
+                       
     Trace * ret = new Trace(traceType, reltime);
     ret->setTraceAddress(tmpAddr);
 
@@ -249,22 +305,28 @@ namespace MFM {
 
   bool Trace::reportSyncIfAny(s32 & store) const {
     // CURRENTLY THERE'S SYNC IN THE FOLLOWING PLACES:
-    // POU T2ITC SHUT
-    // PIN T2ITC DRAIN
-    // POU T2ITC OPEN
-    // PIN T2ITC OPEN
-
+    // - All TFM traces
+    // - POU/PIN T2ITC if byte1 is xitcByte1(XITC_ITC_CMD,SNUM)
+    //   with SNUM == ITCSN_SHUT or ITCSN_OPEN
+    //   FOR WHICH SEE ALSO T2PacketBuffer.cpp: asTagSync
     TraceAddress addr = getTraceAddress();
-    if (addr.getMode() != TRACE_REC_MODE_ITCDIR6) return false;
     u8 tt = mTraceType;
-    u8 itcState = addr.getITCState();
-    bool stdSync = false;
-    if (false) { }
-    else if (tt == TTC_ITC_PacketOut  && itcState == ITCSN_SHUT) stdSync = true;
-    else if (tt == TTC_ITC_PacketIn   && itcState == ITCSN_DRAIN) stdSync = true;
-    else if (tt == TTC_ITC_PacketOut  && itcState == ITCSN_OPEN) stdSync = true;
-    else if (tt == TTC_ITC_PacketIn   && itcState == ITCSN_OPEN) stdSync = true;
-    if (!stdSync) return false;
+    if (addr.getMode() == TRACE_REC_MODE_T2TILE &&
+        tt == TTC_Tile_TraceFileMarker) {
+      CharBufferByteSource cbbs = mData.AsByteSource();
+      s32 tag;
+      if (1 != cbbs.Scanf("%l", &tag)) return false;
+      if (tag == 0) return false; //??
+      store = tag; // tag is already signed in mData
+      return true;
+    }
+
+    if (addr.getMode() != TRACE_REC_MODE_ITCDIR6) return false;
+    if (tt != TTC_ITC_PacketOut && tt != TTC_ITC_PacketIn) return false;
+    u8 sn;
+    if (!asITC(mData,&sn)) return false;
+    if (sn != ITCSN_SHUT && sn != ITCSN_OPEN) return false;
+
     CharBufferByteSource cbbs = mData.AsByteSource();
     s32 tag;
     if (3 != cbbs.Scanf("%c%c%l", 0, 0, &tag)) return false;

@@ -379,6 +379,14 @@ namespace MFM {
       return Get00Tile().GetElementTable().Lookup(symbol);
     }
 
+    Element<EC> * LookupElementFromSymbol(const u8 * symbol) 
+    {
+      // Safe. But, barf.
+      return
+        const_cast<Element<EC> *>(static_cast<const Grid<GC>*>(this)->LookupElementFromSymbol(symbol));
+    }
+
+
     ElementRegistry<EC>& GetElementRegistry()
     {
       return m_er;

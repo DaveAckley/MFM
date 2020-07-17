@@ -54,6 +54,60 @@ namespace MFM {
     }
   }
 
+    static const Rect makeBorderDitRect(Dir6 dir6) {
+    Rect ret;
+    u32 ditWid = 2*T2_DISPLAY_DIT_PER_PIX;
+    switch (dir6) {
+    default: LOG.Error("%s Illegal dir6 %d", __PRETTY_FUNCTION__, dir6); //break;
+    case DIR6_ET:
+      ret.SetPosition(SPoint(T2_SITE_TO_DIT_X*T2TILE_OWNED_WIDTH-ditWid/2,0));
+      ret.SetSize(UPoint(ditWid,T2_SITE_TO_DIT_H*T2TILE_OWNED_HEIGHT));
+      break;
+    case DIR6_SE:
+      ret.SetPosition(SPoint(T2_SITE_TO_DIT_X*T2TILE_OWNED_WIDTH/2,
+                             T2_SITE_TO_DIT_Y*T2TILE_OWNED_HEIGHT-ditWid/2));
+      ret.SetSize(UPoint(T2_SITE_TO_DIT_W*T2TILE_OWNED_WIDTH/2,ditWid));
+      break;
+    case DIR6_SW:
+      ret.SetPosition(SPoint(0,
+                             T2_SITE_TO_DIT_Y*T2TILE_OWNED_HEIGHT-ditWid/2));
+      ret.SetSize(UPoint(T2_SITE_TO_DIT_W*T2TILE_OWNED_WIDTH/2,ditWid));
+      break;
+    case DIR6_WT:
+      ret.SetPosition(SPoint(0,0));
+      ret.SetSize(UPoint(ditWid,T2_SITE_TO_DIT_H*T2TILE_OWNED_HEIGHT));
+      break;
+    case DIR6_NW:
+      ret.SetPosition(SPoint(0,0));
+      ret.SetSize(UPoint(T2_SITE_TO_DIT_W*T2TILE_OWNED_WIDTH/2,ditWid));
+      break;
+    case DIR6_NE:
+      ret.SetPosition(SPoint(T2_SITE_TO_DIT_X*T2TILE_OWNED_WIDTH/2,0));
+      ret.SetSize(UPoint(T2_SITE_TO_DIT_W*T2TILE_OWNED_WIDTH/2,ditWid));
+      break;
+
+    }
+    return ret;
+  }
+
+  void T2GridPanel::PaintBorder(Drawing & drawing)
+  {
+    T2Tile & tile = T2Tile::get();
+    KITCPoller & kitc = tile.getKITCPoller();
+    for (Dir6 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
+      const Rect borderDitRect = makeBorderDitRect(dir6);
+      T2ITC & itc = tile.getITC(dir6);
+      u32 kitcEnabled = kitc.getKITCEnabledStatus(mapDir6ToDir8(dir6));
+      ITCStateNumber sn = itc.getITCSN();
+      u32 color = Drawing::WHITE;
+      if (kitcEnabled == 0) color= Drawing::RED;
+      else if (kitcEnabled == 1) color = Drawing::ORANGE;
+      else if (sn==ITCSN_SHUT) color = Drawing::YELLOW;
+      else if (sn==ITCSN_OPEN) color = Drawing::BLACK; // Don't draw
+      drawing.FillRectDit(borderDitRect, color);
+    }
+  }
+
   void T2GridPanel::PaintComponent(Drawing & config) {
     this->Panel::PaintComponent(config);
     T2Tile & tile = T2Tile::get();
@@ -66,10 +120,12 @@ namespace MFM {
       LOG.Warning("Paint failed at (%d,%d); grid render incomplete", i, j);
     },{
       for (u32 i = CACHE_LINES; i < T2TILE_WIDTH-CACHE_LINES; ++i)
-        for (u32 j = CACHE_LINES; j < T2TILE_HEIGHT-CACHE_LINES; ++j) 
-          paintSite(config,sites.get(UPoint(i,j)),
+        for (u32 j = CACHE_LINES; j < T2TILE_HEIGHT-CACHE_LINES; ++j) {
+          OurT2Site & site = sites.get(UPoint(i,j));
+          paintSite(config,site,
                     i-CACHE_LINES,
                     j-CACHE_LINES);
+        }
     });
   }
 }

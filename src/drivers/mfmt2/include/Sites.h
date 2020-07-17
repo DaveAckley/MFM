@@ -16,6 +16,11 @@ namespace MFM {
       return mTheSites[at.GetX()][at.GetY()];
     }
 
+    const OurT2Site& get(UPoint at) const {
+      MFM_API_ASSERT_ARG(at.BoundedAbove(UPoint(T2TILE_WIDTH-1,T2TILE_HEIGHT-1)));
+      return mTheSites[at.GetX()][at.GetY()];
+    }
+
     Sites() ;
 
   private:

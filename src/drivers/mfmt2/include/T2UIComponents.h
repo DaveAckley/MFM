@@ -29,10 +29,7 @@ namespace MFM {
     virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod) {
       return false;
     }
-    virtual bool ExecuteFunction(u32 keysym, u32 mods) {
-      OnClick(SDL_BUTTON_LEFT);
-      return true;
-    }
+    virtual bool ExecuteFunction(u32 keysym, u32 mods) ;
 
     // T2UIButton methods
     virtual void onClick() = 0;
@@ -42,11 +39,19 @@ namespace MFM {
     virtual void onClick() ;
   };
 
+  struct T2DebugSetupButton : public T2UIButton {
+    virtual void onClick() ;
+  };
+
   struct T2ClearTileButton : public T2UIButton {
     virtual void onClick() ;
   };
 
   struct T2QuitButton : public T2UIButton {
+    virtual void onClick() ;
+  };
+
+  struct T2CrashButton : public T2UIButton {
     virtual void onClick() ;
   };
 
