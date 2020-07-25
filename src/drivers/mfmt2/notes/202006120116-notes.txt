@@ -1,4 +1,4 @@
-{322}  -*- text -*-
+{326}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -5862,3 +5862,29 @@ we haven't yet locked up or crashed..  Just sayin.)
 :320]
 
 :319]
+[322:
+
+Sat Jul 25 03:34:49 2020 Well here we are again finally, after
+ALIFE2020 and t2sup and waffling and fidgeting because coming back
+and working on this stuff is so painful![323:
+
+Sat Jul 25 03:41:47 2020 Adding a 'Boot' reboot button and an 'Off'
+poweroff button[324:
+
+Sat Jul 25 04:11:08 2020 OK, trying the reboot button..
+[325:
+
+Sat Jul 25 04:15:24 2020 Seemed to work okay.  Might be nice to try to
+shut the engine down rather than 'just go', but ..  not now.  Got too
+many fish to fry.
+
+Committing this stuff.
+
+Then let's have a status check and round of to-do construction..
+
+:325]
+:324]
+
+:323]
+
+:322]
