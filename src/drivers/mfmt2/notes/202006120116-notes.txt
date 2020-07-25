@@ -1,4 +1,4 @@
-{326}  -*- text -*-
+{343}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -5888,3 +5888,253 @@ Then let's have a status check and round of to-do construction..
 :323]
 
 :322]
+[326:
+
+Sat Jul 25 13:17:41 2020 OK, a few developments (plus some sleep):
+
+ - I was freaking here because my :322:+ changes to this notes file
+   had vanished and I couldn't get them back, even though they were
+   clearly in the repo on github.
+
+   = DIAGNOSIS: cdm.pl had gotten around to overwritting /home/t2/MFM
+     with the official cdm-MFM.mfz file it found in /cdm/common
+
+   = SOLUTION: I think, just need to be careful to have an up-to-date
+     tag file (specifically, ~/cdmd-MFM.mfz-cdm-install-tag.dat, which
+     currently contains (and needs to) 1594052102.
+
+ - I lucked out and caught a tile having the kernel panic while I was
+   connected to its serial port, and minicom had enough scrollback for
+   me to see this:
+
+    [ 2065.384380] Empty pkt? OB kfifolen = -1 but pktlen = 0 (kfifo a27e561)
+    [ 2065.401594] ------------[ cut here ]------------
+    [ 2065.406268] kernel BUG at /home/t2/T2-12/pru/itcio/module/itcpkt.c:28!
+
+  which was enough to begin localizing the issue.  It's in
+  itcOBPktThreadRunner (AKA 'ITC_PktShipr')
+   -> shipCurrentOBPackets
+    -> shipAPacketToPRU
+     -> sendPacketViaRPMsg
+
+  = DIAGNOSIS: Incomplete, but the 'kfifolen = -1' is the proximal
+    problem.  That 'should be impossible'.  By looking at the kfifo
+    source:
+
+        #define kfifo_len(fifo) \
+        ({ \
+                typeof((fifo) + 1) __tmpl = (fifo); \
+                __tmpl->kfifo.in - __tmpl->kfifo.out; \
+        })
+
+    it suggests that kfifo.out has passed kfifo.in, which we presume
+    means we overflowed that kfifo sometime previously.  Where, we
+    don't yet know, but we now have something specific to look for, in
+    the outbound packet workflow.
+
+  = SOLUTION: Pending complete diagnosis.
+[331:
+
+Sat Jul 25 14:39:40 2020 So, shipAPacketToPRU has two calls on
+sendPacketViaRPMsg, and we don't know which call lead to the panic.  I
+want to think it's mPriorityOB, but we did think we saw cdm's moving
+too.
+
+[332:
+
+Sat Jul 25 14:45:36 2020 Currently we see:
+
+    root@beaglebone:~# cat /sys/class/itc_pkt/statistics 
+    dir psan sfan toan mfmbsent mfmbrcvd mfmpsent mfmprcvd svcbsent svcbrcvd svcpsent svcprcvd
+    0 0 0 0 0 0 0 0 0 0 0 0
+    1 1 0 0 7487 300272 791 2284 62192 84331 1156 1542
+    2 1 0 0 6849 326451 744 2243 60393 86422 1124 1586
+    3 1 0 0 9680 0 4840 0 212 0 53 0
+    4 0 0 0 0 0 0 0 0 0 0 0
+    5 1 0 0 9400 274740 752 2146 62945 120672 1166 2185
+    6 1 0 0 9652 313571 765 2171 61005 87459 1126 1598
+    7 1 0 0 4138 59726 522 999 61753 101296 1141 1849
+    root@beaglebone:~# 
+
+so there is service traffic moving, in the 10KB-100KB range, in
+addition to mfm traffic.
+
+But come on, let's just take a quick look at writers to mPriorityOB.
+The fact that we're seeing 'kfifolen = -1' suggests a genuine
+off-by-one problem could be it..[333:
+
+Sat Jul 25 14:55:03 2020 So, in trySendMFMRoutedKernelPacket we have:
+
+      if (kfifo_avail(&ipb->mFIFO) < count) return -EAGAIN; /* Never block */
+      ret = kfifo_in(&ipb->mFIFO, pkt, count); /*0 on no room else count*/
+
+      wakeOBPktShipper(); /* if we got this far, kick the linux->pru thread */
+
+      return ret ? ret : -ENOSPC;
+
+and I note a couple things:
+
+ - It could be 'if (kfifo_avail(&ipb->mFIFO) <= count)' if we wanted
+   to be safer, and
+
+ - We go to wakeOBPktShipper without checking if ret is zero
+[334:
+
+Sat Jul 25 15:14:51 2020 So looking at __kfifo_in_r, it makes me think
+that it's up to us -- caller -- to take the packet-length-overhead
+into consideration when we're checking if there's enough room to
+insert a packet.
+
+It says:
+
+	if (len + recsize > kfifo_unused(fifo))
+		return 0;
+
+	__kfifo_poke_n(fifo, len, recsize);
+
+	kfifo_copy_in(fifo, buf, len, fifo->in + recsize);
+	fifo->in += len + recsize;
+	return len;
+
+(and recsize == 1 for our case).  We say
+
+  if (kfifo_avail(&ipb->mFIFO) < count) return -EAGAIN; /* Never block */
+
+where count is just exactly our packet length, not our packet length
+plus one.
+
+What's the difference between kfifo_avail and kfifo_unused?
+[335:
+
+Sat Jul 25 15:20:38 2020 Well, we see
+
+    static inline unsigned int kfifo_unused(struct __kfifo *fifo)
+    {
+            return (fifo->mask + 1) - (fifo->in - fifo->out);
+    }
+
+and
+
+    #define	kfifo_avail(fifo) \
+    __kfifo_uint_must_check_helper( \
+    ({ \
+            typeof((fifo) + 1) __tmpq = (fifo); \
+            const size_t __recsize = sizeof(*__tmpq->rectype); \
+            unsigned int __avail = kfifo_size(__tmpq) - kfifo_len(__tmpq); \
+            (__recsize) ? ((__avail <= __recsize) ? 0 : \
+            __kfifo_max_r(__avail - __recsize, __recsize)) : \
+            __avail; \
+    }) \
+    )
+
+And I do not want to try unpacking that foggen kfifo_avail.
+
+[336:
+
+Sat Jul 25 15:30:17 2020 Let's just examine our kfifo_ins and such
+with an eye towards thinking we always need one more byte than the
+length of our packet, and see what we find.[337:
+
+Sat Jul 25 15:37:16 2020 (Need to remember mEvent is a fixed-size u32
+kfifo -- it does not have the record-length overhead.)
+
+:337]
+
+:336]
+
+:335]
+
+:334]
+
+:333]
+
+:332]
+
+:331]
+:326]
+[327:
+
+Sat Jul 25 13:46:44 2020 And watch out!  /home/t2/T2-12 (sometime
+quite recently) got overwritten by our industrious cdm.  Need to git
+clone a new tree there too..
+
+[328:
+
+Sat Jul 25 13:48:51 2020 Could we have 'make cdmd' automatically
+update the relevant tag file(s) to protect the repos we're working in?
+
+:328]
+
+:327]
+[329:
+
+Sat Jul 25 13:50:00 2020 Ooh I bet we need to be careful about not
+updating packages, with a brand-new cloned T2-12 repo.[330:
+
+Sat Jul 25 14:13:05 2020 So it looks like 'make cdmd' excludes .git
+files, so could we perhaps have cdm.pl choose not to overwrite dest
+dirs if a .git/ exists in the destination?  Or is that too implicit?
+
+:330]
+
+:329]
+[338:
+
+Sat Jul 25 15:38:42 2020 Woah, just saw an engine failure out of the
+blue on this very tile!  But it involved packet problems the LKM saw:
+
+    Jul 25 15:17:01 beaglebone CRON[3559]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+    Jul 25 15:37:26 beaglebone kernel: [ 8470.846038] (WT) Packet overrun reported on size 229 packet
+    Jul 25 15:37:26 beaglebone kernel: [ 8470.851745] (WT) Packet error reported on size 229 packet
+    Jul 25 15:37:26 beaglebone kernel: [ 8470.905538] (WT) Packet overrun reported on size 229 packet
+    Jul 25 15:37:26 beaglebone kernel: [ 8470.911233] (WT) Packet error reported on size 229 packet
+    Jul 25 15:37:26 beaglebone mfm.sh[1679]: Failed out of top-level
+    Jul 25 15:37:26 beaglebone kernel: [ 8470.954248] (WT) Packet overrun reported on size 229 packet
+    Jul 25 15:37:26 beaglebone kernel: [ 8470.959921] (WT) Packet error reported on size 229 packet
+    Jul 25 15:37:29 beaglebone mfm.sh[1679]: src/ITCIterator.cpp:11: FAILED: ILLEGAL_STATE
+    Jul 25 15:37:29 beaglebone mfm.sh[1679]: Failed out of main
+[341:
+
+Sat Jul 25 15:52:40 2020 Now I'm a little confused how we get a packet
+overrun on a packet that's much less that 255 bytes long..  Wondering
+if it could possibly be confusion from the kfifo len problems we're
+currently investigating.
+
+:341]
+Unfortunately we don't get the failure itself logged.  Why do we see
+the useless src/ITCIterator.cpp:11 failure -- coming from attempting
+to close the ITCs under stress -- but we don't see whatever lead to
+failing out of top level?  Something different between the two
+unwind_protects? [339:
+
+Sat Jul 25 15:48:19 2020 I guess it's the earlier one doesn't have this:
+
+      MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
+
+but why doesn't it?
+[340:
+
+Sat Jul 25 15:52:13 2020 Well now it does.  We'll see.
+
+:340]
+:339]
+
+:338]
+[342:
+
+Sat Jul 25 16:18:44 2020 OK, about time to go start dinner, but: We
+just finished going through all hits for 'kfifo_' in
+pru/itcio/module/*.[ch], and indeed we made a few changes like:
+
+    -  if (kfifo_avail(&ipb->mFIFO) < count) return -EAGAIN; /* Never block */
+    +  if (kfifo_avail(&ipb->mFIFO) < count + 1) /* Need +1 for packet length byte in fifo */
+    +    return -EAGAIN; /* Never block */
+
+and
+
+    -    while (kfifo_avail(&ipb->mFIFO) < count) {
+    +    while (kfifo_avail(&ipb->mFIFO) < count + 1) { /*Need +1 for packet length byte in kfifo */
+
+Going to commit it defensively at least.
+
+:342]
