@@ -69,4 +69,16 @@ namespace MFM {
     exit(1); /* 'crash' */
   }
 
+  void T2OffButton::onClick() {
+    TLOG(MSG,"Off button clicked");
+    T2Tile::get().stopTracing();
+    system("poweroff");
+  }
+
+  void T2BootButton::onClick() {
+    TLOG(MSG,"Boot button clicked");
+    T2Tile::get().stopTracing();
+    system("reboot");
+  }
+
 }

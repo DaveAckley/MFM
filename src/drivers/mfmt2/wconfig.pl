@@ -162,6 +162,11 @@ $AUTOGEN_STAMP
     font=2
     elevatorwidth=0
     fontheightadjust=-4
+[T2Info_Off_Button OffButton T2Viz `bfs6x6(4,0,4,0)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=4
+    text="Off"
 [T2Info_Quit_Button QuitButton T2Viz `bfs6x6(3,0,3,0)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
@@ -172,6 +177,11 @@ $AUTOGEN_STAMP
     enabledfg=$MENUITEMFG
     font=4
     text="Crash"
+[T2Info_Boot_Button BootButton T2Viz `bfs6x6(1,0,1,0)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=4
+    text="Boot"
 #[Sub1 Label T2Viz 120 50 220 40]
 #    bgcolor=#00ff00
 #    fgcolor=#ff0000
