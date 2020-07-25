@@ -87,9 +87,15 @@ namespace MFM {
           line = 0;
         }
 
+        // Get the failure into the log file
+        MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
         fprintf(stderr,"Failed out of top-level\n");
+
+        // And get it into the trace file
         tile.tlog(Trace(tile,TTC_Tile_TopLevelFailure,"%s:%d: %s [%d]",
                         file, line, msg ? msg : "", code));
+
+        // Aand spam it out on the screen
         tile.showFail((const char *) file, line, msg);
         exit(99);
       },{
