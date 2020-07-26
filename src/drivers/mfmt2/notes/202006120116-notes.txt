@@ -1,4 +1,4 @@
-{343}  -*- text -*-
+{351}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -6138,3 +6138,104 @@ and
 Going to commit it defensively at least.
 
 :342]
+[343:
+
+Sun Jul 26 00:11:25 2020 Well, let's see if we can get a cdmd
+production flow that preserves our work tile repos but lets the
+updates get out into our mini grid, here.
+
+How do we think that could work?
+
+ - Where does the cdm install tag value come from?[344:
+
+Sun Jul 26 00:24:29 2020 Apparently it's the 'inner timestamp' from
+the cdmd itself.  And that's defined when the cdmd is created: Maybe
+we could do this in Makefiles.[345:
+
+Sun Jul 26 00:47:10 2020 So 'checkMFZDataFor' in cdm.pl seems to be
+parsing out the innerTimestamp.
+
+:345]
+
+:344]
+
+ - Could we make a special cdmctl function that sets up the tag
+   without installing the file locally?[346:
+
+Sun Jul 26 00:50:28 2020 OK, so this command seems pretty key:
+
+    t2@beaglebone:~$ /home/t2/MFM/bin/mfzrun -kd /cdm /cdm/common/cdmd-MFM.mfz VERIFY
+    SIGNATURE_CHECK [OK]
+    INNER_CHECKSUM [413536-cd1e-0e467d]
+    INNER_TIMESTAMP [1594073702]
+    SIGNING_HANDLE [t2-keymaster-release-10]
+    HANDLE_FINGERPRINT [85ee-b41-7cb3]
+    HANDLE_PUBKEY [-----BEGIN RSA PUBLIC KEY-----
+    MIGJAoGBAMUbUl/GDrkKYB3ORkeetZEkKisfgiwl6TgoqAB7dfK1gGN3bzDyz/+A
+    LisTyW0b+64ePqv1liBxJEBOd2eX9+hTnngasOrb8RIQN6vTPg6+3WGAmgtez3kg
+    5KSeBLlgMaEbKkeOXZU+pbAaUzL6EGr/O/ESdTE6Lh6azq2DR3P7AgMBAAE=
+    -----END RSA PUBLIC KEY-----
+    ]
+    t2@beaglebone:~$ 
+
+[347:
+
+Sun Jul 26 00:52:11 2020 Although in that context this is a little
+distressing:
+
+    t2@beaglebone:~$ cat cdmd-MFM.mfz-cdm-install-tag.dat 
+    1594052102
+    t2@beaglebone:~$ 
+
+[348:
+
+Sun Jul 26 00:55:03 2020 Eeew, look:
+
+    t2@beaglebone:~$ perl -e 'printf("%f\n",1594073702-1594052102)'
+    21600.000000
+    t2@beaglebone:~$ perl -e 'printf("%f\n",(1594073702-1594052102)/60.0/60.0)'
+    6.000000
+    t2@beaglebone:~$ 
+
+The install tag time is _exactly_ six hours earlier than the mfzrun
+inner timestamp, which is _exactly_ the GMT to Mountain Time offset.
+
+So we _think_ this disgusting hack in cdm.pl --
+
+    #### REPLACE THIS WITH 'mfzrun VERIFY' ONCE AVAILABLE
+ ..
+    my $strp = DateTime::Format::Strptime->new(
+        pattern   => '%a %b %e %H:%M:%S %Y',
+        );
+    my $dt = $strp->parse_datetime( $timestamp );
+    my $epoch = $dt->strftime("%s");
+ ..
+
+is giving us local time, which ends up in the tag?
+
+[349:
+
+Sun Jul 26 03:08:24 2020 OK, so we've made an attempt at switching to
+'mfzrun VERIFY', which we think would solve the timezone screwup..
+We've committed and pushed on T2-12 in case cdm tries to reinstall
+over our repos again.  But we think if all this untested code is
+plausible, we ought to be able to do VERIFY on the existing cdmds, and
+copy the inner timestamp to the tag files, and cdm ought to leave us
+alone.
+
+OUGHT TO LEAVE US ALONE.
+
+[350:
+
+Sun Jul 26 03:32:53 2020 Committing these notes.
+
+:350]
+
+:349]
+
+:348]
+
+:347]
+:346]
+
+:343]
