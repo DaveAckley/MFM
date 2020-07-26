@@ -1,4 +1,4 @@
-{351}  -*- text -*-
+{367}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -6239,3 +6239,204 @@ Sun Jul 26 03:32:53 2020 Committing these notes.
 :346]
 
 :343]
+[351:
+
+Sun Jul 26 03:51:06 2020 Well, had a bug or two in the new code, but
+it appears manually updating the tag files did indeed save our
+repos..
+
+Now, what is supposed to be the workflow for releasing a new cdmd?
+And how shall we modify it to Save The Repos (TM)?[352:
+
+Sun Jul 26 04:08:17 2020 Well, T2-12/apps/cdm/cdmctl appears not to be
+involved.  So far it's all about deletions:
+
+my %cmds = (
+    "help" => \&doHelp,
+    "delete" => \&doDelete,
+    "listdeleted" => \&doListDeleted,
+    "initmap" => \&doInitMap,
+    );
+
+So do we just stick a new cdmd in common and let cdm.pl sniff it up?
+
+Let's make up a procedure and try it for T2-12.  That's the one we'd
+like to push the most right now, and it's a LOT smaller than the
+absurd MFM one..
+
+[353:
+
+
+Sun Jul 26 04:10:42 2020
+
+HOW TO RELEASE cdmd-T2-12.mfz:
+
+(0) Be on the keymaster
+
+(1) Get /home/t2/T2-12 exactly the way you want it, and make sure
+    everything is committed and pushed and the tree is clean
+
+(2) Do
+      # cd /home/t2/T2-12
+      # make cdmd
+    and check it seems to've worked properly
+
+(3) On a connected machine, perhaps do
+      $ cd /data/ackley/PART4/hardware/T2-Tile-Project/CDM-TGZS-BACKUP
+      $ ./scripts/T2PullCode IP.OF.KEY.MASTER
+    and see if the cdmd just made arrives in
+    /data/ackley/PART4/hardware/T2-Tile-Project/CDM-TGZS-BACKUP/CDMSAVE/CDMDS/ 
+    [355: Sun Jul 26 04:45:56 2020 E.g., can do:
+
+        .../hardware/T2-Tile-Project/CDM-TGZS-BACKUP$ /data/ackley/PART4/code/D/MFM/bin/mfzrun CDMSAVE/CDMDS/cdmd-T2-12.mfz VERIFY
+        SIGNATURE_CHECK [OK]
+        INNER_CHECKSUM [3b2dfe-b23f-60ed9f]
+        INNER_TIMESTAMP [1595760220]
+        SIGNING_HANDLE [t2-keymaster-release-10]
+        HANDLE_FINGERPRINT [85ee-b41-7cb3]
+        HANDLE_PUBKEY [-----BEGIN RSA PUBLIC KEY-----
+        MIGJAoGBAMUbUl/GDrkKYB3ORkeetZEkKisfgiwl6TgoqAB7dfK1gGN3bzDyz/+A
+        LisTyW0b+64ePqv1liBxJEBOd2eX9+hTnngasOrb8RIQN6vTPg6+3WGAmgtez3kg
+        5KSeBLlgMaEbKkeOXZU+pbAaUzL6EGr/O/ESdTE6Lh6azq2DR3P7AgMBAAE=
+        -----END RSA PUBLIC KEY-----
+        ]
+        .../hardware/T2-Tile-Project/CDM-TGZS-BACKUP$ 
+
+    :355]
+
+(4) Do
+      $ /home/t2/MFM/bin/mfzrun -kd /cdm ~/cdmd-T2-12.mfz VERIFY
+    and find the inner timestamp, like 'INNER_TIMESTAMP [1594073702]'
+
+(5) Stuff it into the tag file, like
+      $ echo 1594073702 > ~/cdmd-T2-12.mfz-cdm-install-tag.dat
+
+(6) If all looks okay, 'release' by copying to /cdm/common:
+
+      # cp /home/t2/cdmd-T2-12.mfz /cdm/common
+
+    and watch syslog, or wherever you have cdm.pl reporting, to see
+    if/when it picks up the modtime change on the file.
+
+(7) Observe cautiously until something like
+
+        INSTALL T2-12: We are up to date; nothing to do
+
+    occurs.
+    [356: Sun Jul 26 04:48:55 2020 E.g, whammo!
+
+        root@beaglebone:/home/t2/T2-12# cp /home/t2/cdmd-T2-12.mfz /cdm/common
+        root@beaglebone:/home/t2/T2-12# MODTIME CHANGE /cdm/common/cdmd-T2-12.mfz size 2598477
+         /cdm/common/cdmd-T2-12.mfz: t2-keymaster-release-10 => 1595760220
+        Assigning seqno 5 for cdmd-T2-12.mfz
+        INSTALL found candidate T2-12 -> /home/t2
+        INSTALL T2-12: We are up to date; nothing to do
+        ANNOUNCED cdmd-T2-12.mfz to 4
+        To NW Starting to send cdmd-T2-12.mfz (1595760220:c69fa22015)
+        To SW Starting to send cdmd-T2-12.mfz (1595760220:c69fa22015)
+        To SE Starting to send cdmd-T2-12.mfz (1595760220:c69fa22015)
+
+  :356]
+
+[354:
+
+Sun Jul 26 04:40:38 2020 Well okay, trying :353:, we shall see.[357:
+
+Sun Jul 26 04:49:38 2020 
+
+:357]
+
+:354]
+
+:353]
+
+:352]
+
+:351]
+[358:
+
+Sun Jul 26 04:54:06 2020 Well, so I wonder if we can shrink
+cdmd-MFM.mfz a bit.  At the moment it's 28 FOGGEN MEG and takes hours
+to propagate one hop.
+
+:358]
+[359:
+
+Sun Jul 26 06:00:37 2020 Well so I've been watching cdmd-T2-12.mfz
+propagate on a few tiles.  Two observations:
+
+ - cdmd-T2-12.mfz gets installed twice on every destination!  The
+   first time it gets installed, it's the old cdm.pl running, which
+   uses the localtime for the tag file.  Then cdm.pl restarts
+   automatically, and the new cdm.pl assumes the tag file is GMT (as
+   it should), and observes the tag file is (precisely six hours)
+   obsolete, and it installs again.  And then it restarts again, and
+   then things are stable.
+
+ - The tile does not reboot automatically, so although the new LKM is
+   built, it doesn't actually take effect without a manual
+   intervention of some kind.  What do we think about that?  Rebooting
+   automatically is scary.
+
+:359]
+[360:
+
+Sun Jul 26 06:07:06 2020 Poking around in cdmd-MFM.mfz, it looks like
+I could save seven meg just by getting rid of
+
+ -rw-r--r--       0/0       7282674 MFM/res/images/mfms-icons-ZSHEET-orig.png
+ 
+Is anybody even looking at that?
+[361:
+
+Sun Jul 26 06:17:41 2020 Well, I git rm'd it.  We shall see.  Trying
+
+    /home/t2/MFM# make cdmd
+
+after doing a 'make clean' (not realclean).  [362:
+
+Sun Jul 26 06:18:51 2020 Result:
+
+  -rw-r--r--  1 root root 15421782 Jul 26 06:18 cdmd-MFM.mfz
+  -rw-r--r--  1 root root 15549495 Jul 26 06:17 MFM-built.tgz
+  -rw-r--r--  1 t2   t2         11 Jul 26 04:47
+
+15MB is still horrible but it's better than 28MB..[363:
+
+Sun Jul 26 06:33:41 2020 Well, trying an optimized build, then will do
+'make clean' then 'make cdmd', and then we'll see about letting cdm.pl
+try to distribute that.[364:
+
+Sun Jul 26 06:44:03 2020 Wow, well the size is certainly improved:
+
+  -rw-r--r--  1 root root 5551433 Jul 26 06:43 cdmd-MFM.mfz
+
+
+
+:364]
+
+:363]
+
+:362]
+
+:361]
+:360]
+[365:
+
+Sun Jul 26 06:49:09 2020 Auggh and I fogged it up by doing:
+
+    t2@beaglebone:~/MFM$ echo 1595767408 ../cdmd-MFM.mfz-cdm-install-tag.dat
+    1595767408 ../cdmd-MFM.mfz-cdm-install-tag.dat
+    t2@beaglebone:~/MFM$ 
+
+and not noticing!  Arrrrgh!.
+
+:365]
+[366:
+
+Sun Jul 26 06:52:04 2020 Well, cloned afresh, and did manage to save
+these notes, FWTW.
+
+Committing them.
+
+:366]
