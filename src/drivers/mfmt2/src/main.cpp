@@ -8,6 +8,7 @@
 #include "TimeQueue.h"
 #include "SDLI.h"
 #include "ADCCtl.h"
+#include "T2Utils.h"
 
 namespace MFM {
 
@@ -97,6 +98,17 @@ namespace MFM {
 
         // Aand spam it out on the screen
         tile.showFail((const char *) file, line, msg);
+
+        // Aaand try to trigger an explicit packet status dump to syslog (ignore errors)
+        {
+          char buf[100];
+          u32 size = sizeof(buf);
+          snprintf(buf,size,"%s:%d: %s [%d]",
+                   file, line, msg ? msg : "", code);
+          writeWholeFile("/sys/class/itc_pkt/dump",buf);
+        }
+        
+        // Aaaaand die
         exit(99);
       },{
         tile.main();
