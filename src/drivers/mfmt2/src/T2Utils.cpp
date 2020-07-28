@@ -1,4 +1,5 @@
 #include "T2Utils.h"
+#include "FileByteSink.h"
 
 namespace MFM {
 
@@ -25,6 +26,20 @@ namespace MFM {
     while ((ch = fbs.ReadByte()) >= 0) {
       to.WriteByte((u8) ch);
     }
+    fbs.Close();
+    return true;
+  }
+
+  bool writeWholeFile(const char* path, const char * data) {
+    CharBufferByteSource cbbs(data,strlen(data));
+    return writeWholeFile(path,cbbs);
+  }
+
+  bool writeWholeFile(const char* path, ByteSource &from) {
+    FILE * file = fopen(path,"w");
+    if (!file) return false;
+    FileByteSink fbs(file);
+    fbs.Copy(from);
     fbs.Close();
     return true;
   }
