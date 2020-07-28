@@ -108,14 +108,14 @@ namespace MFM {
     return newstatus;
   }
 
-  void T2Tile::seedPhysics() {
+  void T2Tile::seedPhysics(u32 type) {
     // Pick a random hidden site and init it
     SPoint at(getOwnedRect().PickRandom(getRandom()));
     Sites & sites = getSites();
     OurT2Site & site = sites.get(MakeUnsigned(at));
     OurT2Atom & ar =  site.GetAtom();
     ////XXXX
-    OurT2Atom phonyDReg(T2_PHONY_DREG_TYPE);
+    OurT2Atom phonyDReg(type);
     ar = phonyDReg;
   }
 

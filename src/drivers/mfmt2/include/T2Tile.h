@@ -106,7 +106,7 @@ namespace MFM {
 
     // GENERAL SERVICE METHODS
     void debugSetup() ; // Whatever we're currently working on
-    void seedPhysics() ;
+    void seedPhysics(u32 type) ;
     void clearPrivateSites() ;
     void traceSite(const UPoint at, const char * msg = "", Logger::Level level = Logger::DBG) const ;
 
