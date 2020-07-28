@@ -1,4 +1,4 @@
-{367}  -*- text -*-
+{371}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -6440,3 +6440,90 @@ these notes, FWTW.
 Committing them.
 
 :366]
+[367:
+
+Mon Jul 27 00:06:05 2020 Ah okay, so: We still have LKM issues :( --
+corruption of some kind, with our kfifo use still suspect.  On the
+keymaster, we got stuff like this:
+
+    Jul 26 09:38:33 beaglebone kernel: [ 5508.469507] Malformed locstd3 (len=20)
+    Jul 26 09:38:33 beaglebone kernel: [ 5508.497351] Malformed locstd3 (len=20)
+    Jul 26 09:38:33 beaglebone kernel: [ 5508.522103] Malformed locstd3 (len=20)
+    Jul 26 09:38:33 beaglebone kernel: [ 5508.526052] Illegal standard local packet 29
+    Jul 26 09:38:33 beaglebone kernel: [ 5508.534352] Illegal standard local packet 13
+    Jul 26 09:38:33 beaglebone kernel: [ 5508.539174] Empty pkt? OB kfifolen = -2400432 but pktlen = 0 (kfifo 5c253382, prudev c061d7c8)
+
+    Message from syslogd@beaglebone at Jul 26 09:38:33 ...
+     kernel:[ 5508.563464] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
+
+And the only thing we can think of to do at this point is:
+
+ - Review all 'kfifo_' hits _again_ on first principles
+
+   = In particular, checking the flows of control after an out-of-room
+     situation occurred when trying to put something in a kfifo
+
+ - Armor all writes to a kfifo, e.g., using wrapper macros of our own:
+
+   = Check that space really is available
+   
+   = Check that the avail after the write is indeed the (availBefore -
+     len - 1), for packet kfifos
+
+
+ - Double check what we think are all our possible races: Interrupts,
+   kthreads, and syscalls.
+
+Sigh.
+
+I feel like the Indians starting to whoop it up at the end of
+'Temporarily Humboldt County':
+
+Well, let's go.
+
+Go.. go... go. GO.. GO.. GO GO GO GO (fade)
+
+:367]
+[368:
+
+Mon Jul 27 02:45:43 2020 Well I started into kfifo armoring and did
+some stuff, without apparently breaking or discovering anything
+significant, and then I ended up in the time machine reading old
+notes -- 201901191229-intertile-model-notes.txt in particular, which
+is where the whole outbound packet shipper thread concept was first
+invented.
+
+And I see this interesting note, which I had quite forgotten:
+
+    [210
+
+    Thu Jun 20 01:15:05 2019 So, with variable length records such as we
+    are using, kfifo_avail returns the max number of bytes YOU CAN PUT IN
+    THE NEXT RECORD.  That's why I'm seeing avail==255 both before and
+    after I stick stuff in a kfifo.
+
+    210]
+
+So that kind of undercuts my big 'off by 1 because of size' claim, at
+least for anything involving kfifo_avail.[369:
+
+Mon Jul 27 03:28:28 2020 Releasing another bein to flood stuff.  Doing
+'dmesg -wH' on my two serial connections to hope to see anything
+interesting new.
+
+:369]
+
+:368]
+[370:
+
+Mon Jul 27 23:40:21 2020 Well, added a bunch of LKM that purports to
+dump info about most of our kfifos, and purportedly set it up to fire
+as a drive-by when we do
+
+   $ cat /sys/class/itc_pkt/statistics
+
+But it's entirely untested, beyond building successfully, and I think
+we ought to be extra careful here, because we're way out of practice
+in LKM land, so I'm going to both WIP commit and bits off as well.
+
+:370]
