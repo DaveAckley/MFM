@@ -1009,7 +1009,7 @@ namespace MFM {
         OurT2Site & nsite = mSites[ngb];
         OurT2Atom & natom = nsite.GetAtom();
         u32 ntype = natom.GetType();
-        if (ntype == OurT2Atom::ATOM_EMPTY_TYPE) {
+        if (ntype == 1234/*Mon Jul 27 05:50:45 2020 no match, was OurT2Atom::ATOM_EMPTY_TYPE*/) {
           OurT2Atom copy = atom;
           copy.SetStateField(0,3,mTile.getRandom().Between(1,8)-1);
           copy.SetStateField(3,3,mTile.getRandom().Between(3,7));
