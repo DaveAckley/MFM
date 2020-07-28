@@ -35,8 +35,14 @@ namespace MFM {
   }
 
   void T2SeedPhysicsButton::onClick() {
+    const char * name = this->GetName();
+    u32 type = 0;
+    if (sscanf(name,"%*[A-Za-z_]%d",&type) != 1) {
+      LOG.Error("BADSEED BUTTONNAME '%s'",name);
+      return;
+    }
     T2Tile & tile = T2Tile::get();
-    tile.seedPhysics();
+    tile.seedPhysics(type);
     SDLI & sdli = tile.getSDLI();
     const char * panelName = "GlobalMenu_Button_Sites";
     AbstractButton * sites = dynamic_cast<AbstractButton*>(sdli.lookForPanel(panelName));

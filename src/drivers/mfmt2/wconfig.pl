@@ -247,11 +247,16 @@ $AUTOGEN_STAMP
     enabledfg=$MENUITEMFG
     font=1
     text="Clear"
-[PhysicsCtl_Button_Seed T2SeedPhysicsButton PhysicsCtl `bfs3x3(1,0,2,0)`]
+[PhysicsCtl_Button_Seed1 T2SeedPhysicsButton PhysicsCtl `bfs3x3(2,0,2,0)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
     font=1
-    text="Seed DReg"
+    text="Seed #1"
+[PhysicsCtl_Button_Seed2 T2SeedPhysicsButton PhysicsCtl `bfs3x3(1,0,1,0)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="Seed #2"
 [PhysicsCtl_Button_Debug T2DebugSetupButton PhysicsCtl `bfs6x6(0,4,2,5)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
