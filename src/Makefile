@@ -7,7 +7,7 @@
 # stuff is rickety and depends on more tools.)
 
 ifeq ($(PLATFORM),tile)
-SUBDIRS=platform-$(MFM_TARGET) core elements sim gui drivers
+SUBDIRS=platform-$(MFM_TARGET) core sim gui drivers
 else
 SUBDIRS=platform-$(MFM_TARGET) core elements sim gui test drivers
 endif
