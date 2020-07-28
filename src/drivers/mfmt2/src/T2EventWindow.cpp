@@ -195,6 +195,16 @@ namespace MFM {
     }
   }
 
+  void T2ActiveEventWindow::justKillCenterAndCommitThat() {
+    loadSites(); // Erase any possible changes
+    OurT2Site & us = mSites[0];          // Get center
+    OurT2Atom & centerAtom = us.GetAtom();
+    OurT2Atom emptyAtom(OurT2Atom::ATOM_EMPTY_TYPE);
+    centerAtom = emptyAtom;
+
+    commitAndReleaseActive();
+  }
+
   void T2ActiveEventWindow::commitAndReleaseActive() {
     mTile.getStats().incrNonemptyEventsCommitted();
     saveSites();                // COMMIT ACTIVE SIDE EW!
@@ -931,8 +941,9 @@ namespace MFM {
         ew.scheduleWait(WC_NOW);
       } else
         aew->commitAndReleaseActive();
-    } else
-      FAIL(INCOMPLETE_CODE);
+    } else {
+      aew->justKillCenterAndCommitThat();
+    }
   }
 
   void T2EWStateOps_ASCACHE::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
@@ -975,16 +986,13 @@ namespace MFM {
     return 0;
   }
     
-  bool T2ActiveEventWindow::executeEvent() {
-    loadSites();
-
-    mTile.getStats().incrNonemptyTransitionsStarted(); // score now (in case blows up)
-
+  // Here to perform non-empty transitions
+  bool T2ActiveEventWindow::doBehavior() {
     OurT2Site & us = mSites[0];
     OurT2Atom & atom = us.GetAtom();
     u32 type = atom.GetType();
     // XXX BOGUS PHONY DREG HACK
-    if (type != T2_PHONY_DREG_TYPE)
+    if (type != T2_PHONY_DREG_TYPE && type != T2_PHONY_RES_TYPE)  // Only non-empty for now
       return false;
     // XXX DOUBLE PHONY: IT'S NOT EVEN DREG
     // JUST GO N/E/S/W IF LIVE YOUNG BEIN
@@ -1009,7 +1017,8 @@ namespace MFM {
         OurT2Site & nsite = mSites[ngb];
         OurT2Atom & natom = nsite.GetAtom();
         u32 ntype = natom.GetType();
-        if (ntype == 1234/*Mon Jul 27 05:50:45 2020 no match, was OurT2Atom::ATOM_EMPTY_TYPE*/) {
+        // 'DREG' splits at the end of the universe, but not 'RES'
+        if (type == T2_PHONY_DREG_TYPE && ntype == OurT2Atom::ATOM_EMPTY_TYPE) {
           OurT2Atom copy = atom;
           copy.SetStateField(0,3,mTile.getRandom().Between(1,8)-1);
           copy.SetStateField(3,3,mTile.getRandom().Between(3,7));
@@ -1019,27 +1028,29 @@ namespace MFM {
       }
       u8 oth = mTile.getRandom().Between(1,8);
       atom.SetStateField(0,3,oth-1);
-      TLOG(DBG,"%s (%d,%d)BEIN oth %d (othlive %d)",
+      TLOG(DBG,"%s (%d,%d)BEIN TYPE %d oth %d (othlive %d)",
            getName(),
            mCenter.GetX(),mCenter.GetY(),
+           type,
            oth,
            mSitesLive[oth]);
     }
-
-#if 0
-    const char * PHONY_DIRS = "\002\004\003\001";
-    for (const char * dir = PHONY_DIRS; *dir != 0; ++dir) {
-      u8 sn=*dir;
-      if (mSitesLive[sn]) {
-        OurT2Site & west = mSites[sn];
-        OurT2Atom & westa = west.GetAtom();
-        OurT2Atom tmp = atom;
-        atom = westa;
-        westa = tmp;
-      }
-    }
-#endif
     return true;
+  }
+
+  bool T2ActiveEventWindow::executeEvent() {
+    loadSites();
+
+    mTile.getStats().incrNonemptyTransitionsStarted(); // score now (in case blows up)
+
+    unwind_protect({
+        TLOG(WRN,"%s behave failed at (%d,%d)",
+             getName(),
+             mCenter.GetX(),mCenter.GetY());
+      },{
+        return doBehavior();
+      });
+    return false;
   }
 
   /////////////////////T2PassiveEventWindow

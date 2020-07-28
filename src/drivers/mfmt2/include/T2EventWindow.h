@@ -230,11 +230,15 @@ namespace MFM {
 
     bool tryInitiateActiveEvent(UPoint center,u32 radius) ;
 
-    bool executeEvent() ; // This is what we're here for.  true to commit results
+    bool executeEvent() ; // This is what we're here for.  true to commit results, false to kill center
+
+    bool doBehavior() ; // Actually run the center atom's event transition code
 
     bool checkSiteAvailabilityForActive() ;
 
     void commitAndReleaseActive() ;
+    void justKillCenterAndCommitThat() ;
+
     void dropActiveEW(bool dueToNAK) ;
 
     void handleAnswer(T2ITC & itc) ;
