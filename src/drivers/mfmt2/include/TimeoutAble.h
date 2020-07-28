@@ -32,8 +32,8 @@ namespace MFM {
   } WaitCode;
 
   typedef enum waitms {
-    WC_HALF_MS = 250,
-    WC_FULL_MS = 500,
+    WC_HALF_MS = 500,
+    WC_FULL_MS = 1000,
 
     WC_MEDIUM_MIN_MS = 1000,
     WC_MEDIUM_MAX_MS = 5000,
