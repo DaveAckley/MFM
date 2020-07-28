@@ -1,4 +1,4 @@
-{371}  -*- text -*-
+{374}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -6527,3 +6527,43 @@ we ought to be extra careful here, because we're way out of practice
 in LKM land, so I'm going to both WIP commit and bits off as well.
 
 :370]
+[371:
+
+Tue Jul 28 00:39:11 2020 Well it didn't die, but it was hooked onto
+something that MFM was reading every second so it spammed the log more
+than I meant.  Reorged a little and moved it do
+/sys/class/itc_pkt/pru_bufs..  Going again
+
+RISKY BITS OFF.
+
+:371]
+[372:
+
+Tue Jul 28 03:37:04 2020 OK, going to commit again.  Hacked around
+with several things:
+
+ - Making /etc/sysctl.d/T2-12-sysctl.conf with 'kernel.panic = 30' in
+   it, that's supposed to cause an automatic reboot 30 seconds after a
+   panic.  If it avoids blowing the disk journal after a panic that
+   could be quite helpful, and we're obviously going to need 'nonstop'
+   service down the road no matter what.
+
+ - New buttons so we can build non-splitting (#1) and splitting (#2)
+   beins without recompiling.
+
+ - Alleged auto-erase on failed event transitions
+
+ - A new write-only /sys/class/itc_pkt/dump that triggers kfifo status
+   info to syslog, with a user message.  
+
+:372]
+[373:
+
+Tue Jul 28 04:18:14 2020 Well, let's commit and push T2-12 and MFM,
+try them one more time on the keymaster, then roll out new cdmd's for
+them.
+
+I want to see splits with the new kfifo logging.  Could get lucky.
+Especially with the kernel.panic autoreboot thing, if that works.
+
+:373]
