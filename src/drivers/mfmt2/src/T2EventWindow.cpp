@@ -1017,8 +1017,8 @@ namespace MFM {
         OurT2Site & nsite = mSites[ngb];
         OurT2Atom & natom = nsite.GetAtom();
         u32 ntype = natom.GetType();
-        // 'DREG' splits at the end of the universe, but not 'RES'
-        if (type == T2_PHONY_DREG_TYPE && ntype == OurT2Atom::ATOM_EMPTY_TYPE) {
+        // Type 2 splits at the end of the universe, but not type 1
+        if (type == T2_PHONY_RES_TYPE && ntype == OurT2Atom::ATOM_EMPTY_TYPE) {
           OurT2Atom copy = atom;
           copy.SetStateField(0,3,mTile.getRandom().Between(1,8)-1);
           copy.SetStateField(3,3,mTile.getRandom().Between(3,7));
