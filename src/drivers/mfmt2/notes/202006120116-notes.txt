@@ -1,4 +1,4 @@
-{374}  -*- text -*-
+{376}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -6567,3 +6567,101 @@ I want to see splits with the new kfifo logging.  Could get lucky.
 Especially with the kernel.panic autoreboot thing, if that works.
 
 :373]
+[374:
+
+Wed Jul 29 06:15:49 2020 Well, tried a bunch of things without much
+new insight.
+
+ - The autoboot stuff works, but panic reboots don't sync the disk so
+   we still lose data.  The only thing that works is minicom on the
+   serial port with a huge scrollback buffer.  And we only have two
+   USB-serial cables with us at present (plus limited available USB
+   ports).
+
+ - Still upping the logging in itcpkt trying to improve the chances of
+   seeing something helpful.  About to reboot to try another round of
+   that.[375:
+
+Wed Jul 29 06:19:44 2020 Latest anything that we caught was this (yes,
+it's cleaned up from minicom scrollback):
+
+    [31002.851701] XKFIFO OB prudev itc!pru!1, kfifo mPriorityOB, kfifolen = 3, pktlen = 0
+
+So the problem is kfifo_len()==3 is saying there's something there,
+but kfifo_peek_len()==0 is saying the next packet outbound packet is
+of length 0, and that should be impossible.
+
+    [31002.865035] DUMPITCSTATUS DUMPITCSTATUS DUMPITCSTATUS
+    [31002.878107] kfifoptr---kfifoin/out------mskin/out----len-avail-mnrflg name----------------
+    [31002.892839] 7de8f689         0/0            0/0       0l 255a   0   mLocalIB-itc!pru!0
+    [31002.907716] 07337d5b         0/0            0/0       0l 255a   0rp mPriorityOB-itc!pru!0
+    [31002.927702] b727ac4a         0/0            0/0       0l 255a   0r  mBulkOB-itc!pru!0
+    [31002.953916] 6c913277         0/0            0/0       0l 255a   1   mLocalIB-itc!pru!1
+    [31002.968541] 4a68b444   7129366/7129297   2326/2257   69l 255a   1rp mPriorityOB-itc!pru!1
+
+Interestingly, by the time the status dump got this far, that same
+kfifo -- mPriorityOB for PRU1 -- now has kfifo_len() == 69.
+
+    [31002.981651] d04a4086   1503419/1503419    187/187     0l 255a   1r  mBulkOB-itc!pru!1
+    [31002.995409] 9327dea3   1339328/1339328   4032/4032    0l 255a   2   mUserIB-itc!bulk
+    [31003.008373] a81c968a         0/0            0/0       0l 255a   3   mUserIB-itc!flash
+    [31003.022516] 16aea8a9         0/0            0/0       0l 255a   6   mUserIB-itc!mfm!ET
+    [31003.035869] 606d31fc         0/0            0/0       0l 255a   7   mUserIB-itc!mfm!SE
+    [31003.049713] 4245ecf8         0/0            0/0       0l 255a   8   mUserIB-itc!mfm!SW
+    [31003.065295] 5a234c1a   1898075/1898075   1627/1627    0l 255a   9   mUserIB-itc!mfm!WT
+    [31003.077259] d6bc9360   1691891/1691885    243/237     6l 255a   a   mUserIB-itc!mfm!NW
+    [31003.090307] 33548300   2311965/2311965   1821/1821    0l 255a   b   mUserIB-itc!mfm!NE
+    [31003.104486] ------------[ cut here ]------------
+    [31003.112388] kernel BUG at /home/t2/T2-12/pru/itcio/module/itcpkt.c:344!
+
+And this is the explicit BUG_ON(1) following the status dump following
+the pktlen == 0..
+
+    [31003.119033] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
+    [31003.124894] Modules linked in: joydev cpufreq_userspace c_can_platform c_can can_dev fb_
+    ili9486(C) fbtft(C) ads7846 evdev uio_pdrv_genirq uio iptable_nat nf_nat_ipv4 nf_nat nf_con
+    ntrack nf_defrag_ipv6 nf_defrag_ipv4 iptable_mangle iptable_filter itc_pkt(O) itc(O) ip_tab
+    les x_tables spidev
+    [31003.150663] CPU: 0 PID: 1213 Comm: ITC_PktShipr Tainted: G         C O      4.19.79-ti-r30 #1buster
+    [31003.159747] Hardware name: Generic AM33XX (Flattened Device Tree)
+    [31003.165954] PC is at sendPacketViaRPMsg+0x7c/0x298 [itc_pkt]
+    [31003.171655] LR is at wake_up_klogd+0x7c/0xa8
+    [31003.175943] pc : [<bf048964>]    lr : [<c01ad434>]    psr: 600e0013
+    [31003.182236] sp : db0c9ef8  ip : db0c9c88  fp : db0c9f34
+    [31003.187482] r10: 00000003  r9 : 0000007f  r8 : db0c4040
+    [31003.192730] r7 : 00000001  r6 : bf04db7c  r5 : 00000000  r4 : db0c5314
+    [31003.199286] r3 : bad55a76  r2 : bad55a76  r1 : c10ff388  r0 : 0000004a
+    [31003.205844] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
+    [31003.213011] Control: 10c5387d  Table: 9b1dc019  DAC: 00000051
+    [31003.218786] Process ITC_PktShipr (pid: 1213, stack limit = 0x06308bbc)
+    [31003.225343] Stack: (0xdb0c9ef8 to 0xdb0ca000)
+    [31003.229720] 9ee0:                                                       00000000 bf04d980
+    [31003.237938] 9f00: db0c9f1c c14d0adc ffffe000 db0c4040 ffffe000 bf04db7c 00000001 00000000
+    [31003.246155] 9f20: 0000007f 00000002 db0c9f74 db0c9f38 bf048c44 bf0488f4 bf04d980 c1505dc8
+    [31003.254372] 9f40: db0c9f74 bad55a76 c0160a5c db041540 db041e00 00000000 db0c8000 bf04dbac
+    [31003.262589] 9f60: bf048b80 dc621a2c db0c9fac db0c9f78 c0160f6c bf048b8c db04155c db04155c
+    [31003.270805] 9f80: 00000000 db041e00 c0160e00 00000000 00000000 00000000 00000000 00000000
+    [31003.279021] 9fa0: 00000000 db0c9fb0 c01010e8 c0160e0c 00000000 00000000 00000000 00000000
+    [31003.287238] 9fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    [31003.295454] 9fe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
+    [31003.303734] [<bf048964>] (sendPacketViaRPMsg [itc_pkt]) from [<bf048c44>] (itcOBPktThreadRunner+0xc4/0x188 [itc_pkt])
+    [31003.314421] [<bf048c44>] (itcOBPktThreadRunner [itc_pkt]) from [<c0160f6c>] (kthread+0x16c/0x174)
+    [31003.323341] [<c0160f6c>] (kthread) from [<c01010e8>] (ret_from_fork+0x14/0x2c)
+    [31003.330594] Exception stack(0xdb0c9fb0 to 0xdb0c9ff8)
+    [31003.335668] 9fa0:                                     00000000 00000000 00000000 00000000
+    [31003.343884] 9fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    [31003.352100] 9fe0: 00000000 00000000 00000000 00000000 00000013 00000000
+    [31003.358750] Code: e30a0e68 e34b0f04 eb4594c6 ebffff8e (e7f001f2) 
+    [31003.364887] ---[ end trace c3351d5684549665 ]---
+    [31003.369528] Kernel panic - not syncing: Fatal exception
+
+Urggh.  I understand why.. but that means all this stuff I'm showing
+you, right here, is not actually anywhere on the disk.
+
+    [31003.374791] Rebooting in 20 seconds..
+
+And this worked.
+
+:375]
+
+:374]
