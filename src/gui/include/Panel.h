@@ -68,7 +68,7 @@ namespace MFM
     SPoint m_lastMousePosition;
     SDL_KeyboardEvent & m_event;
 
-    KeyboardEvent(SDL_KeyboardEvent e, const SPoint lastKnownMouse)
+    KeyboardEvent(SDL_KeyboardEvent & e, const SPoint lastKnownMouse)
       : m_isPress(e.type == SDL_KEYDOWN)
       , m_modifiers(Keyboard::MergeMods(e.keysym.mod))
       , m_lastMousePosition(lastKnownMouse)
