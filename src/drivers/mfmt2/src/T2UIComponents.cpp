@@ -34,6 +34,44 @@ namespace MFM {
       T2Tile::get().setListening(checked);
   }
 
+  void T2HardButton::onClick() {
+    const char * name = this->GetName();
+    LOG.Error("DON'T CLICK THE HARD BUTTON '%s'",name);
+    return;
+  }
+
+  void T2HardButton::PaintComponent(Drawing & config) {
+    if (mDownTime) {
+      u32 nownow = T2Tile::get().now();
+      u32 delta = nownow - mDownTime;
+      const u32 MAX = 2000;
+      if (delta > MAX) {
+        mDownTime = 0;
+        this->SetText("EJECT");
+      } else {
+        OString32 buf;
+        buf.Printf("%d",MAX-delta);
+        this->SetText(buf.GetZString());
+      }
+      this->AbstractButton::PaintComponent(config);
+    }
+  }
+
+  bool T2HardButton::Handle(KeyboardEvent & event) {
+    if (event.m_event.keysym.sym == SDLK_MENU) {
+      if (event.m_event.type == SDL_KEYDOWN) {
+        mDownTime = T2Tile::get().now();
+        this->SetVisible(1);
+      } else {
+        this->SetVisible(0);
+        mDownTime = 0;
+      }
+      return true;
+    }
+    return false;
+  }
+
+
   void T2SeedPhysicsButton::onClick() {
     const char * name = this->GetName();
     u32 type = 0;

@@ -11,7 +11,7 @@ my ($GRIDINDENT) = (1);
 my ($TW,$TH) = ($SW-2*$VIZINDENT,$SH-2*$VIZINDENT);
 my ($GW,$GH) = ($SW-2*$GRIDINDENT,$SH-2*$GRIDINDENT);
 my ($CORNERW,$CORNERH) = (6,6);
-my ($STATICW,$STATICH) = ($TW-2*$ITCW,28);
+my ($STATICW,$STATICH) = ($TW/3,28);
 
 my $MENUITEMBG = "#ccbb22";
 my $MENUITEMFG = "#112233";
@@ -86,6 +86,13 @@ $AUTOGEN_STAMP
     doc="Current time queue dump"
 [Sites T2GridPanel Root $GW $GH $GRIDINDENT $GRIDINDENT]
     bgcolor=#222222
+[HardButtonPanel HardButton Root `bfs3x3(1,1)`]
+    bgcolor=#663333
+    fgcolor=#ffffff
+    font=1
+    text="EJECT"
+    visible=0
+    doc="Pending hard button notification"
 # GRANDCHILDREN AND BEYOND    
 [Log_Button_X MenuItem Log `bfs6x6(5,0)`]
     enabledbg=$MENUITEMBG
@@ -156,13 +163,13 @@ $AUTOGEN_STAMP
     font=2
     elevatorwidth=0
     fontheightadjust=-4
-[TypeHistogram HistoPanel T2Viz 200 200 150 40]
+[TypeHistogram HistoPanel T2Viz 220 200 150 40]
     bgcolor=#441199
     fgcolor=#ffffff
     font=2
     elevatorwidth=0
     fontheightadjust=-4
-[T2Info_Off_Button OffButton T2Viz `bfs6x6(4,0,4,0)`]
+[T2Info_Off_Button OffButton T2Viz `bfs6x6(3,5,3,5)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
     font=4
@@ -177,7 +184,7 @@ $AUTOGEN_STAMP
     enabledfg=$MENUITEMFG
     font=4
     text="Crash"
-[T2Info_Boot_Button BootButton T2Viz `bfs6x6(1,0,1,0)`]
+[T2Info_Boot_Button BootButton T2Viz `bfs6x6(5,4,5,4)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
     font=4

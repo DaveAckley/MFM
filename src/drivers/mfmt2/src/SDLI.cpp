@@ -136,6 +136,18 @@ namespace MFM
               else
                 mKeyboardModifiers &= ~mod;
               break;
+            case SDLK_MENU:
+              {
+                KeyboardEvent kbe(event.key, mLastKnownMousePosition);
+                Panel * hardp = mPanels["HardButtonPanel"];
+                if (!hardp)
+                  fatal("Undefined hard button panel\n");
+
+                if (hardp->Handle(kbe))
+                  return;
+              }
+              break;
+
             default:
               {
                 KeyboardEvent kbe(event.key, mLastKnownMousePosition);
@@ -285,6 +297,7 @@ namespace MFM
     if (type.Equals("TQPanel")) return new T2TimeQueuePanel(); 
     if (type.Equals("T2TileLiveCheckbox")) return new T2TileLiveCheckbox(); 
     if (type.Equals("T2TileListenCheckbox")) return new T2TileListenCheckbox(); 
+    if (type.Equals("HardButton")) return new T2HardButton(); 
     if (type.Equals("T2SeedPhysicsButton")) return new T2SeedPhysicsButton(); 
     if (type.Equals("T2DebugSetupButton")) return new T2DebugSetupButton(); 
     if (type.Equals("T2ClearTileButton")) return new T2ClearTileButton(); 

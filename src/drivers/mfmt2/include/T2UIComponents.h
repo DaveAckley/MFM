@@ -35,6 +35,20 @@ namespace MFM {
     virtual void onClick() = 0;
   };
   
+  struct T2HardButton : public T2UIButton {
+    T2HardButton() : mDownTime(0) { }
+
+    /* Show eject timer */
+    virtual void PaintComponent(Drawing & config) ;
+
+    /** Hard button press / release comes in as keyboard SDLK_MENU events */
+    virtual bool Handle(KeyboardEvent & event) ;
+
+    virtual void onClick() ;
+
+    u32 mDownTime;
+  };
+
   struct T2SeedPhysicsButton : public T2UIButton {
     virtual void onClick() ;
   };

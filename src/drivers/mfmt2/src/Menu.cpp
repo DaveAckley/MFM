@@ -179,11 +179,14 @@ namespace MFM {
   }
 
   bool MenuMakerPanel::Handle(KeyboardEvent & event) {
+    /* Thu Jul 30 04:20:11 2020 Repurposing hard button / SDLK_MENU
+
     if (event.m_event.type == SDL_KEYDOWN &&
         event.m_event.keysym.sym == SDLK_MENU) {
       toggleGlobalPosting();
       return true;
     }
+    */
     if (event.m_event.type == SDL_KEYDOWN &&
         event.m_event.keysym.sym == SDLK_g) {
       setPosting(true);
