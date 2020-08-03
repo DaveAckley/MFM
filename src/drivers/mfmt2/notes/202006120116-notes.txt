@@ -1,4 +1,4 @@
-{376}  -*- text -*-
+{390}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -5685,7 +5685,7 @@ tryInitiateActiveEvent
       // involvements.  NOTE that 'ITC registration' does NOT
       // necessarily imply 'lock needed': We register even with
       // ITCSN_SHUT, so they know about us in case they start to open.
-      
+
       bool isLive = true;
       for (u32 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
         if (tile.getVisibleAndCacheRect(dir6).Contains(site)) {
@@ -5775,8 +5775,8 @@ anything we already have?[317:
 Sun Jul  5 19:41:02 2020 So, one question is: Why do the existing
 'visible' rectangles include obviously cached sites?
 
-          VIZ                    CCH                    ALL                    
-    ET 0: (48, 0)-(51,39)  4x40  (52, 0)-(55,39)  4x40  (48, 0)-(55,39)  8x40  
+          VIZ                    CCH                    ALL
+    ET 0: (48, 0)-(51,39)  4x40  (52, 0)-(55,39)  4x40  (48, 0)-(55,39)  8x40
 
 For example, Y==0..39 includes the cache rows 0..3 and 36..39 -- why?
 
@@ -5784,7 +5784,7 @@ For example, Y==0..39 includes the cache rows 0..3 and 36..39 -- why?
 
 Sun Jul  5 20:12:13 2020 Seems like it should be
 
-          VIZ                    CCH                    ALL                    
+          VIZ                    CCH                    ALL
     ET 0: (48, 4)-(51,35)  4x32  (52, 0)-(55,39)  4x40  N/A
 
 and so forth.  And the 'getNeighborVisibleRect()', if we needed it,
@@ -5794,11 +5794,11 @@ would be the direct shift of the 4x32 viz:
 
 :318]
 
-    SE 1: (24,32)-(55,35) 32x 4  (24,36)-(55,39) 32x 4  (24,32)-(55,39) 32x 8  
-    SW 2: ( 0,32)-(31,35) 32x 4  ( 0,36)-(31,39) 32x 4  ( 0,32)-(31,39) 32x 8  
-    WT 3: ( 4, 0)-( 7,39)  4x40  ( 0, 0)-( 3,39)  4x40  ( 0, 0)-( 7,39)  8x40  
-    NW 4: ( 0, 4)-(31, 7) 32x 4  ( 0, 0)-(31, 3) 32x 4  ( 0, 0)-(31, 7) 32x 8  
-    NE 5: (24, 4)-(55, 7) 32x 4  (24, 0)-(55, 3) 32x 4  (24, 0)-(55, 7) 32x 8  
+    SE 1: (24,32)-(55,35) 32x 4  (24,36)-(55,39) 32x 4  (24,32)-(55,39) 32x 8
+    SW 2: ( 0,32)-(31,35) 32x 4  ( 0,36)-(31,39) 32x 4  ( 0,32)-(31,39) 32x 8
+    WT 3: ( 4, 0)-( 7,39)  4x40  ( 0, 0)-( 3,39)  4x40  ( 0, 0)-( 7,39)  8x40
+    NW 4: ( 0, 4)-(31, 7) 32x 4  ( 0, 0)-(31, 3) 32x 4  ( 0, 0)-(31, 7) 32x 8
+    NE 5: (24, 4)-(55, 7) 32x 4  (24, 0)-(55, 3) 32x 4  (24, 0)-(55, 7) 32x 8
 
 
 :317]
@@ -5826,13 +5826,13 @@ pretty plausible.  It even almost seems sensible that it's different
 than either visible or cache rects.  We even have our command line
 switch -mitc updated for it:
 
-      VIZ                    CCH                    ALL                    NGB                    
-ET 0: (48, 0)-(51,39)  4x40  (52, 0)-(55,39)  4x40  (48, 0)-(55,39)  8x40  (52, 4)-(55,35)  4x32  
-SE 1: (24,32)-(55,35) 32x 4  (24,36)-(55,39) 32x 4  (24,32)-(55,39) 32x 8  (28,36)-(55,39) 28x 4  
-SW 2: ( 0,32)-(31,35) 32x 4  ( 0,36)-(31,39) 32x 4  ( 0,32)-(31,39) 32x 8  ( 0,36)-(27,39) 28x 4  
-WT 3: ( 4, 0)-( 7,39)  4x40  ( 0, 0)-( 3,39)  4x40  ( 0, 0)-( 7,39)  8x40  ( 0, 4)-( 3,35)  4x32  
-NW 4: ( 0, 4)-(31, 7) 32x 4  ( 0, 0)-(31, 3) 32x 4  ( 0, 0)-(31, 7) 32x 8  ( 0, 0)-(27, 3) 28x 4  
-NE 5: (24, 4)-(55, 7) 32x 4  (24, 0)-(55, 3) 32x 4  (24, 0)-(55, 7) 32x 8  (28, 0)-(55, 3) 28x 4  
+      VIZ                    CCH                    ALL                    NGB
+ET 0: (48, 0)-(51,39)  4x40  (52, 0)-(55,39)  4x40  (48, 0)-(55,39)  8x40  (52, 4)-(55,35)  4x32
+SE 1: (24,32)-(55,35) 32x 4  (24,36)-(55,39) 32x 4  (24,32)-(55,39) 32x 8  (28,36)-(55,39) 28x 4
+SW 2: ( 0,32)-(31,35) 32x 4  ( 0,36)-(31,39) 32x 4  ( 0,32)-(31,39) 32x 8  ( 0,36)-(27,39) 28x 4
+WT 3: ( 4, 0)-( 7,39)  4x40  ( 0, 0)-( 3,39)  4x40  ( 0, 0)-( 7,39)  8x40  ( 0, 4)-( 3,35)  4x32
+NW 4: ( 0, 4)-(31, 7) 32x 4  ( 0, 0)-(31, 3) 32x 4  ( 0, 0)-(31, 7) 32x 8  ( 0, 0)-(27, 3) 28x 4
+NE 5: (24, 4)-(55, 7) 32x 4  (24, 0)-(55, 3) 32x 4  (24, 0)-(55, 7) 32x 8  (28, 0)-(55, 3) 28x 4
 
 Time to commit, stop hacking, and move on to the day and to t2sup
 prep.
@@ -5944,7 +5944,7 @@ too.
 
 Sat Jul 25 14:45:36 2020 Currently we see:
 
-    root@beaglebone:~# cat /sys/class/itc_pkt/statistics 
+    root@beaglebone:~# cat /sys/class/itc_pkt/statistics
     dir psan sfan toan mfmbsent mfmbrcvd mfmpsent mfmprcvd svcbsent svcbrcvd svcpsent svcprcvd
     0 0 0 0 0 0 0 0 0 0 0 0
     1 1 0 0 7487 300272 791 2284 62192 84331 1156 1542
@@ -5954,7 +5954,7 @@ Sat Jul 25 14:45:36 2020 Currently we see:
     5 1 0 0 9400 274740 752 2146 62945 120672 1166 2185
     6 1 0 0 9652 313571 765 2171 61005 87459 1126 1598
     7 1 0 0 4138 59726 522 999 61753 101296 1141 1849
-    root@beaglebone:~# 
+    root@beaglebone:~#
 
 so there is service traffic moving, in the 10KB-100KB range, in
 addition to mfm traffic.
@@ -6176,16 +6176,16 @@ Sun Jul 26 00:50:28 2020 OK, so this command seems pretty key:
     5KSeBLlgMaEbKkeOXZU+pbAaUzL6EGr/O/ESdTE6Lh6azq2DR3P7AgMBAAE=
     -----END RSA PUBLIC KEY-----
     ]
-    t2@beaglebone:~$ 
+    t2@beaglebone:~$
 
 [347:
 
 Sun Jul 26 00:52:11 2020 Although in that context this is a little
 distressing:
 
-    t2@beaglebone:~$ cat cdmd-MFM.mfz-cdm-install-tag.dat 
+    t2@beaglebone:~$ cat cdmd-MFM.mfz-cdm-install-tag.dat
     1594052102
-    t2@beaglebone:~$ 
+    t2@beaglebone:~$
 
 [348:
 
@@ -6195,7 +6195,7 @@ Sun Jul 26 00:55:03 2020 Eeew, look:
     21600.000000
     t2@beaglebone:~$ perl -e 'printf("%f\n",(1594073702-1594052102)/60.0/60.0)'
     6.000000
-    t2@beaglebone:~$ 
+    t2@beaglebone:~$
 
 The install tag time is _exactly_ six hours earlier than the mfzrun
 inner timestamp, which is _exactly_ the GMT to Mountain Time offset.
@@ -6285,7 +6285,7 @@ HOW TO RELEASE cdmd-T2-12.mfz:
       $ cd /data/ackley/PART4/hardware/T2-Tile-Project/CDM-TGZS-BACKUP
       $ ./scripts/T2PullCode IP.OF.KEY.MASTER
     and see if the cdmd just made arrives in
-    /data/ackley/PART4/hardware/T2-Tile-Project/CDM-TGZS-BACKUP/CDMSAVE/CDMDS/ 
+    /data/ackley/PART4/hardware/T2-Tile-Project/CDM-TGZS-BACKUP/CDMSAVE/CDMDS/
     [355: Sun Jul 26 04:45:56 2020 E.g., can do:
 
         .../hardware/T2-Tile-Project/CDM-TGZS-BACKUP$ /data/ackley/PART4/code/D/MFM/bin/mfzrun CDMSAVE/CDMDS/cdmd-T2-12.mfz VERIFY
@@ -6300,7 +6300,7 @@ HOW TO RELEASE cdmd-T2-12.mfz:
         5KSeBLlgMaEbKkeOXZU+pbAaUzL6EGr/O/ESdTE6Lh6azq2DR3P7AgMBAAE=
         -----END RSA PUBLIC KEY-----
         ]
-        .../hardware/T2-Tile-Project/CDM-TGZS-BACKUP$ 
+        .../hardware/T2-Tile-Project/CDM-TGZS-BACKUP$
 
     :355]
 
@@ -6342,7 +6342,7 @@ HOW TO RELEASE cdmd-T2-12.mfz:
 
 Sun Jul 26 04:40:38 2020 Well okay, trying :353:, we shall see.[357:
 
-Sun Jul 26 04:49:38 2020 
+Sun Jul 26 04:49:38 2020
 
 :357]
 
@@ -6385,7 +6385,7 @@ Sun Jul 26 06:07:06 2020 Poking around in cdmd-MFM.mfz, it looks like
 I could save seven meg just by getting rid of
 
  -rw-r--r--       0/0       7282674 MFM/res/images/mfms-icons-ZSHEET-orig.png
- 
+
 Is anybody even looking at that?
 [361:
 
@@ -6427,7 +6427,7 @@ Sun Jul 26 06:49:09 2020 Auggh and I fogged it up by doing:
 
     t2@beaglebone:~/MFM$ echo 1595767408 ../cdmd-MFM.mfz-cdm-install-tag.dat
     1595767408 ../cdmd-MFM.mfz-cdm-install-tag.dat
-    t2@beaglebone:~/MFM$ 
+    t2@beaglebone:~/MFM$
 
 and not noticing!  Arrrrgh!.
 
@@ -6466,7 +6466,7 @@ And the only thing we can think of to do at this point is:
  - Armor all writes to a kfifo, e.g., using wrapper macros of our own:
 
    = Check that space really is available
-   
+
    = Check that the avail after the write is indeed the (availBefore -
      len - 1), for packet kfifos
 
@@ -6554,7 +6554,7 @@ with several things:
  - Alleged auto-erase on failed event transitions
 
  - A new write-only /sys/class/itc_pkt/dump that triggers kfifo status
-   info to syslog, with a user message.  
+   info to syslog, with a user message.
 
 :372]
 [373:
@@ -6651,7 +6651,7 @@ the pktlen == 0..
     [31003.335668] 9fa0:                                     00000000 00000000 00000000 00000000
     [31003.343884] 9fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
     [31003.352100] 9fe0: 00000000 00000000 00000000 00000000 00000013 00000000
-    [31003.358750] Code: e30a0e68 e34b0f04 eb4594c6 ebffff8e (e7f001f2) 
+    [31003.358750] Code: e30a0e68 e34b0f04 eb4594c6 ebffff8e (e7f001f2)
     [31003.364887] ---[ end trace c3351d5684549665 ]---
     [31003.369528] Kernel panic - not syncing: Fatal exception
 
@@ -6665,3 +6665,326 @@ And this worked.
 :375]
 
 :374]
+[376:
+
+Wed Jul 29 14:31:14 2020 So, because it's 2020, more hardware
+anxieties too:
+
+ - SETUP: Three tiles connected in a triangle:
+
+    +--------++---------+
+    |        ||         |
+    |        --         |
+    |on      --      off|
+    |T1  sf! ||       T2|
+    +----||--++--||-----+
+       +-||------||-+
+       | sf!        |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+   = All share grid power
+
+   = T2 is off, T1 and KM are booted
+
+ - BEHAVIOR: The T1/SE <-> KM/NW connection gets repeated sync
+   failures, every 0.5-2 seconds or so, and fails to stay open.
+
+ - SETUP: Now, power up T2:
+
+    +--------++---------+
+    |        ||         |
+    |        --         |
+    |on      --       on|
+    |T1  OK! ||       T2|
+    +----||--++--||-----+
+       +-||------||-+
+       | OK!        |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+ - BEHAVIOR: The sync failures on the T1/SE <-> KM/NW connection
+   vanish; the connection is solid.[377:
+
+Wed Jul 29 14:50:41 2020 Oh and here's a lovely new wrinkle I
+absolutely wasn't expecting.
+
+ - SETUP: As above, except now T1 and T2 are not directly connected at
+   all:
+
+    +--------++---------+
+    |        ||         |
+    |        ||         |
+    |on      ||      off|
+    |T1  ns  ||       T2|
+    +----||--++--||-----+
+       +-||------||-+
+       | ns         |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+ - BEHAVIOR: The T1/SE <-> KM/NW connection fails to sync at all.
+
+ - SETUP: Now power up T2:
+
+    +--------++---------+
+    |        ||         |
+    |        ||         |
+    |on      ||       on|
+    |T1  OK! ||       T2|
+    +----||--++--||-----+
+       +-||------||-+
+       | OK!        |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+ - BEHAVIOR: The T1/SE <-> KM/NW connection opens and remains solid.
+
+[378:
+
+Wed Jul 29 15:12:33 2020 So it appears the issue is 'all' in KM?
+
+ - QUESTION: Suppose we disconnect KM/NE <-> T2/SW?  Does T1/SE <->
+   KM/NW then open, even though T2 is off?
+
+ - BEHAVIOR: YES, yes it does: 
+
+    +--------++---------+
+    |        ||         |
+    |        ||         |
+    |on      ||      off|
+    |T1  OK! ||       T2|
+    +----||--++---------+
+       +-||---------+
+       | OK!        |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+ - QUESTION: Suppose we reconnect T1/ET <-> T2/WT?  Does T1/SE <->
+   KM/NW remain open?
+
+ - BEHAVIOR: YES, yes it does: 
+
+    +--------++---------+
+    |        ||         |
+    |        --         |
+    |on      --      off|
+    |T1  OK! ||       T2|
+    +----||--++---------+
+       +-||---------+
+       | OK!        |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+[379:
+
+Thu Jul 30 00:31:18 2020 So maybe we could actually break out the
+oscilloscope and see if we can see anything that might help explain
+this behavior.
+
+If this behavior is really actually repeatable, in the end..
+
+Let's stick a PD into T2/SW <-> KM/NE and see if T1/SE <-> KM/NW loses
+sync.. [380:
+
+Thu Jul 30 00:36:40 2020 Seems like apparently not? :(
+
+ - SETUP: Now we have this:
+
+    +--------++---------+
+    |        ||         |
+    |        --         |
+    |on      --      off|
+    |T1  OK  ||       T2|
+    +----||--++--||-----+
+       +-||------||-+
+       | OK         |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+ - BEHAVIOR: ..and the preexisting T1/SE <-> KM/NW remains open.
+
+   = So it's not immediately repeatable.  Let's power up T2 and see
+     what happens..
+
+[381:
+
+Thu Jul 30 00:48:43 2020 Hmm, so T2/SE <-> KM/NW gitched a bunch of
+times, while I was (trying to get into position and) pushing the power
+button, but then stopped glitching and remained open, long before T2
+had finished booting.
+
+[382:
+
+Thu Jul 30 00:59:01 2020 So the hardware debugging remains ambiguous
+and frustrating.
+
+:382]
+
+:381]
+
+:380]
+
+:379]
+:378]
+:377]
+
+:376]
+[383:
+
+Thu Jul 30 01:21:10 2020 Well so I relaxed in the afternoon and
+concluded that we have to step up the engine tracing machinery yet
+another notch.  In for a penny in for a ton.
+
+Last we talked on this topic, we had implemented rolling disk buffers
+so that we would retain the latest 8MB (by default) of engine tracing,
+when it was active.
+
+But we were seeing failures-to-log and kernel panics that we
+interpreted as possible evidence that the actual disk was being
+stressed by the rate we were pounding trace data out to it.  Which
+made us unwilling or unable to have tracing turned on by default
+[387:
+
+Thu Jul 30 03:24:29 2020 And so my plan for RIGHT NOW is to rehack the
+engine tracing based on the following observations and goals:
+
+ - Unlike the LKM, the engine rarely actually crashes (although we're
+   having some issues with that at the moment).  Usually it's a FAIL
+   that we have no idea how to respond to.
+
+ - We will keep a rolling trace buffer in memory, with a command line
+   configurable size (defaulting to perhaps 4MB?), and we won't commit
+   that buffer to disk AT ALL, unless some triggering condition -- such
+   as but not limited to FAIL-out-of-top-level -- occurs.
+
+ - When such a triggering condition occurs, which we will call an
+   'EJECT', we'll stop and atomically write the whole rolling trace
+   buffer to disk, leaving the buffer empty, before continuing with
+   whatever happens next
+
+ - We'll also roll ejected disk buffers as needed to minimize the
+   total space trace data is taking up.
+
+[388: Thu Jul 30 03:31:49 2020
+
+ - We'd also like to get flash traffic going, so there could be a
+   chance of requesting EJECTs from one's neighbors, but that's a
+   whole separate kettle of fish.
+
+ - We'd ALSO like to draft our physical push button to generate an
+   EJECT, so we could do that independent of GUI context.
+
+[389:
+
+Thu Jul 30 03:39:15 2020 Are we reading the button at all, in the
+engine?  I kind of think we're not ATM..
+
+:389]
+
+:388]
+
+:387]
+:383]
+[384:
+
+Thu Jul 30 01:48:17 2020 Oops, caught another panic in one of my
+serial ports:
+
+    [39602.426096] Illegal standard local packet e0+2
+    [39602.430664] <pru1: b7132885: e0 5b                                            .[
+
+So that's our 'improved error message', dumping the illegal packet (at
+ictpkt.c:2366).  Not sure how much it tells us, but at least it's
+pointing the finger at pru1 now.
+[385:
+
+Thu Jul 30 02:05:03 2020 Is it possible this packet might be an actual
+corruption (tied to heavy use perhaps), and we're mishandling it and
+something corrupting kfifos in the process?[386:
+
+Thu Jul 30 02:22:50 2020 Well, it's hard to see how: We don't actually
+store those packets anywhere anyway..  Problem almost surely starting
+elsewhere.. 
+
+:386]
+
+:385]
+    [39602.440741] XKFIFO OB prudev itc!pru!1, kfifo mPriorityOB, kfifolen = -101, pktlen = 0
+    [39602.462231] DUMPITCSTATUS DUMPITCSTATUS DUMPITCSTATUS
+    [39602.473087] kfifoptr---kfifoin/out------mskin/out----len-avail-mnrflg name----------------
+    [39602.487550] 3e88bc91      2447/0         2447/0    2447l 255a   0   mLocalIB-itc!pru!0
+    [39602.503827] 558a7f4d   4498498/4498407   1090/999    91l 255a   0rp mPriorityOB-itc!pru!0
+    [39602.519994] 55228e26   1293882/1293717   3642/3477  165l 255a   0r  mBulkOB-itc!pru!0
+    [39602.532971] bc63cdcb       104/0          104/0     104l 255a   1   mLocalIB-itc!pru!1
+    [39602.546910] f10ff6d1   2414326/2414427   1782/1883 -101l 255a   1rp mPriorityOB-itc!pru!1
+
+So we have lot more non-empty kfifos this time, leading up to our -101
+problem.
+
+    [39602.560488] 262c8dc5    635777/635722     897/842    55l 255a   1r  mBulkOB-itc!pru!1
+    [39602.574507] b4cfd749   2196866/2196866   1410/1410    0l 255a   2   mUserIB-itc!bulk
+    [39602.587565] 9a12c977         0/0            0/0       0l 255a   3   mUserIB-itc!flash
+    [39602.601409] 2e3f8adf    416746/416746    3050/3050    0l 255a   6   mUserIB-itc!mfm!ET
+    [39602.614704] 1738beaa   1925417/1925417    297/297     0l 255a   7   mUserIB-itc!mfm!SE
+    [39602.628904] 005a7f04   2406585/2406585   2233/2233    0l 255a   8   mUserIB-itc!mfm!SW
+    [39602.642036] 37428f47         0/0            0/0       0l 255a   9   mUserIB-itc!mfm!WT
+    [39602.655977] e16c3dae         0/0            0/0       0l 255a   a   mUserIB-itc!mfm!NW
+    [39602.669475] 4ad87ea9   2044233/2044233    329/329     0l 255a   b   mUserIB-itc!mfm!NE
+    [39602.683630] ------------[ cut here ]------------
+    [39602.691487] kernel BUG at /home/t2/T2-12/pru/itcio/module/itcpkt.c:344!
+    [39602.698130] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
+    [39602.703991] Modules linked in: joydev cpufreq_userspace c_can_platform c_can can_dev fb_ili9486(C) fbtft(C) evdev ads7846 uio_pdrv_genirq uio 80
+    21q garp stp mrp llc iptable_nat nf_nat_ipv4 nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 iptable_mangle iptable_filter itc_pkt(O) itc(O) ip_t
+    ables x_tables spidev
+    [39602.731783] CPU: 0 PID: 1236 Comm: ITC_PktShipr Tainted: G         C O      4.19.79-ti-r30 #1buster
+    [39602.740868] Hardware name: Generic AM33XX (Flattened Device Tree)
+    [39602.747075] PC is at sendPacketViaRPMsg+0x80/0x2a4 [itc_pkt]
+    [39602.752777] LR is at wake_up_klogd+0x7c/0xa8
+    [39602.757066] pc : [<bf048a3c>]    lr : [<c01ad434>]    psr: 60070013
+    [39602.763359] sp : db173ef8  ip : db173c88  fp : db173f34
+    [39602.768605] r10: ffffff9b  r9 : 0000007f  r8 : db128040
+    [39602.773853] r7 : 00000001  r6 : bf04eb7c  r5 : 00000000  r4 : db129318
+    [39602.780408] r3 : bad55a76  r2 : bad55a76  r1 : c10ff388  r0 : 0000004a
+    [39602.786966] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
+    [39602.794131] Control: 10c5387d  Table: 9c7e8019  DAC: 00000051
+    [39602.799908] Process ITC_PktShipr (pid: 1236, stack limit = 0x26571f6a)
+    [39602.806465] Stack: (0xdb173ef8 to 0xdb174000)
+    [39602.810842] 3ee0:                                                       00000000 db129318
+    [39602.819060] 3f00: db173f1c c14d0adc ffffe000 db128040 ffffe000 bf04eb7c 00000001 00000000
+    [39602.827277] 3f20: 0000007f 00000002 db173f74 db173f38 bf048d24 bf0489c8 bf04e980 c1505dc8
+    [39602.835494] 3f40: db173f74 bad55a76 c0160a5c db112800 db112540 00000000 db172000 bf04ebac
+    [39602.843711] 3f60: bf048c60 da837a2c db173fac db173f78 c0160f6c bf048c6c db11281c db11281c
+    [39602.851927] 3f80: 00000000 db112540 c0160e00 00000000 00000000 00000000 00000000 00000000
+    [39602.860144] 3fa0: 00000000 db173fb0 c01010e8 c0160e0c 00000000 00000000 00000000 00000000
+    [39602.868360] 3fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    [39602.876577] 3fe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
+    [39602.884857] [<bf048a3c>] (sendPacketViaRPMsg [itc_pkt]) from [<bf048d24>] (itcOBPktThreadRunner+0xc4/0x188 [itc_pkt])
+    [39602.895544] [<bf048d24>] (itcOBPktThreadRunner [itc_pkt]) from [<c0160f6c>] (kthread+0x16c/0x174)
+    [39602.904465] [<c0160f6c>] (kthread) from [<c01010e8>] (ret_from_fork+0x14/0x2c)
+    [39602.911718] Exception stack(0xdb173fb0 to 0xdb173ff8)
+    [39602.916792] 3fa0:                                     00000000 00000000 00000000 00000000
+    [39602.925008] 3fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    [39602.933223] 3fe0: 00000000 00000000 00000000 00000000 00000013 00000000
+    [39602.939873] Code: e30b0ec0 e34b0f04 eb459490 ebffff8d (e7f001f2) 
+    [39602.946010] ---[ end trace ffe0a9448ad2f5e1 ]---
+    [39602.950649] Kernel panic - not syncing: Fatal exception
+    [39602.955912] Rebooting in 20 seconds..
+
+
+
+:384]
