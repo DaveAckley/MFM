@@ -9,7 +9,7 @@ namespace MFM {
 
   void TimeQueue::dumpQueue(ByteSink& bs) {
     printComma(getExpiredCount(), bs);
-    bs.Printf("\n");
+    bs.Printf(" [%d]\n", size());
     for (auto itr = mPQ.begin(); itr != mPQ.end(); ++itr) {
       TimeoutAble * ta = *itr;
       ta->printTimeout(bs);
