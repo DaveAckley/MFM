@@ -217,6 +217,7 @@ namespace MFM {
     , mMDist()
     , mCPUFreq(CPUSpeed_Slow)
     , mCoreTempChecker()
+    , mFlashTrafficManager()
     , mRollingTraceDir()
     , mRollingTraceTargetKB(0)
     , mRollingTraceSpinner(0)
@@ -592,6 +593,7 @@ static const char * CMD_HELP_STRING =
     mArgv = argv;
     earlyInit();
     mSDLI.init();
+    mFlashTrafficManager.init();
     insertOnMasterTimeQueue(mSDLI, 0); // Live for display and input
     resetITCs();
   }

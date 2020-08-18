@@ -29,6 +29,7 @@
 #include "Trace.h"
 #include "CPUFreq.h"
 #include "T2TileStats.h"
+#include "T2FlashTrafficManager.h"
 
 namespace MFM {
 
@@ -119,6 +120,8 @@ namespace MFM {
     SDLI & getSDLI() { return mSDLI; }
 
     ADCCtl & getADCCtl() { return mADCCtl; }
+
+    T2FlashTrafficManager & getFlashTrafficManager() { return mFlashTrafficManager; }
 
     void addRandomSyncTag(ByteSink & bs) ;
     bool tryReadRandomSyncTag(ByteSource& bs, s32 & got) ;
@@ -346,6 +349,9 @@ namespace MFM {
     //// HW CONTROL & MISC
     CPUFreq mCPUFreq;
     CoreTempChecker mCoreTempChecker;    
+
+    //// FLASH TRAFFIC MANAGEMENT
+    T2FlashTrafficManager mFlashTrafficManager;
 
     void initRollingTraceDir(u32 targetMB) ;
     void rollTracing() ;

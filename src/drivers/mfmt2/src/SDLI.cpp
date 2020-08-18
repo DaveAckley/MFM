@@ -305,6 +305,7 @@ namespace MFM
     if (type.Equals("CrashButton")) return new T2CrashButton(); 
     if (type.Equals("OffButton")) return new T2OffButton(); 
     if (type.Equals("BootButton")) return new T2BootButton(); 
+    if (type.Equals("FlashCommandLabel")) return new T2FlashCommandLabel(); 
     return 0;
   }
 

@@ -1,9 +1,16 @@
 #include "T2UIComponents.h"
+#include "T2FlashTrafficManager.h"
 
 #include "T2Tile.h"
 #include "TraceTypes.h"
 
 namespace MFM {
+
+  void T2FlashCommandLabel::onClick() {
+    T2Tile & tile = T2Tile::get();
+    tile.getFlashTrafficManager().onClick(this);
+  }
+
   bool T2UIButton::ExecuteFunction(u32 keysym, u32 mods) {
     TLOG(DBG,"%s",__PRETTY_FUNCTION__);
     OnClick(SDL_BUTTON_LEFT);
@@ -59,11 +66,14 @@ namespace MFM {
 
   bool T2HardButton::Handle(KeyboardEvent & event) {
     if (event.m_event.keysym.sym == SDLK_MENU) {
+      Panel * parent = this->GetParent();
       if (event.m_event.type == SDL_KEYDOWN) {
         mDownTime = T2Tile::get().now();
         this->SetVisible(1);
+        parent->RaiseToTop(this);
       } else {
         this->SetVisible(0);
+        parent->LowerToBottom(this);
         mDownTime = 0;
       }
       return true;

@@ -43,7 +43,8 @@ namespace MFM {
       switch (atype) {
         //      case T2_PHONY_DREG_TYPE: color = 0xff444444; break;
       case T2_PHONY_DREG_TYPE: color = 0xffccdd44; break; // GO YELLOW FOR VIZ
-      case T2_PHONY_RES_TYPE: color = 0xff3344ee; break;  // BLUEZ FOR DIFFERENCE
+        //      case T2_PHONY_RES_TYPE: color = 0xff3344ee; break;  // BLUEZ FOR DIFFERENCE
+      case T2_PHONY_RES_TYPE: color = 0xffccffcc; break;  // WHITEISHZ FOR DIFFERENCE
       default: color = 0xffffffff; break;
       }
 

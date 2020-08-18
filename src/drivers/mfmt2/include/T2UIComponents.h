@@ -3,6 +3,7 @@
 #define T2UICOMPONENTS_H
 
 #include "AbstractCheckbox.h"
+#include "T2FlashTrafficManager.h"
 
 namespace MFM {
 
@@ -34,7 +35,12 @@ namespace MFM {
     // T2UIButton methods
     virtual void onClick() = 0;
   };
-  
+
+  struct T2FlashCommandLabel : T2UIButton {
+    // T2UIButton methods
+    virtual void onClick() ;
+  };
+
   struct T2HardButton : public T2UIButton {
     T2HardButton() : mDownTime(0) { }
 
