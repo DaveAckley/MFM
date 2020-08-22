@@ -55,6 +55,12 @@ $0 make HANDLE MFZFILETOMAKE filetopack1 filetopack2..
 
     Other files are accepted and packed by mfzmake, but unused by mfzrun.
 
+$0 cdmake REGNUM MFZFILETOMAKE filetopack1 filetopack2..
+
+    Same as '$0 make' except takes the REGNUM of a registered handle
+    instead of the handle name itself.  'cdmake' is required for .mfz
+    files that are to be distributed by CDM on a T2 tile grid.
+
 $0 keygen HANDLE
 
     Generate a signing key for HANDLE.
@@ -99,6 +105,7 @@ Help() if $verb eq "help" or $verb eq "-h" or $verb eq "--help";
 VersionExit("mfzmake") if $verb eq "version" or $verb eq "-v";
 UDie("Unknown switch '$verb'") if $verb =~ /^-/;
 
+DoCDMake() if $verb eq "cdmake";
 DoMake() if $verb eq "make";
 DoKeygen() if $verb eq "keygen";
 DoKeydel() if $verb eq "keydel";
@@ -110,10 +117,21 @@ DoVerify() if $verb eq "verify";
 UDie("Unknown command '$verb'");
 
 ############################3
-# DoMake
+# DoMake / DoCDMake
 
 sub DoMake {
     my $handle = GetLegalHandle(NextArg());
+
+    DoMakeWithHandle($handle,undef);
+}
+
+sub DoCDMake {
+    my ($regnum,$handle) = GetLegalRegnum(NextArg());
+    DoMakeWithHandle($handle,$regnum);
+}
+
+sub DoMakeWithHandle {
+    my ($handle,$regnum) = @_;
 
     my $privkeyfile = GetPrivateKeyFile($handle);
     $privkeyfile = ReadableFileOrDie("private key file", $privkeyfile);
@@ -136,11 +154,14 @@ sub DoMake {
     for my $file (@files) {
         ReadableFileOrDie("file to pack", $file);
     }
-    my $inner = MakeInnerZip($pubkeydata,$mfzfilename, @files);
+    my ($inner,$innertime) = MakeInnerZip($pubkeydata,$mfzfilename, @files);
 
     my $signed = SignString($privkeyfile, $inner);
 #    WriteWholeFile($mfzfile,MFZRUN_HEADER.$signed.$inner,0644);
-    my $outer = MakeOuterZip($signed,$inner);
+    my $announce = undef;
+    $announce = MakeAnnouncement($regnum,$mfzfilename,$privkeyfile,$inner,$innertime)
+        if defined $regnum;
+    my $outer = MakeOuterZip($signed,$inner,$announce);
     WriteWholeFile($mfzfile,MFZRUN_HEADER.$outer,0644);
     print "Wrote '$mfzfile'\n";
     exit 0;
@@ -393,12 +414,65 @@ sub ConfigureZipOptions {
 #    print "$zipVer/@zipOtherOptions\n";
 }
 
+sub MakeAnnouncement {
+    my ($regnum, $mfzfile, $privkeyfile, $inner, $innertime) = @_;
+    $mfzfile =~ /^(.*?)[.]mfz$/ or IDie("Not .mfz: $mfzfile");
+    my $contentname = $1;
+    UDie("Name '$mfzfile' is too long for CDM (max 54 bytes)")
+        if length($contentname) > 50;
+    my $checksum = ComputeChecksumPrefixOfString($inner,8);
+    print "ZONG\nZONG\nZONG3($innertime/$regnum)".length($inner)."\n";
+    my $signature = SignStringRaw($privkeyfile, $inner);
+    IDie("Bad sig len ".length($signature))
+        if length($signature) != 128;
+    my $ANNOUNCE_FORMAT = ""
+        ."CCA"       # hdr
+        ."C"          # announce version
+        ."N"          # inner timestamp
+        ."N"          # inner length
+        ."n"          # regnum
+        ."A8"         # inner checksum
+        ."A50"        # content name
+        ."A128"       # RSA sig
+        ;
+    my $packet =
+        pack($ANNOUNCE_FORMAT
+             ,0x80, 0x83, "F"
+             ,1
+             ,$innertime
+             ,length($inner)
+             ,$regnum
+             ,$checksum
+             ,$contentname
+             ,$signature);
+    print "ZANG(".length($packet)."  ".join(",",unpack("C*",$packet)).")\n";
+    return $packet;
+}
+
 sub MakeInnerZip {
     my ($pubkeydata,$mfzfilename,@files) = @_;
     my $compressedoutput;
+    # 202008220440 It appears that (this (perl) packaging of) zip has
+    #   a problem with setting the Time field to an odd number?  At
+    #   least, in all my tests on Ubuntu 16.04, the epoch time from
+    #   the zip header appears to always be even, even if the time
+    #   assigned via the 'Time' (and/or 'exTime') fields are odd.  But
+    #   it appears that even-second-times go in and out unchanged.  So
+    #   for now anyway, only using even times.
+    #
+    # Ah, and a snippet from stackoverflow.com: 
+    #   Zip entry timestamps are recorded only to two 2 second
+    #   precision. This reflects the accuracy of DOS timestamps in use
+    #   when PKZIP was created. That number recorded in the Zip will
+    #   be the timestamp truncated, not the nearest 2 seconds.
+    #
+    # So I guess this is 'correct' rather than 'a hack':
+    my $assignedinnertime = int(time()/2)*2; 
+
     my $z = new IO::Compress::Zip
         \$compressedoutput,
         Name          => MFZ_PUBKEY_NAME,
+        Time          => $assignedinnertime,
         @zipOtherOptions,
         BinModeIn     => 1
         or IDie("Zip init failed for inner: $ZipError");
@@ -406,6 +480,7 @@ sub MakeInnerZip {
 
     $z->newStream(
         Name          => MFZ_FILE_NAME,
+        Time          => $assignedinnertime,
         @zipOtherOptions,
         BinModeIn     => 1)
         or die "Zip reinit failed on ".MFZ_FILE_NAME.": $ZipError\n";
@@ -435,11 +510,11 @@ sub MakeInnerZip {
     }
 
     close $z;
-    return $compressedoutput;
+    return ($compressedoutput,$assignedinnertime);
 }
 
 sub MakeOuterZip {
-    my ($signature,$inner) = @_;
+    my ($signature,$inner,$announce) = @_;
     my $compressedoutput;
     my $z = new IO::Compress::Zip
         \$compressedoutput,
@@ -457,11 +532,21 @@ sub MakeOuterZip {
         or die "Zip reinit failed for outer: $ZipError\n";
     $z->print($inner);
 
+    if (defined $announce) {
+        $z->newStream(
+            Name          => CDM_ANNOUNCE_NAME,
+            @zipOtherOptions,
+            BinModeIn     => 1,
+            ExtAttr       => 0666 << 16)
+            or die "Zip reinit failed for outer: $ZipError\n";
+        $z->print($announce);
+    }
+
     close $z;
     return $compressedoutput;
 }
 
-sub SignString {
+sub SignStringRaw {
     my ($privkeyfile, $datatosign) = @_;
 
     my $keystring = ReadWholeFile( $privkeyfile );
@@ -469,6 +554,12 @@ sub SignString {
     $privatekey->use_pkcs1_padding();
     $privatekey->use_sha512_hash();
     my $signature = $privatekey->sign($datatosign);
+    return $signature;
+}
+
+sub SignString {
+    my ($privkeyfile, $datatosign) = @_;
+    my $signature = SignStringRaw($privkeyfile, $datatosign);
     return encode_base64($signature, '');
 }
 
