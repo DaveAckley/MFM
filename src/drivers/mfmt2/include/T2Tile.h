@@ -19,10 +19,10 @@
 
 //Spike files
 #include "T2Constants.h"
+#include "T2Main.h"
 #include "T2Types.h"
 #include "T2ITC.h"
 #include "EWSet.h"
-#include "TimeQueue.h"
 #include "SDLI.h"
 #include "ADCCtl.h"
 #include "Sites.h"
@@ -32,8 +32,6 @@
 #include "T2FlashTrafficManager.h"
 
 namespace MFM {
-
-  const char * getDir6Name(Dir6 dir6) ;  ///// THIS SO DOES NOT BELONG HERE
 
   struct EWInitiator : public TimeoutAble {
     EWInitiator() ;
@@ -69,25 +67,17 @@ namespace MFM {
 
   typedef std::map<u32,u32> AtomTypeCountMap;
   
-  struct T2Tile {
+  struct T2Tile : public T2Main {
 
-    static inline T2Tile & get() {
-      static bool underConstruction;
-      if (underConstruction) {
-        // Go bare lib: LOG etc may not be available yet
-        fprintf(stderr,"%s Reentry during construction\n",__PRETTY_FUNCTION__);
-        FAIL(ILLEGAL_STATE);
-      }
-      underConstruction = true;
-      {
-        static T2Tile THE_INSTANCE;
-        underConstruction = false;
-        return THE_INSTANCE;
-      }
+    // Get the T2Main singleton set up;
+    static void initInstance() { new T2Tile(); }
+
+    static T2Tile & get() {
+      T2Main * o = &T2Main::get();
+      T2Tile * t = dynamic_cast<T2Tile*>(o);
+      MFM_API_ASSERT_NONNULL(t);
+      return (T2Tile&) *t;
     }
-
-    T2Tile() ;
-    ~T2Tile() ;
 
     bool isLiving() const { return mLiving; }
     
@@ -114,8 +104,6 @@ namespace MFM {
     ///
     void setMFZId(const char * mfzid) ;
     const char * getMFZId() const ;
-
-    Random & getRandom() { return mRandom; }
 
     SDLI & getSDLI() { return mSDLI; }
 
@@ -191,8 +179,6 @@ namespace MFM {
 
     void insertOnMasterTimeQueue(TimeoutAble & ta, u32 fromNow, s32 fuzzbits=-1) ;
 
-    u32 now() const { return mTimeQueue.now(); }
-    TimeQueue & getTQ() { return mTimeQueue; }
 
     const Sites& getSites() const { return mSites; }
     Sites& getSites() { return mSites; }
@@ -243,8 +229,6 @@ namespace MFM {
     CPUFreq & getCPUFreq() { return mCPUFreq; }
 
   private:
-    Random mRandom;
-    TimeQueue mTimeQueue;
     TraceLogger* mTraceLoggerPtr;
 
     int mArgc;
@@ -360,6 +344,9 @@ namespace MFM {
     u32 mRollingTraceTargetKB;
     u32 mRollingTraceSpinner;
 
+  protected:
+    T2Tile() ;
+    ~T2Tile() ;
   };
 }
 #endif /* T2TILE_H */

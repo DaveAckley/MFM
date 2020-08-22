@@ -73,6 +73,9 @@ namespace MFM {
     LOG.SetByteSink(STDERR);
     LOG.SetLevel(LOG.MESSAGE);
 
+    // MAKE THE SINGLETON
+    T2Tile::initInstance();
+
     T2Tile & tile = T2Tile::get();
     tile.initEverything(argc,argv);
 

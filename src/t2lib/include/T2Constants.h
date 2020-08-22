@@ -1,6 +1,10 @@
 #ifndef T2CONSTANTS_H
 #define T2CONSTANTS_H
 
+#include "T2Types.h"
+
+#include "dirdatamacro.h"
+
 /** Maximum number of active event windows in flight */
 #define MAX_EWSLOT 32
 
@@ -58,6 +62,25 @@
    !T2_SITE_IS_CACHE(u32x,u32y))                \
   
 
+  /**** ITC STATE MACHINE: EARLY STATES HACKERY ****/
+
+#define ALL_ITC_STATES_MACRO()                                   \
+  /*   name   vz,ch,mc,to,rc,sb,desc */                          \
+  XX(SHUT,     1, 0, 0, 1, 1, 0, "EWs running locally")          \
+  XX(DRAIN,    0, 0, 0, 1, 1, 0, "drain EWs to settle cache")    \
+  XX(CACHEXG,  0, 0, 2, 1, 1, 0, "exchange cache atoms")         \
+  XX(OPEN,     1, 1, 2, 1, 1, 0, "intertile EWs active")         \
+
+  /*** DECLARE STATE NUMBERS **/
+  typedef enum itcstatenumber {
+
+#define XX(NAME,VIZ,CCH,MINCOMP,CUSTO,CUSRC,STUB,DESC) ITCSN_##NAME,
+  ALL_ITC_STATES_MACRO()
+#undef XX
+
+    MAX_ITC_STATE_NUMBER
+  } ITCStateNumber;
+
 //////MISC DEFINES
 #define CIRCUITS_PER_ACTIVE_EW 2
 
@@ -103,6 +126,21 @@ namespace MFM {
 }
 
 namespace MFM {
+  
+#define ALL_DIR6_MACRO() XX(ET)YY XX(SE)YY XX(SW)YY XX(WT)YY XX(NW)YY XX(NE)ZZ
+
+  static inline const char * getDir6Name(Dir6 dir6) {
+    switch (dir6) {
+    default: return "illegal";
+#define XX(dir6) case DIR6_##dir6: return #dir6;
+#define YY 
+#define ZZ
+      ALL_DIR6_MACRO()
+#undef XX
+#undef YY
+#undef ZZ
+     }
+  }
 
 #define ALL_RESOURCE_TYPES()  \
     XX(GRID_VOLTAGE)YY        \
@@ -141,6 +179,11 @@ namespace MFM {
   const char * resourceTypeName(ResourceType rt) ;
 
   const char * resourceLevelName(ResourceLevel rl) ;
+
+  const char * getITCStateName(ITCStateNumber sn) ;
+
+  const char * getITCStateDescription(ITCStateNumber sn) ;
+  
 }
 
 #endif /*T2CONSTANTS_H*/

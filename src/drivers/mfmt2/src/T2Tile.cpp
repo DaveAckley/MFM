@@ -13,22 +13,7 @@
 #include "T2EventWindow.h"
 #include "TraceTypes.h"
 
-#define ALL_DIR6_MACRO() XX(ET)YY XX(SE)YY XX(SW)YY XX(WT)YY XX(NW)YY XX(NE)ZZ
-
 namespace MFM {
-
-  const char * getDir6Name(Dir6 dir6) {
-    switch (dir6) {
-    default: return "illegal";
-#define XX(dir6) case DIR6_##dir6: return #dir6;
-#define YY 
-#define ZZ
-      ALL_DIR6_MACRO()
-#undef XX
-#undef YY
-#undef ZZ
-     }
-  }
 
   CoreTempChecker::CoreTempChecker() {
     LOG.Debug("%s",__PRETTY_FUNCTION__);
@@ -145,8 +130,7 @@ namespace MFM {
   }
 
   T2Tile::T2Tile()
-    : mRandom()                      // Earliest service!
-    , mTimeQueue(this->getRandom())  // Next earliest!
+    : T2Main()
     , mTraceLoggerPtr(0)
     , mArgc(0)
     , mArgv(0)

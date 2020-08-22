@@ -6,6 +6,7 @@
 #include "P3Atom.h"
 #include "Site.h"
 #include "AtomSerializer.h"
+#include "OverflowableCharBufferByteSink.h"
 
 namespace MFM {
 

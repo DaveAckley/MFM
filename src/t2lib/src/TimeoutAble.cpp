@@ -1,6 +1,6 @@
 #include "TimeoutAble.h"
 
-#include "T2Tile.h"
+#include "T2Main.h"
 #include "TimeQueue.h"
 
 namespace MFM {
@@ -64,7 +64,7 @@ namespace MFM {
 
   void TimeoutAble::scheduleWait(WaitCode wc) {
     u32 ms;
-    T2Tile & tile = T2Tile::get();
+    T2Main & tile = T2Main::get();
     TimeQueue & tq = tile.getTQ();
     Random & random = tile.getRandom();
     switch (wc) {
@@ -83,7 +83,7 @@ namespace MFM {
 
   s32 TimeoutAble::msTilTimeout() const {
     // Don't rely on mOnTQ since we want an answer even if unscheduled
-    u32 now = T2Tile::get().now();
+    u32 now = T2Main::get().now();
     return (s32) (mTimeMS - now);
   }
 

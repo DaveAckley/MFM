@@ -1,6 +1,5 @@
 #include "T2PacketBuffer.h"
-#include "T2Tile.h" /*for getDir6Name?*/
-
+#include "T2Constants.h"
 
 namespace MFM {
   //  namespace T2Packet {
@@ -21,7 +20,6 @@ namespace MFM {
       }
       return false;
     }
-
 
     void reportPacketAnalysis(const T2PacketBuffer & pb, ByteSink & bs) {
       u8 src, sn, cs, cn;
