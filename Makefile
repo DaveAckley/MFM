@@ -47,9 +47,10 @@ tar:	FORCE
 	PWD=`pwd`;BASE=`basename $$PWD`;cd ..;tar cvzf mfm-$(MFM_VERSION_NUMBER).tgz $(TAR_SWITCHES) $$BASE
 
 ifeq ($(PLATFORM),tile)
+REGNUM:=0
 cdmd:	FORCE
 	echo make
-	MPWD=`pwd`;BASE=`basename $$MPWD`;echo $$MPWD for $$BASE;pushd ..;tar cvzf $$BASE-built.tgz $(TAR_SWITCHES) $$BASE;cp -f $$BASE-built.tgz /home/debian/CDMSAVE/TGZS/;/home/t2/MFM/bin/mfzmake make - cdmd-$$BASE.mfz $$BASE-built.tgz;cp -f cdmd-$$BASE.mfz /home/debian/CDMSAVE/CDMDS/;popd
+	MPWD=`pwd`;BASE=`basename $$MPWD`;echo $$MPWD for $$BASE;pushd ..;tar cvzf $$BASE-built.tgz $(TAR_SWITCHES) $$BASE;cp -f $$BASE-built.tgz /home/debian/CDMSAVE/TGZS/;/home/t2/MFM/bin/mfzmake cdmake $(REGNUM) cdmd-$$BASE.mfz $$BASE-built.tgz;cp -f cdmd-$$BASE.mfz /home/debian/CDMSAVE/CDMDS/;popd
 endif
 
 identify:	FORCE
