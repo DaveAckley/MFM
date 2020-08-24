@@ -17,6 +17,26 @@ sub MFZ_ZIP_NAME { "MFZ.ZIP" }
 sub CDM_ANNOUNCE_NAME { "ANNOUNCE.PKT" }
 sub CDM_ANNOUNCE_VERSION { 1 }
 
+sub ANNOUNCE_PACK_DATA_FORMAT {
+    ""  # 0
+        ."CCa"        #   0 +   3 =   3 hdr
+        ."C"          #   3 +   1 =   4 announce version
+        ."N"          #   4 +   4 =   8 inner timestamp
+        ."N"          #   8 +   4 =  12 inner length
+        ."n"          #  12 +   2 =  14 regnum
+        ."a8"         #  14 +   8 =  22 inner checksum
+        ."a50"        #  22 +  50 =  72 content name
+        #  72 total length for data
+}
+
+sub ANNOUNCE_PACK_PACKET_FORMAT {
+    "" # 0
+        ."a72"        #   0 +  72 =  72 data
+        ."a128"       #  72 + 128 = 200 RSA sig of bytes 0..71
+}
+
+sub ANNOUNCE_PACKET_LENGTH { 200 }
+
 my $programName = $0;  # default
 sub SetProgramName {
     $programName = shift;

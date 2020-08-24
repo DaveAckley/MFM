@@ -48,6 +48,9 @@ $0 $progname list
     Check the file signature and list contents but do not run it
     (use LIST to print full paths)
 
+$0 $progname announce
+    Print the contents of the ANNOUNCE.PKT metadata file, if it exists.
+
 $0 $progname unpack [DESTINATION_DIRECTORY]
     Verify and unpack the file but do not run it
 
@@ -72,6 +75,7 @@ my %verbs = (
     "demo" => 1,
     "unpack" => 1,
     "list" => 1,
+    "announce" => 1,
     "" => 1,
 );
 
@@ -169,6 +173,30 @@ die "Invalid signature '$sigdata'/'$sig'" unless $rsapub->verify($zipdata, $sig)
 
 ValidatePubKey($pubhandle,$pubkey);
 my $fingerprint = ComputeFingerprintFromFullPublicKey($fullpubstring);
+
+if ($verb eq "announce") {
+    my ($pktpath,$pktname,undef,$pktdata) = FindName(\@outerpaths,CDM_ANNOUNCE_NAME,undef);
+    unless (defined $pktname) {
+        print STDERR "No ".CDM_ANNOUNCE_NAME." in $progname\n";
+        exit;
+    }
+
+    unless (length($pktdata) == ANNOUNCE_PACKET_LENGTH) {
+        die "Corrupt announcement";
+    }
+    my ($data, $sig) = unpack(ANNOUNCE_PACK_PACKET_FORMAT, $pktdata);
+            
+    my $rsapub = Crypt::OpenSSL::RSA->new_public_key($pubkey);
+    $rsapub->use_pkcs1_padding();
+    $rsapub->use_sha512_hash();
+
+#    print "COORD($data)\n";
+    die CDM_ANNOUNCE_NAME." has invalid signature ($pubhandle)" unless $rsapub->verify($data, $sig);
+
+    print $pktdata;
+    exit;
+}
+
 
 if ($optverb eq "VERIFY") {
     my $checksum = ComputeChecksumOfString($zipdata);

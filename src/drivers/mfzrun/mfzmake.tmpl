@@ -421,22 +421,10 @@ sub MakeAnnouncement {
     UDie("Name '$mfzfile' is too long for CDM (max 54 bytes)")
         if length($contentname) > 50;
     my $checksum = ComputeChecksumPrefixOfString($inner,8);
-    print "ZONG\nZONG\nZONG3($innertime/$regnum)".length($inner)."\n";
-    my $signature = SignStringRaw($privkeyfile, $inner);
-    IDie("Bad sig len ".length($signature))
-        if length($signature) != 128;
-    my $ANNOUNCE_FORMAT = ""
-        ."CCA"       # hdr
-        ."C"          # announce version
-        ."N"          # inner timestamp
-        ."N"          # inner length
-        ."n"          # regnum
-        ."A8"         # inner checksum
-        ."A50"        # content name
-        ."A128"       # RSA sig
-        ;
-    my $packet =
-        pack($ANNOUNCE_FORMAT
+#    print "ZONG\nZONG($privkeyfile)\nZONG3($innertime/$regnum)".length($inner)."\n";
+
+    my $packetdata =
+        pack(ANNOUNCE_PACK_DATA_FORMAT
              ,0x80, 0x83, "F"
              ,1
              ,$innertime
@@ -444,8 +432,18 @@ sub MakeAnnouncement {
              ,$regnum
              ,$checksum
              ,$contentname
-             ,$signature);
-    print "ZANG(".length($packet)."  ".join(",",unpack("C*",$packet)).")\n";
+        );
+
+    my $signature = SignStringRaw($privkeyfile, $packetdata);
+    IDie("Bad sig len ".length($signature))
+        if length($signature) != 128;
+    my $packet =
+        pack(ANNOUNCE_PACK_PACKET_FORMAT
+             , $packetdata
+             , $signature
+        );
+#    print "COORD($packetdata)\n";
+#    print "ZANG(".length($packet)."  ".join(",",unpack("C*",$packet)).")\n";
     return $packet;
 }
 
