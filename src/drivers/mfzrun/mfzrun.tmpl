@@ -42,14 +42,15 @@ $0 $progname -h
 
 $0 $progname verify
     Check the file signature but do not run it
-    (use VERIFY for to report more details)
+    (use VERIFY to report more details)
 
 $0 $progname list
     Check the file signature and list contents but do not run it
     (use LIST to print full paths)
 
 $0 $progname announce
-    Print the contents of the ANNOUNCE.PKT metadata file, if it exists.
+    Print the contents of the ANNOUNCE.PKT metadata file, if it exists
+    (use ANNOUNCE to append VERIFY info as well)
 
 $0 $progname unpack [DESTINATION_DIRECTORY]
     Verify and unpack the file but do not run it
@@ -194,7 +195,12 @@ if ($verb eq "announce") {
     die CDM_ANNOUNCE_NAME." has invalid signature ($pubhandle)" unless $rsapub->verify($data, $sig);
 
     print $pktdata;
-    exit;
+    if ($optverb eq "ANNOUNCE") {  # use ANNOUNCE to get the packet + VERIFY info
+        $optverb = "VERIFY";
+        $verb = lc($optverb);
+    } else {
+        exit;
+    }
 }
 
 
