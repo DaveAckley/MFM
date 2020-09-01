@@ -49,8 +49,15 @@ tar:	FORCE
 ifeq ($(PLATFORM),tile)
 REGNUM:=0
 cdmd:	FORCE
-	echo make
-	MPWD=`pwd`;BASE=`basename $$MPWD`;echo $$MPWD for $$BASE;pushd ..;tar cvzf $$BASE-built.tgz $(TAR_SWITCHES) $$BASE;cp -f $$BASE-built.tgz /home/debian/CDMSAVE/TGZS/;/home/t2/MFM/bin/mfzmake cdmake $(REGNUM) cdmd-$$BASE.mfz $$BASE-built.tgz;cp -f cdmd-$$BASE.mfz /home/debian/CDMSAVE/CDMDS/;popd
+	MPWD=`pwd`;BASE=`basename $$MPWD`; \
+	echo $$MPWD for $$BASE; \
+	pushd ..;tar cvzf $$BASE-built.tgz $(TAR_SWITCHES) $$BASE; \
+	cp -f $$BASE-built.tgz /home/debian/CDMSAVE/TGZS/; \
+	/home/t2/MFM/bin/mfzmake cdmake $(REGNUM) cdmd-$$BASE.mfz $$BASE-built.tgz; \
+	/home/t2/MFM/bin/mfzrun -kd /cdm ./cdmd-$$BASE.mfz VERIFY | \
+	perl -ne 'print $$1 if /INNER_TIMESTAMP \[(\d+)\]/' > ./cdmd-$$BASE.mfz-cdm-install-tag.dat; \
+	cp -f cdmd-$$BASE.mfz /home/debian/CDMSAVE/CDMDS/; \
+	popd
 endif
 
 identify:	FORCE
