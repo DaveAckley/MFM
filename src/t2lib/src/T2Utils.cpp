@@ -1,5 +1,6 @@
 #include "T2Utils.h"
 #include "FileByteSink.h"
+#include <sys/stat.h>
 
 namespace MFM {
 
@@ -17,6 +18,12 @@ namespace MFM {
       to.Printf(",%03d", (u32) (num%1000));
     } else
       to.Printf("%d", (u32) num);
+  }
+
+  u32 getModTimeOfFile(const char* path) {
+    struct stat buf;
+    if (stat(path,&buf) != 0) return 0;
+    return (u32) buf.st_mtime; // seconds res is all we want
   }
 
   bool readWholeFile(const char* path, ByteSink& to) {

@@ -8,6 +8,7 @@
 #include "OverflowableCharBufferByteSink.h"
 
 namespace MFM {
+  u32 getModTimeOfFile(const char* path) ;
   bool readWholeFile(const char* path, ByteSink &to) ;
   bool readOneLinerFile(const char* path, ByteSink &to) ;
   bool readOneDecimalNumberFile(const char* path, s32 &to) ;

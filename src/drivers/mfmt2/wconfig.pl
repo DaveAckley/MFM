@@ -173,6 +173,20 @@ $AUTOGEN_STAMP
     fontheightadjust=-6
     elevatorwidth=4
     doc="Current time queue dump"
+[CDM CDMPanel Root $TW $TH $VIZINDENT $VIZINDENT]
+    visible=1
+    fgcolor=#aaffff
+    bgcolor=#551111
+    font=0
+    fontheightadjust=-12
+    elevatorwidth=1
+    doc="CDM status and control"
+[CDM_Button_X MenuItem CDM `bfs6x6(5,5)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="X"
+    action="GO GlobalMenu"
 [Sites T2GridPanel Root $GW $GH $GRIDINDENT $GRIDINDENT]
     bgcolor=#222222
 [HardButtonPanel HardButton Root `bfs3x3(1,1)`]
@@ -221,6 +235,12 @@ $AUTOGEN_STAMP
     font=1
     text="TQ"
     action="GO TQ"
+[GlobalMenu_Button_CDM MenuItem GlobalMenu `bfs6x6(0,4,1,5)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="CDM"
+    action="GO CDM"
 [GlobalMenu_Button_Physics MenuItem GlobalMenu `bfs3x3(2,0)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
@@ -235,7 +255,7 @@ $AUTOGEN_STAMP
     fgcolor=#000000
     text="Tile"
     action="GO T2Viz"
-[GlobalMenu_Button_X MenuItem GlobalMenu `bfs6x6(1,4,4,5)`]
+[GlobalMenu_Button_X MenuItem GlobalMenu `bfs6x6(2,4,5,5)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
     font=1

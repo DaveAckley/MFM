@@ -20,6 +20,7 @@
 #include "T2GridPanel.h"
 #include "T2TimeQueuePanel.h"
 #include "T2UIComponents.h"
+#include "T2CDMPanel.h"
 
 namespace MFM
 {
@@ -295,6 +296,7 @@ namespace MFM
     if (type.Equals("MenuItem")) return new MenuItem(); 
     if (type.Equals("T2GridPanel")) return new T2GridPanel(); 
     if (type.Equals("TQPanel")) return new T2TimeQueuePanel(); 
+    if (type.Equals("CDMPanel")) return new T2CDMPanel(); 
     if (type.Equals("T2TileLiveCheckbox")) return new T2TileLiveCheckbox(); 
     if (type.Equals("T2TileListenCheckbox")) return new T2TileListenCheckbox(); 
     if (type.Equals("HardButton")) return new T2HardButton(); 
