@@ -425,8 +425,8 @@ sub MakeAnnouncement {
 
     my $packetdata =
         pack(ANNOUNCE_PACK_DATA_FORMAT
-             ,0x80, 0x83, "F"
-             ,1
+             ,0x80, 0x83, "S"
+             ,2
              ,$innertime
              ,length($inner)
              ,$regnum
