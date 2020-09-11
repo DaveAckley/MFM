@@ -1199,11 +1199,8 @@ namespace MFM
       
       fs.Printf("\"event_layer_atoms\":[\n");
       bool first_event_layer_atom = true;
-      const u32 printFlags =
-        UlamClassPrintFlags::PRINT_INDENTED_LINES |
-        UlamClassPrintFlags::PRINT_FORMAT_JSON;
+      const u32 printFlags = UlamClassPrintFlags::PRINT_FORMAT_JSON;
 
-      OString2048 atombuff;
       for(s32 y = 0; y < (s32)gridHeight; y++)
       {
         for(s32 x = 0; x < (s32)gridWidth; x++)
@@ -1213,8 +1210,6 @@ namespace MFM
           siteInGrid.SetY(y);
           if(isStaggeredGrid && !grid.IsGridCoord(siteInGrid)) continue;
 
-          atombuff.Reset();
-  
           T* atom = grid.GetWritableAtom(siteInGrid);
           const T empty = tile.GetEmptyAtom();
           const u32 t = atom->GetType();
@@ -1227,7 +1222,6 @@ namespace MFM
             const Element<EC> * e = grid.LookupElement(t);
             const UlamElement<EC> * uelt = e->AsUlamElement();
   
-            uelt->Print(ucr, atombuff, *atom, printFlags, T::ATOM_FIRST_STATE_BIT);
             if(first_event_layer_atom)
             {
               first_event_layer_atom = false;
@@ -1241,16 +1235,16 @@ namespace MFM
                       "\"symbol\":\"%s\", "
                       "\"name\":\"%s\", "
                       "\"argb\":%d, "
-                      "\"data_members\":{%s}"
-                      "}"
+                      "\"data_members\":{%s"
                       ,siteInGrid.GetX()
                       ,siteInGrid.GetY()
                       ,e->GetAtomicSymbol()
                       ,e->GetName()
                       ,e->GetDynamicColor(et, ucr, *atom, 0)
-                      ,atombuff.GetZString());
-          }
-          atombuff.Reset();
+	    );
+            uelt->Print(ucr, fs, *atom, printFlags, T::ATOM_FIRST_STATE_BIT);
+	    fs.Printf("}}");
+	  }
         }
       }
       fs.Printf("\n],");
@@ -1269,8 +1263,6 @@ namespace MFM
           siteInGrid.SetY(y);
           if(isStaggeredGrid && !grid.IsGridCoord(siteInGrid)) continue;
   
-          atombuff.Reset();
-            
           const T* atom = grid.GetAtomInSite(true, siteInGrid);
           const T empty = tile.GetEmptyAtom();
           const u32 t = atom->GetType();
@@ -1283,7 +1275,6 @@ namespace MFM
             const Element<EC> * e = grid.LookupElement(t);
             const UlamElement<EC> * uelt = e->AsUlamElement();
   
-            uelt->Print(ucr, atombuff, *atom, printFlags, T::ATOM_FIRST_STATE_BIT);
             if(first_base_layer_atom)
             {
               first_base_layer_atom = false;
@@ -1297,16 +1288,17 @@ namespace MFM
                       "\"symbol\":\"%s\", "
                       "\"name\":\"%s\", "
                       "\"argb\":%d, "
-                      "\"data_members\":{%s}"
-                      "}"
+                      "\"data_members\":{%s"
                       ,siteInGrid.GetX()
                       ,siteInGrid.GetY()
                       ,e->GetAtomicSymbol()
                       ,e->GetName()
                       ,e->GetDynamicColor(et, ucr, *atom, 0)
-                      ,atombuff.GetZString());
-          }
-          atombuff.Reset();
+	    );
+          
+            uelt->Print(ucr, fs, *atom, printFlags, T::ATOM_FIRST_STATE_BIT);
+	    fs.Printf("}}");
+	  }
         }
       }
       fs.Printf("\n]}");
