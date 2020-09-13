@@ -14,28 +14,30 @@ sub MFZ_PUBKEY_NAME { "MFZPUBKEY.DAT" }
 sub MFZ_FILE_NAME { "MFZNAME.DAT" }
 sub MFZ_SIG_NAME { "MFZSIG.DAT" }
 sub MFZ_ZIP_NAME { "MFZ.ZIP" }
-sub CDM_ANNOUNCE_NAME { "ANNOUNCE.PKT" }
-sub CDM_ANNOUNCE_VERSION { 1 }
 
-sub ANNOUNCE_PACK_DATA_FORMAT {
-    ""  # 0
-        ."CCa"        #   0 +   3 =   3 hdr
-        ."C"          #   3 +   1 =   4 announce version
-        ."N"          #   4 +   4 =   8 inner timestamp
-        ."N"          #   8 +   4 =  12 inner length
-        ."n"          #  12 +   2 =  14 regnum
-        ."a8"         #  14 +   8 =  22 inner checksum
-        ."a50"        #  22 +  50 =  72 content name
-        #  72 total length for data
-}
+use constant CDM_FORMAT_MAGIC => "CDM";
+use constant CDM_FORMAT_VERSION_MAJOR => "1";
+use constant CDM_FORMAT_VERSION_MINOR => "0";
 
-sub ANNOUNCE_PACK_PACKET_FORMAT {
-    "" # 0
-        ."a72"        #   0 +  72 =  72 data
-        ."a128"       #  72 + 128 = 200 RSA sig of bytes 0..71
-}
+use constant CDM10_PACK_SIGNED_DATA_FORMAT =>
+    ""            #   0
+    ."a6"         #   0 +   6 =    6 magic + maj + min + \n
+    ."C1"         #   6 +   1 =    7 bits in block size
+    ."C1"         #   7 +   1 =    8 regnum
+    ."N"          #   8 +   4 =   12 slotstamp
+    ."N"          #  12 +   4 =   16 mapped file length
+    ."a16"        #  16 +  16 =   32 label
+    ."a64"        #  32 +  64 =   96 sha512 mapped file checksum
+    ."(a8)100"    #  96 + 800 =  896 100*8 byte xsum map
+    #  896 total length
+    ;
 
-sub ANNOUNCE_PACKET_LENGTH { 200 }
+use constant CDM10_PACK_FULL_FILE_FORMAT =>
+    ""            #   0
+    ."a896"       #   0 + 896 =  896 as from CDM10_PACK_SIGNED_DATA_FORMAT
+    ."a128"       # 896 + 128 = 1024 RSA sig by regnum of bytes 0..895
+    # 1024 total length
+    ;
 
 my $programName = $0;  # default
 sub SetProgramName {
@@ -142,6 +144,15 @@ sub ReadPublicKeyFile {
     UDie("Non-matching handle in public key file '$file' ('$handle' vs '$pubhandle')")
         unless $pubhandle eq $handle;
     return ($key, ComputeFingerprintFromFullPublicKey($data));
+}
+
+sub CheckForPubKey {
+    my $handle = shift;
+    my $path = GetPublicKeyFile($handle);
+    if (-r $path) {
+        return ($path, ReadPublicKeyFile($handle));
+    }
+    return ($path);
 }
 
 sub GetConfigDir {
@@ -440,6 +451,22 @@ sub FindName {
     return undef;
 }
 
+sub SignStringRaw {
+    my ($privkeyfile, $datatosign) = @_;
+
+    my $keystring = ReadWholeFile( $privkeyfile );
+    my $privatekey = Crypt::OpenSSL::RSA->new_private_key($keystring);
+    $privatekey->use_pkcs1_padding();
+    $privatekey->use_sha512_hash();
+    my $signature = $privatekey->sign($datatosign);
+    return $signature;
+}
+
+sub SignString {
+    my ($privkeyfile, $datatosign) = @_;
+    my $signature = SignStringRaw($privkeyfile, $datatosign);
+    return encode_base64($signature, '');
+}
 
 
 # End: common.pl.inc

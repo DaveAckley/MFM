@@ -1,5 +1,6 @@
 #!/usr/bin/perl -Tw
 # -*- mode:perl -*-
+use strict;
 
 sub BEGIN {
     # Seal us up a bit for living la vida tainted
@@ -49,8 +50,8 @@ $0 $progname list
     (use LIST to print full paths)
 
 $0 $progname announce
-    Print the contents of the ANNOUNCE.PKT metadata file, if it exists
-    (use ANNOUNCE to append VERIFY info as well)
+    [OBSOLETE] Print the contents of the ANNOUNCE.PKT metadata file,
+    if it exists (use ANNOUNCE to append VERIFY info as well)
 
 $0 $progname unpack [DESTINATION_DIRECTORY]
     Verify and unpack the file but do not run it
@@ -101,6 +102,15 @@ if (!open MFZ, "<", $progname) {
 }
 
 my $firstLine = <MFZ>;
+
+if (defined($firstLine) && $firstLine =~ /^CDM1\d\n$/) { # detect cdmake version 1 header
+    my $remainingLen = 1024-6;
+    my $data;
+    my $read = read MFZ,$data,$remainingLen;
+    die "Malformed CDM header or content"
+        unless $read == $remainingLen;
+    $firstLine = <MFZ>; # The poifect crime
+}
 
 die "Bad .mfz header in '$progname'"
     unless defined $firstLine and $firstLine eq MFZRUN_HEADER;
@@ -176,33 +186,8 @@ ValidatePubKey($pubhandle,$pubkey);
 my $fingerprint = ComputeFingerprintFromFullPublicKey($fullpubstring);
 
 if ($verb eq "announce") {
-    my ($pktpath,$pktname,undef,$pktdata) = FindName(\@outerpaths,CDM_ANNOUNCE_NAME,undef);
-    unless (defined $pktname) {
-        print STDERR "No ".CDM_ANNOUNCE_NAME." in $progname\n";
-        exit;
-    }
-
-    unless (length($pktdata) == ANNOUNCE_PACKET_LENGTH) {
-        die "Corrupt announcement";
-    }
-    my ($data, $sig) = unpack(ANNOUNCE_PACK_PACKET_FORMAT, $pktdata);
-            
-    my $rsapub = Crypt::OpenSSL::RSA->new_public_key($pubkey);
-    $rsapub->use_pkcs1_padding();
-    $rsapub->use_sha512_hash();
-
-#    print "COORD($data)\n";
-    die CDM_ANNOUNCE_NAME." has invalid signature ($pubhandle)" unless $rsapub->verify($data, $sig);
-
-    print $pktdata;
-    if ($optverb eq "ANNOUNCE") {  # use ANNOUNCE to get the packet + VERIFY info
-        $optverb = "VERIFY";
-        $verb = lc($optverb);
-    } else {
-        exit;
-    }
+    UDie("Obsolete function: $verb");
 }
-
 
 if ($optverb eq "VERIFY") {
     my $checksum = ComputeChecksumOfString($zipdata);
@@ -409,15 +394,6 @@ sub purifyArgs {
         $args[$i] = $1;
     }
     return @args;
-}
-
-sub CheckForPubKey {
-    my $handle = shift;
-    my $path = GetPublicKeyFile($handle);
-    if (-r $path) {
-        return ($path, ReadPublicKeyFile($handle));
-    }
-    return ($path);
 }
 
 sub TryToPromoteInstalledPubKey {
