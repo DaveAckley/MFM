@@ -17,6 +17,12 @@ include $(BASEDIR)/config/Makelib.mk
 
 ARCHIVES := $(wildcard $(BASEDIR)/build/*/*.a)
 
+# Aaand don't forget to make our own archive before trying to build
+# our program.  Given the above, after a 'realclean' $(ARCHIVES) is
+# empty.
+
+ARCHIVES += $(ARCHIVEPATH)
+
 $(BUILDDIR)/$(COMPONENTNAME).o:	src/main.cpp $(ALLDEP) $(BUILDDIR)/%.d
 	$(GPP) $(OPTS) $(DEBUGS) $(CPPFLAGS) $(DEFINES) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
 

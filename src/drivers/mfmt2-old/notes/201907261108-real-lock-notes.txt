@@ -1,0 +1,77 @@
+{6}  -*- text -*- 
+[0:
+
+Fri Jul 26 11:08:43 2019 OK so lockstat.c shows how we can try for
+locks and get them or not and so forth.  Let's go for an
+'intrapreneurial spike' that gets code like that running in mfmt2,
+just for testing and stats counting.  Just make a whole new foggen
+interface based on what the hw locks are ready to provide, and we'll
+impedance-match that to T2LongLivedLock, or whatever, later.
+
+So.  ITCLocks.[hc] perhaps.  Plural because you go for locksets in
+parallel.  Or maybe ITCLockset.[hc]?  Of course lockset isn't much of
+a word so there's LockSet capitalization risk in the naming.  ITCLocks
+it is.  (Despite the IT-Clocks parse risk that carries.)
+
+:0]
+[1:
+
+Fri Jul 26 11:47:10 2019 OK have an early cut at ITCLocks.[hc], but
+taking a nap here while mfmt2 is building itself pitifully slowly.
+Issues on the table:
+
+ - How to hook into the event loop, like in
+   EventWindow::AcquireAllLocks or something?
+
+ - How to let upper levels know which itcs are connected, so they can
+   distinguish unneeded locks from failures?
+
+:1]
+[2:
+
+Sat Jul 27 09:34:00 2019 OK well it's time to pack up and head for
+England.  Going to take the keymaster and two other tiles to be 'the
+grid'..  But for now:
+
+BITS OFF.
+
+:2]
+[3:
+
+Wed Aug  7 08:15:53 2019 OK so we're back.  How can we proceed on
+real-hardware-integration?  REVIEW STATUS:
+
+ - We have ITCLocks.cpp/h intended to manage ALL hardware ITC locks.
+   It operates at the level of locksets and is not broken down to
+   individual directions.
+
+ - It has open/close for the device, and tryLock/freeLocks for
+   locking, and, at the moment, fakeEvent() to try grabbing a random
+   legitimate set of locks.
+
+ - Can we add like 'u8 getReadySet()' to return a lockset
+   corresponding to all ITCs that are usable?
+
+ - Or maybe go higher level with like 'bool tryForLocks(C2D site)'
+   that figures out the lockset itself?  It would need at least the
+   tile w,h also, if we want to avoid templating all this currently
+   non-templated stuff.
+[4:
+
+Wed Aug  7 13:34:28 2019 Well, every time I try to come at it from the
+EventWindow.tcc side, I get all messed up and confused.  So let's just
+keep growing from the bottom and see where we get.  
+
+'bool tryForLocks(C2D site, C2D tileSize)' ?  Get all needed (if any)
+and return true, or release any taken and return false.
+
+:4]
+:3]
+[5:
+
+Fri Aug  9 13:58:05 2019 OK, fakeEvent() is getting slightly realer
+and it's time to move the flag for the weekend.
+
+BITS OFF
+
+:5]

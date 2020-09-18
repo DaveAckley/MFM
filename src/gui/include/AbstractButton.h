@@ -31,6 +31,7 @@
 #include "itype.h"
 #include "Label.h"
 #include "Keyboard.h"
+#include "Drawing.h"
 
 namespace MFM
 {
@@ -189,7 +190,8 @@ namespace MFM
         m_justClicked = false;
         d.SetForeground(Drawing::YELLOW);
         d.FillRect(0, 0,
-                   this->Panel::GetDimensions().GetX(), this->Panel::GetDimensions().GetY());
+                   (int) this->Panel::GetDimensions().GetX(),
+                   (int) this->Panel::GetDimensions().GetY());
         return true;
       }
       return false;

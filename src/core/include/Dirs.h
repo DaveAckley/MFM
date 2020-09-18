@@ -90,6 +90,26 @@ namespace MFM
     }
 
     /**
+     * map a dir to a 2 character code
+     */
+    static const char * GetCode(Dir dir)
+    {
+      switch (dir)
+      {
+      case NORTH: return "NT";
+      case EAST: return "ET";
+      case SOUTH: return "ST";
+      case WEST: return "WT";
+      case NORTHEAST: return "NE";
+      case SOUTHEAST: return "SE";
+      case SOUTHWEST: return "SW";
+      case NORTHWEST: return "NW";
+      case (Dir) -1: return "--";
+      default: return "XX";
+      }
+    }
+
+    /**
      * true iff dir is a corner direction.
      */
     static bool IsCorner(Dir dir) { return dir&1; }

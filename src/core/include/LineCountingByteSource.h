@@ -155,6 +155,7 @@ namespace MFM
 
       switch (type)
       {
+      case Logger::DEBUG: m_errs->Print("debug"); break;
       case Logger::ERROR: m_errs->Print("error"); break;
       case Logger::WARNING: m_errs->Print("warning"); break;
       case Logger::MESSAGE: m_errs->Print("message"); break;

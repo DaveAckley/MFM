@@ -33,6 +33,7 @@
 #include "Tile.h"
 #include "Site.h"
 #include "Drawing.h"
+#include "UlamContextRestricted.h"
 
 namespace MFM
 {
@@ -67,6 +68,8 @@ namespace MFM
       DRAW_SITE_CHANGE_AGE,      //< CubeHelix rendering of events-since-change
       DRAW_SITE_PAINT,           //< Last color painted on site
       DRAW_SITE_NONE,            //< Do not draw atoms at all
+      DRAW_SITE_BLACK,           //< Fill with black
+      DRAW_SITE_WHITE,           //< Fill with white
       DRAW_SITE_TYPE_COUNT
     };
 
@@ -139,6 +142,9 @@ namespace MFM
                     const DrawSiteType drawType, const DrawSiteShape shape,
                     const SPoint ditOrigin, const OurTile & tile) ;
 
+    void PaintCustom(Drawing & drawing,
+                     const SPoint ditOrigin, const OurTile & tile) ;
+
     void PaintSiteAtDit(Drawing & drawing,
                         const DrawSiteType drawType, const DrawSiteShape shape,
                         const SPoint ditOrigin, const OurSite & site, const OurTile & inTile) ;
@@ -185,6 +191,26 @@ namespace MFM
       m_drawBases = value;
     }
 
+    bool IsDrawCustom() const
+    {
+      return m_drawCustom;
+    }
+
+    void SetDrawCustom(bool value)
+    {
+      m_drawCustom = value;
+    }
+
+    bool IsSuppressLabels() const
+    {
+      return m_drawLabels == 0;
+    }
+
+    void SetSuppressLabels(bool value)
+    {
+      m_drawLabels = value ? 0 : -1;
+    }
+
     u32 NextDrawBackgroundType()
     {
       return m_drawBackgroundType = (DrawSiteType) ((m_drawBackgroundType + 1) % DRAW_SITE_TYPE_COUNT);
@@ -212,6 +238,12 @@ namespace MFM
     }
 
   private:
+
+    void CallRenderGraphics(UlamContextRestricted<EC> & ucrs,
+                            const UlamElement<EC> & uelt,
+                            AtomBitStorage<EC> & abs) ;
+
+
     static bool IsDrawBase(DrawSiteType t)
     {
       return t >= DRAW_SITE_BASE && t <= DRAW_SITE_BASE_2;
@@ -236,6 +268,10 @@ namespace MFM
     bool m_drawCacheSites;
 
     bool m_drawBases;
+
+    bool m_drawCustom;
+
+    s32 m_drawLabels; //<0 auto, ==0 no, >0 yes
 
     u32 m_atomSizeDit;
 

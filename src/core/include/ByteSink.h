@@ -94,6 +94,31 @@ namespace MFM {
     }
 
     /**
+     * [OPTIONAL OPERATION] If the last byte currently in this
+     * ByteSink is a newline, remove that last byte, shortening the
+     * content by one byte.  Returns \c true iff the content was
+     * shortened.
+     *
+     * \fails UNSUPPORTED_OPERATION if this ByteSink does not
+     * implement it.
+     *
+     * \sa CanChomp
+     */
+    virtual bool Chomp(s32 toChomp = '\n')
+    {
+      FAIL(UNSUPPORTED_OPERATION);
+    }
+
+    /**
+     * Return \c true iff this ByteSink implements the \c Chomp
+     * operation.
+     */
+    virtual bool CanChomp()
+    {
+      return false;
+    }
+
+    /**
        Base class destructor does nothing virtually
      */
     virtual ~ByteSink() { }
@@ -103,6 +128,7 @@ namespace MFM {
        leaving restOfThis at EOF.
      */
     void Copy(ByteSource & restOfThis) ;
+
 
     void Print(const char * str, s32 fieldWidth = -1, u8 padChar = ' ');
     void Print(const u8 * str, u32 len, s32 fieldWidth = -1, u8 padChar = ' ');
@@ -190,12 +216,26 @@ namespace MFM {
   };
 
   /**
+     A class for a ByteSink that can be 'Reset' (so it can be written again).
+   */
+  class ResettableByteSink : public ByteSink
+  {
+  public:
+    /** 
+      A method that 'resets' this ByteSink in some sensible fashion,
+      depending on its specifics, so that it can be written to 'as if
+      new'
+    */
+    virtual void Reset() = 0;
+  };
+
+  /**
      A ByteSink that can be converted to a ZString, and reset to
      empty, in some sensible way.  Note that this interface does \e
      not promise any strong functional constraints among Reset, Printf
      (say, or any other writing method), and GetZString.
    */
-  class ZStringableByteSink : public ByteSink
+  class ZStringableByteSink : public ResettableByteSink
   {
   public:
 

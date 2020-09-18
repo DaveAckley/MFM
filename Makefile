@@ -37,15 +37,27 @@ realclean:  $(PLATFORMS)
 	rm -rf doc/ref
 
 include config/Makeversion.mk
-TAR_EXCLUDES+=--exclude=tools --exclude=*~ --exclude=.git --exclude=doc/internal --exclude=spikes --exclude-backups
+TAR_SWITCHES+=--exclude=tools --exclude=*~ --exclude=.git --exclude=doc/internal --exclude=spikes --exclude-backups
+TAR_SWITCHES+=--exclude=*.o --exclude=*.d
+TAR_SWITCHES+=--mtime="2008-01-02 12:34:56"
+TAR_SWITCHES+=--owner=0 --group=0 --numeric-owner 
+
 tar:	FORCE
 	make realclean
-	PWD=`pwd`;BASE=`basename $$PWD`;cd ..;tar cvzf mfm-$(MFM_VERSION_NUMBER).tgz $(TAR_EXCLUDES) $$BASE
+	PWD=`pwd`;BASE=`basename $$PWD`;cd ..;tar cvzf mfm-$(MFM_VERSION_NUMBER).tgz $(TAR_SWITCHES) $$BASE
 
 ifeq ($(PLATFORM),tile)
-cdmDistribution:	FORCE
-	echo make
-	MPWD=`pwd`;BASE=`basename $$MPWD`;echo $$MPWD for $$BASE;pushd ..;tar cvzf $$BASE-built.tgz $(TAR_EXCLUDES) $$BASE;cp -f $$BASE-built.tgz /home/debian/CDM-TGZS/;$$MPWD/bin/mfzmake make - cdm-distrib-$$BASE.mfz $$BASE-built.tgz;popd
+REGNUM:=0
+cdmd:	FORCE
+	MPWD=`pwd`;BASE=`basename $$MPWD`; \
+	echo $$MPWD for $$BASE; \
+	pushd ..;tar cvzf $$BASE-built.tgz $(TAR_SWITCHES) $$BASE; \
+	cp -f $$BASE-built.tgz /home/debian/CDMSAVE/TGZS/; \
+	/home/t2/MFM/bin/mfzmake cdmake $(REGNUM) cdmd-$$BASE.mfz $$BASE-built.tgz; \
+	/home/t2/MFM/bin/mfzrun -kd /cdm ./cdmd-$$BASE.mfz VERIFY | \
+	perl -ne 'print $$1 if /INNER_TIMESTAMP \[(\d+)\]/' > ./cdmd-$$BASE.mfz-cdm-install-tag.dat; \
+	cp -f cdmd-$$BASE.mfz /home/debian/CDMSAVE/CDMDS/; \
+	popd
 endif
 
 identify:	FORCE

@@ -6,7 +6,7 @@ use File::Path qw(make_path);
 use File::Spec;
 use File::Temp qw(tempdir);
 use IO::Uncompress::Unzip qw($UnzipError);
-use Digest::SHA qw(sha512_hex);
+use Digest::SHA qw(sha512_hex sha512);
 
 sub VERSION { "1.0" }
 sub MFZRUN_HEADER { "MFZ(".VERSION.")\n" }
@@ -14,6 +14,28 @@ sub MFZ_PUBKEY_NAME { "MFZPUBKEY.DAT" }
 sub MFZ_FILE_NAME { "MFZNAME.DAT" }
 sub MFZ_SIG_NAME { "MFZSIG.DAT" }
 sub MFZ_ZIP_NAME { "MFZ.ZIP" }
+sub CDM_ANNOUNCE_NAME { "ANNOUNCE.PKT" }
+sub CDM_ANNOUNCE_VERSION { 1 }
+
+sub ANNOUNCE_PACK_DATA_FORMAT {
+    ""  # 0
+        ."CCa"        #   0 +   3 =   3 hdr
+        ."C"          #   3 +   1 =   4 announce version
+        ."N"          #   4 +   4 =   8 inner timestamp
+        ."N"          #   8 +   4 =  12 inner length
+        ."n"          #  12 +   2 =  14 regnum
+        ."a8"         #  14 +   8 =  22 inner checksum
+        ."a50"        #  22 +  50 =  72 content name
+        #  72 total length for data
+}
+
+sub ANNOUNCE_PACK_PACKET_FORMAT {
+    "" # 0
+        ."a72"        #   0 +  72 =  72 data
+        ."a128"       #  72 + 128 = 200 RSA sig of bytes 0..71
+}
+
+sub ANNOUNCE_PACKET_LENGTH { 200 }
 
 my $programName = $0;  # default
 sub SetProgramName {
@@ -102,6 +124,14 @@ sub ComputeChecksumOfString {
     return $fingerprint;
 }
 
+sub ComputeChecksumPrefixOfString {
+    my ($string,$len) = @_;
+    IDie("something is happening here but you don't know what it is")
+        unless defined $len && $len >= 0 && $len <= 64;
+    my $checksum = sha512($string);
+    return substr($checksum,0,$len);
+}
+
 sub ReadPublicKeyFile {
     my $handle = shift;
     my $file = GetPublicKeyFile($handle);
@@ -134,6 +164,22 @@ sub GetLegalHandle {
     UntaintHandleIfLegal(\$handle)
         or UDie("Bad handle '$handle'");
     return $handle;
+}
+
+sub GetLegalRegnum {
+    my $regnum = shift;
+    UDie("Not a number '$regnum'")
+        unless $regnum =~ /^(\d+)$/;
+    my $num = $1;
+    UDie("Illegal regnum $num")
+        unless $regnum >= 0 && $regnum < (1<<16);
+    my @regnumHandles = (
+        "t2-keymaster-release-10"
+        );
+    my $handle = $regnumHandles[$num];
+    UDie("Invalid regnum $num")
+        unless defined $handle;
+    return ($num, $handle);
 }
 
 sub GetDefaultHandleFile {

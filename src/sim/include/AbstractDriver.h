@@ -47,7 +47,7 @@
 #include "Grid.h"
 #include "ElementTable.h"
 #include "VArguments.h"
-#include "StdElements.h"
+/* #include "StdElements.h" XXX NO LONGER USING? */
 #include "ElementRegistry.h"
 #include "Version.h"
 #include "DebugTools.h"
@@ -96,11 +96,13 @@ namespace MFM
      */
     typedef ElementRegistry<EC> OurElementRegistry;
 
+#if 0
     /**
      * Template shortcut for an instance of StdElements with the
      * correct template parameters.
      */
     typedef StdElements<EC> OurStdElements;
+#endif
 
     /**
      * Template shortcut for a Grid with the correct template
@@ -506,7 +508,7 @@ namespace MFM
          || (m_haltOnEmpty && full == 0.0)
          || (m_haltOnFull && full == 1.0)
          || (m_AEPS > 0 && m_haltOnExtinctionOf &&
-             m_grid.GetAtomCountFromSymbol(m_extinctionSymbol)==0)
+             m_grid.GetAtomCountFromSymbol(GetHaltAfterExinctionOfSymbol())==0)
          )
       {
         // Free final save if halting on --halt*.  Hope for good-looking corpse.
@@ -922,6 +924,23 @@ namespace MFM
       }
 
       driver.m_haltAfterAEPS = (u32) out;
+    }
+
+    static void SetEdenSeedFromArgs(const char* symbol, void* driverptr)
+    {
+      AbstractDriver& driver = *((AbstractDriver*)driverptr);
+      VArguments& args = driver.m_varguments;
+
+      if (strlen(symbol) > 2)
+        args.Die("Bad atomic symbol '%s'", symbol);
+
+      if (driver.m_createEdenSeed)
+        args.Die("--edenseed can only be specified once");
+      
+      driver.m_edenSeedSymbol[0] = symbol[0];
+      driver.m_edenSeedSymbol[1] = symbol[1];
+      driver.m_edenSeedSymbol[2] = symbol[2];
+      driver.m_createEdenSeed = true;
     }
 
     static void SetHaltOnExtinctionOfFromArgs(const char* symbol, void* driverptr)
@@ -1421,6 +1440,7 @@ namespace MFM
       , m_currentTickBasis(0)
       , m_haltAfterAEPS(0)
       , m_haltOnExtinctionOf(false) // if true, m_extinctionSymbol has (unvalidated) content
+      , m_createEdenSeed(false) // if true, m_edenSeedSymbol has (unvalidated) content
       , m_haltOnEmpty(false)
       , m_haltOnFull(false)
       , m_suppressStdElements(true)
@@ -1586,6 +1606,9 @@ namespace MFM
       RegisterArgument("Each epoch, write tile AEPS image to per-sim teps/ directory",
                        "--tileImages", &SetTileImages, this, false);
 
+      RegisterArgument("Place one atom of element ARG in the grid.",
+                       "--edenseed", &SetEdenSeedFromArgs, this, true);
+
       RegisterArgument("If ARG > 0, Halts after ARG elapsed aeps.",
                        "--haltafteraeps", &SetHaltAfterAEPSFromArgs, this, true);
 
@@ -1638,12 +1661,21 @@ namespace MFM
       return m_haltAfterAEPS;
     }
 
-    const char * GetHaltAfterExinctionOfSymbol()
+    const u8 * GetHaltAfterExinctionOfSymbol()
     {
       if (!m_haltOnExtinctionOf)
         FAIL(ILLEGAL_STATE);
 
       return m_extinctionSymbol;
+    }
+
+    /*Get ptr to eden seed symbol or 0 if none*/
+    const u8 * GetEdenSeedSymbol()
+    {
+      if (!m_createEdenSeed)
+        return 0;
+
+      return m_edenSeedSymbol;
     }
 
     double GetAEPS()
@@ -1759,7 +1791,9 @@ namespace MFM
     Element<EC>* m_neededElements[MAX_NEEDED_ELEMENTS];
     u32 m_neededElementCount;
 
+#if 0
     OurStdElements m_se;
+#endif
     OurGrid m_grid;
 
     u64 m_ticksLastStopped;
@@ -1768,6 +1802,8 @@ namespace MFM
     u32 m_haltAfterAEPS;
     bool m_haltOnExtinctionOf;
     u8 m_extinctionSymbol[3];
+    u8 m_edenSeedSymbol[3];
+    bool m_createEdenSeed;
     bool m_haltOnEmpty;
     bool m_haltOnFull;
     bool m_suppressStdElements;

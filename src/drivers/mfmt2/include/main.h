@@ -3,9 +3,22 @@
 #define MAIN_H
 
 #include "itype.h"
-#include "AbstractDualDriver.h"
-#include "P3Atom.h"
-#include "GridConfig.h"
+#include "Dirs.h"
 #include "DateTimeStamp.h"
+#include "Logger.h"
+#include "FileByteSink.h"
+
+// Spike files
+#include "T2EventWindow.h"
+#include "T2Tile.h"
+
+#if 0
+#include "MFMT2Constants.h"
+#include "ITCDelegate.h"
+#include "ITCLocks.h"
+#include "PacketFIFO.h"
+#include "MFMIO.h"
+#include "FlashTraffic.h"
+#endif
 
 #endif /* MAIN_H */

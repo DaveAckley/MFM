@@ -29,6 +29,7 @@
 #define _RANDOM_H_
 
 #include <stdlib.h>
+#include <time.h>     /* For time() */
 
 #include "itype.h"
 #include "RandMT.h"
@@ -52,7 +53,7 @@ namespace MFM
      */
     Random()
     {
-      static u32 counter = 0;
+      static u32 counter = (u32) time(NULL);
       SetSeed(++counter);
     }
 
