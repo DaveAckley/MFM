@@ -299,7 +299,7 @@ $AUTOGEN_STAMP
     enabledfg=$MENUITEMFG
     font=4
     text="Crash"
-[T2Info_Boot_Button BootButton T2Viz `bfs6x6(5,4,5,4)`]
+[T2Info_Boot_Button BootButton T2Viz `bfs6x6(5,1,5,1)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
     font=4
@@ -352,7 +352,7 @@ $AUTOGEN_STAMP
 #[T2Viz_Checkbox_Living T2TileLiveCheckbox T2Viz `bfs6x6(3,3,4,3)`]
 #    font=2
 #    text="Run"
-[T2Viz_Checkbox_X MenuItem T2Viz `bfs6x6(5,1,5,1)`]
+[T2Viz_Checkbox_X MenuItem T2Viz `bfs6x6(5,4,5,4)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
     font=4
