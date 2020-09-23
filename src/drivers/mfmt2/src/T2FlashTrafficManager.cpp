@@ -261,7 +261,7 @@ namespace MFM {
       MFM_API_ASSERT_NONNULL(cmdpanel);
       T2FlashCommandLabel * cmdlabel = dynamic_cast<T2FlashCommandLabel*>(cmdpanel);
       
-      const u32 LEN = 20;
+      const u32 LEN = 100;
       char buff[LEN];
       snprintf(buff,LEN,"%s%d",cmdlabel->GetText(),getRange());
       label.SetText(buff);
