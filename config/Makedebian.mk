@@ -21,8 +21,8 @@ export DEB_MFM_RESDIR
 # We're recursing rather than depending on 'all' so that the
 # $(PLATFORMS) mechanism doesn't need to know about install.
 install:	FORCE
-	@#COMMANDS=1 make -k all
-	COMMANDS=1 make -k -C src/drivers/mfzrun all
+	@COMMANDS=1 make -k all
+	@#COMMANDS=1 make -k -C src/drivers/mfzrun all
 	mkdir -p $(DEB_MFM_BINDIR)
 	cp -a $(DEB_PROGRAMS_PATHS_TO_INSTALL) $(DEB_MFM_BINDIR)
 	mkdir -p $(DEB_MFM_RESDIR)
