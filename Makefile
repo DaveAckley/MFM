@@ -48,15 +48,20 @@ tar:	FORCE
 
 ifeq ($(PLATFORM),tile)
 REGNUM:=0
+SLOTNUM:=03
 cdmd:	FORCE
 	MPWD=`pwd`;BASE=`basename $$MPWD`; \
 	echo $$MPWD for $$BASE; \
 	pushd ..;tar cvzf $$BASE-built.tgz $(TAR_SWITCHES) $$BASE; \
 	cp -f $$BASE-built.tgz /home/debian/CDMSAVE/TGZS/; \
-	/home/t2/MFM/bin/mfzmake cdmake $(REGNUM) cdmd-$$BASE.mfz $$BASE-built.tgz; \
-	/home/t2/MFM/bin/mfzrun -kd /cdm ./cdmd-$$BASE.mfz VERIFY | \
-	perl -ne 'print $$1 if /INNER_TIMESTAMP \[(\d+)\]/' > ./cdmd-$$BASE.mfz-cdm-install-tag.dat; \
-	cp -f cdmd-$$BASE.mfz /home/debian/CDMSAVE/CDMDS/; \
+	FN=`/home/t2/MFM/bin/mfzmake cdmake $(REGNUM) $(SLOTNUM) $$BASE $$BASE-built.tgz | \
+            perl -e "while(<>) {/'([^']+)'/ && print "'$$1}'`; \
+	if [ "x$$FN" = "x" ] ; then echo "Build failed" ; else  \
+	echo -n "Got $$FN for $$BASE, tag = "; \
+	perl -e '"'$$FN'" =~ /[^-]+-[^-]+-([[:xdigit:]]+)[.]/; print $$1' > /cdm/tags/slot$(SLOTNUM)-install-tag.dat; \
+	cat /cdm/tags/slot$(SLOTNUM)-install-tag.dat; echo ;\
+	cp -f $$FN /home/debian/CDMSAVE/CDMDS/; \
+	fi; \
 	popd
 endif
 
