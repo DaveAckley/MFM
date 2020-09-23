@@ -168,12 +168,14 @@ sub DoMakeWithHandle {
 
     my $signed = SignString($privkeyfile, $inner);
 #    WriteWholeFile($mfzfile,MFZRUN_HEADER.$signed.$inner,0644);
+    my $outer = MFZRUN_HEADER.MakeOuterZip($signed,$inner,undef);
+
     my $cdmmap = ""; # Assume pure MFZ format
     if (defined($regnum)) {
-        $cdmmap = MakeCDMMap($regnum,$slotnum,$stamptime,$mfzfilename,$privkeyfile,$inner,$innertime,$label);
+        $cdmmap = MakeCDMMap($regnum,$slotnum,$stamptime,$mfzfilename,$privkeyfile,$outer,$innertime,$label);
     }
-    my $outer = MakeOuterZip($signed,$inner,undef);
-    WriteWholeFile($mfzfile,$cdmmap.MFZRUN_HEADER.$outer,0644);
+
+    WriteWholeFile($mfzfile,$cdmmap.$outer,0644);
     print "Wrote '$mfzfile'\n";
     exit 0;
 }
@@ -434,10 +436,10 @@ sub MakeSlotStamp {
 }
 
 sub MakeCDMMap {
-    my ($regnum,$slotnum,$stamptime,$mfzfilename,$privkeyfile,$inner,$innertime,$label) =
+    my ($regnum,$slotnum,$stamptime,$mfzfilename,$privkeyfile,$outer,$innertime,$label) =
         @_;
     my $slotstamp = MakeSlotStamp($slotnum,$stamptime);
-    my $mappedFileLen = length($inner);
+    my $mappedFileLen = length($outer);
     my $bitsInBlock = 8;
     do ++$bitsInBlock while (1<<$bitsInBlock) * 100 < $mappedFileLen;
     my $blockSize = (1<<$bitsInBlock);
@@ -447,7 +449,7 @@ sub MakeCDMMap {
     for (my $block = 0; $block<100;++$block) {
         my $offset = $blockSize*$block;
         last if $offset > $mappedFileLen;
-        my $chunk = substr($inner,$offset,$blockSize); # blockSize or til eof
+        my $chunk = substr($outer,$offset,$blockSize); # blockSize or til eof
         $sha->add($chunk);
         $lastfullxsum = $sha->clone()->digest();
         my $xsum8 = substr($lastfullxsum,0,8);
@@ -480,7 +482,7 @@ sub GetLegalSlotnum {
         unless defined $slotnum;
     UDie("Illegal slotnum '$slotnum'")
         unless $slotnum =~ /^([[:xdigit:]]{1,2})$/;
-    my $num = $1;
+    my $num = hex($1);
     UDie("Illegal slotnum $num")
         unless $num > 0 && $num < 256; # 00 reserved as illegal slotnum
     return $num;
