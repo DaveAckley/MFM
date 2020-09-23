@@ -26,7 +26,7 @@ namespace MFM
 {
   static const double REDISPLAY_HZ = 6;
   static const u32 REDISPLAY_MS = (u32) (1000/REDISPLAY_HZ);
-  static const u32 OVERFLOW_REDISPLAY_MS = (u32) (1.4*REDISPLAY_MS);
+  static const u32 OVERFLOW_REDISPLAY_MS = (u32) (1.75*REDISPLAY_MS);
   static const double BACKAVG_FRAC=0.95;
 
   struct Event {
