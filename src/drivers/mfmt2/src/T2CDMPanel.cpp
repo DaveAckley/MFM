@@ -16,7 +16,7 @@ namespace MFM {
     u32 nowms = m.now();
     const char * PATH = "/cdm/log/status.txt";  // "/home/t2/T2-12/apps/cdm/cdm/cdmDEBUG/log/status.txt"
     u32 curmodtime = getModTimeOfFile(PATH);
-    const u32 DOWN_TIME_SEC = 20;
+    const u32 DOWN_TIME_SEC = 30;
     if (curmodtime != prevmodtime) {
       prevmodtime = curmodtime;
       lastchangems = nowms;
@@ -25,6 +25,10 @@ namespace MFM {
     if (diffms > DOWN_TIME_SEC*1000) {
       bs.Printf("CDM STATUS: DOWN?\n");
       return;
+    }
+    if (diffms > 10 * 1000) {
+      u32 sec = diffms/1000;
+      bs.Printf("[%ds stale]",sec);
     }
     if (!readWholeFile(PATH,bs)) {
       bs.Printf("CDM STATUS: UNAVAILABLE\n");
