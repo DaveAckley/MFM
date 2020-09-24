@@ -21,6 +21,7 @@
 #include "T2TimeQueuePanel.h"
 #include "T2UIComponents.h"
 #include "T2CDMPanel.h"
+#include "T2RadioButton.h"
 
 namespace MFM
 {
@@ -307,6 +308,7 @@ namespace MFM
     if (type.Equals("CrashButton")) return new T2CrashButton(); 
     if (type.Equals("OffButton")) return new T2OffButton(); 
     if (type.Equals("BootButton")) return new T2BootButton(); 
+    if (type.Equals("T2RadioButton")) return new T2RadioButton(); 
     if (type.Equals("FlashCommandLabel")) return new T2FlashCommandLabel(); 
     return 0;
   }
@@ -524,6 +526,11 @@ namespace MFM
         l->SetEnabledFg(parseColor(lcbs, cbbs));
       else
         l->SetEnabledBg(parseColor(lcbs, cbbs));
+    }
+    else if (!strcmp(prop,"radiogroup")) {
+      AbstractRadioButton * l = dynamic_cast<AbstractRadioButton*>(forPanel);
+      if (!l) fatal(lcbs,"'%s' applies only to AbstractRadioButtons",prop);
+      l->SetRadioGroup(parseString(lcbs,cbbs));
     }
     else
       fatal(lcbs,"Unknown property '%s'",prop);

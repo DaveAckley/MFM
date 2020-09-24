@@ -66,6 +66,14 @@ $AUTOGEN_STAMP
     bgcolor=$FLASHBG
     visible=1
     doc="Long-range operations switcher"
+[Flash_Radio1 T2RadioButton Flash `bfs6x6(1,1,2,2)`]
+    radiogroup="grid"
+    font=1
+    text=R1
+[Flash_Radio2 T2RadioButton Flash `bfs6x6(1,3,2,4)`]
+    radiogroup="grid"
+    font=1
+    text=R2
 [Flash_Button_CMD_dismiss FlashCommandLabel Flash `bfs6x6(3,4,5,5)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
