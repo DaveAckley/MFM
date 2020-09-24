@@ -1,0 +1,322 @@
+{25}  -*- text -*-
+[0:
+
+Wed Sep 23 14:49:40 2020 OK, starting a new notes file, here,
+
+  /home/t2/MFM/src/drivers/mfmt2/notes/202009231447-flash-traffic-notes.txt
+
+to shift our brains from CDM processing to getting mfmt2 level flash
+traffic working in some decent way.
+
+[1:
+
+Wed Sep 23 14:51:55 2020 OK so I tried the existing flash menu and
+succeeded in killing the neighbor's mfmt2:
+
+    Sep 23 14:51:04 beaglebone mfm.sh[1764]: 3356: MSG: FLASH: 0x/opt/scripts/t2/mfm.sh: line 17: 10237 Aborted                 /home/t2/MFM/bin/mfmt2 -w /home/t2/MFM/res/mfmt2/wconfig.txt -z MFMT2-FAKE-MFZID
+    Sep 23 14:51:04 beaglebone mfm.sh[1764]: mfmt2 exited status 134 -- RESTARTING
+    Sep 23 14:51:06 beaglebone mfm.sh[1764]: Launching mfmt2
+
+Let's get into gdb.
+[2:
+
+Wed Sep 23 14:53:32 2020 Aand we're going to need to rebuild with
+  DEBUG=1..[3:
+
+Wed Sep 23 14:54:21 2020 Starting that..
+
+[4:
+
+Wed Sep 23 14:55:15 2020 The no-symbols gdb took us this far:
+
+    #0  0x0046796e in MFMLongJmpHere ()
+    #1  0x0045f1a8 in MFM::ByteSink::Vprintf(char const*, std::__va_list&) [clone .part.9] ()
+    #2  0x0042ea4c in MFM::Logger::Vreport(MFM::Logger::Level, char const*, std::__va_list&) ()
+    #3  0x00438586 in MFM::Logger::Message(char const*, ...) ()
+    #4  0x00448c20 in MFM::T2FlashTrafficManager::handleInboundTraffic() [clone .part.20] ()
+    #5  0x0044af7c in MFM::T2FlashTrafficManager::onTimeout(MFM::TimeQueue&) ()
+    #6  0x0042cdde in MFM::T2Tile::main() ()
+    #7  0x0042e09a in MFM::MainDispatch(int, char**) ()
+    #8  0x0042caa6 in main ()
+    (gdb)
+
+:4]
+
+:3]
+
+:2]
+
+:1]
+
+:0]
+[5:
+
+Wed Sep 23 15:00:59 2020 So, while MFM's building yet again, let's do
+a little WIBNI on the whole flash traffic thing:
+
+Wouldn't It Be Nice If
+
+ - Being a flash command was (nearly) orthogonal to the single-tile
+   GUI.  Whatever you can do via the single-tile GUI, you could do as
+   flash traffic in some uniform way.
+
+ - Flash traffic radius was determined primarily by geometry, with a
+   TTL hop count just as drop-dead backup.  So each packet tracked its
+   location relative to the origin as it moved.
+
+ - Flash traffic had some way of detecting the edges of the power zone
+   in which it originated, so commands could be addressed to the zone.
+
+ -
+
+:5]
+[6:
+
+Wed Sep 23 15:31:19 2020 So, the current structure is all based around
+the specific flash screen.  And I think we should push back against
+that.  It's Wednesday.  We've got at least two more good days, so
+let's 'just quick' design an 'action engine' for user-level
+activities.  Then we'll hook both the flash traffic and the GUI
+screens to those actions.
+
+So we'll need a representation of the actions.  I'm thinking short but
+not necessarily fixed-length strings, with category and subcategory of
+actions.
+
+Categories:
+  CONTROL:
+     DISPLAY
+     EVENT
+     DISK
+     MFMT2
+     PHYSICS
+
+  DEBUG:
+
+  QUERY:
+
+[7:
+
+Wed Sep 23 15:57:57 2020 Stuff like that.
+
+Now, maybe we should think about doing worm-routing for these things,
+so that we actually could do query replies with some limited
+robustness.
+
+So we need a notion of outbound and inbound, and while going outbound,
+we append arrival direction at the end, for the reverse trip to use as
+a source direction.  That automatically limits the radius we can do,
+but I'd expect to limit it much more than that.
+
+Full-path tracking is pretty expensive, vs, say, two signed bytes for
+like +-a 125 tile radius.  And it's not really in the 'broadcast'
+model at all.  The problem of course is non-convex routes that get
+traversed on the outbound can become trapping states on the return.
+
+Maybe we really should leave query/reply for another day.
+
+:7]
+
+:6]
+[8:
+
+Wed Sep 23 16:17:35 2020 I like the category/subcategory because it
+holds out the possibility of adding new actions without invalidating
+older ones.  Although just burning obsolete action numbers
+accomplishes that two; just have to have a monotonic list of actions
+that never gets reorganized.
+
+Like errno.h.  actno.h.
+
+[9:
+
+Wed Sep 23 16:19:49 2020 OK what does the packet format look like?
+
+ 0x80, cmd, spinner, ttl, chksum
+
+Do we think we can do anything about the spinner and the collision
+issue?  We could have the hard button cause the tile to preemptively
+try to become the leader.  And if we say don't press multiple hard
+buttons at once..[10:
+
+Thu Sep 24 02:47:42 2020 OK I'm ready to stop with the WIBNI and just
+get some stuff working.  I just re-watched a couple episodes from last
+Dec-Jan and we already demoed a minimal but functional grid-wide flash
+menu back then, that I still like better than the current thing I've
+got.  So let's keep the existing 'simple' structure and just get to
+it.
+
+TODO
+
+ - Reorg menus
+
+
+t2tile  reboot off killcdm
+mfmt2   run pause crash quit
+display sites tile tq log cdm
+physics clear seed1 seed2 initdebug
+
+
+[11:
+
+Thu Sep 24 03:00:00 2020
+
+ - Change main menu center square to 'Control', change its bg color
+
+
+Control menu
+
+  T2TILE   PHYSICS  --
+  MFMT2    DISPLAY  --
+  GRID      --       X
+
+
+CONTROL T2TILE menu
+
+  REBOOT   SHUTDOWN KILLCDM
+    --     --       --
+  GRID     TILE      X
+
+CONTROL MFMT2 MENU
+  RUN    PAUSE   CRASH
+   --    QUIT     --
+  GRID   TILE       X
+
+CONTROL DISPLAY MENU
+  SITES  TILE   CDM
+  TQ     LOG     --
+  GRID   TILE     X
+
+CONTROL PHYSICS MENU
+  CLEAR  SEED1  SEED2
+  SELECT  --     --
+  GRID   TILE     X
+
+[12:
+
+Thu Sep 24 03:26:00 2020
+
+ - All the control menus are a radio group on the top, and pushbutton
+   Grid/Tile/x on the bottom.  So we need radio groups
+
+ - Grid buttons have a pop-up confirm that shows the current grid
+   radius.  Tile buttons execute immediately without confirmation
+
+:12]
+
+:11]
+
+:10]
+
+:9]
+
+:8]
+[13:
+
+Thu Sep 24 03:28:02 2020 OK, how to do radio groups, given what we've
+got?
+
+Well, what's our wconfig syntax, there, again?  What are all the
+pieces of this, say:
+
+    [TQ_Checkbox_Living T2TileLiveCheckbox TQ `bfs6x6(5,0,5,0)`]
+        font=2
+
+[14:
+
+Thu Sep 24 03:30:33 2020 Tracking..  SDLI.cpp:533,
+SDLI::parseWindowConfig -> SDLI::parsePanelDecl.  It's 
+
+ [PANELNAME WINDOWTYPE PARENTWINDOW GEOMETRY]
+
+And it's SDLI::parsePanelDecl -> SDLI::makePanelType(WINDOWTYPE),
+where everything's hardcoded.
+
+So could we define a special format for a PANELNAME that include
+radio-group information?[15:
+
+Thu Sep 24 03:36:38 2020 Well, let's see if panel properties can do it
+without a ton of pain.  After the panel decl produces PANEL,
+processing continues with: 
+
+SDLI::parseWindowConfig
+  -> SDLI::parsePanelProperty(input, PANEL)
+     -> SDLI:: configurePanelProperty(input, PANEL, PROP, VAL)
+
+and all the known properties are hardcoded there.  Subclass-specific
+properties are 'handled' by dynamic casting like:
+
+    else if (!strcmp(prop,"fontheightadjust")) {
+      GenericTextPanel * l = dynamic_cast<GenericTextPanel*>(forPanel);
+      if (!l) fatal(lcbs,"'%s' applies only to TextPanels",prop);
+      l->SetFontHeightAdjust(parseSigned(lcbs,cbbs));
+    }
+
+and we could surely redo that with a
+
+  virtual bool Panel::acceptsProperty(PROP,VAL)
+
+kind of thing if we wanted to.
+
+But in any case it seems we could have a type RadioButton that would
+accept a radiogroup property.  And I guess in fact we'd put all the
+'Grid'able buttons in a single radiogroup, even though they're on
+several different screens and never all visible at once, to avoid
+ambiguity about what command is being requested when Grid is invoked.
+
+And could the radiobutton be a subclass of checkbox, perhaps?[16:
+
+Thu Sep 24 04:15:20 2020 I suspect so.  I also suspect it's worth
+doing a semi-general AbstractRadioButton in src/gui, with some kind of
+(possibly static) map to manage the radio groups.  (Although we could
+just beat the whole panel hierarchy looking for matching radiogroup
+tags, if it's happening at click-a-button speeds.)
+
+But not now.  Going for second sleep.
+
+:16]
+
+:15]
+
+  :14]
+:13]
+[17:
+
+Thu Sep 24 08:53:20 2020 OK.  Another flag-moving day, but perhaps we
+can make a start on AbstractRadioButton.
+[18:
+
+Thu Sep 24 09:42:49 2020 OK, so now we have a built-but-untested
+AbstractRadioButton class.  Pretty clean at that, if brute force.
+
+Let's do some kind of quick hack in mfmt2 to make a couple of this
+beins.
+
+TODO:
+
+[19: Thu Sep 24 11:22:28 2020
+DONE :19] - Some kind of T2RadioButton instance class
+
+[20:
+DONE :20] - Makeable by SDLI
+
+[21:
+DONE :21] - With a radiogroup property
+
+[22:
+DONE :22] - And a couple instances in wconfig.pl somewhere.
+
+:18]
+:17]
+[23:
+
+Thu Sep 24 11:22:45 2020 So we have implications in develop, with new
+files AbstractRadioButton.(h|cpp), but I *think* they're pretty safe.
+
+Heck let's commit.
+[24:
+
+Thu Sep 24 11:41:10 2020 Cleaned up a little..  Now committing.
+
+:24]
+:23]
