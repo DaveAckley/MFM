@@ -128,7 +128,7 @@ namespace MFM {
     u32 len = pb.GetLength();
     if (len < 5)
       LOG.Error("SHORT FLASH %d", len);
-    LOG.Message("FLASH: 0x%02 0x%02 0x%02 0x%02 ",
+    LOG.Message("FLASH: 0x%02x 0x%02x 0x%02x 0x%02x ",
                 buf[1], buf[2], buf[3], buf[4]);
   }
 
