@@ -315,6 +315,7 @@ namespace MFM
     if (type.Equals("BootButton")) return new T2BootButton(); 
     if (type.Equals("T2RadioButton")) return new T2RadioButton(); 
     if (type.Equals("FlashCommandLabel")) return new T2FlashCommandLabel(); 
+    if (type.Equals("XCDMButton")) return new T2KillCDMButton(); 
     return 0;
   }
 

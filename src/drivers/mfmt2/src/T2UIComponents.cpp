@@ -147,4 +147,9 @@ namespace MFM {
     system("reboot");
   }
 
+  void T2KillCDMButton::onClick() {
+    TLOG(MSG,"xCDM button clicked");
+    system("pkill cdm.pl");
+  }
+
 }
