@@ -32,6 +32,40 @@
 
 namespace MFM
 {
+  class AbstractRadioButton; // FORWARD
+  
+  /** Collective behavior for an entire radio group.  Subclass this to
+      define OnCheck, give it a unique name and call
+      AbstractRadioGroup::Register(*this) in its ctor, then your
+      OnCheck method will be called whenever any button in the group
+      changes state.
+
+      (You may instead/also subclass individual AbstractRadioButtons
+      and add behavior by overriding their OnCheck methods.  That will
+      defeat this mechanism unless the override method calls
+      Super::OnCheck appropriately.)
+   */
+  class AbstractRadioGroup
+  {
+  private:
+    static const u32 MAX_RADIO_GROUPS = 32;
+    static AbstractRadioGroup *(m_registeredRadioGroups[MAX_RADIO_GROUPS]);
+
+    const OString32 m_groupName;
+
+  public:
+    static void Register(AbstractRadioGroup & toBeRegistered) ;
+    static AbstractRadioGroup * GetAbstractRadioGroupIfAny(const char * named) ;
+
+    AbstractRadioGroup(const char * nonNullGroupName)
+      : m_groupName(nonNullGroupName)
+    { }
+
+    virtual void OnCheck(AbstractRadioButton & arb, bool value) = 0;
+    const OString32 & GetGroupName() const { return m_groupName; }
+    
+  };
+
   class AbstractRadioButton : public AbstractCheckbox
   {
    private:
@@ -48,6 +82,8 @@ namespace MFM
     static void PopRadioGroupFromPanel(const char * zstr, Panel * fromPanel) ;
 
   public:
+
+    static AbstractRadioButton * GetPushedIfAny(const char * groupName, Panel * fromPanel) ;
 
     AbstractRadioButton()
       : Super()
@@ -111,6 +147,9 @@ namespace MFM
     virtual void OnCheck(bool value)
     {
       if (value) PopRadioGroup();
+      AbstractRadioGroup * arg =
+        AbstractRadioGroup::GetAbstractRadioGroupIfAny(m_radioGroup.GetZString());
+      if (arg) arg->OnCheck(*this, value);
     }
 
     virtual ~AbstractRadioButton() { }
