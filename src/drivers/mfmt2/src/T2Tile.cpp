@@ -201,6 +201,7 @@ namespace MFM {
     , mMDist()
     , mCPUFreq(CPUSpeed_Slow)
     , mCoreTempChecker()
+    , mMFMRunRadioGroup()
     , mFlashTrafficManager()
     , mRollingTraceDir()
     , mRollingTraceTargetKB(0)

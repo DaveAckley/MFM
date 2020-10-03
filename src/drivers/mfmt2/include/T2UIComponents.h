@@ -3,9 +3,21 @@
 #define T2UICOMPONENTS_H
 
 #include "AbstractCheckbox.h"
+#include "AbstractRadioButton.h"
 #include "T2FlashTrafficManager.h"
 
 namespace MFM {
+  struct MFMRunRadioGroup : public AbstractRadioGroup {
+    typedef AbstractRadioGroup Super;
+    MFMRunRadioGroup()
+      : Super("RP")
+    {
+      AbstractRadioGroup::Register(*this);
+    }
+
+    //@Override
+    void OnCheck(AbstractRadioButton & arb, bool value) ;
+  };
 
   struct T2TileLiveCheckbox : public AbstractCheckbox {
     virtual void OnCheck(bool value) ;
@@ -80,6 +92,10 @@ namespace MFM {
   };
 
   struct T2BootButton : public T2UIButton {
+    virtual void onClick() ;
+  };
+
+  struct T2KillCDMButton : public T2UIButton {
     virtual void onClick() ;
   };
 

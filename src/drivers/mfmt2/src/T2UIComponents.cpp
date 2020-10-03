@@ -6,6 +6,18 @@
 
 namespace MFM {
 
+  void MFMRunRadioGroup::OnCheck(AbstractRadioButton & arb, bool value) {
+    if (!value) return;
+    const char * bn = arb.GetName();
+    const char * gn = this->GetGroupName().GetZString();
+    if (0) { }
+    else if (endsWith(bn,"_MFMRun"))   T2Tile::get().setLiving(true);
+    else if (endsWith(bn,"_MFMPause")) T2Tile::get().setLiving(false);
+    else {
+      LOG.Warning("WTC? %s in group %s?", bn, gn);
+    }
+  }
+
   void T2FlashCommandLabel::onClick() {
     T2Tile & tile = T2Tile::get();
     tile.getFlashTrafficManager().onClick(this);

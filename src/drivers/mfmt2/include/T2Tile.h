@@ -30,6 +30,7 @@
 #include "CPUFreq.h"
 #include "T2TileStats.h"
 #include "T2FlashTrafficManager.h"
+#include "T2UIComponents.h"
 
 namespace MFM {
 
@@ -334,6 +335,9 @@ namespace MFM {
     CPUFreq mCPUFreq;
     CoreTempChecker mCoreTempChecker;    
 
+    //// Active Radio Groups
+    MFMRunRadioGroup mMFMRunRadioGroup;
+    
     //// FLASH TRAFFIC MANAGEMENT
     T2FlashTrafficManager mFlashTrafficManager;
 
