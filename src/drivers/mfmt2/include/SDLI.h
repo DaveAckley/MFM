@@ -43,6 +43,8 @@ namespace MFM {
 
     void init() ;
 
+    Panel & getRootPanel() ;
+
     Panel * configureWindows() ;
 
     Panel * makePanelType(OString128& type) ;

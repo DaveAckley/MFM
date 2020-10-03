@@ -281,6 +281,11 @@ namespace MFM
     mRootPanel = configureWindows();
   }
 
+  Panel & SDLI::getRootPanel() {
+    MFM_API_ASSERT_NONNULL(mRootPanel);
+    return *mRootPanel;
+  }
+
   Panel * SDLI::makePanelType(OString128& type) {
     if (type.Equals("Root")) return new RootPanel();
     //    if (type.Equals("Grid")) return new GridPanel();
