@@ -65,8 +65,8 @@ namespace MFM {
   XX(t2t,boot,T2Info_Boot_Button)             \
   XX(t2t,off,T2Info_Off_Button)               \
   XX(t2t,xcdm,T2Info_KillCDM_Button)          \
-  XX(mfm,run,PhysicsCtl_Run)                  \
-  XX(mfm,pause,PhysicsCtl_Pause)              \
+  XX(mfm,run,PhysicsCtl_MFMRun)               \
+  XX(mfm,pause,PhysicsCtl_MFMPause)           \
   XX(mfm,crash,T2Info_Crash_Button)           \
   XX(mfm,quit,T2Info_Crash_Button)            \
   XX(phy,clear,PhysicsCtl_Button_Clear)       \
