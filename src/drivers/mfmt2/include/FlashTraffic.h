@@ -28,32 +28,75 @@
 #ifndef FLASHTRAFFIC_H
 #define FLASHTRAFFIC_H
 
+#include "T2Types.h"
 #include "itype.h"
+#include "Point.h"
+#include "Dirs.h"
 
 namespace MFM
 {
+  typedef Point<s8> BPoint;
+  
   struct FlashTraffic {
-    FlashTraffic(u8 pkthdr, u8 cmd, u8 index, u8 ttl)
+    static const BPoint dir8Offsets[Dirs::DIR_COUNT];
+    static const u32 MAX_FLASH_DISTANCE = 120;
+
+    static bool isInRange(const BPoint & bp) {
+      return bp.GetMaximumLength() <= MAX_FLASH_DISTANCE;
+    }
+
+    FlashTraffic(const FlashTraffic ft, Dir8 dir8)
+      : mPktHdr(0x80|dir8)
+      , mCommand(ft.mCommand)
+      , mIndex(ft.mIndex)
+      , mRange(ft.mRange)
+      , mTimeToLive(ft.mTimeToLive-1)
+      , mOrigin(ft.mOrigin-dir8Offsets[dir8])
+      , mChecksum(computeChecksum())
+    {
+      MFM_API_ASSERT_ARG(ft.mTimeToLive > 0);
+      MFM_API_ASSERT_ARG(isInRange(mOrigin));
+    }
+
+    FlashTraffic(u8 pkthdr = 0x80, u8 cmd = U8_MAX, u8 index = 0, u8 ttl = 0)
       : mPktHdr(pkthdr)
       , mCommand(cmd)
       , mIndex(index)
+      , mRange(ttl)
       , mTimeToLive(ttl)
+      , mOrigin(0,0)
       , mChecksum(computeChecksum())
     { }
 
-    u8 computeChecksum() {
-      u32 num = 0;
-      num = (num << 5) ^ mCommand;
-      num = (num << 5) ^ mIndex;
-      num = (num << 5) ^ mTimeToLive;
-      return (u8) (num ^ (num>>7) ^ (num>>14));
+    bool canPropagateTo(Dir8 inDir8) const {
+      return mTimeToLive > 0 && isInRange(mOrigin+dir8Offsets[inDir8]);
     }
+
+    bool matchesCIRO(const FlashTraffic oth) const {
+      return
+        matchesCIR(oth) &&
+        mOrigin.Equals(oth.mOrigin);
+    }
+
+    bool matchesCIR(const FlashTraffic oth) const {
+      return
+        mCommand == oth.mCommand &&
+        mIndex == oth.mIndex &&
+        mRange == oth.mRange;
+    }
+
+    u8 computeChecksum() const {
+      return (u8) (mCommand ^ mIndex ^ mRange ^ mTimeToLive ^ mOrigin.GetX() ^ mOrigin.GetY());
+    }
+
     void updateChecksum() {
       mChecksum = computeChecksum();
     }
-    bool checksumValid() {
+
+    bool checksumValid() const {
       return mChecksum == computeChecksum();
     }
+
     bool executable(s32 & lastCommandIndex) {
       if (lastCommandIndex >= 0) {
         u8 advance = mIndex - (u8) lastCommandIndex;
@@ -66,7 +109,9 @@ namespace MFM
     u8 mPktHdr;
     u8 mCommand;
     u8 mIndex;
+    u8 mRange;
     u8 mTimeToLive;
+    BPoint mOrigin;
     u8 mChecksum;
   };
 }
