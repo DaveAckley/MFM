@@ -16,6 +16,12 @@ my ($STATICW,$STATICH) = ($TW/3,28);
 my $MENUITEMBG = "#ccbb22";
 my $MENUITEMFG = "#112233";
 
+#my $CONTROLBG = "#aa8822";
+#my $CONTROLFG = "#3344aa";
+
+my $CONTROLBG = "#772255";
+my $CONTROLFG = "#ffee99";
+
 my $FLASHBG = "#993333";
 
 my $AUTOGEN_STAMP =
@@ -58,6 +64,61 @@ $AUTOGEN_STAMP
     bgcolor=#ff0033
     doc="The unique root panel that has no parent"
 # CHILDREN OF ROOT
+[Grid ChooserPanel Root `bfs6x6(0,0,5,5)`]
+    bgcolor=$CONTROLBG
+[Grid_k_fcdist_less FlashCommandLabel Grid `bfs6x6(0,0,0,0)`]
+    enabledbg=$CONTROLBG
+    bdcolor=$CONTROLBG
+    enabledfg=#cccc00
+    iconslot=1
+    visible=1
+    font=1
+[Grid_k_fcdist_down FlashCommandLabel Grid `bfs6x6(1,0,1,0)`]
+    enabledbg=$CONTROLBG
+    bdcolor=$CONTROLBG
+    enabledfg=#cccc00
+    iconslot=2
+    visible=1
+    font=1
+[Grid_k_fcdist_dist FlashCommandLabel Grid `bfs6x6(2,0,3,0)`]
+    enabledbg=$CONTROLBG
+    bdcolor=$CONTROLBG
+    enabledfg=#cccc00
+    iconslot=7
+    visible=1
+    font=1
+    text=10
+[Grid_k_fcdist_up FlashCommandLabel Grid `bfs6x6(4,0,4,0)`]
+    enabledbg=$CONTROLBG
+    bdcolor=$CONTROLBG
+    enabledfg=#cccc00
+    iconslot=4
+    visible=1
+    font=1
+[Grid_k_fcdist_more FlashCommandLabel Grid `bfs6x6(5,0,5,0)`]
+    enabledbg=$CONTROLBG
+    bdcolor=$CONTROLBG
+    enabledfg=#cccc00
+    iconslot=5
+    visible=1
+    font=1
+[Grid_k_fcdist_prepared FlashCommandLabel Grid `bfs6x6(0,2,5,3)`]
+    enabledbg=$CONTROLBG
+    bdcolor=$CONTROLBG
+    enabledfg=#cccc00
+    visible=1
+    font=1
+[Grid_k_fcdist_gogogo FlashCommandLabel Grid `bfs6x6(2,4,3,5)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text=" ENGAGE"
+[Grid_kX MenuItem Grid `bfs6x6(4,4,5,5)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="X"
+    action="RETURN"
 [GlobalMenu ChooserPanel Root $TW $TH $VIZINDENT $VIZINDENT]
     bgcolor=#333366
     visible=1
@@ -66,97 +127,200 @@ $AUTOGEN_STAMP
     bgcolor=$FLASHBG
     visible=1
     doc="Long-range operations switcher"
-[Flash_Radio1 T2RadioButton Flash `bfs6x6(1,1,2,2)`]
-    radiogroup="grid"
+## FC: FLASH CONTROL
+[FC ChooserPanel Root $TW $TH $VIZINDENT $VIZINDENT]
+    bgcolor=$CONTROLBG
+    visible=1
+    doc="Long-range operations switcher"
+## FC_kids
+[FC_kT2 MenuItem FC `bfs3x3(0,0)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
     font=1
-    text=R1
-[Flash_Radio2 T2RadioButton Flash `bfs6x6(1,3,2,4)`]
-    radiogroup="grid"
+    text="T2Tile"
+    action="GO FC_T2"
+[FC_kPHY MenuItem FC `bfs3x3(1,0)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
     font=1
-    text=R2
-[Flash_Button_CMD_dismiss FlashCommandLabel Flash `bfs6x6(3,4,5,5)`]
+    text="Physics"
+    action="GO FC_PHY"
+[FC_kMFM MenuItem FC `bfs3x3(0,1)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="MFMT2"
+    action="GO FC_MFM"
+[FC_kDISP MenuItem FC `bfs3x3(1,1)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="Display"
+    action="GO FC_DISP"
+# [FC_kGRID MenuItem FC `bfs3x3(0,2)`]
+#     enabledbg=$MENUITEMBG
+#     enabledfg=$MENUITEMFG
+#     font=1
+#     text="GRID"
+#     action="GO FC_DISP"
+[FC_kX MenuItem FC `bfs3x3(2,2)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
     font=1
     text="X"
-[Flash_Button_CMD_less FlashCommandLabel Flash `bfs6x6(0,0,0,0)`]
-    enabledbg=$FLASHBG
-    bdcolor=$FLASHBG
-    enabledfg=#cccc00
-    iconslot=1
+    action="RETURN"
+## FC_T2: T2TILE FLASH ITEMS
+[FC_T2 ChooserPanel Root $TW $TH $VIZINDENT $VIZINDENT]
+    bgcolor=$CONTROLBG
     visible=1
+    doc="Long-range operations switcher"
+[FC_T2_k_t2t_boot T2RadioButton FC_T2 `bfs3x3(0,0)`]
+    radiogroup="FC"
+    font=12
+    text=Boot
+[FC_T2_k_t2t_off T2RadioButton FC_T2 `bfs3x3(1,0)`]
+    radiogroup="FC"
+    font=12
+    text=Off
+[FC_T2_k_t2t_xcdm T2RadioButton FC_T2 `bfs3x3(2,0)`]
+    radiogroup="FC"
+    font=12
+    text="x CDM"
+[FC_T2_kGrid MenuItem FC_T2 `bfs3x3(0,2)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
     font=1
-[Flash_Button_CMD_down FlashCommandLabel Flash `bfs6x6(1,0,1,0)`]
-    enabledbg=$FLASHBG
-    bdcolor=$FLASHBG
-    enabledfg=#cccc00
-    iconslot=2
-    visible=1
+    text=Grid
+    action="GO Grid"
+# [FC_T2_kTile MenuItem FC_T2 `bfs3x3(1,2)`]
+#     enabledbg=$MENUITEMBG
+#     enabledfg=$MENUITEMFG
+#     font=1
+#     text=Here
+#     action="GO Here"
+[FC_T2_kX MenuItem FC_T2 `bfs3x3(2,2)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
     font=1
-[Flash_Button_CMD_dist FlashCommandLabel Flash `bfs6x6(2,0,3,0)`]
-    enabledbg=$FLASHBG
-    bdcolor=$FLASHBG
-    enabledfg=#cccc00
-    iconslot=7
+    text=X
+    action="GO FC"
+## FC_MFM: MFMT2 FLASH ITEMS
+[FC_MFM ChooserPanel Root $TW $TH $VIZINDENT $VIZINDENT]
+    bgcolor=$CONTROLBG
     visible=1
+    doc="Long-range operations switcher"
+[FC_MFM_k_mfm_run T2RadioButton FC_MFM `bfs3x3(0,0)`]
+    radiogroup="FC"
+    font=12
+    text="RUN"
+[FC_MFM_k_mfm_pause T2RadioButton FC_MFM `bfs3x3(1,0)`]
+    radiogroup="FC"
+    font=12
+    text="PAUSE"
+[FC_MFM_k_mfm_crash T2RadioButton FC_MFM `bfs3x3(0,1)`]
+    radiogroup="FC"
+    font=12
+    text="CRASH"
+[FC_MFM_k_mfm_quit T2RadioButton FC_MFM `bfs3x3(1,1)`]
+    radiogroup="FC"
+    font=12
+    text="QUIT"
+[FC_MFM_kGrid MenuItem FC_MFM `bfs3x3(0,2)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
     font=1
-    text=10
-[Flash_Button_CMD_up FlashCommandLabel Flash `bfs6x6(4,0,4,0)`]
-    enabledbg=$FLASHBG
-    bdcolor=$FLASHBG
-    enabledfg=#cccc00
-    iconslot=4
-    visible=1
+    text=Grid
+    action="GO Grid"
+# [FC_MFM_kTile MenuItem FC_MFM `bfs3x3(1,2)`]
+#     enabledbg=$MENUITEMBG
+#     enabledfg=$MENUITEMFG
+#     font=1
+#     text=Here
+#     action="GO Here"
+[FC_MFM_kX MenuItem FC_MFM `bfs3x3(2,2)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
     font=1
-[Flash_Button_CMD_more FlashCommandLabel Flash `bfs6x6(5,0,5,0)`]
-    enabledbg=$FLASHBG
-    bdcolor=$FLASHBG
-    enabledfg=#cccc00
-    iconslot=5
+    text=X
+    action="GO FC"
+## FC_PHY: PHYSICS FLASH ITEMS
+[FC_PHY ChooserPanel Root $TW $TH $VIZINDENT $VIZINDENT]
+    bgcolor=$CONTROLBG
     visible=1
+    doc="Long-range operations switcher"
+[FC_PHY_k_phy_clear T2RadioButton FC_PHY `bfs3x3(0,0)`]
+    radiogroup="FC"
+    font=12
+    text="CLEAR"
+[FC_PHY_k_phy_seed1 T2RadioButton FC_PHY `bfs3x3(1,0)`]
+    radiogroup="FC"
+    font=12
+    text="SEED1"
+[FC_PHY_k_phy_seed2 T2RadioButton FC_PHY `bfs3x3(2,0)`]
+    radiogroup="FC"
+    font=12
+    text="SEED2"
+[FC_PHY_kGrid MenuItem FC_PHY `bfs3x3(0,2)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
     font=1
-[Flash_Button_CMD_boot FlashCommandLabel Flash `bfs6x6(0,2,0,2)`]
-    enabledbg=$FLASHBG
-    bdcolor=$FLASHBG
-    enabledfg=#cccc00
-    text="Boot"
-    visible=1
-    font=9
-[Flash_Button_CMD_clear FlashCommandLabel Flash `bfs6x6(0,1,0,1)`]
-    enabledbg=$FLASHBG
-    bdcolor=$FLASHBG
-    enabledfg=#cccc00
-    text="x"
-    visible=1
-    font=9
-[Flash_Button_CMD_off FlashCommandLabel Flash `bfs6x6(0,3,0,3)`]
-    enabledbg=$FLASHBG
-    bdcolor=$FLASHBG
-    enabledfg=#cccc00
-    text="Off"
-    visible=1
-    font=9
-[Flash_Button_CMD_tile FlashCommandLabel Flash `bfs6x6(0,4,0,4)`]
-    enabledbg=$FLASHBG
-    bdcolor=$FLASHBG
-    enabledfg=#cccc00
-    text="Tile"
-    visible=1
-    font=9
-[Flash_Button_CMD_sites FlashCommandLabel Flash `bfs6x6(0,5,0,5)`]
-    enabledbg=$FLASHBG
-    bdcolor=$FLASHBG
-    enabledfg=#cccc00
-    text="Sites"
-    visible=1
-    font=9
-[Flash_Button_CMD_gogogo FlashCommandLabel Flash `bfs6x6(3,2,5,3)`]
-    enabledbg=$FLASHBG
-    bdcolor=$FLASHBG
-    enabledfg=#cccc00
-    text=" "
-    visible=1
+    text=Grid
+    action="GO Grid"
+# [FC_PHY_kTile MenuItem FC_PHY `bfs3x3(1,2)`]
+#     enabledbg=$MENUITEMBG
+#     enabledfg=$MENUITEMFG
+#     font=1
+#     text=Here
+#     action="GO Here"
+[FC_PHY_kX MenuItem FC_PHY `bfs3x3(2,2)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
     font=1
+    text=X
+    action="GO FC"
+## FC_DISP: DISPLAY FLASH ITEMS
+[FC_DISP ChooserPanel Root $TW $TH $VIZINDENT $VIZINDENT]
+    bgcolor=$CONTROLBG
+    visible=1
+    doc="Long-range operations switcher"
+[FC_DISP_k_dsp_sites T2RadioButton FC_DISP `bfs3x3(0,0)`]
+    radiogroup="FC"
+    font=12
+    text="SITES"
+[FC_DISP_k_dsp_tile T2RadioButton FC_DISP `bfs3x3(1,0)`]
+    radiogroup="FC"
+    font=12
+    text="TILE"
+[FC_DISP_k_dsp_cdm T2RadioButton FC_DISP `bfs3x3(2,0)`]
+    radiogroup="FC"
+    font=12
+    text="CDM"
+[FC_DISP_k_dsp_tq T2RadioButton FC_DISP `bfs3x3(0,1)`]
+    radiogroup="FC"
+    font=12
+    text="TQ"
+[FC_DISP_k_dsp_log T2RadioButton FC_DISP `bfs3x3(1,1)`]
+    radiogroup="FC"
+    font=12
+    text="LOG"
+[FC_DISP_kGrid MenuItem FC_DISP `bfs3x3(0,2)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text=Grid
+    action="GO Grid"
+# [FC_DISP_kTile MenuItem FC_DISP `bfs3x3(1,2)`]
+#     enabledbg=$MENUITEMBG
+#     enabledfg=$MENUITEMFG
+#     font=1
+#     text=Here
+#     action="GO Grid"
+[FC_DISP_kX MenuItem FC_DISP `bfs3x3(2,2)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text=X
+    action="GO FC"
 [PhysicsCtl ChooserPanel Root $TW $TH $VIZINDENT $VIZINDENT]
     bgcolor=#333366
     visible=1
@@ -226,11 +390,11 @@ $AUTOGEN_STAMP
     text="Sites"
     action="GO Sites"
 [GlobalMenu_Button_Flash MenuItem GlobalMenu `bfs6x6(2,2,3,3)`]
-    enabledbg=$MENUITEMBG
-    enabledfg=$MENUITEMFG
+    enabledbg=$CONTROLBG
+    enabledfg=$CONTROLFG
     font=1
-    text="Flash"
-    action="GO Flash"
+    text="Control"
+    action="GO FC"
 [GlobalMenu_Button_Log MenuItem GlobalMenu `bfs6x6(4,2,5,3)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
@@ -297,6 +461,11 @@ $AUTOGEN_STAMP
     enabledfg=$MENUITEMFG
     font=4
     text="Off"
+[T2Info_KillCDM_Button XCDMButton T2Viz `bfs6x6(4,5,4,5)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=4
+    text="xCDM"
 [T2Info_Quit_Button QuitButton T2Viz `bfs6x6(3,0,3,0)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
@@ -366,10 +535,18 @@ $AUTOGEN_STAMP
     font=4
     text="X"
     action="GO GlobalMenu"
-[PhysicsCtl_Checkbox_Living T2TileLiveCheckbox PhysicsCtl `bfs6x6(0,2,2,3)`]
+[PhysicsCtl_MFMRun T2RadioButton PhysicsCtl `bfs6x6(0,2,1,3)`]
+    radiogroup="RP"
     font=1
     text="Run"
-[PhysicsCtl_Checkbox_Listening T2TileListenCheckbox PhysicsCtl `bfs6x6(3,2,5,3)`]
+[PhysicsCtl_MFMPause T2RadioButton PhysicsCtl `bfs6x6(2,2,3,3)`]
+    radiogroup="RP"
+    font=1
+    text="Pause"
+# [PhysicsCtl_Checkbox_Living T2TileLiveCheckbox PhysicsCtl `bfs6x6(0,2,2,3)`]
+#     font=1
+#     text="Run"
+[PhysicsCtl_Checkbox_Listening T2TileListenCheckbox PhysicsCtl `bfs6x6(4,2,5,3)`]
     font=2
     text="I/O"
 [PhysicsCtl_Button_Clear T2ClearTileButton PhysicsCtl `bfs3x3(0,0)`]
