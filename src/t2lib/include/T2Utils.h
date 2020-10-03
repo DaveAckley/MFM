@@ -3,6 +3,7 @@
 #define T2UTILS_H
 
 #include <string.h> /*for strlen*/
+#include <string>   /*for std::string*/
 #include "FileByteSource.h"
 #include "CharBufferByteSource.h"
 #include "OverflowableCharBufferByteSink.h"
@@ -24,6 +25,7 @@ namespace MFM {
   void printComma(u32 num, ByteSink & to) ;
   void printComma(u64 num, ByteSink & to) ;
 
+  bool endsWith(const std::string& str, const std::string& suffix) ;
 }
 
 #endif /* T2UTILS_H */
