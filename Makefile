@@ -63,6 +63,10 @@ cdmd:	FORCE
 	cp -f $$FN /home/debian/CDMSAVE/CDMDS/; \
 	fi; \
 	popd
+
+restart:	FORCE
+	pkill mfmt2
+
 endif
 
 identify:	FORCE
