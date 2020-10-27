@@ -1,0 +1,16 @@
+{2}  -*- text -*- 
+[0:
+
+Mon Oct 26 14:44:56 2020 OK so we made the 'rolling trace dir' trace
+concept but never actually got 'in-memory rolling' implemented.  It
+seems we ought to be able to implement the latter by repurposing the
+former, though.
+
+But first let's do LCFNs![1:
+
+Mon Oct 26 15:18:15 2020 LCFNs 234..237 are on their way out into the
+world!
+
+:1]
+
+:0]
