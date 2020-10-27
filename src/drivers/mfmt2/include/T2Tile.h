@@ -125,6 +125,7 @@ namespace MFM {
     void showFail(const char * file, int line, const char * msg) ;
 
     static s32 makeTag() ;
+    void dumpTrace(const char * path = 0) ;
     void startTracing(const char * path, s32 synctag = makeTag()) ;
     void stopTracing(s32 synctag = -makeTag()) ;
     void traceEventStats() ;

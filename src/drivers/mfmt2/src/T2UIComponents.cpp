@@ -135,6 +135,11 @@ namespace MFM {
     exit(1); /* 'crash' */
   }
 
+  void T2DumpButton::onClick() {
+    TLOG(MSG,"Dump button clicked");
+    T2Tile::get().dumpTrace();
+  }
+
   void T2OffButton::onClick() {
     TLOG(MSG,"Off button clicked");
     T2Tile::get().stopTracing();

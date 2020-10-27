@@ -87,6 +87,10 @@ namespace MFM {
     virtual void onClick() ;
   };
 
+  struct T2DumpButton : public T2UIButton {
+    virtual void onClick() ;
+  };
+
   struct T2OffButton : public T2UIButton {
     virtual void onClick() ;
   };

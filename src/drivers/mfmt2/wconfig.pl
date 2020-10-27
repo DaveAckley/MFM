@@ -225,6 +225,10 @@ $AUTOGEN_STAMP
     radiogroup="FC"
     font=12
     text="QUIT"
+[FC_MFM_k_mfm_dump T2RadioButton FC_MFM `bfs3x3(2,0)`]
+    radiogroup="FC"
+    font=12
+    text="DUMP"
 [FC_MFM_kGrid MenuItem FC_MFM `bfs3x3(0,2)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
@@ -476,6 +480,11 @@ $AUTOGEN_STAMP
     enabledfg=$MENUITEMFG
     font=4
     text="Crash"
+[T2Info_Dump_Button DumpButton T2Viz `bfs6x6(2,5,2,5)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=4
+    text="Dump"
 [T2Info_Boot_Button BootButton T2Viz `bfs6x6(5,1,5,1)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG

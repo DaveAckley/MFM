@@ -49,7 +49,8 @@ namespace MFM {
   XX(mfm,1,pause)                      \
   XX(mfm,2,crash)                      \
   XX(mfm,3,quit)                       \
-  /* mfm,4..15 reserved*/              \
+  XX(mfm,4,dump)                       \
+  /* mfm,5..15 reserved*/              \
   XX(phy,0,clear)                      \
   XX(phy,1,seed1)                      \
   XX(phy,2,seed2)                      \
@@ -68,7 +69,8 @@ namespace MFM {
   XX(mfm,run,PhysicsCtl_MFMRun)               \
   XX(mfm,pause,PhysicsCtl_MFMPause)           \
   XX(mfm,crash,T2Info_Crash_Button)           \
-  XX(mfm,quit,T2Info_Crash_Button)            \
+  XX(mfm,quit,T2Info_Quit_Button)             \
+  XX(mfm,dump,T2Info_Dump_Button)             \
   XX(phy,clear,PhysicsCtl_Button_Clear)       \
   XX(phy,seed1,PhysicsCtl_Button_Seed1)       \
   XX(phy,seed2,PhysicsCtl_Button_Seed2)       \

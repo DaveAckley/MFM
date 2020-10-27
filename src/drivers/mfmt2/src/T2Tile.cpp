@@ -658,6 +658,12 @@ static const char * CMD_HELP_STRING =
     return true;
   }
 
+  void T2Tile::dumpTrace(const char * path) {
+    if (!mTraceLoggerPtr) return;
+    if (!path) path = "/tmp/latestTraceDump.dat";
+    mTraceLoggerPtr->dump(path);
+  }
+
   bool T2Tile::tlog(const Trace & tb) {
     if (!mTraceLoggerPtr) return false; // If anybody cares
     mTraceLoggerPtr->log(tb);
@@ -679,7 +685,7 @@ static const char * CMD_HELP_STRING =
   void T2Tile::startTracing(const char * path, s32 syncTag) {
     MFM_API_ASSERT_ARG(syncTag >= 0);
     if (mTraceLoggerPtr != 0) stopTracing(-syncTag);
-    mTraceLoggerPtr = new TraceLogger(path);
+    mTraceLoggerPtr = new TraceLogger(path,true);
     tlog(Trace(*this, TTC_Tile_Start, "%D", TRACE_REC_FORMAT_VERSION));
     tlog(Trace(*this, TTC_Tile_TraceFileMarker, "%l", syncTag));
     traceEventStats();

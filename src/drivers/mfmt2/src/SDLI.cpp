@@ -311,6 +311,7 @@ namespace MFM
     if (type.Equals("T2ClearTileButton")) return new T2ClearTileButton(); 
     if (type.Equals("QuitButton")) return new T2QuitButton(); 
     if (type.Equals("CrashButton")) return new T2CrashButton(); 
+    if (type.Equals("DumpButton")) return new T2DumpButton(); 
     if (type.Equals("OffButton")) return new T2OffButton(); 
     if (type.Equals("BootButton")) return new T2BootButton(); 
     if (type.Equals("T2RadioButton")) return new T2RadioButton(); 
