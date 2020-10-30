@@ -132,6 +132,7 @@ namespace MFM {
   void T2CrashButton::onClick() {
     TLOG(MSG,"Crash button clicked");
     T2Tile::get().stopTracing();
+    throw std::exception(); // Throw something that isn't a FailException
     exit(1); /* 'crash' */
   }
 
