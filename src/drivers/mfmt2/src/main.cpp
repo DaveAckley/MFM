@@ -80,10 +80,15 @@ namespace MFM {
     tile.initEverything(argc,argv);
 
     unwind_protect({
+        /*
         MFMErrorEnvironmentPointer_t errenv = &unwindProtect_errorEnvironment;
         volatile const char * file = errenv->file;
         int line = errenv->lineno;
         int code = errenv->thrown;
+        */
+        const char * file = (const char *) unwindProtect_FailException.mFile;
+        int line = unwindProtect_FailException.mLine;
+        int code = unwindProtect_FailException.mCode;
         const char * msg = MFMFailCodeReason(code);
 
         if (!file) {
@@ -92,7 +97,8 @@ namespace MFM {
         }
 
         // Get the failure into the log file
-        MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
+        MFMPrintError(stderr,file,line,code);
+        //        MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
         fprintf(stderr,"Failed out of top-level\n");
 
         // And get it into the trace file
@@ -125,7 +131,12 @@ namespace MFM {
 int main(int argc, char** argv)
 {
   unwind_protect({
-      MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
+      const char * file = (const char *) unwindProtect_FailException.mFile;
+      int line = unwindProtect_FailException.mLine;
+      int code = unwindProtect_FailException.mCode;
+      //const char * msg = MFMFailCodeReason(code);
+
+      MFMPrintError(stderr,file,line,code);
       fprintf(stderr,"Failed out of main\n");
       exit(99);
   },{
