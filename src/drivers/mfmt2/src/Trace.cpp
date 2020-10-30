@@ -235,9 +235,11 @@ namespace MFM {
                     path, strerror(errno));
     else {
       FileByteSink fbs(file);
+      TLOG(DBG,"Dumping to %s",path);         // Note to trace buffer
       mTraceBuffers[1-mCurBuf].AppendTo(fbs); // Older first
-      mTraceBuffers[mCurBuf].AppendTo(fbs); // Then current
+      mTraceBuffers[mCurBuf].AppendTo(fbs);   // Then current
       fbs.Close();
+      LOG.Message("Trace dumped %s", path);   // Note to log
     }
   }
 
