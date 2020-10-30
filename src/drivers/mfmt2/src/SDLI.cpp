@@ -85,7 +85,7 @@ namespace MFM
           execl("/home/t2/T2-12/apps/mfm/RUN_SDL",
                 "/home/t2/T2-12/apps/mfm/RUN_SDL",
                 "/opt/scripts/t2/sdlsplash",
-                "/opt/scripts/t2/t2-splash.png",
+                "/opt/scripts/t2/t2-splash-inverted.png",
                 (char *) 0);
           exit(0);
           break;
