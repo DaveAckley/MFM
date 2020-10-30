@@ -23,21 +23,12 @@ namespace MFM {
     cdm.initEverything(argc,argv);
 
     unwind_protect({
-        MFMErrorEnvironmentPointer_t errenv = &unwindProtect_errorEnvironment;
-        volatile const char * file = errenv->file;
-        int line = errenv->lineno;
-        int code = errenv->thrown;
-        const char * msg = MFMFailCodeReason(code);
+        const char * file = (const char *) unwindProtect_FailException.mFile;
+        int line = unwindProtect_FailException.mLine;
+        int code = unwindProtect_FailException.mCode;
+        //const char * msg = MFMFailCodeReason(code);
 
-        if (!file) {
-          file = "unknown";
-          line = 0;
-        }
-
-        // Get the failure into the log file
-        MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
-        fprintf(stderr,"%s:%d: %s [%d]\n",
-                file, line, msg ? msg : "", code);
+        MFMPrintError(stderr,file,line,code);
         fprintf(stderr,"Failed out of top-level\n");
         exit(99);
       },{
@@ -52,7 +43,12 @@ namespace MFM {
 int main(int argc, char** argv)
 {
   unwind_protect({
-      MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
+      const char * file = (const char *) unwindProtect_FailException.mFile;
+      int line = unwindProtect_FailException.mLine;
+      int code = unwindProtect_FailException.mCode;
+      //const char * msg = MFMFailCodeReason(code);
+
+      MFMPrintError(stderr,file,line,code);
       fprintf(stderr,"Failed out of main\n");
       exit(99);
   },{

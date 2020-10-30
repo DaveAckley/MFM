@@ -1603,7 +1603,7 @@ namespace MFM
     {
       unwind_protect
       ({
-        MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
+        //XXX        MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
         fprintf(stderr, "Failure reached top-level! Aborting\n");
         abort();
        },
