@@ -1,4 +1,4 @@
-{2}  -*- text -*- 
+{13}  -*- text -*- 
 [0:
 
 Mon Oct 26 14:44:56 2020 OK so we made the 'rolling trace dir' trace
@@ -14,3 +14,131 @@ world!
 :1]
 
 :0]
+[2:
+
+Wed Oct 28 11:44:23 2020 OK, so before t2sup#288 shipped, we got to
+having a flash-commandable 'trace dump' button on the interface, that
+writes the most-recent-up-to 1MB of trace data to a fixed filename,
+currently
+
+  /tmp/latestTraceDump.dat 
+
+as per T2Tile.cpp:663[3:
+
+Wed Oct 28 11:49:26 2020 Now, in grepping for that just now, I came
+across this:
+
+        // Aaand try to trigger an explicit packet status dump to syslog (ignore errors)
+        {
+          char buf[100];
+          u32 size = sizeof(buf);
+          snprintf(buf,size,"%s:%d: %s [%d]",
+                   file, line, msg ? msg : "", code);
+          writeWholeFile("/sys/class/itc_pkt/dump",buf);
+        }
+
+which I'd pretty much plumb forgotten.
+[4:
+
+Wed Oct 28 12:03:12 2020 I'd also really like to try to rescue the
+fail screen, which died somehow when I was messing with the FAIL
+implementation, but I can't now remember how.
+
+Let's try to work on that a bit.  It's a pain to debug since it
+involves longjmp..  We'll see.[5:
+
+Wed Oct 28 12:11:27 2020 Ohhhhhkay, so the first issue seems to be
+that
+
+(gdb) b MFMLongJmpHere
+
+no longer breaks when a FAIL is executed?
+
+Let's get a DEBUG=1 build going here.[6:
+
+Thu Oct 29 03:07:49 2020 Well, I forced an (ITC-processing level)
+failure in the debugger and saw the fail screen no problem.  Not sure
+if it's compiling with optimization that's the problem or what.[7:
+
+Thu Oct 29 03:33:56 2020 OK, I recompiled to create a failure closer
+to event processing and the 'reason' we don't see the fail screen is
+that mfmt2 segfaults first -- apparently at or very close to the
+longjmp call in MFMLongJmpHere.
+
+And that was the hard-to-debug issue that left us without fail-screens
+back when we were screwing with this before.  I feel like I was
+screwing with the unwind-protect implementation back then.. maybe we
+could bisect a little?[8:
+
+Thu Oct 29 15:07:07 2020 Well I went another direction.  Now we've got
+a version that uses try/throw instead of setjmp/longmp, and now I'm
+seeing our fail screens again on our 'main' 1.5PZ grid.
+
+Which tells us, by the way, that the problems are combinations of
+
+T2EventWindow.cpp:972
+T2ITC.cpp:199
+
+which are, respectively,
+
+ - Timeout while awaiting acknowledgments during an EW, and
+
+ - Blown assertint that a passive side EW is idle but it's not.
+
+[9:
+
+Thu Oct 29 15:33:58 2020 A couple thoughts:
+
+ - We'd also really like to capture a 'tail -100' or so of
+   /var/log/syslog in this soon-to-exist dump package.
+
+ - And we really want to know about any lost packets that the kernel
+   knows about.  Do we already capture that for the dump or syslog?
+   How?  We need incremental stats if we're going to try to do it from
+   stats.
+
+[10:
+
+Thu Oct 29 19:47:36 2020 But, the bigger question in my mind about the
+intertile events is the question/need for more reliable delivery
+between the tiles.
+
+What if we put a seqno/retransmit layer in between each pair of ITCs?
+Then the EWs would be the application layer, and the ITCs would be the
+transport layer, and event packets would get buffered in the ITCs, and
+released to the EWs as they got acked, and retransmitted if needed if
+they got lost.  Then if a neighbor really does go down, then we'll be
+closing the ITC link and there'll be plenty of visible consequences to
+that -- plus a full cache exchange when the ITC reopens.
+
+[11:
+
+Fri Oct 30 12:59:14 2020 That also means that ANY lost packet will
+block ALL progress on that ITC until it gets retransmitted, when
+there's no official reason to block non-overlapping EWs.
+[12:
+
+Fri Oct 30 14:27:40 2020 Well time to move the flag.
+
+Committing I guess.
+
+:12]
+
+:11]
+:10]
+
+:9]
+
+
+:8]
+
+:7]
+
+:6]
+
+:5]
+
+:4]
+:3]
+
+:2]
