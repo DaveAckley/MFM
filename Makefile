@@ -57,9 +57,10 @@ cdmd:	FORCE
 	FN=`/home/t2/MFM/bin/mfzmake cdmake $(REGNUM) $(SLOTNUM) $$BASE $$BASE-built.tgz | \
             perl -e "while(<>) {/'([^']+)'/ && print "'$$1}'`; \
 	if [ "x$$FN" = "x" ] ; then echo "Build failed" ; else  \
-	echo -n "Got $$FN for $$BASE, tag = "; \
+	echo -n "Got $$FN for $$BASE, tag = " ; \
 	perl -e '"'$$FN'" =~ /[^-]+-[^-]+-([[:xdigit:]]+)[.]/; print $$1' > /cdm/tags/slot$(SLOTNUM)-install-tag.dat; \
-	cat /cdm/tags/slot$(SLOTNUM)-install-tag.dat; echo ;\
+	cat /cdm/tags/slot$(SLOTNUM)-install-tag.dat; \
+	echo -n ", size = " ; stat -c %s $$FN; \
 	cp -f $$FN /home/debian/CDMSAVE/CDMDS/; \
 	fi; \
 	popd
