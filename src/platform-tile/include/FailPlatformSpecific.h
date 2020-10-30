@@ -5,6 +5,7 @@
 #include <stdio.h>    /* For FILE */
 #include <pthread.h>  /* For __thread */
 #include <execinfo.h> /* For backtrace */
+#include <exception>  /* For std::exception */
 
 typedef struct MFMErrorEnvironment * volatile MFMErrorEnvironmentPointer_t;
 
@@ -37,17 +38,62 @@ extern "C" const char * MFMFailCodeReason(int failCode) ;
 #define FAIL(code)                                                 \
   FAIL_BY_NUMBER(MFM_FAIL_CODE_NUMBER(code))
 
-#define FAIL_BY_NUMBER(number)                                     \
+#define FAIL_BY_NUMBER_OLD(number)                                     \
   ((MFMPtrToErrEnvStackPtr && *MFMPtrToErrEnvStackPtr)?            \
    ((*MFMPtrToErrEnvStackPtr)->file = __FILE__,                    \
     (*MFMPtrToErrEnvStackPtr)->lineno = __LINE__,                  \
-    (*MFMPtrToErrEnvStackPtr)->backtraceSize =                     \
+    (*MFMPtrToErrEnvStackPtr)->backtraceSize = 0,                  \
+  /*  (*MFMPtrToErrEnvStackPtr)->backtraceSize =                   \
       backtrace((*MFMPtrToErrEnvStackPtr)->backtraceArray,         \
-                MAX_BACKTRACE_LEVELS),                             \
+      MAX_BACKTRACE_LEVELS), */                                    \
     MFMLongJmpHere((*MFMPtrToErrEnvStackPtr)->buffer,              \
                    number),0) :                                    \
    (MFMFailHere(__FILE__,__LINE__,                                 \
                 number),0))
+
+struct FailException : public std::exception {
+  const int mCode;
+  const char * mFile;
+  const int mLine;
+  void * mBacktraceArray[MAX_BACKTRACE_LEVELS]; /* Where we were when we threw */
+  unsigned mBacktraceSize;       /* Number of entries used in backtraceArray */
+
+  FailException(int code, const char * file, int line)
+    : mCode(code)
+    , mFile(file)
+    , mLine(line)
+  {
+    mBacktraceSize = backtrace(mBacktraceArray, MAX_BACKTRACE_LEVELS); 
+  }
+  virtual const char * what() const throw() {
+    return "failException";
+  }
+  void prettyPrint(FILE * stream) const ;
+};
+
+extern "C" void MFMPrintFailException(FILE * stream, const FailException & fe) ;
+
+extern "C" void MFMThrowHere(const FailException & fe) __attribute__ ((noreturn));
+
+#define FAIL_BY_NUMBER(number)                  \
+  MFMThrowHere(FailException(number,__FILE__,__LINE__))
+
+#define unwind_protect(cleanup,block)                                   \
+  do {                                                                  \
+    try { block }                                                       \
+    catch (FailException & _fe) {                                       \
+      const FailException &                                                \
+        unwindProtect_FailException __attribute__ ((unused)) = _fe;        \
+      const int MFMThrownFailCode __attribute__ ((unused)) = _fe.mCode;    \
+      const char * MFMThrownFromFile __attribute__ ((unused)) = _fe.mFile; \
+      const int MFMThrownFromLineNo __attribute__ ((unused)) = _fe.mLine;  \
+      void * const * MFMThrownBacktraceArray __attribute__ ((unused)) =    \
+        _fe.mBacktraceArray;                                               \
+      unsigned MFMThrownBacktraceSize __attribute__ ((unused)) =           \
+        _fe.mBacktraceSize;                                                \
+      { cleanup }                                                          \
+    }                                                                      \
+  } while (0)
 
 /**
    Execute 'block', but if any FAIL()'s occur, stop executing 'block'
@@ -99,7 +145,7 @@ extern "C" const char * MFMFailCodeReason(int failCode) ;
    WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
 
  */
-#define unwind_protect(cleanup,block)                                         \
+#define unwind_protect_OLD(cleanup,block)                                         \
 do {									      \
   MFMErrorEnvironment unwindProtect_errorEnvironment;			      \
   unwindProtect_errorEnvironment.prev = (*MFMPtrToErrEnvStackPtr);	      \
