@@ -4,6 +4,7 @@
 
 #include "itype.h"
 #include "P3Atom.h"
+#include "Point.h"
 #include "Site.h"
 #include "AtomSerializer.h"
 #include "OverflowableCharBufferByteSink.h"
@@ -27,7 +28,8 @@ namespace MFM {
 
   typedef BitVector<P3AtomConfig::BITS_PER_ATOM> OurT2AtomBitVector;
 
-  
+  typedef Point<s8> BPoint;
+
 }
 
 
