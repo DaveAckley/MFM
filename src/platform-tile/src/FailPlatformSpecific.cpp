@@ -49,6 +49,7 @@ extern "C" {
   }
 
   void MFMThrowHere(const FailException & fe) {
+
     throw fe;
   }
 
@@ -63,3 +64,5 @@ void FailException::prettyPrint(FILE * stream) const {
   fprintf(stream,"%s:%d: pP%s\n", mFile, mLine, what());
 }
 
+
+MFMFailHook MFMUnwindProtectLoggingHook;

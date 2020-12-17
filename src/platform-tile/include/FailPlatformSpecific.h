@@ -75,6 +75,11 @@ extern "C" void MFMPrintFailException(FILE * stream, const FailException & fe) ;
 
 extern "C" void MFMThrowHere(const FailException & fe) __attribute__ ((noreturn));
 
+
+extern "C" typedef void (*MFMFailHook)(const FailException & fe, const char * unwindFile, int unwindLine);
+
+extern "C" MFMFailHook MFMUnwindProtectLoggingHook;
+
 #define FAIL_BY_NUMBER(number)                  \
   MFMThrowHere(FailException(number,__FILE__,__LINE__))
 
@@ -91,6 +96,8 @@ extern "C" void MFMThrowHere(const FailException & fe) __attribute__ ((noreturn)
         _fe.mBacktraceArray;                                               \
       unsigned MFMThrownBacktraceSize __attribute__ ((unused)) =           \
         _fe.mBacktraceSize;                                                \
+      if (MFMUnwindProtectLoggingHook != NULL)                             \
+        (*MFMUnwindProtectLoggingHook)(_fe,__FILE__,__LINE__);             \
       { cleanup }                                                          \
     }                                                                      \
   } while (0)
