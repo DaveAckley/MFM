@@ -33,9 +33,29 @@
 #include "Point.h"
 #include "Dirs.h"
 
+#include "FlashCommands.h"
+
 namespace MFM
 {
-  typedef Point<s8> BPoint;
+  struct ArgBytes {
+    ArgBytes(u32 arg) {
+      u32 i = 0;
+      while (i < sizeof(mBytes)) {
+        mBytes[i++] = arg&0xff;
+        arg >>= 8;
+      }
+    }
+    u32 get() const {
+      u32 ret = 0;
+      u32 i = sizeof(mBytes);
+      while (i > 0) {
+        ret <<= 8;
+        ret |= mBytes[--i];
+      }
+      return ret;
+    }
+    u8 mBytes[sizeof(u32)];
+  };
   
   struct FlashTraffic {
     static const BPoint dir8Offsets[Dirs::DIR_COUNT];
@@ -45,11 +65,19 @@ namespace MFM
       return bp.GetMaximumLength() <= MAX_FLASH_DISTANCE;
     }
 
+    static FlashTraffic make(T2FlashCmd cmd) ;
+
+    static FlashTraffic make(T2FlashCmd cmd, s32 index, u32 range, u32 tag)
+    {
+      return FlashTraffic(0x80, cmd, index, range, tag);
+    }
+
     FlashTraffic(const FlashTraffic ft, Dir8 dir8)
       : mPktHdr(0x80|dir8)
       , mCommand(ft.mCommand)
       , mIndex(ft.mIndex)
       , mRange(ft.mRange)
+      , mArg(ft.mArg)
       , mTimeToLive(ft.mTimeToLive-1)
       , mOrigin(ft.mOrigin-dir8Offsets[dir8])
       , mChecksum(computeChecksum())
@@ -58,11 +86,12 @@ namespace MFM
       MFM_API_ASSERT_ARG(isInRange(mOrigin));
     }
 
-    FlashTraffic(u8 pkthdr = 0x80, u8 cmd = U8_MAX, u8 index = 0, u8 ttl = 0)
+    FlashTraffic(u8 pkthdr = 0x80, u8 cmd = U8_MAX, u8 index = 0, u8 ttl = 0, u32 tag = 0)
       : mPktHdr(pkthdr)
       , mCommand(cmd)
       , mIndex(index)
       , mRange(ttl)
+      , mArg(ArgBytes(tag))
       , mTimeToLive(ttl)
       , mOrigin(0,0)
       , mChecksum(computeChecksum())
@@ -83,10 +112,6 @@ namespace MFM
         mCommand == oth.mCommand &&
         mIndex == oth.mIndex &&
         mRange == oth.mRange;
-    }
-
-    u8 computeChecksum() const {
-      return (u8) (mCommand ^ mIndex ^ mRange ^ mTimeToLive ^ mOrigin.GetX() ^ mOrigin.GetY());
     }
 
     void updateChecksum() {
@@ -110,9 +135,22 @@ namespace MFM
     u8 mCommand;
     u8 mIndex;
     u8 mRange;
+    ArgBytes mArg; 
     u8 mTimeToLive;
     BPoint mOrigin;
     u8 mChecksum;
+
+    // Actually do it.  static to avoid a vptr
+    static bool execute(const FlashTraffic & ft) ; 
+
+  private:
+    u8 computeChecksum() const {
+      u32 val = 0;
+      const u8 * p = &mCommand; // Skipping the header -- it's altered in transit 
+      while (p != &mChecksum) val = (val<<1) ^ *p++;
+      return (u8) (val ^ (val>>8) ^ (val>>16));
+    }
+
   };
 }
 

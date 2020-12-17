@@ -34,7 +34,7 @@ namespace MFM
     SDL_Event m_sdlEvent;
   };
 
-  SDLI * SDLI::mStaticInstance = 0;
+  //  SDLI * SDLI::mStaticInstance = 0;
 
   SDLI::SDLI(T2Tile& tile, const char * name)
     : mTile(tile)
@@ -57,6 +57,7 @@ namespace MFM
       Panel * p = itr->second;
       delete p;
     }
+    SDL_Quit();
   }
 
   void SDLI::checkInput() {
@@ -82,13 +83,15 @@ namespace MFM
           // Clean up a few FDs since ~T2Tile etc is not going to run
           mTile.stopTracing();
           mTile.closeITCs();
+#if 0
           execl("/home/t2/T2-12/apps/mfm/RUN_SDL",
                 "/home/t2/T2-12/apps/mfm/RUN_SDL",
                 "/opt/scripts/t2/sdlsplash",
                 "/opt/scripts/t2/t2-splash-inverted.png",
                 (char *) 0);
-          exit(0);
-          break;
+#endif
+          mTile.requestExit();
+          return;  // No more event polling for you
 
         case SDL_MOUSEBUTTONUP:
           mLastKnownMousePosition.Set(event.button.x, event.button.y);

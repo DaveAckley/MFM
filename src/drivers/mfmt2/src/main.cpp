@@ -4,13 +4,49 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <execinfo.h>  /* for backtrace_symbols */
+#include <dlfcn.h>     /* for dladdr */
+#include <cxxabi.h>    /* for __cxa_demangle */
 
 #include "TimeQueue.h"
 #include "SDLI.h"
 #include "ADCCtl.h"
 #include "T2Utils.h"
+#include "TraceTypes.h"
+
 
 namespace MFM {
+  extern "C" void T2TileAttemptTraceLogging(const FailException & fe, const char * unwindFile, int unwindLine) {
+    const char * msg = MFMFailCodeReason(fe.mCode);
+    T2Tile & tile = T2Tile::get();
+    tile.tlog(Trace(tile,TTC_Tile_TopLevelFailure,"%s:%d: %s [%d] {%s:%d}",
+                    fe.mFile,
+                    fe.mLine,
+                    msg ? msg : "",
+                    fe.mCode,
+                    unwindFile,
+                    unwindLine));
+    char ** strings;
+    strings = backtrace_symbols(fe.mBacktraceArray, fe.mBacktraceSize);
+    if (strings) {
+      for (u32 i = 0; i < fe.mBacktraceSize; ++i) {
+        Dl_info info;
+        if (dladdr(fe.mBacktraceArray[i],&info)) {
+          char * demangled = NULL;
+          int status;
+          demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
+          tile.tlog(Trace(tile,TTC_Tile_TopLevelFailure," -> %2d: %s + 0x%x",
+                          i,
+                          status == 0 ? demangled : info.dli_sname,
+                          (char*) fe.mBacktraceArray[i] - (char*) info.dli_saddr));
+          free(demangled);
+        } else 
+          tile.tlog(Trace(tile,TTC_Tile_TopLevelFailure," -> %2d: %s",
+                          i, strings[i]));
+      }
+      free(strings);
+    }
+  }
 
   struct TOT : public TimeoutAble {
     virtual void onTimeout(TimeQueue& src) { }
@@ -67,6 +103,39 @@ namespace MFM {
     }
   }
 
+  struct UnexpectedExit {
+    T2Tile& mTile;
+    bool mExpectedExit;
+    UnexpectedExit(T2Tile & tile)
+      : mTile(tile)
+      , mExpectedExit(false)
+    { }
+    void main() {
+      try {
+        unwind_protect({throw std::exception();},{
+            mTile.main();
+            mExpectedExit = true;
+          });
+      }
+      catch (std::exception const & e) {
+        LOG.Error("EXCEPTION COT");
+      }
+    }
+    ~UnexpectedExit() {
+      if (!mExpectedExit) {
+        LOG.Error("UNEXPECTED EXIT");
+        bool tracing = TRACEPrintf(Logger::ERR,"Unexpected exit");
+        if (tracing) {
+          T2FlashTrafficManager & mgr = T2Tile::get().getFlashTrafficManager();
+          mgr.shipAndExecuteFlashDump();
+          LOG.Error("TRACE DUMPED");
+        }
+      }
+      else
+        LOG.Error("GOOD OUT");
+    }
+  };
+
   int MainDispatch(int argc, char** argv)
   {
     // Early early logging
@@ -79,6 +148,12 @@ namespace MFM {
     T2Tile & tile = T2Tile::get();
     tile.initEverything(argc,argv);
 
+    // START TRACE LOGGING FAILS
+    MFMUnwindProtectLoggingHook = T2TileAttemptTraceLogging;
+    
+    UnexpectedExit ue(tile);
+    ue.main();
+#if 0
     unwind_protect({
         /*
         MFMErrorEnvironmentPointer_t errenv = &unwindProtect_errorEnvironment;
@@ -122,11 +197,10 @@ namespace MFM {
       },{
         tile.main();
       });
-
+#endif
     return 0;
   }
 }
-
 
 int main(int argc, char** argv)
 {

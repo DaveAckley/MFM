@@ -101,61 +101,54 @@ namespace MFM {
       LOG.Error("BADSEED BUTTONNAME '%s'",name);
       return;
     }
-    T2Tile & tile = T2Tile::get();
-    tile.seedPhysics(type);
-    SDLI & sdli = tile.getSDLI();
-    const char * panelName = "GlobalMenu_Button_Sites";
-    AbstractButton * sites = dynamic_cast<AbstractButton*>(sdli.lookForPanel(panelName));
-    if (!sites) LOG.Error("Couldn't find '%s'",panelName);
-    else sites->OnClick(1);
+    T2FlashCmd cmd;
+    switch (type) {
+    case 1:  cmd = T2FLASH_CMD(phy,seed1); break;
+    case 2:  cmd = T2FLASH_CMD(phy,seed2); break;
+    default:
+      LOG.Error("BADSEED TYPE '%d'",type);
+      return;
+    }
+    FlashTraffic::execute(FlashTraffic::make(cmd));
   }
 
   void T2DebugSetupButton::onClick() {
-    T2Tile & tile = T2Tile::get();
-    tile.debugSetup();
-    SDLI & sdli = tile.getSDLI();
-    const char * panelName = "GlobalMenu_Button_Sites";
-    AbstractButton * sites = dynamic_cast<AbstractButton*>(sdli.lookForPanel(panelName));
-    if (!sites) LOG.Error("Couldn't find '%s'",panelName);
-    else sites->OnClick(1);
+    TLOG(MSG,"DebugtSetup button clicked");
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(phy,debugsetup)));
   }
 
   void T2ClearTileButton::onClick() {
-    T2Tile::get().clearPrivateSites();
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(phy,clear)));
   }
 
   void T2QuitButton::onClick() {
     TLOG(MSG,"Quit button clicked");
-    T2Tile::get().getSDLI().stop();
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(mfm,quit)));
   }
 
   void T2CrashButton::onClick() {
     TLOG(MSG,"Crash button clicked");
-    T2Tile::get().stopTracing();
-    throw std::exception(); // Throw something that isn't a FailException
-    exit(1); /* 'crash' */
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(mfm,crash)));
   }
 
   void T2DumpButton::onClick() {
     TLOG(MSG,"Dump button clicked");
-    T2Tile::get().dumpTrace();
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(mfm,dump)));
   }
 
   void T2OffButton::onClick() {
     TLOG(MSG,"Off button clicked");
-    T2Tile::get().stopTracing();
-    system("poweroff");
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(t2t,off)));
   }
 
   void T2BootButton::onClick() {
     TLOG(MSG,"Boot button clicked");
-    T2Tile::get().stopTracing();
-    system("reboot");
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(t2t,boot)));
   }
 
   void T2KillCDMButton::onClick() {
     TLOG(MSG,"xCDM button clicked");
-    system("pkill cdm.pl");
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(t2t,xcdm)));
   }
 
 }

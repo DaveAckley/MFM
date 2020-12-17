@@ -138,7 +138,7 @@ namespace MFM {
     return ret;
   }
 
-  void T2FlashTrafficManager::sendFlashPacket(const FlashTraffic packet) {
+  void T2FlashTrafficManager::sendFlashPacket(const FlashTraffic & packet) {
     static ITCIteration dir6Iteration(T2Tile::get().getRandom(), 10);
 
     if (mFD < 0) FAIL(ILLEGAL_STATE);
@@ -195,7 +195,7 @@ namespace MFM {
     receiveFlashPacket(ft);
   }
 
-  bool T2FlashTrafficManager::matchesPacketInPQ(const FlashTraffic packet, bool & diffOrigin) const {
+  bool T2FlashTrafficManager::matchesPacketInPQ(const FlashTraffic & packet, bool & diffOrigin) const {
     for (MultisetTimedFlashTraffic::const_iterator itr = mMultisetTimedFlashTraffic.begin();
          itr != mMultisetTimedFlashTraffic.end(); ++itr) {
       if (packet.matchesCIRO(itr->mPacket)) {
@@ -211,7 +211,7 @@ namespace MFM {
     return false;
   }
 
-  bool T2FlashTrafficManager::matchesPreviousFromOrigin(const FlashTraffic packet) const {
+  bool T2FlashTrafficManager::matchesPreviousFromOrigin(const FlashTraffic & packet) const {
     BPoint origin = packet.mOrigin;
     u16 key = (((u8) origin.GetX())<<8)|((u8) origin.GetY());
     OriginKeyToFlashTraffic::const_iterator itr = mOriginKeyToFlashTraffic.find(key);
@@ -219,18 +219,21 @@ namespace MFM {
     return packet.matchesCIRO(itr->second);
   }
 
-  void T2FlashTrafficManager::acceptPacket(const FlashTraffic packet) {
+  void T2FlashTrafficManager::acceptPacket(const FlashTraffic & packet) {
     mMultisetTimedFlashTraffic.insert(TimedFlashTraffic(packet));
     BPoint origin = packet.mOrigin;
     u16 key = (((u8) origin.GetX())<<8)|((u8) origin.GetY());
     mOriginKeyToFlashTraffic[key] = packet;
   }
 
-  void T2FlashTrafficManager::receiveFlashPacket(const FlashTraffic packet) {
+  void T2FlashTrafficManager::receiveFlashPacket(const FlashTraffic & packet) {
     OString32 buf;
     report(packet,buf);
     LOG.Message("rFP:%s",buf.GetZString());
-    if (!packet.checksumValid()) return;
+    if (!packet.checksumValid()) {
+      LOG.Error("CHECKSUM FAILURE, MESSAGE REJECTED");
+      return;
+    }
 
     bool diffOrigin = false; // True if holding same command from different origin
     if (matchesPacketInPQ(packet,diffOrigin) && !diffOrigin) return; // exact dupe
@@ -317,7 +320,8 @@ namespace MFM {
       if (time_after_eq(elt.mWhen,srcTQ.now())) return;  // Execution time not yet reached
       const FlashTraffic ready = elt.mPacket;                    // Copy command
       mMultisetTimedFlashTraffic.erase(oldest);            // Delete oldest
-      executeFlashTrafficCommand((T2FlashCmd) ready.mCommand); // Do it
+      FlashTraffic::execute(ready);                        // Do it
+      //      executeFlashTrafficCommand((T2FlashCmd) ready.mCommand); // Do it
     }
   }
   
@@ -374,11 +378,17 @@ namespace MFM {
     showPrepared();
   }
 
+  void T2FlashTrafficManager::shipAndExecuteFlashDump() {
+    FlashTraffic ft = FlashTraffic::make(T2FLASH_CMD(mfm,dump), ++mLastIndex, 2, T2Tile::makeTag());
+    sendFlashPacket(ft); // Ship dump request to 2-neighbors (the 'tile markov blanket' donchano)
+    FlashTraffic::execute(ft); // But do it now locally also
+  }
+
   void T2FlashTrafficManager::launchPreparedCommand() {
     T2FlashCmd cmd = getPrepared();
     u32 range = getRange();
     if (cmd < T2FLASH_CMD__COUNT && range > 0) {
-      FlashTraffic ft(0x80, cmd, ++mLastIndex, range);
+      FlashTraffic ft = FlashTraffic::make(cmd, ++mLastIndex, range, T2Tile::makeTag());
       sendFlashPacket(ft);      // ship it
       acceptPacket(ft);         // also accept it
       mPreparedCmd = ft;        // and remember it

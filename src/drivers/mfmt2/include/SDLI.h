@@ -22,7 +22,7 @@ namespace MFM {
   struct T2Tile; // FORWARD
 
   struct SDLI : public TimeoutAble {
-    static struct SDLI * mStaticInstance;
+    //    static struct SDLI * mStaticInstance;
 
     SDLI(T2Tile&,const char *) ;
     ~SDLI() ;

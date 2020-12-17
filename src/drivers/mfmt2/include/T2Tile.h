@@ -126,6 +126,7 @@ namespace MFM {
 
     static s32 makeTag() ;
     void dumpTrace(const char * path = 0) ;
+    void dumpTrace(const u32 tag, u8 range, BPoint offset) ;
     void startTracing(const char * path, s32 synctag = makeTag()) ;
     void stopTracing(s32 synctag = -makeTag()) ;
     void traceEventStats() ;
@@ -147,6 +148,7 @@ namespace MFM {
     void shutdownEverything() ;
 
     bool isDone() const { return mExitRequest; }
+    void requestExit() { mExitRequest = true; }
     
     void resetITCs() ;
     void closeITCs() ;

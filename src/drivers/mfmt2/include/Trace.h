@@ -182,13 +182,13 @@ namespace MFM {
   };
 
   /**
-   * An OverflowableCharBufferByteSink with a capacity of 500KByte.
+   * An OverflowableCharBufferByteSink with a capacity of 1MB.
    */
-  typedef OverflowableCharBufferByteSink<(1<<19) + 2> OString500KB;
+  typedef OverflowableCharBufferByteSink<(1<<20)> OString1MB;  // Screw the +2
 
   struct TraceLoggerInMemory {
     OString32 mBufferName;
-    OString500KB mTraceBuffers[2];
+    OString1MB mTraceBuffers[2];
     u32 mCurBuf;
     s32 ftell() const {
       return (s32)
@@ -204,7 +204,7 @@ namespace MFM {
     }
 
     ByteSink & getByteSink() {
-      if (mTraceBuffers[mCurBuf].CanWrite() < (1<<9)) { // How big can a trace event be?
+      if (mTraceBuffers[mCurBuf].CanWrite() <= (1<<8)) { // G'tee 256 bytes per trace event
         mCurBuf = 1-mCurBuf;
         mTraceBuffers[mCurBuf].Reset();
       }

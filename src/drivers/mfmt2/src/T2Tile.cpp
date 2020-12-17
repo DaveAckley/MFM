@@ -13,6 +13,10 @@
 #include "T2EventWindow.h"
 #include "TraceTypes.h"
 
+#define TRACE_DUMP_FILENAME_FMT "%08x-%08x-%02x%02x%02x.dat"
+#define TRACE_DUMP_FILENAME_MATCHES 5
+#define TRACE_DUMP_FILENAME_MATCH_LEN 28
+
 namespace MFM {
 
   CoreTempChecker::CoreTempChecker() {
@@ -660,8 +664,77 @@ static const char * CMD_HELP_STRING =
 
   void T2Tile::dumpTrace(const char * path) {
     if (!mTraceLoggerPtr) return;
-    if (!path) path = "/tmp/latestTraceDump.dat";
-    mTraceLoggerPtr->dump(path);
+    if (path) mTraceLoggerPtr->dump(path);
+    else dumpTrace(0u,0u,BPoint(0,0));
+  }
+
+  static u32 initAndManageDir(const char * traceDir) {
+    if (mkdir(traceDir,0755) && errno != EEXIST) {
+      LOG.Error("Can't make dir %s: %s",traceDir,strerror(errno));
+      return 0;
+    }
+    DIR *dir = opendir(traceDir);
+    if (!dir) {
+      LOG.Error("Can't open dir %s: %s",traceDir,strerror(errno));
+      return 0;
+    }
+    struct dirent * ent;
+    const u32 MAX_TRACE_SEQ_TO_KEEP = 2;
+    u32 maxseq = 0, minseq = 0xffffffff - MAX_TRACE_SEQ_TO_KEEP - 1;
+    while ((ent = readdir(dir)) != NULL) {
+      u32 seq, tag, count, range, xoff, yoff;
+      u32 matches = sscanf(ent->d_name,TRACE_DUMP_FILENAME_FMT "%n",
+                           &seq,
+                           &tag,
+                           &range,
+                           &xoff,
+                           &yoff,
+                           &count);
+      if (matches != TRACE_DUMP_FILENAME_MATCHES || count != TRACE_DUMP_FILENAME_MATCH_LEN) continue;
+      if (seq < minseq) minseq = seq;
+      if (seq > maxseq) maxseq = seq;
+    }
+    u32 ret = maxseq + 1;
+    if (minseq + MAX_TRACE_SEQ_TO_KEEP <= maxseq) {
+      rewinddir(dir);
+      int dirFD = dirfd(dir);
+      while ((ent = readdir(dir)) != NULL) {
+        u32 seq, tag, count, range, xoff, yoff;
+        u32 matches = sscanf(ent->d_name,TRACE_DUMP_FILENAME_FMT "%n",
+                             &seq,&tag,&range,&xoff,&yoff,&count);
+        if (matches != TRACE_DUMP_FILENAME_MATCHES || count != TRACE_DUMP_FILENAME_MATCH_LEN) continue;
+        if (seq + MAX_TRACE_SEQ_TO_KEEP <= maxseq) {
+          LOG.Message("Auto-deleting %s", ent->d_name);
+          if (unlinkat(dirFD, ent->d_name, 0) != 0) {
+            LOG.Message("%s/%s deletion failed: %s",
+                        traceDir, ent->d_name, strerror(errno));
+            ret = 0;
+            break;
+          }
+        }
+      }
+    }
+    closedir(dir);
+    return ret;
+  }
+
+  void T2Tile::dumpTrace(u32 tag, u8 range, BPoint offset) {
+    if (!mTraceLoggerPtr) return;
+    const char * traceDir = "/home/t2/mfmTraces";
+    u32 nextseq = initAndManageDir(traceDir);
+    if (nextseq == 0) {
+      LOG.Error("Directory problem, can't dump trace");
+      return;
+    }
+    OString128 buf;
+    buf.Printf("%s/" TRACE_DUMP_FILENAME_FMT,
+               traceDir,
+               nextseq,
+               tag,
+               range,
+               offset.GetX(),
+               offset.GetY());
+    mTraceLoggerPtr->dump(buf.GetZString());
   }
 
   bool T2Tile::tlog(const Trace & tb) {
@@ -830,6 +903,26 @@ static const char * CMD_HELP_STRING =
     traceSite(MakeUnsigned(at));
   }
 
+#if 0
+  void T2Tile::initRollingTraceDirInMemory(u32 targetMB) {
+    if (targetMB == 0) return; // Not tracing
+    const u32 ONE_MB = (1u<<20);
+    u32 bufferCount = targetMB/ONE_MB;
+    MFM_API_ASSERT(bufferCount>=2,ILLEGAL_ARGUMENT); // Need at least two buffers if tracing at all
+    mInMemoryTraceBuffers = new OString1MB[bufferCount];
+    MFM_API_ASSERT_NONNULL(mInMemoryTraceBuffers);
+    mInMemoryTraceDirCount = bufferCount;
+    mCurrentInMemoryTraceDir = 0;
+  }
+
+  void T2Tile::rollTracing() {
+    if (!mInMemoryTraceBuffers) return; // Not tracing
+    if (++mCurrentInMemoryTraceDir >= mInMemoryTraceDirCount)
+      mCurrentInMemoryTraceDir = 0;
+    mInMemoryTraceBuffers[mCurrentInMemoryTraceDir].Reset();
+  }
+#endif
+  
   void T2Tile::initRollingTraceDir(u32 targetMB) {
     MFM_API_ASSERT_NONZERO(targetMB);
     u32 gen = 0;
@@ -856,7 +949,7 @@ static const char * CMD_HELP_STRING =
     mRollingTraceTargetKB = targetMB * 1024 / 4; // Rolling four files
     rollTracing();
   }
-
+  
   void T2Tile::rollTracing() {
     MFM_API_ASSERT_STATE(mRollingTraceDir.GetLength() > 0);
     OString128 buf;
@@ -879,6 +972,5 @@ static const char * CMD_HELP_STRING =
       }
     }
   }
-
 
 }
