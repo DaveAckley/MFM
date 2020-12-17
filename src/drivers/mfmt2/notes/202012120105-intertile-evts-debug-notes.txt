@@ -1,0 +1,578 @@
+{40}  -*- text -*- 
+[0:
+
+Sat Dec 12 01:05:40 2020 OK we've blown half a week on non-tile stuff!
+Finally getting in gear.
+
+Plan for re-assessing the current situation, and then making progress
+debugging
+
+TODO
+
+[2: Sat Dec 12 23:09:44 2020 It's try/catch
+DONE :2] - Assess where the unwind_protect/FAIL system implementation is at.
+   Are we running try/catch now, or is it still setjmp/longjmp?
+
+ - Make spikes to demonstrate FAIL-handling code pathways.
+
+ - Get to triggered log dumping actually working.
+
+ - Design odd-hack script support for centralizing and/or exfiltrating
+   log files.
+
+:0]
+[1:
+
+Sat Dec 12 01:10:56 2020 GO GO GO.  COLLECT FACTS HERE vvvvv
+
+ - MFMErrorEnvironment in FailPlatformSpecific.h still has a jmp_buf
+
+ - But #define unwind_protect in FailPlatformSpecific.h doesn't use it
+   (#define unwind_protect_OLD does).  unwind_protect is currently
+   try/catch based.
+
+ - unwind_protect catches a FailException &, which is declared in
+   FailPlatformSpecific.h.  
+
+:1]
+[3:
+
+Sat Dec 12 23:10:05 2020 Let's make some triggerable fail locations:
+
+ - Flash traffic execution
+
+ - Event processing.
+   = How to trigger during intertile processing, vs around behave()?
+
+[4:
+
+Sun Dec 13 09:35:30 2020 And we already have the crash button in the
+tile menu.  That ends up throwing std::exception.[5:
+
+Sun Dec 13 12:30:35 2020 So, do we want to put a general catch at the
+very top, and try to dump the logs there?
+
+Like:
+
+ - Change T2Tile::main() to mainLoop()
+
+ - Make a new T2Tile::main() with the try/catch and the log dumping
+   attempt.
+
+[6:
+
+Sun Dec 13 12:34:13 2020 We're already kind of trying to do that in
+mfmt2/src/main.cpp -- but we're using unwind_protect, which only
+catches FailException&s.  Maybe we should switch that out for an
+actual try/catch -- though that expands our commitment to try/catch
+beyond just FailPlatformSpecific.
+
+:6]
+
+:5]
+
+Come on.  Let's set up to watch that happen.  First goal here is
+getting the rolling logs really working!  We Are Coders.
+
+:4]
+
+
+:3]
+[7:
+
+Sun Dec 13 13:07:18 2020 Well so StackOverflow says I shouldn't want a
+'finally' clause in C++, I should just have a dtor clean up -- because
+C++ 'deterministically' runs destructors even while throwing..  but
+that's not what I'm seeing.
+
+Without a top-level try/catch(std::exception const&) I get
+
+    terminate called after throwing an instance of 'std::exception'
+
+without any evidence of entering my dtor interposed just for purposes
+of cleanup.
+
+So not sure what's going on there.  But going with top-level try/catch
+and just accepting that catching 'std::exception const &' doesn't
+actually catch everything.
+[8:
+
+Mon Dec 14 01:50:18 2020 OK, well, yuck but just going with it.
+Another issue regarding exiting and all is that it appears we're not
+calling SDL_Quit() anywhere.  [9:
+
+Mon Dec 14 01:53:21 2020 Trying calling it in ~SDLI() which seems the
+obvious place, although SDLI lives in T2Tile which is a singleton and
+I'm not completely convinced ~T2Tile actually ever runs.[11:
+
+Mon Dec 14 02:02:12 2020 Gah: So now, indeed, it still looks like
+~SDLI is never running -- so the SDL_Quit() never actually gets called
+-- but the mysterious-gdb-suspension is no longer happening.
+
+I really hate this crab.
+
+:11]
+
+:9]
+
+:8]
+:7]
+[10:
+
+Mon Dec 14 01:54:08 2020 In any case, we need to get more serious
+about updating the tracing stuff to 'roll' in memory.  I'm thinking
+the easiest approach is to map each file-in-a-rolling-dir to an
+OString-in-a-rolling-array and try to keep everything else intact.
+We'll see.
+[12:
+
+Mon Dec 14 02:05:53 2020 OK come on.  Let's switch
+T2Tile::initRollingTraceDir over to setting up an in-memory 'dir' and
+go from there.[13:
+
+Mon Dec 14 02:07:10 2020 Note we want to keep around the actual
+on-disk dir notion, however, so we can use it when we go to dump in
+in-memory dir.[14:
+
+Mon Dec 14 03:03:33 2020 Doh we had most of what we wanted already
+implemented in Trace.h/cpp, in struct TraceLoggerInMemory.[15:
+
+Mon Dec 14 03:56:11 2020 Not to mention there was already a
+functioning 'Dump' button staring me right in the face in the T2Tile
+menu..
+
+So it looks like we just need to:
+
+ (1) Decide on a file-naming scheme, if any, and
+ (2) Arrange to call T2Tile::dumpTrace() somewhere along the crashing
+     pathway.
+
+And we'll have a (pitifully small max) 1MB trace file to deal with,
+and we can move on to exfiltration and consolidation issues.
+
+Note also: There's an TraceLoggerInMemory::mBufferName that gets set
+up by the argument to '-t' on the command line -- via '-tfoo' or
+'--trace=foo' -- but then it's never used for anything.  I thought it
+was going to be the trace size, but that currently appears fixed at
+1MB, and then I thought it would be the trace file name, but that
+currently appears fixed at /tmp/latestTraceDump.dat..
+
+I think we should bump the TraceLoggerInMemory buffers up to 2x1MB, so
+we'll always from 1-2MB of trace data at steady state, rather than the
+500KB-1MB I'm seeing here..[16:
+
+Mon Dec 14 05:29:07 2020 Well, we have a trace file auto-dumped after
+a crash that we can read with:
+
+    t2@beaglebone:~/MFM$ ./bin/Weaver /tmp/latestTraceDump.dat 
+    0 0.00000 0/t  Trace Format Version 7
+    1 0.00005 0/t  File sync mark +?77D5869D
+    2 0.00009 0/t  sec=1,607,948,837; tot=0; emp=0; occ=0; estAER=0.000000
+ ..
+    23556 67.81732 0/iWT:OPEN >WT:RING#31(0,5)+4e +5
+    23557 67.81734 0/a31-AINIT WT CS_BOUND -> CS_RUNG
+    23558 67.81736 0/a31-AINIT -> AWLOCKS
+    23559 67.81769 0/iET:OPEN <ET:RING#31(0,5)+4e +5
+    23560 67.81776 0/pET31-IDLE -> PINIT
+ ..
+    62596 81.83013 0/a07-ABEHAVE -> IDLE
+    62597 81.83447 0/lMSG Crash button clicked
+    62598 83.57534 0/lERR Unexpected exit
+    t2@beaglebone:~/MFM$ 
+
+So that's some progress.
+
+Second sleep.
+
+(We should have the dump flash command include a random token to use
+in/for the dump filename.  Help out the centralization step.  Also do
+FIFO on some trace dir to keep disk usage under control.)
+
+But first second sleep.[17:
+
+Mon Dec 14 10:40:11 2020 Hmm, it looks like not easy to add args to
+any specific flash command?  Is that really true?  I see all the
+table-driven stuff but not really any subclass stuff.[18:
+
+Mon Dec 14 10:44:59 2020 struct FlashTraffic represents a flash
+command instance.[19:
+
+Mon Dec 14 10:47:09 2020 Yeah and T2FlashTrafficManager::sendPacket
+does
+
+      FlashTraffic tosend(packet, dir8);
+      ssize_t amt = write(mFD, (const char *) &tosend, sizeof(tosend));
+
+to write all and only a FlashTraffic's worth of bytes onto the wire.
+
+Let's think about slightly expanding the size struct FlashTraffic here
+while things aren't too set in stone.  How big is sizeof(FlashTraffic)
+at this point?  Hmm, eight bytes, how round.  Add four bytes?
+Randomize them at the originator by default?  To be used as a tag or
+whatever, or ignored?[20:
+
+Mon Dec 14 14:01:04 2020 OK well the 12 byte expanded FlashTraffic
+finally seems to be working.  Now how can we use that during trace
+dumping? [21:
+
+Mon Dec 14 14:10:48 2020 Well, two issues:
+
+(1) ATM, the top-level fail isn't even trying to ship out flash dump.
+(2) The top-level fail is ballistic to dying, so we can't really wait
+    around to receive the flash traffic and handle it then.
+
+Somehow, we have to
+
+(a) Ship it to the neighbors
+(b) Try to push that packet down to LKM level
+(c) Do it ourselves
+(d) Then die
+
+[22:
+
+Mon Dec 14 14:20:03 2020 Well, so T2FlashTrafficManager owns the fd
+connected to /dev/itc/flash, and its sendFlashPacket(..) method does
+the write directly, so that's good.
+
+So I guess we 'just' call sendFlashPacket, then somehow call
+receiveFlashPacket on the same packet.. no something lower-level;
+receiveFlashPacket just stashes stuff.. where do we actually execute a
+flash packet??[23:
+
+Mon Dec 14 14:39:26 2020 Ah,
+
+  T2FlashTrafficManager::onTimeout ->
+  T2FlashTrafficManager::managePending ->
+  T2FlashTrafficManager::executeFlashTrafficCommand ->
+  ?? MouseButtonEvent::Handle ->
+  ?? Panel::Handle ->  
+  AbstractButton::Handle ->
+  T2UIButton::OnClick ->
+  T2DumpButton::onClick ->
+  T2Tile::dumpTrace
+
+..of course.
+
+Which all also helps drive home the essential design problem with our
+whole structure -- if the final execution is tied directly to a click,
+a naked click, how does the shared tag come to be known at execution
+time??
+
+It seems we should (gah) redesign to turn the whole thing upside down,
+and always have a FlashPacket at the bottom being executed, and 'just'
+gin one up on the fly when we're actually just doing a local command.
+
+Gah.[24:
+
+Mon Dec 14 15:50:19 2020 I don't have the strength for it now.  Let's
+go squeeze some words out of the short story, have a bit of an
+evening, and get back to this in the overnight.
+
+:24]
+
+:23]
+
+:22]
+
+:21]
+
+:20]
+
+:19]
+
+:18]
+
+:17]
+
+:16]
+ 
+
+:15]
+
+:14]
+
+:13]
+
+:12]
+:10]
+[25:
+
+Tue Dec 15 14:30:25 2020 So, we haven't inverted the flash traffic
+stuff, but we've implemented a rolling disk buffer for dumped
+in-memory traces, and that appears to be starting to work.  Right now
+we're identifying the trace dumps with a (disk dir) sequence number
+and a tag (0 if explicit dump, to-be-random if via flash command).  We
+thought about trying to encode a relative tile coordinate in there as
+well but so far not doing that.
+
+And it appears we caught an intertile event failure with just a one
+tile and a single loopback.
+
+    t2@beaglebone:~/MFM$ ./bin/Weaver ../mfmTraces/00000009-00000000.dat 
+    0 0.00000 0/a27-ASCACHE -> AWACKS
+    1 0.00020 0/a24-ABEHAVE ET CS_BOUND -> CS_UNUSED
+    2 0.00021 0/a24-ABEHAVE -> IDLE
+    3 0.00030 0/a16-ABEHAVE -> ASCACHE
+    4 0.00053 0/iNE:OPEN >NE:TALK#16 +29
+    5 0.00055 0/a16-ASCACHE -> AWACKS
+  ..
+    60585 21.33511 0/a07-ADROP SE CS_BOUND -> CS_UNUSED
+    60586 21.33512 0/a07-ADROP -> IDLE
+    60587 21.34722 0/lERR a17-AWACKS timeout @ -2943 msec
+    60588 22.56715 0/lERR Unexpected exit
+    t2@beaglebone:~/MFM$ 
+
+which appears to be coming EITHER from T2EventWindow.cpp:916 --
+
+          LOG.Error("%s on %s: TO AWLOCKS with pending locks", getStateName(), ew.getName());
+          TLOG(ERR,"%s timeout @ %d msec", ew.getName(), ew.msTilTimeout()); 
+          FAIL(INCOMPLETE_CODE);
+
+or from T2EventWindow.cpp:971 --
+
+        TLOG(ERR,"%s timeout @ %d msec", ew.getName(), ew.msTilTimeout()); 
+        FAIL(INCOMPLETE_CODE);
+
+but it's hard to tell which.[26:
+
+Tue Dec 15 16:03:12 2020 (And it might be uninterestingly due to
+sitting on a gdb breakpoint too long..)
+
+:26]
+
+I guess it's probably the latter, since
+that's in T2EWStateOps_AWACKS::timeout
+
+where the first one's in T2EWStateOps_AWLOCKS::timeout
+and we see a17-AWACKS in the log..
+
+But we'd really rather see a trace of the damn fail in the log file!
+Could we try to have that?  Do something before the throw?
+
+
+:25]
+[27:
+
+Tue Dec 15 16:57:20 2020 OK, it's time to break for more dinner prep,
+but we've now gotten one fail into a trace file:
+
+ ..
+    99810 215.85521 0/lERR a22-AWLOCKS timeout @ -150198 msec
+    99811 225.10015 0/t  Failed to top: src/T2EventWindow.cpp:918: INCOMPLETE_CODE [1] {src/main.cpp:95}
+    99812 225.10421 0/lERR Unexpected exit
+    t2@beaglebone:~/MFM$ 
+
+So that's progress.
+
+:27]
+[28:
+
+Wed Dec 16 03:44:21 2020 So how can we take some steps towards
+inverting the flash command code stack?
+
+We started a
+
+    static bool execute(const FlashTraffic & ft) ; 
+
+in FlashTraffic, but nobody's calling it yet.  Could we get somebody
+to call it?[29:
+
+Wed Dec 16 03:54:01 2020 So, very near the bottom of the FlashTraffic
+execution we have
+
+  void T2FlashTrafficManager::executeFlashTrafficCommand(T2FlashCmd cmd) 
+
+which is called by
+
+  void T2FlashTrafficManager::managePending(TimeQueue& srcTQ) 
+
+which is the time-based thing that actually releases the commands.
+And it's holding a complete FlashTraffic in its mPacket.  We could
+call
+
+  FlashTraffic::execute(elt.mPacket)
+
+instead of 
+
+  T2FlashTrafficManager::executeFlashTrafficCommand(T2FlashCmd cmd) 
+
+and that would flip the bottom of the code base.
+
+[30:
+
+Wed Dec 16 10:59:59 2020 Hell let's just try it and see how it breaks.
+
+:30]
+
+:29]
+
+:28]
+[31:
+
+Wed Dec 16 13:27:32 2020 OK, have to break for calls, but have much of
+the actual flash command executions moved out of T2UIComponents.cpp
+and into FlashTraffic.cpp.  Need to finish that and then.. what else?
+
+:31]
+[32:
+
+Thu Dec 17 02:18:51 2020 I'm thinking we should really encode the
+dump-source-tile-coord in the filename, before we completely forget
+how all this current code works.  We should maybe include the tile
+coord and the original flash traffic time-to-live, actually, to give
+us some idea of where and how far to search during a log exfiltration 
+event. [33:
+
+Thu Dec 17 02:23:22 2020 So it's a one byte range and a two byte
+BPoint offset?  That's at least six more bytes of filename..
+
+from like  
+
+    00000010-7B33329A.dat
+
+to like
+
+    00000010-7B33329A-rrxxyy.dat
+
+?  For u8 rr and s8 xx,yy?
+
+:33]
+
+:32]
+[34:
+
+Thu Dec 17 05:22:15 2020 Wow, check that out:
+
+    root@beaglebone:/home/t2/MFM# ./bin/Weaver /home/t2/mfmTraces/00000015-00000000-000000.dat 
+    0 0.00000 0/t  Trace Format Version 7
+    1 0.00004 0/t  File sync mark +?1AA89E22
+ ..
+    68 6.89755 0/iSW:OPEN <iSW:OPEN?3B715F22  +6
+    69 10.78196 0/lMSG Crash button clicked
+    70 10.78798 0/t  Failed to top: src/FlashTraffic.cpp:32: UNSPECIFIED_EXPLICIT_FAIL [29] {src/main.cpp:118}
+    71 10.79738 0/t  Failed to top:  ->  0: FailException::FailException(int, char const*, int) + 0x43
+    72 10.79812 0/t  Failed to top:  ->  1: MFM::FlashTraffic::execute(MFM::FlashTraffic const&) + 0x113
+    73 10.79866 0/t  Failed to top:  ->  2: MFM::T2CrashButton::onClick() + 0x3F
+    74 10.79904 0/t  Failed to top:  ->  3: MFM::T2UIButton::OnClick(unsigned char) + 0x17
+    75 10.79936 0/t  Failed to top:  ->  4: MFM::AbstractButton::Handle(MFM::MouseButtonEvent&) + 0x67
+    76 10.79983 0/t  Failed to top:  ->  5: MFM::MouseButtonEvent::Handle(MFM::Panel&) + 0x17
+    77 10.80021 0/t  Failed to top:  ->  6: MFM::Panel::Dispatch(MFM::DispatchableEvent&, MFM::Rect const&) + 0x117
+    78 10.80059 0/t  Failed to top:  ->  7: MFM::Panel::Dispatch(MFM::DispatchableEvent&, MFM::Rect const&) + 0xA1
+    79 10.80105 0/t  Failed to top:  ->  8: MFM::Panel::Dispatch(MFM::DispatchableEvent&, MFM::Rect const&) + 0xA1
+    80 10.80137 0/t  Failed to top:  ->  9: MFM::SDLI::checkInput() + 0x237
+    81 10.80188 0/t  Failed to top:  -> 10: MFM::SDLI::onTimeout(MFM::TimeQueue&) + 0x1B
+    82 10.80227 0/t  Failed to top:  -> 11: MFM::T2Tile::main() + 0x4B
+    83 10.80257 0/t  Failed to top:  -> 12: MFM::UnexpectedExit::main() + 0x15
+    84 10.80295 0/t  Failed to top:  -> 13: MFM::MainDispatch(int, char**) + 0x5F
+    85 10.80329 0/t  Failed to top:  -> 14: main + 0x15
+    86 10.80355 0/t  Failed to top:  -> 15: __libc_start_main + 0x97
+    87 10.81234 0/lERR Unexpected exit
+    root@beaglebone:/home/t2/MFM# 
+
+So plausible!  So demangled!  SO PWITTY! 
+
+:34]
+[35:
+
+Thu Dec 17 10:40:20 2020 Well, we're getting close to moving the flag
+again and we still haven't actually done a dump via actual remote
+flash traffic, let alone an automatic-remote-dump-after-local-error.
+
+How written is the code for those two cases?[36:
+
+Thu Dec 17 11:04:02 2020 Well, the remote end of the automatic remote
+dump is handled via the normal flash traffic path through
+
+   void T2FlashTrafficManager::receiveFlashPacket(const FlashTraffic & packet) 
+-> void T2FlashTrafficManager::acceptPacket(const FlashTraffic & packet) 
+->     mMultisetTimedFlashTraffic.insert(TimedFlashTraffic(packet));
+-> void T2FlashTrafficManager::managePending(TimeQueue& srcTQ) 
+->     MultisetTimedFlashTraffic::iterator oldest = mMultisetTimedFlashTraffic.begin();
+->     FlashTraffic::execute(ready);                        // Do it
+
+so there's some reason to believe that.
+
+The emit-flash-dump-on-failure appears not to exist?  I expected to
+see evidence of it in main.cpp, but it looks like that just goes
+local:
+
+    ~UnexpectedExit() {
+      if (!mExpectedExit) {
+        LOG.Error("UNEXPECTED EXIT");
+        bool tracing = TRACEPrintf(Logger::ERR,"Unexpected exit");
+        if (tracing) {
+          mTile.dumpTrace();
+          LOG.Error("TRACE DUMPED");
+        }
+  ..
+
+so that's a thing.  But didn't we explicitly write an extra
+sendFlashPacket somewhere?[37:
+
+Thu Dec 17 11:33:25 2020 Not seeing it.  rgrep finds:
+
+      void T2FlashTrafficManager::receiveFlashPacket(const FlashTraffic & packet) {
+ ..
+        // And propagate anything that's not an exact dupe
+        sendFlashPacket(packet);               // propagate
+ ..
+
+for repropagation, and
+
+      void T2FlashTrafficManager::launchPreparedCommand() {
+  ..
+        if (cmd < T2FLASH_CMD__COUNT && range > 0) {
+          FlashTraffic ft = FlashTraffic::make(cmd, ++mLastIndex, range, T2Tile::makeTag());
+          sendFlashPacket(ft);      // ship it
+  ..
+
+for original emission, and that's it for calls.[38:
+
+Thu Dec 17 11:41:45 2020 So to emit a please-do-remote-dump flash
+traffic, I guess it'd be something like:
+
+    ~UnexpectedExit() {
+      if (!mExpectedExit) {
+        LOG.Error("UNEXPECTED EXIT");
+        bool tracing = TRACEPrintf(Logger::ERR,"Unexpected exit");
+        if (tracing) {
+          FlashTraffic ft = FlashTraffic::make(T2FLASH_CMD(mfm,dump),++mLastIndex,2,T2Tile::makeTag());
+          sendFlashPacket(ft); // Ship dump request to 2-neighbors
+          FlashTraffic::execute(ft); // But do it now locally also
+          LOG.Error("TRACE DUMPED");
+ ..
+
+except mLastIndex and sendFlashPacket are owned by
+T2FlashTrafficManager, so presumably we want to via that.
+
+:38]
+
+:37]
+
+:36]
+
+:35]
+[39:
+
+Thu Dec 17 13:50:12 2020 OK really do have to pack up now.  But
+current issue is we haven't actually implemented the display-related
+FTs so we're crashing when trying to execute them:
+
+ ..
+    76 61.82039 0/iNE:OPEN <iNE:OPEN?27B24949  +6
+    77 139.32857 0/t  Failed to top: src/FlashTraffic.cpp:87: INCOMPLETE_CODE [1] {src/main.cpp:118}
+    78 139.33604 0/t  Failed to top:  ->  0: FailException::FailException(int, char const*, int) + 0x43
+    79 139.33648 0/t  Failed to top:  ->  1: MFM::FlashTraffic::execute(MFM::FlashTraffic const&) + 0x249
+    80 139.33796 0/t  Failed to top:  ->  2: MFM::T2FlashTrafficManager::managePending(MFM::TimeQueue&) + 0x83
+    81 139.33832 0/t  Failed to top:  ->  3: MFM::T2FlashTrafficManager::onTimeout(MFM::TimeQueue&) + 0x2D
+    82 139.33860 0/t  Failed to top:  ->  4: MFM::T2Tile::main() + 0x4B
+    83 139.33892 0/t  Failed to top:  ->  5: MFM::UnexpectedExit::main() + 0x15
+    84 139.33916 0/t  Failed to top:  ->  6: MFM::MainDispatch(int, char**) + 0x5F
+    85 139.34396 0/t  Failed to top:  ->  7: main + 0x15
+    86 139.34424 0/t  Failed to top:  ->  8: __libc_start_main + 0x97
+    87 139.34638 0/lERR Unexpected exit
+    root@beaglebone:/home/t2/MFM# 
+
+Think I should commit though.  Got a lot of stuff here..
+
+:39]
