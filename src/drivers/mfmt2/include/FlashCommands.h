@@ -34,7 +34,8 @@ namespace MFM {
   XX(mfm,2,crash)                      \
   XX(mfm,3,quit)                       \
   XX(mfm,4,dump)                       \
-  /* mfm,5..15 reserved*/              \
+  XX(mfm,5,getlog)                     \
+  /* mfm,6..15 reserved*/              \
   XX(phy,0,clear)                      \
   XX(phy,1,seed1)                      \
   XX(phy,2,seed2)                      \
@@ -45,7 +46,8 @@ namespace MFM {
   XX(dsp,2,cdm)                        \
   XX(dsp,3,tq)                         \
   XX(dsp,4,log)                        \
-  /* dsp,5..15 reserved*/              \
+  XX(dsp,5,trace)                      \
+  /* dsp,6..15 reserved*/              \
 
 #define ALL_FLASH_COMMANDABLE_BUTTON_PANELS() \
   XX(t2t,boot,T2Info_Boot_Button)             \
@@ -64,6 +66,7 @@ namespace MFM {
   XX(dsp,cdm,GlobalMenu_Button_CDM)           \
   XX(dsp,tq,GlobalMenu_Button_TQ)             \
   XX(dsp,log,GlobalMenu_Button_Log)           \
+  XX(dsp,trace,GlobalMenu_Button_Trace)       \
 
 #define T2FLASH_DIST_PANEL(nam) ("Grid_k_fcdist_" #nam)
 

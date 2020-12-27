@@ -31,6 +31,7 @@
 #include "T2TileStats.h"
 #include "T2FlashTrafficManager.h"
 #include "T2UIComponents.h"
+#include "TraceLogInfo.h" /*for TraceLogInfo, TraceLogDirManager */
 
 namespace MFM {
 
@@ -120,6 +121,8 @@ namespace MFM {
     }
 
     bool tlog(const Trace & tb) ;
+
+    TraceLogDirManager & getTraceLogDirManager() { return mTraceLogDirManager; }
     
     // Draw a kill screen before dying.
     void showFail(const char * file, int line, const char * msg) ;
@@ -232,8 +235,10 @@ namespace MFM {
 
     CPUFreq & getCPUFreq() { return mCPUFreq; }
 
+    
   private:
     TraceLogger* mTraceLoggerPtr;
+    TraceLogDirManager mTraceLogDirManager;
 
     int mArgc;
     char ** mArgv;

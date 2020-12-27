@@ -93,6 +93,42 @@ namespace MFM {
     return false;
   }
 
+  T2TracePanel & T2TraceCtlButton::getTracePanel() {
+    if (!mTracePanel) {
+      // Search siblings for a T2TracePanel
+      Panel * sib = this;
+      do {
+        sib = sib->GetForward();
+        MFM_API_ASSERT_NONNULL(sib); // Circular list (unless no parent)
+        if (dynamic_cast<T2TracePanel*>(sib)) {
+          mTracePanel = dynamic_cast<T2TracePanel*>(sib);
+          break;
+        }
+      } while (sib != this);
+      MFM_API_ASSERT_NONNULL(mTracePanel); // Cell Structure Has Been Checked
+    }
+    return *mTracePanel;
+  }
+
+  void T2TraceCtlButton::onClick() {
+    T2TracePanel & tp = this->getTracePanel();
+    const char * name = this->GetName();
+    if (0) {
+    } else if (endsWith(name,"_Down")) {
+      tp.changeSelection(1);
+    } else if (endsWith(name,"_Up")) {
+      tp.changeSelection(-1);
+    } else if (endsWith(name,"_Req")) {
+      tp.requestSelection();
+    } else if (endsWith(name,"_Del")) {
+      tp.deleteSelection();
+    } else if (endsWith(name,"_Action")) {
+      tp.confirmAction();
+    } else if (endsWith(name,"_X")) {
+      tp.cancelAction();
+    } else
+      LOG.Error("BADTRACECTL BUTTONNAME '%s'",name);
+  }
 
   void T2SeedPhysicsButton::onClick() {
     const char * name = this->GetName();

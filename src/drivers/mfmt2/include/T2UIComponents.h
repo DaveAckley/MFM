@@ -5,6 +5,7 @@
 #include "AbstractCheckbox.h"
 #include "AbstractRadioButton.h"
 #include "T2FlashTrafficManager.h"
+#include "T2TracePanel.h"
 
 namespace MFM {
   struct MFMRunRadioGroup : public AbstractRadioGroup {
@@ -68,6 +69,15 @@ namespace MFM {
   };
 
   struct T2SeedPhysicsButton : public T2UIButton {
+    virtual void onClick() ;
+  };
+
+  struct T2TraceCtlButton : public T2UIButton {
+    T2TracePanel * mTracePanel;
+    T2TraceCtlButton()
+      : mTracePanel(0)
+    { }
+    T2TracePanel & getTracePanel() ;
     virtual void onClick() ;
   };
 

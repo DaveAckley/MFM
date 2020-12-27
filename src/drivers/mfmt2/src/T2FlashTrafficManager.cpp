@@ -373,9 +373,14 @@ namespace MFM {
     setPrepared(T2FLASH_CMD__COUNT);
   }
 
-  void T2FlashTrafficManager::setPrepared(T2FlashCmd cmd) {
-    mPreparedCmd = cmd;
-    showPrepared();
+  void T2FlashTrafficManager::setPrepared(T2FlashCmd cmd, u32 arg) {
+    mPreparedCmd = FlashTraffic::make(cmd,0,0,arg);
+    showPrepared(); // XXX WATCH OUT MESSED UP showPrepared DOES NOT LOOK AT mPreparedCmd GAH!
+  }
+
+  void T2FlashTrafficManager::shipGetlogRequest(u32 fortag) {
+    FlashTraffic ft = FlashTraffic::make(T2FLASH_CMD(mfm,getlog), ++mLastIndex, 2, fortag);
+    sendFlashPacket(ft); // Ship dump request to 2-neighbors (the 'tile markov blanket' donchano)
   }
 
   void T2FlashTrafficManager::shipAndExecuteFlashDump() {

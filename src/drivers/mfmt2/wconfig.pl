@@ -57,6 +57,10 @@ sub bfs6x6 { # Bordered full screen 6x6
     my ($x,$y,$xm,$ym) = @_;
     return join(" ",geomForTile($TW,$TH,6,6,$x,$y,$xm,$ym,8));
 }
+sub bfs6x6p4 { # Bordered full screen 6x6 with reduced padding
+    my ($x,$y,$xm,$ym) = @_;
+    return join(" ",geomForTile($TW,$TH,6,6,$x,$y,$xm,$ym,8-4));
+}
 
 my $wconfig = <<__EOF__;
 $AUTOGEN_STAMP
@@ -307,6 +311,10 @@ $AUTOGEN_STAMP
     radiogroup="FC"
     font=12
     text="LOG"
+[FC_DISP_k_dsp_trace T2RadioButton FC_DISP `bfs3x3(2,1)`]
+    radiogroup="FC"
+    font=12
+    text="TRACE"
 [FC_DISP_kGrid MenuItem FC_DISP `bfs3x3(0,2)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
@@ -329,6 +337,55 @@ $AUTOGEN_STAMP
     bgcolor=#333366
     visible=1
     doc="Physics control dispatcher"
+[TraceCtl ChooserPanel Root $TW $TH $VIZINDENT $VIZINDENT]
+    bgcolor=#333366
+    visible=1
+    doc="Trace log management dispatcher"
+[TraceCtl_Button_Up T2TraceCtlButton TraceCtl `bfs6x6(0,0,0,1)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="^"
+[TraceCtl_Button_Down T2TraceCtlButton TraceCtl `bfs6x6(0,2,0,3)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="v"
+[TraceCtl_Button_Req T2TraceCtlButton TraceCtl `bfs6x6(0,4,1,5)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="REQUEST"
+[TraceCtl_Button_Del T2TraceCtlButton TraceCtl `bfs6x6(2,4,3,5)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="DELETE"
+# [TraceCtl_Button_OK T2TraceCtlButton TraceCtl `bfs6x6(2,4,3,5)`]
+#     enabledbg=$MENUITEMBG
+#     enabledfg=$MENUITEMFG
+#     font=1
+#     text="OK"
+[TraceCtl_Button_X T2TraceCtlButton TraceCtl `bfs6x6(4,4,5,5)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="X"
+[TraceCtl_Text T2TracePanel TraceCtl `bfs6x6p4(1,0,5,3)`]
+    visible=1
+    fgcolor=#aaffff
+    bgcolor=#551111
+    font=0
+    fontheightadjust=-13
+    elevatorwidth=0
+    doc="Trace log files"
+# _Action last to stack on top
+[TraceCtl_Button_Action T2TraceCtlButton TraceCtl `bfs6x6(0,0,5,3)`]
+    visible=0
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=0
+    text="--"
 [T2Viz Panel Root $TW $TH $VIZINDENT $VIZINDENT]
     bgcolor=#ffffff
     visible=1
@@ -431,7 +488,13 @@ $AUTOGEN_STAMP
     fgcolor=#000000
     text="Tile"
     action="GO T2Viz"
-[GlobalMenu_Button_X MenuItem GlobalMenu `bfs6x6(2,4,5,5)`]
+[GlobalMenu_Button_Trace MenuItem GlobalMenu `bfs6x6(2,4,3,5)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="Trace"
+    action="GO TraceCtl"
+[GlobalMenu_Button_X MenuItem GlobalMenu `bfs6x6(4,4,5,5)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
     font=1

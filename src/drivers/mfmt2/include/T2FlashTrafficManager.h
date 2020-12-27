@@ -74,7 +74,7 @@ namespace MFM {
     s32 getRange() const ;
 
     void clearPrepared() ;
-    void setPrepared(T2FlashCmd cmd) ;
+    void setPrepared(T2FlashCmd cmd, u32 arg = 0) ;
     void launchPreparedCommand() ;
     T2FlashCmd getPrepared() const ;
     T2FlashCommandLabel & getPreparedPanel() const ;
@@ -86,7 +86,11 @@ namespace MFM {
 
     void report(const FlashTraffic pkt, ByteSink& to) ;
 
+    void shipGetlogRequest(u32 fortag) ;
+
     void shipAndExecuteFlashDump() ;
+
+    void executeFlashTrafficCommand(T2FlashCmd cmd) ;
 
   private:
 #if 0
@@ -111,8 +115,6 @@ namespace MFM {
     void setGoGoColors(u32 now) ;
 
     void managePending(TimeQueue& srcTQ) ;
-
-    void executeFlashTrafficCommand(T2FlashCmd cmd) ;
 
     u32 mTTL;
     

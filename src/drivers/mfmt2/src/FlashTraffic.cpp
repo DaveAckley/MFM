@@ -24,10 +24,28 @@ namespace MFM
     T2Tile & tile = T2Tile::get();
     u32 seedtype;
     switch (ft.mCommand) {
+    case T2FLASH_CMD(dsp,sites):
+    case T2FLASH_CMD(dsp,tile):
+    case T2FLASH_CMD(dsp,cdm):
+    case T2FLASH_CMD(dsp,tq):
+    case T2FLASH_CMD(dsp,log): 
+    case T2FLASH_CMD(dsp,trace): {
+      T2FlashTrafficManager & ftm = tile.getFlashTrafficManager();
+      ftm.executeFlashTrafficCommand((T2FlashCmd) ft.mCommand);
+      return true;
+    }
+
     case T2FLASH_CMD(mfm,dump): {
       tile.dumpTrace(ft.mArg.get(), ft.mRange, ft.mOrigin);
       return true;
     }
+
+    case T2FLASH_CMD(mfm,getlog): {
+      TraceLogDirManager & dm = tile.getTraceLogDirManager();
+      dm.tryMoveLog(ft.mArg.get(), ft.mRange, ft.mOrigin);
+      return true;
+    }
+
     case T2FLASH_CMD(mfm,crash): {
       FAIL(UNSPECIFIED_EXPLICIT_FAIL);
 #if 0

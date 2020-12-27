@@ -13,10 +13,6 @@
 #include "T2EventWindow.h"
 #include "TraceTypes.h"
 
-#define TRACE_DUMP_FILENAME_FMT "%08x-%08x-%02x%02x%02x.dat"
-#define TRACE_DUMP_FILENAME_MATCHES 5
-#define TRACE_DUMP_FILENAME_MATCH_LEN 28
-
 namespace MFM {
 
   CoreTempChecker::CoreTempChecker() {
@@ -136,6 +132,7 @@ namespace MFM {
   T2Tile::T2Tile()
     : T2Main()
     , mTraceLoggerPtr(0)
+    , mTraceLogDirManager()
     , mArgc(0)
     , mArgv(0)
     , mMFZId(0)
@@ -679,7 +676,7 @@ static const char * CMD_HELP_STRING =
       return 0;
     }
     struct dirent * ent;
-    const u32 MAX_TRACE_SEQ_TO_KEEP = 2;
+    const u32 MAX_TRACE_SEQ_TO_KEEP = 10;
     u32 maxseq = 0, minseq = 0xffffffff - MAX_TRACE_SEQ_TO_KEEP - 1;
     while ((ent = readdir(dir)) != NULL) {
       u32 seq, tag, count, range, xoff, yoff;

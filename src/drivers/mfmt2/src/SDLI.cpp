@@ -21,6 +21,7 @@
 #include "T2TimeQueuePanel.h"
 #include "T2UIComponents.h"
 #include "T2CDMPanel.h"
+#include "T2TracePanel.h"
 #include "T2RadioButton.h"
 
 namespace MFM
@@ -83,14 +84,14 @@ namespace MFM
           // Clean up a few FDs since ~T2Tile etc is not going to run
           mTile.stopTracing();
           mTile.closeITCs();
-#if 0
-          execl("/home/t2/T2-12/apps/mfm/RUN_SDL",
-                "/home/t2/T2-12/apps/mfm/RUN_SDL",
-                "/opt/scripts/t2/sdlsplash",
-                "/opt/scripts/t2/t2-splash-inverted.png",
-                (char *) 0);
-#endif
-          mTile.requestExit();
+          if (1) {
+            execl("/home/t2/T2-12/apps/mfm/RUN_SDL",
+                  "/home/t2/T2-12/apps/mfm/RUN_SDL",
+                  "/opt/scripts/t2/sdlsplash",
+                  "/opt/scripts/t2/t2-splash-inverted.png",
+                  (char *) 0);
+          }
+          mTile.requestExit();  // (But we execld so we're not really here.)
           return;  // No more event polling for you
 
         case SDL_MOUSEBUTTONUP:
@@ -309,6 +310,8 @@ namespace MFM
     if (type.Equals("T2TileLiveCheckbox")) return new T2TileLiveCheckbox(); 
     if (type.Equals("T2TileListenCheckbox")) return new T2TileListenCheckbox(); 
     if (type.Equals("HardButton")) return new T2HardButton(); 
+    if (type.Equals("T2TracePanel")) return new T2TracePanel(); 
+    if (type.Equals("T2TraceCtlButton")) return new T2TraceCtlButton(); 
     if (type.Equals("T2SeedPhysicsButton")) return new T2SeedPhysicsButton(); 
     if (type.Equals("T2DebugSetupButton")) return new T2DebugSetupButton(); 
     if (type.Equals("T2ClearTileButton")) return new T2ClearTileButton(); 
