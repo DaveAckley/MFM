@@ -1,4 +1,4 @@
-{40}  -*- text -*- 
+{90}  -*- text -*-
 [0:
 
 Sat Dec 12 01:05:40 2020 OK we've blown half a week on non-tile stuff!
@@ -32,7 +32,7 @@ Sat Dec 12 01:10:56 2020 GO GO GO.  COLLECT FACTS HERE vvvvv
    try/catch based.
 
  - unwind_protect catches a FailException &, which is declared in
-   FailPlatformSpecific.h.  
+   FailPlatformSpecific.h.
 
 :1]
 [3:
@@ -164,7 +164,7 @@ we'll always from 1-2MB of trace data at steady state, rather than the
 Mon Dec 14 05:29:07 2020 Well, we have a trace file auto-dumped after
 a crash that we can read with:
 
-    t2@beaglebone:~/MFM$ ./bin/Weaver /tmp/latestTraceDump.dat 
+    t2@beaglebone:~/MFM$ ./bin/Weaver /tmp/latestTraceDump.dat
     0 0.00000 0/t  Trace Format Version 7
     1 0.00005 0/t  File sync mark +?77D5869D
     2 0.00009 0/t  sec=1,607,948,837; tot=0; emp=0; occ=0; estAER=0.000000
@@ -178,7 +178,7 @@ a crash that we can read with:
     62596 81.83013 0/a07-ABEHAVE -> IDLE
     62597 81.83447 0/lMSG Crash button clicked
     62598 83.57534 0/lERR Unexpected exit
-    t2@beaglebone:~/MFM$ 
+    t2@beaglebone:~/MFM$
 
 So that's some progress.
 
@@ -245,7 +245,7 @@ Mon Dec 14 14:39:26 2020 Ah,
   T2FlashTrafficManager::managePending ->
   T2FlashTrafficManager::executeFlashTrafficCommand ->
   ?? MouseButtonEvent::Handle ->
-  ?? Panel::Handle ->  
+  ?? Panel::Handle ->
   AbstractButton::Handle ->
   T2UIButton::OnClick ->
   T2DumpButton::onClick ->
@@ -285,7 +285,7 @@ evening, and get back to this in the overnight.
 :17]
 
 :16]
- 
+
 
 :15]
 
@@ -308,7 +308,7 @@ well but so far not doing that.
 And it appears we caught an intertile event failure with just a one
 tile and a single loopback.
 
-    t2@beaglebone:~/MFM$ ./bin/Weaver ../mfmTraces/00000009-00000000.dat 
+    t2@beaglebone:~/MFM$ ./bin/Weaver ../mfmTraces/00000009-00000000.dat
     0 0.00000 0/a27-ASCACHE -> AWACKS
     1 0.00020 0/a24-ABEHAVE ET CS_BOUND -> CS_UNUSED
     2 0.00021 0/a24-ABEHAVE -> IDLE
@@ -320,17 +320,17 @@ tile and a single loopback.
     60586 21.33512 0/a07-ADROP -> IDLE
     60587 21.34722 0/lERR a17-AWACKS timeout @ -2943 msec
     60588 22.56715 0/lERR Unexpected exit
-    t2@beaglebone:~/MFM$ 
+    t2@beaglebone:~/MFM$
 
 which appears to be coming EITHER from T2EventWindow.cpp:916 --
 
           LOG.Error("%s on %s: TO AWLOCKS with pending locks", getStateName(), ew.getName());
-          TLOG(ERR,"%s timeout @ %d msec", ew.getName(), ew.msTilTimeout()); 
+          TLOG(ERR,"%s timeout @ %d msec", ew.getName(), ew.msTilTimeout());
           FAIL(INCOMPLETE_CODE);
 
 or from T2EventWindow.cpp:971 --
 
-        TLOG(ERR,"%s timeout @ %d msec", ew.getName(), ew.msTilTimeout()); 
+        TLOG(ERR,"%s timeout @ %d msec", ew.getName(), ew.msTilTimeout());
         FAIL(INCOMPLETE_CODE);
 
 but it's hard to tell which.[26:
@@ -360,7 +360,7 @@ but we've now gotten one fail into a trace file:
     99810 215.85521 0/lERR a22-AWLOCKS timeout @ -150198 msec
     99811 225.10015 0/t  Failed to top: src/T2EventWindow.cpp:918: INCOMPLETE_CODE [1] {src/main.cpp:95}
     99812 225.10421 0/lERR Unexpected exit
-    t2@beaglebone:~/MFM$ 
+    t2@beaglebone:~/MFM$
 
 So that's progress.
 
@@ -372,7 +372,7 @@ inverting the flash command code stack?
 
 We started a
 
-    static bool execute(const FlashTraffic & ft) ; 
+    static bool execute(const FlashTraffic & ft) ;
 
 in FlashTraffic, but nobody's calling it yet.  Could we get somebody
 to call it?[29:
@@ -380,11 +380,11 @@ to call it?[29:
 Wed Dec 16 03:54:01 2020 So, very near the bottom of the FlashTraffic
 execution we have
 
-  void T2FlashTrafficManager::executeFlashTrafficCommand(T2FlashCmd cmd) 
+  void T2FlashTrafficManager::executeFlashTrafficCommand(T2FlashCmd cmd)
 
 which is called by
 
-  void T2FlashTrafficManager::managePending(TimeQueue& srcTQ) 
+  void T2FlashTrafficManager::managePending(TimeQueue& srcTQ)
 
 which is the time-based thing that actually releases the commands.
 And it's holding a complete FlashTraffic in its mPacket.  We could
@@ -392,9 +392,9 @@ call
 
   FlashTraffic::execute(elt.mPacket)
 
-instead of 
+instead of
 
-  T2FlashTrafficManager::executeFlashTrafficCommand(T2FlashCmd cmd) 
+  T2FlashTrafficManager::executeFlashTrafficCommand(T2FlashCmd cmd)
 
 and that would flip the bottom of the code base.
 
@@ -420,13 +420,13 @@ Thu Dec 17 02:18:51 2020 I'm thinking we should really encode the
 dump-source-tile-coord in the filename, before we completely forget
 how all this current code works.  We should maybe include the tile
 coord and the original flash traffic time-to-live, actually, to give
-us some idea of where and how far to search during a log exfiltration 
+us some idea of where and how far to search during a log exfiltration
 event. [33:
 
 Thu Dec 17 02:23:22 2020 So it's a one byte range and a two byte
 BPoint offset?  That's at least six more bytes of filename..
 
-from like  
+from like
 
     00000010-7B33329A.dat
 
@@ -443,7 +443,7 @@ to like
 
 Thu Dec 17 05:22:15 2020 Wow, check that out:
 
-    root@beaglebone:/home/t2/MFM# ./bin/Weaver /home/t2/mfmTraces/00000015-00000000-000000.dat 
+    root@beaglebone:/home/t2/MFM# ./bin/Weaver /home/t2/mfmTraces/00000015-00000000-000000.dat
     0 0.00000 0/t  Trace Format Version 7
     1 0.00004 0/t  File sync mark +?1AA89E22
  ..
@@ -467,9 +467,9 @@ Thu Dec 17 05:22:15 2020 Wow, check that out:
     85 10.80329 0/t  Failed to top:  -> 14: main + 0x15
     86 10.80355 0/t  Failed to top:  -> 15: __libc_start_main + 0x97
     87 10.81234 0/lERR Unexpected exit
-    root@beaglebone:/home/t2/MFM# 
+    root@beaglebone:/home/t2/MFM#
 
-So plausible!  So demangled!  SO PWITTY! 
+So plausible!  So demangled!  SO PWITTY!
 
 :34]
 [35:
@@ -483,10 +483,10 @@ How written is the code for those two cases?[36:
 Thu Dec 17 11:04:02 2020 Well, the remote end of the automatic remote
 dump is handled via the normal flash traffic path through
 
-   void T2FlashTrafficManager::receiveFlashPacket(const FlashTraffic & packet) 
--> void T2FlashTrafficManager::acceptPacket(const FlashTraffic & packet) 
+   void T2FlashTrafficManager::receiveFlashPacket(const FlashTraffic & packet)
+-> void T2FlashTrafficManager::acceptPacket(const FlashTraffic & packet)
 ->     mMultisetTimedFlashTraffic.insert(TimedFlashTraffic(packet));
--> void T2FlashTrafficManager::managePending(TimeQueue& srcTQ) 
+-> void T2FlashTrafficManager::managePending(TimeQueue& srcTQ)
 ->     MultisetTimedFlashTraffic::iterator oldest = mMultisetTimedFlashTraffic.begin();
 ->     FlashTraffic::execute(ready);                        // Do it
 
@@ -571,8 +571,658 @@ FTs so we're crashing when trying to execute them:
     85 139.34396 0/t  Failed to top:  ->  7: main + 0x15
     86 139.34424 0/t  Failed to top:  ->  8: __libc_start_main + 0x97
     87 139.34638 0/lERR Unexpected exit
-    root@beaglebone:/home/t2/MFM# 
+    root@beaglebone:/home/t2/MFM#
 
 Think I should commit though.  Got a lot of stuff here..
 
 :39]
+[40:
+
+Thu Dec 17 16:33:00 2020 OK, committed, flag moved, setting back up.
+
+:40]
+[41:
+
+Fri Dec 18 05:41:10 2020 Well, dishing back to
+T2FlashTrafficManager::executeFlashTrafficCommand seems to've gotten
+the display FTs working again..  About time to package this up and
+push it to the neighbors.[42:
+
+Fri Dec 18 10:24:42 2020 After second sleep.  cdmss-03-51cd90.mfz is
+on its way into a transfer tile, 42% done.
+
+Then onto the 1.5PZ grid.[43:
+
+Fri Dec 18 13:49:03 2020 OK about time for a call, but just to not
+we've pushed all this onto 0.5PZ of the 1.5PZ grid, and everything
+seems to be fine.
+
+The next question is how do we find out where a failure occurred and
+get the trace files out?
+[44:
+
+Sat Dec 19 06:19:59 2020 We want a new trace files menu.  We want a
+flash traffic message to announce a trace file collection point.  We
+want to spawn srf's to transmit our requested file, and to record
+success in transmission[45:
+
+Sat Dec 19 11:17:21 2020 Where do we put it though?  Maybe replace the
+TQ menu?  Or split the X menu, I could see that.[46:
+
+Sat Dec 19 11:36:20 2020 And how does the trace log menu work?
+
+ - A scrolling list of names.
+ - Top/middle/something one selected
+ - Up/down buttons to scroll the list, x to cancel [left of list]
+ - Action buttons like request tag, delete, ..
+
+[47:
+
+Sat Dec 19 12:39:04 2020
+
+
+     +--+----------------+
+     |^ | seq tag offset |
+     +--+ seq tag offset |
+     |= | seq tag offset |
+     +--+                |
+     |v |                |
+     +--+-+----+----+----|
+     |REQ |DEL | OK | X  |
+     +-------------------+
+
+[48:
+
+Sat Dec 19 13:27:33 2020 Is there some reasonably quick way we could
+make creating that kind of layout a little easier?
+
+:48]
+
+:47]
+
+:46]
+
+:45]
+
+:44]
+:43]
+
+:42]
+
+:41]
+[49:
+
+Sun Dec 20 13:21:56 2020 Looks like we've got 8 rows and 27 columns in
+the trace log text display area.  How do we want to use them?
+Possibilities: 
+
+ - 1 col 'selected' flag
+
+ - 8 col tag
+
+ - 6 col signed offset
+
+ - 1 col relative sequence number? 
+
+ - 1 col status flag
+
+ - 4 byte scaled size
+
+   -> 21, room for 6 punctuation
+
+
+ - 1 row of directory status: file count, total size, age?
+
+ - 7 rows of file status
+
+:49]
+[50:
+
+Mon Dec 21 14:52:27 2020 OK, well we have a semi-credible trace panel,
+and we pretty much need our FT for requesting log centralization now.
+
+:50]
+[51:
+
+Tue Dec 22 08:29:29 2020 Time to push out another version ahead of the
+update.. 
+
+:51]
+[52:
+
+Fri Dec 25 00:03:47 2020 Murray Grismiss.
+
+:52]
+[53:
+
+Fri Dec 25 07:35:48 2020 So, caught another instance of
+
+    [22824.858845] Illegal standard local packet 0xe0+2
+    [22824.871296] <pru1: 1c9e475e: e0 5b                                            .[
+  ..
+    [22825.062559] kernel BUG at /home/t2/T2-12/pru/itcio/module/itcpkt.c:344!
+
+in the overnight.  New aspects this time are
+
+(1) It was on the keymaster not the transfer tile, and
+(2) I was not messing with it at the time (was asleep).
+[57:
+
+Fri Dec 25 15:31:15 2020 (Another difference, FWIW, the first instance
+involved pru0 ('>pru0: ae457221:'), this is '>pru1: 1c9e475e:'.  But
+the packet contents are the same.)
+
+:57]
+All that's visible in /var/log/syslog is:
+
+    Dec 25 04:17:01 beaglebone CRON[2400]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+    Dec 25 05:17:01 beaglebone CRON[2431]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+    ^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@^@Dec 25 05:38:14 beaglebone systemd-modules-load[854]: Inserted module 'itc'
+    Dec 25 05:38:14 beaglebone systemd-modules-load[854]: Inserted module 'itc_pkt'
+    Dec 25 05:38:14 beaglebone fake-hwclock[857]: Current system time: 2020-12-25 12:38:08
+    Dec 25 05:38:14 beaglebone fake-hwclock[857]: fake-hwclock saved clock information is in the past: 2020-12-25 12:17:01
+
+(Where I've taken the liberty of replacing 420 nulls with '^@'s)
+
+[54:
+
+Fri Dec 25 07:43:49 2020 And note this transfer tile syslog:
+
+    Dec 25 05:34:49 beaglebone mfm.sh[1795]: 3152: WRN: Big deltams 405 on update 112675
+    Dec 25 05:37:32 beaglebone mfm.sh[1795]: 3153: ERR: AWLOCKS on a17-AWLOCKS: TO AWLOCKS with pe\
+    nding locks
+    Dec 25 05:37:32 beaglebone mfm.sh[1795]: 3154: ERR: EXCEPTION COT
+    Dec 25 05:37:32 beaglebone mfm.sh[1795]: 3155: ERR: UNEXPECTED EXIT
+    Dec 25 05:37:32 beaglebone mfm.sh[1795]: 3156: MSG: Trace dumped /home/t2/mfmTraces/00000001-7\
+    8F5F3E4-020000.dat
+    Dec 25 05:37:32 beaglebone mfm.sh[1795]: 3157: ERR: TRACE DUMPED
+    Dec 25 05:37:32 beaglebone mfm.sh[1795]: TRACING TO: /tmp/t2trace10.dat
+    Dec 25 05:37:32 beaglebone mfm.sh[1795]: mfmt2 exited status 0 -- RESTARTING
+    Dec 25 05:37:34 beaglebone mfm.sh[1795]: Launching mfmt2
+    Dec 25 05:37:34 beaglebone mfm.sh[1795]: 11: MSG: ctor Sites 0xB68EA6B8
+
+and indeed we have
+
+    root@beaglebone:/var/log# ls -l /home/t2/mfmTraces/
+    total 1160
+    -rw-r--r-- 1 root root 1187479 Dec 25 05:37 00000001-78F5F3E4-020000.dat
+    root@beaglebone:/var/log# 
+
+which has the expected AWLOCKS timeout in it:
+
+    55428 190.15775 0/t  Failed to top: src/T2EventWindow.cpp:918: INCOMPLETE_CODE [1] {src/main.cpp:118}
+    55429 190.16377 0/t  Failed to top:  ->  0: FailException::FailException(int, char const*, int) + 0x1D
+    55430 190.16398 0/t  Failed to top:  ->  1: MFM::T2EWStateOps_AWLOCKS::timeout(MFM::T2ActiveEventWindow&, MFM::OverflowableCharBufferByteSink<258u>&, MFM::TimeQueue&) + 0xCF
+    55431 190.16413 0/t  Failed to top:  ->  2: MFM::T2EventWindow::onTimeout(MFM::TimeQueue&) + 0x59
+    55432 190.16546 0/t  Failed to top:  ->  3: MFM::T2Tile::main() + 0x1D
+    55433 190.16560 0/t  Failed to top:  ->  4: MFM::UnexpectedExit::main() + 0xD
+    55434 190.16571 0/t  Failed to top:  ->  5: MFM::MainDispatch(int, char**) + 0x91
+    55435 190.16585 0/t  Failed to top:  ->  6: main + 0x9
+    55436 190.16607 0/t  Failed to top:  ->  7: __libc_start_main + 0x97
+    55437 190.17146 0/lERR Unexpected exit
+
+[55:
+
+Fri Dec 25 11:00:43 2020 So that convinces me that 
+
+    [22824.871296] <pru1: 1c9e475e: e0 5b                                            .[
+
+is something reasonably real...[56:
+
+Fri Dec 25 12:20:53 2020 OK, lamb shanks in the oven at 250F..
+
+:56]
+
+:55]
+
+:54]
+
+:53]
+[58:
+
+Fri Dec 25 22:32:29 2020 Reviewing files in
+/home/t2/T2-12/pru/itcio/firmware/ looking for ANYTHING that could
+explain 0xe0 0x5b..
+
+ - AM335x_PRU.cmd:
+   = Could we be overflowing the PRU stack?  We only allocated
+     0x300==768 bytes for it.
+   = Do we need the 0x100==256 bytes we allocated?  Could we trim it
+     to like 0xf0 and go to 0x784 for the stack?  See if it changes
+     anything?
+   = Could we add a debug allowing is to report the stack usage?
+   = Redefine '*' at SpecialPackets.c:223?  That's what it's for..
+   
+[59:
+
+Sat Dec 26 02:18:09 2020 Well wandered around Threads.asm and
+PacketRunner.asm and macros.asm but didn't see much to kvetch about.  
+
+Also poked around with
+
+    # /home/t2/T2-12/apps/t2/t2trace/t2trace +p
+
+and
+
+    root@beaglebone:/home/t2/MFM/src/drivers/mfmt2/notes# cat /sys/class/itc_pkt/status 
+    20000020
+    root@beaglebone:/home/t2/MFM/src/drivers/mfmt2/notes# cat /sys/class/itc_pkt/statistics 
+    dir psan sfan toan mfmbsent mfmbrcvd mfmpsent mfmprcvd svcbsent svcbrcvd svcpsent svcprcvd
+    0 0 0 0 0 0 0 0 0 0 0 0
+    1 1 0 0 5066079 5166952 616329 616911 61445 61645 4915 4929
+    2 0 0 0 0 0 0 0 0 0 0 0
+    3 0 0 0 0 0 0 0 0 0 0 0
+    4 0 0 0 0 0 0 0 0 0 0 0
+    5 0 0 0 0 0 0 0 0 0 0 0
+    6 0 0 0 0 0 0 0 0 0 0 0
+    7 1 0 0 5042384 5203099 616573 616914 62855 60895 5009 4879
+    root@beaglebone:/home/t2/MFM/src/drivers/mfmt2/notes# 
+
+without seeing anything noteworthy.
+
+Wondering if I should take the BUG_ON(1) comment to heart and try to
+soldier on after seeing an empty packet (and logging about it).[60:
+
+Sat Dec 26 02:25:36 2020 Um, wait.  Yes, the 0xe0 0x5b problem is in
+the inbound rpmsg callback from the PRUs, but the line 344 BUG_ON is
+inside sendPacketViaRPMsg, which is for outbound packets.  The 0 len
+packet is an OUTBOUND packet.  Let's ask how THAT got there.
+
+[61:
+
+Sat Dec 26 11:29:25 2020 Well left seed2 running between the keymaster
+and the transfer tile and got another line 344 BUG_ON.  So this one
+seems 'obviously' corruption of the mfm outbound kfifo:
+
+    [117686.002688] XKFIFO OB prudev itc!pru!0, kfifo mPriorityOB, kfifolen = -811, pktle0
+                                                                              ^^^^
+    [117686.011759] DUMPITCSTATUS DUMPITCSTATUS DUMPITCSTATUSslogd was HUPed
+    [117686.022576] kfifoptr---kfifoin/out------mskin/out----len-avail-mnrflg name--------
+    [117686.033039] 6f6213ec       841/0          841/0     841l 255a   0   mLocalIB-itc!0
+ >> [117686.044207] 38968ca3  53084524/53085302   364/1142 -778l 255a   0rp mPriorityOB-i0
+    [117686.054666] 3e5e0b62    209884/209884     988/988     0l 255a   0r  mBulkOB-itc!p0
+    [117686.065044] 7dea64a0         0/0            0/0       0l 255a   1   mLocalIB-itc!1
+    [117686.076249] cbc866c0         0/0            0/0       0l 255a   1rp mPriorityOB-i1
+    [117686.087136] 0b62f3b8         0/0            0/0       0l 255a   1r  mBulkOB-itc!p1
+    [117686.100917] b6251f33    211168/211168    2272/2272    0l 255a   2   mUserIB-itc!bk
+    [117686.116623] ddc994a7         0/0            0/0       0l 255a   3   mUserIB-itc!fh
+    [117686.127300] 1c1b059c         0/0            0/0       0l 255a   6   mUserIB-itc!mT
+    [117686.137403] a5a54c23  30327930/30327924  1146/1140    6l 255a   7   mUserIB-itc!mE
+    [117686.146982] 7ae12653  30343735/30343735   567/567     0l 255a   8   mUserIB-itc!mW
+    [117686.156842] d9356600         0/0            0/0       0l 255a   9   mUserIB-itc!mT
+    [117686.166685] 58e16af3         0/0            0/0       0l 255a   a   mUserIB-itc!mW
+    [117686.176510] e4ad805f         0/0            0/0       0l 255a   b   mUserIB-itc!mE
+    [117686.187421] ------------[ cut here ]------------
+ >> [117686.192173] kernel BUG at /home/t2/T2-12/pru/itcio/module/itcpkt.c:344!
+    [117686.198904] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
+    [117686.204853] Modules linked in: joydev cpufreq_userspace c_can_platform c_can can_v
+    [117686.232731] CPU: 0 PID: 1204 Comm: ITC_PktShipr Tainted: G         C O      4.19.r
+    [117686.241904] Hardware name: Generic AM33XX (Flattened Device Tree)-----------
+    [117686.248197] PC is at sendPacketViaRPMsg+0x80/0x2a4 [itc_pkt]
+    [117686.253986] LR is at wake_up_klogd+0x7c/0xa8
+    [117686.258362] pc : [<bf03ea3c>]    lr : [<c01ad434>]    psr: 600e0013
+    [117686.264743] sp : db0f9ef8  ip : db0f9c88  fp : db0f9f34
+    [117686.270076] r10: fffffcd5  r9 : 0000007e  r8 : db0d0040
+    [117686.275410] r7 : 00000000  r6 : bf044b78  r5 : 00000000  r4 : db0d1318
+    [117686.282052] r3 : bad55a76  r2 : bad55a76  r1 : c10ff388  r0 : 0000004a
+    [117686.288698] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
+    [117686.295950] Control: 10c5387d  Table: 9b398019  DAC: 00000051
+ >> [117686.301814] Process ITC_PktShipr (pid: 1204, stack limit = 0x423396f1)
+    [117686.308458] Stack: (0xdb0f9ef8 to 0xdb0fa000)
+    [117686.312923] 9ee0:                                                       00000000 8
+    [117686.321226] 9f00: db0f9f1c c14d0adc ffffe000 db0d0040 ffffe000 bf044b78 00000000 0
+    [117686.329531] 9f20: 0000007e 00000001 db0f9f74 db0f9f38 bf03ed24 bf03e9c8 bf044980 8
+    [117686.337835] 9f40: db0f9f74 bad55a76 c0160a5c db0ecf80 db0ec8c0 00000000 db0f8000 c
+    [117686.346139] 9f60: bf03ec60 db109a2c db0f9fac db0f9f78 c0160f6c bf03ec6c db0ecf9c c
+    [117686.354443] 9f80: 00000000 db0ec8c0 c0160e00 00000000 00000000 00000000 00000000 0
+    [117686.362747] 9fa0: 00000000 db0f9fb0 c01010e8 c0160e0c 00000000 00000000 00000000 0
+    [117686.371050] 9fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 0
+    [117686.379353] 9fe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 0
+    [117686.387721] [<bf03ea3c>] (sendPacketViaRPMsg [itc_pkt]) from [<bf03ed24>] (itcOBP)
+    [117686.398495] [<bf03ed24>] (itcOBPktThreadRunner [itc_pkt]) from [<c0160f6c>] (kthr)
+    [117686.407503] [<c0160f6c>] (kthread) from [<c01010e8>] (ret_from_fork+0x14/0x2c)
+    [117686.414843] Exception stack(0xdb0f9fb0 to 0xdb0f9ff8)
+    [117686.420004] 9fa0:                                     00000000 00000000 00000000 0
+    [117686.428308] 9fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 0
+    [117686.436611] 9fe0: 00000000 00000000 00000000 00000000 00000013 00000000
+    [117686.443350] Code: e3010ec0 e34b0f04 eb45bc90 ebffff8d (e7f001f2) 
+    [117686.449574] ---[ end trace 7a48fbf8fd94e0b9 ]---
+    [117686.454302] Kernel panic - not syncing: Fatal exception
+    [117686.459652] Rebooting in 20 seconds..
+
+And once the kfifo pointers have crossed, it's not at all surprising
+that zero-length packets will turn up, but they will be meaningless in
+and of themselves.
+
+So let's pull on it a little, to refresh our brain if nothing else.
+How exactly do we end up inserting onto the mPriorityOB kfifo?
+[62:
+
+Sat Dec 26 11:50:36 2020
+
+Working backwards..  Here's the actual kfifo insertion:
+
+    trySendMFMRoutedKernelPacket
+     ..
+      ipb = &prudevstate->mPriorityOB;  /*MFM packets are always priority dispatch*/
+     ..
+      if (!roomInPacketFIFO(ipb, count, cdevstate->mName, "return -EAGAIN"))
+        return -EAGAIN; /* Never block */
+
+      ret = kfifo_in(&ipb->mFIFO, pkt, count); /*0 on no room else count*/
+
+[63:
+
+Sat Dec 26 11:53:22 2020 And, trySendMFMRoutedKernelPacket callers:
+
+itcmfm.c:
+ ..
+    static bool sendPacketHandler(PacketHandler * ph) {
+ ..   ret = trySendMFMRoutedKernelPacket(ph->pktbuf,ph->index) > 0;
+
+which is called by
+    void timeout_LEAD_KITC(ITCMFMDeviceState * mds, PacketHandler * ph)
+    void timeout_FOLLOW_KITC(ITCMFMDeviceState * mds, PacketHandler * ph)
+    void timeout_CONFIG_KITC(ITCMFMDeviceState * mds, PacketHandler * ph)
+    void timeout_CHECK_KITC(ITCMFMDeviceState * mds, PacketHandler * ph)
+    void timeoutIn_or_Compatible_KITC(ITCMFMDeviceState * mds, PacketHandler * ph)
+
+[64: Sat Dec 26 11:57:55 2020 ..and that's all?  Those are all part of
+the KITC negotiation flow..  So there has to be another path for
+explicit user-space outbound MFM packets, yes?[65:
+
+Sat Dec 26 12:00:59 2020 So, there's also:
+
+    static const struct file_operations itc_pkt_fops = {
+ ..   .write= itc_pkt_write,
+ ..
+-> 
+    static ssize_t itc_pkt_write(..)
+ ..  return writePacketHelper(file,buf,count,offset,cdevstate);
+ ..
+->
+    static ssize_t writePacketHelper(..)
+ ..       ITCPacketBuffer * ipb = bulkRate ? &prudevstate->mBulkOB : &prudevstate->mPriorityOB;
+ ..       ret = kfifo_from_user(&ipb->mFIFO, buf, count, &copied);
+ 
+[66:
+
+Sat Dec 26 12:06:13 2020 So there are two paths to inserting into
+mPriorityOB:
+
+ PATH 1: KITC processing.  In particular, via timeout_COMPATIBLE_KITC,
+         which we expect WILL occur while userspace MFM packets are
+         moving, right?
+
+ PATH 2: itc_pkt_write via userspace write to /dev/itc/{mfm|flash} 
+
+
+and what processes/threads are running those paths?
+[67:
+
+Sat Dec 26 12:11:11 2020 Umm, PATH 1 is running on KITC_TmoRunr:
+
+  createITCThread(&s->mKITCTimeoutThread,kitcTimeoutThreadRunner,5000,"KITC_TmoRunr");
+
+but PATH 2 is running on the userspace process..
+
+That's.. A.. Race.., Isn't.. It..?
+[68:
+
+Sat Dec 26 12:50:37 2020 After lunch: It depends on the rules for
+kernel threads and userspace processes preempting each other, I
+guess.  Which I sort of thought they didn't?  Let's try to
+refresh.. [69:
+
+Sat Dec 26 12:58:08 2020
+
+"In 2.6, if preemption is configured in, kernel code can be
+interrupted at (almost) any time."
+
+"Yes, the kernel is preemptive. It has been preemptive by default
+since the 2.6 branch."
+[70:
+
+Sat Dec 26 16:15:09 2020 Well, I still don't completely understand if
+userspace writing-to-/dev and a kernel thread can preempt/interrupt
+each other.  But it's still the best guess we've got so far.
+
+The story would be:
+
+ - KITC does kernel ITC negotiations using priority 'MFM' packets
+   buffered in mPriorityOB.
+
+ - Once the KITC machine reaches state SN_COMPATIBLE, userspace then
+   starts doing MFM ITC negotiations and events -- again, using
+   priority 'MFM' packets.
+
+ - KITC has gone mostly silent at that point, BUT every 10-15 seconds,
+   state SN_COMPATIBLE times out, and another KITC packet is sent,
+   again via mPriorityOB.
+
+ - And that SN_COMPATIBLE processing COULD INTERLEAVE with userspace
+   sending MFM packets via mPriorityOB, and corrupt the kfifo.
+
+We could avoid this if we added a separate kfifo for kitc to use, and
+checked that separately in itcpkt.c:414+, with something like
+
+  ret = sendPacketViaRPMsg(prudevstate, &prudevstate->mKITCPriorityOB);
+  if (ret > 0) return 0;  /* shipped priority */
+  if (ret < 0) return ret; /* problem */
+
+so that no race would be possible.  At the price of yet more memory
+use and cache pressure.
+
+[71:
+
+Sat Dec 26 23:48:11 2020 After evening.
+
+So I could probably get evidence to confirm the KITC-userspace race
+theory by _reducing_ the 10-15 second KITC timeout.  If I changed this
+
+    void timeoutIn_or_Compatible_KITC(ITCMFMDeviceState * mds, PacketHandler * ph)
+    {
+      MFMTileState * ts = &S.mMFMTileState;
+      BUG_ON(!mds || !ph);
+      writeByteToPH(ph, ts->mToken);
+      setTimeoutKITC(mds, jiffiesToWait(WC_LONG));
+      sendPacketHandler(ph);
+    }
+
+to something like this
+
+    void timeoutIn_or_Compatible_KITC(ITCMFMDeviceState * mds, PacketHandler * ph)
+    {
+      MFMTileState * ts = &S.mMFMTileState;
+      BUG_ON(!mds || !ph);
+      writeByteToPH(ph, ts->mToken);
+      setTimeoutKITC(mds, msToJiffies(1000));
+      sendPacketHandler(ph);
+    }
+
+so that KITCs timed-out once per second, then races should become a
+lot more likely under seed2 load.  If we didn't see faster panics,
+that would be concerning.
+
+[72:
+
+Sun Dec 27 00:39:16 2020 Well, let's try that on the transfer tile,
+which we're more willing to crash since we don't currently have emacs
+or other coding state running there..[73:
+
+Sun Dec 27 00:44:39 2020 Well, installed a
+
+      setTimeoutKITC(mds, msToJiffies(1000));
+
+version LKM on the transfer tile.  [74:
+
+Sun Dec 27 00:55:57 2020 OK rebooting it now.  We'll start a seed2 and
+see what's what..[75:
+
+Sun Dec 27 00:57:35 2020 Release The Powell! [76:
+
+Sun Dec 27 01:00:28 2020 Currently <5% seed2 sites..  This still might
+take a while..  It typically took several hours at least..  Need to do
+something else for a bit.  Should squeeze story words.  Will wander
+around the net.[77:
+
+Sun Dec 27 01:13:05 2020 Blow Up![78:
+
+Sun Dec 27 01:16:48 2020 OK!  Well, that was exciting!
+
+We hit the itcpkt.c:344 BUG_ON after ..checking.. under 20 minutes!
+
+And that transfer tile crash caused an unexpected exit on the
+keymaster.. as expected.  And so mfm.sh restarted mfmt2, and we got to
+observe the mfmt2 start-up-crash-loop which I'd first seen during the
+t2sup live demo (but which I didn't discuss because I suck / I wanted
+to be happy for us at that moment).
+
+So now (using the demangled backtrace in the trace file!), I can see:
+
+    11 5.78064 0/t  Failed to top: src/TraceLogInfo.cpp:117: ILLEGAL_STATE [4] {src/main.cpp:118}
+    12 5.78730 0/t  Failed to top:  ->  0: MFM::TraceLogDirManager::initAndManageTraceDir() + 0x275
+
+which is
+
+            MFM_API_ASSERT_STATE(index < MAX_TRACE_SEQ_TO_KEEP);
+
+which I Will Now Debug For You.
+
+First it's:
+
+    # cd /home/t2/MFM; make -k realclean; DEBUG=1 make -k
+
+to get debugging symbols loaded.  Unfortunately that takes quite a
+while..  [79:
+
+Sun Dec 27 02:04:46 2020 Like over fifteen minutes:
+
+    Compilation started at Sun Dec 27 01:47:15
+    Compilation finished at Sun Dec 27 02:04:41
+
+Now fire up gdb
+
+# cd /home/t2/MFM
+# gdb ./bin/mfmt2
+(gdb) r  -w /home/t2/MFM/res/mfmt2/wconfig.txt -z MFMT2-FAKE-MFZID -t
+
+[80:
+
+Then Debug The Rest Of The Damn Bug
+
+
+
+Sun Dec 27 02:22:09 2020 Ahem.
+
+It was a fencepost error, slightly hidden by the fact we were kind of
+deleting one of the posts..
+
+:80]
+:79]
+:78]
+
+:77]
+
+:76]
+
+:75]
+
+:74]
+
+:73]
+
+:72]
+
+:71]
+
+
+
+:70]
+:69]
+
+:68]
+
+
+:67]
+
+
+
+:66]
+
+:65]  :64]
+
+:63]
+
+:62]
+:61]:60]
+
+:59]
+:58]
+[81:
+
+Sun Dec 27 02:27:19 2020 So, I think we're at the point of adding yet
+another kfifo to FIX THIS RACE.  It goes in struct itcprudevicestate
+in itcpkt.h.  We'll rgrep for all instances of mPriorityOB and that
+will tell us where the needed changes go.[82:
+
+Sun Dec 27 02:49:01 2020 OK that's going pretty well, but now we're at
+itcmfm.c:349, where we're calling 'trySendMFMRoutedKernelPacket' to
+send a KITC packet.  How do we modify that to target the
+mKernelOB?[83:
+
+Sun Dec 27 02:50:48 2020 Wait, check that name again: It's
+trySendMFMRoutedKERNELPacket.  Is that used only to send KITC packets?
+[84:
+
+Sun Dec 27 02:51:50 2020 Wow, yay, it is!  I think we can just change
+its buffer and rename it!  Good Past Dave, Goooood Coder, pat pat pat.
+
+[85:
+
+Sun Dec 27 02:54:56 2020 Still have a naming issue at least on this
+flag bit and associated comment now:
+
+      /*only mfm packets allowed via this route*/
+      if (!(pkt[0] & PKT_HDR_BITMASK_MFM)) return -ENXIO; /*never the error code you want*/
+
+[86:
+
+Sun Dec 27 03:07:18 2020 Adding BUFFERSET_K for symmetry, but the
+tracing stuff still has issues.
+
+Also: Changing mKernelOB to be characterized as mPriority==true
+because some of the tracing code uses 'minor != BULK' as implying
+'priority', so let's just go with it.  But a new 'k' flag should
+appear in the printk_ITCStatus output.[88:
+
+Sun Dec 27 03:34:37 2020 You know, I'm wondering if shipAPacketToPRU
+should consider mKernelOB first.  At steady state mKernelOB packets
+should be rare, and we could believe mPriorityOB packets will saturate
+the wire, at least in a bursty fashion..
+
+Let's do mKernelOB first.  Call it 'kernel priority', then 'priority',
+then 'bulk'.
+
+:88]
+
+:86]
+:85]
+:84]
+
+:83]
+
+:82]
+
+:81]
+[87:
+
+Sun Dec 27 03:29:53 2020 Well, everything builds again.  Are we
+anything like ready to try this?
+
+:87]
+[89:
+
+Sun Dec 27 03:49:20 2020 Well let's commit provisionally..
+
+:89]
