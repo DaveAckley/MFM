@@ -25,6 +25,8 @@ namespace MFM {
   void printComma(u32 num, ByteSink & to) ;
   void printComma(u64 num, ByteSink & to) ;
 
+  const char * formatSize(u32 usize, bool trimwhite) ;
+
   bool endsWith(const std::string& str, const std::string& suffix) ;
 }
 

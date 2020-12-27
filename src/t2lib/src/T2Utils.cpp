@@ -110,4 +110,34 @@ namespace MFM {
       0 == str.compare(str.size()-suffix.size(), suffix.size(), suffix);
   }
 
+  const char * formatSize(u32 usize, bool trimwhite) {
+    const u32 BUFLEN = 4+1;
+    static char buf[BUFLEN] = "";
+    char * ret = buf;
+    if (usize == 0) snprintf(buf,BUFLEN,"  0 ");
+    else {
+      double size = usize;
+      const char * UNITS = " KMGTPE"; // Can't get over G in u32 ..
+      for (u32 i = 0; i < strlen(UNITS); ++i) {
+        char unit = UNITS[i];
+        if (size < 1000) {
+          if (size < 1) snprintf(buf,BUFLEN,".%02d%c",(u32)(size*100),unit);
+          else if (size >= 9.95 || (u32)(size) == size)
+            snprintf(buf,BUFLEN,"%3d%c",(u32)(size+0.5),unit);
+          else snprintf(buf,BUFLEN,"%3.1f%c",size,unit);
+          break;
+        }
+        size /= 1000.0;
+      }
+    }
+    if (trimwhite) {
+      for (u32 i = BUFLEN; i-- > 0; ) {
+        if (buf[i] == ' ') buf[0] = 0;
+        else break;
+      }
+      while (*ret == ' ') ++ret;
+    }
+    return ret;
+  }
+
 }
