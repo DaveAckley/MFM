@@ -19,8 +19,8 @@ namespace MFM {
                          &seq,
                          &tag,
                          &range,
-                         &xoff,
-                         &yoff,
+                         &xoff,  // XXX WATCH OUT! xoff/yoff are u32 but 
+                         &yoff,  // are meant to be interpreted as s8!
                          &count);
     if (matches != TRACE_DUMP_FILENAME_MATCHES || count != TRACE_DUMP_FILENAME_MATCH_LEN)
       return false;

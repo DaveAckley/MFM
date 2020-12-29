@@ -684,8 +684,8 @@ static const char * CMD_HELP_STRING =
                            &seq,
                            &tag,
                            &range,
-                           &xoff,
-                           &yoff,
+                           &xoff,  // XXX WATCH OUT! xoff/yoff are u32 but 
+                           &yoff,  // are meant to be interpreted as s8!
                            &count);
       if (matches != TRACE_DUMP_FILENAME_MATCHES || count != TRACE_DUMP_FILENAME_MATCH_LEN) continue;
       if (seq < minseq) minseq = seq;
@@ -698,7 +698,7 @@ static const char * CMD_HELP_STRING =
       while ((ent = readdir(dir)) != NULL) {
         u32 seq, tag, count, range, xoff, yoff;
         u32 matches = sscanf(ent->d_name,TRACE_DUMP_FILENAME_FMT "%n",
-                             &seq,&tag,&range,&xoff,&yoff,&count);
+                             &seq,&tag,&range,&xoff,&yoff,&count); // XOFF YOFF SEE ABOVE
         if (matches != TRACE_DUMP_FILENAME_MATCHES || count != TRACE_DUMP_FILENAME_MATCH_LEN) continue;
         if (seq + MAX_TRACE_SEQ_TO_KEEP <= maxseq) {
           LOG.Message("Auto-deleting %s", ent->d_name);
@@ -729,8 +729,8 @@ static const char * CMD_HELP_STRING =
                nextseq,
                tag,
                range,
-               offset.GetX(),
-               offset.GetY());
+               offset.GetX()&0xff,  // Truncate down to s8
+               offset.GetY()&0xff);
     mTraceLoggerPtr->dump(buf.GetZString());
   }
 
