@@ -113,16 +113,17 @@ namespace MFM {
       ResettableByteSink & tagbs = mStaticPanel->GetByteSink();
       tagbs.Reset();
 
-      s32 tmp;
       {
-        const char * PATH = "/home/t2/cdmd-T2-12.mfz-cdm-install-tag.dat";
-        if (!readOneDecimalNumberFile(PATH,tmp)) tagbs.Printf("T2-12: no tag\n");
-        else tagbs.Printf("T2-12: %d\n",tmp);
+        OString16 buf;
+        const char * PATH = "/cdm/tags/slot02-install-tag.dat";
+        if (!readOneLinerFile(PATH,buf)) tagbs.Printf("T2-12: no tag\n");
+        else tagbs.Printf("T2-12 %s\n",buf.GetZString());
       }
       {
-        const char * PATH = "/home/t2/cdmd-MFM.mfz-cdm-install-tag.dat";
-        if (!readOneDecimalNumberFile(PATH,tmp)) tagbs.Printf("MFMT2: no tag\n");
-        else tagbs.Printf("MFMT2: %d\n",tmp);
+        OString16 buf;
+        const char * PATH = "/cdm/tags/slot03-install-tag.dat";
+        if (!readOneLinerFile(PATH,buf)) tagbs.Printf("MFMT2: no tag\n");
+        else tagbs.Printf("MFMT2 %s\n",buf.GetZString());
       }
     } while(0);
 
