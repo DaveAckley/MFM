@@ -11,7 +11,7 @@ my ($GRIDINDENT) = (1);
 my ($TW,$TH) = ($SW-2*$VIZINDENT,$SH-2*$VIZINDENT);
 my ($GW,$GH) = ($SW-2*$GRIDINDENT,$SH-2*$GRIDINDENT);
 my ($CORNERW,$CORNERH) = (6,6);
-my ($STATICW,$STATICH) = ($TW/3,28);
+my ($STATICW,$STATICH) = (90,28);
 
 my $MENUITEMBG = "#ccbb22";
 my $MENUITEMFG = "#112233";
@@ -505,7 +505,9 @@ $AUTOGEN_STAMP
 [T2Info T2Info T2Viz $TW $TH 0 0]
     bgcolor=#040404
     fgcolor=#a0a0a0
-[StaticInfo StaticPanel T2Viz $STATICW $STATICH $ITCW  `($TH-$STATICH)`]
+
+#[StaticInfo StaticPanel T2Viz $STATICW $STATICH $ITCW  `($TH-$STATICH)`]
+[StaticInfo StaticPanel T2Viz $STATICW $STATICH `(($TW/2-$ITCW)/2)` `($TH-$ITCH-$STATICH-5)`]
     bgcolor=#dd22dd
     fgcolor=#ffffff
     font=5
