@@ -1,0 +1,94 @@
+{4}  -*- text -*- 
+[0:
+
+Tue Dec 29 04:14:04 2020 Well it's beginning to look a lot like
+intertile.
+
+Time to start roughing out a plan to get libcue.so's sucked into mfmt2
+and controlling events.
+
+After second sleep.
+
+Some questions:
+
+ - Can we do flash traffic without compatible mfzids?  We want to.
+
+ - How are we going to specify what physics to run?  We want it to be
+   sticky -- we need to boot into some last-specified physics.  Maybe
+   that does argue for shipping the config by cdm.  Would be nice if
+   we could pre-position a new config via cdm but then activate it
+   somehow via flash traffic.
+
+(Also, there's an issue that flash traffic for mfmt2 pause appears to
+blow up the engine.  That needs to be looked at.)[1:
+
+Thu Dec 31 01:57:12 2020 (Have had a hacked-up DReg/Res running for
+19h now on the 1.75PZ grid.  It's looking pretty equilibrated.  Center 
+tile samples:
+
+empty%  mAER
+62      390
+61      360
+63      400
+63      410
+52      300
+57      340
+60      370
+61      360
+61      380
+59      380
+
+59.9    369.0 avg
+
+Looks like we could be saying something like
+
+   350 mAER (IS,DR/R) IS ACHIEVED
+
+0.350 an AER, indefinitely scalable, on DReg/Res physics, is achieved
+
+0.35 of an event per site per second, on average, indefinitely
+scalable, on DReg/Res physics, is achieved.
+
+
+
+:1]
+
+:0]
+[2:
+
+Thu Dec 31 04:11:46 2020 So.  For getting to try ulam in mfmt2
+
+ - Command line changes: arg name?
+   = Repurpose -z?
+   = Is slot number + timestamp enough?
+   = If we had some internal token we could allow events across
+     upgrades?  Terrible idea, I think.  Mostly it just moves the pink
+     bathtub ring to the management of the 'internal token' namespace.
+   = Let's say a cdmss file name, for one of the reserved slots a0-bf
+     IS the physics ID.  Just 31 slots, eh?  What about a0-ef, with
+     f0-ff explicitly reserved for 'temp physics', whatever that
+     means, and 00-9f reserved for 'system use', whatever that means?
+   = So, '-z CDMSSNAME' for physics, with slot a0-ef.
+   = If we get a relative path, we look for it in /cdm/common
+   = Or, is all this happening in a script around mfmt2?  And mfmt2
+     might have just -z TAG and -ep libcue.so?
+   = Is it happening in mfm.sh?  Since that is, after all, ..
+   = So suppose we reserve slot 04 for physics configuration?  Have it
+     be a tiny little file containing the cdmss physics ID that is to
+     be run, and perhaps some other metadata -- to be elaborated --
+     about the run.
+   = What do we do when we install 04?  Just unpack it somewhere?  Are
+     we comfortable splitting all the crypto from the actual running
+     of the physics?
+
+[3:
+
+Sun Jan  3 12:17:24 2021 Well, that's just a start at the ulam-on-t2
+design issues.  But all that's going to have to wait for the next
+cycle, for t2sup#292.
+
+Committing this stuff.
+
+:3]
+
+:2]
