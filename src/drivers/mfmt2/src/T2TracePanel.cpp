@@ -108,8 +108,8 @@ namespace MFM {
       mDisplayedSeqs[i] = 0;
     }
     mRows = 0;
-    for (u32 i = 0; i < TraceLogDirManager::MAX_TRACE_SEQ_TO_KEEP; ++i) {
-      const TraceLogInfo * tli = dm.getTraceLogInfoByIndex(i);
+    for (u32 i = TraceLogDirManager::MAX_TRACE_SEQ_TO_KEEP; i > 0; ) {
+      const TraceLogInfo * tli = dm.getTraceLogInfoByIndex(--i);
       if (!tli) break;
       if (tli->mSeq == 0) continue;
       rbs.Printf(mRows == mSelectedRow ? ">" : " ");
