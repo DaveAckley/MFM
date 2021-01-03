@@ -986,16 +986,10 @@ namespace MFM {
     return 0;
   }
     
-  // Here to perform non-empty transitions
-  bool T2ActiveEventWindow::doBehavior() {
-    OurT2Site & us = mSites[0];
-    OurT2Atom & atom = us.GetAtom();
-    u32 type = atom.GetType();
-    // XXX BOGUS PHONY DREG HACK
-    if (type != T2_PHONY_DREG_TYPE && type != T2_PHONY_RES_TYPE)  // Only non-empty for now
-      return false;
+  void T2ActiveEventWindow::doSplitsAtTheEndOfTheUniverse(OurT2Atom &atom) {
     // XXX DOUBLE PHONY: IT'S NOT EVEN DREG
     // JUST GO N/E/S/W IF LIVE YOUNG BEIN
+    u32 type = atom.GetType();
     u8 ngb = atom.GetStateField(0,3)+1;
     TLOG(DBG,"%s (%d,%d)BEIN ngb %d live %d",
          getName(),
@@ -1035,6 +1029,71 @@ namespace MFM {
            oth,
            mSitesLive[oth]);
     }
+  }
+
+  void T2ActiveEventWindow::doDRegAndRes(OurT2Atom &atom) {
+    Random & random = mTile.getRandom();
+    u8 ngb = random.Between(1,4);
+    if (!mSitesLive[ngb]) return; // DReg and Res don't swap into abyss?
+    u32 type = atom.GetType();
+
+    OurT2Site & nsite = mSites[ngb];
+    OurT2Atom & natom = nsite.GetAtom();
+    u32 ntype = natom.GetType();
+    if (type == T2_PHONY_RES_TYPE) {
+      // Res swaps with Empty
+      if (ntype == OurT2Atom::ATOM_EMPTY_TYPE) {
+        OurT2Atom copy = atom;
+        atom = natom;
+        natom = copy;
+      } // Else hodl
+    } else if (type == T2_PHONY_DREG_TYPE) {
+      const u32 pDREG_CREATE = 1000u;
+      const u32 pRES_CREATE = 200u;
+      const u32 pDREG_DESTROY = 10u;
+      const u32 pANY_DESTROY = 100u;
+      if (ntype == OurT2Atom::ATOM_EMPTY_TYPE) {
+        /// DReg::EMPTY interactions
+        if (random.OneIn(pDREG_CREATE))
+          natom = atom;
+        else if (random.OneIn(pRES_CREATE)) {
+          OurT2Atom newres(T2_PHONY_RES_TYPE);
+          natom = newres;
+        }
+        // Regardless, swap
+        OurT2Atom tmp = atom;
+        atom = natom;
+        natom = tmp;
+      } else if (((ntype == T2_PHONY_DREG_TYPE) && random.OneIn(pDREG_DESTROY)) ||
+                 random.OneIn(pANY_DESTROY)) {
+        /// DReg::DReg and DReg::Anything interactions
+        OurT2Atom newempty(OurT2Atom::ATOM_EMPTY_TYPE);
+        natom = newempty; // Destroy natom
+        // And swap
+        OurT2Atom tmp = atom;
+        atom = natom;
+        natom = tmp;
+      }
+    } // else hodl
+  }
+  
+  // Here to perform non-empty transitions
+  bool T2ActiveEventWindow::doBehavior() {
+    OurT2Site & us = mSites[0];
+    OurT2Atom & atom = us.GetAtom();
+    u32 type = atom.GetType();
+    // XXX BOGUS PHONY DREG HACK
+    if (type != T2_PHONY_DREG_TYPE && type != T2_PHONY_RES_TYPE)  // Only non-empty for now
+      return false;
+#define DO_SPLITS_AT_THE_END_OF_THE_UNIVERSE
+    //#define DO_DREG_AND_RES
+#ifdef DO_SPLITS_AT_THE_END_OF_THE_UNIVERSE
+    doSplitsAtTheEndOfTheUniverse(atom);
+#else
+#ifdef DO_DREG_AND_RES
+      doDRegAndRes(atom);
+#endif
+#endif    
     return true;
   }
 

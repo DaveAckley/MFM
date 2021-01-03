@@ -260,6 +260,10 @@ namespace MFM {
 
     Circuit mActiveCircuits[CIRCUITS_PER_ACTIVE_EW];
     u64 mActiveEventCountForAge;
+
+  private: ////DEMO PHYSICS
+    void doSplitsAtTheEndOfTheUniverse(OurT2Atom &atom) ;
+    void doDRegAndRes(OurT2Atom &atom) ;
   };
 
   struct T2PassiveEventWindow : public T2EventWindow {
