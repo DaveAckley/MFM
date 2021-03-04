@@ -509,6 +509,11 @@ namespace MFM {
     return _Bits32ToUnsigned32(val, srcbitwidth, destbitwidth);
   }
 
+  inline u32 _String32ToBool32(u32 val, const u32 srcbitwidth, const u32 destbitwidth, const u32 max)
+  {
+    u32 cvala = _Unsigned32ToCu32(val, srcbitwidth);
+    return  _CboolToBool32((cvala<max), destbitwidth);
+  }
 
   //To UNARY:
   inline u32 _Int32ToUnary32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
