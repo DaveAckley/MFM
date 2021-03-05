@@ -45,6 +45,8 @@ override LIBS += -lmfm$(COMPONENTNAME) -lmfmt2lib -lt2adc -lmfmgui -lmfmsim -Wl,
 include $(BASEDIR)/config/Makevars.mk
 COMMON_CPPFLAGS+=-std=c++11 
 COMMON_CPPFLAGS+=-Wno-psabi
+#202103050703 Next line imported from config/Makevars.mk
+COMMON_CPPFLAGS+=-Wno-error=restrict -Wno-restrict
 override COMMON_CPPFLAGS:=$(filter-out -pedantic,$(COMMON_CPPFLAGS))
 
 # Add dependencies to make window config
