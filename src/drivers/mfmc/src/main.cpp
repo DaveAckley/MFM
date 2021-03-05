@@ -6,6 +6,11 @@
 #include "UlamCustomElements.h"
 #endif
 
+// Fri Jan 22 12:30:58 2021 WE DON'T REALLY WANT THE (C++)
+// 'StdElements' ANYMORE, BUT THEY DO STILL KIND OF WORK,
+// IF WE INCLUDE THEIR HEADER..
+#include "StdElements.h" 
+
 void * XXXDRIVER = 0;
 
 namespace MFM
