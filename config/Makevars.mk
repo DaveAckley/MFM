@@ -67,6 +67,8 @@ COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror -D SHARED_DIR=\"$(SHARED_DIR)\" -
 COMMON_LDFLAGS+=-Wl,--fatal-warnings -pthread
 # Urgh gcc 8.3 warns about parens I want to keep
 COMMON_CPPFLAGS+=-Wno-parentheses
+# 202101190758 gcc issued buggy warning/error on memcpy, so:
+COMMON_CPPFLAGS+=-Wno-error=restrict -Wno-restrict
 #COMMON_CPPFLAGS+= -std=c++11
 
 # Ubuntu 12.04 needs this for clock_gettime
