@@ -190,6 +190,13 @@ namespace MFM {
     void finalizeEW() ;
     void abortEW() ;
 
+    OurT2Site & getCenterSite() { return mSites[0]; }
+
+    OurT2Atom & getSiteAtom(u32 site) {
+      MFM_API_ASSERT_ARG(site < EVENT_WINDOW_SITES(MAX_EVENT_WINDOW_RADIUS));
+      return mSites[site].GetAtom();
+    }
+
   protected:
     char * mNameBuf32; //allocated so getname() can be const
     void _setEWSNRaw(EWStateNumber ewsn) {
@@ -237,7 +244,7 @@ namespace MFM {
     bool checkSiteAvailabilityForActive() ;
 
     void commitAndReleaseActive() ;
-    void justKillCenterAndCommitThat() ;
+    void emptyCenterAtom() ;
 
     void dropActiveEW(bool dueToNAK) ;
 

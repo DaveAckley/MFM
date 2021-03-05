@@ -11,20 +11,22 @@
 namespace MFM {
   struct Sites {
 
+    OurT2Site * getSiteArray() { return &mTheSites[0][0]; }
+
     OurT2Site& get(UPoint at) {
       MFM_API_ASSERT_ARG(at.BoundedAbove(UPoint(T2TILE_WIDTH-1,T2TILE_HEIGHT-1)));
-      return mTheSites[at.GetX()][at.GetY()];
+      return mTheSites[at.GetY()][at.GetX()];
     }
 
     const OurT2Site& get(UPoint at) const {
       MFM_API_ASSERT_ARG(at.BoundedAbove(UPoint(T2TILE_WIDTH-1,T2TILE_HEIGHT-1)));
-      return mTheSites[at.GetX()][at.GetY()];
+      return mTheSites[at.GetY()][at.GetX()];
     }
 
     Sites() ;
 
   private:
-    typedef OurT2Site OurT2Sites[T2TILE_WIDTH][T2TILE_HEIGHT];
+    typedef OurT2Site OurT2Sites[T2TILE_HEIGHT][T2TILE_WIDTH];
     OurT2Sites mTheSites;
   };
 }

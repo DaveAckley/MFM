@@ -195,14 +195,11 @@ namespace MFM {
     }
   }
 
-  void T2ActiveEventWindow::justKillCenterAndCommitThat() {
-    loadSites(); // Erase any possible changes
+  void T2ActiveEventWindow::emptyCenterAtom() {
     OurT2Site & us = mSites[0];          // Get center
     OurT2Atom & centerAtom = us.GetAtom();
     OurT2Atom emptyAtom(OurT2Atom::ATOM_EMPTY_TYPE);
     centerAtom = emptyAtom;
-
-    commitAndReleaseActive();
   }
 
   void T2ActiveEventWindow::commitAndReleaseActive() {
@@ -935,15 +932,14 @@ namespace MFM {
       FAIL(INCOMPLETE_CODE);
       return;
     }
-    if (aew->executeEvent()) {
-      if (aew->hasAnyLocks()) {
-        ew.setEWSN(EWSN_ASCACHE);
-        ew.scheduleWait(WC_NOW);
-      } else
-        aew->commitAndReleaseActive();
-    } else {
-      aew->justKillCenterAndCommitThat();
-    }
+
+    aew->executeEvent(); // Return value ignored: We act the same either way
+
+    if (aew->hasAnyLocks()) {
+      ew.setEWSN(EWSN_ASCACHE);
+      ew.scheduleWait(WC_NOW);
+    } else
+      aew->commitAndReleaseActive();
   }
 
   void T2EWStateOps_ASCACHE::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
@@ -1079,6 +1075,13 @@ namespace MFM {
   
   // Here to perform non-empty transitions
   bool T2ActiveEventWindow::doBehavior() {
+    UlamEventSystem & ues = mTile.getUlamEventSystem();
+    return ues.doUlamEvent(*this);
+  }
+
+#if 0
+  // Here to perform non-empty transitions
+  bool T2ActiveEventWindow::doBehavior() {
     OurT2Site & us = mSites[0];
     OurT2Atom & atom = us.GetAtom();
     u32 type = atom.GetType();
@@ -1096,6 +1099,7 @@ namespace MFM {
 #endif    
     return true;
   }
+#endif
 
   bool T2ActiveEventWindow::executeEvent() {
     loadSites();

@@ -32,6 +32,7 @@
 #include "T2FlashTrafficManager.h"
 #include "T2UIComponents.h"
 #include "TraceLogInfo.h" /*for TraceLogInfo, TraceLogDirManager */
+#include "UlamEventSystem.h"
 
 namespace MFM {
 
@@ -39,6 +40,7 @@ namespace MFM {
     EWInitiator() ;
     virtual void onTimeout(TimeQueue& srctq) ;
     virtual const char* getName() const { return "EWInitiator"; }
+    u32 mInitiations;
   };
 
   struct CoreTempChecker : public TimeoutAble {
@@ -69,7 +71,7 @@ namespace MFM {
 
   typedef std::map<u32,u32> AtomTypeCountMap;
   
-  struct T2Tile : public T2Main {
+  struct T2Tile : public T2Main, public OurTraditionalTile {
 
     // Get the T2Main singleton set up;
     static void initInstance() { new T2Tile(); }
@@ -80,6 +82,12 @@ namespace MFM {
       MFM_API_ASSERT_NONNULL(t);
       return (T2Tile&) *t;
     }
+
+    ////OurTraditionalTile API
+    virtual bool IsConnected(Dir dir) const ;
+    virtual bool IsCacheSitePossibleEventCenter(const SPoint & location) const;
+    ////
+
 
     bool isLiving() const { return mLiving; }
     
@@ -104,8 +112,10 @@ namespace MFM {
     void traceSite(const UPoint at, const char * msg = "", Logger::Level level = Logger::DBG) const ;
 
     ///
-    void setMFZId(const char * mfzid) ;
+    void setMFZTag(const char * mfztag) ;
+    void generateMFZId() ;
     const char * getMFZId() const ;
+    void openMFZIdDevice() ;
 
     SDLI & getSDLI() { return mSDLI; }
 
@@ -113,6 +123,8 @@ namespace MFM {
 
     T2FlashTrafficManager & getFlashTrafficManager() { return mFlashTrafficManager; }
 
+    UlamEventSystem & getUlamEventSystem() { return mUlamEventSystem; }
+    void setUlamLibraryPath(const char * path) ;
     void addRandomSyncTag(ByteSink & bs) ;
     bool tryReadRandomSyncTag(ByteSource& bs, s32 & got) ;
 
@@ -139,6 +151,7 @@ namespace MFM {
     void earlyInit() ;
     void initEverything(int argc, char **argv) ;
 
+    void initTitleCard();
 #if 0
     void onePass() ;
 #endif
@@ -210,6 +223,12 @@ namespace MFM {
       return mOwnedRect;
     }
 
+    const Rect & getHiddenRect() const {
+      return mHiddenRect;
+    }
+
+    const UPoint pickUnownedHiddenSite() ;
+
     const Rect & getVisibleRect(Dir6 dir6) const {
       MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
       return mITCVisible[dir6];
@@ -235,14 +254,16 @@ namespace MFM {
 
     CPUFreq & getCPUFreq() { return mCPUFreq; }
 
-    
+    void closeFDs() ;
+
   private:
     TraceLogger* mTraceLoggerPtr;
     TraceLogDirManager mTraceLogDirManager;
 
     int mArgc;
     char ** mArgv;
-    const char * mMFZId;
+    OString64 mMFZTag;
+    OString128 mMFZId;
     const char * mWindowConfigPath;
     const u32 mWidth, mHeight;
     bool mExitRequest;
@@ -251,6 +272,7 @@ namespace MFM {
 
   public:  // Hey it's const
     const Rect mOwnedRect;
+    const Rect mHiddenRect;
     const Rect mITCVisible[DIR6_COUNT];
     const Rect mITCCache[DIR6_COUNT];
     const Rect mITCVisibleAndCache[DIR6_COUNT];
@@ -356,9 +378,12 @@ namespace MFM {
     u32 mRollingTraceTargetKB;
     u32 mRollingTraceSpinner;
 
+    //// ULAM EVENT SYSTEM
+    UlamEventSystem mUlamEventSystem;
+    
   protected:
     T2Tile() ;
-    ~T2Tile() ;
+    virtual ~T2Tile() ;
   };
 }
 #endif /* T2TILE_H */

@@ -38,8 +38,16 @@ namespace MFM {
     OurT2Atom & a = s.GetAtom();
     if (!a.IsSane()) paintInsane(config, x,y);
     else if (!OurT2Atom::IsType(a,OurT2Atom::ATOM_EMPTY_TYPE)) {
+      T2Tile & tile = T2Tile::get();
+      UlamEventSystem & ues = tile.getUlamEventSystem();
       u32 atype = a.GetType();
-      u32 color;
+      u32 color = 0xffffffff;
+      const OurElement * elt = ues.getElementIfAny(atype);
+      if (elt != 0) {
+        color = elt->GetDynamicColor(tile.GetElementTable(), tile.GetUlamClassRegistry(), a, 1);
+      }
+      
+#if 0
       switch (atype) {
         //      case T2_PHONY_DREG_TYPE: color = 0xff444444; break;
         //      case T2_PHONY_DREG_TYPE: color = 0xffccdd44; break; // GO YELLOW FOR VIZ
@@ -48,6 +56,7 @@ namespace MFM {
       case T2_PHONY_RES_TYPE: color = 0xffccffcc; break;  // WHITEISHZ FOR DIFFERENCE
       default: color = 0xffffffff; break;
       }
+#endif
 
       const SPoint ditPos(T2_SITE_TO_DIT_X*x, T2_SITE_TO_DIT_Y*y);
       const UPoint ditSiz(T2_SITE_TO_DIT_W,T2_SITE_TO_DIT_H);

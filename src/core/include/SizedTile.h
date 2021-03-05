@@ -29,7 +29,7 @@
 #ifndef SIZEDTILE_H
 #define SIZEDTILE_H
 
-#include "Tile.h"
+#include "MFMSTile.h"
 
 namespace MFM
 {
@@ -40,7 +40,7 @@ namespace MFM
      SizedTiles can be formed.
    */
   template <class EC, u32 WIDTH, u32 HEIGHT, u32 EVENTHISTORYSIZE>
-  class SizedTile : public Tile<EC>
+  class SizedTile : public MFMSTile<EC>
   {
   public:
     typedef typename EC::SITE SITE;

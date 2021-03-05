@@ -47,11 +47,7 @@ namespace MFM
     }
 
     case T2FLASH_CMD(mfm,crash): {
-      FAIL(UNSPECIFIED_EXPLICIT_FAIL);
-#if 0
-      throw std::exception(); // Throw something that isn't a FailException
-      exit(1); /* 'crash' */
-#endif
+      FAIL(USER_REQUESTED_FAILURE);
     }
     case T2FLASH_CMD(mfm,quit): {
       T2Tile::get().getSDLI().stop();

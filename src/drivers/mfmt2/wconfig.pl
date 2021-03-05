@@ -9,9 +9,14 @@ my ($ITCW,$ITCH) = (100,32);
 my ($VIZINDENT) = (3);
 my ($GRIDINDENT) = (1);
 my ($TW,$TH) = ($SW-2*$VIZINDENT,$SH-2*$VIZINDENT);
+print STDERR <<"EOC";
+/* FOR T2VizConstants.h, WITH LOVE FROM $0 */
+#define ROOT_WINDOW_WIDTH ($TW)
+#define ROOT_WINDOW_HEIGHT ($TH)
+EOC
 my ($GW,$GH) = ($SW-2*$GRIDINDENT,$SH-2*$GRIDINDENT);
 my ($CORNERW,$CORNERH) = (6,6);
-my ($STATICW,$STATICH) = (90,28);
+my ($STATICW,$STATICH) = (96,33);
 
 my $MENUITEMBG = "#ccbb22";
 my $MENUITEMFG = "#112233";
@@ -386,16 +391,17 @@ $AUTOGEN_STAMP
     enabledfg=$MENUITEMFG
     font=0
     text="--"
-[T2Viz Panel Root $TW $TH $VIZINDENT $VIZINDENT]
-    bgcolor=#ffffff
-    visible=1
+[T2Viz T2Info Root $TW $TH $VIZINDENT $VIZINDENT]
+    bgcolor=#040404
+    fgcolor=#a0a0a0
+    visible=0
     doc="T2Viz operations display"
 [Log SimLog Root $TW $TH $VIZINDENT $VIZINDENT]
     visible=1
     bgcolor=#cccccc
     fgcolor=#333333
-    font=2
-    fontheightadjust=-6
+    zfont=0,20
+    fontheightadjust=-8
     elevatorwidth=4
     doc="Internal engine log"
 [TQ TQPanel Root $TW $TH $VIZINDENT $VIZINDENT]
@@ -410,8 +416,8 @@ $AUTOGEN_STAMP
     visible=1
     fgcolor=#aaffff
     bgcolor=#551111
-    font=0
-    fontheightadjust=-12
+    zfont=0,24
+    fontheightadjust=-10
     elevatorwidth=1
     doc="CDM status and control"
 [CDM_Button_X MenuItem CDM `bfs6x6(5,5)`]
@@ -502,16 +508,16 @@ $AUTOGEN_STAMP
     fgcolor=#000000
     text="X"
     action="GO Sites"
-[T2Info T2Info T2Viz $TW $TH 0 0]
-    bgcolor=#040404
-    fgcolor=#a0a0a0
+# [T2Info T2Info T2Viz $TW $TH 0 0]
+#     bgcolor=#040404
+#     fgcolor=#a0a0a0
 
 #[StaticInfo StaticPanel T2Viz $STATICW $STATICH $ITCW  `($TH-$STATICH)`]
-[StaticInfo StaticPanel T2Viz $STATICW $STATICH `(($TW/2-$ITCW)/2)` `($TH-$ITCH-$STATICH-5)`]
+[StaticInfo StaticPanel T2Viz $STATICW $STATICH `(($TW/2-$ITCW)/2-6)` `($TH-$ITCH-$STATICH-6)`]
     bgcolor=#dd22dd
     fgcolor=#ffffff
     font=5
-    fontheightadjust=-6
+    fontheightadjust=-5
     elevatorwidth=0
 [StatusInfo StatusPanel T2Viz 100 200 40 40]
     bgcolor=#441199
@@ -572,7 +578,8 @@ $AUTOGEN_STAMP
     fontheightadjust=-6
     elevatorwidth=4
     visible=0
-#[ITC_NE ITC T2Viz $ITCW $ITCH `($TW/2+($TW/2-$ITCW)/2)` 0]
+####NOTE WELL: ITC 'icon' POSITIONS ARE **NOT** DETERMINED BY THESE NUMBERS
+####SEE mfmt2/src/ITCStatus.cpp:17-33
 [ITC_NE ITC T2Viz $ITCW $ITCH `($TW-$ITCW)` 0]
 #    text=NE
 [ITC_ET ITC T2Viz $ITCH $ITCW `($TW-$ITCH)` `(($TH-$ITCW)/2)`]
@@ -642,7 +649,7 @@ $AUTOGEN_STAMP
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
     font=1
-    text="Init Debug"
+    text="Create S"
 [PhysicsCtl_Button_X MenuItem PhysicsCtl `bfs6x6(3,4,5,5)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
@@ -650,6 +657,30 @@ $AUTOGEN_STAMP
     text="X"
     action="RETURN"
     
+[TitleCard T2TitleCard Root $TW $TH $VIZINDENT $VIZINDENT]
+    bgcolor=#f7f7d4
+    fgcolor=#000000
+    visible=1
+    doc="Physics information overview"
+
+[TitleCardTitle WrappedText TitleCard $TW `($TH/2)` 0 0]
+    bgcolor=#f7f7d4
+    fgcolor=#000000
+    zfont=1,48
+    fontheightadjust=-10
+
+[TitleCardAuthor WrappedText TitleCard $TW `($TH/2-80)` 0 `($TH/2)`]
+    bgcolor=#f7f7d4
+    fgcolor=#000000
+    zfont=1,32
+    fontheightadjust=-6
+
+[TitleCardDetail WrappedText TitleCard $TW 80 0 `($TH-80)`]
+    bgcolor=#f7f7d4
+    fgcolor=#000000
+    zfont=0,20
+    fontheightadjust=-4
+
 __EOF__
 
 sub expand {

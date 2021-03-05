@@ -23,6 +23,7 @@
 #include "T2CDMPanel.h"
 #include "T2TracePanel.h"
 #include "T2RadioButton.h"
+#include "T2TitleCard.h"
 
 namespace MFM
 {
@@ -82,11 +83,10 @@ namespace MFM
         case SDL_QUIT:
           LOG.Warning("Quitting on SDL request");
           // Clean up a few FDs since ~T2Tile etc is not going to run
-          mTile.stopTracing();
-          mTile.closeITCs();
+          mTile.closeFDs();
           if (1) {
-            execl("/home/t2/T2-12/apps/mfm/RUN_SDL",
-                  "/home/t2/T2-12/apps/mfm/RUN_SDL",
+            execl("/opt/scripts/t2/RUN_SDL",
+                  "/opt/scripts/t2/RUN_SDL",
                   "/opt/scripts/t2/sdlsplash",
                   "/opt/scripts/t2/t2-splash-inverted.png",
                   (char *) 0);
@@ -323,6 +323,8 @@ namespace MFM
     if (type.Equals("T2RadioButton")) return new T2RadioButton(); 
     if (type.Equals("FlashCommandLabel")) return new T2FlashCommandLabel(); 
     if (type.Equals("XCDMButton")) return new T2KillCDMButton(); 
+    if (type.Equals("T2TitleCard")) return new T2TitleCard(); 
+    if (type.Equals("WrappedText")) return new WrappedText(); 
     return 0;
   }
 
@@ -503,6 +505,23 @@ namespace MFM
       forPanel->SetVisible(parseBool(lcbs, cbbs));
     else if (!strcmp(prop,"font")) 
       forPanel->SetFont((FontAsset) parseUnsigned(lcbs, cbbs));
+    else if (!strcmp(prop,"zfont")) {
+      u32 proportional = parseUnsigned(lcbs, cbbs);
+      if (proportional) proportional = 1; // Anything non-zero means 1
+      // Eat white
+      cbbs.Scanf("%w");
+
+      // Look for ,
+      s32 delim = cbbs.Read();
+      MFM_API_ASSERT_STATE(delim == ',');
+
+      // Get second arg
+      u32 size = parseUnsigned(lcbs, cbbs);
+      
+      TTF_Font * font = AssetManager::GetZFont(proportional, size);
+      MFM_API_ASSERT_NONNULL(font);
+      forPanel->SetFontReal(font);
+    }
 #if 0
     else if (!strcmp(prop,"anchor")) 
       forPanel->SetAnchor(parseAnchor(lcbs, cbbs));

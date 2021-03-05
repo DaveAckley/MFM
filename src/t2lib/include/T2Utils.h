@@ -15,6 +15,9 @@ namespace MFM {
   bool readOneDecimalNumberFile(const char* path, s32 &to) ;
   bool readFloatsFromFile(const char* path, double * floats, u32 floatCount) ;
 
+  u64 digestWholeFile64(const char* path) ;
+  bool digestWholeFile(const char* path, ByteSink& digestout, bool ashex) ;
+
   bool writeWholeFile(const char* path, ByteSource &from) ;
   bool writeWholeFile(const char* path, const char * data) ;
 

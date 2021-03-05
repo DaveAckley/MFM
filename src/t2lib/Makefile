@@ -13,8 +13,8 @@ BASEDIR:=../..
 override INCLUDES += -I $(BASEDIR)/src/core/include -I $(BASEDIR)/src/sim/include
 
 HOME_T2_DIR:=/home/t2
-LKM_INCLUDE_DIR:=$(HOME_T2_DIR)/T2-12/lkms/include
-ITC_PKT_INCLUDE_DIR:=$(HOME_T2_DIR)/T2-12/pru/itcio/module
+LKM_INCLUDE_DIR:=$(HOME_T2_DIR)/T2-12/low/lkms/include
+ITC_PKT_INCLUDE_DIR:=$(HOME_T2_DIR)/T2-12/low/pru/itcio/module
 override INCLUDES += -I $(LKM_INCLUDE_DIR)
 override INCLUDES += -I $(ITC_PKT_INCLUDE_DIR)
 

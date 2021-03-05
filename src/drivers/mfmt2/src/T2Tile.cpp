@@ -12,6 +12,8 @@
 #include "T2Types.h"
 #include "T2EventWindow.h"
 #include "TraceTypes.h"
+#include "UlamEventSystem.h"
+#include "T2TitleCard.h"
 
 namespace MFM {
 
@@ -38,15 +40,24 @@ namespace MFM {
   }
 
 
-  EWInitiator::EWInitiator() {
+  EWInitiator::EWInitiator()
+    : mInitiations(0)
+  {
     LOG.Debug("%s",__PRETTY_FUNCTION__);
   }
 
   void EWInitiator::onTimeout(TimeQueue& srctq) {
     T2Tile& tile = T2Tile::get();
     if (!tile.isLiving()) scheduleWait(WC_LONG);  // Not running EWs
-    else if (tile.maybeInitiateEW()) scheduleWait(WC_NOW);  // EW started
-    else scheduleWait(WC_RANDOM_SHORT); // No EWs?  Short wait
+    else {
+      if (++mInitiations >= 5000) {
+        tile.traceEventStats();
+        mInitiations = 0;
+      }
+      if (tile.maybeInitiateEW()) 
+        scheduleWait(WC_NOW);  // EW started
+      else scheduleWait(WC_RANDOM_SHORT); // No EWs?  Short wait
+    }
   }
 
   void KITCPoller::onTimeout(TimeQueue& srctq) {
@@ -106,6 +117,7 @@ namespace MFM {
 
   void T2Tile::clearPrivateSites() {
     // Clear all sites that are definitely not cached offtile
+    // NOTE THIS DOES NOT KNOW OR CARE ABOUT POSSIBLE IN-PROGESS EVENTS
     Sites & sites = getSites();
     for (u32 x = 0; x < T2TILE_WIDTH; ++x) {
       for (u32 y = 0; y < T2TILE_HEIGHT; ++y) {
@@ -129,13 +141,21 @@ namespace MFM {
     }
   }
 
+  static const u32 EVENT_HISTORY_BUFFER_SIZE = 101;
+  EventHistoryItem mEventHistoryBuffer[EVENT_HISTORY_BUFFER_SIZE];
+
   T2Tile::T2Tile()
     : T2Main()
+    , OurTraditionalTile(T2TILE_WIDTH, T2TILE_HEIGHT,
+                         GRID_LAYOUT_STAGGERED,
+                         getSites().getSiteArray(),
+                         EVENT_HISTORY_BUFFER_SIZE, mEventHistoryBuffer)
     , mTraceLoggerPtr(0)
     , mTraceLogDirManager()
     , mArgc(0)
     , mArgv(0)
-    , mMFZId(0)
+    , mMFZTag()
+    , mMFZId()
     , mWindowConfigPath(0)
     , mWidth(T2TILE_WIDTH)
     , mHeight(T2TILE_HEIGHT)
@@ -152,6 +172,9 @@ namespace MFM {
     , mOwnedRect(SPoint(CACHE_LINES,CACHE_LINES),
                  UPoint(T2TILE_WIDTH-2*CACHE_LINES,
                         T2TILE_HEIGHT-2*CACHE_LINES))
+    , mHiddenRect(SPoint(3*CACHE_LINES,3*CACHE_LINES),
+                  UPoint(T2TILE_WIDTH-6*CACHE_LINES,
+                         T2TILE_HEIGHT-6*CACHE_LINES))
     , mITCVisible{
 #define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,CACHE_LINES,0u)
 #define YY ,
@@ -200,21 +223,59 @@ namespace MFM {
     , mPacketPoller(*this)
     , mListening(false)
     , mMDist()
-    , mCPUFreq(CPUSpeed_Slow)
+    , mCPUFreq(CPUSpeed_Fastest)
     , mCoreTempChecker()
     , mMFMRunRadioGroup()
     , mFlashTrafficManager()
     , mRollingTraceDir()
     , mRollingTraceTargetKB(0)
     , mRollingTraceSpinner(0)
+    , mUlamEventSystem(*this)
   {
     mT2TileStats.reset();
     mCoreTempChecker.schedule(getTQ(),0);
   }
 
+  bool T2Tile::IsConnected(Dir dir) const {
+    Dir6 dir6 = mapDir8ToDir6(dir);
+    if (dir6 == DIR6_COUNT) return false; /* Oh we nevah */
+    const T2ITC & itc = mITCs[dir6];
+    ITCStateNumber sn = itc.getITCSN();
+    return sn == ITCSN_OPEN;
+  }
+
+  bool T2Tile::IsCacheSitePossibleEventCenter(const SPoint & location) const
+  {
+    MFM_API_ASSERT_ARG(IsInCache(location));
+
+    for (Dir6 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
+      const T2ITC & itc = mITCs[dir6];
+      const Rect & cache = itc.getNeighborOwnedRect();
+      if (!cache.Contains(location)) continue; // Not our guy
+      // OK.  The answer is yes iff that itc is open.
+      return itc.getITCSN() == ITCSN_OPEN;
+    }
+    FAIL(ILLEGAL_STATE); // What what
+#if 0    
+    THREEDIR cnCacheDirs;
+    u32 count = CacheAt(location, cnCacheDirs, YESCHKCONNECT);
+    bool isInANeighborsShared = false;
+    for(u32 i = 0; i < count; i++)
+      {
+	Dir dir = cnCacheDirs[i];
+	const CacheProcessor<EC>& cp = this->GetCacheProcessor(dir);
+	SPoint remoteloc = cp.LocalToRemote(location);
+	isInANeighborsShared |= ! IsInCache(remoteloc); //all tiles same size
+      }
+    return isInANeighborsShared;
+#endif
+  }
+
   void T2Tile::earlyInit() {
     processArgs();
 
+    openMFZIdDevice();
+    
     for (u32 i = 0; i < MAX_EWSLOT; ++i) {
       mEWs[i] = new T2ActiveEventWindow(*this, i, "AC");
       mEWs[i]->insertInEWSet(&mFree);
@@ -249,9 +310,10 @@ namespace MFM {
 
 #define ALL_CMD_ARGS()                                          \
   XX(help,h,N,,"Print this help")                               \
+  XX(elements,e,R,PATH,"Specify libcue.so to load")             \
   XX(log,l,O,LEVEL,"Set or increase logging")                   \
   XX(map,m,O,CSV,"Print tile map [in CSV] and exit")            \
-  XX(mfzid,z,R,MFZID,"Specify MFZ file to run")                 \
+  XX(mfzid,z,R,MFZID,"Specify MFZID tag to use")                \
   XX(paused,p,N,,"Start up paused")                             \
   XX(trace,t,O,PATH,"Trace output to PATH or default")          \
   XX(roll,r,O,MB,"Keep rolling trace files up to size MB")      \
@@ -319,13 +381,14 @@ static const char * CMD_HELP_STRING =
     int loglevel = -1;
     int wantpaused = 0;
     int traceSet = 0;
+    const char * emessage = "Missing -e argument";
     while ((c = getopt_long(mArgc,mArgv,
                             CMD_LINE_SHORT_OPTIONS,
                             CMD_LINE_LONG_OPTIONS,
                             &option_index)) != -1) {
       switch (c) {
       case 'z':
-        setMFZId(optarg);
+        setMFZTag(optarg);
         break;
 
       case 'p':
@@ -334,6 +397,10 @@ static const char * CMD_HELP_STRING =
 
       case 'w':
         setWindowConfigPath(optarg);
+        break;
+
+      case 'e':
+        emessage = getUlamEventSystem().setUlamLibraryPath(optarg);
         break;
 
       case 'r': {
@@ -437,8 +504,16 @@ static const char * CMD_HELP_STRING =
         abort();
       }
     }
-    if (!fails && getMFZId()==0) {
-      error("Missing -z MFZID");
+    if (!fails && mMFZTag.GetLength()==0) {
+      error("Missing -z MFZTAG");
+      ++fails;
+    }
+    if (!fails && mWindowConfigPath==0) {
+      error("Missing -w WCONFIG");
+      ++fails;
+    }
+    if (!fails && emessage!=0) {
+      error("%s",emessage);
       ++fails;
     }
     while (optind < mArgc) {
@@ -459,17 +534,28 @@ static const char * CMD_HELP_STRING =
 
 #define MFZID_DEV "/sys/class/itc_pkt/mfzid"
 
-  const char * T2Tile::getMFZId() const { return mMFZId; }
+  void T2Tile::setMFZTag(const char * mfztag) {
+    assert(mfztag!=0);
+    assert(mMFZTag.GetLength()==0);
+    mMFZTag.Printf("%s",mfztag);
+  }
 
-  void T2Tile::setMFZId(const char * mfzid) {
-    assert(mfzid!=0);
-    assert(mMFZId==0);
-    mMFZId = mfzid;
+  void T2Tile::generateMFZId() {
+    assert(mMFZTag.GetLength() > 0);
+    mMFZId.Reset();
+    mMFZId.WriteBytes((const u8*) mMFZTag.GetBuffer(),mMFZTag.GetLength());
+    mMFZId.Printf("[");
+    mUlamEventSystem.getUlamLibDigest(mMFZId);
+    mMFZId.Printf("]");
+  }
 
+  void T2Tile::openMFZIdDevice() {
+    generateMFZId();
     int fd = ::open(MFZID_DEV,O_WRONLY);
     if (fd < 0) fatal("open " MFZID_DEV ": %s", strerror(errno));
 
-    if (write(fd,mMFZId,strlen(mMFZId)) < 0) fatal("write " MFZID_DEV ": %s", strerror(errno));
+    if (write(fd,mMFZId.GetBuffer(),mMFZId.GetLength()) < 0)
+      fatal("write " MFZID_DEV ": %s", strerror(errno));
 
     ::close(fd);
   }
@@ -482,9 +568,14 @@ static const char * CMD_HELP_STRING =
     mWindowConfigPath = path;
   }
 
-  T2Tile::~T2Tile() {
+  void T2Tile::closeFDs() {
     stopTracing();
     closeITCs();
+    this->getFlashTrafficManager().close();
+  }
+
+  T2Tile::~T2Tile() {
+    closeFDs();
     for (u32 i = 0; i < MAX_EWSLOT; ++i) {
       if (i) delete mEWs[i];
       mEWs[i] = 0;
@@ -582,6 +673,60 @@ static const char * CMD_HELP_STRING =
     mFlashTrafficManager.init();
     insertOnMasterTimeQueue(mSDLI, 0); // Live for display and input
     resetITCs();
+    mUlamEventSystem.initUlamClasses();
+    initTitleCard();
+  }
+
+#if 0
+  static u32 theBuildYear() {
+    OString16 buf;
+    buf.Printf("%x",MFM_BUILD_DATE>>16);
+    CharBufferByteSource cbbs = buf.AsByteSource();
+    u32 buildyear;
+    if (cbbs.Scanf("%d",&buildyear) != 1)
+      FAIL(ILLEGAL_STATE);
+    return buildyear;
+  }
+#endif
+
+  static s32 seekYear(const OurUlamElementInfo & uei) {
+    const char * p = uei.GetCopyright();
+    u32 len = strlen(p);
+    u32 minyear = 0;
+    CharBufferByteSource cbbs(p,len);
+    while (cbbs.Peek() >= 0) { // not eof
+      u32 yearish;
+      if (cbbs.Scanf("%d",&yearish) != 1) cbbs.Read(); // discard a byte
+      else if (yearish >= 1956 && (minyear == 0 || yearish < minyear))
+        minyear = yearish;
+    }
+    return minyear;
+  }
+
+  void T2Tile::initTitleCard() {
+    const char * tcname = "TitleCard";
+    T2TitleCard * tc = dynamic_cast<T2TitleCard*>(mSDLI.lookForPanel(tcname));
+    MFM_API_ASSERT_NONNULL(tc);
+    const OurElement * s = mUlamEventSystem.getSeedElementIfExists();
+    const char * title = "--unset--";
+    const char * author = "--unset--";
+    std::string deets = "";
+    const OurUlamElement * seed = s->AsUlamElement();
+    s32 year = 0;
+    if (seed) {
+      const OurUlamElementInfo & uei = seed->GetUlamElementInfo();
+      title = uei.GetSummary();
+      author = uei.GetAuthor();
+      deets += uei.GetCopyright();
+      deets += " / License: ";
+      deets += uei.GetLicense();
+      deets += " / Tag: ";
+      deets += mMFZTag.GetZString();
+      year = seekYear(uei);
+    }
+    tc->configureTitle(title,strlen(title),year);
+    tc->configureAuthor(author,strlen(author));
+    tc->configureDetail(deets.c_str(),deets.length());
   }
 
   u32 T2Tile::getRadius(const OurT2Atom & atom) {
@@ -877,27 +1022,35 @@ static const char * CMD_HELP_STRING =
             &as);
   }
 
+  const UPoint T2Tile::pickUnownedHiddenSite() {
+    Random & r = getRandom();
+    const Rect & h = getHiddenRect();
+    for (u32 i = 0; i < 10000; ++i) {
+      UPoint at(MakeUnsigned(h.PickRandom(r)));
+      if (getSiteOwner(at) == 0)
+        return at;
+    }
+    FAIL(ILLEGAL_STATE);  // No way 32 AEWs can own EVERYTHING?
+  }
+
   void T2Tile::debugSetup() {
-    clearPrivateSites();
-    ////BUG 10 SETUP
-    //    SPoint at(26,28);
-    //    u8 ngb = 8;
-    ////BUG 11 SETUP
-    //    SPoint at(51,5);
-    //    u8 ngb = 2;
-    ////BUG 12 SETUP
-    SPoint at(32,4);
-    u8 ngb = 4;
+    //clearPrivateSites();
+    UPoint at(pickUnownedHiddenSite());
 
     Sites & sites = getSites();
-    OurT2Site & site = sites.get(MakeUnsigned(at));
+    OurT2Site & site = sites.get(at);
     OurT2Atom & ar =  site.GetAtom();
 
-    OurT2Atom atom(T2_PHONY_DREG_TYPE);
-    atom.SetStateField(0,3,ngb-1);
-
-    ar = atom;
-    traceSite(MakeUnsigned(at));
+    const OurElement * seed = mUlamEventSystem.getSeedElementIfExists();
+    if (!seed) LOG.Warning("Element S not found");
+    else {
+      OurT2Atom atom = seed->GetDefaultAtom();
+      ar = atom;
+      traceSite(at);
+      LOG.Message("Created '%s' at (%d,%d)",
+                  seed->GetAtomicSymbol(),
+                  at.GetX(), at.GetY());
+    }
   }
 
 #if 0

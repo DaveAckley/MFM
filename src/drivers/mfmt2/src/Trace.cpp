@@ -250,14 +250,22 @@ namespace MFM {
                 );
     evt.mLocalTimestamp.Print(bs);
     evt.getTraceAddress().print(bs);
-    CharBufferByteSource cbbs = evt.payloadRead();
-    u32 plen = cbbs.GetLength();
-    MFM_API_ASSERT_STATE(plen < 256);
-    bs.Printf("%c%c%<",
-              evt.mTraceType,
-              plen,
-              &cbbs
-              );
+    u32 plen = evt.payloadBufferLength();
+    if (plen > 255) {  // Gah will be 257 if payload overflowed
+      plen = 255;
+      bs.Printf("%c%c",
+                evt.mTraceType,
+                plen);
+      bs.WriteBytes(evt.payloadBuffer(),254);
+      bs.WriteByte('X'); // Gah move the X one byte earlier gah
+    } else {
+      CharBufferByteSource cbbs = evt.payloadRead();
+      bs.Printf("%c%c%<",
+                evt.mTraceType,
+                plen,
+                &cbbs
+                );
+    }
   }
 
   Trace * TraceLogReader::read(ByteSource& bs,

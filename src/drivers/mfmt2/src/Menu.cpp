@@ -214,14 +214,14 @@ namespace MFM {
       Panel * kid = top;
       do {
         kid = kid->GetForward();
-        if (kid==panel) {
-          kid->SetVisible(true);
-          TimeoutAble * ta = dynamic_cast<TimeoutAble*>(kid);
-          if (ta != 0) ta->bump(); // wake dis mofo
-        } else
+        if (kid!=panel)
           kid->SetVisible(false);
       } while (kid != top);
     }
+    panel->SetVisible(true);
+    TimeoutAble * ta = dynamic_cast<TimeoutAble*>(panel);
+    if (ta != 0) ta->bump(); // if mofo wakeable do 
+
   }
 
   void MenuManager::flushStack() {
