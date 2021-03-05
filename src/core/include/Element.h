@@ -276,6 +276,8 @@ namespace MFM
     }
 
     /**
+     * DEPRECATED: Use just AllocateType() instead.
+     *
      * Assigns the type of this Element using the supplied
      * ElementTypeNumberMap . This type is only assigned if it has not
      * been assigned already. Once this type has been allocated, the
@@ -288,6 +290,24 @@ namespace MFM
       if (!m_hasType)
       {
         //m_type = etnm.AllocateType(m_UUID);
+        m_hasType = true;
+	m_type = this->GetTypeFromThisElement(); //ulam-4 ElementTypeNumberMap defunct
+        m_defaultAtom = BuildDefaultAtom();
+      }
+    }
+
+    /**
+     * Assigns the type of this Element using the ulam-supplied type
+     * info.  This type is only assigned if it has not been assigned
+     * already. Once this type has been allocated, the default Atom of
+     * this Element is constructed and an Atom of this Element may be
+     * placed.
+     *
+     */
+    void AllocateType()
+    {
+      if (!m_hasType)
+      {
         m_hasType = true;
 	m_type = this->GetTypeFromThisElement(); //ulam-4 ElementTypeNumberMap defunct
         m_defaultAtom = BuildDefaultAtom();

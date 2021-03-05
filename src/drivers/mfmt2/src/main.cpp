@@ -14,7 +14,6 @@
 #include "T2Utils.h"
 #include "TraceTypes.h"
 
-
 namespace MFM {
   extern "C" void T2TileAttemptTraceLogging(const FailException & fe, const char * unwindFile, int unwindLine) {
     const char * msg = MFMFailCodeReason(fe.mCode);
@@ -112,7 +111,13 @@ namespace MFM {
     { }
     void main() {
       try {
-        unwind_protect({throw std::exception();},{
+        unwind_protect({
+            // Spam it out on the screen
+            mTile.showFail(MFMThrownFromFile,
+                           MFMThrownFromLineNo,
+                           MFMFailCodeReason(MFMThrownFailCode));
+            throw std::exception(); // And punt on up
+          },{
             mTile.main();
             mExpectedExit = true;
           });
@@ -150,7 +155,19 @@ namespace MFM {
 
     // START TRACE LOGGING FAILS
     MFMUnwindProtectLoggingHook = T2TileAttemptTraceLogging;
-    
+
+    // REFER TO STUFF TO TRY TO GET IT LOADED
+    {
+      UlamEventSystem & ues = tile.getUlamEventSystem();
+      OurElementTable & et = tile.GetElementTable();
+      OurUlamClassRegistry & ucr = ues.getUlamClassRegistry();
+      OurUlamContextRestricted uc(et, ucr);
+      OurAtomBitStorage atom;
+      OurUlamRef ur(0u,8u,atom,0,OurUlamRef::PRIMITIVE,uc);
+      ur.Write(9);
+      LOG.Debug("ur.Read() = %d",ur.Read());
+    }
+
     UnexpectedExit ue(tile);
     ue.main();
 #if 0

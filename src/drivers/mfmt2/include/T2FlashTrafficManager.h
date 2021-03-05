@@ -92,6 +92,8 @@ namespace MFM {
 
     void executeFlashTrafficCommand(T2FlashCmd cmd) ;
 
+    int close() ;
+
   private:
 #if 0
     PanelSuffixToFlashCmd m_suffixToCmd;
@@ -125,7 +127,6 @@ namespace MFM {
     MultisetTimedFlashTraffic mMultisetTimedFlashTraffic;
 
     int open() ;
-    int close() ;
     const char * path() const ;
     bool flushPendingPackets() ;
 

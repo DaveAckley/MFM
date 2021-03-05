@@ -19,10 +19,10 @@ T2LIB_INCLUDE_DIR:=$(T2LIB_BASE_DIR)/include
 # T2 EXTERNAL FILES
 #HOME_T2_DIR:=/data/ackley/PART4/code/D/
 HOME_T2_DIR:=/home/t2
-LKM_INCLUDE_DIR:=$(HOME_T2_DIR)/T2-12/lkms/include
-LKM_ITC_INCLUDE_DIR:=$(HOME_T2_DIR)/T2-12/lkms/itc
-ITC_PKT_INCLUDE_DIR:=$(HOME_T2_DIR)/T2-12/pru/itcio/module
-T2ADC_INCLUDE_DIR:=$(HOME_T2_DIR)/T2-12/apps/tnv
+LKM_INCLUDE_DIR:=$(HOME_T2_DIR)/T2-12/low/lkms/include
+LKM_ITC_INCLUDE_DIR:=$(HOME_T2_DIR)/T2-12/low/lkms/itc
+ITC_PKT_INCLUDE_DIR:=$(HOME_T2_DIR)/T2-12/low/pru/itcio/module
+T2ADC_INCLUDE_DIR:=$(HOME_T2_DIR)/T2-12/base/apps/tnv
 
 # What we need to build
 override INCLUDES += -I $(BASEDIR)/src/core/include -I $(BASEDIR)/src/elements/include -I $(BASEDIR)/src/sim/include -I $(BASEDIR)/src/gui/include
@@ -45,6 +45,8 @@ override LIBS += -lmfm$(COMPONENTNAME) -lmfmt2lib -lt2adc -lmfmgui -lmfmsim -Wl,
 include $(BASEDIR)/config/Makevars.mk
 COMMON_CPPFLAGS+=-std=c++11 
 COMMON_CPPFLAGS+=-Wno-psabi
+#202103050703 Next line imported from config/Makevars.mk
+COMMON_CPPFLAGS+=-Wno-error=restrict -Wno-restrict
 override COMMON_CPPFLAGS:=$(filter-out -pedantic,$(COMMON_CPPFLAGS))
 
 # Add dependencies to make window config

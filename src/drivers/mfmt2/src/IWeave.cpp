@@ -384,6 +384,64 @@ namespace MFM {
     OurLogBuffer * mLogBufferP;
   };
 
+  struct IWPanelDataEWStatus : public IWPanelData {
+    typedef IWPanelData Super;
+    IWPanelDataEWStatus(Weaver & w, SPoint pos, UPoint size, const char * label)
+      : IWPanelData(pos,size,label)
+      , mAlignment(w.mAlignment)
+      , mEWSlotMap(mAlignment.getEWSlotMap())
+    {
+    }
+#if 0
+    virtual bool handleKey(PANEL* panel, s32 key) {
+      switch (key) {
+        
+      }
+      return false;
+    }
+#endif    
+    virtual void drawPanel(PANEL* panel) {
+      Super::drawPanel(panel);
+      WINDOW * win = panel_window(panel);
+      s32 w;
+      s32 h;
+      getmaxyx(win, h, w);
+      u32 fnc = mAlignment.logFileCount();
+      MFM_API_ASSERT_STATE(fnc > 0);
+      for (u32 dig = 0; dig < 2; ++dig) {
+        for (u32 slotnum = 0; slotnum < 32; ++slotnum) {
+          u32 n = slotnum;
+          if (dig == 0) n /= 10;
+          u32 ch = (n%10)+'0';
+          mvwprintw(win, dig+1, slotnum+3, "%c", ch);
+        }
+      }
+      for (u32 fn = 0; fn < fnc; ++fn) {
+        u32 row = fn + 3;
+        for (u32 slotnum = 0; slotnum < 32; ++slotnum) {
+          u32 col = slotnum + 3;
+          u32 index = 6; /* active only */
+          EWModel * ewmp = mEWSlotMap.findEWModel(slotnum, fn, index);
+          if (!ewmp) continue; // XXXX ??
+          if ((s32) fn > h) break;
+          mvwprintw(win, row, 1, "%d/", fn);
+          
+          EWModel & ewm = *ewmp;
+          EWStateNumber sn = ewm.mStateNum;
+          char ch;
+          if (sn == U32_MAX) ch = ' ';
+          else if (sn == EWSN_IDLE) ch = '.';
+          else if (sn == EWSN_ADROP) ch = 'd';
+          else if (sn >= EWSN_AINIT && sn <= EWSN_ACOMMIT) ch = 'A';
+          else ch = '?';
+          mvwprintw(win, row, col, "%c", ch);
+        }
+      }
+    }
+    Alignment & mAlignment;
+    EWSlotMap & mEWSlotMap;
+  };
+
   struct IWeavePrivate {
     typedef std::pair<WINDOW*,PANEL*> WindowAndPanelPtrs;
     typedef std::vector<WindowAndPanelPtrs> WAPPtrVector;
@@ -425,6 +483,9 @@ namespace MFM {
       makePanel(new IWPanelDataLog(weaver,
                                    SPoint(0,hs),UPoint(ws,h-hs),
                                    "Log"));
+      makePanel(new IWPanelDataEWStatus(weaver,
+                                   SPoint(0,hs),UPoint(ws,h-hs),
+                                   "AEWs"));
       makePanel(new IWPanelDataTrace(weaver,
                                      SPoint(ws,hs),UPoint(w-ws,h-hs),
                                      "Trace"));

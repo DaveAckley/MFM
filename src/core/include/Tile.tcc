@@ -551,14 +551,6 @@ namespace MFM
   }
 
   template <class EC>
-  bool Tile<EC>::IsConnected(Dir dir) const
-  {
-    const CacheProcessor<EC> & cxn = GetCacheProcessor(dir);
-    //return cxn.IsConnected();
-    return !cxn.IsUnclaimed() && cxn.IsConnected();
-  }
-
-  template <class EC>
   bool Tile<EC>::IsReachableViaCacheProtocol(const SPoint & location) const
   {
     if (!IsInShared(location))
@@ -577,23 +569,6 @@ namespace MFM
 	return (sharedcnt == connectedcnt);
       }
     return false;
-  }
-
-  template <class EC>
-  bool Tile<EC>::IsCacheSitePossibleEventCenter(const SPoint & location) const
-  {
-    MFM_API_ASSERT_ARG(IsInCache(location));
-    THREEDIR cnCacheDirs;
-    u32 count = CacheAt(location, cnCacheDirs, YESCHKCONNECT);
-    bool isInANeighborsShared = false;
-    for(u32 i = 0; i < count; i++)
-      {
-	Dir dir = cnCacheDirs[i];
-	const CacheProcessor<EC>& cp = this->GetCacheProcessor(dir);
-	SPoint remoteloc = cp.LocalToRemote(location);
-	isInANeighborsShared |= ! IsInCache(remoteloc); //all tiles same size
-      }
-    return isInANeighborsShared;
   }
 
   template <class EC>

@@ -509,7 +509,6 @@ namespace MFM {
     return _Bits32ToUnsigned32(val, srcbitwidth, destbitwidth);
   }
 
-
   //To UNARY:
   inline u32 _Int32ToUnary32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
   {

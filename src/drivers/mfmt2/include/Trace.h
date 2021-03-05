@@ -162,8 +162,10 @@ namespace MFM {
     void printPretty(ByteSink& bs, bool includeTime) const ;
     Trace & printf(const char * format, ...) ;
 
-    ByteSink & payloadWrite() { return mData; }
+    T2PacketBuffer & payloadWrite() { return mData; }
     CharBufferByteSource payloadRead() const { return mData.AsByteSource(); }
+    const u8 * payloadBuffer() const { return (const u8 *) mData.GetZString(); }
+    u32 payloadBufferLength() const { return mData.GetLength(); }
     
     /*==0 no tag, >0 sender tag, <0 receiver tag */
     s32 getTag() const { return mSyncTag; }
@@ -204,7 +206,7 @@ namespace MFM {
     }
 
     ByteSink & getByteSink() {
-      if (mTraceBuffers[mCurBuf].CanWrite() <= (1<<8)) { // G'tee 256 bytes per trace event
+      if (mTraceBuffers[mCurBuf].CanWrite() < 300) { // Trace events top around ~275 bytes?
         mCurBuf = 1-mCurBuf;
         mTraceBuffers[mCurBuf].Reset();
       }

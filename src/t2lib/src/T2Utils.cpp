@@ -1,5 +1,6 @@
 #include "T2Utils.h"
 #include "FileByteSink.h"
+#include "SHA256ish.h"
 #include <sys/stat.h>
 
 namespace MFM {
@@ -34,6 +35,35 @@ namespace MFM {
       to.WriteByte((u8) ch);
     }
     fbs.Close();
+    return true;
+  }
+
+  u64 digestWholeFile64(const char* path) {
+    const u64 DIGEST_VERSION = 3; /* Legal values: 1..15 */
+    OString16 out;
+    if (!digestWholeFile(path, out, false))
+      return 0; // Illegal return
+    CharBufferByteSource cbbs = out.AsByteSource();
+    u64 ret = 0;
+    for (u32 i = 0; i < 8; ++i) {  // Take first eight bytes
+      s32 ch = cbbs.Read();
+      MFM_API_ASSERT_STATE(ch >= 0);
+      ret = (ret<<8) | (u8) ch;
+    }
+    return (ret>>4)|(DIGEST_VERSION<<60); // Toss first four bits
+  }
+
+  bool digestWholeFile(const char* path, ByteSink& digestout, bool ashex) {
+    FileByteSource fbs(path);
+    if (!fbs.IsOpen()) return false;
+    SHA256ish hash;
+    s32 ch;
+    while ((ch = fbs.ReadByte()) >= 0) {
+      hash.addByte((u8) ch);
+    }
+    fbs.Close();
+    if (!hash.digest(digestout, ashex)) // This can't be false, right??
+      return false;
     return true;
   }
 

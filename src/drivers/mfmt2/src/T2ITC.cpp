@@ -263,8 +263,9 @@ namespace MFM {
     T2PassiveEventWindow & passiveEW = *mPassiveEWs[cn];
     MFM_API_ASSERT_STATE(passiveEW.getEWSN() == EWSN_PWCACHE);
     Circuit & ci = passiveEW.getPassiveCircuit();
-    MFM_API_ASSERT_STATE(ci.getCS() == CS_ANSWERED);
-    ci.setCS(CS_TALKED);
+    if (ci.getCS() == CS_ANSWERED) // If first CUP
+      ci.setCS(CS_TALKED);
+    MFM_API_ASSERT_STATE(ci.getCS() == CS_TALKED); // All CUPs
     passiveEW.applyCacheUpdatesPacket(pb, *this);
   }
 

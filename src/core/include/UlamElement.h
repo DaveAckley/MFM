@@ -32,7 +32,6 @@
 #include "ElementTable.h"
 #include "UlamClass.h"
 #include "BitStorage.h"
-#include "SizedTile.h"
 
 // Unsigned(32)
 #ifndef Ud_Ui_Ut_102321u
