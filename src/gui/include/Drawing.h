@@ -130,36 +130,45 @@ namespace MFM {
     using Drawable::FillRect;
 
     /**
-       Draw message in the current font using the current foreground
-       color, clipping to the given size, starting at the given loc.
-       Fail ILLEGAL_STATE if the current font is null.
+     * Draw message in the current font (or the given \c infont, if
+     * non-null) using the current foreground color, clipping to the
+     * given size, starting at the given loc.  Fail ILLEGAL_STATE if
+     * the current font is null.
      */
-    void BlitText(const char* message, SPoint loc, UPoint size) const;
+    void BlitText(const char* message, SPoint loc, UPoint size, TTF_Font * infont = 0) const;
 
     /**
-     * Draw a message in the current font using the current background
-     * color as a backing color to another drawn layer using the
-     * foreground color, clipping to the given size, starting at the
-     * given loc. Fail ILLEGAL_STATE if the current font is null.
+     * Draw a message in the current font (or the given \c infont, if
+     * non-null) using the current background color as a backing color
+     * to another drawn layer using the foreground color, clipping to
+     * the given size, starting at the * given loc. Fail ILLEGAL_STATE
+     * if the current font is null.
      */
-    void BlitBackedText(const char* message, SPoint loc, UPoint size);
+    void BlitBackedText(const char* message, SPoint loc, UPoint size, TTF_Font * infont = 0);
 
     /**
      * Just like BlitBackedText but center message on loc + size / 2
      */
-    void BlitBackedTextCentered(const char* message, SPoint loc, UPoint size);
+    void BlitBackedTextCentered(const char* message, SPoint loc, UPoint size, TTF_Font * infont = 0);
 
     /**
      * Return the SPoint(width, height) of message when rendered in
-     * the current font, or SPoint(-1,-1) if any problem occurs
+     * the current font (or the given \c infont, if non-null), or
+     * SPoint(-1,-1) if any problem occurs
      */
-    SPoint GetTextSize(const char* message) ;
+    SPoint GetTextSize(const char* message, TTF_Font * infont = 0) ;
 
     /**
      * Return the SPoint(width, height) of message when rendered in
      * thisFont, or SPoint(-1,-1) if any problem occurs
      */
     SPoint GetTextSizeInFont(const char* message, FontAsset font) ;
+
+    /**
+     * Return the SPoint(width, height) of message when rendered in
+     * thisFont, or SPoint(-1,-1) if any problem occurs
+     */
+    SPoint GetTextSizeInTTFFont(const char* message, TTF_Font & font) ;
 
     /**
      * Draw a specified image to a specified part of the screen.

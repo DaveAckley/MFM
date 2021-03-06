@@ -14,6 +14,7 @@
 
 // Spike files
 #include "T2Types.h"
+#include "T2Constants.h"
 #include "T2EventWindow.h"
 #include "T2PacketBuffer.h"
 #include "TimeoutAble.h"
@@ -38,25 +39,6 @@ namespace MFM {
     T2Tile & mTile;
     ITCIteration mIteration;
   };
-
-  /**** ITC STATE MACHINE: EARLY STATES HACKERY ****/
-
-#define ALL_ITC_STATES_MACRO()                                   \
-  /*   name   vz,ch,mc,to,rc,sb,desc */                          \
-  XX(SHUT,     1, 0, 0, 1, 1, 0, "EWs running locally")          \
-  XX(DRAIN,    0, 0, 0, 1, 1, 0, "drain EWs to settle cache")    \
-  XX(CACHEXG,  0, 0, 2, 1, 1, 0, "exchange cache atoms")         \
-  XX(OPEN,     1, 1, 2, 1, 1, 0, "intertile EWs active")         \
-
-  /*** DECLARE STATE NUMBERS **/
-  typedef enum itcstatenumber {
-
-#define XX(NAME,VIZ,CCH,MINCOMP,CUSTO,CUSRC,STUB,DESC) ITCSN_##NAME,
-  ALL_ITC_STATES_MACRO()
-#undef XX
-
-    MAX_ITC_STATE_NUMBER
-  } ITCStateNumber;
 
   ////BASE CLASS OF ALL T2ITC STATE MACHINE HANDLER CLASSES
   struct T2ITCStateOps {
@@ -221,8 +203,6 @@ namespace MFM {
     bool mCacheReceiveComplete;
 
   };
-
-  const char * getITCStateName(ITCStateNumber sn) ;
 
 }
 #endif /* T2ITC_H */

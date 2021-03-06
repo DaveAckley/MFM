@@ -1,0 +1,715 @@
+{53}  -*- text -*-
+[0:
+
+Tue Dec 29 04:14:04 2020 Well it's beginning to look a lot like
+intertile.
+
+Time to start roughing out a plan to get libcue.so's sucked into mfmt2
+and controlling events.
+
+After second sleep.
+
+Some questions:
+
+[52: Wed Jan 20 05:48:21 2021 
+Yes :52] - Can we do flash traffic without compatible mfzids?  We want to.
+
+ - How are we going to specify what physics to run?  We want it to be
+   sticky -- we need to boot into some last-specified physics.  Maybe
+   that does argue for shipping the config by cdm.  Would be nice if
+   we could pre-position a new config via cdm but then activate it
+   somehow via flash traffic.
+
+(Also, there's an issue that flash traffic for mfmt2 pause appears to
+blow up the engine.  That needs to be looked at.)[1:
+
+Thu Dec 31 01:57:12 2020 (Have had a hacked-up DReg/Res running for
+19h now on the 1.75PZ grid.  It's looking pretty equilibrated.  Center
+tile samples:
+
+empty%  mAER
+62      390
+61      360
+63      400
+63      410
+52      300
+57      340
+60      370
+61      360
+61      380
+59      380
+
+59.9    369.0 avg
+
+Looks like we could be saying something like
+
+   350 mAER (IS,DR/R) IS ACHIEVED
+
+0.350 an AER, indefinitely scalable, on DReg/Res physics, is achieved
+
+0.35 of an event per site per second, on average, indefinitely
+scalable, on DReg/Res physics, is achieved.
+
+
+
+:1]
+
+:0]
+[2:
+
+Thu Dec 31 04:11:46 2020 So.  For getting to try ulam in mfmt2
+
+ - Command line changes: arg name?
+   = Repurpose -z?
+   = Is slot number + timestamp enough?
+   = If we had some internal token we could allow events across
+     upgrades?  Terrible idea, I think.  Mostly it just moves the pink
+     bathtub ring to the management of the 'internal token' namespace.
+   = Let's say a cdmss file name, for one of the reserved slots a0-bf
+     IS the physics ID.  Just 31 slots, eh?  What about a0-ef, with
+     f0-ff explicitly reserved for 'temp physics', whatever that
+     means, and 00-9f reserved for 'system use', whatever that means?
+   = So, '-z CDMSSNAME' for physics, with slot a0-ef.
+   = If we get a relative path, we look for it in /cdm/common
+   = Or, is all this happening in a script around mfmt2?  And mfmt2
+     might have just -z TAG and -ep libcue.so?
+   = Is it happening in mfm.sh?  Since that is, after all, ..
+   = So suppose we reserve slot 04 for physics configuration?  Have it
+     be a tiny little file containing the cdmss physics ID that is to
+     be run, and perhaps some other metadata -- to be elaborated --
+     about the run.
+   = What do we do when we install 04?  Just unpack it somewhere?  Are
+     we comfortable splitting all the crypto from the actual running
+     of the physics?
+
+[3:
+
+Sun Jan  3 12:17:24 2021 Well, that's just a start at the ulam-on-t2
+design issues.  But all that's going to have to wait for the next
+cycle, for t2sup#292.
+
+Committing this stuff.
+
+:3]
+
+:2]
+[4:
+
+Sun Jan 10 01:52:32 2021 OK well here we are.  Time to get to
+implementable on this stuff, somehow, and start digging in.
+
+I'm thinking suppose we split the difference on the
+who-does-the-crypto question.  Have an '-ep' style command line arg to
+specify the path to libcue.so, and also have a '-z' style arg to
+specify PART of the mfzid.
+
+We expect caller to use -z to supply like the slotstamp from the
+associated cdmss filename, without the cdmss- and .mfz --
+like 'cdmss-02-51e6cd.mfz' => '-z 02-51e6cd'.  (Except we expect it to
+be a slotnum in 0xa0..0xef.)
+
+And then we add enough cryptolib to mfmt2 that it can do some credible
+hash on the entire libcue.so file on its own, and the mfzid that mfmt2
+writes to /sys/class/itc_pkt/mfzid will be the concatenation of the
+two.
+
+[5:
+
+Sun Jan 10 02:41:42 2021 Now I do have to raise one issue, at least
+briefly: If we do this right, that means there will be 'No Way' to
+change the physics while preserving any atomic state.  The atomic
+universe will be wiped clean as the new physics frontier passes over
+the grid.
+
+Wearing an engineering control hat, I say: Yay, good, that's
+absolutely as it should be.
+
+But wearing an indefinite scalability hat, I say: How could we ever
+deploy new physics if it means destroying the whole universe?
+
+[6:
+
+Sun Jan 10 03:17:29 2021 I think maybe we should throw it upstairs:
+
+(1) Different slot numbers are never compatible.
+(2) Within a slot number, we'll have some 'compatible version' thing.
+(3) As long as slot and version match, we'll say compatible, whether
+    or not the libcues match.
+
+So that means the -z arg would be SLOTNUM-COMPATIBLEVERSION.  Perhaps
+lexlex them? 2a813 for slot 0xa8 version 3?  Maybe include a
+compatibility-naming-scheme-version as well.  Version 1 style
+compatibility naming: 112a813.
+
+And mfmt2, and the grid, just absolutely trusts the caller that
+libcue.so contains 'appropriate' code for the mfzid.
+
+Hmm what about having a function to call in libcue.so to access what
+it thinks is the SLOTNUM-COMPATIBLEVERSION?  Then we could ditch '-z'
+entirely, and avoid -z/-ep inconsistencies.  Might be good to have a
+default version (of say 0) and declare that version 0 is not even
+compatible with itself.  And maybe that means use a libcue fingerprint
+instead, moved OoB wrt explicitly declared versions.
+
+So by default we stick with the 'best-effort exact code match', and
+coders will use some new mfzmake argument to declare a compatibility
+version.
+
+And that's what we'll mean by kicking it upstairs.[7:
+
+Sun Jan 10 04:04:53 2021 I guess that means altering the 'cdmake'
+command of mfzmake, which is currently like
+
+  mfzmake cdmake REGNUM SLOTNUM LABEL filetopack1 filetopack2..
+
+I guess I'd be tempted to go with something like:
+
+  mfzmake cdmake [-cv COMPATIBLEVERSION] REGNUM SLOTNUM LABEL filetopack1 filetopack2..
+
+and have COMPATIBLEVERSION default to 0 meaning compatible only with
+this exact build.
+
+Then in the mfzid we'd have two kinds of versions:
+
+ - version 0 build specific tags
+ - version 1 declared compatible version
+
+and we could encode the mfzid by piecewise lexing of
+
+  MFZIDSCHEME
+  SLOTNUM
+  VERSIONSCHEME
+  VERSION
+
+with examples like
+
+  112a01092640123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
+for MFZID type: 1, slotnum: 0xa0, version type: 0, libcue.so hash:
+0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
+or
+
+  112a31113
+
+for MFZID type: 1, slotnum: 0xa3, version type: 1, compatible version: 3
+
+[8:
+
+Sun Jan 10 04:20:23 2021 Maybe 32 hex digits == 128 bits is enough for
+the libcue.so hash..[9:
+
+Sun Jan 10 04:35:48 2021 Leaving another SatEotU going on a T2 ring,
+with 10x recording going.  Nap time.
+
+:9]
+
+:8]
+
+:7]
+
+:6]
+:5]
+
+:4]
+[10:
+
+Thu Jan 14 12:06:05 2021 Well, time to move the flag with not a lot to
+show for it, :(.  Have been sporadically looking at AER calculations
+and getting stats into the trace files and getting Weaver some way to
+show AER as of different places in the trace.  Issues include:
+
+ - T2TileStats is oriented around generating AER in real time.  In
+   particular getEstAER() uses the CURRENT TIME to figure out the
+   interval, which is obviously fogged for Weaver.
+
+ - T2TileStats is oriented around u32 seconds granularity, which we
+   think is probably less accurate than we want for purposes of
+   relatively fine-grained AER estimations.
+
+Also, I believe I've currently settled on exact libcue.so hash-match
+for compatibility testing, although future extension to some kind of
+manual versioning scheme is not completely ruled out.  So that's
+probably close to implementable, and we should switch to it at the
+next work opportunity.
+
+That is all.
+
+RISKY BITS OFF.
+
+:10]
+[11:
+
+Fri Jan 15 15:17:32 2021 Well, we've gotten this far:
+
+    11: MSG: ctor Sites 0xB696C6B8
+    [Detaching after fork from child process 7059]
+    12: MSG: CPU Frequency -> 600MHz
+    TRACING TO: /tmp/t2trace13.dat
+    13: MSG: SDL early startup
+    [New LWP 7061]
+    14: MSG: SDL late startup
+    [New LWP 7062]
+    [LWP 7062 exited]
+    15: MSG: Parsing window config /home/t2/MFM/res/mfmt2/wconfig.txt
+    16: WRN: Big MSPAST 4170
+    17: MSG: Flushed 0 flash packet(s)
+    18: MSG: Loaded Ue10103Res10-111043460820201229524945 at 0xB59FEA94 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    19: MSG: Loaded Ue10104DReg10-111043460820201229524945 at 0xB59FE930 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    210: MSG: Loaded Ue10104Wall10-111043460820201229524945 at 0xB59FE7DC from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    211: MSG: Loaded Ue10105Empty10-111043460820201229524945 at 0xB59FE688 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    212: MSG: Loaded Ue1010919MyElement10-111043460820201229524945 at 0xB59FE534 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    213: MSG: Loaded Ue10109218Ulam5StdlibControl10-111043460820201229524945 at 0xB59FE3D8 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    214: MSG: Loaded Ulam Class Uq_10104Fail10 at 0xB59FE3D0 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    215: MSG: Loaded Ulam Class Uq_10105MDist10 at 0xB59FE3CC from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    216: MSG: Loaded Ulam Class Uq_10106Random10 at 0xB59FE3C8 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    217: MSG: Loaded Ulam Class Uq_10106UrSelf10 at 0xB59FE3C4 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    218: MSG: Loaded Ulam Class Uq_1010919AtomUtils10 at 0xB59FE3C0 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    219: MSG: Loaded Ulam Class Uq_10109210ByteStream10 at 0xB59FE3BC from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    220: MSG: Loaded Ulam Class Uq_10109211EventWindow10 at 0xB59FE3B8 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    221: MSG: Loaded Ulam Class Uq_10109214ByteStreamNull10 at 0xB59FE3B4 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    222: MSG: Loaded Ulam Class Uq_10109216ByteStreamReader10 at 0xB59FE3B0 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    223: MSG: Loaded Ulam Class Uq_10109216ByteStreamWriter10 at 0xB59FE3AC from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    224: MSG: Loaded Ulam Class Uq_10109222ByteStreamReaderWriter10 at 0xB59FE3A8 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    225: MSG: Loaded Ulam Class Uq_102323C2D10 at 0xB59FE3A4 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    226: MSG: Loaded Ulam Class Un_102649216ByteStreamString10 at 0xB59FE3A0 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    227: MSG: Loaded Ulam Class Ul_10107_lMDist10 at 0xB59FE39C from /home/t2/physics/a0/code/.gen/bin/libcue.so
+
+so that's fun.  Now we have to 'just' figure out:
+
+ - What it means to 'seed' from a general libcue.so file.
+
+ - How to do that
+
+ - How to have an event
+
+:11]
+[12:
+
+Fri Jan 15 15:53:44 2021 Suppose for now 'seed' means make one of the
+first registered elements.  That would be a Res in the case above.
+Suppose we look for an element named 'S' and only 'S'.  And if we
+don't find one?  Don't provide a way to initialize anything?
+
+Or implement some cheesy version of the damn pallette and let somebody
+pick.
+[13:
+
+Sat Jan 16 01:17:10 2021 OK well we added an 'S' to a0:
+
+  ..
+    17: MSG: Flushed 0 flash packet(s)
+    18: MSG: Loaded Ue10101S10-111043460820210116581016 at 0xB59FE6C8 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    19: MSG: Loaded Ue10103Res10-111043460820210116581016 at 0xB59FE81C from /home/t2/physics/a0/code/.gen/bin/libcue.so
+    210: MSG: Loaded Ue10104DReg10-111043460820210116581016 at 0xB59FE970 from /home/t2/physics/a0/code/.gen/bin/libcue.so
+  ..
+
+So let's try to seed that on the 'Init Debug' button.[14:
+
+Sat Jan 16 02:45:23 2021 OK so now we're blowing up in
+Element::GetDefaultAtom because our S element doesn't have a type.
+Where was that supposed to be set up? [15:
+
+Sat Jan 16 02:48:12 2021 Well, in Element::AllocateType(ElementTypeNumberMap&) which
+is a pain since it never uses the ETNM& it requires -- since ulam-4
+took over responsibility for type numbers.[16:
+
+Sat Jan 16 03:18:04 2021 OK, now we create an S but it vanishes
+immediately --
+
+    231: MSG: Auto-deleting 00000055-14B0EFB5-0201FF.dat
+    232: MSG: Created 'S' at (45,20)
+    233: MSG: Created 'S' at (20,11)
+    234: MSG: Created 'S' at (40,27)
+
+which isn't surprising given event behavior isn't set up yet.
+
+Step by step!
+[17:
+
+Sat Jan 16 06:11:05 2021 So there's going to have to be some
+refactoring in core/ at least, I think.  EventWindow wants a Tile &
+(not a T2Tile) and off we go from there.
+
+:17]
+:16]
+
+:15]
+
+:14]
+
+:13]
+:12]
+[18:
+
+Sat Jan 16 07:26:43 2021 Well small steps anyway.  Currently need to
+look up an Element* from an atom type.  mfms uses an ElementTable with
+a homemade hash -- maybe just make a map of our own instead?[19:
+
+Sat Jan 16 11:53:27 2021 OK we made a std::map<u32,OurElement*> in
+UlamEventSystem and it appears to be finding the element for us.
+
+Now I'm thinking we need to somehow convert a T2ActiveEventWindow into
+a EventWindow<EC> so that we can call
+
+  virtual void Element::Behavior(EventWindow<EC>& window) const = 0;
+
+?  How do we do that?
+
+Well, we already made an OurEventWindow inside UlamEventSystem.. now
+we 'just' need to load it from T2AEW?  Then save the result back to
+T2AEW afterwards, 'is all'?[20:
+
+Sat Jan 16 13:04:45 2021 OK we're plausibly calling
+UlamEventSystem::loadOurEventWindow(aew).  Now have to write it..
+[21:
+
+Sat Jan 16 13:40:07 2021 Well it looks like we might want to try using
+EventWindow::InitForEvent(SPoint&) rather than write it all ourselves,
+but that calls tile.GetElementTable().Lookup(type) meaning we'd have
+to ditch the handy map that we just wrote..[22:
+
+Sat Jan 16 14:03:56 2021 But ugh, InitForEvent(SPoint&) tries to
+acquire locks.  We ABSOLUTELY CAN'T go in that way.  So how do we make
+a cut in here somewhere.  Break InitForCenter into smaller pieces?
+Like?[23:
+
+Sat Jan 16 14:11:09 2021 It kind of looks like only the lock
+acquisition is the problem?  We could nest that under a bool?
+
+:23]
+[24:
+
+Sat Jan 16 15:16:45 2021 Looks like Sites.h reversed the H/W compared
+to what Tile::GetAtom (really, Tile::GetSite (really really,
+Tile::GetSiteInTileNumber)) is expecting.
+
+Trying flipping the axes in Sites.h.  Modularity hmm?[25:
+
+Sat Jan 16 15:36:04 2021 Well, we're finding our atom now, and
+InitForEvent is succeeding.
+
+There's an issue we haven't hit but will have to handle eventually:
+EventWindow::LoadFromTile is setting up the m_isLiveSite array based
+on calls to Tile::IsLiveSite(SPoint), which is (sometimes) going to
+ -> Tile::IsCacheSitePossibleEventCenter(SPoint), and thus to
+ -> Tile::CacheAt,
+ -> Tile::RegionAtReach,
+ -> Tile::TryToAddRegionAtReach, and thus to
+ -> Tile::IsConnected(Dir), and thus to
+ -> Tile::GetCacheProcessor(Dir) and <<<WE'RE DEAD AS OF HERE, BUT..
+ -> CacheProcessor::IsConnected(), and thus to
+ -> ChannelEnd::IsConnected()
+
+but mfmt2 is not using CacheProcessors or ChannelEnds or
+AbstractChannels..
+
+Where to divert?
+[26:
+
+Sun Jan 17 00:19:19 2021 OK, well I don't think there's any avoiding
+it: We need some kind of AbstractTile base class that Tile and T2Tile
+will subclass, and we'll migrate whatever functionality event
+processing needs up there.  Or we could do CRTP I guess if we really
+care about efficiency at this level? [27:
+
+Sun Jan 17 01:59:31 2021 I think we don't.  I think we should just go
+virtual.
+
+TODO
+
+[29: Sun Jan 17 11:30:54 2021 Have one pure virtual method now..
+DONE :29] - Make Tile<EC> be the abstract base class.
+
+[30: Created
+DONE :30] - Create MFMSTile.h,.tcc,.cpp in core/  (or SimTile?), subclass of Tile<EC>
+
+[31:
+DONE :31] - Make T2Tile inherit from Tile<OurEventConfig>
+
+ - Make Tile::IsCacheSitePossibleEventCenter(SPoint) pure virtual
+
+[32: Made Tile::IsConnected(Dir) pure
+DONE :32] - Make other things (gah) pure virtual as needed
+
+[28:
+
+Sun Jan 17 05:28:29 2021 OK, so we've started into this.  We have
+MFMSTile<EC> inheriting from Tile<EC>.  We have T2Tile doing the
+same.  We have SizedTile inheriting from MFMSTile.
+
+But so far nothing's pure in Tile<EC>.  What's a first candidate?
+
+:28][33:
+
+Sun Jan 17 11:32:10 2021 So, hit
+
+      bool T2Tile::IsConnected(Dir dir) const {
+        FAIL(INCOMPLETE_CODE);
+
+in the first test!  So what do we check for this, here in T2Tile
+Native Engine Land?  [34:
+
+Sun Jan 17 11:36:56 2021 Well, for starters, what is 'Dir'?  It's
+dir8, right?  Map it to dir6?  (Yes, it's dir8, via
+core/include/Dirs.h)
+
+:34][35:
+
+Sun Jan 17 14:03:10 2021 OK now we're up to
+
+    242	  bool T2Tile::IsCacheSitePossibleEventCenter(const SPoint & location) const
+    243	  {
+    244	    FAIL(INCOMPLETE_CODE);
+
+and IIRC the theory here is we want to figure out which neighboring
+tile owns the given location, which is (1) in our cache, and (2) owned
+by at most one neighboring tile.  [36:
+
+Sun Jan 17 14:23:35 2021 So do we like want one of these T2ITC
+methods maybe?
+
+    const Rect & getVisibleRect() const ;
+    const Rect & getCacheRect() const ;
+    const Rect & getVisibleAndCacheRect() const ;
+    const Rect & getNeighborOwnedRect() const ;
+
+to find who owns a cache location?  How do they work again?[37:
+
+Sun Jan 17 14:34:33 2021 Hmm they just dish to mTile:
+
+      const Rect & T2ITC::getCacheRect() const { return mTile.getCacheRect(mDir6); }
+
+which is like
+
+        const Rect & getCacheRect(Dir6 dir6) const {
+          MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
+          return mITCCache[dir6];
+        }
+
+declared via
+
+    const Rect mITCCache[DIR6_COUNT];
+
+and initted via
+
+        , mITCCache{
+    #define XX(dir6) mITCs[DIR6_##dir6].getRectForTileInit(CACHE_LINES,0u,0u)
+    #define YY ,
+    #define ZZ
+            ALL_DIR6_MACRO()
+    #undef XX
+    #undef YY
+    #undef ZZ
+          }
+
+which DISHES BACK TO THE ITC (?! just at ctor time though) to like
+
+        Rect getRectForTileInit(u32 widthIn, u32 skipIn, u32 endIn) {
+          return getRectForTileInit(mDir6,widthIn,skipIn,endIn);
+        }
+
+which goes to this static method:
+
+      Rect T2ITC::getRectForTileInit(Dir6 dir6, u32 widthIn, u32 skipIn, u32 endIn) {
+        switch (dir6) {
+        case DIR6_ET:
+          return Rect(T2TILE_WIDTH-(widthIn+skipIn),endIn,
+                      widthIn,T2TILE_HEIGHT-2*endIn);
+        case DIR6_SE:
+          return Rect(T2TILE_WIDTH/2-CACHE_LINES+endIn,T2TILE_HEIGHT-(widthIn+skipIn),
+                      T2TILE_WIDTH/2+CACHE_LINES-endIn, widthIn);
+
+which hardcodes the various regions.[38:
+
+Sun Jan 17 14:43:31 2021 So I guess we iterate over Dir6 and see which
+one owns (the given cache) location.  We might guess that
+
+        const Rect & getNeighborOwnedRect() const ;
+
+would be the thing to call?  That goes to T2Tile's
+
+        const Rect & getNeighborOwnedRect(Dir6 dir6) const {
+          MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
+          return mITCNeighborOwned[dir6];
+        }
+
+with mITCNeighborOwned initialized via
+
+  getRectForTileInit(CACHE_LINES,0u,CACHE_LINES)
+
+on each T2ITC.  So that's
+
+  widthIn==CACHE_LINES, and
+  skipIn==0, and
+  endIn==CACHE_LINES.
+
+So in the case of DIR6_ET, for example:
+
+    case DIR6_ET:
+      return Rect(T2TILE_WIDTH-(widthIn+skipIn),endIn,
+                  widthIn,T2TILE_HEIGHT-2*endIn);
+
+which boils down to
+ x = W-(4+0)  == 56-4 == 52
+ y = 4
+ w = 4
+ h = H-8  == 40-8 == 32
+
+or DIR6_NW
+
+    case DIR6_NW:
+      return Rect(0,skipIn,
+                  T2TILE_WIDTH/2+CACHE_LINES-endIn, widthIn);
+
+ x = 0
+ y = 0
+ w = W/2+4-4 == 56/2+4-4 == 28
+ h = 4
+
+[39:
+
+Sun Jan 17 14:56:31 2021 Which both look plausible on our friendly
+neighborhood T2-CacheMap-15.ods..
+
+So.
+
+:39]
+:38]
+
+:37]
+
+:36]
+
+:35]
+
+:33]
+:27]
+
+:26]
+:25]
+
+:24]
+
+:22]
+
+:21]
+
+:20]
+
+
+:19]
+
+:18]
+[40:
+
+Mon Jan 18 03:22:22 2021 OK, more progress AKA -> different failure.
+Looks like we're dying trying to look up 0xffff == Empty now, which I
+imagine means we didn't do whatever special-purpose stuff was supposed
+to happen for that.  ..Although I do see Element_Empty in the
+apparently relevant ElementTable:
+
+    (gdb) p m_uc.m_elementTable.m_hash[8]
+    $33 = {m_element = 0x51e2a4 <MFM::Element_Empty<MFM::EventConfig<MFM::Site<MFM::P3AtomConfig>, 4u> >::THE_INSTANCE>, m_elementDataStart = 0, m_elementDataLength = 0}
+    (gdb)
+
+and:
+
+    (gdb) p m_uc.m_elementTable.SlotFor(0xffff)
+    $34 = 8
+    (gdb)
+
+so [8] seems to be the place to look for it.
+
+Could it be we've got the 'MFM' Empty but need the 'Ulam' Empty now?
+I guess maybe we have to trace the mfms init code and make sure we're
+following it.[41:
+
+Mon Jan 18 09:07:42 2021 Well, getting to ulam code exposed a bug in
+the Trace logging stuff -- having a single line of a backtrace longer
+than 256 bytes blew an assertion, which ended up reentering the trace
+code and corrupting the trace file..
+
+Because the GetLength() of an OString256 can be 257 if the string has
+overflowed, which a templated UlamRef ctor with a bunch of templated
+arguments readily did (coming in at a cool 405 bytes for just that
+entry, once demangled.)
+
+Going again.[42:
+
+Mon Jan 18 12:39:48 2021 Well at LONG LONG LAST we appear to have
+completed a call to an ulam behave() function.  And now we're blowing
+up because we haven't written saveOurEventWindow yet.  Progress.[43:
+
+Mon Jan 18 12:43:40 2021 Hmm, not clear that saveOurEventWindow should
+actually exist?  We already have saveSites being.. oh wait,
+saveOurEventWindow is to copy from the traditional ew to our t2aew,
+right? [44:
+
+Mon Jan 18 15:12:11 2021 So, um, DReg and Res, WRITTEN IN ULAM, are now
+RUNNING ON A T2 TILE.
+
+SO THAT HAPPENED
+
+Fog in finally.
+
+:44]
+
+:43]
+
+:42]
+
+:41]
+
+:40]
+[45:
+
+Mon Jan 18 16:01:29 2021 OK, so we need to plan how best to use this
+little bit of remaining time before we need to lock down for the
+update. 
+
+Immediate issues:
+
+[49: Tue Jan 19 01:29:14 2021
+DONE :49] - Need an initial mfzid solution.
+[50: YES  :50]   = Do a hack checksum instead of trying to be cryptowypto?
+
+ - Need a quick mfm configuration file solution
+   = Something mfm.sh can read to derive cmd line args
+
+[46: Mon Jan 18 23:48:42 2021
+DONE :46] - Need a getcolor hookup.  Let's do that first.
+
+:45]
+[47:
+
+Mon Jan 18 23:48:54 2021 OK come on hack checksum just do some method
+we can replace later GO GO GO.[48:
+
+Tue Jan 19 01:24:27 2021 OK made a disgusting digester that produces a
+60 bit result as a u64, with the top four bits representing the digest
+version and currently always 1.
+[51:
+
+Tue Jan 19 01:29:55 2021 OK time for some minimal configuration file.
+How does it work?
+
+Minimal: PHYSICS_CONFIG.txt containing a physics slot number and
+nothing else.  Is that at all safe?  What if the config.mfz outruns
+a physics update, couldn't that end up rebooting into the wrong
+version of a slot physics?
+
+PHYSICS_CONFIG.txt containing a full cdmss filename, with a slot in
+the physics range, that is supposed to be the physics used.  And what
+does mfm.sh do if that file doesn't exist?  Maybe installation of the
+config mfz fails until the file does exist?  That doesn't guarantee it
+will still exist come mfm.sh time.
+
+It seems like we need some kind of 'awaiting physics' state -- maybe
+like a0 or ef -- that is automatically run instead if the
+PHYSICS_CONFIG file isn't available?
+
+:51]
+:48]
+
+:47]

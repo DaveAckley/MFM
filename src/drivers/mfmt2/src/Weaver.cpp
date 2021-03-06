@@ -1080,7 +1080,12 @@ static const char * CMD_HELP_STRING =
 
 int main(int argc, char **argv) {
   unwind_protect({
-      MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
+      const char * file = (const char *) unwindProtect_FailException.mFile;
+      int line = unwindProtect_FailException.mLine;
+      int code = unwindProtect_FailException.mCode;
+      //const char * msg = MFMFailCodeReason(code);
+
+      MFMPrintError(stderr,file,line,code);
       fprintf(stderr,"Failed out of top level\n");
       exit(99);
   },{

@@ -100,6 +100,10 @@ namespace MFM
     enum {MAX_LOCK_DIRS = 3 };
     typedef Dir THREEDIR[MAX_LOCK_DIRS]; //copy of CacheProcessor.h
 
+    const Element<EC> * GetCenterElementAfterInit() { return m_element; }
+
+    void SetFree() { m_ewState = FREE; }
+
   private:
 
     Tile<EC> & m_tile;
@@ -249,9 +253,12 @@ namespace MFM
     /**
      * Set up for an event at center, which represented in full,
      * untransformed Tile coordinates.  Public primarily for ulam
-     * element testing.
+     * element testing.  \returns \c true on success (and sets up
+     * m_element), or \c false if initialization failed due to (0)
+     * Unknown atomic type, (1) Irreparable insane atom, or (2) Locks
+     * needed but not acquired,
      */
-    bool InitForEvent(const SPoint & center) ;
+    bool InitForEvent(const SPoint & center, bool tryForLocks = true) ;
 
     const Site<AC> & GetSite() const
     {
@@ -513,6 +520,26 @@ namespace MFM
     bool IsLiveSiteSym(const u32 siteNumber) const
     {
       return m_isLiveSite[MapIndexToIndexSymValid(siteNumber)];
+    }
+
+    /**
+     * Checks to see if a particular site Number, relative to the
+     * center of this EventWindow, points to a Site that may be used
+     * during event execution, using the direct mapping and ignoring
+     * the current symmetry.
+     *
+     * @param siteNumber The site number to check for liveness in this
+     *                 EventWindow .
+     *
+     * @returns \c true if this site may be reached during event
+     *          execution, else \c false .
+     *
+     * \sa IsLiveSite
+     */
+    bool IsLiveSiteDirect(const u32 siteNumber) const
+    {
+      MFM_API_ASSERT_ARG(siteNumber >= 0 && siteNumber < m_boundedSiteCount);
+      return m_isLiveSite[siteNumber];
     }
 
     /**

@@ -228,22 +228,44 @@ namespace MFM {
     bs.Printf("\n");
   }
 
+  void TraceLoggerInMemory::dump(const char * path) {
+    FILE * file = fopen(path,"w");
+    if (file == 0) 
+      STDOUT.Printf("Can't dump to '%s': %s\n",
+                    path, strerror(errno));
+    else {
+      FileByteSink fbs(file);
+      TLOG(DBG,"Dumping to %s",path);         // Note to trace buffer
+      mTraceBuffers[1-mCurBuf].AppendTo(fbs); // Older first
+      mTraceBuffers[mCurBuf].AppendTo(fbs);   // Then current
+      fbs.Close();
+      LOG.Message("Trace dumped %s", path);   // Note to log
+    }
+  }
 
-  void TraceLogger::log(const Trace & evt) {
-    mFBS.Printf("%c%c",
+  void TraceLogger::log(ByteSink & bs, const Trace & evt) {
+    bs.Printf("%c%c",
                 TRACE_REC_START_BYTE1,
                 TRACE_REC_START_BYTE2
                 );
-    evt.mLocalTimestamp.Print(mFBS);
-    evt.getTraceAddress().print(mFBS);
-    CharBufferByteSource cbbs = evt.payloadRead();
-    u32 plen = cbbs.GetLength();
-    MFM_API_ASSERT_STATE(plen < 256);
-    mFBS.Printf("%c%c%<",
+    evt.mLocalTimestamp.Print(bs);
+    evt.getTraceAddress().print(bs);
+    u32 plen = evt.payloadBufferLength();
+    if (plen > 255) {  // Gah will be 257 if payload overflowed
+      plen = 255;
+      bs.Printf("%c%c",
+                evt.mTraceType,
+                plen);
+      bs.WriteBytes(evt.payloadBuffer(),254);
+      bs.WriteByte('X'); // Gah move the X one byte earlier gah
+    } else {
+      CharBufferByteSource cbbs = evt.payloadRead();
+      bs.Printf("%c%c%<",
                 evt.mTraceType,
                 plen,
                 &cbbs
                 );
+    }
   }
 
   Trace * TraceLogReader::read(ByteSource& bs,

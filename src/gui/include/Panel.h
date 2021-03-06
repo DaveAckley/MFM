@@ -68,7 +68,7 @@ namespace MFM
     SPoint m_lastMousePosition;
     SDL_KeyboardEvent & m_event;
 
-    KeyboardEvent(SDL_KeyboardEvent e, const SPoint lastKnownMouse)
+    KeyboardEvent(SDL_KeyboardEvent & e, const SPoint lastKnownMouse)
       : m_isPress(e.type == SDL_KEYDOWN)
       , m_modifiers(Keyboard::MergeMods(e.keysym.mod))
       , m_lastMousePosition(lastKnownMouse)
@@ -154,6 +154,16 @@ namespace MFM
      * AssetManager::FontAsset
      */
     FontAsset m_fontAsset;
+
+    /**
+     * Preferred TTF_Font for text operations, if any.  Be aware the
+     * whole panel/font situation is a mess -- with older stuff using
+     * (unscalable) FontAsset and newer stuff using zfonts and/or
+     * TTF_Fonts directly.
+     *
+     *  \sa SetFontReal
+     */
+    TTF_Font * m_ttfFont;
 
     /**
      * The size that this Panel wants to be, when given enough room.
@@ -385,6 +395,13 @@ namespace MFM
        (Drawing::GetFont()) if this returns null.
     */
     TTF_Font* GetFontReal() const ;
+
+    /**
+       Set or clear (if \c font is null) the default TTF_Font for this
+       panel.  If set, text drawing operations will use this font
+       instead of the prevailing font (Drawing::GetFont()).
+    */
+    void SetFontReal(TTF_Font * font) { m_ttfFont = font; }
 
     FontAsset GetFont() const ;
 

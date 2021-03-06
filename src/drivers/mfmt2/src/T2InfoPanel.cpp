@@ -20,6 +20,7 @@ namespace MFM {
     for (Dir6 dir6 = DIR6_MIN; dir6 <= DIR6_MAX; ++dir6) {
       mITCStatuses[dir6].setDir6Idx(dir6);
     }
+    this->SetVisible(false);
   }
 
   void T2InfoPanel::configure(SDLI & sdli) {
@@ -89,6 +90,30 @@ namespace MFM {
 
     insert(srcTQ,1024);         // Otherwise update at about ~1HZ
 
+    // Update AER (for backwards averaging) whether we are visible or not
+    do { // AER
+      T2Tile & tile = T2Tile::get();
+      T2TileStats & cur = tile.getStats();
+      u32 curage = cur.getAgeSeconds();
+      if (mLastT2StatsAge == 0) {
+        mLastT2Stats = cur;
+        mLastT2StatsAge = curage;
+      }
+      if (curage - mLastT2StatsAge >= 5) {
+        u32 secs = curage - mLastT2StatsAge;
+        mLastT2StatsAge = curage;
+        T2TileStats samp = cur - mLastT2Stats;
+        mLastT2Stats = cur;
+        double sampAER = samp.getEstAER(secs);
+        const double cBACKAVG_FRAC = 0.95;
+        if (mLastAER == 0) mLastAER = sampAER;
+        else mLastAER = cBACKAVG_FRAC*mLastAER + (1-cBACKAVG_FRAC)*sampAER;
+      }
+    } while(0);
+
+    if (!IsVisibleFrom(0)) return;
+    //// EVERYTHING BELOW ONLY HAPPENS WHEN THE TILE PANEL IS UP!
+    
     u32 binsec = srcTQ.now() >> 10; // Tick every 1024 ms
 
     //// Rotate corner lights
@@ -113,16 +138,17 @@ namespace MFM {
       ResettableByteSink & tagbs = mStaticPanel->GetByteSink();
       tagbs.Reset();
 
-      s32 tmp;
       {
-        const char * PATH = "/home/t2/cdmd-T2-12.mfz-cdm-install-tag.dat";
-        if (!readOneDecimalNumberFile(PATH,tmp)) tagbs.Printf("T2-12: no tag\n");
-        else tagbs.Printf("T2-12: %d\n",tmp);
+        OString16 buf;
+        const char * PATH = "/cdm/tags/slot02-install-tag.dat";
+        if (!readOneLinerFile(PATH,buf)) tagbs.Printf("T2-12: no tag\n");
+        else tagbs.Printf("T2-12 %s\n",buf.GetZString());
       }
       {
-        const char * PATH = "/home/t2/cdmd-MFM.mfz-cdm-install-tag.dat";
-        if (!readOneDecimalNumberFile(PATH,tmp)) tagbs.Printf("MFMT2: no tag\n");
-        else tagbs.Printf("MFMT2: %d\n",tmp);
+        OString16 buf;
+        const char * PATH = "/cdm/tags/slot03-install-tag.dat";
+        if (!readOneLinerFile(PATH,buf)) tagbs.Printf("MFMT2: no tag\n");
+        else tagbs.Printf("MFMT2 %s\n",buf.GetZString());
       }
     } while(0);
 
@@ -156,26 +182,6 @@ namespace MFM {
       const char * PATH = "/proc/uptime";
       if (!readFloatsFromFile(PATH, mUptime, sizeof(mUptime)/sizeof(mUptime[0])))
           LOG.Error("Can't read '%s'",PATH);
-    } while(0);
-
-    do { // AER
-      T2Tile & tile = T2Tile::get();
-      T2TileStats & cur = tile.getStats();
-      u32 curage = cur.getAgeSeconds();
-      if (mLastT2StatsAge == 0) {
-        mLastT2Stats = cur;
-        mLastT2StatsAge = curage;
-      }
-      if (curage - mLastT2StatsAge >= 5) {
-        u32 secs = curage - mLastT2StatsAge;
-        mLastT2StatsAge = curage;
-        T2TileStats samp = cur - mLastT2Stats;
-        mLastT2Stats = cur;
-        double sampAER = samp.getEstAER(secs);
-        const double cBACKAVG_FRAC = 0.95;
-        if (mLastAER == 0) mLastAER = sampAER;
-        else mLastAER = cBACKAVG_FRAC*mLastAER + (1-cBACKAVG_FRAC)*sampAER;
-      }
     } while(0);
 
     do { // ITCStatus
@@ -281,6 +287,7 @@ namespace MFM {
     const u32 cSITES = T2TILE_OWNED_WIDTH * T2TILE_OWNED_HEIGHT;
     const u32 SIZE=32;
     char buf[SIZE+1];
+    OurElementTable & et = tile.GetElementTable();
     for (AtomTypeCountVector::iterator itr = vec.begin(); itr != vec.end(); ++itr) {
       u32 type = itr->first;
       u32 count = itr->second;
@@ -288,7 +295,11 @@ namespace MFM {
       if (pct >= 10) snprintf(buf,SIZE,"%3d",(u32) pct);
       else if (pct >= 1) snprintf(buf,SIZE,"%3.1f",pct);
       else snprintf(buf,SIZE,".%02d",(u32) (100*pct));
-      bs.Printf("%s%% %4d #%04x\n", buf, count, type);
+      const OurElement * elt = et.Lookup(type);
+      if (elt) 
+        bs.Printf("%s%% %4d %s\n", buf, count, elt->GetAtomicSymbol());
+      else
+        bs.Printf("%s%% %4d #%04x\n", buf, count, type);
     }
   }
 }

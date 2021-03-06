@@ -1,4 +1,4 @@
-{322}  -*- text -*-
+{390}  -*- text -*-
 [0:
 
 Fri Jun 12 01:17:00 2020 Well we finally moved the ulam5 branch, and
@@ -5685,7 +5685,7 @@ tryInitiateActiveEvent
       // involvements.  NOTE that 'ITC registration' does NOT
       // necessarily imply 'lock needed': We register even with
       // ITCSN_SHUT, so they know about us in case they start to open.
-      
+
       bool isLive = true;
       for (u32 dir6 = 0; dir6 < DIR6_COUNT; ++dir6) {
         if (tile.getVisibleAndCacheRect(dir6).Contains(site)) {
@@ -5775,8 +5775,8 @@ anything we already have?[317:
 Sun Jul  5 19:41:02 2020 So, one question is: Why do the existing
 'visible' rectangles include obviously cached sites?
 
-          VIZ                    CCH                    ALL                    
-    ET 0: (48, 0)-(51,39)  4x40  (52, 0)-(55,39)  4x40  (48, 0)-(55,39)  8x40  
+          VIZ                    CCH                    ALL
+    ET 0: (48, 0)-(51,39)  4x40  (52, 0)-(55,39)  4x40  (48, 0)-(55,39)  8x40
 
 For example, Y==0..39 includes the cache rows 0..3 and 36..39 -- why?
 
@@ -5784,7 +5784,7 @@ For example, Y==0..39 includes the cache rows 0..3 and 36..39 -- why?
 
 Sun Jul  5 20:12:13 2020 Seems like it should be
 
-          VIZ                    CCH                    ALL                    
+          VIZ                    CCH                    ALL
     ET 0: (48, 4)-(51,35)  4x32  (52, 0)-(55,39)  4x40  N/A
 
 and so forth.  And the 'getNeighborVisibleRect()', if we needed it,
@@ -5794,11 +5794,11 @@ would be the direct shift of the 4x32 viz:
 
 :318]
 
-    SE 1: (24,32)-(55,35) 32x 4  (24,36)-(55,39) 32x 4  (24,32)-(55,39) 32x 8  
-    SW 2: ( 0,32)-(31,35) 32x 4  ( 0,36)-(31,39) 32x 4  ( 0,32)-(31,39) 32x 8  
-    WT 3: ( 4, 0)-( 7,39)  4x40  ( 0, 0)-( 3,39)  4x40  ( 0, 0)-( 7,39)  8x40  
-    NW 4: ( 0, 4)-(31, 7) 32x 4  ( 0, 0)-(31, 3) 32x 4  ( 0, 0)-(31, 7) 32x 8  
-    NE 5: (24, 4)-(55, 7) 32x 4  (24, 0)-(55, 3) 32x 4  (24, 0)-(55, 7) 32x 8  
+    SE 1: (24,32)-(55,35) 32x 4  (24,36)-(55,39) 32x 4  (24,32)-(55,39) 32x 8
+    SW 2: ( 0,32)-(31,35) 32x 4  ( 0,36)-(31,39) 32x 4  ( 0,32)-(31,39) 32x 8
+    WT 3: ( 4, 0)-( 7,39)  4x40  ( 0, 0)-( 3,39)  4x40  ( 0, 0)-( 7,39)  8x40
+    NW 4: ( 0, 4)-(31, 7) 32x 4  ( 0, 0)-(31, 3) 32x 4  ( 0, 0)-(31, 7) 32x 8
+    NE 5: (24, 4)-(55, 7) 32x 4  (24, 0)-(55, 3) 32x 4  (24, 0)-(55, 7) 32x 8
 
 
 :317]
@@ -5826,13 +5826,13 @@ pretty plausible.  It even almost seems sensible that it's different
 than either visible or cache rects.  We even have our command line
 switch -mitc updated for it:
 
-      VIZ                    CCH                    ALL                    NGB                    
-ET 0: (48, 0)-(51,39)  4x40  (52, 0)-(55,39)  4x40  (48, 0)-(55,39)  8x40  (52, 4)-(55,35)  4x32  
-SE 1: (24,32)-(55,35) 32x 4  (24,36)-(55,39) 32x 4  (24,32)-(55,39) 32x 8  (28,36)-(55,39) 28x 4  
-SW 2: ( 0,32)-(31,35) 32x 4  ( 0,36)-(31,39) 32x 4  ( 0,32)-(31,39) 32x 8  ( 0,36)-(27,39) 28x 4  
-WT 3: ( 4, 0)-( 7,39)  4x40  ( 0, 0)-( 3,39)  4x40  ( 0, 0)-( 7,39)  8x40  ( 0, 4)-( 3,35)  4x32  
-NW 4: ( 0, 4)-(31, 7) 32x 4  ( 0, 0)-(31, 3) 32x 4  ( 0, 0)-(31, 7) 32x 8  ( 0, 0)-(27, 3) 28x 4  
-NE 5: (24, 4)-(55, 7) 32x 4  (24, 0)-(55, 3) 32x 4  (24, 0)-(55, 7) 32x 8  (28, 0)-(55, 3) 28x 4  
+      VIZ                    CCH                    ALL                    NGB
+ET 0: (48, 0)-(51,39)  4x40  (52, 0)-(55,39)  4x40  (48, 0)-(55,39)  8x40  (52, 4)-(55,35)  4x32
+SE 1: (24,32)-(55,35) 32x 4  (24,36)-(55,39) 32x 4  (24,32)-(55,39) 32x 8  (28,36)-(55,39) 28x 4
+SW 2: ( 0,32)-(31,35) 32x 4  ( 0,36)-(31,39) 32x 4  ( 0,32)-(31,39) 32x 8  ( 0,36)-(27,39) 28x 4
+WT 3: ( 4, 0)-( 7,39)  4x40  ( 0, 0)-( 3,39)  4x40  ( 0, 0)-( 7,39)  8x40  ( 0, 4)-( 3,35)  4x32
+NW 4: ( 0, 4)-(31, 7) 32x 4  ( 0, 0)-(31, 3) 32x 4  ( 0, 0)-(31, 7) 32x 8  ( 0, 0)-(27, 3) 28x 4
+NE 5: (24, 4)-(55, 7) 32x 4  (24, 0)-(55, 3) 32x 4  (24, 0)-(55, 7) 32x 8  (28, 0)-(55, 3) 28x 4
 
 Time to commit, stop hacking, and move on to the day and to t2sup
 prep.
@@ -5862,3 +5862,1129 @@ we haven't yet locked up or crashed..  Just sayin.)
 :320]
 
 :319]
+[322:
+
+Sat Jul 25 03:34:49 2020 Well here we are again finally, after
+ALIFE2020 and t2sup and waffling and fidgeting because coming back
+and working on this stuff is so painful![323:
+
+Sat Jul 25 03:41:47 2020 Adding a 'Boot' reboot button and an 'Off'
+poweroff button[324:
+
+Sat Jul 25 04:11:08 2020 OK, trying the reboot button..
+[325:
+
+Sat Jul 25 04:15:24 2020 Seemed to work okay.  Might be nice to try to
+shut the engine down rather than 'just go', but ..  not now.  Got too
+many fish to fry.
+
+Committing this stuff.
+
+Then let's have a status check and round of to-do construction..
+
+:325]
+:324]
+
+:323]
+
+:322]
+[326:
+
+Sat Jul 25 13:17:41 2020 OK, a few developments (plus some sleep):
+
+ - I was freaking here because my :322:+ changes to this notes file
+   had vanished and I couldn't get them back, even though they were
+   clearly in the repo on github.
+
+   = DIAGNOSIS: cdm.pl had gotten around to overwritting /home/t2/MFM
+     with the official cdm-MFM.mfz file it found in /cdm/common
+
+   = SOLUTION: I think, just need to be careful to have an up-to-date
+     tag file (specifically, ~/cdmd-MFM.mfz-cdm-install-tag.dat, which
+     currently contains (and needs to) 1594052102.
+
+ - I lucked out and caught a tile having the kernel panic while I was
+   connected to its serial port, and minicom had enough scrollback for
+   me to see this:
+
+    [ 2065.384380] Empty pkt? OB kfifolen = -1 but pktlen = 0 (kfifo a27e561)
+    [ 2065.401594] ------------[ cut here ]------------
+    [ 2065.406268] kernel BUG at /home/t2/T2-12/pru/itcio/module/itcpkt.c:28!
+
+  which was enough to begin localizing the issue.  It's in
+  itcOBPktThreadRunner (AKA 'ITC_PktShipr')
+   -> shipCurrentOBPackets
+    -> shipAPacketToPRU
+     -> sendPacketViaRPMsg
+
+  = DIAGNOSIS: Incomplete, but the 'kfifolen = -1' is the proximal
+    problem.  That 'should be impossible'.  By looking at the kfifo
+    source:
+
+        #define kfifo_len(fifo) \
+        ({ \
+                typeof((fifo) + 1) __tmpl = (fifo); \
+                __tmpl->kfifo.in - __tmpl->kfifo.out; \
+        })
+
+    it suggests that kfifo.out has passed kfifo.in, which we presume
+    means we overflowed that kfifo sometime previously.  Where, we
+    don't yet know, but we now have something specific to look for, in
+    the outbound packet workflow.
+
+  = SOLUTION: Pending complete diagnosis.
+[331:
+
+Sat Jul 25 14:39:40 2020 So, shipAPacketToPRU has two calls on
+sendPacketViaRPMsg, and we don't know which call lead to the panic.  I
+want to think it's mPriorityOB, but we did think we saw cdm's moving
+too.
+
+[332:
+
+Sat Jul 25 14:45:36 2020 Currently we see:
+
+    root@beaglebone:~# cat /sys/class/itc_pkt/statistics
+    dir psan sfan toan mfmbsent mfmbrcvd mfmpsent mfmprcvd svcbsent svcbrcvd svcpsent svcprcvd
+    0 0 0 0 0 0 0 0 0 0 0 0
+    1 1 0 0 7487 300272 791 2284 62192 84331 1156 1542
+    2 1 0 0 6849 326451 744 2243 60393 86422 1124 1586
+    3 1 0 0 9680 0 4840 0 212 0 53 0
+    4 0 0 0 0 0 0 0 0 0 0 0
+    5 1 0 0 9400 274740 752 2146 62945 120672 1166 2185
+    6 1 0 0 9652 313571 765 2171 61005 87459 1126 1598
+    7 1 0 0 4138 59726 522 999 61753 101296 1141 1849
+    root@beaglebone:~#
+
+so there is service traffic moving, in the 10KB-100KB range, in
+addition to mfm traffic.
+
+But come on, let's just take a quick look at writers to mPriorityOB.
+The fact that we're seeing 'kfifolen = -1' suggests a genuine
+off-by-one problem could be it..[333:
+
+Sat Jul 25 14:55:03 2020 So, in trySendMFMRoutedKernelPacket we have:
+
+      if (kfifo_avail(&ipb->mFIFO) < count) return -EAGAIN; /* Never block */
+      ret = kfifo_in(&ipb->mFIFO, pkt, count); /*0 on no room else count*/
+
+      wakeOBPktShipper(); /* if we got this far, kick the linux->pru thread */
+
+      return ret ? ret : -ENOSPC;
+
+and I note a couple things:
+
+ - It could be 'if (kfifo_avail(&ipb->mFIFO) <= count)' if we wanted
+   to be safer, and
+
+ - We go to wakeOBPktShipper without checking if ret is zero
+[334:
+
+Sat Jul 25 15:14:51 2020 So looking at __kfifo_in_r, it makes me think
+that it's up to us -- caller -- to take the packet-length-overhead
+into consideration when we're checking if there's enough room to
+insert a packet.
+
+It says:
+
+	if (len + recsize > kfifo_unused(fifo))
+		return 0;
+
+	__kfifo_poke_n(fifo, len, recsize);
+
+	kfifo_copy_in(fifo, buf, len, fifo->in + recsize);
+	fifo->in += len + recsize;
+	return len;
+
+(and recsize == 1 for our case).  We say
+
+  if (kfifo_avail(&ipb->mFIFO) < count) return -EAGAIN; /* Never block */
+
+where count is just exactly our packet length, not our packet length
+plus one.
+
+What's the difference between kfifo_avail and kfifo_unused?
+[335:
+
+Sat Jul 25 15:20:38 2020 Well, we see
+
+    static inline unsigned int kfifo_unused(struct __kfifo *fifo)
+    {
+            return (fifo->mask + 1) - (fifo->in - fifo->out);
+    }
+
+and
+
+    #define	kfifo_avail(fifo) \
+    __kfifo_uint_must_check_helper( \
+    ({ \
+            typeof((fifo) + 1) __tmpq = (fifo); \
+            const size_t __recsize = sizeof(*__tmpq->rectype); \
+            unsigned int __avail = kfifo_size(__tmpq) - kfifo_len(__tmpq); \
+            (__recsize) ? ((__avail <= __recsize) ? 0 : \
+            __kfifo_max_r(__avail - __recsize, __recsize)) : \
+            __avail; \
+    }) \
+    )
+
+And I do not want to try unpacking that foggen kfifo_avail.
+
+[336:
+
+Sat Jul 25 15:30:17 2020 Let's just examine our kfifo_ins and such
+with an eye towards thinking we always need one more byte than the
+length of our packet, and see what we find.[337:
+
+Sat Jul 25 15:37:16 2020 (Need to remember mEvent is a fixed-size u32
+kfifo -- it does not have the record-length overhead.)
+
+:337]
+
+:336]
+
+:335]
+
+:334]
+
+:333]
+
+:332]
+
+:331]
+:326]
+[327:
+
+Sat Jul 25 13:46:44 2020 And watch out!  /home/t2/T2-12 (sometime
+quite recently) got overwritten by our industrious cdm.  Need to git
+clone a new tree there too..
+
+[328:
+
+Sat Jul 25 13:48:51 2020 Could we have 'make cdmd' automatically
+update the relevant tag file(s) to protect the repos we're working in?
+
+:328]
+
+:327]
+[329:
+
+Sat Jul 25 13:50:00 2020 Ooh I bet we need to be careful about not
+updating packages, with a brand-new cloned T2-12 repo.[330:
+
+Sat Jul 25 14:13:05 2020 So it looks like 'make cdmd' excludes .git
+files, so could we perhaps have cdm.pl choose not to overwrite dest
+dirs if a .git/ exists in the destination?  Or is that too implicit?
+
+:330]
+
+:329]
+[338:
+
+Sat Jul 25 15:38:42 2020 Woah, just saw an engine failure out of the
+blue on this very tile!  But it involved packet problems the LKM saw:
+
+    Jul 25 15:17:01 beaglebone CRON[3559]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+    Jul 25 15:37:26 beaglebone kernel: [ 8470.846038] (WT) Packet overrun reported on size 229 packet
+    Jul 25 15:37:26 beaglebone kernel: [ 8470.851745] (WT) Packet error reported on size 229 packet
+    Jul 25 15:37:26 beaglebone kernel: [ 8470.905538] (WT) Packet overrun reported on size 229 packet
+    Jul 25 15:37:26 beaglebone kernel: [ 8470.911233] (WT) Packet error reported on size 229 packet
+    Jul 25 15:37:26 beaglebone mfm.sh[1679]: Failed out of top-level
+    Jul 25 15:37:26 beaglebone kernel: [ 8470.954248] (WT) Packet overrun reported on size 229 packet
+    Jul 25 15:37:26 beaglebone kernel: [ 8470.959921] (WT) Packet error reported on size 229 packet
+    Jul 25 15:37:29 beaglebone mfm.sh[1679]: src/ITCIterator.cpp:11: FAILED: ILLEGAL_STATE
+    Jul 25 15:37:29 beaglebone mfm.sh[1679]: Failed out of main
+[341:
+
+Sat Jul 25 15:52:40 2020 Now I'm a little confused how we get a packet
+overrun on a packet that's much less that 255 bytes long..  Wondering
+if it could possibly be confusion from the kfifo len problems we're
+currently investigating.
+
+:341]
+Unfortunately we don't get the failure itself logged.  Why do we see
+the useless src/ITCIterator.cpp:11 failure -- coming from attempting
+to close the ITCs under stress -- but we don't see whatever lead to
+failing out of top level?  Something different between the two
+unwind_protects? [339:
+
+Sat Jul 25 15:48:19 2020 I guess it's the earlier one doesn't have this:
+
+      MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
+
+but why doesn't it?
+[340:
+
+Sat Jul 25 15:52:13 2020 Well now it does.  We'll see.
+
+:340]
+:339]
+
+:338]
+[342:
+
+Sat Jul 25 16:18:44 2020 OK, about time to go start dinner, but: We
+just finished going through all hits for 'kfifo_' in
+pru/itcio/module/*.[ch], and indeed we made a few changes like:
+
+    -  if (kfifo_avail(&ipb->mFIFO) < count) return -EAGAIN; /* Never block */
+    +  if (kfifo_avail(&ipb->mFIFO) < count + 1) /* Need +1 for packet length byte in fifo */
+    +    return -EAGAIN; /* Never block */
+
+and
+
+    -    while (kfifo_avail(&ipb->mFIFO) < count) {
+    +    while (kfifo_avail(&ipb->mFIFO) < count + 1) { /*Need +1 for packet length byte in kfifo */
+
+Going to commit it defensively at least.
+
+:342]
+[343:
+
+Sun Jul 26 00:11:25 2020 Well, let's see if we can get a cdmd
+production flow that preserves our work tile repos but lets the
+updates get out into our mini grid, here.
+
+How do we think that could work?
+
+ - Where does the cdm install tag value come from?[344:
+
+Sun Jul 26 00:24:29 2020 Apparently it's the 'inner timestamp' from
+the cdmd itself.  And that's defined when the cdmd is created: Maybe
+we could do this in Makefiles.[345:
+
+Sun Jul 26 00:47:10 2020 So 'checkMFZDataFor' in cdm.pl seems to be
+parsing out the innerTimestamp.
+
+:345]
+
+:344]
+
+ - Could we make a special cdmctl function that sets up the tag
+   without installing the file locally?[346:
+
+Sun Jul 26 00:50:28 2020 OK, so this command seems pretty key:
+
+    t2@beaglebone:~$ /home/t2/MFM/bin/mfzrun -kd /cdm /cdm/common/cdmd-MFM.mfz VERIFY
+    SIGNATURE_CHECK [OK]
+    INNER_CHECKSUM [413536-cd1e-0e467d]
+    INNER_TIMESTAMP [1594073702]
+    SIGNING_HANDLE [t2-keymaster-release-10]
+    HANDLE_FINGERPRINT [85ee-b41-7cb3]
+    HANDLE_PUBKEY [-----BEGIN RSA PUBLIC KEY-----
+    MIGJAoGBAMUbUl/GDrkKYB3ORkeetZEkKisfgiwl6TgoqAB7dfK1gGN3bzDyz/+A
+    LisTyW0b+64ePqv1liBxJEBOd2eX9+hTnngasOrb8RIQN6vTPg6+3WGAmgtez3kg
+    5KSeBLlgMaEbKkeOXZU+pbAaUzL6EGr/O/ESdTE6Lh6azq2DR3P7AgMBAAE=
+    -----END RSA PUBLIC KEY-----
+    ]
+    t2@beaglebone:~$
+
+[347:
+
+Sun Jul 26 00:52:11 2020 Although in that context this is a little
+distressing:
+
+    t2@beaglebone:~$ cat cdmd-MFM.mfz-cdm-install-tag.dat
+    1594052102
+    t2@beaglebone:~$
+
+[348:
+
+Sun Jul 26 00:55:03 2020 Eeew, look:
+
+    t2@beaglebone:~$ perl -e 'printf("%f\n",1594073702-1594052102)'
+    21600.000000
+    t2@beaglebone:~$ perl -e 'printf("%f\n",(1594073702-1594052102)/60.0/60.0)'
+    6.000000
+    t2@beaglebone:~$
+
+The install tag time is _exactly_ six hours earlier than the mfzrun
+inner timestamp, which is _exactly_ the GMT to Mountain Time offset.
+
+So we _think_ this disgusting hack in cdm.pl --
+
+    #### REPLACE THIS WITH 'mfzrun VERIFY' ONCE AVAILABLE
+ ..
+    my $strp = DateTime::Format::Strptime->new(
+        pattern   => '%a %b %e %H:%M:%S %Y',
+        );
+    my $dt = $strp->parse_datetime( $timestamp );
+    my $epoch = $dt->strftime("%s");
+ ..
+
+is giving us local time, which ends up in the tag?
+
+[349:
+
+Sun Jul 26 03:08:24 2020 OK, so we've made an attempt at switching to
+'mfzrun VERIFY', which we think would solve the timezone screwup..
+We've committed and pushed on T2-12 in case cdm tries to reinstall
+over our repos again.  But we think if all this untested code is
+plausible, we ought to be able to do VERIFY on the existing cdmds, and
+copy the inner timestamp to the tag files, and cdm ought to leave us
+alone.
+
+OUGHT TO LEAVE US ALONE.
+
+[350:
+
+Sun Jul 26 03:32:53 2020 Committing these notes.
+
+:350]
+
+:349]
+
+:348]
+
+:347]
+:346]
+
+:343]
+[351:
+
+Sun Jul 26 03:51:06 2020 Well, had a bug or two in the new code, but
+it appears manually updating the tag files did indeed save our
+repos..
+
+Now, what is supposed to be the workflow for releasing a new cdmd?
+And how shall we modify it to Save The Repos (TM)?[352:
+
+Sun Jul 26 04:08:17 2020 Well, T2-12/apps/cdm/cdmctl appears not to be
+involved.  So far it's all about deletions:
+
+my %cmds = (
+    "help" => \&doHelp,
+    "delete" => \&doDelete,
+    "listdeleted" => \&doListDeleted,
+    "initmap" => \&doInitMap,
+    );
+
+So do we just stick a new cdmd in common and let cdm.pl sniff it up?
+
+Let's make up a procedure and try it for T2-12.  That's the one we'd
+like to push the most right now, and it's a LOT smaller than the
+absurd MFM one..
+
+[353:
+
+
+Sun Jul 26 04:10:42 2020
+
+HOW TO RELEASE cdmd-T2-12.mfz:
+
+(0) Be on the keymaster
+
+(1) Get /home/t2/T2-12 exactly the way you want it, and make sure
+    everything is committed and pushed and the tree is clean
+
+(2) Do
+      # cd /home/t2/T2-12
+      # make cdmd
+    and check it seems to've worked properly
+
+(3) On a connected machine, perhaps do
+      $ cd /data/ackley/PART4/hardware/T2-Tile-Project/CDM-TGZS-BACKUP
+      $ ./scripts/T2PullCode IP.OF.KEY.MASTER
+    and see if the cdmd just made arrives in
+    /data/ackley/PART4/hardware/T2-Tile-Project/CDM-TGZS-BACKUP/CDMSAVE/CDMDS/
+    [355: Sun Jul 26 04:45:56 2020 E.g., can do:
+
+        .../hardware/T2-Tile-Project/CDM-TGZS-BACKUP$ /data/ackley/PART4/code/D/MFM/bin/mfzrun CDMSAVE/CDMDS/cdmd-T2-12.mfz VERIFY
+        SIGNATURE_CHECK [OK]
+        INNER_CHECKSUM [3b2dfe-b23f-60ed9f]
+        INNER_TIMESTAMP [1595760220]
+        SIGNING_HANDLE [t2-keymaster-release-10]
+        HANDLE_FINGERPRINT [85ee-b41-7cb3]
+        HANDLE_PUBKEY [-----BEGIN RSA PUBLIC KEY-----
+        MIGJAoGBAMUbUl/GDrkKYB3ORkeetZEkKisfgiwl6TgoqAB7dfK1gGN3bzDyz/+A
+        LisTyW0b+64ePqv1liBxJEBOd2eX9+hTnngasOrb8RIQN6vTPg6+3WGAmgtez3kg
+        5KSeBLlgMaEbKkeOXZU+pbAaUzL6EGr/O/ESdTE6Lh6azq2DR3P7AgMBAAE=
+        -----END RSA PUBLIC KEY-----
+        ]
+        .../hardware/T2-Tile-Project/CDM-TGZS-BACKUP$
+
+    :355]
+
+(4) Do
+      $ /home/t2/MFM/bin/mfzrun -kd /cdm ~/cdmd-T2-12.mfz VERIFY
+    and find the inner timestamp, like 'INNER_TIMESTAMP [1594073702]'
+
+(5) Stuff it into the tag file, like
+      $ echo 1594073702 > ~/cdmd-T2-12.mfz-cdm-install-tag.dat
+
+(6) If all looks okay, 'release' by copying to /cdm/common:
+
+      # cp /home/t2/cdmd-T2-12.mfz /cdm/common
+
+    and watch syslog, or wherever you have cdm.pl reporting, to see
+    if/when it picks up the modtime change on the file.
+
+(7) Observe cautiously until something like
+
+        INSTALL T2-12: We are up to date; nothing to do
+
+    occurs.
+    [356: Sun Jul 26 04:48:55 2020 E.g, whammo!
+
+        root@beaglebone:/home/t2/T2-12# cp /home/t2/cdmd-T2-12.mfz /cdm/common
+        root@beaglebone:/home/t2/T2-12# MODTIME CHANGE /cdm/common/cdmd-T2-12.mfz size 2598477
+         /cdm/common/cdmd-T2-12.mfz: t2-keymaster-release-10 => 1595760220
+        Assigning seqno 5 for cdmd-T2-12.mfz
+        INSTALL found candidate T2-12 -> /home/t2
+        INSTALL T2-12: We are up to date; nothing to do
+        ANNOUNCED cdmd-T2-12.mfz to 4
+        To NW Starting to send cdmd-T2-12.mfz (1595760220:c69fa22015)
+        To SW Starting to send cdmd-T2-12.mfz (1595760220:c69fa22015)
+        To SE Starting to send cdmd-T2-12.mfz (1595760220:c69fa22015)
+
+  :356]
+
+[354:
+
+Sun Jul 26 04:40:38 2020 Well okay, trying :353:, we shall see.[357:
+
+Sun Jul 26 04:49:38 2020
+
+:357]
+
+:354]
+
+:353]
+
+:352]
+
+:351]
+[358:
+
+Sun Jul 26 04:54:06 2020 Well, so I wonder if we can shrink
+cdmd-MFM.mfz a bit.  At the moment it's 28 FOGGEN MEG and takes hours
+to propagate one hop.
+
+:358]
+[359:
+
+Sun Jul 26 06:00:37 2020 Well so I've been watching cdmd-T2-12.mfz
+propagate on a few tiles.  Two observations:
+
+ - cdmd-T2-12.mfz gets installed twice on every destination!  The
+   first time it gets installed, it's the old cdm.pl running, which
+   uses the localtime for the tag file.  Then cdm.pl restarts
+   automatically, and the new cdm.pl assumes the tag file is GMT (as
+   it should), and observes the tag file is (precisely six hours)
+   obsolete, and it installs again.  And then it restarts again, and
+   then things are stable.
+
+ - The tile does not reboot automatically, so although the new LKM is
+   built, it doesn't actually take effect without a manual
+   intervention of some kind.  What do we think about that?  Rebooting
+   automatically is scary.
+
+:359]
+[360:
+
+Sun Jul 26 06:07:06 2020 Poking around in cdmd-MFM.mfz, it looks like
+I could save seven meg just by getting rid of
+
+ -rw-r--r--       0/0       7282674 MFM/res/images/mfms-icons-ZSHEET-orig.png
+
+Is anybody even looking at that?
+[361:
+
+Sun Jul 26 06:17:41 2020 Well, I git rm'd it.  We shall see.  Trying
+
+    /home/t2/MFM# make cdmd
+
+after doing a 'make clean' (not realclean).  [362:
+
+Sun Jul 26 06:18:51 2020 Result:
+
+  -rw-r--r--  1 root root 15421782 Jul 26 06:18 cdmd-MFM.mfz
+  -rw-r--r--  1 root root 15549495 Jul 26 06:17 MFM-built.tgz
+  -rw-r--r--  1 t2   t2         11 Jul 26 04:47
+
+15MB is still horrible but it's better than 28MB..[363:
+
+Sun Jul 26 06:33:41 2020 Well, trying an optimized build, then will do
+'make clean' then 'make cdmd', and then we'll see about letting cdm.pl
+try to distribute that.[364:
+
+Sun Jul 26 06:44:03 2020 Wow, well the size is certainly improved:
+
+  -rw-r--r--  1 root root 5551433 Jul 26 06:43 cdmd-MFM.mfz
+
+
+
+:364]
+
+:363]
+
+:362]
+
+:361]
+:360]
+[365:
+
+Sun Jul 26 06:49:09 2020 Auggh and I fogged it up by doing:
+
+    t2@beaglebone:~/MFM$ echo 1595767408 ../cdmd-MFM.mfz-cdm-install-tag.dat
+    1595767408 ../cdmd-MFM.mfz-cdm-install-tag.dat
+    t2@beaglebone:~/MFM$
+
+and not noticing!  Arrrrgh!.
+
+:365]
+[366:
+
+Sun Jul 26 06:52:04 2020 Well, cloned afresh, and did manage to save
+these notes, FWTW.
+
+Committing them.
+
+:366]
+[367:
+
+Mon Jul 27 00:06:05 2020 Ah okay, so: We still have LKM issues :( --
+corruption of some kind, with our kfifo use still suspect.  On the
+keymaster, we got stuff like this:
+
+    Jul 26 09:38:33 beaglebone kernel: [ 5508.469507] Malformed locstd3 (len=20)
+    Jul 26 09:38:33 beaglebone kernel: [ 5508.497351] Malformed locstd3 (len=20)
+    Jul 26 09:38:33 beaglebone kernel: [ 5508.522103] Malformed locstd3 (len=20)
+    Jul 26 09:38:33 beaglebone kernel: [ 5508.526052] Illegal standard local packet 29
+    Jul 26 09:38:33 beaglebone kernel: [ 5508.534352] Illegal standard local packet 13
+    Jul 26 09:38:33 beaglebone kernel: [ 5508.539174] Empty pkt? OB kfifolen = -2400432 but pktlen = 0 (kfifo 5c253382, prudev c061d7c8)
+
+    Message from syslogd@beaglebone at Jul 26 09:38:33 ...
+     kernel:[ 5508.563464] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
+
+And the only thing we can think of to do at this point is:
+
+ - Review all 'kfifo_' hits _again_ on first principles
+
+   = In particular, checking the flows of control after an out-of-room
+     situation occurred when trying to put something in a kfifo
+
+ - Armor all writes to a kfifo, e.g., using wrapper macros of our own:
+
+   = Check that space really is available
+
+   = Check that the avail after the write is indeed the (availBefore -
+     len - 1), for packet kfifos
+
+
+ - Double check what we think are all our possible races: Interrupts,
+   kthreads, and syscalls.
+
+Sigh.
+
+I feel like the Indians starting to whoop it up at the end of
+'Temporarily Humboldt County':
+
+Well, let's go.
+
+Go.. go... go. GO.. GO.. GO GO GO GO (fade)
+
+:367]
+[368:
+
+Mon Jul 27 02:45:43 2020 Well I started into kfifo armoring and did
+some stuff, without apparently breaking or discovering anything
+significant, and then I ended up in the time machine reading old
+notes -- 201901191229-intertile-model-notes.txt in particular, which
+is where the whole outbound packet shipper thread concept was first
+invented.
+
+And I see this interesting note, which I had quite forgotten:
+
+    [210
+
+    Thu Jun 20 01:15:05 2019 So, with variable length records such as we
+    are using, kfifo_avail returns the max number of bytes YOU CAN PUT IN
+    THE NEXT RECORD.  That's why I'm seeing avail==255 both before and
+    after I stick stuff in a kfifo.
+
+    210]
+
+So that kind of undercuts my big 'off by 1 because of size' claim, at
+least for anything involving kfifo_avail.[369:
+
+Mon Jul 27 03:28:28 2020 Releasing another bein to flood stuff.  Doing
+'dmesg -wH' on my two serial connections to hope to see anything
+interesting new.
+
+:369]
+
+:368]
+[370:
+
+Mon Jul 27 23:40:21 2020 Well, added a bunch of LKM that purports to
+dump info about most of our kfifos, and purportedly set it up to fire
+as a drive-by when we do
+
+   $ cat /sys/class/itc_pkt/statistics
+
+But it's entirely untested, beyond building successfully, and I think
+we ought to be extra careful here, because we're way out of practice
+in LKM land, so I'm going to both WIP commit and bits off as well.
+
+:370]
+[371:
+
+Tue Jul 28 00:39:11 2020 Well it didn't die, but it was hooked onto
+something that MFM was reading every second so it spammed the log more
+than I meant.  Reorged a little and moved it do
+/sys/class/itc_pkt/pru_bufs..  Going again
+
+RISKY BITS OFF.
+
+:371]
+[372:
+
+Tue Jul 28 03:37:04 2020 OK, going to commit again.  Hacked around
+with several things:
+
+ - Making /etc/sysctl.d/T2-12-sysctl.conf with 'kernel.panic = 30' in
+   it, that's supposed to cause an automatic reboot 30 seconds after a
+   panic.  If it avoids blowing the disk journal after a panic that
+   could be quite helpful, and we're obviously going to need 'nonstop'
+   service down the road no matter what.
+
+ - New buttons so we can build non-splitting (#1) and splitting (#2)
+   beins without recompiling.
+
+ - Alleged auto-erase on failed event transitions
+
+ - A new write-only /sys/class/itc_pkt/dump that triggers kfifo status
+   info to syslog, with a user message.
+
+:372]
+[373:
+
+Tue Jul 28 04:18:14 2020 Well, let's commit and push T2-12 and MFM,
+try them one more time on the keymaster, then roll out new cdmd's for
+them.
+
+I want to see splits with the new kfifo logging.  Could get lucky.
+Especially with the kernel.panic autoreboot thing, if that works.
+
+:373]
+[374:
+
+Wed Jul 29 06:15:49 2020 Well, tried a bunch of things without much
+new insight.
+
+ - The autoboot stuff works, but panic reboots don't sync the disk so
+   we still lose data.  The only thing that works is minicom on the
+   serial port with a huge scrollback buffer.  And we only have two
+   USB-serial cables with us at present (plus limited available USB
+   ports).
+
+ - Still upping the logging in itcpkt trying to improve the chances of
+   seeing something helpful.  About to reboot to try another round of
+   that.[375:
+
+Wed Jul 29 06:19:44 2020 Latest anything that we caught was this (yes,
+it's cleaned up from minicom scrollback):
+
+    [31002.851701] XKFIFO OB prudev itc!pru!1, kfifo mPriorityOB, kfifolen = 3, pktlen = 0
+
+So the problem is kfifo_len()==3 is saying there's something there,
+but kfifo_peek_len()==0 is saying the next packet outbound packet is
+of length 0, and that should be impossible.
+
+    [31002.865035] DUMPITCSTATUS DUMPITCSTATUS DUMPITCSTATUS
+    [31002.878107] kfifoptr---kfifoin/out------mskin/out----len-avail-mnrflg name----------------
+    [31002.892839] 7de8f689         0/0            0/0       0l 255a   0   mLocalIB-itc!pru!0
+    [31002.907716] 07337d5b         0/0            0/0       0l 255a   0rp mPriorityOB-itc!pru!0
+    [31002.927702] b727ac4a         0/0            0/0       0l 255a   0r  mBulkOB-itc!pru!0
+    [31002.953916] 6c913277         0/0            0/0       0l 255a   1   mLocalIB-itc!pru!1
+    [31002.968541] 4a68b444   7129366/7129297   2326/2257   69l 255a   1rp mPriorityOB-itc!pru!1
+
+Interestingly, by the time the status dump got this far, that same
+kfifo -- mPriorityOB for PRU1 -- now has kfifo_len() == 69.
+
+    [31002.981651] d04a4086   1503419/1503419    187/187     0l 255a   1r  mBulkOB-itc!pru!1
+    [31002.995409] 9327dea3   1339328/1339328   4032/4032    0l 255a   2   mUserIB-itc!bulk
+    [31003.008373] a81c968a         0/0            0/0       0l 255a   3   mUserIB-itc!flash
+    [31003.022516] 16aea8a9         0/0            0/0       0l 255a   6   mUserIB-itc!mfm!ET
+    [31003.035869] 606d31fc         0/0            0/0       0l 255a   7   mUserIB-itc!mfm!SE
+    [31003.049713] 4245ecf8         0/0            0/0       0l 255a   8   mUserIB-itc!mfm!SW
+    [31003.065295] 5a234c1a   1898075/1898075   1627/1627    0l 255a   9   mUserIB-itc!mfm!WT
+    [31003.077259] d6bc9360   1691891/1691885    243/237     6l 255a   a   mUserIB-itc!mfm!NW
+    [31003.090307] 33548300   2311965/2311965   1821/1821    0l 255a   b   mUserIB-itc!mfm!NE
+    [31003.104486] ------------[ cut here ]------------
+    [31003.112388] kernel BUG at /home/t2/T2-12/pru/itcio/module/itcpkt.c:344!
+
+And this is the explicit BUG_ON(1) following the status dump following
+the pktlen == 0..
+
+    [31003.119033] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
+    [31003.124894] Modules linked in: joydev cpufreq_userspace c_can_platform c_can can_dev fb_
+    ili9486(C) fbtft(C) ads7846 evdev uio_pdrv_genirq uio iptable_nat nf_nat_ipv4 nf_nat nf_con
+    ntrack nf_defrag_ipv6 nf_defrag_ipv4 iptable_mangle iptable_filter itc_pkt(O) itc(O) ip_tab
+    les x_tables spidev
+    [31003.150663] CPU: 0 PID: 1213 Comm: ITC_PktShipr Tainted: G         C O      4.19.79-ti-r30 #1buster
+    [31003.159747] Hardware name: Generic AM33XX (Flattened Device Tree)
+    [31003.165954] PC is at sendPacketViaRPMsg+0x7c/0x298 [itc_pkt]
+    [31003.171655] LR is at wake_up_klogd+0x7c/0xa8
+    [31003.175943] pc : [<bf048964>]    lr : [<c01ad434>]    psr: 600e0013
+    [31003.182236] sp : db0c9ef8  ip : db0c9c88  fp : db0c9f34
+    [31003.187482] r10: 00000003  r9 : 0000007f  r8 : db0c4040
+    [31003.192730] r7 : 00000001  r6 : bf04db7c  r5 : 00000000  r4 : db0c5314
+    [31003.199286] r3 : bad55a76  r2 : bad55a76  r1 : c10ff388  r0 : 0000004a
+    [31003.205844] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
+    [31003.213011] Control: 10c5387d  Table: 9b1dc019  DAC: 00000051
+    [31003.218786] Process ITC_PktShipr (pid: 1213, stack limit = 0x06308bbc)
+    [31003.225343] Stack: (0xdb0c9ef8 to 0xdb0ca000)
+    [31003.229720] 9ee0:                                                       00000000 bf04d980
+    [31003.237938] 9f00: db0c9f1c c14d0adc ffffe000 db0c4040 ffffe000 bf04db7c 00000001 00000000
+    [31003.246155] 9f20: 0000007f 00000002 db0c9f74 db0c9f38 bf048c44 bf0488f4 bf04d980 c1505dc8
+    [31003.254372] 9f40: db0c9f74 bad55a76 c0160a5c db041540 db041e00 00000000 db0c8000 bf04dbac
+    [31003.262589] 9f60: bf048b80 dc621a2c db0c9fac db0c9f78 c0160f6c bf048b8c db04155c db04155c
+    [31003.270805] 9f80: 00000000 db041e00 c0160e00 00000000 00000000 00000000 00000000 00000000
+    [31003.279021] 9fa0: 00000000 db0c9fb0 c01010e8 c0160e0c 00000000 00000000 00000000 00000000
+    [31003.287238] 9fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    [31003.295454] 9fe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
+    [31003.303734] [<bf048964>] (sendPacketViaRPMsg [itc_pkt]) from [<bf048c44>] (itcOBPktThreadRunner+0xc4/0x188 [itc_pkt])
+    [31003.314421] [<bf048c44>] (itcOBPktThreadRunner [itc_pkt]) from [<c0160f6c>] (kthread+0x16c/0x174)
+    [31003.323341] [<c0160f6c>] (kthread) from [<c01010e8>] (ret_from_fork+0x14/0x2c)
+    [31003.330594] Exception stack(0xdb0c9fb0 to 0xdb0c9ff8)
+    [31003.335668] 9fa0:                                     00000000 00000000 00000000 00000000
+    [31003.343884] 9fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    [31003.352100] 9fe0: 00000000 00000000 00000000 00000000 00000013 00000000
+    [31003.358750] Code: e30a0e68 e34b0f04 eb4594c6 ebffff8e (e7f001f2)
+    [31003.364887] ---[ end trace c3351d5684549665 ]---
+    [31003.369528] Kernel panic - not syncing: Fatal exception
+
+Urggh.  I understand why.. but that means all this stuff I'm showing
+you, right here, is not actually anywhere on the disk.
+
+    [31003.374791] Rebooting in 20 seconds..
+
+And this worked.
+
+:375]
+
+:374]
+[376:
+
+Wed Jul 29 14:31:14 2020 So, because it's 2020, more hardware
+anxieties too:
+
+ - SETUP: Three tiles connected in a triangle:
+
+    +--------++---------+
+    |        ||         |
+    |        --         |
+    |on      --      off|
+    |T1  sf! ||       T2|
+    +----||--++--||-----+
+       +-||------||-+
+       | sf!        |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+   = All share grid power
+
+   = T2 is off, T1 and KM are booted
+
+ - BEHAVIOR: The T1/SE <-> KM/NW connection gets repeated sync
+   failures, every 0.5-2 seconds or so, and fails to stay open.
+
+ - SETUP: Now, power up T2:
+
+    +--------++---------+
+    |        ||         |
+    |        --         |
+    |on      --       on|
+    |T1  OK! ||       T2|
+    +----||--++--||-----+
+       +-||------||-+
+       | OK!        |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+ - BEHAVIOR: The sync failures on the T1/SE <-> KM/NW connection
+   vanish; the connection is solid.[377:
+
+Wed Jul 29 14:50:41 2020 Oh and here's a lovely new wrinkle I
+absolutely wasn't expecting.
+
+ - SETUP: As above, except now T1 and T2 are not directly connected at
+   all:
+
+    +--------++---------+
+    |        ||         |
+    |        ||         |
+    |on      ||      off|
+    |T1  ns  ||       T2|
+    +----||--++--||-----+
+       +-||------||-+
+       | ns         |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+ - BEHAVIOR: The T1/SE <-> KM/NW connection fails to sync at all.
+
+ - SETUP: Now power up T2:
+
+    +--------++---------+
+    |        ||         |
+    |        ||         |
+    |on      ||       on|
+    |T1  OK! ||       T2|
+    +----||--++--||-----+
+       +-||------||-+
+       | OK!        |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+ - BEHAVIOR: The T1/SE <-> KM/NW connection opens and remains solid.
+
+[378:
+
+Wed Jul 29 15:12:33 2020 So it appears the issue is 'all' in KM?
+
+ - QUESTION: Suppose we disconnect KM/NE <-> T2/SW?  Does T1/SE <->
+   KM/NW then open, even though T2 is off?
+
+ - BEHAVIOR: YES, yes it does: 
+
+    +--------++---------+
+    |        ||         |
+    |        ||         |
+    |on      ||      off|
+    |T1  OK! ||       T2|
+    +----||--++---------+
+       +-||---------+
+       | OK!        |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+ - QUESTION: Suppose we reconnect T1/ET <-> T2/WT?  Does T1/SE <->
+   KM/NW remain open?
+
+ - BEHAVIOR: YES, yes it does: 
+
+    +--------++---------+
+    |        ||         |
+    |        --         |
+    |on      --      off|
+    |T1  OK! ||       T2|
+    +----||--++---------+
+       +-||---------+
+       | OK!        |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+[379:
+
+Thu Jul 30 00:31:18 2020 So maybe we could actually break out the
+oscilloscope and see if we can see anything that might help explain
+this behavior.
+
+If this behavior is really actually repeatable, in the end..
+
+Let's stick a PD into T2/SW <-> KM/NE and see if T1/SE <-> KM/NW loses
+sync.. [380:
+
+Thu Jul 30 00:36:40 2020 Seems like apparently not? :(
+
+ - SETUP: Now we have this:
+
+    +--------++---------+
+    |        ||         |
+    |        --         |
+    |on      --      off|
+    |T1  OK  ||       T2|
+    +----||--++--||-----+
+       +-||------||-+
+       | OK         |
+       |            |
+       |on          |
+       |KM          |
+       +------------+
+
+ - BEHAVIOR: ..and the preexisting T1/SE <-> KM/NW remains open.
+
+   = So it's not immediately repeatable.  Let's power up T2 and see
+     what happens..
+
+[381:
+
+Thu Jul 30 00:48:43 2020 Hmm, so T2/SE <-> KM/NW gitched a bunch of
+times, while I was (trying to get into position and) pushing the power
+button, but then stopped glitching and remained open, long before T2
+had finished booting.
+
+[382:
+
+Thu Jul 30 00:59:01 2020 So the hardware debugging remains ambiguous
+and frustrating.
+
+:382]
+
+:381]
+
+:380]
+
+:379]
+:378]
+:377]
+
+:376]
+[383:
+
+Thu Jul 30 01:21:10 2020 Well so I relaxed in the afternoon and
+concluded that we have to step up the engine tracing machinery yet
+another notch.  In for a penny in for a ton.
+
+Last we talked on this topic, we had implemented rolling disk buffers
+so that we would retain the latest 8MB (by default) of engine tracing,
+when it was active.
+
+But we were seeing failures-to-log and kernel panics that we
+interpreted as possible evidence that the actual disk was being
+stressed by the rate we were pounding trace data out to it.  Which
+made us unwilling or unable to have tracing turned on by default
+[387:
+
+Thu Jul 30 03:24:29 2020 And so my plan for RIGHT NOW is to rehack the
+engine tracing based on the following observations and goals:
+
+ - Unlike the LKM, the engine rarely actually crashes (although we're
+   having some issues with that at the moment).  Usually it's a FAIL
+   that we have no idea how to respond to.
+
+ - We will keep a rolling trace buffer in memory, with a command line
+   configurable size (defaulting to perhaps 4MB?), and we won't commit
+   that buffer to disk AT ALL, unless some triggering condition -- such
+   as but not limited to FAIL-out-of-top-level -- occurs.
+
+ - When such a triggering condition occurs, which we will call an
+   'EJECT', we'll stop and atomically write the whole rolling trace
+   buffer to disk, leaving the buffer empty, before continuing with
+   whatever happens next
+
+ - We'll also roll ejected disk buffers as needed to minimize the
+   total space trace data is taking up.
+
+[388: Thu Jul 30 03:31:49 2020
+
+ - We'd also like to get flash traffic going, so there could be a
+   chance of requesting EJECTs from one's neighbors, but that's a
+   whole separate kettle of fish.
+
+ - We'd ALSO like to draft our physical push button to generate an
+   EJECT, so we could do that independent of GUI context.
+
+[389:
+
+Thu Jul 30 03:39:15 2020 Are we reading the button at all, in the
+engine?  I kind of think we're not ATM..
+
+:389]
+
+:388]
+
+:387]
+:383]
+[384:
+
+Thu Jul 30 01:48:17 2020 Oops, caught another panic in one of my
+serial ports:
+
+    [39602.426096] Illegal standard local packet e0+2
+    [39602.430664] <pru1: b7132885: e0 5b                                            .[
+
+So that's our 'improved error message', dumping the illegal packet (at
+ictpkt.c:2366).  Not sure how much it tells us, but at least it's
+pointing the finger at pru1 now.
+[385:
+
+Thu Jul 30 02:05:03 2020 Is it possible this packet might be an actual
+corruption (tied to heavy use perhaps), and we're mishandling it and
+something corrupting kfifos in the process?[386:
+
+Thu Jul 30 02:22:50 2020 Well, it's hard to see how: We don't actually
+store those packets anywhere anyway..  Problem almost surely starting
+elsewhere.. 
+
+:386]
+
+:385]
+    [39602.440741] XKFIFO OB prudev itc!pru!1, kfifo mPriorityOB, kfifolen = -101, pktlen = 0
+    [39602.462231] DUMPITCSTATUS DUMPITCSTATUS DUMPITCSTATUS
+    [39602.473087] kfifoptr---kfifoin/out------mskin/out----len-avail-mnrflg name----------------
+    [39602.487550] 3e88bc91      2447/0         2447/0    2447l 255a   0   mLocalIB-itc!pru!0
+    [39602.503827] 558a7f4d   4498498/4498407   1090/999    91l 255a   0rp mPriorityOB-itc!pru!0
+    [39602.519994] 55228e26   1293882/1293717   3642/3477  165l 255a   0r  mBulkOB-itc!pru!0
+    [39602.532971] bc63cdcb       104/0          104/0     104l 255a   1   mLocalIB-itc!pru!1
+    [39602.546910] f10ff6d1   2414326/2414427   1782/1883 -101l 255a   1rp mPriorityOB-itc!pru!1
+
+So we have lot more non-empty kfifos this time, leading up to our -101
+problem.
+
+    [39602.560488] 262c8dc5    635777/635722     897/842    55l 255a   1r  mBulkOB-itc!pru!1
+    [39602.574507] b4cfd749   2196866/2196866   1410/1410    0l 255a   2   mUserIB-itc!bulk
+    [39602.587565] 9a12c977         0/0            0/0       0l 255a   3   mUserIB-itc!flash
+    [39602.601409] 2e3f8adf    416746/416746    3050/3050    0l 255a   6   mUserIB-itc!mfm!ET
+    [39602.614704] 1738beaa   1925417/1925417    297/297     0l 255a   7   mUserIB-itc!mfm!SE
+    [39602.628904] 005a7f04   2406585/2406585   2233/2233    0l 255a   8   mUserIB-itc!mfm!SW
+    [39602.642036] 37428f47         0/0            0/0       0l 255a   9   mUserIB-itc!mfm!WT
+    [39602.655977] e16c3dae         0/0            0/0       0l 255a   a   mUserIB-itc!mfm!NW
+    [39602.669475] 4ad87ea9   2044233/2044233    329/329     0l 255a   b   mUserIB-itc!mfm!NE
+    [39602.683630] ------------[ cut here ]------------
+    [39602.691487] kernel BUG at /home/t2/T2-12/pru/itcio/module/itcpkt.c:344!
+    [39602.698130] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
+    [39602.703991] Modules linked in: joydev cpufreq_userspace c_can_platform c_can can_dev fb_ili9486(C) fbtft(C) evdev ads7846 uio_pdrv_genirq uio 80
+    21q garp stp mrp llc iptable_nat nf_nat_ipv4 nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 iptable_mangle iptable_filter itc_pkt(O) itc(O) ip_t
+    ables x_tables spidev
+    [39602.731783] CPU: 0 PID: 1236 Comm: ITC_PktShipr Tainted: G         C O      4.19.79-ti-r30 #1buster
+    [39602.740868] Hardware name: Generic AM33XX (Flattened Device Tree)
+    [39602.747075] PC is at sendPacketViaRPMsg+0x80/0x2a4 [itc_pkt]
+    [39602.752777] LR is at wake_up_klogd+0x7c/0xa8
+    [39602.757066] pc : [<bf048a3c>]    lr : [<c01ad434>]    psr: 60070013
+    [39602.763359] sp : db173ef8  ip : db173c88  fp : db173f34
+    [39602.768605] r10: ffffff9b  r9 : 0000007f  r8 : db128040
+    [39602.773853] r7 : 00000001  r6 : bf04eb7c  r5 : 00000000  r4 : db129318
+    [39602.780408] r3 : bad55a76  r2 : bad55a76  r1 : c10ff388  r0 : 0000004a
+    [39602.786966] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
+    [39602.794131] Control: 10c5387d  Table: 9c7e8019  DAC: 00000051
+    [39602.799908] Process ITC_PktShipr (pid: 1236, stack limit = 0x26571f6a)
+    [39602.806465] Stack: (0xdb173ef8 to 0xdb174000)
+    [39602.810842] 3ee0:                                                       00000000 db129318
+    [39602.819060] 3f00: db173f1c c14d0adc ffffe000 db128040 ffffe000 bf04eb7c 00000001 00000000
+    [39602.827277] 3f20: 0000007f 00000002 db173f74 db173f38 bf048d24 bf0489c8 bf04e980 c1505dc8
+    [39602.835494] 3f40: db173f74 bad55a76 c0160a5c db112800 db112540 00000000 db172000 bf04ebac
+    [39602.843711] 3f60: bf048c60 da837a2c db173fac db173f78 c0160f6c bf048c6c db11281c db11281c
+    [39602.851927] 3f80: 00000000 db112540 c0160e00 00000000 00000000 00000000 00000000 00000000
+    [39602.860144] 3fa0: 00000000 db173fb0 c01010e8 c0160e0c 00000000 00000000 00000000 00000000
+    [39602.868360] 3fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    [39602.876577] 3fe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
+    [39602.884857] [<bf048a3c>] (sendPacketViaRPMsg [itc_pkt]) from [<bf048d24>] (itcOBPktThreadRunner+0xc4/0x188 [itc_pkt])
+    [39602.895544] [<bf048d24>] (itcOBPktThreadRunner [itc_pkt]) from [<c0160f6c>] (kthread+0x16c/0x174)
+    [39602.904465] [<c0160f6c>] (kthread) from [<c01010e8>] (ret_from_fork+0x14/0x2c)
+    [39602.911718] Exception stack(0xdb173fb0 to 0xdb173ff8)
+    [39602.916792] 3fa0:                                     00000000 00000000 00000000 00000000
+    [39602.925008] 3fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    [39602.933223] 3fe0: 00000000 00000000 00000000 00000000 00000013 00000000
+    [39602.939873] Code: e30b0ec0 e34b0f04 eb459490 ebffff8d (e7f001f2) 
+    [39602.946010] ---[ end trace ffe0a9448ad2f5e1 ]---
+    [39602.950649] Kernel panic - not syncing: Fatal exception
+    [39602.955912] Rebooting in 20 seconds..
+
+
+
+:384]

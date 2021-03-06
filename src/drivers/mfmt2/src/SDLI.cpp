@@ -20,19 +20,23 @@
 #include "T2GridPanel.h"
 #include "T2TimeQueuePanel.h"
 #include "T2UIComponents.h"
+#include "T2CDMPanel.h"
+#include "T2TracePanel.h"
+#include "T2RadioButton.h"
+#include "T2TitleCard.h"
 
 namespace MFM
 {
   static const double REDISPLAY_HZ = 6;
   static const u32 REDISPLAY_MS = (u32) (1000/REDISPLAY_HZ);
-  static const u32 OVERFLOW_REDISPLAY_MS = (u32) (1.3*REDISPLAY_MS);
+  static const u32 OVERFLOW_REDISPLAY_MS = (u32) (1.75*REDISPLAY_MS);
   static const double BACKAVG_FRAC=0.95;
 
   struct Event {
     SDL_Event m_sdlEvent;
   };
 
-  SDLI * SDLI::mStaticInstance = 0;
+  //  SDLI * SDLI::mStaticInstance = 0;
 
   SDLI::SDLI(T2Tile& tile, const char * name)
     : mTile(tile)
@@ -55,6 +59,7 @@ namespace MFM
       Panel * p = itr->second;
       delete p;
     }
+    SDL_Quit();
   }
 
   void SDLI::checkInput() {
@@ -78,15 +83,16 @@ namespace MFM
         case SDL_QUIT:
           LOG.Warning("Quitting on SDL request");
           // Clean up a few FDs since ~T2Tile etc is not going to run
-          mTile.stopTracing();
-          mTile.closeITCs();
-          execl("/home/t2/T2-12/apps/mfm/RUN_SDL",
-                "/home/t2/T2-12/apps/mfm/RUN_SDL",
-                "/opt/scripts/t2/sdlsplash",
-                "/opt/scripts/t2/t2-splash.png",
-                (char *) 0);
-          exit(0);
-          break;
+          mTile.closeFDs();
+          if (1) {
+            execl("/opt/scripts/t2/RUN_SDL",
+                  "/opt/scripts/t2/RUN_SDL",
+                  "/opt/scripts/t2/sdlsplash",
+                  "/opt/scripts/t2/t2-splash-inverted.png",
+                  (char *) 0);
+          }
+          mTile.requestExit();  // (But we execld so we're not really here.)
+          return;  // No more event polling for you
 
         case SDL_MOUSEBUTTONUP:
           mLastKnownMousePosition.Set(event.button.x, event.button.y);
@@ -136,6 +142,18 @@ namespace MFM
               else
                 mKeyboardModifiers &= ~mod;
               break;
+            case SDLK_MENU:
+              {
+                KeyboardEvent kbe(event.key, mLastKnownMousePosition);
+                Panel * hardp = mPanels["HardButtonPanel"];
+                if (!hardp)
+                  fatal("Undefined hard button panel\n");
+
+                if (hardp->Handle(kbe))
+                  return;
+              }
+              break;
+
             default:
               {
                 KeyboardEvent kbe(event.key, mLastKnownMousePosition);
@@ -267,6 +285,11 @@ namespace MFM
     mRootPanel = configureWindows();
   }
 
+  Panel & SDLI::getRootPanel() {
+    MFM_API_ASSERT_NONNULL(mRootPanel);
+    return *mRootPanel;
+  }
+
   Panel * SDLI::makePanelType(OString128& type) {
     if (type.Equals("Root")) return new RootPanel();
     //    if (type.Equals("Grid")) return new GridPanel();
@@ -283,13 +306,25 @@ namespace MFM
     if (type.Equals("MenuItem")) return new MenuItem(); 
     if (type.Equals("T2GridPanel")) return new T2GridPanel(); 
     if (type.Equals("TQPanel")) return new T2TimeQueuePanel(); 
+    if (type.Equals("CDMPanel")) return new T2CDMPanel(); 
     if (type.Equals("T2TileLiveCheckbox")) return new T2TileLiveCheckbox(); 
     if (type.Equals("T2TileListenCheckbox")) return new T2TileListenCheckbox(); 
+    if (type.Equals("HardButton")) return new T2HardButton(); 
+    if (type.Equals("T2TracePanel")) return new T2TracePanel(); 
+    if (type.Equals("T2TraceCtlButton")) return new T2TraceCtlButton(); 
     if (type.Equals("T2SeedPhysicsButton")) return new T2SeedPhysicsButton(); 
     if (type.Equals("T2DebugSetupButton")) return new T2DebugSetupButton(); 
     if (type.Equals("T2ClearTileButton")) return new T2ClearTileButton(); 
     if (type.Equals("QuitButton")) return new T2QuitButton(); 
     if (type.Equals("CrashButton")) return new T2CrashButton(); 
+    if (type.Equals("DumpButton")) return new T2DumpButton(); 
+    if (type.Equals("OffButton")) return new T2OffButton(); 
+    if (type.Equals("BootButton")) return new T2BootButton(); 
+    if (type.Equals("T2RadioButton")) return new T2RadioButton(); 
+    if (type.Equals("FlashCommandLabel")) return new T2FlashCommandLabel(); 
+    if (type.Equals("XCDMButton")) return new T2KillCDMButton(); 
+    if (type.Equals("T2TitleCard")) return new T2TitleCard(); 
+    if (type.Equals("WrappedText")) return new WrappedText(); 
     return 0;
   }
 
@@ -470,6 +505,23 @@ namespace MFM
       forPanel->SetVisible(parseBool(lcbs, cbbs));
     else if (!strcmp(prop,"font")) 
       forPanel->SetFont((FontAsset) parseUnsigned(lcbs, cbbs));
+    else if (!strcmp(prop,"zfont")) {
+      u32 proportional = parseUnsigned(lcbs, cbbs);
+      if (proportional) proportional = 1; // Anything non-zero means 1
+      // Eat white
+      cbbs.Scanf("%w");
+
+      // Look for ,
+      s32 delim = cbbs.Read();
+      MFM_API_ASSERT_STATE(delim == ',');
+
+      // Get second arg
+      u32 size = parseUnsigned(lcbs, cbbs);
+      
+      TTF_Font * font = AssetManager::GetZFont(proportional, size);
+      MFM_API_ASSERT_NONNULL(font);
+      forPanel->SetFontReal(font);
+    }
 #if 0
     else if (!strcmp(prop,"anchor")) 
       forPanel->SetAnchor(parseAnchor(lcbs, cbbs));
@@ -506,6 +558,11 @@ namespace MFM
         l->SetEnabledFg(parseColor(lcbs, cbbs));
       else
         l->SetEnabledBg(parseColor(lcbs, cbbs));
+    }
+    else if (!strcmp(prop,"radiogroup")) {
+      AbstractRadioButton * l = dynamic_cast<AbstractRadioButton*>(forPanel);
+      if (!l) fatal(lcbs,"'%s' applies only to AbstractRadioButtons",prop);
+      l->SetRadioGroup(parseString(lcbs,cbbs));
     }
     else
       fatal(lcbs,"Unknown property '%s'",prop);

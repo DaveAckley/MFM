@@ -162,8 +162,10 @@ namespace MFM {
     void printPretty(ByteSink& bs, bool includeTime) const ;
     Trace & printf(const char * format, ...) ;
 
-    ByteSink & payloadWrite() { return mData; }
+    T2PacketBuffer & payloadWrite() { return mData; }
     CharBufferByteSource payloadRead() const { return mData.AsByteSource(); }
+    const u8 * payloadBuffer() const { return (const u8 *) mData.GetZString(); }
+    u32 payloadBufferLength() const { return mData.GetLength(); }
     
     /*==0 no tag, >0 sender tag, <0 receiver tag */
     s32 getTag() const { return mSyncTag; }
@@ -181,7 +183,38 @@ namespace MFM {
     T2PacketBuffer mData;
   };
 
-  struct TraceLogger {
+  /**
+   * An OverflowableCharBufferByteSink with a capacity of 1MB.
+   */
+  typedef OverflowableCharBufferByteSink<(1<<20)> OString1MB;  // Screw the +2
+
+  struct TraceLoggerInMemory {
+    OString32 mBufferName;
+    OString1MB mTraceBuffers[2];
+    u32 mCurBuf;
+    s32 ftell() const {
+      return (s32)
+        (mTraceBuffers[0].GetLength() + mTraceBuffers[1].GetLength());
+    }
+
+    void dump(const char * path) ;
+    
+    TraceLoggerInMemory(const char * p)
+      : mBufferName(p)
+      , mCurBuf(0)
+    {
+    }
+
+    ByteSink & getByteSink() {
+      if (mTraceBuffers[mCurBuf].CanWrite() < 300) { // Trace events top around ~275 bytes?
+        mCurBuf = 1-mCurBuf;
+        mTraceBuffers[mCurBuf].Reset();
+      }
+      return mTraceBuffers[mCurBuf];
+    }
+  };
+
+  struct TraceLoggerToFile {
     static FILE * openPath(const char * path) {
       MFM_API_ASSERT_NONNULL(path);
       const char * mode = "w";
@@ -201,17 +234,20 @@ namespace MFM {
       }
       return file;
     }
-    TraceLogger(const char * path)
+    TraceLoggerToFile(const char * path)
       : mFile(openPath(path))
       , mFBS(mFile)
     {
     }
-    ~TraceLogger() {
+    ~TraceLoggerToFile() {
       mFBS.Close();
       mFile = 0;
     }
     
-    void log(const Trace & evt) ;
+    ByteSink & getByteSink() { 
+      MFM_API_ASSERT_NONNULL(mFile);
+      return mFBS;
+    }
 
     s32 flush() {
       if (mFile) return fflush(mFile);
@@ -227,6 +263,42 @@ namespace MFM {
     FILE * mFile;
     FileByteSink mFBS;
   };
+
+  struct TraceLogger {
+    TraceLoggerInMemory * mInMemory;
+    TraceLoggerToFile * mToFile;
+    TraceLogger(const char * path, bool inMemory)
+      : mInMemory(0)
+      , mToFile(0)
+    {
+      if (inMemory) mInMemory = new TraceLoggerInMemory(path);
+      else mToFile = new TraceLoggerToFile(path);
+    }
+
+    ~TraceLogger() {
+      if (mInMemory) { delete mInMemory; mInMemory = 0; }
+      if (mToFile) { delete mToFile; mToFile = 0; }
+    }
+
+    s32 ftell() {
+      if (mInMemory) return mInMemory->ftell();
+      if (mToFile) return mToFile->ftell();
+      return -EBADF;
+    }
+
+    void log(const Trace & evt) {
+      if (mInMemory) { log(mInMemory->getByteSink(),evt); }
+      if (mToFile) { log(mToFile->getByteSink(),evt); }
+    }
+
+    void dump(const char * path) {
+      if (mInMemory) mInMemory->dump(path);
+    }
+
+    static void log(ByteSink & bs, const Trace & evt);
+  };
+
+
 
   struct TraceLogReader {
     static Trace * read(ByteSource & bs,

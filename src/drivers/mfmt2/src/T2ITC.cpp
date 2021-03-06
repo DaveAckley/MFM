@@ -263,8 +263,9 @@ namespace MFM {
     T2PassiveEventWindow & passiveEW = *mPassiveEWs[cn];
     MFM_API_ASSERT_STATE(passiveEW.getEWSN() == EWSN_PWCACHE);
     Circuit & ci = passiveEW.getPassiveCircuit();
-    MFM_API_ASSERT_STATE(ci.getCS() == CS_ANSWERED);
-    ci.setCS(CS_TALKED);
+    if (ci.getCS() == CS_ANSWERED) // If first CUP
+      ci.setCS(CS_TALKED);
+    MFM_API_ASSERT_STATE(ci.getCS() == CS_TALKED); // All CUPs
     passiveEW.applyCacheUpdatesPacket(pb, *this);
   }
 
@@ -503,32 +504,6 @@ void T2ITCStateOps_##NAME::FUNC(T2ITC & ew, T2PacketBuffer & pb, TimeQueue& tq) 
 #undef YY10
 #undef YY01
 #undef YY00
-
-  /*** STATE NAMES AS STRING **/
-  const char * itcStateName[] = {
-#define XX(NAME,VIZ,CCH,MINCOMP,CUSTO,CUSRC,STUB,DESC) #NAME,
-  ALL_ITC_STATES_MACRO()
-#undef XX
-  "?ILLEGAL"
-  };
-
-  const char * getITCStateName(ITCStateNumber sn) {
-    if (sn >= MAX_ITC_STATE_NUMBER) return "illegal";
-    return itcStateName[sn];
-  }
-
-  /*** STATE DESCRIPTIONS AS STRING **/
-  const char * itcStateDesc[] = {
-#define XX(NAME,VIZ,CCH,MINCOMP,CUSTO,CUSRC,STUB,DESC) DESC,
-  ALL_ITC_STATES_MACRO()
-#undef XX
-  "?ILLEGAL"
-  };
-
-  const char * getITCStateDescription(ITCStateNumber sn) {
-    if (sn >= MAX_ITC_STATE_NUMBER) return "illegal";
-    return itcStateDesc[sn];
-  }
 
   const char * T2ITC::getName() const {
     static char buf[100];

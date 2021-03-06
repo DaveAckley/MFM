@@ -195,6 +195,13 @@ namespace MFM {
     }
   }
 
+  void T2ActiveEventWindow::emptyCenterAtom() {
+    OurT2Site & us = mSites[0];          // Get center
+    OurT2Atom & centerAtom = us.GetAtom();
+    OurT2Atom emptyAtom(OurT2Atom::ATOM_EMPTY_TYPE);
+    centerAtom = emptyAtom;
+  }
+
   void T2ActiveEventWindow::commitAndReleaseActive() {
     mTile.getStats().incrNonemptyEventsCommitted();
     saveSites();                // COMMIT ACTIVE SIDE EW!
@@ -925,14 +932,14 @@ namespace MFM {
       FAIL(INCOMPLETE_CODE);
       return;
     }
-    if (aew->executeEvent()) {
-      if (aew->hasAnyLocks()) {
-        ew.setEWSN(EWSN_ASCACHE);
-        ew.scheduleWait(WC_NOW);
-      } else
-        aew->commitAndReleaseActive();
+
+    aew->executeEvent(); // Return value ignored: We act the same either way
+
+    if (aew->hasAnyLocks()) {
+      ew.setEWSN(EWSN_ASCACHE);
+      ew.scheduleWait(WC_NOW);
     } else
-      FAIL(INCOMPLETE_CODE);
+      aew->commitAndReleaseActive();
   }
 
   void T2EWStateOps_ASCACHE::timeout(T2ActiveEventWindow & ew, T2PacketBuffer & pb, TimeQueue& tq) {
@@ -975,19 +982,10 @@ namespace MFM {
     return 0;
   }
     
-  bool T2ActiveEventWindow::executeEvent() {
-    loadSites();
-
-    mTile.getStats().incrNonemptyTransitionsStarted(); // score now (in case blows up)
-
-    OurT2Site & us = mSites[0];
-    OurT2Atom & atom = us.GetAtom();
-    u32 type = atom.GetType();
-    // XXX BOGUS PHONY DREG HACK
-    if (type != T2_PHONY_DREG_TYPE)
-      return false;
+  void T2ActiveEventWindow::doSplitsAtTheEndOfTheUniverse(OurT2Atom &atom) {
     // XXX DOUBLE PHONY: IT'S NOT EVEN DREG
     // JUST GO N/E/S/W IF LIVE YOUNG BEIN
+    u32 type = atom.GetType();
     u8 ngb = atom.GetStateField(0,3)+1;
     TLOG(DBG,"%s (%d,%d)BEIN ngb %d live %d",
          getName(),
@@ -1009,7 +1007,8 @@ namespace MFM {
         OurT2Site & nsite = mSites[ngb];
         OurT2Atom & natom = nsite.GetAtom();
         u32 ntype = natom.GetType();
-        if (ntype == OurT2Atom::ATOM_EMPTY_TYPE) {
+        // Type 2 splits at the end of the universe, but not type 1
+        if (type == T2_PHONY_RES_TYPE && ntype == OurT2Atom::ATOM_EMPTY_TYPE) {
           OurT2Atom copy = atom;
           copy.SetStateField(0,3,mTile.getRandom().Between(1,8)-1);
           copy.SetStateField(3,3,mTile.getRandom().Between(3,7));
@@ -1019,27 +1018,102 @@ namespace MFM {
       }
       u8 oth = mTile.getRandom().Between(1,8);
       atom.SetStateField(0,3,oth-1);
-      TLOG(DBG,"%s (%d,%d)BEIN oth %d (othlive %d)",
+      TLOG(DBG,"%s (%d,%d)BEIN TYPE %d oth %d (othlive %d)",
            getName(),
            mCenter.GetX(),mCenter.GetY(),
+           type,
            oth,
            mSitesLive[oth]);
     }
+  }
+
+  void T2ActiveEventWindow::doDRegAndRes(OurT2Atom &atom) {
+    Random & random = mTile.getRandom();
+    u8 ngb = random.Between(1,4);
+    if (!mSitesLive[ngb]) return; // DReg and Res don't swap into abyss?
+    u32 type = atom.GetType();
+
+    OurT2Site & nsite = mSites[ngb];
+    OurT2Atom & natom = nsite.GetAtom();
+    u32 ntype = natom.GetType();
+    if (type == T2_PHONY_RES_TYPE) {
+      // Res swaps with Empty
+      if (ntype == OurT2Atom::ATOM_EMPTY_TYPE) {
+        OurT2Atom copy = atom;
+        atom = natom;
+        natom = copy;
+      } // Else hodl
+    } else if (type == T2_PHONY_DREG_TYPE) {
+      const u32 pDREG_CREATE = 1000u;
+      const u32 pRES_CREATE = 200u;
+      const u32 pDREG_DESTROY = 10u;
+      const u32 pANY_DESTROY = 100u;
+      if (ntype == OurT2Atom::ATOM_EMPTY_TYPE) {
+        /// DReg::EMPTY interactions
+        if (random.OneIn(pDREG_CREATE))
+          natom = atom;
+        else if (random.OneIn(pRES_CREATE)) {
+          OurT2Atom newres(T2_PHONY_RES_TYPE);
+          natom = newres;
+        }
+        // Regardless, swap
+        OurT2Atom tmp = atom;
+        atom = natom;
+        natom = tmp;
+      } else if (((ntype == T2_PHONY_DREG_TYPE) && random.OneIn(pDREG_DESTROY)) ||
+                 random.OneIn(pANY_DESTROY)) {
+        /// DReg::DReg and DReg::Anything interactions
+        OurT2Atom newempty(OurT2Atom::ATOM_EMPTY_TYPE);
+        natom = newempty; // Destroy natom
+        // And swap
+        OurT2Atom tmp = atom;
+        atom = natom;
+        natom = tmp;
+      }
+    } // else hodl
+  }
+  
+  // Here to perform non-empty transitions
+  bool T2ActiveEventWindow::doBehavior() {
+    UlamEventSystem & ues = mTile.getUlamEventSystem();
+    return ues.doUlamEvent(*this);
+  }
 
 #if 0
-    const char * PHONY_DIRS = "\002\004\003\001";
-    for (const char * dir = PHONY_DIRS; *dir != 0; ++dir) {
-      u8 sn=*dir;
-      if (mSitesLive[sn]) {
-        OurT2Site & west = mSites[sn];
-        OurT2Atom & westa = west.GetAtom();
-        OurT2Atom tmp = atom;
-        atom = westa;
-        westa = tmp;
-      }
-    }
+  // Here to perform non-empty transitions
+  bool T2ActiveEventWindow::doBehavior() {
+    OurT2Site & us = mSites[0];
+    OurT2Atom & atom = us.GetAtom();
+    u32 type = atom.GetType();
+    // XXX BOGUS PHONY DREG HACK
+    if (type != T2_PHONY_DREG_TYPE && type != T2_PHONY_RES_TYPE)  // Only non-empty for now
+      return false;
+#define DO_SPLITS_AT_THE_END_OF_THE_UNIVERSE
+    //#define DO_DREG_AND_RES
+#ifdef DO_SPLITS_AT_THE_END_OF_THE_UNIVERSE
+    doSplitsAtTheEndOfTheUniverse(atom);
+#else
+#ifdef DO_DREG_AND_RES
+      doDRegAndRes(atom);
 #endif
+#endif    
     return true;
+  }
+#endif
+
+  bool T2ActiveEventWindow::executeEvent() {
+    loadSites();
+
+    mTile.getStats().incrNonemptyTransitionsStarted(); // score now (in case blows up)
+
+    unwind_protect({
+        TLOG(WRN,"%s behave failed at (%d,%d)",
+             getName(),
+             mCenter.GetX(),mCenter.GetY());
+      },{
+        return doBehavior();
+      });
+    return false;
   }
 
   /////////////////////T2PassiveEventWindow

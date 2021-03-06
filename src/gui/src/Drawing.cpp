@@ -85,11 +85,14 @@ namespace MFM
     SPoint(1,1), SPoint(-1,-1), SPoint(1,-1), SPoint(-1,1)
   };
 
-  void Drawing::BlitText(const char* message, SPoint loc, UPoint size) const
+  void Drawing::BlitText(const char* message, SPoint loc, UPoint size, TTF_Font * infont) const
   {
-    u32 baseFontSize = AssetManager::GetZFontSize(m_fontAsset); // in pix
-    u32 scaledSize = MapDitToPix(m_drawScaleDits*baseFontSize); // in pix
-    TTF_Font * ttfont = AssetManager::GetZFont(AssetManager::GetZFontPSC(m_fontAsset),scaledSize);
+    TTF_Font * ttfont = infont;
+    if (!ttfont) {
+      u32 baseFontSize = AssetManager::GetZFontSize(m_fontAsset); // in pix
+      u32 scaledSize = MapDitToPix(m_drawScaleDits*baseFontSize); // in pix
+      ttfont = AssetManager::GetZFont(AssetManager::GetZFontPSC(m_fontAsset),scaledSize);
+    }
 
     SDL_Color sdl_color;
     SetSDLColor(sdl_color,m_fgColor);
@@ -111,7 +114,7 @@ namespace MFM
     SDL_FreeSurface(text);
   }
 
-  void Drawing::BlitBackedText(const char* message, SPoint loc, UPoint size)
+  void Drawing::BlitBackedText(const char* message, SPoint loc, UPoint size, TTF_Font * infont)
   {
     u32 oldFG = GetForeground();
     SPoint backingPt;
@@ -122,28 +125,29 @@ namespace MFM
     for(u32 i = 0; i < 4; i++)
     {
       backingPt.Set(loc.GetX() + backingPts[i].GetX(), loc.GetY() + backingPts[i].GetY());
-      BlitText(message, backingPt, size);
+      BlitText(message, backingPt, size, infont);
     }
 
     SetForeground(oldFG);
-    BlitText(message, loc, size);
+    BlitText(message, loc, size, infont);
   }
 
-  void Drawing::BlitBackedTextCentered(const char* message, SPoint loc, UPoint size)
+  void Drawing::BlitBackedTextCentered(const char* message, SPoint loc, UPoint size, TTF_Font * infont)
   {
     SPoint ssize = MakeSigned(size);
-    SPoint tsize = GetTextSize(message);
+    SPoint tsize = GetTextSize(message, infont);
     if (tsize.GetX() < 0 || tsize.GetY() < 0)
     {
       tsize = SPoint(0,0);  // WTF?
     }
 
     // Extra subtraction because blit backing makes text 1 pixel bigger all around
-    BlitBackedText(message, loc + ssize / 2 - tsize / 2 - SPoint(1, 1), size);
+    BlitBackedText(message, loc + ssize / 2 - tsize / 2 - SPoint(1, 1), size, infont);
   }
 
-  SPoint Drawing::GetTextSize(const char* message)
+  SPoint Drawing::GetTextSize(const char* message, TTF_Font * infont)
   {
+    if (infont) return GetTextSizeInTTFFont(message, *infont);
     return GetTextSizeInFont(message, m_fontAsset);
   }
 
@@ -152,15 +156,17 @@ namespace MFM
     u32 baseFontSize = AssetManager::GetZFontSize(font); // in pix
     u32 scaledSize = MapDitToPix(m_drawScaleDits*baseFontSize); // in pix
     TTF_Font * ttfont = AssetManager::GetZFont(AssetManager::GetZFontPSC(m_fontAsset),scaledSize);
+    if (!ttfont) return SPoint(-1,-1);
+    return GetTextSizeInTTFFont(message,*ttfont);
+  }
 
+  SPoint Drawing::GetTextSizeInTTFFont(const char* message, TTF_Font & font)
+  {
     s32 w = -1;
     s32 h = -1;
-    if (ttfont)
+    if (TTF_SizeText(&font, message, &w, &h) != 0)
     {
-      if (TTF_SizeText(ttfont, message, &w, &h) != 0)
-      {
-        w = h = -1;  // Might TTF_SizeText have messed with them?
-      }
+      w = h = -1;  // Might TTF_SizeText have messed with them?
     }
     return SPoint(w,h);
   }
