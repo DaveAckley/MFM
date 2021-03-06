@@ -48,6 +48,21 @@ extern "C" {
     longjmp(buffer,toThrow);
   }
 
+  void MFMThrowHere(const FailException & fe) {
+
+    throw fe;
+  }
+
+  void MFMPrintFailException(FILE * stream, const FailException & fe) {
+    fe.prettyPrint(stream);
+  }
   //  MFMErrorEnvironment * volatile MFMErrorEnvironmentStackTop = 0;
 
 }
+
+void FailException::prettyPrint(FILE * stream) const {
+  fprintf(stream,"%s:%d: pP%s\n", mFile, mLine, what());
+}
+
+
+MFMFailHook MFMUnwindProtectLoggingHook;

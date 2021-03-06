@@ -22,7 +22,7 @@ namespace MFM {
   struct T2Tile; // FORWARD
 
   struct SDLI : public TimeoutAble {
-    static struct SDLI * mStaticInstance;
+    //    static struct SDLI * mStaticInstance;
 
     SDLI(T2Tile&,const char *) ;
     ~SDLI() ;
@@ -42,6 +42,8 @@ namespace MFM {
     SDL_Surface* getScreen() { return mScreen; }
 
     void init() ;
+
+    Panel & getRootPanel() ;
 
     Panel * configureWindows() ;
 

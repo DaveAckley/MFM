@@ -258,7 +258,8 @@ namespace MFM {
       if (m_panelHeight == 0)
         m_panelHeight = 1;  // WTF:(
 
-      TTF_Font * font = AssetManager::Get(drawing.GetFont());
+      TTF_Font * font = GetFontReal(); // Check for explicit font
+      if (!font) font = AssetManager::Get(drawing.GetFont()); // Fall back to FontAsset
       if (!font) return;  // WTF?
 
       m_fontHeight = TTF_FontLineSkip(font);
@@ -305,7 +306,8 @@ namespace MFM {
         }
         drawing.BlitText(zline,
                          SPoint(m_elevatorWidth, y),
-                         UPoint(GetWidth(), m_fontHeight));
+                         UPoint(GetWidth(), m_fontHeight),
+                         font);
         y -= m_fontHeight;
         if (y < 0) break;
       }

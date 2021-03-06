@@ -29,7 +29,7 @@
 #ifndef SIZEDTILE_H
 #define SIZEDTILE_H
 
-#include "Tile.h"
+#include "MFMSTile.h"
 
 namespace MFM
 {
@@ -40,7 +40,7 @@ namespace MFM
      SizedTiles can be formed.
    */
   template <class EC, u32 WIDTH, u32 HEIGHT, u32 EVENTHISTORYSIZE>
-  class SizedTile : public Tile<EC>
+  class SizedTile : public MFMSTile<EC>
   {
   public:
     typedef typename EC::SITE SITE;
@@ -55,7 +55,7 @@ namespace MFM
 
     static bool IsGridLayoutPatternStaggered() { return (m_ctorLayoutPattern == GRID_LAYOUT_STAGGERED); }
 
-    SizedTile(): Tile<EC>(TILE_WIDTH, TILE_HEIGHT, m_ctorLayoutPattern, m_sites, EVENTHISTORYSIZE, m_items) { }
+    SizedTile(): MFMSTile<EC>(TILE_WIDTH, TILE_HEIGHT, m_ctorLayoutPattern, m_sites, EVENTHISTORYSIZE, m_items) { }
 
 
   private:

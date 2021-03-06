@@ -1,5 +1,6 @@
 #!/usr/bin/perl -Tw
 # -*- mode:perl -*-
+use strict;
 
 sub BEGIN {
     # Seal us up a bit for living la vida tainted
@@ -55,6 +56,14 @@ $0 make HANDLE MFZFILETOMAKE filetopack1 filetopack2..
 
     Other files are accepted and packed by mfzmake, but unused by mfzrun.
 
+$0 cdmake REGNUM SLOTNUM LABEL filetopack1 filetopack2..
+
+    Like '$0 make',
+    except takes the REGNUM of a registered handle instead of the
+    handle name itself, the SLOTNUM of the resulting content instead
+    of an MFZ filename, plus an up-to-16 byte LABEL.  'cdmake' is
+    required for .mfz files that are managed by CDM on a T2 tile grid.
+
 $0 keygen HANDLE
 
     Generate a signing key for HANDLE.
@@ -99,6 +108,7 @@ Help() if $verb eq "help" or $verb eq "-h" or $verb eq "--help";
 VersionExit("mfzmake") if $verb eq "version" or $verb eq "-v";
 UDie("Unknown switch '$verb'") if $verb =~ /^-/;
 
+DoCDMake() if $verb eq "cdmake";
 DoMake() if $verb eq "make";
 DoKeygen() if $verb eq "keygen";
 DoKeydel() if $verb eq "keydel";
@@ -110,10 +120,28 @@ DoVerify() if $verb eq "verify";
 UDie("Unknown command '$verb'");
 
 ############################3
-# DoMake
+# DoMake / DoCDMake
 
 sub DoMake {
     my $handle = GetLegalHandle(NextArg());
+    my $mfzfile = NextArg();
+    my $innertime = MakeNextZipTime();
+    DoMakeWithHandle($handle,$mfzfile,$innertime); # regnum and later args undef
+}
+
+sub DoCDMake {
+    my ($regnum,$handle) = GetLegalRegnum(NextArg());
+    my ($slotnum) = GetLegalSlotnum(NextArg());
+    my ($label) = GetLegalLabel(NextArg());
+    my ($innertime,$stamptime) = MakeNextZipTime();
+    my $mfzfile = sprintf("cdmss-%02x-%06x.mfz",$slotnum,$stamptime);
+    UDie("File '$mfzfile' already exists.  Maybe wait a couple minutes, tiger?")
+        if -e $mfzfile;
+    DoMakeWithHandle($handle,$mfzfile,$innertime,$regnum,$slotnum,$stamptime,$label);
+}
+
+sub DoMakeWithHandle {
+    my ($handle,$mfzfile,$assignedinnertime,$regnum,$slotnum,$stamptime,$label) = @_;
 
     my $privkeyfile = GetPrivateKeyFile($handle);
     $privkeyfile = ReadableFileOrDie("private key file", $privkeyfile);
@@ -123,7 +151,6 @@ sub DoMake {
 
     my $pubkeydata = ReadWholeFile($pubkeyfile);
 
-    my $mfzfile = NextArg();
     $mfzfile = WritableFileOrDie("MFZ file", $mfzfile);
     $mfzfile =~ /[.]mfz$/ or UDie("Supplied MFZ filename '$mfzfile' doesn't end in '.mfz'");
     ((!-e $mfzfile) || (-f $mfzfile && -w $mfzfile)) or UDie("MFZ filename '$mfzfile' is not writable");
@@ -136,12 +163,19 @@ sub DoMake {
     for my $file (@files) {
         ReadableFileOrDie("file to pack", $file);
     }
-    my $inner = MakeInnerZip($pubkeydata,$mfzfilename, @files);
+
+    my ($inner,$innertime) = MakeInnerZip($pubkeydata,$mfzfilename,$assignedinnertime, @files);
 
     my $signed = SignString($privkeyfile, $inner);
 #    WriteWholeFile($mfzfile,MFZRUN_HEADER.$signed.$inner,0644);
-    my $outer = MakeOuterZip($signed,$inner);
-    WriteWholeFile($mfzfile,MFZRUN_HEADER.$outer,0644);
+    my $outer = MFZRUN_HEADER.MakeOuterZip($signed,$inner,undef);
+
+    my $cdmmap = ""; # Assume pure MFZ format
+    if (defined($regnum)) {
+        $cdmmap = MakeCDMMap($regnum,$slotnum,$stamptime,$mfzfilename,$privkeyfile,$outer,$innertime,$label);
+    }
+
+    WriteWholeFile($mfzfile,$cdmmap.$outer,0644);
     print "Wrote '$mfzfile'\n";
     exit 0;
 }
@@ -231,7 +265,7 @@ sub DoKeydel {
         print STDERR "ERROR: Couldn't remove public key file '$pubkeyfile' for '$handle': $!\n";
     }
     if ($errors > 0) {
-        my $s = "", $n = "s";
+        my ($s,$n) = ("", "s");
         if ($errors > 1) {
             $s = "s";
             $n = "";
@@ -280,7 +314,7 @@ sub CheckFilesInternal {
     }
     
     if ($errors > 0) {
-        my $s = "", $n = "s";
+        my ($s,$n) = ("", "s");
         if ($errors > 1) {
             $s = "s";
             $n = "";
@@ -393,12 +427,103 @@ sub ConfigureZipOptions {
 #    print "$zipVer/@zipOtherOptions\n";
 }
 
+sub MakeSlotStamp {
+    my ($slotnum,$stamptime) = @_;
+    IDie("Bad slotnum") if $slotnum <= 0 || $slotnum > 255;
+    IDie("Bad stamptime") if $stamptime < 0 || $slotnum >= (1<<24);
+    my $slotstamp = ((($slotnum)&0xff)<<24)|($stamptime&((1<<24)-1));
+    return $slotstamp;
+}
+
+sub MakeCDMMap {
+    my ($regnum,$slotnum,$stamptime,$mfzfilename,$privkeyfile,$outer,$innertime,$label) =
+        @_;
+    my $slotstamp = MakeSlotStamp($slotnum,$stamptime);
+    my $mappedFileLen = length($outer);
+    my $bitsInBlock = 8;
+    do ++$bitsInBlock while (1<<$bitsInBlock) * 100 < $mappedFileLen;
+    my $blockSize = (1<<$bitsInBlock);
+    my @xsums = ("") x 100;
+    my $sha = Digest::SHA->new(512);
+    my $lastfullxsum;
+    for (my $block = 0; $block<100;++$block) {
+        my $offset = $blockSize*$block;
+        last if $offset > $mappedFileLen;
+        my $chunk = substr($outer,$offset,$blockSize); # blockSize or til eof
+        $sha->add($chunk);
+        $lastfullxsum = $sha->clone()->digest();
+        my $xsum8 = substr($lastfullxsum,0,8);
+        $xsums[$block] = $xsum8;
+    }
+    my $maptosign =
+        pack(CDM10_PACK_SIGNED_DATA_FORMAT,
+             CDM_FORMAT_MAGIC.CDM_FORMAT_VERSION_MAJOR.CDM_FORMAT_VERSION_MINOR."\n",
+             $bitsInBlock,
+             $regnum,
+             $slotstamp,
+             $mappedFileLen,
+             $label,
+             $lastfullxsum,
+             @xsums);
+    IDie("Bad pack") unless length($maptosign) == 896;
+    my $signature = SignStringRaw($privkeyfile, $maptosign);
+    IDie("Bad sign") unless length($signature) == 128;
+    my $cdmmap =
+        pack(CDM10_PACK_FULL_FILE_FORMAT,
+             $maptosign,
+             $signature);
+    IDie("Bad map") unless length($cdmmap) == 1024;
+    return $cdmmap;
+}
+
+sub GetLegalSlotnum {
+    my $slotnum = shift;
+    UDie("Missing slotnum")
+        unless defined $slotnum;
+    UDie("Illegal slotnum '$slotnum'")
+        unless $slotnum =~ /^([[:xdigit:]]{1,2})$/;
+    my $num = hex($1);
+    UDie("Illegal slotnum $num")
+        unless $num > 0 && $num < 256; # 00 reserved as illegal slotnum
+    return $num;
+}
+
+sub GetLegalLabel {
+    my $label = shift;
+    UDie("Missing label")
+        unless defined $label;
+    UDie("Illegal label '$label'")
+        unless  $label =~ /^([[:print:]]+)$/;
+    my $val = $1;
+    my $maxlen = 16;
+    UDie("Label too long '$label' (max $maxlen)")
+        unless length($label) <= $maxlen;
+    return $val;
+}
+
+sub MakeNextZipTime {
+    # Reminder: A snippet from stackoverflow.com: 
+    #   Zip entry timestamps are recorded only to two 2 second
+    #   precision. This reflects the accuracy of DOS timestamps in use
+    #   when PKZIP was created. That number recorded in the Zip will
+    #   be the timestamp truncated, not the nearest 2 seconds.
+    #
+    # So I guess this is 'correct' rather than 'a hack':
+    my $assignedinnertime = int(time()/2)*2; 
+
+    # We also (may) want the low-res 'slotstamp' granularity time
+    my $stamp = int($assignedinnertime/(60*5)); # seconds -> 5 minute chunks
+    return ($assignedinnertime,$stamp);
+}
+
 sub MakeInnerZip {
-    my ($pubkeydata,$mfzfilename,@files) = @_;
+    my ($pubkeydata,$mfzfilename,$assignedinnertime,@files) = @_;
     my $compressedoutput;
+
     my $z = new IO::Compress::Zip
         \$compressedoutput,
         Name          => MFZ_PUBKEY_NAME,
+        Time          => $assignedinnertime,
         @zipOtherOptions,
         BinModeIn     => 1
         or IDie("Zip init failed for inner: $ZipError");
@@ -406,6 +531,7 @@ sub MakeInnerZip {
 
     $z->newStream(
         Name          => MFZ_FILE_NAME,
+        Time          => $assignedinnertime,
         @zipOtherOptions,
         BinModeIn     => 1)
         or die "Zip reinit failed on ".MFZ_FILE_NAME.": $ZipError\n";
@@ -435,11 +561,11 @@ sub MakeInnerZip {
     }
 
     close $z;
-    return $compressedoutput;
+    return ($compressedoutput,$assignedinnertime);
 }
 
 sub MakeOuterZip {
-    my ($signature,$inner) = @_;
+    my ($signature,$inner,$announce) = @_;
     my $compressedoutput;
     my $z = new IO::Compress::Zip
         \$compressedoutput,
@@ -457,19 +583,12 @@ sub MakeOuterZip {
         or die "Zip reinit failed for outer: $ZipError\n";
     $z->print($inner);
 
+    if (defined $announce) {
+        IDie("Why are you here? ANNOUNCING doesn't exist anymore");
+    }
+
     close $z;
     return $compressedoutput;
-}
-
-sub SignString {
-    my ($privkeyfile, $datatosign) = @_;
-
-    my $keystring = ReadWholeFile( $privkeyfile );
-    my $privatekey = Crypt::OpenSSL::RSA->new_private_key($keystring);
-    $privatekey->use_pkcs1_padding();
-    $privatekey->use_sha512_hash();
-    my $signature = $privatekey->sign($datatosign);
-    return encode_base64($signature, '');
 }
 
 ## REACHED EOF

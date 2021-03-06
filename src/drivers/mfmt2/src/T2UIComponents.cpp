@@ -1,9 +1,28 @@
 #include "T2UIComponents.h"
+#include "T2FlashTrafficManager.h"
 
 #include "T2Tile.h"
 #include "TraceTypes.h"
 
 namespace MFM {
+
+  void MFMRunRadioGroup::OnCheck(AbstractRadioButton & arb, bool value) {
+    if (!value) return;
+    const char * bn = arb.GetName();
+    const char * gn = this->GetGroupName().GetZString();
+    if (0) { }
+    else if (endsWith(bn,"_MFMRun"))   T2Tile::get().setLiving(true);
+    else if (endsWith(bn,"_MFMPause")) T2Tile::get().setLiving(false);
+    else {
+      LOG.Warning("WTC? %s in group %s?", bn, gn);
+    }
+  }
+
+  void T2FlashCommandLabel::onClick() {
+    T2Tile & tile = T2Tile::get();
+    tile.getFlashTrafficManager().onClick(this);
+  }
+
   bool T2UIButton::ExecuteFunction(u32 keysym, u32 mods) {
     TLOG(DBG,"%s",__PRETTY_FUNCTION__);
     OnClick(SDL_BUTTON_LEFT);
@@ -34,39 +53,138 @@ namespace MFM {
       T2Tile::get().setListening(checked);
   }
 
+  void T2HardButton::onClick() {
+    const char * name = this->GetName();
+    LOG.Error("DON'T CLICK THE HARD BUTTON '%s'",name);
+    return;
+  }
+
+  void T2HardButton::PaintComponent(Drawing & config) {
+    if (mDownTime) {
+      u32 nownow = T2Tile::get().now();
+      u32 delta = nownow - mDownTime;
+      const u32 MAX = 2000;
+      if (delta > MAX) {
+        mDownTime = 0;
+        this->SetText("EJECT");
+      } else {
+        OString32 buf;
+        buf.Printf("%d",MAX-delta);
+        this->SetText(buf.GetZString());
+      }
+      this->AbstractButton::PaintComponent(config);
+    }
+  }
+
+  bool T2HardButton::Handle(KeyboardEvent & event) {
+    if (event.m_event.keysym.sym == SDLK_MENU) {
+      Panel * parent = this->GetParent();
+      if (event.m_event.type == SDL_KEYDOWN) {
+        mDownTime = T2Tile::get().now();
+        this->SetVisible(1);
+        parent->RaiseToTop(this);
+      } else {
+        this->SetVisible(0);
+        parent->LowerToBottom(this);
+        mDownTime = 0;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  T2TracePanel & T2TraceCtlButton::getTracePanel() {
+    if (!mTracePanel) {
+      // Search siblings for a T2TracePanel
+      Panel * sib = this;
+      do {
+        sib = sib->GetForward();
+        MFM_API_ASSERT_NONNULL(sib); // Circular list (unless no parent)
+        if (dynamic_cast<T2TracePanel*>(sib)) {
+          mTracePanel = dynamic_cast<T2TracePanel*>(sib);
+          break;
+        }
+      } while (sib != this);
+      MFM_API_ASSERT_NONNULL(mTracePanel); // Cell Structure Has Been Checked
+    }
+    return *mTracePanel;
+  }
+
+  void T2TraceCtlButton::onClick() {
+    T2TracePanel & tp = this->getTracePanel();
+    const char * name = this->GetName();
+    if (0) {
+    } else if (endsWith(name,"_Down")) {
+      tp.changeSelection(1);
+    } else if (endsWith(name,"_Up")) {
+      tp.changeSelection(-1);
+    } else if (endsWith(name,"_Req")) {
+      tp.requestSelection();
+    } else if (endsWith(name,"_Del")) {
+      tp.deleteSelection();
+    } else if (endsWith(name,"_Action")) {
+      tp.confirmAction();
+    } else if (endsWith(name,"_X")) {
+      tp.cancelAction();
+    } else
+      LOG.Error("BADTRACECTL BUTTONNAME '%s'",name);
+  }
+
   void T2SeedPhysicsButton::onClick() {
-    T2Tile & tile = T2Tile::get();
-    tile.seedPhysics();
-    SDLI & sdli = tile.getSDLI();
-    const char * panelName = "GlobalMenu_Button_Sites";
-    AbstractButton * sites = dynamic_cast<AbstractButton*>(sdli.lookForPanel(panelName));
-    if (!sites) LOG.Error("Couldn't find '%s'",panelName);
-    else sites->OnClick(1);
+    const char * name = this->GetName();
+    u32 type = 0;
+    if (sscanf(name,"%*[A-Za-z_]%d",&type) != 1) {
+      LOG.Error("BADSEED BUTTONNAME '%s'",name);
+      return;
+    }
+    T2FlashCmd cmd;
+    switch (type) {
+    case 1:  cmd = T2FLASH_CMD(phy,seed1); break;
+    case 2:  cmd = T2FLASH_CMD(phy,seed2); break;
+    default:
+      LOG.Error("BADSEED TYPE '%d'",type);
+      return;
+    }
+    FlashTraffic::execute(FlashTraffic::make(cmd));
   }
 
   void T2DebugSetupButton::onClick() {
-    T2Tile & tile = T2Tile::get();
-    tile.debugSetup();
-    SDLI & sdli = tile.getSDLI();
-    const char * panelName = "GlobalMenu_Button_Sites";
-    AbstractButton * sites = dynamic_cast<AbstractButton*>(sdli.lookForPanel(panelName));
-    if (!sites) LOG.Error("Couldn't find '%s'",panelName);
-    else sites->OnClick(1);
+    TLOG(MSG,"DebugtSetup button clicked");
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(phy,debugsetup)));
   }
 
   void T2ClearTileButton::onClick() {
-    T2Tile::get().clearPrivateSites();
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(phy,clear)));
   }
 
   void T2QuitButton::onClick() {
     TLOG(MSG,"Quit button clicked");
-    T2Tile::get().getSDLI().stop();
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(mfm,quit)));
   }
 
   void T2CrashButton::onClick() {
     TLOG(MSG,"Crash button clicked");
-    T2Tile::get().stopTracing();
-    exit(1); /* 'crash' */
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(mfm,crash)));
+  }
+
+  void T2DumpButton::onClick() {
+    TLOG(MSG,"Dump button clicked");
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(mfm,dump)));
+  }
+
+  void T2OffButton::onClick() {
+    TLOG(MSG,"Off button clicked");
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(t2t,off)));
+  }
+
+  void T2BootButton::onClick() {
+    TLOG(MSG,"Boot button clicked");
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(t2t,boot)));
+  }
+
+  void T2KillCDMButton::onClick() {
+    TLOG(MSG,"xCDM button clicked");
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(t2t,xcdm)));
   }
 
 }

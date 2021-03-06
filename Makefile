@@ -38,6 +38,7 @@ realclean:  $(PLATFORMS)
 
 include config/Makeversion.mk
 TAR_SWITCHES+=--exclude=tools --exclude=*~ --exclude=.git --exclude=doc/internal --exclude=spikes --exclude-backups
+TAR_SWITCHES+=--exclude=*.o --exclude=*.d
 TAR_SWITCHES+=--mtime="2008-01-02 12:34:56"
 TAR_SWITCHES+=--owner=0 --group=0 --numeric-owner 
 
@@ -46,9 +47,27 @@ tar:	FORCE
 	PWD=`pwd`;BASE=`basename $$PWD`;cd ..;tar cvzf mfm-$(MFM_VERSION_NUMBER).tgz $(TAR_SWITCHES) $$BASE
 
 ifeq ($(PLATFORM),tile)
+REGNUM:=0
+SLOTNUM:=03
 cdmd:	FORCE
-	echo make
-	MPWD=`pwd`;BASE=`basename $$MPWD`;echo $$MPWD for $$BASE;pushd ..;tar cvzf $$BASE-built.tgz $(TAR_SWITCHES) $$BASE;cp -f $$BASE-built.tgz /home/debian/CDMSAVE/TGZS/;/home/t2/MFM/bin/mfzmake make - cdmd-$$BASE.mfz $$BASE-built.tgz;cp -f cdmd-$$BASE.mfz /home/debian/CDMSAVE/CDMDS/;popd
+	MPWD=`pwd`;BASE=`basename $$MPWD`; \
+	echo $$MPWD for $$BASE; \
+	pushd ..;tar cvzf $$BASE-built.tgz $(TAR_SWITCHES) $$BASE; \
+	cp -f $$BASE-built.tgz /home/debian/CDMSAVE/TGZS/; \
+	FN=`/home/t2/MFM/bin/mfzmake cdmake $(REGNUM) $(SLOTNUM) $$BASE $$BASE-built.tgz | \
+            perl -e "while(<>) {/'([^']+)'/ && print "'$$1}'`; \
+	if [ "x$$FN" = "x" ] ; then echo "Build failed" ; else  \
+	echo -n "Got $$FN for $$BASE, tag = " ; \
+	perl -e '"'$$FN'" =~ /[^-]+-[^-]+-([[:xdigit:]]+)[.]/; print $$1' > /cdm/tags/slot$(SLOTNUM)-install-tag.dat; \
+	cat /cdm/tags/slot$(SLOTNUM)-install-tag.dat; \
+	echo -n ", size = " ; stat -c %s $$FN; \
+	cp -f $$FN /home/debian/CDMSAVE/CDMDS/; \
+	fi; \
+	popd
+
+restart:	FORCE
+	pkill mfmt2
+
 endif
 
 identify:	FORCE

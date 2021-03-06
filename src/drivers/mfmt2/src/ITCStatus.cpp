@@ -20,7 +20,7 @@ namespace MFM {
     ICON_SIDE = 32,
     STATUS_PIX_IN = ICON_SIDE,
     STATUS_PIX_OVER = 2*ICON_SIDE,
-    WIDER = 60
+    WIDER = 66
   };
 
   const UPoint (ITCStatus::screenPos[DIR6_COUNT]) = {

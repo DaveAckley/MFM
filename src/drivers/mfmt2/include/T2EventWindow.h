@@ -190,6 +190,13 @@ namespace MFM {
     void finalizeEW() ;
     void abortEW() ;
 
+    OurT2Site & getCenterSite() { return mSites[0]; }
+
+    OurT2Atom & getSiteAtom(u32 site) {
+      MFM_API_ASSERT_ARG(site < EVENT_WINDOW_SITES(MAX_EVENT_WINDOW_RADIUS));
+      return mSites[site].GetAtom();
+    }
+
   protected:
     char * mNameBuf32; //allocated so getname() can be const
     void _setEWSNRaw(EWStateNumber ewsn) {
@@ -230,11 +237,15 @@ namespace MFM {
 
     bool tryInitiateActiveEvent(UPoint center,u32 radius) ;
 
-    bool executeEvent() ; // This is what we're here for.  true to commit results
+    bool executeEvent() ; // This is what we're here for.  true to commit results, false to kill center
+
+    bool doBehavior() ; // Actually run the center atom's event transition code
 
     bool checkSiteAvailabilityForActive() ;
 
     void commitAndReleaseActive() ;
+    void emptyCenterAtom() ;
+
     void dropActiveEW(bool dueToNAK) ;
 
     void handleAnswer(T2ITC & itc) ;
@@ -256,6 +267,10 @@ namespace MFM {
 
     Circuit mActiveCircuits[CIRCUITS_PER_ACTIVE_EW];
     u64 mActiveEventCountForAge;
+
+  private: ////DEMO PHYSICS
+    void doSplitsAtTheEndOfTheUniverse(OurT2Atom &atom) ;
+    void doDRegAndRes(OurT2Atom &atom) ;
   };
 
   struct T2PassiveEventWindow : public T2EventWindow {

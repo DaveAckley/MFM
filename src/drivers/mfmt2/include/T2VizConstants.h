@@ -5,9 +5,9 @@
 #define T2_SCREEN_WIDTH 480
 #define T2_SCREEN_HEIGHT 320
 
-#define ROOT_WIDTH_CROP 8   /* Bezel covers some pixels on right */
-#define ROOT_WINDOW_WIDTH (T2_SCREEN_WIDTH-ROOT_WIDTH_CROP) 
-#define ROOT_WINDOW_HEIGHT 320
+/* FOR T2VizConstants.h, WITH LOVE FROM ./wconfig.pl */
+#define ROOT_WINDOW_WIDTH (462)
+#define ROOT_WINDOW_HEIGHT (308)
 
 namespace MFM {
 #define makeColor(R,G,B) ((0xff<<24)|(((R)&0xff)<<16)|(((G)&0xff)<<8)|(((B)&0xff)<<0))

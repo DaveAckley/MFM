@@ -132,6 +132,8 @@ namespace MFM {
 
     bool setPosting(bool posted) ;
 
+    bool isPosted() const { return mPosted; }
+
   private:
     bool mPosted;
   };

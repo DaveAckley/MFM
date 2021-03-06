@@ -1,9 +1,15 @@
-BASE_DIR:=../../..
+BASEDIR:=../../..
+COMPONENTNAME:=mfzrun
 DRIVER_NAME:=mfzrun
-BIN_DIR:=$(BASE_DIR)/bin
+BIN_DIR:=$(BASEDIR)/bin
 SRCS:=$(wildcard *.tmpl)
 TARGETS:=$(patsubst %.tmpl, $(BIN_DIR)/%, $(SRCS))
 ALLDEP+=./Makefile
+
+include $(BASEDIR)/config/Makeplatform.mk
+MFM_TARGET:=$(PLATFORM)
+MFM_ROOT_DIR:=$(shell realpath $(BASEDIR))
+include $(BASEDIR)/config/Makelib.mk
 
 all:	$(TARGETS) $(MOD_TARGETS)
 
@@ -17,17 +23,22 @@ $(BIN_DIR)/%: ./%.tmpl *.inc FORCE | $(BIN_DIR)
 	perl -e 'while(<>){if($$_=~/<<<INCLUDE:\s*(.+)\s*>>>/){system("cat $$1")} else {print}}' $< | \
 	sed \
 	    -e "s|@DEBIAN_PACKAGE_NAME@|$(DEBIAN_PACKAGE_NAME)|" \
+	    -e "s|@DEB_MFM_BINDIR@|$(DEB_MFM_BINDIR)|" \
+	    -e "s|@DEB_MFM_RESDIR@|$(DEB_MFM_RESDIR)|" \
 	    -e "s|@MFM_ROOT_DIR@|$(MFM_ROOT_DIR)|" \
 	    -e "s|@MFM_VERSION_NUMBER@|$(MFM_VERSION_NUMBER)|" \
 	    -e "s|@MFM_TREE_VERSION@|$(MFM_TREE_VERSION)|" \
+	    -e "s|@MFM_CFLAGS@|$(CFLAGS)|" \
+	    -e "s|@MFM_CPPFLAGS@|$(CPPFLAGS)|" \
+	    -e "s|@MFM_LDFLAGS@|$(LDFLAGS)|" \
 	    >$@
 	chmod 755 $@
 
-clean:	FORCE
-	@rm -f *~
-	@rm -f ${OBJS}
+# clean:	FORCE
+# 	@rm -f *~
+# 	@rm -f ${OBJS}
 
-realclean:	clean
-	@rm -f ${TARGET}
+# realclean:	clean
+# 	@rm -f ${TARGET}
 
 .PHONY:	FORCE

@@ -33,6 +33,7 @@ namespace MFM {
   }
 
   Panel::Panel(u32 width, u32 height)
+    : m_ttfFont(0)
   {
     SetDimensions(width, height);
     SetDesiredSize(U32_MAX, U32_MAX);  // Wish for a lot by default.
@@ -335,6 +336,7 @@ namespace MFM {
   }
 
   TTF_Font* Panel::GetFontReal() const {
+    if (m_ttfFont) return m_ttfFont;
     return AssetManager::Get(m_fontAsset);
   }
 

@@ -19,25 +19,28 @@
 
 //Spike files
 #include "T2Constants.h"
+#include "T2Main.h"
 #include "T2Types.h"
 #include "T2ITC.h"
 #include "EWSet.h"
-#include "TimeQueue.h"
 #include "SDLI.h"
 #include "ADCCtl.h"
 #include "Sites.h"
 #include "Trace.h"
 #include "CPUFreq.h"
 #include "T2TileStats.h"
+#include "T2FlashTrafficManager.h"
+#include "T2UIComponents.h"
+#include "TraceLogInfo.h" /*for TraceLogInfo, TraceLogDirManager */
+#include "UlamEventSystem.h"
 
 namespace MFM {
-
-  const char * getDir6Name(Dir6 dir6) ;  ///// THIS SO DOES NOT BELONG HERE
 
   struct EWInitiator : public TimeoutAble {
     EWInitiator() ;
     virtual void onTimeout(TimeQueue& srctq) ;
     virtual const char* getName() const { return "EWInitiator"; }
+    u32 mInitiations;
   };
 
   struct CoreTempChecker : public TimeoutAble {
@@ -68,25 +71,23 @@ namespace MFM {
 
   typedef std::map<u32,u32> AtomTypeCountMap;
   
-  struct T2Tile {
+  struct T2Tile : public T2Main, public OurTraditionalTile {
 
-    static inline T2Tile & get() {
-      static bool underConstruction;
-      if (underConstruction) {
-        // Go bare lib: LOG etc may not be available yet
-        fprintf(stderr,"%s Reentry during construction\n",__PRETTY_FUNCTION__);
-        FAIL(ILLEGAL_STATE);
-      }
-      underConstruction = true;
-      {
-        static T2Tile THE_INSTANCE;
-        underConstruction = false;
-        return THE_INSTANCE;
-      }
+    // Get the T2Main singleton set up;
+    static void initInstance() { new T2Tile(); }
+
+    static T2Tile & get() {
+      T2Main * o = &T2Main::get();
+      T2Tile * t = dynamic_cast<T2Tile*>(o);
+      MFM_API_ASSERT_NONNULL(t);
+      return (T2Tile&) *t;
     }
 
-    T2Tile() ;
-    ~T2Tile() ;
+    ////OurTraditionalTile API
+    virtual bool IsConnected(Dir dir) const ;
+    virtual bool IsCacheSitePossibleEventCenter(const SPoint & location) const;
+    ////
+
 
     bool isLiving() const { return mLiving; }
     
@@ -106,20 +107,24 @@ namespace MFM {
 
     // GENERAL SERVICE METHODS
     void debugSetup() ; // Whatever we're currently working on
-    void seedPhysics() ;
+    void seedPhysics(u32 type) ;
     void clearPrivateSites() ;
     void traceSite(const UPoint at, const char * msg = "", Logger::Level level = Logger::DBG) const ;
 
     ///
-    void setMFZId(const char * mfzid) ;
+    void setMFZTag(const char * mfztag) ;
+    void generateMFZId() ;
     const char * getMFZId() const ;
-
-    Random & getRandom() { return mRandom; }
+    void openMFZIdDevice() ;
 
     SDLI & getSDLI() { return mSDLI; }
 
     ADCCtl & getADCCtl() { return mADCCtl; }
 
+    T2FlashTrafficManager & getFlashTrafficManager() { return mFlashTrafficManager; }
+
+    UlamEventSystem & getUlamEventSystem() { return mUlamEventSystem; }
+    void setUlamLibraryPath(const char * path) ;
     void addRandomSyncTag(ByteSink & bs) ;
     bool tryReadRandomSyncTag(ByteSource& bs, s32 & got) ;
 
@@ -128,11 +133,15 @@ namespace MFM {
     }
 
     bool tlog(const Trace & tb) ;
+
+    TraceLogDirManager & getTraceLogDirManager() { return mTraceLogDirManager; }
     
     // Draw a kill screen before dying.
     void showFail(const char * file, int line, const char * msg) ;
 
     static s32 makeTag() ;
+    void dumpTrace(const char * path = 0) ;
+    void dumpTrace(const u32 tag, u8 range, BPoint offset) ;
     void startTracing(const char * path, s32 synctag = makeTag()) ;
     void stopTracing(s32 synctag = -makeTag()) ;
     void traceEventStats() ;
@@ -142,6 +151,7 @@ namespace MFM {
     void earlyInit() ;
     void initEverything(int argc, char **argv) ;
 
+    void initTitleCard();
 #if 0
     void onePass() ;
 #endif
@@ -154,6 +164,7 @@ namespace MFM {
     void shutdownEverything() ;
 
     bool isDone() const { return mExitRequest; }
+    void requestExit() { mExitRequest = true; }
     
     void resetITCs() ;
     void closeITCs() ;
@@ -188,8 +199,6 @@ namespace MFM {
 
     void insertOnMasterTimeQueue(TimeoutAble & ta, u32 fromNow, s32 fuzzbits=-1) ;
 
-    u32 now() const { return mTimeQueue.now(); }
-    TimeQueue & getTQ() { return mTimeQueue; }
 
     const Sites& getSites() const { return mSites; }
     Sites& getSites() { return mSites; }
@@ -213,6 +222,12 @@ namespace MFM {
     const Rect & getOwnedRect() const {
       return mOwnedRect;
     }
+
+    const Rect & getHiddenRect() const {
+      return mHiddenRect;
+    }
+
+    const UPoint pickUnownedHiddenSite() ;
 
     const Rect & getVisibleRect(Dir6 dir6) const {
       MFM_API_ASSERT_ARG(dir6 < DIR6_COUNT);
@@ -239,14 +254,16 @@ namespace MFM {
 
     CPUFreq & getCPUFreq() { return mCPUFreq; }
 
+    void closeFDs() ;
+
   private:
-    Random mRandom;
-    TimeQueue mTimeQueue;
     TraceLogger* mTraceLoggerPtr;
+    TraceLogDirManager mTraceLogDirManager;
 
     int mArgc;
     char ** mArgv;
-    const char * mMFZId;
+    OString64 mMFZTag;
+    OString128 mMFZId;
     const char * mWindowConfigPath;
     const u32 mWidth, mHeight;
     bool mExitRequest;
@@ -255,6 +272,7 @@ namespace MFM {
 
   public:  // Hey it's const
     const Rect mOwnedRect;
+    const Rect mHiddenRect;
     const Rect mITCVisible[DIR6_COUNT];
     const Rect mITCCache[DIR6_COUNT];
     const Rect mITCVisibleAndCache[DIR6_COUNT];
@@ -347,6 +365,12 @@ namespace MFM {
     CPUFreq mCPUFreq;
     CoreTempChecker mCoreTempChecker;    
 
+    //// Active Radio Groups
+    MFMRunRadioGroup mMFMRunRadioGroup;
+    
+    //// FLASH TRAFFIC MANAGEMENT
+    T2FlashTrafficManager mFlashTrafficManager;
+
     void initRollingTraceDir(u32 targetMB) ;
     void rollTracing() ;
 
@@ -354,6 +378,12 @@ namespace MFM {
     u32 mRollingTraceTargetKB;
     u32 mRollingTraceSpinner;
 
+    //// ULAM EVENT SYSTEM
+    UlamEventSystem mUlamEventSystem;
+    
+  protected:
+    T2Tile() ;
+    virtual ~T2Tile() ;
   };
 }
 #endif /* T2TILE_H */

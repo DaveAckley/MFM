@@ -47,7 +47,7 @@
 #include "Grid.h"
 #include "ElementTable.h"
 #include "VArguments.h"
-#include "StdElements.h"
+/* #include "StdElements.h" XXX NO LONGER USING? */
 #include "ElementRegistry.h"
 #include "Version.h"
 #include "DebugTools.h"
@@ -96,11 +96,13 @@ namespace MFM
      */
     typedef ElementRegistry<EC> OurElementRegistry;
 
+#if 0
     /**
      * Template shortcut for an instance of StdElements with the
      * correct template parameters.
      */
     typedef StdElements<EC> OurStdElements;
+#endif
 
     /**
      * Template shortcut for a Grid with the correct template
@@ -1601,7 +1603,7 @@ namespace MFM
     {
       unwind_protect
       ({
-        MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
+        //XXX        MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
         fprintf(stderr, "Failure reached top-level! Aborting\n");
         abort();
        },
@@ -1618,7 +1620,9 @@ namespace MFM
     Element<EC>* m_neededElements[MAX_NEEDED_ELEMENTS];
     u32 m_neededElementCount;
 
+#if 0
     OurStdElements m_se;
+#endif
     OurGrid m_grid;
 
     u64 m_ticksLastStopped;
