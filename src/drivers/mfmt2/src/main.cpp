@@ -13,6 +13,7 @@
 #include "ADCCtl.h"
 #include "T2Utils.h"
 #include "TraceTypes.h"
+#include "IsLocalPlatformSpecific.h" /* For getStackBound */
 
 namespace MFM {
   extern "C" void T2TileAttemptTraceLogging(const FailException & fe, const char * unwindFile, int unwindLine) {
@@ -147,6 +148,9 @@ namespace MFM {
     LOG.SetByteSink(STDERR);
     LOG.SetLevel(LOG.MESSAGE);
 
+    // GENERATE A FOGGEN REFERENCE TO GETSTACKBOUND
+    LOG.Message("The stack bound is 0x%x.  Fascinating.\n",getStackBound());
+    
     // MAKE THE SINGLETON
     T2Tile::initInstance();
 

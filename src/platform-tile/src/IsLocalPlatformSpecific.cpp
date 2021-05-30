@@ -10,8 +10,5 @@
 
 void * __attribute__ ((noinline)) getStackBound()
 {
-  char local;
-  void * ret = &local;
-  asm(""); // try to block compiler optimizations
-  return ret;
+  return __builtin_frame_address(0); // This seems tailor-made, no?
 }
