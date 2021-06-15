@@ -5,6 +5,7 @@ use strict;
 sub BEGIN {
     # Seal us up a bit for living la vida tainted
     $ENV{'PATH'} = "/bin:/usr/bin";
+    $ENV{'LC_ALL'} = "C";
     delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 }
 
