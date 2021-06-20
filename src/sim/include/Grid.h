@@ -400,7 +400,7 @@ namespace MFM {
       for (iterator_type i = begin(); i != end(); ++i)
         i->RegisterElement(anElement);
 
-      LOG.Message("Assigned type 0x%04x for %@",anElement.GetType(),&anElement.GetUUID());
+      LOG.Message("Type 0x%04x is %@",anElement.GetType(),&anElement.GetUUID());
     }
 
     void SetTileParameter(u32 key, s32 value)
