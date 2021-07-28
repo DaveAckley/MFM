@@ -802,11 +802,26 @@ namespace MFM
     }
 
 
+    static int eltComp(const void * e1, const void * e2) {
+      MFM_API_ASSERT_NONNULL(e1);
+      MFM_API_ASSERT_NONNULL(e2);
+      Element<EC> * elt1 = *(Element<EC>**) e1;
+      Element<EC> * elt2 = *(Element<EC>**) e2;
+      const char * s1 = elt1->GetAtomicSymbol();
+      const char * s2 = elt2->GetAtomicSymbol();
+      MFM_API_ASSERT_NONNULL(s1);
+      MFM_API_ASSERT_NONNULL(s2);
+      return strcmp(s1,s2);
+    }
+
     void AddButtons()
     {
       // Clear all then re-add
       Panel * p;
       while ((p = this->GetTop())) this->Remove(p);
+
+      ////SORTEM BY SYMBOL DAMMIT SORTEM
+      qsort(m_heldElements,m_heldElementCount,sizeof(m_heldElements[0]),eltComp);
 
       for(u32 i = 0; i < m_toolButtonsInUse; i++)
       {

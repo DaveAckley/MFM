@@ -199,19 +199,22 @@ namespace MFM
 
         return;
     }
-    PaintSites(drawing,
-               (m_drawBases && !IsBaseVisible()) ? DRAW_SITE_BASE : m_drawBackgroundType,
-               DRAW_SHAPE_FILL, ditOrigin, tile);
-    PaintUnderlays(drawing, ditOrigin, tile);  // E.g. an event window
+    unwind_protect({
+        LOG.Warning("Failure during painting; incomplete grid render");
+    },{
+        PaintSites(drawing,
+                   (m_drawBases && !IsBaseVisible()) ? DRAW_SITE_BASE : m_drawBackgroundType,
+                   DRAW_SHAPE_FILL, ditOrigin, tile);
+        PaintUnderlays(drawing, ditOrigin, tile);  // E.g. an event window
 
-    PaintSites(drawing, m_drawMidgroundType, DRAW_SHAPE_CIRCLE, ditOrigin, tile);
+        PaintSites(drawing, m_drawMidgroundType, DRAW_SHAPE_CIRCLE, ditOrigin, tile);
 
-    PaintSites(drawing, m_drawForegroundType, DRAW_SHAPE_CDOT, ditOrigin, tile);
+        PaintSites(drawing, m_drawForegroundType, DRAW_SHAPE_CDOT, ditOrigin, tile);
 
-    if (m_drawCustom)
-      PaintCustom(drawing, ditOrigin, tile);
-
-    PaintOverlays(drawing, ditOrigin, tile);   // E.g., a tool footprint
+        if (m_drawCustom)
+          PaintCustom(drawing, ditOrigin, tile);
+        PaintOverlays(drawing, ditOrigin, tile);   // E.g., a tool footprint
+    });
   }
 
   template <class EC>
