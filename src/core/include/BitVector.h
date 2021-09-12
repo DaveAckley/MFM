@@ -543,6 +543,11 @@ namespace MFM {
     void Clear();
 
     /**
+     * Sets all bits of this BitVector to \c 1 .
+     */
+    void SetAllOnes();
+
+    /**
      * Prints the bits held in this BitVector to a specified ByteSink in
      * hex format.
      *
@@ -770,6 +775,25 @@ namespace MFM {
 	  if (i + amt > length) amt = length - i;
 	  dstbv.Write(i, amt, this->Read(i, amt) ^ rbv.Read(i, amt));
 	}
+    }
+
+    /**
+     * Bitwise COMPLEMENT (~) this BitVector into a different
+     * BitVector \c dstbv. All the same size, B.
+     *
+     * @param dstbv The destination BitVector<B> that is written
+     *              in positions [0, B].
+     *
+     * @fails ILLEGAL_ARGUMENT if dstbv is the same object as this
+     *
+     * @sa _BitwiseXorBitsBV
+     *
+     */
+    inline void _BitwiseComplementBitsBV(BitVector<B> & dstbv) const
+    {
+      BitVector<B> bvmask;
+      bvmask.SetAllOnes();
+      this->_BitwiseXorBitsBV(bvmask, dstbv);
     }
 
 
