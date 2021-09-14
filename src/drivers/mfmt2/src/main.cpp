@@ -16,6 +16,23 @@
 #include "IsLocalPlatformSpecific.h" /* For getStackBound */
 
 namespace MFM {
+  static bool dumpFileToTrace(const char * path) {
+    T2Tile & tile = T2Tile::get();
+    OString4096 buf;
+    if (readWholeFile(path,buf)) {
+      tile.tlog(Trace(tile,TTC_Tile_TopLevelFailure,"---BEGIN %s---", path));
+      OString128 line;
+      CharBufferByteSource cbbs = buf.AsByteSource();
+      while (cbbs.Scanf("%[^\n]\n",&line) == 2) {
+        tile.tlog(Trace(tile,TTC_Tile_TopLevelFailure,"%s", line.GetZString()));
+        line.Reset();
+      }
+      tile.tlog(Trace(tile,TTC_Tile_TopLevelFailure,"---END %s---", path));
+      return true;
+    }
+    return false;
+  }
+
   extern "C" void T2TileAttemptTraceLogging(const FailException & fe, const char * unwindFile, int unwindLine) {
     const char * msg = MFMFailCodeReason(fe.mCode);
     T2Tile & tile = T2Tile::get();
@@ -46,6 +63,8 @@ namespace MFM {
       }
       free(strings);
     }
+    dumpFileToTrace("/sys/class/itc_pkt/mfzid");
+    dumpFileToTrace("/sys/class/itc_pkt/fifos");
   }
 
   struct TOT : public TimeoutAble {
