@@ -587,10 +587,19 @@ namespace MFM {
         noneEarlier.insert(n1);
       }
     }
-    if (noneEarlier.size() != 1) {
-      LOG.Message("%d anchor files detected", noneEarlier.size());
-      FAIL(INCOMPLETE_CODE);
-    } else { // One
+    u32 count = noneEarlier.size();
+    if (count != 1) {
+      LOG.Warning("%d anchor files detected", noneEarlier.size());
+      for (NoneEarlierSet::iterator itr = noneEarlier.begin();
+           itr != noneEarlier.end();
+           ++itr) {
+        FileNumber fn = *itr;
+        WeaverLogFile & anchor = *(mWeaverLogFiles[fn].first);
+        LOG.Error(" - %d : %s",fn,anchor.getFilePath());
+      }
+      if (count == 0) exit(1);
+    }
+    { // One
       struct timespec zero;
       zero.tv_sec = 0;
       zero.tv_nsec = 0;
@@ -903,9 +912,9 @@ namespace MFM {
   XX(map,m,N,,"Print the sync map")                             \
   XX(tweak,t,O,FN/USEC,"Tweak file number FN timing by USEC")   \
   XX(version,v,N,,"Print version and exit")                     \
+  XX(log,l,O,LEVEL,"Set or increase logging")                   \
 
 #if 0
-  XX(log,l,O,LEVEL,"Set or increase logging")                   \
   XX(paused,p,N,,"Start up paused")                             \
   XX(trace,t,R,PATH,"Trace output to file")                     \
   XX(wincfg,w,R,PATH,"Specify window configuration file")       \
@@ -1034,6 +1043,9 @@ static const char * CMD_HELP_STRING =
         abort();
       }
     }
+    if (mInteractive) {
+      LOG.SetByteSink(mLogBuffer);
+    }
     while (optind < argc) {
       if (!mAlignment.addLogFile(argv[optind++])) {
         LOG.Error("Bad log file");
@@ -1059,7 +1071,7 @@ static const char * CMD_HELP_STRING =
   }
 
   int Weaver::main(int argc, char ** argv) {
-    LOG.SetByteSink(mLogBuffer);
+    //    LOG.SetByteSink(mLogBuffer);
     processArgs(argc,argv);
     if (mInteractive) {
       IWeave iw(*this);
