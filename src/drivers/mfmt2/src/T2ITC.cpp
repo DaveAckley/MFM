@@ -336,6 +336,12 @@ namespace MFM {
       if (errno == ERESTART) return true; // try me again
       LOG.Error("%s: Read failed on mFD %d: %s",
                 getName(), mFD, strerror(errno));
+      if (errno == ESTALE) {
+        // LKM wants us to reopen the ITCs but we don't know how to do
+        // that at all cleanly from here, except by restarting the
+        // whole engine, so..
+        FAIL(IO_ERROR);
+      }
       return false;
     }
     if (!dispatch) return true;
