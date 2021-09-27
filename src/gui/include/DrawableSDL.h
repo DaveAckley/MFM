@@ -32,6 +32,7 @@
 #include "Drawing.h"
 #include "EventWindowRenderer.h"
 #include "UlamContextRestricted.h"
+#include "UlamContextEvent.h"
 
 namespace MFM {
 
@@ -80,6 +81,23 @@ namespace MFM {
       : UlamContextRestricted<EC>(tile.GetElementTable(), tile.GetUlamClassRegistry())
       , m_ewrs(ewrs)
     { }
+
+    virtual bool HasEventWindowRenderer() const { return true; }
+    virtual const EventWindowRenderer<EC> & GetEventWindowRenderer() const {
+      return m_ewrs;
+    }
+  };
+
+  template <class EC>
+  class UlamContextEventSDL : public UlamContextEvent<EC> {
+    EventWindowRendererSDL<EC> m_ewrs;
+  public:
+    UlamContextEventSDL(EventWindowRendererSDL<EC>& ewrs, Tile<EC> & tile)
+      : UlamContextEvent<EC>(tile.GetElementTable())
+      , m_ewrs(ewrs)
+    {
+      this->SetTile(tile);
+    }
 
     virtual bool HasEventWindowRenderer() const { return true; }
     virtual const EventWindowRenderer<EC> & GetEventWindowRenderer() const {

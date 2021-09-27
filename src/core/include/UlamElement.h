@@ -158,6 +158,14 @@ namespace MFM {
 
     virtual ~UlamElement() { }
 
+    
+    bool HasUlamElementInfo() const { return m_info != NULL; }
+
+    u32 GetSymmetry(UlamContext<EC>& uc) const {
+      u32 sym = m_info ? m_info->GetSymmetry(uc) : (u32) PSYM_DEG000L;
+      return sym;
+    }
+
     const UlamElementInfo<EC> & GetUlamElementInfo() const
     {
       MFM_API_ASSERT_NONNULL(m_info);
