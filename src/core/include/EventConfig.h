@@ -37,7 +37,7 @@ namespace MFM {
    * a single event for an MFM Element.
    */
   template <class S,    // A Site
-            u32 R       // An event window radius
+            s32 R       // An event window radius
             >
   struct EventConfig {
     /**
