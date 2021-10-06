@@ -819,6 +819,18 @@ namespace MFM {
     return _Bits64ToBool64(binvala ^ binvalb, bitwidth, bitwidth);
   }
 
+  inline u32 _BitwiseComplementBits32(u32 vala, u32 bitwidth)
+  {
+    u32 mask = _GetNOnes32(bitwidth);
+    return  ( (vala ^ mask) & mask) ;
+  }
+
+  inline u64 _BitwiseComplementBits64(u64 vala, u32 bitwidth)
+  {
+    u64 mask = _GetNOnes64(bitwidth);
+    return ( (vala ^ mask) & mask);
+  }
+
   //Bounds checks for INT (32,64 bitwidths) arith:
   // based on http://stackoverflow.com/questions/199333/how-to-detect-integer-overflow-in-c-c
 

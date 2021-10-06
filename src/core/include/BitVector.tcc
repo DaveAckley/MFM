@@ -77,6 +77,12 @@ namespace MFM {
     memset(m_bits, 0, sizeof(m_bits));
   }
 
+  template <u32 B>
+  void BitVector<B>::SetAllOnes()
+  {
+    memset(m_bits, 0xff, sizeof(m_bits));
+  }
+
   /*
    * TODO These seem a little dumpy and slow. We could
    * probably make this implementation work with some

@@ -100,7 +100,7 @@ namespace MFM
 	Returns the VfuncPtr, as well as the UlamRef to use in the vf call;
 	Cast the void* VfuncPtr to the vfunc's typedef (see origclass' .h);
 
-	Invarient: the new 'ur' has pos to the Override class found in
+	Invariant: the new 'ur' has pos to the Override class found in
 	EffectiveSelf's VTtable for this vfunc's VOWNED_IDX +
 	originating class start offset;
     */
@@ -122,7 +122,7 @@ namespace MFM
 	Returns the VfuncPtr, as well as the UlamRef to use in the vf call;
 	Cast the void* VfuncPtr to the vfunc's typedef (see origclass' .h);
 
-	Invarient: the new 'ur' has pos to the Override class found in
+	Invariant: the new 'ur' has pos to the Override class found in
 	this VTtable for this vfunc's VOWNED_IDX +
 	originating class start offset; pos is relative to existing effectiveSelf.
     */
@@ -238,7 +238,7 @@ namespace MFM
 
     /** helper, creates UlamRef for virtual func call;
 	2nd arg points to class vtable: the effSelf of 1st arg, unless user 'specific' base;
-	Invarient: 'ur' of a virtual func points to the override class fm vtable;
+	Invariant: 'ur' of a virtual func points to the override class fm vtable;
 	EffectiveSelf may not be same as the override class, i.e. override is a baseclass;
     */
     void InitUlamRefForVirtualFuncCall(const UlamRef<EC> & ur, const UlamClass<EC> * vtclassptr, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref);

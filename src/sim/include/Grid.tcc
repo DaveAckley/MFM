@@ -945,10 +945,11 @@ namespace MFM {
   {
     Random& rand = m_random;
 
-    SPoint center(rand.Create(m_width * TILE_WIDTH),
-		  rand.Create(m_height * TILE_HEIGHT));
+    u32 gw = m_width * TILE_WIDTH;
+    u32 gh = m_height * TILE_HEIGHT;
+    SPoint center(rand.Create(gw), rand.Create(gh));
 
-    u32 radius = rand.Between(5, (TILE_WIDTH + TILE_HEIGHT)/2); //was btn 5 and tile_side
+    u32 radius = rand.Between(5, MIN(gw,gh)/3); //up to a third of smaller grid dim
     T atom(Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
 
     SPoint siteInGrid, tileInGrid, siteInTile;

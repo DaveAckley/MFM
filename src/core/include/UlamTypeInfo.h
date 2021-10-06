@@ -178,6 +178,12 @@ namespace MFM {
       return & m_utip;
     }
 
+    const UlamTypeInfoClass * AsClass() const
+    {
+      if (!IsClass()) return 0;
+      return & m_utic;
+    }
+
     bool IsPrimitive() const { return m_category == PRIM; }
     bool IsElement() const { return m_category == ELEMENT; }
     bool IsQuark() const { return m_category == QUARK; }
