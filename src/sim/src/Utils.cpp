@@ -59,7 +59,7 @@ namespace MFM {
 
       const char * (paths[]) = {
         "~/.mfm",                // Possible per-user customizations first
-        "MFM",                   // AppImage top-level relative path?  Maybe?
+        "../../MFM",             // AppImage top-level relative path?  Maybe?
         SHARED_DIR,              // Source tree root
         "/usr/lib/" XSTR_MACRO(DEBIAN_PACKAGE_NAME) "/MFM", // Debian install location of mfm
         "/usr/share/mfm",        // Debian install location of mfm (old)
