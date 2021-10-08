@@ -1,10 +1,12 @@
-#!/usr/bin/perl -Tw
+#!/usr/bin/perl
 # -*- mode:perl -*-
 use strict;
+use warnings;
 
 sub BEGIN {
+    # Fri Oct  8 12:21:59 2021 Give up on la vide tainted due to appimage-builder
     # Seal us up a bit for living la vida tainted
-    $ENV{'PATH'} = "/bin:/usr/bin";
+    # $ENV{'PATH'} = "/bin:/usr/bin";
     $ENV{'LC_ALL'} = "C";
     delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 }
