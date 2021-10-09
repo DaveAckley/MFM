@@ -70,6 +70,20 @@ namespace MFM
     u32 GetTimeFromDateTime(u64 datetime) ;
 
     /**
+       Try to develop a path based on the directory of the running
+       binary plus a possible \c pathSuffixOrNull.  Returns \c false
+       if the path cannot be constructed for any reason, including:
+       path component or overall length too big, permission failure,
+       too many symbolic links, or the INDICATED PATH DOES NOT EXIST.
+
+       If a path is successfully resolved, returns \c true and writes
+       the path to \c result.  NOTE THAT IT IS UP TO THE CALLER to
+       reset \c result before, if needed, and to check for overflow of
+       \c result after, if that may be an issue.
+    */
+    bool ResolveProgramRelativePath(ByteSink& result, const char * pathSuffixOrNull) ;
+
+    /**
        Look in standard places for relativePath.  Return true if a
        readable file was found, and fills result with an absolute path
        (up to the given length) that was openable for reading at the
