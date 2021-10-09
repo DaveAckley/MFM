@@ -67,7 +67,7 @@ namespace MFM {
       prog[got] = 0; // readlink doesn't null terminate
 
       char * dirn = dirname(prog);
-      char path[PATH_LEN_UGH];
+      char path[PATH_LEN_UGH+1];
 
       if (pathSuffixOrNull) {
         u32 wrote = snprintf(path, PATH_LEN_UGH, "%s/%s", dirn, pathSuffixOrNull);
