@@ -47,7 +47,4 @@ extern "C" {
   void MFMLongJmpHere(jmp_buf buffer, const int toThrow) {
     longjmp(buffer,toThrow);
   }
-
-  //  MFMErrorEnvironment * volatile MFMErrorEnvironmentStackTop = 0;
-
 }
