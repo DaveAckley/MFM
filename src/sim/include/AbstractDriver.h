@@ -1599,11 +1599,16 @@ namespace MFM
 
     }
 
+    static void AbstractDriverRunFailMessage() {
+      fprintf(stderr, "Breakpoint here to explore\n");
+    }
+
     void Run()
     {
       unwind_protect
       ({
-        //XXX        MFMPrintErrorEnvironment(stderr, &unwindProtect_errorEnvironment);
+        PrintBacktrace(stderr, MFMThrownBacktraceArray, MFMThrownBacktraceSize);
+        AbstractDriverRunFailMessage();
         fprintf(stderr, "Failure reached top-level! Aborting\n");
         abort();
        },
