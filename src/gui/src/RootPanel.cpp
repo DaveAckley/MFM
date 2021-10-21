@@ -12,6 +12,11 @@ namespace MFM {
 
   void RootPanel::Paint(Drawing & drawing)
   {
+    Rect wdw;
+    drawing.GetWindow(wdw);
+    u32 bg = drawing.GetBackground();
+    u32 fg = drawing.GetForeground();
+
     unwind_protect(
     {
       LogBacktrace(MFMThrownBacktraceArray, MFMThrownBacktraceSize);
@@ -20,6 +25,10 @@ namespace MFM {
     {
       this->Super::Paint(drawing); // Dish to regular panel
     });
+
+    drawing.SetWindow(wdw);      // FWIW
+    drawing.SetBackground(bg);
+    drawing.SetForeground(fg);
   }
   
 } /* namespace MFM */
