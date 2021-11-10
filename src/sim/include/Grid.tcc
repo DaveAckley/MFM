@@ -437,7 +437,7 @@ namespace MFM {
   template <class GC>
   bool Grid<GC>::IsTileEnabled(const SPoint& tileLoc)
   {
-    MFM_API_ASSERT_ARG(!IsLegalTileIndex(tileLoc));
+    MFM_API_ASSERT_ARG(IsLegalTileIndex(tileLoc));
 
 
     Tile<EC> & tile = GetTile(tileLoc);
