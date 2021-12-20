@@ -140,7 +140,7 @@ namespace MFM {
 
       {
         OString16 buf;
-        const char * PATH = "/cdm/tags/slot02-install-tag.dat";
+        const char * PATH = "/cdm/tags/slot06-install-tag.dat"; // Go with T2-12/low for reporting
         if (!readOneLinerFile(PATH,buf)) tagbs.Printf("T2-12: no tag\n");
         else tagbs.Printf("T2-12 %s\n",buf.GetZString());
       }

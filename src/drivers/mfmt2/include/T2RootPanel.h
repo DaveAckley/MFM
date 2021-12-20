@@ -1,5 +1,5 @@
 /*                                              -*- mode:C++ -*-
-  RootPanel.h T2Viz root panel
+  T2RootPanel.h T2Viz root panel
   Copyright (C) 2019 The T2 Tile Project
 
   This library is free software; you can redistribute it and/or
@@ -19,13 +19,13 @@
 */
 
 /**
-  \file RootPanel.h T2Viz root panel
+  \file T2RootPanel.h T2Viz root panel
   \author David H. Ackley.
   \date (C) 2019 All rights reserved.
   \lgpl
  */
-#ifndef ROOTPANEL_H
-#define ROOTPANEL_H
+#ifndef T2ROOTPANEL_H
+#define T2ROOTPANEL_H
 
 #include "itype.h"
 #include "Panel.h"
@@ -39,7 +39,7 @@ namespace MFM
   /**
    * The root panel for T2Viz
    */
-  class RootPanel : public MenuMakerPanel
+  class T2RootPanel : public MenuMakerPanel
   {
     typedef MenuMakerPanel Super;
 
@@ -48,25 +48,25 @@ namespace MFM
   private:
 
     /**
-     * Initializes this RootPanel
+     * Initializes this T2RootPanel
      */
     void Init() { }
 
   public:
 
-    RootPanel() { }
+    T2RootPanel() { }
 
     /**
      * Destructor.
      */
-    ~RootPanel() { }
+    ~T2RootPanel() { }
 
     /**
-     * Sets the location of this RootPanel, relative to the Panel
+     * Sets the location of this T2RootPanel, relative to the Panel
      * which it is located inside of, at which to render this
-     * RootPanel and process mouse hits.
+     * T2RootPanel and process mouse hits.
      *
-     * @param location The new location that this RootPanel will
+     * @param location The new location that this T2RootPanel will
      *                 reside at.
      */
     void SetLocation(const SPoint& location)
@@ -76,10 +76,10 @@ namespace MFM
 
     virtual void HandleResize(const UPoint& parentSize)
     {
-      /* RootPanels don't resize automatically? */
+      /* T2RootPanels don't resize automatically? */
     }
 
   };
 }
 
-#endif /* ROOTPANEL_H */
+#endif /* T2ROOTPANEL_H */
