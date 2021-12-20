@@ -56,7 +56,7 @@ namespace MFM {
 
     bool ResolveProgramRelativePath(ByteSink& result, const char * pathSuffixOrNull)
     {
-      const u32 PATH_LEN_UGH = 2000;
+      const ssize_t PATH_LEN_UGH = 2000;
       char prog[PATH_LEN_UGH];
 
       ssize_t got = readlink("/proc/self/exe", prog, sizeof(prog));
