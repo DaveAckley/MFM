@@ -1,5 +1,21 @@
-{5}  -*-  mode: text; fill-column: 50;  -*-
-[0:
+{6}  -*-  mode: text; fill-column: 50;  -*-
+[5:
+
+Thu Feb 24 11:50:39 2022 OK it's time to start
+tearing down MFMT2 in preparation for exploring a
+new 'UDP-ish' intertile event system based on GDRO
+cycling from the kernel layer. Start with some
+preliminary TODO:
+
+ - Check the T2-12 repo and make sure we're marked
+   off on a separate branch there too.
+
+ - Build both and make sure we're all plausible to
+   start.
+
+ - Come back here and start planning for real
+
+:5][0:
 
 Mon Sep 13 21:41:29 2021 OK dammit we have to
 start letting errors affect 'user' (==ulam)
