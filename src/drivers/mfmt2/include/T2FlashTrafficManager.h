@@ -106,6 +106,10 @@ namespace MFM {
 
     void processTraffic() ;
 
+    void checkForFlashInjection() ;
+
+    void launchInjectedCommand(T2FlashCmd cmd, u32 range) ;
+
     void handleInboundTraffic() ;
 
     void handleInboundPacket(T2PacketBuffer & pb) ;
