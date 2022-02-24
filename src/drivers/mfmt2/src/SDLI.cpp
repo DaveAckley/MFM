@@ -315,6 +315,7 @@ namespace MFM
     if (type.Equals("T2SeedPhysicsButton")) return new T2SeedPhysicsButton(); 
     if (type.Equals("T2DebugSetupButton")) return new T2DebugSetupButton(); 
     if (type.Equals("T2ClearTileButton")) return new T2ClearTileButton(); 
+    if (type.Equals("T2ShowCardButton")) return new T2ShowCardButton(); 
     if (type.Equals("QuitButton")) return new T2QuitButton(); 
     if (type.Equals("CrashButton")) return new T2CrashButton(); 
     if (type.Equals("DumpButton")) return new T2DumpButton(); 

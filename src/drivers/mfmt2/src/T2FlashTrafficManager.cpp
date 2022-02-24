@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "FlashTraffic.h"
 #include "AbstractRadioButton.h"
+#include "T2TitleCard.h"
 
 #include <string.h> /*For strcmp, strerror */
 

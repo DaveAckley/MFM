@@ -1,6 +1,7 @@
 #include "FlashTraffic.h"
 #include "T2FlashTrafficManager.h"
 #include "T2Tile.h"
+#include "T2TitleCard.h"
 
 namespace MFM
 {
@@ -65,6 +66,15 @@ namespace MFM
     }
     case T2FLASH_CMD(t2t,xcdm): {
       system("pkill cdm.pl");
+      return true;
+    }
+
+    case T2FLASH_CMD(phy,card): {
+      SDLI & sdli = tile.getSDLI();
+      const char * tcname = "TitleCard";
+      T2TitleCard * tc = dynamic_cast<T2TitleCard*>(sdli.lookForPanel(tcname));
+      MFM_API_ASSERT_NONNULL(tc);
+      tc->requestPosting();
       return true;
     }
 

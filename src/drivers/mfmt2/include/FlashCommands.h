@@ -40,7 +40,8 @@ namespace MFM {
   XX(phy,1,seed1)                      \
   XX(phy,2,seed2)                      \
   XX(phy,3,debugsetup)                 \
-  /* phy,4..15 reserved*/              \
+  XX(phy,4,card)                       \
+  /* phy,5..15 reserved*/              \
   XX(dsp,0,sites)                      \
   XX(dsp,1,tile)                       \
   XX(dsp,2,cdm)                        \
@@ -61,6 +62,7 @@ namespace MFM {
   XX(phy,clear,PhysicsCtl_Button_Clear)       \
   XX(phy,seed1,PhysicsCtl_Button_Seed1)       \
   XX(phy,seed2,PhysicsCtl_Button_Seed2)       \
+  XX(phy,card,PhysicsCtl_Button_Card)         \
   XX(dsp,sites,GlobalMenu_Button_Sites)       \
   XX(dsp,tile,GlobalMenu_Button_T2Viz)        \
   XX(dsp,cdm,GlobalMenu_Button_CDM)           \

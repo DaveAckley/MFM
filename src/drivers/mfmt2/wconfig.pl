@@ -273,6 +273,10 @@ $AUTOGEN_STAMP
     radiogroup="FC"
     font=12
     text="SEED2"
+[FC_PHY_k_phy_card T2RadioButton FC_PHY `bfs3x3(0,1)`]
+    radiogroup="FC"
+    font=12
+    text="CARD"
 [FC_PHY_kGrid MenuItem FC_PHY `bfs3x3(0,2)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
@@ -627,9 +631,12 @@ $AUTOGEN_STAMP
 # [PhysicsCtl_Checkbox_Living T2TileLiveCheckbox PhysicsCtl `bfs6x6(0,2,2,3)`]
 #     font=1
 #     text="Run"
-[PhysicsCtl_Checkbox_Listening T2TileListenCheckbox PhysicsCtl `bfs6x6(4,2,5,3)`]
-    font=2
-    text="I/O"
+# [PhysicsCtl_Checkbox_Listening T2TileListenCheckbox PhysicsCtl `bfs6x6(4,2,5,3)`]
+#     font=2
+#     text="I/O"
+[PhysicsCtl_Button_Card T2ShowCardButton PhysicsCtl `bfs6x6(4,2,5,3)`]
+    font=1
+    text="Card"
 [PhysicsCtl_Button_Clear T2ClearTileButton PhysicsCtl `bfs3x3(0,0)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
