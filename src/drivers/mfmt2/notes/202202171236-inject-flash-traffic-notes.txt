@@ -1,0 +1,212 @@
+{13}  -*-  mode: text; fill-column: 50;  -*-
+[0:
+
+Thu Feb 17 12:37:00 2022 OK I'm breaking down - I
+want to be able to come in to a tile via ethernet
+and inject a flash traffic packet. I'm thinking
+the least invasive way to do that is have mfmt2
+check for a particular file path at some regular
+interval, to read process and delete if it is
+found.
+
+I was thinking I needed to get that working before
+giving up physical access to the tiles, but that
+seems not true, right? As long as I can get into
+one grid tile via ethernet, I could inject a new
+MFM cdmss package, which would install locally,
+and then I could kill/restart mfms on that tile,
+and it would then pick up the flash commands to
+distribute to the rest of the grid.
+
+So I guess I don't have to crush to get this
+working immediately. Of course, if I screw it up
+remotely, I won't be able to power cycle that
+access-point tile and it'll be game over on that
+front.
+
+:0]
+[1:
+
+Thu Feb 17 12:52:44 2022 Let's review the existing
+code a little bit, remind ourselves where we're
+at.
+
+[2:
+
+Thu Feb 17 13:07:18 2022
+
+FlashCommands
+ - .h-only macros defining the flash commands
+
+FlashTraffic
+ - .h struct FlashTraffic to hold an instance of a
+   flash command, .cpp code to make it, execute
+   it.
+
+T2FlashTrafficManager
+ - TimeoutAble T2FlashTrafficManager to drive
+   flash traffic motions. Owns /dev/itc/flash in
+   mFD.
+
+ - handleInboundTraffic() reads mFD into a packet
+   buffer. Could be a natural place, or at least
+   model, for code that checks for a magic file.
+
+   = It dishes to handleInboundPacket if it gets
+     one.
+
+   = Maybe we want whatever code initially
+     releases a flash packet, rather than the code
+     that propagates one.
+
+ - launchPreparedCommand() looks like the last
+   stop in the GUI-driven flash traffic release
+   flow. If our file-reading code ended up setting
+   up whatever 'getPrepared()' returns and
+   whatever 'getRange()' returns
+
+   = launchPreparedComment() is called from
+     doControlCmd (only). doControlCmd is called
+     from onClick()
+   
+[3:
+
+
+Thu Feb 17 13:26:29 2022 So, that was pretty
+helpful. Seems we could even start thinking about
+a file format. It would figure out the command
+using cmd = findCmd() and parse a range as a
+number. Whether or not that succeeded it would
+unlink the file. If it did succeed it would then
+call a new method like:
+
+  void T2FlashTrafficManager::launchInjectedCommand(T2FlashCmd cmd, u32 range) {
+    if (cmd < T2FLASH_CMD__COUNT && range > 0) {
+      FlashTraffic ft = FlashTraffic::make(cmd, ++mLastIndex, range, T2Tile::makeTag());
+      sendFlashPacket(ft);      // ship it
+      acceptPacket(ft);         // also accept it
+      mPreparedCmd = ft;        // and remember it
+
+      LOG.Message("INJECTED FLASH TRAFFIC %d",cmd);
+    }
+  }
+
+And I guess it might be nice if it logged whatever
+it did to some append-only file associated with
+the command file location.
+
+[4:
+
+Thu Feb 17 14:09:23 2022 So the obvious file
+format would be a single line
+
+COMMAND RANGE
+
+using the third XX argument from ALL_FLASH_CMDS()
+for the first arg. So a typical line would be
+
+quit 16
+
+to cause all mfmt2's running on tiles out to
+distance 16 to exit and restart.
+[6:
+
+Fri Feb 18 16:13:32 2022 OK can we move on this?
+I'm thinking we should have a special directory
+for this, and just encode the command in the
+filename in that directory. Screw opening the
+file. Screw sorting the directory. Open it, read
+entries, execute and unlink any filenames that fit
+the pattern, in the order that we see them.
+
+Where should we put the directory? It's not /cdm
+business but that's kind of the only really
+privileged dir we've got outside of of /home
+
+In /etc/mfm/ ? In /var/run/mfm/?   [7:
+
+Fri Feb 18 16:18:50 2022 Hmm there's a plain /run
+now, according to Filesystem Hierarchy Standard 3?
+Maybe we should use that.
+
+/run/mfm/cmd/quit_16.cmd
+
+but then where do we put the log? 
+
+/run/mfm/log/commands.log
+
+but /run is supposed to clear on boot. We could
+just use the existing MFM logging?
+
+/run/mfm/quit_16.cmd
+
+[8:
+
+Fri Feb 18 16:24:50 2022 Let's try to implement
+this just using existing logging for now.[9:
+
+Fri Feb 18 16:43:50 2022 Where does execution of
+this flow start? Who gets ticks? Must be
+T2FlashTrafficManager?
+[10:
+
+Fri Feb 18 16:46:18 2022 T2FlashTrafficManager
+is-a TimeoutAble, so we're looking for
+
+void T2FlashTrafficManager::onTimeout(TimeQueue&)
+
+[11:
+
+Fri Feb 18 16:47:46 2022 There it is at
+T2FlashTrafficManager:348. I guess we want a
+checkInjection() method there?
+
+:11]
+
+?
+
+:10]
+
+:9]
+
+:8]
+
+:7]
+
+:6]
+[5:
+
+Thu Feb 17 15:32:10 2022 Moving the flag.
+
+:5]
+
+:4]
+
+:3]
+
+:2]
+
+:1]
+[12:
+
+Sat Feb 19 04:31:44 2022 Well,
+
+    (# mkdir -p /run/mfm/flash) once and then
+    # touch /run/mfm/flash/_phy_card-0.cmd
+
+seems to display the title card on the injected
+machine, and
+
+    # touch /run/mfm/flash/_phy_card-1.cmd
+
+does it on the 1-neighbors as well. And
+
+    # touch /run/mfm/flash/_mfm_quit-0.cmd
+
+restarts the current engine. And, in particular,
+
+    # touch /run/mfm/flash/_phy_debugsetup-0.cmd
+
+releases an S on the injected machine!
+
+:12]
