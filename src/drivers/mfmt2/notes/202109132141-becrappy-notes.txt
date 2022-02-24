@@ -1,0 +1,104 @@
+{5}  -*-  mode: text; fill-column: 50;  -*-
+[0:
+
+Mon Sep 13 21:41:29 2021 OK dammit we have to
+start letting errors affect 'user' (==ulam)
+level!  We have to just do it and feel the burn
+and adjust to it and start dealing with it.
+
+And we're going to make the tiniest little start
+at right now, with scant hours 'til the next
+t2sup.
+
+Yes we are, Dammit.
+
+We are on a newly-created MFM git branch called:
+
+  dontworrybecrappy 
+
+:0]
+[1:
+
+Mon Sep 13 21:44:08 2021 So, we're at
+T2EventWindow.cpp:968 -- the most common failure
+mode I've been dreading dealing with.
+
+T2EventWindow.cpp:968 hits when we get a timeout
+while waiting for an acknowledgment of the cache
+update we sent to somebody.  It's nasty because we
+may have multiple counterparties, and one of them
+may have applied our cache update while the other
+did not.
+
+And what are we going to do?
+
+dontworrybecrappy
+
+Suppose we
+
+(1) Issue a warning instead of failing, and then
+(2) Pretend the counterparty HAD acknowledged?
+
+This is totally just going to move the failure
+elsewhere -- because we'll be dealing with EWs
+marked as free on one side but still in-use on the
+other side, and so forth.
+
+But we'll just keep making up ground states for
+everything and going to them as they hit.
+
+dontworrybecrappy
+
+gah
+
+:1]
+[2:
+
+Thu Nov  4 02:47:28 2021 So let's take another cut
+at this.  Instead of trying to patch up a
+designed-for-determinism cache update protocol,
+what if we just start fresh with our newer
+"everything is all self-stabilization" mindset?
+
+Tiles are ultimately autonomous and they need to
+keep on trucking regardless of what the neighbors
+do.
+
+And what are they mutually self-stabilizing
+toward? A consistent map of who's currently
+controlling which sites? A per-site shared
+variable about like update count?
+
+If we just let updates run on adjacent tiles with
+no locking there's going to be a ton of races. I
+do think we need to build in some at least
+advisory locking somehow..
+
+[3:
+
+Thu Nov  4 02:54:59 2021
+
+  INIT AEW [@site+radius]    (non-conflicting on current map)
+
+  CAPTURE CURRENT
+
+  DO TRANSITION
+
+  BROADCAST ENTIRE BEFORE->AFTER TRANSITION
+
+  WAIT A BIT (PRICE OF TRANSITION)
+
+  RELEASE AEW
+
+[4:
+
+Thu Nov  4 03:05:50 2021 Idea that shared map is
+updating in the background as AEWs do their (now
+nearly ballistic thing).
+
+:4]
+
+
+:3]
+
+:2]
