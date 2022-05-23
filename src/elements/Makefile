@@ -14,7 +14,7 @@ define \n
 endef
 
 ELEMENTS:=$(wildcard src/Element_*.cpp)
-ELEMENT_HEADER_INCLUDES:=$(patsubst src/%.cpp,\#include "%.h"\n,$(ELEMENTS))
+ELEMENT_HEADER_INCLUDES:=$(patsubst src/%.cpp,#include "%.h"\n,$(ELEMENTS))
 #${warning EHI $(ELEMENT_HEADER_INCLUDES) iha}
 ELEMENT_MACRO_INVOKES:=$(patsubst src/%.cpp,XX(%);\n,$(ELEMENTS))
 UNUSED1:=${shell printf %b '$(ELEMENT_HEADER_INCLUDES)' > include/StdElementsHeaders.inc}
