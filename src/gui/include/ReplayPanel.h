@@ -125,7 +125,7 @@ namespace MFM
       }
 
       virtual bool ExecuteFunction(u32 keysym, u32 mods) {
-        if (m_keysym >= 0 && keysym == (u32) m_keysym && mods == mods)
+        if (m_keysym >= 0 && keysym == (u32) m_keysym && m_mods == mods)
         {
           OnClick(SDL_BUTTON_LEFT);
           return true;
@@ -204,7 +204,7 @@ namespace MFM
       }
 
       virtual bool ExecuteFunction(u32 keysym, u32 mods) {
-        if (m_keysym >= 0 && keysym == (u32) m_keysym && mods == mods)
+        if (m_keysym >= 0 && keysym == (u32) m_keysym && m_mods == mods)
         {
           OnClick(SDL_BUTTON_LEFT);
           return true;
