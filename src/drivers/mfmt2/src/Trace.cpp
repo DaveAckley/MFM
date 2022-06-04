@@ -124,7 +124,7 @@ namespace MFM {
 
     if (mTraceType == TTC_Tile_TopLevelFailure) {
       CharBufferByteSource cbbs = mData.AsByteSource();
-      bs.Printf(" Failed to top: %<\n",&cbbs);
+      bs.Printf("@Top: %<\n",&cbbs);
       return;
     }
 

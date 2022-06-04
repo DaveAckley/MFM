@@ -1,10 +1,12 @@
-#!/usr/bin/perl -Tw
+#!/usr/bin/perl
 # -*- mode:perl -*-
 use strict;
+use warnings;
 
 sub BEGIN {
+    # Fri Oct  8 12:21:59 2021 Give up on la vide tainted due to appimage-builder
     # Seal us up a bit for living la vida tainted
-    $ENV{'PATH'} = "/bin:/usr/bin";
+    # $ENV{'PATH'} = "/bin:/usr/bin";
     $ENV{'LC_ALL'} = "C";
     delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 }
@@ -15,8 +17,9 @@ SetUDieMsg("Type '$0' for help\n");
 use File::Temp qw(tempdir);
 use MIME::Base64 qw(decode_base64);
 use Crypt::OpenSSL::RSA;
+use Cwd qw(abs_path);
 
-my (undef, $binDir, $scriptName) = File::Spec ->splitpath($0);
+my (undef, $binDir, $scriptName) = File::Spec ->splitpath(abs_path(__FILE__));
 $binDir =~ s!/$!!;
 
 my $progname = KDGetVerb(0);
@@ -400,7 +403,9 @@ sub purifyArgs {
 sub TryToPromoteInstalledPubKey {
     my $handle = shift;
     my $ehandle = EscapeHandle($handle);
-    my $dir = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/public_keys/";
+    my $dir = TryToFindResPath("public_keys");
+    return unless defined($dir);
+
     my $pub = "$dir/$ehandle.pub";
     if (-r $pub) {
         my $localpub = GetPublicKeyFile($handle);
@@ -468,12 +473,19 @@ EOM
     }
 }
 
+sub TryToFindResPath {
+    my $suffix = shift || "";
+    my $path;
+    return $path if -r ($path = "$binDir/../res/$suffix");
+    return $path if -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/$suffix");
+    return $path if -r ($path = "./res/$suffix");
+    return undef;
+}
+
 # Find and parse the demos.dat file
 sub ListDemosDat {
-    my $path;
-    -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/elements/demos.dat") or
-    -r ($path = "./res/elements/demos.dat") or
-    return 0;
+    my $path = TryToFindResPath("elements/demos.dat");
+    return 0 unless defined $path;
     my $count = 0;
     print "  Built-in demos:\n";
     open(DDAT,"<$path") or die "Can't read '$path': $!";
@@ -511,9 +523,8 @@ sub FindDemoOrDie {
     }
     $demoname .= ".mfz";
     my $path;
-    return $path if -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/elements/demos/$demoname");
     return $path if -r ($path = "~/.mfm/demos/$demoname");
-    return $path if -r ($path = "./res/elements/demos/$demoname");
+    return $path if $path = TryToFindResPath("elements/demos/$demoname");
 
     UDie("No '$demoname' found");
 }

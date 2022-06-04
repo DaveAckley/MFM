@@ -8,7 +8,7 @@
 #include "Logger.h"
 #include "AssetManager.h"
 #include "FileByteSource.h"
-#include "RootPanel.h"
+#include "T2RootPanel.h"
 #include "GridPanel.h"
 #include "TextPanel.h"
 
@@ -291,7 +291,7 @@ namespace MFM
   }
 
   Panel * SDLI::makePanelType(OString128& type) {
-    if (type.Equals("Root")) return new RootPanel();
+    if (type.Equals("Root")) return new T2RootPanel();
     //    if (type.Equals("Grid")) return new GridPanel();
     if (type.Equals("Panel")) return new Panel();
     if (type.Equals("Label")) return new Label();
@@ -315,6 +315,7 @@ namespace MFM
     if (type.Equals("T2SeedPhysicsButton")) return new T2SeedPhysicsButton(); 
     if (type.Equals("T2DebugSetupButton")) return new T2DebugSetupButton(); 
     if (type.Equals("T2ClearTileButton")) return new T2ClearTileButton(); 
+    if (type.Equals("T2ShowCardButton")) return new T2ShowCardButton(); 
     if (type.Equals("QuitButton")) return new T2QuitButton(); 
     if (type.Equals("CrashButton")) return new T2CrashButton(); 
     if (type.Equals("DumpButton")) return new T2DumpButton(); 
@@ -598,9 +599,9 @@ namespace MFM
       Panel * root = mPanels["Root"];
       if (!root)
         fatal("Window 'Root' must be defined");
-      RootPanel * rp = dynamic_cast<RootPanel*>(root);
+      T2RootPanel * rp = dynamic_cast<T2RootPanel*>(root);
       if (!rp)
-        fatal("Window 'Root' must be type RootPanel");
+        fatal("Window 'Root' must be type T2RootPanel");
     }
     for (auto itr = mPanels.begin(); itr != mPanels.end(); ++itr) {
       Panel * p = itr->second;

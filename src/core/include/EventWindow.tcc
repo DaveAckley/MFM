@@ -6,9 +6,6 @@
 #include "PacketIO.h"
 #include "EventHistoryBuffer.h"
 #include "CacheProcessor.h"
-#include <execinfo.h> /* for backtrace_symbols */
-#include <dlfcn.h>    /* for dladdr */
-#include <cxxabi.h>   /* for __cxa_demangle */
 
 namespace MFM {
 
@@ -172,29 +169,7 @@ namespace MFM {
 		      MFMThrownFailCode,
 		      GetCenterAtomDirect().GetType()));
       }
-      {
-        OverflowableCharBufferByteSink<4096 + 2> bt;
-        char ** strings = backtrace_symbols (MFMThrownBacktraceArray, MFMThrownBacktraceSize);
-
-        for (u32 i = 0; i < MFMThrownBacktraceSize; i++) {
-          Dl_info info;
-          if (dladdr(MFMThrownBacktraceArray[i],&info)) {
-            char * demangled = NULL;
-            int status;
-            demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
-            bt.Printf(" -> %2d: %s + 0x%x\n",
-                      i,
-                      status == 0 ? demangled : info.dli_sname,
-                      (char*) MFMThrownBacktraceArray[i] - (char*) info.dli_saddr);
-            free(demangled);
-          } else
-            bt.Printf(" -> %2d: %s\n", i, strings[i]);
-        }
-        free (strings);
-
-        LOG.Message("BACKTRACE %s",bt.GetZString());
-      }
-
+      LogBacktrace(MFMThrownBacktraceArray, MFMThrownBacktraceSize);
       SetCenterAtomDirect(t.GetEmptyAtom());
     },
     {

@@ -56,6 +56,7 @@
 #include "VArguments.h"
 #include "SDL.h"
 #include "SDL_ttf.h"
+#include "RootPanel.h"
 #include "HelpPanel.h"
 #include "MovablePanel.h"
 #include "AbstractGUIDriverButtons.h"
@@ -97,7 +98,7 @@ namespace MFM
 
     Camera m_camera;
     SDL_Surface* m_screen;
-    Panel m_rootPanel;
+    RootPanel m_rootPanel;
     Drawing m_rootDrawing;
 
     u32 m_screenWidth;

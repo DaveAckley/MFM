@@ -266,6 +266,10 @@ namespace MFM {
 
   extern DiscardBytes DevNullByteSink;
 
+  // DON'T KNOW WTH TO STICK THESE:
+  extern void PrintBacktrace(FILE * f, void * const * backtraceArray, unsigned backtraceSize) ;
+  extern void LogBacktrace(void * const * backtraceArray, unsigned backtraceSize) ;
+  extern void DumpBacktrace(ByteSink & bt, void * const * backtraceArray, unsigned backtraceSize) ;
 }
 
 #include "ByteSink.tcc"

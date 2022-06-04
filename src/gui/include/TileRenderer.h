@@ -33,7 +33,7 @@
 #include "Tile.h"
 #include "Site.h"
 #include "Drawing.h"
-#include "UlamContextRestricted.h"
+#include "UlamContextEvent.h"
 
 namespace MFM
 {
@@ -136,14 +136,14 @@ namespace MFM
     TileRenderer();
 
     void PaintTileAtDit(Drawing & drawing,
-                        const SPoint ditOrigin, const OurTile & tile) ;
+                        const SPoint ditOrigin, OurTile & tile) ;
 
     void PaintSites(Drawing & drawing,
                     const DrawSiteType drawType, const DrawSiteShape shape,
                     const SPoint ditOrigin, const OurTile & tile) ;
 
     void PaintCustom(Drawing & drawing,
-                     const SPoint ditOrigin, const OurTile & tile) ;
+                     const SPoint ditOrigin, OurTile & tile) ;
 
     void PaintSiteAtDit(Drawing & drawing,
                         const DrawSiteType drawType, const DrawSiteShape shape,
@@ -239,9 +239,10 @@ namespace MFM
 
   private:
 
-    void CallRenderGraphics(UlamContextRestricted<EC> & ucrs,
+    void CallRenderGraphics(UlamContextEvent<EC> & uce,
                             const UlamElement<EC> & uelt,
-                            AtomBitStorage<EC> & abs) ;
+                            AtomBitStorage<EC> & abs,
+                            OurTile & tile) ;
 
 
     static bool IsDrawBase(DrawSiteType t)

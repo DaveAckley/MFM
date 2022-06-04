@@ -315,7 +315,7 @@ namespace MFM {
         if (!ctile.Advance())
         {
           // We accomplished nothing.  Let somebody else try
-          pthread_yield();
+          sched_yield();
         }
         pauseUsec = 0;
         break;
@@ -437,7 +437,7 @@ namespace MFM {
   template <class GC>
   bool Grid<GC>::IsTileEnabled(const SPoint& tileLoc)
   {
-    MFM_API_ASSERT_ARG(!IsLegalTileIndex(tileLoc));
+    MFM_API_ASSERT_ARG(IsLegalTileIndex(tileLoc));
 
 
     Tile<EC> & tile = GetTile(tileLoc);
@@ -778,7 +778,7 @@ namespace MFM {
       }
       else
       {
-        pthread_yield();
+        sched_yield();
       }
 
       notReady = 0;
@@ -796,7 +796,7 @@ namespace MFM {
         if (!tc.CheckIfReady(td))
         {
           ++notReady;
-          pthread_yield();
+          sched_yield();
         }
       }
 

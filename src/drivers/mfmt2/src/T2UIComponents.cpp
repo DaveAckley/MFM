@@ -157,6 +157,10 @@ namespace MFM {
     FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(phy,clear)));
   }
 
+  void T2ShowCardButton::onClick() {
+    FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(phy,card)));
+  }
+
   void T2QuitButton::onClick() {
     TLOG(MSG,"Quit button clicked");
     FlashTraffic::execute(FlashTraffic::make(T2FLASH_CMD(mfm,quit)));

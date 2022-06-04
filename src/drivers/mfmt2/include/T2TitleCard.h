@@ -34,6 +34,8 @@ namespace MFM {
 
     void configure(SDLI & sdli) ;
 
+    void requestPosting() { mFirstPosted = 0; }
+
     virtual const char * getName() const { return "T2TitleCard"; }
 
     virtual ~T2TitleCard() { }

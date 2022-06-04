@@ -51,7 +51,13 @@ tar:	FORCE
 ifeq ($(PLATFORM),tile)
 REGNUM:=0
 SLOTNUM:=03
+DESTDIR:=$(abspath ..)
+TAG_PATH:=$(DESTDIR)/slot$(SLOTNUM)-install-tag.dat
 cdmd:	FORCE
+	@if [ ! "$(shell id -u)" = 0 ] ; then \
+		echo "You are not root, run 'make $@' as root please" ; \
+		exit 1 ; \
+	fi ; \
 	MPWD=`pwd`;BASE=`basename $$MPWD`; \
 	echo $$MPWD for $$BASE; \
 	pushd ..;tar cvzf $$BASE-built.tgz $(TAR_SWITCHES) $$BASE; \
@@ -60,10 +66,11 @@ cdmd:	FORCE
             perl -e "while(<>) {/'([^']+)'/ && print "'$$1}'`; \
 	if [ "x$$FN" = "x" ] ; then echo "Build failed" ; else  \
 	echo -n "Got $$FN for $$BASE, tag = " ; \
-	perl -e '"'$$FN'" =~ /[^-]+-[^-]+-([[:xdigit:]]+)[.]/; print $$1' > /cdm/tags/slot$(SLOTNUM)-install-tag.dat; \
-	cat /cdm/tags/slot$(SLOTNUM)-install-tag.dat; \
+	perl -e '"'$$FN'" =~ /[^-]+-[^-]+-([[:xdigit:]]+)[.]/; print $$1' > $(TAG_PATH); \
+	cat $(TAG_PATH); \
 	echo -n ", size = " ; stat -c %s $$FN; \
-	cp -f $$FN /home/debian/CDMSAVE/CDMDS/; \
+	echo "TO RELEASE:" ; \
+	echo "  cp $(TAG_PATH) /cdm/tags ; cp $(DESTDIR)/$$FN /cdm/common"; \
 	fi; \
 	popd
 

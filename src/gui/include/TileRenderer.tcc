@@ -116,7 +116,24 @@ namespace MFM
   }
 
   template <class EC>
-  void TileRenderer<EC>::CallRenderGraphics(UlamContextRestricted<EC> & ucrs,
+  void TileRenderer<EC>::CallRenderGraphics(UlamContextEvent<EC> & ucs,
+                                            const UlamElement<EC> & uelt,
+                                            AtomBitStorage<EC> & abs,
+                                            OurTile & tile)
+  {
+    //    const UlamClassRegistry<EC>& ucr = tile.GetUlamClassRegistry();
+
+    UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, uelt.GetClassLength(), abs, &uelt, UlamRef<EC>::ELEMENTAL, ucs);
+    // how to do an ulam virtual function call in c++
+    VfuncPtr vfuncptr;
+    UlamRef<EC> vfur(ur, UlamElement<EC>::RENDERGRAPHICS_VOWNED_INDEX, 0u, true, vfuncptr);
+    typedef void (* Uf_9214renderGraphics)(const UlamContext<EC>& uc, UlamRef<EC>& ur);
+    ((Uf_9214renderGraphics) vfuncptr) (ucs, vfur);
+  }
+
+#if 0
+  template <class EC>
+  void TileRenderer<EC>::CallRenderGraphicsOLD(UlamContextRestricted<EC> & ucrs,
                                             const UlamElement<EC> & uelt,
                                             AtomBitStorage<EC> & abs)
   {
@@ -127,22 +144,25 @@ namespace MFM
     typedef void (* Uf_9214renderGraphics)(const UlamContext<EC>& uc, UlamRef<EC>& ur);
     ((Uf_9214renderGraphics) vfuncptr) (ucrs, vfur);
   }
-  
+#endif
+
   template <class EC>
   void TileRenderer<EC>::PaintCustom(Drawing & drawing,
                                      const SPoint tileDitOrigin,
-                                     const Tile<EC> & tile)
+                                     Tile<EC> & tile)
   {
     DrawableSDL drawable(drawing);
     EventWindowRendererSDL<EC> ewrs(drawable);
-    UlamContextRestrictedSDL<EC> ucrs(ewrs, tile);
+    UlamContextEventSDL<EC> ucs(ewrs, tile); // NB: No longer UlamContextRestrictedSDL!
 
     // Here we need to iterate over the sites
-    typename OurTile::const_iterator_type end = tile.end(m_drawCacheSites);
-    for (typename OurTile::const_iterator_type i = tile.begin(m_drawCacheSites); i != end; ++i)
+    const Tile<EC> & ctile = tile;
+    typename OurTile::const_iterator_type end = ctile.end(m_drawCacheSites);
+    for (typename OurTile::const_iterator_type i = ctile.begin(m_drawCacheSites); i != end; ++i)
     {
-      SPoint siteInTileCoord = i.At();
-      SPoint siteOriginDit = tileDitOrigin + siteInTileCoord * m_atomSizeDit + SPoint(m_atomSizeDit/2,m_atomSizeDit/2); // Center of site
+      SPoint siteInTileCoord = i.AtSite(); // Absolute (0,0) is always in cache
+      SPoint siteInVisibleCoord = i.At();  // (0,0) is least visible pos (cache if m_drawCacheSites, else owned)
+      SPoint siteOriginDit = tileDitOrigin + siteInVisibleCoord * m_atomSizeDit + SPoint(m_atomSizeDit/2,m_atomSizeDit/2); // Center of site
 
       AtomBitStorage<EC> abs(i->GetAtom());
       const T& atom = abs.GetAtom();
@@ -155,41 +175,46 @@ namespace MFM
       if (!elt) continue; // ???
 
       const UlamElement<EC> * uelt = elt->AsUlamElement();
-      if (!uelt) continue; // Custom is only for uelts
+      if (uelt) { // Custom is only for uelts
 
-      drawable.Reset();
-      drawable.SetDitOrigin(siteOriginDit);
-      drawable.SetDitsPerSite(m_atomSizeDit);
+        EventWindow<EC> & ew = tile.GetEventWindow();
+        if (ew.InitForEvent(siteInTileCoord, false)) {
+          drawable.Reset();
+          drawable.SetDitOrigin(siteOriginDit);
+          drawable.SetDitsPerSite(m_atomSizeDit);
 
-      // We have to defend ourselves here.  Even though we know atom
-      // IsSane as far as the parity of the atomic header, anything
-      // might be wrong down in the user bits, and arbitrary rendering
-      // code, even with no eventwindow and thus limited to just this
-      // atom, can easily blow up.
+          // We have to defend ourselves here.  Even though we know atom
+          // IsSane as far as the parity of the atomic header, anything
+          // might be wrong down in the user bits, and arbitrary rendering
+          // code, even given just a temp eventwindow that will never be
+          // committed, can easily blow up.
 
-      unwind_protect(
-      {
-        const char * failFile = MFMThrownFromFile;
-        const unsigned lineno = MFMThrownFromLineNo;
-        const char * failMsg = MFMFailCodeReason(MFMThrownFailCode);
-        OString256 buff;
-        SPointSerializer ssp(siteInTileCoord);
-        buff.Printf("T%s@S%@: Render failed: %s (%s:%d)",
-                    tile.GetLabel(),
-                    &ssp,
-                    failMsg,
-                    failFile,
-                    lineno);
-        LOG.Message("%s",buff.GetZString());
-      },
-      {
-        CallRenderGraphics(ucrs,*uelt,abs);
-      });
+          unwind_protect(
+          {
+            const char * failFile = MFMThrownFromFile;
+            const unsigned lineno = MFMThrownFromLineNo;
+            const char * failMsg = MFMFailCodeReason(MFMThrownFailCode);
+            OString256 buff;
+            SPointSerializer ssp(siteInTileCoord);
+            buff.Printf("T%s@S%@: Render failed: %s (%s:%d)",
+                        tile.GetLabel(),
+                        &ssp,
+                        failMsg,
+                        failFile,
+                        lineno);
+            LOG.Message("%s",buff.GetZString());
+          },
+          {
+            CallRenderGraphics(ucs,*uelt,abs,tile);
+          });
+          ew.SetFree();
+        }
+      }
     }
   }
 
   template <class EC>
-  void TileRenderer<EC>::PaintTileAtDit(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile)
+  void TileRenderer<EC>::PaintTileAtDit(Drawing & drawing, const SPoint ditOrigin, Tile<EC> & tile)
   {
     if (!tile.IsEnabled())
     {

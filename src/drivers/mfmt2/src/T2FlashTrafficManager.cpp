@@ -5,7 +5,12 @@
 #include "Logger.h"
 #include "FlashTraffic.h"
 #include "AbstractRadioButton.h"
+#include "T2TitleCard.h"
 
+#include <sys/types.h>  
+#include <dirent.h>  /* For opendir, readdir, closedir */
+
+#include <stdio.h>  /*For sscanf */
 #include <string.h> /*For strcmp, strerror */
 
 namespace MFM {
@@ -348,9 +353,58 @@ namespace MFM {
   void T2FlashTrafficManager::onTimeout(TimeQueue& srcTQ) {
     setGoGoColors(srcTQ.now());
     processTraffic();
+    checkForFlashInjection();
     showPrepared();
     managePending(srcTQ);
     schedule(srcTQ,250);
+  }
+
+  void T2FlashTrafficManager::checkForFlashInjection() {
+
+    const char * INJECTION_DIR = "/run/mfm/flash";
+    const u32 PATHLEN = 255+50;
+    char pathBuf[PATHLEN+1];
+
+    const char * FILENAME_COMMAND_FORMAT = "%50[^-]-%d.cmd"; // e.g., "_t2t_boot-4.cmd"
+    const u32 CMDLEN = 50;
+    char cmdBuf[CMDLEN+1];
+
+    u32 dist;
+    DIR * dir = opendir(INJECTION_DIR);
+    if (!dir) return; // We're fine if there's no injection dir
+
+    struct dirent * ent;
+    while ((ent = readdir(dir)) != NULL) {
+      u32 matches = sscanf(ent->d_name, FILENAME_COMMAND_FORMAT, &cmdBuf[0], &dist);
+      if (matches != 2u) continue;
+
+      // Unlink before execution attempt
+      snprintf(pathBuf,PATHLEN,"%s/%s", INJECTION_DIR, ent->d_name);
+      if (unlink(pathBuf)) {
+        LOG.Message("Couldn't unlink %s, ignoring: %s",
+                    pathBuf, strerror(errno));
+        continue; // Don't try to execute stuff we can't delete
+      }
+      
+      T2FlashCmd cmd = findCmd(cmdBuf);
+      if (cmd >= T2FLASH_CMD__COUNT) 
+        LOG.Message("Unknown flash injection '%s' discarded", cmdBuf);
+      else
+        launchInjectedCommand(cmd, dist);
+    }
+
+    closedir(dir);
+  }
+
+  void T2FlashTrafficManager::launchInjectedCommand(T2FlashCmd cmd, u32 range) {
+    if (cmd < T2FLASH_CMD__COUNT && range >= 0) {
+      FlashTraffic ft = FlashTraffic::make(cmd, ++mLastIndex, range, T2Tile::makeTag());
+      sendFlashPacket(ft);      // ship it
+      acceptPacket(ft);         // also accept it
+      mPreparedCmd = ft;        // and remember it
+
+      LOG.Message("INJECTED FLASH TRAFFIC %d",cmd);
+    }
   }
 
   void T2FlashTrafficManager::processTraffic() {

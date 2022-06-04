@@ -579,7 +579,7 @@ namespace MFM
 
     enum BackgroundRadiationParameters
     {
-      BACKGROUND_RADIATION_SITE_ODDS = 100,
+      BACKGROUND_RADIATION_SITE_ODDS = 1000,
       BACKGROUND_RADIATION_BIT_ODDS = 100
     };
 

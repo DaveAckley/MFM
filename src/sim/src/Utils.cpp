@@ -6,6 +6,7 @@
 #include <fcntl.h>  /* for O_RDONLY */
 #include <string.h> /* for strerror */
 #include <errno.h> /* for errno */
+#include <libgen.h> /* for dirname */
 #include "OverflowableCharBufferByteSink.h"
 
 namespace MFM {
@@ -53,12 +54,50 @@ namespace MFM {
       return strerror(errno);
     }
 
+    bool ResolveProgramRelativePath(ByteSink& result, const char * pathSuffixOrNull)
+    {
+      const ssize_t PATH_LEN_UGH = 2000;
+      char prog[PATH_LEN_UGH];
+
+      ssize_t got = readlink("/proc/self/exe", prog, sizeof(prog));
+      if (got < 0 || got >= PATH_LEN_UGH) {
+        LOG.Debug("readlink /proc/self/exe == %d", got);
+        return false;
+      }
+      prog[got] = 0; // readlink doesn't null terminate
+
+      char * dirn = dirname(prog);
+      char path[PATH_LEN_UGH+1];
+
+      if (pathSuffixOrNull) {
+        u32 wrote = snprintf(path, PATH_LEN_UGH, "%s/%s", dirn, pathSuffixOrNull);
+        if (wrote >= PATH_LEN_UGH) {
+          LOG.Debug("readlink path too long (%d)", wrote);
+          return false;
+        }
+      } else 
+        strncpy(path, dirn, PATH_LEN_UGH); // dirn gteed to fit since dirname at least deletes '/'
+
+      char * real = realpath(path, 0);
+      if (!real) {
+        LOG.Debug("realpath '%s' failed: %s", path, strerror(errno));
+        return false;
+      }
+
+      // Note: Caller Reset()s result before and/or checks for overflow as needed
+      result.Print(real); 
+      free(real);
+      return true;
+    }
+
     bool GetReadableResourceFile(const char * relativePath, ByteSink& result)
     {
-      OString512 buffer;
+      OString1024 buffer;
 
       const char * (paths[]) = {
         "~/.mfm",                // Possible per-user customizations first
+        0,                       // hack meaning 'try /proc/self/exe now'
+        "../../MFM",             // AppImage top-level relative path?  Maybe?
         SHARED_DIR,              // Source tree root
         "/usr/lib/" XSTR_MACRO(DEBIAN_PACKAGE_NAME) "/MFM", // Debian install location of mfm
         "/usr/share/mfm",        // Debian install location of mfm (old)
@@ -70,7 +109,17 @@ namespace MFM {
 
         const char * dir = paths[i];
         buffer.Reset();
-        if (dir[0] == '~' && home)
+
+        if (!dir) {
+          if (!ResolveProgramRelativePath(buffer,"..")) // Up one from MFM/bin -> MFM
+            continue;
+          
+          buffer.Printf("/res/%s",relativePath);
+          if (buffer.HasOverflowed()) {
+            LOG.Debug("Path overflowed '%s'", buffer.GetZString());
+            continue;
+          }
+        } else if (dir[0] == '~' && home)
           buffer.Printf("%s%s/res/%s",home,dir+1,relativePath);
         else
           buffer.Printf("%s/res/%s",dir,relativePath);
