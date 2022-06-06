@@ -68,7 +68,7 @@ namespace MFM
     SPoint m_lastMousePosition;
     SDL_KeyboardEvent & m_event;
 
-    KeyboardEvent(SDL_KeyboardEvent e, const SPoint lastKnownMouse)
+    KeyboardEvent(SDL_KeyboardEvent & e, const SPoint lastKnownMouse)
       : m_isPress(e.type == SDL_KEYDOWN)
       , m_modifiers(Keyboard::MergeMods(e.keysym.mod))
       , m_lastMousePosition(lastKnownMouse)
@@ -156,6 +156,16 @@ namespace MFM
     FontAsset m_fontAsset;
 
     /**
+     * Preferred TTF_Font for text operations, if any.  Be aware the
+     * whole panel/font situation is a mess -- with older stuff using
+     * (unscalable) FontAsset and newer stuff using zfonts and/or
+     * TTF_Fonts directly.
+     *
+     *  \sa SetFontReal
+     */
+    TTF_Font * m_ttfFont;
+
+    /**
      * The size that this Panel wants to be, when given enough room.
      */
     UPoint m_desiredSize;
@@ -211,6 +221,10 @@ namespace MFM
 
     Panel * GetParent() { return m_parent; }
 
+    Panel * GetForward() { return m_forward; }
+
+    Panel * GetBackward() { return m_backward; }
+
     Panel * GetTop() { return m_top; }
     //    Panel* Pop() ;
 
@@ -234,6 +248,26 @@ namespace MFM
 
     void SetVisible(bool value){ m_visible = value; }
     bool IsVisible() const { return m_visible; }
+
+    /**
+       Check if this window and all its ancestors up to the given \c
+       panel are visible.  If \c panel is 0, check all ancestors of
+       this.  If \c panel is not-null, it must be an ancestor of this
+       or the method returns false.
+
+       Note that the visibility of \c panel itself is not checked.
+
+       \returns false if this or any parent is not visible, or if \c
+                panel is not an ancestor of this
+
+       \returns true if this and all parents up to \c panel are visible
+     */
+    bool IsVisibleFrom(Panel * panel) const {
+      const Panel * p;
+      for (p = this; p != 0 && p != panel; p = p->m_parent)
+        if (!p->IsVisible()) return false;
+      return p == panel;
+    }
 
     u32 GetWidth() const {return m_rect.GetWidth();}
 
@@ -361,6 +395,13 @@ namespace MFM
        (Drawing::GetFont()) if this returns null.
     */
     TTF_Font* GetFontReal() const ;
+
+    /**
+       Set or clear (if \c font is null) the default TTF_Font for this
+       panel.  If set, text drawing operations will use this font
+       instead of the prevailing font (Drawing::GetFont()).
+    */
+    void SetFontReal(TTF_Font * font) { m_ttfFont = font; }
 
     FontAsset GetFont() const ;
 

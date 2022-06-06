@@ -122,7 +122,7 @@ namespace MFM {
 
       s *= 2;        assert(s==65536*2);
 
-      s++;           assert(s==65537);  assert(s.intValue==65537<<16);
+      s++;           assert(s==65537);  assert(s.intValue==((0xffffffff>>16) & 65537)<<16); /* c++11 overflow error */
     }
 
     {

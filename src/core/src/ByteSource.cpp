@@ -1,4 +1,5 @@
 #include "ByteSource.h"
+#include "OverflowableCharBufferByteSink.h"
 #include "ByteSerializable.h"
 #include "BitVector.h"
 #include <ctype.h>  /* for tolower */
@@ -432,6 +433,33 @@ namespace MFM {
             return -matches;
         }
         break;
+
+
+      case 'f':
+        {
+          OString64 buf;
+          const char * FLOAT_BYTES_SPEC[] = { "[ \f\n\r\t\v]", "[-+]", "[0-9]", "[.]", "[0-9]" };
+          s32 got = 0;
+          for (u32 i = 0; i < sizeof(FLOAT_BYTES_SPEC)/sizeof(FLOAT_BYTES_SPEC[0]); ++i) {
+            s32 thispiece = ScanSetFormat(buf, FLOAT_BYTES_SPEC[i]); // urgh accepts 12....34
+            if (thispiece < 0) break; // got EOF at start of scan.
+            if (i > 0) { // Don't count white space
+              got += thispiece;
+              if (i > 2 && thispiece == 0) break; // if no '.' we're done
+            }
+          }
+          if (got <= 0) return -matches;
+          const char * startptr = buf.GetZString();
+          char * endptr;
+          double ret = strtod(startptr, &endptr);
+          if (ret == 0 && endptr == startptr)
+            return -matches;
+          double * stash = va_arg(ap,double*);
+          if (stash) *stash = ret; // Just skip storage if null pointer
+          ++matches;
+        }
+        break;
+        
 
       case 'b': type = Format::BIN; goto store;
       case 'o': type = Format::OCT; goto store;

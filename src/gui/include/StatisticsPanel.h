@@ -55,6 +55,9 @@ namespace MFM
       , m_reportersInUse(0)
       , m_displayElementsInUse(0)
       , m_displayAER(2)
+      , m_displayVersionLine(1)
+      , m_displayTimestampLine(1)
+      , m_displayAEPS(1)
       , m_maxDisplayAER(5)
       , m_screenshotTargetFPS(-1)
         //      , m_registeredButtons(0)
@@ -291,6 +294,9 @@ namespace MFM
     u32 m_displayElementsInUse;
 
     u32 m_displayAER;
+    u32 m_displayVersionLine;
+    u32 m_displayTimestampLine;
+    u32 m_displayAEPS;
     u32 m_maxDisplayAER;
 
     OString64 m_runLabel;

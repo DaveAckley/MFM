@@ -65,6 +65,13 @@ COMMON_FLAGS+= -Wextra -Wno-unused-parameter -Wno-ignored-qualifiers
 # not reliable enough: COMMON_CPPFLAGS+=-Wmissing-noreturn -ansi -pedantic -Wall -Werror -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
 COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror -D SHARED_DIR=\"$(SHARED_DIR)\" -pthread
 COMMON_LDFLAGS+=-Wl,--fatal-warnings -pthread
+# Urgh gcc 8.3 warns about parens I want to keep
+COMMON_CPPFLAGS+=-Wno-parentheses
+# 202103050700 except gcc-5.4.0 (Ubuntu 16.04) doesn't have -Wrestrict
+# so move these flags down to src/drivers/mfmt2 for the tile
+# 202101190758 gcc issued buggy warning/error on memcpy, so:
+#COMMON_CPPFLAGS+=-Wno-error=restrict -Wno-restrict
+#COMMON_CPPFLAGS+= -std=c++11
 
 # Ubuntu 12.04 needs this for clock_gettime
 override LIBS+=-lrt

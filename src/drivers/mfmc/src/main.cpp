@@ -6,6 +6,11 @@
 #include "UlamCustomElements.h"
 #endif
 
+// Fri Jan 22 12:30:58 2021 WE DON'T REALLY WANT THE (C++)
+// 'StdElements' ANYMORE, BUT THEY DO STILL KIND OF WORK,
+// IF WE INCLUDE THEIR HEADER..
+#include "StdElements.h" 
+
 void * XXXDRIVER = 0;
 
 namespace MFM
@@ -173,6 +178,8 @@ namespace MFM
     typedef typename EC::ATOM_CONFIG AC;
     typedef typename AC::ATOM_TYPE T;
 
+    typedef Grid<GC> OurGrid;
+    
     struct ThreadStamper : public DateTimeStamp
     {
       typedef DateTimeStamp Super;
@@ -284,7 +291,45 @@ namespace MFM
     }
 
     virtual void ReinitEden()
-    { }
+    {
+      OurGrid & mainGrid = this->GetGrid();
+      { // Set up edenseed if any
+        const u8 * edenSeedSymbol = this->GetEdenSeedSymbol();
+        if (edenSeedSymbol != 0) {
+          const Element<EC> * elt = mainGrid.LookupElementFromSymbol(edenSeedSymbol);
+          if (!elt)
+            FAIL(UNKNOWN_ELEMENT);
+          // Halfway across and a third down, maybe land in hidden
+          SPoint aloc(mainGrid.GetWidthSites()/2,mainGrid.GetHeightSites()/3);
+          mainGrid.PlaceAtom(elt->GetDefaultAtom(), aloc);
+        }
+      }
+      { // Try to enable ulam5 ByteStreamLogger unless stingy logging
+        if (LOG.GetLevel() >= Logger::MESSAGE) {
+          Element<EC> * elt = mainGrid.LookupElementFromSymbol((const u8 *) "U5");
+          bool found = false;
+          if (elt) {
+            ElementParameters<EC> & parms = elt->GetElementParameters();
+            u32 totalParms = parms.GetParameterCount();
+            for(u32 i = 0; i < totalParms; i++)
+            {
+              ElementParameter<EC> * parm = parms.GetParameter(i);
+              if (parm->GetType() == VD::BOOL &&
+                  !strcmp(parm->GetTag(),"pLOG_ENABLED"))
+              {
+                found = true;
+                parm->SetValueBool(true);
+                break;
+              }
+            }
+          }
+          if (!found)
+          {
+            LOG.Debug("Can't find U5 to enable logging");
+          }
+        }
+      }
+    }
   };
 
   template <class CONFIG>

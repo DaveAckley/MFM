@@ -379,6 +379,14 @@ namespace MFM {
       return Get00Tile().GetElementTable().Lookup(symbol);
     }
 
+    Element<EC> * LookupElementFromSymbol(const u8 * symbol) 
+    {
+      // Safe. But, barf.
+      return
+        const_cast<Element<EC> *>(static_cast<const Grid<GC>*>(this)->LookupElementFromSymbol(symbol));
+    }
+
+
     ElementRegistry<EC>& GetElementRegistry()
     {
       return m_er;
@@ -392,7 +400,7 @@ namespace MFM {
       for (iterator_type i = begin(); i != end(); ++i)
         i->RegisterElement(anElement);
 
-      LOG.Message("Assigned type 0x%04x for %@",anElement.GetType(),&anElement.GetUUID());
+      LOG.Message("Type 0x%04x is %@",anElement.GetType(),&anElement.GetUUID());
     }
 
     void SetTileParameter(u32 key, s32 value)

@@ -139,7 +139,7 @@ namespace MFM
 
     Tile(const u32 tileWidth, const u32 tileHeight, const GridLayoutPattern gridlayout, S * sites, const u32 eventbuffersize, EventHistoryItem * items) ;
 
-    ~Tile() ;
+    virtual ~Tile() ;
 
     void SaveTile(ByteSink & to) const ;
 
@@ -579,7 +579,7 @@ namespace MFM
 
     enum BackgroundRadiationParameters
     {
-      BACKGROUND_RADIATION_SITE_ODDS = 100,
+      BACKGROUND_RADIATION_SITE_ODDS = 1000,
       BACKGROUND_RADIATION_BIT_ODDS = 100
     };
 
@@ -918,7 +918,7 @@ namespace MFM
      *
      * @returns true if this Tile has a neighbor in direction dir, else false.
      */
-    inline bool IsConnected(Dir dir) const;
+    virtual bool IsConnected(Dir dir) const = 0;
 
     //bool HasAnyConnections(Dir regionDir) const; unused
 
@@ -966,7 +966,7 @@ namespace MFM
        \return true iff is it
        \fails ILLEGAL_ARGUMENT if location is not a cache location
      */
-    bool IsCacheSitePossibleEventCenter(const SPoint & location) const ;
+    virtual bool IsCacheSitePossibleEventCenter(const SPoint & location) const = 0;
 
     /**
      * Checks to see if a specified point is in Hidden memory, and therefore

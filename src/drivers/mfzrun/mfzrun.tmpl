@@ -1,9 +1,13 @@
-#!/usr/bin/perl -Tw
+#!/usr/bin/perl
 # -*- mode:perl -*-
+use strict;
+use warnings;
 
 sub BEGIN {
+    # Fri Oct  8 12:21:59 2021 Give up on la vide tainted due to appimage-builder
     # Seal us up a bit for living la vida tainted
-    $ENV{'PATH'} = "/bin:/usr/bin";
+    # $ENV{'PATH'} = "/bin:/usr/bin";
+    $ENV{'LC_ALL'} = "C";
     delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 }
 
@@ -13,8 +17,9 @@ SetUDieMsg("Type '$0' for help\n");
 use File::Temp qw(tempdir);
 use MIME::Base64 qw(decode_base64);
 use Crypt::OpenSSL::RSA;
+use Cwd qw(abs_path);
 
-my (undef, $binDir, $scriptName) = File::Spec ->splitpath($0);
+my (undef, $binDir, $scriptName) = File::Spec ->splitpath(abs_path(__FILE__));
 $binDir =~ s!/$!!;
 
 my $progname = KDGetVerb(0);
@@ -42,10 +47,15 @@ $0 $progname -h
 
 $0 $progname verify
     Check the file signature but do not run it
+    (use VERIFY to report more details)
 
 $0 $progname list
     Check the file signature and list contents but do not run it
     (use LIST to print full paths)
+
+$0 $progname announce
+    [OBSOLETE] Print the contents of the ANNOUNCE.PKT metadata file,
+    if it exists (use ANNOUNCE to append VERIFY info as well)
 
 $0 $progname unpack [DESTINATION_DIRECTORY]
     Verify and unpack the file but do not run it
@@ -71,6 +81,7 @@ my %verbs = (
     "demo" => 1,
     "unpack" => 1,
     "list" => 1,
+    "announce" => 1,
     "" => 1,
 );
 
@@ -82,7 +93,7 @@ if ($verb eq "demo") {
     $verb = "run";
 }
 
-if ($verb ne "run") {
+if ($verb ne "run" && $verb ne "unpack") {
     my $fx = $ARGV[0];
     UDie("Unrecognized extra arguments (beginning with '$fx')")
         if defined $fx;
@@ -95,6 +106,15 @@ if (!open MFZ, "<", $progname) {
 }
 
 my $firstLine = <MFZ>;
+
+if (defined($firstLine) && $firstLine =~ /^CDM1\d\n$/) { # detect cdmake version 1 header
+    my $remainingLen = 1024-6;
+    my $data;
+    my $read = read MFZ,$data,$remainingLen;
+    die "Malformed CDM header or content"
+        unless $read == $remainingLen;
+    $firstLine = <MFZ>; # The poifect crime
+}
 
 die "Bad .mfz header in '$progname'"
     unless defined $firstLine and $firstLine eq MFZRUN_HEADER;
@@ -151,7 +171,7 @@ if (!defined $destdir) {
 }
 
 my @innerpaths = UnzipStream($u2, $destdir);
-my ($pubkeypath,$pubkeyname) = FindName(\@innerpaths,MFZ_PUBKEY_NAME,undef);
+my ($pubkeypath,$pubkeyname,$pubkeytime) = FindName(\@innerpaths,MFZ_PUBKEY_NAME,undef);
 die "Incorrect .mfz packing - missing pubkey" unless defined($pubkeyname);
 my $fullpubkeypath = "$pubkeypath/$pubkeyname";
 
@@ -169,7 +189,21 @@ die "Invalid signature '$sigdata'/'$sig'" unless $rsapub->verify($zipdata, $sig)
 ValidatePubKey($pubhandle,$pubkey);
 my $fingerprint = ComputeFingerprintFromFullPublicKey($fullpubstring);
 
-print "SIGNED BY RECOGNIZED HANDLE: $pubhandle ($fingerprint)\n";
+if ($verb eq "announce") {
+    UDie("Obsolete function: $verb");
+}
+
+if ($optverb eq "VERIFY") {
+    my $checksum = ComputeChecksumOfString($zipdata);
+    print "SIGNATURE_CHECK [OK]\n";
+    print "INNER_CHECKSUM [$checksum]\n";
+    print "INNER_TIMESTAMP [$pubkeytime]\n";
+    print "SIGNING_HANDLE [$pubhandle]\n";
+    print "HANDLE_FINGERPRINT [$fingerprint]\n";
+    print "HANDLE_PUBKEY [$pubkey]\n";
+} else {
+    print "SIGNED BY RECOGNIZED HANDLE: $pubhandle ($fingerprint)\n";
+}
 if ($verb eq "verify") {
     exit 0;
 }
@@ -188,8 +222,11 @@ if ($verb eq "list") {
         $maxsize = length($size) if length($size) > $maxsize;
     }
     my $maxlen = 40;
-    $maxlen = 1000000 if ($optverb eq "LIST");
-    $maxpath = $maxlen if $maxpath > $maxlen;
+    if ($optverb eq "LIST") {
+        $maxlen = $maxpath;
+    } else { 
+        $maxpath = $maxlen if $maxpath > $maxlen;
+    }
     printf("FILES:\n%*s  %*s  %*s  %*s\n",
            -$maxpath, ($maxpath > 4)?"Path":"",
            -$maxname, "Name",
@@ -201,7 +238,7 @@ if ($verb eq "list") {
         $path =~ s!^$destdir/!!;
         my $ellipsis = "[...]";
         my $clip = length($path) - ($maxpath - length($ellipsis));
-        if ($clip > 0) {
+        if ($maxpath > length($ellipsis) && $clip > 0) {
             # /4 since ends of paths seem more informative
             substr($path, ($maxpath-length($ellipsis))/4, $clip) = $ellipsis;
         }
@@ -216,6 +253,12 @@ if ($verb eq "list") {
     exit 0;
 }
 
+if ($verb eq "unpack") {
+    print "UNPACKED INTO: $destdir\n";
+    exit 0;
+}
+
+
 my @mfmargs;
 
 my ($ulams,$splats,$incs,$goodSOs, $badSOs) = (0,0,0,0,0);
@@ -227,7 +270,8 @@ if ($platform eq 'x86_64' || $platform =~ /^armv8.*/) {
 } elsif ($platform eq 'i386' || $platform eq 'i686' || $platform =~ /^armv7.*/) {
     $platformsize = 32;
 } else {
-    UDie("This hardware platform, '$platform', is unrecognized");
+    print STDERR "WARNING: Unrecognized hardware platform '$platform'!  Assuming it's a 32 bit architecture\n";
+    $platformsize = 32;
 }
 for my $prec (@innerpaths) {
     my ($path, $name, $time) = @{$prec};
@@ -272,6 +316,8 @@ for my $prec (@innerpaths) {
         }
     } elsif ($name eq MFZ_PUBKEY_NAME) {
         # Don't need a complaint about this one
+    } elsif ($name eq MFZ_FILE_NAME) {
+        # Or this one
     } elsif ($name =~ /[.]ulam$/) {
         ++$ulams;
         print STDERR "Skipping ulam source: $name\n";
@@ -286,14 +332,14 @@ for my $prec (@innerpaths) {
     }
 }
 
-if ($goodSOs == 0) {
+if ($goodSOs == 0 && $verb eq 'run') {
     print STDERR "CANNOT RUN .mfz file: No usable .so files found\n";
     if ($badSOs > 0) {
         print STDERR "  The $badSOs .so file(s) in this .mfz are incompatible with this $platformsize-bit platform\n";
         if ($ulams > 0) {
             print STDERR "  However, $ulams .ulam file(s) are present\n";
             print STDERR "  You may be able to rebuild it for this platform\n\n";
-        } # For not we're not mentioning SPLAT files
+        } # For now we're not mentioning SPLAT files
     }
     exit 4;
 }
@@ -323,11 +369,6 @@ unshift @mfmargs, $cmd;
 
 print "@mfmargs\n";
 
-if ($verb eq "unpack") {
-    print "UNPACKED INTO: $destdir\n";
-    exit 0;
-}
-
 my $result = system $cmd @mfmargs;
 sleep 0.25;
 exit $result;
@@ -347,7 +388,7 @@ sub purifyArgs {
     for (my $i = 0; $i < scalar(@args); ++$i) {
         my $arg = $args[$i];
         if ($i == 0) {
-            if ($arg =~ /^({+\d+[a-zA-Z]\d+}+)$/) {
+            if ($arg =~ /^(\{+\d+[a-zA-Z]\d+\}+)$/) {
                 $args[0] = $1;
                 next;
             }
@@ -359,19 +400,12 @@ sub purifyArgs {
     return @args;
 }
 
-sub CheckForPubKey {
-    my $handle = shift;
-    my $path = GetPublicKeyFile($handle);
-    if (-r $path) {
-        return ($path, ReadPublicKeyFile($handle));
-    }
-    return ($path);
-}
-
 sub TryToPromoteInstalledPubKey {
     my $handle = shift;
     my $ehandle = EscapeHandle($handle);
-    my $dir = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/public_keys/";
+    my $dir = TryToFindResPath("public_keys");
+    return unless defined($dir);
+
     my $pub = "$dir/$ehandle.pub";
     if (-r $pub) {
         my $localpub = GetPublicKeyFile($handle);
@@ -439,12 +473,19 @@ EOM
     }
 }
 
+sub TryToFindResPath {
+    my $suffix = shift || "";
+    my $path;
+    return $path if -r ($path = "$binDir/../res/$suffix");
+    return $path if -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/$suffix");
+    return $path if -r ($path = "./res/$suffix");
+    return undef;
+}
+
 # Find and parse the demos.dat file
 sub ListDemosDat {
-    my $path;
-    -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/elements/demos.dat") or
-    -r ($path = "./res/elements/demos.dat") or
-    return 0;
+    my $path = TryToFindResPath("elements/demos.dat");
+    return 0 unless defined $path;
     my $count = 0;
     print "  Built-in demos:\n";
     open(DDAT,"<$path") or die "Can't read '$path': $!";
@@ -482,9 +523,8 @@ sub FindDemoOrDie {
     }
     $demoname .= ".mfz";
     my $path;
-    return $path if -r ($path = "/usr/lib/@DEBIAN_PACKAGE_NAME@/MFM/res/elements/demos/$demoname");
     return $path if -r ($path = "~/.mfm/demos/$demoname");
-    return $path if -r ($path = "./res/elements/demos/$demoname");
+    return $path if $path = TryToFindResPath("elements/demos/$demoname");
 
     UDie("No '$demoname' found");
 }

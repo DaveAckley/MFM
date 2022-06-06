@@ -1,6 +1,7 @@
 /*                                              -*- mode:C++ -*-
   BitVector.h Extended integral type
-  Copyright (C) 2014, 2018 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014, 2018, 2020 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2020-2021 The Living Computation Foundation. All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -21,7 +22,7 @@
 /**
   \file BitVector.h Extended integral type
   \author David H. Ackley.
-  \date (C) 2014,2018 All rights reserved.
+  \date (C) 2014,2018,2020-2021 All rights reserved.
   \lgpl
  */
 #ifndef BITVECTOR_H
@@ -150,6 +151,9 @@ namespace MFM {
      * @param other The BitVector to copy properties of.
      */
     BitVector(const BitVector & other);
+
+    BitVector& operator=(const BitVector & rhs); //explicit for c++11
+
 #endif // Fri Mar 13 16:04:59 2015 XXX TESTING GCC CODE GEN IMPACTS
 
     /**
@@ -319,7 +323,7 @@ namespace MFM {
      *
      * @param length The number of bits to copy.
      *
-     * @param dstbv The destination BitVector<BITS> that is written
+     * @param dstbv The destination BitVector<DBITS> that is written
      *              in positions [dstStartIdx, dstStartIdx + length - 1].
      *
      * @fails ILLEGAL_ARGUMENT if dstbv is the same object as this, or
@@ -331,8 +335,8 @@ namespace MFM {
      * @sa ReadBV, WriteBV
      *
      */
-    template <u32 BITS>
-    inline void CopyBV(const u32 srcStartIdx, const u32 dstStartIdx, const u32 length, BitVector<BITS> & dstbv) const
+    template <u32 DBITS>
+    inline void CopyBV(const u32 srcStartIdx, const u32 dstStartIdx, const u32 length, BitVector<DBITS> & dstbv) const
     {
       MFM_API_ASSERT_ARG(((void*) this) != ((void*) &dstbv)); // Ensure distinct ptrs; can't move within yourself
       u32 amt = BITS_PER_UNIT;
@@ -345,21 +349,21 @@ namespace MFM {
 
     /**
      * Reads an arbitrary subsection of this BitVector into all of \c
-     * rtnbv.  Template parameter \c BITS determines the number of
+     * rtnbv.  Template parameter \c DBITS determines the number of
      * bits read.
      *
      * @param startIdx The index of the first bit to read inside this
      *                 BitVector, where the MSB is indexed at \c 0 .
      *
-     * @param rtnbv The BitVector<BITS> modified to hold the read bits .
+     * @param rtnbv The BitVector<DBITS> modified to hold the read bits .
      *
      * @sa WriteBV, CopyBV
      *
      */
-    template <u32 BITS>
-    inline void ReadBV(const u32 startIdx, BitVector<BITS> & rtnbv) const
+    template <u32 DBITS>
+    inline void ReadBV(const u32 startIdx, BitVector<DBITS> & rtnbv) const
     {
-      this->CopyBV(startIdx, 0, BITS, rtnbv);
+      this->CopyBV(startIdx, 0, DBITS, rtnbv);
     }
 
     /**
@@ -370,16 +374,16 @@ namespace MFM {
      * @param startIdx The index of the first bit to write inside this
      *                 BitVector, where the MSB is indexed at \c 0 .
      *
-     * @param val The bits in \c [0, BITS - 1] of val are written to
+     * @param val The bits in \c [0, DBITS - 1] of val are written to
      *              the specified section of this BitVector.
      *
      * @sa ReadBV, CopyBV
      *
      */
-    template<u32 BITS>
-    void WriteBV(const u32 startIdx, const BitVector<BITS>& val)
+    template<u32 DBITS>
+    void WriteBV(const u32 startIdx, const BitVector<DBITS>& val)
     {
-      val.CopyBV(0, startIdx, BITS, *this);
+      val.CopyBV(0, startIdx, DBITS, *this);
     }
 
     /**
@@ -539,6 +543,11 @@ namespace MFM {
     void Clear();
 
     /**
+     * Sets all bits of this BitVector to \c 1 .
+     */
+    void SetAllOnes();
+
+    /**
      * Prints the bits held in this BitVector to a specified ByteSink in
      * hex format.
      *
@@ -627,6 +636,207 @@ namespace MFM {
      * @returns The number of 1 bits counted.
      */
     u32 PopulationCount(const u32 startIdx = 0, const u32 length = B) const;
+
+    /**
+     * Shift LEFT an arbitrary number of bits of this BitVector to a different
+     * BitVector \c dstbv.  Template parameter \c DBITS is the size \c
+     * dstbv.
+     *
+     * @param shiftdist The number of bits to shift, where the MSB is indexed at \c 0 .
+     *
+     * @param dstbv The destination BitVector<DBITS> that is written
+     *              in positions [0, length - shiftdist]. Cleared first.
+     *
+     * @fails ILLEGAL_ARGUMENT if dstbv is the same object as this
+     *
+     * @sa CopyBV
+     *
+     */
+    template <u32 DBITS>
+    inline void _ShiftOpLeftBitsBV(const u32 shiftdist, BitVector<DBITS> & dstbv) const
+    {
+      MFM_API_ASSERT_ARG(((void*) this) != ((void*) &dstbv)); // Ensure distinct ptrs; can't move within yourself
+      dstbv.Clear();
+      u32 length = this->GetLength();
+      u32 startidx = (DBITS - shiftdist - (length - shiftdist));
+
+      this->CopyBV(shiftdist, startidx, length - shiftdist, dstbv);
+    }
+
+
+    /**
+     * Shift RIGHT by an arbitrary number of bits, this BitVector to a different
+     * BitVector \c dstbv.  Template parameter \c DBITS is the size \c
+     * dstbv.
+     *
+     * @param shiftdist The number of bits to shift, where the MSB is indexed at \c 0 .
+     *
+     * @param dstbv The destination BitVector<DBITS> that is written
+     *              in positions [startidx, length - shiftdist]. Cleared first.
+     *
+     * @fails ILLEGAL_ARGUMENT if dstbv is the same object as this
+     *
+     * @sa CopyBV
+     *
+     */
+    template <u32 DBITS>
+    inline void _ShiftOpRightBitsBV(const u32 shiftdist, BitVector<DBITS> & dstbv) const
+    {
+      MFM_API_ASSERT_ARG(((void*) this) != ((void*) &dstbv)); // Ensure distinct ptrs; can't move within yourself
+      dstbv.Clear();
+      u32 length = this->GetLength();
+      u32 startidx = (DBITS - (length - shiftdist));
+
+      this->CopyBV(0u, startidx, (length - shiftdist), dstbv); //drops 'shiftdist' number of bits
+    }
+
+
+    /**
+     * Bitwise OR this BitVector and another BitVector \c rbv, into a different
+     * BitVector \c dstbv. All the same size, B.
+     *
+     * @param rbv The second bitvector, where the MSB is indexed at \c 0 .
+     *
+     * @param dstbv The destination BitVector<B> that is written
+     *              in positions [0, B].
+     *
+     * @fails ILLEGAL_ARGUMENT if dstbv is the same object as this
+     *
+     * @sa Read, Write
+     *
+     */
+    inline void _BitwiseOrBitsBV(const BitVector<B> & rbv, BitVector<B> & dstbv) const
+    {
+      MFM_API_ASSERT_ARG(((void*) this) != ((void*) &dstbv)); // Ensure distinct ptrs; can't move within yourself
+      dstbv.Clear();
+
+      u32 length = this->GetLength();;
+      u32 amt = BITS_PER_UNIT;
+      for (u32 i = 0; i < length; i += amt)
+	{
+	  if (i + amt > length) amt = length - i;
+	  dstbv.Write(i, amt, this->Read(i, amt) | rbv.Read(i, amt));
+	}
+    }
+
+
+    /**
+     * Bitwise AND this BitVector and another BitVector \c rbv, into a different
+     * BitVector \c dstbv. All the same size, B.
+     *
+     * @param rbv The second BitVector<B>, where the MSB is indexed at \c 0 .
+     *
+     * @param dstbv The destination BitVector<B> that is written
+     *              in positions [0, B].
+     *
+     * @fails ILLEGAL_ARGUMENT if dstbv is the same object as this
+     *
+     * @sa Read, Write
+     *
+     */
+    inline void _BitwiseAndBitsBV(const BitVector<B> & rbv, BitVector<B> & dstbv) const
+    {
+      MFM_API_ASSERT_ARG(((void*) this) != ((void*) &dstbv)); // Ensure distinct ptrs; can't move within yourself
+      dstbv.Clear();
+
+      u32 length = this->GetLength();
+      u32 amt = BITS_PER_UNIT;
+      for (u32 i = 0; i < length; i += amt)
+	{
+	  if (i + amt > length) amt = length - i;
+	  dstbv.Write(i, amt, this->Read(i, amt) & rbv.Read(i, amt));
+	}
+    }
+
+
+    /**
+     * Bitwise XOR this BitVector and another BitVector \c rbv, into a different
+     * BitVector \c dstbv. All the same size, B.
+     *
+     * @param rbv The second BitVector<B>, where the MSB is indexed at \c 0 .
+     *
+     * @param dstbv The destination BitVector<B> that is written
+     *              in positions [0, B].
+     *
+     * @fails ILLEGAL_ARGUMENT if dstbv is the same object as this
+     *
+     * @sa Read, Write
+     *
+     */
+    inline void _BitwiseXorBitsBV(const BitVector<B> & rbv, BitVector<B> & dstbv) const
+    {
+      MFM_API_ASSERT_ARG(((void*) this) != ((void*) &dstbv)); // Ensure distinct ptrs; can't move within yourself
+      dstbv.Clear();
+
+      u32 length = this->GetLength();
+      u32 amt = BITS_PER_UNIT;
+      for (u32 i = 0; i < length; i += amt)
+	{
+	  if (i + amt > length) amt = length - i;
+	  dstbv.Write(i, amt, this->Read(i, amt) ^ rbv.Read(i, amt));
+	}
+    }
+
+    /**
+     * Bitwise COMPLEMENT (~) this BitVector into a different
+     * BitVector \c dstbv. All the same size, B.
+     *
+     * @param dstbv The destination BitVector<B> that is written
+     *              in positions [0, B].
+     *
+     * @fails ILLEGAL_ARGUMENT if dstbv is the same object as this
+     *
+     * @sa _BitwiseXorBitsBV
+     *
+     */
+    inline void _BitwiseComplementBitsBV(BitVector<B> & dstbv) const
+    {
+      BitVector<B> bvmask;
+      bvmask.SetAllOnes();
+      this->_BitwiseXorBitsBV(bvmask, dstbv);
+    }
+
+
+    /**
+     * Bitwise Compare == this BitVector and another BitVector \c rbv, the same size, B.
+     *
+     * @param rbv The second BitVector<B>, where the MSB is indexed at \c 0 .
+     *
+     * returns true if equal equal, false if different
+     *
+     *
+     * @fails ILLEGAL_ARGUMENT if dstbv is the same object as this
+     *
+     * @sa Read
+     *
+     */
+    inline bool _BinOpCompareEqEqBitsBV(const BitVector<B> & rbv) const
+    {
+      MFM_API_ASSERT_ARG(((void*) this) != ((void*) &rbv)); // Ensure distinct ptrs; can't move within yourself
+
+      return *this == rbv; //overloaded op==
+    }
+
+
+    /**
+     * Bitwise Compare NOT EQ this BitVector and another BitVector \c rbv, the same size, B.
+     *
+     * @param rbv The second BitVector<B>, where the MSB is indexed at \c 0 .
+     *
+     * returns true if equal equal, false if different
+     *
+     *
+     * @fails ILLEGAL_ARGUMENT if dstbv is the same object as this
+     *
+     * @sa _BinOpCompareEqEqBitsBV
+     *
+     *
+     */
+    inline bool _BinOpCompareNotEqBitsBV(const BitVector<B> & rbv) const
+    {
+      return !(this->_BinOpCompareEqEqBitsBV(rbv));
+    }
+
 
   };
 

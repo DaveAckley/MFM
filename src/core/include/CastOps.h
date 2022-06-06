@@ -22,7 +22,7 @@
 
 /**
   \file CastOps.h Primitive casting and ALU operations
-  \author Elenas S. Ackley.
+  \author Elena S. Ackley.
   \author David H. Ackley.
   \date (C) 2014-2015,2018 All rights reserved.
   \lgpl
@@ -499,6 +499,21 @@ namespace MFM {
     return MIN<u64>(maskedval, maskdestval);
   }
 
+  inline u32 _String32ToBits32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
+  {
+    return _Unsigned32ToBits32(val, srcbitwidth, destbitwidth);
+  }
+
+  inline u32 _Bits32ToString32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
+  {
+    return _Bits32ToUnsigned32(val, srcbitwidth, destbitwidth);
+  }
+
+  inline u32 _String32ToBool32(u32 val, const u32 srcbitwidth, const u32 destbitwidth, const u32 max)
+  {
+    return  _CboolToBool32(((val>0)&&(val<max)), destbitwidth);
+  }
+
   //To UNARY:
   inline u32 _Int32ToUnary32(u32 val, const u32 srcbitwidth, const u32 destbitwidth)
   {
@@ -802,6 +817,18 @@ namespace MFM {
     u64 binvala = _Bool64ToBits64(vala, bitwidth, bitwidth);
     u64 binvalb = _Bool64ToBits64(valb, bitwidth, bitwidth);
     return _Bits64ToBool64(binvala ^ binvalb, bitwidth, bitwidth);
+  }
+
+  inline u32 _BitwiseComplementBits32(u32 vala, u32 bitwidth)
+  {
+    u32 mask = _GetNOnes32(bitwidth);
+    return  ( (vala ^ mask) & mask) ;
+  }
+
+  inline u64 _BitwiseComplementBits64(u64 vala, u32 bitwidth)
+  {
+    u64 mask = _GetNOnes64(bitwidth);
+    return ( (vala ^ mask) & mask);
   }
 
   //Bounds checks for INT (32,64 bitwidths) arith:
@@ -1609,7 +1636,7 @@ namespace MFM {
   {
     if(shft >= 64) return 0; //instead of self
     s64 cvala = _Int64ToCs64(vala, bitwidth);
-    return _Cs64ToInt64((cvala >> shft), bitwidth);
+    return _Cs64ToInt64((cvala << shft), bitwidth); //Sat Jul 20 14:45:23 2019  was >>
   }
 
   //Shift UNSIGNED:

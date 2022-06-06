@@ -27,7 +27,7 @@ namespace MFM {
     for (u32 i = 0; i < m_registeredUlamClassCount; ++i)
     {
       UlamClass<EC> * uc = m_registeredUlamClasses[i];
-      if (!uc) continue; //continguous after all classes register
+      if (!uc) continue; //contiguous after all classes register
 
       const char * mang = uc->GetMangledClassName();
       if (!strcmp(mang, mangledName))
@@ -94,6 +94,13 @@ namespace MFM {
   {
     if (index >= m_registeredUlamClassCount) FAIL(ILLEGAL_ARGUMENT);
     if(!m_registeredUlamClasses[index]) FAIL(ILLEGAL_STATE);
+    return m_registeredUlamClasses[index];
+  }
+
+  template <class EC>
+  const UlamClass<EC>* UlamClassRegistry<EC>::GetUlamClassOrNullByIndex(u32 index) const
+  {
+    if (index >= m_registeredUlamClassCount) return 0;
     return m_registeredUlamClasses[index];
   }
 

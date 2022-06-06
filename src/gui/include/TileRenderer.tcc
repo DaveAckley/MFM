@@ -1,6 +1,8 @@
 /* -*- C++ -*- */
 #include "Util.h"            /* for MIN and MAX */
 #include "ColorMap.h"        /* for CubeHelix */
+#include "DrawableSDL.h"     /* for DrawableSDL, EventWindowRendererSDL, UlamContextRestrictedSDL */
+#include "UlamRef.h"         /* for UlamRef */
 
 namespace MFM
 {
@@ -13,6 +15,8 @@ namespace MFM
     , m_drawGridLines(true)
     , m_drawCacheSites(true)
     , m_drawBases(false)
+    , m_drawCustom(true)
+    , m_drawLabels(-1)
     , m_atomSizeDit(DEFAULT_ATOM_SIZE_DIT)
     , m_gridLineColor(Drawing::GREY30)
   {
@@ -80,7 +84,6 @@ namespace MFM
     }
   }
 
-
   template <class EC>
   void TileRenderer<EC>::PaintUnderlays(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile)
   {
@@ -113,7 +116,105 @@ namespace MFM
   }
 
   template <class EC>
-  void TileRenderer<EC>::PaintTileAtDit(Drawing & drawing, const SPoint ditOrigin, const Tile<EC> & tile)
+  void TileRenderer<EC>::CallRenderGraphics(UlamContextEvent<EC> & ucs,
+                                            const UlamElement<EC> & uelt,
+                                            AtomBitStorage<EC> & abs,
+                                            OurTile & tile)
+  {
+    //    const UlamClassRegistry<EC>& ucr = tile.GetUlamClassRegistry();
+
+    UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, uelt.GetClassLength(), abs, &uelt, UlamRef<EC>::ELEMENTAL, ucs);
+    // how to do an ulam virtual function call in c++
+    VfuncPtr vfuncptr;
+    UlamRef<EC> vfur(ur, UlamElement<EC>::RENDERGRAPHICS_VOWNED_INDEX, 0u, true, vfuncptr);
+    typedef void (* Uf_9214renderGraphics)(const UlamContext<EC>& uc, UlamRef<EC>& ur);
+    ((Uf_9214renderGraphics) vfuncptr) (ucs, vfur);
+  }
+
+#if 0
+  template <class EC>
+  void TileRenderer<EC>::CallRenderGraphicsOLD(UlamContextRestricted<EC> & ucrs,
+                                            const UlamElement<EC> & uelt,
+                                            AtomBitStorage<EC> & abs)
+  {
+    UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, uelt.GetClassLength(), abs, &uelt, UlamRef<EC>::ELEMENTAL, ucrs);
+    // how to do an ulam virtual function call in c++
+    VfuncPtr vfuncptr;
+    UlamRef<EC> vfur(ur, UlamElement<EC>::RENDERGRAPHICS_VOWNED_INDEX, 0u, true, vfuncptr);
+    typedef void (* Uf_9214renderGraphics)(const UlamContext<EC>& uc, UlamRef<EC>& ur);
+    ((Uf_9214renderGraphics) vfuncptr) (ucrs, vfur);
+  }
+#endif
+
+  template <class EC>
+  void TileRenderer<EC>::PaintCustom(Drawing & drawing,
+                                     const SPoint tileDitOrigin,
+                                     Tile<EC> & tile)
+  {
+    DrawableSDL drawable(drawing);
+    EventWindowRendererSDL<EC> ewrs(drawable);
+    UlamContextEventSDL<EC> ucs(ewrs, tile); // NB: No longer UlamContextRestrictedSDL!
+
+    // Here we need to iterate over the sites
+    const Tile<EC> & ctile = tile;
+    typename OurTile::const_iterator_type end = ctile.end(m_drawCacheSites);
+    for (typename OurTile::const_iterator_type i = ctile.begin(m_drawCacheSites); i != end; ++i)
+    {
+      SPoint siteInTileCoord = i.AtSite(); // Absolute (0,0) is always in cache
+      SPoint siteInVisibleCoord = i.At();  // (0,0) is least visible pos (cache if m_drawCacheSites, else owned)
+      SPoint siteOriginDit = tileDitOrigin + siteInVisibleCoord * m_atomSizeDit + SPoint(m_atomSizeDit/2,m_atomSizeDit/2); // Center of site
+
+      AtomBitStorage<EC> abs(i->GetAtom());
+      const T& atom = abs.GetAtom();
+      if (!atom.IsSane()) continue;
+
+      u32 type = atom.GetType();
+      if (type == T::ATOM_EMPTY_TYPE) continue;
+
+      const Element<EC> * elt = tile.GetElementTable().Lookup(type);
+      if (!elt) continue; // ???
+
+      const UlamElement<EC> * uelt = elt->AsUlamElement();
+      if (uelt) { // Custom is only for uelts
+
+        EventWindow<EC> & ew = tile.GetEventWindow();
+        if (ew.InitForEvent(siteInTileCoord, false)) {
+          drawable.Reset();
+          drawable.SetDitOrigin(siteOriginDit);
+          drawable.SetDitsPerSite(m_atomSizeDit);
+
+          // We have to defend ourselves here.  Even though we know atom
+          // IsSane as far as the parity of the atomic header, anything
+          // might be wrong down in the user bits, and arbitrary rendering
+          // code, even given just a temp eventwindow that will never be
+          // committed, can easily blow up.
+
+          unwind_protect(
+          {
+            const char * failFile = MFMThrownFromFile;
+            const unsigned lineno = MFMThrownFromLineNo;
+            const char * failMsg = MFMFailCodeReason(MFMThrownFailCode);
+            OString256 buff;
+            SPointSerializer ssp(siteInTileCoord);
+            buff.Printf("T%s@S%@: Render failed: %s (%s:%d)",
+                        tile.GetLabel(),
+                        &ssp,
+                        failMsg,
+                        failFile,
+                        lineno);
+            LOG.Message("%s",buff.GetZString());
+          },
+          {
+            CallRenderGraphics(ucs,*uelt,abs,tile);
+          });
+          ew.SetFree();
+        }
+      }
+    }
+  }
+
+  template <class EC>
+  void TileRenderer<EC>::PaintTileAtDit(Drawing & drawing, const SPoint ditOrigin, Tile<EC> & tile)
   {
     if (!tile.IsEnabled())
     {
@@ -123,16 +224,22 @@ namespace MFM
 
         return;
     }
-    PaintSites(drawing,
-               (m_drawBases && !IsBaseVisible()) ? DRAW_SITE_BASE : m_drawBackgroundType,
-               DRAW_SHAPE_FILL, ditOrigin, tile);
-    PaintUnderlays(drawing, ditOrigin, tile);  // E.g. an event window
+    unwind_protect({
+        LOG.Warning("Failure during painting; incomplete grid render");
+    },{
+        PaintSites(drawing,
+                   (m_drawBases && !IsBaseVisible()) ? DRAW_SITE_BASE : m_drawBackgroundType,
+                   DRAW_SHAPE_FILL, ditOrigin, tile);
+        PaintUnderlays(drawing, ditOrigin, tile);  // E.g. an event window
 
-    PaintSites(drawing, m_drawMidgroundType, DRAW_SHAPE_CIRCLE, ditOrigin, tile);
+        PaintSites(drawing, m_drawMidgroundType, DRAW_SHAPE_CIRCLE, ditOrigin, tile);
 
-    PaintSites(drawing, m_drawForegroundType, DRAW_SHAPE_CDOT, ditOrigin, tile);
+        PaintSites(drawing, m_drawForegroundType, DRAW_SHAPE_CDOT, ditOrigin, tile);
 
-    PaintOverlays(drawing, ditOrigin, tile);   // E.g., a tool footprint
+        if (m_drawCustom)
+          PaintCustom(drawing, ditOrigin, tile);
+        PaintOverlays(drawing, ditOrigin, tile);   // E.g., a tool footprint
+    });
   }
 
   template <class EC>
@@ -178,6 +285,8 @@ namespace MFM
                                         const Tile<EC> & inTile)
   {
     u32 selector = 0;
+    u32 drawColor;
+    bool specifiedDrawColor = false;
     bool fromBase = false;
     switch (drawType)
     {
@@ -213,6 +322,8 @@ namespace MFM
       }
       return;
 
+    case DRAW_SITE_BLACK:  drawColor = 0xff000000; specifiedDrawColor = true; break;
+    case DRAW_SITE_WHITE:  drawColor = 0xffffffff; specifiedDrawColor = true; break;
     case DRAW_SITE_ELEMENT: break;
     case DRAW_SITE_ATOM_1: selector = 1; break;
     case DRAW_SITE_ATOM_2: selector = 2; break;
@@ -223,9 +334,13 @@ namespace MFM
 
     }
 
+    if (specifiedDrawColor) {
+      PaintShapeForSite(drawing, shape, ditOrigin, drawColor);
+      return;
+    }
+
     // Here if we need to do atom-specific painting
 
-    u32 drawColor;
     const char * elementLabel  = 0;
 
     const T & atom = fromBase ? site.GetBase().GetBaseAtom() : site.GetAtom();
@@ -248,8 +363,8 @@ namespace MFM
       return;
     }
 
-    const u32 LABEL_ATOM_SIZE_DIT = Drawing::MapPixToDit(50);
-    if (m_atomSizeDit >= LABEL_ATOM_SIZE_DIT)
+    const u32 LABEL_ATOM_SIZE_DIT = Drawing::MapPixToDit(25);
+    if (m_drawLabels > 0 || (m_drawLabels < 0 && m_atomSizeDit >= LABEL_ATOM_SIZE_DIT))
     {
       elementLabel = elt->GetAtomicSymbol();
     }
@@ -273,12 +388,14 @@ namespace MFM
     {
       drawing.SetFont(FONT_ASSET_ELEMENT);
       const SPoint size = drawing.GetTextSize(elementLabel);
+      u32 ditSize = 5u*m_atomSizeDit/Drawing::MapPixToDit(1u);
+      u32 old = drawing.SetZoomDits(ditSize);
 
       drawing.SetBackground(Drawing::BLACK);
       drawing.SetForeground(Drawing::WHITE);
       drawing.BlitBackedTextCentered(elementLabel, pixOrigin, pixSize);
+      drawing.SetZoomDits(old);
     }
-
   }
 
   template <class EC>
@@ -329,6 +446,8 @@ namespace MFM
     {
     default:
       FAIL(ILLEGAL_ARGUMENT);
+    case DRAW_SITE_BLACK:         return "Black";
+    case DRAW_SITE_WHITE:         return "White";
     case DRAW_SITE_ELEMENT:       return "Element";
     case DRAW_SITE_ATOM_1:        return "Atom #1";
     case DRAW_SITE_ATOM_2:        return "Atom #2";
@@ -354,7 +473,10 @@ namespace MFM
     sink.Printf(" PP(trmt=%d)\n", m_drawMidgroundType);
     sink.Printf(" PP(trft=%d)\n", m_drawForegroundType);
     sink.Printf(" PP(trgc=%d)\n", m_gridLineColor);
-  }
+
+    sink.Printf(" PP(trrc=%d)\n", m_drawCustom);  // Pre v5 mfs loading will complain about these
+    sink.Printf(" PP(trdl=%d)\n", m_drawLabels);  // but continue loading
+}
 
   template <class EC>
   bool TileRenderer<EC>::TileRendererLoadDetails(const char * key, LineCountingByteSource & source)
@@ -367,6 +489,9 @@ namespace MFM
     if (!strcmp("trmt",key)) return 1 == source.Scanf("%?d", sizeof m_drawMidgroundType, &m_drawMidgroundType);
     if (!strcmp("trft",key)) return 1 == source.Scanf("%?d", sizeof m_drawForegroundType, &m_drawForegroundType);
     if (!strcmp("trgc",key)) return 1 == source.Scanf("%?d", sizeof m_gridLineColor, &m_gridLineColor);
+
+    if (!strcmp("trrc",key)) return 1 == source.Scanf("%?d", sizeof m_drawCustom, &m_drawCustom);
+    if (!strcmp("trdl",key)) return 1 == source.Scanf("%?d", sizeof m_drawLabels, &m_drawLabels);
 
     return false;
   }

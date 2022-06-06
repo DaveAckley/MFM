@@ -1,0 +1,52 @@
+{5}  -*- text -*- 
+[0:
+
+Sat Aug 24 11:48:23 2019 OK, so we have intertile "working" on full
+loopback, but if any ITC isn't all hooked up and happy, we get wedged
+in, apparently, a variety of ways.
+
+So here to assess that situation.
+
+Places to consider/examine/suspect:
+
+ - Determining whether an ITC is open or not, even in the simplest
+   case when it hasn't been connected since say reboot.
+
+ - Needing some kind of timeout while waiting for cache update
+   responses.
+
+ - Needing some kind of timeout after giving a lock.
+
+[1:
+
+Sat Aug 24 11:53:14 2019 Let's consider the first.  First, let's
+rebuild with debugging, then watch what happens during an event that
+wants to involve an unconnected edge.[2:
+
+Sat Aug 24 13:02:01 2019 Well, we have a partial loopback, with NW/SE
+unconnected, but things still seem to be 'working'.  That's the static
+disconnect case; it's easy to believe real ITC will have all kinds of
+mid-event timeouts and stuff..
+
+:2]
+
+:1]
+
+:0]
+[3:
+
+Sat Aug 24 13:10:53 2019 Where is it, again, that the Tile goes ACTIVE
+on its own, in the normal stream of events?[4:
+
+Sat Aug 24 13:14:29 2019 Well it's kind of weird.  It's actually
+ConsiderStateChange that does it.  Every Tile::Advance goes to
+ConsiderStateChange.  There, if m_requestedState is ACTIVE, and all
+CPs are IDLE, the Tile goes active.  Later, Tile::ForcePassive sets
+the tile PASSIVE -- but DOES NOT change m_requestedSate at that time.
+So then a future ConsiderStateChange will change it back to ACTIVE
+when all the CPs are idle, and that keeps happening until the grid
+level changes m_requestedState back to passive.
+
+:4]
+
+:3]

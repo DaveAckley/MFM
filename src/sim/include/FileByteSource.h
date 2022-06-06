@@ -121,6 +121,26 @@ namespace MFM
       }
       return fgetc(m_fp);
     }
+
+    /**
+     * Attempt to seek this FileByteSource to the given position.
+     * \return true iff the seek succeeded
+     */
+    bool Seek(long offset, int whence) {
+      MFM_API_ASSERT_STATE(m_fp);
+      return fseek(m_fp,offset,whence) == 0;
+    }
+
+    /**
+     * Get the current file position of this FileByteSource
+     * \return the current file offset
+     *
+     * \sa Seek
+     */
+    long Tell() const {
+      MFM_API_ASSERT_STATE(m_fp);
+      return ftell(m_fp);
+    }
   };
 }
 

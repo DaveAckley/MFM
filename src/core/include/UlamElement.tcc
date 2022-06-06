@@ -33,8 +33,10 @@ namespace MFM {
     UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), window.GetCenterAtomBitStorage(), this, UlamRef<EC>::ELEMENTAL, uc);
 
     // how to do an ulam virtual function call in c++
+    VfuncPtr vfuncptr;
+    UlamRef<EC> vfur(ur, BEHAVE_VOWNED_INDEX, 0u, true, vfuncptr);
     typedef void (* Uf_6behave) (const UlamContext<EC>&, UlamRef<EC>& );
-    ((Uf_6behave) this->getVTableEntry(BEHAVE_VTABLE_INDEX)) (uc, ur);
+    ((Uf_6behave) vfuncptr) (uc, vfur);
   }
 
   template <class EC>
@@ -50,8 +52,11 @@ namespace MFM {
     UlamRef<EC> ur(T::ATOM_FIRST_STATE_BIT, this->GetClassLength(), atbs, this, UlamRef<EC>::ELEMENTAL, uc);
 
     // how to do an ulam virtual function call in c++
+    VfuncPtr vfuncptr;
+    UlamRef<EC> vfur(ur, GETCOLOR_VOWNED_INDEX, 0u, true, vfuncptr);
+
     typedef Ui_Ut_14181u<EC> (* Uf_8getColor11102321u) (const UlamContext<EC>&, UlamRef<EC>&, Ui_Ut_102321u<EC>& );
-    Ui_Ut_14181u<EC> dynColor = ((Uf_8getColor11102321u) this->getVTableEntry(GETCOLOR_VTABLE_INDEX)) (uc, ur, sel);
+    Ui_Ut_14181u<EC> dynColor = ((Uf_8getColor11102321u) vfuncptr) (uc, vfur, sel);
 
     return dynColor.read();
   }

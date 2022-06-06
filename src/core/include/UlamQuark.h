@@ -58,7 +58,7 @@ namespace MFM {
       return this;
     }
 
-    virtual u32 getDefaultQuark() const = 0;
+    virtual u64 getDefaultQuark() const = 0;
   };
 
 } //MFM

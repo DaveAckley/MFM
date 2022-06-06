@@ -70,9 +70,40 @@ namespace MFM
       DEBUG3,
       ALL,
 
+      ERR=ERROR, // Reify the TLCs familiar from the log files
+      WRN=WARNING,
+      MSG=MESSAGE,
+      DBG=DEBUG,
+
       MIN_LEVEL = NONE,
       MAX_LEVEL = ALL
     };
+
+    /**
+     * An enumeration of what log message components should currently
+     * be included.  \sa GetIncludeFlags(), \sa SetIncludeFlags()
+     */
+    enum IncludeFlags
+    {
+     INCLUDE_TIMESTAMP = 0x01,
+     INCLUDE_LEVEL =     0x02,
+     INCLUDE_SEPARATOR = 0x04,
+     INCLUDE_TEXT =      0x08,
+     INCLUDE_NEWLINE =   0x10,
+     
+     INCLUDE_ALL = (INCLUDE_TIMESTAMP|INCLUDE_LEVEL|INCLUDE_SEPARATOR|INCLUDE_TEXT|INCLUDE_NEWLINE),
+     INCLUDE_NONE = 0
+    };
+
+    /**
+       Get current include flags
+     */
+    IncludeFlags GetIncludeFlags() const { return m_includeFlags; }
+
+    /**
+       Set current include flags to \c newf
+     */
+    void SetIncludeFlags(IncludeFlags newf) { m_includeFlags = newf; }
 
     /**
      * Translates a Level to an immutable string .
@@ -240,6 +271,17 @@ namespace MFM
     }
 
     /**
+     * Returns the ByteSink that this Logger is currently writing to.
+     *
+     * @returns A pointer to the ByteSink that this Logger is writing
+     *          to 
+     */
+    ByteSink * GetByteSink() const
+    {
+      return m_sink;
+    }
+
+    /**
      * Constructs a new Logger which writes to a specified ByteSink
      * and logs at a particular logging Level .
      *
@@ -250,6 +292,7 @@ namespace MFM
     Logger(ByteSink & sink, Level initialLevel) :
       m_sink(&sink),
       m_logLevel(initialLevel),
+      m_includeFlags(INCLUDE_ALL),
       m_timeStamper(&m_defaultTimeStamper)
     {
     }
@@ -311,7 +354,11 @@ namespace MFM
           abort(); // Logger is not prepared to handle failures during printing!
         },
         {
-          m_sink->Printf("%@%s: %<\n",m_timeStamper, StrLevel(level), &bs);
+          if (m_includeFlags & INCLUDE_TIMESTAMP) m_sink->Printf("%@",m_timeStamper);
+          if (m_includeFlags & INCLUDE_LEVEL) m_sink->Printf("%s", StrLevel(level));
+          if (m_includeFlags & INCLUDE_SEPARATOR) m_sink->Printf(": ");
+          if (m_includeFlags & INCLUDE_TEXT) m_sink->Printf("%<", &bs);
+          if (m_includeFlags & INCLUDE_NEWLINE) m_sink->Println();
         });
       }
       return true;
@@ -339,9 +386,11 @@ namespace MFM
           abort(); // Logger is not prepared to handle failures during printing!
         },
         {
-          m_sink->Printf("%@%s: ",m_timeStamper, StrLevel(level));
-          m_sink->Vprintf(format, ap);
-          m_sink->Println();
+          if (m_includeFlags & INCLUDE_TIMESTAMP) m_sink->Printf("%@",m_timeStamper);
+          if (m_includeFlags & INCLUDE_LEVEL) m_sink->Printf("%s", StrLevel(level));
+          if (m_includeFlags & INCLUDE_SEPARATOR) m_sink->Printf(": ");
+          if (m_includeFlags & INCLUDE_TEXT) m_sink->Vprintf(format, ap);
+          if (m_includeFlags & INCLUDE_NEWLINE) m_sink->Println();
         });
       }
     }
@@ -443,9 +492,12 @@ namespace MFM
       m_defaultTimeStamper.Reset();
     }
 
+   
   private:
     ByteSink * m_sink;
     Level m_logLevel;
+
+    IncludeFlags m_includeFlags;
 
     /**
      * A lock to ensure only one thread does logging at a time; the

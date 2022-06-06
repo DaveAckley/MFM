@@ -23,7 +23,7 @@
   \file FailCodes.h Listing of failure codes
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2014-2015 All rights reserved.
+  \date (C) 2014-2015, 2019 All rights reserved.
   \lgpl
  */
 XX(INCOMPLETE_CODE)
@@ -52,6 +52,8 @@ XX(BAD_CAST)
 XX(ZERO)
 XX(BAD_NAME)
 XX(PURE_VIRTUAL_CALLED)
+XX(VIRTUAL_CALLED_ON_SIBLING)
+XX(BAD_VIRTUAL_CALL)
 XX(UNSPECIFIED_EXPLICIT_FAIL)
 XX(NOT_AN_ELEMENT)
 XX(NON_NULL_POINTER)
@@ -59,3 +61,4 @@ XX(STALE_ATOM_REF)
 XX(UNRETURNABLE_REFERENCE)
 XX(NO_MATCH)
 XX(DESCRIBED_FAILURE)
+XX(USER_REQUESTED_FAILURE)

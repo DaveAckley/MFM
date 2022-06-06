@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+# -*- mode:perl -*-
+
+use strict;
+use warnings;
+
+my %VARS = (
+    DEBIAN_PACKAGE_NAME => q{@DEBIAN_PACKAGE_NAME@},
+    DEB_MFM_BINDIR => q{@DEB_MFM_BINDIR@},
+    DEB_MFM_RESDIR => q{@DEB_MFM_RESDIR@},
+    MFM_ROOT_DIR => q{@MFM_ROOT_DIR@},
+    MFM_VERSION_NUMBER => q{@MFM_VERSION_NUMBER@},
+    MFM_TREE_VERSION => q{@MFM_TREE_VERSION@},
+    MFM_CFLAGS => q{@MFM_CFLAGS@},
+    MFM_CPPFLAGS => q{@MFM_CPPFLAGS@},
+    MFM_LDFLAGS => q{@MFM_LDFLAGS@}
+    );
+
+my @alts = qw(sh perl make echo);
+
+sub UDie {
+    print STDERR shift."\n";
+    print STDERR "Usage: $0 [help|[".join("|",@alts)."] VARNAME..]\n";
+    exit 1;
+}
+
+my $regex = '^('.join('|',@alts).')$';
+
+UDie("At least one argument required") unless $#ARGV >= 0;
+
+my $cmd = shift @ARGV;
+
+UDie("") if lc($cmd) eq 'help';
+
+if (lc($cmd) =~ /$regex/) {
+    my $fmt = $1;
+    my @allkeys = sort keys %VARS;
+    my @requestedkeys = @ARGV;
+    @requestedkeys = @allkeys unless @requestedkeys;
+    for my $key (@requestedkeys) {
+        print "$key=$VARS{$key}\n" if $fmt eq "sh";
+        print "use constant $key => q\{$VARS{$key}\};\n" if $fmt eq "perl";
+        print "$key:=$VARS{$key}\n" if $fmt eq "make";
+        print "$VARS{$key}\n" if $fmt eq "echo";
+    }
+    exit 0;
+}
+
+UDie("Unrecognized '$cmd'");

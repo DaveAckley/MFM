@@ -1,7 +1,7 @@
 /*                                              -*- mode:C++ -*-
   UlamClass.h An abstract base class for ULAM quarks and elements
-  Copyright (C) 2015-2018 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015-2018 Ackleyshack LLC.
+  Copyright (C) 2015-2019 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2019 Ackleyshack LLC.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,8 +22,8 @@
 /**
   \file UlamClass.h An abstract base class for ULAM quarks and elements
   \author David H. Ackley.
-  \author Elenas S. Ackley.
-  \date (C) 2015-2018 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2015-2019 All rights reserved.
   \lgpl
  */
 
@@ -32,6 +32,7 @@
 
 #include "itype.h"
 #include "BitStorage.h"
+#include "UlamVTableEntry.h"
 
 namespace MFM
 {
@@ -107,9 +108,65 @@ namespace MFM
       FAIL(ILLEGAL_STATE);
     }
 
+    /**
+	Returns the bit size of this class as a complete object,
+	including all baseclasses.
+    */
     virtual u32 GetClassLength() const
     {
       FAIL(ILLEGAL_STATE);
+    }
+
+    /**
+	Returns the bit size of this class' data members,
+	excluding baseclasses; this is its baseclass
+	size, shared; Elements cannot be shared, or bases.
+    */
+    virtual u32 GetClassDataMembersSize() const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    /**
+	Returns the number of base classes + self, two minimum: one
+	for UrSelf, one for self; all bases are shared. Implemented by
+	every UlamClass.
+    */
+    virtual u32 GetBaseClassCount() const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    /**
+	Returns the number of direct base classes + self, two minimum:
+	one for Self, one for Super.  Implemented by every UlamClass.
+    */
+    virtual u32 GetDirectBaseClassCount() const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+    /**
+	Returns the THE_INSTANCE of ith baseclass, where self is zero,
+	followed by direct bases in the order listed, then by
+	inherited bases; Implemented by every UlamClass.
+    */
+    virtual UlamClass<EC> * GetOrderedBaseClassAsUlamClass(u32 ith) const
+    {
+      FAIL(ILLEGAL_STATE);
+    }
+
+
+    /**
+	Returns true if the argument is a "direct" baseclass (explicit
+	in class definition), or unspecified superclass (UrSelf) of
+	ourself; o.w. false if self, or "shared" base (ancestor of a
+	direct base), or unrelated. Implemented by every UlamClass,
+	except localfilescopes.
+    */
+    virtual bool IsDirectBaseClass(const u32 regid) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
     }
 
     /**
@@ -219,7 +276,19 @@ namespace MFM
 
        \sa T::ATOM_FIRST_STATE_BIT
      */
-    bool internalCMethodImplementingIs(const typename EC::ATOM_CONFIG::ATOM_TYPE& targ) const
+    virtual bool internalCMethodImplementingIs(const typename EC::ATOM_CONFIG::ATOM_TYPE& targ) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+    }
+
+    /**
+       Compare this class registration number to table of relative reg nums
+
+       \return true if they are related;
+
+       \sa T::ATOM_FIRST_STATE_BIT
+     */
+    virtual bool internalCMethodImplementingIs(const u32 regid) const
     {
       FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
     }
@@ -242,8 +311,36 @@ namespace MFM
      */
     static bool IsMethod(const UlamContext<EC>& uc, u32 type, const UlamClass<EC> * classPtr);
 
+    /**
+       Discover if base class Type, specified by its \c
+       INSTANCE address, in an UlamElement specified by its \c type
+       number, if such as UlamElement exists and inherits from such a base class,
+       return its relative starting position.
 
-    typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
+       \param type an element type number, hopefully of an UlamElement
+
+       \param quarkTypeName the name of the type to search for in
+              the ancestors of the found UlamElement.
+
+       \return A return value of positive start position indicates the given \c type is
+               related to type of base class. A negative value means they are not related.
+
+       \sa T::ATOM_FIRST_STATE_BIT
+       \sa internalCMethodImplementingIs
+     */
+    static s32 GetRelativePositionOfBaseClass(const UlamContext<EC>& uc, u32 type, const UlamClass<EC> * baseclassPtr);
+
+
+    virtual s32 internalCMethodImplementingGetRelativePositionOfBaseClass(const UlamClass<EC> * cptrarg) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+    }
+
+    virtual s32 internalCMethodImplementingGetRelativePositionOfBaseClass(const u32 regid) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+    }
+
 
     /**
        Return vtable of this element, or NULL if there isn't one.
@@ -256,7 +353,25 @@ namespace MFM
       return (VfuncPtr) NULL;
     }
 
+    /**
+       Return vtable of this class
+
+       \return UlamClass pointer of override class in this class
+     */
+    virtual const UlamClass<EC> * getVTableEntryUlamClassPtr(u32 idx) const
+    {
+      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+      return 0;
+    }
+
+
     static VfuncPtr GetVTableEntry(const UlamContext<EC>& uc, u32 atype, u32 idx);
+
+    virtual u32 GetVTStartOffsetForClassByRegNum(u32 rn) const
+    {
+      FAIL(ILLEGAL_STATE); // culam should always have overridden this method
+      return 0;
+    }
 
     static void PureVirtualFunctionCalled()
     {
@@ -272,6 +387,23 @@ namespace MFM
 
      */
     virtual const char * GetMangledClassName() const = 0;
+
+    /**
+       String of the mangled name of this class.  To be
+       overridden by subclasses of UlamClass.
+
+       \return an index to a statically-allocated ulam String.
+     */
+    virtual u32 GetMangledClassNameAsStringIndex() const = 0;
+
+    /**
+       String of the name of this class.  To be overridden by
+       subclasses of UlamClass.  Four variations for template instances
+       depending on argument values.
+
+       \return an index to a statically-allocated ulam String.
+     */
+    virtual u32 GetUlamClassNameAsStringIndex(bool templateParameters, bool templateValues) const = 0;
 
     /**
        Specify the number of data members in this class.  To be
@@ -315,6 +447,8 @@ namespace MFM
     static void addASCII(ByteSink & bs, u64 val) ;
 
     virtual u32 GetRegistrationNumber() const = 0;
+
+    virtual bool IsTheEmptyClass() const { return false; }
 
     UlamClass() { }
 

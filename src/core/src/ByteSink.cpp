@@ -1,8 +1,15 @@
 #include "ByteSink.h"
 #include "ByteSource.h"
 #include "ByteSerializable.h"
+#include "OverflowableCharBufferByteSink.h"
 #include <string.h>   /* For strlen */
 #include <ctype.h>    /* For isprint */
+#include "Logger.h"
+
+#include <stdlib.h>   /* for free */
+#include <execinfo.h> /* for backtrace_symbols */
+#include <dlfcn.h>    /* for dladdr */
+#include <cxxabi.h>   /* for __cxa_demangle */
 
 namespace MFM {
 
@@ -529,14 +536,18 @@ XXX UPDATE
       Print(va_arg(ap,u32),type, fieldWidth, padChar);
       break;
 
-    case 'f': 
-    {
-      FAIL(INCOMPLETE_CODE);
-      /*
-      double v =  va_arg(ap,double);
-      ByteSink::Print(face,v);
+    case 'f': {
+      double v = va_arg(ap,double);
+      OString32 fmt;
+      fmt.Print("%");
+      if (padChar != ' ') fmt.WriteByte(padChar);
+      if (fieldWidth > 0) fmt.Print(fieldWidth);
+      fmt.Print("f");
+      const u32 MAX_SIZE = 128;
+      char buf[MAX_SIZE];
+      snprintf(buf, MAX_SIZE, fmt.GetZString(), v);
+      Print(buf);
       break;
-      */
     }
 
     /* %Z: Print a null-terminated string INCLUDING a trailing NULL */
@@ -585,4 +596,38 @@ XXX UPDATE
     }
     }
   }
+
+  void PrintBacktrace(FILE * f, void * const * backtraceArray, unsigned backtraceSize) {
+    OverflowableCharBufferByteSink<4096 + 2> bt;
+    DumpBacktrace(bt, backtraceArray, backtraceSize);
+    fprintf(f,"BACKTRACE %s",bt.GetZString());
+  }
+
+  void LogBacktrace(void * const * backtraceArray, unsigned backtraceSize) {
+    OverflowableCharBufferByteSink<4096 + 2> bt;
+    DumpBacktrace(bt, backtraceArray, backtraceSize);
+    LOG.Message("BACKTRACE %s",bt.GetZString());
+  }
+
+  void DumpBacktrace(ByteSink & bt, void * const * backtraceArray, unsigned backtraceSize)
+  {
+    char ** strings = backtrace_symbols (backtraceArray, backtraceSize);
+
+    for (u32 i = 0; i < backtraceSize; i++) {
+      Dl_info info;
+      if (dladdr(backtraceArray[i],&info)) {
+        char * demangled = NULL;
+        int status;
+        demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
+        bt.Printf(" -> %2d: %s + 0x%x\n",
+                  i,
+                  status == 0 ? demangled : info.dli_sname,
+                  (char*) backtraceArray[i] - (char*) info.dli_saddr);
+        free(demangled);
+      } else
+        bt.Printf(" -> %2d: %s\n", i, strings[i]);
+    }
+    free (strings);
+  }
+
 }

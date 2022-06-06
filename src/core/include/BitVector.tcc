@@ -24,6 +24,14 @@ namespace MFM {
   {
     memcpy(m_bits,other.m_bits,sizeof(m_bits));
   }
+
+  template <u32 B>
+  BitVector<B> & BitVector<B>::operator=(const BitVector<B> & rhs)
+  {
+    memcpy(m_bits,rhs.m_bits,sizeof(m_bits));
+    return *this;
+  }
+
 #endif // Fri Mar 13 16:04:59 2015 XXX TESTING GCC CODE GEN IMPACTS
 
   // This is the general case..
@@ -67,6 +75,12 @@ namespace MFM {
   void BitVector<B>::Clear()
   {
     memset(m_bits, 0, sizeof(m_bits));
+  }
+
+  template <u32 B>
+  void BitVector<B>::SetAllOnes()
+  {
+    memset(m_bits, 0xff, sizeof(m_bits));
   }
 
   /*

@@ -1,6 +1,6 @@
 /*                                              -*- mode:C++ -*-
   UlamDefs.h A roll-up of files and definitions for ULAM compiled output
-  Copyright (C) 2014-2016 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2014-2019 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@
   \file UlamDefs.h A roll-up of files and definitions for ULAM compiled output
   \author David H. Ackley
   \author Elena S. Ackley
-  \date (C) 2014-2016 All rights reserved.
+  \date (C) 2014-2019 All rights reserved.
   \lgpl
  */
 #ifndef ULAMDEFS_H
@@ -45,6 +45,7 @@
 #include "UlamClass.h"
 #include "UlamClassRegistry.h"
 #include "UlamTypeInfo.h"
+#include "UlamVTableEntry.h"
 
 namespace MFM
 {

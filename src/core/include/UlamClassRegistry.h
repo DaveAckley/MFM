@@ -1,7 +1,8 @@
 /*                                              -*- mode:C++ -*-
   UlamClassRegistry.h A class for the registration of ULAM quarks and elements
-  Copyright (C) 2015-2018 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015-2018 Ackleyshack LLC.
+  Copyright (C) 2015-2018,2020 The Regents of the University of New Mexico.  All rights reserved.
+  Copyright (C) 2015-2018,2020 Ackleyshack LLC.
+  Copyright (C) 2020 The Living Computation Foundation.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,8 +23,8 @@
 /**
   \file UlamClassRegistry.h A class for the registration of ULAM quarks and elements
   \author David H. Ackley.
-  \author Elenas S. Ackley.
-  \date (C) 2015-2018 All rights reserved.
+  \author Elena S. Ackley.
+  \date (C) 2015-2018,2020 All rights reserved.
   \lgpl
  */
 
@@ -64,7 +65,9 @@ namespace MFM {
 
     const UlamClass<EC> * GetUlamClassByMangledName(const char *mangledName) const;
 
-    const UlamClass<EC> * GetUlamClassByIndex(u32 index) const;
+    const UlamClass<EC> * GetUlamClassByIndex(u32 index) const; // FAIL on illegal index
+
+    const UlamClass<EC> * GetUlamClassOrNullByIndex(u32 index) const; // return NULL on illegal index
 
     const UlamClass<EC> * GetUlamElementEmpty() const { return m_ulamElementEmpty; }
 

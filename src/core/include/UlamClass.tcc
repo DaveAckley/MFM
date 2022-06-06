@@ -26,8 +26,16 @@ namespace MFM {
   {
     const UlamElement<EC> * ueltptr = (UlamElement<EC> *) uc.LookupElementTypeFromContext(type);
     if (!ueltptr) return false;
-    return ueltptr->internalCMethodImplementingIs(classPtr);
+    return (ueltptr->internalCMethodImplementingIs(classPtr));
   } //IsMethod (static)
+
+  template <class EC>
+  s32 UlamClass<EC>::GetRelativePositionOfBaseClass(const UlamContext<EC>& uc, u32 type, const UlamClass<EC> * baseclassPtr)
+  {
+    const UlamElement<EC> * ueltptr = (UlamElement<EC> *) uc.LookupElementTypeFromContext(type);
+    if (!ueltptr) return -1;
+    return ueltptr->internalCMethodImplementingGetRelativePositionOfBaseClass(baseclassPtr);
+  } //GetRelativePositionOfBaseClass (static)
 
   typedef void (*VfuncPtr)(); // Generic function pointer we'll cast at point of use
   template <class EC>
@@ -72,6 +80,7 @@ namespace MFM {
     if (flags & (PRINT_MEMBER_VALUES|PRINT_MEMBER_NAMES|PRINT_MEMBER_TYPES))
     {
       bool opened = false;
+      OString128 lastBaseClassName;
       for (s32 i = 0; i < GetDataMemberCount(); ++i)
       {
         const UlamClassDataMemberInfo & dmi = GetDataMemberInfo((u32) i);
@@ -96,8 +105,27 @@ namespace MFM {
         }
         if (flags & PRINT_MEMBER_TYPES)
         {
-          utin.PrintPretty(bs);
+          utin.PrintPretty(bs,false);
           bs.Printf(" ");
+        }
+
+        if (true/*flags & PRINT_BASE_CLASS_NAMES*/)
+        {
+          OString128 className;
+          UlamTypeInfo utin2;
+          if (!utin2.InitFrom(dmi.m_dataMemberClassName))
+            FAIL(ILLEGAL_STATE);
+          utin2.PrintPretty(className,true);
+          if (!className.Equals(lastBaseClassName))
+          {
+            if (lastBaseClassName.GetLength() > 0)
+            {
+              bs.Printf(")");
+            }
+            bs.Printf("%s(",className.GetZString());
+            doNL(bs,flags,indent);
+            lastBaseClassName = className;
+          }
         }
 
         if (flags & PRINT_MEMBER_NAMES)

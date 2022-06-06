@@ -315,7 +315,7 @@ namespace MFM {
         if (!ctile.Advance())
         {
           // We accomplished nothing.  Let somebody else try
-          pthread_yield();
+          sched_yield();
         }
         pauseUsec = 0;
         break;
@@ -437,7 +437,7 @@ namespace MFM {
   template <class GC>
   bool Grid<GC>::IsTileEnabled(const SPoint& tileLoc)
   {
-    MFM_API_ASSERT_ARG(!IsLegalTileIndex(tileLoc));
+    MFM_API_ASSERT_ARG(IsLegalTileIndex(tileLoc));
 
 
     Tile<EC> & tile = GetTile(tileLoc);
@@ -778,7 +778,7 @@ namespace MFM {
       }
       else
       {
-        pthread_yield();
+        sched_yield();
       }
 
       notReady = 0;
@@ -796,7 +796,7 @@ namespace MFM {
         if (!tc.CheckIfReady(td))
         {
           ++notReady;
-          pthread_yield();
+          sched_yield();
         }
       }
 
@@ -945,10 +945,11 @@ namespace MFM {
   {
     Random& rand = m_random;
 
-    SPoint center(rand.Create(m_width * TILE_WIDTH),
-		  rand.Create(m_height * TILE_HEIGHT));
+    u32 gw = m_width * TILE_WIDTH;
+    u32 gh = m_height * TILE_HEIGHT;
+    SPoint center(rand.Create(gw), rand.Create(gh));
 
-    u32 radius = rand.Between(5, (TILE_WIDTH + TILE_HEIGHT)/2); //was btn 5 and tile_side
+    u32 radius = rand.Between(5, MIN(gw,gh)/3); //up to a third of smaller grid dim
     T atom(Element_Empty<EC>::THE_INSTANCE.GetDefaultAtom());
 
     SPoint siteInGrid, tileInGrid, siteInTile;

@@ -30,6 +30,8 @@
 #include "ByteSink.h"
 #include "CharBufferByteSource.h"
 #include <string.h>        /* For memcpy */
+#include <unistd.h>        /* For read */
+#include <errno.h>         /* For ENOSPC e.g. */
 
 namespace MFM {
 
@@ -74,6 +76,28 @@ namespace MFM {
     CharBufferByteSource AsByteSource() const 
     {
       return CharBufferByteSource(GetBuffer(), GetLength());
+    }
+
+    /**
+     * Attempt to read up to \c maxlen bytes from \c fd into this
+     * OveflowableCharBufferByteSink .  Return 0 on EOF, negative for
+     * error, otherwise the number of bytes successfully read.
+     *
+     * @param fd File descriptor to read from
+     *
+     * @param maxlen The maximum number of bytes to attempt to read
+     *            from fd.  This number will be reduced as needed to
+     *            avoid causing overflow.
+     */
+    s32 Read(s32 fd, u32 maxlen) {
+      s32 room = CanWrite() - 1;
+      if (m_overflowed || room <= 0) return -ENOSPC;
+      if (room < (s32) maxlen) maxlen = room;
+      ssize_t amt = read(fd, &m_buf[m_written], maxlen);
+      if (amt < 0) return -errno;
+      m_written += amt;
+      m_buf[m_written] = '\0';
+      return amt; // EOF or success
     }
 
     /**
@@ -242,6 +266,25 @@ namespace MFM {
       m_buf[m_written] = '\0';
       m_overflowed = false;
     }
+
+    /**
+     * If the OverflowableCharBufferByteSink is neither empty nor
+     * overflowed, and the last byte of it is equal to toChomp
+     * (default value '\n'), remove that last byte, shortening the
+     * content by one byte.  As an added feature, if toChomp is
+     * negative, chomp any final existing non-overflowed byte.
+     */
+    bool Chomp(s32 toChomp = '\n')
+    {
+      bool chomp =
+        m_written > 0 &&
+        !m_overflowed &&
+        (toChomp < 0 || (m_buf[m_written - 1] == (u8) toChomp));
+      if (chomp) m_buf[--m_written] = '\0';
+      return chomp;
+    }
+
+    bool CanChomp() { return true; }
 
     /**
      * Checks to see whether or not this

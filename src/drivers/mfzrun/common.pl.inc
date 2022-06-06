@@ -6,13 +6,38 @@ use File::Path qw(make_path);
 use File::Spec;
 use File::Temp qw(tempdir);
 use IO::Uncompress::Unzip qw($UnzipError);
-use Digest::SHA qw(sha512_hex);
+use Digest::SHA qw(sha512_hex sha512);
 
 sub VERSION { "1.0" }
 sub MFZRUN_HEADER { "MFZ(".VERSION.")\n" }
 sub MFZ_PUBKEY_NAME { "MFZPUBKEY.DAT" }
+sub MFZ_FILE_NAME { "MFZNAME.DAT" }
 sub MFZ_SIG_NAME { "MFZSIG.DAT" }
 sub MFZ_ZIP_NAME { "MFZ.ZIP" }
+
+use constant CDM_FORMAT_MAGIC => "CDM";
+use constant CDM_FORMAT_VERSION_MAJOR => "1";
+use constant CDM_FORMAT_VERSION_MINOR => "0";
+
+use constant CDM10_PACK_SIGNED_DATA_FORMAT =>
+    ""            #   0
+    ."a6"         #   0 +   6 =    6 magic + maj + min + \n
+    ."C1"         #   6 +   1 =    7 bits in block size
+    ."C1"         #   7 +   1 =    8 regnum
+    ."N"          #   8 +   4 =   12 slotstamp
+    ."N"          #  12 +   4 =   16 mapped file length
+    ."a16"        #  16 +  16 =   32 label
+    ."a64"        #  32 +  64 =   96 sha512 mapped file checksum
+    ."(a8)100"    #  96 + 800 =  896 100*8 byte xsum map
+    #  896 total length
+    ;
+
+use constant CDM10_PACK_FULL_FILE_FORMAT =>
+    ""            #   0
+    ."a896"       #   0 + 896 =  896 as from CDM10_PACK_SIGNED_DATA_FORMAT
+    ."a128"       # 896 + 128 = 1024 RSA sig by regnum of bytes 0..895
+    # 1024 total length
+    ;
 
 my $programName = $0;  # default
 sub SetProgramName {
@@ -93,6 +118,22 @@ sub ComputeFingerprintFromFullPublicKey {
     return $fingerprint;
 }
 
+sub ComputeChecksumOfString {
+    my $string = shift;
+    my $fingerprint = lc(sha512_hex($string));
+    $fingerprint =~ s/^(......)(..).+(..)(......)$/$1-$2$3-$4/
+        or IDie("give me some milk or else go home");
+    return $fingerprint;
+}
+
+sub ComputeChecksumPrefixOfString {
+    my ($string,$len) = @_;
+    IDie("something is happening here but you don't know what it is")
+        unless defined $len && $len >= 0 && $len <= 64;
+    my $checksum = sha512($string);
+    return substr($checksum,0,$len);
+}
+
 sub ReadPublicKeyFile {
     my $handle = shift;
     my $file = GetPublicKeyFile($handle);
@@ -103,6 +144,15 @@ sub ReadPublicKeyFile {
     UDie("Non-matching handle in public key file '$file' ('$handle' vs '$pubhandle')")
         unless $pubhandle eq $handle;
     return ($key, ComputeFingerprintFromFullPublicKey($data));
+}
+
+sub CheckForPubKey {
+    my $handle = shift;
+    my $path = GetPublicKeyFile($handle);
+    if (-r $path) {
+        return ($path, ReadPublicKeyFile($handle));
+    }
+    return ($path);
 }
 
 sub GetConfigDir {
@@ -125,6 +175,22 @@ sub GetLegalHandle {
     UntaintHandleIfLegal(\$handle)
         or UDie("Bad handle '$handle'");
     return $handle;
+}
+
+sub GetLegalRegnum {
+    my $regnum = shift;
+    UDie("Not a number '$regnum'")
+        unless $regnum =~ /^(\d+)$/;
+    my $num = $1;
+    UDie("Illegal regnum $num")
+        unless $regnum >= 0 && $regnum < (1<<16);
+    my @regnumHandles = (
+        "t2-keymaster-release-10"
+        );
+    my $handle = $regnumHandles[$num];
+    UDie("Invalid regnum $num")
+        unless defined $handle;
+    return ($num, $handle);
 }
 
 sub GetDefaultHandleFile {
@@ -385,6 +451,22 @@ sub FindName {
     return undef;
 }
 
+sub SignStringRaw {
+    my ($privkeyfile, $datatosign) = @_;
+
+    my $keystring = ReadWholeFile( $privkeyfile );
+    my $privatekey = Crypt::OpenSSL::RSA->new_private_key($keystring);
+    $privatekey->use_pkcs1_padding();
+    $privatekey->use_sha512_hash();
+    my $signature = $privatekey->sign($datatosign);
+    return $signature;
+}
+
+sub SignString {
+    my ($privkeyfile, $datatosign) = @_;
+    my $signature = SignStringRaw($privkeyfile, $datatosign);
+    return encode_base64($signature, '');
+}
 
 
 # End: common.pl.inc

@@ -34,30 +34,16 @@
 #include "SDL_ttf.h"     /* For TTF_Font, at least */
 #include "Rect.h"
 #include "Tile.h"
+#include "Drawable.h"
 
 namespace MFM {
 
   /**
-     Low-level-ish drawing context and methods.  A Drawing is
-     something like a GraphicsContext in Java.
+     SDL-specific extensions to Drawable, mostly involving fonts and
+     images, which are not modeled by Drawable.
    */
-  class Drawing
+  class Drawing : public Drawable
   {
-    /**
-       Current origin and size for all drawing through this Drawing
-     */
-    Rect m_rect;
-
-    /**
-       Current background color, for clearing and mixing.
-     */
-    u32 m_bgColor;
-
-    /**
-       Current foreground color, for filling and drawing.
-     */
-    u32 m_fgColor;
-
     /**
        Target of all drawing operations
      */
@@ -68,46 +54,15 @@ namespace MFM {
      */
     FontAsset m_fontAsset;
 
+    /**
+       Scale factor to apply to (currently only font) drawing operations.
+     */
+    u32 m_drawScaleDits;
+    
     static void SetSDLColor(SDL_Color & set, const u32 from) ;
     static void GetSDLColor(const SDL_Color & from, u32 & to) ;
 
   public:
-
-    static const int WHITE   = 0xffffffff;
-    static const int BLACK   = 0xff000000;
-    static const int RED     = 0xffff0000;
-    static const int GREEN   = 0xff00ff00;
-    static const int BLUE    = 0xff0000ff;
-    static const int CYAN    = 0xff00ffff;
-    static const int MAGENTA = 0xffff00ff;
-    static const int YELLOW  = 0xffffff00;
-
-    static const int GREY05  = 0xff0c0c0c;
-    static const int GREY10  = 0xff191919;
-    static const int GREY20  = 0xff333333;
-    static const int GREY30  = 0xff4c4c4c;
-    static const int GREY40  = 0xff666666;
-    static const int GREY50  = 0xff7f7f7f;
-    static const int GREY60  = 0xff999999;
-    static const int GREY70  = 0xffb2b2b2;
-    static const int GREY80  = 0xffcccccc;
-    static const int GREY90  = 0xffe5e5e5;
-    static const int GREY95  = 0xfff2f2f2;
-
-    static const int GREY = GREY50;
-    static const int DARK_PURPLE = 0xff200020;
-    static const int LIGHTER_DARK_PURPLE = 0xff280028;
-    static const int ORANGE = 0xffff6600;
-
-    static u32 HalfColor(u32 input)
-    {
-      u8 r, g, b;
-      r = (input & 0xff0000) >> 17;
-      g = (input & 0x00ff00) >> 9;
-      b = (input & 0xff) >> 1;
-
-      return 0xff000000 | (r << 16) | (g << 8) | b;
-    }
 
     Drawing(SDL_Surface * dest = 0, FontAsset font = FONT_ASSET_NONE) ;
 
@@ -127,60 +82,22 @@ namespace MFM {
     static void TransformWindow(const Rect & existing, const Rect & newTransform, Rect & result) ;
 
     /**
-       Access the current drawing window.
+       Set the scale factor (currently affects only fonts) of the
+       drawing window.  dits == MapPixToDit(1u) is no scaling, larger
+       to scale up, smaller to scale down.  Returns old scale factor
      */
-    void GetWindow(Rect & rect) const ;
+    u32 SetZoomDits(u32 dits) ;
 
     /**
-       Set the current drawing window.
+       Get the scale factor (currently affects only fonts) of the drawing window. 
+       \sa SetZoomDits
      */
-    void SetWindow(const Rect & rect) ;
+    u32 GetZoomDits() const ;
 
     /**
        Reset Drawing based on surface and given font
      */
     void Reset(SDL_Surface * dest, FontAsset font);
-
-    /**
-       Fill with current background color
-     */
-    void Clear();
-
-    /**
-       Get the current background color.
-     */
-    u32 GetBackground() const
-    {
-      return m_bgColor;
-    }
-
-    /**
-       Set the background color.  Returns prior value
-     */
-    u32 SetBackground(const u32 color)
-    {
-      u32 old = m_bgColor;
-      m_bgColor = color;
-      return old;
-    }
-
-    /**
-       Get the current foreground color.
-     */
-    u32 GetForeground() const
-    {
-      return m_fgColor;
-    }
-
-    /**
-       Set the foreground color.  Returns prior value
-     */
-    u32 SetForeground(const u32 color)
-    {
-      u32 old = m_fgColor;
-      m_fgColor = color;
-      return old;
-    }
 
     /**
      * Set the current font to one loaded by the AssetManager.
@@ -204,164 +121,42 @@ namespace MFM {
     }
 
     /**
-       Draw a one-pixel high horizontal line in the current foreground color
-     */
-    void DrawHLine(int y, int startX, int endX) const
-    {
-      DrawHLine(y,startX,endX,m_fgColor);
-    }
-
-    /**
-       Draw a one-pixel high horizontal line in the given color
-     */
-    void DrawHLine(int y, int startX, int endX, u32 color) const;
-
-
-    void DrawHLineDit(int y, int startX, int endX) const
-    {
-      DrawHLineDit(y, startX, endX, m_fgColor);
-    }
-
-    void DrawHLineDit(int y, int startX, int endX, u32 color) const
-    {
-      DrawHLine(MapDitToPix(y), MapDitToPix(startX), MapDitToPix(endX), color);
-    }
-
-    /**
-       Draw a one-pixel wide vertical line in the current foreground color
-     */
-    void DrawVLine(int x, int startY, int endY) const
-    {
-      DrawVLine(x,startY,endY,m_fgColor);
-    }
-
-    /**
-       Draw a one-pixel wide vertical line in the given color
-     */
-    void DrawVLine(int x, int startY, int endY, u32 color) const ;
-
-
-    void DrawVLineDit(int x, int startY, int endY) const
-    {
-      DrawVLineDit(x, startY, endY, m_fgColor);
-    }
-
-    void DrawVLineDit(int x, int startY, int endY, u32 color) const
-    {
-      DrawVLine(MapDitToPix(x), MapDitToPix(startY), MapDitToPix(endY), color);
-    }
-
-    /**
-       Draw a solid one pixel line in the current foreground color
-     */
-    void DrawLineDit(int startX, int startY, int endX, int endY) const
-    {
-      DrawLineDitColor(startX, startY, endX, endY, m_fgColor);
-    }
-
-    /**
-       Draw a solid one pixel line in the given color
-     */
-    void DrawLineDitColor(int startX, int startY, int endX, int endY, u32 color) const
-    {
-      DrawMaskedLineDitColor(startX, startY, endX, endY, color, -1);
-    }
-
-    /**
-       Draw a solid or dashed one pixel line in the current foreground color
-     */
-    void DrawMaskedLineDit(int startX, int startY, int endX, int endY, u32 mask) const
-    {
-      DrawMaskedLineDitColor(startX, startY, endX, endY, m_fgColor, mask);
-    }
-
-    /**
-       Draw a solid or dashed one pixel line in the given color
-     */
-    void DrawMaskedLineDitColor(int startX, int startY, int endX, int endY, u32 color, u32 mask) const;
-
-
-    /**
-       Draw a box with one-pixel lines just inside the given Rect, in
-       the current foreground color
-     */
-    void DrawRectangle(const Rect & rect) const;
-
-    /**
-       Draw a box with one-pixel lines just inside the given Rect,
-       measured in dits, in the current foreground color
-     */
-    void DrawRectDit(const Rect & rect) const;
-
-    /**
-       Fill the given rectangle with the current foreground color
-     */
-    void FillRect(int x, int y, int w, int h) const;
-
-    /**
        Fill the given rectangle with the given color, without changing
        the foreground color
      */
-    void FillRect(int x, int y, int w, int h, u32 color) const;
+    virtual void FillRect(int x, int y, int w, int h, u32 color) const;
+
+    /* And pick up other FillRects from the base class geez */
+    using Drawable::FillRect;
 
     /**
-       Fill the given rectangle, measured in dit, with the given
-       color, without changing the foreground color
+     * Draw message in the current font (or the given \c infont, if
+     * non-null) using the current foreground color, clipping to the
+     * given size, starting at the given loc.  Fail ILLEGAL_STATE if
+     * the current font is null.
      */
-    void FillRectDit(int x, int y, int w, int h, u32 color) const;
+    void BlitText(const char* message, SPoint loc, UPoint size, TTF_Font * infont = 0) const;
 
     /**
-       Fill the given rectangle, measured in dit, with the given
-       color, without changing the foreground color.
+     * Draw a message in the current font (or the given \c infont, if
+     * non-null) using the current background color as a backing color
+     * to another drawn layer using the foreground color, clipping to
+     * the given size, starting at the * given loc. Fail ILLEGAL_STATE
+     * if the current font is null.
      */
-    void FillRectDit(const Rect & rectDit, u32 color) const ;
-
-    /**
-       Fill the given rectangle with the current foreground color
-     */
-    void FillRect(const Rect & rect) const
-    {
-      FillRect(rect.GetX(), rect.GetY(), rect.GetWidth(), rect.GetHeight());
-    }
-
-    /**
-       Fill a circle of the given radius with the current foreground
-       color.  The center of the circle is at (x+w/2, y+h/2).
-     */
-     void FillCircle(int x, int y, int w, int h, int radius) const;
-
-    /**
-       Fill a circle of the given radius with the current foreground
-       color.  The center of the circle is at (x+w/2, y+h/2).
-     */
-    void FillCircleDit(const Rect & rect, u32 radiusDits, u32 color) const;
-
-
-    /**
-       Draw message in the current font using the current foreground
-       color, clipping to the given size, starting at the given loc.
-       Fail ILLEGAL_STATE if the current font is null.
-     */
-    void BlitText(const char* message, SPoint loc, UPoint size) const;
-
-    /**
-     * Draw a message in the current font using the current background
-     * color as a backing color to another drawn layer using the
-     * foreground color, clipping to the given size, starting at the
-     * given loc. Fail ILLEGAL_STATE if the current font is null.
-     */
-    void BlitBackedText(const char* message, SPoint loc, UPoint size);
+    void BlitBackedText(const char* message, SPoint loc, UPoint size, TTF_Font * infont = 0);
 
     /**
      * Just like BlitBackedText but center message on loc + size / 2
      */
-    void BlitBackedTextCentered(const char* message, SPoint loc, UPoint size);
+    void BlitBackedTextCentered(const char* message, SPoint loc, UPoint size, TTF_Font * infont = 0);
 
     /**
      * Return the SPoint(width, height) of message when rendered in
-     * the current font, or SPoint(-1,-1) if any problem occurs
+     * the current font (or the given \c infont, if non-null), or
+     * SPoint(-1,-1) if any problem occurs
      */
-    SPoint GetTextSize(const char* message) ;
+    SPoint GetTextSize(const char* message, TTF_Font * infont = 0) ;
 
     /**
      * Return the SPoint(width, height) of message when rendered in
@@ -370,14 +165,35 @@ namespace MFM {
     SPoint GetTextSizeInFont(const char* message, FontAsset font) ;
 
     /**
+     * Return the SPoint(width, height) of message when rendered in
+     * thisFont, or SPoint(-1,-1) if any problem occurs
+     */
+    SPoint GetTextSizeInTTFFont(const char* message, TTF_Font & font) ;
+
+    /**
      * Draw a specified image to a specified part of the screen.
      */
     void BlitImage(SDL_Surface* image, SPoint loc, UPoint maxSize) const;
 
     /**
+     * Tile copies of a specified image to a specified part of the screen.
+     */
+    void BlitImageTiled(SDL_Surface* image, const Rect & destRegion) const;
+
+    /**
      * Draw a specified ImageAsset (corresponding to an SDL_Surface*) to the screen.
      */
     void BlitImageAsset(ImageAsset asset, SPoint loc, UPoint maxSize) const;
+
+    /**
+     * Draw a specified ImageAsset at loc in its own maximum size.
+     */
+    void BlitImageAsset(ImageAsset asset, SPoint loc) const;
+
+    /**
+     * Tile copies of a specified image to a specified part of the screen.
+     */
+    void BlitImageAssetTiled(ImageAsset asset, const Rect & destRegion) const;
 
     /** 
       Draw a portion of a source image to a destination location on
@@ -399,69 +215,14 @@ namespace MFM {
      */
     void BlitIconAsset(const IconAsset & icon, u32 size, SPoint destLoc) const;
 
-    /**
-     * Tile copies of a specified image to a specified part of the screen.
-     */
-    void BlitImageTiled(SDL_Surface* image, const Rect & destRegion) const;
-
-    /**
-     * Tile copies of a specified image to a specified part of the screen.
-     */
-    void BlitImageAssetTiled(ImageAsset asset, const Rect & destRegion) const;
-
-    /**
-     * Draw a specified ImageAsset at loc in its own maximum size.
-     */
-    void BlitImageAsset(ImageAsset asset, SPoint loc) const;
-
-
     static void Convert(const Rect & rect, SDL_Rect & toFill) ;
-
-    /*
-      Support for cheapo (i.e., no antialiasing) subpixel rendering
-     */
-    static const u32 DIT_PER_PIX = 256;
-
-    static s32 MapPixToDit(s32 pix) { return pix * (s32) DIT_PER_PIX; }
-
-    static u32 MapPixToDit(u32 pix) { return pix * DIT_PER_PIX; }
-
-    static s32 MapDitToPix(s32 dit) { return (s32) (dit + DIT_PER_PIX / 2) / (s32) DIT_PER_PIX; }
-    static u32 MapDitToPix(u32 dit) { return (dit + DIT_PER_PIX / 2) / DIT_PER_PIX; }
-
-    static s32 MapDitToPixCeiling(s32 dit) { return (s32) (dit + DIT_PER_PIX - 1) / (s32) DIT_PER_PIX; }
-    static u32 MapDitToPixCeiling(u32 dit) { return (dit + DIT_PER_PIX - 1) / DIT_PER_PIX; }
-
-    static s32 MapDitToPixFloor(s32 dit) { return (s32) (dit + 0) / (s32) DIT_PER_PIX; }
-    static u32 MapDitToPixFloor(u32 dit) { return (dit + 0) / DIT_PER_PIX; }
-
-    static SPoint MapPixToDit(const SPoint pix)
-    {
-      return SPoint(MapPixToDit(pix.GetX()), MapPixToDit(pix.GetY()));
-    }
-
-    static SPoint MapDitToPix(const SPoint & dit)
-    {
-      return SPoint(MapDitToPix(dit.GetX()), MapDitToPix(dit.GetY()));
-    }
-
-    static UPoint MapDitToPix(const UPoint & pdit) {
-      return UPoint(MapDitToPix(pdit.GetX()),MapDitToPix(pdit.GetY()));
-    }
-
-    static UPoint MapPixToDit(const UPoint & pix) {
-      return UPoint(MapPixToDit(pix.GetX()),MapPixToDit(pix.GetY()));
-    }
-
-    static Rect MapDitToPix(const Rect & rectdit) {
-      return Rect(MapDitToPix(rectdit.GetPosition()), MapDitToPix(rectdit.GetSize()));
-    }
 
   private:
 
     // Let's try to deprecate SetPixel.  Bounds-checking every pixel is
     // slow, and SDL_FillRect is (like SSE) fast and also clips against
     // the surface cliprect so it's bounds-checking anyway?
+#if 0
     static inline void SetPixel(SDL_Surface* dest,
                                 u32 x, u32 y,
                                 u32 color)
@@ -471,7 +232,7 @@ namespace MFM {
         ((u32*)dest->pixels)[x + y * dest->w] = color;
       }
     }
-
+#endif
   };
 } /* namespace MFM */
 
