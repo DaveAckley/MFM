@@ -27,7 +27,7 @@ PLATFORM:=linux
 endif
 ifeq ($(MACHINE_TYPE), armv7l)
 NODE_NAME:=$(shell uname -n)
-ifeq ($(NODE_NAME, beaglebone)
+ifeq ($(NODE_NAME), beaglebone)
 PLATFORM:=tile
 else
 PLATFORM:=linux
