@@ -36,6 +36,13 @@ namespace MFM
       return true;
     }
 
+    case T2FLASH_CMD(dsp,draw): {
+      SiteRenderConfig & src = tile.getSiteRenderConfig();
+      LOG.Message("dsp_draw %x",ft.mArg.get());
+      src.unpackSiteRenderConfig(ft.mArg.get());
+      goto showsites;
+    }
+
     case T2FLASH_CMD(mfm,dump): {
       tile.dumpTrace(ft.mArg.get(), ft.mRange, ft.mOrigin);
       return true;

@@ -53,9 +53,13 @@ namespace MFM {
 
   typedef UlamContext<OurT2EventConfig> OurUlamContext;
 
+  typedef UlamContextEvent<OurT2EventConfig> OurUlamContextEvent;
+
   typedef UlamContextRestricted<OurT2EventConfig> OurUlamContextRestricted;
 
   typedef EventWindow<OurT2EventConfig> OurEventWindow;
+
+  typedef EventWindowRenderer<OurT2EventConfig> OurEventWindowRenderer;
 
   typedef Tile<OurT2EventConfig> OurTraditionalTile;
 

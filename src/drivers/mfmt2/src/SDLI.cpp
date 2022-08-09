@@ -24,6 +24,7 @@
 #include "T2TracePanel.h"
 #include "T2RadioButton.h"
 #include "T2TitleCard.h"
+#include "T2DrawConfigPanel.h"
 
 namespace MFM
 {
@@ -300,12 +301,15 @@ namespace MFM
     if (type.Equals("HistoPanel")) return new HistoPanel(); 
     if (type.Equals("StatusPanel")) return new StatusPanel(); 
     if (type.Equals("StaticPanel")) return new StaticPanel(); 
+    //    if (type.Equals("DrawLabelPanel")) return new DrawLabelPanel(); 
     if (type.Equals("SimLog")) return new SimLogPanel(); 
     if (type.Equals("T2Info")) return new T2InfoPanel(); 
     if (type.Equals("ChooserPanel")) return new ChooserPanel(); 
     if (type.Equals("MenuItem")) return new MenuItem(); 
     if (type.Equals("T2GridPanel")) return new T2GridPanel(); 
     if (type.Equals("TQPanel")) return new T2TimeQueuePanel(); 
+    if (type.Equals("T2DrawConfigPanel")) return new T2DrawConfigPanel(); 
+    if (type.Equals("DrawCustomCheckbox")) return new DrawCustomCheckbox(); 
     if (type.Equals("CDMPanel")) return new T2CDMPanel(); 
     if (type.Equals("T2TileLiveCheckbox")) return new T2TileLiveCheckbox(); 
     if (type.Equals("T2TileListenCheckbox")) return new T2TileListenCheckbox(); 

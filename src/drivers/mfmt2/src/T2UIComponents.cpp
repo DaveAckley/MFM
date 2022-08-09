@@ -18,6 +18,56 @@ namespace MFM {
     }
   }
 
+  void DrawLayerRadioGroup::OnCheck(AbstractRadioButton & arb, bool value) {
+    /*
+XXX
+    if (!value) return;
+    const char * bn = arb.GetName();
+    const char * gn = this->GetGroupName().GetZString();
+    if (0) { }
+    else if (endsWith(bn,"_MFMRun"))   T2Tile::get().setLiving(true);
+    else if (endsWith(bn,"_MFMPause")) T2Tile::get().setLiving(false);
+    else {
+      LOG.Warning("WTC? %s in group %s?", bn, gn);
+    }
+    */
+  }
+
+  void DrawTypeRadioGroup::OnCheck(AbstractRadioButton & arb, bool value) {
+    if (!value) return;
+    const char * dlgroup = "DL";
+    const char * dtgroup = "DT";
+    const char * bn = arb.GetName();
+    const char * gn = this->GetGroupName().GetZString();
+    if (!EndsWith(gn,dtgroup)) {
+      LOG.Warning("DrawTypeRadioGroup::OnCheck %s in group %s value %d?", bn, gn, value);
+      return;
+    }
+
+    T2Tile & tile = T2Tile::get();
+    SDLI & sdli = tile.getSDLI();
+    Panel & root = sdli.getRootPanel();
+    AbstractRadioButton * dlpushed = AbstractRadioButton::GetPushedIfAny(dlgroup,&root);
+    if (!dlpushed) {
+      LOG.Warning("DrawTypeRadioGroup::OnCheck no layer %s %s value %d?", bn, gn, value);
+      return;
+    }
+    const char * dlname = dlpushed->GetName();
+    if (!EndsWith(arb.GetRadioGroupName().GetZString(),dtgroup)) {
+      LOG.Warning("DrawTypeRadioGroup::OnCheck no type %s %s %s?", bn, gn, dlname);
+      return;
+    }
+    const char * dtname = arb.GetName();
+    DrawSiteType dst = DrawPanelManager::getDrawSiteTypeFromSuffix(dtname);
+    if (dst >= DRAW_SITE_TYPE_COUNT)  {
+      LOG.Warning("DrawTypeRadioGroup::OnCheck bad dst name %s?", dtname);
+      return;
+    }
+    DrawPanelManager & dpm = tile.getDrawPanelManager();
+    dpm.setCurrentDrawSiteTypeOfLayer(dlname, dst);
+    dpm.bump(); // jump clock for prompt update
+  }
+
   void T2FlashCommandLabel::onClick() {
     T2Tile & tile = T2Tile::get();
     tile.getFlashTrafficManager().onClick(this);
@@ -28,6 +78,19 @@ namespace MFM {
     OnClick(SDL_BUTTON_LEFT);
     return true;
   }
+
+  void DrawCustomCheckbox::OnCheck(bool value) {
+    this->SetChecked(value);
+  }
+
+  bool DrawCustomCheckbox::IsChecked() const {
+    return T2Tile::get().getSiteRenderConfig().isCustomGraphicsEnabled();
+  }
+
+  void DrawCustomCheckbox::SetChecked(bool checked) {
+    T2Tile::get().getSiteRenderConfig().setCustomGraphicsEnabled(checked);
+  }
+
 
   void T2TileLiveCheckbox::OnCheck(bool value) {
     this->SetChecked(value);

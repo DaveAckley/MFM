@@ -323,7 +323,6 @@ namespace MFM
       return;
 
     case DRAW_SITE_BLACK:  drawColor = 0xff000000; specifiedDrawColor = true; break;
-    case DRAW_SITE_DARK:   drawColor = 0xff101010; specifiedDrawColor = true; break;
     case DRAW_SITE_WHITE:  drawColor = 0xffffffff; specifiedDrawColor = true; break;
     case DRAW_SITE_ELEMENT: break;
     case DRAW_SITE_ATOM_1: selector = 1; break;
@@ -448,7 +447,6 @@ namespace MFM
     default:
       FAIL(ILLEGAL_ARGUMENT);
     case DRAW_SITE_BLACK:         return "Black";
-    case DRAW_SITE_DARK:          return "Dark";
     case DRAW_SITE_WHITE:         return "White";
     case DRAW_SITE_ELEMENT:       return "Element";
     case DRAW_SITE_ATOM_1:        return "Atom #1";

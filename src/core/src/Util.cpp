@@ -1,5 +1,6 @@
 #include "Util.h"
 #include <time.h>  /* For nanosleep */
+#include <cstring> /* For strlen */
 
 namespace MFM
 {
@@ -84,4 +85,18 @@ namespace MFM
     return str;
   }
 
+
+  bool EndsWith(const char * str, const char * suffix)
+  {
+    if (!str || !suffix) return false; // WTF?
+    int len = strlen(str);
+    int xlen = strlen(suffix);
+    if (len < xlen) return false;
+    int delta = len-xlen;
+    for (int i = 0; i < xlen; ++i)
+    {
+      if (str[i+delta] != suffix[i]) return false;
+    }
+    return true;
+  }
 }

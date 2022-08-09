@@ -33,8 +33,66 @@
 #include "T2UIComponents.h"
 #include "TraceLogInfo.h" /*for TraceLogInfo, TraceLogDirManager */
 #include "UlamEventSystem.h"
+#include "Drawable.h"  /* for DrawSiteType, DrawSiteShape */
 
 namespace MFM {
+
+  struct SiteRenderConfig {
+    DrawSiteType mBackType;
+    DrawSiteType mMidType;
+    DrawSiteType mFrontType;
+    bool mCustomGraphics;
+    SiteRenderConfig();
+
+    bool isCustomGraphicsEnabled() const { return mCustomGraphics; }
+    void setCustomGraphicsEnabled(bool enable) { mCustomGraphics = enable; }
+
+    bool setTypeInNamedLayer(const char * layerSuffix, DrawSiteType newVal) ;
+
+    u32 packSiteRenderConfig() const {
+      const u32 reserved = 1; // packed fmt must be non-zero
+      return
+        ((mBackType & 0x1f)      << 0) |
+        ((mMidType & 0x1f)       << 5) |
+        ((mFrontType & 0x1f)     << 10) |
+        ((mCustomGraphics & 0x1) << 15) |
+        ((reserved & 0xffff)     << 16);
+    }
+
+    void unpackSiteRenderConfig(u32 packed) {
+      mBackType =       (DrawSiteType) ((packed>>0) & 0x1f);
+      mMidType =        (DrawSiteType) ((packed>>5) & 0x1f);
+      mFrontType =      (DrawSiteType) ((packed>>10) & 0x1f);
+      mCustomGraphics = (bool)         ((packed>>15) & 0x1);
+    }
+  };
+
+  //typedef TextPanel<50,2> DrawLabelPanel;
+
+  struct DrawPanelManager : public TimeoutAble {
+
+    static DrawSiteType getDrawSiteTypeFromSuffix(const char * typeSuffix) ; //< general map
+    static const char * getSuffixFromDrawSiteType(const DrawSiteType dt) ; //< general map
+
+    DrawSiteType getCurrentDrawSiteTypeOfLayer(const char * layerSuffix) ; //< DST on live layer
+    bool setCurrentDrawSiteTypeOfLayer(const char * layerSuffix, DrawSiteType dst) ; 
+
+    virtual void onTimeout(TimeQueue& srctq) ;
+    virtual const char* getName() const { return "DPMgr"; }
+
+    void setDrawTypeEnabling(bool enable) ;
+
+    void updateButtons() ;
+
+    DrawPanelManager() ;
+
+    void configure(SDLI& sdli) ;
+
+    DrawLayerRadioGroup mDrawLayerRadioGroup;
+    DrawTypeRadioGroup mDrawTypeRadioGroup;
+    SiteRenderConfig mSiteRenderConfig;
+    //DrawLabelPanel * mDrawLabelPanel;
+  };
 
   struct EWInitiator : public TimeoutAble {
     EWInitiator() ;
@@ -88,6 +146,11 @@ namespace MFM {
     virtual bool IsCacheSitePossibleEventCenter(const SPoint & location) const;
     ////
 
+    const DrawPanelManager & getDrawPanelManager() const { return mDrawPanelManager; }
+    DrawPanelManager & getDrawPanelManager() { return mDrawPanelManager; }
+
+    const SiteRenderConfig & getSiteRenderConfig() const { return mDrawPanelManager.mSiteRenderConfig; }
+    SiteRenderConfig & getSiteRenderConfig() { return mDrawPanelManager.mSiteRenderConfig; }
 
     bool isLiving() const { return mLiving; }
     
@@ -378,6 +441,9 @@ namespace MFM {
     u32 mRollingTraceTargetKB;
     u32 mRollingTraceSpinner;
 
+    //// SITE RENDERING INFO
+    DrawPanelManager mDrawPanelManager;
+    
     //// ULAM EVENT SYSTEM
     UlamEventSystem mUlamEventSystem;
     

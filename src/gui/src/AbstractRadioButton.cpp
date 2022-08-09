@@ -32,6 +32,30 @@ namespace MFM {
     return 0;
   }
 
+  AbstractRadioButton * AbstractRadioGroup::GetButtonMatchingIfAny(const char * groupname, const char * suffix, Panel * fromPanel)
+  {
+    MFM_API_ASSERT_NONNULL(fromPanel);
+    AbstractRadioButton * arb = dynamic_cast<AbstractRadioButton*>(fromPanel);
+    //    if (arb) LOG.Message("GBMIA %s, %s, %s",groupname,arb->GetName(),suffix);
+    if (arb && arb->GetRadioGroupName().Equals(groupname) && EndsWith(arb->GetName(),suffix))
+    {
+      //      LOG.Message("GBMIA yes");
+      return arb;
+    }
+
+    Panel * top = fromPanel->GetTop();
+    if (top) {
+      Panel * kid = top;
+      do {
+        kid = kid->GetForward();
+        arb = GetButtonMatchingIfAny(groupname, suffix, kid);
+        if (arb) return arb;
+      } while (kid != top);
+    }
+
+    return 0;
+  }
+
   AbstractRadioButton * AbstractRadioButton::GetPushedIfAny(const char * groupName, Panel * fromPanel)
   {
     MFM_API_ASSERT_NONNULL(fromPanel);

@@ -17,6 +17,13 @@
 
 namespace MFM {
 
+  SiteRenderConfig::SiteRenderConfig()
+    : mBackType(DRAW_SITE_NONE)
+    , mMidType(DRAW_SITE_NONE)
+    , mFrontType(DRAW_SITE_ATOM_1)
+    , mCustomGraphics(true)
+  { }
+  
   CoreTempChecker::CoreTempChecker() {
     LOG.Debug("%s",__PRETTY_FUNCTION__);
   }
@@ -39,6 +46,113 @@ namespace MFM {
     scheduleWait(WC_LONG);
   }
 
+  bool SiteRenderConfig::setTypeInNamedLayer(const char * layerSuffix, DrawSiteType newval) {
+    if (EndsWith(layerSuffix,"bot")) { mBackType = newval; return true; }
+    if (EndsWith(layerSuffix,"mid")) { mMidType = newval; return true; }
+    if (EndsWith(layerSuffix,"top")) { mFrontType = newval; return true; }
+    return false;
+  }
+
+  DrawPanelManager::DrawPanelManager()
+  //    : mDrawLabelPanel(0)
+  {
+    LOG.Debug("%s",__PRETTY_FUNCTION__);
+  }
+
+  void DrawPanelManager::configure(SDLI& sdli) {
+    /*
+    const char * pname = "DrawCurrentConfig";
+    DrawLabelPanel * p = dynamic_cast<DrawLabelPanel*>(sdli.lookForPanel(pname));
+    if (!p) fatal("Couldn't find DrawLabelPanel '%s'",pname);
+    mDrawLabelPanel = p;
+    */
+  }
+
+  void DrawPanelManager::setDrawTypeEnabling(bool enable) {
+    // XXX WRITE ME
+  }
+
+  DrawSiteType DrawPanelManager::getCurrentDrawSiteTypeOfLayer(const char * layerSuffix) {
+    if (EndsWith(layerSuffix,"_bot")) return mSiteRenderConfig.mBackType;
+    if (EndsWith(layerSuffix,"_mid")) return mSiteRenderConfig.mMidType;
+    if (EndsWith(layerSuffix,"_top")) return mSiteRenderConfig.mFrontType;
+    LOG.Warning("DPM:getDrawSiteTypeOfLayer %s??", layerSuffix);
+    return DRAW_SITE_TYPE_COUNT;
+  }
+
+  bool DrawPanelManager::setCurrentDrawSiteTypeOfLayer(const char * layerSuffix, DrawSiteType dst) {
+    if (EndsWith(layerSuffix,"_bot")) { mSiteRenderConfig.mBackType = dst; return true; }
+    if (EndsWith(layerSuffix,"_mid")) { mSiteRenderConfig.mMidType = dst; return true; }
+    if (EndsWith(layerSuffix,"_top")) { mSiteRenderConfig.mFrontType = dst; return true; }
+    return false;
+  }
+
+  const char * DrawPanelManager::getSuffixFromDrawSiteType(const DrawSiteType dt) {
+    const char * dtname;
+    switch (dt) {
+    case DRAW_SITE_ELEMENT: dtname = "element"; break;  //< Static color of event layer atom
+    case DRAW_SITE_ATOM_1: dtname = "atom_1"; break;     //< Dynamic per-atom rendering type 1
+    case DRAW_SITE_ATOM_2: dtname = "atom_2"; break;     //< Dynamic per-atom rendering type 2
+    case DRAW_SITE_BASE: dtname = "base"; break;        //< Static color of base atom
+    case DRAW_SITE_BASE_1: dtname = "base_1"; break;     //< Dynamic base-atom rendering type 1
+    case DRAW_SITE_BASE_2: dtname = "base_2"; break;     //< Dynamic base-atom rendering type 2
+    case DRAW_SITE_LIGHT_TILE: dtname = "light"; break; //< Light grey rendering of tile regions
+    case DRAW_SITE_DARK_TILE: dtname = "dark"; break;   //< Dark grey rendering of hidden regions
+    case DRAW_SITE_CHANGE_AGE: dtname = "age"; break;   //< CubeHelix rendering of events-since-change
+    case DRAW_SITE_PAINT: dtname = "paint"; break;      //< Last color painted on site
+    case DRAW_SITE_NONE: dtname = "none"; break;        //< Do not draw atoms at all
+    case DRAW_SITE_BLACK: dtname = "black"; break;      //< Fill with black
+    case DRAW_SITE_WHITE: dtname = "white"; break;      //< Fill with white
+    default: dtname = 0; break; // Illegal DST
+    }
+    return dtname;
+  }
+
+  DrawSiteType DrawPanelManager::getDrawSiteTypeFromSuffix(const char * name) {
+    for (int dst = 0; 1; ++dst) {
+      const char * suf = getSuffixFromDrawSiteType((DrawSiteType) dst);
+      if (!suf) return DRAW_SITE_TYPE_COUNT;
+      if (EndsWith(name, suf)) return (DrawSiteType) dst;
+    }
+  }
+
+  void DrawPanelManager::updateButtons() {
+    /*
+    if (mDrawLabelPanel) {
+      ResettableByteSink & labelbs = mDrawLabelPanel->GetByteSink();
+      labelbs.Reset();
+      labelbs.Print("XXX FILL IN");
+    } else LOG.Warning("DPM:uB no DLP?");
+    */
+
+    //// Which layer is visible?
+    T2Tile & tile = T2Tile::get();
+    SDLI & sdli = tile.getSDLI();
+    Panel & root = sdli.getRootPanel();
+    const char * dlgroup = "DL";
+    const char * dtgroup = "DT";
+    AbstractRadioButton * dlpushed = AbstractRadioButton::GetPushedIfAny(dlgroup,&root);
+    setDrawTypeEnabling(dlpushed != 0);
+    //    LOG.Message("DrawPanelManager::updateButtons10");
+    if (!dlpushed) return;
+    const char * dlname = dlpushed->GetName();
+    //    LOG.Message("DrawPanelManager::updateButtons11 %s",dlname);
+    DrawSiteType dt = getCurrentDrawSiteTypeOfLayer(dlname);
+    if (dt >= DRAW_SITE_TYPE_COUNT) {
+      LOG.Warning("DPM:uB bad %s??", dlname);
+      return;
+    }
+    const char * dtname = getSuffixFromDrawSiteType(dt);
+    AbstractRadioButton::PopRadioGroupFromPanel(dtgroup, &root);
+    AbstractRadioButton * arb = AbstractRadioGroup::GetButtonMatchingIfAny(dtgroup,dtname,&root);
+    //    LOG.Message("DrawPanelManager::updateButtons12 %s %x",dtname,arb);
+    if (arb) arb->SetChecked(true);
+  }
+
+  void DrawPanelManager::onTimeout(TimeQueue& srctq) {
+    updateButtons();
+    scheduleWait(WC_FULL); // once a second
+  }
 
   EWInitiator::EWInitiator()
     : mInitiations(0)
@@ -230,10 +344,12 @@ namespace MFM {
     , mRollingTraceDir()
     , mRollingTraceTargetKB(0)
     , mRollingTraceSpinner(0)
+    , mDrawPanelManager()
     , mUlamEventSystem(*this)
   {
     mT2TileStats.reset();
     mCoreTempChecker.schedule(getTQ(),0);
+    mDrawPanelManager.schedule(getTQ(),0);
   }
 
   bool T2Tile::IsConnected(Dir dir) const {

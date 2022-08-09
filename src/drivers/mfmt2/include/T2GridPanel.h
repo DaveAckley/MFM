@@ -21,7 +21,14 @@ namespace MFM {
 
     virtual void PaintComponent(Drawing & config) ;
 
-    void paintSite(Drawing & config, OurT2Site & s, u32 atx, u32 aty) ;
+    void paintSite(Drawing & config, DrawSiteType dtype, DrawSiteShape dshape, OurT2Site & s, u32 x, u32 y) ;
+
+    void paintCustomTile(Drawing & config) ;
+
+    void CallRenderGraphics(OurUlamContextEvent & ucs,
+                            const OurUlamElement & uelt,
+                            OurAtomBitStorage & abs) ;
+
     void paintInsane(Drawing & config, u32 atx, u32 aty) ;
   };
 }

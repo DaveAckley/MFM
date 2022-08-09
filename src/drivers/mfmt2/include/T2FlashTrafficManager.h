@@ -73,8 +73,8 @@ namespace MFM {
     s32 setRange(s32 range) ;
     s32 getRange() const ;
 
-    void clearPrepared() ;
-    void setPrepared(T2FlashCmd cmd, u32 arg = 0) ;
+    //    void clearPrepared() ;
+    //    void setPrepared(T2FlashCmd cmd, u32 arg = 0) ;
     void launchPreparedCommand() ;
     T2FlashCmd getPrepared() const ;
     T2FlashCommandLabel & getPreparedPanel() const ;
@@ -108,7 +108,9 @@ namespace MFM {
 
     void checkForFlashInjection() ;
 
-    void launchInjectedCommand(T2FlashCmd cmd, u32 range) ;
+    bool finalizeFlashPacket(FlashTraffic & ft, T2FlashCmd cmd, u32 range, u32 optarg = 0u) ;
+
+    void launchInjectedCommand(T2FlashCmd cmd, u32 range, u32 optarg = 0u) ;
 
     void handleInboundTraffic() ;
 
@@ -126,7 +128,7 @@ namespace MFM {
     
     s32 mLastIndex;
 
-    FlashTraffic mPreparedCmd;
+    //    FlashTraffic mPreparedCmd;
     OriginKeyToFlashTraffic mOriginKeyToFlashTraffic;
     MultisetTimedFlashTraffic mMultisetTimedFlashTraffic;
 
