@@ -94,6 +94,9 @@ namespace MFM {
     case DRAW_SITE_BLACK:           //< Fill with black
       color = 0x0;
       break;
+    case DRAW_SITE_DARK:            //< Fill with dark grey
+      color = 0xff101010;
+      break;
     case DRAW_SITE_WHITE:           //< Fill with white
       color = 0xffffffff;
       break;

@@ -102,6 +102,7 @@ namespace MFM {
     case DRAW_SITE_PAINT: dtname = "paint"; break;      //< Last color painted on site
     case DRAW_SITE_NONE: dtname = "none"; break;        //< Do not draw atoms at all
     case DRAW_SITE_BLACK: dtname = "black"; break;      //< Fill with black
+    case DRAW_SITE_DARK: dtname = "dark"; break;        //< Fill with dark grey
     case DRAW_SITE_WHITE: dtname = "white"; break;      //< Fill with white
     default: dtname = 0; break; // Illegal DST
     }
