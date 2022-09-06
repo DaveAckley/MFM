@@ -209,12 +209,10 @@ namespace MFM {
 
       u32 ret = ReadFromUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength);
 
-      // NOTE: The ARRAY_LENGTH > 1 clause of the following 'if' is
-      // strictly unnecessary, since it is implied by hasSecondUnit --
-      // but without it, gcc's optimizer (at least in some versions)
-      // mistakenly declares an array bounds warning (which we treat as
-      // an error) when inlining the code involving firstUnitIdx + 1
-      if (ARRAY_LENGTH > 1 && hasSecondUnit) {
+      // NOTE: See Write(const u32, const u32), below, for discussion
+      // about the 'ARRAY_LENGTH' clause of this 'if' statement:
+
+      if (ARRAY_LENGTH > firstUnitIdx + 1 && hasSecondUnit) {
 	const u32 secondUnitLength = length - firstUnitLength;
 	ret = (ret << secondUnitLength) | ReadFromUnit(firstUnitIdx + 1, 0, secondUnitLength);
       }
@@ -253,13 +251,25 @@ namespace MFM {
 
       WriteToUnit(firstUnitIdx, firstUnitFirstBit, firstUnitLength, value >> (length - firstUnitLength));
 
-      // NOTE: The ARRAY_LENGTH > 1 clause of the following 'if' is
-      // strictly unnecessary, since it is implied by hasSecondUnit --
-      // but without it, gcc's optimizer (at least in some versions)
-      // mistakenly declares an array bounds warning (which we treat as
-      // an error) when inlining the code involving firstUnitIdx + 1
-      if (ARRAY_LENGTH > 1 && hasSecondUnit)
+      // NOTE: The 'ARRAY_LENGTH > firstUnitIdx + 1' clause of the
+      // following 'if' is strictly unnecessary, since it is
+      // (circuitously) implied by hasSecondUnit and the first
+      // assertion above-- but without it, gcc's optimizer (at least
+      // in some versions) mistakenly declares an array bounds warning
+      // (which we treat as an error) when inlining the code involving
+      // firstUnitIdx + 1
+
+      // Prior to 2022-09-03, the extra condition was 'ARRAY_LENGTH >
+      // 1', which was enough for the optimizer to figure out the
+      // second WriteToUnit would not actually get called, and so
+      // avoid the warning. Unfortunately, we coded up an ulam class
+      // that generates code where ARRAY_LENGTH is 2 but we're writing
+      // a field that fits entirely within unit[1] - and gcc 9.4.0 (at
+      // least) generates a false positive warning in some such cases.
+
+      if (ARRAY_LENGTH > firstUnitIdx + 1 && hasSecondUnit) 
 	WriteToUnit(firstUnitIdx + 1, 0, length - firstUnitLength, value);
+
     } //Write
 
     /**
