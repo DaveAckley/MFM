@@ -19,6 +19,7 @@ namespace MFM {
     , m_usage(usage)
     , m_posToEff(pos)
     , m_vtableclassid(0)
+    , m_posToDM(0)
     , m_prevur(NULL)
   {
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
@@ -29,11 +30,26 @@ namespace MFM {
     if(m_usage == ELEMENTAL)
       {
 	MFM_API_ASSERT_ARG(pos >= T::ATOM_FIRST_STATE_BIT); //non-negative
-	m_posToEff = (u32) (pos - T::ATOM_FIRST_STATE_BIT);
+	m_posToDM = (u32) (pos - T::ATOM_FIRST_STATE_BIT);
+	m_posToEff = 0u;
       }
     else if(m_usage == PRIMITIVE)
       {
 	m_posToEff = 0u; //no eff self
+      }
+    else if(m_usage == CLASSIC)
+      {
+	if(effself != NULL)
+	  {
+	    const UlamElement<EC> * eltptr = effself->AsUlamElement();
+	    if(eltptr) //quark or transient, baseclass of element
+	      {
+		MFM_API_ASSERT_ARG(pos >= T::ATOM_FIRST_STATE_BIT); //non-negative
+		m_posToEff = (u32) (pos - T::ATOM_FIRST_STATE_BIT); //(t3747, t41613)
+	      }
+	    //else m_posToEff == pos
+	  }
+	//else m_posToEff == pos
       }
 
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
@@ -58,12 +74,37 @@ namespace MFM {
     , m_usage(usage)
     , m_posToEff(postoeff)
     , m_vtableclassid(0)
+    , m_posToDM(pos-postoeff)
     , m_prevur(NULL)
   {
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
     MFM_API_ASSERT_ARG(m_usage != PRIMITIVE || m_effSelf == 0); // Primitive usage has no effself
     MFM_API_ASSERT_ARG(m_usage != ARRAY || m_effSelf == 0); // Array usage has no effself
     MFM_API_ASSERT_ARG(m_usage != CLASSIC || m_effSelf != 0); // Classic usage has effself
+
+    if(m_usage == ELEMENTAL)
+      {
+	MFM_API_ASSERT_ARG(pos >= T::ATOM_FIRST_STATE_BIT); //non-negative
+	m_posToDM = (u32) (pos - postoeff - T::ATOM_FIRST_STATE_BIT);
+      }
+    else if(m_usage == PRIMITIVE)
+      {
+	m_posToEff = 0u; //no eff self
+      }
+    else if(m_usage == CLASSIC)
+      {
+	if(effself != NULL)
+	  {
+	    const UlamElement<EC> * eltptr = effself->AsUlamElement();
+	    if(eltptr) //quark or transient, baseclass of element
+	      {
+		MFM_API_ASSERT_ARG(pos >= T::ATOM_FIRST_STATE_BIT); //non-negative
+		m_posToDM = (u32) (pos - postoeff - T::ATOM_FIRST_STATE_BIT); //t3747,t41613
+	      }
+	    //else m_posToDM = pos
+	  }
+	//else m_posToDM == pos
+      }
 
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
       {
@@ -83,6 +124,7 @@ namespace MFM {
     , m_stg(existing.m_stg)
     , m_len(len)
     , m_vtableclassid(0)
+    , m_posToDM(existing.m_posToDM)
     , m_prevur(NULL)
   {
     s32 newpos = posincr + (s32) existing.GetPos(); //e.g. pos -25 to start of atom of element ref
@@ -103,10 +145,15 @@ namespace MFM {
 
     if((usage == ATOMIC) && (existing.m_usage == ELEMENTAL))
       m_posToEff = 0u; //== pos + t::atom_first_state_bit
+    if((usage == ATOMIC) && (existing.m_usage == CLASSIC))
+      {
+	m_posToEff = 0u; //== pos + t::atom_first_state_bit
+	m_posToDM = posincr; //t41610 transient DM, an atom
+      }
     else if((usage == ELEMENTAL) && (existing.m_usage == ATOMIC))
-      m_posToEff = 0u; //== pos + t::atom_first_state_bit
+      m_posToEff = 0u; //== pos - t::atom_first_state_bit
     else if((usage == CLASSIC) && (existing.m_usage == ATOMIC))
-      m_posToEff = m_pos - T::ATOM_FIRST_STATE_BIT; //== pos - t::atom_first_state_bit (t41360)
+      m_posToEff = m_pos - T::ATOM_FIRST_STATE_BIT - m_posToDM; //== pos - t::atom_first_state_bit (t41360); to start of atom, not always start of stg (t41611);
     else if(m_effSelf && (m_effSelf != existing.m_effSelf))
       m_posToEff = 0u; //data member, new effSelf
     else if(usage == PRIMITIVE)
@@ -115,7 +162,7 @@ namespace MFM {
       {
 	//negative when the new base is a subclass of old base (t41325)
 	//MFM_API_ASSERT_ARG(posincr >= 0); //non-negative
-	m_posToEff = existing.m_posToEff + posincr; //subtract from newpos for eff self pos
+	m_posToEff = existing.m_posToEff + posincr; //subtract from newpos for effself pos
       }
 
     if(m_effSelf != NULL)
@@ -133,6 +180,7 @@ namespace MFM {
     , m_usage(existing.m_usage)
     , m_posToEff(existing.m_posToEff + posincr)
     , m_vtableclassid(0)
+    , m_posToDM(existing.m_posToDM)
     , m_prevur(NULL)
   {
     s32 newpos = posincr + (s32) existing.GetPos(); //e.g. pos -25 to start of atom of element ref
@@ -159,6 +207,7 @@ namespace MFM {
     , m_len(len)
     , m_usage(usage)
     , m_vtableclassid(0)
+    , m_posToDM(existing.m_posToDM)
     , m_prevur(NULL)
   {
     MFM_API_ASSERT_ARG(effselfoffset >= 0); //non-negative
@@ -186,6 +235,7 @@ namespace MFM {
     , m_len(existing.m_len)
     , m_usage(existing.m_usage)
     , m_vtableclassid(existing.m_vtableclassid)
+    , m_posToDM(existing.m_posToDM)
     , m_prevur(& existing)
   {
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
@@ -212,6 +262,7 @@ namespace MFM {
     , m_len(existing.m_len)
     , m_usage(existing.m_usage)
     , m_vtableclassid(existing.m_vtableclassid)
+    , m_posToDM(existing.m_posToDM)
     , m_prevur(& existing)
   {
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
@@ -238,6 +289,7 @@ namespace MFM {
     , m_stg(existing.m_stg)
     , m_len(existing.m_len)
     , m_usage(existing.m_usage)
+    , m_posToDM(existing.m_posToDM)
     , m_prevur(& existing)
   {
     if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
@@ -260,6 +312,7 @@ namespace MFM {
     , m_usage(muter.GetUsageType())
     , m_posToEff(muter.GetPosToEffectiveSelf())
     , m_vtableclassid(muter.GetVTableClassId())
+    , m_posToDM(muter.GetPosToDataMember())
     , m_prevur(muter.GetPreviousUlamRefPtr())
   { }
 
@@ -302,12 +355,12 @@ namespace MFM {
     MFM_API_ASSERT_ARG(effselfoffset >= 0); //non-negative
 
     //virtual func override class ref, from existing calling ref
-    s32 newpos = effselfoffset + existingeffselfpos;
+    s32 newpos = existingeffselfpos + effselfoffset;
     MFM_API_ASSERT_ARG(newpos >= 0); //non-negative
     m_pos = (u32) newpos; //save as unsigned
-    m_posToEff = (u32) effselfoffset; //subtract from newpos for pos of effself
+    m_posToEff = (u32) effselfoffset; //subtract from newpos for pos of effself; (t3735)
     m_len = len;
-    MFM_API_ASSERT_ARG((m_pos + m_len - m_posToEff) <= m_stg.GetBitSize());
+    MFM_API_ASSERT_ARG((u32)(m_pos + m_len - m_posToEff) <= m_stg.GetBitSize());
   }
 
   template <class EC>

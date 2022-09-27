@@ -1,8 +1,8 @@
 /*                                              -*- mode:C++ -*-
   UlamRef.h A base for ulam references
   Copyright (C) 2016,2019-2020 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2019-2020 ackleyshack LLC.  All rights reserved.
-  Copyright (C) 2020 The Living Computation Foundation. All rights reserved.
+  Copyright (C) 2019-2022 ackleyshack LLC.  All rights reserved.
+  Copyright (C) 2020-2022 The Living Computation Foundation. All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@
   \file UlamRef.h A base class for ulam references
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2016,2019-2020 All rights reserved.
+  \date (C) 2016,2019-2020,2022 All rights reserved.
   \lgpl
  */
 #ifndef ULAMREF_H
@@ -153,7 +153,8 @@ namespace MFM
     T ReadAtom() const
     {
       if (m_usage == ATOMIC) return m_stg.ReadAtom(m_pos);
-      if (m_usage == ELEMENTAL) return m_stg.ReadAtom(GetEffectiveSelfPos() - T::ATOM_FIRST_STATE_BIT);
+      if (m_usage == ELEMENTAL)
+	return m_stg.ReadAtom(GetEffectiveSelfPos() - T::ATOM_FIRST_STATE_BIT);
       FAIL(ILLEGAL_STATE);
     }
 
@@ -201,7 +202,7 @@ namespace MFM
 
 
     //return beginning of element state bits;
-    s32 GetEffectiveSelfPos() const { return (m_pos - m_posToEff); }
+    s32 GetEffectiveSelfPos() const { return ( m_pos - m_posToEff); }
 
     //return the delta from existing pos to beginning of element state bits;
     s32 GetPosToEffectiveSelf() const { return m_posToEff; }
@@ -211,6 +212,9 @@ namespace MFM
     UlamClass<EC> * GetEffectiveSelfPointer() const { return const_cast<UlamClass<EC> *> (m_effSelf); } //for UlamRefMutable
 
     u32 GetVTableClassId() const { return m_vtableclassid; }
+
+    //return the storage pos of the data member (e.g. Atom in Transient)
+    u32 GetPosToDataMember() const { return m_posToDM; }
 
     const UlamRef<EC> * GetPreviousUlamRefPtr() const { return m_prevur; }
 
@@ -243,7 +247,7 @@ namespace MFM
     */
     void InitUlamRefForVirtualFuncCall(const UlamRef<EC> & ur, const UlamClass<EC> * vtclassptr, u32 vownedfuncidx, u32 origclassregnum, VfuncPtr & vfuncref);
 
-    /** helper, uses existing effselfpos and new effselfoffset to set our
+    /** helper, uses existing pos, effselfpos and new effselfoffset to set our
 	new m_pos and m_posToEff; m_len is also set;
 	m_pos + m_len - m_posToEff must fit in m_stg.
     */
@@ -259,11 +263,12 @@ namespace MFM
     const UlamContext<EC> & m_uc;
     const UlamClass<EC> * m_effSelf;
     BitStorage<EC> & m_stg;
-    u32 m_pos;
-    u32 m_len;
+    u16 m_pos;
+    u16 m_len;
     UsageType m_usage;
-    u32 m_posToEff;
-    u32 m_vtableclassid;
+    u16 m_posToEff;
+    u16 m_vtableclassid;
+    u16 m_posToDM;
     const UlamRef<EC> * m_prevur;
   }; //UlamRef
 

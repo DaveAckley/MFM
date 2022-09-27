@@ -1,8 +1,8 @@
 /*                                              -*- mode:C++ -*-
   UlamRefMutable.h  Temporary holder for ulam reference data
   Copyright (C) 2019-2020 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2019-2020 ackleyshack LLC.  All rights reserved.
-  Copyright (C) 2020 The Living Computation Foundation.  All rights reserved.
+  Copyright (C) 2019-2022 ackleyshack LLC.  All rights reserved.
+  Copyright (C) 2020-2022 The Living Computation Foundation.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@
   \file UlamRefMutable.h  Temporary holder for ulam reference data
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2019-2020 All rights reserved.
+  \date (C) 2019-2022 All rights reserved.
   \lgpl
  */
 #ifndef ULAMREFMUTABLE_H
@@ -72,6 +72,7 @@ namespace MFM
     UsageT GetUsageType() const { return m_usage; }
     u32 GetPosToEffectiveSelf() const { return m_posToEff; }
     u32 GetVTableClassId() const { return m_vtableclassid; }
+    u32 GetPosToDataMember() const { return m_posToDM;}
     const UlamRef<EC> * GetPreviousUlamRefPtr() const { return m_prevur; }
 
     UlamRefMutable<EC>& operator=(const UlamRef<EC>& rhs);
@@ -82,11 +83,12 @@ namespace MFM
     UlamContext<EC> * m_ucptr; //pointer, not ref
     UlamClass<EC> * m_effSelf; //non-const, may be NULL
     BitStorage<EC> * m_stgptr; //pointer, not ref
-    u32 m_pos;
-    u32 m_len;
+    u16 m_pos;
+    u16 m_len;
     UsageT m_usage;
-    u32 m_posToEff;
-    u32 m_vtableclassid;
+    u16 m_posToEff;
+    u16 m_vtableclassid;
+    u16 m_posToDM;
     const UlamRef<EC> * m_prevur;
 
   }; //UlamRefMutable
