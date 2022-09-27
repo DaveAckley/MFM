@@ -69,6 +69,7 @@ namespace MFM
       DRAW_SITE_PAINT,           //< Last color painted on site
       DRAW_SITE_NONE,            //< Do not draw atoms at all
       DRAW_SITE_BLACK,           //< Fill with black
+      DRAW_SITE_DARK,            //< Fill with dark grey
       DRAW_SITE_WHITE,           //< Fill with white
       DRAW_SITE_TYPE_COUNT
     };
