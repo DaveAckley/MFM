@@ -72,7 +72,7 @@ namespace MFM
     UsageT GetUsageType() const { return m_usage; }
     u32 GetPosToEffectiveSelf() const { return m_posToEff; }
     u32 GetVTableClassId() const { return m_vtableclassid; }
-    u32 GetPosToDataMember() const { return m_posToDM;}
+    u32 GetDataMemberOffsetInStorage() const { return m_dmOffsetInStg;}
     const UlamRef<EC> * GetPreviousUlamRefPtr() const { return m_prevur; }
 
     UlamRefMutable<EC>& operator=(const UlamRef<EC>& rhs);
@@ -83,14 +83,13 @@ namespace MFM
     UlamContext<EC> * m_ucptr; //pointer, not ref
     UlamClass<EC> * m_effSelf; //non-const, may be NULL
     BitStorage<EC> * m_stgptr; //pointer, not ref
+    const UlamRef<EC> * m_prevur;
     u16 m_pos;
     u16 m_len;
     UsageT m_usage;
     u16 m_posToEff;
     u16 m_vtableclassid;
-    u16 m_posToDM;
-    const UlamRef<EC> * m_prevur;
-
+    u16 m_dmOffsetInStg;
   }; //UlamRefMutable
 
 } // MFM

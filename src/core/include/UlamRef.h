@@ -214,7 +214,7 @@ namespace MFM
     u32 GetVTableClassId() const { return m_vtableclassid; }
 
     //return the storage pos of the data member (e.g. Atom in Transient)
-    u32 GetPosToDataMember() const { return m_posToDM; }
+    u32 GetDataMemberOffsetInStorage() const { return m_dmOffsetInStg; }
 
     const UlamRef<EC> * GetPreviousUlamRefPtr() const { return m_prevur; }
 
@@ -263,13 +263,13 @@ namespace MFM
     const UlamContext<EC> & m_uc;
     const UlamClass<EC> * m_effSelf;
     BitStorage<EC> & m_stg;
+    const UlamRef<EC> * m_prevur;
     u16 m_pos;
     u16 m_len;
     UsageType m_usage;
     u16 m_posToEff;
     u16 m_vtableclassid;
-    u16 m_posToDM;
-    const UlamRef<EC> * m_prevur;
+    u16 m_dmOffsetInStg;
   }; //UlamRef
 
   template <class EC, u32 POS, u32 LEN>
