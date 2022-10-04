@@ -18,24 +18,24 @@ namespace MFM {
     , m_pos(pos)
     , m_len(len)
     , m_usage(usage)
-    , m_posToEff(pos)
+    , m_posToEff(0)
     , m_vtableclassid(0)
-    , m_dmOffsetInStg(0)
+    , m_dmOffsetInStg(pos)
   {
     MFM_API_ASSERT_ARG(m_pos + m_len <= m_stg.GetBitSize());
     MFM_API_ASSERT_ARG(m_usage != PRIMITIVE || m_effSelf == 0); // Primitive usage has no effself
     MFM_API_ASSERT_ARG(m_usage != ARRAY || m_effSelf == 0); // Array usage has no effself
     MFM_API_ASSERT_ARG(m_usage != CLASSIC || m_effSelf != 0); // Classic usage has effself
 
+    if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
+      {
+	UpdateEffectiveSelf();
+      }
+
     if(m_usage == ELEMENTAL)
       {
 	MFM_API_ASSERT_ARG(pos >= T::ATOM_FIRST_STATE_BIT); //non-negative
 	m_dmOffsetInStg = (u32) (pos - T::ATOM_FIRST_STATE_BIT);
-	m_posToEff = 0u;
-      }
-    else if(m_usage == PRIMITIVE)
-      {
-	m_posToEff = 0u; //no eff self
       }
     else if(m_usage == CLASSIC)
       {
@@ -46,15 +46,24 @@ namespace MFM {
 	      {
 		MFM_API_ASSERT_ARG(pos >= T::ATOM_FIRST_STATE_BIT); //non-negative
 		m_posToEff = (u32) (pos - T::ATOM_FIRST_STATE_BIT); //(t3747, t41613)
+		m_dmOffsetInStg = pos - m_posToEff - T::ATOM_FIRST_STATE_BIT;
 	      }
-	    //else m_posToEff == pos
+	    else
+	      {
+		u32 classlen = effself->GetClassLength(); //t3826,t41358
+		if(classlen > 0 && classlen != len)  //quark or transient, baseclass
+		  {
+		    m_posToEff = pos;
+		    m_dmOffsetInStg = pos - m_posToEff;
+		  }
+		//else m_posToEff == 0
+	      }
 	  }
-	//else m_posToEff == pos
+	//else m_posToEff == 0
       }
-
-    if ((m_usage == ATOMIC || m_usage == ELEMENTAL) && !m_effSelf)
+    else if(m_usage == PRIMITIVE)
       {
-	UpdateEffectiveSelf();
+	//m_posToEff = 0u; //no eff self
       }
 
     if(m_effSelf != NULL)
