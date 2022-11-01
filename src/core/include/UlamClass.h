@@ -119,8 +119,7 @@ namespace MFM
 
     /**
 	Returns the bit size of this class' data members,
-	excluding baseclasses; this is its baseclass
-	size, shared; Elements cannot be shared, or bases.
+	excluding baseclasses; Implemented by every UlamClass.
     */
     virtual u32 GetClassDataMembersSize() const
     {
