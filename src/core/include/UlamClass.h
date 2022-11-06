@@ -405,8 +405,8 @@ namespace MFM
     virtual u32 GetUlamClassNameAsStringIndex(bool templateParameters, bool templateValues) const = 0;
 
     /**
-       Specify the number of data members in this class.  To be
-       overridden by subclasses of UlamClass.
+       Specify the number of data members in this class, including its
+       baseclasses.  To be overridden by subclasses of UlamClass.
 
        \return -1 means the data members are unknown
 
