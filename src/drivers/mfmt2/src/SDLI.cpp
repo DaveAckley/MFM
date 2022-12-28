@@ -28,9 +28,9 @@
 
 namespace MFM
 {
-  static const double REDISPLAY_HZ = 6;
+  static const double REDISPLAY_HZ = 3;
   static const u32 REDISPLAY_MS = (u32) (1000/REDISPLAY_HZ);
-  static const u32 OVERFLOW_REDISPLAY_MS = (u32) (1.75*REDISPLAY_MS);
+  static const u32 OVERFLOW_REDISPLAY_MS = (u32) (3*REDISPLAY_MS);
   static const double BACKAVG_FRAC=0.95;
 
   struct Event {
@@ -49,7 +49,7 @@ namespace MFM
     , mKeyboardModifiers(0)
     , mLastKnownMousePosition(0,0)
     , mLastRedisplayMS(0)
-    , mAvgMSPerRedisplay(REDISPLAY_MS)
+    , mAvgMSPerRedisplay(REDISPLAY_MS) // NOT USED
     , mName(name)
     , mMenuManager(tile)
   {
@@ -183,9 +183,9 @@ namespace MFM
   }
 
   void SDLI::onTimeout(TimeQueue& srcTQ) {
-    insert(srcTQ, REDISPLAY_MS,0);
     checkInput();
     redisplay();
+    insert(srcTQ, REDISPLAY_MS,0); // schedule relative to AFTER redisplay
   }
 
 #define HACK_SIGNAL_NUM SIGXCPU  /* Don't think we're likely to really need this? */
@@ -708,7 +708,7 @@ namespace MFM
       if (deltams > OVERFLOW_REDISPLAY_MS) {
         LOG.Warning("Big deltams %d on update %d",deltams,updates);
       }
-      mAvgMSPerRedisplay = BACKAVG_FRAC*mAvgMSPerRedisplay + (1.0-BACKAVG_FRAC)*deltams;
+      //NOT USED: mAvgMSPerRedisplay = BACKAVG_FRAC*mAvgMSPerRedisplay + (1.0-BACKAVG_FRAC)*deltams;
       if (false /*mAvgMSPerRedisplay != 0*/) {
         const double secPerFrame =  mAvgMSPerRedisplay / 1000.0;
         const double fps =  1.0 / secPerFrame;
