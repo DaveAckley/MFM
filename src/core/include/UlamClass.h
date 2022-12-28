@@ -318,7 +318,7 @@ namespace MFM
 
        \param type an element type number, hopefully of an UlamElement
 
-       \param quarkTypeName the name of the type to search for in
+       \param baseclassPtr pointer to the singleton instance of the UlamClass to search for in
               the ancestors of the found UlamElement.
 
        \return A return value of positive start position indicates the given \c type is
