@@ -119,8 +119,7 @@ namespace MFM
 
     /**
 	Returns the bit size of this class' data members,
-	excluding baseclasses; this is its baseclass
-	size, shared; Elements cannot be shared, or bases.
+	excluding baseclasses; Implemented by every UlamClass.
     */
     virtual u32 GetClassDataMembersSize() const
     {
@@ -406,8 +405,8 @@ namespace MFM
     virtual u32 GetUlamClassNameAsStringIndex(bool templateParameters, bool templateValues) const = 0;
 
     /**
-       Specify the number of data members in this class.  To be
-       overridden by subclasses of UlamClass.
+       Specify the number of data members in this class, including its
+       baseclasses.  To be overridden by subclasses of UlamClass.
 
        \return -1 means the data members are unknown
 
