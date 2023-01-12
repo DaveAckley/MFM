@@ -262,7 +262,7 @@ if ($verb eq "unpack") {
 my @mfmargs;
 
 my ($ulams,$splats,$incs,$goodSOs, $badSOs) = (0,0,0,0,0);
-my $platform = `/bin/uname -i`;
+my $platform = `/bin/uname -m`;
 chomp $platform;
 my $platformsize;
 if ($platform eq 'x86_64' || $platform =~ /^armv8.*/) {
