@@ -13,6 +13,7 @@ namespace MFM {
     , m_usage(UlamRef<EC>::PRIMITIVE)
     , m_posToEff(0)
     , m_vtableclassid(0)
+    , m_dmOffsetInStg(0)
   { }
 
   template <class EC>
