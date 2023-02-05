@@ -1,0 +1,71 @@
+{3}  -*-  mode: text; fill-column: 50;  -*-
+[0:
+
+Sun Feb  5 09:32:33 2023 So our second attempt to
+"build more ballroom floor after the dancing has
+already started" -- for Lotus 4 -- failed, I
+believe at least in part, due to an arguable
+design flaw in the "mfzid" concept used to
+identify physics between tiles.
+
+That was a bummer because it was quite exciting to
+get through the Lotus 4 hardware build-out and its
+first power up all successfully, and were working
+our way through the big update.
+
+The problem specifically, I believe, was this:
+
+The new Ancestor physics mfz, and the physics
+config mfz, fully reached some of the lotus 4
+tiles long before the latest MFM mfz
+completed. And according to the associated slot
+config rules, MFM restarted using the new
+physics. And it actually came up, which is kind of
+amazing considering the multiyear age gap between
+that MFM build and the libcue.so in the latest
+physics.
+
+But that in itself isn't the main problem. The
+main problem is that that MFM successfully got to
+ITC open with Lotus 3 tiles, which were running
+the latest MFM (with the same libcue.so).
+
+And I'm weasel wording all this because I'm not
+completely sure what's going on, but a crash storm
+eventually wiped out all the existing dancers.
+And although the first steps of the crash storm -
+as captured by gridcam timelapse - appear to start
+deep in Lotus 3, the crashing quickly spreads to
+the suspect 'frontier' tile in Lotus 4.
+
+So I think the bogus open-ITC between vastly
+different MFMs caused or contributed to that crash
+storm, and we should change MFM so that different
+versions of the MFM mfz will never reach ITC open
+with each other.
+[1:
+
+Sun Feb  5 09:50:27 2023 I think the 'obvious fix'
+would be in ~/T2-12/mfm/mfm.pl (rather than in the
+MFM tree, despite the location of these notes.)
+
+I think in sub oneTry we should look up the MFM
+cdm install tag, and include that somehow in the
+-z argument to mfmt2. So getting to ITC open will
+need the MFM install tags to match as well as the
+physics slot and stamp.
+[2:
+
+Sun Feb  5 11:20:03 2023 Well, hacked on
+T2-12/mfm/mfm.pl and things seems plausible
+enough. Now includes the MFM slot (03) and its tag
+in the mfmt2 -z argument.
+
+Released and tested between the keymaster
+and the (new) transfer tile.
+
+Committing.
+
+:2]
+:1]
+:0]
