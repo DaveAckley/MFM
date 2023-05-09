@@ -293,6 +293,35 @@ namespace MFM
   };
 
   template<class GC>
+  struct GridRunCheckbox2 : public AbstractGridCheckbox<GC>
+  {
+    GridRunCheckbox2()
+      : AbstractGridCheckbox<GC>("Run2")
+    {
+      AbstractButton::SetName("GridRunButton2");
+      Panel::SetDoc("Run/pause the grid (alternate)");
+      Panel::SetFont(FONT_ASSET_BUTTON_BIG);
+    }
+    virtual s32 GetSection() { return HELP_SECTION_RUNNING; }
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_TAB;
+      mod = 0;
+      return true;
+    }
+
+    virtual bool IsChecked() const
+    {
+      return !this->GetDriver().IsKeyboardPaused();
+    }
+    virtual void SetChecked(bool checked)
+    {
+      this->GetDriver().SetKeyboardPaused(!checked);
+    }
+
+  };
+
+  template<class GC>
   struct GridRenderButton : public AbstractGridCheckbox<GC>
   {
     GridRenderButton()

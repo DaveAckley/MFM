@@ -34,6 +34,31 @@
 
 namespace MFM {
 
+  enum DrawSiteType { //Migrated from ../gui for T2 accessibility
+    DRAW_SITE_ELEMENT,         //< Static color of event layer atom
+    DRAW_SITE_ATOM_1,          //< Dynamic per-atom rendering type 1
+    DRAW_SITE_ATOM_2,          //< Dynamic per-atom rendering type 2
+    DRAW_SITE_BASE,            //< Static color of base atom
+    DRAW_SITE_BASE_1,          //< Dynamic base-atom rendering type 1
+    DRAW_SITE_BASE_2,          //< Dynamic base-atom rendering type 2
+    DRAW_SITE_LIGHT_TILE,      //< Light grey rendering of tile regions
+    DRAW_SITE_DARK_TILE,       //< Dark grey rendering of hidden regions
+    DRAW_SITE_CHANGE_AGE,      //< CubeHelix rendering of events-since-change
+    DRAW_SITE_PAINT,           //< Last color painted on site
+    DRAW_SITE_NONE,            //< Do not draw atoms at all
+    DRAW_SITE_BLACK,           //< Fill with black
+    DRAW_SITE_DARK,            //< Fill with dark grey
+    DRAW_SITE_WHITE,           //< Fill with white
+    DRAW_SITE_TYPE_COUNT
+  };
+
+  enum DrawSiteShape { //Migrated from ../gui for T2 accessibility
+    DRAW_SHAPE_FILL,           //< Flood fill site entirely (square)
+    DRAW_SHAPE_CIRCLE,         //< Draw circle touching site edges
+    DRAW_SHAPE_CDOT,           //< Draw small centered dot
+    DRAW_SHAPE_COUNT
+  };
+
   /**
      Low-level-ish Drawable context and methods.  A Drawable is
      something like a GraphicsContext in Java.

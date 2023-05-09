@@ -126,6 +126,7 @@ namespace MFM
     XRayButton<GC> m_xrayButton;
     ThinButton<GC> m_thinButton;
     GridRunCheckbox<GC> m_gridRunButton, m_gridRunMiniButton;
+    GridRunCheckbox2<GC> m_gridRunButton2;
     GridRenderButton<GC> m_gridRenderButton;
     CacheRenderButton<GC> m_cacheRenderButton;
     GridStepCheckbox<GC> m_gridStepButton;
@@ -218,17 +219,17 @@ namespace MFM
     {
       m_gridPanel.InitAtomViewPanels(Super::GetGrid(), &m_gridToolAtomView);
       //      m_gridToolAtomView.SetAtomViewPanel(m_gridPanel.GetAtomViewPanel(0));
-      InsertAndRegisterGridTool(m_gridToolPencil);
-      InsertAndRegisterGridTool(m_gridToolEraser);
+      InsertAndRegisterGridTool(m_gridToolPencil);     // on '1'
+      InsertAndRegisterGridTool(m_gridToolEraser);     // on '2'
+      InsertAndRegisterGridTool(m_gridToolEvent);      // on '3'
+      InsertAndRegisterGridTool(m_gridToolAtomView);   // on '4'
+      InsertAndRegisterGridTool(m_gridToolTileSelect); // on '5'
       // XXX Consider killing the brush to make room for the spark
       //      InsertAndRegisterGridTool(m_gridToolBrush);
       InsertAndRegisterGridTool(m_gridToolAirBrush);
       InsertAndRegisterGridTool(m_gridToolXRay);
       InsertAndRegisterGridTool(m_gridToolBucket);
       InsertAndRegisterGridTool(m_gridToolClone);
-      InsertAndRegisterGridTool(m_gridToolEvent);
-      InsertAndRegisterGridTool(m_gridToolAtomView);
-      InsertAndRegisterGridTool(m_gridToolTileSelect);
     }
 
     void OnceOnlyButtons()
@@ -251,6 +252,7 @@ namespace MFM
       InsertAndRegisterButton(m_gridRenderButton);
       InsertAndRegisterButton(m_cacheRenderButton);
       InsertAndRegisterButton(m_gridRunButton);
+      InsertAndRegisterButton(m_gridRunButton2);
       InsertAndRegisterButton(m_bgrButton);
       InsertAndRegisterButton(m_fgrButton);
       InsertAndRegisterButton(m_logButton);
@@ -857,6 +859,7 @@ namespace MFM
       , m_xrayButton()
       , m_thinButton()
       , m_gridRunButton()
+      , m_gridRunButton2()
       , m_gridRenderButton()
       , m_cacheRenderButton()
       , m_gridStepButton()

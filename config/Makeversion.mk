@@ -7,8 +7,8 @@
 # git push origin v3.0.5
 
 MFM_VERSION_MAJOR:=5
-MFM_VERSION_MINOR:=0
-MFM_VERSION_REV:=8
+MFM_VERSION_MINOR:=1
+MFM_VERSION_REV:=0
 
 ################## NOTHING BELOW HERE SHOULD NEED TO CHANGE ##################
 

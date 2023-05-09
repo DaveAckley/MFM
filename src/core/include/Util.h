@@ -485,6 +485,9 @@ namespace MFM {
   */
   const char * StripThroughHexSpaceIfExists(const char * str) ;
 
+  bool EndsWith(const char * str, const char * suffix) ;
+
+
 }
 
 #endif /* UTIL_H */

@@ -48,7 +48,8 @@ namespace MFM {
   XX(dsp,3,tq)                         \
   XX(dsp,4,log)                        \
   XX(dsp,5,trace)                      \
-  /* dsp,6..15 reserved*/              \
+  XX(dsp,6,draw)                       \
+  /* dsp,7..15 reserved*/              \
 
 #define ALL_FLASH_COMMANDABLE_BUTTON_PANELS() \
   XX(t2t,boot,T2Info_Boot_Button)             \
@@ -67,6 +68,7 @@ namespace MFM {
   XX(dsp,tile,GlobalMenu_Button_T2Viz)        \
   XX(dsp,cdm,GlobalMenu_Button_CDM)           \
   XX(dsp,tq,GlobalMenu_Button_TQ)             \
+  XX(dsp,draw,GlobalMenu_Button_Draw)         \
   XX(dsp,log,GlobalMenu_Button_Log)           \
   XX(dsp,trace,GlobalMenu_Button_Trace)       \
 

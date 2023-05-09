@@ -20,6 +20,37 @@ namespace MFM {
     void OnCheck(AbstractRadioButton & arb, bool value) ;
   };
 
+  struct DrawLayerRadioGroup : public AbstractRadioGroup {
+    typedef AbstractRadioGroup Super;
+    DrawLayerRadioGroup()
+      : Super("DL")
+    {
+      AbstractRadioGroup::Register(*this);
+    }
+
+    //@Override
+    void OnCheck(AbstractRadioButton & arb, bool value) ;
+  };
+
+  struct DrawTypeRadioGroup : public AbstractRadioGroup {
+    typedef AbstractRadioGroup Super;
+    DrawTypeRadioGroup()
+      : Super("DT")
+    {
+      AbstractRadioGroup::Register(*this);
+    }
+
+    //@Override
+    void OnCheck(AbstractRadioButton & arb, bool value) ;
+  };
+
+  struct DrawCustomCheckbox : public AbstractCheckbox {
+    virtual void OnCheck(bool value) ;
+    virtual bool IsChecked() const ;
+    virtual void SetChecked(bool checked) ;
+  };
+
+
   struct T2TileLiveCheckbox : public AbstractCheckbox {
     virtual void OnCheck(bool value) ;
     virtual bool IsChecked() const ;

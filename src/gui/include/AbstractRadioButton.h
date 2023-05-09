@@ -57,6 +57,8 @@ namespace MFM
     static void Register(AbstractRadioGroup & toBeRegistered) ;
     static AbstractRadioGroup * GetAbstractRadioGroupIfAny(const char * named) ;
 
+    static AbstractRadioButton * GetButtonMatchingIfAny(const char * groupname, const char * suffix, Panel * fromPanel) ;
+
     AbstractRadioGroup(const char * nonNullGroupName)
       : m_groupName(nonNullGroupName)
     { }
@@ -77,11 +79,11 @@ namespace MFM
     u32 m_bgPopped;
     u32 m_fgPopped;
 
+  public:
+
     void PopRadioGroup() ;
 
     static void PopRadioGroupFromPanel(const char * zstr, Panel * fromPanel) ;
-
-  public:
 
     static AbstractRadioButton * GetPushedIfAny(const char * groupName, Panel * fromPanel) ;
 
@@ -115,6 +117,10 @@ namespace MFM
     void OnceOnly()
     {
       this->SetIconSlot(ZSLOT_NONE);
+    }
+
+    const OString32 & GetRadioGroupName() {
+      return m_radioGroup;
     }
 
     void SetRadioGroup(const char * groupName)

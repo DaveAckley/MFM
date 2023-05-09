@@ -46,7 +46,7 @@ namespace MFM {
     static u32 lastmsnow = 0;
     if (lastmsnow) {
       u32 mspast = msnow - lastmsnow;
-      if (mspast > 200) {
+      if (mspast > 500) {
         LOG.Warning("Big MSPAST %d",mspast);
       }
     }

@@ -104,7 +104,7 @@ namespace MFM {
   T2FlashTrafficManager::T2FlashTrafficManager()
     : mTTL(8)
     , mLastIndex(-1)
-    , mPreparedCmd()
+      //    , mPreparedCmd()
     , mFD(-1)
   {
   }
@@ -247,7 +247,7 @@ namespace MFM {
     // If we don't already have this command, accept and remember, it
     if (!diffOrigin) {
       acceptPacket(packet);                  // accept
-      mPreparedCmd = packet;                 // remember
+      //      mPreparedCmd = packet;                 // remember
     }
     // And propagate anything that's not an exact dupe
     sendFlashPacket(packet);               // propagate
@@ -396,13 +396,30 @@ namespace MFM {
     closedir(dir);
   }
 
-  void T2FlashTrafficManager::launchInjectedCommand(T2FlashCmd cmd, u32 range) {
+  bool T2FlashTrafficManager::finalizeFlashPacket(FlashTraffic & ft, T2FlashCmd cmd, u32 range, u32 optarg) {
     if (cmd < T2FLASH_CMD__COUNT && range >= 0) {
-      FlashTraffic ft = FlashTraffic::make(cmd, ++mLastIndex, range, T2Tile::makeTag());
+
+      if (optarg == 0u) {
+        if (cmd == T2FLASH_CMD(dsp,draw)) {  // Pick up current draw parms
+          T2Tile & tile = T2Tile::get();
+          SiteRenderConfig  & src = tile.getSiteRenderConfig();
+          optarg = src.packSiteRenderConfig();
+        } else
+          optarg = T2Tile::makeTag(); // Use random tag
+      }
+      ft = FlashTraffic::make(cmd, ++mLastIndex, range, optarg);
+      return true;
+
+    }
+    return false;
+  }
+
+  void T2FlashTrafficManager::launchInjectedCommand(T2FlashCmd cmd, u32 range, u32 optarg) {
+    FlashTraffic ft;
+    if (finalizeFlashPacket(ft, cmd, range, optarg)) {
       sendFlashPacket(ft);      // ship it
       acceptPacket(ft);         // also accept it
-      mPreparedCmd = ft;        // and remember it
-
+      //      mPreparedCmd = ft;        // and remember it
       LOG.Message("INJECTED FLASH TRAFFIC %d",cmd);
     }
   }
@@ -423,6 +440,7 @@ namespace MFM {
     doControlCmd(got);
   }
 
+#if 0
   void T2FlashTrafficManager::clearPrepared() {
     setPrepared(T2FLASH_CMD__COUNT);
   }
@@ -431,6 +449,7 @@ namespace MFM {
     mPreparedCmd = FlashTraffic::make(cmd,0,0,arg);
     showPrepared(); // XXX WATCH OUT MESSED UP showPrepared DOES NOT LOOK AT mPreparedCmd GAH!
   }
+#endif
 
   void T2FlashTrafficManager::shipGetlogRequest(u32 fortag) {
     FlashTraffic ft = FlashTraffic::make(T2FLASH_CMD(mfm,getlog), ++mLastIndex, 2, fortag);
@@ -446,11 +465,11 @@ namespace MFM {
   void T2FlashTrafficManager::launchPreparedCommand() {
     T2FlashCmd cmd = getPrepared();
     u32 range = getRange();
-    if (cmd < T2FLASH_CMD__COUNT && range > 0) {
-      FlashTraffic ft = FlashTraffic::make(cmd, ++mLastIndex, range, T2Tile::makeTag());
+    FlashTraffic ft;
+    if (finalizeFlashPacket(ft, cmd, range)) {
       sendFlashPacket(ft);      // ship it
       acceptPacket(ft);         // also accept it
-      mPreparedCmd = ft;        // and remember it
+      //      mPreparedCmd = ft;        // and remember it
 
       LOG.Message("LAUNCHED FLASH TRAFFIC %d",cmd);
     }
@@ -506,7 +525,7 @@ namespace MFM {
     else if (range > 255) range = 255;
     mTTL = (u32) range;
     showRange();
-    if (range == 0) clearPrepared();
+    //    if (range == 0) clearPrepared();
     return getRange();
   }
 
@@ -514,7 +533,7 @@ namespace MFM {
     T2Tile & tile = T2Tile::get();
     SDLI & sdli = tile.getSDLI();
     MenuManager & mm = sdli.getMenuManager();
-    clearPrepared();
+    //    clearPrepared();
     MenuAction ma;
     ma.mKeyToPress = SDLK_LEFT; /*RETURN*/
     mm.execute(ma, 0);

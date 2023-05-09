@@ -85,7 +85,7 @@ call a new method like:
       FlashTraffic ft = FlashTraffic::make(cmd, ++mLastIndex, range, T2Tile::makeTag());
       sendFlashPacket(ft);      // ship it
       acceptPacket(ft);         // also accept it
-      mPreparedCmd = ft;        // and remember it
+//      mPreparedCmd = ft;        // and remember it
 
       LOG.Message("INJECTED FLASH TRAFFIC %d",cmd);
     }

@@ -312,10 +312,14 @@ $AUTOGEN_STAMP
     radiogroup="FC"
     font=12
     text="CDM"
-[FC_DISP_k_dsp_tq T2RadioButton FC_DISP `bfs3x3(0,1)`]
+# [FC_DISP_k_dsp_tq T2RadioButton FC_DISP `bfs3x3(0,1)`]
+#     radiogroup="FC"
+#     font=12
+#     text="TQ"
+[FC_DISP_k_dsp_draw T2RadioButton FC_DISP `bfs3x3(0,1)`]
     radiogroup="FC"
     font=12
-    text="TQ"
+    text="DRAW"
 [FC_DISP_k_dsp_log T2RadioButton FC_DISP `bfs3x3(1,1)`]
     radiogroup="FC"
     font=12
@@ -346,6 +350,15 @@ $AUTOGEN_STAMP
     bgcolor=#333366
     visible=1
     doc="Physics control dispatcher"
+# [DrawCtl ChooserPanel Root $TW $TH $VIZINDENT $VIZINDENT]
+#     bgcolor=#333366
+#     visible=1
+#     doc="Site rendering configuation dispatcher"
+# [DrawCtl_Button_Back T2DrawCtlButton DrawCtl `bfs6x6(0,0,0,1)`]
+#     enabledbg=$MENUITEMBG
+#     enabledfg=$MENUITEMFG
+#     font=1
+#     text="back"
 [TraceCtl ChooserPanel Root $TW $TH $VIZINDENT $VIZINDENT]
     bgcolor=#333366
     visible=1
@@ -416,6 +429,76 @@ $AUTOGEN_STAMP
     fontheightadjust=-6
     elevatorwidth=4
     doc="Current time queue dump"
+[Draw T2DrawConfigPanel Root $TW $TH $VIZINDENT $VIZINDENT]
+    visible=1
+    fgcolor=#ffffff
+    bgcolor=#111111
+    zfont=0,24
+#    font=1
+    fontheightadjust=-6
+    elevatorwidth=4
+    doc="Site rendering options"
+# [DrawCurrentConfig DrawLabelPanel Draw `bfs6x6(0,0,5,5)`]
+#     bgcolor=#dd22dd
+#     fgcolor=#ffffff
+#     font=5
+#     fontheightadjust=-5
+#     elevatorwidth=0
+[Draw_Checkbox_Custom DrawCustomCheckbox Draw `bfs6x6(0,5,4,5)`]
+    font=2
+    text="Custom Graphics"
+[Draw_Layer_bot T2RadioButton Draw `bfs6x6(0,1,1,1)`]
+    radiogroup="DL"
+    font=1
+    text="BOT"
+[Draw_Layer_mid T2RadioButton Draw `bfs6x6(2,1,3,1)`]
+    radiogroup="DL"
+    font=1
+    text="MID"
+[Draw_Layer_top T2RadioButton Draw `bfs6x6(4,1,5,1)`]
+    radiogroup="DL"
+    font=1
+    text="TOP"
+[Draw_Type_element T2RadioButton Draw `bfs6x6(0,2,1,2)`]
+    radiogroup="DT"
+    font=2
+    text="Element"
+[Draw_Type_atom_1 T2RadioButton Draw `bfs6x6(2,2,3,2)`]
+    radiogroup="DT"
+    font=2
+    text="Atom1"
+[Draw_Type_atom_2 T2RadioButton Draw `bfs6x6(4,2,5,2)`]
+    radiogroup="DT"
+    font=2
+    text="Atom2"
+[Draw_Type_base T2RadioButton Draw `bfs6x6(0,3,1,3)`]
+    radiogroup="DT"
+    font=2
+    text="Base"
+[Draw_Type_base_1 T2RadioButton Draw `bfs6x6(2,3,3,3)`]
+    radiogroup="DT"
+    font=2
+    text="Base1"
+[Draw_Type_base_2 T2RadioButton Draw `bfs6x6(4,3,5,3)`]
+    radiogroup="DT"
+    font=2
+    text="Base2"
+# [Draw_Type_white T2RadioButton Draw `bfs6x6(0,4,1,4)`]
+#     radiogroup="DT"
+#     font=2
+#     text="White"
+[Draw_Type_none T2RadioButton Draw `bfs6x6(0,4,1,4)`]
+    radiogroup="DT"
+    font=2
+    text="NONE"
+[Draw_Type_black T2RadioButton Draw `bfs6x6(2,4,3,4)`]
+    radiogroup="DT"
+    font=2
+    text="Black"
+[Draw_Type_paint T2RadioButton Draw `bfs6x6(4,4,5,4)`]
+    radiogroup="DT"
+    font=2
+    text="Paint"
 [CDM CDMPanel Root $TW $TH $VIZINDENT $VIZINDENT]
     visible=1
     fgcolor=#aaffff
@@ -431,7 +514,8 @@ $AUTOGEN_STAMP
     text="X"
     action="GO GlobalMenu"
 [Sites T2GridPanel Root $GW $GH $GRIDINDENT $GRIDINDENT]
-    bgcolor=#222222
+#    bgcolor=#222222
+    bgcolor=#000000
 [HardButtonPanel HardButton Root `bfs3x3(1,1)`]
     bgcolor=#663333
     fgcolor=#ffffff
@@ -446,6 +530,12 @@ $AUTOGEN_STAMP
     font=1
     text="X"
     action="GO GlobalMenu"
+[Draw_Button_X MenuItem Draw `bfs6x6(5,5)`]
+    enabledbg=$MENUITEMBG
+    enabledfg=$MENUITEMFG
+    font=1
+    text="X"
+    action="GO Sites"
 [TQ_Button_X MenuItem TQ `bfs6x6(5,5)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
@@ -472,12 +562,18 @@ $AUTOGEN_STAMP
     font=1
     text="Log"
     action="GO Log"
-[GlobalMenu_Button_TQ MenuItem GlobalMenu `bfs6x6(0,2,1,3)`]
+# [GlobalMenu_Button_TQ MenuItem GlobalMenu `bfs6x6(0,2,1,3)`]
+#     enabledbg=$MENUITEMBG
+#     enabledfg=$MENUITEMFG
+#     font=1
+#     text="TQ"
+#     action="GO TQ"
+[GlobalMenu_Button_Draw MenuItem GlobalMenu `bfs6x6(0,2,1,3)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
     font=1
-    text="TQ"
-    action="GO TQ"
+    text="Draw"
+    action="GO Draw"
 [GlobalMenu_Button_CDM MenuItem GlobalMenu `bfs6x6(0,4,1,5)`]
     enabledbg=$MENUITEMBG
     enabledfg=$MENUITEMFG
