@@ -472,7 +472,7 @@ namespace MFM {
     if(!eltptr) FAIL(ILLEGAL_ARGUMENT);
     u32 len = eltptr->GetClassLength();
     AtomBitStorage<EC> atmp(eltptr->GetDefaultAtom());
-    atmp.WriteBig(0u + T::ATOM_FIRST_STATE_BIT, len, m_stg.ReadBig(GetPos(), len));
+    atmp.WriteBig(0u + T::ATOM_FIRST_STATE_BIT, len, m_stg.ReadBig(GetEffectiveSelfPos(), len));
     return atmp.ReadAtom();
   }
 
