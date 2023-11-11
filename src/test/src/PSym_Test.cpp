@@ -7,6 +7,7 @@ namespace MFM {
   void PSym_Test::Test_RunTests() {
     Test_PSymTemplates();
     Test_PSymMap();
+    Test_PSymInverse();
   }
 
   void PSym_Test::Test_PSymTemplates()
@@ -69,7 +70,25 @@ namespace MFM {
     assert(SymMap(in,PSYM_FLIPX,err) == SymMap(in, PSYM_DEG180R,err2));
     assert(SymMap(in,PSYM_FLIPY,err) == SymMap(in, PSYM_DEG000R,err2));
     assert(SymMap(in,PSYM_FLIPXY,err)== SymMap(in, PSYM_DEG180L,err2));
+  }
 
+  void PSym_Test::Test_PSymInverse()
+  {
+    const unsigned num = 4;
+    const SPoint in[num] = {SPoint(-1, 0), SPoint(0, -1), SPoint(0, 1), SPoint(1, 0)};
+    const SPoint err(10, 10);
+
+    // Inverse of symmetry should return the original point
+    for (unsigned i = 0; i < num; i++) {
+      assert(SymMap(SymMap(in[i], PSYM_DEG000L, err), SymInverse(PSYM_DEG000L), err) == in[i]);
+      assert(SymMap(SymMap(in[i], PSYM_DEG090L, err), SymInverse(PSYM_DEG090L), err) == in[i]);
+      assert(SymMap(SymMap(in[i], PSYM_DEG180L, err), SymInverse(PSYM_DEG180L), err) == in[i]);
+      assert(SymMap(SymMap(in[i], PSYM_DEG270L, err), SymInverse(PSYM_DEG270L), err) == in[i]);
+      assert(SymMap(SymMap(in[i], PSYM_DEG000R, err), SymInverse(PSYM_DEG000R), err) == in[i]);
+      assert(SymMap(SymMap(in[i], PSYM_DEG090R, err), SymInverse(PSYM_DEG090R), err) == in[i]);
+      assert(SymMap(SymMap(in[i], PSYM_DEG180R, err), SymInverse(PSYM_DEG180R), err) == in[i]);
+      assert(SymMap(SymMap(in[i], PSYM_DEG270R, err), SymInverse(PSYM_DEG270R), err) == in[i]);
+    }
   }
 
 } /* namespace MFM */
