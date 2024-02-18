@@ -394,7 +394,7 @@ sub purifyArgs {
             }
         }
         UDie("Bad content in argument: '$arg'")
-            unless $arg =~ m!^\s*(:?[-=a-zA-Z0-9:./]*)\s*$!;
+            unless $arg =~ m!^\s*(:?[-=a-zA-Z0-9_:./]*)\s*$!;
         $args[$i] = $1;
     }
     return @args;
