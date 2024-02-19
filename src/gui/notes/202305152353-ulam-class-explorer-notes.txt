@@ -1,0 +1,469 @@
+{42}  -*-  mode: text; fill-column: 50;  -*-
+[0:
+
+Mon May 15 23:54:10 2023 I'm having a hard time
+understanding why there's nearly no -notes.txt
+files in the MFM dirs. There's some down in
+src/drivers/mfmt2 but that's it.
+
+Where did I put all the dev notes? I never
+committed them? Can't believe I never wrote them.
+
+:0]
+[1:
+
+Mon May 15 23:56:03 2023 Anyway. Goal here is to
+think about implementing an "Ulam Class Explorer"
+UI within MFM/src/gui, probably with src/sim
+support, with functions like:
+
+ - List all ulam classes in various orders
+   = In particular, including ordered by number of
+     instances in the grid
+ - Select a subset of those classes and highlight
+   the instances of those classes on the grid (in
+   various ways)
+ - Show class relations from the viewpoint of a
+   particular class U
+   = Show all classes that include U as a direct
+     base class
+   = Show all classes that include U as an
+     indirect base class
+   = Show all classes that include a direct
+     datamember of type U or U[].
+   = Show all classes that include a indirect
+     datamember of type U or U[].
+
+[2:
+
+Tue May 16 00:57:03 2023 Wondering if it might be
+better to have this thing be a separate program -
+to take advantage of more vis stuff - and then
+somehow inject display commands into a running
+mfms.
+
+Yah.
+
+[3:
+
+Tue May 16 00:58:06 2023 So we have arrived at
+"minimal minimal" for the first time in this notes
+file. So what's the first/minimal thing we could
+get going?
+
+[4:
+
+Tue May 16 00:58:53 2023 We need some exploration
+and spiking for starters, I'd think.
+
+TODO
+[17: Tue May 16 16:07:56 2023 Let's call this
+DONE :17] - Review the flow of class and type information
+   from culam to mfms.
+[18: Ditto
+DONE :18] - Review ClassUtils.ulam functionality
+
+[5:
+
+Tue May 16 01:04:27 2023 Well so here's a thing:
+We've got BaseClassUtils.ulam in all our projects
+but we think - since it's really got only two main
+methods in it:
+
+  Int copyClassDataMembers(ClassId bci, Atom & fromelt, Atom & toelt)
+  Int copySharedData(Atom & fromelt, Atom & toelt)
+
+- maybe we could just add them to ClassUtils.ulam
+in stdlib?
+
+Let's try that..[6:
+
+Tue May 16 02:45:46 2023 Well haven't really
+tested it but that's all building (under
+Ancestor17). Let's call okay on that for now.
+
+:6]
+
+:5]
+
+:4]
+
+:3]
+
+:2]
+
+:1]
+[7:
+
+Tue May 16 09:26:19 2023 OK let's make a summary
+of class info movement from culam to mfms.
+
+[8:
+
+Tue May 16 09:27:23 2023
+
+(1) ULAM/src/drivers/ulam/ulam.tmpl runs culam via
+    runUlamCompilations() (which calls runThis(..))
+(2) The resulting stderr output is split on \n
+    into an array and each line is examined.
+(3) Each line is split on " " into words, and
+    lines of the form
+      ("ULAM", "INFO", $type, @args)
+    are considered further. (Note lines that do
+    NOT have that pattern are returns to stderr
+    for possible later presentation to user.)
+(4) $type values that receive further processing
+    are: PARAMETER, TARGET, FUNCTION.
+(5) TARGET has args like
+     ($path,$name,$cname,$size,$testflag,$classtype,$fullulamname,$fullulamparent,$scmt)
+    where, in particular, $classtype may be
+    "element", "quark", "transient" (or
+    "localsfilescope", not treated as a class).
+(6) Element $cnames are collected on
+    @elementCNamesFromUlam, and same for
+    @quarkCNamesFromUlam and
+    @transientNamesFromUlam
+ ..
+(7) Eventually, writeElementAllocatorStub() is
+    called, which writes UlamCustomElements.h and
+    .cpp, by iterating over the union of
+        @elementCNamesFromUlam
+        @quarkCNamesFromUlam
+        @transientNamesFromUlam
+        @localsfilescopeCNamesFromUlam
+    to generate a mass-including .h file, and
+(8) For each element, generates a subclass of
+    UlamElementInfo<EC> containing primarily the
+    structured comment metadata.
+ ..
+(9) Eventually, in UlamCustomElements.cpp, it
+    generates an array of ElementLibraryStubs:
+      static MFM::ElementLibraryStub<MFM::StdEventConfig> * _elementStubPtrArray_[] = {
+    with one pointer per element.
+(10) For (apparently) non-element classes only, it
+     generates an array of UlamClass pointers:
+      static MFM::UlamClass<MFM::StdEventConfig> * _otherUlamClassPtrArray_[] = {
+        &MFM::Uq_10103D1D10<MFM::StdEventConfig>::THE_INSTANCE,
+        &MFM::Uq_10103DTU10<MFM::StdEventConfig>::THE_INSTANCE,
+  ..
+     (and note that array appears to be sorted by
+     mangled name, which means it's sorted by
+     length and then alpha-within-length. We might
+     want to change that.)
+     (The element tables are also sorted by
+     mangled name.)
+(11) And finally, the dll symbol points at
+
+  static MFM::ElementLibrary<MFM::StdEventConfig> el = {
+
+     which contains (among other things), the
+     sizes and pointers of those two arrays
+
+        85,
+        _elementStubPtrArray_,
+        215,
+        _otherUlamClassPtrArray_
+
+[9:
+
+Tue May 16 12:03:50 2023 Let's see if we can get
+the classes and elements sorted just by
+name.. That'll be a way to get our feet wet.
+
+[10:
+
+Tue May 16 12:20:40 2023 Well it looks like that
+sorting may go all the way back into culam so that
+may take a little longer to dig into.
+
+But, separate from that whole ulam.tmpl flow,
+information about data members is provided in the
+generated subclasses of UlamClass -
+
+   virtual u32 GetUlamClassNameAsStringIndex(bool templateParameters, bool templateValues) const
+   virtual s32 GetDataMemberCount() const
+
+similar information is generated for base classes:
+
+    virtual u32 GetBaseClassCount() const
+    virtual u32 GetDirectBaseClassCount() const
+    virtual UlamClass<EC> * GetOrderedBaseClassAsUlamClass(u32 ith) const
+
+[11:
+
+Tue May 16 12:33:53 2023 Let's see if we can find
+out where culam sorts the classes (for
+output)..[12:
+
+Tue May 16 12:39:10 2023 Well it's not as easy as
+searching for 'sort'. It's iterating over some
+sorted container I expect, but I haven't found the
+top of the code generation stuff..[13:
+
+Tue May 16 12:41:18 2023 It's in m_idToSymbolPtr,
+perhaps?[14:
+
+Tue May 16 12:50:03 2023 Maybe we should try to
+sort in ulam.tmpl..[15:
+
+Tue May 16 15:59:42 2023 OK, well, I think they're
+sorted, although in a kind of weird way since the
+elements are sorted on their own, while the
+quarks/transients/file locals are sorted all
+together in a pile, but there it is.
+
+[16:
+
+Tue May 16 16:07:44 2023 So okay we need some more
+to-do. I'd like a list selector.. well let's go
+for an overall UCE window design for a second.
+
+  +-------------------------------------------+
+  |       class display and selection panel   |
+  |                                           |
+  |                                           |
+  |                                           |
+  +-------------------------------------------+
+  |      selected classes panel               |
+  |                                           |
+  |                                           |
+  +-------------------------------------------+
+  |        single class display panel         |
+  |                                           |
+  |                                           |
+  |                                           |
+  |                                           |
+  |                                           |
+  +-------------------------------------------+
+
+Maybe we shouldn't try to tie them all
+together. Or at least we let the single class
+display panel float separately?
+
+Drill down. I'm thinking of a stacked linear
+selector thing like I did to visualize the ccr
+tar file 'genome' way back when. Three levels from
+all classes to one class:
+
+  +--------------------------------------------+
+  |ABBCDDDEFGHIJKLMMMNOPQRSSSSSTTTTTTUVWXYX_   |
+  +-------------------^------------------------+
+  |Manu Mix Nan Not Ore ObiW Ozzy Pals Phon Pri|
+  +----------^---------------------------------+
+  | NanoArm:   [ ] [ ] .. controls             |
+  +--------------------------------------------+
+
+  +------------------------------+
+  |                              |
+  |                              |
+  |  Codon QDebug                |
+  |           NanoArm            |
+  | mProgram                     |
+  | mFoo                         |
+  | mBar                         |
+  +------------------------------+
+
+[19:
+
+Tue May 16 16:41:47 2023 Have to start dinner
+pretty soon but thinking could take a crack at
+like vector<string> -> selector display or
+something. We'll see.[20:
+
+Tue May 16 16:52:36 2023 Maybe it could be fisheye
+in the second level? Nah let's leave it as it is.
+
+:20]
+
+:19]
+
+:16]
+
+:15]
+
+:14]
+
+:13]
+
+:12]
+
+:11]
+
+:10]
+:9]
+:8]
+
+:7]
+[21:
+
+Wed May 17 00:13:05 2023 OK let's try to make a
+sensibly-UI-resizable panel for mfms. With a
+little grabby corner actually visualized. Then
+let's play with that.[22:
+
+Wed May 17 00:19:22 2023 Well it seems we already
+have a previous stub at a 'TreeViewPanel' that
+didn't get very far. Which feels like coming upon
+the skeleton of previous explorer right near the
+entrance to the cave..
+
+But, bravely made a V6Panel nonetheless. Now, how
+do we pop it up so we can see it?[23:
+
+Wed May 17 00:23:02 2023 Jeez the TreeViewPanel
+was actually wired into the AtomViewPanel, but
+then diked out. In 2015.
+
+But I want a top-level V6Panel for now. How do we
+pop an AtomViewPanel, for comparison?
+[24:
+
+Wed May 17 00:58:00 2023 OK so first-cut V6Panel
+and V6PanelPool<COUNT> now build. Let's figure out
+how to pop one and then get to trying.[25:
+
+Wed May 17 01:07:16 2023 So popping an
+AtomViewPanel goes through GridToolAtomView I
+guess? How do clicks get dispatched to tools?
+
+[26:
+
+Wed May 17 01:09:02 2023 I guess via GridPanel
+
+    virtual bool Handle(MouseButtonEvent& mbe)
+ ..    if(event.type == SDL_MOUSEBUTTONDOWN)
+ ..          m_currentGridTool->Press(mbe);
+
+and so forth.. Are we saying we're going to have a
+V6Panel tool??
+
+Well, later we want V6Panel to be a more general
+panel API, and this tool to be the UCE tool.. but
+for now..
+
+Could we think about ditching an existing tool?
+  [27:
+
+Wed May 17 01:27:34 2023 Well if forced to pick
+I'd say clone or flood.. clone maybe.. it's the
+hardest to use, and its structure-copying
+superpower I just don't use much anymore, now that
+the whole start-symbol-S ethos is really dug in.
+
+But for starters could we use a keyboard binding?
+Like 'v' for v6panel? or 'u' for UCE?
+
+How does 't' toggle the toolbox?[28:
+
+Wed May 17 01:31:24 2023 Via ShowToolboxButton in
+AbstractGUIDriverButtons.h[29:
+
+Wed May 17 01:32:30 2023 Looks like SDLK_u isn't
+mentioned in the codebase so far..[30:
+
+Wed May 17 02:52:21 2023 OK, so we have 'u' in the
+grid panel toggling the 'visibility' of the
+V6PanelPool. But that by itself never actually
+makes any of the V6Panel's therein visible, so
+we're not getting to V6Panel::PaintComponent yet.
+[31:
+
+Wed May 17 02:55:59 2023 I guess I think as a
+general idea, we'd like to have kbd and mouse
+events get to V6PanelPool somehow, and let the
+pool deal with them - and later, have pool
+subclasses do actual content
+
+[32:
+
+Wed May 17 10:16:17 2023 OK, so, 'u' is toggling
+the visiblility of the pool, but none of its v6
+are active so.. how do we get something active?
+
+Maybe when activating, if nothing's already set
+up, we should pop one ourselves (like, pointed at
+UrSelf or something eventually)?[33:
+
+Wed May 17 10:22:23 2023 OK, we autopopped a V6P
+during UpdateVisibility if none were allocated,
+and now we're reaching
+V6Panel::PaintComponent.[34:
+
+Wed May 17 10:26:03 2023 OK now I see the
+v6p. Let's get a border around it?[35:
+
+Wed May 17 10:55:16 2023 OK now we have a(n
+always) yellow border.[36:
+
+Wed May 17 11:16:00 2023 OK now we finally have
+the background getting drawn dark and the text
+light.. though I'm not sure we need blit-backed
+text there..[37:
+
+Wed May 17 11:38:44 2023 OK now we're drawing
+proportional small cap text in a size proportional
+to the window width.
+
+..but we can't change the window width except by
+recompiling ATM. Let's try for the resize
+grabber.. wait, could shift-drag already work?[38:
+
+Wed May 17 11:40:10 2023 No, it doesn't.. How does
+resizing work in windows that do it?[39:
+
+Wed May 17 11:48:41 2023 OK, now we can resize
+(by just not overriding MovablePanel's stuff..)
+But my text isn't tracking the size changes..
+[40:
+
+Thu May 18 08:09:48 2023 So what's next here? Had
+a bit of a sidetrack with a 400 minute power
+outage at the house yesterday.
+
+Also have to take a break to finish up the camera
+ready for the alife paper.[41:
+
+Mon May 22 02:57:44 2023 OK the camera-ready has
+shipped. And we're talking it's getting a little
+late in the month.
+
+:41]
+
+:40]
+:39]
+
+:38]
+
+:37]
+
+:36]
+
+:35]
+
+:34]
+
+:33]
+
+:32]
+
+:31]
+
+:30]
+
+:29]
+
+:28]
+
+:27]
+
+:26]
+
+:25]
+
+:24]
+
+:23]
+
+:22]
+
+:21]
