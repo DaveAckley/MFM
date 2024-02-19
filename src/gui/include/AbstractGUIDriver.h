@@ -143,6 +143,7 @@ namespace MFM
     LogButton<GC> m_logButton;
     ShowHelpButton<GC> m_showHelpButton, m_showHelpMiniButton;
     ShowToolboxButton<GC> m_showToolboxButton;
+    ShowUCEButton<GC> m_showUCEButton;
     ShowInfoBoxButton<GC> m_showInfoBoxButton;
     SuppressLabelsButton<GC> m_suppressLabelsButton;
     DrawCustomButton<GC> m_drawCustomButton;
@@ -258,6 +259,7 @@ namespace MFM
       InsertAndRegisterButton(m_logButton);
       InsertAndRegisterButton(m_showHelpButton);
       InsertAndRegisterButton(m_showToolboxButton);
+      InsertAndRegisterButton(m_showUCEButton);
       InsertAndRegisterButton(m_showInfoBoxButton);
 
       InsertAndRegisterButton(m_suppressLabelsButton);
@@ -346,6 +348,16 @@ namespace MFM
     bool IsToolboxVisible() const
     {
       return m_toolboxPanel.IsVisible();
+    }
+
+    void SetUCEVisible(bool vis)
+    {
+      m_gridPanel.SetUCEVisible(vis);
+    }
+
+    bool IsUCEVisible() const
+    {
+      return m_gridPanel.IsUCEVisible();
     }
 
     void SetInfoBoxVisible(bool vis)
@@ -877,6 +889,7 @@ namespace MFM
       , m_logButton()
       , m_showHelpButton()
       , m_showToolboxButton()
+      , m_showUCEButton()
       , m_showInfoBoxButton()
       , m_loadDriverSectionButton()
       , m_loadGridSectionButton()

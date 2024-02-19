@@ -29,6 +29,8 @@
 #ifndef GRIDPANEL_H
 #define GRIDPANEL_H
 
+#include "V6Panel.h"
+#include "V6PanelPool.h"
 #include "ReplayPanel.h"
 #include "AtomViewPanel.h"
 #include "itype.h"
@@ -73,6 +75,9 @@ namespace MFM
     typedef TileRenderer<EC> OurTileRenderer;
     typedef GridTool<GC> OurGridTool;
     typedef AtomViewPanel<GC> OurAtomViewPanel;
+
+    typedef V6Panel OurV6Panel;
+    typedef V6PanelPool<6> OurV6PanelPool;
 
     const char * GetEventHistoryStrategyName() const
     {
@@ -281,10 +286,14 @@ namespace MFM
     SPoint m_leftButtonGridStartDit;
 
     enum {
-      MAX_AVPS = 8
+          MAX_AVPS = 8,
+          MAX_V6PS = 4
     };
     OurAtomViewPanel m_avps[MAX_AVPS];
     s32 m_selectedAvp;
+
+    OurV6PanelPool m_v6PanelPool;
+    s32 m_selectedV6p;
 
     enum {
       MAX_GRID_SIDE = 128,  // Yeah right.  More power to you..
@@ -328,6 +337,16 @@ namespace MFM
     }
 
    public:
+    void SetUCEVisible(bool vis)
+    {
+      m_v6PanelPool.SetVisible(vis);
+    }
+
+    bool IsUCEVisible() const
+    {
+      return m_v6PanelPool.IsVisible();
+    }
+
     OurAtomViewPanel* GetInvisibleAtomViewPanelIfAny()
     {
       for (u32 i = 0; i < MAX_AVPS; ++i)
@@ -408,6 +427,10 @@ namespace MFM
       return m_avps[index];
     }
 
+    ////// V6 PANELS
+    //////////
+
+
     GridPanel()
       : Super()
       , m_tileRenderer(0)
@@ -418,6 +441,8 @@ namespace MFM
       , m_leftButtonDragStartPix(0,0)
       , m_leftButtonGridStartDit (0,0)
       , m_selectedAvp(-1)
+      , m_v6PanelPool(this)
+      , m_selectedV6p(-1)
       , m_selectedTiles()
       , m_recheckTileSelections(true)
       , m_eventHistoryStrategy(EVENT_HISTORY_STRATEGY_SELECTED)
@@ -440,6 +465,7 @@ namespace MFM
         m_avps[i].SetRenderPoint(SPoint(300+20*i,30+20*i));
         m_avps[i].Init();
       }
+      m_v6PanelPool.Init();
     }
 
     virtual ~GridPanel() { } //avoid inline error

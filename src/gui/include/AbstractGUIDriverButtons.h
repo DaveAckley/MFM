@@ -926,6 +926,37 @@ namespace MFM
   };
 
   template<class GC>
+  struct ShowUCEButton : public AbstractGridCheckbox<GC>
+  {
+    ShowUCEButton()
+      : AbstractGridCheckbox<GC>("Show Ulam Class Explorer")
+    {
+      AbstractButton::SetName("UlamClassExplorerButton");
+      Panel::SetDoc("Toggle showing the Ulam Class Explorer windows");
+      Panel::SetFont(FONT_ASSET_BUTTON_BIG);
+    }
+    virtual s32 GetSection() { return HELP_SECTION_WINDOWS; }
+    virtual bool GetKeyboardAccelerator(u32 & keysym, u32 & mod)
+    {
+      keysym = SDLK_u;
+      mod = 0;
+      return true;
+    }
+
+    virtual bool IsChecked() const
+    {
+      return this->GetDriver().IsUCEVisible();
+      return false;
+    }
+
+    virtual void SetChecked(bool value)
+    {
+      this->GetDriver().SetUCEVisible(value);
+    }
+  };
+  
+
+  template<class GC>
   struct ShowInfoBoxButton : public AbstractGridCheckbox<GC>
   {
     ShowInfoBoxButton()
