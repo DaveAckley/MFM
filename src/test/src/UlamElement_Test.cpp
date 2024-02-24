@@ -29,12 +29,12 @@ namespace MFM {
       UlamTypeCase("Uq_10104Fail10","quark Fail"),
       UlamTypeCase("Ue_102419212Display64x3210","element Display64x32"),
       UlamTypeCase("Ue_102689214WindowServices10","element WindowServices"),
-      UlamTypeCase("Uq_102115IntXY12102321u16102321u15","quark IntXY(Unsigned=6u,Unsigned=5u)"),
-      UlamTypeCase("Uq_102115IntXY12102321i16102321u15","quark IntXY(Int=6,Unsigned=5u)"),
-      UlamTypeCase("Uq_102115IntXY12102321in16102321u10","quark IntXY(Int=-6,Unsigned=0u)"),
-      UlamTypeCase("Uq_102115IntXY12102321in10102321u10","quark IntXY(Int=-2147483648,Unsigned=0u)"),
-      UlamTypeCase("Uq_102117LoCoord13102321u16102321u15102311t74043954","quark LoCoord(Unsigned=6u,Unsigned=5u,Bits(31)=0x3DB4B2)"),
-      UlamTypeCase("Uq_102117LoCoord13102321u16102321u15102321t814043954","quark LoCoord(Unsigned=6u,Unsigned=5u,Bits=0xD64B32)")
+      UlamTypeCase("Uq_102115IntXY12102321u16102321u15","quark IntXY(Unsigned6u,Unsigned5u)"),
+      UlamTypeCase("Uq_102115IntXY12102321i16102321u15","quark IntXY(Int6,Unsigned5u)"),
+      UlamTypeCase("Uq_102115IntXY12102321in16102321u10","quark IntXY(Int-6,Unsigned0u)"),
+      UlamTypeCase("Uq_102115IntXY12102321in10102321u10","quark IntXY(Int-2147483648,Unsigned0u)"),
+      UlamTypeCase("Uq_102117LoCoord13102321u16102321u15102311t74043954","quark LoCoord(Unsigned6u,Unsigned5u,Bits(31)0x3DB4B2)"),
+      UlamTypeCase("Uq_102117LoCoord13102321u16102321u15102321t814043954","quark LoCoord(Unsigned6u,Unsigned5u,Bits0xD64B32)")
     };
 
   void UlamElement_Test::Test_RunTests() {
