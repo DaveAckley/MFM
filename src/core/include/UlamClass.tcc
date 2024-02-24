@@ -77,7 +77,143 @@ namespace MFM {
                                         u32 indent) const
   {
     //    typedef typename EC::ATOM_CONFIG::ATOM_TYPE T;
-    if (flags & (PRINT_MEMBER_VALUES|PRINT_MEMBER_NAMES|PRINT_MEMBER_TYPES))
+    if (flags & PRINT_FORMAT_JSON)
+    {
+      bool first = false;
+      for (s32 i = 0; i < GetDataMemberCount(); ++i)
+      {
+        const UlamClassDataMemberInfo & dmi = GetDataMemberInfo((u32) i);
+        UlamTypeInfo utin;
+        if (!utin.InitFrom(dmi.m_mangledType))
+          FAIL(ILLEGAL_STATE);
+
+        if (utin.GetBitSize() == 0) continue;
+        
+        if (!first)
+        {
+          first = true;
+        }
+        else
+        {
+          bs.Printf(",");
+          doNL(bs,flags,indent);
+        }
+        bs.Printf("\"%s\":", dmi.m_dataMemberName);
+        
+        // For starters just dig out the bits and print them
+        u32 bitsize = utin.GetBitSize();
+        u32 arraysize = utin.GetArrayLength();
+  
+        for (u32 idx = 0; idx < MAX(arraysize,1u); ++idx)
+        {
+          if (utin.IsLocals()) break; // locals have no data members (and cannot be in arrays..)
+    
+          if (arraysize > 0)
+          {
+            if (idx==0)
+	    {
+	      bs.Printf("[");
+	    }
+	    else if (idx>0 && idx<arraysize)
+	    {
+	      bs.Printf(",");
+	    }
+          }
+    
+          u32 offset = 0; 
+          u32 startPos =
+            baseStatePos + dmi.m_bitPosition
+            + offset + idx * bitsize;
+  
+          if (utin.IsQuark() || utin.IsTransient())
+          {
+            const char * mangledName = dmi.m_mangledType;
+            const UlamClass * memberClass = ucr.GetUlamClassByMangledName(mangledName);
+            if (memberClass)
+            {
+              bs.Printf("{");
+              indent += 2;
+              doNL(bs,flags,indent);
+    
+              memberClass->PrintClassMembers(ucr, bs, stg, flags, startPos, indent + 2);
+	      
+              bs.Printf("}");
+              doNL(bs,flags,indent);    
+              indent -= 2;
+              continue;
+            }
+          }
+          if (!utin.IsPrimitive()) FAIL(ILLEGAL_STATE); // Can't happen now right?
+  
+          if (utin.m_utip.GetPrimType() == UlamTypeInfoPrimitive::ATOM) {
+            // Atom hex is a string in JSON
+            bs.Printf("\"0x");
+            stg.PrintHex(bs, startPos, bitsize);
+            bs.Printf("\"");
+            continue;
+          }
+  
+          u64 val = stg.ReadLong(startPos, bitsize);
+          switch (utin.m_utip.GetPrimType())
+          {
+          case UlamTypeInfoPrimitive::INT:
+            {
+              s64 cval = _SignExtend64(val,bitsize);
+              bs.Print(cval);
+              break;
+            }
+  
+          case UlamTypeInfoPrimitive::UNSIGNED:
+            {
+              bs.Print(val);
+              break;
+            }
+  
+          case UlamTypeInfoPrimitive::BOOL:
+            {
+              bool cval = _Bool64ToCbool(val,bitsize);
+              bs.Printf("%s", cval?"true":"false");
+              break;
+            }
+  
+          case UlamTypeInfoPrimitive::UNARY:
+            {
+              u32 cval = (u32) _Unary64ToInt64(val,bitsize,32);
+              bs.Printf("%d", cval);
+              break;
+            }
+  
+          case UlamTypeInfoPrimitive::BITS:
+            {
+              // hex values are strings in JSON
+              bs.Printf("\"0x");  // use hex for bits
+              bs.Print(val, Format::HEX);
+              bs.Printf("\"");
+              break;
+            }
+  
+          case UlamTypeInfoPrimitive::VOID:
+            {
+              // we'll say Void is equivalent to null. Why not?
+              bs.Printf("null"); // should be impossible?
+              break;
+            }
+  
+          case UlamTypeInfoPrimitive::STRING:
+            {
+              bs.Printf("<string>"); // XXX NYI
+              break;
+            }
+  
+          default:
+            FAIL(ILLEGAL_STATE);
+          }
+          if (arraysize > 0 && idx == arraysize-1)
+            bs.Printf("]");
+        }
+      }
+    }
+    else if (flags & (PRINT_MEMBER_VALUES|PRINT_MEMBER_NAMES|PRINT_MEMBER_TYPES))
     {
       bool opened = false;
       OString128 lastBaseClassName;

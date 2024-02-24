@@ -126,6 +126,12 @@ namespace MFM
      */
     typedef Grid<GC> OurGrid;
 
+    
+    /**
+     * Template shortcut for a Tile with the correct template
+     * parameters.
+     */
+    typedef typename OurGrid::GridTile OurTile;
     /**
      * Template shortcut for an ElementTable with the correct template
      * parameters.
@@ -841,6 +847,11 @@ namespace MFM
       driver.m_includeCPPDemos = 1;
     }
 
+    static void SetSaveGridJSON(const char* not_needed, void* driver)
+    {
+      ((AbstractDriver*)driver)->m_saveGridJSON = 1;
+    }
+
     static void SetGridImages(const char* not_needed, void* driver)
     {
       ((AbstractDriver*)driver)->m_gridImages = 1;
@@ -1160,6 +1171,14 @@ namespace MFM
         GetSimDirPathTemporary("autosave/%D-%D.mfs", epochs, (u32) m_AEPS);
       SaveGrid(filename);
     }
+    
+    void AutosaveJSON(u32 epochs)
+    {
+      const char* filename =
+        GetSimDirPathTemporary("grid-%D-%D.json", epochs, (u32) m_AEPS);
+      this->SaveGridJSON(filename);
+    }
+    
 
     ExternalConfig<GC> & GetExternalConfig()
     {
@@ -1174,6 +1193,150 @@ namespace MFM
       FileByteSink fs(fp);
 
       m_externalConfig.Write(fs);
+      fs.Close();
+    }
+    
+    void SaveGridJSON(const char* filename)
+    {
+      OurGrid& grid = this->GetGrid();
+      OurTile tile;
+      ElementTable<EC> et = tile.GetElementTable();
+
+
+      LOG.Message("Saving JSON to: %s", filename);
+      FILE* fp = fopen(filename, "w");
+      FileByteSink fs(fp);
+
+      const u32 gridWidth = grid.GetWidthSites();
+      const u32 gridHeight = grid.GetHeightSites();
+      const bool isStaggeredGrid = grid.IsGridLayoutStaggered();
+
+      fs.Printf("{");
+      fs.Printf("\"grid_configuration\":{"
+                "\"grid_is_staggered\":%s, "
+                "\"grid_height\":%d, "
+                "\"grid_width\":%d},\n"
+                ,isStaggeredGrid ? "true" : "false"
+                ,gridHeight
+                ,gridWidth);
+      
+      fs.Printf("\"tile_configuration\":{"
+                "\"event_window_radius\":%d, "
+                "\"tile_height\":%d, "
+                "\"tile_width\":%d, "
+                "\"owned_height\":%d, "
+                "\"owned_width\":%d},\n"
+                ,tile.EVENT_WINDOW_RADIUS
+                ,tile.GetTileHeight()
+                ,tile.GetTileWidth()
+                ,tile.OWNED_HEIGHT
+                ,tile.OWNED_WIDTH);
+      
+      fs.Printf("\"event_layer_atoms\":[\n");
+      bool first_event_layer_atom = true;
+      const u32 printFlags = UlamClassPrintFlags::PRINT_FORMAT_JSON;
+
+      for(s32 y = 0; y < (s32)gridHeight; y++)
+      {
+        for(s32 x = 0; x < (s32)gridWidth; x++)
+        {
+          SPoint siteInGrid;
+          siteInGrid.SetX(x);
+          siteInGrid.SetY(y);
+          if(isStaggeredGrid && !grid.IsGridCoord(siteInGrid)) continue;
+
+          T* atom = grid.GetWritableAtom(siteInGrid);
+          const T empty = tile.GetEmptyAtom();
+          const u32 t = atom->GetType();
+          // sites are assumed to contain an Empty if not otherwise specified.
+          if(!atom->IsType(empty, t))
+          {
+  
+            UlamClassRegistry<EC> ucr = grid.GetUlamClassRegistry();
+  
+            const Element<EC> * e = grid.LookupElement(t);
+            const UlamElement<EC> * uelt = e->AsUlamElement();
+  
+            if(first_event_layer_atom)
+            {
+              first_event_layer_atom = false;
+            }
+            else
+            {
+              fs.Printf(",\n");
+            }
+            fs.Printf("{\"x\":%d, " 
+                      "\"y\":%d, "
+                      "\"symbol\":\"%s\", "
+                      "\"name\":\"%s\", "
+                      "\"argb\":%d, "
+                      "\"data_members\":{%s"
+                      ,siteInGrid.GetX()
+                      ,siteInGrid.GetY()
+                      ,e->GetAtomicSymbol()
+                      ,e->GetName()
+                      ,e->GetDynamicColor(et, ucr, *atom, 0)
+	    );
+            uelt->Print(ucr, fs, *atom, printFlags, T::ATOM_FIRST_STATE_BIT);
+	    fs.Printf("}}");
+	  }
+        }
+      }
+      fs.Printf("\n],");
+      // hate to loop through the whole grid twice, but JSON requires that we close the list and I'm not too sure
+      // how to get a char buffer that's variable in size depending on the size of the grid, so we write straight
+      // to disk. That's also a lot slower than writing to a mem buffer. call that a:
+      // TODO: !!
+      bool first_base_layer_atom = true;
+      fs.Printf("\"base_layer_atoms\":[\n");
+      for(s32 y = 0; y < (s32)gridHeight; y++)
+      {
+        for(s32 x = 0; x < (s32)gridWidth; x++)
+        {
+          SPoint siteInGrid;
+          siteInGrid.SetX(x);
+          siteInGrid.SetY(y);
+          if(isStaggeredGrid && !grid.IsGridCoord(siteInGrid)) continue;
+  
+          const T* atom = grid.GetAtomInSite(true, siteInGrid);
+          const T empty = tile.GetEmptyAtom();
+          const u32 t = atom->GetType();
+          // sites are assumed to contain an Empty if not otherwise specified.
+          if(!atom->IsType(empty, t))
+          {
+  
+            UlamClassRegistry<EC> ucr = grid.GetUlamClassRegistry();
+  
+            const Element<EC> * e = grid.LookupElement(t);
+            const UlamElement<EC> * uelt = e->AsUlamElement();
+  
+            if(first_base_layer_atom)
+            {
+              first_base_layer_atom = false;
+            }
+            else
+            {
+              fs.Printf(",\n");
+            }
+            fs.Printf("{\"x\":%d, " 
+                      "\"y\":%d, "
+                      "\"symbol\":\"%s\", "
+                      "\"name\":\"%s\", "
+                      "\"argb\":%d, "
+                      "\"data_members\":{%s"
+                      ,siteInGrid.GetX()
+                      ,siteInGrid.GetY()
+                      ,e->GetAtomicSymbol()
+                      ,e->GetName()
+                      ,e->GetDynamicColor(et, ucr, *atom, 0)
+	    );
+          
+            uelt->Print(ucr, fs, *atom, printFlags, T::ATOM_FIRST_STATE_BIT);
+	    fs.Printf("}}");
+	  }
+        }
+      }
+      fs.Printf("\n]}");
       fs.Close();
     }
 
@@ -1264,6 +1427,11 @@ namespace MFM
         this->AutosaveGrid(epochs);
       }
 
+      if (m_saveGridJSON > 0 && (epochs % m_autosavePerEpochs) == 0)
+      {
+	this->AutosaveJSON(epochs);
+      }
+
       if (m_accelerateAfterEpochs > 0 && (epochs % m_accelerateAfterEpochs) == 0)
       {
         this->SetAEPSPerEpoch(MAX(1u, this->GetAEPSPerEpoch() + m_acceleration));
@@ -1294,6 +1462,7 @@ namespace MFM
       , m_suppressStdElements(true)
       , m_includeUEDemos(false)
       , m_includeCPPDemos(false)
+      , m_saveGridJSON(false)
       , m_msSpentRunning(0)
       , m_msSpentOverhead(0)
       , m_microsSleepPerFrame(1000)
@@ -1494,7 +1663,9 @@ namespace MFM
 
       RegisterArgument("Command line comment, logged but otherwise ignored (string)",
                        "-#|--comment", &IgnoreComment, this, true);
-
+      
+      RegisterArgument("Output detailed grid state information in JSON format.",
+                       "-gj|--grid-json", &SetSaveGridJSON, this, false);
     }
 
 
@@ -1659,6 +1830,7 @@ namespace MFM
     bool m_suppressStdElements;
     bool m_includeUEDemos;
     bool m_includeCPPDemos;
+    bool m_saveGridJSON;
 
     u64 m_msSpentRunning;
     u64 m_msSpentOverhead;
@@ -1723,3 +1895,4 @@ namespace MFM
 }
 
 #endif /* ABSTRACTDRIVER_H */
+

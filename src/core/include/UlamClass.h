@@ -69,6 +69,7 @@ namespace MFM
       PRINT_RECURSE_QUARKS =  0x00000200, //< Print quarks recursively
       PRINT_INDENTED_LINES =  0x00000400, //< Add newlines and indents
       PRINT_MEMBER_ASCII =    0x00000800, //< Add ASCII data member values if printable
+      PRINT_FORMAT_JSON =     0x00001000, //< Format data members in JSON
 
       /** (Composite value) Print element symbol and entire atom in hex */
       PRINT_HEX_ATOM = PRINT_SYMBOL|PRINT_ATOM_BODY,
