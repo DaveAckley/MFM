@@ -179,6 +179,9 @@ namespace MFM
     IncreaseAEPSPerFrame<GC> m_increaseAEPSPerFrame;
     DecreaseAEPSPerFrame<GC> m_decreaseAEPSPerFrame;
 
+    bool m_snapshotRequested;
+    OString512 m_snapshotPath;
+
   public:
     static AbstractGUIDriver * getSelf() { return m_staticSelf; }
     
@@ -187,6 +190,28 @@ namespace MFM
 
     const GridPanel<GC> & GetGridPanel() const { return m_gridPanel; }
     GridPanel<GC> & GetGridPanel() { return m_gridPanel; }
+
+    virtual void RequestSnapshot(ByteSource & path) {
+      m_snapshotRequested = true;
+      m_snapshotPath.Reset();
+      m_snapshotPath.Copy(path);
+      MFM_API_ASSERT_ARG(!m_snapshotPath.HasOverflowed());
+    }
+
+    bool TakeSnapshotIfRequested() {
+      bool ret = false;
+      if (m_snapshotRequested) {
+        TakeSnapshot(m_snapshotPath.GetZString());
+        ret = true;
+      }
+      return ret;
+    }
+
+    void TakeSnapshot(const char * path) {
+      MFM_API_ASSERT_NONNULL(path);
+      MFM_API_ASSERT_NONNULL(m_screen);
+      m_camera.DrawSurface(m_screen, path);
+    }
 
     void RequestReinit()
     {
@@ -903,10 +928,12 @@ namespace MFM
       , m_displayAER(m_statisticsPanel)
       , m_increaseAEPSPerFrame(*this)
       , m_decreaseAEPSPerFrame(*this)
+      , m_snapshotRequested(false)
       , m_buttonPanel("ButtonPanel",false)
       , m_miniButtonPanel("miniButtonPanel",true)
       , m_externalConfigSectionGUI(AbstractDriver<GC>::GetExternalConfig(),*this)
     {
+      m_snapshotPath.Reset();
       m_startFile.Reset();
       m_staticSelf = this;
       signal(SIGUSR1, AbstractGUIDriver::handleUSR1);
@@ -1347,6 +1374,8 @@ namespace MFM
 
         m_rootDrawing.Clear();
         m_rootPanel.Paint(m_rootDrawing);
+
+        TakeSnapshotIfRequested();
 
         if (m_thisUpdateIsEpoch)
         {

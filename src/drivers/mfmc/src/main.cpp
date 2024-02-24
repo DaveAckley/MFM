@@ -11,6 +11,8 @@
 // IF WE INCLUDE THEIR HEADER..
 #include "StdElements.h" 
 
+#include "GlobalHooks.h" // barf.
+
 void * XXXDRIVER = 0;
 
 namespace MFM
@@ -333,12 +335,32 @@ namespace MFM
   };
 
   template <class CONFIG>
+  struct SnapshotGlobalHook : GlobalHook {
+    SnapshotGlobalHook(MFMCDriver<CONFIG> & driver)
+      : GlobalHook("RequestSnapshot")
+      , m_driver(driver)
+    {
+      GlobalHooks& hooks = GlobalHooks::getSingleton();
+      hooks.addHook(*this);
+    }
+    virtual void * hookHandler(void * varg) {
+      MFM_API_ASSERT_NONNULL(varg);
+      const char * arg = (const char *) varg;
+      ZStringByteSource zbs(arg);
+      m_driver.RequestSnapshot(zbs);
+      return 0;
+    }
+    MFMCDriver<CONFIG> & m_driver;
+  };
+
+  template <class CONFIG>
   int SimRunner(int argc, const char** argv,u32 gridWidth,u32 gridHeight, GridLayoutPattern gridLayout)
   {
     SizedTile<typename CONFIG::EVENT_CONFIG, CONFIG::TILE_WIDTH, CONFIG::TILE_HEIGHT, CONFIG::EVENT_HISTORY_SIZE>::SetGridLayoutPattern(gridLayout); //static before sim (next line)
 
     MFMCDriver<CONFIG> sim(gridWidth,gridHeight,gridLayout);
     XXXDRIVER = &sim;
+    SnapshotGlobalHook<CONFIG> sgh(sim);
     sim.ProcessArguments(argc, argv);
     sim.AddInternalLogging();
     sim.Init();
@@ -447,6 +469,18 @@ void XXXCC##A() { \
 #include "TileSizes.inc"
 #undef XX
 
+#if 0 ///XXX DELETE ME
+//BARF. BARF BARF BARF.
+#include "AbstractDriver.h"
+
+namespace MFM {
+  extern bool RequestSnapshotGlobal(const char * path) __attribute__ ((used)) ;
+  extern bool RequestSnapshotGlobal(const char * path) {
+    AbstractDriverBase * bptr = (AbstractDriverBase *) XXXDRIVER;
+    return bptr->RequestSnapshot(path);
+  }
+}
+#endif
 
 void DP(const MFM::UlamContext<MFM::OurEventConfigAll>& ruc,
         const MFM::UlamRef<MFM::OurEventConfigAll>& rur) __attribute__ ((used)) ;
