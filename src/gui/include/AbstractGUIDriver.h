@@ -200,7 +200,7 @@ namespace MFM
 
     bool TakeSnapshotIfRequested() {
       bool ret = false;
-      if (m_snapshotRequested) {
+      if (m_pastFirstUpdate && m_snapshotRequested) {
         TakeSnapshot(m_snapshotPath.GetZString());
         ret = true;
       }
@@ -1370,12 +1370,12 @@ namespace MFM
         }
         Update(Super::GetGrid());
 
-        m_pastFirstUpdate = true;
-
         m_rootDrawing.Clear();
         m_rootPanel.Paint(m_rootDrawing);
 
         TakeSnapshotIfRequested();
+
+        m_pastFirstUpdate = true;
 
         if (m_thisUpdateIsEpoch)
         {
