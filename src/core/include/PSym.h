@@ -112,7 +112,9 @@ namespace MFM {
      points mapped by psym to their original coordinates
    */
   inline const PointSymmetry SymInverse(const PointSymmetry psym) {
-    return (const PointSymmetry) (psym ^ ((psym & 1) << 1)); // PSYM_DEG090{L,R} <-> PSYM_DEG270{L,R}
+    return ((psym & 5) == 1)
+      ? (const PointSymmetry) (psym ^ 2) // PSYM_DEG090L <-> PSYM_DEG270L
+      : psym;
   }
 
 } /* namespace MFM */
