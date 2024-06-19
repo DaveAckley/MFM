@@ -14,7 +14,7 @@ namespace MFM {
     static u32 lastchangems;
     T2Main & m = T2Main::get();
     u32 nowms = m.now();
-    const char * PATH = "/cdm/log/status.txt";  // "/home/t2/T2-12/apps/cdm/cdm/cdmDEBUG/log/status.txt"
+    const char * PATH = "/mnt/T2TMP/cdmStatus.txt";  // "/home/t2/T2-12/apps/cdm/cdm/cdmDEBUG/log/status.txt"
     u32 curmodtime = getModTimeOfFile(PATH);
     const u32 DOWN_TIME_SEC = 30;
     if (curmodtime != prevmodtime) {

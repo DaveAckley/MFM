@@ -1,6 +1,6 @@
 
 /* Tile codes don't have to start with A, but whatever tiles sizes are
-   configured must have consecutive letter codes!  Here we support B-J
+   configured must have consecutive letter codes!  Here we support A-J
    by default, or A-M if EXTRA_TILE_SIZES is defined.  Every tile size
    that is included implies another huge pile of templates for g++ to
    instantiate, slowing the MFM build time.
@@ -11,9 +11,9 @@
  */
 
 #ifdef EXTRA_TILE_SIZES
-XX(A,24,24)
 #endif /*EXTRA_TILE_SIZES*/
 
+XX(A,48+8,32+8)    /* T2 tile size doh! */
 XX(B,32,32)
 XX(C,40,40)
 XX(D,54,54)

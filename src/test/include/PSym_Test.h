@@ -16,6 +16,7 @@ namespace MFM {
 
     static void Test_PSymTemplates();
 
+    static void Test_PSymInverse();
   };
 } /* namespace MFM */
 #endif /*PSYM_TEST_H*/

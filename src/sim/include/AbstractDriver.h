@@ -63,6 +63,22 @@
 
 namespace MFM
 {
+  /** 
+   * A non-template base for the abstract drivers gah.
+   */
+  struct AbstractDriverBase {
+    bool RequestSnapshot(const char * cpath) {
+      ZStringByteSource zbs(cpath);
+      return RequestSnapshot(zbs);
+    }
+
+    virtual bool RequestSnapshot(ByteSource & path) {
+      return false;
+    }
+
+    virtual ~AbstractDriverBase() { }
+  };
+
   /**
    * An abstract driver from which all MFM drivers should
    * inherit. This should be the highest level structure and contain
