@@ -346,8 +346,9 @@ namespace MFM
     virtual void * hookHandler(void * varg) {
       MFM_API_ASSERT_NONNULL(varg);
       const char * arg = (const char *) varg;
-      ZStringByteSource zbs(arg);
-      m_driver.RequestSnapshot(zbs);
+      OString512 ocbs(arg);     // copy path onto stack?
+      CharBufferByteSource cbbs = ocbs.AsByteSource();
+      m_driver.RequestSnapshot(cbbs);
       return 0;
     }
     MFMCDriver<CONFIG> & m_driver;

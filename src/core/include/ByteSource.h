@@ -201,6 +201,26 @@ namespace MFM
     bool Scan(u32 & result, Format::Type code = Format::DEC, u32 fieldWidth = U32_MAX) ;
 
     /**
+     * Read a strictly negative lex32-encoded number, if it is present
+     * at the front of the source.
+     *
+     * @returns the negative value successfully read, or 0 if a
+     *          negative value was not present (in which case the
+     *          source is unchanged), or a positive value if a format
+     *          error occurred (in which case the source status is
+     *          undefined).
+     */
+    s32 ReadNegativeLex32() {
+      bool neg = (Read() == 'n');
+      if (!neg) { Unread(); return 0; }
+      u32 num;
+      if (!Scan(num, Format::LEX32, 0)) return 1;
+      if (num == 0u) return 1;  // Bad source format: minimum neg lex is n11
+      if (num > 0x7fffffff) return 1; // Neg won't fit in s32
+      return -(s32) num;
+    }
+    
+    /**
      * Reads a ByteSerializable from the front of this ByteSource.
      *
      * @param byteSerializable The ByteSerializable which is to be

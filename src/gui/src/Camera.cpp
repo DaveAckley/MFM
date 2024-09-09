@@ -2,6 +2,7 @@
 
 #include <stdlib.h>    /* for malloc, free */
 #include <png.h>
+#include <errno.h>     /* for errno */
 
 /* libpng is ghetto and needs these */
 static void libpng_warning(png_structp context, png_const_charp msg)
@@ -70,7 +71,7 @@ namespace MFM
     FILE* fp = fopen(filename, "wb");
     if(fp == NULL)
     {
-      fprintf(stderr, "[Camera::SavePNG] Can't open %s\n.", filename);
+      fprintf(stderr, "[Camera::SavePNG] Can't open %s: %s\n.", filename, strerror(errno));
       return 1;
     }
 

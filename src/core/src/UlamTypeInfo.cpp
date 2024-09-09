@@ -2,7 +2,6 @@
 
 namespace MFM
 {
-
   bool UlamTypeInfo::InitFrom(ByteSource & cbs)
   {
     cbs.SkipWhitespace();
@@ -115,8 +114,14 @@ namespace MFM
 
   bool UlamTypeInfoPrimitive::InitFrom(ByteSource & cbs)
   {
-    u32 arraylen, bitsize, namelen;
-    if (!cbs.Scan(arraylen, Format::LEX32, 0)) return false;
+    u32 arraylen = 0u, bitsize, namelen;
+
+    /* Special case: arraylen 'n11' means zero length array (while '10' means scalar instead of array) */
+    s32 negval = cbs.ReadNegativeLex32();
+    if (negval > 0) return false; // bad negative format
+    if (negval < 0 && negval != -1) return false; // only n11 supported in this context
+
+    if (negval == 0 && !cbs.Scan(arraylen, Format::LEX32, 0)) return false;  // wasn't negative
     if (!cbs.Scan(bitsize, Format::LEX32, 0)) return false;
     if (!cbs.Scan(namelen, Format::LEXHD, 0)) return false;
     if (namelen != 1) return false;
@@ -128,6 +133,7 @@ namespace MFM
 
     m_primType = type;
     m_bitSize = bitsize;
+    m_zeroLengthArray = (negval < 0);
     m_arrayLength = arraylen;
 
     return true;
@@ -135,7 +141,11 @@ namespace MFM
 
   void UlamTypeInfoPrimitive::PrintMangled(ByteSink & bs) const
   {
-    bs.Printf("%D%D1%c", m_arrayLength, m_bitSize, CharFromPrimType(GetPrimType()));
+    if (m_zeroLengthArray)
+      bs.Printf("n11");
+    else
+      bs.Printf("%D", m_arrayLength);
+    bs.Printf("%D1%c", m_bitSize, CharFromPrimType(GetPrimType()));
   }
 
   void UlamTypeInfoPrimitive::PrintPretty(ByteSink & bs,bool minpunct) const
@@ -145,14 +155,21 @@ namespace MFM
     if (m_bitSize != DefaultSizeFromPrimType(GetPrimType()))
       bs.Printf("(%d)", m_bitSize);
 
-    if (m_arrayLength > 0)
+    if (m_zeroLengthArray)
+      bs.Printf("[]");
+    else if (m_arrayLength > 0)
       bs.Printf("[%d]", m_arrayLength);
   }
 
   bool UlamTypeInfoClass::InitFrom(ByteSource & cbs)
   {
-    u32 arraylen, bitsize, namelen, parms;
-    if (!cbs.Scan(arraylen, Format::LEX32, 0)) return false;
+    u32 arraylen, bitsize, namelen, parms; 
+
+    s32 negval = cbs.ReadNegativeLex32();
+    if (negval > 0) return false; // bad negative format
+    if (negval < 0 && negval != -1) return false; // only n11 supported in this context
+
+    if (negval == 0 && !cbs.Scan(arraylen, Format::LEX32, 0)) return false; 
     if (!cbs.Scan(bitsize, Format::LEX32, 0)) return false;
     if (!cbs.Scan(namelen, Format::LEXHD, 0)) return false;
 
@@ -198,8 +215,10 @@ namespace MFM
       else
 	{
 	  u32 arrayloop = uticp.m_parameterType.m_arrayLength;
-	  if(arrayloop > MAX_CLASS_PARAMETER_ARRAY_LENGTH) return false;
-	  arrayloop = ((arrayloop == 0) ? 1 : arrayloop);
+          bool zeroarraylen = uticp.m_parameterType.m_zeroLengthArray;
+	  if (arrayloop > MAX_CLASS_PARAMETER_ARRAY_LENGTH) return false;
+          bool isscalar = (arrayloop == 0 && !zeroarraylen);
+	  arrayloop = (isscalar ? 1 : arrayloop);
 
 	  for(u32 j = 0; j < arrayloop; j++)
 	    {
@@ -222,6 +241,7 @@ namespace MFM
     }
 
     m_name = name;
+    m_zeroLengthArray = (negval < 0);
     m_arrayLength = arraylen;
     m_bitSize = bitsize;
     m_classParameterCount = parms;
@@ -235,8 +255,12 @@ namespace MFM
 
   void UlamTypeInfoClass::PrintMangled(ByteSink & bs) const
   {
-    bs.Printf("%D%D%H%s",
-              m_arrayLength,
+    if (m_zeroLengthArray)
+      bs.Printf("n11");
+    else
+      bs.Printf("%D", m_arrayLength);
+
+    bs.Printf("%D%H%s",
               m_bitSize,
               m_name.GetLength(),
               m_name.GetZString());
@@ -259,8 +283,11 @@ namespace MFM
 	  else
 	    {
 	      u32 arrayloop = m_classParameters[i].m_parameterType.m_arrayLength;
-	      if(arrayloop > MAX_CLASS_PARAMETER_ARRAY_LENGTH) FAIL(ILLEGAL_STATE);
-	      arrayloop = ((arrayloop == 0) ? 1 : arrayloop);
+              bool zeroarraylen = m_classParameters[i].m_parameterType.m_zeroLengthArray;
+
+	      if (arrayloop > MAX_CLASS_PARAMETER_ARRAY_LENGTH) FAIL(ILLEGAL_STATE);
+              bool isscalar = (arrayloop == 0 && !zeroarraylen);
+              arrayloop = (isscalar ? 1 : arrayloop);
 
 	      for(u32 j = 0; j < arrayloop; j++)
 		{
@@ -309,9 +336,13 @@ namespace MFM
 	else
 	  {
 	    u32 arrayloop = m_classParameters[i].m_parameterType.m_arrayLength;
-	    if(arrayloop > MAX_CLASS_PARAMETER_ARRAY_LENGTH) FAIL(ILLEGAL_STATE);
+            bool zeroarraylen = m_classParameters[i].m_parameterType.m_zeroLengthArray;
 
-	    arrayloop = ((arrayloop == 0) ? 1 : arrayloop);
+	    if (arrayloop > MAX_CLASS_PARAMETER_ARRAY_LENGTH) FAIL(ILLEGAL_STATE);
+
+            bool isscalar = (arrayloop == 0 && !zeroarraylen);
+            arrayloop = (isscalar ? 1 : arrayloop);
+
             //XXX COMPACTIFY TEMPLATES? bs.Printf("=");
 	    if(arrayloop > 1)
 	      bs.Printf("{"); //start of array values

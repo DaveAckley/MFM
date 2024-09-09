@@ -40,6 +40,7 @@ namespace MFM
 
     u8 m_primType;
     u8 m_bitSize;
+    bool m_zeroLengthArray;
     u16 m_arrayLength;
 
     static bool PrimTypeFromChar(const u8 ch, PrimType & result) ;
@@ -67,9 +68,10 @@ namespace MFM
     void PrintPretty(ByteSink & bs, bool minpunct) const ;
 
     u32 GetBitSize() const { return m_bitSize; }
-    u32 GetArrayLength() const { return m_arrayLength; }
-    void MakeScalar() { m_arrayLength = 0; }
-    bool IsScalar() const { return GetArrayLength() == 0; }
+    u32 GetArrayLength() const { return m_arrayLength; } // check for !IsScalar first
+    void MakeScalar() { m_arrayLength = 0; m_zeroLengthArray = false; }
+    bool IsScalar() const { return !m_zeroLengthArray && GetArrayLength() == 0; }
+    bool IsZeroLengthArray() const { return m_zeroLengthArray; }
     void AssertScalar() const { if (!IsScalar()) FAIL(ILLEGAL_STATE); }
 
     u64 GetMaxOfScalarType() const
@@ -107,6 +109,7 @@ namespace MFM {
   struct UlamTypeInfoClass {
 
     OStringClassName m_name;
+    bool m_zeroLengthArray;
     u32 m_arrayLength;
     u32 m_bitSize;
     u32 m_classParameterCount;
@@ -124,9 +127,10 @@ namespace MFM {
     void PrintMangled(ByteSink & bs) const ;
     void PrintPretty(ByteSink & bs, bool minpunct) const ;
 
-    u32 GetArrayLength() const { return m_arrayLength; }
-    void MakeScalar() { m_arrayLength = 0; }
-
+    u32 GetArrayLength() const { return m_arrayLength; } // check for !IsScalar first
+    void MakeScalar() { m_arrayLength = 0; m_zeroLengthArray = false; }
+    bool IsScalar() const { return !m_zeroLengthArray && GetArrayLength() == 0; }
+    bool IsZeroLengthArray() const { return m_zeroLengthArray; }
   };
 } //MFM
 
@@ -220,6 +224,13 @@ namespace MFM {
     {
       if (IsPrimitive()) return m_utip.GetArrayLength();
       if (IsClass()) return m_utic.GetArrayLength();
+      FAIL(ILLEGAL_STATE);
+    }
+
+    bool IsZeroLengthArray() const
+    {
+      if (IsPrimitive()) return m_utip.IsZeroLengthArray();
+      if (IsClass()) return m_utic.IsZeroLengthArray();
       FAIL(ILLEGAL_STATE);
     }
 

@@ -88,6 +88,9 @@ namespace MFM {
         if (!utin.InitFrom(dmi.m_mangledType))
           FAIL(ILLEGAL_STATE);
 
+        // Skip 0 length arrays period
+        if (utin.IsZeroLengthArray()) continue;
+
         // Skip size 0 members unless they reeeally want them
         if (utin.GetBitSize() == 0 && !(flags & PRINT_SIZE0_MEMBERS)) continue;
 

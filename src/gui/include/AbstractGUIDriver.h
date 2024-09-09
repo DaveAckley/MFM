@@ -179,6 +179,7 @@ namespace MFM
     IncreaseAEPSPerFrame<GC> m_increaseAEPSPerFrame;
     DecreaseAEPSPerFrame<GC> m_decreaseAEPSPerFrame;
 
+    Mutex m_snapshotAccess;
     bool m_snapshotRequested;
     OString512 m_snapshotPath;
 
@@ -192,13 +193,17 @@ namespace MFM
     GridPanel<GC> & GetGridPanel() { return m_gridPanel; }
 
     virtual void RequestSnapshot(ByteSource & path) {
-      m_snapshotRequested = true;
-      m_snapshotPath.Reset();
-      m_snapshotPath.Copy(path);
-      MFM_API_ASSERT_ARG(!m_snapshotPath.HasOverflowed());
+      if (m_snapshotAccess.TryLock()) { // don't block if busy
+        m_snapshotRequested = true;
+        m_snapshotPath.Reset();
+        m_snapshotPath.Copy(path);
+        MFM_API_ASSERT_ARG(!m_snapshotPath.HasOverflowed());
+        m_snapshotAccess.Unlock();
+      }
     }
 
     bool TakeSnapshotIfRequested() {
+      Mutex::ScopeLock lock(m_snapshotAccess);
       bool ret = false;
       if (m_pastFirstUpdate && m_snapshotRequested) {
         TakeSnapshot(m_snapshotPath.GetZString());
