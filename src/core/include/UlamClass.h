@@ -1,7 +1,8 @@
 /*                                              -*- mode:C++ -*-
   UlamClass.h An abstract base class for ULAM quarks and elements
   Copyright (C) 2015-2019 The Regents of the University of New Mexico.  All rights reserved.
-  Copyright (C) 2015-2019 Ackleyshack LLC.
+  Copyright (C) 2015-2024 Ackleyshack LLC.
+  Copyright (C) 2020-2024 The Living Computation Foundation.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,7 +24,7 @@
   \file UlamClass.h An abstract base class for ULAM quarks and elements
   \author David H. Ackley.
   \author Elena S. Ackley.
-  \date (C) 2015-2019 All rights reserved.
+  \date (C) 2015-2024 All rights reserved.
   \lgpl
  */
 
@@ -267,7 +268,6 @@ namespace MFM
       FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
     }
 
-
     /**
        Compare type of this element to atom
 
@@ -329,10 +329,9 @@ namespace MFM
      */
     static s32 GetRelativePositionOfBaseClass(const UlamContext<EC>& uc, u32 type, const UlamClass<EC> * baseclassPtr);
 
-
-    virtual s32 internalCMethodImplementingGetRelativePositionOfBaseClass(const UlamClass<EC> * cptrarg) const
+    s32 internalCMethodImplementingGetRelativePositionOfBaseClass(const UlamClass<EC> * cptrarg) const
     {
-      FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
+      return internalCMethodImplementingGetRelativePositionOfBaseClass(cptrarg->GetRegistrationNumber());
     }
 
     virtual s32 internalCMethodImplementingGetRelativePositionOfBaseClass(const u32 regid) const
@@ -340,6 +339,13 @@ namespace MFM
       FAIL(ILLEGAL_STATE);  // culam should always have overridden this method
     }
 
+    s32 internalCMethodImplementingGetRelativePositionOfBaseClassWithCheck(const u32 regid) const
+    {
+      const s32 relpos = internalCMethodImplementingGetRelativePositionOfBaseClass(regid);
+      if(relpos < 0)
+	FAIL(BAD_CAST);
+      return relpos;
+    }
 
     /**
        Return vtable of this element, or NULL if there isn't one.
