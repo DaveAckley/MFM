@@ -56,7 +56,7 @@ namespace MFM {
     typedef OString256 LibraryPathString;
 
     enum {
-      TABLE_SIZE = 100,
+      TABLE_SIZE = 256, // Mon Feb 24 23:20:39 2025 Gah, 100 was not enough for Beevee2025
       MAX_PATHS = 1
     };
 
