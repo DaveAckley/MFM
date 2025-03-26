@@ -67,6 +67,8 @@ COMMON_CPPFLAGS+=-ansi -pedantic -Wall -Werror -D SHARED_DIR=\"$(SHARED_DIR)\" -
 COMMON_LDFLAGS+=-Wl,--fatal-warnings -pthread
 # Urgh gcc 8.3 warns about parens I want to keep
 COMMON_CPPFLAGS+=-Wno-parentheses
+# 202410250212 Urrgh gcc 13.2.0 gives some aggravating these - 
+COMMON_CPPFLAGS+= -Wno-overloaded-virtual
 # 202103050700 except gcc-5.4.0 (Ubuntu 16.04) doesn't have -Wrestrict
 # so move these flags down to src/drivers/mfmt2 for the tile
 # 202101190758 gcc issued buggy warning/error on memcpy, so:
