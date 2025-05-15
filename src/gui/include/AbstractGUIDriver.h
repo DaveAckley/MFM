@@ -207,6 +207,7 @@ namespace MFM
       bool ret = false;
       if (m_pastFirstUpdate && m_snapshotRequested) {
         TakeSnapshot(m_snapshotPath.GetZString());
+        m_snapshotRequested = false;
         ret = true;
       }
       return ret;
