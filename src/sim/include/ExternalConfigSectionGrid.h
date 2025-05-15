@@ -178,7 +178,7 @@ namespace MFM
      */
     Grid<GC>& m_grid;
 
-    static const u32 MAX_REGISTERED_ELEMENTS = 100;
+    static const u32 MAX_REGISTERED_ELEMENTS = ElementRegistry<EC>::TABLE_SIZE;
     ByteSink * m_errorsTo;
 
     struct RegElt {
